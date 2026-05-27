@@ -21,5 +21,6 @@ COPY . .
 
 EXPOSE 8000
 
+# ASGI (daphne) so real-time chat WebSockets (D5) are served in production.
 # Dev compose overrides this with `runserver`.
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000"]
+CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "config.asgi:application"]
