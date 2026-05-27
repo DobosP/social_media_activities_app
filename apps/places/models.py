@@ -30,6 +30,10 @@ class Place(gis_models.Model):
     opening_hours_raw = models.CharField(max_length=255, blank=True)
     opening_hours = models.JSONField(null=True, blank=True)
 
+    # Contact details — `website` is the entry point for reservations/bookings (D8).
+    website = models.URLField(max_length=500, blank=True)
+    phone = models.CharField(max_length=64, blank=True)
+
     source = models.CharField(max_length=16, choices=Source.choices)
     osm_type = models.CharField(max_length=8, blank=True)  # node | way | relation
     osm_id = models.BigIntegerField(null=True, blank=True)
@@ -61,6 +65,11 @@ class Place(gis_models.Model):
             models.Index(fields=["address_city"]),
             models.Index(fields=["source"]),
         ]
+
+    @property
+    def is_bookable(self) -> bool:
+        """A place with a website is a reservation candidate (deep-link booking)."""
+        return bool(self.website)
 
     def __str__(self):
         return self.name or f"{self.source}:{self.osm_id or self.external_id}"

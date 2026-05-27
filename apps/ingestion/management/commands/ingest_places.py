@@ -46,6 +46,11 @@ class Command(BaseCommand):
         )
         parser.set_defaults(dedup=True)
         parser.add_argument("--min-confidence", type=float, default=0.0)
+        parser.add_argument(
+            "--with-website",
+            action="store_true",
+            help="Only ingest places that have a website (reservation-capable venues first).",
+        )
 
     def _build_adapter(self, source: str, opts) -> SourceAdapter:
         if source == "osm":
@@ -89,6 +94,7 @@ class Command(BaseCommand):
         city, bbox = self._resolve_area(source, opts)
         dry_run, limit, min_conf = opts["dry_run"], opts["limit"], opts["min_confidence"]
         dedup = opts["dedup"]
+        with_website = opts["with_website"]
 
         types = {t.slug: t for t in ActivityType.objects.all()}
         if not types:
@@ -98,6 +104,9 @@ class Command(BaseCommand):
         unmapped: Counter = Counter()
 
         for raw in adapter.fetch(city=city, bbox=bbox, limit=limit):
+            if with_website and not raw.website:
+                counts["skipped_no_website"] += 1
+                continue
             matches = [m for m in self._match(raw) if m[2] >= min_conf]
             if not matches:
                 unmapped[self._unmapped_signature(raw)] += 1
@@ -133,6 +142,8 @@ class Command(BaseCommand):
                 "address_country": raw.address.get("country", ""),
                 "opening_hours_raw": raw.opening_hours_raw,
                 "opening_hours": parsed_hours,
+                "website": raw.website,
+                "phone": raw.phone,
                 "raw_tags": raw.tags,
                 "last_seen_at": timezone.now(),
             }
@@ -186,6 +197,13 @@ class Command(BaseCommand):
             canonical.opening_hours_raw = raw.opening_hours_raw
             canonical.opening_hours = defaults["opening_hours"]
             update_fields += ["opening_hours_raw", "opening_hours"]
+        # Backfill contact details from the secondary source if missing.
+        if not canonical.website and raw.website:
+            canonical.website = raw.website
+            update_fields.append("website")
+        if not canonical.phone and raw.phone:
+            canonical.phone = raw.phone
+            update_fields.append("phone")
         canonical.save(update_fields=update_fields)
 
     @staticmethod

@@ -14,8 +14,22 @@ SELECTORS = [
     '["leisure"="sports_centre"]',
     '["leisure"="playground"]',
     '["leisure"="amusement_arcade"]',
+    # Parks & green public spaces where activities happen outdoors.
+    '["leisure"="park"]',
+    '["leisure"="garden"]',
+    '["leisure"="nature_reserve"]',
+    '["leisure"="dog_park"]',
+    # Reservation-friendly venues (often have a website/phone).
+    '["leisure"="fitness_centre"]',
+    '["leisure"="swimming_pool"]',
+    '["leisure"="sports_hall"]',
+    '["leisure"="stadium"]',
+    # Public/cultural places known for activities.
     '["amenity"="library"]',
     '["amenity"="community_centre"]',
+    '["amenity"="arts_centre"]',
+    '["amenity"="theatre"]',
+    '["amenity"="public_bookcase"]',
     '["amenity"="table_tennis_table"]',
     '["amenity"="internet_cafe"]',
     '["amenity"="cafe"]["board_games"]',
@@ -109,6 +123,14 @@ class OverpassAdapter(SourceAdapter):
             "postcode": tags.get("addr:postcode", ""),
             "country": tags.get("addr:country", ""),
         }
+        website = (
+            tags.get("website")
+            or tags.get("contact:website")
+            or tags.get("url")
+            or tags.get("contact:url")
+            or ""
+        )
+        phone = tags.get("phone") or tags.get("contact:phone") or ""
         return RawPlace(
             source="osm",
             osm_type=element_type,
@@ -119,6 +141,8 @@ class OverpassAdapter(SourceAdapter):
             tags=tags,
             address=address,
             opening_hours_raw=tags.get("opening_hours", ""),
+            website=website,
+            phone=phone,
         )
 
     def fetch(self, *, city=None, bbox=None, limit=None) -> Iterator[RawPlace]:
