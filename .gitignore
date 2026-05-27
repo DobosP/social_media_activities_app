@@ -17,6 +17,8 @@ local_settings.py
 db.sqlite3
 /staticfiles/
 /media/
+# Local media blob store (D6 LocalStorageBackend default MEDIA_ROOT)
+/media_store/
 
 # Env / secrets
 .env

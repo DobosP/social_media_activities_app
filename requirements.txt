@@ -90,6 +90,8 @@ packaging==26.2
     # via
     #   gunicorn
     #   incremental
+pillow==12.2.0
+    # via -r requirements.in
 psycopg[binary]==3.3.4
     # via -r requirements.in
 psycopg-binary==3.3.4

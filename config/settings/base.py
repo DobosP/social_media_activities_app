@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "apps.safety",
     "apps.chat",
     "apps.booking",
+    "apps.media",
 ]
 
 MIDDLEWARE = [
@@ -161,3 +162,15 @@ CHAT_RATE_LIMIT = env.int("CHAT_RATE_LIMIT", default=30)
 CHAT_RATE_WINDOW_SECONDS = env.int("CHAT_RATE_WINDOW_SECONDS", default=60)
 # 0 disables time-based purging; set a positive number of days to enable retention.
 CHAT_RETENTION_DAYS = env.int("CHAT_RETENTION_DAYS", default=0)
+
+# --- D6 media (profile pictures + private thread photos) ---
+# Blobs live in object storage, not Postgres. Default is local filesystem for
+# dev/CI; production sets an S3-compatible backend (Cloudflare R2 / MinIO).
+MEDIA_STORAGE_BACKEND = env(
+    "MEDIA_STORAGE_BACKEND", default="apps.media.storage.LocalStorageBackend"
+)
+MEDIA_ROOT = env("MEDIA_ROOT", default=str(BASE_DIR / "media_store"))
+MEDIA_MAX_BYTES = env.int("MEDIA_MAX_BYTES", default=5 * 1024 * 1024)
+# Safety screening run before an image is visible (CSAM hash-match seam, where lawful).
+MEDIA_IMAGE_SCANNER = env("MEDIA_IMAGE_SCANNER", default="apps.media.scanning.HashBlocklistScanner")
+MEDIA_HASH_BLOCKLIST = env.list("MEDIA_HASH_BLOCKLIST", default=[])

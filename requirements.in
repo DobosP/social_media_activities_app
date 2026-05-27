@@ -21,3 +21,5 @@ duckdb>=1.1
 # D5: real-time chat over WebSockets via Channels (ASGI); daphne serves the ASGI app.
 channels>=4.2
 daphne>=4.1
+# D6: image validation + EXIF/GPS stripping for media uploads.
+Pillow>=11.0
