@@ -47,7 +47,7 @@ planned in **[PHASE_2_PLAN](PHASE_2_PLAN.md)** — claim a track there.
 
 | Track | Branch | Status | Session | Owns (paths) | Depends on (merged) |
 |------|--------|--------|---------|--------------|---------------------|
-| **P1** discovery & feed API | `claude/p1-discovery` | _unclaimed_ | — | `apps/discovery/` (new); read-only views over places/events/activities | D3, D7, events |
+| **P1** discovery & feed API | `claude/p1-discovery` | in-review | `claude/p1-discovery` | `apps/discovery/` (new); read-only views over places/events/activities | D3, D7, events |
 | **P2** live data adapters | `claude/p2-live-data` | _unclaimed_ | — | `apps/ingestion/sources/` (Foursquare, Ticketmaster, Wikidata, Geofabrik) | D7, events |
 | **P3** recommendations | `claude/p3-recommend` | _unclaimed_ | — | `apps/discovery/` ranking; interest similarity (pgvector) | P1 |
 | **P4** notifications | `claude/p4-notify` | _unclaimed_ | — | `apps/notifications/` (new); opt-in, no tracking | D3, D5 |

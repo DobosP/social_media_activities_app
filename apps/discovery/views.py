@@ -1,0 +1,112 @@
+from django.contrib.gis.db.models.functions import Distance
+from django.contrib.gis.measure import D
+from django.utils import timezone
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from apps.events.models import Event
+from apps.places.models import Place
+
+from .proximity import apply_proximity, parse_point
+from .serializers import ActivityCardSerializer, EventCardSerializer, PlaceCardSerializer
+
+# Discovery feeds are read-only projections over existing data. Place/event data is
+# public; the activities feed is cohort-scoped + block-aware (reuses social.services).
+
+MAX_RESULTS = 100
+
+
+def _truthy(params, key) -> bool:
+    return params.get(key, "").lower() in ("1", "true", "yes")
+
+
+class NearMeView(APIView):
+    """Places near a point, filterable by activity and venue traits.
+
+    Filters: ?activity=<slug>, ?bookable=true, ?wellness=true, ?family_friendly=true,
+    ?has_events=true, ?near_lon=&near_lat=&radius_m=.
+    """
+
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        p = request.query_params
+        qs = Place.objects.prefetch_related("place_activities__activity")
+        if activity := p.get("activity"):
+            qs = qs.filter(place_activities__activity__slug=activity)
+        if _truthy(p, "bookable"):
+            qs = qs.exclude(website="")
+        if _truthy(p, "wellness"):
+            qs = qs.filter(place_activities__activity__wellness=True)
+        if _truthy(p, "family_friendly"):
+            qs = qs.filter(place_activities__activity__family_friendly=True)
+        if _truthy(p, "has_events"):
+            qs = qs.filter(events__starts_at__gte=timezone.now())
+
+        qs = qs.distinct()
+        qs, point = apply_proximity(qs, p)
+        if point is None:
+            qs = qs.order_by("id")
+        return Response(PlaceCardSerializer(qs[:MAX_RESULTS], many=True).data)
+
+
+class HappeningView(APIView):
+    """Upcoming events ("what's happening"), optionally near a point / by activity.
+
+    Filters: ?activity=<slug>, ?days=<n>, ?near_lon=&near_lat=&radius_m=.
+    """
+
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        p = request.query_params
+        now = timezone.now()
+        qs = Event.objects.select_related("place", "activity_type").filter(starts_at__gte=now)
+        if activity := p.get("activity"):
+            qs = qs.filter(activity_type__slug=activity)
+        if days := p.get("days"):
+            try:
+                qs = qs.filter(starts_at__lte=now + timezone.timedelta(days=int(days)))
+            except (TypeError, ValueError):
+                pass
+
+        point = parse_point(p)
+        if point is not None:
+            qs = qs.filter(place__isnull=False).annotate(
+                distance=Distance("place__location", point)
+            )
+            if radius_m := p.get("radius_m"):
+                try:
+                    qs = qs.filter(place__location__distance_lte=(point, D(m=float(radius_m))))
+                except (TypeError, ValueError):
+                    pass
+        # Chronological feed regardless of proximity (nearest-soonest stays useful).
+        qs = qs.order_by("starts_at")
+        return Response(EventCardSerializer(qs[:MAX_RESULTS], many=True).data)
+
+
+class ActivitiesFeedView(APIView):
+    """Upcoming activities the user may join — cohort-scoped and block-aware.
+
+    Filters: ?activity=<slug>, ?near_lon=&near_lat=&radius_m=.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from apps.social.models import Activity
+        from apps.social.services import visible_activities
+
+        p = request.query_params
+        qs = (
+            visible_activities(request.user)
+            .filter(status=Activity.Status.OPEN, starts_at__gte=timezone.now())
+            .select_related("activity_type", "place")
+        )
+        if activity := p.get("activity"):
+            qs = qs.filter(activity_type__slug=activity)
+        qs, point = apply_proximity(qs, p, field="place__location")
+        if point is None:
+            qs = qs.order_by("starts_at")
+        return Response(ActivityCardSerializer(qs[:MAX_RESULTS], many=True).data)
