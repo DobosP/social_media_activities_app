@@ -50,6 +50,34 @@ MAPPING: list[TagRule] = [
     TagRule("arcade", {"leisure": "amusement_arcade"}, "video_games", 0.8),
     TagRule("video_shop", {"shop": "video_games"}, "video_games", 0.7),
     TagRule("internet_cafe", {"amenity": "internet_cafe"}, "video_games", 0.5),
+    # Running / athletics
+    TagRule("running_track", {"leisure": "track"}, "running", 0.7),
+    TagRule("athletics", {"sport": "athletics"}, "running", 0.7),
+    TagRule("running_sport", {"sport": "running"}, "running", 0.8),
+    # Cycling
+    TagRule("cycling_sport", {"sport": "cycling"}, "cycling", 0.7),
+    TagRule("mtb_sport", {"sport": "mtb"}, "mountain_biking", 0.8),
+    # Hiking / outdoor routes
+    TagRule("hiking_route", {"route": "hiking"}, "hiking", 0.8),
+    TagRule("hiking_sport", {"sport": "hiking"}, "hiking", 0.7),
+    # Swimming
+    TagRule("swimming_pool", {"leisure": "swimming_pool"}, "swimming", 0.7),
+    TagRule("swimming_sport", {"sport": "swimming"}, "swimming", 0.8),
+    # Climbing
+    TagRule("climbing_sport", {"sport": "climbing"}, "climbing", 0.85),
+    # Volleyball / handball / badminton
+    TagRule("volleyball_pitch", {"leisure": "pitch", "sport": "volleyball"}, "volleyball", 0.9),
+    TagRule("volleyball_sport", {"sport": "volleyball"}, "volleyball", 0.7),
+    TagRule("handball_pitch", {"leisure": "pitch", "sport": "handball"}, "handball", 0.9),
+    TagRule("handball_sport", {"sport": "handball"}, "handball", 0.7),
+    TagRule("badminton_sport", {"sport": "badminton"}, "badminton", 0.8),
+    # Fitness & wellness
+    TagRule("fitness_centre", {"leisure": "fitness_centre"}, "group_fitness", 0.6),
+    TagRule("fitness_sport", {"sport": "fitness"}, "group_fitness", 0.6),
+    TagRule("yoga_sport", {"sport": "yoga"}, "yoga", 0.7),
+    # Culture & community venues
+    TagRule("museum", {"tourism": "museum"}, "museum_visit", 0.8),
+    TagRule("theatre", {"amenity": "theatre"}, "theatre_show", 0.8),
 ]
 
 # Venues that imply several activities but name no specific sport. Emitted at
@@ -63,9 +91,14 @@ GENERIC_VENUES: dict[str, tuple[dict, list[str], float]] = {
     ),
     "community_centre": ({"amenity": "community_centre"}, ["board_games", "reading"], 0.3),
     "playground": ({"leisure": "playground"}, ["football", "basketball"], 0.2),
-    # Parks host casual outdoor games (street ball, kickabouts, park chess tables).
-    "park": ({"leisure": "park"}, ["football", "basketball", "streetball", "chess"], 0.2),
-    "arts_centre": ({"amenity": "arts_centre"}, ["board_games", "reading"], 0.25),
+    # Parks host casual outdoor games and are natural running/cycling spots.
+    "park": (
+        {"leisure": "park"},
+        ["football", "basketball", "streetball", "chess", "running", "cycling"],
+        0.2,
+    ),
+    "nature_reserve": ({"leisure": "nature_reserve"}, ["hiking", "running"], 0.3),
+    "arts_centre": ({"amenity": "arts_centre"}, ["workshop", "dance_social", "board_games"], 0.25),
 }
 
 
