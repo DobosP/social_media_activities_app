@@ -33,8 +33,8 @@ everyone can read this file on `main`.
 | Track | Branch | Status | Session | Owns (paths) | Depends on (merged) |
 |------|--------|--------|---------|--------------|---------------------|
 | **D8** booking | `claude/d8-booking` | in-review | integrator | `apps/booking/` (new) | D3, D7 |
-| **D6** media | `claude/d6-media` | available | — | `apps/media/` | D3, D4 |
-| **D5** chat | `claude/d5-chat` | available | — | `apps/chat/`, `config/asgi.py` | D3, D4 |
+| **D6** media | `claude/d6-media` | in-review | `claude/d6-media` | `apps/media/` | D3, D4 |
+| **D5** chat | `claude/d5-chat` | in-review | `claude/d5-chat` | `apps/chat/`, `config/asgi.py` | D3, D4 |
 | **D9** nonprofit/ops/launch | `claude/d9-ops` | blocked | — | deploy, donations, observability | D5, D6, D8 |
 
 ## Shared edit points (coordinate / keep minimal)
