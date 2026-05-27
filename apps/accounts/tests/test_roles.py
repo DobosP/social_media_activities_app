@@ -63,3 +63,31 @@ def test_me_endpoint_exposes_role_and_guardian_flag():
     data = client.get("/api/accounts/me/").json()
     assert data["role"] == Role.USER
     assert data["is_guardian"] is True
+
+
+def test_guardian_lists_and_manages_ward_account():
+    guardian = _user("p3")
+    child = _user("k3", band=AgeBand.UNDER_16)
+    link_guardian(guardian, child)
+    client = APIClient()
+    client.force_authenticate(guardian)
+
+    listing = client.get("/api/accounts/wards/").json()
+    assert [w["username"] for w in listing] == ["k3"]
+
+    resp = client.patch(
+        f"/api/accounts/wards/{child.public_id}/",
+        {"display_name": "Kiddo"},
+        format="json",
+    )
+    assert resp.status_code == 200
+    child.refresh_from_db()
+    assert child.display_name == "Kiddo"
+
+
+def test_non_guardian_cannot_access_ward():
+    other = _user("stranger")
+    child = _user("k4", band=AgeBand.UNDER_16)
+    client = APIClient()
+    client.force_authenticate(other)
+    assert client.get(f"/api/accounts/wards/{child.public_id}/").status_code == 403

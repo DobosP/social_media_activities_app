@@ -4,13 +4,14 @@ from apps.places.models import Place
 from apps.taxonomy.models import ActivityType
 
 from .models import Activity, Membership, Post
-from .services import current_members
+from .services import current_members, open_positions
 
 
 class ActivitySerializer(serializers.ModelSerializer):
     owner = serializers.CharField(source="owner.display_name", read_only=True)
     activity_type = serializers.SlugRelatedField(slug_field="slug", read_only=True)
     member_count = serializers.SerializerMethodField()
+    open_positions = serializers.SerializerMethodField()
 
     class Meta:
         model = Activity
@@ -30,12 +31,16 @@ class ActivitySerializer(serializers.ModelSerializer):
             "status",
             "guardian_accompanied",
             "member_count",
+            "open_positions",
             "created_at",
         ]
         read_only_fields = fields
 
     def get_member_count(self, obj) -> int:
         return current_members(obj).count()
+
+    def get_open_positions(self, obj) -> int | None:
+        return open_positions(obj)
 
 
 class ActivityCreateSerializer(serializers.Serializer):

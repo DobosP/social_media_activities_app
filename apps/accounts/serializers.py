@@ -26,3 +26,32 @@ class MeSerializer(serializers.ModelSerializer):
 
     def get_can_participate(self, obj) -> bool:
         return can_participate(obj)
+
+
+class WardSerializer(serializers.ModelSerializer):
+    """A minor's profile, as seen/managed by their guardian."""
+
+    can_participate = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = [
+            "public_id",
+            "username",
+            "display_name",
+            "age_band",
+            "cohort",
+            "is_active",
+            "can_participate",
+        ]
+        read_only_fields = [
+            "public_id",
+            "username",
+            "age_band",
+            "cohort",
+            "is_active",
+            "can_participate",
+        ]
+
+    def get_can_participate(self, obj) -> bool:
+        return can_participate(obj)
