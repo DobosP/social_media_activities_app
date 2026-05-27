@@ -99,7 +99,7 @@ These thread through multiple deliverables. Skipping them creates rework or lega
   scoped to one city); read-only GeoJSON + taxonomy APIs; admin map; Docker; tests.
 - **Definition of done.** ✅ All met — see repo `README.md`.
 
-## D2 · Identity, accounts & consent ▶️ (in progress)
+## D2 · Identity, accounts & consent ✅ (shipped)
 
 > **Scaffold landed** (branch `claude/d2-identity-accounts`): custom `accounts.User` (IS-1),
 > `AgeBand`/`Cohort`, `ParentalConsent` + `AgeAssurance` models, the pluggable `IdentityProvider`
@@ -124,7 +124,7 @@ These thread through multiple deliverables. Skipping them creates rework or lega
   cannot use the service without a validated parental consent record; age band + cohort are
   available to other apps via a stable interface. See [COMPLIANCE](COMPLIANCE.md).
 
-## D3 · Social core — threads, activities, join-by-vote ⏳
+## D3 · Social core — threads, activities, join-by-vote ✅ (shipped)
 
 - **Goal.** The actual product loop: organize an activity at a place, with a thread, and a
   democratic way to let new people in.
@@ -145,7 +145,7 @@ These thread through multiple deliverables. Skipping them creates rework or lega
   in its thread, and a new member can be admitted only via the voting threshold; a user-proposed
   place needs the quorum before going public.
 
-## D4 · Safety & moderation ⏳ (parallels D3)
+## D4 · Safety & moderation ✅ (shipped)
 
 - **Goal.** Make it a genuinely safe place for children — the core promise.
 - **Scope.**
@@ -158,7 +158,7 @@ These thread through multiple deliverables. Skipping them creates rework or lega
 - **Definition of done.** Users can report/block; moderators can action reports from a queue;
   cohort isolation is verifiably enforced; safety events are audit-logged. See [SAFETY](SAFETY.md).
 
-## D5 · Chat ⏳
+## D5 · Chat ✅ (shipped)
 
 - **Goal.** Real-time conversation **inside an activity thread**, private to its members.
 - **Scope.** ASGI/Channels consumers over the `config/asgi.py` seam; per-thread rooms scoped to
@@ -169,7 +169,7 @@ These thread through multiple deliverables. Skipping them creates rework or lega
   cannot; messages are moderatable; the scanning/encryption strategy is a documented, swappable
   policy.
 
-## D6 · Media — profile + private thread photos ⏳
+## D6 · Media — profile + private thread photos ✅ (shipped)
 
 - **Goal.** The *only* images in the product: one profile picture, and photos shared **privately
   inside an activity thread** (visible only to that thread's members). No public photo feed.
@@ -181,7 +181,7 @@ These thread through multiple deliverables. Skipping them creates rework or lega
 - **Definition of done.** A user can set a profile picture and post photos in a thread that only
   members can see; uploads are size-limited, metadata-stripped, and safety-screened.
 
-## D7 · Richer location data & discovery ⏳
+## D7 · Richer location data & discovery ✅ (shipped)
 
 - **Goal.** Better coverage + "what's around me / is it open / is something happening there",
   reducing the need for users to create places.
@@ -195,7 +195,7 @@ These thread through multiple deliverables. Skipping them creates rework or lega
 - **Definition of done.** A user gets relevant nearby suggestions with open/closed status where
   available; duplicate places across sources are merged; recommendations reflect interests.
 
-## D8 · Booking integration ⏳
+## D8 · Booking integration ✅ (shipped)
 
 - **Goal.** Make appointments/bookings **through the app** where providers allow.
 - **Scope.** A `BookingProvider` adapter interface; **deep-links first** ("how to book"); then
@@ -206,7 +206,7 @@ These thread through multiple deliverables. Skipping them creates rework or lega
 - **Definition of done.** For at least one integrated provider, a user can initiate/confirm a
   booking tied to an activity; all other places fall back to deep-links.
 
-## D9 · Nonprofit, ops & launch ⏳
+## D9 · Nonprofit, ops & launch ✅ (shipped)
 
 - **Goal.** Sustainable, compliant, public launch — starting in one Romanian city.
 - **Scope.**
@@ -220,6 +220,37 @@ These thread through multiple deliverables. Skipping them creates rework or lega
 - **Depends on.** D5, D6, D8 (and the cross-cutting steps).
 - **Definition of done.** The app is publicly usable by a cohort of real users in one city,
   donation-funded, with compliance artifacts complete and ops runbooks in place.
+
+---
+
+## Delivered status (all core deliverables shipped) ✅
+
+**D1–D9 are all merged to `main`** with a green CI gate (ruff, format, migrations,
+~209 tests, pip-audit, Docker build). On top of the original deliverables, these
+cross-cutting enhancements have also shipped:
+
+- **Data sources & registry** — provider investigation in
+  [DATA_PROVIDERS](DATA_PROVIDERS.md); collection focused on parks, libraries,
+  archives/used-bookshops, and reservation-capable venues (website + GPS captured,
+  with `is_bookable`). Overture + Foursquare-ready parquet seam; Wikidata/Geofabrik
+  identified as no-key wins.
+- **Events** — `apps/events`: venue **iCalendar** feeds + auto-classification of
+  events to activity types (`festival`, `city_day`, `marathon`, …); `/api/events/`.
+- **Activity taxonomy v2** — endurance/outdoor (running, marathon, hiking, cycling…),
+  fitness/wellness, and participatory culture (festivals, city days, concerts), with
+  `wellness` and `family_friendly` traits.
+- **Guardian-accompanied child activities** — under-16 may take part with a verified
+  adult guardian (supervisory, group-only; guardians don't vote, no cross-cohort
+  discovery).
+- **Safety hardening** — blocking enforced in discovery; staff moderation API;
+  suspension auto-expiry; hash-chained audit log.
+- **Launch readiness** — donations (no ads/tracking), `/healthz` + aggregate stats,
+  ASGI prod, **Render one-blueprint deploy**, runbook + release-readiness gate.
+
+**What remains is not new features but go-live work** — see the next phase plan in
+[PHASE_2_PLAN](PHASE_2_PLAN.md): real provider keys (Foursquare/Ticketmaster/Google),
+legal/compliance sign-off (DPIA, ToS, DSA), a security review, and the discovery/UX
+layer that ties places + events + activities together.
 
 ---
 

@@ -28,16 +28,32 @@ everyone can read this file on `main`.
 | D8 — booking | ✅ merged | BookingProvider adapters, deep-links, bookings tied to activities |
 | D6 — media | ✅ merged | profile + private thread photos, EXIF/GPS stripping, safety scan, signed URLs |
 | D9 — nonprofit/ops/launch | ✅ merged | donations (no ads/tracking), `/healthz` + aggregate stats, ASGI prod, runbook + release gate |
+| Data sources & collection | ✅ merged | parks/libraries/archives/reservation venues; website+GPS; provider registry ([DATA_PROVIDERS](DATA_PROVIDERS.md)) |
+| Events | ✅ merged | iCal feeds + event→activity classification; `/api/events/` |
+| Activity taxonomy v2 | ✅ merged | endurance/outdoor, fitness, culture; `wellness` + `family_friendly` traits |
+| Guardian-accompanied activities | ✅ merged | child + verified-adult guardian (supervisory, group-only) |
+| Render deploy | ✅ merged | one-blueprint hosting (web + PostGIS) + WhiteNoise static |
 
-## Active / available tracks
+## 🎉 Phase 1 complete — all roadmap deliverables (D1–D9) + enhancements are on `main`
 
-> 🎉 **All roadmap deliverables (D1–D9) are merged to `main`.** Engineering launch-gate
-> controls are complete; remaining work is deployment provisioning + legal/compliance
-> sign-off — see [RELEASE_READINESS](RELEASE_READINESS.md).
+CI is green (ruff, format, migrations, ~209 tests, pip-audit, Docker build). What's
+left is **go-live + the experience layer**, not new core systems. The next phase is
+planned in **[PHASE_2_PLAN](PHASE_2_PLAN.md)** — claim a track there.
+
+## Active / available tracks (Phase 2 — see PHASE_2_PLAN.md)
+
+> Claim a row (branch + status) in your first commit. "Depends on" lists tracks that
+> must be **merged to `main`** first. Most are independent → high parallelism.
 
 | Track | Branch | Status | Session | Owns (paths) | Depends on (merged) |
 |------|--------|--------|---------|--------------|---------------------|
-| _none_ | — | — | — | — | — |
+| **P1** discovery & feed API | `claude/p1-discovery` | _unclaimed_ | — | `apps/discovery/` (new); read-only views over places/events/activities | D3, D7, events |
+| **P2** live data adapters | `claude/p2-live-data` | _unclaimed_ | — | `apps/ingestion/sources/` (Foursquare, Ticketmaster, Wikidata, Geofabrik) | D7, events |
+| **P3** recommendations | `claude/p3-recommend` | _unclaimed_ | — | `apps/discovery/` ranking; interest similarity (pgvector) | P1 |
+| **P4** notifications | `claude/p4-notify` | _unclaimed_ | — | `apps/notifications/` (new); opt-in, no tracking | D3, D5 |
+| **P5** compliance & legal | `claude/p5-compliance` | _unclaimed_ | — | `docs/` (DPIA, ToS, Privacy, DSA), consent UX | D2, D4 |
+| **P6** i18n (RO/EN) | `claude/p6-i18n` | _unclaimed_ | — | `locale/`, DRF/Django i18n wiring | — |
+| **P7** security review | `claude/p7-security` | _unclaimed_ | — | threat model, pen-test fixes, rate-limit coverage | D4, D9 |
 
 ## Shared edit points (coordinate / keep minimal)
 
