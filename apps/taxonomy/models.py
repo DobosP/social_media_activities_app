@@ -51,6 +51,10 @@ class ActivityType(models.Model):
     )
     aliases = models.JSONField(default=list, blank=True)
     is_active = models.BooleanField(default=True)
+    # Active/healthy activity (sport, outdoor, fitness) — for surfacing "healthier" options.
+    wellness = models.BooleanField(default=False)
+    # Suitable for under-16 when accompanied by a parent/guardian.
+    family_friendly = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
