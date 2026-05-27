@@ -1,9 +1,15 @@
 """Production settings. ALLOWED_HOSTS / secrets come from the environment."""
 
+import copy
+
 from .base import *  # noqa: F401,F403
-from .base import MIDDLEWARE, env
+from .base import DATABASES, MIDDLEWARE, env
 
 DEBUG = False
+
+# Work on our own copy so prod-only DB tweaks below never mutate the dict shared
+# with base/test settings (importing this module must have no side effects).
+DATABASES = copy.deepcopy(DATABASES)
 
 # Security hardening (override per-deployment via env).
 SECURE_SSL_REDIRECT = env.bool("DJANGO_SECURE_SSL_REDIRECT", default=True)
@@ -17,6 +23,15 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 # Managed Postgres (e.g. Render) hands us a `postgres://` URL; this app is PostGIS,
 # so force the GeoDjango backend regardless of the URL scheme.
 DATABASES["default"]["ENGINE"] = "django.contrib.gis.db.backends.postgis"  # noqa: F405
+
+# Production DB resilience (threat model finding #2): cap runaway queries as a DoS
+# guard, reuse connections, and health-check pooled connections (Django 4.1+).
+DATABASES["default"].setdefault("OPTIONS", {})  # noqa: F405
+DATABASES["default"]["OPTIONS"]["options"] = (  # noqa: F405
+    f"-c statement_timeout={env.int('DB_STATEMENT_TIMEOUT_MS', default=30000)}"
+)
+DATABASES["default"]["CONN_MAX_AGE"] = env.int("DB_CONN_MAX_AGE", default=60)  # noqa: F405
+DATABASES["default"]["CONN_HEALTH_CHECKS"] = True  # noqa: F405
 
 # Render injects the public hostname at runtime; trust it for hosts + CSRF.
 RENDER_EXTERNAL_HOSTNAME = env("RENDER_EXTERNAL_HOSTNAME", default="")
