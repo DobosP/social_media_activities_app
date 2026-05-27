@@ -1,0 +1,15 @@
+# Opens update PRs for review (we do NOT auto-merge security bumps — see
+# docs/SECURITY.md). Keeps pinned deps and GitHub Actions current.
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    labels: ["dependencies"]
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    labels: ["ci"]
