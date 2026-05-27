@@ -32,6 +32,7 @@ SELECTORS = [
     '["route"="bicycle"]',
     # Public/cultural places known for activities.
     '["amenity"="library"]',
+    '["amenity"="archive"]',
     '["amenity"="community_centre"]',
     '["amenity"="arts_centre"]',
     '["amenity"="theatre"]',
