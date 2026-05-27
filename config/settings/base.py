@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "apps.media",
     "apps.donations",
     "apps.ops",
+    "apps.events",
 ]
 
 MIDDLEWARE = [
