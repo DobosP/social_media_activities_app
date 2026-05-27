@@ -1,0 +1,148 @@
+"""Safety & moderation domain logic: reporting, blocking, moderation actions, a
+tamper-evident audit log, and a lightweight rate limiter. See docs/SAFETY.md."""
+
+import hashlib
+import json
+
+from django.contrib.contenttypes.models import ContentType
+from django.core.cache import cache
+from django.db import transaction
+from django.db.models import Q
+from django.utils import timezone
+
+from .models import AuditLog, Block, ModerationAction, Report
+
+
+def _canonical(actor_id, event, target_ref, data, created_iso) -> str:
+    payload = json.dumps(
+        {
+            "actor": actor_id,
+            "event": event,
+            "target": target_ref,
+            "data": data,
+            "created": created_iso,
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    return hashlib.sha256(payload.encode()).hexdigest()
+
+
+@transaction.atomic
+def record_audit(event: str, *, actor=None, target=None, **data) -> AuditLog:
+    """Append a hash-chained audit entry. Serialized via a row lock on the prior tail."""
+    prev = AuditLog.objects.select_for_update().order_by("-id").first()
+    prev_hash = prev.hash if prev else ""
+    target_ref = ""
+    if target is not None:
+        ct = ContentType.objects.get_for_model(target)
+        target_ref = f"{ct.app_label}.{ct.model}:{target.pk}"
+    created = timezone.now()
+    digest = _canonical(actor.id if actor else None, event, target_ref, data, created.isoformat())
+    chained = hashlib.sha256((prev_hash + digest).encode()).hexdigest()
+    return AuditLog.objects.create(
+        actor=actor,
+        event=event,
+        target_ref=target_ref,
+        data=data,
+        created_at=created,
+        prev_hash=prev_hash,
+        hash=chained,
+    )
+
+
+def verify_audit_chain() -> bool:
+    """Recompute the chain; returns False if any row was tampered with or removed."""
+    prev_hash = ""
+    for row in AuditLog.objects.order_by("id"):
+        digest = _canonical(
+            row.actor_id, row.event, row.target_ref, row.data, row.created_at.isoformat()
+        )
+        expected = hashlib.sha256((prev_hash + digest).encode()).hexdigest()
+        if row.prev_hash != prev_hash or row.hash != expected:
+            return False
+        prev_hash = row.hash
+    return True
+
+
+@transaction.atomic
+def file_report(reporter, target, reason, detail="") -> Report:
+    ct = ContentType.objects.get_for_model(target)
+    report = Report.objects.create(
+        reporter=reporter,
+        target_type=ct,
+        target_id=target.pk,
+        reason=reason,
+        detail=detail,
+    )
+    record_audit("report.filed", actor=reporter, target=target, reason=reason)
+    return report
+
+
+@transaction.atomic
+def block_user(blocker, blocked) -> Block:
+    if blocker.id == blocked.id:
+        raise ValueError("A user cannot block themselves.")
+    block, created = Block.objects.get_or_create(blocker=blocker, blocked=blocked)
+    if created:
+        record_audit("user.blocked", actor=blocker, target=blocked)
+    return block
+
+
+def unblock_user(blocker, blocked) -> None:
+    deleted, _ = Block.objects.filter(blocker=blocker, blocked=blocked).delete()
+    if deleted:
+        record_audit("user.unblocked", actor=blocker, target=blocked)
+
+
+def is_blocked(viewer, other) -> bool:
+    """True if either user has blocked the other (interaction is suppressed both ways)."""
+    return Block.objects.filter(
+        Q(blocker=viewer, blocked=other) | Q(blocker=other, blocked=viewer)
+    ).exists()
+
+
+@transaction.atomic
+def take_action(moderator, target, action, reason, *, notes="", report=None, expires_at=None):
+    """Apply a moderation action and record it. Suspend/ban deactivate the target user."""
+    record = ModerationAction.objects.create(
+        moderator=moderator,
+        target_type=ContentType.objects.get_for_model(target),
+        target_id=target.pk,
+        action=action,
+        reason=reason,
+        notes=notes,
+        report=report,
+        expires_at=expires_at,
+    )
+    if action in (ModerationAction.Action.SUSPEND, ModerationAction.Action.BAN):
+        # Deactivating blocks auth/login for the offending account.
+        if hasattr(target, "is_active"):
+            target.is_active = False
+            target.save(update_fields=["is_active"])
+    if report is not None:
+        report.status = Report.Status.ACTIONED
+        report.handled_by = moderator
+        report.handled_at = timezone.now()
+        report.save(update_fields=["status", "handled_by", "handled_at"])
+    record_audit(
+        "moderation.action",
+        actor=moderator,
+        target=target,
+        action=action,
+        reason=reason,
+    )
+    return record
+
+
+def allow_action(user, action: str, *, limit: int, window_seconds: int) -> bool:
+    """Simple fixed-window rate limiter (anti-abuse). Returns False when over the limit."""
+    key = f"ratelimit:{action}:{user.id}"
+    count = cache.get_or_set(key, 0, window_seconds)
+    if count >= limit:
+        return False
+    try:
+        cache.incr(key)
+    except ValueError:
+        cache.set(key, 1, window_seconds)
+    return True
