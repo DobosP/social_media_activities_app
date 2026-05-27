@@ -1,15 +1,18 @@
-# Runtime
-Django>=5.1,<5.2
-djangorestframework>=3.15,<3.16
-djangorestframework-gis>=1.1
-django-filter>=24.3
-django-environ>=0.11
+# Runtime dependencies (production). Dev/test tools live in requirements-dev.in so
+# they are NOT shipped in the production image (smaller surface area).
+#
+# Dependency-security policy (see docs/SECURITY.md):
+#   - requirements*.txt are fully pinned (compiled); we do NOT float/auto-update.
+#   - We track the latest *secure* releases and bump deliberately after review.
+#   - `pip-audit` must pass before every release.
+#   - Django is pinned to the 5.2 LTS line for the longest security-support window.
+
+Django>=5.2,<5.3
+djangorestframework>=3.17,<3.18
+djangorestframework-gis>=1.2
+django-filter>=25.2
+django-environ>=0.13
 psycopg[binary]>=3.2
 requests>=2.32
-drf-spectacular>=0.27
+drf-spectacular>=0.29
 gunicorn>=23.0
-
-# Dev / test
-pytest>=8.3
-pytest-django>=4.9
-ruff>=0.6

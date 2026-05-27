@@ -6,7 +6,8 @@ vision, slots each into a deliverable, sequences them by dependency, and calls o
 but are required to glue the product together safely.
 
 See also: [ARCHITECTURE](ARCHITECTURE.md) · [COMPLIANCE](COMPLIANCE.md) ·
-[SAFETY](SAFETY.md) · [DATA_AND_INTEGRATIONS](DATA_AND_INTEGRATIONS.md)
+[SAFETY](SAFETY.md) · [SECURITY](SECURITY.md) · [DATA_AND_INTEGRATIONS](DATA_AND_INTEGRATIONS.md) ·
+[MULTI_AGENT_BUILD](MULTI_AGENT_BUILD.md) (how to build this in parallel)
 
 ## Vision & principles
 
@@ -70,8 +71,9 @@ These thread through multiple deliverables. Skipping them creates rework or lega
   very start of D2, *before* any app references users. Changing the user model after tables
   reference it is extremely painful in Django. D1 deliberately left only `# FUTURE:` user FKs.
 - **IS-2 · CI & quality gates.** GitHub Actions running `ruff`, `pytest`, `makemigrations
-  --check`, and a Docker build; pre-commit; dependency updates (Dependabot/Renovate); secret
-  scanning. Land before multi-developer / multiplayer features (start of D2).
+  --check`, **`pip-audit`**, and a Docker build; pre-commit; dependency updates
+  (Dependabot/Renovate, review-then-merge); secret scanning. Land before multi-developer /
+  multiplayer features (start of D2). Dependency policy: [SECURITY](SECURITY.md).
 - **IS-3 · EU data residency from day one.** First real deploy must be EU-hosted (e.g. Hetzner
   EU, or an EU region of a managed provider). Non-negotiable for GDPR + children's data.
 - **IS-4 · Legal gates before processing children's data.** A **DPIA** (GDPR Art. 35),

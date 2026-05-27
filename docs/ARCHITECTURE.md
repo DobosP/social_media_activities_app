@@ -10,7 +10,9 @@ already exist. See [ROADMAP](ROADMAP.md) for sequencing.
   (the few images) are the only thing that leave Postgres — they go to S3-compatible object
   storage (D6).
 - **Modular monolith.** One Django project, many focused apps under `apps/`. Cheap to run and
-  deploy; split out services only if/when a real bottleneck appears.
+  deploy; split out services only if/when a real bottleneck appears. This modularity is also what
+  lets **multiple agents build in parallel** without colliding — see
+  [MULTI_AGENT_BUILD](MULTI_AGENT_BUILD.md).
 - **Source-agnostic ingestion.** Place data arrives through `SourceAdapter`s, normalized to a
   `RawPlace`, so adding Overture/Google later doesn't touch the command logic.
 - **Provenance & confidence are first-class.** Every place and every place↔activity edge records

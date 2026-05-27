@@ -8,7 +8,9 @@ Orchestration and design docs for the Social Activities App. Start with the road
 | [ARCHITECTURE.md](ARCHITECTURE.md) | System shape today (D1) and the seams every future deliverable plugs into. |
 | [COMPLIANCE.md](COMPLIANCE.md) | EU/Romania legal landscape (eIDAS/EUDI, GDPR + Law 190, Online Age of Majority law, DSA, CSAR) and a compliance checklist mapped to deliverables. |
 | [SAFETY.md](SAFETY.md) | Child-safety-by-design: threat model, invariants, and controls per deliverable. |
+| [SECURITY.md](SECURITY.md) | Engineering & supply-chain security: the dependency-pinning/upgrade policy and the app-security baseline. |
 | [DATA_AND_INTEGRATIONS.md](DATA_AND_INTEGRATIONS.md) | Place-data sources (OSM / Overture / Google) and the booking-integration strategy. |
+| [MULTI_AGENT_BUILD.md](MULTI_AGENT_BUILD.md) | How to build with several Claude Code agents in parallel without conflicts (ownership, branches/worktrees, contracts, merge order). |
 
 Status legend used across docs: ✅ Done · ▶️ Next · ⏳ Planned · 🧊 Backlog
 

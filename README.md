@@ -33,7 +33,7 @@ Requires Postgres 16 + PostGIS and the GeoDjango native libs
 
 ```bash
 python -m venv .venv && . .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements.txt -r requirements-dev.txt   # prod installs requirements.txt only
 cp .env.example .env          # then edit DATABASE_URL
 python manage.py migrate
 python manage.py runserver
@@ -77,14 +77,19 @@ apps/ingestion/  # source adapters (overpass, overture-stub), mapping, ingest_pl
 ```bash
 pytest            # unit (mapping) + DB/API + ingestion (recorded Overpass fixture, no network)
 ruff check . && ruff format --check .
+pip-audit         # dependency vulnerability scan (release gate)
 ```
+
+Dependencies are fully pinned (compiled from `requirements*.in`) and tracked for security — see
+[`docs/SECURITY.md`](docs/SECURITY.md). Django is on the **5.2 LTS** line.
 
 ## Roadmap
 
 **Full roadmap & design docs live in [`docs/`](docs/README.md)** — the phased plan (D1–D9) with a
 dependency graph and feature traceability is in [`docs/ROADMAP.md`](docs/ROADMAP.md); see also
 [ARCHITECTURE](docs/ARCHITECTURE.md), [COMPLIANCE](docs/COMPLIANCE.md), [SAFETY](docs/SAFETY.md),
-and [DATA_AND_INTEGRATIONS](docs/DATA_AND_INTEGRATIONS.md).
+[SECURITY](docs/SECURITY.md), [DATA_AND_INTEGRATIONS](docs/DATA_AND_INTEGRATIONS.md), and
+[MULTI_AGENT_BUILD](docs/MULTI_AGENT_BUILD.md) (parallel multi-agent development).
 
 Captured for later deliverables (not built yet):
 

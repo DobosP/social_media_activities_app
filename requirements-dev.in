@@ -1,0 +1,11 @@
+# Dev/test tooling. Install alongside runtime deps:
+#   pip install -r requirements.txt -r requirements-dev.txt
+# The constraint below keeps shared/transitive deps at the same pinned versions
+# as the runtime set (no divergence between prod and dev).
+
+-c requirements.txt
+
+pytest>=8.3
+pytest-django>=4.9
+ruff>=0.6
+pip-audit>=2.7
