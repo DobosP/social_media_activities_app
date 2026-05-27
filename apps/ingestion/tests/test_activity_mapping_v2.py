@@ -42,3 +42,9 @@ def test_overture_new_categories():
     assert any(s == "group_fitness" for s, _, _ in match_overture("gym"))
     assert any(s == "museum_visit" for s, _, _ in match_overture("art_museum"))
     assert any(s == "hiking" for s, _, _ in match_overture("hiking_trail"))
+
+
+def test_school_is_a_child_activity_venue():
+    slugs = _slugs({"amenity": "school", "name": "Liceul Teoretic"})
+    assert {"football", "basketball", "running", "reading"} <= slugs
+    assert any(s == "reading" for s, _, _ in match_overture("primary_school"))

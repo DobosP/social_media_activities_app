@@ -4,10 +4,11 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.exceptions import NotFound, Throttled, ValidationError
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.accounts.permissions import IsModerator
 from apps.social.models import Activity, Post
 
 from .models import ModerationAction, Report
@@ -82,7 +83,7 @@ class BlockView(APIView):
 class ModerationReportListView(APIView):
     """Staff review queue (read API). `?status=open` filters; default lists all."""
 
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsModerator]
 
     def get(self, request):
         reports = Report.objects.order_by("-created_at")
@@ -95,7 +96,7 @@ class ModerationReportListView(APIView):
 class ResolveReportView(APIView):
     """Staff: resolve a report by dismissing it or taking a moderation action."""
 
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsModerator]
 
     def post(self, request, pk):
         report = Report.objects.filter(pk=pk).first()

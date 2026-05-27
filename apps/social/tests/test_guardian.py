@@ -4,7 +4,7 @@ from rest_framework.test import APIClient
 
 from apps.accounts.identity.base import AssuranceResult
 from apps.accounts.models import AgeBand, ParentalConsent, User
-from apps.accounts.services import apply_assurance
+from apps.accounts.services import apply_assurance, link_guardian
 from apps.places.models import Place
 from apps.social.models import Membership
 from apps.social.services import (
@@ -62,6 +62,7 @@ def test_owner_adds_verified_adult_guardian():
     child = _child("c1")
     activity = _child_activity(child, slug="ok")
     guardian = _adult("parent1")
+    link_guardian(guardian, child)
     membership = add_guardian(child, activity, guardian)
     assert membership.role == Membership.Role.GUARDIAN
     assert membership.state == Membership.State.MEMBER
@@ -73,6 +74,14 @@ def test_guardian_must_be_verified_adult():
     another_child = _child("c2b")
     with pytest.raises(NotEligible):
         add_guardian(child, activity, another_child)
+
+
+def test_unlinked_adult_cannot_be_added_as_guardian():
+    child = _child("c2c")
+    activity = _child_activity(child, slug="unlinked")
+    stranger = _adult("stranger")  # verified adult but NOT a registered guardian
+    with pytest.raises(NotEligible):
+        add_guardian(child, activity, stranger)
 
 
 def test_guardian_not_allowed_when_flag_off():
@@ -87,6 +96,7 @@ def test_guardians_do_not_count_as_voters():
     child = _child("c4")
     activity = _child_activity(child, slug="vote")
     guardian = _adult("parent4")
+    link_guardian(guardian, child)
     add_guardian(child, activity, guardian)
     # Only the child owner is a voting member; the guardian is excluded.
     assert voting_members(activity).count() == 1
@@ -103,6 +113,7 @@ def test_guardian_api_endpoint():
     child = _child("c5")
     activity = _child_activity(child, slug="api")
     guardian = _adult("parent5")
+    link_guardian(guardian, child)
     client = APIClient()
     client.force_authenticate(child)
     resp = client.post(

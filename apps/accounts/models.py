@@ -19,6 +19,15 @@ class Cohort(models.TextChoices):
     ADULT = "adult", "Adult (18+)"
 
 
+class Role(models.TextChoices):
+    """Platform access level. A *guardian* is not a role — it's any USER who has an
+    active GuardianRelationship to a minor (a parent/legal guardian)."""
+
+    USER = "user", "User"
+    MODERATOR = "moderator", "Moderator"
+    ADMIN = "admin", "Admin"
+
+
 # Romania's digital age of majority is 16, so under-16 is the consent-gated cohort.
 COHORT_BY_AGE_BAND = {
     AgeBand.UNDER_16: Cohort.CHILD,
@@ -43,6 +52,7 @@ class UserManager(BaseUserManager):
         extra.setdefault("is_staff", True)
         extra.setdefault("is_superuser", True)
         extra.setdefault("age_band", AgeBand.ADULT)
+        extra.setdefault("role", Role.ADMIN)
         if extra.get("is_staff") is not True:
             raise ValueError("Superuser must have is_staff=True.")
         if extra.get("is_superuser") is not True:
@@ -66,6 +76,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_identity_verified = models.BooleanField(default=False)
     identity_verified_at = models.DateTimeField(null=True, blank=True)
 
+    role = models.CharField(max_length=16, choices=Role.choices, default=Role.USER)
+
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)
@@ -81,6 +93,20 @@ class User(AbstractBaseUser, PermissionsMixin):
     @property
     def requires_parental_consent(self) -> bool:
         return self.age_band == AgeBand.UNDER_16
+
+    @property
+    def is_admin(self) -> bool:
+        return self.role == Role.ADMIN or self.is_superuser
+
+    @property
+    def is_moderator(self) -> bool:
+        # Admins are moderators too.
+        return self.role in (Role.MODERATOR, Role.ADMIN) or self.is_staff
+
+    @property
+    def is_guardian(self) -> bool:
+        """True if this account is a parent/legal guardian of at least one minor."""
+        return self.wards.filter(status=GuardianRelationship.Status.ACTIVE).exists()
 
     def recompute_cohort(self) -> None:
         self.cohort = COHORT_BY_AGE_BAND.get(self.age_band, Cohort.UNASSIGNED)
@@ -138,3 +164,39 @@ class ParentalConsent(models.Model):
         if self.expires_at and self.expires_at <= timezone.now():
             return False
         return True
+
+
+class GuardianRelationship(models.Model):
+    """An account-level legal-guardianship link: an adult `guardian` is the parent/
+    protector of a minor `ward`. Established alongside parental consent; lets the
+    guardian accompany/act for their child within safety rules (see docs/SAFETY.md)."""
+
+    class Status(models.TextChoices):
+        ACTIVE = "active", "Active"
+        REVOKED = "revoked", "Revoked"
+
+    guardian = models.ForeignKey(User, on_delete=models.CASCADE, related_name="wards")
+    ward = models.ForeignKey(User, on_delete=models.CASCADE, related_name="guardians")
+    relationship = models.CharField(max_length=32, blank=True)  # e.g. parent, legal_guardian
+    status = models.CharField(max_length=16, choices=Status.choices, default=Status.ACTIVE)
+    consent = models.ForeignKey(
+        ParentalConsent,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="guardian_links",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["guardian", "ward"], name="uq_guardian_ward"),
+            models.CheckConstraint(
+                condition=~models.Q(guardian=models.F("ward")), name="guardian_not_self"
+            ),
+        ]
+        indexes = [models.Index(fields=["ward", "status"])]
+
+    def __str__(self):
+        return f"{self.guardian} guards {self.ward} ({self.status})"
