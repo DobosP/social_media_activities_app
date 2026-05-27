@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "apps.safety",
     "apps.chat",
     "apps.booking",
+    "apps.media",
 ]
 
 MIDDLEWARE = [
@@ -97,6 +98,8 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+MEDIA_ROOT = env("MEDIA_ROOT", default=str(BASE_DIR / "media"))
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "accounts.User"
@@ -133,6 +136,17 @@ INGEST_USER_AGENT = env(
     "INGEST_USER_AGENT",
     default="social-activities-app/0.1 (nonprofit; contact: you@example.org)",
 )
+
+# --- D6 media ---
+# Image bytes live in object storage; the local backend is the dev/test default.
+MEDIA_STORAGE_BACKEND = env(
+    "MEDIA_STORAGE_BACKEND", default="apps.media.storage.LocalStorageBackend"
+)
+MEDIA_MAX_UPLOAD_BYTES = env.int("MEDIA_MAX_UPLOAD_BYTES", default=5 * 1024 * 1024)
+MEDIA_SIGNED_URL_TTL = env.int("MEDIA_SIGNED_URL_TTL", default=300)
+# Swappable safety-scanning posture (CSAR-dependent); default matches a hash blocklist.
+MEDIA_IMAGE_SCANNER = env("MEDIA_IMAGE_SCANNER", default="apps.media.scanning.HashBlocklistScanner")
+MEDIA_CSAM_HASH_BLOCKLIST = env.list("MEDIA_CSAM_HASH_BLOCKLIST", default=[])
 
 # D7 — richer place data.
 # Overture places parquet path/glob (local extract or the public S3 release, e.g.
