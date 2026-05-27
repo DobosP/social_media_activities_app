@@ -20,6 +20,7 @@ everyone can read this file on `main`.
 | D1 — foundation & RO place data | ✅ merged | knowledge graph, OSM ingestion, geo API |
 | IS-2 — CI / Dependabot / pre-commit | ✅ merged | gates every PR |
 | D2 — identity scaffold | ✅ merged | custom user, cohorts, consent gate, provider interface (EUDI **stub**) |
+| D3 — social core | ✅ merged | activities, threads/posts, join-by-vote, place quorum, cohort isolation |
 
 ## Active / available tracks
 
@@ -31,7 +32,7 @@ everyone can read this file on `main`.
 | **D7** richer place data | `claude/d7-place-data` | _unclaimed_ | — | `apps/ingestion/sources/`, `apps/places/` (enrichment) | D1 |
 | **D2-eudi** finish identity | `claude/d2-eudi` | _unclaimed_ | — | `apps/accounts/identity/` | D2 |
 | **D3** social core | `claude/d3-social-core` | in-review | session-d3 | `apps/social/` (new) | D2 |
-| **D4** safety & moderation | `claude/d4-safety` | blocked | — | `apps/safety/` | D2, **D3** |
+| **D4** safety & moderation | `claude/d4-safety` | in-review | session-d4 | `apps/safety/` | D2, **D3** |
 | **D6** media | `claude/d6-media` | blocked | — | `apps/media/` | D3, D4 |
 | **D5** chat | `claude/d5-chat` | blocked | — | `apps/chat/`, `config/asgi.py` | D3, D4 |
 | **D8** booking | `claude/d8-booking` | blocked | — | `apps/booking/` | D3, D7 |
