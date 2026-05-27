@@ -15,6 +15,7 @@ from .services import (
     NotAMember,
     NotEligible,
     SocialError,
+    add_guardian,
     cast_vote,
     create_activity,
     leave_activity,
@@ -69,6 +70,20 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
         if membership is None:
             raise ValidationError("You are not a member of this activity.")
         return Response(MembershipSerializer(membership).data)
+
+    @action(detail=True, methods=["post"])
+    def guardians(self, request, pk=None):
+        activity = self.get_object()
+        from django.contrib.auth import get_user_model
+
+        guardian = get_user_model().objects.filter(pk=request.data.get("user_id")).first()
+        if guardian is None:
+            raise ValidationError({"user_id": "No such user."})
+        try:
+            membership = add_guardian(request.user, activity, guardian)
+        except SocialError as exc:
+            raise PermissionDenied(str(exc)) from exc
+        return Response(MembershipSerializer(membership).data, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=["get"])
     def mine(self, request):

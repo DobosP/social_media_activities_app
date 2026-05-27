@@ -28,6 +28,7 @@ class ActivitySerializer(serializers.ModelSerializer):
             "owner_can_override",
             "capacity",
             "status",
+            "guardian_accompanied",
             "member_count",
             "created_at",
         ]
@@ -46,6 +47,7 @@ class ActivityCreateSerializer(serializers.Serializer):
     ends_at = serializers.DateTimeField(required=False, allow_null=True)
     join_threshold = serializers.FloatField(required=False, min_value=0.01, max_value=1.0)
     capacity = serializers.IntegerField(required=False, allow_null=True, min_value=1)
+    guardian_accompanied = serializers.BooleanField(required=False, default=False)
 
 
 class MembershipSerializer(serializers.ModelSerializer):
