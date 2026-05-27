@@ -23,3 +23,12 @@ def test_seeded_relation_exists():
     assert ActivityRelation.objects.filter(
         source__slug="chess", target__slug="board_games"
     ).exists()
+
+
+@pytest.mark.django_db
+def test_reading_archive_types_seeded():
+    # Added by 0005_seed_reading_archives.
+    for slug in ("archive", "used_bookshop"):
+        obj = ActivityType.objects.get(slug=slug)
+        assert obj.category.slug == "reading"
+    assert ActivityRelation.objects.filter(source__slug="archive", target__slug="reading").exists()

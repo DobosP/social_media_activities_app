@@ -33,6 +33,15 @@ MAPPING: list[TagRule] = [
     # Reading
     TagRule("library", {"amenity": "library"}, "reading", 0.95),
     TagRule("books_shop", {"shop": "books"}, "reading", 0.6),
+    TagRule("public_bookcase", {"amenity": "public_bookcase"}, "reading", 0.4),
+    # Archives & old papers.
+    TagRule("archive", {"amenity": "archive"}, "archive", 0.95),
+    # Antiquarian / second-hand bookshops (old papers & rare books).
+    TagRule("antiquarian_books", {"shop": "books", "books": "antiquarian"}, "used_bookshop", 0.9),
+    TagRule(
+        "secondhand_books_only", {"shop": "books", "second_hand": "only"}, "used_bookshop", 0.9
+    ),
+    TagRule("secondhand_books", {"shop": "books", "second_hand": "yes"}, "used_bookshop", 0.75),
     # Board games
     TagRule("games_shop", {"shop": "games"}, "board_games", 0.7),
     TagRule("boardgames_shop", {"shop": "boardgames"}, "board_games", 0.85),
