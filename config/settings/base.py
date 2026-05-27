@@ -127,9 +127,39 @@ REST_FRAMEWORK = {
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Social Activities API",
-    "DESCRIPTION": "Activities knowledge graph + places for organizing in-person meetups.",
-    "VERSION": "0.1.0",
+    "DESCRIPTION": (
+        "Text-first, safety-by-design platform for organizing in-person activities at "
+        "real places. Children-first: EU-grade age assurance, age-cohort isolation, and "
+        "strong moderation. This OpenAPI schema is the stable contract clients build "
+        "against — see /api/docs/ for the interactive Swagger UI."
+    ),
+    "VERSION": env("APP_VERSION", default="0.1.0"),
     "SERVE_INCLUDE_SCHEMA": False,
+    # Split request vs. response components so generated client models are accurate
+    # (read-only/write-only fields don't bleed across).
+    "COMPONENT_SPLIT_REQUEST": True,
+    "SORT_OPERATIONS": False,
+    "CONTACT": {
+        "name": "Maintainers",
+        "url": "https://github.com/DobosP/social_media_activities_app",
+    },
+    "LICENSE": {"name": "See repository"},
+    "SERVERS": [{"url": "/", "description": "This deployment"}],
+    "SWAGGER_UI_SETTINGS": {"persistAuthorization": True, "displayRequestDuration": True},
+    # Curated, stable tag order grouping endpoints by domain.
+    "TAGS": [
+        {"name": "accounts", "description": "Identity, age band, cohort, consent."},
+        {"name": "places", "description": "Real places (GeoJSON) and proximity search."},
+        {"name": "taxonomy", "description": "Activity categories and the activity graph."},
+        {"name": "social", "description": "Activities, threads, membership, join-by-vote."},
+        {"name": "safety", "description": "Reporting, blocking, moderation."},
+        {"name": "chat", "description": "Per-thread messaging (REST + WebSocket)."},
+        {"name": "booking", "description": "Reservations and provider deep-links."},
+        {"name": "media", "description": "Profile pictures and private thread photos."},
+        {"name": "donations", "description": "Nonprofit donations (no ads/tracking)."},
+        {"name": "events", "description": "Happenings associated with places."},
+        {"name": "ops", "description": "Health and aggregate, privacy-respecting metrics."},
+    ],
 }
 
 # --- Ingestion ---
