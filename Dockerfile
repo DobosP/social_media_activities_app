@@ -19,8 +19,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+# Bake static assets into the image so WhiteNoise can serve them at runtime.
+# collectstatic needs no database connection.
+RUN DJANGO_SETTINGS_MODULE=config.settings.prod python manage.py collectstatic --noinput
+
 EXPOSE 8000
 
-# ASGI (daphne) so real-time chat WebSockets (D5) are served in production.
-# Dev compose overrides this with `runserver`.
+# ASGI (daphne) so the REST API and real-time chat WebSockets (D5) are served from
+# one process. Dev compose overrides this with `runserver`; on Render, $PORT is
+# injected (see render.yaml).
 CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "config.asgi:application"]
