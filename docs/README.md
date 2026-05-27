@@ -10,7 +10,8 @@ Orchestration and design docs for the Social Activities App. Start with the road
 | [SAFETY.md](SAFETY.md) | Child-safety-by-design: threat model, invariants, and controls per deliverable. |
 | [SECURITY.md](SECURITY.md) | Engineering & supply-chain security: the dependency-pinning/upgrade policy and the app-security baseline. |
 | [DATA_AND_INTEGRATIONS.md](DATA_AND_INTEGRATIONS.md) | Place-data sources (OSM / Overture / Google) and the booking-integration strategy. |
-| [MULTI_AGENT_BUILD.md](MULTI_AGENT_BUILD.md) | How to build with several Claude Code agents in parallel without conflicts (ownership, branches/worktrees, contracts, merge order). |
+| [MULTI_AGENT_BUILD.md](MULTI_AGENT_BUILD.md) | How to build with several Claude Code agents in parallel without conflicts (ownership, branches/worktrees, contracts, cross-branch sync, how many sessions + what to tell them). |
+| [WORKBOARD.md](WORKBOARD.md) | **Live registry** of which session/branch owns which track — claim here before coding. |
 
 Status legend used across docs: ✅ Done · ▶️ Next · ⏳ Planned · 🧊 Backlog
 
