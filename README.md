@@ -81,6 +81,11 @@ ruff check . && ruff format --check .
 
 ## Roadmap
 
+**Full roadmap & design docs live in [`docs/`](docs/README.md)** — the phased plan (D1–D9) with a
+dependency graph and feature traceability is in [`docs/ROADMAP.md`](docs/ROADMAP.md); see also
+[ARCHITECTURE](docs/ARCHITECTURE.md), [COMPLIANCE](docs/COMPLIANCE.md), [SAFETY](docs/SAFETY.md),
+and [DATA_AND_INTEGRATIONS](docs/DATA_AND_INTEGRATIONS.md).
+
 Captured for later deliverables (not built yet):
 
 - **Accounts & identity** — pluggable provider integrating the EU **EUDI Wallet** + the EU
