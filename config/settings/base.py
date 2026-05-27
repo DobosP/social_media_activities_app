@@ -17,6 +17,8 @@ DEBUG = env.bool("DJANGO_DEBUG", default=False)
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=[])
 
 INSTALLED_APPS = [
+    # daphne must precede staticfiles so its ASGI runserver takes over (D5 chat).
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -29,6 +31,7 @@ INSTALLED_APPS = [
     "rest_framework_gis",
     "django_filters",
     "drf_spectacular",
+    "channels",
     # Local
     "apps.accounts",
     "apps.taxonomy",
@@ -36,6 +39,8 @@ INSTALLED_APPS = [
     "apps.ingestion",
     "apps.social",
     "apps.safety",
+    "apps.chat",
+    "apps.booking",
     "apps.media",
 ]
 
@@ -138,6 +143,25 @@ OVERTURE_DATA_PATH = env("OVERTURE_DATA_PATH", default="")
 # a place source). Enable explicitly and provide a key to use it.
 GOOGLE_PLACES_ENABLED = env.bool("GOOGLE_PLACES_ENABLED", default=False)
 GOOGLE_PLACES_API_KEY = env("GOOGLE_PLACES_API_KEY", default="")
+
+# --- D5 chat (real-time, ASGI/Channels) ---
+# In-memory layer suits a single process; a multi-process deploy sets a Redis layer
+# (channels-redis) here — see docs/ARCHITECTURE.md / D9 ops.
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": env(
+            "CHANNEL_LAYER_BACKEND",
+            default="channels.layers.InMemoryChannelLayer",
+        )
+    }
+}
+# Swap to add CSAR-driven scanning/encryption without re-architecting (see COMPLIANCE).
+CHAT_MESSAGE_POLICY = env("CHAT_MESSAGE_POLICY", default="apps.chat.policy.BasicMessagePolicy")
+CHAT_MAX_LENGTH = env.int("CHAT_MAX_LENGTH", default=4000)
+CHAT_RATE_LIMIT = env.int("CHAT_RATE_LIMIT", default=30)
+CHAT_RATE_WINDOW_SECONDS = env.int("CHAT_RATE_WINDOW_SECONDS", default=60)
+# 0 disables time-based purging; set a positive number of days to enable retention.
+CHAT_RETENTION_DAYS = env.int("CHAT_RETENTION_DAYS", default=0)
 
 # --- D6 media (profile pictures + private thread photos) ---
 # Blobs live in object storage, not Postgres. Default is local filesystem for
