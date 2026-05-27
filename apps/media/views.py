@@ -13,8 +13,10 @@ from .serializers import PhotoSerializer
 from .services import (
     MediaRejected,
     NotAuthorized,
+    delete_photo,
     resolve_signed_token,
     signed_url,
+    thread_photos,
     upload_photo,
 )
 from .storage import get_storage
@@ -62,6 +64,33 @@ class PhotoDetailView(APIView):
             raise PermissionDenied(str(exc)) from exc
         ctx = {"signed_urls": {photo.id: url}}
         return Response(PhotoSerializer(photo, context=ctx).data)
+
+    def delete(self, request, pk):
+        photo = Photo.objects.filter(pk=pk).first()
+        if photo is None:
+            raise ValidationError("No such photo.")
+        try:
+            delete_photo(request.user, photo)
+        except NotAuthorized as exc:
+            raise PermissionDenied(str(exc)) from exc
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ThreadPhotosView(APIView):
+    """List the clean photos in an activity thread (members only), with signed URLs."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, thread_id):
+        thread = Thread.objects.filter(id=thread_id).first()
+        if thread is None:
+            raise ValidationError("No such thread.")
+        try:
+            photos = list(thread_photos(request.user, thread))
+        except NotAuthorized as exc:
+            raise PermissionDenied(str(exc)) from exc
+        ctx = {"signed_urls": {p.id: signed_url(p, request.user) for p in photos}}
+        return Response(PhotoSerializer(photos, many=True, context=ctx).data)
 
 
 class MediaFileView(APIView):

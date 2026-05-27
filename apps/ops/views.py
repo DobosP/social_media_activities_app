@@ -1,15 +1,18 @@
 """Privacy-respecting observability (IS-6): a liveness/readiness probe and an
 AGGREGATE-only stats endpoint. No per-user analytics, no behavioural tracking."""
 
+from django.conf import settings
 from django.db import connection
 from django.db.models import Sum
+from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 
 class HealthView(APIView):
-    """Liveness + DB readiness probe for load balancers / uptime checks."""
+    """Liveness + DB readiness probe for load balancers / uptime checks. Returns 503
+    when the database is unreachable so orchestrators can route around the instance."""
 
     permission_classes = [AllowAny]
 
@@ -21,7 +24,13 @@ class HealthView(APIView):
                 cursor.fetchone()
         except Exception:
             db_ok = False
-        return Response({"status": "ok" if db_ok else "degraded", "database": db_ok})
+        body = {
+            "status": "ok" if db_ok else "degraded",
+            "database": db_ok,
+            "version": getattr(settings, "APP_VERSION", "unknown"),
+        }
+        code = status.HTTP_200_OK if db_ok else status.HTTP_503_SERVICE_UNAVAILABLE
+        return Response(body, status=code)
 
 
 class StatsView(APIView):

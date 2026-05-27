@@ -13,8 +13,9 @@ class ImageError(ValueError):
     """Upload is not a valid/allowed image or is too large."""
 
 
-def validate_and_strip(data: bytes, *, max_bytes: int):
-    """Validate size/format, then return (clean_bytes, format, (w, h)) with metadata removed."""
+def validate_and_strip(data: bytes, *, max_bytes: int, max_dimension: int | None = None):
+    """Validate size/format, then return (clean_bytes, format, (w, h)) with metadata
+    removed and the image downscaled to fit `max_dimension` (longest side) if given."""
     if len(data) > max_bytes:
         raise ImageError(f"Image exceeds the {max_bytes}-byte limit.")
     try:
@@ -30,9 +31,11 @@ def validate_and_strip(data: bytes, *, max_bytes: int):
     # Reopen (verify() leaves the image unusable) and rebuild from pixels only.
     with Image.open(BytesIO(data)) as img:
         img.load()
-        size = img.size
         # Rebuild from raw pixels only: drops EXIF/GPS and any other metadata.
-        clean = Image.frombytes(img.mode, size, img.tobytes())
+        clean = Image.frombytes(img.mode, img.size, img.tobytes())
+        if max_dimension and max(clean.size) > max_dimension:
+            clean.thumbnail((max_dimension, max_dimension))
+        size = clean.size
         out = BytesIO()
         clean.save(out, format=fmt)
     return out.getvalue(), fmt, size

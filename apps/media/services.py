@@ -48,7 +48,9 @@ def upload_photo(uploader, kind, data: bytes, *, thread=None) -> Photo:
         raise MediaError("Unknown photo kind.")
 
     clean_bytes, fmt, (width, height) = validate_and_strip(
-        data, max_bytes=settings.MEDIA_MAX_UPLOAD_BYTES
+        data,
+        max_bytes=settings.MEDIA_MAX_UPLOAD_BYTES,
+        max_dimension=getattr(settings, "MEDIA_MAX_DIMENSION", None),
     )
     digest = hashlib.sha256(clean_bytes).hexdigest()
     result = get_scanner().scan(clean_bytes)
@@ -87,6 +89,24 @@ def _replace_existing_profile(uploader) -> None:
         if existing.storage_key:
             get_storage().delete(existing.storage_key)
         existing.delete()
+
+
+def thread_photos(viewer, thread):
+    """Clean photos in a thread visible to `viewer` (must be a current member)."""
+    if not _is_member(viewer, thread):
+        raise NotAuthorized("Only current members can view this thread's photos.")
+    return thread.photos.filter(scan_status=Photo.ScanStatus.CLEAN).order_by("-created_at")
+
+
+@transaction.atomic
+def delete_photo(actor, photo: Photo) -> None:
+    """Delete a photo. Allowed for the uploader or staff (moderation removal)."""
+    if actor.id != photo.uploader_id and not getattr(actor, "is_staff", False):
+        raise NotAuthorized("Not allowed to delete this photo.")
+    if photo.storage_key:
+        get_storage().delete(photo.storage_key)
+    record_audit("media.deleted", actor=actor, target=photo)
+    photo.delete()
 
 
 def can_view_photo(viewer, photo: Photo) -> bool:
