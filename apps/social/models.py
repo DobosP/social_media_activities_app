@@ -47,6 +47,9 @@ class Activity(models.Model):
     join_threshold = models.FloatField(default=DEFAULT_JOIN_THRESHOLD)
     owner_can_override = models.BooleanField(default=True)
     capacity = models.PositiveIntegerField(null=True, blank=True)
+    # Children's activities may allow a parent/guardian to accompany (supervised,
+    # group-only). Only meaningful for the CHILD cohort. See docs/SAFETY.md.
+    guardian_accompanied = models.BooleanField(default=False)
 
     status = models.CharField(max_length=16, choices=Status.choices, default=Status.OPEN)
 
@@ -79,6 +82,7 @@ class Membership(models.Model):
     class Role(models.TextChoices):
         OWNER = "owner", "Owner"
         MEMBER = "member", "Member"
+        GUARDIAN = "guardian", "Guardian"  # accompanying parent/guardian (supervisory)
 
     class State(models.TextChoices):
         REQUESTED = "requested", "Requested"

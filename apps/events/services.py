@@ -1,5 +1,6 @@
 from django.db import transaction
 
+from .classify import classify_activity
 from .models import Event
 from .sources import RawEvent
 
@@ -32,10 +33,14 @@ def upsert_event(
     return event
 
 
-def import_events(source, *, place=None, activity_type=None) -> int:
-    """Pull all RawEvents from an EventSource and upsert them. Returns the count."""
+def import_events(source, *, place=None, activity_type=None, classify=True) -> int:
+    """Pull all RawEvents from an EventSource and upsert them. When no activity_type is
+    given, classify each event from its text against the taxonomy. Returns the count."""
     count = 0
     for raw in source.fetch():
-        upsert_event(raw, place=place, activity_type=activity_type, source=source.name)
+        resolved = activity_type
+        if resolved is None and classify:
+            resolved = classify_activity(f"{raw.title} {raw.description}")
+        upsert_event(raw, place=place, activity_type=resolved, source=source.name)
         count += 1
     return count

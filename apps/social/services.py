@@ -68,6 +68,12 @@ def current_members(activity):
     return activity.memberships.filter(state=Membership.State.MEMBER)
 
 
+def voting_members(activity):
+    """Members who vote on join requests — peers only; guardians are supervisory and
+    do not vote."""
+    return current_members(activity).exclude(role=Membership.Role.GUARDIAN)
+
+
 def can_join(user, activity) -> bool:
     if not can_participate(user):
         return False
@@ -93,9 +99,12 @@ def create_activity(
     description="",
     join_threshold=None,
     capacity=None,
+    guardian_accompanied=False,
 ):
     if not can_create_activity(owner):
         raise NotEligible("User cannot create activities (needs verification/consent + a cohort).")
+    if guardian_accompanied and owner.cohort != Cohort.CHILD:
+        raise InvalidState("Only children's activities can be guardian-accompanied.")
     activity = Activity.objects.create(
         owner=owner,
         place=place,
@@ -107,6 +116,7 @@ def create_activity(
         cohort=owner.cohort,
         join_threshold=DEFAULT_JOIN_THRESHOLD if join_threshold is None else join_threshold,
         capacity=capacity,
+        guardian_accompanied=guardian_accompanied,
     )
     Membership.objects.create(
         activity=activity,
@@ -153,7 +163,7 @@ def _admit(membership: Membership) -> None:
 
 def _evaluate_vote(membership: Membership) -> None:
     """Promote a requested membership to member once approvals clear the threshold."""
-    member_count = current_members(membership.activity).count()
+    member_count = voting_members(membership.activity).count()
     if member_count == 0:
         return
     approvals = membership.votes.filter(approve=True).count()
@@ -168,7 +178,7 @@ def cast_vote(voter, membership: Membership, approve: bool) -> Membership:
         raise InvalidState("This membership is not awaiting a join vote.")
     if membership.user_id == voter.id:
         raise InvalidState("A requester cannot vote on their own join request.")
-    if not current_members(activity).filter(user=voter).exists():
+    if not voting_members(activity).filter(user=voter).exists():
         raise NotAMember("Only current members may vote on join requests.")
     JoinVote.objects.update_or_create(
         membership=membership, voter=voter, defaults={"approve": approve}
@@ -189,6 +199,33 @@ def owner_admit(owner, membership: Membership) -> Membership:
         raise InvalidState("This membership is not awaiting a join vote.")
     _admit(membership)
     return membership
+
+
+@transaction.atomic
+def add_guardian(owner, activity, guardian) -> Membership:
+    """The child owner adds a verified adult as an accompanying guardian (supervisory,
+    group-only). Controlled exception to cohort isolation: only on a CHILD-cohort
+    activity explicitly flagged guardian_accompanied, and the guardian must be a
+    verified adult. Guardians don't vote and aren't open-discoverable. See docs/SAFETY.md.
+    """
+    if activity.owner_id != owner.id:
+        raise NotAMember("Only the activity owner may add a guardian.")
+    if not activity.guardian_accompanied or activity.cohort != Cohort.CHILD:
+        raise InvalidState("This activity does not allow accompanying guardians.")
+    if guardian.cohort != Cohort.ADULT or not can_participate(guardian):
+        raise NotEligible("A guardian must be a verified adult.")
+    existing = (
+        activity.memberships.filter(user=guardian).exclude(state=Membership.State.REMOVED).first()
+    )
+    if existing:
+        return existing
+    return Membership.objects.create(
+        activity=activity,
+        user=guardian,
+        role=Membership.Role.GUARDIAN,
+        state=Membership.State.MEMBER,
+        decided_at=timezone.now(),
+    )
 
 
 @transaction.atomic
