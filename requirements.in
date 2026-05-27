@@ -18,3 +18,5 @@ drf-spectacular>=0.29
 gunicorn>=23.0
 # D7: Overture places ingestion reads GeoParquet via DuckDB.
 duckdb>=1.1
+# D6: image validation + EXIF/GPS stripping for media uploads.
+Pillow>=11.0

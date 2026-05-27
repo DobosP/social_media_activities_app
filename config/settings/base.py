@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "apps.ingestion",
     "apps.social",
     "apps.safety",
+    "apps.media",
 ]
 
 MIDDLEWARE = [
@@ -137,3 +138,15 @@ OVERTURE_DATA_PATH = env("OVERTURE_DATA_PATH", default="")
 # a place source). Enable explicitly and provide a key to use it.
 GOOGLE_PLACES_ENABLED = env.bool("GOOGLE_PLACES_ENABLED", default=False)
 GOOGLE_PLACES_API_KEY = env("GOOGLE_PLACES_API_KEY", default="")
+
+# --- D6 media (profile pictures + private thread photos) ---
+# Blobs live in object storage, not Postgres. Default is local filesystem for
+# dev/CI; production sets an S3-compatible backend (Cloudflare R2 / MinIO).
+MEDIA_STORAGE_BACKEND = env(
+    "MEDIA_STORAGE_BACKEND", default="apps.media.storage.LocalStorageBackend"
+)
+MEDIA_ROOT = env("MEDIA_ROOT", default=str(BASE_DIR / "media_store"))
+MEDIA_MAX_BYTES = env.int("MEDIA_MAX_BYTES", default=5 * 1024 * 1024)
+# Safety screening run before an image is visible (CSAM hash-match seam, where lawful).
+MEDIA_IMAGE_SCANNER = env("MEDIA_IMAGE_SCANNER", default="apps.media.scanning.HashBlocklistScanner")
+MEDIA_HASH_BLOCKLIST = env.list("MEDIA_HASH_BLOCKLIST", default=[])

@@ -33,7 +33,7 @@ everyone can read this file on `main`.
 | **D2-eudi** finish identity | `claude/d2-eudi` | in-review | `claude/d2-eudi` | `apps/accounts/identity/` | D2 |
 | **D3** social core | `claude/d3-social-core` | in-review | session-d3 | `apps/social/` (new) | D2 |
 | **D4** safety & moderation | `claude/d4-safety` | in-review | session-d4 | `apps/safety/` | D2, **D3** |
-| **D6** media | `claude/d6-media` | blocked | — | `apps/media/` | D3, D4 |
+| **D6** media | `claude/d6-media` | in-review | `claude/d6-media` | `apps/media/` | D3, D4 |
 | **D5** chat | `claude/d5-chat` | blocked | — | `apps/chat/`, `config/asgi.py` | D3, D4 |
 | **D8** booking | `claude/d8-booking` | blocked | — | `apps/booking/` | D3, D7 |
 | **D9** nonprofit/ops/launch | `claude/d9-ops` | blocked | — | deploy, donations, observability | D5, D6, D8 |
