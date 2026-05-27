@@ -99,7 +99,13 @@ These thread through multiple deliverables. Skipping them creates rework or lega
   scoped to one city); read-only GeoJSON + taxonomy APIs; admin map; Docker; tests.
 - **Definition of done.** ✅ All met — see repo `README.md`.
 
-## D2 · Identity, accounts & consent ▶️ (next)
+## D2 · Identity, accounts & consent ▶️ (in progress)
+
+> **Scaffold landed** (branch `claude/d2-identity-accounts`): custom `accounts.User` (IS-1),
+> `AgeBand`/`Cohort`, `ParentalConsent` + `AgeAssurance` models, the pluggable `IdentityProvider`
+> interface with a **dev stub** + an **EUDI stub**, cohort assignment + a `can_participate` consent
+> gate, `/api/accounts/me/`, admin, and tests. **Pending:** the real EUDI Wallet / EU
+> age-verification integration and the parental-consent UX/record-keeping.
 
 - **Goal.** Let real people (incl. minors) onboard with **EU-grade identity/age assurance** and
   **verifiable parental consent**, without the app hoarding identity data.
