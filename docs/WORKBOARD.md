@@ -26,16 +26,18 @@ everyone can read this file on `main`.
 | D7 — richer place data | ✅ merged | Overture adapter, Google enrichment, cross-source dedup, opening-hours/open-now |
 | D5 — chat | ✅ merged | real-time per-thread rooms (ASGI/Channels), cohort/membership-scoped, moderation hooks |
 | D8 — booking | ✅ merged | BookingProvider adapters, deep-links, bookings tied to activities |
+| D6 — media | ✅ merged | profile + private thread photos, EXIF/GPS stripping, safety scan, signed URLs |
+| D9 — nonprofit/ops/launch | ✅ merged | donations (no ads/tracking), `/healthz` + aggregate stats, ASGI prod, runbook + release gate |
 
 ## Active / available tracks
 
-> Claim one by editing your row (branch + status). Unclaimed rows are up for grabs, in dependency
-> order. "Depends on" lists tracks that must be **merged to `main`** first.
+> 🎉 **All roadmap deliverables (D1–D9) are merged to `main`.** Engineering launch-gate
+> controls are complete; remaining work is deployment provisioning + legal/compliance
+> sign-off — see [RELEASE_READINESS](RELEASE_READINESS.md).
 
 | Track | Branch | Status | Session | Owns (paths) | Depends on (merged) |
 |------|--------|--------|---------|--------------|---------------------|
-| **D6** media | `claude/d6-media-integrated` | in-review | integrator | `apps/media/` | D3, D4 |
-| **D9** nonprofit/ops/launch | `claude/d9-ops` | blocked | — | deploy, donations, observability | D5, D6, D8 |
+| _none_ | — | — | — | — | — |
 
 ## Shared edit points (coordinate / keep minimal)
 
