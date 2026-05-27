@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "apps.ingestion",
     "apps.social",
     "apps.safety",
+    "apps.booking",
 ]
 
 MIDDLEWARE = [
