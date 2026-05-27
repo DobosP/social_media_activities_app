@@ -1,0 +1,15 @@
+# Runtime
+Django>=5.1,<5.2
+djangorestframework>=3.15,<3.16
+djangorestframework-gis>=1.1
+django-filter>=24.3
+django-environ>=0.11
+psycopg[binary]>=3.2
+requests>=2.32
+drf-spectacular>=0.27
+gunicorn>=23.0
+
+# Dev / test
+pytest>=8.3
+pytest-django>=4.9
+ruff>=0.6
