@@ -5,6 +5,11 @@ from datetime import datetime
 from apps.accounts.models import AgeBand
 
 
+class IdentityVerificationError(Exception):
+    """Raised when an identity provider cannot establish a trustworthy age band
+    (e.g. a missing, malformed, or cryptographically invalid wallet presentation)."""
+
+
 @dataclass
 class AssuranceResult:
     """What an identity provider returns: a proven age band and verification status,
