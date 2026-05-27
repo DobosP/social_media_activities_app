@@ -33,6 +33,9 @@ everyone can read this file on `main`.
 | Activity taxonomy v2 | ✅ merged | endurance/outdoor, fitness, culture; `wellness` + `family_friendly` traits |
 | Guardian-accompanied activities | ✅ merged | child + verified-adult guardian (supervisory, group-only) |
 | Render deploy | ✅ merged | one-blueprint hosting (web + PostGIS) + WhiteNoise static |
+| Roles & guardianship | ✅ merged | admin/moderator/user roles; legal-guardian links; guardian manages ward; schools as places |
+| P1 — discovery & feed API | ✅ merged | near-me / happening / activities feeds over places·events·activities |
+| P7 — security review | ✅ merged | STRIDE threat model, findings, pen-test checklist |
 
 ## 🎉 Phase 1 complete — all roadmap deliverables (D1–D9) + enhancements are on `main`
 
@@ -50,7 +53,7 @@ planned in **[PHASE_2_PLAN](PHASE_2_PLAN.md)** — claim a track there.
 | **P1** discovery & feed API | `claude/p1-discovery` | in-review | `claude/p1-discovery` | `apps/discovery/` (new); read-only views over places/events/activities | D3, D7, events |
 | **P2** live data adapters | `claude/p2-live-data` | _unclaimed_ | — | `apps/ingestion/sources/` (Foursquare, Ticketmaster, Wikidata, Geofabrik) | D7, events |
 | **P3** recommendations | `claude/p3-recommend` | _unclaimed_ | — | `apps/discovery/` ranking; interest similarity (pgvector) | P1 |
-| **P4** notifications | `claude/p4-notify` | _unclaimed_ | — | `apps/notifications/` (new); opt-in, no tracking | D3, D5 |
+| **P4** notifications | `claude/p4-notifications` | in-review | integrator | `apps/notifications/` (new); opt-in, no tracking | D3, D5 |
 | **P5** compliance & legal | `claude/p5-compliance` | _unclaimed_ | — | `docs/` (DPIA, ToS, Privacy, DSA), consent UX | D2, D4 |
 | **P6** i18n (RO/EN) | `claude/p6-i18n` | _unclaimed_ | — | `locale/`, DRF/Django i18n wiring | — |
 | **P7** security review | `claude/p7-security` | in-review | `claude/p7-security` | threat model, pen-test fixes, rate-limit coverage | D4, D9 |

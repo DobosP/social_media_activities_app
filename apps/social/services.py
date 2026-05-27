@@ -147,12 +147,20 @@ def create_activity(
 def request_to_join(user, activity) -> Membership:
     if not can_join(user, activity):
         raise NotEligible("User is not eligible to join this activity.")
-    return Membership.objects.create(
+    membership = Membership.objects.create(
         activity=activity,
         user=user,
         role=Membership.Role.MEMBER,
         state=Membership.State.REQUESTED,
     )
+    _notify(
+        activity.owner,
+        "join_requested",
+        "New join request",
+        body=f"{user.display_name or user.username} asked to join “{activity.title}”.",
+        url=f"/api/social/activities/{activity.id}/",
+    )
+    return membership
 
 
 @transaction.atomic
@@ -169,10 +177,24 @@ def leave_activity(user, activity) -> Membership | None:
     return membership
 
 
+def _notify(recipient, kind, title, *, body="", url=""):
+    """Emit an in-app notification (best-effort; never blocks the social action)."""
+    from apps.notifications.services import notify
+
+    notify(recipient, kind, title, body=body, url=url)
+
+
 def _admit(membership: Membership) -> None:
     membership.state = Membership.State.MEMBER
     membership.decided_at = timezone.now()
     membership.save(update_fields=["state", "decided_at", "updated_at"])
+    _notify(
+        membership.user,
+        "join_approved",
+        "You're in!",
+        body=f"You were admitted to “{membership.activity.title}”.",
+        url=f"/api/social/activities/{membership.activity_id}/",
+    )
 
 
 def _evaluate_vote(membership: Membership) -> None:

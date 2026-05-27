@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "apps.ops",
     "apps.events",
     "apps.discovery",
+    "apps.notifications",
 ]
 
 MIDDLEWARE = [
