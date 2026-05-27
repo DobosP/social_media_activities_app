@@ -16,3 +16,5 @@ psycopg[binary]>=3.2
 requests>=2.32
 drf-spectacular>=0.29
 gunicorn>=23.0
+# D7: Overture places ingestion reads GeoParquet via DuckDB.
+duckdb>=1.1

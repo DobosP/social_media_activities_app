@@ -1,6 +1,8 @@
+from django.utils import timezone
 from rest_framework import serializers
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
+from .enrichment.opening_hours import is_open_at
 from .models import Place, PlaceActivity
 
 
@@ -16,6 +18,7 @@ class PlaceActivitySerializer(serializers.ModelSerializer):
 class PlaceSerializer(GeoFeatureModelSerializer):
     activities = PlaceActivitySerializer(source="place_activities", many=True, read_only=True)
     distance_m = serializers.SerializerMethodField()
+    open_now = serializers.SerializerMethodField()
 
     class Meta:
         model = Place
@@ -29,6 +32,8 @@ class PlaceSerializer(GeoFeatureModelSerializer):
             "address_postcode",
             "address_country",
             "opening_hours_raw",
+            "opening_hours",
+            "open_now",
             "source",
             "osm_type",
             "osm_id",
@@ -41,3 +46,7 @@ class PlaceSerializer(GeoFeatureModelSerializer):
         if distance is None:
             return None
         return round(distance.m, 1)
+
+    def get_open_now(self, obj):
+        # Computed from parsed opening_hours (no external call); null if unknown.
+        return is_open_at(obj.opening_hours, timezone.localtime())
