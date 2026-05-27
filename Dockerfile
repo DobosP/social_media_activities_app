@@ -25,6 +25,7 @@ RUN DJANGO_SETTINGS_MODULE=config.settings.prod python manage.py collectstatic -
 
 EXPOSE 8000
 
-# Dev compose overrides this with `runserver`; Render overrides with daphne (see
-# render.yaml) to serve both HTTP and chat WebSockets from one process.
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000"]
+# ASGI (daphne) so the REST API and real-time chat WebSockets (D5) are served from
+# one process. Dev compose overrides this with `runserver`; on Render, $PORT is
+# injected (see render.yaml).
+CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "config.asgi:application"]

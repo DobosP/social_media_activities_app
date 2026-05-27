@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     "apps.chat",
     "apps.booking",
     "apps.media",
+    "apps.donations",
+    "apps.ops",
 ]
 
 MIDDLEWARE = [
@@ -175,3 +177,9 @@ CHAT_RATE_LIMIT = env.int("CHAT_RATE_LIMIT", default=30)
 CHAT_RATE_WINDOW_SECONDS = env.int("CHAT_RATE_WINDOW_SECONDS", default=60)
 # 0 disables time-based purging; set a positive number of days to enable retention.
 CHAT_RETENTION_DAYS = env.int("CHAT_RETENTION_DAYS", default=0)
+
+# --- D9 donations (no ads / no tracking-based monetization) ---
+# Pluggable payment provider; default builds an off-platform checkout deep link and
+# stores no card data. Swap for a real EU-friendly nonprofit processor in prod.
+DONATIONS_PROVIDER = env("DONATIONS_PROVIDER", default="apps.donations.providers.DeepLinkProvider")
+DONATIONS_CHECKOUT_BASE_URL = env("DONATIONS_CHECKOUT_BASE_URL", default="")
