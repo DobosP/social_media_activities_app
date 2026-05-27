@@ -25,6 +25,7 @@ class Donation(models.Model):
     )
     amount_cents = models.PositiveIntegerField()
     currency = models.CharField(max_length=3, default="EUR")
+    recurring = models.BooleanField(default=False)
     provider = models.CharField(max_length=64)
     status = models.CharField(max_length=16, choices=Status.choices, default=Status.PENDING)
     external_ref = models.CharField(max_length=128, blank=True)

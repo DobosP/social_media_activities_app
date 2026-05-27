@@ -17,6 +17,7 @@ from .services import (
     SocialError,
     cast_vote,
     create_activity,
+    leave_activity,
     owner_admit,
     post_to_thread,
     request_to_join,
@@ -57,6 +58,26 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
         except NotEligible as exc:
             raise PermissionDenied(str(exc)) from exc
         return Response(MembershipSerializer(membership).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=["post"])
+    def leave(self, request, pk=None):
+        activity = self.get_object()
+        try:
+            membership = leave_activity(request.user, activity)
+        except SocialError as exc:
+            raise PermissionDenied(str(exc)) from exc
+        if membership is None:
+            raise ValidationError("You are not a member of this activity.")
+        return Response(MembershipSerializer(membership).data)
+
+    @action(detail=False, methods=["get"])
+    def mine(self, request):
+        memberships = (
+            Membership.objects.filter(user=request.user)
+            .exclude(state=Membership.State.REMOVED)
+            .select_related("activity")
+        )
+        return Response(MembershipSerializer(memberships, many=True).data)
 
     @action(detail=True, methods=["get", "post"])
     def posts(self, request, pk=None):

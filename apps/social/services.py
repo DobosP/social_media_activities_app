@@ -47,10 +47,17 @@ def can_create_activity(user) -> bool:
 
 
 def visible_activities(user):
-    """Activities a user may see — only those in their own cohort (isolation)."""
+    """Activities a user may see — those in their own cohort (isolation), excluding
+    any owned by a user they've blocked or been blocked by (D4)."""
     if not _has_cohort(user):
         return Activity.objects.none()
-    return Activity.objects.filter(cohort=user.cohort)
+    from apps.safety.services import blocked_user_ids
+
+    qs = Activity.objects.filter(cohort=user.cohort)
+    blocked = blocked_user_ids(user)
+    if blocked:
+        qs = qs.exclude(owner_id__in=blocked)
+    return qs
 
 
 def can_see_activity(user, activity) -> bool:
@@ -122,6 +129,20 @@ def request_to_join(user, activity) -> Membership:
         role=Membership.Role.MEMBER,
         state=Membership.State.REQUESTED,
     )
+
+
+@transaction.atomic
+def leave_activity(user, activity) -> Membership | None:
+    """A member leaves an activity. The owner cannot leave their own activity (they must
+    cancel it instead). Returns the removed membership, or None if not a member."""
+    membership = activity.memberships.filter(user=user).first()
+    if membership is None or membership.state == Membership.State.REMOVED:
+        return None
+    if membership.role == Membership.Role.OWNER:
+        raise InvalidState("The owner cannot leave their own activity.")
+    membership.state = Membership.State.REMOVED
+    membership.save(update_fields=["state", "updated_at"])
+    return membership
 
 
 def _admit(membership: Membership) -> None:

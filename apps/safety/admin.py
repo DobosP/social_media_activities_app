@@ -12,7 +12,7 @@ class ReportAdmin(admin.ModelAdmin):
     list_filter = ("status", "reason", "target_type")
     search_fields = ("detail", "resolution")
     readonly_fields = ("target_type", "target_id", "reporter", "created_at")
-    actions = ("mark_reviewing", "dismiss")
+    actions = ("mark_reviewing", "dismiss", "ban_target")
 
     @admin.action(description="Mark selected reports as reviewing")
     def mark_reviewing(self, request, queryset):
@@ -23,6 +23,23 @@ class ReportAdmin(admin.ModelAdmin):
         queryset.update(
             status=Report.Status.DISMISSED, handled_by=request.user, handled_at=timezone.now()
         )
+
+    @admin.action(description="Ban the reported target (account)")
+    def ban_target(self, request, queryset):
+        from .services import take_action
+
+        banned = 0
+        for report in queryset:
+            if report.target is not None:
+                take_action(
+                    request.user,
+                    report.target,
+                    ModerationAction.Action.BAN,
+                    report.reason,
+                    report=report,
+                )
+                banned += 1
+        self.message_user(request, f"Banned {banned} target(s).")
 
 
 @admin.register(ModerationAction)

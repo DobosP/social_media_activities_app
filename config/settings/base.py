@@ -145,6 +145,8 @@ MEDIA_STORAGE_BACKEND = env(
     "MEDIA_STORAGE_BACKEND", default="apps.media.storage.LocalStorageBackend"
 )
 MEDIA_MAX_UPLOAD_BYTES = env.int("MEDIA_MAX_UPLOAD_BYTES", default=5 * 1024 * 1024)
+# Longest-side cap; larger uploads are downscaled (privacy + storage/bandwidth).
+MEDIA_MAX_DIMENSION = env.int("MEDIA_MAX_DIMENSION", default=2048)
 MEDIA_SIGNED_URL_TTL = env.int("MEDIA_SIGNED_URL_TTL", default=300)
 # Swappable safety-scanning posture (CSAR-dependent); default matches a hash blocklist.
 MEDIA_IMAGE_SCANNER = env("MEDIA_IMAGE_SCANNER", default="apps.media.scanning.HashBlocklistScanner")
@@ -183,3 +185,8 @@ CHAT_RETENTION_DAYS = env.int("CHAT_RETENTION_DAYS", default=0)
 # stores no card data. Swap for a real EU-friendly nonprofit processor in prod.
 DONATIONS_PROVIDER = env("DONATIONS_PROVIDER", default="apps.donations.providers.DeepLinkProvider")
 DONATIONS_CHECKOUT_BASE_URL = env("DONATIONS_CHECKOUT_BASE_URL", default="")
+# Shared secret verifying provider webhook callbacks (empty disables the check in dev).
+DONATIONS_WEBHOOK_SECRET = env("DONATIONS_WEBHOOK_SECRET", default="")
+
+# Build/version surfaced by /healthz (set from CI / image tag).
+APP_VERSION = env("APP_VERSION", default="0.1.0")

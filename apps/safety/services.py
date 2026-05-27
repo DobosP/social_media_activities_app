@@ -102,6 +102,17 @@ def is_blocked(viewer, other) -> bool:
     ).exists()
 
 
+def blocked_user_ids(user) -> set[int]:
+    """IDs of everyone `user` has blocked or been blocked by — for filtering feeds so
+    blocked pairs never see each other's content."""
+    if not getattr(user, "id", None):
+        return set()
+    pairs = Block.objects.filter(Q(blocker=user) | Q(blocked=user)).values_list(
+        "blocker_id", "blocked_id"
+    )
+    return {blocked if blocker == user.id else blocker for blocker, blocked in pairs}
+
+
 @transaction.atomic
 def take_action(moderator, target, action, reason, *, notes="", report=None, expires_at=None):
     """Apply a moderation action and record it. Suspend/ban deactivate the target user."""
@@ -133,6 +144,48 @@ def take_action(moderator, target, action, reason, *, notes="", report=None, exp
         reason=reason,
     )
     return record
+
+
+@transaction.atomic
+def dismiss_report(moderator, report: Report, resolution: str = "") -> Report:
+    report.status = Report.Status.DISMISSED
+    report.handled_by = moderator
+    report.handled_at = timezone.now()
+    report.resolution = resolution
+    report.save(update_fields=["status", "handled_by", "handled_at", "resolution"])
+    record_audit("report.dismissed", actor=moderator, target=report)
+    return report
+
+
+def lift_expired_suspensions() -> int:
+    """Reactivate accounts whose temporary suspension has elapsed, unless a ban or a
+    still-active suspension also applies. Returns the number of accounts reactivated."""
+    from django.contrib.auth import get_user_model
+
+    user_model = get_user_model()
+    now = timezone.now()
+    reactivated = 0
+    expired = ModerationAction.objects.filter(
+        action=ModerationAction.Action.SUSPEND, expires_at__lte=now, lifted_at__isnull=True
+    )
+    for moderation in expired:
+        target = moderation.target
+        if isinstance(target, user_model):
+            scope = ModerationAction.objects.filter(
+                target_type=moderation.target_type, target_id=moderation.target_id
+            )
+            banned = scope.filter(action=ModerationAction.Action.BAN).exists()
+            still_suspended = scope.filter(
+                action=ModerationAction.Action.SUSPEND, expires_at__gt=now
+            ).exists()
+            if not banned and not still_suspended and not target.is_active:
+                target.is_active = True
+                target.save(update_fields=["is_active"])
+                record_audit("moderation.suspension_lifted", target=target)
+                reactivated += 1
+        moderation.lifted_at = now
+        moderation.save(update_fields=["lifted_at"])
+    return reactivated
 
 
 def allow_action(user, action: str, *, limit: int, window_seconds: int) -> bool:

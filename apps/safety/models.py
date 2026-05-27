@@ -105,11 +105,17 @@ class ModerationAction(models.Model):
     report = models.ForeignKey(
         Report, on_delete=models.SET_NULL, null=True, blank=True, related_name="actions"
     )
+    # For SUSPEND: when the suspension elapses (null = indefinite). lifted_at records
+    # when an expired suspension was reversed (account reactivated).
     expires_at = models.DateTimeField(null=True, blank=True)
+    lifted_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        indexes = [models.Index(fields=["target_type", "target_id"])]
+        indexes = [
+            models.Index(fields=["target_type", "target_id"]),
+            models.Index(fields=["action", "expires_at"]),
+        ]
 
     def __str__(self):
         return f"{self.action} ({self.reason})"

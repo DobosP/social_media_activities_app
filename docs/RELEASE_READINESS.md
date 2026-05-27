@@ -10,7 +10,9 @@ implemented and verified. Status reflects code on `main`.
 | Cohort isolation across discovery & threads | `apps/social/services.py` (`visible_activities`, `can_join`); pinned `Activity.cohort` | ✅ enforced + tested |
 | Cohort isolation in chat | `apps/chat` consumer/service access checks (membership + cohort) | ✅ enforced + tested |
 | Under-16 cannot participate without valid parental consent | `apps/accounts/services.can_participate`; gated in social/media/chat | ✅ enforced + tested |
-| Reporting → moderation → action loop with audit logs | `apps/safety` (reports, moderation queue, hash-chained `AuditLog`) | ✅ implemented + tested |
+| Reporting → moderation → action loop with audit logs | `apps/safety` (reports, moderation queue, staff resolve API, hash-chained `AuditLog`) | ✅ implemented + tested |
+| Blocking enforced in discovery (blocked pairs don't see each other) | `apps/safety.blocked_user_ids` → `apps/social.visible_activities` | ✅ enforced + tested |
+| Temporary suspensions auto-expire | `apps/safety.lift_expired_suspensions` + `lift_suspensions` command | ✅ implemented + tested |
 | Image scanning + EXIF/GPS stripping on every upload path | `apps/media` pipeline (validate → strip → scan → store) | ✅ implemented + tested |
 | Text-first; only profile pic + private in-thread photos | `apps/social` (text posts), `apps/media` (the only image paths) | ✅ enforced |
 | No public adult↔minor private contact; no global DMs | chat is per-activity only; no DM system exists | ✅ by design |
