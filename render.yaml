@@ -1,0 +1,38 @@
+# Render Blueprint: one platform for both the app server and the PostGIS database.
+# Connect this repo in the Render dashboard ("New +" -> "Blueprint") and Render reads
+# this file, provisions the database, builds the Docker image, runs migrations, and
+# serves the app. Auto-deploys on every push to the default branch.
+#
+# Free tier notes: the web service sleeps after ~15 min idle (cold start on next hit);
+# the free Postgres has a limited lifespan. See docs/OPERATIONS.md.
+
+databases:
+  - name: socialapp-db
+    databaseName: app
+    user: app
+    plan: free
+    postgresMajorVersion: "16"
+
+services:
+  - type: web
+    name: socialapp
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /healthz
+    # daphne (ASGI) serves the REST API AND the chat WebSockets from one process.
+    dockerCommand: daphne -b 0.0.0.0 -p $PORT config.asgi:application
+    # Runs once per deploy before traffic shifts; GeoDjango auto-enables the PostGIS
+    # extension during migrate.
+    preDeployCommand: python manage.py migrate --noinput
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.prod
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: socialapp-db
+          property: connectionString
+      - key: PYTHONUNBUFFERED
+        value: "1"

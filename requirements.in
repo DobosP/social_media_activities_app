@@ -16,6 +16,8 @@ psycopg[binary]>=3.2
 requests>=2.32
 drf-spectacular>=0.29
 gunicorn>=23.0
+# Serve static files from the app process (single-container deploy, e.g. Render).
+whitenoise>=6.7
 # D7: Overture places ingestion reads GeoParquet via DuckDB.
 duckdb>=1.1
 # D5: real-time chat over WebSockets via Channels (ASGI); daphne serves the ASGI app.
