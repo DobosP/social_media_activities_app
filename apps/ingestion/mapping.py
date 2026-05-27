@@ -54,6 +54,9 @@ GENERIC_VENUES: dict[str, tuple[dict, list[str], float]] = {
     ),
     "community_centre": ({"amenity": "community_centre"}, ["board_games", "reading"], 0.3),
     "playground": ({"leisure": "playground"}, ["football", "basketball"], 0.2),
+    # Parks host casual outdoor games (street ball, kickabouts, park chess tables).
+    "park": ({"leisure": "park"}, ["football", "basketball", "streetball", "chess"], 0.2),
+    "arts_centre": ({"amenity": "arts_centre"}, ["board_games", "reading"], 0.25),
 }
 
 

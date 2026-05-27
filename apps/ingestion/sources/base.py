@@ -14,6 +14,8 @@ class RawPlace:
     tags: dict
     address: dict = field(default_factory=dict)
     opening_hours_raw: str = ""
+    website: str = ""
+    phone: str = ""
     osm_type: str | None = None
     osm_id: int | None = None
     external_id: str | None = None

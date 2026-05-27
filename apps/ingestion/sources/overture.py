@@ -191,6 +191,7 @@ class OvertureAdapter(SourceAdapter):
             lon=float(lon),
             lat=float(lat),
             tags=tags,
+            website=websites[0] if websites else "",
             address={
                 "street": addr.get("street", "") or addr.get("freeform", ""),
                 "housenumber": addr.get("housenumber", ""),
