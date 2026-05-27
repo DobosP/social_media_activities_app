@@ -74,6 +74,18 @@ def voting_members(activity):
     return current_members(activity).exclude(role=Membership.Role.GUARDIAN)
 
 
+def participant_count(activity) -> int:
+    """Number of participants holding a position — members/owner, excluding guardians."""
+    return voting_members(activity).count()
+
+
+def open_positions(activity) -> int | None:
+    """Remaining open spots, or None when the activity is uncapped."""
+    if activity.capacity is None:
+        return None
+    return max(activity.capacity - participant_count(activity), 0)
+
+
 def can_join(user, activity) -> bool:
     if not can_participate(user):
         return False
@@ -81,6 +93,8 @@ def can_join(user, activity) -> bool:
         return False
     if activity.status != Activity.Status.OPEN:
         return False
+    if activity.capacity is not None and participant_count(activity) >= activity.capacity:
+        return False  # no open positions left
     existing = (
         activity.memberships.filter(user=user).exclude(state=Membership.State.REMOVED).exists()
     )
