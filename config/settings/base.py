@@ -128,3 +128,12 @@ INGEST_USER_AGENT = env(
     "INGEST_USER_AGENT",
     default="social-activities-app/0.1 (nonprofit; contact: you@example.org)",
 )
+
+# D7 — richer place data.
+# Overture places parquet path/glob (local extract or the public S3 release, e.g.
+# "s3://overturemaps-us-west-2/release/<rel>/theme=places/type=place/*").
+OVERTURE_DATA_PATH = env("OVERTURE_DATA_PATH", default="")
+# Optional, paid Google Places enrichment — OFF by default (enrichment only, never
+# a place source). Enable explicitly and provide a key to use it.
+GOOGLE_PLACES_ENABLED = env.bool("GOOGLE_PLACES_ENABLED", default=False)
+GOOGLE_PLACES_API_KEY = env("GOOGLE_PLACES_API_KEY", default="")
