@@ -99,7 +99,10 @@ class GooglePlacesEnricher:
         data = self._get(
             _DETAILS_URL.format(place_id=place_id),
             params={},
-            field_mask="id,googleMapsUri,currentOpeningHours,regularOpeningHours",
+            field_mask=(
+                "id,googleMapsUri,currentOpeningHours,regularOpeningHours,"
+                "websiteUri,internationalPhoneNumber,rating,userRatingCount,primaryType"
+            ),
         )
         current = data.get("currentOpeningHours") or {}
         regular = data.get("regularOpeningHours") or {}
@@ -108,6 +111,11 @@ class GooglePlacesEnricher:
             "open_now": current.get("openNow"),
             "maps_uri": data.get("googleMapsUri"),
             "regular_hours": regular.get("weekdayDescriptions") or [],
+            "website": data.get("websiteUri") or "",
+            "phone": data.get("internationalPhoneNumber") or "",
+            "rating": data.get("rating"),
+            "rating_count": data.get("userRatingCount"),
+            "primary_type": data.get("primaryType") or "",
         }
 
     def enrich_place(self, place) -> dict | None:
@@ -121,8 +129,17 @@ class GooglePlacesEnricher:
             return None
         status = self.live_status(place_id)
         google_meta = {"place_id": status["place_id"]}
-        if status.get("maps_uri"):
-            google_meta["maps_uri"] = status["maps_uri"]
+        for key in ("maps_uri", "rating", "rating_count", "primary_type"):
+            if status.get(key):
+                google_meta[key] = status[key]
         place.raw_tags = {**(place.raw_tags or {}), "google": google_meta}
-        place.save(update_fields=["raw_tags"])
+        update_fields = ["raw_tags"]
+        # Backfill durable contact details Google can supply when we're missing them.
+        if not place.website and status.get("website"):
+            place.website = status["website"]
+            update_fields.append("website")
+        if not place.phone and status.get("phone"):
+            place.phone = status["phone"]
+            update_fields.append("phone")
+        place.save(update_fields=update_fields)
         return status
