@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     "apps.taxonomy",
     "apps.places",
     "apps.ingestion",
+    "apps.social",
 ]
 
 MIDDLEWARE = [
