@@ -51,6 +51,31 @@ OVERTURE_CATEGORY_MAP: dict[str, tuple[str, float]] = {
     "video_game_store": ("video_games", 0.7),
     "video_arcade": ("video_games", 0.8),
     "internet_cafe": ("video_games", 0.5),
+    # Endurance / outdoor
+    "running": ("running", 0.7),
+    "track_and_field": ("running", 0.7),
+    "hiking_trail": ("hiking", 0.7),
+    "trail": ("hiking", 0.5),
+    "cycling": ("cycling", 0.7),
+    # Fitness & wellness
+    "gym": ("group_fitness", 0.6),
+    "fitness_center": ("group_fitness", 0.6),
+    "fitness_trainer": ("group_fitness", 0.5),
+    "yoga_studio": ("yoga", 0.8),
+    "swimming_pool": ("swimming", 0.7),
+    "rock_climbing": ("climbing", 0.85),
+    "climbing_gym": ("climbing", 0.85),
+    # Team / racquet
+    "volleyball_court": ("volleyball", 0.9),
+    "badminton": ("badminton", 0.8),
+    # Culture & community
+    "museum": ("museum_visit", 0.8),
+    "art_museum": ("museum_visit", 0.8),
+    "history_museum": ("museum_visit", 0.8),
+    "performing_arts_theater": ("theatre_show", 0.8),
+    "theater": ("theatre_show", 0.7),
+    "concert_hall": ("concert", 0.7),
+    "dance_studio": ("dance_social", 0.7),
 }
 
 # Generic venues that imply several candidate activities but name no specific one.

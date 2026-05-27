@@ -18,7 +18,17 @@ class ActivityTypeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ActivityType
-        fields = ["slug", "name", "category", "parent", "aliases", "is_active", "related"]
+        fields = [
+            "slug",
+            "name",
+            "category",
+            "parent",
+            "aliases",
+            "is_active",
+            "wellness",
+            "family_friendly",
+            "related",
+        ]
 
 
 class ActivityCategorySerializer(serializers.ModelSerializer):

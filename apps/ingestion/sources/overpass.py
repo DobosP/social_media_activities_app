@@ -24,11 +24,18 @@ SELECTORS = [
     '["leisure"="swimming_pool"]',
     '["leisure"="sports_hall"]',
     '["leisure"="stadium"]',
+    # Endurance / outdoor.
+    '["leisure"="track"]',
+    '["sport"="running"]',
+    '["sport"="climbing"]',
+    '["route"="hiking"]',
+    '["route"="bicycle"]',
     # Public/cultural places known for activities.
     '["amenity"="library"]',
     '["amenity"="community_centre"]',
     '["amenity"="arts_centre"]',
     '["amenity"="theatre"]',
+    '["tourism"="museum"]',
     '["amenity"="public_bookcase"]',
     '["amenity"="table_tennis_table"]',
     '["amenity"="internet_cafe"]',
