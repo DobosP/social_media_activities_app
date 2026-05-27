@@ -7,6 +7,7 @@ from .services import can_participate
 class MeSerializer(serializers.ModelSerializer):
     requires_parental_consent = serializers.BooleanField(read_only=True)
     can_participate = serializers.SerializerMethodField()
+    is_guardian = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = User
@@ -16,8 +17,10 @@ class MeSerializer(serializers.ModelSerializer):
             "display_name",
             "age_band",
             "cohort",
+            "role",
             "is_identity_verified",
             "requires_parental_consent",
+            "is_guardian",
             "can_participate",
         ]
 

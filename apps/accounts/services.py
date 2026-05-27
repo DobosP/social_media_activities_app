@@ -1,6 +1,13 @@
+from django.db import transaction
 from django.utils import timezone
 
-from .models import COHORT_BY_AGE_BAND, AgeAssurance, Cohort, User
+from .models import (
+    COHORT_BY_AGE_BAND,
+    AgeAssurance,
+    Cohort,
+    GuardianRelationship,
+    User,
+)
 
 
 def assign_cohort(age_band: str) -> str:
@@ -37,3 +44,32 @@ def can_participate(user: User) -> bool:
     if user.requires_parental_consent:
         return has_valid_parental_consent(user)
     return True
+
+
+@transaction.atomic
+def link_guardian(guardian: User, ward: User, *, relationship="parent", consent=None):
+    """Record (or re-activate) an account-level guardianship link guardian → ward."""
+    if guardian.id == ward.id:
+        raise ValueError("A user cannot be their own guardian.")
+    link, _ = GuardianRelationship.objects.update_or_create(
+        guardian=guardian,
+        ward=ward,
+        defaults={
+            "relationship": relationship,
+            "consent": consent,
+            "status": GuardianRelationship.Status.ACTIVE,
+        },
+    )
+    return link
+
+
+def revoke_guardian(guardian: User, ward: User) -> None:
+    GuardianRelationship.objects.filter(guardian=guardian, ward=ward).update(
+        status=GuardianRelationship.Status.REVOKED
+    )
+
+
+def is_guardian_of(guardian: User, ward: User) -> bool:
+    return GuardianRelationship.objects.filter(
+        guardian=guardian, ward=ward, status=GuardianRelationship.Status.ACTIVE
+    ).exists()

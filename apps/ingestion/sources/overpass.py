@@ -30,6 +30,10 @@ SELECTORS = [
     '["sport"="climbing"]',
     '["route"="hiking"]',
     '["route"="bicycle"]',
+    # Schools & their sports grounds — activity venues for children (school sport,
+    # after-hours pitches). Collected as places; child-suitability via the taxonomy.
+    '["amenity"="school"]',
+    '["amenity"="college"]',
     # Public/cultural places known for activities.
     '["amenity"="library"]',
     '["amenity"="archive"]',

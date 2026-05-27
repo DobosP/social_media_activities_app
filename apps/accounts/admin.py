@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 
-from .models import AgeAssurance, ParentalConsent, User
+from .models import AgeAssurance, GuardianRelationship, ParentalConsent, User
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -25,17 +25,19 @@ class UserAdmin(BaseUserAdmin):
     list_display = (
         "username",
         "display_name",
+        "role",
         "age_band",
         "cohort",
         "is_identity_verified",
         "is_staff",
     )
-    list_filter = ("age_band", "cohort", "is_identity_verified", "is_staff", "is_superuser")
+    list_filter = ("role", "age_band", "cohort", "is_identity_verified", "is_staff", "is_superuser")
     search_fields = ("username", "display_name", "public_id")
     readonly_fields = ("public_id", "identity_verified_at", "last_login", "date_joined")
     fieldsets = (
         (None, {"fields": ("username", "password")}),
         ("Profile", {"fields": ("display_name", "public_id")}),
+        ("Role", {"fields": ("role",)}),
         (
             "Age & identity",
             {"fields": ("age_band", "cohort", "is_identity_verified", "identity_verified_at")},
@@ -63,3 +65,11 @@ class ParentalConsentAdmin(admin.ModelAdmin):
     list_display = ("minor", "status", "guardian_identifier", "granted_at", "expires_at")
     list_filter = ("status",)
     search_fields = ("minor__username", "guardian_identifier")
+
+
+@admin.register(GuardianRelationship)
+class GuardianRelationshipAdmin(admin.ModelAdmin):
+    list_display = ("guardian", "ward", "relationship", "status", "created_at")
+    list_filter = ("status", "relationship")
+    search_fields = ("guardian__username", "ward__username")
+    autocomplete_fields = ("guardian", "ward")

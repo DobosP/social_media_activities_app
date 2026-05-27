@@ -99,6 +99,14 @@ GENERIC_VENUES: dict[str, tuple[dict, list[str], float]] = {
     ),
     "nature_reserve": ({"leisure": "nature_reserve"}, ["hiking", "running"], 0.3),
     "arts_centre": ({"amenity": "arts_centre"}, ["workshop", "dance_social", "board_games"], 0.25),
+    # Schools host children's sport (gym/pitch) and reading — candidate venues for
+    # kids' activities (often available after hours / weekends).
+    "school": (
+        {"amenity": "school"},
+        ["football", "basketball", "volleyball", "table_tennis", "running", "reading"],
+        0.2,
+    ),
+    "college": ({"amenity": "college"}, ["football", "basketball", "running"], 0.2),
 }
 
 

@@ -208,12 +208,16 @@ def add_guardian(owner, activity, guardian) -> Membership:
     activity explicitly flagged guardian_accompanied, and the guardian must be a
     verified adult. Guardians don't vote and aren't open-discoverable. See docs/SAFETY.md.
     """
+    from apps.accounts.services import is_guardian_of
+
     if activity.owner_id != owner.id:
         raise NotAMember("Only the activity owner may add a guardian.")
     if not activity.guardian_accompanied or activity.cohort != Cohort.CHILD:
         raise InvalidState("This activity does not allow accompanying guardians.")
     if guardian.cohort != Cohort.ADULT or not can_participate(guardian):
         raise NotEligible("A guardian must be a verified adult.")
+    if not is_guardian_of(guardian, owner):
+        raise NotEligible("This adult is not a registered guardian of the activity owner.")
     existing = (
         activity.memberships.filter(user=guardian).exclude(state=Membership.State.REMOVED).first()
     )

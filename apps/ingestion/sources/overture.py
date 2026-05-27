@@ -86,6 +86,10 @@ OVERTURE_GENERIC: dict[str, tuple[list[str], float]] = {
     "recreation_center": (["basketball", "football", "board_games"], 0.2),
     "community_center": (["board_games", "reading"], 0.3),
     "community_services_non_profit": (["board_games", "reading"], 0.2),
+    # Schools — children's sport & reading venues.
+    "school": (["football", "basketball", "running", "reading"], 0.2),
+    "primary_school": (["football", "basketball", "running", "reading"], 0.2),
+    "high_school": (["football", "basketball", "running", "reading"], 0.2),
 }
 
 
