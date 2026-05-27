@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "django_filters",
     "drf_spectacular",
     # Local
+    "apps.accounts",
     "apps.taxonomy",
     "apps.places",
     "apps.ingestion",
@@ -90,6 +91,17 @@ STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+AUTH_USER_MODEL = "accounts.User"
+
+# Pluggable identity/age-assurance provider (D2). Default is the dev stub; in
+# production set this to a real provider (e.g. the EUDI Wallet provider). The dev
+# provider refuses to run outside DEBUG unless IDENTITY_ALLOW_DEV_PROVIDER=True.
+IDENTITY_PROVIDER = env(
+    "IDENTITY_PROVIDER",
+    default="apps.accounts.identity.providers.dev.DevIdentityProvider",
+)
+IDENTITY_ALLOW_DEV_PROVIDER = env.bool("IDENTITY_ALLOW_DEV_PROVIDER", default=False)
 
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
