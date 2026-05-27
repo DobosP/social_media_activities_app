@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "apps.social",
     "apps.safety",
     "apps.chat",
+    "apps.booking",
 ]
 
 MIDDLEWARE = [
