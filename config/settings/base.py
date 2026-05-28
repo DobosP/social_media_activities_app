@@ -118,6 +118,16 @@ IDENTITY_PROVIDER = env(
 )
 IDENTITY_ALLOW_DEV_PROVIDER = env.bool("IDENTITY_ALLOW_DEV_PROVIDER", default=False)
 
+# EUDI Wallet / OpenID4VP age verification (D2). The verifier checks an age attestation's
+# ES256 signature against EUDI_TRUSTED_ISSUERS (the EU trust list in production). Sandbox
+# mode additionally trusts a local test issuer so the flow is exercisable before the live
+# national wallet ships (RO ~Dec 2026).
+EUDI_CLIENT_ID = env("EUDI_CLIENT_ID", default="social-activities-app")
+EUDI_SANDBOX = env.bool("EUDI_SANDBOX", default=DEBUG)
+EUDI_SANDBOX_ISSUER_KEY_PEM = env("EUDI_SANDBOX_ISSUER_KEY_PEM", default="")
+# {issuer_id: PEM public key} — the trust anchor; populated from the EU trust list in prod.
+EUDI_TRUSTED_ISSUERS = env.json("EUDI_TRUSTED_ISSUERS", default={})
+
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_FILTER_BACKENDS": [

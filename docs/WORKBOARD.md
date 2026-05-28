@@ -20,7 +20,7 @@ everyone can read this file on `main`.
 | D1 — foundation & RO place data | ✅ merged | knowledge graph, OSM ingestion, geo API |
 | IS-2 — CI / Dependabot / pre-commit | ✅ merged | gates every PR |
 | D2 — identity scaffold | ✅ merged | custom user, cohorts, consent gate, provider interface (EUDI **stub**) |
-| D2-eudi — finish identity | ✅ merged | EUDIWalletProvider (age-band only, no PII) over the verifier seam |
+| D2-eudi — finish identity | ✅ merged | EUDIWalletProvider: real OpenID4VP/ES256 verification (trust list + nonce/audience), age-band only, no PII; `/api/accounts/verify-age/` |
 | D3 — social core | ✅ merged | activities, threads/posts, join-by-vote, place quorum, cohort isolation |
 | D4 — safety & moderation | ✅ merged | reporting, blocking, moderation queue, hash-chained audit log |
 | D7 — richer place data | ✅ merged | Overture adapter, Google enrichment, cross-source dedup, opening-hours/open-now |
