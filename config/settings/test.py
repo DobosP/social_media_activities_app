@@ -10,6 +10,8 @@ PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
 # Tests exercise the identity flow via the dev stub even though DEBUG is off.
 IDENTITY_ALLOW_DEV_PROVIDER = True
+# Trust the local EUDI sandbox issuer in tests.
+EUDI_SANDBOX = True
 
 # Disable API throttling in tests so request counts don't accumulate across cases
 # (the LocMemCache persists within a test process). Throttling is verified explicitly

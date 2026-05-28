@@ -36,6 +36,7 @@ constantly==23.10.4
 cryptography==48.0.0
     # via
     #   autobahn
+    #   pyjwt
     #   pyopenssl
     #   service-identity
 daphne==4.2.1
@@ -106,6 +107,10 @@ pyasn1-modules==0.4.2
     # via service-identity
 pycparser==3.0
     # via cffi
+pyjwt[crypto]==2.13.0
+    # via
+    #   -r requirements.in
+    #   pyjwt
 pyopenssl==26.2.0
     # via twisted
 pyyaml==6.0.3

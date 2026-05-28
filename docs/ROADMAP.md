@@ -103,9 +103,13 @@ These thread through multiple deliverables. Skipping them creates rework or lega
 
 > **Scaffold landed** (branch `claude/d2-identity-accounts`): custom `accounts.User` (IS-1),
 > `AgeBand`/`Cohort`, `ParentalConsent` + `AgeAssurance` models, the pluggable `IdentityProvider`
-> interface with a **dev stub** + an **EUDI stub**, cohort assignment + a `can_participate` consent
-> gate, `/api/accounts/me/`, admin, and tests. **Pending:** the real EUDI Wallet / EU
-> age-verification integration and the parental-consent UX/record-keeping.
+> interface with a **dev stub** + a **real EUDI provider**, cohort assignment + a `can_participate`
+> consent gate, `/api/accounts/me/`, admin, and tests. The EUDI provider performs **real OpenID4VP
+> verification** of the wallet's age attestation — ES256 signature against the
+> `EUDI_TRUSTED_ISSUERS` trust list, audience + nonce/replay binding and expiry — yielding only an
+> over-16/over-18 band, reachable via `POST /api/accounts/verify-age/start/` then `/verify-age/`.
+> **Pending:** trusting the **live** national wallet/issuer (point the trust list at the EU trust
+> list, RO ~Dec 2026) and the SD-JWT VC / ISO mdoc credential formats (the verifier seam is ready).
 
 - **Goal.** Let real people (incl. minors) onboard with **EU-grade identity/age assurance** and
   **verifiable parental consent**, without the app hoarding identity data.
