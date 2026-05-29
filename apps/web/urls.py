@@ -35,6 +35,7 @@ urlpatterns = [
     path("wards/", views.wards, name="wards"),
     path("notifications/", views.notifications_list, name="notifications"),
     path("notifications/read-all/", views.notifications_read_all, name="notifications_read_all"),
+    path("messages/", views.messages_page, name="messages"),
     path("donate/", views.donate, name="donate"),
     # Safety: reporting & blocking
     path("report/", views.report, name="report"),

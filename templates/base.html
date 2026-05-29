@@ -20,6 +20,7 @@
       <a href="{% url 'activity_create' %}">Organize</a>
       <a href="{% url 'notifications' %}">Alerts{% if unread_notifications %}
         <span class="pill">{{ unread_notifications }}</span>{% endif %}</a>
+      <a href="{% url 'messages' %}">Messages</a>
     {% endif %}
     <a href="{% url 'donate' %}">Support</a>
     <span class="spacer"></span>

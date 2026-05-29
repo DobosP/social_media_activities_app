@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Messages{% endblock %}
+{% block content %}
+<h1>Messages</h1>
+<p class="muted">
+  Private, <strong>end-to-end encrypted</strong> direct &amp; group chats. Only you and the
+  people in a conversation can read the messages &mdash; the server stores them encrypted and
+  cannot read them. You can only message people in your own age group, and they must accept
+  your first message.
+</p>
+
+{# Setting csrf_token here ensures the cookie is present for the JS API calls. #}
+<span style="display:none">{{ csrf_token }}</span>
+{{ messaging_config|json_script:"mz-config" }}
+
+<p id="mz-status" class="muted">Setting up secure messaging&hellip;</p>
+
+<div class="mz-layout">
+  <aside class="mz-sidebar card">
+    <h3>Conversations</h3>
+    <div id="mz-conversations"><p class="muted">Loading&hellip;</p></div>
+
+    <h3 style="margin-top:1rem">New conversation</h3>
+    <form id="mz-new-form" class="mz-new">
+      <label>Usernames <small class="muted">(comma or space separated; 2+ makes a group)</small>
+        <input name="usernames" autocomplete="off" placeholder="e.g. alex, sam" required>
+      </label>
+      <label>Group name <small class="muted">(optional)</small>
+        <input name="title" autocomplete="off" placeholder="Trail crew">
+      </label>
+      <input type="hidden" name="kind" value="direct">
+      <button class="btn btn-sm" type="submit">Start</button>
+    </form>
+
+    <h3 style="margin-top:1rem">This device</h3>
+    <p class="muted" style="font-size:.8rem">Your private key lives only in this browser. Back it
+      up (encrypted with a passphrase) to read your history on another device.</p>
+    <button id="mz-backup" class="btn btn-sm btn-secondary" type="button">Back up my key</button>
+  </aside>
+
+  <section class="mz-main card">
+    <h3 id="mz-title">Select a conversation</h3>
+    <div id="mz-log" class="thread mz-log"></div>
+    <form id="mz-composer" class="row" style="margin-top:.5rem;display:none">
+      <input id="mz-input" autocomplete="off" placeholder="Write an encrypted message&hellip;" style="flex:1">
+      <button class="btn btn-sm" type="submit">Send</button>
+    </form>
+  </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+  .mz-layout { display:grid; grid-template-columns: 280px 1fr; gap:1rem; align-items:start; }
+  .mz-log { min-height:240px; max-height:50vh; overflow-y:auto; border:1px solid var(--line);
+            border-radius:8px; padding:.5rem; }
+  .mz-conv { display:flex; align-items:center; gap:.35rem; flex-wrap:wrap; padding:.25rem 0;
+             border-bottom:1px solid var(--line); }
+  .mz-conv .linkbtn { flex:1; text-align:left; }
+  .mz-new label { display:block; font-size:.85rem; margin-bottom:.4rem; }
+  .mz-new input { width:100%; }
+  #mz-status.ok { color:#1a7f37; } #mz-status.error { color:#b42318; }
+  @media (max-width:720px){ .mz-layout { grid-template-columns:1fr; } }
+</style>
+<script src="{% static 'js/e2ee-messaging.js' %}"></script>
+{% endblock %}

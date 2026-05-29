@@ -413,6 +413,28 @@ def notifications_read_all(request):
     return redirect("notifications")
 
 
+# --- Secure messaging (E2EE, client-side crypto) ------------------------------------
+
+
+@login_required
+def messages_page(request):
+    """Shell for the end-to-end-encrypted messenger. All crypto happens in the
+    browser (see static/js/e2ee-messaging.js); this view only renders the page and
+    hands the client the current user's public identity so it can address itself."""
+    config = {
+        "me": {
+            "public_id": str(request.user.public_id),
+            "username": request.user.username,
+            "display_name": request.user.display_name or request.user.username,
+        }
+    }
+    return render(
+        request,
+        "web/messages.html",
+        {"messaging_config": config, **_nav_context(request.user)},
+    )
+
+
 # --- Donations ----------------------------------------------------------------------
 
 

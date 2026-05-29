@@ -12,12 +12,17 @@ from channels.routing import ProtocolTypeRouter, URLRouter  # noqa: E402
 from channels.security.websocket import AllowedHostsOriginValidator  # noqa: E402
 
 import apps.chat.routing  # noqa: E402
+import apps.messaging.routing  # noqa: E402
+
+websocket_urlpatterns = (
+    apps.chat.routing.websocket_urlpatterns + apps.messaging.routing.websocket_urlpatterns
+)
 
 application = ProtocolTypeRouter(
     {
         "http": django_asgi_app,
         "websocket": AllowedHostsOriginValidator(
-            AuthMiddlewareStack(URLRouter(apps.chat.routing.websocket_urlpatterns))
+            AuthMiddlewareStack(URLRouter(websocket_urlpatterns))
         ),
     }
 )
