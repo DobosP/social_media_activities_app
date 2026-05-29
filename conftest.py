@@ -1,0 +1,50 @@
+"""Project-wide pytest fixtures.
+
+Several tests run as ``TransactionTestCase`` (``@pytest.mark.django_db(transaction=True)``
+— e.g. the WebSocket consumer tests), which **flushes every table** at teardown,
+including the taxonomy that data migrations seed at database creation. Under
+pytest's ``--reuse-db`` (the CI default) that seed is not restored, so any later
+test that relies on the migration-seeded taxonomy fails depending on collection
+order. This autouse fixture re-applies the *idempotent* seed migrations for any
+test that touches the database, making the suite order-independent and CI
+deterministic.
+"""
+
+import importlib
+
+import pytest
+
+# Applied in dependency order (0004/0005 look up categories/types created earlier).
+_SEED_MODULES = (
+    "apps.taxonomy.migrations.0002_seed_taxonomy",
+    "apps.taxonomy.migrations.0004_seed_activities_v2",
+    "apps.taxonomy.migrations.0005_seed_reading_archives",
+)
+
+
+def _reseed_taxonomy():
+    from django.apps import apps as global_apps
+
+    from apps.taxonomy.models import ActivityType
+
+    # Fast path: the seed is intact, so do nothing but a couple of cheap lookups.
+    if (
+        ActivityType.objects.filter(slug="basketball").exists()
+        and ActivityType.objects.filter(slug="archive").exists()
+    ):
+        return
+    for path in _SEED_MODULES:
+        importlib.import_module(path).seed(global_apps, None)
+
+
+@pytest.fixture(autouse=True)
+def _ensure_taxonomy_seed(request):
+    """Reseed the taxonomy for DB tests if a prior transaction test flushed it."""
+    if "django_db" not in request.keywords:
+        return
+    # Make sure the database fixture is set up before we touch the DB.
+    if "transactional_db" in request.fixturenames:
+        request.getfixturevalue("transactional_db")
+    else:
+        request.getfixturevalue("db")
+    _reseed_taxonomy()
