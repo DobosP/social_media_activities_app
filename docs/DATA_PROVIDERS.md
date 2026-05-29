@@ -17,7 +17,7 @@ Legend: 🟢 free, no key · 🔑 free with a key/token · 💳 paid.
 | OSM bulk — Geofabrik (Romania) | whole-country OSM in one file | ODbL | 🟢 | **planned P2** (`GeofabrikAdapter`) |
 | Overture Maps — Places | ~60M POIs + categories/websites | CDLA-Permissive (some ODbL) | 🟢 | **integrated** (`OvertureAdapter`) |
 | Foursquare OS Places | 100M+ POIs, monthly | Apache-2.0 | 🔑 `FSQ_PLACES_TOKEN` | **planned P2** (parquet/DuckDB) |
-| Wikidata (SPARQL) | institutions/parks/venues + official website | CC0 | 🟢 | **planned P2** (enricher) |
+| Wikidata (SPARQL) | institutions/parks/venues + official website | CC0 | 🟢 | ✅ **built** (`enrichment/wikidata.py`; `enrich_places --wikidata`) |
 | data.gov.ro | RO public datasets (sport clubs, etc.) | OGL-RO | 🟢 | per-dataset adapter |
 | OpenData CJN (Cluj) | hyperlocal city data | open | 🟢 | per-dataset adapter (launch city) |
 
