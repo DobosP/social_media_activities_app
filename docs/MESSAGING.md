@@ -141,10 +141,12 @@ to false) and the client also **warns when a contact's fingerprint changes** sin
 | Method + path                                             | Purpose                                  |
 | --------------------------------------------------------- | ---------------------------------------- |
 | `GET/POST /keys/`                                          | get your own key / publish-rotate it     |
-| `GET /keys/<username>/`                                    | fetch a contactable user's public key    |
+| `GET /keys/<username>/`                                    | fetch a contactable user's key (+ fingerprint, verified) |
+| `POST /verify/`                                            | record out-of-band key verification      |
 | `GET/POST /conversations/`                                 | list / start a direct or group chat      |
 | `POST /conversations/<id>/accept/` `/decline/` `/leave/`   | invitation & membership lifecycle        |
 | `POST/DELETE /conversations/<id>/participants/`            | group admin add / remove (by username)   |
+| `POST /conversations/<id>/disappearing/`                   | set the disappearing-messages timer      |
 | `GET/POST /conversations/<id>/messages/`                   | history (with your key) / send ciphertext |
 | `POST /conversations/<id>/messages/<mid>/report/`          | report-with-decryption                   |
 
@@ -152,13 +154,28 @@ Real-time delivery is over a WebSocket at `ws/messaging/<conversation_id>/`, whi
 ciphertext (with every recipient's wrapped key) to connected members; each client decrypts only the
 key addressed to it.
 
+## Data minimization & retention
+
+Less ciphertext at rest means a smaller breach blast radius — important for a children's platform.
+Two mechanisms cull stored messages:
+
+- **Disappearing messages** — a per-conversation timer (`POST /conversations/<id>/disappearing/` with
+  `seconds` ∈ {0, 5min, 1h, 1d, 1w, 30d}; any active member for a direct chat, admins for groups).
+- **Global retention backstop** — `MESSAGING_RETENTION_DAYS` (default 0 = off).
+
+Both are applied by `services.purge_expired_messages()`, run via the **`purge_messaging`** management
+command (schedule it on cron/Celery beat). The count it reports is *messages* (the cascade also
+removes their `MessageKey` rows).
+
 ## Operational notes
 
 - **Anti-abuse** rate limits: `MESSAGING_START_RATE_LIMIT` (default 20), `MESSAGING_SEND_RATE_LIMIT`
   (default 60) per `MESSAGING_RATE_WINDOW_SECONDS` (default 60). For multi-process deploys, configure
   a shared cache (Redis) so counts are global, and a Redis channel layer for WebSocket fan-out.
+- **Retention**: schedule `manage.py purge_messaging` to enforce disappearing timers + the global
+  backstop.
 - **Audit log** records messaging *events* (key registered, conversation started, message sent with
-  a recipient count, reports) — never content.
+  a recipient count, disappearing timer changed, reports) — never content.
 - **Admin** exposes conversation/participant **metadata** for abuse triage; message bodies are
   unreadable there too.
 
@@ -166,7 +183,7 @@ key addressed to it.
 
 - ✅ Out-of-band **key verification** (safety numbers) + **key-change warnings** — done (see above).
   Next: render the safety number as a **QR code** for easier in-person comparison.
+- ✅ **Disappearing messages** + global retention backstop — done (see above).
 - **Forward secrecy** via a ratchet (consider MLS / RFC 9420) if the threat model warrants it.
-- **Disappearing messages** + server-side retention windows for ciphertext.
 - **Guardian visibility** controls for the youngest cohort, consistent with consent rules.
 - Client-side safety hashing **iff** mandated by the CSA Regulation, kept on-device.

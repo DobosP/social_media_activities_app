@@ -51,6 +51,7 @@ class ConversationSerializer(serializers.ModelSerializer):
             "kind",
             "title",
             "cohort",
+            "disappearing_seconds",
             "created_at",
             "updated_at",
             "participants",

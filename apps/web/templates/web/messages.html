@@ -41,6 +41,17 @@
 
   <section class="mz-main card">
     <h3 id="mz-title">Select a conversation</h3>
+    <div id="mz-toolbar" class="row" style="display:none;gap:.5rem;align-items:center;font-size:.8rem">
+      <label class="muted">Disappearing messages:
+        <select id="mz-timer">
+          <option value="0">Off</option>
+          <option value="3600">1 hour</option>
+          <option value="86400">1 day</option>
+          <option value="604800">1 week</option>
+          <option value="2592000">30 days</option>
+        </select>
+      </label>
+    </div>
     <div id="mz-verify"></div>
     <div id="mz-log" class="thread mz-log"></div>
     <form id="mz-composer" class="row" style="margin-top:.5rem;display:none">

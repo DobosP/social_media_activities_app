@@ -269,6 +269,9 @@ CHAT_RETENTION_DAYS = env.int("CHAT_RETENTION_DAYS", default=0)
 MESSAGING_RATE_WINDOW_SECONDS = env.int("MESSAGING_RATE_WINDOW_SECONDS", default=60)
 MESSAGING_START_RATE_LIMIT = env.int("MESSAGING_START_RATE_LIMIT", default=20)
 MESSAGING_SEND_RATE_LIMIT = env.int("MESSAGING_SEND_RATE_LIMIT", default=60)
+# Global retention backstop for encrypted messages (0 disables). Per-conversation
+# disappearing timers also apply. Purged by the purge_messaging management command.
+MESSAGING_RETENTION_DAYS = env.int("MESSAGING_RETENTION_DAYS", default=0)
 
 # --- D9 donations (no ads / no tracking-based monetization) ---
 # Pluggable payment provider; default builds an off-platform checkout deep link and

@@ -280,6 +280,8 @@
     newForm: document.getElementById("mz-new-form"),
     backupBtn: document.getElementById("mz-backup"),
     verify: document.getElementById("mz-verify"),
+    toolbar: document.getElementById("mz-toolbar"),
+    timer: document.getElementById("mz-timer"),
   };
   let current = null; // current conversation object
   let socket = null;
@@ -483,11 +485,14 @@
 
     if (current.my_state !== "active") {
       els.composer.style.display = "none";
+      els.toolbar.style.display = "none";
       els.verify.innerHTML = "";
       els.log.innerHTML = '<p class="muted">Accept the invitation to read and reply.</p>';
       return;
     }
     els.composer.style.display = "";
+    els.toolbar.style.display = "";
+    els.timer.value = String(current.disappearing_seconds || 0);
 
     await renderVerification(current);
 
@@ -532,6 +537,27 @@
       await sendCurrent(text);
     } catch (e) {
       setStatus("Send failed: " + e.message, "error");
+    }
+  });
+
+  els.timer.addEventListener("change", async () => {
+    if (!current) return;
+    try {
+      const conv = await api(
+        "POST",
+        "/api/messaging/conversations/" + current.id + "/disappearing/",
+        { seconds: parseInt(els.timer.value, 10) }
+      );
+      current.disappearing_seconds = conv.disappearing_seconds;
+      setStatus(
+        conv.disappearing_seconds
+          ? "Messages now disappear after the selected time."
+          : "Disappearing messages turned off.",
+        "ok"
+      );
+    } catch (e) {
+      setStatus("Could not update timer: " + e.message, "error");
+      els.timer.value = String(current.disappearing_seconds || 0);
     }
   });
 

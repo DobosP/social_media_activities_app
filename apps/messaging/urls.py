@@ -31,6 +31,11 @@ urlpatterns = [
         views.ConversationParticipantsView.as_view(),
         name="messaging-participants",
     ),
+    path(
+        "conversations/<int:pk>/disappearing/",
+        views.ConversationDisappearingView.as_view(),
+        name="messaging-disappearing",
+    ),
     # Messages
     path(
         "conversations/<int:pk>/messages/",

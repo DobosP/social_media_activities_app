@@ -337,6 +337,56 @@ def remove_participant(actor, conversation, target) -> Participant:
     return p
 
 
+# Allowed disappearing-message timers (seconds): off, or 5 min … 30 days.
+DISAPPEARING_CHOICES = {0, 300, 3600, 86400, 604800, 2592000}
+
+
+@transaction.atomic
+def set_disappearing(actor, conversation, seconds) -> Conversation:
+    """Set the disappearing-messages timer. Any active member can set it for a direct
+    chat; only an admin can for a group. The change is audited."""
+    try:
+        seconds = int(seconds)
+    except (TypeError, ValueError):
+        raise MessagingError("Timer must be a number of seconds.") from None
+    if seconds not in DISAPPEARING_CHOICES:
+        raise MessagingError("Unsupported timer value.")
+    actor_p = _participant(conversation, actor)
+    if not actor_p or actor_p.state != Participant.State.ACTIVE:
+        raise MessagingError("You are not an active member of this conversation.")
+    if conversation.kind == Conversation.Kind.GROUP and actor_p.role != Participant.Role.ADMIN:
+        raise MessagingError("Only a group admin can change the disappearing timer.")
+    conversation.disappearing_seconds = seconds
+    conversation.save(update_fields=["disappearing_seconds", "updated_at"])
+    record_audit(
+        "messaging.disappearing_set",
+        actor=actor,
+        conversation_id=conversation.id,
+        seconds=seconds,
+    )
+    return conversation
+
+
+def purge_expired_messages(now=None) -> int:
+    """Delete ciphertext past its lifetime: per-conversation disappearing timers, plus
+    a global MESSAGING_RETENTION_DAYS backstop. Returns the number of messages removed.
+    Intended to run periodically (see the purge_messaging management command)."""
+    now = now or timezone.now()
+    removed = 0
+    timed = Conversation.objects.filter(disappearing_seconds__gt=0)
+    for conv in timed.iterator():
+        cutoff = now - timezone.timedelta(seconds=conv.disappearing_seconds)
+        # .delete() returns the cascade total (incl. MessageKey rows); count Messages.
+        _, by_model = Message.objects.filter(conversation=conv, created_at__lt=cutoff).delete()
+        removed += by_model.get("messaging.Message", 0)
+    days = getattr(settings, "MESSAGING_RETENTION_DAYS", 0)
+    if days:
+        cutoff = now - timezone.timedelta(days=days)
+        _, by_model = Message.objects.filter(created_at__lt=cutoff).delete()
+        removed += by_model.get("messaging.Message", 0)
+    return removed
+
+
 # --------------------------------------------------------------------------- #
 # Access helpers
 # --------------------------------------------------------------------------- #

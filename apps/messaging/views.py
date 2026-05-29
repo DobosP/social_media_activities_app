@@ -187,6 +187,20 @@ class ConversationParticipantsView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+class ConversationDisappearingView(APIView):
+    """Set the disappearing-messages timer (seconds; 0 = off)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        conv = get_object_or_404(Conversation, pk=pk)
+        try:
+            services.set_disappearing(request.user, conv, request.data.get("seconds", 0))
+        except services.MessagingError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(_conversation_payload(conv, request))
+
+
 class ConversationMessagesView(APIView):
     """Read history (GET, with the caller's wrapped keys) or send ciphertext (POST)."""
 

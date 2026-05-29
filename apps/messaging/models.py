@@ -63,6 +63,9 @@ class Conversation(models.Model):
     title = models.CharField(max_length=120, blank=True)
     # Snapshot of the cohort this conversation is locked to (cohort isolation).
     cohort = models.CharField(max_length=16, choices=Cohort.choices)
+    # Disappearing-messages timer in seconds (0 = off). Messages older than this are
+    # purged, minimizing ciphertext at rest. See services.purge_expired_messages.
+    disappearing_seconds = models.PositiveIntegerField(default=0)
     creator = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
