@@ -63,7 +63,28 @@ class UserKeyView(APIView):
                 {"detail": "This user hasn't set up secure messaging yet."},
                 status=status.HTTP_404_NOT_FOUND,
             )
-        return Response(PublicKeySerializer(key).data)
+        data = PublicKeySerializer(key).data
+        # Fingerprint + whether the caller has verified this exact key (for the
+        # safety-number UI). The browser recomputes the fingerprint to trust it.
+        data.update(services.verification_status(request.user, target))
+        return Response(data)
+
+
+class KeyVerifyView(APIView):
+    """Record that the caller verified a contact's key out of band (safety number).
+    Rejects a fingerprint that doesn't match the contact's current key."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        target = get_object_or_404(User, username=request.data.get("username", ""))
+        try:
+            services.record_key_verification(
+                request.user, target, request.data.get("fingerprint", "")
+            )
+        except services.MessagingError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(services.verification_status(request.user, target))
 
 
 class ConversationListCreateView(APIView):

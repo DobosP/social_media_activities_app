@@ -124,6 +124,38 @@
     );
   }
 
+  // ---- key fingerprints & safety numbers (out-of-band verification) --------
+  // canonicalJwk MUST match the server's json.dumps(sort_keys, no spaces) so the
+  // fingerprint we submit equals services.key_fingerprint() (see docs/MESSAGING.md).
+  function canonicalJwk(jwk) {
+    return JSON.stringify({ crv: jwk.crv, kty: jwk.kty, x: jwk.x, y: jwk.y });
+  }
+  function toHex(buf) {
+    return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+  }
+  async function sha256hex(text) {
+    return toHex(await subtle.digest("SHA-256", enc.encode(text)));
+  }
+  async function keyFingerprint(jwk) {
+    return (await sha256hex(canonicalJwk(jwk))).slice(0, 32);
+  }
+  // A 60-digit safety number, identical for both peers when their keys match (it is
+  // order-independent and binds each party's identity to their key). If a server
+  // MITMs by serving a different key to one side, the two numbers differ.
+  async function safetyNumber(meId, meJwk, themId, themJwk) {
+    const a = meId + "|" + (await sha256hex(canonicalJwk(meJwk)));
+    const b = themId + "|" + (await sha256hex(canonicalJwk(themJwk)));
+    const combined = [a, b].sort().join("");
+    const digest = new Uint8Array(await subtle.digest("SHA-512", enc.encode(combined)));
+    const groups = [];
+    for (let i = 0; i < 12; i++) {
+      let n = 0;
+      for (let j = 0; j < 5; j++) n = n * 256 + digest[i * 5 + j];
+      groups.push(String(n % 100000).padStart(5, "0"));
+    }
+    return groups.join(" ");
+  }
+
   // ---- passphrase backup (optional, enables history on a new device) -------
   async function kekFromPassphrase(passphrase, salt) {
     const base = await subtle.importKey("raw", enc.encode(passphrase), "PBKDF2", false, [
@@ -173,12 +205,17 @@
   }
 
   // ---- message encryption / decryption ------------------------------------
-  async function getPublicJwk(username) {
-    if (username === ME.username) return identity.publicJwk;
+  // Fetch a contact's full key record ({public_jwk, fingerprint, verified, ...}).
+  async function getContactKey(username) {
     if (keyCache[username]) return keyCache[username];
     const data = await api("GET", "/api/messaging/keys/" + encodeURIComponent(username) + "/");
-    keyCache[username] = data.public_jwk;
-    return data.public_jwk;
+    keyCache[username] = data;
+    return data;
+  }
+
+  async function getPublicJwk(username) {
+    if (username === ME.username) return identity.publicJwk;
+    return (await getContactKey(username)).public_jwk;
   }
 
   // recipients: [{username, public_id}]
@@ -242,6 +279,7 @@
     input: document.getElementById("mz-input"),
     newForm: document.getElementById("mz-new-form"),
     backupBtn: document.getElementById("mz-backup"),
+    verify: document.getElementById("mz-verify"),
   };
   let current = null; // current conversation object
   let socket = null;
@@ -343,6 +381,97 @@
     setStatus("Report submitted to moderators.", "ok");
   }
 
+  // Render the key-verification panel: a safety number per other member, a verified
+  // badge, a verify button, and a warning if a member's key changed since last seen.
+  async function renderVerification(conv) {
+    els.verify.innerHTML = "";
+    const others = (conv.participants || [])
+      .filter((p) => p.state === "active" && p.user.public_id !== ME.public_id)
+      .map((p) => ({
+        username: p.user.username,
+        public_id: p.user.public_id,
+        display: p.user.display_name || p.user.username,
+      }));
+    if (!others.length) return;
+
+    const panel = document.createElement("details");
+    panel.className = "mz-verify-panel card";
+    const summary = document.createElement("summary");
+    panel.appendChild(summary);
+    let unverified = 0;
+
+    for (const o of others) {
+      let ck;
+      try {
+        ck = await getContactKey(o.username);
+      } catch (e) {
+        continue;
+      }
+      const number = await safetyNumber(ME.public_id, identity.publicJwk, o.public_id, ck.public_jwk);
+
+      // Key-change detection (stored locally — the server isn't trusted for this).
+      const seenKey = "seenfp:" + o.public_id;
+      const prev = await idbGet(seenKey);
+      const changed = prev && prev !== ck.fingerprint;
+      await idbPut(seenKey, ck.fingerprint);
+
+      const row = document.createElement("div");
+      row.className = "mz-verify-row";
+      const head = document.createElement("div");
+      const name = document.createElement("strong");
+      name.textContent = o.display;
+      head.appendChild(name);
+      head.appendChild(document.createTextNode(" "));
+      const badge = document.createElement("span");
+      if (ck.verified) {
+        badge.className = "pill ok";
+        badge.textContent = "✓ verified";
+      } else {
+        unverified++;
+        badge.className = "pill";
+        badge.textContent = "unverified";
+      }
+      head.appendChild(badge);
+      row.appendChild(head);
+
+      if (changed) {
+        const warn = document.createElement("div");
+        warn.className = "mz-warn";
+        warn.textContent =
+          "⚠ " + o.display + "'s key changed since you last saw it — re-verify before trusting it.";
+        row.appendChild(warn);
+      }
+
+      const num = document.createElement("code");
+      num.className = "mz-safety";
+      num.textContent = number;
+      row.appendChild(num);
+
+      const btn = document.createElement("button");
+      btn.className = "btn btn-sm";
+      btn.textContent = ck.verified ? "Re-verify" : "Mark verified";
+      btn.addEventListener("click", async () => {
+        try {
+          await api("POST", "/api/messaging/verify/", {
+            username: o.username,
+            fingerprint: ck.fingerprint,
+          });
+          delete keyCache[o.username];
+          setStatus("Marked " + o.display + " as verified.", "ok");
+          await renderVerification(current);
+        } catch (e) {
+          setStatus("Verify failed: " + e.message, "error");
+        }
+      });
+      row.appendChild(btn);
+      panel.appendChild(row);
+    }
+
+    summary.textContent =
+      "🔒 Verify encryption keys" + (unverified ? " (" + unverified + " unverified)" : " (all verified)");
+    els.verify.appendChild(panel);
+  }
+
   async function openConversation(id) {
     const convs = await api("GET", "/api/messaging/conversations/");
     current = convs.find((c) => c.id === id);
@@ -354,10 +483,13 @@
 
     if (current.my_state !== "active") {
       els.composer.style.display = "none";
+      els.verify.innerHTML = "";
       els.log.innerHTML = '<p class="muted">Accept the invitation to read and reply.</p>';
       return;
     }
     els.composer.style.display = "";
+
+    await renderVerification(current);
 
     const history = await api(
       "GET",

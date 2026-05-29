@@ -174,3 +174,35 @@ class MessageKey(models.Model):
 
     def __str__(self):
         return f"key(msg={self.message_id}, to={self.recipient_id})"
+
+
+class KeyVerification(models.Model):
+    """A record that `verifier` confirmed `subject`'s key fingerprint out of band
+    (e.g. comparing a safety number in person).
+
+    The server is UNTRUSTED for this: it only mirrors the user's decision across
+    devices and is auto-invalidated when the subject's key changes (the stored
+    fingerprint no longer matches). The real protection is the human comparison and
+    the client's warning when a fingerprint changes. See docs/MESSAGING.md.
+    """
+
+    verifier = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="key_verifications_made"
+    )
+    subject = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="key_verifications_received",
+    )
+    fingerprint = models.CharField(max_length=128)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["verifier", "subject"], name="uq_verifier_subject")
+        ]
+        indexes = [models.Index(fields=["verifier", "subject"])]
+
+    def __str__(self):
+        return f"verify({self.verifier_id}->{self.subject_id})"

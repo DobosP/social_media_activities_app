@@ -14,6 +14,9 @@ First contact also requires the recipient to ACCEPT (no unsolicited messaging),
 and blocking is honoured in both directions. See docs/MESSAGING.md.
 """
 
+import hashlib
+import json
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import transaction
@@ -22,7 +25,7 @@ from django.utils import timezone
 from apps.accounts.models import Cohort
 from apps.safety.services import allow_action, file_report, is_blocked, record_audit
 
-from .models import Conversation, Message, MessageKey, Participant, PublicKey
+from .models import Conversation, KeyVerification, Message, MessageKey, Participant, PublicKey
 
 User = get_user_model()
 
@@ -67,6 +70,52 @@ def register_public_key(
 
 def public_key_for(user) -> PublicKey | None:
     return PublicKey.objects.filter(user=user, active=True).first()
+
+
+# --------------------------------------------------------------------------- #
+# Key verification (out-of-band safety numbers — closes the MITM gap)
+# --------------------------------------------------------------------------- #
+def key_fingerprint(public_jwk) -> str:
+    """A stable, human-checkable fingerprint of a public key: the first 32 hex chars
+    of SHA-256 over the key's canonical JSON. The browser computes this identically
+    (see static/js/e2ee-messaging.js) so the two always agree. The full 60-digit
+    *safety number* compared by two users is derived client-side from both parties'
+    fingerprints (algorithm documented in docs/MESSAGING.md)."""
+    canon = json.dumps(public_jwk, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(canon.encode()).hexdigest()[:32]
+
+
+@transaction.atomic
+def record_key_verification(verifier, subject, fingerprint) -> KeyVerification:
+    """Record that `verifier` confirmed `subject`'s current key out of band. Rejects a
+    fingerprint that doesn't match the subject's *current* active key, so a stale or
+    forged value can't be marked verified."""
+    assert_can_message(verifier, subject)
+    key = public_key_for(subject)
+    if key is None:
+        raise MessagingError("That user has no active key to verify.")
+    current = key_fingerprint(key.public_jwk)
+    if fingerprint != current:
+        raise MessagingError("Fingerprint does not match the user's current key.")
+    obj, _ = KeyVerification.objects.update_or_create(
+        verifier=verifier, subject=subject, defaults={"fingerprint": current}
+    )
+    record_audit("messaging.key_verified", actor=verifier, target=subject)
+    return obj
+
+
+def verification_status(viewer, subject) -> dict:
+    """The subject's current key fingerprint and whether `viewer` has a verification
+    on record for it. A key rotation changes the fingerprint, so any prior
+    verification stops matching automatically (`verified` flips back to False)."""
+    key = public_key_for(subject)
+    if key is None:
+        return {"fingerprint": None, "verified": False}
+    fp = key_fingerprint(key.public_jwk)
+    verified = KeyVerification.objects.filter(
+        verifier=viewer, subject=subject, fingerprint=fp
+    ).exists()
+    return {"fingerprint": fp, "verified": verified}
 
 
 # --------------------------------------------------------------------------- #

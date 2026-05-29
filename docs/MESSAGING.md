@@ -84,14 +84,39 @@ a new device the user enters the passphrase to restore. Without a backup, switch
 **new key** and **no access to old history** (messages were wrapped to the old key) — an accepted,
 documented limitation.
 
+### Key verification (safety numbers)
+
+To mitigate a key-substitution **man-in-the-middle** by a malicious server, two users can compare a
+**safety number** out of band (in person or over another trusted channel). It is derived entirely
+**client-side** from the public keys each client actually holds, so a server that serves different
+keys to each side produces **different** numbers on each side — a visible mismatch.
+
+Algorithm (kept identical in `static/js/e2ee-messaging.js` and `services.key_fingerprint`):
+
+```
+canonicalJwk = JSON of {crv, kty, x, y} with sorted keys, no spaces
+fingerprint(jwk)      = SHA-256(canonicalJwk).hex[:32]          # per-key, server mirrors this
+perUser(id, jwk)      = id + "|" + SHA-256(canonicalJwk).hex    # binds identity to key
+safetyNumber(a, b)    = SHA-512( sort([perUser_a, perUser_b]).join("") )
+                        -> 12 groups of 5 digits (order-independent, same for both peers)
+```
+
+When a user marks a contact verified, the client submits the contact's **fingerprint** to
+`POST /verify/`; the server stores it **only as a cross-device convenience** (it is *not* a trust
+boundary) and rejects a fingerprint that doesn't match the contact's current key. A key rotation
+changes the fingerprint, so any prior verification automatically stops matching (`verified` flips
+to false) and the client also **warns when a contact's fingerprint changes** since it was last seen
+(stored locally). The actual security comes from the human comparison, not the server's record.
+
 ## Honest limitations (what this is NOT)
 
 - **Not Signal/MLS.** This is hybrid public-key encryption. There is **no double ratchet**, so **no
   forward secrecy** and **no post-compromise security**: if a private key leaks, past messages
   wrapped to it can be decrypted.
-- **Server-asserted trust (no key verification yet).** Clients trust the public key the server hands
-  them. A malicious/compromised server could perform a **man-in-the-middle** by substituting keys.
-  There is no out-of-band safety-number verification yet — see Roadmap.
+- **Trust is server-asserted unless you verify.** Clients trust the public key the server hands them
+  until a **safety number** is compared out of band (see above). Verification + key-change warnings
+  mitigate a server MITM but only work if users actually compare; absent that, a malicious server
+  could substitute keys.
 - **Metadata is visible to the server.** Who talks to whom, when, message sizes, and group
   membership are **not** encrypted (they're needed to enforce cohort/abuse rules). Only *content*
   is E2EE.
@@ -139,7 +164,8 @@ key addressed to it.
 
 ## Roadmap (to strengthen)
 
-- Out-of-band **key verification** (safety numbers / QR) to close the MITM gap.
+- ✅ Out-of-band **key verification** (safety numbers) + **key-change warnings** — done (see above).
+  Next: render the safety number as a **QR code** for easier in-person comparison.
 - **Forward secrecy** via a ratchet (consider MLS / RFC 9420) if the threat model warrants it.
 - **Disappearing messages** + server-side retention windows for ciphertext.
 - **Guardian visibility** controls for the youngest cohort, consistent with consent rules.

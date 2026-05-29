@@ -3,8 +3,9 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    # Key registry
+    # Key registry & out-of-band verification
     path("keys/", views.KeyRegistryView.as_view(), name="messaging-keys"),
+    path("verify/", views.KeyVerifyView.as_view(), name="messaging-verify"),
     path("keys/<str:username>/", views.UserKeyView.as_view(), name="messaging-user-key"),
     # Conversations
     path(

@@ -41,6 +41,7 @@
 
   <section class="mz-main card">
     <h3 id="mz-title">Select a conversation</h3>
+    <div id="mz-verify"></div>
     <div id="mz-log" class="thread mz-log"></div>
     <form id="mz-composer" class="row" style="margin-top:.5rem;display:none">
       <input id="mz-input" autocomplete="off" placeholder="Write an encrypted message&hellip;" style="flex:1">
@@ -61,6 +62,13 @@
   .mz-new label { display:block; font-size:.85rem; margin-bottom:.4rem; }
   .mz-new input { width:100%; }
   #mz-status.ok { color:#1a7f37; } #mz-status.error { color:#b42318; }
+  .pill.ok { background:#1a7f37; color:#fff; }
+  .mz-verify-panel { margin:.25rem 0 .75rem; padding:.5rem .75rem; }
+  .mz-verify-panel summary { cursor:pointer; font-size:.85rem; }
+  .mz-verify-row { padding:.4rem 0; border-top:1px solid var(--line); }
+  .mz-safety { display:block; font-size:.8rem; letter-spacing:.5px; margin:.3rem 0;
+               word-spacing:2px; color:var(--muted, #555); }
+  .mz-warn { color:#b42318; font-size:.8rem; margin:.25rem 0; }
   @media (max-width:720px){ .mz-layout { grid-template-columns:1fr; } }
 </style>
 <script src="{% static 'js/e2ee-messaging.js' %}"></script>
