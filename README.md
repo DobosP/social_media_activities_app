@@ -58,11 +58,13 @@ activity links are never overwritten. The OSM-tag → activity mapping lives in
 A server-rendered web interface (`apps/web/`, session auth) sits on top of the API for end
 users — open `http://localhost:8000/`:
 
-- Sign up / log in (demo age assurance), profile + avatar, declare interests.
-- Discover: interactive **places map** (Leaflet), recommended-for-you feed, upcoming activities.
+- Sign up / log in, profile + avatar, declare interests, and **verify your age** via the EU
+  Digital Identity wallet (OpenID4VP; a sandbox demo wallet stands in until the live one ships).
+- Discover: interactive **places map** (Leaflet), a recommended-for-you feed, upcoming activities,
+  and **"what's happening"** events (with place detail showing nearby events).
 - Organise an activity; on its page: **join-by-vote**, text thread, private member photos, and
   **live chat** (WebSocket).
-- Notifications and a donation page. Moderation stays in `/admin/`.
+- Notifications, a guardian **wards** view, and a donation page. Moderation stays in `/admin/`.
 
 ## API
 

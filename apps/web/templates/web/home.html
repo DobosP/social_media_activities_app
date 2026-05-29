@@ -23,4 +23,16 @@
 <h2>Upcoming in your cohort</h2>
 {% for a in upcoming %}{% include "web/_activity_card.html" %}{% empty %}
 <p class="muted">Nothing upcoming yet. Be the first to organise something!</p>{% endfor %}
+
+{% if events %}
+<h2>What's happening near you <a class="muted" style="font-size:.8rem" href="{% url 'events_list' %}">see all &rarr;</a></h2>
+<div class="grid">
+  {% for e in events %}
+    <div class="card">
+      <h3><a href="{% url 'event_detail' e.pk %}">{{ e.title }}</a></h3>
+      <p class="muted">{{ e.starts_at|date:"D j M, H:i" }}{% if e.place %} &middot; {{ e.place.name }}{% endif %}</p>
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
 {% endblock %}

@@ -13,6 +13,7 @@
   <nav class="nav container">
     <a class="brand" href="{% url 'home' %}">&#9679; Activities</a>
     <a href="{% url 'places_map' %}">Places</a>
+    <a href="{% url 'events_list' %}">Events</a>
     {% if user.is_authenticated %}
       <a href="{% url 'activity_list' %}">Activities</a>
       <a href="{% url 'interests' %}">Interests</a>
