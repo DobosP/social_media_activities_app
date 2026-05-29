@@ -50,6 +50,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             binutils gdal-bin libgdal-dev libgeos-dev libproj-dev
+      - name: Install pgvector into the Postgres service
+        # The postgis/postgis image ships PostGIS but not pgvector; the
+        # recommendations app's migration runs CREATE EXTENSION vector. Install the
+        # PGDG pgvector package into the running service container so it's available.
+        run: |
+          set -euo pipefail
+          CID=$(docker ps --filter "ancestor=postgis/postgis:16-3.4" --format '{{.ID}}' | head -1)
+          echo "Postgres service container: $CID"
+          docker exec "$CID" bash -lc "apt-get update && apt-get install -y --no-install-recommends postgresql-16-pgvector"
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
