@@ -71,26 +71,41 @@ STORAGES = {
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
 }
 
-# --- Fail-closed production assertions (mirror the SECRET_KEY guard above) ---
-# Each of these is a silent, dangerous misconfiguration in production: per-process cache /
-# channel-layer break global rate-limiting and real-time fan-out the moment a 2nd process
-# exists; the dev identity provider trusts any self-asserted age band; EUDI sandbox trusts
-# a local test issuer. Refuse to boot rather than run a minors' platform unsafely.
+# --- Production safety assertions (mirror the SECRET_KEY guard above) ---
+# Two tiers. HARD failures (always): the dev identity provider trusts any self-asserted age
+# band, and EUDI sandbox trusts a local test issuer — neither may run a minors' platform.
+# SOFT (warn unless DJANGO_REQUIRE_SHARED_STATE=True): per-process cache / channel layer are
+# fine for a SINGLE-process deploy (the free-tier default) but break global rate-limiting and
+# cross-process WebSocket fan-out the moment a 2nd process exists — so we warn loudly and let
+# a scaled-out deploy enforce them (set REDIS_URL + DJANGO_REQUIRE_SHARED_STATE=True; enabling
+# Redis also requires installing channels-redis — recompile requirements.txt).
 #
 # These run only when prod is the ACTIVE settings module (server boot, migrate, check,
 # collectstatic) — not when prod is imported for inspection while another settings module
 # (e.g. config.settings.test) is active, where base.py was already loaded with dev defaults.
 if os.environ.get("DJANGO_SETTINGS_MODULE") == "config.settings.prod":
+    import warnings
+
+    _require_shared_state = env.bool("DJANGO_REQUIRE_SHARED_STATE", default=False)
+    _per_process_problems = []
     if "InMemory" in CHANNEL_LAYERS["default"]["BACKEND"]:
-        raise ImproperlyConfigured(
-            "Production requires a shared channel layer: set REDIS_URL (InMemoryChannelLayer "
-            "is per-process and drops cross-process WebSocket messages)."
+        _per_process_problems.append(
+            "InMemoryChannelLayer is per-process and drops cross-process WebSocket messages"
         )
     if "locmem" in CACHES["default"]["BACKEND"].lower():
-        raise ImproperlyConfigured(
-            "Production requires a shared cache: set REDIS_URL (LocMemCache is per-process, so "
-            "rate limits and throttles would not be global and reset on every restart)."
+        _per_process_problems.append(
+            "LocMemCache is per-process, so rate limits aren't global and reset on restart"
         )
+    if _per_process_problems:
+        _msg = (
+            "Per-process backends in production: "
+            + "; ".join(_per_process_problems)
+            + ". Safe only for a SINGLE-process deploy. Set REDIS_URL (and install channels-redis) "
+            "before scaling out."
+        )
+        if _require_shared_state:
+            raise ImproperlyConfigured(_msg + " (DJANGO_REQUIRE_SHARED_STATE=True)")
+        warnings.warn(_msg, stacklevel=2)
     if IDENTITY_PROVIDER.endswith("dev.DevIdentityProvider") and not IDENTITY_ALLOW_DEV_PROVIDER:
         raise ImproperlyConfigured(
             "Production must use a real IDENTITY_PROVIDER (e.g. the EUDI wallet provider); the "

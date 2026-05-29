@@ -125,10 +125,12 @@ def _affected_user(target):
 
     if isinstance(target, get_user_model()):
         return target
-    if getattr(target, "owner_id", None) is not None:
-        return getattr(target, "owner", None)
-    if getattr(target, "author_id", None) is not None:
-        return getattr(target, "author", None)
+    # Resolve the content owner across the reportable content models: Activity.owner,
+    # Post.author, Message.sender, Membership/Booking.user. Without this, removing a
+    # reported message/membership would notify nobody (missing DSA Art.17 notice).
+    for attr in ("owner", "author", "sender", "user"):
+        if getattr(target, f"{attr}_id", None) is not None:
+            return getattr(target, attr, None)
     return None
 
 
@@ -152,13 +154,17 @@ def _notify_statement_of_reasons(target, action, reason):
             f"Action taken: {action_label}. Reason: {reason_label}. "
             "If you believe this decision is wrong, you may contest it."
         )
-        notify(
-            recipient,
-            Notification.Kind.MODERATION,
-            title="A moderation decision affected your content/account",
-            body=body,
-            url="",
-        )
+        # Savepoint: a DB-level failure creating the notification must roll back ONLY the
+        # notification, never the (already-applied) moderation action in the outer atomic
+        # block — a poisoned transaction would otherwise fail the outer COMMIT.
+        with transaction.atomic():
+            notify(
+                recipient,
+                Notification.Kind.MODERATION,
+                title="A moderation decision affected your content/account",
+                body=body,
+                url="",
+            )
     except Exception:
         # Statement-of-reasons delivery is non-critical relative to the action itself.
         pass

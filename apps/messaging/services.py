@@ -211,6 +211,9 @@ def start_group(initiator, targets, *, title="") -> Conversation:
         unique_targets.append(t)
     if not unique_targets:
         raise MessagingError("A group needs at least one other member.")
+    max_members = getattr(settings, "MESSAGING_MAX_GROUP_MEMBERS", 256)
+    if len(unique_targets) + 1 > max_members:  # +1 for the initiator/admin
+        raise MessagingError(f"A group can have at most {max_members} members.")
     for t in unique_targets:
         assert_can_message(initiator, t)
     if not _rate_ok(
@@ -310,6 +313,13 @@ def add_participant(actor, conversation, target) -> Participant:
     existing = _participant(conversation, target)
     if existing and existing.state in (Participant.State.ACTIVE, Participant.State.INVITED):
         return existing
+    # Enforce the group-size cap on growth (new or re-invited member).
+    max_members = getattr(settings, "MESSAGING_MAX_GROUP_MEMBERS", 256)
+    current = conversation.participants.filter(
+        state__in=[Participant.State.ACTIVE, Participant.State.INVITED]
+    ).count()
+    if current >= max_members:
+        raise MessagingError(f"This group is full (max {max_members} members).")
     if existing:
         existing.state = Participant.State.INVITED
         existing.invited_by = actor

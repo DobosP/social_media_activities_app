@@ -7,8 +7,14 @@ import pytest
 from rest_framework.test import APIClient
 
 from apps.accounts.identity.base import AssuranceResult
-from apps.accounts.models import AgeBand, User
-from apps.accounts.services import apply_assurance, erase_user, link_guardian
+from apps.accounts.models import AgeBand, ParentalConsent, User
+from apps.accounts.services import (
+    apply_assurance,
+    can_participate,
+    erase_user,
+    grant_parental_consent,
+    link_guardian,
+)
 from apps.safety.models import AuditLog
 from apps.safety.services import verify_audit_chain
 
@@ -31,8 +37,27 @@ def test_self_erasure_deletes_account_and_audits():
     assert not User.objects.filter(id=uid).exists()
     entry = AuditLog.objects.get(event="account.erased")
     assert entry.data["erased_public_id"] == public_id
-    assert entry.data["erased_username"] == "erase_me"
+    # The username is NOT retained in the permanent log after erasure (only the UUID).
+    assert "erased_username" not in entry.data
     assert verify_audit_chain() is True
+
+
+def test_erasing_guardian_revokes_wards_consent():
+    """A guardian self-erasing must not leave the ward able to participate off a consent
+    whose guardian no longer exists (the consent is string-referenced, not an FK)."""
+    guardian = _user("g_self_erase")
+    child = _user("w_left_behind", AgeBand.UNDER_16)
+    link_guardian(guardian, child)
+    grant_parental_consent(guardian, child)
+    assert can_participate(child) is True
+
+    erase_user(guardian, guardian)
+
+    child.refresh_from_db()
+    assert can_participate(child) is False
+    assert not ParentalConsent.objects.filter(
+        minor=child, status=ParentalConsent.Status.ACTIVE
+    ).exists()
 
 
 def test_guardian_can_erase_ward():

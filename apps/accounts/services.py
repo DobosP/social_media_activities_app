@@ -203,9 +203,14 @@ def revoke_guardian(guardian: User, ward: User) -> None:
     ).update(status=ParentalConsent.Status.REVOKED, revoked_at=timezone.now())
     # End any messaging observer presence the (now-revoked) guardianship justified, so an
     # adult cannot keep reading a child's E2EE conversation after the relationship ends.
-    from apps.messaging.services import drop_guardian_observers_for
+    from apps.messaging.services import drop_guardian_observers_for, remove_user_from_conversations
 
     drop_guardian_observers_for(guardian, ward)
+    # If revoking this guardian's consent leaves the ward unable to participate (no other
+    # active consent), evict them from conversations too — consistent with
+    # revoke_parental_consent. A co-guardian's still-valid consent keeps them in.
+    if not can_participate(ward):
+        remove_user_from_conversations(ward, reason="guardian_revoked")
 
 
 def is_guardian_of(guardian: User, ward: User) -> bool:
@@ -228,12 +233,22 @@ def erase_user(actor: User, target: User) -> None:
 
     from apps.safety.services import record_audit
 
-    record_audit(
-        "account.erased",
-        actor=actor,
-        erased_public_id=str(target.public_id),
-        erased_username=target.username,
-    )
+    # If the target is a guardian, erasing them must NOT leave a ward able to participate
+    # off a consent whose guardian no longer exists. ParentalConsent references the guardian
+    # by a string identifier (not an FK), so the CASCADE that removes the GuardianRelationship
+    # rows would otherwise orphan an ACTIVE consent. revoke_guardian does the full cleanup
+    # (revoke that guardian's consent, drop its observer presence, evict the now-ineligible
+    # ward from conversations) before the rows cascade away.
+    for ward_id in list(
+        GuardianRelationship.objects.filter(
+            guardian=target, status=GuardianRelationship.Status.ACTIVE
+        ).values_list("ward_id", flat=True)
+    ):
+        revoke_guardian(target, User.objects.get(id=ward_id))
+
+    # erased_public_id (a UUID pseudonym) is sufficient to record the event; we do NOT keep
+    # the username in the permanent log after erasure.
+    record_audit("account.erased", actor=actor, erased_public_id=str(target.public_id))
     target.delete()
 
 
