@@ -1,4 +1,5 @@
 from django.contrib.gis.geos import Point
+from django.utils.translation import gettext as _
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -21,7 +22,7 @@ class InterestsView(APIView):
     def put(self, request):
         slugs = request.data.get("interests", request.data.get("activity_types", []))
         if not isinstance(slugs, list):
-            return Response({"detail": "`interests` must be a list of type slugs."}, status=400)
+            return Response({"detail": _("`interests` must be a list of type slugs.")}, status=400)
         types = services.set_interests(request.user, slugs)
         known = {t.slug for t in types}
         unknown = [s for s in slugs if s not in known]

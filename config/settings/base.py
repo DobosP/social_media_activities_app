@@ -53,6 +53,8 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    # Selects the language from the Accept-Language header (RO/EN) per request (P6/IS-7).
+    "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -96,10 +98,18 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "en"
 TIME_ZONE = "Europe/Bucharest"
 USE_I18N = True
 USE_TZ = True
+
+# Supported locales (P6/IS-7). Romanian first — the launch city is Cluj-Napoca. The
+# active language is negotiated from the Accept-Language header by LocaleMiddleware.
+LANGUAGES = [
+    ("en", "English"),
+    ("ro", "Română"),
+]
+LOCALE_PATHS = [BASE_DIR / "locale"]
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
