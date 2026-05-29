@@ -147,6 +147,12 @@ EUDI_SANDBOX_ISSUER_KEY_PEM = env("EUDI_SANDBOX_ISSUER_KEY_PEM", default="")
 # {issuer_id: PEM public key} — the trust anchor; populated from the EU trust list in prod.
 EUDI_TRUSTED_ISSUERS = env.json("EUDI_TRUSTED_ISSUERS", default={})
 
+# Guardianship link invites (verified-adult → minor, mutually confirmed). How long an
+# unaccepted invite stays valid, and anti-abuse limits on issuing invites.
+GUARDIAN_INVITE_TTL_DAYS = env.int("GUARDIAN_INVITE_TTL_DAYS", default=7)
+GUARDIAN_INVITE_RATE_LIMIT = env.int("GUARDIAN_INVITE_RATE_LIMIT", default=20)
+GUARDIAN_INVITE_RATE_WINDOW_SECONDS = env.int("GUARDIAN_INVITE_RATE_WINDOW_SECONDS", default=3600)
+
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_FILTER_BACKENDS": [
@@ -228,13 +234,26 @@ MEDIA_STORAGE_BACKEND = env(
 MEDIA_MAX_UPLOAD_BYTES = env.int("MEDIA_MAX_UPLOAD_BYTES", default=5 * 1024 * 1024)
 # Longest-side cap; larger uploads are downscaled (privacy + storage/bandwidth).
 MEDIA_MAX_DIMENSION = env.int("MEDIA_MAX_DIMENSION", default=2048)
+# Decompression-bomb ceiling: reject images whose header-declared pixel count exceeds
+# this before any pixels are decoded (≈30 MP default — above real photos, below a bomb).
+MEDIA_MAX_IMAGE_PIXELS = env.int("MEDIA_MAX_IMAGE_PIXELS", default=30_000_000)
 MEDIA_SIGNED_URL_TTL = env.int("MEDIA_SIGNED_URL_TTL", default=300)
 # Swappable safety-scanning posture (CSAR-dependent); default matches a hash blocklist.
 MEDIA_IMAGE_SCANNER = env("MEDIA_IMAGE_SCANNER", default="apps.media.scanning.HashBlocklistScanner")
 MEDIA_CSAM_HASH_BLOCKLIST = env.list("MEDIA_CSAM_HASH_BLOCKLIST", default=[])
+# Optional path to a newline-delimited file of known-bad SHA-256 hashes (e.g. a CSAM hash
+# set from a lawful provider). Lets the blocklist be populated operationally — without
+# inlining thousands of hashes in env — to make uploads safe to enable. Hashes from both
+# the inline list and this file are matched.
+MEDIA_CSAM_HASH_BLOCKLIST_FILE = env("MEDIA_CSAM_HASH_BLOCKLIST_FILE", default="")
+# Managed scanning service (used when MEDIA_IMAGE_SCANNER=apps.media.scanning.ManagedHttpScanner):
+# the original image bytes are POSTed for screening (e.g. a PhotoDNA/Thorn-style matcher).
+MEDIA_SCANNER_ENDPOINT = env("MEDIA_SCANNER_ENDPOINT", default="")
+MEDIA_SCANNER_API_KEY = env("MEDIA_SCANNER_API_KEY", default="")
+MEDIA_SCANNER_TIMEOUT = env.int("MEDIA_SCANNER_TIMEOUT", default=10)
 # Fail closed: refuse photo uploads unless an *effective* scanner is configured. The
-# default HashBlocklistScanner is only effective with a non-empty MEDIA_CSAM_HASH_BLOCKLIST
-# (or point MEDIA_IMAGE_SCANNER at a managed service). dev/test settings set this False.
+# default HashBlocklistScanner is only effective with a non-empty blocklist (inline or
+# file); or point MEDIA_IMAGE_SCANNER at a managed service. dev/test settings set False.
 MEDIA_REQUIRE_SCANNER = env.bool("MEDIA_REQUIRE_SCANNER", default=True)
 
 # D7 — richer place data.
@@ -282,11 +301,16 @@ MESSAGING_RETENTION_DAYS = env.int("MESSAGING_RETENTION_DAYS", default=0)
 # stores no card data. Swap for a real EU-friendly nonprofit processor in prod.
 DONATIONS_PROVIDER = env("DONATIONS_PROVIDER", default="apps.donations.providers.DeepLinkProvider")
 DONATIONS_CHECKOUT_BASE_URL = env("DONATIONS_CHECKOUT_BASE_URL", default="")
-# Shared secret verifying provider webhook callbacks (empty disables the check in dev).
+# Shared secret authenticating provider webhook callbacks (X-Webhook-Secret header).
+# The webhook is FAIL-CLOSED: with neither this nor STRIPE_WEBHOOK_SECRET set, every
+# callback is rejected, so a pending donation cannot be forged complete.
 DONATIONS_WEBHOOK_SECRET = env("DONATIONS_WEBHOOK_SECRET", default="")
 
 # Stripe Checkout (used when DONATIONS_PROVIDER=apps.donations.providers.StripePaymentProvider).
 STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="")
+# Stripe webhook signing secret — when set (with the Stripe provider), callbacks are
+# authenticated by verifying the Stripe-Signature header instead of the shared secret.
+STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", default="")
 DONATIONS_SUCCESS_URL = env("DONATIONS_SUCCESS_URL", default="")
 DONATIONS_CANCEL_URL = env("DONATIONS_CANCEL_URL", default="")
 

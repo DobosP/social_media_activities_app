@@ -12,11 +12,15 @@ from rest_framework.views import APIView
 from .identity.base import IdentityVerificationError
 from .identity.providers.eudi import AGE_OVER_16, AGE_OVER_18, EUDIWalletProvider
 from .models import GuardianRelationship, User
-from .serializers import MeSerializer, WardSerializer
+from .serializers import GuardianLinkInviteSerializer, MeSerializer, WardSerializer
 from .services import (
+    accept_guardian_link_invite,
     apply_assurance,
+    create_guardian_link_invite,
+    decline_guardian_link_invite,
     grant_parental_consent,
     is_guardian_of,
+    pending_guardian_invites_for,
     revoke_parental_consent,
 )
 
@@ -105,6 +109,70 @@ class WardConsentView(APIView):
         ward = get_object_or_404(User, public_id=public_id)
         try:
             revoke_parental_consent(request.user, ward)
+        except ValueError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class GuardianLinkView(APIView):
+    """Establish a guardianship link via a mutually-confirmed invite.
+
+    POST (a verified adult): invite a minor `ward` (by `public_id`) to confirm a link —
+    returns the invite incl. the `token` the ward uses to accept.
+    GET (the ward): list pending invites awaiting this user's response.
+    Acceptance creates the `GuardianRelationship`; the guardian can then grant parental
+    consent (WardConsentView) to make the minor eligible to participate."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        invites = pending_guardian_invites_for(request.user)
+        return Response(GuardianLinkInviteSerializer(invites, many=True).data)
+
+    def post(self, request):
+        from apps.safety.services import allow_action
+
+        if not allow_action(
+            request.user,
+            "guardian_invite",
+            limit=getattr(settings, "GUARDIAN_INVITE_RATE_LIMIT", 20),
+            window_seconds=getattr(settings, "GUARDIAN_INVITE_RATE_WINDOW_SECONDS", 3600),
+        ):
+            return Response(
+                {"detail": "Too many invites; try again later."},
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
+            )
+        ward = get_object_or_404(User, public_id=request.data.get("ward"))
+        try:
+            invite = create_guardian_link_invite(
+                request.user, ward, relationship=request.data.get("relationship", "parent")
+            )
+        except ValueError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(GuardianLinkInviteSerializer(invite).data, status=status.HTTP_201_CREATED)
+
+
+class GuardianLinkAcceptView(APIView):
+    """The invited ward accepts a pending guardianship invite (by token)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, token):
+        try:
+            accept_guardian_link_invite(request.user, token)
+        except ValueError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(MeSerializer(request.user).data)
+
+
+class GuardianLinkDeclineView(APIView):
+    """The invited ward declines a pending guardianship invite (by token)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, token):
+        try:
+            decline_guardian_link_invite(request.user, token)
         except ValueError as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_204_NO_CONTENT)

@@ -52,6 +52,9 @@ class Activity(models.Model):
     guardian_accompanied = models.BooleanField(default=False)
 
     status = models.CharField(max_length=16, choices=Status.choices, default=Status.OPEN)
+    # Set by a moderator REMOVE action; hidden content is excluded from every member-facing
+    # query (discovery, recommendations) but retained for audit/appeal. See apps/safety.
+    is_hidden = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -147,6 +150,9 @@ class Post(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="posts"
     )
     body = models.TextField()
+    # Set by a moderator REMOVE action; hidden posts are excluded from thread reads but
+    # retained for audit/appeal.
+    is_hidden = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

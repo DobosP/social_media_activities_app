@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import User
+from .models import GuardianLinkInvite, User
 from .services import can_participate
 
 
@@ -26,6 +26,28 @@ class MeSerializer(serializers.ModelSerializer):
 
     def get_can_participate(self, obj) -> bool:
         return can_participate(obj)
+
+
+class GuardianLinkInviteSerializer(serializers.ModelSerializer):
+    guardian = serializers.CharField(source="guardian.display_name", read_only=True)
+    guardian_public_id = serializers.UUIDField(source="guardian.public_id", read_only=True)
+    ward = serializers.CharField(source="ward.display_name", read_only=True)
+    ward_public_id = serializers.UUIDField(source="ward.public_id", read_only=True)
+
+    class Meta:
+        model = GuardianLinkInvite
+        fields = [
+            "token",
+            "guardian",
+            "guardian_public_id",
+            "ward",
+            "ward_public_id",
+            "relationship",
+            "status",
+            "created_at",
+            "expires_at",
+        ]
+        read_only_fields = fields
 
 
 class WardSerializer(serializers.ModelSerializer):

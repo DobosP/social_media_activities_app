@@ -4,6 +4,7 @@ invariants (cohort isolation, verified-and-consented participation) live in one 
 """
 
 from django.db import transaction
+from django.db.models import Count, Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -54,7 +55,7 @@ def visible_activities(user):
         return Activity.objects.none()
     from apps.safety.services import blocked_user_ids
 
-    qs = Activity.objects.filter(cohort=user.cohort)
+    qs = Activity.objects.filter(cohort=user.cohort, is_hidden=False)
     blocked = blocked_user_ids(user)
     if blocked:
         qs = qs.exclude(owner_id__in=blocked)
@@ -63,6 +64,22 @@ def visible_activities(user):
 
 def can_see_activity(user, activity) -> bool:
     return _has_cohort(user) and user.cohort == activity.cohort
+
+
+def with_counts(qs):
+    """Annotate an Activity queryset with ``member_n`` (current members) and
+    ``participant_n`` (members holding a position — excludes supervisory guardians) so
+    list serialization needs no per-row COUNT. The serializer reads these annotations
+    when present, eliminating the N+1 on the activities feed / recommendations."""
+    member = Q(memberships__state=Membership.State.MEMBER)
+    return qs.annotate(
+        member_n=Count("memberships", filter=member, distinct=True),
+        participant_n=Count(
+            "memberships",
+            filter=member & ~Q(memberships__role=Membership.Role.GUARDIAN),
+            distinct=True,
+        ),
+    )
 
 
 def current_members(activity):

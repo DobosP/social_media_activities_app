@@ -131,6 +131,12 @@ def take_action(moderator, target, action, reason, *, notes="", report=None, exp
         if hasattr(target, "is_active"):
             target.is_active = False
             target.save(update_fields=["is_active"])
+    elif action == ModerationAction.Action.REMOVE:
+        # Hide the offending content from every member-facing surface (retained for
+        # audit/appeal). Applies to content models that carry an is_hidden flag.
+        if hasattr(target, "is_hidden"):
+            target.is_hidden = True
+            target.save(update_fields=["is_hidden"])
     if report is not None:
         report.status = Report.Status.ACTIONED
         report.handled_by = moderator

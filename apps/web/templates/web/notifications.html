@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load safe_urls %}
 {% block title %}Notifications{% endblock %}
 {% block content %}
 <h1>Notifications</h1>
@@ -11,7 +12,7 @@
     <div class="card" style="{% if not n.read_at %}border-left:3px solid var(--accent){% endif %}">
       <strong>{{ n.title }}</strong>{% if not n.read_at %} <span class="tag">new</span>{% endif %}
       {% if n.body %}<p>{{ n.body }}</p>{% endif %}
-      <p class="muted">{{ n.created_at|date:"j M H:i" }}{% if n.url %} &middot; <a href="{{ n.url }}">view</a>{% endif %}</p>
+      <p class="muted">{{ n.created_at|date:"j M H:i" }}{% if n.url|safe_href %} &middot; <a href="{{ n.url|safe_href }}">view</a>{% endif %}</p>
     </div>
   {% empty %}<p class="muted">No notifications yet.</p>{% endfor %}
 </div>

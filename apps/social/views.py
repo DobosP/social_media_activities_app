@@ -26,6 +26,7 @@ from .services import (
     post_to_thread,
     request_to_join,
     visible_activities,
+    with_counts,
 )
 
 
@@ -55,8 +56,10 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
         return ActivitySerializer
 
     def get_queryset(self):
-        return visible_activities(self.request.user).select_related(
-            "owner", "place", "activity_type", "thread"
+        return with_counts(
+            visible_activities(self.request.user).select_related(
+                "owner", "place", "activity_type", "thread"
+            )
         )
 
     def _actor(self, request):
@@ -137,7 +140,7 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
             except NotAMember as exc:
                 raise PermissionDenied(str(exc)) from exc
             return Response(PostSerializer(post).data, status=status.HTTP_201_CREATED)
-        posts = activity.thread.posts.select_related("author")
+        posts = activity.thread.posts.filter(is_hidden=False).select_related("author")
         return Response(PostSerializer(posts, many=True).data)
 
 

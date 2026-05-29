@@ -17,7 +17,14 @@ from django.views.decorators.http import require_POST
 
 from apps.accounts.identity.registry import get_identity_provider
 from apps.accounts.models import AgeBand, GuardianRelationship, User
-from apps.accounts.services import apply_assurance, can_participate
+from apps.accounts.services import (
+    accept_guardian_link_invite,
+    apply_assurance,
+    can_participate,
+    create_guardian_link_invite,
+    decline_guardian_link_invite,
+    pending_guardian_invites_for,
+)
 from apps.events.models import Event
 from apps.media.models import Photo
 from apps.media.services import NotAuthorized, signed_url, thread_photos, upload_photo
@@ -130,6 +137,7 @@ def home(request):
             "upcoming": upcoming,
             "mine": mine,
             "events": events,
+            "guardian_invites": list(pending_guardian_invites_for(user)),
             **_nav_context(user),
         },
     )
@@ -168,9 +176,10 @@ def _visible_activity_or_404(user, pk) -> Activity:
     activity = get_object_or_404(
         Activity.objects.select_related("place", "activity_type", "owner", "thread"), pk=pk
     )
-    if getattr(user, "is_staff", False) or (
-        user.is_authenticated and social.can_see_activity(user, activity)
-    ):
+    # Staff/moderators may still open removed content (for review/appeal); members may not.
+    if getattr(user, "is_staff", False):
+        return activity
+    if user.is_authenticated and social.can_see_activity(user, activity) and not activity.is_hidden:
         return activity
     raise Http404("No activity matches the given query.")
 
@@ -214,7 +223,7 @@ def activity_detail(request, pk):
             m.my_vote = my_votes.get(m.id)
             pending.append(m)
 
-    posts = activity.thread.posts.select_related("author").all()
+    posts = activity.thread.posts.filter(is_hidden=False).select_related("author")
     photos = []
     if is_member or user.is_staff:
         try:
@@ -545,6 +554,64 @@ def wards(request):
         "web/wards.html",
         {"wards": ward_users, **_nav_context(request.user)},
     )
+
+
+@login_required
+@require_POST
+def guardian_invite_create(request):
+    """A verified adult invites a minor (by username) to confirm a guardianship link.
+
+    Rate-limited, and the outcome is deliberately non-distinguishing (same message whether
+    or not the account exists / is a minor / is already linked) so the form can't be used
+    to enumerate or classify child accounts. The ward sees the pending request in-app on
+    their home page — no code is shared out-of-band."""
+    generic = (
+        "If that account exists and is eligible, a guardianship request was sent. "
+        "They'll see it on their home page to accept."
+    )
+    if not safety.allow_action(
+        request.user,
+        "guardian_invite",
+        limit=getattr(settings, "GUARDIAN_INVITE_RATE_LIMIT", 20),
+        window_seconds=getattr(settings, "GUARDIAN_INVITE_RATE_WINDOW_SECONDS", 3600),
+    ):
+        messages.error(request, "Too many requests; please try again later.")
+        return redirect("wards")
+    ward = User.objects.filter(username=(request.POST.get("ward_username") or "").strip()).first()
+    if ward is not None:
+        try:
+            create_guardian_link_invite(
+                request.user,
+                ward,
+                relationship=(request.POST.get("relationship") or "parent").strip(),
+            )
+        except ValueError:
+            pass  # swallow to keep the outcome indistinguishable
+    messages.success(request, generic)
+    return redirect("wards")
+
+
+@login_required
+@require_POST
+def guardian_invite_accept(request, token):
+    """The invited ward confirms the guardianship link."""
+    try:
+        accept_guardian_link_invite(request.user, token)
+        messages.success(request, "Guardian link confirmed.")
+    except ValueError as exc:
+        messages.error(request, str(exc))
+    return redirect("home")
+
+
+@login_required
+@require_POST
+def guardian_invite_decline(request, token):
+    try:
+        decline_guardian_link_invite(request.user, token)
+        messages.success(request, "Invite declined.")
+    except ValueError as exc:
+        messages.error(request, str(exc))
+    return redirect("home")
 
 
 # --- Safety: reporting & blocking (wires apps/safety into the UI) --------------------

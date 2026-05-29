@@ -4,7 +4,7 @@ from apps.places.models import Place
 from apps.taxonomy.models import ActivityType
 
 from .models import Activity, Membership, Post
-from .services import current_members, open_positions
+from .services import current_members, participant_count
 
 
 class ActivitySerializer(serializers.ModelSerializer):
@@ -37,10 +37,17 @@ class ActivitySerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
     def get_member_count(self, obj) -> int:
-        return current_members(obj).count()
+        # Prefer the queryset annotation (see services.with_counts) to avoid an N+1;
+        # fall back to a direct count when the object wasn't annotated.
+        annotated = getattr(obj, "member_n", None)
+        return annotated if annotated is not None else current_members(obj).count()
 
     def get_open_positions(self, obj) -> int | None:
-        return open_positions(obj)
+        if obj.capacity is None:
+            return None
+        annotated = getattr(obj, "participant_n", None)
+        taken = annotated if annotated is not None else participant_count(obj)
+        return max(obj.capacity - taken, 0)
 
 
 class ActivityCreateSerializer(serializers.Serializer):

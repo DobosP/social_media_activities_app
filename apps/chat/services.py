@@ -19,6 +19,10 @@ def can_access_thread(user, thread) -> bool:
     if not user or not user.is_authenticated:
         return False
     activity = thread.activity
+    # A moderator REMOVE hides the activity from every member-facing surface, including
+    # its live chat — members can no longer read or post once it's removed.
+    if getattr(activity, "is_hidden", False):
+        return False
     if user.cohort != activity.cohort:
         return False
     # Participation must still be valid at access time, not just at join time — revoking

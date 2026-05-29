@@ -1,6 +1,8 @@
 from django.db import models
 from django.db.models import Q, UniqueConstraint
 
+from apps.safety.sanitize import safe_external_url
+
 
 class Event(models.Model):
     """A happening at a place — pulled from venue calendars (iCal feeds), Google, or
@@ -55,3 +57,8 @@ class Event(models.Model):
 
     def __str__(self):
         return f"{self.title} @ {self.starts_at:%Y-%m-%d %H:%M}"
+
+    def save(self, *args, **kwargs):
+        # Untrusted feed URL served raw over the API — persist only safe http(s) links.
+        self.url = safe_external_url(self.url)
+        super().save(*args, **kwargs)

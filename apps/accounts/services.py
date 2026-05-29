@@ -1,3 +1,7 @@
+import secrets
+from datetime import timedelta
+
+from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 
@@ -5,6 +9,7 @@ from .models import (
     COHORT_BY_AGE_BAND,
     AgeAssurance,
     Cohort,
+    GuardianLinkInvite,
     GuardianRelationship,
     ParentalConsent,
     User,
@@ -37,10 +42,27 @@ def has_valid_parental_consent(user: User) -> bool:
     return any(consent.is_valid() for consent in user.parental_consents.all())
 
 
-def can_participate(user: User) -> bool:
-    """The gate D3/D4 will use: identity-verified, and (if under 16) a valid parental
-    consent on file."""
+def is_assurance_current(user: User) -> bool:
+    """Identity verification is only valid while the *latest* age-assurance proof is
+    unexpired. A proof with no expiry never lapses; an expired proof means the user must
+    re-verify — so a child who ages out of a band, or whose attestation has gone stale,
+    can no longer participate (join/post/chat) until they re-verify. (Cohort is not
+    recomputed here; it is re-derived on the next successful assurance.)
+
+    Falls back to the denormalized ``is_identity_verified`` flag when no assurance row
+    exists (e.g. a staff/legacy account verified out-of-band)."""
     if not user.is_identity_verified:
+        return False
+    latest = AgeAssurance.objects.filter(user=user).order_by("-verified_at", "-id").first()
+    if latest is None:
+        return True
+    return latest.expires_at is None or latest.expires_at > timezone.now()
+
+
+def can_participate(user: User) -> bool:
+    """The gate D3/D4 uses: identity-verified with a *current* (unexpired) age
+    assurance, and (if under 16) a valid parental consent on file."""
+    if not is_assurance_current(user):
         return False
     if user.requires_parental_consent:
         return has_valid_parental_consent(user)
@@ -65,6 +87,105 @@ def link_guardian(guardian: User, ward: User, *, relationship="parent", consent=
         },
     )
     return link
+
+
+def pending_guardian_invites_for(ward: User):
+    """Open, unexpired guardian-link invites awaiting this ward's response."""
+    return GuardianLinkInvite.objects.filter(
+        ward=ward, status=GuardianLinkInvite.Status.PENDING, expires_at__gt=timezone.now()
+    ).select_related("guardian")
+
+
+@transaction.atomic
+def create_guardian_link_invite(
+    guardian: User, ward: User, *, relationship: str = "parent"
+) -> GuardianLinkInvite:
+    """A verified adult invites a (minor) ward to confirm a guardianship link.
+
+    The link is NOT created here — the ward must accept (see accept_guardian_link_invite),
+    so the relationship requires both parties to act. Raises ValueError on any precondition
+    failure."""
+    if guardian.id == ward.id:
+        raise ValueError("A user cannot be their own guardian.")
+    if guardian.cohort != Cohort.ADULT or not can_participate(guardian):
+        raise ValueError("Only a verified adult can invite a ward.")
+    if ward.cohort not in (Cohort.CHILD, Cohort.TEEN):
+        # Minor-only: also rejects ADULT and the UNASSIGNED (unverified/unknown-age) cohort.
+        raise ValueError("A guardian link can only target a minor account.")
+    if is_guardian_of(guardian, ward):
+        raise ValueError("You are already this user's guardian.")
+    ttl_days = getattr(settings, "GUARDIAN_INVITE_TTL_DAYS", 7)
+    # Idempotent per pair: refresh the open invite rather than stacking duplicates
+    # (the partial unique constraint also enforces at most one PENDING invite per pair).
+    invite, _ = GuardianLinkInvite.objects.update_or_create(
+        guardian=guardian,
+        ward=ward,
+        status=GuardianLinkInvite.Status.PENDING,
+        defaults={
+            "relationship": relationship,
+            "token": secrets.token_urlsafe(24),
+            "expires_at": timezone.now() + timedelta(days=ttl_days),
+        },
+    )
+    from apps.safety.services import record_audit
+
+    record_audit("guardian.link_invited", actor=guardian, target=ward)
+    return invite
+
+
+def accept_guardian_link_invite(ward: User, token: str) -> GuardianRelationship:
+    """The ward accepts a pending invite, creating the guardianship link. Re-validates the
+    inviter is still a *currently-verified* adult at accept time."""
+    from apps.safety.services import record_audit
+
+    # The expiry-marking and the link-creation are in SEPARATE atomic blocks: marking an
+    # invite EXPIRED and then raising inside one transaction would roll back the EXPIRED
+    # write, so we commit that status, then raise outside the block.
+    with transaction.atomic():
+        invite = (
+            GuardianLinkInvite.objects.select_for_update()
+            .filter(token=token, status=GuardianLinkInvite.Status.PENDING)
+            .first()
+        )
+        if invite is None:
+            raise ValueError("No such pending invite.")
+        if invite.ward_id != ward.id:
+            raise ValueError("This invite is addressed to a different user.")
+        expired = invite.expires_at <= timezone.now()
+        if expired:
+            invite.status = GuardianLinkInvite.Status.EXPIRED
+            invite.responded_at = timezone.now()
+            invite.save(update_fields=["status", "responded_at"])
+    if expired:
+        raise ValueError("This invite has expired.")
+
+    # One atomic unit for the link + its audit entry (record_audit takes a row lock, so it
+    # MUST run inside a transaction — outside one it raises on PostgreSQL). Re-validate the
+    # inviter is still a current verified adult (link_guardian only checks the cohort).
+    with transaction.atomic():
+        if invite.guardian.cohort != Cohort.ADULT or not can_participate(invite.guardian):
+            raise ValueError("The inviting guardian is no longer a verified adult.")
+        link = link_guardian(invite.guardian, ward, relationship=invite.relationship)
+        invite.status = GuardianLinkInvite.Status.ACCEPTED
+        invite.responded_at = timezone.now()
+        invite.save(update_fields=["status", "responded_at"])
+        record_audit("guardian.link_accepted", actor=ward, target=invite.guardian)
+    return link
+
+
+@transaction.atomic
+def decline_guardian_link_invite(ward: User, token: str) -> None:
+    """The ward declines (or revokes) a pending invite addressed to them."""
+    invite = (
+        GuardianLinkInvite.objects.select_for_update()
+        .filter(token=token, status=GuardianLinkInvite.Status.PENDING, ward=ward)
+        .first()
+    )
+    if invite is None:
+        raise ValueError("No such pending invite.")
+    invite.status = GuardianLinkInvite.Status.DECLINED
+    invite.responded_at = timezone.now()
+    invite.save(update_fields=["status", "responded_at"])
 
 
 @transaction.atomic

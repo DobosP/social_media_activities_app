@@ -33,6 +33,17 @@ urlpatterns = [
     path("profile/avatar/", views.avatar_upload, name="avatar_upload"),
     path("verify-age/", views.verify_age, name="verify_age"),
     path("wards/", views.wards, name="wards"),
+    path("wards/invite/", views.guardian_invite_create, name="guardian_invite_create"),
+    path(
+        "guardian-invites/<str:token>/accept/",
+        views.guardian_invite_accept,
+        name="guardian_invite_accept",
+    ),
+    path(
+        "guardian-invites/<str:token>/decline/",
+        views.guardian_invite_decline,
+        name="guardian_invite_decline",
+    ),
     path("notifications/", views.notifications_list, name="notifications"),
     path("notifications/read-all/", views.notifications_read_all, name="notifications_read_all"),
     path("messages/", views.messages_page, name="messages"),
