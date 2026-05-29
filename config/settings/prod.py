@@ -11,8 +11,12 @@ from .base import (
     CHANNEL_LAYERS,
     DATABASES,
     EUDI_SANDBOX,
+    EUDI_TRUSTED_ISSUERS,
     IDENTITY_ALLOW_DEV_PROVIDER,
     IDENTITY_PROVIDER,
+    MEDIA_S3_ENDPOINT_URL,
+    MEDIA_S3_REGION,
+    MEDIA_STORAGE_BACKEND,
     MIDDLEWARE,
     env,
 )
@@ -115,6 +119,22 @@ if os.environ.get("DJANGO_SETTINGS_MODULE") == "config.settings.prod":
         raise ImproperlyConfigured(
             "EUDI_SANDBOX must be False in production (it trusts a local test issuer that will "
             "sign any claimed age)."
+        )
+    # A live EUDI provider with no trust anchor verifies nothing (every check fails closed,
+    # so no minor can ever be onboarded) with no other signal — require the trust list.
+    if "eudi" in IDENTITY_PROVIDER.lower() and not EUDI_TRUSTED_ISSUERS:
+        raise ImproperlyConfigured(
+            "The EUDI identity provider requires a non-empty EUDI_TRUSTED_ISSUERS trust anchor "
+            "in production (the EU trust list / issuer public keys)."
+        )
+    # EU data residency for minors' media (GDPR Ch. V): if S3-compatible storage is used,
+    # require an EU region (or an explicit endpoint, e.g. an EU R2 bucket).
+    if MEDIA_STORAGE_BACKEND.endswith("S3StorageBackend") and not (
+        MEDIA_S3_REGION.lower().startswith("eu") or MEDIA_S3_ENDPOINT_URL
+    ):
+        raise ImproperlyConfigured(
+            "Media object storage must be in an EU region (set MEDIA_S3_REGION=eu-* or an EU "
+            "MEDIA_S3_ENDPOINT_URL) for minors' data residency."
         )
 
 # --- Error tracking (opt-in via SENTRY_DSN; sentry-sdk is only imported when configured) ---

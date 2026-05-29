@@ -594,12 +594,20 @@ def is_active_participant(user, conversation) -> bool:
 def can_view(user, conversation) -> bool:
     """Only ACTIVE members read content; INVITED users see invitation metadata only.
     Guardians are a sanctioned cross-cohort observer; every other member must still be
-    participation-eligible, so a revoked-consent minor immediately loses read access."""
+    participation-eligible AND in the conversation's cohort, so a revoked-consent minor,
+    a deactivated/banned account, or a re-verified user whose cohort changed immediately
+    loses read access (enforced per-delivery on the live socket too)."""
+    if not getattr(user, "is_active", False):
+        return False
     if not is_active_participant(user, conversation):
         return False
     p = _participant(conversation, user)
     if p and p.role == Participant.Role.GUARDIAN:
         return True
+    # Cohort isolation must hold at READ time, not only at join/send: a participant whose
+    # cohort changed can no longer read a conversation pinned to a different cohort.
+    if user.cohort != conversation.cohort:
+        return False
     return can_participate(user)
 
 

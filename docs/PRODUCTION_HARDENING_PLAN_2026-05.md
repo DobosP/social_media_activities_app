@@ -5,6 +5,15 @@
   This is a PLAN for sign-off — not yet implemented. Pairs with AUDIT_2026-05.md.
 -->
 
+> **STATUS NOTE (2026-05-29).** Much of the Wave-1/2 *engineering* in this plan is now
+> implemented on `claude/wave1-prod-hardening`. The **authoritative, current** release
+> verdict is **[AUDIT_STRESS_2026-05-29.md](AUDIT_STRESS_2026-05-29.md)** (verdict: **NO-GO**
+> for a public beta with minors). In §6's legal checklist below, the ✅/❌ in the **"B?"
+> column means BLOCKS-BETA (✅ = blocking), NOT "done"** — the DPIA, ROPA, DPO appointment,
+> processor DPAs, breach runbook, finalized Privacy Policy/Terms, and RO-counsel sign-offs
+> are **human artifacts that do NOT yet exist** and remain launch-blockers. Do not read any
+> ✅ here as "completed."
+
 # Live validation performed (2026-05-29, in Docker on this machine)
 
 Before trusting the analysis, the app was brought up live and key claims were re-checked:

@@ -54,6 +54,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # Reject oversized request bodies (by Content-Length) before anything reads the stream.
+    "apps.ops.middleware.MaxBodySizeMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     # Selects the language from the Accept-Language header (RO/EN) per request (P6/IS-7).
     "django.middleware.locale.LocaleMiddleware",
@@ -176,7 +178,18 @@ REST_FRAMEWORK = {
         "anon": env("DRF_THROTTLE_ANON", default="60/min"),
         "user": env("DRF_THROTTLE_USER", default="240/min"),
     },
+    # Behind a single trusted edge proxy (e.g. Render), trust only the last X-Forwarded-For
+    # hop for throttle identity — otherwise a client can spoof XFF to get a fresh anon bucket
+    # per request and bypass rate limits entirely.
+    "NUM_PROXIES": env.int("DRF_NUM_PROXIES", default=1),
 }
+
+# Hard cap on request body size (bytes). Django's DATA_UPLOAD_MAX_MEMORY_SIZE governs form
+# parsing but NOT DRF's JSON parser reading request.body, so a multi-MB JSON POST could OOM
+# the single ASGI process. MaxBodySizeMiddleware rejects oversized requests by Content-Length
+# before the body is read. Default leaves headroom for the largest legit upload (media).
+MAX_REQUEST_BODY_BYTES = env.int("MAX_REQUEST_BODY_BYTES", default=8 * 1024 * 1024)
+DATA_UPLOAD_MAX_MEMORY_SIZE = env.int("DATA_UPLOAD_MAX_MEMORY_SIZE", default=MAX_REQUEST_BODY_BYTES)
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Social Activities API",

@@ -44,6 +44,12 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         )
 
     async def chat_message(self, event):
+        # Per-delivery re-authorization (see ConversationConsumer): a member whose access
+        # was revoked/blocked, whose activity was REMOVE'd/hidden, whose cohort changed, or
+        # who was erased after connecting stops receiving live messages and is disconnected.
+        if not await self._still_authorized():
+            await self.close(code=4403)
+            return
         await self.send_json({"type": "message", **event["message"]})
 
     @database_sync_to_async
@@ -53,6 +59,17 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def _can_access(self, user, thread):
         return can_access_thread(user, thread)
+
+    @database_sync_to_async
+    def _still_authorized(self) -> bool:
+        from django.contrib.auth import get_user_model
+
+        uid = getattr(self.user, "pk", None)
+        user = get_user_model().objects.filter(pk=uid).first() if uid else None
+        if user is None:
+            return False
+        thread = Thread.objects.select_related("activity").filter(pk=self.thread_id).first()
+        return thread is not None and can_access_thread(user, thread)
 
     @database_sync_to_async
     def _send(self, user, thread, body):

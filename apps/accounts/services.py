@@ -23,11 +23,19 @@ def assign_cohort(age_band: str) -> str:
 def apply_assurance(user: User, result) -> AgeAssurance:
     """Persist an assurance result onto the user and record it. Does NOT by itself
     grant participation for minors — that still requires valid parental consent."""
+    old_cohort = user.cohort
     user.age_band = result.age_band
     user.recompute_cohort()
     user.is_identity_verified = bool(result.verified)
     user.identity_verified_at = timezone.now() if result.verified else None
     user.save(update_fields=["age_band", "cohort", "is_identity_verified", "identity_verified_at"])
+    # A cohort change on re-verification must evict the user from conversations pinned to
+    # their OLD cohort (cohort isolation): every such conversation is now cross-cohort for
+    # them. (First verification from UNASSIGNED has no prior conversations to clean.)
+    if user.cohort != old_cohort and old_cohort != Cohort.UNASSIGNED:
+        from apps.messaging.services import remove_user_from_conversations
+
+        remove_user_from_conversations(user, reason="cohort_changed")
     return AgeAssurance.objects.create(
         user=user,
         provider=result.provider,
@@ -245,6 +253,15 @@ def erase_user(actor: User, target: User) -> None:
         ).values_list("ward_id", flat=True)
     ):
         revoke_guardian(target, User.objects.get(id=ward_id))
+
+    # Remove the user from their conversations and DELETE their authored E2EE ciphertext.
+    # Message.sender is SET_NULL, so target.delete() alone would leave the user's messages
+    # (and recipients' wrapped keys) decryptable in others' histories — not true erasure.
+    from apps.messaging.models import Message
+    from apps.messaging.services import remove_user_from_conversations
+
+    remove_user_from_conversations(target, reason="account_erased")
+    Message.objects.filter(sender=target).delete()
 
     # erased_public_id (a UUID pseudonym) is sufficient to record the event; we do NOT keep
     # the username in the permanent log after erasure.

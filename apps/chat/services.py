@@ -16,7 +16,7 @@ class ChatError(Exception):
 def can_access_thread(user, thread) -> bool:
     """A user may read/write a thread only as an active member of its activity,
     within the same age cohort (cohort isolation, see docs/SAFETY.md)."""
-    if not user or not user.is_authenticated:
+    if not user or not user.is_authenticated or not user.is_active:
         return False
     activity = thread.activity
     # A moderator REMOVE hides the activity from every member-facing surface, including
