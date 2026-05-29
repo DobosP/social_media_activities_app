@@ -52,13 +52,26 @@ def upload_photo(uploader, kind, data: bytes, *, thread=None) -> Photo:
         max_bytes=settings.MEDIA_MAX_UPLOAD_BYTES,
         max_dimension=getattr(settings, "MEDIA_MAX_DIMENSION", None),
     )
-    digest = hashlib.sha256(clean_bytes).hexdigest()
-    result = get_scanner().scan(clean_bytes)
-
+    scanner = get_scanner()
+    # Fail closed on a children's platform: if no effective content scanner is configured
+    # (e.g. the hash blocklist is empty), refuse the upload rather than store unscreened
+    # imagery. Set MEDIA_REQUIRE_SCANNER=False only in dev/test.
+    if getattr(settings, "MEDIA_REQUIRE_SCANNER", True) and not scanner.is_effective():
+        record_audit("media.upload_blocked", actor=uploader, reason="no_scanner", kind=kind)
+        raise MediaRejected(
+            "Photo uploads are unavailable until a content safety scanner is configured."
+        )
+    # Scan the ORIGINAL uploaded bytes — that is what a CSAM hash set / managed service
+    # matches. Hashing the metadata-stripped re-encode (clean_bytes) would never match a
+    # known-bad source file, so the original is both scanned and used as the match digest.
+    orig_digest = hashlib.sha256(data).hexdigest()
+    result = scanner.scan(data)
     if not result.clean:
         # Record for moderation/audit but never store or surface blocked content.
-        record_audit("media.blocked", actor=uploader, reason="scan_match", sha256=digest)
+        record_audit("media.blocked", actor=uploader, reason="scan_match", sha256=orig_digest)
         raise MediaRejected("Image failed safety screening and was not stored.")
+
+    digest = hashlib.sha256(clean_bytes).hexdigest()
 
     storage_key = f"{uuid.uuid4().hex}.{extension_for(fmt)}"
     get_storage().save(storage_key, clean_bytes)

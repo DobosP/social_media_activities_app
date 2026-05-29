@@ -13,7 +13,12 @@ from .identity.base import IdentityVerificationError
 from .identity.providers.eudi import AGE_OVER_16, AGE_OVER_18, EUDIWalletProvider
 from .models import GuardianRelationship, User
 from .serializers import MeSerializer, WardSerializer
-from .services import apply_assurance, is_guardian_of
+from .services import (
+    apply_assurance,
+    grant_parental_consent,
+    is_guardian_of,
+    revoke_parental_consent,
+)
 
 # Signed-state salt binding an OpenID4VP nonce to the user who started verification.
 _EUDI_STATE_SALT = "accounts.eudi.age-verification"
@@ -76,6 +81,33 @@ class WardDetailView(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
+
+
+class WardConsentView(APIView):
+    """A guardian grants (POST) or revokes (DELETE) parental consent for an under-16 ward.
+
+    This is the self-service path the consent gate (can_participate) depends on; before
+    it existed, only Django admin could create a consent record, blocking minor onboarding.
+    Establishing the guardianship link itself still flows through the verified
+    parental-consent identity process (see docs/COMPLIANCE.md)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, public_id):
+        ward = get_object_or_404(User, public_id=public_id)
+        try:
+            grant_parental_consent(request.user, ward)
+        except ValueError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(WardSerializer(ward).data, status=status.HTTP_201_CREATED)
+
+    def delete(self, request, public_id):
+        ward = get_object_or_404(User, public_id=public_id)
+        try:
+            revoke_parental_consent(request.user, ward)
+        except ValueError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class EUDIVerifyStartView(APIView):

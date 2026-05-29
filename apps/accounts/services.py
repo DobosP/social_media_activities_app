@@ -6,6 +6,7 @@ from .models import (
     AgeAssurance,
     Cohort,
     GuardianRelationship,
+    ParentalConsent,
     User,
 )
 
@@ -51,6 +52,9 @@ def link_guardian(guardian: User, ward: User, *, relationship="parent", consent=
     """Record (or re-activate) an account-level guardianship link guardian → ward."""
     if guardian.id == ward.id:
         raise ValueError("A user cannot be their own guardian.")
+    if guardian.cohort != Cohort.ADULT:
+        # A guardian is an adult protector of a minor; never a child/teen/unassigned user.
+        raise ValueError("A guardian must be a verified adult.")
     link, _ = GuardianRelationship.objects.update_or_create(
         guardian=guardian,
         ward=ward,
@@ -63,13 +67,68 @@ def link_guardian(guardian: User, ward: User, *, relationship="parent", consent=
     return link
 
 
+@transaction.atomic
 def revoke_guardian(guardian: User, ward: User) -> None:
     GuardianRelationship.objects.filter(guardian=guardian, ward=ward).update(
         status=GuardianRelationship.Status.REVOKED
     )
+    # End any messaging observer presence the (now-revoked) guardianship justified, so an
+    # adult cannot keep reading a child's E2EE conversation after the relationship ends.
+    from apps.messaging.services import drop_guardian_observers_for
+
+    drop_guardian_observers_for(guardian, ward)
 
 
 def is_guardian_of(guardian: User, ward: User) -> bool:
     return GuardianRelationship.objects.filter(
         guardian=guardian, ward=ward, status=GuardianRelationship.Status.ACTIVE
     ).exists()
+
+
+@transaction.atomic
+def grant_parental_consent(
+    guardian: User, ward: User, *, scope="", expires_at=None
+) -> ParentalConsent:
+    """A verified adult guardian grants parental consent for their under-16 ward.
+
+    Requires an existing active guardianship (established through the verified
+    parental-consent identity flow). Activates/refreshes the ward's consent record so
+    can_participate(ward) becomes True. Raises ValueError on any precondition failure.
+    """
+    if not ward.requires_parental_consent:
+        raise ValueError("This user does not require parental consent.")
+    if guardian.cohort != Cohort.ADULT or not can_participate(guardian):
+        raise ValueError("Only a verified adult guardian can grant consent.")
+    if not is_guardian_of(guardian, ward):
+        raise ValueError("You are not a registered guardian of this user.")
+    consent, _ = ParentalConsent.objects.update_or_create(
+        minor=ward,
+        guardian_identifier=str(guardian.public_id),
+        defaults={
+            "status": ParentalConsent.Status.ACTIVE,
+            "scope": scope,
+            "granted_at": timezone.now(),
+            "expires_at": expires_at,
+            "revoked_at": None,
+        },
+    )
+    GuardianRelationship.objects.filter(
+        guardian=guardian, ward=ward, status=GuardianRelationship.Status.ACTIVE
+    ).update(consent=consent)
+    return consent
+
+
+@transaction.atomic
+def revoke_parental_consent(guardian: User, ward: User) -> int:
+    """Revoke all active parental consents for `ward`. "No consent -> no access": the ward
+    is removed from messaging conversations (write-path consent re-checks block any new
+    participation across the app). Returns the number of consents revoked."""
+    if not is_guardian_of(guardian, ward):
+        raise ValueError("You are not a registered guardian of this user.")
+    revoked = ParentalConsent.objects.filter(
+        minor=ward, status=ParentalConsent.Status.ACTIVE
+    ).update(status=ParentalConsent.Status.REVOKED, revoked_at=timezone.now())
+    from apps.messaging.services import remove_user_from_conversations
+
+    remove_user_from_conversations(ward, reason="consent_revoked")
+    return revoked

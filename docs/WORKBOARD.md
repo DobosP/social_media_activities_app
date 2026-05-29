@@ -36,6 +36,9 @@ everyone can read this file on `main`.
 | Roles & guardianship | ✅ merged | admin/moderator/user roles; legal-guardian links; guardian manages ward; schools as places |
 | P1 — discovery & feed API | ✅ merged | near-me / happening / activities feeds over places·events·activities |
 | P7 — security review | ✅ merged | STRIDE threat model, findings, pen-test checklist |
+| D10 — secure messaging | ✅ merged | E2EE direct/group chat, cohort-isolated, guardian read-only *(was missing from this board)* |
+| web UI · notifications · recommendations | ✅ merged | server-rendered UI, opt-in notifications, pgvector recommendations *(P3/P6 shipped despite "unclaimed" rows below)* |
+| 2026-05 audit — Wave 0 | 🔧 `claude/wave0-safety-hardening` | verified audit + child-safety/security fixes; see [AUDIT_2026-05](AUDIT_2026-05.md) |
 
 ## 🎉 Phase 1 complete — all roadmap deliverables (D1–D9) + enhancements are on `main`
 

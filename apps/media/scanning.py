@@ -20,17 +20,29 @@ class ImageScanner(ABC):
     @abstractmethod
     def scan(self, data: bytes) -> ScanResult: ...
 
+    def is_effective(self) -> bool:
+        """Whether this scanner can actually screen content. The fail-closed upload gate
+        (MEDIA_REQUIRE_SCANNER) refuses uploads when this is False, so a children's
+        platform never silently accepts unscanned images."""
+        return True
+
 
 class HashBlocklistScanner(ImageScanner):
     """Blocks an image whose SHA-256 matches a known-bad hash (e.g. a CSAM hash set).
     Lawful, privacy-preserving (hashes only) and the swap point for a real service."""
 
+    def _blocklist(self) -> set[str]:
+        return {h.lower() for h in getattr(settings, "MEDIA_CSAM_HASH_BLOCKLIST", [])}
+
     def scan(self, data: bytes) -> ScanResult:
         digest = hashlib.sha256(data).hexdigest()
-        blocklist = {h.lower() for h in getattr(settings, "MEDIA_CSAM_HASH_BLOCKLIST", [])}
-        if digest in blocklist:
+        if digest in self._blocklist():
             return ScanResult(clean=False, matched=digest)
         return ScanResult(clean=True)
+
+    def is_effective(self) -> bool:
+        # A hash blocklist only screens anything if it actually contains hashes.
+        return bool(self._blocklist())
 
 
 def get_scanner() -> ImageScanner:

@@ -4,3 +4,6 @@ from .base import *  # noqa: F401,F403
 
 DEBUG = True
 ALLOWED_HOSTS = ["*"]
+
+# Local dev convenience: don't block uploads on a configured content scanner.
+MEDIA_REQUIRE_SCANNER = False

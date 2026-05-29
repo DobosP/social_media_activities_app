@@ -118,18 +118,23 @@ def test_thread_photo_visible_only_to_members():
 def test_blocked_scan_rejects_and_does_not_store():
     user = _user("p3")
     data = _png(color=(9, 9, 9))
+    # The scanner matches the ORIGINAL uploaded bytes — what a real CSAM hash set knows —
+    # not the metadata-stripped Pillow re-encode (whose hash a known-bad file never has).
     digest = hashlib.sha256(data).hexdigest()
-    # The scanner hashes the post-strip bytes; replicate the pipeline to get that hash.
-    from apps.media.processing import validate_and_strip
-
-    clean, _, _ = validate_and_strip(data, max_bytes=10_000_000)
-    clean_digest = hashlib.sha256(clean).hexdigest()
-
-    with override_settings(MEDIA_CSAM_HASH_BLOCKLIST=[clean_digest]):
+    with override_settings(MEDIA_CSAM_HASH_BLOCKLIST=[digest]):
         with pytest.raises(MediaRejected):
             upload_photo(user, Photo.Kind.PROFILE, data)
     assert Photo.objects.filter(uploader=user).count() == 0
-    assert digest  # silence unused
+
+
+def test_upload_fails_closed_when_no_scanner_configured():
+    """On a children's platform an empty/ineffective scanner must REJECT uploads, not
+    silently accept them (UPLOAD-1). MEDIA_REQUIRE_SCANNER defaults True in prod."""
+    user = _user("p3b")
+    with override_settings(MEDIA_REQUIRE_SCANNER=True, MEDIA_CSAM_HASH_BLOCKLIST=[]):
+        with pytest.raises(MediaRejected):
+            upload_photo(user, Photo.Kind.PROFILE, _png())
+    assert Photo.objects.filter(uploader=user).count() == 0
 
 
 def test_oversize_upload_rejected():

@@ -232,6 +232,10 @@ MEDIA_SIGNED_URL_TTL = env.int("MEDIA_SIGNED_URL_TTL", default=300)
 # Swappable safety-scanning posture (CSAR-dependent); default matches a hash blocklist.
 MEDIA_IMAGE_SCANNER = env("MEDIA_IMAGE_SCANNER", default="apps.media.scanning.HashBlocklistScanner")
 MEDIA_CSAM_HASH_BLOCKLIST = env.list("MEDIA_CSAM_HASH_BLOCKLIST", default=[])
+# Fail closed: refuse photo uploads unless an *effective* scanner is configured. The
+# default HashBlocklistScanner is only effective with a non-empty MEDIA_CSAM_HASH_BLOCKLIST
+# (or point MEDIA_IMAGE_SCANNER at a managed service). dev/test settings set this False.
+MEDIA_REQUIRE_SCANNER = env.bool("MEDIA_REQUIRE_SCANNER", default=True)
 
 # D7 — richer place data.
 # Overture places parquet path/glob (local extract or the public S3 release, e.g.

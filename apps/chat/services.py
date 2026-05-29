@@ -1,7 +1,8 @@
 from django.conf import settings
 from django.utils import timezone
 
-from apps.safety.services import allow_action
+from apps.accounts.services import can_participate
+from apps.safety.services import allow_action, is_blocked
 from apps.social.models import Activity, Membership
 
 from .models import ChatMessage
@@ -20,7 +21,17 @@ def can_access_thread(user, thread) -> bool:
     activity = thread.activity
     if user.cohort != activity.cohort:
         return False
-    return activity.memberships.filter(user=user, state=Membership.State.MEMBER).exists()
+    # Participation must still be valid at access time, not just at join time — revoking
+    # a minor's parental consent (or letting age assurance lapse) cuts off chat access.
+    if not can_participate(user):
+        return False
+    if not activity.memberships.filter(user=user, state=Membership.State.MEMBER).exists():
+        return False
+    # Honour blocking: keep a user who blocked (or was blocked by) the activity owner out
+    # of its thread, consistent with how discovery hides blocked owners' activities.
+    if user.id != activity.owner_id and is_blocked(user, activity.owner):
+        return False
+    return True
 
 
 def assert_can_access(user, thread) -> None:

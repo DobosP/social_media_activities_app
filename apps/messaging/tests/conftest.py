@@ -1,19 +1,26 @@
 import pytest
 from django.utils import timezone
 
-from apps.accounts.models import AgeBand, User
+from apps.accounts.models import AgeBand, ParentalConsent, User
 from apps.messaging.models import Participant
 
 # A syntactically valid public EC JWK (no private `d` component).
 PUBLIC_JWK = {"kty": "EC", "crv": "P-256", "x": "QUJD", "y": "REVG"}
 
 
-def make_user(username, *, age_band=AgeBand.ADULT, verified=True):
+def make_user(username, *, age_band=AgeBand.ADULT, verified=True, consented=True):
+    """Create a verified user. Under-16 users get an active parental consent by default
+    (the legitimate, participation-eligible case); pass consented=False to exercise the
+    consent gate."""
     user = User.objects.create_user(username=username, password="pw", age_band=age_band)
     user.recompute_cohort()
     user.is_identity_verified = verified
     user.identity_verified_at = timezone.now() if verified else None
     user.save()
+    if consented and age_band == AgeBand.UNDER_16:
+        ParentalConsent.objects.create(
+            minor=user, guardian_identifier="g", status=ParentalConsent.Status.ACTIVE
+        )
     return user
 
 

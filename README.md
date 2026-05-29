@@ -5,10 +5,13 @@ A nonprofit, open-source platform for organizing **in-person** activities — sp
 people to real physical places. Text-first and deliberately the opposite of image-perfect /
 short-video social media.
 
-This repository currently contains **Deliverable 1**: the foundation and the Romanian
-place-data pipeline (the activity↔place "knowledge graph"). User accounts, identity /
-age-verification, threads, join-by-vote and chat are intentionally **not** built yet — see
-[Roadmap](#roadmap).
+This repository now implements the **full product engine (D1–D10)**: the foundation +
+Romanian place data, identity / age-cohorts + parental consent, the social core with
+join-by-vote, safety/moderation, per-activity chat, **end-to-end-encrypted direct & group
+messaging**, private media, richer place/event data, booking, donations/ops, a
+server-rendered web UI, notifications and recommendations. It is **not yet
+production-ready** — see the **[2026-05 audit](docs/AUDIT_2026-05.md)** for the verified
+state, the remaining launch-blockers, and the child-safety hardening in progress.
 
 ## Stack
 
@@ -104,7 +107,10 @@ dependency graph and feature traceability is in [`docs/ROADMAP.md`](docs/ROADMAP
 [SECURITY](docs/SECURITY.md), [DATA_AND_INTEGRATIONS](docs/DATA_AND_INTEGRATIONS.md), and
 [MULTI_AGENT_BUILD](docs/MULTI_AGENT_BUILD.md) (parallel multi-agent development).
 
-Captured for later deliverables (not built yet):
+The items below were "later deliverables" when this README was written at D1; **they have
+since been built** (D2–D10). The list is kept for historical context — see
+[docs/ROADMAP.md](docs/ROADMAP.md) and [docs/AUDIT_2026-05.md](docs/AUDIT_2026-05.md) for
+current, verified status:
 
 - **Accounts & identity** — pluggable provider integrating the EU **EUDI Wallet** + the EU
   privacy-preserving **age-verification** app (age-band proof) plus parental consent;

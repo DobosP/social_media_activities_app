@@ -3,19 +3,26 @@
 Maps the launch gate in [SAFETY](SAFETY.md) (and the brief) to where each control is
 implemented and verified. Status reflects code on `main`.
 
+> **2026-05 audit correction.** This gate was reconciled against the code in
+> [AUDIT_2026-05](AUDIT_2026-05.md). Two prior claims here were **wrong**: a full **D10
+> direct/group messaging** subsystem *does* exist (the old "no DM system exists" line is
+> removed below), and image scanning was a **no-op** as shipped. Both are corrected, and
+> the messaging consent/cohort gaps were fixed (Wave 0). Several launch-blockers remain
+> open (Wave 1) — the engineering gate is **not** fully met yet; see the audit.
+
 ## Launch-blocking safety criteria
 
 | Gate criterion | Where it lives | Status |
 |---|---|---|
 | Cohort isolation across discovery & threads | `apps/social/services.py` (`visible_activities`, `can_join`); pinned `Activity.cohort` | ✅ enforced + tested |
 | Cohort isolation in chat | `apps/chat` consumer/service access checks (membership + cohort) | ✅ enforced + tested |
-| Under-16 cannot participate without valid parental consent | `apps/accounts/services.can_participate`; gated in social/media/chat | ✅ enforced + tested |
+| Under-16 cannot participate without valid parental consent | `can_participate` gated in social, booking, chat, media **and messaging** (the 2026-05 audit closed the messaging gap); consent grant/revoke now self-service via `POST/DELETE /api/accounts/wards/<id>/consent/` | ✅ enforced + tested |
 | Reporting → moderation → action loop with audit logs | `apps/safety` (reports, moderation queue, staff resolve API, hash-chained `AuditLog`) | ✅ implemented + tested |
 | Blocking enforced in discovery (blocked pairs don't see each other) | `apps/safety.blocked_user_ids` → `apps/social.visible_activities` | ✅ enforced + tested |
 | Temporary suspensions auto-expire | `apps/safety.lift_expired_suspensions` + `lift_suspensions` command | ✅ implemented + tested |
-| Image scanning + EXIF/GPS stripping on every upload path | `apps/media` pipeline (validate → strip → scan → store) | ✅ implemented + tested |
+| Image scanning + EXIF/GPS stripping on every upload path | `apps/media` pipeline; **fails closed** — scans the *original* bytes and refuses uploads unless a real scanner / non-empty blocklist is configured (`MEDIA_REQUIRE_SCANNER`). NB: a real CSAM matcher is still a launch-gate config task | ✅ pipeline fixed + tested; ⏳ wire real scanner |
 | Text-first; only profile pic + private in-thread photos | `apps/social` (text posts), `apps/media` (the only image paths) | ✅ enforced |
-| No public adult↔minor private contact; no global DMs | chat is per-activity only; no DM system exists | ✅ by design |
+| No private adult↔minor contact | Per-activity chat is membership+cohort scoped. **D10 direct/group messaging exists** and is cohort-isolated, invite-accept, **consent-gated** (Wave 0), block-aware, with guardian observers read-only and pruned when the consent basis ends | ✅ enforced + tested |
 | Private by default (threads/photos visible to members) | membership-scoped queries; signed, expiring media URLs | ✅ enforced + tested |
 | Consent-based joining (two-thirds vote) | `apps/social` join-by-vote (default 2/3) | ✅ implemented + tested |
 
@@ -46,7 +53,12 @@ tracked here, not code:
 
 ## Verdict
 
-All **engineering** launch-gate controls are implemented, integrated, and covered by the
-automated test suite. Remaining items are **deployment provisioning** and **legal/compliance
-sign-off**, which require a human owner and production credentials before a public beta in
-the first city.
+The **core child-safety invariants** (cohort isolation, consent-gated participation incl.
+messaging, guardian read-only, blocking, fail-closed media) are implemented, integrated,
+and covered by regression tests. **However, the engineering gate is not yet fully met:**
+the 2026-05 audit ([AUDIT_2026-05](AUDIT_2026-05.md)) found launch-blockers that remain
+open (Wave 1) — no shared cache so rate-limits/channel-layer are per-process; no
+brute-force protection on login; retention/suspension purges are not scheduled in the
+deploy; and no GDPR erasure path. Those plus **deployment provisioning** and
+**legal/compliance sign-off** (a real CSAM scanner, DPIA, DSA Art. 28, EUDI prod
+credentials, pen test) must be closed before a public beta in the first city.

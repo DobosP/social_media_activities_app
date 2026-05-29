@@ -2,10 +2,23 @@
 
 import copy
 
+from django.core.exceptions import ImproperlyConfigured
+
 from .base import *  # noqa: F401,F403
 from .base import DATABASES, MIDDLEWARE, env
 
 DEBUG = False
+
+# Fail closed on secrets. base.py ships a dev-only SECRET_KEY default so local/test
+# runs work without configuration; in production a missing or sentinel key must be a
+# hard boot error, never a silently world-readable signer (a known key lets an
+# attacker forge session cookies, password-reset tokens, and signed media URLs).
+SECRET_KEY = env("DJANGO_SECRET_KEY")  # no default -> ImproperlyConfigured if unset
+if SECRET_KEY == "insecure-dev-key-change-me":
+    raise ImproperlyConfigured(
+        "DJANGO_SECRET_KEY is still the insecure development default; set a unique "
+        "secret in the production environment."
+    )
 
 # Work on our own copy so prod-only DB tweaks below never mutate the dict shared
 # with base/test settings (importing this module must have no side effects).

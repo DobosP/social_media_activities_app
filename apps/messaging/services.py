@@ -23,6 +23,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from apps.accounts.models import Cohort, GuardianRelationship
+from apps.accounts.services import can_participate
 from apps.safety.services import allow_action, file_report, is_blocked, record_audit
 
 from .models import Conversation, KeyVerification, Message, MessageKey, Participant, PublicKey
@@ -53,6 +54,11 @@ def register_public_key(
 ) -> PublicKey:
     """Publish (or rotate) a user's identity key. Rejects anything carrying private
     material so the registry can never accidentally hold a private key."""
+    if not can_participate(user):
+        raise MessagingError(
+            "Complete age verification (and parental consent if under 16) before "
+            "setting up secure messaging."
+        )
     if not _looks_like_public_jwk(public_jwk):
         raise MessagingError("A valid public JWK (without private material) is required.")
     if wrapped_private_jwk is not None and not isinstance(wrapped_private_jwk, dict):
@@ -132,6 +138,11 @@ def can_message(initiator, target) -> bool:
     if initiator.cohort == Cohort.UNASSIGNED or target.cohort == Cohort.UNASSIGNED:
         return False
     if initiator.cohort != target.cohort:
+        return False
+    # Both parties must have cleared the participation gate — verified age, plus valid
+    # parental consent for under-16. Without this a verified-but-non-consented minor
+    # could run a full E2EE channel, bypassing the core consent invariant (SAFETY.md #3).
+    if not can_participate(initiator) or not can_participate(target):
         return False
     if is_blocked(initiator, target):
         return False
@@ -244,6 +255,15 @@ def accept_invite(user, conversation) -> Participant:
     p = _participant(conversation, user)
     if not p or p.state != Participant.State.INVITED:
         raise MessagingError("No pending invitation to accept.")
+    # Re-assert cohort/consent at accept time: a user's cohort can change between invite
+    # and accept (e.g. a corrected age attestation), and a stale snapshot must never land
+    # someone in a conversation outside their current cohort (cross-cohort = adult<->minor).
+    if user.cohort == Cohort.UNASSIGNED or user.cohort != conversation.cohort:
+        raise MessagingError("This conversation is not in your cohort.")
+    if not can_participate(user):
+        raise MessagingError(
+            "Complete age verification (and parental consent if under 16) first."
+        )
     p.state = Participant.State.ACTIVE
     p.joined_at = timezone.now()
     p.save(update_fields=["state", "joined_at"])
@@ -258,6 +278,7 @@ def decline_invite(user, conversation) -> Participant:
         raise MessagingError("No pending invitation to decline.")
     p.state = Participant.State.DECLINED
     p.save(update_fields=["state"])
+    _prune_orphaned_guardians(conversation)
     record_audit("messaging.invite_declined", actor=user, conversation_id=conversation.id)
     return p
 
@@ -269,6 +290,7 @@ def leave(user, conversation) -> Participant:
         raise MessagingError("You are not part of this conversation.")
     p.state = Participant.State.LEFT
     p.save(update_fields=["state"])
+    _prune_orphaned_guardians(conversation)
     record_audit("messaging.left", actor=user, conversation_id=conversation.id)
     return p
 
@@ -332,6 +354,7 @@ def remove_participant(actor, conversation, target) -> Participant:
         raise MessagingError("A guardian observer cannot be removed by another member.")
     p.state = Participant.State.REMOVED
     p.save(update_fields=["state"])
+    _prune_orphaned_guardians(conversation)
     record_audit(
         "messaging.participant_removed",
         actor=actor,
@@ -364,6 +387,8 @@ def add_guardian_observer(guardian, conversation) -> Participant:
     which one of their CHILD wards is an active member. This is the one sanctioned
     cross-cohort presence and exists only because of the consented guardianship.
     Everyone in the conversation can see the guardian (no secret surveillance)."""
+    if guardian.cohort != Cohort.ADULT or not can_participate(guardian):
+        raise MessagingError("Only a verified adult guardian can observe a conversation.")
     if not _child_wards_in(guardian, conversation):
         raise MessagingError("You can only observe a conversation your child is part of.")
     if public_key_for(guardian) is None:
@@ -404,6 +429,72 @@ def guardian_observable_conversations(guardian):
         .distinct()
         .order_by("-updated_at")
     )
+
+
+def _prune_orphaned_guardians(conversation) -> int:
+    """End any guardian observer in `conversation` who no longer has an active CHILD
+    ward present (the ward left, declined, was removed, or lost participation). A
+    guardian's cross-cohort presence exists only for the consented ward and must not
+    outlive it — otherwise an adult keeps reading a children's conversation."""
+    removed = 0
+    guardians = conversation.participants.filter(
+        role=Participant.Role.GUARDIAN, state=Participant.State.ACTIVE
+    ).select_related("user")
+    for gp in guardians:
+        if not _child_wards_in(gp.user, conversation):
+            gp.state = Participant.State.REMOVED
+            gp.save(update_fields=["state"])
+            record_audit(
+                "messaging.guardian_observer_ended",
+                actor=gp.user,
+                conversation_id=conversation.id,
+            )
+            removed += 1
+    return removed
+
+
+@transaction.atomic
+def drop_guardian_observers_for(guardian, ward) -> int:
+    """Called from accounts when a guardianship is revoked: end `guardian`'s observer
+    presence in any conversation whose only basis was this (now-revoked) ward."""
+    removed = 0
+    observing = Participant.objects.filter(
+        user=guardian, role=Participant.Role.GUARDIAN, state=Participant.State.ACTIVE
+    ).select_related("conversation")
+    for p in observing:
+        if not _child_wards_in(guardian, p.conversation):
+            p.state = Participant.State.REMOVED
+            p.save(update_fields=["state"])
+            record_audit(
+                "messaging.guardian_observer_ended",
+                actor=guardian,
+                conversation_id=p.conversation_id,
+            )
+            removed += 1
+    return removed
+
+
+@transaction.atomic
+def remove_user_from_conversations(user, *, reason="participation_revoked") -> int:
+    """End a user's messaging presence everywhere — used when they lose participation
+    eligibility (e.g. parental consent revoked: "no consent -> no access"). Demotes their
+    active/invited rows and prunes any guardian left without a ward as a result."""
+    affected = list(
+        Conversation.objects.filter(
+            participants__user=user,
+            participants__state__in=[Participant.State.ACTIVE, Participant.State.INVITED],
+        ).distinct()
+    )
+    Participant.objects.filter(
+        user=user, state__in=[Participant.State.ACTIVE, Participant.State.INVITED]
+    ).update(state=Participant.State.REMOVED)
+    for conv in affected:
+        _prune_orphaned_guardians(conv)
+    if affected:
+        record_audit(
+            "messaging.participation_revoked", actor=user, count=len(affected), reason=reason
+        )
+    return len(affected)
 
 
 def participant_keys(viewer, conversation) -> list[dict]:
@@ -493,8 +584,15 @@ def is_active_participant(user, conversation) -> bool:
 
 
 def can_view(user, conversation) -> bool:
-    """Only ACTIVE members read content; INVITED users see invitation metadata only."""
-    return is_active_participant(user, conversation)
+    """Only ACTIVE members read content; INVITED users see invitation metadata only.
+    Guardians are a sanctioned cross-cohort observer; every other member must still be
+    participation-eligible, so a revoked-consent minor immediately loses read access."""
+    if not is_active_participant(user, conversation):
+        return False
+    p = _participant(conversation, user)
+    if p and p.role == Participant.Role.GUARDIAN:
+        return True
+    return can_participate(user)
 
 
 def active_recipient_users(conversation) -> list:
@@ -537,6 +635,12 @@ def post_message(
         # Guardian observers are read-only: an adult must not send into a children's
         # conversation (that would breach cohort isolation for the other child).
         raise MessagingError("Guardian observers can read but not send messages.")
+    # A non-guardian sender must still match the conversation's cohort and remain
+    # participation-eligible (covers a cohort change or consent revocation after joining).
+    if sender.cohort == Cohort.UNASSIGNED or sender.cohort != conversation.cohort:
+        raise MessagingError("You can no longer send in this conversation.")
+    if not can_participate(sender):
+        raise MessagingError("Your participation is not currently active.")
     if not ciphertext or not iv:
         raise MessagingError("Encrypted content is required.")
     if not _rate_ok(
@@ -597,7 +701,7 @@ def post_message(
 def messages_for(user, conversation, *, limit=50, after_id=None) -> list[Message]:
     """Return messages this user can decrypt (those with a key wrapped to them),
     each annotated with `my_key` (the recipient's own MessageKey)."""
-    if not is_active_participant(user, conversation):
+    if not can_view(user, conversation):
         raise MessagingError("You are not an active member of this conversation.")
     qs = (
         Message.objects.filter(conversation=conversation, keys__recipient=user)

@@ -273,8 +273,16 @@ def add_guardian(owner, activity, guardian) -> Membership:
 
 @transaction.atomic
 def post_to_thread(author, activity, body: str) -> Post:
-    if not current_members(activity).filter(user=author).exists():
+    membership = current_members(activity).filter(user=author).first()
+    if membership is None:
         raise NotAMember("Only current members can post in the activity thread.")
+    if membership.role == Membership.Role.GUARDIAN:
+        # Guardians accompany children's activities as transparent, read-only supervisors;
+        # an adult must not post into a children's thread (cohort isolation for the peers).
+        raise NotEligible(_("Guardians accompany activities as read-only supervisors."))
+    if not can_participate(author):
+        # Catches a member whose parental consent was revoked or assurance lapsed after join.
+        raise NotEligible(_("Posting requires verified, consented participation."))
     return Post.objects.create(thread=activity.thread, author=author, body=body)
 
 

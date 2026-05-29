@@ -20,3 +20,7 @@ REST_FRAMEWORK = {**REST_FRAMEWORK, "DEFAULT_THROTTLE_CLASSES": [], "DEFAULT_THR
 
 # Keep uploaded test blobs out of the repo tree.
 MEDIA_ROOT = tempfile.mkdtemp(prefix="test-media-")
+
+# Media uploads don't require a real scanner under test (no blocklist is configured); the
+# fail-closed gate is verified explicitly in the media tests via a settings override.
+MEDIA_REQUIRE_SCANNER = False

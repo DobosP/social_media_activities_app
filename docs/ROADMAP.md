@@ -5,6 +5,14 @@ vision, slots each into a deliverable, sequences them by dependency, and calls o
 **integrated steps** (infrastructure / sequencing / legal gates) that aren't a single feature
 but are required to glue the product together safely.
 
+> **2026-05 audit reconciliation.** This roadmap had drifted from the code. A whole
+> **D10 secure-messaging** subsystem (plus the `web`, `notifications`, and
+> `recommendations` apps) shipped but was never listed here; several "⏳" rows below are
+> actually built; and a few "shipped" items aren't fully reachable (activity-create has no
+> live API route, the place-quorum is admin-only, booking is a demo stub, the web UI isn't
+> translated). The verified state, the open launch-blockers, and the child-safety fixes
+> already applied are in **[AUDIT_2026-05](AUDIT_2026-05.md)** — read it alongside this.
+
 See also: [ARCHITECTURE](ARCHITECTURE.md) · [COMPLIANCE](COMPLIANCE.md) ·
 [SAFETY](SAFETY.md) · [SECURITY](SECURITY.md) · [DATA_AND_INTEGRATIONS](DATA_AND_INTEGRATIONS.md) ·
 [MULTI_AGENT_BUILD](MULTI_AGENT_BUILD.md) (how to build this in parallel)
@@ -229,9 +237,10 @@ These thread through multiple deliverables. Skipping them creates rework or lega
 
 ## Delivered status (all core deliverables shipped) ✅
 
-**D1–D9 are all merged to `main`** with a green CI gate (ruff, format, migrations,
-~209 tests, pip-audit, Docker build). On top of the original deliverables, these
-cross-cutting enhancements have also shipped:
+**D1–D9 are all merged to `main`** — plus **D10 secure messaging** and the `web`,
+`notifications`, and `recommendations` apps — with a green CI gate (ruff, format,
+migrations, ~360 tests, pip-audit, Docker build). On top of the original deliverables,
+these cross-cutting enhancements have also shipped:
 
 - **Data sources & registry** — provider investigation in
   [DATA_PROVIDERS](DATA_PROVIDERS.md); collection focused on parks, libraries,
@@ -251,16 +260,28 @@ cross-cutting enhancements have also shipped:
 - **Launch readiness** — donations (no ads/tracking), `/healthz` + aggregate stats,
   ASGI prod, **Render one-blueprint deploy**, runbook + release-readiness gate.
 
-**What remains is not new features but go-live work** — see the next phase plan in
-[PHASE_2_PLAN](PHASE_2_PLAN.md): real provider keys (Foursquare/Ticketmaster/Google),
-legal/compliance sign-off (DPIA, ToS, DSA), a security review, and the discovery/UX
-layer that ties places + events + activities together.
+- **D10 · Secure messaging** — cohort-isolated, invite-accept, end-to-end-encrypted
+  direct & group chat (`apps/messaging`), with consent-gated, read-only guardian
+  oversight. See [MESSAGING](MESSAGING.md). *(Was absent from this roadmap until the
+  2026-05 audit; its consent/cohort enforcement gaps were fixed in audit Wave 0.)*
+
+**What remains is partly go-live work — but the 2026-05 audit
+([AUDIT_2026-05](AUDIT_2026-05.md)) also found real engineering launch-blockers in shipped
+code** (some fixed in "Wave 0"): a shared cache for global rate-limits + WebSocket fan-out,
+brute-force protection on auth, scheduled retention/suspension purges, and a GDPR erasure
+path. Remaining go-live items are in [PHASE_2_PLAN](PHASE_2_PLAN.md): real provider keys
+(Foursquare/Ticketmaster/Google), legal/compliance sign-off (DPIA, ToS, DSA), a real CSAM
+scanner, and an independent security review.
 
 ---
 
 ## Feature traceability (from the original brief)
 
-Every feature you described, and where it lives:
+Every feature you described, and where it lives. **Note (2026-05 audit):** the ⏳ marks
+below are stale — the D2/D3/D5/D6/D8 items shown as "planned" are in fact **shipped**
+(and D10 added username-addressable secure messaging on top). See
+[AUDIT_2026-05](AUDIT_2026-05.md) for the verified status and the caveats (e.g. the
+activity-create API route and the user-place quorum API are not yet wired).
 
 | Feature from the brief | Deliverable | Status |
 |---|---|---|
