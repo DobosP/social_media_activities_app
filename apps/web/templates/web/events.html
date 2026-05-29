@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}What's happening{% endblock %}
+{% block content %}
+<h1>What's happening</h1>
+<p class="muted">Upcoming events at places near you. Find one you like, then organise an activity to
+  go together.{% if activity %} Filtered by <strong>{{ activity }}</strong> &middot;
+  <a href="{% url 'events_list' %}">clear</a>.{% endif %}</p>
+<div class="grid">
+  {% for e in events %}
+    <div class="card">
+      <h3><a href="{% url 'event_detail' e.pk %}">{{ e.title }}</a></h3>
+      <div>{% if e.activity_type %}<span class="tag">{{ e.activity_type.name }}</span>{% endif %}</div>
+      <p class="muted">{{ e.starts_at|date:"D j M, H:i" }}{% if e.place %} &middot;
+        <a href="{% url 'place_detail' e.place.pk %}">{{ e.place.name }}</a>{% endif %}</p>
+      {% if e.description %}<p>{{ e.description|truncatewords:22 }}</p>{% endif %}
+    </div>
+  {% empty %}<p class="muted">No upcoming events yet.</p>{% endfor %}
+</div>
+{% endblock %}

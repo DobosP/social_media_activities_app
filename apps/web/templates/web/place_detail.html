@@ -17,6 +17,16 @@
   <h2>Upcoming here (your cohort)</h2>
   {% for a in meetups %}{% include "web/_activity_card.html" %}{% empty %}
   <p class="muted">No upcoming activities here yet.</p>{% endfor %}
+
+  {% if events %}
+  <h2>Events here</h2>
+  {% for e in events %}
+    <div class="card">
+      <h3><a href="{% url 'event_detail' e.pk %}">{{ e.title }}</a></h3>
+      <p class="muted">{{ e.starts_at|date:"D j M, H:i" }}</p>
+    </div>
+  {% endfor %}
+  {% endif %}
 {% else %}
   <div class="banner"><a href="{% url 'login' %}">Log in</a> or
     <a href="{% url 'register' %}">sign up</a> to organise or join activities here.</div>

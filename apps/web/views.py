@@ -4,6 +4,7 @@ membership-scoped media) hold identically here."""
 
 import math
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
@@ -11,11 +12,13 @@ from django.core.exceptions import ValidationError
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.utils.crypto import get_random_string
 from django.views.decorators.http import require_POST
 
 from apps.accounts.identity.registry import get_identity_provider
-from apps.accounts.models import AgeBand, User
+from apps.accounts.models import AgeBand, GuardianRelationship, User
 from apps.accounts.services import apply_assurance, can_participate
+from apps.events.models import Event
 from apps.media.models import Photo
 from apps.media.services import NotAuthorized, signed_url, thread_photos, upload_photo
 from apps.notifications import services as notifications
@@ -112,10 +115,21 @@ def home(request):
         .distinct()
         .order_by("starts_at")
     )
+    events = (
+        Event.objects.filter(starts_at__gte=timezone.now())
+        .select_related("place", "activity_type")
+        .order_by("starts_at")[:6]
+    )
     return render(
         request,
         "web/home.html",
-        {"recommended": recommended, "upcoming": upcoming, "mine": mine, **_nav_context(user)},
+        {
+            "recommended": recommended,
+            "upcoming": upcoming,
+            "mine": mine,
+            "events": events,
+            **_nav_context(user),
+        },
     )
 
 
@@ -133,10 +147,15 @@ def place_detail(request, pk):
             .select_related("activity_type", "owner")
             .order_by("starts_at")
         )
+    events = (
+        Event.objects.filter(place=place, starts_at__gte=timezone.now())
+        .select_related("activity_type")
+        .order_by("starts_at")
+    )
     return render(
         request,
         "web/place_detail.html",
-        {"place": place, "meetups": meetups, **_nav_context(request.user)},
+        {"place": place, "meetups": meetups, "events": events, **_nav_context(request.user)},
     )
 
 
@@ -409,3 +428,94 @@ def donate(request):
     else:
         form = DonateForm()
     return render(request, "web/donate.html", {"form": form, **_nav_context(request.user)})
+
+
+# --- Events (public: places + happenings) -------------------------------------------
+
+
+def events_list(request):
+    events = (
+        Event.objects.filter(starts_at__gte=timezone.now())
+        .select_related("place", "activity_type")
+        .order_by("starts_at")
+    )
+    activity = request.GET.get("activity")
+    if activity:
+        events = events.filter(activity_type__slug=activity)
+    return render(
+        request,
+        "web/events.html",
+        {"events": events[:100], "activity": activity, **_nav_context(request.user)},
+    )
+
+
+def event_detail(request, pk):
+    event = get_object_or_404(Event.objects.select_related("place", "activity_type"), pk=pk)
+    return render(request, "web/event_detail.html", {"event": event, **_nav_context(request.user)})
+
+
+# --- EUDI Wallet age verification (in-page; sandbox demo wallet) ---------------------
+
+
+@login_required
+def verify_age(request):
+    sandbox = getattr(settings, "EUDI_SANDBOX", False)
+    if request.method == "POST":
+        if not sandbox:
+            messages.error(request, "EU wallet verification is not configured on this server.")
+            return redirect("profile")
+        from apps.accounts.identity.base import IdentityVerificationError
+        from apps.accounts.identity.eudi.issuer import issue_age_credential
+        from apps.accounts.identity.providers.eudi import EUDIWalletProvider
+
+        choice = request.POST.get("age", "adult")
+        nonce = get_random_string(24)
+        token = issue_age_credential(
+            audience=settings.EUDI_CLIENT_ID,
+            nonce=nonce,
+            age_over_16=choice in ("16_17", "adult"),
+            age_over_18=choice == "adult",
+            subject=str(request.user.public_id),
+        )
+        presentation = {
+            "vp_token": token,
+            "nonce": nonce,
+            "audience": settings.EUDI_CLIENT_ID,
+        }
+        try:
+            result = EUDIWalletProvider().verify(request.user, presentation=presentation)
+        except IdentityVerificationError as exc:
+            messages.error(request, f"Verification failed: {exc}")
+            return redirect("verify_age")
+        apply_assurance(request.user, result)
+        messages.success(
+            request,
+            f"Age verified via the EU wallet - you're in the "
+            f"'{request.user.get_cohort_display()}' cohort.",
+        )
+        return redirect("profile")
+    return render(
+        request,
+        "web/verify_age.html",
+        {
+            "sandbox": sandbox,
+            "verified": can_participate(request.user),
+            **_nav_context(request.user),
+        },
+    )
+
+
+# --- Guardian / wards (account-level guardianship) ----------------------------------
+
+
+@login_required
+def wards(request):
+    ward_users = User.objects.filter(
+        guardians__guardian=request.user,
+        guardians__status=GuardianRelationship.Status.ACTIVE,
+    ).distinct()
+    return render(
+        request,
+        "web/wards.html",
+        {"wards": ward_users, **_nav_context(request.user)},
+    )

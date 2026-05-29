@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Your wards{% endblock %}
+{% block content %}
+<h1>Your wards</h1>
+<p class="muted">Children you are the registered parent/legal guardian of. Guardianship is set up
+  alongside parental consent.</p>
+<ul class="members">
+  {% for w in wards %}
+    <li>{{ w.display_name|default:w.username }} &middot; {{ w.get_cohort_display }}</li>
+  {% empty %}
+    <p class="muted">You aren't a registered guardian of any account.</p>
+  {% endfor %}
+</ul>
+{% endblock %}

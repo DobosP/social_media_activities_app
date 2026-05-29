@@ -28,6 +28,14 @@
     &middot; <a href="{% url 'interests' %}">edit</a></p>
 </div>
 
+<div class="card">
+  <h3>Age verification</h3>
+  <p class="muted">Prove your age band with the EU Digital Identity wallet &mdash; the app only ever
+    learns an over-16/over-18 band, never your birthdate.</p>
+  <a class="btn" href="{% url 'verify_age' %}">Verify with EU Digital Identity</a>
+  {% if profile_user.is_guardian %}<a class="btn btn-secondary" href="{% url 'wards' %}">Your wards</a>{% endif %}
+</div>
+
 {% if profile_user.requires_parental_consent and not can_participate %}
 <div class="banner">As an under-16, a parent or guardian must approve your account before you can
   join or organise activities.</div>

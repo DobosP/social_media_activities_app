@@ -125,3 +125,39 @@ def test_cohort_isolation_detail_404_for_other_cohort():
 def test_donate_redirects_to_checkout():
     resp = _client(_user("web-donor")).post("/donate/", {"amount": "10"})
     assert resp.status_code == 302
+
+
+def test_events_pages_render():
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    from apps.events.models import Event
+
+    place, atype = _place(), _type(slug="web-ev")
+    event = Event.objects.create(
+        place=place,
+        activity_type=atype,
+        title="City Festival",
+        starts_at=timezone.now() + timedelta(days=3),
+    )
+    c = _client(_user("ev-user"))
+    assert c.get("/events/").status_code == 200
+    assert c.get(f"/events/{event.id}/").status_code == 200
+
+
+def test_verify_age_flow_sets_band():
+    # A fresh, unverified user proves "adult" via the sandbox EU wallet.
+    user = User.objects.create_user(username="unverified", password=PW)
+    c = Client()
+    c.force_login(user)
+    assert c.get("/verify-age/").status_code == 200
+    resp = c.post("/verify-age/", {"age": "adult"})
+    assert resp.status_code == 302
+    user.refresh_from_db()
+    assert user.is_identity_verified is True
+    assert user.cohort == "adult"
+
+
+def test_wards_page_renders():
+    assert _client(_user("guardian-user")).get("/wards/").status_code == 200
