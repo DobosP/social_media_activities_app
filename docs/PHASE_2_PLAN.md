@@ -82,9 +82,17 @@ adult→minor outreach.
 Finalize DPIA, Privacy Policy, Terms, DSA Art. 28 alignment, consent UX/records review.
 Mostly `docs/` + small consent-flow wiring. Pairs with the DPO.
 
-### P6 · Localization (RO/EN)
+### P6 · Localization (RO/EN)  ✅ framework + core RO strings
 IS-7 from the roadmap: Django/DRF i18n, `locale/` catalogs, translate user-facing strings;
 RO first (launch city is Cluj-Napoca).
+- **Built:** `LocaleMiddleware` (per-request language from `Accept-Language`), `LANGUAGES`
+  (en, ro), `LOCALE_PATHS`, and a compiled **`locale/ro`** catalog. The core
+  participation/join messages (`apps/social/services.py`) and a sample API validation
+  message are wrapped in `gettext` and translated to Romanian; APIs return RO when the
+  client sends `Accept-Language: ro`.
+- **Extending:** wrap further user-facing strings with `_()`, run
+  `makemessages -l ro --ignore=.venv`, translate, `compilemessages` — no code changes
+  needed beyond the wrap.
 
 ### P7 · Security review
 Threat-model pass, rate-limit coverage across write endpoints, dependency/audit review,

@@ -1,0 +1,55 @@
+# Romanian (ro) translations for the Social Activities app.
+# Distributed under the same license as the project.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: social-activities 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-29 09:51+0300\n"
+"PO-Revision-Date: 2026-05-29 10:00+0300\n"
+"Last-Translator: Claude Code\n"
+"Language-Team: Romanian\n"
+"Language: ro\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1?0:(((n%100>19)||((n%100==0)&&(n!=0)))?"
+"2:1));\n"
+
+#: apps/recommendations/views.py:26
+msgid "`interests` must be a list of type slugs."
+msgstr "„interests” trebuie să fie o listă de identificatori (slug) de tipuri."
+
+#: apps/social/services.py:121
+msgid "User cannot create activities (needs verification/consent + a cohort)."
+msgstr ""
+"Utilizatorul nu poate crea activități (necesită verificare/consimțământ + o "
+"cohortă)."
+
+#: apps/social/services.py:124
+msgid "Only children's activities can be guardian-accompanied."
+msgstr "Doar activitățile copiilor pot fi însoțite de un tutore."
+
+#: apps/social/services.py:152
+msgid "User is not eligible to join this activity."
+msgstr "Utilizatorul nu este eligibil să se alăture acestei activități."
+
+#: apps/social/services.py:177
+msgid "The owner cannot leave their own activity."
+msgstr "Organizatorul nu poate părăsi propria activitate."
+
+#: apps/social/services.py:217 apps/social/services.py:238
+msgid "This membership is not awaiting a join vote."
+msgstr "Această calitate de membru nu așteaptă un vot de aderare."
+
+#: apps/social/services.py:221
+msgid "Only current members may vote on join requests."
+msgstr "Doar membrii actuali pot vota cererile de aderare."
+
+#: apps/social/services.py:234
+msgid "Only the activity owner may override."
+msgstr "Doar organizatorul activității poate decide direct."
+
+#: apps/social/services.py:236
+msgid "Owner override is disabled for this activity."
+msgstr "Decizia directă a organizatorului este dezactivată pentru această activitate."

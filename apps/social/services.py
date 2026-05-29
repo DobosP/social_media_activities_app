@@ -5,6 +5,7 @@ invariants (cohort isolation, verified-and-consented participation) live in one 
 
 from django.db import transaction
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 from apps.accounts.models import Cohort
 from apps.accounts.services import can_participate
@@ -116,9 +117,11 @@ def create_activity(
     guardian_accompanied=False,
 ):
     if not can_create_activity(owner):
-        raise NotEligible("User cannot create activities (needs verification/consent + a cohort).")
+        raise NotEligible(
+            _("User cannot create activities (needs verification/consent + a cohort).")
+        )
     if guardian_accompanied and owner.cohort != Cohort.CHILD:
-        raise InvalidState("Only children's activities can be guardian-accompanied.")
+        raise InvalidState(_("Only children's activities can be guardian-accompanied."))
     activity = Activity.objects.create(
         owner=owner,
         place=place,
@@ -146,7 +149,7 @@ def create_activity(
 @transaction.atomic
 def request_to_join(user, activity) -> Membership:
     if not can_join(user, activity):
-        raise NotEligible("User is not eligible to join this activity.")
+        raise NotEligible(_("User is not eligible to join this activity."))
     membership = Membership.objects.create(
         activity=activity,
         user=user,
@@ -171,7 +174,7 @@ def leave_activity(user, activity) -> Membership | None:
     if membership is None or membership.state == Membership.State.REMOVED:
         return None
     if membership.role == Membership.Role.OWNER:
-        raise InvalidState("The owner cannot leave their own activity.")
+        raise InvalidState(_("The owner cannot leave their own activity."))
     membership.state = Membership.State.REMOVED
     membership.save(update_fields=["state", "updated_at"])
     return membership
@@ -211,11 +214,11 @@ def _evaluate_vote(membership: Membership) -> None:
 def cast_vote(voter, membership: Membership, approve: bool) -> Membership:
     activity = membership.activity
     if membership.state != Membership.State.REQUESTED:
-        raise InvalidState("This membership is not awaiting a join vote.")
+        raise InvalidState(_("This membership is not awaiting a join vote."))
     if membership.user_id == voter.id:
         raise InvalidState("A requester cannot vote on their own join request.")
     if not voting_members(activity).filter(user=voter).exists():
-        raise NotAMember("Only current members may vote on join requests.")
+        raise NotAMember(_("Only current members may vote on join requests."))
     JoinVote.objects.update_or_create(
         membership=membership, voter=voter, defaults={"approve": approve}
     )
@@ -228,11 +231,11 @@ def owner_admit(owner, membership: Membership) -> Membership:
     """Owner override: admit a requested member directly (if enabled for the activity)."""
     activity = membership.activity
     if activity.owner_id != owner.id:
-        raise NotAMember("Only the activity owner may override.")
+        raise NotAMember(_("Only the activity owner may override."))
     if not activity.owner_can_override:
-        raise InvalidState("Owner override is disabled for this activity.")
+        raise InvalidState(_("Owner override is disabled for this activity."))
     if membership.state != Membership.State.REQUESTED:
-        raise InvalidState("This membership is not awaiting a join vote.")
+        raise InvalidState(_("This membership is not awaiting a join vote."))
     _admit(membership)
     return membership
 
