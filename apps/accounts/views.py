@@ -10,6 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .export import build_user_export
 from .identity.base import IdentityVerificationError
 from .identity.providers.eudi import AGE_OVER_16, AGE_OVER_18, EUDIWalletProvider
 from .models import ConsumedAgeNonce, GuardianRelationship, User
@@ -59,6 +60,18 @@ class MeView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+class MeExportView(APIView):
+    """GDPR Art. 20 data portability: the authenticated user's own data as JSON.
+
+    Returns a structured snapshot (profile, age band, cohort, consent metadata,
+    memberships/activities, donations summary) — only the requester's own data."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response(build_user_export(request.user))
+
+
 class WardListView(APIView):
     """The minors this user is the parent/legal guardian of."""
 
@@ -99,6 +112,20 @@ class WardDetailView(APIView):
         ward = self._get_ward(request, public_id)
         erase_user(request.user, ward)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class WardExportView(APIView):
+    """GDPR Art. 20 data portability, guardian-for-ward variant: a verified guardian
+    exports their under-age ward's data as JSON. Authorised only for an active
+    guardianship link (the same gate WardDetailView uses)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, public_id):
+        ward = get_object_or_404(User, public_id=public_id)
+        if not is_guardian_of(request.user, ward):
+            raise PermissionDenied("You are not this user's guardian.")
+        return Response(build_user_export(ward))
 
 
 class WardConsentView(APIView):
@@ -237,6 +264,10 @@ class EUDIVerifyView(APIView):
 
         presentation = {
             "vp_token": request.data.get("vp_token"),
+            # Optional holder key-binding proof (proof-of-possession of the credential
+            # holder key over our audience + nonce); when present the credential is bound
+            # to this account's holder id, preventing credential transfer/replay.
+            "holder_binding_proof": request.data.get("holder_binding_proof"),
             "nonce": payload["nonce"],
             "audience": settings.EUDI_CLIENT_ID,
             "method": "openid4vp",

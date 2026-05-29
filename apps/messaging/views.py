@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework import status
@@ -91,7 +92,14 @@ class ConversationListCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        convs = services.conversations_for(request.user).prefetch_related("participants__user")
+        # Hard-cap the list so a user with a very large number of conversations
+        # cannot make the server materialize and serialize an unbounded queryset
+        # (mirrors the notifications [:100] bound). `conversations_for` already
+        # orders by -updated_at, so this keeps the most recently active ones.
+        limit = getattr(settings, "MESSAGING_CONVERSATION_LIST_LIMIT", 100)
+        convs = services.conversations_for(request.user).prefetch_related("participants__user")[
+            :limit
+        ]
         return Response(ConversationSerializer(convs, many=True, context={"request": request}).data)
 
     def post(self, request):
@@ -256,8 +264,19 @@ class ConversationMessagesView(APIView):
             after_id = int(after) if after else None
         except ValueError:
             after_id = None
+        # History is always bounded to the newest-N messages so a long-lived
+        # conversation can never return an unbounded page. A caller-supplied
+        # `?limit=` may only shrink the window, never exceed the hard cap.
+        max_limit = getattr(settings, "MESSAGING_MESSAGE_PAGE_LIMIT", 50)
+        limit = max_limit
+        requested = request.query_params.get("limit")
+        if requested:
+            try:
+                limit = max(1, min(int(requested), max_limit))
+            except ValueError:
+                limit = max_limit
         try:
-            msgs = services.messages_for(request.user, conv, after_id=after_id)
+            msgs = services.messages_for(request.user, conv, limit=limit, after_id=after_id)
         except services.MessagingError as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_403_FORBIDDEN)
         return Response(MessageSerializer(msgs, many=True, context={"request": request}).data)

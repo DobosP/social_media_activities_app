@@ -2,9 +2,10 @@ from unittest import mock
 
 import pytest
 from django.contrib.gis.geos import Point
+from django.core.cache import cache
 from django.test import Client
 
-from apps.accounts.identity.base import AssuranceResult
+from apps.accounts.identity.base import AssuranceResult, IdentityVerificationError
 from apps.accounts.models import AgeBand, User
 from apps.accounts.services import apply_assurance
 from apps.places.models import Place
@@ -265,3 +266,89 @@ def test_profile_shows_delete_control():
     assert resp.status_code == 200
     assert b"Delete my account" in resp.content
     assert b'action="/account/delete/"' in resp.content
+
+
+# --- Auth hardening regressions -----------------------------------------------------
+
+
+def test_login_locks_out_after_repeated_failures(settings):
+    # Tight limit so the test stays fast; LocMemCache persists in-process, so clear it.
+    settings.LOGIN_FAILURE_LIMIT = 3
+    settings.LOGIN_FAILURE_WINDOW_SECONDS = 900
+    cache.clear()
+    _user("lockme")
+    c = Client()
+    for _ in range(settings.LOGIN_FAILURE_LIMIT):
+        resp = c.post("/login/", {"username": "lockme", "password": "wrong"})
+        assert resp.status_code == 200  # re-rendered form, not authenticated
+
+    # Even the *correct* password is now refused: the (username, IP) pair is locked out.
+    resp = c.post("/login/", {"username": "lockme", "password": PW})
+    assert resp.status_code == 200
+    assert b"Too many failed login attempts" in resp.content
+    assert "_auth_user_id" not in c.session
+
+
+def test_login_succeeds_before_lockout_and_clears_counter(settings):
+    settings.LOGIN_FAILURE_LIMIT = 5
+    settings.LOGIN_FAILURE_WINDOW_SECONDS = 900
+    cache.clear()
+    _user("goodlogin")
+    c = Client()
+    # A couple of failures, still under the limit.
+    c.post("/login/", {"username": "goodlogin", "password": "wrong"})
+    c.post("/login/", {"username": "goodlogin", "password": "wrong"})
+    # Correct credentials authenticate and reset the failure counter.
+    resp = c.post("/login/", {"username": "goodlogin", "password": PW})
+    assert resp.status_code == 302
+    assert "_auth_user_id" in c.session
+
+
+def test_register_rolls_back_on_identity_error(settings, monkeypatch):
+    # If the identity provider raises, no orphan account must remain and no 500 occurs.
+    cache.clear()
+    from apps.web import views as web_views
+
+    class _Boom:
+        def verify(self, user, **kwargs):
+            raise IdentityVerificationError("wallet unavailable")
+
+    monkeypatch.setattr(web_views, "get_identity_provider", lambda: _Boom())
+    resp = Client().post(
+        "/register/",
+        {
+            "username": "orphan",
+            "display_name": "Orphan",
+            "password": PW,
+            "age_band": AgeBand.ADULT,
+        },
+    )
+    assert resp.status_code == 302  # redirected, not a 500
+    assert not User.objects.filter(username="orphan").exists()
+
+
+def test_block_redirect_rejects_offsite_next():
+    me, other = _user("redir-me"), _user("redir-other")
+    c = _client(me)
+    resp = c.post(f"/users/{other.id}/block/", {"next": "https://evil.example/phish"})
+    assert resp.status_code == 302
+    # Open redirect blocked: falls back to the on-site default instead of the evil host.
+    assert "evil.example" not in resp.headers["Location"]
+    assert resp.headers["Location"] == "/"
+
+
+def test_block_redirect_allows_safe_relative_next():
+    me, other = _user("redir2-me"), _user("redir2-other")
+    c = _client(me)
+    resp = c.post(f"/users/{other.id}/block/", {"next": "/activities/"})
+    assert resp.status_code == 302
+    assert resp.headers["Location"] == "/activities/"
+
+
+def test_unblock_redirect_rejects_offsite_next():
+    me, other = _user("redir3-me"), _user("redir3-other")
+    c = _client(me)
+    resp = c.post(f"/users/{other.id}/unblock/", {"next": "//evil.example/x"})
+    assert resp.status_code == 302
+    assert "evil.example" not in resp.headers["Location"]
+    assert resp.headers["Location"] == "/profile/"  # safe on-site default (reversed URL)

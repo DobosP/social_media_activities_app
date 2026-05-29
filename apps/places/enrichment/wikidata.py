@@ -35,7 +35,7 @@ class WikidataEnricher:
 
     def _run_query(self, qids: list[str]) -> dict[str, str]:
         """Return {QID: official_website} for the given QIDs in one SPARQL query."""
-        import requests
+        from apps.safety.net import safe_get
 
         values = " ".join(f"wd:{q}" for q in qids)
         query = (
@@ -43,7 +43,10 @@ class WikidataEnricher:
             f"VALUES ?item {{ {values} }} "
             "OPTIONAL { ?item wdt:P856 ?website. } }"
         )
-        resp = requests.get(
+        # SSRF-safe fetch: the SPARQL endpoint is operator-configured but routed through
+        # safe_get so a misconfigured/internal endpoint can't be reached and the JSON
+        # response is byte-capped.
+        resp = safe_get(
             self.endpoint,
             params={"query": query, "format": "json"},
             headers={
@@ -51,6 +54,7 @@ class WikidataEnricher:
                 "Accept": "application/sparql-results+json",
             },
             timeout=30,
+            max_bytes=10 * 1024 * 1024,
         )
         resp.raise_for_status()
         websites: dict[str, str] = {}

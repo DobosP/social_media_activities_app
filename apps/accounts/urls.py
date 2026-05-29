@@ -6,16 +6,21 @@ from .views import (
     GuardianLinkAcceptView,
     GuardianLinkDeclineView,
     GuardianLinkView,
+    MeExportView,
     MeView,
     WardConsentView,
     WardDetailView,
+    WardExportView,
     WardListView,
 )
 
 urlpatterns = [
     path("me/", MeView.as_view(), name="me"),
+    # GDPR Art. 20 data portability (JSON export).
+    path("me/export/", MeExportView.as_view(), name="me-export"),
     path("wards/", WardListView.as_view(), name="wards"),
     path("wards/<uuid:public_id>/", WardDetailView.as_view(), name="ward-detail"),
+    path("wards/<uuid:public_id>/export/", WardExportView.as_view(), name="ward-export"),
     path("wards/<uuid:public_id>/consent/", WardConsentView.as_view(), name="ward-consent"),
     # Guardianship link establishment (mutually-confirmed invite/accept)
     path("guardian-links/", GuardianLinkView.as_view(), name="guardian-links"),

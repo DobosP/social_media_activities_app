@@ -53,7 +53,10 @@ def test_eudi_result_carries_only_age_band_no_pii():
     )
     assert result.age_band == AgeBand.ADULT
     assert result.expires_at is not None
-    assert set(result.raw) == {"age_over_16", "age_over_18", "format"}
+    # raw records the proven booleans, credential format, and the holder-binding
+    # outcome — but never identifying claims (data minimisation).
+    assert set(result.raw) == {"age_over_16", "age_over_18", "format", "holder_proof"}
+    assert result.raw["holder_proof"] == "unverified"  # no key-binding proof presented
 
 
 def test_eudi_requires_a_presentation():

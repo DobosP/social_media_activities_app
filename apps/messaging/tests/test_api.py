@@ -3,7 +3,7 @@ from rest_framework.test import APIClient
 
 from apps.messaging import services
 
-from .conftest import PUBLIC_JWK, keys_for
+from .conftest import PUBLIC_JWK, keys_for, make_user
 
 pytestmark = pytest.mark.django_db
 
@@ -164,3 +164,38 @@ def test_requires_authentication(adult_a, adult_b):
         401,
         403,
     )
+
+
+# --- list bounding ---
+def test_conversation_list_is_bounded(settings, adult_a):
+    settings.MESSAGING_CONVERSATION_LIST_LIMIT = 3
+    # Distinct same-cohort partners ⇒ distinct direct conversations (start_direct
+    # reuses an existing 1:1, so each partner must be unique).
+    for i in range(6):
+        partner = make_user(f"partner_{i}")
+        services.start_direct(adult_a, partner)
+    resp = client_for(adult_a).get("/api/messaging/conversations/")
+    assert resp.status_code == 200, resp.content
+    assert len(resp.data) == 3
+
+
+def test_message_history_is_bounded(settings, adult_a, adult_b):
+    settings.MESSAGING_MESSAGE_PAGE_LIMIT = 5
+    conv = _active_direct(adult_a, adult_b)
+    keys = keys_for(conv)
+    for i in range(9):
+        services.post_message(
+            adult_a, conv, ciphertext=f"Y2lwaGVy{i}", iv="aXY=", recipient_keys=keys
+        )
+    url = f"/api/messaging/conversations/{conv.id}/messages/"
+    history = client_for(adult_b).get(url)
+    assert history.status_code == 200, history.content
+    # Capped to the newest-N, returned oldest-first.
+    assert len(history.data) == 5
+    assert history.data[-1]["ciphertext"] == "Y2lwaGVy8"
+
+    # A caller-supplied ?limit may shrink the window but never exceed the hard cap.
+    bounded = client_for(adult_b).get(url, {"limit": 50})
+    assert len(bounded.data) == 5
+    smaller = client_for(adult_b).get(url, {"limit": 2})
+    assert len(smaller.data) == 2

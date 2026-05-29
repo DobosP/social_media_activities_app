@@ -39,3 +39,36 @@ services:
           property: connectionString
       - key: PYTHONUNBUFFERED
         value: "1"
+
+  # Scheduled retention/maintenance jobs (GDPR Art.5(1)(e) storage limitation + DSA
+  # proportionality): purge expired E2EE messages & chat, lift elapsed suspensions, send
+  # activity reminders. Without this, retention never runs and suspensions never auto-lift.
+  # NOTE: Render `cron` requires a paid plan — on free tier, run `manage.py run_due_jobs`
+  # from an external scheduler (e.g. a GitHub Actions cron hitting a one-off job). Set the
+  # *_RETENTION_DAYS env to the periods your DPO defines (0 = disabled).
+  - type: cron
+    name: socialapp-scheduled-jobs
+    runtime: docker
+    plan: starter
+    region: frankfurt
+    schedule: "0 3 * * *" # daily 03:00 UTC
+    dockerfilePath: ./Dockerfile
+    dockerCommand: python manage.py run_due_jobs
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.prod
+      - key: DJANGO_SECRET_KEY
+        fromService:
+          name: socialapp
+          type: web
+          envVarKey: DJANGO_SECRET_KEY
+      - key: DATABASE_URL
+        fromDatabase:
+          name: socialapp-db
+          property: connectionString
+      - key: MESSAGING_RETENTION_DAYS
+        value: "365" # DPO to confirm; 0 disables
+      - key: CHAT_RETENTION_DAYS
+        value: "365" # DPO to confirm; 0 disables
+      - key: PYTHONUNBUFFERED
+        value: "1"

@@ -73,44 +73,53 @@ class HashBlocklistScanner(ImageScanner):
         return bool(self._blocklist())
 
 
-class ManagedHttpScanner(ImageScanner):
-    """Submits the original image bytes to a managed content-safety service (e.g. a
-    PhotoDNA/Thorn-style CSAM matcher) over HTTPS and blocks on a positive match.
+class ManagedScanner(ImageScanner):
+    """Screens an image against a managed CSAM hash-matching service.
 
-    Configured via MEDIA_SCANNER_ENDPOINT + MEDIA_SCANNER_API_KEY. The service is
-    expected to return JSON with a truthy ``match``/``flagged`` field on a hit. Network
-    or service errors are treated as NOT-CLEAN (fail-closed) — a children's platform must
-    never store an image it could not screen."""
+    Privacy-preserving: only the SHA-256 of the upload is sent (never the image bytes),
+    matching the project's hash-only posture. The endpoint is operator-configured
+    (MEDIA_SCANNER_ENDPOINT) and the request is routed through apps.safety.net.safe_get so
+    it can't be coerced into reaching an internal/metadata host, and the reply is byte-capped.
+
+    Expected response: JSON {"match": <bool>} (a truthy match blocks the upload).
+    Fail-closed: on any network/parse error the image is treated as NOT clean so a children's
+    platform never stores content the scanner could not clear. This is the production swap
+    point — point MEDIA_IMAGE_SCANNER at apps.media.scanning.ManagedScanner."""
 
     def _endpoint(self) -> str:
         return getattr(settings, "MEDIA_SCANNER_ENDPOINT", "")
 
+    def is_effective(self) -> bool:
+        # Only effective when an endpoint is configured to screen against.
+        return bool(self._endpoint())
+
     def scan(self, data: bytes) -> ScanResult:
-        import requests
+        from apps.safety.net import safe_get
 
         endpoint = self._endpoint()
-        api_key = getattr(settings, "MEDIA_SCANNER_API_KEY", "")
-        if not endpoint or not api_key:
-            # Misconfigured at call time: fail closed rather than pass content through.
+        if not endpoint:
             return ScanResult(clean=False, matched="scanner_unconfigured")
+        api_key = getattr(settings, "MEDIA_SCANNER_API_KEY", "")
+        digest = hashlib.sha256(data).hexdigest()
+        headers = {"Accept": "application/json"}
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
         try:
-            resp = requests.post(
+            resp = safe_get(
                 endpoint,
-                headers={"Authorization": f"Bearer {api_key}"},
-                files={"image": ("upload", data, "application/octet-stream")},
+                method="POST",
+                json={"sha256": digest},
+                headers=headers,
                 timeout=getattr(settings, "MEDIA_SCANNER_TIMEOUT", 10),
+                max_bytes=64 * 1024,
             )
             resp.raise_for_status()
-            body = resp.json()
-        except Exception:
-            logger.exception("Managed CSAM scanner call failed; failing closed")
+            matched = bool(resp.json().get("match") or resp.json().get("flagged"))
+        except Exception as exc:
+            # Fail closed: never clear an image the scanner could not evaluate.
+            logger.warning("Managed scanner unavailable; failing closed: %s", exc)
             return ScanResult(clean=False, matched="scanner_error")
-        flagged = bool(body.get("match") or body.get("flagged") or body.get("is_csam"))
-        matched = str(body.get("match_id", "")) if flagged else ""
-        return ScanResult(clean=not flagged, matched=matched)
-
-    def is_effective(self) -> bool:
-        return bool(self._endpoint() and getattr(settings, "MEDIA_SCANNER_API_KEY", ""))
+        return ScanResult(clean=not matched, matched=digest if matched else "")
 
 
 def get_scanner() -> ImageScanner:

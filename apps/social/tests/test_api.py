@@ -2,7 +2,8 @@ import pytest
 from rest_framework.test import APIClient
 
 from apps.accounts.models import AgeBand
-from apps.social.models import Membership
+from apps.social.models import Membership, Post
+from apps.social.serializers import ACTIVITY_DESCRIPTION_MAX_LENGTH, POST_BODY_MAX_LENGTH
 from apps.social.services import create_activity
 
 from .conftest import make_user
@@ -86,3 +87,72 @@ def test_post_requires_membership(adult, place, activity_type, now):
         f"/api/social/activities/{activity.id}/posts/", {"body": "Meet at 6"}, format="json"
     )
     assert ok.status_code == 201, ok.content
+
+
+# --- input-size caps (serializer layer) ---
+def test_post_body_too_long_rejected(adult, place, activity_type, now):
+    activity = create_activity(
+        adult, place=place, activity_type=activity_type, title="Hike", starts_at=now
+    )
+    resp = _client(adult).post(
+        f"/api/social/activities/{activity.id}/posts/",
+        {"body": "x" * (POST_BODY_MAX_LENGTH + 1)},
+        format="json",
+    )
+    assert resp.status_code == 400, resp.content
+    assert "body" in resp.json()
+    # Nothing overlong is persisted.
+    assert not Post.objects.filter(thread__activity=activity).exists()
+
+    # A body exactly at the cap is accepted.
+    ok = _client(adult).post(
+        f"/api/social/activities/{activity.id}/posts/",
+        {"body": "y" * POST_BODY_MAX_LENGTH},
+        format="json",
+    )
+    assert ok.status_code == 201, ok.content
+
+
+def test_activity_description_too_long_rejected(adult, place, activity_type, now):
+    resp = _client(adult).post(
+        "/api/social/activities/",
+        {
+            "place": place.id,
+            "activity_type": activity_type.id,
+            "title": "Evening run",
+            "description": "d" * (ACTIVITY_DESCRIPTION_MAX_LENGTH + 1),
+            "starts_at": now.isoformat(),
+        },
+        format="json",
+    )
+    assert resp.status_code == 400, resp.content
+    assert "description" in resp.json()
+
+
+# --- list bounding ---
+def test_thread_posts_list_is_bounded(settings, adult, place, activity_type, now):
+    settings.SOCIAL_THREAD_POST_LIMIT = 5
+    activity = create_activity(
+        adult, place=place, activity_type=activity_type, title="Hike", starts_at=now
+    )
+    for i in range(12):
+        Post.objects.create(thread=activity.thread, author=adult, body=f"post {i}")
+    resp = _client(adult).get(f"/api/social/activities/{activity.id}/posts/")
+    assert resp.status_code == 200, resp.content
+    body = resp.json()
+    assert len(body) == 5
+    # Newest-N, returned oldest-first for display: the last item is the most recent.
+    assert body[-1]["body"] == "post 11"
+
+
+def test_mine_membership_list_is_bounded(settings, adult, place, activity_type, now):
+    settings.SOCIAL_MEMBERSHIP_LIST_LIMIT = 3
+    # Each created activity makes `adult` an owner-member, so 7 activities ⇒ 7 rows.
+    for i in range(7):
+        create_activity(
+            adult, place=place, activity_type=activity_type, title=f"A{i}", starts_at=now
+        )
+    assert Membership.objects.filter(user=adult).count() == 7
+    resp = _client(adult).get("/api/social/activities/mine/")
+    assert resp.status_code == 200, resp.content
+    assert len(resp.json()) == 3

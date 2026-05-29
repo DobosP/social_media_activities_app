@@ -6,6 +6,12 @@ from apps.taxonomy.models import ActivityType
 from .models import Activity, Membership, Post
 from .services import current_members, participant_count
 
+# Hard text caps enforced at the serialization layer. The underlying model fields
+# are unbounded TextFields, so without these the API would accept arbitrarily large
+# bodies/descriptions (abuse + storage/perf risk). Posts mirror the E2EE chat cap.
+POST_BODY_MAX_LENGTH = 4000
+ACTIVITY_DESCRIPTION_MAX_LENGTH = 2000
+
 
 class ActivitySerializer(serializers.ModelSerializer):
     owner = serializers.CharField(source="owner.display_name", read_only=True)
@@ -54,7 +60,11 @@ class ActivityCreateSerializer(serializers.Serializer):
     place = serializers.PrimaryKeyRelatedField(queryset=Place.objects.all())
     activity_type = serializers.PrimaryKeyRelatedField(queryset=ActivityType.objects.all())
     title = serializers.CharField(max_length=200)
-    description = serializers.CharField(required=False, allow_blank=True, default="")
+    # The model stores description as an unbounded TextField; cap it here so the
+    # API rejects overlong input instead of persisting arbitrarily large blobs.
+    description = serializers.CharField(
+        required=False, allow_blank=True, default="", max_length=ACTIVITY_DESCRIPTION_MAX_LENGTH
+    )
     starts_at = serializers.DateTimeField()
     ends_at = serializers.DateTimeField(required=False, allow_null=True)
     join_threshold = serializers.FloatField(required=False, min_value=0.01, max_value=1.0)
@@ -73,6 +83,9 @@ class MembershipSerializer(serializers.ModelSerializer):
 
 class PostSerializer(serializers.ModelSerializer):
     author = serializers.CharField(source="author.display_name", read_only=True)
+    # Explicit cap: Post.body is a TextField (unbounded), so declare the limit here
+    # to reject overlong posts at the API boundary.
+    body = serializers.CharField(max_length=POST_BODY_MAX_LENGTH)
 
     class Meta:
         model = Post

@@ -8,13 +8,18 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.views import LoginView
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.crypto import get_random_string
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
+from apps.accounts.identity.base import IdentityVerificationError
 from apps.accounts.identity.registry import get_identity_provider
 from apps.accounts.models import AgeBand, GuardianRelationship, User
 from apps.accounts.services import (
@@ -67,6 +72,81 @@ def _avatar_url(viewer, target_user):
 # --- Auth ---------------------------------------------------------------------------
 
 
+def _client_ip(request) -> str:
+    """Best-effort real client IP. Honour X-Forwarded-For only behind the number of
+    trusted proxies the deployment declares (settings.NUM_PROXIES); otherwise the XFF
+    header is attacker-controlled and would let a single host evade per-IP lockout by
+    spoofing it. With NUM_PROXIES=0 we always trust REMOTE_ADDR."""
+    num_proxies = getattr(settings, "NUM_PROXIES", 0)
+    if num_proxies:
+        forwarded = request.META.get("HTTP_X_FORWARDED_FOR", "")
+        parts = [p.strip() for p in forwarded.split(",") if p.strip()]
+        if len(parts) >= num_proxies:
+            # The right-most NUM_PROXIES entries are appended by our own proxies; the
+            # entry just before them is the closest IP we can trust.
+            return parts[-num_proxies]
+    return request.META.get("REMOTE_ADDR", "") or "unknown"
+
+
+def _login_attempt_key(username: str, ip: str) -> str:
+    return f"web:login-failures:{(username or '').lower()}:{ip}"
+
+
+class ThrottledLoginView(LoginView):
+    """Stock Django login with an app-layer brute-force brake: too many failed attempts
+    for the same (username, real client IP) within a rolling window locks that pair out.
+    Stock ``LoginView`` is not a DRF view, so DRF throttles never apply to it; this gives
+    the web login the per-IP brake the API already has, with no new dependency."""
+
+    template_name = "web/login.html"
+
+    @property
+    def _limit(self) -> int:
+        return getattr(settings, "LOGIN_FAILURE_LIMIT", 10)
+
+    @property
+    def _window(self) -> int:
+        return getattr(settings, "LOGIN_FAILURE_WINDOW_SECONDS", 900)
+
+    def _attempt_key(self) -> str:
+        # AuthenticationForm posts the identifier under "username" regardless of the
+        # user model's USERNAME_FIELD.
+        username = self.request.POST.get("username", "")
+        return _login_attempt_key(username, _client_ip(self.request))
+
+    def _is_locked_out(self, key) -> bool:
+        return (cache.get(key) or 0) >= self._limit
+
+    def _record_failure(self, key) -> None:
+        # Fixed-window counter; the first failure seeds the TTL so the window expires.
+        try:
+            cache.incr(key)
+        except ValueError:
+            cache.set(key, 1, self._window)
+
+    def post(self, request, *args, **kwargs):
+        if self._is_locked_out(self._attempt_key()):
+            form = self.get_form()
+            form.add_error(
+                None,
+                "Too many failed login attempts. Please wait a few minutes and try again.",
+            )
+            # Do not count the lock-out response itself as another failed attempt.
+            self._locked_out = True
+            return self.form_invalid(form)
+        return super().post(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        # A successful login clears the counter for this (username, IP) pair.
+        cache.delete(self._attempt_key())
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        if not getattr(self, "_locked_out", False):
+            self._record_failure(self._attempt_key())
+        return super().form_invalid(form)
+
+
 def register(request):
     if request.user.is_authenticated:
         return redirect("home")
@@ -77,13 +157,29 @@ def register(request):
             if User.objects.filter(username=data["username"]).exists():
                 form.add_error("username", "That username is taken.")
             else:
-                user = User.objects.create_user(
-                    username=data["username"], password=data["password"]
-                )
-                user.display_name = data["display_name"]
-                user.save(update_fields=["display_name"])
-                result = get_identity_provider().verify(user, age_band=data["age_band"])
-                apply_assurance(user, result)
+                # Account creation + age assurance must succeed or fail together: a provider
+                # error must never leave an orphan, un-verified account behind. If the
+                # configured identity provider (e.g. EUDI in prod) cannot establish an age
+                # band here, roll back the half-built account and send the user back to
+                # the sign-up form to retry age verification, rather than 500-ing on the
+                # primary onboarding path. (verify_age itself is login-gated, so we can't
+                # send a not-yet-authenticated registrant straight there.)
+                try:
+                    with transaction.atomic():
+                        user = User.objects.create_user(
+                            username=data["username"], password=data["password"]
+                        )
+                        user.display_name = data["display_name"]
+                        user.save(update_fields=["display_name"])
+                        result = get_identity_provider().verify(user, age_band=data["age_band"])
+                        apply_assurance(user, result)
+                except IdentityVerificationError:
+                    messages.error(
+                        request,
+                        "We couldn't verify your age automatically. Your account wasn't "
+                        "created - please try again and complete age verification.",
+                    )
+                    return redirect("register")
                 login(request, user)
                 if data["age_band"] == AgeBand.UNDER_16 and not can_participate(user):
                     messages.info(
@@ -661,6 +757,20 @@ def report(request):
     )
 
 
+def _safe_next(request, default: str) -> str:
+    """Return the posted ``next`` target only if it points back at this site, else the
+    given named-route default. Prevents an open redirect through an attacker-supplied
+    ``next`` on the block/unblock POST."""
+    candidate = request.POST.get("next")
+    if candidate and url_has_allowed_host_and_scheme(
+        candidate,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return candidate
+    return default
+
+
 @login_required
 @require_POST
 def block_user_view(request, pk):
@@ -670,7 +780,7 @@ def block_user_view(request, pk):
         messages.success(request, f"Blocked {target.display_name or target.username}.")
     except ValueError as exc:
         messages.error(request, _msg(exc))
-    return redirect(request.POST.get("next") or "home")
+    return redirect(_safe_next(request, "home"))
 
 
 @login_required
@@ -679,7 +789,7 @@ def unblock_user_view(request, pk):
     target = get_object_or_404(User, pk=pk)
     safety.unblock_user(request.user, target)
     messages.success(request, f"Unblocked {target.display_name or target.username}.")
-    return redirect(request.POST.get("next") or "profile")
+    return redirect(_safe_next(request, "profile"))
 
 
 # --- Transparency: privacy & terms (W1-8) -------------------------------------------

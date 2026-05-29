@@ -39,9 +39,9 @@ class GooglePlacesEnricher:
         self.enabled = bool(enabled and self.api_key)
 
     def _get(self, url: str, *, params: dict, field_mask: str) -> dict:
-        import requests
+        from apps.safety.net import safe_get
 
-        resp = requests.get(
+        resp = safe_get(
             url,
             params=params,
             headers={
@@ -49,21 +49,24 @@ class GooglePlacesEnricher:
                 "X-Goog-FieldMask": field_mask,
             },
             timeout=15,
+            max_bytes=5 * 1024 * 1024,
         )
         resp.raise_for_status()
         return resp.json()
 
     def _post(self, url: str, *, json: dict, field_mask: str) -> dict:
-        import requests
+        from apps.safety.net import safe_get
 
-        resp = requests.post(
+        resp = safe_get(
             url,
+            method="POST",
             json=json,
             headers={
                 "X-Goog-Api-Key": self.api_key,
                 "X-Goog-FieldMask": field_mask,
             },
             timeout=15,
+            max_bytes=5 * 1024 * 1024,
         )
         resp.raise_for_status()
         return resp.json()

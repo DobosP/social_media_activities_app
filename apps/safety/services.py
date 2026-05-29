@@ -13,6 +13,18 @@ from django.utils import timezone
 from .models import AuditLog, Block, ModerationAction, ReasonCode, Report
 
 
+def _notify_reporter(reporter, title, body):
+    """Tell the reporter about their report (DSA Art. 16: acknowledge receipt and notify
+    on resolution). Anonymous reports (reporter is None) get no notification. Best-effort:
+    a notification failure never blocks the underlying safety action."""
+    if reporter is None:
+        return
+    from apps.notifications.models import Notification
+    from apps.notifications.services import notify
+
+    notify(reporter, Notification.Kind.SYSTEM, title, body=body)
+
+
 def _canonical(actor_id, event, target_ref, data, created_iso) -> str:
     payload = json.dumps(
         {
@@ -80,6 +92,12 @@ def file_report(reporter, target, reason, detail="") -> Report:
         detail=detail,
     )
     record_audit("report.filed", actor=reporter, target=target, reason=reason)
+    _notify_reporter(
+        reporter,
+        "We received your report",
+        "Thanks - your report was sent to the moderation team. We'll let you know once "
+        "it's been reviewed.",
+    )
     return report
 
 
@@ -206,7 +224,13 @@ def take_action(moderator, target, action, reason, *, notes="", report=None, exp
         action=action,
         reason=reason,
     )
-    _notify_statement_of_reasons(target, action, reason)
+    _notify_statement_of_reasons(target, action, reason)  # DSA Art.17 (to the offender)
+    if report is not None:
+        _notify_reporter(  # DSA Art.16 outcome notice (to the reporter)
+            report.reporter,
+            "Your report was reviewed",
+            "Thanks for your report. Our moderation team reviewed it and took action.",
+        )
     return record
 
 
@@ -218,6 +242,11 @@ def dismiss_report(moderator, report: Report, resolution: str = "") -> Report:
     report.resolution = resolution
     report.save(update_fields=["status", "handled_by", "handled_at", "resolution"])
     record_audit("report.dismissed", actor=moderator, target=report)
+    _notify_reporter(
+        report.reporter,
+        "Your report was reviewed",
+        "Thanks for your report. Our moderation team reviewed it and found no action was needed.",
+    )
     return report
 
 
