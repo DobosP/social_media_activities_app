@@ -25,7 +25,8 @@ implemented and verified. Status reflects code on `main`.
 |---|---|---|
 | Liveness/readiness probe | `GET /healthz` (`apps/ops`) | ✅ |
 | Privacy-respecting (aggregate-only) observability | `GET /api/ops/stats` staff-only; no per-user analytics (IS-6) | ✅ |
-| Donation funding (no ads, no tracking) | `apps/donations` (pluggable provider, no card data stored) | ✅ |
+| Donation funding (no ads, no tracking) | `apps/donations` (pluggable provider, no card data stored; deep-link default + **Stripe Checkout** provider) | ✅ |
+| Media blobs in object storage (prod scale) | `apps/media/storage.S3StorageBackend` (S3 / Cloudflare R2 / MinIO); set `MEDIA_STORAGE_BACKEND` + `MEDIA_S3_BUCKET` | ✅ available |
 | Real-time chat served in prod (ASGI) | `Dockerfile` runs `daphne config.asgi` | ✅ |
 | CI gate (ruff, format, migrations, tests, pip-audit, docker build) | `.github/workflows` | ✅ |
 | Backups / restore, cost controls, CDN | see [RUNBOOK](RUNBOOK.md) | 📋 documented (provisioning is a deploy-time task) |

@@ -27,3 +27,5 @@ daphne>=4.1
 Pillow>=11.0
 # D2: EUDI age-attestation verification — JWS (ES256) signature checks.
 PyJWT[crypto]>=2.9
+# D6/prod: S3-compatible object storage backend for media blobs (R2/MinIO/AWS).
+boto3>=1.34

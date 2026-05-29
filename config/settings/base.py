@@ -241,5 +241,18 @@ DONATIONS_CHECKOUT_BASE_URL = env("DONATIONS_CHECKOUT_BASE_URL", default="")
 # Shared secret verifying provider webhook callbacks (empty disables the check in dev).
 DONATIONS_WEBHOOK_SECRET = env("DONATIONS_WEBHOOK_SECRET", default="")
 
+# Stripe Checkout (used when DONATIONS_PROVIDER=apps.donations.providers.StripePaymentProvider).
+STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="")
+DONATIONS_SUCCESS_URL = env("DONATIONS_SUCCESS_URL", default="")
+DONATIONS_CANCEL_URL = env("DONATIONS_CANCEL_URL", default="")
+
+# Media object storage (S3-compatible: AWS S3 / Cloudflare R2 / MinIO) for production —
+# used when MEDIA_STORAGE_BACKEND=apps.media.storage.S3StorageBackend. Credentials come
+# from the environment (AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY).
+MEDIA_S3_BUCKET = env("MEDIA_S3_BUCKET", default="")
+MEDIA_S3_ENDPOINT_URL = env("MEDIA_S3_ENDPOINT_URL", default="")
+MEDIA_S3_REGION = env("MEDIA_S3_REGION", default="")
+MEDIA_S3_ADDRESSING_STYLE = env("MEDIA_S3_ADDRESSING_STYLE", default="auto")
+
 # Build/version surfaced by /healthz (set from CI / image tag).
 APP_VERSION = env("APP_VERSION", default="0.1.0")

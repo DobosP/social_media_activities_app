@@ -19,6 +19,12 @@ autobahn==25.12.2
     # via daphne
 automat==25.4.16
     # via twisted
+boto3==1.43.17
+    # via -r requirements.in
+botocore==1.43.17
+    # via
+    #   boto3
+    #   s3transfer
 cbor2==6.1.1
     # via autobahn
 certifi==2026.5.20
@@ -81,6 +87,10 @@ incremental==24.11.0
     # via twisted
 inflection==0.5.1
     # via drf-spectacular
+jmespath==1.1.0
+    # via
+    #   boto3
+    #   botocore
 jsonschema==4.26.0
     # via drf-spectacular
 jsonschema-specifications==2025.9.1
@@ -113,6 +123,8 @@ pyjwt[crypto]==2.13.0
     #   pyjwt
 pyopenssl==26.2.0
     # via twisted
+python-dateutil==2.9.0.post0
+    # via botocore
 pyyaml==6.0.3
     # via drf-spectacular
 referencing==0.37.0
@@ -125,8 +137,12 @@ rpds-py==0.30.0
     # via
     #   jsonschema
     #   referencing
+s3transfer==0.18.0
+    # via boto3
 service-identity==24.2.0
     # via twisted
+six==1.17.0
+    # via python-dateutil
 sqlparse==0.5.5
     # via django
 twisted[tls]==26.4.0
@@ -144,7 +160,9 @@ ujson==5.12.1
 uritemplate==4.2.0
     # via drf-spectacular
 urllib3==2.7.0
-    # via requests
+    # via
+    #   botocore
+    #   requests
 whitenoise==6.12.0
     # via -r requirements.in
 zope-interface==8.5

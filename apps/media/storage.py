@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 from django.utils.module_loading import import_string
 
 
@@ -50,6 +51,51 @@ class LocalStorageBackend(StorageBackend):
         path = self._path(key)
         if path.exists():
             path.unlink()
+
+
+class S3StorageBackend(StorageBackend):
+    """S3-compatible object storage (AWS S3 / Cloudflare R2 / MinIO) for production.
+
+    Credentials come from the environment via boto3's default chain
+    (``AWS_ACCESS_KEY_ID`` / ``AWS_SECRET_ACCESS_KEY``); the bucket and optional
+    endpoint/region come from settings. Activated by pointing ``MEDIA_STORAGE_BACKEND``
+    at this class. Objects are private — they are only ever served through the
+    membership-scoped, signed-URL view, never via a public bucket URL."""
+
+    def __init__(self):
+        import boto3  # lazy: dev/tests stay dependency-light unless S3 is selected
+        from botocore.config import Config
+
+        self.bucket = getattr(settings, "MEDIA_S3_BUCKET", "")
+        if not self.bucket:
+            raise ImproperlyConfigured("MEDIA_S3_BUCKET must be set to use S3 storage.")
+        self._client = boto3.client(
+            "s3",
+            endpoint_url=getattr(settings, "MEDIA_S3_ENDPOINT_URL", "") or None,
+            region_name=getattr(settings, "MEDIA_S3_REGION", "") or None,
+            config=Config(
+                signature_version="s3v4",
+                s3={"addressing_style": getattr(settings, "MEDIA_S3_ADDRESSING_STYLE", "auto")},
+            ),
+        )
+
+    def save(self, key: str, data: bytes) -> None:
+        self._client.put_object(Bucket=self.bucket, Key=key, Body=data)
+
+    def open(self, key: str) -> bytes:
+        return self._client.get_object(Bucket=self.bucket, Key=key)["Body"].read()
+
+    def exists(self, key: str) -> bool:
+        from botocore.exceptions import ClientError
+
+        try:
+            self._client.head_object(Bucket=self.bucket, Key=key)
+            return True
+        except ClientError:
+            return False
+
+    def delete(self, key: str) -> None:
+        self._client.delete_object(Bucket=self.bucket, Key=key)
 
 
 def get_storage() -> StorageBackend:
