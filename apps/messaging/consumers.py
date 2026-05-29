@@ -33,6 +33,12 @@ class ConversationConsumer(AsyncJsonWebsocketConsumer):
             await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
     async def receive_json(self, content, **kwargs):
+        # Re-authorize the SENDER against FRESH state before storing/broadcasting: a banned/
+        # revoked/cohort-changed/erased user with an open socket must not be able to inject
+        # messages (the cached scope user is stale; a ban only flips is_active in the DB).
+        if not await self._still_authorized():
+            await self.close(code=4403)
+            return
         try:
             message = await self._post(content)
         except services.MessagingError as exc:

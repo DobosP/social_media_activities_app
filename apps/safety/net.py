@@ -12,8 +12,13 @@ happily fetch ``http://169.254.169.254/`` (cloud metadata), ``http://127.0.0.1:�
 * only ``http``/``https`` schemes are allowed;
 * the host is resolved with :func:`socket.getaddrinfo` and **every** resolved
   address is checked — private, loopback, link-local, reserved, multicast and
-  unspecified ranges are rejected (defeats DNS-rebinding-to-internal and the
-  metadata IP);
+  unspecified ranges are rejected (blocks the metadata IP and internal hosts);
+  NOTE: this is a pre-flight check, not pinning — ``requests`` re-resolves the host
+  when connecting, so a TOCTOU **DNS-rebinding** attacker who flips the record between
+  validation and connect is NOT fully defeated. Acceptable here because these URLs are
+  operator/feed-configured, not arbitrary per-request user input; pinning the validated
+  IP (connect-by-IP + Host/SNI) is a hardening follow-up before exposing this to
+  user-supplied URLs;
 * redirects are disabled by default (a redirect to an internal host would bypass
   the pre-flight check); callers that must follow redirects re-enter ``safe_get``
   per hop;

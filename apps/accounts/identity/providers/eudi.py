@@ -106,9 +106,17 @@ class EUDIWalletProvider(IdentityProvider):
 
     @staticmethod
     def _holder_id(user) -> str | None:
-        """Stable per-user holder id the credential subject must bind to."""
-        public_id = getattr(user, "public_id", None)
-        return str(public_id) if public_id is not None else None
+        """The stable per-user holder id the credential subject must bind to, or None.
+
+        IMPORTANT: this must NOT be our ``public_id`` — a real issuer sets the credential
+        ``sub`` to its own holder pseudonym, which will never equal our id, so binding to
+        public_id would reject every real wallet. Cross-account anti-transfer is provided by
+        the key-binding *proof-of-possession* (verified when presented); the durable
+        per-user binding is a trust-on-first-use record of the holder id, recorded on first
+        verification — a follow-up. Until that record exists we pass None (no subject
+        enforcement); proof-of-possession still defeats in-window replay.
+        """
+        return getattr(user, "eudi_holder_id", None) or None
 
     def _age_band_from_claims(self, claims: dict) -> str:
         for key in _PII_CLAIMS:

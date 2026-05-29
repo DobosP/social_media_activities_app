@@ -1,9 +1,14 @@
-"""Image safety scanning. The posture is swappable (CSAR-dependent): the default
-matches uploads against a configured hash blocklist (the CSAM hash-matching model), and
-prod can point MEDIA_IMAGE_SCANNER at a managed scanning service (ManagedHttpScanner).
+"""Image safety scanning. The posture is swappable (CSAR-dependent): the default matches
+uploads against a configured hash blocklist (exact SHA-256), and prod can point
+MEDIA_IMAGE_SCANNER at a managed service (apps.media.scanning.ManagedScanner) that screens
+the upload's SHA-256 against a managed hash set over an SSRF-safe channel.
 
-Either path makes the fail-closed upload gate (MEDIA_REQUIRE_SCANNER) effective, so
-photo uploads can be enabled for production once a lawful matcher/blocklist is wired."""
+NOTE on detection strength: both built-in scanners do EXACT SHA-256 matching, which only
+catches known-bad files bit-for-bit (any re-encode/resize/crop evades it). They are NOT a
+perceptual CSAM matcher (e.g. PhotoDNA) — for perceptual detection an operator must wire a
+service that ingests a perceptual hash or the image bytes (over the SSRF-safe channel) and
+state the guarantee. Either built-in path makes the fail-closed upload gate
+(MEDIA_REQUIRE_SCANNER) effective so uploads can be enabled once a lawful matcher is wired."""
 
 import hashlib
 import logging

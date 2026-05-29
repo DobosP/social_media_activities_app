@@ -154,6 +154,10 @@ def create_guardian_link_invite(
 def accept_guardian_link_invite(ward: User, token: str) -> GuardianRelationship:
     """The ward accepts a pending invite, creating the guardianship link. Re-validates the
     inviter is still a *currently-verified* adult at accept time."""
+    # Defense-in-depth: a stale PENDING invite from before onboarding was disabled must not
+    # be acceptable while the gate is off (mirrors create_guardian_link_invite/consent).
+    if not minor_onboarding_enabled():
+        raise ValueError("Minor onboarding is disabled on this deployment.")
     from apps.safety.services import record_audit
 
     # The expiry-marking and the link-creation are in SEPARATE atomic blocks: marking an

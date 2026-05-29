@@ -19,10 +19,16 @@ def _notify_reporter(reporter, title, body):
     a notification failure never blocks the underlying safety action."""
     if reporter is None:
         return
-    from apps.notifications.models import Notification
-    from apps.notifications.services import notify
+    try:
+        from apps.notifications.models import Notification
+        from apps.notifications.services import notify
 
-    notify(reporter, Notification.Kind.SYSTEM, title, body=body)
+        # Savepoint so a notification DB failure rolls back ONLY the notification, never the
+        # surrounding atomic safety action (file_report / take_action / dismiss_report).
+        with transaction.atomic():
+            notify(reporter, Notification.Kind.SYSTEM, title, body=body)
+    except Exception:
+        pass
 
 
 def _canonical(actor_id, event, target_ref, data, created_iso) -> str:

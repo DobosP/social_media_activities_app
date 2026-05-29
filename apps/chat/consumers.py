@@ -32,6 +32,12 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
     async def receive_json(self, content, **kwargs):
+        # Re-authorize the SENDER against FRESH state before storing/broadcasting (see
+        # ConversationConsumer): a banned/revoked/cohort-changed/erased member with an open
+        # socket must not be able to inject messages via the cached scope user.
+        if not await self._still_authorized():
+            await self.close(code=4403)
+            return
         body = content.get("body", "")
         try:
             message = await self._send(self.user, self.thread, body)

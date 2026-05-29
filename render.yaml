@@ -39,6 +39,17 @@ services:
           property: connectionString
       - key: PYTHONUNBUFFERED
         value: "1"
+      # REQUIRED for prod to boot (fail-closed assertions): a real identity provider + EU
+      # trust anchor — the dev self-declaration stub and EUDI sandbox are rejected in prod.
+      # Set these in the Render dashboard (secrets); sync:false keeps them out of the blueprint.
+      - key: IDENTITY_PROVIDER
+        value: apps.accounts.identity.providers.eudi.EUDIWalletProvider
+      - key: EUDI_SANDBOX
+        value: "False"
+      - key: EUDI_TRUSTED_ISSUERS # JSON {issuer: PEM} — operator-supplied secret
+        sync: false
+      # Optional: set REDIS_URL + DJANGO_REQUIRE_SHARED_STATE=True when scaling beyond one
+      # process; ALLOW_MINOR_ONBOARDING stays False until a verifiable trust anchor + DPIA.
 
   # Scheduled retention/maintenance jobs (GDPR Art.5(1)(e) storage limitation + DSA
   # proportionality): purge expired E2EE messages & chat, lift elapsed suspensions, send

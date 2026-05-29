@@ -164,6 +164,11 @@ GUARDIAN_INVITE_TTL_DAYS = env.int("GUARDIAN_INVITE_TTL_DAYS", default=7)
 GUARDIAN_INVITE_RATE_LIMIT = env.int("GUARDIAN_INVITE_RATE_LIMIT", default=20)
 GUARDIAN_INVITE_RATE_WINDOW_SECONDS = env.int("GUARDIAN_INVITE_RATE_WINDOW_SECONDS", default=3600)
 
+# Number of trusted reverse proxies in front of the app (e.g. Render's edge = 1). Used for
+# both DRF throttle identity AND the web login-lockout's real-client-IP derivation, so they
+# agree on which X-Forwarded-For hop to trust (a spoofed XFF must not mint a fresh bucket).
+NUM_PROXIES = env.int("NUM_PROXIES", default=1)
+
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     # Deny-by-default: every endpoint requires auth unless it explicitly opts into AllowAny
@@ -187,10 +192,9 @@ REST_FRAMEWORK = {
         "anon": env("DRF_THROTTLE_ANON", default="60/min"),
         "user": env("DRF_THROTTLE_USER", default="240/min"),
     },
-    # Behind a single trusted edge proxy (e.g. Render), trust only the last X-Forwarded-For
-    # hop for throttle identity — otherwise a client can spoof XFF to get a fresh anon bucket
-    # per request and bypass rate limits entirely.
-    "NUM_PROXIES": env.int("DRF_NUM_PROXIES", default=1),
+    # Trust only the last NUM_PROXIES X-Forwarded-For hops for throttle identity — otherwise
+    # a client can spoof XFF to get a fresh anon bucket per request and bypass rate limits.
+    "NUM_PROXIES": NUM_PROXIES,
 }
 
 # Hard cap on request body size (bytes). Django's DATA_UPLOAD_MAX_MEMORY_SIZE governs form
@@ -276,8 +280,9 @@ MEDIA_CSAM_HASH_BLOCKLIST = env.list("MEDIA_CSAM_HASH_BLOCKLIST", default=[])
 # inlining thousands of hashes in env — to make uploads safe to enable. Hashes from both
 # the inline list and this file are matched.
 MEDIA_CSAM_HASH_BLOCKLIST_FILE = env("MEDIA_CSAM_HASH_BLOCKLIST_FILE", default="")
-# Managed scanning service (used when MEDIA_IMAGE_SCANNER=apps.media.scanning.ManagedHttpScanner):
-# the original image bytes are POSTed for screening (e.g. a PhotoDNA/Thorn-style matcher).
+# Managed scanning service (used when MEDIA_IMAGE_SCANNER=apps.media.scanning.ManagedScanner):
+# the upload's SHA-256 (hash-only, privacy-preserving) is POSTed for screening over the
+# SSRF-safe channel. Exact-hash matching only — not perceptual; see scanning.py.
 MEDIA_SCANNER_ENDPOINT = env("MEDIA_SCANNER_ENDPOINT", default="")
 MEDIA_SCANNER_API_KEY = env("MEDIA_SCANNER_API_KEY", default="")
 MEDIA_SCANNER_TIMEOUT = env.int("MEDIA_SCANNER_TIMEOUT", default=10)
