@@ -163,6 +163,13 @@ def test_wards_page_renders():
     assert _client(_user("guardian-user")).get("/wards/").status_code == 200
 
 
+def test_messages_page_renders():
+    resp = _client(_user("messenger")).get("/messages/")
+    assert resp.status_code == 200
+    assert b"mz-config" in resp.content
+    assert b"end-to-end encrypted" in resp.content
+
+
 def test_report_activity_creates_report():
     owner = _user("rep-owner")
     activity = create_activity(

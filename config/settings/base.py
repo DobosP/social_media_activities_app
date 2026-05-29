@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "apps.social",
     "apps.safety",
     "apps.chat",
+    "apps.messaging",
     "apps.booking",
     "apps.media",
     "apps.donations",
@@ -194,6 +195,13 @@ SPECTACULAR_SETTINGS = {
         {"name": "social", "description": "Activities, threads, membership, join-by-vote."},
         {"name": "safety", "description": "Reporting, blocking, moderation."},
         {"name": "chat", "description": "Per-thread messaging (REST + WebSocket)."},
+        {
+            "name": "messaging",
+            "description": (
+                "Cohort-safe, invite-accept, end-to-end-encrypted direct & group "
+                "messaging by username (zero-knowledge relay)."
+            ),
+        },
         {"name": "booking", "description": "Reservations and provider deep-links."},
         {"name": "media", "description": "Profile pictures and private thread photos."},
         {"name": "donations", "description": "Nonprofit donations (no ads/tracking)."},
@@ -252,6 +260,18 @@ CHAT_RATE_LIMIT = env.int("CHAT_RATE_LIMIT", default=30)
 CHAT_RATE_WINDOW_SECONDS = env.int("CHAT_RATE_WINDOW_SECONDS", default=60)
 # 0 disables time-based purging; set a positive number of days to enable retention.
 CHAT_RETENTION_DAYS = env.int("CHAT_RETENTION_DAYS", default=0)
+
+# --- Secure messaging (cohort-safe, invite-accept, end-to-end encrypted) ---
+# The server is a zero-knowledge relay: it stores ciphertext + per-recipient wrapped
+# keys only. Safety is access-control-based (cohort isolation + invite-accept +
+# blocking) plus report-with-decryption — content scanning is impossible under E2EE.
+# See docs/MESSAGING.md. These are anti-abuse rate limits (per fixed window).
+MESSAGING_RATE_WINDOW_SECONDS = env.int("MESSAGING_RATE_WINDOW_SECONDS", default=60)
+MESSAGING_START_RATE_LIMIT = env.int("MESSAGING_START_RATE_LIMIT", default=20)
+MESSAGING_SEND_RATE_LIMIT = env.int("MESSAGING_SEND_RATE_LIMIT", default=60)
+# Global retention backstop for encrypted messages (0 disables). Per-conversation
+# disappearing timers also apply. Purged by the purge_messaging management command.
+MESSAGING_RETENTION_DAYS = env.int("MESSAGING_RETENTION_DAYS", default=0)
 
 # --- D9 donations (no ads / no tracking-based monetization) ---
 # Pluggable payment provider; default builds an off-platform checkout deep link and

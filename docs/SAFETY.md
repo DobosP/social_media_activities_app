@@ -19,7 +19,10 @@ D5, and D6 too. See [ROADMAP](ROADMAP.md) and [COMPLIANCE](COMPLIANCE.md).
    activities, threads, and chat are all cohort-scoped. Derived from the D2 age band — *exact birthdate
    is not needed and is avoided*.
 2. **No private adult↔minor contact.** No cross-cohort DMs or private chat between adults and
-   minors. (There is no global DM system at all in the current plan — chat is **per-activity**, D5.)
+   minors. Username-addressable direct & group messaging (D10) is **cohort-isolated** — you can
+   only message users in your *own* age cohort — so an adult can never reach a child. First contact
+   also requires the recipient to **accept** (no unsolicited messaging), and blocking is honoured
+   both ways. Per-activity chat (D5) remains membership- + cohort-scoped. See [MESSAGING](MESSAGING.md).
 3. **Verified age + parental consent before participation** for under-16 (D2). No consent → no
    access (age-gating).
 4. **Private by default.** Threads and their photos are visible only to that activity's members
@@ -46,6 +49,16 @@ D5, and D6 too. See [ROADMAP](ROADMAP.md) and [COMPLIANCE](COMPLIANCE.md).
   posture swappable pending CSAR ([COMPLIANCE](COMPLIANCE.md)).
 - **D6 (media):** **image safety scanning** (CSAM hash-matching where lawful) before a photo is
   visible; EXIF/GPS stripping; size limits; signed, expiring, membership-scoped URLs.
+- **D10 (secure messaging):** username-addressable **direct & group** chat that is **end-to-end
+  encrypted** (the server is a zero-knowledge relay storing ciphertext only). Because content
+  scanning is impossible under E2EE, safety is enforced by **access control** — cohort isolation,
+  invite-accept first contact, blocking, and rate limits — plus **report-with-decryption** (the
+  reporter attaches the plaintext they can see), which feeds the D4 moderation loop. **Guardian
+  oversight** for the under-16 cohort is the one sanctioned cross-cohort presence: a verified
+  guardian can join a ward's conversation as a **transparent, read-only** observer (visible to all,
+  cannot send, consent-gated). Optional **disappearing messages** minimize ciphertext at rest, and
+  **key verification** (safety numbers) lets users detect a server MITM. Honest cryptographic limits
+  and the moderation trade-off are documented in [MESSAGING](MESSAGING.md).
 
 ## Offline-meetup safety (product/UX, later)
 
