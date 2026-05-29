@@ -56,10 +56,19 @@ Turn the provider registry ([DATA_PROVIDERS](DATA_PROVIDERS.md)) into running co
 - All behind settings/flags; reuse `SourceAdapter` / `EventSource` seams; attribution
   recorded per source.
 
-### P3 · Recommendations  *(depends on P1)*
-"Activities for you nearby." Interest similarity via `pgvector` (already floated in D7),
-ranked over a user's cohort + past memberships. No behavioural tracking — recommend from
-declared interests and joined activities only.
+### P3 · Recommendations  ✅ built — `apps/recommendations/`
+"Activities for you nearby." Interest similarity via `pgvector`, ranked over a user's
+cohort + past memberships. No behavioural tracking — recommend from declared interests
+and joined activities only.
+- `UserInterest` (declared, by activity-type slug) + `ActivityEmbedding` (a `pgvector`
+  vector feature-hashed from the activity taxonomy — deterministic, PII-free; kept in
+  sync by a post-save signal).
+- `recommend_activities` ranks cohort-visible, not-yet-joined, upcoming activities by
+  cosine distance to the user's taste vector; cold-start falls back to soonest-first;
+  optional `?near_lon/lat&radius_m` proximity filter.
+- API: `GET/PUT /api/recommendations/interests/`, `/interests/options/`,
+  `GET /api/recommendations/activities/`. **Prod note:** the Postgres `vector` extension
+  must be available (the migration runs `CREATE EXTENSION vector`).
 
 ### P4 · Notifications
 Opt-in, privacy-respecting: "your join request was approved", "an event you follow is
