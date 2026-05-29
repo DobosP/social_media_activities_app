@@ -641,6 +641,22 @@ def post_message(
         raise MessagingError("Your participation is not currently active.")
     if not ciphertext or not iv:
         raise MessagingError("Encrypted content is required.")
+    # Abuse/size caps (W2-12). Enforce these BEFORE the rate-limit check and the
+    # per-recipient key loop so an oversized payload or a huge recipient list is
+    # rejected cheaply, without doing per-recipient work or burning a rate token
+    # on a request that can never be stored anyway.
+    max_ciphertext = getattr(settings, "MESSAGING_MAX_CIPHERTEXT_BYTES", 65536)
+    # len() on a str counts characters; encode to bytes so the cap is a true byte
+    # limit regardless of how the (base64/opaque) ciphertext is represented.
+    if len(ciphertext.encode("utf-8")) > max_ciphertext:
+        raise MessagingError("Encrypted content is too large.")
+    max_members = getattr(settings, "MESSAGING_MAX_GROUP_MEMBERS", 256)
+    # Reject a wildly oversized recipient set before resolving any of them, so a
+    # client cannot make the server do per-recipient work just to be throttled.
+    if len(recipient_keys or []) > max_members:
+        raise MessagingError("Too many recipients for one message.")
+    # The rate-limit check stays BEFORE the per-recipient key loop: a huge but
+    # under-cap recipient list must not let a throttled sender do work first.
     if not _rate_ok(
         sender, "messaging_send", limit_setting="MESSAGING_SEND_RATE_LIMIT", default_limit=60
     ):
@@ -652,6 +668,12 @@ def post_message(
             "user"
         )
     }
+    # Defence in depth: even if the client's recipient set is within the cap, an
+    # actual active-member count over the limit must not be served (the per-message
+    # key fan-out would be unbounded). Group membership is itself bounded elsewhere,
+    # but the send path enforces it independently.
+    if len(active) > max_members:
+        raise MessagingError("Too many recipients for one message.")
     rows, provided = [], set()
     for rk in recipient_keys or []:
         pub = str(rk.get("recipient_public_id", ""))

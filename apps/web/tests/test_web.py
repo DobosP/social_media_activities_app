@@ -1,3 +1,5 @@
+from unittest import mock
+
 import pytest
 from django.contrib.gis.geos import Point
 from django.test import Client
@@ -200,3 +202,66 @@ def test_block_then_unblock_user():
     assert Block.objects.filter(blocker=me, blocked=other).exists()
     assert c.post(f"/users/{other.id}/unblock/").status_code == 302
     assert not Block.objects.filter(blocker=me, blocked=other).exists()
+
+
+# --- Transparency pages & GDPR self-service deletion --------------------------------
+
+
+@pytest.mark.parametrize("path", ["/privacy/", "/terms/"])
+def test_transparency_pages_are_public(path):
+    resp = Client().get(path)
+    assert resp.status_code == 200
+    # Must clearly flag the copy as not-yet-finalised legal text.
+    assert b"DRAFT" in resp.content
+
+
+def test_footer_links_to_privacy_and_terms():
+    resp = Client().get("/")
+    assert resp.status_code == 200
+    assert b'href="/privacy/"' in resp.content
+    assert b'href="/terms/"' in resp.content
+
+
+def test_account_delete_requires_login():
+    # Anonymous POST is redirected to login, not processed.
+    resp = Client().post("/account/delete/")
+    assert resp.status_code == 302
+    assert "/login/" in resp.headers["Location"]
+
+
+def test_account_delete_is_post_only():
+    resp = _client(_user("del-get")).get("/account/delete/")
+    assert resp.status_code == 405
+
+
+def test_account_delete_erases_and_logs_out():
+    user = _user("del-me")
+    c = _client(user)
+    with mock.patch("apps.accounts.services.erase_user", create=True) as erase:
+        resp = c.post("/account/delete/")
+        erase.assert_called_once_with(user, user)
+    assert resp.status_code == 302
+    assert resp.headers["Location"] == "/"
+    # Session was cleared by logout(): a follow-up request is anonymous.
+    home = c.get("/")
+    assert home.wsgi_request.user.is_authenticated is False
+
+
+def test_account_delete_failure_shows_error_and_stays():
+    user = _user("del-fail")
+    c = _client(user)
+    with mock.patch(
+        "apps.accounts.services.erase_user", create=True, side_effect=PermissionError("nope")
+    ):
+        resp = c.post("/account/delete/")
+    # Redirected back to profile; user is still logged in.
+    assert resp.status_code == 302
+    assert resp.headers["Location"] == "/profile/"
+    assert c.get("/profile/").status_code == 200
+
+
+def test_profile_shows_delete_control():
+    resp = _client(_user("del-control")).get("/profile/")
+    assert resp.status_code == 200
+    assert b"Delete my account" in resp.content
+    assert b'action="/account/delete/"' in resp.content

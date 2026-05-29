@@ -155,6 +155,12 @@ GUARDIAN_INVITE_RATE_WINDOW_SECONDS = env.int("GUARDIAN_INVITE_RATE_WINDOW_SECON
 
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    # Deny-by-default: every endpoint requires auth unless it explicitly opts into AllowAny
+    # (the intentionally public ones: places, taxonomy, discovery feeds, donations totals,
+    # ops health). This prevents a future viewset from silently inheriting AllowAny.
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
     "DEFAULT_FILTER_BACKENDS": [
         "django_filters.rest_framework.DjangoFilterBackend",
     ],
@@ -182,6 +188,8 @@ SPECTACULAR_SETTINGS = {
     ),
     "VERSION": env("APP_VERSION", default="0.1.0"),
     "SERVE_INCLUDE_SCHEMA": False,
+    # The OpenAPI schema + Swagger UI stay publicly readable despite deny-by-default perms.
+    "SERVE_PERMISSIONS": ["rest_framework.permissions.AllowAny"],
     # Split request vs. response components so generated client models are accurate
     # (read-only/write-only fields don't bleed across).
     "COMPONENT_SPLIT_REQUEST": True,
@@ -265,17 +273,33 @@ OVERTURE_DATA_PATH = env("OVERTURE_DATA_PATH", default="")
 GOOGLE_PLACES_ENABLED = env.bool("GOOGLE_PLACES_ENABLED", default=False)
 GOOGLE_PLACES_API_KEY = env("GOOGLE_PLACES_API_KEY", default="")
 
-# --- D5 chat (real-time, ASGI/Channels) ---
-# In-memory layer suits a single process; a multi-process deploy sets a Redis layer
-# (channels-redis) here — see docs/ARCHITECTURE.md / D9 ops.
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": env(
-            "CHANNEL_LAYER_BACKEND",
-            default="channels.layers.InMemoryChannelLayer",
-        )
+# --- Shared cache + real-time channel layer ---
+# A single Redis (REDIS_URL) backs BOTH the cache (DRF throttles + the anti-abuse rate
+# limiter in apps/safety) AND the Channels layer, so limits and WebSocket fan-out are
+# GLOBAL across processes/instances. Without REDIS_URL we fall back to per-process
+# LocMemCache + InMemoryChannelLayer — single-process dev only; prod.py asserts in
+# production that these per-process backends are NOT in use (see config/settings/prod.py).
+REDIS_URL = env("REDIS_URL", default="")
+if REDIS_URL:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": REDIS_URL,
+        }
     }
-}
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {"hosts": [REDIS_URL]},
+        }
+    }
+else:
+    CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": env("CHANNEL_LAYER_BACKEND", default="channels.layers.InMemoryChannelLayer")
+        }
+    }
 # Swap to add CSAR-driven scanning/encryption without re-architecting (see COMPLIANCE).
 CHAT_MESSAGE_POLICY = env("CHAT_MESSAGE_POLICY", default="apps.chat.policy.BasicMessagePolicy")
 CHAT_MAX_LENGTH = env.int("CHAT_MAX_LENGTH", default=4000)
@@ -292,6 +316,10 @@ CHAT_RETENTION_DAYS = env.int("CHAT_RETENTION_DAYS", default=0)
 MESSAGING_RATE_WINDOW_SECONDS = env.int("MESSAGING_RATE_WINDOW_SECONDS", default=60)
 MESSAGING_START_RATE_LIMIT = env.int("MESSAGING_START_RATE_LIMIT", default=20)
 MESSAGING_SEND_RATE_LIMIT = env.int("MESSAGING_SEND_RATE_LIMIT", default=60)
+# Abuse/DoS caps on the E2EE relay: max stored ciphertext per message and max members in
+# a group conversation (an unbounded recipient list would amplify per-recipient work).
+MESSAGING_MAX_CIPHERTEXT_BYTES = env.int("MESSAGING_MAX_CIPHERTEXT_BYTES", default=65536)
+MESSAGING_MAX_GROUP_MEMBERS = env.int("MESSAGING_MAX_GROUP_MEMBERS", default=256)
 # Global retention backstop for encrypted messages (0 disables). Per-conversation
 # disappearing timers also apply. Purged by the purge_messaging management command.
 MESSAGING_RETENTION_DAYS = env.int("MESSAGING_RETENTION_DAYS", default=0)

@@ -166,6 +166,18 @@ class ParentalConsent(models.Model):
         return True
 
 
+class ConsumedAgeNonce(models.Model):
+    """Single-use ledger of OpenID4VP age-verification nonces (W2-9). Claiming a nonce
+    here before applying an assurance prevents a captured wallet presentation from being
+    replayed: the unique constraint makes a second claim of the same nonce fail."""
+
+    nonce = models.CharField(max_length=255, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"consumed-nonce({self.nonce})"
+
+
 class GuardianRelationship(models.Model):
     """An account-level legal-guardianship link: an adult `guardian` is the parent/
     protector of a minor `ward`. Established alongside parental consent; lets the

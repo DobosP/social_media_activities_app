@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Terms of Service{% endblock %}
+{% block content %}
+<div class="banner">
+  <strong>DRAFT &mdash; to be finalized by the DPO/legal before launch.</strong>
+  This text is placeholder copy and is not legally binding in its current form.
+</div>
+
+<h1>Terms of Service</h1>
+<p class="muted">These terms govern use of this nonprofit, text-first platform for arranging
+  in-person activities, operated for users in Romania and the EU.</p>
+
+<div class="card">
+  <h2>Acceptable use</h2>
+  <p>By using the service you agree to:</p>
+  <ul>
+    <li>Use the platform only for lawful, real, in-person activities and respectful interaction.</li>
+    <li>Provide truthful age information and not impersonate others or share your account.</li>
+    <li>Keep content text-first and appropriate &mdash; no harassment, hate speech, sexual content,
+      grooming, threats, spam, scams, or sharing of others' private data.</li>
+    <li>Not attempt to contact, meet, or share content with users outside your permitted age cohort.</li>
+    <li>Not upload illegal content or content that endangers minors. Such content is reported to the
+      appropriate authorities.</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h2>Minors and cohort policy</h2>
+  <p>This platform is intended to be safe for minors:</p>
+  <ul>
+    <li>Users are grouped into <strong>age cohorts</strong>, and interaction is kept within a user's
+      own cohort. Adults and minors are not mixed in the same activity spaces.</li>
+    <li>Users <strong>under 16</strong> require verified <strong>parental or guardian consent</strong>
+      before they can join or organise activities. Without consent, browsing only is allowed.</li>
+    <li>Age is verified via the EU Digital Identity wallet, which discloses only an age band &mdash;
+      never a birthdate.</li>
+    <li>Guardians may review activity and withdraw consent at any time.</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h2>Moderation</h2>
+  <p>To protect the community and minors, we may review reported content and accounts, remove
+    content, restrict features, or suspend or terminate accounts that breach these terms or
+    endanger others. Decisions follow our child-safety priorities and applicable law, including the
+    Digital Services Act. Serious matters affecting child safety may be escalated to authorities.</p>
+</div>
+
+<div class="card">
+  <h2>Reporting and appeals</h2>
+  <p>You can report users or activities through the in-app reporting tools. If we take a moderation
+    action against your account or content, you will be informed and may <strong>appeal</strong> the
+    decision. Appeals are reviewed by a person who was not solely responsible for the original
+    decision. <em>(Appeal channel and timelines to be finalised by legal in line with DSA
+    requirements.)</em></p>
+</div>
+
+<div class="card">
+  <h2>Your data and account deletion</h2>
+  <p>Our handling of personal data is described in the <a href="{% url 'privacy' %}">Privacy
+    Policy</a>. You may delete your account and personal data at any time from your profile page
+    (right to erasure, GDPR Art. 17).</p>
+</div>
+
+<div class="card">
+  <h2>Changes and contact</h2>
+  <p>We may update these terms; material changes will be communicated. For questions about these
+    terms, contact us at <em>(contact to be inserted by legal)</em>.</p>
+</div>
+{% endblock %}

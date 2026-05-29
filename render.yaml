@@ -12,12 +12,15 @@ databases:
     user: app
     plan: free
     postgresMajorVersion: "16"
+    # EU data residency for minors' personal data (GDPR Ch. V). Keep web + DB co-located.
+    region: frankfurt
 
 services:
   - type: web
     name: socialapp
     runtime: docker
     plan: free
+    region: frankfurt
     dockerfilePath: ./Dockerfile
     healthCheckPath: /healthz
     # daphne (ASGI) serves the REST API AND the chat WebSockets from one process.

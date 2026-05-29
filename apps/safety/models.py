@@ -75,6 +75,11 @@ class Block(models.Model):
                 condition=~Q(blocker=models.F("blocked")), name="block_not_self"
             ),
         ]
+        # Reverse-block lookups ("who has blocked me?"); the unique constraint already
+        # covers (blocker, blocked) so only the lone `blocked` column needs an index.
+        indexes = [
+            models.Index(fields=["blocked"]),
+        ]
 
     def __str__(self):
         return f"{self.blocker_id} blocks {self.blocked_id}"
@@ -135,6 +140,11 @@ class AuditLog(models.Model):
         blank=True,
         related_name="audit_events",
     )
+    # Immutable copy of the actor's id captured at write time. The `actor` FK is SET_NULL
+    # when a user is erased (GDPR Art.17), which would otherwise change the hashed content
+    # and falsely fail verify_audit_chain(); the hash covers actor_ref instead, so the
+    # tamper-evident chain stays valid across legitimate erasures.
+    actor_ref = models.IntegerField(null=True, blank=True)
     event = models.CharField(max_length=64)
     target_ref = models.CharField(max_length=128, blank=True)
     data = models.JSONField(default=dict, blank=True)

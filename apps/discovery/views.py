@@ -14,6 +14,10 @@ from .serializers import ActivityCardSerializer, EventCardSerializer, PlaceCardS
 # Discovery feeds are read-only projections over existing data. Place/event data is
 # public; the activities feed is cohort-scoped + block-aware (reuses social.services).
 
+# These are bare APIViews (not paginated viewsets), so each feed applies a hard,
+# server-controlled row cap via qs[:MAX_RESULTS]. The slice is non-negotiable by the
+# client — it bounds DB work and response size so a single request can never dump the
+# whole table. Keep every feed's slice using this constant.
 MAX_RESULTS = 100
 
 

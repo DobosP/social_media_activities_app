@@ -55,4 +55,15 @@
 <div class="banner">As an under-16, a parent or guardian must approve your account before you can
   join or organise activities.</div>
 {% endif %}
+
+<div class="card">
+  <h3>Delete my account</h3>
+  <p class="muted">This permanently deletes your account and personal data (GDPR right to erasure,
+    Art. 17). This cannot be undone. See our <a href="{% url 'privacy' %}">Privacy Policy</a>.</p>
+  <form method="post" action="{% url 'account_delete' %}"
+        onsubmit="return confirm('Permanently delete your account and personal data? This cannot be undone.');">
+    {% csrf_token %}
+    <button class="btn btn-danger" type="submit">Delete my account</button>
+  </form>
+</div>
 {% endblock %}

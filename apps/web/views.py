@@ -6,7 +6,7 @@ import math
 
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.http import Http404
@@ -680,3 +680,41 @@ def unblock_user_view(request, pk):
     safety.unblock_user(request.user, target)
     messages.success(request, f"Unblocked {target.display_name or target.username}.")
     return redirect(request.POST.get("next") or "profile")
+
+
+# --- Transparency: privacy & terms (W1-8) -------------------------------------------
+# Static legal pages. Copy is DRAFT placeholder text and must be reviewed/finalised by
+# the DPO/legal before launch; see the templates' leading banner.
+
+
+def privacy(request):
+    return render(request, "web/privacy.html", _nav_context(request.user))
+
+
+def terms(request):
+    return render(request, "web/terms.html", _nav_context(request.user))
+
+
+# --- GDPR self-service account deletion (right to erasure) ---------------------------
+
+
+@login_required
+@require_POST
+def account_delete(request):
+    """Let a user erase their own account (GDPR Art. 17). Delegates to the accounts
+    domain service, which enforces the actual erasure/retention rules, then logs the
+    user out and returns them to the public landing page."""
+    # Imported lazily: erase_user is owned by the accounts domain service.
+    from apps.accounts.services import erase_user
+
+    try:
+        erase_user(request.user, request.user)
+    except (ValueError, PermissionError) as exc:
+        messages.error(request, _msg(exc))
+        return redirect("profile")
+    logout(request)
+    messages.success(
+        request,
+        "Your account and personal data have been deleted. We're sorry to see you go.",
+    )
+    return redirect("home")

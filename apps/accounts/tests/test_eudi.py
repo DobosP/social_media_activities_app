@@ -135,3 +135,35 @@ def test_verify_age_api_rejects_replayed_nonce():
     assert resp.status_code == 400
     user.refresh_from_db()
     assert user.is_identity_verified is False
+
+
+@pytest.mark.django_db
+def test_verify_age_api_nonce_is_single_use():
+    """W2-9: even a validly-signed presentation cannot be redeemed twice. A captured
+    state+vp_token replayed against a new /start nonce must be rejected."""
+    from apps.accounts.models import ConsumedAgeNonce
+
+    user = User.objects.create_user(username="eudi3", password="pw")
+    client = APIClient()
+    client.force_authenticate(user)
+
+    started = client.post("/api/accounts/verify-age/start/")
+    nonce = started.data["nonce"]
+    state = started.data["state"]
+    token = issuer.issue_age_credential(
+        audience=settings.EUDI_CLIENT_ID,
+        nonce=nonce,
+        age_over_16=True,
+        age_over_18=True,
+        subject=str(user.public_id),
+    )
+
+    first = client.post("/api/accounts/verify-age/", {"vp_token": token, "state": state})
+    assert first.status_code == 200
+    assert ConsumedAgeNonce.objects.filter(nonce=nonce).count() == 1
+
+    # Same (still-unexpired) state + token replayed -> rejected as already used.
+    replay = client.post("/api/accounts/verify-age/", {"vp_token": token, "state": state})
+    assert replay.status_code == 400
+    assert replay.data["detail"] == "This verification has already been used."
+    assert ConsumedAgeNonce.objects.filter(nonce=nonce).count() == 1

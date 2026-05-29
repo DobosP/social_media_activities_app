@@ -1,11 +1,21 @@
 """Production settings. ALLOWED_HOSTS / secrets come from the environment."""
 
 import copy
+import os
 
 from django.core.exceptions import ImproperlyConfigured
 
 from .base import *  # noqa: F401,F403
-from .base import DATABASES, MIDDLEWARE, env
+from .base import (
+    CACHES,
+    CHANNEL_LAYERS,
+    DATABASES,
+    EUDI_SANDBOX,
+    IDENTITY_ALLOW_DEV_PROVIDER,
+    IDENTITY_PROVIDER,
+    MIDDLEWARE,
+    env,
+)
 
 DEBUG = False
 
@@ -28,7 +38,7 @@ DATABASES = copy.deepcopy(DATABASES)
 SECURE_SSL_REDIRECT = env.bool("DJANGO_SECURE_SSL_REDIRECT", default=True)
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
-SECURE_HSTS_SECONDS = env.int("DJANGO_HSTS_SECONDS", default=3600)
+SECURE_HSTS_SECONDS = env.int("DJANGO_HSTS_SECONDS", default=31536000)  # 1 year
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
@@ -60,3 +70,49 @@ STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
 }
+
+# --- Fail-closed production assertions (mirror the SECRET_KEY guard above) ---
+# Each of these is a silent, dangerous misconfiguration in production: per-process cache /
+# channel-layer break global rate-limiting and real-time fan-out the moment a 2nd process
+# exists; the dev identity provider trusts any self-asserted age band; EUDI sandbox trusts
+# a local test issuer. Refuse to boot rather than run a minors' platform unsafely.
+#
+# These run only when prod is the ACTIVE settings module (server boot, migrate, check,
+# collectstatic) — not when prod is imported for inspection while another settings module
+# (e.g. config.settings.test) is active, where base.py was already loaded with dev defaults.
+if os.environ.get("DJANGO_SETTINGS_MODULE") == "config.settings.prod":
+    if "InMemory" in CHANNEL_LAYERS["default"]["BACKEND"]:
+        raise ImproperlyConfigured(
+            "Production requires a shared channel layer: set REDIS_URL (InMemoryChannelLayer "
+            "is per-process and drops cross-process WebSocket messages)."
+        )
+    if "locmem" in CACHES["default"]["BACKEND"].lower():
+        raise ImproperlyConfigured(
+            "Production requires a shared cache: set REDIS_URL (LocMemCache is per-process, so "
+            "rate limits and throttles would not be global and reset on every restart)."
+        )
+    if IDENTITY_PROVIDER.endswith("dev.DevIdentityProvider") and not IDENTITY_ALLOW_DEV_PROVIDER:
+        raise ImproperlyConfigured(
+            "Production must use a real IDENTITY_PROVIDER (e.g. the EUDI wallet provider); the "
+            "dev provider trusts caller-asserted age bands."
+        )
+    if EUDI_SANDBOX:
+        raise ImproperlyConfigured(
+            "EUDI_SANDBOX must be False in production (it trusts a local test issuer that will "
+            "sign any claimed age)."
+        )
+
+# --- Error tracking (opt-in via SENTRY_DSN; sentry-sdk is only imported when configured) ---
+SENTRY_DSN = env("SENTRY_DSN", default="")
+if SENTRY_DSN:
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[DjangoIntegration()],
+        # Privacy-first: never attach PII, and don't sample request bodies by default.
+        send_default_pii=False,
+        traces_sample_rate=env.float("SENTRY_TRACES_SAMPLE_RATE", default=0.0),
+        environment=env("SENTRY_ENVIRONMENT", default="production"),
+    )

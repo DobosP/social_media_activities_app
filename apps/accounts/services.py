@@ -193,6 +193,14 @@ def revoke_guardian(guardian: User, ward: User) -> None:
     GuardianRelationship.objects.filter(guardian=guardian, ward=ward).update(
         status=GuardianRelationship.Status.REVOKED
     )
+    # Revoking the guardianship must also revoke the parental consent this guardian granted
+    # (W2-11), otherwise can_participate(ward) stays True off a consent whose authorizing
+    # relationship no longer exists. "No guardian -> no consent."
+    ParentalConsent.objects.filter(
+        minor=ward,
+        guardian_identifier=str(guardian.public_id),
+        status=ParentalConsent.Status.ACTIVE,
+    ).update(status=ParentalConsent.Status.REVOKED, revoked_at=timezone.now())
     # End any messaging observer presence the (now-revoked) guardianship justified, so an
     # adult cannot keep reading a child's E2EE conversation after the relationship ends.
     from apps.messaging.services import drop_guardian_observers_for
@@ -204,6 +212,29 @@ def is_guardian_of(guardian: User, ward: User) -> bool:
     return GuardianRelationship.objects.filter(
         guardian=guardian, ward=ward, status=GuardianRelationship.Status.ACTIVE
     ).exists()
+
+
+@transaction.atomic
+def erase_user(actor: User, target: User) -> None:
+    """GDPR Art.17 right-to-erasure (W1-5). Permanently deletes `target` and everything
+    that cascades from the account (memberships, photos[blob-cleanup signal], messaging
+    participation, consents, guardianships). Only the user themselves or an active guardian
+    of the target may erase the account; anyone else raises ValueError.
+
+    The erasure is audited BEFORE deletion (so the tamper-evident log records that it
+    happened) using the target's public_id, since the row itself is about to disappear."""
+    if not (actor.id == target.id or is_guardian_of(actor, target)):
+        raise ValueError("You are not authorized to erase this account.")
+
+    from apps.safety.services import record_audit
+
+    record_audit(
+        "account.erased",
+        actor=actor,
+        erased_public_id=str(target.public_id),
+        erased_username=target.username,
+    )
+    target.delete()
 
 
 @transaction.atomic

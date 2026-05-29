@@ -2,6 +2,7 @@ import secrets
 
 from django.conf import settings
 from django.core import signing
+from django.db import IntegrityError, transaction
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import get_object_or_404
@@ -11,13 +12,14 @@ from rest_framework.views import APIView
 
 from .identity.base import IdentityVerificationError
 from .identity.providers.eudi import AGE_OVER_16, AGE_OVER_18, EUDIWalletProvider
-from .models import GuardianRelationship, User
+from .models import ConsumedAgeNonce, GuardianRelationship, User
 from .serializers import GuardianLinkInviteSerializer, MeSerializer, WardSerializer
 from .services import (
     accept_guardian_link_invite,
     apply_assurance,
     create_guardian_link_invite,
     decline_guardian_link_invite,
+    erase_user,
     grant_parental_consent,
     is_guardian_of,
     pending_guardian_invites_for,
@@ -50,6 +52,11 @@ class MeView(APIView):
 
     def get(self, request):
         return Response(MeSerializer(request.user).data)
+
+    def delete(self, request):
+        """GDPR Art.17 self-erasure: permanently delete the caller's own account."""
+        erase_user(request.user, request.user)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class WardListView(APIView):
@@ -85,6 +92,13 @@ class WardDetailView(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
+
+    def delete(self, request, public_id):
+        """GDPR Art.17 erasure on behalf of a minor: a guardian deletes their ward's
+        account permanently."""
+        ward = self._get_ward(request, public_id)
+        erase_user(request.user, ward)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class WardConsentView(APIView):
@@ -231,6 +245,19 @@ class EUDIVerifyView(APIView):
             result = EUDIWalletProvider().verify(request.user, presentation=presentation)
         except IdentityVerificationError as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Single-use nonce (W2-9): even a validly-signed presentation can only be redeemed
+        # once. Claim the nonce after signature verification; a duplicate means replay. The
+        # create() runs in a savepoint so the IntegrityError on a replay rolls back only the
+        # claim, not any surrounding transaction (ATOMIC_REQUESTS / test transaction).
+        try:
+            with transaction.atomic():
+                ConsumedAgeNonce.objects.create(nonce=payload["nonce"])
+        except IntegrityError:
+            return Response(
+                {"detail": "This verification has already been used."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         apply_assurance(request.user, result)
         return Response(MeSerializer(request.user).data)

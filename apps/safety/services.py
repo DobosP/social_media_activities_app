@@ -10,7 +10,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
-from .models import AuditLog, Block, ModerationAction, Report
+from .models import AuditLog, Block, ModerationAction, ReasonCode, Report
 
 
 def _canonical(actor_id, event, target_ref, data, created_iso) -> str:
@@ -38,10 +38,14 @@ def record_audit(event: str, *, actor=None, target=None, **data) -> AuditLog:
         ct = ContentType.objects.get_for_model(target)
         target_ref = f"{ct.app_label}.{ct.model}:{target.pk}"
     created = timezone.now()
-    digest = _canonical(actor.id if actor else None, event, target_ref, data, created.isoformat())
+    # Hash over actor_ref (an immutable copy of actor.id), not the FK, so a later
+    # SET_NULL on actor (GDPR erasure) doesn't invalidate the chain.
+    actor_ref = actor.id if actor else None
+    digest = _canonical(actor_ref, event, target_ref, data, created.isoformat())
     chained = hashlib.sha256((prev_hash + digest).encode()).hexdigest()
     return AuditLog.objects.create(
         actor=actor,
+        actor_ref=actor_ref,
         event=event,
         target_ref=target_ref,
         data=data,
@@ -56,7 +60,7 @@ def verify_audit_chain() -> bool:
     prev_hash = ""
     for row in AuditLog.objects.order_by("id"):
         digest = _canonical(
-            row.actor_id, row.event, row.target_ref, row.data, row.created_at.isoformat()
+            row.actor_ref, row.event, row.target_ref, row.data, row.created_at.isoformat()
         )
         expected = hashlib.sha256((prev_hash + digest).encode()).hexdigest()
         if row.prev_hash != prev_hash or row.hash != expected:
@@ -113,6 +117,53 @@ def blocked_user_ids(user) -> set[int]:
     return {blocked if blocker == user.id else blocker for blocker, blocked in pairs}
 
 
+def _affected_user(target):
+    """Resolve the user a moderation action affects, for the DSA Art.17 statement of
+    reasons. A User target is the user themselves; an Activity is its owner; a Post is
+    its author. Returns None when no individual user can be identified (skip notice)."""
+    from django.contrib.auth import get_user_model
+
+    if isinstance(target, get_user_model()):
+        return target
+    if getattr(target, "owner_id", None) is not None:
+        return getattr(target, "owner", None)
+    if getattr(target, "author_id", None) is not None:
+        return getattr(target, "author", None)
+    return None
+
+
+def _notify_statement_of_reasons(target, action, reason):
+    """DSA Art.17: tell the affected user a moderation decision hit their account/content,
+    what it was and why, and that they may contest it. Best-effort — never let a
+    notification failure roll back or break the moderation action itself."""
+    try:
+        from apps.notifications.models import Notification
+        from apps.notifications.services import notify
+
+        recipient = _affected_user(target)
+        if recipient is None:
+            return
+        action_label = ModerationAction.Action(action).label
+        try:
+            reason_label = ReasonCode(reason).label
+        except ValueError:
+            reason_label = str(reason)
+        body = (
+            f"Action taken: {action_label}. Reason: {reason_label}. "
+            "If you believe this decision is wrong, you may contest it."
+        )
+        notify(
+            recipient,
+            Notification.Kind.MODERATION,
+            title="A moderation decision affected your content/account",
+            body=body,
+            url="",
+        )
+    except Exception:
+        # Statement-of-reasons delivery is non-critical relative to the action itself.
+        pass
+
+
 @transaction.atomic
 def take_action(moderator, target, action, reason, *, notes="", report=None, expires_at=None):
     """Apply a moderation action and record it. Suspend/ban deactivate the target user."""
@@ -149,6 +200,7 @@ def take_action(moderator, target, action, reason, *, notes="", report=None, exp
         action=action,
         reason=reason,
     )
+    _notify_statement_of_reasons(target, action, reason)
     return record
 
 

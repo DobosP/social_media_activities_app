@@ -52,4 +52,8 @@ urlpatterns = [
     path("report/", views.report, name="report"),
     path("users/<int:pk>/block/", views.block_user_view, name="block_user"),
     path("users/<int:pk>/unblock/", views.unblock_user_view, name="unblock_user"),
+    # Transparency (W1-8) & GDPR self-service
+    path("privacy/", views.privacy, name="privacy"),
+    path("terms/", views.terms, name="terms"),
+    path("account/delete/", views.account_delete, name="account_delete"),
 ]

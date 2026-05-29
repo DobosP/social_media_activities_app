@@ -68,6 +68,22 @@ jobs:
         run: python manage.py makemigrations --check --dry-run
       - name: Tests
         run: pytest -q
+      - name: Django deploy checks (prod settings)
+        # Boots the production settings module so the fail-closed prod assertions
+        # (shared cache + channel layer, real identity provider, EUDI sandbox off) and
+        # Django's --deploy security checks are exercised in CI. Uses a dummy REDIS_URL
+        # (no connection is made at check time) and the real EUDI provider path.
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.prod
+          DJANGO_SECRET_KEY: ci-deploy-check-not-a-real-secret-please-rotate-0001
+          DJANGO_ALLOWED_HOSTS: example.com
+          DATABASE_URL: postgis://app:app@localhost:5432/app
+          REDIS_URL: redis://localhost:6379/0
+          IDENTITY_PROVIDER: apps.accounts.identity.providers.eudi.EUDIWalletProvider
+          EUDI_SANDBOX: "False"
+        run: |
+          pip install channels-redis
+          python manage.py check --deploy
 
   docker-build:
     if: github.event_name != 'schedule'
