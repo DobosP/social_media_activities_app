@@ -36,6 +36,21 @@
   {% if profile_user.is_guardian %}<a class="btn btn-secondary" href="{% url 'wards' %}">Your wards</a>{% endif %}
 </div>
 
+{% if blocked %}
+<div class="card">
+  <h3>Blocked users</h3>
+  <p class="muted">You and these people never see each other's activities.</p>
+  <ul class="members">
+    {% for b in blocked %}
+      <li>{{ b.display_name|default:b.username }}
+        <form method="post" action="{% url 'unblock_user' b.pk %}" class="inline">{% csrf_token %}
+          <input type="hidden" name="next" value="{% url 'profile' %}">
+          <button class="linkbtn" type="submit">unblock</button></form></li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+
 {% if profile_user.requires_parental_consent and not can_participate %}
 <div class="banner">As an under-16, a parent or guardian must approve your account before you can
   join or organise activities.</div>

@@ -2,6 +2,7 @@ from django import forms
 
 from apps.accounts.models import AgeBand
 from apps.places.models import Place
+from apps.safety.models import ReasonCode
 from apps.taxonomy.models import ActivityType
 
 # Demo age assurance for the web sign-up. In production the real EU age-verification /
@@ -62,4 +63,15 @@ class PostForm(forms.Form):
 class DonateForm(forms.Form):
     amount = forms.DecimalField(
         min_value=1, max_digits=8, decimal_places=2, label="Amount (EUR)", initial=10
+    )
+
+
+class ReportForm(forms.Form):
+    reason = forms.ChoiceField(choices=ReasonCode.choices, label="Reason")
+    detail = forms.CharField(
+        widget=forms.Textarea(
+            attrs={"rows": 3, "placeholder": "Anything that helps moderators..."}
+        ),
+        required=False,
+        label="Details (optional)",
     )

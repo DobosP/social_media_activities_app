@@ -12,7 +12,8 @@
 <p class="muted">{{ activity.starts_at|date:"l j F Y, H:i" }}{% if activity.ends_at %} &ndash; {{ activity.ends_at|date:"H:i" }}{% endif %}<br>
   at <a href="{% url 'place_detail' activity.place.pk %}">{{ activity.place.name|default:"a place" }}</a>{% if activity.place.address_city %}, {{ activity.place.address_city }}{% endif %}</p>
 {% if activity.description %}<p>{{ activity.description|linebreaks }}</p>{% endif %}
-<p class="muted">Organised by {{ activity.owner.display_name|default:activity.owner.username }}.</p>
+<p class="muted">Organised by {{ activity.owner.display_name|default:activity.owner.username }}.
+  {% if not is_owner %}&middot; <a href="{% url 'report' %}?type=activity&id={{ activity.pk }}">Report</a>{% endif %}</p>
 
 {% if is_member %}
   <div class="card">
@@ -49,7 +50,11 @@
 
 <h2>Members</h2>
 <ul class="members">
-  {% for m in members %}<li>{{ m.user.display_name|default:m.user.username }}{% if m.role == "owner" %} &middot; owner{% elif m.role == "guardian" %} &middot; guardian{% endif %}</li>{% endfor %}
+  {% for m in members %}<li>{{ m.user.display_name|default:m.user.username }}{% if m.role == "owner" %} &middot; owner{% elif m.role == "guardian" %} &middot; guardian{% endif %}{% if m.user.id != user.id %}
+    &middot; <a style="font-size:.75rem" href="{% url 'report' %}?type=user&id={{ m.user.id }}">report</a>
+    <form method="post" action="{% url 'block_user' m.user.id %}" class="inline">{% csrf_token %}
+      <input type="hidden" name="next" value="{% url 'activity_detail' activity.pk %}">
+      <button class="linkbtn" style="font-size:.75rem" type="submit">block</button></form>{% endif %}</li>{% endfor %}
 </ul>
 
 {% if is_member or user.is_staff %}

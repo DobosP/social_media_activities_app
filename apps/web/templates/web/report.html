@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Report{% endblock %}
+{% block content %}
+<h1>Report this {{ target_type }}</h1>
+<p class="muted">Reporting: <strong>{{ target_label }}</strong>. Reports are confidential and go
+  straight to the moderation team. If someone is in immediate danger, contact local emergency
+  services.</p>
+<form method="post" class="card">{% csrf_token %}
+  <input type="hidden" name="type" value="{{ target_type }}">
+  <input type="hidden" name="id" value="{{ target_id }}">
+  {{ form.as_p }}
+  <button class="btn btn-danger" type="submit">Send report</button>
+</form>
+{% endblock %}
