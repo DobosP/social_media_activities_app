@@ -26,11 +26,13 @@ from apps.notifications.models import Notification
 from apps.places.models import Place
 from apps.recommendations import services as recs
 from apps.recommendations.models import UserInterest
+from apps.safety import services as safety
+from apps.safety.models import Block
 from apps.social import services as social
 from apps.social.models import Activity, JoinVote, Membership
 from apps.taxonomy.models import ActivityType
 
-from .forms import ActivityForm, DonateForm, PostForm, RegisterForm
+from .forms import ActivityForm, DonateForm, PostForm, RegisterForm, ReportForm
 
 
 def _msg(exc) -> str:
@@ -367,6 +369,7 @@ def profile(request):
         .select_related("activity_type")
         .values_list("activity_type__name", flat=True)
     )
+    blocked = [b.blocked for b in Block.objects.filter(blocker=user).select_related("blocked")]
     return render(
         request,
         "web/profile.html",
@@ -375,6 +378,7 @@ def profile(request):
             "avatar_url": _avatar_url(user, user),
             "can_participate": can_participate(user),
             "interests": chosen,
+            "blocked": blocked,
             **_nav_context(user),
         },
     )
@@ -519,3 +523,71 @@ def wards(request):
         "web/wards.html",
         {"wards": ward_users, **_nav_context(request.user)},
     )
+
+
+# --- Safety: reporting & blocking (wires apps/safety into the UI) --------------------
+
+
+def _resolve_report_target(user, target_type, target_id):
+    if target_type == "activity":
+        activity = Activity.objects.filter(pk=target_id).first()
+        if activity and (user.is_staff or social.can_see_activity(user, activity)):
+            return activity, activity.title
+    elif target_type == "user":
+        person = User.objects.filter(pk=target_id).first()
+        if person:
+            return person, (person.display_name or person.username)
+    return None, None
+
+
+@login_required
+def report(request):
+    target_type = request.GET.get("type") or request.POST.get("type")
+    target_id = request.GET.get("id") or request.POST.get("id")
+    target, label = _resolve_report_target(request.user, target_type, target_id)
+    if target is None:
+        raise Http404("Nothing to report.")
+    if request.method == "POST":
+        form = ReportForm(request.POST)
+        if form.is_valid():
+            safety.file_report(
+                request.user, target, form.cleaned_data["reason"], form.cleaned_data["detail"]
+            )
+            messages.success(request, "Thanks - your report was sent to the moderation team.")
+            if target_type == "activity":
+                return redirect("activity_detail", pk=target.pk)
+            return redirect("home")
+    else:
+        form = ReportForm()
+    return render(
+        request,
+        "web/report.html",
+        {
+            "form": form,
+            "target_type": target_type,
+            "target_id": target_id,
+            "target_label": label,
+            **_nav_context(request.user),
+        },
+    )
+
+
+@login_required
+@require_POST
+def block_user_view(request, pk):
+    target = get_object_or_404(User, pk=pk)
+    try:
+        safety.block_user(request.user, target)
+        messages.success(request, f"Blocked {target.display_name or target.username}.")
+    except ValueError as exc:
+        messages.error(request, _msg(exc))
+    return redirect(request.POST.get("next") or "home")
+
+
+@login_required
+@require_POST
+def unblock_user_view(request, pk):
+    target = get_object_or_404(User, pk=pk)
+    safety.unblock_user(request.user, target)
+    messages.success(request, f"Unblocked {target.display_name or target.username}.")
+    return redirect(request.POST.get("next") or "profile")

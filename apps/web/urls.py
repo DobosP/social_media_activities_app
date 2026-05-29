@@ -36,4 +36,8 @@ urlpatterns = [
     path("notifications/", views.notifications_list, name="notifications"),
     path("notifications/read-all/", views.notifications_read_all, name="notifications_read_all"),
     path("donate/", views.donate, name="donate"),
+    # Safety: reporting & blocking
+    path("report/", views.report, name="report"),
+    path("users/<int:pk>/block/", views.block_user_view, name="block_user"),
+    path("users/<int:pk>/unblock/", views.unblock_user_view, name="unblock_user"),
 ]

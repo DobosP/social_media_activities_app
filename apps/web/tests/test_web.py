@@ -161,3 +161,35 @@ def test_verify_age_flow_sets_band():
 
 def test_wards_page_renders():
     assert _client(_user("guardian-user")).get("/wards/").status_code == 200
+
+
+def test_report_activity_creates_report():
+    owner = _user("rep-owner")
+    activity = create_activity(
+        owner,
+        place=_place(),
+        activity_type=_type(slug="web-rep"),
+        title="ReportMe",
+        starts_at="2030-05-01T10:00Z",
+    )
+    reporter = _user("reporter")  # same (adult) cohort -> can see/report
+    c = _client(reporter)
+    assert c.get(f"/report/?type=activity&id={activity.id}").status_code == 200
+    resp = c.post(
+        "/report/", {"type": "activity", "id": activity.id, "reason": "spam", "detail": "x"}
+    )
+    assert resp.status_code == 302
+    from apps.safety.models import Report
+
+    assert Report.objects.filter(reason="spam").exists()
+
+
+def test_block_then_unblock_user():
+    me, other = _user("blk-me"), _user("blk-other")
+    from apps.safety.models import Block
+
+    c = _client(me)
+    assert c.post(f"/users/{other.id}/block/").status_code == 302
+    assert Block.objects.filter(blocker=me, blocked=other).exists()
+    assert c.post(f"/users/{other.id}/unblock/").status_code == 302
+    assert not Block.objects.filter(blocker=me, blocked=other).exists()
