@@ -9,7 +9,7 @@ docs/PRODUCTION_HARDENING_PLAN_2026-05.md (W1-1)."""
 from datetime import timedelta
 
 import pytest
-from django.test import Client
+from django.test import Client, override_settings
 from django.utils import timezone
 from rest_framework.test import APIClient
 
@@ -121,6 +121,25 @@ def test_cannot_invite_unassigned_account_as_ward():
     unknown = _user("gl_u8", AgeBand.UNKNOWN)  # cohort UNASSIGNED
     with pytest.raises(ValueError):
         create_guardian_link_invite(guardian, unknown)
+
+
+@override_settings(ALLOW_MINOR_ONBOARDING=False)
+def test_minor_onboarding_disabled_blocks_guardian_link():
+    """Production default: minors cannot be onboarded (no verifiable trust anchor yet)."""
+    guardian = _user("gl_off_g", AgeBand.ADULT)
+    child = _user("gl_off_c", AgeBand.UNDER_16)
+    with pytest.raises(ValueError):
+        create_guardian_link_invite(guardian, child)
+
+
+def test_minor_onboarding_disabled_blocks_consent_grant():
+    from apps.accounts.services import grant_parental_consent, link_guardian
+
+    guardian = _user("gl_off2_g", AgeBand.ADULT)
+    child = _user("gl_off2_c", AgeBand.UNDER_16)
+    link_guardian(guardian, child)  # set up a link while onboarding is enabled
+    with override_settings(ALLOW_MINOR_ONBOARDING=False), pytest.raises(ValueError):
+        grant_parental_consent(guardian, child)
 
 
 def test_accept_writes_audit_entry():

@@ -149,6 +149,15 @@ EUDI_SANDBOX_ISSUER_KEY_PEM = env("EUDI_SANDBOX_ISSUER_KEY_PEM", default="")
 # {issuer_id: PEM public key} — the trust anchor; populated from the EU trust list in prod.
 EUDI_TRUSTED_ISSUERS = env.json("EUDI_TRUSTED_ISSUERS", default={})
 
+# Whether minors can be onboarded (guardian-linked + consented) on this deployment.
+# The current guardian-link flow establishes a relationship on mutual confirmation but does
+# NOT cryptographically prove a real parent-child / legal-guardianship relationship, and no
+# production-grade age/parental-responsibility trust anchor exists yet (EUDI wallets not live;
+# the EU age-verification app was bypassed). So this is ON for dev/test but prod.py defaults
+# it OFF — a prod deploy runs adults-only until a real trust anchor (EUDI guardian flow /
+# national eID / blessed out-of-band process) is wired. See docs/AUDIT_STRESS_2026-05-29.md.
+ALLOW_MINOR_ONBOARDING = env.bool("ALLOW_MINOR_ONBOARDING", default=True)
+
 # Guardianship link invites (verified-adult → minor, mutually confirmed). How long an
 # unaccepted invite stays valid, and anti-abuse limits on issuing invites.
 GUARDIAN_INVITE_TTL_DAYS = env.int("GUARDIAN_INVITE_TTL_DAYS", default=7)

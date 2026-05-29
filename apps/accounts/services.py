@@ -46,6 +46,14 @@ def apply_assurance(user: User, result) -> AgeAssurance:
     )
 
 
+def minor_onboarding_enabled() -> bool:
+    """Whether this deployment permits onboarding minors (guardian-linking + consent).
+    OFF in production by default until a real parental-responsibility trust anchor exists
+    (the mutual-click guardian link is not verifiable proof of a parent-child relationship).
+    See settings.ALLOW_MINOR_ONBOARDING and docs/AUDIT_STRESS_2026-05-29.md (L-GUARDIAN)."""
+    return getattr(settings, "ALLOW_MINOR_ONBOARDING", True)
+
+
 def has_valid_parental_consent(user: User) -> bool:
     return any(consent.is_valid() for consent in user.parental_consents.all())
 
@@ -113,6 +121,8 @@ def create_guardian_link_invite(
     The link is NOT created here — the ward must accept (see accept_guardian_link_invite),
     so the relationship requires both parties to act. Raises ValueError on any precondition
     failure."""
+    if not minor_onboarding_enabled():
+        raise ValueError("Minor onboarding is disabled on this deployment.")
     if guardian.id == ward.id:
         raise ValueError("A user cannot be their own guardian.")
     if guardian.cohort != Cohort.ADULT or not can_participate(guardian):
@@ -279,6 +289,8 @@ def grant_parental_consent(
     parental-consent identity flow). Activates/refreshes the ward's consent record so
     can_participate(ward) becomes True. Raises ValueError on any precondition failure.
     """
+    if not minor_onboarding_enabled():
+        raise ValueError("Minor onboarding is disabled on this deployment.")
     if not ward.requires_parental_consent:
         raise ValueError("This user does not require parental consent.")
     if guardian.cohort != Cohort.ADULT or not can_participate(guardian):
