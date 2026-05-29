@@ -144,15 +144,42 @@ to false) and the client also **warns when a contact's fingerprint changes** sin
 | `GET /keys/<username>/`                                    | fetch a contactable user's key (+ fingerprint, verified) |
 | `POST /verify/`                                            | record out-of-band key verification      |
 | `GET/POST /conversations/`                                 | list / start a direct or group chat      |
+| `GET /guardian/conversations/`                             | a guardian's observable ward conversations |
 | `POST /conversations/<id>/accept/` `/decline/` `/leave/`   | invitation & membership lifecycle        |
 | `POST/DELETE /conversations/<id>/participants/`            | group admin add / remove (by username)   |
+| `POST /conversations/<id>/guardian/`                       | guardian enrolls as a read-only observer |
 | `POST /conversations/<id>/disappearing/`                   | set the disappearing-messages timer      |
+| `GET /conversations/<id>/keys/`                            | active members' public keys (to encrypt to) |
 | `GET/POST /conversations/<id>/messages/`                   | history (with your key) / send ciphertext |
 | `POST /conversations/<id>/messages/<mid>/report/`          | report-with-decryption                   |
 
 Real-time delivery is over a WebSocket at `ws/messaging/<conversation_id>/`, which relays the stored
 ciphertext (with every recipient's wrapped key) to connected members; each client decrypts only the
 key addressed to it.
+
+## Guardian oversight (consented, transparent, read-only)
+
+For the youngest, consent-gated cohort (**CHILD**, under 16), a verified guardian can oversee a
+ward's conversations. Under E2EE this can only work one way: the guardian becomes an **additional
+recipient** so messages are encrypted to them too. The design keeps this safe:
+
+- **Consent-gated.** Enrolling requires an active `GuardianRelationship` and a ward in the **CHILD**
+  cohort (16+ is the digital age of majority in Romania, so teens/adults aren't observable). The
+  guardian discovers eligible conversations via `GET /guardian/conversations/` and enrolls via
+  `POST /conversations/<id>/guardian/`.
+- **Transparent.** The guardian appears in the participant list with role `guardian`, and the web
+  client shows a banner to everyone: *"A guardian is observing this conversation."* There is **no
+  secret surveillance** — the other party can leave if uncomfortable.
+- **Read-only.** A guardian (an adult) **cannot send** into a children's conversation — that would
+  breach cohort isolation for the *other* child. `post_message` rejects guardian-role senders.
+- **Tamper-resistant.** A child cannot evict their guardian (`remove_participant` refuses a
+  guardian); the guardian themselves ends oversight via `leave`, or by revoking the account-level
+  guardianship.
+- **Forward-only.** The guardian only gets keys for messages sent *after* they enroll; prior history
+  stays unreadable to them.
+
+Because the guardian is cross-cohort, child members fetch keys to encrypt to from the
+membership-scoped `GET /conversations/<id>/keys/` (authorized by membership, not the cohort gate).
 
 ## Data minimization & retention
 
@@ -184,6 +211,6 @@ removes their `MessageKey` rows).
 - ✅ Out-of-band **key verification** (safety numbers) + **key-change warnings** — done (see above).
   Next: render the safety number as a **QR code** for easier in-person comparison.
 - ✅ **Disappearing messages** + global retention backstop — done (see above).
+- ✅ **Guardian visibility** for the youngest cohort (consented, transparent, read-only) — done.
 - **Forward secrecy** via a ratchet (consider MLS / RFC 9420) if the threat model warrants it.
-- **Guardian visibility** controls for the youngest cohort, consistent with consent rules.
 - Client-side safety hashing **iff** mandated by the CSA Regulation, kept on-device.

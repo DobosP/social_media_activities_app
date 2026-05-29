@@ -12,6 +12,11 @@ urlpatterns = [
         "conversations/", views.ConversationListCreateView.as_view(), name="messaging-conversations"
     ),
     path(
+        "guardian/conversations/",
+        views.GuardianConversationsView.as_view(),
+        name="messaging-guardian-conversations",
+    ),
+    path(
         "conversations/<int:pk>/accept/",
         views.ConversationAcceptView.as_view(),
         name="messaging-accept",
@@ -35,6 +40,16 @@ urlpatterns = [
         "conversations/<int:pk>/disappearing/",
         views.ConversationDisappearingView.as_view(),
         name="messaging-disappearing",
+    ),
+    path(
+        "conversations/<int:pk>/keys/",
+        views.ConversationKeysView.as_view(),
+        name="messaging-conversation-keys",
+    ),
+    path(
+        "conversations/<int:pk>/guardian/",
+        views.ConversationGuardianView.as_view(),
+        name="messaging-guardian",
     ),
     # Messages
     path(

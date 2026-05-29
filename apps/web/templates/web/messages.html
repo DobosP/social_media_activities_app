@@ -33,6 +33,13 @@
       <button class="btn btn-sm" type="submit">Start</button>
     </form>
 
+    <div id="mz-guardian-section" style="display:none">
+      <h3 style="margin-top:1rem">Guardian oversight</h3>
+      <p class="muted" style="font-size:.8rem">Conversations your child is part of. Observing is
+        read-only and visible to everyone in the chat.</p>
+      <div id="mz-guardian-list"></div>
+    </div>
+
     <h3 style="margin-top:1rem">This device</h3>
     <p class="muted" style="font-size:.8rem">Your private key lives only in this browser. Back it
       up (encrypted with a passphrase) to read your history on another device.</p>
@@ -52,6 +59,7 @@
         </select>
       </label>
     </div>
+    <div id="mz-guardian"></div>
     <div id="mz-verify"></div>
     <div id="mz-log" class="thread mz-log"></div>
     <form id="mz-composer" class="row" style="margin-top:.5rem;display:none">

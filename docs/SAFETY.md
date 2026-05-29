@@ -53,8 +53,12 @@ D5, and D6 too. See [ROADMAP](ROADMAP.md) and [COMPLIANCE](COMPLIANCE.md).
   encrypted** (the server is a zero-knowledge relay storing ciphertext only). Because content
   scanning is impossible under E2EE, safety is enforced by **access control** — cohort isolation,
   invite-accept first contact, blocking, and rate limits — plus **report-with-decryption** (the
-  reporter attaches the plaintext they can see), which feeds the D4 moderation loop. Honest
-  cryptographic limits and the moderation trade-off are documented in [MESSAGING](MESSAGING.md).
+  reporter attaches the plaintext they can see), which feeds the D4 moderation loop. **Guardian
+  oversight** for the under-16 cohort is the one sanctioned cross-cohort presence: a verified
+  guardian can join a ward's conversation as a **transparent, read-only** observer (visible to all,
+  cannot send, consent-gated). Optional **disappearing messages** minimize ciphertext at rest, and
+  **key verification** (safety numbers) lets users detect a server MITM. Honest cryptographic limits
+  and the moderation trade-off are documented in [MESSAGING](MESSAGING.md).
 
 ## Offline-meetup safety (product/UX, later)
 

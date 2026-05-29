@@ -201,6 +201,49 @@ class ConversationDisappearingView(APIView):
         return Response(_conversation_payload(conv, request))
 
 
+class ConversationKeysView(APIView):
+    """Public keys of the conversation's active members, for the client to encrypt to.
+    Scoped to members, so it also yields a (cross-cohort) guardian observer's key."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        conv = get_object_or_404(Conversation, pk=pk)
+        try:
+            keys = services.participant_keys(request.user, conv)
+        except services.MessagingError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_403_FORBIDDEN)
+        return Response(keys)
+
+
+class ConversationGuardianView(APIView):
+    """A verified guardian enrolls themselves as a read-only observer of a conversation
+    their CHILD ward is in. Transparent to all members."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        conv = get_object_or_404(Conversation, pk=pk)
+        try:
+            services.add_guardian_observer(request.user, conv)
+        except services.MessagingError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(_conversation_payload(conv, request), status=status.HTTP_201_CREATED)
+
+
+class GuardianConversationsView(APIView):
+    """Discovery: conversations the caller (a guardian) may observe — those where an
+    active CHILD ward is an active member."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        convs = services.guardian_observable_conversations(request.user).prefetch_related(
+            "participants__user"
+        )
+        return Response(ConversationSerializer(convs, many=True, context={"request": request}).data)
+
+
 class ConversationMessagesView(APIView):
     """Read history (GET, with the caller's wrapped keys) or send ciphertext (POST)."""
 

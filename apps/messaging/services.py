@@ -22,7 +22,7 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.utils import timezone
 
-from apps.accounts.models import Cohort
+from apps.accounts.models import Cohort, GuardianRelationship
 from apps.safety.services import allow_action, file_report, is_blocked, record_audit
 
 from .models import Conversation, KeyVerification, Message, MessageKey, Participant, PublicKey
@@ -326,6 +326,10 @@ def remove_participant(actor, conversation, target) -> Participant:
         Participant.State.DECLINED,
     ):
         raise MessagingError("That user is not in the conversation.")
+    if p.role == Participant.Role.GUARDIAN:
+        # A child must not be able to evict their guardian's oversight; the guardian
+        # ends it themselves via leave (or by revoking guardianship at the account level).
+        raise MessagingError("A guardian observer cannot be removed by another member.")
     p.state = Participant.State.REMOVED
     p.save(update_fields=["state"])
     record_audit(
@@ -335,6 +339,98 @@ def remove_participant(actor, conversation, target) -> Participant:
         conversation_id=conversation.id,
     )
     return p
+
+
+# --------------------------------------------------------------------------- #
+# Guardian oversight (consented, transparent, read-only)
+# --------------------------------------------------------------------------- #
+def _child_wards_in(guardian, conversation):
+    """Active CHILD-cohort wards of `guardian` who are active in this conversation."""
+    ward_ids = GuardianRelationship.objects.filter(
+        guardian=guardian, status=GuardianRelationship.Status.ACTIVE
+    ).values_list("ward_id", flat=True)
+    return list(
+        conversation.participants.filter(
+            user_id__in=ward_ids,
+            state=Participant.State.ACTIVE,
+            user__cohort=Cohort.CHILD,
+        ).select_related("user")
+    )
+
+
+@transaction.atomic
+def add_guardian_observer(guardian, conversation) -> Participant:
+    """Enroll `guardian` as a transparent, read-only observer of a conversation in
+    which one of their CHILD wards is an active member. This is the one sanctioned
+    cross-cohort presence and exists only because of the consented guardianship.
+    Everyone in the conversation can see the guardian (no secret surveillance)."""
+    if not _child_wards_in(guardian, conversation):
+        raise MessagingError("You can only observe a conversation your child is part of.")
+    if public_key_for(guardian) is None:
+        raise MessagingError("Set up secure messaging (a key) before observing.")
+    existing = _participant(conversation, guardian)
+    if existing and existing.state == Participant.State.ACTIVE:
+        return existing
+    if existing:
+        existing.state = Participant.State.ACTIVE
+        existing.role = Participant.Role.GUARDIAN
+        existing.joined_at = timezone.now()
+        existing.save(update_fields=["state", "role", "joined_at"])
+        p = existing
+    else:
+        p = Participant.objects.create(
+            conversation=conversation,
+            user=guardian,
+            state=Participant.State.ACTIVE,
+            role=Participant.Role.GUARDIAN,
+            joined_at=timezone.now(),
+        )
+    record_audit("messaging.guardian_observing", actor=guardian, conversation_id=conversation.id)
+    return p
+
+
+def guardian_observable_conversations(guardian):
+    """Conversations a guardian may observe: those where an active CHILD ward is an
+    active member. Used by the guardian's discovery view."""
+    ward_ids = GuardianRelationship.objects.filter(
+        guardian=guardian, status=GuardianRelationship.Status.ACTIVE
+    ).values_list("ward_id", flat=True)
+    return (
+        Conversation.objects.filter(
+            participants__user_id__in=ward_ids,
+            participants__state=Participant.State.ACTIVE,
+            participants__user__cohort=Cohort.CHILD,
+        )
+        .distinct()
+        .order_by("-updated_at")
+    )
+
+
+def participant_keys(viewer, conversation) -> list[dict]:
+    """Public keys of the conversation's active members, for the client to encrypt to.
+
+    Membership is the authorization here, so this intentionally bypasses the
+    cohort-gated key registry — it's how a child member obtains the (cross-cohort)
+    public key of a consented guardian observer in order to encrypt to them."""
+    if not is_active_participant(viewer, conversation):
+        raise MessagingError("You are not an active member of this conversation.")
+    out = []
+    parts = conversation.participants.filter(state=Participant.State.ACTIVE).select_related("user")
+    for p in parts:
+        key = public_key_for(p.user)
+        if key is None:
+            continue
+        out.append(
+            {
+                "public_id": str(p.user.public_id),
+                "username": p.user.username,
+                "display_name": p.user.display_name or p.user.username,
+                "role": p.role,
+                "public_jwk": key.public_jwk,
+                "fingerprint": key_fingerprint(key.public_jwk),
+            }
+        )
+    return out
 
 
 # Allowed disappearing-message timers (seconds): off, or 5 min … 30 days.
@@ -434,8 +530,13 @@ def post_message(
     (including the sender). This prevents a client from dropping recipients so they
     cannot read, or wrapping keys for someone outside the conversation.
     """
-    if not is_active_participant(sender, conversation):
+    sender_p = _participant(conversation, sender)
+    if not sender_p or sender_p.state != Participant.State.ACTIVE:
         raise MessagingError("You are not an active member of this conversation.")
+    if sender_p.role == Participant.Role.GUARDIAN:
+        # Guardian observers are read-only: an adult must not send into a children's
+        # conversation (that would breach cohort isolation for the other child).
+        raise MessagingError("Guardian observers can read but not send messages.")
     if not ciphertext or not iv:
         raise MessagingError("Encrypted content is required.")
     if not _rate_ok(

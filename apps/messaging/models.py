@@ -96,6 +96,9 @@ class Participant(models.Model):
     class Role(models.TextChoices):
         ADMIN = "admin", "Admin"
         MEMBER = "member", "Member"
+        # A consented, read-only observer: a verified guardian of a CHILD member.
+        # Visible to everyone (no secret surveillance) and cannot send. See SAFETY.md.
+        GUARDIAN = "guardian", "Guardian (observer)"
 
     conversation = models.ForeignKey(
         Conversation, on_delete=models.CASCADE, related_name="participants"

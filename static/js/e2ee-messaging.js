@@ -213,13 +213,10 @@
     return data;
   }
 
-  async function getPublicJwk(username) {
-    if (username === ME.username) return identity.publicJwk;
-    return (await getContactKey(username)).public_jwk;
-  }
-
-  // recipients: [{username, public_id}]
-  async function encryptFor(recipients, plaintext) {
+  // members: [{public_id, public_jwk}] — the conversation's active members (incl. any
+  // guardian observer), fetched from the membership-scoped keys endpoint so a
+  // cross-cohort guardian's key is available to encrypt to.
+  async function encryptForMembers(members, plaintext) {
     const cek = await subtle.generateKey({ name: "AES-GCM", length: 256 }, true, [
       "encrypt",
       "decrypt",
@@ -229,15 +226,14 @@
     const rawCek = await subtle.exportKey("raw", cek);
 
     const recipient_keys = [];
-    for (const r of recipients) {
-      const pubJwk = await getPublicJwk(r.username);
-      const recipientPub = await importPublicJwk(pubJwk);
+    for (const m of members) {
+      const recipientPub = await importPublicJwk(m.public_jwk);
       const ephemeral = await subtle.generateKey(ECDH, true, ["deriveKey", "deriveBits"]);
       const wrapKey = await deriveAesKey(ephemeral.privateKey, recipientPub, ["encrypt"]);
       const wrapIv = randomBytes(12);
       const wrapped = await subtle.encrypt({ name: "AES-GCM", iv: wrapIv }, wrapKey, rawCek);
       recipient_keys.push({
-        recipient_public_id: r.public_id,
+        recipient_public_id: m.public_id,
         ephemeral_public_jwk: publicJwkOnly(await subtle.exportKey("jwk", ephemeral.publicKey)),
         wrapped_key: b64encode(wrapped),
         wrap_iv: b64encode(wrapIv),
@@ -282,20 +278,16 @@
     verify: document.getElementById("mz-verify"),
     toolbar: document.getElementById("mz-toolbar"),
     timer: document.getElementById("mz-timer"),
+    guardian: document.getElementById("mz-guardian"),
+    guardianSection: document.getElementById("mz-guardian-section"),
+    guardianList: document.getElementById("mz-guardian-list"),
   };
   let current = null; // current conversation object
   let socket = null;
-  const activeRecipients = []; // [{username, public_id}] for the current conversation
 
   function setStatus(text, kind) {
     els.status.textContent = text;
     els.status.className = "muted" + (kind ? " " + kind : "");
-  }
-
-  function activeMembers(conv) {
-    return (conv.participants || [])
-      .filter((p) => p.state === "active")
-      .map((p) => ({ username: p.user.username, public_id: p.user.public_id }));
   }
 
   function convLabel(conv) {
@@ -343,6 +335,46 @@
       els.list.appendChild(item);
     });
     if (!convs.length) els.list.innerHTML = '<p class="muted">No conversations yet.</p>';
+  }
+
+  // For guardians: list ward conversations not yet observed, each with an Observe button.
+  async function loadGuardianConversations() {
+    let convs = [];
+    try {
+      convs = await api("GET", "/api/messaging/guardian/conversations/");
+    } catch (e) {
+      return; // not a guardian / nothing to show
+    }
+    const pending = convs.filter((c) => c.my_state !== "active");
+    if (!pending.length) {
+      els.guardianSection.style.display = "none";
+      return;
+    }
+    els.guardianSection.style.display = "";
+    els.guardianList.innerHTML = "";
+    pending.forEach((conv) => {
+      const item = document.createElement("div");
+      item.className = "mz-conv";
+      const label = document.createElement("span");
+      label.textContent = convLabel(conv);
+      const observe = document.createElement("button");
+      observe.className = "btn btn-sm";
+      observe.textContent = "Observe";
+      observe.addEventListener("click", async () => {
+        try {
+          await api("POST", "/api/messaging/conversations/" + conv.id + "/guardian/");
+          setStatus("You are now observing this conversation (read-only).", "ok");
+          await loadConversations();
+          await loadGuardianConversations();
+          openConversation(conv.id);
+        } catch (e) {
+          setStatus("Could not observe: " + e.message, "error");
+        }
+      });
+      item.appendChild(label);
+      item.appendChild(observe);
+      els.guardianList.appendChild(item);
+    });
   }
 
   function appendMessage(msg, plaintext) {
@@ -474,14 +506,34 @@
     els.verify.appendChild(panel);
   }
 
+  // Transparency: show a banner whenever a guardian is observing, and switch the
+  // viewer to read-only if they are themselves the guardian observer.
+  function renderGuardianNotice(conv) {
+    els.guardian.innerHTML = "";
+    const guardians = (conv.participants || []).filter(
+      (p) => p.state === "active" && p.role === "guardian"
+    );
+    if (conv.my_role === "guardian") {
+      els.composer.style.display = "none";
+      els.toolbar.style.display = "none";
+    }
+    if (!guardians.length) return;
+    const names = guardians.map((p) => p.user.display_name || p.user.username).join(", ");
+    const banner = document.createElement("div");
+    banner.className = "banner mz-guardian-banner";
+    banner.textContent =
+      conv.my_role === "guardian"
+        ? "You are observing this conversation as a guardian (read-only)."
+        : "👁 A guardian (" + names + ") is observing this conversation.";
+    els.guardian.appendChild(banner);
+  }
+
   async function openConversation(id) {
     const convs = await api("GET", "/api/messaging/conversations/");
     current = convs.find((c) => c.id === id);
     if (!current) return;
     els.title.textContent = convLabel(current);
     els.log.innerHTML = "";
-    activeRecipients.length = 0;
-    activeMembers(current).forEach((m) => activeRecipients.push(m));
 
     if (current.my_state !== "active") {
       els.composer.style.display = "none";
@@ -494,6 +546,7 @@
     els.toolbar.style.display = "";
     els.timer.value = String(current.disappearing_seconds || 0);
 
+    renderGuardianNotice(current);
     await renderVerification(current);
 
     const history = await api(
@@ -514,7 +567,9 @@
   }
 
   async function sendCurrent(text) {
-    const payload = await encryptFor(activeRecipients, text);
+    // Fetch the live member key set (includes any guardian observer) at send time.
+    const members = await api("GET", "/api/messaging/conversations/" + current.id + "/keys/");
+    const payload = await encryptForMembers(members, text);
     if (socket && socket.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify(payload));
     } else {
@@ -658,7 +713,10 @@
 
   (async function init() {
     try {
-      if (await ensureIdentity()) await loadConversations();
+      if (await ensureIdentity()) {
+        await loadConversations();
+        await loadGuardianConversations();
+      }
     } catch (e) {
       setStatus("Messaging unavailable: " + e.message, "error");
     }
