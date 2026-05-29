@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Profile{% endblock %}
+{% block content %}
+<h1>{{ profile_user.display_name|default:profile_user.username }}</h1>
+
+<div class="row" style="align-items:flex-start;gap:1rem">
+  {% if avatar_url %}
+    <img class="avatar" src="{{ avatar_url }}" width="96" height="96" alt="profile picture">
+  {% else %}
+    <div class="muted" style="width:96px;height:96px;border-radius:50%;background:#eef0ec;
+         display:flex;align-items:center;justify-content:center;font-size:.8rem">no photo</div>
+  {% endif %}
+  <form method="post" action="{% url 'avatar_upload' %}" enctype="multipart/form-data">{% csrf_token %}
+    <input type="file" name="image" accept="image/*" required>
+    <button class="btn btn-sm" type="submit">Update photo</button>
+    <div class="helptext">One profile picture. Location metadata is stripped automatically.</div>
+  </form>
+</div>
+
+<div class="card">
+  <p><strong>Username:</strong> {{ profile_user.username }}</p>
+  <p><strong>Cohort:</strong> {{ profile_user.get_cohort_display }}</p>
+  <p><strong>Age band:</strong> {{ profile_user.get_age_band_display }} <span class="muted">(demo)</span></p>
+  <p><strong>Identity verified:</strong> {{ profile_user.is_identity_verified|yesno:"yes,no" }}</p>
+  <p><strong>Can participate:</strong> {{ can_participate|yesno:"yes,no" }}</p>
+  <p><strong>Interests:</strong>
+    {% for i in interests %}<span class="tag">{{ i }}</span>{% empty %}<span class="muted">none yet</span>{% endfor %}
+    &middot; <a href="{% url 'interests' %}">edit</a></p>
+</div>
+
+{% if profile_user.requires_parental_consent and not can_participate %}
+<div class="banner">As an under-16, a parent or guardian must approve your account before you can
+  join or organise activities.</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Meet people. Do real things. In person.</h1>
+<p class="lead">A nonprofit, text-first platform for organising in-person activities &mdash; sport,
+outdoor, reading, board &amp; video games, culture &mdash; at real places near you. No public
+photo feeds, no endless scrolling, no ads.</p>
+<div class="row">
+  <a class="btn" href="{% url 'register' %}">Get started</a>
+  <a class="btn btn-secondary" href="{% url 'places_map' %}">Browse places</a>
+</div>
+
+<h2>How it works</h2>
+<div class="grid grid-2">
+  <div class="card"><h3>1. Find a place &amp; people</h3>
+    <p>Places are already on the map (courts, parks, libraries, cafes). Tell us your interests and
+       we suggest activities for you nearby.</p></div>
+  <div class="card"><h3>2. Join by vote</h3>
+    <p>Ask to join an activity; current members vote you in (two-thirds by default). The group
+       decides who joins.</p></div>
+  <div class="card"><h3>3. Organise &amp; chat</h3>
+    <p>Create your own meetup, post in its private thread, share photos, and chat live with members
+       &mdash; text-first, always.</p></div>
+</div>
+
+<div class="banner">Safe by design: people are grouped into age cohorts and only ever see and join
+  activities within their own cohort &mdash; children interact only with similar-age peers. Age
+  checks are simulated in this demo.</div>
+{% endblock %}

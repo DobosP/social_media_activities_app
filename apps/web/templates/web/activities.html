@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Activities{% endblock %}
+{% block content %}
+<h1>Upcoming activities</h1>
+<p class="muted">In your cohort (<strong>{{ user.get_cohort_display }}</strong>).
+  <a href="{% url 'activity_create' %}">Organise one →</a></p>
+{% for a in activities %}{% include "web/_activity_card.html" %}{% empty %}
+<p class="muted">Nothing upcoming yet. Be the first to organise something!</p>{% endfor %}
+{% endblock %}

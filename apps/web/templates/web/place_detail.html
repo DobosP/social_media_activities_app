@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}{{ place.name|default:"Place" }}{% endblock %}
+{% block content %}
+<p class="muted"><a href="{% url 'places_map' %}">&larr; Places</a></p>
+<h1>{{ place.name|default:"Unnamed place" }}</h1>
+<p class="muted">
+  {% if place.address_street %}{{ place.address_street }} {{ place.address_housenumber }}, {% endif %}
+  {{ place.address_city }} {{ place.address_country }}
+</p>
+{% if place.website %}<p><a href="{{ place.website }}" rel="noopener" target="_blank">Official website &rarr;</a></p>{% endif %}
+<div>{% for pa in place.place_activities.all %}<span class="tag">{{ pa.activity.name }}</span>{% endfor %}</div>
+
+{% if user.is_authenticated %}
+  <p style="margin-top:1rem">
+    <a class="btn" href="{% url 'activity_create' %}?place={{ place.pk }}">Organise an activity here</a>
+  </p>
+  <h2>Upcoming here (your cohort)</h2>
+  {% for a in meetups %}{% include "web/_activity_card.html" %}{% empty %}
+  <p class="muted">No upcoming activities here yet.</p>{% endfor %}
+{% else %}
+  <div class="banner"><a href="{% url 'login' %}">Log in</a> or
+    <a href="{% url 'register' %}">sign up</a> to organise or join activities here.</div>
+{% endif %}
+{% endblock %}

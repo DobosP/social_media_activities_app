@@ -1,0 +1,52 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Social Activities{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+<header class="site-header">
+  <nav class="nav container">
+    <a class="brand" href="{% url 'home' %}">&#9679; Activities</a>
+    <a href="{% url 'places_map' %}">Places</a>
+    {% if user.is_authenticated %}
+      <a href="{% url 'activity_list' %}">Activities</a>
+      <a href="{% url 'interests' %}">Interests</a>
+      <a href="{% url 'activity_create' %}">Organize</a>
+      <a href="{% url 'notifications' %}">Alerts{% if unread_notifications %}
+        <span class="pill">{{ unread_notifications }}</span>{% endif %}</a>
+    {% endif %}
+    <a href="{% url 'donate' %}">Support</a>
+    <span class="spacer"></span>
+    {% if user.is_authenticated %}
+      <a href="{% url 'profile' %}">{{ user.display_name|default:user.username }}
+        <small class="cohort">{{ user.get_cohort_display }}</small></a>
+      <form method="post" action="{% url 'logout' %}" class="inline">{% csrf_token %}
+        <button class="linkbtn" type="submit">Log out</button></form>
+    {% else %}
+      <a href="{% url 'login' %}">Log in</a>
+      <a class="btn btn-sm" href="{% url 'register' %}">Sign up</a>
+    {% endif %}
+  </nav>
+</header>
+
+<main class="container">
+  {% if messages %}
+    <ul class="messages">
+      {% for m in messages %}<li class="msg {{ m.tags }}">{{ m }}</li>{% endfor %}
+    </ul>
+  {% endif %}
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer container">
+  <p>A nonprofit, text-first way to meet up in person &mdash; the opposite of image-perfect social
+     media. <strong>Demo environment: do not enter real personal data.</strong></p>
+</footer>
+{% block scripts %}{% endblock %}
+</body>
+</html>
