@@ -261,9 +261,7 @@ def accept_invite(user, conversation) -> Participant:
     if user.cohort == Cohort.UNASSIGNED or user.cohort != conversation.cohort:
         raise MessagingError("This conversation is not in your cohort.")
     if not can_participate(user):
-        raise MessagingError(
-            "Complete age verification (and parental consent if under 16) first."
-        )
+        raise MessagingError("Complete age verification (and parental consent if under 16) first.")
     p.state = Participant.State.ACTIVE
     p.joined_at = timezone.now()
     p.save(update_fields=["state", "joined_at"])

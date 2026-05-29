@@ -20,8 +20,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Bake static assets into the image so WhiteNoise can serve them at runtime.
-# collectstatic needs no database connection.
-RUN DJANGO_SETTINGS_MODULE=config.settings.prod python manage.py collectstatic --noinput
+# collectstatic needs no database connection. Prod settings now require DJANGO_SECRET_KEY
+# (fail-closed; see config/settings/prod.py), so pass a throwaway value for this build-only
+# step — it never reaches runtime, where a real key must be provided via the environment.
+RUN DJANGO_SECRET_KEY=build-time-only-not-used-at-runtime \
+    DJANGO_SETTINGS_MODULE=config.settings.prod python manage.py collectstatic --noinput
 
 EXPOSE 8000
 

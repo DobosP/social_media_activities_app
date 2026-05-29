@@ -32,3 +32,6 @@ htmlcov/
 .idea/
 .vscode/
 .DS_Store
+
+# Local WSL/Docker helper scripts (session-specific, not for the repo)
+.wsl_*
