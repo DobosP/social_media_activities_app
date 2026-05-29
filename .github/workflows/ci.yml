@@ -15,6 +15,9 @@ jobs:
   lint-test:
     if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     services:
       db:
         image: postgis/postgis:16-3.4
@@ -59,6 +62,33 @@ jobs:
         run: python manage.py makemigrations --check --dry-run
       - name: Tests
         run: pytest -q
+      # TEMPORARY diagnostic (reverted before merge): on any failure above, re-run
+      # the checks, capture output, and post it as a PR comment we can read.
+      - name: Diagnostics on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          {
+            echo "## ruff check"; ruff check . || true
+            echo "## ruff format --check"; ruff format --check . || true
+            echo "## makemigrations --check"; python manage.py makemigrations --check --dry-run || true
+            echo "## pytest -ra --tb=short"; pytest -q -ra --tb=short || true
+          } > ci-diag.txt 2>&1
+          python - <<'PY'
+          import json, os, urllib.request
+          body = open("ci-diag.txt").read()[-58000:]
+          payload = json.dumps({"body": "Auto CI diagnostics:\n\n```\n" + body + "\n```"}).encode()
+          url = f"https://api.github.com/repos/{os.environ['REPO']}/issues/{os.environ['PR']}/comments"
+          req = urllib.request.Request(
+              url, data=payload,
+              headers={"Authorization": "Bearer " + os.environ["GH_TOKEN"],
+                       "Accept": "application/vnd.github+json"},
+          )
+          print("posted:", urllib.request.urlopen(req).status)
+          PY
 
   docker-build:
     if: github.event_name != 'schedule'
