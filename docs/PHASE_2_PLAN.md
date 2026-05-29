@@ -51,8 +51,10 @@ Tie places + events + activities together into the screens a user actually sees.
 Turn the provider registry ([DATA_PROVIDERS](DATA_PROVIDERS.md)) into running code.
 - `FoursquareAdapter` (parquet/DuckDB, mirror `OvertureAdapter`) — token `FSQ_PLACES_TOKEN`.
 - `TicketmasterEventSource` (Discovery API → `RawEvent`) — key `TICKETMASTER_API_KEY`.
-- `WikidataEnricher` (SPARQL; CC0; backfill official website/links) — **no key**.
-- `GeofabrikAdapter` (Romania `.osm.pbf` bulk) — **no key**.
+- `WikidataEnricher` (SPARQL; CC0; backfill official website/links) — **no key**. ✅ **built**
+  (`apps/places/enrichment/wikidata.py`; run via `enrich_places --wikidata`).
+- `GeofabrikAdapter` (Romania `.osm.pbf` bulk) — **no key**. _Deferred:_ needs the heavy
+  `pyosmium` C dependency; OSM coverage is already provided by the Overpass + Overture adapters.
 - All behind settings/flags; reuse `SourceAdapter` / `EventSource` seams; attribution
   recorded per source.
 

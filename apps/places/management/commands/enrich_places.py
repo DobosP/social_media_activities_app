@@ -26,6 +26,11 @@ class Command(BaseCommand):
             action="store_true",
             help="Also enrich via Google Places (requires GOOGLE_PLACES_ENABLED + key).",
         )
+        parser.add_argument(
+            "--wikidata",
+            action="store_true",
+            help="Backfill official website from Wikidata (SPARQL, CC0, no key).",
+        )
 
     def handle(self, *args, **opts):
         qs = Place.objects.all().order_by("id")
@@ -48,6 +53,11 @@ class Command(BaseCommand):
             self._parse_hours(place, counts, dry_run=opts["dry_run"])
             if enricher is not None and not opts["dry_run"]:
                 self._google(place, enricher, counts)
+
+        if opts["wikidata"] and not opts["dry_run"]:
+            from apps.places.enrichment.wikidata import WikidataEnricher
+
+            counts["wikidata_enriched"] = WikidataEnricher().enrich_places(list(qs))
 
         self._report(counts, opts["dry_run"])
 
@@ -85,3 +95,5 @@ class Command(BaseCommand):
                 f"  google: enriched={counts['google_enriched']} "
                 f"unresolved={counts['google_unresolved']} errors={counts['google_error']}"
             )
+        if counts["wikidata_enriched"]:
+            self.stdout.write(f"  wikidata: website backfilled={counts['wikidata_enriched']}")

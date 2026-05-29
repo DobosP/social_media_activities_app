@@ -192,6 +192,8 @@ INGEST_USER_AGENT = env(
     "INGEST_USER_AGENT",
     default="social-activities-app/0.1 (nonprofit; contact: you@example.org)",
 )
+# Wikidata SPARQL endpoint for the no-key website enricher (CC0).
+WIKIDATA_SPARQL_URL = env("WIKIDATA_SPARQL_URL", default="https://query.wikidata.org/sparql")
 
 # --- D6 media ---
 # Image bytes live in object storage; the local backend is the dev/test default.
