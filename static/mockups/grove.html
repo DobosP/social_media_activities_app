@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grove · Social Activities mockup</title>
+<style>
+  /* ============ "Grove" — warm, friendly community · light + dark ============ */
+  :root{
+    --cream:#fdf7ec; --surface:#fffdf8; --raised:#ffffff; --field:#ffffff; --ink:#26302a; --soft:#6d776e; --line:#eee4d2;
+    --leaf:#3f8f5b; --leaf-d:#2c6a42; --leaf-ink:#2c6a42; --sky:#5b9bd5; --sun:#f3b340; --berry:#e8718a; --plum:#8b6fc4;
+    --radius:24px; --radius-sm:16px; --shadow:0 2px 0 var(--line),0 14px 30px -18px rgba(44,106,66,.35);
+    --maxw:1060px; --font:ui-rounded,"SF Pro Rounded",system-ui,-apple-system,"Segoe UI",Roboto,Inter,sans-serif;
+  }
+  :root[data-theme="dark"]{
+    --cream:#14160f; --surface:#1d2016; --raised:#262a1b; --field:#201f17; --ink:#f1efe2; --soft:#a7a895; --line:#2f3322;
+    --leaf-d:#8fd6a6; --leaf-ink:#8fd6a6;
+    --shadow:0 2px 0 var(--line),0 16px 34px -20px rgba(0,0,0,.8);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--cream);color:var(--ink);font-family:var(--font);line-height:1.6;-webkit-font-smoothing:antialiased;transition:background .2s,color .2s}
+  @media (prefers-reduced-motion: reduce){*{transition:none!important}}
+  a{color:var(--leaf-d);text-decoration:none}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 22px}
+  .icon{width:1.1em;height:1.1em;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.15em}
+
+  header.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--cream) 85%,transparent);backdrop-filter:blur(10px)}
+  .top .wrap{display:flex;align-items:center;gap:12px;height:70px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.12rem}
+  .brand .logo{width:38px;height:38px;border-radius:13px;display:grid;place-items:center;color:#fff;background:var(--leaf);box-shadow:0 6px 14px -6px var(--leaf)}
+  nav.main{display:flex;gap:4px;margin-left:6px}
+  nav.main a{padding:9px 15px;border-radius:999px;color:var(--soft);font-weight:700;font-size:.92rem}
+  nav.main a:hover{background:var(--raised);color:var(--ink)}
+  nav.main a.active{background:var(--leaf);color:#fff}
+  .spacer{flex:1}
+  .pill{display:inline-flex;align-items:center;gap:7px;background:var(--surface);border:2px solid var(--line);border-radius:999px;padding:7px 13px;font-weight:700;font-size:.84rem;color:var(--leaf-d)}
+  .iconbtn{display:grid;place-items:center;width:42px;height:42px;border-radius:13px;border:2px solid var(--line);background:var(--surface);color:var(--soft);cursor:pointer}
+  .iconbtn:hover{color:var(--ink)}
+  .avatar{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-weight:800;color:#fff;background:var(--berry);border:3px solid var(--surface);box-shadow:var(--shadow)}
+  @media (max-width:860px){nav.main,.pill{display:none}}
+
+  .hero .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:24px;align-items:center;padding:26px 22px 14px}
+  @media (max-width:780px){.hero .wrap{grid-template-columns:1fr;text-align:center}}
+  .hero h1{font-size:2.3rem;line-height:1.12;letter-spacing:-.02em;margin:.2rem 0}
+  .hero h1 .hl{color:var(--leaf);position:relative;white-space:nowrap}
+  .hero h1 .hl::after{content:"";position:absolute;left:0;right:0;bottom:4px;height:10px;background:color-mix(in srgb,var(--sun) 60%,transparent);z-index:-1;border-radius:6px}
+  .hero p{color:var(--soft);font-size:1.08rem;max-width:44ch}
+  @media (max-width:780px){.hero p{margin-inline:auto}}
+  .cta{display:flex;gap:12px;margin-top:16px;flex-wrap:wrap}
+  @media (max-width:780px){.cta{justify-content:center}}
+  .btn{display:inline-flex;align-items:center;gap:9px;border:0;cursor:pointer;font:inherit;font-weight:800;padding:13px 22px;border-radius:999px;background:var(--leaf);color:#fff;box-shadow:0 8px 18px -8px var(--leaf)}
+  .btn:hover{transform:translateY(-1px)}
+  .btn.alt{background:var(--surface);color:var(--ink);border:2px solid var(--line);box-shadow:none}
+  .heroart{width:100%;height:auto;display:block;filter:drop-shadow(0 20px 30px -18px rgba(44,106,66,.5))}
+
+  main{padding:8px 0 110px}
+  section{margin:34px 0}
+  .sec-head{display:flex;align-items:center;justify-content:space-between;margin:0 0 16px}
+  .sec-head h2{font-size:1.32rem;letter-spacing:-.01em;margin:0;display:flex;align-items:center;gap:9px}
+  .sec-head h2 .e{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;color:#fff}
+  .sec-head a{color:var(--leaf-d);font-weight:800;font-size:.9rem}
+
+  .grid{display:grid;gap:18px;grid-template-columns:repeat(3,1fr)}
+  @media (max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:600px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--surface);border:2px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);transition:transform .15s}
+  .card:hover{transform:translateY(-4px)}
+  .card .strip{height:10px}
+  .card .body{padding:16px 18px 18px}
+  .card h3{margin:.2rem 0 .4rem;font-size:1.12rem}
+  .chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:6px}
+  .chip2{font-size:.76rem;font-weight:800;padding:4px 11px;border-radius:999px}
+  .t-sport{background:rgba(243,179,64,.18);color:#9a6b10}
+  .t-read{background:rgba(139,111,196,.18);color:#5b4685}
+  .t-out,.t-cohort{background:rgba(63,143,91,.16);color:var(--leaf-ink)}
+  .t-kids{background:rgba(91,155,213,.2);color:#2f6aa0}
+  [data-theme="dark"] .t-sport{background:rgba(243,179,64,.22);color:#f3c468}
+  [data-theme="dark"] .t-read{background:rgba(139,111,196,.28);color:#c8b6ef}
+  [data-theme="dark"] .t-kids{background:rgba(91,155,213,.28);color:#a8cdee}
+  .meta{color:var(--soft);font-size:.88rem;display:flex;align-items:center;gap:7px;margin:.25rem 0}
+  .heart{float:right;color:var(--berry);font-weight:800;font-size:.86rem;display:inline-flex;align-items:center;gap:4px}
+  .vote{margin:12px 0 4px;background:var(--raised);border:2px solid var(--line);border-radius:14px;padding:10px 12px}
+  .vrow{display:flex;justify-content:space-between;font-size:.8rem;font-weight:700;color:var(--soft);margin-bottom:6px}
+  .bar{height:10px;border-radius:99px;background:var(--line);overflow:hidden}
+  .bar>i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--sun),var(--leaf))}
+  .joinbtn{display:block;width:100%;margin-top:12px;background:var(--leaf);color:#fff;border:0;font:inherit;font-weight:800;padding:12px;border-radius:14px;cursor:pointer}
+  .joinbtn.soft{background:color-mix(in srgb,var(--leaf) 16%,var(--surface));color:var(--leaf-d)}
+
+  .kids{background:linear-gradient(135deg,var(--surface),color-mix(in srgb,var(--sky) 12%,var(--surface)));border:2px dashed color-mix(in srgb,var(--sky) 45%,var(--line))}
+  .kids .strip{background:var(--sky)}
+
+  .evgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  @media (max-width:820px){.evgrid{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:480px){.evgrid{grid-template-columns:1fr}}
+  .ev{border-radius:18px;padding:16px;color:#fff;min-height:110px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:var(--shadow)}
+  .ev .when{font-weight:800;opacity:.9;font-size:.8rem}.ev h4{margin:0;font-size:1.05rem}
+
+  .placewrap{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:600px){.placewrap{grid-template-columns:1fr}}
+  .place{display:flex;align-items:center;gap:13px;background:var(--surface);border:2px solid var(--line);border-radius:18px;padding:13px 15px}
+  .place .ic{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;color:#fff;flex:none}
+  .place .open{margin-left:auto;font-size:.76rem;font-weight:800;color:var(--leaf-ink);background:rgba(63,143,91,.16);padding:4px 10px;border-radius:999px}
+
+  .detail{display:grid;grid-template-columns:1.6fr 1fr;gap:18px}
+  @media (max-width:820px){.detail{grid-template-columns:1fr}}
+  .panel{background:var(--surface);border:2px solid var(--line);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+  .members{display:flex;align-items:center;margin:12px 0}
+  .members .a{width:38px;height:38px;border-radius:50%;border:3px solid var(--surface);margin-left:-10px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:.85rem}
+  .members .a:first-child{margin-left:0}
+  .post{padding:11px 0;border-top:2px solid var(--line)}.post:first-child{border-top:0}
+  .post .who{font-weight:800}.post .when{color:var(--soft);font-size:.8rem}
+  .compose{display:flex;gap:8px;margin-top:12px}
+  .compose input{flex:1;border:2px solid var(--line);background:var(--field);border-radius:14px;padding:11px 14px;font:inherit;color:var(--ink)}
+  .stat{display:flex;justify-content:space-between;padding:11px 0;border-bottom:2px solid var(--line);font-size:.95rem}
+  .stat:last-of-type{border-bottom:0}.stat b{font-weight:800}
+  .safe{display:flex;gap:11px;align-items:flex-start;background:rgba(63,143,91,.12);color:var(--leaf-ink);border-radius:16px;padding:13px;font-size:.86rem;font-weight:600;margin-top:8px}
+
+  footer{margin-top:30px}
+  footer .wrap{display:flex;gap:14px;flex-wrap:wrap;align-items:center;padding:24px 22px;color:var(--soft);font-weight:600;font-size:.88rem}
+  footer .b{background:var(--surface);border:2px solid var(--line);border-radius:999px;padding:6px 13px}
+  .tabbar{position:fixed;bottom:0;left:0;right:0;display:none;justify-content:space-around;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(10px);border-top:2px solid var(--line);padding:8px 0 calc(8px + env(safe-area-inset-bottom));z-index:30}
+  .tabbar a{display:grid;justify-items:center;gap:3px;color:var(--soft);font-size:.68rem;font-weight:800}.tabbar a.active{color:var(--leaf)}
+  @media (max-width:820px){.tabbar{display:flex}main{padding-bottom:88px}}
+  .mock-flag{position:fixed;top:8px;right:8px;background:var(--leaf-d);color:var(--cream);font-size:.66rem;font-weight:800;padding:4px 10px;border-radius:999px;z-index:50}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s7-6.4 7-11a7 7 0 1 0-14 0c0 4.6 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9h18M8 2.5v4M16 2.5v4"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 5.5a3.2 3.2 0 0 1 0 6M22 20a6 6 0 0 0-4.5-5.8"/></symbol>
+  <symbol id="i-msg" viewBox="0 0 24 24"><path d="M21 15a3 3 0 0 1-3 3H8l-5 4V6a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3Z"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22c5-2 8-6 8-11V5l-8-3-8 3v6c0 5 3 9 8 11Z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5 5-2Z"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2Z"/><path d="M19 17H6a2 2 0 0 0-2 2"/></symbol>
+  <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M5 19c0-8 6-13 14-14 0 9-5 15-14 14Z"/><path d="M5 19c3-4 6-6 9-7"/></symbol>
+  <symbol id="i-ball" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3v18M5 6c3 2 5 5 5 6s-2 4-5 6M19 6c-3 2-5 5-5 6s2 4 5 6"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-7-4.6-9.3-9C1 7.6 3 4.5 6.2 4.5c1.9 0 3.2 1 3.8 2 .6-1 1.9-2 3.8-2 3.2 0 5.2 3.1 3.5 6.5C19 15.4 12 20 12 20Z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5 3.7 3.7M20.3 20.3 19 19M19 5l1.3-1.3M3.7 20.3 5 19"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></symbol>
+</svg>
+<span class="mock-flag">MOCKUP · Grove</span>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#"><span class="logo"><svg class="icon" style="width:22px;height:22px"><use href="#i-leaf"/></svg></span> Social Activities</a>
+    <nav class="main"><a class="active" href="#">Discover</a><a href="#">Activities</a><a href="#">What's on</a><a href="#">Messages</a></nav>
+    <span class="spacer"></span>
+    <span class="pill"><svg class="icon"><use href="#i-shield"/></svg> Adult cohort</span>
+    <button class="iconbtn" id="themeBtn" title="Toggle light / dark" aria-label="Toggle light or dark mode"><svg class="icon"><use href="#i-moon"/></svg></button>
+    <span class="avatar">M</span>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <h1>Find your <span class="hl">people</span>,<br>do something <span class="hl">real</span>.</h1>
+      <p>A friendly, nonprofit way to meet up near Cluj-Napoca — sport, reading, hikes, board games — at places that are already on the map. Text-first, safe by design.</p>
+      <div class="cta">
+        <button class="btn"><svg class="icon"><use href="#i-compass"/></svg> Discover activities</button>
+        <button class="btn alt"><svg class="icon"><use href="#i-pin"/></svg> Browse places</button>
+      </div>
+    </div>
+    <svg class="heroart" viewBox="0 0 420 320" role="img" aria-label="Two friends meeting in a park">
+      <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#dff0fb"/><stop offset="1" stop-color="#eafbf0"/></linearGradient></defs>
+      <rect x="10" y="10" width="400" height="300" rx="34" fill="url(#sky)"/>
+      <circle cx="330" cy="80" r="34" fill="#f3b340"/>
+      <path d="M10 240 Q120 180 230 235 T410 220 V310 H10 Z" fill="#bfe6c9"/>
+      <path d="M10 270 Q160 230 290 275 T410 268 V310 H10 Z" fill="#9ad6ab"/>
+      <rect x="78" y="150" width="12" height="70" rx="5" fill="#8a6a4f"/>
+      <circle cx="84" cy="140" r="34" fill="#5bb274"/><circle cx="62" cy="155" r="22" fill="#4aa365"/><circle cx="108" cy="155" r="24" fill="#4aa365"/>
+      <circle cx="200" cy="170" r="18" fill="#e8718a"/><rect x="184" y="190" width="32" height="52" rx="15" fill="#8b6fc4"/>
+      <circle cx="258" cy="176" r="18" fill="#f0b48a"/><rect x="242" y="196" width="32" height="48" rx="15" fill="#3f8f5b"/>
+      <circle cx="300" cy="232" r="15" fill="#ef8a3c"/><path d="M285 232h30M300 217v30M289 221c7 4 11 8 11 11s-4 7-11 11M311 221c-7 4-11 8-11 11s4 7 11 11" stroke="#c25e1c" stroke-width="2" fill="none"/>
+    </svg>
+  </div>
+</section>
+
+<main class="wrap">
+  <section>
+    <div class="sec-head"><h2><span class="e" style="background:var(--leaf)"><svg class="icon"><use href="#i-heart"/></svg></span> Recommended for you</h2><a href="#">See all →</a></div>
+    <div class="grid">
+      <article class="card">
+        <div class="strip" style="background:var(--sun)"></div>
+        <div class="body">
+          <span class="heart"><svg class="icon"><use href="#i-heart"/></svg>92%</span>
+          <div class="chips"><span class="chip2 t-sport">🏀 Basketball</span><span class="chip2 t-cohort">Adult</span></div>
+          <h3>Tuesday pick-up game</h3>
+          <p class="meta"><svg class="icon"><use href="#i-cal"/></svg> Tue 3 Jun, 19:00 · <svg class="icon"><use href="#i-pin"/></svg> Sala Sporturilor</p>
+          <div class="vote"><div class="vrow"><span>2 of 3 approved</span><span>4 / 8 spots</span></div><div class="bar"><i style="width:66%"></i></div></div>
+          <button class="joinbtn">Ask to join</button>
+        </div>
+      </article>
+      <article class="card">
+        <div class="strip" style="background:var(--plum)"></div>
+        <div class="body">
+          <span class="heart"><svg class="icon"><use href="#i-heart"/></svg>88%</span>
+          <div class="chips"><span class="chip2 t-read">📖 Reading</span><span class="chip2 t-cohort">Adult</span></div>
+          <h3>Sunday reading circle</h3>
+          <p class="meta"><svg class="icon"><use href="#i-cal"/></svg> Sun 8 Jun, 11:00 · <svg class="icon"><use href="#i-pin"/></svg> Biblioteca Județeană</p>
+          <div class="vote"><div class="vrow"><span>Open to join</span><span>5 / 12 spots</span></div><div class="bar"><i style="width:100%"></i></div></div>
+          <button class="joinbtn soft">Ask to join</button>
+        </div>
+      </article>
+      <article class="card kids">
+        <div class="strip"></div>
+        <div class="body">
+          <span class="heart" style="color:var(--sky)"><svg class="icon"><use href="#i-shield"/></svg>Kids</span>
+          <div class="chips"><span class="chip2 t-kids">⚽ Football</span><span class="chip2 t-kids">Guardian-accompanied</span></div>
+          <h3>Saturday kids' football</h3>
+          <p class="meta"><svg class="icon"><use href="#i-cal"/></svg> Sat 7 Jun, 10:00 · <svg class="icon"><use href="#i-pin"/></svg> Parcul Rozelor</p>
+          <div class="vote"><div class="vrow"><span>Same-age cohort only</span><span>6 / 12 kids</span></div><div class="bar"><i style="width:50%"></i></div></div>
+          <button class="joinbtn" style="background:var(--sky)">Join with a guardian</button>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2><span class="e" style="background:var(--berry)"><svg class="icon"><use href="#i-cal"/></svg></span> What's happening</h2><a href="#">All events →</a></div>
+    <div class="evgrid">
+      <div class="ev" style="background:linear-gradient(135deg,#8b6fc4,#e8718a)"><span class="when">6–8 JUN</span><h4>Jazz in the Park</h4></div>
+      <div class="ev" style="background:linear-gradient(135deg,#5b9bd5,#3f8f5b)"><span class="when">12–15 JUN</span><h4>Zilele Clujului</h4></div>
+      <div class="ev" style="background:linear-gradient(135deg,#f3b340,#e8718a)"><span class="when">EVERY SAT</span><h4>parkrun 5k</h4></div>
+      <div class="ev" style="background:linear-gradient(135deg,#3f8f5b,#5b9bd5)"><span class="when">FRI 6 JUN</span><h4>Board-game night</h4></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2><span class="e" style="background:var(--sky)"><svg class="icon"><use href="#i-pin"/></svg></span> Places near you</h2><a href="#">Open map →</a></div>
+    <div class="placewrap">
+      <div class="place"><span class="ic" style="background:var(--sun)"><svg class="icon"><use href="#i-ball"/></svg></span><div><b>Sala Sporturilor</b><br><span class="meta">Basketball · 1.2 km</span></div><span class="open">Open</span></div>
+      <div class="place"><span class="ic" style="background:var(--plum)"><svg class="icon"><use href="#i-book"/></svg></span><div><b>Biblioteca Județeană</b><br><span class="meta">Reading · 0.8 km</span></div><span class="open">Open</span></div>
+      <div class="place"><span class="ic" style="background:var(--leaf)"><svg class="icon"><use href="#i-leaf"/></svg></span><div><b>Parcul Central</b><br><span class="meta">Outdoor · 0.5 km</span></div><span class="open">Open</span></div>
+      <div class="place"><span class="ic" style="background:var(--berry)"><svg class="icon"><use href="#i-users"/></svg></span><div><b>Cafe Meron</b><br><span class="meta">Board games · 0.6 km</span></div><span class="open">Open</span></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2><span class="e" style="background:var(--leaf)"><svg class="icon"><use href="#i-ball"/></svg></span> Activity detail</h2><a href="#">Back →</a></div>
+    <div class="detail">
+      <div class="panel">
+        <div class="chips"><span class="chip2 t-sport">🏀 Basketball</span><span class="chip2 t-cohort">Adult cohort</span></div>
+        <h3 style="font-size:1.5rem;margin:.3rem 0">Tuesday pick-up at Sala Sporturilor</h3>
+        <p class="meta"><svg class="icon"><use href="#i-cal"/></svg> Tue 3 Jun, 19:00–20:30 &nbsp; <svg class="icon"><use href="#i-pin"/></svg> Sala Sporturilor Horia Demian</p>
+        <p>Friendly 5-a-side, all levels welcome. Teams rotate every game so everyone plays. Hosted by Andrei 👋</p>
+        <div class="members"><span class="a" style="background:var(--leaf)">A</span><span class="a" style="background:var(--berry)">M</span><span class="a" style="background:var(--plum)">D</span><span class="a" style="background:var(--sun)">R</span></div>
+        <h4 style="margin:14px 0 2px">Group thread <span style="color:var(--soft);font-weight:600;font-size:.85rem">· text-first, members only</span></h4>
+        <div class="post"><span class="who">Andrei</span> <span class="when">· 2h ago</span><div>Bring a light + dark shirt if you can 🏀</div></div>
+        <div class="post"><span class="who">Maria</span> <span class="when">· 1h ago</span><div>In! Can someone bring a spare ball?</div></div>
+        <div class="compose"><input placeholder="Say hi to the group…"><button class="btn" style="padding:11px 16px"><svg class="icon"><use href="#i-msg"/></svg></button></div>
+      </div>
+      <aside class="panel">
+        <div class="stat"><span>Join by vote</span><b>66% needed</b></div>
+        <div class="vote" style="margin:10px 0"><div class="vrow"><span>2 of 3 approved</span><span>1 more!</span></div><div class="bar"><i style="width:66%"></i></div></div>
+        <div class="stat"><span>Spots</span><b>4 / 8</b></div>
+        <div class="stat"><span>Host</span><b>Andrei P.</b></div>
+        <div class="stat"><span>Cohort</span><b>Adult (18+)</b></div>
+        <button class="joinbtn" style="border-radius:999px;padding:13px">Ask to join</button>
+        <div class="safe"><svg class="icon" style="width:18px;height:18px;flex:none"><use href="#i-shield"/></svg> You only meet people in your own age cohort. Report anything that feels off — always.</div>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap"><span class="b">💚 Nonprofit</span><span class="b">No ads</span><span class="b">No tracking</span><span class="b">Open source</span><span class="b">Română · English</span></div>
+</footer>
+
+<nav class="tabbar">
+  <a class="active" href="#"><svg class="icon"><use href="#i-compass"/></svg>Discover</a>
+  <a href="#"><svg class="icon"><use href="#i-users"/></svg>Activities</a>
+  <a href="#"><svg class="icon"><use href="#i-cal"/></svg>What's on</a>
+  <a href="#"><svg class="icon"><use href="#i-msg"/></svg>Messages</a>
+</nav>
+
+<script>
+  const root=document.documentElement, btn=document.getElementById('themeBtn'), use=btn.querySelector('use');
+  function set(t){root.setAttribute('data-theme',t);use.setAttribute('href',t==='dark'?'#i-sun':'#i-moon');}
+  set(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+  btn.addEventListener('click',()=>set(root.getAttribute('data-theme')==='dark'?'light':'dark'));
+</script>
+</body>
+</html>

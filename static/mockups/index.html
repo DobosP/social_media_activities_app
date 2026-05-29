@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UI mockups · Social Activities</title>
+<style>
+  :root{--bg:#0f1117;--surf:#171a23;--surf2:#1f2331;--ink:#eceefa;--muted:#9aa0bd;--line:#2a2f42;
+    --indigo:#7c83ff;--teal:#2dd4bf;--font:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Inter,sans-serif}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 24px}
+  a{color:var(--teal)}
+  header{padding:54px 0 6px;text-align:center;position:relative;overflow:hidden}
+  header::before{content:"";position:absolute;inset:-60% 0 auto;height:340px;
+    background:radial-gradient(50% 100% at 30% 0,rgba(124,131,255,.25),transparent 70%),radial-gradient(50% 100% at 75% 10%,rgba(45,212,191,.2),transparent 70%);z-index:0}
+  header *{position:relative;z-index:1}
+  .eyebrow{letter-spacing:.18em;text-transform:uppercase;font-size:.74rem;font-weight:700;color:var(--teal)}
+  h1{font-size:2.4rem;letter-spacing:-.025em;margin:.3rem 0}
+  .sub{color:var(--muted);max-width:60ch;margin:0 auto;font-size:1.05rem}
+  .principles{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:22px 0 6px}
+  .principles span{background:var(--surf);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:.84rem;font-weight:600;color:var(--muted)}
+  .principles b{color:var(--ink)}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin:38px 0}
+  @media (max-width:760px){.grid{grid-template-columns:1fr}}
+  .opt{display:flex;flex-direction:column;background:var(--surf);border:1px solid var(--line);border-radius:20px;overflow:hidden;color:inherit;text-decoration:none;transition:transform .15s,border-color .15s}
+  .opt:hover{transform:translateY(-4px);border-color:var(--indigo)}
+  .opt .prev{height:150px;display:grid;place-items:center;position:relative}
+  .opt .modes{position:absolute;top:12px;right:12px;display:flex;gap:6px}
+  .opt .modes b{font-size:.66rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;background:rgba(0,0,0,.35);color:#fff;padding:4px 8px;border-radius:999px;backdrop-filter:blur(4px)}
+  .opt .swatches{position:absolute;bottom:10px;left:12px;display:flex;gap:6px}
+  .opt .swatches i{width:18px;height:18px;border-radius:6px;border:2px solid rgba(255,255,255,.45)}
+  .opt .b{padding:20px}
+  .opt .tag{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--teal)}
+  .opt h2{margin:.25rem 0 .4rem;font-size:1.5rem;letter-spacing:-.01em}
+  .opt p{color:var(--muted);font-size:.95rem;margin:0 0 12px}
+  .opt ul{margin:0;padding-left:18px;color:var(--muted);font-size:.88rem}
+  .opt .go{margin-top:16px;font-weight:800;color:var(--indigo)}
+  .name{display:inline-block;padding:6px 14px;border-radius:9px;font-weight:800;letter-spacing:-.01em;font-size:1.05rem}
+  .tip{text-align:center;color:var(--muted);font-size:.92rem;margin:-8px 0 0}
+  .tip kbd{background:var(--surf2);border:1px solid var(--line);border-radius:6px;padding:1px 7px;font:inherit;font-size:.85em}
+  .section{background:var(--surf);border:1px solid var(--line);border-radius:18px;padding:24px;margin:30px 0}
+  .section h3{margin:0 0 12px;font-size:1.15rem}
+  .stack{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+  @media (max-width:680px){.stack{grid-template-columns:1fr}}
+  .stack .row{display:flex;gap:12px;align-items:flex-start}
+  .stack .row .k{font-weight:700;min-width:120px;color:var(--ink)}
+  .stack .row .v{color:var(--muted);font-size:.92rem}
+  .stack .v code{background:var(--surf2);padding:1px 6px;border-radius:5px;font-size:.85em}
+  .more{color:var(--muted);font-size:.9rem;text-align:center;margin-top:8px}
+  footer{color:var(--muted);font-size:.85rem;text-align:center;padding:26px 0 50px}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="eyebrow">Interface redesign · 2 versions · light + dark</div>
+    <h1>A modern, fast face for Social&nbsp;Activities</h1>
+    <p class="sub">Two visual languages — <b>Normal</b> and <b>Grove</b> — each with full <b>light &amp; dark mode</b>.
+      Real, clickable HTML of your actual screens (Discover, join-by-vote, what's-on, places, activity detail),
+      built fast, accessible, and true to the text-first, privacy-first, nonprofit ethos.</p>
+    <div class="principles">
+      <span><b>⚡ Fast</b></span><span><b>🌗 Light + dark</b></span><span><b>🔒 No trackers</b></span>
+      <span><b>📝 Text-first</b></span><span><b>♿ WCAG-minded</b></span><span><b>📱 Mobile-first</b></span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <p class="tip">💡 Each mockup has a <kbd>🌙 / ☀️</kbd> toggle in the top-right of its header — click it to flip light/dark.</p>
+  <div class="grid">
+    <a class="opt" href="normal.html">
+      <div class="prev" style="background:linear-gradient(135deg,#4f46e5,#0ea5e9)">
+        <span class="name" style="background:rgba(255,255,255,.16);color:#fff">Normal</span>
+        <div class="modes"><b>☀ Light</b><b>🌙 Dark</b></div>
+        <div class="swatches"><i style="background:#4f46e5"></i><i style="background:#0ea5e9"></i><i style="background:#0b1120"></i><i style="background:#f8fafc"></i></div>
+      </div>
+      <div class="b">
+        <div class="tag">Clean &amp; neutral</div>
+        <h2>Normal</h2>
+        <p>Crisp slate + indigo, subtle depth, professional. The safe, modern default that suits any audience.</p>
+        <ul><li>Neutral palette, low-key</li><li>Slate light ↔ deep-navy dark</li><li>App-like nav + mobile tab-bar</li></ul>
+        <div class="go">Open Normal →</div>
+      </div>
+    </a>
+
+    <a class="opt" href="grove.html">
+      <div class="prev" style="background:linear-gradient(135deg,#3f8f5b,#5b9bd5)">
+        <span class="name" style="background:#fff;color:#2c6a42">Grove</span>
+        <div class="modes"><b>☀ Light</b><b>🌙 Dark</b></div>
+        <div class="swatches"><i style="background:#3f8f5b"></i><i style="background:#f3b340"></i><i style="background:#5b9bd5"></i><i style="background:#14160f"></i></div>
+      </div>
+      <div class="b">
+        <div class="tag">Warm &amp; friendly</div>
+        <h2>Grove</h2>
+        <p>Rounded, soft, leaf-green with a generated SVG illustration. Welcoming for families &amp; younger cohorts.</p>
+        <ul><li>Friendly &amp; playful, big tap targets</li><li>Cream light ↔ warm-charcoal dark</li><li>Highlights the kid-safe angle</li></ul>
+        <div class="go">Open Grove →</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="section">
+    <h3>How these become production (open-source, fast)</h3>
+    <div class="stack">
+      <div class="row"><div class="k">Type</div><div class="v"><b>Inter</b> variable font (SIL OFL), <b>self-hosted</b> + system fallback — instant first paint, no Google-Fonts call.</div></div>
+      <div class="row"><div class="k">Icons</div><div class="v"><b>Lucide</b> (ISC) as an inline SVG sprite — no icon-font, only what's used.</div></div>
+      <div class="row"><div class="k">Illustrations</div><div class="v"><b>unDraw</b> (free, recolour to brand) or generated inline SVG like Grove's hero — tiny &amp; crisp.</div></div>
+      <div class="row"><div class="k">Interactivity</div><div class="v"><b>htmx</b> + a little <b>Alpine.js</b> for fast server-rendered partials — no SPA, keeps your Django templates.</div></div>
+      <div class="row"><div class="k">Theming</div><div class="v">CSS custom properties; dark mode via a <code>data-theme</code> toggle (remembers via <code>localStorage</code> + honours <code>prefers-color-scheme</code>).</div></div>
+      <div class="row"><div class="k">Delivery</div><div class="v">One small CSS file served &amp; compressed by <b>WhiteNoise</b>. Respects <code>prefers-reduced-motion</code>. Zero trackers.</div></div>
+    </div>
+  </div>
+
+  <p class="more">Earlier explorations are still here too: <a href="aurora.html">Aurora</a> (vibrant app) · <a href="reader.html">Reader</a> (editorial). · Pick a direction (or a mix) and I'll wire it into the live Django templates.</p>
+</main>
+
+<footer class="wrap">Mockups for the Social Activities app · open each in your browser · not yet wired to the backend.</footer>
+</body>
+</html>

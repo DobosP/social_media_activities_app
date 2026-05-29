@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reader · Social Activities mockup</title>
+<style>
+  /* ============ Direction B — "Reader": text-first editorial, calm, fast ============ */
+  :root{
+    --paper:#fbf9f4; --panel:#fffdf8; --ink:#1c231f; --soft:#5d665f; --rule:#e2ded2; --rule-2:#d3cebe;
+    --green:#285a3c; --terra:#a8552f; --tint:#f0eee5; --maxw:1000px;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Charter,Georgia,Cambria,serif;
+    --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Inter,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.6;
+    font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+  @media (prefers-reduced-motion: reduce){*{transition:none!important}}
+  a{color:var(--green);text-decoration:none}a:hover{text-decoration:underline;text-underline-offset:3px}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+  .icon{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.12em}
+  .serif{font-family:var(--serif)}
+
+  /* masthead */
+  .masthead{border-bottom:2px solid var(--ink)}
+  .mast-top{display:flex;align-items:baseline;gap:16px;padding:16px 24px 12px;max-width:var(--maxw);margin:0 auto}
+  .logo{font-family:var(--serif);font-weight:700;font-size:1.55rem;letter-spacing:-.01em}
+  .logo .amp{color:var(--terra)}
+  .tagline{color:var(--soft);font-size:.82rem;font-style:italic;margin-left:auto}
+  nav.mast{border-top:1px solid var(--rule);max-width:var(--maxw);margin:0 auto;display:flex;gap:26px;
+    padding:9px 24px;font-size:.82rem;letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+  nav.mast a{color:var(--soft)} nav.mast a.active{color:var(--ink);border-bottom:2px solid var(--terra);padding-bottom:7px;margin-bottom:-9px}
+  nav.mast .right{margin-left:auto;display:flex;gap:18px}
+  nav.mast .cohort{color:var(--green)}
+
+  /* dateline / intro */
+  .dateline{display:flex;justify-content:space-between;align-items:baseline;color:var(--soft);
+    font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;padding:14px 0 0}
+  .intro{font-family:var(--serif);font-size:1.9rem;line-height:1.25;margin:.3rem 0 .2rem;max-width:30ch}
+  .intro .lede{color:var(--soft)}
+  .sub{color:var(--soft);max-width:60ch}
+  hr.rule{border:0;border-top:1px solid var(--rule);margin:26px 0}
+  hr.thin{border:0;border-top:1px solid var(--rule);margin:0}
+
+  .label{font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--terra);font-weight:700;
+    display:flex;align-items:center;gap:12px;margin:30px 0 4px}
+  .label::after{content:"";flex:1;height:1px;background:var(--rule-2)}
+
+  /* recommended — editorial rows */
+  .feed{margin:6px 0}
+  .item{display:grid;grid-template-columns:1fr auto;gap:18px;padding:18px 0;border-bottom:1px solid var(--rule)}
+  .item:last-child{border-bottom:0}
+  .item h3{font-family:var(--serif);font-size:1.35rem;font-weight:600;margin:.1rem 0 .25rem;line-height:1.25}
+  .kicker{font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);font-weight:700}
+  .kicker .type{color:var(--green)}
+  .item p{margin:.2rem 0 0;color:#39423b;max-width:62ch}
+  .meta{color:var(--soft);font-size:.86rem;margin-top:.35rem}
+  .aside{text-align:right;min-width:140px;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+  .match{font-family:var(--serif);font-size:1.5rem;color:var(--terra)}
+  .match small{display:block;font-family:var(--sans);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
+  .progress{font-size:.78rem;color:var(--soft)}
+  .tline{width:130px;height:3px;background:var(--tint);margin-top:3px}
+  .tline>i{display:block;height:100%;background:var(--green)}
+  .req{font-size:.82rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border:1px solid var(--green);
+    color:var(--green);padding:6px 12px;border-radius:2px;background:none;cursor:pointer;font-family:var(--sans)}
+  .req:hover{background:var(--green);color:#fff}
+  @media (max-width:640px){.item{grid-template-columns:1fr}.aside{align-items:flex-start;text-align:left}.tline{width:100%}}
+
+  /* what's on — agenda */
+  .agenda{column-count:2;column-gap:40px}
+  @media (max-width:640px){.agenda{column-count:1}}
+  .ag{break-inside:avoid;display:flex;gap:14px;padding:11px 0;border-bottom:1px solid var(--rule)}
+  .ag .d{font-family:var(--serif);text-align:center;min-width:46px;color:var(--terra);line-height:1}
+  .ag .d b{font-size:1.4rem;display:block} .ag .d span{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--soft)}
+  .ag h4{margin:0;font-size:1rem} .ag .meta{margin-top:1px}
+
+  /* places — definition list */
+  .places{display:grid;grid-template-columns:1fr 1fr;gap:0 40px}
+  @media (max-width:640px){.places{grid-template-columns:1fr}}
+  .pl{display:flex;align-items:baseline;gap:10px;padding:10px 0;border-bottom:1px solid var(--rule)}
+  .pl .name{font-weight:600} .pl .dots{flex:1;border-bottom:1px dotted var(--rule-2);transform:translateY(-4px)}
+  .pl .open{color:var(--green);font-size:.78rem;font-weight:700}
+
+  /* article detail */
+  .article{display:grid;grid-template-columns:1fr 260px;gap:40px;margin-top:8px}
+  @media (max-width:780px){.article{grid-template-columns:1fr}}
+  .article h2{font-family:var(--serif);font-size:2rem;line-height:1.2;margin:.2rem 0 .3rem;font-weight:600}
+  .byline{color:var(--soft);font-size:.86rem;border-bottom:1px solid var(--rule);padding-bottom:14px;margin-bottom:14px}
+  .article p{max-width:64ch}
+  .thread{margin-top:18px;border-top:2px solid var(--ink);padding-top:8px}
+  .thread .t-label{font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;color:var(--soft);font-weight:700}
+  .post{padding:12px 0;border-bottom:1px solid var(--rule)}
+  .post .who{font-weight:700} .post .when{color:var(--soft);font-size:.8rem}
+  .sidebar dl{margin:0;border-top:1px solid var(--rule)}
+  .sidebar .r{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--rule);font-size:.92rem}
+  .sidebar .r dt{color:var(--soft)} .sidebar .r dd{margin:0;font-weight:600}
+  .sidebar .big{font-family:var(--serif);font-size:1.05rem}
+  .joinbtn{display:block;width:100%;text-align:center;margin-top:16px;background:var(--green);color:#fff;border:0;
+    padding:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;font-size:.85rem;border-radius:2px;cursor:pointer;font-family:var(--sans)}
+  .note{font-size:.84rem;color:var(--soft);font-style:italic;margin-top:14px;border-left:2px solid var(--terra);padding-left:12px}
+
+  footer{border-top:2px solid var(--ink);margin-top:50px}
+  footer .wrap{display:flex;gap:18px;flex-wrap:wrap;padding:18px 24px;color:var(--soft);font-size:.84rem;align-items:center}
+  footer .sep{color:var(--rule-2)}
+  .mock-flag{position:fixed;top:8px;right:8px;background:var(--ink);color:#fff;font-size:.66rem;font-weight:700;letter-spacing:.06em;padding:4px 9px;border-radius:2px;opacity:.85}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s7-6.4 7-11a7 7 0 1 0-14 0c0 4.6 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22c5-2 8-6 8-11V5l-8-3-8 3v6c0 5 3 9 8 11Z"/><path d="m9 12 2 2 4-4"/></symbol>
+</svg>
+<span class="mock-flag">MOCKUP · Reader</span>
+
+<header class="masthead">
+  <div class="mast-top">
+    <span class="logo">Social <span class="amp">&amp;</span> Activities</span>
+    <span class="tagline">Meet people. Do real things. In person.</span>
+  </div>
+  <nav class="mast">
+    <a class="active" href="#">Discover</a>
+    <a href="#">Activities</a>
+    <a href="#">What's on</a>
+    <a href="#">Messages</a>
+    <span class="right"><span class="cohort">Adult cohort</span><a href="#">Maria</a></span>
+  </nav>
+</header>
+
+<main class="wrap">
+  <div class="dateline"><span>Cluj-Napoca</span><span>Tuesday, 3 June 2026</span></div>
+  <h1 class="intro serif">Good evening, Maria. <span class="lede">Five things worth leaving the house for this week.</span></h1>
+  <p class="sub">No feed to scroll, no notifications to chase — just real activities near you, chosen for what you actually like.</p>
+
+  <div class="label">Recommended for you nearby</div>
+  <div class="feed">
+    <article class="item">
+      <div>
+        <div class="kicker"><span class="type">Basketball</span> · Adult cohort</div>
+        <h3>Tuesday pick-up at Sala Sporturilor</h3>
+        <p>Friendly 5-a-side, all levels. Teams rotate every game so everyone plays. Hosted by Andrei.</p>
+        <div class="meta"><svg class="icon"><use href="#i-pin"/></svg> Sala Sporturilor Horia Demian · Tue 3 Jun, 19:00</div>
+      </div>
+      <div class="aside">
+        <div class="match">92%<small>match</small></div>
+        <div class="progress">2 of 3 approved · 4/8 spots<div class="tline"><i style="width:66%"></i></div></div>
+        <button class="req">Request to join</button>
+      </div>
+    </article>
+    <article class="item">
+      <div>
+        <div class="kicker"><span class="type">Reading</span> · Adult cohort</div>
+        <h3>Sunday reading circle — science fiction</h3>
+        <p>This month: <i>Project Hail Mary</i>. A quiet corner, tea provided, no homework required.</p>
+        <div class="meta"><svg class="icon"><use href="#i-pin"/></svg> Biblioteca Județeană · Sun 8 Jun, 11:00</div>
+      </div>
+      <div class="aside">
+        <div class="match">88%<small>match</small></div>
+        <div class="progress">Open to join · 5/12 spots<div class="tline"><i style="width:100%"></i></div></div>
+        <button class="req">Request to join</button>
+      </div>
+    </article>
+    <article class="item">
+      <div>
+        <div class="kicker"><span class="type">Hiking</span> · Adult cohort</div>
+        <h3>Cheile Turzii day hike</h3>
+        <p>About 12&nbsp;km, moderate pace. Bring water and proper shoes; we stop for lunch on the ridge.</p>
+        <div class="meta"><svg class="icon"><use href="#i-pin"/></svg> Meet at Piața Mihai Viteazul · Sat 14 Jun, 08:30</div>
+      </div>
+      <div class="aside">
+        <div class="match">81%<small>match</small></div>
+        <div class="progress">1 of 3 approved · 3/10 spots<div class="tline"><i style="width:33%"></i></div></div>
+        <button class="req">Request to join</button>
+      </div>
+    </article>
+  </div>
+
+  <div class="label">What's happening near you</div>
+  <div class="agenda">
+    <div class="ag"><div class="d"><b>06</b><span>Jun</span></div><div><h4>Jazz in the Park</h4><div class="meta">Festival · Parcul Central · 6–8 Jun</div></div></div>
+    <div class="ag"><div class="d"><b>12</b><span>Jun</span></div><div><h4>Zilele Clujului</h4><div class="meta">City day · Centru · 12–15 Jun</div></div></div>
+    <div class="ag"><div class="d"><b>07</b><span>Jun</span></div><div><h4>Saturday parkrun 5k</h4><div class="meta">Free · Parcul Rozelor · weekly</div></div></div>
+    <div class="ag"><div class="d"><b>06</b><span>Jun</span></div><div><h4>Board-game night</h4><div class="meta">Workshop · Cafe Meron · Fri</div></div></div>
+  </div>
+
+  <div class="label">Places around you</div>
+  <div class="places">
+    <div class="pl"><span class="name">Sala Sporturilor Horia Demian</span><span class="dots"></span><span class="open">Open · 1.2 km</span></div>
+    <div class="pl"><span class="name">Biblioteca Județeană</span><span class="dots"></span><span class="open">Open · 0.8 km</span></div>
+    <div class="pl"><span class="name">Parcul Central</span><span class="dots"></span><span class="open">Open · 0.5 km</span></div>
+    <div class="pl"><span class="name">Cafe Meron</span><span class="dots"></span><span class="open">Open · 0.6 km</span></div>
+  </div>
+
+  <hr class="rule">
+  <div class="label">Activity</div>
+  <div class="article">
+    <article>
+      <div class="kicker"><span class="type">Basketball</span> · Adult cohort</div>
+      <h2 class="serif">Tuesday pick-up at Sala Sporturilor</h2>
+      <div class="byline">Hosted by Andrei P. · Tue 3 June, 19:00–20:30 · Sala Sporturilor Horia Demian, Cluj-Napoca</div>
+      <p>Friendly 5-a-side, all levels welcome. We rotate teams every game so everyone gets to play, and we keep it
+         relaxed — it's about turning up and moving, not winning. Bring a light and a dark shirt if you can.</p>
+      <div class="thread">
+        <div class="t-label">Thread — text-first, members only</div>
+        <div class="post"><span class="who">Andrei</span> <span class="when">· 2h ago</span><div>Bring a light + dark shirt if you can, it helps with teams.</div></div>
+        <div class="post"><span class="who">Maria</span> <span class="when">· 1h ago</span><div>In! Can someone bring a spare ball?</div></div>
+      </div>
+    </article>
+    <aside class="sidebar">
+      <dl>
+        <div class="r"><dt>Join by vote</dt><dd>66% needed</dd></div>
+        <div class="r"><dt>Approvals</dt><dd class="big">2 / 3</dd></div>
+        <div class="r"><dt>Capacity</dt><dd class="big">4 / 8</dd></div>
+        <div class="r"><dt>Cohort</dt><dd>Adult (18+)</dd></div>
+        <div class="r"><dt>Host</dt><dd>Andrei P.</dd></div>
+      </dl>
+      <button class="joinbtn">Request to join</button>
+      <p class="note"><svg class="icon"><use href="#i-shield"/></svg> You only see and join activities in your own age cohort.</p>
+    </aside>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Nonprofit</span><span class="sep">/</span><span>No ads</span><span class="sep">/</span>
+    <span>No tracking</span><span class="sep">/</span><span>Open source</span><span class="sep">/</span>
+    <span>Română · English</span>
+  </div>
+</footer>
+</body>
+</html>
