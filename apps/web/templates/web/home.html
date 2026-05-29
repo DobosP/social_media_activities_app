@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block content %}
+<h1>Hi {{ user.display_name|default:user.username }}</h1>
+<p class="muted">You're in the <strong>{{ user.get_cohort_display }}</strong> cohort &mdash; you only
+  see activities for your cohort. <a href="{% url 'interests' %}">Pick your interests</a> for better
+  suggestions.</p>
+<div class="row">
+  <a class="btn" href="{% url 'activity_create' %}">Organise an activity</a>
+  <a class="btn btn-secondary" href="{% url 'places_map' %}">Find a place</a>
+</div>
+
+<h2>Recommended for you</h2>
+{% for a in recommended %}{% include "web/_activity_card.html" %}{% empty %}
+<p class="muted">No suggestions yet &mdash; <a href="{% url 'interests' %}">tell us what you like</a>
+  or browse upcoming activities below.</p>{% endfor %}
+
+{% if mine %}
+<h2>Your activities</h2>
+{% for a in mine %}{% include "web/_activity_card.html" %}{% endfor %}
+{% endif %}
+
+<h2>Upcoming in your cohort</h2>
+{% for a in upcoming %}{% include "web/_activity_card.html" %}{% empty %}
+<p class="muted">Nothing upcoming yet. Be the first to organise something!</p>{% endfor %}
+{% endblock %}

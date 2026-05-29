@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}{{ activity.title }}{% endblock %}
+{% block content %}
+<p class="muted"><a href="{% url 'activity_list' %}">&larr; Activities</a></p>
+<h1>{{ activity.title }}</h1>
+<div>
+  <span class="tag">{{ activity.activity_type.name }}</span>
+  <span class="tag">{{ activity.get_cohort_display }}</span>
+  {% if activity.status != "open" %}<span class="tag">{{ activity.get_status_display }}</span>{% endif %}
+  {% if activity.guardian_accompanied %}<span class="tag">guardian-accompanied</span>{% endif %}
+</div>
+<p class="muted">{{ activity.starts_at|date:"l j F Y, H:i" }}{% if activity.ends_at %} &ndash; {{ activity.ends_at|date:"H:i" }}{% endif %}<br>
+  at <a href="{% url 'place_detail' activity.place.pk %}">{{ activity.place.name|default:"a place" }}</a>{% if activity.place.address_city %}, {{ activity.place.address_city }}{% endif %}</p>
+{% if activity.description %}<p>{{ activity.description|linebreaks }}</p>{% endif %}
+<p class="muted">Organised by {{ activity.owner.display_name|default:activity.owner.username }}.</p>
+
+{% if is_member %}
+  <div class="card">
+    <strong>You're a member{% if is_owner %} (owner){% endif %}.</strong>
+    {% if not is_owner %}
+      <form method="post" action="{% url 'activity_leave' activity.pk %}" class="inline" style="float:right">{% csrf_token %}
+        <button class="linkbtn" type="submit">Leave</button></form>
+    {% endif %}
+    <h3>Pending join requests</h3>
+    {% for m in pending %}
+      <div class="row" style="justify-content:space-between">
+        <div>{{ m.user.display_name|default:m.user.username }}
+          <span class="muted">&mdash; {{ m.approvals }}/{{ m.needed }} approvals</span></div>
+        <div class="vote-row">
+          {% if m.my_vote is not None %}<span class="muted">you voted {{ m.my_vote|yesno:"approve,deny" }}</span>{% endif %}
+          <form class="inline" method="post" action="{% url 'membership_vote' activity.pk m.id %}">{% csrf_token %}
+            <input type="hidden" name="vote" value="approve">
+            <button class="btn btn-sm" type="submit">Approve</button></form>
+          <form class="inline" method="post" action="{% url 'membership_vote' activity.pk m.id %}">{% csrf_token %}
+            <input type="hidden" name="vote" value="deny">
+            <button class="btn btn-sm btn-secondary" type="submit">Deny</button></form>
+        </div>
+      </div>
+    {% empty %}<p class="muted">No pending requests.</p>{% endfor %}
+  </div>
+{% elif my_membership and my_membership.state == "requested" %}
+  <div class="banner">Your join request is pending a vote of current members.</div>
+{% elif can_join %}
+  <form method="post" action="{% url 'activity_join' activity.pk %}">{% csrf_token %}
+    <button class="btn" type="submit">Request to join</button></form>
+{% elif user.cohort != activity.cohort %}
+  <div class="banner">This activity is for a different age cohort, so you can't join it.</div>
+{% endif %}
+
+<h2>Members</h2>
+<ul class="members">
+  {% for m in members %}<li>{{ m.user.display_name|default:m.user.username }}{% if m.role == "owner" %} &middot; owner{% elif m.role == "guardian" %} &middot; guardian{% endif %}</li>{% endfor %}
+</ul>
+
+{% if is_member or user.is_staff %}
+  <h2>Thread</h2>
+  {% if is_member %}
+    <form method="post" action="{% url 'activity_post' activity.pk %}">{% csrf_token %}
+      {{ post_form.body }}
+      <button class="btn btn-sm" type="submit" style="margin-top:.4rem">Post</button>
+    </form>
+  {% endif %}
+  <div class="thread">
+    {% for p in posts %}
+      <div class="post">
+        <div class="meta">{{ p.author.display_name|default:p.author.username }} &middot; {{ p.created_at|date:"j M H:i" }}</div>
+        <div>{{ p.body|linebreaksbr }}</div>
+      </div>
+    {% empty %}<p class="muted">No messages yet.</p>{% endfor %}
+  </div>
+
+  <h2>Photos</h2>
+  <p class="muted">Private to members &mdash; location metadata is stripped on upload.</p>
+  {% if is_member %}
+    <form method="post" action="{% url 'activity_photo' activity.pk %}" enctype="multipart/form-data" class="row">{% csrf_token %}
+      <input type="file" name="image" accept="image/*" required>
+      <button class="btn btn-sm" type="submit">Add photo</button>
+    </form>
+  {% endif %}
+  <div class="photos">
+    {% for ph in photos %}<img src="{{ ph.url }}" alt="thread photo">{% empty %}
+    <p class="muted">No photos yet.</p>{% endfor %}
+  </div>
+
+  {% if is_member %}
+  <h2>Live chat</h2>
+  <div id="chat-log" class="thread" style="border:1px solid var(--line);border-radius:8px;padding:.5rem"></div>
+  <form id="chat-form" class="row" style="margin-top:.5rem">
+    <input id="chat-input" autocomplete="off" placeholder="Message members..." style="flex:1">
+    <button class="btn btn-sm" type="submit">Send</button>
+  </form>
+  {% endif %}
+{% else %}
+  <p class="muted">The thread, photos and chat are private to members. Request to join to take part.</p>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if is_member %}
+<script>
+(function () {
+  const threadId = {{ activity.thread.id }};
+  const log = document.getElementById("chat-log");
+  function append(author, body, at) {
+    const row = document.createElement("div");
+    row.className = "post";
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    meta.textContent = (author || "member") + (at ? " · " + new Date(at).toLocaleString() : "");
+    const b = document.createElement("div");
+    b.textContent = body;
+    row.appendChild(meta); row.appendChild(b);
+    log.appendChild(row); log.scrollTop = log.scrollHeight;
+  }
+  // Load history.
+  fetch(`/api/chat/threads/${threadId}/messages/`, {headers: {'Accept': 'application/json'}})
+    .then(r => r.ok ? r.json() : [])
+    .then(list => (list || []).forEach(m => append(m.author && m.author.display_name, m.body, m.created_at)));
+  // Live socket.
+  const proto = location.protocol === "https:" ? "wss" : "ws";
+  const sock = new WebSocket(`${proto}://${location.host}/ws/chat/${threadId}/`);
+  sock.onmessage = (e) => {
+    const d = JSON.parse(e.data);
+    if (d.type === "message") append(d.author && d.author.display_name, d.body, d.created_at);
+  };
+  document.getElementById("chat-form").addEventListener("submit", (ev) => {
+    ev.preventDefault();
+    const i = document.getElementById("chat-input");
+    if (i.value.trim()) { sock.send(JSON.stringify({body: i.value})); i.value = ""; }
+  });
+})();
+</script>
+{% endif %}
+{% endblock %}

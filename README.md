@@ -53,6 +53,17 @@ Re-runs are **idempotent** (upsert keyed on `osm_type`+`osm_id`); user-confirmed
 activity links are never overwritten. The OSM-tag → activity mapping lives in
 `apps/ingestion/mapping.py`.
 
+## Web UI
+
+A server-rendered web interface (`apps/web/`, session auth) sits on top of the API for end
+users — open `http://localhost:8000/`:
+
+- Sign up / log in (demo age assurance), profile + avatar, declare interests.
+- Discover: interactive **places map** (Leaflet), recommended-for-you feed, upcoming activities.
+- Organise an activity; on its page: **join-by-vote**, text thread, private member photos, and
+  **live chat** (WebSocket).
+- Notifications and a donation page. Moderation stays in `/admin/`.
+
 ## API
 
 - `GET /api/taxonomy/categories/`, `GET /api/taxonomy/activities/` — the activity graph

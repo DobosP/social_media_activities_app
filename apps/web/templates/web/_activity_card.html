@@ -1,0 +1,12 @@
+<div class="card">
+  {% if a.match_pct %}<span class="score">{{ a.match_pct }}% match</span>{% endif %}
+  <h3><a href="{% url 'activity_detail' a.pk %}">{{ a.title }}</a></h3>
+  <div>
+    <span class="tag">{{ a.activity_type.name }}</span>
+    <span class="tag">{{ a.get_cohort_display }}</span>
+    {% if a.guardian_accompanied %}<span class="tag">guardian-accompanied</span>{% endif %}
+  </div>
+  <p class="muted">{{ a.starts_at|date:"D j M, H:i" }} &middot;
+    {{ a.place.name|default:"a place" }}{% if a.place.address_city %}, {{ a.place.address_city }}{% endif %}</p>
+  {% if a.description %}<p>{{ a.description|truncatewords:22 }}</p>{% endif %}
+</div>

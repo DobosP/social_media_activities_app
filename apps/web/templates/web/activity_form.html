@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Organise an activity{% endblock %}
+{% block content %}
+<h1>Organise an activity</h1>
+<p class="muted">It will be visible only to people in your cohort
+  (<strong>{{ user.get_cohort_display }}</strong>).</p>
+<form method="post">{% csrf_token %}
+  {{ form.as_p }}
+  <button class="btn" type="submit">Create activity</button>
+</form>
+{% endblock %}

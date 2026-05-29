@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Sign up{% endblock %}
+{% block content %}
+<h1>Create your account</h1>
+<div class="banner">Demo only: age verification is simulated here. In production this uses the EU
+  age-verification app / EUDI Wallet, and under-16s require verified parental consent.</div>
+<form method="post">{% csrf_token %}
+  {{ form.as_p }}
+  <button class="btn" type="submit">Sign up</button>
+</form>
+<p class="muted">Already have an account? <a href="{% url 'login' %}">Log in</a>.</p>
+{% endblock %}
