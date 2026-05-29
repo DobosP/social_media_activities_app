@@ -7,6 +7,10 @@ from apps.messaging.routing import websocket_urlpatterns
 
 from .conftest import keys_for, make_user
 
+# Generous timeout so the async handshake/relay doesn't flake on a loaded CI runner
+# (the WebsocketCommunicator default is only 1s).
+WS_TIMEOUT = 10
+
 
 def _communicator(conversation_id, user):
     communicator = WebsocketCommunicator(
@@ -31,15 +35,15 @@ async def test_active_members_relay_ciphertext():
     a, b, conv, recipient_keys = await setup()
     a_conn = _communicator(conv.id, a)
     b_conn = _communicator(conv.id, b)
-    assert (await a_conn.connect())[0] is True
-    assert (await b_conn.connect())[0] is True
+    assert (await a_conn.connect(timeout=WS_TIMEOUT))[0] is True
+    assert (await b_conn.connect(timeout=WS_TIMEOUT))[0] is True
 
     await a_conn.send_json_to(
         {"ciphertext": "Y2lwaGVy", "iv": "aXY=", "recipient_keys": recipient_keys}
     )
 
-    echoed = await a_conn.receive_json_from()
-    received = await b_conn.receive_json_from()
+    echoed = await a_conn.receive_json_from(timeout=WS_TIMEOUT)
+    received = await b_conn.receive_json_from(timeout=WS_TIMEOUT)
     assert echoed["type"] == "message"
     assert received["ciphertext"] == "Y2lwaGVy"
     # The broadcast carries every recipient's wrapped key; clients pick their own.
@@ -63,7 +67,7 @@ async def test_invited_user_cannot_connect():
 
     b, conv = await setup()
     conn = _communicator(conv.id, b)
-    connected, _ = await conn.connect()
+    connected, _ = await conn.connect(timeout=WS_TIMEOUT)
     assert connected is False
     await conn.disconnect()
 
@@ -83,6 +87,6 @@ async def test_outsider_connection_rejected():
 
     outsider, conv = await setup()
     conn = _communicator(conv.id, outsider)
-    connected, _ = await conn.connect()
+    connected, _ = await conn.connect(timeout=WS_TIMEOUT)
     assert connected is False
     await conn.disconnect()
