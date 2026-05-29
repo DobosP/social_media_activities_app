@@ -15,6 +15,9 @@ class HealthView(APIView):
     when the database is unreachable so orchestrators can route around the instance."""
 
     permission_classes = [AllowAny]
+    # The probe must never be rate-limited: sharing the global anon throttle would let
+    # shared-IP/proxy traffic 429 the health check and make the orchestrator flap the node.
+    throttle_classes = []
 
     def get(self, request):
         db_ok = True

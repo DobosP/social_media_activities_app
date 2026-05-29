@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -26,6 +27,7 @@ from .services import (
     post_to_thread,
     request_to_join,
     visible_activities,
+    with_counts,
 )
 
 
@@ -55,8 +57,10 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
         return ActivitySerializer
 
     def get_queryset(self):
-        return visible_activities(self.request.user).select_related(
-            "owner", "place", "activity_type", "thread"
+        return with_counts(
+            visible_activities(self.request.user).select_related(
+                "owner", "place", "activity_type", "thread"
+            )
         )
 
     def _actor(self, request):
@@ -118,10 +122,14 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=False, methods=["get"])
     def mine(self, request):
         actor = self._actor(request)
+        # Hard-cap so a user with a very large membership history cannot force an
+        # unbounded queryset to be materialized and serialized.
+        limit = getattr(settings, "SOCIAL_MEMBERSHIP_LIST_LIMIT", 100)
         memberships = (
             Membership.objects.filter(user=actor)
             .exclude(state=Membership.State.REMOVED)
             .select_related("activity")
+            .order_by("-created_at")[:limit]
         )
         return Response(MembershipSerializer(memberships, many=True).data)
 
@@ -137,7 +145,15 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
             except NotAMember as exc:
                 raise PermissionDenied(str(exc)) from exc
             return Response(PostSerializer(post).data, status=status.HTTP_201_CREATED)
-        posts = activity.thread.posts.select_related("author")
+        # Hard-cap the thread read to the newest N (chronological), excluding hidden posts,
+        # so a long thread can't force an unbounded queryset/serialization.
+        limit = getattr(settings, "SOCIAL_THREAD_POST_LIMIT", 100)
+        posts = list(
+            activity.thread.posts.filter(is_hidden=False)
+            .select_related("author")
+            .order_by("-created_at")[:limit]
+        )
+        posts.reverse()
         return Response(PostSerializer(posts, many=True).data)
 
 

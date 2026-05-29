@@ -2,6 +2,7 @@ from django.contrib.gis.db import models as gis_models
 from django.db import models
 from django.db.models import Q, UniqueConstraint
 
+from apps.safety.sanitize import safe_external_url
 from apps.taxonomy.models import ActivityType
 
 
@@ -66,13 +67,20 @@ class Place(gis_models.Model):
             models.Index(fields=["source"]),
         ]
 
+    def __str__(self):
+        return self.name or f"{self.source}:{self.osm_id or self.external_id}"
+
+    def save(self, *args, **kwargs):
+        # Centralized stored-XSS guard. `website` arrives from untrusted sources (OSM,
+        # Overture, Google/Wikidata enrichment) and is served RAW over the JSON API, so
+        # only a safe http(s) URL is ever persisted — at the single write chokepoint.
+        self.website = safe_external_url(self.website)
+        super().save(*args, **kwargs)
+
     @property
     def is_bookable(self) -> bool:
         """A place with a website is a reservation candidate (deep-link booking)."""
         return bool(self.website)
-
-    def __str__(self):
-        return self.name or f"{self.source}:{self.osm_id or self.external_id}"
 
 
 class PlaceActivity(models.Model):

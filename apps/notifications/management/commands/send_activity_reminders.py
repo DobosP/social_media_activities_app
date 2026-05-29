@@ -24,7 +24,10 @@ class Command(BaseCommand):
         now = timezone.now()
         horizon = now + timedelta(hours=opts["within_hours"])
         upcoming = Activity.objects.filter(
-            status=Activity.Status.OPEN, starts_at__gte=now, starts_at__lte=horizon
+            status=Activity.Status.OPEN,
+            is_hidden=False,  # don't re-surface a moderator-removed activity's title
+            starts_at__gte=now,
+            starts_at__lte=horizon,
         )
         sent = 0
         for activity in upcoming:

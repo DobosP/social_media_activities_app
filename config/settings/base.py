@@ -54,6 +54,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # Reject oversized request bodies (by Content-Length) before anything reads the stream.
+    "apps.ops.middleware.MaxBodySizeMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     # Selects the language from the Accept-Language header (RO/EN) per request (P6/IS-7).
     "django.middleware.locale.LocaleMiddleware",
@@ -147,8 +149,34 @@ EUDI_SANDBOX_ISSUER_KEY_PEM = env("EUDI_SANDBOX_ISSUER_KEY_PEM", default="")
 # {issuer_id: PEM public key} — the trust anchor; populated from the EU trust list in prod.
 EUDI_TRUSTED_ISSUERS = env.json("EUDI_TRUSTED_ISSUERS", default={})
 
+# Whether minors can be onboarded (guardian-linked + consented) on this deployment.
+# The current guardian-link flow establishes a relationship on mutual confirmation but does
+# NOT cryptographically prove a real parent-child / legal-guardianship relationship, and no
+# production-grade age/parental-responsibility trust anchor exists yet (EUDI wallets not live;
+# the EU age-verification app was bypassed). So this is ON for dev/test but prod.py defaults
+# it OFF — a prod deploy runs adults-only until a real trust anchor (EUDI guardian flow /
+# national eID / blessed out-of-band process) is wired. See docs/AUDIT_STRESS_2026-05-29.md.
+ALLOW_MINOR_ONBOARDING = env.bool("ALLOW_MINOR_ONBOARDING", default=True)
+
+# Guardianship link invites (verified-adult → minor, mutually confirmed). How long an
+# unaccepted invite stays valid, and anti-abuse limits on issuing invites.
+GUARDIAN_INVITE_TTL_DAYS = env.int("GUARDIAN_INVITE_TTL_DAYS", default=7)
+GUARDIAN_INVITE_RATE_LIMIT = env.int("GUARDIAN_INVITE_RATE_LIMIT", default=20)
+GUARDIAN_INVITE_RATE_WINDOW_SECONDS = env.int("GUARDIAN_INVITE_RATE_WINDOW_SECONDS", default=3600)
+
+# Number of trusted reverse proxies in front of the app (e.g. Render's edge = 1). Used for
+# both DRF throttle identity AND the web login-lockout's real-client-IP derivation, so they
+# agree on which X-Forwarded-For hop to trust (a spoofed XFF must not mint a fresh bucket).
+NUM_PROXIES = env.int("NUM_PROXIES", default=1)
+
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    # Deny-by-default: every endpoint requires auth unless it explicitly opts into AllowAny
+    # (the intentionally public ones: places, taxonomy, discovery feeds, donations totals,
+    # ops health). This prevents a future viewset from silently inheriting AllowAny.
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
     "DEFAULT_FILTER_BACKENDS": [
         "django_filters.rest_framework.DjangoFilterBackend",
     ],
@@ -164,7 +192,17 @@ REST_FRAMEWORK = {
         "anon": env("DRF_THROTTLE_ANON", default="60/min"),
         "user": env("DRF_THROTTLE_USER", default="240/min"),
     },
+    # Trust only the last NUM_PROXIES X-Forwarded-For hops for throttle identity — otherwise
+    # a client can spoof XFF to get a fresh anon bucket per request and bypass rate limits.
+    "NUM_PROXIES": NUM_PROXIES,
 }
+
+# Hard cap on request body size (bytes). Django's DATA_UPLOAD_MAX_MEMORY_SIZE governs form
+# parsing but NOT DRF's JSON parser reading request.body, so a multi-MB JSON POST could OOM
+# the single ASGI process. MaxBodySizeMiddleware rejects oversized requests by Content-Length
+# before the body is read. Default leaves headroom for the largest legit upload (media).
+MAX_REQUEST_BODY_BYTES = env.int("MAX_REQUEST_BODY_BYTES", default=8 * 1024 * 1024)
+DATA_UPLOAD_MAX_MEMORY_SIZE = env.int("DATA_UPLOAD_MAX_MEMORY_SIZE", default=MAX_REQUEST_BODY_BYTES)
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Social Activities API",
@@ -176,6 +214,8 @@ SPECTACULAR_SETTINGS = {
     ),
     "VERSION": env("APP_VERSION", default="0.1.0"),
     "SERVE_INCLUDE_SCHEMA": False,
+    # The OpenAPI schema + Swagger UI stay publicly readable despite deny-by-default perms.
+    "SERVE_PERMISSIONS": ["rest_framework.permissions.AllowAny"],
     # Split request vs. response components so generated client models are accurate
     # (read-only/write-only fields don't bleed across).
     "COMPONENT_SPLIT_REQUEST": True,
@@ -228,13 +268,27 @@ MEDIA_STORAGE_BACKEND = env(
 MEDIA_MAX_UPLOAD_BYTES = env.int("MEDIA_MAX_UPLOAD_BYTES", default=5 * 1024 * 1024)
 # Longest-side cap; larger uploads are downscaled (privacy + storage/bandwidth).
 MEDIA_MAX_DIMENSION = env.int("MEDIA_MAX_DIMENSION", default=2048)
+# Decompression-bomb ceiling: reject images whose header-declared pixel count exceeds
+# this before any pixels are decoded (≈30 MP default — above real photos, below a bomb).
+MEDIA_MAX_IMAGE_PIXELS = env.int("MEDIA_MAX_IMAGE_PIXELS", default=30_000_000)
 MEDIA_SIGNED_URL_TTL = env.int("MEDIA_SIGNED_URL_TTL", default=300)
 # Swappable safety-scanning posture (CSAR-dependent); default matches a hash blocklist.
 MEDIA_IMAGE_SCANNER = env("MEDIA_IMAGE_SCANNER", default="apps.media.scanning.HashBlocklistScanner")
 MEDIA_CSAM_HASH_BLOCKLIST = env.list("MEDIA_CSAM_HASH_BLOCKLIST", default=[])
+# Optional path to a newline-delimited file of known-bad SHA-256 hashes (e.g. a CSAM hash
+# set from a lawful provider). Lets the blocklist be populated operationally — without
+# inlining thousands of hashes in env — to make uploads safe to enable. Hashes from both
+# the inline list and this file are matched.
+MEDIA_CSAM_HASH_BLOCKLIST_FILE = env("MEDIA_CSAM_HASH_BLOCKLIST_FILE", default="")
+# Managed scanning service (used when MEDIA_IMAGE_SCANNER=apps.media.scanning.ManagedScanner):
+# the upload's SHA-256 (hash-only, privacy-preserving) is POSTed for screening over the
+# SSRF-safe channel. Exact-hash matching only — not perceptual; see scanning.py.
+MEDIA_SCANNER_ENDPOINT = env("MEDIA_SCANNER_ENDPOINT", default="")
+MEDIA_SCANNER_API_KEY = env("MEDIA_SCANNER_API_KEY", default="")
+MEDIA_SCANNER_TIMEOUT = env.int("MEDIA_SCANNER_TIMEOUT", default=10)
 # Fail closed: refuse photo uploads unless an *effective* scanner is configured. The
-# default HashBlocklistScanner is only effective with a non-empty MEDIA_CSAM_HASH_BLOCKLIST
-# (or point MEDIA_IMAGE_SCANNER at a managed service). dev/test settings set this False.
+# default HashBlocklistScanner is only effective with a non-empty blocklist (inline or
+# file); or point MEDIA_IMAGE_SCANNER at a managed service. dev/test settings set False.
 MEDIA_REQUIRE_SCANNER = env.bool("MEDIA_REQUIRE_SCANNER", default=True)
 
 # D7 — richer place data.
@@ -246,17 +300,33 @@ OVERTURE_DATA_PATH = env("OVERTURE_DATA_PATH", default="")
 GOOGLE_PLACES_ENABLED = env.bool("GOOGLE_PLACES_ENABLED", default=False)
 GOOGLE_PLACES_API_KEY = env("GOOGLE_PLACES_API_KEY", default="")
 
-# --- D5 chat (real-time, ASGI/Channels) ---
-# In-memory layer suits a single process; a multi-process deploy sets a Redis layer
-# (channels-redis) here — see docs/ARCHITECTURE.md / D9 ops.
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": env(
-            "CHANNEL_LAYER_BACKEND",
-            default="channels.layers.InMemoryChannelLayer",
-        )
+# --- Shared cache + real-time channel layer ---
+# A single Redis (REDIS_URL) backs BOTH the cache (DRF throttles + the anti-abuse rate
+# limiter in apps/safety) AND the Channels layer, so limits and WebSocket fan-out are
+# GLOBAL across processes/instances. Without REDIS_URL we fall back to per-process
+# LocMemCache + InMemoryChannelLayer — single-process dev only; prod.py asserts in
+# production that these per-process backends are NOT in use (see config/settings/prod.py).
+REDIS_URL = env("REDIS_URL", default="")
+if REDIS_URL:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": REDIS_URL,
+        }
     }
-}
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {"hosts": [REDIS_URL]},
+        }
+    }
+else:
+    CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": env("CHANNEL_LAYER_BACKEND", default="channels.layers.InMemoryChannelLayer")
+        }
+    }
 # Swap to add CSAR-driven scanning/encryption without re-architecting (see COMPLIANCE).
 CHAT_MESSAGE_POLICY = env("CHAT_MESSAGE_POLICY", default="apps.chat.policy.BasicMessagePolicy")
 CHAT_MAX_LENGTH = env.int("CHAT_MAX_LENGTH", default=4000)
@@ -273,6 +343,10 @@ CHAT_RETENTION_DAYS = env.int("CHAT_RETENTION_DAYS", default=0)
 MESSAGING_RATE_WINDOW_SECONDS = env.int("MESSAGING_RATE_WINDOW_SECONDS", default=60)
 MESSAGING_START_RATE_LIMIT = env.int("MESSAGING_START_RATE_LIMIT", default=20)
 MESSAGING_SEND_RATE_LIMIT = env.int("MESSAGING_SEND_RATE_LIMIT", default=60)
+# Abuse/DoS caps on the E2EE relay: max stored ciphertext per message and max members in
+# a group conversation (an unbounded recipient list would amplify per-recipient work).
+MESSAGING_MAX_CIPHERTEXT_BYTES = env.int("MESSAGING_MAX_CIPHERTEXT_BYTES", default=65536)
+MESSAGING_MAX_GROUP_MEMBERS = env.int("MESSAGING_MAX_GROUP_MEMBERS", default=256)
 # Global retention backstop for encrypted messages (0 disables). Per-conversation
 # disappearing timers also apply. Purged by the purge_messaging management command.
 MESSAGING_RETENTION_DAYS = env.int("MESSAGING_RETENTION_DAYS", default=0)
@@ -282,11 +356,16 @@ MESSAGING_RETENTION_DAYS = env.int("MESSAGING_RETENTION_DAYS", default=0)
 # stores no card data. Swap for a real EU-friendly nonprofit processor in prod.
 DONATIONS_PROVIDER = env("DONATIONS_PROVIDER", default="apps.donations.providers.DeepLinkProvider")
 DONATIONS_CHECKOUT_BASE_URL = env("DONATIONS_CHECKOUT_BASE_URL", default="")
-# Shared secret verifying provider webhook callbacks (empty disables the check in dev).
+# Shared secret authenticating provider webhook callbacks (X-Webhook-Secret header).
+# The webhook is FAIL-CLOSED: with neither this nor STRIPE_WEBHOOK_SECRET set, every
+# callback is rejected, so a pending donation cannot be forged complete.
 DONATIONS_WEBHOOK_SECRET = env("DONATIONS_WEBHOOK_SECRET", default="")
 
 # Stripe Checkout (used when DONATIONS_PROVIDER=apps.donations.providers.StripePaymentProvider).
 STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="")
+# Stripe webhook signing secret — when set (with the Stripe provider), callbacks are
+# authenticated by verifying the Stripe-Signature header instead of the shared secret.
+STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", default="")
 DONATIONS_SUCCESS_URL = env("DONATIONS_SUCCESS_URL", default="")
 DONATIONS_CANCEL_URL = env("DONATIONS_CANCEL_URL", default="")
 

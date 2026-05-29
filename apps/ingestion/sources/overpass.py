@@ -4,6 +4,8 @@ from collections.abc import Iterator
 
 import requests
 
+from apps.safety.net import safe_get
+
 from .base import RawPlace, SourceAdapter
 
 logger = logging.getLogger(__name__)
@@ -64,11 +66,14 @@ class OverpassAdapter(SourceAdapter):
         user_agent: str,
         timeout: int = 190,
         max_retries: int = 3,
+        max_bytes: int = 200 * 1024 * 1024,
     ):
         self.endpoint = endpoint
         self.user_agent = user_agent
         self.timeout = timeout
         self.max_retries = max_retries
+        # Generous cap: a city-wide Overpass result can be large, but still bounded.
+        self.max_bytes = max_bytes
 
     def _build_query(self, *, city: str | None, bbox) -> str:
         if bbox:
@@ -86,11 +91,13 @@ class OverpassAdapter(SourceAdapter):
         last_exc: Exception | None = None
         for attempt in range(1, self.max_retries + 1):
             try:
-                resp = requests.post(
+                resp = safe_get(
                     self.endpoint,
+                    method="POST",
                     data={"data": query},
                     headers={"User-Agent": self.user_agent},
                     timeout=self.timeout,
+                    max_bytes=self.max_bytes,
                 )
                 if resp.status_code in RETRYABLE_STATUS:
                     logger.warning(

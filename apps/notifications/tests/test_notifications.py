@@ -97,3 +97,16 @@ def test_mark_all_read_helper():
     notify(user, Notification.Kind.SYSTEM, "a")
     notify(user, Notification.Kind.SYSTEM, "b")
     assert mark_all_read(user) == 2
+
+
+def test_safety_report_emits_system_notification_to_reporter():
+    """DSA Art. 16 acknowledgement reaches the reporter as an in-app SYSTEM notification
+    (cross-app: safety.file_report -> notifications.notify)."""
+    from apps.safety.models import ReasonCode
+    from apps.safety.services import file_report
+
+    reporter, target = _adult("dsa_rep"), _adult("dsa_tgt")
+    file_report(reporter, target, ReasonCode.HARASSMENT)
+    assert (
+        Notification.objects.filter(recipient=reporter, kind=Notification.Kind.SYSTEM).count() == 1
+    )

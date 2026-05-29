@@ -211,6 +211,9 @@ def start_group(initiator, targets, *, title="") -> Conversation:
         unique_targets.append(t)
     if not unique_targets:
         raise MessagingError("A group needs at least one other member.")
+    max_members = getattr(settings, "MESSAGING_MAX_GROUP_MEMBERS", 256)
+    if len(unique_targets) + 1 > max_members:  # +1 for the initiator/admin
+        raise MessagingError(f"A group can have at most {max_members} members.")
     for t in unique_targets:
         assert_can_message(initiator, t)
     if not _rate_ok(
@@ -310,6 +313,13 @@ def add_participant(actor, conversation, target) -> Participant:
     existing = _participant(conversation, target)
     if existing and existing.state in (Participant.State.ACTIVE, Participant.State.INVITED):
         return existing
+    # Enforce the group-size cap on growth (new or re-invited member).
+    max_members = getattr(settings, "MESSAGING_MAX_GROUP_MEMBERS", 256)
+    current = conversation.participants.filter(
+        state__in=[Participant.State.ACTIVE, Participant.State.INVITED]
+    ).count()
+    if current >= max_members:
+        raise MessagingError(f"This group is full (max {max_members} members).")
     if existing:
         existing.state = Participant.State.INVITED
         existing.invited_by = actor
@@ -584,12 +594,20 @@ def is_active_participant(user, conversation) -> bool:
 def can_view(user, conversation) -> bool:
     """Only ACTIVE members read content; INVITED users see invitation metadata only.
     Guardians are a sanctioned cross-cohort observer; every other member must still be
-    participation-eligible, so a revoked-consent minor immediately loses read access."""
+    participation-eligible AND in the conversation's cohort, so a revoked-consent minor,
+    a deactivated/banned account, or a re-verified user whose cohort changed immediately
+    loses read access (enforced per-delivery on the live socket too)."""
+    if not getattr(user, "is_active", False):
+        return False
     if not is_active_participant(user, conversation):
         return False
     p = _participant(conversation, user)
     if p and p.role == Participant.Role.GUARDIAN:
         return True
+    # Cohort isolation must hold at READ time, not only at join/send: a participant whose
+    # cohort changed can no longer read a conversation pinned to a different cohort.
+    if user.cohort != conversation.cohort:
+        return False
     return can_participate(user)
 
 
@@ -641,6 +659,22 @@ def post_message(
         raise MessagingError("Your participation is not currently active.")
     if not ciphertext or not iv:
         raise MessagingError("Encrypted content is required.")
+    # Abuse/size caps (W2-12). Enforce these BEFORE the rate-limit check and the
+    # per-recipient key loop so an oversized payload or a huge recipient list is
+    # rejected cheaply, without doing per-recipient work or burning a rate token
+    # on a request that can never be stored anyway.
+    max_ciphertext = getattr(settings, "MESSAGING_MAX_CIPHERTEXT_BYTES", 65536)
+    # len() on a str counts characters; encode to bytes so the cap is a true byte
+    # limit regardless of how the (base64/opaque) ciphertext is represented.
+    if len(ciphertext.encode("utf-8")) > max_ciphertext:
+        raise MessagingError("Encrypted content is too large.")
+    max_members = getattr(settings, "MESSAGING_MAX_GROUP_MEMBERS", 256)
+    # Reject a wildly oversized recipient set before resolving any of them, so a
+    # client cannot make the server do per-recipient work just to be throttled.
+    if len(recipient_keys or []) > max_members:
+        raise MessagingError("Too many recipients for one message.")
+    # The rate-limit check stays BEFORE the per-recipient key loop: a huge but
+    # under-cap recipient list must not let a throttled sender do work first.
     if not _rate_ok(
         sender, "messaging_send", limit_setting="MESSAGING_SEND_RATE_LIMIT", default_limit=60
     ):
@@ -652,6 +686,12 @@ def post_message(
             "user"
         )
     }
+    # Defence in depth: even if the client's recipient set is within the cap, an
+    # actual active-member count over the limit must not be served (the per-message
+    # key fan-out would be unbounded). Group membership is itself bounded elsewhere,
+    # but the send path enforces it independently.
+    if len(active) > max_members:
+        raise MessagingError("Too many recipients for one message.")
     rows, provided = [], set()
     for rk in recipient_keys or []:
         pub = str(rk.get("recipient_public_id", ""))

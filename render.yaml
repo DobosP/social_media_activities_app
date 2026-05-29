@@ -12,12 +12,15 @@ databases:
     user: app
     plan: free
     postgresMajorVersion: "16"
+    # EU data residency for minors' personal data (GDPR Ch. V). Keep web + DB co-located.
+    region: frankfurt
 
 services:
   - type: web
     name: socialapp
     runtime: docker
     plan: free
+    region: frankfurt
     dockerfilePath: ./Dockerfile
     healthCheckPath: /healthz
     # daphne (ASGI) serves the REST API AND the chat WebSockets from one process.
@@ -34,5 +37,49 @@ services:
         fromDatabase:
           name: socialapp-db
           property: connectionString
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      # REQUIRED for prod to boot (fail-closed assertions): a real identity provider + EU
+      # trust anchor — the dev self-declaration stub and EUDI sandbox are rejected in prod.
+      # Set these in the Render dashboard (secrets); sync:false keeps them out of the blueprint.
+      - key: IDENTITY_PROVIDER
+        value: apps.accounts.identity.providers.eudi.EUDIWalletProvider
+      - key: EUDI_SANDBOX
+        value: "False"
+      - key: EUDI_TRUSTED_ISSUERS # JSON {issuer: PEM} — operator-supplied secret
+        sync: false
+      # Optional: set REDIS_URL + DJANGO_REQUIRE_SHARED_STATE=True when scaling beyond one
+      # process; ALLOW_MINOR_ONBOARDING stays False until a verifiable trust anchor + DPIA.
+
+  # Scheduled retention/maintenance jobs (GDPR Art.5(1)(e) storage limitation + DSA
+  # proportionality): purge expired E2EE messages & chat, lift elapsed suspensions, send
+  # activity reminders. Without this, retention never runs and suspensions never auto-lift.
+  # NOTE: Render `cron` requires a paid plan — on free tier, run `manage.py run_due_jobs`
+  # from an external scheduler (e.g. a GitHub Actions cron hitting a one-off job). Set the
+  # *_RETENTION_DAYS env to the periods your DPO defines (0 = disabled).
+  - type: cron
+    name: socialapp-scheduled-jobs
+    runtime: docker
+    plan: starter
+    region: frankfurt
+    schedule: "0 3 * * *" # daily 03:00 UTC
+    dockerfilePath: ./Dockerfile
+    dockerCommand: python manage.py run_due_jobs
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.prod
+      - key: DJANGO_SECRET_KEY
+        fromService:
+          name: socialapp
+          type: web
+          envVarKey: DJANGO_SECRET_KEY
+      - key: DATABASE_URL
+        fromDatabase:
+          name: socialapp-db
+          property: connectionString
+      - key: MESSAGING_RETENTION_DAYS
+        value: "365" # DPO to confirm; 0 disables
+      - key: CHAT_RETENTION_DAYS
+        value: "365" # DPO to confirm; 0 disables
       - key: PYTHONUNBUFFERED
         value: "1"

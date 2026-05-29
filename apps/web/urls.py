@@ -7,7 +7,7 @@ urlpatterns = [
     path("", views.home, name="home"),
     # Auth
     path("register/", views.register, name="register"),
-    path("login/", auth_views.LoginView.as_view(template_name="web/login.html"), name="login"),
+    path("login/", views.ThrottledLoginView.as_view(), name="login"),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
     # Discover
     path("places/", views.places_map, name="places_map"),
@@ -33,6 +33,17 @@ urlpatterns = [
     path("profile/avatar/", views.avatar_upload, name="avatar_upload"),
     path("verify-age/", views.verify_age, name="verify_age"),
     path("wards/", views.wards, name="wards"),
+    path("wards/invite/", views.guardian_invite_create, name="guardian_invite_create"),
+    path(
+        "guardian-invites/<str:token>/accept/",
+        views.guardian_invite_accept,
+        name="guardian_invite_accept",
+    ),
+    path(
+        "guardian-invites/<str:token>/decline/",
+        views.guardian_invite_decline,
+        name="guardian_invite_decline",
+    ),
     path("notifications/", views.notifications_list, name="notifications"),
     path("notifications/read-all/", views.notifications_read_all, name="notifications_read_all"),
     path("messages/", views.messages_page, name="messages"),
@@ -41,4 +52,8 @@ urlpatterns = [
     path("report/", views.report, name="report"),
     path("users/<int:pk>/block/", views.block_user_view, name="block_user"),
     path("users/<int:pk>/unblock/", views.unblock_user_view, name="unblock_user"),
+    # Transparency (W1-8) & GDPR self-service
+    path("privacy/", views.privacy, name="privacy"),
+    path("terms/", views.terms, name="terms"),
+    path("account/delete/", views.account_delete, name="account_delete"),
 ]

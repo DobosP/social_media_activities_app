@@ -11,4 +11,19 @@
     <p class="muted">You aren't a registered guardian of any account.</p>
   {% endfor %}
 </ul>
+
+<h2>Link a child's account</h2>
+<p class="muted">Enter your child's username to send a guardianship request. They confirm it from
+  their own home page. You must be a verified adult.</p>
+<form method="post" action="{% url 'guardian_invite_create' %}" class="stack">
+  {% csrf_token %}
+  <label>Child's username
+    <input type="text" name="ward_username" required autocomplete="off"></label>
+  <label>Relationship
+    <select name="relationship">
+      <option value="parent">Parent</option>
+      <option value="legal_guardian">Legal guardian</option>
+    </select></label>
+  <button class="btn" type="submit">Send guardianship request</button>
+</form>
 {% endblock %}

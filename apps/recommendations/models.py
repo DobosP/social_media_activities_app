@@ -8,7 +8,7 @@ no PII), stored as a pgvector for cosine-similarity ranking.
 
 from django.conf import settings
 from django.db import models
-from pgvector.django import VectorField
+from pgvector.django import HnswIndex, VectorField
 
 from apps.social.models import Activity
 from apps.taxonomy.models import ActivityType
@@ -44,6 +44,19 @@ class ActivityEmbedding(models.Model):
     activity = models.OneToOneField(Activity, on_delete=models.CASCADE, related_name="embedding")
     vector = VectorField(dimensions=EMBEDDING_DIM)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [
+            # ANN index so cosine-similarity ranking stays sub-linear as the
+            # embedding table grows (matches the cosine distance used in ranking).
+            HnswIndex(
+                name="actemb_vector_hnsw",
+                fields=["vector"],
+                m=16,
+                ef_construction=64,
+                opclasses=["vector_cosine_ops"],
+            ),
+        ]
 
     def __str__(self):
         return f"embedding({self.activity_id})"

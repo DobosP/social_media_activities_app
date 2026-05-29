@@ -35,3 +35,7 @@ htmlcov/
 
 # Local WSL/Docker helper scripts (session-specific, not for the repo)
 .wsl_*
+
+# Local agent worktrees / state
+.claude/
+docker-compose.local.yml

@@ -2,6 +2,7 @@ import secrets
 
 from django.conf import settings
 from django.core import signing
+from django.db import IntegrityError, transaction
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import get_object_or_404
@@ -9,14 +10,20 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .export import build_user_export
 from .identity.base import IdentityVerificationError
 from .identity.providers.eudi import AGE_OVER_16, AGE_OVER_18, EUDIWalletProvider
-from .models import GuardianRelationship, User
-from .serializers import MeSerializer, WardSerializer
+from .models import ConsumedAgeNonce, GuardianRelationship, User
+from .serializers import GuardianLinkInviteSerializer, MeSerializer, WardSerializer
 from .services import (
+    accept_guardian_link_invite,
     apply_assurance,
+    create_guardian_link_invite,
+    decline_guardian_link_invite,
+    erase_user,
     grant_parental_consent,
     is_guardian_of,
+    pending_guardian_invites_for,
     revoke_parental_consent,
 )
 
@@ -46,6 +53,23 @@ class MeView(APIView):
 
     def get(self, request):
         return Response(MeSerializer(request.user).data)
+
+    def delete(self, request):
+        """GDPR Art.17 self-erasure: permanently delete the caller's own account."""
+        erase_user(request.user, request.user)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class MeExportView(APIView):
+    """GDPR Art. 20 data portability: the authenticated user's own data as JSON.
+
+    Returns a structured snapshot (profile, age band, cohort, consent metadata,
+    memberships/activities, donations summary) — only the requester's own data."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response(build_user_export(request.user))
 
 
 class WardListView(APIView):
@@ -82,6 +106,27 @@ class WardDetailView(APIView):
         serializer.save()
         return Response(serializer.data)
 
+    def delete(self, request, public_id):
+        """GDPR Art.17 erasure on behalf of a minor: a guardian deletes their ward's
+        account permanently."""
+        ward = self._get_ward(request, public_id)
+        erase_user(request.user, ward)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class WardExportView(APIView):
+    """GDPR Art. 20 data portability, guardian-for-ward variant: a verified guardian
+    exports their under-age ward's data as JSON. Authorised only for an active
+    guardianship link (the same gate WardDetailView uses)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, public_id):
+        ward = get_object_or_404(User, public_id=public_id)
+        if not is_guardian_of(request.user, ward):
+            raise PermissionDenied("You are not this user's guardian.")
+        return Response(build_user_export(ward))
+
 
 class WardConsentView(APIView):
     """A guardian grants (POST) or revokes (DELETE) parental consent for an under-16 ward.
@@ -105,6 +150,70 @@ class WardConsentView(APIView):
         ward = get_object_or_404(User, public_id=public_id)
         try:
             revoke_parental_consent(request.user, ward)
+        except ValueError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class GuardianLinkView(APIView):
+    """Establish a guardianship link via a mutually-confirmed invite.
+
+    POST (a verified adult): invite a minor `ward` (by `public_id`) to confirm a link —
+    returns the invite incl. the `token` the ward uses to accept.
+    GET (the ward): list pending invites awaiting this user's response.
+    Acceptance creates the `GuardianRelationship`; the guardian can then grant parental
+    consent (WardConsentView) to make the minor eligible to participate."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        invites = pending_guardian_invites_for(request.user)
+        return Response(GuardianLinkInviteSerializer(invites, many=True).data)
+
+    def post(self, request):
+        from apps.safety.services import allow_action
+
+        if not allow_action(
+            request.user,
+            "guardian_invite",
+            limit=getattr(settings, "GUARDIAN_INVITE_RATE_LIMIT", 20),
+            window_seconds=getattr(settings, "GUARDIAN_INVITE_RATE_WINDOW_SECONDS", 3600),
+        ):
+            return Response(
+                {"detail": "Too many invites; try again later."},
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
+            )
+        ward = get_object_or_404(User, public_id=request.data.get("ward"))
+        try:
+            invite = create_guardian_link_invite(
+                request.user, ward, relationship=request.data.get("relationship", "parent")
+            )
+        except ValueError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(GuardianLinkInviteSerializer(invite).data, status=status.HTTP_201_CREATED)
+
+
+class GuardianLinkAcceptView(APIView):
+    """The invited ward accepts a pending guardianship invite (by token)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, token):
+        try:
+            accept_guardian_link_invite(request.user, token)
+        except ValueError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(MeSerializer(request.user).data)
+
+
+class GuardianLinkDeclineView(APIView):
+    """The invited ward declines a pending guardianship invite (by token)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, token):
+        try:
+            decline_guardian_link_invite(request.user, token)
         except ValueError as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -155,6 +264,10 @@ class EUDIVerifyView(APIView):
 
         presentation = {
             "vp_token": request.data.get("vp_token"),
+            # Optional holder key-binding proof (proof-of-possession of the credential
+            # holder key over our audience + nonce); when present the credential is bound
+            # to this account's holder id, preventing credential transfer/replay.
+            "holder_binding_proof": request.data.get("holder_binding_proof"),
             "nonce": payload["nonce"],
             "audience": settings.EUDI_CLIENT_ID,
             "method": "openid4vp",
@@ -163,6 +276,19 @@ class EUDIVerifyView(APIView):
             result = EUDIWalletProvider().verify(request.user, presentation=presentation)
         except IdentityVerificationError as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Single-use nonce (W2-9): even a validly-signed presentation can only be redeemed
+        # once. Claim the nonce after signature verification; a duplicate means replay. The
+        # create() runs in a savepoint so the IntegrityError on a replay rolls back only the
+        # claim, not any surrounding transaction (ATOMIC_REQUESTS / test transaction).
+        try:
+            with transaction.atomic():
+                ConsumedAgeNonce.objects.create(nonce=payload["nonce"])
+        except IntegrityError:
+            return Response(
+                {"detail": "This verification has already been used."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         apply_assurance(request.user, result)
         return Response(MeSerializer(request.user).data)

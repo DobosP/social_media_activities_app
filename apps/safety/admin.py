@@ -1,5 +1,4 @@
 from django.contrib import admin
-from django.utils import timezone
 
 from .models import AuditLog, Block, ModerationAction, Report
 
@@ -20,9 +19,13 @@ class ReportAdmin(admin.ModelAdmin):
 
     @admin.action(description="Dismiss selected reports")
     def dismiss(self, request, queryset):
-        queryset.update(
-            status=Report.Status.DISMISSED, handled_by=request.user, handled_at=timezone.now()
-        )
+        from .services import dismiss_report
+
+        dismissed = 0
+        for report in queryset:
+            dismiss_report(request.user, report)
+            dismissed += 1
+        self.message_user(request, f"Dismissed {dismissed} report(s).")
 
     @admin.action(description="Ban the reported target (account)")
     def ban_target(self, request, queryset):

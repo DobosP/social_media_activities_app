@@ -6,18 +6,30 @@ import math
 
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.views import LoginView
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.crypto import get_random_string
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
+from apps.accounts.identity.base import IdentityVerificationError
 from apps.accounts.identity.registry import get_identity_provider
 from apps.accounts.models import AgeBand, GuardianRelationship, User
-from apps.accounts.services import apply_assurance, can_participate
+from apps.accounts.services import (
+    accept_guardian_link_invite,
+    apply_assurance,
+    can_participate,
+    create_guardian_link_invite,
+    decline_guardian_link_invite,
+    pending_guardian_invites_for,
+)
 from apps.events.models import Event
 from apps.media.models import Photo
 from apps.media.services import NotAuthorized, signed_url, thread_photos, upload_photo
@@ -60,6 +72,81 @@ def _avatar_url(viewer, target_user):
 # --- Auth ---------------------------------------------------------------------------
 
 
+def _client_ip(request) -> str:
+    """Best-effort real client IP. Honour X-Forwarded-For only behind the number of
+    trusted proxies the deployment declares (settings.NUM_PROXIES); otherwise the XFF
+    header is attacker-controlled and would let a single host evade per-IP lockout by
+    spoofing it. With NUM_PROXIES=0 we always trust REMOTE_ADDR."""
+    num_proxies = getattr(settings, "NUM_PROXIES", 0)
+    if num_proxies:
+        forwarded = request.META.get("HTTP_X_FORWARDED_FOR", "")
+        parts = [p.strip() for p in forwarded.split(",") if p.strip()]
+        if len(parts) >= num_proxies:
+            # The right-most NUM_PROXIES entries are appended by our own proxies; the
+            # entry just before them is the closest IP we can trust.
+            return parts[-num_proxies]
+    return request.META.get("REMOTE_ADDR", "") or "unknown"
+
+
+def _login_attempt_key(username: str, ip: str) -> str:
+    return f"web:login-failures:{(username or '').lower()}:{ip}"
+
+
+class ThrottledLoginView(LoginView):
+    """Stock Django login with an app-layer brute-force brake: too many failed attempts
+    for the same (username, real client IP) within a rolling window locks that pair out.
+    Stock ``LoginView`` is not a DRF view, so DRF throttles never apply to it; this gives
+    the web login the per-IP brake the API already has, with no new dependency."""
+
+    template_name = "web/login.html"
+
+    @property
+    def _limit(self) -> int:
+        return getattr(settings, "LOGIN_FAILURE_LIMIT", 10)
+
+    @property
+    def _window(self) -> int:
+        return getattr(settings, "LOGIN_FAILURE_WINDOW_SECONDS", 900)
+
+    def _attempt_key(self) -> str:
+        # AuthenticationForm posts the identifier under "username" regardless of the
+        # user model's USERNAME_FIELD.
+        username = self.request.POST.get("username", "")
+        return _login_attempt_key(username, _client_ip(self.request))
+
+    def _is_locked_out(self, key) -> bool:
+        return (cache.get(key) or 0) >= self._limit
+
+    def _record_failure(self, key) -> None:
+        # Fixed-window counter; the first failure seeds the TTL so the window expires.
+        try:
+            cache.incr(key)
+        except ValueError:
+            cache.set(key, 1, self._window)
+
+    def post(self, request, *args, **kwargs):
+        if self._is_locked_out(self._attempt_key()):
+            form = self.get_form()
+            form.add_error(
+                None,
+                "Too many failed login attempts. Please wait a few minutes and try again.",
+            )
+            # Do not count the lock-out response itself as another failed attempt.
+            self._locked_out = True
+            return self.form_invalid(form)
+        return super().post(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        # A successful login clears the counter for this (username, IP) pair.
+        cache.delete(self._attempt_key())
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        if not getattr(self, "_locked_out", False):
+            self._record_failure(self._attempt_key())
+        return super().form_invalid(form)
+
+
 def register(request):
     if request.user.is_authenticated:
         return redirect("home")
@@ -70,13 +157,29 @@ def register(request):
             if User.objects.filter(username=data["username"]).exists():
                 form.add_error("username", "That username is taken.")
             else:
-                user = User.objects.create_user(
-                    username=data["username"], password=data["password"]
-                )
-                user.display_name = data["display_name"]
-                user.save(update_fields=["display_name"])
-                result = get_identity_provider().verify(user, age_band=data["age_band"])
-                apply_assurance(user, result)
+                # Account creation + age assurance must succeed or fail together: a provider
+                # error must never leave an orphan, un-verified account behind. If the
+                # configured identity provider (e.g. EUDI in prod) cannot establish an age
+                # band here, roll back the half-built account and send the user back to
+                # the sign-up form to retry age verification, rather than 500-ing on the
+                # primary onboarding path. (verify_age itself is login-gated, so we can't
+                # send a not-yet-authenticated registrant straight there.)
+                try:
+                    with transaction.atomic():
+                        user = User.objects.create_user(
+                            username=data["username"], password=data["password"]
+                        )
+                        user.display_name = data["display_name"]
+                        user.save(update_fields=["display_name"])
+                        result = get_identity_provider().verify(user, age_band=data["age_band"])
+                        apply_assurance(user, result)
+                except IdentityVerificationError:
+                    messages.error(
+                        request,
+                        "We couldn't verify your age automatically. Your account wasn't "
+                        "created - please try again and complete age verification.",
+                    )
+                    return redirect("register")
                 login(request, user)
                 if data["age_band"] == AgeBand.UNDER_16 and not can_participate(user):
                     messages.info(
@@ -130,6 +233,7 @@ def home(request):
             "upcoming": upcoming,
             "mine": mine,
             "events": events,
+            "guardian_invites": list(pending_guardian_invites_for(user)),
             **_nav_context(user),
         },
     )
@@ -168,9 +272,10 @@ def _visible_activity_or_404(user, pk) -> Activity:
     activity = get_object_or_404(
         Activity.objects.select_related("place", "activity_type", "owner", "thread"), pk=pk
     )
-    if getattr(user, "is_staff", False) or (
-        user.is_authenticated and social.can_see_activity(user, activity)
-    ):
+    # Staff/moderators may still open removed content (for review/appeal); members may not.
+    if getattr(user, "is_staff", False):
+        return activity
+    if user.is_authenticated and social.can_see_activity(user, activity) and not activity.is_hidden:
         return activity
     raise Http404("No activity matches the given query.")
 
@@ -214,7 +319,7 @@ def activity_detail(request, pk):
             m.my_vote = my_votes.get(m.id)
             pending.append(m)
 
-    posts = activity.thread.posts.select_related("author").all()
+    posts = activity.thread.posts.filter(is_hidden=False).select_related("author")
     photos = []
     if is_member or user.is_staff:
         try:
@@ -547,6 +652,64 @@ def wards(request):
     )
 
 
+@login_required
+@require_POST
+def guardian_invite_create(request):
+    """A verified adult invites a minor (by username) to confirm a guardianship link.
+
+    Rate-limited, and the outcome is deliberately non-distinguishing (same message whether
+    or not the account exists / is a minor / is already linked) so the form can't be used
+    to enumerate or classify child accounts. The ward sees the pending request in-app on
+    their home page — no code is shared out-of-band."""
+    generic = (
+        "If that account exists and is eligible, a guardianship request was sent. "
+        "They'll see it on their home page to accept."
+    )
+    if not safety.allow_action(
+        request.user,
+        "guardian_invite",
+        limit=getattr(settings, "GUARDIAN_INVITE_RATE_LIMIT", 20),
+        window_seconds=getattr(settings, "GUARDIAN_INVITE_RATE_WINDOW_SECONDS", 3600),
+    ):
+        messages.error(request, "Too many requests; please try again later.")
+        return redirect("wards")
+    ward = User.objects.filter(username=(request.POST.get("ward_username") or "").strip()).first()
+    if ward is not None:
+        try:
+            create_guardian_link_invite(
+                request.user,
+                ward,
+                relationship=(request.POST.get("relationship") or "parent").strip(),
+            )
+        except ValueError:
+            pass  # swallow to keep the outcome indistinguishable
+    messages.success(request, generic)
+    return redirect("wards")
+
+
+@login_required
+@require_POST
+def guardian_invite_accept(request, token):
+    """The invited ward confirms the guardianship link."""
+    try:
+        accept_guardian_link_invite(request.user, token)
+        messages.success(request, "Guardian link confirmed.")
+    except ValueError as exc:
+        messages.error(request, str(exc))
+    return redirect("home")
+
+
+@login_required
+@require_POST
+def guardian_invite_decline(request, token):
+    try:
+        decline_guardian_link_invite(request.user, token)
+        messages.success(request, "Invite declined.")
+    except ValueError as exc:
+        messages.error(request, str(exc))
+    return redirect("home")
+
+
 # --- Safety: reporting & blocking (wires apps/safety into the UI) --------------------
 
 
@@ -594,6 +757,20 @@ def report(request):
     )
 
 
+def _safe_next(request, default: str) -> str:
+    """Return the posted ``next`` target only if it points back at this site, else the
+    given named-route default. Prevents an open redirect through an attacker-supplied
+    ``next`` on the block/unblock POST."""
+    candidate = request.POST.get("next")
+    if candidate and url_has_allowed_host_and_scheme(
+        candidate,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return candidate
+    return default
+
+
 @login_required
 @require_POST
 def block_user_view(request, pk):
@@ -603,7 +780,7 @@ def block_user_view(request, pk):
         messages.success(request, f"Blocked {target.display_name or target.username}.")
     except ValueError as exc:
         messages.error(request, _msg(exc))
-    return redirect(request.POST.get("next") or "home")
+    return redirect(_safe_next(request, "home"))
 
 
 @login_required
@@ -612,4 +789,42 @@ def unblock_user_view(request, pk):
     target = get_object_or_404(User, pk=pk)
     safety.unblock_user(request.user, target)
     messages.success(request, f"Unblocked {target.display_name or target.username}.")
-    return redirect(request.POST.get("next") or "profile")
+    return redirect(_safe_next(request, "profile"))
+
+
+# --- Transparency: privacy & terms (W1-8) -------------------------------------------
+# Static legal pages. Copy is DRAFT placeholder text and must be reviewed/finalised by
+# the DPO/legal before launch; see the templates' leading banner.
+
+
+def privacy(request):
+    return render(request, "web/privacy.html", _nav_context(request.user))
+
+
+def terms(request):
+    return render(request, "web/terms.html", _nav_context(request.user))
+
+
+# --- GDPR self-service account deletion (right to erasure) ---------------------------
+
+
+@login_required
+@require_POST
+def account_delete(request):
+    """Let a user erase their own account (GDPR Art. 17). Delegates to the accounts
+    domain service, which enforces the actual erasure/retention rules, then logs the
+    user out and returns them to the public landing page."""
+    # Imported lazily: erase_user is owned by the accounts domain service.
+    from apps.accounts.services import erase_user
+
+    try:
+        erase_user(request.user, request.user)
+    except (ValueError, PermissionError) as exc:
+        messages.error(request, _msg(exc))
+        return redirect("profile")
+    logout(request)
+    messages.success(
+        request,
+        "Your account and personal data have been deleted. We're sorry to see you go.",
+    )
+    return redirect("home")

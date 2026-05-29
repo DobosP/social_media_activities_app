@@ -31,3 +31,9 @@ PyJWT[crypto]>=2.9
 boto3>=1.34
 # P3: pgvector-backed interest similarity for recommendations.
 pgvector>=0.3
+# Production-only (activated by env): a shared Redis backs the cache (global rate limits)
+# AND the Channels layer (cross-process WebSocket fan-out) when REDIS_URL is set;
+# error tracking when SENTRY_DSN is set. Neither is imported unless configured, so dev/CI
+# run without them — recompile requirements.txt before enabling in production.
+channels-redis>=4.2
+sentry-sdk[django]>=2.0

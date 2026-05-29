@@ -1,5 +1,7 @@
 from django.db import transaction
 
+from apps.safety.sanitize import safe_external_url
+
 from .classify import classify_activity
 from .models import Event
 from .sources import RawEvent
@@ -19,7 +21,9 @@ def upsert_event(
         "description": raw.description,
         "starts_at": raw.starts_at,
         "ends_at": raw.ends_at,
-        "url": raw.url,
+        # Untrusted feed URL — strip anything that isn't a safe http(s) link so it can
+        # never be rendered as a javascript:/data: href (stored XSS).
+        "url": safe_external_url(raw.url),
         "source": src,
     }
     if raw.external_id:

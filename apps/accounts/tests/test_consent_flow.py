@@ -14,6 +14,7 @@ from apps.accounts.services import (
     can_participate,
     grant_parental_consent,
     link_guardian,
+    revoke_guardian,
     revoke_parental_consent,
 )
 
@@ -86,3 +87,48 @@ def test_consent_api_rejects_non_guardian():
     client.force_authenticate(stranger)
     resp = client.post(f"/api/accounts/wards/{child.public_id}/consent/")
     assert resp.status_code == 400
+
+
+def test_revoking_guardianship_also_revokes_its_consent():
+    """W2-11: revoking guardianship must drop the consent that guardian granted, so the
+    ward stops being able to participate (no orphaned consent off a dead relationship)."""
+    guardian = _user("g_drift", AgeBand.ADULT)
+    child = _user("w_drift", AgeBand.UNDER_16)
+    link_guardian(guardian, child)
+    grant_parental_consent(guardian, child)
+    assert can_participate(child) is True
+
+    revoke_guardian(guardian, child)
+
+    assert can_participate(child) is False
+    assert not ParentalConsent.objects.filter(
+        minor=child,
+        guardian_identifier=str(guardian.public_id),
+        status=ParentalConsent.Status.ACTIVE,
+    ).exists()
+
+
+def test_revoking_one_guardian_leaves_other_guardians_consent():
+    """A second active guardian's consent is untouched when the first is revoked."""
+    g1 = _user("g_one", AgeBand.ADULT)
+    g2 = _user("g_two", AgeBand.ADULT)
+    child = _user("w_two_guardians", AgeBand.UNDER_16)
+    link_guardian(g1, child)
+    link_guardian(g2, child)
+    grant_parental_consent(g1, child)
+    grant_parental_consent(g2, child)
+
+    revoke_guardian(g1, child)
+
+    # g2's consent still holds, so the ward can still participate.
+    assert can_participate(child) is True
+    assert ParentalConsent.objects.filter(
+        minor=child,
+        guardian_identifier=str(g2.public_id),
+        status=ParentalConsent.Status.ACTIVE,
+    ).exists()
+    assert not ParentalConsent.objects.filter(
+        minor=child,
+        guardian_identifier=str(g1.public_id),
+        status=ParentalConsent.Status.ACTIVE,
+    ).exists()

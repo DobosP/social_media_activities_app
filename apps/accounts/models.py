@@ -166,6 +166,18 @@ class ParentalConsent(models.Model):
         return True
 
 
+class ConsumedAgeNonce(models.Model):
+    """Single-use ledger of OpenID4VP age-verification nonces (W2-9). Claiming a nonce
+    here before applying an assurance prevents a captured wallet presentation from being
+    replayed: the unique constraint makes a second claim of the same nonce fail."""
+
+    nonce = models.CharField(max_length=255, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"consumed-nonce({self.nonce})"
+
+
 class GuardianRelationship(models.Model):
     """An account-level legal-guardianship link: an adult `guardian` is the parent/
     protector of a minor `ward`. Established alongside parental consent; lets the
@@ -200,3 +212,51 @@ class GuardianRelationship(models.Model):
 
     def __str__(self):
         return f"{self.guardian} guards {self.ward} ({self.status})"
+
+
+class GuardianLinkInvite(models.Model):
+    """A pending, mutually-confirmed request to establish a guardianship link.
+
+    A verified adult initiates the invite for a (minor) ward; the ward must explicitly
+    accept before the `GuardianRelationship` is created — so neither an adult can
+    unilaterally claim a child, nor a child unilaterally attach to a stranger. This is the
+    onboarding path that was previously missing (the only `link_guardian` callers were
+    tests), which left minors unable to be onboarded at all. See docs/SAFETY.md. The
+    strength of the identity binding upgrades to the EUDI wallet when it ships (~Dec 2026).
+    """
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        ACCEPTED = "accepted", "Accepted"
+        DECLINED = "declined", "Declined"
+        EXPIRED = "expired", "Expired"
+
+    guardian = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="guardian_link_invites_sent"
+    )
+    ward = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="guardian_link_invites_received"
+    )
+    relationship = models.CharField(max_length=32, blank=True)  # e.g. parent, legal_guardian
+    token = models.CharField(max_length=64, unique=True)
+    status = models.CharField(max_length=16, choices=Status.choices, default=Status.PENDING)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    responded_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            # At most one OPEN invite per (guardian, ward) pair.
+            models.UniqueConstraint(
+                fields=["guardian", "ward"],
+                condition=models.Q(status="pending"),
+                name="uq_pending_guardian_invite",
+            ),
+            models.CheckConstraint(
+                condition=~models.Q(guardian=models.F("ward")), name="guardian_invite_not_self"
+            ),
+        ]
+        indexes = [models.Index(fields=["ward", "status"])]
+
+    def __str__(self):
+        return f"invite({self.guardian} -> {self.ward}, {self.status})"

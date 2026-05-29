@@ -33,6 +33,12 @@ class ConversationConsumer(AsyncJsonWebsocketConsumer):
             await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
     async def receive_json(self, content, **kwargs):
+        # Re-authorize the SENDER against FRESH state before storing/broadcasting: a banned/
+        # revoked/cohort-changed/erased user with an open socket must not be able to inject
+        # messages (the cached scope user is stale; a ban only flips is_active in the DB).
+        if not await self._still_authorized():
+            await self.close(code=4403)
+            return
         try:
             message = await self._post(content)
         except services.MessagingError as exc:
@@ -44,6 +50,13 @@ class ConversationConsumer(AsyncJsonWebsocketConsumer):
         )
 
     async def conversation_message(self, event):
+        # Per-delivery re-authorization: a user whose access was revoked/banned/removed,
+        # whose cohort changed, or who was erased AFTER connecting must stop receiving live
+        # messages immediately. We re-check against FRESH user+conversation state (the cached
+        # self.user could be stale) and close the socket if access no longer holds.
+        if not await self._still_authorized():
+            await self.close(code=4403)
+            return
         await self.send_json({"type": "message", **event["message"]})
 
     @database_sync_to_async
@@ -53,6 +66,17 @@ class ConversationConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def _can_view(self, user, conversation):
         return services.can_view(user, conversation)
+
+    @database_sync_to_async
+    def _still_authorized(self) -> bool:
+        from django.contrib.auth import get_user_model
+
+        uid = getattr(self.user, "pk", None)
+        user = get_user_model().objects.filter(pk=uid).first() if uid else None
+        if user is None:  # account erased
+            return False
+        conversation = Conversation.objects.filter(pk=self.conversation_id).first()
+        return conversation is not None and services.can_view(user, conversation)
 
     @database_sync_to_async
     def _post(self, content):

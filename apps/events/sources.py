@@ -101,19 +101,29 @@ class ICalFeedSource(EventSource):
 
     name = "ical"
 
-    def __init__(self, *, text: str | None = None, url: str | None = None, timeout: int = 20):
+    def __init__(
+        self,
+        *,
+        text: str | None = None,
+        url: str | None = None,
+        timeout: int = 20,
+        max_bytes: int = 5 * 1024 * 1024,
+    ):
         self.text = text
         self.url = url
         self.timeout = timeout
+        self.max_bytes = max_bytes
 
     def _load(self) -> str:
         if self.text is not None:
             return self.text
         if not self.url:
             raise ValueError("Provide either text or url.")
-        import requests
+        from apps.safety.net import safe_get
 
-        resp = requests.get(self.url, timeout=self.timeout)
+        # The feed URL is operator/external input — fetch it SSRF-safely with a byte
+        # cap so a hostile or oversized .ics can't reach internal hosts or exhaust memory.
+        resp = safe_get(self.url, timeout=self.timeout, max_bytes=self.max_bytes)
         resp.raise_for_status()
         return resp.text
 

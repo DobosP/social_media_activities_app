@@ -12,6 +12,7 @@ from .serializers import (
     StartDonationSerializer,
 )
 from .services import DonationError, complete_donation, completed_total_cents, start_donation
+from .webhooks import constant_time_secret_ok, verify_stripe_signature
 
 
 class StartDonationView(APIView):
@@ -56,18 +57,53 @@ class DonationTotalView(APIView):
 
 
 class DonationWebhookView(APIView):
-    """Provider callback that marks a donation completed. Guarded by a shared secret
-    (`DONATIONS_WEBHOOK_SECRET`) supplied in the `X-Webhook-Secret` header when set."""
+    """Provider callback that marks a donation completed.
+
+    Authenticated and **fail-closed**: when the Stripe provider + `STRIPE_WEBHOOK_SECRET`
+    are configured, a real Stripe Event is accepted only with a valid `Stripe-Signature`;
+    otherwise a constant-time shared-secret check against `DONATIONS_WEBHOOK_SECRET` (sent
+    in `X-Webhook-Secret`) is required. With neither configured the endpoint rejects every
+    request, so a pending donation can never be forged complete by an anonymous caller."""
 
     permission_classes = [AllowAny]
 
+    def _stripe_mode(self) -> bool:
+        return "Stripe" in getattr(settings, "DONATIONS_PROVIDER", "") and bool(
+            getattr(settings, "STRIPE_WEBHOOK_SECRET", "")
+        )
+
     def post(self, request):
-        secret = getattr(settings, "DONATIONS_WEBHOOK_SECRET", "")
-        if secret and request.headers.get("X-Webhook-Secret") != secret:
-            raise PermissionDenied("Invalid webhook secret.")
+        if self._stripe_mode():
+            return self._handle_stripe(request)
+        return self._handle_shared_secret(request)
+
+    def _handle_shared_secret(self, request):
+        shared = getattr(settings, "DONATIONS_WEBHOOK_SECRET", "")
+        if not constant_time_secret_ok(request.headers.get("X-Webhook-Secret", ""), shared):
+            raise PermissionDenied("Webhook authentication failed.")
         serializer = DonationWebhookSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        donation = complete_donation(serializer.validated_data["external_ref"])
+        return self._complete(serializer.validated_data["external_ref"])
+
+    def _handle_stripe(self, request):
+        secret = getattr(settings, "STRIPE_WEBHOOK_SECRET", "")
+        if not verify_stripe_signature(
+            request.body, request.headers.get("Stripe-Signature", ""), secret
+        ):
+            raise PermissionDenied("Webhook authentication failed.")
+        # A genuine Stripe Event is nested; the donation's external_ref is the Checkout
+        # Session id. Only act on a completed checkout; ignore every other event type.
+        event = request.data if isinstance(request.data, dict) else {}
+        if event.get("type") != "checkout.session.completed":
+            return Response({"status": "ignored"}, status=status.HTTP_200_OK)
+        session = (event.get("data") or {}).get("object") or {}
+        external_ref = session.get("id", "")
+        if not external_ref:
+            return Response({"status": "ignored"}, status=status.HTTP_200_OK)
+        return self._complete(external_ref)
+
+    def _complete(self, external_ref):
+        donation = complete_donation(external_ref)
         if donation is None:
             return Response({"status": "ignored"}, status=status.HTTP_200_OK)
         return Response(DonationSerializer(donation).data)

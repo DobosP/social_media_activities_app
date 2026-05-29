@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.accounts.permissions import IsModerator
+from apps.social import services as social
 from apps.social.models import Activity, Post
 
 from .models import ModerationAction, Report
@@ -41,6 +42,27 @@ def _resolve_target(target_type, target_id):
         raise ValidationError({"target_id": "No such target."}) from exc
 
 
+def _resolve_report_target(user, target_type, target_id):
+    """Resolve a report target gated by the reporter's visibility, mirroring the web UI's
+    ``_resolve_report_target``. Returns the target or None when it is unknown or the user
+    is not allowed to see it (so the API can 404 rather than leak existence)."""
+    if target_type == "activity":
+        activity = Activity.objects.filter(pk=target_id).first()
+        if activity and (user.is_staff or social.can_see_activity(user, activity)):
+            return activity
+    elif target_type == "post":
+        post = Post.objects.filter(pk=target_id).first()
+        if post:
+            activity = post.thread.activity
+            if user.is_staff or social.can_see_activity(user, activity):
+                return post
+    elif target_type == "user":
+        person = User.objects.filter(pk=target_id).first()
+        if person:
+            return person
+    return None
+
+
 class ReportView(APIView):
     """File a report against a user, activity, or post."""
 
@@ -52,7 +74,10 @@ class ReportView(APIView):
         data = serializer.validated_data
         if not allow_action(request.user, "report", limit=20, window_seconds=3600):
             raise Throttled(detail="Too many reports; try again later.")
-        target = _resolve_target(data["target_type"], data["target_id"])
+        target = _resolve_report_target(request.user, data["target_type"], data["target_id"])
+        if target is None:
+            # Don't leak whether the target exists but is invisible to the reporter.
+            raise NotFound("Nothing to report.")
         report = file_report(request.user, target, data["reason"], data["detail"])
         return Response(ReportSerializer(report).data, status=status.HTTP_201_CREATED)
 
@@ -90,7 +115,8 @@ class ModerationReportListView(APIView):
         status_filter = request.query_params.get("status")
         if status_filter:
             reports = reports.filter(status=status_filter)
-        return Response(ModerationReportSerializer(reports, many=True).data)
+        # Hard cap to keep the response bounded (mirrors the notifications list cap).
+        return Response(ModerationReportSerializer(reports[:100], many=True).data)
 
 
 class ResolveReportView(APIView):

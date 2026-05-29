@@ -12,7 +12,7 @@ from apps.safety.services import is_blocked, record_audit
 from apps.social.services import current_members
 
 from .models import Photo
-from .processing import extension_for, validate_and_strip
+from .processing import DEFAULT_MAX_PIXELS, extension_for, validate_and_strip
 from .scanning import get_scanner
 from .storage import get_storage
 
@@ -51,6 +51,7 @@ def upload_photo(uploader, kind, data: bytes, *, thread=None) -> Photo:
         data,
         max_bytes=settings.MEDIA_MAX_UPLOAD_BYTES,
         max_dimension=getattr(settings, "MEDIA_MAX_DIMENSION", None),
+        max_pixels=getattr(settings, "MEDIA_MAX_IMAGE_PIXELS", DEFAULT_MAX_PIXELS),
     )
     scanner = get_scanner()
     # Fail closed on a children's platform: if no effective content scanner is configured

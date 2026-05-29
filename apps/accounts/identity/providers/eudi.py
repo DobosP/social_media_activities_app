@@ -64,7 +64,7 @@ class EUDIWalletProvider(IdentityProvider):
                 "EUDI verification requires a wallet `presentation` dict; got none."
             )
 
-        claims = self._verify_presentation(presentation)
+        claims = self._verify_presentation(user, presentation)
         age_band = self._age_band_from_claims(claims)
         return AssuranceResult(
             age_band=age_band,
@@ -76,15 +76,22 @@ class EUDIWalletProvider(IdentityProvider):
                 AGE_OVER_16: bool(claims.get(AGE_OVER_16)),
                 AGE_OVER_18: bool(claims.get(AGE_OVER_18)),
                 "format": presentation.get("format", "jwt_vc"),
+                # Whether proof-of-possession of the holder key was established.
+                "holder_proof": claims.get("holder_proof", "unverified"),
             },
         )
 
-    def _verify_presentation(self, presentation: dict) -> dict:
+    def _verify_presentation(self, user, presentation: dict) -> dict:
         """Cryptographically verify the wallet presentation and return its claims.
 
         Verifies the signed ``vp_token`` (OpenID4VP) against the trusted-issuer list, with
         audience + nonce binding and expiry. The trust-anchor check is the only part that
-        differs from production (sandbox issuer vs the EU trust list)."""
+        differs from production (sandbox issuer vs the EU trust list).
+
+        When the wallet also presents a ``holder_binding_proof`` (a holder-signed
+        key-binding JWT), proof-of-possession of the credential holder key is verified and
+        the credential subject is bound to this user's stable holder id, so a credential
+        cannot be lifted from one holder and replayed to assure another account."""
         token = presentation.get("vp_token") or presentation.get("credential")
         if not token:
             raise IdentityVerificationError("Wallet presentation must carry a signed `vp_token`.")
@@ -93,7 +100,23 @@ class EUDIWalletProvider(IdentityProvider):
             nonce=presentation.get("nonce"),
             audience=presentation.get("audience") or settings.EUDI_CLIENT_ID,
             trusted_issuers=trusted_issuers(),
+            holder_binding_proof=presentation.get("holder_binding_proof"),
+            expected_holder_id=self._holder_id(user),
         )
+
+    @staticmethod
+    def _holder_id(user) -> str | None:
+        """The stable per-user holder id the credential subject must bind to, or None.
+
+        IMPORTANT: this must NOT be our ``public_id`` — a real issuer sets the credential
+        ``sub`` to its own holder pseudonym, which will never equal our id, so binding to
+        public_id would reject every real wallet. Cross-account anti-transfer is provided by
+        the key-binding *proof-of-possession* (verified when presented); the durable
+        per-user binding is a trust-on-first-use record of the holder id, recorded on first
+        verification — a follow-up. Until that record exists we pass None (no subject
+        enforcement); proof-of-possession still defeats in-window replay.
+        """
+        return getattr(user, "eudi_holder_id", None) or None
 
     def _age_band_from_claims(self, claims: dict) -> str:
         for key in _PII_CLAIMS:

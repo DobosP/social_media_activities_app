@@ -14,6 +14,7 @@ from apps.ingestion.sources.overture import OvertureAdapter, match_overture
 from apps.places.enrichment.dedup import find_duplicate
 from apps.places.enrichment.opening_hours import parse_opening_hours
 from apps.places.models import Place, PlaceActivity
+from apps.safety.sanitize import safe_external_url
 from apps.taxonomy.models import ActivityType
 
 logger = logging.getLogger(__name__)
@@ -142,7 +143,8 @@ class Command(BaseCommand):
                 "address_country": raw.address.get("country", ""),
                 "opening_hours_raw": raw.opening_hours_raw,
                 "opening_hours": parsed_hours,
-                "website": raw.website,
+                # Untrusted source URL — keep only safe http(s) links (stored-XSS guard).
+                "website": safe_external_url(raw.website),
                 "phone": raw.phone,
                 "raw_tags": raw.tags,
                 "last_seen_at": timezone.now(),
@@ -198,8 +200,8 @@ class Command(BaseCommand):
             canonical.opening_hours = defaults["opening_hours"]
             update_fields += ["opening_hours_raw", "opening_hours"]
         # Backfill contact details from the secondary source if missing.
-        if not canonical.website and raw.website:
-            canonical.website = raw.website
+        if not canonical.website and safe_external_url(raw.website):
+            canonical.website = safe_external_url(raw.website)
             update_fields.append("website")
         if not canonical.phone and raw.phone:
             canonical.phone = raw.phone

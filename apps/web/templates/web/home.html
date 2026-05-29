@@ -2,6 +2,22 @@
 {% block title %}Home{% endblock %}
 {% block content %}
 <h1>Hi {{ user.display_name|default:user.username }}</h1>
+{% if guardian_invites %}
+<div class="card" style="border-left:3px solid var(--accent)">
+  <strong>Guardian requests</strong>
+  <p class="muted">An adult has asked to be registered as your parent/guardian. Only accept if you
+    recognise them.</p>
+  {% for inv in guardian_invites %}
+    <div class="row" style="align-items:center;gap:.6rem">
+      <span>{{ inv.guardian.display_name|default:inv.guardian.username }} &middot; {{ inv.relationship|default:"guardian" }}</span>
+      <form method="post" action="{% url 'guardian_invite_accept' inv.token %}">{% csrf_token %}
+        <button class="btn btn-sm" type="submit">Accept</button></form>
+      <form method="post" action="{% url 'guardian_invite_decline' inv.token %}">{% csrf_token %}
+        <button class="btn btn-sm btn-secondary" type="submit">Decline</button></form>
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
 <p class="muted">You're in the <strong>{{ user.get_cohort_display }}</strong> cohort &mdash; you only
   see activities for your cohort. <a href="{% url 'interests' %}">Pick your interests</a> for better
   suggestions.</p>

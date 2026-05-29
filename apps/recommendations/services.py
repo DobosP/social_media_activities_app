@@ -6,7 +6,7 @@ from django.utils import timezone
 from pgvector.django import CosineDistance
 
 from apps.social.models import Activity, Membership
-from apps.social.services import visible_activities
+from apps.social.services import visible_activities, with_counts
 from apps.taxonomy.models import ActivityType
 
 from .embeddings import activity_vector, user_vector
@@ -45,9 +45,9 @@ def recommend_activities(user, *, limit=20, near_point=None, radius_m=None):
     uvec = user_vector(user)
     if not any(uvec):  # cold start — no declared interests or joined activities yet
         return list(
-            candidates.select_related("place", "activity_type", "owner").order_by("starts_at")[
-                :limit
-            ]
+            with_counts(candidates.select_related("place", "activity_type", "owner")).order_by(
+                "starts_at"
+            )[:limit]
         )
 
     ranked = (
@@ -60,4 +60,15 @@ def recommend_activities(user, *, limit=20, near_point=None, radius_m=None):
     for embedding in ranked:
         embedding.activity.rec_distance = embedding.distance
         activities.append(embedding.activity)
+    # Attach member/participant counts in ONE query so the serializer doesn't fall back to
+    # a per-row COUNT (the W2-2 N+1) on the ranked recommendations path.
+    if activities:
+        annotated = {
+            a.id: a for a in with_counts(Activity.objects.filter(id__in=[a.id for a in activities]))
+        }
+        for act in activities:
+            counts = annotated.get(act.id)
+            if counts is not None:
+                act.member_n = counts.member_n
+                act.participant_n = counts.participant_n
     return activities
