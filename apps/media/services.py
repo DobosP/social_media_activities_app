@@ -2,6 +2,7 @@
 membership/cohort-scoped visibility, and signed, expiring URLs."""
 
 import hashlib
+import logging
 import re
 import uuid
 
@@ -20,6 +21,7 @@ from .storage import get_storage
 _SIGNING_SALT = "media.signed_url"
 _ATTACH_SIGNING_SALT = "media.attachment_url"
 PDF_MAGIC = b"%PDF-"
+logger = logging.getLogger(__name__)
 
 
 class MediaError(Exception):
@@ -244,10 +246,42 @@ def _sanitize_filename(name: str) -> str:
 
 
 @transaction.atomic
-def attach_to_post(uploader, post, *, filename: str, data: bytes) -> Attachment:
+def _ephemeral_min_ttl_seconds(cohort) -> int:
+    """The per-cohort floor a requested disappear-TTL is clamped UP to. Minors (child + teen) get
+    the 24h floor; adults the shorter floor. This is the single safety seam for ephemeral media."""
+    from apps.accounts.models import Cohort
+
+    if cohort in (Cohort.CHILD, Cohort.TEEN):
+        return getattr(settings, "MEDIA_EPHEMERAL_MIN_TTL_MINORS_SECONDS", 86400)
+    return getattr(settings, "MEDIA_EPHEMERAL_MIN_TTL_SECONDS", 3600)
+
+
+def _resolve_expiry(activity, ttl_seconds):
+    """Translate a requested TTL into an absolute expires_at, clamped UP to the cohort floor.
+    None ttl → permanent (None). A non-positive ttl is treated as 'no expiry' (permanent), so a
+    bug/crafted 0 can never make an image vanish faster than the floor."""
+    from django.utils import timezone
+
+    if ttl_seconds is None:
+        return None
+    try:
+        ttl = int(ttl_seconds)
+    except (TypeError, ValueError):
+        return None
+    if ttl <= 0:
+        return None
+    ttl = max(ttl, _ephemeral_min_ttl_seconds(activity.cohort))
+    return timezone.now() + timezone.timedelta(seconds=ttl)
+
+
+def attach_to_post(uploader, post, *, filename: str, data: bytes, ttl_seconds=None) -> Attachment:
     """Attach a scanned image or PDF to the uploader's OWN thread Post. Fail-closed: if the
     scanner is ineffective or the content matches the blocklist, nothing is stored and the
-    caller's transaction should roll back the Post too (so there is no post without its file)."""
+    caller's transaction should roll back the Post too (so there is no post without its file).
+
+    ``ttl_seconds`` makes it a "temporary picture": the blob stops serving at expiry and a purge
+    job later reclaims it (hidden/reported content is exempt — evidence is kept). The TTL is
+    clamped UP to the cohort floor (24h for minors), so it can never outrun a guardian/report."""
     from apps.social.services import can_read_thread
 
     if not _attachments_enabled():
@@ -308,6 +342,7 @@ def attach_to_post(uploader, post, *, filename: str, data: bytes) -> Attachment:
         width_h = (0, 0)
         exif = False
 
+    expires_at = _resolve_expiry(activity, ttl_seconds)
     storage_key = f"{uuid.uuid4().hex}.{ext}"
     get_storage().save(storage_key, clean_bytes)
     att = Attachment.objects.create(
@@ -322,8 +357,15 @@ def attach_to_post(uploader, post, *, filename: str, data: bytes) -> Attachment:
         width=width_h[0],
         height=width_h[1],
         exif_stripped=exif,
+        expires_at=expires_at,
     )
-    record_audit("media.attachment_uploaded", actor=uploader, kind=kind, attachment_id=att.id)
+    record_audit(
+        "media.attachment_uploaded",
+        actor=uploader,
+        kind=kind,
+        attachment_id=att.id,
+        expires_at=expires_at.isoformat() if expires_at else None,
+    )
     return att
 
 
@@ -341,9 +383,28 @@ def can_view_attachment(viewer, attachment) -> bool:
     return can_read_thread(viewer, attachment.post.thread.activity)
 
 
+def _blob_retrievable(attachment, viewer) -> bool:
+    """Whether ``viewer`` may still pull the bytes. A live (not expired, not purged) attachment is
+    retrievable by any permitted viewer. An EXPIRED-but-not-yet-purged blob is additionally
+    retrievable by STAFF only — a moderator must be able to fetch the evidence in the window between
+    expiry and the purge job. A PURGED blob (bytes gone) is retrievable by no one."""
+    if attachment.is_available():
+        return True
+    return (
+        attachment.purged_at is None
+        and bool(attachment.storage_key)
+        and getattr(viewer, "is_staff", False)
+    )
+
+
 def attachment_signed_url(attachment, viewer) -> str:
     if not can_view_attachment(viewer, attachment):
         raise NotAuthorized("Not allowed to view this file.")
+    if not _blob_retrievable(attachment, viewer):
+        # A temporary picture that has expired (or been purged) stops serving immediately, even if
+        # the caller still holds a freshly-minted token — expiry is the upper bound, not the TTL.
+        # (Staff retain access to a not-yet-purged blob so moderation can still pull the evidence.)
+        raise NotAuthorized("This file is no longer available.")
     token = signing.dumps(
         {"attachment_id": attachment.id, "viewer_id": viewer.id}, salt=_ATTACH_SIGNING_SALT
     )
@@ -366,6 +427,8 @@ def resolve_attachment_token(token: str, viewer):
     )
     if att is None or not can_view_attachment(viewer, att):
         raise NotAuthorized("Not allowed to view this file.")
+    if not _blob_retrievable(att, viewer):
+        raise NotAuthorized("This file is no longer available.")
     return att
 
 
@@ -379,6 +442,117 @@ def delete_attachment(actor, attachment) -> None:
         get_storage().delete(attachment.storage_key)
     record_audit("media.attachment_deleted", actor=actor, target=attachment)
     attachment.delete()
+
+
+def _under_moderation(*, post_ids, activity_ids, uploader_ids):
+    """Return (reported_posts, reported_activities, reported_users): the ids with an UNRESOLVED
+    report so the ephemeral purge can preserve evidence. A report can target the Post, its
+    Activity, OR the uploading User — and the web report UI only ever emits user/activity targets,
+    so matching the post alone would miss the dominant child-safety report (reporting the groomer
+    or the activity). "Unresolved" excludes only DISMISSED: OPEN/REVIEWING hold during triage and
+    ACTIONED holds through the DSA appeal window (a WARN/BAN substantiates the report but does NOT
+    hide the image, so the bytes must stay)."""
+    from django.contrib.auth import get_user_model
+    from django.contrib.contenttypes.models import ContentType
+
+    from apps.safety.models import Report
+    from apps.social.models import Activity, Post
+
+    def _hits(model, ids):
+        if not ids:
+            return set()
+        ct = ContentType.objects.get_for_model(model)
+        return set(
+            Report.objects.filter(target_type=ct, target_id__in=list(ids))
+            .exclude(status=Report.Status.DISMISSED)
+            .values_list("target_id", flat=True)
+        )
+
+    return (
+        _hits(Post, post_ids),
+        _hits(Activity, activity_ids),
+        _hits(get_user_model(), uploader_ids),
+    )
+
+
+def purge_expired_attachments(now=None) -> int:
+    """Reclaim the blobs of expired temporary pictures. EXEMPT (never purged) — evidence is
+    preserved for moderation/appeal/DSA/law: a hidden post, a hidden activity, OR any attachment
+    whose post / containing activity / uploader is under an unresolved report. Each item is purged
+    in its OWN transaction with a fresh row-locked re-check (so a report or hide that lands after
+    the candidate snapshot still wins the race) and its own try/except (one bad blob is logged and
+    skipped, retried next tick — it never starves the rest). Idempotent (skips already-purged
+    rows). The row is RETAINED (only the bytes go) so the audit trail + sha256 survive. Returns the
+    number of blobs reclaimed."""
+    from django.utils import timezone
+
+    from apps.social.models import Post
+
+    now = now or timezone.now()
+    candidates = list(
+        Attachment.objects.filter(
+            expires_at__isnull=False, expires_at__lte=now, purged_at__isnull=True
+        ).select_related("post__thread__activity")
+    )
+    if not candidates:
+        return 0
+    # Cheap pre-filter from a snapshot so the common (non-exempt) case avoids a row lock; the
+    # authoritative check is re-run under the lock below to close the report-after-snapshot race.
+    reported_posts, reported_acts, reported_users = _under_moderation(
+        post_ids={a.post_id for a in candidates},
+        activity_ids={a.post.thread.activity_id for a in candidates},
+        uploader_ids={a.uploader_id for a in candidates},
+    )
+    storage = get_storage()
+    purged = 0
+    for att in candidates:
+        activity = att.post.thread.activity
+        if (
+            att.post.is_hidden
+            or activity.is_hidden
+            or att.post_id in reported_posts
+            or activity.id in reported_acts
+            or att.uploader_id in reported_users
+        ):
+            continue  # preserve evidence — reconsidered on the next run
+        try:
+            with transaction.atomic():
+                # Re-check under a row lock against FRESH state: a report filed or a hide applied
+                # since the snapshot must be honoured (evidence preservation can't lose the race).
+                locked = (
+                    Post.objects.select_for_update()
+                    .select_related("thread__activity")
+                    .get(pk=att.post_id)
+                )
+                fresh_p, fresh_a, fresh_u = _under_moderation(
+                    post_ids=[locked.id],
+                    activity_ids=[locked.thread.activity_id],
+                    uploader_ids=[att.uploader_id],
+                )
+                if (
+                    locked.is_hidden
+                    or locked.thread.activity.is_hidden
+                    or fresh_p
+                    or fresh_a
+                    or fresh_u
+                ):
+                    continue
+                key = att.storage_key
+                att.purged_at = now
+                att.storage_key = ""  # so it is never re-served or re-deleted
+                att.save(update_fields=["purged_at", "storage_key"])
+                record_audit("media.attachment_purged", actor=None, target=att, reason="expired")
+                # Delete the bytes LAST: if it throws, the atomic rolls back the row changes too, so
+                # we never end up "row says purged, blob still present" or vice-versa.
+                if key:
+                    storage.delete(key)
+            purged += 1
+        except Exception:
+            # One unreclaimable blob (storage hiccup) must not abort the whole sweep; it stays
+            # not-purged and is retried on the next tick.
+            logger.exception("purge_expired_attachments: could not reclaim attachment %s", att.id)
+            continue
+    return purged
 
 
 def attachments_for_posts(posts, viewer):
@@ -397,6 +571,14 @@ def attachments_for_posts(posts, viewer):
     for att in qs:
         if not can_view_attachment(viewer, att):
             continue
-        att.url = attachment_signed_url(att, viewer)
+        if _blob_retrievable(att, viewer):
+            # Live for a member; for STAFF this also covers an expired-not-purged blob (evidence).
+            att.url = attachment_signed_url(att, viewer)
+            att.expired = False
+        else:
+            # Keep an honest placeholder in the stream (a temporary picture that has disappeared)
+            # rather than a broken image — no URL is issued for a gone blob.
+            att.url = ""
+            att.expired = True
         by_post.setdefault(att.post_id, []).append(att)
     return by_post

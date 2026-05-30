@@ -23,7 +23,7 @@ from django.views.decorators.http import require_POST
 
 from apps.accounts.identity.base import IdentityVerificationError
 from apps.accounts.identity.registry import get_identity_provider
-from apps.accounts.models import AgeBand, GuardianRelationship, User
+from apps.accounts.models import AgeBand, Cohort, GuardianRelationship, User
 from apps.accounts.services import (
     accept_guardian_link_invite,
     apply_assurance,
@@ -858,6 +858,13 @@ def activity_detail(request, pk):
             "reply_target": reply_target,
             "photos": photos,
             "post_form": post_form,
+            # Disappear options shown in the composer — MINORS (child/teen) never see a sub-day
+            # option (their floor is 24h); adults may also pick 1 hour.
+            "ephemeral_options": (
+                [("3600", "1 hour"), ("86400", "1 day"), ("604800", "1 week")]
+                if activity.cohort == Cohort.ADULT
+                else [("86400", "1 day"), ("604800", "1 week")]
+            ),
             "my_guardians": my_guardians,
             "my_arrival": my_arrival,
             "arrival_window_open": is_member and social.arrival_window_open(activity),
@@ -1110,7 +1117,14 @@ def activity_post(request, pk):
                 ping=form.cleaned_data.get("ping", False),
             )
             if data is not None:
-                media.attach_to_post(request.user, post, filename=upload.name, data=data)
+                ttl = form.cleaned_data.get("disappear") or None
+                media.attach_to_post(
+                    request.user,
+                    post,
+                    filename=upload.name,
+                    data=data,
+                    ttl_seconds=int(ttl) if ttl else None,
+                )
     except (social.SocialError, media.MediaError) as exc:
         messages.error(request, _msg(exc))
     return redirect("activity_detail", pk=pk)

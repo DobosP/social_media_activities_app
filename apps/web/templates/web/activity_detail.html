@@ -227,6 +227,12 @@
         <label class="visually-hidden" for="{{ post_form.attachment.id_for_label }}">Attach a photo or PDF</label>
         <input type="file" name="attachment" id="{{ post_form.attachment.id_for_label }}"
                accept="image/png,image/jpeg,image/webp,application/pdf">
+        <label class="muted" style="font-size:.78rem;display:inline-flex;align-items:center;gap:.3rem">
+          🕓 <span class="visually-hidden">Make this picture temporary</span>
+          <select name="disappear">
+            <option value="">Keep</option>
+            {% for secs, label in ephemeral_options %}<option value="{{ secs }}">Disappear after {{ label }}</option>{% endfor %}
+          </select></label>
         <button class="btn btn-sm" type="submit">Post</button>
       </div>
       <label style="font-size:.78rem;display:inline-flex;align-items:center;gap:.35rem;margin-top:.3rem">

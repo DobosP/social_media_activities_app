@@ -15,14 +15,18 @@
      wrapped in <span class="mention">. Falls back to the plain escaped body if not attached. #}
   <div>{% if p.body_html %}{{ p.body_html }}{% else %}{{ p.body|linebreaksbr }}{% endif %}</div>
   {% for att in p.attachment_list %}
-    {% if att.kind == "image" %}
+    {% if att.expired %}
+      <p class="muted" style="margin:.3rem 0 0;font-size:.8rem">🕓 This temporary picture has disappeared.</p>
+    {% elif att.kind == "image" %}
       <a href="{{ att.url }}" target="_blank" rel="noopener noreferrer">
         <img src="{{ att.url }}" alt="shared image" loading="lazy"
              style="max-width:280px;max-height:280px;border-radius:8px;margin-top:.3rem"></a>
+      {% if att.expires_at %}<p class="muted" style="font-size:.72rem;margin:.1rem 0 0">🕓 disappears {{ att.expires_at|timeuntil }}</p>{% endif %}
     {% else %}
       <p style="margin:.3rem 0 0">&#128206;
         <a href="{{ att.url }}">{{ att.original_filename|default:"document.pdf" }}</a>
-        <span class="muted" style="font-size:.75rem">(PDF &mdash; downloads)</span></p>
+        <span class="muted" style="font-size:.75rem">(PDF &mdash; downloads)</span>
+        {% if att.expires_at %}<span class="muted" style="font-size:.72rem">&middot; 🕓 disappears {{ att.expires_at|timeuntil }}</span>{% endif %}</p>
     {% endif %}
   {% endfor %}
   {# Reactions: anonymous + COUNTLESS — only which emojis are present, never how many or who. #}

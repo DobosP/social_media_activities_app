@@ -90,9 +90,37 @@ class Attachment(models.Model):
     height = models.PositiveIntegerField(default=0)
     exif_stripped = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    # Ephemeral ("temporary picture") support. NULL = permanent (the default). When set, the blob
+    # stops being served at expiry and a purge job later reclaims it — UNLESS the post is hidden or
+    # under an unresolved report, in which case the evidence is preserved (purge exempts it). A
+    # per-cohort minimum TTL (24h for minors) is enforced in the service so disappearing media can
+    # never be weaponised for "look quick, it's gone" pressure or to outrun a guardian/report.
+    expires_at = models.DateTimeField(null=True, blank=True)
+    # Set when the purge job has reclaimed the blob (idempotency + an honest "expired" placeholder).
+    # The row is RETAINED after purge (uploader + sha256 + audit survive); only the bytes are gone.
+    purged_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        indexes = [models.Index(fields=["post", "created_at"])]
+        indexes = [
+            models.Index(fields=["post", "created_at"]),
+            # The purge job scans by (expires_at set, not yet purged) — keep it an index scan.
+            models.Index(
+                fields=["expires_at"],
+                condition=Q(expires_at__isnull=False, purged_at__isnull=True),
+                name="ix_attachment_pending_purge",
+            ),
+        ]
 
     def __str__(self):
         return f"attachment({self.kind}, post={self.post_id})"
+
+    def is_available(self, now=None) -> bool:
+        """Whether the blob should still be served: not purged and not past its expiry. An expired
+        attachment stops serving immediately (the moment of expiry), even before the purge runs."""
+        from django.utils import timezone
+
+        if self.purged_at is not None or not self.storage_key:
+            return False
+        if self.expires_at is None:
+            return True
+        return self.expires_at > (now or timezone.now())

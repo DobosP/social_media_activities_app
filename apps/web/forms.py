@@ -180,6 +180,18 @@ class PostForm(forms.Form):
     # @mentions are always a calm highlight (tag-not-ping). Ticking this opt-in escalates them to
     # a notification to the mentioned peers (still mutable by each recipient). Default off.
     ping = forms.BooleanField(required=False)
+    # Optional "temporary picture": how long an attached image/PDF stays before it disappears.
+    # "" = keep permanently (default). The service clamps the TTL UP to the cohort floor (24h for
+    # minors), so a too-short value here can never make media vanish faster than that floor.
+    disappear = forms.ChoiceField(
+        required=False,
+        choices=[
+            ("", "Keep in the thread"),
+            ("3600", "Disappear after 1 hour"),
+            ("86400", "Disappear after 1 day"),
+            ("604800", "Disappear after 1 week"),
+        ],
+    )
 
 
 class DonateForm(forms.Form):

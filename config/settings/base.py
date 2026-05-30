@@ -302,6 +302,14 @@ MEDIA_REQUIRE_SCANNER = env.bool("MEDIA_REQUIRE_SCANNER", default=True)
 MEDIA_ATTACHMENTS_ENABLED = env.bool("MEDIA_ATTACHMENTS_ENABLED", default=True)
 MEDIA_ATTACHMENT_MAX_BYTES = env.int("MEDIA_ATTACHMENT_MAX_BYTES", default=7 * 1024 * 1024)
 MEDIA_FILE_COHORTS = env.list("MEDIA_FILE_COHORTS", default=["adult"])
+# Ephemeral ("temporary") thread pictures. A requested TTL is clamped UP to a per-cohort minimum
+# so disappearing media can't be used for "look quick, it's gone" pressure or to outrun a
+# guardian/moderator/report. MINORS (child + teen) get a 24h floor; adults a 1h floor. NULL ttl
+# (no disappear) stays permanent. The purge job NEVER removes hidden/reported content (evidence).
+MEDIA_EPHEMERAL_MIN_TTL_SECONDS = env.int("MEDIA_EPHEMERAL_MIN_TTL_SECONDS", default=3600)
+MEDIA_EPHEMERAL_MIN_TTL_MINORS_SECONDS = env.int(
+    "MEDIA_EPHEMERAL_MIN_TTL_MINORS_SECONDS", default=86400
+)
 
 # D7 — richer place data.
 # Overture places parquet path/glob (local extract or the public S3 release, e.g.
