@@ -9,6 +9,7 @@
   {{ place.address_city }} {{ place.address_country }}
 </p>
 {% if place.website|safe_href %}<p><a href="{{ place.website|safe_href }}" rel="noopener noreferrer" target="_blank">Official website &rarr;</a></p>{% endif %}
+{% if partner %}<p class="muted">In partnership with {% if partner.website|safe_href %}<a href="{{ partner.website|safe_href }}" rel="noopener noreferrer" target="_blank">{{ partner.name }}</a>{% else %}{{ partner.name }}{% endif %} <small>({{ partner.get_kind_display }})</small></p>{% endif %}
 <div>{% for pa in place.place_activities.all %}<span class="tag">{{ pa.activity.name }}</span>{% endfor %}</div>
 
 <div class="card">

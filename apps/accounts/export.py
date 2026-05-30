@@ -154,6 +154,7 @@ def _donations_summary(user) -> dict:
                 "amount_cents": d.amount_cents,
                 "currency": d.currency,
                 "recurring": d.recurring,
+                "campaign": d.campaign.title if d.campaign else None,
                 "provider": d.provider,
                 "status": d.status,
                 "external_ref": d.external_ref,

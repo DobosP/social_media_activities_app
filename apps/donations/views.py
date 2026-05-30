@@ -30,6 +30,7 @@ class StartDonationView(APIView):
                 data["amount_cents"],
                 data["currency"],
                 recurring=data["recurring"],
+                campaign=data.get("campaign"),
             )
         except DonationError as exc:
             raise ValidationError(str(exc)) from exc

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load safe_urls %}
+{% block title %}Civic partners{% endblock %}
+{% block content %}
+<h1>Civic partners</h1>
+<p class="muted">Libraries, schools, NGOs and civic bodies we work with. This is an acknowledgement
+  of their support &mdash; not advertising. Partners are staff-curated and never paid for placement.</p>
+{% for p in partners %}
+  <div class="card">
+    <strong>{{ p.name }}</strong> <span class="tag">{{ p.get_kind_display }}</span>
+    {% if p.blurb %}<p>{{ p.blurb }}</p>{% endif %}
+    {% if p.place %}<p class="muted">Stewards <a href="{% url 'place_detail' p.place.pk %}">{{ p.place.name|default:"a venue" }}</a>.</p>{% endif %}
+    {% if p.website|safe_href %}<p class="muted"><a href="{{ p.website|safe_href }}" rel="noopener noreferrer" target="_blank">Website &rarr;</a></p>{% endif %}
+  </div>
+{% empty %}
+  <p class="muted">No civic partners listed yet.</p>
+{% endfor %}
+{% endblock %}

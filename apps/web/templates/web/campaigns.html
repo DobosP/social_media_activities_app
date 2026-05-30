@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load money %}
+{% block title %}Campaigns{% endblock %}
+{% block content %}
+<h1>Campaigns</h1>
+<p class="muted">Specific things your donation can support. Earmark a gift to one, or give to the
+  general fund. Figures shown in EUR.</p>
+{% for c in campaigns %}
+  <div class="card">
+    <h2 style="margin-top:0">{{ c.title }}</h2>
+    {% if c.description %}<p>{{ c.description|linebreaks }}</p>{% endif %}
+    <div role="progressbar" aria-valuenow="{{ c.percent }}" aria-valuemin="0" aria-valuemax="100"
+         aria-label="raised {{ c.raised_cents|cents }} of {{ c.goal_cents|cents }} EUR goal"
+         style="background:#eef0ec;border-radius:6px;height:10px;overflow:hidden;margin:.4rem 0">
+      <div style="background:var(--accent);height:10px;width:{{ c.percent }}%"></div>
+    </div>
+    <p class="muted">Raised {{ c.raised_cents|cents }} of {{ c.goal_cents|cents }} EUR goal.</p>
+    <a class="btn btn-sm" href="{% url 'donate' %}?campaign={{ c.slug }}">Donate to this campaign</a>
+  </div>
+{% empty %}
+  <p class="muted">No active campaigns right now.
+    <a href="{% url 'donate' %}">Support the general fund</a>.</p>
+{% endfor %}
+{% endblock %}

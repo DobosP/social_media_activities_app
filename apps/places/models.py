@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.gis.db import models as gis_models
+from django.core.validators import MaxLengthValidator
 from django.db import models
 from django.db.models import Q, UniqueConstraint
 
@@ -133,3 +134,52 @@ class AccessPreference(models.Model):
 
     def __str__(self):
         return f"{self.user} access-pref"
+
+
+class PartnerManager(models.Manager):
+    def public(self):
+        """The single public-visibility chokepoint: verified AND active only."""
+        return self.filter(is_verified=True, is_active=True)
+
+
+class Partner(models.Model):
+    """A vetted civic institution we acknowledge as a partner (F37) — a library/school/NGO/civic
+    body that stewards a real venue. TEXT-ONLY by construction: NO logo/image field (never an
+    ad/banner surface), NO ranking/boost/featured field. Only verified+active partners are ever
+    public, via Partner.objects.public(). The optional website is sanitised like Place.website."""
+
+    class Kind(models.TextChoices):
+        LIBRARY = "library", "Library"
+        SCHOOL = "school", "School"
+        NGO = "ngo", "NGO / nonprofit"
+        CIVIC = "civic", "Civic body"
+        HEALTHCARE = "healthcare", "Healthcare"
+        CULTURAL = "cultural", "Cultural"
+        OTHER = "other", "Other"
+
+    name = models.CharField(max_length=255)
+    kind = models.CharField(max_length=16, choices=Kind.choices)
+    # Short credit only — a hard cap keeps it an acknowledgement, never a promotional paragraph.
+    blurb = models.TextField(blank=True, validators=[MaxLengthValidator(280)])
+    place = models.ForeignKey(
+        "places.Place", on_delete=models.SET_NULL, null=True, blank=True, related_name="partners"
+    )
+    website = models.URLField(max_length=500, blank=True)
+    is_verified = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    objects = PartnerManager()
+
+    class Meta:
+        ordering = ["name"]  # neutral alphabetical — no rank/amount/boost field exists
+        indexes = [models.Index(fields=["is_verified", "is_active"])]
+
+    def __str__(self):
+        return f"{self.name} ({self.get_kind_display()})"
+
+    def save(self, *args, **kwargs):
+        # Same trust boundary as Place.website: only a safe http(s) URL is ever stored.
+        self.website = safe_external_url(self.website)
+        super().save(*args, **kwargs)

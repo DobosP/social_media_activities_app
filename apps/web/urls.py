@@ -63,6 +63,10 @@ urlpatterns = [
     ),
     path("messages/", views.messages_page, name="messages"),
     path("donate/", views.donate, name="donate"),
+    path("transparency/", views.transparency, name="transparency"),
+    path("my-donations/", views.my_donations, name="my_donations"),
+    path("campaigns/", views.campaigns, name="campaigns"),
+    path("partners/", views.partners_list, name="partners"),
     # Safety: reporting & blocking
     path("report/", views.report, name="report"),
     path("users/<int:pk>/block/", views.block_user_view, name="block_user"),
