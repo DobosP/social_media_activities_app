@@ -3,6 +3,7 @@ user-place quorum. Views and admin go through these functions so the safety
 invariants (cohort isolation, verified-and-consented participation) live in one place.
 """
 
+import re
 from datetime import timedelta
 
 from django.conf import settings
@@ -31,6 +32,20 @@ from .models import (
 # settings; sane defaults here.
 ARRIVAL_WINDOW_BEFORE_HOURS = 2
 ARRIVAL_WINDOW_AFTER_HOURS = 3
+
+# F35 "catch up" digest — deterministic, bounded, no ML. Caps keep the read cheap.
+DIGEST_SCAN_LIMIT = 60  # hard cap on non-announcement posts pulled into Python
+DIGEST_RECENT_POSTS = 3  # most-recent posts always surfaced
+DIGEST_LOGISTICAL_POSTS = 3  # max keyword-matched logistical posts surfaced
+DIGEST_MAX_ANNOUNCEMENTS = 2  # latest N announcements
+# Conservative, whole-word vocabulary for "this post is about logistics". Deliberately omits
+# bare "time" (so "had a great time" never matches); a real time change still trips on
+# change/changed/reschedule/moved/postpone. The vocabulary lives only here.
+_LOGISTICAL_RE = re.compile(
+    r"\b(meet|meeting|change|changed|move|moved|moving|bring|bringing|cancel|"
+    r"cancell?ed|cancelling|reschedul\w*|postpon\w*|location|venue)\b",
+    re.IGNORECASE,
+)
 
 
 class SocialError(Exception):
@@ -351,15 +366,40 @@ def _notify(recipient, kind, title, *, body="", url=""):
     notify(recipient, kind, title, body=body, url=url)
 
 
+def _is_genuinely_new(membership: Membership) -> bool:
+    """True when the joiner holds no OTHER current MEMBER membership — i.e. this is their first
+    activity. A presence/absence fact about the joiner themselves (never a rating); used to fire
+    the first-timer welcome at most once. Self excluded by pk so it's robust to flush order."""
+    return not (
+        Membership.objects.filter(user_id=membership.user_id, state=Membership.State.MEMBER)
+        .exclude(pk=membership.pk)
+        .exists()
+    )
+
+
 def _admit(membership: Membership) -> None:
     membership.state = Membership.State.MEMBER
     membership.decided_at = timezone.now()
-    membership.save(update_fields=["state", "decided_at", "updated_at"])
+    body = str(_("You were admitted to “%(title)s”.") % {"title": membership.activity.title})
+    # F39: a genuinely-new joiner (their first activity) gets a one-time welcome line on this
+    # notification + a self-dismissing banner; welcomed_at makes it at-most-once.
+    is_new = membership.welcomed_at is None and _is_genuinely_new(membership)
+    update_fields = ["state", "decided_at", "updated_at"]
+    if is_new:
+        membership.welcomed_at = timezone.now()
+        update_fields.append("welcomed_at")
+        body += str(
+            _(
+                " New here? Say a quick hello in the thread and check the meetup logistics — "
+                "the group is glad you joined."
+            )
+        )
+    membership.save(update_fields=update_fields)
     _notify(
         membership.user,
         "join_approved",
         "You're in!",
-        body=f"You were admitted to “{membership.activity.title}”.",
+        body=body,
         url=f"/api/social/activities/{membership.activity_id}/",
     )
 
@@ -530,6 +570,76 @@ def met_confirmation_summary(activity) -> dict:
         "confirmed": members.filter(met_confirmed_at__isnull=False).count(),
         "total": members.count(),
     }
+
+
+# --- F35: extractive "catch up" thread digest -----------------------------------------
+
+
+def thread_digest(activity) -> dict:
+    """A deterministic, extractive recap of an activity thread (F35): the latest
+    announcements, a few logistical posts (conservative keyword match) and the most-recent
+    posts, plus the live going/total + member count. Pure read; the SAME digest for every
+    member (no per-user 'last read' state — that would be behavioural tracking). Bounded by
+    DIGEST_SCAN_LIMIT. Mirrors the existing thread read: like activity_detail, it does NOT
+    filter blocked-author posts, so the digest is identical for every member."""
+    posts = activity.thread.posts
+    announcements = list(
+        posts.filter(is_hidden=False, is_announcement=True)
+        .select_related("author")
+        .order_by("-created_at")[:DIGEST_MAX_ANNOUNCEMENTS]
+    )
+    scanned = list(
+        posts.filter(is_hidden=False, is_announcement=False)
+        .select_related("author")
+        .order_by("-created_at")[:DIGEST_SCAN_LIMIT]
+    )
+    recent = scanned[:DIGEST_RECENT_POSTS]
+    recent_ids = {p.id for p in recent}
+    logistical = [p for p in scanned if p.id not in recent_ids and _LOGISTICAL_RE.search(p.body)][
+        :DIGEST_LOGISTICAL_POSTS
+    ]
+    att = attendance_summary(activity)
+    return {
+        "announcements": announcements,
+        "recent": recent,
+        "logistical": logistical,
+        "going": att["going"],
+        "total": att["total"],
+        "member_count": current_members(activity).count(),
+        "has_content": bool(announcements or recent or logistical),
+    }
+
+
+# --- F36: template-driven activity draft helper ----------------------------------------
+
+
+def draft_activity_text(*, activity_type, place=None, starts_at=None, cohort=None) -> dict:
+    """A deterministic (no ML) draft title + description composed from the organiser's OWN
+    chosen type/place/time, to seed an empty create form (F36). A CHILD/TEEN organiser also
+    gets a short safety reminder. Returns {'title', 'description'}; callers only ever seed
+    EMPTY initial, never overwrite what the user typed. gettext fragments are str()-coerced
+    before slicing/concatenation (a lazy proxy can't be sliced)."""
+    has_place_name = bool(place and (place.name or "").strip())
+    if has_place_name:
+        title = str(_("%(type)s at %(place)s") % {"type": activity_type.name, "place": place.name})
+    else:
+        title = str(activity_type.name)
+    title = title[:200]
+
+    where = str(_(" at %(place)s") % {"place": place.name}) if has_place_name else ""
+    when = str(_(" on %(when)s") % {"when": f"{starts_at:%a %d %b, %H:%M}"}) if starts_at else ""
+    base = str(
+        _("A %(type)s meetup%(where)s%(when)s. Add any details below before you post.")
+        % {"type": activity_type.name, "where": where, "when": when}
+    )
+    # Minor signal = cohort, NOT requires_parental_consent (which is UNDER_16-only and would
+    # silently skip TEEN organisers).
+    if cohort in (Cohort.CHILD, Cohort.TEEN):
+        safety = str(_("Safety: meet in a public place and bring a friend."))
+        description = "\n\n".join([base, safety])
+    else:
+        description = base
+    return {"title": title, "description": description}
 
 
 # --- F3: "we're here" arrival ping -----------------------------------------------------
