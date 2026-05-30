@@ -92,6 +92,7 @@ urlpatterns = [
     path("messages/", views.messages_page, name="messages"),
     # Communities
     path("communities/", views.communities_page, name="communities"),
+    path("communities/graph/", views.community_graph_page, name="community_graph"),
     path("communities/<slug:slug>/", views.community_detail, name="community_detail"),
     # Connections
     path("connections/", views.connections_page, name="connections"),
