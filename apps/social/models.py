@@ -249,6 +249,32 @@ class Post(models.Model):
         return f"post({self.author} @ {self.thread_id})"
 
 
+class PostReaction(models.Model):
+    """An emoji acknowledgement of a thread Post. Deliberately ANONYMOUS + COUNTLESS at the
+    read surface: the thread renders only the DISTINCT set of emojis present on a post (never how
+    many, never who). The rows exist so a user can toggle their OWN reaction and so a moderator
+    can inspect, but `post_reaction_emojis` exposes neither a count nor a who-list — that keeps a
+    reaction a neutral ack, not a per-user popularity/affinity signal among minors (inv.2). The
+    encrypted-DM surface, by contrast, shows who-reacted-with-what, but that lives entirely
+    client-side inside the ciphertext the server relays — there is no PostReaction there."""
+
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="reactions")
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="post_reactions"
+    )
+    emoji = models.CharField(max_length=8)  # one of a fixed, non-extensible set (no custom emoji)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(fields=["post", "user", "emoji"], name="uq_post_reaction"),
+        ]
+        indexes = [models.Index(fields=["post"])]
+
+    def __str__(self):
+        return f"reaction({self.emoji} on {self.post_id})"
+
+
 class UserPlaceProposal(models.Model):
     """A user-submitted place awaiting a multi-user quorum before it goes public.
 

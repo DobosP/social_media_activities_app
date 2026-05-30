@@ -757,6 +757,77 @@ def broadcast_post(post, *, edited=False) -> None:
         pass
 
 
+# --- thread reactions (anonymous, COUNTLESS, no who-list) -----------------------------------
+
+# A fixed, NON-extensible ack set — never user-supplied custom emoji (a custom-emoji economy is
+# an engagement/vanity surface). Overridable via settings only by an operator.
+DEFAULT_REACTION_EMOJIS = ["👍", "❤️", "🎉", "👏", "🙏"]
+
+
+def allowed_reactions() -> list:
+    return list(getattr(settings, "THREAD_REACTION_EMOJIS", DEFAULT_REACTION_EMOJIS))
+
+
+@transaction.atomic
+def toggle_reaction(user, post, emoji) -> bool:
+    """Add or remove the user's OWN emoji reaction on a thread post. Same membership/cohort/
+    consent gate as posting; refuses a hidden post and a custom emoji. Returns True if now
+    reacted, False if removed. Never exposes a count or a who-list anywhere."""
+    from .models import PostReaction
+
+    if emoji not in allowed_reactions():
+        raise InvalidState(_("That reaction isn't available."))
+    if post.is_hidden:
+        raise InvalidState(_("You can't react to that message."))
+    activity = post.thread.activity
+    membership = current_members(activity).filter(user=user).first()
+    if membership is None:
+        raise NotAMember(_("Only current members can react."))
+    if membership.role == Membership.Role.GUARDIAN:
+        # Guardians are read-only supervisors (like post_to_thread) — reacting is a write.
+        raise NotEligible(_("Guardians accompany activities as read-only supervisors."))
+    if not can_participate(user):
+        raise NotEligible(_("Reacting requires verified, consented participation."))
+    if activity.status == Activity.Status.CANCELLED:
+        raise InvalidState(_("This activity was cancelled; its thread is closed."))
+    existing = PostReaction.objects.filter(post=post, user=user, emoji=emoji).first()
+    if existing is not None:
+        existing.delete()
+        return False
+    PostReaction.objects.create(post=post, user=user, emoji=emoji)
+    return True
+
+
+def post_reaction_emojis(post) -> list:
+    """The DISTINCT emojis present on a post, in the fixed display order — NO count, NO who."""
+    present = set(post.reactions.values_list("emoji", flat=True))
+    return [e for e in allowed_reactions() if e in present]
+
+
+def reactions_for_posts(posts, viewer) -> dict:
+    """Batch (no N+1): post_id -> {"present": [distinct emojis, no count], "mine": {viewer's own}}.
+    Used by the thread view to render reaction chips + highlight the viewer's own toggles."""
+    from .models import PostReaction
+
+    ids = [p.id for p in posts]
+    out = {pid: {"present": set(), "mine": set()} for pid in ids}
+    if not ids:
+        return out
+    for r in PostReaction.objects.filter(post_id__in=ids).values("post_id", "user_id", "emoji"):
+        slot = out[r["post_id"]]
+        slot["present"].add(r["emoji"])
+        if r["user_id"] == viewer.id:
+            slot["mine"].add(r["emoji"])
+    order = allowed_reactions()
+    return {
+        pid: {
+            "present": [e for e in order if e in v["present"]],  # ordered distinct, no count
+            "mine": v["mine"],
+        }
+        for pid, v in out.items()
+    }
+
+
 @transaction.atomic
 def post_announcement(owner, activity, body: str) -> Post:
     """Owner-only pinned broadcast: a must-read logistics post that surfaces above the

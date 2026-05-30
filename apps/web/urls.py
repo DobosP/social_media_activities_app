@@ -56,6 +56,11 @@ urlpatterns = [
         views.activity_post_delete,
         name="activity_post_delete",
     ),
+    path(
+        "activities/<int:pk>/post/<int:post_id>/react/",
+        views.activity_post_react,
+        name="activity_post_react",
+    ),
     path("activities/<int:pk>/photo/", views.activity_photo, name="activity_photo"),
     path(
         "activities/<int:pk>/members/<int:membership_id>/vote/",

@@ -15,6 +15,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -767,8 +768,13 @@ def activity_detail(request, pk):
 
         all_rendered = [*posts, *(r for p in posts for r in p.replies.all())]
         by_post = attachments_for_posts(all_rendered, user)
+        # Reactions: anonymous, COUNTLESS — only the distinct emojis present + the viewer's own.
+        rx = social.reactions_for_posts(all_rendered, user)
         for p in all_rendered:
             p.attachment_list = by_post.get(p.id, [])
+            slot = rx.get(p.id, {"present": [], "mine": set()})
+            p.reaction_present = slot["present"]
+            p.reaction_mine = slot["mine"]
     # No-JS quote-reply: a "Reply" link is ?reply_to=<id>#compose; pre-target the compose form.
     reply_target = None
     rt = request.GET.get("reply_to")
@@ -844,6 +850,7 @@ def activity_detail(request, pk):
             "posts": posts,
             "has_older": has_older,
             "older_cursor": older_cursor,
+            "reaction_emojis": social.allowed_reactions(),
             "reply_target": reply_target,
             "photos": photos,
             "post_form": post_form,
@@ -1136,6 +1143,19 @@ def activity_post_delete(request, pk, post_id):
 
 @login_required
 @require_POST
+def activity_post_react(request, pk, post_id):
+    """Toggle the viewer's own emoji reaction on a thread post (anonymous, no count)."""
+    activity = _visible_activity_or_404(request.user, pk)
+    post = get_object_or_404(Post, pk=post_id, thread=activity.thread)
+    try:
+        social.toggle_reaction(request.user, post, request.POST.get("emoji", ""))
+    except social.SocialError as exc:
+        messages.error(request, _msg(exc))
+    return redirect(f"{reverse('activity_detail', args=[pk])}#post-{post_id}")
+
+
+@login_required
+@require_POST
 def activity_photo(request, pk):
     activity = _visible_activity_or_404(request.user, pk)
     upload = request.FILES.get("image")
@@ -1320,6 +1340,9 @@ def messages_page(request):
             "display_name": request.user.display_name or request.user.username,
         },
         "connections": conns,
+        # The fixed reaction set (same as the thread). In E2EE chat a reaction is an encrypted
+        # message the client renders as who+what — the server never sees the emoji.
+        "reaction_emojis": social.allowed_reactions(),
     }
     return render(
         request,

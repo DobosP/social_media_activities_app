@@ -19,6 +19,9 @@
 
   const cfg = JSON.parse(document.getElementById("mz-config").textContent);
   const ME = cfg.me; // {public_id, username, display_name}
+  const REACTIONS = cfg.reaction_emojis || []; // fixed emoji ack set
+  const msgRows = {}; // server msg id -> rendered row element (so reactions find their target)
+  const appliedReactions = {}; // de-dupe: "targetId:senderId:emoji" -> true
   const subtle = window.crypto && window.crypto.subtle;
 
   // ---- small helpers -------------------------------------------------------
@@ -480,6 +483,10 @@
     const own = msg.sender && msg.sender.public_id === ME.public_id;
     const row = document.createElement("div");
     row.className = "mz-msg " + (own ? "mz-msg--own" : "mz-msg--them");
+    if (msg.id != null) {
+      row.dataset.msgId = msg.id;
+      msgRows[msg.id] = row;
+    }
 
     // Sender name above the bubble in GROUP chats (WhatsApp-style); not for your own / 1:1.
     if (!own && current && current.kind === "group") {
@@ -507,9 +514,94 @@
       report.addEventListener("click", () => reportMessage(msg, plaintext));
       time.appendChild(report);
     }
+    // React affordance — you can react to any message (including your own). E2EE: the emoji is
+    // sent as an encrypted message the server can't read; recipients render it as who+what.
+    if (msg.id != null && REACTIONS.length) {
+      const react = document.createElement("span");
+      react.className = "mz-react";
+      const pick = document.createElement("button");
+      pick.className = "linkbtn mz-react-toggle";
+      pick.textContent = "+react";
+      pick.title = "Add a reaction";
+      const tray = document.createElement("span");
+      tray.className = "mz-react-tray";
+      tray.style.display = "none";
+      REACTIONS.forEach((e) => {
+        const b = document.createElement("button");
+        b.className = "mz-react-emoji";
+        b.textContent = e;
+        b.addEventListener("click", () => {
+          tray.style.display = "none";
+          sendReaction(msg.id, e);
+        });
+        tray.appendChild(b);
+      });
+      pick.addEventListener("click", () => {
+        tray.style.display = tray.style.display === "none" ? "inline" : "none";
+      });
+      react.appendChild(pick);
+      react.appendChild(tray);
+      time.appendChild(react);
+    }
     row.appendChild(time);
+    // Container for rendered reactions (who reacted with what) under the bubble.
+    const rx = document.createElement("div");
+    rx.className = "mz-msg-rx";
+    row.appendChild(rx);
     els.log.appendChild(row);
     els.log.scrollTop = els.log.scrollHeight;
+  }
+
+  // A reaction travels as an ENCRYPTED message whose plaintext is a sentinel JSON
+  // {"__r":1,"m":<targetMsgId>,"e":"👍"} — the server only relays ciphertext, so the emoji is
+  // private; WHO reacted is the (visible) message-sender metadata, WHAT is the encrypted emoji.
+  function asReaction(plaintext) {
+    if (!plaintext || plaintext.charAt(0) !== "{") return null;
+    try {
+      const o = JSON.parse(plaintext);
+      return o && o.__r === 1 && o.m != null && o.e ? o : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Route a decrypted message: a reaction attaches to its target; anything else is a normal msg.
+  function routeMessage(msg, plaintext) {
+    const r = asReaction(plaintext);
+    if (r) {
+      const who = msg.sender ? msg.sender.display_name || msg.sender.username : "someone";
+      const sid = msg.sender ? msg.sender.public_id : "?";
+      applyReaction(r.m, sid, who, r.e);
+    } else {
+      appendMessage(msg, plaintext);
+    }
+  }
+
+  // Render "who reacted with what" under the target message (deduped against the live echo).
+  function applyReaction(targetId, senderId, senderName, emoji) {
+    const key = targetId + ":" + senderId + ":" + emoji;
+    if (appliedReactions[key]) return;
+    appliedReactions[key] = true;
+    const targetRow = msgRows[targetId];
+    if (!targetRow) return; // target outside the loaded window — skip
+    const box = targetRow.querySelector(".mz-msg-rx");
+    if (!box) return;
+    const chip = document.createElement("span");
+    chip.className = "mz-rx-chip";
+    chip.textContent = emoji + " " + senderName;
+    box.appendChild(chip);
+  }
+
+  async function sendReaction(targetId, emoji) {
+    if (!current) return;
+    const payload = { __r: 1, m: targetId, e: emoji };
+    try {
+      // Optimistic local render (the server echo is deduped by the key above).
+      applyReaction(targetId, ME.public_id, ME.display_name, emoji);
+      await sendCurrent(JSON.stringify(payload));
+    } catch (e) {
+      setStatus("Could not send reaction: " + e.message, "error");
+    }
   }
 
   async function reportMessage(msg, plaintext) {
@@ -651,6 +743,9 @@
     if (els.app) els.app.classList.add("show-main");
     renderConversations();
     els.log.innerHTML = "";
+    // Reset per-conversation reaction state (rows + de-dupe) so nothing carries across chats.
+    Object.keys(msgRows).forEach((k) => delete msgRows[k]);
+    Object.keys(appliedReactions).forEach((k) => delete appliedReactions[k]);
 
     if (current.my_state !== "active") {
       els.composer.style.display = "none";
@@ -670,7 +765,7 @@
       "GET",
       "/api/messaging/conversations/" + id + "/messages/"
     );
-    for (const m of history) appendMessage(m, await decryptMessage(m));
+    for (const m of history) routeMessage(m, await decryptMessage(m));
 
     // Live socket.
     if (socket) socket.close();
@@ -678,7 +773,7 @@
     socket = new WebSocket(proto + "://" + location.host + "/ws/messaging/" + id + "/");
     socket.onmessage = async (e) => {
       const d = JSON.parse(e.data);
-      if (d.type === "message") appendMessage(d, await decryptMessage(d));
+      if (d.type === "message") routeMessage(d, await decryptMessage(d));
       else if (d.type === "error") setStatus(d.detail, "error");
     };
   }
@@ -695,7 +790,7 @@
         "/api/messaging/conversations/" + current.id + "/messages/",
         payload
       );
-      appendMessage(msg, text);
+      routeMessage(msg, text);
     }
   }
 

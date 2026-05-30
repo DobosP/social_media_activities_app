@@ -23,6 +23,21 @@
         <span class="muted" style="font-size:.75rem">(PDF &mdash; downloads)</span></p>
     {% endif %}
   {% endfor %}
+  {# Reactions: anonymous + COUNTLESS — only which emojis are present, never how many or who. #}
+  <div class="rx" style="margin-top:.25rem">
+    {% for e in p.reaction_present %}<span class="rx-chip{% if e in p.reaction_mine %} rx-mine{% endif %}">{{ e }}</span>{% endfor %}
+    {% if is_member %}
+      <details class="rx-pick">
+        <summary class="muted">react</summary>
+        {% for e in reaction_emojis %}
+          <form method="post" action="{% url 'activity_post_react' activity.pk p.pk %}" class="inline">{% csrf_token %}
+            <input type="hidden" name="emoji" value="{{ e }}">
+            <button class="rx-btn{% if e in p.reaction_mine %} rx-mine{% endif %}" type="submit" aria-label="react {{ e }}">{{ e }}</button>
+          </form>
+        {% endfor %}
+      </details>
+    {% endif %}
+  </div>
   {% if is_member %}
     <div class="post-actions" style="font-size:.75rem;margin-top:.2rem">
       <a href="?reply_to={{ p.pk }}#compose">Reply</a>
