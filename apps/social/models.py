@@ -120,6 +120,12 @@ class Membership(models.Model):
     # window and cleared a few hours after start by expire_arrivals, so it never becomes a
     # standing presence record. NOT geolocation — a tap, not a position.
     arrived_at = models.DateTimeField(null=True, blank=True)
+    # F22: a member's private "yes, we met up" tap, allowed ONLY once activity.status ==
+    # COMPLETED. A single per-member boolean (null = unset) about whether THE MEETUP happened —
+    # never a rating/judgement of any person, NEVER aggregated per-user, NEVER read
+    # cross-activity (the aggregate only ever counts IS NOT NULL within ONE activity). Cleared
+    # on leave so a removed row carries no signal.
+    met_confirmed_at = models.DateTimeField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

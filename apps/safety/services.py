@@ -298,3 +298,90 @@ def allow_action(user, action: str, *, limit: int, window_seconds: int) -> bool:
     except ValueError:
         cache.set(key, 1, window_seconds)
     return True
+
+
+def safety_record_for(user, *, limit: int = 50) -> dict:
+    """Read-only DSA Art.16/17 record for ONE user (F19): the moderation decisions that
+    affected their own account/activities/posts, and the status of the reports they filed.
+
+    STRICTLY self-only: it never exposes another user's data, the moderator's identity, the
+    moderator's private notes, or who/what was reported. Each row is projected to an
+    allowlisted dict — the ORM rows themselves (with target/moderator/handler FKs) never
+    leave this function.
+
+    Scope note: "affecting you" covers User / Activity-owner / Post-author targets. Moderation
+    of a user's Message or Booking is deliberately omitted here, and the page header is
+    narrowed to match; extend the Q below + the scope labels if those surfaces are added.
+    """
+    from django.contrib.auth import get_user_model
+
+    from apps.social.models import Activity, Post
+
+    user_ct = ContentType.objects.get_for_model(get_user_model())
+    activity_ct = ContentType.objects.get_for_model(Activity)
+    post_ct = ContentType.objects.get_for_model(Post)
+    # Intentional caps so the "own content" id sets can't blow up the IN clause.
+    own_activity_ids = list(Activity.objects.filter(owner=user).values_list("id", flat=True)[:500])
+    own_post_ids = list(Post.objects.filter(author=user).values_list("id", flat=True)[:1000])
+    now = timezone.now()
+
+    action_q = (
+        Q(target_type=user_ct, target_id=user.id)
+        | Q(target_type=activity_ct, target_id__in=own_activity_ids)
+        | Q(target_type=post_ct, target_id__in=own_post_ids)
+    )
+    decisions = []
+    for a in (
+        ModerationAction.objects.filter(action_q)
+        .only(
+            "action", "reason", "target_type", "target_id", "expires_at", "lifted_at", "created_at"
+        )
+        .order_by("-created_at")[:limit]
+    ):
+        try:
+            reason_label = ReasonCode(a.reason).label
+        except ValueError:
+            reason_label = str(a.reason)
+        if a.target_type_id == user_ct.id:
+            scope = "your account"
+        elif a.target_type_id == activity_ct.id:
+            scope = "one of your activities"
+        else:
+            scope = "one of your posts"
+        is_suspension = a.action == ModerationAction.Action.SUSPEND
+        decisions.append(
+            {
+                "action_label": ModerationAction.Action(a.action).label,
+                "reason_label": reason_label,
+                "scope": scope,
+                "created_at": a.created_at,
+                "is_suspension": is_suspension,
+                # Only meaningful for a suspension; "active" = not yet expired and not lifted.
+                "is_active": is_suspension
+                and (a.expires_at is None or a.expires_at > now)
+                and a.lifted_at is None,
+            }
+        )
+
+    reports = []
+    for r in (
+        Report.objects.filter(reporter=user)
+        .only("reason", "status", "detail", "created_at", "handled_at", "resolution")
+        .order_by("-created_at")[:limit]
+    ):
+        try:
+            reason_label = ReasonCode(r.reason).label
+        except ValueError:
+            reason_label = str(r.reason)
+        reports.append(
+            {
+                "reason_label": reason_label,
+                "status_label": Report.Status(r.status).label,
+                "created_at": r.created_at,
+                "handled_at": r.handled_at,
+                "detail": r.detail,  # the reporter's OWN submitted text — safe to show back
+                "resolution": r.resolution,
+            }
+        )
+
+    return {"decisions": decisions, "reports": reports}

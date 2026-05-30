@@ -25,6 +25,7 @@ from apps.accounts.models import AgeBand, GuardianRelationship, User
 from apps.accounts.services import (
     accept_guardian_link_invite,
     apply_assurance,
+    assurance_provenance,
     can_participate,
     create_guardian_link_invite,
     decline_guardian_link_invite,
@@ -396,6 +397,7 @@ def activity_detail(request, pk):
             "is_member": is_member,
             "is_owner": is_owner,
             "is_open": activity.status == Activity.Status.OPEN,
+            "is_completed": activity.status == Activity.Status.COMPLETED,
             "my_membership": my_membership,
             "pending": pending,
             "announcements": announcements,
@@ -406,6 +408,10 @@ def activity_detail(request, pk):
             "my_arrival": my_arrival,
             "arrival_window_open": is_member and social.arrival_window_open(activity),
             "rsvp_summary": social.attendance_summary(activity),
+            "met_summary": social.met_confirmation_summary(activity),
+            "my_met_confirmed": bool(my_membership.met_confirmed_at)
+            if (is_member and my_membership)
+            else False,
             "can_join": social.can_join(user, activity),
             **_nav_context(user),
         },
@@ -511,6 +517,19 @@ def activity_rsvp(request, pk):
     activity = _visible_activity_or_404(request.user, pk)
     try:
         social.set_attendance_intent(request.user, activity, request.POST.get("intent"))
+    except social.SocialError as exc:
+        messages.error(request, _msg(exc))
+    return redirect("activity_detail", pk=pk)
+
+
+@login_required
+@require_POST
+def activity_met(request, pk):
+    """A participant confirms (or undoes) that a finished meetup happened (F22)."""
+    activity = _visible_activity_or_404(request.user, pk)
+    confirmed = request.POST.get("met") != "no"
+    try:
+        social.set_met_confirmed(request.user, activity, confirmed)
     except social.SocialError as exc:
         messages.error(request, _msg(exc))
     return redirect("activity_detail", pk=pk)
@@ -637,6 +656,7 @@ def profile(request):
             "profile_user": user,
             "avatar_url": _avatar_url(user, user),
             "can_participate": can_participate(user),
+            "provenance": assurance_provenance(user),
             "interests": chosen,
             "blocked": blocked,
             **_nav_context(user),
@@ -1055,6 +1075,22 @@ def unblock_user_view(request, pk):
 # --- Transparency: privacy & terms (W1-8) -------------------------------------------
 # Static legal pages. Copy is DRAFT placeholder text and must be reviewed/finalised by
 # the DPO/legal before launch; see the templates' leading banner.
+
+
+@login_required
+def safety_record(request):
+    """F19: a user's own DSA Art.16/17 transparency page — moderation decisions about them and
+    the status of reports they filed. Read-only and strictly self-scoped."""
+    record = safety.safety_record_for(request.user)
+    return render(
+        request,
+        "web/safety_record.html",
+        {
+            "decisions": record["decisions"],
+            "reports": record["reports"],
+            **_nav_context(request.user),
+        },
+    )
 
 
 def privacy(request):

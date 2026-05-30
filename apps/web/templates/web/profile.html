@@ -30,11 +30,25 @@
 
 <div class="card">
   <h3>Age verification</h3>
-  <p class="muted">Prove your age band with the EU Digital Identity wallet &mdash; the app only ever
-    learns an over-16/over-18 band, never your birthdate.</p>
-  <a class="btn" href="{% url 'verify_age' %}">Verify with EU Digital Identity</a>
+  {% if provenance and provenance.has_row %}
+    {% if provenance.band_display %}<p><strong>Verified as:</strong> {{ provenance.band_display }}
+      <span class="muted">(an age band only &mdash; never your birthdate)</span></p>{% endif %}
+    <p class="muted">Proven by {{ provenance.method|default:"the EU Digital Identity wallet" }}{% if provenance.provider %} via {{ provenance.provider }}{% endif %} on {{ provenance.verified_at|date:"j M Y" }}.</p>
+    {% if provenance.status == "no_expiry" %}<p class="muted">This proof does not expire.</p>
+    {% elif provenance.status == "current" %}<p class="muted">Current{% if provenance.expires_at %} &mdash; valid until {{ provenance.expires_at|date:"j M Y" }}{% endif %}.</p>
+    {% elif provenance.status == "expiring" %}<div class="banner">Expires in {{ provenance.days_left }} day{{ provenance.days_left|pluralize }} &mdash; re-verify to avoid losing access.</div>
+    {% elif provenance.status == "expired" %}<div class="banner">Your age proof has expired &mdash; re-verify to keep joining and chatting.</div>{% endif %}
+    <a class="btn" href="{% url 'verify_age' %}">Re-verify</a>
+  {% else %}
+    <p class="muted">Prove your age band with the EU Digital Identity wallet &mdash; the app only ever
+      learns an over-16/over-18 band, never your birthdate.</p>
+    <a class="btn" href="{% url 'verify_age' %}">Verify with EU Digital Identity</a>
+  {% endif %}
+  <p class="muted" style="font-size:.8rem">Re-verifying into a different age band may remove you from
+    conversations pinned to your current cohort.</p>
   {% if profile_user.is_guardian %}<a class="btn btn-secondary" href="{% url 'wards' %}">Your wards</a>{% endif %}
   {% if has_guardians %}<a class="btn btn-secondary" href="{% url 'my_guardians' %}">Your guardians</a>{% endif %}
+  <a class="btn btn-secondary" href="{% url 'safety_record' %}">Your safety record</a>
 </div>
 
 {% if blocked %}

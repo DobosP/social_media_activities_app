@@ -1,5 +1,6 @@
 import secrets
 from datetime import timedelta
+from math import ceil
 
 from django.conf import settings
 from django.db import transaction
@@ -8,12 +9,16 @@ from django.utils import timezone
 from .models import (
     COHORT_BY_AGE_BAND,
     AgeAssurance,
+    AgeBand,
     Cohort,
     GuardianLinkInvite,
     GuardianRelationship,
     ParentalConsent,
     User,
 )
+
+# Friendlier labels for the age-proof "method" token shown to users (F14).
+_METHOD_LABELS = {"openid4vp": "the EU Digital Identity wallet"}
 
 
 def assign_cohort(age_band: str) -> str:
@@ -73,6 +78,60 @@ def is_assurance_current(user: User) -> bool:
     if latest is None:
         return True
     return latest.expires_at is None or latest.expires_at > timezone.now()
+
+
+def assurance_provenance(user: User) -> dict | None:
+    """Read-only provenance of the user's age proof, for the F14 profile panel. Returns ONLY
+    the proven band, method, provider and timestamps plus a derived status — NEVER any
+    identity/DOB/raw-attestation PII. Reuses is_assurance_current() for the validity gate so
+    the panel can never drift from what actually governs participation.
+
+    Returns None when there is nothing to show (no assurance row and not verified)."""
+    latest = AgeAssurance.objects.filter(user=user).order_by("-verified_at", "-id").first()
+    if latest is None:
+        if not user.is_identity_verified:
+            return None
+        # Verified out-of-band (e.g. legacy/staff) with no assurance row.
+        return {
+            "has_row": False,
+            "is_current": True,
+            "band_display": user.get_age_band_display(),
+            "provider": None,
+            "method": None,
+            "verified_at": None,
+            "expires_at": None,
+            "status": "no_expiry",
+            "expires_soon": False,
+            "days_left": None,
+        }
+    is_current = is_assurance_current(user)
+    # Map a valid band to its label; never render an unknown/invalid value as a "proof".
+    band_display = dict(AgeBand.choices).get(latest.age_band, "")
+    reminder_days = getattr(settings, "REVERIFY_REMINDER_DAYS", 14)
+    days_left = None
+    if latest.expires_at is not None:
+        days_left = max(0, ceil((latest.expires_at - timezone.now()).total_seconds() / 86400))
+    # Status order matters: an expired proof must never be mislabelled "expiring".
+    if latest.expires_at is None:
+        status, expires_soon = "no_expiry", False
+    elif not is_current:
+        status, expires_soon = "expired", False
+    elif days_left <= reminder_days:
+        status, expires_soon = "expiring", True
+    else:
+        status, expires_soon = "current", False
+    return {
+        "has_row": True,
+        "provider": latest.provider,
+        "method": _METHOD_LABELS.get(latest.method, latest.method),
+        "band_display": band_display,
+        "verified_at": latest.verified_at,
+        "expires_at": latest.expires_at,
+        "is_current": is_current,
+        "expires_soon": expires_soon,
+        "days_left": days_left,
+        "status": status,
+    }
 
 
 def can_participate(user: User) -> bool:
