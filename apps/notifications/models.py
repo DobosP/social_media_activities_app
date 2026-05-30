@@ -17,6 +17,7 @@ class Notification(models.Model):
         ARRIVAL = "arrival", "Arrival"
         CONNECTION_REQUEST = "connection_request", "Connection request"
         CONNECTION_ACCEPTED = "connection_accepted", "Connection accepted"
+        MENTION = "mention", "Mention"
         MODERATION = "moderation", "Moderation notice"
         SYSTEM = "system", "System"
 
@@ -61,6 +62,10 @@ WHY_REASONS = {
         "Someone you've shared an activity with asked to connect."
     ),
     Notification.Kind.CONNECTION_ACCEPTED: "Someone accepted your connection request.",
+    Notification.Kind.MENTION: (
+        "Someone @mentioned you in an activity thread and chose to notify you "
+        "(you can turn these off)."
+    ),
     Notification.Kind.MODERATION: (
         "A moderation decision affected your content or account (you cannot turn these off)."
     ),

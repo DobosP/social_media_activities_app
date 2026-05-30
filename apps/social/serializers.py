@@ -163,8 +163,11 @@ class PostSerializer(serializers.ModelSerializer):
     reply_to = serializers.PrimaryKeyRelatedField(
         queryset=Post.objects.all(), required=False, allow_null=True
     )
+    # Write-only opt-in: escalate @mentions in the body from a calm tag to a MENTION notification
+    # to the mentioned peers (default off = tag-not-ping). Never echoed back.
+    ping = serializers.BooleanField(required=False, default=False, write_only=True)
 
     class Meta:
         model = Post
-        fields = ["id", "author", "body", "is_announcement", "reply_to", "created_at"]
+        fields = ["id", "author", "body", "is_announcement", "reply_to", "ping", "created_at"]
         read_only_fields = ["id", "author", "is_announcement", "created_at"]

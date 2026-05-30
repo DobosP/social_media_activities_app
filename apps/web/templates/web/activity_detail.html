@@ -229,6 +229,10 @@
                accept="image/png,image/jpeg,image/webp,application/pdf">
         <button class="btn btn-sm" type="submit">Post</button>
       </div>
+      <label style="font-size:.78rem;display:inline-flex;align-items:center;gap:.35rem;margin-top:.3rem">
+        <input type="checkbox" name="ping" value="on">
+        Notify the people I&nbsp;<span class="mention">@mention</span>
+        <span class="muted">(off = they just see the tag)</span></label>
       <p class="muted" style="font-size:.75rem;margin:.2rem 0 0">Photos &amp; PDFs are private to
         members and safety-screened on upload. No video.</p>
     </form>
@@ -266,6 +270,8 @@
   .rx-btn { background:none; border:1px solid var(--line); border-radius:999px; cursor:pointer;
             font-size:1rem; line-height:1; padding:.1rem .35rem; margin:.1rem; }
   .rx-btn.rx-mine { background:#d6f2dd; border-color:var(--accent,#1a7f37); }
+  .mention { color:var(--accent,#1a7f37); font-weight:600; background:#eef6f0; border-radius:4px;
+             padding:0 .15rem; }
 </style>
 {% if is_member %}
 <script>

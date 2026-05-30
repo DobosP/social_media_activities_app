@@ -770,11 +770,15 @@ def activity_detail(request, pk):
         by_post = attachments_for_posts(all_rendered, user)
         # Reactions: anonymous, COUNTLESS — only the distinct emojis present + the viewer's own.
         rx = social.reactions_for_posts(all_rendered, user)
+        # @mention roster computed ONCE (not per post) so highlighting the stream stays one query.
+        roster = social.mention_roster(activity)
         for p in all_rendered:
             p.attachment_list = by_post.get(p.id, [])
             slot = rx.get(p.id, {"present": [], "mine": set()})
             p.reaction_present = slot["present"]
             p.reaction_mine = slot["mine"]
+            # @mentions rendered as a safe highlight (escaped first; only real peers highlight).
+            p.body_html = social.highlight_mentions(p.body, roster)
     # No-JS quote-reply: a "Reply" link is ?reply_to=<id>#compose; pre-target the compose form.
     reply_target = None
     rt = request.GET.get("reply_to")
@@ -1103,6 +1107,7 @@ def activity_post(request, pk):
                 body,
                 reply_to=form.cleaned_data.get("reply_to"),
                 allow_empty=data is not None,
+                ping=form.cleaned_data.get("ping", False),
             )
             if data is not None:
                 media.attach_to_post(request.user, post, filename=upload.name, data=data)

@@ -494,7 +494,9 @@ def add_guardian(owner, activity, guardian) -> Membership:
 
 @transaction.atomic
 @transaction.atomic
-def post_to_thread(author, activity, body: str, *, reply_to=None, allow_empty=False) -> Post:
+def post_to_thread(
+    author, activity, body: str, *, reply_to=None, allow_empty=False, ping=False
+) -> Post:
     """THE single write path for an activity thread, shared by the web form, the DRF API,
     and the WebSocket consumer (via post_to_thread_realtime). It enforces the FULL union of
     the gates the two old surfaces had — so the child-safety gate holds identically on every
@@ -506,7 +508,12 @@ def post_to_thread(author, activity, body: str, *, reply_to=None, allow_empty=Fa
     working — only a cancelled meetup freezes its thread) + not blocked-vs-owner + a per-user
     rate limit + the swappable MessagePolicy/CSAR content seam. ``reply_to`` is validated to
     the same thread, must not be hidden, and is re-parented to its top-level ancestor so the
-    tree can never exceed one level. A committed write schedules a live broadcast on commit."""
+    tree can never exceed one level. A committed write schedules a live broadcast on commit.
+
+    ``@mentions`` in the body are always rendered as a calm highlight (tag-not-ping). ``ping``
+    is an explicit author opt-in: only then is a MENTION notification fanned out — to PEER
+    members named in the body, minus the author and minus blocked pairs, and still mutable by
+    each recipient (no engagement-maxxing, no surprise pings)."""
     from apps.chat.policy import get_message_policy  # local: avoid social<->chat import cycle
     from apps.safety.services import allow_action, is_blocked
 
@@ -548,8 +555,32 @@ def post_to_thread(author, activity, body: str, *, reply_to=None, allow_empty=Fa
     # "edited"). After this, any real edit makes updated_at strictly greater. One cheap write.
     Post.objects.filter(pk=post.pk).update(updated_at=post.created_at)
     post.updated_at = post.created_at
+    if ping:
+        _ping_mentioned(author, activity, post)
     transaction.on_commit(lambda: broadcast_post(post))
     return post
+
+
+def _ping_mentioned(author, activity, post) -> None:
+    """Opt-in fan-out: notify PEER members @mentioned in ``post`` — never the author, never a
+    blocked pair, never a guardian (resolve_mentions already excludes guardians by resolving
+    against voting_members). notify() still honours each recipient's per-kind mute, so MENTION
+    stays a fully user-controllable signal. Runs inside the post's transaction so a rolled-back
+    post pings nobody."""
+    from apps.notifications.models import Notification
+    from apps.safety.services import blocked_user_ids
+
+    mentioned = resolve_mentions(activity, post.body, exclude_user=author)
+    if not mentioned:
+        return
+    blocked = blocked_user_ids(author)
+    who = author.display_name or author.username
+    title = _("%(who)s mentioned you") % {"who": who}
+    url = f"/activities/{activity.id}/#post-{post.id}"
+    for user in mentioned:
+        if user.id in blocked:
+            continue
+        _notify(user, Notification.Kind.MENTION, title, body=post.body[:140], url=url)
 
 
 def _validate_reply_to(activity, reply_to):
@@ -819,6 +850,76 @@ def post_reaction_emojis(post) -> list:
     """The DISTINCT emojis present on a post, in the fixed display order — NO count, NO who."""
     present = set(post.reactions.values_list("emoji", flat=True))
     return [e for e in allowed_reactions() if e in present]
+
+
+# --- @mentions (tag-not-ping by default; an explicit ping is a calm opt-in) -----------------
+
+# A mention is "@" + a username. The lookbehind refuses a "@" glued to a preceding word char,
+# so an email address (alice@example.com) never reads as a mention/ping. Username charset mirrors
+# the model's max length; we resolve case-insensitively against ACTUAL peer members, so a token
+# that doesn't name a current peer is left as plain text (never a fake highlight, never a ping).
+MENTION_RE = re.compile(r"(?<![\w@])@([\w.\-]{1,150})")
+
+
+def mention_roster(activity) -> dict:
+    """Lowercased-username -> peer member User for this activity. PEERS ONLY — a supervisory
+    guardian is never mentionable (no adult is pulled into a children's thread by a tag), and a
+    mention can never reach outside the activity's own roster. Compute ONCE per request and pass
+    into highlight_mentions for each post (the rendering loop must not re-query per post)."""
+    out = {}
+    for m in voting_members(activity).select_related("user"):
+        out[m.user.username.lower()] = m.user
+    return out
+
+
+def resolve_mentions(activity, body, *, exclude_user=None) -> list:
+    """Distinct peer members named by '@username' in ``body`` (order of first appearance), minus
+    ``exclude_user``. Resolution is against the live roster, so the set self-narrows as people
+    leave — a mention is only ever a current peer, never a stranger or a guardian."""
+    if not body:
+        return []
+    roster = mention_roster(activity)
+    seen, result = set(), []
+    for token in MENTION_RE.findall(body):
+        user = roster.get(token.lower())
+        if user is None or user.id in seen:
+            continue
+        if exclude_user is not None and user.id == exclude_user.id:
+            continue
+        seen.add(user.id)
+        result.append(user)
+    return result
+
+
+def highlight_mentions(body, roster):
+    """Render a thread body to SAFE HTML: HTML-escaped, newlines -> <br>, and every '@username'
+    that names a CURRENT peer member (a key in ``roster`` from ``mention_roster``) wrapped in
+    <span class="mention">. Escaping happens BEFORE any markup is inserted, so a hostile body can
+    never inject HTML; only the literal mention spans we add are trusted. A token that doesn't
+    resolve to a peer stays plain escaped text."""
+    from django.utils.html import escape
+    from django.utils.safestring import mark_safe
+
+    if not body:
+        return mark_safe("")
+
+    def repl(match):
+        token = match.group(1)
+        if token.lower() in roster:
+            return f'<span class="mention">@{escape(token)}</span>'
+        return escape(match.group(0))  # not a real member — leave as escaped plain text
+
+    # Escape the gaps between mentions ourselves so the whole string is safe, then mark_safe.
+    pieces, last = [], 0
+    for m in MENTION_RE.finditer(body):
+        pieces.append(escape(body[last : m.start()]))
+        pieces.append(repl(m))
+        last = m.end()
+    pieces.append(escape(body[last:]))
+    # Normalise CRLF/CR before turning newlines into <br> so no stray \r survives (parity with
+    # the |linebreaksbr fallback). All segments are already escaped, so this only adds our <br>.
+    html = "".join(pieces).replace("\r\n", "\n").replace("\r", "\n").replace("\n", "<br>")
+    return mark_safe(html)
 
 
 def reactions_for_posts(posts, viewer) -> dict:

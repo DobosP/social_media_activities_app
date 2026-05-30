@@ -11,7 +11,9 @@
     <a href="#post-{{ p.pk }}" class="muted" title="Link to this message">{{ p.created_at|date:"j M H:i" }}</a>
     {% if p.is_edited %}<span class="muted" style="font-size:.75rem">(edited)</span>{% endif %}
   </div>
-  <div>{{ p.body|linebreaksbr }}</div>
+  {# body_html is server-rendered safe HTML: escaped, newlines->br, @mentions of real peers
+     wrapped in <span class="mention">. Falls back to the plain escaped body if not attached. #}
+  <div>{% if p.body_html %}{{ p.body_html }}{% else %}{{ p.body|linebreaksbr }}{% endif %}</div>
   {% for att in p.attachment_list %}
     {% if att.kind == "image" %}
       <a href="{{ att.url }}" target="_blank" rel="noopener noreferrer">

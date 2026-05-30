@@ -206,6 +206,7 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
                     activity,
                     serializer.validated_data["body"],
                     reply_to=serializer.validated_data.get("reply_to"),
+                    ping=serializer.validated_data.get("ping", False),
                 )
             except (NotAMember, NotEligible) as exc:
                 # Membership / participation failures are authorization problems (403).

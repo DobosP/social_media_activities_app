@@ -177,6 +177,9 @@ class PostForm(forms.Form):
     # Optional photo or PDF shared in the thread (members only; scanned fail-closed). PDFs are
     # adults-only and always served as a download. No video.
     attachment = forms.FileField(required=False)
+    # @mentions are always a calm highlight (tag-not-ping). Ticking this opt-in escalates them to
+    # a notification to the mentioned peers (still mutable by each recipient). Default off.
+    ping = forms.BooleanField(required=False)
 
 
 class DonateForm(forms.Form):
