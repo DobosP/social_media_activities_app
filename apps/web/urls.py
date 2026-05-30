@@ -90,6 +90,13 @@ urlpatterns = [
         name="notification_preferences",
     ),
     path("messages/", views.messages_page, name="messages"),
+    # Connections
+    path("connections/", views.connections_page, name="connections"),
+    path("connections/request/", views.connection_request, name="connection_request"),
+    path("connections/<int:pk>/respond/", views.connection_respond, name="connection_respond"),
+    path("connections/<int:pk>/withdraw/", views.connection_withdraw, name="connection_withdraw"),
+    path("connections/remove/", views.connection_remove, name="connection_remove"),
+    path("connections/message/", views.connection_message, name="connection_message"),
     path("donate/", views.donate, name="donate"),
     path("transparency/", views.transparency, name="transparency"),
     path("my-donations/", views.my_donations, name="my_donations"),

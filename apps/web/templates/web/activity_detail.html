@@ -151,6 +151,11 @@
 <ul class="members">
   {% for m in members %}<li>{{ m.user.display_name|default:m.user.username }}{% if m.role == "owner" %} &middot; owner{% elif m.role == "guardian" %} &middot; guardian{% endif %}{% if m.user.id != user.id %}
     &middot; <a style="font-size:.75rem" href="{% url 'report' %}?type=user&id={{ m.user.id }}">report</a>
+    {% if conn_enabled and m.role != "guardian" and m.user.id not in conn_related_ids %}
+    <form method="post" action="{% url 'connection_request' %}" class="inline">{% csrf_token %}
+      <input type="hidden" name="public_id" value="{{ m.user.public_id }}">
+      <input type="hidden" name="next" value="{% url 'activity_detail' activity.pk %}">
+      <button class="btn btn-sm" style="font-size:.75rem" type="submit">connect</button></form>{% endif %}
     <form method="post" action="{% url 'block_user' m.user.id %}" class="inline">{% csrf_token %}
       <input type="hidden" name="next" value="{% url 'activity_detail' activity.pk %}">
       <button class="linkbtn" style="font-size:.75rem" type="submit">block</button></form>{% endif %}</li>{% endfor %}

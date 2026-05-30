@@ -22,6 +22,7 @@
       <a href="{% url 'notifications' %}">Alerts{% if unread_notifications %}
         <span class="pill">{{ unread_notifications }}</span>{% endif %}</a>
       <a href="{% url 'messages' %}">Messages</a>
+      {% if connections_enabled %}<a href="{% url 'connections' %}">Connections</a>{% endif %}
       {% if has_guardians %}<a href="{% url 'my_guardians' %}">Guardians</a>{% endif %}
       <a href="{% url 'my_donations' %}">My donations</a>
     {% endif %}

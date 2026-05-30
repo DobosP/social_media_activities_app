@@ -15,6 +15,8 @@ class Notification(models.Model):
         ACTIVITY_UPDATED = "activity_updated", "Activity updated"
         ANNOUNCEMENT = "announcement", "Organizer announcement"
         ARRIVAL = "arrival", "Arrival"
+        CONNECTION_REQUEST = "connection_request", "Connection request"
+        CONNECTION_ACCEPTED = "connection_accepted", "Connection accepted"
         MODERATION = "moderation", "Moderation notice"
         SYSTEM = "system", "System"
 
@@ -55,6 +57,10 @@ WHY_REASONS = {
         "An organiser posted an announcement in an activity you joined."
     ),
     Notification.Kind.ARRIVAL: "Someone arrived at your meetup (or your ward arrived).",
+    Notification.Kind.CONNECTION_REQUEST: (
+        "Someone you've shared an activity with asked to connect."
+    ),
+    Notification.Kind.CONNECTION_ACCEPTED: "Someone accepted your connection request.",
     Notification.Kind.MODERATION: (
         "A moderation decision affected your content or account (you cannot turn these off)."
     ),
