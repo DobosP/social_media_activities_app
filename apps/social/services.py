@@ -64,6 +64,23 @@ class InvalidState(SocialError):
     """Target object is not in a state that permits this action."""
 
 
+class DuplicatePlace(SocialError):
+    """A proposed venue duplicates an existing place (F25). Carries the existing place id/name
+    so the UI can link to it; ``soft`` marks a near-but-different venue the user may override."""
+
+    def __init__(self, place_id, place_name, *, soft=False):
+        self.place_id = place_id
+        self.place_name = place_name
+        self.soft = soft
+        super().__init__(f"A place already exists nearby: {place_name}")
+
+
+# F25: a stricter same-surface 'don't re-add an existing venue' radius, deliberately separate
+# from the 75 m cross-source ingest dedup. Overridable via settings.
+PLACE_PROPOSAL_DEDUP_RADIUS_M = 60
+PLACE_PROPOSAL_SOFT_RADIUS_M = 25
+
+
 def _has_cohort(user) -> bool:
     return user.cohort != Cohort.UNASSIGNED
 
@@ -744,3 +761,95 @@ def confirm_place(user, proposal: UserPlaceProposal) -> UserPlaceProposal:
         proposal.published_at = timezone.now()
         proposal.save(update_fields=["status", "published_at"])
     return proposal
+
+
+@transaction.atomic
+def propose_place_with_venue(
+    proposer, *, name, lon, lat, activity_type, allow_nearby=False
+) -> UserPlaceProposal:
+    """Create a user venue (source=USER) + its seed activity edge, then open a co-creation
+    proposal (F25). Hidden from the public until the quorum (or staff) publishes it. A
+    name-similar venue within the dedup radius is a hard DuplicatePlace; any place within the
+    soft radius is a DuplicatePlace(soft=True) the proposer can override with allow_nearby."""
+    from django.contrib.gis.geos import Point
+    from django.contrib.gis.measure import D
+
+    from apps.places.enrichment.dedup import find_duplicate
+    from apps.places.models import Place, PlaceActivity
+
+    if not can_participate(proposer):  # fail before creating any Place (no orphan)
+        raise NotEligible(_("User cannot propose places (needs verification/consent)."))
+    name = (name or "").strip()[:255]
+    point = Point(lon, lat, srid=4326)
+    radius = getattr(settings, "PLACE_PROPOSAL_DEDUP_RADIUS_M", PLACE_PROPOSAL_DEDUP_RADIUS_M)
+    dup = find_duplicate(point, name, max_distance_m=radius)
+    if dup is not None:  # same named venue nearby — hard block
+        raise DuplicatePlace(dup.id, dup.name)
+    if not allow_nearby:  # soft: any place very close, even with a different name
+        soft_radius = getattr(
+            settings, "PLACE_PROPOSAL_SOFT_RADIUS_M", PLACE_PROPOSAL_SOFT_RADIUS_M
+        )
+        near = Place.objects.filter(location__distance_lte=(point, D(m=soft_radius))).first()
+        if near is not None:
+            raise DuplicatePlace(near.id, near.name or "a nearby place", soft=True)
+    place = Place.objects.create(name=name, location=point, source=Place.Source.USER)
+    # origin=MANUAL is in the ingest PROTECTED_ORIGINS, so a re-ingest won't clobber the edge.
+    PlaceActivity.objects.create(
+        place=place,
+        activity=activity_type,
+        origin=PlaceActivity.Origin.MANUAL,
+        confidence=1.0,
+        source="user",
+    )
+    return propose_place(proposer, place)
+
+
+@transaction.atomic
+def staff_publish_proposal(staff_user, proposal: UserPlaceProposal) -> UserPlaceProposal:
+    """Moderator fast-publish (F25) — the single-launch-city escape hatch when a 3-user quorum
+    won't be reached organically."""
+    if not staff_user.is_staff:
+        raise NotEligible(_("Only staff may publish a place proposal."))
+    if proposal.status != UserPlaceProposal.Status.PENDING:
+        raise InvalidState(_("This proposal is not pending."))
+    proposal.status = UserPlaceProposal.Status.PUBLISHED
+    proposal.published_at = timezone.now()
+    proposal.save(update_fields=["status", "published_at"])
+    from apps.safety.services import record_audit
+
+    record_audit("place.staff_published", actor=staff_user, target=proposal.place)
+    return proposal
+
+
+@transaction.atomic
+def staff_reject_proposal(
+    staff_user, proposal: UserPlaceProposal, *, reason=""
+) -> UserPlaceProposal:
+    """Moderator close-out of a bad/duplicate submission. A REJECTED proposal keeps its place
+    hidden by public_places (never published)."""
+    if not staff_user.is_staff:
+        raise NotEligible(_("Only staff may reject a place proposal."))
+    if proposal.status != UserPlaceProposal.Status.PENDING:
+        raise InvalidState(_("This proposal is not pending."))
+    proposal.status = UserPlaceProposal.Status.REJECTED
+    proposal.save(update_fields=["status"])
+    from apps.safety.services import record_audit
+
+    record_audit(
+        "place.staff_rejected", actor=staff_user, target=proposal.place, reason=reason[:200]
+    )
+    return proposal
+
+
+def pending_proposals_for(user):
+    """Open proposals OTHER users may confirm (F25). Annotates a confirmation count so the list
+    can show '2 of 3 confirmed' WITHOUT ever naming the proposer/confirmers."""
+    from django.db.models import Count
+
+    return (
+        UserPlaceProposal.objects.filter(status=UserPlaceProposal.Status.PENDING)
+        .exclude(proposer=user)
+        .select_related("place")
+        .annotate(confirmations_count=Count("confirmations"))
+        .order_by("created_at")[:200]
+    )

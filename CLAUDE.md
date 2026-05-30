@@ -150,3 +150,24 @@ Built on the social core; see services/tests for exact behaviour. All uphold the
 - **Verified civic partners (F37)** — `places.Partner` (text-only; **no image/logo field**), `/partners/` and a
   one-line place_detail credit. `Partner.objects.public()` (verified+active) is the single visibility chokepoint;
   website sanitised via `safe_external_url`; blurb capped at 280; neutral alphabetical order (no pay-for-placement).
+- **User-proposed places, co-created (F25)** — `social.propose_place_with_venue` creates a `source=USER` `Place` +
+  a `UserPlaceProposal` that needs **N independent confirmers** (`confirm_place`, proposer excluded) before going
+  public. `places.public_places()` is the **single visibility chokepoint** — a *positive keep-filter* (`~USER OR
+  proposal.PUBLISHED`, so a USER place with **no proposal row** is correctly hidden, not leaked by `NULL IN`). EVERY
+  AllowAny Place surface (API `PlaceViewSet`, discovery `NearMe`/`Happening`, web list/detail) routes through it;
+  `place_detail` 404s a pending place to everyone but its proposer/staff. Duplicate guard: 60 m hard / 25 m soft
+  (`allow_nearby` override). Pending UI shows confirm **counts only**, never the proposer/confirmer identities.
+- **Crowd confirm/dispute of activity edges (F26)** — `places/edges.py`: members `vote_on_edge` confirm/dispute a
+  `PlaceActivity`. Tally lives in `ActivityEdgeVote` (one row per (edge,user); a mind-change updates it) — **ingest
+  never touches that table**, so it survives re-ingest. A quorum (3) of disputes sets the **ingest-safe**
+  `PlaceActivity.is_disputed` (absent from `ingest_places` `defaults`, so re-ingest can't clear it) and every read
+  surface hides the edge; a quorum of confirms promotes an **INFERRED** edge to **CONFIRMED** (then in
+  `PROTECTED_ORIGINS`, so ingest won't demote it). Only INFERRED edges auto-flip — a CONFIRMED edge is **not**
+  crowd-hideable (no griefing); `moderator_reverse_edge` (demote/restore/reset) is the only reversal. Disputes are
+  weighed **before** confirms (accuracy-first). `edge_vote_summary` exposes counts + the viewer's own vote only.
+- **Open-now accuracy reports (F28)** — `places.open_now_status` returns open/closed from parsed hours, **downgraded
+  to `"unverified"`** when ≥3 recent member reports (`OpenNowReport`) say the posted hours are wrong; `None` if hours
+  are unknown. A **dedicated overlay** model (never on `Place`, which re-ingest clobbers) with **read-time decay**
+  (reports outside `OPEN_NOW_REPORT_DECAY_SECONDS`=14 d stop counting — hours self-heal). `file_open_now_report` gates
+  on `can_participate`, is **rate-limited** across venues and **idempotent** per reporter/place/window (anti-brigading);
+  `clear_open_now_reports` is the staff reset. `PlaceViewSet` annotates `recent_report_n` so the serializer avoids N+1.

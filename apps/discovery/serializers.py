@@ -29,7 +29,8 @@ class PlaceCardSerializer(serializers.Serializer):
         return _distance_m(obj)
 
     def get_activities(self, obj):
-        return [pa.activity.slug for pa in obj.place_activities.all()]
+        # F26: disputed edges are hidden from discovery.
+        return [pa.activity.slug for pa in obj.place_activities.all() if not pa.is_disputed]
 
 
 class EventCardSerializer(serializers.Serializer):

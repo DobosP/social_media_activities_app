@@ -146,6 +146,21 @@ class ActivityEditForm(forms.Form):
         return cleaned
 
 
+class PlaceProposeForm(forms.Form):
+    """Add a venue OSM missed (F25). It stays pending until neighbours (or staff) confirm it."""
+
+    name = forms.CharField(max_length=255, label="Place name")
+    lat = forms.FloatField(min_value=-90, max_value=90, label="Latitude")
+    lon = forms.FloatField(min_value=-180, max_value=180, label="Longitude")
+    activity_type = forms.ModelChoiceField(
+        queryset=ActivityType.objects.filter(is_active=True).order_by("name"),
+        label="Main activity here",
+    )
+    allow_nearby = forms.BooleanField(
+        required=False, label="Add anyway (a different place may already exist very close)"
+    )
+
+
 class PostForm(forms.Form):
     body = forms.CharField(
         widget=forms.Textarea(attrs={"rows": 3, "placeholder": "Write a message..."}), label=""

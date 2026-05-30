@@ -50,6 +50,35 @@ class PostAdmin(admin.ModelAdmin):
 class UserPlaceProposalAdmin(admin.ModelAdmin):
     list_display = ("place", "proposer", "status", "required_confirmations", "published_at")
     list_filter = ("status",)
+    search_fields = ("place__name", "proposer__username")
+    readonly_fields = ("place", "proposer", "created_at", "published_at")
+    actions = ("publish_selected", "reject_selected")
+
+    @admin.action(description="Publish selected proposals (F25 staff fast-path)")
+    def publish_selected(self, request, queryset):
+        from .services import staff_publish_proposal
+
+        n = 0
+        for proposal in queryset:
+            try:
+                staff_publish_proposal(request.user, proposal)
+                n += 1
+            except Exception as exc:  # noqa: BLE001 — surface to the admin, keep going
+                self.message_user(request, f"{proposal}: {exc}", level="error")
+        self.message_user(request, f"Published {n} proposal(s).")
+
+    @admin.action(description="Reject selected proposals")
+    def reject_selected(self, request, queryset):
+        from .services import staff_reject_proposal
+
+        n = 0
+        for proposal in queryset:
+            try:
+                staff_reject_proposal(request.user, proposal)
+                n += 1
+            except Exception as exc:  # noqa: BLE001
+                self.message_user(request, f"{proposal}: {exc}", level="error")
+        self.message_user(request, f"Rejected {n} proposal(s).")
 
 
 admin.site.register(Thread)

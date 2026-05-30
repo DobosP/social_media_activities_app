@@ -35,10 +35,17 @@ class NearMeView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
+        from apps.places.services import public_places
+
         p = request.query_params
-        qs = Place.objects.prefetch_related("place_activities__activity")
+        # F25: never leak a pending user-proposed place's name/coords through discovery.
+        qs = public_places(Place.objects.prefetch_related("place_activities__activity"))
         if activity := p.get("activity"):
-            qs = qs.filter(place_activities__activity__slug=activity)
+            # F26: match only via a non-disputed edge (conjoined in one filter()).
+            qs = qs.filter(
+                place_activities__activity__slug=activity,
+                place_activities__is_disputed=False,
+            )
         if _truthy(p, "bookable"):
             qs = qs.exclude(website="")
         if _truthy(p, "wellness"):
@@ -64,9 +71,15 @@ class HappeningView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
+        from django.db.models import Q
+
+        from apps.places.services import public_places
+
         p = request.query_params
         now = timezone.now()
         qs = Event.objects.select_related("place", "activity_type").filter(starts_at__gte=now)
+        # F25: an event pinned to a still-pending user place must not leak that place.
+        qs = qs.filter(Q(place__isnull=True) | Q(place_id__in=public_places().values("id")))
         if activity := p.get("activity"):
             qs = qs.filter(activity_type__slug=activity)
         if days := p.get("days"):
