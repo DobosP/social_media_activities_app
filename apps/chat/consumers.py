@@ -2,16 +2,18 @@ from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
 from apps.social.models import Thread
-
-from .serializers import ChatMessageSerializer
-from .services import ChatError, can_access_thread, send_message
+from apps.social.services import SocialError, can_read_thread, post_to_thread_realtime
 
 
 class ChatConsumer(AsyncJsonWebsocketConsumer):
     """Per-thread WebSocket room, private to the activity's members.
 
-    Membership + cohort are checked on connect; each inbound message is persisted
-    and moderated via the chat service, then fanned out to the room group.
+    The socket is PURE live delivery over the durable ``social.Post`` stream — it is not a
+    second store. An inbound message is persisted through the one hardened write path
+    (``post_to_thread_realtime`` -> ``post_to_thread``); the resulting Post's
+    ``transaction.on_commit`` broadcast fans it out to this group, so the consumer never
+    re-sends. Membership + cohort are checked on connect, on every inbound message, and on
+    every delivery, all through the single ``can_read_thread`` gate.
     """
 
     async def connect(self):
@@ -20,7 +22,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         self.group_name = f"chat_{self.thread_id}"
 
         self.thread = await self._get_thread(self.thread_id)
-        if self.thread is None or not await self._can_access(self.user, self.thread):
+        if self.thread is None or not await self._can_access():
             await self.close(code=4403)
             return
 
@@ -32,27 +34,31 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
     async def receive_json(self, content, **kwargs):
-        # Re-authorize the SENDER against FRESH state before storing/broadcasting (see
-        # ConversationConsumer): a banned/revoked/cohort-changed/erased member with an open
-        # socket must not be able to inject messages via the cached scope user.
+        # Re-authorize the SENDER against FRESH state before persisting: a banned/revoked/
+        # cohort-changed/erased member with an open socket must not inject via the cached scope
+        # user. The write itself goes through the full union gate in post_to_thread; the live
+        # fan-out happens from that Post's on_commit broadcast (not from here).
         if not await self._still_authorized():
             await self.close(code=4403)
             return
         body = content.get("body", "")
-        try:
-            message = await self._send(self.user, self.thread, body)
-        except ChatError as exc:
-            await self.send_json({"type": "error", "detail": str(exc)})
-            return
-        payload = await self._serialize(message)
-        await self.channel_layer.group_send(
-            self.group_name, {"type": "chat.message", "message": payload}
+        # Coerce the untrusted reply_to to an int-or-None at the boundary so a bad value can
+        # never raise an uncaught ValueError that tears down the socket (the service also guards).
+        raw = content.get("reply_to")
+        reply_to_id = (
+            raw
+            if isinstance(raw, int)
+            else (int(raw) if isinstance(raw, str) and raw.isdigit() else None)
         )
+        try:
+            await self._persist(body, reply_to_id)
+        except SocialError as exc:
+            await self.send_json({"type": "error", "detail": str(exc)})
 
     async def chat_message(self, event):
-        # Per-delivery re-authorization (see ConversationConsumer): a member whose access
-        # was revoked/blocked, whose activity was REMOVE'd/hidden, whose cohort changed, or
-        # who was erased after connecting stops receiving live messages and is disconnected.
+        # Per-delivery re-authorization: a member whose access was revoked/blocked, whose
+        # activity was REMOVE'd/hidden, whose cohort changed, or who was erased after
+        # connecting stops receiving live messages and is disconnected.
         if not await self._still_authorized():
             await self.close(code=4403)
             return
@@ -63,8 +69,8 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         return Thread.objects.select_related("activity").filter(pk=thread_id).first()
 
     @database_sync_to_async
-    def _can_access(self, user, thread):
-        return can_access_thread(user, thread)
+    def _can_access(self) -> bool:
+        return can_read_thread(self.user, self.thread.activity)
 
     @database_sync_to_async
     def _still_authorized(self) -> bool:
@@ -75,12 +81,10 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         if user is None:
             return False
         thread = Thread.objects.select_related("activity").filter(pk=self.thread_id).first()
-        return thread is not None and can_access_thread(user, thread)
+        return thread is not None and can_read_thread(user, thread.activity)
 
     @database_sync_to_async
-    def _send(self, user, thread, body):
-        return send_message(user, thread, body)
-
-    @database_sync_to_async
-    def _serialize(self, message):
-        return ChatMessageSerializer(message).data
+    def _persist(self, body, reply_to_id):
+        return post_to_thread_realtime(
+            self.user, self.thread.activity, body, reply_to_id=reply_to_id
+        )

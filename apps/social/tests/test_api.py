@@ -149,6 +149,37 @@ def test_thread_posts_list_is_bounded(settings, adult, place, activity_type, now
     assert body[-1]["body"] == "post 11"
 
 
+def test_thread_posts_get_requires_membership(adult, adult2, place, activity_type, now):
+    # A same-cohort NON-member must NOT be able to read a private activity thread via the API
+    # (cohort-isolation: _activity_for only checks cohort-visibility; can_read_thread is the bar).
+    activity = create_activity(
+        adult, place=place, activity_type=activity_type, title="Hike", starts_at=now
+    )
+    Post.objects.create(thread=activity.thread, author=adult, body="secret coordination")
+    assert adult2.cohort == activity.cohort  # same cohort, but not a member
+    outsider = _client(adult2).get(f"/api/social/activities/{activity.id}/posts/")
+    assert outsider.status_code == 403, outsider.content
+    owner = _client(adult).get(f"/api/social/activities/{activity.id}/posts/")
+    assert owner.status_code == 200  # the owner-member still reads it
+
+
+def test_posts_cannot_be_ghostwritten_on_behalf_of(child, place, activity_type, now):
+    # A guardian must not ghostwrite a thread post as their ward via on_behalf_of (a message is
+    # a first-person utterance, like an arrival ping). The author is pinned to request.user.
+    activity = create_activity(
+        child, place=place, activity_type=activity_type, title="Kids game", starts_at=now
+    )
+    guardian = make_user("ghost_guardian", age_band=AgeBand.ADULT)
+    link_guardian(guardian, child)
+    resp = _client(guardian).post(
+        f"/api/social/activities/{activity.id}/posts/",
+        {"body": "ghostwritten", "on_behalf_of": str(child.public_id)},
+        format="json",
+    )
+    assert resp.status_code == 403, resp.content  # guardian isn't a member; no ghostwrite
+    assert not Post.objects.filter(thread=activity.thread, body="ghostwritten").exists()
+
+
 def test_mine_membership_list_is_bounded(settings, adult, place, activity_type, now):
     settings.SOCIAL_MEMBERSHIP_LIST_LIMIT = 3
     # Each created activity makes `adult` an owner-member, so 7 activities ⇒ 7 rows.

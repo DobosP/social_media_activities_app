@@ -170,41 +170,55 @@
         {% for p in digest.recent %}<div class="post"><div class="meta">{{ p.author.display_name|default:p.author.username }} &middot; {{ p.created_at|date:"j M H:i" }}</div><div>{{ p.body|truncatechars:200|linebreaksbr }}</div></div>{% endfor %}{% endif %}
     </details>
   {% endif %}
-  {% if announcements or is_owner %}
-    <h2>Announcements</h2>
-    {% if is_owner %}
-      <form method="post" action="{% url 'activity_announce' activity.pk %}" class="stack" style="margin-bottom:.6rem">{% csrf_token %}
-        <label>Post an announcement <span class="muted">(pinned; notifies every member)</span>
-          <textarea name="body" rows="2" maxlength="4000" required
-                    placeholder="Meet at the north gate; bring water; time changed..."></textarea></label>
-        <button class="btn btn-sm" type="submit">Post announcement</button>
-      </form>
-    {% endif %}
-    <div class="thread">
+  {# One conversation: pinned announcements on top, then the single chronological stream. #}
+  <h2 id="messages">Messages</h2>
+  {% if is_owner %}
+    <form method="post" action="{% url 'activity_announce' activity.pk %}" class="stack" style="margin-bottom:.6rem">{% csrf_token %}
+      <label>Post an announcement <span class="muted">(pinned; notifies every member)</span>
+        <textarea name="body" rows="2" maxlength="4000" required
+                  placeholder="Meet at the north gate; bring water; time changed..."></textarea></label>
+      <button class="btn btn-sm" type="submit">Post announcement</button>
+    </form>
+  {% endif %}
+  {% if announcements %}
+    <div class="thread" aria-label="Pinned announcements">
       {% for p in announcements %}
         <div class="post" style="border-left:3px solid var(--accent)">
           <div class="meta">&#128204; {{ p.author.display_name|default:p.author.username }} &middot; {{ p.created_at|date:"j M H:i" }}</div>
           <div>{{ p.body|linebreaksbr }}</div>
         </div>
-      {% empty %}<p class="muted">No announcements yet.</p>{% endfor %}
+      {% endfor %}
     </div>
   {% endif %}
 
-  <h2>Thread</h2>
+  {% if has_older %}
+    <p><a href="?before={{ older_cursor }}#messages" rel="prev">&uarr; Older messages</a></p>
+  {% endif %}
+  <div id="thread-list" class="thread">
+    {% for p in posts %}
+      {% include "web/_post.html" %}
+      <div class="replies" data-parent="{{ p.pk }}" style="margin-left:1.5rem">
+        {% for r in p.replies.all %}{% include "web/_post.html" with p=r %}{% endfor %}
+      </div>
+    {% empty %}<p class="muted" id="no-messages">No messages yet. Say hello!</p>{% endfor %}
+  </div>
+
   {% if is_member %}
-    <form method="post" action="{% url 'activity_post' activity.pk %}">{% csrf_token %}
+    <form method="post" id="compose" action="{% url 'activity_post' activity.pk %}" class="stack" style="margin-top:.6rem">{% csrf_token %}
+      {% if reply_target %}
+        <p class="muted" style="margin:0;font-size:.85rem">Replying to
+          {{ reply_target.author.display_name|default:reply_target.author.username }}
+          &middot; <a href="{% url 'activity_detail' activity.pk %}#compose">cancel</a></p>
+      {% endif %}
+      {{ post_form.reply_to }}
+      <label class="visually-hidden" for="{{ post_form.body.id_for_label }}">Write a message</label>
       {{ post_form.body }}
       <button class="btn btn-sm" type="submit" style="margin-top:.4rem">Post</button>
     </form>
+    {# Live region: announces ONLY the viewer's own send + new announcements (never every
+       inbound peer message), so a busy thread is not a screen-reader replay or a nudge. #}
+    <div id="live-status" class="visually-hidden" role="status" aria-live="polite"></div>
   {% endif %}
-  <div class="thread">
-    {% for p in posts %}
-      <div class="post">
-        <div class="meta">{{ p.author.display_name|default:p.author.username }} &middot; {{ p.created_at|date:"j M H:i" }}</div>
-        <div>{{ p.body|linebreaksbr }}</div>
-      </div>
-    {% empty %}<p class="muted">No messages yet.</p>{% endfor %}
-  </div>
 
   <h2>Photos</h2>
   <p class="muted">Private to members &mdash; location metadata is stripped on upload.</p>
@@ -219,56 +233,70 @@
     <p class="muted">No photos yet.</p>{% endfor %}
   </div>
 
-  {% if is_member %}
-  <h2>Live chat</h2>
-  <div id="chat-log" class="thread" role="log" aria-live="polite" aria-relevant="additions"
-       aria-label="Live chat messages" style="border:1px solid var(--line);border-radius:8px;padding:.5rem"></div>
-  <form id="chat-form" class="row" style="margin-top:.5rem">
-    <input id="chat-input" autocomplete="off" aria-label="Message members" placeholder="Message members..." style="flex:1">
-    <button class="btn btn-sm" type="submit">Send</button>
-  </form>
-  {% endif %}
 {% else %}
-  <p class="muted">The thread, photos and chat are private to members. Request to join to take part.</p>
+  <p class="muted">The messages and photos are private to members. Request to join to take part.</p>
 {% endif %}
 {% endblock %}
 
 {% block scripts %}
 {% if is_member %}
 <script>
+// Progressive enhancement over the server-rendered stream: live-append new messages via the
+// thread WebSocket. The page is fully functional with JS off (the compose form POSTs normally).
 (function () {
   const threadId = {{ activity.thread.id }};
-  const log = document.getElementById("chat-log");
-  // Mute the live region while history loads so a screen reader doesn't read the whole
-  // backlog aloud; re-enable it (below) once history has been appended, for new messages only.
-  log.setAttribute("aria-live", "off");
-  function append(author, body, at) {
-    const row = document.createElement("div");
-    row.className = "post";
-    const meta = document.createElement("div");
-    meta.className = "meta";
-    meta.textContent = (author || "member") + (at ? " · " + new Date(at).toLocaleString() : "");
-    const b = document.createElement("div");
-    b.textContent = body;
-    row.appendChild(meta); row.appendChild(b);
-    log.appendChild(row); log.scrollTop = log.scrollHeight;
+  const list = document.getElementById("thread-list");
+  const status = document.getElementById("live-status");
+  const seen = new Set();
+  document.querySelectorAll('#thread-list [id^="post-"]').forEach(el => seen.add(el.id.slice(5)));
+
+  function esc(t) { const d = document.createElement("div"); d.textContent = t == null ? "" : t; return d.innerHTML; }
+  function render(d) {
+    if (seen.has(String(d.id))) return;          // dedupe by server pk (no double author-echo)
+    seen.add(String(d.id));
+    const noneEl = document.getElementById("no-messages");
+    if (noneEl) noneEl.remove();
+    const art = document.createElement("article");
+    art.id = "post-" + d.id;
+    art.className = "post";
+    let html = "";
+    if (d.reply_snippet) {
+      html += '<div class="reply-quote muted" style="font-size:.8rem;border-left:2px solid var(--line);padding-left:.5rem;margin-bottom:.2rem">Replying to ' +
+              esc(d.reply_snippet.author) + ": " + esc(d.reply_snippet.text) + "</div>";
+    }
+    const when = d.created_at ? new Date(d.created_at).toLocaleString() : "";
+    html += '<div class="meta">' + esc(d.author) + " &middot; " + esc(when) + "</div>";
+    html += "<div>" + esc(d.body).replace(/\n/g, "<br>") + "</div>";
+    art.innerHTML = html;
+    // Place a reply under its parent's group if that parent is in the rendered window; else as
+    // a plain top-level entry (the "Replying to" line preserves the relationship regardless).
+    let target = null;
+    if (d.reply_to) target = list.querySelector('.replies[data-parent="' + d.reply_to + '"]');
+    (target || list).appendChild(art);
   }
-  // Load history.
-  fetch(`/api/chat/threads/${threadId}/messages/`, {headers: {'Accept': 'application/json'}})
-    .then(r => r.ok ? r.json() : [])
-    .then(list => (list || []).forEach(m => append(m.author && m.author.display_name, m.body, m.created_at)))
-    .finally(() => log.setAttribute("aria-live", "polite"));
-  // Live socket.
+
   const proto = location.protocol === "https:" ? "wss" : "ws";
   const sock = new WebSocket(`${proto}://${location.host}/ws/chat/${threadId}/`);
   sock.onmessage = (e) => {
     const d = JSON.parse(e.data);
-    if (d.type === "message") append(d.author && d.author.display_name, d.body, d.created_at);
+    if (d.type !== "message") return;
+    render(d);
+    // Announce ONLY new announcements over the live region (peer chatter is silent).
+    if (d.is_announcement && status) status.textContent = "New announcement posted.";
   };
-  document.getElementById("chat-form").addEventListener("submit", (ev) => {
+
+  // With the socket open, send through it (no full reload); otherwise the form POSTs normally.
+  const form = document.getElementById("compose");
+  if (form) form.addEventListener("submit", (ev) => {
+    if (sock.readyState !== WebSocket.OPEN) return;            // graceful fallback to POST
+    const ta = form.querySelector('textarea');
+    const rt = form.querySelector('input[name="reply_to"]');
+    const body = (ta.value || "").trim();
+    if (!body) return;
     ev.preventDefault();
-    const i = document.getElementById("chat-input");
-    if (i.value.trim()) { sock.send(JSON.stringify({body: i.value})); i.value = ""; }
+    sock.send(JSON.stringify({ body: body, reply_to: rt && rt.value ? Number(rt.value) : null }));
+    ta.value = "";
+    if (status) status.textContent = "Message sent.";
   });
 })();
 </script>

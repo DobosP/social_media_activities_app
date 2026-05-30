@@ -1,0 +1,34 @@
+{# One thread message. Context: p (Post, with .snippet/.is_edited attached by thread_page),
+   activity, user, is_member. Replies render the same partial one level deep. #}
+<article id="post-{{ p.pk }}" class="post"
+         aria-label="Message from {{ p.author.display_name|default:p.author.username }} at {{ p.created_at|date:'j M H:i' }}">
+  {% if p.snippet %}
+    <div class="reply-quote muted" style="font-size:.8rem;border-left:2px solid var(--line);padding-left:.5rem;margin-bottom:.2rem">
+      <a href="#post-{{ p.snippet.pk }}">Replying to {{ p.snippet.author }}</a>: {{ p.snippet.text }}
+    </div>
+  {% endif %}
+  <div class="meta">{{ p.author.display_name|default:p.author.username }} &middot;
+    <a href="#post-{{ p.pk }}" class="muted" title="Link to this message">{{ p.created_at|date:"j M H:i" }}</a>
+    {% if p.is_edited %}<span class="muted" style="font-size:.75rem">(edited)</span>{% endif %}
+  </div>
+  <div>{{ p.body|linebreaksbr }}</div>
+  {% if is_member %}
+    <div class="post-actions" style="font-size:.75rem;margin-top:.2rem">
+      <a href="?reply_to={{ p.pk }}#compose">Reply</a>
+      {% if p.author_id == user.id %}
+        &middot; <a href="#edit-{{ p.pk }}">Edit</a>
+        &middot;
+        <form method="post" action="{% url 'activity_post_delete' activity.pk p.pk %}" class="inline"
+              onsubmit="return confirm('Delete your message? This can\'t be undone.');">{% csrf_token %}
+          <button class="linkbtn" type="submit">Delete</button>
+        </form>
+        {# No-JS in-place edit: a target-revealed form, classic POST/redirect. #}
+        <form method="post" id="edit-{{ p.pk }}" class="post-edit" action="{% url 'activity_post_edit' activity.pk p.pk %}"
+              style="margin-top:.3rem">{% csrf_token %}
+          <textarea name="body" rows="2" maxlength="4000" required aria-label="Edit your message">{{ p.body }}</textarea>
+          <button class="btn btn-sm" type="submit">Save edit</button>
+        </form>
+      {% endif %}
+    </div>
+  {% endif %}
+</article>

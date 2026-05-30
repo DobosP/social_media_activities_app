@@ -327,13 +327,19 @@ else:
             "BACKEND": env("CHANNEL_LAYER_BACKEND", default="channels.layers.InMemoryChannelLayer")
         }
     }
+# The "One Thread" stream: a single durable social.Post conversation per activity. The
+# MessagePolicy (CSAR seam) + length cap apply to EVERY write (web/DRF/socket) via
+# social.post_to_thread. CHAT_MAX_LENGTH stays the canonical body cap (== POST_BODY_MAX_LENGTH).
 # Swap to add CSAR-driven scanning/encryption without re-architecting (see COMPLIANCE).
 CHAT_MESSAGE_POLICY = env("CHAT_MESSAGE_POLICY", default="apps.chat.policy.BasicMessagePolicy")
 CHAT_MAX_LENGTH = env.int("CHAT_MAX_LENGTH", default=4000)
-CHAT_RATE_LIMIT = env.int("CHAT_RATE_LIMIT", default=30)
-CHAT_RATE_WINDOW_SECONDS = env.int("CHAT_RATE_WINDOW_SECONDS", default=60)
-# 0 disables time-based purging; set a positive number of days to enable retention.
-CHAT_RETENTION_DAYS = env.int("CHAT_RETENTION_DAYS", default=0)
+# Per-user thread-post rate limit (fixed window). Defaults preserve the old chat limits.
+THREAD_POST_RATE_LIMIT = env.int("THREAD_POST_RATE_LIMIT", default=30)
+THREAD_POST_RATE_WINDOW_SECONDS = env.int("THREAD_POST_RATE_WINDOW_SECONDS", default=60)
+# Hard ceiling on the thread read window (web + DRF), so a long thread can't dump unbounded.
+SOCIAL_THREAD_POST_LIMIT = env.int("SOCIAL_THREAD_POST_LIMIT", default=100)
+# NOTE: thread messages are now permanent + audited (no time-based purge) — the child-safety-
+# correct retention posture. The former CHAT_RETENTION_DAYS / purge_chat job were removed.
 
 # --- Secure messaging (cohort-safe, invite-accept, end-to-end encrypted) ---
 # The server is a zero-knowledge relay: it stores ciphertext + per-recipient wrapped

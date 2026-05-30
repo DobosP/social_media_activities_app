@@ -201,7 +201,11 @@ class Thread(models.Model):
 
 
 class Post(models.Model):
-    """A text post in an activity thread. Text-first: no media here (photos are D6)."""
+    """A text post in an activity thread. Text-first: no media here (photos are D6).
+
+    The SINGLE durable record for an activity's conversation: realtime delivery (Channels)
+    is a transport over committed Posts, never a parallel store. Every write goes through
+    ``social.services.post_to_thread`` / ``post_announcement`` (the only two creators)."""
 
     thread = models.ForeignKey(Thread, on_delete=models.CASCADE, related_name="posts")
     author = models.ForeignKey(
@@ -211,15 +215,31 @@ class Post(models.Model):
     # An owner-only pinned broadcast ("meet at the north gate", "time changed"): surfaced
     # above the ordinary thread and accompanied by a one-off notification to every member.
     is_announcement = models.BooleanField(default=False)
-    # Set by a moderator REMOVE action; hidden posts are excluded from thread reads but
-    # retained for audit/appeal.
+    # Set by a moderator REMOVE action (or an author self-delete); hidden posts are excluded
+    # from thread reads but retained for audit/appeal.
     is_hidden = models.BooleanField(default=False)
+    # WhatsApp-style one-level quote-reply. SET_NULL (not CASCADE) so moderator-hiding or
+    # GDPR-erasing a parent never destroys a child's coordination text — an orphaned reply
+    # renders as a plain top-level post. Depth is capped at ONE LEVEL IN THE SERVICE
+    # (post_to_thread re-parents a reply-to-a-reply onto the top-level ancestor), so this
+    # column only ever points at a top-level Post — a 2-level render with bounded index
+    # scans, never a recursive CTE. The quoted snippet is NEVER stored here; it is derived
+    # live from the current parent.body at render/serialize time, so editing or hiding a
+    # parent immediately changes what its replies show.
+    reply_to = models.ForeignKey(
+        "self", on_delete=models.SET_NULL, null=True, blank=True, related_name="replies"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ["created_at"]
-        indexes = [models.Index(fields=["thread", "created_at"])]
+        indexes = [
+            # Chronological/digest read (top-level page = reply_to IS NULL, ordered by time).
+            models.Index(fields=["thread", "reply_to", "created_at"]),
+            # Retained covering scan for the digest's whole-thread chronological pass.
+            models.Index(fields=["thread", "created_at"]),
+        ]
 
     def __str__(self):
         return f"post({self.author} @ {self.thread_id})"

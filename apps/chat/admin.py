@@ -1,12 +1,3 @@
-from django.contrib import admin
-
-from .models import ChatMessage
-
-
-@admin.register(ChatMessage)
-class ChatMessageAdmin(admin.ModelAdmin):
-    list_display = ("thread", "author", "redacted", "created_at")
-    list_filter = ("redacted",)
-    search_fields = ("author__username", "body")
-    raw_id_fields = ("thread", "author")
-    readonly_fields = ("created_at",)
+# The chat app no longer registers any model in the admin: the thread conversation is now the
+# single social.Post stream, moderated via the safety app's REMOVE action (Post.is_hidden) and
+# the hash-chained audit log. Nothing to register here.
