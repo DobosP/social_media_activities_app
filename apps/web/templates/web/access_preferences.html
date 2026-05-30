@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Access preferences{% endblock %}
+{% block content %}
+<h1>Access preferences</h1>
+<p class="muted">A setting you choose &mdash; we never track or infer it. We only ever show what a
+  venue's open data records, and places with unknown accessibility are still shown to you.</p>
+<form method="post" class="card">{% csrf_token %}
+  <label class="row" style="gap:.5rem;align-items:flex-start;margin:.4rem 0">
+    <input type="checkbox" name="needs_step_free"{% if pref.needs_step_free %} checked{% endif %}>
+    <span><strong>I need step-free access</strong></span>
+  </label>
+  <label class="row" style="gap:.5rem;align-items:flex-start;margin:.4rem 0">
+    <input type="checkbox" name="needs_accessible_toilet"{% if pref.needs_accessible_toilet %} checked{% endif %}>
+    <span><strong>I need an accessible toilet</strong></span>
+  </label>
+  <label class="row" style="gap:.5rem;align-items:flex-start;margin:.4rem 0">
+    <input type="checkbox" name="prefers_quiet"{% if pref.prefers_quiet %} checked{% endif %}>
+    <span><strong>I prefer quiet / sensory-friendly places</strong>
+      <br><span class="muted" style="font-size:.8rem">Saved for the future &mdash; venue data for
+      this isn't available yet, so it doesn't change what you see.</span></span>
+  </label>
+  <button class="btn" type="submit" style="margin-top:.5rem">Save preferences</button>
+</form>
+{% endblock %}

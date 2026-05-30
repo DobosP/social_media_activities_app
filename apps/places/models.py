@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.gis.db import models as gis_models
 from django.db import models
 from django.db.models import Q, UniqueConstraint
@@ -111,3 +112,24 @@ class PlaceActivity(models.Model):
 
     def __str__(self):
         return f"{self.place_id}<->{self.activity.slug} ({self.confidence})"
+
+
+class AccessPreference(models.Model):
+    """A user's OWN stated accessibility needs (F15) — a setting they choose, never inferred
+    from behaviour and never used for tracking. One row per user. Drives only a SOFT badge
+    against the read-time accessibility facts derived from a venue's OSM tags; it never hides a
+    place whose accessibility is unknown."""
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="access_preference"
+    )
+    needs_step_free = models.BooleanField(default=False)
+    needs_accessible_toilet = models.BooleanField(default=False)
+    # Stored + shown as a forward-looking preference; no OSM tag satisfies it yet, so it drives
+    # no badge/sort in v1 (documented to the user).
+    prefers_quiet = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user} access-pref"

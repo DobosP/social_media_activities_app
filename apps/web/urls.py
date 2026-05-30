@@ -11,6 +11,7 @@ urlpatterns = [
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
     # Discover
     path("places/", views.places_map, name="places_map"),
+    path("places/list/", views.places_list, name="places_list"),
     path("places/<int:pk>/", views.place_detail, name="place_detail"),
     path("events/", views.events_list, name="events_list"),
     path("events/<int:pk>/", views.event_detail, name="event_detail"),
@@ -35,6 +36,7 @@ urlpatterns = [
     ),
     # Interests, profile, notifications, donations
     path("interests/", views.interests, name="interests"),
+    path("access/", views.access_preferences, name="access_preferences"),
     path("profile/", views.profile, name="profile"),
     path("profile/avatar/", views.avatar_upload, name="avatar_upload"),
     path("verify-age/", views.verify_age, name="verify_age"),

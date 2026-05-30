@@ -134,3 +134,10 @@ Built on the social core; see services/tests for exact behaviour. All uphold the
 - **Activity draft helper (F36)** — `social.draft_activity_text` composes a deterministic (template-only) draft
   title/description from the organizer's chosen type/place/time (+ a CHILD/TEEN safety reminder); `activity_create`
   seeds them via `setdefault` so it **never overwrites typed input**. Composes with F40's prefill.
+- **Accessibility facts + access preference (F15)** — `places.accessibility_facts` derives honest states
+  (true/limited/false/**unknown**) from a venue's existing OSM tags at **read time** (never written back — re-ingest
+  would clobber). A per-user `AccessPreference` (a *stated* setting, not inferred) drives a **soft** "matches your
+  access needs" badge that **never hides** unknown-accessibility places. `/access/` edits it.
+- **WCAG chrome + JS-free places list (F16)** — a server-rendered `/places/list/` text fallback for the Leaflet
+  map (mirrors the API filter/proximity, `.distinct()`), plus a skip link, ARIA landmarks, visible `:focus-visible`
+  styles, and an `aria-live` chat region (muted during history load so screen readers don't replay the backlog).

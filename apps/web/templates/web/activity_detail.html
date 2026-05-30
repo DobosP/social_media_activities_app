@@ -221,9 +221,10 @@
 
   {% if is_member %}
   <h2>Live chat</h2>
-  <div id="chat-log" class="thread" style="border:1px solid var(--line);border-radius:8px;padding:.5rem"></div>
+  <div id="chat-log" class="thread" role="log" aria-live="polite" aria-relevant="additions"
+       aria-label="Live chat messages" style="border:1px solid var(--line);border-radius:8px;padding:.5rem"></div>
   <form id="chat-form" class="row" style="margin-top:.5rem">
-    <input id="chat-input" autocomplete="off" placeholder="Message members..." style="flex:1">
+    <input id="chat-input" autocomplete="off" aria-label="Message members" placeholder="Message members..." style="flex:1">
     <button class="btn btn-sm" type="submit">Send</button>
   </form>
   {% endif %}
@@ -238,6 +239,9 @@
 (function () {
   const threadId = {{ activity.thread.id }};
   const log = document.getElementById("chat-log");
+  // Mute the live region while history loads so a screen reader doesn't read the whole
+  // backlog aloud; re-enable it (below) once history has been appended, for new messages only.
+  log.setAttribute("aria-live", "off");
   function append(author, body, at) {
     const row = document.createElement("div");
     row.className = "post";
@@ -252,7 +256,8 @@
   // Load history.
   fetch(`/api/chat/threads/${threadId}/messages/`, {headers: {'Accept': 'application/json'}})
     .then(r => r.ok ? r.json() : [])
-    .then(list => (list || []).forEach(m => append(m.author && m.author.display_name, m.body, m.created_at)));
+    .then(list => (list || []).forEach(m => append(m.author && m.author.display_name, m.body, m.created_at)))
+    .finally(() => log.setAttribute("aria-live", "polite"));
   // Live socket.
   const proto = location.protocol === "https:" ? "wss" : "ws";
   const sock = new WebSocket(`${proto}://${location.host}/ws/chat/${threadId}/`);

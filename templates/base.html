@@ -9,8 +9,9 @@
   {% block head %}{% endblock %}
 </head>
 <body>
-<header class="site-header">
-  <nav class="nav container">
+<a class="skip-link" href="#main">Skip to main content</a>
+<header class="site-header" role="banner">
+  <nav class="nav container" role="navigation" aria-label="Primary">
     <a class="brand" href="{% url 'home' %}">&#9679; Activities</a>
     <a href="{% url 'places_map' %}">Places</a>
     <a href="{% url 'events_list' %}">Events</a>
@@ -37,7 +38,7 @@
   </nav>
 </header>
 
-<main class="container">
+<main class="container" id="main" role="main" tabindex="-1">
   {% if messages %}
     <ul class="messages">
       {% for m in messages %}<li class="msg {{ m.tags }}">{{ m }}</li>{% endfor %}
@@ -46,7 +47,7 @@
   {% block content %}{% endblock %}
 </main>
 
-<footer class="site-footer container">
+<footer class="site-footer container" role="contentinfo">
   <p>A nonprofit, text-first way to meet up in person &mdash; the opposite of image-perfect social
      media. <strong>Demo environment: do not enter real personal data.</strong></p>
   <p class="footer-links">
