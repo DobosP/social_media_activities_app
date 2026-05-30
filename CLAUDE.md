@@ -125,3 +125,12 @@ Built on the social core; see services/tests for exact behaviour. All uphold the
   "% match"; `Activity.beginners_welcome` adds a `?beginners=true` filter (the ranked strip stays unfiltered).
 - **"Organize one here" prefill (F40)** — an event's "Organise" link seeds the create form's activity type +
   start time; `activity_create` validates every GET value (type exists/active, time parses) before seeding.
+- **Catch-up thread digest (F35)** — `social.thread_digest` is a deterministic (no-ML) extractive recap
+  (latest announcements + keyword-matched logistics + recent posts + going/total) shown member-only in a no-JS
+  `<details>` "Catch up". Same digest for every member — **no per-user read-tracking**. Bounded queries.
+- **First-timer welcome mat (F39)** — `_admit` marks a genuinely-new joiner's first membership (`welcomed_at`)
+  and appends a line to their `JOIN_APPROVED` notice; a self-dismissing banner (7-day TTL) shows on the activity.
+  **No thread Post is written** (avoids the required `Post.author` FK) — the welcome is unmistakably systemic.
+- **Activity draft helper (F36)** — `social.draft_activity_text` composes a deterministic (template-only) draft
+  title/description from the organizer's chosen type/place/time (+ a CHILD/TEEN safety reminder); `activity_create`
+  seeds them via `setdefault` so it **never overwrites typed input**. Composes with F40's prefill.

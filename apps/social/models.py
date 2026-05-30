@@ -152,6 +152,10 @@ class Membership(models.Model):
     # cross-activity (the aggregate only ever counts IS NOT NULL within ONE activity). Cleared
     # on leave so a removed row carries no signal.
     met_confirmed_at = models.DateTimeField(null=True, blank=True)
+    # F39: one-shot marker set inside _admit when this is a genuinely-new joiner's FIRST
+    # admitted membership, so the first-timer welcome (a self-dismissing banner + a line on
+    # the join notification) fires at most once. null = not (yet) welcomed; never aggregated.
+    welcomed_at = models.DateTimeField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

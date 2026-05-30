@@ -3,7 +3,7 @@ services the API uses, so the safety invariants (cohort isolation, consent gatin
 membership-scoped media) hold identically here."""
 
 import math
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.contrib import messages
@@ -415,6 +415,17 @@ def activity_detail(request, pk):
 
     is_owner = activity.owner_id == user.id
     my_arrival = my_membership.arrived_at if (is_member and my_membership) else None
+    # F35: the "catch up" digest, only for someone who can already see the thread.
+    digest = social.thread_digest(activity) if (is_member or user.is_staff) else None
+    # F39: a self-dismissing first-timer welcome banner, shown to the new joiner for a window
+    # after they were welcomed (then it simply ages out — no mutating GET).
+    welcome_ttl = timedelta(days=getattr(settings, "F39_WELCOME_BANNER_TTL_DAYS", 7))
+    show_welcome = bool(
+        is_member
+        and my_membership
+        and my_membership.welcomed_at
+        and timezone.now() - my_membership.welcomed_at <= welcome_ttl
+    )
     return render(
         request,
         "web/activity_detail.html",
@@ -425,6 +436,8 @@ def activity_detail(request, pk):
             "is_owner": is_owner,
             "is_open": activity.status == Activity.Status.OPEN,
             "is_completed": activity.status == Activity.Status.COMPLETED,
+            "digest": digest,
+            "show_welcome": show_welcome,
             "my_membership": my_membership,
             "pending": pending,
             "announcements": announcements,
@@ -470,6 +483,23 @@ def activity_create(request):
             break
         except ValueError:
             continue
+    # F36: seed an editable draft title/description from the chosen type/place/time (composes
+    # with the F40 prefill). setdefault only fills EMPTY slots — never overwrites the user's
+    # input, and the POST path is untouched.
+    if initial.get("activity_type"):
+        atype = ActivityType.objects.filter(pk=initial["activity_type"], is_active=True).first()
+        if atype is not None:
+            place_obj = (
+                Place.objects.filter(pk=initial["place"]).first() if initial.get("place") else None
+            )
+            draft = social.draft_activity_text(
+                activity_type=atype,
+                place=place_obj,
+                starts_at=initial.get("starts_at"),
+                cohort=request.user.cohort,
+            )
+            initial.setdefault("title", draft["title"])
+            initial.setdefault("description", draft["description"])
     if request.method == "POST":
         form = ActivityForm(request.POST)
         if form.is_valid():

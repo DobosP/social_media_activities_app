@@ -112,6 +112,15 @@
   <div class="banner">This activity is for a different age cohort, so you can't join it.</div>
 {% endif %}
 
+{% if show_welcome %}
+  {# F39: a systemic welcome banner for a first-timer — rendered by the app, never a member post. #}
+  <div class="card" style="border-left:3px solid var(--accent)">
+    <strong>Welcome to your first meetup!</strong>
+    <p class="muted" style="margin:.3rem 0 0">Say a quick hello in the thread below, check the
+      logistics, and turn up &mdash; the group is glad you joined.</p>
+  </div>
+{% endif %}
+
 {% if is_member and not is_owner %}
   <div class="card" style="border-left:3px solid var(--danger,#c0392b)">
     <strong>Feeling unsafe or uncomfortable?</strong>
@@ -148,6 +157,19 @@
 </ul>
 
 {% if is_member or user.is_staff %}
+  {% if digest and digest.has_content %}
+    {# F35: deterministic "catch up" recap — a condensed view of the CURRENT thread, no JS. #}
+    <details class="card" style="border-left:3px solid var(--accent)">
+      <summary><strong>Catch up</strong> <span class="muted">&mdash; what you missed</span></summary>
+      <p class="muted" style="margin:.4rem 0">{{ digest.going }} of {{ digest.total }} coming &middot; {{ digest.member_count }} member{{ digest.member_count|pluralize }}.</p>
+      {% if digest.announcements %}<p class="muted" style="margin:.2rem 0 0">Latest announcements:</p>
+        {% for p in digest.announcements %}<div class="post" style="border-left:3px solid var(--accent)"><div class="meta">&#128204; {{ p.author.display_name|default:p.author.username }} &middot; {{ p.created_at|date:"j M H:i" }}</div><div>{{ p.body|truncatechars:200|linebreaksbr }}</div></div>{% endfor %}{% endif %}
+      {% if digest.logistical %}<p class="muted" style="margin:.4rem 0 0">Logistics mentioned:</p>
+        {% for p in digest.logistical %}<div class="post"><div class="meta">{{ p.author.display_name|default:p.author.username }} &middot; {{ p.created_at|date:"j M H:i" }}</div><div>{{ p.body|truncatechars:200|linebreaksbr }}</div></div>{% endfor %}{% endif %}
+      {% if digest.recent %}<p class="muted" style="margin:.4rem 0 0">Most recent:</p>
+        {% for p in digest.recent %}<div class="post"><div class="meta">{{ p.author.display_name|default:p.author.username }} &middot; {{ p.created_at|date:"j M H:i" }}</div><div>{{ p.body|truncatechars:200|linebreaksbr }}</div></div>{% endfor %}{% endif %}
+    </details>
+  {% endif %}
   {% if announcements or is_owner %}
     <h2>Announcements</h2>
     {% if is_owner %}
