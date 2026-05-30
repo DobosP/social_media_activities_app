@@ -2,13 +2,12 @@
 {% load static %}
 {% block title %}Messages{% endblock %}
 {% block content %}
-<h1>Messages</h1>
-<p class="muted">
-  Private, <strong>end-to-end encrypted</strong> direct &amp; group chats. Only you and the
-  people in a conversation can read the messages &mdash; the server stores them encrypted and
-  cannot read them. You can only message people in your own age group, and they must accept
-  your first message.
-</p>
+<div class="mz-head">
+  <h1 style="margin:0">Messages</h1>
+  <span class="mz-lock muted" title="End-to-end encrypted">🔒 end-to-end encrypted</span>
+</div>
+<p class="muted" style="margin:.2rem 0 .6rem">Private chats only you and the other people can read.
+  You can only message people in your own age group, and they must accept your first message.</p>
 
 {# Setting csrf_token here ensures the cookie is present for the JS API calls. #}
 <span style="display:none">{{ csrf_token }}</span>
@@ -16,54 +15,67 @@
 
 <p id="mz-status" class="muted">Setting up secure messaging&hellip;</p>
 
-<div class="mz-layout">
-  <aside class="mz-sidebar card">
-    <h3>Conversations</h3>
-    <div id="mz-conversations"><p class="muted">Loading&hellip;</p></div>
+<div class="mz-app card" id="mz-app">
+  <aside class="mz-sidebar" id="mz-sidebar">
+    {# Quick-start a chat with one of your connections #}
+    <div id="mz-connections" class="mz-connections"></div>
 
-    <h3 style="margin-top:1rem">New conversation</h3>
-    <form id="mz-new-form" class="mz-new">
-      <label>Usernames <small class="muted">(comma or space separated; 2+ makes a group)</small>
-        <input name="usernames" autocomplete="off" placeholder="e.g. alex, sam" required>
-      </label>
-      <label>Group name <small class="muted">(optional)</small>
-        <input name="title" autocomplete="off" placeholder="Trail crew">
-      </label>
-      <input type="hidden" name="kind" value="direct">
-      <button class="btn btn-sm" type="submit">Start</button>
-    </form>
-
-    <div id="mz-guardian-section" style="display:none">
-      <h3 style="margin-top:1rem">Guardian oversight</h3>
-      <p class="muted" style="font-size:.8rem">Conversations your child is part of. Observing is
-        read-only and visible to everyone in the chat.</p>
-      <div id="mz-guardian-list"></div>
+    {# Filter tabs #}
+    <div class="mz-tabs" role="tablist">
+      <button class="mz-tab is-active" data-filter="all" type="button">All</button>
+      <button class="mz-tab" data-filter="direct" type="button">Direct</button>
+      <button class="mz-tab" data-filter="group" type="button">Groups</button>
+      <button class="mz-tab" data-filter="invited" type="button">Requests</button>
     </div>
 
-    <h3 style="margin-top:1rem">This device</h3>
-    <p class="muted" style="font-size:.8rem">Your private key lives only in this browser. Back it
-      up (encrypted with a passphrase) to read your history on another device.</p>
-    <button id="mz-backup" class="btn btn-sm btn-secondary" type="button">Back up my key</button>
+    <div id="mz-conversations" class="mz-conv-list"><p class="muted">Loading&hellip;</p></div>
+
+    <details class="mz-more">
+      <summary>New group &amp; device options</summary>
+      <form id="mz-new-form" class="mz-new">
+        <label>Usernames <small class="muted">(comma/space separated; 2+ = group)</small>
+          <input name="usernames" autocomplete="off" placeholder="e.g. alex, sam" required></label>
+        <label>Group name <small class="muted">(optional)</small>
+          <input name="title" autocomplete="off" placeholder="Trail crew"></label>
+        <input type="hidden" name="kind" value="direct">
+        <button class="btn btn-sm" type="submit">Start</button>
+      </form>
+      <div id="mz-guardian-section" style="display:none">
+        <h4 style="margin:.6rem 0 .2rem">Guardian oversight</h4>
+        <p class="muted" style="font-size:.78rem">Conversations your child is in. Observing is
+          read-only and visible to everyone in the chat.</p>
+        <div id="mz-guardian-list"></div>
+      </div>
+      <p class="muted" style="font-size:.78rem;margin-top:.5rem">Your private key lives only in this
+        browser. Back it up (encrypted) to read your history on another device.</p>
+      <button id="mz-backup" class="btn btn-sm btn-secondary" type="button">Back up my key</button>
+    </details>
   </aside>
 
-  <section class="mz-main card">
-    <h3 id="mz-title">Select a conversation</h3>
-    <div id="mz-toolbar" class="row" style="display:none;gap:.5rem;align-items:center;font-size:.8rem">
-      <label class="muted">Disappearing messages:
-        <select id="mz-timer">
-          <option value="0">Off</option>
-          <option value="3600">1 hour</option>
-          <option value="86400">1 day</option>
-          <option value="604800">1 week</option>
-          <option value="2592000">30 days</option>
-        </select>
-      </label>
-    </div>
+  <section class="mz-main" id="mz-main">
+    <header class="mz-main-head">
+      <button class="mz-back linkbtn" id="mz-back" type="button" aria-label="Back to conversations">&larr;</button>
+      <span class="mz-avatar" id="mz-title-avatar" aria-hidden="true"></span>
+      <h3 id="mz-title" style="margin:0;flex:1">Select a conversation</h3>
+      <div id="mz-toolbar" class="mz-toolbar" style="display:none">
+        <label class="muted" title="Disappearing messages">⏲
+          <select id="mz-timer">
+            <option value="0">Off</option>
+            <option value="3600">1 hour</option>
+            <option value="86400">1 day</option>
+            <option value="604800">1 week</option>
+            <option value="2592000">30 days</option>
+          </select>
+        </label>
+      </div>
+    </header>
     <div id="mz-guardian"></div>
     <div id="mz-verify"></div>
-    <div id="mz-log" class="thread mz-log"></div>
-    <form id="mz-composer" class="row" style="margin-top:.5rem;display:none">
-      <input id="mz-input" autocomplete="off" placeholder="Write an encrypted message&hellip;" style="flex:1">
+    <div id="mz-log" class="mz-log">
+      <p class="muted mz-empty">Pick a conversation on the left, or start one with a connection.</p>
+    </div>
+    <form id="mz-composer" class="mz-composer" style="display:none">
+      <input id="mz-input" autocomplete="off" placeholder="Write an encrypted message&hellip;">
       <button class="btn btn-sm" type="submit">Send</button>
     </form>
   </section>
@@ -72,23 +84,70 @@
 
 {% block scripts %}
 <style>
-  .mz-layout { display:grid; grid-template-columns: 280px 1fr; gap:1rem; align-items:start; }
-  .mz-log { min-height:240px; max-height:50vh; overflow-y:auto; border:1px solid var(--line);
-            border-radius:8px; padding:.5rem; }
-  .mz-conv { display:flex; align-items:center; gap:.35rem; flex-wrap:wrap; padding:.25rem 0;
-             border-bottom:1px solid var(--line); }
-  .mz-conv .linkbtn { flex:1; text-align:left; }
-  .mz-new label { display:block; font-size:.85rem; margin-bottom:.4rem; }
+  .mz-head { display:flex; align-items:baseline; gap:.6rem; }
+  .mz-lock { font-size:.8rem; }
+  .mz-app { display:grid; grid-template-columns: 300px 1fr; gap:0; padding:0; overflow:hidden;
+            min-height:60vh; }
+  .mz-sidebar { border-right:1px solid var(--line); padding:.6rem; overflow-y:auto; max-height:70vh; }
+  .mz-connections { display:flex; gap:.4rem; overflow-x:auto; padding-bottom:.4rem; }
+  .mz-connections:empty { display:none; }
+  .mz-connchip { flex:0 0 auto; display:flex; flex-direction:column; align-items:center; gap:.2rem;
+                 background:none; border:0; cursor:pointer; font:inherit; width:56px; }
+  .mz-connchip .mz-avatar { width:40px; height:40px; }
+  .mz-connchip small { font-size:.68rem; max-width:54px; overflow:hidden; text-overflow:ellipsis;
+                       white-space:nowrap; color:var(--muted,#555); }
+  .mz-tabs { display:flex; gap:.25rem; margin:.4rem 0; }
+  .mz-tab { flex:1; background:none; border:1px solid var(--line); border-radius:999px; cursor:pointer;
+            font:inherit; font-size:.78rem; padding:.2rem .3rem; color:var(--muted,#555); }
+  .mz-tab.is-active { background:var(--accent,#1a7f37); color:#fff; border-color:var(--accent,#1a7f37); }
+  .mz-conv-list { display:flex; flex-direction:column; }
+  .mz-conv { display:flex; align-items:center; gap:.5rem; padding:.45rem .3rem; cursor:pointer;
+             border-radius:8px; border:0; background:none; text-align:left; width:100%; font:inherit; }
+  .mz-conv:hover { background:#f3f5f1; }
+  .mz-conv.is-active { background:#e7f0e9; }
+  .mz-conv .mz-meta { flex:1; min-width:0; }
+  .mz-conv .mz-name { font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .mz-conv .mz-sub { font-size:.76rem; color:var(--muted,#555); white-space:nowrap; overflow:hidden;
+                     text-overflow:ellipsis; }
+  .mz-avatar { width:38px; height:38px; border-radius:50%; flex:0 0 auto; display:flex;
+               align-items:center; justify-content:center; font-weight:600; color:#fff;
+               background:#7a8a7c; font-size:.85rem; }
+  .mz-avatar.group { background:#6b7fa3; }
+  .mz-main { display:flex; flex-direction:column; padding:.6rem; max-height:70vh; }
+  .mz-main-head { display:flex; align-items:center; gap:.5rem; border-bottom:1px solid var(--line);
+                  padding-bottom:.4rem; }
+  .mz-back { display:none; font-size:1.1rem; }
+  .mz-toolbar { margin-left:auto; font-size:.8rem; }
+  .mz-log { flex:1; min-height:240px; overflow-y:auto; padding:.6rem .2rem; display:flex;
+            flex-direction:column; gap:.25rem; }
+  .mz-msg { max-width:78%; padding:.4rem .6rem; border-radius:12px; }
+  .mz-msg .mz-msg-who { font-size:.72rem; font-weight:600; color:#3a6b8a; margin-bottom:.1rem; }
+  .mz-msg .mz-msg-body { white-space:pre-wrap; word-wrap:break-word; }
+  .mz-msg .mz-msg-time { font-size:.66rem; color:var(--muted,#777); margin-top:.15rem; text-align:right; }
+  .mz-msg--them { align-self:flex-start; background:#fff; border:1px solid var(--line);
+                  border-bottom-left-radius:3px; }
+  .mz-msg--own { align-self:flex-end; background:#d6f2dd; border-bottom-right-radius:3px; }
+  .mz-msg .linkbtn { font-size:.7rem; }
+  .mz-composer { display:flex; gap:.5rem; padding-top:.5rem; border-top:1px solid var(--line); }
+  .mz-composer input { flex:1; }
+  .mz-more summary { cursor:pointer; font-size:.82rem; margin-top:.6rem; color:var(--muted,#555); }
+  .mz-new label { display:block; font-size:.82rem; margin:.4rem 0; }
   .mz-new input { width:100%; }
   #mz-status.ok { color:#1a7f37; } #mz-status.error { color:#b42318; }
   .pill.ok { background:#1a7f37; color:#fff; }
-  .mz-verify-panel { margin:.25rem 0 .75rem; padding:.5rem .75rem; }
-  .mz-verify-panel summary { cursor:pointer; font-size:.85rem; }
+  .mz-verify-panel { margin:.25rem 0 .5rem; }
+  .mz-verify-panel summary { cursor:pointer; font-size:.82rem; }
   .mz-verify-row { padding:.4rem 0; border-top:1px solid var(--line); }
-  .mz-safety { display:block; font-size:.8rem; letter-spacing:.5px; margin:.3rem 0;
-               word-spacing:2px; color:var(--muted, #555); }
+  .mz-safety { display:block; font-size:.78rem; letter-spacing:.5px; word-spacing:2px; margin:.3rem 0;
+               color:var(--muted,#555); }
   .mz-warn { color:#b42318; font-size:.8rem; margin:.25rem 0; }
-  @media (max-width:720px){ .mz-layout { grid-template-columns:1fr; } }
+  @media (max-width:720px) {
+    .mz-app { grid-template-columns:1fr; }
+    .mz-main { display:none; }
+    .mz-app.show-main .mz-sidebar { display:none; }
+    .mz-app.show-main .mz-main { display:flex; }
+    .mz-back { display:inline; }
+  }
 </style>
 <script src="{% static 'js/e2ee-messaging.js' %}"></script>
 {% endblock %}

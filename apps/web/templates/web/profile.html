@@ -32,6 +32,30 @@
 </div>
 
 <div class="card">
+  <h3>Connections</h3>
+  <p class="muted" style="margin-top:0">People you've met at activities &mdash;
+    <a href="{% url 'connections' %}">manage</a>.</p>
+  {% if pending_in %}
+    <div class="banner">{{ pending_in|length }} pending connection request{{ pending_in|length|pluralize }}
+      &middot; <a href="{% url 'connections' %}">review</a></div>
+  {% endif %}
+  {% if connections %}
+    <ul class="members">
+      {% for u in connections %}
+        <li>{{ u.display_name|default:u.username }}
+          <form method="post" action="{% url 'connection_message' %}" class="inline">{% csrf_token %}
+            <input type="hidden" name="public_id" value="{{ u.public_id }}">
+            <button class="btn btn-sm" type="submit">Message</button>
+          </form>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="muted">No connections yet. <a href="{% url 'connections' %}">Find people you've met</a>.</p>
+  {% endif %}
+</div>
+
+<div class="card">
   <h3>Age verification</h3>
   {% if provenance and provenance.has_row %}
     {% if provenance.band_display %}<p><strong>Verified as:</strong> {{ provenance.band_display }}

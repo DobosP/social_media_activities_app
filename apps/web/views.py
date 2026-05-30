@@ -1180,6 +1180,8 @@ def access_preferences(request):
 @login_required
 def profile(request):
     user = request.user
+    from apps.connections import services as connections
+
     chosen = list(
         UserInterest.objects.filter(user=user)
         .select_related("activity_type")
@@ -1196,6 +1198,10 @@ def profile(request):
             "provenance": assurance_provenance(user),
             "interests": chosen,
             "blocked": blocked,
+            "connections": connections.connections_for(user),
+            "pending_in": connections.pending_incoming(user)
+            if connections.is_enabled_for(user)
+            else [],
             **_nav_context(user),
         },
     )
@@ -1278,12 +1284,25 @@ def messages_page(request):
     """Shell for the end-to-end-encrypted messenger. All crypto happens in the
     browser (see static/js/e2ee-messaging.js); this view only renders the page and
     hands the client the current user's public identity so it can address itself."""
+    from apps.connections import services as connections
+
+    # Your connections (people you've met) — offered as quick "start a chat" shortcuts so you
+    # don't have to type a username. Same-cohort by construction; messaging re-gates can_message.
+    conns = [
+        {
+            "public_id": str(u.public_id),
+            "username": u.username,
+            "display_name": u.display_name or u.username,
+        }
+        for u in connections.connections_for(request.user)
+    ]
     config = {
         "me": {
             "public_id": str(request.user.public_id),
             "username": request.user.username,
             "display_name": request.user.display_name or request.user.username,
-        }
+        },
+        "connections": conns,
     }
     return render(
         request,
