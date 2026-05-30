@@ -233,10 +233,49 @@ class Command(BaseCommand):
                 },
             )
 
+        # --- connections (accepted) + messaging conversation shells ---
+        # Connect adults who actually share an activity (the loop above made co-members), so the
+        # profile + connections page are populated. E2EE message BODIES can't be pre-seeded (the
+        # ciphertext is generated client-side), so we only create conversation shells here.
+        import itertools
+
+        from apps.connections import services as conn_svc
+        from apps.connections.models import Connection
+        from apps.messaging import services as msg_svc
+
+        made = 0
+        for a, b in itertools.combinations(adults, 2):
+            if made >= 8 or conn_svc.are_connected(a, b) or not conn_svc.shares_activity(a, b):
+                continue
+            try:
+                c = conn_svc.request_connection(a, b)
+                if c.status != "accepted":
+                    conn_svc.respond_to_connection(b, c, accept=True)
+                made += 1
+            except conn_svc.ConnectionError:
+                continue
+
+        def _direct(a, b):
+            try:
+                conv = msg_svc.start_direct(a, b)
+                msg_svc.accept_invite(b, conv)  # both ACTIVE so it shows as a live conversation
+            except Exception:  # noqa: BLE001 — demo seeding is best-effort
+                pass
+
+        _direct(adults[0], adults[1])
+        _direct(adults[0], adults[2])
+        try:
+            g = msg_svc.start_group(adults[0], [adults[1], adults[3]], title="Saturday crew")
+            msg_svc.accept_invite(adults[1], g)
+            msg_svc.accept_invite(adults[3], g)
+        except Exception:  # noqa: BLE001
+            pass
+
         out.write(
             self.style.SUCCESS(
                 f"Seeded: {User.objects.count()} users, {Place.objects.count()} places, "
-                f"{Activity.objects.count()} activities, {Event.objects.count()} events."
+                f"{Activity.objects.count()} activities, {Event.objects.count()} events, "
+                f"{Connection.objects.filter(status='accepted').count()} connections."
             )
         )
         out.write("Login (web at http://localhost:8000/):")
