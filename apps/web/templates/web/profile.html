@@ -26,6 +26,9 @@
   <p><strong>Interests:</strong>
     {% for i in interests %}<span class="tag">{{ i }}</span>{% empty %}<span class="muted">none yet</span>{% endfor %}
     &middot; <a href="{% url 'interests' %}">edit</a></p>
+  <p><strong>Access preferences:</strong>
+    <span class="muted">step-free, accessible toilet &amp; more</span>
+    &middot; <a href="{% url 'access_preferences' %}">edit</a></p>
 </div>
 
 <div class="card">

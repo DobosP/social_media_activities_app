@@ -11,6 +11,29 @@
 {% if place.website|safe_href %}<p><a href="{{ place.website|safe_href }}" rel="noopener noreferrer" target="_blank">Official website &rarr;</a></p>{% endif %}
 <div>{% for pa in place.place_activities.all %}<span class="tag">{{ pa.activity.name }}</span>{% endfor %}</div>
 
+<div class="card">
+  <h2 style="margin-top:0">Accessibility</h2>
+  {% if has_access_pref %}
+    {% if access_match == "match" %}<p><span class="tag fact--true">Matches your access needs</span></p>
+    {% elif access_match == "mismatch" %}<p><span class="tag fact--false">May not meet your access needs</span></p>
+    {% else %}<p class="muted">Some of your access needs aren't recorded for this venue.</p>{% endif %}
+  {% else %}
+    <p class="muted"><a href="{% url 'access_preferences' %}">Set your access preferences</a> to see at a glance whether a venue matches your needs.</p>
+  {% endif %}
+  <ul class="members">
+    {% for f in access_facts %}
+      <li>{{ f.label }}:
+        {% if f.state == "true" %}<span class="tag fact--true">yes</span>
+        {% elif f.state == "limited" %}<span class="tag fact--limited">limited</span>
+        {% elif f.state == "false" %}<span class="tag fact--false">no</span>
+        {% else %}<span class="muted">not recorded</span>{% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+  <p class="muted" style="font-size:.8rem">From the venue's open data &mdash; we never claim a place
+    is accessible when it isn't recorded.</p>
+</div>
+
 {% if user.is_authenticated %}
   <p style="margin-top:1rem">
     <a class="btn" href="{% url 'activity_create' %}?place={{ place.pk }}">Organise an activity here</a>

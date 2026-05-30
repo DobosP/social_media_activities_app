@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Places (text list){% endblock %}
+{% block content %}
+<h1>Places</h1>
+<p class="muted">A plain text list of venues &mdash; no map or JavaScript needed.
+  <a href="{% url 'places_map' %}">Switch to the map &rarr;</a></p>
+<form method="get" class="row" style="gap:.5rem;flex-wrap:wrap;margin:.4rem 0">
+  <label>City <input type="text" name="city" value="{{ filters.city }}"></label>
+  <label>Activity <input type="text" name="activity" value="{{ filters.activity }}" placeholder="slug, e.g. basketball"></label>
+  <button class="btn btn-sm" type="submit">Filter</button>
+</form>
+{% include "web/_near_me.html" %}
+{% if truncated %}<p class="muted">Showing the first 200 places &mdash; narrow with a city or activity filter.</p>{% endif %}
+<ul class="members">
+  {% for p in places %}
+    <li>
+      <a href="{% url 'place_detail' p.pk %}">{{ p.name|default:"Unnamed place" }}</a>
+      {% if p.address_street %}<span class="muted">&middot; {{ p.address_street }}{% if p.address_city %}, {{ p.address_city }}{% endif %}</span>{% elif p.address_city %}<span class="muted">&middot; {{ p.address_city }}</span>{% endif %}
+      {% if p.distance %}<span class="muted">&middot; {{ p.distance.m|floatformat:0 }} m away</span>{% endif %}
+      {% for pa in p.place_activities.all %}<span class="tag">{{ pa.activity.name }}</span>{% endfor %}
+      {% if p.access_tags %}{% for r in p.access_tags %}<span class="tag fact--{{ r.state }}">{{ r.label }}{% if r.state == "limited" %} (limited){% endif %}</span>{% endfor %}{% endif %}
+    </li>
+  {% empty %}
+    <li class="muted">No places match.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

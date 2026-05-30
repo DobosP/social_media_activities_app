@@ -47,7 +47,15 @@ from apps.media.services import (
 )
 from apps.notifications import services as notifications
 from apps.notifications.models import Notification
+from apps.places.filters import PlaceFilter
 from apps.places.models import Place
+from apps.places.services import (
+    accessibility_facts,
+    accessibility_facts_display,
+    get_access_preference,
+    matches_access_preference,
+    set_access_preference,
+)
 from apps.recommendations import services as recs
 from apps.recommendations.models import UserInterest
 from apps.safety import services as safety
@@ -306,6 +314,41 @@ def places_map(request):
     return render(request, "web/places.html", _nav_context(request.user))
 
 
+def places_list(request):
+    """F16: a server-rendered, JS-free text list of places (works with no map/tiles), mirroring
+    the public places API's filtering + proximity. Public data; no per-user location stored."""
+    from apps.discovery.proximity import apply_proximity
+
+    qs = Place.objects.prefetch_related("place_activities__activity")
+    # .distinct() is load-bearing: PlaceFilter joins place_activities for ?activity/?min_confidence
+    # and would otherwise multiply rows (mirrors PlaceViewSet.get_queryset).
+    qs = PlaceFilter(request.GET, queryset=qs).qs.distinct()
+    qs, point = apply_proximity(qs, request.GET)  # field="location" (default), like the API
+    if point is None:
+        qs = qs.order_by("name", "id")
+    capped = list(qs[:200])
+    # F15 compose: attach the venue's positive accessibility facts as terse badges per row.
+    for p in capped:
+        p.access_tags = [
+            r for r in accessibility_facts_display(p) if r["state"] in ("true", "limited")
+        ]
+    return render(
+        request,
+        "web/places_list.html",
+        {
+            "places": capped,
+            "near_active": point is not None,
+            "truncated": len(capped) == 200,
+            "filters": {
+                "activity": request.GET.get("activity", ""),
+                "city": request.GET.get("city", ""),
+                "source": request.GET.get("source", ""),
+            },
+            **_nav_context(request.user),
+        },
+    )
+
+
 def place_detail(request, pk):
     place = get_object_or_404(Place.objects.prefetch_related("place_activities__activity"), pk=pk)
     meetups = []
@@ -321,10 +364,22 @@ def place_detail(request, pk):
         .select_related("activity_type")
         .order_by("starts_at")
     )
+    # F15: honest accessibility facts derived from OSM tags, plus a soft match badge when the
+    # viewer has set an access preference (get_access_preference returns None for anonymous).
+    pref = get_access_preference(request.user)
+    access_match = matches_access_preference(accessibility_facts(place), pref)
     return render(
         request,
         "web/place_detail.html",
-        {"place": place, "meetups": meetups, "events": events, **_nav_context(request.user)},
+        {
+            "place": place,
+            "meetups": meetups,
+            "events": events,
+            "access_facts": accessibility_facts_display(place),
+            "access_match": access_match,
+            "has_access_pref": pref is not None,
+            **_nav_context(request.user),
+        },
     )
 
 
@@ -708,6 +763,26 @@ def interests(request):
         request,
         "web/interests.html",
         {"options": options, "chosen": chosen, **_nav_context(request.user)},
+    )
+
+
+@login_required
+def access_preferences(request):
+    """F15: the user's OWN stated accessibility needs — a setting they choose, never inferred
+    or tracked. Reads/writes only request.user (no cross-user surface)."""
+    if request.method == "POST":
+        set_access_preference(
+            request.user,
+            needs_step_free=request.POST.get("needs_step_free") == "on",
+            needs_accessible_toilet=request.POST.get("needs_accessible_toilet") == "on",
+            prefers_quiet=request.POST.get("prefers_quiet") == "on",
+        )
+        messages.success(request, "Your access preferences were saved.")
+        return redirect("access_preferences")
+    return render(
+        request,
+        "web/access_preferences.html",
+        {"pref": get_access_preference(request.user), **_nav_context(request.user)},
     )
 
 
