@@ -23,7 +23,9 @@
         <span class="pill">{{ unread_notifications }}</span>{% endif %}</a>
       <a href="{% url 'messages' %}">Messages</a>
       {% if has_guardians %}<a href="{% url 'my_guardians' %}">Guardians</a>{% endif %}
+      <a href="{% url 'my_donations' %}">My donations</a>
     {% endif %}
+    <a href="{% url 'partners' %}">Civic partners</a>
     <a href="{% url 'donate' %}">Support</a>
     <span class="spacer"></span>
     {% if user.is_authenticated %}

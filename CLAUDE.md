@@ -141,3 +141,12 @@ Built on the social core; see services/tests for exact behaviour. All uphold the
 - **WCAG chrome + JS-free places list (F16)** — a server-rendered `/places/list/` text fallback for the Leaflet
   map (mirrors the API filter/proximity, `.distinct()`), plus a skip link, ARIA landmarks, visible `:focus-visible`
   styles, and an `aria-live` chat region (muted during history load so screen readers don't replay the backlog).
+- **Donation transparency (F29)** — `/transparency/` shows aggregate `completed_total_cents` raised next to
+  staff-entered `SpendEntry` rows by category (two separate sections, **never** an "X of Y goal" bar; no donor
+  PII); `/my-donations/` gives a donor their own plain receipts (self-only, no card data). `|cents` templatetag.
+- **Earmarked campaigns (F34)** — staff `Campaign` + optional `Donation.campaign` FK (`SET_NULL`); `/campaigns/`
+  shows a **calm static** progress bar (integer percent, capped 100; no countdown/scarcity/vanity). Inactive
+  campaigns are blocked at all 3 layers (form/serializer/`start_donation`); general fund stays the default.
+- **Verified civic partners (F37)** — `places.Partner` (text-only; **no image/logo field**), `/partners/` and a
+  one-line place_detail credit. `Partner.objects.public()` (verified+active) is the single visibility chokepoint;
+  website sanitised via `safe_external_url`; blurb capped at 280; neutral alphabetical order (no pay-for-placement).

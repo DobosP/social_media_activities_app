@@ -1,6 +1,7 @@
 from django import forms
 
 from apps.accounts.models import AgeBand
+from apps.donations.models import Campaign
 from apps.places.models import Place
 from apps.safety.models import ReasonCode
 from apps.social.models import Activity
@@ -155,6 +156,18 @@ class DonateForm(forms.Form):
     amount = forms.DecimalField(
         min_value=1, max_digits=8, decimal_places=2, label="Amount (EUR)", initial=10
     )
+    # Earmark to an active campaign, or leave on the general fund. The queryset is set in
+    # __init__ (per-request, not import time) so a campaign toggled inactive can't be picked.
+    campaign = forms.ModelChoiceField(
+        queryset=Campaign.objects.none(),
+        required=False,
+        empty_label="General fund (where it's needed most)",
+        label="Direct your gift to",
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["campaign"].queryset = Campaign.objects.filter(is_active=True).order_by("title")
 
 
 class ReportForm(forms.Form):

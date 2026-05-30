@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load money %}
+{% block title %}Where the money goes{% endblock %}
+{% block content %}
+<h1>Where the money goes</h1>
+<p class="muted">We're funded only by donations &mdash; no ads, no tracking. Figures are shown in
+  EUR, entered by our team and updated periodically.</p>
+
+<div class="card">
+  <h2 style="margin-top:0">Donations received</h2>
+  <p><strong>{{ raised_cents|cents }} EUR</strong> from completed donations.</p>
+</div>
+
+<div class="card">
+  <h2 style="margin-top:0">Spending by category</h2>
+  {% if spend_rows %}
+    <ul class="members">
+      {% for row in spend_rows %}
+        <li>{{ row.category }} &mdash; <strong>{{ row.total_cents|cents }} EUR</strong></li>
+      {% endfor %}
+    </ul>
+    <p class="muted">Total allocated so far: <strong>{{ spend_total_cents|cents }} EUR</strong>.</p>
+  {% else %}
+    <p class="muted">No spending has been published yet.</p>
+  {% endif %}
+</div>
+<p><a class="btn" href="{% url 'donate' %}">Support the platform</a></p>
+{% endblock %}

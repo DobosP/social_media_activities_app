@@ -6,7 +6,7 @@ honest — never claiming a venue is accessible when the tag is missing."""
 
 from django.db import transaction
 
-from .models import AccessPreference
+from .models import AccessPreference, Partner
 
 FACT_TRUE = "true"
 FACT_FALSE = "false"
@@ -98,3 +98,13 @@ def set_access_preference(
         },
     )
     return pref
+
+
+def verified_partners():
+    """Public list of verified civic partners (F37) — visibility gated by the manager."""
+    return Partner.objects.public().select_related("place")
+
+
+def partner_for_place(place):
+    """The verified civic partner stewarding this place, if any (one acknowledgement line)."""
+    return Partner.objects.public().filter(place=place).first()

@@ -54,6 +54,7 @@ from apps.places.services import (
     accessibility_facts_display,
     get_access_preference,
     matches_access_preference,
+    partner_for_place,
     set_access_preference,
 )
 from apps.recommendations import services as recs
@@ -378,6 +379,7 @@ def place_detail(request, pk):
             "access_facts": accessibility_facts_display(place),
             "access_match": access_match,
             "has_access_pref": pref is not None,
+            "partner": partner_for_place(place),
             **_nav_context(request.user),
         },
     )
@@ -908,6 +910,7 @@ def messages_page(request):
 
 
 def donate(request):
+    from apps.donations.models import Campaign
     from apps.donations.services import DonationError, start_donation
 
     if request.method == "POST":
@@ -915,14 +918,79 @@ def donate(request):
         if form.is_valid():
             cents = int(form.cleaned_data["amount"] * 100)
             try:
-                _donation, checkout_url = start_donation(request.user, cents)
+                _donation, checkout_url = start_donation(
+                    request.user, cents, campaign=form.cleaned_data["campaign"]
+                )
             except DonationError as exc:
                 messages.error(request, _msg(exc))
             else:
                 return redirect(checkout_url)
     else:
-        form = DonateForm()
+        # F34: pre-select a campaign when arriving from /campaigns/ via ?campaign=<slug>.
+        initial = {}
+        slug = request.GET.get("campaign")
+        if slug:
+            initial["campaign"] = Campaign.objects.filter(slug=slug, is_active=True).first()
+        form = DonateForm(initial=initial)
     return render(request, "web/donate.html", {"form": form, **_nav_context(request.user)})
+
+
+def transparency(request):
+    """F29: public 'where the money goes' — donations received and staff-entered spending by
+    category, as two clearly separate aggregate sections (never an 'X of Y goal' bar)."""
+    from apps.donations.services import (
+        completed_total_cents,
+        spend_by_category,
+        spend_total_cents,
+    )
+
+    return render(
+        request,
+        "web/transparency.html",
+        {
+            "currency": "EUR",
+            "raised_cents": completed_total_cents("EUR"),
+            "spend_rows": spend_by_category("EUR"),
+            "spend_total_cents": spend_total_cents("EUR"),
+            **_nav_context(request.user),
+        },
+    )
+
+
+@login_required
+def my_donations(request):
+    """F29: the donor's OWN donations with plain receipts. Self-only by construction; no
+    card/payment data is stored or shown."""
+    from apps.donations.models import Donation
+
+    donations = Donation.objects.filter(donor=request.user).order_by("-created_at")
+    return render(
+        request,
+        "web/my_donations.html",
+        {"donations": donations, **_nav_context(request.user)},
+    )
+
+
+def campaigns(request):
+    """F34: public list of active earmark campaigns with a calm, static progress bar."""
+    from apps.donations.services import active_campaigns_with_progress
+
+    return render(
+        request,
+        "web/campaigns.html",
+        {"campaigns": active_campaigns_with_progress(), **_nav_context(request.user)},
+    )
+
+
+def partners_list(request):
+    """F37: public list of verified civic partners — text-only acknowledgement, not advertising."""
+    from apps.places.services import verified_partners
+
+    return render(
+        request,
+        "web/partners.html",
+        {"partners": list(verified_partners()), **_nav_context(request.user)},
+    )
 
 
 # --- Events (public: places + happenings) -------------------------------------------

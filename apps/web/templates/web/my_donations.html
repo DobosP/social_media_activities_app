@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load money %}
+{% block title %}My donations{% endblock %}
+{% block content %}
+<h1>My donations</h1>
+<p class="muted">Your own donation receipts. We never store card or payment details &mdash; only an
+  amount, a date and an opaque reference.</p>
+{% for d in donations %}
+  <div class="card">
+    <strong>{{ d.amount_cents|cents }} {{ d.currency }}</strong>
+    <span class="tag">{{ d.get_status_display }}</span>{% if d.recurring %} <span class="tag">recurring</span>{% endif %}
+    {% if d.campaign %}<span class="tag">{{ d.campaign.title }}</span>{% endif %}
+    <p class="muted">{{ d.created_at|date:"Y-m-d H:i" }}{% if d.external_ref %} &middot; reference {{ d.external_ref }}{% endif %}</p>
+  </div>
+{% empty %}
+  <p class="muted">You have no donations yet. <a href="{% url 'donate' %}">Make one?</a></p>
+{% endfor %}
+{% endblock %}
