@@ -76,6 +76,103 @@ from .forms import (
     ReportForm,
 )
 
+# --- Connections (find + reconnect with people you've shared real activities with) ------
+
+
+@login_required
+def connections_page(request):
+    """Your connections + pending requests, and a SEARCH box (query-only, no suggestions feed).
+    Search is restricted to people you've shared an activity with, in your own cohort."""
+    from apps.connections import services as connections
+
+    if not connections.is_enabled_for(request.user):
+        messages.info(request, "Connections aren't available for your account yet.")
+        return redirect("home")
+    query = request.GET.get("q", "")
+    return render(
+        request,
+        "web/connections.html",
+        {
+            "connections": connections.connections_for(request.user),
+            "incoming": connections.pending_incoming(request.user),
+            "outgoing": connections.pending_outgoing(request.user),
+            "query": query,
+            "results": connections.search_connectable(request.user, query),
+            **_nav_context(request.user),
+        },
+    )
+
+
+@login_required
+@require_POST
+def connection_request(request):
+    from apps.connections import services as connections
+
+    target = get_object_or_404(User, public_id=request.POST.get("public_id"))
+    try:
+        connections.request_connection(request.user, target)
+        messages.success(request, "Connection request sent.")
+    except connections.ConnectionError as exc:
+        messages.error(request, _msg(exc))
+    # _safe_next rejects an off-site/MITM'd ?next (open-redirect guard), like block_user_view.
+    return redirect(_safe_next(request, "connections"))
+
+
+@login_required
+@require_POST
+def connection_respond(request, pk):
+    from apps.connections import services as connections
+    from apps.connections.models import Connection
+
+    conn = get_object_or_404(Connection, pk=pk)
+    accept = request.POST.get("accept") == "1"
+    try:
+        connections.respond_to_connection(request.user, conn, accept=accept)
+        messages.success(request, "Connected." if accept else "Request declined.")
+    except connections.ConnectionError as exc:
+        messages.error(request, _msg(exc))
+    return redirect("connections")
+
+
+@login_required
+@require_POST
+def connection_withdraw(request, pk):
+    from apps.connections import services as connections
+    from apps.connections.models import Connection
+
+    conn = get_object_or_404(Connection, pk=pk)
+    try:
+        connections.withdraw_request(request.user, conn)
+    except connections.ConnectionError as exc:
+        messages.error(request, _msg(exc))
+    return redirect("connections")
+
+
+@login_required
+@require_POST
+def connection_remove(request):
+    from apps.connections import services as connections
+
+    target = get_object_or_404(User, public_id=request.POST.get("public_id"))
+    connections.remove_connection(request.user, target)
+    messages.success(request, "Connection removed.")
+    return redirect("connections")
+
+
+@login_required
+@require_POST
+def connection_message(request):
+    """One tap from a connection into the existing E2EE messaging."""
+    from apps.connections import services as connections
+
+    target = get_object_or_404(User, public_id=request.POST.get("public_id"))
+    try:
+        connections.open_conversation(request.user, target)
+        return redirect("messages")
+    except connections.ConnectionError as exc:
+        messages.error(request, _msg(exc))
+        return redirect("connections")
+
 
 def _msg(exc) -> str:
     if isinstance(exc, ValidationError):
@@ -97,12 +194,15 @@ def _order_feed_by_location(qs, params):
 
 def _nav_context(user):
     if user.is_authenticated:
+        from apps.connections.services import is_enabled_for as connections_enabled
+
         return {
             "unread_notifications": notifications.unread_count(user),
             # Show the ward-side "Guardians" link only to users who actually have one (F13).
             "has_guardians": GuardianRelationship.objects.filter(
                 ward=user, status=GuardianRelationship.Status.ACTIVE
             ).exists(),
+            "connections_enabled": connections_enabled(user),
         }
     return {}
 
@@ -636,6 +736,16 @@ def activity_detail(request, pk):
     ]
 
     is_owner = activity.owner_id == user.id
+    # Connections: show a "connect" button on co-members (only when the feature is enabled for
+    # the viewer's cohort, and not for someone already connected/requested). Co-membership here
+    # satisfies the shared-activity precondition; the service still re-applies the full gate.
+    from apps.connections import services as connections
+
+    # A supervisory guardian is not a peer and must never be offered a "connect" affordance
+    # toward the (child-cohort) members they accompany.
+    viewer_is_guardian = bool(my_membership and my_membership.role == Membership.Role.GUARDIAN)
+    conn_enabled = is_member and not viewer_is_guardian and connections.is_enabled_for(user)
+    conn_related_ids = connections.related_user_ids(user) if conn_enabled else set()
     my_arrival = my_membership.arrived_at if (is_member and my_membership) else None
     # F35: the "catch up" digest, only for someone who can already see the thread.
     digest = social.thread_digest(activity) if (is_member or user.is_staff) else None
@@ -656,6 +766,8 @@ def activity_detail(request, pk):
             "members": members,
             "is_member": is_member,
             "is_owner": is_owner,
+            "conn_enabled": conn_enabled,
+            "conn_related_ids": conn_related_ids,
             "is_open": activity.status == Activity.Status.OPEN,
             "is_completed": activity.status == Activity.Status.COMPLETED,
             "digest": digest,

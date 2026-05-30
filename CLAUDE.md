@@ -61,7 +61,9 @@ threads, join-by-vote, memberships) · `safety` (reporting, blocking, moderation
 (WebSocket *transport* over the `social.Post` stream — no message store of its own) ·
 `messaging` (E2EE direct/group) · `media` (profile + private photos) ·
 `events` (iCal feeds) · `booking` · `discovery` + `recommendations` (feeds, pgvector) ·
-`notifications` · `donations` · `ops` (`/healthz`, jobs, GDPR erasure) · `web` (server-rendered UI).
+`notifications` · `donations` · `connections` (find/reconnect with people you've shared an
+activity with — the discovery layer in front of `messaging`) ·
+`ops` (`/healthz`, jobs, GDPR erasure) · `web` (server-rendered UI).
 
 ## Local run & tests (Docker)
 
@@ -189,3 +191,15 @@ Built on the social core; see services/tests for exact behaviour. All uphold the
   from the fan-out. Thread Posts are **permanent + audited** (the `purge_chat`/`CHAT_RETENTION_DAYS` retention was
   dropped). The `aria-live` region announces only the viewer's own send + announcements — **never** every peer message.
   Explicitly OUT (each needs its own review): reactions, acks, @mentions, markdown, typing, unread dividers.
+- **Connections** — find/reconnect with people you've shared a real activity with; the discovery layer in front of the
+  existing E2EE `messaging`. `connections.can_connect` is the gate: same cohort + both `can_participate` + not blocked +
+  **a shared PEER activity** (`shares_activity` excludes supervisory guardians, mirroring `voting_members`) + cohort
+  allowed by `CONNECTIONS_ALLOWED_COHORTS` (**adults-only at launch; CHILD can never be enabled even by misconfig**;
+  TEEN behind the flag). A deliberate **mutual opt-in** (request→accept; a reciprocal pending auto-accepts), re-gated at
+  accept time. **Discovery is SEARCH-ONLY** (`search_connectable` needs a query and returns only peer co-members in your
+  cohort) — there is **no "people you may know" suggestions feed** and **no attendance/“met-N-times”/reliability** stored
+  or shown (eligibility is derived live — no behavioural rollup). `request_connection` is **idempotent** (a repeat never
+  re-notifies) and **rate-limited** (`CONNECTIONS_REQUEST_RATE_LIMIT`) — no post-decline pestering. `open_conversation`
+  requires an accepted connection then reuses `messaging.start_direct` (never bypasses messaging's own gate). Web
+  (`/connections/` + a co-member “connect” button, guardian viewers excluded) + a DRF `ConnectionViewSet`; the web
+  `connection_request` uses `_safe_next` (open-redirect guard). New mutable `Notification.Kind` CONNECTION_REQUEST/ACCEPTED.

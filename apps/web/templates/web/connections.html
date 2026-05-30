@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Connections{% endblock %}
+{% block content %}
+<h1>Connections</h1>
+<p class="muted">People you've shared an activity with. Connect to chat privately &mdash;
+  it's the same end-to-end encrypted messaging, just easier to find each other.</p>
+
+{# Search-only discovery: type a name to look someone up. No "people you may know" feed. #}
+<form method="get" action="{% url 'connections' %}" class="row" role="search" style="margin:1rem 0">
+  <label class="visually-hidden" for="conn-q">Search people you've met</label>
+  <input id="conn-q" name="q" value="{{ query }}" autocomplete="off"
+         placeholder="Search someone you've met by name..." style="flex:1">
+  <button class="btn btn-sm" type="submit">Search</button>
+</form>
+
+{% if query %}
+  <h2>Search results</h2>
+  {% if results %}
+    <ul class="members">
+      {% for u in results %}
+        <li>{{ u.display_name|default:u.username }}
+          <form method="post" action="{% url 'connection_request' %}" class="inline">{% csrf_token %}
+            <input type="hidden" name="public_id" value="{{ u.public_id }}">
+            <button class="btn btn-sm" type="submit">Connect</button>
+          </form>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="muted">No matches among people you've shared an activity with.</p>
+  {% endif %}
+{% endif %}
+
+{% if incoming %}
+  <h2>Requests to you</h2>
+  <ul class="members">
+    {% for c in incoming %}
+      <li>{{ c.requester.display_name|default:c.requester.username }}
+        <form method="post" action="{% url 'connection_respond' c.pk %}" class="inline">{% csrf_token %}
+          <input type="hidden" name="accept" value="1">
+          <button class="btn btn-sm" type="submit">Accept</button>
+        </form>
+        <form method="post" action="{% url 'connection_respond' c.pk %}" class="inline">{% csrf_token %}
+          <input type="hidden" name="accept" value="0">
+          <button class="linkbtn" type="submit">Decline</button>
+        </form>
+      </li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+{% if outgoing %}
+  <h2>Sent requests</h2>
+  <ul class="members">
+    {% for c in outgoing %}
+      <li class="muted">{{ c.addressee.display_name|default:c.addressee.username }} &middot; pending
+        <form method="post" action="{% url 'connection_withdraw' c.pk %}" class="inline">{% csrf_token %}
+          <button class="linkbtn" type="submit">Withdraw</button>
+        </form>
+      </li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+<h2>Your connections</h2>
+{% if connections %}
+  <ul class="members">
+    {% for u in connections %}
+      <li>{{ u.display_name|default:u.username }}
+        <form method="post" action="{% url 'connection_message' %}" class="inline">{% csrf_token %}
+          <input type="hidden" name="public_id" value="{{ u.public_id }}">
+          <button class="btn btn-sm" type="submit">Message</button>
+        </form>
+        <form method="post" action="{% url 'connection_remove' %}" class="inline"
+              onsubmit="return confirm('Remove this connection?');">{% csrf_token %}
+          <input type="hidden" name="public_id" value="{{ u.public_id }}">
+          <button class="linkbtn" type="submit">Remove</button>
+        </form>
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p class="muted">No connections yet. Go to an activity you're in and connect with the people there,
+    or search for someone above.</p>
+{% endif %}
+{% endblock %}

@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "apps.discovery",
     "apps.notifications",
     "apps.recommendations",
+    "apps.connections",
     "apps.web",
 ]
 
@@ -340,6 +341,17 @@ THREAD_POST_RATE_WINDOW_SECONDS = env.int("THREAD_POST_RATE_WINDOW_SECONDS", def
 SOCIAL_THREAD_POST_LIMIT = env.int("SOCIAL_THREAD_POST_LIMIT", default=100)
 # NOTE: thread messages are now permanent + audited (no time-based purge) — the child-safety-
 # correct retention posture. The former CHAT_RETENTION_DAYS / purge_chat job were removed.
+
+# --- Connections (find + reconnect with people you've shared real activities with) ---
+# Cohorts allowed to use connections. ADULT-only at launch (minors-off); TEEN can be enabled
+# here later behind a child-safety review. CHILD can NEVER be enabled (filtered in services).
+CONNECTIONS_ALLOWED_COHORTS = env.list("CONNECTIONS_ALLOWED_COHORTS", default=["adult"])
+# Anti-pestering: cap new connection requests per user per window (a repeat request to the same
+# person is idempotent and never re-notifies, so this only bounds requests to DISTINCT people).
+CONNECTIONS_REQUEST_RATE_LIMIT = env.int("CONNECTIONS_REQUEST_RATE_LIMIT", default=20)
+CONNECTIONS_REQUEST_RATE_WINDOW_SECONDS = env.int(
+    "CONNECTIONS_REQUEST_RATE_WINDOW_SECONDS", default=3600
+)
 
 # --- Secure messaging (cohort-safe, invite-accept, end-to-end encrypted) ---
 # The server is a zero-knowledge relay: it stores ciphertext + per-recipient wrapped
