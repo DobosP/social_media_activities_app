@@ -61,3 +61,38 @@ class Photo(models.Model):
 
     def __str__(self):
         return f"photo({self.kind}, {self.scan_status})"
+
+
+class Attachment(models.Model):
+    """A file shared INSIDE an activity thread, attached to a single ``social.Post`` so media
+    lives in the conversation (not a separate gallery). Only ever stored once it has passed the
+    same fail-closed scan as a Photo, so there is no PENDING/BLOCKED state — a row existing
+    means it is clean. Images are EXIF-stripped + re-encoded; FILE (PDF) is stored as-is and
+    only ever served as a forced download (never inline) so it can't execute in the page.
+    Visibility = current membership of the post's activity thread (enforced in services)."""
+
+    class Kind(models.TextChoices):
+        IMAGE = "image", "Image"
+        FILE = "file", "File"
+
+    post = models.ForeignKey("social.Post", on_delete=models.CASCADE, related_name="attachments")
+    uploader = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="attachments"
+    )
+    kind = models.CharField(max_length=8, choices=Kind.choices)
+    storage_key = models.CharField(max_length=128)
+    content_type = models.CharField(max_length=64)
+    byte_size = models.PositiveIntegerField(default=0)
+    sha256 = models.CharField(max_length=64, blank=True)
+    # Sanitised display name (FILE only); images render without a filename.
+    original_filename = models.CharField(max_length=120, blank=True)
+    width = models.PositiveIntegerField(default=0)
+    height = models.PositiveIntegerField(default=0)
+    exif_stripped = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["post", "created_at"])]
+
+    def __str__(self):
+        return f"attachment({self.kind}, post={self.post_id})"

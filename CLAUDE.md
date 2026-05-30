@@ -59,7 +59,7 @@ These are the product, not preferences. A change that breaks one is wrong even i
 · `accounts` (custom User, cohorts, EUDI age assurance, guardian links) · `social` (activities,
 threads, join-by-vote, memberships) · `safety` (reporting, blocking, moderation, audit) · `chat`
 (WebSocket *transport* over the `social.Post` stream — no message store of its own) ·
-`messaging` (E2EE direct/group) · `media` (profile + private photos) ·
+`messaging` (E2EE direct/group) · `media` (profile + private photos + thread image/PDF attachments) ·
 `events` (iCal feeds) · `booking` · `discovery` + `recommendations` (feeds, pgvector) ·
 `notifications` · `donations` · `connections` (find/reconnect with people you've shared an
 activity with — the discovery layer in front of `messaging`) ·
@@ -203,3 +203,14 @@ Built on the social core; see services/tests for exact behaviour. All uphold the
   requires an accepted connection then reuses `messaging.start_direct` (never bypasses messaging's own gate). Web
   (`/connections/` + a co-member “connect” button, guardian viewers excluded) + a DRF `ConnectionViewSet`; the web
   `connection_request` uses `_safe_next` (open-redirect guard). New mutable `Notification.Kind` CONNECTION_REQUEST/ACCEPTED.
+- **Group-thread media (images + PDF, no video)** — `media.Attachment` (FK to `social.Post`) puts media IN the unified
+  conversation, members-only. `attach_to_post` reuses the Photo pipeline: image **EXIF-strip + re-encode**
+  (`validate_and_strip`, PNG/JPEG/WEBP only), **fail-closed** hash-blocklist scan on the original bytes (reject unless the
+  scanner is effective when `MEDIA_REQUIRE_SCANNER`), the storage backend, and **signed, expiring, per-viewer,
+  membership-scoped URLs** (`attachment_signed_url`/`resolve_attachment_token` → `AttachmentFileView`). **PDF is the only
+  FILE type, ADULTS-ONLY** (`MEDIA_FILE_COHORTS`, never minors — images are allowed in any cohort thread) and is **always
+  served as a forced download** (`Content-Disposition: attachment` + `nosniff`) so it can't execute inline. **Never in 1:1
+  DMs** (E2EE = unscannable). `post_to_thread(..., allow_empty=True)` permits an attachment-only message; the web
+  `activity_post` creates Post + Attachment in **one transaction** (a rejected scan rolls back the post). `can_view_attachment`
+  re-checks `can_read_thread` + `post.is_hidden` + block-vs-uploader; only the author/staff can delete. No video — deferred
+  pending a real video-CSAM-scanning decision.

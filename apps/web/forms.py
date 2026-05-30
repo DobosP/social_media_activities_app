@@ -162,9 +162,11 @@ class PlaceProposeForm(forms.Form):
 
 
 class PostForm(forms.Form):
-    # max_length closes the divergence where the durable thread surface was the only uncapped
-    # one (the API + the MessagePolicy already cap at this length).
+    # body is optional ONLY when an attachment is present (an image/PDF-only message); the view
+    # enforces "text or attachment". max_length closes the divergence where the durable thread
+    # surface was the only uncapped one (the API + the MessagePolicy already cap at this length).
     body = forms.CharField(
+        required=False,
         max_length=POST_BODY_MAX_LENGTH,
         widget=forms.Textarea(attrs={"rows": 3, "placeholder": "Write a message..."}),
         label="",
@@ -172,6 +174,9 @@ class PostForm(forms.Form):
     # Optional one-level quote-reply target (a Post id in the same thread). Re-validated in the
     # service (same thread, not hidden, re-parented to the top-level ancestor).
     reply_to = forms.IntegerField(required=False, widget=forms.HiddenInput)
+    # Optional photo or PDF shared in the thread (members only; scanned fail-closed). PDFs are
+    # adults-only and always served as a download. No video.
+    attachment = forms.FileField(required=False)
 
 
 class DonateForm(forms.Form):

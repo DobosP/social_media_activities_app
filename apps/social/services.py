@@ -494,7 +494,7 @@ def add_guardian(owner, activity, guardian) -> Membership:
 
 @transaction.atomic
 @transaction.atomic
-def post_to_thread(author, activity, body: str, *, reply_to=None) -> Post:
+def post_to_thread(author, activity, body: str, *, reply_to=None, allow_empty=False) -> Post:
     """THE single write path for an activity thread, shared by the web form, the DRF API,
     and the WebSocket consumer (via post_to_thread_realtime). It enforces the FULL union of
     the gates the two old surfaces had — so the child-safety gate holds identically on every
@@ -531,11 +531,17 @@ def post_to_thread(author, activity, body: str, *, reply_to=None) -> Post:
     if not allow_action(author, "thread_post", limit=limit, window_seconds=window):
         raise InvalidState(_("You are posting too quickly; slow down."))
     result = get_message_policy().process(author=author, thread=activity.thread, body=body)
-    if not result.allowed:
+    if result.allowed:
+        result_body = result.body
+    elif allow_empty and not (body or "").strip():
+        # An attachment-only message (allow_empty): an empty body is fine. Any OTHER policy
+        # rejection (too long, or a future CSAR content block) still applies.
+        result_body = ""
+    else:
         raise InvalidState(result.reason or _("Message rejected."))
     parent = _validate_reply_to(activity, reply_to)
     post = Post.objects.create(
-        thread=activity.thread, author=author, body=result.body, reply_to=parent
+        thread=activity.thread, author=author, body=result_body, reply_to=parent
     )
     # Normalize updated_at == created_at on a fresh post (auto_now_add and auto_now fire as two
     # separate now() calls, so they'd otherwise differ by microseconds and falsely read as
