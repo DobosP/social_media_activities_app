@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Community graph{% endblock %}
+{% block content %}
+<p class="muted"><a href="{% url 'communities' %}">&larr; Communities (list)</a></p>
+<h1>Community graph</h1>
+<p class="muted">Drag to rotate, scroll to zoom, click a node to focus, click a community to open it.</p>
+
+<div class="row" style="gap:.6rem;align-items:center;margin:.5rem 0">
+  <label class="visually-hidden" for="mz-graph-search">Search the graph</label>
+  <input id="mz-graph-search" placeholder="Search the graph…" autocomplete="off" style="flex:1">
+  <label class="muted" style="font-size:.85rem;white-space:nowrap">
+    <input type="checkbox" id="mz-graph-counts" checked> show counts</label>
+</div>
+
+<div id="mz-graph" style="height:62vh;border:1px solid var(--line);border-radius:8px;background:#0b1411"></div>
+<noscript><p class="muted">The graph needs JavaScript &mdash;
+  <a href="{% url 'communities' %}">browse the list instead</a>.</p></noscript>
+
+<details style="margin-top:.6rem">
+  <summary class="muted">All communities (text list &mdash; always works)</summary>
+  <ul class="members" style="margin-top:.4rem">
+    {% for c in communities %}
+      <li><a href="{% url 'community_detail' c.slug %}">{{ c.name }}</a></li>
+    {% empty %}<li class="muted">No communities yet.</li>{% endfor %}
+  </ul>
+</details>
+{% endblock %}
+
+{% block scripts %}
+{# Vendored locally (no live CDN) so a viewer's IP/timing never leaks to a third party. #}
+<script src="{% static 'js/vendor/3d-force-graph.min.js' %}" defer></script>
+<script src="{% static 'js/community-graph.js' %}" defer></script>
+{% endblock %}

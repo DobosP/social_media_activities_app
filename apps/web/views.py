@@ -93,6 +93,23 @@ def communities_page(request):
 
 
 @login_required
+def community_graph_page(request):
+    """The 3D community-graph navigator. Server-renders the list as the no-JS fallback, then
+    progressively enhances into the rotatable WebGL graph (cohort-walled via the same
+    visible_communities chokepoint as everywhere else)."""
+    from apps.communities import services as communities
+
+    return render(
+        request,
+        "web/communities_graph.html",
+        {
+            "communities": communities.visible_communities(request.user),
+            **_nav_context(request.user),
+        },
+    )
+
+
+@login_required
 def community_detail(request, slug):
     """A community's upcoming activities — the existing cohort-filtered feed narrowed to this
     (area x type). Cohort-walled (404 for a cross-cohort/unpublished slug); NO roster, NO

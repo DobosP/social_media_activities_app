@@ -2,6 +2,7 @@
 {% block title %}Communities{% endblock %}
 {% block content %}
 <h1>Communities</h1>
+<p><a class="btn btn-sm" href="{% url 'community_graph' %}">🌐 Explore as a 3D graph</a></p>
 <p class="muted">Find activities by type and place &mdash; e.g. <em>{{ page.paginator.count|yesno:"like ,"|default:"" }}</em>
   &ldquo;Cluj-Napoca Football&rdquo;. A community is just a named list of upcoming activities to
   go to; there's no group to join and no members list.</p>

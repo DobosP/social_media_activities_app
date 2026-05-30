@@ -268,3 +268,57 @@ def test_generator_excludes_hidden_and_cancelled():
     communities.generate_communities()
     # the only activity is hidden -> no community materializes off it
     assert not Community.objects.filter(is_published=True).exists()
+
+
+# --- 3D graph endpoint (cohort-walled, no member count) ------------------------------------
+
+
+def test_graph_endpoint_is_cohort_walled_and_count_free():
+    from rest_framework.test import APIClient
+
+    owner = _adult("gph1")
+    _activity(owner)
+    communities.generate_communities()
+    client = APIClient()
+    client.force_authenticate(owner)
+    data = client.get("/api/communities/communities/graph/").json()
+    assert data["nodes"] and data["links"]
+    kinds = {n["kind"] for n in data["nodes"]}
+    assert "community" in kinds and "type" in kinds and "category" in kinds
+    # community nodes may carry an activity_count (discovery), but NEVER a member/participant count.
+    for n in data["nodes"]:
+        assert "member_count" not in n and "participant_n" not in n and "members" not in n
+        assert "roster" not in n
+    # a community node drills to its (cohort-walled, count-free) detail page
+    comm_nodes = [n for n in data["nodes"] if n["kind"] == "community"]
+    assert all(n["drill"].startswith("/communities/") for n in comm_nodes)
+    assert all("activity_count" in n for n in comm_nodes)
+
+
+def test_graph_child_gets_only_child_nodes():
+    from rest_framework.test import APIClient
+
+    _activity(_adult("gph_a"))  # only adult activity -> only adult communities
+    communities.generate_communities()
+    child = _child("gph_c")
+    client = APIClient()
+    client.force_authenticate(child)
+    data = client.get("/api/communities/communities/graph/").json()
+    # a child with no child community sees an EMPTY graph (never the adult branch)
+    assert data == {"nodes": [], "links": []}
+
+
+def test_graph_requires_auth():
+    from rest_framework.test import APIClient
+
+    assert APIClient().get("/api/communities/communities/graph/").status_code in (401, 403)
+
+
+def test_graph_page_renders_with_no_js_fallback():
+    owner = _adult("gph_p")
+    _activity(owner)
+    communities.generate_communities()
+    page = _client(owner).get("/communities/graph/").content.decode()
+    assert 'id="mz-graph"' in page  # the 3D canvas container
+    assert "3d-force-graph.min.js" in page  # vendored lib (no live CDN)
+    assert f"{CITY} Football" in page  # the server-rendered text fallback list

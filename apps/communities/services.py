@@ -77,6 +77,94 @@ def community_by_slug(slug, viewer):
     return visible_communities(viewer).filter(slug=slug).first()
 
 
+def community_graph(viewer) -> dict:
+    """Cohort-walled {nodes, links} for the 3D navigator. Sourced ONLY from
+    visible_communities(viewer) — so the cohort wall AND the generator's k-anonymity existence
+    floor both apply (a community node exists only if it was published) — then the taxonomy
+    scaffolding (categories/types/relations) is CLAMPED to exactly the categories/types those
+    communities use. A child's graph can never contain another cohort's branch, and NO node or
+    edge carries any member/participant count (only category/type/community names + structure)."""
+    from apps.taxonomy.models import ActivityCategory, ActivityRelation, ActivityType
+
+    comms = list(visible_communities(viewer))
+    if not comms:
+        return {"nodes": [], "links": []}
+    cat_ids = {c.category_id for c in comms}
+    type_ids = {c.activity_type_id for c in comms if c.activity_type_id}
+
+    nodes, links, seen = [], [], set()
+
+    def _node(nid, kind, label, drill=None):
+        if nid in seen:
+            return
+        seen.add(nid)
+        n = {"id": nid, "kind": kind, "label": label}
+        if drill:
+            n["drill"] = drill
+        nodes.append(n)
+
+    cats = {c.id: c for c in ActivityCategory.objects.filter(id__in=cat_ids)}
+    types = {
+        t.id: t for t in ActivityType.objects.filter(id__in=type_ids).select_related("category")
+    }
+    for c in cats.values():
+        _node(f"cat:{c.slug}", "category", c.name)
+    for t in types.values():
+        _node(f"type:{t.slug}", "type", t.name)
+        if t.category_id in cats:  # contains: category -> type
+            links.append(
+                {
+                    "source": f"cat:{cats[t.category_id].slug}",
+                    "target": f"type:{t.slug}",
+                    "kind": "contains",
+                }
+            )
+    for c in cats.values():  # parent: category -> category (clamped to in-payload categories)
+        if c.parent_id and c.parent_id in cats:
+            links.append(
+                {
+                    "source": f"cat:{cats[c.parent_id].slug}",
+                    "target": f"cat:{c.slug}",
+                    "kind": "parent",
+                }
+            )
+    # lateral knowledge-graph edges (type -> type), only when BOTH endpoints are in the payload.
+    for r in ActivityRelation.objects.filter(
+        source_id__in=type_ids, target_id__in=type_ids
+    ).select_related("source", "target"):
+        links.append(
+            {"source": f"type:{r.source.slug}", "target": f"type:{r.target.slug}", "kind": r.kind}
+        )
+    # community leaves + their instance edge (from the type, or the category for a CATEGORY-tier).
+    # activity_count = upcoming activities in this community (a DISCOVERY count, never a member
+    # count — communities have no membership; it also drives node "relevance" sizing client-side).
+    for comm in comms:
+        cid = f"comm:{comm.slug}"
+        node = {
+            "id": cid,
+            "kind": "community",
+            "label": comm.name,
+            "drill": f"/communities/{comm.slug}/",
+            "activity_count": community_activities(comm, viewer).count(),
+        }
+        if cid not in seen:
+            seen.add(cid)
+            nodes.append(node)
+        if comm.activity_type_id and comm.activity_type_id in types:
+            links.append(
+                {
+                    "source": f"type:{types[comm.activity_type_id].slug}",
+                    "target": cid,
+                    "kind": "instance",
+                }
+            )
+        elif comm.category_id in cats:
+            links.append(
+                {"source": f"cat:{cats[comm.category_id].slug}", "target": cid, "kind": "instance"}
+            )
+    return {"nodes": nodes, "links": links}
+
+
 def communities_for_activity(activity):
     """The published TYPE + CATEGORY communities an activity belongs to, in its own cohort — a
     discovery affordance on activity_detail. Returns [] when the activity's place has no city."""

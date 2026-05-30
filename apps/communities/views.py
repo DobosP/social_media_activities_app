@@ -31,6 +31,14 @@ class CommunityViewSet(viewsets.ViewSet):
             raise NotFound("No such community.")
         return Response(CommunitySerializer(community).data)
 
+    @action(detail=False, methods=["get"])
+    def graph(self, request):
+        # Cohort-walled node/edge graph for the 3D navigator: sourced ONLY from
+        # visible_communities(viewer), so an anon/UNASSIGNED viewer gets an empty graph and a
+        # child never receives an adult branch. No member/participant count (only an
+        # activity_count discovery number on community nodes).
+        return Response(services.community_graph(request.user))
+
     @action(detail=True, methods=["get"])
     def activities(self, request, slug=None):
         community = services.community_by_slug(slug, request.user)
