@@ -281,9 +281,29 @@
     guardian: document.getElementById("mz-guardian"),
     guardianSection: document.getElementById("mz-guardian-section"),
     guardianList: document.getElementById("mz-guardian-list"),
+    app: document.getElementById("mz-app"),
+    back: document.getElementById("mz-back"),
+    titleAvatar: document.getElementById("mz-title-avatar"),
+    connections: document.getElementById("mz-connections"),
+    tabs: Array.prototype.slice.call(document.querySelectorAll(".mz-tab")),
   };
   let current = null; // current conversation object
   let socket = null;
+  let currentFilter = "all"; // conversation-list filter (all/direct/group/invited)
+
+  // A coloured avatar circle showing the first initial(s) of a label.
+  function avatarEl(label, isGroup) {
+    const a = document.createElement("span");
+    a.className = "mz-avatar" + (isGroup ? " group" : "");
+    a.textContent = (label || "?").trim().charAt(0).toUpperCase() || "?";
+    return a;
+  }
+
+  // Which list filter a conversation matches.
+  function convCategory(conv) {
+    if (conv.my_state === "invited") return "invited";
+    return conv.kind === "group" ? "group" : "direct";
+  }
 
   function setStatus(text, kind) {
     els.status.textContent = text;
@@ -298,43 +318,120 @@
     return others.join(", ") || "Conversation";
   }
 
+  let lastConvs = [];
+
   async function loadConversations() {
-    const convs = await api("GET", "/api/messaging/conversations/");
+    lastConvs = await api("GET", "/api/messaging/conversations/");
+    renderConversations();
+  }
+
+  function renderConversations() {
     els.list.innerHTML = "";
+    const convs = lastConvs.filter(
+      (c) => currentFilter === "all" || convCategory(c) === currentFilter
+    );
     convs.forEach((conv) => {
-      const item = document.createElement("div");
-      item.className = "mz-conv";
-      const label = document.createElement("button");
-      label.className = "linkbtn";
-      label.textContent = convLabel(conv) + (conv.kind === "group" ? "  (group)" : "");
-      label.addEventListener("click", () => openConversation(conv.id));
-      item.appendChild(label);
+      const isGroup = conv.kind === "group";
+      const label = convLabel(conv);
+      const row = document.createElement("button");
+      row.type = "button";
+      row.className = "mz-conv" + (current && current.id === conv.id ? " is-active" : "");
+      row.dataset.convId = conv.id;
+      row.appendChild(avatarEl(isGroup ? conv.title || "#" : label, isGroup));
+
+      const meta = document.createElement("div");
+      meta.className = "mz-meta";
+      const name = document.createElement("div");
+      name.className = "mz-name";
+      name.textContent = label;
+      const sub = document.createElement("div");
+      sub.className = "mz-sub";
+      sub.textContent =
+        conv.my_state === "invited"
+          ? "wants to chat with you"
+          : isGroup
+            ? (conv.participants || []).length + " people"
+            : "direct message";
+      meta.appendChild(name);
+      meta.appendChild(sub);
+      row.appendChild(meta);
+      row.addEventListener("click", () => openConversation(conv.id));
+
       if (conv.my_state === "invited") {
-        const badge = document.createElement("span");
-        badge.className = "pill";
-        badge.textContent = "invite";
-        item.appendChild(badge);
+        const actions = document.createElement("span");
         const accept = document.createElement("button");
         accept.className = "btn btn-sm";
         accept.textContent = "Accept";
-        accept.addEventListener("click", async () => {
+        accept.addEventListener("click", async (e) => {
+          e.stopPropagation();
           await api("POST", "/api/messaging/conversations/" + conv.id + "/accept/");
           await loadConversations();
           openConversation(conv.id);
         });
         const decline = document.createElement("button");
-        decline.className = "btn btn-sm btn-secondary";
+        decline.className = "linkbtn";
+        decline.style.marginLeft = ".3rem";
         decline.textContent = "Decline";
-        decline.addEventListener("click", async () => {
+        decline.addEventListener("click", async (e) => {
+          e.stopPropagation();
           await api("POST", "/api/messaging/conversations/" + conv.id + "/decline/");
           loadConversations();
         });
-        item.appendChild(accept);
-        item.appendChild(decline);
+        actions.appendChild(accept);
+        actions.appendChild(decline);
+        row.appendChild(actions);
       }
-      els.list.appendChild(item);
+      els.list.appendChild(row);
     });
-    if (!convs.length) els.list.innerHTML = '<p class="muted">No conversations yet.</p>';
+    if (!convs.length) {
+      els.list.innerHTML =
+        '<p class="muted">' +
+        (currentFilter === "all" ? "No conversations yet." : "Nothing in this filter.") +
+        "</p>";
+    }
+  }
+
+  // Quick-start chips for your connections (people you've met). Clicking opens/creates a 1:1.
+  function renderConnections() {
+    const conns = cfg.connections || [];
+    els.connections.innerHTML = "";
+    conns.slice(0, 24).forEach((c) => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "mz-connchip";
+      chip.title = "Chat with " + c.display_name;
+      chip.appendChild(avatarEl(c.display_name, false));
+      const lbl = document.createElement("small");
+      lbl.textContent = c.display_name;
+      chip.appendChild(lbl);
+      chip.addEventListener("click", () => startDirect(c.username));
+      els.connections.appendChild(chip);
+    });
+  }
+
+  // Open an existing 1:1 with `username`, or create one (they must accept the first message).
+  async function startDirect(username) {
+    const existing = lastConvs.find(
+      (c) =>
+        c.kind === "direct" &&
+        (c.participants || []).some((p) => p.user.username === username)
+    );
+    if (existing) {
+      openConversation(existing.id);
+      return;
+    }
+    try {
+      const conv = await api("POST", "/api/messaging/conversations/", {
+        kind: "direct",
+        usernames: [username],
+        title: "",
+      });
+      await loadConversations();
+      openConversation(conv.id);
+      setStatus("Conversation started — they must accept before they can read it.", "ok");
+    } catch (e) {
+      setStatus("Could not start conversation: " + e.message, "error");
+    }
   }
 
   // For guardians: list ward conversations not yet observed, each with an Observe button.
@@ -378,25 +475,39 @@
   }
 
   function appendMessage(msg, plaintext) {
+    const empty = els.log.querySelector(".mz-empty");
+    if (empty) empty.remove();
+    const own = msg.sender && msg.sender.public_id === ME.public_id;
     const row = document.createElement("div");
-    row.className = "post";
-    const meta = document.createElement("div");
-    meta.className = "meta";
-    const who = msg.sender ? msg.sender.display_name || msg.sender.username : "unknown";
-    meta.textContent = who + " · " + new Date(msg.created_at).toLocaleString();
-    if (msg.sender && msg.sender.public_id !== ME.public_id) {
-      const report = document.createElement("button");
-      report.className = "linkbtn";
-      report.style.marginLeft = ".5rem";
-      report.style.fontSize = ".75rem";
-      report.textContent = "report";
-      report.addEventListener("click", () => reportMessage(msg, plaintext));
-      meta.appendChild(report);
+    row.className = "mz-msg " + (own ? "mz-msg--own" : "mz-msg--them");
+
+    // Sender name above the bubble in GROUP chats (WhatsApp-style); not for your own / 1:1.
+    if (!own && current && current.kind === "group") {
+      const who = document.createElement("div");
+      who.className = "mz-msg-who";
+      who.textContent = msg.sender ? msg.sender.display_name || msg.sender.username : "unknown";
+      row.appendChild(who);
     }
     const body = document.createElement("div");
+    body.className = "mz-msg-body";
     body.textContent = plaintext === null ? "⚠ [no key for you]" : plaintext;
-    row.appendChild(meta);
     row.appendChild(body);
+
+    const time = document.createElement("div");
+    time.className = "mz-msg-time";
+    time.textContent = new Date(msg.created_at).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    if (!own && msg.sender) {
+      const report = document.createElement("button");
+      report.className = "linkbtn";
+      report.style.marginLeft = ".4rem";
+      report.textContent = "report";
+      report.addEventListener("click", () => reportMessage(msg, plaintext));
+      time.appendChild(report);
+    }
+    row.appendChild(time);
     els.log.appendChild(row);
     els.log.scrollTop = els.log.scrollHeight;
   }
@@ -533,6 +644,12 @@
     current = convs.find((c) => c.id === id);
     if (!current) return;
     els.title.textContent = convLabel(current);
+    // Header avatar, active-row highlight, and (on mobile) switch to the message pane.
+    const isGroup = current.kind === "group";
+    els.titleAvatar.className = "mz-avatar" + (isGroup ? " group" : "");
+    els.titleAvatar.textContent = (convLabel(current) || "?").trim().charAt(0).toUpperCase() || "?";
+    if (els.app) els.app.classList.add("show-main");
+    renderConversations();
     els.log.innerHTML = "";
 
     if (current.my_state !== "active") {
@@ -665,6 +782,22 @@
     });
   }
 
+  // Filter tabs (All / Direct / Groups / Requests) — re-render the already-loaded list.
+  els.tabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      els.tabs.forEach((t) => t.classList.toggle("is-active", t === tab));
+      currentFilter = tab.dataset.filter;
+      renderConversations();
+    });
+  });
+
+  // Mobile: back arrow returns from the message pane to the conversation list.
+  if (els.back) {
+    els.back.addEventListener("click", () => {
+      if (els.app) els.app.classList.remove("show-main");
+    });
+  }
+
   // ---- bootstrap -----------------------------------------------------------
   async function ensureIdentity() {
     if (!subtle) {
@@ -713,6 +846,7 @@
 
   (async function init() {
     try {
+      renderConnections();
       if (await ensureIdentity()) {
         await loadConversations();
         await loadGuardianConversations();
