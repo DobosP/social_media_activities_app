@@ -23,6 +23,7 @@ from .services import (
     SocialError,
     add_guardian,
     attendance_summary,
+    can_read_thread,
     cancel_activity,
     cast_vote,
     create_activity,
@@ -197,10 +198,27 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
             serializer = PostSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             try:
-                post = post_to_thread(actor, activity, serializer.validated_data["body"])
-            except NotAMember as exc:
+                # A thread message is a first-person utterance — ALWAYS the authenticated
+                # user, never on_behalf_of (mirrors `arrived`), so a guardian cannot ghostwrite
+                # a post as a ward (and a guardian's own post is rejected by the role gate).
+                post = post_to_thread(
+                    request.user,
+                    activity,
+                    serializer.validated_data["body"],
+                    reply_to=serializer.validated_data.get("reply_to"),
+                )
+            except (NotAMember, NotEligible) as exc:
+                # Membership / participation failures are authorization problems (403).
                 raise PermissionDenied(str(exc)) from exc
+            except InvalidState as exc:
+                # Cancelled/hidden/blocked/rate-limited/policy-rejected are bad-request (400).
+                raise ValidationError(str(exc)) from exc
             return Response(PostSerializer(post).data, status=status.HTTP_201_CREATED)
+        # GET: enforce the SINGLE read gate (membership + cohort + consent + block) before
+        # serializing — `_activity_for` only checks cohort-visibility, so without this a
+        # same-cohort NON-member could read a private activity thread (cohort-isolation leak).
+        if not can_read_thread(actor, activity):
+            raise PermissionDenied("This activity's thread is private to its members.")
         # Hard-cap the thread read to the newest N (chronological), excluding hidden posts,
         # so a long thread can't force an unbounded queryset/serialization.
         limit = getattr(settings, "SOCIAL_THREAD_POST_LIMIT", 100)

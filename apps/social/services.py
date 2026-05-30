@@ -493,10 +493,26 @@ def add_guardian(owner, activity, guardian) -> Membership:
 
 
 @transaction.atomic
-def post_to_thread(author, activity, body: str) -> Post:
+@transaction.atomic
+def post_to_thread(author, activity, body: str, *, reply_to=None) -> Post:
+    """THE single write path for an activity thread, shared by the web form, the DRF API,
+    and the WebSocket consumer (via post_to_thread_realtime). It enforces the FULL union of
+    the gates the two old surfaces had — so the child-safety gate holds identically on every
+    surface (the whole point of collapsing Post + chat into one stream).
+
+    Gate: current MEMBER (not a supervisory guardian) + verified/consented participation +
+    the activity isn't moderator-hidden + the activity isn't CANCELLED (OPEN *and* COMPLETED
+    both admit posts, so the post-meetup "thanks for coming" + F22 "did we meet?" flow keep
+    working — only a cancelled meetup freezes its thread) + not blocked-vs-owner + a per-user
+    rate limit + the swappable MessagePolicy/CSAR content seam. ``reply_to`` is validated to
+    the same thread, must not be hidden, and is re-parented to its top-level ancestor so the
+    tree can never exceed one level. A committed write schedules a live broadcast on commit."""
+    from apps.chat.policy import get_message_policy  # local: avoid social<->chat import cycle
+    from apps.safety.services import allow_action, is_blocked
+
     membership = current_members(activity).filter(user=author).first()
     if membership is None:
-        raise NotAMember("Only current members can post in the activity thread.")
+        raise NotAMember(_("Only current members can post in the activity thread."))
     if membership.role == Membership.Role.GUARDIAN:
         # Guardians accompany children's activities as transparent, read-only supervisors;
         # an adult must not post into a children's thread (cohort isolation for the peers).
@@ -504,7 +520,235 @@ def post_to_thread(author, activity, body: str) -> Post:
     if not can_participate(author):
         # Catches a member whose parental consent was revoked or assurance lapsed after join.
         raise NotEligible(_("Posting requires verified, consented participation."))
-    return Post.objects.create(thread=activity.thread, author=author, body=body)
+    if getattr(activity, "is_hidden", False):
+        raise InvalidState(_("This activity is no longer available."))
+    if activity.status == Activity.Status.CANCELLED:
+        raise InvalidState(_("This activity was cancelled; its thread is closed."))
+    if author.id != activity.owner_id and is_blocked(author, activity.owner):
+        raise InvalidState(_("This activity is no longer available."))
+    limit = getattr(settings, "THREAD_POST_RATE_LIMIT", 30)
+    window = getattr(settings, "THREAD_POST_RATE_WINDOW_SECONDS", 60)
+    if not allow_action(author, "thread_post", limit=limit, window_seconds=window):
+        raise InvalidState(_("You are posting too quickly; slow down."))
+    result = get_message_policy().process(author=author, thread=activity.thread, body=body)
+    if not result.allowed:
+        raise InvalidState(result.reason or _("Message rejected."))
+    parent = _validate_reply_to(activity, reply_to)
+    post = Post.objects.create(
+        thread=activity.thread, author=author, body=result.body, reply_to=parent
+    )
+    # Normalize updated_at == created_at on a fresh post (auto_now_add and auto_now fire as two
+    # separate now() calls, so they'd otherwise differ by microseconds and falsely read as
+    # "edited"). After this, any real edit makes updated_at strictly greater. One cheap write.
+    Post.objects.filter(pk=post.pk).update(updated_at=post.created_at)
+    post.updated_at = post.created_at
+    transaction.on_commit(lambda: broadcast_post(post))
+    return post
+
+
+def _validate_reply_to(activity, reply_to):
+    """Resolve an optional reply target to a TOP-LEVEL ancestor Post in the same thread, or
+    None. Re-parenting (parent.reply_to or parent) enforces the one-level depth cap in the
+    service, never the schema. Refused: a hidden parent (no replying to a removed post), a
+    PINNED ANNOUNCEMENT (it isn't part of the reply tree — a reply to it would be orphaned out
+    of thread_page), a wrong-thread parent, and a non-integer id (raised as a domain error, not
+    an uncaught ValueError that would tear down the WebSocket consumer)."""
+    if reply_to is None:
+        return None
+    if isinstance(reply_to, Post):
+        parent = reply_to
+    else:
+        try:
+            parent = Post.objects.filter(pk=int(reply_to)).first()
+        except (TypeError, ValueError) as exc:
+            raise InvalidState(_("You can't reply to that message.")) from exc
+    if (
+        parent is None
+        or parent.thread_id != activity.thread.id
+        or parent.is_hidden
+        or parent.is_announcement
+    ):
+        raise InvalidState(_("You can't reply to that message."))
+    return parent.reply_to if parent.reply_to_id else parent
+
+
+def post_to_thread_realtime(author, activity, body: str, *, reply_to_id=None) -> Post:
+    """Thin wrapper the WebSocket consumer calls so the socket write goes through the EXACT
+    same gate as the form/API — gate divergence between surfaces is structurally impossible."""
+    return post_to_thread(author, activity, body, reply_to=reply_to_id)
+
+
+def can_read_thread(user, activity) -> bool:
+    """The single read/write membership gate for a thread, used by the web view, the bounded
+    history read, AND the WebSocket consumer (connect + per-receive + per-delivery re-auth).
+    Folds the old chat.can_access_thread logic so all surfaces agree on who may see a thread."""
+    if not user or not getattr(user, "is_authenticated", False) or not user.is_active:
+        return False
+    if getattr(activity, "is_hidden", False):
+        return False
+    if user.cohort != activity.cohort:
+        return False
+    if not can_participate(user):
+        return False
+    if not activity.memberships.filter(user=user, state=Membership.State.MEMBER).exists():
+        return False
+    from apps.safety.services import is_blocked
+
+    if user.id != activity.owner_id and is_blocked(user, activity.owner):
+        return False
+    return True
+
+
+def thread_page(activity, *, before=None, limit=None):
+    """A bounded, keyset-paginated window of TOP-LEVEL posts (reply_to IS NULL) for an
+    activity thread, newest-window-first then returned oldest->newest for display, each with
+    its non-hidden replies prefetched (one extra query, no N+1, no recursive CTE). Replaces
+    the old unbounded thread load. The CALLER MUST gate on can_read_thread first so the
+    ``before`` cursor can never leak across the membership wall. Returns
+    (posts_oldest_first, has_older, older_cursor_id)."""
+    from django.db.models import Prefetch
+
+    limit = limit or getattr(settings, "SOCIAL_THREAD_POST_LIMIT", 100)
+    replies_qs = Post.objects.filter(is_hidden=False).select_related("author", "reply_to__author")
+    top = (
+        activity.thread.posts.filter(is_hidden=False, is_announcement=False, reply_to__isnull=True)
+        .select_related("author")
+        .prefetch_related(Prefetch("replies", queryset=replies_qs.order_by("created_at")))
+        .order_by("-created_at")
+    )
+    if before:
+        try:
+            before_id = int(before)
+        except (TypeError, ValueError):
+            before_id = None  # a malformed cursor degrades to the first page, never a 500
+        anchor = (
+            Post.objects.filter(pk=before_id, thread=activity.thread).first()
+            if before_id is not None
+            else None
+        )
+        if anchor is not None:
+            # Keyset on (created_at, id) — strictly older than the anchor, stable on ties.
+            top = top.filter(
+                Q(created_at__lt=anchor.created_at)
+                | Q(created_at=anchor.created_at, id__lt=anchor.id)
+            )
+    window = list(top[: limit + 1])
+    has_older = len(window) > limit
+    window = window[:limit]
+    older_cursor_id = window[-1].id if (has_older and window) else None
+    window.reverse()  # oldest -> newest for display
+    for tp in window:
+        tp.is_edited = _is_edited(tp)
+        for reply in tp.replies.all():  # prefetched, already filtered + ordered
+            reply.is_edited = _is_edited(reply)
+            reply.snippet = reply_snippet(reply)
+    return window, has_older, older_cursor_id
+
+
+def _is_edited(post) -> bool:
+    # post_to_thread normalizes updated_at == created_at on a fresh post, so a strict
+    # inequality means a genuine later edit (edit_post bumps updated_at via auto_now).
+    if not post.updated_at or not post.created_at:
+        return False
+    return post.updated_at > post.created_at
+
+
+def reply_snippet(post, *, length=120):
+    """The 'Replying to <author>: <text>' snippet, ALWAYS derived from the CURRENT parent at
+    read time (never a stored copy): a hidden/removed parent yields a neutral placeholder, so
+    an edited or moderated parent can't resurface stale text inside its replies."""
+    parent = post.reply_to
+    if parent is None:
+        return None
+    author = parent.author.display_name or parent.author.username
+    if parent.is_hidden:
+        return {"author": author, "text": str(_("(message removed)")), "pk": parent.id}
+    text = (parent.body or "").strip().replace("\n", " ")
+    if len(text) > length:
+        text = text[: length - 1].rstrip() + "…"
+    return {"author": author, "text": text, "pk": parent.id}
+
+
+@transaction.atomic
+def edit_post(author, post, body: str) -> Post:
+    """Author-only in-place edit. Same participation/status gate as posting; refuses a
+    moderator-hidden post (no moderation evasion) and an announcement (the owner re-announces
+    instead). Because reply snippets are render-derived, an edit here automatically updates
+    every reply that quotes this post on its next read. The 'edited' marker is derived from
+    updated_at != created_at — no edit-count, no revision table."""
+    from apps.chat.policy import get_message_policy
+
+    if post.author_id != author.id:
+        raise NotEligible(_("You can only edit your own messages."))
+    if post.is_hidden or post.is_announcement:
+        raise InvalidState(_("This message can't be edited."))
+    activity = post.thread.activity
+    if not current_members(activity).filter(user=author).exists():
+        raise NotAMember(_("Only current members can edit a message."))
+    if not can_participate(author):
+        raise NotEligible(_("Editing requires verified, consented participation."))
+    if activity.status == Activity.Status.CANCELLED:
+        raise InvalidState(_("This activity was cancelled; its thread is closed."))
+    result = get_message_policy().process(author=author, thread=post.thread, body=body)
+    if not result.allowed:
+        raise InvalidState(result.reason or _("Message rejected."))
+    post.body = result.body
+    post.save(update_fields=["body", "updated_at"])
+    transaction.on_commit(lambda: broadcast_post(post, edited=True))
+    return post
+
+
+@transaction.atomic
+def delete_own_post(author, post) -> Post:
+    """Author soft-delete: flag the post hidden so it drops from member reads but the row is
+    RETAINED for audit/appeal (like a moderator REMOVE). Refuses a post already moderator-
+    hidden (no clobbering a moderation record). Because snippets are render-derived, a
+    self-deleted parent's quote drops from its replies on next read automatically. GDPR
+    erasure (apps/ops) stays the only hard-delete path."""
+    from apps.safety.services import record_audit
+
+    if post.author_id != author.id:
+        raise NotEligible(_("You can only delete your own messages."))
+    if post.is_hidden:
+        return post  # idempotent; never un-hides a moderation action
+    post.is_hidden = True
+    post.save(update_fields=["is_hidden", "updated_at"])
+    record_audit("post.self_deleted", actor=author, target=post)
+    return post
+
+
+def broadcast_post(post, *, edited=False) -> None:
+    """Fan a committed Post out to its thread's WebSocket group as PURE live delivery (the
+    durable record already exists; this only saves connected members a reload). Called via
+    transaction.on_commit, so a rolled-back write broadcasts nothing. Per-delivery re-auth in
+    the consumer drops blocked/cohort-changed/erased members, so this need not filter. Wrapped
+    to a graceful no-op when there is no working channel layer (single-process InMemory across
+    processes) — the no-JS surface already has the content on reload."""
+    try:
+        from asgiref.sync import async_to_sync
+        from channels.layers import get_channel_layer
+
+        layer = get_channel_layer()
+        if layer is None:
+            return
+        snippet = reply_snippet(post)
+        author = post.author.display_name or post.author.username
+        payload = {
+            "id": post.id,
+            "author": author,
+            "body": post.body,
+            "is_announcement": post.is_announcement,
+            "reply_to": post.reply_to_id,
+            "reply_snippet": snippet,
+            "edited": edited
+            or (post.updated_at and post.created_at and post.updated_at > post.created_at),
+            "created_at": post.created_at.isoformat() if post.created_at else None,
+        }
+        async_to_sync(layer.group_send)(
+            f"chat_{post.thread_id}", {"type": "chat.message", "message": payload}
+        )
+    except Exception:  # noqa: BLE001 — live delivery is best-effort; never break the write
+        pass
 
 
 @transaction.atomic
@@ -512,6 +756,8 @@ def post_announcement(owner, activity, body: str) -> Post:
     """Owner-only pinned broadcast: a must-read logistics post that surfaces above the
     thread and fires one notification to every current member. Same cohort/consent gate
     as an ordinary post; only the owner may use it."""
+    from apps.safety.services import blocked_user_ids
+
     if activity.owner_id != owner.id:
         raise NotAMember(_("Only the organiser can post an announcement."))
     if not can_participate(owner):
@@ -522,7 +768,18 @@ def post_announcement(owner, activity, body: str) -> Post:
     body_preview = body.strip()
     if len(body_preview) > 140:
         body_preview = body_preview[:139].rstrip() + "…"
-    for membership in current_members(activity).exclude(user_id=owner.id).select_related("user"):
+    # Exclude blocked pairs from the fan-out — without this a member who blocked (or was
+    # blocked by) the owner kept receiving the owner's announcements (the pre-existing gap
+    # that mark_arrived already closes). The live group_send is filtered at delivery by the
+    # consumer's can_read_thread re-auth, which also drops blocked members.
+    blocked = blocked_user_ids(owner)
+    recipients = (
+        current_members(activity)
+        .exclude(user_id=owner.id)
+        .exclude(user_id__in=blocked)
+        .select_related("user")
+    )
+    for membership in recipients:
         _notify(
             membership.user,
             "announcement",
@@ -530,6 +787,7 @@ def post_announcement(owner, activity, body: str) -> Post:
             body=body_preview,
             url=f"/api/social/activities/{activity.id}/",
         )
+    transaction.on_commit(lambda: broadcast_post(post))
     return post
 
 

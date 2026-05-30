@@ -158,8 +158,13 @@ class PostSerializer(serializers.ModelSerializer):
     # Explicit cap: Post.body is a TextField (unbounded), so declare the limit here
     # to reject overlong posts at the API boundary.
     body = serializers.CharField(max_length=POST_BODY_MAX_LENGTH)
+    # Optional one-level quote-reply target; the service validates it (same thread, not hidden)
+    # and re-parents to the top-level ancestor. Read back as the (possibly re-parented) id.
+    reply_to = serializers.PrimaryKeyRelatedField(
+        queryset=Post.objects.all(), required=False, allow_null=True
+    )
 
     class Meta:
         model = Post
-        fields = ["id", "author", "body", "is_announcement", "created_at"]
+        fields = ["id", "author", "body", "is_announcement", "reply_to", "created_at"]
         read_only_fields = ["id", "author", "is_announcement", "created_at"]

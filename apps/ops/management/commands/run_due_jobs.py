@@ -4,7 +4,6 @@
 It fans out to the existing per-app commands rather than re-implementing their logic:
 
   * ``purge_messaging``        — delete expired E2EE messages (retention / disappearing).
-  * ``purge_chat``             — delete chat messages past CHAT_RETENTION_DAYS.
   * ``lift_suspensions``       — reactivate accounts whose temporary suspension elapsed.
   * ``auto_complete_activities``— move past OPEN activities to COMPLETED.
   * ``expire_arrivals``        — clear stale arrival pings (keep them ephemeral).
@@ -21,7 +20,6 @@ from django.core.management.base import BaseCommand, CommandError
 # The jobs to run, in order, as (command_name, kwargs-for-call_command).
 DUE_JOBS = (
     ("purge_messaging", {}),
-    ("purge_chat", {}),
     ("lift_suspensions", {}),
     ("auto_complete_activities", {}),
     ("expire_arrivals", {}),

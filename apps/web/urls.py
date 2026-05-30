@@ -46,6 +46,16 @@ urlpatterns = [
     path("activities/<int:pk>/join/", views.activity_join, name="activity_join"),
     path("activities/<int:pk>/leave/", views.activity_leave, name="activity_leave"),
     path("activities/<int:pk>/post/", views.activity_post, name="activity_post"),
+    path(
+        "activities/<int:pk>/post/<int:post_id>/edit/",
+        views.activity_post_edit,
+        name="activity_post_edit",
+    ),
+    path(
+        "activities/<int:pk>/post/<int:post_id>/delete/",
+        views.activity_post_delete,
+        name="activity_post_delete",
+    ),
     path("activities/<int:pk>/photo/", views.activity_photo, name="activity_photo"),
     path(
         "activities/<int:pk>/members/<int:membership_id>/vote/",

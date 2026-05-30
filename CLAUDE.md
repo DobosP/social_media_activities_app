@@ -58,7 +58,8 @@ These are the product, not preferences. A change that breaks one is wrong even i
 `taxonomy` (activity graph) · `places` (PostGIS + geo API) · `ingestion` (OSM/Overture adapters)
 · `accounts` (custom User, cohorts, EUDI age assurance, guardian links) · `social` (activities,
 threads, join-by-vote, memberships) · `safety` (reporting, blocking, moderation, audit) · `chat`
-(realtime per-thread) · `messaging` (E2EE direct/group) · `media` (profile + private photos) ·
+(WebSocket *transport* over the `social.Post` stream — no message store of its own) ·
+`messaging` (E2EE direct/group) · `media` (profile + private photos) ·
 `events` (iCal feeds) · `booking` · `discovery` + `recommendations` (feeds, pgvector) ·
 `notifications` · `donations` · `ops` (`/healthz`, jobs, GDPR erasure) · `web` (server-rendered UI).
 
@@ -171,3 +172,20 @@ Built on the social core; see services/tests for exact behaviour. All uphold the
   (reports outside `OPEN_NOW_REPORT_DECAY_SECONDS`=14 d stop counting — hours self-heal). `file_open_now_report` gates
   on `can_participate`, is **rate-limited** across venues and **idempotent** per reporter/place/window (anti-brigading);
   `clear_open_now_reports` is the staff reset. `PlaceViewSet` annotates `recent_report_n` so the serializer avoids N+1.
+- **One Thread — unified activity conversation** — collapses the two old overlapping surfaces (durable `social.Post`
+  + the retired realtime `chat.ChatMessage`) into a SINGLE durable `Post` stream; the WebSocket is pure live delivery.
+  `social.post_to_thread` is the **single hardened write path** for web/DRF/socket (the DRF chat POST was deleted; a
+  test asserts `post_to_thread`/`post_announcement` are the **only** Post creators). Its union gate: current MEMBER +
+  `role≠GUARDIAN` + `can_participate` + activity not hidden + **`status≠CANCELLED`** (OPEN *and* COMPLETED post, so the
+  post-meetup + F22 flow survive; only a cancelled meetup freezes) + not blocked-vs-owner + rate-limit +
+  MessagePolicy/CSAR. `can_read_thread` is the single read gate (web view + keyset history + consumer connect/receive/
+  per-delivery 4403). **Depth-1 quote-reply** `Post.reply_to` (`SET_NULL`, re-parented to the top-level ancestor in the
+  service — never a tree, no recursive CTE); the quote snippet is **derived live** from the current parent at render/
+  serialize time (a hidden/edited parent updates its replies on next read — never stored). Author `edit_post` /
+  `delete_own_post` are audited soft-edits (the "edited" marker is derived; no field/edit-count). `thread_page` is
+  **bounded keyset** pagination (no infinite scroll); the `?before=` cursor + `#post-N` permalink stay behind the
+  membership wall. `broadcast_post` fires on `transaction.on_commit` (rolled-back writes broadcast nothing; graceful
+  no-op without a channel layer — **needs `REDIS_URL`** cross-process). `post_announcement` now excludes blocked pairs
+  from the fan-out. Thread Posts are **permanent + audited** (the `purge_chat`/`CHAT_RETENTION_DAYS` retention was
+  dropped). The `aria-live` region announces only the viewer's own send + announcements — **never** every peer message.
+  Explicitly OUT (each needs its own review): reactions, acks, @mentions, markdown, typing, unread dividers.

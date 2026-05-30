@@ -62,7 +62,7 @@ from apps.recommendations.models import UserInterest
 from apps.safety import services as safety
 from apps.safety.models import Block
 from apps.social import services as social
-from apps.social.models import Activity, JoinVote, Membership
+from apps.social.models import Activity, JoinVote, Membership, Post
 from apps.taxonomy.models import ActivityType
 
 from .forms import (
@@ -597,10 +597,25 @@ def activity_detail(request, pk):
             m.my_vote = my_votes.get(m.id)
             pending.append(m)
 
-    thread_posts = list(activity.thread.posts.filter(is_hidden=False).select_related("author"))
-    # Owner announcements (F11) pin above the ordinary thread, newest-first.
-    announcements = [p for p in reversed(thread_posts) if p.is_announcement]
-    posts = [p for p in thread_posts if not p.is_announcement]
+    # Owner announcements (F11) pin above the ordinary thread, newest-first (bounded).
+    announcements = list(
+        activity.thread.posts.filter(is_hidden=False, is_announcement=True)
+        .select_related("author")
+        .order_by("-created_at")[:50]
+    )
+    # F26/unification: one bounded, keyset-paginated window of top-level posts, each with its
+    # non-hidden replies prefetched. can_read_thread is enforced via _visible_activity_or_404 +
+    # is_member below, so the ?before= cursor can't leak across the membership wall.
+    before = request.GET.get("before") if (is_member or user.is_staff) else None
+    posts, has_older, older_cursor = social.thread_page(activity, before=before)
+    # No-JS quote-reply: a "Reply" link is ?reply_to=<id>#compose; pre-target the compose form.
+    reply_target = None
+    rt = request.GET.get("reply_to")
+    if rt and rt.isdigit() and is_member:
+        reply_target = Post.objects.filter(
+            pk=int(rt), thread=activity.thread, is_hidden=False, is_announcement=False
+        ).first()
+    post_form = PostForm(initial={"reply_to": reply_target.id} if reply_target else None)
     photos = []
     if is_member or user.is_staff:
         try:
@@ -649,8 +664,11 @@ def activity_detail(request, pk):
             "pending": pending,
             "announcements": announcements,
             "posts": posts,
+            "has_older": has_older,
+            "older_cursor": older_cursor,
+            "reply_target": reply_target,
             "photos": photos,
-            "post_form": PostForm(),
+            "post_form": post_form,
             "my_guardians": my_guardians,
             "my_arrival": my_arrival,
             "arrival_window_open": is_member and social.arrival_window_open(activity),
@@ -875,9 +893,46 @@ def activity_post(request, pk):
     form = PostForm(request.POST)
     if form.is_valid():
         try:
-            social.post_to_thread(request.user, activity, form.cleaned_data["body"])
+            social.post_to_thread(
+                request.user,
+                activity,
+                form.cleaned_data["body"],
+                reply_to=form.cleaned_data.get("reply_to"),
+            )
         except social.SocialError as exc:
             messages.error(request, _msg(exc))
+    else:
+        messages.error(request, "Your message couldn't be posted.")
+    return redirect("activity_detail", pk=pk)
+
+
+@login_required
+@require_POST
+def activity_post_edit(request, pk, post_id):
+    """Author edits their own thread message in place (the 'edited' marker is derived)."""
+    activity = _visible_activity_or_404(request.user, pk)
+    post = get_object_or_404(Post, pk=post_id, thread=activity.thread)
+    body = (request.POST.get("body") or "").strip()
+    if not body:
+        messages.error(request, "A message can't be empty.")
+        return redirect("activity_detail", pk=pk)
+    try:
+        social.edit_post(request.user, post, body)
+    except social.SocialError as exc:
+        messages.error(request, _msg(exc))
+    return redirect("activity_detail", pk=pk)
+
+
+@login_required
+@require_POST
+def activity_post_delete(request, pk, post_id):
+    """Author soft-deletes their own thread message (row retained for audit/appeal)."""
+    activity = _visible_activity_or_404(request.user, pk)
+    post = get_object_or_404(Post, pk=post_id, thread=activity.thread)
+    try:
+        social.delete_own_post(request.user, post)
+    except social.SocialError as exc:
+        messages.error(request, _msg(exc))
     return redirect("activity_detail", pk=pk)
 
 

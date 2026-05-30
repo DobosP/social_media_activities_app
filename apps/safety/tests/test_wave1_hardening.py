@@ -112,19 +112,17 @@ def test_remove_hides_activity_from_web_detail():
 
 @pytest.mark.django_db
 def test_remove_blocks_chat_thread_access():
-    from apps.chat.services import can_access_thread
-    from apps.social.models import Thread
+    from apps.social.services import can_read_thread
 
     owner = _verified("chat_owner")
     activity = _activity(owner)
-    thread = Thread.objects.select_related("activity").get(activity=activity)
-    assert can_access_thread(owner, thread) is True  # owner-member before removal
+    assert can_read_thread(owner, activity) is True  # owner-member before removal
 
     moderator = User.objects.create_user(username="chatmod", password="pw", is_staff=True)
     take_action(moderator, activity, ModerationAction.Action.REMOVE, ReasonCode.HARASSMENT)
 
-    thread = Thread.objects.select_related("activity").get(activity=activity)
-    assert can_access_thread(owner, thread) is False  # removed → thread closed to members
+    activity.refresh_from_db()
+    assert can_read_thread(owner, activity) is False  # removed → thread closed to members
 
 
 @pytest.mark.django_db

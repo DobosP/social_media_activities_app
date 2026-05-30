@@ -43,12 +43,12 @@ def test_threads_reminder_window_to_reminders_job():
 
 def test_one_failing_job_does_not_skip_the_rest_and_signals_failure():
     def fake_call(name, **kwargs):
-        if name == "purge_chat":
+        if name == "lift_suspensions":
             raise RuntimeError("boom")
 
     with mock.patch.object(run_due_jobs, "call_command", side_effect=fake_call) as called:
         with pytest.raises(CommandError):
             call_command("run_due_jobs", stdout=StringIO(), stderr=StringIO())
-    # All jobs were still attempted despite purge_chat failing.
+    # All jobs were still attempted despite one job failing.
     invoked = {c.args[0] for c in called.call_args_list}
     assert invoked == ALL_JOBS

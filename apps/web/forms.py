@@ -5,7 +5,7 @@ from apps.donations.models import Campaign
 from apps.places.models import Place
 from apps.safety.models import ReasonCode
 from apps.social.models import Activity
-from apps.social.serializers import LOGISTICS_FIELD_MAX_LENGTH
+from apps.social.serializers import LOGISTICS_FIELD_MAX_LENGTH, POST_BODY_MAX_LENGTH
 from apps.taxonomy.models import ActivityType
 
 
@@ -162,9 +162,16 @@ class PlaceProposeForm(forms.Form):
 
 
 class PostForm(forms.Form):
+    # max_length closes the divergence where the durable thread surface was the only uncapped
+    # one (the API + the MessagePolicy already cap at this length).
     body = forms.CharField(
-        widget=forms.Textarea(attrs={"rows": 3, "placeholder": "Write a message..."}), label=""
+        max_length=POST_BODY_MAX_LENGTH,
+        widget=forms.Textarea(attrs={"rows": 3, "placeholder": "Write a message..."}),
+        label="",
     )
+    # Optional one-level quote-reply target (a Post id in the same thread). Re-validated in the
+    # service (same thread, not hidden, re-parented to the top-level ancestor).
+    reply_to = forms.IntegerField(required=False, widget=forms.HiddenInput)
 
 
 class DonateForm(forms.Form):

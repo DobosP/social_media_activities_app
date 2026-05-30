@@ -157,7 +157,8 @@ def test_owner_posts_announcement_and_it_shows():
         recipient=member, kind=Notification.Kind.ANNOUNCEMENT
     ).exists()
     page = _client(member).get(f"/activities/{activity.id}/").content.decode()
-    assert "Announcements" in page
+    # Announcements are pinned at the top of the unified "Messages" stream.
+    assert "Messages" in page
     assert "Meet at the fountain" in page
 
 
