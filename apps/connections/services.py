@@ -37,10 +37,14 @@ class InvalidState(ConnectionError):
 
 
 def _allowed_cohorts() -> set:
-    """Cohorts allowed to use connections. ADULT-only at launch; TEEN can be enabled via
-    settings; CHILD is never allowed here (cohort isolation + minors-off)."""
-    allowed = getattr(settings, "CONNECTIONS_ALLOWED_COHORTS", (Cohort.ADULT,))
-    return {c for c in allowed if c != Cohort.CHILD}  # CHILD can never be enabled by config
+    """Which cohorts may use connections, WITHIN their own cohort. Cross-age connection stays
+    impossible regardless — ``can_connect`` requires the SAME cohort, so this never opens an
+    adult<->minor path; it only governs whether each age group can connect among its own peers.
+    All ages are enabled by default (children inherit the participation/consent gate and the
+    messaging guardian-observer on any resulting chat); UNASSIGNED is never allowed."""
+    allowed = set(getattr(settings, "CONNECTIONS_ALLOWED_COHORTS", (Cohort.ADULT,)))
+    allowed.discard(Cohort.UNASSIGNED)
+    return allowed
 
 
 def _peer_activity_ids(user):
