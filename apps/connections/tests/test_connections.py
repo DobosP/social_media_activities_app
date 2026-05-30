@@ -97,12 +97,26 @@ def test_cannot_connect_across_cohorts():
     assert connections.can_connect(child, adult) is False
 
 
-def test_minor_cohort_disabled_at_launch():
-    # CHILD cohort is off by default (minors-off); two children sharing an activity still can't.
+def test_all_ages_connect_within_their_own_cohort():
+    # "No matter age" (the SAFE version): every cohort can connect WITHIN itself. Two children
+    # who shared a (child) activity can connect; the cross-age wall is tested separately.
     c1, c2 = _child("ch2"), _child("ch3")
     _share(c1, c2, slug="conn-kids")
-    assert connections.can_connect(c1, c2) is False
-    assert connections.is_enabled_for(c1) is False
+    assert connections.is_enabled_for(c1) is True
+    assert connections.can_connect(c1, c2) is True
+
+
+def test_adult_minor_connection_remains_impossible():
+    # The non-negotiable wall: an adult and a minor can NEVER connect, even with all cohorts
+    # enabled and even if (hypothetically) they shared an activity — different cohort -> blocked.
+    adult = _adult("xa1")
+    child = _child("xc1")
+    teen = User.objects.create_user(username="xt1", password=PW, display_name="Teen")
+    apply_assurance(teen, AssuranceResult(age_band=AgeBand.AGE_16_17, provider="dev"))
+    assert connections.can_connect(adult, child) is False
+    assert connections.can_connect(child, adult) is False
+    assert connections.can_connect(adult, teen) is False
+    assert connections.can_connect(teen, child) is False
 
 
 def test_blocking_prevents_connect():

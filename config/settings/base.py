@@ -353,9 +353,14 @@ SOCIAL_THREAD_POST_LIMIT = env.int("SOCIAL_THREAD_POST_LIMIT", default=100)
 # correct retention posture. The former CHAT_RETENTION_DAYS / purge_chat job were removed.
 
 # --- Connections (find + reconnect with people you've shared real activities with) ---
-# Cohorts allowed to use connections. ADULT-only at launch (minors-off); TEEN can be enabled
-# here later behind a child-safety review. CHILD can NEVER be enabled (filtered in services).
-CONNECTIONS_ALLOWED_COHORTS = env.list("CONNECTIONS_ALLOWED_COHORTS", default=["adult"])
+# Cohorts allowed to use connections, each WITHIN its own cohort. Cross-age connection is
+# impossible regardless (can_connect requires the same cohort), so this only governs whether a
+# given age group can connect among its own peers. All ages by default — children still need
+# active parental consent (can_participate) and any resulting chat is guardian-observable via
+# messaging. Note: in prod, minors only exist if minor onboarding is enabled.
+CONNECTIONS_ALLOWED_COHORTS = env.list(
+    "CONNECTIONS_ALLOWED_COHORTS", default=["adult", "teen", "child"]
+)
 # Anti-pestering: cap new connection requests per user per window (a repeat request to the same
 # person is idempotent and never re-notifies, so this only bounds requests to DISTINCT people).
 CONNECTIONS_REQUEST_RATE_LIMIT = env.int("CONNECTIONS_REQUEST_RATE_LIMIT", default=20)
