@@ -110,3 +110,11 @@ Built on the social core; see services/tests for exact behaviour. All uphold the
 - **Notification reasons & per-kind mute (F31)** — `NotificationPreference` + a mute gate in the single
   `notifications.notify()` choke point. **MODERATION (DSA Art.17) and SYSTEM (DSA Art.16) are never
   mutable** — checked first, before any lookup. Each notice carries a "why you got this" line.
+- **Post-meetup "did we meet?" (F22)** — `Membership.met_confirmed_at`, settable only when the activity is
+  COMPLETED; shows a member-only **count** ("Confirmed: N of M") — never a who-confirmed list and **never a
+  per-person rating or cross-activity rollup**. Cleared on leave.
+- **Age-proof provenance (F14)** — `accounts.assurance_provenance` renders a read-only profile panel: band +
+  method + provider + verify/expiry dates + a re-verify nudge. Exposes **no DOB/identity/raw attestation**.
+- **Your safety record (F19)** — `safety.safety_record_for` powers `/my-safety-record/`: a user's own DSA
+  Art.16/17 record (moderation decisions about their account/activities/posts + reports they filed).
+  Strictly self-scoped, field-allowlisted — never another user's data or the moderator's identity.

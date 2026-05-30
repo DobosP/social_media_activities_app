@@ -66,6 +66,22 @@
           <button class="linkbtn" type="submit">clear</button></form>
       {% endif %}
     </div>
+    {% if is_completed %}
+      {# F22: post-meetup "did we meet?" — a count only, never who-confirmed, never per-person. #}
+      <div style="margin:.4rem 0">
+        <strong>Did this meet up?</strong>
+        <span class="muted">Confirmed: <strong>{{ met_summary.confirmed }}</strong> of {{ met_summary.total }}</span>
+        {% if my_met_confirmed %}
+          <form class="inline" method="post" action="{% url 'activity_met' activity.pk %}">{% csrf_token %}
+            <input type="hidden" name="met" value="no">
+            <span class="muted">&#10003; you confirmed &middot;</span>
+            <button class="linkbtn" type="submit">undo</button></form>
+        {% else %}
+          <form class="inline" method="post" action="{% url 'activity_met' activity.pk %}">{% csrf_token %}
+            <button class="btn btn-sm" type="submit">Yes, we met up</button></form>
+        {% endif %}
+      </div>
+    {% endif %}
     <h3>Pending join requests</h3>
     {% for m in pending %}
       <div class="row" style="justify-content:space-between">

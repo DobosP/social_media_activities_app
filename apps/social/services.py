@@ -208,10 +208,11 @@ def leave_activity(user, activity) -> Membership | None:
     if membership.role == Membership.Role.OWNER:
         raise InvalidState(_("The owner cannot leave their own activity."))
     membership.state = Membership.State.REMOVED
-    # Reset the RSVP so leaving literally erases the go/no-go datum (no lingering "going" on
-    # the removed row): F20 keeps no attendance state for non-members. See attendance_summary.
+    # Reset the per-activity transient signals so a removed row carries nothing: the RSVP
+    # go/no-go (F20) and the "we met up" confirmation (F22). Keeps both scoped to live members.
     membership.attendance_intent = Membership.AttendanceIntent.UNKNOWN
-    membership.save(update_fields=["state", "attendance_intent", "updated_at"])
+    membership.met_confirmed_at = None
+    membership.save(update_fields=["state", "attendance_intent", "met_confirmed_at", "updated_at"])
     return membership
 
 
@@ -486,6 +487,35 @@ def attendance_summary(activity) -> dict:
     members = voting_members(activity)
     return {
         "going": members.filter(attendance_intent=Membership.AttendanceIntent.GOING).count(),
+        "total": members.count(),
+    }
+
+
+@transaction.atomic
+def set_met_confirmed(user, activity, confirmed: bool = True) -> Membership:
+    """A participant privately confirms (or undoes) that a finished meetup actually happened
+    (F22). Allowed only once the activity is COMPLETED. No notification, no audit, no
+    cross-activity trace — it is a single per-activity boolean, never a judgement of a person."""
+    membership = current_members(activity).filter(user=user).first()
+    if membership is None:
+        raise NotAMember(_("Only current members can confirm a meetup."))
+    if membership.role == Membership.Role.GUARDIAN:
+        raise NotEligible(_("Guardians accompany activities as read-only supervisors."))
+    if activity.status != Activity.Status.COMPLETED:
+        raise InvalidState(_("You can only confirm a meetup after it has finished."))
+    if confirmed and membership.met_confirmed_at is not None:
+        return membership  # idempotent: a second tap changes nothing
+    membership.met_confirmed_at = timezone.now() if confirmed else None
+    membership.save(update_fields=["met_confirmed_at", "updated_at"])
+    return membership
+
+
+def met_confirmation_summary(activity) -> dict:
+    """Per-activity 'did we meet up?' count over the participants (excludes guardians). A live
+    snapshot shown only to members — never stored, never rolled up per-user or cross-activity."""
+    members = voting_members(activity)
+    return {
+        "confirmed": members.filter(met_confirmed_at__isnull=False).count(),
         "total": members.count(),
     }
 

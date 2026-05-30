@@ -23,6 +23,7 @@ urlpatterns = [
     path("activities/<int:pk>/announce/", views.activity_announce, name="activity_announce"),
     path("activities/<int:pk>/rsvp/", views.activity_rsvp, name="activity_rsvp"),
     path("activities/<int:pk>/arrived/", views.activity_arrived, name="activity_arrived"),
+    path("activities/<int:pk>/met/", views.activity_met, name="activity_met"),
     path("activities/<int:pk>/join/", views.activity_join, name="activity_join"),
     path("activities/<int:pk>/leave/", views.activity_leave, name="activity_leave"),
     path("activities/<int:pk>/post/", views.activity_post, name="activity_post"),
@@ -67,5 +68,6 @@ urlpatterns = [
     # Transparency (W1-8) & GDPR self-service
     path("privacy/", views.privacy, name="privacy"),
     path("terms/", views.terms, name="terms"),
+    path("my-safety-record/", views.safety_record, name="safety_record"),
     path("account/delete/", views.account_delete, name="account_delete"),
 ]
