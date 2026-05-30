@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Your guardians{% endblock %}
+{% block content %}
+<h1>Your guardians</h1>
+<p class="muted">The adults registered as your parent/legal guardian, and exactly what each one
+  can and cannot see about you. This page is for your information only.</p>
+{% for g in guardians %}
+  <div class="card">
+    <strong>{{ g.display_name|default:g.username }}</strong>
+    <span class="tag">{{ g.caps.relationship }}</span>
+    <h3 style="margin:.5rem 0 .3rem">What they can see about you</h3>
+    <ul class="muted" style="font-size:.85rem">
+      <li>&#10003; Where and when your upcoming meetups are (place, time, activity type).</li>
+      {% if g.caps.can_get_arrival_pings %}<li>&#10003; An alert when you tap &ldquo;I've arrived&rdquo; at a meetup.</li>{% endif %}
+      {% if g.caps.can_observe_messaging %}<li>&#10003; If they have set up secure messaging, they can read your group chats as a visible observer (you can see them in the chat).</li>{% endif %}
+      <li>&#10007; They cannot read your activity threads, see your photos or who else is there, post as you, or join your activities. They are never in your cohort.</li>
+    </ul>
+  </div>
+{% empty %}
+  <p class="muted">No one is registered as your guardian.</p>
+{% endfor %}
+{% if guardians %}
+  <p class="muted" style="font-size:.85rem">This page doesn't have a &ldquo;remove&rdquo; button. To change
+    a guardianship link, talk to your guardian. If something feels wrong, use <strong>Report</strong> on an
+    activity or person, or leave the activity.</p>
+{% endif %}
+{% endblock %}

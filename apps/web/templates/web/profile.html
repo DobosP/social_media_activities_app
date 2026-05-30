@@ -34,6 +34,7 @@
     learns an over-16/over-18 band, never your birthdate.</p>
   <a class="btn" href="{% url 'verify_age' %}">Verify with EU Digital Identity</a>
   {% if profile_user.is_guardian %}<a class="btn btn-secondary" href="{% url 'wards' %}">Your wards</a>{% endif %}
+  {% if has_guardians %}<a class="btn btn-secondary" href="{% url 'my_guardians' %}">Your guardians</a>{% endif %}
 </div>
 
 {% if blocked %}

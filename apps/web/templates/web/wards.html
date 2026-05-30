@@ -20,6 +20,20 @@
     {% else %}
       <p class="muted">No upcoming meetups.</p>
     {% endif %}
+
+    <h3 style="margin:.6rem 0 .3rem">What this guardianship lets you do</h3>
+    <ul class="muted" style="font-size:.85rem">
+      <li>&#10003; See their upcoming meetups (place, time, activity type) &mdash; shown above.</li>
+      {% if w.caps.can_get_arrival_pings %}<li>&#10003; Get an alert when they tap &ldquo;I've arrived&rdquo; at a meetup.</li>{% endif %}
+      {% if w.caps.can_observe_messaging %}<li>&#10003; If you've set up secure messaging, read their group chats as a visible, read-only observer.</li>{% endif %}
+      {% if w.caps.requires_consent %}<li>{% if w.caps.consent_active %}&#10003; Parental consent is active.{% else %}&bull; Parental consent is not active.{% endif %}{% if w.caps.can_grant_consent %} You can grant or revoke it.{% endif %}</li>{% endif %}
+      <li>&#10007; You cannot see their thread posts, photos, who else is there, or chat content (beyond the observer view above); you never enter their activities or cohort.</li>
+    </ul>
+    <form method="post" action="{% url 'guardian_revoke' w.pk %}" class="inline"
+          onsubmit="return confirm('End guardianship of {{ w.display_name|default:w.username }}? This also revokes the consent you granted.');">
+      {% csrf_token %}
+      <button class="btn btn-sm btn-danger" type="submit">End guardianship</button>
+    </form>
   </div>
 {% empty %}
   <p class="muted">You aren't a registered guardian of any account.</p>

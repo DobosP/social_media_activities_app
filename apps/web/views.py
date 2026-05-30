@@ -28,11 +28,21 @@ from apps.accounts.services import (
     can_participate,
     create_guardian_link_invite,
     decline_guardian_link_invite,
+    guardianship_capabilities,
+    is_guardian_of,
+    minor_onboarding_enabled,
     pending_guardian_invites_for,
+    revoke_guardian,
 )
 from apps.events.models import Event
 from apps.media.models import Photo
-from apps.media.services import NotAuthorized, signed_url, thread_photos, upload_photo
+from apps.media.services import (
+    MediaError,
+    NotAuthorized,
+    signed_url,
+    thread_photos,
+    upload_photo,
+)
 from apps.notifications import services as notifications
 from apps.notifications.models import Notification
 from apps.places.models import Place
@@ -74,7 +84,13 @@ def _order_feed_by_location(qs, params):
 
 def _nav_context(user):
     if user.is_authenticated:
-        return {"unread_notifications": notifications.unread_count(user)}
+        return {
+            "unread_notifications": notifications.unread_count(user),
+            # Show the ward-side "Guardians" link only to users who actually have one (F13).
+            "has_guardians": GuardianRelationship.objects.filter(
+                ward=user, status=GuardianRelationship.Status.ACTIVE
+            ).exists(),
+        }
     return {}
 
 
@@ -631,12 +647,23 @@ def profile(request):
 @login_required
 @require_POST
 def avatar_upload(request):
+    # Brake the avatar-upload path so the profile-image uniqueness check can't be queried at
+    # scale to brute-force which images are in use (an enumeration oracle on a child platform).
+    if not safety.allow_action(
+        request.user,
+        "avatar_upload",
+        limit=getattr(settings, "AVATAR_UPLOAD_RATE_LIMIT", 20),
+        window_seconds=getattr(settings, "AVATAR_UPLOAD_RATE_WINDOW_SECONDS", 3600),
+    ):
+        messages.error(request, "Too many avatar changes; please try again later.")
+        return redirect("profile")
     upload = request.FILES.get("image")
     if upload is not None:
         try:
             upload_photo(request.user, Photo.Kind.PROFILE, upload.read())
             messages.success(request, "Profile picture updated.")
-        except ValueError as exc:
+        except (ValueError, MediaError) as exc:
+            # MediaError covers a duplicate image (DuplicateProfileImage) and a failed scan.
             messages.error(request, _msg(exc))
     return redirect("profile")
 
@@ -646,7 +673,9 @@ def avatar_upload(request):
 
 @login_required
 def notifications_list(request):
-    items = Notification.objects.filter(recipient=request.user)[:50]
+    items = list(Notification.objects.filter(recipient=request.user)[:50])
+    for n in items:
+        n.why = notifications.why_reason(n.kind)
     return render(request, "web/notifications.html", {"items": items, **_nav_context(request.user)})
 
 
@@ -655,6 +684,33 @@ def notifications_list(request):
 def notifications_read_all(request):
     notifications.mark_all_read(request.user)
     return redirect("notifications")
+
+
+@login_required
+def notification_preferences(request):
+    """Per-kind mute + 'why you got this'. DSA notices (moderation/system) aren't listed —
+    they can never be muted."""
+    from apps.notifications.models import MUTABLE_KINDS
+
+    if request.method == "POST":
+        notifications.set_muted_kinds(request.user, request.POST.getlist("muted"))
+        messages.success(request, "Notification settings saved.")
+        return redirect("notification_preferences")
+    muted = notifications.get_muted_kinds(request.user)
+    rows = [
+        {
+            "value": k.value,
+            "label": k.label,
+            "reason": notifications.why_reason(k),
+            "muted": k.value in muted,
+        }
+        for k in MUTABLE_KINDS
+    ]
+    return render(
+        request,
+        "web/notification_preferences.html",
+        {"rows": rows, **_nav_context(request.user)},
+    )
 
 
 # --- Secure messaging (E2EE, client-side crypto) ------------------------------------
@@ -802,10 +858,57 @@ def wards(request):
             .order_by("starts_at")
             .distinct()
         )
+        # F13: the legible can/cannot boundary for this guardianship, from the real rules.
+        ward.caps = guardianship_capabilities(request.user, ward)
     return render(
         request,
         "web/wards.html",
-        {"wards": ward_users, **_nav_context(request.user)},
+        {
+            "wards": ward_users,
+            "minor_onboarding": minor_onboarding_enabled(),
+            **_nav_context(request.user),
+        },
+    )
+
+
+@login_required
+@require_POST
+def guardian_revoke(request, ward_pk):
+    """A guardian ends a guardianship link (F13). Reuses accounts.revoke_guardian, which also
+    revokes that guardian's consent grant and drops any messaging-observer presence."""
+    ward = get_object_or_404(User, pk=ward_pk)
+    # revoke_guardian does not itself re-check the actor is the guardian — guard here.
+    if not is_guardian_of(request.user, ward):
+        messages.error(request, "You are not this user's guardian.")
+        return redirect("wards")
+    try:
+        revoke_guardian(request.user, ward)
+        messages.success(request, "Guardianship ended.")
+    except ValueError as exc:
+        messages.error(request, _msg(exc))
+    return redirect("wards")
+
+
+@login_required
+def my_guardians(request):
+    """Ward-side legibility panel (F13): who my guardians are and exactly what each can and
+    cannot see about me. Read-only — there is no ward-initiated unlink (a child severing
+    oversight is a safety decision, not a UI toggle)."""
+    guardians = []
+    for rel in (
+        GuardianRelationship.objects.filter(
+            ward=request.user, status=GuardianRelationship.Status.ACTIVE
+        )
+        .select_related("guardian")
+        .order_by("guardian__display_name")
+    ):
+        guardian = rel.guardian
+        guardian.caps = guardianship_capabilities(guardian, request.user)
+        guardians.append(guardian)
+    return render(
+        request,
+        "web/guardianship.html",
+        {"guardians": guardians, **_nav_context(request.user)},
     )
 
 

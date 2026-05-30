@@ -39,6 +39,8 @@ urlpatterns = [
     path("verify-age/", views.verify_age, name="verify_age"),
     path("wards/", views.wards, name="wards"),
     path("wards/invite/", views.guardian_invite_create, name="guardian_invite_create"),
+    path("wards/<int:ward_pk>/revoke/", views.guardian_revoke, name="guardian_revoke"),
+    path("guardianship/", views.my_guardians, name="my_guardians"),
     path(
         "guardian-invites/<str:token>/accept/",
         views.guardian_invite_accept,
@@ -51,6 +53,11 @@ urlpatterns = [
     ),
     path("notifications/", views.notifications_list, name="notifications"),
     path("notifications/read-all/", views.notifications_read_all, name="notifications_read_all"),
+    path(
+        "notifications/preferences/",
+        views.notification_preferences,
+        name="notification_preferences",
+    ),
     path("messages/", views.messages_page, name="messages"),
     path("donate/", views.donate, name="donate"),
     # Safety: reporting & blocking

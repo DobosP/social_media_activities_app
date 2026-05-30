@@ -1,16 +1,19 @@
+from django.conf import settings
 from django.http import HttpResponse
 from rest_framework import status
-from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.exceptions import PermissionDenied, Throttled, ValidationError
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.safety.services import allow_action
 from apps.social.models import Thread
 
 from .models import Photo
 from .serializers import PhotoSerializer
 from .services import (
+    DuplicateProfileImage,
     MediaRejected,
     NotAuthorized,
     delete_photo,
@@ -39,13 +42,21 @@ class PhotoUploadView(APIView):
             thread = Thread.objects.filter(id=thread_id).first()
             if thread is None:
                 raise ValidationError({"thread": "No such thread."})
+        elif kind == Photo.Kind.PROFILE and not allow_action(
+            request.user,
+            "avatar_upload",
+            limit=getattr(settings, "AVATAR_UPLOAD_RATE_LIMIT", 20),
+            window_seconds=getattr(settings, "AVATAR_UPLOAD_RATE_WINDOW_SECONDS", 3600),
+        ):
+            # Brake the avatar uniqueness-check oracle (mirrors the web avatar path).
+            raise Throttled(detail="Too many avatar changes; please try again later.")
         try:
             photo = upload_photo(request.user, kind, upload.read(), thread=thread)
         except MediaRejected as exc:
             raise PermissionDenied(str(exc)) from exc
         except NotAuthorized as exc:
             raise PermissionDenied(str(exc)) from exc
-        except ValueError as exc:
+        except (DuplicateProfileImage, ValueError) as exc:
             raise ValidationError(str(exc)) from exc
         ctx = {"signed_urls": {photo.id: signed_url(photo, request.user)}}
         return Response(PhotoSerializer(photo, context=ctx).data, status=status.HTTP_201_CREATED)
