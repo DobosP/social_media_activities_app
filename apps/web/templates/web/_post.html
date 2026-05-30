@@ -12,6 +12,17 @@
     {% if p.is_edited %}<span class="muted" style="font-size:.75rem">(edited)</span>{% endif %}
   </div>
   <div>{{ p.body|linebreaksbr }}</div>
+  {% for att in p.attachment_list %}
+    {% if att.kind == "image" %}
+      <a href="{{ att.url }}" target="_blank" rel="noopener noreferrer">
+        <img src="{{ att.url }}" alt="shared image" loading="lazy"
+             style="max-width:280px;max-height:280px;border-radius:8px;margin-top:.3rem"></a>
+    {% else %}
+      <p style="margin:.3rem 0 0">&#128206;
+        <a href="{{ att.url }}">{{ att.original_filename|default:"document.pdf" }}</a>
+        <span class="muted" style="font-size:.75rem">(PDF &mdash; downloads)</span></p>
+    {% endif %}
+  {% endfor %}
   {% if is_member %}
     <div class="post-actions" style="font-size:.75rem;margin-top:.2rem">
       <a href="?reply_to={{ p.pk }}#compose">Reply</a>

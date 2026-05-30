@@ -17,6 +17,7 @@ from .services import (
     MediaRejected,
     NotAuthorized,
     delete_photo,
+    resolve_attachment_token,
     resolve_signed_token,
     signed_url,
     thread_photos,
@@ -115,4 +116,27 @@ class MediaFileView(APIView):
         except NotAuthorized as exc:
             raise PermissionDenied(str(exc)) from exc
         data = get_storage().open(photo.storage_key)
-        return HttpResponse(data, content_type=photo.content_type)
+        resp = HttpResponse(data, content_type=photo.content_type)
+        resp["X-Content-Type-Options"] = "nosniff"
+        return resp
+
+
+class AttachmentFileView(APIView):
+    """Serve a thread Attachment behind a signed, unexpired, membership-scoped link. A FILE
+    (PDF) is ALWAYS served as a forced download with nosniff, so it can never render/execute
+    inline in the page context (PDF-borne JS/XSS); images render inline."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, token):
+        try:
+            att = resolve_attachment_token(token, request.user)
+        except NotAuthorized as exc:
+            raise PermissionDenied(str(exc)) from exc
+        data = get_storage().open(att.storage_key)
+        resp = HttpResponse(data, content_type=att.content_type)
+        resp["X-Content-Type-Options"] = "nosniff"
+        if att.kind == att.Kind.FILE:
+            name = att.original_filename or "document.pdf"
+            resp["Content-Disposition"] = f'attachment; filename="{name}"'
+        return resp

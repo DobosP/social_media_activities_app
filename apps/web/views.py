@@ -708,6 +708,15 @@ def activity_detail(request, pk):
     # is_member below, so the ?before= cursor can't leak across the membership wall.
     before = request.GET.get("before") if (is_member or user.is_staff) else None
     posts, has_older, older_cursor = social.thread_page(activity, before=before)
+    # Inline media: attach each post's viewable attachments (with per-viewer signed URLs) so the
+    # stream renders images/PDFs in the conversation without an N+1.
+    if is_member or user.is_staff:
+        from apps.media.services import attachments_for_posts
+
+        all_rendered = [*posts, *(r for p in posts for r in p.replies.all())]
+        by_post = attachments_for_posts(all_rendered, user)
+        for p in all_rendered:
+            p.attachment_list = by_post.get(p.id, [])
     # No-JS quote-reply: a "Reply" link is ?reply_to=<id>#compose; pre-target the compose form.
     reply_target = None
     rt = request.GET.get("reply_to")
@@ -1001,20 +1010,40 @@ def membership_vote(request, pk, membership_id):
 @login_required
 @require_POST
 def activity_post(request, pk):
+    from apps.media import services as media
+
     activity = _visible_activity_or_404(request.user, pk)
-    form = PostForm(request.POST)
-    if form.is_valid():
-        try:
-            social.post_to_thread(
+    form = PostForm(request.POST, request.FILES)
+    if not form.is_valid():
+        messages.error(request, "Your message couldn't be posted.")
+        return redirect("activity_detail", pk=pk)
+    body = form.cleaned_data["body"]
+    upload = form.cleaned_data.get("attachment")
+    if not (body or "").strip() and upload is None:
+        messages.error(request, "Type a message or attach a file.")
+        return redirect("activity_detail", pk=pk)
+    data = None
+    if upload is not None:
+        if upload.size > media._attachment_max_bytes():
+            messages.error(request, "That file is too large.")
+            return redirect("activity_detail", pk=pk)
+        data = upload.read()
+    try:
+        # Post + attachment are ONE transaction: if the scan rejects the file, the post is
+        # rolled back too (no message without its file), and the on_commit live broadcast fires
+        # only after both exist.
+        with transaction.atomic():
+            post = social.post_to_thread(
                 request.user,
                 activity,
-                form.cleaned_data["body"],
+                body,
                 reply_to=form.cleaned_data.get("reply_to"),
+                allow_empty=data is not None,
             )
-        except social.SocialError as exc:
-            messages.error(request, _msg(exc))
-    else:
-        messages.error(request, "Your message couldn't be posted.")
+            if data is not None:
+                media.attach_to_post(request.user, post, filename=upload.name, data=data)
+    except (social.SocialError, media.MediaError) as exc:
+        messages.error(request, _msg(exc))
     return redirect("activity_detail", pk=pk)
 
 

@@ -292,6 +292,16 @@ MEDIA_SCANNER_TIMEOUT = env.int("MEDIA_SCANNER_TIMEOUT", default=10)
 # file); or point MEDIA_IMAGE_SCANNER at a managed service. dev/test settings set False.
 MEDIA_REQUIRE_SCANNER = env.bool("MEDIA_REQUIRE_SCANNER", default=True)
 
+# Thread attachments (images + PDF in the activity conversation). Master switch; per-attachment
+# size cap; and the cohorts allowed to share a FILE/PDF (a NEW media type → adults only at
+# launch, "none for minors"; images are allowed in any cohort thread).
+# INVARIANT: MEDIA_ATTACHMENT_MAX_BYTES + multipart/CSRF overhead must stay UNDER
+# MAX_REQUEST_BODY_BYTES (above, default 8 MiB), or the MaxBodySizeMiddleware rejects the upload
+# with a raw 413 before the view's friendly "too large" message. 7 MiB leaves ~1 MiB headroom.
+MEDIA_ATTACHMENTS_ENABLED = env.bool("MEDIA_ATTACHMENTS_ENABLED", default=True)
+MEDIA_ATTACHMENT_MAX_BYTES = env.int("MEDIA_ATTACHMENT_MAX_BYTES", default=7 * 1024 * 1024)
+MEDIA_FILE_COHORTS = env.list("MEDIA_FILE_COHORTS", default=["adult"])
+
 # D7 — richer place data.
 # Overture places parquet path/glob (local extract or the public S3 release, e.g.
 # "s3://overturemaps-us-west-2/release/<rel>/theme=places/type=place/*").

@@ -209,7 +209,8 @@
   </div>
 
   {% if is_member %}
-    <form method="post" id="compose" action="{% url 'activity_post' activity.pk %}" class="stack" style="margin-top:.6rem">{% csrf_token %}
+    <form method="post" id="compose" enctype="multipart/form-data"
+          action="{% url 'activity_post' activity.pk %}" class="stack" style="margin-top:.6rem">{% csrf_token %}
       {% if reply_target %}
         <p class="muted" style="margin:0;font-size:.85rem">Replying to
           {{ reply_target.author.display_name|default:reply_target.author.username }}
@@ -218,7 +219,14 @@
       {{ post_form.reply_to }}
       <label class="visually-hidden" for="{{ post_form.body.id_for_label }}">Write a message</label>
       {{ post_form.body }}
-      <button class="btn btn-sm" type="submit" style="margin-top:.4rem">Post</button>
+      <div class="row" style="margin-top:.4rem">
+        <label class="visually-hidden" for="{{ post_form.attachment.id_for_label }}">Attach a photo or PDF</label>
+        <input type="file" name="attachment" id="{{ post_form.attachment.id_for_label }}"
+               accept="image/png,image/jpeg,image/webp,application/pdf">
+        <button class="btn btn-sm" type="submit">Post</button>
+      </div>
+      <p class="muted" style="font-size:.75rem;margin:.2rem 0 0">Photos &amp; PDFs are private to
+        members and safety-screened on upload. No video.</p>
     </form>
     {# Live region: announces ONLY the viewer's own send + new announcements (never every
        inbound peer message), so a busy thread is not a screen-reader replay or a nudge. #}
@@ -294,6 +302,8 @@
   const form = document.getElementById("compose");
   if (form) form.addEventListener("submit", (ev) => {
     if (sock.readyState !== WebSocket.OPEN) return;            // graceful fallback to POST
+    const file = form.querySelector('input[name="attachment"]');
+    if (file && file.files && file.files.length) return;       // a file upload must POST, not WS
     const ta = form.querySelector('textarea');
     const rt = form.querySelector('input[name="reply_to"]');
     const body = (ta.value || "").trim();

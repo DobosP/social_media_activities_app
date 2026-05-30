@@ -2,6 +2,7 @@
 membership/cohort-scoped visibility, and signed, expiring URLs."""
 
 import hashlib
+import re
 import uuid
 
 from django.conf import settings
@@ -11,12 +12,14 @@ from django.db import transaction
 from apps.safety.services import is_blocked, record_audit
 from apps.social.services import current_members
 
-from .models import Photo
+from .models import Attachment, Photo
 from .processing import DEFAULT_MAX_PIXELS, extension_for, validate_and_strip
 from .scanning import get_scanner
 from .storage import get_storage
 
 _SIGNING_SALT = "media.signed_url"
+_ATTACH_SIGNING_SALT = "media.attachment_url"
+PDF_MAGIC = b"%PDF-"
 
 
 class MediaError(Exception):
@@ -201,3 +204,199 @@ def resolve_signed_token(token: str, viewer):
     if photo is None or not can_view_photo(viewer, photo):
         raise NotAuthorized("Not allowed to view this photo.")
     return photo
+
+
+# --- Thread attachments (images + PDF in the activity conversation) -----------------------
+#
+# Media lives IN the unified Post stream (apps/social), attached to the author's own message.
+# Same fail-closed scan + EXIF-strip pipeline as Photos; PDFs (the only FILE type at launch)
+# are stored as-is and served ONLY as a forced download so they can never execute in the page.
+# No video. Images are allowed in any cohort's thread (members only); FILE (PDF) is gated to
+# MEDIA_FILE_COHORTS (adults only at launch — "none for minors").
+
+
+def _attachments_enabled() -> bool:
+    return getattr(settings, "MEDIA_ATTACHMENTS_ENABLED", True)
+
+
+def _file_cohorts() -> set:
+    return set(getattr(settings, "MEDIA_FILE_COHORTS", ["adult"]))
+
+
+def _attachment_max_bytes() -> int:
+    return getattr(
+        settings,
+        "MEDIA_ATTACHMENT_MAX_BYTES",
+        getattr(settings, "MEDIA_MAX_UPLOAD_BYTES", 5_000_000),
+    )
+
+
+def _sanitize_filename(name: str) -> str:
+    """A safe display filename for a PDF: strip any path, keep a conservative charset, cap
+    length, and force a .pdf suffix (the content is type-verified separately)."""
+    base = (name or "").replace("\\", "/").split("/")[-1].strip()
+    base = re.sub(r"[^A-Za-z0-9._ -]", "_", base)[:116]
+    if not base:
+        base = "document"
+    if not base.lower().endswith(".pdf"):
+        base = base.rsplit(".", 1)[0] + ".pdf"
+    return base
+
+
+@transaction.atomic
+def attach_to_post(uploader, post, *, filename: str, data: bytes) -> Attachment:
+    """Attach a scanned image or PDF to the uploader's OWN thread Post. Fail-closed: if the
+    scanner is ineffective or the content matches the blocklist, nothing is stored and the
+    caller's transaction should roll back the Post too (so there is no post without its file)."""
+    from apps.social.services import can_read_thread
+
+    if not _attachments_enabled():
+        raise MediaRejected("File sharing is currently unavailable.")
+    activity = post.thread.activity
+    if uploader.id != post.author_id:
+        raise NotAuthorized("You can only attach a file to your own message.")
+    # The WRITE gate must mirror the READ gate (can_read_thread): current MEMBER + same cohort +
+    # can_participate (consent/assurance) + not blocked-vs-owner + activity not hidden. Using the
+    # full gate here (not a bare membership check) keeps the child-safety gate IN the service, so
+    # a future DRF/socket caller can't let a cohort-drifted/consent-lapsed/blocked member attach.
+    if not can_read_thread(uploader, activity):
+        raise NotAuthorized("Only current members can share files in this thread.")
+    if len(data) > _attachment_max_bytes():
+        raise MediaRejected("File exceeds the size limit.")
+
+    kind = Attachment.Kind.FILE if data[:5] == PDF_MAGIC else Attachment.Kind.IMAGE
+    # FILE (PDF) is a new media type — gated to adults at launch (never for minors).
+    if kind == Attachment.Kind.FILE and activity.cohort not in _file_cohorts():
+        raise NotAuthorized("File sharing isn't available in this thread.")
+
+    # Fail-closed safety scan on the ORIGINAL bytes (what a CSAM hash set matches), same as
+    # the photo path — applies to images AND PDFs.
+    scanner = get_scanner()
+    if getattr(settings, "MEDIA_REQUIRE_SCANNER", True) and not scanner.is_effective():
+        record_audit("media.attach_blocked", actor=uploader, reason="no_scanner", kind=kind)
+        raise MediaRejected(
+            "File sharing is unavailable until a content safety scanner is configured."
+        )
+    orig_digest = hashlib.sha256(data).hexdigest()
+    if not scanner.scan(data).clean:
+        record_audit("media.blocked", actor=uploader, reason="scan_match", sha256=orig_digest)
+        raise MediaRejected("File failed safety screening and was not stored.")
+
+    if kind == Attachment.Kind.IMAGE:
+        from .processing import ImageError
+
+        try:
+            clean_bytes, fmt, (width, height) = validate_and_strip(
+                data,
+                max_bytes=_attachment_max_bytes(),
+                max_dimension=getattr(settings, "MEDIA_MAX_DIMENSION", None),
+                max_pixels=getattr(settings, "MEDIA_MAX_IMAGE_PIXELS", DEFAULT_MAX_PIXELS),
+            )
+        except ImageError as exc:
+            # A non-image / non-PDF (or an unreadable/oversized image) — clean rejection, not a 500.
+            raise MediaRejected("Only images (PNG/JPEG/WEBP) and PDF files can be shared.") from exc
+        ext = extension_for(fmt)
+        content_type = f"image/{ext}"
+        display_name = ""
+        width_h = (width, height)
+        exif = True
+    else:  # FILE / PDF — stored as-is (no re-encode), only ever served as a download
+        clean_bytes = data
+        ext = "pdf"
+        content_type = "application/pdf"
+        display_name = _sanitize_filename(filename)
+        width_h = (0, 0)
+        exif = False
+
+    storage_key = f"{uuid.uuid4().hex}.{ext}"
+    get_storage().save(storage_key, clean_bytes)
+    att = Attachment.objects.create(
+        post=post,
+        uploader=uploader,
+        kind=kind,
+        storage_key=storage_key,
+        content_type=content_type,
+        byte_size=len(clean_bytes),
+        sha256=hashlib.sha256(clean_bytes).hexdigest(),
+        original_filename=display_name,
+        width=width_h[0],
+        height=width_h[1],
+        exif_stripped=exif,
+    )
+    record_audit("media.attachment_uploaded", actor=uploader, kind=kind, attachment_id=att.id)
+    return att
+
+
+def can_view_attachment(viewer, attachment) -> bool:
+    """Members of the post's activity thread may view its attachments. A hidden (removed/self-
+    deleted) post's attachments are hidden to everyone but staff; blocked-vs-uploader hides."""
+    from apps.social.services import can_read_thread
+
+    if attachment.post.is_hidden and not getattr(viewer, "is_staff", False):
+        return False
+    if viewer.id != attachment.uploader_id and is_blocked(viewer, attachment.uploader):
+        return False
+    if getattr(viewer, "is_staff", False):
+        return True
+    return can_read_thread(viewer, attachment.post.thread.activity)
+
+
+def attachment_signed_url(attachment, viewer) -> str:
+    if not can_view_attachment(viewer, attachment):
+        raise NotAuthorized("Not allowed to view this file.")
+    token = signing.dumps(
+        {"attachment_id": attachment.id, "viewer_id": viewer.id}, salt=_ATTACH_SIGNING_SALT
+    )
+    return f"/api/media/attachment/{token}/"
+
+
+def resolve_attachment_token(token: str, viewer):
+    try:
+        payload = signing.loads(
+            token, salt=_ATTACH_SIGNING_SALT, max_age=settings.MEDIA_SIGNED_URL_TTL
+        )
+    except signing.BadSignature as exc:
+        raise NotAuthorized("Invalid or expired file link.") from exc
+    if payload.get("viewer_id") != viewer.id:
+        raise NotAuthorized("This file link was issued to a different user.")
+    att = (
+        Attachment.objects.filter(id=payload["attachment_id"])
+        .select_related("post__thread__activity", "uploader")
+        .first()
+    )
+    if att is None or not can_view_attachment(viewer, att):
+        raise NotAuthorized("Not allowed to view this file.")
+    return att
+
+
+@transaction.atomic
+def delete_attachment(actor, attachment) -> None:
+    """Delete an attachment (uploader or staff). The blob is removed; the Post itself remains
+    (the message may still carry text) — to remove the whole message use the post path."""
+    if actor.id != attachment.uploader_id and not getattr(actor, "is_staff", False):
+        raise NotAuthorized("Not allowed to delete this file.")
+    if attachment.storage_key:
+        get_storage().delete(attachment.storage_key)
+    record_audit("media.attachment_deleted", actor=actor, target=attachment)
+    attachment.delete()
+
+
+def attachments_for_posts(posts, viewer):
+    """Map post_id -> [attachment, ...] (with a per-viewer signed `url`) for a batch of posts,
+    so the thread template renders inline media without an N+1. Skips anything the viewer can't
+    see. Bounded by the caller's already-bounded post window."""
+    by_post: dict = {}
+    post_ids = [p.id for p in posts]
+    if not post_ids:
+        return by_post
+    qs = (
+        Attachment.objects.filter(post_id__in=post_ids)
+        .select_related("post__thread__activity", "uploader")
+        .order_by("created_at")
+    )
+    for att in qs:
+        if not can_view_attachment(viewer, att):
+            continue
+        att.url = attachment_signed_url(att, viewer)
+        by_post.setdefault(att.post_id, []).append(att)
+    return by_post
