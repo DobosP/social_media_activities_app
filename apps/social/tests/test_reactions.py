@@ -98,6 +98,47 @@ def test_gate_non_member_invalid_emoji_hidden_cancelled(place, activity_type):
 
 
 @pytest.mark.django_db
+def test_blocked_member_cannot_react(place, activity_type):
+    # A block leaves Membership intact, so the reaction path must re-check it (parity with
+    # post_to_thread) — otherwise a blocked member's emoji would surface on the owner's posts.
+    from apps.safety.services import block_user
+
+    owner, member, activity = _setup(place, activity_type)
+    post = social.post_to_thread(owner, activity, "hi")
+    e = social.allowed_reactions()[0]
+    block_user(member, owner)
+    with pytest.raises(social.InvalidState):
+        social.toggle_reaction(member, post, e)
+    assert not PostReaction.objects.filter(post=post, user=member).exists()
+
+
+@pytest.mark.django_db
+def test_hidden_activity_cannot_react(place, activity_type):
+    owner, member, activity = _setup(place, activity_type)
+    post = social.post_to_thread(owner, activity, "hi")
+    e = social.allowed_reactions()[0]
+    activity.is_hidden = True
+    activity.save(update_fields=["is_hidden"])
+    with pytest.raises(social.InvalidState):
+        social.toggle_reaction(member, post, e)
+
+
+@pytest.mark.django_db
+def test_add_path_is_idempotent_under_a_race(place, activity_type):
+    # toggle_reaction's add path uses get_or_create so a duplicate insert (a racing double-tap
+    # that landed a row between this request's filter and create) is a benign no-op instead of an
+    # IntegrityError that would poison the surrounding atomic block. The unique constraint holds.
+    owner, member, activity = _setup(place, activity_type)
+    post = social.post_to_thread(owner, activity, "hi")
+    e = social.allowed_reactions()[0]
+    # simulate the racing request having already inserted the row, then this request adds:
+    PostReaction.objects.create(post=post, user=member, emoji=e)
+    _, created = PostReaction.objects.get_or_create(post=post, user=member, emoji=e)
+    assert created is False
+    assert PostReaction.objects.filter(post=post, user=member, emoji=e).count() == 1
+
+
+@pytest.mark.django_db
 def test_web_react_toggles_and_shows_no_count(place, activity_type):
     owner, member, activity = _setup(place, activity_type)
     post = social.post_to_thread(owner, activity, "hi")

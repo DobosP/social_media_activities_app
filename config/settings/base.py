@@ -348,6 +348,9 @@ CHAT_MAX_LENGTH = env.int("CHAT_MAX_LENGTH", default=4000)
 # Per-user thread-post rate limit (fixed window). Defaults preserve the old chat limits.
 THREAD_POST_RATE_LIMIT = env.int("THREAD_POST_RATE_LIMIT", default=30)
 THREAD_POST_RATE_WINDOW_SECONDS = env.int("THREAD_POST_RATE_WINDOW_SECONDS", default=60)
+# Reactions are cheaper than posts (a toggle, not content), so a looser per-user fixed window.
+THREAD_REACT_RATE_LIMIT = env.int("THREAD_REACT_RATE_LIMIT", default=60)
+THREAD_REACT_RATE_WINDOW_SECONDS = env.int("THREAD_REACT_RATE_WINDOW_SECONDS", default=60)
 # Hard ceiling on the thread read window (web + DRF), so a long thread can't dump unbounded.
 SOCIAL_THREAD_POST_LIMIT = env.int("SOCIAL_THREAD_POST_LIMIT", default=100)
 # NOTE: thread messages are now permanent + audited (no time-based purge) — the child-safety-

@@ -555,11 +555,20 @@
   // A reaction travels as an ENCRYPTED message whose plaintext is a sentinel JSON
   // {"__r":1,"m":<targetMsgId>,"e":"👍"} — the server only relays ciphertext, so the emoji is
   // private; WHO reacted is the (visible) message-sender metadata, WHAT is the encrypted emoji.
+  // `e` is constrained to the fixed REACTIONS set: the server is ciphertext-blind and CANNOT
+  // police the payload, so this receiving-side allowlist is the only gate. Without it a hostile
+  // co-member could glue arbitrary free text (an off-platform lure, an impersonation string, a
+  // spam wall — each distinct string defeating the dedupe) onto a victim's message bubble. A
+  // sentinel that fails the allowlist returns null → routeMessage renders it as an ordinary
+  // (scannable, reportable) message, the correct fail-safe.
   function asReaction(plaintext) {
     if (!plaintext || plaintext.charAt(0) !== "{") return null;
     try {
       const o = JSON.parse(plaintext);
-      return o && o.__r === 1 && o.m != null && o.e ? o : null;
+      if (o && o.__r === 1 && typeof o.m === "number" && REACTIONS.indexOf(o.e) !== -1) {
+        return o;
+      }
+      return null;
     } catch (e) {
       return null;
     }

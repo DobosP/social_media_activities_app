@@ -770,9 +770,13 @@ def allowed_reactions() -> list:
 
 @transaction.atomic
 def toggle_reaction(user, post, emoji) -> bool:
-    """Add or remove the user's OWN emoji reaction on a thread post. Same membership/cohort/
-    consent gate as posting; refuses a hidden post and a custom emoji. Returns True if now
-    reacted, False if removed. Never exposes a count or a who-list anywhere."""
+    """Add or remove the user's OWN emoji reaction on a thread post. Enforces the SAME write
+    gate as post_to_thread (membership, not-a-guardian, consent, not-blocked-vs-owner, activity
+    not hidden/cancelled) plus a fixed-emoji-set and not-a-hidden-post check, so the reaction
+    surface can never become a weaker side door than posting. Returns True if now reacted, False
+    if removed. Never exposes a count or a who-list anywhere."""
+    from apps.safety.services import allow_action, is_blocked
+
     from .models import PostReaction
 
     if emoji not in allowed_reactions():
@@ -780,6 +784,8 @@ def toggle_reaction(user, post, emoji) -> bool:
     if post.is_hidden:
         raise InvalidState(_("You can't react to that message."))
     activity = post.thread.activity
+    if getattr(activity, "is_hidden", False):
+        raise InvalidState(_("This activity is no longer available."))
     membership = current_members(activity).filter(user=user).first()
     if membership is None:
         raise NotAMember(_("Only current members can react."))
@@ -790,12 +796,23 @@ def toggle_reaction(user, post, emoji) -> bool:
         raise NotEligible(_("Reacting requires verified, consented participation."))
     if activity.status == Activity.Status.CANCELLED:
         raise InvalidState(_("This activity was cancelled; its thread is closed."))
+    if user.id != activity.owner_id and is_blocked(user, activity.owner):
+        # Mirror post_to_thread (a block leaves Membership intact, so it must be re-checked here);
+        # otherwise a blocked-vs-owner member's emoji would surface on the owner's own posts.
+        raise InvalidState(_("This activity is no longer available."))
+    limit = getattr(settings, "THREAD_REACT_RATE_LIMIT", 60)
+    window = getattr(settings, "THREAD_REACT_RATE_WINDOW_SECONDS", 60)
+    if not allow_action(user, "thread_react", limit=limit, window_seconds=window):
+        raise InvalidState(_("You are reacting too quickly; slow down."))
     existing = PostReaction.objects.filter(post=post, user=user, emoji=emoji).first()
     if existing is not None:
         existing.delete()
         return False
-    PostReaction.objects.create(post=post, user=user, emoji=emoji)
-    return True
+    # get_or_create swallows a concurrent duplicate (a fast double-tap) as a benign no-op via its
+    # own savepoint, rather than poisoning this atomic block with an unhandled IntegrityError 500.
+    # (Don't bind the throwaway to ``_`` — that's the module-level gettext alias.)
+    _obj, created = PostReaction.objects.get_or_create(post=post, user=user, emoji=emoji)
+    return created
 
 
 def post_reaction_emojis(post) -> list:
