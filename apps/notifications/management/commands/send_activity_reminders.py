@@ -42,12 +42,15 @@ class Command(BaseCommand):
                 ).exists()
                 if already:
                     continue
-                notify(
+                # notify() returns None when the recipient muted EVENT_REMINDER — don't count
+                # a notice that was never delivered.
+                delivered = notify(
                     membership.user,
                     Notification.Kind.EVENT_REMINDER,
                     title=f"“{activity.title}” is starting soon",
                     body=f"Starts {activity.starts_at:%Y-%m-%d %H:%M}.",
                     url=url,
                 )
-                sent += 1
+                if delivered:
+                    sent += 1
         self.stdout.write(self.style.SUCCESS(f"reminders sent: {sent}"))

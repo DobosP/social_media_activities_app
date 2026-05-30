@@ -332,3 +332,44 @@ def revoke_parental_consent(guardian: User, ward: User) -> int:
 
     remove_user_from_conversations(ward, reason="consent_revoked")
     return revoked
+
+
+def guardianship_capabilities(guardian: User, ward: User) -> dict:
+    """What a guardianship link actually grants, computed from the real rules (F13). Pure,
+    read-only; the legibility panels render exactly these booleans so the displayed can/cannot
+    copy can never drift from enforcement. Every flag maps to a code fact:
+      - can_see_manifest: the F6 read-only meetup manifest (place/time/type only).
+      - can_get_arrival_pings: F3 arrival pings, CHILD wards only (teens self-manage).
+      - can_observe_messaging: consent-gated, CHILD-only, read-only E2EE observer — and only
+        if the guardian has actually set up secure messaging (a key); the panel phrases this
+        conditionally rather than asserting it unconditionally.
+      - can_grant_consent: only while the guardian is a currently-verified adult and minor
+        onboarding is enabled.
+    """
+    rel = (
+        GuardianRelationship.objects.filter(
+            guardian=guardian, ward=ward, status=GuardianRelationship.Status.ACTIVE
+        )
+        .only("relationship")
+        .first()
+    )
+    consent_active = any(
+        c.is_valid()
+        for c in ParentalConsent.objects.filter(
+            minor=ward, guardian_identifier=str(guardian.public_id)
+        )
+    )
+    is_child = ward.cohort == Cohort.CHILD
+    return {
+        "relationship": (rel.relationship if rel else "") or "guardian",
+        "consent_active": consent_active,
+        "requires_consent": ward.requires_parental_consent,
+        "can_see_manifest": True,
+        "can_get_arrival_pings": is_child,
+        "can_observe_messaging": is_child and consent_active,
+        "can_grant_consent": (
+            ward.requires_parental_consent
+            and minor_onboarding_enabled()
+            and can_participate(guardian)
+        ),
+    }

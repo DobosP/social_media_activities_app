@@ -3,15 +3,19 @@
 {% block title %}Notifications{% endblock %}
 {% block content %}
 <h1>Notifications</h1>
-{% if items %}
-<form method="post" action="{% url 'notifications_read_all' %}">{% csrf_token %}
-  <button class="btn btn-sm btn-secondary" type="submit">Mark all read</button></form>
-{% endif %}
+<div class="row" style="gap:.5rem">
+  {% if items %}
+    <form method="post" action="{% url 'notifications_read_all' %}">{% csrf_token %}
+      <button class="btn btn-sm btn-secondary" type="submit">Mark all read</button></form>
+  {% endif %}
+  <a class="btn btn-sm btn-secondary" href="{% url 'notification_preferences' %}">Notification settings</a>
+</div>
 <div class="grid" style="margin-top:.6rem">
   {% for n in items %}
     <div class="card" style="{% if not n.read_at %}border-left:3px solid var(--accent){% endif %}">
       <strong>{{ n.title }}</strong>{% if not n.read_at %} <span class="tag">new</span>{% endif %}
       {% if n.body %}<p>{{ n.body }}</p>{% endif %}
+      {% if n.why %}<p class="muted" style="font-size:.8rem">Why you got this: {{ n.why }}</p>{% endif %}
       <p class="muted">{{ n.created_at|date:"j M H:i" }}{% if n.url|safe_href %} &middot; <a href="{{ n.url|safe_href }}">view</a>{% endif %}</p>
     </div>
   {% empty %}<p class="muted">No notifications yet.</p>{% endfor %}

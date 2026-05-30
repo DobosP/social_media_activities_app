@@ -31,8 +31,43 @@ class MediaRejected(MediaError):
     """Upload failed safety scanning and was not stored."""
 
 
+class DuplicateProfileImage(MediaError):
+    """A profile picture whose content duplicates another user's profile picture."""
+
+
 def _is_member(user, thread) -> bool:
     return current_members(thread.activity).filter(user=user).exists()
+
+
+def profile_image_is_taken(uploader, content_digest: str) -> bool:
+    """Whether another user IN THE SAME COHORT already uses a profile picture with this exact
+    content.
+
+    First-pass definition of "unique": byte-identical stored content — the post-EXIF-strip
+    re-encode whose hash we keep in ``Photo.sha256`` (NOT the raw upload, so two images that
+    differ only in stripped metadata still collide). This is the single seam for refining
+    what "unique" means later (e.g. perceptual near-duplicate detection): callers and tests
+    go through it, so the rule can change here without touching the upload pipeline.
+
+    Scoped to the uploader's own cohort so the duplicate boolean never crosses the cohort
+    wall — an adult must not be able to probe whether a given image is a child's avatar
+    (profile photos are only viewable within a cohort; see can_view_photo).
+
+    Guarantee is best-effort and exact-bytes only: it is NOT perceptual and NOT
+    impersonation-proof — a re-encode, resize, or single-pixel change defeats it, and the
+    digest is tied to the Pillow/codec version. Do not assume it prevents lookalike avatars.
+    """
+    if not content_digest:
+        return False
+    return (
+        Photo.objects.filter(
+            kind=Photo.Kind.PROFILE,
+            sha256=content_digest,
+            uploader__cohort=uploader.cohort,
+        )
+        .exclude(uploader=uploader)
+        .exists()
+    )
 
 
 @transaction.atomic
@@ -73,6 +108,17 @@ def upload_photo(uploader, kind, data: bytes, *, thread=None) -> Photo:
         raise MediaRejected("Image failed safety screening and was not stored.")
 
     digest = hashlib.sha256(clean_bytes).hexdigest()
+
+    # Profile pictures must be unique by content: refuse one byte-identical to another user's
+    # avatar (checked before storing so a rejected duplicate leaves no orphan blob). See
+    # profile_image_is_taken for the (extensible) definition of "unique".
+    if kind == Photo.Kind.PROFILE and profile_image_is_taken(uploader, digest):
+        # The reason is recorded for audit only. The user-facing message is deliberately
+        # GENERIC (indistinguishable from other "bad image" rejections) so avatar upload
+        # cannot be used as an oracle to confirm a specific image is in use as someone's
+        # avatar — a presence-confirmation primitive we must not hand out on a child platform.
+        record_audit("media.profile_duplicate_rejected", actor=uploader, sha256=digest)
+        raise DuplicateProfileImage("Please choose a different image.")
 
     storage_key = f"{uuid.uuid4().hex}.{extension_for(fmt)}"
     get_storage().save(storage_key, clean_bytes)

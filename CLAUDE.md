@@ -100,3 +100,13 @@ Built on the social core; see services/tests for exact behaviour. All uphold the
   `expire_arrivals` so it never becomes a presence record.
 - **Parent meetup manifest** — read-only `/wards/` view of each ward's upcoming place/time/type.
 - **Safe-exit card** + **use-my-location** (request-only proximity) in `apps/web/`.
+- **Unique profile images** — `media.services.profile_image_is_taken` rejects a profile picture
+  byte-identical (post-EXIF-strip `sha256`) to another user's **within the same cohort** (the
+  single seam to refine "unique" later). Generic rejection message + rate-limited upload so it
+  can't be used as an enumeration oracle. Best-effort, not perceptual / not impersonation-proof.
+- **Consent & guardianship legibility (F13)** — two-sided read-only panels (`/wards/`, `/guardianship/`)
+  stating exactly what a link grants, from `accounts.guardianship_capabilities`; guardian-side revoke
+  reuses `accounts.revoke_guardian`. Ward side is legibility-only (no ward-initiated unlink).
+- **Notification reasons & per-kind mute (F31)** — `NotificationPreference` + a mute gate in the single
+  `notifications.notify()` choke point. **MODERATION (DSA Art.17) and SYSTEM (DSA Art.16) are never
+  mutable** — checked first, before any lookup. Each notice carries a "why you got this" line.
