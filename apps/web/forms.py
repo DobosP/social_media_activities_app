@@ -3,7 +3,20 @@ from django import forms
 from apps.accounts.models import AgeBand
 from apps.places.models import Place
 from apps.safety.models import ReasonCode
+from apps.social.serializers import LOGISTICS_FIELD_MAX_LENGTH
 from apps.taxonomy.models import ActivityType
+
+
+def _logistics_field(help_text=""):
+    """An optional, length-capped logistics text field (F9), shared by the create and edit
+    forms so the cap matches the serializer/model on both web paths."""
+    return forms.CharField(
+        required=False,
+        max_length=LOGISTICS_FIELD_MAX_LENGTH,
+        widget=forms.Textarea(attrs={"rows": 2}),
+        help_text=help_text,
+    )
+
 
 # Demo age assurance for the web sign-up. In production the real EU age-verification /
 # EUDI flow (apps/accounts) replaces this; the user does not self-declare.
@@ -45,6 +58,9 @@ class ActivityForm(forms.Form):
     starts_at = _dt_field()
     ends_at = _dt_field(required=False)
     capacity = forms.IntegerField(required=False, min_value=1, help_text="Blank = unlimited.")
+    meeting_point = _logistics_field("Where exactly to meet (e.g. north gate by the fountain).")
+    what_to_bring = _logistics_field("What members should bring.")
+    organizer_note = _logistics_field("A short note for members.")
 
     def clean(self):
         cleaned = super().clean()
@@ -64,6 +80,9 @@ class ActivityEditForm(forms.Form):
     starts_at = _dt_field()
     ends_at = _dt_field(required=False)
     capacity = forms.IntegerField(required=False, min_value=1, help_text="Blank = unlimited.")
+    meeting_point = _logistics_field("Where exactly to meet (e.g. north gate by the fountain).")
+    what_to_bring = _logistics_field("What members should bring.")
+    organizer_note = _logistics_field("A short note for members.")
 
     def clean(self):
         cleaned = super().clean()

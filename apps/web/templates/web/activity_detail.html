@@ -44,6 +44,28 @@
       <form method="post" action="{% url 'activity_leave' activity.pk %}" class="inline" style="float:right">{% csrf_token %}
         <button class="linkbtn" type="submit">Leave</button></form>
     {% endif %}
+    {% if arrival_window_open and not my_arrival %}
+      <form method="post" action="{% url 'activity_arrived' activity.pk %}" style="margin:.4rem 0">{% csrf_token %}
+        <button class="btn btn-sm" type="submit">&#128205; I've arrived</button>
+        <span class="muted" style="font-size:.75rem">Tells the group you're here &mdash; no location shared.</span>
+      </form>
+    {% elif my_arrival %}
+      <p class="muted" style="margin:.4rem 0">&#10003; You marked yourself here at {{ my_arrival|date:"H:i" }} &mdash; your group was notified.</p>
+    {% endif %}
+    <div class="row" style="gap:.4rem;align-items:center;margin:.4rem 0;flex-wrap:wrap">
+      <span class="muted">Coming: <strong>{{ rsvp_summary.going }}</strong> of {{ rsvp_summary.total }}</span>
+      <form class="inline" method="post" action="{% url 'activity_rsvp' activity.pk %}">{% csrf_token %}
+        <input type="hidden" name="intent" value="going">
+        <button class="btn btn-sm{% if my_membership.attendance_intent != 'going' %} btn-secondary{% endif %}" type="submit">I'm coming</button></form>
+      <form class="inline" method="post" action="{% url 'activity_rsvp' activity.pk %}">{% csrf_token %}
+        <input type="hidden" name="intent" value="not_going">
+        <button class="btn btn-sm{% if my_membership.attendance_intent != 'not_going' %} btn-secondary{% endif %}" type="submit">Can't make it</button></form>
+      {% if my_membership.attendance_intent != 'unknown' %}
+        <form class="inline" method="post" action="{% url 'activity_rsvp' activity.pk %}">{% csrf_token %}
+          <input type="hidden" name="intent" value="unknown">
+          <button class="linkbtn" type="submit">clear</button></form>
+      {% endif %}
+    </div>
     <h3>Pending join requests</h3>
     {% for m in pending %}
       <div class="row" style="justify-content:space-between">
@@ -86,6 +108,15 @@
     </div>
   </div>
 {% endif %}
+
+{% if is_member or is_owner %}{% if activity.meeting_point or activity.what_to_bring or activity.organizer_note %}
+  <div class="card" style="border-left:3px solid var(--accent)">
+    <strong>Meetup logistics</strong>
+    {% if activity.meeting_point %}<p style="margin:.4rem 0 0"><span class="muted">Where to meet:</span><br>{{ activity.meeting_point|linebreaksbr }}</p>{% endif %}
+    {% if activity.what_to_bring %}<p style="margin:.4rem 0 0"><span class="muted">What to bring:</span><br>{{ activity.what_to_bring|linebreaksbr }}</p>{% endif %}
+    {% if activity.organizer_note %}<p style="margin:.4rem 0 0"><span class="muted">From the organiser:</span><br>{{ activity.organizer_note|linebreaksbr }}</p>{% endif %}
+  </div>
+{% endif %}{% endif %}
 
 <h2>Members</h2>
 <ul class="members">

@@ -13,6 +13,7 @@ class Notification(models.Model):
         ACTIVITY_CANCELLED = "activity_cancelled", "Activity cancelled"
         ACTIVITY_UPDATED = "activity_updated", "Activity updated"
         ANNOUNCEMENT = "announcement", "Organizer announcement"
+        ARRIVAL = "arrival", "Arrival"
         MODERATION = "moderation", "Moderation notice"
         SYSTEM = "system", "System"
 

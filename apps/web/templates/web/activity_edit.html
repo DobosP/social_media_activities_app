@@ -3,7 +3,8 @@
 {% block content %}
 <p class="muted"><a href="{% url 'activity_detail' activity.pk %}">&larr; Back to activity</a></p>
 <h1>Edit activity</h1>
-<p class="muted">You can change the title, description, time, end time and capacity. The place
+<p class="muted">You can change the title, description, time, end time, capacity and the meetup
+  logistics (where to meet, what to bring, an organiser note). The place
   (<strong>{{ activity.place.name|default:"a place" }}</strong>) and activity type
   (<strong>{{ activity.activity_type.name }}</strong>) are fixed once an activity exists.
   Changing the start time re-notifies everyone who joined.</p>

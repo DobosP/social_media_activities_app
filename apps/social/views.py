@@ -17,17 +17,21 @@ from .serializers import (
     PostSerializer,
 )
 from .services import (
+    InvalidState,
     NotAMember,
     NotEligible,
     SocialError,
     add_guardian,
+    attendance_summary,
     cancel_activity,
     cast_vote,
     create_activity,
     leave_activity,
+    mark_arrived,
     owner_admit,
     post_to_thread,
     request_to_join,
+    set_attendance_intent,
     update_activity,
     visible_activities,
     with_counts,
@@ -110,6 +114,31 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
         except SocialError as exc:
             raise PermissionDenied(str(exc)) from exc
         return Response(ActivitySerializer(activity).data)
+
+    @action(detail=True, methods=["post"])
+    def rsvp(self, request, pk=None):
+        """A member flips their transient go/no-go (F20). Returns the live going/total
+        count for the activity. Member-only; never aggregated into per-user history."""
+        actor = self._actor(request)
+        activity = self._activity_for(actor, pk)
+        try:
+            set_attendance_intent(actor, activity, request.data.get("intent"))
+        except NotAMember as exc:
+            raise PermissionDenied(str(exc)) from exc
+        except InvalidState as exc:
+            raise ValidationError(str(exc)) from exc
+        return Response(attendance_summary(activity))
+
+    @action(detail=True, methods=["post"])
+    def arrived(self, request, pk=None):
+        """Self-declared "I've arrived" (F3). Always the authenticated user — never
+        on_behalf_of, since an arrival ping must be the member's own tap."""
+        activity = self._activity_for(request.user, pk)
+        try:
+            membership = mark_arrived(request.user, activity)
+        except SocialError as exc:
+            raise PermissionDenied(str(exc)) from exc
+        return Response(MembershipSerializer(membership).data)
 
     @action(detail=True, methods=["post"])
     def join(self, request, pk=None):

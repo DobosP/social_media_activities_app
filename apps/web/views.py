@@ -370,6 +370,7 @@ def activity_detail(request, pk):
     ]
 
     is_owner = activity.owner_id == user.id
+    my_arrival = my_membership.arrived_at if (is_member and my_membership) else None
     return render(
         request,
         "web/activity_detail.html",
@@ -386,6 +387,9 @@ def activity_detail(request, pk):
             "photos": photos,
             "post_form": PostForm(),
             "my_guardians": my_guardians,
+            "my_arrival": my_arrival,
+            "arrival_window_open": is_member and social.arrival_window_open(activity),
+            "rsvp_summary": social.attendance_summary(activity),
             "can_join": social.can_join(user, activity),
             **_nav_context(user),
         },
@@ -444,6 +448,9 @@ def activity_edit(request, pk):
                 "starts_at": activity.starts_at,
                 "ends_at": activity.ends_at,
                 "capacity": activity.capacity,
+                "meeting_point": activity.meeting_point,
+                "what_to_bring": activity.what_to_bring,
+                "organizer_note": activity.organizer_note,
             }
         )
     return render(
@@ -478,6 +485,32 @@ def activity_announce(request, pk):
             messages.success(request, "Announcement posted - members notified.")
         except social.SocialError as exc:
             messages.error(request, _msg(exc))
+    return redirect("activity_detail", pk=pk)
+
+
+@login_required
+@require_POST
+def activity_rsvp(request, pk):
+    """A member sets their transient go/no-go for this meetup (F20)."""
+    activity = _visible_activity_or_404(request.user, pk)
+    try:
+        social.set_attendance_intent(request.user, activity, request.POST.get("intent"))
+    except social.SocialError as exc:
+        messages.error(request, _msg(exc))
+    return redirect("activity_detail", pk=pk)
+
+
+@login_required
+@require_POST
+def activity_arrived(request, pk):
+    """A member self-declares "I've arrived" (F3); their group (and a child's guardian) are
+    quietly told. No location, no note — just the tap."""
+    activity = _visible_activity_or_404(request.user, pk)
+    try:
+        social.mark_arrived(request.user, activity)
+        messages.success(request, "Thanks - your group has been told you're here.")
+    except social.SocialError as exc:
+        messages.error(request, _msg(exc))
     return redirect("activity_detail", pk=pk)
 
 
