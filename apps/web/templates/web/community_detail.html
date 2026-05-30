@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ community.name }}{% endblock %}
+{% block content %}
+<p class="muted"><a href="{% url 'communities' %}">&larr; Communities</a></p>
+<h1>{{ community.name }}</h1>
+<p class="muted">Upcoming
+  {% if community.activity_type %}{{ community.activity_type.name }}{% else %}{{ community.category.name }}{% endif %}
+  activities in {{ community.area.name }} &mdash; soonest first.</p>
+
+{% for a in activities %}
+  {% include "web/_activity_card.html" %}
+{% empty %}
+  <p class="muted">No upcoming activities here right now.
+    <a class="btn btn-sm" href="{% url 'activity_create' %}">Organise one</a></p>
+{% endfor %}
+{% endblock %}

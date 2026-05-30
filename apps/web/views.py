@@ -76,6 +76,41 @@ from .forms import (
     ReportForm,
 )
 
+# --- Communities (derived geo x activity-type discovery labels) -------------------------
+
+
+@login_required
+def communities_page(request):
+    """A paginated, alphabetical list of the viewer's-cohort communities (no counts, no
+    'trending'/'hot' — just named lists of activities to go to)."""
+    from django.core.paginator import Paginator
+
+    from apps.communities import services as communities
+
+    qs = communities.visible_communities(request.user)
+    page = Paginator(qs, 30).get_page(request.GET.get("page"))
+    return render(request, "web/communities.html", {"page": page, **_nav_context(request.user)})
+
+
+@login_required
+def community_detail(request, slug):
+    """A community's upcoming activities — the existing cohort-filtered feed narrowed to this
+    (area x type). Cohort-walled (404 for a cross-cohort/unpublished slug); NO roster, NO
+    member count, NO contact button — just activity cards."""
+    from apps.communities import services as communities
+
+    community = communities.community_by_slug(slug, request.user)
+    if community is None:
+        raise Http404("No such community.")
+    limit = getattr(settings, "COMMUNITY_ACTIVITIES_PAGE_SIZE", 100)
+    activities = list(communities.community_activities(community, request.user)[:limit])
+    return render(
+        request,
+        "web/community_detail.html",
+        {"community": community, "activities": activities, **_nav_context(request.user)},
+    )
+
+
 # --- Connections (find + reconnect with people you've shared real activities with) ------
 
 
@@ -745,6 +780,10 @@ def activity_detail(request, pk):
     ]
 
     is_owner = activity.owner_id == user.id
+    # Communities this activity belongs to (its area x type/category), as a discovery affordance.
+    from apps.communities.services import communities_for_activity
+
+    activity_communities = communities_for_activity(activity)
     # Connections: show a "connect" button on co-members (only when the feature is enabled for
     # the viewer's cohort, and not for someone already connected/requested). Co-membership here
     # satisfies the shared-activity precondition; the service still re-applies the full gate.
@@ -775,6 +814,7 @@ def activity_detail(request, pk):
             "members": members,
             "is_member": is_member,
             "is_owner": is_owner,
+            "activity_communities": activity_communities,
             "conn_enabled": conn_enabled,
             "conn_related_ids": conn_related_ids,
             "is_open": activity.status == Activity.Status.OPEN,

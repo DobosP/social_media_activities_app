@@ -24,6 +24,7 @@ DUE_JOBS = (
     ("auto_complete_activities", {}),
     ("expire_arrivals", {}),
     ("send_activity_reminders", {}),
+    ("generate_communities", {}),
 )
 
 

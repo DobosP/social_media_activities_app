@@ -62,7 +62,8 @@ threads, join-by-vote, memberships) · `safety` (reporting, blocking, moderation
 `messaging` (E2EE direct/group) · `media` (profile + private photos + thread image/PDF attachments) ·
 `events` (iCal feeds) · `booking` · `discovery` + `recommendations` (feeds, pgvector) ·
 `notifications` · `donations` · `connections` (find/reconnect with people you've shared an
-activity with — the discovery layer in front of `messaging`) ·
+activity with — the discovery layer in front of `messaging`) · `communities` (derived per-cohort
+geo×type discovery labels, e.g. "Cluj-Napoca Football") ·
 `ops` (`/healthz`, jobs, GDPR erasure) · `web` (server-rendered UI).
 
 ## Local run & tests (Docker)
@@ -203,6 +204,24 @@ Built on the social core; see services/tests for exact behaviour. All uphold the
   requires an accepted connection then reuses `messaging.start_direct` (never bypasses messaging's own gate). Web
   (`/connections/` + a co-member “connect” button, guardian viewers excluded) + a DRF `ConnectionViewSet`; the web
   `connection_request` uses `_safe_next` (open-redirect guard). New mutable `Notification.Kind` CONNECTION_REQUEST/ACCEPTED.
+  Connections are enabled for **all cohorts within their own cohort** (`CONNECTIONS_ALLOWED_COHORTS`; cross-age stays
+  structurally impossible via the same-cohort `can_connect` gate).
+- **Communities (derived geo×activity-type discovery labels)** — a "community" (e.g. "Cluj-Napoca Football") is a
+  **materialized SAVED-SEARCH with a human name**, NOT a room/roster/feed/chat. `communities.Community` pins one
+  coordinate on each of two existing FK chains — the GEO axis (`Place.address_city` → an `Area`; finer PostGIS areas
+  later) and the TAXONOMY axis (`ActivityType → category`). **Materialized PER COHORT** by the nightly
+  `generate_communities` job (in `ops` `DUE_JOBS`) only above `COMMUNITY_MIN_ACTIVITIES` + `COMMUNITY_MIN_DAYS` + a
+  **k-anonymity floor** counted as DISTINCT non-guardian peers of that cohort (a supervisory guardian never counts toward
+  a minor slice) — so a child never sees the **existence** of a community built off adult activity. The single read
+  primitive `community_activities(community, viewer)` **asserts `viewer.cohort == community.cohort`** then routes through
+  the existing `social.visible_activities(viewer)` and only narrows it — there is no second read path. **Membership is
+  never stored or shown** (no count, no roster — a serializer-allowlist test enforces it); ordering is deterministic
+  (alphabetical/soonest-first, never hot/trending); the list is paginated; no community-digest notification. Activities
+  map in by **predicate at read time** (nothing written on the Activity; place/type/cohort are immutable). The
+  **private-contact wall is untouched** — co-presence in a community is **not** a shared activity, so it never enables
+  `can_connect` (pinned by a test). Generic across all activity types (sports is just the launch slice). New Activity
+  indexes `(cohort, activity_type)` / `(cohort, place)` keep the predicate + generator index-scan. Read surfaces are
+  members-only (`IsAuthenticated`, web + DRF `CommunityViewSet`); deactivate-not-delete self-heals a dry spell.
 - **Group-thread media (images + PDF, no video)** — `media.Attachment` (FK to `social.Post`) puts media IN the unified
   conversation, members-only. `attach_to_post` reuses the Photo pipeline: image **EXIF-strip + re-encode**
   (`validate_and_strip`, PNG/JPEG/WEBP only), **fail-closed** hash-blocklist scan on the original bytes (reject unless the

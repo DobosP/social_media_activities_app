@@ -90,6 +90,9 @@ urlpatterns = [
         name="notification_preferences",
     ),
     path("messages/", views.messages_page, name="messages"),
+    # Communities
+    path("communities/", views.communities_page, name="communities"),
+    path("communities/<slug:slug>/", views.community_detail, name="community_detail"),
     # Connections
     path("connections/", views.connections_page, name="connections"),
     path("connections/request/", views.connection_request, name="connection_request"),

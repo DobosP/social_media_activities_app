@@ -103,6 +103,10 @@ class Activity(models.Model):
         indexes = [
             models.Index(fields=["cohort", "status"]),
             models.Index(fields=["starts_at"]),
+            # Communities map activities by (cohort, type) and (cohort, place); index both so the
+            # community read predicate + the nightly generator are index scans, not seq scans.
+            models.Index(fields=["cohort", "activity_type"]),
+            models.Index(fields=["cohort", "place"]),
         ]
 
     def __str__(self):

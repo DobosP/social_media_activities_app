@@ -14,6 +14,10 @@
 </div>
 <p class="muted">{{ activity.starts_at|date:"l j F Y, H:i" }}{% if activity.ends_at %} &ndash; {{ activity.ends_at|date:"H:i" }}{% endif %}<br>
   at <a href="{% url 'place_detail' activity.place.pk %}">{{ activity.place.name|default:"a place" }}</a>{% if activity.place.address_city %}, {{ activity.place.address_city }}{% endif %}</p>
+{% if activity_communities %}
+  <p class="muted" style="font-size:.85rem">Part of:
+    {% for c in activity_communities %}<a class="tag" href="{% url 'community_detail' c.slug %}">{{ c.name }}</a> {% endfor %}</p>
+{% endif %}
 {% if activity.description %}<p>{{ activity.description|linebreaks }}</p>{% endif %}
 {% if activity.accessibility_notes %}<p class="muted"><strong>Accessibility:</strong><br>{{ activity.accessibility_notes|linebreaksbr }}</p>{% endif %}
 <p class="muted">Organised by {{ activity.owner.display_name|default:activity.owner.username }}.
