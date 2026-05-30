@@ -3,6 +3,7 @@ from django import forms
 from apps.accounts.models import AgeBand
 from apps.places.models import Place
 from apps.safety.models import ReasonCode
+from apps.social.models import Activity
 from apps.social.serializers import LOGISTICS_FIELD_MAX_LENGTH
 from apps.taxonomy.models import ActivityType
 
@@ -61,12 +62,38 @@ class ActivityForm(forms.Form):
     meeting_point = _logistics_field("Where exactly to meet (e.g. north gate by the fountain).")
     what_to_bring = _logistics_field("What members should bring.")
     organizer_note = _logistics_field("A short note for members.")
+    cost_band = forms.ChoiceField(
+        choices=Activity.CostBand.choices,
+        required=False,
+        initial=Activity.CostBand.UNSPECIFIED,
+        help_text="Roughly what it costs to take part.",
+    )
+    difficulty = forms.ChoiceField(
+        choices=Activity.Difficulty.choices,
+        required=False,
+        initial=Activity.Difficulty.UNSPECIFIED,
+        help_text="How physically demanding it is.",
+    )
+    accessibility_notes = _logistics_field(
+        "Accessibility info (step-free access, quiet space, etc.)."
+    )
+    beginners_welcome = forms.BooleanField(
+        required=False,
+        label="Beginners welcome",
+        help_text="Tick if first-timers are explicitly welcome.",
+    )
 
     def clean(self):
         cleaned = super().clean()
         starts, ends = cleaned.get("starts_at"), cleaned.get("ends_at")
         if starts and ends and ends < starts:
             self.add_error("ends_at", "End time cannot be before the start time.")
+        # A ChoiceField(required=False) can yield "" — coerce to the sentinel so the model's
+        # choices validation isn't bypassed (Activity.objects.create skips full_clean()).
+        if not cleaned.get("cost_band"):
+            cleaned["cost_band"] = Activity.CostBand.UNSPECIFIED
+        if not cleaned.get("difficulty"):
+            cleaned["difficulty"] = Activity.Difficulty.UNSPECIFIED
         return cleaned
 
 
@@ -83,12 +110,38 @@ class ActivityEditForm(forms.Form):
     meeting_point = _logistics_field("Where exactly to meet (e.g. north gate by the fountain).")
     what_to_bring = _logistics_field("What members should bring.")
     organizer_note = _logistics_field("A short note for members.")
+    cost_band = forms.ChoiceField(
+        choices=Activity.CostBand.choices,
+        required=False,
+        initial=Activity.CostBand.UNSPECIFIED,
+        help_text="Roughly what it costs to take part.",
+    )
+    difficulty = forms.ChoiceField(
+        choices=Activity.Difficulty.choices,
+        required=False,
+        initial=Activity.Difficulty.UNSPECIFIED,
+        help_text="How physically demanding it is.",
+    )
+    accessibility_notes = _logistics_field(
+        "Accessibility info (step-free access, quiet space, etc.)."
+    )
+    beginners_welcome = forms.BooleanField(
+        required=False,
+        label="Beginners welcome",
+        help_text="Tick if first-timers are explicitly welcome.",
+    )
 
     def clean(self):
         cleaned = super().clean()
         starts, ends = cleaned.get("starts_at"), cleaned.get("ends_at")
         if starts and ends and ends < starts:
             self.add_error("ends_at", "End time cannot be before the start time.")
+        # A ChoiceField(required=False) can yield "" — coerce to the sentinel so the model's
+        # choices validation isn't bypassed (Activity.objects.create skips full_clean()).
+        if not cleaned.get("cost_band"):
+            cleaned["cost_band"] = Activity.CostBand.UNSPECIFIED
+        if not cleaned.get("difficulty"):
+            cleaned["difficulty"] = Activity.Difficulty.UNSPECIFIED
         return cleaned
 
 

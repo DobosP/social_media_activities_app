@@ -32,6 +32,10 @@ class ActivitySerializer(serializers.ModelSerializer):
             "meeting_point",
             "what_to_bring",
             "organizer_note",
+            "cost_band",
+            "difficulty",
+            "accessibility_notes",
+            "beginners_welcome",
             "owner",
             "place",
             "activity_type",
@@ -86,6 +90,16 @@ class ActivityCreateSerializer(serializers.Serializer):
     organizer_note = serializers.CharField(
         required=False, allow_blank=True, default="", max_length=LOGISTICS_FIELD_MAX_LENGTH
     )
+    cost_band = serializers.ChoiceField(
+        choices=Activity.CostBand.choices, required=False, default=Activity.CostBand.UNSPECIFIED
+    )
+    difficulty = serializers.ChoiceField(
+        choices=Activity.Difficulty.choices, required=False, default=Activity.Difficulty.UNSPECIFIED
+    )
+    accessibility_notes = serializers.CharField(
+        required=False, allow_blank=True, default="", max_length=LOGISTICS_FIELD_MAX_LENGTH
+    )
+    beginners_welcome = serializers.BooleanField(required=False, default=False)
 
 
 class ActivityUpdateSerializer(serializers.Serializer):
@@ -110,6 +124,14 @@ class ActivityUpdateSerializer(serializers.Serializer):
     organizer_note = serializers.CharField(
         required=False, allow_blank=True, max_length=LOGISTICS_FIELD_MAX_LENGTH
     )
+    # No defaults below: a default would inject the field on every partial PATCH that omits
+    # it and silently overwrite the stored value (e.g. reset beginners_welcome to False).
+    cost_band = serializers.ChoiceField(choices=Activity.CostBand.choices, required=False)
+    difficulty = serializers.ChoiceField(choices=Activity.Difficulty.choices, required=False)
+    accessibility_notes = serializers.CharField(
+        required=False, allow_blank=True, max_length=LOGISTICS_FIELD_MAX_LENGTH
+    )
+    beginners_welcome = serializers.BooleanField(required=False)
 
 
 class MembershipSerializer(serializers.ModelSerializer):

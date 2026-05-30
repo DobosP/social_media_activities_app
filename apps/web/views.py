@@ -3,6 +3,7 @@ services the API uses, so the safety invariants (cohort isolation, consent gatin
 membership-scoped media) hold identically here."""
 
 import math
+from datetime import datetime
 
 from django.conf import settings
 from django.contrib import messages
@@ -56,6 +57,7 @@ from apps.social.models import Activity, JoinVote, Membership
 from apps.taxonomy.models import ActivityType
 
 from .forms import (
+    _DT_FORMATS,
     ActivityEditForm,
     ActivityForm,
     DonateForm,
@@ -239,15 +241,31 @@ def home(request):
         return render(request, "web/landing.html")
     user = request.user
     recommended = recs.recommend_activities(user, limit=8)
+    # F17: an HONEST reason per card, computed from the viewer's OWN declared interests (one
+    # query, no per-card N+1). "matches your interest in X" is emitted only when the activity's
+    # type is actually in that set; cold-start (no distance) is labelled "soonest first"; an
+    # uncategorised similarity keeps the genuine "% match".
+    interest_names = dict(
+        UserInterest.objects.filter(user=user).values_list(
+            "activity_type__slug", "activity_type__name"
+        )
+    )
     for a in recommended:
         distance = getattr(a, "rec_distance", None)
         if distance is not None:
             a.match_pct = max(0, min(100, round((1 - float(distance)) * 100)))
+        if distance is None:  # `is None`, never falsy — a perfect match is distance 0.0
+            a.rec_reason = "soonest first"
+        elif a.activity_type.slug in interest_names:
+            a.rec_reason = f"matches your interest in {interest_names[a.activity_type.slug]}"
+    beginners_only = request.GET.get("beginners") == "true"
     upcoming_qs = (
         social.visible_activities(user)
         .filter(status=Activity.Status.OPEN, starts_at__gte=timezone.now())
         .select_related("place", "activity_type", "owner")
     )
+    if beginners_only:
+        upcoming_qs = upcoming_qs.filter(beginners_welcome=True)
     upcoming_qs, near_active = _order_feed_by_location(upcoming_qs, request.GET)
     upcoming = upcoming_qs[:20]
     # "Your activities" shows only live meetups: a cancelled/completed one shouldn't sit in
@@ -277,6 +295,7 @@ def home(request):
             "mine": mine,
             "events": events,
             "near_active": near_active,
+            "beginners_only": beginners_only,
             "guardian_invites": list(pending_guardian_invites_for(user)),
             **_nav_context(user),
         },
@@ -331,11 +350,19 @@ def activity_list(request):
         .filter(status=Activity.Status.OPEN, starts_at__gte=timezone.now())
         .select_related("place", "activity_type", "owner")
     )
+    beginners_only = request.GET.get("beginners") == "true"
+    if beginners_only:
+        activities = activities.filter(beginners_welcome=True)
     activities, near_active = _order_feed_by_location(activities, request.GET)
     return render(
         request,
         "web/activities.html",
-        {"activities": activities, "near_active": near_active, **_nav_context(request.user)},
+        {
+            "activities": activities,
+            "near_active": near_active,
+            "beginners_only": beginners_only,
+            **_nav_context(request.user),
+        },
     )
 
 
@@ -430,6 +457,19 @@ def activity_create(request):
     initial = {}
     if request.GET.get("place"):
         initial["place"] = request.GET["place"]
+    # F40: seed the form from an event the owner wants to convene around. Every GET value is
+    # validated so a crafted URL can't 500 or inject an inactive type; the owner still edits
+    # before submit, and create_activity pins the cohort, so there's no isolation impact.
+    atype_id = request.GET.get("activity_type", "")
+    if atype_id.isdigit() and ActivityType.objects.filter(pk=atype_id, is_active=True).exists():
+        initial["activity_type"] = atype_id
+    raw_starts = request.GET.get("starts_at", "")
+    for fmt in _DT_FORMATS:
+        try:
+            initial["starts_at"] = datetime.strptime(raw_starts, fmt)
+            break
+        except ValueError:
+            continue
     if request.method == "POST":
         form = ActivityForm(request.POST)
         if form.is_valid():
@@ -473,6 +513,10 @@ def activity_edit(request, pk):
                 "meeting_point": activity.meeting_point,
                 "what_to_bring": activity.what_to_bring,
                 "organizer_note": activity.organizer_note,
+                "cost_band": activity.cost_band,
+                "difficulty": activity.difficulty,
+                "accessibility_notes": activity.accessibility_notes,
+                "beginners_welcome": activity.beginners_welcome,
             }
         )
     return render(

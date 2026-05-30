@@ -36,7 +36,9 @@
 {% for a in mine %}{% include "web/_activity_card.html" %}{% endfor %}
 {% endif %}
 
-<h2>Upcoming in your cohort</h2>
+<h2>Upcoming in your cohort
+  {% if beginners_only %}<a class="muted" style="font-size:.8rem" href="?">show all</a>{% else %}<a class="muted" style="font-size:.8rem" href="?beginners=true">beginners welcome only</a>{% endif %}
+</h2>
 {% include "web/_near_me.html" %}
 {% for a in upcoming %}{% include "web/_activity_card.html" %}{% empty %}
 <p class="muted">Nothing upcoming yet. Be the first to organise something!</p>{% endfor %}
