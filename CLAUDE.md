@@ -118,3 +118,10 @@ Built on the social core; see services/tests for exact behaviour. All uphold the
 - **Your safety record (F19)** — `safety.safety_record_for` powers `/my-safety-record/`: a user's own DSA
   Art.16/17 record (moderation decisions about their account/activities/posts + reports they filed).
   Strictly self-scoped, field-allowlisted — never another user's data or the moderator's identity.
+- **What-to-expect fields (F8)** — owner-curated `Activity.cost_band` / `difficulty` (choices) +
+  `accessibility_notes`, routed through the F2 edit path; shown as cohort-visible chips (not member-gated).
+- **Honest "why recommended" + beginners filter (F17)** — the home feed shows a true reason from the viewer's
+  own declared interests ("matches your interest in X") or "soonest first" on cold-start, else the genuine
+  "% match"; `Activity.beginners_welcome` adds a `?beginners=true` filter (the ranked strip stays unfiltered).
+- **"Organize one here" prefill (F40)** — an event's "Organise" link seeds the create form's activity type +
+  start time; `activity_create` validates every GET value (type exists/active, time parses) before seeding.

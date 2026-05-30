@@ -25,6 +25,18 @@ class Activity(models.Model):
         CANCELLED = "cancelled", "Cancelled"
         COMPLETED = "completed", "Completed"
 
+    class CostBand(models.TextChoices):
+        UNSPECIFIED = "unspecified", "Not specified"
+        FREE = "free", "Free"
+        LOW = "low", "Low cost"
+        PAID = "paid", "Paid"
+
+    class Difficulty(models.TextChoices):
+        UNSPECIFIED = "unspecified", "Not specified"
+        EASY = "easy", "Easy"
+        MODERATE = "moderate", "Moderate"
+        CHALLENGING = "challenging", "Challenging"
+
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="owned_activities"
     )
@@ -45,6 +57,17 @@ class Activity(models.Model):
     what_to_bring = models.TextField(blank=True, default="")
     organizer_note = models.TextField(blank=True, default="")
 
+    # F8: optional "what to expect" fields so newcomers, disabled, and anxious users can
+    # judge fit at a glance. Owner-curated; cost/difficulty are constrained choices,
+    # accessibility_notes is capped at the form/serializer edge (like description).
+    cost_band = models.CharField(
+        max_length=16, choices=CostBand.choices, default=CostBand.UNSPECIFIED
+    )
+    difficulty = models.CharField(
+        max_length=16, choices=Difficulty.choices, default=Difficulty.UNSPECIFIED
+    )
+    accessibility_notes = models.TextField(blank=True, default="")
+
     starts_at = models.DateTimeField()
     ends_at = models.DateTimeField(null=True, blank=True)
 
@@ -57,6 +80,9 @@ class Activity(models.Model):
     # Children's activities may allow a parent/guardian to accompany (supervised,
     # group-only). Only meaningful for the CHILD cohort. See docs/SAFETY.md.
     guardian_accompanied = models.BooleanField(default=False)
+    # F17: an owner-set "beginners welcome" flag — a property of the MEETUP, never a skill
+    # judgement of any person. Used only as a per-activity discovery filter/tag.
+    beginners_welcome = models.BooleanField(default=False)
 
     status = models.CharField(max_length=16, choices=Status.choices, default=Status.OPEN)
     # Set by a moderator REMOVE action; hidden content is excluded from every member-facing

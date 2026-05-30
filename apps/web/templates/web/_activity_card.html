@@ -1,9 +1,12 @@
 <div class="card">
-  {% if a.match_pct %}<span class="score">{{ a.match_pct }}% match</span>{% endif %}
+  {% if a.rec_reason %}<span class="score">{{ a.rec_reason }}</span>{% elif a.match_pct %}<span class="score">{{ a.match_pct }}% match</span>{% endif %}
   <h3><a href="{% url 'activity_detail' a.pk %}">{{ a.title }}</a></h3>
   <div>
     <span class="tag">{{ a.activity_type.name }}</span>
     <span class="tag">{{ a.get_cohort_display }}</span>
+    {% if a.cost_band and a.cost_band != "unspecified" %}<span class="tag">{{ a.get_cost_band_display }}</span>{% endif %}
+    {% if a.difficulty and a.difficulty != "unspecified" %}<span class="tag">{{ a.get_difficulty_display }}</span>{% endif %}
+    {% if a.beginners_welcome %}<span class="tag">beginners welcome</span>{% endif %}
     {% if a.status and a.status != "open" %}<span class="tag">{{ a.get_status_display }}</span>{% endif %}
     {% if a.guardian_accompanied %}<span class="tag">guardian-accompanied</span>{% endif %}
   </div>

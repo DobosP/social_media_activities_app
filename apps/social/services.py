@@ -144,6 +144,10 @@ def create_activity(
     meeting_point="",
     what_to_bring="",
     organizer_note="",
+    cost_band=Activity.CostBand.UNSPECIFIED,
+    difficulty=Activity.Difficulty.UNSPECIFIED,
+    accessibility_notes="",
+    beginners_welcome=False,
 ):
     if not can_create_activity(owner):
         raise NotEligible(
@@ -166,6 +170,10 @@ def create_activity(
         meeting_point=meeting_point,
         what_to_bring=what_to_bring,
         organizer_note=organizer_note,
+        cost_band=cost_band,
+        difficulty=difficulty,
+        accessibility_notes=accessibility_notes,
+        beginners_welcome=beginners_welcome,
     )
     Membership.objects.create(
         activity=activity,
@@ -229,6 +237,10 @@ ACTIVITY_EDITABLE_FIELDS = (
     "meeting_point",  # F9 logistics — owner-curated, routed through the same edit path
     "what_to_bring",
     "organizer_note",
+    "cost_band",  # F8 what-to-expect
+    "difficulty",
+    "accessibility_notes",
+    "beginners_welcome",  # F17 per-activity flag
 )
 
 
