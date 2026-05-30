@@ -23,6 +23,7 @@ urlpatterns = [
     path("api/notifications/", include("apps.notifications.urls")),
     path("api/recommendations/", include("apps.recommendations.urls")),
     path("api/connections/", include("apps.connections.urls")),
+    path("api/communities/", include("apps.communities.urls")),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="docs"),
     # Server-rendered web UI (mounted at the root; must come after the API/admin routes).

@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "apps.notifications",
     "apps.recommendations",
     "apps.connections",
+    "apps.communities",
     "apps.web",
 ]
 
@@ -367,6 +368,16 @@ CONNECTIONS_REQUEST_RATE_LIMIT = env.int("CONNECTIONS_REQUEST_RATE_LIMIT", defau
 CONNECTIONS_REQUEST_RATE_WINDOW_SECONDS = env.int(
     "CONNECTIONS_REQUEST_RATE_WINDOW_SECONDS", default=3600
 )
+
+# --- Communities (derived geo x activity-type discovery labels, e.g. "Cluj-Napoca Football") ---
+# A community is materialized PER COHORT only when it clears ALL three floors, counted within
+# that cohort over distinct NON-GUARDIAN peers (the k-anon floor keeps a thin bucket from
+# pinpointing a minor). Tune per city/cohort. The lookback bounds the nightly GROUP BY.
+COMMUNITY_MIN_ACTIVITIES = env.int("COMMUNITY_MIN_ACTIVITIES", default=3)
+COMMUNITY_K_ANON_FLOOR = env.int("COMMUNITY_K_ANON_FLOOR", default=5)
+COMMUNITY_MIN_DAYS = env.int("COMMUNITY_MIN_DAYS", default=2)
+COMMUNITY_LOOKBACK_DAYS = env.int("COMMUNITY_LOOKBACK_DAYS", default=180)
+COMMUNITY_ACTIVITIES_PAGE_SIZE = env.int("COMMUNITY_ACTIVITIES_PAGE_SIZE", default=100)
 
 # --- Secure messaging (cohort-safe, invite-accept, end-to-end encrypted) ---
 # The server is a zero-knowledge relay: it stores ciphertext + per-recipient wrapped

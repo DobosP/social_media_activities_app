@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Communities{% endblock %}
+{% block content %}
+<h1>Communities</h1>
+<p class="muted">Find activities by type and place &mdash; e.g. <em>{{ page.paginator.count|yesno:"like ,"|default:"" }}</em>
+  &ldquo;Cluj-Napoca Football&rdquo;. A community is just a named list of upcoming activities to
+  go to; there's no group to join and no members list.</p>
+
+{% for c in page %}
+  <div class="card">
+    <h3 style="margin:.2rem 0"><a href="{% url 'community_detail' c.slug %}">{{ c.name }}</a></h3>
+    <p class="muted" style="margin:0">
+      {% if c.tier == "type" %}{{ c.category.name }} &middot; {{ c.area.name }}{% else %}All {{ c.category.name }} &middot; {{ c.area.name }}{% endif %}
+    </p>
+  </div>
+{% empty %}
+  <p class="muted">No communities yet &mdash; they appear automatically once there are enough
+    upcoming activities of a type in your city.</p>
+{% endfor %}
+
+{% if page.has_other_pages %}
+  <p class="muted" style="margin-top:1rem">
+    {% if page.has_previous %}<a href="?page={{ page.previous_page_number }}">&larr; Previous</a> &middot; {% endif %}
+    Page {{ page.number }} of {{ page.paginator.num_pages }}
+    {% if page.has_next %} &middot; <a href="?page={{ page.next_page_number }}">Next &rarr;</a>{% endif %}
+  </p>
+{% endif %}
+{% endblock %}
