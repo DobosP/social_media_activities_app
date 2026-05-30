@@ -3,14 +3,27 @@
 {% block content %}
 <h1>Your wards</h1>
 <p class="muted">Children you are the registered parent/legal guardian of. Guardianship is set up
-  alongside parental consent.</p>
-<ul class="members">
-  {% for w in wards %}
-    <li>{{ w.display_name|default:w.username }} &middot; {{ w.get_cohort_display }}</li>
-  {% empty %}
-    <p class="muted">You aren't a registered guardian of any account.</p>
-  {% endfor %}
-</ul>
+  alongside parental consent. You can see <strong>where and when</strong> they're meeting in
+  person &mdash; not their conversations, photos or who else is there.</p>
+{% for w in wards %}
+  <div class="card">
+    <strong>{{ w.display_name|default:w.username }}</strong>
+    <span class="tag">{{ w.get_cohort_display }}</span>
+    <h3 style="margin:.5rem 0 .3rem">Upcoming meetups</h3>
+    {% if w.meetups %}
+      <ul class="members">
+        {% for a in w.meetups %}
+          <li>{{ a.starts_at|date:"D j M, H:i" }} &middot; {{ a.activity_type.name }}
+            at {{ a.place.name|default:"a place" }}{% if a.place.address_city %}, {{ a.place.address_city }}{% endif %}</li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="muted">No upcoming meetups.</p>
+    {% endif %}
+  </div>
+{% empty %}
+  <p class="muted">You aren't a registered guardian of any account.</p>
+{% endfor %}
 
 <h2>Link a child's account</h2>
 <p class="muted">Enter your child's username to send a guardianship request. They confirm it from

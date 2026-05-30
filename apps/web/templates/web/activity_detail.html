@@ -15,6 +15,28 @@
 <p class="muted">Organised by {{ activity.owner.display_name|default:activity.owner.username }}.
   {% if not is_owner %}&middot; <a href="{% url 'report' %}?type=activity&id={{ activity.pk }}">Report</a>{% endif %}</p>
 
+{% if not is_open %}
+  <div class="banner">This activity is {{ activity.get_status_display|lower }}.{% if activity.status == "cancelled" %}
+    The organiser called it off &mdash; see your alerts for any details.{% endif %}</div>
+{% endif %}
+
+{% if is_owner and is_open %}
+  <div class="card">
+    <strong>Organiser tools</strong>
+    <div class="row" style="gap:.5rem;margin-top:.4rem">
+      <a class="btn btn-sm" href="{% url 'activity_edit' activity.pk %}">Edit details</a>
+    </div>
+    <form method="post" action="{% url 'activity_cancel' activity.pk %}" class="stack" style="margin-top:.6rem"
+          onsubmit="return confirm('Cancel this activity? Every member will be notified.');">
+      {% csrf_token %}
+      <label>Cancel this activity
+        <input type="text" name="reason" maxlength="200"
+               placeholder="Optional: why (members will see this)"></label>
+      <button class="btn btn-sm btn-danger" type="submit">Cancel activity</button>
+    </form>
+  </div>
+{% endif %}
+
 {% if is_member %}
   <div class="card">
     <strong>You're a member{% if is_owner %} (owner){% endif %}.</strong>
@@ -22,6 +44,28 @@
       <form method="post" action="{% url 'activity_leave' activity.pk %}" class="inline" style="float:right">{% csrf_token %}
         <button class="linkbtn" type="submit">Leave</button></form>
     {% endif %}
+    {% if arrival_window_open and not my_arrival %}
+      <form method="post" action="{% url 'activity_arrived' activity.pk %}" style="margin:.4rem 0">{% csrf_token %}
+        <button class="btn btn-sm" type="submit">&#128205; I've arrived</button>
+        <span class="muted" style="font-size:.75rem">Tells the group you're here &mdash; no location shared.</span>
+      </form>
+    {% elif my_arrival %}
+      <p class="muted" style="margin:.4rem 0">&#10003; You marked yourself here at {{ my_arrival|date:"H:i" }} &mdash; your group was notified.</p>
+    {% endif %}
+    <div class="row" style="gap:.4rem;align-items:center;margin:.4rem 0;flex-wrap:wrap">
+      <span class="muted">Coming: <strong>{{ rsvp_summary.going }}</strong> of {{ rsvp_summary.total }}</span>
+      <form class="inline" method="post" action="{% url 'activity_rsvp' activity.pk %}">{% csrf_token %}
+        <input type="hidden" name="intent" value="going">
+        <button class="btn btn-sm{% if my_membership.attendance_intent != 'going' %} btn-secondary{% endif %}" type="submit">I'm coming</button></form>
+      <form class="inline" method="post" action="{% url 'activity_rsvp' activity.pk %}">{% csrf_token %}
+        <input type="hidden" name="intent" value="not_going">
+        <button class="btn btn-sm{% if my_membership.attendance_intent != 'not_going' %} btn-secondary{% endif %}" type="submit">Can't make it</button></form>
+      {% if my_membership.attendance_intent != 'unknown' %}
+        <form class="inline" method="post" action="{% url 'activity_rsvp' activity.pk %}">{% csrf_token %}
+          <input type="hidden" name="intent" value="unknown">
+          <button class="linkbtn" type="submit">clear</button></form>
+      {% endif %}
+    </div>
     <h3>Pending join requests</h3>
     {% for m in pending %}
       <div class="row" style="justify-content:space-between">
@@ -48,6 +92,32 @@
   <div class="banner">This activity is for a different age cohort, so you can't join it.</div>
 {% endif %}
 
+{% if is_member and not is_owner %}
+  <div class="card" style="border-left:3px solid var(--danger,#c0392b)">
+    <strong>Feeling unsafe or uncomfortable?</strong>
+    <p class="muted" style="margin:.3rem 0">You can leave any time &mdash; nothing is shared about you for
+      doing so. If something doesn't feel right, tell a moderator, or talk to a grown-up you trust.</p>
+    {% if my_guardians %}
+      <p class="muted">People you can talk to:
+        {% for g in my_guardians %}<strong>{{ g.display_name|default:g.username }}</strong>{% if not forloop.last %}, {% endif %}{% endfor %}.</p>
+    {% endif %}
+    <div class="row" style="gap:.5rem">
+      <a class="btn btn-sm btn-danger" href="{% url 'report' %}?type=activity&id={{ activity.pk }}">Tell a moderator</a>
+      <form method="post" action="{% url 'activity_leave' activity.pk %}" class="inline">{% csrf_token %}
+        <button class="btn btn-sm btn-secondary" type="submit">Leave this activity</button></form>
+    </div>
+  </div>
+{% endif %}
+
+{% if is_member or is_owner %}{% if activity.meeting_point or activity.what_to_bring or activity.organizer_note %}
+  <div class="card" style="border-left:3px solid var(--accent)">
+    <strong>Meetup logistics</strong>
+    {% if activity.meeting_point %}<p style="margin:.4rem 0 0"><span class="muted">Where to meet:</span><br>{{ activity.meeting_point|linebreaksbr }}</p>{% endif %}
+    {% if activity.what_to_bring %}<p style="margin:.4rem 0 0"><span class="muted">What to bring:</span><br>{{ activity.what_to_bring|linebreaksbr }}</p>{% endif %}
+    {% if activity.organizer_note %}<p style="margin:.4rem 0 0"><span class="muted">From the organiser:</span><br>{{ activity.organizer_note|linebreaksbr }}</p>{% endif %}
+  </div>
+{% endif %}{% endif %}
+
 <h2>Members</h2>
 <ul class="members">
   {% for m in members %}<li>{{ m.user.display_name|default:m.user.username }}{% if m.role == "owner" %} &middot; owner{% elif m.role == "guardian" %} &middot; guardian{% endif %}{% if m.user.id != user.id %}
@@ -58,6 +128,26 @@
 </ul>
 
 {% if is_member or user.is_staff %}
+  {% if announcements or is_owner %}
+    <h2>Announcements</h2>
+    {% if is_owner %}
+      <form method="post" action="{% url 'activity_announce' activity.pk %}" class="stack" style="margin-bottom:.6rem">{% csrf_token %}
+        <label>Post an announcement <span class="muted">(pinned; notifies every member)</span>
+          <textarea name="body" rows="2" maxlength="4000" required
+                    placeholder="Meet at the north gate; bring water; time changed..."></textarea></label>
+        <button class="btn btn-sm" type="submit">Post announcement</button>
+      </form>
+    {% endif %}
+    <div class="thread">
+      {% for p in announcements %}
+        <div class="post" style="border-left:3px solid var(--accent)">
+          <div class="meta">&#128204; {{ p.author.display_name|default:p.author.username }} &middot; {{ p.created_at|date:"j M H:i" }}</div>
+          <div>{{ p.body|linebreaksbr }}</div>
+        </div>
+      {% empty %}<p class="muted">No announcements yet.</p>{% endfor %}
+    </div>
+  {% endif %}
+
   <h2>Thread</h2>
   {% if is_member %}
     <form method="post" action="{% url 'activity_post' activity.pk %}">{% csrf_token %}

@@ -37,6 +37,7 @@
 {% endif %}
 
 <h2>Upcoming in your cohort</h2>
+{% include "web/_near_me.html" %}
 {% for a in upcoming %}{% include "web/_activity_card.html" %}{% empty %}
 <p class="muted">Nothing upcoming yet. Be the first to organise something!</p>{% endfor %}
 

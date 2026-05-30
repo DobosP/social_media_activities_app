@@ -10,6 +10,10 @@ class Notification(models.Model):
         JOIN_REQUESTED = "join_requested", "Join requested"
         JOIN_APPROVED = "join_approved", "Join approved"
         EVENT_REMINDER = "event_reminder", "Event reminder"
+        ACTIVITY_CANCELLED = "activity_cancelled", "Activity cancelled"
+        ACTIVITY_UPDATED = "activity_updated", "Activity updated"
+        ANNOUNCEMENT = "announcement", "Organizer announcement"
+        ARRIVAL = "arrival", "Arrival"
         MODERATION = "moderation", "Moderation notice"
         SYSTEM = "system", "System"
 

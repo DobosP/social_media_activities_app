@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Edit {{ activity.title }}{% endblock %}
+{% block content %}
+<p class="muted"><a href="{% url 'activity_detail' activity.pk %}">&larr; Back to activity</a></p>
+<h1>Edit activity</h1>
+<p class="muted">You can change the title, description, time, end time, capacity and the meetup
+  logistics (where to meet, what to bring, an organiser note). The place
+  (<strong>{{ activity.place.name|default:"a place" }}</strong>) and activity type
+  (<strong>{{ activity.activity_type.name }}</strong>) are fixed once an activity exists.
+  Changing the start time re-notifies everyone who joined.</p>
+<form method="post" class="stack">{% csrf_token %}
+  {{ form.as_p }}
+  <div class="row" style="gap:.5rem">
+    <button class="btn" type="submit">Save changes</button>
+    <a class="btn btn-secondary" href="{% url 'activity_detail' activity.pk %}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

@@ -38,6 +38,13 @@ class Activity(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
 
+    # F9: owner-curated logistics shown to members above the thread (where exactly to meet,
+    # what to bring, a short organiser note). Text-first; length-capped at the form/serializer
+    # edge (LOGISTICS_FIELD_MAX_LENGTH), like description.
+    meeting_point = models.TextField(blank=True, default="")
+    what_to_bring = models.TextField(blank=True, default="")
+    organizer_note = models.TextField(blank=True, default="")
+
     starts_at = models.DateTimeField()
     ends_at = models.DateTimeField(null=True, blank=True)
 
@@ -92,12 +99,27 @@ class Membership(models.Model):
         MEMBER = "member", "Member"
         REMOVED = "removed", "Removed"
 
+    class AttendanceIntent(models.TextChoices):
+        # F20: a transient, per-activity go/no-go toggle shown only as an in-activity count
+        # to members. Deliberately NOT aggregated into any per-user reliability/attendance
+        # history (that would be behavioural tracking). Reset to UNKNOWN when the member leaves.
+        UNKNOWN = "unknown", "Not said"
+        GOING = "going", "Coming"
+        NOT_GOING = "not_going", "Can't make it"
+
     activity = models.ForeignKey(Activity, on_delete=models.CASCADE, related_name="memberships")
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="memberships"
     )
     role = models.CharField(max_length=16, choices=Role.choices, default=Role.MEMBER)
     state = models.CharField(max_length=16, choices=State.choices, default=State.REQUESTED)
+    attendance_intent = models.CharField(
+        max_length=16, choices=AttendanceIntent.choices, default=AttendanceIntent.UNKNOWN
+    )
+    # F3: ephemeral self-declared arrival ping. Set by mark_arrived within a start-relative
+    # window and cleared a few hours after start by expire_arrivals, so it never becomes a
+    # standing presence record. NOT geolocation — a tap, not a position.
+    arrived_at = models.DateTimeField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -150,6 +172,9 @@ class Post(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="posts"
     )
     body = models.TextField()
+    # An owner-only pinned broadcast ("meet at the north gate", "time changed"): surfaced
+    # above the ordinary thread and accompanied by a one-off notification to every member.
+    is_announcement = models.BooleanField(default=False)
     # Set by a moderator REMOVE action; hidden posts are excluded from thread reads but
     # retained for audit/appeal.
     is_hidden = models.BooleanField(default=False)

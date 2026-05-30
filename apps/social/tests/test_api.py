@@ -1,8 +1,12 @@
+from datetime import timedelta
+
 import pytest
+from django.utils import timezone
 from rest_framework.test import APIClient
 
 from apps.accounts.models import AgeBand
-from apps.social.models import Membership, Post
+from apps.accounts.services import link_guardian
+from apps.social.models import Activity, Membership, Post
 from apps.social.serializers import ACTIVITY_DESCRIPTION_MAX_LENGTH, POST_BODY_MAX_LENGTH
 from apps.social.services import create_activity
 
@@ -156,3 +160,118 @@ def test_mine_membership_list_is_bounded(settings, adult, place, activity_type, 
     resp = _client(adult).get("/api/social/activities/mine/")
     assert resp.status_code == 200, resp.content
     assert len(resp.json()) == 3
+
+
+# --- lifecycle / edit over the API (F1/F2) ---
+
+
+def test_owner_can_edit_activity_via_patch(adult, place, activity_type):
+    activity = create_activity(
+        adult,
+        place=place,
+        activity_type=activity_type,
+        title="Old",
+        starts_at=timezone.now() + timedelta(days=1),
+    )
+    resp = _client(adult).patch(
+        f"/api/social/activities/{activity.id}/", {"title": "New name"}, format="json"
+    )
+    assert resp.status_code == 200, resp.content
+    activity.refresh_from_db()
+    assert activity.title == "New name"
+
+
+def test_non_owner_cannot_patch_activity(adult, adult2, place, activity_type):
+    activity = create_activity(
+        adult,
+        place=place,
+        activity_type=activity_type,
+        title="Keep",
+        starts_at=timezone.now() + timedelta(days=1),
+    )
+    resp = _client(adult2).patch(
+        f"/api/social/activities/{activity.id}/", {"title": "hijack"}, format="json"
+    )
+    # adult2 shares the cohort (can see it) but isn't the owner → forbidden.
+    assert resp.status_code == 403, resp.content
+    activity.refresh_from_db()
+    assert activity.title == "Keep"
+
+
+def test_owner_can_cancel_via_api(adult, place, activity_type, now):
+    activity = create_activity(
+        adult, place=place, activity_type=activity_type, title="Run", starts_at=now
+    )
+    resp = _client(adult).post(
+        f"/api/social/activities/{activity.id}/cancel/", {"reason": "weather"}, format="json"
+    )
+    assert resp.status_code == 200, resp.content
+    activity.refresh_from_db()
+    assert activity.status == Activity.Status.CANCELLED
+
+
+# --- RSVP (F20) ---
+
+
+def test_rsvp_returns_live_count(adult, adult2, place, activity_type, now):
+    activity = create_activity(
+        adult, place=place, activity_type=activity_type, title="Run", starts_at=now
+    )
+    activity.memberships.create(
+        user=adult2, role=Membership.Role.MEMBER, state=Membership.State.MEMBER
+    )
+    resp = _client(adult2).post(
+        f"/api/social/activities/{activity.id}/rsvp/", {"intent": "going"}, format="json"
+    )
+    assert resp.status_code == 200, resp.content
+    assert resp.json() == {"going": 1, "total": 2}
+
+
+def test_rsvp_non_member_forbidden(adult, adult2, place, activity_type, now):
+    # adult2 shares the cohort (can see it) but is not a member → 403 from the NotAMember map.
+    activity = create_activity(
+        adult, place=place, activity_type=activity_type, title="Run", starts_at=now
+    )
+    resp = _client(adult2).post(
+        f"/api/social/activities/{activity.id}/rsvp/", {"intent": "going"}, format="json"
+    )
+    assert resp.status_code == 403, resp.content
+
+
+def test_rsvp_invalid_intent_is_400(adult, place, activity_type, now):
+    activity = create_activity(
+        adult, place=place, activity_type=activity_type, title="Run", starts_at=now
+    )
+    resp = _client(adult).post(
+        f"/api/social/activities/{activity.id}/rsvp/", {"intent": "maybe?"}, format="json"
+    )
+    assert resp.status_code == 400, resp.content
+
+
+# --- arrival (F3) ---
+
+
+def test_arrived_action_marks_membership(adult, place, activity_type, now):
+    activity = create_activity(
+        adult, place=place, activity_type=activity_type, title="Run", starts_at=now
+    )
+    resp = _client(adult).post(f"/api/social/activities/{activity.id}/arrived/")
+    assert resp.status_code == 200, resp.content
+    assert activity.memberships.get(user=adult).arrived_at is not None
+
+
+def test_arrived_ignores_on_behalf_of(child, place, activity_type, now):
+    # A guardian cannot self-declare a child's arrival: arrived always acts as request.user,
+    # so the adult guardian (different cohort, not a member) cannot reach the child's activity.
+    guardian = make_user("apiguardian")
+    link_guardian(guardian, child)
+    activity = create_activity(
+        child, place=place, activity_type=activity_type, title="Kids run", starts_at=now
+    )
+    resp = _client(guardian).post(
+        f"/api/social/activities/{activity.id}/arrived/",
+        {"on_behalf_of": str(child.public_id)},
+        format="json",
+    )
+    assert resp.status_code == 404, resp.content  # acted as guardian, who can't see it
+    assert activity.memberships.get(user=child).arrived_at is None

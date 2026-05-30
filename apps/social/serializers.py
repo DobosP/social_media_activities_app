@@ -11,6 +11,10 @@ from .services import current_members, participant_count
 # bodies/descriptions (abuse + storage/perf risk). Posts mirror the E2EE chat cap.
 POST_BODY_MAX_LENGTH = 4000
 ACTIVITY_DESCRIPTION_MAX_LENGTH = 2000
+# F9 logistics fields (meeting point / what to bring / organiser note). Capped at the API
+# edge on BOTH the create and update serializers (the model TextFields stay unbounded, like
+# description). The form enforces the same cap for the web path.
+LOGISTICS_FIELD_MAX_LENGTH = 500
 
 
 class ActivitySerializer(serializers.ModelSerializer):
@@ -25,6 +29,9 @@ class ActivitySerializer(serializers.ModelSerializer):
             "id",
             "title",
             "description",
+            "meeting_point",
+            "what_to_bring",
+            "organizer_note",
             "owner",
             "place",
             "activity_type",
@@ -70,6 +77,39 @@ class ActivityCreateSerializer(serializers.Serializer):
     join_threshold = serializers.FloatField(required=False, min_value=0.01, max_value=1.0)
     capacity = serializers.IntegerField(required=False, allow_null=True, min_value=1)
     guardian_accompanied = serializers.BooleanField(required=False, default=False)
+    meeting_point = serializers.CharField(
+        required=False, allow_blank=True, default="", max_length=LOGISTICS_FIELD_MAX_LENGTH
+    )
+    what_to_bring = serializers.CharField(
+        required=False, allow_blank=True, default="", max_length=LOGISTICS_FIELD_MAX_LENGTH
+    )
+    organizer_note = serializers.CharField(
+        required=False, allow_blank=True, default="", max_length=LOGISTICS_FIELD_MAX_LENGTH
+    )
+
+
+class ActivityUpdateSerializer(serializers.Serializer):
+    """Partial edit of an OPEN, not-yet-started activity. Only the owner-editable fields
+    are accepted; place/activity_type/cohort/guardian_accompanied are intentionally absent
+    so an edit can never change the meetup's identity or cohort pin (see
+    services.ACTIVITY_EDITABLE_FIELDS)."""
+
+    title = serializers.CharField(required=False, max_length=200)
+    description = serializers.CharField(
+        required=False, allow_blank=True, max_length=ACTIVITY_DESCRIPTION_MAX_LENGTH
+    )
+    starts_at = serializers.DateTimeField(required=False)
+    ends_at = serializers.DateTimeField(required=False, allow_null=True)
+    capacity = serializers.IntegerField(required=False, allow_null=True, min_value=1)
+    meeting_point = serializers.CharField(
+        required=False, allow_blank=True, max_length=LOGISTICS_FIELD_MAX_LENGTH
+    )
+    what_to_bring = serializers.CharField(
+        required=False, allow_blank=True, max_length=LOGISTICS_FIELD_MAX_LENGTH
+    )
+    organizer_note = serializers.CharField(
+        required=False, allow_blank=True, max_length=LOGISTICS_FIELD_MAX_LENGTH
+    )
 
 
 class MembershipSerializer(serializers.ModelSerializer):
@@ -77,7 +117,17 @@ class MembershipSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Membership
-        fields = ["id", "activity", "user", "role", "state", "created_at", "decided_at"]
+        fields = [
+            "id",
+            "activity",
+            "user",
+            "role",
+            "state",
+            "attendance_intent",
+            "arrived_at",
+            "created_at",
+            "decided_at",
+        ]
         read_only_fields = fields
 
 
@@ -89,5 +139,5 @@ class PostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ["id", "author", "body", "created_at"]
-        read_only_fields = ["id", "author", "created_at"]
+        fields = ["id", "author", "body", "is_announcement", "created_at"]
+        read_only_fields = ["id", "author", "is_announcement", "created_at"]

@@ -4,9 +4,10 @@
   <div>
     <span class="tag">{{ a.activity_type.name }}</span>
     <span class="tag">{{ a.get_cohort_display }}</span>
+    {% if a.status and a.status != "open" %}<span class="tag">{{ a.get_status_display }}</span>{% endif %}
     {% if a.guardian_accompanied %}<span class="tag">guardian-accompanied</span>{% endif %}
   </div>
   <p class="muted">{{ a.starts_at|date:"D j M, H:i" }} &middot;
-    {{ a.place.name|default:"a place" }}{% if a.place.address_city %}, {{ a.place.address_city }}{% endif %}</p>
+    {{ a.place.name|default:"a place" }}{% if a.place.address_city %}, {{ a.place.address_city }}{% endif %}{% if a.distance %} &middot; {{ a.distance.km|floatformat:1 }} km away{% endif %}</p>
   {% if a.description %}<p>{{ a.description|truncatewords:22 }}</p>{% endif %}
 </div>

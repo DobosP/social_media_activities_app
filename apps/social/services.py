@@ -3,12 +3,15 @@ user-place quorum. Views and admin go through these functions so the safety
 invariants (cohort isolation, verified-and-consented participation) live in one place.
 """
 
+from datetime import timedelta
+
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Count, Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from apps.accounts.models import Cohort
+from apps.accounts.models import Cohort, GuardianRelationship
 from apps.accounts.services import can_participate
 
 from .models import (
@@ -22,6 +25,12 @@ from .models import (
     Thread,
     UserPlaceProposal,
 )
+
+# F3: self-declared arrival ping is only accepted around the start time, and is cleared a
+# few hours after start so it never becomes a standing presence record. Overridable via
+# settings; sane defaults here.
+ARRIVAL_WINDOW_BEFORE_HOURS = 2
+ARRIVAL_WINDOW_AFTER_HOURS = 3
 
 
 class SocialError(Exception):
@@ -132,6 +141,9 @@ def create_activity(
     join_threshold=None,
     capacity=None,
     guardian_accompanied=False,
+    meeting_point="",
+    what_to_bring="",
+    organizer_note="",
 ):
     if not can_create_activity(owner):
         raise NotEligible(
@@ -151,6 +163,9 @@ def create_activity(
         join_threshold=DEFAULT_JOIN_THRESHOLD if join_threshold is None else join_threshold,
         capacity=capacity,
         guardian_accompanied=guardian_accompanied,
+        meeting_point=meeting_point,
+        what_to_bring=what_to_bring,
+        organizer_note=organizer_note,
     )
     Membership.objects.create(
         activity=activity,
@@ -193,8 +208,127 @@ def leave_activity(user, activity) -> Membership | None:
     if membership.role == Membership.Role.OWNER:
         raise InvalidState(_("The owner cannot leave their own activity."))
     membership.state = Membership.State.REMOVED
-    membership.save(update_fields=["state", "updated_at"])
+    # Reset the RSVP so leaving literally erases the go/no-go datum (no lingering "going" on
+    # the removed row): F20 keeps no attendance state for non-members. See attendance_summary.
+    membership.attendance_intent = Membership.AttendanceIntent.UNKNOWN
+    membership.save(update_fields=["state", "attendance_intent", "updated_at"])
     return membership
+
+
+# Fields an owner may change on an OPEN, not-yet-started activity. Deliberately excludes
+# place / activity_type / cohort / owner / guardian_accompanied: those define the meetup's
+# identity and the cohort-isolation boundary, so an edit must never touch them (no
+# bait-and-switch, no escaping the safety pin). See docs/SAFETY.md.
+ACTIVITY_EDITABLE_FIELDS = (
+    "title",
+    "description",
+    "starts_at",
+    "ends_at",
+    "capacity",
+    "meeting_point",  # F9 logistics — owner-curated, routed through the same edit path
+    "what_to_bring",
+    "organizer_note",
+)
+
+
+@transaction.atomic
+def cancel_activity(owner, activity, *, reason: str = "") -> Activity:
+    """Owner cancels a meetup they can no longer host. Flips the activity to CANCELLED
+    (so it leaves discovery/joining) and tells every current member, with the reason, so
+    nobody travels to a meetup that isn't happening. Idempotent-safe: only an OPEN
+    activity can be cancelled."""
+    if activity.owner_id != owner.id:
+        raise NotAMember(_("Only the activity owner may cancel it."))
+    if activity.status != Activity.Status.OPEN:
+        raise InvalidState(_("Only an open activity can be cancelled."))
+    activity.status = Activity.Status.CANCELLED
+    activity.save(update_fields=["status", "updated_at"])
+    reason = (reason or "").strip()[:200]
+    body = _("“%(title)s” was cancelled by the organiser.") % {"title": activity.title}
+    if reason:
+        body = f"{body} {reason}"
+    for membership in current_members(activity).exclude(user_id=owner.id).select_related("user"):
+        _notify(
+            membership.user,
+            "activity_cancelled",
+            _("An activity was cancelled"),
+            body=body,
+            url=f"/api/social/activities/{activity.id}/",
+        )
+    from apps.safety.services import record_audit
+
+    record_audit("activity.cancelled", actor=owner, target=activity, reason=reason)
+    return activity
+
+
+@transaction.atomic
+def complete_activity(activity) -> Activity:
+    """Move a past OPEN activity to its terminal COMPLETED state. Housekeeping only — no
+    notification — so a finished meetup stops being shown as live. No-op unless OPEN."""
+    if activity.status != Activity.Status.OPEN:
+        return activity
+    activity.status = Activity.Status.COMPLETED
+    activity.save(update_fields=["status", "updated_at"])
+    return activity
+
+
+def _supersede_reminders(activity) -> None:
+    """Clear any already-sent event reminders for this activity so a changed start time
+    re-fires one. send_activity_reminders dedups on (recipient, kind, url) and the url
+    carries no time, so without this a corrected time would silently never be reminded."""
+    from apps.notifications.models import Notification
+
+    Notification.objects.filter(
+        kind=Notification.Kind.EVENT_REMINDER,
+        url=f"/api/social/activities/{activity.id}/",
+    ).delete()
+
+
+@transaction.atomic
+def update_activity(owner, activity, **changes) -> Activity:
+    """Owner edits an OPEN, not-yet-started activity in place (preserving its roster,
+    thread and vote history). Only ACTIVITY_EDITABLE_FIELDS are honoured; a material time
+    change re-notifies members and supersedes the stale reminder."""
+    if activity.owner_id != owner.id:
+        raise NotAMember(_("Only the activity owner may edit it."))
+    if activity.status != Activity.Status.OPEN:
+        raise InvalidState(_("Only an open activity can be edited."))
+    if activity.starts_at <= timezone.now():
+        raise InvalidState(_("This activity has already started and can no longer be edited."))
+
+    fields = {k: v for k, v in changes.items() if k in ACTIVITY_EDITABLE_FIELDS}
+    new_starts = fields.get("starts_at", activity.starts_at)
+    new_ends = fields.get("ends_at", activity.ends_at)
+    if new_ends is not None and new_ends < new_starts:
+        raise InvalidState(_("End time cannot be before the start time."))
+    new_capacity = fields.get("capacity", activity.capacity)
+    if new_capacity is not None and new_capacity < participant_count(activity):
+        raise InvalidState(_("Capacity cannot be lower than the current number of participants."))
+
+    time_changed = "starts_at" in fields and fields["starts_at"] != activity.starts_at
+    if not fields:
+        return activity
+    for key, value in fields.items():
+        setattr(activity, key, value)
+    activity.save(update_fields=[*fields.keys(), "updated_at"])
+
+    if time_changed:
+        _supersede_reminders(activity)
+        body = _("“%(title)s” now starts %(when)s.") % {
+            "title": activity.title,
+            "when": f"{activity.starts_at:%Y-%m-%d %H:%M}",
+        }
+        for membership in (
+            current_members(activity).exclude(user_id=owner.id).select_related("user")
+        ):
+            _notify(
+                membership.user,
+                "activity_updated",
+                _("An activity you joined changed"),
+                body=body,
+                url=f"/api/social/activities/{activity.id}/",
+            )
+    return activity
 
 
 def _notify(recipient, kind, title, *, body="", url=""):
@@ -301,6 +435,134 @@ def post_to_thread(author, activity, body: str) -> Post:
         # Catches a member whose parental consent was revoked or assurance lapsed after join.
         raise NotEligible(_("Posting requires verified, consented participation."))
     return Post.objects.create(thread=activity.thread, author=author, body=body)
+
+
+@transaction.atomic
+def post_announcement(owner, activity, body: str) -> Post:
+    """Owner-only pinned broadcast: a must-read logistics post that surfaces above the
+    thread and fires one notification to every current member. Same cohort/consent gate
+    as an ordinary post; only the owner may use it."""
+    if activity.owner_id != owner.id:
+        raise NotAMember(_("Only the organiser can post an announcement."))
+    if not can_participate(owner):
+        raise NotEligible(_("Posting requires verified, consented participation."))
+    post = Post.objects.create(
+        thread=activity.thread, author=owner, body=body, is_announcement=True
+    )
+    body_preview = body.strip()
+    if len(body_preview) > 140:
+        body_preview = body_preview[:139].rstrip() + "…"
+    for membership in current_members(activity).exclude(user_id=owner.id).select_related("user"):
+        _notify(
+            membership.user,
+            "announcement",
+            _("Announcement: %(title)s") % {"title": activity.title},
+            body=body_preview,
+            url=f"/api/social/activities/{activity.id}/",
+        )
+    return post
+
+
+# --- F20: RSVP attendance intent -------------------------------------------------------
+
+
+@transaction.atomic
+def set_attendance_intent(user, activity, intent) -> Membership:
+    """A current member flips their transient go/no-go for THIS activity. No notification,
+    no audit, no cross-activity history (that would be behavioural tracking)."""
+    membership = current_members(activity).filter(user=user).first()
+    if membership is None:
+        raise NotAMember(_("Only current members can RSVP."))
+    if intent not in Membership.AttendanceIntent.values:
+        raise InvalidState(_("Invalid attendance choice."))
+    membership.attendance_intent = intent
+    membership.save(update_fields=["attendance_intent", "updated_at"])
+    return membership
+
+
+def attendance_summary(activity) -> dict:
+    """Per-activity go count for the participants (peers, excluding supervisory guardians).
+    A live snapshot shown only to members — never stored, never aggregated per-user."""
+    members = voting_members(activity)
+    return {
+        "going": members.filter(attendance_intent=Membership.AttendanceIntent.GOING).count(),
+        "total": members.count(),
+    }
+
+
+# --- F3: "we're here" arrival ping -----------------------------------------------------
+
+
+def arrival_window_open(activity) -> bool:
+    """Whether arrival may be marked right now: an OPEN activity within the start-relative
+    window. Used by the web view to show/hide the button (the service re-checks anyway)."""
+    if activity.status != Activity.Status.OPEN:
+        return False
+    now = timezone.now()
+    before = getattr(settings, "ARRIVAL_WINDOW_BEFORE_HOURS", ARRIVAL_WINDOW_BEFORE_HOURS)
+    after = getattr(settings, "ARRIVAL_WINDOW_AFTER_HOURS", ARRIVAL_WINDOW_AFTER_HOURS)
+    return (
+        activity.starts_at - timedelta(hours=before)
+        <= now
+        <= activity.starts_at + timedelta(hours=after)
+    )
+
+
+@transaction.atomic
+def mark_arrived(user, activity) -> Membership:
+    """A current member self-declares "I've arrived". Quietly tells the OTHER current
+    members (excluding blocked pairs); for a CHILD-cohort member it ALSO tells their active
+    guardian(s), so a child is never standing alone. Self-declared only (no on-behalf-of),
+    no free text, no location ever, idempotent, and cleared a few hours later by
+    expire_arrivals so it never becomes a presence dashboard."""
+    from apps.safety.services import blocked_user_ids, record_audit
+
+    membership = current_members(activity).filter(user=user).first()
+    if membership is None:
+        raise NotAMember(_("Only current members can mark themselves arrived."))
+    if not can_participate(user):
+        raise NotEligible(_("Marking arrival requires verified, consented participation."))
+    if activity.status != Activity.Status.OPEN:
+        raise InvalidState(_("You can only mark arrival for an active meetup."))
+    if not arrival_window_open(activity):
+        raise InvalidState(_("Arrival can only be marked around the start time."))
+    if membership.arrived_at is not None:
+        return membership  # idempotent: a second tap never re-pings the group
+
+    membership.arrived_at = timezone.now()
+    membership.save(update_fields=["arrived_at", "updated_at"])
+
+    blocked = blocked_user_ids(user)
+    # Server-composed, fixed copy. The only arriver-derived string is display_name — the
+    # same low-entropy handle already shown app-wide (members list, thread). NO per-ping
+    # note exists, so no unmoderated child-authored text reaches an adult.
+    title = _("Someone arrived")
+    body = _("%(name)s is at “%(title)s”.") % {
+        "name": user.display_name or user.username,
+        "title": activity.title,
+    }
+    url = f"/api/social/activities/{activity.id}/"
+    notified: set[int] = set()
+    for member in current_members(activity).exclude(user_id=user.id).select_related("user"):
+        if member.user_id in blocked:
+            continue
+        _notify(member.user, "arrival", title, body=body, url=url)
+        notified.add(member.user_id)
+
+    # CHILD cohort only (teens self-manage, matching F5/F6). Keyed on an ACTIVE
+    # GuardianRelationship — never a loose is_child flag. Each guardian gets at most one ping.
+    if user.cohort == Cohort.CHILD:
+        for rel in GuardianRelationship.objects.filter(
+            ward=user, status=GuardianRelationship.Status.ACTIVE
+        ).select_related("guardian"):
+            guardian = rel.guardian
+            if guardian.id in blocked or guardian.id in notified:
+                continue
+            _notify(guardian, "arrival", title, body=body, url=url)
+            notified.add(guardian.id)
+
+    record_audit("activity.arrived", actor=user, target=activity)
+    return membership
 
 
 @transaction.atomic
