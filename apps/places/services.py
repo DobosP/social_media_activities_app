@@ -4,9 +4,43 @@ stated access preference. Facts are derived from ``Place.raw_tags`` and never wr
 there (or on Place) would be clobbered. Deriving on read keeps the facts in sync for free and
 honest — never claiming a venue is accessible when the tag is missing."""
 
-from django.db import transaction
+from datetime import timedelta
 
-from .models import AccessPreference, Partner
+from django.conf import settings
+from django.db import transaction
+from django.db.models import Q
+from django.utils import timezone
+
+from .models import AccessPreference, OpenNowReport, Partner, Place
+
+
+class PlacesError(Exception):
+    """Expected, user-facing places-domain error (F28)."""
+
+
+class NotEligible(PlacesError):
+    """User fails the verified+consented gate."""
+
+
+def public_places(qs=None):
+    """The SINGLE visibility chokepoint for public Place reads (F25): keep every non-USER
+    place, but keep a USER place ONLY once its co-creation proposal is PUBLISHED. A USER place
+    with a PENDING/REJECTED proposal — or no proposal row at all — is hidden (a positive
+    keep-filter, so a NULL proposal status correctly fails the second disjunct). EVERY
+    AllowAny/anonymous Place surface must route through this."""
+    from apps.social.models import UserPlaceProposal  # local: places must not import social at top
+
+    qs = Place.objects.all() if qs is None else qs
+    return qs.filter(
+        ~Q(source=Place.Source.USER) | Q(proposal__status=UserPlaceProposal.Status.PUBLISHED)
+    )
+
+
+def edge_is_publicly_visible(edge) -> bool:
+    """True if the edge's place is publicly visible — used to refuse F26 votes on a place that
+    is still pending the co-creation quorum."""
+    return public_places().filter(pk=edge.place_id).exists()
+
 
 FACT_TRUE = "true"
 FACT_FALSE = "false"
@@ -108,3 +142,71 @@ def verified_partners():
 def partner_for_place(place):
     """The verified civic partner stewarding this place, if any (one acknowledgement line)."""
     return Partner.objects.public().filter(place=place).first()
+
+
+# --- F28: open-now accuracy reports (ingest-safe overlay) -------------------------------
+
+
+def _open_now_settings():
+    return (
+        getattr(settings, "OPEN_NOW_REPORT_THRESHOLD", 3),
+        getattr(settings, "OPEN_NOW_REPORT_DECAY_SECONDS", 14 * 24 * 3600),
+    )
+
+
+def hours_reliable(place, *, now=None) -> bool:
+    """True unless there are >= N independent reports within the decay window (auto-decay: old
+    reports stop counting). Prefers a `recent_report_n` annotation when present (avoids a
+    per-row query)."""
+    threshold, decay = _open_now_settings()
+    recent = getattr(place, "recent_report_n", None)
+    if recent is None:
+        cutoff = (now or timezone.now()) - timedelta(seconds=decay)
+        recent = place.open_now_reports.filter(created_at__gte=cutoff).count()
+    return recent < threshold
+
+
+def open_now_status(place, *, now=None):
+    """open/closed (bool) from parsed hours, downgraded to the 'unverified' sentinel when recent
+    reports say the hours are wrong; None when hours are unknown. Read-time, ingest-safe (F28)."""
+    from .enrichment.opening_hours import is_open_at
+
+    base = is_open_at(place.opening_hours, now or timezone.localtime())
+    if base is None:
+        return None
+    return base if hours_reliable(place, now=now) else "unverified"
+
+
+@transaction.atomic
+def file_open_now_report(reporter, place):
+    """File one 'actually closed when it said open' report (F28). Idempotent per reporter per
+    place per decay window (anti-brigading); rate-limited across venues. Returns the report, or
+    None if throttled / already reported this window."""
+    from apps.accounts.services import can_participate
+    from apps.safety.services import allow_action
+
+    if not can_participate(reporter):
+        raise NotEligible("Verified, consented participation is required to report hours.")
+    if not allow_action(
+        reporter,
+        "open_now_report",
+        limit=getattr(settings, "OPEN_NOW_REPORT_RATE_LIMIT", 10),
+        window_seconds=getattr(settings, "OPEN_NOW_REPORT_RATE_WINDOW_SECONDS", 3600),
+    ):
+        return None  # over the cross-venue rate limit
+    _, decay = _open_now_settings()
+    cutoff = timezone.now() - timedelta(seconds=decay)
+    if place.open_now_reports.filter(reporter=reporter, created_at__gte=cutoff).exists():
+        return None  # one report per reporter per place per window
+    return OpenNowReport.objects.create(place=place, reporter=reporter)
+
+
+@transaction.atomic
+def clear_open_now_reports(place, *, moderator=None) -> int:
+    """Moderator reset — delete all reports so the parsed hours self-heal on the next read."""
+    n, _ = place.open_now_reports.all().delete()
+    if moderator is not None:
+        from apps.safety.services import record_audit
+
+        record_audit("place.open_now_reports_cleared", actor=moderator, target=place)
+    return n

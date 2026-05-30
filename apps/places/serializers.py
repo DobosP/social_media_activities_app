@@ -1,8 +1,6 @@
-from django.utils import timezone
 from rest_framework import serializers
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
-from .enrichment.opening_hours import is_open_at
 from .models import Place, PlaceActivity
 
 
@@ -16,9 +14,14 @@ class PlaceActivitySerializer(serializers.ModelSerializer):
 
 
 class PlaceSerializer(GeoFeatureModelSerializer):
-    activities = PlaceActivitySerializer(source="place_activities", many=True, read_only=True)
+    activities = serializers.SerializerMethodField()
     distance_m = serializers.SerializerMethodField()
     open_now = serializers.SerializerMethodField()
+
+    def get_activities(self, obj):
+        # F26: disputed edges are hidden from discovery. Filter in Python over the prefetch.
+        edges = [pa for pa in obj.place_activities.all() if not pa.is_disputed]
+        return PlaceActivitySerializer(edges, many=True).data
 
     class Meta:
         model = Place
@@ -51,5 +54,8 @@ class PlaceSerializer(GeoFeatureModelSerializer):
         return round(distance.m, 1)
 
     def get_open_now(self, obj):
-        # Computed from parsed opening_hours (no external call); null if unknown.
-        return is_open_at(obj.opening_hours, timezone.localtime())
+        # F28: parsed-hours open/closed, downgraded to 'unverified' when enough recent member
+        # reports say the hours are wrong (null if unknown). No external call.
+        from .services import open_now_status
+
+        return open_now_status(obj)

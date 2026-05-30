@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Pending places{% endblock %}
+{% block content %}
+<h1>Places awaiting confirmation</h1>
+<p class="muted">Neighbours proposed these venues. If you know a place is real, confirm it &mdash;
+  enough independent confirmations publish it for everyone. We never show who proposed a place.</p>
+{% for p in proposals %}
+  <div class="card">
+    <strong>{{ p.place.name|default:"Unnamed place" }}</strong>
+    {% if p.place.address_city %}<span class="muted">&middot; {{ p.place.address_city }}</span>{% endif %}
+    <p class="muted">{{ p.confirmations_count }} of {{ p.required_confirmations }} confirmations.</p>
+    <form method="post" action="{% url 'place_confirm' p.id %}" class="inline">{% csrf_token %}
+      <button class="btn btn-sm" type="submit">Confirm this place</button></form>
+  </div>
+{% empty %}
+  <p class="muted">No places are awaiting confirmation right now.</p>
+{% endfor %}
+{% endblock %}

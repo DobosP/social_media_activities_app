@@ -43,7 +43,28 @@ class PlaceViewSet(viewsets.ReadOnlyModelViewSet):
     bbox_filter_include_overlapping = True
 
     def get_queryset(self):
-        qs = Place.objects.prefetch_related("place_activities__activity").order_by("id")
+        from datetime import timedelta
+
+        from django.db.models import Count, Q
+        from django.utils import timezone
+
+        from .services import _open_now_settings, public_places
+
+        # F25: hide user-proposed places until their co-creation quorum publishes them.
+        # F28: annotate the recent open-now report count once here so the serializer's
+        # open_now_status() never fires a per-row query (hours_reliable reads the annotation).
+        _, decay = _open_now_settings()
+        cutoff = timezone.now() - timedelta(seconds=decay)
+        qs = (
+            public_places(Place.objects.prefetch_related("place_activities__activity"))
+            .annotate(
+                recent_report_n=Count(
+                    "open_now_reports",
+                    filter=Q(open_now_reports__created_at__gte=cutoff),
+                )
+            )
+            .order_by("id")
+        )
         params = self.request.query_params
         near_lon, near_lat = params.get("near_lon"), params.get("near_lat")
         if near_lon is not None and near_lat is not None:

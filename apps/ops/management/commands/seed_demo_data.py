@@ -140,8 +140,10 @@ class Command(BaseCommand):
             grant_parental_consent(adults[0], kevin)
 
         # --- places ---
+        from apps.social.models import UserPlaceProposal
+
         for name, lon, lat in PLACES:
-            Place.objects.get_or_create(
+            place, _ = Place.objects.get_or_create(
                 name=name,
                 defaults={
                     "location": Point(lon, lat, srid=4326),
@@ -149,6 +151,16 @@ class Command(BaseCommand):
                     "address_city": "Cluj-Napoca",
                     "address_country": "RO",
                     "website": "https://visitclujnapoca.ro",
+                },
+            )
+            # F25: a USER place is hidden by public_places() until its proposal is PUBLISHED —
+            # mark the demo venues published so the seeded demo stays visible.
+            UserPlaceProposal.objects.get_or_create(
+                place=place,
+                defaults={
+                    "proposer": adults[0],
+                    "status": UserPlaceProposal.Status.PUBLISHED,
+                    "published_at": timezone.now(),
                 },
             )
         place_list = list(Place.objects.order_by("id"))

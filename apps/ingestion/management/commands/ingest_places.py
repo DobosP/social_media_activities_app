@@ -216,6 +216,11 @@ class Command(BaseCommand):
             .first()
         )
         if existing:
+            # F26: an edge the crowd promoted to CONFIRMED is in PROTECTED_ORIGINS, so re-ingest
+            # never demotes it. A still-INFERRED but crowd-DISPUTED edge is updated below, but
+            # `is_disputed` is deliberately ABSENT from the defaults dict — so a re-ingest refreshes
+            # the confidence/source without ever clearing a standing dispute (the flag is overlay
+            # state owned by ActivityEdgeVote, not by the OSM import).
             if existing.origin in PROTECTED_ORIGINS:
                 return  # never clobber user-confirmed / manual edges
             if confidence < existing.confidence:

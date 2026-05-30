@@ -70,6 +70,7 @@ from .forms import (
     ActivityEditForm,
     ActivityForm,
     DonateForm,
+    PlaceProposeForm,
     PostForm,
     RegisterForm,
     ReportForm,
@@ -319,8 +320,10 @@ def places_list(request):
     """F16: a server-rendered, JS-free text list of places (works with no map/tiles), mirroring
     the public places API's filtering + proximity. Public data; no per-user location stored."""
     from apps.discovery.proximity import apply_proximity
+    from apps.places.services import public_places
 
-    qs = Place.objects.prefetch_related("place_activities__activity")
+    # F25: hide pending user-proposed places from the public list.
+    qs = public_places(Place.objects.prefetch_related("place_activities__activity"))
     # .distinct() is load-bearing: PlaceFilter joins place_activities for ?activity/?min_confidence
     # and would otherwise multiply rows (mirrors PlaceViewSet.get_queryset).
     qs = PlaceFilter(request.GET, queryset=qs).qs.distinct()
@@ -351,7 +354,21 @@ def places_list(request):
 
 
 def place_detail(request, pk):
+    from apps.places.services import public_places
+
     place = get_object_or_404(Place.objects.prefetch_related("place_activities__activity"), pk=pk)
+    # F25: a still-pending user place is viewable ONLY by its proposer or staff (404 otherwise),
+    # so the quorum isn't bypassed and the public never sees it before it's published.
+    proposal = getattr(place, "proposal", None)
+    is_public = public_places().filter(pk=place.pk).exists()
+    is_proposer = (
+        request.user.is_authenticated
+        and proposal is not None
+        and proposal.proposer_id == request.user.id
+    )
+    if not (is_public or request.user.is_staff or is_proposer):
+        raise Http404("No place matches the given query.")
+    pending = proposal is not None and proposal.status != proposal.Status.PUBLISHED
     meetups = []
     if request.user.is_authenticated:
         meetups = (
@@ -369,6 +386,17 @@ def place_detail(request, pk):
     # viewer has set an access preference (get_access_preference returns None for anonymous).
     pref = get_access_preference(request.user)
     access_match = matches_access_preference(accessibility_facts(place), pref)
+    # F26: activity edges with per-viewer vote summaries; F28: open-now status from parsed hours,
+    # downgraded to "unverified" when recent reports say the posted hours are wrong.
+    from apps.places.edges import edge_vote_summary
+    from apps.places.services import open_now_status
+
+    edges = [
+        pa for pa in place.place_activities.all() if not pa.is_disputed or request.user.is_staff
+    ]
+    for edge in edges:
+        edge.summary = edge_vote_summary(edge, request.user)
+    can_contribute = is_public and request.user.is_authenticated and can_participate(request.user)
     return render(
         request,
         "web/place_detail.html",
@@ -376,13 +404,135 @@ def place_detail(request, pk):
             "place": place,
             "meetups": meetups,
             "events": events,
+            "edges": edges,
+            "can_contribute": can_contribute,
+            "open_now": open_now_status(place),
             "access_facts": accessibility_facts_display(place),
             "access_match": access_match,
             "has_access_pref": pref is not None,
             "partner": partner_for_place(place),
+            "pending_proposal": proposal if pending else None,
             **_nav_context(request.user),
         },
     )
+
+
+@login_required
+def place_propose(request):
+    """F25: add a venue OSM missed. Creates a pending user place + a co-creation proposal."""
+    if not can_participate(request.user):
+        messages.error(
+            request, "You need to be verified (and consented, if a minor) to add a place."
+        )
+        return redirect("profile")
+    if request.method == "POST":
+        form = PlaceProposeForm(request.POST)
+        if form.is_valid():
+            d = form.cleaned_data
+            try:
+                proposal = social.propose_place_with_venue(
+                    request.user,
+                    name=d["name"],
+                    lon=d["lon"],
+                    lat=d["lat"],
+                    activity_type=d["activity_type"],
+                    allow_nearby=d["allow_nearby"],
+                )
+            except social.DuplicatePlace as exc:
+                if exc.soft:
+                    messages.warning(
+                        request,
+                        f"A place already exists very close ({exc.place_name}). If yours is "
+                        "different, tick 'Add anyway' and resubmit.",
+                    )
+                else:
+                    messages.error(request, f"That place already exists: {exc.place_name}.")
+                    return redirect("place_detail", pk=exc.place_id)
+            except social.SocialError as exc:
+                messages.error(request, _msg(exc))
+            else:
+                messages.success(
+                    request, "Thanks! Your place is pending — neighbours can now confirm it."
+                )
+                return redirect("place_detail", pk=proposal.place_id)
+    else:
+        form = PlaceProposeForm()
+    return render(request, "web/place_propose.html", {"form": form, **_nav_context(request.user)})
+
+
+@login_required
+def places_pending(request):
+    """F25: user places awaiting confirmation by other verified neighbours (counts only — no
+    proposer/confirmer identity is shown)."""
+    return render(
+        request,
+        "web/places_pending.html",
+        {"proposals": social.pending_proposals_for(request.user), **_nav_context(request.user)},
+    )
+
+
+@login_required
+@require_POST
+def place_confirm(request, proposal_id):
+    """F25: one-tap confirmation of a pending place by another verified user."""
+    from apps.social.models import UserPlaceProposal
+
+    proposal = get_object_or_404(UserPlaceProposal, pk=proposal_id)
+    try:
+        social.confirm_place(request.user, proposal)
+        messages.success(request, "Thanks for confirming this place.")
+    except social.SocialError as exc:
+        messages.error(request, _msg(exc))
+    return redirect("places_pending")
+
+
+@login_required
+@require_POST
+def edge_vote(request, pk, edge_id):
+    """F26: confirm or dispute that a place supports an activity."""
+    from apps.places.edges import EdgeError, vote_on_edge
+    from apps.places.models import PlaceActivity
+
+    edge = get_object_or_404(PlaceActivity, pk=edge_id, place_id=pk)
+    try:
+        vote_on_edge(request.user, edge, request.POST.get("vote"))
+        messages.success(request, "Thanks - your feedback was recorded.")
+    except EdgeError as exc:
+        messages.error(request, str(exc))
+    return redirect("place_detail", pk=pk)
+
+
+@login_required
+@require_POST
+def place_open_now_report(request, pk):
+    """F28: report that a venue's posted opening hours are wrong (closed when it said open)."""
+    from apps.places.services import NotEligible, file_open_now_report
+
+    place = get_object_or_404(Place, pk=pk)
+    try:
+        result = file_open_now_report(request.user, place)
+    except NotEligible as exc:
+        messages.error(request, str(exc))
+    else:
+        if result is None:
+            messages.info(request, "Thanks - we already have your report for this place.")
+        else:
+            messages.success(request, "Thanks - we'll flag the hours if others agree.")
+    return redirect("place_detail", pk=pk)
+
+
+@login_required
+@require_POST
+def place_open_now_reset(request, pk):
+    """F28: staff reset of accumulated open-now reports for a place."""
+    from apps.places.services import clear_open_now_reports
+
+    if not request.user.is_staff:
+        raise Http404("Not found.")
+    place = get_object_or_404(Place, pk=pk)
+    clear_open_now_reports(place, moderator=request.user)
+    messages.success(request, "Opening-hours reports cleared.")
+    return redirect("place_detail", pk=pk)
 
 
 # --- Activities ---------------------------------------------------------------------

@@ -12,7 +12,25 @@ urlpatterns = [
     # Discover
     path("places/", views.places_map, name="places_map"),
     path("places/list/", views.places_list, name="places_list"),
+    path("places/propose/", views.place_propose, name="place_propose"),
+    path("places/pending/", views.places_pending, name="places_pending"),
+    path(
+        "places/pending/<int:proposal_id>/confirm/",
+        views.place_confirm,
+        name="place_confirm",
+    ),
     path("places/<int:pk>/", views.place_detail, name="place_detail"),
+    path("places/<int:pk>/edges/<int:edge_id>/vote/", views.edge_vote, name="edge_vote"),
+    path(
+        "places/<int:pk>/hours-wrong/",
+        views.place_open_now_report,
+        name="place_open_now_report",
+    ),
+    path(
+        "places/<int:pk>/hours-reset/",
+        views.place_open_now_reset,
+        name="place_open_now_reset",
+    ),
     path("events/", views.events_list, name="events_list"),
     path("events/<int:pk>/", views.event_detail, name="event_detail"),
     # Activities

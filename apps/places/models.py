@@ -101,6 +101,10 @@ class PlaceActivity(models.Model):
     confidence = models.FloatField(default=0.5)
     source = models.CharField(max_length=16, default="osm")
     mapping_rule = models.CharField(max_length=128, blank=True)
+    # F26: crowd-dispute hide flag. INGEST-SAFE: ingest_places._upsert_edge's fixed `defaults`
+    # dict never sets is_disputed, so update_or_create leaves it untouched on re-ingest. Owned
+    # solely by the crowd-vote path (apps/places/edges.py).
+    is_disputed = models.BooleanField(default=False)
     # FUTURE: confirmed_by FK to accounts.User (null=True) for user confirmations.
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -183,3 +187,58 @@ class Partner(models.Model):
         # Same trust boundary as Place.website: only a safe http(s) URL is ever stored.
         self.website = safe_external_url(self.website)
         super().save(*args, **kwargs)
+
+
+# F26: independent confirmations to promote an INFERRED edge to CONFIRMED (ingest-protected),
+# and independent disputes to hide an inferred edge from discovery.
+DEFAULT_EDGE_QUORUM = 3
+
+
+class ActivityEdgeVote(models.Model):
+    """A user's confirm/dispute of a place<->activity edge (F26). The COUNT SOURCE — ingest
+    never touches this table, so the tally survives re-ingest by construction. One vote per
+    (edge, user); a mind-change updates the single row (no brigading)."""
+
+    class Vote(models.TextChoices):
+        CONFIRM = "confirm", "Confirms"
+        DISPUTE = "dispute", "Disputes"
+
+    edge = models.ForeignKey(PlaceActivity, on_delete=models.CASCADE, related_name="edge_votes")
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="activity_edge_votes"
+    )
+    vote = models.CharField(max_length=8, choices=Vote.choices)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(fields=["edge", "user"], name="uq_edge_vote_user"),
+        ]
+        indexes = [models.Index(fields=["edge", "vote"])]
+
+    def __str__(self):
+        return f"{self.vote}({self.edge_id} by {self.user_id})"
+
+
+class OpenNowReport(models.Model):
+    """A member's 'actually closed when it said open' report (F28). DEDICATED, ingest-safe
+    overlay: NEVER stored on Place, because ingest_places._resolve_place overwrites
+    opening_hours/opening_hours_raw/raw_tags on every re-ingest. 'Hours unreliable' is derived
+    at READ time from a count of recent reports (auto-decay), so a re-ingest can't clobber it."""
+
+    place = models.ForeignKey(Place, on_delete=models.CASCADE, related_name="open_now_reports")
+    reporter = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="open_now_reports"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        # No UniqueConstraint: uniqueness is TEMPORAL (one per reporter per place per decay
+        # window), enforced in the service so a post-decay report is allowed again.
+        indexes = [
+            models.Index(fields=["place", "created_at"]),  # read-time recent-count query
+            models.Index(fields=["place", "reporter"]),  # cheap per-window dedup .exists()
+        ]
+
+    def __str__(self):
+        return f"open_now_report({self.place_id} by {self.reporter_id})"
