@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load avatars %}
 {% block title %}Profile{% endblock %}
 {% block content %}
 <h1>{{ profile_user.display_name|default:profile_user.username }}</h1>
@@ -7,8 +8,9 @@
   {% if avatar_url %}
     <img class="avatar" src="{{ avatar_url }}" width="96" height="96" alt="profile picture">
   {% else %}
-    <div class="muted" style="width:96px;height:96px;border-radius:50%;background:#eef0ec;
-         display:flex;align-items:center;justify-content:center;font-size:.8rem">no photo</div>
+    {# No uploaded picture → the generated identicon (the universal default avatar). #}
+    <img class="avatar" src="{{ profile_user|avatar_uri }}" width="96" height="96"
+         alt="generated avatar" title="Your generated avatar (upload a photo to replace it)">
   {% endif %}
   <form method="post" action="{% url 'avatar_upload' %}" enctype="multipart/form-data">{% csrf_token %}
     <input type="file" name="image" accept="image/*" required>

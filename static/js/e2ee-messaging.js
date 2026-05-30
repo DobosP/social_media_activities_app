@@ -294,12 +294,31 @@
   let socket = null;
   let currentFilter = "all"; // conversation-list filter (all/direct/group/invited)
 
-  // A coloured avatar circle showing the first initial(s) of a label.
-  function avatarEl(label, isGroup) {
+  // An avatar circle: a person's generated identicon when we have one, else the first initial.
+  // Groups keep the initial/colour (a group has no single identity).
+  function avatarEl(label, isGroup, avatarUri) {
     const a = document.createElement("span");
     a.className = "mz-avatar" + (isGroup ? " group" : "");
-    a.textContent = (label || "?").trim().charAt(0).toUpperCase() || "?";
+    if (avatarUri && !isGroup) {
+      const img = document.createElement("img");
+      img.src = avatarUri;
+      img.alt = "";
+      img.className = "mz-avatar-img";
+      a.appendChild(img);
+    } else {
+      a.textContent = (label || "?").trim().charAt(0).toUpperCase() || "?";
+    }
     return a;
+  }
+
+  // The generated avatar for a 1:1 conversation = the OTHER participant's identicon (server-issued
+  // on the participant user-ref). A group has none.
+  function convAvatar(conv) {
+    if (!conv || conv.kind === "group") return null;
+    const other = (conv.participants || []).find(
+      (p) => p.user.public_id !== ME.public_id
+    );
+    return other && other.user.avatar ? other.user.avatar : null;
   }
 
   // Which list filter a conversation matches.
@@ -340,7 +359,7 @@
       row.type = "button";
       row.className = "mz-conv" + (current && current.id === conv.id ? " is-active" : "");
       row.dataset.convId = conv.id;
-      row.appendChild(avatarEl(isGroup ? conv.title || "#" : label, isGroup));
+      row.appendChild(avatarEl(isGroup ? conv.title || "#" : label, isGroup, convAvatar(conv)));
 
       const meta = document.createElement("div");
       meta.className = "mz-meta";
@@ -403,7 +422,7 @@
       chip.type = "button";
       chip.className = "mz-connchip";
       chip.title = "Chat with " + c.display_name;
-      chip.appendChild(avatarEl(c.display_name, false));
+      chip.appendChild(avatarEl(c.display_name, false, c.avatar));
       const lbl = document.createElement("small");
       lbl.textContent = c.display_name;
       chip.appendChild(lbl);
@@ -746,9 +765,12 @@
     if (!current) return;
     els.title.textContent = convLabel(current);
     // Header avatar, active-row highlight, and (on mobile) switch to the message pane.
+    // avatarEl returns a span whose single child is EITHER the <img> (1:1 identicon) OR a text
+    // node (the group/no-avatar initial); replaceChildren moves that child in, covering both.
     const isGroup = current.kind === "group";
-    els.titleAvatar.className = "mz-avatar" + (isGroup ? " group" : "");
-    els.titleAvatar.textContent = (convLabel(current) || "?").trim().charAt(0).toUpperCase() || "?";
+    const headAvatar = avatarEl(convLabel(current), isGroup, convAvatar(current));
+    els.titleAvatar.className = headAvatar.className;
+    els.titleAvatar.replaceChildren(...headAvatar.childNodes);
     if (els.app) els.app.classList.add("show-main");
     renderConversations();
     els.log.innerHTML = "";

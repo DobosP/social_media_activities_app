@@ -1,6 +1,8 @@
 {% extends "base.html" %}
+{% load avatars %}
 {% block title %}Connections{% endblock %}
 {% block content %}
+<style>.mini-avatar{width:28px;height:28px;border-radius:50%;vertical-align:middle;margin-right:.4rem}</style>
 <h1>Connections</h1>
 <p class="muted">People you've shared an activity with. Connect to chat privately &mdash;
   it's the same end-to-end encrypted messaging, just easier to find each other.</p>
@@ -18,7 +20,7 @@
   {% if results %}
     <ul class="members">
       {% for u in results %}
-        <li>{{ u.display_name|default:u.username }}
+        <li><img class="mini-avatar" src="{{ u|avatar_uri }}" alt="">{{ u.display_name|default:u.username }}
           <form method="post" action="{% url 'connection_request' %}" class="inline">{% csrf_token %}
             <input type="hidden" name="public_id" value="{{ u.public_id }}">
             <button class="btn btn-sm" type="submit">Connect</button>
@@ -66,7 +68,7 @@
 {% if connections %}
   <ul class="members">
     {% for u in connections %}
-      <li>{{ u.display_name|default:u.username }}
+      <li><img class="mini-avatar" src="{{ u|avatar_uri }}" alt="">{{ u.display_name|default:u.username }}
         <form method="post" action="{% url 'connection_message' %}" class="inline">{% csrf_token %}
           <input type="hidden" name="public_id" value="{{ u.public_id }}">
           <button class="btn btn-sm" type="submit">Message</button>

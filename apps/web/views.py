@@ -21,6 +21,7 @@ from django.utils.crypto import get_random_string
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
+from apps.accounts.avatars import identicon_data_uri
 from apps.accounts.identity.base import IdentityVerificationError
 from apps.accounts.identity.registry import get_identity_provider
 from apps.accounts.models import AgeBand, Cohort, GuardianRelationship, User
@@ -1349,6 +1350,7 @@ def messages_page(request):
             "public_id": str(u.public_id),
             "username": u.username,
             "display_name": u.display_name or u.username,
+            "avatar": identicon_data_uri(u.username),
         }
         for u in connections.connections_for(request.user)
     ]
@@ -1357,6 +1359,7 @@ def messages_page(request):
             "public_id": str(request.user.public_id),
             "username": request.user.username,
             "display_name": request.user.display_name or request.user.username,
+            "avatar": identicon_data_uri(request.user.username),
         },
         "connections": conns,
         # The fixed reaction set (same as the thread). In E2EE chat a reaction is an encrypted
