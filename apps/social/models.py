@@ -150,6 +150,9 @@ class Post(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="posts"
     )
     body = models.TextField()
+    # An owner-only pinned broadcast ("meet at the north gate", "time changed"): surfaced
+    # above the ordinary thread and accompanied by a one-off notification to every member.
+    is_announcement = models.BooleanField(default=False)
     # Set by a moderator REMOVE action; hidden posts are excluded from thread reads but
     # retained for audit/appeal.
     is_hidden = models.BooleanField(default=False)

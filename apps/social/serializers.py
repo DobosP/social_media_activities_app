@@ -72,6 +72,21 @@ class ActivityCreateSerializer(serializers.Serializer):
     guardian_accompanied = serializers.BooleanField(required=False, default=False)
 
 
+class ActivityUpdateSerializer(serializers.Serializer):
+    """Partial edit of an OPEN, not-yet-started activity. Only the owner-editable fields
+    are accepted; place/activity_type/cohort/guardian_accompanied are intentionally absent
+    so an edit can never change the meetup's identity or cohort pin (see
+    services.ACTIVITY_EDITABLE_FIELDS)."""
+
+    title = serializers.CharField(required=False, max_length=200)
+    description = serializers.CharField(
+        required=False, allow_blank=True, max_length=ACTIVITY_DESCRIPTION_MAX_LENGTH
+    )
+    starts_at = serializers.DateTimeField(required=False)
+    ends_at = serializers.DateTimeField(required=False, allow_null=True)
+    capacity = serializers.IntegerField(required=False, allow_null=True, min_value=1)
+
+
 class MembershipSerializer(serializers.ModelSerializer):
     user = serializers.CharField(source="user.display_name", read_only=True)
 
@@ -89,5 +104,5 @@ class PostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ["id", "author", "body", "created_at"]
-        read_only_fields = ["id", "author", "created_at"]
+        fields = ["id", "author", "body", "is_announcement", "created_at"]
+        read_only_fields = ["id", "author", "is_announcement", "created_at"]

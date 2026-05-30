@@ -6,6 +6,7 @@ It fans out to the existing per-app commands rather than re-implementing their l
   * ``purge_messaging``        — delete expired E2EE messages (retention / disappearing).
   * ``purge_chat``             — delete chat messages past CHAT_RETENTION_DAYS.
   * ``lift_suspensions``       — reactivate accounts whose temporary suspension elapsed.
+  * ``auto_complete_activities``— move past OPEN activities to COMPLETED.
   * ``send_activity_reminders``— notify members of activities starting soon.
 
 Each job is isolated: a failure in one is reported but does not abort the rest, so a
@@ -21,6 +22,7 @@ DUE_JOBS = (
     ("purge_messaging", {}),
     ("purge_chat", {}),
     ("lift_suspensions", {}),
+    ("auto_complete_activities", {}),
     ("send_activity_reminders", {}),
 )
 

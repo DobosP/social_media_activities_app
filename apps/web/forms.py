@@ -54,6 +54,25 @@ class ActivityForm(forms.Form):
         return cleaned
 
 
+class ActivityEditForm(forms.Form):
+    """Edit an existing activity. Place and activity type are deliberately omitted: they
+    are locked once the meetup exists (identity + cohort pin) — see
+    social.services.ACTIVITY_EDITABLE_FIELDS."""
+
+    title = forms.CharField(max_length=200)
+    description = forms.CharField(widget=forms.Textarea(attrs={"rows": 4}), required=False)
+    starts_at = _dt_field()
+    ends_at = _dt_field(required=False)
+    capacity = forms.IntegerField(required=False, min_value=1, help_text="Blank = unlimited.")
+
+    def clean(self):
+        cleaned = super().clean()
+        starts, ends = cleaned.get("starts_at"), cleaned.get("ends_at")
+        if starts and ends and ends < starts:
+            self.add_error("ends_at", "End time cannot be before the start time.")
+        return cleaned
+
+
 class PostForm(forms.Form):
     body = forms.CharField(
         widget=forms.Textarea(attrs={"rows": 3, "placeholder": "Write a message..."}), label=""

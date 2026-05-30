@@ -23,7 +23,11 @@ COPY . .
 # collectstatic needs no database connection. Prod settings now require DJANGO_SECRET_KEY
 # (fail-closed; see config/settings/prod.py), so pass a throwaway value for this build-only
 # step — it never reaches runtime, where a real key must be provided via the environment.
+# IDENTITY_ALLOW_DEV_PROVIDER lets this static-only step past the prod fail-closed identity
+# check (collectstatic needs no identity provider); the real provider is still required at
+# runtime via the environment.
 RUN DJANGO_SECRET_KEY=build-time-only-not-used-at-runtime \
+    IDENTITY_ALLOW_DEV_PROVIDER=True \
     DJANGO_SETTINGS_MODULE=config.settings.prod python manage.py collectstatic --noinput
 
 EXPOSE 8000

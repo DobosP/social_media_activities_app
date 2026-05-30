@@ -197,6 +197,113 @@ def leave_activity(user, activity) -> Membership | None:
     return membership
 
 
+# Fields an owner may change on an OPEN, not-yet-started activity. Deliberately excludes
+# place / activity_type / cohort / owner / guardian_accompanied: those define the meetup's
+# identity and the cohort-isolation boundary, so an edit must never touch them (no
+# bait-and-switch, no escaping the safety pin). See docs/SAFETY.md.
+ACTIVITY_EDITABLE_FIELDS = ("title", "description", "starts_at", "ends_at", "capacity")
+
+
+@transaction.atomic
+def cancel_activity(owner, activity, *, reason: str = "") -> Activity:
+    """Owner cancels a meetup they can no longer host. Flips the activity to CANCELLED
+    (so it leaves discovery/joining) and tells every current member, with the reason, so
+    nobody travels to a meetup that isn't happening. Idempotent-safe: only an OPEN
+    activity can be cancelled."""
+    if activity.owner_id != owner.id:
+        raise NotAMember(_("Only the activity owner may cancel it."))
+    if activity.status != Activity.Status.OPEN:
+        raise InvalidState(_("Only an open activity can be cancelled."))
+    activity.status = Activity.Status.CANCELLED
+    activity.save(update_fields=["status", "updated_at"])
+    reason = (reason or "").strip()[:200]
+    body = _("“%(title)s” was cancelled by the organiser.") % {"title": activity.title}
+    if reason:
+        body = f"{body} {reason}"
+    for membership in current_members(activity).exclude(user_id=owner.id).select_related("user"):
+        _notify(
+            membership.user,
+            "activity_cancelled",
+            _("An activity was cancelled"),
+            body=body,
+            url=f"/api/social/activities/{activity.id}/",
+        )
+    from apps.safety.services import record_audit
+
+    record_audit("activity.cancelled", actor=owner, target=activity, reason=reason)
+    return activity
+
+
+@transaction.atomic
+def complete_activity(activity) -> Activity:
+    """Move a past OPEN activity to its terminal COMPLETED state. Housekeeping only — no
+    notification — so a finished meetup stops being shown as live. No-op unless OPEN."""
+    if activity.status != Activity.Status.OPEN:
+        return activity
+    activity.status = Activity.Status.COMPLETED
+    activity.save(update_fields=["status", "updated_at"])
+    return activity
+
+
+def _supersede_reminders(activity) -> None:
+    """Clear any already-sent event reminders for this activity so a changed start time
+    re-fires one. send_activity_reminders dedups on (recipient, kind, url) and the url
+    carries no time, so without this a corrected time would silently never be reminded."""
+    from apps.notifications.models import Notification
+
+    Notification.objects.filter(
+        kind=Notification.Kind.EVENT_REMINDER,
+        url=f"/api/social/activities/{activity.id}/",
+    ).delete()
+
+
+@transaction.atomic
+def update_activity(owner, activity, **changes) -> Activity:
+    """Owner edits an OPEN, not-yet-started activity in place (preserving its roster,
+    thread and vote history). Only ACTIVITY_EDITABLE_FIELDS are honoured; a material time
+    change re-notifies members and supersedes the stale reminder."""
+    if activity.owner_id != owner.id:
+        raise NotAMember(_("Only the activity owner may edit it."))
+    if activity.status != Activity.Status.OPEN:
+        raise InvalidState(_("Only an open activity can be edited."))
+    if activity.starts_at <= timezone.now():
+        raise InvalidState(_("This activity has already started and can no longer be edited."))
+
+    fields = {k: v for k, v in changes.items() if k in ACTIVITY_EDITABLE_FIELDS}
+    new_starts = fields.get("starts_at", activity.starts_at)
+    new_ends = fields.get("ends_at", activity.ends_at)
+    if new_ends is not None and new_ends < new_starts:
+        raise InvalidState(_("End time cannot be before the start time."))
+    new_capacity = fields.get("capacity", activity.capacity)
+    if new_capacity is not None and new_capacity < participant_count(activity):
+        raise InvalidState(_("Capacity cannot be lower than the current number of participants."))
+
+    time_changed = "starts_at" in fields and fields["starts_at"] != activity.starts_at
+    if not fields:
+        return activity
+    for key, value in fields.items():
+        setattr(activity, key, value)
+    activity.save(update_fields=[*fields.keys(), "updated_at"])
+
+    if time_changed:
+        _supersede_reminders(activity)
+        body = _("“%(title)s” now starts %(when)s.") % {
+            "title": activity.title,
+            "when": f"{activity.starts_at:%Y-%m-%d %H:%M}",
+        }
+        for membership in (
+            current_members(activity).exclude(user_id=owner.id).select_related("user")
+        ):
+            _notify(
+                membership.user,
+                "activity_updated",
+                _("An activity you joined changed"),
+                body=body,
+                url=f"/api/social/activities/{activity.id}/",
+            )
+    return activity
+
+
 def _notify(recipient, kind, title, *, body="", url=""):
     """Emit an in-app notification (best-effort; never blocks the social action)."""
     from apps.notifications.services import notify
@@ -301,6 +408,32 @@ def post_to_thread(author, activity, body: str) -> Post:
         # Catches a member whose parental consent was revoked or assurance lapsed after join.
         raise NotEligible(_("Posting requires verified, consented participation."))
     return Post.objects.create(thread=activity.thread, author=author, body=body)
+
+
+@transaction.atomic
+def post_announcement(owner, activity, body: str) -> Post:
+    """Owner-only pinned broadcast: a must-read logistics post that surfaces above the
+    thread and fires one notification to every current member. Same cohort/consent gate
+    as an ordinary post; only the owner may use it."""
+    if activity.owner_id != owner.id:
+        raise NotAMember(_("Only the organiser can post an announcement."))
+    if not can_participate(owner):
+        raise NotEligible(_("Posting requires verified, consented participation."))
+    post = Post.objects.create(
+        thread=activity.thread, author=owner, body=body, is_announcement=True
+    )
+    body_preview = body.strip()
+    if len(body_preview) > 140:
+        body_preview = body_preview[:139].rstrip() + "…"
+    for membership in current_members(activity).exclude(user_id=owner.id).select_related("user"):
+        _notify(
+            membership.user,
+            "announcement",
+            _("Announcement: %(title)s") % {"title": activity.title},
+            body=body_preview,
+            url=f"/api/social/activities/{activity.id}/",
+        )
+    return post
 
 
 @transaction.atomic

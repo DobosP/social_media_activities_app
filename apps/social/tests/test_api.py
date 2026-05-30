@@ -1,8 +1,11 @@
+from datetime import timedelta
+
 import pytest
+from django.utils import timezone
 from rest_framework.test import APIClient
 
 from apps.accounts.models import AgeBand
-from apps.social.models import Membership, Post
+from apps.social.models import Activity, Membership, Post
 from apps.social.serializers import ACTIVITY_DESCRIPTION_MAX_LENGTH, POST_BODY_MAX_LENGTH
 from apps.social.services import create_activity
 
@@ -156,3 +159,51 @@ def test_mine_membership_list_is_bounded(settings, adult, place, activity_type, 
     resp = _client(adult).get("/api/social/activities/mine/")
     assert resp.status_code == 200, resp.content
     assert len(resp.json()) == 3
+
+
+# --- lifecycle / edit over the API (F1/F2) ---
+
+
+def test_owner_can_edit_activity_via_patch(adult, place, activity_type):
+    activity = create_activity(
+        adult,
+        place=place,
+        activity_type=activity_type,
+        title="Old",
+        starts_at=timezone.now() + timedelta(days=1),
+    )
+    resp = _client(adult).patch(
+        f"/api/social/activities/{activity.id}/", {"title": "New name"}, format="json"
+    )
+    assert resp.status_code == 200, resp.content
+    activity.refresh_from_db()
+    assert activity.title == "New name"
+
+
+def test_non_owner_cannot_patch_activity(adult, adult2, place, activity_type):
+    activity = create_activity(
+        adult,
+        place=place,
+        activity_type=activity_type,
+        title="Keep",
+        starts_at=timezone.now() + timedelta(days=1),
+    )
+    resp = _client(adult2).patch(
+        f"/api/social/activities/{activity.id}/", {"title": "hijack"}, format="json"
+    )
+    # adult2 shares the cohort (can see it) but isn't the owner → forbidden.
+    assert resp.status_code == 403, resp.content
+    activity.refresh_from_db()
+    assert activity.title == "Keep"
+
+
+def test_owner_can_cancel_via_api(adult, place, activity_type, now):
+    activity = create_activity(
+        adult, place=place, activity_type=activity_type, title="Run", starts_at=now
+    )
+    resp = _client(adult).post(
+        f"/api/social/activities/{activity.id}/cancel/", {"reason": "weather"}, format="json"
+    )
+    assert resp.status_code == 200, resp.content
+    activity.refresh_from_db()
+    assert activity.status == Activity.Status.CANCELLED

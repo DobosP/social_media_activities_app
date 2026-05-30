@@ -12,6 +12,7 @@ from .models import Membership
 from .serializers import (
     ActivityCreateSerializer,
     ActivitySerializer,
+    ActivityUpdateSerializer,
     MembershipSerializer,
     PostSerializer,
 )
@@ -20,12 +21,14 @@ from .services import (
     NotEligible,
     SocialError,
     add_guardian,
+    cancel_activity,
     cast_vote,
     create_activity,
     leave_activity,
     owner_admit,
     post_to_thread,
     request_to_join,
+    update_activity,
     visible_activities,
     with_counts,
 )
@@ -83,6 +86,30 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
         except NotEligible as exc:
             raise PermissionDenied(str(exc)) from exc
         return Response(ActivitySerializer(activity).data, status=status.HTTP_201_CREATED)
+
+    def partial_update(self, request, pk=None):
+        """Owner edits an OPEN, not-yet-started activity (PATCH). place/activity_type/
+        cohort are not editable — see services.update_activity."""
+        actor = self._actor(request)
+        activity = self._activity_for(actor, pk)
+        serializer = ActivityUpdateSerializer(data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        try:
+            update_activity(actor, activity, **serializer.validated_data)
+        except SocialError as exc:
+            raise PermissionDenied(str(exc)) from exc
+        return Response(ActivitySerializer(activity).data)
+
+    @action(detail=True, methods=["post"])
+    def cancel(self, request, pk=None):
+        """Owner cancels the meetup; current members are notified with the reason."""
+        actor = self._actor(request)
+        activity = self._activity_for(actor, pk)
+        try:
+            cancel_activity(actor, activity, reason=request.data.get("reason", ""))
+        except SocialError as exc:
+            raise PermissionDenied(str(exc)) from exc
+        return Response(ActivitySerializer(activity).data)
 
     @action(detail=True, methods=["post"])
     def join(self, request, pk=None):

@@ -44,13 +44,32 @@ from apps.social import services as social
 from apps.social.models import Activity, JoinVote, Membership
 from apps.taxonomy.models import ActivityType
 
-from .forms import ActivityForm, DonateForm, PostForm, RegisterForm, ReportForm
+from .forms import (
+    ActivityEditForm,
+    ActivityForm,
+    DonateForm,
+    PostForm,
+    RegisterForm,
+    ReportForm,
+)
 
 
 def _msg(exc) -> str:
     if isinstance(exc, ValidationError):
         return "; ".join(exc.messages)
     return str(exc)
+
+
+def _order_feed_by_location(qs, params):
+    """Order an activity feed closest-first when the page carries ?near_lon/&near_lat
+    (opt-in "near me"), else soonest-first. Coordinates are used only for this query and
+    are never stored (privacy: no location tracking). Returns (queryset, near_active)."""
+    from apps.discovery.proximity import apply_proximity
+
+    qs, point = apply_proximity(qs, params, field="place__location")
+    if point is None:
+        qs = qs.order_by("starts_at")
+    return qs, point is not None
 
 
 def _nav_context(user):
@@ -207,15 +226,22 @@ def home(request):
         distance = getattr(a, "rec_distance", None)
         if distance is not None:
             a.match_pct = max(0, min(100, round((1 - float(distance)) * 100)))
-    upcoming = (
+    upcoming_qs = (
         social.visible_activities(user)
         .filter(status=Activity.Status.OPEN, starts_at__gte=timezone.now())
         .select_related("place", "activity_type", "owner")
-        .order_by("starts_at")[:20]
     )
+    upcoming_qs, near_active = _order_feed_by_location(upcoming_qs, request.GET)
+    upcoming = upcoming_qs[:20]
+    # "Your activities" shows only live meetups: a cancelled/completed one shouldn't sit in
+    # the active list pulling members toward a meetup that isn't happening (F1 lifecycle).
     mine = (
         social.visible_activities(user)
-        .filter(memberships__user=user, memberships__state=Membership.State.MEMBER)
+        .filter(
+            memberships__user=user,
+            memberships__state=Membership.State.MEMBER,
+            status=Activity.Status.OPEN,
+        )
         .select_related("place", "activity_type")
         .distinct()
         .order_by("starts_at")
@@ -233,6 +259,7 @@ def home(request):
             "upcoming": upcoming,
             "mine": mine,
             "events": events,
+            "near_active": near_active,
             "guardian_invites": list(pending_guardian_invites_for(user)),
             **_nav_context(user),
         },
@@ -286,12 +313,12 @@ def activity_list(request):
         social.visible_activities(request.user)
         .filter(status=Activity.Status.OPEN, starts_at__gte=timezone.now())
         .select_related("place", "activity_type", "owner")
-        .order_by("starts_at")
     )
+    activities, near_active = _order_feed_by_location(activities, request.GET)
     return render(
         request,
         "web/activities.html",
-        {"activities": activities, **_nav_context(request.user)},
+        {"activities": activities, "near_active": near_active, **_nav_context(request.user)},
     )
 
 
@@ -319,7 +346,10 @@ def activity_detail(request, pk):
             m.my_vote = my_votes.get(m.id)
             pending.append(m)
 
-    posts = activity.thread.posts.filter(is_hidden=False).select_related("author")
+    thread_posts = list(activity.thread.posts.filter(is_hidden=False).select_related("author"))
+    # Owner announcements (F11) pin above the ordinary thread, newest-first.
+    announcements = [p for p in reversed(thread_posts) if p.is_announcement]
+    posts = [p for p in thread_posts if not p.is_announcement]
     photos = []
     if is_member or user.is_staff:
         try:
@@ -329,6 +359,17 @@ def activity_detail(request, pk):
         for photo in photos:
             photo.url = signed_url(photo, user)
 
+    # Safe-exit context (F5): the viewer's own already-linked guardians, named so a child
+    # who feels unsafe knows who they can turn to. No contact details, no new link — just
+    # the names of adults the platform already records as their guardian.
+    my_guardians = [
+        rel.guardian
+        for rel in GuardianRelationship.objects.filter(
+            ward=user, status=GuardianRelationship.Status.ACTIVE
+        ).select_related("guardian")
+    ]
+
+    is_owner = activity.owner_id == user.id
     return render(
         request,
         "web/activity_detail.html",
@@ -336,12 +377,15 @@ def activity_detail(request, pk):
             "activity": activity,
             "members": members,
             "is_member": is_member,
-            "is_owner": activity.owner_id == user.id,
+            "is_owner": is_owner,
+            "is_open": activity.status == Activity.Status.OPEN,
             "my_membership": my_membership,
             "pending": pending,
+            "announcements": announcements,
             "posts": posts,
             "photos": photos,
             "post_form": PostForm(),
+            "my_guardians": my_guardians,
             "can_join": social.can_join(user, activity),
             **_nav_context(user),
         },
@@ -373,6 +417,68 @@ def activity_create(request):
     else:
         form = ActivityForm(initial=initial)
     return render(request, "web/activity_form.html", {"form": form, **_nav_context(request.user)})
+
+
+@login_required
+def activity_edit(request, pk):
+    """Owner edits an OPEN, not-yet-started activity (F2). Place/type are not editable."""
+    activity = _visible_activity_or_404(request.user, pk)
+    if activity.owner_id != request.user.id:
+        messages.error(request, "Only the organiser can edit this activity.")
+        return redirect("activity_detail", pk=pk)
+    if request.method == "POST":
+        form = ActivityEditForm(request.POST)
+        if form.is_valid():
+            try:
+                social.update_activity(request.user, activity, **form.cleaned_data)
+            except social.SocialError as exc:
+                messages.error(request, _msg(exc))
+            else:
+                messages.success(request, "Activity updated.")
+                return redirect("activity_detail", pk=pk)
+    else:
+        form = ActivityEditForm(
+            initial={
+                "title": activity.title,
+                "description": activity.description,
+                "starts_at": activity.starts_at,
+                "ends_at": activity.ends_at,
+                "capacity": activity.capacity,
+            }
+        )
+    return render(
+        request,
+        "web/activity_edit.html",
+        {"form": form, "activity": activity, **_nav_context(request.user)},
+    )
+
+
+@login_required
+@require_POST
+def activity_cancel(request, pk):
+    """Owner cancels the meetup (F1); current members are notified with the reason."""
+    activity = _visible_activity_or_404(request.user, pk)
+    try:
+        social.cancel_activity(request.user, activity, reason=request.POST.get("reason", ""))
+        messages.success(request, "Activity cancelled - members have been notified.")
+    except social.SocialError as exc:
+        messages.error(request, _msg(exc))
+    return redirect("activity_detail", pk=pk)
+
+
+@login_required
+@require_POST
+def activity_announce(request, pk):
+    """Owner posts a pinned announcement that notifies every member (F11)."""
+    activity = _visible_activity_or_404(request.user, pk)
+    form = PostForm(request.POST)
+    if form.is_valid():
+        try:
+            social.post_announcement(request.user, activity, form.cleaned_data["body"])
+            messages.success(request, "Announcement posted - members notified.")
+        except social.SocialError as exc:
+            messages.error(request, _msg(exc))
+    return redirect("activity_detail", pk=pk)
 
 
 @login_required
@@ -641,10 +747,28 @@ def verify_age(request):
 
 @login_required
 def wards(request):
-    ward_users = User.objects.filter(
-        guardians__guardian=request.user,
-        guardians__status=GuardianRelationship.Status.ACTIVE,
-    ).distinct()
+    ward_users = list(
+        User.objects.filter(
+            guardians__guardian=request.user,
+            guardians__status=GuardianRelationship.Status.ACTIVE,
+        ).distinct()
+    )
+    now = timezone.now()
+    for ward in ward_users:
+        # Read-only "where/when is my child meeting" manifest (F6): real place, time and
+        # activity type only — never the thread, peers, or chat. Scoped to live, upcoming
+        # meetups the ward has actually been admitted to.
+        ward.meetups = list(
+            Activity.objects.filter(
+                memberships__user=ward,
+                memberships__state=Membership.State.MEMBER,
+                status=Activity.Status.OPEN,
+                starts_at__gte=now,
+            )
+            .select_related("place", "activity_type")
+            .order_by("starts_at")
+            .distinct()
+        )
     return render(
         request,
         "web/wards.html",
