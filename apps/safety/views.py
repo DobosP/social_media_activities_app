@@ -53,8 +53,11 @@ def _resolve_report_target(user, target_type, target_id):
     elif target_type == "post":
         post = Post.objects.filter(pk=target_id).first()
         if post:
-            activity = post.thread.activity
-            if user.is_staff or social.can_see_activity(user, activity):
+            # A Post can live in an activity thread OR a group thread — resolve the owner
+            # generically (a group thread's .activity is None). can_see_activity is a cohort check,
+            # which both an Activity and a Group satisfy, so a same-cohort member can report either.
+            owner = post.thread.owner_object
+            if user.is_staff or social.can_see_activity(user, owner):
                 return post
     elif target_type == "user":
         person = User.objects.filter(pk=target_id).first()

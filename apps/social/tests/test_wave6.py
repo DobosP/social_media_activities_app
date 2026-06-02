@@ -39,7 +39,7 @@ def test_digest_surfaces_content_and_is_conservative(adult, place, activity_type
     post_announcement(adult, activity, "Bring water!")
     post_to_thread(adult, activity, "The meeting point moved to the north gate.")
     post_to_thread(adult, activity, "had a great time last week")  # NOT logistical
-    digest = thread_digest(activity)
+    digest = thread_digest(activity, adult)
     assert any("Bring water" in p.body for p in digest["announcements"])
     # The logistics post is surfaced somewhere (here, among the most-recent).
     assert any("north gate" in p.body for p in digest["recent"] + digest["logistical"])
@@ -63,13 +63,13 @@ def test_digest_logistical_surfaces_older_keyword_post(adult, place, activity_ty
     # Force a deterministic chronology so the keyword post falls outside the recent-3 window.
     for i, p in enumerate(posts):
         Post.objects.filter(pk=p.pk).update(created_at=now + _dt.timedelta(minutes=i))
-    digest = thread_digest(activity)
+    digest = thread_digest(activity, adult)
     assert any("rescheduled" in p.body for p in digest["logistical"])  # surfaced via keyword
     assert {p.body for p in digest["recent"]} == {"ok", "cool", "nice"}
 
 
 def test_digest_empty_thread_has_no_content(adult, place, activity_type, now):
-    digest = thread_digest(_activity(adult, place, activity_type, now))
+    digest = thread_digest(_activity(adult, place, activity_type, now), adult)
     assert digest["has_content"] is False
 
 
@@ -80,9 +80,24 @@ def test_digest_counts_exclude_guardian_from_total(child, place, activity_type, 
     link_guardian(guardian, child)
     activity = _activity(child, place, activity_type, now, guardian_accompanied=True)
     add_guardian(child, activity, guardian)
-    digest = thread_digest(activity)
+    # Counts are cohort-gated: an ADULT viewer (here the supervisory guardian) sees them; the count
+    # logic still excludes the guardian from `total` (voting_members) but includes them in
+    # member_count (current_members). A CHILD viewer would get None (asserted in the groups tests).
+    digest = thread_digest(activity, guardian)
     assert digest["member_count"] == 2  # owner + guardian (current_members)
     assert digest["total"] == 1  # participants only (voting_members, guardian excluded)
+
+
+def test_digest_counts_are_none_for_a_minor_viewer(child, place, activity_type, now):
+    """The headline rule, on the activity digest too: a CHILD/TEEN viewer never sees a member
+    count or the going/total (which reveals the roster size). Textual content still shows."""
+    activity = _activity(child, place, activity_type, now)
+    post_announcement(child, activity, "Meet at the gate")
+    digest = thread_digest(activity, child)
+    assert digest["member_count"] is None
+    assert digest["going"] is None
+    assert digest["total"] is None
+    assert digest["has_content"] is True  # the announcement is still surfaced
 
 
 # --- F39: first-timer welcome ----------------------------------------------------------

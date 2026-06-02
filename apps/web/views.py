@@ -64,7 +64,7 @@ from apps.recommendations.models import UserInterest
 from apps.safety import services as safety
 from apps.safety.models import Block
 from apps.social import services as social
-from apps.social.models import Activity, JoinVote, Membership, Post
+from apps.social.models import Activity, GroupMembership, JoinVote, Membership, Post
 from apps.taxonomy.models import ActivityType
 
 from .forms import (
@@ -72,6 +72,7 @@ from .forms import (
     ActivityEditForm,
     ActivityForm,
     DonateForm,
+    GroupCreateForm,
     PlaceProposeForm,
     PostForm,
     RegisterForm,
@@ -123,11 +124,211 @@ def community_detail(request, slug):
         raise Http404("No such community.")
     limit = getattr(settings, "COMMUNITY_ACTIVITIES_PAGE_SIZE", 100)
     activities = list(communities.community_activities(community, request.user)[:limit])
+    # Read-time linkage: if a standing GROUP exists on the same (cohort, area, type/category)
+    # coordinate AND is visible to this viewer, offer a "join the standing group" link (name only,
+    # no count). Sourced from visible_groups, so a child can never discover an adult group this way.
+    linked_group = social.linked_group_for_community(community, request.user)
     return render(
         request,
         "web/community_detail.html",
-        {"community": community, "activities": activities, **_nav_context(request.user)},
+        {
+            "community": community,
+            "activities": activities,
+            "linked_group": linked_group,
+            **_nav_context(request.user),
+        },
     )
+
+
+# --- Public Groups (persistent, cohort-pinned, joinable standing groups) ----------------
+
+
+@login_required
+def group_list(request):
+    """A paginated, alphabetical list of the viewer's-cohort ACTIVE groups (the visible_groups
+    chokepoint). No counts, no 'trending' — just named groups to join."""
+    from django.core.paginator import Paginator
+
+    qs = social.visible_groups(request.user)
+    page = Paginator(qs, 30).get_page(request.GET.get("page"))
+    can_create = request.user.is_staff or getattr(settings, "GROUPS_ALLOW_USER_CREATED", False)
+    return render(
+        request,
+        "web/groups.html",
+        {"page": page, "can_create": can_create, **_nav_context(request.user)},
+    )
+
+
+@login_required
+def group_create(request):
+    """Create a standing group. Staff may always; a non-staff adult only when
+    GROUPS_ALLOW_USER_CREATED is on. The service enforces every cohort rule (minor groups are
+    staff-curated only and dark behind ALLOW_MINOR_ONBOARDING)."""
+    if not (request.user.is_staff or getattr(settings, "GROUPS_ALLOW_USER_CREATED", False)):
+        messages.error(request, "Group creation isn't available for your account yet.")
+        return redirect("groups")
+    if request.method == "POST":
+        form = GroupCreateForm(request.POST)
+        if form.is_valid():
+            from apps.communities.services import _ensure_city_area
+
+            area = _ensure_city_area(form.cleaned_data["city"])
+            try:
+                group = social.create_group(
+                    request.user,
+                    area=area,
+                    title=form.cleaned_data["title"],
+                    activity_type=form.cleaned_data["activity_type"],
+                    description=form.cleaned_data.get("description", ""),
+                    cohort=form.cleaned_data.get("cohort") or None,
+                )
+            except social.SocialError as exc:
+                messages.error(request, _msg(exc))
+            else:
+                messages.success(request, "Group created - you're the owner.")
+                return redirect("group_detail", pk=group.pk)
+    else:
+        form = GroupCreateForm()
+    return render(request, "web/group_form.html", {"form": form, **_nav_context(request.user)})
+
+
+@login_required
+def group_detail(request, pk):
+    """A standing group: its info, the upcoming activities in its coordinate, and (for members) the
+    moderated thread. The ROSTER PANEL is shown ONLY to an eligible ADULT member (group_roster);
+    minors and non-members never see a roster or count. Cohort-walled 404 via visible_groups."""
+    user = request.user
+    group = social.group_by_id(pk, user)
+    if group is None:
+        raise Http404("No such group.")
+    my_membership = group.memberships.filter(user=user).first()
+    is_member = my_membership is not None and my_membership.state == GroupMembership.State.MEMBER
+    is_owner = group.owner_id == user.id
+
+    # The SOLE who-is-here surface: None for minors / non-members (no count either).
+    roster = social.group_roster(group, user)
+    # Upcoming activities in the group's (area x type/category) coordinate — discovery, not roster.
+    feed = list(social.group_feed_activities(group, user)[:50])
+
+    # The moderated thread (members who pass the read gate). @mentions are NOT resolved on group
+    # threads (no name autocomplete/enumeration); minor group threads are announcement-only. The
+    # adult staff CURATOR of a minor group can't pass the cohort wall (can_read_thread), so they get
+    # the same staff read-bypass as activity_detail — they need to see their own announcements.
+    announcements, posts, can_post = [], [], False
+    show_thread = (is_member and social.can_read_thread(user, group)) or user.is_staff
+    if show_thread:
+        announcements = list(
+            group.thread.posts.filter(is_hidden=False, is_announcement=True)
+            .select_related("author")
+            .order_by("-created_at")[:50]
+        )
+        posts, _has_older, _cursor = social.thread_page(group)
+        for p in posts:
+            p.body_html = social.highlight_mentions(p.body, {})
+            for r in p.replies.all():
+                r.body_html = social.highlight_mentions(r.body, {})
+        # Peer posting: a current member of a non-minor group who passes the read gate. Minor group
+        # threads are announcement-only (the gate lives in post_to_thread); a staff non-member or
+        # the minor-group curator posts nothing here — the curator broadcasts via the announce form.
+        can_post = (
+            is_member
+            and group.cohort not in (Cohort.CHILD, Cohort.TEEN)
+            and social.can_read_thread(user, group)
+        )
+    post_form = PostForm() if can_post else None
+    return render(
+        request,
+        "web/group_detail.html",
+        {
+            "group": group,
+            "is_member": is_member,
+            "is_owner": is_owner,
+            "roster": roster,
+            "feed": feed,
+            "announcements": announcements,
+            "posts": posts,
+            "show_thread": show_thread,
+            "can_post": can_post,
+            "post_form": post_form,
+            # The owner (for an adult group, a peer; for a minor group, the staff curator) is the
+            # only one who may broadcast — independent of the cohort-walled thread read.
+            "can_announce": is_owner,
+            **_nav_context(user),
+        },
+    )
+
+
+@login_required
+@require_POST
+def group_join(request, pk):
+    try:
+        social.join_group(request.user, pk)
+    except social.SocialError as exc:
+        messages.error(request, _msg(exc))
+    return redirect("group_detail", pk=pk)
+
+
+@login_required
+@require_POST
+def group_leave(request, pk):
+    try:
+        social.leave_group(request.user, pk)
+    except social.SocialError as exc:
+        messages.error(request, _msg(exc))
+    return redirect("group_detail", pk=pk)
+
+
+@login_required
+@require_POST
+def group_post(request, pk):
+    group = social.group_by_id(pk, request.user)
+    if group is None:
+        raise Http404("No such group.")
+    form = PostForm(request.POST)
+    if not form.is_valid() or not (form.cleaned_data.get("body") or "").strip():
+        messages.error(request, "Type a message.")
+        return redirect("group_detail", pk=pk)
+    try:
+        social.post_to_thread(
+            request.user,
+            group,
+            form.cleaned_data["body"],
+            reply_to=form.cleaned_data.get("reply_to"),
+        )
+    except social.SocialError as exc:
+        messages.error(request, _msg(exc))
+    return redirect("group_detail", pk=pk)
+
+
+@login_required
+@require_POST
+def group_announce(request, pk):
+    group = social.group_by_id(pk, request.user)
+    if group is None:
+        raise Http404("No such group.")
+    body = (request.POST.get("body") or "").strip()
+    if not body:
+        messages.error(request, "Write an announcement.")
+        return redirect("group_detail", pk=pk)
+    try:
+        social.post_announcement(request.user, group, body)
+    except social.SocialError as exc:
+        messages.error(request, _msg(exc))
+    return redirect("group_detail", pk=pk)
+
+
+@login_required
+@require_POST
+def group_archive(request, pk):
+    group = social.group_by_id(pk, request.user)
+    if group is None:
+        raise Http404("No such group.")
+    try:
+        social.archive_group(request.user, group)
+        messages.success(request, "Group archived.")
+    except social.SocialError as exc:
+        messages.error(request, _msg(exc))
+    return redirect("groups")
 
 
 # --- Connections (find + reconnect with people you've shared real activities with) ------
@@ -823,8 +1024,9 @@ def activity_detail(request, pk):
     conn_enabled = is_member and not viewer_is_guardian and connections.is_enabled_for(user)
     conn_related_ids = connections.related_user_ids(user) if conn_enabled else set()
     my_arrival = my_membership.arrived_at if (is_member and my_membership) else None
-    # F35: the "catch up" digest, only for someone who can already see the thread.
-    digest = social.thread_digest(activity) if (is_member or user.is_staff) else None
+    # F35: the "catch up" digest, only for someone who can already see the thread. The numeric
+    # summary inside it is cohort-gated by the viewer (None for minors — see thread_digest).
+    digest = social.thread_digest(activity, user) if (is_member or user.is_staff) else None
     # F39: a self-dismissing first-timer welcome banner, shown to the new joiner for a window
     # after they were welcomed (then it simply ages out — no mutating GET).
     welcome_ttl = timedelta(days=getattr(settings, "F39_WELCOME_BANNER_TTL_DAYS", 7))
@@ -1682,6 +1884,13 @@ def _resolve_report_target(user, target_type, target_id):
         activity = Activity.objects.filter(pk=target_id).first()
         if activity and (user.is_staff or social.can_see_activity(user, activity)):
             return activity, activity.title
+    elif target_type == "post":
+        # A thread post — in an activity OR a group thread. Resolve the owner generically (a group
+        # thread's .activity is None) so a member (incl. a minor in a group thread) can report a
+        # post directly; can_see_activity is a cohort check both an Activity and a Group satisfy.
+        post = Post.objects.filter(pk=target_id).first()
+        if post and (user.is_staff or social.can_see_activity(user, post.thread.owner_object)):
+            return post, (post.author.display_name or post.author.username)
     elif target_type == "user":
         person = User.objects.filter(pk=target_id).first()
         if person:

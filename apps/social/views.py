@@ -13,6 +13,8 @@ from .serializers import (
     ActivityCreateSerializer,
     ActivitySerializer,
     ActivityUpdateSerializer,
+    GroupCreateSerializer,
+    GroupSerializer,
     MembershipSerializer,
     PostSerializer,
 )
@@ -27,7 +29,13 @@ from .services import (
     cancel_activity,
     cast_vote,
     create_activity,
+    create_group,
+    group_by_id,
+    group_feed_activities,
+    group_roster,
+    join_group,
     leave_activity,
+    leave_group,
     mark_arrived,
     owner_admit,
     post_to_thread,
@@ -35,6 +43,7 @@ from .services import (
     set_attendance_intent,
     update_activity,
     visible_activities,
+    visible_groups,
     with_counts,
 )
 
@@ -230,6 +239,91 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
         )
         posts.reverse()
         return Response(PostSerializer(posts, many=True).data)
+
+
+class GroupViewSet(viewsets.ViewSet):
+    """Persistent, cohort-pinned standing groups. Authenticated-only (NEVER AllowAny). EVERY read
+    routes through services.visible_groups(request.user) / group_by_id — there is deliberately NO
+    class-level ``queryset = Group.objects.all()``, so a cross-cohort group can never be retrieved
+    by id-guessing (the classic under-gated DRF read path). No serialized member count/roster
+    anywhere: the roster action returns a member LIST only, and only to an eligible ADULT member."""
+
+    permission_classes = [IsAuthenticated]
+
+    def list(self, request):
+        return Response(GroupSerializer(visible_groups(request.user), many=True).data)
+
+    def retrieve(self, request, pk=None):
+        group = group_by_id(pk, request.user)
+        if group is None:
+            raise NotFound("No such group.")
+        return Response(GroupSerializer(group).data)
+
+    def create(self, request):
+        serializer = GroupCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        from apps.communities.services import _ensure_city_area
+
+        area = _ensure_city_area(data["city"])
+        try:
+            group = create_group(
+                request.user,
+                area=area,
+                title=data["title"],
+                activity_type=data.get("activity_type"),
+                description=data.get("description", ""),
+                cohort=data.get("cohort") or None,
+            )
+        except NotEligible as exc:
+            raise PermissionDenied(str(exc)) from exc
+        except SocialError as exc:
+            raise ValidationError(str(exc)) from exc
+        return Response(GroupSerializer(group).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=["post"])
+    def join(self, request, pk=None):
+        try:
+            join_group(request.user, pk)
+        except (NotAMember, NotEligible) as exc:
+            raise PermissionDenied(str(exc)) from exc
+        except InvalidState as exc:
+            raise ValidationError(str(exc)) from exc
+        group = group_by_id(pk, request.user)
+        return Response(GroupSerializer(group).data if group else {})
+
+    @action(detail=True, methods=["post"])
+    def leave(self, request, pk=None):
+        try:
+            membership = leave_group(request.user, pk)
+        except InvalidState as exc:
+            raise ValidationError(str(exc)) from exc
+        if membership is None:
+            raise ValidationError("You are not a member of this group.")
+        return Response({"left": True})
+
+    @action(detail=True, methods=["get"])
+    def roster(self, request, pk=None):
+        """The member list — ONLY for an eligible ADULT member (group_roster gates it). Minors and
+        non-members get a 403, never a count. Returns names only (no scalar count field)."""
+        group = group_by_id(pk, request.user)
+        if group is None:
+            raise NotFound("No such group.")
+        roster = group_roster(group, request.user)
+        if roster is None:
+            raise PermissionDenied("This group's roster is not available to you.")
+        return Response({"members": [u.display_name or u.username for u in roster]})
+
+    @action(detail=True, methods=["get"])
+    def activities(self, request, pk=None):
+        group = group_by_id(pk, request.user)
+        if group is None:
+            raise NotFound("No such group.")
+        from apps.discovery.serializers import ActivityCardSerializer
+
+        limit = getattr(settings, "COMMUNITY_ACTIVITIES_PAGE_SIZE", 100)
+        acts = group_feed_activities(group, request.user)[:limit]
+        return Response(ActivityCardSerializer(acts, many=True).data)
 
 
 class MembershipViewSet(viewsets.ReadOnlyModelViewSet):

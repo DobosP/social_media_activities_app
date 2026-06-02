@@ -14,6 +14,7 @@ class Notification(models.Model):
         ACTIVITY_CANCELLED = "activity_cancelled", "Activity cancelled"
         ACTIVITY_UPDATED = "activity_updated", "Activity updated"
         ANNOUNCEMENT = "announcement", "Organizer announcement"
+        GROUP_ANNOUNCEMENT = "group_announcement", "Group announcement"
         ARRIVAL = "arrival", "Arrival"
         CONNECTION_REQUEST = "connection_request", "Connection request"
         CONNECTION_ACCEPTED = "connection_accepted", "Connection accepted"
@@ -56,6 +57,9 @@ WHY_REASONS = {
     Notification.Kind.ACTIVITY_UPDATED: "An activity you joined changed.",
     Notification.Kind.ANNOUNCEMENT: (
         "An organiser posted an announcement in an activity you joined."
+    ),
+    Notification.Kind.GROUP_ANNOUNCEMENT: (
+        "An organiser posted an announcement in a group you're a member of."
     ),
     Notification.Kind.ARRIVAL: "Someone arrived at your meetup (or your ward arrived).",
     Notification.Kind.CONNECTION_REQUEST: (

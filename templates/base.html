@@ -18,6 +18,7 @@
     {% if user.is_authenticated %}
       <a href="{% url 'activity_list' %}">Activities</a>
       <a href="{% url 'communities' %}">Communities</a>
+      <a href="{% url 'groups' %}">Groups</a>
       <a href="{% url 'interests' %}">Interests</a>
       <a href="{% url 'activity_create' %}">Organize</a>
       <a href="{% url 'notifications' %}">Alerts{% if unread_notifications %}

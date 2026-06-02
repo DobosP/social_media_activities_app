@@ -6,6 +6,9 @@
 <p class="muted">Upcoming
   {% if community.activity_type %}{{ community.activity_type.name }}{% else %}{{ community.category.name }}{% endif %}
   activities in {{ community.area.name }} &mdash; soonest first.</p>
+{% if linked_group %}
+  <p><a class="btn btn-sm" href="{% url 'group_detail' linked_group.pk %}">&#128101; Join the standing group: {{ linked_group.title }}</a></p>
+{% endif %}
 
 {% for a in activities %}
   {% include "web/_activity_card.html" %}

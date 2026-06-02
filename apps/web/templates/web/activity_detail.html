@@ -170,7 +170,7 @@
     {# F35: deterministic "catch up" recap — a condensed view of the CURRENT thread, no JS. #}
     <details class="card" style="border-left:3px solid var(--accent)">
       <summary><strong>Catch up</strong> <span class="muted">&mdash; what you missed</span></summary>
-      <p class="muted" style="margin:.4rem 0">{{ digest.going }} of {{ digest.total }} coming &middot; {{ digest.member_count }} member{{ digest.member_count|pluralize }}.</p>
+      {% if digest.member_count is not None %}<p class="muted" style="margin:.4rem 0">{{ digest.going }} of {{ digest.total }} coming &middot; {{ digest.member_count }} member{{ digest.member_count|pluralize }}.</p>{% endif %}
       {% if digest.announcements %}<p class="muted" style="margin:.2rem 0 0">Latest announcements:</p>
         {% for p in digest.announcements %}<div class="post" style="border-left:3px solid var(--accent)"><div class="meta">&#128204; {{ p.author.display_name|default:p.author.username }} &middot; {{ p.created_at|date:"j M H:i" }}</div><div>{{ p.body|truncatechars:200|linebreaksbr }}</div></div>{% endfor %}{% endif %}
       {% if digest.logistical %}<p class="muted" style="margin:.4rem 0 0">Logistics mentioned:</p>

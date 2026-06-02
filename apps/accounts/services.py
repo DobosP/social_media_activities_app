@@ -39,8 +39,13 @@ def apply_assurance(user: User, result) -> AgeAssurance:
     # them. (First verification from UNASSIGNED has no prior conversations to clean.)
     if user.cohort != old_cohort and old_cohort != Cohort.UNASSIGNED:
         from apps.messaging.services import remove_user_from_conversations
+        from apps.social.services import remove_user_from_groups
 
         remove_user_from_conversations(user, reason="cohort_changed")
+        # The user's standing groups were all pinned to their OLD cohort, so every one is now
+        # cross-cohort: evict them (the read-time cohort wall in can_read_thread/group_roster also
+        # fails closed, but eviction keeps rosters/feeds clean).
+        remove_user_from_groups(user, reason="cohort_changed")
     return AgeAssurance.objects.create(
         user=user,
         provider=result.provider,
@@ -292,6 +297,9 @@ def revoke_guardian(guardian: User, ward: User) -> None:
     # revoke_parental_consent. A co-guardian's still-valid consent keeps them in.
     if not can_participate(ward):
         remove_user_from_conversations(ward, reason="guardian_revoked")
+        from apps.social.services import remove_user_from_groups
+
+        remove_user_from_groups(ward, reason="guardian_revoked")
 
 
 def is_guardian_of(guardian: User, ward: User) -> bool:
@@ -335,6 +343,22 @@ def erase_user(actor: User, target: User) -> None:
 
     remove_user_from_conversations(target, reason="account_erased")
     Message.objects.filter(sender=target).delete()
+
+    # The user's owned Groups CASCADE-delete with the account (like owned Activities + their
+    # threads). Audit each destruction FIRST so a (possibly moderation-hidden, evidence-bearing)
+    # group is never destroyed SILENTLY — the hash-chained log keeps a permanent, traceable record
+    # of what went, even though the rows themselves are erased (target_ref is a string, not an FK).
+    from apps.social.models import Group
+
+    for g in Group.objects.filter(owner=target):
+        record_audit(
+            "group.owner_erased",
+            actor=actor,
+            target=g,
+            cohort=g.cohort,
+            is_hidden=g.is_hidden,
+            status=g.status,
+        )
 
     # erased_public_id (a UUID pseudonym) is sufficient to record the event; we do NOT keep
     # the username in the permanent log after erasure.
@@ -388,8 +412,12 @@ def revoke_parental_consent(guardian: User, ward: User) -> int:
         minor=ward, status=ParentalConsent.Status.ACTIVE
     ).update(status=ParentalConsent.Status.REVOKED, revoked_at=timezone.now())
     from apps.messaging.services import remove_user_from_conversations
+    from apps.social.services import remove_user_from_groups
 
     remove_user_from_conversations(ward, reason="consent_revoked")
+    # "No consent -> no access" applies to standing groups too. A consent revocation does NOT change
+    # cohort, so apply_assurance's eviction never fires for it — this is the separate wiring (H6).
+    remove_user_from_groups(ward, reason="consent_revoked")
     return revoked
 
 

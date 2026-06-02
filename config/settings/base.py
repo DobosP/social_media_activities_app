@@ -390,6 +390,21 @@ COMMUNITY_MIN_DAYS = env.int("COMMUNITY_MIN_DAYS", default=2)
 COMMUNITY_LOOKBACK_DAYS = env.int("COMMUNITY_LOOKBACK_DAYS", default=180)
 COMMUNITY_ACTIVITIES_PAGE_SIZE = env.int("COMMUNITY_ACTIVITIES_PAGE_SIZE", default=100)
 
+# --- Public Groups (persistent, cohort-pinned, joinable standing groups) ---
+# Adult groups are self-creatable only when this is True; default False = staff-curated everywhere
+# first (matching the minor-onboarding-off-by-default posture). Minor (CHILD/TEEN) groups are ALWAYS
+# staff-curated and additionally gated behind ALLOW_MINOR_ONBOARDING — they ship dark in prod.
+GROUPS_ALLOW_USER_CREATED = env.bool("GROUPS_ALLOW_USER_CREATED", default=False)
+# Hard-wall: cohorts whose members may SELF-CREATE a group. CHILD/TEEN/UNASSIGNED are discarded
+# unconditionally in code (create_group), so a minor can never own a group even by misconfig
+# (mirrors CONNECTIONS_ALLOWED_COHORTS). Adults only at launch.
+GROUPS_USER_CREATION_COHORTS = env.list("GROUPS_USER_CREATION_COHORTS", default=["adult"])
+# Anti-spam / anti-reconnaissance rate limits (dedicated buckets, distinct from thread_post).
+GROUP_CREATE_RATE_LIMIT = env.int("GROUP_CREATE_RATE_LIMIT", default=5)
+GROUP_CREATE_RATE_WINDOW_SECONDS = env.int("GROUP_CREATE_RATE_WINDOW_SECONDS", default=3600)
+GROUP_JOIN_RATE_LIMIT = env.int("GROUP_JOIN_RATE_LIMIT", default=20)
+GROUP_JOIN_RATE_WINDOW_SECONDS = env.int("GROUP_JOIN_RATE_WINDOW_SECONDS", default=3600)
+
 # --- Secure messaging (cohort-safe, invite-accept, end-to-end encrypted) ---
 # The server is a zero-knowledge relay: it stores ciphertext + per-recipient wrapped
 # keys only. Safety is access-control-based (cohort isolation + invite-accept +

@@ -48,6 +48,8 @@ def test_build_user_export_has_expected_sections():
         "guardianships",
         "memberships",
         "owned_activities",
+        "owned_groups",
+        "group_memberships",
         "donations",
     }
     assert export["profile"]["username"] == "exp1"

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Groups{% endblock %}
+{% block content %}
+<h1>Groups</h1>
+{% if can_create %}<p><a class="btn btn-sm" href="{% url 'group_create' %}">+ Create a group</a></p>{% endif %}
+<p class="muted">Standing groups in your area &mdash; e.g. &ldquo;Cluj-Napoca Football&rdquo;. Join one to
+  follow its upcoming activities and its conversation. There's no public member list.</p>
+
+{% for g in page %}
+  <div class="card">
+    <h3 style="margin:.2rem 0"><a href="{% url 'group_detail' g.pk %}">{{ g.title }}</a></h3>
+    <p class="muted" style="margin:0">
+      {% if g.activity_type %}{{ g.activity_type.name }}{% else %}All {{ g.category.name }}{% endif %}
+      &middot; {{ g.area.name }}</p>
+    {% if g.description %}<p style="margin:.3rem 0 0">{{ g.description|truncatewords:24 }}</p>{% endif %}
+  </div>
+{% empty %}
+  <p class="muted">No groups here yet.</p>
+{% endfor %}
+
+{% if page.has_other_pages %}
+  <p class="muted" style="margin-top:1rem">
+    {% if page.has_previous %}<a href="?page={{ page.previous_page_number }}">&larr; Previous</a> &middot; {% endif %}
+    Page {{ page.number }} of {{ page.paginator.num_pages }}
+    {% if page.has_next %} &middot; <a href="?page={{ page.next_page_number }}">Next &rarr;</a>{% endif %}
+  </p>
+{% endif %}
+{% endblock %}

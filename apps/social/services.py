@@ -19,6 +19,8 @@ from .models import (
     DEFAULT_JOIN_THRESHOLD,
     DEFAULT_PLACE_QUORUM,
     Activity,
+    Group,
+    GroupMembership,
     JoinVote,
     Membership,
     PlaceConfirmation,
@@ -131,6 +133,28 @@ def voting_members(activity):
     """Members who vote on join requests — peers only; guardians are supervisory and
     do not vote."""
     return current_members(activity).exclude(role=Membership.Role.GUARDIAN)
+
+
+def thread_members(owner_obj):
+    """Current MEMBER-state memberships of a thread owner — an Activity OR a Group. The single
+    dispatcher the hardened thread gates (post_to_thread / can_read_thread / toggle_reaction /
+    edit_post) use so they hold IDENTICALLY on both surfaces. Fail-closed: an unknown owner type
+    raises (never silently treated as an Activity — that default would be a cross-cohort leak)."""
+    if isinstance(owner_obj, Activity):
+        return owner_obj.memberships.filter(state=Membership.State.MEMBER)
+    if isinstance(owner_obj, Group):
+        return owner_obj.memberships.filter(state=GroupMembership.State.MEMBER)
+    raise TypeError(f"Unknown thread owner type: {type(owner_obj)!r}")
+
+
+def is_thread_frozen(owner_obj) -> bool:
+    """Whether a thread is frozen to new writes: a CANCELLED Activity or a non-ACTIVE (ARCHIVED)
+    Group. The freeze gate, generalised. Fail-closed on an unknown owner type."""
+    if isinstance(owner_obj, Activity):
+        return owner_obj.status == Activity.Status.CANCELLED
+    if isinstance(owner_obj, Group):
+        return owner_obj.status != Group.Status.ACTIVE
+    raise TypeError(f"Unknown thread owner type: {type(owner_obj)!r}")
 
 
 def participant_count(activity) -> int:
@@ -517,20 +541,31 @@ def post_to_thread(
     from apps.chat.policy import get_message_policy  # local: avoid social<->chat import cycle
     from apps.safety.services import allow_action, is_blocked
 
-    membership = current_members(activity).filter(user=author).first()
+    membership = thread_members(activity).filter(user=author).first()
     if membership is None:
         raise NotAMember(_("Only current members can post in the activity thread."))
     if membership.role == Membership.Role.GUARDIAN:
         # Guardians accompany children's activities as transparent, read-only supervisors;
         # an adult must not post into a children's thread (cohort isolation for the peers).
+        # Vestigial for a Group (GroupMembership has no GUARDIAN role — a test pins this), kept
+        # unconditionally so a future GUARDIAN role could never silently gain posting rights.
         raise NotEligible(_("Guardians accompany activities as read-only supervisors."))
+    # Minor-cohort GROUP threads are ANNOUNCEMENT-ONLY: peers read, only the owner/staff broadcasts
+    # (post_announcement). On a standing, city-wide minor group this collapses the active-poster
+    # enumeration surface to zero — the per-meetup Activity thread is where minors actually
+    # converse, naturally bounded to that meetup. A no-op for activity threads and adult groups;
+    # bylines elsewhere stay so any post author can still be reported.
+    if isinstance(activity, Group) and activity.cohort in (Cohort.CHILD, Cohort.TEEN):
+        raise NotEligible(
+            _("This group's thread is announcement-only; the organiser posts updates here.")
+        )
     if not can_participate(author):
         # Catches a member whose parental consent was revoked or assurance lapsed after join.
         raise NotEligible(_("Posting requires verified, consented participation."))
     if getattr(activity, "is_hidden", False):
         raise InvalidState(_("This activity is no longer available."))
-    if activity.status == Activity.Status.CANCELLED:
-        raise InvalidState(_("This activity was cancelled; its thread is closed."))
+    if is_thread_frozen(activity):
+        raise InvalidState(_("This conversation is closed."))
     if author.id != activity.owner_id and is_blocked(author, activity.owner):
         raise InvalidState(_("This activity is no longer available."))
     limit = getattr(settings, "THREAD_POST_RATE_LIMIT", 30)
@@ -570,6 +605,12 @@ def _ping_mentioned(author, activity, post) -> None:
     from apps.notifications.models import Notification
     from apps.safety.services import blocked_user_ids
 
+    # @mentions are an ACTIVITY-thread affordance only. On a standing GROUP thread we deliberately
+    # do NOT resolve mentions (no @autocomplete, no ping), so the active-member set is never
+    # enumerable by name — consistent with the roster-less-for-minors rule. Bylines remain for
+    # reporting; this just removes the name-resolution/ping surface entirely on group threads.
+    if isinstance(activity, Group):
+        return
     mentioned = resolve_mentions(activity, post.body, exclude_user=author)
     if not mentioned:
         return
@@ -618,7 +659,12 @@ def post_to_thread_realtime(author, activity, body: str, *, reply_to_id=None) ->
 def can_read_thread(user, activity) -> bool:
     """The single read/write membership gate for a thread, used by the web view, the bounded
     history read, AND the WebSocket consumer (connect + per-receive + per-delivery re-auth).
-    Folds the old chat.can_access_thread logic so all surfaces agree on who may see a thread."""
+    Folds the old chat.can_access_thread logic so all surfaces agree on who may see a thread.
+
+    ``activity`` is the thread OWNER OBJECT — an Activity or a Group (duck-typed: both expose
+    ``is_hidden`` / ``cohort`` / ``memberships`` / ``owner_id`` / ``owner``). Step 3 (the cohort
+    wall) is the SINGLE fail-closed read gate; there is no carve-out, so an aged-out or cross-cohort
+    user is rejected at read time even if an eviction was missed."""
     if not user or not getattr(user, "is_authenticated", False) or not user.is_active:
         return False
     if getattr(activity, "is_hidden", False):
@@ -627,7 +673,7 @@ def can_read_thread(user, activity) -> bool:
         return False
     if not can_participate(user):
         return False
-    if not activity.memberships.filter(user=user, state=Membership.State.MEMBER).exists():
+    if not thread_members(activity).filter(user=user).exists():
         return False
     from apps.safety.services import is_blocked
 
@@ -719,13 +765,13 @@ def edit_post(author, post, body: str) -> Post:
         raise NotEligible(_("You can only edit your own messages."))
     if post.is_hidden or post.is_announcement:
         raise InvalidState(_("This message can't be edited."))
-    activity = post.thread.activity
-    if not current_members(activity).filter(user=author).exists():
+    activity = post.thread.owner_object
+    if not thread_members(activity).filter(user=author).exists():
         raise NotAMember(_("Only current members can edit a message."))
     if not can_participate(author):
         raise NotEligible(_("Editing requires verified, consented participation."))
-    if activity.status == Activity.Status.CANCELLED:
-        raise InvalidState(_("This activity was cancelled; its thread is closed."))
+    if is_thread_frozen(activity):
+        raise InvalidState(_("This conversation is closed."))
     result = get_message_policy().process(author=author, thread=post.thread, body=body)
     if not result.allowed:
         raise InvalidState(result.reason or _("Message rejected."))
@@ -814,10 +860,10 @@ def toggle_reaction(user, post, emoji) -> bool:
         raise InvalidState(_("That reaction isn't available."))
     if post.is_hidden:
         raise InvalidState(_("You can't react to that message."))
-    activity = post.thread.activity
+    activity = post.thread.owner_object
     if getattr(activity, "is_hidden", False):
         raise InvalidState(_("This activity is no longer available."))
-    membership = current_members(activity).filter(user=user).first()
+    membership = thread_members(activity).filter(user=user).first()
     if membership is None:
         raise NotAMember(_("Only current members can react."))
     if membership.role == Membership.Role.GUARDIAN:
@@ -825,8 +871,8 @@ def toggle_reaction(user, post, emoji) -> bool:
         raise NotEligible(_("Guardians accompany activities as read-only supervisors."))
     if not can_participate(user):
         raise NotEligible(_("Reacting requires verified, consented participation."))
-    if activity.status == Activity.Status.CANCELLED:
-        raise InvalidState(_("This activity was cancelled; its thread is closed."))
+    if is_thread_frozen(activity):
+        raise InvalidState(_("This conversation is closed."))
     if user.id != activity.owner_id and is_blocked(user, activity.owner):
         # Mirror post_to_thread (a block leaves Membership intact, so it must be re-checked here);
         # otherwise a blocked-vs-owner member's emoji would surface on the owner's own posts.
@@ -951,37 +997,52 @@ def post_announcement(owner, activity, body: str) -> Post:
     """Owner-only pinned broadcast: a must-read logistics post that surfaces above the
     thread and fires one notification to every current member. Same cohort/consent gate
     as an ordinary post; only the owner may use it."""
+    from apps.notifications.models import Notification
     from apps.safety.services import blocked_user_ids
 
     if activity.owner_id != owner.id:
         raise NotAMember(_("Only the organiser can post an announcement."))
     if not can_participate(owner):
         raise NotEligible(_("Posting requires verified, consented participation."))
+    # Re-check current membership (mirrors post_to_thread's first gate): an owner who was EVICTED
+    # (e.g. a cohort change flipped their membership to REMOVED) can no longer broadcast into a
+    # group they no longer belong to, even though they still nominally own the row. Deliberately
+    # NOT a cohort check — the staff curator of a MINOR group is an ADULT and MUST still announce.
+    if thread_members(activity).filter(user=owner).first() is None:
+        raise NotAMember(_("Only a current member can post an announcement."))
+    if is_thread_frozen(activity):
+        raise InvalidState(_("This conversation is closed."))
     post = Post.objects.create(
         thread=activity.thread, author=owner, body=body, is_announcement=True
     )
     body_preview = body.strip()
     if len(body_preview) > 140:
         body_preview = body_preview[:139].rstrip() + "…"
+    # An announcement on a GROUP is the owner/staff broadcast channel (and, for a minor group, the
+    # ONLY write into its announcement-only thread). It uses the mutable GROUP_ANNOUNCEMENT kind and
+    # a /groups/ link; an activity announcement keeps its existing kind + link unchanged.
+    is_group = isinstance(activity, Group)
+    kind = Notification.Kind.GROUP_ANNOUNCEMENT if is_group else "announcement"
+    url = f"/groups/{activity.id}/" if is_group else f"/api/social/activities/{activity.id}/"
+    title = (_("Group announcement: %(title)s") if is_group else _("Announcement: %(title)s")) % {
+        "title": activity.title
+    }
     # Exclude blocked pairs from the fan-out — without this a member who blocked (or was
     # blocked by) the owner kept receiving the owner's announcements (the pre-existing gap
     # that mark_arrived already closes). The live group_send is filtered at delivery by the
-    # consumer's can_read_thread re-auth, which also drops blocked members.
+    # consumer's can_read_thread re-auth, which also drops blocked members. The fan-out targets
+    # current MEMBERS of the (cohort-pinned) thread and does not re-check each recipient's live
+    # cohort/eligibility — matching every other notify() fan-out; can_read_thread re-gates at READ
+    # time, so a stale recipient at most sees a notification title, never thread content (LOW).
     blocked = blocked_user_ids(owner)
     recipients = (
-        current_members(activity)
+        thread_members(activity)
         .exclude(user_id=owner.id)
         .exclude(user_id__in=blocked)
         .select_related("user")
     )
     for membership in recipients:
-        _notify(
-            membership.user,
-            "announcement",
-            _("Announcement: %(title)s") % {"title": activity.title},
-            body=body_preview,
-            url=f"/api/social/activities/{activity.id}/",
-        )
+        _notify(membership.user, kind, title, body=body_preview, url=url)
     transaction.on_commit(lambda: broadcast_post(post))
     return post
 
@@ -1045,13 +1106,17 @@ def met_confirmation_summary(activity) -> dict:
 # --- F35: extractive "catch up" thread digest -----------------------------------------
 
 
-def thread_digest(activity) -> dict:
-    """A deterministic, extractive recap of an activity thread (F35): the latest
-    announcements, a few logistical posts (conservative keyword match) and the most-recent
-    posts, plus the live going/total + member count. Pure read; the SAME digest for every
-    member (no per-user 'last read' state — that would be behavioural tracking). Bounded by
-    DIGEST_SCAN_LIMIT. Mirrors the existing thread read: like activity_detail, it does NOT
-    filter blocked-author posts, so the digest is identical for every member."""
+def thread_digest(activity, viewer) -> dict:
+    """A deterministic, extractive recap of an activity thread (F35): the latest announcements, a
+    few logistical posts (conservative keyword match) and the most-recent posts. Pure read; the
+    SAME content for every member (no per-user 'last read' state — that would be behavioural
+    tracking). Bounded by DIGEST_SCAN_LIMIT.
+
+    The numeric summary (going / total / member_count) is COHORT-GATED by ``viewer``: it is returned
+    only to an ADULT viewer, and is None for CHILD/TEEN viewers (and anyone else). ``member_count``
+    AND ``total`` both reveal the roster size, so the headline 'minors never see a member count'
+    rule suppresses the whole numeric block for minors — the digest then carries only the textual
+    content. ``viewer`` is REQUIRED so a caller can never accidentally emit an ungated count."""
     posts = activity.thread.posts
     announcements = list(
         posts.filter(is_hidden=False, is_announcement=True)
@@ -1068,14 +1133,20 @@ def thread_digest(activity) -> dict:
     logistical = [p for p in scanned if p.id not in recent_ids and _LOGISTICAL_RE.search(p.body)][
         :DIGEST_LOGISTICAL_POSTS
     ]
-    att = attendance_summary(activity)
+    # Counts are an ADULT-only surface (the count-leak fix, platform-wide). Skip the queries
+    # entirely for a minor/anon viewer so nothing leaks and nothing is wasted.
+    going = total = member_count = None
+    if getattr(viewer, "cohort", None) == Cohort.ADULT:
+        att = attendance_summary(activity)
+        going, total = att["going"], att["total"]
+        member_count = current_members(activity).count()
     return {
         "announcements": announcements,
         "recent": recent,
         "logistical": logistical,
-        "going": att["going"],
-        "total": att["total"],
-        "member_count": current_members(activity).count(),
+        "going": going,
+        "total": total,
+        "member_count": member_count,
         "has_content": bool(announcements or recent or logistical),
     }
 
@@ -1306,3 +1377,327 @@ def pending_proposals_for(user):
         .annotate(confirmations_count=Count("confirmations"))
         .order_by("created_at")[:200]
     )
+
+
+# --- Public Groups: persistent, cohort-pinned standing groups ------------------------------
+#
+# A Group reuses the ONE hardened thread stack (post_to_thread / can_read_thread, generalised to
+# owner_object above) rather than cloning it. The group-specific logic below is discovery (who can
+# see which groups), membership (open join / leave / cohort-change eviction), the per-cohort roster
+# rule (minors are roster-LESS), creation/curation (staff-only for minors; flag-gated for adults),
+# and the read-time Community linkage. Every state-changing service is @transaction.atomic and
+# audits inside the txn. See docs/PUBLIC_GROUPS_DESIGN.md.
+
+
+def _group_user_creation_cohorts() -> set:
+    """Cohorts permitted to SELF-CREATE a group (the hard-wall). UNASSIGNED and BOTH minor cohorts
+    are unconditionally discarded — a minor can never own/create a group even by misconfiguration
+    (mirrors connections._allowed_cohorts). Minor groups are staff-curated only, never self-made."""
+    allowed = set(getattr(settings, "GROUPS_USER_CREATION_COHORTS", (Cohort.ADULT,)))
+    allowed.discard(Cohort.UNASSIGNED)
+    allowed.discard(Cohort.CHILD)
+    allowed.discard(Cohort.TEEN)
+    return allowed
+
+
+def visible_groups(viewer):
+    """Groups a viewer may discover — ACTIVE, not-hidden groups of their OWN cohort, excluding any
+    owned by a blocked user. The SOLE read-access path for group discovery: every group-entity
+    surface (web list/detail, DRF GroupViewSet, Community linkage) MUST source from this, so a CHILD
+    can never even learn an ADULT group exists. Anon/UNASSIGNED -> none (never a named empty group),
+    mirroring visible_communities."""
+    if not getattr(viewer, "is_authenticated", False) or viewer.cohort == Cohort.UNASSIGNED:
+        return Group.objects.none()
+    from apps.safety.services import blocked_user_ids
+
+    qs = Group.objects.filter(
+        cohort=viewer.cohort, status=Group.Status.ACTIVE, is_hidden=False
+    ).select_related("area", "category", "activity_type", "owner")
+    blocked = blocked_user_ids(viewer)
+    if blocked:
+        qs = qs.exclude(owner_id__in=blocked)
+    return qs.order_by("title")
+
+
+def group_by_id(group_id, viewer):
+    """A group at this id reachable by the viewer, else None — a cross-cohort/hidden/archived id is
+    a clean 404 for an ordinary member, never a content leak. The single RETRIEVE chokepoint shared
+    by the web detail/management views and the DRF GroupViewSet retrieve.
+
+    STAFF get a curation/moderation bypass (any group, incl. hidden/cross-cohort), mirroring the
+    activity_detail staff bypass — so the adult staff curator of a MINOR group can still
+    view/announce/archive it (announce + archive are owner/staff-gated, not cohort-gated). The
+    cohort wall in can_read_thread still bars them from a minor PEER thread (announcement-only
+    anyway). DISCOVERY (visible_groups + the list) stays STRICTLY cohort-walled; this bypass is
+    read-only retrieve, never a discovery surface."""
+    if getattr(viewer, "is_staff", False):
+        return Group.objects.filter(pk=group_id).first()
+    return visible_groups(viewer).filter(pk=group_id).first()
+
+
+def group_feed_activities(group, viewer, *, upcoming=True):
+    """Upcoming activities a viewer can see in this group's (area x type/category) coordinate — the
+    same cohort-filtered feed a Community shows, narrowed to the group's coordinate. Cohort-walled
+    twice (viewer.cohort == group.cohort here, and visible_activities is itself cohort-pinned). This
+    is DISCOVERY (activities to go to), never the group's membership."""
+    from apps.communities.services import _area_place_q
+
+    if not getattr(viewer, "is_authenticated", False) or viewer.cohort != group.cohort:
+        return Activity.objects.none()
+    qs = visible_activities(viewer).filter(_area_place_q(group.area))
+    if group.tier == Group.Tier.TYPE:
+        qs = qs.filter(activity_type=group.activity_type)
+    else:
+        qs = qs.filter(activity_type__category=group.category)
+    if upcoming:
+        qs = qs.filter(status=Activity.Status.OPEN, starts_at__gte=timezone.now())
+    return qs.select_related("activity_type", "place", "owner").order_by("starts_at")
+
+
+@transaction.atomic
+def create_group(
+    actor,
+    *,
+    area,
+    title,
+    activity_type=None,
+    category=None,
+    description="",
+    cohort=None,
+    is_staff_curated=False,
+):
+    """Create a standing group. The cohort is PINNED at creation and IMMUTABLE thereafter; cross-age
+    is structurally impossible. Two creation paths:
+
+      - CHILD/TEEN group: STAFF-CURATED ONLY (``actor.is_staff``) and only while minor onboarding is
+        enabled (the whole minor apparatus ships dark in prod). A minor can never own a group — an
+        openly-joinable, persistent space gathering minors by city+activity is a high-value grooming
+        target, so a human gate guards its very existence (matching how minor Communities are
+        materialized by a vetted job, never user-declared).
+      - ADULT group: self-creatable only behind ``GROUPS_ALLOW_USER_CREATED`` (default False —
+        staff-curated everywhere first); staff may always create.
+
+    A non-staff actor can only ever create a group in their OWN cohort. Owner is auto-admitted
+    (role=OWNER, state=MEMBER); the Thread is created in the SAME txn (mirrors create_activity)."""
+    from apps.accounts.services import minor_onboarding_enabled
+    from apps.safety.services import allow_action, record_audit
+
+    if not can_participate(actor) or not _has_cohort(actor):
+        raise NotEligible(
+            _("You need verified, consented participation and a cohort to create a group.")
+        )
+
+    target_cohort = cohort or actor.cohort
+    if target_cohort == Cohort.UNASSIGNED:
+        raise NotEligible(_("Group creation is not available for your account."))
+    # A non-staff actor can only ever create a group in their OWN cohort (no cross-cohort creation).
+    if not actor.is_staff and target_cohort != actor.cohort:
+        raise NotEligible(_("You can only create a group in your own cohort."))
+
+    minor = target_cohort in (Cohort.CHILD, Cohort.TEEN)
+    if minor:
+        if not actor.is_staff:
+            raise NotEligible(_("Groups for under-18s are created by staff only."))
+        if not minor_onboarding_enabled():
+            raise NotEligible(_("Minor groups are not enabled on this deployment."))
+        is_staff_curated = True
+    else:
+        # Adult-cohort. The hard-wall makes CHILD/TEEN structurally unreachable here regardless.
+        if target_cohort not in _group_user_creation_cohorts():
+            raise NotEligible(_("Group creation is not available for that cohort."))
+        if not actor.is_staff and not getattr(settings, "GROUPS_ALLOW_USER_CREATED", False):
+            raise NotEligible(_("Group creation is staff-only on this deployment for now."))
+        if actor.is_staff:
+            is_staff_curated = True
+
+    # Resolve the taxonomy coordinate -> tier + rollup category.
+    if activity_type is not None:
+        tier = Group.Tier.TYPE
+        category = activity_type.category
+    elif category is not None:
+        tier = Group.Tier.CATEGORY
+    else:
+        raise InvalidState(_("A group needs an activity type or a category."))
+
+    limit = getattr(settings, "GROUP_CREATE_RATE_LIMIT", 5)
+    window = getattr(settings, "GROUP_CREATE_RATE_WINDOW_SECONDS", 3600)
+    if not allow_action(actor, "group_create", limit=limit, window_seconds=window):
+        raise InvalidState(_("You are creating groups too quickly; slow down."))
+
+    group = Group.objects.create(
+        owner=actor,
+        area=area,
+        category=category,
+        activity_type=activity_type,
+        tier=tier,
+        cohort=target_cohort,
+        title=title,
+        description=description,
+        is_staff_curated=is_staff_curated,
+    )
+    GroupMembership.objects.create(
+        group=group,
+        user=actor,
+        role=GroupMembership.Role.OWNER,
+        state=GroupMembership.State.MEMBER,
+    )
+    Thread.objects.create(group=group)
+    record_audit(
+        "group.created",
+        actor=actor,
+        target=group,
+        cohort=str(target_cohort),
+        staff_curated=is_staff_curated,
+    )
+    return group
+
+
+@transaction.atomic
+def join_group(user, group_id) -> GroupMembership:
+    """Openly join a group: admit straight to MEMBER (no vote, no request). Re-resolves the group
+    through visible_groups(user) by id (NEVER trusts a passed object), so a hidden/archived/
+    cross-cohort group can't be joined. Idempotent — a re-join by a current member is a no-op (never
+    re-notifies, never re-audits). Rate-limited on a DEDICATED bucket (mass-join reconnaissance)."""
+    from apps.safety.services import allow_action, is_blocked, record_audit
+
+    group = visible_groups(user).filter(pk=group_id).first()
+    if group is None:
+        raise NotAMember(_("No such group."))
+    if not can_participate(user):
+        raise NotEligible(_("Joining requires verified, consented participation."))
+    if user.id != group.owner_id and is_blocked(user, group.owner):
+        raise InvalidState(_("This group is no longer available."))
+    existing = group.memberships.filter(user=user).first()
+    if existing is not None and existing.state == GroupMembership.State.MEMBER:
+        return existing  # idempotent: already a member
+    limit = getattr(settings, "GROUP_JOIN_RATE_LIMIT", 20)
+    window = getattr(settings, "GROUP_JOIN_RATE_WINDOW_SECONDS", 3600)
+    if not allow_action(user, "group_join", limit=limit, window_seconds=window):
+        raise InvalidState(_("You are joining groups too quickly; slow down."))
+    if existing is not None:
+        existing.state = GroupMembership.State.MEMBER
+        existing.save(update_fields=["state"])
+        membership = existing
+    else:
+        membership = GroupMembership.objects.create(
+            group=group,
+            user=user,
+            role=GroupMembership.Role.MEMBER,
+            state=GroupMembership.State.MEMBER,
+        )
+    record_audit("group.joined", actor=user, target=group)
+    return membership
+
+
+@transaction.atomic
+def leave_group(user, group_id) -> GroupMembership | None:
+    """A member leaves a group (state -> LEFT). The owner cannot leave (they archive instead).
+    Re-resolves via visible_groups. Returns the membership, or None if not a current member."""
+    from apps.safety.services import record_audit
+
+    group = visible_groups(user).filter(pk=group_id).first()
+    if group is None:
+        return None
+    membership = group.memberships.filter(user=user).first()
+    if membership is None or membership.state != GroupMembership.State.MEMBER:
+        return None
+    if membership.role == GroupMembership.Role.OWNER:
+        raise InvalidState(_("The owner cannot leave their own group; archive it instead."))
+    membership.state = GroupMembership.State.LEFT
+    membership.save(update_fields=["state"])
+    record_audit("group.left", actor=user, target=group)
+    return membership
+
+
+@transaction.atomic
+def remove_user_from_groups(user, *, reason="participation_revoked") -> int:
+    """Evict a user from ALL their groups (MEMBER -> REMOVED) when they lose eligibility — a cohort
+    change (their old groups are all cross-cohort now) or a consent/participation revocation (which
+    does NOT change cohort, so it must be wired separately — see accounts.apply_assurance /
+    revoke_parental_consent / revoke_guardian). Mirrors messaging.remove_user_from_conversations but
+    SIMPLER: groups have no guardian-observer rows, so there is no prune fan-out. The read-time
+    cohort + can_participate re-checks in can_read_thread / group_roster fail closed even if a call
+    here is somehow missed. Returns the number of memberships removed."""
+    from apps.safety.services import record_audit
+
+    n = GroupMembership.objects.filter(user=user, state=GroupMembership.State.MEMBER).update(
+        state=GroupMembership.State.REMOVED
+    )
+    # ACCEPTED LOW (review finding): this evicts the user's own MEMBERSHIPS but does not archive
+    # groups they OWN. An evicted owner can no longer announce (post_announcement re-checks current
+    # membership) or peer-post, and staff can archive an ownerless group, so at most a benign
+    # unmanaged SAME-cohort group remains — never a cross-cohort or safety hole. Minor groups are
+    # staff-owned and staff are never evicted here, so a minor group can never become ownerless.
+    if n:
+        record_audit("group.participation_revoked", actor=user, count=n, reason=reason)
+    return n
+
+
+def group_roster(group, viewer):
+    """The SOLE 'who is in this group' read path — returns a list[User] or None. Cohort wall FIRST,
+    then the per-cohort rule (the headline child-safety requirement):
+
+      - anon / cross-cohort viewer    -> None
+      - CHILD / TEEN viewer           -> None ALWAYS (minors never see a roster/count/who-is-here)
+      - ADULT non-member              -> None (member-gated, not just cohort-gated)
+      - ADULT member                  -> the live members, defended in depth: each listed member is
+        re-filtered to ``user.cohort == group.cohort`` (a missed eviction can NEVER surface an
+        off-cohort user — symmetric with can_read_thread's read-time cohort re-check), to active +
+        eligible (can_participate, catching a consent-revoked/suspended member eviction missed), and
+        block-filtered both ways."""
+    if not getattr(viewer, "is_authenticated", False) or viewer.cohort != group.cohort:
+        return None
+    if viewer.cohort in (Cohort.CHILD, Cohort.TEEN):
+        return None
+    if not group.memberships.filter(user=viewer, state=GroupMembership.State.MEMBER).exists():
+        return None
+    from apps.safety.services import blocked_user_ids
+
+    blocked = blocked_user_ids(viewer)
+    rows = (
+        group.memberships.filter(
+            state=GroupMembership.State.MEMBER, user__cohort=group.cohort, user__is_active=True
+        )
+        .exclude(user_id__in=blocked)
+        .select_related("user")
+        .order_by("joined_at")
+    )
+    return [m.user for m in rows if can_participate(m.user)]
+
+
+def group_member_count(group, viewer):
+    """``len(group_roster(...))`` or None — the SAME gated read, never a stored count, never a
+    second surface. None for minors / non-members; an incidental display number for an adult
+    member."""
+    roster = group_roster(group, viewer)
+    return len(roster) if roster is not None else None
+
+
+@transaction.atomic
+def archive_group(actor, group) -> Group:
+    """Owner or staff archives a group: status -> ARCHIVED, which FREEZES its thread (via
+    is_thread_frozen) and drops it from discovery (visible_groups filters ACTIVE). Not a hard
+    delete (audit/appeal)."""
+    from apps.safety.services import record_audit
+
+    if actor.id != group.owner_id and not getattr(actor, "is_staff", False):
+        raise NotAMember(_("Only the owner or staff can archive a group."))
+    if group.status != Group.Status.ACTIVE:
+        return group
+    group.status = Group.Status.ARCHIVED
+    group.save(update_fields=["status", "updated_at"])
+    record_audit("group.archived", actor=actor, target=group)
+    return group
+
+
+def linked_group_for_community(community, viewer):
+    """The ACTIVE group (if any) on the SAME (cohort, area, type-or-category) coordinate as a
+    community, VISIBLE to the viewer. Sourced from visible_groups(viewer) — NEVER raw Group.objects
+    — so a child community card can never surface an adult group's existence (both ends cohort-
+    walled). Returns a Group or None; the caller links by NAME only (no membership/count)."""
+    qs = visible_groups(viewer).filter(area_id=community.area_id)
+    if community.tier == community.Tier.TYPE:
+        qs = qs.filter(tier=Group.Tier.TYPE, activity_type_id=community.activity_type_id)
+    else:
+        qs = qs.filter(tier=Group.Tier.CATEGORY, category_id=community.category_id)
+    return qs.first()
