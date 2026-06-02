@@ -1,42 +1,42 @@
 {% extends "base.html" %}
-{% load safe_urls %}
-{% block title %}{{ place.name|default:"Place" }}{% endblock %}
+{% load safe_urls i18n %}
+{% block title %}{{ place.name|default:_("Place") }}{% endblock %}
 {% block content %}
-<p class="muted"><a href="{% url 'places_map' %}">&larr; Places</a></p>
-<h1>{{ place.name|default:"Unnamed place" }}</h1>
+<p class="muted"><a href="{% url 'places_map' %}">&larr; {% trans "Places" %}</a></p>
+<h1>{{ place.name|default:_("Unnamed place") }}</h1>
 {% if pending_proposal %}
-  <div class="banner">This place is pending &mdash; it needs
-    {{ pending_proposal.confirmations.count }} of {{ pending_proposal.required_confirmations }}
-    confirmations before it's public. For now only you and moderators can see it.</div>
+  <div class="banner">{% blocktrans with confirmed=pending_proposal.confirmations.count required=pending_proposal.required_confirmations %}This place is pending &mdash; it needs
+    {{ confirmed }} of {{ required }}
+    confirmations before it's public. For now only you and moderators can see it.{% endblocktrans %}</div>
 {% endif %}
 <p class="muted">
   {% if place.address_street %}{{ place.address_street }} {{ place.address_housenumber }}, {% endif %}
   {{ place.address_city }} {{ place.address_country }}
 </p>
-{% if place.website|safe_href %}<p><a href="{{ place.website|safe_href }}" rel="noopener noreferrer" target="_blank">Official website &rarr;</a></p>{% endif %}
-{% if partner %}<p class="muted">In partnership with {% if partner.website|safe_href %}<a href="{{ partner.website|safe_href }}" rel="noopener noreferrer" target="_blank">{{ partner.name }}</a>{% else %}{{ partner.name }}{% endif %} <small>({{ partner.get_kind_display }})</small></p>{% endif %}
+{% if place.website|safe_href %}<p><a href="{{ place.website|safe_href }}" rel="noopener noreferrer" target="_blank">{% trans "Official website" %} &rarr;</a></p>{% endif %}
+{% if partner %}<p class="muted">{% trans "In partnership with" %} {% if partner.website|safe_href %}<a href="{{ partner.website|safe_href }}" rel="noopener noreferrer" target="_blank">{{ partner.name }}</a>{% else %}{{ partner.name }}{% endif %} <small>({{ partner.get_kind_display }})</small></p>{% endif %}
 
 {# F28: open-now status from the venue's parsed hours, downgraded to "unverified" by crowd reports. #}
 {% if place.opening_hours %}
 <div class="card">
-  <h2 style="margin-top:0">Opening hours</h2>
-  {% if open_now is True %}<p><span class="tag fact--true">Open now</span></p>
-  {% elif open_now is False %}<p><span class="tag fact--false">Closed now</span></p>
+  <h2 style="margin-top:0">{% trans "Opening hours" %}</h2>
+  {% if open_now is True %}<p><span class="tag fact--true">{% trans "Open now" %}</span></p>
+  {% elif open_now is False %}<p><span class="tag fact--false">{% trans "Closed now" %}</span></p>
   {% elif open_now == "unverified" %}
-    <p><span class="tag fact--limited">Hours may be out of date</span></p>
-    <p class="muted" style="font-size:.85rem">Visitors reported the posted hours were wrong here.</p>
-  {% else %}<p class="muted">Posted hours couldn't be read for right now.</p>{% endif %}
-  <p class="muted" style="font-size:.8rem">Posted: <code>{{ place.opening_hours }}</code></p>
+    <p><span class="tag fact--limited">{% trans "Hours may be out of date" %}</span></p>
+    <p class="muted" style="font-size:.85rem">{% trans "Visitors reported the posted hours were wrong here." %}</p>
+  {% else %}<p class="muted">{% trans "Posted hours couldn't be read for right now." %}</p>{% endif %}
+  <p class="muted" style="font-size:.8rem">{% trans "Posted:" %} <code>{{ place.opening_hours }}</code></p>
   {% if can_contribute %}
     <form method="post" action="{% url 'place_open_now_report' place.pk %}" style="display:inline">
       {% csrf_token %}
-      <button class="btn btn--light" type="submit">Report: closed when it said open</button>
+      <button class="btn btn--light" type="submit">{% trans "Report: closed when it said open" %}</button>
     </form>
   {% endif %}
   {% if user.is_staff %}
     <form method="post" action="{% url 'place_open_now_reset' place.pk %}" style="display:inline">
       {% csrf_token %}
-      <button class="btn btn--light" type="submit">Clear hours reports (staff)</button>
+      <button class="btn btn--light" type="submit">{% trans "Clear hours reports (staff)" %}</button>
     </form>
   {% endif %}
 </div>
@@ -44,61 +44,61 @@
 
 {# F26: crowd-confirmed activity edges. Disputed edges are hidden (staff see them flagged). #}
 <div class="card">
-  <h2 style="margin-top:0">Activities here</h2>
+  <h2 style="margin-top:0">{% trans "Activities here" %}</h2>
   {% if edges %}
   <ul class="members">
     {% for pa in edges %}
       <li>
         <span class="tag {% if pa.summary.is_confirmed %}fact--true{% elif pa.is_disputed %}fact--false{% endif %}">{{ pa.activity.name }}</span>
-        {% if pa.summary.is_confirmed %}<small class="muted">community-confirmed</small>
-        {% elif pa.is_disputed %}<small class="muted">disputed &mdash; hidden from search (staff view)</small>
-        {% else %}<small class="muted">{{ pa.summary.confirms }}/{{ pa.summary.required }} confirms{% if pa.summary.disputes %}, {{ pa.summary.disputes }} disputed{% endif %}</small>{% endif %}
+        {% if pa.summary.is_confirmed %}<small class="muted">{% trans "community-confirmed" %}</small>
+        {% elif pa.is_disputed %}<small class="muted">{% trans "disputed &mdash; hidden from search (staff view)" %}</small>
+        {% else %}<small class="muted">{% blocktrans with confirms=pa.summary.confirms required=pa.summary.required %}{{ confirms }}/{{ required }} confirms{% endblocktrans %}{% if pa.summary.disputes %}{% blocktrans with disputes=pa.summary.disputes %}, {{ disputes }} disputed{% endblocktrans %}{% endif %}</small>{% endif %}
         {% if can_contribute %}
           <form method="post" action="{% url 'edge_vote' place.pk pa.pk %}" style="display:inline">
             {% csrf_token %}
-            <button class="btn btn--light" name="vote" value="confirm" {% if pa.summary.my_vote == "confirm" %}disabled{% endif %}>Confirm</button>
-            <button class="btn btn--light" name="vote" value="dispute" {% if pa.summary.my_vote == "dispute" %}disabled{% endif %}>Dispute</button>
+            <button class="btn btn--light" name="vote" value="confirm" {% if pa.summary.my_vote == "confirm" %}disabled{% endif %}>{% trans "Confirm" %}</button>
+            <button class="btn btn--light" name="vote" value="dispute" {% if pa.summary.my_vote == "dispute" %}disabled{% endif %}>{% trans "Dispute" %}</button>
           </form>
         {% endif %}
       </li>
     {% endfor %}
   </ul>
-  {% else %}<p class="muted">No activities recorded here yet.</p>{% endif %}
+  {% else %}<p class="muted">{% trans "No activities recorded here yet." %}</p>{% endif %}
 </div>
 
 <div class="card">
-  <h2 style="margin-top:0">Accessibility</h2>
+  <h2 style="margin-top:0">{% trans "Accessibility" %}</h2>
   {% if has_access_pref %}
-    {% if access_match == "match" %}<p><span class="tag fact--true">Matches your access needs</span></p>
-    {% elif access_match == "mismatch" %}<p><span class="tag fact--false">May not meet your access needs</span></p>
-    {% else %}<p class="muted">Some of your access needs aren't recorded for this venue.</p>{% endif %}
+    {% if access_match == "match" %}<p><span class="tag fact--true">{% trans "Matches your access needs" %}</span></p>
+    {% elif access_match == "mismatch" %}<p><span class="tag fact--false">{% trans "May not meet your access needs" %}</span></p>
+    {% else %}<p class="muted">{% trans "Some of your access needs aren't recorded for this venue." %}</p>{% endif %}
   {% else %}
-    <p class="muted"><a href="{% url 'access_preferences' %}">Set your access preferences</a> to see at a glance whether a venue matches your needs.</p>
+    {% url 'access_preferences' as access_prefs_url %}
+    <p class="muted">{% blocktrans %}<a href="{{ access_prefs_url }}">Set your access preferences</a> to see at a glance whether a venue matches your needs.{% endblocktrans %}</p>
   {% endif %}
   <ul class="members">
     {% for f in access_facts %}
       <li>{{ f.label }}:
-        {% if f.state == "true" %}<span class="tag fact--true">yes</span>
-        {% elif f.state == "limited" %}<span class="tag fact--limited">limited</span>
-        {% elif f.state == "false" %}<span class="tag fact--false">no</span>
-        {% else %}<span class="muted">not recorded</span>{% endif %}
+        {% if f.state == "true" %}<span class="tag fact--true">{% trans "yes" %}</span>
+        {% elif f.state == "limited" %}<span class="tag fact--limited">{% trans "limited" %}</span>
+        {% elif f.state == "false" %}<span class="tag fact--false">{% trans "no" %}</span>
+        {% else %}<span class="muted">{% trans "not recorded" %}</span>{% endif %}
       </li>
     {% endfor %}
   </ul>
-  <p class="muted" style="font-size:.8rem">From the venue's open data &mdash; we never claim a place
-    is accessible when it isn't recorded.</p>
+  <p class="muted" style="font-size:.8rem">{% trans "From the venue's open data &mdash; we never claim a place is accessible when it isn't recorded." %}</p>
 </div>
 
 {% if user.is_authenticated %}
   <p style="margin-top:1rem">
-    <a class="btn" href="{% url 'activity_create' %}?place={{ place.pk }}">Organise an activity here</a>
+    <a class="btn" href="{% url 'activity_create' %}?place={{ place.pk }}">{% trans "Organise an activity here" %}</a>
   </p>
-  <h2>Upcoming here (your cohort)</h2>
+  <h2>{% trans "Upcoming here (your cohort)" %}</h2>
   {% for a in meetups %}{% include "web/_activity_card.html" %}{% empty %}
-  <p class="muted">No upcoming activities here yet.</p>{% endfor %}
+  <p class="muted">{% trans "No upcoming activities here yet." %}</p>{% endfor %}
 
   {% if events %}
-  <h2>Events here</h2>
+  <h2>{% trans "Events here" %}</h2>
   {% for e in events %}
     <div class="card">
       <h3><a href="{% url 'event_detail' e.pk %}">{{ e.title }}</a></h3>
@@ -107,7 +107,8 @@
   {% endfor %}
   {% endif %}
 {% else %}
-  <div class="banner"><a href="{% url 'login' %}">Log in</a> or
-    <a href="{% url 'register' %}">sign up</a> to organise or join activities here.</div>
+  {% url 'login' as login_url %}{% url 'register' as register_url %}
+  <div class="banner">{% blocktrans %}<a href="{{ login_url }}">Log in</a> or
+    <a href="{{ register_url }}">sign up</a> to organise or join activities here.{% endblocktrans %}</div>
 {% endif %}
 {% endblock %}

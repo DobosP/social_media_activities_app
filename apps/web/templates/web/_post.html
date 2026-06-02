@@ -1,32 +1,33 @@
+{% load i18n %}
 {# One thread message. Context: p (Post, with .snippet/.is_edited attached by thread_page),
    activity, user, is_member. Replies render the same partial one level deep. #}
 <article id="post-{{ p.pk }}" class="post"
-         aria-label="Message from {{ p.author.display_name|default:p.author.username }} at {{ p.created_at|date:'j M H:i' }}">
+         aria-label="{% blocktrans with author=p.author.display_name|default:p.author.username at=p.created_at|date:'j M H:i' %}Message from {{ author }} at {{ at }}{% endblocktrans %}">
   {% if p.snippet %}
     <div class="reply-quote muted" style="font-size:.8rem;border-left:2px solid var(--line);padding-left:.5rem;margin-bottom:.2rem">
-      <a href="#post-{{ p.snippet.pk }}">Replying to {{ p.snippet.author }}</a>: {{ p.snippet.text }}
+      <a href="#post-{{ p.snippet.pk }}">{% blocktrans with author=p.snippet.author %}Replying to {{ author }}{% endblocktrans %}</a>: {{ p.snippet.text }}
     </div>
   {% endif %}
   <div class="meta">{{ p.author.display_name|default:p.author.username }} &middot;
-    <a href="#post-{{ p.pk }}" class="muted" title="Link to this message">{{ p.created_at|date:"j M H:i" }}</a>
-    {% if p.is_edited %}<span class="muted" style="font-size:.75rem">(edited)</span>{% endif %}
+    <a href="#post-{{ p.pk }}" class="muted" title="{% trans 'Link to this message' %}">{{ p.created_at|date:"j M H:i" }}</a>
+    {% if p.is_edited %}<span class="muted" style="font-size:.75rem">{% trans "(edited)" %}</span>{% endif %}
   </div>
   {# body_html is server-rendered safe HTML: escaped, newlines->br, @mentions of real peers
      wrapped in <span class="mention">. Falls back to the plain escaped body if not attached. #}
   <div>{% if p.body_html %}{{ p.body_html }}{% else %}{{ p.body|linebreaksbr }}{% endif %}</div>
   {% for att in p.attachment_list %}
     {% if att.expired %}
-      <p class="muted" style="margin:.3rem 0 0;font-size:.8rem">🕓 This temporary picture has disappeared.</p>
+      <p class="muted" style="margin:.3rem 0 0;font-size:.8rem">🕓 {% trans "This temporary picture has disappeared." %}</p>
     {% elif att.kind == "image" %}
       <a href="{{ att.url }}" target="_blank" rel="noopener noreferrer">
-        <img src="{{ att.url }}" alt="shared image" loading="lazy"
+        <img src="{{ att.url }}" alt="{% trans 'shared image' %}" loading="lazy"
              style="max-width:280px;max-height:280px;border-radius:8px;margin-top:.3rem"></a>
-      {% if att.expires_at %}<p class="muted" style="font-size:.72rem;margin:.1rem 0 0">🕓 disappears {{ att.expires_at|timeuntil }}</p>{% endif %}
+      {% if att.expires_at %}<p class="muted" style="font-size:.72rem;margin:.1rem 0 0">🕓 {% blocktrans with when=att.expires_at|timeuntil %}disappears {{ when }}{% endblocktrans %}</p>{% endif %}
     {% else %}
       <p style="margin:.3rem 0 0">&#128206;
         <a href="{{ att.url }}">{{ att.original_filename|default:"document.pdf" }}</a>
-        <span class="muted" style="font-size:.75rem">(PDF &mdash; downloads)</span>
-        {% if att.expires_at %}<span class="muted" style="font-size:.72rem">&middot; 🕓 disappears {{ att.expires_at|timeuntil }}</span>{% endif %}</p>
+        <span class="muted" style="font-size:.75rem">{% trans "(PDF &mdash; downloads)" %}</span>
+        {% if att.expires_at %}<span class="muted" style="font-size:.72rem">&middot; 🕓 {% blocktrans with when=att.expires_at|timeuntil %}disappears {{ when }}{% endblocktrans %}</span>{% endif %}</p>
     {% endif %}
   {% endfor %}
   {# Reactions: anonymous + COUNTLESS — only which emojis are present, never how many or who. #}
@@ -34,11 +35,11 @@
     {% for e in p.reaction_present %}<span class="rx-chip{% if e in p.reaction_mine %} rx-mine{% endif %}">{{ e }}</span>{% endfor %}
     {% if is_member %}
       <details class="rx-pick">
-        <summary class="muted">react</summary>
+        <summary class="muted">{% trans "react" %}</summary>
         {% for e in reaction_emojis %}
           <form method="post" action="{% url 'activity_post_react' activity.pk p.pk %}" class="inline">{% csrf_token %}
             <input type="hidden" name="emoji" value="{{ e }}">
-            <button class="rx-btn{% if e in p.reaction_mine %} rx-mine{% endif %}" type="submit" aria-label="react {{ e }}">{{ e }}</button>
+            <button class="rx-btn{% if e in p.reaction_mine %} rx-mine{% endif %}" type="submit" aria-label="{% blocktrans with emoji=e %}react {{ emoji }}{% endblocktrans %}">{{ e }}</button>
           </form>
         {% endfor %}
       </details>
@@ -46,19 +47,19 @@
   </div>
   {% if is_member %}
     <div class="post-actions" style="font-size:.75rem;margin-top:.2rem">
-      <a href="?reply_to={{ p.pk }}#compose">Reply</a>
+      <a href="?reply_to={{ p.pk }}#compose">{% trans "Reply" %}</a>
       {% if p.author_id == user.id %}
-        &middot; <a href="#edit-{{ p.pk }}">Edit</a>
+        &middot; <a href="#edit-{{ p.pk }}">{% trans "Edit" %}</a>
         &middot;
         <form method="post" action="{% url 'activity_post_delete' activity.pk p.pk %}" class="inline"
-              onsubmit="return confirm('Delete your message? This can\'t be undone.');">{% csrf_token %}
-          <button class="linkbtn" type="submit">Delete</button>
+              onsubmit="return confirm('{% trans "Delete your message? This can\'t be undone." %}');">{% csrf_token %}
+          <button class="linkbtn" type="submit">{% trans "Delete" %}</button>
         </form>
         {# No-JS in-place edit: a target-revealed form, classic POST/redirect. #}
         <form method="post" id="edit-{{ p.pk }}" class="post-edit" action="{% url 'activity_post_edit' activity.pk p.pk %}"
               style="margin-top:.3rem">{% csrf_token %}
-          <textarea name="body" rows="2" maxlength="4000" required aria-label="Edit your message">{{ p.body }}</textarea>
-          <button class="btn btn-sm" type="submit">Save edit</button>
+          <textarea name="body" rows="2" maxlength="4000" required aria-label="{% trans 'Edit your message' %}">{{ p.body }}</textarea>
+          <button class="btn btn-sm" type="submit">{% trans "Save edit" %}</button>
         </form>
       {% endif %}
     </div>

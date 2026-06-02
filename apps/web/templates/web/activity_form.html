@@ -1,11 +1,12 @@
 {% extends "base.html" %}
-{% block title %}Organise an activity{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Organise an activity" %}{% endblock %}
 {% block content %}
-<h1>Organise an activity</h1>
-<p class="muted">It will be visible only to people in your cohort
-  (<strong>{{ user.get_cohort_display }}</strong>).</p>
+<h1>{% trans "Organise an activity" %}</h1>
+{% blocktrans with cohort=user.get_cohort_display %}<p class="muted">It will be visible only to people in your cohort
+  (<strong>{{ cohort }}</strong>).</p>{% endblocktrans %}
 <form method="post">{% csrf_token %}
   {{ form.as_p }}
-  <button class="btn" type="submit">Create activity</button>
+  <button class="btn" type="submit">{% trans "Create activity" %}</button>
 </form>
 {% endblock %}

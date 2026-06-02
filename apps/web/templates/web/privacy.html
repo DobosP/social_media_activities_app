@@ -1,93 +1,90 @@
 {% extends "base.html" %}
-{% block title %}Privacy Policy{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Privacy Policy" %}{% endblock %}
 {% block content %}
 <div class="banner">
-  <strong>DRAFT &mdash; to be finalized by the DPO/legal before launch.</strong>
-  This text is placeholder copy and is not legally binding in its current form.
+  <strong>{% trans "DRAFT &mdash; to be finalized by the DPO/legal before launch." %}</strong>
+  {% trans "This text is placeholder copy and is not legally binding in its current form." %}
 </div>
 
-<h1>Privacy Policy</h1>
-<p class="muted">Last reviewed: draft. This platform is operated for users in Romania and the EU and
-  is designed around the GDPR (Regulation (EU) 2016/679) and the Digital Services Act.</p>
+<h1>{% trans "Privacy Policy" %}</h1>
+<p class="muted">{% trans "Last reviewed: draft. This platform is operated for users in Romania and the EU and is designed around the GDPR (Regulation (EU) 2016/679) and the Digital Services Act." %}</p>
 
 <div class="card">
-  <h2>Who we are</h2>
-  <p>This service is a nonprofit, text-first platform for arranging in-person activities. The
+  <h2>{% trans "Who we are" %}</h2>
+  <p>{% blocktrans %}This service is a nonprofit, text-first platform for arranging in-person activities. The
     operating organisation is the data controller for the personal data described below.
-    <em>(Legal entity name, address and registration number to be inserted by legal.)</em></p>
+    <em>(Legal entity name, address and registration number to be inserted by legal.)</em>{% endblocktrans %}</p>
 </div>
 
 <div class="card">
-  <h2>What data we collect</h2>
+  <h2>{% trans "What data we collect" %}</h2>
   <ul>
-    <li><strong>Age band, not date of birth.</strong> We only ever store an age <em>band</em>
+    <li>{% blocktrans %}<strong>Age band, not date of birth.</strong> We only ever store an age <em>band</em>
       (for example "over 16" or "over 18"). We do <strong>not</strong> collect or store your
       birthdate. Age is proven through the EU Digital Identity wallet, which discloses only the
-      band to us.</li>
-    <li><strong>Username and display name</strong> you choose at registration. We do not require
-      your real name.</li>
-    <li><strong>Activity data</strong> you create or take part in: activities you organise or join,
+      band to us.{% endblocktrans %}</li>
+    <li>{% blocktrans %}<strong>Username and display name</strong> you choose at registration. We do not require
+      your real name.{% endblocktrans %}</li>
+    <li>{% blocktrans %}<strong>Activity data</strong> you create or take part in: activities you organise or join,
       posts in activity threads, interests you select, places and events you view, and
-      membership/voting records needed to run the activity.</li>
-    <li><strong>Safety data</strong> needed to keep minors and the community safe: reports you file
-      or that concern you, blocks, and moderation decisions.</li>
-    <li><strong>Account security data</strong> such as a hashed password and basic technical logs.</li>
+      membership/voting records needed to run the activity.{% endblocktrans %}</li>
+    <li>{% blocktrans %}<strong>Safety data</strong> needed to keep minors and the community safe: reports you file
+      or that concern you, blocks, and moderation decisions.{% endblocktrans %}</li>
+    <li>{% blocktrans %}<strong>Account security data</strong> such as a hashed password and basic technical logs.{% endblocktrans %}</li>
   </ul>
-  <p class="muted">We do not run behavioural advertising, sell personal data, or profile you to
-    manipulate engagement.</p>
+  <p class="muted">{% trans "We do not run behavioural advertising, sell personal data, or profile you to manipulate engagement." %}</p>
 </div>
 
 <div class="card">
-  <h2>Lawful basis for processing</h2>
+  <h2>{% trans "Lawful basis for processing" %}</h2>
   <ul>
-    <li><strong>Performance of a contract</strong> (Art. 6(1)(b)) to provide the account and
-      activity features you ask for.</li>
-    <li><strong>Legal obligation</strong> (Art. 6(1)(c)) for age assurance and child-safety
-      duties, including obligations under the Digital Services Act.</li>
-    <li><strong>Legitimate interests</strong> (Art. 6(1)(f)) to keep the service safe, prevent
-      abuse, and maintain security &mdash; balanced against your rights.</li>
-    <li><strong>Consent</strong> (Art. 6(1)(a)) where specifically requested. For users under 16,
-      processing relies on parental/guardian consent as required by GDPR Art. 8 and Romanian law.</li>
+    <li>{% blocktrans %}<strong>Performance of a contract</strong> (Art. 6(1)(b)) to provide the account and
+      activity features you ask for.{% endblocktrans %}</li>
+    <li>{% blocktrans %}<strong>Legal obligation</strong> (Art. 6(1)(c)) for age assurance and child-safety
+      duties, including obligations under the Digital Services Act.{% endblocktrans %}</li>
+    <li>{% blocktrans %}<strong>Legitimate interests</strong> (Art. 6(1)(f)) to keep the service safe, prevent
+      abuse, and maintain security &mdash; balanced against your rights.{% endblocktrans %}</li>
+    <li>{% blocktrans %}<strong>Consent</strong> (Art. 6(1)(a)) where specifically requested. For users under 16,
+      processing relies on parental/guardian consent as required by GDPR Art. 8 and Romanian law.{% endblocktrans %}</li>
   </ul>
 </div>
 
 <div class="card">
-  <h2>How long we keep data (retention)</h2>
-  <p>We keep personal data only as long as needed for the purpose it was collected, then delete or
+  <h2>{% trans "How long we keep data (retention)" %}</h2>
+  <p>{% blocktrans %}We keep personal data only as long as needed for the purpose it was collected, then delete or
     anonymise it. Account data is retained while your account is active. Safety and moderation
     records may be retained longer where required to protect users or to meet legal obligations.
-    <em>(Concrete retention periods to be confirmed by the DPO.)</em></p>
+    <em>(Concrete retention periods to be confirmed by the DPO.)</em>{% endblocktrans %}</p>
 </div>
 
 <div class="card">
-  <h2>Your rights</h2>
-  <p>Under the GDPR you have the right to:</p>
+  <h2>{% trans "Your rights" %}</h2>
+  <p>{% trans "Under the GDPR you have the right to:" %}</p>
   <ul>
-    <li><strong>Access</strong> the personal data we hold about you and obtain a copy.</li>
-    <li><strong>Rectification</strong> of inaccurate data.</li>
-    <li><strong>Erasure</strong> ("right to be forgotten", Art. 17). You can delete your account
-      and personal data yourself from your
-      {% if user.is_authenticated %}<a href="{% url 'profile' %}">profile page</a>{% else %}profile page{% endif %},
-      or by contacting our Data Protection Officer.</li>
-    <li><strong>Restriction</strong> and <strong>objection</strong> to certain processing.</li>
-    <li><strong>Data portability</strong> for data you provided to us.</li>
-    <li><strong>Lodge a complaint</strong> with a supervisory authority, in Romania the National
-      Supervisory Authority for Personal Data Processing (ANSPDCP).</li>
+    <li>{% blocktrans %}<strong>Access</strong> the personal data we hold about you and obtain a copy.{% endblocktrans %}</li>
+    <li>{% blocktrans %}<strong>Rectification</strong> of inaccurate data.{% endblocktrans %}</li>
+    <li>{% blocktrans %}<strong>Erasure</strong> ("right to be forgotten", Art. 17). You can delete your account
+      and personal data yourself from your{% endblocktrans %}
+      {% if user.is_authenticated %}<a href="{% url 'profile' %}">{% trans "profile page" %}</a>{% else %}{% trans "profile page" %}{% endif %},
+      {% trans "or by contacting our Data Protection Officer." %}</li>
+    <li>{% blocktrans %}<strong>Restriction</strong> and <strong>objection</strong> to certain processing.{% endblocktrans %}</li>
+    <li>{% blocktrans %}<strong>Data portability</strong> for data you provided to us.{% endblocktrans %}</li>
+    <li>{% blocktrans %}<strong>Lodge a complaint</strong> with a supervisory authority, in Romania the National
+      Supervisory Authority for Personal Data Processing (ANSPDCP).{% endblocktrans %}</li>
   </ul>
 </div>
 
 <div class="card">
-  <h2>Children and guardians</h2>
-  <p>This platform is used by minors. Users under 16 require verified parental or guardian consent
-    before they can join or organise activities, and we keep cohorts age-separated. Guardians can
-    review and withdraw consent at any time.</p>
+  <h2>{% trans "Children and guardians" %}</h2>
+  <p>{% trans "This platform is used by minors. Users under 16 require verified parental or guardian consent before they can join or organise activities, and we keep cohorts age-separated. Guardians can review and withdraw consent at any time." %}</p>
 </div>
 
 <div class="card">
-  <h2>Contact our Data Protection Officer</h2>
-  <p>For any privacy question or to exercise your rights, contact our Data Protection Officer:</p>
-  <p><strong>Data Protection Officer</strong><br>
-    Email: <em>dpo@example.org (placeholder &mdash; to be set by legal)</em><br>
-    Postal address: <em>(to be inserted by legal)</em></p>
+  <h2>{% trans "Contact our Data Protection Officer" %}</h2>
+  <p>{% trans "For any privacy question or to exercise your rights, contact our Data Protection Officer:" %}</p>
+  <p><strong>{% trans "Data Protection Officer" %}</strong><br>
+    {% blocktrans %}Email: <em>dpo@example.org (placeholder &mdash; to be set by legal)</em><br>
+    Postal address: <em>(to be inserted by legal)</em>{% endblocktrans %}</p>
 </div>
 {% endblock %}

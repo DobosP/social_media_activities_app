@@ -1,56 +1,57 @@
 {% extends "base.html" %}
-{% block title %}Your wards{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Your wards" %}{% endblock %}
 {% block content %}
-<h1>Your wards</h1>
-<p class="muted">Children you are the registered parent/legal guardian of. Guardianship is set up
+<h1>{% trans "Your wards" %}</h1>
+<p class="muted">{% blocktrans %}Children you are the registered parent/legal guardian of. Guardianship is set up
   alongside parental consent. You can see <strong>where and when</strong> they're meeting in
-  person &mdash; not their conversations, photos or who else is there.</p>
+  person &mdash; not their conversations, photos or who else is there.{% endblocktrans %}</p>
 {% for w in wards %}
   <div class="card">
     <strong>{{ w.display_name|default:w.username }}</strong>
     <span class="tag">{{ w.get_cohort_display }}</span>
-    <h3 style="margin:.5rem 0 .3rem">Upcoming meetups</h3>
+    <h3 style="margin:.5rem 0 .3rem">{% trans "Upcoming meetups" %}</h3>
     {% if w.meetups %}
       <ul class="members">
         {% for a in w.meetups %}
           <li>{{ a.starts_at|date:"D j M, H:i" }} &middot; {{ a.activity_type.name }}
-            at {{ a.place.name|default:"a place" }}{% if a.place.address_city %}, {{ a.place.address_city }}{% endif %}</li>
+            {% blocktrans with place=a.place.name|default:_("a place") %}at {{ place }}{% endblocktrans %}{% if a.place.address_city %}, {{ a.place.address_city }}{% endif %}</li>
         {% endfor %}
       </ul>
     {% else %}
-      <p class="muted">No upcoming meetups.</p>
+      <p class="muted">{% trans "No upcoming meetups." %}</p>
     {% endif %}
 
-    <h3 style="margin:.6rem 0 .3rem">What this guardianship lets you do</h3>
+    <h3 style="margin:.6rem 0 .3rem">{% trans "What this guardianship lets you do" %}</h3>
     <ul class="muted" style="font-size:.85rem">
-      <li>&#10003; See their upcoming meetups (place, time, activity type) &mdash; shown above.</li>
-      {% if w.caps.can_get_arrival_pings %}<li>&#10003; Get an alert when they tap &ldquo;I've arrived&rdquo; at a meetup.</li>{% endif %}
-      {% if w.caps.can_observe_messaging %}<li>&#10003; If you've set up secure messaging, read their group chats as a visible, read-only observer.</li>{% endif %}
-      {% if w.caps.requires_consent %}<li>{% if w.caps.consent_active %}&#10003; Parental consent is active.{% else %}&bull; Parental consent is not active.{% endif %}{% if w.caps.can_grant_consent %} You can grant or revoke it.{% endif %}</li>{% endif %}
-      <li>&#10007; You cannot see their thread posts, photos, who else is there, or chat content (beyond the observer view above); you never enter their activities or cohort.</li>
+      <li>{% trans "&#10003; See their upcoming meetups (place, time, activity type) &mdash; shown above." %}</li>
+      {% if w.caps.can_get_arrival_pings %}<li>{% trans "&#10003; Get an alert when they tap &ldquo;I've arrived&rdquo; at a meetup." %}</li>{% endif %}
+      {% if w.caps.can_observe_messaging %}<li>{% trans "&#10003; If you've set up secure messaging, read their group chats as a visible, read-only observer." %}</li>{% endif %}
+      {% if w.caps.requires_consent %}<li>{% if w.caps.consent_active %}{% trans "&#10003; Parental consent is active." %}{% else %}{% trans "&bull; Parental consent is not active." %}{% endif %}{% if w.caps.can_grant_consent %} {% trans "You can grant or revoke it." %}{% endif %}</li>{% endif %}
+      <li>{% trans "&#10007; You cannot see their thread posts, photos, who else is there, or chat content (beyond the observer view above); you never enter their activities or cohort." %}</li>
     </ul>
     <form method="post" action="{% url 'guardian_revoke' w.pk %}" class="inline"
-          onsubmit="return confirm('End guardianship of {{ w.display_name|default:w.username }}? This also revokes the consent you granted.');">
+          onsubmit="return confirm('{% blocktrans with name=w.display_name|default:w.username %}End guardianship of {{ name }}? This also revokes the consent you granted.{% endblocktrans %}');">
       {% csrf_token %}
-      <button class="btn btn-sm btn-danger" type="submit">End guardianship</button>
+      <button class="btn btn-sm btn-danger" type="submit">{% trans "End guardianship" %}</button>
     </form>
   </div>
 {% empty %}
-  <p class="muted">You aren't a registered guardian of any account.</p>
+  <p class="muted">{% trans "You aren't a registered guardian of any account." %}</p>
 {% endfor %}
 
-<h2>Link a child's account</h2>
-<p class="muted">Enter your child's username to send a guardianship request. They confirm it from
-  their own home page. You must be a verified adult.</p>
+<h2>{% trans "Link a child's account" %}</h2>
+<p class="muted">{% blocktrans %}Enter your child's username to send a guardianship request. They confirm it from
+  their own home page. You must be a verified adult.{% endblocktrans %}</p>
 <form method="post" action="{% url 'guardian_invite_create' %}" class="stack">
   {% csrf_token %}
-  <label>Child's username
+  <label>{% trans "Child's username" %}
     <input type="text" name="ward_username" required autocomplete="off"></label>
-  <label>Relationship
+  <label>{% trans "Relationship" %}
     <select name="relationship">
-      <option value="parent">Parent</option>
-      <option value="legal_guardian">Legal guardian</option>
+      <option value="parent">{% trans "Parent" %}</option>
+      <option value="legal_guardian">{% trans "Legal guardian" %}</option>
     </select></label>
-  <button class="btn" type="submit">Send guardianship request</button>
+  <button class="btn" type="submit">{% trans "Send guardianship request" %}</button>
 </form>
 {% endblock %}

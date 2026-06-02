@@ -1,9 +1,10 @@
 {% extends "base.html" %}
-{% block title %}Your interests{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Your interests" %}{% endblock %}
 {% block content %}
-<h1>Your interests</h1>
-<p class="muted">Pick what you'd like to do &mdash; we suggest activities for you from these (and the
-  activities you join). No tracking; only what you tell us here.</p>
+<h1>{% trans "Your interests" %}</h1>
+<p class="muted">{% blocktrans %}Pick what you'd like to do &mdash; we suggest activities for you from these (and the
+  activities you join). No tracking; only what you tell us here.{% endblocktrans %}</p>
 <form method="post">{% csrf_token %}
   <div class="interest-grid">
     {% for t in options %}
@@ -11,6 +12,6 @@
         {% if t.slug in chosen %}checked{% endif %}> {{ t.name }}</label>
     {% endfor %}
   </div>
-  <button class="btn" type="submit" style="margin-top:.8rem">Save interests</button>
+  <button class="btn" type="submit" style="margin-top:.8rem">{% trans "Save interests" %}</button>
 </form>
 {% endblock %}

@@ -1,40 +1,39 @@
 {% extends "base.html" %}
-{% block title %}Your safety record{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Your safety record" %}{% endblock %}
 {% block content %}
-<h1>Your safety record</h1>
-<p class="muted">A record of moderation decisions about your account, your activities and your posts,
-  and the status of the reports you've sent us. Only you can see this page.</p>
+<h1>{% trans "Your safety record" %}</h1>
+<p class="muted">{% trans "A record of moderation decisions about your account, your activities and your posts, and the status of the reports you've sent us. Only you can see this page." %}</p>
 
-<h2>Decisions about you</h2>
+<h2>{% trans "Decisions about you" %}</h2>
 <div class="grid">
   {% for d in decisions %}
     <div class="card">
       <strong>{{ d.action_label }}</strong> &middot; <span class="muted">{{ d.scope }}</span>
       {% if d.is_suspension %}
-        <span class="tag">{% if d.is_active %}active{% else %}no longer active{% endif %}</span>
+        <span class="tag">{% if d.is_active %}{% trans "active" %}{% else %}{% trans "no longer active" %}{% endif %}</span>
       {% endif %}
-      <p>Reason: {{ d.reason_label }}</p>
+      <p>{% blocktrans with reason=d.reason_label %}Reason: {{ reason }}{% endblocktrans %}</p>
       <p class="muted">{{ d.created_at|date:"j M Y, H:i" }}</p>
     </div>
   {% empty %}
-    <p class="muted">No moderation decisions have affected your account or content.</p>
+    <p class="muted">{% trans "No moderation decisions have affected your account or content." %}</p>
   {% endfor %}
 </div>
 
-<h2>Reports you've filed</h2>
+<h2>{% trans "Reports you've filed" %}</h2>
 <div class="grid">
   {% for r in reports %}
     <div class="card">
       <strong>{{ r.reason_label }}</strong> <span class="tag">{{ r.status_label }}</span>
       {% if r.detail %}<p>{{ r.detail }}</p>{% endif %}
-      {% if r.resolution %}<p class="muted">Outcome: {{ r.resolution }}</p>{% endif %}
-      <p class="muted">Filed {{ r.created_at|date:"j M Y" }}{% if r.handled_at %} &middot; reviewed {{ r.handled_at|date:"j M Y" }}{% endif %}</p>
+      {% if r.resolution %}<p class="muted">{% blocktrans with resolution=r.resolution %}Outcome: {{ resolution }}{% endblocktrans %}</p>{% endif %}
+      <p class="muted">{% blocktrans with filed=r.created_at|date:"j M Y" %}Filed {{ filed }}{% endblocktrans %}{% if r.handled_at %} &middot; {% blocktrans with reviewed=r.handled_at|date:"j M Y" %}reviewed {{ reviewed }}{% endblocktrans %}{% endif %}</p>
     </div>
   {% empty %}
-    <p class="muted">You haven't filed any reports.</p>
+    <p class="muted">{% trans "You haven't filed any reports." %}</p>
   {% endfor %}
 </div>
 
-<p class="muted" style="font-size:.85rem">If you believe a decision is wrong, you'll be able to contest
-  it here soon. In the meantime, replies to a moderation notice reach our team.</p>
+<p class="muted" style="font-size:.85rem">{% trans "If you believe a decision is wrong, you'll be able to contest it here soon. In the meantime, replies to a moderation notice reach our team." %}</p>
 {% endblock %}

@@ -1,50 +1,50 @@
 {% extends "base.html" %}
-{% load avatars %}
-{% block title %}Connections{% endblock %}
+{% load avatars i18n %}
+{% block title %}{% trans "Connections" %}{% endblock %}
 {% block content %}
 <style>.mini-avatar{width:28px;height:28px;border-radius:50%;vertical-align:middle;margin-right:.4rem}</style>
-<h1>Connections</h1>
-<p class="muted">People you've shared an activity with. Connect to chat privately &mdash;
-  it's the same end-to-end encrypted messaging, just easier to find each other.</p>
+<h1>{% trans "Connections" %}</h1>
+<p class="muted">{% blocktrans %}People you've shared an activity with. Connect to chat privately &mdash;
+  it's the same end-to-end encrypted messaging, just easier to find each other.{% endblocktrans %}</p>
 
 {# Search-only discovery: type a name to look someone up. No "people you may know" feed. #}
 <form method="get" action="{% url 'connections' %}" class="row" role="search" style="margin:1rem 0">
-  <label class="visually-hidden" for="conn-q">Search people you've met</label>
+  <label class="visually-hidden" for="conn-q">{% trans "Search people you've met" %}</label>
   <input id="conn-q" name="q" value="{{ query }}" autocomplete="off"
-         placeholder="Search someone you've met by name..." style="flex:1">
-  <button class="btn btn-sm" type="submit">Search</button>
+         placeholder="{% trans "Search someone you've met by name..." %}" style="flex:1">
+  <button class="btn btn-sm" type="submit">{% trans "Search" %}</button>
 </form>
 
 {% if query %}
-  <h2>Search results</h2>
+  <h2>{% trans "Search results" %}</h2>
   {% if results %}
     <ul class="members">
       {% for u in results %}
         <li><img class="mini-avatar" src="{{ u|avatar_uri }}" alt="">{{ u.display_name|default:u.username }}
           <form method="post" action="{% url 'connection_request' %}" class="inline">{% csrf_token %}
             <input type="hidden" name="public_id" value="{{ u.public_id }}">
-            <button class="btn btn-sm" type="submit">Connect</button>
+            <button class="btn btn-sm" type="submit">{% trans "Connect" %}</button>
           </form>
         </li>
       {% endfor %}
     </ul>
   {% else %}
-    <p class="muted">No matches among people you've shared an activity with.</p>
+    <p class="muted">{% trans "No matches among people you've shared an activity with." %}</p>
   {% endif %}
 {% endif %}
 
 {% if incoming %}
-  <h2>Requests to you</h2>
+  <h2>{% trans "Requests to you" %}</h2>
   <ul class="members">
     {% for c in incoming %}
       <li>{{ c.requester.display_name|default:c.requester.username }}
         <form method="post" action="{% url 'connection_respond' c.pk %}" class="inline">{% csrf_token %}
           <input type="hidden" name="accept" value="1">
-          <button class="btn btn-sm" type="submit">Accept</button>
+          <button class="btn btn-sm" type="submit">{% trans "Accept" %}</button>
         </form>
         <form method="post" action="{% url 'connection_respond' c.pk %}" class="inline">{% csrf_token %}
           <input type="hidden" name="accept" value="0">
-          <button class="linkbtn" type="submit">Decline</button>
+          <button class="linkbtn" type="submit">{% trans "Decline" %}</button>
         </form>
       </li>
     {% endfor %}
@@ -52,37 +52,37 @@
 {% endif %}
 
 {% if outgoing %}
-  <h2>Sent requests</h2>
+  <h2>{% trans "Sent requests" %}</h2>
   <ul class="members">
     {% for c in outgoing %}
-      <li class="muted">{{ c.addressee.display_name|default:c.addressee.username }} &middot; pending
+      <li class="muted">{{ c.addressee.display_name|default:c.addressee.username }} &middot; {% trans "pending" %}
         <form method="post" action="{% url 'connection_withdraw' c.pk %}" class="inline">{% csrf_token %}
-          <button class="linkbtn" type="submit">Withdraw</button>
+          <button class="linkbtn" type="submit">{% trans "Withdraw" %}</button>
         </form>
       </li>
     {% endfor %}
   </ul>
 {% endif %}
 
-<h2>Your connections</h2>
+<h2>{% trans "Your connections" %}</h2>
 {% if connections %}
   <ul class="members">
     {% for u in connections %}
       <li><img class="mini-avatar" src="{{ u|avatar_uri }}" alt="">{{ u.display_name|default:u.username }}
         <form method="post" action="{% url 'connection_message' %}" class="inline">{% csrf_token %}
           <input type="hidden" name="public_id" value="{{ u.public_id }}">
-          <button class="btn btn-sm" type="submit">Message</button>
+          <button class="btn btn-sm" type="submit">{% trans "Message" %}</button>
         </form>
         <form method="post" action="{% url 'connection_remove' %}" class="inline"
-              onsubmit="return confirm('Remove this connection?');">{% csrf_token %}
+              onsubmit="return confirm('{% trans "Remove this connection?" %}');">{% csrf_token %}
           <input type="hidden" name="public_id" value="{{ u.public_id }}">
-          <button class="linkbtn" type="submit">Remove</button>
+          <button class="linkbtn" type="submit">{% trans "Remove" %}</button>
         </form>
       </li>
     {% endfor %}
   </ul>
 {% else %}
-  <p class="muted">No connections yet. Go to an activity you're in and connect with the people there,
-    or search for someone above.</p>
+  <p class="muted">{% blocktrans %}No connections yet. Go to an activity you're in and connect with the people there,
+    or search for someone above.{% endblocktrans %}</p>
 {% endif %}
 {% endblock %}

@@ -1,12 +1,11 @@
 {% extends "base.html" %}
-{% block title %}Add a place{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Add a place" %}{% endblock %}
 {% block content %}
-<h1>Add a missing place</h1>
-<p class="muted">Add a real venue we don't have yet (a court, pitch, community centre). It stays
-  hidden from everyone until a few neighbours confirm it &mdash; or our team publishes it. Enter
-  the coordinates (you can copy them from a map app).</p>
+<h1>{% trans "Add a missing place" %}</h1>
+<p class="muted">{% trans "Add a real venue we don't have yet (a court, pitch, community centre). It stays hidden from everyone until a few neighbours confirm it &mdash; or our team publishes it. Enter the coordinates (you can copy them from a map app)." %}</p>
 <form method="post" class="card">{% csrf_token %}
   {{ form.as_p }}
-  <button class="btn" type="submit">Submit place</button>
+  <button class="btn" type="submit">{% trans "Submit place" %}</button>
 </form>
 {% endblock %}

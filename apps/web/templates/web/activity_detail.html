@@ -1,196 +1,197 @@
 {% extends "base.html" %}
+{% load i18n %}
 {% block title %}{{ activity.title }}{% endblock %}
 {% block content %}
-<p class="muted"><a href="{% url 'activity_list' %}">&larr; Activities</a></p>
+<p class="muted"><a href="{% url 'activity_list' %}">&larr; {% trans "Activities" %}</a></p>
 <h1>{{ activity.title }}</h1>
 <div>
   <span class="tag">{{ activity.activity_type.name }}</span>
   <span class="tag">{{ activity.get_cohort_display }}</span>
   {% if activity.cost_band != "unspecified" %}<span class="tag">{{ activity.get_cost_band_display }}</span>{% endif %}
   {% if activity.difficulty != "unspecified" %}<span class="tag">{{ activity.get_difficulty_display }}</span>{% endif %}
-  {% if activity.beginners_welcome %}<span class="tag">beginners welcome</span>{% endif %}
+  {% if activity.beginners_welcome %}<span class="tag">{% trans "beginners welcome" %}</span>{% endif %}
   {% if activity.status != "open" %}<span class="tag">{{ activity.get_status_display }}</span>{% endif %}
-  {% if activity.guardian_accompanied %}<span class="tag">guardian-accompanied</span>{% endif %}
+  {% if activity.guardian_accompanied %}<span class="tag">{% trans "guardian-accompanied" %}</span>{% endif %}
 </div>
 <p class="muted">{{ activity.starts_at|date:"l j F Y, H:i" }}{% if activity.ends_at %} &ndash; {{ activity.ends_at|date:"H:i" }}{% endif %}<br>
-  at <a href="{% url 'place_detail' activity.place.pk %}">{{ activity.place.name|default:"a place" }}</a>{% if activity.place.address_city %}, {{ activity.place.address_city }}{% endif %}</p>
+  {% url 'place_detail' activity.place.pk as place_url %}{% blocktrans with place_name=activity.place.name|default:_("a place") %}at <a href="{{ place_url }}">{{ place_name }}</a>{% endblocktrans %}{% if activity.place.address_city %}, {{ activity.place.address_city }}{% endif %}</p>
 {% if activity_communities %}
-  <p class="muted" style="font-size:.85rem">Part of:
+  <p class="muted" style="font-size:.85rem">{% trans "Part of:" %}
     {% for c in activity_communities %}<a class="tag" href="{% url 'community_detail' c.slug %}">{{ c.name }}</a> {% endfor %}</p>
 {% endif %}
 {% if activity.description %}<p>{{ activity.description|linebreaks }}</p>{% endif %}
-{% if activity.accessibility_notes %}<p class="muted"><strong>Accessibility:</strong><br>{{ activity.accessibility_notes|linebreaksbr }}</p>{% endif %}
-<p class="muted">Organised by {{ activity.owner.display_name|default:activity.owner.username }}.
-  {% if not is_owner %}&middot; <a href="{% url 'report' %}?type=activity&id={{ activity.pk }}">Report</a>{% endif %}</p>
+{% if activity.accessibility_notes %}<p class="muted"><strong>{% trans "Accessibility:" %}</strong><br>{{ activity.accessibility_notes|linebreaksbr }}</p>{% endif %}
+<p class="muted">{% blocktrans with owner_name=activity.owner.display_name|default:activity.owner.username %}Organised by {{ owner_name }}.{% endblocktrans %}
+  {% if not is_owner %}&middot; <a href="{% url 'report' %}?type=activity&id={{ activity.pk }}">{% trans "Report" %}</a>{% endif %}</p>
 
 {% if not is_open %}
-  <div class="banner">This activity is {{ activity.get_status_display|lower }}.{% if activity.status == "cancelled" %}
-    The organiser called it off &mdash; see your alerts for any details.{% endif %}</div>
+  <div class="banner">{% blocktrans with status_display=activity.get_status_display|lower %}This activity is {{ status_display }}.{% endblocktrans %}{% if activity.status == "cancelled" %}
+    {% trans "The organiser called it off &mdash; see your alerts for any details." %}{% endif %}</div>
 {% endif %}
 
 {% if is_owner and is_open %}
   <div class="card">
-    <strong>Organiser tools</strong>
+    <strong>{% trans "Organiser tools" %}</strong>
     <div class="row" style="gap:.5rem;margin-top:.4rem">
-      <a class="btn btn-sm" href="{% url 'activity_edit' activity.pk %}">Edit details</a>
+      <a class="btn btn-sm" href="{% url 'activity_edit' activity.pk %}">{% trans "Edit details" %}</a>
     </div>
     <form method="post" action="{% url 'activity_cancel' activity.pk %}" class="stack" style="margin-top:.6rem"
-          onsubmit="return confirm('Cancel this activity? Every member will be notified.');">
+          onsubmit="return confirm('{% trans "Cancel this activity? Every member will be notified." %}');">
       {% csrf_token %}
-      <label>Cancel this activity
+      <label>{% trans "Cancel this activity" %}
         <input type="text" name="reason" maxlength="200"
-               placeholder="Optional: why (members will see this)"></label>
-      <button class="btn btn-sm btn-danger" type="submit">Cancel activity</button>
+               placeholder="{% trans 'Optional: why (members will see this)' %}"></label>
+      <button class="btn btn-sm btn-danger" type="submit">{% trans "Cancel activity" %}</button>
     </form>
   </div>
 {% endif %}
 
 {% if is_member %}
   <div class="card">
-    <strong>You're a member{% if is_owner %} (owner){% endif %}.</strong>
+    <strong>{% trans "You're a member" %}{% if is_owner %} {% trans "(owner)" %}{% endif %}.</strong>
     {% if not is_owner %}
       <form method="post" action="{% url 'activity_leave' activity.pk %}" class="inline" style="float:right">{% csrf_token %}
-        <button class="linkbtn" type="submit">Leave</button></form>
+        <button class="linkbtn" type="submit">{% trans "Leave" %}</button></form>
     {% endif %}
     {% if arrival_window_open and not my_arrival %}
       <form method="post" action="{% url 'activity_arrived' activity.pk %}" style="margin:.4rem 0">{% csrf_token %}
-        <button class="btn btn-sm" type="submit">&#128205; I've arrived</button>
-        <span class="muted" style="font-size:.75rem">Tells the group you're here &mdash; no location shared.</span>
+        <button class="btn btn-sm" type="submit">&#128205; {% trans "I've arrived" %}</button>
+        <span class="muted" style="font-size:.75rem">{% trans "Tells the group you're here &mdash; no location shared." %}</span>
       </form>
     {% elif my_arrival %}
-      <p class="muted" style="margin:.4rem 0">&#10003; You marked yourself here at {{ my_arrival|date:"H:i" }} &mdash; your group was notified.</p>
+      <p class="muted" style="margin:.4rem 0">&#10003; {% blocktrans with arrival_time=my_arrival|date:"H:i" %}You marked yourself here at {{ arrival_time }} &mdash; your group was notified.{% endblocktrans %}</p>
     {% endif %}
     <div class="row" style="gap:.4rem;align-items:center;margin:.4rem 0;flex-wrap:wrap">
-      <span class="muted">Coming: <strong>{{ rsvp_summary.going }}</strong> of {{ rsvp_summary.total }}</span>
+      <span class="muted">{% blocktrans with going=rsvp_summary.going total=rsvp_summary.total %}Coming: <strong>{{ going }}</strong> of {{ total }}{% endblocktrans %}</span>
       <form class="inline" method="post" action="{% url 'activity_rsvp' activity.pk %}">{% csrf_token %}
         <input type="hidden" name="intent" value="going">
-        <button class="btn btn-sm{% if my_membership.attendance_intent != 'going' %} btn-secondary{% endif %}" type="submit">I'm coming</button></form>
+        <button class="btn btn-sm{% if my_membership.attendance_intent != 'going' %} btn-secondary{% endif %}" type="submit">{% trans "I'm coming" %}</button></form>
       <form class="inline" method="post" action="{% url 'activity_rsvp' activity.pk %}">{% csrf_token %}
         <input type="hidden" name="intent" value="not_going">
-        <button class="btn btn-sm{% if my_membership.attendance_intent != 'not_going' %} btn-secondary{% endif %}" type="submit">Can't make it</button></form>
+        <button class="btn btn-sm{% if my_membership.attendance_intent != 'not_going' %} btn-secondary{% endif %}" type="submit">{% trans "Can't make it" %}</button></form>
       {% if my_membership.attendance_intent != 'unknown' %}
         <form class="inline" method="post" action="{% url 'activity_rsvp' activity.pk %}">{% csrf_token %}
           <input type="hidden" name="intent" value="unknown">
-          <button class="linkbtn" type="submit">clear</button></form>
+          <button class="linkbtn" type="submit">{% trans "clear" %}</button></form>
       {% endif %}
     </div>
     {% if is_completed %}
       {# F22: post-meetup "did we meet?" — a count only, never who-confirmed, never per-person. #}
       <div style="margin:.4rem 0">
-        <strong>Did this meet up?</strong>
-        <span class="muted">Confirmed: <strong>{{ met_summary.confirmed }}</strong> of {{ met_summary.total }}</span>
+        <strong>{% trans "Did this meet up?" %}</strong>
+        <span class="muted">{% blocktrans with confirmed=met_summary.confirmed total=met_summary.total %}Confirmed: <strong>{{ confirmed }}</strong> of {{ total }}{% endblocktrans %}</span>
         {% if my_met_confirmed %}
           <form class="inline" method="post" action="{% url 'activity_met' activity.pk %}">{% csrf_token %}
             <input type="hidden" name="met" value="no">
-            <span class="muted">&#10003; you confirmed &middot;</span>
-            <button class="linkbtn" type="submit">undo</button></form>
+            <span class="muted">&#10003; {% trans "you confirmed" %} &middot;</span>
+            <button class="linkbtn" type="submit">{% trans "undo" %}</button></form>
         {% else %}
           <form class="inline" method="post" action="{% url 'activity_met' activity.pk %}">{% csrf_token %}
-            <button class="btn btn-sm" type="submit">Yes, we met up</button></form>
+            <button class="btn btn-sm" type="submit">{% trans "Yes, we met up" %}</button></form>
         {% endif %}
       </div>
     {% endif %}
-    <h3>Pending join requests</h3>
+    <h3>{% trans "Pending join requests" %}</h3>
     {% for m in pending %}
       <div class="row" style="justify-content:space-between">
         <div>{{ m.user.display_name|default:m.user.username }}
-          <span class="muted">&mdash; {{ m.approvals }}/{{ m.needed }} approvals</span></div>
+          <span class="muted">&mdash; {% blocktrans with approvals=m.approvals needed=m.needed %}{{ approvals }}/{{ needed }} approvals{% endblocktrans %}</span></div>
         <div class="vote-row">
-          {% if m.my_vote is not None %}<span class="muted">you voted {{ m.my_vote|yesno:"approve,deny" }}</span>{% endif %}
+          {% if m.my_vote is not None %}<span class="muted">{% blocktrans with vote=m.my_vote|yesno:_("approve,deny") %}you voted {{ vote }}{% endblocktrans %}</span>{% endif %}
           <form class="inline" method="post" action="{% url 'membership_vote' activity.pk m.id %}">{% csrf_token %}
             <input type="hidden" name="vote" value="approve">
-            <button class="btn btn-sm" type="submit">Approve</button></form>
+            <button class="btn btn-sm" type="submit">{% trans "Approve" %}</button></form>
           <form class="inline" method="post" action="{% url 'membership_vote' activity.pk m.id %}">{% csrf_token %}
             <input type="hidden" name="vote" value="deny">
-            <button class="btn btn-sm btn-secondary" type="submit">Deny</button></form>
+            <button class="btn btn-sm btn-secondary" type="submit">{% trans "Deny" %}</button></form>
         </div>
       </div>
-    {% empty %}<p class="muted">No pending requests.</p>{% endfor %}
+    {% empty %}<p class="muted">{% trans "No pending requests." %}</p>{% endfor %}
   </div>
 {% elif my_membership and my_membership.state == "requested" %}
-  <div class="banner">Your join request is pending a vote of current members.</div>
+  <div class="banner">{% trans "Your join request is pending a vote of current members." %}</div>
 {% elif can_join %}
   <form method="post" action="{% url 'activity_join' activity.pk %}">{% csrf_token %}
-    <button class="btn" type="submit">Request to join</button></form>
+    <button class="btn" type="submit">{% trans "Request to join" %}</button></form>
 {% elif user.cohort != activity.cohort %}
-  <div class="banner">This activity is for a different age cohort, so you can't join it.</div>
+  <div class="banner">{% trans "This activity is for a different age cohort, so you can't join it." %}</div>
 {% endif %}
 
 {% if show_welcome %}
   {# F39: a systemic welcome banner for a first-timer — rendered by the app, never a member post. #}
   <div class="card" style="border-left:3px solid var(--accent)">
-    <strong>Welcome to your first meetup!</strong>
-    <p class="muted" style="margin:.3rem 0 0">Say a quick hello in the thread below, check the
-      logistics, and turn up &mdash; the group is glad you joined.</p>
+    <strong>{% trans "Welcome to your first meetup!" %}</strong>
+    <p class="muted" style="margin:.3rem 0 0">{% blocktrans %}Say a quick hello in the thread below, check the
+      logistics, and turn up &mdash; the group is glad you joined.{% endblocktrans %}</p>
   </div>
 {% endif %}
 
 {% if is_member and not is_owner %}
   <div class="card" style="border-left:3px solid var(--danger,#c0392b)">
-    <strong>Feeling unsafe or uncomfortable?</strong>
-    <p class="muted" style="margin:.3rem 0">You can leave any time &mdash; nothing is shared about you for
-      doing so. If something doesn't feel right, tell a moderator, or talk to a grown-up you trust.</p>
+    <strong>{% trans "Feeling unsafe or uncomfortable?" %}</strong>
+    <p class="muted" style="margin:.3rem 0">{% blocktrans %}You can leave any time &mdash; nothing is shared about you for
+      doing so. If something doesn't feel right, tell a moderator, or talk to a grown-up you trust.{% endblocktrans %}</p>
     {% if my_guardians %}
-      <p class="muted">People you can talk to:
+      <p class="muted">{% trans "People you can talk to:" %}
         {% for g in my_guardians %}<strong>{{ g.display_name|default:g.username }}</strong>{% if not forloop.last %}, {% endif %}{% endfor %}.</p>
     {% endif %}
     <div class="row" style="gap:.5rem">
-      <a class="btn btn-sm btn-danger" href="{% url 'report' %}?type=activity&id={{ activity.pk }}">Tell a moderator</a>
+      <a class="btn btn-sm btn-danger" href="{% url 'report' %}?type=activity&id={{ activity.pk }}">{% trans "Tell a moderator" %}</a>
       <form method="post" action="{% url 'activity_leave' activity.pk %}" class="inline">{% csrf_token %}
-        <button class="btn btn-sm btn-secondary" type="submit">Leave this activity</button></form>
+        <button class="btn btn-sm btn-secondary" type="submit">{% trans "Leave this activity" %}</button></form>
     </div>
   </div>
 {% endif %}
 
 {% if is_member or is_owner %}{% if activity.meeting_point or activity.what_to_bring or activity.organizer_note %}
   <div class="card" style="border-left:3px solid var(--accent)">
-    <strong>Meetup logistics</strong>
-    {% if activity.meeting_point %}<p style="margin:.4rem 0 0"><span class="muted">Where to meet:</span><br>{{ activity.meeting_point|linebreaksbr }}</p>{% endif %}
-    {% if activity.what_to_bring %}<p style="margin:.4rem 0 0"><span class="muted">What to bring:</span><br>{{ activity.what_to_bring|linebreaksbr }}</p>{% endif %}
-    {% if activity.organizer_note %}<p style="margin:.4rem 0 0"><span class="muted">From the organiser:</span><br>{{ activity.organizer_note|linebreaksbr }}</p>{% endif %}
+    <strong>{% trans "Meetup logistics" %}</strong>
+    {% if activity.meeting_point %}<p style="margin:.4rem 0 0"><span class="muted">{% trans "Where to meet:" %}</span><br>{{ activity.meeting_point|linebreaksbr }}</p>{% endif %}
+    {% if activity.what_to_bring %}<p style="margin:.4rem 0 0"><span class="muted">{% trans "What to bring:" %}</span><br>{{ activity.what_to_bring|linebreaksbr }}</p>{% endif %}
+    {% if activity.organizer_note %}<p style="margin:.4rem 0 0"><span class="muted">{% trans "From the organiser:" %}</span><br>{{ activity.organizer_note|linebreaksbr }}</p>{% endif %}
   </div>
 {% endif %}{% endif %}
 
-<h2>Members</h2>
+<h2>{% trans "Members" %}</h2>
 <ul class="members">
-  {% for m in members %}<li>{{ m.user.display_name|default:m.user.username }}{% if m.role == "owner" %} &middot; owner{% elif m.role == "guardian" %} &middot; guardian{% endif %}{% if m.user.id != user.id %}
-    &middot; <a style="font-size:.75rem" href="{% url 'report' %}?type=user&id={{ m.user.id }}">report</a>
+  {% for m in members %}<li>{{ m.user.display_name|default:m.user.username }}{% if m.role == "owner" %} &middot; {% trans "owner" %}{% elif m.role == "guardian" %} &middot; {% trans "guardian" %}{% endif %}{% if m.user.id != user.id %}
+    &middot; <a style="font-size:.75rem" href="{% url 'report' %}?type=user&id={{ m.user.id }}">{% trans "report" %}</a>
     {% if conn_enabled and m.role != "guardian" and m.user.id not in conn_related_ids %}
     <form method="post" action="{% url 'connection_request' %}" class="inline">{% csrf_token %}
       <input type="hidden" name="public_id" value="{{ m.user.public_id }}">
       <input type="hidden" name="next" value="{% url 'activity_detail' activity.pk %}">
-      <button class="btn btn-sm" style="font-size:.75rem" type="submit">connect</button></form>{% endif %}
+      <button class="btn btn-sm" style="font-size:.75rem" type="submit">{% trans "connect" %}</button></form>{% endif %}
     <form method="post" action="{% url 'block_user' m.user.id %}" class="inline">{% csrf_token %}
       <input type="hidden" name="next" value="{% url 'activity_detail' activity.pk %}">
-      <button class="linkbtn" style="font-size:.75rem" type="submit">block</button></form>{% endif %}</li>{% endfor %}
+      <button class="linkbtn" style="font-size:.75rem" type="submit">{% trans "block" %}</button></form>{% endif %}</li>{% endfor %}
 </ul>
 
 {% if is_member or user.is_staff %}
   {% if digest and digest.has_content %}
     {# F35: deterministic "catch up" recap — a condensed view of the CURRENT thread, no JS. #}
     <details class="card" style="border-left:3px solid var(--accent)">
-      <summary><strong>Catch up</strong> <span class="muted">&mdash; what you missed</span></summary>
-      {% if digest.member_count is not None %}<p class="muted" style="margin:.4rem 0">{{ digest.going }} of {{ digest.total }} coming &middot; {{ digest.member_count }} member{{ digest.member_count|pluralize }}.</p>{% endif %}
-      {% if digest.announcements %}<p class="muted" style="margin:.2rem 0 0">Latest announcements:</p>
+      <summary><strong>{% trans "Catch up" %}</strong> <span class="muted">&mdash; {% trans "what you missed" %}</span></summary>
+      {% if digest.member_count is not None %}<p class="muted" style="margin:.4rem 0">{% blocktrans count member_count=digest.member_count with going=digest.going total=digest.total %}{{ going }} of {{ total }} coming &middot; {{ member_count }} member.{% plural %}{{ going }} of {{ total }} coming &middot; {{ member_count }} members.{% endblocktrans %}</p>{% endif %}
+      {% if digest.announcements %}<p class="muted" style="margin:.2rem 0 0">{% trans "Latest announcements:" %}</p>
         {% for p in digest.announcements %}<div class="post" style="border-left:3px solid var(--accent)"><div class="meta">&#128204; {{ p.author.display_name|default:p.author.username }} &middot; {{ p.created_at|date:"j M H:i" }}</div><div>{{ p.body|truncatechars:200|linebreaksbr }}</div></div>{% endfor %}{% endif %}
-      {% if digest.logistical %}<p class="muted" style="margin:.4rem 0 0">Logistics mentioned:</p>
+      {% if digest.logistical %}<p class="muted" style="margin:.4rem 0 0">{% trans "Logistics mentioned:" %}</p>
         {% for p in digest.logistical %}<div class="post"><div class="meta">{{ p.author.display_name|default:p.author.username }} &middot; {{ p.created_at|date:"j M H:i" }}</div><div>{{ p.body|truncatechars:200|linebreaksbr }}</div></div>{% endfor %}{% endif %}
-      {% if digest.recent %}<p class="muted" style="margin:.4rem 0 0">Most recent:</p>
+      {% if digest.recent %}<p class="muted" style="margin:.4rem 0 0">{% trans "Most recent:" %}</p>
         {% for p in digest.recent %}<div class="post"><div class="meta">{{ p.author.display_name|default:p.author.username }} &middot; {{ p.created_at|date:"j M H:i" }}</div><div>{{ p.body|truncatechars:200|linebreaksbr }}</div></div>{% endfor %}{% endif %}
     </details>
   {% endif %}
   {# One conversation: pinned announcements on top, then the single chronological stream. #}
-  <h2 id="messages">Messages</h2>
+  <h2 id="messages">{% trans "Messages" %}</h2>
   {% if is_owner %}
     <form method="post" action="{% url 'activity_announce' activity.pk %}" class="stack" style="margin-bottom:.6rem">{% csrf_token %}
-      <label>Post an announcement <span class="muted">(pinned; notifies every member)</span>
+      <label>{% trans "Post an announcement" %} <span class="muted">{% trans "(pinned; notifies every member)" %}</span>
         <textarea name="body" rows="2" maxlength="4000" required
-                  placeholder="Meet at the north gate; bring water; time changed..."></textarea></label>
-      <button class="btn btn-sm" type="submit">Post announcement</button>
+                  placeholder="{% trans 'Meet at the north gate; bring water; time changed...' %}"></textarea></label>
+      <button class="btn btn-sm" type="submit">{% trans "Post announcement" %}</button>
     </form>
   {% endif %}
   {% if announcements %}
-    <div class="thread" aria-label="Pinned announcements">
+    <div class="thread" aria-label="{% trans 'Pinned announcements' %}">
       {% for p in announcements %}
         <div class="post" style="border-left:3px solid var(--accent)">
           <div class="meta">&#128204; {{ p.author.display_name|default:p.author.username }} &middot; {{ p.created_at|date:"j M H:i" }}</div>
@@ -201,7 +202,7 @@
   {% endif %}
 
   {% if has_older %}
-    <p><a href="?before={{ older_cursor }}#messages" rel="prev">&uarr; Older messages</a></p>
+    <p><a href="?before={{ older_cursor }}#messages" rel="prev">&uarr; {% trans "Older messages" %}</a></p>
   {% endif %}
   <div id="thread-list" class="thread">
     {% for p in posts %}
@@ -209,59 +210,59 @@
       <div class="replies" data-parent="{{ p.pk }}" style="margin-left:1.5rem">
         {% for r in p.replies.all %}{% include "web/_post.html" with p=r %}{% endfor %}
       </div>
-    {% empty %}<p class="muted" id="no-messages">No messages yet. Say hello!</p>{% endfor %}
+    {% empty %}<p class="muted" id="no-messages">{% trans "No messages yet. Say hello!" %}</p>{% endfor %}
   </div>
 
   {% if is_member %}
     <form method="post" id="compose" enctype="multipart/form-data"
           action="{% url 'activity_post' activity.pk %}" class="stack" style="margin-top:.6rem">{% csrf_token %}
       {% if reply_target %}
-        <p class="muted" style="margin:0;font-size:.85rem">Replying to
-          {{ reply_target.author.display_name|default:reply_target.author.username }}
-          &middot; <a href="{% url 'activity_detail' activity.pk %}#compose">cancel</a></p>
+        <p class="muted" style="margin:0;font-size:.85rem">{% blocktrans with reply_author=reply_target.author.display_name|default:reply_target.author.username %}Replying to
+          {{ reply_author }}{% endblocktrans %}
+          &middot; <a href="{% url 'activity_detail' activity.pk %}#compose">{% trans "cancel" %}</a></p>
       {% endif %}
       {{ post_form.reply_to }}
-      <label class="visually-hidden" for="{{ post_form.body.id_for_label }}">Write a message</label>
+      <label class="visually-hidden" for="{{ post_form.body.id_for_label }}">{% trans "Write a message" %}</label>
       {{ post_form.body }}
       <div class="row" style="margin-top:.4rem">
-        <label class="visually-hidden" for="{{ post_form.attachment.id_for_label }}">Attach a photo or PDF</label>
+        <label class="visually-hidden" for="{{ post_form.attachment.id_for_label }}">{% trans "Attach a photo or PDF" %}</label>
         <input type="file" name="attachment" id="{{ post_form.attachment.id_for_label }}"
                accept="image/png,image/jpeg,image/webp,application/pdf">
         <label class="muted" style="font-size:.78rem;display:inline-flex;align-items:center;gap:.3rem">
-          🕓 <span class="visually-hidden">Make this picture temporary</span>
+          🕓 <span class="visually-hidden">{% trans "Make this picture temporary" %}</span>
           <select name="disappear">
-            <option value="">Keep</option>
-            {% for secs, label in ephemeral_options %}<option value="{{ secs }}">Disappear after {{ label }}</option>{% endfor %}
+            <option value="">{% trans "Keep" %}</option>
+            {% for secs, label in ephemeral_options %}<option value="{{ secs }}">{% blocktrans %}Disappear after {{ label }}{% endblocktrans %}</option>{% endfor %}
           </select></label>
-        <button class="btn btn-sm" type="submit">Post</button>
+        <button class="btn btn-sm" type="submit">{% trans "Post" %}</button>
       </div>
       <label style="font-size:.78rem;display:inline-flex;align-items:center;gap:.35rem;margin-top:.3rem">
         <input type="checkbox" name="ping" value="on">
-        Notify the people I&nbsp;<span class="mention">@mention</span>
-        <span class="muted">(off = they just see the tag)</span></label>
-      <p class="muted" style="font-size:.75rem;margin:.2rem 0 0">Photos &amp; PDFs are private to
-        members and safety-screened on upload. No video.</p>
+        {% blocktrans %}Notify the people I&nbsp;<span class="mention">@mention</span>{% endblocktrans %}
+        <span class="muted">{% trans "(off = they just see the tag)" %}</span></label>
+      <p class="muted" style="font-size:.75rem;margin:.2rem 0 0">{% blocktrans %}Photos &amp; PDFs are private to
+        members and safety-screened on upload. No video.{% endblocktrans %}</p>
     </form>
     {# Live region: announces ONLY the viewer's own send + new announcements (never every
        inbound peer message), so a busy thread is not a screen-reader replay or a nudge. #}
     <div id="live-status" class="visually-hidden" role="status" aria-live="polite"></div>
   {% endif %}
 
-  <h2>Photos</h2>
-  <p class="muted">Private to members &mdash; location metadata is stripped on upload.</p>
+  <h2>{% trans "Photos" %}</h2>
+  <p class="muted">{% trans "Private to members &mdash; location metadata is stripped on upload." %}</p>
   {% if is_member %}
     <form method="post" action="{% url 'activity_photo' activity.pk %}" enctype="multipart/form-data" class="row">{% csrf_token %}
       <input type="file" name="image" accept="image/*" required>
-      <button class="btn btn-sm" type="submit">Add photo</button>
+      <button class="btn btn-sm" type="submit">{% trans "Add photo" %}</button>
     </form>
   {% endif %}
   <div class="photos">
-    {% for ph in photos %}<img src="{{ ph.url }}" alt="thread photo">{% empty %}
-    <p class="muted">No photos yet.</p>{% endfor %}
+    {% for ph in photos %}<img src="{{ ph.url }}" alt="{% trans 'thread photo' %}">{% empty %}
+    <p class="muted">{% trans "No photos yet." %}</p>{% endfor %}
   </div>
 
 {% else %}
-  <p class="muted">The messages and photos are private to members. Request to join to take part.</p>
+  <p class="muted">{% trans "The messages and photos are private to members. Request to join to take part." %}</p>
 {% endif %}
 {% endblock %}
 
@@ -301,7 +302,7 @@
     art.className = "post";
     let html = "";
     if (d.reply_snippet) {
-      html += '<div class="reply-quote muted" style="font-size:.8rem;border-left:2px solid var(--line);padding-left:.5rem;margin-bottom:.2rem">Replying to ' +
+      html += '<div class="reply-quote muted" style="font-size:.8rem;border-left:2px solid var(--line);padding-left:.5rem;margin-bottom:.2rem">{% trans "Replying to" %} ' +
               esc(d.reply_snippet.author) + ": " + esc(d.reply_snippet.text) + "</div>";
     }
     const when = d.created_at ? new Date(d.created_at).toLocaleString() : "";
@@ -322,7 +323,7 @@
     if (d.type !== "message") return;
     render(d);
     // Announce ONLY new announcements over the live region (peer chatter is silent).
-    if (d.is_announcement && status) status.textContent = "New announcement posted.";
+    if (d.is_announcement && status) status.textContent = "{% trans 'New announcement posted.' %}";
   };
 
   // With the socket open, send through it (no full reload); otherwise the form POSTs normally.
@@ -338,7 +339,7 @@
     ev.preventDefault();
     sock.send(JSON.stringify({ body: body, reply_to: rt && rt.value ? Number(rt.value) : null }));
     ta.value = "";
-    if (status) status.textContent = "Message sent.";
+    if (status) status.textContent = "{% trans 'Message sent.' %}";
   });
 })();
 </script>

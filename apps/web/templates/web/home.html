@@ -1,50 +1,49 @@
 {% extends "base.html" %}
-{% block title %}Home{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Home" %}{% endblock %}
 {% block content %}
-<h1>Hi {{ user.display_name|default:user.username }}</h1>
+<h1>{% blocktrans with name=user.display_name|default:user.username %}Hi {{ name }}{% endblocktrans %}</h1>
 {% if guardian_invites %}
 <div class="card" style="border-left:3px solid var(--accent)">
-  <strong>Guardian requests</strong>
-  <p class="muted">An adult has asked to be registered as your parent/guardian. Only accept if you
-    recognise them.</p>
+  <strong>{% trans "Guardian requests" %}</strong>
+  <p class="muted">{% trans "An adult has asked to be registered as your parent/guardian. Only accept if you recognise them." %}</p>
   {% for inv in guardian_invites %}
     <div class="row" style="align-items:center;gap:.6rem">
-      <span>{{ inv.guardian.display_name|default:inv.guardian.username }} &middot; {{ inv.relationship|default:"guardian" }}</span>
+      <span>{{ inv.guardian.display_name|default:inv.guardian.username }} &middot; {{ inv.relationship|default:_("guardian") }}</span>
       <form method="post" action="{% url 'guardian_invite_accept' inv.token %}">{% csrf_token %}
-        <button class="btn btn-sm" type="submit">Accept</button></form>
+        <button class="btn btn-sm" type="submit">{% trans "Accept" %}</button></form>
       <form method="post" action="{% url 'guardian_invite_decline' inv.token %}">{% csrf_token %}
-        <button class="btn btn-sm btn-secondary" type="submit">Decline</button></form>
+        <button class="btn btn-sm btn-secondary" type="submit">{% trans "Decline" %}</button></form>
     </div>
   {% endfor %}
 </div>
 {% endif %}
-<p class="muted">You're in the <strong>{{ user.get_cohort_display }}</strong> cohort &mdash; you only
-  see activities for your cohort. <a href="{% url 'interests' %}">Pick your interests</a> for better
-  suggestions.</p>
+<p class="muted">{% blocktrans with cohort=user.get_cohort_display %}You're in the <strong>{{ cohort }}</strong> cohort &mdash; you only
+  see activities for your cohort.{% endblocktrans %} <a href="{% url 'interests' %}">{% trans "Pick your interests" %}</a> {% trans "for better suggestions." %}</p>
 <div class="row">
-  <a class="btn" href="{% url 'activity_create' %}">Organise an activity</a>
-  <a class="btn btn-secondary" href="{% url 'places_map' %}">Find a place</a>
+  <a class="btn" href="{% url 'activity_create' %}">{% trans "Organise an activity" %}</a>
+  <a class="btn btn-secondary" href="{% url 'places_map' %}">{% trans "Find a place" %}</a>
 </div>
 
-<h2>Recommended for you</h2>
+<h2>{% trans "Recommended for you" %}</h2>
 {% for a in recommended %}{% include "web/_activity_card.html" %}{% empty %}
-<p class="muted">No suggestions yet &mdash; <a href="{% url 'interests' %}">tell us what you like</a>
-  or browse upcoming activities below.</p>{% endfor %}
+<p class="muted">{% trans "No suggestions yet &mdash;" %} <a href="{% url 'interests' %}">{% trans "tell us what you like" %}</a>
+  {% trans "or browse upcoming activities below." %}</p>{% endfor %}
 
 {% if mine %}
-<h2>Your activities</h2>
+<h2>{% trans "Your activities" %}</h2>
 {% for a in mine %}{% include "web/_activity_card.html" %}{% endfor %}
 {% endif %}
 
-<h2>Upcoming in your cohort
-  {% if beginners_only %}<a class="muted" style="font-size:.8rem" href="?">show all</a>{% else %}<a class="muted" style="font-size:.8rem" href="?beginners=true">beginners welcome only</a>{% endif %}
+<h2>{% trans "Upcoming in your cohort" %}
+  {% if beginners_only %}<a class="muted" style="font-size:.8rem" href="?">{% trans "show all" %}</a>{% else %}<a class="muted" style="font-size:.8rem" href="?beginners=true">{% trans "beginners welcome only" %}</a>{% endif %}
 </h2>
 {% include "web/_near_me.html" %}
 {% for a in upcoming %}{% include "web/_activity_card.html" %}{% empty %}
-<p class="muted">Nothing upcoming yet. Be the first to organise something!</p>{% endfor %}
+<p class="muted">{% trans "Nothing upcoming yet. Be the first to organise something!" %}</p>{% endfor %}
 
 {% if events %}
-<h2>What's happening near you <a class="muted" style="font-size:.8rem" href="{% url 'events_list' %}">see all &rarr;</a></h2>
+<h2>{% trans "What's happening near you" %} <a class="muted" style="font-size:.8rem" href="{% url 'events_list' %}">{% trans "see all &rarr;" %}</a></h2>
 <div class="grid">
   {% for e in events %}
     <div class="card">

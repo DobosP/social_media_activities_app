@@ -26,6 +26,9 @@ urlpatterns = [
     path("api/communities/", include("apps.communities.urls")),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="docs"),
+    # Language switcher (P6/IS-7): set_language persists the choice (cookie/session) and
+    # LocaleMiddleware then serves Romanian. Open-redirect-safe (set_language validates `next`).
+    path("i18n/", include("django.conf.urls.i18n")),
     # Server-rendered web UI (mounted at the root; must come after the API/admin routes).
     path("", include("apps.web.urls")),
 ]

@@ -1,11 +1,12 @@
 {% extends "base.html" %}
-{% block title %}Activities{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Activities" %}{% endblock %}
 {% block content %}
-<h1>Upcoming activities</h1>
-<p class="muted">In your cohort (<strong>{{ user.get_cohort_display }}</strong>).
-  <a href="{% url 'activity_create' %}">Organise one →</a>
-  &middot; {% if beginners_only %}<a href="{% url 'activity_list' %}">show all</a> (beginners-welcome only){% else %}<a href="?beginners=true">beginners welcome only</a>{% endif %}</p>
+<h1>{% trans "Upcoming activities" %}</h1>
+<p class="muted">{% blocktrans with cohort=user.get_cohort_display %}In your cohort (<strong>{{ cohort }}</strong>).{% endblocktrans %}
+  <a href="{% url 'activity_create' %}">{% trans "Organise one →" %}</a>
+  &middot; {% if beginners_only %}<a href="{% url 'activity_list' %}">{% trans "show all" %}</a> {% trans "(beginners-welcome only)" %}{% else %}<a href="?beginners=true">{% trans "beginners welcome only" %}</a>{% endif %}</p>
 {% include "web/_near_me.html" %}
 {% for a in activities %}{% include "web/_activity_card.html" %}{% empty %}
-<p class="muted">Nothing upcoming yet. Be the first to organise something!</p>{% endfor %}
+<p class="muted">{% trans "Nothing upcoming yet. Be the first to organise something!" %}</p>{% endfor %}
 {% endblock %}
