@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: social-activities 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-03 01:48+0300\n"
+"POT-Creation-Date: 2026-06-03 02:02+0300\n"
 "PO-Revision-Date: 2026-05-29 10:00+0300\n"
 "Last-Translator: Claude Code\n"
 "Language-Team: Romanian\n"
@@ -14,6 +14,35 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1?0:(((n%100>19)||((n%100==0)&&(n!=0)))?2:1));\n"
+
+#: apps/accounts/services.py:171
+msgid "Your age verification has expired"
+msgstr "Verificarea vârstei tale a expirat"
+
+#: apps/accounts/services.py:172
+msgid "Re-verify your age to keep joining and chatting."
+msgstr ""
+"Re-verifică-ți vârsta ca să poți continua să te alături și să discuți."
+
+#: apps/accounts/services.py:187
+msgid "Your age verification is expiring soon"
+msgstr "Verificarea vârstei tale expiră curând"
+
+#: apps/accounts/services.py:188
+msgid "Re-verify your age soon to keep joining and chatting."
+msgstr ""
+"Re-verifică-ți vârsta în curând ca să poți continua să te alături și să "
+"discuți."
+
+#: apps/accounts/services.py:195
+msgid "Your ward's age verification is expiring soon"
+msgstr "Verificarea vârstei copilului tău expiră curând"
+
+#: apps/accounts/services.py:196
+msgid "Your ward needs to re-verify their age soon to keep participating."
+msgstr ""
+"Copilul tău trebuie să își re-verifice vârsta curând ca să poată participa "
+"în continuare."
 
 #: apps/recommendations/views.py:25
 msgid "`interests` must be a list of type slugs."

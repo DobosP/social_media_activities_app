@@ -9,6 +9,8 @@ It fans out to the existing per-app commands rather than re-implementing their l
   * ``auto_complete_activities``— move past OPEN activities to COMPLETED.
   * ``expire_arrivals``        — clear stale arrival pings (keep them ephemeral).
   * ``send_activity_reminders``— notify members of activities starting soon.
+  * ``generate_communities``   — re-materialize the per-cohort community discovery labels.
+  * ``reverify_sweep``         — nudge/evict minors on a stale age proof (active expiry).
 
 Each job is isolated: a failure in one is reported but does not abort the rest, so a
 single broken job never blocks the others on a shared cron tick. Exit status is non-zero
@@ -27,6 +29,7 @@ DUE_JOBS = (
     ("expire_arrivals", {}),
     ("send_activity_reminders", {}),
     ("generate_communities", {}),
+    ("reverify_sweep", {}),
 )
 
 
