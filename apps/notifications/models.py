@@ -15,6 +15,7 @@ class Notification(models.Model):
         ACTIVITY_UPDATED = "activity_updated", "Activity updated"
         ANNOUNCEMENT = "announcement", "Organizer announcement"
         GROUP_ANNOUNCEMENT = "group_announcement", "Group announcement"
+        MEETUP_CONFIRMED = "meetup_confirmed", "Meetup confirmed"
         ARRIVAL = "arrival", "Arrival"
         CONNECTION_REQUEST = "connection_request", "Connection request"
         CONNECTION_ACCEPTED = "connection_accepted", "Connection accepted"
@@ -60,6 +61,9 @@ WHY_REASONS = {
     ),
     Notification.Kind.GROUP_ANNOUNCEMENT: (
         "An organiser posted an announcement in a group you're a member of."
+    ),
+    Notification.Kind.MEETUP_CONFIRMED: (
+        "A meetup you joined reached the organiser's minimum number of people going."
     ),
     Notification.Kind.ARRIVAL: "Someone arrived at your meetup (or your ward arrived).",
     Notification.Kind.CONNECTION_REQUEST: (

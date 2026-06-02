@@ -144,7 +144,9 @@ def test_set_attendance_intent_and_summary(adult, adult2, place, activity_type, 
     _member(activity, adult2)
     set_attendance_intent(adult2, activity, Membership.AttendanceIntent.GOING)
     summary = attendance_summary(activity)
-    assert summary == {"going": 1, "total": 2}  # owner + adult2 are the participants
+    # owner + adult2 are the participants; F1 quorum keys are None with no threshold set.
+    assert summary["going"] == 1 and summary["total"] == 2
+    assert summary["min_to_go"] is None and summary["met_minimum"] is None
 
 
 def test_invalid_attendance_intent_rejected(adult, place, activity_type, now):
@@ -174,8 +176,9 @@ def test_attendance_intent_isolated_across_activities(adult, place, activity_typ
     a = _activity(adult, place, activity_type, now)
     b = _activity(adult, place, activity_type, now)
     set_attendance_intent(adult, a, Membership.AttendanceIntent.GOING)
-    assert attendance_summary(a) == {"going": 1, "total": 1}
-    assert attendance_summary(b) == {"going": 0, "total": 1}  # B is unaffected
+    sa, sb = attendance_summary(a), attendance_summary(b)
+    assert (sa["going"], sa["total"]) == (1, 1)
+    assert (sb["going"], sb["total"]) == (0, 1)  # B unaffected
 
 
 def test_attendance_summary_excludes_guardians(child, place, activity_type, now):
@@ -184,7 +187,8 @@ def test_attendance_summary_excludes_guardians(child, place, activity_type, now)
     activity = _activity(child, place, activity_type, now, guardian_accompanied=True)
     add_guardian(child, activity, guardian)
     # Only the child is a participant; the supervisory guardian is excluded from the count.
-    assert attendance_summary(activity) == {"going": 0, "total": 1}
+    s = attendance_summary(activity)
+    assert s["going"] == 0 and s["total"] == 1
 
 
 # --- F9: logistics ---------------------------------------------------------------------

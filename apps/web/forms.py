@@ -64,6 +64,12 @@ class ActivityForm(forms.Form):
     starts_at = _dt_field()
     ends_at = _dt_field(required=False)
     capacity = forms.IntegerField(required=False, min_value=1, help_text="Blank = unlimited.")
+    min_to_go = forms.IntegerField(
+        required=False,
+        min_value=1,
+        label="Minimum to happen",
+        help_text="Runs only if at least this many say they're going. Blank = no minimum.",
+    )
     meeting_point = _logistics_field("Where exactly to meet (e.g. north gate by the fountain).")
     what_to_bring = _logistics_field("What members should bring.")
     organizer_note = _logistics_field("A short note for members.")
@@ -112,6 +118,12 @@ class ActivityEditForm(forms.Form):
     starts_at = _dt_field()
     ends_at = _dt_field(required=False)
     capacity = forms.IntegerField(required=False, min_value=1, help_text="Blank = unlimited.")
+    min_to_go = forms.IntegerField(
+        required=False,
+        min_value=1,
+        label="Minimum to happen",
+        help_text="Runs only if at least this many say they're going. Blank = no minimum.",
+    )
     meeting_point = _logistics_field("Where exactly to meet (e.g. north gate by the fountain).")
     what_to_bring = _logistics_field("What members should bring.")
     organizer_note = _logistics_field("A short note for members.")

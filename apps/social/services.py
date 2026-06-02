@@ -196,6 +196,7 @@ def create_activity(
     description="",
     join_threshold=None,
     capacity=None,
+    min_to_go=None,
     guardian_accompanied=False,
     meeting_point="",
     what_to_bring="",
@@ -211,6 +212,9 @@ def create_activity(
         )
     if guardian_accompanied and owner.cohort != Cohort.CHILD:
         raise InvalidState(_("Only children's activities can be guardian-accompanied."))
+    if min_to_go is not None and capacity is not None and min_to_go > capacity:
+        # An un-confirmable meetup (the minimum can never be reached within the cap) is nonsensical.
+        raise InvalidState(_("Minimum to happen can't be more than the capacity."))
     activity = Activity.objects.create(
         owner=owner,
         place=place,
@@ -222,6 +226,7 @@ def create_activity(
         cohort=owner.cohort,
         join_threshold=DEFAULT_JOIN_THRESHOLD if join_threshold is None else join_threshold,
         capacity=capacity,
+        min_to_go=min_to_go,
         guardian_accompanied=guardian_accompanied,
         meeting_point=meeting_point,
         what_to_bring=what_to_bring,
@@ -290,6 +295,7 @@ ACTIVITY_EDITABLE_FIELDS = (
     "starts_at",
     "ends_at",
     "capacity",
+    "min_to_go",  # F1 Quorum-go — owner-curated minimum-to-happen threshold
     "meeting_point",  # F9 logistics — owner-curated, routed through the same edit path
     "what_to_bring",
     "organizer_note",
@@ -373,6 +379,9 @@ def update_activity(owner, activity, **changes) -> Activity:
     new_capacity = fields.get("capacity", activity.capacity)
     if new_capacity is not None and new_capacity < participant_count(activity):
         raise InvalidState(_("Capacity cannot be lower than the current number of participants."))
+    new_min_to_go = fields.get("min_to_go", activity.min_to_go)
+    if new_min_to_go is not None and new_capacity is not None and new_min_to_go > new_capacity:
+        raise InvalidState(_("Minimum to happen can't be more than the capacity."))
 
     time_changed = "starts_at" in fields and fields["starts_at"] != activity.starts_at
     if not fields:
@@ -380,6 +389,12 @@ def update_activity(owner, activity, **changes) -> Activity:
     for key, value in fields.items():
         setattr(activity, key, value)
     activity.save(update_fields=[*fields.keys(), "updated_at"])
+
+    if "min_to_go" in fields:
+        # F1: lowering the threshold can make a still-open meetup cross its (now-lower) minimum on
+        # the LIVE count without any new RSVP — fire the one-shot confirm exactly as an RSVP would.
+        # _maybe_confirm_meetup's go_confirmed_at guard + OPEN check keep it at-most-once and safe.
+        _maybe_confirm_meetup(activity)
 
     if time_changed:
         _supersede_reminders(activity)
@@ -1061,16 +1076,72 @@ def set_attendance_intent(user, activity, intent) -> Membership:
         raise InvalidState(_("Invalid attendance choice."))
     membership.attendance_intent = intent
     membership.save(update_fields=["attendance_intent", "updated_at"])
+    _maybe_confirm_meetup(activity)  # F1: one-shot "it's on" notice when GOING crosses min_to_go
     return membership
 
 
+def _maybe_confirm_meetup(activity) -> None:
+    """F1 Quorum-go: if a min_to_go threshold is set and the LIVE GOING count has now reached it,
+    latch the one-shot ``go_confirmed_at`` and fan out a single MEETUP_CONFIRMED notice. The latch
+    ONLY dedups the notification (so a wobbling count never spams) — it never feeds the displayed
+    state. Locks the activity row so two concurrent RSVPs can't double-fire the notice. Must be
+    called inside set_attendance_intent's transaction (so the just-saved RSVP is counted)."""
+    if activity.min_to_go is None:
+        return
+    locked = Activity.objects.select_for_update().get(pk=activity.pk)
+    if locked.min_to_go is None or locked.go_confirmed_at is not None:
+        return
+    if locked.status != Activity.Status.OPEN:
+        # A cancelled/completed meetup can never become "on" — never latch or fan out an
+        # "it's happening" notice for a frozen activity (checked on the locked row, race-safe).
+        return
+    going = (
+        voting_members(locked).filter(attendance_intent=Membership.AttendanceIntent.GOING).count()
+    )
+    if going < locked.min_to_go:
+        return
+    locked.go_confirmed_at = timezone.now()
+    locked.save(update_fields=["go_confirmed_at", "updated_at"])
+    activity.go_confirmed_at = locked.go_confirmed_at  # keep the caller's instance fresh
+    # Notify synchronously in-txn (like mark_arrived / post_announcement create their notices): a
+    # rolled-back RSVP rolls back the latch AND the notices together, so a phantom "it's on" can
+    # never outlive a failed RSVP. The activity-row lock above makes the one-shot fan-out atomic.
+    _notify_meetup_confirmed(locked)
+
+
+def _notify_meetup_confirmed(activity) -> None:
+    """Fan a single 'the meetup is on' notice to current members (minus blocked pairs), once the
+    quorum is first reached. Mirrors post_announcement's blocked-pair exclusion."""
+    from apps.notifications.models import Notification
+    from apps.safety.services import blocked_user_ids
+
+    blocked = blocked_user_ids(activity.owner)
+    title = _("A meetup is on")
+    body = _("“%(title)s” has enough people going — it's happening.") % {"title": activity.title}
+    url = f"/api/social/activities/{activity.id}/"
+    for membership in current_members(activity).exclude(user_id__in=blocked).select_related("user"):
+        _notify(membership.user, Notification.Kind.MEETUP_CONFIRMED, title, body=body, url=url)
+
+
 def attendance_summary(activity) -> dict:
-    """Per-activity go count for the participants (peers, excluding supervisory guardians).
-    A live snapshot shown only to members — never stored, never aggregated per-user."""
+    """Per-activity go count for the participants (peers, excluding supervisory guardians), plus the
+    F1 Quorum-go state. A live snapshot shown only to members — never stored, never aggregated
+    per-user. ``met_minimum`` / ``remaining_needed`` are derived LIVE from the current GOING count
+    (NOT from the go_confirmed_at latch), so the chip can never claim "on" after the count drops."""
     members = voting_members(activity)
+    going = members.filter(attendance_intent=Membership.AttendanceIntent.GOING).count()
+    # The forward-looking quorum state ("it's on / needs N more") is meaningful only for a LIVE
+    # (OPEN) meetup — a cancelled or completed activity has no such state, and showing one would be
+    # a lying chip. The configured min_to_go still lives on the model + ActivitySerializer; this
+    # dict is the LIVE snapshot, so its quorum keys go None once the meetup is no longer open.
+    live = activity.min_to_go is not None and activity.status == Activity.Status.OPEN
+    min_to_go = activity.min_to_go if live else None
     return {
-        "going": members.filter(attendance_intent=Membership.AttendanceIntent.GOING).count(),
+        "going": going,
         "total": members.count(),
+        "min_to_go": min_to_go,
+        "met_minimum": (going >= min_to_go) if live else None,
+        "remaining_needed": max(min_to_go - going, 0) if live else None,
     }
 
 

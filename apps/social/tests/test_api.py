@@ -255,7 +255,9 @@ def test_rsvp_returns_live_count(adult, adult2, place, activity_type, now):
         f"/api/social/activities/{activity.id}/rsvp/", {"intent": "going"}, format="json"
     )
     assert resp.status_code == 200, resp.content
-    assert resp.json() == {"going": 1, "total": 2}
+    body = resp.json()
+    assert body["going"] == 1 and body["total"] == 2
+    assert body["min_to_go"] is None  # F1 quorum keys present; None when no threshold is set
 
 
 def test_rsvp_non_member_forbidden(adult, adult2, place, activity_type, now):
