@@ -519,8 +519,12 @@ def purge_expired_attachments(now=None) -> int:
             with transaction.atomic():
                 # Re-check under a row lock against FRESH state: a report filed or a hide applied
                 # since the snapshot must be honoured (evidence preservation can't lose the race).
+                # Lock ONLY the Post row (of=("self",)): Thread.activity is nullable (group threads
+                # have no activity), so select_related makes that join a LEFT OUTER JOIN, and an
+                # unscoped FOR UPDATE can't lock the nullable side. We only re-READ the activity's
+                # is_hidden here, never lock it, so locking just the Post is correct.
                 locked = (
-                    Post.objects.select_for_update()
+                    Post.objects.select_for_update(of=("self",))
                     .select_related("thread__activity")
                     .get(pk=att.post_id)
                 )

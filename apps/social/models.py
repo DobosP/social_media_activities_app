@@ -194,14 +194,181 @@ class JoinVote(models.Model):
         return f"{self.voter} {'+' if self.approve else '-'} {self.membership_id}"
 
 
-class Thread(models.Model):
-    """The text-only discussion thread for an activity (one per activity)."""
+class Group(models.Model):
+    """A persistent, cohort-pinned STANDING GROUP — a joinable space on the same
+    (Area x taxonomy) coordinate system as a ``communities.Community``, but explicitly
+    created with a stored membership and its own thread.
 
-    activity = models.OneToOneField(Activity, on_delete=models.CASCADE, related_name="thread")
+    Activity-SHAPED on purpose: it exposes the same duck-typed attributes the hardened thread
+    gates read off an Activity (``owner``/``owner_id``, ``cohort``, ``status``, ``is_hidden``,
+    ``memberships``, ``thread``), so ``post_to_thread`` / ``can_read_thread`` work on a Group
+    VERBATIM (the single-gate reuse that the One-Thread collapse exists for). The cohort is
+    pinned from the creator at creation and is IMMUTABLE — the isolation boundary, never in any
+    editable whitelist. Membership counts/rosters are NEVER stored here (see services.group_roster
+    for the per-cohort visibility rule); a Group has no per-user reliability/attendance history."""
+
+    class Tier(models.TextChoices):
+        TYPE = "type", "Activity type"
+        CATEGORY = "category", "Category"
+
+    class Status(models.TextChoices):
+        ACTIVE = "active", "Active"
+        ARCHIVED = "archived", "Archived"
+
+    # PROTECT-vs-CASCADE: CASCADE, mirroring Activity.owner. A Group is content like an Activity
+    # (thread + memberships), and CASCADE keeps GDPR erase_user() working without a system-curator
+    # account to reassign to. The destruction is NOT silent: erase_user() writes a
+    # `group.owner_erased` audit row per owned group BEFORE deletion, so the hash-chained log keeps
+    # a permanent, traceable record even of a moderation-hidden group (target_ref is a string, not
+    # an FK, so it survives).
+    # Reassign a departing staff curator's groups before offboarding if continuity is required.
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="owned_groups"
+    )
+    area = models.ForeignKey("communities.Area", on_delete=models.PROTECT, related_name="groups")
+    # The rollup category (always set, = the type's category or the category itself).
+    category = models.ForeignKey(
+        "taxonomy.ActivityCategory", on_delete=models.PROTECT, related_name="groups"
+    )
+    # Set ONLY for a TYPE-tier group; NULL marks a CATEGORY-tier rollup group.
+    activity_type = models.ForeignKey(
+        "taxonomy.ActivityType",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="groups",
+    )
+    tier = models.CharField(max_length=8, choices=Tier.choices)
+
+    # Pinned from the owner's cohort at creation; the isolation boundary. IMMUTABLE.
+    cohort = models.CharField(max_length=16, choices=Cohort.choices)
+
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+
+    status = models.CharField(max_length=16, choices=Status.choices, default=Status.ACTIVE)
+    # Set by a moderator REMOVE action (safety.take_action); a hidden group is excluded from
+    # every read surface (visible_groups, group_detail, thread gates) but retained for audit.
+    is_hidden = models.BooleanField(default=False)
+    # True for any CHILD/TEEN group (staff-curated only) and for staff-created adult groups.
+    is_staff_curated = models.BooleanField(default=False)
+
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            # At most ONE live group per coordinate per cohort (anti-spam-clone), mirroring the
+            # Community one-per-coordinate rule but scoped to ACTIVE groups (an archived group
+            # frees the coordinate). Partial unique on the live set.
+            models.UniqueConstraint(
+                fields=["cohort", "area", "activity_type"],
+                condition=Q(status="active", activity_type__isnull=False),
+                name="uq_group_type",
+            ),
+            models.UniqueConstraint(
+                fields=["cohort", "area", "category"],
+                condition=Q(status="active", activity_type__isnull=True),
+                name="uq_group_category",
+            ),
+            # Tier must agree with whether activity_type is set (mirrors Community).
+            models.CheckConstraint(
+                condition=(
+                    Q(tier="type", activity_type__isnull=False)
+                    | Q(tier="category", activity_type__isnull=True)
+                ),
+                name="group_tier_matches_type",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["cohort", "status"]),  # visible_groups discovery scan
+            models.Index(fields=["cohort", "area", "activity_type"]),  # coordinate / linkage lookup
+            models.Index(fields=["cohort", "category"]),
+        ]
 
     def __str__(self):
-        return f"thread({self.activity})"
+        return f"group({self.title}, {self.cohort})"
+
+
+class GroupMembership(models.Model):
+    """A user's stored membership of a Group. Deliberately SIMPLER than the Activity Membership:
+
+    - Role is OWNER/MEMBER only — **no GUARDIAN role** (a standing group thread is peer-only,
+      same-cohort; there is no adult guardian-observer seat, so the leak-prone observer/prune
+      machinery the activity surface needs simply does not exist here).
+    - State is MEMBER/LEFT/REMOVED — **no REQUESTED/INVITED** (groups are openly joinable; join
+      admits straight to MEMBER).
+    - **No** ``attendance_intent`` / ``arrived_at`` / ``met_confirmed_at`` / ``last_read_at`` — a
+      standing group must never accrue per-user reliability or read-tracking history (inv.2)."""
+
+    class Role(models.TextChoices):
+        OWNER = "owner", "Owner"
+        MEMBER = "member", "Member"
+
+    class State(models.TextChoices):
+        MEMBER = "member", "Member"
+        LEFT = "left", "Left"
+        REMOVED = "removed", "Removed"
+
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, related_name="memberships")
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="group_memberships"
+    )
+    role = models.CharField(max_length=16, choices=Role.choices, default=Role.MEMBER)
+    state = models.CharField(max_length=16, choices=State.choices, default=State.MEMBER)
+    joined_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(fields=["group", "user"], name="uq_group_membership_group_user"),
+        ]
+        indexes = [
+            models.Index(fields=["group", "state"]),  # group_roster / count
+            models.Index(fields=["user", "state"]),  # "my groups" + cohort-change eviction sweep
+        ]
+
+    def __str__(self):
+        return f"{self.user} @ {self.group} ({self.state})"
+
+
+class Thread(models.Model):
+    """The text-only discussion thread for an activity OR a group (exactly one owner).
+
+    A Thread is owned by EITHER an ``activity`` or a ``group`` (the XOR constraint), bridged by the
+    ``owner_object`` property so the single hardened ``post_to_thread`` / ``can_read_thread`` gates
+    read it duck-typed. ``group`` is a OneToOneField (NOT a plain FK) with the same
+    ``related_name="thread"`` as ``activity``, so ``group.thread`` resolves to the singular Thread
+    object exactly like ``activity.thread`` (a plain FK would make it a RelatedManager and break the
+    bridge)."""
+
+    activity = models.OneToOneField(
+        Activity, on_delete=models.CASCADE, related_name="thread", null=True, blank=True
+    )
+    group = models.OneToOneField(
+        "Group", on_delete=models.CASCADE, related_name="thread", null=True, blank=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            # Exactly one owner: an activity thread XOR a group thread, never both, never neither.
+            models.CheckConstraint(
+                condition=(
+                    Q(activity__isnull=False, group__isnull=True)
+                    | Q(activity__isnull=True, group__isnull=False)
+                ),
+                name="thread_exactly_one_owner",
+            ),
+        ]
+
+    def __str__(self):
+        return f"thread({self.owner_object})"
+
+    @property
+    def owner_object(self):
+        """The Activity or Group that owns this thread (exactly one is non-null per the XOR
+        constraint). The single duck-type bridge the thread gates dispatch on."""
+        return self.activity or self.group
 
 
 class Post(models.Model):

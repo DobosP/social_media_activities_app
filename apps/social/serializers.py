@@ -4,7 +4,7 @@ from apps.places.models import Place
 from apps.taxonomy.models import ActivityType
 
 from .models import Activity, Membership, Post
-from .services import current_members, participant_count
+from .services import participant_count
 
 # Hard text caps enforced at the serialization layer. The underlying model fields
 # are unbounded TextFields, so without these the API would accept arbitrarily large
@@ -20,7 +20,10 @@ LOGISTICS_FIELD_MAX_LENGTH = 500
 class ActivitySerializer(serializers.ModelSerializer):
     owner = serializers.CharField(source="owner.display_name", read_only=True)
     activity_type = serializers.SlugRelatedField(slug_field="slug", read_only=True)
-    member_count = serializers.SerializerMethodField()
+    # NO member_count: a raw "N members/going" number on the discovery feed is exactly the kind of
+    # social-proof vanity metric inv.2 forbids, and it leaked unconditionally to every cohort
+    # (including minors). It is removed outright (not merely cohort-gated). open_positions stays —
+    # that is FUNCTIONAL capacity info ("3 spots left"), not social proof.
     open_positions = serializers.SerializerMethodField()
 
     class Meta:
@@ -47,17 +50,10 @@ class ActivitySerializer(serializers.ModelSerializer):
             "capacity",
             "status",
             "guardian_accompanied",
-            "member_count",
             "open_positions",
             "created_at",
         ]
         read_only_fields = fields
-
-    def get_member_count(self, obj) -> int:
-        # Prefer the queryset annotation (see services.with_counts) to avoid an N+1;
-        # fall back to a direct count when the object wasn't annotated.
-        annotated = getattr(obj, "member_n", None)
-        return annotated if annotated is not None else current_members(obj).count()
 
     def get_open_positions(self, obj) -> int | None:
         if obj.capacity is None:
@@ -151,6 +147,46 @@ class MembershipSerializer(serializers.ModelSerializer):
             "decided_at",
         ]
         read_only_fields = fields
+
+
+class GroupSerializer(serializers.Serializer):
+    """A standing-group card / detail. STRICT ALLOWLIST — deliberately NO member_count / roster /
+    participants / open_positions / any ``*_count`` or ``*_n`` field, for ANY cohort (the headline
+    roster-less rule; a regression test asserts no such key is ever added here). The roster, when an
+    ADULT member may see it, is a server-rendered list via services.group_roster — never a
+    serialized scalar a client could read directly or sum into an aggregate."""
+
+    id = serializers.IntegerField(read_only=True)
+    title = serializers.CharField(read_only=True)
+    description = serializers.CharField(read_only=True)
+    owner = serializers.CharField(source="owner.display_name", read_only=True)
+    area = serializers.CharField(source="area.name", read_only=True)
+    category = serializers.CharField(source="category.name", read_only=True)
+    activity_type = serializers.SerializerMethodField()
+    tier = serializers.CharField(read_only=True)
+    cohort = serializers.CharField(read_only=True)
+    status = serializers.CharField(read_only=True)
+    is_staff_curated = serializers.BooleanField(read_only=True)
+    created_at = serializers.DateTimeField(read_only=True)
+
+    def get_activity_type(self, obj):
+        return obj.activity_type.name if obj.activity_type_id else None
+
+
+class GroupCreateSerializer(serializers.Serializer):
+    """Create a group from a city + a taxonomy coordinate (an activity_type, or a category for a
+    rollup group). cohort is OPTIONAL and only honoured for staff (a staff curator creates a minor
+    group); a non-staff actor's group is always pinned to their own cohort by the service."""
+
+    city = serializers.CharField(max_length=128)
+    activity_type = serializers.PrimaryKeyRelatedField(
+        queryset=ActivityType.objects.all(), required=False, allow_null=True
+    )
+    title = serializers.CharField(max_length=200)
+    description = serializers.CharField(
+        required=False, allow_blank=True, default="", max_length=ACTIVITY_DESCRIPTION_MAX_LENGTH
+    )
+    cohort = serializers.CharField(required=False, allow_blank=True, default="")
 
 
 class PostSerializer(serializers.ModelSerializer):

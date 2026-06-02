@@ -31,6 +31,8 @@ def build_user_export(user) -> dict:
         "guardianships": _guardianships(user),
         "memberships": _memberships(user),
         "owned_activities": _owned_activities(user),
+        "owned_groups": _owned_groups(user),
+        "group_memberships": _group_memberships(user),
         "donations": _donations_summary(user),
     }
 
@@ -133,6 +135,36 @@ def _owned_activities(user) -> list[dict]:
             "created_at": _iso(a.created_at),
         }
         for a in user.owned_activities.all().order_by("created_at")
+    ]
+
+
+def _owned_groups(user) -> list[dict]:
+    """Standing groups this user owns (a group is content like an activity)."""
+    return [
+        {
+            "id": g.id,
+            "title": g.title,
+            "status": g.status,
+            "cohort": g.cohort,
+            "area": g.area.name,
+            "is_staff_curated": g.is_staff_curated,
+            "created_at": _iso(g.created_at),
+        }
+        for g in user.owned_groups.select_related("area").order_by("created_at")
+    ]
+
+
+def _group_memberships(user) -> list[dict]:
+    """Standing-group memberships (role/state only — a group keeps no per-user history)."""
+    return [
+        {
+            "group_id": m.group_id,
+            "group_title": m.group.title,
+            "role": m.role,
+            "state": m.state,
+            "joined_at": _iso(m.joined_at),
+        }
+        for m in user.group_memberships.select_related("group").order_by("joined_at")
     ]
 
 

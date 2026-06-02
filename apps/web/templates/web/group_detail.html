@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}{{ group.title }}{% endblock %}
+{% block content %}
+<p class="muted"><a href="{% url 'groups' %}">&larr; Groups</a></p>
+<h1>{{ group.title }}</h1>
+<p class="muted">
+  {% if group.activity_type %}{{ group.activity_type.name }}{% else %}All {{ group.category.name }}{% endif %}
+  &middot; {{ group.area.name }} &middot; {{ group.get_cohort_display }}
+  {% if group.status != "active" %}&middot; {{ group.get_status_display }}{% endif %}
+</p>
+{% if group.description %}<p>{{ group.description }}</p>{% endif %}
+
+{% if not is_owner %}
+  {% if is_member %}
+    <form method="post" action="{% url 'group_leave' group.pk %}" class="inline">{% csrf_token %}
+      <button class="btn btn-sm" type="submit">Leave group</button></form>
+  {% else %}
+    <form method="post" action="{% url 'group_join' group.pk %}" class="inline">{% csrf_token %}
+      <button class="btn" type="submit">Join group</button></form>
+  {% endif %}
+{% else %}
+  <form method="post" action="{% url 'group_archive' group.pk %}" class="inline"
+        onsubmit="return confirm('Archive this group? Its thread will be frozen.');">{% csrf_token %}
+    <button class="btn btn-sm" type="submit">Archive group</button></form>
+{% endif %}
+
+{# Roster panel — rendered ONLY when group_roster returned a list (an eligible ADULT member).
+   Minors and non-members get roster=None, so this whole block is absent: no list, no count,
+   anywhere. The number below is the incidental length of the list already on screen. #}
+{% if roster is not None %}
+  <h2>Members ({{ roster|length }})</h2>
+  <ul>{% for m in roster %}<li>{{ m.display_name|default:m.username }}</li>{% endfor %}</ul>
+{% endif %}
+
+{% if can_announce %}
+  <h2>Post an announcement</h2>
+  <form method="post" action="{% url 'group_announce' group.pk %}">{% csrf_token %}
+    <textarea name="body" rows="2" placeholder="A pinned update for everyone..."></textarea>
+    <button class="btn btn-sm" type="submit">Announce</button>
+  </form>
+{% endif %}
+
+{% if show_thread %}
+  <h2>Conversation</h2>
+  {% for a in announcements %}
+    <article class="post" style="border-left:3px solid var(--accent,#888);padding-left:.5rem">
+      <div class="meta">&#128204; {{ a.author.display_name|default:a.author.username }} &middot; {{ a.created_at|date:'j M H:i' }}
+        {% if a.author_id != user.id %}&middot; <a class="muted" style="font-size:.75rem" href="{% url 'report' %}?type=post&amp;id={{ a.pk }}">report</a>{% endif %}</div>
+      <div>{{ a.body|linebreaksbr }}</div>
+    </article>
+  {% endfor %}
+  {% for p in posts %}
+    <article id="post-{{ p.pk }}" class="post">
+      <div class="meta">{{ p.author.display_name|default:p.author.username }} &middot;
+        <a href="#post-{{ p.pk }}" class="muted">{{ p.created_at|date:'j M H:i' }}</a>
+        {% if p.author_id != user.id %}&middot; <a class="muted" style="font-size:.75rem" href="{% url 'report' %}?type=post&amp;id={{ p.pk }}">report</a>{% endif %}</div>
+      <div>{{ p.body_html }}</div>
+    </article>
+  {% empty %}
+    {% if not announcements %}<p class="muted">No messages yet.</p>{% endif %}
+  {% endfor %}
+  {% if can_post %}
+    <form method="post" action="{% url 'group_post' group.pk %}">{% csrf_token %}
+      <textarea name="body" rows="3" placeholder="Write a message..."></textarea>
+      <button class="btn btn-sm" type="submit">Post</button>
+    </form>
+  {% else %}
+    <p class="muted">This group's thread is announcement-only.</p>
+  {% endif %}
+{% endif %}
+
+<h2>Upcoming activities</h2>
+{% for a in feed %}
+  {% include "web/_activity_card.html" %}
+{% empty %}
+  <p class="muted">No upcoming activities here right now.
+    <a class="btn btn-sm" href="{% url 'activity_create' %}">Organise one</a></p>
+{% endfor %}
+{% endblock %}

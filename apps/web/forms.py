@@ -5,7 +5,11 @@ from apps.donations.models import Campaign
 from apps.places.models import Place
 from apps.safety.models import ReasonCode
 from apps.social.models import Activity
-from apps.social.serializers import LOGISTICS_FIELD_MAX_LENGTH, POST_BODY_MAX_LENGTH
+from apps.social.serializers import (
+    ACTIVITY_DESCRIPTION_MAX_LENGTH,
+    LOGISTICS_FIELD_MAX_LENGTH,
+    POST_BODY_MAX_LENGTH,
+)
 from apps.taxonomy.models import ActivityType
 
 
@@ -220,4 +224,30 @@ class ReportForm(forms.Form):
         ),
         required=False,
         label="Details (optional)",
+    )
+
+
+class GroupCreateForm(forms.Form):
+    """Create a standing group from a city + an activity type. The cohort is pinned by the service
+    (to the creator's cohort for a self-created adult group). The optional cohort select is honoured
+    only for staff creating a MINOR group; the service rejects a non-staff cross-cohort attempt."""
+
+    city = forms.CharField(max_length=128)
+    activity_type = forms.ModelChoiceField(
+        queryset=ActivityType.objects.filter(is_active=True).order_by("name")
+    )
+    title = forms.CharField(max_length=200)
+    description = forms.CharField(
+        required=False,
+        max_length=ACTIVITY_DESCRIPTION_MAX_LENGTH,
+        widget=forms.Textarea(attrs={"rows": 3}),
+    )
+    # Staff-only: create a group for a MINOR cohort. Blank = the creator's own cohort.
+    cohort = forms.ChoiceField(
+        required=False,
+        choices=[
+            ("", "My own cohort"),
+            ("child", "Child (under 16) — staff only"),
+            ("teen", "Teen (16-17) — staff only"),
+        ],
     )

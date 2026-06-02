@@ -55,9 +55,10 @@ def test_feed_serialization_is_constant_query_count(
     with django_assert_num_queries(1):
         data = ActivitySerializer(list(qs), many=True).data
     assert len(data) == 3
-    # The annotation produced correct numbers (owner is a member; 4 added => 5).
+    # member_count is intentionally NOT serialized any more (the vanity-count removal); only the
+    # functional open_positions remains, derived from the participant_n annotation (no N+1).
     by_title = {row["title"]: row for row in data}
-    assert by_title["Game 0"]["member_count"] == 5
+    assert "member_count" not in by_title["Game 0"]
     assert by_title["Game 0"]["open_positions"] == 5  # capacity 10 - 5 participants
     assert by_title["Game 1"]["open_positions"] is None  # uncapped
 
@@ -81,5 +82,5 @@ def test_counts_exclude_guardian_from_positions(adult, child, place, activity_ty
         decided_at=timezone.now(),
     )
     row = ActivitySerializer(with_counts(Activity.objects.filter(id=act.id)).first()).data
-    assert row["member_count"] == 2  # owner + guardian are members
+    assert "member_count" not in row  # member_count is no longer a serialized field
     assert row["open_positions"] == 3  # but only the owner holds a position (4 - 1)

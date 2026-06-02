@@ -95,6 +95,15 @@ urlpatterns = [
         name="notification_preferences",
     ),
     path("messages/", views.messages_page, name="messages"),
+    # Groups (persistent, cohort-pinned, joinable standing groups)
+    path("groups/", views.group_list, name="groups"),
+    path("groups/new/", views.group_create, name="group_create"),
+    path("groups/<int:pk>/", views.group_detail, name="group_detail"),
+    path("groups/<int:pk>/join/", views.group_join, name="group_join"),
+    path("groups/<int:pk>/leave/", views.group_leave, name="group_leave"),
+    path("groups/<int:pk>/post/", views.group_post, name="group_post"),
+    path("groups/<int:pk>/announce/", views.group_announce, name="group_announce"),
+    path("groups/<int:pk>/archive/", views.group_archive, name="group_archive"),
     # Communities
     path("communities/", views.communities_page, name="communities"),
     path("communities/graph/", views.community_graph_page, name="community_graph"),

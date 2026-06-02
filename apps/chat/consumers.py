@@ -66,11 +66,13 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
     @database_sync_to_async
     def _get_thread(self, thread_id):
-        return Thread.objects.select_related("activity").filter(pk=thread_id).first()
+        # Load BOTH owners so thread.owner_object resolves without an extra query whether this is
+        # an activity thread or a group thread.
+        return Thread.objects.select_related("activity", "group").filter(pk=thread_id).first()
 
     @database_sync_to_async
     def _can_access(self) -> bool:
-        return can_read_thread(self.user, self.thread.activity)
+        return can_read_thread(self.user, self.thread.owner_object)
 
     @database_sync_to_async
     def _still_authorized(self) -> bool:
@@ -80,11 +82,13 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         user = get_user_model().objects.filter(pk=uid).first() if uid else None
         if user is None:
             return False
-        thread = Thread.objects.select_related("activity").filter(pk=self.thread_id).first()
-        return thread is not None and can_read_thread(user, thread.activity)
+        thread = (
+            Thread.objects.select_related("activity", "group").filter(pk=self.thread_id).first()
+        )
+        return thread is not None and can_read_thread(user, thread.owner_object)
 
     @database_sync_to_async
     def _persist(self, body, reply_to_id):
         return post_to_thread_realtime(
-            self.user, self.thread.activity, body, reply_to_id=reply_to_id
+            self.user, self.thread.owner_object, body, reply_to_id=reply_to_id
         )
