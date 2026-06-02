@@ -77,6 +77,14 @@ class Activity(models.Model):
     join_threshold = models.FloatField(default=DEFAULT_JOIN_THRESHOLD)
     owner_can_override = models.BooleanField(default=True)
     capacity = models.PositiveIntegerField(null=True, blank=True)
+    # F1 "Quorum-go": owner-set minimum number of GOING RSVPs for the meetup to be "on".
+    # null = no threshold. A property of THIS meetup, never a per-user reliability signal.
+    min_to_go = models.PositiveIntegerField(null=True, blank=True)
+    # One-shot latch: set the FIRST time the live GOING count reaches min_to_go, so the
+    # MEETUP_CONFIRMED notice fires at most once. It does NOT drive the displayed state — the
+    # "it's on / needs N more" chip is always derived LIVE from the current count, so it can never
+    # lie after the count drops back below the threshold.
+    go_confirmed_at = models.DateTimeField(null=True, blank=True)
     # Children's activities may allow a parent/guardian to accompany (supervised,
     # group-only). Only meaningful for the CHILD cohort. See docs/SAFETY.md.
     guardian_accompanied = models.BooleanField(default=False)

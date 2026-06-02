@@ -48,6 +48,7 @@ class ActivitySerializer(serializers.ModelSerializer):
             "join_threshold",
             "owner_can_override",
             "capacity",
+            "min_to_go",
             "status",
             "guardian_accompanied",
             "open_positions",
@@ -76,6 +77,7 @@ class ActivityCreateSerializer(serializers.Serializer):
     ends_at = serializers.DateTimeField(required=False, allow_null=True)
     join_threshold = serializers.FloatField(required=False, min_value=0.01, max_value=1.0)
     capacity = serializers.IntegerField(required=False, allow_null=True, min_value=1)
+    min_to_go = serializers.IntegerField(required=False, allow_null=True, min_value=1)
     guardian_accompanied = serializers.BooleanField(required=False, default=False)
     meeting_point = serializers.CharField(
         required=False, allow_blank=True, default="", max_length=LOGISTICS_FIELD_MAX_LENGTH
@@ -111,6 +113,7 @@ class ActivityUpdateSerializer(serializers.Serializer):
     starts_at = serializers.DateTimeField(required=False)
     ends_at = serializers.DateTimeField(required=False, allow_null=True)
     capacity = serializers.IntegerField(required=False, allow_null=True, min_value=1)
+    min_to_go = serializers.IntegerField(required=False, allow_null=True, min_value=1)
     meeting_point = serializers.CharField(
         required=False, allow_blank=True, max_length=LOGISTICS_FIELD_MAX_LENGTH
     )

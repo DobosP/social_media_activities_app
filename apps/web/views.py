@@ -1164,6 +1164,7 @@ def activity_edit(request, pk):
                 "starts_at": activity.starts_at,
                 "ends_at": activity.ends_at,
                 "capacity": activity.capacity,
+                "min_to_go": activity.min_to_go,
                 "meeting_point": activity.meeting_point,
                 "what_to_bring": activity.what_to_bring,
                 "organizer_note": activity.organizer_note,

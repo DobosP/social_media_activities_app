@@ -63,6 +63,15 @@
     {% endif %}
     <div class="row" style="gap:.4rem;align-items:center;margin:.4rem 0;flex-wrap:wrap">
       <span class="muted">{% blocktrans with going=rsvp_summary.going total=rsvp_summary.total %}Coming: <strong>{{ going }}</strong> of {{ total }}{% endblocktrans %}</span>
+      {# F1 Quorum-go: LIVE derived state (never the go_confirmed_at latch) — flips back to
+         "needs N more" honestly if the count drops below the threshold again. #}
+      {% if rsvp_summary.min_to_go %}
+        {% if rsvp_summary.met_minimum %}
+          <span class="tag">&#10003; {% trans "It's on" %}</span>
+        {% else %}
+          <span class="muted">{% blocktrans count n=rsvp_summary.remaining_needed %}needs {{ n }} more to happen{% plural %}needs {{ n }} more to happen{% endblocktrans %}</span>
+        {% endif %}
+      {% endif %}
       <form class="inline" method="post" action="{% url 'activity_rsvp' activity.pk %}">{% csrf_token %}
         <input type="hidden" name="intent" value="going">
         <button class="btn btn-sm{% if my_membership.attendance_intent != 'going' %} btn-secondary{% endif %}" type="submit">{% trans "I'm coming" %}</button></form>
