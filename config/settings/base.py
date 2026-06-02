@@ -160,6 +160,12 @@ EUDI_TRUSTED_ISSUERS = env.json("EUDI_TRUSTED_ISSUERS", default={})
 # national eID / blessed out-of-band process) is wired. See docs/AUDIT_STRESS_2026-05-29.md.
 ALLOW_MINOR_ONBOARDING = env.bool("ALLOW_MINOR_ONBOARDING", default=True)
 
+# F6 re-verify-or-pause sweep: how many days before an age proof lapses to nudge re-verification,
+# and a hard per-tick cap on EVICTIONS (a clock-skew / mass-expiry event above this is audited and
+# capped rather than silently evicting a whole cohort in one run).
+REVERIFY_REMINDER_DAYS = env.int("REVERIFY_REMINDER_DAYS", default=14)
+REVERIFY_SWEEP_BATCH = env.int("REVERIFY_SWEEP_BATCH", default=1000)
+
 # Guardianship link invites (verified-adult → minor, mutually confirmed). How long an
 # unaccepted invite stays valid, and anti-abuse limits on issuing invites.
 GUARDIAN_INVITE_TTL_DAYS = env.int("GUARDIAN_INVITE_TTL_DAYS", default=7)

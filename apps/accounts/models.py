@@ -87,6 +87,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS: list[str] = []
 
+    class Meta:
+        # The nightly F6 reverify_sweep filters minors by (cohort, is_identity_verified); an index
+        # keeps that candidate scan from degrading to a seq scan as the users table grows.
+        indexes = [models.Index(fields=["cohort", "is_identity_verified"])]
+
     def __str__(self):
         return self.display_name or self.username
 
@@ -116,6 +121,14 @@ class AgeAssurance(models.Model):
     """Record of an age-assurance event from an identity provider (e.g. EUDI wallet /
     EU age-verification). Stores the proven band, not identity data."""
 
+    class ReverifyNotice(models.TextChoices):
+        # F6 sent-marker: which re-verify notice the nightly reverify_sweep has already sent for
+        # THIS proof, so a tick never re-notifies. A fresh proof (re-verification creates a new
+        # row) starts at NONE, giving each proof its own expiring-soon nudge + expiry notice.
+        NONE = "", "None"
+        SOON = "soon", "Expiring-soon nudge sent"
+        EXPIRED = "expired", "Expired / paused notice sent"
+
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="age_assurances")
     provider = models.CharField(max_length=64)
     method = models.CharField(max_length=64, blank=True)
@@ -123,6 +136,9 @@ class AgeAssurance(models.Model):
     verified_at = models.DateTimeField(default=timezone.now)
     expires_at = models.DateTimeField(null=True, blank=True)
     raw = models.JSONField(default=dict, blank=True)
+    reverify_notice = models.CharField(
+        max_length=8, choices=ReverifyNotice.choices, default=ReverifyNotice.NONE, blank=True
+    )
 
     class Meta:
         indexes = [models.Index(fields=["user", "verified_at"])]

@@ -1,3 +1,4 @@
+import logging
 import secrets
 from datetime import timedelta
 from math import ceil
@@ -5,6 +6,7 @@ from math import ceil
 from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 from .models import (
     COHORT_BY_AGE_BAND,
@@ -16,6 +18,8 @@ from .models import (
     ParentalConsent,
     User,
 )
+
+logger = logging.getLogger(__name__)
 
 # Friendlier labels for the age-proof "method" token shown to users (F14).
 _METHOD_LABELS = {"openid4vp": "the EU Digital Identity wallet"}
@@ -137,6 +141,119 @@ def assurance_provenance(user: User) -> dict | None:
         "days_left": days_left,
         "status": status,
     }
+
+
+def _active_guardians(ward: User) -> list:
+    """The ward's currently-ACTIVE guardians (keyed strictly on an ACTIVE GuardianRelationship —
+    never a loose flag), for safety fan-outs. Mirrors the mark_arrived guardian-ping idiom."""
+    return [
+        rel.guardian
+        for rel in GuardianRelationship.objects.filter(
+            ward=ward, status=GuardianRelationship.Status.ACTIVE
+        ).select_related("guardian")
+    ]
+
+
+@transaction.atomic
+def _pause_lapsed_minor(minor: User, latest: AgeAssurance) -> None:
+    """Evict a minor whose age proof has LAPSED from cohort-pinned rosters/conversations and send a
+    one-time SYSTEM 'paused — re-verify' notice. is_assurance_current already fails closed at every
+    action gate; this is the ACTIVE cleanup so a lapsed minor doesn't linger in a roster until they
+    next act. Idempotent: evictions no-op once removed, and the EXPIRED marker stops re-notify."""
+    from apps.messaging.services import remove_user_from_conversations
+    from apps.notifications.models import Notification
+    from apps.notifications.services import notify
+    from apps.social.services import remove_user_from_groups
+
+    remove_user_from_groups(minor, reason="assurance_expired")
+    remove_user_from_conversations(minor, reason="assurance_expired")
+    latest.reverify_notice = AgeAssurance.ReverifyNotice.EXPIRED
+    latest.save(update_fields=["reverify_notice"])
+    notify(
+        minor,
+        Notification.Kind.SYSTEM,
+        str(_("Your age verification has expired")),
+        body=str(_("Re-verify your age to keep joining and chatting.")),
+        url="/verify-age/",
+    )
+
+
+@transaction.atomic
+def _nudge_reverify_soon(minor: User, latest: AgeAssurance) -> None:
+    """Send a one-time SYSTEM 'expiring soon' nudge to a minor AND each ACTIVE guardian, so they
+    re-verify before the proof lapses. The SOON marker makes it at-most-once per proof."""
+    from apps.notifications.models import Notification
+    from apps.notifications.services import notify
+
+    notify(
+        minor,
+        Notification.Kind.SYSTEM,
+        str(_("Your age verification is expiring soon")),
+        body=str(_("Re-verify your age soon to keep joining and chatting.")),
+        url="/verify-age/",
+    )
+    for guardian in _active_guardians(minor):
+        notify(
+            guardian,
+            Notification.Kind.SYSTEM,
+            str(_("Your ward's age verification is expiring soon")),
+            body=str(_("Your ward needs to re-verify their age soon to keep participating.")),
+            url="/verify-age/",
+        )
+    latest.reverify_notice = AgeAssurance.ReverifyNotice.SOON
+    latest.save(update_fields=["reverify_notice"])
+
+
+def run_reverify_sweep(*, now=None) -> dict:
+    """F6: proactively pause/nudge minors on a stale age proof — ACTIVE enforcement of EUDI expiry,
+    which is otherwise only checked lazily at action time (is_assurance_current). For each CHILD/
+    TEEN minor, look at their LATEST proof: if it has LAPSED, evict them from cohort-pinned
+    rosters/conversations + a one-time SYSTEM notice; if it is EXPIRING within the reminder window,
+    a one-time SYSTEM nudge to them + their ACTIVE guardians. Reads only band/expiry, never DOB. The
+    per-proof sent-marker makes every notice at-most-once. Evictions are CAPPED per tick and the cap
+    is AUDITED, so a clock-skew / mass-expiry event can never silently evict a whole cohort."""
+    from apps.safety.services import record_audit
+
+    now = now or timezone.now()
+    reminder = getattr(settings, "REVERIFY_REMINDER_DAYS", 14)
+    cap = getattr(settings, "REVERIFY_SWEEP_BATCH", 1000)
+    soon_cutoff = now + timedelta(days=reminder)
+
+    nudged = paused = newly_expired = 0
+    minors = User.objects.filter(
+        cohort__in=[Cohort.CHILD, Cohort.TEEN], is_identity_verified=True
+    ).order_by("id")
+    for minor in minors.iterator():
+        try:
+            latest = AgeAssurance.objects.filter(user=minor).order_by("-verified_at", "-id").first()
+            if latest is None or latest.expires_at is None:
+                continue
+            if latest.expires_at <= now:
+                # Already paused on a prior tick: skip WITHOUT counting it — counting the standing
+                # backlog would make the mass-expiry guard a permanent nightly false alarm.
+                if latest.reverify_notice == AgeAssurance.ReverifyNotice.EXPIRED:
+                    continue
+                newly_expired += 1  # a NOT-yet-handled lapse — the anomaly metric
+                if paused >= cap:
+                    continue  # eviction cap reached this tick (rest processed next tick)
+                _pause_lapsed_minor(minor, latest)
+                paused += 1
+            elif latest.expires_at <= soon_cutoff:
+                if latest.reverify_notice == AgeAssurance.ReverifyNotice.NONE:
+                    _nudge_reverify_soon(minor, latest)
+                    nudged += 1
+        except Exception:  # noqa: BLE001 — one bad minor must not starve the rest of the cohort
+            logger.exception("reverify_sweep: skipping minor %s after an error", minor.pk)
+
+    if newly_expired > cap:
+        # Anomalous burst of NEWLY-lapsed proofs in one tick (e.g. a provider or clock-skew bug) —
+        # evictions are capped above; surface it loudly for a human. Keyed on NEW (not standing)
+        # expiries, so steady-state accumulation of already-paused minors never trips the alarm.
+        record_audit("accounts.reverify_mass_expiry_guard", newly_expired=newly_expired, cap=cap)
+    record_audit(
+        "accounts.reverify_swept", nudged=nudged, paused=paused, newly_expired=newly_expired
+    )
+    return {"nudged": nudged, "paused": paused, "newly_expired": newly_expired}
 
 
 def can_participate(user: User) -> bool:
