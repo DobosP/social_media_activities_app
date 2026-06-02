@@ -1,20 +1,19 @@
 {% extends "base.html" %}
-{% block title %}Verify your age{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Verify your age" %}{% endblock %}
 {% block content %}
-<h1>Verify your age</h1>
-{% if verified %}<div class="banner">Your age is verified and you can participate.</div>{% endif %}
-<p class="muted">Prove your age band with the EU Digital Identity wallet (OpenID4VP). The app receives
-  only an over-16 / over-18 proof &mdash; never your birthdate &mdash; and verifies its signature
-  cryptographically.</p>
+<h1>{% trans "Verify your age" %}</h1>
+{% if verified %}<div class="banner">{% trans "Your age is verified and you can participate." %}</div>{% endif %}
+<p class="muted">{% trans "Prove your age band with the EU Digital Identity wallet (OpenID4VP). The app receives only an over-16 / over-18 proof &mdash; never your birthdate &mdash; and verifies its signature cryptographically." %}</p>
 {% if sandbox %}
 <form method="post" class="card">{% csrf_token %}
-  <p><strong>Demo wallet</strong> &mdash; present an age proof:</p>
-  <label><input type="radio" name="age" value="adult" checked> 18 or over (adult)</label>
-  <label><input type="radio" name="age" value="16_17"> 16-17</label>
-  <label><input type="radio" name="age" value="under_16"> under 16</label>
-  <button class="btn" type="submit" style="margin-top:.6rem">Present to the app</button>
+  <p><strong>{% trans "Demo wallet" %}</strong> {% trans "&mdash; present an age proof:" %}</p>
+  <label><input type="radio" name="age" value="adult" checked> {% trans "18 or over (adult)" %}</label>
+  <label><input type="radio" name="age" value="16_17"> {% trans "16-17" %}</label>
+  <label><input type="radio" name="age" value="under_16"> {% trans "under 16" %}</label>
+  <button class="btn" type="submit" style="margin-top:.6rem">{% trans "Present to the app" %}</button>
 </form>
 {% else %}
-<div class="banner">EU wallet verification isn't configured on this server yet.</div>
+<div class="banner">{% trans "EU wallet verification isn't configured on this server yet." %}</div>
 {% endif %}
 {% endblock %}

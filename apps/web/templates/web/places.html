@@ -1,18 +1,23 @@
 {% extends "base.html" %}
-{% block title %}Places{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Places" %}{% endblock %}
 {% block head %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 {% endblock %}
 {% block content %}
-<h1>Places</h1>
-<p class="muted">Real locations where activities can happen, from open data. Click a marker to see
-  what's on or to organise there.</p>
-<p><a href="{% url 'places_list' %}">View as a text list (no map needed) &rarr;</a>
-  {% if user.is_authenticated %}&middot; <a href="{% url 'place_propose' %}">Add a missing place</a>
-  &middot; <a href="{% url 'places_pending' %}">Pending places</a>{% endif %}</p>
+<h1>{% trans "Places" %}</h1>
+<p class="muted">{% trans "Real locations where activities can happen, from open data. Click a marker to see what's on or to organise there." %}</p>
+<p><a href="{% url 'places_list' %}">{% trans "View as a text list (no map needed)" %} &rarr;</a>
+  {% if user.is_authenticated %}&middot; <a href="{% url 'place_propose' %}">{% trans "Add a missing place" %}</a>
+  &middot; <a href="{% url 'places_pending' %}">{% trans "Pending places" %}</a>{% endif %}</p>
 <div id="map"></div>
 {% endblock %}
 {% block scripts %}
+{% comment %}
+i18n known gap: the JS map-popup strings below ('Unnamed place', 'View & organise →') are not yet
+localized — JS-side i18n (a trans tag emitted into the script, or a data-* config the JS reads) is a
+separate follow-up. The no-JS /places/list/ fallback IS fully localized.
+{% endcomment %}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script>
   const map = L.map('map').setView([46.770, 23.591], 13); // Cluj-Napoca

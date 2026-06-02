@@ -1,16 +1,16 @@
 {% extends "base.html" %}
-{% load safe_urls %}
+{% load safe_urls i18n %}
 {% block title %}{{ event.title }}{% endblock %}
 {% block content %}
-<p class="muted"><a href="{% url 'events_list' %}">&larr; Events</a></p>
+<p class="muted"><a href="{% url 'events_list' %}">{% trans "&larr; Events" %}</a></p>
 <h1>{{ event.title }}</h1>
 <div>{% if event.activity_type %}<span class="tag">{{ event.activity_type.name }}</span>{% endif %}</div>
 <p class="muted">{{ event.starts_at|date:"l j F Y, H:i" }}{% if event.ends_at %} &ndash; {{ event.ends_at|date:"H:i" }}{% endif %}
-  {% if event.place %}<br>at <a href="{% url 'place_detail' event.place.pk %}">{{ event.place.name }}</a>{% endif %}</p>
+  {% if event.place %}<br>{% url 'place_detail' event.place.pk as place_url %}{% blocktrans with place_name=event.place.name %}at <a href="{{ place_url }}">{{ place_name }}</a>{% endblocktrans %}{% endif %}</p>
 {% if event.description %}<p>{{ event.description|linebreaks }}</p>{% endif %}
-{% if event.url|safe_href %}<p><a href="{{ event.url|safe_href }}" rel="noopener noreferrer" target="_blank">Event website &rarr;</a></p>{% endif %}
+{% if event.url|safe_href %}<p><a href="{{ event.url|safe_href }}" rel="noopener noreferrer" target="_blank">{% trans "Event website &rarr;" %}</a></p>{% endif %}
 {% if user.is_authenticated and event.place %}
   {# F40: prefill the new activity's type + start time from this event (owner edits before submit). #}
-  <p><a class="btn" href="{% url 'activity_create' %}?place={{ event.place.pk }}{% if event.activity_type %}&activity_type={{ event.activity_type.pk }}{% endif %}&starts_at={{ event.starts_at|date:'Y-m-d\TH:i'|urlencode }}">Organise an activity to go together</a></p>
+  <p><a class="btn" href="{% url 'activity_create' %}?place={{ event.place.pk }}{% if event.activity_type %}&activity_type={{ event.activity_type.pk }}{% endif %}&starts_at={{ event.starts_at|date:'Y-m-d\TH:i'|urlencode }}">{% trans "Organise an activity to go together" %}</a></p>
 {% endif %}
 {% endblock %}

@@ -1,19 +1,22 @@
 {% extends "base.html" %}
+{% load i18n %}
 {% block title %}{{ community.name }}{% endblock %}
 {% block content %}
-<p class="muted"><a href="{% url 'communities' %}">&larr; Communities</a></p>
+<p class="muted"><a href="{% url 'communities' %}">&larr; {% trans "Communities" %}</a></p>
 <h1>{{ community.name }}</h1>
-<p class="muted">Upcoming
-  {% if community.activity_type %}{{ community.activity_type.name }}{% else %}{{ community.category.name }}{% endif %}
-  activities in {{ community.area.name }} &mdash; soonest first.</p>
+<p class="muted">{% if community.activity_type %}{% blocktrans with type_name=community.activity_type.name area=community.area.name %}Upcoming
+  {{ type_name }}
+  activities in {{ area }} &mdash; soonest first.{% endblocktrans %}{% else %}{% blocktrans with category=community.category.name area=community.area.name %}Upcoming
+  {{ category }}
+  activities in {{ area }} &mdash; soonest first.{% endblocktrans %}{% endif %}</p>
 {% if linked_group %}
-  <p><a class="btn btn-sm" href="{% url 'group_detail' linked_group.pk %}">&#128101; Join the standing group: {{ linked_group.title }}</a></p>
+  <p><a class="btn btn-sm" href="{% url 'group_detail' linked_group.pk %}">&#128101; {% blocktrans with title=linked_group.title %}Join the standing group: {{ title }}{% endblocktrans %}</a></p>
 {% endif %}
 
 {% for a in activities %}
   {% include "web/_activity_card.html" %}
 {% empty %}
-  <p class="muted">No upcoming activities here right now.
-    <a class="btn btn-sm" href="{% url 'activity_create' %}">Organise one</a></p>
+  <p class="muted">{% trans "No upcoming activities here right now." %}
+    <a class="btn btn-sm" href="{% url 'activity_create' %}">{% trans "Organise one" %}</a></p>
 {% endfor %}
 {% endblock %}

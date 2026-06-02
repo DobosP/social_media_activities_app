@@ -1,45 +1,59 @@
-{% load static %}
+{% load static i18n %}
+{% get_current_language as LANGUAGE_CODE %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ LANGUAGE_CODE }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}Social Activities{% endblock %}</title>
+  <title>{% block title %}{% trans "Social Activities" %}{% endblock %}</title>
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
   {% block head %}{% endblock %}
 </head>
 <body>
-<a class="skip-link" href="#main">Skip to main content</a>
+<a class="skip-link" href="#main">{% trans "Skip to main content" %}</a>
 <header class="site-header" role="banner">
-  <nav class="nav container" role="navigation" aria-label="Primary">
-    <a class="brand" href="{% url 'home' %}">&#9679; Activities</a>
-    <a href="{% url 'places_map' %}">Places</a>
-    <a href="{% url 'events_list' %}">Events</a>
+  <nav class="nav container" role="navigation" aria-label="{% trans 'Primary' %}">
+    <a class="brand" href="{% url 'home' %}">&#9679; {% trans "Activities" %}</a>
+    <a href="{% url 'places_map' %}">{% trans "Places" %}</a>
+    <a href="{% url 'events_list' %}">{% trans "Events" %}</a>
     {% if user.is_authenticated %}
-      <a href="{% url 'activity_list' %}">Activities</a>
-      <a href="{% url 'communities' %}">Communities</a>
-      <a href="{% url 'groups' %}">Groups</a>
-      <a href="{% url 'interests' %}">Interests</a>
-      <a href="{% url 'activity_create' %}">Organize</a>
-      <a href="{% url 'notifications' %}">Alerts{% if unread_notifications %}
+      <a href="{% url 'activity_list' %}">{% trans "Activities" %}</a>
+      <a href="{% url 'communities' %}">{% trans "Communities" %}</a>
+      <a href="{% url 'groups' %}">{% trans "Groups" %}</a>
+      <a href="{% url 'interests' %}">{% trans "Interests" %}</a>
+      <a href="{% url 'activity_create' %}">{% trans "Organize" %}</a>
+      <a href="{% url 'notifications' %}">{% trans "Alerts" %}{% if unread_notifications %}
         <span class="pill">{{ unread_notifications }}</span>{% endif %}</a>
-      <a href="{% url 'messages' %}">Messages</a>
-      {% if connections_enabled %}<a href="{% url 'connections' %}">Connections</a>{% endif %}
-      {% if has_guardians %}<a href="{% url 'my_guardians' %}">Guardians</a>{% endif %}
-      <a href="{% url 'my_donations' %}">My donations</a>
+      <a href="{% url 'messages' %}">{% trans "Messages" %}</a>
+      {% if connections_enabled %}<a href="{% url 'connections' %}">{% trans "Connections" %}</a>{% endif %}
+      {% if has_guardians %}<a href="{% url 'my_guardians' %}">{% trans "Guardians" %}</a>{% endif %}
+      <a href="{% url 'my_donations' %}">{% trans "My donations" %}</a>
     {% endif %}
-    <a href="{% url 'partners' %}">Civic partners</a>
-    <a href="{% url 'donate' %}">Support</a>
+    <a href="{% url 'partners' %}">{% trans "Civic partners" %}</a>
+    <a href="{% url 'donate' %}">{% trans "Support" %}</a>
     <span class="spacer"></span>
     {% if user.is_authenticated %}
       <a href="{% url 'profile' %}">{{ user.display_name|default:user.username }}
         <small class="cohort">{{ user.get_cohort_display }}</small></a>
       <form method="post" action="{% url 'logout' %}" class="inline">{% csrf_token %}
-        <button class="linkbtn" type="submit">Log out</button></form>
+        <button class="linkbtn" type="submit">{% trans "Log out" %}</button></form>
     {% else %}
-      <a href="{% url 'login' %}">Log in</a>
-      <a class="btn btn-sm" href="{% url 'register' %}">Sign up</a>
+      <a href="{% url 'login' %}">{% trans "Log in" %}</a>
+      <a class="btn btn-sm" href="{% url 'register' %}">{% trans "Sign up" %}</a>
     {% endif %}
+    {# Language switcher (P6/IS-7): persists to the session via set_language; LocaleMiddleware
+       then serves the chosen language. No-JS friendly: a submit button is provided. #}
+    <form method="post" action="{% url 'set_language' %}" class="inline lang-switch">{% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.path }}">
+      <select name="language" aria-label="{% trans 'Language' %}" onchange="this.form.submit()">
+        {% get_current_language as cur_lang %}
+        {% get_available_languages as available_langs %}
+        {% for code, name in available_langs %}
+          <option value="{{ code }}"{% if code == cur_lang %} selected{% endif %}>{{ name }}</option>
+        {% endfor %}
+      </select>
+      <noscript><button class="linkbtn" type="submit">{% trans "Set language" %}</button></noscript>
+    </form>
   </nav>
 </header>
 
@@ -53,11 +67,11 @@
 </main>
 
 <footer class="site-footer container" role="contentinfo">
-  <p>A nonprofit, text-first way to meet up in person &mdash; the opposite of image-perfect social
-     media. <strong>Demo environment: do not enter real personal data.</strong></p>
+  <p>{% blocktrans %}A nonprofit, text-first way to meet up in person &mdash; the opposite of image-perfect social
+     media.{% endblocktrans %} <strong>{% trans "Demo environment: do not enter real personal data." %}</strong></p>
   <p class="footer-links">
-    <a href="{% url 'privacy' %}">Privacy</a> &middot;
-    <a href="{% url 'terms' %}">Terms</a>
+    <a href="{% url 'privacy' %}">{% trans "Privacy" %}</a> &middot;
+    <a href="{% url 'terms' %}">{% trans "Terms" %}</a>
   </p>
 </footer>
 {% block scripts %}{% endblock %}

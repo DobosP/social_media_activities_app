@@ -1,10 +1,10 @@
 {% extends "base.html" %}
-{% block title %}What's happening{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "What's happening" %}{% endblock %}
 {% block content %}
-<h1>What's happening</h1>
-<p class="muted">Upcoming events at places near you. Find one you like, then organise an activity to
-  go together.{% if activity %} Filtered by <strong>{{ activity }}</strong> &middot;
-  <a href="{% url 'events_list' %}">clear</a>.{% endif %}</p>
+<h1>{% trans "What's happening" %}</h1>
+<p class="muted">{% trans "Upcoming events at places near you. Find one you like, then organise an activity to go together." %}{% if activity %} {% url 'events_list' as clear_url %}{% blocktrans with activity_name=activity %}Filtered by <strong>{{ activity_name }}</strong> &middot;
+  <a href="{{ clear_url }}">clear</a>.{% endblocktrans %}{% endif %}</p>
 <div class="grid">
   {% for e in events %}
     <div class="card">
@@ -14,6 +14,6 @@
         <a href="{% url 'place_detail' e.place.pk %}">{{ e.place.name }}</a>{% endif %}</p>
       {% if e.description %}<p>{{ e.description|truncatewords:22 }}</p>{% endif %}
     </div>
-  {% empty %}<p class="muted">No upcoming events yet.</p>{% endfor %}
+  {% empty %}<p class="muted">{% trans "No upcoming events yet." %}</p>{% endfor %}
 </div>
 {% endblock %}

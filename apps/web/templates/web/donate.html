@@ -1,15 +1,16 @@
 {% extends "base.html" %}
-{% block title %}Support us{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Support us" %}{% endblock %}
 {% block content %}
-<h1>Support the project</h1>
-<p class="lead">This is a <strong>nonprofit</strong>, open-source platform &mdash; no ads, no
+<h1>{% trans "Support the project" %}</h1>
+<p class="lead">{% blocktrans %}This is a <strong>nonprofit</strong>, open-source platform &mdash; no ads, no
   behavioural tracking, nothing sold. It runs on donations that cover EU hosting, storage and
-  safety tooling.</p>
+  safety tooling.{% endblocktrans %}</p>
 <form method="post" class="card">{% csrf_token %}
   {{ form.as_p }}
-  <button class="btn" type="submit">Donate</button>
+  <button class="btn" type="submit">{% trans "Donate" %}</button>
 </form>
-<p class="muted">You'll be taken to a secure checkout &mdash; no card data ever touches this app.</p>
-<p class="muted"><a href="{% url 'transparency' %}">See where donations go</a> &middot;
-  <a href="{% url 'campaigns' %}">Active campaigns</a></p>
+<p class="muted">{% trans "You'll be taken to a secure checkout &mdash; no card data ever touches this app." %}</p>
+<p class="muted"><a href="{% url 'transparency' %}">{% trans "See where donations go" %}</a> &middot;
+  <a href="{% url 'campaigns' %}">{% trans "Active campaigns" %}</a></p>
 {% endblock %}

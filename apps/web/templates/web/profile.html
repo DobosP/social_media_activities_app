@@ -1,45 +1,45 @@
 {% extends "base.html" %}
-{% load avatars %}
-{% block title %}Profile{% endblock %}
+{% load avatars i18n %}
+{% block title %}{% trans "Profile" %}{% endblock %}
 {% block content %}
 <h1>{{ profile_user.display_name|default:profile_user.username }}</h1>
 
 <div class="row" style="align-items:flex-start;gap:1rem">
   {% if avatar_url %}
-    <img class="avatar" src="{{ avatar_url }}" width="96" height="96" alt="profile picture">
+    <img class="avatar" src="{{ avatar_url }}" width="96" height="96" alt="{% trans 'profile picture' %}">
   {% else %}
     {# No uploaded picture → the generated identicon (the universal default avatar). #}
     <img class="avatar" src="{{ profile_user|avatar_uri }}" width="96" height="96"
-         alt="generated avatar" title="Your generated avatar (upload a photo to replace it)">
+         alt="{% trans 'generated avatar' %}" title="{% trans 'Your generated avatar (upload a photo to replace it)' %}">
   {% endif %}
   <form method="post" action="{% url 'avatar_upload' %}" enctype="multipart/form-data">{% csrf_token %}
     <input type="file" name="image" accept="image/*" required>
-    <button class="btn btn-sm" type="submit">Update photo</button>
-    <div class="helptext">One profile picture. Location metadata is stripped automatically.</div>
+    <button class="btn btn-sm" type="submit">{% trans "Update photo" %}</button>
+    <div class="helptext">{% trans "One profile picture. Location metadata is stripped automatically." %}</div>
   </form>
 </div>
 
 <div class="card">
-  <p><strong>Username:</strong> {{ profile_user.username }}</p>
-  <p><strong>Cohort:</strong> {{ profile_user.get_cohort_display }}</p>
-  <p><strong>Age band:</strong> {{ profile_user.get_age_band_display }} <span class="muted">(demo)</span></p>
-  <p><strong>Identity verified:</strong> {{ profile_user.is_identity_verified|yesno:"yes,no" }}</p>
-  <p><strong>Can participate:</strong> {{ can_participate|yesno:"yes,no" }}</p>
-  <p><strong>Interests:</strong>
-    {% for i in interests %}<span class="tag">{{ i }}</span>{% empty %}<span class="muted">none yet</span>{% endfor %}
-    &middot; <a href="{% url 'interests' %}">edit</a></p>
-  <p><strong>Access preferences:</strong>
-    <span class="muted">step-free, accessible toilet &amp; more</span>
-    &middot; <a href="{% url 'access_preferences' %}">edit</a></p>
+  <p><strong>{% trans "Username:" %}</strong> {{ profile_user.username }}</p>
+  <p><strong>{% trans "Cohort:" %}</strong> {{ profile_user.get_cohort_display }}</p>
+  <p><strong>{% trans "Age band:" %}</strong> {{ profile_user.get_age_band_display }} <span class="muted">{% trans "(demo)" %}</span></p>
+  <p><strong>{% trans "Identity verified:" %}</strong> {{ profile_user.is_identity_verified|yesno:_("yes,no") }}</p>
+  <p><strong>{% trans "Can participate:" %}</strong> {{ can_participate|yesno:_("yes,no") }}</p>
+  <p><strong>{% trans "Interests:" %}</strong>
+    {% for i in interests %}<span class="tag">{{ i }}</span>{% empty %}<span class="muted">{% trans "none yet" %}</span>{% endfor %}
+    &middot; <a href="{% url 'interests' %}">{% trans "edit" %}</a></p>
+  <p><strong>{% trans "Access preferences:" %}</strong>
+    <span class="muted">{% trans "step-free, accessible toilet &amp; more" %}</span>
+    &middot; <a href="{% url 'access_preferences' %}">{% trans "edit" %}</a></p>
 </div>
 
 <div class="card">
-  <h3>Connections</h3>
-  <p class="muted" style="margin-top:0">People you've met at activities &mdash;
-    <a href="{% url 'connections' %}">manage</a>.</p>
+  <h3>{% trans "Connections" %}</h3>
+  <p class="muted" style="margin-top:0">{% url 'connections' as connections_url %}{% blocktrans %}People you've met at activities &mdash;
+    <a href="{{ connections_url }}">manage</a>.{% endblocktrans %}</p>
   {% if pending_in %}
-    <div class="banner">{{ pending_in|length }} pending connection request{{ pending_in|length|pluralize }}
-      &middot; <a href="{% url 'connections' %}">review</a></div>
+    <div class="banner">{% blocktrans count counter=pending_in|length %}{{ counter }} pending connection request{% plural %}{{ counter }} pending connection requests{% endblocktrans %}
+      &middot; <a href="{% url 'connections' %}">{% trans "review" %}</a></div>
   {% endif %}
   {% if connections %}
     <ul class="members">
@@ -47,67 +47,64 @@
         <li>{{ u.display_name|default:u.username }}
           <form method="post" action="{% url 'connection_message' %}" class="inline">{% csrf_token %}
             <input type="hidden" name="public_id" value="{{ u.public_id }}">
-            <button class="btn btn-sm" type="submit">Message</button>
+            <button class="btn btn-sm" type="submit">{% trans "Message" %}</button>
           </form>
         </li>
       {% endfor %}
     </ul>
   {% else %}
-    <p class="muted">No connections yet. <a href="{% url 'connections' %}">Find people you've met</a>.</p>
+    <p class="muted">{% url 'connections' as connections_url %}{% blocktrans %}No connections yet. <a href="{{ connections_url }}">Find people you've met</a>.{% endblocktrans %}</p>
   {% endif %}
 </div>
 
 <div class="card">
-  <h3>Age verification</h3>
+  <h3>{% trans "Age verification" %}</h3>
   {% if provenance and provenance.has_row %}
-    {% if provenance.band_display %}<p><strong>Verified as:</strong> {{ provenance.band_display }}
-      <span class="muted">(an age band only &mdash; never your birthdate)</span></p>{% endif %}
-    <p class="muted">Proven by {{ provenance.method|default:"the EU Digital Identity wallet" }}{% if provenance.provider %} via {{ provenance.provider }}{% endif %} on {{ provenance.verified_at|date:"j M Y" }}.</p>
-    {% if provenance.status == "no_expiry" %}<p class="muted">This proof does not expire.</p>
-    {% elif provenance.status == "current" %}<p class="muted">Current{% if provenance.expires_at %} &mdash; valid until {{ provenance.expires_at|date:"j M Y" }}{% endif %}.</p>
-    {% elif provenance.status == "expiring" %}<div class="banner">Expires in {{ provenance.days_left }} day{{ provenance.days_left|pluralize }} &mdash; re-verify to avoid losing access.</div>
-    {% elif provenance.status == "expired" %}<div class="banner">Your age proof has expired &mdash; re-verify to keep joining and chatting.</div>{% endif %}
-    <a class="btn" href="{% url 'verify_age' %}">Re-verify</a>
+    {% if provenance.band_display %}<p><strong>{% trans "Verified as:" %}</strong> {{ provenance.band_display }}
+      <span class="muted">{% trans "(an age band only &mdash; never your birthdate)" %}</span></p>{% endif %}
+    <p class="muted">{% with method=provenance.method|default:_("the EU Digital Identity wallet") verified_at=provenance.verified_at|date:"j M Y" %}{% if provenance.provider %}{% blocktrans with provider=provenance.provider %}Proven by {{ method }} via {{ provider }} on {{ verified_at }}.{% endblocktrans %}{% else %}{% blocktrans %}Proven by {{ method }} on {{ verified_at }}.{% endblocktrans %}{% endif %}{% endwith %}</p>
+    {% if provenance.status == "no_expiry" %}<p class="muted">{% trans "This proof does not expire." %}</p>
+    {% elif provenance.status == "current" %}<p class="muted">{% trans "Current" %}{% if provenance.expires_at %} {% blocktrans with expires_at=provenance.expires_at|date:"j M Y" %}&mdash; valid until {{ expires_at }}{% endblocktrans %}{% endif %}.</p>
+    {% elif provenance.status == "expiring" %}<div class="banner">{% blocktrans count days_left=provenance.days_left %}Expires in {{ days_left }} day &mdash; re-verify to avoid losing access.{% plural %}Expires in {{ days_left }} days &mdash; re-verify to avoid losing access.{% endblocktrans %}</div>
+    {% elif provenance.status == "expired" %}<div class="banner">{% trans "Your age proof has expired &mdash; re-verify to keep joining and chatting." %}</div>{% endif %}
+    <a class="btn" href="{% url 'verify_age' %}">{% trans "Re-verify" %}</a>
   {% else %}
-    <p class="muted">Prove your age band with the EU Digital Identity wallet &mdash; the app only ever
-      learns an over-16/over-18 band, never your birthdate.</p>
-    <a class="btn" href="{% url 'verify_age' %}">Verify with EU Digital Identity</a>
+    <p class="muted">{% trans "Prove your age band with the EU Digital Identity wallet &mdash; the app only ever learns an over-16/over-18 band, never your birthdate." %}</p>
+    <a class="btn" href="{% url 'verify_age' %}">{% trans "Verify with EU Digital Identity" %}</a>
   {% endif %}
-  <p class="muted" style="font-size:.8rem">Re-verifying into a different age band may remove you from
-    conversations pinned to your current cohort.</p>
-  {% if profile_user.is_guardian %}<a class="btn btn-secondary" href="{% url 'wards' %}">Your wards</a>{% endif %}
-  {% if has_guardians %}<a class="btn btn-secondary" href="{% url 'my_guardians' %}">Your guardians</a>{% endif %}
-  <a class="btn btn-secondary" href="{% url 'safety_record' %}">Your safety record</a>
+  <p class="muted" style="font-size:.8rem">{% trans "Re-verifying into a different age band may remove you from conversations pinned to your current cohort." %}</p>
+  {% if profile_user.is_guardian %}<a class="btn btn-secondary" href="{% url 'wards' %}">{% trans "Your wards" %}</a>{% endif %}
+  {% if has_guardians %}<a class="btn btn-secondary" href="{% url 'my_guardians' %}">{% trans "Your guardians" %}</a>{% endif %}
+  <a class="btn btn-secondary" href="{% url 'safety_record' %}">{% trans "Your safety record" %}</a>
 </div>
 
 {% if blocked %}
 <div class="card">
-  <h3>Blocked users</h3>
-  <p class="muted">You and these people never see each other's activities.</p>
+  <h3>{% trans "Blocked users" %}</h3>
+  <p class="muted">{% trans "You and these people never see each other's activities." %}</p>
   <ul class="members">
     {% for b in blocked %}
       <li>{{ b.display_name|default:b.username }}
         <form method="post" action="{% url 'unblock_user' b.pk %}" class="inline">{% csrf_token %}
           <input type="hidden" name="next" value="{% url 'profile' %}">
-          <button class="linkbtn" type="submit">unblock</button></form></li>
+          <button class="linkbtn" type="submit">{% trans "unblock" %}</button></form></li>
     {% endfor %}
   </ul>
 </div>
 {% endif %}
 
 {% if profile_user.requires_parental_consent and not can_participate %}
-<div class="banner">As an under-16, a parent or guardian must approve your account before you can
-  join or organise activities.</div>
+<div class="banner">{% trans "As an under-16, a parent or guardian must approve your account before you can join or organise activities." %}</div>
 {% endif %}
 
 <div class="card">
-  <h3>Delete my account</h3>
-  <p class="muted">This permanently deletes your account and personal data (GDPR right to erasure,
-    Art. 17). This cannot be undone. See our <a href="{% url 'privacy' %}">Privacy Policy</a>.</p>
+  <h3>{% trans "Delete my account" %}</h3>
+  <p class="muted">{% url 'privacy' as privacy_url %}{% blocktrans %}This permanently deletes your account and personal data (GDPR right to erasure,
+    Art. 17). This cannot be undone. See our <a href="{{ privacy_url }}">Privacy Policy</a>.{% endblocktrans %}</p>
   <form method="post" action="{% url 'account_delete' %}"
-        onsubmit="return confirm('Permanently delete your account and personal data? This cannot be undone.');">
+        onsubmit="return confirm('{% trans "Permanently delete your account and personal data? This cannot be undone." %}');">
     {% csrf_token %}
-    <button class="btn btn-danger" type="submit">Delete my account</button>
+    <button class="btn btn-danger" type="submit">{% trans "Delete my account" %}</button>
   </form>
 </div>
 {% endblock %}

@@ -1,19 +1,19 @@
 {% extends "base.html" %}
-{% load static %}
-{% block title %}Messages{% endblock %}
+{% load static i18n %}
+{% block title %}{% trans "Messages" %}{% endblock %}
 {% block content %}
 <div class="mz-head">
-  <h1 style="margin:0">Messages</h1>
-  <span class="mz-lock muted" title="End-to-end encrypted">🔒 end-to-end encrypted</span>
+  <h1 style="margin:0">{% trans "Messages" %}</h1>
+  <span class="mz-lock muted" title="{% trans 'End-to-end encrypted' %}">🔒 {% trans "end-to-end encrypted" %}</span>
 </div>
-<p class="muted" style="margin:.2rem 0 .6rem">Private chats only you and the other people can read.
-  You can only message people in your own age group, and they must accept your first message.</p>
+<p class="muted" style="margin:.2rem 0 .6rem">{% trans "Private chats only you and the other people can read." %}
+  {% trans "You can only message people in your own age group, and they must accept your first message." %}</p>
 
 {# Setting csrf_token here ensures the cookie is present for the JS API calls. #}
 <span style="display:none">{{ csrf_token }}</span>
 {{ messaging_config|json_script:"mz-config" }}
 
-<p id="mz-status" class="muted">Setting up secure messaging&hellip;</p>
+<p id="mz-status" class="muted">{% blocktrans %}Setting up secure messaging&hellip;{% endblocktrans %}</p>
 
 <div class="mz-app card" id="mz-app">
   <aside class="mz-sidebar" id="mz-sidebar">
@@ -22,49 +22,47 @@
 
     {# Filter tabs #}
     <div class="mz-tabs" role="tablist">
-      <button class="mz-tab is-active" data-filter="all" type="button">All</button>
-      <button class="mz-tab" data-filter="direct" type="button">Direct</button>
-      <button class="mz-tab" data-filter="group" type="button">Groups</button>
-      <button class="mz-tab" data-filter="invited" type="button">Requests</button>
+      <button class="mz-tab is-active" data-filter="all" type="button">{% trans "All" %}</button>
+      <button class="mz-tab" data-filter="direct" type="button">{% trans "Direct" %}</button>
+      <button class="mz-tab" data-filter="group" type="button">{% trans "Groups" %}</button>
+      <button class="mz-tab" data-filter="invited" type="button">{% trans "Requests" %}</button>
     </div>
 
-    <div id="mz-conversations" class="mz-conv-list"><p class="muted">Loading&hellip;</p></div>
+    <div id="mz-conversations" class="mz-conv-list"><p class="muted">{% blocktrans %}Loading&hellip;{% endblocktrans %}</p></div>
 
     <details class="mz-more">
-      <summary>New group &amp; device options</summary>
+      <summary>{% trans "New group &amp; device options" %}</summary>
       <form id="mz-new-form" class="mz-new">
-        <label>Usernames <small class="muted">(comma/space separated; 2+ = group)</small>
-          <input name="usernames" autocomplete="off" placeholder="e.g. alex, sam" required></label>
-        <label>Group name <small class="muted">(optional)</small>
-          <input name="title" autocomplete="off" placeholder="Trail crew"></label>
+        <label>{% trans "Usernames" %} <small class="muted">{% trans "(comma/space separated; 2+ = group)" %}</small>
+          <input name="usernames" autocomplete="off" placeholder="{% trans 'e.g. alex, sam' %}" required></label>
+        <label>{% trans "Group name" %} <small class="muted">{% trans "(optional)" %}</small>
+          <input name="title" autocomplete="off" placeholder="{% trans 'Trail crew' %}"></label>
         <input type="hidden" name="kind" value="direct">
-        <button class="btn btn-sm" type="submit">Start</button>
+        <button class="btn btn-sm" type="submit">{% trans "Start" %}</button>
       </form>
       <div id="mz-guardian-section" style="display:none">
-        <h4 style="margin:.6rem 0 .2rem">Guardian oversight</h4>
-        <p class="muted" style="font-size:.78rem">Conversations your child is in. Observing is
-          read-only and visible to everyone in the chat.</p>
+        <h4 style="margin:.6rem 0 .2rem">{% trans "Guardian oversight" %}</h4>
+        <p class="muted" style="font-size:.78rem">{% trans "Conversations your child is in. Observing is read-only and visible to everyone in the chat." %}</p>
         <div id="mz-guardian-list"></div>
       </div>
-      <p class="muted" style="font-size:.78rem;margin-top:.5rem">Your private key lives only in this
-        browser. Back it up (encrypted) to read your history on another device.</p>
-      <button id="mz-backup" class="btn btn-sm btn-secondary" type="button">Back up my key</button>
+      <p class="muted" style="font-size:.78rem;margin-top:.5rem">{% trans "Your private key lives only in this browser. Back it up (encrypted) to read your history on another device." %}</p>
+      <button id="mz-backup" class="btn btn-sm btn-secondary" type="button">{% trans "Back up my key" %}</button>
     </details>
   </aside>
 
   <section class="mz-main" id="mz-main">
     <header class="mz-main-head">
-      <button class="mz-back linkbtn" id="mz-back" type="button" aria-label="Back to conversations">&larr;</button>
+      <button class="mz-back linkbtn" id="mz-back" type="button" aria-label="{% trans 'Back to conversations' %}">&larr;</button>
       <span class="mz-avatar" id="mz-title-avatar" aria-hidden="true"></span>
-      <h3 id="mz-title" style="margin:0;flex:1">Select a conversation</h3>
+      <h3 id="mz-title" style="margin:0;flex:1">{% trans "Select a conversation" %}</h3>
       <div id="mz-toolbar" class="mz-toolbar" style="display:none">
-        <label class="muted" title="Disappearing messages">⏲
+        <label class="muted" title="{% trans 'Disappearing messages' %}">⏲
           <select id="mz-timer">
-            <option value="0">Off</option>
-            <option value="3600">1 hour</option>
-            <option value="86400">1 day</option>
-            <option value="604800">1 week</option>
-            <option value="2592000">30 days</option>
+            <option value="0">{% trans "Off" %}</option>
+            <option value="3600">{% trans "1 hour" %}</option>
+            <option value="86400">{% trans "1 day" %}</option>
+            <option value="604800">{% trans "1 week" %}</option>
+            <option value="2592000">{% trans "30 days" %}</option>
           </select>
         </label>
       </div>
@@ -72,11 +70,11 @@
     <div id="mz-guardian"></div>
     <div id="mz-verify"></div>
     <div id="mz-log" class="mz-log">
-      <p class="muted mz-empty">Pick a conversation on the left, or start one with a connection.</p>
+      <p class="muted mz-empty">{% trans "Pick a conversation on the left, or start one with a connection." %}</p>
     </div>
     <form id="mz-composer" class="mz-composer" style="display:none">
-      <input id="mz-input" autocomplete="off" placeholder="Write an encrypted message&hellip;">
-      <button class="btn btn-sm" type="submit">Send</button>
+      <input id="mz-input" autocomplete="off" placeholder="{% trans 'Write an encrypted message&hellip;' %}">
+      <button class="btn btn-sm" type="submit">{% trans "Send" %}</button>
     </form>
   </section>
 </div>

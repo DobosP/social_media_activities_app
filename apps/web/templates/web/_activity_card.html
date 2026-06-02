@@ -1,16 +1,17 @@
+{% load i18n %}
 <div class="card">
-  {% if a.rec_reason %}<span class="score">{{ a.rec_reason }}</span>{% elif a.match_pct %}<span class="score">{{ a.match_pct }}% match</span>{% endif %}
+  {% if a.rec_reason %}<span class="score">{{ a.rec_reason }}</span>{% elif a.match_pct %}<span class="score">{% blocktrans with pct=a.match_pct %}{{ pct }}% match{% endblocktrans %}</span>{% endif %}
   <h3><a href="{% url 'activity_detail' a.pk %}">{{ a.title }}</a></h3>
   <div>
     <span class="tag">{{ a.activity_type.name }}</span>
     <span class="tag">{{ a.get_cohort_display }}</span>
     {% if a.cost_band and a.cost_band != "unspecified" %}<span class="tag">{{ a.get_cost_band_display }}</span>{% endif %}
     {% if a.difficulty and a.difficulty != "unspecified" %}<span class="tag">{{ a.get_difficulty_display }}</span>{% endif %}
-    {% if a.beginners_welcome %}<span class="tag">beginners welcome</span>{% endif %}
+    {% if a.beginners_welcome %}<span class="tag">{% trans "beginners welcome" %}</span>{% endif %}
     {% if a.status and a.status != "open" %}<span class="tag">{{ a.get_status_display }}</span>{% endif %}
-    {% if a.guardian_accompanied %}<span class="tag">guardian-accompanied</span>{% endif %}
+    {% if a.guardian_accompanied %}<span class="tag">{% trans "guardian-accompanied" %}</span>{% endif %}
   </div>
   <p class="muted">{{ a.starts_at|date:"D j M, H:i" }} &middot;
-    {{ a.place.name|default:"a place" }}{% if a.place.address_city %}, {{ a.place.address_city }}{% endif %}{% if a.distance %} &middot; {{ a.distance.km|floatformat:1 }} km away{% endif %}</p>
+    {{ a.place.name|default:_("a place") }}{% if a.place.address_city %}, {{ a.place.address_city }}{% endif %}{% if a.distance %} &middot; {% blocktrans with km=a.distance.km|floatformat:1 %}{{ km }} km away{% endblocktrans %}{% endif %}</p>
   {% if a.description %}<p>{{ a.description|truncatewords:22 }}</p>{% endif %}
 </div>
