@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: social-activities 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-03 01:21+0300\n"
+"POT-Creation-Date: 2026-06-03 01:48+0300\n"
 "PO-Revision-Date: 2026-05-29 10:00+0300\n"
 "Last-Translator: Claude Code\n"
 "Language-Team: Romanian\n"
@@ -30,67 +30,71 @@ msgstr ""
 msgid "Only children's activities can be guardian-accompanied."
 msgstr "Doar activitățile copiilor pot fi însoțite de un tutore."
 
-#: apps/social/services.py:250 apps/social/tests/test_i18n.py:14
+#: apps/social/services.py:217 apps/social/services.py:384
+msgid "Minimum to happen can't be more than the capacity."
+msgstr "Minimul pentru a se ține nu poate depăși capacitatea."
+
+#: apps/social/services.py:253 apps/social/tests/test_i18n.py:14
 msgid "User is not eligible to join this activity."
 msgstr "Utilizatorul nu este eligibil să se alăture acestei activități."
 
-#: apps/social/services.py:275 apps/social/tests/test_i18n.py:17
+#: apps/social/services.py:278 apps/social/tests/test_i18n.py:17
 msgid "The owner cannot leave their own activity."
 msgstr "Organizatorul nu poate părăsi propria activitate."
 
-#: apps/social/services.py:313
+#: apps/social/services.py:316
 msgid "Only the activity owner may cancel it."
 msgstr "Doar organizatorul activității o poate anula."
 
-#: apps/social/services.py:315
+#: apps/social/services.py:318
 msgid "Only an open activity can be cancelled."
 msgstr "Doar o activitate deschisă poate fi anulată."
 
-#: apps/social/services.py:319
+#: apps/social/services.py:322
 #, python-format
 msgid "“%(title)s” was cancelled by the organiser."
 msgstr "„%(title)s” a fost anulată de organizator."
 
-#: apps/social/services.py:326
+#: apps/social/services.py:329
 msgid "An activity was cancelled"
 msgstr "O activitate a fost anulată"
 
-#: apps/social/services.py:365
+#: apps/social/services.py:368
 msgid "Only the activity owner may edit it."
 msgstr "Doar organizatorul activității o poate edita."
 
-#: apps/social/services.py:367
+#: apps/social/services.py:370
 msgid "Only an open activity can be edited."
 msgstr "Doar o activitate deschisă poate fi editată."
 
-#: apps/social/services.py:369
+#: apps/social/services.py:372
 msgid "This activity has already started and can no longer be edited."
 msgstr "Această activitate a început deja și nu mai poate fi editată."
 
-#: apps/social/services.py:375
+#: apps/social/services.py:378
 msgid "End time cannot be before the start time."
 msgstr "Ora de final nu poate fi înaintea orei de început."
 
-#: apps/social/services.py:378
+#: apps/social/services.py:381
 msgid "Capacity cannot be lower than the current number of participants."
 msgstr ""
 "Capacitatea nu poate fi mai mică decât numărul actual de participanți."
 
-#: apps/social/services.py:389
+#: apps/social/services.py:401
 #, python-format
 msgid "“%(title)s” now starts %(when)s."
 msgstr "„%(title)s” începe acum %(when)s."
 
-#: apps/social/services.py:399
+#: apps/social/services.py:411
 msgid "An activity you joined changed"
 msgstr "O activitate la care te-ai alăturat s-a schimbat"
 
-#: apps/social/services.py:427
+#: apps/social/services.py:439
 #, python-format
 msgid "You were admitted to “%(title)s”."
 msgstr "Ai fost admis la „%(title)s”."
 
-#: apps/social/services.py:437
+#: apps/social/services.py:449
 msgid ""
 " New here? Say a quick hello in the thread and check the meetup logistics — "
 "the group is glad you joined."
@@ -98,175 +102,175 @@ msgstr ""
 " Ești nou aici? Salută pe scurt în conversație și verifică detaliile "
 "întâlnirii — grupul se bucură că te-ai alăturat."
 
-#: apps/social/services.py:465 apps/social/services.py:486
+#: apps/social/services.py:477 apps/social/services.py:498
 msgid "This membership is not awaiting a join vote."
 msgstr "Această calitate de membru nu așteaptă un vot de aderare."
 
-#: apps/social/services.py:469
+#: apps/social/services.py:481
 msgid "Only current members may vote on join requests."
 msgstr "Doar membrii actuali pot vota cererile de aderare."
 
-#: apps/social/services.py:482
+#: apps/social/services.py:494
 msgid "Only the activity owner may override."
 msgstr "Doar organizatorul activității poate decide direct."
 
-#: apps/social/services.py:484
+#: apps/social/services.py:496
 msgid "Owner override is disabled for this activity."
 msgstr ""
 "Decizia directă a organizatorului este dezactivată pentru această "
 "activitate."
 
-#: apps/social/services.py:549
+#: apps/social/services.py:561
 msgid "Only current members can post in the activity thread."
 msgstr "Doar membrii actuali pot publica în conversația activității."
 
-#: apps/social/services.py:555 apps/social/services.py:874
-#: apps/social/services.py:1137
+#: apps/social/services.py:567 apps/social/services.py:886
+#: apps/social/services.py:1157
 msgid "Guardians accompany activities as read-only supervisors."
 msgstr ""
 "Tutorii însoțesc activitățile ca supraveghetori, doar cu acces de citire."
 
-#: apps/social/services.py:563
+#: apps/social/services.py:575
 msgid ""
 "This group's thread is announcement-only; the organiser posts updates here."
 msgstr ""
 "Conversația acestui grup este doar pentru anunțuri; organizatorul publică "
 "aici noutățile."
 
-#: apps/social/services.py:567 apps/social/services.py:1009
+#: apps/social/services.py:579 apps/social/services.py:1021
 msgid "Posting requires verified, consented participation."
 msgstr "Publicarea necesită participare verificată și cu consimțământ."
 
-#: apps/social/services.py:569 apps/social/services.py:573
-#: apps/social/services.py:868 apps/social/services.py:882
+#: apps/social/services.py:581 apps/social/services.py:585
+#: apps/social/services.py:880 apps/social/services.py:894
 msgid "This activity is no longer available."
 msgstr "Această activitate nu mai este disponibilă."
 
-#: apps/social/services.py:571 apps/social/services.py:777
-#: apps/social/services.py:878 apps/social/services.py:1017
+#: apps/social/services.py:583 apps/social/services.py:789
+#: apps/social/services.py:890 apps/social/services.py:1029
 msgid "This conversation is closed."
 msgstr "Această conversație este închisă."
 
-#: apps/social/services.py:577
+#: apps/social/services.py:589
 msgid "You are posting too quickly; slow down."
 msgstr "Publici prea repede; încetinește."
 
-#: apps/social/services.py:586 apps/social/services.py:780
+#: apps/social/services.py:598 apps/social/services.py:792
 msgid "Message rejected."
 msgstr "Mesaj respins."
 
-#: apps/social/services.py:622
+#: apps/social/services.py:634
 #, python-format
 msgid "%(who)s mentioned you"
 msgstr "%(who)s te-a menționat"
 
-#: apps/social/services.py:645 apps/social/services.py:652
+#: apps/social/services.py:657 apps/social/services.py:664
 msgid "You can't reply to that message."
 msgstr "Nu poți răspunde la acel mesaj."
 
-#: apps/social/services.py:751
+#: apps/social/services.py:763
 msgid "(message removed)"
 msgstr "(mesaj eliminat)"
 
-#: apps/social/services.py:768
+#: apps/social/services.py:780
 msgid "You can only edit your own messages."
 msgstr "Poți edita doar propriile mesaje."
 
-#: apps/social/services.py:770
+#: apps/social/services.py:782
 msgid "This message can't be edited."
 msgstr "Acest mesaj nu poate fi editat."
 
-#: apps/social/services.py:773
+#: apps/social/services.py:785
 msgid "Only current members can edit a message."
 msgstr "Doar membrii actuali pot edita un mesaj."
 
-#: apps/social/services.py:775
+#: apps/social/services.py:787
 msgid "Editing requires verified, consented participation."
 msgstr "Editarea necesită participare verificată și cu consimțământ."
 
-#: apps/social/services.py:797
+#: apps/social/services.py:809
 msgid "You can only delete your own messages."
 msgstr "Poți șterge doar propriile mesaje."
 
-#: apps/social/services.py:863
+#: apps/social/services.py:875
 msgid "That reaction isn't available."
 msgstr "Acea reacție nu este disponibilă."
 
-#: apps/social/services.py:865
+#: apps/social/services.py:877
 msgid "You can't react to that message."
 msgstr "Nu poți reacționa la acel mesaj."
 
-#: apps/social/services.py:871
+#: apps/social/services.py:883
 msgid "Only current members can react."
 msgstr "Doar membrii actuali pot reacționa."
 
-#: apps/social/services.py:876
+#: apps/social/services.py:888
 msgid "Reacting requires verified, consented participation."
 msgstr "Reacția necesită participare verificată și cu consimțământ."
 
-#: apps/social/services.py:886
+#: apps/social/services.py:898
 msgid "You are reacting too quickly; slow down."
 msgstr "Reacționezi prea repede; încetinește."
 
-#: apps/social/services.py:1007
+#: apps/social/services.py:1019
 msgid "Only the organiser can post an announcement."
 msgstr "Doar organizatorul poate publica un anunț."
 
-#: apps/social/services.py:1015
+#: apps/social/services.py:1027
 msgid "Only a current member can post an announcement."
 msgstr "Doar un membru actual poate publica un anunț."
 
-#: apps/social/services.py:1030
+#: apps/social/services.py:1042
 #, python-format
 msgid "Group announcement: %(title)s"
 msgstr "Anunț de grup: %(title)s"
 
-#: apps/social/services.py:1030
+#: apps/social/services.py:1042
 #, python-format
 msgid "Announcement: %(title)s"
 msgstr "Anunț: %(title)s"
 
-#: apps/social/services.py:1062
+#: apps/social/services.py:1074
 msgid "Only current members can RSVP."
 msgstr "Doar membrii actuali pot confirma prezența."
 
-#: apps/social/services.py:1064
+#: apps/social/services.py:1076
 msgid "Invalid attendance choice."
 msgstr "Opțiune de prezență invalidă."
 
-#: apps/social/services.py:1102
+#: apps/social/services.py:1119
 msgid "A meetup is on"
 msgstr "O întâlnire se ține"
 
-#: apps/social/services.py:1103
+#: apps/social/services.py:1120
 #, python-format
 msgid "“%(title)s” has enough people going — it's happening."
 msgstr "„%(title)s” are destui participanți — se ține."
 
-#: apps/social/services.py:1135
+#: apps/social/services.py:1155
 msgid "Only current members can confirm a meetup."
 msgstr "Doar membrii actuali pot confirma o întâlnire."
 
-#: apps/social/services.py:1139
+#: apps/social/services.py:1159
 msgid "You can only confirm a meetup after it has finished."
 msgstr "Poți confirma o întâlnire doar după ce s-a încheiat."
 
-#: apps/social/services.py:1216
+#: apps/social/services.py:1236
 #, python-format
 msgid "%(type)s at %(place)s"
 msgstr "%(type)s la %(place)s"
 
-#: apps/social/services.py:1221
+#: apps/social/services.py:1241
 #, python-format
 msgid " at %(place)s"
 msgstr " la %(place)s"
 
-#: apps/social/services.py:1222
+#: apps/social/services.py:1242
 #, python-format
 msgid " on %(when)s"
 msgstr " pe %(when)s"
 
-#: apps/social/services.py:1224
+#: apps/social/services.py:1244
 #, python-format
 msgid ""
 "A %(type)s meetup%(where)s%(when)s. Add any details below before you post."
@@ -274,115 +278,115 @@ msgstr ""
 "O întâlnire de %(type)s%(where)s%(when)s. Adaugă mai jos orice detalii "
 "înainte să publici."
 
-#: apps/social/services.py:1230
+#: apps/social/services.py:1250
 msgid "Safety: meet in a public place and bring a friend."
 msgstr "Siguranță: întâlniți-vă într-un loc public și veniți cu un prieten."
 
-#: apps/social/services.py:1266
+#: apps/social/services.py:1286
 msgid "Only current members can mark themselves arrived."
 msgstr "Doar membrii actuali se pot marca drept ajunși."
 
-#: apps/social/services.py:1268
+#: apps/social/services.py:1288
 msgid "Marking arrival requires verified, consented participation."
 msgstr "Marcarea sosirii necesită participare verificată și cu consimțământ."
 
-#: apps/social/services.py:1270
+#: apps/social/services.py:1290
 msgid "You can only mark arrival for an active meetup."
 msgstr "Poți marca sosirea doar pentru o întâlnire activă."
 
-#: apps/social/services.py:1272
+#: apps/social/services.py:1292
 msgid "Arrival can only be marked around the start time."
 msgstr "Sosirea poate fi marcată doar în jurul orei de început."
 
-#: apps/social/services.py:1283
+#: apps/social/services.py:1303
 msgid "Someone arrived"
 msgstr "Cineva a ajuns"
 
-#: apps/social/services.py:1284
+#: apps/social/services.py:1304
 #, python-format
 msgid "%(name)s is at “%(title)s”."
 msgstr "%(name)s este la „%(title)s”."
 
-#: apps/social/services.py:1356
+#: apps/social/services.py:1376
 msgid "User cannot propose places (needs verification/consent)."
 msgstr ""
 "Utilizatorul nu poate propune locuri (necesită verificare/consimțământ)."
 
-#: apps/social/services.py:1387
+#: apps/social/services.py:1407
 msgid "Only staff may publish a place proposal."
 msgstr "Doar personalul poate publica o propunere de loc."
 
-#: apps/social/services.py:1389 apps/social/services.py:1408
+#: apps/social/services.py:1409 apps/social/services.py:1428
 msgid "This proposal is not pending."
 msgstr "Această propunere nu este în așteptare."
 
-#: apps/social/services.py:1406
+#: apps/social/services.py:1426
 msgid "Only staff may reject a place proposal."
 msgstr "Doar personalul poate respinge o propunere de loc."
 
-#: apps/social/services.py:1538
+#: apps/social/services.py:1558
 msgid ""
 "You need verified, consented participation and a cohort to create a group."
 msgstr ""
 "Ai nevoie de participare verificată, cu consimțământ, și de o cohortă pentru"
 " a crea un grup."
 
-#: apps/social/services.py:1543
+#: apps/social/services.py:1563
 msgid "Group creation is not available for your account."
 msgstr "Crearea de grupuri nu este disponibilă pentru contul tău."
 
-#: apps/social/services.py:1546
+#: apps/social/services.py:1566
 msgid "You can only create a group in your own cohort."
 msgstr "Poți crea un grup doar în propria cohortă."
 
-#: apps/social/services.py:1551
+#: apps/social/services.py:1571
 msgid "Groups for under-18s are created by staff only."
 msgstr "Grupurile pentru cei sub 18 ani sunt create doar de personal."
 
-#: apps/social/services.py:1553
+#: apps/social/services.py:1573
 msgid "Minor groups are not enabled on this deployment."
 msgstr "Grupurile pentru minori nu sunt activate în această implementare."
 
-#: apps/social/services.py:1558
+#: apps/social/services.py:1578
 msgid "Group creation is not available for that cohort."
 msgstr "Crearea de grupuri nu este disponibilă pentru acea cohortă."
 
-#: apps/social/services.py:1560
+#: apps/social/services.py:1580
 msgid "Group creation is staff-only on this deployment for now."
 msgstr ""
 "Deocamdată, crearea de grupuri este permisă doar personalului în această "
 "implementare."
 
-#: apps/social/services.py:1571
+#: apps/social/services.py:1591
 msgid "A group needs an activity type or a category."
 msgstr "Un grup are nevoie de un tip de activitate sau de o categorie."
 
-#: apps/social/services.py:1576
+#: apps/social/services.py:1596
 msgid "You are creating groups too quickly; slow down."
 msgstr "Creezi grupuri prea repede; încetinește."
 
-#: apps/social/services.py:1616
+#: apps/social/services.py:1636
 msgid "No such group."
 msgstr "Nu există un astfel de grup."
 
-#: apps/social/services.py:1618
+#: apps/social/services.py:1638
 msgid "Joining requires verified, consented participation."
 msgstr "Alăturarea necesită participare verificată și cu consimțământ."
 
-#: apps/social/services.py:1620
+#: apps/social/services.py:1640
 msgid "This group is no longer available."
 msgstr "Acest grup nu mai este disponibil."
 
-#: apps/social/services.py:1627
+#: apps/social/services.py:1647
 msgid "You are joining groups too quickly; slow down."
 msgstr "Te alături la grupuri prea repede; încetinește."
 
-#: apps/social/services.py:1656
+#: apps/social/services.py:1676
 msgid "The owner cannot leave their own group; archive it instead."
 msgstr ""
 "Organizatorul nu își poate părăsi propriul grup; arhivează-l în schimb."
 
-#: apps/social/services.py:1735
+#: apps/social/services.py:1755
 msgid "Only the owner or staff can archive a group."
 msgstr "Doar organizatorul sau personalul pot arhiva un grup."
 
@@ -2754,11 +2758,25 @@ msgstr ""
 "înainte de a te putea alătura sau organiza activități."
 
 #: apps/web/templates/web/profile.html:101
+#: apps/web/templates/web/profile.html:103
+msgid "Download my data"
+msgstr "Descarcă-mi datele"
+
+#: apps/web/templates/web/profile.html:102
+msgid ""
+"Get a copy of all the personal data we hold about you, as a JSON file (GDPR "
+"right to data portability, Art. 20). No card or payment details are stored."
+msgstr ""
+"Obține o copie a tuturor datelor personale pe care le deținem despre tine, "
+"ca fișier JSON (dreptul GDPR la portabilitatea datelor, Art. 20). Nu stocăm "
+"date despre card sau plată."
+
 #: apps/web/templates/web/profile.html:107
+#: apps/web/templates/web/profile.html:113
 msgid "Delete my account"
 msgstr "Șterge contul meu"
 
-#: apps/web/templates/web/profile.html:102
+#: apps/web/templates/web/profile.html:108
 #, python-format
 msgid ""
 "This permanently deletes your account and personal data (GDPR right to erasure,\n"
@@ -2767,7 +2785,7 @@ msgstr ""
 "Aceasta vă șterge definitiv contul și datele cu caracter personal (dreptul la ștergere conform GDPR,\n"
 "    Art. 17). Acțiunea nu poate fi anulată. Consultați <a href=\"%(privacy_url)s\">Politica de confidențialitate</a>."
 
-#: apps/web/templates/web/profile.html:105
+#: apps/web/templates/web/profile.html:111
 msgid ""
 "Permanently delete your account and personal data? This cannot be undone."
 msgstr ""

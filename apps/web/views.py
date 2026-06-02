@@ -1999,6 +1999,24 @@ def terms(request):
 
 
 @login_required
+def account_export(request):
+    """F35: one-click GDPR Art.20 download of the user's OWN data as a JSON file. Self-scoped —
+    reuses the hardened build_user_export (the same payload as the DRF /api/accounts/me/export/
+    endpoint), served as a file attachment so the browser saves it instead of rendering inline.
+    No card/payment data is stored, so none can leak; only the requesting user's own data."""
+    import json
+
+    from django.http import HttpResponse
+
+    from apps.accounts.export import build_user_export
+
+    payload = json.dumps(build_user_export(request.user), indent=2, ensure_ascii=False)
+    resp = HttpResponse(payload, content_type="application/json")
+    resp["Content-Disposition"] = f'attachment; filename="my-data-{request.user.public_id}.json"'
+    return resp
+
+
+@login_required
 @require_POST
 def account_delete(request):
     """Let a user erase their own account (GDPR Art. 17). Delegates to the accounts

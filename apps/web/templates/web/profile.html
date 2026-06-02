@@ -98,6 +98,12 @@
 {% endif %}
 
 <div class="card">
+  <h3>{% trans "Download my data" %}</h3>
+  <p class="muted">{% trans "Get a copy of all the personal data we hold about you, as a JSON file (GDPR right to data portability, Art. 20). No card or payment details are stored." %}</p>
+  <a class="btn btn-sm" href="{% url 'account_export' %}" download>{% trans "Download my data" %}</a>
+</div>
+
+<div class="card">
   <h3>{% trans "Delete my account" %}</h3>
   <p class="muted">{% url 'privacy' as privacy_url %}{% blocktrans %}This permanently deletes your account and personal data (GDPR right to erasure,
     Art. 17). This cannot be undone. See our <a href="{{ privacy_url }}">Privacy Policy</a>.{% endblocktrans %}</p>
