@@ -134,6 +134,14 @@ def test_drf_groupviewset_is_cohort_walled_no_id_guessing(area, activity_type):
     assert client.get(f"/api/social/groups/{group.id}/roster/").status_code in (403, 404)
 
 
+def test_group_non_integer_pk_404s_not_500(adult):
+    # A non-numeric pk must 404 at routing (lookup_value_regex), never reach group_by_id's
+    # .filter(pk="abc") and 500.
+    client = APIClient()
+    client.force_authenticate(adult)
+    assert client.get("/api/social/groups/not-a-number/").status_code == 404
+
+
 # --- gate parity: a group thread enforces the same union as an activity thread ------------------
 
 

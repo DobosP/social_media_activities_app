@@ -8,7 +8,7 @@ from rest_framework.response import Response
 
 from apps.accounts.services import is_guardian_of
 
-from .models import Membership
+from .models import Membership, UserPlaceProposal
 from .serializers import (
     ActivityCreateSerializer,
     ActivitySerializer,
@@ -16,9 +16,12 @@ from .serializers import (
     GroupCreateSerializer,
     GroupSerializer,
     MembershipSerializer,
+    PlaceProposalSerializer,
     PostSerializer,
+    ProposePlaceSerializer,
 )
 from .services import (
+    DuplicatePlace,
     InvalidState,
     NotAMember,
     NotEligible,
@@ -28,6 +31,7 @@ from .services import (
     can_read_thread,
     cancel_activity,
     cast_vote,
+    confirm_place,
     create_activity,
     create_group,
     group_by_id,
@@ -38,7 +42,9 @@ from .services import (
     leave_group,
     mark_arrived,
     owner_admit,
+    pending_proposals_for,
     post_to_thread,
+    propose_place_with_venue,
     request_to_join,
     set_attendance_intent,
     update_activity,
@@ -249,6 +255,11 @@ class GroupViewSet(viewsets.ViewSet):
     anywhere: the roster action returns a member LIST only, and only to an eligible ADULT member."""
 
     permission_classes = [IsAuthenticated]
+    # Numeric-only pk (matches the web's <int:pk> routes). Without this, the router's default
+    # `[^/.]+` lets a non-numeric pk reach group_by_id -> .filter(pk="abc") -> ValueError -> 500;
+    # this 404s it at routing instead. (DRF GenericAPIView viewsets get this free via
+    # get_object_or_404; a plain ViewSet that filters manually does not.)
+    lookup_value_regex = r"[0-9]+"
 
     def list(self, request):
         return Response(GroupSerializer(visible_groups(request.user), many=True).data)
@@ -357,3 +368,63 @@ class MembershipViewSet(viewsets.ReadOnlyModelViewSet):
         except SocialError as exc:
             raise PermissionDenied(str(exc)) from exc
         return Response(MembershipSerializer(membership).data)
+
+
+class PlaceProposalViewSet(viewsets.ViewSet):
+    """User-proposed places + the co-creation quorum (F25) over REST — previously web/admin only.
+    Authenticated + verified/consented participation required (the services enforce it). Only
+    confirmation COUNTS are exposed, never the proposer's or any confirmer's identity
+    (PlaceProposalSerializer is a strict allowlist)."""
+
+    permission_classes = [IsAuthenticated]
+    # Numeric-only pk (matches the web's <int:proposal_id>): a non-numeric pk would otherwise reach
+    # .filter(pk="abc") in confirm() -> ValueError -> 500. 404 it at routing instead.
+    lookup_value_regex = r"[0-9]+"
+
+    def list(self, request):
+        # Pending proposals OTHER verified users may confirm (count-annotated, proposer excluded).
+        qs = pending_proposals_for(request.user)
+        return Response(PlaceProposalSerializer(qs, many=True).data)
+
+    def create(self, request):
+        serializer = ProposePlaceSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        d = serializer.validated_data
+        try:
+            proposal = propose_place_with_venue(
+                request.user,
+                name=d["name"],
+                lon=d["lon"],
+                lat=d["lat"],
+                activity_type=d["activity_type"],
+                allow_nearby=d["allow_nearby"],
+            )
+        except DuplicatePlace as exc:
+            # Returned as a plain Response (NOT raise ValidationError, which would coerce the
+            # int/bool into error-detail strings) so the client gets a real id + boolean.
+            # Web parity (apps/web/views.py place_propose): a HARD duplicate exposes the existing
+            # place id (the web redirects to place_detail by id); a SOFT duplicate (some place is
+            # merely very close, possibly a different/hidden venue) exposes only the name + the
+            # retry-with-allow_nearby affordance — never the bare id of an arbitrary nearby place.
+            body = {"detail": str(exc), "soft": exc.soft, "duplicate_place_name": exc.place_name}
+            if not exc.soft:
+                body["duplicate_place_id"] = exc.place_id
+            return Response(body, status=status.HTTP_400_BAD_REQUEST)
+        except NotEligible as exc:
+            raise PermissionDenied(str(exc)) from exc
+        except SocialError as exc:
+            raise ValidationError(str(exc)) from exc
+        return Response(PlaceProposalSerializer(proposal).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=["post"])
+    def confirm(self, request, pk=None):
+        proposal = UserPlaceProposal.objects.filter(pk=pk).first()
+        if proposal is None:
+            raise NotFound("No such proposal.")
+        try:
+            confirm_place(request.user, proposal)
+        except NotEligible as exc:
+            raise PermissionDenied(str(exc)) from exc
+        except SocialError as exc:
+            raise ValidationError(str(exc)) from exc
+        return Response(PlaceProposalSerializer(proposal).data)

@@ -189,6 +189,44 @@ class GroupCreateSerializer(serializers.Serializer):
     cohort = serializers.CharField(required=False, allow_blank=True, default="")
 
 
+class ProposePlaceSerializer(serializers.Serializer):
+    """Propose a new venue (F25): a name + coordinate + the activity it supports. ``allow_nearby``
+    lets the proposer override the soft 'something is very close' duplicate guard."""
+
+    name = serializers.CharField(max_length=255)
+    lon = serializers.FloatField(min_value=-180, max_value=180)
+    lat = serializers.FloatField(min_value=-90, max_value=90)
+    activity_type = serializers.PrimaryKeyRelatedField(queryset=ActivityType.objects.all())
+    allow_nearby = serializers.BooleanField(required=False, default=False)
+
+
+class PlaceProposalSerializer(serializers.Serializer):
+    """A pending user-place proposal others may confirm. STRICT ALLOWLIST — confirmation COUNTS
+    only, NEVER the proposer's or any confirmer's identity (mirrors the web 'counts only' rule and
+    the `pending_proposals_for` annotation). A confirmer sees what/where the venue is, never who."""
+
+    id = serializers.IntegerField(read_only=True)
+    place_id = serializers.IntegerField(read_only=True)
+    place_name = serializers.CharField(source="place.name", read_only=True)
+    lon = serializers.SerializerMethodField()
+    lat = serializers.SerializerMethodField()
+    status = serializers.CharField(read_only=True)
+    required_confirmations = serializers.IntegerField(read_only=True)
+    confirmations_count = serializers.SerializerMethodField()
+    created_at = serializers.DateTimeField(read_only=True)
+
+    def get_lon(self, obj):
+        return obj.place.location.x if obj.place.location else None
+
+    def get_lat(self, obj):
+        return obj.place.location.y if obj.place.location else None
+
+    def get_confirmations_count(self, obj):
+        # `pending_proposals_for` annotates this; fall back to a count when serialized standalone.
+        annotated = getattr(obj, "confirmations_count", None)
+        return annotated if annotated is not None else obj.confirmations.count()
+
+
 class PostSerializer(serializers.ModelSerializer):
     author = serializers.CharField(source="author.display_name", read_only=True)
     # Explicit cap: Post.body is a TextField (unbounded), so declare the limit here
