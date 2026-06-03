@@ -129,6 +129,7 @@ urlpatterns = [
     path("privacy/", views.privacy, name="privacy"),
     path("terms/", views.terms, name="terms"),
     path("my-privacy/", views.my_privacy, name="my_privacy"),
+    path("my-activity-log/", views.activity_log, name="activity_log"),
     path("my-safety-record/", views.safety_record, name="safety_record"),
     path("account/export/", views.account_export, name="account_export"),
     path("account/delete/", views.account_delete, name="account_delete"),

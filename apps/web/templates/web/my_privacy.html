@@ -55,6 +55,12 @@
   </div>
 
   <div class="card">
+    <strong>{% trans "Your activity log" %}</strong>
+    <p class="muted">{% trans "A plain-language record of the safety-relevant actions you've taken." %}</p>
+    <a href="{% url 'activity_log' %}">{% trans "View your activity log" %} &rarr;</a>
+  </div>
+
+  <div class="card">
     <strong>{% trans "Your donations" %}</strong>
     <p>{% blocktrans with n=donations_count %}Donations on record: {{ n }}.{% endblocktrans %}</p>
     <p class="muted">{% trans "We never store card or payment details." %}</p>

@@ -2045,6 +2045,21 @@ def safety_record(request):
 
 
 @login_required
+def activity_log(request):
+    """F34: a read-only, plain-language list of the safety-relevant actions you took, drawn from the
+    tamper-evident audit log. Strictly self-scoped (safety.audit_log_for keys on actor_ref); each
+    row is an allowlisted {label, when} — no raw event code, target, or payload reaches the page."""
+    return render(
+        request,
+        "web/activity_log.html",
+        {
+            "entries": safety.audit_log_for(request.user),
+            **_nav_context(request.user),
+        },
+    )
+
+
+@login_required
 def my_privacy(request):
     """F36: a single self-only "what we know about you" front door. It only re-renders already-
     built, strictly self-scoped reads (band-only age provenance, muted-kind list, capped safety-
