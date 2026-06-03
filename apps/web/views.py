@@ -1091,6 +1091,8 @@ def activity_create(request):
             "to organize activities.",
         )
         return redirect("profile")
+    from apps.places.services import public_places
+
     initial = {}
     if request.GET.get("place"):
         initial["place"] = request.GET["place"]
@@ -1114,7 +1116,9 @@ def activity_create(request):
         atype = ActivityType.objects.filter(pk=initial["activity_type"], is_active=True).first()
         if atype is not None:
             place_obj = (
-                Place.objects.filter(pk=initial["place"]).first() if initial.get("place") else None
+                public_places(Place.objects.filter(pk=initial["place"])).first()
+                if initial.get("place")
+                else None
             )
             draft = social.draft_activity_text(
                 activity_type=atype,
