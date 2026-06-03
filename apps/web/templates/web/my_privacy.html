@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "What we know about you" %}{% endblock %}
+{% block content %}
+<h1>{% trans "What we know about you" %}</h1>
+<p class="muted">{% trans "Every kind of personal data we hold about you, in one place — with a link to change or remove each one. Only you can see this page." %}</p>
+
+<h2>{% trans "Your data" %}</h2>
+<div class="grid">
+
+  <div class="card">
+    <strong>{% trans "Age verification" %}</strong>
+    {% if provenance and provenance.has_row %}
+      <p>{% blocktrans with band=provenance.band_display %}We hold a proven age band: <strong>{{ band }}</strong>.{% endblocktrans %}
+        {% if provenance.provider %}<span class="muted">{% blocktrans with provider=provenance.provider %}Verified via {{ provider }}.{% endblocktrans %}</span>{% endif %}</p>
+      <p class="muted">{% trans "We store an age band only — never your date of birth or identity documents." %}</p>
+    {% else %}
+      <p class="muted">{% trans "Your age isn't verified yet." %}</p>
+    {% endif %}
+    <a href="{% url 'verify_age' %}">{% trans "Manage age verification" %} &rarr;</a>
+  </div>
+
+  <div class="card">
+    <strong>{% trans "Your interests" %}</strong>
+    <p>{% blocktrans with n=interests_count %}Activity types you've chosen: {{ n }}.{% endblocktrans %}</p>
+    <p class="muted">{% trans "Used only to suggest activities to you — never to profile or target you." %}</p>
+    <a href="{% url 'interests' %}">{% trans "Edit your interests" %} &rarr;</a>
+  </div>
+
+  <div class="card">
+    <strong>{% trans "Access needs" %}</strong>
+    {% if access_set %}
+      <p>{% trans "You've set access preferences we use to label matching places." %}</p>
+    {% else %}
+      <p class="muted">{% trans "You haven't set any access preferences." %}</p>
+    {% endif %}
+    <a href="{% url 'access_preferences' %}">{% trans "Edit access needs" %} &rarr;</a>
+  </div>
+
+  <div class="card">
+    <strong>{% trans "Notifications" %}</strong>
+    {% if muted_labels %}
+      <p>{% blocktrans with kinds=muted_labels|join:", " %}You've muted: {{ kinds }}.{% endblocktrans %}</p>
+    {% else %}
+      <p class="muted">{% trans "You haven't muted any notifications." %}</p>
+    {% endif %}
+    <p class="muted">{% trans "Safety and legal notices can never be muted." %}</p>
+    <a href="{% url 'notification_preferences' %}">{% trans "Manage notifications" %} &rarr;</a>
+  </div>
+
+  <div class="card">
+    <strong>{% trans "Your safety record" %}</strong>
+    <p>{% blocktrans with d=decisions_count r=reports_count %}Moderation decisions about you: {{ d }} · Reports you've filed: {{ r }}.{% endblocktrans %}</p>
+    <a href="{% url 'safety_record' %}">{% trans "View your safety record" %} &rarr;</a>
+  </div>
+
+  <div class="card">
+    <strong>{% trans "Your donations" %}</strong>
+    <p>{% blocktrans with n=donations_count %}Donations on record: {{ n }}.{% endblocktrans %}</p>
+    <p class="muted">{% trans "We never store card or payment details." %}</p>
+    <a href="{% url 'my_donations' %}">{% trans "View your donations" %} &rarr;</a>
+  </div>
+
+  {% if has_guardians %}
+  <div class="card">
+    <strong>{% trans "Guardianship" %}</strong>
+    <p>{% trans "A parent or guardian is linked to your account." %}</p>
+    <a href="{% url 'my_guardians' %}">{% trans "See what this link grants" %} &rarr;</a>
+  </div>
+  {% endif %}
+
+</div>
+
+<h2>{% trans "Take your data with you, or remove it" %}</h2>
+<div class="row" style="gap:.5rem">
+  <a class="btn btn-sm" href="{% url 'account_export' %}" download>{% trans "Download my data" %}</a>
+  <a class="btn btn-sm btn-secondary" href="{% url 'account_delete' %}">{% trans "Delete my account" %}</a>
+</div>
+
+<h2>{% trans "What we never collect or do" %}</h2>
+<ul class="members">
+  <li>{% trans "We never store your location — proximity uses your device's position only for the search you ask for, and is never saved." %}</li>
+  <li>{% trans "We store an age band, never your date of birth." %}</li>
+  <li>{% trans "No ads, no behavioural tracking, no profiling — we're funded by donations." %}</li>
+  <li>{% trans "No public photo feeds — photos exist only privately inside an activity thread, and you get one profile picture at most." %}</li>
+  <li>{% trans "No reliability scores, attendance history, or vanity metrics about you." %}</li>
+</ul>
+{% endblock %}

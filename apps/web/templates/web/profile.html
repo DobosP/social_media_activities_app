@@ -76,6 +76,7 @@
   {% if profile_user.is_guardian %}<a class="btn btn-secondary" href="{% url 'wards' %}">{% trans "Your wards" %}</a>{% endif %}
   {% if has_guardians %}<a class="btn btn-secondary" href="{% url 'my_guardians' %}">{% trans "Your guardians" %}</a>{% endif %}
   <a class="btn btn-secondary" href="{% url 'safety_record' %}">{% trans "Your safety record" %}</a>
+  <a class="btn btn-secondary" href="{% url 'my_privacy' %}">{% trans "What we know about you" %}</a>
 </div>
 
 {% if blocked %}
