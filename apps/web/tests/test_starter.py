@@ -177,7 +177,8 @@ def test_safe_exit_card_names_guardian_to_member():
     body = page.content.decode()
     assert "Feeling unsafe" in body
     assert "f5guardian" in body
-    assert "Tell a moderator" in body
+    assert "Report with details" in body  # the detailed report slow path (F8 relabel)
+    assert "/unsafe/" in body  # the F8 one-tap "I feel unsafe" fast path
 
 
 def test_owner_does_not_see_safe_exit_card():

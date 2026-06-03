@@ -144,8 +144,14 @@
       <p class="muted">{% trans "People you can talk to:" %}
         {% for g in my_guardians %}<strong>{{ g.display_name|default:g.username }}</strong>{% if not forloop.last %}, {% endif %}{% endfor %}.</p>
     {% endif %}
+    {% comment %}F8: one-tap "I feel unsafe" — the fast path for a scared member. A single press files
+    a real moderation report and (if you're a child) tells the grown-ups who look after you — no form
+    to fill in. The detailed reason-code report stays available below as the slow path.{% endcomment %}
+    <form method="post" action="{% url 'activity_unsafe' activity.pk %}" class="inline" style="margin:.3rem 0">{% csrf_token %}
+      <button class="btn btn-danger" type="submit">&#9888;&#65039; {% trans "I feel unsafe &mdash; tell someone now" %}</button>
+    </form>
     <div class="row" style="gap:.5rem">
-      <a class="btn btn-sm btn-danger" href="{% url 'report' %}?type=activity&id={{ activity.pk }}">{% trans "Tell a moderator" %}</a>
+      <a class="btn btn-sm btn-secondary" href="{% url 'report' %}?type=activity&id={{ activity.pk }}">{% trans "Report with details" %}</a>
       <form method="post" action="{% url 'activity_leave' activity.pk %}" class="inline">{% csrf_token %}
         <button class="btn btn-sm btn-secondary" type="submit">{% trans "Leave this activity" %}</button></form>
     </div>

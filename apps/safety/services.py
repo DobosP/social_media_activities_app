@@ -3,7 +3,10 @@ tamper-evident audit log, and a lightweight rate limiter. See docs/SAFETY.md."""
 
 import hashlib
 import json
+from collections import namedtuple
+from datetime import timedelta
 
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.db import transaction
@@ -11,6 +14,10 @@ from django.db.models import Q
 from django.utils import timezone
 
 from .models import AuditLog, Block, ModerationAction, ReasonCode, Report
+
+
+class RateLimited(Exception):
+    """A rate-limited safety action exceeded its window cap (the caller should refuse gently)."""
 
 
 def _notify_reporter(reporter, title, body):
@@ -105,6 +112,121 @@ def file_report(reporter, target, reason, detail="") -> Report:
         "it's been reviewed.",
     )
     return report
+
+
+# F8: fixed, server-composed copy for the "I feel unsafe" guardian alert. NEVER child-authored, and
+# carries no PII beyond the ward's own name (which their guardian already knows); the meetup details
+# live behind the guardian's /wards/ manifest, not in the notice — so this is not a minor->adult
+# text channel. Plain English to match the safety app's other notices (file_report's reporter ack).
+_UNSAFE_GUARDIAN_TITLE = "Safety alert: a child you look after asked for help"
+
+# A panic-button report is filed with this fixed sentinel in `detail`, so its idempotency check can
+# NEVER collide with a user's free-text slow-path report that happens to also be OFF_PLATFORM (which
+# would otherwise suppress the guardian alert while the UI claims it fired). It also tells a
+# moderator how the report was filed.
+_UNSAFE_SENTINEL = "Filed via the one-tap safe-exit “I feel unsafe” button."
+# A report still being worked (OPEN/REVIEWING) keeps the fast path idempotent indefinitely; once
+# resolved, only the cooldown window guards against an immediate re-storm.
+_UNSAFE_NON_TERMINAL = (Report.Status.OPEN, Report.Status.REVIEWING)
+
+# What file_unsafe_report tells the caller: the report row, how many guardians were ACTUALLY alerted
+# this call (0 for an adult/teen reporter, a guardian-less or all-blocked child, or an idempotent
+# repeat), and whether this tap was an idempotent repeat — so the view's reassurance copy can never
+# promise more than what happened.
+UnsafeReportResult = namedtuple("UnsafeReportResult", ["report", "guardians_alerted", "repeat"])
+
+
+def _alert_guardians_unsafe(child) -> int:
+    """Fan the F8 SYSTEM safety alert out to the child's ACTIVE guardians, mirroring the
+    mark_arrived idiom: keyed strictly on an ACTIVE GuardianRelationship (never a loose flag),
+    blocked pairs excluded, at most one per guardian. SYSTEM is non-mutable, so a guardian can never
+    accidentally (or maliciously) mute a safety alert. Best-effort + savepoint-isolated: a notify()
+    failure rolls back only that notify and never turns the one-tap path into a 500. Returns the
+    number of guardians actually alerted (so the caller's reassurance reflects reality)."""
+    from django.urls import reverse
+
+    from apps.accounts.models import GuardianRelationship
+    from apps.notifications.models import Notification
+    from apps.notifications.services import notify
+
+    blocked = blocked_user_ids(child)
+    ward_name = child.display_name or child.username
+    body = (
+        f"{ward_name} used the 'I feel unsafe' button during a meetup. Please check in with them "
+        "now. You can see their upcoming meetups on your guardian page."
+    )
+    url = reverse("wards")
+    notified: set[int] = set()
+    for rel in GuardianRelationship.objects.filter(
+        ward=child, status=GuardianRelationship.Status.ACTIVE
+    ).select_related("guardian"):
+        guardian = rel.guardian
+        if guardian.id in blocked or guardian.id in notified:
+            continue
+        try:
+            # Savepoint so a notify DB failure rolls back ONLY the notify, never the surrounding
+            # atomic report — and never turns the scared-child one-tap path into a 500.
+            with transaction.atomic():
+                notify(
+                    guardian, Notification.Kind.SYSTEM, _UNSAFE_GUARDIAN_TITLE, body=body, url=url
+                )
+        except Exception:
+            continue  # best-effort: don't count a guardian we failed to actually reach
+        notified.add(guardian.id)
+    return len(notified)
+
+
+@transaction.atomic
+def file_unsafe_report(reporter, activity) -> UnsafeReportResult:
+    """F8 one-tap "I feel unsafe" for the safe-exit card. Files a real moderation Report on the
+    ACTIVITY (OFF_PLATFORM, fixed sentinel detail, no child free text) and — for a CHILD reporter —
+    alerts each ACTIVE guardian with a non-mutable SYSTEM notice. The detailed reason-code form
+    stays the slow path; this is the scared-kid fast path that reaches a real adult in one tap.
+
+    Idempotent per (reporter, activity): a panic report still being handled (OPEN/REVIEWING) OR
+    filed within UNSAFE_REPORT_COOLDOWN_SECONDS makes a re-tap a no-op (returns it, repeat=True),
+    so re-taps and post-resolution mashing never re-file or re-storm guardians, while a recurring
+    fear after the cooldown can still raise a fresh alert. The dedup is sentinel-scoped, so a user's
+    slow-path OFF_PLATFORM report can never suppress the guardian alert. Rate-limited (raises
+    RateLimited) as an anti-abuse ceiling; the idempotency check runs FIRST so a child re-tapping
+    the SAME activity never burns the budget. Concurrency-safe: a row lock on the activity
+    serialises simultaneous taps so they can't both pass the dedup check."""
+    from apps.accounts.models import Cohort
+    from apps.social.models import Activity
+
+    # Serialise concurrent taps on this activity (TOCTOU): the second tap blocks until the first
+    # commits, then sees its report in the dedup check below.
+    Activity.objects.select_for_update().filter(pk=activity.pk).first()
+
+    ct = ContentType.objects.get_for_model(activity)
+    cooldown = timedelta(seconds=getattr(settings, "UNSAFE_REPORT_COOLDOWN_SECONDS", 300))
+    recent = (
+        Report.objects.filter(
+            reporter=reporter,
+            target_type=ct,
+            target_id=activity.pk,
+            reason=ReasonCode.OFF_PLATFORM,
+            detail=_UNSAFE_SENTINEL,
+        )
+        .order_by("-created_at")
+        .first()
+    )
+    if recent is not None and (
+        recent.status in _UNSAFE_NON_TERMINAL or recent.created_at >= timezone.now() - cooldown
+    ):
+        return UnsafeReportResult(report=recent, guardians_alerted=0, repeat=True)
+
+    if not allow_action(
+        reporter,
+        "unsafe_report",
+        limit=getattr(settings, "UNSAFE_REPORT_RATE_LIMIT", 12),
+        window_seconds=getattr(settings, "UNSAFE_REPORT_RATE_WINDOW_SECONDS", 3600),
+    ):
+        raise RateLimited("Too many safety reports in a short time.")
+
+    report = file_report(reporter, activity, ReasonCode.OFF_PLATFORM, detail=_UNSAFE_SENTINEL)
+    alerted = _alert_guardians_unsafe(reporter) if reporter.cohort == Cohort.CHILD else 0
+    return UnsafeReportResult(report=report, guardians_alerted=alerted, repeat=False)
 
 
 @transaction.atomic

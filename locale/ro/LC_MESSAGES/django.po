@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: social-activities 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-03 02:48+0300\n"
+"POT-Creation-Date: 2026-06-03 03:15+0300\n"
 "PO-Revision-Date: 2026-05-29 10:00+0300\n"
 "Last-Translator: Claude Code\n"
 "Language-Team: Romanian\n"
@@ -822,66 +822,71 @@ msgstr ""
 msgid "People you can talk to:"
 msgstr "Persoane cu care poți vorbi:"
 
-#: apps/web/templates/web/activity_detail.html:148
-msgid "Tell a moderator"
-msgstr "Anunță un moderator"
+#: apps/web/templates/web/activity_detail.html:152
+msgid "I feel unsafe &mdash; tell someone now"
+msgstr "Mă simt în nesiguranță &mdash; spune-i cuiva acum"
 
-#: apps/web/templates/web/activity_detail.html:150
+#: apps/web/templates/web/activity_detail.html:155
+#| msgid "Reporting and appeals"
+msgid "Report with details"
+msgstr "Raportează cu detalii"
+
+#: apps/web/templates/web/activity_detail.html:157
 msgid "Leave this activity"
 msgstr "Părăsește această activitate"
 
-#: apps/web/templates/web/activity_detail.html:157
+#: apps/web/templates/web/activity_detail.html:164
 msgid "Meetup logistics"
 msgstr "Detalii organizatorice"
 
-#: apps/web/templates/web/activity_detail.html:158
+#: apps/web/templates/web/activity_detail.html:165
 msgid "Where to meet:"
 msgstr "Unde ne întâlnim:"
 
-#: apps/web/templates/web/activity_detail.html:159
+#: apps/web/templates/web/activity_detail.html:166
 msgid "What to bring:"
 msgstr "Ce să aduci:"
 
-#: apps/web/templates/web/activity_detail.html:160
+#: apps/web/templates/web/activity_detail.html:167
 msgid "From the organiser:"
 msgstr "De la organizator:"
 
-#: apps/web/templates/web/activity_detail.html:164
+#: apps/web/templates/web/activity_detail.html:171
 msgid "Members"
 msgstr "Membri"
 
-#: apps/web/templates/web/activity_detail.html:166
+#: apps/web/templates/web/activity_detail.html:173
 msgid "owner"
 msgstr "organizator"
 
-#: apps/web/templates/web/activity_detail.html:166
+#: apps/web/templates/web/activity_detail.html:173
 #: apps/web/templates/web/home.html:12
 msgid "guardian"
 msgstr "tutore"
 
-#: apps/web/templates/web/activity_detail.html:167
+#: apps/web/templates/web/activity_detail.html:174
 #: apps/web/templates/web/group_detail.html:49
 #: apps/web/templates/web/group_detail.html:57
 msgid "report"
 msgstr "raportează"
 
-#: apps/web/templates/web/activity_detail.html:172
+#: apps/web/templates/web/activity_detail.html:179
 msgid "connect"
 msgstr "conectează-te"
 
-#: apps/web/templates/web/activity_detail.html:175
+#: apps/web/templates/web/activity_detail.html:182
 msgid "block"
 msgstr "blochează"
 
-#: apps/web/templates/web/activity_detail.html:182
+#: apps/web/templates/web/activity_detail.html:189
 msgid "Catch up"
 msgstr "Pune-te la curent"
 
-#: apps/web/templates/web/activity_detail.html:182
+#: apps/web/templates/web/activity_detail.html:189
 msgid "what you missed"
 msgstr "ce ai ratat"
 
-#: apps/web/templates/web/activity_detail.html:183
+#: apps/web/templates/web/activity_detail.html:190
 #, python-format
 msgid "%(going)s of %(total)s coming &middot; %(member_count)s member."
 msgid_plural ""
@@ -890,54 +895,54 @@ msgstr[0] "%(going)s din %(total)s vin &middot; %(member_count)s membru."
 msgstr[1] "%(going)s din %(total)s vin &middot; %(member_count)s membri."
 msgstr[2] "%(going)s din %(total)s vin &middot; %(member_count)s de membri."
 
-#: apps/web/templates/web/activity_detail.html:184
+#: apps/web/templates/web/activity_detail.html:191
 msgid "Latest announcements:"
 msgstr "Cele mai recente anunțuri:"
 
-#: apps/web/templates/web/activity_detail.html:186
+#: apps/web/templates/web/activity_detail.html:193
 msgid "Logistics mentioned:"
 msgstr "Detalii organizatorice menționate:"
 
-#: apps/web/templates/web/activity_detail.html:188
+#: apps/web/templates/web/activity_detail.html:195
 msgid "Most recent:"
 msgstr "Cele mai recente:"
 
-#: apps/web/templates/web/activity_detail.html:193
+#: apps/web/templates/web/activity_detail.html:200
 #: apps/web/templates/web/messages.html:3
 #: apps/web/templates/web/messages.html:6 templates/base.html:27
 msgid "Messages"
 msgstr "Mesaje"
 
-#: apps/web/templates/web/activity_detail.html:196
+#: apps/web/templates/web/activity_detail.html:203
 #: apps/web/templates/web/group_detail.html:37
 msgid "Post an announcement"
 msgstr "Publică un anunț"
 
-#: apps/web/templates/web/activity_detail.html:196
+#: apps/web/templates/web/activity_detail.html:203
 msgid "(pinned; notifies every member)"
 msgstr "(fixat; notifică fiecare membru)"
 
-#: apps/web/templates/web/activity_detail.html:198
+#: apps/web/templates/web/activity_detail.html:205
 msgid "Meet at the north gate; bring water; time changed..."
 msgstr "Ne întâlnim la poarta de nord; aduceți apă; ora s-a schimbat..."
 
-#: apps/web/templates/web/activity_detail.html:199
+#: apps/web/templates/web/activity_detail.html:206
 msgid "Post announcement"
 msgstr "Publică anunțul"
 
-#: apps/web/templates/web/activity_detail.html:203
+#: apps/web/templates/web/activity_detail.html:210
 msgid "Pinned announcements"
 msgstr "Anunțuri fixate"
 
-#: apps/web/templates/web/activity_detail.html:214
+#: apps/web/templates/web/activity_detail.html:221
 msgid "Older messages"
 msgstr "Mesaje mai vechi"
 
-#: apps/web/templates/web/activity_detail.html:222
+#: apps/web/templates/web/activity_detail.html:229
 msgid "No messages yet. Say hello!"
 msgstr "Niciun mesaj încă. Salută!"
 
-#: apps/web/templates/web/activity_detail.html:229
+#: apps/web/templates/web/activity_detail.html:236
 #, python-format
 msgid ""
 "Replying to\n"
@@ -946,45 +951,45 @@ msgstr ""
 "Răspunzi la\n"
 "          %(reply_author)s"
 
-#: apps/web/templates/web/activity_detail.html:231
+#: apps/web/templates/web/activity_detail.html:238
 msgid "cancel"
 msgstr "anulează"
 
-#: apps/web/templates/web/activity_detail.html:234
+#: apps/web/templates/web/activity_detail.html:241
 msgid "Write a message"
 msgstr "Scrie un mesaj"
 
-#: apps/web/templates/web/activity_detail.html:237
+#: apps/web/templates/web/activity_detail.html:244
 msgid "Attach a photo or PDF"
 msgstr "Atașează o fotografie sau un PDF"
 
-#: apps/web/templates/web/activity_detail.html:241
+#: apps/web/templates/web/activity_detail.html:248
 msgid "Make this picture temporary"
 msgstr "Fă această imagine temporară"
 
-#: apps/web/templates/web/activity_detail.html:243
+#: apps/web/templates/web/activity_detail.html:250
 msgid "Keep"
 msgstr "Păstrează"
 
-#: apps/web/templates/web/activity_detail.html:244
+#: apps/web/templates/web/activity_detail.html:251
 #, python-format
 msgid "Disappear after %(label)s"
 msgstr "Dispare după %(label)s"
 
-#: apps/web/templates/web/activity_detail.html:246
+#: apps/web/templates/web/activity_detail.html:253
 #: apps/web/templates/web/group_detail.html:66
 msgid "Post"
 msgstr "Publică"
 
-#: apps/web/templates/web/activity_detail.html:250
+#: apps/web/templates/web/activity_detail.html:257
 msgid "Notify the people I&nbsp;<span class=\"mention\">@mention</span>"
 msgstr "Anunță persoanele pe care&nbsp;<span class=\"mention\">@menționez</span>"
 
-#: apps/web/templates/web/activity_detail.html:251
+#: apps/web/templates/web/activity_detail.html:258
 msgid "(off = they just see the tag)"
 msgstr "(dezactivat = văd doar eticheta)"
 
-#: apps/web/templates/web/activity_detail.html:252
+#: apps/web/templates/web/activity_detail.html:259
 msgid ""
 "Photos &amp; PDFs are private to\n"
 "        members and safety-screened on upload. No video."
@@ -992,29 +997,29 @@ msgstr ""
 "Fotografiile &amp; PDF-urile sunt private pentru\n"
 "        membri și verificate pentru siguranță la încărcare. Fără video."
 
-#: apps/web/templates/web/activity_detail.html:260
+#: apps/web/templates/web/activity_detail.html:267
 msgid "Photos"
 msgstr "Fotografii"
 
-#: apps/web/templates/web/activity_detail.html:261
+#: apps/web/templates/web/activity_detail.html:268
 msgid "Private to members &mdash; location metadata is stripped on upload."
 msgstr ""
 "Private pentru membri &mdash; metadatele de localizare sunt eliminate la "
 "încărcare."
 
-#: apps/web/templates/web/activity_detail.html:265
+#: apps/web/templates/web/activity_detail.html:272
 msgid "Add photo"
 msgstr "Adaugă fotografie"
 
-#: apps/web/templates/web/activity_detail.html:269
+#: apps/web/templates/web/activity_detail.html:276
 msgid "thread photo"
 msgstr "fotografie din conversație"
 
-#: apps/web/templates/web/activity_detail.html:270
+#: apps/web/templates/web/activity_detail.html:277
 msgid "No photos yet."
 msgstr "Nicio fotografie încă."
 
-#: apps/web/templates/web/activity_detail.html:274
+#: apps/web/templates/web/activity_detail.html:281
 msgid ""
 "The messages and photos are private to members. Request to join to take "
 "part."
@@ -1022,15 +1027,15 @@ msgstr ""
 "Mesajele și fotografiile sunt private pentru membri. Solicită să te alături "
 "pentru a participa."
 
-#: apps/web/templates/web/activity_detail.html:314
+#: apps/web/templates/web/activity_detail.html:321
 msgid "Replying to"
 msgstr "Răspunzi la"
 
-#: apps/web/templates/web/activity_detail.html:335
+#: apps/web/templates/web/activity_detail.html:342
 msgid "New announcement posted."
 msgstr "Anunț nou publicat."
 
-#: apps/web/templates/web/activity_detail.html:351
+#: apps/web/templates/web/activity_detail.html:358
 msgid "Message sent."
 msgstr "Mesaj trimis."
 
@@ -1086,7 +1091,6 @@ msgstr ""
 "  (<strong>%(cohort)s</strong>).</p>"
 
 #: apps/web/templates/web/activity_form.html:17
-#| msgid "Find a place"
 msgid "Find a place on the map"
 msgstr "Găsește un loc pe hartă"
 
@@ -1095,25 +1099,20 @@ msgid "Locating…"
 msgstr "Se localizează…"
 
 #: apps/web/templates/web/activity_form.html:21
-#| msgid "That reaction isn't available."
 msgid "Location unavailable"
 msgstr "Locație indisponibilă"
 
 #: apps/web/templates/web/activity_form.html:21
-#| msgid "Find a place"
 msgid "Find places near me"
 msgstr "Găsește locuri lângă mine"
 
 #: apps/web/templates/web/activity_form.html:22
-#| msgid ""
-#| "Your location is used only to sort this page &mdash; never stored."
 msgid "Your location is used only to sort the map &mdash; never stored."
 msgstr ""
 "Locația ta este folosită doar pentru a sorta harta &mdash; nu este stocată "
 "niciodată."
 
 #: apps/web/templates/web/activity_form.html:26
-#| msgid "Confirm this place"
 msgid "Choose this place"
 msgstr "Alege acest loc"
 
@@ -3413,3 +3412,6 @@ msgstr "Confidențialitate"
 #: templates/base.html:74
 msgid "Terms"
 msgstr "Termeni"
+
+#~ msgid "Tell a moderator"
+#~ msgstr "Anunță un moderator"
