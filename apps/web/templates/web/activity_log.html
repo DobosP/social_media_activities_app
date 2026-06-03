@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Your activity log" %}{% endblock %}
+{% block content %}
+<h1>{% trans "Your activity log" %}</h1>
+<p class="muted">{% trans "A plain-language record of the safety-relevant actions you've taken on the platform. Only you can see this page. We keep this for safety and to be transparent with you — it is never used to profile you or rank you." %}</p>
+
+<div class="grid">
+  {% for e in entries %}
+    <div class="card">
+      <strong>{{ e.label }}</strong>
+      <p class="muted">{{ e.when|date:"j M Y, H:i" }}</p>
+    </div>
+  {% empty %}
+    <p class="muted">{% trans "You haven't taken any recorded actions yet." %}</p>
+  {% endfor %}
+</div>
+
+<p class="muted" style="font-size:.85rem">{% blocktrans %}Looking for moderation decisions about you, or reports you've filed? Those are on your safety record.{% endblocktrans %}
+  <a href="{% url 'safety_record' %}">{% trans "View your safety record" %} &rarr;</a></p>
+{% endblock %}

@@ -155,6 +155,9 @@ class AuditLog(models.Model):
 
     class Meta:
         ordering = ["id"]
+        # F34 self-audit view (audit_log_for) filters by actor_ref and reads newest-first; without
+        # this the query is a full backward filter-scan of the never-purged audit table.
+        indexes = [models.Index(fields=["actor_ref", "-id"], name="safety_audit_actor_id_idx")]
 
     def __str__(self):
         return f"audit#{self.pk}:{self.event}"

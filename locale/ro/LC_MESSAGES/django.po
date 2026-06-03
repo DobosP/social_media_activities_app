@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: social-activities 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-03 03:53+0300\n"
+"POT-Creation-Date: 2026-06-03 04:21+0300\n"
 "PO-Revision-Date: 2026-05-29 10:00+0300\n"
 "Last-Translator: Claude Code\n"
 "Language-Team: Romanian\n"
@@ -48,6 +48,117 @@ msgstr ""
 msgid "`interests` must be a list of type slugs."
 msgstr ""
 "„interests” trebuie să fie o listă de identificatori (slug) de tipuri."
+
+#: apps/safety/services.py:525
+msgid "You marked yourself as arrived at an activity"
+msgstr "Te-ai marcat ca sosit la o activitate"
+
+#: apps/safety/services.py:526
+msgid "You cancelled an activity you organised"
+msgstr "Ai anulat o activitate pe care ai organizat-o"
+
+#: apps/safety/services.py:527
+msgid "You sent a connection request"
+msgstr "Ai trimis o cerere de conectare"
+
+#: apps/safety/services.py:528
+msgid "You accepted a connection"
+msgstr "Ai acceptat o conexiune"
+
+#: apps/safety/services.py:529
+msgid "You removed a connection"
+msgstr "Ai eliminat o conexiune"
+
+#: apps/safety/services.py:530
+#| msgid "+ Create a group"
+msgid "You created a group"
+msgstr "Ai creat un grup"
+
+#: apps/safety/services.py:531
+msgid "You joined a group"
+msgstr "Te-ai alăturat unui grup"
+
+#: apps/safety/services.py:532
+msgid "You left a group"
+msgstr "Ai părăsit un grup"
+
+#: apps/safety/services.py:533
+#| msgid "You joined a group"
+msgid "You archived a group"
+msgstr "Ai arhivat un grup"
+
+#: apps/safety/services.py:534
+msgid "You sent a guardian-link invitation"
+msgstr "Ai trimis o invitație de legătură cu un tutore"
+
+#: apps/safety/services.py:535
+msgid "You accepted a guardian link"
+msgstr "Ai acceptat o legătură cu un tutore"
+
+#: apps/safety/services.py:536
+#| msgid "You uploaded a photo or file"
+msgid "You uploaded a photo"
+msgstr "Ai încărcat o fotografie"
+
+#: apps/safety/services.py:537
+#| msgid "You deleted a photo or file"
+msgid "You deleted a photo"
+msgstr "Ai șters o fotografie"
+
+#: apps/safety/services.py:538
+#| msgid "You left a conversation"
+msgid "You uploaded a file to a conversation"
+msgstr "Ai încărcat un fișier într-o conversație"
+
+#: apps/safety/services.py:539
+msgid "You deleted an attachment"
+msgstr "Ai șters un atașament"
+
+#: apps/safety/services.py:540
+#| msgid "You joined a conversation"
+msgid "You started a conversation"
+msgstr "Ai început o conversație"
+
+#: apps/safety/services.py:541
+#| msgid "You joined a conversation"
+msgid "You started a group conversation"
+msgstr "Ai început o conversație de grup"
+
+#: apps/safety/services.py:542
+msgid "You joined a conversation"
+msgstr "Te-ai alăturat unei conversații"
+
+#: apps/safety/services.py:543
+msgid "You declined a conversation invitation"
+msgstr "Ai refuzat o invitație la conversație"
+
+#: apps/safety/services.py:544
+msgid "You set up message encryption"
+msgstr "Ai configurat criptarea mesajelor"
+
+#: apps/safety/services.py:545
+msgid "You verified a contact's safety number"
+msgstr "Ai verificat numărul de siguranță al unui contact"
+
+#: apps/safety/services.py:546
+msgid "You left a conversation"
+msgstr "Ai părăsit o conversație"
+
+#: apps/safety/services.py:547
+msgid "You updated your notification settings"
+msgstr "Ți-ai actualizat setările de notificare"
+
+#: apps/safety/services.py:548
+msgid "You deleted one of your posts"
+msgstr "Ai șters una dintre postările tale"
+
+#: apps/safety/services.py:549
+msgid "You blocked someone"
+msgstr "Ai blocat pe cineva"
+
+#: apps/safety/services.py:550
+msgid "You unblocked someone"
+msgstr "Ai deblocat pe cineva"
 
 #: apps/social/services.py:211
 msgid "User cannot create activities (needs verification/consent + a cohort)."
@@ -1130,6 +1241,41 @@ msgstr "Loc fără nume"
 msgid "Create activity"
 msgstr "Creează activitatea"
 
+#: apps/web/templates/web/activity_log.html:3
+#: apps/web/templates/web/activity_log.html:5
+#: apps/web/templates/web/my_privacy.html:58
+#: apps/web/templates/web/profile.html:79
+msgid "Your activity log"
+msgstr "Jurnalul tău de activitate"
+
+#: apps/web/templates/web/activity_log.html:6
+msgid ""
+"A plain-language record of the safety-relevant actions you've taken on the "
+"platform. Only you can see this page. We keep this for safety and to be "
+"transparent with you — it is never used to profile you or rank you."
+msgstr ""
+"Un registru în limbaj simplu al acțiunilor relevante pentru siguranță pe "
+"care le-ai făcut pe platformă. Doar tu poți vedea această pagină. Îl păstrăm"
+" pentru siguranță și pentru a fi transparenți cu tine — nu este folosit "
+"niciodată pentru a te profila sau a te clasifica."
+
+#: apps/web/templates/web/activity_log.html:15
+msgid "You haven't taken any recorded actions yet."
+msgstr "Nu ai făcut încă nicio acțiune înregistrată."
+
+#: apps/web/templates/web/activity_log.html:19
+msgid ""
+"Looking for moderation decisions about you, or reports you've filed? Those "
+"are on your safety record."
+msgstr ""
+"Cauți decizii de moderare despre tine sau rapoarte pe care le-ai trimis? "
+"Acestea sunt în evidența ta de siguranță."
+
+#: apps/web/templates/web/activity_log.html:20
+#: apps/web/templates/web/my_privacy.html:54
+msgid "View your safety record"
+msgstr "Vezi evidența ta de siguranță"
+
 #: apps/web/templates/web/campaigns.html:3
 #: apps/web/templates/web/campaigns.html:5
 msgid "Campaigns"
@@ -1975,8 +2121,7 @@ msgstr "Faci una?"
 
 #: apps/web/templates/web/my_privacy.html:3
 #: apps/web/templates/web/my_privacy.html:5
-#: apps/web/templates/web/profile.html:79
-#| msgid "What they can see about you"
+#: apps/web/templates/web/profile.html:80
 msgid "What we know about you"
 msgstr "Ce știm despre tine"
 
@@ -1990,7 +2135,6 @@ msgstr ""
 "această pagină."
 
 #: apps/web/templates/web/my_privacy.html:8
-#| msgid "Your wards"
 msgid "Your data"
 msgstr "Datele tale"
 
@@ -2001,7 +2145,6 @@ msgstr "Verificarea vârstei"
 
 #: apps/web/templates/web/my_privacy.html:14
 #, python-format
-#| msgid "Total allocated so far: <strong>%(total)s EUR</strong>."
 msgid "We hold a proven age band: <strong>%(band)s</strong>."
 msgstr "Deținem o grupă de vârstă dovedită: <strong>%(band)s</strong>."
 
@@ -2018,12 +2161,10 @@ msgstr ""
 "identitate."
 
 #: apps/web/templates/web/my_privacy.html:18
-#| msgid "Your age is verified and you can participate."
 msgid "Your age isn't verified yet."
 msgstr "Vârsta ta nu este încă verificată."
 
 #: apps/web/templates/web/my_privacy.html:20
-#| msgid "Age verification"
 msgid "Manage age verification"
 msgstr "Gestionează verificarea vârstei"
 
@@ -2040,12 +2181,10 @@ msgstr ""
 "sau viza."
 
 #: apps/web/templates/web/my_privacy.html:27
-#| msgid "Pick your interests"
 msgid "Edit your interests"
 msgstr "Editează-ți interesele"
 
 #: apps/web/templates/web/my_privacy.html:31
-#| msgid "Access preferences"
 msgid "Access needs"
 msgstr "Nevoi de accesibilitate"
 
@@ -2056,12 +2195,10 @@ msgstr ""
 "locurile potrivite."
 
 #: apps/web/templates/web/my_privacy.html:35
-#| msgid "You haven't filed any reports."
 msgid "You haven't set any access preferences."
 msgstr "Nu ai setat nicio preferință de accesibilitate."
 
 #: apps/web/templates/web/my_privacy.html:37
-#| msgid "Matches your access needs"
 msgid "Edit access needs"
 msgstr "Editează nevoile de accesibilitate"
 
@@ -2078,7 +2215,6 @@ msgid "You've muted: %(kinds)s."
 msgstr "Ai dezactivat: %(kinds)s."
 
 #: apps/web/templates/web/my_privacy.html:45
-#| msgid "You haven't filed any reports."
 msgid "You haven't muted any notifications."
 msgstr "Nu ai dezactivat nicio notificare."
 
@@ -2088,7 +2224,6 @@ msgstr ""
 "Notificările de siguranță și cele legale nu pot fi dezactivate niciodată."
 
 #: apps/web/templates/web/my_privacy.html:48
-#| msgid "Notifications"
 msgid "Manage notifications"
 msgstr "Gestionează notificările"
 
@@ -2105,67 +2240,66 @@ msgid "Moderation decisions about you: %(d)s · Reports you've filed: %(r)s."
 msgstr ""
 "Decizii de moderare despre tine: %(d)s · Rapoarte trimise de tine: %(r)s."
 
-#: apps/web/templates/web/my_privacy.html:54
-#| msgid "Your safety record"
-msgid "View your safety record"
-msgstr "Vezi evidența ta de siguranță"
+#: apps/web/templates/web/my_privacy.html:59
+msgid "A plain-language record of the safety-relevant actions you've taken."
+msgstr ""
+"Un registru în limbaj simplu al acțiunilor relevante pentru siguranță pe "
+"care le-ai făcut."
 
-#: apps/web/templates/web/my_privacy.html:58
-#| msgid "Your connections"
+#: apps/web/templates/web/my_privacy.html:60
+msgid "View your activity log"
+msgstr "Vezi jurnalul tău de activitate"
+
+#: apps/web/templates/web/my_privacy.html:64
 msgid "Your donations"
 msgstr "Donațiile tale"
 
-#: apps/web/templates/web/my_privacy.html:59
+#: apps/web/templates/web/my_privacy.html:65
 #, python-format
-#| msgid "Donations received"
 msgid "Donations on record: %(n)s."
 msgstr "Donații înregistrate: %(n)s."
 
-#: apps/web/templates/web/my_privacy.html:60
+#: apps/web/templates/web/my_privacy.html:66
 msgid "We never store card or payment details."
 msgstr "Nu stocăm niciodată detalii despre card sau plată."
 
-#: apps/web/templates/web/my_privacy.html:61
-#| msgid "My donations"
+#: apps/web/templates/web/my_privacy.html:67
 msgid "View your donations"
 msgstr "Vezi donațiile tale"
 
-#: apps/web/templates/web/my_privacy.html:66
-#| msgid "Guardians"
+#: apps/web/templates/web/my_privacy.html:72
 msgid "Guardianship"
 msgstr "Tutelă"
 
-#: apps/web/templates/web/my_privacy.html:67
-#| msgid "You aren't a registered guardian of any account."
+#: apps/web/templates/web/my_privacy.html:73
 msgid "A parent or guardian is linked to your account."
 msgstr "Un părinte sau tutore este legat de contul tău."
 
-#: apps/web/templates/web/my_privacy.html:68
+#: apps/web/templates/web/my_privacy.html:74
 msgid "See what this link grants"
 msgstr "Vezi ce permite această legătură"
 
-#: apps/web/templates/web/my_privacy.html:74
+#: apps/web/templates/web/my_privacy.html:80
 msgid "Take your data with you, or remove it"
 msgstr "Ia-ți datele cu tine sau șterge-le"
 
-#: apps/web/templates/web/my_privacy.html:76
-#: apps/web/templates/web/profile.html:102
-#: apps/web/templates/web/profile.html:104
+#: apps/web/templates/web/my_privacy.html:82
+#: apps/web/templates/web/profile.html:103
+#: apps/web/templates/web/profile.html:105
 msgid "Download my data"
 msgstr "Descarcă-mi datele"
 
-#: apps/web/templates/web/my_privacy.html:77
-#: apps/web/templates/web/profile.html:108
-#: apps/web/templates/web/profile.html:114
+#: apps/web/templates/web/my_privacy.html:83
+#: apps/web/templates/web/profile.html:109
+#: apps/web/templates/web/profile.html:115
 msgid "Delete my account"
 msgstr "Șterge contul meu"
 
-#: apps/web/templates/web/my_privacy.html:80
-#| msgid "What data we collect"
+#: apps/web/templates/web/my_privacy.html:86
 msgid "What we never collect or do"
 msgstr "Ce nu colectăm și nu facem niciodată"
 
-#: apps/web/templates/web/my_privacy.html:82
+#: apps/web/templates/web/my_privacy.html:88
 msgid ""
 "We never store your location — proximity uses your device's position only "
 "for the search you ask for, and is never saved."
@@ -2174,18 +2308,18 @@ msgstr ""
 "dispozitivului tău doar pentru căutarea pe care o ceri și nu este salvată "
 "niciodată."
 
-#: apps/web/templates/web/my_privacy.html:83
+#: apps/web/templates/web/my_privacy.html:89
 msgid "We store an age band, never your date of birth."
 msgstr "Stocăm o grupă de vârstă, niciodată data nașterii."
 
-#: apps/web/templates/web/my_privacy.html:84
+#: apps/web/templates/web/my_privacy.html:90
 msgid ""
 "No ads, no behavioural tracking, no profiling — we're funded by donations."
 msgstr ""
 "Fără reclame, fără urmărire comportamentală, fără profilare — suntem "
 "finanțați prin donații."
 
-#: apps/web/templates/web/my_privacy.html:85
+#: apps/web/templates/web/my_privacy.html:91
 msgid ""
 "No public photo feeds — photos exist only privately inside an activity "
 "thread, and you get one profile picture at most."
@@ -2193,7 +2327,7 @@ msgstr ""
 "Fără fluxuri publice de fotografii — fotografiile există doar privat în "
 "conversația unei activități, iar tu ai cel mult o poză de profil."
 
-#: apps/web/templates/web/my_privacy.html:86
+#: apps/web/templates/web/my_privacy.html:92
 msgid ""
 "No reliability scores, attendance history, or vanity metrics about you."
 msgstr ""
@@ -3017,19 +3151,19 @@ msgstr ""
 msgid "Your wards"
 msgstr "Persoanele aflate în grija dvs."
 
-#: apps/web/templates/web/profile.html:84
+#: apps/web/templates/web/profile.html:85
 msgid "Blocked users"
 msgstr "Utilizatori blocați"
 
-#: apps/web/templates/web/profile.html:85
+#: apps/web/templates/web/profile.html:86
 msgid "You and these people never see each other's activities."
 msgstr "Dvs. și aceste persoane nu vă vedeți niciodată activitățile reciproc."
 
-#: apps/web/templates/web/profile.html:91
+#: apps/web/templates/web/profile.html:92
 msgid "unblock"
 msgstr "deblochează"
 
-#: apps/web/templates/web/profile.html:98
+#: apps/web/templates/web/profile.html:99
 msgid ""
 "As an under-16, a parent or guardian must approve your account before you "
 "can join or organise activities."
@@ -3037,7 +3171,7 @@ msgstr ""
 "Întrucât ai sub 16 ani, un părinte sau tutore trebuie să aprobe contul tău "
 "înainte de a te putea alătura sau organiza activități."
 
-#: apps/web/templates/web/profile.html:103
+#: apps/web/templates/web/profile.html:104
 msgid ""
 "Get a copy of all the personal data we hold about you, as a JSON file (GDPR "
 "right to data portability, Art. 20). No card or payment details are stored."
@@ -3046,7 +3180,7 @@ msgstr ""
 "ca fișier JSON (dreptul GDPR la portabilitatea datelor, Art. 20). Nu stocăm "
 "date despre card sau plată."
 
-#: apps/web/templates/web/profile.html:109
+#: apps/web/templates/web/profile.html:110
 #, python-format
 msgid ""
 "This permanently deletes your account and personal data (GDPR right to erasure,\n"
@@ -3055,7 +3189,7 @@ msgstr ""
 "Aceasta vă șterge definitiv contul și datele cu caracter personal (dreptul la ștergere conform GDPR,\n"
 "    Art. 17). Acțiunea nu poate fi anulată. Consultați <a href=\"%(privacy_url)s\">Politica de confidențialitate</a>."
 
-#: apps/web/templates/web/profile.html:112
+#: apps/web/templates/web/profile.html:113
 msgid ""
 "Permanently delete your account and personal data? This cannot be undone."
 msgstr ""
@@ -3613,6 +3747,9 @@ msgstr "Confidențialitate"
 #: templates/base.html:74
 msgid "Terms"
 msgstr "Termeni"
+
+#~ msgid "You reported a message"
+#~ msgstr "Ai raportat un mesaj"
 
 #~ msgid "Tell a moderator"
 #~ msgstr "Anunță un moderator"

@@ -12,6 +12,7 @@ from django.core.cache import cache
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 from .models import AuditLog, Block, ModerationAction, ReasonCode, Report
 
@@ -507,3 +508,58 @@ def safety_record_for(user, *, limit: int = 50) -> dict:
         )
 
     return {"decisions": decisions, "reports": reports}
+
+
+# F34: the FIXED allowlist of audit events that represent a DELIBERATE lifecycle action the user
+# themselves took on their OWN participation/content (the actor axis), each mapped to plain-language
+# copy. An event NOT in this map is DROPPED at the DB, never rendered raw — so a newly-added audit
+# event can never leak a raw code or its data payload into a user's view. Deliberately EXCLUDED:
+#  - report.filed / messaging.message_reported — both create a Report row already shown on the F19
+#    safety record (/my-safety-record/), so listing them here too would double-count;
+#  - system-initiated events (group/messaging.participation_revoked, media.*_blocked / *_purged) —
+#    they're not something the user chose to do (and most don't match actor_ref anyway);
+#  - administration-of-OTHERS and child-safety-sensitive events (messaging.participant_added /
+#    removed, guardian observation) — the log is about YOUR participation, not who you manage/watch;
+#  - per-message noise (messaging.message_sent).
+_ACTIVITY_LOG_LABELS = {
+    "activity.arrived": _("You marked yourself as arrived at an activity"),
+    "activity.cancelled": _("You cancelled an activity you organised"),
+    "connection.requested": _("You sent a connection request"),
+    "connection.accepted": _("You accepted a connection"),
+    "connection.removed": _("You removed a connection"),
+    "group.created": _("You created a group"),
+    "group.joined": _("You joined a group"),
+    "group.left": _("You left a group"),
+    "group.archived": _("You archived a group"),
+    "guardian.link_invited": _("You sent a guardian-link invitation"),
+    "guardian.link_accepted": _("You accepted a guardian link"),
+    "media.uploaded": _("You uploaded a photo"),
+    "media.deleted": _("You deleted a photo"),
+    "media.attachment_uploaded": _("You uploaded a file to a conversation"),
+    "media.attachment_deleted": _("You deleted an attachment"),
+    "messaging.direct_started": _("You started a conversation"),
+    "messaging.group_started": _("You started a group conversation"),
+    "messaging.invite_accepted": _("You joined a conversation"),
+    "messaging.invite_declined": _("You declined a conversation invitation"),
+    "messaging.key_registered": _("You set up message encryption"),
+    "messaging.key_verified": _("You verified a contact's safety number"),
+    "messaging.left": _("You left a conversation"),
+    "notification.preferences_updated": _("You updated your notification settings"),
+    "post.self_deleted": _("You deleted one of your posts"),
+    "user.blocked": _("You blocked someone"),
+    "user.unblocked": _("You unblocked someone"),
+}
+
+
+def audit_log_for(user, *, limit: int = 100) -> list[dict]:
+    """F34: a calm, plain-language list of the safety-relevant actions THIS user took, from the
+    tamper-evident audit log. STRICTLY self-scoped to actor_ref == user.id. Each row is projected
+    through the FIXED `_ACTIVITY_LOG_LABELS` allowlist (an unmapped event is filtered out at the DB,
+    never rendered raw) and emits ONLY {label, when} — never target_ref, the data payload, the raw
+    event code, or any other party. Newest first, capped at `limit`."""
+    rows = (
+        AuditLog.objects.filter(actor_ref=user.id, event__in=list(_ACTIVITY_LOG_LABELS))
+        .order_by("-id")
+        .values_list("event", "created_at")[:limit]
+    )
+    return [{"label": str(_ACTIVITY_LOG_LABELS[event]), "when": when} for event, when in rows]
