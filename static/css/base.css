@@ -1,3 +1,7 @@
+/* F12: the light palette is the default. Dark + high-contrast themes (and a text-size scale)
+   override these custom-property tokens further down; every colour below flows through a token so a
+   theme switch needs no per-rule changes. New tokens (--lead/--chip-*/--info-*) replace what used to
+   be hard-coded hexes so dark mode can re-map them. */
 :root {
   --bg: #fbfaf7;
   --fg: #1f2421;
@@ -10,7 +14,16 @@
   --warn-fg: #8a2a1f;
   --ok-bg: #e7f3ec;
   --ok-fg: #1e5a37;
+  --lead: #374151;
+  --chip-bg: #eef0ec;
+  --chip-fg: #3a463f;
+  --info-bg: #fff7e6;
+  --info-fg: #7a5a00;
+  --info-line: #f0d98c;
 }
+/* F12: larger-text scale. --scale (default 1) is set inline on <html> from the display-prefs
+   cookie; it scales the rem base so all rem/em-sized text grows together. */
+html { font-size: calc(100% * var(--scale, 1)); }
 * { box-sizing: border-box; }
 body {
   margin: 0;
@@ -23,19 +36,19 @@ body {
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
-.site-header { border-bottom: 1px solid var(--line); background: #fff; position: sticky; top: 0; z-index: 5; }
+.site-header { border-bottom: 1px solid var(--line); background: var(--card); position: sticky; top: 0; z-index: 5; }
 .nav { display: flex; align-items: center; gap: 1rem; padding: .7rem 1rem; flex-wrap: wrap; }
 .nav .brand { font-weight: 700; color: var(--fg); }
 .nav .spacer { flex: 1; }
 .nav .cohort { color: var(--muted); font-weight: 400; }
-.nav .pill { background: var(--accent); color: #fff; border-radius: 999px; font-size: .72rem; padding: 0 .4rem; }
+.nav .pill { background: var(--accent); color: var(--accent-fg); border-radius: 999px; font-size: .72rem; padding: 0 .4rem; }
 .inline { display: inline; margin: 0; }
 .linkbtn { background: none; border: 0; color: var(--accent); cursor: pointer; font: inherit; padding: 0; }
 
 h1 { font-size: 1.7rem; margin: 1.2rem 0 .4rem; }
 h2 { font-size: 1.2rem; margin: 1.6rem 0 .6rem; }
 .muted { color: var(--muted); }
-.lead { font-size: 1.1rem; color: #374151; }
+.lead { font-size: 1.1rem; color: var(--lead); }
 
 .btn {
   display: inline-block; background: var(--accent); color: var(--accent-fg);
@@ -43,12 +56,12 @@ h2 { font-size: 1.2rem; margin: 1.6rem 0 .6rem; }
 }
 .btn:hover { text-decoration: none; opacity: .92; }
 .btn-sm { padding: .3rem .6rem; font-size: .9rem; }
-.btn-secondary { background: #eef0ec; color: var(--fg); }
+.btn-secondary { background: var(--chip-bg); color: var(--fg); }
 .btn-danger { background: var(--warn-bg); color: var(--warn-fg); }
 
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 1rem; margin: .7rem 0; }
 .card h3 { margin: 0 0 .2rem; }
-.tag { display: inline-block; font-size: .78rem; background: #eef0ec; color: #3a463f; padding: .1rem .5rem; border-radius: 999px; margin-right: .3rem; }
+.tag { display: inline-block; font-size: .78rem; background: var(--chip-bg); color: var(--chip-fg); padding: .1rem .5rem; border-radius: 999px; margin-right: .3rem; }
 .grid { display: grid; gap: .7rem; }
 .grid-2 { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
 .score { float: right; color: var(--accent); font-weight: 600; font-size: .85rem; }
@@ -57,12 +70,12 @@ h2 { font-size: 1.2rem; margin: 1.6rem 0 .6rem; }
 .msg { padding: .6rem .8rem; border-radius: 8px; margin-bottom: .4rem; }
 .msg.success { background: var(--ok-bg); color: var(--ok-fg); }
 .msg.error { background: var(--warn-bg); color: var(--warn-fg); }
-.msg.info, .msg.warning { background: #fff7e6; color: #7a5a00; }
+.msg.info, .msg.warning { background: var(--info-bg); color: var(--info-fg); }
 
 form p { margin: .5rem 0; }
 label { font-weight: 600; display: block; margin-bottom: .15rem; }
-input, select, textarea { width: 100%; padding: .5rem; border: 1px solid var(--line); border-radius: 8px; font: inherit; background: #fff; }
-input[type=checkbox] { width: auto; }
+input, select, textarea { width: 100%; padding: .5rem; border: 1px solid var(--line); border-radius: 8px; font: inherit; background: var(--card); color: var(--fg); }
+input[type=checkbox], input[type=radio] { width: auto; }
 .helptext, .help { color: var(--muted); font-size: .85rem; }
 ul.errorlist { color: var(--warn-fg); padding-left: 1rem; }
 
@@ -71,12 +84,12 @@ ul.errorlist { color: var(--warn-fg); padding-left: 1rem; }
 .thread .post:first-child { border-top: 0; }
 .post .meta { color: var(--muted); font-size: .82rem; }
 .members { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: .4rem; }
-.members li { background: #eef0ec; border-radius: 999px; padding: .15rem .6rem; font-size: .88rem; }
+.members li { background: var(--chip-bg); border-radius: 999px; padding: .15rem .6rem; font-size: .88rem; }
 .avatar { border-radius: 50%; object-fit: cover; border: 1px solid var(--line); }
 .photos { display: flex; flex-wrap: wrap; gap: .5rem; }
 .photos img { max-width: 150px; max-height: 150px; border-radius: 8px; border: 1px solid var(--line); }
 
-.banner { background: #fff7e6; border: 1px solid #f0d98c; color: #7a5a00; padding: .6rem .8rem; border-radius: 8px; font-size: .9rem; margin: 1rem 0; }
+.banner { background: var(--info-bg); border: 1px solid var(--info-line); color: var(--info-fg); padding: .6rem .8rem; border-radius: 8px; font-size: .9rem; margin: 1rem 0; }
 #map { height: 460px; border-radius: 10px; border: 1px solid var(--line); }
 .site-footer { color: var(--muted); font-size: .85rem; margin: 2.5rem auto 1.5rem; }
 .row { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
@@ -109,8 +122,108 @@ a:focus, button:focus, input:focus, select:focus, textarea:focus, summary:focus 
   overflow: hidden; white-space: nowrap;
 }
 
-/* F15: accessibility-fact badges on places (state-coloured; honest, never green when unknown). */
+/* F15: accessibility-fact badges on places (state-coloured; honest, never green when unknown).
+   These are self-contained pastel pills with their own bg+fg, so they stay legible on a dark page. */
 .fact--true { background: #e3f3e8; color: #1d6b3a; }
 .fact--limited { background: #fdf3e0; color: #8a5a00; }
 .fact--false { background: #fce8e8; color: #a02020; }
 .fact--unknown { background: #eef0ec; color: #555; }
+
+/* ---------------------------------------------------------------------------------------------
+   F12 display preferences. Source of truth = a functional cookie surfaced as data-theme /
+   data-motion / --scale on <html> by the display_preferences context processor. When no explicit
+   theme is chosen (data-theme="auto") we honour the OS prefers-color-scheme; an explicit dark /
+   contrast choice always wins. Only the token VALUES change — every rule above already uses them.
+   --------------------------------------------------------------------------------------------- */
+:root[data-theme="auto"] { color-scheme: light dark; }
+
+/* Dark palette — applied for an explicit dark choice, or for "auto" when the OS prefers dark. */
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="auto"] {
+    --bg: #14171a;
+    --fg: #e6e8e6;
+    --muted: #9aa3a8;
+    --line: #2b3036;
+    --card: #1c2024;
+    --accent: #6bbf86;
+    --accent-fg: #0c1a10;
+    --warn-bg: #3a1f1c;
+    --warn-fg: #f3b6ad;
+    --ok-bg: #18301f;
+    --ok-fg: #8fd6a8;
+    --lead: #c8cdc9;
+    --chip-bg: #2a2f33;
+    --chip-fg: #cdd3cf;
+    --info-bg: #33291a;
+    --info-fg: #e8c98a;
+    --info-line: #5a4a28;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #14171a;
+  --fg: #e6e8e6;
+  --muted: #9aa3a8;
+  --line: #2b3036;
+  --card: #1c2024;
+  --accent: #6bbf86;
+  --accent-fg: #0c1a10;
+  --warn-bg: #3a1f1c;
+  --warn-fg: #f3b6ad;
+  --ok-bg: #18301f;
+  --ok-fg: #8fd6a8;
+  --lead: #c8cdc9;
+  --chip-bg: #2a2f33;
+  --chip-fg: #cdd3cf;
+  --info-bg: #33291a;
+  --info-fg: #e8c98a;
+  --info-line: #5a4a28;
+}
+
+/* High-contrast palette — maximal black-on-white with bold borders. Explicit choice only. */
+:root[data-theme="contrast"] {
+  --bg: #ffffff;
+  --fg: #000000;
+  --muted: #1a1a1a;
+  --line: #000000;
+  --card: #ffffff;
+  --accent: #00451f;
+  --accent-fg: #ffffff;
+  --warn-bg: #ffe3e3;
+  --warn-fg: #6b0000;
+  --ok-bg: #dffbe6;
+  --ok-fg: #00401a;
+  --lead: #000000;
+  --chip-bg: #f0f0f0;
+  --chip-fg: #000000;
+  --info-bg: #fff4d6;
+  --info-fg: #4a3600;
+  --info-line: #000000;
+}
+:root[data-theme="contrast"] .card,
+:root[data-theme="contrast"] input,
+:root[data-theme="contrast"] select,
+:root[data-theme="contrast"] textarea { border-width: 2px; }
+
+/* Reduced motion. "auto" follows the OS (a user who explicitly wants full motion opts out);
+   an explicit "reduce" choice always near-instantly settles every animation/transition. base.css
+   ships no animations today, so this mainly future-proofs + complements community-graph.js (which
+   already gates its 3D view on the OS prefers-reduced-motion). */
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"]) *,
+  :root:not([data-motion="full"]) *::before,
+  :root:not([data-motion="full"]) *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+:root[data-motion="reduce"] *,
+:root[data-motion="reduce"] *::before,
+:root[data-motion="reduce"] *::after {
+  animation-duration: .001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: .001ms !important;
+  scroll-behavior: auto !important;
+}

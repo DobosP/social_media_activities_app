@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: social-activities 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-03 04:21+0300\n"
+"POT-Creation-Date: 2026-06-03 10:27+0300\n"
 "PO-Revision-Date: 2026-05-29 10:00+0300\n"
 "Last-Translator: Claude Code\n"
 "Language-Team: Romanian\n"
@@ -70,7 +70,6 @@ msgid "You removed a connection"
 msgstr "Ai eliminat o conexiune"
 
 #: apps/safety/services.py:530
-#| msgid "+ Create a group"
 msgid "You created a group"
 msgstr "Ai creat un grup"
 
@@ -83,7 +82,6 @@ msgid "You left a group"
 msgstr "Ai părăsit un grup"
 
 #: apps/safety/services.py:533
-#| msgid "You joined a group"
 msgid "You archived a group"
 msgstr "Ai arhivat un grup"
 
@@ -96,17 +94,14 @@ msgid "You accepted a guardian link"
 msgstr "Ai acceptat o legătură cu un tutore"
 
 #: apps/safety/services.py:536
-#| msgid "You uploaded a photo or file"
 msgid "You uploaded a photo"
 msgstr "Ai încărcat o fotografie"
 
 #: apps/safety/services.py:537
-#| msgid "You deleted a photo or file"
 msgid "You deleted a photo"
 msgstr "Ai șters o fotografie"
 
 #: apps/safety/services.py:538
-#| msgid "You left a conversation"
 msgid "You uploaded a file to a conversation"
 msgstr "Ai încărcat un fișier într-o conversație"
 
@@ -115,12 +110,10 @@ msgid "You deleted an attachment"
 msgstr "Ai șters un atașament"
 
 #: apps/safety/services.py:540
-#| msgid "You joined a conversation"
 msgid "You started a conversation"
 msgstr "Ai început o conversație"
 
 #: apps/safety/services.py:541
-#| msgid "You joined a conversation"
 msgid "You started a group conversation"
 msgstr "Ai început o conversație de grup"
 
@@ -1537,6 +1530,75 @@ msgid ""
 msgstr ""
 "Nicio conexiune încă. Mergi la o activitate la care participi și conectează-te cu persoanele de acolo,\n"
 "    sau caută pe cineva mai sus."
+
+#: apps/web/templates/web/display_preferences.html:3
+#: apps/web/templates/web/display_preferences.html:5
+msgid "Display settings"
+msgstr "Setări de afișare"
+
+#: apps/web/templates/web/display_preferences.html:6
+msgid ""
+"Choose how the site looks. Your choice is saved on this device only (a small"
+" functional cookie) and applies whether or not you're signed in. By default "
+"we follow your device's own light/dark and reduced-motion settings."
+msgstr ""
+"Alege cum arată site-ul. Alegerea ta este salvată doar pe acest dispozitiv "
+"(un mic cookie funcțional) și se aplică indiferent dacă ești autentificat "
+"sau nu. În mod implicit, urmăm setările luminos/întunecat și de reducere a "
+"mișcării ale dispozitivului tău."
+
+#: apps/web/templates/web/display_preferences.html:10
+msgid "Theme"
+msgstr "Temă"
+
+#: apps/web/templates/web/display_preferences.html:11
+#: apps/web/templates/web/display_preferences.html:26
+msgid "Match my device"
+msgstr "Potrivește dispozitivul meu"
+
+#: apps/web/templates/web/display_preferences.html:12
+msgid "Light"
+msgstr "Luminos"
+
+#: apps/web/templates/web/display_preferences.html:13
+msgid "Dark"
+msgstr "Întunecat"
+
+#: apps/web/templates/web/display_preferences.html:14
+msgid "High contrast"
+msgstr "Contrast ridicat"
+
+#: apps/web/templates/web/display_preferences.html:18
+msgid "Text size"
+msgstr "Mărimea textului"
+
+#: apps/web/templates/web/display_preferences.html:19
+msgid "Normal"
+msgstr "Normal"
+
+#: apps/web/templates/web/display_preferences.html:20
+msgid "Large"
+msgstr "Mare"
+
+#: apps/web/templates/web/display_preferences.html:21
+msgid "Larger"
+msgstr "Mai mare"
+
+#: apps/web/templates/web/display_preferences.html:25
+msgid "Motion"
+msgstr "Mișcare"
+
+#: apps/web/templates/web/display_preferences.html:27
+msgid "Reduce motion"
+msgstr "Redu mișcarea"
+
+#: apps/web/templates/web/display_preferences.html:28
+msgid "Full motion"
+msgstr "Mișcare completă"
+
+#: apps/web/templates/web/display_preferences.html:31
+msgid "Save display settings"
+msgstr "Salvează setările de afișare"
 
 #: apps/web/templates/web/donate.html:3
 msgid "Support us"
@@ -3680,6 +3742,11 @@ msgstr "Tutore legal"
 msgid "Send guardianship request"
 msgstr "Trimite cererea de tutelă"
 
+#: apps/web/views.py:2132
+#| msgid "Save display settings"
+msgid "Your display settings were saved."
+msgstr "Setările de afișare au fost salvate."
+
 #: templates/base.html:8
 msgid "Social Activities"
 msgstr "Activități sociale"
@@ -3747,6 +3814,10 @@ msgstr "Confidențialitate"
 #: templates/base.html:74
 msgid "Terms"
 msgstr "Termeni"
+
+#: templates/base.html:75
+msgid "Display"
+msgstr "Afișare"
 
 #~ msgid "You reported a message"
 #~ msgstr "Ai raportat un mesaj"

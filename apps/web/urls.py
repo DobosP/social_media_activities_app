@@ -126,6 +126,7 @@ urlpatterns = [
     path("users/<int:pk>/block/", views.block_user_view, name="block_user"),
     path("users/<int:pk>/unblock/", views.unblock_user_view, name="unblock_user"),
     # Transparency (W1-8) & GDPR self-service
+    path("display/", views.display_preferences, name="display_preferences"),
     path("privacy/", views.privacy, name="privacy"),
     path("terms/", views.terms, name="terms"),
     path("my-privacy/", views.my_privacy, name="my_privacy"),
