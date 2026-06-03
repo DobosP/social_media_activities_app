@@ -1935,6 +1935,59 @@ def report(request):
     )
 
 
+@login_required
+@require_POST
+def activity_unsafe(request, pk):
+    """F8: the one-tap "I feel unsafe" button on the safe-exit card. Files a real moderation report
+    against the activity and (for a CHILD) alerts the active guardians — see
+    safety.file_unsafe_report. Member-only and never the owner (mirrors the card's own gate), so it
+    can't be used as a drive-by report endpoint beyond the detailed /report/ slow path."""
+    activity = _visible_activity_or_404(request.user, pk)
+    membership = activity.memberships.filter(
+        user=request.user, state=Membership.State.MEMBER
+    ).first()
+    # Member, not the owner, and not a supervisory GUARDIAN seat (mirrors the card gate + the
+    # thread-write services' GUARDIAN exclusion — a guardian uses their own channels).
+    if (
+        membership is None
+        or activity.owner_id == request.user.id
+        or membership.role == Membership.Role.GUARDIAN
+    ):
+        messages.error(request, "That option isn't available here.")
+        return redirect("activity_detail", pk=pk)
+    try:
+        result = safety.file_unsafe_report(request.user, activity)
+    except safety.RateLimited:
+        # Stay reassuring even when rate-limited: a scared child must never get a scolding error.
+        messages.success(
+            request,
+            "We've got your earlier alert and a moderator is looking. If you're in danger right "
+            "now, tell a trusted adult or call your local emergency number.",
+        )
+        return redirect("activity_detail", pk=pk)
+    # Reassurance reflects exactly what happened: only claim a guardian was told when one actually
+    # was (file_unsafe_report alerts guardians only for a CHILD, and excludes blocked ones).
+    if result.repeat:
+        messages.success(
+            request,
+            "Thanks — we already have your alert and a moderator is looking. You can leave this "
+            "activity any time.",
+        )
+    elif result.guardians_alerted:
+        messages.success(
+            request,
+            "Thank you for telling us. A moderator has been alerted, and the grown-ups who look "
+            "after you have been told. You can leave this activity any time.",
+        )
+    else:
+        messages.success(
+            request,
+            "Thank you for telling us. A moderator has been alerted. You can leave this activity "
+            "any time.",
+        )
+    return redirect("activity_detail", pk=pk)
+
+
 def _safe_next(request, default: str) -> str:
     """Return the posted ``next`` target only if it points back at this site, else the
     given named-route default. Prevents an open redirect through an attacker-supplied

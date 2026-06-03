@@ -360,6 +360,15 @@ else:
 CHAT_MESSAGE_POLICY = env("CHAT_MESSAGE_POLICY", default="apps.chat.policy.BasicMessagePolicy")
 CHAT_MAX_LENGTH = env.int("CHAT_MAX_LENGTH", default=4000)
 # Per-user thread-post rate limit (fixed window). Defaults preserve the old chat limits.
+# F8 one-tap "I feel unsafe": this web path is otherwise unthrottled. Generous cap (idempotency
+# already dedups same-activity re-taps without burning the budget), purely an anti-abuse ceiling.
+UNSAFE_REPORT_RATE_LIMIT = env.int("UNSAFE_REPORT_RATE_LIMIT", default=12)
+UNSAFE_REPORT_RATE_WINDOW_SECONDS = env.int("UNSAFE_REPORT_RATE_WINDOW_SECONDS", default=3600)
+# A panic report stays idempotent while it's still being handled (OPEN/REVIEWING) or was filed
+# within this cooldown — so re-taps (and post-resolution mashing) never re-storm the guardians,
+# while a genuinely-recurring fear after the cooldown can still raise a fresh alert.
+UNSAFE_REPORT_COOLDOWN_SECONDS = env.int("UNSAFE_REPORT_COOLDOWN_SECONDS", default=300)
+
 THREAD_POST_RATE_LIMIT = env.int("THREAD_POST_RATE_LIMIT", default=30)
 THREAD_POST_RATE_WINDOW_SECONDS = env.int("THREAD_POST_RATE_WINDOW_SECONDS", default=60)
 # Reactions are cheaper than posts (a toggle, not content), so a looser per-user fixed window.
