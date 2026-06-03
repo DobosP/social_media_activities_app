@@ -55,7 +55,10 @@ class RegisterForm(forms.Form):
 
 
 class ActivityForm(forms.Form):
-    place = forms.ModelChoiceField(queryset=Place.objects.order_by("name"))
+    # The queryset is narrowed to public_places() in __init__ (F25): a still-pending/rejected
+    # user-proposed venue must never be offered, and a tampered POST carrying a pending place id
+    # must fail form validation. Start from .none() so the field is never accidentally open.
+    place = forms.ModelChoiceField(queryset=Place.objects.none())
     activity_type = forms.ModelChoiceField(
         queryset=ActivityType.objects.filter(is_active=True).order_by("name")
     )
@@ -93,6 +96,13 @@ class ActivityForm(forms.Form):
         label="Beginners welcome",
         help_text="Tick if first-timers are explicitly welcome.",
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from apps.places.services import public_places
+
+        # Only publicly-visible places (F25 chokepoint), ordered for the dropdown + the map picker.
+        self.fields["place"].queryset = public_places(Place.objects.order_by("name"))
 
     def clean(self):
         cleaned = super().clean()

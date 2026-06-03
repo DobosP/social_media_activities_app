@@ -103,7 +103,10 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
         actor = self._actor(request)
         try:
             activity = create_activity(actor, **serializer.validated_data)
-        except NotEligible as exc:
+        except SocialError as exc:
+            # Mirror the sibling mutators (partial_update/cancel/rsvp): any expected social-domain
+            # error — NotEligible OR InvalidState (e.g. a non-public/pending place via F25, or
+            # min_to_go>capacity) — is a clean 403, never an unhandled 500.
             raise PermissionDenied(str(exc)) from exc
         return Response(ActivitySerializer(activity).data, status=status.HTTP_201_CREATED)
 

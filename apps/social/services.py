@@ -215,6 +215,13 @@ def create_activity(
     if min_to_go is not None and capacity is not None and min_to_go > capacity:
         # An un-confirmable meetup (the minimum can never be reached within the cap) is nonsensical.
         raise InvalidState(_("Minimum to happen can't be more than the capacity."))
+    # F25 gate: an activity may only be organised at a PUBLICLY-visible place — never at a
+    # still-pending/rejected user-proposed venue. public_places() is the single visibility
+    # chokepoint, so this holds identically on the web form and the DRF surface.
+    from apps.places.services import public_places
+
+    if place is None or not public_places().filter(pk=place.pk).exists():
+        raise InvalidState(_("That place isn't available to organise an activity at yet."))
     activity = Activity.objects.create(
         owner=owner,
         place=place,
