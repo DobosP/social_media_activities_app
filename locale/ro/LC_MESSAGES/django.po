@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: social-activities 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-03 03:15+0300\n"
+"POT-Creation-Date: 2026-06-03 03:53+0300\n"
 "PO-Revision-Date: 2026-05-29 10:00+0300\n"
 "Last-Translator: Claude Code\n"
 "Language-Team: Romanian\n"
@@ -827,7 +827,6 @@ msgid "I feel unsafe &mdash; tell someone now"
 msgstr "Mă simt în nesiguranță &mdash; spune-i cuiva acum"
 
 #: apps/web/templates/web/activity_detail.html:155
-#| msgid "Reporting and appeals"
 msgid "Report with details"
 msgstr "Raportează cu detalii"
 
@@ -1698,6 +1697,7 @@ msgstr "vezi toate &rarr;"
 
 #: apps/web/templates/web/interests.html:3
 #: apps/web/templates/web/interests.html:5
+#: apps/web/templates/web/my_privacy.html:24
 msgid "Your interests"
 msgstr "Interesele tale"
 
@@ -1973,17 +1973,238 @@ msgstr "Nu ai încă nicio donație."
 msgid "Make one?"
 msgstr "Faci una?"
 
-#: apps/web/templates/web/notification_preferences.html:3
-#: apps/web/templates/web/notification_preferences.html:6
-#: apps/web/templates/web/notifications.html:11
-msgid "Notification settings"
-msgstr "Setări notificări"
+#: apps/web/templates/web/my_privacy.html:3
+#: apps/web/templates/web/my_privacy.html:5
+#: apps/web/templates/web/profile.html:79
+#| msgid "What they can see about you"
+msgid "What we know about you"
+msgstr "Ce știm despre tine"
 
+#: apps/web/templates/web/my_privacy.html:6
+msgid ""
+"Every kind of personal data we hold about you, in one place — with a link to"
+" change or remove each one. Only you can see this page."
+msgstr ""
+"Fiecare tip de date personale pe care le deținem despre tine, într-un singur"
+" loc — cu un link pentru a schimba sau șterge fiecare. Doar tu poți vedea "
+"această pagină."
+
+#: apps/web/templates/web/my_privacy.html:8
+#| msgid "Your wards"
+msgid "Your data"
+msgstr "Datele tale"
+
+#: apps/web/templates/web/my_privacy.html:12
+#: apps/web/templates/web/profile.html:61
+msgid "Age verification"
+msgstr "Verificarea vârstei"
+
+#: apps/web/templates/web/my_privacy.html:14
+#, python-format
+#| msgid "Total allocated so far: <strong>%(total)s EUR</strong>."
+msgid "We hold a proven age band: <strong>%(band)s</strong>."
+msgstr "Deținem o grupă de vârstă dovedită: <strong>%(band)s</strong>."
+
+#: apps/web/templates/web/my_privacy.html:15
+#, python-format
+msgid "Verified via %(provider)s."
+msgstr "Verificat prin %(provider)s."
+
+#: apps/web/templates/web/my_privacy.html:16
+msgid ""
+"We store an age band only — never your date of birth or identity documents."
+msgstr ""
+"Stocăm doar o grupă de vârstă — niciodată data nașterii sau documentele de "
+"identitate."
+
+#: apps/web/templates/web/my_privacy.html:18
+#| msgid "Your age is verified and you can participate."
+msgid "Your age isn't verified yet."
+msgstr "Vârsta ta nu este încă verificată."
+
+#: apps/web/templates/web/my_privacy.html:20
+#| msgid "Age verification"
+msgid "Manage age verification"
+msgstr "Gestionează verificarea vârstei"
+
+#: apps/web/templates/web/my_privacy.html:25
+#, python-format
+msgid "Activity types you've chosen: %(n)s."
+msgstr "Tipuri de activități alese: %(n)s."
+
+#: apps/web/templates/web/my_privacy.html:26
+msgid ""
+"Used only to suggest activities to you — never to profile or target you."
+msgstr ""
+"Folosite doar pentru a-ți sugera activități — niciodată pentru a te profila "
+"sau viza."
+
+#: apps/web/templates/web/my_privacy.html:27
+#| msgid "Pick your interests"
+msgid "Edit your interests"
+msgstr "Editează-ți interesele"
+
+#: apps/web/templates/web/my_privacy.html:31
+#| msgid "Access preferences"
+msgid "Access needs"
+msgstr "Nevoi de accesibilitate"
+
+#: apps/web/templates/web/my_privacy.html:33
+msgid "You've set access preferences we use to label matching places."
+msgstr ""
+"Ai setat preferințe de accesibilitate pe care le folosim pentru a marca "
+"locurile potrivite."
+
+#: apps/web/templates/web/my_privacy.html:35
+#| msgid "You haven't filed any reports."
+msgid "You haven't set any access preferences."
+msgstr "Nu ai setat nicio preferință de accesibilitate."
+
+#: apps/web/templates/web/my_privacy.html:37
+#| msgid "Matches your access needs"
+msgid "Edit access needs"
+msgstr "Editează nevoile de accesibilitate"
+
+#: apps/web/templates/web/my_privacy.html:41
 #: apps/web/templates/web/notification_preferences.html:5
 #: apps/web/templates/web/notifications.html:3
 #: apps/web/templates/web/notifications.html:5
 msgid "Notifications"
 msgstr "Notificări"
+
+#: apps/web/templates/web/my_privacy.html:43
+#, python-format
+msgid "You've muted: %(kinds)s."
+msgstr "Ai dezactivat: %(kinds)s."
+
+#: apps/web/templates/web/my_privacy.html:45
+#| msgid "You haven't filed any reports."
+msgid "You haven't muted any notifications."
+msgstr "Nu ai dezactivat nicio notificare."
+
+#: apps/web/templates/web/my_privacy.html:47
+msgid "Safety and legal notices can never be muted."
+msgstr ""
+"Notificările de siguranță și cele legale nu pot fi dezactivate niciodată."
+
+#: apps/web/templates/web/my_privacy.html:48
+#| msgid "Notifications"
+msgid "Manage notifications"
+msgstr "Gestionează notificările"
+
+#: apps/web/templates/web/my_privacy.html:52
+#: apps/web/templates/web/profile.html:78
+#: apps/web/templates/web/safety_record.html:3
+#: apps/web/templates/web/safety_record.html:5
+msgid "Your safety record"
+msgstr "Evidența dvs. de siguranță"
+
+#: apps/web/templates/web/my_privacy.html:53
+#, python-format
+msgid "Moderation decisions about you: %(d)s · Reports you've filed: %(r)s."
+msgstr ""
+"Decizii de moderare despre tine: %(d)s · Rapoarte trimise de tine: %(r)s."
+
+#: apps/web/templates/web/my_privacy.html:54
+#| msgid "Your safety record"
+msgid "View your safety record"
+msgstr "Vezi evidența ta de siguranță"
+
+#: apps/web/templates/web/my_privacy.html:58
+#| msgid "Your connections"
+msgid "Your donations"
+msgstr "Donațiile tale"
+
+#: apps/web/templates/web/my_privacy.html:59
+#, python-format
+#| msgid "Donations received"
+msgid "Donations on record: %(n)s."
+msgstr "Donații înregistrate: %(n)s."
+
+#: apps/web/templates/web/my_privacy.html:60
+msgid "We never store card or payment details."
+msgstr "Nu stocăm niciodată detalii despre card sau plată."
+
+#: apps/web/templates/web/my_privacy.html:61
+#| msgid "My donations"
+msgid "View your donations"
+msgstr "Vezi donațiile tale"
+
+#: apps/web/templates/web/my_privacy.html:66
+#| msgid "Guardians"
+msgid "Guardianship"
+msgstr "Tutelă"
+
+#: apps/web/templates/web/my_privacy.html:67
+#| msgid "You aren't a registered guardian of any account."
+msgid "A parent or guardian is linked to your account."
+msgstr "Un părinte sau tutore este legat de contul tău."
+
+#: apps/web/templates/web/my_privacy.html:68
+msgid "See what this link grants"
+msgstr "Vezi ce permite această legătură"
+
+#: apps/web/templates/web/my_privacy.html:74
+msgid "Take your data with you, or remove it"
+msgstr "Ia-ți datele cu tine sau șterge-le"
+
+#: apps/web/templates/web/my_privacy.html:76
+#: apps/web/templates/web/profile.html:102
+#: apps/web/templates/web/profile.html:104
+msgid "Download my data"
+msgstr "Descarcă-mi datele"
+
+#: apps/web/templates/web/my_privacy.html:77
+#: apps/web/templates/web/profile.html:108
+#: apps/web/templates/web/profile.html:114
+msgid "Delete my account"
+msgstr "Șterge contul meu"
+
+#: apps/web/templates/web/my_privacy.html:80
+#| msgid "What data we collect"
+msgid "What we never collect or do"
+msgstr "Ce nu colectăm și nu facem niciodată"
+
+#: apps/web/templates/web/my_privacy.html:82
+msgid ""
+"We never store your location — proximity uses your device's position only "
+"for the search you ask for, and is never saved."
+msgstr ""
+"Nu îți stocăm niciodată locația — proximitatea folosește poziția "
+"dispozitivului tău doar pentru căutarea pe care o ceri și nu este salvată "
+"niciodată."
+
+#: apps/web/templates/web/my_privacy.html:83
+msgid "We store an age band, never your date of birth."
+msgstr "Stocăm o grupă de vârstă, niciodată data nașterii."
+
+#: apps/web/templates/web/my_privacy.html:84
+msgid ""
+"No ads, no behavioural tracking, no profiling — we're funded by donations."
+msgstr ""
+"Fără reclame, fără urmărire comportamentală, fără profilare — suntem "
+"finanțați prin donații."
+
+#: apps/web/templates/web/my_privacy.html:85
+msgid ""
+"No public photo feeds — photos exist only privately inside an activity "
+"thread, and you get one profile picture at most."
+msgstr ""
+"Fără fluxuri publice de fotografii — fotografiile există doar privat în "
+"conversația unei activități, iar tu ai cel mult o poză de profil."
+
+#: apps/web/templates/web/my_privacy.html:86
+msgid ""
+"No reliability scores, attendance history, or vanity metrics about you."
+msgstr ""
+"Fără scoruri de fiabilitate, istoric de prezență sau metrici de vanitate "
+"despre tine."
+
+#: apps/web/templates/web/notification_preferences.html:3
+#: apps/web/templates/web/notification_preferences.html:6
+#: apps/web/templates/web/notifications.html:11
+msgid "Notification settings"
+msgstr "Setări notificări"
 
 #: apps/web/templates/web/notification_preferences.html:7
 msgid ""
@@ -2710,10 +2931,6 @@ msgstr ""
 "Nicio conexiune încă. <a href=\"%(connections_url)s\">Găsiți persoane pe "
 "care le-ați cunoscut</a>."
 
-#: apps/web/templates/web/profile.html:61
-msgid "Age verification"
-msgstr "Verificarea vârstei"
-
 #: apps/web/templates/web/profile.html:63
 msgid "Verified as:"
 msgstr "Verificat ca:"
@@ -2800,25 +3017,19 @@ msgstr ""
 msgid "Your wards"
 msgstr "Persoanele aflate în grija dvs."
 
-#: apps/web/templates/web/profile.html:78
-#: apps/web/templates/web/safety_record.html:3
-#: apps/web/templates/web/safety_record.html:5
-msgid "Your safety record"
-msgstr "Evidența dvs. de siguranță"
-
-#: apps/web/templates/web/profile.html:83
+#: apps/web/templates/web/profile.html:84
 msgid "Blocked users"
 msgstr "Utilizatori blocați"
 
-#: apps/web/templates/web/profile.html:84
+#: apps/web/templates/web/profile.html:85
 msgid "You and these people never see each other's activities."
 msgstr "Dvs. și aceste persoane nu vă vedeți niciodată activitățile reciproc."
 
-#: apps/web/templates/web/profile.html:90
+#: apps/web/templates/web/profile.html:91
 msgid "unblock"
 msgstr "deblochează"
 
-#: apps/web/templates/web/profile.html:97
+#: apps/web/templates/web/profile.html:98
 msgid ""
 "As an under-16, a parent or guardian must approve your account before you "
 "can join or organise activities."
@@ -2826,12 +3037,7 @@ msgstr ""
 "Întrucât ai sub 16 ani, un părinte sau tutore trebuie să aprobe contul tău "
 "înainte de a te putea alătura sau organiza activități."
 
-#: apps/web/templates/web/profile.html:101
 #: apps/web/templates/web/profile.html:103
-msgid "Download my data"
-msgstr "Descarcă-mi datele"
-
-#: apps/web/templates/web/profile.html:102
 msgid ""
 "Get a copy of all the personal data we hold about you, as a JSON file (GDPR "
 "right to data portability, Art. 20). No card or payment details are stored."
@@ -2840,12 +3046,7 @@ msgstr ""
 "ca fișier JSON (dreptul GDPR la portabilitatea datelor, Art. 20). Nu stocăm "
 "date despre card sau plată."
 
-#: apps/web/templates/web/profile.html:107
-#: apps/web/templates/web/profile.html:113
-msgid "Delete my account"
-msgstr "Șterge contul meu"
-
-#: apps/web/templates/web/profile.html:108
+#: apps/web/templates/web/profile.html:109
 #, python-format
 msgid ""
 "This permanently deletes your account and personal data (GDPR right to erasure,\n"
@@ -2854,7 +3055,7 @@ msgstr ""
 "Aceasta vă șterge definitiv contul și datele cu caracter personal (dreptul la ștergere conform GDPR,\n"
 "    Art. 17). Acțiunea nu poate fi anulată. Consultați <a href=\"%(privacy_url)s\">Politica de confidențialitate</a>."
 
-#: apps/web/templates/web/profile.html:111
+#: apps/web/templates/web/profile.html:112
 msgid ""
 "Permanently delete your account and personal data? This cannot be undone."
 msgstr ""

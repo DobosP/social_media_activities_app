@@ -2044,6 +2044,44 @@ def safety_record(request):
     )
 
 
+@login_required
+def my_privacy(request):
+    """F36: a single self-only "what we know about you" front door. It only re-renders already-
+    built, strictly self-scoped reads (band-only age provenance, muted-kind list, capped safety-
+    record counts, interest/donation counts) and deep-links each category to its existing control,
+    plus honest negative-space statements. No user_id param, no new data — it cannot widen exposure
+    beyond what those services already permit."""
+    from apps.donations.models import Donation
+
+    user = request.user
+    record = safety.safety_record_for(user)
+    muted_labels = sorted(
+        Notification.Kind(value).label
+        for value in notifications.get_muted_kinds(user)
+        if value in Notification.Kind.values
+    )
+    access = get_access_preference(user)
+    access_set = bool(
+        access
+        and (access.needs_step_free or access.needs_accessible_toilet or access.prefers_quiet)
+    )
+    return render(
+        request,
+        "web/my_privacy.html",
+        {
+            "provenance": assurance_provenance(user),
+            "access_set": access_set,
+            "muted_labels": muted_labels,
+            "interests_count": UserInterest.objects.filter(user=user).count(),
+            "donations_count": Donation.objects.filter(donor=user).count(),
+            # Counts mirror exactly what the linked /my-safety-record/ page shows (same cap).
+            "decisions_count": len(record["decisions"]),
+            "reports_count": len(record["reports"]),
+            **_nav_context(user),
+        },
+    )
+
+
 def privacy(request):
     return render(request, "web/privacy.html", _nav_context(request.user))
 
