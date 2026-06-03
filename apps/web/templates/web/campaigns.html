@@ -10,7 +10,7 @@
     {% if c.description %}<p>{{ c.description|linebreaks }}</p>{% endif %}
     <div role="progressbar" aria-valuenow="{{ c.percent }}" aria-valuemin="0" aria-valuemax="100"
          aria-label="{% blocktrans with raised=c.raised_cents|cents goal=c.goal_cents|cents %}raised {{ raised }} of {{ goal }} EUR goal{% endblocktrans %}"
-         style="background:#eef0ec;border-radius:6px;height:10px;overflow:hidden;margin:.4rem 0">
+         style="background:var(--chip-bg);border-radius:6px;height:10px;overflow:hidden;margin:.4rem 0">
       <div style="background:var(--accent);height:10px;width:{{ c.percent }}%"></div>
     </div>
     <p class="muted">{% blocktrans with raised=c.raised_cents|cents goal=c.goal_cents|cents %}Raised {{ raised }} of {{ goal }} EUR goal.{% endblocktrans %}</p>

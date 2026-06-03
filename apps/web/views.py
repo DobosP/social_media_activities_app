@@ -2097,6 +2097,45 @@ def my_privacy(request):
     )
 
 
+def display_preferences(request):
+    """F12: choose a display theme (auto/light/dark/high-contrast), text size, and motion. Stored in
+    FUNCTIONAL cookies that apply to everyone (no login, no per-user data); the display_preferences
+    context processor reads them back onto <html>. No-JS friendly (a plain form + submit)."""
+    from django.utils.translation import gettext
+
+    from apps.web.context_processors import (
+        MOTION_COOKIE,
+        MOTIONS,
+        TEXT_COOKIE,
+        TEXT_SIZES,
+        THEME_COOKIE,
+        THEMES,
+    )
+
+    if request.method == "POST":
+        resp = redirect("display_preferences")
+        one_year = 60 * 60 * 24 * 365
+        for cookie, allowed in (
+            (THEME_COOKIE, THEMES),
+            (TEXT_COOKIE, TEXT_SIZES),
+            (MOTION_COOKIE, MOTIONS),
+        ):
+            value = request.POST.get(cookie, "")
+            if value in allowed:  # ignore anything off the allowlist (no garbage cookies)
+                resp.set_cookie(
+                    cookie,
+                    value,
+                    max_age=one_year,
+                    samesite="Lax",
+                    secure=request.is_secure(),
+                )
+        messages.success(request, gettext("Your display settings were saved."))
+        return resp
+    # The current selections come from the context processor (display_theme/text/motion), so the
+    # template just marks the matching option — works for signed-in and signed-out visitors alike.
+    return render(request, "web/display_preferences.html", _nav_context(request.user))
+
+
 def privacy(request):
     return render(request, "web/privacy.html", _nav_context(request.user))
 

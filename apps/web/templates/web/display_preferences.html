@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Display settings" %}{% endblock %}
+{% block content %}
+<h1>{% trans "Display settings" %}</h1>
+<p class="muted">{% trans "Choose how the site looks. Your choice is saved on this device only (a small functional cookie) and applies whether or not you're signed in. By default we follow your device's own light/dark and reduced-motion settings." %}</p>
+
+<form method="post" action="{% url 'display_preferences' %}">{% csrf_token %}
+  <fieldset style="margin:.6rem 0;border:1px solid var(--line);border-radius:8px">
+    <legend><strong>{% trans "Theme" %}</strong></legend>
+    <label class="row"><input type="radio" name="display_theme" value="auto"{% if display_theme == 'auto' %} checked{% endif %}> {% trans "Match my device" %}</label>
+    <label class="row"><input type="radio" name="display_theme" value="light"{% if display_theme == 'light' %} checked{% endif %}> {% trans "Light" %}</label>
+    <label class="row"><input type="radio" name="display_theme" value="dark"{% if display_theme == 'dark' %} checked{% endif %}> {% trans "Dark" %}</label>
+    <label class="row"><input type="radio" name="display_theme" value="contrast"{% if display_theme == 'contrast' %} checked{% endif %}> {% trans "High contrast" %}</label>
+  </fieldset>
+
+  <fieldset style="margin:.6rem 0;border:1px solid var(--line);border-radius:8px">
+    <legend><strong>{% trans "Text size" %}</strong></legend>
+    <label class="row"><input type="radio" name="display_text" value="normal"{% if display_text == 'normal' %} checked{% endif %}> {% trans "Normal" %}</label>
+    <label class="row"><input type="radio" name="display_text" value="large"{% if display_text == 'large' %} checked{% endif %}> {% trans "Large" %}</label>
+    <label class="row"><input type="radio" name="display_text" value="larger"{% if display_text == 'larger' %} checked{% endif %}> {% trans "Larger" %}</label>
+  </fieldset>
+
+  <fieldset style="margin:.6rem 0;border:1px solid var(--line);border-radius:8px">
+    <legend><strong>{% trans "Motion" %}</strong></legend>
+    <label class="row"><input type="radio" name="display_motion" value="auto"{% if display_motion == 'auto' %} checked{% endif %}> {% trans "Match my device" %}</label>
+    <label class="row"><input type="radio" name="display_motion" value="reduce"{% if display_motion == 'reduce' %} checked{% endif %}> {% trans "Reduce motion" %}</label>
+    <label class="row"><input type="radio" name="display_motion" value="full"{% if display_motion == 'full' %} checked{% endif %}> {% trans "Full motion" %}</label>
+  </fieldset>
+
+  <button class="btn" type="submit">{% trans "Save display settings" %}</button>
+</form>
+{% endblock %}

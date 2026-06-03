@@ -35,7 +35,7 @@ def test_language_switcher_serves_romanian():
     assert "Locuri" in ro  # "Places"
     assert "Evenimente" in ro  # "Events"
     assert "Creează cont" in ro  # "Sign up"
-    assert '<html lang="ro">' in ro  # the dynamic lang attribute follows the active language
+    assert '<html lang="ro"' in ro  # the dynamic lang attribute follows the active language
 
 
 def test_connections_search_placeholder_is_not_broken_by_apostrophe():
@@ -56,4 +56,4 @@ def test_accept_language_header_negotiates_romanian():
     # No explicit switch needed: LocaleMiddleware negotiates from Accept-Language too.
     ro = Client().get("/login/", HTTP_ACCEPT_LANGUAGE="ro").content.decode()
     assert "Autentificare" in ro
-    assert '<html lang="ro">' in ro
+    assert '<html lang="ro"' in ro
