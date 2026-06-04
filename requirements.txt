@@ -7,6 +7,7 @@
 asgiref==3.11.1
     # via
     #   channels
+    #   channels-redis
     #   daphne
     #   django
 attrs==26.1.0
@@ -28,12 +29,18 @@ botocore==1.43.17
 cbor2==6.1.1
     # via autobahn
 certifi==2026.5.20
-    # via requests
+    # via
+    #   requests
+    #   sentry-sdk
 cffi==2.0.0
     # via
     #   autobahn
     #   cryptography
 channels==4.3.2
+    # via
+    #   -r requirements.in
+    #   channels-redis
+channels-redis==4.3.0
     # via -r requirements.in
 charset-normalizer==3.4.7
     # via requests
@@ -47,7 +54,7 @@ cryptography==48.0.0
     #   service-identity
 daphne==4.2.1
     # via -r requirements.in
-django==5.2.14
+django==5.2.15
     # via
     #   -r requirements.in
     #   channels
@@ -55,6 +62,7 @@ django==5.2.14
     #   djangorestframework
     #   djangorestframework-gis
     #   drf-spectacular
+    #   sentry-sdk
 django-environ==0.13.0
     # via -r requirements.in
 django-filter==25.2
@@ -96,7 +104,9 @@ jsonschema==4.26.0
 jsonschema-specifications==2025.9.1
     # via jsonschema
 msgpack==1.1.2
-    # via autobahn
+    # via
+    #   autobahn
+    #   channels-redis
 numpy==2.4.6
     # via pgvector
 packaging==26.2
@@ -131,6 +141,8 @@ python-dateutil==2.9.0.post0
     # via botocore
 pyyaml==6.0.3
     # via drf-spectacular
+redis==8.0.0
+    # via channels-redis
 referencing==0.37.0
     # via
     #   jsonschema
@@ -143,6 +155,8 @@ rpds-py==0.30.0
     #   referencing
 s3transfer==0.18.0
     # via boto3
+sentry-sdk[django]==2.61.1
+    # via -r requirements.in
 service-identity==24.2.0
     # via twisted
 six==1.17.0
@@ -167,6 +181,7 @@ urllib3==2.7.0
     # via
     #   botocore
     #   requests
+    #   sentry-sdk
 whitenoise==6.12.0
     # via -r requirements.in
 zope-interface==8.5

@@ -7,7 +7,7 @@
 #   - `pip-audit` must pass before every release.
 #   - Django is pinned to the 5.2 LTS line for the longest security-support window.
 
-Django>=5.2,<5.3
+Django>=5.2.15,<5.3
 djangorestframework>=3.17,<3.18
 djangorestframework-gis>=1.2
 django-filter>=25.2
