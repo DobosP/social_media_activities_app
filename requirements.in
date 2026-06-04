@@ -36,4 +36,4 @@ pgvector>=0.3
 # error tracking when SENTRY_DSN is set. Neither is imported unless configured, so dev/CI
 # run without them — recompile requirements.txt before enabling in production.
 channels-redis>=4.2
-sentry-sdk[django]>=2.0
+sentry-sdk[django]>=2.61.1
