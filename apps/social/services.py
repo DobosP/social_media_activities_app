@@ -556,8 +556,17 @@ def add_guardian(owner, activity, guardian) -> Membership:
 
 def _coorg_eligible(activity, user):
     """A current, same-cohort, non-GUARDIAN MEMBER who isn't the owner — the only kind of person who
-    can be made a co-organiser or handed ownership. Returns the Membership row or None."""
+    can be made a co-organiser or handed ownership. Returns the Membership row or None.
+
+    Re-checks the member's LIVE cohort + participation eligibility, not just the stale Membership
+    row: the activity cohort wall is otherwise enforced only at read time (visible_activities /
+    can_read_thread), so a member re-verified ADULT->minor after joining keeps a stale MEMBER row on
+    an (immutable-cohort) ADULT activity. Mirroring that read-time wall here makes the "adult-only,
+    same-cohort" promise structural — a cross-cohort or no-longer-eligible member can never be
+    promoted to organiser/owner (no adult<->minor organiser path via a downgraded seat)."""
     if user.id == activity.owner_id:
+        return None
+    if getattr(user, "cohort", None) != activity.cohort or not can_participate(user):
         return None
     return (
         current_members(activity).exclude(role=Membership.Role.GUARDIAN).filter(user=user).first()
@@ -575,6 +584,10 @@ def grant_co_organizer(owner, activity, member) -> Membership:
     from apps.notifications.services import notify
     from apps.safety.services import record_audit
 
+    # Lock the activity row and re-check the owner FK on the locked instance: the owner gate + the
+    # role write must serialize against any concurrent meta-power call (grant/revoke/transfer), so
+    # two in-flight requests can't leave split-brain role state (mirrors _maybe_confirm_meetup).
+    activity = Activity.objects.select_for_update().get(pk=activity.pk)
     if activity.owner_id != owner.id:
         raise NotAMember(_("Only the activity owner may grant co-organiser rights."))
     if activity.cohort != Cohort.ADULT:
@@ -611,6 +624,9 @@ def revoke_co_organizer(owner, activity, member) -> Membership:
     from apps.notifications.services import notify
     from apps.safety.services import record_audit
 
+    activity = Activity.objects.select_for_update().get(
+        pk=activity.pk
+    )  # serialize meta-power calls
     if activity.owner_id != owner.id:
         raise NotAMember(_("Only the activity owner may change co-organiser rights."))
     m = current_members(activity).filter(user=member, role=Membership.Role.CO_ORGANIZER).first()
@@ -642,6 +658,10 @@ def transfer_ownership(owner, activity, new_owner) -> Activity:
     from apps.notifications.services import notify
     from apps.safety.services import record_audit
 
+    # Lock + re-check on the committed row: this is the one service that denormalises a role across
+    # multiple rows (new owner -> OWNER, old owner -> MEMBER) and reassigns the owner FK, so two
+    # concurrent transfers must serialize — otherwise the loser leaves a second stale OWNER row.
+    activity = Activity.objects.select_for_update().get(pk=activity.pk)
     if activity.owner_id != owner.id:
         raise NotAMember(_("Only the current organiser may hand off the activity."))
     if activity.cohort != Cohort.ADULT:
