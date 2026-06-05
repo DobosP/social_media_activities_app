@@ -29,7 +29,7 @@
     {% trans "The organiser called it off &mdash; see your alerts for any details." %}{% endif %}</div>
 {% endif %}
 
-{% if is_owner and is_open %}
+{% if is_organizer and is_open %}
   <div class="card">
     <strong>{% trans "Organiser tools" %}</strong>
     <div class="row" style="gap:.5rem;margin-top:.4rem">
@@ -46,9 +46,37 @@
   </div>
 {% endif %}
 
+{% if can_manage_organizers %}
+  {# F22: owner-only. Co-organisers share the operational tools (edit/cancel/admit/announce) but
+     never these meta-powers — so a co-organiser can never lock the owner out. Adult cohort only. #}
+  <div class="card">
+    <strong>{% trans "Organisers" %}</strong>
+    <p class="muted" style="font-size:.8rem;margin:.2rem 0 .5rem">{% trans "A co-organiser can edit details, admit members, and post announcements. Hand the activity over to keep it going if you step away." %}</p>
+    <ul class="members">
+      {% for m in members %}{% if m.role != "owner" and m.role != "guardian" %}
+        <li>{{ m.user.display_name|default:m.user.username }}{% if m.role == "co_organizer" %} &middot; <span class="tag">{% trans "co-organiser" %}</span>{% endif %}
+          {% if m.role == "co_organizer" %}
+            <form method="post" action="{% url 'activity_revoke_coorg' activity.pk %}" class="inline">{% csrf_token %}
+              <input type="hidden" name="user_id" value="{{ m.user.id }}">
+              <button class="linkbtn" style="font-size:.8rem" type="submit">{% trans "Remove co-organiser" %}</button></form>
+          {% else %}
+            <form method="post" action="{% url 'activity_grant_coorg' activity.pk %}" class="inline">{% csrf_token %}
+              <input type="hidden" name="user_id" value="{{ m.user.id }}">
+              <button class="btn btn-sm" style="font-size:.8rem" type="submit">{% trans "Make co-organiser" %}</button></form>
+          {% endif %}
+          <form method="post" action="{% url 'activity_transfer_owner' activity.pk %}" class="inline"
+                onsubmit="return confirm('{% trans "Hand this activity over? They become the organiser and you become a regular member." %}');">{% csrf_token %}
+            <input type="hidden" name="user_id" value="{{ m.user.id }}">
+            <button class="linkbtn" style="font-size:.8rem" type="submit">{% trans "Hand over" %}</button></form>
+        </li>
+      {% endif %}{% endfor %}
+    </ul>
+  </div>
+{% endif %}
+
 {% if is_member %}
   <div class="card">
-    <strong>{% trans "You're a member" %}{% if is_owner %} {% trans "(owner)" %}{% endif %}.</strong>
+    <strong>{% trans "You're a member" %}{% if is_owner %} {% trans "(owner)" %}{% elif is_organizer %} {% trans "(co-organiser)" %}{% endif %}.</strong>
     {% if not is_owner %}
       <form method="post" action="{% url 'activity_leave' activity.pk %}" class="inline" style="float:right">{% csrf_token %}
         <button class="linkbtn" type="submit">{% trans "Leave" %}</button></form>
@@ -169,7 +197,7 @@
 
 <h2>{% trans "Members" %}</h2>
 <ul class="members">
-  {% for m in members %}<li>{{ m.user.display_name|default:m.user.username }}{% if m.role == "owner" %} &middot; {% trans "owner" %}{% elif m.role == "guardian" %} &middot; {% trans "guardian" %}{% endif %}{% if m.user.id != user.id %}
+  {% for m in members %}<li>{{ m.user.display_name|default:m.user.username }}{% if m.role == "owner" %} &middot; {% trans "owner" %}{% elif m.role == "co_organizer" %} &middot; {% trans "co-organiser" %}{% elif m.role == "guardian" %} &middot; {% trans "guardian" %}{% endif %}{% if m.user.id != user.id %}
     &middot; <a style="font-size:.75rem" href="{% url 'report' %}?type=user&id={{ m.user.id }}">{% trans "report" %}</a>
     {% if conn_enabled and m.role != "guardian" and m.user.id not in conn_related_ids %}
     <form method="post" action="{% url 'connection_request' %}" class="inline">{% csrf_token %}
@@ -197,7 +225,7 @@
   {% endif %}
   {# One conversation: pinned announcements on top, then the single chronological stream. #}
   <h2 id="messages">{% trans "Messages" %}</h2>
-  {% if is_owner %}
+  {% if is_organizer %}
     <form method="post" action="{% url 'activity_announce' activity.pk %}" class="stack" style="margin-bottom:.6rem">{% csrf_token %}
       <label>{% trans "Post an announcement" %} <span class="muted">{% trans "(pinned; notifies every member)" %}</span>
         <textarea name="body" rows="2" maxlength="4000" required

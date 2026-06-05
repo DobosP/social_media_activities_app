@@ -129,6 +129,7 @@ class Membership(models.Model):
 
     class Role(models.TextChoices):
         OWNER = "owner", "Owner"
+        CO_ORGANIZER = "co_organizer", "Co-organizer"  # F22: owner-granted, adult activities only
         MEMBER = "member", "Member"
         GUARDIAN = "guardian", "Guardian"  # accompanying parent/guardian (supervisory)
 

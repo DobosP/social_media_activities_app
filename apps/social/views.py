@@ -34,6 +34,7 @@ from .services import (
     confirm_place,
     create_activity,
     create_group,
+    grant_co_organizer,
     group_by_id,
     group_feed_activities,
     group_roster,
@@ -46,7 +47,9 @@ from .services import (
     post_to_thread,
     propose_place_with_venue,
     request_to_join,
+    revoke_co_organizer,
     set_attendance_intent,
+    transfer_ownership,
     update_activity,
     visible_activities,
     visible_groups,
@@ -193,6 +196,50 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
         except SocialError as exc:
             raise PermissionDenied(str(exc)) from exc
         return Response(MembershipSerializer(membership).data, status=status.HTTP_201_CREATED)
+
+    def _target_member(self, request):
+        """Resolve the User a co-organiser/transfer action targets from `user_id`. The service
+        layer enforces owner-only + adult-cohort + current-member; this only resolves the id."""
+        member = get_user_model().objects.filter(pk=request.data.get("user_id")).first()
+        if member is None:
+            raise ValidationError({"user_id": "No such user."})
+        return member
+
+    @action(detail=True, methods=["post"])
+    def grant_organizer(self, request, pk=None):
+        """F22: the owner grants a current adult member co-organiser rights. The actor is always
+        the authenticated user (never on_behalf_of) — granting an organiser power is the owner's
+        own act. Service enforces owner-only + ADULT-cohort + same-cohort current member."""
+        activity = self._activity_for(request.user, pk)
+        member = self._target_member(request)
+        try:
+            membership = grant_co_organizer(request.user, activity, member)
+        except SocialError as exc:
+            raise PermissionDenied(str(exc)) from exc
+        return Response(MembershipSerializer(membership).data)
+
+    @action(detail=True, methods=["post"])
+    def revoke_organizer(self, request, pk=None):
+        """F22: the owner removes a member's co-organiser rights (back to a plain member)."""
+        activity = self._activity_for(request.user, pk)
+        member = self._target_member(request)
+        try:
+            membership = revoke_co_organizer(request.user, activity, member)
+        except SocialError as exc:
+            raise PermissionDenied(str(exc)) from exc
+        return Response(MembershipSerializer(membership).data)
+
+    @action(detail=True, methods=["post"])
+    def transfer(self, request, pk=None):
+        """F22: the owner hands the activity over to a current adult member, who becomes the new
+        owner; the former owner stays on as a plain member."""
+        activity = self._activity_for(request.user, pk)
+        member = self._target_member(request)
+        try:
+            activity = transfer_ownership(request.user, activity, member)
+        except SocialError as exc:
+            raise PermissionDenied(str(exc)) from exc
+        return Response(ActivitySerializer(activity).data)
 
     @action(detail=False, methods=["get"])
     def mine(self, request):

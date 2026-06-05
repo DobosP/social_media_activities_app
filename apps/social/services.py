@@ -135,6 +135,22 @@ def voting_members(activity):
     return current_members(activity).exclude(role=Membership.Role.GUARDIAN)
 
 
+def is_organizer(user, activity) -> bool:
+    """F22: True if `user` may act as an organiser of `activity` — the owner, OR a current member
+    granted the CO_ORGANIZER role. Fail-closed (anonymous / non-member → False). This is the single
+    gate the operational owner-actions (cancel/edit/admit/announce) route through, so a co-organiser
+    inherits exactly those powers and nothing more (granting/revoking/transfer stay owner-only)."""
+    if not getattr(user, "id", None):
+        return False
+    if activity.owner_id == user.id:
+        return True
+    return activity.memberships.filter(
+        user=user,
+        state=Membership.State.MEMBER,
+        role=Membership.Role.CO_ORGANIZER,
+    ).exists()
+
+
 def thread_members(owner_obj):
     """Current MEMBER-state memberships of a thread owner — an Activity OR a Group. The single
     dispatcher the hardened thread gates (post_to_thread / can_read_thread / toggle_reaction /
@@ -319,8 +335,8 @@ def cancel_activity(owner, activity, *, reason: str = "") -> Activity:
     (so it leaves discovery/joining) and tells every current member, with the reason, so
     nobody travels to a meetup that isn't happening. Idempotent-safe: only an OPEN
     activity can be cancelled."""
-    if activity.owner_id != owner.id:
-        raise NotAMember(_("Only the activity owner may cancel it."))
+    if not is_organizer(owner, activity):
+        raise NotAMember(_("Only the activity organiser may cancel it."))
     if activity.status != Activity.Status.OPEN:
         raise InvalidState(_("Only an open activity can be cancelled."))
     activity.status = Activity.Status.CANCELLED
@@ -371,8 +387,8 @@ def update_activity(owner, activity, **changes) -> Activity:
     """Owner edits an OPEN, not-yet-started activity in place (preserving its roster,
     thread and vote history). Only ACTIVITY_EDITABLE_FIELDS are honoured; a material time
     change re-notifies members and supersedes the stale reminder."""
-    if activity.owner_id != owner.id:
-        raise NotAMember(_("Only the activity owner may edit it."))
+    if not is_organizer(owner, activity):
+        raise NotAMember(_("Only the activity organiser may edit it."))
     if activity.status != Activity.Status.OPEN:
         raise InvalidState(_("Only an open activity can be edited."))
     if activity.starts_at <= timezone.now():
@@ -495,10 +511,10 @@ def cast_vote(voter, membership: Membership, approve: bool) -> Membership:
 
 @transaction.atomic
 def owner_admit(owner, membership: Membership) -> Membership:
-    """Owner override: admit a requested member directly (if enabled for the activity)."""
+    """Organiser override: admit a requested member directly (if enabled for the activity)."""
     activity = membership.activity
-    if activity.owner_id != owner.id:
-        raise NotAMember(_("Only the activity owner may override."))
+    if not is_organizer(owner, activity):
+        raise NotAMember(_("Only the activity organiser may override."))
     if not activity.owner_can_override:
         raise InvalidState(_("Owner override is disabled for this activity."))
     if membership.state != Membership.State.REQUESTED:
@@ -538,7 +554,125 @@ def add_guardian(owner, activity, guardian) -> Membership:
     )
 
 
+def _coorg_eligible(activity, user):
+    """A current, same-cohort, non-GUARDIAN MEMBER who isn't the owner — the only kind of person who
+    can be made a co-organiser or handed ownership. Returns the Membership row or None."""
+    if user.id == activity.owner_id:
+        return None
+    return (
+        current_members(activity).exclude(role=Membership.Role.GUARDIAN).filter(user=user).first()
+    )
+
+
 @transaction.atomic
+def grant_co_organizer(owner, activity, member) -> Membership:
+    """F22: the OWNER grants a current member co-organiser rights. ADULT activities only — a child/
+    teen activity refuses peer organiser handoff entirely (no adult<->minor organiser path). A
+    co-organiser shares the operational owner-actions via is_organizer (cancel/edit/admit/announce)
+    but NOT the meta-powers — grant/revoke/transfer stay owner-only, so a co-organiser can never
+    lock the owner out."""
+    from apps.notifications.models import Notification
+    from apps.notifications.services import notify
+    from apps.safety.services import record_audit
+
+    if activity.owner_id != owner.id:
+        raise NotAMember(_("Only the activity owner may grant co-organiser rights."))
+    if activity.cohort != Cohort.ADULT:
+        raise InvalidState(_("Co-organisers are only available on adult activities."))
+    m = _coorg_eligible(activity, member)
+    if m is None:
+        raise NotAMember(_("A co-organiser must be a current member of this activity."))
+    if m.role != Membership.Role.CO_ORGANIZER:
+        m.role = Membership.Role.CO_ORGANIZER
+        m.save(update_fields=["role"])
+        record_audit(
+            "activity.co_organizer_granted", actor=owner, target=activity, member_ref=member.id
+        )
+        notify(
+            member,
+            Notification.Kind.ORGANIZER_ROLE,
+            str(_("You're now a co-organiser")),
+            body=str(
+                _(
+                    'You can now help run "%(title)s" — edit details, admit members, and post '
+                    "announcements."
+                )
+                % {"title": activity.title}
+            ),
+            url=f"/activities/{activity.id}/",
+        )
+    return m
+
+
+@transaction.atomic
+def revoke_co_organizer(owner, activity, member) -> Membership:
+    """F22: the OWNER removes a member's co-organiser rights (back to a plain member)."""
+    from apps.notifications.models import Notification
+    from apps.notifications.services import notify
+    from apps.safety.services import record_audit
+
+    if activity.owner_id != owner.id:
+        raise NotAMember(_("Only the activity owner may change co-organiser rights."))
+    m = current_members(activity).filter(user=member, role=Membership.Role.CO_ORGANIZER).first()
+    if m is None:
+        raise NotAMember(_("That member is not a co-organiser."))
+    m.role = Membership.Role.MEMBER
+    m.save(update_fields=["role"])
+    record_audit(
+        "activity.co_organizer_revoked", actor=owner, target=activity, member_ref=member.id
+    )
+    notify(
+        member,
+        Notification.Kind.ORGANIZER_ROLE,
+        str(_("Your co-organiser role was removed")),
+        body=str(_('You\'re still a member of "%(title)s".') % {"title": activity.title}),
+        url=f"/activities/{activity.id}/",
+    )
+    return m
+
+
+@transaction.atomic
+def transfer_ownership(owner, activity, new_owner) -> Activity:
+    """F22: the OWNER hands the activity over to a current member — so a thriving meetup survives
+    the organiser stepping down (and so an owner can leave before a GDPR erasure CASCADE-destroys
+    the thread). The new owner's membership becomes OWNER, the old owner stays on as a plain MEMBER,
+    and the Activity.owner FK + the denormalised roles are updated together. ADULT activities only;
+    never to a guardian."""
+    from apps.notifications.models import Notification
+    from apps.notifications.services import notify
+    from apps.safety.services import record_audit
+
+    if activity.owner_id != owner.id:
+        raise NotAMember(_("Only the current organiser may hand off the activity."))
+    if activity.cohort != Cohort.ADULT:
+        raise InvalidState(_("Ownership hand-off is only available on adult activities."))
+    target = _coorg_eligible(activity, new_owner)
+    if target is None:
+        raise NotAMember(_("You can only hand off to a current member of this activity."))
+    old = current_members(activity).filter(user=owner, role=Membership.Role.OWNER).first()
+    activity.owner = new_owner
+    activity.save(update_fields=["owner"])
+    target.role = Membership.Role.OWNER
+    target.save(update_fields=["role"])
+    if old is not None:  # demote the former owner to a plain member (they stepped down)
+        old.role = Membership.Role.MEMBER
+        old.save(update_fields=["role"])
+    record_audit(
+        "activity.ownership_transferred", actor=owner, target=activity, new_owner_ref=new_owner.id
+    )
+    notify(
+        new_owner,
+        Notification.Kind.ORGANIZER_ROLE,
+        str(_("You're now the organiser")),
+        body=str(
+            _('"%(title)s" was handed over to you — you can now fully manage it.')
+            % {"title": activity.title}
+        ),
+        url=f"/activities/{activity.id}/",
+    )
+    return activity
+
+
 @transaction.atomic
 def post_to_thread(
     author, activity, body: str, *, reply_to=None, allow_empty=False, ping=False
@@ -1022,7 +1156,7 @@ def post_announcement(owner, activity, body: str) -> Post:
     from apps.notifications.models import Notification
     from apps.safety.services import blocked_user_ids
 
-    if activity.owner_id != owner.id:
+    if not is_organizer(owner, activity):
         raise NotAMember(_("Only the organiser can post an announcement."))
     if not can_participate(owner):
         raise NotEligible(_("Posting requires verified, consented participation."))

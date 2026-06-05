@@ -40,6 +40,19 @@ urlpatterns = [
     path("activities/<int:pk>/edit/", views.activity_edit, name="activity_edit"),
     path("activities/<int:pk>/cancel/", views.activity_cancel, name="activity_cancel"),
     path("activities/<int:pk>/announce/", views.activity_announce, name="activity_announce"),
+    path(
+        "activities/<int:pk>/co-org/grant/", views.activity_grant_coorg, name="activity_grant_coorg"
+    ),
+    path(
+        "activities/<int:pk>/co-org/revoke/",
+        views.activity_revoke_coorg,
+        name="activity_revoke_coorg",
+    ),
+    path(
+        "activities/<int:pk>/transfer/",
+        views.activity_transfer_owner,
+        name="activity_transfer_owner",
+    ),
     path("activities/<int:pk>/rsvp/", views.activity_rsvp, name="activity_rsvp"),
     path("activities/<int:pk>/arrived/", views.activity_arrived, name="activity_arrived"),
     path("activities/<int:pk>/met/", views.activity_met, name="activity_met"),

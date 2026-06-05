@@ -20,6 +20,7 @@ class Notification(models.Model):
         CONNECTION_REQUEST = "connection_request", "Connection request"
         CONNECTION_ACCEPTED = "connection_accepted", "Connection accepted"
         MENTION = "mention", "Mention"
+        ORGANIZER_ROLE = "organizer_role", "Organizer role changed"
         MODERATION = "moderation", "Moderation notice"
         SYSTEM = "system", "System"
 
@@ -73,6 +74,10 @@ WHY_REASONS = {
     Notification.Kind.MENTION: (
         "Someone @mentioned you in an activity thread and chose to notify you "
         "(you can turn these off)."
+    ),
+    Notification.Kind.ORGANIZER_ROLE: (
+        "An organiser of an activity made you a co-organiser, removed that role, or "
+        "handed the activity over to you."
     ),
     Notification.Kind.MODERATION: (
         "A moderation decision affected your content or account (you cannot turn these off)."
