@@ -13,7 +13,9 @@ from datetime import timedelta
 import pytest
 from django.test import Client
 
+from apps.accounts.identity.base import AssuranceResult
 from apps.accounts.models import AgeBand
+from apps.accounts.services import apply_assurance
 from apps.notifications.models import Notification
 from apps.safety.models import AuditLog
 from apps.social import services as social
@@ -352,3 +354,69 @@ def test_api_non_owner_grant_is_forbidden(adult, adult2, place, activity_type, n
         format="json",
     )
     assert r.status_code == 403
+
+
+def test_api_non_numeric_user_id_is_400_not_500(adult, adult2, place, activity_type, now):
+    """A malformed user_id must degrade to a clean 400, never reach the ORM as an invalid literal
+    and surface as a 500 (the web surface already guards this with isdigit)."""
+    from rest_framework.test import APIClient
+
+    activity = _activity(adult, place, activity_type, now + timedelta(hours=2))
+    _member(activity, adult2)
+    client = APIClient()
+    client.force_authenticate(adult)
+    for verb in ("grant_organizer", "revoke_organizer", "transfer"):
+        r = client.post(
+            f"/api/social/activities/{activity.id}/{verb}/",
+            {"user_id": "not-a-number"},
+            format="json",
+        )
+        assert r.status_code == 400, (verb, r.status_code, r.content)
+
+
+# --- review fix: live-cohort re-check (no adult<->minor organiser path via a downgraded seat) ---
+
+
+def test_grant_and_transfer_reject_a_member_downgraded_to_a_minor_cohort(
+    adult, adult2, place, activity_type, now
+):
+    """The cohort wall is enforced at READ time, so a member re-verified ADULT->minor after joining
+    keeps a stale MEMBER row on the (immutable-cohort) ADULT activity. Promotion to organiser/owner
+    must re-check the LIVE cohort so a downgraded seat can never open an adult<->minor organiser."""
+    activity = _activity(adult, place, activity_type, now + timedelta(hours=2))
+    _member(activity, adult2)
+    apply_assurance(adult2, AssuranceResult(age_band=AgeBand.AGE_16_17, provider="dev"))
+    adult2.refresh_from_db()
+    assert adult2.cohort != activity.cohort  # now TEEN; the activity stays ADULT
+    with pytest.raises(NotAMember):
+        grant_co_organizer(adult, activity, adult2)
+    with pytest.raises(NotAMember):
+        transfer_ownership(adult, activity, adult2)
+
+
+# --- review fix: single-owner invariant under a stale-owner / concurrent transfer ----------------
+
+
+def test_transfer_keeps_one_owner_and_refuses_a_stale_owner_retry(
+    adult, adult2, place, activity_type, now
+):
+    """After a hand-off there must be exactly one OWNER membership, and the former owner — who still
+    holds a stale in-memory Activity (owner_id unchanged on the caller's object) — is re-checked
+    against the locked row, so a second transfer can't mint a split-brain second OWNER row."""
+    third = make_user("adult3b", AgeBand.ADULT)
+    activity = _activity(adult, place, activity_type, now + timedelta(hours=2))
+    _member(activity, adult2)
+    _member(activity, third)
+    transfer_ownership(
+        adult, activity, adult2
+    )  # `activity` object is now stale (owner_id == adult)
+    fresh = Activity.objects.get(pk=activity.pk)
+    assert fresh.memberships.filter(role=Membership.Role.OWNER).count() == 1
+    assert fresh.owner_id == adult2.id
+    # the former owner retries with the stale handle: the locked re-read refuses it
+    with pytest.raises(NotAMember):
+        transfer_ownership(adult, activity, third)
+    assert (
+        Activity.objects.get(pk=activity.pk).memberships.filter(role=Membership.Role.OWNER).count()
+        == 1
+    )

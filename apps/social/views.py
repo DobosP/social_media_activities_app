@@ -199,8 +199,11 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
 
     def _target_member(self, request):
         """Resolve the User a co-organiser/transfer action targets from `user_id`. The service
-        layer enforces owner-only + adult-cohort + current-member; this only resolves the id."""
-        member = get_user_model().objects.filter(pk=request.data.get("user_id")).first()
+        layer enforces owner-only + adult-cohort + current-member; this only resolves the id.
+        A missing or non-numeric id is a clean 400 (mirrors the web `_member_from_post` guard) —
+        without the isdigit gate it would reach the ORM as an invalid-literal and raise a 500."""
+        raw = str(request.data.get("user_id", ""))
+        member = get_user_model().objects.filter(pk=raw).first() if raw.isdigit() else None
         if member is None:
             raise ValidationError({"user_id": "No such user."})
         return member
