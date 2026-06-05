@@ -1009,6 +1009,10 @@ def activity_detail(request, pk):
     ]
 
     is_owner = activity.owner_id == user.id
+    # F22: a co-organiser shares the operational tools (edit/cancel/announce) via is_organizer;
+    # grant/revoke/transfer stay owner-only and are gated separately in the template.
+    is_organizer = social.is_organizer(user, activity)
+    can_manage_organizers = is_owner and activity.cohort == Cohort.ADULT
     # Communities this activity belongs to (its area x type/category), as a discovery affordance.
     from apps.communities.services import communities_for_activity
 
@@ -1044,6 +1048,8 @@ def activity_detail(request, pk):
             "members": members,
             "is_member": is_member,
             "is_owner": is_owner,
+            "is_organizer": is_organizer,
+            "can_manage_organizers": can_manage_organizers,
             "activity_communities": activity_communities,
             "conn_enabled": conn_enabled,
             "conn_related_ids": conn_related_ids,
@@ -1147,7 +1153,7 @@ def activity_create(request):
 def activity_edit(request, pk):
     """Owner edits an OPEN, not-yet-started activity (F2). Place/type are not editable."""
     activity = _visible_activity_or_404(request.user, pk)
-    if activity.owner_id != request.user.id:
+    if not social.is_organizer(request.user, activity):  # F22: owner OR co-organiser
         messages.error(request, "Only the organiser can edit this activity.")
         return redirect("activity_detail", pk=pk)
     if request.method == "POST":
@@ -1210,6 +1216,65 @@ def activity_announce(request, pk):
             messages.success(request, "Announcement posted - members notified.")
         except social.SocialError as exc:
             messages.error(request, _msg(exc))
+    return redirect("activity_detail", pk=pk)
+
+
+def _member_from_post(request):
+    """Resolve a target member User from a posted integer user_id, None-safe (a non-numeric id
+    never reaches the ORM as an invalid-literal 500)."""
+    uid = request.POST.get("user_id", "")
+    return User.objects.filter(pk=uid).first() if uid.isdigit() else None
+
+
+@login_required
+@require_POST
+def activity_grant_coorg(request, pk):
+    """F22: the owner grants a current member co-organiser rights (the service enforces owner-only +
+    adult-cohort-only + same-cohort-member)."""
+    activity = _visible_activity_or_404(request.user, pk)
+    member = _member_from_post(request)
+    if member is None:
+        messages.error(request, "Pick a member to make a co-organiser.")
+        return redirect("activity_detail", pk=pk)
+    try:
+        social.grant_co_organizer(request.user, activity, member)
+        messages.success(request, "Co-organiser added.")
+    except social.SocialError as exc:
+        messages.error(request, _msg(exc))
+    return redirect("activity_detail", pk=pk)
+
+
+@login_required
+@require_POST
+def activity_revoke_coorg(request, pk):
+    """F22: the owner removes a member's co-organiser rights."""
+    activity = _visible_activity_or_404(request.user, pk)
+    member = _member_from_post(request)
+    if member is None:
+        messages.error(request, "Pick a co-organiser to remove.")
+        return redirect("activity_detail", pk=pk)
+    try:
+        social.revoke_co_organizer(request.user, activity, member)
+        messages.success(request, "Co-organiser removed.")
+    except social.SocialError as exc:
+        messages.error(request, _msg(exc))
+    return redirect("activity_detail", pk=pk)
+
+
+@login_required
+@require_POST
+def activity_transfer_owner(request, pk):
+    """F22: the owner hands the activity over to a current member."""
+    activity = _visible_activity_or_404(request.user, pk)
+    member = _member_from_post(request)
+    if member is None:
+        messages.error(request, "Pick a member to hand the activity to.")
+        return redirect("activity_detail", pk=pk)
+    try:
+        social.transfer_ownership(request.user, activity, member)
+        messages.success(request, "You handed this activity over - they're now the organiser.")
+    except social.SocialError as exc:
+        messages.error(request, _msg(exc))
     return redirect("activity_detail", pk=pk)
 
 
