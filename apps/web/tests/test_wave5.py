@@ -127,6 +127,64 @@ def test_recommendation_reason_matches_declared_interest():
     assert match.rec_reason == "matches your interest in Running"
 
 
+# --- F5: honest proximity / access reason suffixes (request-only coords) ---------------
+
+
+def test_recommendation_reason_near_you():
+    owner, viewer = _user("f5no"), _user("f5nv")
+    atype = _type(slug="w5-running", name="Running")
+    set_interests(viewer, [atype.slug])
+    a = _activity(owner, atype)  # place is at 23.6,46.77
+    recommended = _client(viewer).get("/?near_lon=23.6&near_lat=46.77").context["recommended"]
+    match = next(r for r in recommended if r.id == a.id)
+    assert match.rec_reason.endswith(" · near you")
+
+
+def test_recommendation_reason_access_needs():
+    from apps.places.services import set_access_preference
+
+    owner, viewer = _user("f5ao"), _user("f5av")
+    atype = _type(slug="w5-running", name="Running")
+    set_interests(viewer, [atype.slug])
+    set_access_preference(viewer, needs_step_free=True)
+    place = Place.objects.create(
+        name="Court",
+        location=Point(23.6, 46.77, srid=4326),
+        source=Place.Source.OSM,
+        raw_tags={"wheelchair": "yes"},
+    )
+    a = create_activity(
+        owner,
+        place=place,
+        activity_type=atype,
+        title="Run",
+        starts_at=timezone.now() + timedelta(days=1),
+    )
+    recommended = _client(viewer).get("/?near_lon=23.6&near_lat=46.77").context["recommended"]
+    match = next(r for r in recommended if r.id == a.id)
+    assert " · matches your access needs" in match.rec_reason
+
+
+def test_recommendation_reason_uncategorised_match_gets_base_and_suffix():
+    owner, viewer = _user("f5uo"), _user("f5uv")
+    set_interests(viewer, [_type(slug="w5-running", name="Running").slug])  # vector signal
+    other = _type(slug="w5-chess", name="Chess")  # same category, NOT declared
+    a = _activity(owner, other)
+    recommended = _client(viewer).get("/?near_lon=23.6&near_lat=46.77").context["recommended"]
+    match = next(r for r in recommended if r.id == a.id)
+    assert "match" in match.rec_reason and match.rec_reason.endswith(" · near you")
+
+
+def test_recommendation_reason_no_coords_no_suffix():
+    owner, viewer = _user("f5xo"), _user("f5xv")
+    atype = _type(slug="w5-running", name="Running")
+    set_interests(viewer, [atype.slug])
+    a = _activity(owner, atype)
+    recommended = _client(viewer).get("/").context["recommended"]  # no coords
+    match = next(r for r in recommended if r.id == a.id)
+    assert match.rec_reason == "matches your interest in Running"  # no suffix without coordinates
+
+
 # --- F40: prefill from an event --------------------------------------------------------
 
 

@@ -608,11 +608,23 @@ def home(request):
     if not request.user.is_authenticated:
         return render(request, "web/landing.html")
     user = request.user
-    recommended = recs.recommend_activities(user, limit=8)
-    # F17: an HONEST reason per card, computed from the viewer's OWN declared interests (one
-    # query, no per-card N+1). "matches your interest in X" is emitted only when the activity's
-    # type is actually in that set; cold-start (no distance) is labelled "soonest first"; an
-    # uncategorised similarity keeps the genuine "% match".
+    from apps.discovery.proximity import parse_point
+
+    # F5: request-only proximity. Used to re-rank the recommended strip toward reachable venues,
+    # then discarded — never stored. Radius defaults to the discovery API's 10 km when a point is
+    # given (recommend_activities needs BOTH a point and a radius to apply the hard distance cut).
+    near_point = parse_point(request.GET)
+    radius_m = None
+    if near_point is not None:
+        raw_radius = request.GET.get("radius_m")
+        try:
+            radius_m = float(raw_radius) if raw_radius else 10000.0
+        except (TypeError, ValueError):
+            radius_m = 10000.0
+    recommended = recs.recommend_activities(user, limit=8, near_point=near_point, radius_m=radius_m)
+    # F17: an HONEST reason per card from the viewer's OWN declared interests (one query, no N+1):
+    # "matches your interest in X" when the type is in that set, else the genuine "% match"; cold
+    # start is "soonest first". F5 appends truthful "· near you" / "· matches your access needs".
     interest_names = dict(
         UserInterest.objects.filter(user=user).values_list(
             "activity_type__slug", "activity_type__name"
@@ -620,12 +632,20 @@ def home(request):
     )
     for a in recommended:
         distance = getattr(a, "rec_distance", None)
-        if distance is not None:
-            a.match_pct = max(0, min(100, round((1 - float(distance)) * 100)))
-        if distance is None:  # `is None`, never falsy — a perfect match is distance 0.0
+        if distance is None:  # cold start — no vector signal (never a perfect-match 0.0)
             a.rec_reason = "soonest first"
-        elif a.activity_type.slug in interest_names:
+            continue
+        a.match_pct = max(0, min(100, round((1 - float(distance)) * 100)))
+        if a.activity_type.slug in interest_names:
             a.rec_reason = f"matches your interest in {interest_names[a.activity_type.slug]}"
+        else:
+            a.rec_reason = (
+                f"{a.match_pct}% match"  # base for an uncategorised scored match (F17 gap)
+            )
+        if getattr(a, "rec_near", False):
+            a.rec_reason += " · near you"
+        if getattr(a, "rec_access_match", False):
+            a.rec_reason += " · matches your access needs"
     beginners_only = request.GET.get("beginners") == "true"
     upcoming_qs = (
         social.visible_activities(user)
