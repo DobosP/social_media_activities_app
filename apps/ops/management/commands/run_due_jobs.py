@@ -12,6 +12,7 @@ It fans out to the existing per-app commands rather than re-implementing their l
   * ``generate_communities``   — re-materialize the per-cohort community discovery labels.
   * ``reverify_sweep``         — nudge/evict minors on a stale age proof (active expiry).
   * ``spawn_due_series``       — spawn the next instance of each due recurring activity series.
+  * ``match_saved_searches``   — alert savers when a new activity matches a saved search.
 
 Each job is isolated: a failure in one is reported but does not abort the rest, so a
 single broken job never blocks the others on a shared cron tick. Exit status is non-zero
@@ -32,6 +33,7 @@ DUE_JOBS = (
     ("generate_communities", {}),
     ("reverify_sweep", {}),
     ("spawn_due_series", {}),
+    ("match_saved_searches", {}),
 )
 
 

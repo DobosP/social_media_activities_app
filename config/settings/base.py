@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "apps.recommendations",
     "apps.connections",
     "apps.communities",
+    "apps.saved_searches",
     "apps.web",
 ]
 
@@ -172,6 +173,15 @@ REVERIFY_SWEEP_BATCH = env.int("REVERIFY_SWEEP_BATCH", default=1000)
 # clock-skew / backlog event above this is capped rather than mass-creating activities in one run).
 SERIES_SPAWN_LEAD_DAYS = env.int("SERIES_SPAWN_LEAD_DAYS", default=14)
 SERIES_SPAWN_BATCH = env.int("SERIES_SPAWN_BATCH", default=500)
+
+# F3 saved-search alerts: anti-abuse on creation (rate + hard cap per user), a per-tick match batch
+# cap, and a per-saver notify cap so one viral activity can never flood a single user.
+SAVED_SEARCH_RATE_LIMIT = env.int("SAVED_SEARCH_RATE_LIMIT", default=20)
+SAVED_SEARCH_RATE_WINDOW_SECONDS = env.int("SAVED_SEARCH_RATE_WINDOW_SECONDS", default=3600)
+SAVED_SEARCH_MAX_PER_USER = env.int("SAVED_SEARCH_MAX_PER_USER", default=20)
+SAVED_SEARCH_MATCH_BATCH = env.int("SAVED_SEARCH_MATCH_BATCH", default=1000)
+SAVED_SEARCH_NOTIFY_RATE_LIMIT = env.int("SAVED_SEARCH_NOTIFY_RATE_LIMIT", default=50)
+SAVED_SEARCH_NOTIFY_WINDOW_SECONDS = env.int("SAVED_SEARCH_NOTIFY_WINDOW_SECONDS", default=86400)
 
 # Guardianship link invites (verified-adult → minor, mutually confirmed). How long an
 # unaccepted invite stays valid, and anti-abuse limits on issuing invites.

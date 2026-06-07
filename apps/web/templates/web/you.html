@@ -24,6 +24,7 @@
       <a href="{% url 'notifications' %}">{% trans "Alerts" %}{% if unread_notifications %} <span class="pill">{{ unread_notifications }}</span>{% endif %}</a>
       <a href="{% url 'messages' %}">{% trans "Messages" %}</a>
       {% if connections_enabled %}<a href="{% url 'connections' %}">{% trans "Connections" %}</a>{% endif %}
+      <a href="{% url 'saved_searches' %}">{% trans "Saved searches" %}</a>
       <a href="{% url 'notification_preferences' %}">{% trans "Notification settings" %}</a>
     </div>
   </div>

@@ -24,6 +24,7 @@ urlpatterns = [
     path("api/recommendations/", include("apps.recommendations.urls")),
     path("api/connections/", include("apps.connections.urls")),
     path("api/communities/", include("apps.communities.urls")),
+    path("api/saved-searches/", include("apps.saved_searches.urls")),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="docs"),
     # Language switcher (P6/IS-7): set_language persists the choice (cookie/session) and
