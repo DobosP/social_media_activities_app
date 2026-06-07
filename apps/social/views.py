@@ -19,6 +19,8 @@ from .serializers import (
     PlaceProposalSerializer,
     PostSerializer,
     ProposePlaceSerializer,
+    SeriesCreateSerializer,
+    SeriesSerializer,
 )
 from .services import (
     DuplicatePlace,
@@ -34,6 +36,8 @@ from .services import (
     confirm_place,
     create_activity,
     create_group,
+    create_series,
+    end_series,
     grant_co_organizer,
     group_by_id,
     group_feed_activities,
@@ -43,16 +47,19 @@ from .services import (
     leave_group,
     mark_arrived,
     owner_admit,
+    pause_series,
     pending_proposals_for,
     post_to_thread,
     propose_place_with_venue,
     request_to_join,
+    resume_series,
     revoke_co_organizer,
     set_attendance_intent,
     transfer_ownership,
     update_activity,
     visible_activities,
     visible_groups,
+    visible_series,
     with_counts,
 )
 
@@ -388,6 +395,61 @@ class GroupViewSet(viewsets.ViewSet):
         limit = getattr(settings, "COMMUNITY_ACTIVITIES_PAGE_SIZE", 100)
         acts = group_feed_activities(group, request.user)[:limit]
         return Response(ActivityCardSerializer(acts, many=True).data)
+
+
+class SeriesViewSet(viewsets.ViewSet):
+    """Recurring activity series (F4). Owner-management templates, NOT meetups: authenticated-only
+    (NEVER AllowAny), and every read routes through services.visible_series(request.user) — there is
+    deliberately NO class-level ``queryset``, so a series can't be retrieved by id-guessing. The
+    serializer exposes no roster / member count / instance count (a series is not a roster)."""
+
+    permission_classes = [IsAuthenticated]
+    lookup_value_regex = r"[0-9]+"
+
+    def _get(self, request, pk):
+        series = visible_series(request.user).filter(pk=pk).first()
+        if series is None:
+            raise NotFound("No such series.")
+        return series
+
+    def list(self, request):
+        return Response(SeriesSerializer(visible_series(request.user), many=True).data)
+
+    def retrieve(self, request, pk=None):
+        return Response(SeriesSerializer(self._get(request, pk)).data)
+
+    def create(self, request):
+        serializer = SeriesCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            series = create_series(request.user, **serializer.validated_data)
+        except NotEligible as exc:
+            raise PermissionDenied(str(exc)) from exc
+        except SocialError as exc:
+            raise ValidationError(str(exc)) from exc
+        return Response(SeriesSerializer(series).data, status=status.HTTP_201_CREATED)
+
+    def _transition(self, request, pk, fn):
+        series = self._get(request, pk)
+        try:
+            fn(request.user, series)
+        except (NotAMember, NotEligible) as exc:
+            raise PermissionDenied(str(exc)) from exc
+        except InvalidState as exc:
+            raise ValidationError(str(exc)) from exc
+        return Response(SeriesSerializer(series).data)
+
+    @action(detail=True, methods=["post"])
+    def pause(self, request, pk=None):
+        return self._transition(request, pk, pause_series)
+
+    @action(detail=True, methods=["post"])
+    def resume(self, request, pk=None):
+        return self._transition(request, pk, resume_series)
+
+    @action(detail=True, methods=["post"])
+    def end(self, request, pk=None):
+        return self._transition(request, pk, end_series)
 
 
 class MembershipViewSet(viewsets.ReadOnlyModelViewSet):

@@ -167,6 +167,12 @@ ALLOW_MINOR_ONBOARDING = env.bool("ALLOW_MINOR_ONBOARDING", default=True)
 REVERIFY_REMINDER_DAYS = env.int("REVERIFY_REMINDER_DAYS", default=14)
 REVERIFY_SWEEP_BATCH = env.int("REVERIFY_SWEEP_BATCH", default=1000)
 
+# F4 recurring activity series: how many days ahead the nightly spawn job materialises the next
+# instance (so members can discover/join before it starts), and a hard per-tick cap on spawns (a
+# clock-skew / backlog event above this is capped rather than mass-creating activities in one run).
+SERIES_SPAWN_LEAD_DAYS = env.int("SERIES_SPAWN_LEAD_DAYS", default=14)
+SERIES_SPAWN_BATCH = env.int("SERIES_SPAWN_BATCH", default=500)
+
 # Guardianship link invites (verified-adult → minor, mutually confirmed). How long an
 # unaccepted invite stays valid, and anti-abuse limits on issuing invites.
 GUARDIAN_INVITE_TTL_DAYS = env.int("GUARDIAN_INVITE_TTL_DAYS", default=7)

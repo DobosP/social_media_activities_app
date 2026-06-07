@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Your recurring series" %}{% endblock %}
+{% block content %}
+<h1>{% trans "Your recurring series" %}</h1>
+<p class="muted">{% trans "Repeating meetups you've set up. Each one auto-schedules its next instance before it starts; every instance needs a fresh join." %}</p>
+<p><a class="btn" href="{% url 'series_create' %}">{% trans "New recurring series" %}</a></p>
+{% for s in series %}
+  <div class="card">
+    <h3><a href="{% url 'series_detail' s.pk %}">{{ s.title }}</a></h3>
+    <div class="cluster">
+      <span class="tag">{{ s.activity_type.name }}</span>
+      <span class="tag">{{ s.get_cadence_display }}</span>
+      <span class="tag">{{ s.get_status_display }}</span>
+    </div>
+    <p class="muted">{{ s.place.name }}{% if s.status == 'active' %} &middot; {% blocktrans with when=s.next_starts_at|date:"j M, H:i" %}next around {{ when }}{% endblocktrans %}{% endif %}</p>
+  </div>
+{% empty %}
+  <p class="muted">{% trans "You haven't set up any recurring series yet." %} <a href="{% url 'series_create' %}">{% trans "Create one?" %}</a></p>
+{% endfor %}
+{% endblock %}

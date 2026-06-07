@@ -36,6 +36,13 @@ urlpatterns = [
     # Activities
     path("activities/", views.activity_list, name="activity_list"),
     path("activities/new/", views.activity_create, name="activity_create"),
+    # F4: recurring activity series (owner-managed templates)
+    path("activities/series/", views.series_list, name="series_list"),
+    path("activities/series/new/", views.series_create, name="series_create"),
+    path("activities/series/<int:pk>/", views.series_detail, name="series_detail"),
+    path("activities/series/<int:pk>/pause/", views.series_pause, name="series_pause"),
+    path("activities/series/<int:pk>/resume/", views.series_resume, name="series_resume"),
+    path("activities/series/<int:pk>/end/", views.series_end, name="series_end"),
     path("activities/<int:pk>/", views.activity_detail, name="activity_detail"),
     path("activities/<int:pk>/edit/", views.activity_edit, name="activity_edit"),
     path("activities/<int:pk>/cancel/", views.activity_cancel, name="activity_cancel"),

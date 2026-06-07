@@ -3,6 +3,8 @@ user-place quorum. Views and admin go through these functions so the safety
 invariants (cohort isolation, verified-and-consented participation) live in one place.
 """
 
+import calendar
+import logging
 import re
 from datetime import timedelta
 
@@ -19,6 +21,7 @@ from .models import (
     DEFAULT_JOIN_THRESHOLD,
     DEFAULT_PLACE_QUORUM,
     Activity,
+    ActivitySeries,
     Group,
     GroupMembership,
     JoinVote,
@@ -28,6 +31,8 @@ from .models import (
     Thread,
     UserPlaceProposal,
 )
+
+logger = logging.getLogger(__name__)
 
 # F3: self-declared arrival ping is only accepted around the start time, and is cleared a
 # few hours after start so it never becomes a standing presence record. Overridable via
@@ -268,6 +273,301 @@ def create_activity(
     )
     Thread.objects.create(activity=activity)
     return activity
+
+
+# --- F4: recurring activity series ---------------------------------------------------
+# An organiser defines a repeating meetup once; spawn_due_series materialises ONLY the next
+# single Activity through create_activity (so every cohort/consent/blocking gate re-runs per
+# instance). A series is never a roster or an attendance rollup — each instance needs a fresh
+# per-member join. place/activity_type/cohort are immutable and re-asserted at spawn.
+
+
+def _add_month(dt, anchor_day=None):
+    """One calendar month later, clamping the day to the target month's length (e.g. Jan 31 ->
+    Feb 28). ``anchor_day`` (the series' intended day-of-month) is clamped fresh each month, so a
+    "last day" series recovers the full day in longer months (Feb 28 -> Mar 31) instead of decaying
+    to the 28th forever. Operates on the value as-is — the caller handles timezone."""
+    target_day = anchor_day or dt.day
+    month = dt.month + 1
+    year = dt.year
+    if month > 12:
+        month = 1
+        year += 1
+    day = min(target_day, calendar.monthrange(year, month)[1])
+    return dt.replace(year=year, month=month, day=day)
+
+
+def _advance_slot(starts_at, cadence, anchor_day=None):
+    """The next occurrence after starts_at for the given cadence (next-instance-only; no rrule).
+    The arithmetic is done on the LOCAL wall-clock and re-localised, so a meetup keeps its local
+    start time across a DST transition (stays 18:00, not 17:00/19:00 in the launch city)."""
+    tz = timezone.get_current_timezone()
+    naive = timezone.localtime(starts_at, tz).replace(tzinfo=None)
+    if cadence == ActivitySeries.Cadence.WEEKLY:
+        naive = naive + timedelta(weeks=1)
+    elif cadence == ActivitySeries.Cadence.BIWEEKLY:
+        naive = naive + timedelta(weeks=2)
+    elif cadence == ActivitySeries.Cadence.MONTHLY:
+        naive = _add_month(naive, anchor_day)
+    else:
+        raise InvalidState(_("Invalid cadence."))
+    return timezone.make_aware(naive, tz)
+
+
+@transaction.atomic
+def create_series(
+    owner,
+    *,
+    place,
+    activity_type,
+    title,
+    cadence,
+    first_starts_at,
+    ends_at=None,
+    description="",
+    join_threshold=None,
+    capacity=None,
+    min_to_go=None,
+    guardian_accompanied=False,
+    meeting_point="",
+    what_to_bring="",
+    organizer_note="",
+    cost_band=Activity.CostBand.UNSPECIFIED,
+    difficulty=Activity.Difficulty.UNSPECIFIED,
+    accessibility_notes="",
+    beginners_welcome=False,
+) -> ActivitySeries:
+    """Create a recurring-activity template. Mirrors create_activity's gates so a series can
+    never define a meetup the owner couldn't create one-off. cohort is pinned from the owner."""
+    if not can_create_activity(owner):
+        raise NotEligible(
+            _("User cannot create activity series (needs verification/consent + a cohort).")
+        )
+    if guardian_accompanied and owner.cohort != Cohort.CHILD:
+        raise InvalidState(_("Only children's activities can be guardian-accompanied."))
+    if min_to_go is not None and capacity is not None and min_to_go > capacity:
+        raise InvalidState(_("Minimum to happen can't be more than the capacity."))
+    if cadence not in ActivitySeries.Cadence.values:
+        raise InvalidState(_("Invalid cadence."))
+    from apps.places.services import public_places
+
+    if place is None or not public_places().filter(pk=place.pk).exists():
+        raise InvalidState(_("That place isn't available to organise an activity at yet."))
+    duration = None
+    if ends_at is not None and ends_at > first_starts_at:
+        duration = int((ends_at - first_starts_at).total_seconds() // 60)
+    series = ActivitySeries.objects.create(
+        owner=owner,
+        place=place,
+        activity_type=activity_type,
+        cohort=owner.cohort,
+        title=title,
+        description=description,
+        cadence=cadence,
+        next_starts_at=first_starts_at,
+        anchor_day=timezone.localtime(first_starts_at).day,
+        duration_minutes=duration,
+        join_threshold=DEFAULT_JOIN_THRESHOLD if join_threshold is None else join_threshold,
+        capacity=capacity,
+        min_to_go=min_to_go,
+        guardian_accompanied=guardian_accompanied,
+        meeting_point=meeting_point,
+        what_to_bring=what_to_bring,
+        organizer_note=organizer_note,
+        cost_band=cost_band,
+        difficulty=difficulty,
+        accessibility_notes=accessibility_notes,
+        beginners_welcome=beginners_welcome,
+    )
+    from apps.safety.services import record_audit
+
+    record_audit("series.created", actor=owner, target=series)
+    return series
+
+
+@transaction.atomic
+def pause_series(owner, series) -> ActivitySeries:
+    """Owner pauses a series (no further instances spawn). Reversible via resume_series."""
+    if series.owner_id != getattr(owner, "id", None):
+        raise NotAMember(_("Only the series owner may pause it."))
+    if series.status != ActivitySeries.Status.ACTIVE:
+        raise InvalidState(_("Only an active series can be paused."))
+    series.status = ActivitySeries.Status.PAUSED
+    series.save(update_fields=["status", "updated_at"])
+    from apps.safety.services import record_audit
+
+    record_audit("series.paused", actor=owner, target=series)
+    return series
+
+
+@transaction.atomic
+def resume_series(owner, series) -> ActivitySeries:
+    """Owner resumes a paused series. The spawn job fast-forwards a stale cursor to the next
+    future slot, so resuming never backfills missed past meetups."""
+    if series.owner_id != getattr(owner, "id", None):
+        raise NotAMember(_("Only the series owner may resume it."))
+    if series.status != ActivitySeries.Status.PAUSED:
+        raise InvalidState(_("Only a paused series can be resumed."))
+    series.status = ActivitySeries.Status.ACTIVE
+    series.save(update_fields=["status", "updated_at"])
+    from apps.safety.services import record_audit
+
+    record_audit("series.resumed", actor=owner, target=series)
+    return series
+
+
+@transaction.atomic
+def end_series(owner, series) -> ActivitySeries:
+    """Owner ends a series permanently. Already-spawned instances stand (Activity.series is
+    SET_NULL-safe); an ENDED series never spawns again."""
+    if series.owner_id != getattr(owner, "id", None):
+        raise NotAMember(_("Only the series owner may end it."))
+    if series.status == ActivitySeries.Status.ENDED:
+        raise InvalidState(_("This series has already ended."))
+    series.status = ActivitySeries.Status.ENDED
+    series.save(update_fields=["status", "updated_at"])
+    from apps.safety.services import record_audit
+
+    record_audit("series.ended", actor=owner, target=series)
+    return series
+
+
+def visible_series(user):
+    """Series a user may see/manage. A series is an owner-management template (not a meetup),
+    so it is scoped to its owner — peers discover the spawned Activities via the cohort feed,
+    never the template. Staff see all (moderation). The single read chokepoint for series."""
+    qs = ActivitySeries.objects.select_related("owner", "place", "activity_type")
+    if not getattr(user, "is_authenticated", False):
+        return qs.none()
+    if user.is_staff:
+        return qs
+    return qs.filter(owner=user)
+
+
+def spawn_due_series(*, now=None) -> dict:
+    """Nightly engine: spawn the next single instance of each due ACTIVE series via the normal
+    create_activity path. One instance per series per tick, materialised SERIES_SPAWN_LEAD_DAYS
+    ahead so members can discover/join before it starts; never backfills past occurrences and
+    never keeps more than one upcoming instance live at once. Per-series isolation — one broken
+    series never aborts the tick. cohort is re-asserted against the owner's CURRENT cohort before
+    every spawn (create_activity always re-pins cohort=owner.cohort, so a drift would otherwise
+    spawn into the wrong cohort). No request user: audits actor=series.owner; the summary is
+    actor-less. Idempotent."""
+    from apps.safety.services import record_audit
+
+    now = now or timezone.now()
+    lead = now + timedelta(days=getattr(settings, "SERIES_SPAWN_LEAD_DAYS", 14))
+    cap = getattr(settings, "SERIES_SPAWN_BATCH", 500)
+    spawned = skipped = paused = 0
+    due = (
+        ActivitySeries.objects.filter(status=ActivitySeries.Status.ACTIVE, next_starts_at__lte=lead)
+        .select_related("owner", "place", "activity_type")
+        .order_by("id")
+    )
+    for series in due.iterator():
+        if spawned >= cap:
+            break  # anomaly guard: never mass-spawn in a single tick
+        try:
+            with transaction.atomic():
+                # Lock the row so two overlapping ticks can't double-spawn the same slot; a row
+                # already held by another tick is skipped this run (skip_locked) and picked up next.
+                series = (
+                    ActivitySeries.objects.select_for_update(skip_locked=True)
+                    .select_related("owner", "place", "activity_type")
+                    .filter(pk=series.pk, status=ActivitySeries.Status.ACTIVE)
+                    .first()
+                )
+                if series is None:
+                    continue
+                # Cohort re-assert (the isolation boundary). Only a cohort DRIFT pauses; a
+                # transient eligibility/place loss is left to create_activity (raises -> skip).
+                if series.owner.cohort != series.cohort:
+                    series.status = ActivitySeries.Status.PAUSED
+                    series.save(update_fields=["status", "updated_at"])
+                    record_audit(
+                        "series.paused",
+                        actor=series.owner,
+                        target=series,
+                        reason="owner_cohort_drift",
+                    )
+                    paused += 1
+                    continue
+                # One upcoming instance at a time ("only the next single instance"): don't create a
+                # second future instance while one is still live/upcoming.
+                if series.instances.filter(starts_at__gte=now).exists():
+                    continue
+                # Fast-forward past any slot already in the past (long pause / missed ticks) — never
+                # spawn a past-dated meetup nobody can attend, and never backfill the missed ones.
+                guard = 0
+                while series.next_starts_at < now and guard < 240:
+                    series.next_starts_at = _advance_slot(
+                        series.next_starts_at, series.cadence, series.anchor_day
+                    )
+                    guard += 1
+                if series.next_starts_at < now:
+                    # Guard cap hit on an implausibly stale cursor: never spawn a past-dated meetup.
+                    # Persist the partial fast-forward and skip; it self-heals over later ticks.
+                    logger.error(
+                        "spawn_due_series: series %s cursor still stale after fast-forward cap",
+                        series.pk,
+                    )
+                    series.save(update_fields=["next_starts_at", "updated_at"])
+                    skipped += 1
+                    continue
+                if series.next_starts_at > lead:
+                    # Next future slot isn't within the lead window yet — persist cursor and wait.
+                    series.save(update_fields=["next_starts_at", "updated_at"])
+                    continue
+                # Idempotency: a prior tick may already have materialised this exact slot.
+                if series.instances.filter(starts_at=series.next_starts_at).exists():
+                    series.next_starts_at = _advance_slot(
+                        series.next_starts_at, series.cadence, series.anchor_day
+                    )
+                    series.save(update_fields=["next_starts_at", "updated_at"])
+                    continue
+                ends_at = None
+                if series.duration_minutes:
+                    ends_at = series.next_starts_at + timedelta(minutes=series.duration_minutes)
+                activity = create_activity(
+                    series.owner,
+                    place=series.place,
+                    activity_type=series.activity_type,
+                    title=series.title,
+                    starts_at=series.next_starts_at,
+                    ends_at=ends_at,
+                    description=series.description,
+                    join_threshold=series.join_threshold,
+                    capacity=series.capacity,
+                    min_to_go=series.min_to_go,
+                    guardian_accompanied=series.guardian_accompanied,
+                    meeting_point=series.meeting_point,
+                    what_to_bring=series.what_to_bring,
+                    organizer_note=series.organizer_note,
+                    cost_band=series.cost_band,
+                    difficulty=series.difficulty,
+                    accessibility_notes=series.accessibility_notes,
+                    beginners_welcome=series.beginners_welcome,
+                )
+                activity.series = series
+                activity.save(update_fields=["series"])
+                series.next_starts_at = _advance_slot(
+                    series.next_starts_at, series.cadence, series.anchor_day
+                )
+                series.save(update_fields=["next_starts_at", "updated_at"])
+                record_audit(
+                    "series.spawned", actor=series.owner, target=activity, series_id=series.id
+                )
+                spawned += 1
+        except SocialError:
+            # Owner lost eligibility / place un-published since create -> clean per-series skip
+            # (self-heals when they re-verify / the place re-publishes), never abort the tick.
+            logger.exception("spawn_due_series: skipping series %s (social gate)", series.pk)
+            skipped += 1
+        except Exception:  # noqa: BLE001 — one broken series must not kill the whole tick
+            logger.exception("spawn_due_series: skipping series %s after an error", series.pk)
+            skipped += 1
+    record_audit("series.swept", spawned=spawned, skipped=skipped, paused=paused)
+    return {"spawned": spawned, "skipped": skipped, "paused": paused}
 
 
 @transaction.atomic
