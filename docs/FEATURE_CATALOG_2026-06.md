@@ -53,7 +53,7 @@ SEQUENCING: (1) Several features only deliver value once minor onboarding is ena
 **Reuses:** PlaceActivity edges + is_disputed + origin INFERRED/CONFIRMED; public_places() visibility chokepoint; apply_proximity/parse_point request-only coords; F40 create-form prefill seeding initial['place']; F16 JS-free filtered-select fallback + _near_me.html partial
 **Touches:** apps/web/forms.py ActivityForm (narrow display only, keep full-queryset validation); apps/web/views.py activity_create; apps/social/services.py (suggest_places + recently_used_places); apps/web/templates/web/activity_form.html
 
-### F3 — Saved-search "tell me when a matching meetup appears" alert  `[M/imp4/low/revise]`
+### F3 — Saved-search "tell me when a matching meetup appears" alert  `[M/imp4/low/revise]`  ✅ SHIPPED 2026-06-07 (126b2e5)
 *Theme: Closing the find→commit loop*
 
 **Pitch.** Let a user save one discovery filter (activity type/category + optional Area, within their own cohort) and get a single opt-in in-app notice the first time a new matching activity is created — so good meetups stop going unjoined while people re-run feeds. AREA-ONLY: no stored user coordinate.
@@ -65,7 +65,7 @@ SEQUENCING: (1) Several features only deliver value once minor onboarding is ena
 **Reuses:** visible_activities/can_see_activity per-saver read gate; ops run_due_jobs DUE_JOBS + membership test; notifications notify() choke point + mutable ACTIVITY_MATCH Kind + WHY_REASONS + makemigrations; Activity.created_at + (cohort,activity_type)/(cohort,place) indexes; communities.Area + Place.address_city (only geo scope)
 **Touches:** apps/discovery (or apps/recommendations) — SavedSearch model + matcher (no coordinate field); apps/ops/management/commands — match_saved_searches + DUE_JOBS entry + test; apps/notifications/models.py — ACTIVITY_MATCH Kind + WHY_REASONS + makemigrations; apps/web — save control + /saved-searches/ + DRF viewset + allowlist test
 
-### F4 — Recurring activity series (templated next-instance respawn)  `[M/imp4/med/keep]`
+### F4 — Recurring activity series (templated next-instance respawn)  `[M/imp4/med/keep]`  ✅ SHIPPED 2026-06-07 (3dd0e0c)
 *Theme: Filling every seat fairly*
 
 **Pitch.** Let a volunteer organiser define a repeating meetup once (e.g. every Tuesday 18:00 run) so the platform auto-spawns ONLY the next single Activity through the existing create path — sparing organisers weekly re-creation and keeping the standing meetup discoverable between instances.
@@ -77,7 +77,7 @@ SEQUENCING: (1) Several features only deliver value once minor onboarding is ena
 **Reuses:** ActivitySeries model + Activity.series FK + migration; create_series + spawn_series_instance wrapping create_activity (catch NotEligible→pause, assert cohort→pause, audit); spawn_due_series command (next-only, per-series failure isolation); ops run_due_jobs DUE_JOBS append; notifications EVENT_REMINDER (reused) through blocked_user_ids; social.Group — Group = standing space, Series = scheduled respawn (complementary)
 **Touches:** apps/social/models.py; apps/social/services.py; apps/social/management/commands/spawn_due_series.py; apps/ops/management/commands/run_due_jobs.py; apps/web/views.py + templates; apps/social/serializers.py + apps/social/views.py
 
-### F5 — Geography-aware, distance-bounded recommendations  `[M/imp4/low/revise]`
+### F5 — Geography-aware, distance-bounded recommendations  `[M/imp4/low/revise]`  ✅ SHIPPED 2026-06-08 (dc921f1)
 *Theme: Accessibility & inclusion*
 
 **Pitch.** When a user opts into proximity on the home feed, fold a deterministic distance-decay into the recommendation ranking (and a soft access-match boost) so a child, wheelchair user, or elderly user who can't travel far isn't shown an unreachable "perfect match" alongside a nearby one — from request-only coords + declared tokens, never stored.
