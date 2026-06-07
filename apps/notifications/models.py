@@ -21,6 +21,7 @@ class Notification(models.Model):
         CONNECTION_ACCEPTED = "connection_accepted", "Connection accepted"
         MENTION = "mention", "Mention"
         ORGANIZER_ROLE = "organizer_role", "Organizer role changed"
+        ACTIVITY_MATCH = "activity_match", "Saved-search match"  # F3 (mutable, opt-in)
         MODERATION = "moderation", "Moderation notice"
         SYSTEM = "system", "System"
 
@@ -78,6 +79,9 @@ WHY_REASONS = {
     Notification.Kind.ORGANIZER_ROLE: (
         "An organiser of an activity made you a co-organiser, removed that role, or "
         "handed the activity over to you."
+    ),
+    Notification.Kind.ACTIVITY_MATCH: (
+        "A new activity matched a search you saved (you can turn these off)."
     ),
     Notification.Kind.MODERATION: (
         "A moderation decision affected your content or account (you cannot turn these off)."

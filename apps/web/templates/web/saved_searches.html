@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Saved searches" %}{% endblock %}
+{% block content %}
+<h1>{% trans "Saved searches" %}</h1>
+<p class="muted">{% blocktrans %}Save a search and we'll send you one in-app alert the first time a new
+  matching activity appears in your cohort &mdash; so you don't have to keep checking. No emails, no
+  "near you" counts, and you can turn these alerts off any time.{% endblocktrans %}
+  <a href="{% url 'notification_preferences' %}">{% trans "Notification settings" %}</a>.</p>
+
+<div class="card">
+  <h3>{% trans "Save a new search" %}</h3>
+  <form method="post" action="{% url 'saved_search_create' %}" class="stack">{% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <label>{% trans "Activity type" %}
+      <select name="activity_type">
+        <option value="">{% trans "— any (use a category instead) —" %}</option>
+        {% for t in activity_types %}<option value="{{ t.id }}">{{ t.name }}</option>{% endfor %}
+      </select></label>
+    <label>{% trans "…or a whole category" %}
+      <select name="category">
+        <option value="">{% trans "— none —" %}</option>
+        {% for c in categories %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}
+      </select>
+      <span class="help">{% trans "Pick exactly one of activity type or category." %}</span></label>
+    <label>{% trans "City (optional)" %}
+      <input type="text" name="city" maxlength="128" placeholder="{% trans 'e.g. Cluj-Napoca' %}">
+      <span class="help">{% trans "Leave blank for anywhere in your cohort. No location is stored." %}</span></label>
+    <label>{% trans "Cost (optional)" %}
+      <select name="cost_band">
+        <option value="">{% trans "— any —" %}</option>
+        {% for value, label in cost_bands %}{% if value != 'unspecified' %}<option value="{{ value }}">{{ label }}</option>{% endif %}{% endfor %}
+      </select></label>
+    <label class="row"><input type="checkbox" name="beginners"> {% trans "Beginners-welcome activities only" %}</label>
+    <button class="btn" type="submit">{% trans "Save search" %}</button>
+  </form>
+</div>
+
+<h2>{% trans "Your saved searches" %}</h2>
+{% for s in items %}
+  <div class="card">
+    <div class="cluster">
+      {% if s.activity_type %}<span class="tag">{{ s.activity_type.name }}</span>
+      {% else %}<span class="tag">{{ s.category.name }}</span>{% endif %}
+      {% if s.area %}<span class="tag">{{ s.area.name }}</span>{% endif %}
+      {% if s.beginners %}<span class="tag">{% trans "beginners welcome" %}</span>{% endif %}
+      {% if s.cost_band %}<span class="tag">{{ s.get_cost_band_display }}</span>{% endif %}
+    </div>
+    <form method="post" action="{% url 'saved_search_delete' s.pk %}" class="inline">{% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <button class="linkbtn" type="submit">{% trans "Remove" %}</button></form>
+  </div>
+{% empty %}
+  <p class="muted">{% trans "You haven't saved any searches yet." %}</p>
+{% endfor %}
+{% endblock %}

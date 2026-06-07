@@ -63,6 +63,8 @@ from apps.recommendations import services as recs
 from apps.recommendations.models import UserInterest
 from apps.safety import services as safety
 from apps.safety.models import Block
+from apps.saved_searches import services as saved_searches
+from apps.saved_searches.models import SavedSearch
 from apps.social import services as social
 from apps.social.models import Activity, ActivitySeries, GroupMembership, JoinVote, Membership, Post
 from apps.taxonomy.models import ActivityType
@@ -1603,6 +1605,68 @@ def access_preferences(request):
         "web/access_preferences.html",
         {"pref": get_access_preference(request.user), **_nav_context(request.user)},
     )
+
+
+# --- F3: saved-search alerts (web) ---------------------------------------------------
+
+
+@login_required
+def saved_searches_page(request):
+    """Opt-in, save-only: list the user's saved searches + a create form. No suggestions feed."""
+    if not saved_searches.can_save(request.user):
+        messages.info(request, "Verify your account to save searches and get match alerts.")
+        return redirect("home")
+    from apps.taxonomy.models import ActivityCategory
+
+    return render(
+        request,
+        "web/saved_searches.html",
+        {
+            "items": saved_searches.saved_searches_for(request.user),
+            "activity_types": ActivityType.objects.filter(is_active=True).order_by("name"),
+            "categories": ActivityCategory.objects.all().order_by("name"),
+            "cost_bands": Activity.CostBand.choices,
+            **_nav_context(request.user),
+        },
+    )
+
+
+@login_required
+@require_POST
+def saved_search_create(request):
+    from apps.taxonomy.models import ActivityCategory
+
+    at_id = (request.POST.get("activity_type") or "").strip()
+    cat_id = (request.POST.get("category") or "").strip()
+    city = (request.POST.get("city") or "").strip()
+    activity_type = (
+        ActivityType.objects.filter(pk=at_id, is_active=True).first() if at_id.isdigit() else None
+    )
+    category = ActivityCategory.objects.filter(pk=cat_id).first() if cat_id.isdigit() else None
+    try:
+        saved_searches.create_saved_search(
+            request.user,
+            activity_type=activity_type,
+            category=category,
+            city=city,  # the service resolves an Area after its anti-abuse gates
+            beginners=request.POST.get("beginners") == "on",
+            cost_band=request.POST.get("cost_band") or "",
+        )
+        messages.success(
+            request, "Search saved — we'll alert you when a matching activity appears."
+        )
+    except saved_searches.SavedSearchError as exc:
+        messages.error(request, _msg(exc))
+    return redirect(_safe_next(request, "saved_searches"))
+
+
+@login_required
+@require_POST
+def saved_search_delete(request, pk):
+    ss = get_object_or_404(SavedSearch, pk=pk, user=request.user)  # owner-scoped lookup
+    saved_searches.delete_saved_search(request.user, ss)
+    messages.success(request, "Saved search removed.")
+    return redirect(_safe_next(request, "saved_searches"))
 
 
 # --- Hubs (consolidated navigation landings) ----------------------------------------

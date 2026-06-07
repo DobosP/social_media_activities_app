@@ -88,6 +88,10 @@ urlpatterns = [
         views.membership_vote,
         name="membership_vote",
     ),
+    # F3 saved-search alerts
+    path("saved-searches/", views.saved_searches_page, name="saved_searches"),
+    path("saved-searches/create/", views.saved_search_create, name="saved_search_create"),
+    path("saved-searches/<int:pk>/delete/", views.saved_search_delete, name="saved_search_delete"),
     # Consolidated nav hubs (presentation-only landings; see views)
     path("you/", views.you_hub, name="you"),
     path("inbox/", views.inbox_hub, name="inbox"),
