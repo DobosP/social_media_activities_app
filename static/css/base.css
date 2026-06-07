@@ -1,229 +1,426 @@
-/* F12: the light palette is the default. Dark + high-contrast themes (and a text-size scale)
-   override these custom-property tokens further down; every colour below flows through a token so a
-   theme switch needs no per-rule changes. New tokens (--lead/--chip-*/--info-*) replace what used to
-   be hard-coded hexes so dark mode can re-map them. */
+/* =============================================================================
+   Design system — fresh, neutral, airy. One green accent.
+   -----------------------------------------------------------------------------
+   Every colour flows through a CSS custom property ("token"), so the dark and
+   high-contrast themes (F12) only need to re-map the token VALUES near the
+   bottom of this file — no per-rule changes. Spacing / radius / shadow scales
+   are theme-independent and defined once. All legacy class names (.card, .btn,
+   .tag, .grid, .row, .banner, .thread, .members, .fact--*) are preserved so the
+   server-rendered templates keep rendering, just restyled.
+   ============================================================================= */
+
 :root {
-  --bg: #fbfaf7;
-  --fg: #1f2421;
-  --muted: #6b7280;
-  --line: #e3e1da;
-  --card: #ffffff;
+  /* Surfaces & text */
+  --bg: #fafafa;          /* page background — near-white, airy */
+  --bg-subtle: #f4f4f5;   /* header / footer / section tint */
+  --card: #ffffff;        /* raised surfaces */
+  --fg: #18181b;          /* primary text — near-black */
+  --muted: #5f6772;       /* secondary text — WCAG AA (>=4.5:1) on --bg / --bg-subtle / --card */
+  --lead: #3f3f46;        /* lead paragraphs */
+  --line: #e7e7ea;        /* hairline borders */
+
+  /* Single accent (brand green) + tints */
   --accent: #2f6b46;
+  --accent-strong: #265a3a;   /* hover / active */
+  --accent-weak: #eaf2ec;     /* tinted backgrounds, badges, mentions */
   --accent-fg: #ffffff;
-  --warn-bg: #fdecea;
-  --warn-fg: #8a2a1f;
-  --ok-bg: #e7f3ec;
-  --ok-fg: #1e5a37;
-  --lead: #374151;
-  --chip-bg: #eef0ec;
-  --chip-fg: #3a463f;
-  --info-bg: #fff7e6;
-  --info-fg: #7a5a00;
-  --info-line: #f0d98c;
+
+  /* Status */
+  --ok-bg: #e7f3ec;  --ok-fg: #1e5a37;
+  --warn-bg: #fdecea; --warn-fg: #8a2a1f;
+  --info-bg: #fff7e6; --info-fg: #7a5a00; --info-line: #f0d98c;
+  --danger: #b91c1c; --danger-fg: #ffffff;
+
+  /* Chips */
+  --chip-bg: #f0f0f1; --chip-fg: #3f3f46;
+
+  /* Scales (theme-independent) */
+  --r-sm: 8px; --r: 12px; --r-lg: 16px; --r-pill: 999px;
+  --shadow-sm: 0 1px 2px rgba(24, 24, 27, .05);
+  --shadow: 0 1px 3px rgba(24, 24, 27, .07), 0 1px 2px rgba(24, 24, 27, .04);
+  --shadow-pop: 0 10px 30px rgba(24, 24, 27, .12), 0 2px 8px rgba(24, 24, 27, .08);
 }
-/* F12: larger-text scale. --scale (default 1) is set inline on <html> from the display-prefs
-   cookie; it scales the rem base so all rem/em-sized text grows together. */
-html { font-size: calc(100% * var(--scale, 1)); }
+
+/* F12: larger-text scale. --scale (default 1) is set inline on <html> from the
+   display-prefs cookie; it scales the rem base so all rem/em text grows together. */
+html { font-size: calc(100% * var(--scale, 1)); -webkit-text-size-adjust: 100%; }
 * { box-sizing: border-box; }
 body {
   margin: 0;
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   color: var(--fg);
   background: var(--bg);
-  line-height: 1.55;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
 }
-.container { width: 100%; max-width: 920px; margin: 0 auto; padding: 0 1rem; }
+.container { width: 100%; max-width: 960px; margin: 0 auto; padding: 0 1.25rem; }
+
 a { color: var(--accent); text-decoration: none; }
-a:hover { text-decoration: underline; }
+a:hover { color: var(--accent-strong); text-decoration: underline; }
 
-.site-header { border-bottom: 1px solid var(--line); background: var(--card); position: sticky; top: 0; z-index: 5; }
-.nav { display: flex; align-items: center; gap: 1rem; padding: .7rem 1rem; flex-wrap: wrap; }
-.nav .brand { font-weight: 700; color: var(--fg); }
-.nav .spacer { flex: 1; }
-.nav .cohort { color: var(--muted); font-weight: 400; }
-.nav .pill { background: var(--accent); color: var(--accent-fg); border-radius: 999px; font-size: .72rem; padding: 0 .4rem; }
-.inline { display: inline; margin: 0; }
-.linkbtn { background: none; border: 0; color: var(--accent); cursor: pointer; font: inherit; padding: 0; }
-
-h1 { font-size: 1.7rem; margin: 1.2rem 0 .4rem; }
-h2 { font-size: 1.2rem; margin: 1.6rem 0 .6rem; }
+/* ---- Typography ---------------------------------------------------------- */
+h1, h2, h3 { line-height: 1.25; letter-spacing: -.01em; font-weight: 700; }
+h1 { font-size: 1.85rem; margin: 1.4rem 0 .5rem; letter-spacing: -.02em; }
+h2 { font-size: 1.3rem; margin: 1.9rem 0 .7rem; }
+h3 { font-size: 1.05rem; margin: 0 0 .25rem; }
+p { margin: .6rem 0; }
 .muted { color: var(--muted); }
-.lead { font-size: 1.1rem; color: var(--lead); }
+.lead { font-size: 1.15rem; color: var(--lead); line-height: 1.55; max-width: 60ch; }
+small { font-size: .82rem; }
 
-.btn {
-  display: inline-block; background: var(--accent); color: var(--accent-fg);
-  padding: .55rem .9rem; border-radius: 8px; border: 0; cursor: pointer; font: inherit;
-}
-.btn:hover { text-decoration: none; opacity: .92; }
-.btn-sm { padding: .3rem .6rem; font-size: .9rem; }
-.btn-secondary { background: var(--chip-bg); color: var(--fg); }
-.btn-danger { background: var(--warn-bg); color: var(--warn-fg); }
-
-.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 1rem; margin: .7rem 0; }
-.card h3 { margin: 0 0 .2rem; }
-.tag { display: inline-block; font-size: .78rem; background: var(--chip-bg); color: var(--chip-fg); padding: .1rem .5rem; border-radius: 999px; margin-right: .3rem; }
-.grid { display: grid; gap: .7rem; }
+/* ---- Layout helpers ------------------------------------------------------ */
+.stack { display: flex; flex-direction: column; gap: .55rem; }
+.row { display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; }
+.cluster { display: flex; gap: .4rem; flex-wrap: wrap; align-items: center; }
+.grid { display: grid; gap: .9rem; }
 .grid-2 { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
-.score { float: right; color: var(--accent); font-weight: 600; font-size: .85rem; }
+.spacer, .nav .spacer { flex: 1; }
+.inline { display: inline; margin: 0; }
 
+/* =============================================================================
+   Header & primary navigation — grouped bar (desktop) / slide-out drawer (mobile)
+   Built entirely from <details>/<summary>: keyboard-accessible and works with
+   JS off. The optional script in base.html only adds nicety (close-on-outside,
+   close-drawer-on-navigate, one-menu-at-a-time).
+   ============================================================================= */
+.site-header {
+  border-bottom: 1px solid var(--line);
+  background: var(--card); /* solid fallback if color-mix is unsupported */
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+  backdrop-filter: saturate(180%) blur(8px);
+  position: sticky; top: 0; z-index: 30;
+}
+.nav-wrap { display: flex; align-items: center; gap: 1rem; padding: .55rem 1.25rem; }
+.brand {
+  font-weight: 800; color: var(--fg); font-size: 1.05rem; letter-spacing: -.02em;
+  display: inline-flex; align-items: center; gap: .4rem; white-space: nowrap;
+}
+.brand:hover { color: var(--fg); text-decoration: none; }
+.brand .dot { color: var(--accent); }
+
+/* No-JS drawer toggle (mobile). The checkbox is visually hidden but stays in the
+   focus order (clip technique — no scroll jank); the <label> is the visible ☰ control. */
+.nav-toggle-cb {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0;
+  clip: rect(0 0 0 0); clip-path: inset(50%); overflow: hidden; white-space: nowrap;
+}
+.nav-toggle {
+  margin-left: auto; cursor: pointer; display: inline-flex; align-items: center; gap: .4rem;
+  padding: .45rem .7rem; border: 1px solid var(--line); border-radius: var(--r-sm);
+  background: var(--card); font-weight: 600; color: var(--fg); user-select: none;
+}
+.nav-toggle-cb:focus-visible + .nav-toggle { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.nav { display: flex; align-items: center; gap: .15rem; flex-wrap: wrap; }
+.nav-link, .nav-menu > summary {
+  display: inline-flex; align-items: center; gap: .35rem;
+  padding: .45rem .7rem; border-radius: var(--r-sm); color: var(--fg);
+  font-weight: 500; cursor: pointer; white-space: nowrap; line-height: 1.2;
+}
+.nav-link:hover, .nav-menu > summary:hover { background: var(--bg-subtle); text-decoration: none; }
+.nav-link.is-active { color: var(--accent); background: var(--accent-weak); }
+.nav-cta { background: var(--accent); color: var(--accent-fg); font-weight: 600; }
+.nav-cta:hover { background: var(--accent-strong); color: var(--accent-fg); }
+
+/* Dropdown groups */
+.nav-menu { position: relative; }
+.nav-menu > summary { list-style: none; }
+.nav-menu > summary::-webkit-details-marker { display: none; }
+.nav-menu > summary::after {
+  content: "▾"; font-size: .7em; color: var(--muted); margin-left: .1rem;
+}
+.nav-menu[open] > summary { background: var(--bg-subtle); }
+.nav-panel { display: flex; flex-direction: column; gap: .1rem; padding: .35rem 0 .35rem 1.1rem; }
+.nav-panel a {
+  display: block; padding: .45rem .6rem; border-radius: var(--r-sm); color: var(--fg); font-weight: 500;
+}
+.nav-panel a:hover { background: var(--bg-subtle); text-decoration: none; }
+.nav-panel .sep { border-top: 1px solid var(--line); margin: .25rem 0; }
+.nav-panel .meta { color: var(--muted); font-size: .78rem; padding: .2rem .6rem; }
+
+/* Identity / language on the far end */
+.nav-end { margin-left: auto; }
+.linkbtn { background: none; border: 0; color: var(--accent); cursor: pointer; font: inherit; padding: 0; }
+.linkbtn:hover { color: var(--accent-strong); text-decoration: underline; }
+.lang-switch { display: inline-flex; align-items: center; }
+.lang-switch select { width: auto; padding: .35rem .5rem; font-size: .85rem; }
+
+/* Notification badge */
+.pill {
+  background: var(--accent); color: var(--accent-fg); border-radius: var(--r-pill);
+  font-size: .7rem; font-weight: 700; line-height: 1; padding: .18rem .4rem; min-width: 1.1em; text-align: center;
+}
+
+/* Mobile (< 880px): the menu is hidden until the ☰ checkbox reveals it as a panel. */
+@media (max-width: 879px) {
+  .nav { display: none; }
+  .nav-toggle-cb:checked ~ .nav {
+    display: flex; position: absolute; left: 0; right: 0; top: 100%;
+    flex-direction: column; align-items: stretch; gap: .1rem;
+    background: var(--card); border-bottom: 1px solid var(--line);
+    box-shadow: var(--shadow-pop); padding: .6rem 1.25rem 1rem; z-index: 25;
+  }
+  .nav .nav-link, .nav .nav-menu > summary { padding: .6rem .5rem; }
+  .nav .nav-end { margin-left: 0; }
+  .nav .lang-switch { margin-top: .5rem; }
+}
+
+/* Desktop (>= 880px): inline bar, no ☰, dropdown panels float over the page. */
+@media (min-width: 880px) {
+  .nav-toggle { display: none; }
+  .nav-toggle-cb { display: none; } /* also drop the hidden checkbox from the tab order */
+  .nav-menu > .nav-panel {
+    position: absolute; top: calc(100% + .3rem); left: 0; min-width: 220px;
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--r);
+    box-shadow: var(--shadow-pop); padding: .4rem; z-index: 40;
+  }
+  .nav-menu.nav-end > .nav-panel { left: auto; right: 0; }
+}
+
+/* =============================================================================
+   Section sub-navigation (Inbox / You hub tabs)
+   ============================================================================= */
+.tabs {
+  display: flex; gap: .25rem; flex-wrap: wrap; margin: .4rem 0 1.3rem;
+  border-bottom: 1px solid var(--line);
+}
+.tabs a {
+  padding: .5rem .85rem; border-radius: var(--r-sm) var(--r-sm) 0 0; color: var(--muted);
+  font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -1px;
+}
+.tabs a:hover { color: var(--fg); background: var(--bg-subtle); text-decoration: none; }
+.tabs a.is-active { color: var(--accent); border-bottom-color: var(--accent); }
+.tabs a .pill { margin-left: .15rem; }
+
+/* =============================================================================
+   Buttons
+   ============================================================================= */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+  background: var(--accent); color: var(--accent-fg);
+  padding: .55rem 1rem; border-radius: var(--r-sm); border: 1px solid transparent;
+  cursor: pointer; font: inherit; font-weight: 600; line-height: 1.2;
+  transition: background-color .12s ease, border-color .12s ease, transform .04s ease;
+}
+.btn:hover { background: var(--accent-strong); color: var(--accent-fg); text-decoration: none; }
+.btn:active { transform: translateY(1px); }
+.btn-sm { padding: .35rem .65rem; font-size: .88rem; }
+.btn-secondary { background: var(--card); color: var(--fg); border-color: var(--line); }
+.btn-secondary:hover { background: var(--bg-subtle); color: var(--fg); }
+.btn-danger { background: var(--danger); color: var(--danger-fg); }
+.btn-danger:hover { background: var(--danger); color: var(--danger-fg); opacity: .92; }
+.btn-ghost { background: transparent; color: var(--accent); border-color: transparent; }
+.btn-ghost:hover { background: var(--accent-weak); color: var(--accent-strong); }
+
+/* =============================================================================
+   Cards
+   ============================================================================= */
+.card {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--r);
+  padding: 1.1rem 1.2rem; margin: .9rem 0; box-shadow: var(--shadow-sm);
+}
+.card > :first-child { margin-top: 0; }
+.card > :last-child { margin-bottom: 0; }
+.card h3 { margin: 0 0 .25rem; }
+.card h3 a { color: var(--fg); }
+.card h3 a:hover { color: var(--accent); }
+/* Accent-flagged cards (welcome mat, logistics, catch-up) — replaces inline
+   `style="border-left:3px solid var(--accent)"` scattered across templates. */
+.card-accent { border-left: 3px solid var(--accent); }
+.card-danger { border-left: 3px solid var(--danger); }
+.card-muted { background: var(--bg-subtle); box-shadow: none; }
+
+/* =============================================================================
+   Chips, tags, badges
+   ============================================================================= */
+.tag {
+  display: inline-block; font-size: .76rem; font-weight: 600;
+  background: var(--chip-bg); color: var(--chip-fg);
+  padding: .15rem .55rem; border-radius: var(--r-pill); margin: 0 .25rem .2rem 0;
+}
+a.tag:hover { background: var(--accent-weak); color: var(--accent-strong); text-decoration: none; }
+.score { float: right; color: var(--accent); font-weight: 700; font-size: .82rem; }
+
+/* =============================================================================
+   Forms
+   ============================================================================= */
+form p { margin: .6rem 0; }
+label { font-weight: 600; display: block; margin-bottom: .2rem; }
+input, select, textarea {
+  width: 100%; padding: .55rem .65rem; border: 1px solid var(--line); border-radius: var(--r-sm);
+  font: inherit; background: var(--card); color: var(--fg);
+}
+input:hover, select:hover, textarea:hover { border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
+input[type=checkbox], input[type=radio] { width: auto; }
+input[type=file] { padding: .4rem; background: var(--bg-subtle); }
+.helptext, .help { color: var(--muted); font-size: .85rem; }
+fieldset { margin: .9rem 0; border: 1px solid var(--line); border-radius: var(--r-sm); padding: .7rem .9rem; }
+legend { padding: 0 .35rem; }
+ul.errorlist { color: var(--warn-fg); padding-left: 1rem; margin: .2rem 0; }
+.interest-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: .35rem; }
+.interest-grid label { font-weight: 400; display: flex; gap: .45rem; align-items: center; }
+
+/* =============================================================================
+   Flash messages & banners
+   ============================================================================= */
 .messages { list-style: none; padding: 0; margin: 1rem 0; }
-.msg { padding: .6rem .8rem; border-radius: 8px; margin-bottom: .4rem; }
+.msg { padding: .65rem .85rem; border-radius: var(--r-sm); margin-bottom: .45rem; border: 1px solid transparent; }
 .msg.success { background: var(--ok-bg); color: var(--ok-fg); }
 .msg.error { background: var(--warn-bg); color: var(--warn-fg); }
-.msg.info, .msg.warning { background: var(--info-bg); color: var(--info-fg); }
+.msg.info, .msg.warning { background: var(--info-bg); color: var(--info-fg); border-color: var(--info-line); }
+.banner {
+  background: var(--info-bg); border: 1px solid var(--info-line); color: var(--info-fg);
+  padding: .7rem .9rem; border-radius: var(--r-sm); font-size: .92rem; margin: 1rem 0;
+}
 
-form p { margin: .5rem 0; }
-label { font-weight: 600; display: block; margin-bottom: .15rem; }
-input, select, textarea { width: 100%; padding: .5rem; border: 1px solid var(--line); border-radius: 8px; font: inherit; background: var(--card); color: var(--fg); }
-input[type=checkbox], input[type=radio] { width: auto; }
-.helptext, .help { color: var(--muted); font-size: .85rem; }
-ul.errorlist { color: var(--warn-fg); padding-left: 1rem; }
+/* =============================================================================
+   Hero (landing / home intro)
+   ============================================================================= */
+.hero { padding: 1.5rem 0 .5rem; }
+.hero h1 { font-size: 2.3rem; max-width: 18ch; }
+.hero .lead { margin-bottom: 1.1rem; }
 
-.thread { max-height: 360px; overflow: auto; }
-.thread .post { border-top: 1px solid var(--line); padding: .6rem 0; }
+/* =============================================================================
+   Activity thread / posts / reactions / mentions / members / photos
+   (reaction + mention styles moved here from an inline <style> so they finally
+   flow through theme tokens — they were hard-coded hexes, broken in dark mode.)
+   ============================================================================= */
+.thread { max-height: 380px; overflow: auto; }
+.thread .post { border-top: 1px solid var(--line); padding: .7rem 0; }
 .thread .post:first-child { border-top: 0; }
 .post .meta { color: var(--muted); font-size: .82rem; }
-.members { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: .4rem; }
-.members li { background: var(--chip-bg); border-radius: 999px; padding: .15rem .6rem; font-size: .88rem; }
+.post.is-announcement, .post-announcement { border-left: 3px solid var(--accent); padding-left: .7rem; }
+.reply-quote { font-size: .8rem; border-left: 2px solid var(--line); padding-left: .5rem; margin-bottom: .25rem; color: var(--muted); }
+.post-actions { font-size: .8rem; margin-top: .25rem; }
+/* No-JS in-place edit: the edit form is revealed only when its #edit-<pk> anchor is
+   the URL :target (the "Edit" link). Without this rule it would always be visible. */
+.post-edit { display: none; margin-top: .35rem; }
+.post-edit:target { display: block; }
+
+.rx { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem; }
+.rx-chip { font-size: .92rem; padding: .05rem .35rem; border-radius: var(--r-pill); background: var(--chip-bg); }
+.rx-chip.rx-mine { background: var(--accent-weak); }
+.rx-pick { display: inline-block; }
+.rx-pick summary { font-size: .72rem; cursor: pointer; list-style: none; color: var(--muted); }
+.rx-pick summary::-webkit-details-marker { display: none; }
+.rx-pick[open] summary { color: var(--accent); }
+.rx-btn {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--r-pill); cursor: pointer;
+  font-size: 1rem; line-height: 1; padding: .12rem .38rem; margin: .1rem;
+}
+.rx-btn.rx-mine { background: var(--accent-weak); border-color: var(--accent); }
+.mention { color: var(--accent-strong); font-weight: 600; background: var(--accent-weak); border-radius: 4px; padding: 0 .18rem; }
+
+.members { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: .45rem; }
+.members li { background: var(--chip-bg); border-radius: var(--r-pill); padding: .2rem .7rem; font-size: .88rem; }
 .avatar { border-radius: 50%; object-fit: cover; border: 1px solid var(--line); }
 .photos { display: flex; flex-wrap: wrap; gap: .5rem; }
-.photos img { max-width: 150px; max-height: 150px; border-radius: 8px; border: 1px solid var(--line); }
+.photos img { max-width: 150px; max-height: 150px; border-radius: var(--r-sm); border: 1px solid var(--line); }
 
-.banner { background: var(--info-bg); border: 1px solid var(--info-line); color: var(--info-fg); padding: .6rem .8rem; border-radius: 8px; font-size: .9rem; margin: 1rem 0; }
-#map { height: 460px; border-radius: 10px; border: 1px solid var(--line); }
-.site-footer { color: var(--muted); font-size: .85rem; margin: 2.5rem auto 1.5rem; }
-.row { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
-.vote-row { display: flex; gap: .4rem; align-items: center; }
-.interest-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: .3rem; }
-.interest-grid label { font-weight: 400; display: flex; gap: .4rem; align-items: center; }
+.vote-row { display: flex; gap: .4rem; align-items: center; flex-wrap: wrap; }
 
-/* F16: accessibility chrome — skip link, visible focus, screen-reader-only utility. */
+/* =============================================================================
+   Map & footer
+   ============================================================================= */
+#map { height: 460px; border-radius: var(--r); border: 1px solid var(--line); }
+.site-footer {
+  color: var(--muted); font-size: .85rem; margin-top: 3rem; padding: 1.75rem 0;
+  border-top: 1px solid var(--line); background: var(--bg-subtle);
+}
+.site-footer .container { max-width: 960px; }
+.footer-links a { color: var(--muted); }
+.footer-links a:hover { color: var(--accent); }
+
+/* =============================================================================
+   F16 accessibility chrome — skip link, visible focus, sr-only utility
+   ============================================================================= */
 .skip-link {
-  position: absolute;
-  left: -9999px;
-  top: 0;
-  background: var(--accent);
-  color: var(--accent-fg, #fff);
-  padding: .5rem .8rem;
-  border-radius: 0 0 8px 0;
-  z-index: 100;
+  position: absolute; left: -9999px; top: 0; background: var(--accent); color: var(--accent-fg);
+  padding: .5rem .8rem; border-radius: 0 0 var(--r-sm) 0; z-index: 100;
 }
 .skip-link:focus { left: 0; }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-a:focus, button:focus, input:focus, select:focus, textarea:focus, summary:focus {
-  outline: 3px solid var(--accent);
-  outline-offset: 2px;
-}
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible,
+textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .visually-hidden {
-  position: absolute;
-  width: 1px; height: 1px;
-  margin: -1px; padding: 0; border: 0;
-  clip: rect(0 0 0 0); clip-path: inset(50%);
-  overflow: hidden; white-space: nowrap;
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0;
+  clip: rect(0 0 0 0); clip-path: inset(50%); overflow: hidden; white-space: nowrap;
 }
 
-/* F15: accessibility-fact badges on places (state-coloured; honest, never green when unknown).
-   These are self-contained pastel pills with their own bg+fg, so they stay legible on a dark page. */
+/* F15 accessibility-fact badges (self-contained pastels; honest — never green
+   when unknown). Kept legible on dark pages via their own bg+fg. */
 .fact--true { background: #e3f3e8; color: #1d6b3a; }
 .fact--limited { background: #fdf3e0; color: #8a5a00; }
 .fact--false { background: #fce8e8; color: #a02020; }
 .fact--unknown { background: #eef0ec; color: #555; }
 
-/* ---------------------------------------------------------------------------------------------
-   F12 display preferences. Source of truth = a functional cookie surfaced as data-theme /
-   data-motion / --scale on <html> by the display_preferences context processor. When no explicit
-   theme is chosen (data-theme="auto") we honour the OS prefers-color-scheme; an explicit dark /
-   contrast choice always wins. Only the token VALUES change — every rule above already uses them.
-   --------------------------------------------------------------------------------------------- */
+/* =============================================================================
+   F12 display preferences — theme token re-maps. Only token VALUES change here;
+   every rule above already consumes them. Source of truth = a functional cookie
+   surfaced as data-theme / --scale on <html> by the context processor.
+   ============================================================================= */
 :root[data-theme="auto"] { color-scheme: light dark; }
 
-/* Dark palette — applied for an explicit dark choice, or for "auto" when the OS prefers dark. */
+/* Dark — for an explicit dark choice, or "auto" when the OS prefers dark. */
 @media (prefers-color-scheme: dark) {
   :root[data-theme="auto"] {
-    --bg: #14171a;
-    --fg: #e6e8e6;
-    --muted: #9aa3a8;
-    --line: #2b3036;
-    --card: #1c2024;
-    --accent: #6bbf86;
-    --accent-fg: #0c1a10;
-    --warn-bg: #3a1f1c;
-    --warn-fg: #f3b6ad;
-    --ok-bg: #18301f;
-    --ok-fg: #8fd6a8;
-    --lead: #c8cdc9;
-    --chip-bg: #2a2f33;
-    --chip-fg: #cdd3cf;
-    --info-bg: #33291a;
-    --info-fg: #e8c98a;
-    --info-line: #5a4a28;
+    --bg: #0f1113; --bg-subtle: #16181b; --card: #1a1d20; --fg: #e7e7e4;
+    --muted: #9b9ba3; --lead: #c8cbc9; --line: #2a2d31;
+    --accent: #6bbf86; --accent-strong: #84cf9c; --accent-weak: #18261d; --accent-fg: #0c1a10;
+    --ok-bg: #16301f; --ok-fg: #8fd6a8; --warn-bg: #3a1f1c; --warn-fg: #f3b6ad;
+    --info-bg: #33291a; --info-fg: #e8c98a; --info-line: #5a4a28;
+    --danger: #ef4444; --danger-fg: #150707; --chip-bg: #25282c; --chip-fg: #cdd0cd;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, .45);
+    --shadow: 0 1px 3px rgba(0, 0, 0, .55);
+    --shadow-pop: 0 10px 30px rgba(0, 0, 0, .65), 0 2px 8px rgba(0, 0, 0, .5);
   }
+  :root[data-theme="auto"] .site-header { background: color-mix(in srgb, var(--card) 82%, transparent); }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #14171a;
-  --fg: #e6e8e6;
-  --muted: #9aa3a8;
-  --line: #2b3036;
-  --card: #1c2024;
-  --accent: #6bbf86;
-  --accent-fg: #0c1a10;
-  --warn-bg: #3a1f1c;
-  --warn-fg: #f3b6ad;
-  --ok-bg: #18301f;
-  --ok-fg: #8fd6a8;
-  --lead: #c8cdc9;
-  --chip-bg: #2a2f33;
-  --chip-fg: #cdd3cf;
-  --info-bg: #33291a;
-  --info-fg: #e8c98a;
-  --info-line: #5a4a28;
+  --bg: #0f1113; --bg-subtle: #16181b; --card: #1a1d20; --fg: #e7e7e4;
+  --muted: #9b9ba3; --lead: #c8cbc9; --line: #2a2d31;
+  --accent: #6bbf86; --accent-strong: #84cf9c; --accent-weak: #18261d; --accent-fg: #0c1a10;
+  --ok-bg: #16301f; --ok-fg: #8fd6a8; --warn-bg: #3a1f1c; --warn-fg: #f3b6ad;
+  --info-bg: #33291a; --info-fg: #e8c98a; --info-line: #5a4a28;
+  --danger: #ef4444; --danger-fg: #150707; --chip-bg: #25282c; --chip-fg: #cdd0cd;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, .45);
+  --shadow: 0 1px 3px rgba(0, 0, 0, .55);
+  --shadow-pop: 0 10px 30px rgba(0, 0, 0, .65), 0 2px 8px rgba(0, 0, 0, .5);
 }
+:root[data-theme="dark"] .site-header { background: color-mix(in srgb, var(--card) 82%, transparent); }
 
-/* High-contrast palette — maximal black-on-white with bold borders. Explicit choice only. */
+/* High-contrast — maximal black-on-white, bold borders, no soft shadows. */
 :root[data-theme="contrast"] {
-  --bg: #ffffff;
-  --fg: #000000;
-  --muted: #1a1a1a;
-  --line: #000000;
-  --card: #ffffff;
-  --accent: #00451f;
-  --accent-fg: #ffffff;
-  --warn-bg: #ffe3e3;
-  --warn-fg: #6b0000;
-  --ok-bg: #dffbe6;
-  --ok-fg: #00401a;
-  --lead: #000000;
-  --chip-bg: #f0f0f0;
-  --chip-fg: #000000;
-  --info-bg: #fff4d6;
-  --info-fg: #4a3600;
-  --info-line: #000000;
+  --bg: #ffffff; --bg-subtle: #ffffff; --card: #ffffff; --fg: #000000;
+  --muted: #1a1a1a; --lead: #000000; --line: #000000;
+  --accent: #00451f; --accent-strong: #00351a; --accent-weak: #dff0e6; --accent-fg: #ffffff;
+  --ok-bg: #dffbe6; --ok-fg: #00401a; --warn-bg: #ffe3e3; --warn-fg: #6b0000;
+  --info-bg: #fff4d6; --info-fg: #4a3600; --info-line: #000000;
+  --danger: #8a0000; --danger-fg: #ffffff; --chip-bg: #f0f0f0; --chip-fg: #000000;
+  --shadow-sm: none; --shadow: none; --shadow-pop: 0 0 0 2px #000;
 }
 :root[data-theme="contrast"] .card,
 :root[data-theme="contrast"] input,
 :root[data-theme="contrast"] select,
-:root[data-theme="contrast"] textarea { border-width: 2px; }
+:root[data-theme="contrast"] textarea,
+:root[data-theme="contrast"] .nav-toggle { border-width: 2px; }
+:root[data-theme="contrast"] .site-header { background: var(--card); backdrop-filter: none; }
 
-/* Reduced motion. "auto" follows the OS (a user who explicitly wants full motion opts out);
-   an explicit "reduce" choice always near-instantly settles every animation/transition. base.css
-   ships no animations today, so this mainly future-proofs + complements community-graph.js (which
-   already gates its 3D view on the OS prefers-reduced-motion). */
+/* =============================================================================
+   Reduced motion. "auto" follows the OS; an explicit "reduce" always settles.
+   ============================================================================= */
 @media (prefers-reduced-motion: reduce) {
   :root:not([data-motion="full"]) *,
   :root:not([data-motion="full"]) *::before,
   :root:not([data-motion="full"]) *::after {
-    animation-duration: .001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: .001ms !important;
-    scroll-behavior: auto !important;
+    animation-duration: .001ms !important; animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important; scroll-behavior: auto !important;
   }
 }
 :root[data-motion="reduce"] *,
 :root[data-motion="reduce"] *::before,
 :root[data-motion="reduce"] *::after {
-  animation-duration: .001ms !important;
-  animation-iteration-count: 1 !important;
-  transition-duration: .001ms !important;
-  scroll-behavior: auto !important;
+  animation-duration: .001ms !important; animation-iteration-count: 1 !important;
+  transition-duration: .001ms !important; scroll-behavior: auto !important;
 }

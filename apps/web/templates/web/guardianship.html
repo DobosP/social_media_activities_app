@@ -3,6 +3,7 @@
 {% block title %}{% trans "Your guardians" %}{% endblock %}
 {% block content %}
 <h1>{% trans "Your guardians" %}</h1>
+{% include "web/_you_tabs.html" with active="guardians" %}
 <p class="muted">{% trans "The adults registered as your parent/legal guardian, and exactly what each one can and cannot see about you. This page is for your information only." %}</p>
 {% for g in guardians %}
   <div class="card">

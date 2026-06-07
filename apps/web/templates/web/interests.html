@@ -3,6 +3,7 @@
 {% block title %}{% trans "Your interests" %}{% endblock %}
 {% block content %}
 <h1>{% trans "Your interests" %}</h1>
+{% include "web/_you_tabs.html" with active="interests" %}
 <p class="muted">{% blocktrans %}Pick what you'd like to do &mdash; we suggest activities for you from these (and the
   activities you join). No tracking; only what you tell us here.{% endblocktrans %}</p>
 <form method="post">{% csrf_token %}

@@ -3,6 +3,7 @@
 {% block title %}{% trans "What we know about you" %}{% endblock %}
 {% block content %}
 <h1>{% trans "What we know about you" %}</h1>
+{% include "web/_you_tabs.html" with active="privacy" %}
 <p class="muted">{% trans "Every kind of personal data we hold about you, in one place — with a link to change or remove each one. Only you can see this page." %}</p>
 
 <h2>{% trans "Your data" %}</h2>

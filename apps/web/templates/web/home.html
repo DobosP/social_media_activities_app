@@ -4,11 +4,11 @@
 {% block content %}
 <h1>{% blocktrans with name=user.display_name|default:user.username %}Hi {{ name }}{% endblocktrans %}</h1>
 {% if guardian_invites %}
-<div class="card" style="border-left:3px solid var(--accent)">
+<div class="card card-accent">
   <strong>{% trans "Guardian requests" %}</strong>
   <p class="muted">{% trans "An adult has asked to be registered as your parent/guardian. Only accept if you recognise them." %}</p>
   {% for inv in guardian_invites %}
-    <div class="row" style="align-items:center;gap:.6rem">
+    <div class="row">
       <span>{{ inv.guardian.display_name|default:inv.guardian.username }} &middot; {{ inv.relationship|default:_("guardian") }}</span>
       <form method="post" action="{% url 'guardian_invite_accept' inv.token %}">{% csrf_token %}
         <button class="btn btn-sm" type="submit">{% trans "Accept" %}</button></form>
@@ -36,14 +36,14 @@
 {% endif %}
 
 <h2>{% trans "Upcoming in your cohort" %}
-  {% if beginners_only %}<a class="muted" style="font-size:.8rem" href="?">{% trans "show all" %}</a>{% else %}<a class="muted" style="font-size:.8rem" href="?beginners=true">{% trans "beginners welcome only" %}</a>{% endif %}
+  {% if beginners_only %}<a class="muted" href="?"><small>{% trans "show all" %}</small></a>{% else %}<a class="muted" href="?beginners=true"><small>{% trans "beginners welcome only" %}</small></a>{% endif %}
 </h2>
 {% include "web/_near_me.html" %}
 {% for a in upcoming %}{% include "web/_activity_card.html" %}{% empty %}
 <p class="muted">{% trans "Nothing upcoming yet. Be the first to organise something!" %}</p>{% endfor %}
 
 {% if events %}
-<h2>{% trans "What's happening near you" %} <a class="muted" style="font-size:.8rem" href="{% url 'events_list' %}">{% trans "see all &rarr;" %}</a></h2>
+<h2>{% trans "What's happening near you" %} <a class="muted" href="{% url 'events_list' %}"><small>{% trans "see all &rarr;" %}</small></a></h2>
 <div class="grid">
   {% for e in events %}
     <div class="card">

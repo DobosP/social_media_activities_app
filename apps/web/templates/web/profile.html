@@ -3,6 +3,7 @@
 {% block title %}{% trans "Profile" %}{% endblock %}
 {% block content %}
 <h1>{{ profile_user.display_name|default:profile_user.username }}</h1>
+{% include "web/_you_tabs.html" with active="profile" %}
 
 <div class="row" style="align-items:flex-start;gap:1rem">
   {% if avatar_url %}
