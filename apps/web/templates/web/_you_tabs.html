@@ -1,0 +1,12 @@
+{% load i18n %}
+{% comment %}'You' account section sub-nav. Pass `active` = overview | profile | interests |
+   display | privacy | donations | guardians.{% endcomment %}
+<nav class="tabs" aria-label="{% trans 'Account' %}">
+  <a href="{% url 'you' %}"{% if active == 'overview' %} class="is-active" aria-current="page"{% endif %}>{% trans "Overview" %}</a>
+  <a href="{% url 'profile' %}"{% if active == 'profile' %} class="is-active" aria-current="page"{% endif %}>{% trans "Profile" %}</a>
+  <a href="{% url 'interests' %}"{% if active == 'interests' %} class="is-active" aria-current="page"{% endif %}>{% trans "Interests" %}</a>
+  <a href="{% url 'display_preferences' %}"{% if active == 'display' %} class="is-active" aria-current="page"{% endif %}>{% trans "Display" %}</a>
+  <a href="{% url 'my_privacy' %}"{% if active == 'privacy' %} class="is-active" aria-current="page"{% endif %}>{% trans "Privacy &amp; data" %}</a>
+  <a href="{% url 'my_donations' %}"{% if active == 'donations' %} class="is-active" aria-current="page"{% endif %}>{% trans "Donations" %}</a>
+  {% if has_guardians or active == 'guardians' %}<a href="{% url 'my_guardians' %}"{% if active == 'guardians' %} class="is-active" aria-current="page"{% endif %}>{% trans "Guardians" %}</a>{% endif %}
+</nav>

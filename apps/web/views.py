@@ -1503,6 +1503,28 @@ def access_preferences(request):
     )
 
 
+# --- Hubs (consolidated navigation landings) ----------------------------------------
+# Presentation-only: these wrap existing, individually-gated pages so the redesigned
+# nav can group them. Each hub is a thin landing — it adds NO new data path or gate;
+# the real work still happens in the underlying views/services (cohort isolation,
+# consent, blocking unchanged).
+
+
+@login_required
+def you_hub(request):
+    """The 'You' account & settings overview — a single home for the personal pages
+    that used to be scattered across the top nav. Pure links; nav_badges() supplies
+    has_guardians / connections_enabled for the conditional cards."""
+    return render(request, "web/you.html", _nav_context(request.user))
+
+
+@login_required
+def inbox_hub(request):
+    """Canonical Inbox entry point. The grouped nav links straight to each tab, so
+    this only matters for a typed/bookmarked /inbox/ URL — land it on Alerts."""
+    return redirect("notifications")
+
+
 # --- Profile ------------------------------------------------------------------------
 
 

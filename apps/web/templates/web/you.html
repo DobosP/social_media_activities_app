@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Account & settings" %}{% endblock %}
+{% block content %}
+<h1>{% trans "Account &amp; settings" %}</h1>
+{% include "web/_you_tabs.html" with active="overview" %}
+<p class="muted">{% blocktrans with name=user.display_name|default:user.username cohort=user.get_cohort_display %}Signed in as <strong>{{ name }}</strong> &middot; {{ cohort }} cohort.{% endblocktrans %}</p>
+
+<div class="grid grid-2">
+  <div class="card">
+    <h3>{% trans "Profile &amp; preferences" %}</h3>
+    <div class="stack">
+      <a href="{% url 'profile' %}">{% trans "Your profile" %}</a>
+      <a href="{% url 'interests' %}">{% trans "Interests" %}</a>
+      <a href="{% url 'access_preferences' %}">{% trans "Access needs" %}</a>
+      <a href="{% url 'display_preferences' %}">{% trans "Display (theme, text size, motion)" %}</a>
+      <a href="{% url 'verify_age' %}">{% trans "Age verification" %}</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>{% trans "Inbox" %}</h3>
+    <div class="stack">
+      <a href="{% url 'notifications' %}">{% trans "Alerts" %}{% if unread_notifications %} <span class="pill">{{ unread_notifications }}</span>{% endif %}</a>
+      <a href="{% url 'messages' %}">{% trans "Messages" %}</a>
+      {% if connections_enabled %}<a href="{% url 'connections' %}">{% trans "Connections" %}</a>{% endif %}
+      <a href="{% url 'notification_preferences' %}">{% trans "Notification settings" %}</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>{% trans "Privacy &amp; safety" %}</h3>
+    <div class="stack">
+      <a href="{% url 'my_privacy' %}">{% trans "Privacy &amp; your data" %}</a>
+      <a href="{% url 'safety_record' %}">{% trans "Your safety record" %}</a>
+      <a href="{% url 'activity_log' %}">{% trans "Your activity log" %}</a>
+      {% if user.is_guardian %}<a href="{% url 'wards' %}">{% trans "Wards you look after" %}</a>{% endif %}
+      {% if has_guardians %}<a href="{% url 'my_guardians' %}">{% trans "Your guardians" %}</a>{% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>{% trans "Giving" %}</h3>
+    <div class="stack">
+      <a href="{% url 'my_donations' %}">{% trans "My donations" %}</a>
+      <a href="{% url 'donate' %}">{% trans "Support this platform" %}</a>
+      <a href="{% url 'campaigns' %}">{% trans "Campaigns" %}</a>
+      <a href="{% url 'transparency' %}">{% trans "Where the money goes" %}</a>
+    </div>
+  </div>
+</div>
+
+<form method="post" action="{% url 'logout' %}" class="inline" style="margin-top:1rem">{% csrf_token %}
+  <button class="btn btn-secondary" type="submit">{% trans "Log out" %}</button>
+</form>
+{% endblock %}

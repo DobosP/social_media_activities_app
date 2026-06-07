@@ -12,49 +12,92 @@
 <body>
 <a class="skip-link" href="#main">{% trans "Skip to main content" %}</a>
 <header class="site-header" role="banner">
-  <nav class="nav container" role="navigation" aria-label="{% trans 'Primary' %}">
-    <a class="brand" href="{% url 'home' %}">&#9679; {% trans "Activities" %}</a>
-    <a href="{% url 'places_map' %}">{% trans "Places" %}</a>
-    <a href="{% url 'events_list' %}">{% trans "Events" %}</a>
-    {% if user.is_authenticated %}
-      <a href="{% url 'activity_list' %}">{% trans "Activities" %}</a>
-      <a href="{% url 'communities' %}">{% trans "Communities" %}</a>
-      <a href="{% url 'groups' %}">{% trans "Groups" %}</a>
-      <a href="{% url 'interests' %}">{% trans "Interests" %}</a>
-      <a href="{% url 'activity_create' %}">{% trans "Organize" %}</a>
-      <a href="{% url 'notifications' %}">{% trans "Alerts" %}{% if unread_notifications %}
-        <span class="pill">{{ unread_notifications }}</span>{% endif %}</a>
-      <a href="{% url 'messages' %}">{% trans "Messages" %}</a>
-      {% if connections_enabled %}<a href="{% url 'connections' %}">{% trans "Connections" %}</a>{% endif %}
-      {% if has_guardians %}<a href="{% url 'my_guardians' %}">{% trans "Guardians" %}</a>{% endif %}
-      <a href="{% url 'my_donations' %}">{% trans "My donations" %}</a>
-    {% endif %}
-    <a href="{% url 'partners' %}">{% trans "Civic partners" %}</a>
-    <a href="{% url 'donate' %}">{% trans "Support" %}</a>
-    <span class="spacer"></span>
-    {% if user.is_authenticated %}
-      <a href="{% url 'profile' %}">{{ user.display_name|default:user.username }}
-        <small class="cohort">{{ user.get_cohort_display }}</small></a>
-      <form method="post" action="{% url 'logout' %}" class="inline">{% csrf_token %}
-        <button class="linkbtn" type="submit">{% trans "Log out" %}</button></form>
-    {% else %}
-      <a href="{% url 'login' %}">{% trans "Log in" %}</a>
-      <a class="btn btn-sm" href="{% url 'register' %}">{% trans "Sign up" %}</a>
-    {% endif %}
-    {# Language switcher (P6/IS-7): persists to the session via set_language; LocaleMiddleware
-       then serves the chosen language. No-JS friendly: a submit button is provided. #}
-    <form method="post" action="{% url 'set_language' %}" class="inline lang-switch">{% csrf_token %}
-      <input type="hidden" name="next" value="{{ request.path }}">
-      <select name="language" aria-label="{% trans 'Language' %}" onchange="this.form.submit()">
-        {% get_current_language as cur_lang %}
-        {% get_available_languages as available_langs %}
-        {% for code, name in available_langs %}
-          <option value="{{ code }}"{% if code == cur_lang %} selected{% endif %}>{{ name }}</option>
-        {% endfor %}
-      </select>
-      <noscript><button class="linkbtn" type="submit">{% trans "Set language" %}</button></noscript>
-    </form>
-  </nav>
+  <div class="container nav-wrap">
+    <a class="brand" href="{% url 'home' %}"><span class="dot">&#9679;</span> {% trans "Activities" %}</a>
+
+    {% comment %}
+    No-JS drawer: an off-screen checkbox toggles the menu on mobile; on desktop the menu
+    is always shown and the toggle hidden (see base.css). Robust across browsers because
+    it does not depend on details open-state for the always-visible bar.
+    {% endcomment %}
+    {% comment %}Focusable (keyboard/SR can toggle the drawer) but visually hidden; the <label> is
+       the visible control and supplies the accessible name. Its focus ring shows on the label.{% endcomment %}
+    <input type="checkbox" id="nav-toggle" class="nav-toggle-cb">
+    <label for="nav-toggle" class="nav-toggle"><span aria-hidden="true">&#9776;</span> {% trans "Menu" %}</label>
+    <nav class="nav" role="navigation" aria-label="{% trans 'Primary' %}">
+
+        {% if user.is_authenticated %}
+          <a class="nav-link" href="{% url 'activity_list' %}">{% trans "Browse" %}</a>
+          <a class="nav-link nav-cta" href="{% url 'activity_create' %}">{% trans "Organize" %}</a>
+        {% endif %}
+
+        <details class="nav-menu">
+          <summary>{% trans "Discover" %}</summary>
+          <div class="nav-panel">
+            <a href="{% url 'places_map' %}">{% trans "Places" %}</a>
+            <a href="{% url 'events_list' %}">{% trans "Events" %}</a>
+            {% if user.is_authenticated %}
+              <a href="{% url 'communities' %}">{% trans "Communities" %}</a>
+              <a href="{% url 'groups' %}">{% trans "Groups" %}</a>
+            {% endif %}
+            <a href="{% url 'partners' %}">{% trans "Civic partners" %}</a>
+          </div>
+        </details>
+
+        {% if user.is_authenticated %}
+          <details class="nav-menu">
+            <summary>{% trans "Inbox" %}{% if unread_notifications %} <span class="pill">{{ unread_notifications }}</span>{% endif %}</summary>
+            <div class="nav-panel">
+              <a href="{% url 'notifications' %}">{% trans "Alerts" %}{% if unread_notifications %} <span class="pill">{{ unread_notifications }}</span>{% endif %}</a>
+              <a href="{% url 'messages' %}">{% trans "Messages" %}</a>
+              {% if connections_enabled %}<a href="{% url 'connections' %}">{% trans "Connections" %}</a>{% endif %}
+            </div>
+          </details>
+        {% endif %}
+
+        <span class="spacer"></span>
+
+        {% if user.is_authenticated %}
+          <details class="nav-menu nav-end">
+            <summary>{{ user.display_name|default:user.username }}</summary>
+            <div class="nav-panel">
+              <span class="meta">{% trans "Signed in" %} &middot; {{ user.get_cohort_display }}</span>
+              <a href="{% url 'you' %}">{% trans "Account &amp; settings" %}</a>
+              <div class="sep"></div>
+              <a href="{% url 'profile' %}">{% trans "Profile" %}</a>
+              <a href="{% url 'interests' %}">{% trans "Interests" %}</a>
+              <a href="{% url 'my_donations' %}">{% trans "My donations" %}</a>
+              {% if has_guardians %}<a href="{% url 'my_guardians' %}">{% trans "Guardians" %}</a>{% endif %}
+              <div class="sep"></div>
+              <a href="{% url 'display_preferences' %}">{% trans "Display" %}</a>
+              <a href="{% url 'my_privacy' %}">{% trans "Privacy &amp; data" %}</a>
+              <div class="sep"></div>
+              <form method="post" action="{% url 'logout' %}" class="inline">{% csrf_token %}
+                <button class="linkbtn" type="submit">{% trans "Log out" %}</button></form>
+            </div>
+          </details>
+          <a class="nav-link" href="{% url 'donate' %}">{% trans "Support" %}</a>
+        {% else %}
+          <a class="nav-link nav-end" href="{% url 'login' %}">{% trans "Log in" %}</a>
+          <a class="nav-link nav-cta" href="{% url 'register' %}">{% trans "Sign up" %}</a>
+          <a class="nav-link" href="{% url 'donate' %}">{% trans "Support" %}</a>
+        {% endif %}
+
+        {% comment %}Language switcher (P6/IS-7): persists to the session via set_language;
+           LocaleMiddleware then serves the chosen language. No-JS friendly: a submit button.{% endcomment %}
+        <form method="post" action="{% url 'set_language' %}" class="inline lang-switch">{% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.path }}">
+          <select name="language" aria-label="{% trans 'Language' %}" onchange="this.form.submit()">
+            {% get_current_language as cur_lang %}
+            {% get_available_languages as available_langs %}
+            {% for code, name in available_langs %}
+              <option value="{{ code }}"{% if code == cur_lang %} selected{% endif %}>{{ name }}</option>
+            {% endfor %}
+          </select>
+          <noscript><button class="linkbtn" type="submit">{% trans "Set language" %}</button></noscript>
+        </form>
+      </nav>
+  </div>
 </header>
 
 <main class="container" id="main" role="main" tabindex="-1">
@@ -66,15 +109,25 @@
   {% block content %}{% endblock %}
 </main>
 
-<footer class="site-footer container" role="contentinfo">
-  <p>{% blocktrans %}A nonprofit, text-first way to meet up in person &mdash; the opposite of image-perfect social
-     media.{% endblocktrans %} <strong>{% trans "Demo environment: do not enter real personal data." %}</strong></p>
-  <p class="footer-links">
-    <a href="{% url 'privacy' %}">{% trans "Privacy" %}</a> &middot;
-    <a href="{% url 'terms' %}">{% trans "Terms" %}</a> &middot;
-    <a href="{% url 'display_preferences' %}">{% trans "Display" %}</a>
-  </p>
+<footer class="site-footer" role="contentinfo">
+  <div class="container">
+    <p>{% blocktrans %}A nonprofit, text-first way to meet up in person &mdash; the opposite of image-perfect social
+       media.{% endblocktrans %} <strong>{% trans "Demo environment: do not enter real personal data." %}</strong></p>
+    <p class="footer-links">
+      <a href="{% url 'privacy' %}">{% trans "Privacy" %}</a> &middot;
+      <a href="{% url 'terms' %}">{% trans "Terms" %}</a> &middot;
+      <a href="{% url 'transparency' %}">{% trans "Transparency" %}</a> &middot;
+      <a href="{% url 'display_preferences' %}">{% trans "Display" %}</a>
+    </p>
+  </div>
 </footer>
+
+{% comment %}
+The nav is intentionally JS-free: every <details> menu/drawer toggles on click and
+works with scripting disabled — keeping the global chrome calm and static (no
+per-page script in the base), in line with the text-first product ethos. Pages that
+genuinely need interactivity add their own scripts block below.
+{% endcomment %}
 {% block scripts %}{% endblock %}
 </body>
 </html>

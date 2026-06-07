@@ -6,6 +6,7 @@
   <h1 style="margin:0">{% trans "Messages" %}</h1>
   <span class="mz-lock muted" title="{% trans 'End-to-end encrypted' %}">🔒 {% trans "end-to-end encrypted" %}</span>
 </div>
+{% include "web/_inbox_tabs.html" with active="messages" %}
 <p class="muted" style="margin:.2rem 0 .6rem">{% trans "Private chats only you and the other people can read." %}
   {% trans "You can only message people in your own age group, and they must accept your first message." %}</p>
 

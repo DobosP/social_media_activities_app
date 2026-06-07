@@ -25,9 +25,9 @@
     <button class="btn btn-sm" type="submit">{% trans "Archive group" %}</button></form>
 {% endif %}
 
-{# Roster panel — rendered ONLY when group_roster returned a list (an eligible ADULT member).
+{% comment %}Roster panel — rendered ONLY when group_roster returned a list (an eligible ADULT member).
    Minors and non-members get roster=None, so this whole block is absent: no list, no count,
-   anywhere. The number below is the incidental length of the list already on screen. #}
+   anywhere. The number below is the incidental length of the list already on screen.{% endcomment %}
 {% if roster is not None %}
   <h2>{% blocktrans with count_n=roster|length %}Members ({{ count_n }}){% endblocktrans %}</h2>
   <ul>{% for m in roster %}<li>{{ m.display_name|default:m.username }}</li>{% endfor %}</ul>

@@ -47,8 +47,8 @@
 {% endif %}
 
 {% if can_manage_organizers %}
-  {# F22: owner-only. Co-organisers share the operational tools (edit/cancel/admit/announce) but
-     never these meta-powers — so a co-organiser can never lock the owner out. Adult cohort only. #}
+  {% comment %}F22: owner-only. Co-organisers share the operational tools (edit/cancel/admit/announce)
+     but never these meta-powers — so a co-organiser can never lock the owner out. Adult cohort only.{% endcomment %}
   <div class="card">
     <strong>{% trans "Organisers" %}</strong>
     <p class="muted" style="font-size:.8rem;margin:.2rem 0 .5rem">{% trans "A co-organiser can edit details, admit members, and post announcements. Hand the activity over to keep it going if you step away." %}</p>
@@ -91,8 +91,8 @@
     {% endif %}
     <div class="row" style="gap:.4rem;align-items:center;margin:.4rem 0;flex-wrap:wrap">
       <span class="muted">{% blocktrans with going=rsvp_summary.going total=rsvp_summary.total %}Coming: <strong>{{ going }}</strong> of {{ total }}{% endblocktrans %}</span>
-      {# F1 Quorum-go: LIVE derived state (never the go_confirmed_at latch) — flips back to
-         "needs N more" honestly if the count drops below the threshold again. #}
+      {% comment %}F1 Quorum-go: LIVE derived state (never the go_confirmed_at latch) — flips back
+         to "needs N more" honestly if the count drops below the threshold again.{% endcomment %}
       {% if rsvp_summary.min_to_go %}
         {% if rsvp_summary.met_minimum %}
           <span class="tag">&#10003; {% trans "It's on" %}</span>
@@ -156,7 +156,7 @@
 
 {% if show_welcome %}
   {# F39: a systemic welcome banner for a first-timer — rendered by the app, never a member post. #}
-  <div class="card" style="border-left:3px solid var(--accent)">
+  <div class="card card-accent">
     <strong>{% trans "Welcome to your first meetup!" %}</strong>
     <p class="muted" style="margin:.3rem 0 0">{% blocktrans %}Say a quick hello in the thread below, check the
       logistics, and turn up &mdash; the group is glad you joined.{% endblocktrans %}</p>
@@ -164,7 +164,7 @@
 {% endif %}
 
 {% if is_member and not is_owner %}
-  <div class="card" style="border-left:3px solid var(--danger,#c0392b)">
+  <div class="card card-danger">
     <strong>{% trans "Feeling unsafe or uncomfortable?" %}</strong>
     <p class="muted" style="margin:.3rem 0">{% blocktrans %}You can leave any time &mdash; nothing is shared about you for
       doing so. If something doesn't feel right, tell a moderator, or talk to a grown-up you trust.{% endblocktrans %}</p>
@@ -187,7 +187,7 @@
 {% endif %}
 
 {% if is_member or is_owner %}{% if activity.meeting_point or activity.what_to_bring or activity.organizer_note %}
-  <div class="card" style="border-left:3px solid var(--accent)">
+  <div class="card card-accent">
     <strong>{% trans "Meetup logistics" %}</strong>
     {% if activity.meeting_point %}<p style="margin:.4rem 0 0"><span class="muted">{% trans "Where to meet:" %}</span><br>{{ activity.meeting_point|linebreaksbr }}</p>{% endif %}
     {% if activity.what_to_bring %}<p style="margin:.4rem 0 0"><span class="muted">{% trans "What to bring:" %}</span><br>{{ activity.what_to_bring|linebreaksbr }}</p>{% endif %}
@@ -212,11 +212,11 @@
 {% if is_member or user.is_staff %}
   {% if digest and digest.has_content %}
     {# F35: deterministic "catch up" recap — a condensed view of the CURRENT thread, no JS. #}
-    <details class="card" style="border-left:3px solid var(--accent)">
+    <details class="card card-accent">
       <summary><strong>{% trans "Catch up" %}</strong> <span class="muted">&mdash; {% trans "what you missed" %}</span></summary>
       {% if digest.member_count is not None %}<p class="muted" style="margin:.4rem 0">{% blocktrans count member_count=digest.member_count with going=digest.going total=digest.total %}{{ going }} of {{ total }} coming &middot; {{ member_count }} member.{% plural %}{{ going }} of {{ total }} coming &middot; {{ member_count }} members.{% endblocktrans %}</p>{% endif %}
       {% if digest.announcements %}<p class="muted" style="margin:.2rem 0 0">{% trans "Latest announcements:" %}</p>
-        {% for p in digest.announcements %}<div class="post" style="border-left:3px solid var(--accent)"><div class="meta">&#128204; {{ p.author.display_name|default:p.author.username }} &middot; {{ p.created_at|date:"j M H:i" }}</div><div>{{ p.body|truncatechars:200|linebreaksbr }}</div></div>{% endfor %}{% endif %}
+        {% for p in digest.announcements %}<div class="post post-announcement"><div class="meta">&#128204; {{ p.author.display_name|default:p.author.username }} &middot; {{ p.created_at|date:"j M H:i" }}</div><div>{{ p.body|truncatechars:200|linebreaksbr }}</div></div>{% endfor %}{% endif %}
       {% if digest.logistical %}<p class="muted" style="margin:.4rem 0 0">{% trans "Logistics mentioned:" %}</p>
         {% for p in digest.logistical %}<div class="post"><div class="meta">{{ p.author.display_name|default:p.author.username }} &middot; {{ p.created_at|date:"j M H:i" }}</div><div>{{ p.body|truncatechars:200|linebreaksbr }}</div></div>{% endfor %}{% endif %}
       {% if digest.recent %}<p class="muted" style="margin:.4rem 0 0">{% trans "Most recent:" %}</p>
@@ -236,7 +236,7 @@
   {% if announcements %}
     <div class="thread" aria-label="{% trans 'Pinned announcements' %}">
       {% for p in announcements %}
-        <div class="post" style="border-left:3px solid var(--accent)">
+        <div class="post post-announcement">
           <div class="meta">&#128204; {{ p.author.display_name|default:p.author.username }} &middot; {{ p.created_at|date:"j M H:i" }}</div>
           <div>{{ p.body|linebreaksbr }}</div>
         </div>
@@ -286,8 +286,8 @@
       <p class="muted" style="font-size:.75rem;margin:.2rem 0 0">{% blocktrans %}Photos &amp; PDFs are private to
         members and safety-screened on upload. No video.{% endblocktrans %}</p>
     </form>
-    {# Live region: announces ONLY the viewer's own send + new announcements (never every
-       inbound peer message), so a busy thread is not a screen-reader replay or a nudge. #}
+    {% comment %}Live region: announces ONLY the viewer's own send + new announcements (never every
+       inbound peer message), so a busy thread is not a screen-reader replay or a nudge.{% endcomment %}
     <div id="live-status" class="visually-hidden" role="status" aria-live="polite"></div>
   {% endif %}
 
@@ -310,19 +310,6 @@
 {% endblock %}
 
 {% block scripts %}
-<style>
-  .rx { display:flex; flex-wrap:wrap; align-items:center; gap:.2rem; }
-  .rx-chip { font-size:.95rem; padding:.05rem .25rem; border-radius:999px; background:#f0f2ee; }
-  .rx-chip.rx-mine { background:#d6f2dd; }
-  .rx-pick { display:inline-block; }
-  .rx-pick summary { font-size:.72rem; cursor:pointer; list-style:none; color:var(--muted,#666); }
-  .rx-pick[open] summary { color:var(--accent,#1a7f37); }
-  .rx-btn { background:none; border:1px solid var(--line); border-radius:999px; cursor:pointer;
-            font-size:1rem; line-height:1; padding:.1rem .35rem; margin:.1rem; }
-  .rx-btn.rx-mine { background:#d6f2dd; border-color:var(--accent,#1a7f37); }
-  .mention { color:var(--accent,#1a7f37); font-weight:600; background:#eef6f0; border-radius:4px;
-             padding:0 .15rem; }
-</style>
 {% if is_member %}
 <script>
 // Progressive enhancement over the server-rendered stream: live-append new messages via the
