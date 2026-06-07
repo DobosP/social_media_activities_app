@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Create a recurring series" %}{% endblock %}
+{% block content %}
+<h1>{% trans "Create a recurring series" %}</h1>
+{% blocktrans with cohort=user.get_cohort_display %}<p class="muted">Define a repeating meetup once &mdash; the
+  next instance is scheduled automatically before it starts, visible only to your cohort
+  (<strong>{{ cohort }}</strong>). Each instance needs a fresh join, so it never becomes a standing
+  roster.</p>{% endblocktrans %}
+<p class="muted"><a href="{% url 'activity_create' %}">{% trans "Just organising once? Create a single activity instead." %}</a></p>
+
+<form method="post" class="stack">{% csrf_token %}
+  {{ form.as_p }}
+  <button class="btn" type="submit">{% trans "Create series" %}</button>
+</form>
+{% endblock %}

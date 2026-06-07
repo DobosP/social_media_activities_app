@@ -97,6 +97,17 @@ class Activity(models.Model):
     # query (discovery, recommendations) but retained for audit/appeal. See apps/safety.
     is_hidden = models.BooleanField(default=False)
 
+    # F4: the recurring series that auto-spawned this instance (null for one-off activities).
+    # SET_NULL — ending/deleting a series leaves already-spawned, joined meetups standing as
+    # plain one-offs. Used only for idempotency + tracing; NEVER to copy a roster between instances.
+    series = models.ForeignKey(
+        "ActivitySeries",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="instances",
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -119,6 +130,95 @@ class Activity(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class ActivitySeries(models.Model):
+    """F4: a recurring meetup template. An organiser defines it once; the nightly
+    ``spawn_due_series`` job materialises ONLY the next single Activity through the normal
+    ``create_activity`` path, so every cohort/consent/blocking gate re-runs per instance.
+
+    A series is NOT a roster and NOT an attendance record: each spawned instance requires a
+    fresh per-member join (fresh parental consent for under-16), and memberships are never
+    copied between instances. ``place``/``activity_type``/``cohort`` are immutable — the
+    identity + cohort-isolation boundary, re-asserted against the owner's cohort at spawn.
+    See docs/SAFETY.md.
+    """
+
+    class Cadence(models.TextChoices):
+        WEEKLY = "weekly", "Weekly"
+        BIWEEKLY = "biweekly", "Every two weeks"
+        MONTHLY = "monthly", "Monthly"
+
+    class Status(models.TextChoices):
+        ACTIVE = "active", "Active"
+        PAUSED = "paused", "Paused"
+        ENDED = "ended", "Ended"
+
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="owned_series"
+    )
+    place = models.ForeignKey(
+        "places.Place", on_delete=models.PROTECT, related_name="activity_series"
+    )
+    activity_type = models.ForeignKey(
+        "taxonomy.ActivityType", on_delete=models.PROTECT, related_name="activity_series"
+    )
+    # Pinned from the owner's cohort at creation; the isolation boundary. Immutable, and
+    # re-asserted against the owner's current cohort at every spawn.
+    cohort = models.CharField(max_length=16, choices=Cohort.choices)
+
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True, default="")
+
+    # Logistics template copied onto each spawned instance (text-first; length-capped at the edge).
+    meeting_point = models.TextField(blank=True, default="")
+    what_to_bring = models.TextField(blank=True, default="")
+    organizer_note = models.TextField(blank=True, default="")
+    accessibility_notes = models.TextField(blank=True, default="")
+    cost_band = models.CharField(
+        max_length=16, choices=Activity.CostBand.choices, default=Activity.CostBand.UNSPECIFIED
+    )
+    difficulty = models.CharField(
+        max_length=16, choices=Activity.Difficulty.choices, default=Activity.Difficulty.UNSPECIFIED
+    )
+    capacity = models.PositiveIntegerField(null=True, blank=True)
+    min_to_go = models.PositiveIntegerField(null=True, blank=True)
+    join_threshold = models.FloatField(default=DEFAULT_JOIN_THRESHOLD)
+    guardian_accompanied = models.BooleanField(default=False)
+    beginners_welcome = models.BooleanField(default=False)
+
+    cadence = models.CharField(max_length=16, choices=Cadence.choices)
+    # The start time of the NEXT instance to spawn; advanced by one cadence step after each spawn.
+    next_starts_at = models.DateTimeField()
+    # The intended local day-of-month for MONTHLY series, captured at create time. Monthly advance
+    # clamps from THIS anchor (e.g. 31 -> Feb 28 -> Mar 31), so a "last day" series doesn't decay
+    # to the 28th forever after one short month. Unused for weekly/biweekly.
+    anchor_day = models.PositiveSmallIntegerField(default=1)
+    # Length of each instance in minutes, so every spawn gets a FRESH ends_at = starts + duration
+    # (never a stale absolute end time). null = open-ended (no ends_at on the instance).
+    duration_minutes = models.PositiveIntegerField(null=True, blank=True)
+
+    status = models.CharField(max_length=16, choices=Status.choices, default=Status.ACTIVE)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = "activity series"
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(join_threshold__gt=0) & Q(join_threshold__lte=1),
+                name="series_threshold_fraction",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["status", "next_starts_at"]),  # the nightly due-scan
+            models.Index(fields=["owner"]),  # "my series"
+            models.Index(fields=["cohort", "status"]),
+        ]
+
+    def __str__(self):
+        return f"{self.title} ({self.cadence})"
 
 
 class Membership(models.Model):

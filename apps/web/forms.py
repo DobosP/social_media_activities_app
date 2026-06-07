@@ -4,7 +4,7 @@ from apps.accounts.models import AgeBand
 from apps.donations.models import Campaign
 from apps.places.models import Place
 from apps.safety.models import ReasonCode
-from apps.social.models import Activity
+from apps.social.models import Activity, ActivitySeries
 from apps.social.serializers import (
     ACTIVITY_DESCRIPTION_MAX_LENGTH,
     LOGISTICS_FIELD_MAX_LENGTH,
@@ -111,6 +111,71 @@ class ActivityForm(forms.Form):
             self.add_error("ends_at", "End time cannot be before the start time.")
         # A ChoiceField(required=False) can yield "" — coerce to the sentinel so the model's
         # choices validation isn't bypassed (Activity.objects.create skips full_clean()).
+        if not cleaned.get("cost_band"):
+            cleaned["cost_band"] = Activity.CostBand.UNSPECIFIED
+        if not cleaned.get("difficulty"):
+            cleaned["difficulty"] = Activity.Difficulty.UNSPECIFIED
+        return cleaned
+
+
+class SeriesForm(forms.Form):
+    """Create a recurring activity series (F4). Mirrors ActivityForm; adds a cadence and uses
+    first_starts_at for the first instance's time. place is narrowed to public_places() like
+    ActivityForm, so a pending/tampered place id fails validation identically."""
+
+    place = forms.ModelChoiceField(queryset=Place.objects.none())
+    activity_type = forms.ModelChoiceField(
+        queryset=ActivityType.objects.filter(is_active=True).order_by("name")
+    )
+    title = forms.CharField(max_length=200)
+    description = forms.CharField(widget=forms.Textarea(attrs={"rows": 4}), required=False)
+    cadence = forms.ChoiceField(
+        choices=ActivitySeries.Cadence.choices, help_text="How often the meetup repeats."
+    )
+    first_starts_at = _dt_field()
+    ends_at = _dt_field(required=False)
+    capacity = forms.IntegerField(required=False, min_value=1, help_text="Blank = unlimited.")
+    min_to_go = forms.IntegerField(
+        required=False,
+        min_value=1,
+        label="Minimum to happen",
+        help_text="Runs only if at least this many say they're going. Blank = no minimum.",
+    )
+    meeting_point = _logistics_field("Where exactly to meet (e.g. north gate by the fountain).")
+    what_to_bring = _logistics_field("What members should bring.")
+    organizer_note = _logistics_field("A short note for members.")
+    cost_band = forms.ChoiceField(
+        choices=Activity.CostBand.choices,
+        required=False,
+        initial=Activity.CostBand.UNSPECIFIED,
+        help_text="Roughly what it costs to take part.",
+    )
+    difficulty = forms.ChoiceField(
+        choices=Activity.Difficulty.choices,
+        required=False,
+        initial=Activity.Difficulty.UNSPECIFIED,
+        help_text="How physically demanding it is.",
+    )
+    accessibility_notes = _logistics_field(
+        "Accessibility info (step-free access, quiet space, etc.)."
+    )
+    beginners_welcome = forms.BooleanField(
+        required=False,
+        label="Beginners welcome",
+        help_text="Tick if first-timers are explicitly welcome.",
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from apps.places.services import public_places
+
+        self.fields["place"].queryset = public_places(Place.objects.order_by("name"))
+
+    def clean(self):
+        cleaned = super().clean()
+        starts, ends = cleaned.get("first_starts_at"), cleaned.get("ends_at")
+        if starts and ends and ends < starts:
+            self.add_error("ends_at", "End time cannot be before the start time.")
         if not cleaned.get("cost_band"):
             cleaned["cost_band"] = Activity.CostBand.UNSPECIFIED
         if not cleaned.get("difficulty"):

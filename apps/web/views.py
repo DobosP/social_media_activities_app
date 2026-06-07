@@ -64,7 +64,7 @@ from apps.recommendations.models import UserInterest
 from apps.safety import services as safety
 from apps.safety.models import Block
 from apps.social import services as social
-from apps.social.models import Activity, GroupMembership, JoinVote, Membership, Post
+from apps.social.models import Activity, ActivitySeries, GroupMembership, JoinVote, Membership, Post
 from apps.taxonomy.models import ActivityType
 
 from .forms import (
@@ -77,6 +77,7 @@ from .forms import (
     PostForm,
     RegisterForm,
     ReportForm,
+    SeriesForm,
 )
 
 # --- Communities (derived geo x activity-type discovery labels) -------------------------
@@ -1147,6 +1148,107 @@ def activity_create(request):
     else:
         form = ActivityForm(initial=initial)
     return render(request, "web/activity_form.html", {"form": form, **_nav_context(request.user)})
+
+
+# --- F4: recurring series (web) ------------------------------------------------------
+# A series is an owner-management template, not a meetup: only its owner sees/manages it
+# (peers discover the spawned activities via the normal cohort feed).
+
+
+def _visible_series_or_404(user, pk) -> ActivitySeries:
+    series = get_object_or_404(
+        ActivitySeries.objects.select_related("place", "activity_type", "owner"), pk=pk
+    )
+    if getattr(user, "is_staff", False):
+        return series
+    if user.is_authenticated and series.owner_id == user.id:
+        return series
+    raise Http404("No series matches the given query.")
+
+
+@login_required
+def series_list(request):
+    """The signed-in user's own recurring series."""
+    series = social.visible_series(request.user).order_by("status", "next_starts_at")
+    return render(request, "web/series_list.html", {"series": series, **_nav_context(request.user)})
+
+
+@login_required
+def series_create(request):
+    if not social.can_create_activity(request.user):
+        messages.error(
+            request,
+            "You need to be verified (and, if a minor, have parental consent) and in a cohort "
+            "to organize activities.",
+        )
+        return redirect("profile")
+    if request.method == "POST":
+        form = SeriesForm(request.POST)
+        if form.is_valid():
+            try:
+                series = social.create_series(request.user, **form.cleaned_data)
+            except social.SocialError as exc:
+                messages.error(request, _msg(exc))
+            else:
+                messages.success(
+                    request,
+                    "Recurring series created - the next meetup is scheduled automatically.",
+                )
+                return redirect("series_detail", pk=series.pk)
+    else:
+        form = SeriesForm()
+    return render(request, "web/series_form.html", {"form": form, **_nav_context(request.user)})
+
+
+@login_required
+def series_detail(request, pk):
+    series = _visible_series_or_404(request.user, pk)
+    return render(
+        request,
+        "web/series_detail.html",
+        {
+            "series": series,
+            "is_owner": series.owner_id == request.user.id,
+            "instances": series.instances.order_by("-starts_at")[:10],
+            **_nav_context(request.user),
+        },
+    )
+
+
+@login_required
+@require_POST
+def series_pause(request, pk):
+    series = _visible_series_or_404(request.user, pk)
+    try:
+        social.pause_series(request.user, series)
+        messages.success(request, "Series paused - no new meetups will be scheduled.")
+    except social.SocialError as exc:
+        messages.error(request, _msg(exc))
+    return redirect("series_detail", pk=pk)
+
+
+@login_required
+@require_POST
+def series_resume(request, pk):
+    series = _visible_series_or_404(request.user, pk)
+    try:
+        social.resume_series(request.user, series)
+        messages.success(request, "Series resumed.")
+    except social.SocialError as exc:
+        messages.error(request, _msg(exc))
+    return redirect("series_detail", pk=pk)
+
+
+@login_required
+@require_POST
+def series_end(request, pk):
+    series = _visible_series_or_404(request.user, pk)
+    try:
+        social.end_series(request.user, series)
+        messages.success(request, "Series ended. Already-scheduled meetups still stand.")
+    except social.SocialError as exc:
+        messages.error(request, _msg(exc))
+    return redirect("series_detail", pk=pk)
 
 
 @login_required

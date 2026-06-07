@@ -11,6 +11,7 @@ It fans out to the existing per-app commands rather than re-implementing their l
   * ``send_activity_reminders``— notify members of activities starting soon.
   * ``generate_communities``   — re-materialize the per-cohort community discovery labels.
   * ``reverify_sweep``         — nudge/evict minors on a stale age proof (active expiry).
+  * ``spawn_due_series``       — spawn the next instance of each due recurring activity series.
 
 Each job is isolated: a failure in one is reported but does not abort the rest, so a
 single broken job never blocks the others on a shared cron tick. Exit status is non-zero
@@ -30,6 +31,7 @@ DUE_JOBS = (
     ("send_activity_reminders", {}),
     ("generate_communities", {}),
     ("reverify_sweep", {}),
+    ("spawn_due_series", {}),
 )
 
 

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{{ series.title }}{% endblock %}
+{% block content %}
+<p class="muted"><a href="{% url 'series_list' %}">&larr; {% trans "Your recurring series" %}</a></p>
+<h1>{{ series.title }}</h1>
+<div class="cluster">
+  <span class="tag">{{ series.activity_type.name }}</span>
+  <span class="tag">{{ series.get_cohort_display }}</span>
+  <span class="tag">{{ series.get_cadence_display }}</span>
+  <span class="tag">{{ series.get_status_display }}</span>
+</div>
+<p class="muted">{% blocktrans with place=series.place.name %}At {{ place }}.{% endblocktrans %}
+  {% if series.status == 'active' %}{% blocktrans with when=series.next_starts_at|date:"l j F Y, H:i" %}Next instance scheduled around {{ when }}.{% endblocktrans %}{% endif %}</p>
+{% if series.description %}<p>{{ series.description|linebreaks }}</p>{% endif %}
+
+{% if is_owner %}
+<div class="card card-accent">
+  <strong>{% trans "Series controls" %}</strong>
+  <p class="muted">{% trans "Pausing stops new meetups from being scheduled; ending is permanent. Meetups already scheduled always stand." %}</p>
+  <div class="row">
+    {% if series.status == 'active' %}
+      <form method="post" action="{% url 'series_pause' series.pk %}">{% csrf_token %}
+        <button class="btn btn-sm btn-secondary" type="submit">{% trans "Pause" %}</button></form>
+    {% elif series.status == 'paused' %}
+      <form method="post" action="{% url 'series_resume' series.pk %}">{% csrf_token %}
+        <button class="btn btn-sm" type="submit">{% trans "Resume" %}</button></form>
+    {% endif %}
+    {% if series.status != 'ended' %}
+      <form method="post" action="{% url 'series_end' series.pk %}"
+            onsubmit="return confirm('{% trans "End this series? No more meetups will be scheduled. This can't be undone." %}');">{% csrf_token %}
+        <button class="btn btn-sm btn-danger" type="submit">{% trans "End series" %}</button></form>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+<h2>{% trans "Scheduled meetups" %}</h2>
+{% for a in instances %}
+  <div class="card">
+    <h3><a href="{% url 'activity_detail' a.pk %}">{{ a.title }}</a></h3>
+    <p class="muted">{{ a.starts_at|date:"D j M, H:i" }} &middot; {{ a.get_status_display }}</p>
+  </div>
+{% empty %}
+  <p class="muted">{% trans "No meetups scheduled yet &mdash; the next one appears automatically before it starts." %}</p>
+{% endfor %}
+{% endblock %}

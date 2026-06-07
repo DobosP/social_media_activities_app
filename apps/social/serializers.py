@@ -3,7 +3,7 @@ from rest_framework import serializers
 from apps.places.models import Place
 from apps.taxonomy.models import ActivityType
 
-from .models import Activity, Membership, Post
+from .models import Activity, ActivitySeries, Membership, Post
 from .services import participant_count
 
 # Hard text caps enforced at the serialization layer. The underlying model fields
@@ -131,6 +131,80 @@ class ActivityUpdateSerializer(serializers.Serializer):
         required=False, allow_blank=True, max_length=LOGISTICS_FIELD_MAX_LENGTH
     )
     beginners_welcome = serializers.BooleanField(required=False)
+
+
+class SeriesCreateSerializer(serializers.Serializer):
+    """Create a recurring activity series. Mirrors ActivityCreateSerializer; adds cadence +
+    first_starts_at. cohort/owner are NOT accepted — cohort is pinned from the owner."""
+
+    place = serializers.PrimaryKeyRelatedField(queryset=Place.objects.all())
+    activity_type = serializers.PrimaryKeyRelatedField(queryset=ActivityType.objects.all())
+    title = serializers.CharField(max_length=200)
+    cadence = serializers.ChoiceField(choices=ActivitySeries.Cadence.choices)
+    first_starts_at = serializers.DateTimeField()
+    ends_at = serializers.DateTimeField(required=False, allow_null=True)
+    description = serializers.CharField(
+        required=False, allow_blank=True, default="", max_length=ACTIVITY_DESCRIPTION_MAX_LENGTH
+    )
+    join_threshold = serializers.FloatField(required=False, min_value=0.01, max_value=1.0)
+    capacity = serializers.IntegerField(required=False, allow_null=True, min_value=1)
+    min_to_go = serializers.IntegerField(required=False, allow_null=True, min_value=1)
+    guardian_accompanied = serializers.BooleanField(required=False, default=False)
+    meeting_point = serializers.CharField(
+        required=False, allow_blank=True, default="", max_length=LOGISTICS_FIELD_MAX_LENGTH
+    )
+    what_to_bring = serializers.CharField(
+        required=False, allow_blank=True, default="", max_length=LOGISTICS_FIELD_MAX_LENGTH
+    )
+    organizer_note = serializers.CharField(
+        required=False, allow_blank=True, default="", max_length=LOGISTICS_FIELD_MAX_LENGTH
+    )
+    cost_band = serializers.ChoiceField(
+        choices=Activity.CostBand.choices, required=False, default=Activity.CostBand.UNSPECIFIED
+    )
+    difficulty = serializers.ChoiceField(
+        choices=Activity.Difficulty.choices, required=False, default=Activity.Difficulty.UNSPECIFIED
+    )
+    accessibility_notes = serializers.CharField(
+        required=False, allow_blank=True, default="", max_length=LOGISTICS_FIELD_MAX_LENGTH
+    )
+    beginners_welcome = serializers.BooleanField(required=False, default=False)
+
+
+class SeriesSerializer(serializers.ModelSerializer):
+    """Read-output for a recurring series. Explicit allowlist + read_only — deliberately exposes
+    NO roster, member/instance count, or attendance rollup (a series is not a meetup)."""
+
+    owner = serializers.CharField(source="owner.display_name", read_only=True)
+    activity_type = serializers.SlugRelatedField(slug_field="slug", read_only=True)
+
+    class Meta:
+        model = ActivitySeries
+        fields = [
+            "id",
+            "title",
+            "description",
+            "meeting_point",
+            "what_to_bring",
+            "organizer_note",
+            "cost_band",
+            "difficulty",
+            "accessibility_notes",
+            "beginners_welcome",
+            "owner",
+            "place",
+            "activity_type",
+            "cohort",
+            "cadence",
+            "status",
+            "next_starts_at",
+            "join_threshold",
+            "capacity",
+            "min_to_go",
+            "guardian_accompanied",
+            "created_at",
+        ]
+        read_only_fields = fields
 
 
 class MembershipSerializer(serializers.ModelSerializer):
