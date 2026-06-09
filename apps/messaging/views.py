@@ -18,8 +18,17 @@ from .serializers import (
 User = get_user_model()
 
 
+def _attach_avatars(users):
+    """Batch interest nodes onto the given users so UserRefSerializer's nested constellation
+    avatars render from cache, instead of one interest query per participant/sender (N+1)."""
+    from apps.recommendations.services import attach_interest_nodes
+
+    attach_interest_nodes(users)
+
+
 def _conversation_payload(conv, request):
     conv = Conversation.objects.prefetch_related("participants__user").get(pk=conv.pk)
+    _attach_avatars([p.user for p in conv.participants.all()])
     return ConversationSerializer(conv, context={"request": request}).data
 
 
@@ -97,9 +106,10 @@ class ConversationListCreateView(APIView):
         # (mirrors the notifications [:100] bound). `conversations_for` already
         # orders by -updated_at, so this keeps the most recently active ones.
         limit = getattr(settings, "MESSAGING_CONVERSATION_LIST_LIMIT", 100)
-        convs = services.conversations_for(request.user).prefetch_related("participants__user")[
-            :limit
-        ]
+        convs = list(
+            services.conversations_for(request.user).prefetch_related("participants__user")[:limit]
+        )
+        _attach_avatars([p.user for c in convs for p in c.participants.all()])
         return Response(ConversationSerializer(convs, many=True, context={"request": request}).data)
 
     def post(self, request):
@@ -246,9 +256,12 @@ class GuardianConversationsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        convs = services.guardian_observable_conversations(request.user).prefetch_related(
-            "participants__user"
+        convs = list(
+            services.guardian_observable_conversations(request.user).prefetch_related(
+                "participants__user"
+            )
         )
+        _attach_avatars([p.user for c in convs for p in c.participants.all()])
         return Response(ConversationSerializer(convs, many=True, context={"request": request}).data)
 
 
@@ -279,6 +292,7 @@ class ConversationMessagesView(APIView):
             msgs = services.messages_for(request.user, conv, limit=limit, after_id=after_id)
         except services.MessagingError as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_403_FORBIDDEN)
+        _attach_avatars([m.sender for m in msgs if m.sender_id])
         return Response(MessageSerializer(msgs, many=True, context={"request": request}).data)
 
     def post(self, request, pk):

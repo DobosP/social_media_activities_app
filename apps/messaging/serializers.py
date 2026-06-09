@@ -7,14 +7,17 @@ class UserRefSerializer(serializers.Serializer):
     public_id = serializers.UUIDField(read_only=True)
     username = serializers.CharField(read_only=True)
     display_name = serializers.CharField(read_only=True)
-    # The generated identicon (deterministic from username) so the chat shows a consistent avatar
-    # for the other participant without any upload or extra round-trip.
+    # The same generated avatar the rest of the app shows: the user's interest *constellation*
+    # (identicon fallback when they have no interests). Deterministic — no upload, no round-trip —
+    # so the chat matches the web connections/profile surfaces for the same person.
     avatar = serializers.SerializerMethodField()
 
     def get_avatar(self, obj):
-        from apps.accounts.avatars import identicon_data_uri
+        # Reads interests prefetched by attach_interest_nodes when the view batched them (nested
+        # participant/sender lists), so a conversation/message list doesn't N+1.
+        from apps.recommendations.services import interest_avatar_data_uri
 
-        return identicon_data_uri(getattr(obj, "username", "?"))
+        return interest_avatar_data_uri(obj)
 
 
 class PublicKeySerializer(serializers.ModelSerializer):

@@ -73,6 +73,17 @@ clear reporting from the activity screen. Track as safety backlog.
 - **Data minimization:** age bands over birthdates; store the least identity data that works.
 - **Deletion & revocation:** parental consent can be revoked; accounts and their content can be
   deleted; define retention windows with the DPO.
+- **Generated "constellation" avatar — declared-interest disclosure (deliberate).** The default
+  generated avatar (when a user has not uploaded a photo) is a star-map of the user's *declared
+  interests*: one colour-coded star per interest, coloured by its taxonomy category. Because the
+  category→colour palette is fixed, a same-cohort viewer can infer a user's interest **count** and
+  **category mix** from the picture. This is an accepted trade-off: interests are low-sensitivity,
+  self-declared data; the avatar shows **no readable activity labels** (abstract nodes only); it is
+  shown **only where any avatar is — same-cohort** (cohort isolation and the no-adult↔minor wall are
+  untouched, since an avatar is not a shared activity); and nothing is stored (the image is derived
+  on the fly, like the identicon it supersedes). It is **not** behavioural data — it reflects only
+  what the user chose to declare, never inferred activity/attendance. Decided 2026-06-09; the avatar
+  is the user's identity surface and is intentionally consistent across web and the messaging API.
 
 ## Definition of "safe enough to launch" (D9 gate)
 
