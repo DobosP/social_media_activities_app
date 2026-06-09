@@ -1,11 +1,14 @@
 """Recommendation domain logic: manage interests, (re)compute embeddings, and rank
 upcoming activities by interest similarity — always within the viewer's cohort."""
 
+import base64
+
 from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.measure import D
 from django.utils import timezone
 from pgvector.django import CosineDistance
 
+from apps.accounts.avatars import constellation_svg, identicon_svg
 from apps.places.services import (
     accessibility_facts,
     get_access_preference,
@@ -56,6 +59,108 @@ def set_interests(user, slugs) -> list[ActivityType]:
 
 def get_interests(user):
     return ActivityType.objects.filter(interested_users__user=user).order_by("slug")
+
+
+# --- Interest-graph avatar (the generated "constellation" profile picture) ----------------------
+#
+# The generated avatar visualises a user's DECLARED interests as a small graph: one glowing star
+# per interest (colour = its taxonomy category), joined by an edge for each same-category pair.
+# Edges are derived in pure Python from the nodes (zero extra queries), and the graph reads from
+# interests prefetched by ``attach_interest_nodes`` when present, so rendering a *list* of avatars
+# never N+1s. Rendering itself is a pure, DB-free function in ``apps.accounts.avatars``; this layer
+# only turns a user into (nodes, edges) using the colour palette below. The picture reveals no PII:
+# interests show as abstract colour-coded nodes, never readable activity labels, and it is only ever
+# shown where any avatar is (same-cohort), exactly like the identicon it supersedes.
+
+# Category slug -> star colour. Generic across all activity types (sport is just the launch slice).
+INTEREST_AVATAR_COLORS = {
+    "team_sport": "#ff7a45",  # warm orange
+    "racquet_sport": "#ffa940",  # amber
+    "sport": "#ff7a45",
+    "outdoor": "#52c41a",  # green
+    "fitness": "#13c2c2",  # teal
+    "tabletop": "#9254de",  # violet
+    "reading": "#4096ff",  # blue
+    "video_games": "#f759ab",  # magenta
+    "culture": "#ffc53d",  # gold
+    "social": "#ff85c0",  # rose
+}
+_DEFAULT_AVATAR_COLOR = "#8c8c8c"
+
+
+def _avatar_node(activity_type):
+    cat = activity_type.category.slug if activity_type.category_id else ""
+    return {
+        "slug": activity_type.slug,
+        "name": activity_type.name,
+        "category": cat,
+        "color": INTEREST_AVATAR_COLORS.get(cat, _DEFAULT_AVATAR_COLOR),
+        "wellness": activity_type.wellness,
+        "family_friendly": activity_type.family_friendly,
+    }
+
+
+def _same_category_edges(nodes):
+    """Undirected edges joining every pair of interests that share a category — the cheap,
+    query-free graph structure behind the constellation's colour-threads."""
+    edges = []
+    for i in range(len(nodes)):
+        for j in range(i + 1, len(nodes)):
+            if nodes[i]["category"] and nodes[i]["category"] == nodes[j]["category"]:
+                edges.append((i, j))
+    return edges
+
+
+def interest_graph(user):
+    """(nodes, edges) for a user's interest constellation. Uses interests prefetched by
+    ``attach_interest_nodes`` when present; otherwise issues a single query. Node order is
+    deterministic (by slug) so the avatar is byte-stable."""
+    nodes = getattr(user, "_interest_nodes", None)
+    if nodes is None:
+        rows = (
+            UserInterest.objects.filter(user=user)
+            .select_related("activity_type__category")
+            .order_by("activity_type__slug")
+        )
+        nodes = [_avatar_node(r.activity_type) for r in rows]
+    return nodes, _same_category_edges(nodes)
+
+
+def attach_interest_nodes(users):
+    """Bulk-load interest nodes for many users in ONE query and cache them on each user as
+    ``_interest_nodes``, so rendering a list of constellation avatars doesn't N+1. Returns the
+    same list for convenience."""
+    users = list(users)
+    if not users:
+        return users
+    by_id = {u.id: [] for u in users}
+    rows = (
+        UserInterest.objects.filter(user__in=users)
+        .select_related("activity_type__category")
+        .order_by("activity_type__slug")
+    )
+    for r in rows:
+        if r.user_id in by_id:
+            by_id[r.user_id].append(_avatar_node(r.activity_type))
+    for u in users:
+        u._interest_nodes = by_id[u.id]
+    return users
+
+
+def interest_avatar_svg(user, *, px=80):
+    """The user's generated avatar SVG: their interest constellation, or the identicon fallback
+    when they have not declared any interests yet — so every account always has an avatar."""
+    nodes, edges = interest_graph(user)
+    seed = getattr(user, "username", None) or str(getattr(user, "pk", "") or "?")
+    if nodes:
+        return constellation_svg(seed, nodes, edges, px=px)
+    return identicon_svg(seed, px=px)
+
+
+def interest_avatar_data_uri(user, *, px=80):
+    """``interest_avatar_svg`` as a base64 ``data:`` URI for an ``<img src>`` / JSON payload."""
+    b64 = base64.b64encode(interest_avatar_svg(user, px=px).encode("utf-8")).decode("ascii")
+    return f"data:image/svg+xml;base64,{b64}"
 
 
 def recompute_activity_embedding(activity) -> None:

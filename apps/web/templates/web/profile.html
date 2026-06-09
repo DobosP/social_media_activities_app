@@ -9,7 +9,7 @@
   {% if avatar_url %}
     <img class="avatar" src="{{ avatar_url }}" width="96" height="96" alt="{% trans 'profile picture' %}">
   {% else %}
-    {# No uploaded picture → the generated identicon (the universal default avatar). #}
+    {# No uploaded picture → the generated avatar (interest constellation, identicon if no interests). #}
     <img class="avatar" src="{{ profile_user|avatar_uri }}" width="96" height="96"
          alt="{% trans 'generated avatar' %}" title="{% trans 'Your generated avatar (upload a photo to replace it)' %}">
   {% endif %}
