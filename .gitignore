@@ -39,3 +39,6 @@ htmlcov/
 # Local agent worktrees / state
 .claude/
 docker-compose.local.yml
+
+# Local design/exploration scratch (avatar concept gallery, montages — not for the repo)
+scratch/
