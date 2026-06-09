@@ -21,7 +21,6 @@ from django.utils.crypto import get_random_string
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
-from apps.accounts.avatars import identicon_data_uri
 from apps.accounts.identity.base import IdentityVerificationError
 from apps.accounts.identity.registry import get_identity_provider
 from apps.accounts.models import AgeBand, Cohort, GuardianRelationship, User
@@ -342,20 +341,26 @@ def connections_page(request):
     """Your connections + pending requests, and a SEARCH box (query-only, no suggestions feed).
     Search is restricted to people you've shared an activity with, in your own cohort."""
     from apps.connections import services as connections
+    from apps.recommendations.services import attach_interest_nodes
 
     if not connections.is_enabled_for(request.user):
         messages.info(request, "Connections aren't available for your account yet.")
         return redirect("home")
     query = request.GET.get("q", "")
+    conns = connections.connections_for(request.user)
+    results = list(connections.search_connectable(request.user, query))
+    # Batch-load interests so the constellation avatars in these lists don't N+1 (one query total);
+    # the |avatar_uri filter then renders each from the cached nodes. incoming/outgoing show names.
+    attach_interest_nodes(conns + results)
     return render(
         request,
         "web/connections.html",
         {
-            "connections": connections.connections_for(request.user),
+            "connections": conns,
             "incoming": connections.pending_incoming(request.user),
             "outgoing": connections.pending_outgoing(request.user),
             "query": query,
-            "results": connections.search_connectable(request.user, query),
+            "results": results,
             **_nav_context(request.user),
         },
     )
@@ -1822,24 +1827,29 @@ def messages_page(request):
     browser (see static/js/e2ee-messaging.js); this view only renders the page and
     hands the client the current user's public identity so it can address itself."""
     from apps.connections import services as connections
+    from apps.recommendations.services import attach_interest_nodes, interest_avatar_data_uri
 
     # Your connections (people you've met) — offered as quick "start a chat" shortcuts so you
     # don't have to type a username. Same-cohort by construction; messaging re-gates can_message.
+    conn_users = connections.connections_for(request.user)
+    # Same generated avatar (interest constellation) the rest of the UI shows; batch the interest
+    # load across the connections + me so the chips don't N+1.
+    attach_interest_nodes(conn_users + [request.user])
     conns = [
         {
             "public_id": str(u.public_id),
             "username": u.username,
             "display_name": u.display_name or u.username,
-            "avatar": identicon_data_uri(u.username),
+            "avatar": interest_avatar_data_uri(u),
         }
-        for u in connections.connections_for(request.user)
+        for u in conn_users
     ]
     config = {
         "me": {
             "public_id": str(request.user.public_id),
             "username": request.user.username,
             "display_name": request.user.display_name or request.user.username,
-            "avatar": identicon_data_uri(request.user.username),
+            "avatar": interest_avatar_data_uri(request.user),
         },
         "connections": conns,
         # The fixed reaction set (same as the thread). In E2EE chat a reaction is an encrypted
