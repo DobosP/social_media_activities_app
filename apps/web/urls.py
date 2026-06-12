@@ -94,6 +94,7 @@ urlpatterns = [
     path("saved-searches/<int:pk>/delete/", views.saved_search_delete, name="saved_search_delete"),
     # Consolidated nav hubs (presentation-only landings; see views)
     path("you/", views.you_hub, name="you"),
+    path("settings/", views.settings_hub, name="settings"),
     path("inbox/", views.inbox_hub, name="inbox"),
     # Interests, profile, notifications, donations
     path("interests/", views.interests, name="interests"),

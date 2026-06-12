@@ -362,6 +362,10 @@ textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--accent)
 .search-bar input[type="search"] { flex: 1; min-width: 0; }
 .search-bar .btn { flex-shrink: 0; }
 
+/* W3: avatar-button account menu */
+.nav-avatar { width: 26px; height: 26px; flex-shrink: 0; background: var(--card); }
+@media (max-width: 879px) { .nav-username { font-weight: 600; } }
+
 /* =============================================================================
    F12 display preferences — theme token re-maps. Only token VALUES change here;
    every rule above already consumes them. Source of truth = a functional cookie

@@ -1,4 +1,4 @@
-{% load static i18n %}
+{% load static i18n avatars %}
 {% get_current_language as LANGUAGE_CODE %}
 <!DOCTYPE html>
 <html lang="{{ LANGUAGE_CODE }}" data-theme="{{ display_theme }}" data-motion="{{ display_motion }}" style="--scale: {{ display_scale }};">
@@ -58,20 +58,16 @@
         <span class="spacer"></span>
 
         {% if user.is_authenticated %}
+          {% comment %}W3: the account menu opens from the user's avatar (generated
+             constellation/identicon — a deterministic data URI, no media fetch). The
+             menu is deliberately slim: everything else lives on /settings/.{% endcomment %}
           <details class="nav-menu nav-end">
-            <summary>{{ user.display_name|default:user.username }}</summary>
+            <summary><img class="avatar nav-avatar" src="{{ user|avatar_uri }}" width="26" height="26" alt="">
+              <span class="nav-username">{{ user.display_name|default:user.username }}</span></summary>
             <div class="nav-panel">
-              <span class="meta">{% trans "Signed in" %} &middot; {{ user.get_cohort_display }}</span>
-              <a href="{% url 'you' %}">{% trans "Account &amp; settings" %}</a>
-              <div class="sep"></div>
               <a href="{% url 'profile' %}">{% trans "Profile" %}</a>
-              <a href="{% url 'interests' %}">{% trans "Interests" %}</a>
-              <a href="{% url 'saved_searches' %}">{% trans "Saved searches" %}</a>
-              <a href="{% url 'my_donations' %}">{% trans "My donations" %}</a>
-              {% if has_guardians %}<a href="{% url 'my_guardians' %}">{% trans "Guardians" %}</a>{% endif %}
-              <div class="sep"></div>
-              <a href="{% url 'display_preferences' %}">{% trans "Display" %}</a>
-              <a href="{% url 'my_privacy' %}">{% trans "Privacy &amp; data" %}</a>
+              <a href="{% url 'you' %}">{% trans "Account overview" %}</a>
+              <a href="{% url 'settings' %}">{% trans "Settings" %}</a>
               <div class="sep"></div>
               <form method="post" action="{% url 'logout' %}" class="inline">{% csrf_token %}
                 <button class="linkbtn" type="submit">{% trans "Log out" %}</button></form>
@@ -83,20 +79,6 @@
           <a class="nav-link nav-cta" href="{% url 'register' %}">{% trans "Sign up" %}</a>
           <a class="nav-link" href="{% url 'donate' %}">{% trans "Support" %}</a>
         {% endif %}
-
-        {% comment %}Language switcher (P6/IS-7): persists to the session via set_language;
-           LocaleMiddleware then serves the chosen language. No-JS friendly: a submit button.{% endcomment %}
-        <form method="post" action="{% url 'set_language' %}" class="inline lang-switch">{% csrf_token %}
-          <input type="hidden" name="next" value="{{ request.path }}">
-          <select name="language" aria-label="{% trans 'Language' %}" onchange="this.form.submit()">
-            {% get_current_language as cur_lang %}
-            {% get_available_languages as available_langs %}
-            {% for code, name in available_langs %}
-              <option value="{{ code }}"{% if code == cur_lang %} selected{% endif %}>{{ name }}</option>
-            {% endfor %}
-          </select>
-          <noscript><button class="linkbtn" type="submit">{% trans "Set language" %}</button></noscript>
-        </form>
       </nav>
   </div>
 </header>
@@ -119,7 +101,21 @@
       <a href="{% url 'terms' %}">{% trans "Terms" %}</a> &middot;
       <a href="{% url 'transparency' %}">{% trans "Transparency" %}</a> &middot;
       <a href="{% url 'display_preferences' %}">{% trans "Display" %}</a>
+      {% if user.is_authenticated %} &middot; <a href="{% url 'settings' %}">{% trans "Settings" %}</a>{% endif %}
     </p>
+    {% comment %}Language switcher (P6/IS-7) — moved out of the top bar (W3 declutter).
+       Persists to the session via set_language; no-JS friendly submit button.{% endcomment %}
+    <form method="post" action="{% url 'set_language' %}" class="inline lang-switch">{% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.path }}">
+      <select name="language" aria-label="{% trans 'Language' %}" onchange="this.form.submit()">
+        {% get_current_language as cur_lang %}
+        {% get_available_languages as available_langs %}
+        {% for code, name in available_langs %}
+          <option value="{{ code }}"{% if code == cur_lang %} selected{% endif %}>{{ name }}</option>
+        {% endfor %}
+      </select>
+      <noscript><button class="linkbtn" type="submit">{% trans "Set language" %}</button></noscript>
+    </form>
   </div>
 </footer>
 

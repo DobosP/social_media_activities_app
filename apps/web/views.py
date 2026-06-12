@@ -1701,6 +1701,15 @@ def inbox_hub(request):
     return redirect("notifications")
 
 
+@login_required
+def settings_hub(request):
+    """W3: the single Settings page. Everything that used to crowd the top bar lives
+    here — language, display, notifications, access needs, privacy/data controls,
+    age verification, guardians, and the account dangers (export / delete). Pure
+    links + the language form; every linked control keeps its own view and gates."""
+    return render(request, "web/settings.html", _nav_context(request.user))
+
+
 # --- Profile ------------------------------------------------------------------------
 
 
