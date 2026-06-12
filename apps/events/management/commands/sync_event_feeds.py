@@ -35,9 +35,7 @@ class Command(BaseCommand):
         for feed in EventFeed.objects.filter(is_active=True):
             try:
                 source = _NamespacedSource(ICalFeedSource(url=feed.url), feed.pk)
-                count = import_events(
-                    source, place=feed.place, activity_type=feed.activity_type
-                )
+                count = import_events(source, place=feed.place, activity_type=feed.activity_type)
                 feed.last_status = f"ok: {count} event(s)"
                 self.stdout.write(f"{feed.name}: {count} event(s)")
             except Exception as exc:  # noqa: BLE001 — per-feed isolation by design

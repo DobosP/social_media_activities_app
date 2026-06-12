@@ -522,9 +522,7 @@ def share_to_thread(request):
     note = (request.POST.get("note") or "").strip()[:280]
     share_kwargs = {f"share_{kind}": obj_id}
     try:
-        post = social.post_to_thread(
-            request.user, target, note, allow_empty=True, **share_kwargs
-        )
+        post = social.post_to_thread(request.user, target, note, allow_empty=True, **share_kwargs)
     except social.SocialError as exc:
         messages.error(request, _msg(exc))
         return redirect(_safe_next(request, "home"))

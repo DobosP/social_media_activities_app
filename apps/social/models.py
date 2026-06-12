@@ -131,9 +131,7 @@ class Activity(models.Model):
             # keeps those ILIKE '%…%' scans index-assisted as the table grows (the pg_trgm
             # extension is created in the same migration that adds these indexes).
             GinIndex(name="activity_title_trgm", fields=["title"], opclasses=["gin_trgm_ops"]),
-            GinIndex(
-                name="activity_desc_trgm", fields=["description"], opclasses=["gin_trgm_ops"]
-            ),
+            GinIndex(name="activity_desc_trgm", fields=["description"], opclasses=["gin_trgm_ops"]),
         ]
 
     def __str__(self):

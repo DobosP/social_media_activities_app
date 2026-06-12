@@ -242,9 +242,7 @@ def recommended_with_reasons(user, *, limit=8, near_point=None, radius_m=None):
     and the mobile feed API state the exact same truthful reason: "matches your interest
     in X" from the viewer's OWN declared interests, the genuine "% match" otherwise, and
     "soonest first" on cold start. F5 appends "· near you" / access-match suffixes."""
-    recommended = recommend_activities(
-        user, limit=limit, near_point=near_point, radius_m=radius_m
-    )
+    recommended = recommend_activities(user, limit=limit, near_point=near_point, radius_m=radius_m)
     interest_names = dict(
         UserInterest.objects.filter(user=user).values_list(
             "activity_type__slug", "activity_type__name"

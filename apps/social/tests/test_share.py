@@ -14,7 +14,7 @@ from apps.accounts.models import AgeBand
 from apps.events.models import Event
 from apps.places.models import Place
 from apps.social import services as social
-from apps.social.models import Activity, Membership, UserPlaceProposal
+from apps.social.models import Membership, UserPlaceProposal
 
 from .conftest import make_user
 
@@ -89,9 +89,7 @@ def test_share_event_venue_gate_and_only_one_share(setup, place):
     post = social.post_to_thread(member, activity, "", share_event=event.pk)
     assert social.share_card(post)["kind"] == "event"
     with pytest.raises(social.InvalidState):
-        social.post_to_thread(
-            member, activity, "", share_event=event.pk, share_place=place.pk
-        )
+        social.post_to_thread(member, activity, "", share_event=event.pk, share_place=place.pk)
 
 
 def test_web_share_endpoint_and_thread_search(client, setup, place, activity_type):

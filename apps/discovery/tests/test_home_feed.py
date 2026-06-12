@@ -14,7 +14,7 @@ from apps.accounts.identity.base import AssuranceResult
 from apps.accounts.models import AgeBand, User
 from apps.accounts.services import apply_assurance
 from apps.communities.models import Area
-from apps.discovery.services import build_home_feed, group_updates, interest_matched_events
+from apps.discovery.services import group_updates, interest_matched_events
 from apps.events.models import Event
 from apps.places.models import Place
 from apps.recommendations.services import set_interests

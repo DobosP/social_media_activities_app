@@ -280,9 +280,7 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
             serializer = PostSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             data = serializer.validated_data
-            shares = {
-                k: data.get(k) for k in ("share_activity", "share_place", "share_event")
-            }
+            shares = {k: data.get(k) for k in ("share_activity", "share_place", "share_event")}
             try:
                 # A thread message is a first-person utterance — ALWAYS the authenticated
                 # user, never on_behalf_of (mirrors `arrived`), so a guardian cannot ghostwrite

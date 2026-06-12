@@ -83,12 +83,12 @@ def test_profile_near_duplicate_rejected_within_cohort_only():
 def test_pdf_requires_document_scanner_when_flagged(place=None):
     from datetime import timedelta
 
+    from django.contrib.gis.geos import Point
     from django.utils import timezone
 
     from apps.places.models import Place as PlaceModel
     from apps.social import services as social
     from apps.taxonomy.models import ActivityCategory, ActivityType
-    from django.contrib.gis.geos import Point
 
     owner = _user("ph-pdf")
     cat, _ = ActivityCategory.objects.get_or_create(slug="sport", defaults={"name": "Sport"})

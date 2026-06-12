@@ -1249,9 +1249,7 @@ def share_card(post):
         from apps.places.services import public_places
 
         e = post.shared_event
-        if e is None or (
-            e.place_id and not public_places().filter(pk=e.place_id).exists()
-        ):
+        if e is None or (e.place_id and not public_places().filter(pk=e.place_id).exists()):
             return {"kind": "gone"}
         return {"kind": "event", "obj": e}
     return None
