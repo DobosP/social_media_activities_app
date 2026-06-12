@@ -135,3 +135,41 @@ class ActivitiesFeedView(APIView):
         if point is None:
             qs = qs.order_by("starts_at")
         return Response(ActivityCardSerializer(qs[:MAX_RESULTS], many=True).data)
+
+
+class HomeFeedView(APIView):
+    """W2: the typed home feed for API clients (the future phone app) — the exact same
+    ``build_home_feed`` composition the web home page renders, so both surfaces show the
+    same items for the same honest reasons. Bounded sections, deterministic order, no
+    engagement signals. Optional request-only proximity (?near_lon/near_lat/radius_m)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from .serializers import FeedActivitySerializer, FeedEventSerializer
+        from .services import build_home_feed
+
+        p = request.query_params
+        point = parse_point(p)
+        radius_m = None
+        if point is not None:
+            try:
+                radius_m = float(p.get("radius_m") or 10000.0)
+            except (TypeError, ValueError):
+                radius_m = 10000.0
+        feed = build_home_feed(request.user, near_point=point, radius_m=radius_m)
+        return Response(
+            {
+                "recommended": FeedActivitySerializer(feed["recommended"], many=True).data,
+                "events": FeedEventSerializer(feed["events"], many=True).data,
+                "group_updates": [
+                    {
+                        "group_id": post.thread.group_id,
+                        "group_title": post.thread.group.title,
+                        "body": post.body[:280],
+                        "created_at": post.created_at,
+                    }
+                    for post in feed["group_updates"]
+                ],
+            }
+        )

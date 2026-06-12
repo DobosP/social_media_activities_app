@@ -60,3 +60,23 @@ class ActivityCardSerializer(serializers.Serializer):
 
     def get_distance_m(self, obj):
         return _distance_m(obj)
+
+
+class FeedActivitySerializer(ActivityCardSerializer):
+    """W2 home feed card: the activity card + the F17 honest reason. Strict allowlist —
+    no member counts, no popularity signals (inv.2)."""
+
+    place_name = serializers.CharField(source="place.name", default=None)
+    reason = serializers.SerializerMethodField()
+
+    def get_reason(self, obj):
+        return getattr(obj, "rec_reason", "")
+
+
+class FeedEventSerializer(EventCardSerializer):
+    """W2 home feed event card + its honest interest-match reason (may be empty)."""
+
+    reason = serializers.SerializerMethodField()
+
+    def get_reason(self, obj):
+        return getattr(obj, "feed_reason", "")

@@ -626,31 +626,13 @@ def home(request):
             radius_m = float(raw_radius) if raw_radius else 10000.0
         except (TypeError, ValueError):
             radius_m = 10000.0
-    recommended = recs.recommend_activities(user, limit=8, near_point=near_point, radius_m=radius_m)
-    # F17: an HONEST reason per card from the viewer's OWN declared interests (one query, no N+1):
-    # "matches your interest in X" when the type is in that set, else the genuine "% match"; cold
-    # start is "soonest first". F5 appends truthful "· near you" / "· matches your access needs".
-    interest_names = dict(
-        UserInterest.objects.filter(user=user).values_list(
-            "activity_type__slug", "activity_type__name"
-        )
-    )
-    for a in recommended:
-        distance = getattr(a, "rec_distance", None)
-        if distance is None:  # cold start — no vector signal (never a perfect-match 0.0)
-            a.rec_reason = "soonest first"
-            continue
-        a.match_pct = max(0, min(100, round((1 - float(distance)) * 100)))
-        if a.activity_type.slug in interest_names:
-            a.rec_reason = f"matches your interest in {interest_names[a.activity_type.slug]}"
-        else:
-            a.rec_reason = (
-                f"{a.match_pct}% match"  # base for an uncategorised scored match (F17 gap)
-            )
-        if getattr(a, "rec_near", False):
-            a.rec_reason += " · near you"
-        if getattr(a, "rec_access_match", False):
-            a.rec_reason += " · matches your access needs"
+    # W2: one shared feed composition (recommended + interest-matched events + group
+    # updates) — the same build_home_feed the mobile feed API serves, so web and API
+    # always show the same items for the same honest F17 reasons.
+    from apps.discovery.services import build_home_feed
+
+    feed = build_home_feed(user, near_point=near_point, radius_m=radius_m, limit=8)
+    recommended = feed["recommended"]
     beginners_only = request.GET.get("beginners") == "true"
     upcoming_qs = (
         social.visible_activities(user)
@@ -674,11 +656,6 @@ def home(request):
         .distinct()
         .order_by("starts_at")
     )
-    events = (
-        Event.objects.filter(starts_at__gte=timezone.now())
-        .select_related("place", "activity_type")
-        .order_by("starts_at")[:6]
-    )
     return render(
         request,
         "web/home.html",
@@ -686,7 +663,8 @@ def home(request):
             "recommended": recommended,
             "upcoming": upcoming,
             "mine": mine,
-            "events": events,
+            "events": feed["events"],
+            "group_updates": feed["group_updates"],
             "near_active": near_active,
             "beginners_only": beginners_only,
             "guardian_invites": list(pending_guardian_invites_for(user)),

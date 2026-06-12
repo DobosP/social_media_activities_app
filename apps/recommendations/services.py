@@ -234,3 +234,34 @@ def recommend_activities(user, *, limit=20, near_point=None, radius_m=None):
                 act.member_n = counts.member_n
                 act.participant_n = counts.participant_n
     return activities
+
+
+def recommended_with_reasons(user, *, limit=8, near_point=None, radius_m=None):
+    """``recommend_activities`` + the F17 HONEST per-card reason, attached as
+    ``rec_reason`` / ``match_pct``. Moved out of the web home view (W2) so the web feed
+    and the mobile feed API state the exact same truthful reason: "matches your interest
+    in X" from the viewer's OWN declared interests, the genuine "% match" otherwise, and
+    "soonest first" on cold start. F5 appends "· near you" / access-match suffixes."""
+    recommended = recommend_activities(
+        user, limit=limit, near_point=near_point, radius_m=radius_m
+    )
+    interest_names = dict(
+        UserInterest.objects.filter(user=user).values_list(
+            "activity_type__slug", "activity_type__name"
+        )
+    )
+    for a in recommended:
+        distance = getattr(a, "rec_distance", None)
+        if distance is None:  # cold start — no vector signal (never a perfect-match 0.0)
+            a.rec_reason = "soonest first"
+            continue
+        a.match_pct = max(0, min(100, round((1 - float(distance)) * 100)))
+        if a.activity_type.slug in interest_names:
+            a.rec_reason = f"matches your interest in {interest_names[a.activity_type.slug]}"
+        else:
+            a.rec_reason = f"{a.match_pct}% match"
+        if getattr(a, "rec_near", False):
+            a.rec_reason += " · near you"
+        if getattr(a, "rec_access_match", False):
+            a.rec_reason += " · matches your access needs"
+    return recommended

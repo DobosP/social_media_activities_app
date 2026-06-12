@@ -26,6 +26,22 @@
   <a class="btn btn-secondary" href="{% url 'series_list' %}">{% trans "Recurring series" %}</a>
 </div>
 
+<form method="get" action="{% url 'activity_list' %}" class="search-bar" role="search">
+  <input type="search" name="q" placeholder="{% trans 'Search activities, venues, types…' %}" aria-label="{% trans 'Search activities' %}" minlength="2">
+  <button class="btn" type="submit">{% trans "Search" %}</button>
+</form>
+
+{% if group_updates %}
+<h2>{% trans "From your groups" %}</h2>
+{% for p in group_updates %}
+<div class="card card-accent feed-update">
+  <p class="meta muted"><a href="{% url 'group_detail' p.thread.group.pk %}">{{ p.thread.group.title }}</a>
+    &middot; {{ p.created_at|date:"D j M, H:i" }}</p>
+  <p>{{ p.body|truncatewords:40 }}</p>
+</div>
+{% endfor %}
+{% endif %}
+
 <h2>{% trans "Recommended for you" %}</h2>
 {% for a in recommended %}{% include "web/_activity_card.html" %}{% empty %}
 <p class="muted">{% trans "No suggestions yet &mdash;" %} <a href="{% url 'interests' %}">{% trans "tell us what you like" %}</a>
@@ -44,11 +60,12 @@
 <p class="muted">{% trans "Nothing upcoming yet. Be the first to organise something!" %}</p>{% endfor %}
 
 {% if events %}
-<h2>{% trans "What's happening near you" %} <a class="muted" href="{% url 'events_list' %}"><small>{% trans "see all &rarr;" %}</small></a></h2>
+<h2>{% trans "Events you may like" %} <a class="muted" href="{% url 'events_list' %}"><small>{% trans "see all &rarr;" %}</small></a></h2>
 <div class="grid">
   {% for e in events %}
     <div class="card">
       <h3><a href="{% url 'event_detail' e.pk %}">{{ e.title }}</a></h3>
+      {% if e.feed_reason %}<span class="tag">{{ e.feed_reason }}</span>{% endif %}
       <p class="muted">{{ e.starts_at|date:"D j M, H:i" }}{% if e.place %} &middot; {{ e.place.name }}{% endif %}</p>
     </div>
   {% endfor %}
