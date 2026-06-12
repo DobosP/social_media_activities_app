@@ -1058,7 +1058,16 @@ def transfer_ownership(owner, activity, new_owner) -> Activity:
 
 @transaction.atomic
 def post_to_thread(
-    author, activity, body: str, *, reply_to=None, allow_empty=False, ping=False
+    author,
+    activity,
+    body: str,
+    *,
+    reply_to=None,
+    allow_empty=False,
+    ping=False,
+    share_activity=None,
+    share_place=None,
+    share_event=None,
 ) -> Post:
     """THE single write path for an activity thread, shared by the web form, the DRF API,
     and the WebSocket consumer (via post_to_thread_realtime). It enforces the FULL union of
@@ -1111,18 +1120,19 @@ def post_to_thread(
     window = getattr(settings, "THREAD_POST_RATE_WINDOW_SECONDS", 60)
     if not allow_action(author, "thread_post", limit=limit, window_seconds=window):
         raise InvalidState(_("You are posting too quickly; slow down."))
+    share = _validate_share(author, share_activity, share_place, share_event)
     result = get_message_policy().process(author=author, thread=activity.thread, body=body)
     if result.allowed:
         result_body = result.body
-    elif allow_empty and not (body or "").strip():
-        # An attachment-only message (allow_empty): an empty body is fine. Any OTHER policy
-        # rejection (too long, or a future CSAR content block) still applies.
+    elif (allow_empty or share) and not (body or "").strip():
+        # An attachment-only or share-only message: an empty body is fine. Any OTHER
+        # policy rejection (too long, or a future CSAR content block) still applies.
         result_body = ""
     else:
         raise InvalidState(result.reason or _("Message rejected."))
     parent = _validate_reply_to(activity, reply_to)
     post = Post.objects.create(
-        thread=activity.thread, author=author, body=result_body, reply_to=parent
+        thread=activity.thread, author=author, body=result_body, reply_to=parent, **share
     )
     # Normalize updated_at == created_at on a fresh post (auto_now_add and auto_now fire as two
     # separate now() calls, so they'd otherwise differ by microseconds and falsely read as
@@ -1161,6 +1171,90 @@ def _ping_mentioned(author, activity, post) -> None:
         if user.id in blocked:
             continue
         _notify(user, Notification.Kind.MENTION, title, body=post.body[:140], url=url)
+
+
+def _validate_share(author, share_activity, share_place, share_event) -> dict:
+    """Validate an optional share target at WRITE time (W6). At most ONE target; the
+    author must be able to see it through the same gates as everywhere else:
+
+    - an activity: same cohort as the author (can_see_activity) and not hidden — since a
+      thread's readers share the author's cohort, a share can never bridge cohorts;
+    - a place: in ``public_places()`` (the F25 chokepoint — no pending-place disclosure).
+      A venue card is the privacy-safe "send a location": never a person's coordinates;
+    - an event: its venue (if any) must be public (same F25 rule).
+
+    Accepts model instances or pks. Returns kwargs for Post.objects.create. Render-time
+    re-gating happens separately in ``share_card`` (a target can become hidden later)."""
+    chosen = [x for x in (share_activity, share_place, share_event) if x is not None]
+    if not chosen:
+        return {}
+    if len(chosen) > 1:
+        raise InvalidState(_("Share one thing at a time."))
+    from apps.events.models import Event
+    from apps.places.models import Place
+    from apps.places.services import public_places
+
+    if share_activity is not None:
+        target = (
+            share_activity
+            if isinstance(share_activity, Activity)
+            else Activity.objects.filter(pk=_safe_pk(share_activity)).first()
+        )
+        if target is None or target.is_hidden or not can_see_activity(author, target):
+            raise InvalidState(_("You can't share that."))
+        return {"shared_activity": target}
+    if share_place is not None:
+        pk = share_place.pk if isinstance(share_place, Place) else _safe_pk(share_place)
+        target = public_places().filter(pk=pk).first()
+        if target is None:
+            raise InvalidState(_("You can't share that."))
+        return {"shared_place": target}
+    pk = share_event.pk if isinstance(share_event, Event) else _safe_pk(share_event)
+    target = (
+        Event.objects.select_related("place")
+        .filter(pk=pk)
+        .filter(Q(place__isnull=True) | Q(place_id__in=public_places().values("id")))
+        .first()
+    )
+    if target is None:
+        raise InvalidState(_("You can't share that."))
+    return {"shared_event": target}
+
+
+def _safe_pk(value):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def share_card(post):
+    """Derive the share card for a post at READ time, re-gating the target's visibility
+    NOW (not when it was shared): a hidden/cancelled activity, an unpublished place or a
+    vanished target render as an honest "unavailable" stub. Thread readers share the
+    author's cohort by construction, so no per-viewer cohort check is needed here."""
+    if post.shared_activity_id:
+        a = post.shared_activity
+        if a is None or a.is_hidden:
+            return {"kind": "gone"}
+        return {"kind": "activity", "obj": a}
+    if post.shared_place_id:
+        from apps.places.services import public_places
+
+        p = post.shared_place
+        if p is None or not public_places().filter(pk=p.pk).exists():
+            return {"kind": "gone"}
+        return {"kind": "place", "obj": p}
+    if post.shared_event_id:
+        from apps.places.services import public_places
+
+        e = post.shared_event
+        if e is None or (
+            e.place_id and not public_places().filter(pk=e.place_id).exists()
+        ):
+            return {"kind": "gone"}
+        return {"kind": "event", "obj": e}
+    return None
 
 
 def _validate_reply_to(activity, reply_to):
@@ -1231,10 +1325,12 @@ def thread_page(activity, *, before=None, limit=None):
     from django.db.models import Prefetch
 
     limit = limit or getattr(settings, "SOCIAL_THREAD_POST_LIMIT", 100)
-    replies_qs = Post.objects.filter(is_hidden=False).select_related("author", "reply_to__author")
+    replies_qs = Post.objects.filter(is_hidden=False).select_related(
+        "author", "reply_to__author", "shared_activity", "shared_place", "shared_event"
+    )
     top = (
         activity.thread.posts.filter(is_hidden=False, is_announcement=False, reply_to__isnull=True)
-        .select_related("author")
+        .select_related("author", "shared_activity", "shared_place", "shared_event")
         .prefetch_related(Prefetch("replies", queryset=replies_qs.order_by("created_at")))
         .order_by("-created_at")
     )
@@ -1261,9 +1357,11 @@ def thread_page(activity, *, before=None, limit=None):
     window.reverse()  # oldest -> newest for display
     for tp in window:
         tp.is_edited = _is_edited(tp)
+        tp.share = share_card(tp)
         for reply in tp.replies.all():  # prefetched, already filtered + ordered
             reply.is_edited = _is_edited(reply)
             reply.snippet = reply_snippet(reply)
+            reply.share = share_card(reply)
     return window, has_older, older_cursor_id
 
 

@@ -279,6 +279,10 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
         if request.method == "POST":
             serializer = PostSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
+            data = serializer.validated_data
+            shares = {
+                k: data.get(k) for k in ("share_activity", "share_place", "share_event")
+            }
             try:
                 # A thread message is a first-person utterance — ALWAYS the authenticated
                 # user, never on_behalf_of (mirrors `arrived`), so a guardian cannot ghostwrite
@@ -286,9 +290,12 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
                 post = post_to_thread(
                     request.user,
                     activity,
-                    serializer.validated_data["body"],
-                    reply_to=serializer.validated_data.get("reply_to"),
-                    ping=serializer.validated_data.get("ping", False),
+                    data.get("body", ""),
+                    reply_to=data.get("reply_to"),
+                    ping=data.get("ping", False),
+                    # a share-only message may have an empty body (like attachment-only)
+                    allow_empty=any(v is not None for v in shares.values()),
+                    **shares,
                 )
             except (NotAMember, NotEligible) as exc:
                 # Membership / participation failures are authorization problems (403).

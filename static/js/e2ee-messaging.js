@@ -289,10 +289,13 @@
     titleAvatar: document.getElementById("mz-title-avatar"),
     connections: document.getElementById("mz-connections"),
     tabs: Array.prototype.slice.call(document.querySelectorAll(".mz-tab")),
+    convSearch: document.getElementById("mz-conv-search"),
+    msgSearch: document.getElementById("mz-msg-search"),
   };
   let current = null; // current conversation object
   let socket = null;
   let currentFilter = "all"; // conversation-list filter (all/direct/group/invited)
+  let convQuery = ""; // W6: chat-list search (metadata only — names/titles, never bodies)
 
   // An avatar circle: a person's generated identicon when we have one, else the first initial.
   // Groups keep the initial/colour (a group has no single identity).
@@ -350,7 +353,9 @@
   function renderConversations() {
     els.list.innerHTML = "";
     const convs = lastConvs.filter(
-      (c) => currentFilter === "all" || convCategory(c) === currentFilter
+      (c) =>
+        (currentFilter === "all" || convCategory(c) === currentFilter) &&
+        (!convQuery || convLabel(c).toLowerCase().indexOf(convQuery) !== -1)
     );
     convs.forEach((conv) => {
       const isGroup = conv.kind === "group";
@@ -518,6 +523,26 @@
     body.className = "mz-msg-body";
     body.textContent = plaintext === null ? "⚠ [no key for you]" : plaintext;
     row.appendChild(body);
+    // W6 share-by-link: an in-app activity/place/event link pasted into a private chat
+    // gets a tappable card UNDER the text. Client-side only (the server never sees the
+    // plaintext); the href is rebuilt from the matched digits-only path, never raw text.
+    if (plaintext) {
+      const seenPaths = {};
+      const linkRe = /\/(activities|places|events)\/(\d+)\//g;
+      let m;
+      while ((m = linkRe.exec(plaintext)) !== null) {
+        const path = "/" + m[1] + "/" + m[2] + "/";
+        if (seenPaths[path]) continue;
+        seenPaths[path] = true;
+        const card = document.createElement("a");
+        card.className = "mz-share-card";
+        card.href = path;
+        card.textContent =
+          (m[1] === "activities" ? "Open activity" : m[1] === "places" ? "Open place" : "Open event") +
+          " →";
+        row.appendChild(card);
+      }
+    }
 
     const time = document.createElement("div");
     time.className = "mz-msg-time";
@@ -763,6 +788,7 @@
     const convs = await api("GET", "/api/messaging/conversations/");
     current = convs.find((c) => c.id === id);
     if (!current) return;
+    if (els.msgSearch) els.msgSearch.value = ""; // W6: a fresh chat starts unfiltered
     els.title.textContent = convLabel(current);
     // Header avatar, active-row highlight, and (on mobile) switch to the message pane.
     // avatarEl returns a span whose single child is EITHER the <img> (1:1 identicon) OR a text
@@ -916,6 +942,28 @@
       renderConversations();
     });
   });
+
+  // W6: chat-list search — filters the loaded list by name/title locally (metadata only).
+  if (els.convSearch) {
+    els.convSearch.addEventListener("input", () => {
+      convQuery = els.convSearch.value.trim().toLowerCase();
+      renderConversations();
+    });
+  }
+
+  // W6: search INSIDE the open chat — a pure on-device filter over the decrypted bubbles
+  // already on screen. Nothing is sent anywhere (the server never has plaintext to search).
+  function applyMsgSearch() {
+    const q = els.msgSearch ? els.msgSearch.value.trim().toLowerCase() : "";
+    els.log.querySelectorAll(".mz-msg").forEach((rowEl) => {
+      const bodyEl = rowEl.querySelector(".mz-msg-body");
+      const text = bodyEl ? bodyEl.textContent.toLowerCase() : "";
+      rowEl.classList.toggle("mz-hidden", Boolean(q) && text.indexOf(q) === -1);
+    });
+  }
+  if (els.msgSearch) {
+    els.msgSearch.addEventListener("input", applyMsgSearch);
+  }
 
   // Mobile: back arrow returns from the message pane to the conversation list.
   if (els.back) {

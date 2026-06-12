@@ -485,6 +485,53 @@ def _msg(exc) -> str:
     return str(exc)
 
 
+def _share_targets(user, *, exclude_pk=None):
+    """W6: the threads the viewer could share something into — their own current
+    activities (peer memberships only; the post gate re-checks everything)."""
+    if not user.is_authenticated:
+        return []
+    qs = (
+        social.visible_activities(user)
+        .filter(
+            memberships__user=user,
+            memberships__state=Membership.State.MEMBER,
+            status=Activity.Status.OPEN,
+        )
+        .exclude(memberships__user=user, memberships__role=Membership.Role.GUARDIAN)
+        .distinct()
+        .order_by("starts_at")
+    )
+    if exclude_pk:
+        qs = qs.exclude(pk=exclude_pk)
+    return list(qs[:50])
+
+
+@login_required
+@require_POST
+def share_to_thread(request):
+    """W6 'share content': post an activity / venue / event card into one of YOUR
+    activity threads. Everything rides the single hardened write path post_to_thread —
+    the share target is validated there (cohort / F25 public-place gates) and the card
+    is re-gated at render time."""
+    kind = request.POST.get("kind")
+    obj_id = request.POST.get("obj_id")
+    target_pk = request.POST.get("target")
+    if kind not in ("activity", "place", "event") or not str(target_pk).isdigit():
+        raise Http404("Bad share request.")
+    target = _visible_activity_or_404(request.user, int(target_pk))
+    note = (request.POST.get("note") or "").strip()[:280]
+    share_kwargs = {f"share_{kind}": obj_id}
+    try:
+        post = social.post_to_thread(
+            request.user, target, note, allow_empty=True, **share_kwargs
+        )
+    except social.SocialError as exc:
+        messages.error(request, _msg(exc))
+        return redirect(_safe_next(request, "home"))
+    messages.success(request, "Shared to the conversation.")
+    return redirect(f"/activities/{target.pk}/#post-{post.pk}")
+
+
 def _order_feed_by_location(qs, params):
     """Order an activity feed closest-first when the page carries ?near_lon/&near_lat
     (opt-in "near me"), else soonest-first. Coordinates are used only for this query and
@@ -815,6 +862,10 @@ def place_detail(request, pk):
             "has_access_pref": pref is not None,
             "partner": partner_for_place(place),
             "pending_proposal": proposal if pending else None,
+            # W6: share this venue into one of the viewer's activity chats (public only).
+            "share_targets": _share_targets(request.user) if is_public else [],
+            "share_kind": "place",
+            "share_obj_id": place.pk,
             **_nav_context(request.user),
         },
     )
@@ -1095,6 +1146,12 @@ def activity_detail(request, pk):
         and my_membership.welcomed_at
         and timezone.now() - my_membership.welcomed_at <= welcome_ttl
     )
+    # W6 "search into chat": members may search this thread's plaintext posts (the
+    # service re-gates on can_read_thread; E2EE DMs are unsearchable by design).
+    thread_query = (request.GET.get("tq") or "").strip()
+    thread_results = None
+    if thread_query and (is_member or user.is_staff) and social.can_read_thread(user, activity):
+        thread_results = list(social.search_thread_posts(user, activity, thread_query))
     return render(
         request,
         "web/activity_detail.html",
@@ -1141,6 +1198,12 @@ def activity_detail(request, pk):
             # W5: "start a standing group like this" prefill affordance (members only;
             # the service re-enforces the real creation gate).
             "can_create_group": is_member and _can_create_group(user),
+            # W6: share THIS activity into another of the viewer's chats + in-thread search.
+            "share_targets": _share_targets(user, exclude_pk=activity.pk) if is_member else [],
+            "share_kind": "activity",
+            "share_obj_id": activity.pk,
+            "thread_query": thread_query,
+            "thread_results": thread_results,
             **_nav_context(user),
         },
     )
@@ -1910,7 +1973,13 @@ def messages_page(request):
     return render(
         request,
         "web/messages.html",
-        {"messaging_config": config, **_nav_context(request.user)},
+        {
+            "messaging_config": config,
+            # W5: "start a standing group" entry point from the chat surface (the
+            # service still enforces the real creation gate).
+            "can_create_group": _can_create_group(request.user),
+            **_nav_context(request.user),
+        },
     )
 
 
@@ -2040,7 +2109,17 @@ def event_detail(request, pk):
         _Q(place__isnull=True) | _Q(place_id__in=public_places().values("id"))
     )
     event = get_object_or_404(qs, pk=pk)
-    return render(request, "web/event_detail.html", {"event": event, **_nav_context(request.user)})
+    return render(
+        request,
+        "web/event_detail.html",
+        {
+            "event": event,
+            "share_targets": _share_targets(request.user),
+            "share_kind": "event",
+            "share_obj_id": event.pk,
+            **_nav_context(request.user),
+        },
+    )
 
 
 # --- EUDI Wallet age verification (in-page; sandbox demo wallet) ---------------------

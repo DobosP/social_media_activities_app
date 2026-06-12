@@ -67,6 +67,7 @@ urlpatterns = [
     path("activities/<int:pk>/leave/", views.activity_leave, name="activity_leave"),
     path("activities/<int:pk>/unsafe/", views.activity_unsafe, name="activity_unsafe"),
     path("activities/<int:pk>/post/", views.activity_post, name="activity_post"),
+    path("share/", views.share_to_thread, name="share_to_thread"),
     path(
         "activities/<int:pk>/post/<int:post_id>/edit/",
         views.activity_post_edit,

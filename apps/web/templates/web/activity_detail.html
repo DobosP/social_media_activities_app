@@ -23,6 +23,7 @@
   <p class="muted" style="font-size:.85rem">{% url 'group_create' as group_create_url %}{% blocktrans with city=activity.place.address_city|urlencode type=activity.activity_type.slug %}Enjoying this crowd?
     <a href="{{ group_create_url }}?city={{ city }}&amp;type={{ type }}">Start a standing group</a> so it keeps happening.{% endblocktrans %}</p>
 {% endif %}
+{% include "web/_share_box.html" %}
 {% if activity.description %}<p>{{ activity.description|linebreaks }}</p>{% endif %}
 {% if activity.accessibility_notes %}<p class="muted"><strong>{% trans "Accessibility:" %}</strong><br>{{ activity.accessibility_notes|linebreaksbr }}</p>{% endif %}
 <p class="muted">{% blocktrans with owner_name=activity.owner.display_name|default:activity.owner.username %}Organised by {{ owner_name }}.{% endblocktrans %}
@@ -248,11 +249,33 @@
     </div>
   {% endif %}
 
+  <form method="get" action="{% url 'activity_detail' activity.pk %}" class="search-bar" role="search" style="margin:.4rem 0">
+    <input type="search" name="tq" value="{{ thread_query }}" placeholder="{% trans 'Search this conversation…' %}"
+           aria-label="{% trans 'Search this conversation' %}" minlength="2">
+    <button class="btn btn-sm btn-secondary" type="submit">{% trans "Search" %}</button>
+    {% if thread_query %}<a class="muted" href="{% url 'activity_detail' activity.pk %}#messages">{% trans "clear" %}</a>{% endif %}
+  </form>
+  {% if thread_query %}
+    <div class="card card-muted" aria-label="{% trans 'Search results' %}">
+      <p class="muted" style="margin-top:0">{% blocktrans count counter=thread_results|length %}{{ counter }} message matches.{% plural %}{{ counter }} messages match.{% endblocktrans %}</p>
+      {% for p in thread_results %}
+        <div class="post">
+          <div class="meta">{{ p.author.display_name|default:p.author.username }} &middot;
+            <a href="{% url 'activity_detail' activity.pk %}#post-{{ p.pk }}">{{ p.created_at|date:"j M H:i" }}</a></div>
+          <div>{{ p.body|truncatechars:240|linebreaksbr }}</div>
+        </div>
+      {% empty %}<p class="muted">{% trans "Nothing matched." %}</p>{% endfor %}
+    </div>
+  {% endif %}
+
   {% if has_older %}
     <p><a href="?before={{ older_cursor }}#messages" rel="prev">&uarr; {% trans "Older messages" %}</a></p>
   {% endif %}
   <div id="thread-list" class="thread">
     {% for p in posts %}
+      {% ifchanged p.created_at|date:"Y-m-d" %}
+        <div class="day-sep" aria-hidden="true"><span>{{ p.created_at|date:"D j M" }}</span></div>
+      {% endifchanged %}
       {% include "web/_post.html" %}
       <div class="replies" data-parent="{{ p.pk }}" style="margin-left:1.5rem">
         {% for r in p.replies.all %}{% include "web/_post.html" with p=r %}{% endfor %}

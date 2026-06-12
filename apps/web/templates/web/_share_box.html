@@ -1,0 +1,22 @@
+{% load i18n %}
+{% comment %}W6 share box. Context: share_kind ("activity"|"place"|"event"), share_obj_id,
+   share_targets (the viewer's joined OPEN activities). Posts through share_to_thread →
+   post_to_thread, so every thread gate holds. For private (E2EE) chats the server can't
+   compose a card — copy the link and paste it there instead.{% endcomment %}
+{% if share_targets %}
+<details class="share-box">
+  <summary class="muted">{% trans "Share" %}</summary>
+  <form method="post" action="{% url 'share_to_thread' %}" class="stack" style="margin-top:.4rem;max-width:26rem">{% csrf_token %}
+    <input type="hidden" name="kind" value="{{ share_kind }}">
+    <input type="hidden" name="obj_id" value="{{ share_obj_id }}">
+    <input type="hidden" name="next" value="{{ request.path }}">
+    <label for="share-target-{{ share_obj_id }}">{% trans "To one of your activity chats" %}</label>
+    <select id="share-target-{{ share_obj_id }}" name="target">
+      {% for a in share_targets %}<option value="{{ a.pk }}">{{ a.title }} ({{ a.starts_at|date:"j M" }})</option>{% endfor %}
+    </select>
+    <input name="note" maxlength="280" placeholder="{% trans 'Add a note (optional)' %}">
+    <button class="btn btn-sm" type="submit">{% trans "Share" %}</button>
+    <p class="helptext">{% trans "To share in a private message, copy this page's link and paste it in the chat." %}</p>
+  </form>
+</details>
+{% endif %}

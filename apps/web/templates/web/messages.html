@@ -21,6 +21,10 @@
     {# Quick-start a chat with one of your connections #}
     <div id="mz-connections" class="mz-connections"></div>
 
+    {# W6: find a chat — filters the loaded list by name/title (metadata only; bodies are E2EE). #}
+    <input id="mz-conv-search" type="search" autocomplete="off"
+           placeholder="{% trans 'Search chats…' %}" aria-label="{% trans 'Search chats' %}">
+
     {# Filter tabs #}
     <div class="mz-tabs" role="tablist">
       <button class="mz-tab is-active" data-filter="all" type="button">{% trans "All" %}</button>
@@ -46,6 +50,10 @@
         <p class="muted" style="font-size:.78rem">{% trans "Conversations your child is in. Observing is read-only and visible to everyone in the chat." %}</p>
         <div id="mz-guardian-list"></div>
       </div>
+      {% if can_create_group %}
+        <p style="margin:.6rem 0 0"><a class="btn btn-sm btn-secondary" href="{% url 'group_create' %}">{% trans "Start a standing group" %}</a></p>
+        <p class="muted" style="font-size:.74rem;margin:.15rem 0 0">{% trans "A public, joinable community with its own conversation." %}</p>
+      {% endif %}
       <p class="muted" style="font-size:.78rem;margin-top:.5rem">{% trans "Your private key lives only in this browser. Back it up (encrypted) to read your history on another device." %}</p>
       <button id="mz-backup" class="btn btn-sm btn-secondary" type="button">{% trans "Back up my key" %}</button>
     </details>
@@ -57,6 +65,11 @@
       <span class="mz-avatar" id="mz-title-avatar" aria-hidden="true"></span>
       <h3 id="mz-title" style="margin:0;flex:1">{% trans "Select a conversation" %}</h3>
       <div id="mz-toolbar" class="mz-toolbar" style="display:none">
+        {# W6: search inside THIS chat — runs only in your browser over the decrypted
+           messages on screen; the server never sees message text. #}
+        <input id="mz-msg-search" type="search" autocomplete="off"
+               placeholder="{% trans 'Search in chat…' %}" aria-label="{% trans 'Search in this chat (on this device only)' %}"
+               title="{% trans 'Searches the decrypted messages on this device only' %}">
         <label class="muted" title="{% trans 'Disappearing messages' %}">⏲
           <select id="mz-timer">
             <option value="0">{% trans "Off" %}</option>
@@ -148,6 +161,13 @@
   .mz-msg-rx { display:flex; flex-wrap:wrap; gap:.25rem; margin-top:.25rem; }
   .mz-msg-rx:empty { display:none; }
   .mz-rx-chip { font-size:.72rem; background:rgba(0,0,0,.07); border-radius:999px; padding:.05rem .4rem; }
+  #mz-conv-search { margin:.2rem 0 .1rem; font-size:.85rem; }
+  #mz-msg-search { width:9.5rem; font-size:.78rem; padding:.25rem .45rem; }
+  .mz-toolbar { display:flex; align-items:center; gap:.45rem; }
+  .mz-msg.mz-hidden { display:none; }
+  .mz-share-card { display:block; margin-top:.3rem; font-size:.8rem; border:1px solid var(--line);
+                   border-left:3px solid var(--accent,#1a7f37); border-radius:8px; padding:.3rem .5rem;
+                   background:var(--card,#fff); }
   @media (max-width:720px) {
     .mz-app { grid-template-columns:1fr; }
     .mz-main { display:none; }

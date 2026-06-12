@@ -366,6 +366,41 @@ textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--accent)
 .nav-avatar { width: 26px; height: 26px; flex-shrink: 0; background: var(--card); }
 @media (max-width: 879px) { .nav-username { font-weight: 600; } }
 
+/* W6: modern chat chrome — bubbles, day separators, share cards. Structure (article.post,
+   .meta, .replies) is unchanged; this is presentation only, so the no-JS flow and the
+   WebSocket-append path keep working untouched. */
+.thread { max-height: 62vh; padding: .2rem .4rem; }
+.thread .post {
+  border-top: 0; background: var(--bg-subtle); border: 1px solid var(--line);
+  border-radius: 14px 14px 14px 4px; padding: .5rem .75rem; margin: .45rem 0;
+  max-width: 88%;
+}
+.thread .post--mine {
+  background: var(--accent-weak); margin-left: auto; border-radius: 14px 14px 4px 14px;
+}
+.thread .post.is-announcement, .thread .post-announcement {
+  background: var(--card); border-left: 3px solid var(--accent); max-width: 100%;
+}
+.day-sep { text-align: center; margin: .7rem 0 .3rem; }
+.day-sep span {
+  display: inline-block; font-size: .72rem; font-weight: 600; color: var(--muted);
+  background: var(--chip-bg); border-radius: var(--r-pill); padding: .12rem .65rem;
+}
+.share-card {
+  display: block; border: 1px solid var(--line); border-left: 3px solid var(--accent);
+  border-radius: var(--r-sm); background: var(--card); padding: .45rem .65rem;
+  margin-top: .35rem; max-width: 24rem; text-decoration: none; color: var(--fg);
+}
+.share-card:hover { text-decoration: none; box-shadow: var(--shadow); }
+.share-card strong { display: block; }
+.share-card .share-kind {
+  display: block; font-size: .68rem; font-weight: 700; letter-spacing: .04em;
+  text-transform: uppercase; color: var(--muted);
+}
+.share-card .muted { font-size: .82rem; }
+.share-card--gone { border-left-color: var(--line); font-size: .85rem; }
+.share-box > summary { cursor: pointer; }
+
 /* W4: compact pill picker (interests). The checkbox stays in the tab order but is
    visually hidden; its sibling <span> is the visible pill (no :has() needed). */
 .pick-group { margin: .6rem 0; }

@@ -1,7 +1,7 @@
 {% load i18n %}
 {% comment %}One thread message. Context: p (Post, with .snippet/.is_edited attached by thread_page),
    activity, user, is_member. Replies render the same partial one level deep.{% endcomment %}
-<article id="post-{{ p.pk }}" class="post"
+<article id="post-{{ p.pk }}" class="post{% if p.author_id == user.id %} post--mine{% endif %}"
          aria-label="{% blocktrans with author=p.author.display_name|default:p.author.username at=p.created_at|date:'j M H:i' %}Message from {{ author }} at {{ at }}{% endblocktrans %}">
   {% if p.snippet %}
     <div class="reply-quote muted">
@@ -15,6 +15,29 @@
   {% comment %}body_html is server-rendered safe HTML: escaped, newlines->br, @mentions of real peers
      wrapped in a mention span. Falls back to the plain escaped body if not attached.{% endcomment %}
   <div>{% if p.body_html %}{{ p.body_html }}{% else %}{{ p.body|linebreaksbr }}{% endif %}</div>
+  {% if p.share %}
+    {% if p.share.kind == "activity" %}
+      <a class="share-card" href="{% url 'activity_detail' p.share.obj.pk %}">
+        <span class="share-kind">{% trans "Activity" %}</span>
+        <strong>{{ p.share.obj.title }}</strong>
+        <span class="muted">{{ p.share.obj.starts_at|date:"D j M, H:i" }}{% if p.share.obj.place %} &middot; {{ p.share.obj.place.name }}{% endif %}</span>
+      </a>
+    {% elif p.share.kind == "place" %}
+      <a class="share-card" href="{% url 'place_detail' p.share.obj.pk %}">
+        <span class="share-kind">📍 {% trans "Place" %}</span>
+        <strong>{{ p.share.obj.name }}</strong>
+        {% if p.share.obj.address_city %}<span class="muted">{{ p.share.obj.address_city }}</span>{% endif %}
+      </a>
+    {% elif p.share.kind == "event" %}
+      <a class="share-card" href="{% url 'event_detail' p.share.obj.pk %}">
+        <span class="share-kind">{% trans "Event" %}</span>
+        <strong>{{ p.share.obj.title }}</strong>
+        <span class="muted">{{ p.share.obj.starts_at|date:"D j M, H:i" }}{% if p.share.obj.place %} &middot; {{ p.share.obj.place.name }}{% endif %}</span>
+      </a>
+    {% else %}
+      <p class="share-card share-card--gone muted">{% trans "This shared item is no longer available." %}</p>
+    {% endif %}
+  {% endif %}
   {% for att in p.attachment_list %}
     {% if att.expired %}
       <p class="muted" style="margin:.3rem 0 0;font-size:.8rem">🕓 {% trans "This temporary picture has disappeared." %}</p>
