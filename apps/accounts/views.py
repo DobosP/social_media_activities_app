@@ -292,3 +292,99 @@ class EUDIVerifyView(APIView):
 
         apply_assurance(request.user, result)
         return Response(MeSerializer(request.user).data)
+
+
+class ObtainAPIToken(APIView):
+    """W10 mobile auth: exchange username+password for an opaque DRF token (Bearer-style
+    `Authorization: Token <key>`). No JWT — the token is server-validated, carries no
+    PII, and is revoked by deleting the row. Throttled hard (its own scope) because a
+    credential endpoint is a stuffing target; counts per-IP for anonymous callers."""
+
+    permission_classes: list = []  # credentials ARE the authentication here
+    authentication_classes: list = []
+    throttle_scope = "token_obtain"
+
+    def get_throttles(self):
+        from rest_framework.settings import api_settings
+        from rest_framework.throttling import ScopedRateThrottle
+
+        # Honour a config with throttling disabled (test settings empty the rates dict).
+        if not (api_settings.DEFAULT_THROTTLE_RATES or {}).get(self.throttle_scope):
+            return []
+        return [ScopedRateThrottle()]
+
+    def post(self, request):
+        from django.contrib.auth import authenticate
+        from rest_framework.authtoken.models import Token
+
+        username = request.data.get("username") or ""
+        password = request.data.get("password") or ""
+        user = authenticate(request, username=username, password=password)
+        if user is None or not user.is_active:
+            return Response(
+                {"detail": "Invalid credentials."}, status=status.HTTP_400_BAD_REQUEST
+            )
+        token, _ = Token.objects.get_or_create(user=user)
+        return Response({"token": token.key})
+
+    def delete(self, request):
+        """Revoke the caller's token (mobile logout). Requires the token itself."""
+        from rest_framework.authentication import TokenAuthentication
+        from rest_framework.authtoken.models import Token
+
+        auth = TokenAuthentication().authenticate(request)
+        if auth is None:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        user, _ = auth
+        Token.objects.filter(user=user).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class MeSettingsView(APIView):
+    """W10: the user's own preference panel for API clients — notification mutes +
+    stated access needs. Strictly self-scoped; MODERATION/SYSTEM notices are never
+    mutable (enforced by set_muted_kinds, same as the web form)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from apps.notifications.services import get_muted_kinds
+        from apps.places.services import get_access_preference
+
+        pref = get_access_preference(request.user)
+        return Response(
+            {
+                "muted_kinds": sorted(get_muted_kinds(request.user)),
+                "access": {
+                    "needs_step_free": bool(pref and pref.needs_step_free),
+                    "needs_accessible_toilet": bool(pref and pref.needs_accessible_toilet),
+                    "prefers_quiet": bool(pref and pref.prefers_quiet),
+                },
+            }
+        )
+
+    def put(self, request):
+        from apps.notifications.services import set_muted_kinds
+        from apps.places.services import set_access_preference
+
+        if "muted_kinds" in request.data:
+            kinds = request.data.get("muted_kinds")
+            if not isinstance(kinds, list):
+                return Response(
+                    {"detail": "muted_kinds must be a list."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            set_muted_kinds(request.user, kinds)
+        access = request.data.get("access")
+        if access is not None:
+            if not isinstance(access, dict):
+                return Response(
+                    {"detail": "access must be an object."}, status=status.HTTP_400_BAD_REQUEST
+                )
+            set_access_preference(
+                request.user,
+                needs_step_free=bool(access.get("needs_step_free")),
+                needs_accessible_toilet=bool(access.get("needs_accessible_toilet")),
+                prefers_quiet=bool(access.get("prefers_quiet")),
+            )
+        return self.get(request)

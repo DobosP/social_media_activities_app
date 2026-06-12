@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     "django.contrib.gis",
     # Third-party
     "rest_framework",
+    "rest_framework.authtoken",  # W10: opaque API tokens for native clients
     "rest_framework_gis",
     "django_filters",
     "drf_spectacular",
@@ -196,6 +197,15 @@ NUM_PROXIES = env.int("NUM_PROXIES", default=1)
 
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    # W10 mobile-readiness: session auth for the web UI + opaque DRF tokens for native
+    # clients / service accounts (no JWT — tokens are server-validated, instantly
+    # revocable, and carry no PII). Obtain at /api/auth/token/ (throttled).
+    # Token FIRST: the first authenticator's challenge header decides 401-vs-403 for
+    # unauthenticated API calls (Session has none and would force 403s on API clients).
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    ],
     # Deny-by-default: every endpoint requires auth unless it explicitly opts into AllowAny
     # (the intentionally public ones: places, taxonomy, discovery feeds, donations totals,
     # ops health). This prevents a future viewset from silently inheriting AllowAny.
@@ -216,6 +226,8 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "anon": env("DRF_THROTTLE_ANON", default="60/min"),
         "user": env("DRF_THROTTLE_USER", default="240/min"),
+        # W10: the token-obtain endpoint is a credential-stuffing target — much stricter.
+        "token_obtain": env("DRF_THROTTLE_TOKEN_OBTAIN", default="10/min"),
     },
     # Trust only the last NUM_PROXIES X-Forwarded-For hops for throttle identity — otherwise
     # a client can spoof XFF to get a fresh anon bucket per request and bypass rate limits.
