@@ -355,6 +355,14 @@ textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--accent)
 .fact--unknown { background: #eef0ec; color: #555; }
 
 /* =============================================================================
+   2026-06 refactor wave — search, settings hub, chat chrome, compact pickers.
+   Consumes existing tokens only (no new colour tokens → nothing to remap per theme).
+   ============================================================================= */
+.search-bar { display: flex; gap: .5rem; align-items: center; margin: .6rem 0 1rem; }
+.search-bar input[type="search"] { flex: 1; min-width: 0; }
+.search-bar .btn { flex-shrink: 0; }
+
+/* =============================================================================
    F12 display preferences — theme token re-maps. Only token VALUES change here;
    every rule above already consumes them. Source of truth = a functional cookie
    surfaced as data-theme / --scale on <html> by the context processor.

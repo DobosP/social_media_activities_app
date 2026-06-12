@@ -82,6 +82,14 @@ class HappeningView(APIView):
         qs = qs.filter(Q(place__isnull=True) | Q(place_id__in=public_places().values("id")))
         if activity := p.get("activity"):
             qs = qs.filter(activity_type__slug=activity)
+        # W1 search: ?q= free-text filter (title/description/venue; venue already
+        # restricted to public places by the F25 gate above).
+        if (query := (p.get("q") or "").strip()) and len(query) >= 2:
+            qs = qs.filter(
+                Q(title__icontains=query)
+                | Q(description__icontains=query)
+                | Q(place__name__icontains=query)
+            )
         if days := p.get("days"):
             try:
                 qs = qs.filter(starts_at__lte=now + timezone.timedelta(days=int(days)))

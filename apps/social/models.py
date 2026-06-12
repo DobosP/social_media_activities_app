@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.contrib.postgres.indexes import GinIndex
 from django.db import models
 from django.db.models import Q, UniqueConstraint
 
@@ -126,6 +127,13 @@ class Activity(models.Model):
             # community read predicate + the nightly generator are index scans, not seq scans.
             models.Index(fields=["cohort", "activity_type"]),
             models.Index(fields=["cohort", "place"]),
+            # W1 search: free-text search uses icontains over title/description; trigram GIN
+            # keeps those ILIKE '%…%' scans index-assisted as the table grows (the pg_trgm
+            # extension is created in the same migration that adds these indexes).
+            GinIndex(name="activity_title_trgm", fields=["title"], opclasses=["gin_trgm_ops"]),
+            GinIndex(
+                name="activity_desc_trgm", fields=["description"], opclasses=["gin_trgm_ops"]
+            ),
         ]
 
     def __str__(self):

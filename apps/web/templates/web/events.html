@@ -5,6 +5,11 @@
 <h1>{% trans "What's happening" %}</h1>
 <p class="muted">{% trans "Upcoming events at places near you. Find one you like, then organise an activity to go together." %}{% if activity %} {% url 'events_list' as clear_url %}{% blocktrans with activity_name=activity %}Filtered by <strong>{{ activity_name }}</strong> &middot;
   <a href="{{ clear_url }}">clear</a>.{% endblocktrans %}{% endif %}</p>
+<form method="get" action="{% url 'events_list' %}" class="search-bar" role="search">
+  <input type="search" name="q" value="{{ query }}" placeholder="{% trans 'Search events…' %}" aria-label="{% trans 'Search events' %}" minlength="2">
+  <button class="btn" type="submit">{% trans "Search" %}</button>
+  {% if query %}<a class="muted" href="{% url 'events_list' %}">{% trans "clear" %}</a>{% endif %}
+</form>
 <div class="grid">
   {% for e in events %}
     <div class="card">

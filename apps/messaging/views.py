@@ -106,9 +106,19 @@ class ConversationListCreateView(APIView):
         # (mirrors the notifications [:100] bound). `conversations_for` already
         # orders by -updated_at, so this keeps the most recently active ones.
         limit = getattr(settings, "MESSAGING_CONVERSATION_LIST_LIMIT", 100)
-        convs = list(
-            services.conversations_for(request.user).prefetch_related("participants__user")[:limit]
-        )
+        qs = services.conversations_for(request.user)
+        # W1 search: ?q= filters by conversation METADATA only (group title, participant
+        # names) — message bodies are E2EE ciphertext the server cannot search.
+        query = (request.query_params.get("q") or "").strip()
+        if len(query) >= 2:
+            from django.db.models import Q as _Q
+
+            qs = qs.filter(
+                _Q(title__icontains=query)
+                | _Q(participants__user__display_name__icontains=query)
+                | _Q(participants__user__username__icontains=query)
+            ).distinct()
+        convs = list(qs.prefetch_related("participants__user")[:limit])
         _attach_avatars([p.user for c in convs for p in c.participants.all()])
         return Response(ConversationSerializer(convs, many=True, context={"request": request}).data)
 

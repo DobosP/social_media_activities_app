@@ -114,6 +114,69 @@ def can_see_activity(user, activity) -> bool:
     return _has_cohort(user) and user.cohort == activity.cohort
 
 
+# Search queries shorter than this return nothing (too noisy, and a 1-char probe is a
+# cheap enumeration surface). Shared by every search entry point (web + DRF).
+SEARCH_MIN_QUERY_LEN = 2
+SEARCH_MAX_RESULTS = 100
+
+
+def activity_search_filter(qs, query):
+    """Apply the free-text activity search predicate to an Activity queryset.
+
+    Matches title, description, the venue name and the activity-type name. Plain
+    icontains (trigram-indexed) — honest substring match, no relevance ranking, so
+    ordering stays soonest-first (never popularity)."""
+    return qs.filter(
+        Q(title__icontains=query)
+        | Q(description__icontains=query)
+        | Q(place__name__icontains=query)
+        | Q(activity_type__name__icontains=query)
+    )
+
+
+def search_activities(viewer, query, *, beginners=False, limit=SEARCH_MAX_RESULTS):
+    """Free-text search over the activities the viewer may see (W1).
+
+    Routed through ``visible_activities`` so cohort isolation and blocking hold
+    identically to every other discovery surface. Only OPEN, future activities are
+    returned (a search is a way to find something to join, not an archive browse).
+    Venue names are safe to match: ``create_activity`` only accepts ``public_places()``
+    venues, so no pending user-proposed place name can leak through an activity.
+    Bounded and soonest-first."""
+    query = (query or "").strip()
+    if len(query) < SEARCH_MIN_QUERY_LEN:
+        return Activity.objects.none()
+    qs = visible_activities(viewer).filter(
+        status=Activity.Status.OPEN, starts_at__gte=timezone.now()
+    )
+    if beginners:
+        qs = qs.filter(beginners_welcome=True)
+    return (
+        activity_search_filter(qs, query)
+        .select_related("place", "activity_type", "owner")
+        .order_by("starts_at", "id")[: max(1, min(int(limit), SEARCH_MAX_RESULTS))]
+    )
+
+
+def search_thread_posts(viewer, activity, query, *, limit=50):
+    """Search inside one thread's plaintext posts (W1 "search into chat").
+
+    Fail-closed: re-gates on ``can_read_thread`` even though callers should have
+    gated already — a search must never see further than the thread itself. Hidden
+    posts stay hidden. Returns newest-first, bounded. (E2EE direct messages are
+    structurally unsearchable server-side — the server never has plaintext.)"""
+    query = (query or "").strip()
+    if len(query) < SEARCH_MIN_QUERY_LEN:
+        return Post.objects.none()
+    if not can_read_thread(viewer, activity):
+        raise NotEligible("You can't search this thread.")
+    return (
+        activity.thread.posts.filter(is_hidden=False, body__icontains=query)
+        .select_related("author", "reply_to__author")
+        .order_by("-created_at", "-id")[:limit]
+    )
+
+
 def with_counts(qs):
     """Annotate an Activity queryset with ``member_n`` (current members) and
     ``participant_n`` (members holding a position — excludes supervisory guardians) so

@@ -23,11 +23,13 @@ from .serializers import (
     SeriesSerializer,
 )
 from .services import (
+    SEARCH_MIN_QUERY_LEN,
     DuplicatePlace,
     InvalidState,
     NotAMember,
     NotEligible,
     SocialError,
+    activity_search_filter,
     add_guardian,
     attendance_summary,
     can_read_thread,
@@ -90,11 +92,16 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
         return ActivitySerializer
 
     def get_queryset(self):
-        return with_counts(
-            visible_activities(self.request.user).select_related(
-                "owner", "place", "activity_type", "thread"
-            )
+        qs = visible_activities(self.request.user).select_related(
+            "owner", "place", "activity_type", "thread"
         )
+        # W1 search: ?q= free-text filter on the list (same predicate as the web search,
+        # same gates — visible_activities is already applied above).
+        if self.action == "list":
+            query = (self.request.query_params.get("q") or "").strip()
+            if len(query) >= SEARCH_MIN_QUERY_LEN:
+                qs = activity_search_filter(qs, query)
+        return with_counts(qs)
 
     def _actor(self, request):
         """Resolve who the action is performed as. A guardian may act on behalf of a

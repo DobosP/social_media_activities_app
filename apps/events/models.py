@@ -1,3 +1,4 @@
+from django.contrib.postgres.indexes import GinIndex
 from django.db import models
 from django.db.models import Q, UniqueConstraint
 
@@ -52,6 +53,9 @@ class Event(models.Model):
         indexes = [
             models.Index(fields=["place", "starts_at"]),
             models.Index(fields=["starts_at"]),
+            # W1 search: trigram GIN so the events search (icontains) stays index-assisted.
+            GinIndex(name="event_title_trgm", fields=["title"], opclasses=["gin_trgm_ops"]),
+            GinIndex(name="event_desc_trgm", fields=["description"], opclasses=["gin_trgm_ops"]),
         ]
         ordering = ["starts_at"]
 

@@ -935,15 +935,21 @@ def _visible_activity_or_404(user, pk) -> Activity:
 
 @login_required
 def activity_list(request):
-    activities = (
-        social.visible_activities(request.user)
-        .filter(status=Activity.Status.OPEN, starts_at__gte=timezone.now())
-        .select_related("place", "activity_type", "owner")
-    )
     beginners_only = request.GET.get("beginners") == "true"
-    if beginners_only:
-        activities = activities.filter(beginners_welcome=True)
-    activities, near_active = _order_feed_by_location(activities, request.GET)
+    query = (request.GET.get("q") or "").strip()
+    near_active = False
+    if query:
+        # W1 search: one bounded, gate-identical path (visible_activities inside).
+        activities = social.search_activities(request.user, query, beginners=beginners_only)
+    else:
+        activities = (
+            social.visible_activities(request.user)
+            .filter(status=Activity.Status.OPEN, starts_at__gte=timezone.now())
+            .select_related("place", "activity_type", "owner")
+        )
+        if beginners_only:
+            activities = activities.filter(beginners_welcome=True)
+        activities, near_active = _order_feed_by_location(activities, request.GET)
     return render(
         request,
         "web/activities.html",
@@ -951,6 +957,7 @@ def activity_list(request):
             "activities": activities,
             "near_active": near_active,
             "beginners_only": beginners_only,
+            "query": query,
             **_nav_context(request.user),
         },
     )
@@ -1954,23 +1961,41 @@ def partners_list(request):
 
 
 def events_list(request):
-    events = (
-        Event.objects.filter(starts_at__gte=timezone.now())
-        .select_related("place", "activity_type")
-        .order_by("starts_at")
-    )
-    activity = request.GET.get("activity")
-    if activity:
-        events = events.filter(activity_type__slug=activity)
+    from apps.events.services import search_events, upcoming_events
+
+    query = (request.GET.get("q") or "").strip()
+    if query:
+        events = search_events(query)
+    else:
+        # upcoming_events applies the F25 pending-place gate (the API HappeningView always
+        # had it; the web list previously leaked a pending venue's name through an event).
+        events = upcoming_events().order_by("starts_at")
+        activity = request.GET.get("activity")
+        if activity:
+            events = events.filter(activity_type__slug=activity)
     return render(
         request,
         "web/events.html",
-        {"events": events[:100], "activity": activity, **_nav_context(request.user)},
+        {
+            "events": events[:100],
+            "activity": request.GET.get("activity"),
+            "query": query,
+            **_nav_context(request.user),
+        },
     )
 
 
 def event_detail(request, pk):
-    event = get_object_or_404(Event.objects.select_related("place", "activity_type"), pk=pk)
+    from django.db.models import Q as _Q
+
+    from apps.places.services import public_places
+
+    # Same F25 gate as the list: an event at a still-unpublished user-proposed place
+    # must not disclose that place (or its name) on the detail page either.
+    qs = Event.objects.select_related("place", "activity_type").filter(
+        _Q(place__isnull=True) | _Q(place_id__in=public_places().values("id"))
+    )
+    event = get_object_or_404(qs, pk=pk)
     return render(request, "web/event_detail.html", {"event": event, **_nav_context(request.user)})
 
 
