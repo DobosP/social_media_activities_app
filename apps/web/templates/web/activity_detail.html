@@ -19,6 +19,10 @@
   <p class="muted" style="font-size:.85rem">{% trans "Part of:" %}
     {% for c in activity_communities %}<a class="tag" href="{% url 'community_detail' c.slug %}">{{ c.name }}</a> {% endfor %}</p>
 {% endif %}
+{% if can_create_group %}
+  <p class="muted" style="font-size:.85rem">{% url 'group_create' as group_create_url %}{% blocktrans with city=activity.place.address_city|urlencode type=activity.activity_type.slug %}Enjoying this crowd?
+    <a href="{{ group_create_url }}?city={{ city }}&amp;type={{ type }}">Start a standing group</a> so it keeps happening.{% endblocktrans %}</p>
+{% endif %}
 {% if activity.description %}<p>{{ activity.description|linebreaks }}</p>{% endif %}
 {% if activity.accessibility_notes %}<p class="muted"><strong>{% trans "Accessibility:" %}</strong><br>{{ activity.accessibility_notes|linebreaksbr }}</p>{% endif %}
 <p class="muted">{% blocktrans with owner_name=activity.owner.display_name|default:activity.owner.username %}Organised by {{ owner_name }}.{% endblocktrans %}

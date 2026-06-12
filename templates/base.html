@@ -37,8 +37,8 @@
             <a href="{% url 'places_map' %}">{% trans "Places" %}</a>
             <a href="{% url 'events_list' %}">{% trans "Events" %}</a>
             {% if user.is_authenticated %}
-              <a href="{% url 'communities' %}">{% trans "Communities" %}</a>
-              <a href="{% url 'groups' %}">{% trans "Groups" %}</a>
+              {% comment %}W5: groups + communities are one surface now.{% endcomment %}
+              <a href="{% url 'communities' %}">{% trans "Communities &amp; groups" %}</a>
             {% endif %}
             <a href="{% url 'partners' %}">{% trans "Civic partners" %}</a>
           </div>

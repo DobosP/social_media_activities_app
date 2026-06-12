@@ -84,17 +84,42 @@ from .forms import (
 # --- Communities (derived geo x activity-type discovery labels) -------------------------
 
 
+def _can_create_group(user) -> bool:
+    """UI-visibility mirror of create_group's gate (the service still enforces it):
+    staff always; a non-staff user only when GROUPS_ALLOW_USER_CREATED is on AND their
+    cohort is in the GROUPS_USER_CREATION_COHORTS hard wall (a minor can never own one)."""
+    if user.is_staff:
+        return True
+    if not getattr(settings, "GROUPS_ALLOW_USER_CREATED", False):
+        return False
+    return user.cohort in getattr(settings, "GROUPS_USER_CREATION_COHORTS", ["adult"])
+
+
 @login_required
 def communities_page(request):
-    """A paginated, alphabetical list of the viewer's-cohort communities (no counts, no
-    'trending'/'hot' — just named lists of activities to go to)."""
+    """W5: the ONE communities surface — joinable standing groups and auto-detected
+    communities side by side (they live on the same area×type coordinate; users
+    shouldn't have to learn two nouns). Both lists stay behind their own chokepoints
+    (visible_groups / visible_communities); no counts, no 'trending'/'hot'."""
     from django.core.paginator import Paginator
 
     from apps.communities import services as communities
 
     qs = communities.visible_communities(request.user)
     page = Paginator(qs, 30).get_page(request.GET.get("page"))
-    return render(request, "web/communities.html", {"page": page, **_nav_context(request.user)})
+    groups_page = Paginator(social.visible_groups(request.user), 30).get_page(
+        request.GET.get("gpage")
+    )
+    return render(
+        request,
+        "web/communities.html",
+        {
+            "page": page,
+            "groups_page": groups_page,
+            "can_create": _can_create_group(request.user),
+            **_nav_context(request.user),
+        },
+    )
 
 
 @login_required
@@ -147,18 +172,9 @@ def community_detail(request, slug):
 
 @login_required
 def group_list(request):
-    """A paginated, alphabetical list of the viewer's-cohort ACTIVE groups (the visible_groups
-    chokepoint). No counts, no 'trending' — just named groups to join."""
-    from django.core.paginator import Paginator
-
-    qs = social.visible_groups(request.user)
-    page = Paginator(qs, 30).get_page(request.GET.get("page"))
-    can_create = request.user.is_staff or getattr(settings, "GROUPS_ALLOW_USER_CREATED", False)
-    return render(
-        request,
-        "web/groups.html",
-        {"page": page, "can_create": can_create, **_nav_context(request.user)},
-    )
+    """W5: groups and communities are ONE discovery surface now — the old standalone
+    /groups/ list lands on it (group detail/join/leave URLs are unchanged)."""
+    return redirect("communities")
 
 
 @login_required
@@ -190,7 +206,17 @@ def group_create(request):
                 messages.success(request, "Group created - you're the owner.")
                 return redirect("group_detail", pk=group.pk)
     else:
-        form = GroupCreateForm()
+        # W5 "start a group from a chat": validated GET prefill (the F40 pattern) so an
+        # activity thread / conversation can seed city + type. setdefault-style — typed
+        # input is never overwritten; bad values are simply dropped.
+        initial = {}
+        if city := (request.GET.get("city") or "").strip()[:128]:
+            initial["city"] = city
+        if type_slug := request.GET.get("type"):
+            seeded_type = ActivityType.objects.filter(slug=type_slug, is_active=True).first()
+            if seeded_type:
+                initial["activity_type"] = seeded_type
+        form = GroupCreateForm(initial=initial)
     return render(request, "web/group_form.html", {"form": form, **_nav_context(request.user)})
 
 
@@ -1112,6 +1138,9 @@ def activity_detail(request, pk):
             if (is_member and my_membership)
             else False,
             "can_join": social.can_join(user, activity),
+            # W5: "start a standing group like this" prefill affordance (members only;
+            # the service re-enforces the real creation gate).
+            "can_create_group": is_member and _can_create_group(user),
             **_nav_context(user),
         },
     )
