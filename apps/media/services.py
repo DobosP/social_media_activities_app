@@ -44,35 +44,39 @@ def _is_member(user, thread) -> bool:
     return current_members(thread.activity).filter(user=user).exists()
 
 
-def profile_image_is_taken(uploader, content_digest: str) -> bool:
-    """Whether another user IN THE SAME COHORT already uses a profile picture with this exact
-    content.
+def profile_image_is_taken(uploader, content_digest: str, perceptual: str = "") -> bool:
+    """Whether another user IN THE SAME COHORT already uses this profile picture.
 
-    First-pass definition of "unique": byte-identical stored content — the post-EXIF-strip
-    re-encode whose hash we keep in ``Photo.sha256`` (NOT the raw upload, so two images that
-    differ only in stripped metadata still collide). This is the single seam for refining
-    what "unique" means later (e.g. perceptual near-duplicate detection): callers and tests
-    go through it, so the rule can change here without touching the upload pipeline.
+    "Unique" now means (W8): byte-identical stored content (``Photo.sha256`` of the
+    post-EXIF-strip re-encode) OR a perceptual near-duplicate — the new picture's 64-bit
+    dHash within MEDIA_PERCEPTUAL_MAX_DISTANCE bits of an existing avatar's ``phash``.
+    A resize/re-encode/small-crop of someone else's avatar no longer slips through.
+    This stays the single seam for the "unique" definition: callers and tests go
+    through it, so it can keep tightening here without touching the upload pipeline.
 
     Scoped to the uploader's own cohort so the duplicate boolean never crosses the cohort
     wall — an adult must not be able to probe whether a given image is a child's avatar
     (profile photos are only viewable within a cohort; see can_view_photo).
 
-    Guarantee is best-effort and exact-bytes only: it is NOT perceptual and NOT
-    impersonation-proof — a re-encode, resize, or single-pixel change defeats it, and the
-    digest is tied to the Pillow/codec version. Do not assume it prevents lookalike avatars.
+    Still best-effort and NOT impersonation-proof: dHash is defeated by heavy crops or
+    deliberate perturbation, and legacy rows without a phash only match exactly.
     """
     if not content_digest:
         return False
-    return (
-        Photo.objects.filter(
-            kind=Photo.Kind.PROFILE,
-            sha256=content_digest,
-            uploader__cohort=uploader.cohort,
-        )
-        .exclude(uploader=uploader)
-        .exists()
-    )
+    others = Photo.objects.filter(
+        kind=Photo.Kind.PROFILE, uploader__cohort=uploader.cohort
+    ).exclude(uploader=uploader)
+    if others.filter(sha256=content_digest).exists():
+        return True
+    if perceptual:
+        from .perceptual import DEFAULT_MAX_DISTANCE, hamming_hex
+
+        max_distance = getattr(settings, "MEDIA_PERCEPTUAL_MAX_DISTANCE", DEFAULT_MAX_DISTANCE)
+        # Bounded scan: one row per same-cohort user (an account has at most one avatar).
+        for existing in others.exclude(phash="").values_list("phash", flat=True):
+            if hamming_hex(perceptual, existing) <= max_distance:
+                return True
+    return False
 
 
 @transaction.atomic
@@ -113,11 +117,14 @@ def upload_photo(uploader, kind, data: bytes, *, thread=None) -> Photo:
         raise MediaRejected("Image failed safety screening and was not stored.")
 
     digest = hashlib.sha256(clean_bytes).hexdigest()
+    from .perceptual import dhash_hex
 
-    # Profile pictures must be unique by content: refuse one byte-identical to another user's
-    # avatar (checked before storing so a rejected duplicate leaves no orphan blob). See
-    # profile_image_is_taken for the (extensible) definition of "unique".
-    if kind == Photo.Kind.PROFILE and profile_image_is_taken(uploader, digest):
+    fingerprint = dhash_hex(clean_bytes) or ""
+
+    # Profile pictures must be unique by content: refuse one byte-identical OR a
+    # perceptual near-duplicate of another user's avatar (checked before storing so a
+    # rejected duplicate leaves no orphan blob). See profile_image_is_taken.
+    if kind == Photo.Kind.PROFILE and profile_image_is_taken(uploader, digest, fingerprint):
         # The reason is recorded for audit only. The user-facing message is deliberately
         # GENERIC (indistinguishable from other "bad image" rejections) so avatar upload
         # cannot be used as an oracle to confirm a specific image is in use as someone's
@@ -139,6 +146,7 @@ def upload_photo(uploader, kind, data: bytes, *, thread=None) -> Photo:
         content_type=f"image/{extension_for(fmt)}",
         byte_size=len(clean_bytes),
         sha256=digest,
+        phash=fingerprint,
         width=width,
         height=height,
         scan_status=Photo.ScanStatus.CLEAN,
@@ -315,6 +323,27 @@ def attach_to_post(uploader, post, *, filename: str, data: bytes, ttl_seconds=No
     if not scanner.scan(data).clean:
         record_audit("media.blocked", actor=uploader, reason="scan_match", sha256=orig_digest)
         raise MediaRejected("File failed safety screening and was not stored.")
+
+    # W8: PDFs additionally pass through the document (antivirus) seam. Default is a
+    # no-op until an operator wires clamd; MEDIA_REQUIRE_DOCUMENT_SCANNER=True makes it
+    # fail-closed. Forced-download + nosniff serving stays regardless of scan result.
+    if kind == Attachment.Kind.FILE:
+        from .docscan import get_document_scanner
+
+        doc_scanner = get_document_scanner()
+        if (
+            getattr(settings, "MEDIA_REQUIRE_DOCUMENT_SCANNER", False)
+            and not doc_scanner.is_effective()
+        ):
+            record_audit("media.attach_blocked", actor=uploader, reason="no_doc_scanner")
+            raise MediaRejected(
+                "File sharing is unavailable until a document scanner is configured."
+            )
+        if doc_scanner.is_effective() and not doc_scanner.scan(data).clean:
+            record_audit(
+                "media.blocked", actor=uploader, reason="doc_scan_match", sha256=orig_digest
+            )
+            raise MediaRejected("File failed safety screening and was not stored.")
 
     if kind == Attachment.Kind.IMAGE:
         from .processing import ImageError

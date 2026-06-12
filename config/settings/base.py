@@ -315,6 +315,21 @@ MEDIA_SCANNER_TIMEOUT = env.int("MEDIA_SCANNER_TIMEOUT", default=10)
 # default HashBlocklistScanner is only effective with a non-empty blocklist (inline or
 # file); or point MEDIA_IMAGE_SCANNER at a managed service. dev/test settings set False.
 MEDIA_REQUIRE_SCANNER = env.bool("MEDIA_REQUIRE_SCANNER", default=True)
+# W8 perceptual layer: 64-bit dHash entries (16 hex chars) matched within
+# MEDIA_PERCEPTUAL_MAX_DISTANCE bits — catches trivially re-encoded/resized copies of
+# known-bad images that defeat exact SHA-256. See apps/media/perceptual.py for limits.
+MEDIA_PERCEPTUAL_BLOCKLIST = env.list("MEDIA_PERCEPTUAL_BLOCKLIST", default=[])
+MEDIA_PERCEPTUAL_BLOCKLIST_FILE = env("MEDIA_PERCEPTUAL_BLOCKLIST_FILE", default="")
+MEDIA_PERCEPTUAL_MAX_DISTANCE = env.int("MEDIA_PERCEPTUAL_MAX_DISTANCE", default=8)
+# W8 document (PDF) scanning seam — default no-op; deploy clamd and point this at
+# apps.media.docscan.ClamdScanner, then flip the require flag to fail closed.
+MEDIA_DOCUMENT_SCANNER = env(
+    "MEDIA_DOCUMENT_SCANNER", default="apps.media.docscan.NoopDocumentScanner"
+)
+MEDIA_REQUIRE_DOCUMENT_SCANNER = env.bool("MEDIA_REQUIRE_DOCUMENT_SCANNER", default=False)
+MEDIA_CLAMD_HOST = env("MEDIA_CLAMD_HOST", default="127.0.0.1")
+MEDIA_CLAMD_PORT = env.int("MEDIA_CLAMD_PORT", default=3310)
+MEDIA_CLAMD_TIMEOUT = env.int("MEDIA_CLAMD_TIMEOUT", default=20)
 
 # Thread attachments (images + PDF in the activity conversation). Master switch; per-attachment
 # size cap; and the cohorts allowed to share a FILE/PDF (a NEW media type → adults only at

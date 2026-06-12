@@ -53,9 +53,13 @@ def _load_blocklist_file(path: str, mtime: float) -> frozenset[str]:
 
 
 class HashBlocklistScanner(ImageScanner):
-    """Blocks an image whose SHA-256 matches a known-bad hash (e.g. a CSAM hash set).
-    Lawful and privacy-preserving (hashes only). Hashes come from the inline
-    MEDIA_CSAM_HASH_BLOCKLIST and/or a MEDIA_CSAM_HASH_BLOCKLIST_FILE."""
+    """Blocks an image whose SHA-256 matches a known-bad hash (e.g. a CSAM hash set),
+    OR whose 64-bit perceptual dHash sits within MEDIA_PERCEPTUAL_MAX_DISTANCE bits of a
+    perceptual blocklist entry (W8 — catches the trivial re-encode/resize that defeats
+    exact hashing; see apps.media.perceptual for honest limits). Lawful and
+    privacy-preserving (hashes only). Exact hashes come from MEDIA_CSAM_HASH_BLOCKLIST
+    and/or MEDIA_CSAM_HASH_BLOCKLIST_FILE; perceptual entries (16 hex chars) from
+    MEDIA_PERCEPTUAL_BLOCKLIST and/or MEDIA_PERCEPTUAL_BLOCKLIST_FILE."""
 
     def _blocklist(self) -> set[str]:
         hashes = {h.lower() for h in getattr(settings, "MEDIA_CSAM_HASH_BLOCKLIST", [])}
@@ -67,15 +71,37 @@ class HashBlocklistScanner(ImageScanner):
                 logger.exception("Could not read MEDIA_CSAM_HASH_BLOCKLIST_FILE=%s", path)
         return hashes
 
+    def _perceptual_blocklist(self) -> set[str]:
+        entries = {h.lower() for h in getattr(settings, "MEDIA_PERCEPTUAL_BLOCKLIST", [])}
+        path = getattr(settings, "MEDIA_PERCEPTUAL_BLOCKLIST_FILE", "")
+        if path:
+            try:
+                entries |= _load_blocklist_file(path, Path(path).stat().st_mtime)
+            except OSError:
+                logger.exception("Could not read MEDIA_PERCEPTUAL_BLOCKLIST_FILE=%s", path)
+        return {e for e in entries if len(e) == 16}
+
     def scan(self, data: bytes) -> ScanResult:
         digest = hashlib.sha256(data).hexdigest()
         if digest in self._blocklist():
             return ScanResult(clean=False, matched=digest)
+        perceptual = self._perceptual_blocklist()
+        if perceptual:
+            from .perceptual import DEFAULT_MAX_DISTANCE, dhash_hex, hamming_hex
+
+            fingerprint = dhash_hex(data)
+            if fingerprint:
+                max_distance = getattr(
+                    settings, "MEDIA_PERCEPTUAL_MAX_DISTANCE", DEFAULT_MAX_DISTANCE
+                )
+                for entry in perceptual:
+                    if hamming_hex(fingerprint, entry) <= max_distance:
+                        return ScanResult(clean=False, matched=f"phash:{entry}")
         return ScanResult(clean=True)
 
     def is_effective(self) -> bool:
         # A hash blocklist only screens anything if it actually contains hashes.
-        return bool(self._blocklist())
+        return bool(self._blocklist() or self._perceptual_blocklist())
 
 
 class ManagedScanner(ImageScanner):
