@@ -66,3 +66,36 @@ class Event(models.Model):
         # Untrusted feed URL served raw over the API — persist only safe http(s) links.
         self.url = safe_external_url(self.url)
         super().save(*args, **kwargs)
+
+
+class EventFeed(models.Model):
+    """W9 multi-source aggregation prep: an operator-registered external calendar the
+    nightly ``sync_event_feeds`` job pulls. One row per source feed; events upsert
+    idempotently with a per-feed-namespaced external id ("feed<pk>:<uid>") so two
+    providers reusing the same UID can never collide or overwrite each other.
+
+    Staff-curated (operator/admin) — never user-submitted — so the SSRF posture of the
+    fetcher only ever sees vetted URLs. New API-based sources plug in the same way:
+    register an adapter (INGESTION_EXTRA_ADAPTERS) or add a feed row here."""
+
+    name = models.CharField(max_length=120)
+    url = models.URLField(max_length=500)
+    # Optional default bindings applied to every event in this feed.
+    place = models.ForeignKey(
+        "places.Place", on_delete=models.SET_NULL, null=True, blank=True, related_name="feeds"
+    )
+    activity_type = models.ForeignKey(
+        "taxonomy.ActivityType",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="event_feeds",
+    )
+    is_active = models.BooleanField(default=True)
+    last_synced_at = models.DateTimeField(null=True, blank=True)
+    # Truncated last outcome ("ok: 12 events" / "error: …") for the ops page/admin.
+    last_status = models.CharField(max_length=200, blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.name} ({'active' if self.is_active else 'inactive'})"

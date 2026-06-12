@@ -66,6 +66,19 @@ class Command(BaseCommand):
                     "Overture needs --overture-path or OVERTURE_DATA_PATH (parquet path/glob)."
                 )
             return OvertureAdapter(data_path=data_path)
+        # W9 pluggable registry: an external aggregator registers its adapter class via
+        # INGESTION_EXTRA_ADAPTERS = {"<source-name>": "dotted.path.AdapterClass"} and runs
+        # `ingest_places --source=<source-name>` — no fork of this command needed. The
+        # adapter must implement SourceAdapter (fetch() -> Iterator[RawPlace]); all the
+        # upsert/dedup/overlay-protection semantics below apply to it identically.
+        extra = getattr(settings, "INGESTION_EXTRA_ADAPTERS", {}) or {}
+        if source in extra:
+            from django.utils.module_loading import import_string
+
+            try:
+                return import_string(extra[source])()
+            except ImportError as exc:
+                raise CommandError(f"Could not import adapter for '{source}': {exc}") from exc
         raise CommandError(f"Unknown source: {source}")
 
     def _resolve_area(self, source, opts) -> tuple[str | None, tuple | None]:

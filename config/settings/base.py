@@ -284,6 +284,11 @@ INGEST_USER_AGENT = env(
 )
 # Wikidata SPARQL endpoint for the no-key website enricher (CC0).
 WIKIDATA_SPARQL_URL = env("WIKIDATA_SPARQL_URL", default="https://query.wikidata.org/sparql")
+# W9 pluggable source registry: {"<source-name>": "dotted.path.AdapterClass"} lets an
+# external aggregator add place sources without forking ingest_places (same upsert/
+# dedup/overlay-protection semantics). JSON in the env, e.g.
+# INGESTION_EXTRA_ADAPTERS='{"eventbrite": "myadapters.EventbritePlaces"}'.
+INGESTION_EXTRA_ADAPTERS = env.json("INGESTION_EXTRA_ADAPTERS", default={})
 
 # --- D6 media ---
 # Image bytes live in object storage; the local backend is the dev/test default.
