@@ -6,8 +6,7 @@
 {% endblock %}
 {% block content %}
 <h1>{% trans "Organise an activity" %}</h1>
-{% blocktrans with cohort=user.get_cohort_display %}<p class="muted">It will be visible only to people in your cohort
-  (<strong>{{ cohort }}</strong>).</p>{% endblocktrans %}
+<p class="muted">{% trans "It will be visible to people your age only." %}</p>
 <p class="muted">{% url 'series_create' as series_url %}{% blocktrans %}Running the same meetup regularly?
   <a href="{{ series_url }}">Set up a recurring series</a> instead.{% endblocktrans %}</p>
 

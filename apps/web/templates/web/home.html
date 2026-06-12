@@ -18,8 +18,7 @@
   {% endfor %}
 </div>
 {% endif %}
-<p class="muted">{% blocktrans with cohort=user.get_cohort_display %}You're in the <strong>{{ cohort }}</strong> cohort &mdash; you only
-  see activities for your cohort.{% endblocktrans %} <a href="{% url 'interests' %}">{% trans "Pick your interests" %}</a> {% trans "for better suggestions." %}</p>
+<p class="muted">{% trans "Everything here is filtered to people your age, automatically." %} <a href="{% url 'interests' %}">{% trans "Pick your interests" %}</a> {% trans "for better suggestions." %}</p>
 <div class="row">
   <a class="btn" href="{% url 'activity_create' %}">{% trans "Organise an activity" %}</a>
   <a class="btn btn-secondary" href="{% url 'places_map' %}">{% trans "Find a place" %}</a>

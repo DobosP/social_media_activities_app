@@ -1869,7 +1869,8 @@ def draft_activity_text(*, activity_type, place=None, starts_at=None, cohort=Non
     # Minor signal = cohort, NOT requires_parental_consent (which is UNDER_16-only and would
     # silently skip TEEN organisers).
     if cohort in (Cohort.CHILD, Cohort.TEEN):
-        safety = str(_("Safety: meet in a public place and bring a friend."))
+        # W7: same reminder, calmer label — guidance, not a "you are a child" badge.
+        safety = str(_("Tip: meet in a public place and bring a friend."))
         description = "\n\n".join([base, safety])
     else:
         description = base

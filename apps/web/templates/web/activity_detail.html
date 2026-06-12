@@ -6,7 +6,6 @@
 <h1>{{ activity.title }}</h1>
 <div>
   <span class="tag">{{ activity.activity_type.name }}</span>
-  <span class="tag">{{ activity.get_cohort_display }}</span>
   {% if activity.cost_band != "unspecified" %}<span class="tag">{{ activity.get_cost_band_display }}</span>{% endif %}
   {% if activity.difficulty != "unspecified" %}<span class="tag">{{ activity.get_difficulty_display }}</span>{% endif %}
   {% if activity.beginners_welcome %}<span class="tag">{% trans "beginners welcome" %}</span>{% endif %}
@@ -156,7 +155,7 @@
   <form method="post" action="{% url 'activity_join' activity.pk %}">{% csrf_token %}
     <button class="btn" type="submit">{% trans "Request to join" %}</button></form>
 {% elif user.cohort != activity.cohort %}
-  <div class="banner">{% trans "This activity is for a different age cohort, so you can't join it." %}</div>
+  <div class="banner">{% trans "This activity isn't open to your account." %}</div>
 {% endif %}
 
 {% if show_welcome %}

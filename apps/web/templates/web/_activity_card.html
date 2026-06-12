@@ -4,7 +4,8 @@
   <h3><a href="{% url 'activity_detail' a.pk %}">{{ a.title }}</a></h3>
   <div>
     <span class="tag">{{ a.activity_type.name }}</span>
-    <span class="tag">{{ a.get_cohort_display }}</span>
+    {% comment %}W7: no cohort badge — everyone only ever sees their own cohort's
+       activities, so the tag was pure "you are a child" signage.{% endcomment %}
     {% if a.cost_band and a.cost_band != "unspecified" %}<span class="tag">{{ a.get_cost_band_display }}</span>{% endif %}
     {% if a.difficulty and a.difficulty != "unspecified" %}<span class="tag">{{ a.get_difficulty_display }}</span>{% endif %}
     {% if a.beginners_welcome %}<span class="tag">{% trans "beginners welcome" %}</span>{% endif %}

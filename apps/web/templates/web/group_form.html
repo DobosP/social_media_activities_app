@@ -4,8 +4,8 @@
 {% block content %}
 <p class="muted"><a href="{% url 'groups' %}">&larr; {% trans "Groups" %}</a></p>
 <h1>{% trans "Create a group" %}</h1>
-<p class="muted">{% blocktrans %}A standing group for a city + activity type. Your group is pinned to your own
-  cohort. (Groups for under-18s are staff-curated only.){% endblocktrans %}</p>
+<p class="muted">{% blocktrans %}A standing group for a city + activity type, visible to people your age.
+  Some groups need staff approval before they appear.{% endblocktrans %}</p>
 <form method="post">{% csrf_token %}
   {{ form.as_p }}
   <button class="btn" type="submit">{% trans "Create group" %}</button>

@@ -67,7 +67,9 @@ WHY_REASONS = {
     Notification.Kind.MEETUP_CONFIRMED: (
         "A meetup you joined reached the organiser's minimum number of people going."
     ),
-    Notification.Kind.ARRIVAL: "Someone arrived at your meetup (or your ward arrived).",
+    Notification.Kind.ARRIVAL: (
+        "Someone arrived at a meetup you're part of, or that someone you look after joined."
+    ),
     Notification.Kind.CONNECTION_REQUEST: (
         "Someone you've shared an activity with asked to connect."
     ),
