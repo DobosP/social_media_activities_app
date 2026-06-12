@@ -261,11 +261,17 @@ def test_account_delete_failure_shows_error_and_stays():
     assert c.get("/profile/").status_code == 200
 
 
-def test_profile_shows_delete_control():
-    resp = _client(_user("del-control")).get("/profile/")
-    assert resp.status_code == 200
-    assert b"Delete my account" in resp.content
-    assert b'action="/account/delete/"' in resp.content
+def test_delete_control_lives_in_settings_and_profile_points_there():
+    # W3 moved the account danger zone to /settings/ (per user request — the profile was
+    # overloaded). The control must exist there, and the profile must point at it.
+    c = _client(_user("del-control"))
+    settings_page = c.get("/settings/")
+    assert settings_page.status_code == 200
+    assert b"Delete my account" in settings_page.content
+    assert b'action="/account/delete/"' in settings_page.content
+    profile = c.get("/profile/")
+    assert profile.status_code == 200
+    assert b"/settings/" in profile.content
 
 
 # --- Auth hardening regressions -----------------------------------------------------

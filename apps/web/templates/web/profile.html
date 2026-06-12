@@ -5,33 +5,42 @@
 <h1>{{ profile_user.display_name|default:profile_user.username }}</h1>
 {% include "web/_you_tabs.html" with active="profile" %}
 
-<div class="row" style="align-items:flex-start;gap:1rem">
-  {% if avatar_url %}
-    <img class="avatar" src="{{ avatar_url }}" width="96" height="96" alt="{% trans 'profile picture' %}">
-  {% else %}
-    {# No uploaded picture → the generated avatar (interest constellation, identicon if no interests). #}
-    <img class="avatar" src="{{ profile_user|avatar_uri }}" width="96" height="96"
-         alt="{% trans 'generated avatar' %}" title="{% trans 'Your generated avatar (upload a photo to replace it)' %}">
-  {% endif %}
-  <form method="post" action="{% url 'avatar_upload' %}" enctype="multipart/form-data">{% csrf_token %}
-    <input type="file" name="image" accept="image/*" required>
-    <button class="btn btn-sm" type="submit">{% trans "Update photo" %}</button>
-    <div class="helptext">{% trans "One profile picture. Location metadata is stripped automatically." %}</div>
-  </form>
+{% if profile_user.requires_parental_consent and not can_participate %}
+<div class="banner">{% trans "As an under-16, a parent or guardian must approve your account before you can join or organise activities." %}</div>
+{% endif %}
+
+<div class="card">
+  <div class="row" style="align-items:flex-start;gap:1rem">
+    {% if avatar_url %}
+      <img class="avatar" src="{{ avatar_url }}" width="96" height="96" alt="{% trans 'profile picture' %}">
+    {% else %}
+      {# No uploaded picture → the generated avatar (interest constellation, identicon if no interests). #}
+      <img class="avatar" src="{{ profile_user|avatar_uri }}" width="96" height="96"
+           alt="{% trans 'generated avatar' %}" title="{% trans 'Your generated avatar (upload a photo to replace it)' %}">
+    {% endif %}
+    <div style="flex:1">
+      <p style="margin:.1rem 0"><strong>{{ profile_user.username }}</strong></p>
+      <p class="muted" style="margin:.1rem 0">
+        {{ profile_user.get_age_band_display }} <span class="muted">{% trans "(demo)" %}</span> &middot;
+        {% if profile_user.is_identity_verified %}{% trans "age verified" %}{% else %}{% trans "not yet verified" %}{% endif %}
+        {% if not can_participate %} &middot; {% trans "participation paused" %}{% endif %}
+      </p>
+      <form method="post" action="{% url 'avatar_upload' %}" enctype="multipart/form-data" class="row" style="margin-top:.5rem">{% csrf_token %}
+        <input type="file" name="image" accept="image/*" required style="max-width:16rem">
+        <button class="btn btn-sm" type="submit">{% trans "Update photo" %}</button>
+      </form>
+      <div class="helptext">{% trans "One profile picture. Location metadata is stripped automatically." %}</div>
+    </div>
+  </div>
 </div>
 
 <div class="card">
-  <p><strong>{% trans "Username:" %}</strong> {{ profile_user.username }}</p>
-  <p><strong>{% trans "Cohort:" %}</strong> {{ profile_user.get_cohort_display }}</p>
-  <p><strong>{% trans "Age band:" %}</strong> {{ profile_user.get_age_band_display }} <span class="muted">{% trans "(demo)" %}</span></p>
-  <p><strong>{% trans "Identity verified:" %}</strong> {{ profile_user.is_identity_verified|yesno:_("yes,no") }}</p>
-  <p><strong>{% trans "Can participate:" %}</strong> {{ can_participate|yesno:_("yes,no") }}</p>
-  <p><strong>{% trans "Interests:" %}</strong>
+  <h3>{% trans "Interests" %}</h3>
+  <p style="margin:.3rem 0">
     {% for i in interests %}<span class="tag">{{ i }}</span>{% empty %}<span class="muted">{% trans "none yet" %}</span>{% endfor %}
     &middot; <a href="{% url 'interests' %}">{% trans "edit" %}</a></p>
-  <p><strong>{% trans "Access preferences:" %}</strong>
-    <span class="muted">{% trans "step-free, accessible toilet &amp; more" %}</span>
-    &middot; <a href="{% url 'access_preferences' %}">{% trans "edit" %}</a></p>
+  <p class="helptext">{% trans "Your interests light up your generated avatar and drive your recommendations. Only you choose them — nothing is tracked." %}
+    <a href="{% url 'access_preferences' %}">{% trans "Access needs" %}</a></p>
 </div>
 
 <div class="card">
@@ -44,7 +53,7 @@
   {% endif %}
   {% if connections %}
     <ul class="members">
-      {% for u in connections %}
+      {% for u in connections|slice:":8" %}
         <li>{{ u.display_name|default:u.username }}
           <form method="post" action="{% url 'connection_message' %}" class="inline">{% csrf_token %}
             <input type="hidden" name="public_id" value="{{ u.public_id }}">
@@ -53,13 +62,16 @@
         </li>
       {% endfor %}
     </ul>
+    {% if connections|length > 8 %}
+      <p class="muted"><a href="{% url 'connections' %}">{% blocktrans with total=connections|length %}See all {{ total }} connections →{% endblocktrans %}</a></p>
+    {% endif %}
   {% else %}
     <p class="muted">{% url 'connections' as connections_url %}{% blocktrans %}No connections yet. <a href="{{ connections_url }}">Find people you've met</a>.{% endblocktrans %}</p>
   {% endif %}
 </div>
 
-<div class="card">
-  <h3>{% trans "Age verification" %}</h3>
+<details class="card" {% if provenance.status == "expiring" or provenance.status == "expired" or not provenance.has_row %}open{% endif %}>
+  <summary><strong>{% trans "Age verification" %}</strong></summary>
   {% if provenance and provenance.has_row %}
     {% if provenance.band_display %}<p><strong>{% trans "Verified as:" %}</strong> {{ provenance.band_display }}
       <span class="muted">{% trans "(an age band only &mdash; never your birthdate)" %}</span></p>{% endif %}
@@ -73,17 +85,19 @@
     <p class="muted">{% trans "Prove your age band with the EU Digital Identity wallet &mdash; the app only ever learns an over-16/over-18 band, never your birthdate." %}</p>
     <a class="btn" href="{% url 'verify_age' %}">{% trans "Verify with EU Digital Identity" %}</a>
   {% endif %}
-  <p class="muted" style="font-size:.8rem">{% trans "Re-verifying into a different age band may remove you from conversations pinned to your current cohort." %}</p>
-  {% if profile_user.is_guardian %}<a class="btn btn-secondary" href="{% url 'wards' %}">{% trans "Your wards" %}</a>{% endif %}
-  {% if has_guardians %}<a class="btn btn-secondary" href="{% url 'my_guardians' %}">{% trans "Your guardians" %}</a>{% endif %}
-  <a class="btn btn-secondary" href="{% url 'safety_record' %}">{% trans "Your safety record" %}</a>
-  <a class="btn btn-secondary" href="{% url 'activity_log' %}">{% trans "Your activity log" %}</a>
-  <a class="btn btn-secondary" href="{% url 'my_privacy' %}">{% trans "What we know about you" %}</a>
-</div>
+  <p class="muted" style="font-size:.8rem">{% trans "Re-verifying into a different age band may change which activities and conversations you can take part in." %}</p>
+  <p class="row">
+    {% if profile_user.is_guardian %}<a class="btn btn-secondary btn-sm" href="{% url 'wards' %}">{% trans "Your wards" %}</a>{% endif %}
+    {% if has_guardians %}<a class="btn btn-secondary btn-sm" href="{% url 'my_guardians' %}">{% trans "Your guardians" %}</a>{% endif %}
+    <a class="btn btn-secondary btn-sm" href="{% url 'safety_record' %}">{% trans "Your safety record" %}</a>
+    <a class="btn btn-secondary btn-sm" href="{% url 'activity_log' %}">{% trans "Your activity log" %}</a>
+    <a class="btn btn-secondary btn-sm" href="{% url 'my_privacy' %}">{% trans "What we know about you" %}</a>
+  </p>
+</details>
 
 {% if blocked %}
-<div class="card">
-  <h3>{% trans "Blocked users" %}</h3>
+<details class="card">
+  <summary><strong>{% trans "Blocked users" %}</strong> <span class="muted">({{ blocked|length }})</span></summary>
   <p class="muted">{% trans "You and these people never see each other's activities." %}</p>
   <ul class="members">
     {% for b in blocked %}
@@ -93,27 +107,9 @@
           <button class="linkbtn" type="submit">{% trans "unblock" %}</button></form></li>
     {% endfor %}
   </ul>
-</div>
+</details>
 {% endif %}
 
-{% if profile_user.requires_parental_consent and not can_participate %}
-<div class="banner">{% trans "As an under-16, a parent or guardian must approve your account before you can join or organise activities." %}</div>
-{% endif %}
-
-<div class="card">
-  <h3>{% trans "Download my data" %}</h3>
-  <p class="muted">{% trans "Get a copy of all the personal data we hold about you, as a JSON file (GDPR right to data portability, Art. 20). No card or payment details are stored." %}</p>
-  <a class="btn btn-sm" href="{% url 'account_export' %}" download>{% trans "Download my data" %}</a>
-</div>
-
-<div class="card">
-  <h3>{% trans "Delete my account" %}</h3>
-  <p class="muted">{% url 'privacy' as privacy_url %}{% blocktrans %}This permanently deletes your account and personal data (GDPR right to erasure,
-    Art. 17). This cannot be undone. See our <a href="{{ privacy_url }}">Privacy Policy</a>.{% endblocktrans %}</p>
-  <form method="post" action="{% url 'account_delete' %}"
-        onsubmit="return confirm('{% trans "Permanently delete your account and personal data? This cannot be undone." %}');">
-    {% csrf_token %}
-    <button class="btn btn-danger" type="submit">{% trans "Delete my account" %}</button>
-  </form>
-</div>
+<p class="muted">{% url 'settings' as settings_url %}{% blocktrans %}Looking for data download, account deletion, language or notification controls?
+  They live in <a href="{{ settings_url }}">Settings</a>.{% endblocktrans %}</p>
 {% endblock %}

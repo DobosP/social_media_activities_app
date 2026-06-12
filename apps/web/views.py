@@ -348,15 +348,31 @@ def connections_page(request):
         return redirect("home")
     query = request.GET.get("q", "")
     conns = connections.connections_for(request.user)
+    # W4: a filter WITHIN your own connections (already-loaded, read-gated list — plain
+    # name match, no new query surface) + pagination so the list stays manageable at scale.
+    conn_query = (request.GET.get("cq") or "").strip()
+    if conn_query:
+        needle = conn_query.lower()
+        conns = [
+            u
+            for u in conns
+            if needle in (u.display_name or "").lower() or needle in u.username.lower()
+        ]
+    from django.core.paginator import Paginator
+
+    conn_page = Paginator(conns, 24).get_page(request.GET.get("page"))
     results = list(connections.search_connectable(request.user, query))
     # Batch-load interests so the constellation avatars in these lists don't N+1 (one query total);
     # the |avatar_uri filter then renders each from the cached nodes. incoming/outgoing show names.
-    attach_interest_nodes(conns + results)
+    attach_interest_nodes(list(conn_page.object_list) + results)
     return render(
         request,
         "web/connections.html",
         {
-            "connections": conns,
+            "connections": conn_page.object_list,
+            "conn_page": conn_page,
+            "conn_query": conn_query,
+            "conn_total": len(conns),
             "incoming": connections.pending_incoming(request.user),
             "outgoing": connections.pending_outgoing(request.user),
             "query": query,
@@ -1587,13 +1603,25 @@ def interests(request):
     chosen = set(
         UserInterest.objects.filter(user=request.user).values_list("activity_type__slug", flat=True)
     )
+    # W4: compact category-grouped picker — types arrive grouped so the template renders
+    # one chip-section per category instead of one flat wall of checkboxes.
     options = (
-        ActivityType.objects.filter(is_active=True).select_related("category").order_by("name")
+        ActivityType.objects.filter(is_active=True)
+        .select_related("category")
+        .order_by("category__name", "name")
     )
+    groups: dict = {}
+    for t in options:
+        groups.setdefault(t.category, []).append(t)
     return render(
         request,
         "web/interests.html",
-        {"options": options, "chosen": chosen, **_nav_context(request.user)},
+        {
+            "groups": [(cat, types) for cat, types in groups.items()],
+            "chosen": chosen,
+            "chosen_count": len(chosen),
+            **_nav_context(request.user),
+        },
     )
 
 

@@ -65,7 +65,16 @@
   </ul>
 {% endif %}
 
-<h2>{% trans "Your connections" %}</h2>
+<h2>{% trans "Your connections" %}{% if conn_total %} <span class="muted"><small>({{ conn_total }})</small></span>{% endif %}</h2>
+{% if conn_total or conn_query %}
+<form method="get" action="{% url 'connections' %}" class="row" role="search" style="margin:.5rem 0">
+  <label class="visually-hidden" for="conn-cq">{% trans "Filter your connections" %}</label>
+  <input id="conn-cq" name="cq" value="{{ conn_query }}" autocomplete="off"
+         placeholder="{% trans 'Filter your connections…' %}" style="flex:1">
+  <button class="btn btn-sm btn-secondary" type="submit">{% trans "Filter" %}</button>
+  {% if conn_query %}<a class="muted" href="{% url 'connections' %}">{% trans "clear" %}</a>{% endif %}
+</form>
+{% endif %}
 {% if connections %}
   <ul class="members">
     {% for u in connections %}
@@ -82,6 +91,15 @@
       </li>
     {% endfor %}
   </ul>
+  {% if conn_page.paginator.num_pages > 1 %}
+    <p class="row">
+      {% if conn_page.has_previous %}<a class="btn btn-sm btn-secondary" href="?cq={{ conn_query|urlencode }}&amp;page={{ conn_page.previous_page_number }}">&larr; {% trans "Previous" %}</a>{% endif %}
+      <span class="muted">{% blocktrans with n=conn_page.number total=conn_page.paginator.num_pages %}Page {{ n }} of {{ total }}{% endblocktrans %}</span>
+      {% if conn_page.has_next %}<a class="btn btn-sm btn-secondary" href="?cq={{ conn_query|urlencode }}&amp;page={{ conn_page.next_page_number }}">{% trans "Next" %} &rarr;</a>{% endif %}
+    </p>
+  {% endif %}
+{% elif conn_query %}
+  <p class="muted">{% trans "No connections match that filter." %}</p>
 {% else %}
   <p class="muted">{% blocktrans %}No connections yet. Go to an activity you're in and connect with the people there,
     or search for someone above.{% endblocktrans %}</p>

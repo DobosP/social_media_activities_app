@@ -366,6 +366,27 @@ textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--accent)
 .nav-avatar { width: 26px; height: 26px; flex-shrink: 0; background: var(--card); }
 @media (max-width: 879px) { .nav-username { font-weight: 600; } }
 
+/* W4: compact pill picker (interests). The checkbox stays in the tab order but is
+   visually hidden; its sibling <span> is the visible pill (no :has() needed). */
+.pick-group { margin: .6rem 0; }
+.pick-group > summary { cursor: pointer; font-weight: 600; padding: .3rem 0; }
+.pick-row { display: flex; flex-wrap: wrap; gap: .4rem; padding: .4rem 0 .2rem; }
+.pick input {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0;
+  clip: rect(0 0 0 0); clip-path: inset(50%); overflow: hidden; white-space: nowrap;
+}
+.pick span {
+  display: inline-block; padding: .3rem .8rem; border-radius: var(--r-pill);
+  border: 1px solid var(--line); background: var(--card); color: var(--fg);
+  font-size: .9rem; cursor: pointer; user-select: none;
+}
+.pick span:hover { border-color: var(--accent); }
+.pick input:checked + span {
+  background: var(--accent-weak); border-color: var(--accent);
+  color: var(--accent-strong); font-weight: 600;
+}
+.pick input:focus-visible + span { outline: 3px solid var(--accent); outline-offset: 2px; }
+
 /* =============================================================================
    F12 display preferences — theme token re-maps. Only token VALUES change here;
    every rule above already consumes them. Source of truth = a functional cookie
