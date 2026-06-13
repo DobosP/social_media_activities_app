@@ -2285,16 +2285,28 @@ def events_list(request):
 
 
 def event_detail(request, pk):
-    from apps.events.services import events_with_public_places
-
     # Same F25 gate as the list: an event at a still-unpublished user-proposed place
     # must not disclose that place (or its name) on the detail page either. Mirror
     # place_detail's carve-out (review W1-13): the place's PROPOSER and staff may still
     # open it, so the pending-place flow doesn't dead-end.
+    # F21: annotate the recent-report count at query time (one query, no wasted prefetch) so
+    # event_reliability reads the annotation instead of re-counting per request.
+    from datetime import timedelta
+
+    from django.db.models import Count, Q
+
+    from apps.events.services import events_with_public_places
+
+    decay = getattr(settings, "EVENT_REPORT_DECAY_SECONDS", 14 * 24 * 3600)
+    cutoff = timezone.now() - timedelta(seconds=decay)
     event = get_object_or_404(
-        Event.objects.select_related("place", "activity_type").prefetch_related("reports"), pk=pk
+        Event.objects.select_related("place", "activity_type").annotate(
+            recent_report_n=Count("reports", filter=Q(reports__created_at__gte=cutoff))
+        ),
+        pk=pk,
     )
-    if not events_with_public_places().filter(pk=event.pk).exists():
+    is_public_event = events_with_public_places().filter(pk=event.pk).exists()
+    if not is_public_event:
         proposal = getattr(event.place, "proposal", None) if event.place_id else None
         is_proposer = (
             request.user.is_authenticated
@@ -2303,7 +2315,8 @@ def event_detail(request, pk):
         )
         if not (request.user.is_staff or is_proposer):
             raise Http404("No event matches the given query.")
-    # F21: read-time accuracy flag from crowd reports + the member report affordance.
+    # F21: read-time accuracy flag from crowd reports + the member report affordance. The report
+    # form shows only on a PUBLIC event (mirrors the event_report gate — no form that would 404).
     from apps.events.services import event_reliability
 
     return render(
@@ -2312,7 +2325,9 @@ def event_detail(request, pk):
         {
             "event": event,
             "event_reliability": event_reliability(event),
-            "can_report_event": request.user.is_authenticated and can_participate(request.user),
+            "can_report_event": (
+                is_public_event and request.user.is_authenticated and can_participate(request.user)
+            ),
             "share_targets": _share_targets(request.user),
             "share_kind": "event",
             "share_obj_id": event.pk,
@@ -2325,9 +2340,11 @@ def event_detail(request, pk):
 @require_POST
 def event_report(request, pk):
     """F21: report that an event has changed (cancelled / moved / wrong time)."""
-    from apps.events.services import file_event_report
+    from apps.events.services import events_with_public_places, file_event_report
 
-    event = get_object_or_404(Event, pk=pk)
+    # F25 gate: you can only report an event you can actually SEE — never one at a still-pending
+    # user-proposed place (mirrors the event_detail visibility gate; no report-on-invisible).
+    event = get_object_or_404(events_with_public_places(), pk=pk)
     try:
         result = file_event_report(request.user, event, request.POST.get("kind", ""))
     except (PermissionError, ValueError) as exc:

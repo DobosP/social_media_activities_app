@@ -89,3 +89,35 @@ def test_non_staff_cannot_reset():
     event = _event()
     resp = _client(_user("ns")).post(f"/events/{event.pk}/report-reset/")
     assert resp.status_code == 404
+
+
+def test_report_form_hidden_for_unverified_user():
+    event = _event()
+    unverified = User.objects.create_user(username="unverif", password=PW)  # no apply_assurance
+    body = _client(unverified).get(f"/events/{event.pk}/").content.decode()
+    assert "Is this event wrong?" not in body  # fail-closed UX — no form they can't use
+
+
+def test_pending_place_event_gated_for_view_and_report():
+    # F25 + F21 compose: an event at a still-pending USER place can't be viewed OR reported by a
+    # non-proposer, and the report endpoint is gated even though the proposer can view the page.
+    from apps.social.models import UserPlaceProposal
+
+    proposer = _user("ppx")
+    place = Place.objects.create(name="Pending Hall", location=PT, source=Place.Source.USER)
+    UserPlaceProposal.objects.create(
+        place=place, proposer=proposer, status=UserPlaceProposal.Status.PENDING
+    )
+    event = Event.objects.create(
+        title="Hidden", place=place, starts_at=timezone.now() + timedelta(days=3)
+    )
+    stranger = _user("strangerx")
+    assert _client(stranger).get(f"/events/{event.pk}/").status_code == 404
+    assert (
+        _client(stranger).post(f"/events/{event.pk}/report/", {"kind": K.CANCELLED}).status_code
+        == 404
+    )
+    assert not EventReport.objects.filter(event=event).exists()  # no report-on-invisible
+    # The proposer CAN view their pending event, but the report form is hidden (not yet public).
+    body = _client(proposer).get(f"/events/{event.pk}/").content.decode()
+    assert "Is this event wrong?" not in body
