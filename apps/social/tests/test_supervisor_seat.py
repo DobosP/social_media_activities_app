@@ -5,6 +5,8 @@ seated as a read-only GUARDIAN supervisor. Presence is derived LIVE; the seat is
 on is_guardian_of(guardian, OWNER) — never loosened to "any participant".
 """
 
+from datetime import UTC, datetime
+
 import pytest
 from django.contrib.gis.geos import Point
 
@@ -12,7 +14,7 @@ from apps.accounts.identity.base import AssuranceResult
 from apps.accounts.models import AgeBand, ParentalConsent, User
 from apps.accounts.services import apply_assurance, link_guardian
 from apps.places.models import Place
-from apps.social.models import Membership
+from apps.social.models import ActivitySeries, Membership
 from apps.social.services import (
     InvalidState,
     NotAMember,
@@ -20,10 +22,12 @@ from apps.social.services import (
     add_guardian,
     cast_vote,
     create_activity,
+    create_series,
     leave_activity,
     owner_admit,
     request_to_join,
     set_activity_supervision,
+    spawn_due_series,
     supervision_satisfied,
 )
 from apps.taxonomy.models import ActivityCategory, ActivityType
@@ -199,3 +203,61 @@ def test_non_owner_cannot_set_supervision():
     other = _child("s10x")
     with pytest.raises(NotAMember):
         set_activity_supervision(other, activity, False)
+
+
+# --- recurring supervised series (F29 review remediation) -----------------------------
+
+
+_SERIES_START = datetime(2030, 6, 1, 10, 0, tzinfo=UTC)
+
+
+def _supervised_series(owner, slug):
+    place = Place.objects.create(name=f"S-{slug}", location=PT, source=Place.Source.OSM)
+    return create_series(
+        owner,
+        place=place,
+        activity_type=_type(slug),
+        title="Weekly kids meetup",
+        cadence=ActivitySeries.Cadence.WEEKLY,
+        first_starts_at=_SERIES_START,
+        supervised=True,
+    )
+
+
+def test_supervised_series_implies_guardian_accompanied():
+    child = _child("ss1")
+    series = _supervised_series(child, "ss1")
+    assert series.supervised is True
+    assert series.guardian_accompanied is True
+
+
+def test_supervised_series_rejected_for_adult():
+    adult = _adult("ss2")
+    place = Place.objects.create(name="SA2", location=PT, source=Place.Source.OSM)
+    with pytest.raises(InvalidState):
+        create_series(
+            adult,
+            place=place,
+            activity_type=_type("ss2"),
+            title="x",
+            cadence=ActivitySeries.Cadence.WEEKLY,
+            first_starts_at=_SERIES_START,
+            supervised=True,
+        )
+
+
+def test_spawned_instance_is_supervised_and_needs_a_supervisor():
+    child = _child("ss3")
+    series = _supervised_series(child, "ss3")
+    result = spawn_due_series(now=series.next_starts_at)
+    assert result["spawned"] == 1
+    activity = series.instances.get()
+    assert activity.supervised is True
+    # The spawned instance has NO guardian seated yet -> a join can't settle until the owner
+    # seats their guardian on THIS instance (supervision is re-established per meetup).
+    joiner = _child("ss3j")
+    request_to_join(joiner, activity)
+    m = Membership.objects.get(activity=activity, user=joiner)
+    cast_vote(child, m, True)
+    m.refresh_from_db()
+    assert m.state == Membership.State.REQUESTED

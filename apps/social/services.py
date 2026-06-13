@@ -464,6 +464,7 @@ def create_series(
     capacity=None,
     min_to_go=None,
     guardian_accompanied=False,
+    supervised=False,
     meeting_point="",
     what_to_bring="",
     organizer_note="",
@@ -478,6 +479,11 @@ def create_series(
         raise NotEligible(
             _("User cannot create activity series (needs verification/consent + a cohort).")
         )
+    # F29: supervised implies guardian_accompanied (so each spawned instance can seat a supervisor).
+    if supervised:
+        if owner.cohort != Cohort.CHILD:
+            raise InvalidState(_("Only children's activities can require a supervising guardian."))
+        guardian_accompanied = True
     if guardian_accompanied and owner.cohort != Cohort.CHILD:
         raise InvalidState(_("Only children's activities can be guardian-accompanied."))
     if min_to_go is not None and capacity is not None and min_to_go > capacity:
@@ -520,6 +526,7 @@ def create_series(
         capacity=capacity,
         min_to_go=min_to_go,
         guardian_accompanied=guardian_accompanied,
+        supervised=supervised,
         meeting_point=meeting_point,
         what_to_bring=what_to_bring,
         organizer_note=organizer_note,
@@ -689,6 +696,7 @@ def spawn_due_series(*, now=None) -> dict:
                     capacity=series.capacity,
                     min_to_go=series.min_to_go,
                     guardian_accompanied=series.guardian_accompanied,
+                    supervised=series.supervised,
                     meeting_point=series.meeting_point,
                     what_to_bring=series.what_to_bring,
                     organizer_note=series.organizer_note,

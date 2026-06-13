@@ -128,3 +128,24 @@ def test_non_owner_cannot_toggle_supervision():
     _client(other).post(f"/activities/{activity.id}/supervision/", {"supervised": "off"})
     activity.refresh_from_db()
     assert activity.supervised is True  # untouched by a non-owner
+
+
+def test_drf_adult_cannot_create_supervised():
+    from rest_framework.test import APIClient
+
+    adult = _adult("w6")
+    atype, place = _type("w6"), _place("w6")
+    client = APIClient()
+    client.force_authenticate(adult)
+    resp = client.post(
+        "/api/social/activities/",
+        {
+            "place": place.id,
+            "activity_type": atype.id,
+            "title": "x",
+            "starts_at": "2030-01-01T10:00:00Z",
+            "supervised": True,
+        },
+        format="json",
+    )
+    assert resp.status_code == 403, resp.content  # service rejects supervised for a non-CHILD owner

@@ -1333,7 +1333,7 @@ def series_create(request):
         )
         return redirect("profile")
     if request.method == "POST":
-        form = SeriesForm(request.POST)
+        form = SeriesForm(request.POST, user=request.user)
         if form.is_valid():
             try:
                 series = social.create_series(request.user, **form.cleaned_data)
@@ -1346,7 +1346,7 @@ def series_create(request):
                 )
                 return redirect("series_detail", pk=series.pk)
     else:
-        form = SeriesForm()
+        form = SeriesForm(user=request.user)
     return render(request, "web/series_form.html", {"form": form, **_nav_context(request.user)})
 
 

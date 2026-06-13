@@ -199,6 +199,9 @@ class ActivitySeries(models.Model):
     min_to_go = models.PositiveIntegerField(null=True, blank=True)
     join_threshold = models.FloatField(default=DEFAULT_JOIN_THRESHOLD)
     guardian_accompanied = models.BooleanField(default=False)
+    # F29: each spawned instance is supervised — the owner's verified guardian must be seated
+    # afresh on every instance before joins settle (supervision is re-established per meetup).
+    supervised = models.BooleanField(default=False)
     beginners_welcome = models.BooleanField(default=False)
 
     cadence = models.CharField(max_length=16, choices=Cadence.choices)

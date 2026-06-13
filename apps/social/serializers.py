@@ -153,6 +153,8 @@ class SeriesCreateSerializer(serializers.Serializer):
     capacity = serializers.IntegerField(required=False, allow_null=True, min_value=1)
     min_to_go = serializers.IntegerField(required=False, allow_null=True, min_value=1)
     guardian_accompanied = serializers.BooleanField(required=False, default=False)
+    # F29: require the owner's verified guardian to supervise each instance (CHILD only).
+    supervised = serializers.BooleanField(required=False, default=False)
     meeting_point = serializers.CharField(
         required=False, allow_blank=True, default="", max_length=LOGISTICS_FIELD_MAX_LENGTH
     )
@@ -205,6 +207,7 @@ class SeriesSerializer(serializers.ModelSerializer):
             "capacity",
             "min_to_go",
             "guardian_accompanied",
+            "supervised",
             "created_at",
         ]
         read_only_fields = fields

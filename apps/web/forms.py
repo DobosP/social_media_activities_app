@@ -177,12 +177,21 @@ class SeriesForm(forms.Form):
         label="Beginners welcome",
         help_text="Tick if first-timers are explicitly welcome.",
     )
+    # F29: CHILD owners only (dropped below otherwise). Each spawned instance requires the owner's
+    # guardian to be seated as a read-only supervisor before anyone is admitted.
+    supervised = forms.BooleanField(
+        required=False,
+        label="Require a supervising guardian",
+        help_text="Each meetup needs your parent/guardian to join as a read-only supervisor.",
+    )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         from apps.places.services import public_places
 
         self.fields["place"].queryset = public_places(Place.objects.order_by("name"))
+        if user is None or getattr(user, "cohort", None) != Cohort.CHILD:
+            self.fields.pop("supervised", None)
 
     def clean(self):
         cleaned = super().clean()
