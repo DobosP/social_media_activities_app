@@ -308,7 +308,11 @@ class PostSerializer(serializers.ModelSerializer):
     author = serializers.CharField(source="author.display_name", read_only=True)
     # Explicit cap: Post.body is a TextField (unbounded), so declare the limit here
     # to reject overlong posts at the API boundary.
-    body = serializers.CharField(max_length=POST_BODY_MAX_LENGTH)
+    # Optional since W6 (share-only posts); allow_blank so an explicit body:"" behaves
+    # exactly like an omitted body instead of 400ing (review W1-12).
+    body = serializers.CharField(
+        max_length=POST_BODY_MAX_LENGTH, required=False, allow_blank=True, default=""
+    )
     # Optional one-level quote-reply target; the service validates it (same thread, not hidden)
     # and re-parents to the top-level ancestor. Read back as the (possibly re-parented) id.
     reply_to = serializers.PrimaryKeyRelatedField(
@@ -317,8 +321,43 @@ class PostSerializer(serializers.ModelSerializer):
     # Write-only opt-in: escalate @mentions in the body from a calm tag to a MENTION notification
     # to the mentioned peers (default off = tag-not-ping). Never echoed back.
     ping = serializers.BooleanField(required=False, default=False, write_only=True)
+    # W6 share-into-the-conversation: at most ONE target pk; the service validates
+    # visibility at write time (cohort / public_places / F25), the read side re-gates.
+    share_activity = serializers.IntegerField(required=False, allow_null=True, write_only=True)
+    share_place = serializers.IntegerField(required=False, allow_null=True, write_only=True)
+    share_event = serializers.IntegerField(required=False, allow_null=True, write_only=True)
+    share = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Post
-        fields = ["id", "author", "body", "is_announcement", "reply_to", "ping", "created_at"]
-        read_only_fields = ["id", "author", "is_announcement", "created_at"]
+        fields = [
+            "id",
+            "author",
+            "body",
+            "is_announcement",
+            "reply_to",
+            "ping",
+            "share_activity",
+            "share_place",
+            "share_event",
+            "share",
+            "created_at",
+        ]
+        read_only_fields = ["id", "author", "is_announcement", "share", "created_at"]
+
+    def get_share(self, obj):
+        from .services import share_card
+
+        # Prefer the batch-derived card (attach_share_cards ran in the view — one query
+        # for the page); fall back to the single-post derivation for stray callers.
+        card = obj.share if hasattr(obj, "share") else share_card(obj)
+        if card is None:
+            return None
+        if card["kind"] == "gone":
+            return {"kind": "gone"}
+        target = card["obj"]
+        return {
+            "kind": card["kind"],
+            "id": target.pk,
+            "title": getattr(target, "title", "") or getattr(target, "name", ""),
+        }

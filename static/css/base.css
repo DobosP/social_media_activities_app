@@ -355,6 +355,76 @@ textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--accent)
 .fact--unknown { background: #eef0ec; color: #555; }
 
 /* =============================================================================
+   2026-06 refactor wave — search, settings hub, chat chrome, compact pickers.
+   Consumes existing tokens only (no new colour tokens → nothing to remap per theme).
+   ============================================================================= */
+.search-bar { display: flex; gap: .5rem; align-items: center; margin: .6rem 0 1rem; }
+.search-bar input[type="search"] { flex: 1; min-width: 0; }
+.search-bar .btn { flex-shrink: 0; }
+
+/* W3: avatar-button account menu */
+.nav-avatar { width: 26px; height: 26px; flex-shrink: 0; background: var(--card); }
+@media (max-width: 879px) { .nav-username { font-weight: 600; } }
+
+/* W6: modern chat chrome — bubbles, day separators, share cards. Structure (article.post,
+   .meta, .replies) is unchanged; this is presentation only, so the no-JS flow and the
+   WebSocket-append path keep working untouched. */
+.thread { max-height: 62vh; padding: .2rem .4rem; }
+.thread .post {
+  border-top: 0; background: var(--bg-subtle); border: 1px solid var(--line);
+  border-radius: 14px 14px 14px 4px; padding: .5rem .75rem; margin: .45rem 0;
+  max-width: 88%;
+}
+.thread .post--mine {
+  background: var(--accent-weak); margin-left: auto; border-radius: 14px 14px 4px 14px;
+}
+.thread .post.is-announcement, .thread .post-announcement {
+  background: var(--card); border-left: 3px solid var(--accent); max-width: 100%;
+}
+.day-sep { text-align: center; margin: .7rem 0 .3rem; }
+.day-sep span {
+  display: inline-block; font-size: .72rem; font-weight: 600; color: var(--muted);
+  background: var(--chip-bg); border-radius: var(--r-pill); padding: .12rem .65rem;
+}
+.share-card {
+  display: block; border: 1px solid var(--line); border-left: 3px solid var(--accent);
+  border-radius: var(--r-sm); background: var(--card); padding: .45rem .65rem;
+  margin-top: .35rem; max-width: 24rem; text-decoration: none; color: var(--fg);
+}
+.share-card:hover { text-decoration: none; box-shadow: var(--shadow); }
+.share-card strong { display: block; }
+.share-card .share-kind {
+  display: block; font-size: .68rem; font-weight: 700; letter-spacing: .04em;
+  text-transform: uppercase; color: var(--muted);
+}
+.share-card .muted { font-size: .82rem; }
+.share-card--gone { border-left-color: var(--line); font-size: .85rem; }
+.share-box > summary { cursor: pointer; }
+/* Headings inside <summary> stay inline (collapsible cards keep SR heading nav). */
+.inline-h { display: inline; font-size: 1rem; margin: 0; }
+
+/* W4: compact pill picker (interests). The checkbox stays in the tab order but is
+   visually hidden; its sibling <span> is the visible pill (no :has() needed). */
+.pick-group { margin: .6rem 0; }
+.pick-group > summary { cursor: pointer; font-weight: 600; padding: .3rem 0; }
+.pick-row { display: flex; flex-wrap: wrap; gap: .4rem; padding: .4rem 0 .2rem; }
+.pick input {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0;
+  clip: rect(0 0 0 0); clip-path: inset(50%); overflow: hidden; white-space: nowrap;
+}
+.pick span {
+  display: inline-block; padding: .3rem .8rem; border-radius: var(--r-pill);
+  border: 1px solid var(--line); background: var(--card); color: var(--fg);
+  font-size: .9rem; cursor: pointer; user-select: none;
+}
+.pick span:hover { border-color: var(--accent); }
+.pick input:checked + span {
+  background: var(--accent-weak); border-color: var(--accent);
+  color: var(--accent-strong); font-weight: 600;
+}
+.pick input:focus-visible + span { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* =============================================================================
    F12 display preferences — theme token re-maps. Only token VALUES change here;
    every rule above already consumes them. Source of truth = a functional cookie
    surfaced as data-theme / --scale on <html> by the context processor.

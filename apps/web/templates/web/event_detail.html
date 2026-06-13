@@ -13,4 +13,5 @@
   {# F40: prefill the new activity's type + start time from this event (owner edits before submit). #}
   <p><a class="btn" href="{% url 'activity_create' %}?place={{ event.place.pk }}{% if event.activity_type %}&activity_type={{ event.activity_type.pk }}{% endif %}&starts_at={{ event.starts_at|date:'Y-m-d\TH:i'|urlencode }}">{% trans "Organise an activity to go together" %}</a></p>
 {% endif %}
+{% include "web/_share_box.html" %}
 {% endblock %}

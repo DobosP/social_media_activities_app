@@ -84,17 +84,42 @@ from .forms import (
 # --- Communities (derived geo x activity-type discovery labels) -------------------------
 
 
+def _can_create_group(user) -> bool:
+    """UI-visibility mirror of create_group's gate (the service still enforces it):
+    staff always; a non-staff user only when GROUPS_ALLOW_USER_CREATED is on AND their
+    cohort is in the GROUPS_USER_CREATION_COHORTS hard wall (a minor can never own one)."""
+    if user.is_staff:
+        return True
+    if not getattr(settings, "GROUPS_ALLOW_USER_CREATED", False):
+        return False
+    return user.cohort in getattr(settings, "GROUPS_USER_CREATION_COHORTS", ["adult"])
+
+
 @login_required
 def communities_page(request):
-    """A paginated, alphabetical list of the viewer's-cohort communities (no counts, no
-    'trending'/'hot' — just named lists of activities to go to)."""
+    """W5: the ONE communities surface — joinable standing groups and auto-detected
+    communities side by side (they live on the same area×type coordinate; users
+    shouldn't have to learn two nouns). Both lists stay behind their own chokepoints
+    (visible_groups / visible_communities); no counts, no 'trending'/'hot'."""
     from django.core.paginator import Paginator
 
     from apps.communities import services as communities
 
     qs = communities.visible_communities(request.user)
     page = Paginator(qs, 30).get_page(request.GET.get("page"))
-    return render(request, "web/communities.html", {"page": page, **_nav_context(request.user)})
+    groups_page = Paginator(social.visible_groups(request.user), 30).get_page(
+        request.GET.get("gpage")
+    )
+    return render(
+        request,
+        "web/communities.html",
+        {
+            "page": page,
+            "groups_page": groups_page,
+            "can_create": _can_create_group(request.user),
+            **_nav_context(request.user),
+        },
+    )
 
 
 @login_required
@@ -147,18 +172,9 @@ def community_detail(request, slug):
 
 @login_required
 def group_list(request):
-    """A paginated, alphabetical list of the viewer's-cohort ACTIVE groups (the visible_groups
-    chokepoint). No counts, no 'trending' — just named groups to join."""
-    from django.core.paginator import Paginator
-
-    qs = social.visible_groups(request.user)
-    page = Paginator(qs, 30).get_page(request.GET.get("page"))
-    can_create = request.user.is_staff or getattr(settings, "GROUPS_ALLOW_USER_CREATED", False)
-    return render(
-        request,
-        "web/groups.html",
-        {"page": page, "can_create": can_create, **_nav_context(request.user)},
-    )
+    """W5: groups and communities are ONE discovery surface now — the old standalone
+    /groups/ list lands on it (group detail/join/leave URLs are unchanged)."""
+    return redirect("communities")
 
 
 @login_required
@@ -190,7 +206,17 @@ def group_create(request):
                 messages.success(request, "Group created - you're the owner.")
                 return redirect("group_detail", pk=group.pk)
     else:
-        form = GroupCreateForm()
+        # W5 "start a group from a chat": validated GET prefill (the F40 pattern) so an
+        # activity thread / conversation can seed city + type. setdefault-style — typed
+        # input is never overwritten; bad values are simply dropped.
+        initial = {}
+        if city := (request.GET.get("city") or "").strip()[:128]:
+            initial["city"] = city
+        if type_slug := request.GET.get("type"):
+            seeded_type = ActivityType.objects.filter(slug=type_slug, is_active=True).first()
+            if seeded_type:
+                initial["activity_type"] = seeded_type
+        form = GroupCreateForm(initial=initial)
     return render(request, "web/group_form.html", {"form": form, **_nav_context(request.user)})
 
 
@@ -348,15 +374,31 @@ def connections_page(request):
         return redirect("home")
     query = request.GET.get("q", "")
     conns = connections.connections_for(request.user)
+    # W4: a filter WITHIN your own connections (already-loaded, read-gated list — plain
+    # name match, no new query surface) + pagination so the list stays manageable at scale.
+    conn_query = (request.GET.get("cq") or "").strip()
+    if conn_query:
+        needle = conn_query.lower()
+        conns = [
+            u
+            for u in conns
+            if needle in (u.display_name or "").lower() or needle in u.username.lower()
+        ]
+    from django.core.paginator import Paginator
+
+    conn_page = Paginator(conns, 24).get_page(request.GET.get("page"))
     results = list(connections.search_connectable(request.user, query))
     # Batch-load interests so the constellation avatars in these lists don't N+1 (one query total);
     # the |avatar_uri filter then renders each from the cached nodes. incoming/outgoing show names.
-    attach_interest_nodes(conns + results)
+    attach_interest_nodes(list(conn_page.object_list) + results)
     return render(
         request,
         "web/connections.html",
         {
-            "connections": conns,
+            "connections": conn_page.object_list,
+            "conn_page": conn_page,
+            "conn_query": conn_query,
+            "conn_total": len(conns),
             "incoming": connections.pending_incoming(request.user),
             "outgoing": connections.pending_outgoing(request.user),
             "query": query,
@@ -441,6 +483,57 @@ def _msg(exc) -> str:
     if isinstance(exc, ValidationError):
         return "; ".join(exc.messages)
     return str(exc)
+
+
+def _share_targets(user, *, exclude_pk=None):
+    """W6: the threads the viewer could share something into — their own current
+    activities (peer memberships only; the post gate re-checks everything)."""
+    if not user.is_authenticated:
+        return []
+    qs = (
+        social.visible_activities(user)
+        .filter(
+            memberships__user=user,
+            memberships__state=Membership.State.MEMBER,
+            status=Activity.Status.OPEN,
+        )
+        .exclude(memberships__user=user, memberships__role=Membership.Role.GUARDIAN)
+        .distinct()
+        .order_by("starts_at")
+    )
+    if exclude_pk:
+        qs = qs.exclude(pk=exclude_pk)
+    return list(qs[:50])
+
+
+@login_required
+@require_POST
+def share_to_thread(request):
+    """W6 'share content': post an activity / venue / event card into one of YOUR
+    activity threads. Everything rides the single hardened write path post_to_thread —
+    the share target is validated there (cohort / F25 public-place gates) and the card
+    is re-gated at render time."""
+    kind = request.POST.get("kind")
+    obj_id = request.POST.get("obj_id")
+    target_pk = request.POST.get("target")
+    # obj_id must be a real pk too (review W1-6): a missing/garbage obj_id would make
+    # _validate_share a no-op and allow_empty=True would then create a fully EMPTY post.
+    if (
+        kind not in ("activity", "place", "event")
+        or not str(target_pk).isdigit()
+        or not str(obj_id).isdigit()
+    ):
+        raise Http404("Bad share request.")
+    target = _visible_activity_or_404(request.user, int(target_pk))
+    note = (request.POST.get("note") or "").strip()[:280]
+    share_kwargs = {f"share_{kind}": obj_id}
+    try:
+        post = social.post_to_thread(request.user, target, note, allow_empty=True, **share_kwargs)
+    except social.SocialError as exc:
+        messages.error(request, _msg(exc))
+        return redirect(_safe_next(request, "home"))
+    messages.success(request, "Shared to the conversation.")
+    return redirect(f"/activities/{target.pk}/#post-{post.pk}")
 
 
 def _order_feed_by_location(qs, params):
@@ -626,31 +719,13 @@ def home(request):
             radius_m = float(raw_radius) if raw_radius else 10000.0
         except (TypeError, ValueError):
             radius_m = 10000.0
-    recommended = recs.recommend_activities(user, limit=8, near_point=near_point, radius_m=radius_m)
-    # F17: an HONEST reason per card from the viewer's OWN declared interests (one query, no N+1):
-    # "matches your interest in X" when the type is in that set, else the genuine "% match"; cold
-    # start is "soonest first". F5 appends truthful "· near you" / "· matches your access needs".
-    interest_names = dict(
-        UserInterest.objects.filter(user=user).values_list(
-            "activity_type__slug", "activity_type__name"
-        )
-    )
-    for a in recommended:
-        distance = getattr(a, "rec_distance", None)
-        if distance is None:  # cold start — no vector signal (never a perfect-match 0.0)
-            a.rec_reason = "soonest first"
-            continue
-        a.match_pct = max(0, min(100, round((1 - float(distance)) * 100)))
-        if a.activity_type.slug in interest_names:
-            a.rec_reason = f"matches your interest in {interest_names[a.activity_type.slug]}"
-        else:
-            a.rec_reason = (
-                f"{a.match_pct}% match"  # base for an uncategorised scored match (F17 gap)
-            )
-        if getattr(a, "rec_near", False):
-            a.rec_reason += " · near you"
-        if getattr(a, "rec_access_match", False):
-            a.rec_reason += " · matches your access needs"
+    # W2: one shared feed composition (recommended + interest-matched events + group
+    # updates) — the same build_home_feed the mobile feed API serves, so web and API
+    # always show the same items for the same honest F17 reasons.
+    from apps.discovery.services import build_home_feed
+
+    feed = build_home_feed(user, near_point=near_point, radius_m=radius_m, limit=8)
+    recommended = feed["recommended"]
     beginners_only = request.GET.get("beginners") == "true"
     upcoming_qs = (
         social.visible_activities(user)
@@ -674,11 +749,6 @@ def home(request):
         .distinct()
         .order_by("starts_at")
     )
-    events = (
-        Event.objects.filter(starts_at__gte=timezone.now())
-        .select_related("place", "activity_type")
-        .order_by("starts_at")[:6]
-    )
     return render(
         request,
         "web/home.html",
@@ -686,7 +756,8 @@ def home(request):
             "recommended": recommended,
             "upcoming": upcoming,
             "mine": mine,
-            "events": events,
+            "events": feed["events"],
+            "group_updates": feed["group_updates"],
             "near_active": near_active,
             "beginners_only": beginners_only,
             "guardian_invites": list(pending_guardian_invites_for(user)),
@@ -795,6 +866,10 @@ def place_detail(request, pk):
             "has_access_pref": pref is not None,
             "partner": partner_for_place(place),
             "pending_proposal": proposal if pending else None,
+            # W6: share this venue into one of the viewer's activity chats (public only).
+            "share_targets": _share_targets(request.user) if is_public else [],
+            "share_kind": "place",
+            "share_obj_id": place.pk,
             **_nav_context(request.user),
         },
     )
@@ -935,15 +1010,21 @@ def _visible_activity_or_404(user, pk) -> Activity:
 
 @login_required
 def activity_list(request):
-    activities = (
-        social.visible_activities(request.user)
-        .filter(status=Activity.Status.OPEN, starts_at__gte=timezone.now())
-        .select_related("place", "activity_type", "owner")
-    )
     beginners_only = request.GET.get("beginners") == "true"
-    if beginners_only:
-        activities = activities.filter(beginners_welcome=True)
-    activities, near_active = _order_feed_by_location(activities, request.GET)
+    query = (request.GET.get("q") or "").strip()
+    near_active = False
+    if query:
+        # W1 search: one bounded, gate-identical path (visible_activities inside).
+        activities = social.search_activities(request.user, query, beginners=beginners_only)
+    else:
+        activities = (
+            social.visible_activities(request.user)
+            .filter(status=Activity.Status.OPEN, starts_at__gte=timezone.now())
+            .select_related("place", "activity_type", "owner")
+        )
+        if beginners_only:
+            activities = activities.filter(beginners_welcome=True)
+        activities, near_active = _order_feed_by_location(activities, request.GET)
     return render(
         request,
         "web/activities.html",
@@ -951,6 +1032,7 @@ def activity_list(request):
             "activities": activities,
             "near_active": near_active,
             "beginners_only": beginners_only,
+            "query": query,
             **_nav_context(request.user),
         },
     )
@@ -1068,6 +1150,12 @@ def activity_detail(request, pk):
         and my_membership.welcomed_at
         and timezone.now() - my_membership.welcomed_at <= welcome_ttl
     )
+    # W6 "search into chat": members may search this thread's plaintext posts (the
+    # service re-gates on can_read_thread; E2EE DMs are unsearchable by design).
+    thread_query = (request.GET.get("tq") or "").strip()
+    thread_results = None
+    if thread_query and (is_member or user.is_staff) and social.can_read_thread(user, activity):
+        thread_results = list(social.search_thread_posts(user, activity, thread_query))
     return render(
         request,
         "web/activity_detail.html",
@@ -1111,6 +1199,15 @@ def activity_detail(request, pk):
             if (is_member and my_membership)
             else False,
             "can_join": social.can_join(user, activity),
+            # W5: "start a standing group like this" prefill affordance (members only;
+            # the service re-enforces the real creation gate).
+            "can_create_group": is_member and _can_create_group(user),
+            # W6: share THIS activity into another of the viewer's chats + in-thread search.
+            "share_targets": _share_targets(user, exclude_pk=activity.pk) if is_member else [],
+            "share_kind": "activity",
+            "share_obj_id": activity.pk,
+            "thread_query": thread_query,
+            "thread_results": thread_results,
             **_nav_context(user),
         },
     )
@@ -1602,13 +1699,25 @@ def interests(request):
     chosen = set(
         UserInterest.objects.filter(user=request.user).values_list("activity_type__slug", flat=True)
     )
+    # W4: compact category-grouped picker — types arrive grouped so the template renders
+    # one chip-section per category instead of one flat wall of checkboxes.
     options = (
-        ActivityType.objects.filter(is_active=True).select_related("category").order_by("name")
+        ActivityType.objects.filter(is_active=True)
+        .select_related("category")
+        .order_by("category__name", "name")
     )
+    groups: dict = {}
+    for t in options:
+        groups.setdefault(t.category, []).append(t)
     return render(
         request,
         "web/interests.html",
-        {"options": options, "chosen": chosen, **_nav_context(request.user)},
+        {
+            "groups": [(cat, types) for cat, types in groups.items()],
+            "chosen": chosen,
+            "chosen_count": len(chosen),
+            **_nav_context(request.user),
+        },
     )
 
 
@@ -1714,6 +1823,43 @@ def inbox_hub(request):
     """Canonical Inbox entry point. The grouped nav links straight to each tab, so
     this only matters for a typed/bookmarked /inbox/ URL — land it on Alerts."""
     return redirect("notifications")
+
+
+@login_required
+def settings_hub(request):
+    """W3: the single Settings page. Everything that used to crowd the top bar lives
+    here — language, display, notifications, access needs, privacy/data controls,
+    age verification, guardians, and the account dangers (export / delete). Pure
+    links + the language form; every linked control keeps its own view and gates."""
+    from rest_framework.authtoken.models import Token
+
+    # W10 disclosure (review W1-1): if an API token exists, the user can SEE it here
+    # and revoke it with their session — losing the device no longer means an
+    # invisible, irrevocable credential.
+    api_token = Token.objects.filter(user=request.user).first()
+    return render(
+        request,
+        "web/settings.html",
+        {
+            "api_token_created": api_token.created if api_token else None,
+            **_nav_context(request.user),
+        },
+    )
+
+
+@login_required
+@require_POST
+def api_token_revoke(request):
+    """Session-authenticated revoke of the account's API token (W10) — the recovery
+    path when the device holding the token is lost or shared."""
+    from rest_framework.authtoken.models import Token
+
+    deleted, _ = Token.objects.filter(user=request.user).delete()
+    if deleted:
+        messages.success(request, "API access has been revoked on all devices.")
+    else:
+        messages.info(request, "There was no API access to revoke.")
+    return redirect("settings")
 
 
 # --- Profile ------------------------------------------------------------------------
@@ -1859,7 +2005,13 @@ def messages_page(request):
     return render(
         request,
         "web/messages.html",
-        {"messaging_config": config, **_nav_context(request.user)},
+        {
+            "messaging_config": config,
+            # W5: "start a standing group" entry point from the chat surface (the
+            # service still enforces the real creation gate).
+            "can_create_group": _can_create_group(request.user),
+            **_nav_context(request.user),
+        },
     )
 
 
@@ -1954,24 +2106,60 @@ def partners_list(request):
 
 
 def events_list(request):
-    events = (
-        Event.objects.filter(starts_at__gte=timezone.now())
-        .select_related("place", "activity_type")
-        .order_by("starts_at")
-    )
+    from apps.events.services import search_events, upcoming_events
+
+    query = (request.GET.get("q") or "").strip()
     activity = request.GET.get("activity")
-    if activity:
-        events = events.filter(activity_type__slug=activity)
+    if query:
+        # The type filter composes with search — never silently dropped while the
+        # "Filtered by X" banner shows (review W1-28).
+        events = search_events(query, activity_slug=activity)
+    else:
+        # upcoming_events applies the F25 pending-place gate (the API HappeningView always
+        # had it; the web list previously leaked a pending venue's name through an event).
+        events = upcoming_events().order_by("starts_at")
+        if activity:
+            events = events.filter(activity_type__slug=activity)
     return render(
         request,
         "web/events.html",
-        {"events": events[:100], "activity": activity, **_nav_context(request.user)},
+        {
+            "events": events[:100],
+            "activity": activity,
+            "query": query,
+            **_nav_context(request.user),
+        },
     )
 
 
 def event_detail(request, pk):
+    from apps.events.services import events_with_public_places
+
+    # Same F25 gate as the list: an event at a still-unpublished user-proposed place
+    # must not disclose that place (or its name) on the detail page either. Mirror
+    # place_detail's carve-out (review W1-13): the place's PROPOSER and staff may still
+    # open it, so the pending-place flow doesn't dead-end.
     event = get_object_or_404(Event.objects.select_related("place", "activity_type"), pk=pk)
-    return render(request, "web/event_detail.html", {"event": event, **_nav_context(request.user)})
+    if not events_with_public_places().filter(pk=event.pk).exists():
+        proposal = getattr(event.place, "proposal", None) if event.place_id else None
+        is_proposer = (
+            request.user.is_authenticated
+            and proposal is not None
+            and proposal.proposer_id == request.user.id
+        )
+        if not (request.user.is_staff or is_proposer):
+            raise Http404("No event matches the given query.")
+    return render(
+        request,
+        "web/event_detail.html",
+        {
+            "event": event,
+            "share_targets": _share_targets(request.user),
+            "share_kind": "event",
+            "share_obj_id": event.pk,
+            **_nav_context(request.user),
+        },
+    )
 
 
 # --- EUDI Wallet age verification (in-page; sandbox demo wallet) ---------------------
@@ -2375,9 +2563,17 @@ def my_privacy(request):
             # Counts mirror exactly what the linked /my-safety-record/ page shows (same cap).
             "decisions_count": len(record["decisions"]),
             "reports_count": len(record["reports"]),
+            # W10 disclosure: a device may hold API access; the revoke lives in Settings.
+            "api_token_exists": _api_token_exists(user),
             **_nav_context(user),
         },
     )
+
+
+def _api_token_exists(user) -> bool:
+    from rest_framework.authtoken.models import Token
+
+    return Token.objects.filter(user=user).exists()
 
 
 def display_preferences(request):

@@ -7,6 +7,7 @@ from .views import (
     GuardianLinkDeclineView,
     GuardianLinkView,
     MeExportView,
+    MeSettingsView,
     MeView,
     WardConsentView,
     WardDetailView,
@@ -18,6 +19,8 @@ urlpatterns = [
     path("me/", MeView.as_view(), name="me"),
     # GDPR Art. 20 data portability (JSON export).
     path("me/export/", MeExportView.as_view(), name="me-export"),
+    # W10: self-scoped preferences (notification mutes + access needs) for API clients.
+    path("me/settings/", MeSettingsView.as_view(), name="me-settings"),
     path("wards/", WardListView.as_view(), name="wards"),
     path("wards/<uuid:public_id>/", WardDetailView.as_view(), name="ward-detail"),
     path("wards/<uuid:public_id>/export/", WardExportView.as_view(), name="ward-export"),

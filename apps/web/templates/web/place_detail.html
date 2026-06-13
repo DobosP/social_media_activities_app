@@ -93,7 +93,8 @@
   <p style="margin-top:1rem">
     <a class="btn" href="{% url 'activity_create' %}?place={{ place.pk }}">{% trans "Organise an activity here" %}</a>
   </p>
-  <h2>{% trans "Upcoming here (your cohort)" %}</h2>
+  {% include "web/_share_box.html" %}
+  <h2>{% trans "Upcoming here" %}</h2>
   {% for a in meetups %}{% include "web/_activity_card.html" %}{% empty %}
   <p class="muted">{% trans "No upcoming activities here yet." %}</p>{% endfor %}
 

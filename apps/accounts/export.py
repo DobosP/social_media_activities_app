@@ -34,6 +34,20 @@ def build_user_export(user) -> dict:
         "owned_groups": _owned_groups(user),
         "group_memberships": _group_memberships(user),
         "donations": _donations_summary(user),
+        "api_access": _api_access(user),
+    }
+
+
+def _api_access(user) -> dict:
+    """W10 disclosure: whether an API token exists for this account and when it was
+    issued — METADATA only, never the key itself (Art. 15 transparency without turning
+    the export into a credential leak)."""
+    from rest_framework.authtoken.models import Token
+
+    token = Token.objects.filter(user=user).first()
+    return {
+        "api_token_issued": token is not None,
+        "issued_at": token.created.isoformat() if token else None,
     }
 
 

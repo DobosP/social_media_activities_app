@@ -2,12 +2,15 @@ from django.contrib import admin
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
+from apps.accounts.views import ObtainAPIToken
 from apps.ops.views import HealthView
 
 urlpatterns = [
     path("healthz", HealthView.as_view(), name="healthz"),
     path("admin/", admin.site.urls),
     path("api/accounts/", include("apps.accounts.urls")),
+    # W10 mobile auth: opaque-token obtain/revoke (no JWT; throttled hard).
+    path("api/auth/token/", ObtainAPIToken.as_view(), name="api-token"),
     path("api/places/", include("apps.places.urls")),
     path("api/taxonomy/", include("apps.taxonomy.urls")),
     path("api/social/", include("apps.social.urls")),
@@ -19,6 +22,7 @@ urlpatterns = [
     path("api/donations/", include("apps.donations.urls")),
     path("api/ops/", include("apps.ops.urls")),
     path("api/events/", include("apps.events.urls")),
+    path("api/ingestion/", include("apps.ingestion.urls")),
     path("api/discovery/", include("apps.discovery.urls")),
     path("api/notifications/", include("apps.notifications.urls")),
     path("api/recommendations/", include("apps.recommendations.urls")),

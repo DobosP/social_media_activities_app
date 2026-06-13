@@ -54,7 +54,9 @@ def test_happening_proximity(seed):
 
 
 def test_activities_feed_requires_auth(seed):
-    assert APIClient().get("/api/discovery/activities/").status_code == 403
+    # 401 (not 403) since W10: TokenAuthentication is the first authenticator, so an
+    # unauthenticated API call gets a proper challenge instead of a bare forbidden.
+    assert APIClient().get("/api/discovery/activities/").status_code == 401
 
 
 def test_activities_feed_is_cohort_scoped(seed):

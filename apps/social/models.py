@@ -1,6 +1,8 @@
 from django.conf import settings
+from django.contrib.postgres.indexes import GinIndex, OpClass
 from django.db import models
 from django.db.models import Q, UniqueConstraint
+from django.db.models.functions import Upper
 
 from apps.accounts.models import Cohort
 
@@ -126,6 +128,12 @@ class Activity(models.Model):
             # community read predicate + the nightly generator are index scans, not seq scans.
             models.Index(fields=["cohort", "activity_type"]),
             models.Index(fields=["cohort", "place"]),
+            # W1 search uses icontains over title/description. On Postgres, Django compiles
+            # icontains to UPPER(col) LIKE UPPER(%s) — so the trigram GIN index must be an
+            # EXPRESSION index on Upper(col) to ever be used (a plain column index never
+            # matches; review finding W1-14). pg_trgm is created in migration 0016.
+            GinIndex(OpClass(Upper("title"), name="gin_trgm_ops"), name="activity_title_trgm"),
+            GinIndex(OpClass(Upper("description"), name="gin_trgm_ops"), name="activity_desc_trgm"),
         ]
 
     def __str__(self):
@@ -508,6 +516,34 @@ class Post(models.Model):
     # parent immediately changes what its replies show.
     reply_to = models.ForeignKey(
         "self", on_delete=models.SET_NULL, null=True, blank=True, related_name="replies"
+    )
+    # W6 "share into the conversation": an optional structured reference to ONE in-app
+    # object (an activity / a venue / an event), rendered as a card. SET_NULL — deleting
+    # the target degrades the post to its plain text, never destroys conversation. The
+    # card is RE-GATED AT RENDER TIME (hidden activity / unpublished place → an
+    # "unavailable" stub), so a share can never outlive its target's visibility.
+    # Sharing a venue is the privacy-safe "send a location": a public Place card, never
+    # anyone's coordinates (inv.4 — user location is never stored).
+    shared_activity = models.ForeignKey(
+        Activity,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="shared_in_posts",
+    )
+    shared_place = models.ForeignKey(
+        "places.Place",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="shared_in_posts",
+    )
+    shared_event = models.ForeignKey(
+        "events.Event",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="shared_in_posts",
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

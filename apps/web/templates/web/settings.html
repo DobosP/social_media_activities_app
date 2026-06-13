@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Settings" %}{% endblock %}
+{% block content %}
+<h1>{% trans "Settings" %}</h1>
+{% include "web/_you_tabs.html" with active="settings" %}
+
+<div class="grid grid-2">
+  <div class="card">
+    <h3>{% trans "Language" %}</h3>
+    <p class="muted">{% trans "Choose the language this site is shown in." %}</p>
+    <form method="post" action="{% url 'set_language' %}" class="row">{% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.path }}">
+      {% get_current_language as cur_lang %}
+      {% get_available_languages as available_langs %}
+      <select name="language" aria-label="{% trans 'Language' %}" style="max-width:14rem">
+        {% for code, name in available_langs %}
+          <option value="{{ code }}"{% if code == cur_lang %} selected{% endif %}>{{ name }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn btn-sm" type="submit">{% trans "Save" %}</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3>{% trans "Preferences" %}</h3>
+    <div class="stack">
+      <a href="{% url 'display_preferences' %}">{% trans "Display (theme, text size, motion)" %}</a>
+      <a href="{% url 'notification_preferences' %}">{% trans "Notifications" %}</a>
+      <a href="{% url 'access_preferences' %}">{% trans "Access needs" %}</a>
+      <a href="{% url 'interests' %}">{% trans "Interests" %}</a>
+      <a href="{% url 'saved_searches' %}">{% trans "Saved searches" %}</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>{% trans "Privacy &amp; safety" %}</h3>
+    <div class="stack">
+      <a href="{% url 'my_privacy' %}">{% trans "Privacy &amp; your data" %}</a>
+      <a href="{% url 'verify_age' %}">{% trans "Age verification" %}</a>
+      <a href="{% url 'safety_record' %}">{% trans "Your safety record" %}</a>
+      <a href="{% url 'activity_log' %}">{% trans "Your activity log" %}</a>
+      {% if user.is_guardian %}<a href="{% url 'wards' %}">{% trans "Wards you look after" %}</a>{% endif %}
+      {% if has_guardians %}<a href="{% url 'my_guardians' %}">{% trans "Your guardians" %}</a>{% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>{% trans "Giving" %}</h3>
+    <div class="stack">
+      <a href="{% url 'my_donations' %}">{% trans "My donations" %}</a>
+      <a href="{% url 'transparency' %}">{% trans "Where the money goes" %}</a>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h3>{% trans "API access" %}</h3>
+  {% if api_token_created %}
+    <p class="muted">{% blocktrans with when=api_token_created|date:"j M Y" %}A device (e.g. the mobile app) holds API access to your account, issued {{ when }}. Revoke it if you lost the device or no longer use it.{% endblocktrans %}</p>
+    <form method="post" action="{% url 'api_token_revoke' %}" class="inline">{% csrf_token %}
+      <button class="btn btn-sm btn-secondary" type="submit">{% trans "Revoke API access" %}</button>
+    </form>
+  {% else %}
+    <p class="muted">{% trans "No device currently holds API access to your account." %}</p>
+  {% endif %}
+</div>
+
+<div class="card card-danger">
+  <h3>{% trans "Your account" %}</h3>
+  <p class="muted">{% trans "Your data belongs to you. Take a copy any time, or delete the account and the personal data that goes with it." %}</p>
+  <div class="row">
+    <a class="btn btn-secondary" href="{% url 'account_export' %}">{% trans "Download my data" %}</a>
+    <form method="post" action="{% url 'account_delete' %}" class="inline"
+          onsubmit="return confirm('{% trans 'Delete your account and personal data? This cannot be undone.' %}')">{% csrf_token %}
+      <button class="btn btn-danger" type="submit">{% trans "Delete my account" %}</button>
+    </form>
+  </div>
+</div>
+
+<form method="post" action="{% url 'logout' %}" class="inline" style="margin-top:1rem">{% csrf_token %}
+  <button class="btn btn-secondary" type="submit">{% trans "Log out" %}</button>
+</form>
+{% endblock %}

@@ -114,6 +114,69 @@ def can_see_activity(user, activity) -> bool:
     return _has_cohort(user) and user.cohort == activity.cohort
 
 
+# Search queries shorter than this return nothing (too noisy, and a 1-char probe is a
+# cheap enumeration surface). Shared by every search entry point (web + DRF).
+SEARCH_MIN_QUERY_LEN = 2
+SEARCH_MAX_RESULTS = 100
+
+
+def activity_search_filter(qs, query):
+    """Apply the free-text activity search predicate to an Activity queryset.
+
+    Matches title, description, the venue name and the activity-type name. Plain
+    icontains (trigram-indexed) — honest substring match, no relevance ranking, so
+    ordering stays soonest-first (never popularity)."""
+    return qs.filter(
+        Q(title__icontains=query)
+        | Q(description__icontains=query)
+        | Q(place__name__icontains=query)
+        | Q(activity_type__name__icontains=query)
+    )
+
+
+def search_activities(viewer, query, *, beginners=False, limit=SEARCH_MAX_RESULTS):
+    """Free-text search over the activities the viewer may see (W1).
+
+    Routed through ``visible_activities`` so cohort isolation and blocking hold
+    identically to every other discovery surface. Only OPEN, future activities are
+    returned (a search is a way to find something to join, not an archive browse).
+    Venue names are safe to match: ``create_activity`` only accepts ``public_places()``
+    venues, so no pending user-proposed place name can leak through an activity.
+    Bounded and soonest-first."""
+    query = (query or "").strip()
+    if len(query) < SEARCH_MIN_QUERY_LEN:
+        return Activity.objects.none()
+    qs = visible_activities(viewer).filter(
+        status=Activity.Status.OPEN, starts_at__gte=timezone.now()
+    )
+    if beginners:
+        qs = qs.filter(beginners_welcome=True)
+    return (
+        activity_search_filter(qs, query)
+        .select_related("place", "activity_type", "owner")
+        .order_by("starts_at", "id")[: max(1, min(int(limit), SEARCH_MAX_RESULTS))]
+    )
+
+
+def search_thread_posts(viewer, activity, query, *, limit=50):
+    """Search inside one thread's plaintext posts (W1 "search into chat").
+
+    Fail-closed: re-gates on ``can_read_thread`` even though callers should have
+    gated already — a search must never see further than the thread itself. Hidden
+    posts stay hidden. Returns newest-first, bounded. (E2EE direct messages are
+    structurally unsearchable server-side — the server never has plaintext.)"""
+    query = (query or "").strip()
+    if len(query) < SEARCH_MIN_QUERY_LEN:
+        return Post.objects.none()
+    if not can_read_thread(viewer, activity):
+        raise NotEligible("You can't search this thread.")
+    return (
+        activity.thread.posts.filter(is_hidden=False, body__icontains=query)
+        .select_related("author", "reply_to__author")
+        .order_by("-created_at", "-id")[:limit]
+    )
+
+
 def with_counts(qs):
     """Annotate an Activity queryset with ``member_n`` (current members) and
     ``participant_n`` (members holding a position — excludes supervisory guardians) so
@@ -995,7 +1058,16 @@ def transfer_ownership(owner, activity, new_owner) -> Activity:
 
 @transaction.atomic
 def post_to_thread(
-    author, activity, body: str, *, reply_to=None, allow_empty=False, ping=False
+    author,
+    activity,
+    body: str,
+    *,
+    reply_to=None,
+    allow_empty=False,
+    ping=False,
+    share_activity=None,
+    share_place=None,
+    share_event=None,
 ) -> Post:
     """THE single write path for an activity thread, shared by the web form, the DRF API,
     and the WebSocket consumer (via post_to_thread_realtime). It enforces the FULL union of
@@ -1048,18 +1120,19 @@ def post_to_thread(
     window = getattr(settings, "THREAD_POST_RATE_WINDOW_SECONDS", 60)
     if not allow_action(author, "thread_post", limit=limit, window_seconds=window):
         raise InvalidState(_("You are posting too quickly; slow down."))
+    share = _validate_share(author, share_activity, share_place, share_event)
     result = get_message_policy().process(author=author, thread=activity.thread, body=body)
     if result.allowed:
         result_body = result.body
-    elif allow_empty and not (body or "").strip():
-        # An attachment-only message (allow_empty): an empty body is fine. Any OTHER policy
-        # rejection (too long, or a future CSAR content block) still applies.
+    elif (allow_empty or share) and not (body or "").strip():
+        # An attachment-only or share-only message: an empty body is fine. Any OTHER
+        # policy rejection (too long, or a future CSAR content block) still applies.
         result_body = ""
     else:
         raise InvalidState(result.reason or _("Message rejected."))
     parent = _validate_reply_to(activity, reply_to)
     post = Post.objects.create(
-        thread=activity.thread, author=author, body=result_body, reply_to=parent
+        thread=activity.thread, author=author, body=result_body, reply_to=parent, **share
     )
     # Normalize updated_at == created_at on a fresh post (auto_now_add and auto_now fire as two
     # separate now() calls, so they'd otherwise differ by microseconds and falsely read as
@@ -1098,6 +1171,120 @@ def _ping_mentioned(author, activity, post) -> None:
         if user.id in blocked:
             continue
         _notify(user, Notification.Kind.MENTION, title, body=post.body[:140], url=url)
+
+
+def _validate_share(author, share_activity, share_place, share_event) -> dict:
+    """Validate an optional share target at WRITE time (W6). At most ONE target; the
+    author must be able to see it through the same gates as everywhere else:
+
+    - an activity: same cohort as the author (can_see_activity) and not hidden — since a
+      thread's readers share the author's cohort, a share can never bridge cohorts;
+    - a place: in ``public_places()`` (the F25 chokepoint — no pending-place disclosure).
+      A venue card is the privacy-safe "send a location": never a person's coordinates;
+    - an event: its venue (if any) must be public (same F25 rule).
+
+    Accepts model instances or pks. Returns kwargs for Post.objects.create. Render-time
+    re-gating happens separately in ``share_card`` (a target can become hidden later)."""
+    chosen = [x for x in (share_activity, share_place, share_event) if x is not None]
+    if not chosen:
+        return {}
+    if len(chosen) > 1:
+        raise InvalidState(_("Share one thing at a time."))
+    from apps.events.models import Event
+    from apps.places.models import Place
+    from apps.places.services import public_places
+
+    if share_activity is not None:
+        target = (
+            share_activity
+            if isinstance(share_activity, Activity)
+            else Activity.objects.filter(pk=_safe_pk(share_activity)).first()
+        )
+        if (
+            target is None
+            or target.is_hidden
+            # Sharing a cancelled meetup invites people to nothing — reject at write,
+            # mirroring the read side (share_card degrades a later-cancelled target).
+            or target.status == Activity.Status.CANCELLED
+            or not can_see_activity(author, target)
+        ):
+            raise InvalidState(_("You can't share that."))
+        return {"shared_activity": target}
+    if share_place is not None:
+        pk = share_place.pk if isinstance(share_place, Place) else _safe_pk(share_place)
+        target = public_places().filter(pk=pk).first()
+        if target is None:
+            raise InvalidState(_("You can't share that."))
+        return {"shared_place": target}
+    pk = share_event.pk if isinstance(share_event, Event) else _safe_pk(share_event)
+    target = (
+        Event.objects.select_related("place")
+        .filter(pk=pk)
+        .filter(Q(place__isnull=True) | Q(place_id__in=public_places().values("id")))
+        .first()
+    )
+    if target is None:
+        raise InvalidState(_("You can't share that."))
+    return {"shared_event": target}
+
+
+def _safe_pk(value):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def attach_share_cards(posts) -> None:
+    """Batch-derive ``post.share`` for a page of posts (W6), re-gating each target's
+    visibility NOW (not when it was shared): a hidden or CANCELLED activity, an
+    unpublished place or a vanished target render as an honest "unavailable" stub.
+    Thread readers share the author's cohort by construction, so no per-viewer cohort
+    check is needed. ONE public-places query for the whole page (no per-post N+1) —
+    callers must have select_related the shared_* FKs."""
+    from apps.places.services import public_places
+
+    posts = list(posts)
+    place_ids = set()
+    for p in posts:
+        if p.shared_place_id:
+            place_ids.add(p.shared_place_id)
+        if p.shared_event_id and p.shared_event is not None and p.shared_event.place_id:
+            place_ids.add(p.shared_event.place_id)
+    public_ids = (
+        set(public_places().filter(pk__in=place_ids).values_list("id", flat=True))
+        if place_ids
+        else set()
+    )
+    for p in posts:
+        p.share = _derive_share_card(p, public_ids)
+
+
+def share_card(post):
+    """Single-post variant of ``attach_share_cards`` (used by the API serializer when a
+    post arrives without the batch pass). Same re-gating; one query at most."""
+    if not (post.shared_activity_id or post.shared_place_id or post.shared_event_id):
+        return None
+    attach_share_cards([post])
+    return post.share
+
+
+def _derive_share_card(post, public_place_ids: set):
+    if post.shared_activity_id:
+        a = post.shared_activity
+        if a is None or a.is_hidden or a.status == Activity.Status.CANCELLED:
+            return {"kind": "gone"}
+        return {"kind": "activity", "obj": a}
+    if post.shared_place_id:
+        if post.shared_place is None or post.shared_place_id not in public_place_ids:
+            return {"kind": "gone"}
+        return {"kind": "place", "obj": post.shared_place}
+    if post.shared_event_id:
+        e = post.shared_event
+        if e is None or (e.place_id and e.place_id not in public_place_ids):
+            return {"kind": "gone"}
+        return {"kind": "event", "obj": e}
+    return None
 
 
 def _validate_reply_to(activity, reply_to):
@@ -1168,10 +1355,12 @@ def thread_page(activity, *, before=None, limit=None):
     from django.db.models import Prefetch
 
     limit = limit or getattr(settings, "SOCIAL_THREAD_POST_LIMIT", 100)
-    replies_qs = Post.objects.filter(is_hidden=False).select_related("author", "reply_to__author")
+    replies_qs = Post.objects.filter(is_hidden=False).select_related(
+        "author", "reply_to__author", "shared_activity", "shared_place", "shared_event"
+    )
     top = (
         activity.thread.posts.filter(is_hidden=False, is_announcement=False, reply_to__isnull=True)
-        .select_related("author")
+        .select_related("author", "shared_activity", "shared_place", "shared_event")
         .prefetch_related(Prefetch("replies", queryset=replies_qs.order_by("created_at")))
         .order_by("-created_at")
     )
@@ -1196,11 +1385,15 @@ def thread_page(activity, *, before=None, limit=None):
     window = window[:limit]
     older_cursor_id = window[-1].id if (has_older and window) else None
     window.reverse()  # oldest -> newest for display
+    all_posts = []
     for tp in window:
         tp.is_edited = _is_edited(tp)
+        all_posts.append(tp)
         for reply in tp.replies.all():  # prefetched, already filtered + ordered
             reply.is_edited = _is_edited(reply)
             reply.snippet = reply_snippet(reply)
+            all_posts.append(reply)
+    attach_share_cards(all_posts)  # ONE public-places query for the whole page
     return window, has_older, older_cursor_id
 
 
@@ -1292,13 +1485,30 @@ def broadcast_post(post, *, edited=False) -> None:
             return
         snippet = reply_snippet(post)
         author = post.author.display_name or post.author.username
+        # Live share-card summary so a share-only post never arrives as a blank bubble.
+        # Title only (text) — the client builds the href from kind + integer id, never
+        # from this string.
+        share = share_card(post)
+        share_payload = None
+        if share is not None:
+            if share["kind"] == "gone":
+                share_payload = {"kind": "gone"}
+            else:
+                target = share["obj"]
+                share_payload = {
+                    "kind": share["kind"],
+                    "id": target.pk,
+                    "title": getattr(target, "title", "") or getattr(target, "name", ""),
+                }
         payload = {
             "id": post.id,
             "author": author,
+            "author_id": post.author_id,
             "body": post.body,
             "is_announcement": post.is_announcement,
             "reply_to": post.reply_to_id,
             "reply_snippet": snippet,
+            "share": share_payload,
             "edited": edited
             or (post.updated_at and post.created_at and post.updated_at > post.created_at),
             "created_at": post.created_at.isoformat() if post.created_at else None,
@@ -1708,7 +1918,8 @@ def draft_activity_text(*, activity_type, place=None, starts_at=None, cohort=Non
     # Minor signal = cohort, NOT requires_parental_consent (which is UNDER_16-only and would
     # silently skip TEEN organisers).
     if cohort in (Cohort.CHILD, Cohort.TEEN):
-        safety = str(_("Safety: meet in a public place and bring a friend."))
+        # W7: same reminder, calmer label — guidance, not a "you are a child" badge.
+        safety = str(_("Tip: meet in a public place and bring a friend."))
         description = "\n\n".join([base, safety])
     else:
         description = base

@@ -9,4 +9,5 @@
   <a href="{% url 'my_privacy' %}"{% if active == 'privacy' %} class="is-active" aria-current="page"{% endif %}>{% trans "Privacy &amp; data" %}</a>
   <a href="{% url 'my_donations' %}"{% if active == 'donations' %} class="is-active" aria-current="page"{% endif %}>{% trans "Donations" %}</a>
   {% if has_guardians or active == 'guardians' %}<a href="{% url 'my_guardians' %}"{% if active == 'guardians' %} class="is-active" aria-current="page"{% endif %}>{% trans "Guardians" %}</a>{% endif %}
+  <a href="{% url 'settings' %}"{% if active == 'settings' %} class="is-active" aria-current="page"{% endif %}>{% trans "Settings" %}</a>
 </nav>

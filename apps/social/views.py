@@ -23,12 +23,15 @@ from .serializers import (
     SeriesSerializer,
 )
 from .services import (
+    SEARCH_MIN_QUERY_LEN,
     DuplicatePlace,
     InvalidState,
     NotAMember,
     NotEligible,
     SocialError,
+    activity_search_filter,
     add_guardian,
+    attach_share_cards,
     attendance_summary,
     can_read_thread,
     cancel_activity,
@@ -90,11 +93,16 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
         return ActivitySerializer
 
     def get_queryset(self):
-        return with_counts(
-            visible_activities(self.request.user).select_related(
-                "owner", "place", "activity_type", "thread"
-            )
+        qs = visible_activities(self.request.user).select_related(
+            "owner", "place", "activity_type", "thread"
         )
+        # W1 search: ?q= free-text filter on the list (same predicate as the web search,
+        # same gates — visible_activities is already applied above).
+        if self.action == "list":
+            query = (self.request.query_params.get("q") or "").strip()
+            if len(query) >= SEARCH_MIN_QUERY_LEN:
+                qs = activity_search_filter(qs, query)
+        return with_counts(qs)
 
     def _actor(self, request):
         """Resolve who the action is performed as. A guardian may act on behalf of a
@@ -272,6 +280,8 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
         if request.method == "POST":
             serializer = PostSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
+            data = serializer.validated_data
+            shares = {k: data.get(k) for k in ("share_activity", "share_place", "share_event")}
             try:
                 # A thread message is a first-person utterance — ALWAYS the authenticated
                 # user, never on_behalf_of (mirrors `arrived`), so a guardian cannot ghostwrite
@@ -279,9 +289,12 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
                 post = post_to_thread(
                     request.user,
                     activity,
-                    serializer.validated_data["body"],
-                    reply_to=serializer.validated_data.get("reply_to"),
-                    ping=serializer.validated_data.get("ping", False),
+                    data.get("body", ""),
+                    reply_to=data.get("reply_to"),
+                    ping=data.get("ping", False),
+                    # a share-only message may have an empty body (like attachment-only)
+                    allow_empty=any(v is not None for v in shares.values()),
+                    **shares,
                 )
             except (NotAMember, NotEligible) as exc:
                 # Membership / participation failures are authorization problems (403).
@@ -300,10 +313,13 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
         limit = getattr(settings, "SOCIAL_THREAD_POST_LIMIT", 100)
         posts = list(
             activity.thread.posts.filter(is_hidden=False)
-            .select_related("author")
+            .select_related("author", "shared_activity", "shared_place", "shared_event")
             .order_by("-created_at")[:limit]
         )
         posts.reverse()
+        # Batch the share-card derivation (ONE public-places query) so the serializer's
+        # `share` field never re-queries per post.
+        attach_share_cards(posts)
         return Response(PostSerializer(posts, many=True).data)
 
 

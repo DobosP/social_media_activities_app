@@ -67,6 +67,7 @@ urlpatterns = [
     path("activities/<int:pk>/leave/", views.activity_leave, name="activity_leave"),
     path("activities/<int:pk>/unsafe/", views.activity_unsafe, name="activity_unsafe"),
     path("activities/<int:pk>/post/", views.activity_post, name="activity_post"),
+    path("share/", views.share_to_thread, name="share_to_thread"),
     path(
         "activities/<int:pk>/post/<int:post_id>/edit/",
         views.activity_post_edit,
@@ -94,6 +95,8 @@ urlpatterns = [
     path("saved-searches/<int:pk>/delete/", views.saved_search_delete, name="saved_search_delete"),
     # Consolidated nav hubs (presentation-only landings; see views)
     path("you/", views.you_hub, name="you"),
+    path("settings/", views.settings_hub, name="settings"),
+    path("settings/api-token/revoke/", views.api_token_revoke, name="api_token_revoke"),
     path("inbox/", views.inbox_hub, name="inbox"),
     # Interests, profile, notifications, donations
     path("interests/", views.interests, name="interests"),

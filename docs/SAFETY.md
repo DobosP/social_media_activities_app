@@ -49,6 +49,11 @@ D5, and D6 too. See [ROADMAP](ROADMAP.md) and [COMPLIANCE](COMPLIANCE.md).
   posture swappable pending CSAR ([COMPLIANCE](COMPLIANCE.md)).
 - **D6 (media):** **image safety scanning** (CSAM hash-matching where lawful) before a photo is
   visible; EXIF/GPS stripping; size limits; signed, expiring, membership-scoped URLs.
+  Since W8 the built-in blocklist also matches a **perceptual (dHash) layer** (a casual
+  re-encode/resize no longer evades it; honest limits in `apps/media/perceptual.py`), and
+  PDFs pass a swappable **document/AV scanner seam** (clamd; fail-closed when required).
+  The external-scanner integration plan (Arachnid Shield, PhotoDNA Cloud, NCMEC/esc_ABUZ
+  reporting) lives in [MEDIA_FILTERING](MEDIA_FILTERING.md).
 - **D10 (secure messaging):** username-addressable **direct & group** chat that is **end-to-end
   encrypted** (the server is a zero-knowledge relay storing ciphertext only). Because content
   scanning is impossible under E2EE, safety is enforced by **access control** — cohort isolation,

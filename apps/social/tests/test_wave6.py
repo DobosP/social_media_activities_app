@@ -160,13 +160,15 @@ def test_draft_title_and_description():
     )
     assert draft["title"] == "Basketball at Central Park"
     assert "A Basketball meetup at Central Park" in draft["description"]
-    assert "Safety:" not in draft["description"]  # adult organiser → no reminder
+    assert "meet in a public place" not in draft["description"]  # adult → no reminder
 
 
 def test_draft_for_minor_adds_safety_reminder():
+    # W7: the reminder itself is non-negotiable for minors; its label is the calm
+    # "Tip:" (not a "Safety:"-badge that shouts cohort status).
     atype, place = _named()
     draft = draft_activity_text(activity_type=atype, place=place, cohort=Cohort.CHILD)
-    assert "Safety:" in draft["description"]
+    assert "Tip: meet in a public place and bring a friend." in draft["description"]
 
 
 def test_draft_without_place_name_uses_type_only_title():

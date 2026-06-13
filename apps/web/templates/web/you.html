@@ -4,7 +4,7 @@
 {% block content %}
 <h1>{% trans "Account &amp; settings" %}</h1>
 {% include "web/_you_tabs.html" with active="overview" %}
-<p class="muted">{% blocktrans with name=user.display_name|default:user.username cohort=user.get_cohort_display %}Signed in as <strong>{{ name }}</strong> &middot; {{ cohort }} cohort.{% endblocktrans %}</p>
+<p class="muted">{% blocktrans with name=user.display_name|default:user.username %}Signed in as <strong>{{ name }}</strong>.{% endblocktrans %}</p>
 
 <div class="grid grid-2">
   <div class="card">

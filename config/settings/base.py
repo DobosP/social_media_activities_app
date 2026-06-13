@@ -25,9 +25,14 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # Required for OpClass to be registered as an index-expression wrapper (the W1
+    # trigram expression indexes) — without the app's ready() hook, Django parenthesizes
+    # the opclass into the expression and emits invalid SQL.
+    "django.contrib.postgres",
     "django.contrib.gis",
     # Third-party
     "rest_framework",
+    "rest_framework.authtoken",  # W10: opaque API tokens for native clients
     "rest_framework_gis",
     "django_filters",
     "drf_spectacular",
@@ -196,6 +201,15 @@ NUM_PROXIES = env.int("NUM_PROXIES", default=1)
 
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    # W10 mobile-readiness: session auth for the web UI + opaque DRF tokens for native
+    # clients / service accounts (no JWT — tokens are server-validated, instantly
+    # revocable, and carry no PII). Obtain at /api/auth/token/ (throttled).
+    # Token FIRST: the first authenticator's challenge header decides 401-vs-403 for
+    # unauthenticated API calls (Session has none and would force 403s on API clients).
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    ],
     # Deny-by-default: every endpoint requires auth unless it explicitly opts into AllowAny
     # (the intentionally public ones: places, taxonomy, discovery feeds, donations totals,
     # ops health). This prevents a future viewset from silently inheriting AllowAny.
@@ -216,6 +230,8 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "anon": env("DRF_THROTTLE_ANON", default="60/min"),
         "user": env("DRF_THROTTLE_USER", default="240/min"),
+        # W10: the token-obtain endpoint is a credential-stuffing target — much stricter.
+        "token_obtain": env("DRF_THROTTLE_TOKEN_OBTAIN", default="10/min"),
     },
     # Trust only the last NUM_PROXIES X-Forwarded-For hops for throttle identity — otherwise
     # a client can spoof XFF to get a fresh anon bucket per request and bypass rate limits.
@@ -284,6 +300,11 @@ INGEST_USER_AGENT = env(
 )
 # Wikidata SPARQL endpoint for the no-key website enricher (CC0).
 WIKIDATA_SPARQL_URL = env("WIKIDATA_SPARQL_URL", default="https://query.wikidata.org/sparql")
+# W9 pluggable source registry: {"<source-name>": "dotted.path.AdapterClass"} lets an
+# external aggregator add place sources without forking ingest_places (same upsert/
+# dedup/overlay-protection semantics). JSON in the env, e.g.
+# INGESTION_EXTRA_ADAPTERS='{"eventbrite": "myadapters.EventbritePlaces"}'.
+INGESTION_EXTRA_ADAPTERS = env.json("INGESTION_EXTRA_ADAPTERS", default={})
 
 # --- D6 media ---
 # Image bytes live in object storage; the local backend is the dev/test default.
@@ -315,6 +336,25 @@ MEDIA_SCANNER_TIMEOUT = env.int("MEDIA_SCANNER_TIMEOUT", default=10)
 # default HashBlocklistScanner is only effective with a non-empty blocklist (inline or
 # file); or point MEDIA_IMAGE_SCANNER at a managed service. dev/test settings set False.
 MEDIA_REQUIRE_SCANNER = env.bool("MEDIA_REQUIRE_SCANNER", default=True)
+# W8 perceptual layer: 64-bit dHash entries (16 hex chars) matched within
+# MEDIA_PERCEPTUAL_MAX_DISTANCE bits — catches trivially re-encoded/resized copies of
+# known-bad images that defeat exact SHA-256. See apps/media/perceptual.py for limits.
+MEDIA_PERCEPTUAL_BLOCKLIST = env.list("MEDIA_PERCEPTUAL_BLOCKLIST", default=[])
+MEDIA_PERCEPTUAL_BLOCKLIST_FILE = env("MEDIA_PERCEPTUAL_BLOCKLIST_FILE", default="")
+MEDIA_PERCEPTUAL_MAX_DISTANCE = env.int("MEDIA_PERCEPTUAL_MAX_DISTANCE", default=8)
+# W8 document (PDF) scanning seam — default no-op; deploy clamd and point this at
+# apps.media.docscan.ClamdScanner, then flip the require flag to fail closed.
+MEDIA_DOCUMENT_SCANNER = env(
+    "MEDIA_DOCUMENT_SCANNER", default="apps.media.docscan.NoopDocumentScanner"
+)
+MEDIA_REQUIRE_DOCUMENT_SCANNER = env.bool("MEDIA_REQUIRE_DOCUMENT_SCANNER", default=False)
+MEDIA_CLAMD_HOST = env("MEDIA_CLAMD_HOST", default="127.0.0.1")
+MEDIA_CLAMD_PORT = env.int("MEDIA_CLAMD_PORT", default=3310)
+MEDIA_CLAMD_TIMEOUT = env.int("MEDIA_CLAMD_TIMEOUT", default=20)
+
+# W10: API tokens are not forever-credentials — the expire_api_tokens job deletes
+# tokens older than this (a mobile client just re-authenticates).
+API_TOKEN_MAX_AGE_DAYS = env.int("API_TOKEN_MAX_AGE_DAYS", default=90)
 
 # Thread attachments (images + PDF in the activity conversation). Master switch; per-attachment
 # size cap; and the cohorts allowed to share a FILE/PDF (a NEW media type → adults only at

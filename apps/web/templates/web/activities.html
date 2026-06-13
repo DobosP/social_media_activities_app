@@ -3,10 +3,18 @@
 {% block title %}{% trans "Activities" %}{% endblock %}
 {% block content %}
 <h1>{% trans "Upcoming activities" %}</h1>
-<p class="muted">{% blocktrans with cohort=user.get_cohort_display %}In your cohort (<strong>{{ cohort }}</strong>).{% endblocktrans %}
+<p class="muted">{% trans "Shown to people your age only." %}
   <a href="{% url 'activity_create' %}">{% trans "Organise one →" %}</a>
   &middot; {% if beginners_only %}<a href="{% url 'activity_list' %}">{% trans "show all" %}</a> {% trans "(beginners-welcome only)" %}{% else %}<a href="?beginners=true">{% trans "beginners welcome only" %}</a>{% endif %}</p>
-{% include "web/_near_me.html" %}
+<form method="get" action="{% url 'activity_list' %}" class="search-bar" role="search">
+  <input type="search" name="q" value="{{ query }}" placeholder="{% trans 'Search activities, venues, types…' %}" aria-label="{% trans 'Search activities' %}" minlength="2">
+  {% if beginners_only %}<input type="hidden" name="beginners" value="true">{% endif %}
+  <button class="btn" type="submit">{% trans "Search" %}</button>
+  {% if query %}<a class="muted" href="{% url 'activity_list' %}">{% trans "clear" %}</a>{% endif %}
+</form>
+{% if query %}
+<p class="muted">{% blocktrans with q=query %}Results for “{{ q }}” — soonest first.{% endblocktrans %}</p>
+{% else %}{% include "web/_near_me.html" %}{% endif %}
 {% for a in activities %}{% include "web/_activity_card.html" %}{% empty %}
-<p class="muted">{% trans "Nothing upcoming yet. Be the first to organise something!" %}</p>{% endfor %}
+<p class="muted">{% if query %}{% trans "No upcoming activities match your search." %}{% else %}{% trans "Nothing upcoming yet. Be the first to organise something!" %}{% endif %}</p>{% endfor %}
 {% endblock %}

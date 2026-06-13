@@ -1,13 +1,39 @@
 {% extends "base.html" %}
 {% load i18n %}
-{% block title %}{% trans "Communities" %}{% endblock %}
+{% block title %}{% trans "Communities & groups" %}{% endblock %}
 {% block content %}
-<h1>{% trans "Communities" %}</h1>
-<p><a class="btn btn-sm" href="{% url 'community_graph' %}">🌐 {% trans "Explore as a 3D graph" %}</a></p>
-<p class="muted">{% blocktrans with like_prefix=page.paginator.count|yesno:_("like ,")|default:"" %}Find activities by type and place &mdash; e.g. <em>{{ like_prefix }}</em>
-  &ldquo;Cluj-Napoca Football&rdquo;. A community is just a named list of upcoming activities to
-  go to; there's no group to join and no members list.{% endblocktrans %}</p>
+<h1>{% trans "Communities &amp; groups" %}</h1>
+<p class="row">
+  <a class="btn btn-sm btn-secondary" href="{% url 'community_graph' %}">🌐 {% trans "Explore as a 3D graph" %}</a>
+  {% if can_create %}<a class="btn btn-sm" href="{% url 'group_create' %}">{% trans "+ Start a group" %}</a>{% endif %}
+</p>
+<p class="muted">{% blocktrans %}One place for people who do the same thing near you. <strong>Groups</strong> are standing
+  communities you can join — each has its own conversation. The rest appear automatically once enough
+  activities of a type happen in your city. No member lists, no follower counts.{% endblocktrans %}</p>
 
+<h2>{% trans "Groups — join and belong" %}</h2>
+{% for g in groups_page %}
+  <div class="card">
+    <h3 style="margin:.2rem 0"><a href="{% url 'group_detail' g.pk %}">{{ g.title }}</a></h3>
+    <p class="muted" style="margin:0">
+      {% if g.activity_type %}{{ g.activity_type.name }}{% else %}{% blocktrans with category=g.category.name %}All {{ category }}{% endblocktrans %}{% endif %}
+      &middot; {{ g.area.name }}</p>
+    {% if g.description %}<p style="margin:.3rem 0 0">{{ g.description|truncatewords:24 }}</p>{% endif %}
+  </div>
+{% empty %}
+  <p class="muted">{% trans "No groups here yet." %}{% if can_create %} <a href="{% url 'group_create' %}">{% trans "Start the first one." %}</a>{% endif %}</p>
+{% endfor %}
+{% if groups_page.has_other_pages %}
+  <p class="muted" style="margin-top:1rem">
+    {% if groups_page.has_previous %}<a href="?gpage={{ groups_page.previous_page_number }}">&larr; {% trans "Previous" %}</a> &middot; {% endif %}
+    {% blocktrans with number=groups_page.number num_pages=groups_page.paginator.num_pages %}Page {{ number }} of {{ num_pages }}{% endblocktrans %}
+    {% if groups_page.has_next %} &middot; <a href="?gpage={{ groups_page.next_page_number }}">{% trans "Next" %} &rarr;</a>{% endif %}
+  </p>
+{% endif %}
+
+<h2>{% trans "Around your city" %}</h2>
+<p class="muted">{% blocktrans %}Auto-detected from real upcoming activities &mdash; a named list of things to go to,
+  with nothing to join.{% endblocktrans %}</p>
 {% for c in page %}
   <div class="card">
     <h3 style="margin:.2rem 0"><a href="{% url 'community_detail' c.slug %}">{{ c.name }}</a></h3>

@@ -33,6 +33,10 @@ class Photo(models.Model):
     content_type = models.CharField(max_length=64, blank=True)
     byte_size = models.PositiveIntegerField(default=0)
     sha256 = models.CharField(max_length=64, blank=True)
+    # W8: 64-bit perceptual dHash (16 hex chars) of the stored bytes. Powers near-
+    # duplicate profile-picture detection (a resize/re-encode no longer evades the
+    # uniqueness rule). Empty = not computed (legacy rows); never treated as a match.
+    phash = models.CharField(max_length=16, blank=True, default="")
     width = models.PositiveIntegerField(default=0)
     height = models.PositiveIntegerField(default=0)
 
