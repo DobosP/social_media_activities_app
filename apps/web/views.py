@@ -2291,7 +2291,9 @@ def event_detail(request, pk):
     # must not disclose that place (or its name) on the detail page either. Mirror
     # place_detail's carve-out (review W1-13): the place's PROPOSER and staff may still
     # open it, so the pending-place flow doesn't dead-end.
-    event = get_object_or_404(Event.objects.select_related("place", "activity_type"), pk=pk)
+    event = get_object_or_404(
+        Event.objects.select_related("place", "activity_type").prefetch_related("reports"), pk=pk
+    )
     if not events_with_public_places().filter(pk=event.pk).exists():
         proposal = getattr(event.place, "proposal", None) if event.place_id else None
         is_proposer = (
@@ -2301,17 +2303,55 @@ def event_detail(request, pk):
         )
         if not (request.user.is_staff or is_proposer):
             raise Http404("No event matches the given query.")
+    # F21: read-time accuracy flag from crowd reports + the member report affordance.
+    from apps.events.services import event_reliability
+
     return render(
         request,
         "web/event_detail.html",
         {
             "event": event,
+            "event_reliability": event_reliability(event),
+            "can_report_event": request.user.is_authenticated and can_participate(request.user),
             "share_targets": _share_targets(request.user),
             "share_kind": "event",
             "share_obj_id": event.pk,
             **_nav_context(request.user),
         },
     )
+
+
+@login_required
+@require_POST
+def event_report(request, pk):
+    """F21: report that an event has changed (cancelled / moved / wrong time)."""
+    from apps.events.services import file_event_report
+
+    event = get_object_or_404(Event, pk=pk)
+    try:
+        result = file_event_report(request.user, event, request.POST.get("kind", ""))
+    except (PermissionError, ValueError) as exc:
+        messages.error(request, str(exc))
+    else:
+        if result is None:
+            messages.info(request, "Thanks - we already have your report for this event.")
+        else:
+            messages.success(request, "Thanks - we'll flag the event if others agree.")
+    return redirect("event_detail", pk=pk)
+
+
+@login_required
+@require_POST
+def event_report_reset(request, pk):
+    """F21: staff reset of accumulated change-reports for an event."""
+    from apps.events.services import clear_event_reports
+
+    if not request.user.is_staff:
+        raise Http404("Not found.")
+    event = get_object_or_404(Event, pk=pk)
+    clear_event_reports(event, moderator=request.user)
+    messages.success(request, "Event reports cleared.")
+    return redirect("event_detail", pk=pk)
 
 
 # --- EUDI Wallet age verification (in-page; sandbox demo wallet) ---------------------

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Event, EventFeed
+from .models import Event, EventFeed, EventReport
 
 
 @admin.register(Event)
@@ -22,3 +22,13 @@ class EventFeedAdmin(admin.ModelAdmin):
     search_fields = ("name", "url")
     autocomplete_fields = ("place", "activity_type")
     readonly_fields = ("last_synced_at", "last_status", "created_at")
+
+
+@admin.register(EventReport)
+class EventReportAdmin(admin.ModelAdmin):
+    """F21: read-only view of member event-accuracy reports (counts-only overlay)."""
+
+    list_display = ("event", "kind", "reporter", "created_at")
+    list_filter = ("kind",)
+    search_fields = ("event__title", "reporter__username")
+    readonly_fields = ("event", "reporter", "kind", "created_at")

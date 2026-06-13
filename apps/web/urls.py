@@ -44,6 +44,8 @@ urlpatterns = [
     ),
     path("events/", views.events_list, name="events_list"),
     path("events/<int:pk>/", views.event_detail, name="event_detail"),
+    path("events/<int:pk>/report/", views.event_report, name="event_report"),
+    path("events/<int:pk>/report-reset/", views.event_report_reset, name="event_report_reset"),
     # Activities
     path("activities/", views.activity_list, name="activity_list"),
     path("activities/new/", views.activity_create, name="activity_create"),

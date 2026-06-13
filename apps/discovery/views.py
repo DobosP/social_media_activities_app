@@ -71,7 +71,10 @@ class HappeningView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        from django.db.models import Q
+        from datetime import timedelta
+
+        from django.conf import settings
+        from django.db.models import Count, Q
 
         from apps.places.services import public_places
 
@@ -80,6 +83,14 @@ class HappeningView(APIView):
         qs = Event.objects.select_related("place", "activity_type").filter(starts_at__gte=now)
         # F25: an event pinned to a still-pending user place must not leak that place.
         qs = qs.filter(Q(place__isnull=True) | Q(place_id__in=public_places().values("id")))
+        # F21: drop events the crowd flagged as changed (cancelled/moved/wrong time) from the
+        # Happening feed — counted within the decay window so a re-listed event self-heals.
+        threshold = getattr(settings, "EVENT_REPORT_THRESHOLD", 3)
+        decay = getattr(settings, "EVENT_REPORT_DECAY_SECONDS", 14 * 24 * 3600)
+        cutoff = now - timedelta(seconds=decay)
+        qs = qs.annotate(
+            recent_report_n=Count("reports", filter=Q(reports__created_at__gte=cutoff))
+        ).filter(recent_report_n__lt=threshold)
         if activity := p.get("activity"):
             qs = qs.filter(activity_type__slug=activity)
         # W1 search: ?q= free-text filter (title/description/venue; venue already
