@@ -12,7 +12,39 @@
   {% if activity.status != "open" %}<span class="tag">{{ activity.get_status_display }}</span>{% endif %}
   {% if activity.guardian_accompanied %}<span class="tag">{% trans "guardian-accompanied" %}</span>{% endif %}
   {% if child_safe_venue %}<span class="tag" title="{% trans 'A known public venue type, approved for children&#39;s meetups.' %}">{% trans "approved public venue" %}</span>{% endif %}
+  {% if supervised %}{% if supervisor_present %}<span class="tag" title="{% trans 'The organiser&#39;s verified guardian is present as a read-only supervisor.' %}">{% trans "supervised" %}</span>{% else %}<span class="tag" title="{% trans 'This activity requires the organiser&#39;s guardian to supervise before anyone is admitted.' %}">{% trans "supervisor needed" %}</span>{% endif %}{% endif %}
 </div>
+
+{% if is_owner and supervised %}
+<div class="card">
+  {% if supervisor_present %}
+    <p class="muted">{% trans "&#10003; A supervising guardian is in place — members can be admitted." %}</p>
+  {% else %}
+    <p>{% trans "This activity requires a supervising guardian. No one can be admitted until one of your guardians joins as a read-only supervisor." %}</p>
+    {% if owner_supervisor_candidates %}
+      <form method="post" action="{% url 'activity_add_supervisor' activity.pk %}" class="stack">
+        {% csrf_token %}
+        <label>{% trans "Add a guardian as supervisor" %}
+          <select name="user_id">
+            {% for g in owner_supervisor_candidates %}<option value="{{ g.id }}">{{ g.display_name|default:g.username }}</option>{% endfor %}
+          </select></label>
+        <button class="btn btn-sm" type="submit">{% trans "Add supervisor" %}</button>
+      </form>
+    {% else %}
+      <p class="muted">{% url 'wards' as wards_url %}{% blocktrans %}You have no registered guardian to add. A guardianship link must be set up first.{% endblocktrans %}</p>
+    {% endif %}
+  {% endif %}
+  <form method="post" action="{% url 'activity_set_supervision' activity.pk %}" class="inline">
+    {% csrf_token %}<input type="hidden" name="supervised" value="off">
+    <button class="btn btn-sm btn-secondary" type="submit">{% trans "Stop requiring a supervisor" %}</button>
+  </form>
+</div>
+{% elif is_owner and is_open and activity.cohort == "child" and activity.guardian_accompanied %}
+<form method="post" action="{% url 'activity_set_supervision' activity.pk %}" class="inline" style="margin:.4rem 0">
+  {% csrf_token %}<input type="hidden" name="supervised" value="on">
+  <button class="btn btn-sm btn-secondary" type="submit">{% trans "Require a supervising guardian" %}</button>
+</form>
+{% endif %}
 <p class="muted">{{ activity.starts_at|date:"l j F Y, H:i" }}{% if activity.ends_at %} &ndash; {{ activity.ends_at|date:"H:i" }}{% endif %}<br>
   {% url 'place_detail' activity.place.pk as place_url %}{% blocktrans with place_name=activity.place.name|default:_("a place") %}at <a href="{{ place_url }}">{{ place_name }}</a>{% endblocktrans %}{% if activity.place.address_city %}, {{ activity.place.address_city }}{% endif %}</p>
 {% if activity_communities %}

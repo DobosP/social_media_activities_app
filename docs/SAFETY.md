@@ -71,6 +71,20 @@ Because the whole point is meeting **in person**, add (in or after D3/D4): publi
 safety guidance prompts for minors, optional "bring a guardian" norms for younger cohorts, and
 clear reporting from the activity screen. Track as safety backlog.
 
+- **Public-place gate for children (F9).** A CHILD-cohort meetup may only be set at a known public
+  venue type — a staff-curated `places.ChildVenueClass` allowlist (library/park/school/sports/
+  community), matched at read time, or a per-place staff approval (`ApprovedChildVenue`). Enforced
+  in `create_activity`/`create_series`/`can_join`, fail-closed, behind `CHILD_PUBLIC_VENUES_ONLY`.
+- **Verified-adult supervisor seat (F29).** A CHILD activity may REQUIRE supervision
+  (`Activity.supervised`, set at create or via the guarded `set_activity_supervision` — never via
+  the editable-fields path). A join then cannot **settle** (`_admit`) until the owner's OWN verified
+  guardian is seated as a **read-only** `GUARDIAN` member. The presence test is **live** (derived
+  from current memberships, never stored) so the chip can't lie after a guardian leaves. The only
+  adult who can enter stays keyed on an **ACTIVE `GuardianRelationship` to the OWNER** —
+  `add_guardian` is **NOT** loosened to "guardian of any participant" (that would open an
+  adult → other-people's-minors read-window). GUARDIANs remain excluded from posting, voting,
+  reactions and the mention roster.
+
 ## Privacy stance (reinforces safety)
 
 - **No behavioural tracking, no ads, no profiling** (also DSA Art. 28). Observability is aggregate

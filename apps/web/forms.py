@@ -1,6 +1,6 @@
 from django import forms
 
-from apps.accounts.models import AgeBand
+from apps.accounts.models import AgeBand, Cohort
 from apps.donations.models import Campaign
 from apps.places.models import Place
 from apps.safety.models import ReasonCode
@@ -96,13 +96,26 @@ class ActivityForm(forms.Form):
         label="Beginners welcome",
         help_text="Tick if first-timers are explicitly welcome.",
     )
+    # F29: CHILD owners only (dropped below for everyone else). Requires the owner's own verified
+    # guardian to join as a read-only supervisor before any join settles.
+    supervised = forms.BooleanField(
+        required=False,
+        label="Require a supervising guardian",
+        help_text=(
+            "Your parent/guardian must join as a read-only supervisor before anyone is admitted."
+        ),
+    )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         from apps.places.services import public_places
 
         # Only publicly-visible places (F25 chokepoint), ordered for the dropdown + the map picker.
         self.fields["place"].queryset = public_places(Place.objects.order_by("name"))
+        # The supervised pin is meaningful only for a CHILD owner — hide it for everyone else so
+        # the form never offers an option create_activity would reject.
+        if user is None or getattr(user, "cohort", None) != Cohort.CHILD:
+            self.fields.pop("supervised", None)
 
     def clean(self):
         cleaned = super().clean()

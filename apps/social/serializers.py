@@ -51,6 +51,7 @@ class ActivitySerializer(serializers.ModelSerializer):
             "min_to_go",
             "status",
             "guardian_accompanied",
+            "supervised",
             "open_positions",
             "created_at",
         ]
@@ -79,6 +80,8 @@ class ActivityCreateSerializer(serializers.Serializer):
     capacity = serializers.IntegerField(required=False, allow_null=True, min_value=1)
     min_to_go = serializers.IntegerField(required=False, allow_null=True, min_value=1)
     guardian_accompanied = serializers.BooleanField(required=False, default=False)
+    # F29: require the owner's verified guardian to supervise (CHILD only; validated in service).
+    supervised = serializers.BooleanField(required=False, default=False)
     meeting_point = serializers.CharField(
         required=False, allow_blank=True, default="", max_length=LOGISTICS_FIELD_MAX_LENGTH
     )

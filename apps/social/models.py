@@ -90,6 +90,12 @@ class Activity(models.Model):
     # Children's activities may allow a parent/guardian to accompany (supervised,
     # group-only). Only meaningful for the CHILD cohort. See docs/SAFETY.md.
     guardian_accompanied = models.BooleanField(default=False)
+    # F29: when True (CHILD only, implies guardian_accompanied), a join cannot SETTLE until the
+    # owner's own verified guardian is seated as a read-only GUARDIAN supervisor. Set at create or
+    # the guarded set_activity_supervision service — deliberately NOT in ACTIVITY_EDITABLE_FIELDS
+    # (a structural, cohort-isolation-adjacent pin). "Is a supervisor present *now*" is derived LIVE
+    # from memberships, never stored — so the chip can't lie after a guardian leaves.
+    supervised = models.BooleanField(default=False)
     # F17: an owner-set "beginners welcome" flag — a property of the MEETUP, never a skill
     # judgement of any person. Used only as a per-activity discovery filter/tag.
     beginners_welcome = models.BooleanField(default=False)

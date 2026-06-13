@@ -48,6 +48,16 @@ urlpatterns = [
     path("activities/<int:pk>/cancel/", views.activity_cancel, name="activity_cancel"),
     path("activities/<int:pk>/announce/", views.activity_announce, name="activity_announce"),
     path(
+        "activities/<int:pk>/supervisor/add/",
+        views.activity_add_supervisor,
+        name="activity_add_supervisor",
+    ),
+    path(
+        "activities/<int:pk>/supervision/",
+        views.activity_set_supervision,
+        name="activity_set_supervision",
+    ),
+    path(
         "activities/<int:pk>/co-org/grant/", views.activity_grant_coorg, name="activity_grant_coorg"
     ),
     path(
