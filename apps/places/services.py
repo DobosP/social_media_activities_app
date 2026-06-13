@@ -522,11 +522,18 @@ def staff_publish_correction(staff_user, correction: PlaceCorrection) -> PlaceCo
 def staff_reject_correction(
     staff_user, correction: PlaceCorrection, *, reason=""
 ) -> PlaceCorrection:
-    """Moderator close-out of a bad correction (stays unapplied — display falls back to OSM)."""
+    """Moderator close-out of a bad correction. Works on a PENDING one (never applied) OR a
+    PUBLISHED one (a deliberate REVERT — display falls back to OSM / an earlier correction); this
+    revert capability is why it intentionally differs from F25's PENDING-only staff_reject_proposal
+    (a published place can't be 'unpublished' the same way). A re-reject of an already-REJECTED
+    correction is a no-op error (validation the review asked for)."""
     if not staff_user.is_staff:
         raise NotEligible("Only staff may reject a correction.")
+    if correction.status == PlaceCorrection.Status.REJECTED:
+        raise InvalidState("This correction is already rejected.")
     correction.status = PlaceCorrection.Status.REJECTED
-    correction.save(update_fields=["status"])
+    correction.published_at = None  # a reverted correction is no longer applied at read time
+    correction.save(update_fields=["status", "published_at"])
     from apps.safety.services import record_audit
 
     record_audit(

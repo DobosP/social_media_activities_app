@@ -151,7 +151,11 @@ def community_detail(request, slug):
     if community is None:
         raise Http404("No such community.")
     limit = getattr(settings, "COMMUNITY_ACTIVITIES_PAGE_SIZE", 100)
-    activities = list(communities.community_activities(community, request.user)[:limit])
+    activities = list(
+        communities.community_activities(community, request.user)
+        .select_related("place", "activity_type", "owner")
+        .prefetch_related("place__corrections")[:limit]  # F20: _activity_card display_name
+    )
     # Read-time linkage: if a standing GROUP exists on the same (cohort, area, type/category)
     # coordinate AND is visible to this viewer, offer a "join the standing group" link (name only,
     # no count). Sourced from visible_groups, so a child can never discover an adult group this way.
@@ -237,7 +241,11 @@ def group_detail(request, pk):
     # The SOLE who-is-here surface: None for minors / non-members (no count either).
     roster = social.group_roster(group, user)
     # Upcoming activities in the group's (area x type/category) coordinate — discovery, not roster.
-    feed = list(social.group_feed_activities(group, user)[:50])
+    feed = list(
+        social.group_feed_activities(group, user)
+        .select_related("place", "activity_type", "owner")
+        .prefetch_related("place__corrections")[:50]  # F20: _activity_card display_name
+    )
 
     # The moderated thread (members who pass the read gate). @mentions are NOT resolved on group
     # threads (no name autocomplete/enumeration); minor group threads are announcement-only. The
@@ -732,6 +740,7 @@ def home(request):
         social.visible_activities(user)
         .filter(status=Activity.Status.OPEN, starts_at__gte=timezone.now())
         .select_related("place", "activity_type", "owner")
+        .prefetch_related("place__corrections")  # F20: display_name without per-card N+1
     )
     if beginners_only:
         upcoming_qs = upcoming_qs.filter(beginners_welcome=True)
@@ -747,6 +756,7 @@ def home(request):
             status=Activity.Status.OPEN,
         )
         .select_related("place", "activity_type")
+        .prefetch_related("place__corrections")  # F20
         .distinct()
         .order_by("starts_at")
     )
@@ -831,7 +841,8 @@ def place_detail(request, pk):
         meetups = (
             social.visible_activities(request.user)
             .filter(place=place, status=Activity.Status.OPEN, starts_at__gte=timezone.now())
-            .select_related("activity_type", "owner")
+            .select_related("place", "activity_type", "owner")
+            .prefetch_related("place__corrections")  # F20: _activity_card display_name
             .order_by("starts_at")
         )
     events = (
@@ -1072,7 +1083,10 @@ def place_open_now_reset(request, pk):
 
 def _visible_activity_or_404(user, pk) -> Activity:
     activity = get_object_or_404(
-        Activity.objects.select_related("place", "activity_type", "owner", "thread"), pk=pk
+        Activity.objects.select_related(
+            "place", "activity_type", "owner", "thread"
+        ).prefetch_related("place__corrections"),
+        pk=pk,
     )
     # Staff/moderators may still open removed content (for review/appeal); members may not.
     if getattr(user, "is_staff", False):
@@ -1090,11 +1104,13 @@ def activity_list(request):
     if query:
         # W1 search: one bounded, gate-identical path (visible_activities inside).
         activities = social.search_activities(request.user, query, beginners=beginners_only)
+        activities = activities.prefetch_related("place__corrections")  # F20
     else:
         activities = (
             social.visible_activities(request.user)
             .filter(status=Activity.Status.OPEN, starts_at__gte=timezone.now())
             .select_related("place", "activity_type", "owner")
+            .prefetch_related("place__corrections")  # F20: _activity_card display_name
         )
         if beginners_only:
             activities = activities.filter(beginners_welcome=True)

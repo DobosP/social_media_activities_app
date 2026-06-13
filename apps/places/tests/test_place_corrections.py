@@ -129,6 +129,46 @@ def test_staff_can_fast_publish_and_reject():
     assert place2.display_name == "Keep"  # rejected -> never applied
 
 
+def test_staff_reject_reverts_published_correction():
+    # Rejecting a PUBLISHED correction is a deliberate REVERT (differs from F25's pending-only) —
+    # display falls back to OSM. A re-reject of an already-rejected one is a validated no-op error.
+    place = _place(name="Old Name")
+    c = _publish_name(place, "Bad Published")
+    place.refresh_from_db()
+    assert place.display_name == "Bad Published"
+    staff_reject_correction(_staff("rev"), c)
+    place.refresh_from_db()
+    assert place.display_name == "Old Name"  # reverted to OSM
+    c.refresh_from_db()
+    assert c.status == PlaceCorrection.Status.REJECTED and c.published_at is None
+    with pytest.raises(InvalidState):
+        staff_reject_correction(_staff("rev2"), c)  # already rejected
+
+
+def test_latest_published_correction_wins():
+    place = _place(name="Old Name")
+    _publish_name(place, "First")
+    place.refresh_from_db()
+    assert place.display_name == "First"
+    # A second correction can open once the first is published (not pending), then publish too.
+    second = propose_place_correction(_user("p2"), place, field=F.NAME, proposed_value="Second")
+    for i in range(3):
+        confirm_place_correction(_user(f"c2-{i}"), second)
+    place.refresh_from_db()
+    assert place.display_name == "Second"  # most-recent PUBLISHED wins
+
+
+def test_place_serializer_renders_display_name_and_address():
+    from apps.places.serializers import PlaceSerializer
+
+    place = _place(name="Old Name", address_street="Str. Veche", address_city="Cluj")
+    _publish_name(place, "Corrected Name")
+    place.refresh_from_db()
+    props = PlaceSerializer(place).data["properties"]
+    assert props["name"] == "Corrected Name"
+    assert props["display_address"] == "Str. Veche, Cluj"
+
+
 # --- gating ---------------------------------------------------------------------------
 
 

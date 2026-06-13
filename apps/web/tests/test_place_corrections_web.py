@@ -73,6 +73,28 @@ def test_confirm_publishes_and_applies_at_quorum():
     assert "Corrected" in body
 
 
+def test_place_detail_prefetches_corrections_no_n_plus_one(django_assert_max_num_queries):
+    # A mix of pending corrections (one per field, per the constraint) + a published one.
+    place = _place()
+    PlaceCorrection.objects.create(
+        place=place, proposer=_user("pn"), field=F.NAME, proposed_value="Name?"
+    )
+    PlaceCorrection.objects.create(
+        place=place, proposer=_user("pa"), field=F.ADDRESS, proposed_value="Addr?"
+    )
+    PlaceCorrection.objects.create(
+        place=place,
+        proposer=_user("pp"),
+        field=F.NAME,
+        proposed_value="Was published",
+        status=PlaceCorrection.Status.PUBLISHED,
+    )
+    client = _client(_user("viewer"))
+    # place_detail prefetches 'corrections', so rendering is query-bounded regardless of count.
+    with django_assert_max_num_queries(30):
+        assert client.get(f"/places/{place.pk}/").status_code == 200
+
+
 def test_proposer_confirm_button_hidden_for_self():
     place = _place()
     proposer = _user("w4")
