@@ -21,6 +21,7 @@ urlpatterns = [
     ),
     path("places/<int:pk>/", views.place_detail, name="place_detail"),
     path("places/<int:pk>/edges/<int:edge_id>/vote/", views.edge_vote, name="edge_vote"),
+    path("places/<int:pk>/facts/vote/", views.fact_vote, name="fact_vote"),
     path(
         "places/<int:pk>/hours-wrong/",
         views.place_open_now_report,
