@@ -54,6 +54,7 @@ from apps.places.services import (
     accessibility_facts,
     accessibility_facts_display,
     get_access_preference,
+    is_child_safe_venue,
     matches_access_preference,
     partner_for_place,
     set_access_preference,
@@ -1199,6 +1200,10 @@ def activity_detail(request, pk):
             if (is_member and my_membership)
             else False,
             "can_join": social.can_join(user, activity),
+            # F9: transparency chip — this CHILD meetup is at an approved public venue type.
+            "child_safe_venue": (
+                activity.cohort == Cohort.CHILD and is_child_safe_venue(activity.place)
+            ),
             # W5: "start a standing group like this" prefill affordance (members only;
             # the service re-enforces the real creation gate).
             "can_create_group": is_member and _can_create_group(user),

@@ -11,7 +11,14 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
-from .models import AccessPreference, OpenNowReport, Partner, Place
+from .models import (
+    AccessPreference,
+    ApprovedChildVenue,
+    ChildVenueClass,
+    OpenNowReport,
+    Partner,
+    Place,
+)
 
 
 class PlacesError(Exception):
@@ -90,6 +97,51 @@ def accessibility_facts_display(place) -> list:
     template as 'not recorded' — never asserted as accessible."""
     facts = accessibility_facts(place)
     return [{"key": key, "label": label, "state": facts[key]} for key, label in _FACT_LABELS]
+
+
+# --- F9: public meetup-place gate for children's activities --------------------------
+# A CHILD-cohort meetup may only be set at a known public venue type (a STAFF-curated
+# ChildVenueClass) or a per-place staff approval. Derived at READ time from the place's
+# existing tags (never written onto Place — re-ingest safe, like accessibility_facts).
+
+CHILD_VENUE_ALLOWED = "allowed"
+CHILD_VENUE_UNKNOWN = "unknown"
+
+
+def public_child_venue_class(place) -> str:
+    """Classify a Place for CHILD-cohort meetups: ``"allowed"`` iff a staff per-place approval
+    exists OR the place's tags match an ACTIVE ChildVenueClass for its source; else ``"unknown"``
+    (fail-closed). We deliberately emit no ``"not_allowed"`` state: with no trustworthy denylist,
+    anything not positively allowed is ``"unknown"`` — still fail-closed, but the UI offers a
+    staff-approval path rather than asserting the venue is unsafe. Never writes to Place."""
+    if place is None:
+        return CHILD_VENUE_UNKNOWN
+    # Per-place staff override (escape hatch for a legit-but-mistagged / non-OSM venue).
+    if ApprovedChildVenue.objects.filter(place=place).exists():
+        return CHILD_VENUE_ALLOWED
+    tags = place.raw_tags or {}
+    classes = list(ChildVenueClass.objects.filter(is_active=True))
+    if place.source in (Place.Source.OSM, Place.Source.USER):
+        for c in classes:
+            crit = c.osm_match or {}
+            # All criteria keys must equal the place's tags (mirrors ingestion._matches);
+            # an empty criteria dict never matches (so it can't blanket-allow everything).
+            if crit and all(tags.get(k) == v for k, v in crit.items()):
+                return CHILD_VENUE_ALLOWED
+    elif place.source == Place.Source.OVERTURE:
+        cats = {tags.get("overture:category"), *(tags.get("overture:alternate") or [])}
+        cats.discard(None)
+        for c in classes:
+            if cats & set(c.overture_categories or []):
+                return CHILD_VENUE_ALLOWED
+    # GOOGLE / any other source whose tag shape we don't yet resolve -> unknown (fail-closed).
+    return CHILD_VENUE_UNKNOWN
+
+
+def is_child_safe_venue(place) -> bool:
+    """True iff `place` is an approved public venue type for a CHILD meetup (see
+    public_child_venue_class). The single boolean both gates (create/join) consult."""
+    return public_child_venue_class(place) == CHILD_VENUE_ALLOWED
 
 
 def matches_access_preference(facts, pref) -> str:

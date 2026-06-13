@@ -2,7 +2,15 @@ from django.contrib import admin
 from django.contrib.gis import admin as gis_admin
 
 from .edges import moderator_reverse_edge
-from .models import ActivityEdgeVote, OpenNowReport, Partner, Place, PlaceActivity
+from .models import (
+    ActivityEdgeVote,
+    ApprovedChildVenue,
+    ChildVenueClass,
+    OpenNowReport,
+    Partner,
+    Place,
+    PlaceActivity,
+)
 from .services import clear_open_now_reports
 
 
@@ -78,3 +86,23 @@ class PartnerAdmin(admin.ModelAdmin):
     list_display = ("name", "kind", "place", "is_verified", "is_active")
     list_filter = ("kind", "is_verified", "is_active")
     search_fields = ("name", "blurb")
+
+
+@admin.register(ChildVenueClass)
+class ChildVenueClassAdmin(admin.ModelAdmin):
+    """F9: the staff-curated allowlist of venue CLASSES safe-enough for children's meetups."""
+
+    list_display = ("key", "label", "is_active")
+    list_filter = ("is_active",)
+    search_fields = ("key", "label")
+
+
+@admin.register(ApprovedChildVenue)
+class ApprovedChildVenueAdmin(admin.ModelAdmin):
+    """F9: the staff-approval path — approve a specific place for children's meetups when its
+    tags don't match a ChildVenueClass (an ingest-safe per-place override)."""
+
+    list_display = ("place", "approved_by", "created_at")
+    search_fields = ("place__name", "note")
+    autocomplete_fields = ("place", "approved_by")
+    readonly_fields = ("created_at",)

@@ -24,3 +24,8 @@ MEDIA_ROOT = tempfile.mkdtemp(prefix="test-media-")
 # Media uploads don't require a real scanner under test (no blocklist is configured); the
 # fail-closed gate is verified explicitly in the media tests via a settings override.
 MEDIA_REQUIRE_SCANNER = False
+
+# The F9 child-public-venue gate is OFF by default in tests (the existing suite creates child
+# activities at bare/tag-less places); the gate is verified explicitly in the F9 tests via a
+# settings override. Production defaults this ON (see base.py).
+CHILD_PUBLIC_VENUES_ONLY = False

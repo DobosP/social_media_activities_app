@@ -242,3 +242,49 @@ class OpenNowReport(models.Model):
 
     def __str__(self):
         return f"open_now_report({self.place_id} by {self.reporter_id})"
+
+
+class ChildVenueClass(models.Model):
+    """F9: a STAFF-curated allowlist of venue CLASSES considered safe-enough public places for a
+    CHILD-cohort meetup (library, park, sports centre, school, community centre, ...). This is a
+    "known public venue type" signal — NOT a claim of staffed supervision. Matching is per source:
+    OSM tags (``osm_match`` — every key/value must equal the place's raw_tags) and Overture
+    categories (``overture_categories`` — any overlap). Read at activity-create and join time via
+    ``places.public_child_venue_class``; NEVER written onto Place (so re-ingest can't clobber it).
+    Staff edit the set in Django admin without a deploy."""
+
+    key = models.SlugField(max_length=64, unique=True)
+    label = models.CharField(max_length=120)
+    osm_match = models.JSONField(default=dict, blank=True)
+    overture_categories = models.JSONField(default=list, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "child venue class"
+        verbose_name_plural = "child venue classes"
+
+    def __str__(self):
+        return self.key
+
+
+class ApprovedChildVenue(models.Model):
+    """F9 escape hatch: a per-PLACE staff approval that a specific venue is a safe-enough public
+    place for children, even when its tags don't match any ChildVenueClass (e.g. a legitimate
+    library that OSM mis-tagged, or a non-OSM source). An ingest-safe overlay in its OWN table
+    (never a Place field), so re-ingest can't clobber it. Managed by staff in Django admin — the
+    'staff-approval path' that keeps fail-closed from silently over-blocking real venues."""
+
+    place = models.OneToOneField(Place, on_delete=models.CASCADE, related_name="child_approval")
+    approved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="child_venue_approvals",
+    )
+    note = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"child_approved({self.place_id})"

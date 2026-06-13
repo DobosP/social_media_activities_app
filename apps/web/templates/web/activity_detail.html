@@ -11,6 +11,7 @@
   {% if activity.beginners_welcome %}<span class="tag">{% trans "beginners welcome" %}</span>{% endif %}
   {% if activity.status != "open" %}<span class="tag">{{ activity.get_status_display }}</span>{% endif %}
   {% if activity.guardian_accompanied %}<span class="tag">{% trans "guardian-accompanied" %}</span>{% endif %}
+  {% if child_safe_venue %}<span class="tag" title="{% trans 'A known public venue type, approved for children&#39;s meetups.' %}">{% trans "approved public venue" %}</span>{% endif %}
 </div>
 <p class="muted">{{ activity.starts_at|date:"l j F Y, H:i" }}{% if activity.ends_at %} &ndash; {{ activity.ends_at|date:"H:i" }}{% endif %}<br>
   {% url 'place_detail' activity.place.pk as place_url %}{% blocktrans with place_name=activity.place.name|default:_("a place") %}at <a href="{{ place_url }}">{{ place_name }}</a>{% endblocktrans %}{% if activity.place.address_city %}, {{ activity.place.address_city }}{% endif %}</p>
