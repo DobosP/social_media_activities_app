@@ -25,7 +25,9 @@ from .services import (
     block_user,
     dismiss_report,
     file_report,
+    record_audit,
     take_action,
+    triage_order,
     unblock_user,
 )
 
@@ -114,12 +116,36 @@ class ModerationReportListView(APIView):
     permission_classes = [IsModerator]
 
     def get(self, request):
-        reports = Report.objects.order_by("-created_at")
+        from django.db import transaction
+        from django.db.models import Case, IntegerField, Value, When
+
+        from .services import _TRIAGE_SEVERITY
+
+        reports = Report.objects.all()
         status_filter = request.query_params.get("status")
         if status_filter:
             reports = reports.filter(status=status_filter)
-        # Hard cap to keep the response bounded (mirrors the notifications list cap).
-        return Response(ModerationReportSerializer(reports[:100], many=True).data)
+        # F11: pre-order by reason severity in the DB BEFORE the hard cap, so the most dangerous
+        # reasons (CSAM/grooming) can never be truncated by a recency-only cap; the full advisory
+        # triage re-rank (child involvement + duplicate count + contact hint) happens in Python.
+        severity = Case(
+            *[When(reason=k, then=Value(v)) for k, v in _TRIAGE_SEVERITY.items()],
+            default=Value(0),
+            output_field=IntegerField(),
+        )
+        capped = list(reports.annotate(_sev=severity).order_by("-_sev", "-created_at")[:100])
+        ordered = triage_order(capped)  # [(report, summary), ...] most-dangerous-first
+        for report, summary in ordered:
+            report._triage = summary
+        # DSA accountability: audit staff access to the queue (no report content in the log).
+        with transaction.atomic():
+            record_audit(
+                "moderation.queue_viewed",
+                actor=request.user,
+                status=status_filter or "all",
+                count=len(ordered),
+            )
+        return Response(ModerationReportSerializer([r for r, _ in ordered], many=True).data)
 
 
 class ResolveReportView(APIView):

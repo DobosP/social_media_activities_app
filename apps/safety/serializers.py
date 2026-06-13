@@ -22,9 +22,12 @@ class BlockSerializer(serializers.Serializer):
 
 
 class ModerationReportSerializer(serializers.ModelSerializer):
-    """Full report view for the staff moderation queue."""
+    """Full report view for the staff moderation queue (IsModerator-gated)."""
 
     target = serializers.SerializerMethodField()
+    # F11: advisory triage signals, present only when the list view computed them. Staff-only
+    # (this serializer is never served to a reported user); ranks the report, not the person.
+    triage = serializers.SerializerMethodField()
 
     class Meta:
         model = Report
@@ -41,11 +44,15 @@ class ModerationReportSerializer(serializers.ModelSerializer):
             "handled_at",
             "resolution",
             "created_at",
+            "triage",
         ]
         read_only_fields = fields
 
     def get_target(self, obj):
         return str(obj.target) if obj.target is not None else None
+
+    def get_triage(self, obj):
+        return getattr(obj, "_triage", None)
 
 
 class ResolveReportSerializer(serializers.Serializer):
