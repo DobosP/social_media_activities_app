@@ -28,8 +28,39 @@
       {% if w.caps.can_get_arrival_pings %}<li>{% trans "&#10003; Get an alert when they tap &ldquo;I've arrived&rdquo; at a meetup." %}</li>{% endif %}
       {% if w.caps.can_observe_messaging %}<li>{% trans "&#10003; If you've set up secure messaging, read their group chats as a visible, read-only observer." %}</li>{% endif %}
       {% if w.caps.requires_consent %}<li>{% if w.caps.consent_active %}{% trans "&#10003; Parental consent is active." %}{% else %}{% trans "&bull; Parental consent is not active." %}{% endif %}{% if w.caps.can_grant_consent %} {% trans "You can grant or revoke it." %}{% endif %}</li>{% endif %}
+      {% if w.caps.guardrail_supervised_only %}<li>{% trans "&#10003; Limit set: only guardian-accompanied meetups." %}</li>{% endif %}
+      {% if w.caps.guardrail_latest_start_hour is not None %}<li>{% blocktrans with hour=w.caps.guardrail_latest_start_hour %}&#10003; Limit set: meetups starting by {{ hour }}:00 at the latest.{% endblocktrans %}</li>{% endif %}
+      {% if w.caps.guardrail_max_open_joins %}<li>{% blocktrans count n=w.caps.guardrail_max_open_joins %}&#10003; Limit set: at most {{ n }} open meetup at a time.{% plural %}&#10003; Limit set: at most {{ n }} open meetups at a time.{% endblocktrans %}</li>{% endif %}
       <li>{% trans "&#10007; You cannot see their thread posts, photos, who else is there, or chat content (beyond the observer view above); you never enter their activities or cohort." %}</li>
     </ul>
+
+    {% if w.caps.can_set_guardrails %}
+    <details class="card" style="margin:.6rem 0">
+      <summary>{% trans "Set participation limits" %}</summary>
+      <p class="muted" style="font-size:.85rem">{% blocktrans %}Optional, conservative limits on the meetups
+        your child can join. These only ever make their options narrower &mdash; they never open anything up.
+        If more than one guardian sets a limit, the strictest one applies.{% endblocktrans %}</p>
+      <form method="post" action="{% url 'guardian_guardrail_set' w.pk %}" class="stack">
+        {% csrf_token %}
+        <label class="inline">
+          <input type="checkbox" name="supervised_only" {% if w.caps.guardrail_supervised_only %}checked{% endif %}>
+          {% trans "Only guardian-accompanied meetups" %}</label>
+        <label>{% trans "Latest start time" %}
+          <select name="latest_start_hour">
+            <option value="">{% trans "No limit" %}</option>
+            {% for h in guardrail_hours %}
+              <option value="{{ h }}" {% if w.caps.guardrail_latest_start_hour == h %}selected{% endif %}>{{ h }}:00</option>
+            {% endfor %}
+          </select></label>
+        <label>{% trans "Most open meetups at once" %}
+          <input type="number" name="max_open_joins" min="1" max="50" inputmode="numeric"
+                 value="{{ w.caps.guardrail_max_open_joins|default_if_none:'' }}"
+                 placeholder="{% trans 'No limit' %}"></label>
+        <button class="btn btn-sm" type="submit">{% trans "Save limits" %}</button>
+      </form>
+    </details>
+    {% endif %}
+
     <form method="post" action="{% url 'guardian_revoke' w.pk %}" class="inline"
           onsubmit="return confirm('{% blocktrans with name=w.display_name|default:w.username %}End guardianship of {{ name }}? This also revokes the consent you granted.{% endblocktrans %}');">
       {% csrf_token %}

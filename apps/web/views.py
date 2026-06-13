@@ -32,10 +32,10 @@ from apps.accounts.services import (
     create_guardian_link_invite,
     decline_guardian_link_invite,
     guardianship_capabilities,
-    is_guardian_of,
     minor_onboarding_enabled,
     pending_guardian_invites_for,
     revoke_guardian,
+    set_guardian_guardrail,
 )
 from apps.events.models import Event
 from apps.media.models import Photo
@@ -2241,6 +2241,7 @@ def wards(request):
             .distinct()
         )
         # F13: the legible can/cannot boundary for this guardianship, from the real rules.
+        # caps already carries this guardian's F7 guardrail values (for pre-filling the form).
         ward.caps = guardianship_capabilities(request.user, ward)
     return render(
         request,
@@ -2248,9 +2249,55 @@ def wards(request):
         {
             "wards": ward_users,
             "minor_onboarding": minor_onboarding_enabled(),
+            "guardrail_hours": range(24),
             **_nav_context(request.user),
         },
     )
+
+
+def _active_ward_or_none(guardian, ward_pk):
+    """The actor's CURRENTLY-ACTIVE ward by pk, resolved in a SINGLE query — so a non-guardian
+    gets an identical response whether or not the pk exists. Avoids a 404-vs-redirect
+    user-enumeration oracle on child accounts (cf. the deliberately non-distinguishing
+    guardian_invite_create). Returns None when the actor is not this user's active guardian."""
+    return User.objects.filter(
+        pk=ward_pk,
+        guardians__guardian=guardian,
+        guardians__status=GuardianRelationship.Status.ACTIVE,
+    ).first()
+
+
+@login_required
+@require_POST
+def guardian_guardrail_set(request, ward_pk):
+    """A guardian sets conservative participation limits on a CHILD ward (F7). Reuses
+    accounts.set_guardian_guardrail, which re-checks the ACTIVE guardianship + CHILD cohort and
+    audits in-transaction. Guardrails only ever NARROW the ward's access (see can_join)."""
+    ward = _active_ward_or_none(request.user, ward_pk)
+    if ward is None:
+        messages.error(request, "You are not this user's guardian.")
+        return redirect("wards")
+    # Throttle: each save writes an audit row; mirror the guardian-invite throttle.
+    if not safety.allow_action(
+        request.user,
+        "guardian_guardrail",
+        limit=getattr(settings, "GUARDIAN_GUARDRAIL_RATE_LIMIT", 30),
+        window_seconds=getattr(settings, "GUARDIAN_GUARDRAIL_RATE_WINDOW_SECONDS", 3600),
+    ):
+        messages.error(request, "Too many updates; please try again later.")
+        return redirect("wards")
+    try:
+        set_guardian_guardrail(
+            request.user,
+            ward,
+            supervised_only=request.POST.get("supervised_only") == "on",
+            latest_start_hour=request.POST.get("latest_start_hour", ""),
+            max_open_joins=request.POST.get("max_open_joins", ""),
+        )
+        messages.success(request, "Participation limits saved.")
+    except ValueError as exc:
+        messages.error(request, _msg(exc))
+    return redirect("wards")
 
 
 @login_required
@@ -2258,9 +2305,8 @@ def wards(request):
 def guardian_revoke(request, ward_pk):
     """A guardian ends a guardianship link (F13). Reuses accounts.revoke_guardian, which also
     revokes that guardian's consent grant and drops any messaging-observer presence."""
-    ward = get_object_or_404(User, pk=ward_pk)
-    # revoke_guardian does not itself re-check the actor is the guardian — guard here.
-    if not is_guardian_of(request.user, ward):
+    ward = _active_ward_or_none(request.user, ward_pk)
+    if ward is None:
         messages.error(request, "You are not this user's guardian.")
         return redirect("wards")
     try:

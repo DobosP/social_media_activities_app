@@ -15,7 +15,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from apps.accounts.models import Cohort, GuardianRelationship
-from apps.accounts.services import can_participate
+from apps.accounts.services import can_participate, effective_guardrail
 
 from .models import (
     DEFAULT_JOIN_THRESHOLD,
@@ -265,7 +265,42 @@ def can_join(user, activity) -> bool:
     existing = (
         activity.memberships.filter(user=user).exclude(state=Membership.State.REMOVED).exists()
     )
-    return not existing
+    if existing:
+        return False
+    # F7: a CHILD ward's guardian(s) may have set conservative participation guardrails. These
+    # only ever NARROW access; we apply the STRICTEST across all active guardians, fail-closed.
+    if user.cohort == Cohort.CHILD and not _passes_guardrails(user, activity):
+        return False
+    return True
+
+
+def _passes_guardrails(user, activity) -> bool:
+    """True iff the activity satisfies the strictest active guardian guardrail on a CHILD ward
+    (F7). No guardrail -> always True. Each clause is a hard NARROW: supervised_only requires a
+    guardian-accompanied meetup; latest_start_hour caps the meetup's *local* start hour; and
+    max_open_joins caps how many OPEN meetups (non-removed memberships) the ward is already in.
+    Called only for CHILD users (see can_join)."""
+    rail = effective_guardrail(user)
+    if rail is None:
+        return True
+    if rail["supervised_only"] and not activity.guardian_accompanied:
+        return False
+    latest = rail["latest_start_hour"]
+    if latest is not None and timezone.localtime(activity.starts_at).hour > latest:
+        return False
+    cap = rail["max_open_joins"]
+    if cap is not None:
+        # Count the ward's current commitments to OPEN meetups (REQUESTED or MEMBER, not REMOVED).
+        # The activity being joined isn't counted (can_join's `existing` check excludes members),
+        # so block when joining would exceed the cap.
+        current = (
+            Membership.objects.filter(user=user, activity__status=Activity.Status.OPEN)
+            .exclude(state=Membership.State.REMOVED)
+            .count()
+        )
+        if current >= cap:
+            return False
+    return True
 
 
 @transaction.atomic

@@ -1,6 +1,7 @@
 import uuid
 
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
 
@@ -228,6 +229,58 @@ class GuardianRelationship(models.Model):
 
     def __str__(self):
         return f"{self.guardian} guards {self.ward} ({self.status})"
+
+
+class GuardianGuardrail(models.Model):
+    """F7: a guardian's conservative, child-read-only limits on a CHILD ward's meetup
+    participation. It only ever NARROWS access — every field maps to an honest fact the
+    ``can_join`` gate already knows, never to PII or location:
+
+      - ``supervised_only``    -> the meetup must be ``Activity.guardian_accompanied``.
+      - ``latest_start_hour``  -> the meetup's *local* start hour must be <= this (0-23).
+      - ``max_open_joins``     -> a cap on how many OPEN meetups the ward may be in at once.
+
+    Attached one-to-one to the ``GuardianRelationship`` so a guardrail can never outlive its
+    link (CASCADE) and "active" is exactly ``relationship.status == ACTIVE`` — a revoked link's
+    guardrail is structurally ignored by enforcement, and a child can have several guardians,
+    each with their own guardrail (the gate consults the STRICTEST across all active ones).
+    Mutated only by the guardian from ``/wards/`` and audited in-transaction; the child side is
+    legibility-only. See docs/SAFETY.md and accounts.services.effective_guardrail / can_join.
+    """
+
+    relationship = models.OneToOneField(
+        GuardianRelationship, on_delete=models.CASCADE, related_name="guardrail"
+    )
+    supervised_only = models.BooleanField(default=False)
+    latest_start_hour = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(23)],
+    )
+    max_open_joins = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(50)],
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(latest_start_hour__isnull=True)
+                | models.Q(latest_start_hour__gte=0, latest_start_hour__lte=23),
+                name="guardrail_latest_start_hour_range",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(max_open_joins__isnull=True)
+                | models.Q(max_open_joins__gte=1, max_open_joins__lte=50),
+                name="guardrail_max_open_joins_range",
+            ),
+        ]
+
+    def __str__(self):
+        return f"guardrail({self.relationship_id})"
 
 
 class GuardianLinkInvite(models.Model):

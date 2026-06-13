@@ -13,6 +13,7 @@ from .models import (
     AgeAssurance,
     AgeBand,
     Cohort,
+    GuardianGuardrail,
     GuardianLinkInvite,
     GuardianRelationship,
     ParentalConsent,
@@ -425,6 +426,119 @@ def is_guardian_of(guardian: User, ward: User) -> bool:
     ).exists()
 
 
+# --- F7: guardian-set participation guardrails ---------------------------------------
+# A guardian turns all-or-nothing consent into a few conservative, child-read-only limits.
+# Each maps to an honest fact can_join already checks; guardrails only ever NARROW access.
+
+
+def _clean_hour(value) -> int | None:
+    """Normalise an optional 0-23 hour. Empty -> None (no limit). Raises ValueError on junk so
+    a bad form value can never silently become 'no limit' (fail-closed at the input boundary)."""
+    if value is None or value == "":
+        return None
+    try:
+        hour = int(value)
+    except (TypeError, ValueError):
+        raise ValueError("Latest start hour must be a whole number between 0 and 23.") from None
+    if not 0 <= hour <= 23:
+        raise ValueError("Latest start hour must be between 0 and 23.")
+    return hour
+
+
+def _clean_cap(value) -> int | None:
+    """Normalise an optional open-meetup cap. Empty -> None (no cap)."""
+    if value is None or value == "":
+        return None
+    try:
+        cap = int(value)
+    except (TypeError, ValueError):
+        raise ValueError("The open-meetup limit must be a whole number.") from None
+    if not 1 <= cap <= 50:
+        raise ValueError("The open-meetup limit must be between 1 and 50.")
+    return cap
+
+
+@transaction.atomic
+def set_guardian_guardrail(
+    guardian: User,
+    ward: User,
+    *,
+    supervised_only: bool = False,
+    latest_start_hour=None,
+    max_open_joins=None,
+) -> GuardianGuardrail:
+    """Create/update this guardian's guardrail for a CHILD ward. Gated strictly on an ACTIVE
+    GuardianRelationship with a CHILD ward; audited inside the transaction. Inputs are
+    normalised/validated fail-closed (junk raises, never silently becomes 'no limit')."""
+    rel = (
+        GuardianRelationship.objects.select_for_update()
+        .filter(guardian=guardian, ward=ward, status=GuardianRelationship.Status.ACTIVE)
+        .first()
+    )
+    if rel is None:
+        raise ValueError("You are not a registered guardian of this user.")
+    if ward.cohort != Cohort.CHILD:
+        # Guardrails map to children's-meetup facts; teens self-manage (mirrors arrival pings).
+        raise ValueError("Participation limits apply to children's accounts only.")
+    hour = _clean_hour(latest_start_hour)
+    cap = _clean_cap(max_open_joins)
+    rail, _created = GuardianGuardrail.objects.update_or_create(
+        relationship=rel,
+        defaults={
+            "supervised_only": bool(supervised_only),
+            "latest_start_hour": hour,
+            "max_open_joins": cap,
+        },
+    )
+    from apps.safety.services import record_audit
+
+    record_audit(
+        "guardian.guardrail_set",
+        actor=guardian,
+        target=ward,
+        supervised_only=bool(supervised_only),
+        latest_start_hour=hour,
+        max_open_joins=cap,
+    )
+    return rail
+
+
+def guardrail_for(guardian: User, ward: User) -> GuardianGuardrail | None:
+    """This guardian's own guardrail on the ward (for pre-filling the edit form / legibility),
+    only while the link is ACTIVE."""
+    return (
+        GuardianGuardrail.objects.filter(
+            relationship__guardian=guardian,
+            relationship__ward=ward,
+            relationship__status=GuardianRelationship.Status.ACTIVE,
+        )
+        .select_related("relationship")
+        .first()
+    )
+
+
+def effective_guardrail(ward: User) -> dict | None:
+    """The STRICTEST guardrail across ALL of the ward's currently-ACTIVE guardians, combined
+    fail-closed: supervised_only if ANY guardian requires it, the EARLIEST latest_start_hour,
+    and the SMALLEST max_open_joins. A guardian with no guardrail row never loosens another's
+    limit. Returns None when no active guardrail applies (the common case → no enforcement)."""
+    rails = list(
+        GuardianGuardrail.objects.filter(
+            relationship__ward=ward,
+            relationship__status=GuardianRelationship.Status.ACTIVE,
+        )
+    )
+    if not rails:
+        return None
+    hours = [r.latest_start_hour for r in rails if r.latest_start_hour is not None]
+    caps = [r.max_open_joins for r in rails if r.max_open_joins is not None]
+    return {
+        "supervised_only": any(r.supervised_only for r in rails),
+        "latest_start_hour": min(hours) if hours else None,
+        "max_open_joins": min(caps) if caps else None,
+    }
+
+
 @transaction.atomic
 def erase_user(actor: User, target: User) -> None:
     """GDPR Art.17 right-to-erasure (W1-5). Permanently deletes `target` and everything
@@ -564,6 +678,9 @@ def guardianship_capabilities(guardian: User, ward: User) -> dict:
         )
     )
     is_child = ward.cohort == Cohort.CHILD
+    # F7: this guardian's own participation guardrail (CHILD wards only) — surfaced so the F13
+    # legibility panels render exactly what can_join enforces, never a claim that can drift.
+    rail = guardrail_for(guardian, ward) if is_child else None
     return {
         "relationship": (rel.relationship if rel else "") or "guardian",
         "consent_active": consent_active,
@@ -576,4 +693,8 @@ def guardianship_capabilities(guardian: User, ward: User) -> dict:
             and minor_onboarding_enabled()
             and can_participate(guardian)
         ),
+        "can_set_guardrails": is_child,
+        "guardrail_supervised_only": bool(rail and rail.supervised_only),
+        "guardrail_latest_start_hour": rail.latest_start_hour if rail else None,
+        "guardrail_max_open_joins": rail.max_open_joins if rail else None,
     }
