@@ -25,6 +25,10 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # Required for OpClass to be registered as an index-expression wrapper (the W1
+    # trigram expression indexes) — without the app's ready() hook, Django parenthesizes
+    # the opclass into the expression and emits invalid SQL.
+    "django.contrib.postgres",
     "django.contrib.gis",
     # Third-party
     "rest_framework",
@@ -347,6 +351,10 @@ MEDIA_REQUIRE_DOCUMENT_SCANNER = env.bool("MEDIA_REQUIRE_DOCUMENT_SCANNER", defa
 MEDIA_CLAMD_HOST = env("MEDIA_CLAMD_HOST", default="127.0.0.1")
 MEDIA_CLAMD_PORT = env.int("MEDIA_CLAMD_PORT", default=3310)
 MEDIA_CLAMD_TIMEOUT = env.int("MEDIA_CLAMD_TIMEOUT", default=20)
+
+# W10: API tokens are not forever-credentials — the expire_api_tokens job deletes
+# tokens older than this (a mobile client just re-authenticates).
+API_TOKEN_MAX_AGE_DAYS = env.int("API_TOKEN_MAX_AGE_DAYS", default=90)
 
 # Thread attachments (images + PDF in the activity conversation). Master switch; per-attachment
 # size cap; and the cohorts allowed to share a FILE/PDF (a NEW media type → adults only at

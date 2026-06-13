@@ -342,6 +342,7 @@
 // thread WebSocket. The page is fully functional with JS off (the compose form POSTs normally).
 (function () {
   const threadId = {{ activity.thread.id }};
+  const ME_ID = {{ user.id }};
   const list = document.getElementById("thread-list");
   const status = document.getElementById("live-status");
   const seen = new Set();
@@ -355,7 +356,8 @@
     if (noneEl) noneEl.remove();
     const art = document.createElement("article");
     art.id = "post-" + d.id;
-    art.className = "post";
+    // Match the server-rendered bubble styling: own messages right-align (post--mine).
+    art.className = "post" + (d.author_id === ME_ID ? " post--mine" : "");
     let html = "";
     if (d.reply_snippet) {
       html += '<div class="reply-quote muted" style="font-size:.8rem;border-left:2px solid var(--line);padding-left:.5rem;margin-bottom:.2rem">{% trans "Replying to" %} ' +
@@ -364,6 +366,16 @@
     const when = d.created_at ? new Date(d.created_at).toLocaleString() : "";
     html += '<div class="meta">' + esc(d.author) + " &middot; " + esc(when) + "</div>";
     html += "<div>" + esc(d.body).replace(/\n/g, "<br>") + "</div>";
+    // Live share card (a share-only post must not arrive as a blank bubble). The href
+    // is rebuilt from kind + integer id only — never from server-sent text.
+    if (d.share && d.share.kind && d.share.kind !== "gone" && Number.isInteger(d.share.id)) {
+      const paths = { activity: "/activities/", place: "/places/", event: "/events/" };
+      if (paths[d.share.kind]) {
+        html += '<a class="share-card" href="' + paths[d.share.kind] + d.share.id + '/">' +
+                '<span class="share-kind">' + esc(d.share.kind) + "</span><strong>" +
+                esc(d.share.title || "") + "</strong></a>";
+      }
+    }
     art.innerHTML = html;
     // Place a reply under its parent's group if that parent is in the rendered window; else as
     // a plain top-level entry (the "Replying to" line preserves the relationship regardless).

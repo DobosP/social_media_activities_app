@@ -39,26 +39,35 @@ def upsert_event(
     return event
 
 
-def upcoming_events():
-    """Upcoming events with the F25 pending-place gate applied: an event pinned to a
-    still-unpublished user-proposed place must not leak that place's existence or name.
-    The single base queryset for every event read surface (web list, API, search)."""
+def events_with_public_places():
+    """Events with the F25 pending-place gate applied (no time filter): an event pinned
+    to a still-unpublished user-proposed place must not leak that place's existence or
+    name. The single base queryset for EVERY event read surface (web list/detail, the
+    events API, discovery, search)."""
     from apps.places.services import public_places
 
-    return (
-        Event.objects.select_related("place", "activity_type")
-        .filter(starts_at__gte=timezone.now())
-        .filter(Q(place__isnull=True) | Q(place_id__in=public_places().values("id")))
+    return Event.objects.select_related("place", "activity_type").filter(
+        Q(place__isnull=True) | Q(place_id__in=public_places().values("id"))
     )
 
 
-def search_events(query, *, limit=100):
+def upcoming_events():
+    """The F25-gated base, narrowed to upcoming."""
+    return events_with_public_places().filter(starts_at__gte=timezone.now())
+
+
+def search_events(query, *, activity_slug=None, limit=100):
     """Free-text search over upcoming events (W1). Matches title/description and the
-    venue name (place gate already applied by ``upcoming_events``). Bounded, soonest-first."""
+    venue name (place gate already applied by ``upcoming_events``); composes with the
+    list's type filter so searching never silently drops an active filter. Bounded,
+    soonest-first."""
     query = (query or "").strip()
     if len(query) < 2:
         return Event.objects.none()
-    return upcoming_events().filter(
+    qs = upcoming_events()
+    if activity_slug:
+        qs = qs.filter(activity_type__slug=activity_slug)
+    return qs.filter(
         Q(title__icontains=query)
         | Q(description__icontains=query)
         | Q(place__name__icontains=query)

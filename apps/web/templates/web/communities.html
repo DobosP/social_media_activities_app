@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% load i18n %}
-{% block title %}{% trans "Communities" %}{% endblock %}
+{% block title %}{% trans "Communities & groups" %}{% endblock %}
 {% block content %}
-<h1>{% trans "Communities" %}</h1>
+<h1>{% trans "Communities &amp; groups" %}</h1>
 <p class="row">
   <a class="btn btn-sm btn-secondary" href="{% url 'community_graph' %}">🌐 {% trans "Explore as a 3D graph" %}</a>
   {% if can_create %}<a class="btn btn-sm" href="{% url 'group_create' %}">{% trans "+ Start a group" %}</a>{% endif %}

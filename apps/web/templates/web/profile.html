@@ -71,7 +71,8 @@
 </div>
 
 <details class="card" {% if provenance.status == "expiring" or provenance.status == "expired" or not provenance.has_row %}open{% endif %}>
-  <summary><strong>{% trans "Age verification" %}</strong></summary>
+  {# h3 inside summary keeps the section in screen-reader heading navigation (review W1-27). #}
+  <summary><h3 class="inline-h">{% trans "Age verification" %}</h3></summary>
   {% if provenance and provenance.has_row %}
     {% if provenance.band_display %}<p><strong>{% trans "Verified as:" %}</strong> {{ provenance.band_display }}
       <span class="muted">{% trans "(an age band only &mdash; never your birthdate)" %}</span></p>{% endif %}
@@ -97,7 +98,7 @@
 
 {% if blocked %}
 <details class="card">
-  <summary><strong>{% trans "Blocked users" %}</strong> <span class="muted">({{ blocked|length }})</span></summary>
+  <summary><h3 class="inline-h">{% trans "Blocked users" %}</h3> <span class="muted">({{ blocked|length }})</span></summary>
   <p class="muted">{% trans "You and these people never see each other's activities." %}</p>
   <ul class="members">
     {% for b in blocked %}

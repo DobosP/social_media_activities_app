@@ -14,7 +14,8 @@
     <select id="share-target-{{ share_obj_id }}" name="target">
       {% for a in share_targets %}<option value="{{ a.pk }}">{{ a.title }} ({{ a.starts_at|date:"j M" }})</option>{% endfor %}
     </select>
-    <input name="note" maxlength="280" placeholder="{% trans 'Add a note (optional)' %}">
+    <label class="visually-hidden" for="share-note-{{ share_obj_id }}">{% trans "Add a note (optional)" %}</label>
+    <input id="share-note-{{ share_obj_id }}" name="note" maxlength="280" placeholder="{% trans 'Add a note (optional)' %}">
     <button class="btn btn-sm" type="submit">{% trans "Share" %}</button>
     <p class="helptext">{% trans "To share in a private message, copy this page's link and paste it in the chat." %}</p>
   </form>

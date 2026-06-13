@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: social-activities 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-03 10:27+0300\n"
+"POT-Creation-Date: 2026-06-13 02:13+0300\n"
 "PO-Revision-Date: 2026-05-29 10:00+0300\n"
 "Last-Translator: Claude Code\n"
 "Language-Team: Romanian\n"
@@ -15,223 +15,241 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1?0:(((n%100>19)||((n%100==0)&&(n!=0)))?2:1));\n"
 
-#: apps/accounts/services.py:175
 msgid "Your age verification has expired"
 msgstr "Verificarea vârstei tale a expirat"
 
-#: apps/accounts/services.py:176
 msgid "Re-verify your age to keep joining and chatting."
 msgstr ""
 "Re-verifică-ți vârsta ca să poți continua să te alături și să discuți."
 
-#: apps/accounts/services.py:191
 msgid "Your age verification is expiring soon"
 msgstr "Verificarea vârstei tale expiră curând"
 
-#: apps/accounts/services.py:192
 msgid "Re-verify your age soon to keep joining and chatting."
 msgstr ""
 "Re-verifică-ți vârsta în curând ca să poți continua să te alături și să "
 "discuți."
 
-#: apps/accounts/services.py:199
 msgid "Your ward's age verification is expiring soon"
 msgstr "Verificarea vârstei copilului tău expiră curând"
 
-#: apps/accounts/services.py:200
 msgid "Your ward needs to re-verify their age soon to keep participating."
 msgstr ""
 "Copilul tău trebuie să își re-verifice vârsta curând ca să poată participa "
 "în continuare."
 
-#: apps/recommendations/views.py:25
 msgid "`interests` must be a list of type slugs."
 msgstr ""
 "„interests” trebuie să fie o listă de identificatori (slug) de tipuri."
 
-#: apps/safety/services.py:525
 msgid "You marked yourself as arrived at an activity"
 msgstr "Te-ai marcat ca sosit la o activitate"
 
-#: apps/safety/services.py:526
 msgid "You cancelled an activity you organised"
 msgstr "Ai anulat o activitate pe care ai organizat-o"
 
-#: apps/safety/services.py:527
 msgid "You sent a connection request"
 msgstr "Ai trimis o cerere de conectare"
 
-#: apps/safety/services.py:528
 msgid "You accepted a connection"
 msgstr "Ai acceptat o conexiune"
 
-#: apps/safety/services.py:529
 msgid "You removed a connection"
 msgstr "Ai eliminat o conexiune"
 
-#: apps/safety/services.py:530
 msgid "You created a group"
 msgstr "Ai creat un grup"
 
-#: apps/safety/services.py:531
 msgid "You joined a group"
 msgstr "Te-ai alăturat unui grup"
 
-#: apps/safety/services.py:532
 msgid "You left a group"
 msgstr "Ai părăsit un grup"
 
-#: apps/safety/services.py:533
 msgid "You archived a group"
 msgstr "Ai arhivat un grup"
 
-#: apps/safety/services.py:534
 msgid "You sent a guardian-link invitation"
 msgstr "Ai trimis o invitație de legătură cu un tutore"
 
-#: apps/safety/services.py:535
 msgid "You accepted a guardian link"
 msgstr "Ai acceptat o legătură cu un tutore"
 
-#: apps/safety/services.py:536
 msgid "You uploaded a photo"
 msgstr "Ai încărcat o fotografie"
 
-#: apps/safety/services.py:537
 msgid "You deleted a photo"
 msgstr "Ai șters o fotografie"
 
-#: apps/safety/services.py:538
 msgid "You uploaded a file to a conversation"
 msgstr "Ai încărcat un fișier într-o conversație"
 
-#: apps/safety/services.py:539
 msgid "You deleted an attachment"
 msgstr "Ai șters un atașament"
 
-#: apps/safety/services.py:540
 msgid "You started a conversation"
 msgstr "Ai început o conversație"
 
-#: apps/safety/services.py:541
 msgid "You started a group conversation"
 msgstr "Ai început o conversație de grup"
 
-#: apps/safety/services.py:542
 msgid "You joined a conversation"
 msgstr "Te-ai alăturat unei conversații"
 
-#: apps/safety/services.py:543
 msgid "You declined a conversation invitation"
 msgstr "Ai refuzat o invitație la conversație"
 
-#: apps/safety/services.py:544
 msgid "You set up message encryption"
 msgstr "Ai configurat criptarea mesajelor"
 
-#: apps/safety/services.py:545
 msgid "You verified a contact's safety number"
 msgstr "Ai verificat numărul de siguranță al unui contact"
 
-#: apps/safety/services.py:546
 msgid "You left a conversation"
 msgstr "Ai părăsit o conversație"
 
-#: apps/safety/services.py:547
 msgid "You updated your notification settings"
 msgstr "Ți-ai actualizat setările de notificare"
 
-#: apps/safety/services.py:548
 msgid "You deleted one of your posts"
 msgstr "Ai șters una dintre postările tale"
 
-#: apps/safety/services.py:549
 msgid "You blocked someone"
 msgstr "Ai blocat pe cineva"
 
-#: apps/safety/services.py:550
 msgid "You unblocked someone"
 msgstr "Ai deblocat pe cineva"
 
-#: apps/social/services.py:211
+#| msgid ""
+#| "You need verified, consented participation and a cohort to create a group."
+msgid ""
+"You must be verified (consented if a minor) and in a cohort to save "
+"searches."
+msgstr ""
+"Trebuie să fii verificat (cu consimțământ dacă ești minor) și să faci parte "
+"dintr-o cohortă pentru a salva căutări."
+
+#| msgid "A group needs an activity type or a category."
+msgid "Choose exactly one of an activity type or a category."
+msgstr "Alege exact unul dintre un tip de activitate sau o categorie."
+
+#| msgid "That reaction isn't available."
+msgid "That activity type isn't available."
+msgstr "Acel tip de activitate nu este disponibil."
+
+msgid "Invalid cost band."
+msgstr "Categorie de cost invalidă."
+
+msgid "You're saving searches too quickly; please try again later."
+msgstr "Salvezi căutări prea repede; te rugăm să încerci din nou mai târziu."
+
+msgid "You've reached the maximum number of saved searches."
+msgstr "Ai atins numărul maxim de căutări salvate."
+
+msgid "You've already saved this search."
+msgstr "Ai salvat deja această căutare."
+
+#| msgid "You can only delete your own messages."
+msgid "You can only remove your own saved searches."
+msgstr "Poți elimina doar propriile căutări salvate."
+
 msgid "User cannot create activities (needs verification/consent + a cohort)."
 msgstr ""
 "Utilizatorul nu poate crea activități (necesită verificare/consimțământ + o "
 "cohortă)."
 
-#: apps/social/services.py:214
 msgid "Only children's activities can be guardian-accompanied."
 msgstr "Doar activitățile copiilor pot fi însoțite de un tutore."
 
-#: apps/social/services.py:217 apps/social/services.py:391
 msgid "Minimum to happen can't be more than the capacity."
 msgstr "Minimul pentru a se ține nu poate depăși capacitatea."
 
-#: apps/social/services.py:224
 msgid "That place isn't available to organise an activity at yet."
 msgstr "Acel loc nu este încă disponibil pentru a organiza o activitate."
 
-#: apps/social/services.py:260 apps/social/tests/test_i18n.py:14
+#| msgid "Invalid attendance choice."
+msgid "Invalid cadence."
+msgstr "Cadență invalidă."
+
+#| msgid ""
+#| "User cannot create activities (needs verification/consent + a cohort)."
+msgid ""
+"User cannot create activity series (needs verification/consent + a cohort)."
+msgstr ""
+"Utilizatorul nu poate crea serii de activități (necesită "
+"verificare/consimțământ + o cohortă)."
+
+#| msgid "Only the activity owner may cancel it."
+msgid "Only the series owner may pause it."
+msgstr "Doar proprietarul seriei o poate pune pe pauză."
+
+#| msgid "Only an open activity can be edited."
+msgid "Only an active series can be paused."
+msgstr "Doar o serie activă poate fi pusă pe pauză."
+
+#| msgid "Only the activity owner may edit it."
+msgid "Only the series owner may resume it."
+msgstr "Doar proprietarul seriei o poate relua."
+
+#| msgid "Only an open activity can be edited."
+msgid "Only a paused series can be resumed."
+msgstr "Doar o serie pusă pe pauză poate fi reluată."
+
+#| msgid "Only the activity owner may edit it."
+msgid "Only the series owner may end it."
+msgstr "Doar proprietarul seriei o poate încheia."
+
+msgid "This series has already ended."
+msgstr "Această serie s-a încheiat deja."
+
 msgid "User is not eligible to join this activity."
 msgstr "Utilizatorul nu este eligibil să se alăture acestei activități."
 
-#: apps/social/services.py:285 apps/social/tests/test_i18n.py:17
 msgid "The owner cannot leave their own activity."
 msgstr "Organizatorul nu poate părăsi propria activitate."
 
-#: apps/social/services.py:323
-msgid "Only the activity owner may cancel it."
+#| msgid "Only the activity owner may cancel it."
+msgid "Only the activity organiser may cancel it."
 msgstr "Doar organizatorul activității o poate anula."
 
-#: apps/social/services.py:325
 msgid "Only an open activity can be cancelled."
 msgstr "Doar o activitate deschisă poate fi anulată."
 
-#: apps/social/services.py:329
 #, python-format
 msgid "“%(title)s” was cancelled by the organiser."
 msgstr "„%(title)s” a fost anulată de organizator."
 
-#: apps/social/services.py:336
 msgid "An activity was cancelled"
 msgstr "O activitate a fost anulată"
 
-#: apps/social/services.py:375
-msgid "Only the activity owner may edit it."
+#| msgid "Only the activity owner may edit it."
+msgid "Only the activity organiser may edit it."
 msgstr "Doar organizatorul activității o poate edita."
 
-#: apps/social/services.py:377
 msgid "Only an open activity can be edited."
 msgstr "Doar o activitate deschisă poate fi editată."
 
-#: apps/social/services.py:379
 msgid "This activity has already started and can no longer be edited."
 msgstr "Această activitate a început deja și nu mai poate fi editată."
 
-#: apps/social/services.py:385
 msgid "End time cannot be before the start time."
 msgstr "Ora de final nu poate fi înaintea orei de început."
 
-#: apps/social/services.py:388
 msgid "Capacity cannot be lower than the current number of participants."
 msgstr ""
 "Capacitatea nu poate fi mai mică decât numărul actual de participanți."
 
-#: apps/social/services.py:408
 #, python-format
 msgid "“%(title)s” now starts %(when)s."
 msgstr "„%(title)s” începe acum %(when)s."
 
-#: apps/social/services.py:418
 msgid "An activity you joined changed"
 msgstr "O activitate la care te-ai alăturat s-a schimbat"
 
-#: apps/social/services.py:446
 #, python-format
 msgid "You were admitted to “%(title)s”."
 msgstr "Ai fost admis la „%(title)s”."
 
-#: apps/social/services.py:456
 msgid ""
 " New here? Say a quick hello in the thread and check the meetup logistics — "
 "the group is glad you joined."
@@ -239,175 +257,197 @@ msgstr ""
 " Ești nou aici? Salută pe scurt în conversație și verifică detaliile "
 "întâlnirii — grupul se bucură că te-ai alăturat."
 
-#: apps/social/services.py:484 apps/social/services.py:505
 msgid "This membership is not awaiting a join vote."
 msgstr "Această calitate de membru nu așteaptă un vot de aderare."
 
-#: apps/social/services.py:488
 msgid "Only current members may vote on join requests."
 msgstr "Doar membrii actuali pot vota cererile de aderare."
 
-#: apps/social/services.py:501
-msgid "Only the activity owner may override."
+#| msgid "Only the activity owner may override."
+msgid "Only the activity organiser may override."
 msgstr "Doar organizatorul activității poate decide direct."
 
-#: apps/social/services.py:503
 msgid "Owner override is disabled for this activity."
 msgstr ""
 "Decizia directă a organizatorului este dezactivată pentru această "
 "activitate."
 
-#: apps/social/services.py:568
+#| msgid "Only the activity owner may cancel it."
+msgid "Only the activity owner may grant co-organiser rights."
+msgstr ""
+"Doar organizatorul activității poate acorda drepturi de co-organizator."
+
+msgid "Co-organisers are only available on adult activities."
+msgstr "Co-organizatorii sunt disponibili doar la activitățile pentru adulți."
+
+msgid "A co-organiser must be a current member of this activity."
+msgstr "Un co-organizator trebuie să fie membru actual al acestei activități."
+
+msgid "You're now a co-organiser"
+msgstr "Ești acum co-organizator"
+
+#, python-format
+msgid ""
+"You can now help run \"%(title)s\" — edit details, admit members, and post "
+"announcements."
+msgstr ""
+"Acum poți ajuta la coordonarea „%(title)s” — editezi detalii, admiți membri "
+"și publici anunțuri."
+
+#| msgid "Only the activity owner may cancel it."
+msgid "Only the activity owner may change co-organiser rights."
+msgstr ""
+"Doar organizatorul activității poate modifica drepturile de co-organizator."
+
+msgid "That member is not a co-organiser."
+msgstr "Acel membru nu este co-organizator."
+
+msgid "Your co-organiser role was removed"
+msgstr "Rolul tău de co-organizator a fost eliminat"
+
+#, python-format
+msgid "You're still a member of \"%(title)s\"."
+msgstr "Ești în continuare membru al „%(title)s”."
+
+#| msgid "Only current members can post in the activity thread."
+msgid "Only the current organiser may hand off the activity."
+msgstr "Doar organizatorul actual poate preda activitatea."
+
+msgid "Ownership hand-off is only available on adult activities."
+msgstr ""
+"Predarea organizării este disponibilă doar la activitățile pentru adulți."
+
+msgid "You can only hand off to a current member of this activity."
+msgstr "Poți preda doar unui membru actual al acestei activități."
+
+#| msgid "From the organiser:"
+msgid "You're now the organiser"
+msgstr "Ești acum organizator"
+
+#, python-format
+msgid "\"%(title)s\" was handed over to you — you can now fully manage it."
+msgstr "„%(title)s” ți-a fost predată — acum o poți gestiona complet."
+
 msgid "Only current members can post in the activity thread."
 msgstr "Doar membrii actuali pot publica în conversația activității."
 
-#: apps/social/services.py:574 apps/social/services.py:893
-#: apps/social/services.py:1164
 msgid "Guardians accompany activities as read-only supervisors."
 msgstr ""
 "Tutorii însoțesc activitățile ca supraveghetori, doar cu acces de citire."
 
-#: apps/social/services.py:582
 msgid ""
 "This group's thread is announcement-only; the organiser posts updates here."
 msgstr ""
 "Conversația acestui grup este doar pentru anunțuri; organizatorul publică "
 "aici noutățile."
 
-#: apps/social/services.py:586 apps/social/services.py:1028
 msgid "Posting requires verified, consented participation."
 msgstr "Publicarea necesită participare verificată și cu consimțământ."
 
-#: apps/social/services.py:588 apps/social/services.py:592
-#: apps/social/services.py:887 apps/social/services.py:901
 msgid "This activity is no longer available."
 msgstr "Această activitate nu mai este disponibilă."
 
-#: apps/social/services.py:590 apps/social/services.py:796
-#: apps/social/services.py:897 apps/social/services.py:1036
 msgid "This conversation is closed."
 msgstr "Această conversație este închisă."
 
-#: apps/social/services.py:596
 msgid "You are posting too quickly; slow down."
 msgstr "Publici prea repede; încetinește."
 
-#: apps/social/services.py:605 apps/social/services.py:799
 msgid "Message rejected."
 msgstr "Mesaj respins."
 
-#: apps/social/services.py:641
 #, python-format
 msgid "%(who)s mentioned you"
 msgstr "%(who)s te-a menționat"
 
-#: apps/social/services.py:664 apps/social/services.py:671
+msgid "Share one thing at a time."
+msgstr "Partajează câte un lucru o dată."
+
+#| msgid "You can't reply to that message."
+msgid "You can't share that."
+msgstr "Nu poți partaja asta."
+
 msgid "You can't reply to that message."
 msgstr "Nu poți răspunde la acel mesaj."
 
-#: apps/social/services.py:770
 msgid "(message removed)"
 msgstr "(mesaj eliminat)"
 
-#: apps/social/services.py:787
 msgid "You can only edit your own messages."
 msgstr "Poți edita doar propriile mesaje."
 
-#: apps/social/services.py:789
 msgid "This message can't be edited."
 msgstr "Acest mesaj nu poate fi editat."
 
-#: apps/social/services.py:792
 msgid "Only current members can edit a message."
 msgstr "Doar membrii actuali pot edita un mesaj."
 
-#: apps/social/services.py:794
 msgid "Editing requires verified, consented participation."
 msgstr "Editarea necesită participare verificată și cu consimțământ."
 
-#: apps/social/services.py:816
 msgid "You can only delete your own messages."
 msgstr "Poți șterge doar propriile mesaje."
 
-#: apps/social/services.py:882
 msgid "That reaction isn't available."
 msgstr "Acea reacție nu este disponibilă."
 
-#: apps/social/services.py:884
 msgid "You can't react to that message."
 msgstr "Nu poți reacționa la acel mesaj."
 
-#: apps/social/services.py:890
 msgid "Only current members can react."
 msgstr "Doar membrii actuali pot reacționa."
 
-#: apps/social/services.py:895
 msgid "Reacting requires verified, consented participation."
 msgstr "Reacția necesită participare verificată și cu consimțământ."
 
-#: apps/social/services.py:905
 msgid "You are reacting too quickly; slow down."
 msgstr "Reacționezi prea repede; încetinește."
 
-#: apps/social/services.py:1026
 msgid "Only the organiser can post an announcement."
 msgstr "Doar organizatorul poate publica un anunț."
 
-#: apps/social/services.py:1034
 msgid "Only a current member can post an announcement."
 msgstr "Doar un membru actual poate publica un anunț."
 
-#: apps/social/services.py:1049
 #, python-format
 msgid "Group announcement: %(title)s"
 msgstr "Anunț de grup: %(title)s"
 
-#: apps/social/services.py:1049
 #, python-format
 msgid "Announcement: %(title)s"
 msgstr "Anunț: %(title)s"
 
-#: apps/social/services.py:1081
 msgid "Only current members can RSVP."
 msgstr "Doar membrii actuali pot confirma prezența."
 
-#: apps/social/services.py:1083
 msgid "Invalid attendance choice."
 msgstr "Opțiune de prezență invalidă."
 
-#: apps/social/services.py:1126
 msgid "A meetup is on"
 msgstr "O întâlnire se ține"
 
-#: apps/social/services.py:1127
 #, python-format
 msgid "“%(title)s” has enough people going — it's happening."
 msgstr "„%(title)s” are destui participanți — se ține."
 
-#: apps/social/services.py:1162
 msgid "Only current members can confirm a meetup."
 msgstr "Doar membrii actuali pot confirma o întâlnire."
 
-#: apps/social/services.py:1166
 msgid "You can only confirm a meetup after it has finished."
 msgstr "Poți confirma o întâlnire doar după ce s-a încheiat."
 
-#: apps/social/services.py:1243
 #, python-format
 msgid "%(type)s at %(place)s"
 msgstr "%(type)s la %(place)s"
 
-#: apps/social/services.py:1248
 #, python-format
 msgid " at %(place)s"
 msgstr " la %(place)s"
 
-#: apps/social/services.py:1249
 #, python-format
 msgid " on %(when)s"
 msgstr " pe %(when)s"
 
-#: apps/social/services.py:1251
 #, python-format
 msgid ""
 "A %(type)s meetup%(where)s%(when)s. Add any details below before you post."
@@ -415,237 +455,254 @@ msgstr ""
 "O întâlnire de %(type)s%(where)s%(when)s. Adaugă mai jos orice detalii "
 "înainte să publici."
 
-#: apps/social/services.py:1257
-msgid "Safety: meet in a public place and bring a friend."
-msgstr "Siguranță: întâlniți-vă într-un loc public și veniți cu un prieten."
+#| msgid "Safety: meet in a public place and bring a friend."
+msgid "Tip: meet in a public place and bring a friend."
+msgstr "Sfat: întâlniți-vă într-un loc public și veniți cu un prieten."
 
-#: apps/social/services.py:1293
 msgid "Only current members can mark themselves arrived."
 msgstr "Doar membrii actuali se pot marca drept ajunși."
 
-#: apps/social/services.py:1295
 msgid "Marking arrival requires verified, consented participation."
 msgstr "Marcarea sosirii necesită participare verificată și cu consimțământ."
 
-#: apps/social/services.py:1297
 msgid "You can only mark arrival for an active meetup."
 msgstr "Poți marca sosirea doar pentru o întâlnire activă."
 
-#: apps/social/services.py:1299
 msgid "Arrival can only be marked around the start time."
 msgstr "Sosirea poate fi marcată doar în jurul orei de început."
 
-#: apps/social/services.py:1310
 msgid "Someone arrived"
 msgstr "Cineva a ajuns"
 
-#: apps/social/services.py:1311
 #, python-format
 msgid "%(name)s is at “%(title)s”."
 msgstr "%(name)s este la „%(title)s”."
 
-#: apps/social/services.py:1383
 msgid "User cannot propose places (needs verification/consent)."
 msgstr ""
 "Utilizatorul nu poate propune locuri (necesită verificare/consimțământ)."
 
-#: apps/social/services.py:1414
 msgid "Only staff may publish a place proposal."
 msgstr "Doar personalul poate publica o propunere de loc."
 
-#: apps/social/services.py:1416 apps/social/services.py:1435
 msgid "This proposal is not pending."
 msgstr "Această propunere nu este în așteptare."
 
-#: apps/social/services.py:1433
 msgid "Only staff may reject a place proposal."
 msgstr "Doar personalul poate respinge o propunere de loc."
 
-#: apps/social/services.py:1565
 msgid ""
 "You need verified, consented participation and a cohort to create a group."
 msgstr ""
 "Ai nevoie de participare verificată, cu consimțământ, și de o cohortă pentru"
 " a crea un grup."
 
-#: apps/social/services.py:1570
 msgid "Group creation is not available for your account."
 msgstr "Crearea de grupuri nu este disponibilă pentru contul tău."
 
-#: apps/social/services.py:1573
 msgid "You can only create a group in your own cohort."
 msgstr "Poți crea un grup doar în propria cohortă."
 
-#: apps/social/services.py:1578
 msgid "Groups for under-18s are created by staff only."
 msgstr "Grupurile pentru cei sub 18 ani sunt create doar de personal."
 
-#: apps/social/services.py:1580
 msgid "Minor groups are not enabled on this deployment."
 msgstr "Grupurile pentru minori nu sunt activate în această implementare."
 
-#: apps/social/services.py:1585
 msgid "Group creation is not available for that cohort."
 msgstr "Crearea de grupuri nu este disponibilă pentru acea cohortă."
 
-#: apps/social/services.py:1587
 msgid "Group creation is staff-only on this deployment for now."
 msgstr ""
 "Deocamdată, crearea de grupuri este permisă doar personalului în această "
 "implementare."
 
-#: apps/social/services.py:1598
 msgid "A group needs an activity type or a category."
 msgstr "Un grup are nevoie de un tip de activitate sau de o categorie."
 
-#: apps/social/services.py:1603
 msgid "You are creating groups too quickly; slow down."
 msgstr "Creezi grupuri prea repede; încetinește."
 
-#: apps/social/services.py:1643
 msgid "No such group."
 msgstr "Nu există un astfel de grup."
 
-#: apps/social/services.py:1645
 msgid "Joining requires verified, consented participation."
 msgstr "Alăturarea necesită participare verificată și cu consimțământ."
 
-#: apps/social/services.py:1647
 msgid "This group is no longer available."
 msgstr "Acest grup nu mai este disponibil."
 
-#: apps/social/services.py:1654
 msgid "You are joining groups too quickly; slow down."
 msgstr "Te alături la grupuri prea repede; încetinește."
 
-#: apps/social/services.py:1683
 msgid "The owner cannot leave their own group; archive it instead."
 msgstr ""
 "Organizatorul nu își poate părăsi propriul grup; arhivează-l în schimb."
 
-#: apps/social/services.py:1762
 msgid "Only the owner or staff can archive a group."
 msgstr "Doar organizatorul sau personalul pot arhiva un grup."
 
-#: apps/web/templates/web/_activity_card.html:3
 #, python-format
 msgid "%(pct)s%% match"
 msgstr "%(pct)s%% potrivire"
 
-#: apps/web/templates/web/_activity_card.html:10
-#: apps/web/templates/web/activity_detail.html:12
 msgid "beginners welcome"
 msgstr "începătorii sunt bineveniți"
 
-#: apps/web/templates/web/_activity_card.html:12
-#: apps/web/templates/web/activity_detail.html:14
 msgid "guardian-accompanied"
 msgstr "însoțit de tutore"
 
-#: apps/web/templates/web/_activity_card.html:15
-#: apps/web/templates/web/activity_detail.html:17
-#: apps/web/templates/web/activity_edit.html:7
-#: apps/web/templates/web/wards.html:18
 msgid "a place"
 msgstr "un loc"
 
-#: apps/web/templates/web/_activity_card.html:15
 #, python-format
 msgid "%(km)s km away"
 msgstr "la %(km)s km distanță"
 
-#: apps/web/templates/web/_near_me.html:7
+msgid "Inbox"
+msgstr "Mesaje și alerte"
+
+msgid "Alerts"
+msgstr "Alerte"
+
+msgid "Messages"
+msgstr "Mesaje"
+
+msgid "Connections"
+msgstr "Conexiuni"
+
 msgid "Sort by nearest"
 msgstr "Sortează după cele mai apropiate"
 
-#: apps/web/templates/web/_near_me.html:8
 msgid "Sorted by distance from you."
 msgstr "Sortate după distanța față de tine."
 
-#: apps/web/templates/web/_near_me.html:9
 msgid "Clear"
 msgstr "Șterge"
 
-#: apps/web/templates/web/_near_me.html:10
 msgid "Your location is used only to sort this page &mdash; never stored."
 msgstr ""
 "Locația ta este folosită doar pentru a sorta această pagină &mdash; nu este "
 "stocată niciodată."
 
-#: apps/web/templates/web/_post.html:5
 #, python-format
 msgid "Message from %(author)s at %(at)s"
 msgstr "Mesaj de la %(author)s la %(at)s"
 
-#: apps/web/templates/web/_post.html:8
 #, python-format
 msgid "Replying to %(author)s"
 msgstr "Răspuns către %(author)s"
 
-#: apps/web/templates/web/_post.html:12
 msgid "Link to this message"
 msgstr "Link către acest mesaj"
 
-#: apps/web/templates/web/_post.html:13
 msgid "(edited)"
 msgstr "(editat)"
 
-#: apps/web/templates/web/_post.html:20
+msgid "Activity"
+msgstr "Activitate"
+
+msgid "Place"
+msgstr "Loc"
+
+#| msgid "Events"
+msgid "Event"
+msgstr "Eveniment"
+
+#| msgid "This activity is no longer available."
+msgid "This shared item is no longer available."
+msgstr "Acest element partajat nu mai este disponibil."
+
 msgid "This temporary picture has disappeared."
 msgstr "Această imagine temporară a dispărut."
 
-#: apps/web/templates/web/_post.html:23
 msgid "shared image"
 msgstr "imagine partajată"
 
-#: apps/web/templates/web/_post.html:25 apps/web/templates/web/_post.html:30
 #, python-format
 msgid "disappears %(when)s"
 msgstr "dispare %(when)s"
 
-#: apps/web/templates/web/_post.html:29
 msgid "(PDF &mdash; downloads)"
 msgstr "(PDF &mdash; se descarcă)"
 
-#: apps/web/templates/web/_post.html:38
 msgid "react"
 msgstr "reacționează"
 
-#: apps/web/templates/web/_post.html:42
 #, python-format
 msgid "react %(emoji)s"
 msgstr "reacționează %(emoji)s"
 
-#: apps/web/templates/web/_post.html:50
 msgid "Reply"
 msgstr "Răspunde"
 
-#: apps/web/templates/web/_post.html:52
 msgid "Edit"
 msgstr "Editează"
 
-#: apps/web/templates/web/_post.html:55
 msgid "Delete your message? This can\\'t be undone."
 msgstr "Ștergi mesajul? Această acțiune nu poate fi anulată."
 
-#: apps/web/templates/web/_post.html:56
 msgid "Delete"
 msgstr "Șterge"
 
-#: apps/web/templates/web/_post.html:61
 msgid "Edit your message"
 msgstr "Editează mesajul"
 
-#: apps/web/templates/web/_post.html:62
 msgid "Save edit"
 msgstr "Salvează editarea"
 
-#: apps/web/templates/web/access_preferences.html:3
-#: apps/web/templates/web/access_preferences.html:5
+msgid "Share"
+msgstr "Partajează"
+
+#| msgid "View your activity log"
+msgid "To one of your activity chats"
+msgstr "Către una dintre conversațiile tale de activitate"
+
+#| msgid "(optional)"
+msgid "Add a note (optional)"
+msgstr "Adaugă o notă (opțional)"
+
+msgid ""
+"To share in a private message, copy this page's link and paste it in the "
+"chat."
+msgstr ""
+"Pentru a partaja într-un mesaj privat, copiază linkul acestei pagini și "
+"lipește-l în conversație."
+
+#| msgid "No account?"
+msgid "Account"
+msgstr "Cont"
+
+#| msgid "review"
+msgid "Overview"
+msgstr "Prezentare generală"
+
+msgid "Profile"
+msgstr "Profil"
+
+msgid "Interests"
+msgstr "Interese"
+
+msgid "Display"
+msgstr "Afișare"
+
+msgid "Privacy &amp; data"
+msgstr "Confidențialitate &amp; date"
+
+#| msgid "My donations"
+msgid "Donations"
+msgstr "Donații"
+
+msgid "Guardians"
+msgstr "Tutori"
+
+#| msgid "Save settings"
+msgid "Settings"
+msgstr "Setări"
+
 msgid "Access preferences"
 msgstr "Preferințe de accesibilitate"
 
-#: apps/web/templates/web/access_preferences.html:6
 msgid ""
 "A setting you choose &mdash; we never track or infer it. We only ever show "
 "what a venue's open data records, and places with unknown accessibility are "
@@ -655,19 +712,15 @@ msgstr ""
 "Afișăm doar ceea ce înregistrează datele deschise ale unei locații, iar "
 "locurile cu accesibilitate necunoscută îți sunt în continuare afișate."
 
-#: apps/web/templates/web/access_preferences.html:10
 msgid "I need step-free access"
 msgstr "Am nevoie de acces fără trepte"
 
-#: apps/web/templates/web/access_preferences.html:14
 msgid "I need an accessible toilet"
 msgstr "Am nevoie de o toaletă accesibilă"
 
-#: apps/web/templates/web/access_preferences.html:18
 msgid "I prefer quiet / sensory-friendly places"
 msgstr "Prefer locuri liniștite / prietenoase senzorial"
 
-#: apps/web/templates/web/access_preferences.html:19
 msgid ""
 "Saved for the future &mdash; venue data for this isn't available yet, so it "
 "doesn't change what you see."
@@ -675,127 +728,156 @@ msgstr ""
 "Salvat pentru viitor &mdash; datele locațiilor pentru aceasta nu sunt încă "
 "disponibile, deci nu schimbă ceea ce vezi."
 
-#: apps/web/templates/web/access_preferences.html:21
 msgid "Save preferences"
 msgstr "Salvează preferințele"
 
-#: apps/web/templates/web/activities.html:3
-#: apps/web/templates/web/activity_detail.html:5 templates/base.html:16
-#: templates/base.html:20
 msgid "Activities"
 msgstr "Activități"
 
-#: apps/web/templates/web/activities.html:5
-#: apps/web/templates/web/group_detail.html:73
 msgid "Upcoming activities"
 msgstr "Activități viitoare"
 
-#: apps/web/templates/web/activities.html:6
-#, python-format
-msgid "In your cohort (<strong>%(cohort)s</strong>)."
-msgstr "În cohorta ta (<strong>%(cohort)s</strong>)."
+msgid "Shown to people your age only."
+msgstr "Afișat doar persoanelor de vârsta ta."
 
-#: apps/web/templates/web/activities.html:7
 msgid "Organise one →"
 msgstr "Organizează una →"
 
-#: apps/web/templates/web/activities.html:8
-#: apps/web/templates/web/home.html:39
 msgid "show all"
 msgstr "arată tot"
 
-#: apps/web/templates/web/activities.html:8
 msgid "(beginners-welcome only)"
 msgstr "(doar pentru începători)"
 
-#: apps/web/templates/web/activities.html:8
-#: apps/web/templates/web/home.html:39
 msgid "beginners welcome only"
 msgstr "doar pentru începători"
 
-#: apps/web/templates/web/activities.html:11
-#: apps/web/templates/web/home.html:43
+msgid "Search activities, venues, types…"
+msgstr "Caută activități, locații, tipuri…"
+
+#| msgid "Your activities"
+msgid "Search activities"
+msgstr "Caută activități"
+
+msgid "Search"
+msgstr "Caută"
+
+msgid "clear"
+msgstr "șterge"
+
+#, python-format
+msgid "Results for “%(q)s” — soonest first."
+msgstr "Rezultate pentru „%(q)s” — cele mai apropiate primele."
+
+#| msgid "No upcoming activities here yet."
+msgid "No upcoming activities match your search."
+msgstr "Nicio activitate viitoare nu corespunde căutării tale."
+
 msgid "Nothing upcoming yet. Be the first to organise something!"
 msgstr "Nimic în curând încă. Fii primul care organizează ceva!"
 
-#: apps/web/templates/web/activity_detail.html:17
-#: apps/web/templates/web/event_detail.html:9
 #, python-format
 msgid "at <a href=\"%(place_url)s\">%(place_name)s</a>"
 msgstr "la <a href=\"%(place_url)s\">%(place_name)s</a>"
 
-#: apps/web/templates/web/activity_detail.html:19
 msgid "Part of:"
 msgstr "Face parte din:"
 
-#: apps/web/templates/web/activity_detail.html:23
+#, python-format
+msgid ""
+"Enjoying this crowd?\n"
+"    <a href=\"%(group_create_url)s?city=%(city)s&amp;type=%(type)s\">Start a standing group</a> so it keeps happening."
+msgstr ""
+"Îți place acest grup de oameni?\n"
+"    <a href=\"%(group_create_url)s?city=%(city)s&amp;type=%(type)s\">Pornește un grup permanent</a> ca să se întâmple în continuare."
+
 msgid "Accessibility:"
 msgstr "Accesibilitate:"
 
-#: apps/web/templates/web/activity_detail.html:24
 #, python-format
 msgid "Organised by %(owner_name)s."
 msgstr "Organizat de %(owner_name)s."
 
-#: apps/web/templates/web/activity_detail.html:25
-#: apps/web/templates/web/report.html:3
 msgid "Report"
 msgstr "Raportează"
 
-#: apps/web/templates/web/activity_detail.html:28
 #, python-format
 msgid "This activity is %(status_display)s."
 msgstr "Această activitate este %(status_display)s."
 
-#: apps/web/templates/web/activity_detail.html:29
 msgid "The organiser called it off &mdash; see your alerts for any details."
 msgstr "Organizatorul a anulat-o &mdash; vezi alertele tale pentru detalii."
 
-#: apps/web/templates/web/activity_detail.html:34
 msgid "Organiser tools"
 msgstr "Instrumente pentru organizator"
 
-#: apps/web/templates/web/activity_detail.html:36
 msgid "Edit details"
 msgstr "Editează detaliile"
 
-#: apps/web/templates/web/activity_detail.html:39
 msgid "Cancel this activity? Every member will be notified."
 msgstr "Anulezi această activitate? Fiecare membru va fi notificat."
 
-#: apps/web/templates/web/activity_detail.html:41
 msgid "Cancel this activity"
 msgstr "Anulează această activitate"
 
-#: apps/web/templates/web/activity_detail.html:43
 msgid "Optional: why (members will see this)"
 msgstr "Opțional: de ce (membrii vor vedea asta)"
 
-#: apps/web/templates/web/activity_detail.html:44
 msgid "Cancel activity"
 msgstr "Anulează activitatea"
 
-#: apps/web/templates/web/activity_detail.html:51
+#| msgid "Organiser tools"
+msgid "Organisers"
+msgstr "Organizatori"
+
+msgid ""
+"A co-organiser can edit details, admit members, and post announcements. Hand"
+" the activity over to keep it going if you step away."
+msgstr ""
+"Un co-organizator poate edita detalii, admite membri și publica anunțuri. "
+"Predă activitatea ca să continue dacă te retragi."
+
+#| msgid "From the organiser:"
+msgid "co-organiser"
+msgstr "co-organizator"
+
+#| msgid "From the organiser:"
+msgid "Remove co-organiser"
+msgstr "Elimină co-organizatorul"
+
+#| msgid "Make one?"
+msgid "Make co-organiser"
+msgstr "Fă co-organizator"
+
+msgid ""
+"Hand this activity over? They become the organiser and you become a regular "
+"member."
+msgstr ""
+"Predai această activitate? Cealaltă persoană devine organizator, iar tu "
+"devii membru obișnuit."
+
+msgid "Hand over"
+msgstr "Predă"
+
 msgid "You're a member"
 msgstr "Ești membru"
 
-#: apps/web/templates/web/activity_detail.html:51
 msgid "(owner)"
 msgstr "(organizator)"
 
-#: apps/web/templates/web/activity_detail.html:54
+#| msgid "From the organiser:"
+msgid "(co-organiser)"
+msgstr "(co-organizator)"
+
 msgid "Leave"
 msgstr "Părăsește"
 
-#: apps/web/templates/web/activity_detail.html:58
 msgid "I've arrived"
 msgstr "Am ajuns"
 
-#: apps/web/templates/web/activity_detail.html:59
 msgid "Tells the group you're here &mdash; no location shared."
 msgstr "Anunță grupul că ești aici &mdash; nu se partajează nicio locație."
 
-#: apps/web/templates/web/activity_detail.html:62
 #, python-format
 msgid ""
 "You marked yourself here at %(arrival_time)s &mdash; your group was "
@@ -804,16 +886,13 @@ msgstr ""
 "Te-ai marcat ca prezent la %(arrival_time)s &mdash; grupul tău a fost "
 "notificat."
 
-#: apps/web/templates/web/activity_detail.html:65
 #, python-format
 msgid "Coming: <strong>%(going)s</strong> of %(total)s"
 msgstr "Vin: <strong>%(going)s</strong> din %(total)s"
 
-#: apps/web/templates/web/activity_detail.html:70
 msgid "It's on"
 msgstr "Se ține"
 
-#: apps/web/templates/web/activity_detail.html:72
 #, python-format
 msgid "needs %(n)s more to happen"
 msgid_plural "needs %(n)s more to happen"
@@ -821,88 +900,64 @@ msgstr[0] "mai e nevoie de încă %(n)s ca să se țină"
 msgstr[1] "mai e nevoie de încă %(n)s ca să se țină"
 msgstr[2] "mai e nevoie de încă %(n)s ca să se țină"
 
-#: apps/web/templates/web/activity_detail.html:77
 msgid "I'm coming"
 msgstr "Vin"
 
-#: apps/web/templates/web/activity_detail.html:80
 msgid "Can't make it"
 msgstr "Nu pot ajunge"
 
-#: apps/web/templates/web/activity_detail.html:84
-msgid "clear"
-msgstr "șterge"
-
-#: apps/web/templates/web/activity_detail.html:90
 msgid "Did this meet up?"
 msgstr "A avut loc întâlnirea?"
 
-#: apps/web/templates/web/activity_detail.html:91
 #, python-format
 msgid "Confirmed: <strong>%(confirmed)s</strong> of %(total)s"
 msgstr "Confirmat: <strong>%(confirmed)s</strong> din %(total)s"
 
-#: apps/web/templates/web/activity_detail.html:95
 msgid "you confirmed"
 msgstr "ai confirmat"
 
-#: apps/web/templates/web/activity_detail.html:96
 msgid "undo"
 msgstr "anulează"
 
-#: apps/web/templates/web/activity_detail.html:99
 msgid "Yes, we met up"
 msgstr "Da, ne-am întâlnit"
 
-#: apps/web/templates/web/activity_detail.html:103
 msgid "Pending join requests"
 msgstr "Cereri de alăturare în așteptare"
 
-#: apps/web/templates/web/activity_detail.html:107
 #, python-format
 msgid "%(approvals)s/%(needed)s approvals"
 msgstr "%(approvals)s/%(needed)s aprobări"
 
-#: apps/web/templates/web/activity_detail.html:109
 msgid "approve,deny"
 msgstr "aprobă,respinge"
 
-#: apps/web/templates/web/activity_detail.html:109
 #, python-format
 msgid "you voted %(vote)s"
 msgstr "ai votat %(vote)s"
 
-#: apps/web/templates/web/activity_detail.html:112
 msgid "Approve"
 msgstr "Aprobă"
 
-#: apps/web/templates/web/activity_detail.html:115
 msgid "Deny"
 msgstr "Respinge"
 
-#: apps/web/templates/web/activity_detail.html:118
 msgid "No pending requests."
 msgstr "Nicio cerere în așteptare."
 
-#: apps/web/templates/web/activity_detail.html:121
 msgid "Your join request is pending a vote of current members."
 msgstr "Cererea ta de alăturare așteaptă votul membrilor actuali."
 
-#: apps/web/templates/web/activity_detail.html:124
 msgid "Request to join"
 msgstr "Cere să te alături"
 
-#: apps/web/templates/web/activity_detail.html:126
-msgid "This activity is for a different age cohort, so you can't join it."
-msgstr ""
-"Această activitate este pentru o altă cohortă de vârstă, așa că nu te poți "
-"alătura."
+#| msgid "This activity is no longer available."
+msgid "This activity isn't open to your account."
+msgstr "Această activitate nu este deschisă contului tău."
 
-#: apps/web/templates/web/activity_detail.html:132
 msgid "Welcome to your first meetup!"
 msgstr "Bun venit la prima ta întâlnire!"
 
-#: apps/web/templates/web/activity_detail.html:133
 msgid ""
 "Say a quick hello in the thread below, check the\n"
 "      logistics, and turn up &mdash; the group is glad you joined."
@@ -910,11 +965,9 @@ msgstr ""
 "Spune un scurt salut în conversația de mai jos, verifică\n"
 "      detaliile organizatorice și prezintă-te &mdash; grupul se bucură că te-ai alăturat."
 
-#: apps/web/templates/web/activity_detail.html:140
 msgid "Feeling unsafe or uncomfortable?"
 msgstr "Te simți nesigur sau inconfortabil?"
 
-#: apps/web/templates/web/activity_detail.html:141
 msgid ""
 "You can leave any time &mdash; nothing is shared about you for\n"
 "      doing so. If something doesn't feel right, tell a moderator, or talk to a grown-up you trust."
@@ -922,74 +975,54 @@ msgstr ""
 "Poți pleca oricând &mdash; nu se partajează nimic despre tine dacă\n"
 "      faci asta. Dacă ceva nu pare în regulă, anunță un moderator sau vorbește cu un adult în care ai încredere."
 
-#: apps/web/templates/web/activity_detail.html:144
 msgid "People you can talk to:"
 msgstr "Persoane cu care poți vorbi:"
 
-#: apps/web/templates/web/activity_detail.html:152
 msgid "I feel unsafe &mdash; tell someone now"
 msgstr "Mă simt în nesiguranță &mdash; spune-i cuiva acum"
 
-#: apps/web/templates/web/activity_detail.html:155
 msgid "Report with details"
 msgstr "Raportează cu detalii"
 
-#: apps/web/templates/web/activity_detail.html:157
 msgid "Leave this activity"
 msgstr "Părăsește această activitate"
 
-#: apps/web/templates/web/activity_detail.html:164
 msgid "Meetup logistics"
 msgstr "Detalii organizatorice"
 
-#: apps/web/templates/web/activity_detail.html:165
 msgid "Where to meet:"
 msgstr "Unde ne întâlnim:"
 
-#: apps/web/templates/web/activity_detail.html:166
 msgid "What to bring:"
 msgstr "Ce să aduci:"
 
-#: apps/web/templates/web/activity_detail.html:167
 msgid "From the organiser:"
 msgstr "De la organizator:"
 
-#: apps/web/templates/web/activity_detail.html:171
 msgid "Members"
 msgstr "Membri"
 
-#: apps/web/templates/web/activity_detail.html:173
 msgid "owner"
 msgstr "organizator"
 
-#: apps/web/templates/web/activity_detail.html:173
-#: apps/web/templates/web/home.html:12
 msgid "guardian"
 msgstr "tutore"
 
-#: apps/web/templates/web/activity_detail.html:174
-#: apps/web/templates/web/group_detail.html:49
-#: apps/web/templates/web/group_detail.html:57
 msgid "report"
 msgstr "raportează"
 
-#: apps/web/templates/web/activity_detail.html:179
 msgid "connect"
 msgstr "conectează-te"
 
-#: apps/web/templates/web/activity_detail.html:182
 msgid "block"
 msgstr "blochează"
 
-#: apps/web/templates/web/activity_detail.html:189
 msgid "Catch up"
 msgstr "Pune-te la curent"
 
-#: apps/web/templates/web/activity_detail.html:189
 msgid "what you missed"
 msgstr "ce ai ratat"
 
-#: apps/web/templates/web/activity_detail.html:190
 #, python-format
 msgid "%(going)s of %(total)s coming &middot; %(member_count)s member."
 msgid_plural ""
@@ -998,54 +1031,57 @@ msgstr[0] "%(going)s din %(total)s vin &middot; %(member_count)s membru."
 msgstr[1] "%(going)s din %(total)s vin &middot; %(member_count)s membri."
 msgstr[2] "%(going)s din %(total)s vin &middot; %(member_count)s de membri."
 
-#: apps/web/templates/web/activity_detail.html:191
 msgid "Latest announcements:"
 msgstr "Cele mai recente anunțuri:"
 
-#: apps/web/templates/web/activity_detail.html:193
 msgid "Logistics mentioned:"
 msgstr "Detalii organizatorice menționate:"
 
-#: apps/web/templates/web/activity_detail.html:195
 msgid "Most recent:"
 msgstr "Cele mai recente:"
 
-#: apps/web/templates/web/activity_detail.html:200
-#: apps/web/templates/web/messages.html:3
-#: apps/web/templates/web/messages.html:6 templates/base.html:27
-msgid "Messages"
-msgstr "Mesaje"
-
-#: apps/web/templates/web/activity_detail.html:203
-#: apps/web/templates/web/group_detail.html:37
 msgid "Post an announcement"
 msgstr "Publică un anunț"
 
-#: apps/web/templates/web/activity_detail.html:203
 msgid "(pinned; notifies every member)"
 msgstr "(fixat; notifică fiecare membru)"
 
-#: apps/web/templates/web/activity_detail.html:205
 msgid "Meet at the north gate; bring water; time changed..."
 msgstr "Ne întâlnim la poarta de nord; aduceți apă; ora s-a schimbat..."
 
-#: apps/web/templates/web/activity_detail.html:206
 msgid "Post announcement"
 msgstr "Publică anunțul"
 
-#: apps/web/templates/web/activity_detail.html:210
 msgid "Pinned announcements"
 msgstr "Anunțuri fixate"
 
-#: apps/web/templates/web/activity_detail.html:221
+#| msgid "Back to conversations"
+msgid "Search this conversation…"
+msgstr "Caută în această conversație…"
+
+#| msgid "Back to conversations"
+msgid "Search this conversation"
+msgstr "Caută în această conversație"
+
+msgid "Search results"
+msgstr "Rezultatele căutării"
+
+#, python-format
+msgid "%(counter)s message matches."
+msgid_plural "%(counter)s messages match."
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
+msgid "Nothing matched."
+msgstr "Niciun rezultat."
+
 msgid "Older messages"
 msgstr "Mesaje mai vechi"
 
-#: apps/web/templates/web/activity_detail.html:229
 msgid "No messages yet. Say hello!"
 msgstr "Niciun mesaj încă. Salută!"
 
-#: apps/web/templates/web/activity_detail.html:236
 #, python-format
 msgid ""
 "Replying to\n"
@@ -1054,45 +1090,34 @@ msgstr ""
 "Răspunzi la\n"
 "          %(reply_author)s"
 
-#: apps/web/templates/web/activity_detail.html:238
 msgid "cancel"
 msgstr "anulează"
 
-#: apps/web/templates/web/activity_detail.html:241
 msgid "Write a message"
 msgstr "Scrie un mesaj"
 
-#: apps/web/templates/web/activity_detail.html:244
 msgid "Attach a photo or PDF"
 msgstr "Atașează o fotografie sau un PDF"
 
-#: apps/web/templates/web/activity_detail.html:248
 msgid "Make this picture temporary"
 msgstr "Fă această imagine temporară"
 
-#: apps/web/templates/web/activity_detail.html:250
 msgid "Keep"
 msgstr "Păstrează"
 
-#: apps/web/templates/web/activity_detail.html:251
 #, python-format
 msgid "Disappear after %(label)s"
 msgstr "Dispare după %(label)s"
 
-#: apps/web/templates/web/activity_detail.html:253
-#: apps/web/templates/web/group_detail.html:66
 msgid "Post"
 msgstr "Publică"
 
-#: apps/web/templates/web/activity_detail.html:257
 msgid "Notify the people I&nbsp;<span class=\"mention\">@mention</span>"
 msgstr "Anunță persoanele pe care&nbsp;<span class=\"mention\">@menționez</span>"
 
-#: apps/web/templates/web/activity_detail.html:258
 msgid "(off = they just see the tag)"
 msgstr "(dezactivat = văd doar eticheta)"
 
-#: apps/web/templates/web/activity_detail.html:259
 msgid ""
 "Photos &amp; PDFs are private to\n"
 "        members and safety-screened on upload. No video."
@@ -1100,29 +1125,23 @@ msgstr ""
 "Fotografiile &amp; PDF-urile sunt private pentru\n"
 "        membri și verificate pentru siguranță la încărcare. Fără video."
 
-#: apps/web/templates/web/activity_detail.html:267
 msgid "Photos"
 msgstr "Fotografii"
 
-#: apps/web/templates/web/activity_detail.html:268
 msgid "Private to members &mdash; location metadata is stripped on upload."
 msgstr ""
 "Private pentru membri &mdash; metadatele de localizare sunt eliminate la "
 "încărcare."
 
-#: apps/web/templates/web/activity_detail.html:272
 msgid "Add photo"
 msgstr "Adaugă fotografie"
 
-#: apps/web/templates/web/activity_detail.html:276
 msgid "thread photo"
 msgstr "fotografie din conversație"
 
-#: apps/web/templates/web/activity_detail.html:277
 msgid "No photos yet."
 msgstr "Nicio fotografie încă."
 
-#: apps/web/templates/web/activity_detail.html:281
 msgid ""
 "The messages and photos are private to members. Request to join to take "
 "part."
@@ -1130,32 +1149,25 @@ msgstr ""
 "Mesajele și fotografiile sunt private pentru membri. Solicită să te alături "
 "pentru a participa."
 
-#: apps/web/templates/web/activity_detail.html:321
 msgid "Replying to"
 msgstr "Răspunzi la"
 
-#: apps/web/templates/web/activity_detail.html:342
 msgid "New announcement posted."
 msgstr "Anunț nou publicat."
 
-#: apps/web/templates/web/activity_detail.html:358
 msgid "Message sent."
 msgstr "Mesaj trimis."
 
-#: apps/web/templates/web/activity_edit.html:3
 #, python-format
 msgid "Edit %(activity_title)s"
 msgstr "Editează %(activity_title)s"
 
-#: apps/web/templates/web/activity_edit.html:5
 msgid "&larr; Back to activity"
 msgstr "&larr; Înapoi la activitate"
 
-#: apps/web/templates/web/activity_edit.html:6
 msgid "Edit activity"
 msgstr "Editează activitatea"
 
-#: apps/web/templates/web/activity_edit.html:7
 #, python-format
 msgid ""
 "You can change the title, description, time, end time, capacity and the meetup\n"
@@ -1170,78 +1182,58 @@ msgstr ""
 "  (<strong>%(type_name)s</strong>) sunt fixe odată ce o activitate există.\n"
 "  Schimbarea orei de început îi anunță din nou pe toți cei care s-au alăturat."
 
-#: apps/web/templates/web/activity_edit.html:15
 msgid "Save changes"
 msgstr "Salvează modificările"
 
-#: apps/web/templates/web/activity_edit.html:16
 msgid "Cancel"
 msgstr "Anulează"
 
-#: apps/web/templates/web/activity_form.html:3
-#: apps/web/templates/web/activity_form.html:8
-#: apps/web/templates/web/home.html:24
 msgid "Organise an activity"
 msgstr "Organizează o activitate"
 
-#: apps/web/templates/web/activity_form.html:9
+msgid "It will be visible to people your age only."
+msgstr "Va fi vizibilă doar persoanelor de vârsta ta."
+
 #, python-format
 msgid ""
-"<p class=\"muted\">It will be visible only to people in your cohort\n"
-"  (<strong>%(cohort)s</strong>).</p>"
+"Running the same meetup regularly?\n"
+"  <a href=\"%(series_url)s\">Set up a recurring series</a> instead."
 msgstr ""
-"<p class=\"muted\">Va fi vizibilă doar pentru persoanele din cohorta ta\n"
-"  (<strong>%(cohort)s</strong>).</p>"
+"Organizezi aceeași întâlnire în mod regulat?\n"
+"  <a href=\"%(series_url)s\">Configurează o serie recurentă</a> în schimb."
 
-#: apps/web/templates/web/activity_form.html:17
 msgid "Find a place on the map"
 msgstr "Găsește un loc pe hartă"
 
-#: apps/web/templates/web/activity_form.html:20
 msgid "Locating…"
 msgstr "Se localizează…"
 
-#: apps/web/templates/web/activity_form.html:21
 msgid "Location unavailable"
 msgstr "Locație indisponibilă"
 
-#: apps/web/templates/web/activity_form.html:21
 msgid "Find places near me"
 msgstr "Găsește locuri lângă mine"
 
-#: apps/web/templates/web/activity_form.html:22
 msgid "Your location is used only to sort the map &mdash; never stored."
 msgstr ""
 "Locația ta este folosită doar pentru a sorta harta &mdash; nu este stocată "
 "niciodată."
 
-#: apps/web/templates/web/activity_form.html:26
 msgid "Choose this place"
 msgstr "Alege acest loc"
 
-#: apps/web/templates/web/activity_form.html:27
 msgid "Selected place:"
 msgstr "Loc selectat:"
 
-#: apps/web/templates/web/activity_form.html:28
-#: apps/web/templates/web/place_detail.html:6
-#: apps/web/templates/web/places_list.html:18
-#: apps/web/templates/web/places_pending.html:9
 msgid "Unnamed place"
 msgstr "Loc fără nume"
 
-#: apps/web/templates/web/activity_form.html:34
 msgid "Create activity"
 msgstr "Creează activitatea"
 
-#: apps/web/templates/web/activity_log.html:3
-#: apps/web/templates/web/activity_log.html:5
-#: apps/web/templates/web/my_privacy.html:58
-#: apps/web/templates/web/profile.html:79
 msgid "Your activity log"
 msgstr "Jurnalul tău de activitate"
 
-#: apps/web/templates/web/activity_log.html:6
 msgid ""
 "A plain-language record of the safety-relevant actions you've taken on the "
 "platform. Only you can see this page. We keep this for safety and to be "
@@ -1252,11 +1244,9 @@ msgstr ""
 " pentru siguranță și pentru a fi transparenți cu tine — nu este folosit "
 "niciodată pentru a te profila sau a te clasifica."
 
-#: apps/web/templates/web/activity_log.html:15
 msgid "You haven't taken any recorded actions yet."
 msgstr "Nu ai făcut încă nicio acțiune înregistrată."
 
-#: apps/web/templates/web/activity_log.html:19
 msgid ""
 "Looking for moderation decisions about you, or reports you've filed? Those "
 "are on your safety record."
@@ -1264,17 +1254,12 @@ msgstr ""
 "Cauți decizii de moderare despre tine sau rapoarte pe care le-ai trimis? "
 "Acestea sunt în evidența ta de siguranță."
 
-#: apps/web/templates/web/activity_log.html:20
-#: apps/web/templates/web/my_privacy.html:54
 msgid "View your safety record"
 msgstr "Vezi evidența ta de siguranță"
 
-#: apps/web/templates/web/campaigns.html:3
-#: apps/web/templates/web/campaigns.html:5
 msgid "Campaigns"
 msgstr "Campanii"
 
-#: apps/web/templates/web/campaigns.html:6
 msgid ""
 "Specific things your donation can support. Earmark a gift to one, or give to"
 " the general fund. Figures shown in EUR."
@@ -1283,59 +1268,84 @@ msgstr ""
 "donație către una dintre ele sau contribuie la fondul general. Sumele sunt "
 "afișate în EUR."
 
-#: apps/web/templates/web/campaigns.html:12
 #, python-format
 msgid "raised %(raised)s of %(goal)s EUR goal"
 msgstr "strânși %(raised)s din obiectivul de %(goal)s EUR"
 
-#: apps/web/templates/web/campaigns.html:16
 #, python-format
 msgid "Raised %(raised)s of %(goal)s EUR goal."
 msgstr "Strânși %(raised)s din obiectivul de %(goal)s EUR."
 
-#: apps/web/templates/web/campaigns.html:17
 msgid "Donate to this campaign"
 msgstr "Donează pentru această campanie"
 
-#: apps/web/templates/web/campaigns.html:20
 msgid "No active campaigns right now."
 msgstr "Nicio campanie activă momentan."
 
-#: apps/web/templates/web/campaigns.html:21
 msgid "Support the general fund"
 msgstr "Susține fondul general"
 
-#: apps/web/templates/web/communities.html:3
-#: apps/web/templates/web/communities.html:5
-#: apps/web/templates/web/community_detail.html:5 templates/base.html:21
-msgid "Communities"
-msgstr "Comunități"
+#| msgid "Communities"
+msgid "Communities & groups"
+msgstr "Comunități și grupuri"
 
-#: apps/web/templates/web/communities.html:6
+#| msgid "Communities"
+msgid "Communities &amp; groups"
+msgstr "Comunități &amp; grupuri"
+
 msgid "Explore as a 3D graph"
 msgstr "Explorează ca grafic 3D"
 
-#: apps/web/templates/web/communities.html:7
-msgid "like ,"
-msgstr "ca ,"
+#| msgid "+ Create a group"
+msgid "+ Start a group"
+msgstr "+ Pornește un grup"
 
-#: apps/web/templates/web/communities.html:7
-#, python-format
 msgid ""
-"Find activities by type and place &mdash; e.g. <em>%(like_prefix)s</em>\n"
-"  &ldquo;Cluj-Napoca Football&rdquo;. A community is just a named list of upcoming activities to\n"
-"  go to; there's no group to join and no members list."
+"One place for people who do the same thing near you. <strong>Groups</strong> are standing\n"
+"  communities you can join — each has its own conversation. The rest appear automatically once enough\n"
+"  activities of a type happen in your city. No member lists, no follower counts."
 msgstr ""
-"Găsește activități după tip și loc &mdash; de ex. <em>%(like_prefix)s</em>\n"
-"  &ldquo;Cluj-Napoca Football&rdquo;. O comunitate este doar o listă denumită de activități viitoare la\n"
-"  care poți merge; nu există niciun grup la care să te alături și nicio listă de membri."
+"Un singur loc pentru oamenii care fac același lucru lângă tine. <strong>Grupurile</strong> sunt comunități\n"
+"  permanente la care te poți alătura — fiecare are propria conversație. Restul apar automat odată ce se întâmplă suficiente\n"
+"  activități de un anumit tip în orașul tău. Fără liste de membri, fără numărători de urmăritori."
 
-#: apps/web/templates/web/communities.html:15
+msgid "Groups — join and belong"
+msgstr "Grupuri — alătură-te și aparține"
+
+#, python-format
+msgid "All %(category)s"
+msgstr "Toate: %(category)s"
+
+msgid "No groups here yet."
+msgstr "Niciun grup aici încă."
+
+msgid "Start the first one."
+msgstr "Pornește-l pe primul."
+
+msgid "Previous"
+msgstr "Anterior"
+
+#, python-format
+msgid "Page %(number)s of %(num_pages)s"
+msgstr "Pagina %(number)s din %(num_pages)s"
+
+msgid "Next"
+msgstr "Următor"
+
+msgid "Around your city"
+msgstr "Prin orașul tău"
+
+msgid ""
+"Auto-detected from real upcoming activities &mdash; a named list of things to go to,\n"
+"  with nothing to join."
+msgstr ""
+"Detectate automat din activități viitoare reale &mdash; o listă denumită de lucruri la care să mergi,\n"
+"  fără nimic la care să te alături."
+
 #, python-format
 msgid "All %(category)s &middot; %(area)s"
 msgstr "Toate %(category)s &middot; %(area)s"
 
-#: apps/web/templates/web/communities.html:19
 msgid ""
 "No communities yet &mdash; they appear automatically once there are enough\n"
 "    upcoming activities of a type in your city."
@@ -1343,32 +1353,12 @@ msgstr ""
 "Nicio comunitate încă &mdash; apar automat odată ce există suficiente\n"
 "    activități viitoare de un anumit tip în orașul tău."
 
-#: apps/web/templates/web/communities.html:25
-#: apps/web/templates/web/groups.html:24
-msgid "Previous"
-msgstr "Anterior"
-
-#: apps/web/templates/web/communities.html:26
-#: apps/web/templates/web/groups.html:25
-#, python-format
-msgid "Page %(number)s of %(num_pages)s"
-msgstr "Pagina %(number)s din %(num_pages)s"
-
-#: apps/web/templates/web/communities.html:27
-#: apps/web/templates/web/groups.html:26
-msgid "Next"
-msgstr "Următor"
-
-#: apps/web/templates/web/communities_graph.html:3
-#: apps/web/templates/web/communities_graph.html:6
 msgid "Community graph"
 msgstr "Graficul comunităților"
 
-#: apps/web/templates/web/communities_graph.html:5
 msgid "Communities (list)"
 msgstr "Comunități (listă)"
 
-#: apps/web/templates/web/communities_graph.html:7
 msgid ""
 "Drag to rotate, scroll to zoom, click a node to focus, click a community to "
 "open it."
@@ -1376,35 +1366,30 @@ msgstr ""
 "Trage pentru a roti, derulează pentru a mări, apasă pe un nod pentru a-l "
 "focaliza, apasă pe o comunitate pentru a o deschide."
 
-#: apps/web/templates/web/communities_graph.html:10
 msgid "Search the graph"
 msgstr "Caută în grafic"
 
-#: apps/web/templates/web/communities_graph.html:11
 msgid "Search the graph…"
 msgstr "Caută în grafic…"
 
-#: apps/web/templates/web/communities_graph.html:13
 msgid "show counts"
 msgstr "arată numărul"
 
-#: apps/web/templates/web/communities_graph.html:17
 msgid "The graph needs JavaScript"
 msgstr "Graficul necesită JavaScript"
 
-#: apps/web/templates/web/communities_graph.html:18
 msgid "browse the list instead"
 msgstr "răsfoiește lista în schimb"
 
-#: apps/web/templates/web/communities_graph.html:21
 msgid "All communities (text list &mdash; always works)"
 msgstr "Toate comunitățile (listă text &mdash; funcționează mereu)"
 
-#: apps/web/templates/web/communities_graph.html:25
 msgid "No communities yet."
 msgstr "Nicio comunitate încă."
 
-#: apps/web/templates/web/community_detail.html:7
+msgid "Communities"
+msgstr "Comunități"
+
 #, python-format
 msgid ""
 "Upcoming\n"
@@ -1415,7 +1400,6 @@ msgstr ""
 "  de %(type_name)s\n"
 "  în %(area)s &mdash; cele mai apropiate primele."
 
-#: apps/web/templates/web/community_detail.html:9
 #, python-format
 msgid ""
 "Upcoming\n"
@@ -1426,28 +1410,16 @@ msgstr ""
 "  de %(category)s\n"
 "  în %(area)s &mdash; cele mai apropiate primele."
 
-#: apps/web/templates/web/community_detail.html:13
 #, python-format
 msgid "Join the standing group: %(title)s"
 msgstr "Alătură-te grupului permanent: %(title)s"
 
-#: apps/web/templates/web/community_detail.html:19
-#: apps/web/templates/web/group_detail.html:77
 msgid "No upcoming activities here right now."
 msgstr "Nicio activitate viitoare aici momentan."
 
-#: apps/web/templates/web/community_detail.html:20
-#: apps/web/templates/web/group_detail.html:78
 msgid "Organise one"
 msgstr "Organizează una"
 
-#: apps/web/templates/web/connections.html:3
-#: apps/web/templates/web/connections.html:6
-#: apps/web/templates/web/profile.html:37 templates/base.html:28
-msgid "Connections"
-msgstr "Conexiuni"
-
-#: apps/web/templates/web/connections.html:7
 msgid ""
 "People you've shared an activity with. Connect to chat privately &mdash;\n"
 "  it's the same end-to-end encrypted messaging, just easier to find each other."
@@ -1455,75 +1427,68 @@ msgstr ""
 "Persoane cu care ai participat la o activitate. Conectează-te pentru a discuta privat &mdash;\n"
 "  este aceeași mesagerie criptată integral, doar mai ușor de găsit unii pe alții."
 
-#: apps/web/templates/web/connections.html:12
 msgid "Search people you've met"
 msgstr "Caută persoane pe care le-ai cunoscut"
 
-#: apps/web/templates/web/connections.html:14
 msgid "Search someone you've met by name..."
 msgstr "Caută după nume pe cineva pe care l-ai cunoscut..."
 
-#: apps/web/templates/web/connections.html:15
-msgid "Search"
-msgstr "Caută"
-
-#: apps/web/templates/web/connections.html:19
-msgid "Search results"
-msgstr "Rezultatele căutării"
-
-#: apps/web/templates/web/connections.html:26
 msgid "Connect"
 msgstr "Conectează-te"
 
-#: apps/web/templates/web/connections.html:32
 msgid "No matches among people you've shared an activity with."
 msgstr ""
 "Niciun rezultat printre persoanele cu care ai participat la o activitate."
 
-#: apps/web/templates/web/connections.html:37
 msgid "Requests to you"
 msgstr "Cereri către tine"
 
-#: apps/web/templates/web/connections.html:43
-#: apps/web/templates/web/home.html:14
 msgid "Accept"
 msgstr "Acceptă"
 
-#: apps/web/templates/web/connections.html:47
-#: apps/web/templates/web/home.html:16
 msgid "Decline"
 msgstr "Refuză"
 
-#: apps/web/templates/web/connections.html:55
 msgid "Sent requests"
 msgstr "Cereri trimise"
 
-#: apps/web/templates/web/connections.html:58
 msgid "pending"
 msgstr "în așteptare"
 
-#: apps/web/templates/web/connections.html:60
 msgid "Withdraw"
 msgstr "Retrage"
 
-#: apps/web/templates/web/connections.html:67
 msgid "Your connections"
 msgstr "Conexiunile tale"
 
-#: apps/web/templates/web/connections.html:74
-#: apps/web/templates/web/profile.html:50
+#| msgid "Your connections"
+msgid "Filter your connections"
+msgstr "Filtrează-ți conexiunile"
+
+#| msgid "Your connections"
+msgid "Filter your connections…"
+msgstr "Filtrează-ți conexiunile…"
+
+msgid "Filter"
+msgstr "Filtrează"
+
 msgid "Message"
 msgstr "Mesaj"
 
-#: apps/web/templates/web/connections.html:77
 msgid "Remove this connection?"
 msgstr "Elimini această conexiune?"
 
-#: apps/web/templates/web/connections.html:79
 msgid "Remove"
 msgstr "Elimină"
 
-#: apps/web/templates/web/connections.html:85
+#, python-format
+#| msgid "Page %(number)s of %(num_pages)s"
+msgid "Page %(n)s of %(total)s"
+msgstr "Pagina %(n)s din %(total)s"
+
+msgid "No connections match that filter."
+msgstr "Nicio conexiune nu corespunde acelui filtru."
+
 msgid ""
 "No connections yet. Go to an activity you're in and connect with the people there,\n"
 "    or search for someone above."
@@ -1531,12 +1496,9 @@ msgstr ""
 "Nicio conexiune încă. Mergi la o activitate la care participi și conectează-te cu persoanele de acolo,\n"
 "    sau caută pe cineva mai sus."
 
-#: apps/web/templates/web/display_preferences.html:3
-#: apps/web/templates/web/display_preferences.html:5
 msgid "Display settings"
 msgstr "Setări de afișare"
 
-#: apps/web/templates/web/display_preferences.html:6
 msgid ""
 "Choose how the site looks. Your choice is saved on this device only (a small"
 " functional cookie) and applies whether or not you're signed in. By default "
@@ -1547,68 +1509,51 @@ msgstr ""
 "sau nu. În mod implicit, urmăm setările luminos/întunecat și de reducere a "
 "mișcării ale dispozitivului tău."
 
-#: apps/web/templates/web/display_preferences.html:10
 msgid "Theme"
 msgstr "Temă"
 
-#: apps/web/templates/web/display_preferences.html:11
-#: apps/web/templates/web/display_preferences.html:26
 msgid "Match my device"
 msgstr "Potrivește dispozitivul meu"
 
-#: apps/web/templates/web/display_preferences.html:12
 msgid "Light"
 msgstr "Luminos"
 
-#: apps/web/templates/web/display_preferences.html:13
 msgid "Dark"
 msgstr "Întunecat"
 
-#: apps/web/templates/web/display_preferences.html:14
 msgid "High contrast"
 msgstr "Contrast ridicat"
 
-#: apps/web/templates/web/display_preferences.html:18
 msgid "Text size"
 msgstr "Mărimea textului"
 
-#: apps/web/templates/web/display_preferences.html:19
 msgid "Normal"
 msgstr "Normal"
 
-#: apps/web/templates/web/display_preferences.html:20
 msgid "Large"
 msgstr "Mare"
 
-#: apps/web/templates/web/display_preferences.html:21
 msgid "Larger"
 msgstr "Mai mare"
 
-#: apps/web/templates/web/display_preferences.html:25
 msgid "Motion"
 msgstr "Mișcare"
 
-#: apps/web/templates/web/display_preferences.html:27
 msgid "Reduce motion"
 msgstr "Redu mișcarea"
 
-#: apps/web/templates/web/display_preferences.html:28
 msgid "Full motion"
 msgstr "Mișcare completă"
 
-#: apps/web/templates/web/display_preferences.html:31
 msgid "Save display settings"
 msgstr "Salvează setările de afișare"
 
-#: apps/web/templates/web/donate.html:3
 msgid "Support us"
 msgstr "Susține-ne"
 
-#: apps/web/templates/web/donate.html:5
 msgid "Support the project"
 msgstr "Susține proiectul"
 
-#: apps/web/templates/web/donate.html:6
 msgid ""
 "This is a <strong>nonprofit</strong>, open-source platform &mdash; no ads, no\n"
 "  behavioural tracking, nothing sold. It runs on donations that cover EU hosting, storage and\n"
@@ -1618,11 +1563,9 @@ msgstr ""
 "  urmărire comportamentală, fără nimic de vânzare. Funcționează din donații care acoperă găzduirea în UE, stocarea și\n"
 "  instrumentele de siguranță."
 
-#: apps/web/templates/web/donate.html:11
 msgid "Donate"
 msgstr "Donează"
 
-#: apps/web/templates/web/donate.html:13
 msgid ""
 "You'll be taken to a secure checkout &mdash; no card data ever touches this "
 "app."
@@ -1630,31 +1573,24 @@ msgstr ""
 "Vei fi direcționat către o pagină de plată securizată &mdash; datele "
 "cardului nu ajung niciodată în această aplicație."
 
-#: apps/web/templates/web/donate.html:14
 msgid "See where donations go"
 msgstr "Vezi unde ajung donațiile"
 
-#: apps/web/templates/web/donate.html:15
 msgid "Active campaigns"
 msgstr "Campanii active"
 
-#: apps/web/templates/web/event_detail.html:5
 msgid "&larr; Events"
 msgstr "&larr; Evenimente"
 
-#: apps/web/templates/web/event_detail.html:11
 msgid "Event website &rarr;"
 msgstr "Site-ul evenimentului &rarr;"
 
-#: apps/web/templates/web/event_detail.html:14
 msgid "Organise an activity to go together"
 msgstr "Organizează o activitate pentru a merge împreună"
 
-#: apps/web/templates/web/events.html:3 apps/web/templates/web/events.html:5
 msgid "What's happening"
 msgstr "Ce se întâmplă"
 
-#: apps/web/templates/web/events.html:6
 msgid ""
 "Upcoming events at places near you. Find one you like, then organise an "
 "activity to go together."
@@ -1662,7 +1598,6 @@ msgstr ""
 "Evenimente viitoare la locuri din apropierea ta. Găsește unul care îți "
 "place, apoi organizează o activitate ca să mergeți împreună."
 
-#: apps/web/templates/web/events.html:6
 #, python-format
 msgid ""
 "Filtered by <strong>%(activity_name)s</strong> &middot;\n"
@@ -1671,90 +1606,72 @@ msgstr ""
 "Filtrat după <strong>%(activity_name)s</strong> &middot;\n"
 "  <a href=\"%(clear_url)s\">șterge filtrul</a>."
 
-#: apps/web/templates/web/events.html:17
+#| msgid "Search results"
+msgid "Search events…"
+msgstr "Caută evenimente…"
+
+#| msgid "Search results"
+msgid "Search events"
+msgstr "Caută evenimente"
+
 msgid "No upcoming events yet."
 msgstr "Niciun eveniment viitor încă."
 
-#: apps/web/templates/web/group_detail.html:5
-#: apps/web/templates/web/group_form.html:5
-#: apps/web/templates/web/groups.html:3 apps/web/templates/web/groups.html:5
-#: apps/web/templates/web/messages.html:27 templates/base.html:22
 msgid "Groups"
 msgstr "Grupuri"
 
-#: apps/web/templates/web/group_detail.html:8
-#: apps/web/templates/web/groups.html:14
-#, python-format
-msgid "All %(category)s"
-msgstr "Toate: %(category)s"
-
-#: apps/web/templates/web/group_detail.html:17
 msgid "Leave group"
 msgstr "Părăsește grupul"
 
-#: apps/web/templates/web/group_detail.html:20
 msgid "Join group"
 msgstr "Alătură-te grupului"
 
-#: apps/web/templates/web/group_detail.html:24
 msgid "Archive this group? Its thread will be frozen."
 msgstr "Arhivezi acest grup? Conversația lui va fi înghețată."
 
-#: apps/web/templates/web/group_detail.html:25
 msgid "Archive group"
 msgstr "Arhivează grupul"
 
-#: apps/web/templates/web/group_detail.html:32
 #, python-format
 msgid "Members (%(count_n)s)"
 msgstr "Membri (%(count_n)s)"
 
-#: apps/web/templates/web/group_detail.html:39
 msgid "A pinned update for everyone..."
 msgstr "O actualizare fixată pentru toți..."
 
-#: apps/web/templates/web/group_detail.html:40
 msgid "Announce"
 msgstr "Anunță"
 
-#: apps/web/templates/web/group_detail.html:45
 msgid "Conversation"
 msgstr "Conversație"
 
-#: apps/web/templates/web/group_detail.html:61
 msgid "No messages yet."
 msgstr "Niciun mesaj încă."
 
-#: apps/web/templates/web/group_detail.html:65
 msgid "Write a message..."
 msgstr "Scrie un mesaj..."
 
-#: apps/web/templates/web/group_detail.html:69
 msgid "This group's thread is announcement-only."
 msgstr "Conversația acestui grup este doar pentru anunțuri."
 
-#: apps/web/templates/web/group_form.html:3
-#: apps/web/templates/web/group_form.html:6
 msgid "Create a group"
 msgstr "Creează un grup"
 
-#: apps/web/templates/web/group_form.html:7
+#| msgid ""
+#| "A standing group for a city + activity type. Your group is pinned to your own\n"
+#| "  cohort. (Groups for under-18s are staff-curated only.)"
 msgid ""
-"A standing group for a city + activity type. Your group is pinned to your own\n"
-"  cohort. (Groups for under-18s are staff-curated only.)"
+"A standing group for a city + activity type, visible to people your age."
 msgstr ""
-"Un grup permanent pentru un oraș + un tip de activitate. Grupul tău este fixat pe propria ta\n"
-"  cohortă. (Grupurile pentru cei sub 18 ani sunt curatoriate doar de echipă.)"
+"Un grup permanent pentru un oraș + un tip de activitate, vizibil persoanelor"
+" de vârsta ta."
 
-#: apps/web/templates/web/group_form.html:11
 msgid "Create group"
 msgstr "Creează grupul"
 
-#: apps/web/templates/web/groups.html:6
 msgid "+ Create a group"
 msgstr "+ Creează un grup"
 
-#: apps/web/templates/web/groups.html:7
 msgid ""
 "Standing groups in your area &mdash; e.g. &ldquo;Cluj-Napoca Football&rdquo;. Join one to\n"
 "  follow its upcoming activities and its conversation. There's no public member list."
@@ -1762,17 +1679,9 @@ msgstr ""
 "Grupuri permanente din zona ta &mdash; de exemplu &ldquo;Cluj-Napoca Fotbal&rdquo;. Alătură-te unuia ca să\n"
 "  urmărești activitățile lui viitoare și conversația lui. Nu există o listă publică de membri."
 
-#: apps/web/templates/web/groups.html:19
-msgid "No groups here yet."
-msgstr "Niciun grup aici încă."
-
-#: apps/web/templates/web/guardianship.html:3
-#: apps/web/templates/web/guardianship.html:5
-#: apps/web/templates/web/profile.html:77
 msgid "Your guardians"
 msgstr "Tutorii tăi"
 
-#: apps/web/templates/web/guardianship.html:6
 msgid ""
 "The adults registered as your parent/legal guardian, and exactly what each "
 "one can and cannot see about you. This page is for your information only."
@@ -1781,11 +1690,9 @@ msgstr ""
 "nu poate vedea fiecare despre tine. Această pagină este doar pentru "
 "informarea ta."
 
-#: apps/web/templates/web/guardianship.html:11
 msgid "What they can see about you"
 msgstr "Ce pot vedea despre tine"
 
-#: apps/web/templates/web/guardianship.html:13
 msgid ""
 "&#10003; Where and when your upcoming meetups are (place, time, activity "
 "type)."
@@ -1793,11 +1700,9 @@ msgstr ""
 "&#10003; Unde și când au loc întâlnirile tale viitoare (loc, oră, tip de "
 "activitate)."
 
-#: apps/web/templates/web/guardianship.html:14
 msgid "&#10003; An alert when you tap &ldquo;I've arrived&rdquo; at a meetup."
 msgstr "&#10003; O alertă când apeși &ldquo;Am ajuns&rdquo; la o întâlnire."
 
-#: apps/web/templates/web/guardianship.html:15
 msgid ""
 "&#10003; If they have set up secure messaging, they can read your group "
 "chats as a visible observer (you can see them in the chat)."
@@ -1805,7 +1710,6 @@ msgstr ""
 "&#10003; Dacă au configurat mesageria securizată, pot citi conversațiile "
 "tale de grup ca observator vizibil (îi poți vedea în conversație)."
 
-#: apps/web/templates/web/guardianship.html:16
 msgid ""
 "&#10007; They cannot read your activity threads, see your photos or who else"
 " is there, post as you, or join your activities. They are never in your "
@@ -1815,11 +1719,9 @@ msgstr ""
 "fotografiile tale sau cine mai participă, nu pot publica în numele tău și nu"
 " se pot alătura activităților tale. Nu fac niciodată parte din cohorta ta."
 
-#: apps/web/templates/web/guardianship.html:20
 msgid "No one is registered as your guardian."
 msgstr "Nimeni nu este înregistrat ca tutore al tău."
 
-#: apps/web/templates/web/guardianship.html:23
 msgid ""
 "This page doesn't have a &ldquo;remove&rdquo; button. To change\n"
 "    a guardianship link, talk to your guardian. If something feels wrong, use <strong>Report</strong> on an\n"
@@ -1829,20 +1731,16 @@ msgstr ""
 "    o legătură de tutelă, vorbește cu tutorele tău. Dacă ceva ți se pare în neregulă, folosește <strong>Raportează</strong> pe o\n"
 "    activitate sau persoană, sau părăsește activitatea."
 
-#: apps/web/templates/web/home.html:3
 msgid "Home"
 msgstr "Acasă"
 
-#: apps/web/templates/web/home.html:5
 #, python-format
 msgid "Hi %(name)s"
 msgstr "Salut, %(name)s"
 
-#: apps/web/templates/web/home.html:8
 msgid "Guardian requests"
 msgstr "Cereri de tutelă"
 
-#: apps/web/templates/web/home.html:9
 msgid ""
 "An adult has asked to be registered as your parent/guardian. Only accept if "
 "you recognise them."
@@ -1850,66 +1748,54 @@ msgstr ""
 "Un adult a cerut să fie înregistrat ca părinte/tutore al tău. Acceptă doar "
 "dacă îl recunoști."
 
-#: apps/web/templates/web/home.html:21
-#, python-format
-msgid ""
-"You're in the <strong>%(cohort)s</strong> cohort &mdash; you only\n"
-"  see activities for your cohort."
-msgstr ""
-"Faci parte din cohorta <strong>%(cohort)s</strong> &mdash; vezi\n"
-"  doar activitățile pentru cohorta ta."
+msgid "Everything here is filtered to people your age, automatically."
+msgstr "Totul de aici este filtrat automat la persoanele de vârsta ta."
 
-#: apps/web/templates/web/home.html:22
 msgid "Pick your interests"
 msgstr "Alege-ți interesele"
 
-#: apps/web/templates/web/home.html:22
 msgid "for better suggestions."
 msgstr "pentru sugestii mai bune."
 
-#: apps/web/templates/web/home.html:25
 msgid "Find a place"
 msgstr "Găsește un loc"
 
-#: apps/web/templates/web/home.html:28
+#| msgid "recurring"
+msgid "Recurring series"
+msgstr "Serii recurente"
+
+#| msgid "No such group."
+msgid "From your groups"
+msgstr "Din grupurile tale"
+
 msgid "Recommended for you"
 msgstr "Recomandate pentru tine"
 
-#: apps/web/templates/web/home.html:30
 msgid "No suggestions yet &mdash;"
 msgstr "Nicio sugestie încă &mdash;"
 
-#: apps/web/templates/web/home.html:30
 msgid "tell us what you like"
 msgstr "spune-ne ce îți place"
 
-#: apps/web/templates/web/home.html:31
 msgid "or browse upcoming activities below."
 msgstr "sau răsfoiește activitățile viitoare de mai jos."
 
-#: apps/web/templates/web/home.html:34
 msgid "Your activities"
 msgstr "Activitățile tale"
 
-#: apps/web/templates/web/home.html:38
-msgid "Upcoming in your cohort"
-msgstr "Viitoare în cohorta ta"
+#| msgid "Recommended for you"
+msgid "Upcoming for you"
+msgstr "Viitoare pentru tine"
 
-#: apps/web/templates/web/home.html:46
-msgid "What's happening near you"
-msgstr "Ce se întâmplă în apropierea ta"
+msgid "Events you may like"
+msgstr "Evenimente care ți-ar putea plăcea"
 
-#: apps/web/templates/web/home.html:46
 msgid "see all &rarr;"
 msgstr "vezi toate &rarr;"
 
-#: apps/web/templates/web/interests.html:3
-#: apps/web/templates/web/interests.html:5
-#: apps/web/templates/web/my_privacy.html:24
 msgid "Your interests"
 msgstr "Interesele tale"
 
-#: apps/web/templates/web/interests.html:6
 msgid ""
 "Pick what you'd like to do &mdash; we suggest activities for you from these (and the\n"
 "  activities you join). No tracking; only what you tell us here."
@@ -1917,15 +1803,19 @@ msgstr ""
 "Alege ce ți-ar plăcea să faci &mdash; îți sugerăm activități pe baza acestora (și a\n"
 "  activităților la care te alături). Fără urmărire; doar ce ne spui aici."
 
-#: apps/web/templates/web/interests.html:15
+#, python-format
+msgid "%(counter)s selected."
+msgid_plural "%(counter)s selected."
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
 msgid "Save interests"
 msgstr "Salvează interesele"
 
-#: apps/web/templates/web/landing.html:4
 msgid "Meet people. Do real things. In person."
 msgstr "Cunoaște oameni. Fă lucruri reale. În persoană."
 
-#: apps/web/templates/web/landing.html:5
 msgid ""
 "A nonprofit, text-first platform for organising in-person activities &mdash;"
 " sport, outdoor, reading, board &amp; video games, culture &mdash; at real "
@@ -1936,23 +1826,18 @@ msgstr ""
 " video, cultură &mdash; la locuri reale din apropierea ta. Fără fluxuri "
 "publice de fotografii, fără derulare nesfârșită, fără reclame."
 
-#: apps/web/templates/web/landing.html:7
 msgid "Get started"
 msgstr "Începe"
 
-#: apps/web/templates/web/landing.html:8
 msgid "Browse places"
 msgstr "Răsfoiește locuri"
 
-#: apps/web/templates/web/landing.html:11
 msgid "How it works"
 msgstr "Cum funcționează"
 
-#: apps/web/templates/web/landing.html:13
 msgid "1. Find a place &amp; people"
 msgstr "1. Găsește un loc &amp; oameni"
 
-#: apps/web/templates/web/landing.html:14
 msgid ""
 "Places are already on the map (courts, parks, libraries, cafes). Tell us "
 "your interests and we suggest activities for you nearby."
@@ -1960,11 +1845,9 @@ msgstr ""
 "Locurile sunt deja pe hartă (terenuri, parcuri, biblioteci, cafenele). "
 "Spune-ne interesele tale și îți sugerăm activități în apropiere."
 
-#: apps/web/templates/web/landing.html:15
 msgid "2. Join by vote"
 msgstr "2. Alătură-te prin vot"
 
-#: apps/web/templates/web/landing.html:16
 msgid ""
 "Ask to join an activity; current members vote you in (two-thirds by "
 "default). The group decides who joins."
@@ -1972,11 +1855,9 @@ msgstr ""
 "Cere să te alături unei activități; membrii actuali te votează (două treimi "
 "în mod implicit). Grupul decide cine se alătură."
 
-#: apps/web/templates/web/landing.html:17
 msgid "3. Organise &amp; chat"
 msgstr "3. Organizează &amp; conversează"
 
-#: apps/web/templates/web/landing.html:18
 msgid ""
 "Create your own meetup, post in its private thread, share photos, and chat "
 "live with members &mdash; text-first, always."
@@ -1985,7 +1866,6 @@ msgstr ""
 "fotografii și conversează în timp real cu membrii &mdash; text în primul "
 "rând, întotdeauna."
 
-#: apps/web/templates/web/landing.html:21
 msgid ""
 "Safe by design: people are grouped into age cohorts and only ever see and "
 "join activities within their own cohort &mdash; children interact only with "
@@ -1996,34 +1876,24 @@ msgstr ""
 "interacționează doar cu colegi de vârstă apropiată. Verificările de vârstă "
 "sunt simulate în această demonstrație."
 
-#: apps/web/templates/web/login.html:3 apps/web/templates/web/login.html:5
-#: apps/web/templates/web/login.html:9 apps/web/templates/web/register.html:11
-#: templates/base.html:41
 msgid "Log in"
 msgstr "Autentificare"
 
-#: apps/web/templates/web/login.html:11
 msgid "No account?"
 msgstr "Nu ai cont?"
 
-#: apps/web/templates/web/login.html:11 apps/web/templates/web/register.html:3
-#: apps/web/templates/web/register.html:9 templates/base.html:42
 msgid "Sign up"
 msgstr "Creează cont"
 
-#: apps/web/templates/web/messages.html:7
 msgid "End-to-end encrypted"
 msgstr "Criptat integral"
 
-#: apps/web/templates/web/messages.html:7
 msgid "end-to-end encrypted"
 msgstr "criptat integral"
 
-#: apps/web/templates/web/messages.html:9
 msgid "Private chats only you and the other people can read."
 msgstr "Conversații private pe care doar tu și ceilalți le puteți citi."
 
-#: apps/web/templates/web/messages.html:10
 msgid ""
 "You can only message people in your own age group, and they must accept your"
 " first message."
@@ -2031,71 +1901,73 @@ msgstr ""
 "Poți trimite mesaje doar persoanelor din propria ta grupă de vârstă, iar "
 "acestea trebuie să accepte primul tău mesaj."
 
-#: apps/web/templates/web/messages.html:16
 msgid "Setting up secure messaging&hellip;"
 msgstr "Se configurează mesageria securizată&hellip;"
 
-#: apps/web/templates/web/messages.html:25
+#| msgid "Search the graph…"
+msgid "Search chats…"
+msgstr "Caută în conversații…"
+
+#| msgid "Search results"
+msgid "Search chats"
+msgstr "Caută în conversații"
+
 msgid "All"
 msgstr "Toate"
 
-#: apps/web/templates/web/messages.html:26
 msgid "Direct"
 msgstr "Directe"
 
-#: apps/web/templates/web/messages.html:28
 msgid "Requests"
 msgstr "Cereri"
 
-#: apps/web/templates/web/messages.html:31
 msgid "Loading&hellip;"
 msgstr "Se încarcă&hellip;"
 
-#: apps/web/templates/web/messages.html:34
 msgid "New group &amp; device options"
 msgstr "Opțiuni grup nou &amp; dispozitiv"
 
-#: apps/web/templates/web/messages.html:36
 msgid "Usernames"
 msgstr "Nume de utilizator"
 
-#: apps/web/templates/web/messages.html:36
 msgid "(comma/space separated; 2+ = group)"
 msgstr "(separate prin virgulă/spațiu; 2+ = grup)"
 
-#: apps/web/templates/web/messages.html:37
 msgid "e.g. alex, sam"
 msgstr "de exemplu alex, sam"
 
-#: apps/web/templates/web/messages.html:38
 msgid "Group name"
 msgstr "Numele grupului"
 
-#: apps/web/templates/web/messages.html:38
 msgid "(optional)"
 msgstr "(opțional)"
 
-#: apps/web/templates/web/messages.html:39
 msgid "Trail crew"
 msgstr "Echipa de traseu"
 
-#: apps/web/templates/web/messages.html:41
 msgid "Start"
 msgstr "Începe"
 
-#: apps/web/templates/web/messages.html:44
 msgid "Guardian oversight"
 msgstr "Supraveghere de tutore"
 
-#: apps/web/templates/web/messages.html:45
+#| msgid ""
+#| "Conversations your child is in. Observing is read-only and visible to "
+#| "everyone in the chat."
 msgid ""
-"Conversations your child is in. Observing is read-only and visible to "
-"everyone in the chat."
+"Conversations of the person you look after. Observing is read-only and "
+"visible to everyone in the chat."
 msgstr ""
-"Conversațiile la care participă copilul tău. Observarea este doar pentru "
+"Conversațiile persoanei pe care o ai în grijă. Observarea este doar pentru "
 "citire și vizibilă tuturor din conversație."
 
-#: apps/web/templates/web/messages.html:48
+msgid "Start a standing group"
+msgstr "Pornește un grup permanent"
+
+msgid "A public, joinable community with its own conversation."
+msgstr ""
+"O comunitate publică, la care te poți alătura, cu propria conversație."
+
 msgid ""
 "Your private key lives only in this browser. Back it up (encrypted) to read "
 "your history on another device."
@@ -2103,60 +1975,55 @@ msgstr ""
 "Cheia ta privată există doar în acest browser. Fă o copie de rezervă "
 "(criptată) ca să îți citești istoricul pe alt dispozitiv."
 
-#: apps/web/templates/web/messages.html:49
 msgid "Back up my key"
 msgstr "Salvează copia cheii mele"
 
-#: apps/web/templates/web/messages.html:55
 msgid "Back to conversations"
 msgstr "Înapoi la conversații"
 
-#: apps/web/templates/web/messages.html:57
 msgid "Select a conversation"
 msgstr "Selectează o conversație"
 
-#: apps/web/templates/web/messages.html:59
+#| msgid "Search the graph…"
+msgid "Search in chat…"
+msgstr "Caută în conversație…"
+
+msgid "Search in this chat (on this device only)"
+msgstr "Caută în această conversație (doar pe acest dispozitiv)"
+
+msgid "Searches the decrypted messages on this device only"
+msgstr "Caută doar în mesajele decriptate de pe acest dispozitiv"
+
 msgid "Disappearing messages"
 msgstr "Mesaje care dispar"
 
-#: apps/web/templates/web/messages.html:61
 msgid "Off"
 msgstr "Dezactivat"
 
-#: apps/web/templates/web/messages.html:62
 msgid "1 hour"
 msgstr "1 oră"
 
-#: apps/web/templates/web/messages.html:63
 msgid "1 day"
 msgstr "1 zi"
 
-#: apps/web/templates/web/messages.html:64
 msgid "1 week"
 msgstr "1 săptămână"
 
-#: apps/web/templates/web/messages.html:65
 msgid "30 days"
 msgstr "30 de zile"
 
-#: apps/web/templates/web/messages.html:73
 msgid "Pick a conversation on the left, or start one with a connection."
 msgstr "Alege o conversație din stânga sau începe una cu o conexiune."
 
-#: apps/web/templates/web/messages.html:76
 msgid "Write an encrypted message&hellip;"
 msgstr "Scrie un mesaj criptat&hellip;"
 
-#: apps/web/templates/web/messages.html:77
 msgid "Send"
 msgstr "Trimite"
 
-#: apps/web/templates/web/my_donations.html:3
-#: apps/web/templates/web/my_donations.html:5 templates/base.html:30
 msgid "My donations"
 msgstr "Donațiile mele"
 
-#: apps/web/templates/web/my_donations.html:6
 msgid ""
 "Your own donation receipts. We never store card or payment details &mdash; "
 "only an amount, a date and an opaque reference."
@@ -2164,30 +2031,22 @@ msgstr ""
 "Propriile tale chitanțe de donație. Nu stocăm niciodată detalii despre card "
 "sau plată &mdash; doar o sumă, o dată și o referință opacă."
 
-#: apps/web/templates/web/my_donations.html:10
 msgid "recurring"
 msgstr "recurentă"
 
-#: apps/web/templates/web/my_donations.html:12
 #, python-format
 msgid "reference %(ref)s"
 msgstr "referință %(ref)s"
 
-#: apps/web/templates/web/my_donations.html:15
 msgid "You have no donations yet."
 msgstr "Nu ai încă nicio donație."
 
-#: apps/web/templates/web/my_donations.html:15
 msgid "Make one?"
 msgstr "Faci una?"
 
-#: apps/web/templates/web/my_privacy.html:3
-#: apps/web/templates/web/my_privacy.html:5
-#: apps/web/templates/web/profile.html:80
 msgid "What we know about you"
 msgstr "Ce știm despre tine"
 
-#: apps/web/templates/web/my_privacy.html:6
 msgid ""
 "Every kind of personal data we hold about you, in one place — with a link to"
 " change or remove each one. Only you can see this page."
@@ -2196,172 +2055,134 @@ msgstr ""
 " loc — cu un link pentru a schimba sau șterge fiecare. Doar tu poți vedea "
 "această pagină."
 
-#: apps/web/templates/web/my_privacy.html:8
 msgid "Your data"
 msgstr "Datele tale"
 
-#: apps/web/templates/web/my_privacy.html:12
-#: apps/web/templates/web/profile.html:61
 msgid "Age verification"
 msgstr "Verificarea vârstei"
 
-#: apps/web/templates/web/my_privacy.html:14
 #, python-format
 msgid "We hold a proven age band: <strong>%(band)s</strong>."
 msgstr "Deținem o grupă de vârstă dovedită: <strong>%(band)s</strong>."
 
-#: apps/web/templates/web/my_privacy.html:15
 #, python-format
 msgid "Verified via %(provider)s."
 msgstr "Verificat prin %(provider)s."
 
-#: apps/web/templates/web/my_privacy.html:16
 msgid ""
 "We store an age band only — never your date of birth or identity documents."
 msgstr ""
 "Stocăm doar o grupă de vârstă — niciodată data nașterii sau documentele de "
 "identitate."
 
-#: apps/web/templates/web/my_privacy.html:18
 msgid "Your age isn't verified yet."
 msgstr "Vârsta ta nu este încă verificată."
 
-#: apps/web/templates/web/my_privacy.html:20
 msgid "Manage age verification"
 msgstr "Gestionează verificarea vârstei"
 
-#: apps/web/templates/web/my_privacy.html:25
 #, python-format
 msgid "Activity types you've chosen: %(n)s."
 msgstr "Tipuri de activități alese: %(n)s."
 
-#: apps/web/templates/web/my_privacy.html:26
 msgid ""
 "Used only to suggest activities to you — never to profile or target you."
 msgstr ""
 "Folosite doar pentru a-ți sugera activități — niciodată pentru a te profila "
 "sau viza."
 
-#: apps/web/templates/web/my_privacy.html:27
 msgid "Edit your interests"
 msgstr "Editează-ți interesele"
 
-#: apps/web/templates/web/my_privacy.html:31
 msgid "Access needs"
 msgstr "Nevoi de accesibilitate"
 
-#: apps/web/templates/web/my_privacy.html:33
 msgid "You've set access preferences we use to label matching places."
 msgstr ""
 "Ai setat preferințe de accesibilitate pe care le folosim pentru a marca "
 "locurile potrivite."
 
-#: apps/web/templates/web/my_privacy.html:35
 msgid "You haven't set any access preferences."
 msgstr "Nu ai setat nicio preferință de accesibilitate."
 
-#: apps/web/templates/web/my_privacy.html:37
 msgid "Edit access needs"
 msgstr "Editează nevoile de accesibilitate"
 
-#: apps/web/templates/web/my_privacy.html:41
-#: apps/web/templates/web/notification_preferences.html:5
-#: apps/web/templates/web/notifications.html:3
-#: apps/web/templates/web/notifications.html:5
 msgid "Notifications"
 msgstr "Notificări"
 
-#: apps/web/templates/web/my_privacy.html:43
 #, python-format
 msgid "You've muted: %(kinds)s."
 msgstr "Ai dezactivat: %(kinds)s."
 
-#: apps/web/templates/web/my_privacy.html:45
 msgid "You haven't muted any notifications."
 msgstr "Nu ai dezactivat nicio notificare."
 
-#: apps/web/templates/web/my_privacy.html:47
 msgid "Safety and legal notices can never be muted."
 msgstr ""
 "Notificările de siguranță și cele legale nu pot fi dezactivate niciodată."
 
-#: apps/web/templates/web/my_privacy.html:48
 msgid "Manage notifications"
 msgstr "Gestionează notificările"
 
-#: apps/web/templates/web/my_privacy.html:52
-#: apps/web/templates/web/profile.html:78
-#: apps/web/templates/web/safety_record.html:3
-#: apps/web/templates/web/safety_record.html:5
 msgid "Your safety record"
 msgstr "Evidența dvs. de siguranță"
 
-#: apps/web/templates/web/my_privacy.html:53
 #, python-format
 msgid "Moderation decisions about you: %(d)s · Reports you've filed: %(r)s."
 msgstr ""
 "Decizii de moderare despre tine: %(d)s · Rapoarte trimise de tine: %(r)s."
 
-#: apps/web/templates/web/my_privacy.html:59
 msgid "A plain-language record of the safety-relevant actions you've taken."
 msgstr ""
 "Un registru în limbaj simplu al acțiunilor relevante pentru siguranță pe "
 "care le-ai făcut."
 
-#: apps/web/templates/web/my_privacy.html:60
 msgid "View your activity log"
 msgstr "Vezi jurnalul tău de activitate"
 
-#: apps/web/templates/web/my_privacy.html:64
 msgid "Your donations"
 msgstr "Donațiile tale"
 
-#: apps/web/templates/web/my_privacy.html:65
 #, python-format
 msgid "Donations on record: %(n)s."
 msgstr "Donații înregistrate: %(n)s."
 
-#: apps/web/templates/web/my_privacy.html:66
 msgid "We never store card or payment details."
 msgstr "Nu stocăm niciodată detalii despre card sau plată."
 
-#: apps/web/templates/web/my_privacy.html:67
 msgid "View your donations"
 msgstr "Vezi donațiile tale"
 
-#: apps/web/templates/web/my_privacy.html:72
 msgid "Guardianship"
 msgstr "Tutelă"
 
-#: apps/web/templates/web/my_privacy.html:73
 msgid "A parent or guardian is linked to your account."
 msgstr "Un părinte sau tutore este legat de contul tău."
 
-#: apps/web/templates/web/my_privacy.html:74
 msgid "See what this link grants"
 msgstr "Vezi ce permite această legătură"
 
-#: apps/web/templates/web/my_privacy.html:80
+#, python-format
+msgid ""
+"A device (e.g. the mobile app) currently holds API access to your\n"
+"  account — you can revoke it in <a href=\"%(settings_url)s\">Settings</a>."
+msgstr ""
+"Un dispozitiv (de exemplu aplicația mobilă) deține în prezent acces API la\n"
+"  contul tău — îl poți revoca în <a href=\"%(settings_url)s\">Setări</a>."
+
 msgid "Take your data with you, or remove it"
 msgstr "Ia-ți datele cu tine sau șterge-le"
 
-#: apps/web/templates/web/my_privacy.html:82
-#: apps/web/templates/web/profile.html:103
-#: apps/web/templates/web/profile.html:105
 msgid "Download my data"
 msgstr "Descarcă-mi datele"
 
-#: apps/web/templates/web/my_privacy.html:83
-#: apps/web/templates/web/profile.html:109
-#: apps/web/templates/web/profile.html:115
 msgid "Delete my account"
 msgstr "Șterge contul meu"
 
-#: apps/web/templates/web/my_privacy.html:86
 msgid "What we never collect or do"
 msgstr "Ce nu colectăm și nu facem niciodată"
 
-#: apps/web/templates/web/my_privacy.html:88
 msgid ""
 "We never store your location — proximity uses your device's position only "
 "for the search you ask for, and is never saved."
@@ -2370,18 +2191,15 @@ msgstr ""
 "dispozitivului tău doar pentru căutarea pe care o ceri și nu este salvată "
 "niciodată."
 
-#: apps/web/templates/web/my_privacy.html:89
 msgid "We store an age band, never your date of birth."
 msgstr "Stocăm o grupă de vârstă, niciodată data nașterii."
 
-#: apps/web/templates/web/my_privacy.html:90
 msgid ""
 "No ads, no behavioural tracking, no profiling — we're funded by donations."
 msgstr ""
 "Fără reclame, fără urmărire comportamentală, fără profilare — suntem "
 "finanțați prin donații."
 
-#: apps/web/templates/web/my_privacy.html:91
 msgid ""
 "No public photo feeds — photos exist only privately inside an activity "
 "thread, and you get one profile picture at most."
@@ -2389,20 +2207,15 @@ msgstr ""
 "Fără fluxuri publice de fotografii — fotografiile există doar privat în "
 "conversația unei activități, iar tu ai cel mult o poză de profil."
 
-#: apps/web/templates/web/my_privacy.html:92
 msgid ""
 "No reliability scores, attendance history, or vanity metrics about you."
 msgstr ""
 "Fără scoruri de fiabilitate, istoric de prezență sau metrici de vanitate "
 "despre tine."
 
-#: apps/web/templates/web/notification_preferences.html:3
-#: apps/web/templates/web/notification_preferences.html:6
-#: apps/web/templates/web/notifications.html:11
 msgid "Notification settings"
 msgstr "Setări notificări"
 
-#: apps/web/templates/web/notification_preferences.html:7
 msgid ""
 "Tick a category to stop receiving those in-app notifications. We never send ads or\n"
 "  track you. Important safety and moderation notices are always delivered and can't be turned off."
@@ -2410,12 +2223,10 @@ msgstr ""
 "Bifează o categorie pentru a nu mai primi acele notificări în aplicație. Nu trimitem niciodată reclame și\n"
 "  nu te urmărim. Notificările importante de siguranță și moderare sunt mereu livrate și nu pot fi dezactivate."
 
-#: apps/web/templates/web/notification_preferences.html:13
 #, python-format
 msgid "Mute: %(label)s"
 msgstr "Dezactivează: %(label)s"
 
-#: apps/web/templates/web/notification_preferences.html:16
 msgid ""
 "Note: muting this also turns off arrival\n"
 "          alerts for a child you supervise."
@@ -2423,37 +2234,28 @@ msgstr ""
 "Notă: dezactivarea acestora oprește și alertele\n"
 "          de sosire pentru un copil pe care îl supraveghezi."
 
-#: apps/web/templates/web/notification_preferences.html:22
 msgid "Save settings"
 msgstr "Salvează setările"
 
-#: apps/web/templates/web/notifications.html:9
 msgid "Mark all read"
 msgstr "Marchează toate ca citite"
 
-#: apps/web/templates/web/notifications.html:16
 msgid "new"
 msgstr "nou"
 
-#: apps/web/templates/web/notifications.html:18
 #, python-format
 msgid "Why you got this: %(why)s"
 msgstr "De ce ai primit asta: %(why)s"
 
-#: apps/web/templates/web/notifications.html:19
 msgid "view"
 msgstr "vezi"
 
-#: apps/web/templates/web/notifications.html:21
 msgid "No notifications yet."
 msgstr "Nicio notificare deocamdată."
 
-#: apps/web/templates/web/partners.html:3
-#: apps/web/templates/web/partners.html:5 templates/base.html:32
 msgid "Civic partners"
 msgstr "Parteneri civici"
 
-#: apps/web/templates/web/partners.html:6
 msgid ""
 "Libraries, schools, NGOs and civic bodies we work with. This is an "
 "acknowledgement of their support &mdash; not advertising. Partners are "
@@ -2463,34 +2265,22 @@ msgstr ""
 "este o recunoaștere a sprijinului lor &mdash; nu publicitate. Partenerii "
 "sunt selectați de echipă și nu plătesc niciodată pentru afișare."
 
-#: apps/web/templates/web/partners.html:11
 msgid "a venue"
 msgstr "o locație"
 
-#: apps/web/templates/web/partners.html:11
 #, python-format
 msgid "Stewards <a href=\"%(place_url)s\">%(place_name)s</a>."
 msgstr "Administrează <a href=\"%(place_url)s\">%(place_name)s</a>."
 
-#: apps/web/templates/web/partners.html:12
 msgid "Website &rarr;"
 msgstr "Site web &rarr;"
 
-#: apps/web/templates/web/partners.html:15
 msgid "No civic partners listed yet."
 msgstr "Niciun partener civic listat deocamdată."
 
-#: apps/web/templates/web/place_detail.html:3
-msgid "Place"
-msgstr "Loc"
-
-#: apps/web/templates/web/place_detail.html:5
-#: apps/web/templates/web/places.html:3 apps/web/templates/web/places.html:8
-#: apps/web/templates/web/places_list.html:5 templates/base.html:17
 msgid "Places"
 msgstr "Locuri"
 
-#: apps/web/templates/web/place_detail.html:8
 #, python-format
 msgid ""
 "This place is pending &mdash; it needs\n"
@@ -2501,103 +2291,79 @@ msgstr ""
 "    %(confirmed)s din %(required)s\n"
 "    confirmări înainte de a deveni public. Deocamdată doar tu și moderatorii îl pot vedea."
 
-#: apps/web/templates/web/place_detail.html:16
 msgid "Official website"
 msgstr "Site web oficial"
 
-#: apps/web/templates/web/place_detail.html:17
 msgid "In partnership with"
 msgstr "În parteneriat cu"
 
-#: apps/web/templates/web/place_detail.html:22
 msgid "Opening hours"
 msgstr "Program de funcționare"
 
-#: apps/web/templates/web/place_detail.html:23
 msgid "Open now"
 msgstr "Deschis acum"
 
-#: apps/web/templates/web/place_detail.html:24
 msgid "Closed now"
 msgstr "Închis acum"
 
-#: apps/web/templates/web/place_detail.html:26
 msgid "Hours may be out of date"
 msgstr "Programul poate fi depășit"
 
-#: apps/web/templates/web/place_detail.html:27
 msgid "Visitors reported the posted hours were wrong here."
 msgstr "Vizitatorii au raportat că programul afișat aici era greșit."
 
-#: apps/web/templates/web/place_detail.html:28
 msgid "Posted hours couldn't be read for right now."
 msgstr "Programul afișat nu a putut fi citit pentru acest moment."
 
-#: apps/web/templates/web/place_detail.html:29
 msgid "Posted:"
 msgstr "Afișat:"
 
-#: apps/web/templates/web/place_detail.html:33
 msgid "Report: closed when it said open"
 msgstr "Raportează: închis deși scria deschis"
 
-#: apps/web/templates/web/place_detail.html:39
 msgid "Clear hours reports (staff)"
 msgstr "Șterge rapoartele despre program (echipă)"
 
-#: apps/web/templates/web/place_detail.html:47
 msgid "Activities here"
 msgstr "Activități aici"
 
-#: apps/web/templates/web/place_detail.html:53
 msgid "community-confirmed"
 msgstr "confirmat de comunitate"
 
-#: apps/web/templates/web/place_detail.html:54
 msgid "disputed &mdash; hidden from search (staff view)"
 msgstr "disputat &mdash; ascuns din căutare (vizualizare echipă)"
 
-#: apps/web/templates/web/place_detail.html:55
 #, python-format
 msgid "%(confirms)s/%(required)s confirms"
 msgstr "%(confirms)s/%(required)s confirmări"
 
-#: apps/web/templates/web/place_detail.html:55
 #, python-format
 msgid ", %(disputes)s disputed"
 msgstr ", %(disputes)s disputate"
 
-#: apps/web/templates/web/place_detail.html:59
 msgid "Confirm"
 msgstr "Confirmă"
 
-#: apps/web/templates/web/place_detail.html:60
 msgid "Dispute"
 msgstr "Disputează"
 
-#: apps/web/templates/web/place_detail.html:66
 msgid "No activities recorded here yet."
 msgstr "Nicio activitate înregistrată aici deocamdată."
 
-#: apps/web/templates/web/place_detail.html:70
 msgid "Accessibility"
 msgstr "Accesibilitate"
 
-#: apps/web/templates/web/place_detail.html:72
 msgid "Matches your access needs"
 msgstr "Corespunde nevoilor tale de acces"
 
-#: apps/web/templates/web/place_detail.html:73
 msgid "May not meet your access needs"
 msgstr "S-ar putea să nu corespundă nevoilor tale de acces"
 
-#: apps/web/templates/web/place_detail.html:74
 msgid "Some of your access needs aren't recorded for this venue."
 msgstr ""
 "Unele dintre nevoile tale de acces nu sunt înregistrate pentru această "
 "locație."
 
-#: apps/web/templates/web/place_detail.html:77
 #, python-format
 msgid ""
 "<a href=\"%(access_prefs_url)s\">Set your access preferences</a> to see at a"
@@ -2606,23 +2372,18 @@ msgstr ""
 "<a href=\"%(access_prefs_url)s\">Setează-ți preferințele de acces</a> pentru"
 " a vedea dintr-o privire dacă o locație corespunde nevoilor tale."
 
-#: apps/web/templates/web/place_detail.html:82
 msgid "yes"
 msgstr "da"
 
-#: apps/web/templates/web/place_detail.html:83
 msgid "limited"
 msgstr "limitat"
 
-#: apps/web/templates/web/place_detail.html:84
 msgid "no"
 msgstr "nu"
 
-#: apps/web/templates/web/place_detail.html:85
 msgid "not recorded"
 msgstr "neînregistrat"
 
-#: apps/web/templates/web/place_detail.html:89
 msgid ""
 "From the venue's open data &mdash; we never claim a place is accessible when"
 " it isn't recorded."
@@ -2630,23 +2391,19 @@ msgstr ""
 "Din datele deschise ale locației &mdash; nu pretindem niciodată că un loc "
 "este accesibil dacă acest lucru nu este înregistrat."
 
-#: apps/web/templates/web/place_detail.html:94
 msgid "Organise an activity here"
 msgstr "Organizează o activitate aici"
 
-#: apps/web/templates/web/place_detail.html:96
-msgid "Upcoming here (your cohort)"
-msgstr "În curând aici (cohorta ta)"
+#| msgid "Upcoming meetups"
+msgid "Upcoming here"
+msgstr "Viitoare aici"
 
-#: apps/web/templates/web/place_detail.html:98
 msgid "No upcoming activities here yet."
 msgstr "Nicio activitate viitoare aici deocamdată."
 
-#: apps/web/templates/web/place_detail.html:101
 msgid "Events here"
 msgstr "Evenimente aici"
 
-#: apps/web/templates/web/place_detail.html:111
 #, python-format
 msgid ""
 "<a href=\"%(login_url)s\">Log in</a> or\n"
@@ -2655,16 +2412,12 @@ msgstr ""
 "<a href=\"%(login_url)s\">Autentifică-te</a> sau\n"
 "    <a href=\"%(register_url)s\">creează cont</a> pentru a organiza sau a te alătura activităților de aici."
 
-#: apps/web/templates/web/place_propose.html:3
 msgid "Add a place"
 msgstr "Adaugă un loc"
 
-#: apps/web/templates/web/place_propose.html:5
-#: apps/web/templates/web/places.html:11
 msgid "Add a missing place"
 msgstr "Adaugă un loc lipsă"
 
-#: apps/web/templates/web/place_propose.html:6
 msgid ""
 "Add a real venue we don't have yet (a court, pitch, community centre). It "
 "stays hidden from everyone until a few neighbours confirm it &mdash; or our "
@@ -2675,11 +2428,9 @@ msgstr ""
 "vecini o confirmă &mdash; sau echipa noastră o publică. Introdu coordonatele"
 " (le poți copia dintr-o aplicație de hărți)."
 
-#: apps/web/templates/web/place_propose.html:9
 msgid "Submit place"
 msgstr "Trimite locul"
 
-#: apps/web/templates/web/places.html:9
 msgid ""
 "Real locations where activities can happen, from open data. Click a marker "
 "to see what's on or to organise there."
@@ -2687,68 +2438,46 @@ msgstr ""
 "Locații reale unde pot avea loc activități, din date deschise. Apasă pe un "
 "marcaj pentru a vedea ce se întâmplă sau pentru a organiza acolo."
 
-#: apps/web/templates/web/places.html:10
 msgid "View as a text list (no map needed)"
 msgstr "Vezi ca listă text (fără hartă)"
 
-#: apps/web/templates/web/places.html:12
-#: apps/web/templates/web/places_pending.html:3
 msgid "Pending places"
 msgstr "Locuri în așteptare"
 
-#: apps/web/templates/web/places_list.html:3
 msgid "Places (text list)"
 msgstr "Locuri (listă text)"
 
-#: apps/web/templates/web/places_list.html:6
 msgid "A plain text list of venues &mdash; no map or JavaScript needed."
 msgstr "O listă simplă, text, a locațiilor &mdash; fără hartă sau JavaScript."
 
-#: apps/web/templates/web/places_list.html:7
 msgid "Switch to the map"
 msgstr "Comută la hartă"
 
-#: apps/web/templates/web/places_list.html:9
 msgid "City"
 msgstr "Oraș"
 
-#: apps/web/templates/web/places_list.html:10
-msgid "Activity"
-msgstr "Activitate"
-
-#: apps/web/templates/web/places_list.html:10
 msgid "slug, e.g. basketball"
 msgstr "slug, ex. basketball"
 
-#: apps/web/templates/web/places_list.html:11
-msgid "Filter"
-msgstr "Filtrează"
-
-#: apps/web/templates/web/places_list.html:14
 msgid ""
 "Showing the first 200 places &mdash; narrow with a city or activity filter."
 msgstr ""
 "Se afișează primele 200 de locuri &mdash; restrânge cu un filtru de oraș sau"
 " de activitate."
 
-#: apps/web/templates/web/places_list.html:20
 #, python-format
 msgid "%(meters)s m away"
 msgstr "la %(meters)s m distanță"
 
-#: apps/web/templates/web/places_list.html:22
 msgid "(limited)"
 msgstr "(limitat)"
 
-#: apps/web/templates/web/places_list.html:25
 msgid "No places match."
 msgstr "Niciun loc nu corespunde."
 
-#: apps/web/templates/web/places_pending.html:5
 msgid "Places awaiting confirmation"
 msgstr "Locuri în așteptarea confirmării"
 
-#: apps/web/templates/web/places_pending.html:6
 msgid ""
 "Neighbours proposed these venues. If you know a place is real, confirm it "
 "&mdash; enough independent confirmations publish it for everyone. We never "
@@ -2758,31 +2487,24 @@ msgstr ""
 "&mdash; suficiente confirmări independente îl publică pentru toată lumea. Nu"
 " arătăm niciodată cine a propus un loc."
 
-#: apps/web/templates/web/places_pending.html:11
 #, python-format
 msgid "%(count)s of %(required)s confirmations."
 msgstr "%(count)s din %(required)s confirmări."
 
-#: apps/web/templates/web/places_pending.html:13
 msgid "Confirm this place"
 msgstr "Confirmă acest loc"
 
-#: apps/web/templates/web/places_pending.html:16
 msgid "No places are awaiting confirmation right now."
 msgstr "Niciun loc nu așteaptă confirmare în acest moment."
 
-#: apps/web/templates/web/privacy.html:3
-#: apps/web/templates/web/privacy.html:10
 msgid "Privacy Policy"
 msgstr "Politica de confidențialitate"
 
-#: apps/web/templates/web/privacy.html:6 apps/web/templates/web/terms.html:6
 msgid "DRAFT &mdash; to be finalized by the DPO/legal before launch."
 msgstr ""
 "CIORNĂ &mdash; urmează a fi finalizată de DPO/departamentul juridic înainte "
 "de lansare."
 
-#: apps/web/templates/web/privacy.html:7 apps/web/templates/web/terms.html:7
 msgid ""
 "This text is placeholder copy and is not legally binding in its current "
 "form."
@@ -2790,7 +2512,6 @@ msgstr ""
 "Acest text este unul provizoriu și nu are caracter juridic obligatoriu în "
 "forma actuală."
 
-#: apps/web/templates/web/privacy.html:11
 msgid ""
 "Last reviewed: draft. This platform is operated for users in Romania and the"
 " EU and is designed around the GDPR (Regulation (EU) 2016/679) and the "
@@ -2800,11 +2521,9 @@ msgstr ""
 "din România și UE și este concepută în jurul GDPR (Regulamentul (UE) "
 "2016/679) și al Actului privind serviciile digitale."
 
-#: apps/web/templates/web/privacy.html:14
 msgid "Who we are"
 msgstr "Cine suntem"
 
-#: apps/web/templates/web/privacy.html:15
 msgid ""
 "This service is a nonprofit, text-first platform for arranging in-person activities. The\n"
 "    operating organisation is the data controller for the personal data described below.\n"
@@ -2814,11 +2533,9 @@ msgstr ""
 "    operatoare este operatorul de date pentru datele cu caracter personal descrise mai jos.\n"
 "    <em>(Denumirea entității juridice, adresa și numărul de înregistrare urmează a fi completate de departamentul juridic.)</em>"
 
-#: apps/web/templates/web/privacy.html:21
 msgid "What data we collect"
 msgstr "Ce date colectăm"
 
-#: apps/web/templates/web/privacy.html:23
 msgid ""
 "<strong>Age band, not date of birth.</strong> We only ever store an age <em>band</em>\n"
 "      (for example \"over 16\" or \"over 18\"). We do <strong>not</strong> collect or store your\n"
@@ -2830,7 +2547,6 @@ msgstr ""
 "      data nașterii dvs. Vârsta este dovedită prin portofelul de identitate digitală al UE, care ne dezvăluie doar\n"
 "      categoria."
 
-#: apps/web/templates/web/privacy.html:27
 msgid ""
 "<strong>Username and display name</strong> you choose at registration. We do not require\n"
 "      your real name."
@@ -2838,7 +2554,6 @@ msgstr ""
 "<strong>Numele de utilizator și numele afișat</strong> pe care le alegeți la înregistrare. Nu solicităm\n"
 "      numele dvs. real."
 
-#: apps/web/templates/web/privacy.html:29
 msgid ""
 "<strong>Activity data</strong> you create or take part in: activities you organise or join,\n"
 "      posts in activity threads, interests you select, places and events you view, and\n"
@@ -2848,7 +2563,6 @@ msgstr ""
 "      postări în conversațiile activităților, interesele pe care le selectați, locurile și evenimentele pe care le vizualizați și\n"
 "      evidențele de membru/vot necesare pentru desfășurarea activității."
 
-#: apps/web/templates/web/privacy.html:32
 msgid ""
 "<strong>Safety data</strong> needed to keep minors and the community safe: reports you file\n"
 "      or that concern you, blocks, and moderation decisions."
@@ -2856,7 +2570,6 @@ msgstr ""
 "<strong>Datele de siguranță</strong> necesare pentru a proteja minorii și comunitatea: rapoartele pe care le depuneți\n"
 "      sau care vă privesc, blocările și deciziile de moderare."
 
-#: apps/web/templates/web/privacy.html:34
 msgid ""
 "<strong>Account security data</strong> such as a hashed password and basic "
 "technical logs."
@@ -2864,7 +2577,6 @@ msgstr ""
 "<strong>Date de securitate a contului</strong>, precum o parolă criptată "
 "(hash) și jurnale tehnice de bază."
 
-#: apps/web/templates/web/privacy.html:36
 msgid ""
 "We do not run behavioural advertising, sell personal data, or profile you to"
 " manipulate engagement."
@@ -2872,11 +2584,9 @@ msgstr ""
 "Nu derulăm publicitate comportamentală, nu vindem date cu caracter personal "
 "și nu vă profilăm pentru a manipula implicarea."
 
-#: apps/web/templates/web/privacy.html:40
 msgid "Lawful basis for processing"
 msgstr "Temeiul legal al prelucrării"
 
-#: apps/web/templates/web/privacy.html:42
 msgid ""
 "<strong>Performance of a contract</strong> (Art. 6(1)(b)) to provide the account and\n"
 "      activity features you ask for."
@@ -2884,7 +2594,6 @@ msgstr ""
 "<strong>Executarea unui contract</strong> (Art. 6(1)(b)) pentru a furniza contul și\n"
 "      funcțiile pentru activități pe care le solicitați."
 
-#: apps/web/templates/web/privacy.html:44
 msgid ""
 "<strong>Legal obligation</strong> (Art. 6(1)(c)) for age assurance and child-safety\n"
 "      duties, including obligations under the Digital Services Act."
@@ -2892,7 +2601,6 @@ msgstr ""
 "<strong>Obligație legală</strong> (Art. 6(1)(c)) pentru asigurarea vârstei și obligațiile\n"
 "      de siguranță a copiilor, inclusiv obligațiile prevăzute de Actul privind serviciile digitale."
 
-#: apps/web/templates/web/privacy.html:46
 msgid ""
 "<strong>Legitimate interests</strong> (Art. 6(1)(f)) to keep the service safe, prevent\n"
 "      abuse, and maintain security &mdash; balanced against your rights."
@@ -2900,7 +2608,6 @@ msgstr ""
 "<strong>Interese legitime</strong> (Art. 6(1)(f)) pentru a menține serviciul sigur, a preveni\n"
 "      abuzurile și a menține securitatea &mdash; în echilibru cu drepturile dvs."
 
-#: apps/web/templates/web/privacy.html:48
 msgid ""
 "<strong>Consent</strong> (Art. 6(1)(a)) where specifically requested. For users under 16,\n"
 "      processing relies on parental/guardian consent as required by GDPR Art. 8 and Romanian law."
@@ -2908,11 +2615,9 @@ msgstr ""
 "<strong>Consimțământ</strong> (Art. 6(1)(a)) acolo unde este solicitat în mod expres. Pentru utilizatorii sub 16 ani,\n"
 "      prelucrarea se bazează pe consimțământul părintelui/tutorelui, conform GDPR Art. 8 și legislației române."
 
-#: apps/web/templates/web/privacy.html:54
 msgid "How long we keep data (retention)"
 msgstr "Cât timp păstrăm datele (păstrare)"
 
-#: apps/web/templates/web/privacy.html:55
 msgid ""
 "We keep personal data only as long as needed for the purpose it was collected, then delete or\n"
 "    anonymise it. Account data is retained while your account is active. Safety and moderation\n"
@@ -2924,15 +2629,12 @@ msgstr ""
 "    pot fi păstrate mai mult timp atunci când acest lucru este necesar pentru a proteja utilizatorii sau pentru a îndeplini obligații legale.\n"
 "    <em>(Perioadele concrete de păstrare urmează a fi confirmate de DPO.)</em>"
 
-#: apps/web/templates/web/privacy.html:62
 msgid "Your rights"
 msgstr "Drepturile dvs."
 
-#: apps/web/templates/web/privacy.html:63
 msgid "Under the GDPR you have the right to:"
 msgstr "Conform GDPR, aveți dreptul de a:"
 
-#: apps/web/templates/web/privacy.html:65
 msgid ""
 "<strong>Access</strong> the personal data we hold about you and obtain a "
 "copy."
@@ -2940,11 +2642,9 @@ msgstr ""
 "<strong>Accesa</strong> datele cu caracter personal pe care le deținem "
 "despre dvs. și de a obține o copie."
 
-#: apps/web/templates/web/privacy.html:66
 msgid "<strong>Rectification</strong> of inaccurate data."
 msgstr "<strong>Rectifica</strong> datele inexacte."
 
-#: apps/web/templates/web/privacy.html:67
 msgid ""
 "<strong>Erasure</strong> (\"right to be forgotten\", Art. 17). You can delete your account\n"
 "      and personal data yourself from your"
@@ -2952,15 +2652,12 @@ msgstr ""
 "<strong>Șterge</strong> („dreptul de a fi uitat”, Art. 17). Vă puteți șterge singur contul\n"
 "      și datele cu caracter personal din"
 
-#: apps/web/templates/web/privacy.html:69
 msgid "profile page"
 msgstr "pagina de profil"
 
-#: apps/web/templates/web/privacy.html:70
 msgid "or by contacting our Data Protection Officer."
 msgstr "sau contactând Responsabilul nostru cu protecția datelor."
 
-#: apps/web/templates/web/privacy.html:71
 msgid ""
 "<strong>Restriction</strong> and <strong>objection</strong> to certain "
 "processing."
@@ -2968,13 +2665,11 @@ msgstr ""
 "<strong>Restricționa</strong> și de a vă <strong>opune</strong> anumitor "
 "prelucrări."
 
-#: apps/web/templates/web/privacy.html:72
 msgid "<strong>Data portability</strong> for data you provided to us."
 msgstr ""
 "<strong>Portabilitatea datelor</strong> pentru datele pe care ni le-ați "
 "furnizat."
 
-#: apps/web/templates/web/privacy.html:73
 msgid ""
 "<strong>Lodge a complaint</strong> with a supervisory authority, in Romania the National\n"
 "      Supervisory Authority for Personal Data Processing (ANSPDCP)."
@@ -2982,11 +2677,9 @@ msgstr ""
 "<strong>Depune o plângere</strong> la o autoritate de supraveghere, în România Autoritatea Națională\n"
 "      de Supraveghere a Prelucrării Datelor cu Caracter Personal (ANSPDCP)."
 
-#: apps/web/templates/web/privacy.html:79
 msgid "Children and guardians"
 msgstr "Copii și tutori"
 
-#: apps/web/templates/web/privacy.html:80
 msgid ""
 "This platform is used by minors. Users under 16 require verified parental or"
 " guardian consent before they can join or organise activities, and we keep "
@@ -2998,11 +2691,9 @@ msgstr ""
 "alătura sau de a organiza activități, iar cohortele sunt separate în funcție"
 " de vârstă. Tutorii pot revizui și retrage consimțământul în orice moment."
 
-#: apps/web/templates/web/privacy.html:84
 msgid "Contact our Data Protection Officer"
 msgstr "Contactați Responsabilul nostru cu protecția datelor"
 
-#: apps/web/templates/web/privacy.html:85
 msgid ""
 "For any privacy question or to exercise your rights, contact our Data "
 "Protection Officer:"
@@ -3010,11 +2701,9 @@ msgstr ""
 "Pentru orice întrebare privind confidențialitatea sau pentru a vă exercita "
 "drepturile, contactați Responsabilul nostru cu protecția datelor:"
 
-#: apps/web/templates/web/privacy.html:86
 msgid "Data Protection Officer"
 msgstr "Responsabil cu protecția datelor"
 
-#: apps/web/templates/web/privacy.html:87
 msgid ""
 "Email: <em>dpo@example.org (placeholder &mdash; to be set by legal)</em><br>\n"
 "    Postal address: <em>(to be inserted by legal)</em>"
@@ -3022,82 +2711,57 @@ msgstr ""
 "E-mail: <em>dpo@example.org (provizoriu &mdash; urmează a fi stabilit de departamentul juridic)</em><br>\n"
 "    Adresă poștală: <em>(urmează a fi completată de departamentul juridic)</em>"
 
-#: apps/web/templates/web/profile.html:3
-msgid "Profile"
-msgstr "Profil"
+msgid ""
+"As an under-16, a parent or guardian must approve your account before you "
+"can join or organise activities."
+msgstr ""
+"Întrucât ai sub 16 ani, un părinte sau tutore trebuie să aprobe contul tău "
+"înainte de a te putea alătura sau organiza activități."
 
-#: apps/web/templates/web/profile.html:9
 msgid "profile picture"
 msgstr "poză de profil"
 
-#: apps/web/templates/web/profile.html:13
 msgid "generated avatar"
 msgstr "avatar generat"
 
-#: apps/web/templates/web/profile.html:13
 msgid "Your generated avatar (upload a photo to replace it)"
 msgstr "Avatarul dvs. generat (încărcați o poză pentru a-l înlocui)"
 
-#: apps/web/templates/web/profile.html:17
+msgid "(demo)"
+msgstr "(demo)"
+
+#| msgid "Identity verified:"
+msgid "age verified"
+msgstr "vârstă verificată"
+
+#| msgid "Identity verified:"
+msgid "not yet verified"
+msgstr "neverificat încă"
+
+#| msgid "Can participate:"
+msgid "participation paused"
+msgstr "participare suspendată"
+
 msgid "Update photo"
 msgstr "Actualizează poza"
 
-#: apps/web/templates/web/profile.html:18
 msgid "One profile picture. Location metadata is stripped automatically."
 msgstr ""
 "O singură poză de profil. Metadatele de localizare sunt eliminate automat."
 
-#: apps/web/templates/web/profile.html:23
-msgid "Username:"
-msgstr "Nume de utilizator:"
-
-#: apps/web/templates/web/profile.html:24
-msgid "Cohort:"
-msgstr "Cohortă:"
-
-#: apps/web/templates/web/profile.html:25
-msgid "Age band:"
-msgstr "Categorie de vârstă:"
-
-#: apps/web/templates/web/profile.html:25
-msgid "(demo)"
-msgstr "(demo)"
-
-#: apps/web/templates/web/profile.html:26
-msgid "Identity verified:"
-msgstr "Identitate verificată:"
-
-#: apps/web/templates/web/profile.html:26
-#: apps/web/templates/web/profile.html:27
-msgid "yes,no"
-msgstr "da,nu"
-
-#: apps/web/templates/web/profile.html:27
-msgid "Can participate:"
-msgstr "Poate participa:"
-
-#: apps/web/templates/web/profile.html:28
-msgid "Interests:"
-msgstr "Interese:"
-
-#: apps/web/templates/web/profile.html:29
 msgid "none yet"
 msgstr "niciunul încă"
 
-#: apps/web/templates/web/profile.html:30
-#: apps/web/templates/web/profile.html:33
 msgid "edit"
 msgstr "editează"
 
-#: apps/web/templates/web/profile.html:31
-msgid "Access preferences:"
-msgstr "Preferințe de accesibilitate:"
+msgid ""
+"Your interests light up your generated avatar and drive your "
+"recommendations. Only you choose them — nothing is tracked."
+msgstr ""
+"Interesele tale îți luminează avatarul generat și îți determină "
+"recomandările. Doar tu le alegi — nimic nu este urmărit."
 
-#: apps/web/templates/web/profile.html:32
-msgid "step-free, accessible toilet &amp; more"
-msgstr "fără trepte, toaletă accesibilă &amp; altele"
-
-#: apps/web/templates/web/profile.html:38
 #, python-format
 msgid ""
 "People you've met at activities &mdash;\n"
@@ -3106,7 +2770,6 @@ msgstr ""
 "Persoane pe care le-ați cunoscut la activități &mdash;\n"
 "    <a href=\"%(connections_url)s\">gestionează</a>."
 
-#: apps/web/templates/web/profile.html:41
 #, python-format
 msgid "%(counter)s pending connection request"
 msgid_plural "%(counter)s pending connection requests"
@@ -3114,11 +2777,13 @@ msgstr[0] "%(counter)s cerere de conectare în așteptare"
 msgstr[1] "%(counter)s cereri de conectare în așteptare"
 msgstr[2] "%(counter)s de cereri de conectare în așteptare"
 
-#: apps/web/templates/web/profile.html:42
 msgid "review"
 msgstr "examinează"
 
-#: apps/web/templates/web/profile.html:56
+#, python-format
+msgid "See all %(total)s connections →"
+msgstr "Vezi toate cele %(total)s conexiuni →"
+
 #, python-format
 msgid ""
 "No connections yet. <a href=\"%(connections_url)s\">Find people you've "
@@ -3127,42 +2792,33 @@ msgstr ""
 "Nicio conexiune încă. <a href=\"%(connections_url)s\">Găsiți persoane pe "
 "care le-ați cunoscut</a>."
 
-#: apps/web/templates/web/profile.html:63
 msgid "Verified as:"
 msgstr "Verificat ca:"
 
-#: apps/web/templates/web/profile.html:64
 msgid "(an age band only &mdash; never your birthdate)"
 msgstr "(doar o categorie de vârstă &mdash; niciodată data nașterii)"
 
-#: apps/web/templates/web/profile.html:65
 msgid "the EU Digital Identity wallet"
 msgstr "portofelul UE de identitate digitală"
 
-#: apps/web/templates/web/profile.html:65
 #, python-format
 msgid "Proven by %(method)s via %(provider)s on %(verified_at)s."
 msgstr "Dovedit prin %(method)s via %(provider)s la %(verified_at)s."
 
-#: apps/web/templates/web/profile.html:65
 #, python-format
 msgid "Proven by %(method)s on %(verified_at)s."
 msgstr "Dovedit prin %(method)s la %(verified_at)s."
 
-#: apps/web/templates/web/profile.html:66
 msgid "This proof does not expire."
 msgstr "Această dovadă nu expiră."
 
-#: apps/web/templates/web/profile.html:67
 msgid "Current"
 msgstr "Curentă"
 
-#: apps/web/templates/web/profile.html:67
 #, python-format
 msgid "&mdash; valid until %(expires_at)s"
 msgstr "&mdash; valabilă până la %(expires_at)s"
 
-#: apps/web/templates/web/profile.html:68
 #, python-format
 msgid "Expires in %(days_left)s day &mdash; re-verify to avoid losing access."
 msgid_plural ""
@@ -3176,18 +2832,15 @@ msgstr[2] ""
 "Expiră în %(days_left)s de zile &mdash; reverificați pentru a nu pierde "
 "accesul."
 
-#: apps/web/templates/web/profile.html:69
 msgid ""
 "Your age proof has expired &mdash; re-verify to keep joining and chatting."
 msgstr ""
 "Dovada vârstei dvs. a expirat &mdash; reverificați pentru a continua să vă "
 "alăturați și să conversați."
 
-#: apps/web/templates/web/profile.html:70
 msgid "Re-verify"
 msgstr "Reverifică"
 
-#: apps/web/templates/web/profile.html:72
 msgid ""
 "Prove your age band with the EU Digital Identity wallet &mdash; the app only"
 " ever learns an over-16/over-18 band, never your birthdate."
@@ -3196,73 +2849,42 @@ msgstr ""
 "&mdash; aplicația află doar o categorie peste 16/peste 18 ani, niciodată "
 "data nașterii."
 
-#: apps/web/templates/web/profile.html:73
 msgid "Verify with EU Digital Identity"
 msgstr "Verifică cu Identitatea Digitală a UE"
 
-#: apps/web/templates/web/profile.html:75
+#| msgid ""
+#| "Re-verifying into a different age band may remove you from conversations "
+#| "pinned to your current cohort."
 msgid ""
-"Re-verifying into a different age band may remove you from conversations "
-"pinned to your current cohort."
+"Re-verifying into a different age band may change which activities and "
+"conversations you can take part in."
 msgstr ""
-"Reverificarea într-o altă categorie de vârstă vă poate scoate din "
-"conversațiile asociate cohortei dvs. curente."
+"Reverificarea într-o altă categorie de vârstă poate schimba la ce activități"
+" și conversații poți participa."
 
-#: apps/web/templates/web/profile.html:76 apps/web/templates/web/wards.html:3
-#: apps/web/templates/web/wards.html:5
 msgid "Your wards"
 msgstr "Persoanele aflate în grija dvs."
 
-#: apps/web/templates/web/profile.html:85
 msgid "Blocked users"
 msgstr "Utilizatori blocați"
 
-#: apps/web/templates/web/profile.html:86
 msgid "You and these people never see each other's activities."
 msgstr "Dvs. și aceste persoane nu vă vedeți niciodată activitățile reciproc."
 
-#: apps/web/templates/web/profile.html:92
 msgid "unblock"
 msgstr "deblochează"
 
-#: apps/web/templates/web/profile.html:99
-msgid ""
-"As an under-16, a parent or guardian must approve your account before you "
-"can join or organise activities."
-msgstr ""
-"Întrucât ai sub 16 ani, un părinte sau tutore trebuie să aprobe contul tău "
-"înainte de a te putea alătura sau organiza activități."
-
-#: apps/web/templates/web/profile.html:104
-msgid ""
-"Get a copy of all the personal data we hold about you, as a JSON file (GDPR "
-"right to data portability, Art. 20). No card or payment details are stored."
-msgstr ""
-"Obține o copie a tuturor datelor personale pe care le deținem despre tine, "
-"ca fișier JSON (dreptul GDPR la portabilitatea datelor, Art. 20). Nu stocăm "
-"date despre card sau plată."
-
-#: apps/web/templates/web/profile.html:110
 #, python-format
 msgid ""
-"This permanently deletes your account and personal data (GDPR right to erasure,\n"
-"    Art. 17). This cannot be undone. See our <a href=\"%(privacy_url)s\">Privacy Policy</a>."
+"Looking for data download, account deletion, language or notification controls?\n"
+"  They live in <a href=\"%(settings_url)s\">Settings</a>."
 msgstr ""
-"Aceasta vă șterge definitiv contul și datele cu caracter personal (dreptul la ștergere conform GDPR,\n"
-"    Art. 17). Acțiunea nu poate fi anulată. Consultați <a href=\"%(privacy_url)s\">Politica de confidențialitate</a>."
+"Cauți descărcarea datelor, ștergerea contului, limba sau controalele de notificare?\n"
+"  Se află în <a href=\"%(settings_url)s\">Setări</a>."
 
-#: apps/web/templates/web/profile.html:113
-msgid ""
-"Permanently delete your account and personal data? This cannot be undone."
-msgstr ""
-"Ștergeți definitiv contul și datele dvs. cu caracter personal? Această "
-"acțiune nu poate fi anulată."
-
-#: apps/web/templates/web/register.html:5
 msgid "Create your account"
 msgstr "Creează-ți contul"
 
-#: apps/web/templates/web/register.html:6
 msgid ""
 "Demo only: age verification is simulated here. In production this uses the "
 "EU age-verification app / EUDI Wallet, and under-16s require verified "
@@ -3272,16 +2894,13 @@ msgstr ""
 "folosește aplicația de verificare a vârstei a UE / Portofelul EUDI, iar "
 "pentru cei sub 16 ani este necesar consimțământ parental verificat."
 
-#: apps/web/templates/web/register.html:11
 msgid "Already have an account?"
 msgstr "Ai deja un cont?"
 
-#: apps/web/templates/web/report.html:5
 #, python-format
 msgid "Report this %(target_type)s"
 msgstr "Raportează acest/această %(target_type)s"
 
-#: apps/web/templates/web/report.html:6
 #, python-format
 msgid ""
 "Reporting: <strong>%(target_label)s</strong>. Reports are confidential and go\n"
@@ -3292,11 +2911,9 @@ msgstr ""
 "  direct la echipa de moderare. Dacă o persoană este în pericol imediat, contactați serviciile locale\n"
 "  de urgență."
 
-#: apps/web/templates/web/report.html:13
 msgid "Send report"
 msgstr "Trimite raportul"
 
-#: apps/web/templates/web/safety_record.html:6
 msgid ""
 "A record of moderation decisions about your account, your activities and "
 "your posts, and the status of the reports you've sent us. Only you can see "
@@ -3306,51 +2923,40 @@ msgstr ""
 "postările dvs., precum și statusul rapoartelor pe care ni le-ați trimis. "
 "Doar dvs. puteți vedea această pagină."
 
-#: apps/web/templates/web/safety_record.html:8
 msgid "Decisions about you"
 msgstr "Decizii care vă privesc"
 
-#: apps/web/templates/web/safety_record.html:14
 msgid "active"
 msgstr "activă"
 
-#: apps/web/templates/web/safety_record.html:14
 msgid "no longer active"
 msgstr "nu mai este activă"
 
-#: apps/web/templates/web/safety_record.html:16
 #, python-format
 msgid "Reason: %(reason)s"
 msgstr "Motiv: %(reason)s"
 
-#: apps/web/templates/web/safety_record.html:20
 msgid "No moderation decisions have affected your account or content."
 msgstr "Nicio decizie de moderare nu a afectat contul sau conținutul tău."
 
-#: apps/web/templates/web/safety_record.html:24
 msgid "Reports you've filed"
 msgstr "Rapoarte trimise de tine"
 
-#: apps/web/templates/web/safety_record.html:30
 #, python-format
 msgid "Outcome: %(resolution)s"
 msgstr "Rezultat: %(resolution)s"
 
-#: apps/web/templates/web/safety_record.html:31
 #, python-format
 msgid "Filed %(filed)s"
 msgstr "Trimis %(filed)s"
 
-#: apps/web/templates/web/safety_record.html:31
 #, python-format
 msgid "reviewed %(reviewed)s"
 msgstr "evaluat %(reviewed)s"
 
-#: apps/web/templates/web/safety_record.html:34
 msgid "You haven't filed any reports."
 msgstr "Nu ai trimis niciun raport."
 
-#: apps/web/templates/web/safety_record.html:38
 msgid ""
 "If you believe a decision is wrong, you'll be able to contest it here soon. "
 "In the meantime, replies to a moderation notice reach our team."
@@ -3359,11 +2965,239 @@ msgstr ""
 "curând. Între timp, răspunsurile la o notificare de moderare ajung la echipa"
 " noastră."
 
-#: apps/web/templates/web/terms.html:3 apps/web/templates/web/terms.html:10
+#| msgid "Save changes"
+msgid "Saved searches"
+msgstr "Căutări salvate"
+
+msgid ""
+"Save a search and we'll send you one in-app alert the first time a new\n"
+"  matching activity appears in your cohort &mdash; so you don't have to keep checking. No emails, no\n"
+"  \"near you\" counts, and you can turn these alerts off any time."
+msgstr ""
+"Salvează o căutare și îți trimitem o singură alertă în aplicație prima dată când apare o nouă\n"
+"    activitate care se potrivește în cohorta ta &mdash; ca să nu fie nevoie să tot verifici. Fără e-mailuri, fără\n"
+"    numărători „lângă tine” și poți dezactiva aceste alerte oricând."
+
+#| msgid "Save changes"
+msgid "Save a new search"
+msgstr "Salvează o căutare nouă"
+
+#| msgid "Activity"
+msgid "Activity type"
+msgstr "Tip de activitate"
+
+msgid "— any (use a category instead) —"
+msgstr "— oricare (folosește în schimb o categorie) —"
+
+msgid "…or a whole category"
+msgstr "…sau o categorie întreagă"
+
+msgid "— none —"
+msgstr "— niciuna —"
+
+#| msgid "A group needs an activity type or a category."
+msgid "Pick exactly one of activity type or category."
+msgstr "Alege exact unul dintre tip de activitate sau categorie."
+
+#| msgid "(optional)"
+msgid "City (optional)"
+msgstr "Oraș (opțional)"
+
+msgid "e.g. Cluj-Napoca"
+msgstr "de exemplu Cluj-Napoca"
+
+msgid "Leave blank for anywhere in your cohort. No location is stored."
+msgstr ""
+"Lasă necompletat pentru oriunde în cohorta ta. Nu se stochează nicio "
+"locație."
+
+#| msgid "(optional)"
+msgid "Cost (optional)"
+msgstr "Cost (opțional)"
+
+msgid "— any —"
+msgstr "— oricare —"
+
+#| msgid "(beginners-welcome only)"
+msgid "Beginners-welcome activities only"
+msgstr "Doar activități unde începătorii sunt bineveniți"
+
+#| msgid "Search"
+msgid "Save search"
+msgstr "Salvează căutarea"
+
+msgid "Your saved searches"
+msgstr "Căutările tale salvate"
+
+#| msgid "You haven't taken any recorded actions yet."
+msgid "You haven't saved any searches yet."
+msgstr "Nu ai salvat încă nicio căutare."
+
+#| msgid "Your interests"
+msgid "Your recurring series"
+msgstr "Seriile tale recurente"
+
+#, python-format
+#| msgid "at %(place)s"
+msgid "At %(place)s."
+msgstr "La %(place)s."
+
+#, python-format
+msgid "Next instance scheduled around %(when)s."
+msgstr "Următoarea apariție este programată în jurul %(when)s."
+
+msgid "Series controls"
+msgstr "Controale pentru serie"
+
+msgid ""
+"Pausing stops new meetups from being scheduled; ending is permanent. Meetups"
+" already scheduled always stand."
+msgstr ""
+"Punerea pe pauză oprește programarea de noi întâlniri; încheierea este "
+"permanentă. Întâlnirile deja programate rămân întotdeauna valabile."
+
+msgid "Pause"
+msgstr "Pune pe pauză"
+
+msgid "Resume"
+msgstr "Reia"
+
+msgid ""
+"End this series? No more meetups will be scheduled. This can't be undone."
+msgstr ""
+"Închei această serie? Nu se vor mai programa întâlniri. Această acțiune nu "
+"poate fi anulată."
+
+msgid "End series"
+msgstr "Încheie seria"
+
+msgid "Scheduled meetups"
+msgstr "Întâlniri programate"
+
+msgid ""
+"No meetups scheduled yet &mdash; the next one appears automatically before "
+"it starts."
+msgstr ""
+"Nicio întâlnire programată încă &mdash; următoarea apare automat înainte să "
+"înceapă."
+
+msgid "Create a recurring series"
+msgstr "Creează o serie recurentă"
+
+msgid ""
+"<p class=\"muted\">Define a repeating meetup once &mdash; the next instance is scheduled\n"
+"  automatically before it starts, visible to people your age. Each instance needs a fresh join,\n"
+"  so it never becomes a standing roster.</p>"
+msgstr ""
+"<p class=\"muted\">Definește o singură dată o întâlnire care se repetă &mdash; următoarea apariție este programată\n"
+"  automat înainte să înceapă, vizibilă persoanelor de vârsta ta. Fiecare apariție necesită o alăturare nouă,\n"
+"  așa că nu devine niciodată o listă permanentă de participanți.</p>"
+
+msgid "Just organising once? Create a single activity instead."
+msgstr "Organizezi doar o dată? Creează în schimb o singură activitate."
+
+#| msgid "Create group"
+msgid "Create series"
+msgstr "Creează seria"
+
+msgid ""
+"Repeating meetups you've set up. Each one auto-schedules its next instance "
+"before it starts; every instance needs a fresh join."
+msgstr ""
+"Întâlniri care se repetă pe care le-ai configurat. Fiecare își programează "
+"automat următoarea apariție înainte să înceapă; fiecare apariție necesită o "
+"alăturare nouă."
+
+#| msgid "recurring"
+msgid "New recurring series"
+msgstr "Serie recurentă nouă"
+
+#, python-format
+#| msgid " on %(when)s"
+msgid "next around %(when)s"
+msgstr "următoarea în jurul %(when)s"
+
+#| msgid "You haven't taken any recorded actions yet."
+msgid "You haven't set up any recurring series yet."
+msgstr "Nu ai configurat încă nicio serie recurentă."
+
+#| msgid "Make one?"
+msgid "Create one?"
+msgstr "Creezi una?"
+
+msgid "Language"
+msgstr "Limbă"
+
+msgid "Choose the language this site is shown in."
+msgstr "Alege limba în care este afișat acest site."
+
+#| msgid "Save edit"
+msgid "Save"
+msgstr "Salvează"
+
+#| msgid "Save preferences"
+msgid "Preferences"
+msgstr "Preferințe"
+
+msgid "Display (theme, text size, motion)"
+msgstr "Afișare (temă, mărimea textului, mișcare)"
+
+msgid "Privacy &amp; safety"
+msgstr "Confidențialitate &amp; siguranță"
+
+msgid "Privacy &amp; your data"
+msgstr "Confidențialitate &amp; datele tale"
+
+msgid "Wards you look after"
+msgstr "Persoanele aflate în grija ta"
+
+msgid "Giving"
+msgstr "Donații"
+
+msgid "Where the money goes"
+msgstr "Unde se duc banii"
+
+msgid "API access"
+msgstr "Acces API"
+
+#, python-format
+msgid ""
+"A device (e.g. the mobile app) holds API access to your account, issued "
+"%(when)s. Revoke it if you lost the device or no longer use it."
+msgstr ""
+"Un dispozitiv (de exemplu aplicația mobilă) deține acces API la contul tău, "
+"emis %(when)s. Revocă-l dacă ai pierdut dispozitivul sau nu îl mai "
+"folosești."
+
+msgid "Revoke API access"
+msgstr "Revocă accesul API"
+
+msgid "No device currently holds API access to your account."
+msgstr "Niciun dispozitiv nu deține în prezent acces API la contul tău."
+
+#| msgid "No account?"
+msgid "Your account"
+msgstr "Contul tău"
+
+msgid ""
+"Your data belongs to you. Take a copy any time, or delete the account and "
+"the personal data that goes with it."
+msgstr ""
+"Datele tale îți aparțin. Ia o copie oricând sau șterge contul și datele "
+"personale care îl însoțesc."
+
+#| msgid ""
+#| "Permanently delete your account and personal data? This cannot be undone."
+msgid "Delete your account and personal data? This cannot be undone."
+msgstr ""
+"Ștergi contul și datele tale personale? Această acțiune nu poate fi anulată."
+
+msgid "Log out"
+msgstr "Deconectare"
+
 msgid "Terms of Service"
 msgstr "Termeni și condiții"
 
-#: apps/web/templates/web/terms.html:11
 msgid ""
 "These terms govern use of this nonprofit, text-first platform for arranging "
 "in-person activities, operated for users in Romania and the EU."
@@ -3372,15 +3206,12 @@ msgstr ""
 " primul rând, pentru organizarea de activități în persoană, operată pentru "
 "utilizatorii din România și UE."
 
-#: apps/web/templates/web/terms.html:14
 msgid "Acceptable use"
 msgstr "Utilizare acceptabilă"
 
-#: apps/web/templates/web/terms.html:15
 msgid "By using the service you agree to:"
 msgstr "Prin utilizarea serviciului ești de acord să:"
 
-#: apps/web/templates/web/terms.html:17
 msgid ""
 "Use the platform only for lawful, real, in-person activities and respectful "
 "interaction."
@@ -3388,7 +3219,6 @@ msgstr ""
 "Folosești platforma doar pentru activități legale, reale, în persoană și "
 "pentru interacțiuni respectuoase."
 
-#: apps/web/templates/web/terms.html:18
 msgid ""
 "Provide truthful age information and not impersonate others or share your "
 "account."
@@ -3396,7 +3226,6 @@ msgstr ""
 "Oferi informații corecte despre vârstă și să nu te dai drept altă persoană "
 "sau să-ți partajezi contul."
 
-#: apps/web/templates/web/terms.html:19
 msgid ""
 "Keep content text-first and appropriate &mdash; no harassment, hate speech, "
 "sexual content, grooming, threats, spam, scams, or sharing of others' "
@@ -3406,7 +3235,6 @@ msgstr ""
 "discurs de incitare la ură, conținut sexual, ademenirea minorilor, "
 "amenințări, spam, înșelătorii sau partajarea datelor private ale altora."
 
-#: apps/web/templates/web/terms.html:20
 msgid ""
 "Not attempt to contact, meet, or share content with users outside your "
 "permitted age cohort."
@@ -3414,7 +3242,6 @@ msgstr ""
 "Nu încerci să contactezi, să întâlnești sau să partajezi conținut cu "
 "utilizatori din afara cohortei de vârstă permise."
 
-#: apps/web/templates/web/terms.html:21
 msgid ""
 "Not upload illegal content or content that endangers minors. Such content is"
 " reported to the appropriate authorities."
@@ -3422,15 +3249,12 @@ msgstr ""
 "Nu încarci conținut ilegal sau conținut care pune în pericol minorii. Un "
 "astfel de conținut este raportat autorităților competente."
 
-#: apps/web/templates/web/terms.html:26
 msgid "Minors and cohort policy"
 msgstr "Politica privind minorii și cohortele"
 
-#: apps/web/templates/web/terms.html:27
 msgid "This platform is intended to be safe for minors:"
 msgstr "Această platformă este concepută să fie sigură pentru minori:"
 
-#: apps/web/templates/web/terms.html:29
 msgid ""
 "Users are grouped into <strong>age cohorts</strong>, and interaction is kept within a user's\n"
 "      own cohort. Adults and minors are not mixed in the same activity spaces."
@@ -3438,7 +3262,6 @@ msgstr ""
 "Utilizatorii sunt grupați în <strong>cohorte de vârstă</strong>, iar interacțiunea rămâne în\n"
 "      propria cohortă a utilizatorului. Adulții și minorii nu sunt amestecați în aceleași spații de activitate."
 
-#: apps/web/templates/web/terms.html:31
 msgid ""
 "Users <strong>under 16</strong> require verified <strong>parental or guardian consent</strong>\n"
 "      before they can join or organise activities. Without consent, browsing only is allowed."
@@ -3446,7 +3269,6 @@ msgstr ""
 "Utilizatorii <strong>sub 16 ani</strong> au nevoie de <strong>consimțământ parental sau al tutorelui</strong> verificat\n"
 "      înainte de a se putea alătura sau de a organiza activități. Fără consimțământ, este permisă doar navigarea."
 
-#: apps/web/templates/web/terms.html:33
 msgid ""
 "Age is verified via the EU Digital Identity wallet, which discloses only an "
 "age band &mdash; never a birthdate."
@@ -3454,16 +3276,13 @@ msgstr ""
 "Vârsta este verificată prin portofelul de identitate digitală al UE, care "
 "dezvăluie doar o categorie de vârstă &mdash; niciodată data nașterii."
 
-#: apps/web/templates/web/terms.html:34
 msgid "Guardians may review activity and withdraw consent at any time."
 msgstr ""
 "Tutorii pot examina activitatea și pot retrage consimțământul oricând."
 
-#: apps/web/templates/web/terms.html:39
 msgid "Moderation"
 msgstr "Moderare"
 
-#: apps/web/templates/web/terms.html:40
 msgid ""
 "To protect the community and minors, we may review reported content and "
 "accounts, remove content, restrict features, or suspend or terminate "
@@ -3479,11 +3298,9 @@ msgstr ""
 "digitale. Chestiunile grave care afectează siguranța copiilor pot fi "
 "escaladate către autorități."
 
-#: apps/web/templates/web/terms.html:44
 msgid "Reporting and appeals"
 msgstr "Raportare și contestații"
 
-#: apps/web/templates/web/terms.html:45
 msgid ""
 "You can report users or activities through the in-app reporting tools. If we take a moderation\n"
 "    action against your account or content, you will be informed and may <strong>appeal</strong> the\n"
@@ -3496,11 +3313,9 @@ msgstr ""
 "    decizia. Contestațiile sunt examinate de o persoană care nu a fost singura responsabilă de decizia\n"
 "    inițială. <em>(Canalul de contestație și termenele urmează să fie finalizate de departamentul juridic în conformitate cu cerințele DSA.)</em>"
 
-#: apps/web/templates/web/terms.html:53
 msgid "Your data and account deletion"
 msgstr "Datele tale și ștergerea contului"
 
-#: apps/web/templates/web/terms.html:54
 #, python-format
 msgid ""
 "Our handling of personal data is described in the <a href=\"%(privacy_url)s\">Privacy\n"
@@ -3511,11 +3326,9 @@ msgstr ""
 "    confidențialitate</a>. Îți poți șterge contul și datele personale oricând din pagina ta de profil\n"
 "    (dreptul la ștergere, GDPR art. 17)."
 
-#: apps/web/templates/web/terms.html:60
 msgid "Changes and contact"
 msgstr "Modificări și contact"
 
-#: apps/web/templates/web/terms.html:61
 msgid ""
 "We may update these terms; material changes will be communicated. For questions about these\n"
 "    terms, contact us at <em>(contact to be inserted by legal)</em>."
@@ -3523,12 +3336,6 @@ msgstr ""
 "Putem actualiza acești termeni; modificările semnificative vor fi comunicate. Pentru întrebări despre acești\n"
 "    termeni, contactează-ne la <em>(contact de inserat de departamentul juridic)</em>."
 
-#: apps/web/templates/web/transparency.html:3
-#: apps/web/templates/web/transparency.html:5
-msgid "Where the money goes"
-msgstr "Unde se duc banii"
-
-#: apps/web/templates/web/transparency.html:6
 msgid ""
 "We're funded only by donations &mdash; no ads, no tracking. Figures are "
 "shown in EUR, entered by our team and updated periodically."
@@ -3537,51 +3344,39 @@ msgstr ""
 "Cifrele sunt afișate în EUR, introduse de echipa noastră și actualizate "
 "periodic."
 
-#: apps/web/templates/web/transparency.html:9
 msgid "Donations received"
 msgstr "Donații primite"
 
-#: apps/web/templates/web/transparency.html:10
 #, python-format
 msgid "%(raised)s EUR"
 msgstr "%(raised)s EUR"
 
-#: apps/web/templates/web/transparency.html:10
 msgid "from completed donations."
 msgstr "din donații finalizate."
 
-#: apps/web/templates/web/transparency.html:14
 msgid "Spending by category"
 msgstr "Cheltuieli pe categorii"
 
-#: apps/web/templates/web/transparency.html:18
 #, python-format
 msgid "%(total)s EUR"
 msgstr "%(total)s EUR"
 
-#: apps/web/templates/web/transparency.html:21
 #, python-format
 msgid "Total allocated so far: <strong>%(total)s EUR</strong>."
 msgstr "Total alocat până acum: <strong>%(total)s EUR</strong>."
 
-#: apps/web/templates/web/transparency.html:23
 msgid "No spending has been published yet."
 msgstr "Nu a fost publicată încă nicio cheltuială."
 
-#: apps/web/templates/web/transparency.html:26
 msgid "Support the platform"
 msgstr "Susține platforma"
 
-#: apps/web/templates/web/verify_age.html:3
-#: apps/web/templates/web/verify_age.html:5
 msgid "Verify your age"
 msgstr "Verifică-ți vârsta"
 
-#: apps/web/templates/web/verify_age.html:6
 msgid "Your age is verified and you can participate."
 msgstr "Vârsta ta este verificată și poți participa."
 
-#: apps/web/templates/web/verify_age.html:7
 msgid ""
 "Prove your age band with the EU Digital Identity wallet (OpenID4VP). The app"
 " receives only an over-16 / over-18 proof &mdash; never your birthdate "
@@ -3592,36 +3387,28 @@ msgstr ""
 " &mdash; niciodată data nașterii &mdash; și îi verifică semnătura "
 "criptografic."
 
-#: apps/web/templates/web/verify_age.html:10
 msgid "Demo wallet"
 msgstr "Portofel demo"
 
-#: apps/web/templates/web/verify_age.html:10
 msgid "&mdash; present an age proof:"
 msgstr "&mdash; prezintă o dovadă de vârstă:"
 
-#: apps/web/templates/web/verify_age.html:11
 msgid "18 or over (adult)"
 msgstr "18 ani sau peste (adult)"
 
-#: apps/web/templates/web/verify_age.html:12
 msgid "16-17"
 msgstr "16-17"
 
-#: apps/web/templates/web/verify_age.html:13
 msgid "under 16"
 msgstr "sub 16 ani"
 
-#: apps/web/templates/web/verify_age.html:14
 msgid "Present to the app"
 msgstr "Prezintă aplicației"
 
-#: apps/web/templates/web/verify_age.html:17
 msgid "EU wallet verification isn't configured on this server yet."
 msgstr ""
 "Verificarea cu portofelul UE nu este încă configurată pe acest server."
 
-#: apps/web/templates/web/wards.html:6
 msgid ""
 "Children you are the registered parent/legal guardian of. Guardianship is set up\n"
 "  alongside parental consent. You can see <strong>where and when</strong> they're meeting in\n"
@@ -3631,24 +3418,19 @@ msgstr ""
 "  împreună cu consimțământul parental. Poți vedea <strong>unde și când</strong> se întâlnesc în\n"
 "  persoană &mdash; nu conversațiile, fotografiile sau cine altcineva este prezent."
 
-#: apps/web/templates/web/wards.html:13
 msgid "Upcoming meetups"
 msgstr "Întâlniri viitoare"
 
-#: apps/web/templates/web/wards.html:18
 #, python-format
 msgid "at %(place)s"
 msgstr "la %(place)s"
 
-#: apps/web/templates/web/wards.html:22
 msgid "No upcoming meetups."
 msgstr "Nicio întâlnire viitoare."
 
-#: apps/web/templates/web/wards.html:25
 msgid "What this guardianship lets you do"
 msgstr "Ce îți permite această tutelă"
 
-#: apps/web/templates/web/wards.html:27
 msgid ""
 "&#10003; See their upcoming meetups (place, time, activity type) &mdash; "
 "shown above."
@@ -3656,14 +3438,12 @@ msgstr ""
 "&#10003; Să vezi întâlnirile lor viitoare (loc, oră, tip de activitate) "
 "&mdash; afișate mai sus."
 
-#: apps/web/templates/web/wards.html:28
 msgid ""
 "&#10003; Get an alert when they tap &ldquo;I've arrived&rdquo; at a meetup."
 msgstr ""
 "&#10003; Să primești o alertă când apasă &ldquo;Am ajuns&rdquo; la o "
 "întâlnire."
 
-#: apps/web/templates/web/wards.html:29
 msgid ""
 "&#10003; If you've set up secure messaging, read their group chats as a "
 "visible, read-only observer."
@@ -3671,19 +3451,15 @@ msgstr ""
 "&#10003; Dacă ai configurat mesageria securizată, să citești conversațiile "
 "lor de grup ca observator vizibil, doar pentru citire."
 
-#: apps/web/templates/web/wards.html:30
 msgid "&#10003; Parental consent is active."
 msgstr "&#10003; Consimțământul parental este activ."
 
-#: apps/web/templates/web/wards.html:30
 msgid "&bull; Parental consent is not active."
 msgstr "&bull; Consimțământul parental nu este activ."
 
-#: apps/web/templates/web/wards.html:30
 msgid "You can grant or revoke it."
 msgstr "Îl poți acorda sau revoca."
 
-#: apps/web/templates/web/wards.html:31
 msgid ""
 "&#10007; You cannot see their thread posts, photos, who else is there, or "
 "chat content (beyond the observer view above); you never enter their "
@@ -3694,7 +3470,6 @@ msgstr ""
 "de observator de mai sus); nu intri niciodată în activitățile sau cohorta "
 "lor."
 
-#: apps/web/templates/web/wards.html:34
 #, python-format
 msgid ""
 "End guardianship of %(name)s? This also revokes the consent you granted."
@@ -3702,19 +3477,15 @@ msgstr ""
 "Închei tutela asupra %(name)s? Aceasta revocă și consimțământul pe care l-ai"
 " acordat."
 
-#: apps/web/templates/web/wards.html:36
 msgid "End guardianship"
 msgstr "Încheie tutela"
 
-#: apps/web/templates/web/wards.html:40
 msgid "You aren't a registered guardian of any account."
 msgstr "Nu ești tutore înregistrat al niciunui cont."
 
-#: apps/web/templates/web/wards.html:43
 msgid "Link a child's account"
 msgstr "Conectează contul unui copil"
 
-#: apps/web/templates/web/wards.html:44
 msgid ""
 "Enter your child's username to send a guardianship request. They confirm it from\n"
 "  their own home page. You must be a verified adult."
@@ -3722,102 +3493,187 @@ msgstr ""
 "Introdu numele de utilizator al copilului tău pentru a trimite o cerere de tutelă. Acesta o confirmă\n"
 "  din propria pagină de pornire. Trebuie să fii adult verificat."
 
-#: apps/web/templates/web/wards.html:48
 msgid "Child's username"
 msgstr "Numele de utilizator al copilului"
 
-#: apps/web/templates/web/wards.html:50
 msgid "Relationship"
 msgstr "Relație"
 
-#: apps/web/templates/web/wards.html:52
 msgid "Parent"
 msgstr "Părinte"
 
-#: apps/web/templates/web/wards.html:53
 msgid "Legal guardian"
 msgstr "Tutore legal"
 
-#: apps/web/templates/web/wards.html:55
 msgid "Send guardianship request"
 msgstr "Trimite cererea de tutelă"
 
-#: apps/web/views.py:2132
-#| msgid "Save display settings"
+#| msgid "Notification settings"
+msgid "Account & settings"
+msgstr "Cont și setări"
+
+msgid "Account &amp; settings"
+msgstr "Cont &amp; setări"
+
+#, python-format
+#| msgid "We hold a proven age band: <strong>%(band)s</strong>."
+msgid "Signed in as <strong>%(name)s</strong>."
+msgstr "Autentificat ca <strong>%(name)s</strong>."
+
+#| msgid "Save preferences"
+msgid "Profile &amp; preferences"
+msgstr "Profil &amp; preferințe"
+
+#| msgid "Profile"
+msgid "Your profile"
+msgstr "Profilul tău"
+
+#| msgid "Support the platform"
+msgid "Support this platform"
+msgstr "Susține această platformă"
+
 msgid "Your display settings were saved."
 msgstr "Setările de afișare au fost salvate."
 
-#: templates/base.html:8
 msgid "Social Activities"
 msgstr "Activități sociale"
 
-#: templates/base.html:13
 msgid "Skip to main content"
 msgstr "Sari la conținutul principal"
 
-#: templates/base.html:15
+msgid "Menu"
+msgstr "Meniu"
+
 msgid "Primary"
 msgstr "Principal"
 
-#: templates/base.html:18
-msgid "Events"
-msgstr "Evenimente"
+#| msgid "Browse places"
+msgid "Browse"
+msgstr "Explorează"
 
-#: templates/base.html:23
-msgid "Interests"
-msgstr "Interese"
-
-#: templates/base.html:24
 msgid "Organize"
 msgstr "Organizează"
 
-#: templates/base.html:25
-msgid "Alerts"
-msgstr "Alerte"
+msgid "Discover"
+msgstr "Descoperă"
 
-#: templates/base.html:29
-msgid "Guardians"
-msgstr "Tutori"
+msgid "Events"
+msgstr "Evenimente"
 
-#: templates/base.html:33
+msgid "Account overview"
+msgstr "Prezentare generală a contului"
+
 msgid "Support"
 msgstr "Susține"
 
-#: templates/base.html:39
-msgid "Log out"
-msgstr "Deconectare"
-
-#: templates/base.html:48
-msgid "Language"
-msgstr "Limbă"
-
-#: templates/base.html:55
-msgid "Set language"
-msgstr "Setează limba"
-
-#: templates/base.html:70
+#| msgid ""
+#| "A nonprofit, text-first way to meet up in person &mdash; the opposite of image-perfect social\n"
+#| "     media."
 msgid ""
 "A nonprofit, text-first way to meet up in person &mdash; the opposite of image-perfect social\n"
-"     media."
+"       media."
 msgstr ""
 "O modalitate nonprofit, text în primul rând, de a te întâlni în persoană &mdash; opusul rețelelor sociale\n"
-"     bazate pe imagini perfecte."
+"       bazate pe imagini perfecte."
 
-#: templates/base.html:71
 msgid "Demo environment: do not enter real personal data."
 msgstr "Mediu demo: nu introduce date personale reale."
 
-#: templates/base.html:73
 msgid "Privacy"
 msgstr "Confidențialitate"
 
-#: templates/base.html:74
 msgid "Terms"
 msgstr "Termeni"
 
-#: templates/base.html:75
-msgid "Display"
-msgstr "Afișare"
+msgid "Transparency"
+msgstr "Transparență"
+
+msgid "Set language"
+msgstr "Setează limba"
+
+#, python-format
+#~ msgid "In your cohort (<strong>%(cohort)s</strong>)."
+#~ msgstr "În cohorta ta (<strong>%(cohort)s</strong>)."
+
+#~ msgid "This activity is for a different age cohort, so you can't join it."
+#~ msgstr ""
+#~ "Această activitate este pentru o altă cohortă de vârstă, așa că nu te poți "
+#~ "alătura."
+
+#, python-format
+#~ msgid ""
+#~ "<p class=\"muted\">It will be visible only to people in your cohort\n"
+#~ "  (<strong>%(cohort)s</strong>).</p>"
+#~ msgstr ""
+#~ "<p class=\"muted\">Va fi vizibilă doar pentru persoanele din cohorta ta\n"
+#~ "  (<strong>%(cohort)s</strong>).</p>"
+
+#~ msgid "like ,"
+#~ msgstr "ca ,"
+
+#, python-format
+#~ msgid ""
+#~ "Find activities by type and place &mdash; e.g. <em>%(like_prefix)s</em>\n"
+#~ "  &ldquo;Cluj-Napoca Football&rdquo;. A community is just a named list of upcoming activities to\n"
+#~ "  go to; there's no group to join and no members list."
+#~ msgstr ""
+#~ "Găsește activități după tip și loc &mdash; de ex. <em>%(like_prefix)s</em>\n"
+#~ "  &ldquo;Cluj-Napoca Football&rdquo;. O comunitate este doar o listă denumită de activități viitoare la\n"
+#~ "  care poți merge; nu există niciun grup la care să te alături și nicio listă de membri."
+
+#, python-format
+#~ msgid ""
+#~ "You're in the <strong>%(cohort)s</strong> cohort &mdash; you only\n"
+#~ "  see activities for your cohort."
+#~ msgstr ""
+#~ "Faci parte din cohorta <strong>%(cohort)s</strong> &mdash; vezi\n"
+#~ "  doar activitățile pentru cohorta ta."
+
+#~ msgid "Upcoming in your cohort"
+#~ msgstr "Viitoare în cohorta ta"
+
+#~ msgid "What's happening near you"
+#~ msgstr "Ce se întâmplă în apropierea ta"
+
+#~ msgid "Upcoming here (your cohort)"
+#~ msgstr "În curând aici (cohorta ta)"
+
+#~ msgid "Username:"
+#~ msgstr "Nume de utilizator:"
+
+#~ msgid "Cohort:"
+#~ msgstr "Cohortă:"
+
+#~ msgid "Age band:"
+#~ msgstr "Categorie de vârstă:"
+
+#~ msgid "yes,no"
+#~ msgstr "da,nu"
+
+#~ msgid "Interests:"
+#~ msgstr "Interese:"
+
+#~ msgid "Access preferences:"
+#~ msgstr "Preferințe de accesibilitate:"
+
+#~ msgid "step-free, accessible toilet &amp; more"
+#~ msgstr "fără trepte, toaletă accesibilă &amp; altele"
+
+#~ msgid ""
+#~ "Get a copy of all the personal data we hold about you, as a JSON file (GDPR "
+#~ "right to data portability, Art. 20). No card or payment details are stored."
+#~ msgstr ""
+#~ "Obține o copie a tuturor datelor personale pe care le deținem despre tine, "
+#~ "ca fișier JSON (dreptul GDPR la portabilitatea datelor, Art. 20). Nu stocăm "
+#~ "date despre card sau plată."
+
+#, python-format
+#~ msgid ""
+#~ "This permanently deletes your account and personal data (GDPR right to erasure,\n"
+#~ "    Art. 17). This cannot be undone. See our <a href=\"%(privacy_url)s\">Privacy Policy</a>."
+#~ msgstr ""
+#~ "Aceasta vă șterge definitiv contul și datele cu caracter personal (dreptul la ștergere conform GDPR,\n"
+#~ "    Art. 17). Acțiunea nu poate fi anulată. Consultați <a href=\"%(privacy_url)s\">Politica de confidențialitate</a>."
 
 #~ msgid "You reported a message"
 #~ msgstr "Ai raportat un mesaj"

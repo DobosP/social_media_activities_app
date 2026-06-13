@@ -51,7 +51,7 @@
 {% for a in mine %}{% include "web/_activity_card.html" %}{% endfor %}
 {% endif %}
 
-<h2>{% trans "Upcoming in your cohort" %}
+<h2>{% trans "Upcoming for you" %}
   {% if beginners_only %}<a class="muted" href="?"><small>{% trans "show all" %}</small></a>{% else %}<a class="muted" href="?beginners=true"><small>{% trans "beginners welcome only" %}</small></a>{% endif %}
 </h2>
 {% include "web/_near_me.html" %}

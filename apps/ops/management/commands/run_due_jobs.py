@@ -14,6 +14,7 @@ It fans out to the existing per-app commands rather than re-implementing their l
   * ``spawn_due_series``       — spawn the next instance of each due recurring activity series.
   * ``match_saved_searches``   — alert savers when a new activity matches a saved search.
   * ``sync_event_feeds``       — pull registered external calendars (EventFeed) into Events.
+  * ``expire_api_tokens``      — delete stale API tokens (forced re-login; no forever-credentials).
 
 Each job is isolated: a failure in one is reported but does not abort the rest, so a
 single broken job never blocks the others on a shared cron tick. Exit status is non-zero
@@ -36,6 +37,7 @@ DUE_JOBS = (
     ("spawn_due_series", {}),
     ("match_saved_searches", {}),
     ("sync_event_feeds", {}),
+    ("expire_api_tokens", {}),
 )
 
 

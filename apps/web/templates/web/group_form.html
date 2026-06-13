@@ -2,10 +2,9 @@
 {% load i18n %}
 {% block title %}{% trans "Create a group" %}{% endblock %}
 {% block content %}
-<p class="muted"><a href="{% url 'groups' %}">&larr; {% trans "Groups" %}</a></p>
+<p class="muted"><a href="{% url 'communities' %}">&larr; {% trans "Communities &amp; groups" %}</a></p>
 <h1>{% trans "Create a group" %}</h1>
-<p class="muted">{% blocktrans %}A standing group for a city + activity type, visible to people your age.
-  Some groups need staff approval before they appear.{% endblocktrans %}</p>
+<p class="muted">{% trans "A standing group for a city + activity type, visible to people your age." %}</p>
 <form method="post">{% csrf_token %}
   {{ form.as_p }}
   <button class="btn" type="submit">{% trans "Create group" %}</button>

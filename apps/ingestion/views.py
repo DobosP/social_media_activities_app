@@ -45,6 +45,22 @@ class BatchEventsView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         valid_sources = set(Event.Source.values)
+        # Batch-resolve referenced places/types ONCE (review W1-19): a 500-row batch
+        # does 2 lookup queries here, not 1000 inside the loop.
+        place_pks = set()
+        type_slugs = set()
+        for row in rows:
+            if isinstance(row, dict):
+                if str(row.get("place_id", "")).isdigit():
+                    place_pks.add(int(row["place_id"]))
+                if row.get("activity_type"):
+                    type_slugs.add(str(row["activity_type"]))
+        places = Place.objects.in_bulk(place_pks) if place_pks else {}
+        types = (
+            {t.slug: t for t in ActivityType.objects.filter(slug__in=type_slugs, is_active=True)}
+            if type_slugs
+            else {}
+        )
         processed, errors = 0, []
         for i, row in enumerate(rows):
             try:
@@ -53,14 +69,12 @@ class BatchEventsView(APIView):
                     raise ValueError(f"unknown source '{source}'")
                 place = None
                 if row.get("place_id") is not None:
-                    place = Place.objects.filter(pk=int(row["place_id"])).first()
+                    place = places.get(int(row["place_id"]))
                     if place is None:
                         raise ValueError(f"no place {row['place_id']}")
-                activity_type = None
-                if row.get("activity_type"):
-                    activity_type = ActivityType.objects.filter(
-                        slug=row["activity_type"], is_active=True
-                    ).first()
+                activity_type = (
+                    types.get(row["activity_type"]) if row.get("activity_type") else None
+                )
                 raw = RawEvent(
                     title=str(row["title"])[:255],
                     starts_at=row["starts_at"],

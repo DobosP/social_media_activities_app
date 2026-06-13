@@ -96,6 +96,7 @@ urlpatterns = [
     # Consolidated nav hubs (presentation-only landings; see views)
     path("you/", views.you_hub, name="you"),
     path("settings/", views.settings_hub, name="settings"),
+    path("settings/api-token/revoke/", views.api_token_revoke, name="api_token_revoke"),
     path("inbox/", views.inbox_hub, name="inbox"),
     # Interests, profile, notifications, donations
     path("interests/", views.interests, name="interests"),

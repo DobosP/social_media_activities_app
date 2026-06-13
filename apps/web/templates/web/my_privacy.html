@@ -78,6 +78,11 @@
 
 </div>
 
+{% if api_token_exists %}
+<p class="muted">{% url 'settings' as settings_url %}{% blocktrans %}A device (e.g. the mobile app) currently holds API access to your
+  account — you can revoke it in <a href="{{ settings_url }}">Settings</a>.{% endblocktrans %}</p>
+{% endif %}
+
 <h2>{% trans "Take your data with you, or remove it" %}</h2>
 <div class="row" style="gap:.5rem">
   <a class="btn btn-sm" href="{% url 'account_export' %}" download>{% trans "Download my data" %}</a>

@@ -31,6 +31,7 @@ from .services import (
     SocialError,
     activity_search_filter,
     add_guardian,
+    attach_share_cards,
     attendance_summary,
     can_read_thread,
     cancel_activity,
@@ -312,10 +313,13 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
         limit = getattr(settings, "SOCIAL_THREAD_POST_LIMIT", 100)
         posts = list(
             activity.thread.posts.filter(is_hidden=False)
-            .select_related("author")
+            .select_related("author", "shared_activity", "shared_place", "shared_event")
             .order_by("-created_at")[:limit]
         )
         posts.reverse()
+        # Batch the share-card derivation (ONE public-places query) so the serializer's
+        # `share` field never re-queries per post.
+        attach_share_cards(posts)
         return Response(PostSerializer(posts, many=True).data)
 
 

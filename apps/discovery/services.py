@@ -50,12 +50,23 @@ def group_updates(user, *, limit=5):
     """The latest announcements from groups the viewer is currently a member of.
     Routed through ``visible_groups`` (the single group discovery chokepoint) so the
     cohort wall, hidden/archived state and the blocked-owner exclusion all hold;
-    membership is checked live (never a stored rollup). Hidden posts stay hidden."""
-    my_groups = visible_groups(user).filter(
-        memberships__user=user, memberships__state=GroupMembership.State.MEMBER
+    membership is checked live (never a stored rollup). Hidden posts stay hidden.
+
+    Two-step shape (review W1-17): resolve the viewer's few thread ids first (cheap,
+    indexed), then read newest-first per thread via the (thread, created_at) Post index
+    — instead of one big join the planner may heap-scan on every home render."""
+    from apps.social.models import Thread
+
+    my_group_ids = list(
+        visible_groups(user)
+        .filter(memberships__user=user, memberships__state=GroupMembership.State.MEMBER)
+        .values_list("id", flat=True)
     )
+    if not my_group_ids:
+        return []
+    thread_ids = list(Thread.objects.filter(group_id__in=my_group_ids).values_list("id", flat=True))
     return list(
-        Post.objects.filter(thread__group__in=my_groups, is_announcement=True, is_hidden=False)
+        Post.objects.filter(thread_id__in=thread_ids, is_announcement=True, is_hidden=False)
         .select_related("thread__group", "author")
         .order_by("-created_at", "-id")[:limit]
     )

@@ -1,7 +1,8 @@
 from django.conf import settings
-from django.contrib.postgres.indexes import GinIndex
+from django.contrib.postgres.indexes import GinIndex, OpClass
 from django.db import models
 from django.db.models import Q, UniqueConstraint
+from django.db.models.functions import Upper
 
 from apps.accounts.models import Cohort
 
@@ -127,11 +128,12 @@ class Activity(models.Model):
             # community read predicate + the nightly generator are index scans, not seq scans.
             models.Index(fields=["cohort", "activity_type"]),
             models.Index(fields=["cohort", "place"]),
-            # W1 search: free-text search uses icontains over title/description; trigram GIN
-            # keeps those ILIKE '%…%' scans index-assisted as the table grows (the pg_trgm
-            # extension is created in the same migration that adds these indexes).
-            GinIndex(name="activity_title_trgm", fields=["title"], opclasses=["gin_trgm_ops"]),
-            GinIndex(name="activity_desc_trgm", fields=["description"], opclasses=["gin_trgm_ops"]),
+            # W1 search uses icontains over title/description. On Postgres, Django compiles
+            # icontains to UPPER(col) LIKE UPPER(%s) — so the trigram GIN index must be an
+            # EXPRESSION index on Upper(col) to ever be used (a plain column index never
+            # matches; review finding W1-14). pg_trgm is created in migration 0016.
+            GinIndex(OpClass(Upper("title"), name="gin_trgm_ops"), name="activity_title_trgm"),
+            GinIndex(OpClass(Upper("description"), name="gin_trgm_ops"), name="activity_desc_trgm"),
         ]
 
     def __str__(self):

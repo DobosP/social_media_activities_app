@@ -72,8 +72,13 @@ def profile_image_is_taken(uploader, content_digest: str, perceptual: str = "") 
         from .perceptual import DEFAULT_MAX_DISTANCE, hamming_hex
 
         max_distance = getattr(settings, "MEDIA_PERCEPTUAL_MAX_DISTANCE", DEFAULT_MAX_DISTANCE)
-        # Bounded scan: one row per same-cohort user (an account has at most one avatar).
-        for existing in others.exclude(phash="").values_list("phash", flat=True):
+        # One row per same-cohort user (an account has at most one avatar), HARD-CAPPED
+        # so this in-Python scan can never balloon at cohort scale — newest avatars are
+        # the realistic impersonation targets, so they are checked first. Best-effort by
+        # design (the docstring's honesty clause covers anything beyond the cap).
+        cap = getattr(settings, "MEDIA_PERCEPTUAL_PROFILE_SCAN_CAP", 10_000)
+        candidates = others.exclude(phash="").order_by("-id").values_list("phash", flat=True)[:cap]
+        for existing in candidates:
             if hamming_hex(perceptual, existing) <= max_distance:
                 return True
     return False
@@ -119,7 +124,11 @@ def upload_photo(uploader, kind, data: bytes, *, thread=None) -> Photo:
     digest = hashlib.sha256(clean_bytes).hexdigest()
     from .perceptual import dhash_hex
 
-    fingerprint = dhash_hex(clean_bytes) or ""
+    # Data minimisation (review finding W8-0): the perceptual fingerprint exists ONLY
+    # for the avatar-uniqueness rule, so it is computed and stored ONLY for PROFILE
+    # pictures. A private in-thread photo never gets a stored fingerprint — storing one
+    # would create an unused cross-thread correlation signal over private photos.
+    fingerprint = (dhash_hex(clean_bytes) or "") if kind == Photo.Kind.PROFILE else ""
 
     # Profile pictures must be unique by content: refuse one byte-identical OR a
     # perceptual near-duplicate of another user's avatar (checked before storing so a

@@ -51,7 +51,10 @@ def test_build_user_export_has_expected_sections():
         "owned_groups",
         "group_memberships",
         "donations",
+        "api_access",
     }
+    # W10 disclosure: token METADATA only — the export must never contain a key.
+    assert export["api_access"] == {"api_token_issued": False, "issued_at": None}
     assert export["profile"]["username"] == "exp1"
     assert export["profile"]["cohort"] == "adult"
     # The proven band is exported, but never a birthdate or other identifying data.

@@ -1200,7 +1200,14 @@ def _validate_share(author, share_activity, share_place, share_event) -> dict:
             if isinstance(share_activity, Activity)
             else Activity.objects.filter(pk=_safe_pk(share_activity)).first()
         )
-        if target is None or target.is_hidden or not can_see_activity(author, target):
+        if (
+            target is None
+            or target.is_hidden
+            # Sharing a cancelled meetup invites people to nothing — reject at write,
+            # mirroring the read side (share_card degrades a later-cancelled target).
+            or target.status == Activity.Status.CANCELLED
+            or not can_see_activity(author, target)
+        ):
             raise InvalidState(_("You can't share that."))
         return {"shared_activity": target}
     if share_place is not None:
@@ -1228,28 +1235,53 @@ def _safe_pk(value):
         return None
 
 
+def attach_share_cards(posts) -> None:
+    """Batch-derive ``post.share`` for a page of posts (W6), re-gating each target's
+    visibility NOW (not when it was shared): a hidden or CANCELLED activity, an
+    unpublished place or a vanished target render as an honest "unavailable" stub.
+    Thread readers share the author's cohort by construction, so no per-viewer cohort
+    check is needed. ONE public-places query for the whole page (no per-post N+1) —
+    callers must have select_related the shared_* FKs."""
+    from apps.places.services import public_places
+
+    posts = list(posts)
+    place_ids = set()
+    for p in posts:
+        if p.shared_place_id:
+            place_ids.add(p.shared_place_id)
+        if p.shared_event_id and p.shared_event is not None and p.shared_event.place_id:
+            place_ids.add(p.shared_event.place_id)
+    public_ids = (
+        set(public_places().filter(pk__in=place_ids).values_list("id", flat=True))
+        if place_ids
+        else set()
+    )
+    for p in posts:
+        p.share = _derive_share_card(p, public_ids)
+
+
 def share_card(post):
-    """Derive the share card for a post at READ time, re-gating the target's visibility
-    NOW (not when it was shared): a hidden/cancelled activity, an unpublished place or a
-    vanished target render as an honest "unavailable" stub. Thread readers share the
-    author's cohort by construction, so no per-viewer cohort check is needed here."""
+    """Single-post variant of ``attach_share_cards`` (used by the API serializer when a
+    post arrives without the batch pass). Same re-gating; one query at most."""
+    if not (post.shared_activity_id or post.shared_place_id or post.shared_event_id):
+        return None
+    attach_share_cards([post])
+    return post.share
+
+
+def _derive_share_card(post, public_place_ids: set):
     if post.shared_activity_id:
         a = post.shared_activity
-        if a is None or a.is_hidden:
+        if a is None or a.is_hidden or a.status == Activity.Status.CANCELLED:
             return {"kind": "gone"}
         return {"kind": "activity", "obj": a}
     if post.shared_place_id:
-        from apps.places.services import public_places
-
-        p = post.shared_place
-        if p is None or not public_places().filter(pk=p.pk).exists():
+        if post.shared_place is None or post.shared_place_id not in public_place_ids:
             return {"kind": "gone"}
-        return {"kind": "place", "obj": p}
+        return {"kind": "place", "obj": post.shared_place}
     if post.shared_event_id:
-        from apps.places.services import public_places
-
         e = post.shared_event
-        if e is None or (e.place_id and not public_places().filter(pk=e.place_id).exists()):
+        if e is None or (e.place_id and e.place_id not in public_place_ids):
             return {"kind": "gone"}
         return {"kind": "event", "obj": e}
     return None
@@ -1353,13 +1385,15 @@ def thread_page(activity, *, before=None, limit=None):
     window = window[:limit]
     older_cursor_id = window[-1].id if (has_older and window) else None
     window.reverse()  # oldest -> newest for display
+    all_posts = []
     for tp in window:
         tp.is_edited = _is_edited(tp)
-        tp.share = share_card(tp)
+        all_posts.append(tp)
         for reply in tp.replies.all():  # prefetched, already filtered + ordered
             reply.is_edited = _is_edited(reply)
             reply.snippet = reply_snippet(reply)
-            reply.share = share_card(reply)
+            all_posts.append(reply)
+    attach_share_cards(all_posts)  # ONE public-places query for the whole page
     return window, has_older, older_cursor_id
 
 
@@ -1451,13 +1485,30 @@ def broadcast_post(post, *, edited=False) -> None:
             return
         snippet = reply_snippet(post)
         author = post.author.display_name or post.author.username
+        # Live share-card summary so a share-only post never arrives as a blank bubble.
+        # Title only (text) — the client builds the href from kind + integer id, never
+        # from this string.
+        share = share_card(post)
+        share_payload = None
+        if share is not None:
+            if share["kind"] == "gone":
+                share_payload = {"kind": "gone"}
+            else:
+                target = share["obj"]
+                share_payload = {
+                    "kind": share["kind"],
+                    "id": target.pk,
+                    "title": getattr(target, "title", "") or getattr(target, "name", ""),
+                }
         payload = {
             "id": post.id,
             "author": author,
+            "author_id": post.author_id,
             "body": post.body,
             "is_announcement": post.is_announcement,
             "reply_to": post.reply_to_id,
             "reply_snippet": snippet,
+            "share": share_payload,
             "edited": edited
             or (post.updated_at and post.created_at and post.updated_at > post.created_at),
             "created_at": post.created_at.isoformat() if post.created_at else None,

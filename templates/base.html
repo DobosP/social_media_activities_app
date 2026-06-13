@@ -59,8 +59,10 @@
 
         {% if user.is_authenticated %}
           {% comment %}W3: the account menu opens from the user's avatar (generated
-             constellation/identicon — a deterministic data URI, no media fetch). The
-             menu is deliberately slim: everything else lives on /settings/.{% endcomment %}
+             constellation/identicon — a deterministic data URI, no media fetch). Known
+             cost: |avatar_uri runs one indexed interests query + a small SVG render per
+             page; cache here if profiling ever shows it hot. The menu is deliberately
+             slim: everything else lives on /settings/.{% endcomment %}
           <details class="nav-menu nav-end">
             <summary><img class="avatar nav-avatar" src="{{ user|avatar_uri }}" width="26" height="26" alt="">
               <span class="nav-username">{{ user.display_name|default:user.username }}</span></summary>

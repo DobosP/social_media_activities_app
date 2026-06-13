@@ -400,6 +400,8 @@ textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--accent)
 .share-card .muted { font-size: .82rem; }
 .share-card--gone { border-left-color: var(--line); font-size: .85rem; }
 .share-box > summary { cursor: pointer; }
+/* Headings inside <summary> stay inline (collapsible cards keep SR heading nav). */
+.inline-h { display: inline; font-size: 1rem; margin: 0; }
 
 /* W4: compact pill picker (interests). The checkbox stays in the tab order but is
    visually hidden; its sibling <span> is the visible pill (no :has() needed). */

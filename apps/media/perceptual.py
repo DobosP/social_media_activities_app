@@ -36,7 +36,7 @@ def dhash_hex(data: bytes, *, max_pixels: int = DEFAULT_MAX_PIXELS) -> str | Non
             if width * height > max_pixels:
                 return None
             gray = im.convert("L").resize((9, 8), Image.LANCZOS)
-            pixels = list(gray.getdata())
+            pixels = list(gray.tobytes())  # 9*8 grayscale bytes, in row-major order
     except Exception:
         return None
     bits = 0

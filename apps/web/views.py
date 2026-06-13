@@ -516,7 +516,13 @@ def share_to_thread(request):
     kind = request.POST.get("kind")
     obj_id = request.POST.get("obj_id")
     target_pk = request.POST.get("target")
-    if kind not in ("activity", "place", "event") or not str(target_pk).isdigit():
+    # obj_id must be a real pk too (review W1-6): a missing/garbage obj_id would make
+    # _validate_share a no-op and allow_empty=True would then create a fully EMPTY post.
+    if (
+        kind not in ("activity", "place", "event")
+        or not str(target_pk).isdigit()
+        or not str(obj_id).isdigit()
+    ):
         raise Http404("Bad share request.")
     target = _visible_activity_or_404(request.user, int(target_pk))
     note = (request.POST.get("note") or "").strip()[:280]
@@ -1825,7 +1831,35 @@ def settings_hub(request):
     here — language, display, notifications, access needs, privacy/data controls,
     age verification, guardians, and the account dangers (export / delete). Pure
     links + the language form; every linked control keeps its own view and gates."""
-    return render(request, "web/settings.html", _nav_context(request.user))
+    from rest_framework.authtoken.models import Token
+
+    # W10 disclosure (review W1-1): if an API token exists, the user can SEE it here
+    # and revoke it with their session — losing the device no longer means an
+    # invisible, irrevocable credential.
+    api_token = Token.objects.filter(user=request.user).first()
+    return render(
+        request,
+        "web/settings.html",
+        {
+            "api_token_created": api_token.created if api_token else None,
+            **_nav_context(request.user),
+        },
+    )
+
+
+@login_required
+@require_POST
+def api_token_revoke(request):
+    """Session-authenticated revoke of the account's API token (W10) — the recovery
+    path when the device holding the token is lost or shared."""
+    from rest_framework.authtoken.models import Token
+
+    deleted, _ = Token.objects.filter(user=request.user).delete()
+    if deleted:
+        messages.success(request, "API access has been revoked on all devices.")
+    else:
+        messages.info(request, "There was no API access to revoke.")
+    return redirect("settings")
 
 
 # --- Profile ------------------------------------------------------------------------
@@ -2075,13 +2109,15 @@ def events_list(request):
     from apps.events.services import search_events, upcoming_events
 
     query = (request.GET.get("q") or "").strip()
+    activity = request.GET.get("activity")
     if query:
-        events = search_events(query)
+        # The type filter composes with search — never silently dropped while the
+        # "Filtered by X" banner shows (review W1-28).
+        events = search_events(query, activity_slug=activity)
     else:
         # upcoming_events applies the F25 pending-place gate (the API HappeningView always
         # had it; the web list previously leaked a pending venue's name through an event).
         events = upcoming_events().order_by("starts_at")
-        activity = request.GET.get("activity")
         if activity:
             events = events.filter(activity_type__slug=activity)
     return render(
@@ -2089,7 +2125,7 @@ def events_list(request):
         "web/events.html",
         {
             "events": events[:100],
-            "activity": request.GET.get("activity"),
+            "activity": activity,
             "query": query,
             **_nav_context(request.user),
         },
@@ -2097,16 +2133,22 @@ def events_list(request):
 
 
 def event_detail(request, pk):
-    from django.db.models import Q as _Q
-
-    from apps.places.services import public_places
+    from apps.events.services import events_with_public_places
 
     # Same F25 gate as the list: an event at a still-unpublished user-proposed place
-    # must not disclose that place (or its name) on the detail page either.
-    qs = Event.objects.select_related("place", "activity_type").filter(
-        _Q(place__isnull=True) | _Q(place_id__in=public_places().values("id"))
-    )
-    event = get_object_or_404(qs, pk=pk)
+    # must not disclose that place (or its name) on the detail page either. Mirror
+    # place_detail's carve-out (review W1-13): the place's PROPOSER and staff may still
+    # open it, so the pending-place flow doesn't dead-end.
+    event = get_object_or_404(Event.objects.select_related("place", "activity_type"), pk=pk)
+    if not events_with_public_places().filter(pk=event.pk).exists():
+        proposal = getattr(event.place, "proposal", None) if event.place_id else None
+        is_proposer = (
+            request.user.is_authenticated
+            and proposal is not None
+            and proposal.proposer_id == request.user.id
+        )
+        if not (request.user.is_staff or is_proposer):
+            raise Http404("No event matches the given query.")
     return render(
         request,
         "web/event_detail.html",
@@ -2521,9 +2563,17 @@ def my_privacy(request):
             # Counts mirror exactly what the linked /my-safety-record/ page shows (same cap).
             "decisions_count": len(record["decisions"]),
             "reports_count": len(record["reports"]),
+            # W10 disclosure: a device may hold API access; the revoke lives in Settings.
+            "api_token_exists": _api_token_exists(user),
             **_nav_context(user),
         },
     )
+
+
+def _api_token_exists(user) -> bool:
+    from rest_framework.authtoken.models import Token
+
+    return Token.objects.filter(user=user).exists()
 
 
 def display_preferences(request):

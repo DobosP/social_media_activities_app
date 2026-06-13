@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from . import services
-from .models import Conversation, Message
+from .models import Conversation, Message, Participant
 from .serializers import (
     ConversationSerializer,
     MessageSerializer,
@@ -108,16 +108,20 @@ class ConversationListCreateView(APIView):
         limit = getattr(settings, "MESSAGING_CONVERSATION_LIST_LIMIT", 100)
         qs = services.conversations_for(request.user)
         # W1 search: ?q= filters by conversation METADATA only (group title, participant
-        # names) — message bodies are E2EE ciphertext the server cannot search.
+        # names) — message bodies are E2EE ciphertext the server cannot search. Name
+        # matching is restricted to the participant states the serializer actually shows
+        # (ACTIVE/INVITED), so someone who LEFT/was removed can't be rediscovered through
+        # search on a surface that deliberately hides them (review W1-2).
         query = (request.query_params.get("q") or "").strip()
         if len(query) >= 2:
             from django.db.models import Q as _Q
 
-            qs = qs.filter(
-                _Q(title__icontains=query)
-                | _Q(participants__user__display_name__icontains=query)
+            shown_states = [Participant.State.ACTIVE, Participant.State.INVITED]
+            name_match = _Q(participants__state__in=shown_states) & (
+                _Q(participants__user__display_name__icontains=query)
                 | _Q(participants__user__username__icontains=query)
-            ).distinct()
+            )
+            qs = qs.filter(_Q(title__icontains=query) | name_match).distinct()
         convs = list(qs.prefetch_related("participants__user")[:limit])
         _attach_avatars([p.user for c in convs for p in c.participants.all()])
         return Response(ConversationSerializer(convs, many=True, context={"request": request}).data)

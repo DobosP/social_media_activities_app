@@ -1,6 +1,7 @@
-from django.contrib.postgres.indexes import GinIndex
+from django.contrib.postgres.indexes import GinIndex, OpClass
 from django.db import models
 from django.db.models import Q, UniqueConstraint
+from django.db.models.functions import Upper
 
 from apps.safety.sanitize import safe_external_url
 
@@ -53,9 +54,10 @@ class Event(models.Model):
         indexes = [
             models.Index(fields=["place", "starts_at"]),
             models.Index(fields=["starts_at"]),
-            # W1 search: trigram GIN so the events search (icontains) stays index-assisted.
-            GinIndex(name="event_title_trgm", fields=["title"], opclasses=["gin_trgm_ops"]),
-            GinIndex(name="event_desc_trgm", fields=["description"], opclasses=["gin_trgm_ops"]),
+            # W1 search: trigram GIN on UPPER(col) — icontains compiles to UPPER() LIKE on
+            # Postgres, so only an expression index matches (review finding W1-14).
+            GinIndex(OpClass(Upper("title"), name="gin_trgm_ops"), name="event_title_trgm"),
+            GinIndex(OpClass(Upper("description"), name="gin_trgm_ops"), name="event_desc_trgm"),
         ]
         ordering = ["starts_at"]
 
