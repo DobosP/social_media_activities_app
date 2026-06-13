@@ -19,18 +19,22 @@ _SEED_MODULES = (
     "apps.taxonomy.migrations.0002_seed_taxonomy",
     "apps.taxonomy.migrations.0004_seed_activities_v2",
     "apps.taxonomy.migrations.0005_seed_reading_archives",
+    # F9: the child-safe venue-class allowlist (library/park/...) the venue gate reads.
+    "apps.places.migrations.0007_seed_child_venue_classes",
 )
 
 
 def _reseed_taxonomy():
     from django.apps import apps as global_apps
 
+    from apps.places.models import ChildVenueClass
     from apps.taxonomy.models import ActivityType
 
-    # Fast path: the seed is intact, so do nothing but a couple of cheap lookups.
+    # Fast path: every seed is intact, so do nothing but a few cheap lookups.
     if (
         ActivityType.objects.filter(slug="basketball").exists()
         and ActivityType.objects.filter(slug="archive").exists()
+        and ChildVenueClass.objects.filter(key="library").exists()
     ):
         return
     for path in _SEED_MODULES:

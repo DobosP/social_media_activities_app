@@ -267,11 +267,26 @@ def can_join(user, activity) -> bool:
     )
     if existing:
         return False
+    # F9: a CHILD-cohort meetup must be at an approved public venue type (defence in depth — the
+    # same gate runs at create; this also covers a place that lost its classification since).
+    if (
+        activity.cohort == Cohort.CHILD
+        and getattr(settings, "CHILD_PUBLIC_VENUES_ONLY", True)
+        and not _venue_ok_for_child(activity)
+    ):
+        return False
     # F7: a CHILD ward's guardian(s) may have set conservative participation guardrails. These
     # only ever NARROW access; we apply the STRICTEST across all active guardians, fail-closed.
     if user.cohort == Cohort.CHILD and not _passes_guardrails(user, activity):
         return False
     return True
+
+
+def _venue_ok_for_child(activity) -> bool:
+    """True iff the activity's meetup place is an approved public venue type for children (F9)."""
+    from apps.places.services import is_child_safe_venue
+
+    return is_child_safe_venue(activity.place)
 
 
 def _passes_guardrails(user, activity) -> bool:
@@ -341,6 +356,20 @@ def create_activity(
 
     if place is None or not public_places().filter(pk=place.pk).exists():
         raise InvalidState(_("That place isn't available to organise an activity at yet."))
+    # F9: a CHILD-cohort meetup may only be set at a known public venue type (or a staff-approved
+    # place). Fail-closed, but the message names the staff-approval path rather than silently
+    # over-blocking. Gated behind CHILD_PUBLIC_VENUES_ONLY (default ON).
+    if owner.cohort == Cohort.CHILD and getattr(settings, "CHILD_PUBLIC_VENUES_ONLY", True):
+        from apps.places.services import is_child_safe_venue
+
+        if not is_child_safe_venue(place):
+            raise InvalidState(
+                _(
+                    "This venue isn't on the approved list for children's activities yet. Pick a "
+                    "library, park, school, sports or community venue — or ask a moderator to "
+                    "approve this place."
+                )
+            )
     activity = Activity.objects.create(
         owner=owner,
         place=place,
@@ -451,6 +480,20 @@ def create_series(
 
     if place is None or not public_places().filter(pk=place.pk).exists():
         raise InvalidState(_("That place isn't available to organise an activity at yet."))
+    # F9: a CHILD series must template a known public venue type too — otherwise it would be a
+    # "zombie series" that silently never spawns (every spawn re-checks the same gate). Same gate,
+    # same message, same flag as create_activity.
+    if owner.cohort == Cohort.CHILD and getattr(settings, "CHILD_PUBLIC_VENUES_ONLY", True):
+        from apps.places.services import is_child_safe_venue
+
+        if not is_child_safe_venue(place):
+            raise InvalidState(
+                _(
+                    "This venue isn't on the approved list for children's activities yet. Pick a "
+                    "library, park, school, sports or community venue — or ask a moderator to "
+                    "approve this place."
+                )
+            )
     duration = None
     if ends_at is not None and ends_at > first_starts_at:
         duration = int((ends_at - first_starts_at).total_seconds() // 60)
