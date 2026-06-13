@@ -1,18 +1,16 @@
 {% extends "base.html" %}
 {% load safe_urls i18n %}
-{% block title %}{{ place.name|default:_("Place") }}{% endblock %}
+{% block title %}{{ place.display_name|default:_("Place") }}{% endblock %}
 {% block content %}
 <p class="muted"><a href="{% url 'places_map' %}">&larr; {% trans "Places" %}</a></p>
-<h1>{{ place.name|default:_("Unnamed place") }}</h1>
+{# F20: render the crowd-corrected name/address (falls back to raw OSM); never written to Place. #}
+<h1>{{ place.display_name|default:_("Unnamed place") }}</h1>
 {% if pending_proposal %}
   <div class="banner">{% blocktrans with confirmed=pending_proposal.confirmations.count required=pending_proposal.required_confirmations %}This place is pending &mdash; it needs
     {{ confirmed }} of {{ required }}
     confirmations before it's public. For now only you and moderators can see it.{% endblocktrans %}</div>
 {% endif %}
-<p class="muted">
-  {% if place.address_street %}{{ place.address_street }} {{ place.address_housenumber }}, {% endif %}
-  {{ place.address_city }} {{ place.address_country }}
-</p>
+<p class="muted">{{ place.display_address }}{% if place.address_country %} {{ place.address_country }}{% endif %}</p>
 {% if place.website|safe_href %}<p><a href="{{ place.website|safe_href }}" rel="noopener noreferrer" target="_blank">{% trans "Official website" %} &rarr;</a></p>{% endif %}
 {% if partner %}<p class="muted">{% trans "In partnership with" %} {% if partner.website|safe_href %}<a href="{{ partner.website|safe_href }}" rel="noopener noreferrer" target="_blank">{{ partner.name }}</a>{% else %}{{ partner.name }}{% endif %} <small>({{ partner.get_kind_display }})</small></p>{% endif %}
 
@@ -117,6 +115,43 @@
     {% endfor %}
   </ul>
   <p class="muted" style="font-size:.8rem">{% trans "Map data first; otherwise members confirm. We never claim a fact that isn't recorded, and never show who voted." %}</p>
+</div>
+
+{# F20: crowd-corrected name/address. Pending corrections show COUNTS only (no proposer/confirmer). #}
+<div class="card">
+  <h2 style="margin-top:0">{% trans "Name &amp; address" %}</h2>
+  {% if corrections %}
+    <ul class="members">
+      {% for c in corrections %}
+        <li>{{ c.field_label }} &rarr; <strong>{{ c.proposed_value }}</strong>
+          <small class="muted">{% blocktrans with confirms=c.confirms required=c.required %}{{ confirms }}/{{ required }} confirms{% endblocktrans %}</small>
+          {% if can_contribute and not c.is_proposer %}
+            <form method="post" action="{% url 'place_correction_confirm' place.pk c.id %}" style="display:inline">
+              {% csrf_token %}
+              <button class="btn btn--light" {% if c.confirmed_by_me %}disabled{% endif %}>{% trans "Confirm" %}</button>
+            </form>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+  {% if can_contribute %}
+    <details>
+      <summary>{% trans "Suggest a correction" %}</summary>
+      <form method="post" action="{% url 'place_correction_propose' place.pk %}" class="stack">
+        {% csrf_token %}
+        <label>{% trans "What's wrong?" %}
+          <select name="field">
+            <option value="name">{% trans "Name" %}</option>
+            <option value="address">{% trans "Address" %}</option>
+          </select></label>
+        <label>{% trans "Corrected value" %}
+          <input type="text" name="proposed_value" maxlength="255" required></label>
+        <button class="btn btn-sm" type="submit">{% trans "Suggest correction" %}</button>
+      </form>
+    </details>
+  {% endif %}
+  <p class="muted" style="font-size:.8rem">{% trans "Corrections need a few independent confirmations before they show. We never change the map's own data, and never show who suggested or confirmed." %}</p>
 </div>
 
 {% if user.is_authenticated %}

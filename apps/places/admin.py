@@ -10,8 +10,9 @@ from .models import (
     Partner,
     Place,
     PlaceActivity,
+    PlaceCorrection,
 )
-from .services import clear_open_now_reports
+from .services import clear_open_now_reports, staff_publish_correction, staff_reject_correction
 
 
 class PlaceActivityInline(gis_admin.TabularInline):
@@ -86,6 +87,34 @@ class PartnerAdmin(admin.ModelAdmin):
     list_display = ("name", "kind", "place", "is_verified", "is_active")
     list_filter = ("kind", "is_verified", "is_active")
     search_fields = ("name", "blurb")
+
+
+@admin.register(PlaceCorrection)
+class PlaceCorrectionAdmin(admin.ModelAdmin):
+    """F20: staff fast-publish / reject of crowd name/address corrections (the launch escape
+    hatch when a 3-confirmer quorum won't form organically)."""
+
+    list_display = ("place", "field", "proposed_value", "status", "created_at")
+    list_filter = ("status", "field")
+    search_fields = ("place__name", "proposed_value")
+    readonly_fields = ("place", "proposer", "field", "proposed_value", "created_at", "published_at")
+    actions = ("publish_corrections", "reject_corrections")
+
+    @admin.action(description="Publish selected corrections (apply at read time)")
+    def publish_corrections(self, request, queryset):
+        done = 0
+        for correction in queryset.filter(status=PlaceCorrection.Status.PENDING):
+            staff_publish_correction(request.user, correction)
+            done += 1
+        self.message_user(request, f"Published {done} correction(s).")
+
+    @admin.action(description="Reject selected corrections")
+    def reject_corrections(self, request, queryset):
+        done = 0
+        for correction in queryset.exclude(status=PlaceCorrection.Status.REJECTED):
+            staff_reject_correction(request.user, correction)
+            done += 1
+        self.message_user(request, f"Rejected {done} correction(s).")
 
 
 @admin.register(ChildVenueClass)

@@ -811,7 +811,9 @@ def places_list(request):
 def place_detail(request, pk):
     from apps.places.services import public_places
 
-    place = get_object_or_404(Place.objects.prefetch_related("place_activities__activity"), pk=pk)
+    place = get_object_or_404(
+        Place.objects.prefetch_related("place_activities__activity", "corrections"), pk=pk
+    )
     # F25: a still-pending user place is viewable ONLY by its proposer or staff (404 otherwise),
     # so the quorum isn't bypassed and the public never sees it before it's published.
     proposal = getattr(place, "proposal", None)
@@ -852,6 +854,10 @@ def place_detail(request, pk):
     for edge in edges:
         edge.summary = edge_vote_summary(edge, request.user)
     can_contribute = is_public and request.user.is_authenticated and can_participate(request.user)
+    # F20: pending name/address corrections (counts only) — applied at read time via display_*.
+    from apps.places.services import pending_corrections
+
+    corrections = pending_corrections(place, request.user)
     # F19: crowd venue facts (OSM-first, crowd overlay) + a SOFT kid badge (never hides a place).
     venue_fact_rows = venue_facts_detail(place, request.user)
     has_kid_facts = any(
@@ -869,6 +875,7 @@ def place_detail(request, pk):
             "edges": edges,
             "can_contribute": can_contribute,
             "open_now": open_now_status(place),
+            "corrections": corrections,
             "venue_facts": venue_fact_rows,
             "has_kid_facts": has_kid_facts,
             "access_facts": accessibility_facts_display(place),
@@ -987,6 +994,42 @@ def fact_vote(request, pk):
         )
         messages.success(request, "Thanks - your feedback was recorded.")
     except PlacesError as exc:
+        messages.error(request, str(exc))
+    return redirect("place_detail", pk=pk)
+
+
+@login_required
+@require_POST
+def place_correction_propose(request, pk):
+    """F20: suggest a corrected venue name/address (opens a quorum correction)."""
+    from apps.places.services import PlacesError, propose_place_correction
+
+    place = get_object_or_404(Place, pk=pk)
+    try:
+        propose_place_correction(
+            request.user,
+            place,
+            field=request.POST.get("field", ""),
+            proposed_value=request.POST.get("proposed_value", ""),
+        )
+        messages.success(request, "Thanks - others can now confirm your correction.")
+    except PlacesError as exc:
+        messages.error(request, str(exc))
+    return redirect("place_detail", pk=pk)
+
+
+@login_required
+@require_POST
+def place_correction_confirm(request, pk, correction_id):
+    """F20: confirm a pending correction; a quorum publishes it (applied at read time)."""
+    from apps.places.models import PlaceCorrection
+    from apps.places.services import InvalidState, NotEligible, confirm_place_correction
+
+    correction = get_object_or_404(PlaceCorrection, pk=correction_id, place_id=pk)
+    try:
+        confirm_place_correction(request.user, correction)
+        messages.success(request, "Thanks - your confirmation was recorded.")
+    except (InvalidState, NotEligible) as exc:
         messages.error(request, str(exc))
     return redirect("place_detail", pk=pk)
 

@@ -12,6 +12,7 @@ from django.db.models import Q
 from django.utils import timezone
 
 from .models import (
+    DEFAULT_CORRECTION_QUORUM,
     DEFAULT_FACT_QUORUM,
     AccessPreference,
     ApprovedChildVenue,
@@ -19,6 +20,8 @@ from .models import (
     OpenNowReport,
     Partner,
     Place,
+    PlaceCorrection,
+    PlaceCorrectionConfirmation,
     PlaceFactVote,
 )
 
@@ -29,6 +32,10 @@ class PlacesError(Exception):
 
 class NotEligible(PlacesError):
     """User fails the verified+consented gate."""
+
+
+class InvalidState(PlacesError):
+    """The target isn't in a state that permits the action (e.g. a correction already resolved)."""
 
 
 def public_places(qs=None):
@@ -435,3 +442,117 @@ def vote_on_fact(user, place, fact_key, value) -> PlaceFactVote:
         place=place, user=user, fact_key=fact_key, defaults={"value": bool(value)}
     )
     return vote
+
+
+# --- F20: crowd-corrected venue name & address (quorum edit overlay) ------------------
+# A member proposes a corrected name/address behind the SAME N-confirmer quorum as a user-proposed
+# place (F25). Applied OSM-first at read time via Place.display_name/display_address — never written
+# back to Place (re-ingest safe). Counts-only pending UI; proposer excluded from confirming.
+
+
+def _correction_quorum() -> int:
+    return getattr(settings, "CORRECTION_QUORUM", DEFAULT_CORRECTION_QUORUM)
+
+
+@transaction.atomic
+def propose_place_correction(proposer, place, *, field, proposed_value) -> PlaceCorrection:
+    """Open a correction proposal for a venue's name/address. Verified+consented, public place only,
+    a fixed field, sanitised + capped value; at most one PENDING correction per (place, field)."""
+    from apps.accounts.services import can_participate
+    from apps.safety.services import record_audit
+
+    if field not in PlaceCorrection.Field.values:
+        raise PlacesError("You can only correct the name or address.")
+    if not can_participate(proposer):
+        raise NotEligible("Verified, consented participation is required to suggest a correction.")
+    if not public_places().filter(pk=place.pk).exists():
+        raise PlacesError("This place isn't published yet.")
+    value = (proposed_value or "").strip()[:255]
+    if not value:
+        raise PlacesError("Enter the corrected value.")
+    if place.corrections.filter(field=field, status=PlaceCorrection.Status.PENDING).exists():
+        raise PlacesError("There's already an open correction for this field.")
+    correction = PlaceCorrection.objects.create(
+        place=place,
+        proposer=proposer,
+        field=field,
+        proposed_value=value,
+        required_confirmations=_correction_quorum(),
+    )
+    record_audit("place.correction_proposed", actor=proposer, target=place, field=field)
+    return correction
+
+
+@transaction.atomic
+def confirm_place_correction(user, correction: PlaceCorrection) -> PlaceCorrection:
+    """An independent member confirms a correction; a quorum publishes it (applied at read time)."""
+    from apps.accounts.services import can_participate
+
+    if correction.status != PlaceCorrection.Status.PENDING:
+        raise InvalidState("This correction is no longer open for confirmation.")
+    if correction.proposer_id == user.id:
+        raise InvalidState("The proposer cannot confirm their own correction.")
+    if not can_participate(user):
+        raise NotEligible("Verified, consented participation is required to confirm a correction.")
+    PlaceCorrectionConfirmation.objects.get_or_create(correction=correction, user=user)
+    if correction.confirmations.count() >= correction.required_confirmations:
+        correction.status = PlaceCorrection.Status.PUBLISHED
+        correction.published_at = timezone.now()
+        correction.save(update_fields=["status", "published_at"])
+    return correction
+
+
+@transaction.atomic
+def staff_publish_correction(staff_user, correction: PlaceCorrection) -> PlaceCorrection:
+    """Moderator fast-publish (single-launch-city escape hatch when a quorum won't form)."""
+    if not staff_user.is_staff:
+        raise NotEligible("Only staff may publish a correction.")
+    if correction.status != PlaceCorrection.Status.PENDING:
+        raise InvalidState("This correction is not pending.")
+    correction.status = PlaceCorrection.Status.PUBLISHED
+    correction.published_at = timezone.now()
+    correction.save(update_fields=["status", "published_at"])
+    from apps.safety.services import record_audit
+
+    record_audit("place.correction_published", actor=staff_user, target=correction.place)
+    return correction
+
+
+@transaction.atomic
+def staff_reject_correction(
+    staff_user, correction: PlaceCorrection, *, reason=""
+) -> PlaceCorrection:
+    """Moderator close-out of a bad correction (stays unapplied — display falls back to OSM)."""
+    if not staff_user.is_staff:
+        raise NotEligible("Only staff may reject a correction.")
+    correction.status = PlaceCorrection.Status.REJECTED
+    correction.save(update_fields=["status"])
+    from apps.safety.services import record_audit
+
+    record_audit(
+        "place.correction_rejected", actor=staff_user, target=correction.place, reason=reason
+    )
+    return correction
+
+
+def pending_corrections(place, viewer=None) -> list:
+    """Open corrections for a place as COUNTS only (never proposer/confirmer identities), plus
+    whether the viewer has already confirmed each (so the UI can disable their button)."""
+    out = []
+    for c in place.corrections.filter(status=PlaceCorrection.Status.PENDING).order_by("field"):
+        confirmed_by_me = False
+        if viewer is not None and getattr(viewer, "is_authenticated", False):
+            confirmed_by_me = c.confirmations.filter(user=viewer).exists()
+        out.append(
+            {
+                "id": c.id,
+                "field": c.field,
+                "field_label": PlaceCorrection.Field(c.field).label,
+                "proposed_value": c.proposed_value,
+                "confirms": c.confirmations.count(),
+                "required": c.required_confirmations,
+                "is_proposer": viewer is not None and c.proposer_id == getattr(viewer, "id", None),
+                "confirmed_by_me": confirmed_by_me,
+            }
+        )
+    return out
