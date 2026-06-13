@@ -57,3 +57,23 @@ def test_deterministic_sorted_unique():
 
 def test_short_digit_runs_are_not_phone_numbers():
     assert "phone-number" not in contact_hint_terms("we are 5 people, room 12")
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "add message to the board",  # 'add me' must not match inside 'add message'
+        "I sent a snapshot of the field",  # 'snap' must not match inside 'snapshot'
+        "reply instantly please",  # 'insta' must not match inside 'instantly'
+        "that was a discordant note",  # 'discord' must not match inside 'discordant'
+        "the coach was signaling us",  # 'signal' must not match inside 'signaling'
+        "a short history of telegraphy",  # 'telegram' must not match inside 'telegraphy'
+        "call message center tomorrow",  # 'call me' must not match across 'call message'
+    ],
+)
+def test_word_boundary_suppresses_substring_false_positives(text):
+    assert has_contact_hint(text) is False
+
+
+def test_dotted_version_numbers_are_not_phone_numbers():
+    assert "phone-number" not in contact_hint_terms("upgrade to version 2.5.4.2.1.6.7 today")

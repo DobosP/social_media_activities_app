@@ -122,3 +122,40 @@ def test_triage_is_not_persisted():
     triage_summary(report)
     triage_order([report])
     assert Report.objects.count() == before
+
+
+def test_dismissed_report_has_zero_open_duplicates():
+    # A non-OPEN report whose target has no OPEN reports must report 0 duplicates, not the old
+    # fallback of 1 (review finding).
+    from apps.safety.services import dismiss_report
+
+    target = _user("dz1")
+    report = file_report(_user("dz2"), target, ReasonCode.SPAM)
+    dismiss_report(_user("dzmod", Role.MODERATOR), report, "nope")
+    report.refresh_from_db()
+    ((_, summary),) = triage_order([report])
+    assert summary["open_duplicates"] == 0
+
+
+def test_queue_rejects_non_moderator():
+    file_report(_user("nm_r"), _user("nm_t"), ReasonCode.SPAM)
+    # Unauthenticated.
+    assert APIClient().get("/api/safety/moderation/reports/").status_code in (401, 403)
+    # A plain (non-moderator) user must never see triage signals.
+    client = APIClient()
+    client.force_authenticate(_user("nm_plain"))
+    assert client.get("/api/safety/moderation/reports/").status_code == 403
+
+
+def test_queue_query_count_is_bounded(django_assert_max_num_queries):
+    # Many reports of mixed targets must NOT trigger a GenericForeignKey N+1 (review finding).
+    for i in range(12):
+        file_report(_user(f"qc_r{i}"), _child(f"qc_c{i}"), ReasonCode.GROOMING)
+        file_report(_user(f"qc_ru{i}"), _user(f"qc_u{i}"), ReasonCode.SPAM)
+    moderator = _user("qc_mod", Role.MODERATOR)
+    client = APIClient()
+    client.force_authenticate(moderator)
+    # Bounded: auth + cap + dup-count + targets-per-type + bulk users + audit (+ a little overhead).
+    with django_assert_max_num_queries(20):
+        resp = client.get("/api/safety/moderation/reports/?status=open")
+    assert resp.status_code == 200

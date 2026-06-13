@@ -297,37 +297,89 @@ _TRIAGE_SEVERITY = {
 }
 
 
+_UNSET = object()
+
+
 def _open_duplicate_counts(reports):
     """One grouped query: {(target_type_id, target_id): open_report_count} over the given reports'
-    targets (uses the (target_type, target_id) index). Avoids an N+1 across the queue."""
+    targets (uses the (target_type, target_id) index). Narrowed by BOTH type and id so the scan is
+    bounded to the queue's targets, not every open report of those content types."""
     from django.db.models import Count
 
     keys = {(r.target_type_id, r.target_id) for r in reports}
     if not keys:
         return {}
     type_ids = {t for t, _ in keys}
+    ids = {i for _, i in keys}
     rows = (
-        Report.objects.filter(status=Report.Status.OPEN, target_type_id__in=type_ids)
+        Report.objects.filter(
+            status=Report.Status.OPEN, target_type_id__in=type_ids, target_id__in=ids
+        )
         .values("target_type_id", "target_id")
         .annotate(n=Count("id"))
     )
+    # Over-fetch within the type×id cross product is harmless — only exact (type,id) keys are read.
     return {(row["target_type_id"], row["target_id"]): row["n"] for row in rows}
 
 
-def triage_summary(report, *, open_duplicate_count=None):
-    """Advisory triage signals for ONE open report (staff-only). Returns a fixed-key dict:
+def _resolve_targets(reports):
+    """Bulk-load report targets grouped by content type → {(type_id, target_id): obj}. One query
+    per distinct content type (vs a GenericForeignKey load per report). Missing/deleted targets are
+    simply absent from the map."""
+    by_type = {}
+    for r in reports:
+        by_type.setdefault(r.target_type_id, set()).add(r.target_id)
+    out = {}
+    for type_id, ids in by_type.items():
+        model = ContentType.objects.get_for_id(type_id).model_class()
+        if model is None:
+            continue
+        for obj in model.objects.filter(pk__in=ids):
+            out[(type_id, obj.pk)] = obj
+    return out
+
+
+def _resolve_affected(targets):
+    """Map {(type_id, id): affected_user_or_None} for a batch of loaded targets, in ONE user query.
+    A User target is itself; otherwise the owner/author/sender/user is read by FK id (already on the
+    target row — no per-row query) and the users are fetched in bulk."""
+    from django.contrib.auth import get_user_model
+
+    user_model = get_user_model()
+    direct, fk = {}, {}
+    for key, obj in targets.items():
+        if isinstance(obj, user_model):
+            direct[key] = obj
+            continue
+        for attr in ("owner", "author", "sender", "user"):
+            uid = getattr(obj, f"{attr}_id", None)
+            if uid is not None:
+                fk[key] = uid
+                break
+    users = {u.id: u for u in user_model.objects.filter(id__in=set(fk.values()))} if fk else {}
+    out = dict(direct)
+    for key, uid in fk.items():
+        out[key] = users.get(uid)
+    return out
+
+
+def triage_summary(report, *, open_duplicate_count=None, target=_UNSET, affected=_UNSET):
+    """Advisory triage signals for ONE report (staff-only). Returns a fixed-key dict:
       - severity: the reason's severity rank (CSAM/GROOMING highest).
       - involves_child: derived bool — the affected user's cohort is CHILD (never age band/DOB).
-      - open_duplicates: count of OPEN reports against the SAME target (pass in for batch use).
+      - open_duplicates: count of OPEN reports against the SAME target.
       - contact_hint / contact_terms: the LOWEST-WEIGHT signal — a reported Post body soliciting
         off-platform contact. Empty for non-Post targets.
-    No persistence, no per-user rollup, never user-facing."""
+    No persistence, no per-user rollup, never user-facing. ``target``/``affected``/
+    ``open_duplicate_count`` may be passed pre-resolved by triage_order to avoid per-report
+    queries."""
     from apps.accounts.models import Cohort
     from apps.social.models import Post
 
-    severity = _TRIAGE_SEVERITY.get(report.reason, 0)
-
-    affected = _affected_user(report.target) if report.target is not None else None
+    if target is _UNSET:
+        target = report.target
+    if affected is _UNSET:
+        affected = _affected_user(target) if target is not None else None
     involves_child = bool(
         affected is not None and getattr(affected, "cohort", None) == Cohort.CHILD
     )
@@ -340,13 +392,13 @@ def triage_summary(report, *, open_duplicate_count=None):
         ).count()
 
     contact_terms = []
-    if isinstance(report.target, Post):
+    if isinstance(target, Post):
         from .triage_keywords import contact_hint_terms
 
-        contact_terms = contact_hint_terms(report.target.body)
+        contact_terms = contact_hint_terms(target.body)
 
     return {
-        "severity": severity,
+        "severity": _TRIAGE_SEVERITY.get(report.reason, 0),
         "involves_child": involves_child,
         "open_duplicates": open_duplicate_count,
         "contact_hint": bool(contact_terms),
@@ -367,18 +419,33 @@ def triage_rank(summary) -> tuple:
 
 
 def triage_order(reports):
-    """Order a list of OPEN reports most-dangerous-first by their triage signals (then newest
-    first as a stable final tiebreak). Returns [(report, summary), ...]. Batches the duplicate
-    count into a single query."""
+    """Order reports most-dangerous-first by their triage signals (then newest first as a stable
+    final tiebreak). Returns [(report, summary), ...]. Bounded queries regardless of list size:
+    one duplicate-count query, one target load per content type, one bulk user load."""
     reports = list(reports)
     dup = _open_duplicate_counts(reports)
-    pairs = [
-        (
-            r,
-            triage_summary(r, open_duplicate_count=dup.get((r.target_type_id, r.target_id), 1)),
+    targets = _resolve_targets(reports)
+    affected = _resolve_affected(targets)
+    pairs = []
+    for r in reports:
+        key = (r.target_type_id, r.target_id)
+        obj = targets.get(key)
+        # Populate the GenericForeignKey cache so a downstream serializer's `report.target` reuses
+        # the batch-loaded object instead of re-querying per report (would re-introduce the N+1).
+        if obj is not None:
+            r.target = obj
+        pairs.append(
+            (
+                r,
+                triage_summary(
+                    r,
+                    target=obj,
+                    affected=affected.get(key),
+                    # Absent from the OPEN-count map => this (non-OPEN) report has 0 open dups.
+                    open_duplicate_count=dup.get(key, 0),
+                ),
+            )
         )
-        for r in reports
-    ]
     pairs.sort(key=lambda pair: (triage_rank(pair[1]), pair[0].created_at), reverse=True)
     return pairs
 
