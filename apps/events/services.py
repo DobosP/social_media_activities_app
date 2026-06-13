@@ -1,3 +1,6 @@
+from datetime import timedelta
+
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
@@ -5,7 +8,7 @@ from django.utils import timezone
 from apps.safety.sanitize import safe_external_url
 
 from .classify import classify_activity
-from .models import Event
+from .models import Event, EventReport
 from .sources import RawEvent
 
 
@@ -85,3 +88,78 @@ def import_events(source, *, place=None, activity_type=None, classify=True) -> i
         upsert_event(raw, place=place, activity_type=resolved, source=source.name)
         count += 1
     return count
+
+
+# --- F21: event accuracy reports (ingest-safe, decaying overlay) ----------------------
+# Clones the F28 OpenNowReport pattern for events: a member flags a stale event
+# (cancelled/moved/wrong time); once enough RECENT reports land the event is shown as
+# "members reported this may have changed" and dropped from the Happening feed. Never a field
+# on Event (re-ingest clobbers), counts-only, decaying so a re-listed event self-heals.
+
+
+def _event_report_settings():
+    return (
+        getattr(settings, "EVENT_REPORT_THRESHOLD", 3),
+        getattr(settings, "EVENT_REPORT_DECAY_SECONDS", 14 * 24 * 3600),
+    )
+
+
+def recent_event_report_count(event, *, now=None) -> int:
+    """Count of reports within the decay window. Prefers a ``recent_report_n`` annotation when
+    present (so a list view avoids a per-row query)."""
+    annotated = getattr(event, "recent_report_n", None)
+    if annotated is not None:
+        return annotated
+    _, decay = _event_report_settings()
+    cutoff = (now or timezone.now()) - timedelta(seconds=decay)
+    return event.reports.filter(created_at__gte=cutoff).count()
+
+
+def event_is_flagged(event, *, now=None) -> bool:
+    """True once >= threshold recent reports say the event has changed (auto-decay self-heals)."""
+    threshold, _ = _event_report_settings()
+    return recent_event_report_count(event, now=now) >= threshold
+
+
+def event_reliability(event, *, now=None):
+    """Read-time accuracy sentinel for the UI: ``"unverified"`` when enough recent member reports
+    say the event has changed, else ``None`` (treated as reliable). Ingest-safe (F21)."""
+    return "unverified" if event_is_flagged(event, now=now) else None
+
+
+@transaction.atomic
+def file_event_report(reporter, event, kind):
+    """File one 'this event has changed' report (F21). Idempotent per reporter per event per decay
+    window (anti-brigading); rate-limited across events; a fixed kind. Returns the report, or None
+    if throttled / already reported this window. Clones file_open_now_report verbatim."""
+    from apps.accounts.services import can_participate
+    from apps.safety.services import allow_action
+
+    if kind not in EventReport.Kind.values:
+        raise ValueError("Unknown event report kind.")
+    if not can_participate(reporter):
+        raise PermissionError("Verified, consented participation is required to report an event.")
+    if not allow_action(
+        reporter,
+        "event_report",
+        limit=getattr(settings, "EVENT_REPORT_RATE_LIMIT", 10),
+        window_seconds=getattr(settings, "EVENT_REPORT_RATE_WINDOW_SECONDS", 3600),
+    ):
+        return None  # over the cross-event rate limit
+    _, decay = _event_report_settings()
+    cutoff = timezone.now() - timedelta(seconds=decay)
+    if event.reports.filter(reporter=reporter, created_at__gte=cutoff).exists():
+        return None  # one report per reporter per event per window
+    return EventReport.objects.create(event=event, reporter=reporter, kind=kind)
+
+
+@transaction.atomic
+def clear_event_reports(event, *, moderator=None) -> int:
+    """Moderator reset — delete all reports so the event re-appears on the next read."""
+    n = event.reports.count()
+    event.reports.all().delete()
+    if moderator is not None:
+        from apps.safety.services import record_audit
+
+        record_audit("event.reports_cleared", actor=moderator, target=event)
+    return n

@@ -7,8 +7,30 @@
 <div>{% if event.activity_type %}<span class="tag">{{ event.activity_type.name }}</span>{% endif %}</div>
 <p class="muted">{{ event.starts_at|date:"l j F Y, H:i" }}{% if event.ends_at %} &ndash; {{ event.ends_at|date:"H:i" }}{% endif %}
   {% if event.place %}<br>{% url 'place_detail' event.place.pk as place_url %}{% blocktrans with place_name=event.place.display_name %}at <a href="{{ place_url }}">{{ place_name }}</a>{% endblocktrans %}{% endif %}</p>
+{% if event_reliability == "unverified" %}
+  <p><span class="tag fact--false">{% trans "Members reported this event may have changed (cancelled, moved, or wrong time). Check before you go." %}</span></p>
+{% endif %}
 {% if event.description %}<p>{{ event.description|linebreaks }}</p>{% endif %}
 {% if event.url|safe_href %}<p><a href="{{ event.url|safe_href }}" rel="noopener noreferrer" target="_blank">{% trans "Event website &rarr;" %}</a></p>{% endif %}
+
+{# F21: crowd accuracy reports — counts-only, decaying, ingest-safe. Never shows who reported. #}
+{% if can_report_event %}
+<div class="card">
+  <h2 style="margin-top:0">{% trans "Is this event wrong?" %}</h2>
+  <form method="post" action="{% url 'event_report' event.pk %}" class="inline">
+    {% csrf_token %}
+    <button class="btn btn--light" name="kind" value="cancelled">{% trans "Cancelled" %}</button>
+    <button class="btn btn--light" name="kind" value="moved">{% trans "Moved" %}</button>
+    <button class="btn btn--light" name="kind" value="wrong_time">{% trans "Wrong time" %}</button>
+  </form>
+  <p class="muted" style="font-size:.8rem">{% trans "If enough members report it, we'll flag the event and stop showing it. We never show who reported." %}</p>
+  {% if user.is_staff %}
+    <form method="post" action="{% url 'event_report_reset' event.pk %}" class="inline">
+      {% csrf_token %}<button class="btn btn-sm btn-secondary" type="submit">{% trans "Clear reports (staff)" %}</button>
+    </form>
+  {% endif %}
+</div>
+{% endif %}
 {% if user.is_authenticated and event.place %}
   {# F40: prefill the new activity's type + start time from this event (owner edits before submit). #}
   <p><a class="btn" href="{% url 'activity_create' %}?place={{ event.place.pk }}{% if event.activity_type %}&activity_type={{ event.activity_type.pk }}{% endif %}&starts_at={{ event.starts_at|date:'Y-m-d\TH:i'|urlencode }}">{% trans "Organise an activity to go together" %}</a></p>

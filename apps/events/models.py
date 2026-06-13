@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.postgres.indexes import GinIndex, OpClass
 from django.db import models
 from django.db.models import Q, UniqueConstraint
@@ -101,3 +102,39 @@ class EventFeed(models.Model):
 
     def __str__(self):
         return f"{self.name} ({'active' if self.is_active else 'inactive'})"
+
+
+class EventReport(models.Model):
+    """F21: a member's 'this event has changed' report (cancelled / moved / wrong time). A DEDICATED
+    ingest-safe overlay — NEVER a field on Event, because upsert_event's update_or_create would
+    clobber it on every re-ingest of the feed. 'This may have changed' is derived at READ time from
+    a count of RECENT reports (auto-decay: reports outside the window stop counting, so a re-listed
+    event self-heals), exactly like F28's OpenNowReport.
+
+    COHORT NOTE (deliberate): events are AllowAny and NOT cohort-scoped, and can_participate is
+    cohort-blind — so a verified CHILD and ADULT report into the SAME event tally. That's acceptable
+    because an event being cancelled/moved is cohort-neutral physical reality and the tally is
+    counts-only (never reporter identity, never a per-user reliability rollup)."""
+
+    class Kind(models.TextChoices):
+        CANCELLED = "cancelled", "Cancelled"
+        MOVED = "moved", "Moved / wrong place"
+        WRONG_TIME = "wrong_time", "Wrong time"
+
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="reports")
+    reporter = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="event_reports"
+    )
+    kind = models.CharField(max_length=16, choices=Kind.choices)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        # No UniqueConstraint: uniqueness is TEMPORAL (one per reporter per event per decay window),
+        # enforced in the service so a post-decay report is allowed again (mirrors OpenNowReport).
+        indexes = [
+            models.Index(fields=["event", "created_at"]),  # read-time recent-count query
+            models.Index(fields=["event", "reporter"]),  # cheap per-window dedup .exists()
+        ]
+
+    def __str__(self):
+        return f"event_report({self.event_id}.{self.kind} by {self.reporter_id})"
