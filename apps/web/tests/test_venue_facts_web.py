@@ -52,10 +52,26 @@ def test_member_can_vote_a_fact():
 
 
 def test_osm_sourced_fact_hides_vote_form():
-    # A fact decided by map data shows "from map data" and no crowd vote buttons.
+    # A fact decided by map data shows "from map data" and NO crowd vote form for that fact (its
+    # per-fact hidden input is absent), while a crowd-only fact (indoor_shelter) still has its form.
     place = _place({"toilets": "yes"})
     body = _client(_user("vf3")).get(f"/places/{place.pk}/").content.decode()
     assert "from map data" in body
+    assert 'name="fact_key" value="toilets"' not in body  # OSM-sourced -> no vote form
+    assert 'name="fact_key" value="indoor_shelter"' in body  # crowd-only -> form present
+
+
+def test_vote_buttons_disable_after_voting():
+    place = _place({})  # indoor_shelter is crowd-only -> votable
+    voter = _user("vf5")
+    c = _client(voter)
+    c.post(
+        f"/places/{place.pk}/facts/vote/",
+        {"fact_key": PlaceFactVote.FactKey.INDOOR_SHELTER, "value": "yes"},
+    )
+    body = c.get(f"/places/{place.pk}/").content.decode()
+    assert 'value="yes" disabled' in body  # the side you voted is disabled
+    assert 'value="no" disabled' not in body  # the other side stays enabled
 
 
 def test_kid_badge_shows_when_confirmed():

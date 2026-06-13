@@ -166,6 +166,26 @@ def test_kid_badge_is_soft():
     assert has_kid_facts(_place({})) is False  # unknowns -> no badge, but still a valid place
 
 
+def test_kid_badge_lights_on_crowd_quorum():
+    # The soft kid badge must also light when a KID-relevant fact reaches quorum via CROWD votes
+    # (not only via OSM data).
+    place = _place({})  # OSM silent on 'fenced'
+    assert has_kid_facts(place) is False
+    for i in range(3):
+        vote_on_fact(_user(f"kb{i}"), place, FK.FENCED, True)
+    assert has_kid_facts(place) is True
+
+
+def test_vote_rate_limit_enforced(settings):
+    settings.FACT_VOTE_RATE_LIMIT = 1
+    settings.FACT_VOTE_RATE_WINDOW_SECONDS = 3600
+    place = _place({})
+    voter = _user("rl")
+    vote_on_fact(voter, place, FK.TOILETS, True)  # first is allowed
+    with pytest.raises(PlacesError):
+        vote_on_fact(voter, place, FK.SHADE, True)  # second (same action bucket) is throttled
+
+
 def test_not_written_back_to_place():
     place = _place({})
     vote_on_fact(_user("wb"), place, FK.TOILETS, True)
