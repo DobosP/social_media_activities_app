@@ -9,17 +9,21 @@ from datetime import datetime
 
 import pytest
 from django.contrib.gis.geos import Point
+from rest_framework.test import APIClient
 
 from apps.accounts.identity.base import AssuranceResult
 from apps.accounts.models import AgeBand, ParentalConsent, User
 from apps.accounts.services import apply_assurance
 from apps.places.models import ApprovedChildVenue, Place
+from apps.social.models import ActivitySeries
 from apps.social.services import (
     InvalidState,
     NotEligible,
     can_join,
     create_activity,
+    create_series,
     request_to_join,
+    spawn_due_series,
 )
 from apps.taxonomy.models import ActivityCategory, ActivityType
 
@@ -125,3 +129,98 @@ def test_can_join_allows_child_activity_at_library(settings):
     activity = _make(owner, place, "lib7")
     joiner = _child("cv7j")
     assert can_join(joiner, activity) is True
+
+
+# --- create_series + spawn (the gate must hold on the recurring path too) -------------
+
+
+def _series(owner, place, slug):
+    return create_series(
+        owner,
+        place=place,
+        activity_type=_type(slug),
+        title="Weekly",
+        cadence=ActivitySeries.Cadence.WEEKLY,
+        first_starts_at=datetime(2026, 6, 15, 10, 0, tzinfo=TZ),
+    )
+
+
+def test_child_series_blocked_at_unapproved_venue(settings):
+    settings.CHILD_PUBLIC_VENUES_ONLY = True
+    child = _child("sv1")
+    place = _place("sbar", {"amenity": "bar"})
+    with pytest.raises(InvalidState):
+        _series(child, place, "sv1")  # no zombie series — fail fast at create
+
+
+def test_child_series_allowed_at_library(settings):
+    settings.CHILD_PUBLIC_VENUES_ONLY = True
+    child = _child("sv2")
+    place = _place("slib", {"amenity": "library"})
+    assert _series(child, place, "sv2").pk is not None
+
+
+def test_series_spawn_skips_when_venue_unapproved(settings):
+    # Build a CHILD series at a bare venue with the gate OFF, then turn it ON: the spawn re-runs
+    # create_activity's gate, so the due instance is SKIPPED (not spawned) — defence in depth.
+    settings.CHILD_PUBLIC_VENUES_ONLY = False
+    child = _child("sv3")
+    place = _place("sbar3", {"amenity": "bar"})
+    series = create_series(
+        child,
+        place=place,
+        activity_type=_type("sv3"),
+        title="Weekly",
+        cadence=ActivitySeries.Cadence.WEEKLY,
+        first_starts_at=datetime(2026, 6, 15, 10, 0, tzinfo=TZ),
+    )
+    settings.CHILD_PUBLIC_VENUES_ONLY = True
+    result = spawn_due_series(now=datetime(2026, 6, 16, 12, 0, tzinfo=TZ))
+    assert result["spawned"] == 0  # the due instance was NOT created at the unapproved venue
+    assert result["skipped"] >= 1  # it was skipped (per-series SocialError handling), not crashed
+    series.refresh_from_db()
+    assert series.status == ActivitySeries.Status.ACTIVE  # a skip never pauses the series
+
+
+# --- DRF create surface must enforce the gate too -------------------------------------
+
+
+def test_drf_create_blocks_child_at_unapproved_venue(settings):
+    settings.CHILD_PUBLIC_VENUES_ONLY = True
+    child = _child("api1")
+    place = _place("abar", {"amenity": "bar"})
+    atype = _type("api1")
+    client = APIClient()
+    client.force_authenticate(child)
+    resp = client.post(
+        "/api/social/activities/",
+        {
+            "place": place.id,
+            "activity_type": atype.id,
+            "title": "Hang",
+            "starts_at": "2030-01-01T10:00:00Z",
+        },
+        format="json",
+    )
+    assert resp.status_code == 403, resp.content
+    assert b"approved list for children" in resp.content
+
+
+def test_drf_create_allows_child_at_library(settings):
+    settings.CHILD_PUBLIC_VENUES_ONLY = True
+    child = _child("api2")
+    place = _place("alib", {"amenity": "library"})
+    atype = _type("api2")
+    client = APIClient()
+    client.force_authenticate(child)
+    resp = client.post(
+        "/api/social/activities/",
+        {
+            "place": place.id,
+            "activity_type": atype.id,
+            "title": "Reading",
+            "starts_at": "2030-01-01T10:00:00Z",
+        },
+        format="json",
+    )
+    assert resp.status_code == 201, resp.content

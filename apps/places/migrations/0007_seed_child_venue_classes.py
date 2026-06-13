@@ -6,6 +6,12 @@ venue that no class matches can be approved per-place via ApprovedChildVenue."""
 from django.db import migrations
 
 # key -> (label, osm_match, overture_categories)
+# NOTE: osm_match values are exact OSM tags (high confidence — these are the canonical tags). The
+# overture_categories are BEST-EFFORT guesses at Overture's `categories.primary` naming and are
+# NOT yet verified against a real Overture extract — at launch we ingest OSM only. They exist so
+# the resolver is source-complete; staff refine them in admin (and approve individual places via
+# ApprovedChildVenue) once Overture data lands. Fail-closed: an unmatched category is "unknown",
+# never wrongly "allowed".
 SEED = [
     ("library", "Library", {"amenity": "library"}, ["library"]),
     ("park", "Park", {"leisure": "park"}, ["park", "national_park"]),

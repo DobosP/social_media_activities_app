@@ -119,7 +119,10 @@ def public_child_venue_class(place) -> str:
     # Per-place staff override (escape hatch for a legit-but-mistagged / non-OSM venue).
     if ApprovedChildVenue.objects.filter(place=place).exists():
         return CHILD_VENUE_ALLOWED
-    tags = place.raw_tags or {}
+    tags = place.raw_tags if isinstance(place.raw_tags, dict) else {}
+    # The allowlist is a tiny, staff-curated table; we DELIBERATELY do not module-cache it (an
+    # admin edit to a child-safety allowlist must take effect immediately, not after a restart).
+    # It's read at most a couple of times per page with no per-item loop, so the cost is trivial.
     classes = list(ChildVenueClass.objects.filter(is_active=True))
     if place.source in (Place.Source.OSM, Place.Source.USER):
         for c in classes:
@@ -129,7 +132,11 @@ def public_child_venue_class(place) -> str:
             if crit and all(tags.get(k) == v for k, v in crit.items()):
                 return CHILD_VENUE_ALLOWED
     elif place.source == Place.Source.OVERTURE:
-        cats = {tags.get("overture:category"), *(tags.get("overture:alternate") or [])}
+        # raw_tags is untrusted JSON — guard against a malformed (non-list) alternate so it can't
+        # be iterated character-by-character and silently mis-match.
+        alternate = tags.get("overture:alternate")
+        alternate = alternate if isinstance(alternate, list) else []
+        cats = {tags.get("overture:category"), *alternate}
         cats.discard(None)
         for c in classes:
             if cats & set(c.overture_categories or []):

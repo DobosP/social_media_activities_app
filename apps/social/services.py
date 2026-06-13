@@ -480,6 +480,20 @@ def create_series(
 
     if place is None or not public_places().filter(pk=place.pk).exists():
         raise InvalidState(_("That place isn't available to organise an activity at yet."))
+    # F9: a CHILD series must template a known public venue type too — otherwise it would be a
+    # "zombie series" that silently never spawns (every spawn re-checks the same gate). Same gate,
+    # same message, same flag as create_activity.
+    if owner.cohort == Cohort.CHILD and getattr(settings, "CHILD_PUBLIC_VENUES_ONLY", True):
+        from apps.places.services import is_child_safe_venue
+
+        if not is_child_safe_venue(place):
+            raise InvalidState(
+                _(
+                    "This venue isn't on the approved list for children's activities yet. Pick a "
+                    "library, park, school, sports or community venue — or ask a moderator to "
+                    "approve this place."
+                )
+            )
     duration = None
     if ends_at is not None and ends_at > first_starts_at:
         duration = int((ends_at - first_starts_at).total_seconds() // 60)
