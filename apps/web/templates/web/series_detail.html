@@ -9,7 +9,7 @@
   <span class="tag">{{ series.get_cadence_display }}</span>
   <span class="tag">{{ series.get_status_display }}</span>
 </div>
-<p class="muted">{% blocktrans with place=series.place.name %}At {{ place }}.{% endblocktrans %}
+<p class="muted">{% blocktrans with place=series.place.display_name %}At {{ place }}.{% endblocktrans %}
   {% if series.status == 'active' %}{% blocktrans with when=series.next_starts_at|date:"l j F Y, H:i" %}Next instance scheduled around {{ when }}.{% endblocktrans %}{% endif %}</p>
 {% if series.description %}<p>{{ series.description|linebreaks }}</p>{% endif %}
 

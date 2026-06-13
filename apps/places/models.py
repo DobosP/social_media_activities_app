@@ -84,6 +84,35 @@ class Place(gis_models.Model):
         """A place with a website is a reservation candidate (deep-link booking)."""
         return bool(self.website)
 
+    # --- F20: read-time crowd corrections (never written back to Place) -----------------
+
+    def _raw_address(self) -> str:
+        street = f"{self.address_street} {self.address_housenumber}".strip()
+        return ", ".join(p for p in (street, self.address_city) if p)
+
+    def _applied_correction(self, field) -> str:
+        """The most-recent PUBLISHED correction value for `field`, or '' if none. Iterates
+        ``self.corrections.all()`` so a ``prefetch_related('corrections')`` yields ZERO extra
+        queries on list surfaces (a bare access on one place costs a single query)."""
+        published = [
+            c
+            for c in self.corrections.all()
+            if c.field == field and c.status == PlaceCorrection.Status.PUBLISHED
+        ]
+        if not published:
+            return ""
+        return max(published, key=lambda c: (c.published_at or c.created_at, c.id)).proposed_value
+
+    @property
+    def display_name(self) -> str:
+        """The crowd-corrected name if a correction was published, else the raw (OSM) name. The
+        single seam every template/serializer renders so a correction reaches them all (F20)."""
+        return self._applied_correction(PlaceCorrection.Field.NAME) or self.name
+
+    @property
+    def display_address(self) -> str:
+        return self._applied_correction(PlaceCorrection.Field.ADDRESS) or self._raw_address()
+
 
 class PlaceActivity(models.Model):
     """Edge connecting a Place to an ActivityType it supports."""
@@ -283,6 +312,76 @@ class PlaceFactVote(models.Model):
 
     def __str__(self):
         return f"fact_vote({self.place_id}.{self.fact_key}={self.value} by {self.user_id})"
+
+
+DEFAULT_CORRECTION_QUORUM = 3
+
+
+class PlaceCorrection(models.Model):
+    """F20: a member-proposed correction to a venue's name or address, behind the SAME N-confirmer
+    quorum as a user-proposed place (F25). Applied at READ time via Place.display_name /
+    display_address — NEVER written back to Place, so it can't poison canonical OSM and survives
+    re-ingest (the gap a staff-admin edit, clobbered on re-ingest, can't fill). Counts-only pending
+    UI: no proposer/confirmer identities. Place metadata is cohort-agnostic — no contact path."""
+
+    class Field(models.TextChoices):
+        NAME = "name", "Name"
+        ADDRESS = "address", "Address"
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        PUBLISHED = "published", "Published"
+        REJECTED = "rejected", "Rejected"
+
+    place = models.ForeignKey(Place, on_delete=models.CASCADE, related_name="corrections")
+    proposer = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="place_corrections"
+    )
+    field = models.CharField(max_length=16, choices=Field.choices)
+    proposed_value = models.CharField(max_length=255)
+    required_confirmations = models.PositiveIntegerField(default=DEFAULT_CORRECTION_QUORUM)
+    status = models.CharField(max_length=16, choices=Status.choices, default=Status.PENDING)
+    created_at = models.DateTimeField(auto_now_add=True)
+    published_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(required_confirmations__gte=1), name="correction_quorum_positive"
+            ),
+            # At most ONE open correction per (place, field) — no duplicate pending proposals.
+            UniqueConstraint(
+                fields=["place", "field"],
+                condition=Q(status="pending"),
+                name="uq_one_pending_correction_per_field",
+            ),
+        ]
+        indexes = [models.Index(fields=["place", "status"])]
+
+    def __str__(self):
+        return f"correction({self.place_id}.{self.field}, {self.status})"
+
+
+class PlaceCorrectionConfirmation(models.Model):
+    """An independent member's confirmation of a proposed correction (proposer excluded)."""
+
+    correction = models.ForeignKey(
+        PlaceCorrection, on_delete=models.CASCADE, related_name="confirmations"
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="place_correction_confirmations",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(fields=["correction", "user"], name="uq_correction_confirm_user"),
+        ]
+
+    def __str__(self):
+        return f"confirm_correction({self.correction_id} by {self.user_id})"
 
 
 class ChildVenueClass(models.Model):

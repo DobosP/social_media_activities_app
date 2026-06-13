@@ -151,7 +151,11 @@ def community_detail(request, slug):
     if community is None:
         raise Http404("No such community.")
     limit = getattr(settings, "COMMUNITY_ACTIVITIES_PAGE_SIZE", 100)
-    activities = list(communities.community_activities(community, request.user)[:limit])
+    activities = list(
+        communities.community_activities(community, request.user)
+        .select_related("place", "activity_type", "owner")
+        .prefetch_related("place__corrections")[:limit]  # F20: _activity_card display_name
+    )
     # Read-time linkage: if a standing GROUP exists on the same (cohort, area, type/category)
     # coordinate AND is visible to this viewer, offer a "join the standing group" link (name only,
     # no count). Sourced from visible_groups, so a child can never discover an adult group this way.
@@ -237,7 +241,11 @@ def group_detail(request, pk):
     # The SOLE who-is-here surface: None for minors / non-members (no count either).
     roster = social.group_roster(group, user)
     # Upcoming activities in the group's (area x type/category) coordinate — discovery, not roster.
-    feed = list(social.group_feed_activities(group, user)[:50])
+    feed = list(
+        social.group_feed_activities(group, user)
+        .select_related("place", "activity_type", "owner")
+        .prefetch_related("place__corrections")[:50]  # F20: _activity_card display_name
+    )
 
     # The moderated thread (members who pass the read gate). @mentions are NOT resolved on group
     # threads (no name autocomplete/enumeration); minor group threads are announcement-only. The
@@ -732,6 +740,7 @@ def home(request):
         social.visible_activities(user)
         .filter(status=Activity.Status.OPEN, starts_at__gte=timezone.now())
         .select_related("place", "activity_type", "owner")
+        .prefetch_related("place__corrections")  # F20: display_name without per-card N+1
     )
     if beginners_only:
         upcoming_qs = upcoming_qs.filter(beginners_welcome=True)
@@ -747,6 +756,7 @@ def home(request):
             status=Activity.Status.OPEN,
         )
         .select_related("place", "activity_type")
+        .prefetch_related("place__corrections")  # F20
         .distinct()
         .order_by("starts_at")
     )
@@ -811,7 +821,9 @@ def places_list(request):
 def place_detail(request, pk):
     from apps.places.services import public_places
 
-    place = get_object_or_404(Place.objects.prefetch_related("place_activities__activity"), pk=pk)
+    place = get_object_or_404(
+        Place.objects.prefetch_related("place_activities__activity", "corrections"), pk=pk
+    )
     # F25: a still-pending user place is viewable ONLY by its proposer or staff (404 otherwise),
     # so the quorum isn't bypassed and the public never sees it before it's published.
     proposal = getattr(place, "proposal", None)
@@ -829,7 +841,8 @@ def place_detail(request, pk):
         meetups = (
             social.visible_activities(request.user)
             .filter(place=place, status=Activity.Status.OPEN, starts_at__gte=timezone.now())
-            .select_related("activity_type", "owner")
+            .select_related("place", "activity_type", "owner")
+            .prefetch_related("place__corrections")  # F20: _activity_card display_name
             .order_by("starts_at")
         )
     events = (
@@ -852,6 +865,10 @@ def place_detail(request, pk):
     for edge in edges:
         edge.summary = edge_vote_summary(edge, request.user)
     can_contribute = is_public and request.user.is_authenticated and can_participate(request.user)
+    # F20: pending name/address corrections (counts only) — applied at read time via display_*.
+    from apps.places.services import pending_corrections
+
+    corrections = pending_corrections(place, request.user)
     # F19: crowd venue facts (OSM-first, crowd overlay) + a SOFT kid badge (never hides a place).
     venue_fact_rows = venue_facts_detail(place, request.user)
     has_kid_facts = any(
@@ -869,6 +886,7 @@ def place_detail(request, pk):
             "edges": edges,
             "can_contribute": can_contribute,
             "open_now": open_now_status(place),
+            "corrections": corrections,
             "venue_facts": venue_fact_rows,
             "has_kid_facts": has_kid_facts,
             "access_facts": accessibility_facts_display(place),
@@ -993,6 +1011,42 @@ def fact_vote(request, pk):
 
 @login_required
 @require_POST
+def place_correction_propose(request, pk):
+    """F20: suggest a corrected venue name/address (opens a quorum correction)."""
+    from apps.places.services import PlacesError, propose_place_correction
+
+    place = get_object_or_404(Place, pk=pk)
+    try:
+        propose_place_correction(
+            request.user,
+            place,
+            field=request.POST.get("field", ""),
+            proposed_value=request.POST.get("proposed_value", ""),
+        )
+        messages.success(request, "Thanks - others can now confirm your correction.")
+    except PlacesError as exc:
+        messages.error(request, str(exc))
+    return redirect("place_detail", pk=pk)
+
+
+@login_required
+@require_POST
+def place_correction_confirm(request, pk, correction_id):
+    """F20: confirm a pending correction; a quorum publishes it (applied at read time)."""
+    from apps.places.models import PlaceCorrection
+    from apps.places.services import InvalidState, NotEligible, confirm_place_correction
+
+    correction = get_object_or_404(PlaceCorrection, pk=correction_id, place_id=pk)
+    try:
+        confirm_place_correction(request.user, correction)
+        messages.success(request, "Thanks - your confirmation was recorded.")
+    except (InvalidState, NotEligible) as exc:
+        messages.error(request, str(exc))
+    return redirect("place_detail", pk=pk)
+
+
+@login_required
+@require_POST
 def place_open_now_report(request, pk):
     """F28: report that a venue's posted opening hours are wrong (closed when it said open)."""
     from apps.places.services import NotEligible, file_open_now_report
@@ -1029,7 +1083,10 @@ def place_open_now_reset(request, pk):
 
 def _visible_activity_or_404(user, pk) -> Activity:
     activity = get_object_or_404(
-        Activity.objects.select_related("place", "activity_type", "owner", "thread"), pk=pk
+        Activity.objects.select_related(
+            "place", "activity_type", "owner", "thread"
+        ).prefetch_related("place__corrections"),
+        pk=pk,
     )
     # Staff/moderators may still open removed content (for review/appeal); members may not.
     if getattr(user, "is_staff", False):
@@ -1047,11 +1104,13 @@ def activity_list(request):
     if query:
         # W1 search: one bounded, gate-identical path (visible_activities inside).
         activities = social.search_activities(request.user, query, beginners=beginners_only)
+        activities = activities.prefetch_related("place__corrections")  # F20
     else:
         activities = (
             social.visible_activities(request.user)
             .filter(status=Activity.Status.OPEN, starts_at__gte=timezone.now())
             .select_related("place", "activity_type", "owner")
+            .prefetch_related("place__corrections")  # F20: _activity_card display_name
         )
         if beginners_only:
             activities = activities.filter(beginners_welcome=True)

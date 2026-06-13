@@ -23,6 +23,16 @@ urlpatterns = [
     path("places/<int:pk>/edges/<int:edge_id>/vote/", views.edge_vote, name="edge_vote"),
     path("places/<int:pk>/facts/vote/", views.fact_vote, name="fact_vote"),
     path(
+        "places/<int:pk>/corrections/propose/",
+        views.place_correction_propose,
+        name="place_correction_propose",
+    ),
+    path(
+        "places/<int:pk>/corrections/<int:correction_id>/confirm/",
+        views.place_correction_confirm,
+        name="place_correction_confirm",
+    ),
+    path(
         "places/<int:pk>/hours-wrong/",
         views.place_open_now_report,
         name="place_open_now_report",

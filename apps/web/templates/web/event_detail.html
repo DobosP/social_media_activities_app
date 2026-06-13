@@ -6,7 +6,7 @@
 <h1>{{ event.title }}</h1>
 <div>{% if event.activity_type %}<span class="tag">{{ event.activity_type.name }}</span>{% endif %}</div>
 <p class="muted">{{ event.starts_at|date:"l j F Y, H:i" }}{% if event.ends_at %} &ndash; {{ event.ends_at|date:"H:i" }}{% endif %}
-  {% if event.place %}<br>{% url 'place_detail' event.place.pk as place_url %}{% blocktrans with place_name=event.place.name %}at <a href="{{ place_url }}">{{ place_name }}</a>{% endblocktrans %}{% endif %}</p>
+  {% if event.place %}<br>{% url 'place_detail' event.place.pk as place_url %}{% blocktrans with place_name=event.place.display_name %}at <a href="{{ place_url }}">{{ place_name }}</a>{% endblocktrans %}{% endif %}</p>
 {% if event.description %}<p>{{ event.description|linebreaks }}</p>{% endif %}
 {% if event.url|safe_href %}<p><a href="{{ event.url|safe_href }}" rel="noopener noreferrer" target="_blank">{% trans "Event website &rarr;" %}</a></p>{% endif %}
 {% if user.is_authenticated and event.place %}

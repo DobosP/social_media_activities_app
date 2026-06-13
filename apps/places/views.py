@@ -56,7 +56,11 @@ class PlaceViewSet(viewsets.ReadOnlyModelViewSet):
         _, decay = _open_now_settings()
         cutoff = timezone.now() - timedelta(seconds=decay)
         qs = (
-            public_places(Place.objects.prefetch_related("place_activities__activity"))
+            public_places(
+                # F20: prefetch corrections so the serializer's display_name/display_address
+                # don't fire a per-place query across the (up to 500-place) list.
+                Place.objects.prefetch_related("place_activities__activity", "corrections")
+            )
             .annotate(
                 recent_report_n=Count(
                     "open_now_reports",

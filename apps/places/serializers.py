@@ -17,6 +17,9 @@ class PlaceSerializer(GeoFeatureModelSerializer):
     activities = serializers.SerializerMethodField()
     distance_m = serializers.SerializerMethodField()
     open_now = serializers.SerializerMethodField()
+    # F20: render the crowd-corrected name/address (falls back to raw OSM). One read-time seam.
+    name = serializers.CharField(source="display_name", read_only=True)
+    display_address = serializers.CharField(read_only=True)
 
     def get_activities(self, obj):
         # F26: disputed edges are hidden from discovery. Filter in Python over the prefetch.
@@ -29,6 +32,7 @@ class PlaceSerializer(GeoFeatureModelSerializer):
         fields = [
             "id",
             "name",
+            "display_address",
             "address_street",
             "address_housenumber",
             "address_city",
