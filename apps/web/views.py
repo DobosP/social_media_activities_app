@@ -1124,6 +1124,23 @@ def activity_detail(request, pk):
     # grant/revoke/transfer stay owner-only and are gated separately in the template.
     is_organizer = social.is_organizer(user, activity)
     can_manage_organizers = is_owner and activity.cohort == Cohort.ADULT
+    # F29: LIVE supervision state (never a stored flag) + the owner's add-supervisor candidates.
+    supervised = activity.supervised
+    supervisor_present = social.active_supervisor_present(activity) if supervised else False
+    owner_supervisor_candidates = []
+    if is_owner and supervised and not supervisor_present:
+        seated_ids = set(
+            activity.memberships.filter(role=Membership.Role.GUARDIAN)
+            .exclude(state=Membership.State.REMOVED)
+            .values_list("user_id", flat=True)
+        )
+        owner_supervisor_candidates = [
+            rel.guardian
+            for rel in GuardianRelationship.objects.filter(
+                ward=user, status=GuardianRelationship.Status.ACTIVE
+            ).select_related("guardian")
+            if rel.guardian_id not in seated_ids
+        ]
     # Communities this activity belongs to (its area x type/category), as a discovery affordance.
     from apps.communities.services import communities_for_activity
 
@@ -1204,6 +1221,10 @@ def activity_detail(request, pk):
             "child_safe_venue": (
                 activity.cohort == Cohort.CHILD and is_child_safe_venue(activity.place)
             ),
+            # F29: LIVE supervision state + the owner's seat-a-guardian affordance.
+            "supervised": supervised,
+            "supervisor_present": supervisor_present,
+            "owner_supervisor_candidates": owner_supervisor_candidates,
             # W5: "start a standing group like this" prefill affordance (members only;
             # the service re-enforces the real creation gate).
             "can_create_group": is_member and _can_create_group(user),
@@ -1265,7 +1286,7 @@ def activity_create(request):
             initial.setdefault("title", draft["title"])
             initial.setdefault("description", draft["description"])
     if request.method == "POST":
-        form = ActivityForm(request.POST)
+        form = ActivityForm(request.POST, user=request.user)
         if form.is_valid():
             try:
                 activity = social.create_activity(request.user, **form.cleaned_data)
@@ -1275,7 +1296,7 @@ def activity_create(request):
                 messages.success(request, "Activity created - you're the owner.")
                 return redirect("activity_detail", pk=activity.pk)
     else:
-        form = ActivityForm(initial=initial)
+        form = ActivityForm(initial=initial, user=request.user)
     return render(request, "web/activity_form.html", {"form": form, **_nav_context(request.user)})
 
 
@@ -1312,7 +1333,7 @@ def series_create(request):
         )
         return redirect("profile")
     if request.method == "POST":
-        form = SeriesForm(request.POST)
+        form = SeriesForm(request.POST, user=request.user)
         if form.is_valid():
             try:
                 series = social.create_series(request.user, **form.cleaned_data)
@@ -1325,7 +1346,7 @@ def series_create(request):
                 )
                 return redirect("series_detail", pk=series.pk)
     else:
-        form = SeriesForm()
+        form = SeriesForm(user=request.user)
     return render(request, "web/series_form.html", {"form": form, **_nav_context(request.user)})
 
 
@@ -1447,6 +1468,43 @@ def activity_announce(request, pk):
             messages.success(request, "Announcement posted - members notified.")
         except social.SocialError as exc:
             messages.error(request, _msg(exc))
+    return redirect("activity_detail", pk=pk)
+
+
+@login_required
+@require_POST
+def activity_add_supervisor(request, pk):
+    """F29: the (CHILD) owner seats one of their own verified guardians as the read-only supervisor.
+    Thin wrapper over social.add_guardian, which enforces is_guardian_of(guardian, owner) + adult +
+    guardian_accompanied, and settles any join that was waiting on supervision."""
+    activity = _visible_activity_or_404(request.user, pk)
+    guardian = _member_from_post(request)
+    if guardian is None:
+        messages.error(request, "Choose a guardian to add.")
+        return redirect("activity_detail", pk=pk)
+    try:
+        social.add_guardian(request.user, activity, guardian)
+        messages.success(request, "Your guardian was added as supervisor.")
+    except social.SocialError as exc:
+        messages.error(request, _msg(exc))
+    return redirect("activity_detail", pk=pk)
+
+
+@login_required
+@require_POST
+def activity_set_supervision(request, pk):
+    """F29: the owner turns the supervising-guardian requirement on/off — a guarded toggle, NOT the
+    edit path (supervised is deliberately absent from ACTIVITY_EDITABLE_FIELDS)."""
+    activity = _visible_activity_or_404(request.user, pk)
+    want = request.POST.get("supervised") == "on"
+    try:
+        social.set_activity_supervision(request.user, activity, want)
+        messages.success(
+            request,
+            "Supervision is now required." if want else "Supervision is no longer required.",
+        )
+    except social.SocialError as exc:
+        messages.error(request, _msg(exc))
     return redirect("activity_detail", pk=pk)
 
 

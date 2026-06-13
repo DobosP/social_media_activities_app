@@ -332,6 +332,7 @@ def create_activity(
     capacity=None,
     min_to_go=None,
     guardian_accompanied=False,
+    supervised=False,
     meeting_point="",
     what_to_bring="",
     organizer_note="",
@@ -344,6 +345,12 @@ def create_activity(
         raise NotEligible(
             _("User cannot create activities (needs verification/consent + a cohort).")
         )
+    # F29: a supervised activity REQUIRES a guardian seat, so it must also be guardian-accompanied
+    # (else the owner could never seat the supervisor — a deadlock). supervised implies it.
+    if supervised:
+        if owner.cohort != Cohort.CHILD:
+            raise InvalidState(_("Only children's activities can require a supervising guardian."))
+        guardian_accompanied = True
     if guardian_accompanied and owner.cohort != Cohort.CHILD:
         raise InvalidState(_("Only children's activities can be guardian-accompanied."))
     if min_to_go is not None and capacity is not None and min_to_go > capacity:
@@ -383,6 +390,7 @@ def create_activity(
         capacity=capacity,
         min_to_go=min_to_go,
         guardian_accompanied=guardian_accompanied,
+        supervised=supervised,
         meeting_point=meeting_point,
         what_to_bring=what_to_bring,
         organizer_note=organizer_note,
@@ -456,6 +464,7 @@ def create_series(
     capacity=None,
     min_to_go=None,
     guardian_accompanied=False,
+    supervised=False,
     meeting_point="",
     what_to_bring="",
     organizer_note="",
@@ -470,6 +479,11 @@ def create_series(
         raise NotEligible(
             _("User cannot create activity series (needs verification/consent + a cohort).")
         )
+    # F29: supervised implies guardian_accompanied (so each spawned instance can seat a supervisor).
+    if supervised:
+        if owner.cohort != Cohort.CHILD:
+            raise InvalidState(_("Only children's activities can require a supervising guardian."))
+        guardian_accompanied = True
     if guardian_accompanied and owner.cohort != Cohort.CHILD:
         raise InvalidState(_("Only children's activities can be guardian-accompanied."))
     if min_to_go is not None and capacity is not None and min_to_go > capacity:
@@ -512,6 +526,7 @@ def create_series(
         capacity=capacity,
         min_to_go=min_to_go,
         guardian_accompanied=guardian_accompanied,
+        supervised=supervised,
         meeting_point=meeting_point,
         what_to_bring=what_to_bring,
         organizer_note=organizer_note,
@@ -681,6 +696,7 @@ def spawn_due_series(*, now=None) -> dict:
                     capacity=series.capacity,
                     min_to_go=series.min_to_go,
                     guardian_accompanied=series.guardian_accompanied,
+                    supervised=series.supervised,
                     meeting_point=series.meeting_point,
                     what_to_bring=series.what_to_bring,
                     organizer_note=series.organizer_note,
@@ -897,7 +913,46 @@ def _is_genuinely_new(membership: Membership) -> bool:
     )
 
 
+# --- F29: verified-adult supervisor seat ---------------------------------------------
+# A supervised CHILD activity cannot SETTLE a join until the owner's OWN verified guardian is
+# seated as a read-only GUARDIAN member. "Is a supervisor present now" is derived LIVE from
+# memberships (never stored) — keyed strictly on is_guardian_of(guardian, OWNER), never loosened
+# to "any participant" (that would open an adult -> other-people's-minors read-window).
+
+
+def active_supervisor_present(activity) -> bool:
+    """True iff a verified guardian OF THE OWNER is currently seated as a GUARDIAN member.
+    Computed live so the supervision chip can never lie after the guardian leaves/is removed."""
+    from apps.accounts.services import is_guardian_of
+
+    owner = activity.owner
+    guardian_memberships = activity.memberships.filter(
+        role=Membership.Role.GUARDIAN, state=Membership.State.MEMBER
+    ).select_related("user")
+    return any(is_guardian_of(m.user, owner) for m in guardian_memberships)
+
+
+def supervision_satisfied(activity) -> bool:
+    """An activity that doesn't require supervision is always satisfied; a supervised one needs a
+    live supervisor of the owner. The single predicate both the settle gate and the chip use."""
+    if not activity.supervised:
+        return True
+    return active_supervisor_present(activity)
+
+
+def _settle_pending_joins(activity) -> None:
+    """Re-evaluate REQUESTED memberships so any that already cleared the vote threshold but couldn't
+    settle for lack of a supervisor are admitted now (called after a supervisor is seated)."""
+    for membership in activity.memberships.filter(state=Membership.State.REQUESTED):
+        _evaluate_vote(membership)
+
+
 def _admit(membership: Membership) -> None:
+    # F29: a supervised activity cannot settle a join until the owner's guardian supervises it.
+    # Fail-closed no-op (the vote/approval is preserved on the still-REQUESTED row and settles via
+    # _settle_pending_joins once the supervisor is seated). owner_admit raises a clear message.
+    if not supervision_satisfied(membership.activity):
+        return
     membership.state = Membership.State.MEMBER
     membership.decided_at = timezone.now()
     body = str(_("You were admitted to “%(title)s”.") % {"title": membership.activity.title})
@@ -960,6 +1015,12 @@ def owner_admit(owner, membership: Membership) -> Membership:
         raise InvalidState(_("Owner override is disabled for this activity."))
     if membership.state != Membership.State.REQUESTED:
         raise InvalidState(_("This membership is not awaiting a join vote."))
+    # F29: surface the bootstrap clearly — the owner must seat their guardian supervisor before
+    # anyone can be admitted to a supervised activity (the vote path just waits silently).
+    if not supervision_satisfied(activity):
+        raise InvalidState(
+            _("Add your guardian as this activity's supervisor before admitting members.")
+        )
     _admit(membership)
     return membership
 
@@ -986,13 +1047,47 @@ def add_guardian(owner, activity, guardian) -> Membership:
     )
     if existing:
         return existing
-    return Membership.objects.create(
+    membership = Membership.objects.create(
         activity=activity,
         user=guardian,
         role=Membership.Role.GUARDIAN,
         state=Membership.State.MEMBER,
         decided_at=timezone.now(),
     )
+    # F29: seating the supervisor unblocks any join that already cleared the vote but couldn't
+    # settle for lack of supervision (the bootstrap: requests can arrive before the guardian).
+    if activity.supervised:
+        _settle_pending_joins(activity)
+    return membership
+
+
+@transaction.atomic
+def set_activity_supervision(owner, activity, supervised: bool) -> Activity:
+    """Owner toggles the F29 supervised pin AFTER create — a guarded service, deliberately NOT in
+    ACTIVITY_EDITABLE_FIELDS (which freezes the cohort-isolation boundary). Enabling implies
+    guardian_accompanied so the supervisor can be seated; CHILD-only; audited. Disabling (or, once
+    enabled, seating the guardian) releases any join that was waiting on supervision."""
+    if activity.owner_id != owner.id:
+        raise NotAMember(_("Only the activity owner may change supervision."))
+    if activity.status != Activity.Status.OPEN:
+        raise InvalidState(_("Only an open activity's supervision can be changed."))
+    if supervised and activity.cohort != Cohort.CHILD:
+        raise InvalidState(_("Only children's activities can require a supervising guardian."))
+    activity.supervised = bool(supervised)
+    fields = ["supervised", "updated_at"]
+    if supervised and not activity.guardian_accompanied:
+        activity.guardian_accompanied = True
+        fields.append("guardian_accompanied")
+    activity.save(update_fields=fields)
+    from apps.safety.services import record_audit
+
+    record_audit(
+        "activity.supervision_set", actor=owner, target=activity, supervised=bool(supervised)
+    )
+    # If supervision is now satisfied (turned off, or already-seated guardian), settle any join
+    # that cleared the vote while blocked.
+    _settle_pending_joins(activity)
+    return activity
 
 
 def _coorg_eligible(activity, user):

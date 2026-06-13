@@ -15,7 +15,7 @@
       <ul class="members">
         {% for a in w.meetups %}
           <li>{{ a.starts_at|date:"D j M, H:i" }} &middot; {{ a.activity_type.name }}
-            {% blocktrans with place=a.place.name|default:_("a place") %}at {{ place }}{% endblocktrans %}{% if a.place.address_city %}, {{ a.place.address_city }}{% endif %}</li>
+            {% blocktrans with place=a.place.name|default:_("a place") %}at {{ place }}{% endblocktrans %}{% if a.place.address_city %}, {{ a.place.address_city }}{% endif %}{% if a.supervised %} &middot; {% trans "guardian-supervised" %}{% endif %}</li>
         {% endfor %}
       </ul>
     {% else %}
