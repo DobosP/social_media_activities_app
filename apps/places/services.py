@@ -12,12 +12,14 @@ from django.db.models import Q
 from django.utils import timezone
 
 from .models import (
+    DEFAULT_FACT_QUORUM,
     AccessPreference,
     ApprovedChildVenue,
     ChildVenueClass,
     OpenNowReport,
     Partner,
     Place,
+    PlaceFactVote,
 )
 
 
@@ -269,3 +271,167 @@ def clear_open_now_reports(place, *, moderator=None) -> int:
 
         record_audit("place.open_now_reports_cleared", actor=moderator, target=place)
     return n
+
+
+# --- F19: crowd venue facts + kid-suitability facts (ingest-safe overlay) -------------
+# Verified members confirm/dispute concrete VENUE facts OSM rarely records. Derived OSM-FIRST at
+# read time; crowd votes fill in only where OSM is silent. NEVER a composite "safe for kids" score
+# — neutral individual facts only. Counts-only display; never writes Place/raw_tags.
+
+
+def _fact_quorum() -> int:
+    return getattr(settings, "FACT_QUORUM", DEFAULT_FACT_QUORUM)
+
+
+# OSM-first source per fact: "kv" -> _tristate on raw_tags[key] (yes/no/unknown); "present" ->
+# true if the tag equals the value, else UNKNOWN (the ABSENCE of an OSM tag is never a 'no'); None
+# -> no OSM source, crowd-only. Top-level OSM keys are safe (enrichment namespaces its sub-keys).
+_FACT_OSM = {
+    PlaceFactVote.FactKey.DRINKING_WATER: ("kv", "drinking_water"),
+    PlaceFactVote.FactKey.TOILETS: ("kv", "toilets"),
+    PlaceFactVote.FactKey.LIT_AT_NIGHT: ("kv", "lit"),
+    PlaceFactVote.FactKey.PLAYGROUND: ("present", ("leisure", "playground")),
+    PlaceFactVote.FactKey.FENCED: ("present", ("barrier", "fence")),
+    PlaceFactVote.FactKey.SHADE: ("present", ("natural", "tree")),
+    PlaceFactVote.FactKey.INDOOR_SHELTER: (None, None),
+}
+
+# Kid-relevant subset for the SOFT badge (never a composite score; never hides 'unknown').
+_KID_FACTS = (
+    PlaceFactVote.FactKey.TOILETS,
+    PlaceFactVote.FactKey.FENCED,
+    PlaceFactVote.FactKey.PLAYGROUND,
+    PlaceFactVote.FactKey.DRINKING_WATER,
+)
+
+
+def _osm_fact_state(place, fact_key) -> str:
+    kind, spec = _FACT_OSM.get(fact_key, (None, None))
+    raw = place.raw_tags if isinstance(place.raw_tags, dict) else {}
+    if kind == "kv":
+        return _tristate(raw.get(spec))
+    if kind == "present":
+        key, value = spec
+        return FACT_TRUE if raw.get(key) == value else FACT_UNKNOWN
+    return FACT_UNKNOWN
+
+
+def _crowd_state(yes: int, no: int) -> str:
+    """A quorum on the MAJORITY side decides; a tie or sub-quorum stays unknown."""
+    if max(yes, no) < _fact_quorum() or yes == no:
+        return FACT_UNKNOWN
+    return FACT_TRUE if yes > no else FACT_FALSE
+
+
+def place_fact_status(place, fact_key) -> str:
+    """Tristate for ONE venue fact at read time. OSM is authoritative when present; crowd votes
+    fill in only where OSM is silent. Never written back to Place (re-ingest safe)."""
+    osm = _osm_fact_state(place, fact_key)
+    if osm != FACT_UNKNOWN:
+        return osm
+    yes = place.fact_votes.filter(fact_key=fact_key, value=True).count()
+    no = place.fact_votes.filter(fact_key=fact_key, value=False).count()
+    return _crowd_state(yes, no)
+
+
+def venue_facts(place) -> list:
+    """Ordered [{key, label, state}] for every venue fact (OSM-first, crowd overlay). ONE grouped
+    query for the crowd tallies — no per-fact N+1."""
+    from django.db.models import Count
+
+    tally = {
+        (row["fact_key"], row["value"]): row["n"]
+        for row in place.fact_votes.values("fact_key", "value").annotate(n=Count("id"))
+    }
+    out = []
+    for key in PlaceFactVote.FactKey:
+        osm = _osm_fact_state(place, key)
+        if osm != FACT_UNKNOWN:
+            state = osm
+        else:
+            state = _crowd_state(tally.get((key.value, True), 0), tally.get((key.value, False), 0))
+        out.append({"key": key.value, "label": key.label, "state": state})
+    return out
+
+
+def venue_facts_detail(place, viewer=None) -> list:
+    """venue_facts + per-fact yes/no counts + the viewer's OWN vote, in BOUNDED queries (one
+    grouped tally, one viewer-votes lookup) — for the place_detail surface. `osm_sourced` marks a
+    fact decided by map data (the crowd vote form is hidden for those — crowd only fills gaps)."""
+    from django.db.models import Count
+
+    tally = {
+        (row["fact_key"], row["value"]): row["n"]
+        for row in place.fact_votes.values("fact_key", "value").annotate(n=Count("id"))
+    }
+    my = {}
+    if viewer is not None and getattr(viewer, "is_authenticated", False):
+        my = {row.fact_key: row.value for row in place.fact_votes.filter(user=viewer)}
+    out = []
+    for key in PlaceFactVote.FactKey:
+        osm = _osm_fact_state(place, key)
+        yes = tally.get((key.value, True), 0)
+        no = tally.get((key.value, False), 0)
+        out.append(
+            {
+                "key": key.value,
+                "label": key.label,
+                "state": osm if osm != FACT_UNKNOWN else _crowd_state(yes, no),
+                "yes": yes,
+                "no": no,
+                "required": _fact_quorum(),
+                "my_vote": my.get(key.value),
+                "osm_sourced": osm != FACT_UNKNOWN,
+            }
+        )
+    return out
+
+
+def has_kid_facts(place) -> bool:
+    """SOFT badge signal (F15 rule): True iff at least one KID-relevant fact is confirmed 'true'.
+    Never used to HIDE a place (an unknown-fact venue is never excluded) — only to mark one."""
+    return any(place_fact_status(place, key) == FACT_TRUE for key in _KID_FACTS)
+
+
+def fact_vote_summary(place, fact_key, viewer=None) -> dict:
+    """Counts + the viewer's OWN vote only (never a voter list) + the derived state for one fact."""
+    yes = place.fact_votes.filter(fact_key=fact_key, value=True).count()
+    no = place.fact_votes.filter(fact_key=fact_key, value=False).count()
+    my_vote = None
+    if viewer is not None and getattr(viewer, "is_authenticated", False):
+        row = place.fact_votes.filter(user=viewer, fact_key=fact_key).first()
+        my_vote = row.value if row else None
+    return {
+        "yes": yes,
+        "no": no,
+        "required": _fact_quorum(),
+        "state": place_fact_status(place, fact_key),
+        "my_vote": my_vote,
+    }
+
+
+@transaction.atomic
+def vote_on_fact(user, place, fact_key, value) -> PlaceFactVote:
+    """Record (or change) one member's yes/no vote on a venue fact. Gated like the other crowd
+    overlays: verified+consented, public place only, a fixed fact_key, rate-limited; idempotent via
+    update_or_create (one row per (place,user,fact_key) — a mind-change updates, never stacks)."""
+    from apps.accounts.services import can_participate
+    from apps.safety.services import allow_action
+
+    if fact_key not in PlaceFactVote.FactKey.values:
+        raise PlacesError("Unknown venue fact.")
+    if not can_participate(user):
+        raise NotEligible("Verified, consented participation is required to vote on a place.")
+    if not public_places().filter(pk=place.pk).exists():
+        raise PlacesError("This place isn't published yet.")
+    if not allow_action(
+        user,
+        "place_fact_vote",
+        limit=getattr(settings, "FACT_VOTE_RATE_LIMIT", 40),
+        window_seconds=getattr(settings, "FACT_VOTE_RATE_WINDOW_SECONDS", 3600),
+    ):
+        raise PlacesError("You're voting too quickly; please try again later.")
+    vote, _ = PlaceFactVote.objects.update_or_create(
+        place=place, user=user, fact_key=fact_key, defaults={"value": bool(value)}
+    )
+    return vote

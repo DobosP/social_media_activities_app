@@ -244,6 +244,47 @@ class OpenNowReport(models.Model):
         return f"open_now_report({self.place_id} by {self.reporter_id})"
 
 
+DEFAULT_FACT_QUORUM = 3
+
+
+class PlaceFactVote(models.Model):
+    """F19: a verified member's yes/no vote on a concrete VENUE fact OSM rarely records (drinking
+    water, lit at night, toilets, shade, fenced, indoor shelter, playground). The COUNT SOURCE —
+    ingest never touches this table, so the tally survives re-ingest. One vote per
+    (place, user, fact_key); a mind-change updates the single row (no brigading). fact_key is a
+    FIXED closed allowlist and value is a bare boolean — no free text, so it can't be a covert
+    channel. The per-fact state is derived OSM-FIRST at read time (see services.place_fact_status);
+    these votes only fill in where OSM is silent. Describes the physical venue, never user presence
+    — co-voting on a place is NOT a shared activity and never enables can_connect."""
+
+    class FactKey(models.TextChoices):
+        DRINKING_WATER = "drinking_water", "Drinking water"
+        TOILETS = "toilets", "Toilets"
+        LIT_AT_NIGHT = "lit_at_night", "Lit at night"
+        INDOOR_SHELTER = "indoor_shelter", "Indoor shelter"
+        FENCED = "fenced", "Fenced / away from traffic"
+        SHADE = "shade", "Shade"
+        PLAYGROUND = "playground", "Playground nearby"
+
+    place = models.ForeignKey(Place, on_delete=models.CASCADE, related_name="fact_votes")
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="place_fact_votes"
+    )
+    fact_key = models.CharField(max_length=24, choices=FactKey.choices)
+    value = models.BooleanField()  # True = yes (present), False = no (absent)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(fields=["place", "user", "fact_key"], name="uq_place_fact_user"),
+        ]
+        indexes = [models.Index(fields=["place", "fact_key"])]
+
+    def __str__(self):
+        return f"fact_vote({self.place_id}.{self.fact_key}={self.value} by {self.user_id})"
+
+
 class ChildVenueClass(models.Model):
     """F9: a STAFF-curated allowlist of venue CLASSES considered safe-enough public places for a
     CHILD-cohort meetup (library, park, sports centre, school, community centre, ...). This is a

@@ -844,7 +844,7 @@ def place_detail(request, pk):
     # F26: activity edges with per-viewer vote summaries; F28: open-now status from parsed hours,
     # downgraded to "unverified" when recent reports say the posted hours are wrong.
     from apps.places.edges import edge_vote_summary
-    from apps.places.services import open_now_status
+    from apps.places.services import open_now_status, venue_facts_detail
 
     edges = [
         pa for pa in place.place_activities.all() if not pa.is_disputed or request.user.is_staff
@@ -852,6 +852,13 @@ def place_detail(request, pk):
     for edge in edges:
         edge.summary = edge_vote_summary(edge, request.user)
     can_contribute = is_public and request.user.is_authenticated and can_participate(request.user)
+    # F19: crowd venue facts (OSM-first, crowd overlay) + a SOFT kid badge (never hides a place).
+    venue_fact_rows = venue_facts_detail(place, request.user)
+    has_kid_facts = any(
+        row["state"] == "true"
+        and row["key"] in ("toilets", "fenced", "playground", "drinking_water")
+        for row in venue_fact_rows
+    )
     return render(
         request,
         "web/place_detail.html",
@@ -862,6 +869,8 @@ def place_detail(request, pk):
             "edges": edges,
             "can_contribute": can_contribute,
             "open_now": open_now_status(place),
+            "venue_facts": venue_fact_rows,
+            "has_kid_facts": has_kid_facts,
             "access_facts": accessibility_facts_display(place),
             "access_match": access_match,
             "has_access_pref": pref is not None,
@@ -957,6 +966,27 @@ def edge_vote(request, pk, edge_id):
         vote_on_edge(request.user, edge, request.POST.get("vote"))
         messages.success(request, "Thanks - your feedback was recorded.")
     except EdgeError as exc:
+        messages.error(request, str(exc))
+    return redirect("place_detail", pk=pk)
+
+
+@login_required
+@require_POST
+def fact_vote(request, pk):
+    """F19: confirm/dispute a concrete venue fact (drinking water, toilets, fenced, ...). The
+    service gates verified+consented + public-place + rate-limit and is idempotent per fact."""
+    from apps.places.services import PlacesError, vote_on_fact
+
+    place = get_object_or_404(Place, pk=pk)
+    try:
+        vote_on_fact(
+            request.user,
+            place,
+            request.POST.get("fact_key", ""),
+            request.POST.get("value") == "yes",
+        )
+        messages.success(request, "Thanks - your feedback was recorded.")
+    except PlacesError as exc:
         messages.error(request, str(exc))
     return redirect("place_detail", pk=pk)
 

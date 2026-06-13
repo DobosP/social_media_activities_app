@@ -89,6 +89,36 @@
   <p class="muted" style="font-size:.8rem">{% trans "From the venue's open data &mdash; we never claim a place is accessible when it isn't recorded." %}</p>
 </div>
 
+{# F19: crowd-confirmed venue facts (OSM-first, members fill in the gaps). Counts only, never voter
+   names; never a composite "safe for kids" score. The kid badge is soft — it never hides a place. #}
+<div class="card">
+  <h2 style="margin-top:0">{% trans "What's at this venue" %}</h2>
+  {% if has_kid_facts %}<p><span class="tag fact--true">{% trans "Has kid-friendly facilities" %}</span></p>{% endif %}
+  <ul class="members">
+    {% for f in venue_facts %}
+      <li>{{ f.label }}:
+        {% if f.state == "true" %}<span class="tag fact--true">{% trans "yes" %}</span>
+        {% elif f.state == "false" %}<span class="tag fact--false">{% trans "no" %}</span>
+        {% else %}<span class="muted">{% trans "not recorded" %}</span>{% endif %}
+        {% if f.osm_sourced %}
+          <small class="muted">{% trans "from map data" %}</small>
+        {% else %}
+          <small class="muted">{% blocktrans with yes=f.yes no=f.no required=f.required %}{{ yes }} yes / {{ no }} no (needs {{ required }}){% endblocktrans %}</small>
+          {% if can_contribute %}
+          <form method="post" action="{% url 'fact_vote' place.pk %}" style="display:inline">
+            {% csrf_token %}
+            <input type="hidden" name="fact_key" value="{{ f.key }}">
+            <button class="btn btn--light" name="value" value="yes" {% if f.my_vote is True %}disabled{% endif %}>{% trans "Yes" %}</button>
+            <button class="btn btn--light" name="value" value="no" {% if f.my_vote is False %}disabled{% endif %}>{% trans "No" %}</button>
+          </form>
+          {% endif %}
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+  <p class="muted" style="font-size:.8rem">{% trans "Map data first; otherwise members confirm. We never claim a fact that isn't recorded, and never show who voted." %}</p>
+</div>
+
 {% if user.is_authenticated %}
   <p style="margin-top:1rem">
     <a class="btn" href="{% url 'activity_create' %}?place={{ place.pk }}">{% trans "Organise an activity here" %}</a>
