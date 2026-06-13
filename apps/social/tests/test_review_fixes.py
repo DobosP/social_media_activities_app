@@ -8,7 +8,6 @@ from django.contrib.gis.geos import Point
 from django.utils import timezone
 from rest_framework.test import APIClient
 
-from apps.accounts.models import AgeBand
 from apps.events.models import Event
 from apps.media import services as media
 from apps.media.models import Photo

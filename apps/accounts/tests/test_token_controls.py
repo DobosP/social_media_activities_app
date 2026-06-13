@@ -4,7 +4,6 @@ METADATA only (never the key)."""
 
 import pytest
 from rest_framework.authtoken.models import Token
-from rest_framework.test import APIClient
 
 from apps.accounts.export import build_user_export
 from apps.accounts.identity.base import AssuranceResult

@@ -16,6 +16,14 @@
       {% if g.caps.can_observe_messaging %}<li>{% trans "&#10003; If they have set up secure messaging, they can read your group chats as a visible observer (you can see them in the chat)." %}</li>{% endif %}
       <li>{% trans "&#10007; They cannot read your activity threads, see your photos or who else is there, post as you, or join your activities. They are never in your cohort." %}</li>
     </ul>
+    {% if g.caps.guardrail_supervised_only or g.caps.guardrail_latest_start_hour is not None or g.caps.guardrail_max_open_joins %}
+    <h3 style="margin:.5rem 0 .3rem">{% trans "Limits they've set on the meetups you can join" %}</h3>
+    <ul class="muted" style="font-size:.85rem">
+      {% if g.caps.guardrail_supervised_only %}<li>{% trans "Only guardian-accompanied meetups." %}</li>{% endif %}
+      {% if g.caps.guardrail_latest_start_hour is not None %}<li>{% blocktrans with hour=g.caps.guardrail_latest_start_hour %}Meetups that start by {{ hour }}:00 at the latest.{% endblocktrans %}</li>{% endif %}
+      {% if g.caps.guardrail_max_open_joins %}<li>{% blocktrans count n=g.caps.guardrail_max_open_joins %}You can be in at most {{ n }} open meetup at a time.{% plural %}You can be in at most {{ n }} open meetups at a time.{% endblocktrans %}</li>{% endif %}
+    </ul>
+    {% endif %}
   </div>
 {% empty %}
   <p class="muted">{% trans "No one is registered as your guardian." %}</p>

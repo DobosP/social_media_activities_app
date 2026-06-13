@@ -107,6 +107,11 @@ urlpatterns = [
     path("wards/", views.wards, name="wards"),
     path("wards/invite/", views.guardian_invite_create, name="guardian_invite_create"),
     path("wards/<int:ward_pk>/revoke/", views.guardian_revoke, name="guardian_revoke"),
+    path(
+        "wards/<int:ward_pk>/limits/",
+        views.guardian_guardrail_set,
+        name="guardian_guardrail_set",
+    ),
     path("guardianship/", views.my_guardians, name="my_guardians"),
     path(
         "guardian-invites/<str:token>/accept/",

@@ -193,6 +193,11 @@ SAVED_SEARCH_NOTIFY_WINDOW_SECONDS = env.int("SAVED_SEARCH_NOTIFY_WINDOW_SECONDS
 GUARDIAN_INVITE_TTL_DAYS = env.int("GUARDIAN_INVITE_TTL_DAYS", default=7)
 GUARDIAN_INVITE_RATE_LIMIT = env.int("GUARDIAN_INVITE_RATE_LIMIT", default=20)
 GUARDIAN_INVITE_RATE_WINDOW_SECONDS = env.int("GUARDIAN_INVITE_RATE_WINDOW_SECONDS", default=3600)
+# F7: throttle guardrail edits (each writes an audit row) — mirrors the guardian-invite throttle.
+GUARDIAN_GUARDRAIL_RATE_LIMIT = env.int("GUARDIAN_GUARDRAIL_RATE_LIMIT", default=30)
+GUARDIAN_GUARDRAIL_RATE_WINDOW_SECONDS = env.int(
+    "GUARDIAN_GUARDRAIL_RATE_WINDOW_SECONDS", default=3600
+)
 
 # Number of trusted reverse proxies in front of the app (e.g. Render's edge = 1). Used for
 # both DRF throttle identity AND the web login-lockout's real-client-IP derivation, so they
