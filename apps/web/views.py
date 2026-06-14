@@ -1437,6 +1437,10 @@ def activity_create(request):
             )
             initial.setdefault("title", draft["title"])
             initial.setdefault("description", draft["description"])
+            # F18: a getting-home prompt for minor organisers (empty for adults). setdefault
+            # keeps the never-overwrite guarantee.
+            if draft.get("getting_home_note"):
+                initial.setdefault("getting_home_note", draft["getting_home_note"])
     if request.method == "POST":
         form = ActivityForm(request.POST, user=request.user)
         if form.is_valid():

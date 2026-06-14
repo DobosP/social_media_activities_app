@@ -35,6 +35,7 @@ class ActivitySerializer(serializers.ModelSerializer):
             "meeting_point",
             "what_to_bring",
             "organizer_note",
+            "getting_home_note",
             "cost_band",
             "difficulty",
             "accessibility_notes",
@@ -91,6 +92,9 @@ class ActivityCreateSerializer(serializers.Serializer):
     organizer_note = serializers.CharField(
         required=False, allow_blank=True, default="", max_length=LOGISTICS_FIELD_MAX_LENGTH
     )
+    getting_home_note = serializers.CharField(
+        required=False, allow_blank=True, default="", max_length=LOGISTICS_FIELD_MAX_LENGTH
+    )
     cost_band = serializers.ChoiceField(
         choices=Activity.CostBand.choices, required=False, default=Activity.CostBand.UNSPECIFIED
     )
@@ -124,6 +128,9 @@ class ActivityUpdateSerializer(serializers.Serializer):
         required=False, allow_blank=True, max_length=LOGISTICS_FIELD_MAX_LENGTH
     )
     organizer_note = serializers.CharField(
+        required=False, allow_blank=True, max_length=LOGISTICS_FIELD_MAX_LENGTH
+    )
+    getting_home_note = serializers.CharField(
         required=False, allow_blank=True, max_length=LOGISTICS_FIELD_MAX_LENGTH
     )
     # No defaults below: a default would inject the field on every partial PATCH that omits
@@ -164,6 +171,9 @@ class SeriesCreateSerializer(serializers.Serializer):
     organizer_note = serializers.CharField(
         required=False, allow_blank=True, default="", max_length=LOGISTICS_FIELD_MAX_LENGTH
     )
+    getting_home_note = serializers.CharField(
+        required=False, allow_blank=True, default="", max_length=LOGISTICS_FIELD_MAX_LENGTH
+    )
     cost_band = serializers.ChoiceField(
         choices=Activity.CostBand.choices, required=False, default=Activity.CostBand.UNSPECIFIED
     )
@@ -192,6 +202,7 @@ class SeriesSerializer(serializers.ModelSerializer):
             "meeting_point",
             "what_to_bring",
             "organizer_note",
+            "getting_home_note",
             "cost_band",
             "difficulty",
             "accessibility_notes",

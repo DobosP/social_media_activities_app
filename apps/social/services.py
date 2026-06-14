@@ -337,6 +337,7 @@ def create_activity(
     meeting_point="",
     what_to_bring="",
     organizer_note="",
+    getting_home_note="",
     cost_band=Activity.CostBand.UNSPECIFIED,
     difficulty=Activity.Difficulty.UNSPECIFIED,
     accessibility_notes="",
@@ -395,6 +396,7 @@ def create_activity(
         meeting_point=meeting_point,
         what_to_bring=what_to_bring,
         organizer_note=organizer_note,
+        getting_home_note=getting_home_note,
         cost_band=cost_band,
         difficulty=difficulty,
         accessibility_notes=accessibility_notes,
@@ -469,6 +471,7 @@ def create_series(
     meeting_point="",
     what_to_bring="",
     organizer_note="",
+    getting_home_note="",
     cost_band=Activity.CostBand.UNSPECIFIED,
     difficulty=Activity.Difficulty.UNSPECIFIED,
     accessibility_notes="",
@@ -531,6 +534,7 @@ def create_series(
         meeting_point=meeting_point,
         what_to_bring=what_to_bring,
         organizer_note=organizer_note,
+        getting_home_note=getting_home_note,
         cost_band=cost_band,
         difficulty=difficulty,
         accessibility_notes=accessibility_notes,
@@ -701,6 +705,7 @@ def spawn_due_series(*, now=None) -> dict:
                     meeting_point=series.meeting_point,
                     what_to_bring=series.what_to_bring,
                     organizer_note=series.organizer_note,
+                    getting_home_note=series.getting_home_note,
                     cost_band=series.cost_band,
                     difficulty=series.difficulty,
                     accessibility_notes=series.accessibility_notes,
@@ -780,6 +785,7 @@ ACTIVITY_EDITABLE_FIELDS = (
     "meeting_point",  # F9 logistics — owner-curated, routed through the same edit path
     "what_to_bring",
     "organizer_note",
+    "getting_home_note",  # F18 — mirrored onto a CHILD ward's guardian manifest
     "cost_band",  # F8 what-to-expect
     "difficulty",
     "accessibility_notes",
@@ -2157,8 +2163,9 @@ def thread_digest(activity, viewer) -> dict:
 def draft_activity_text(*, activity_type, place=None, starts_at=None, cohort=None) -> dict:
     """A deterministic (no ML) draft title + description composed from the organiser's OWN
     chosen type/place/time, to seed an empty create form (F36). A CHILD/TEEN organiser also
-    gets a short safety reminder. Returns {'title', 'description'}; callers only ever seed
-    EMPTY initial, never overwrite what the user typed. gettext fragments are str()-coerced
+    gets a short safety reminder AND a getting-home note seed (F18). Returns
+    {'title', 'description', 'getting_home_note'} (the note is "" for adults); callers only ever
+    seed EMPTY initial, never overwrite what the user typed. gettext fragments are str()-coerced
     before slicing/concatenation (a lazy proxy can't be sliced)."""
     has_place_name = bool(place and (place.name or "").strip())
     if has_place_name:
@@ -2175,13 +2182,19 @@ def draft_activity_text(*, activity_type, place=None, starts_at=None, cohort=Non
     )
     # Minor signal = cohort, NOT requires_parental_consent (which is UNDER_16-only and would
     # silently skip TEEN organisers).
+    getting_home_note = ""
     if cohort in (Cohort.CHILD, Cohort.TEEN):
         # W7: same reminder, calmer label — guidance, not a "you are a child" badge.
         safety = str(_("Tip: meet in a public place and bring a friend."))
         description = "\n\n".join([base, safety])
+        # F18: an editable getting-home prompt, seeded only for minors. setdefault at the call
+        # site means it never overwrites what the organiser typed.
+        getting_home_note = str(
+            _("Agree how you'll get home before you go (e.g. who picks you up).")
+        )
     else:
         description = base
-    return {"title": title, "description": description}
+    return {"title": title, "description": description, "getting_home_note": getting_home_note}
 
 
 # --- F3: "we're here" arrival ping -----------------------------------------------------

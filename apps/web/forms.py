@@ -76,6 +76,9 @@ class ActivityForm(forms.Form):
     meeting_point = _logistics_field("Where exactly to meet (e.g. north gate by the fountain).")
     what_to_bring = _logistics_field("What members should bring.")
     organizer_note = _logistics_field("A short note for members.")
+    getting_home_note = _logistics_field(
+        "How members get home (e.g. nearest bus stop, pickup point)."
+    )
     cost_band = forms.ChoiceField(
         choices=Activity.CostBand.choices,
         required=False,
@@ -157,6 +160,9 @@ class SeriesForm(forms.Form):
     meeting_point = _logistics_field("Where exactly to meet (e.g. north gate by the fountain).")
     what_to_bring = _logistics_field("What members should bring.")
     organizer_note = _logistics_field("A short note for members.")
+    getting_home_note = _logistics_field(
+        "How members get home (e.g. nearest bus stop, pickup point)."
+    )
     cost_band = forms.ChoiceField(
         choices=Activity.CostBand.choices,
         required=False,
@@ -224,6 +230,9 @@ class ActivityEditForm(forms.Form):
     meeting_point = _logistics_field("Where exactly to meet (e.g. north gate by the fountain).")
     what_to_bring = _logistics_field("What members should bring.")
     organizer_note = _logistics_field("A short note for members.")
+    getting_home_note = _logistics_field(
+        "How members get home (e.g. nearest bus stop, pickup point)."
+    )
     cost_band = forms.ChoiceField(
         choices=Activity.CostBand.choices,
         required=False,

@@ -59,6 +59,9 @@ class Activity(models.Model):
     meeting_point = models.TextField(blank=True, default="")
     what_to_bring = models.TextField(blank=True, default="")
     organizer_note = models.TextField(blank=True, default="")
+    # F18: a short "getting home" note (e.g. nearest bus stop, pickup point). Owner-curated,
+    # same edit path + cap as the other logistics; mirrored onto a CHILD ward's guardian manifest.
+    getting_home_note = models.TextField(blank=True, default="")
 
     # F8: optional "what to expect" fields so newcomers, disabled, and anxious users can
     # judge fit at a glance. Owner-curated; cost/difficulty are constrained choices,
@@ -189,6 +192,7 @@ class ActivitySeries(models.Model):
     meeting_point = models.TextField(blank=True, default="")
     what_to_bring = models.TextField(blank=True, default="")
     organizer_note = models.TextField(blank=True, default="")
+    getting_home_note = models.TextField(blank=True, default="")  # F18
     accessibility_notes = models.TextField(blank=True, default="")
     cost_band = models.CharField(
         max_length=16, choices=Activity.CostBand.choices, default=Activity.CostBand.UNSPECIFIED
