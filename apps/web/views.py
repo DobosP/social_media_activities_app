@@ -2567,6 +2567,127 @@ def wards(request):
     )
 
 
+@login_required
+def my_meetups(request):
+    """F38: the viewer's OWN upcoming meetups (time, place, meeting point) + the guardians they
+    can turn to — a lean, no-JS page a member can read en route. A service worker serves it
+    NETWORK-FIRST and falls back to the last-cached copy offline (with a freshness stamp).
+
+    Strictly self-scoped and mirrors the wards-manifest read wall: only OPEN, upcoming meetups
+    the viewer is an admitted MEMBER of, in their CURRENT cohort, never moderator-hidden — so a
+    cancelled / hidden / past / stale-cross-cohort meetup is never shown (and the offline copy
+    can never resurrect one, because it was never cached)."""
+    now = timezone.now()
+    meetups = list(
+        Activity.objects.filter(
+            memberships__user=request.user,
+            memberships__state=Membership.State.MEMBER,
+            status=Activity.Status.OPEN,
+            starts_at__gte=now,
+            cohort=request.user.cohort,
+            is_hidden=False,
+        )
+        .select_related("place", "activity_type")
+        .order_by("starts_at")
+        .distinct()
+    )
+    # The viewer's own safe-exit guardians (names only — no contact details), readable offline.
+    my_guardians = [
+        rel.guardian
+        for rel in GuardianRelationship.objects.filter(
+            ward=request.user, status=GuardianRelationship.Status.ACTIVE
+        ).select_related("guardian")
+    ]
+    return render(
+        request,
+        "web/my_meetups.html",
+        {
+            "meetups": meetups,
+            "my_guardians": my_guardians,
+            # Baked into the HTML, so the offline (cached) copy honestly shows WHEN it was saved.
+            "generated_at": now,
+            **_nav_context(request.user),
+        },
+    )
+
+
+# F38: a minimal, root-scoped service worker. Served at /sw.js (root => scope "/" with no extra
+# header needed; we set Service-Worker-Allowed defensively). NETWORK-FIRST for /my-meetups/ so a
+# live cancel/edit is always preferred; the cached copy is only a last-resort offline fallback.
+# Caches NOTHING else authenticated. Purged on logout + on a user switch (see base.html), so a
+# shared/borrowed phone never serves one member's saved meetups to another.
+_SERVICE_WORKER_JS = """\
+'use strict';
+const CACHE = 'mz-meetups-v1';
+const PAGE = '/my-meetups/';
+const ASSETS = ['/static/css/base.css'];
+
+self.addEventListener('install', (e) => {
+  self.skipWaiting();
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS).catch(() => {})));
+});
+
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(
+        keys.filter((k) => k.startsWith('mz-meetups') && k !== CACHE).map((k) => caches.delete(k))
+      )
+    ).then(() => self.clients.claim())
+  );
+});
+
+// The page postMessages this on logout / user-switch — drop the on-device copy immediately.
+self.addEventListener('message', (e) => {
+  if (e.data && e.data.type === 'purge') {
+    e.waitUntil(caches.delete(CACHE));
+  }
+});
+
+self.addEventListener('fetch', (e) => {
+  const req = e.request;
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
+  if (url.origin !== self.location.origin) return;
+  const isPage = url.pathname === PAGE;
+  const isAsset = ASSETS.indexOf(url.pathname) !== -1;
+  if (!isPage && !isAsset) return; // manage ONLY the meetups page + its stylesheet
+
+  if (isPage) {
+    // NETWORK-FIRST: always prefer the live page (so a cancellation shows); cache the fresh copy;
+    // only fall back to the cached copy when the network is unavailable.
+    e.respondWith(
+      fetch(req)
+        .then((resp) => {
+          if (resp && resp.ok) {
+            const copy = resp.clone();
+            caches.open(CACHE).then((c) => c.put(PAGE, copy));
+          }
+          return resp;
+        })
+        .catch(() => caches.match(PAGE))
+    );
+    return;
+  }
+  // The stylesheet is static/versioned — cache-first is fine and keeps the offline page styled.
+  e.respondWith(caches.match(req).then((hit) => hit || fetch(req)));
+});
+"""
+
+
+def service_worker(request):
+    """Serve the F38 service worker at the site root so its scope is '/'. A plain view (WhiteNoise
+    can't set headers, and /static/ would limit the scope) returning the JS with the right
+    content type. No auth: the SW script itself is non-sensitive; the data it caches is fetched
+    per-session and purged on logout."""
+    from django.http import HttpResponse
+
+    resp = HttpResponse(_SERVICE_WORKER_JS, content_type="text/javascript")
+    resp["Service-Worker-Allowed"] = "/"
+    resp["Cache-Control"] = "no-cache"  # always re-check the SW script itself for updates
+    return resp
+
+
 def _active_ward_or_none(guardian, ward_pk):
     """The actor's CURRENTLY-ACTIVE ward by pk, resolved in a SINGLE query — so a non-guardian
     gets an identical response whether or not the pk exists. Avoids a 404-vs-redirect

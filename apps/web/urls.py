@@ -5,6 +5,9 @@ from . import views
 
 urlpatterns = [
     path("", views.home, name="home"),
+    # F38: offline-resilient "my next meetups" + its root-scoped service worker (/sw.js).
+    path("my-meetups/", views.my_meetups, name="my_meetups"),
+    path("sw.js", views.service_worker, name="service_worker"),
     # Auth
     path("register/", views.register, name="register"),
     path("login/", views.ThrottledLoginView.as_view(), name="login"),
