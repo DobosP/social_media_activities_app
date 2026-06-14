@@ -91,6 +91,11 @@ class ActivityCreateSerializer(serializers.Serializer):
     organizer_note = serializers.CharField(
         required=False, allow_blank=True, default="", max_length=LOGISTICS_FIELD_MAX_LENGTH
     )
+    # F18: accepted on write, but intentionally NOT echoed by the cohort-wide read serializers
+    # (it's the child-safety-sensitive getting-home plan, shown member-only on the web).
+    getting_home_note = serializers.CharField(
+        required=False, allow_blank=True, default="", max_length=LOGISTICS_FIELD_MAX_LENGTH
+    )
     cost_band = serializers.ChoiceField(
         choices=Activity.CostBand.choices, required=False, default=Activity.CostBand.UNSPECIFIED
     )
@@ -124,6 +129,9 @@ class ActivityUpdateSerializer(serializers.Serializer):
         required=False, allow_blank=True, max_length=LOGISTICS_FIELD_MAX_LENGTH
     )
     organizer_note = serializers.CharField(
+        required=False, allow_blank=True, max_length=LOGISTICS_FIELD_MAX_LENGTH
+    )
+    getting_home_note = serializers.CharField(
         required=False, allow_blank=True, max_length=LOGISTICS_FIELD_MAX_LENGTH
     )
     # No defaults below: a default would inject the field on every partial PATCH that omits
@@ -162,6 +170,11 @@ class SeriesCreateSerializer(serializers.Serializer):
         required=False, allow_blank=True, default="", max_length=LOGISTICS_FIELD_MAX_LENGTH
     )
     organizer_note = serializers.CharField(
+        required=False, allow_blank=True, default="", max_length=LOGISTICS_FIELD_MAX_LENGTH
+    )
+    # F18: accepted on write, but intentionally NOT echoed by the cohort-wide read serializers
+    # (it's the child-safety-sensitive getting-home plan, shown member-only on the web).
+    getting_home_note = serializers.CharField(
         required=False, allow_blank=True, default="", max_length=LOGISTICS_FIELD_MAX_LENGTH
     )
     cost_band = serializers.ChoiceField(

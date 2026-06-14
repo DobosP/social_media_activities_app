@@ -15,7 +15,14 @@
       <ul class="members">
         {% for a in w.meetups %}
           <li>{{ a.starts_at|date:"D j M, H:i" }} &middot; {{ a.activity_type.name }}
-            {% blocktrans with place=a.place.name|default:_("a place") %}at {{ place }}{% endblocktrans %}{% if a.place.address_city %}, {{ a.place.address_city }}{% endif %}{% if a.supervised %} &middot; {% trans "guardian-supervised" %}{% endif %}</li>
+            {% blocktrans with place=a.place.name|default:_("a place") %}at {{ place }}{% endblocktrans %}{% if a.place.address_city %}, {{ a.place.address_city }}{% endif %}{% if a.supervised %} &middot; {% trans "guardian-supervised" %}{% endif %}
+            {% comment %}F18: mirror the owner-curated plan (end time, meeting spot, getting-home note)
+               for CHILD wards only — teens self-manage. Read-only facts; there is no reply channel.{% endcomment %}
+            {% if w.cohort == "child" %}
+              {% if a.ends_at %}<br><span class="muted">{% trans "Ends:" %}</span> {{ a.ends_at|date:"D j M, H:i" }}{% endif %}
+              {% if a.meeting_point %}<br><span class="muted">{% trans "Where to meet:" %}</span> {{ a.meeting_point|linebreaksbr }}{% endif %}
+              {% if a.getting_home_note %}<br><span class="muted">{% trans "Getting home:" %}</span> {{ a.getting_home_note|linebreaksbr }}{% endif %}
+            {% endif %}</li>
         {% endfor %}
       </ul>
     {% else %}

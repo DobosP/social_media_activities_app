@@ -223,12 +223,13 @@
   </div>
 {% endif %}
 
-{% if is_member or is_owner %}{% if activity.meeting_point or activity.what_to_bring or activity.organizer_note %}
+{% if is_member or is_owner %}{% if activity.meeting_point or activity.what_to_bring or activity.organizer_note or activity.getting_home_note %}
   <div class="card card-accent">
     <strong>{% trans "Meetup logistics" %}</strong>
     {% if activity.meeting_point %}<p style="margin:.4rem 0 0"><span class="muted">{% trans "Where to meet:" %}</span><br>{{ activity.meeting_point|linebreaksbr }}</p>{% endif %}
     {% if activity.what_to_bring %}<p style="margin:.4rem 0 0"><span class="muted">{% trans "What to bring:" %}</span><br>{{ activity.what_to_bring|linebreaksbr }}</p>{% endif %}
     {% if activity.organizer_note %}<p style="margin:.4rem 0 0"><span class="muted">{% trans "From the organiser:" %}</span><br>{{ activity.organizer_note|linebreaksbr }}</p>{% endif %}
+    {% if activity.getting_home_note %}<p style="margin:.4rem 0 0"><span class="muted">{% trans "Getting home:" %}</span><br>{{ activity.getting_home_note|linebreaksbr }}</p>{% endif %}
   </div>
 {% endif %}{% endif %}
 

@@ -337,6 +337,7 @@ def create_activity(
     meeting_point="",
     what_to_bring="",
     organizer_note="",
+    getting_home_note="",
     cost_band=Activity.CostBand.UNSPECIFIED,
     difficulty=Activity.Difficulty.UNSPECIFIED,
     accessibility_notes="",
@@ -395,6 +396,7 @@ def create_activity(
         meeting_point=meeting_point,
         what_to_bring=what_to_bring,
         organizer_note=organizer_note,
+        getting_home_note=getting_home_note,
         cost_band=cost_band,
         difficulty=difficulty,
         accessibility_notes=accessibility_notes,
@@ -469,6 +471,7 @@ def create_series(
     meeting_point="",
     what_to_bring="",
     organizer_note="",
+    getting_home_note="",
     cost_band=Activity.CostBand.UNSPECIFIED,
     difficulty=Activity.Difficulty.UNSPECIFIED,
     accessibility_notes="",
@@ -531,6 +534,7 @@ def create_series(
         meeting_point=meeting_point,
         what_to_bring=what_to_bring,
         organizer_note=organizer_note,
+        getting_home_note=getting_home_note,
         cost_band=cost_band,
         difficulty=difficulty,
         accessibility_notes=accessibility_notes,
@@ -701,6 +705,7 @@ def spawn_due_series(*, now=None) -> dict:
                     meeting_point=series.meeting_point,
                     what_to_bring=series.what_to_bring,
                     organizer_note=series.organizer_note,
+                    getting_home_note=series.getting_home_note,
                     cost_band=series.cost_band,
                     difficulty=series.difficulty,
                     accessibility_notes=series.accessibility_notes,
@@ -780,6 +785,7 @@ ACTIVITY_EDITABLE_FIELDS = (
     "meeting_point",  # F9 logistics — owner-curated, routed through the same edit path
     "what_to_bring",
     "organizer_note",
+    "getting_home_note",  # F18 — mirrored onto a CHILD ward's guardian manifest
     "cost_band",  # F8 what-to-expect
     "difficulty",
     "accessibility_notes",
@@ -2159,7 +2165,12 @@ def draft_activity_text(*, activity_type, place=None, starts_at=None, cohort=Non
     chosen type/place/time, to seed an empty create form (F36). A CHILD/TEEN organiser also
     gets a short safety reminder. Returns {'title', 'description'}; callers only ever seed
     EMPTY initial, never overwrite what the user typed. gettext fragments are str()-coerced
-    before slicing/concatenation (a lazy proxy can't be sliced)."""
+    before slicing/concatenation (a lazy proxy can't be sliced).
+
+    NB (F18): we deliberately do NOT seed getting_home_note. A template prompt stored verbatim
+    would be mirrored onto the CHILD guardian manifest as if it were the organiser's real plan,
+    defeating the "see the ACTUAL plan" purpose. The create form's help_text carries that
+    guidance instead, so nothing misleading is ever persisted."""
     has_place_name = bool(place and (place.name or "").strip())
     if has_place_name:
         title = str(_("%(type)s at %(place)s") % {"type": activity_type.name, "place": place.name})

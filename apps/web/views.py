@@ -1582,6 +1582,10 @@ def activity_edit(request, pk):
                 "meeting_point": activity.meeting_point,
                 "what_to_bring": activity.what_to_bring,
                 "organizer_note": activity.organizer_note,
+                # Must prefill: the edit form's getting_home_note is required=False, so an absent
+                # initial would submit "" on any routine edit and silently wipe the stored note
+                # (the very field F18 mirrors to the CHILD guardian manifest).
+                "getting_home_note": activity.getting_home_note,
                 "cost_band": activity.cost_band,
                 "difficulty": activity.difficulty,
                 "accessibility_notes": activity.accessibility_notes,
@@ -2507,6 +2511,12 @@ def wards(request):
                 memberships__state=Membership.State.MEMBER,
                 status=Activity.Status.OPEN,
                 starts_at__gte=now,
+                # Mirror the read-time wall every other surface enforces (visible_activities /
+                # _coorg_eligible / can_read_thread): never surface an activity whose cohort no
+                # longer matches the ward (a stale membership after a cohort change) or one a
+                # moderator has hidden. Without these, F18's free-text logistics would leak.
+                cohort=ward.cohort,
+                is_hidden=False,
             )
             .select_related("place", "activity_type")
             .order_by("starts_at")
