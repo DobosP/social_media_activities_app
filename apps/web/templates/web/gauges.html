@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Gauge interest" %}{% endblock %}
+{% block content %}
+<h1>{% trans "Gauge interest" %}</h1>
+<p><a class="btn btn-sm" href="{% url 'gauge_create' %}">{% trans "+ Start a gauge" %}</a></p>
+<p class="muted">{% blocktrans %}A gauge is a quick, temporary &ldquo;I'd come&rdquo; poll for a place and rough time. It's
+  NOT a standing group &mdash; if enough people your age signal interest, the person who started it
+  can turn it into a real meetup. If not, it just quietly expires.{% endblocktrans %}</p>
+
+{% for item in items %}
+  {% with g=item.gauge %}
+  <div class="card">
+    <h3 style="margin:.2rem 0"><a href="{% url 'gauge_detail' g.pk %}">{{ g.activity_type.name }} {% blocktrans with place=g.place.name %}at {{ place }}{% endblocktrans %}</a></h3>
+    <p class="muted" style="margin:0">{{ g.get_coarse_window_display }}
+      &middot; {% blocktrans count counter=item.count %}{{ counter }} interested{% plural %}{{ counter }} interested{% endblocktrans %}
+      {% if item.count >= threshold %}&middot; {% trans "ready to start" %}{% endif %}</p>
+  </div>
+  {% endwith %}
+{% empty %}
+  <p class="muted">{% trans "No open gauges right now &mdash; start one above." %}</p>
+{% endfor %}
+{% endblock %}

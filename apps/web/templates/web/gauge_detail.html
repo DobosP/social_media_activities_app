@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{{ gauge.activity_type.name }}{% endblock %}
+{% block content %}
+<p class="muted"><a href="{% url 'gauges' %}">&larr; {% trans "Gauge interest" %}</a></p>
+<h1>{{ gauge.activity_type.name }} {% blocktrans with place=gauge.place.name %}at {{ place }}{% endblocktrans %}</h1>
+<p class="muted">{{ gauge.get_coarse_window_display }}{% if gauge.place.address_city %} &middot; {{ gauge.place.address_city }}{% endif %}</p>
+
+{% comment %}Count-only: we show HOW MANY are interested (the functional threshold signal), never
+   WHO. There is no roster anywhere on this surface.{% endcomment %}
+<div class="card card-accent">
+  <strong>{% blocktrans count counter=count %}{{ counter }} interested{% plural %}{{ counter }} interested{% endblocktrans %}</strong>
+  {% if ready %}
+    <p style="margin:.3rem 0 0">{% trans "Enough people are interested to start this as a real meetup." %}</p>
+  {% else %}
+    <p class="muted" style="margin:.3rem 0 0">{% blocktrans count counter=remaining %}Needs {{ counter }} more to be ready.{% plural %}Needs {{ counter }} more to be ready.{% endblocktrans %}</p>
+  {% endif %}
+</div>
+
+{% if not is_proposer %}
+  {% if viewer_interested %}
+    <form method="post" action="{% url 'gauge_uninterested' gauge.pk %}" class="inline">{% csrf_token %}
+      <button class="btn btn-sm" type="submit">{% trans "I'm no longer interested" %}</button></form>
+  {% else %}
+    <form method="post" action="{% url 'gauge_interested' gauge.pk %}" class="inline">{% csrf_token %}
+      <button class="btn" type="submit">{% trans "I'd come" %}</button></form>
+  {% endif %}
+{% else %}
+  <p class="muted">{% trans "You started this gauge." %}</p>
+  <a class="btn" href="{% url 'gauge_convert' gauge.pk %}">{% trans "Turn into a real meetup" %}</a>
+{% endif %}
+
+<p class="muted" style="margin-top:1rem">{% trans "Temporary: this gauge expires on its own if it isn't converted." %}</p>
+{% endblock %}

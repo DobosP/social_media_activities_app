@@ -31,6 +31,7 @@ DUE_JOBS = (
     ("lift_suspensions", {}),
     ("auto_complete_activities", {}),
     ("expire_arrivals", {}),
+    ("expire_interest", {}),  # F27 gauge expiry (ephemeral, self-healing)
     ("send_activity_reminders", {}),
     ("generate_communities", {}),
     ("reverify_sweep", {}),

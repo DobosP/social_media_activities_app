@@ -668,3 +668,61 @@ class PlaceConfirmation(models.Model):
 
     def __str__(self):
         return f"confirm({self.proposal_id} by {self.user})"
+
+
+class ActivityInterest(models.Model):
+    """F27 — an EPHEMERAL "I'd come" gauge for a place + type + coarse time. The throwaway
+    proto-meetup sibling of the persistent ``Group``: a proposer floats it, same-cohort peers
+    signal interest, and once a few do the proposer converts it into a real ``Activity`` (the
+    normal ``create_activity`` path). A failed gauge simply expires — silent, no dead room.
+
+    Deliberately MINIMAL and isolated from the membership graph:
+    - ``interested_users`` is a plain M2M that is NEVER ``Membership`` — so it can NOT establish
+      a "shared activity" and can NEVER feed ``connections.can_connect`` (pinned by a test).
+    - the interest is a COUNT only (no roster is ever exposed — who signalled stays private).
+    - ``cohort`` is pinned from the proposer (the isolation boundary); ``coarse_window`` is a
+      fixed choice (no free text / no precise time / no PII); ``expires_at`` caps its lifetime
+      and ``expire_interest`` deletes stale rows so it never accretes into a standing surface.
+    """
+
+    class CoarseWindow(models.TextChoices):
+        WEEKDAY_DAYTIME = "weekday_daytime", "Weekday daytime"
+        WEEKDAY_EVENING = "weekday_evening", "Weekday evening"
+        WEEKEND_DAYTIME = "weekend_daytime", "Weekend daytime"
+        WEEKEND_EVENING = "weekend_evening", "Weekend evening"
+
+    proposer = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="proposed_interests"
+    )
+    place = models.ForeignKey("places.Place", on_delete=models.PROTECT, related_name="interests")
+    activity_type = models.ForeignKey(
+        "taxonomy.ActivityType", on_delete=models.PROTECT, related_name="interests"
+    )
+    # Pinned from the proposer's cohort at creation; the isolation boundary. IMMUTABLE.
+    cohort = models.CharField(max_length=16, choices=Cohort.choices)
+    coarse_window = models.CharField(max_length=16, choices=CoarseWindow.choices)
+    # The ephemeral signal set. NOT a Membership — invisible to connections.shares_activity.
+    interested_users = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, related_name="gauge_interests", blank=True
+    )
+    # Set when the proposer converts the gauge into a real meetup; SET_NULL so deleting the
+    # spawned Activity never deletes the (soon-expiring) gauge row.
+    converted_activity = models.ForeignKey(
+        "social.Activity",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="converted_from_interest",
+    )
+    expires_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [
+            # visible_gauges discovery scan: active gauges in a cohort, soonest-expiring last.
+            models.Index(fields=["cohort", "expires_at"]),
+        ]
+
+    def __str__(self):
+        return f"interest({self.activity_type_id} @ {self.place_id}, {self.cohort})"

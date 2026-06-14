@@ -164,6 +164,13 @@ urlpatterns = [
     path("groups/<int:pk>/announce/", views.group_announce, name="group_announce"),
     path("groups/<int:pk>/ask/", views.group_ask, name="group_ask"),
     path("groups/<int:pk>/archive/", views.group_archive, name="group_archive"),
+    # F27 gauge-interest (ephemeral proto-meetups)
+    path("gauges/", views.gauges, name="gauges"),
+    path("gauges/new/", views.gauge_create, name="gauge_create"),
+    path("gauges/<int:pk>/", views.gauge_detail, name="gauge_detail"),
+    path("gauges/<int:pk>/interested/", views.gauge_interested, name="gauge_interested"),
+    path("gauges/<int:pk>/uninterested/", views.gauge_uninterested, name="gauge_uninterested"),
+    path("gauges/<int:pk>/convert/", views.gauge_convert, name="gauge_convert"),
     # Communities
     path("communities/", views.communities_page, name="communities"),
     path("communities/graph/", views.community_graph_page, name="community_graph"),
