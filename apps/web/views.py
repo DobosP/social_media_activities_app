@@ -2588,6 +2588,8 @@ def my_meetups(request):
             is_hidden=False,
         )
         .select_related("place", "activity_type")
+        # F20: place.display_name reads applied corrections — prefetch so the list is O(1) queries.
+        .prefetch_related("place__corrections")
         .order_by("starts_at")
         .distinct()
     )
@@ -2669,8 +2671,23 @@ self.addEventListener('fetch', (e) => {
     );
     return;
   }
-  // The stylesheet is static/versioned — cache-first is fine and keeps the offline page styled.
-  e.respondWith(caches.match(req).then((hit) => hit || fetch(req)));
+  // The stylesheet: serve the cached copy at once (fast, keeps the offline page styled) but
+  // refresh it in the background when online, so a deployed CSS change reaches the user on their
+  // next online load (stale-while-revalidate) rather than being pinned until CACHE is bumped.
+  e.respondWith(
+    caches.match(req).then((hit) => {
+      const live = fetch(req)
+        .then((resp) => {
+          if (resp && resp.ok) {
+            const copy = resp.clone();
+            caches.open(CACHE).then((c) => c.put(req, copy));
+          }
+          return resp;
+        })
+        .catch(() => hit);
+      return hit || live;
+    })
+  );
 });
 """
 

@@ -160,9 +160,35 @@ def test_service_worker_served_at_root_with_correct_headers():
     assert "'purge'" in body
 
 
-def test_sw_registration_present_for_member_absent_for_anon():
+def test_sw_registration_and_purge_wiring_present_for_member_absent_for_anon():
     member = _user("f38_reg")
     on = _client(member).get("/my-meetups/").content.decode()
     assert "/sw.js" in on and "serviceWorker" in on
+    # The shared-phone safety wiring is the core of F38 — pin it so it can't silently regress.
+    assert "mz-meetups-owner" in on  # user-switch purge
+    assert "caches.delete" in on  # reliable page-level purge (not only postMessage)
+    assert '"purge"' in on
+    assert 'form[action$="/logout/"]' in on  # logout-submit purge hook
+    assert str(member.public_id) in on  # the owner identity baked in
     off = Client().get("/").content.decode()
-    assert "/sw.js" not in off  # anonymous visitors get no service worker
+    assert "/sw.js" not in off and "mz-meetups-owner" not in off  # anon gets no SW + no wiring
+
+
+def test_removed_or_requested_membership_does_not_appear():
+    owner = _user("f38_rm_owner")
+    member = _user("f38_rm_member")
+    a = _activity(owner, title="Left game")
+    # A REMOVED (or never-admitted REQUESTED) membership must NOT surface — only state=MEMBER does.
+    Membership.objects.create(
+        activity=a, user=member, role=Membership.Role.MEMBER, state=Membership.State.REMOVED
+    )
+    html = _client(member).get("/my-meetups/").content.decode()
+    assert "Left game" not in html
+
+
+def test_empty_state_does_not_crash():
+    # A brand-new member with no meetups and no guardians renders cleanly (no 500).
+    lonely = _user("f38_lonely")
+    resp = _client(lonely).get("/my-meetups/")
+    assert resp.status_code == 200
+    assert "No upcoming meetups" in resp.content.decode()

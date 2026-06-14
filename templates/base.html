@@ -141,6 +141,10 @@ genuinely need interactivity add their own scripts block below.
   var me = "{{ user.public_id }}";
   function purge() {
     try {
+      // Delete the cache DIRECTLY from the page so it works even before the SW controls this load
+      // (the controller-null window) — and ALSO message the SW, whose waitUntil reliably finishes
+      // the delete even as the logout POST navigates away. Belt and suspenders for child-safety data.
+      if (window.caches) caches.delete("mz-meetups-v1");
       if (navigator.serviceWorker.controller) {
         navigator.serviceWorker.controller.postMessage({ type: "purge" });
       }
