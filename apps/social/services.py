@@ -339,6 +339,7 @@ def create_activity(
     what_to_bring="",
     organizer_note="",
     getting_home_note="",
+    first_time_note="",
     cost_band=Activity.CostBand.UNSPECIFIED,
     difficulty=Activity.Difficulty.UNSPECIFIED,
     accessibility_notes="",
@@ -402,6 +403,7 @@ def create_activity(
         what_to_bring=what_to_bring,
         organizer_note=organizer_note,
         getting_home_note=getting_home_note,
+        first_time_note=first_time_note,
         cost_band=cost_band,
         difficulty=difficulty,
         accessibility_notes=accessibility_notes,
@@ -791,6 +793,7 @@ ACTIVITY_EDITABLE_FIELDS = (
     "what_to_bring",
     "organizer_note",
     "getting_home_note",  # F18 — mirrored onto a CHILD ward's guardian manifest
+    "first_time_note",  # F41 — member-only "what to expect when you arrive" note
     "cost_band",  # F8 what-to-expect
     "difficulty",
     "accessibility_notes",

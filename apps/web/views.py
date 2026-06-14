@@ -1605,6 +1605,8 @@ def activity_edit(request, pk):
                 # initial would submit "" on any routine edit and silently wipe the stored note
                 # (the very field F18 mirrors to the CHILD guardian manifest).
                 "getting_home_note": activity.getting_home_note,
+                # Same prefill reason (F41): required=False would wipe the stored note on edit.
+                "first_time_note": activity.first_time_note,
                 "cost_band": activity.cost_band,
                 "difficulty": activity.difficulty,
                 "accessibility_notes": activity.accessibility_notes,
