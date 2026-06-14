@@ -4,7 +4,7 @@ from apps.accounts.models import AgeBand, Cohort
 from apps.donations.models import Campaign
 from apps.places.models import Place
 from apps.safety.models import ReasonCode
-from apps.social.models import Activity, ActivitySeries
+from apps.social.models import Activity, ActivityInterest, ActivitySeries
 from apps.social.serializers import (
     ACTIVITY_DESCRIPTION_MAX_LENGTH,
     LOGISTICS_FIELD_MAX_LENGTH,
@@ -369,3 +369,44 @@ class GroupCreateForm(forms.Form):
             ("teen", "Teen (16-17) — staff only"),
         ],
     )
+
+
+class GaugeForm(forms.Form):
+    """F27: propose an ephemeral gauge. place is narrowed to public_places() like ActivityForm,
+    so a pending/tampered place id fails validation; the service re-checks too."""
+
+    place = forms.ModelChoiceField(queryset=Place.objects.none())
+    activity_type = forms.ModelChoiceField(
+        queryset=ActivityType.objects.filter(is_active=True).order_by("name")
+    )
+    coarse_window = forms.ChoiceField(
+        choices=ActivityInterest.CoarseWindow.choices,
+        help_text="Roughly when — kept coarse on purpose (no exact time, no location).",
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from apps.places.services import public_places
+
+        self.fields["place"].queryset = public_places(Place.objects.order_by("name"))
+
+
+class GaugeConvertForm(forms.Form):
+    """F27: the concrete details a proposer fills to turn a gauge into a real meetup. place/type
+    come from the gauge itself, so they are not on this form."""
+
+    title = forms.CharField(max_length=200)
+    starts_at = _dt_field()
+    ends_at = _dt_field(required=False)
+    description = forms.CharField(
+        required=False,
+        max_length=ACTIVITY_DESCRIPTION_MAX_LENGTH,
+        widget=forms.Textarea(attrs={"rows": 3}),
+    )
+
+    def clean(self):
+        cleaned = super().clean()
+        starts, ends = cleaned.get("starts_at"), cleaned.get("ends_at")
+        if starts and ends and ends < starts:
+            self.add_error("ends_at", "End time cannot be before the start time.")
+        return cleaned

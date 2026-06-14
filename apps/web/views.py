@@ -83,6 +83,8 @@ from .forms import (
     ActivityEditForm,
     ActivityForm,
     DonateForm,
+    GaugeConvertForm,
+    GaugeForm,
     GroupCreateForm,
     PlaceProposeForm,
     PostForm,
@@ -2992,3 +2994,137 @@ def account_delete(request):
         "Your account and personal data have been deleted. We're sorry to see you go.",
     )
     return redirect("home")
+
+
+# --- F27: gauge-interest (ephemeral proto-meetups) web --------------------------------
+
+
+@login_required
+def gauges(request):
+    """Active gauges in the viewer's cohort — count-only cards. The ephemeral sibling of the
+    standing Groups list."""
+    user = request.user
+    threshold = social.interest_threshold()
+    items = []
+    for g in social.visible_gauges(user):
+        count = social.interest_count(g)
+        items.append(
+            {
+                "gauge": g,
+                "ready": count >= threshold,
+                "remaining": max(threshold - count, 0),
+                "mine": g.proposer_id == user.id,
+            }
+        )
+    return render(request, "web/gauges.html", {"items": items, **_nav_context(user)})
+
+
+@login_required
+def gauge_create(request):
+    if not social.can_create_activity(request.user):
+        messages.error(
+            request,
+            "You need to be verified (and, if a minor, have parental consent) and in a cohort "
+            "to start a gauge.",
+        )
+        return redirect("gauges")
+    if request.method == "POST":
+        form = GaugeForm(request.POST)
+        if form.is_valid():
+            try:
+                gauge = social.propose_interest(
+                    request.user,
+                    place=form.cleaned_data["place"],
+                    activity_type=form.cleaned_data["activity_type"],
+                    coarse_window=form.cleaned_data["coarse_window"],
+                )
+            except social.SocialError as exc:
+                messages.error(request, _msg(exc))
+            else:
+                messages.success(request, "Gauge started — peers can now signal interest.")
+                return redirect("gauge_detail", pk=gauge.pk)
+    else:
+        form = GaugeForm()
+    return render(request, "web/gauge_form.html", {"form": form, **_nav_context(request.user)})
+
+
+@login_required
+def gauge_detail(request, pk):
+    user = request.user
+    gauge = social.gauge_by_id(pk, user)
+    if gauge is None:
+        raise Http404("No such gauge.")
+    count = social.interest_count(gauge)
+    threshold = social.interest_threshold()
+    return render(
+        request,
+        "web/gauge_detail.html",
+        {
+            "gauge": gauge,
+            "count": count,
+            "threshold": threshold,
+            "remaining": max(threshold - count, 0),
+            "ready": count >= threshold,
+            "is_proposer": gauge.proposer_id == user.id,
+            "viewer_interested": gauge.interested_users.filter(id=user.id).exists(),
+            **_nav_context(user),
+        },
+    )
+
+
+@login_required
+@require_POST
+def gauge_interested(request, pk):
+    gauge = social.gauge_by_id(pk, request.user)
+    if gauge is None:
+        raise Http404("No such gauge.")
+    try:
+        social.mark_interested(request.user, gauge)
+    except social.SocialError as exc:
+        messages.error(request, _msg(exc))
+    return redirect("gauge_detail", pk=pk)
+
+
+@login_required
+@require_POST
+def gauge_uninterested(request, pk):
+    gauge = social.gauge_by_id(pk, request.user)
+    if gauge is None:
+        raise Http404("No such gauge.")
+    social.unmark_interested(request.user, gauge)
+    return redirect("gauge_detail", pk=pk)
+
+
+@login_required
+def gauge_convert(request, pk):
+    gauge = social.gauge_by_id(pk, request.user)
+    # Only the proposer may convert; a non-proposer (or a converted/expired gauge, which
+    # gauge_by_id already filters out) gets a 404 — never a usable convert form.
+    if gauge is None or gauge.proposer_id != request.user.id:
+        raise Http404("No such gauge.")
+    if request.method == "POST":
+        form = GaugeConvertForm(request.POST)
+        if form.is_valid():
+            try:
+                activity = social.convert_to_activity(
+                    request.user,
+                    gauge,
+                    title=form.cleaned_data["title"],
+                    starts_at=form.cleaned_data["starts_at"],
+                    ends_at=form.cleaned_data.get("ends_at"),
+                    description=form.cleaned_data.get("description", ""),
+                )
+            except social.SocialError as exc:
+                messages.error(request, _msg(exc))
+            else:
+                messages.success(
+                    request, "Your gauge is now a real meetup — interested peers were invited."
+                )
+                return redirect("activity_detail", pk=activity.pk)
+    else:
+        form = GaugeConvertForm()
+    return render(
+        request,
+        "web/gauge_convert.html",
+        {"form": form, "gauge": gauge, **_nav_context(request.user)},
+    )

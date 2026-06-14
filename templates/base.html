@@ -39,6 +39,7 @@
             {% if user.is_authenticated %}
               {% comment %}W5: groups + communities are one surface now.{% endcomment %}
               <a href="{% url 'communities' %}">{% trans "Communities &amp; groups" %}</a>
+              <a href="{% url 'gauges' %}">{% trans "Gauge interest" %}</a>
             {% endif %}
             <a href="{% url 'partners' %}">{% trans "Civic partners" %}</a>
           </div>

@@ -21,6 +21,7 @@ from .models import (
     DEFAULT_JOIN_THRESHOLD,
     DEFAULT_PLACE_QUORUM,
     Activity,
+    ActivityInterest,
     ActivitySeries,
     Group,
     GroupMembership,
@@ -358,6 +359,10 @@ def create_activity(
     if min_to_go is not None and capacity is not None and min_to_go > capacity:
         # An un-confirmable meetup (the minimum can never be reached within the cap) is nonsensical.
         raise InvalidState(_("Minimum to happen can't be more than the capacity."))
+    if ends_at is not None and starts_at is not None and ends_at < starts_at:
+        # Centralised here so every caller (web/DRF create, series spawn, F27 gauge convert)
+        # inherits it — the web forms also check, but the DRF/convert serializers did not.
+        raise InvalidState(_("End time cannot be before the start time."))
     # F25 gate: an activity may only be organised at a PUBLICLY-visible place — never at a
     # still-pending/rejected user-proposed venue. public_places() is the single visibility
     # chokepoint, so this holds identically on the web form and the DRF surface.
@@ -2713,3 +2718,170 @@ def linked_group_for_community(community, viewer):
     else:
         qs = qs.filter(tier=Group.Tier.CATEGORY, category_id=community.category_id)
     return qs.first()
+
+
+# --- F27: ephemeral "gauge interest" proto-meetups -------------------------------------
+# The throwaway, threshold sibling of the persistent Group: float a place+type+coarse-time,
+# let same-cohort peers signal "I'd come", and convert to a real Activity once a few do. A
+# failed gauge silently expires. The interest signal is a plain M2M that NEVER touches
+# Membership, so it can never establish a shared activity / enable connections.can_connect.
+
+INTEREST_DEFAULT_LIFETIME_DAYS = 14  # short by design; settings.INTEREST_LIFETIME_DAYS overrides
+INTEREST_GO_THRESHOLD = 3  # a low "ready to start" nudge; never a hard block on the proposer
+
+
+def _interest_lifetime() -> timedelta:
+    return timedelta(
+        days=getattr(settings, "INTEREST_LIFETIME_DAYS", INTEREST_DEFAULT_LIFETIME_DAYS)
+    )
+
+
+def interest_threshold() -> int:
+    return getattr(settings, "INTEREST_THRESHOLD", INTEREST_GO_THRESHOLD)
+
+
+def visible_gauges(user):
+    """Active gauges (not converted, not expired) in the viewer's OWN cohort, minus blocked
+    proposers — the single cohort-walled read primitive, mirroring visible_groups."""
+    if not _has_cohort(user):
+        return ActivityInterest.objects.none()
+    from apps.safety.services import blocked_user_ids
+
+    return (
+        ActivityInterest.objects.filter(
+            cohort=user.cohort,
+            converted_activity__isnull=True,
+            expires_at__gt=timezone.now(),
+        )
+        .exclude(proposer_id__in=blocked_user_ids(user))
+        .select_related("place", "activity_type", "proposer")
+        .order_by("expires_at")
+    )
+
+
+def gauge_by_id(pk, user):
+    return visible_gauges(user).filter(pk=pk).first()
+
+
+def interest_count(interest) -> int:
+    """How many peers have signalled — a COUNT only (the gauge never exposes WHO)."""
+    return interest.interested_users.count()
+
+
+def _gauge_active(interest) -> bool:
+    return interest.converted_activity_id is None and interest.expires_at > timezone.now()
+
+
+@transaction.atomic
+def propose_interest(proposer, *, place, activity_type, coarse_window) -> ActivityInterest:
+    """Float an ephemeral gauge. Same eligibility as creating an activity (the proposer must be
+    able to actually convert it), cohort pinned from the proposer, at a PUBLICLY-visible place
+    (F25). For a CHILD proposer the place must also pass the F9 child-venue gate — otherwise the
+    gauge could never convert (a dead end) and would surface a non-child-safe venue to children.
+    The proposer auto-counts as interested."""
+    from apps.places.services import public_places
+
+    if not can_create_activity(proposer):
+        raise NotEligible(
+            _("You need to be verified (and, if a minor, consented) and in a cohort to start one.")
+        )
+    if activity_type is None or not getattr(activity_type, "is_active", False):
+        raise NotEligible(_("Pick an available activity type."))
+    if place is None or not public_places().filter(pk=place.pk).exists():
+        raise NotEligible(_("Pick a publicly listed place."))
+    # F9: mirror create_activity so a CHILD gauge can't be floated at a non-child-safe venue
+    # (which would then fail at convert — a dead end — and surface that venue to children).
+    if proposer.cohort == Cohort.CHILD and getattr(settings, "CHILD_PUBLIC_VENUES_ONLY", True):
+        from apps.places.services import is_child_safe_venue
+
+        if not is_child_safe_venue(place):
+            raise InvalidState(
+                _(
+                    "This venue isn't on the approved list for children's activities yet. Pick a "
+                    "library, park, school, sports or community venue — or ask a moderator to "
+                    "approve this place."
+                )
+            )
+    if coarse_window not in ActivityInterest.CoarseWindow.values:
+        raise InvalidState(_("Pick one of the listed time windows."))
+    interest = ActivityInterest.objects.create(
+        proposer=proposer,
+        place=place,
+        activity_type=activity_type,
+        cohort=proposer.cohort,
+        coarse_window=coarse_window,
+        expires_at=timezone.now() + _interest_lifetime(),
+    )
+    interest.interested_users.add(proposer)
+    return interest
+
+
+@transaction.atomic
+def mark_interested(user, interest) -> ActivityInterest:
+    """A same-cohort peer signals "I'd come". Idempotent. Never creates a Membership, so it can
+    never make the user a co-member or feed connections.can_connect."""
+    from apps.safety.services import is_blocked
+
+    if not _gauge_active(interest):
+        raise InvalidState(_("This gauge is no longer open."))
+    if getattr(user, "cohort", None) != interest.cohort:
+        raise NotEligible(_("This gauge is for a different group."))
+    if not can_participate(user):
+        raise NotEligible(_("Verified, consented participation is required."))
+    if is_blocked(user, interest.proposer):
+        raise NotEligible(_("This gauge is not available."))
+    interest.interested_users.add(user)  # idempotent (a repeat never double-counts)
+    return interest
+
+
+@transaction.atomic
+def unmark_interested(user, interest) -> ActivityInterest:
+    """Withdraw the signal. Idempotent; allowed even after expiry (pure removal)."""
+    interest.interested_users.remove(user)
+    return interest
+
+
+@transaction.atomic
+def convert_to_activity(proposer, interest, *, title, starts_at, **extra) -> Activity:
+    """The proposer turns a gauge into a real meetup. Calls create_activity VERBATIM (so every
+    cohort/consent/place/child-venue gate re-runs and the cohort is re-pinned), pinning the
+    gauge's OWN place + activity_type (a tampered request can't swap them). Then fans a one-shot
+    JOIN-style invite to everyone who signalled — excluding the proposer and blocked pairs — and
+    marks the gauge converted. The interest set is the only input; no Membership is ever copied."""
+    from apps.notifications.models import Notification
+    from apps.safety.services import blocked_user_ids, record_audit
+
+    # Lock + re-check on the locked row so two concurrent converts can't both spawn an Activity
+    # (mirrors cast_vote/leave/cancel/complete — "two in-flight requests can't split-brain").
+    interest = ActivityInterest.objects.select_for_update().get(pk=interest.pk)
+    if interest.proposer_id != proposer.id:
+        raise NotAMember(_("Only the proposer can start this gauge as a meetup."))
+    if not _gauge_active(interest):
+        raise InvalidState(_("This gauge is no longer open."))
+    # place/activity_type are the gauge's own — never from the request (no bait-and-switch).
+    extra.pop("place", None)
+    extra.pop("activity_type", None)
+    activity = create_activity(
+        proposer,
+        place=interest.place,
+        activity_type=interest.activity_type,
+        title=title,
+        starts_at=starts_at,
+        **extra,
+    )
+    interest.converted_activity = activity
+    interest.save(update_fields=["converted_activity", "updated_at"])
+    # One-shot invite to the peers who signalled, excluding the proposer + blocked pairs. Re-filter
+    # each recipient by the CONVERTED activity's cohort + live eligibility: a peer who re-verified
+    # into another cohort (or lost consent) after signalling must never be pushed a cross-cohort or
+    # ineligible invite — defence-in-depth mirroring group_roster's read-time re-check.
+    blocked = blocked_user_ids(proposer)
+    title_n = _("A meetup you were interested in is on")
+    body_n = _("%(t)s is now a real meetup — join if you can come.") % {"t": activity.title}
+    url = f"/api/social/activities/{activity.id}/"
+    for u in interest.interested_users.exclude(id=proposer.id).exclude(id__in=blocked):
+        if getattr(u, "cohort", None) != activity.cohort or not can_participate(u):
+            continue
+        _notify(u, Notification.Kind.INTEREST_CONVERTED, str(title_n), body=str(body_n), url=url)
+    record_audit("interest.converted", actor=proposer, target=activity)
+    return activity

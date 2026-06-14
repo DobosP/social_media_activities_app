@@ -13,6 +13,9 @@ from .serializers import (
     ActivityCreateSerializer,
     ActivitySerializer,
     ActivityUpdateSerializer,
+    GaugeConvertSerializer,
+    GaugeCreateSerializer,
+    GaugeSerializer,
     GroupCreateSerializer,
     GroupSerializer,
     MembershipSerializer,
@@ -37,10 +40,12 @@ from .services import (
     cancel_activity,
     cast_vote,
     confirm_place,
+    convert_to_activity,
     create_activity,
     create_group,
     create_series,
     end_series,
+    gauge_by_id,
     grant_co_organizer,
     group_ask_organiser,
     group_by_id,
@@ -50,18 +55,22 @@ from .services import (
     leave_activity,
     leave_group,
     mark_arrived,
+    mark_interested,
     owner_admit,
     pause_series,
     pending_proposals_for,
     post_to_thread,
+    propose_interest,
     propose_place_with_venue,
     request_to_join,
     resume_series,
     revoke_co_organizer,
     set_attendance_intent,
     transfer_ownership,
+    unmark_interested,
     update_activity,
     visible_activities,
+    visible_gauges,
     visible_groups,
     visible_series,
     with_counts,
@@ -578,3 +587,66 @@ class PlaceProposalViewSet(viewsets.ViewSet):
         except SocialError as exc:
             raise ValidationError(str(exc)) from exc
         return Response(PlaceProposalSerializer(proposal).data)
+
+
+class GaugeViewSet(viewsets.ViewSet):
+    """F27 ephemeral gauge-interest polls. Authenticated-only (NEVER AllowAny); every read
+    routes through services.visible_gauges(request.user) / gauge_by_id — there is deliberately
+    NO class-level ``queryset``, so a gauge can't be retrieved by id-guessing across cohorts.
+    The interest signal is a COUNT only — no roster of who signalled is ever returned."""
+
+    permission_classes = [IsAuthenticated]
+    lookup_value_regex = r"[0-9]+"
+
+    def _get(self, request, pk):
+        gauge = gauge_by_id(pk, request.user)
+        if gauge is None:
+            raise NotFound("No such gauge.")
+        return gauge
+
+    def list(self, request):
+        return Response(GaugeSerializer(visible_gauges(request.user), many=True).data)
+
+    def retrieve(self, request, pk=None):
+        return Response(GaugeSerializer(self._get(request, pk)).data)
+
+    def create(self, request):
+        serializer = GaugeCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            gauge = propose_interest(request.user, **serializer.validated_data)
+        except NotEligible as exc:
+            raise PermissionDenied(str(exc)) from exc
+        except SocialError as exc:
+            raise ValidationError(str(exc)) from exc
+        return Response(GaugeSerializer(gauge).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=["post"])
+    def interested(self, request, pk=None):
+        gauge = self._get(request, pk)
+        try:
+            mark_interested(request.user, gauge)
+        except (NotAMember, NotEligible) as exc:
+            raise PermissionDenied(str(exc)) from exc
+        except InvalidState as exc:
+            raise ValidationError(str(exc)) from exc
+        return Response(GaugeSerializer(gauge).data)
+
+    @action(detail=True, methods=["post"])
+    def uninterested(self, request, pk=None):
+        gauge = self._get(request, pk)
+        unmark_interested(request.user, gauge)
+        return Response(GaugeSerializer(gauge).data)
+
+    @action(detail=True, methods=["post"])
+    def convert(self, request, pk=None):
+        gauge = self._get(request, pk)
+        serializer = GaugeConvertSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            activity = convert_to_activity(request.user, gauge, **serializer.validated_data)
+        except (NotAMember, NotEligible) as exc:
+            raise PermissionDenied(str(exc)) from exc
+        except SocialError as exc:
+            raise ValidationError(str(exc)) from exc
+        return Response(ActivitySerializer(activity).data, status=status.HTTP_201_CREATED)

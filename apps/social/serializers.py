@@ -3,8 +3,8 @@ from rest_framework import serializers
 from apps.places.models import Place
 from apps.taxonomy.models import ActivityType
 
-from .models import Activity, ActivitySeries, Membership, Post
-from .services import participant_count
+from .models import Activity, ActivityInterest, ActivitySeries, Membership, Post
+from .services import interest_threshold, participant_count
 
 # Hard text caps enforced at the serialization layer. The underlying model fields
 # are unbounded TextFields, so without these the API would accept arbitrarily large
@@ -380,3 +380,65 @@ class PostSerializer(serializers.ModelSerializer):
             "id": target.pk,
             "title": getattr(target, "title", "") or getattr(target, "name", ""),
         }
+
+
+# --- F27: ephemeral gauge-interest poll ------------------------------------------------
+
+
+class GaugeCreateSerializer(serializers.Serializer):
+    """Propose a gauge. place is validated against public_places() in the service (F25)."""
+
+    place = serializers.PrimaryKeyRelatedField(queryset=Place.objects.all())
+    activity_type = serializers.PrimaryKeyRelatedField(
+        queryset=ActivityType.objects.filter(is_active=True)
+    )
+    coarse_window = serializers.ChoiceField(choices=ActivityInterest.CoarseWindow.choices)
+
+
+class GaugeConvertSerializer(serializers.Serializer):
+    """The proposer-supplied concrete details for converting a gauge into a real meetup
+    (place/type/cohort come from the gauge itself, never the request)."""
+
+    title = serializers.CharField(max_length=200)
+    starts_at = serializers.DateTimeField()
+    ends_at = serializers.DateTimeField(required=False, allow_null=True)
+    description = serializers.CharField(
+        required=False, allow_blank=True, default="", max_length=ACTIVITY_DESCRIPTION_MAX_LENGTH
+    )
+
+
+class GaugeSerializer(serializers.ModelSerializer):
+    """Read-output for a gauge. Allowlist + read_only. Exposes only a BOUNDED functional signal —
+    `ready` (threshold met) + `remaining` (how many more to be ready, capped at 0, like F1's
+    "needs N more") — NEVER a raw cumulative "N interested" count (that is the social-proof vanity
+    metric inv.2 forbids, the same reason ActivitySerializer dropped member_count) and NEVER the
+    roster of WHO signalled (no interested_users / members / who field)."""
+
+    proposer = serializers.CharField(source="proposer.display_name", read_only=True)
+    place = serializers.CharField(source="place.name", read_only=True)
+    activity_type = serializers.SlugRelatedField(slug_field="slug", read_only=True)
+    coarse_window = serializers.CharField(source="get_coarse_window_display", read_only=True)
+    ready = serializers.SerializerMethodField()
+    remaining = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ActivityInterest
+        fields = [
+            "id",
+            "proposer",
+            "place",
+            "activity_type",
+            "cohort",
+            "coarse_window",
+            "ready",
+            "remaining",
+            "expires_at",
+            "created_at",
+        ]
+        read_only_fields = fields
+
+    def get_ready(self, obj) -> bool:
+        return obj.interested_users.count() >= interest_threshold()
+
+    def get_remaining(self, obj) -> int:
+        return max(interest_threshold() - obj.interested_users.count(), 0)
