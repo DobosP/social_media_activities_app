@@ -13,7 +13,7 @@ user's (or, via the guardian variant, their ward's) own data, never other member
 from django.utils import timezone
 
 # Export schema version, so consumers can detect format changes over time.
-EXPORT_SCHEMA_VERSION = 1
+EXPORT_SCHEMA_VERSION = 2  # W2-F32: added "thread_posts" (the user's own authored words)
 
 
 def build_user_export(user) -> dict:
@@ -33,6 +33,7 @@ def build_user_export(user) -> dict:
         "owned_activities": _owned_activities(user),
         "owned_groups": _owned_groups(user),
         "group_memberships": _group_memberships(user),
+        "thread_posts": _thread_posts(user),
         "donations": _donations_summary(user),
         "api_access": _api_access(user),
     }
@@ -180,6 +181,46 @@ def _group_memberships(user) -> list[dict]:
         }
         for m in user.group_memberships.select_related("group").order_by("joined_at")
     ]
+
+
+def _thread_posts(user) -> list[dict]:
+    """W2-F32: the user's OWN authored thread posts + announcements, so their actual words travel
+    with them (GDPR Art.20), not just metadata. STRICT allowlist — only fields the user authored
+    or that describe their own post:
+
+    * body — their own text (an own post a moderator hid is exported as a neutral '[removed]'
+      marker, never the moderator's identity or reason);
+    * created_at, edited (derived live from updated_at > created_at — there is no stored flag),
+      is_announcement, had_attachment (boolean only — never attachment bytes);
+    * the parent thread's title + id (via the activity-XOR-group bridge).
+
+    HARD EXCLUSIONS (another member's data / not the user's words): never the reply_to parent's
+    body or the derived reply snippet, never a shared activity/place/event target's content.
+    Bounded; attachments are prefetched so the had_attachment flag costs no extra query."""
+    from apps.social.models import Post
+
+    rows = []
+    posts = (
+        Post.objects.filter(author=user)
+        .select_related("thread__activity", "thread__group")
+        .prefetch_related("attachments")
+        .order_by("created_at")[:5000]
+    )
+    for p in posts:
+        owner = p.thread.owner_object  # an Activity XOR a Group
+        rows.append(
+            {
+                "thread_kind": "group" if p.thread.group_id else "activity",
+                "thread_id": getattr(owner, "id", None),
+                "thread_title": getattr(owner, "title", None) or getattr(owner, "name", None),
+                "body": "[removed]" if p.is_hidden else p.body,
+                "is_announcement": p.is_announcement,
+                "edited": p.updated_at > p.created_at,
+                "had_attachment": bool(p.attachments.all()),
+                "created_at": _iso(p.created_at),
+            }
+        )
+    return rows
 
 
 def _donations_summary(user) -> dict:

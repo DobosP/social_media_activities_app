@@ -50,6 +50,7 @@ def test_build_user_export_has_expected_sections():
         "owned_activities",
         "owned_groups",
         "group_memberships",
+        "thread_posts",
         "donations",
         "api_access",
     }
@@ -150,3 +151,113 @@ def test_ward_export_unknown_user_is_404():
     client.force_authenticate(guardian)
     resp = client.get(reverse("ward-export", args=[uuid.uuid4()]))
     assert resp.status_code == 404
+
+
+# --- W2-F32: the user's own thread words in their takeout ------------------------------------
+
+
+def _thread_setup(owner_name, other_name, slug):
+    from apps.social.models import Membership
+
+    owner = _user(owner_name)
+    other = _user(other_name)
+    activity = _activity(owner, slug)
+    Membership.objects.create(
+        activity=activity, user=other, role=Membership.Role.MEMBER, state=Membership.State.MEMBER
+    )
+    return owner, other, activity
+
+
+def test_thread_posts_exports_only_the_users_own_words():
+    from apps.social import services as social
+
+    owner, other, activity = _thread_setup("tp_owner", "tp_other", "tp")
+    social.post_to_thread(owner, activity, "my plan: bring snacks")
+    theirs = social.post_to_thread(other, activity, "another members private words")
+    social.post_to_thread(owner, activity, "replying to you", reply_to=theirs.id)
+    social.post_announcement(owner, activity, "owner announcement here")
+
+    export = build_user_export(owner)
+    posts = export["thread_posts"]
+    bodies = [p["body"] for p in posts]
+    assert "my plan: bring snacks" in bodies
+    assert "replying to you" in bodies
+    assert any(p["is_announcement"] and p["body"] == "owner announcement here" for p in posts)
+    # HARD exclusion: another member's words never appear — not as a post, nor a reply snippet.
+    assert "another members private words" not in str(export)
+    # Strict allowlist shape (no reply_to/shared-target/attachment-bytes/author/thread internals).
+    assert set(posts[0]) == {
+        "thread_kind",
+        "thread_id",
+        "thread_title",
+        "body",
+        "is_announcement",
+        "edited",
+        "had_attachment",
+        "created_at",
+    }
+    assert posts[0]["thread_kind"] == "activity" and posts[0]["thread_id"] == activity.id
+
+
+def test_own_hidden_post_exports_as_neutral_removed_marker():
+    from apps.social import services as social
+
+    owner, _other, activity = _thread_setup("tp_h_owner", "tp_h_other", "tph")
+    p = social.post_to_thread(owner, activity, "this got moderated")
+    p.is_hidden = True
+    p.save(update_fields=["is_hidden"])
+    export = build_user_export(owner)
+    bodies = [r["body"] for r in export["thread_posts"]]
+    assert "this got moderated" not in bodies  # the original text is not disclosed
+    assert "[removed]" in bodies  # a neutral marker, never a moderator identity/reason
+
+
+def test_thread_posts_empty_for_a_user_who_never_posted():
+    user = _user("tp_silent")
+    assert build_user_export(user)["thread_posts"] == []
+    assert build_user_export(user)["schema_version"] == 2
+
+
+def test_thread_posts_covers_group_threads_with_name_fallback():
+    # Locks the activity-XOR-group branch: a group thread has no .title, so owner.name is used.
+    from apps.communities.models import Area
+    from apps.social import services as social
+
+    staff = User.objects.create_user(username="tp_staff", password="pw", is_staff=True)
+    apply_assurance(staff, AssuranceResult(age_band=AgeBand.ADULT, provider="dev"))
+    area = Area.objects.create(city="Cluj-Napoca", slug="cluj-exp", name="Cluj-Napoca")
+    cat = ActivityCategory.objects.create(slug="cat-grp", name="Sport")
+    atype = ActivityType.objects.create(slug="at-grp", name="Football", category=cat)
+    group = social.create_group(staff, area=area, title="Cluj Runners", activity_type=atype)
+    social.post_to_thread(staff, group, "group welcome post")
+
+    posts = build_user_export(staff)["thread_posts"]
+    row = next(p for p in posts if p["body"] == "group welcome post")
+    assert row["thread_kind"] == "group"
+    assert row["thread_id"] == group.id
+    assert row["thread_title"] == "Cluj Runners"  # group.name (no .title) via the fallback
+
+
+def test_shared_post_target_content_never_leaks_into_thread_posts():
+    from apps.social import services as social
+
+    owner, _other, activity = _thread_setup("tp_s_owner", "tp_s_other", "tps")
+    place = Place.objects.create(
+        name="X", location=Point(23.6, 46.77, srid=4326), source=Place.Source.OSM
+    )
+    cat = ActivityCategory.objects.create(slug="cat-shr", name="Sport")
+    atype = ActivityType.objects.create(slug="at-shr", name="Football", category=cat)
+    shared = social.create_activity(
+        owner,
+        place=place,
+        activity_type=atype,
+        title="SHARED_TARGET_SECRET",
+        starts_at="2030-06-01T10:00Z",
+    )
+    social.post_to_thread(owner, activity, "look here", share_activity=shared)
+
+    posts = build_user_export(owner)["thread_posts"]
+    assert any(p["body"] == "look here" for p in posts)
+    # The shared activity's content is NOT pulled into the post projection (only the post's own
+    # body + its thread title). (Its title appears under owned_activities — that's the user's own.)
+    assert "SHARED_TARGET_SECRET" not in str(posts)
