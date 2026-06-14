@@ -80,6 +80,34 @@ def test_depth1_synonym_walk(cat):
     assert "Indoor futsal" in _titles(social.search_activities(owner, "soccer"))
 
 
+def test_walk_excludes_related_and_requires_edges(cat):
+    # Only SYNONYM/VARIANT expand the search — RELATED/REQUIRES must NOT (they'd over-broaden).
+    owner = make_user("w2f1_o3b")
+    a = _type(cat, "w2f1-a", "Alpha", aliases=[])
+    b = _type(cat, "w2f1-b", "Bravo", aliases=[])
+    c = _type(cat, "w2f1-c", "Charlie", aliases=[])
+    ActivityRelation.objects.create(source=a, target=b, kind=ActivityRelation.Kind.RELATED)
+    ActivityRelation.objects.create(source=a, target=c, kind=ActivityRelation.Kind.REQUIRES)
+    _activity(owner, b, title="Bravo game")
+    _activity(owner, c, title="Charlie game")
+    found = _titles(social.search_activities(owner, "alpha"))
+    assert "Bravo game" not in found and "Charlie game" not in found
+
+
+def test_non_symmetric_relation_expands_one_way_only(cat):
+    owner = make_user("w2f1_o3c")
+    src = _type(cat, "w2f1-src", "Sourcetype", aliases=[])
+    tgt = _type(cat, "w2f1-tgt", "Targettype", aliases=[])
+    ActivityRelation.objects.create(
+        source=src, target=tgt, kind=ActivityRelation.Kind.VARIANT, symmetric=False
+    )
+    _activity(owner, src, title="Source game")
+    _activity(owner, tgt, title="Target game")
+    # source -> target expands; the reverse (target -> source) does NOT for a non-symmetric edge.
+    assert "Target game" in _titles(social.search_activities(owner, "sourcetype"))
+    assert "Source game" not in _titles(social.search_activities(owner, "targettype"))
+
+
 def test_unrelated_query_finds_nothing(cat):
     owner = make_user("w2f1_o4")
     fb = _type(cat, "w2f1-fb2", "Football", aliases=["fotbal"])

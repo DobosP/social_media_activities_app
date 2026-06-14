@@ -17,5 +17,5 @@
 {% else %}{% include "web/_near_me.html" %}{% endif %}
 {% for a in activities %}{% include "web/_activity_card.html" %}{% empty %}
 <p class="muted">{% if query %}{% trans "No upcoming activities match your search." %}{% else %}{% trans "Nothing upcoming yet. Be the first to organise something!" %}{% endif %}</p>
-{% if did_you_mean %}<p class="muted">{% blocktrans with term=did_you_mean %}Did you mean <a href="?q={{ term }}">{{ term }}</a>?{% endblocktrans %}</p>{% endif %}{% endfor %}
+{% if did_you_mean %}<p class="muted">{% blocktrans with term=did_you_mean termq=did_you_mean_q %}Did you mean <a href="?{{ termq }}">{{ term }}</a>?{% endblocktrans %}</p>{% endif %}{% endfor %}
 {% endblock %}

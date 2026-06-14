@@ -18,7 +18,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.crypto import get_random_string
-from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.http import url_has_allowed_host_and_scheme, urlencode
 from django.views.decorators.http import require_POST
 
 from apps.accounts.identity.base import IdentityVerificationError
@@ -1197,6 +1197,9 @@ def activity_list(request):
         if beginners_only:
             activities = activities.filter(beginners_welcome=True)
         activities, near_active = _order_feed_by_location(activities, request.GET)
+    # Pre-encode the suggestion as a query string (a type name may contain a space or '&');
+    # blocktrans can't apply |urlencode in its body, so build it here (W2-F1 review).
+    did_you_mean_q = urlencode({"q": did_you_mean}) if did_you_mean else ""
     return render(
         request,
         "web/activities.html",
@@ -1206,6 +1209,7 @@ def activity_list(request):
             "beginners_only": beginners_only,
             "query": query,
             "did_you_mean": did_you_mean,
+            "did_you_mean_q": did_you_mean_q,
             **_nav_context(request.user),
         },
     )
