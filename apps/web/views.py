@@ -58,6 +58,7 @@ from apps.places.services import (
     matches_access_preference,
     partner_for_place,
     set_access_preference,
+    sort_by_access_match,
 )
 from apps.recommendations import services as recs
 from apps.recommendations.models import UserInterest
@@ -861,11 +862,18 @@ def places_list(request):
     if point is None:
         qs = qs.order_by("name", "id")
     capped = list(qs[:200])
-    # F15 compose: attach the venue's positive accessibility facts as terse badges per row.
+    # F32: a SOFT needs-aware nudge — stably float venues that CONFIRM the viewer's stated access
+    # needs to the top, without hiding anything (no-op for an anonymous/no-need viewer). Applied
+    # AFTER the distance/name ordering + materialisation, so it composes rather than replaces.
+    pref = get_access_preference(request.user)
+    capped = sort_by_access_match(capped, pref)
+    # F15 compose: attach the venue's positive accessibility facts as terse badges per row, plus a
+    # subtle "matches your needs" marker on the rows the nudge promoted.
     for p in capped:
         p.access_tags = [
             r for r in accessibility_facts_display(p) if r["state"] in ("true", "limited")
         ]
+        p.access_match = matches_access_preference(accessibility_facts(p), pref) == "match"
     return render(
         request,
         "web/places_list.html",
@@ -1970,6 +1978,7 @@ def access_preferences(request):
             request.user,
             needs_step_free=request.POST.get("needs_step_free") == "on",
             needs_accessible_toilet=request.POST.get("needs_accessible_toilet") == "on",
+            needs_hearing_loop=request.POST.get("needs_hearing_loop") == "on",
             prefers_quiet=request.POST.get("prefers_quiet") == "on",
         )
         messages.success(request, "Your access preferences were saved.")

@@ -19,6 +19,7 @@
       {% if p.address_street %}<span class="muted">&middot; {{ p.address_street }}{% if p.address_city %}, {{ p.address_city }}{% endif %}</span>{% elif p.address_city %}<span class="muted">&middot; {{ p.address_city }}</span>{% endif %}
       {% if p.distance %}<span class="muted">&middot; {% blocktrans with meters=p.distance.m|floatformat:0 %}{{ meters }} m away{% endblocktrans %}</span>{% endif %}
       {% for pa in p.place_activities.all %}<span class="tag">{{ pa.activity.name }}</span>{% endfor %}
+      {% if p.access_match %}<span class="tag fact--true">&#10003; {% trans "Matches your access needs" %}</span>{% endif %}
       {% if p.access_tags %}{% for r in p.access_tags %}<span class="tag fact--{{ r.state }}">{{ r.label }}{% if r.state == "limited" %} {% trans "(limited)" %}{% endif %}</span>{% endfor %}{% endif %}
     </li>
   {% empty %}

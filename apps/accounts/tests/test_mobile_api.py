@@ -61,3 +61,27 @@ def test_me_settings_roundtrip_and_non_mutable_guard():
     assert Notification.Kind.MODERATION not in body["muted_kinds"]
     assert body["access"]["needs_step_free"] is True
     assert Notification.Kind.MODERATION not in get_muted_kinds(user)
+
+
+def test_me_settings_hearing_loop_is_readable_and_not_wiped_on_roundtrip():
+    # F32: the DRF settings surface must read AND write needs_hearing_loop exactly like the web
+    # /access/ form (same service). A round-trip that omitted it used to silently wipe it.
+    from apps.places.services import get_access_preference, set_access_preference
+
+    user = _user("mob-hearing")
+    set_access_preference(user, needs_hearing_loop=True)  # as if set via the web form
+    api = APIClient()
+    api.force_authenticate(user)
+
+    # GET exposes it (was previously absent from the dict).
+    assert api.get("/api/accounts/me/settings/").json()["access"]["needs_hearing_loop"] is True
+
+    # A client that reads-modifies-writes the FULL access object keeps it set.
+    resp = api.put(
+        "/api/accounts/me/settings/",
+        {"access": {"needs_step_free": True, "needs_hearing_loop": True}},
+        format="json",
+    )
+    assert resp.status_code == 200
+    assert resp.json()["access"]["needs_hearing_loop"] is True
+    assert get_access_preference(user).needs_hearing_loop is True

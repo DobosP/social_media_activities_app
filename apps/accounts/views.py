@@ -356,6 +356,7 @@ class MeSettingsView(APIView):
                 "access": {
                     "needs_step_free": bool(pref and pref.needs_step_free),
                     "needs_accessible_toilet": bool(pref and pref.needs_accessible_toilet),
+                    "needs_hearing_loop": bool(pref and pref.needs_hearing_loop),
                     "prefers_quiet": bool(pref and pref.prefers_quiet),
                 },
             }
@@ -383,6 +384,7 @@ class MeSettingsView(APIView):
                 request.user,
                 needs_step_free=bool(access.get("needs_step_free")),
                 needs_accessible_toilet=bool(access.get("needs_accessible_toilet")),
+                needs_hearing_loop=bool(access.get("needs_hearing_loop")),
                 prefers_quiet=bool(access.get("prefers_quiet")),
             )
         return self.get(request)
