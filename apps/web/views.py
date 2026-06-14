@@ -1174,10 +1174,19 @@ def activity_list(request):
     beginners_only = request.GET.get("beginners") == "true"
     query = (request.GET.get("q") or "").strip()
     near_active = False
+    did_you_mean = None
     if query:
-        # W1 search: one bounded, gate-identical path (visible_activities inside).
-        activities = social.search_activities(request.user, query, beginners=beginners_only)
-        activities = activities.prefetch_related("place__corrections")  # F20
+        # W1 search: one bounded, gate-identical path (visible_activities inside). W2-F1 now
+        # resolves the type via slug + RO/EN aliases + a synonym walk, so seeded vocabulary
+        # matches. Materialise the bounded result so we can offer an honest "did you mean X?"
+        # (trigram) only when it found nothing — never auto-applied, never a dead-end suggestion.
+        activities = list(
+            social.search_activities(
+                request.user, query, beginners=beginners_only
+            ).prefetch_related("place__corrections")  # F20
+        )
+        if not activities:
+            did_you_mean = social.search_did_you_mean(request.user, query)
     else:
         activities = (
             social.visible_activities(request.user)
@@ -1196,6 +1205,7 @@ def activity_list(request):
             "near_active": near_active,
             "beginners_only": beginners_only,
             "query": query,
+            "did_you_mean": did_you_mean,
             **_nav_context(request.user),
         },
     )

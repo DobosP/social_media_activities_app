@@ -19,6 +19,9 @@ _SEED_MODULES = (
     "apps.taxonomy.migrations.0002_seed_taxonomy",
     "apps.taxonomy.migrations.0004_seed_activities_v2",
     "apps.taxonomy.migrations.0005_seed_reading_archives",
+    # W2-F1: additive RO search aliases (incl. 'fotbal' on football) — must re-apply AFTER 0002
+    # re-creates football, or a transaction-test flush would leave it without the RO alias.
+    "apps.taxonomy.migrations.0006_seed_ro_aliases",
     # F9: the child-safe venue-class allowlist (library/park/...) the venue gate reads.
     "apps.places.migrations.0007_seed_child_venue_classes",
 )
@@ -30,11 +33,14 @@ def _reseed_taxonomy():
     from apps.places.models import ChildVenueClass
     from apps.taxonomy.models import ActivityType
 
-    # Fast path: every seed is intact, so do nothing but a few cheap lookups.
+    # Fast path: every seed is intact, so do nothing but a few cheap lookups. The football/fotbal
+    # check also catches a DB migrated before W2-F1's 0006 (under --reuse-db) so the RO alias is
+    # re-applied without a full --create-db.
     if (
         ActivityType.objects.filter(slug="basketball").exists()
         and ActivityType.objects.filter(slug="archive").exists()
         and ChildVenueClass.objects.filter(key="library").exists()
+        and ActivityType.objects.filter(slug="football", aliases__contains=["fotbal"]).exists()
     ):
         return
     for path in _SEED_MODULES:
