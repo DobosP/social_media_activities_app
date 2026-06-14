@@ -1328,6 +1328,22 @@ def activity_detail(request, pk):
     thread_results = None
     if thread_query and (is_member or user.is_staff) and social.can_read_thread(user, activity):
         thread_results = list(social.search_thread_posts(user, activity, thread_query))
+    # F33: the shared contact-leak ruleset + a translated confirm message, emitted to the
+    # client composer (members only — that's the only surface with a compose form). The
+    # ruleset is the SAME one the server policy uses (apps.chat.presend), so the two can't
+    # drift; the nudge is advisory and dismissible — it never blocks a post.
+    from django.utils.translation import gettext
+
+    from apps.chat.presend import client_ruleset
+
+    presend_nudge = {
+        "rules": client_ruleset(),
+        "message": gettext(
+            "This looks like it might share contact details or a plan to meet one-to-one. "
+            "To keep everyone safe — especially younger members — try to keep coordination "
+            "inside the meetup. Post it anyway?"
+        ),
+    }
     return render(
         request,
         "web/activity_detail.html",
@@ -1388,6 +1404,7 @@ def activity_detail(request, pk):
             "share_obj_id": activity.pk,
             "thread_query": thread_query,
             "thread_results": thread_results,
+            "presend_nudge": presend_nudge,
             **_nav_context(user),
         },
     )
