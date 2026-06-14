@@ -20,9 +20,14 @@ CREDIT = "In partnership with"
 BLURB = "Cluj City Library reading hour"
 
 
-def _partner(name="Cluj City Library", *, verified=True, active=True):
+def _partner(name="Cluj City Library", *, verified=True, active=True, blurb=BLURB, website=""):
     return Partner.objects.create(
-        name=name, kind=Partner.Kind.LIBRARY, blurb=BLURB, is_verified=verified, is_active=active
+        name=name,
+        kind=Partner.Kind.LIBRARY,
+        blurb=blurb,
+        website=website,
+        is_verified=verified,
+        is_active=active,
     )
 
 
@@ -68,11 +73,48 @@ def test_no_partner_means_no_credit():
     assert CREDIT not in _campaigns_page()
 
 
+def test_partner_website_renders_as_a_sanitised_link():
+    _campaign(partner=_partner(website="https://example.org"))
+    assert active_campaigns_with_progress()[0]["partner_website"] == "https://example.org"
+    assert 'href="https://example.org"' in _campaigns_page()
+
+
+def test_malicious_partner_website_is_never_a_live_link():
+    # Even a javascript: URL forced past Partner.save()'s strip (via .update) must be neutralised
+    # at render by |safe_href — the load-bearing XSS defence on the credit's href.
+    p = _partner(website="https://ok.example")
+    c = _campaign(partner=p)
+    Partner.objects.filter(pk=p.pk).update(website="javascript:alert(1)")
+    html = _campaigns_page()
+    assert "javascript:" not in html  # no live scheme reaches the page
+    assert CREDIT in html and p.name in html  # the name still shows, just not as a link
+    assert 'href="javascript:alert(1)"' not in html
+    assert c.partner_id == p.pk  # sanity: still credited
+
+
+def test_name_only_partner_has_no_dangling_separator():
+    _campaign(partner=_partner(blurb=""))
+    rows = active_campaigns_with_progress()
+    assert rows[0]["partner_name"] == "Cluj City Library"
+    assert rows[0]["partner_blurb"] == ""
+    html = _campaigns_page()
+    assert CREDIT in html and "Cluj City Library" in html
+    assert "Cluj City Library &mdash;" not in html  # no separator with an empty blurb
+
+
+def test_inactive_campaign_is_not_listed_so_partner_credit_is_moot():
+    _campaign(slug="closed", partner=_partner(), active=False)
+    assert active_campaigns_with_progress() == []  # campaign-level gating short-circuits first
+    assert CREDIT not in _campaigns_page()
+
+
 # --- write-time gate (defence in depth) ------------------------------------------------------
 
 
-def test_clean_rejects_unverified_partner():
-    bad = _partner(verified=False)
+@pytest.mark.parametrize("verified,active", [(False, True), (True, False)])
+def test_clean_rejects_non_public_partner(verified, active):
+    # Both halves of public() (verified AND active) must block naming — not just verified.
+    bad = _partner(verified=verified, active=active)
     c = Campaign(title="x", slug="x", goal_cents=100000, partner=bad)
     with pytest.raises(ValidationError):
         c.full_clean()
