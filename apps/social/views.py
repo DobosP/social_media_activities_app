@@ -42,6 +42,7 @@ from .services import (
     create_series,
     end_series,
     grant_co_organizer,
+    group_ask_organiser,
     group_by_id,
     group_feed_activities,
     group_roster,
@@ -400,6 +401,24 @@ class GroupViewSet(viewsets.ViewSet):
         if roster is None:
             raise PermissionDenied("This group's roster is not available to you.")
         return Response({"members": [u.display_name or u.username for u in roster]})
+
+    @action(detail=True, methods=["post"])
+    def ask(self, request, pk=None):
+        """F30 — a minor-group member sends ONE fixed-enum question to the STAFF organiser.
+        Writes no Post and notifies only the organiser; the reply is a group-wide
+        announcement (no private adult→minor reply). Returns a bare confirmation: no
+        roster, no count, nothing about who else asked."""
+        group = group_by_id(pk, request.user)
+        if group is None:
+            raise NotFound("No such group.")
+        try:
+            delivered = group_ask_organiser(request.user, group, request.data.get("prompt"))
+        except (NotAMember, NotEligible) as exc:
+            raise PermissionDenied(str(exc)) from exc
+        except InvalidState as exc:
+            raise ValidationError(str(exc)) from exc
+        # `sent` reflects ACTUAL delivery: False if the organiser muted this (mutable) kind.
+        return Response({"sent": delivered})
 
     @action(detail=True, methods=["get"])
     def activities(self, request, pk=None):

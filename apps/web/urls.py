@@ -162,6 +162,7 @@ urlpatterns = [
     path("groups/<int:pk>/leave/", views.group_leave, name="group_leave"),
     path("groups/<int:pk>/post/", views.group_post, name="group_post"),
     path("groups/<int:pk>/announce/", views.group_announce, name="group_announce"),
+    path("groups/<int:pk>/ask/", views.group_ask, name="group_ask"),
     path("groups/<int:pk>/archive/", views.group_archive, name="group_archive"),
     # Communities
     path("communities/", views.communities_page, name="communities"),

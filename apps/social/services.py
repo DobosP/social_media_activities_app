@@ -24,6 +24,7 @@ from .models import (
     ActivitySeries,
     Group,
     GroupMembership,
+    GroupQuestionPrompt,
     JoinVote,
     Membership,
     PlaceConfirmation,
@@ -896,10 +897,12 @@ def update_activity(owner, activity, **changes) -> Activity:
 
 
 def _notify(recipient, kind, title, *, body="", url=""):
-    """Emit an in-app notification (best-effort; never blocks the social action)."""
+    """Emit an in-app notification (best-effort; never blocks the social action). Returns the
+    created Notification, or None when the recipient has muted this (mutable) kind, so callers
+    that need an honest delivery signal can branch on it."""
     from apps.notifications.services import notify
 
-    notify(recipient, kind, title, body=body, url=url)
+    return notify(recipient, kind, title, body=body, url=url)
 
 
 def _is_genuinely_new(membership: Membership) -> bool:
@@ -1904,6 +1907,88 @@ def post_announcement(owner, activity, body: str) -> Post:
         _notify(membership.user, kind, title, body=body_preview, url=url)
     transaction.on_commit(lambda: broadcast_post(post))
     return post
+
+
+# --- F30: minor-group "ask the organiser" relief valve ---------------------------------
+
+
+@transaction.atomic
+def group_ask_organiser(member, group, prompt_choice) -> bool:
+    """Inbound voice for a muted minor group, with NO adult↔minor private-contact path.
+
+    A minor-cohort Group thread is announcement-only (peers read, only the staff curator
+    broadcasts), so without this it is a one-way board. This lets a current MEMBER send ONE
+    of a small FIXED set of prompts (``GroupQuestionPrompt`` — never free text) to the
+    group's STAFF organiser, and ONLY to that organiser:
+
+    - **Writes NO Post** — the question is never member-visible and never adds to the
+      active-poster enumeration surface the announcement-only rule exists to collapse.
+    - **Notifies only ``group.owner``** — never ``thread_members``, never a fan-out.
+    - The organiser's only reply channel is a group-wide ``post_announcement`` — there is
+      deliberately NO private adult→minor reply, so any answer is public to the whole group.
+      The web/DRF surfaces state this asymmetry plainly so a child is never misled.
+
+    Rate-limited (anti-flood of the organiser) and audited (the choice key only — there is
+    no free text to leak). Returns ``True`` if a notification reached the organiser, ``False``
+    if it was suppressed because the organiser muted this (mutable) kind — so the caller can be
+    honest with the child instead of always claiming delivery."""
+    from apps.safety.services import allow_action, is_blocked, record_audit
+
+    # Minor groups only. An adult-group member just posts in the thread (not announcement-only).
+    if not isinstance(group, Group) or group.cohort not in (Cohort.CHILD, Cohort.TEEN):
+        raise NotEligible(_("Asking the organiser is only for under-18 groups."))
+    if group.status != Group.Status.ACTIVE or group.is_hidden:
+        raise InvalidState(_("This group isn't active."))
+    # The caller must be a current MEMBER — role MEMBER, not OWNER (the staff curator holds an
+    # OWNER-role membership and must not be able to "ask themselves"; they answer via announce).
+    if not group.memberships.filter(
+        user=member,
+        role=GroupMembership.Role.MEMBER,
+        state=GroupMembership.State.MEMBER,
+    ).exists():
+        raise NotAMember(_("Join the group to ask its organiser a question."))
+    if not can_participate(member):
+        raise NotEligible(_("Verified, consented participation is required."))
+    # Defence-in-depth: the only recipient must be a vetted STAFF curator. Minor-group
+    # creation forces both (is_staff_curated + a staff owner) and there is no group
+    # ownership-transfer service, so this holds structurally — but re-assert it here so a
+    # legacy/misconfigured row can NEVER route a minor's message to a non-staff adult.
+    owner = group.owner
+    if not group.is_staff_curated or not owner.is_staff:
+        raise NotEligible(_("This group has no staff organiser to receive questions."))
+    # Block wall (defence-in-depth, mirroring join_group / post_to_thread / post_announcement):
+    # the gate lives in the service so it holds identically on every surface, not only where the
+    # caller pre-filtered via visible_groups. If either party blocked the other, the organiser's
+    # only reply channel (post_announcement) already excludes the pair — so accepting the question
+    # would be a dead-end. Refuse before spending rate budget or writing an audit row.
+    if member.id != owner.id and is_blocked(member, owner):
+        raise NotEligible(_("This group is no longer available."))
+    # Fixed enum ONLY — no free text (closes the grooming / PII-disclosure vector).
+    try:
+        prompt = GroupQuestionPrompt(prompt_choice)
+    except ValueError as exc:
+        raise InvalidState(_("Pick one of the listed questions.")) from exc
+    # Rate-limit in a dedicated per-user bucket so the organiser can't be flooded.
+    limit = getattr(settings, "GROUP_QUESTION_RATE_LIMIT", 6)
+    window = getattr(settings, "GROUP_QUESTION_RATE_WINDOW_SECONDS", 3600)
+    if not allow_action(member, "group_question", limit=limit, window_seconds=window):
+        raise InvalidState(_("You've sent a few questions already — please wait a while."))
+    # Audit INSIDE the transaction (it takes a row lock). Record the choice KEY only.
+    record_audit("group.question_asked", actor=member, target=group, prompt=prompt.value)
+    # Notify ONLY the staff organiser. Never thread_members, never a Post, never member-visible.
+    from apps.notifications.models import Notification
+
+    title = _("New question in %(group)s") % {"group": group.title}
+    body = _("A member asks: %(q)s") % {"q": str(prompt.label)}
+    notice = _notify(
+        owner,
+        Notification.Kind.GROUP_QUESTION,
+        str(title),
+        body=str(body),
+        url=f"/groups/{group.id}/",
+    )
+    # None when the organiser muted this (mutable) kind — report honest non-delivery upward.
+    return notice is not None
 
 
 # --- F20: RSVP attendance intent -------------------------------------------------------

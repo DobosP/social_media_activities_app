@@ -70,6 +70,24 @@
   {% endif %}
 {% endif %}
 
+{% comment %}F30 — inbound voice for a muted minor group. The question is a FIXED choice (no
+   free text), goes ONLY to the staff organiser (never a thread post, never member-visible),
+   and the organiser can only answer the whole group in an announcement — there is no private
+   adult→minor reply. The copy below states that asymmetry plainly so a child is never misled.{% endcomment %}
+{% if can_ask %}
+  <section aria-labelledby="ask-organiser-h">
+    <h2 id="ask-organiser-h">{% trans "Ask the organiser" %}</h2>
+    <p class="muted">{% trans "Pick a question to send to the group's organiser. Only the organiser sees your question. They answer everyone here in an announcement — there are no private replies." %}</p>
+    <form method="post" action="{% url 'group_ask' group.pk %}">{% csrf_token %}
+      <label for="group-ask-prompt">{% trans "Your question" %}</label>
+      <select id="group-ask-prompt" name="prompt" required>
+        {% for value, label in question_prompts %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+      </select>
+      <button class="btn btn-sm" type="submit">{% trans "Send question" %}</button>
+    </form>
+  </section>
+{% endif %}
+
 <h2>{% trans "Upcoming activities" %}</h2>
 {% for a in feed %}
   {% include "web/_activity_card.html" %}
