@@ -62,6 +62,11 @@ class Activity(models.Model):
     # F18: a short "getting home" note (e.g. nearest bus stop, pickup point). Owner-curated,
     # same edit path + cap as the other logistics; mirrored onto a CHILD ward's guardian manifest.
     getting_home_note = models.TextField(blank=True, default="")
+    # F41: a "what to expect when you arrive" note for a nervous first-timer (how to recognise the
+    # group, what happens first). Owner-curated, same edit path + cap. MEMBER-ONLY like
+    # getting_home_note (deliberately NOT on the cohort-visible ActivitySerializer) — it lowers the
+    # social drop-at-the-door barrier without becoming a public discovery surface.
+    first_time_note = models.TextField(blank=True, default="")
 
     # F8: optional "what to expect" fields so newcomers, disabled, and anxious users can
     # judge fit at a glance. Owner-curated; cost/difficulty are constrained choices,

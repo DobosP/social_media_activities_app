@@ -200,6 +200,17 @@
   </div>
 {% endif %}
 
+{% comment %}F41: owner-curated "what to expect when you arrive" note for a nervous first-timer.
+   Member-gated (same wall as the logistics card), visible to ALL members so it isn't write-only
+   after the welcome window — it just gets a calm accent during that window (show_welcome). No
+   badge/streak/countdown. linebreaksbr keeps it auto-escaped.{% endcomment %}
+{% if is_member or is_owner %}{% if activity.first_time_note %}
+  <div class="card{% if show_welcome %} card-accent{% endif %}">
+    <strong>{% trans "First time here?" %}</strong>
+    <p style="margin:.4rem 0 0">{{ activity.first_time_note|linebreaksbr }}</p>
+  </div>
+{% endif %}{% endif %}
+
 {% if is_member and not is_owner %}
   <div class="card card-danger">
     <strong>{% trans "Feeling unsafe or uncomfortable?" %}</strong>

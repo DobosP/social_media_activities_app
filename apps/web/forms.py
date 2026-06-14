@@ -94,6 +94,9 @@ class ActivityForm(forms.Form):
     accessibility_notes = _logistics_field(
         "Accessibility info (step-free access, quiet space, etc.)."
     )
+    first_time_note = _logistics_field(
+        "What to expect on arrival (how to recognise the group, what happens first)."
+    )
     beginners_welcome = forms.BooleanField(
         required=False,
         label="Beginners welcome",
@@ -247,6 +250,9 @@ class ActivityEditForm(forms.Form):
     )
     accessibility_notes = _logistics_field(
         "Accessibility info (step-free access, quiet space, etc.)."
+    )
+    first_time_note = _logistics_field(
+        "What to expect on arrival (how to recognise the group, what happens first)."
     )
     beginners_welcome = forms.BooleanField(
         required=False,
