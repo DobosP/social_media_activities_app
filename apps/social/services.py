@@ -359,6 +359,10 @@ def create_activity(
     if min_to_go is not None and capacity is not None and min_to_go > capacity:
         # An un-confirmable meetup (the minimum can never be reached within the cap) is nonsensical.
         raise InvalidState(_("Minimum to happen can't be more than the capacity."))
+    if ends_at is not None and starts_at is not None and ends_at < starts_at:
+        # Centralised here so every caller (web/DRF create, series spawn, F27 gauge convert)
+        # inherits it — the web forms also check, but the DRF/convert serializers did not.
+        raise InvalidState(_("End time cannot be before the start time."))
     # F25 gate: an activity may only be organised at a PUBLICLY-visible place — never at a
     # still-pending/rejected user-proposed venue. public_places() is the single visibility
     # chokepoint, so this holds identically on the web form and the DRF surface.
@@ -2772,15 +2776,32 @@ def _gauge_active(interest) -> bool:
 def propose_interest(proposer, *, place, activity_type, coarse_window) -> ActivityInterest:
     """Float an ephemeral gauge. Same eligibility as creating an activity (the proposer must be
     able to actually convert it), cohort pinned from the proposer, at a PUBLICLY-visible place
-    (F25). The proposer auto-counts as interested."""
+    (F25). For a CHILD proposer the place must also pass the F9 child-venue gate — otherwise the
+    gauge could never convert (a dead end) and would surface a non-child-safe venue to children.
+    The proposer auto-counts as interested."""
     from apps.places.services import public_places
 
     if not can_create_activity(proposer):
         raise NotEligible(
             _("You need to be verified (and, if a minor, consented) and in a cohort to start one.")
         )
+    if activity_type is None or not getattr(activity_type, "is_active", False):
+        raise NotEligible(_("Pick an available activity type."))
     if place is None or not public_places().filter(pk=place.pk).exists():
         raise NotEligible(_("Pick a publicly listed place."))
+    # F9: mirror create_activity so a CHILD gauge can't be floated at a non-child-safe venue
+    # (which would then fail at convert — a dead end — and surface that venue to children).
+    if proposer.cohort == Cohort.CHILD and getattr(settings, "CHILD_PUBLIC_VENUES_ONLY", True):
+        from apps.places.services import is_child_safe_venue
+
+        if not is_child_safe_venue(place):
+            raise InvalidState(
+                _(
+                    "This venue isn't on the approved list for children's activities yet. Pick a "
+                    "library, park, school, sports or community venue — or ask a moderator to "
+                    "approve this place."
+                )
+            )
     if coarse_window not in ActivityInterest.CoarseWindow.values:
         raise InvalidState(_("Pick one of the listed time windows."))
     interest = ActivityInterest.objects.create(
@@ -2830,6 +2851,9 @@ def convert_to_activity(proposer, interest, *, title, starts_at, **extra) -> Act
     from apps.notifications.models import Notification
     from apps.safety.services import blocked_user_ids, record_audit
 
+    # Lock + re-check on the locked row so two concurrent converts can't both spawn an Activity
+    # (mirrors cast_vote/leave/cancel/complete — "two in-flight requests can't split-brain").
+    interest = ActivityInterest.objects.select_for_update().get(pk=interest.pk)
     if interest.proposer_id != proposer.id:
         raise NotAMember(_("Only the proposer can start this gauge as a meetup."))
     if not _gauge_active(interest):
@@ -2847,12 +2871,17 @@ def convert_to_activity(proposer, interest, *, title, starts_at, **extra) -> Act
     )
     interest.converted_activity = activity
     interest.save(update_fields=["converted_activity", "updated_at"])
-    # One-shot invite to the peers who signalled, excluding the proposer + blocked pairs.
+    # One-shot invite to the peers who signalled, excluding the proposer + blocked pairs. Re-filter
+    # each recipient by the CONVERTED activity's cohort + live eligibility: a peer who re-verified
+    # into another cohort (or lost consent) after signalling must never be pushed a cross-cohort or
+    # ineligible invite — defence-in-depth mirroring group_roster's read-time re-check.
     blocked = blocked_user_ids(proposer)
     title_n = _("A meetup you were interested in is on")
     body_n = _("%(t)s is now a real meetup — join if you can come.") % {"t": activity.title}
     url = f"/api/social/activities/{activity.id}/"
     for u in interest.interested_users.exclude(id=proposer.id).exclude(id__in=blocked):
+        if getattr(u, "cohort", None) != activity.cohort or not can_participate(u):
+            continue
         _notify(u, Notification.Kind.INTEREST_CONVERTED, str(title_n), body=str(body_n), url=url)
     record_audit("interest.converted", actor=proposer, target=activity)
     return activity

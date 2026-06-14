@@ -64,18 +64,16 @@ def test_create_gauge_via_web():
     assert ActivityInterest.objects.filter(proposer=user).exists()
 
 
-def test_detail_shows_count_not_roster():
+def test_detail_shows_bounded_signal_not_roster():
     proposer = _user("f27w_prop")
-    peer_a = _user("f27wRosterA")
-    peer_b = _user("f27wRosterB")
+    signer = _user("f27wRosterA")
     g = _gauge(proposer)
-    social.mark_interested(peer_a, g)
-    social.mark_interested(peer_b, g)
-    # View as the proposer (their own name is in the nav, so assert on the OTHER signers' names).
+    social.mark_interested(signer, g)  # proposer + signer = 2; threshold 3 → needs 1 more
+    # View as the proposer (their own name is in the nav, so assert on the OTHER signer's name).
     body = _client(proposer).get(f"/gauges/{g.pk}/").content.decode()
-    assert "3 interested" in body  # functional count shown
-    assert "f27wRosterA" not in body  # never WHO (no roster of who signalled)
-    assert "f27wRosterB" not in body
+    assert "needs 1 more" in body.lower()  # bounded functional signal, not a raw count
+    assert "3 interested" not in body  # no raw cumulative count anywhere
+    assert "f27wRosterA" not in body  # never WHO signalled (no roster)
 
 
 def test_id_come_toggle():
@@ -96,10 +94,20 @@ def test_cross_cohort_cannot_see_gauge():
 
 
 def test_non_proposer_cannot_convert():
+    from apps.social.models import Activity
+
     proposer = _user("f27w_p4")
     peer = _user("f27w_peer4")
     g = _gauge(proposer)
     assert _client(peer).get(f"/gauges/{g.pk}/convert/").status_code == 404
+    # The state-changing POST must be blocked too — not just the GET.
+    before = Activity.objects.count()
+    starts = (timezone.now() + timedelta(days=2)).strftime("%Y-%m-%dT%H:%M")
+    resp = _client(peer).post(f"/gauges/{g.pk}/convert/", {"title": "Sneaky", "starts_at": starts})
+    assert resp.status_code == 404
+    assert Activity.objects.count() == before
+    g.refresh_from_db()
+    assert g.converted_activity_id is None
 
 
 def test_proposer_converts_via_web():

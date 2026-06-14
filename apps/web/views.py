@@ -3004,15 +3004,19 @@ def gauges(request):
     """Active gauges in the viewer's cohort — count-only cards. The ephemeral sibling of the
     standing Groups list."""
     user = request.user
-    items = [
-        {"gauge": g, "count": social.interest_count(g), "mine": g.proposer_id == user.id}
-        for g in social.visible_gauges(user)
-    ]
-    return render(
-        request,
-        "web/gauges.html",
-        {"items": items, "threshold": social.interest_threshold(), **_nav_context(user)},
-    )
+    threshold = social.interest_threshold()
+    items = []
+    for g in social.visible_gauges(user):
+        count = social.interest_count(g)
+        items.append(
+            {
+                "gauge": g,
+                "ready": count >= threshold,
+                "remaining": max(threshold - count, 0),
+                "mine": g.proposer_id == user.id,
+            }
+        )
+    return render(request, "web/gauges.html", {"items": items, **_nav_context(user)})
 
 
 @login_required

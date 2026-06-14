@@ -180,13 +180,25 @@ def test_visible_gauges_cohort_walled_and_excludes_converted(adult, place, activ
     assert g not in social.visible_gauges(adult)  # converted drops out
 
 
-def test_serializer_is_count_only_no_roster(adult, adult2, place, activity_type):
+def test_serializer_bounded_signal_no_raw_count_no_roster(adult, adult2, place, activity_type):
     g = _gauge(adult, place, activity_type)
     social.mark_interested(adult2, g)
     data = GaugeSerializer(g).data
-    assert data["interested_count"] == 2  # the functional count is exposed
-    forbidden = {"interested_users", "members", "roster", "who", "participants", "interested"}
-    assert forbidden.isdisjoint(data.keys()), f"gauge serializer leaks a roster key: {data.keys()}"
+    # Bounded functional signal only — "needs N more" / ready. NO raw cumulative count (vanity),
+    # NO roster of who signalled.
+    assert data["remaining"] == 1  # threshold 3, 2 interested → 1 more
+    assert data["ready"] is False
+    forbidden = {
+        "interested_count",
+        "count",
+        "interested_users",
+        "members",
+        "roster",
+        "who",
+        "participants",
+        "interested",
+    }
+    assert forbidden.isdisjoint(data.keys()), f"gauge serializer leaks a key: {data.keys()}"
 
 
 def test_kind_is_mutable():
@@ -197,13 +209,23 @@ def test_kind_is_mutable():
 # --- expiry command --------------------------------------------------------------------
 
 
-def test_expire_interest_deletes_stale(adult, place, activity_type):
+def test_expire_interest_deletes_stale_spares_active(adult, place, activity_type):
     from django.core.management import call_command
 
-    g = _gauge(adult, place, activity_type)
-    ActivityInterest.objects.filter(pk=g.pk).update(expires_at=timezone.now() - timedelta(days=1))
+    stale = _gauge(adult, place, activity_type)
+    fresh = _gauge(adult, place, activity_type)  # default expires_at = now + 14d (active)
+    ActivityInterest.objects.filter(pk=stale.pk).update(
+        expires_at=timezone.now() - timedelta(days=1)
+    )
     call_command("expire_interest")
-    assert not ActivityInterest.objects.filter(pk=g.pk).exists()
+    assert not ActivityInterest.objects.filter(pk=stale.pk).exists()  # stale gone
+    assert ActivityInterest.objects.filter(pk=fresh.pk).exists()  # active survives
+
+
+def test_expire_interest_registered_in_due_jobs():
+    import apps.ops.management.commands.run_due_jobs as run_due_jobs
+
+    assert "expire_interest" in {name for name, _ in run_due_jobs.DUE_JOBS}
 
 
 # --- THE load-bearing wall: interest never enables connections ------------------------
@@ -240,14 +262,15 @@ def test_drf_create_interest_convert_flow(adult, adult2, place, activity_type, n
     )
     assert resp.status_code == 201, resp.content
     gid = resp.json()["id"]
-    assert resp.json()["interested_count"] == 1
+    assert resp.json()["remaining"] == 2  # threshold 3, proposer only → 2 more
+    assert "interested_count" not in resp.json()
     assert "interested_users" not in resp.json()
 
     peer = APIClient()
     peer.force_authenticate(adult2)
     r2 = peer.post(f"/api/social/gauges/{gid}/interested/")
     assert r2.status_code == 200, r2.content
-    assert r2.json()["interested_count"] == 2
+    assert r2.json()["remaining"] == 1
 
     r3 = proposer.post(
         f"/api/social/gauges/{gid}/convert/",
@@ -255,6 +278,78 @@ def test_drf_create_interest_convert_flow(adult, adult2, place, activity_type, n
     )
     assert r3.status_code == 201, r3.content
     assert r3.json()["title"] == "Converted"
+
+
+# --- convert keeps the wall closed + is single-shot (review regressions) --------------
+
+
+def test_convert_does_not_make_interested_peers_co_members(
+    adult, adult2, place, activity_type, now
+):
+    """The load-bearing wall at the convert mutation point: a peer who only SIGNALLED interest
+    must never become a Membership of the spawned activity (else connections would open)."""
+    g = _gauge(adult, place, activity_type)
+    social.mark_interested(adult2, g)  # signals interest but never JOINS
+    activity = social.convert_to_activity(
+        adult, g, title="Converted", starts_at=now + timedelta(days=2)
+    )
+    assert not activity.memberships.filter(user=adult2).exists()
+    assert list(activity.memberships.values_list("user_id", flat=True)) == [adult.id]
+    assert connections.shares_activity(adult, adult2) is False
+    assert connections.can_connect(adult, adult2) is False
+
+
+def test_convert_twice_blocked_no_duplicate(adult, place, activity_type, now):
+    from apps.social.models import Activity
+
+    g = _gauge(adult, place, activity_type)
+    a1 = social.convert_to_activity(adult, g, title="First", starts_at=now + timedelta(days=2))
+    g.refresh_from_db()
+    n = Activity.objects.count()
+    with pytest.raises(social.InvalidState):
+        social.convert_to_activity(adult, g, title="Second", starts_at=now + timedelta(days=3))
+    assert Activity.objects.count() == n  # no duplicate Activity spawned
+    g.refresh_from_db()
+    assert g.converted_activity_id == a1.id  # original link not overwritten
+
+
+def test_convert_fanout_skips_cohort_changed_peer(adult, adult2, place, activity_type, now):
+    """A peer who re-verified into another cohort after signalling must NOT be pushed a
+    cross-cohort INTEREST_CONVERTED invite."""
+    from apps.accounts.identity.base import AssuranceResult
+    from apps.accounts.services import apply_assurance
+
+    g = _gauge(adult, place, activity_type)
+    social.mark_interested(adult2, g)
+    # adult2 re-verifies down to TEEN — the interest row survives, but the invite must not fire.
+    apply_assurance(adult2, AssuranceResult(age_band=AgeBand.AGE_16_17, provider="dev"))
+    social.convert_to_activity(adult, g, title="Adult Meetup", starts_at=now + timedelta(days=2))
+    assert not Notification.objects.filter(
+        recipient=adult2, kind=Notification.Kind.INTEREST_CONVERTED
+    ).exists()
+
+
+def test_child_proposer_rejected_at_non_child_safe_venue(place, activity_type, settings):
+    settings.CHILD_PUBLIC_VENUES_ONLY = True
+    from apps.accounts.models import ParentalConsent
+
+    child = make_user("f27_child_prop", AgeBand.UNDER_16, consented=True)
+    assert ParentalConsent.objects.filter(minor=child).exists()
+    # conftest `place` is a generic OSM venue, not on the child-safe allowlist.
+    with pytest.raises(social.SocialError):
+        _gauge(child, place, activity_type)
+
+
+def test_convert_rejects_ends_before_starts(adult, place, activity_type, now):
+    g = _gauge(adult, place, activity_type)
+    with pytest.raises(social.InvalidState):
+        social.convert_to_activity(
+            adult,
+            g,
+            title="Bad times",
+            starts_at=now + timedelta(days=2),
+            ends_at=now + timedelta(days=1),
+        )
 
 
 def place_point(dx=0.0):

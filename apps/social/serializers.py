@@ -408,16 +408,18 @@ class GaugeConvertSerializer(serializers.Serializer):
 
 
 class GaugeSerializer(serializers.ModelSerializer):
-    """Read-output for a gauge. Allowlist + read_only. Exposes the functional interest COUNT
-    (the gauge's whole point — like open_positions, not a vanity feed metric) and a `ready`
-    flag, but NEVER the roster of WHO signalled (no interested_users / members / who field)."""
+    """Read-output for a gauge. Allowlist + read_only. Exposes only a BOUNDED functional signal —
+    `ready` (threshold met) + `remaining` (how many more to be ready, capped at 0, like F1's
+    "needs N more") — NEVER a raw cumulative "N interested" count (that is the social-proof vanity
+    metric inv.2 forbids, the same reason ActivitySerializer dropped member_count) and NEVER the
+    roster of WHO signalled (no interested_users / members / who field)."""
 
     proposer = serializers.CharField(source="proposer.display_name", read_only=True)
     place = serializers.CharField(source="place.name", read_only=True)
     activity_type = serializers.SlugRelatedField(slug_field="slug", read_only=True)
     coarse_window = serializers.CharField(source="get_coarse_window_display", read_only=True)
-    interested_count = serializers.SerializerMethodField()
     ready = serializers.SerializerMethodField()
+    remaining = serializers.SerializerMethodField()
 
     class Meta:
         model = ActivityInterest
@@ -428,15 +430,15 @@ class GaugeSerializer(serializers.ModelSerializer):
             "activity_type",
             "cohort",
             "coarse_window",
-            "interested_count",
             "ready",
+            "remaining",
             "expires_at",
             "created_at",
         ]
         read_only_fields = fields
 
-    def get_interested_count(self, obj) -> int:
-        return obj.interested_users.count()
-
     def get_ready(self, obj) -> bool:
         return obj.interested_users.count() >= interest_threshold()
+
+    def get_remaining(self, obj) -> int:
+        return max(interest_threshold() - obj.interested_users.count(), 0)

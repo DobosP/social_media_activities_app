@@ -6,14 +6,15 @@
 <h1>{{ gauge.activity_type.name }} {% blocktrans with place=gauge.place.name %}at {{ place }}{% endblocktrans %}</h1>
 <p class="muted">{{ gauge.get_coarse_window_display }}{% if gauge.place.address_city %} &middot; {{ gauge.place.address_city }}{% endif %}</p>
 
-{% comment %}Count-only: we show HOW MANY are interested (the functional threshold signal), never
-   WHO. There is no roster anywhere on this surface.{% endcomment %}
+{% comment %}Bounded, functional signal only — "ready" / "needs N more to be ready" (like F1's
+   quorum nudge). We deliberately do NOT show a raw cumulative "N interested" social-proof count,
+   and never WHO signalled. There is no roster anywhere on this surface.{% endcomment %}
 <div class="card card-accent">
-  <strong>{% blocktrans count counter=count %}{{ counter }} interested{% plural %}{{ counter }} interested{% endblocktrans %}</strong>
   {% if ready %}
+    <strong>{% trans "Ready to start" %}</strong>
     <p style="margin:.3rem 0 0">{% trans "Enough people are interested to start this as a real meetup." %}</p>
   {% else %}
-    <p class="muted" style="margin:.3rem 0 0">{% blocktrans count counter=remaining %}Needs {{ counter }} more to be ready.{% plural %}Needs {{ counter }} more to be ready.{% endblocktrans %}</p>
+    <strong>{% blocktrans count counter=remaining %}Needs {{ counter }} more to be ready{% plural %}Needs {{ counter }} more to be ready{% endblocktrans %}</strong>
   {% endif %}
 </div>
 
