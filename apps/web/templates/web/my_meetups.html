@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "My meetups" %}{% endblock %}
+{% block content %}
+<h1>{% trans "My next meetups" %}</h1>
+<p class="muted">{% blocktrans with when=generated_at|date:"D d M, H:i" %}Saved {{ when }}. The essentials to get there &mdash; readable even on a patchy connection.{% endblocktrans %}</p>
+
+{% comment %}F38: revealed only when the browser is offline (progressive enhancement). The page
+   itself is fully server-rendered and works with no JavaScript — this is just an honesty banner
+   so a saved copy is never mistaken for live truth.{% endcomment %}
+<p id="offline-note" class="card card-accent" hidden role="status">
+  &#9888;&#65039; {% trans "You're offline &mdash; this is a saved copy. A meetup cancelled or moved since you last had signal may not show here." %}
+</p>
+
+{% for a in meetups %}
+  <div class="card">
+    <strong><a href="{% url 'activity_detail' a.pk %}">{{ a.title }}</a></strong>
+    <span class="tag">{{ a.activity_type.name }}</span>
+    <p class="muted" style="margin:.3rem 0 0">
+      &#128197; {{ a.starts_at|date:"D d M, H:i" }}{% if a.ends_at %} &ndash; {{ a.ends_at|date:"H:i" }}{% endif %}
+      {% if a.place %}<br>&#128205; {{ a.place.display_name|default:a.place.name|default:_("Place") }}{% endif %}
+    </p>
+    {% if a.meeting_point %}<p style="margin:.3rem 0 0"><span class="muted">{% trans "Where to meet:" %}</span><br>{{ a.meeting_point|linebreaksbr }}</p>{% endif %}
+  </div>
+{% empty %}
+  <p class="muted">{% trans "No upcoming meetups yet." %} <a href="{% url 'activity_list' %}">{% trans "Find one to join" %}</a>.</p>
+{% endfor %}
+
+{% if my_guardians %}
+  <div class="card">
+    <strong>{% trans "Grown-ups you can turn to" %}</strong>
+    <p class="muted" style="margin:.3rem 0 0">{% trans "If something doesn't feel right, you can reach out to:" %}</p>
+    <ul class="members">{% for g in my_guardians %}<li>{{ g.display_name|default:g.username }}</li>{% endfor %}</ul>
+  </div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+// F38: reveal the "saved copy" banner whenever this page might be a cached copy. We do NOT trust
+// navigator.onLine alone (it reports true on captive portals / WiFi-with-no-backhaul — exactly the
+// patchy case this page is for), so we actively PROBE a same-origin endpoint the service worker
+// never caches (/healthz). If the probe fails, the live page couldn't have loaded, so this is the
+// cached copy → show the banner. No-JS users never see the banner; the page content is identical.
+(function () {
+  var note = document.getElementById("offline-note");
+  if (!note) return;
+  function reveal() { note.hidden = false; }
+  function probe() {
+    if (!navigator.onLine) { reveal(); return; }
+    fetch("/healthz", { cache: "no-store" })
+      .then(function (r) { note.hidden = !!(r && r.ok); })
+      .catch(reveal);
+  }
+  probe();
+  window.addEventListener("offline", reveal);
+  window.addEventListener("online", probe);
+})();
+</script>
+{% endblock %}

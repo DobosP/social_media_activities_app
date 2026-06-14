@@ -69,6 +69,7 @@
               <span class="nav-username">{{ user.display_name|default:user.username }}</span></summary>
             <div class="nav-panel">
               <a href="{% url 'profile' %}">{% trans "Profile" %}</a>
+              <a href="{% url 'my_meetups' %}">{% trans "My meetups" %}</a>
               <a href="{% url 'you' %}">{% trans "Account overview" %}</a>
               <a href="{% url 'settings' %}">{% trans "Settings" %}</a>
               <div class="sep"></div>
@@ -129,5 +130,43 @@ per-page script in the base), in line with the text-first product ethos. Pages t
 genuinely need interactivity add their own scripts block below.
 {% endcomment %}
 {% block scripts %}{% endblock %}
+{% if user.is_authenticated %}
+{% comment %}F38: register the root-scoped service worker that makes /my-meetups/ readable offline.
+   It is purged the instant the user logs out (stock LogoutView has no server hook) AND whenever
+   the logged-in user changes on this device — so a shared/borrowed phone never serves one
+   member's saved meetups to another. No-JS users get no SW (and so no on-device cache) at all.{% endcomment %}
+<script>
+(function () {
+  if (!("serviceWorker" in navigator)) return;
+  var me = "{{ user.public_id }}";
+  function purge() {
+    try {
+      // Delete the cache DIRECTLY from the page so it works even before the SW controls this load
+      // (the controller-null window) — and ALSO message the SW, whose waitUntil reliably finishes
+      // the delete even as the logout POST navigates away. Belt and suspenders for child-safety data.
+      if (window.caches) caches.delete("mz-meetups-v1");
+      if (navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({ type: "purge" });
+      }
+    } catch (e) {}
+  }
+  try {
+    // A different member is now logged in on this device — drop the previous member's cache.
+    if (window.localStorage && localStorage.getItem("mz-meetups-owner") !== me) {
+      purge();
+      localStorage.setItem("mz-meetups-owner", me);
+    }
+  } catch (e) {}
+  navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(function () {});
+  // Purge on logout, before the form POSTs.
+  document.querySelectorAll('form[action$="/logout/"]').forEach(function (f) {
+    f.addEventListener("submit", function () {
+      purge();
+      try { if (window.localStorage) localStorage.removeItem("mz-meetups-owner"); } catch (e) {}
+    });
+  });
+})();
+</script>
+{% endif %}
 </body>
 </html>
