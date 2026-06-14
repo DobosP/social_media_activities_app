@@ -759,6 +759,11 @@
 
     summary.textContent =
       "🔒 Verify encryption keys" + (unverified ? " (" + unverified + " unverified)" : " (all verified)");
+    // F43: open the panel for a zero-click safety-number comparison ONLY while a peer is still
+    // unverified; once every peer is verified it stays collapsed, so it never becomes an
+    // always-on nag (no dark pattern). The key-change warning above lives inside, so an
+    // unverified-after-rotation peer surfaces its fingerprint immediately.
+    panel.open = unverified > 0;
     els.verify.appendChild(panel);
   }
 
