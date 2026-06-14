@@ -122,18 +122,85 @@ SEARCH_MIN_QUERY_LEN = 2
 SEARCH_MAX_RESULTS = 100
 
 
+def _matching_type_ids(query):
+    """W2-F1: resolve a free-text query to the ActivityType ids it should match, reading the
+    RO/EN ``aliases`` + the slug (NOT just the display name — already-seeded vocabulary like
+    'alergare'/'streetball' otherwise returns nothing), then a depth-1 SYNONYM/VARIANT walk so a
+    search for one term also finds its synonyms/variants. The taxonomy is tiny (~100 rows), so the
+    alias scan is a single cheap query in Python — no JSONField lookup quirks, no ranking."""
+    from apps.taxonomy.models import ActivityRelation, ActivityType
+
+    q = (query or "").strip().lower()
+    if not q:
+        return set()
+    matched = {
+        t.id
+        for t in ActivityType.objects.filter(is_active=True).only("id", "name", "slug", "aliases")
+        if q in t.name.lower()
+        or q in t.slug.lower()
+        or any(isinstance(a, str) and q in a.lower() for a in (t.aliases or []))
+    }
+    if not matched:
+        return matched
+    expanded = set(matched)
+    rels = ActivityRelation.objects.filter(
+        Q(source_id__in=matched) | Q(target_id__in=matched),
+        kind__in=[ActivityRelation.Kind.SYNONYM, ActivityRelation.Kind.VARIANT],
+    ).only("source_id", "target_id", "symmetric")
+    for r in rels:
+        if r.source_id in matched:
+            expanded.add(r.target_id)
+        if r.target_id in matched and r.symmetric:
+            expanded.add(r.source_id)
+    return expanded
+
+
 def activity_search_filter(qs, query):
     """Apply the free-text activity search predicate to an Activity queryset.
 
-    Matches title, description, the venue name and the activity-type name. Plain
-    icontains (trigram-indexed) — honest substring match, no relevance ranking, so
-    ordering stays soonest-first (never popularity)."""
-    return qs.filter(
+    Matches title, description and the venue name (plain trigram-indexed icontains), plus the
+    activity TYPE resolved through its slug + RO/EN aliases + a depth-1 synonym/variant walk
+    (W2-F1) — so seeded vocabulary actually matches. Honest substring match, no relevance ranking,
+    so ordering stays soonest-first (never popularity)."""
+    predicate = (
         Q(title__icontains=query)
         | Q(description__icontains=query)
         | Q(place__name__icontains=query)
         | Q(activity_type__name__icontains=query)
     )
+    type_ids = _matching_type_ids(query)
+    if type_ids:
+        predicate |= Q(activity_type_id__in=type_ids)
+    return qs.filter(predicate)
+
+
+def search_did_you_mean(viewer, query, *, threshold=0.3):
+    """W2-F1: when a search finds nothing, suggest the closest activity-type NAME by trigram
+    similarity (the taxonomy is small, so no index is needed). Honest + never auto-applied: only
+    a name the viewer could actually act on (an active type with an upcoming, visible activity) is
+    suggested, so 'did you mean X?' never leads to a dead end. Returns the name or None."""
+    from django.contrib.postgres.search import TrigramSimilarity
+
+    from apps.taxonomy.models import ActivityType
+
+    query = (query or "").strip()
+    if len(query) < SEARCH_MIN_QUERY_LEN:
+        return None
+    best = (
+        ActivityType.objects.filter(is_active=True)
+        .annotate(sim=TrigramSimilarity("name", query))
+        .filter(sim__gt=threshold)
+        .order_by("-sim", "name")
+        .first()
+    )
+    if best is None:
+        return None
+    leads_somewhere = (
+        visible_activities(viewer)
+        .filter(status=Activity.Status.OPEN, starts_at__gte=timezone.now(), activity_type=best)
+        .exists()
+    )
+    return best.name if leads_somewhere else None
 
 
 def search_activities(viewer, query, *, beginners=False, limit=SEARCH_MAX_RESULTS):

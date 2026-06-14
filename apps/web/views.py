@@ -18,7 +18,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.crypto import get_random_string
-from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.http import url_has_allowed_host_and_scheme, urlencode
 from django.views.decorators.http import require_POST
 
 from apps.accounts.identity.base import IdentityVerificationError
@@ -1174,10 +1174,19 @@ def activity_list(request):
     beginners_only = request.GET.get("beginners") == "true"
     query = (request.GET.get("q") or "").strip()
     near_active = False
+    did_you_mean = None
     if query:
-        # W1 search: one bounded, gate-identical path (visible_activities inside).
-        activities = social.search_activities(request.user, query, beginners=beginners_only)
-        activities = activities.prefetch_related("place__corrections")  # F20
+        # W1 search: one bounded, gate-identical path (visible_activities inside). W2-F1 now
+        # resolves the type via slug + RO/EN aliases + a synonym walk, so seeded vocabulary
+        # matches. Materialise the bounded result so we can offer an honest "did you mean X?"
+        # (trigram) only when it found nothing — never auto-applied, never a dead-end suggestion.
+        activities = list(
+            social.search_activities(
+                request.user, query, beginners=beginners_only
+            ).prefetch_related("place__corrections")  # F20
+        )
+        if not activities:
+            did_you_mean = social.search_did_you_mean(request.user, query)
     else:
         activities = (
             social.visible_activities(request.user)
@@ -1188,6 +1197,9 @@ def activity_list(request):
         if beginners_only:
             activities = activities.filter(beginners_welcome=True)
         activities, near_active = _order_feed_by_location(activities, request.GET)
+    # Pre-encode the suggestion as a query string (a type name may contain a space or '&');
+    # blocktrans can't apply |urlencode in its body, so build it here (W2-F1 review).
+    did_you_mean_q = urlencode({"q": did_you_mean}) if did_you_mean else ""
     return render(
         request,
         "web/activities.html",
@@ -1196,6 +1208,8 @@ def activity_list(request):
             "near_active": near_active,
             "beginners_only": beginners_only,
             "query": query,
+            "did_you_mean": did_you_mean,
+            "did_you_mean_q": did_you_mean_q,
             **_nav_context(request.user),
         },
     )
