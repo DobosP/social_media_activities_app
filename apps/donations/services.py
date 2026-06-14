@@ -37,9 +37,15 @@ def start_donation(
 def active_campaigns_with_progress() -> list[dict]:
     """Active earmark campaigns, each with a calm static progress figure (F34). One grouped
     query (no N+1); AGGREGATE-only — returns plain dicts, never a Campaign object or a donor
-    list, so no per-donor data can leak. percent uses integer math, capped at 100."""
+    list, so no per-donor data can leak. percent uses integer math, capped at 100.
+
+    F42: if a campaign credits a partner, the partner's name/blurb/website are exposed ONLY when
+    that partner is still public() (verified+active). The check is done in Python on the
+    select_related'd partner (no extra query / no N+1), mirroring Partner.objects.public(), so a
+    partner deactivated after being named simply stops being credited."""
     qs = (
         Campaign.objects.filter(is_active=True)
+        .select_related("partner")
         .annotate(
             raised=Sum(
                 "donations__amount_cents",
@@ -52,6 +58,8 @@ def active_campaigns_with_progress() -> list[dict]:
     for c in qs:
         raised = c.raised or 0
         percent = min(100, raised * 100 // c.goal_cents) if c.goal_cents else 0
+        # Read-time public() chokepoint, in Python on the joined row (is_verified AND is_active).
+        p = c.partner if (c.partner and c.partner.is_verified and c.partner.is_active) else None
         rows.append(
             {
                 "title": c.title,
@@ -61,6 +69,9 @@ def active_campaigns_with_progress() -> list[dict]:
                 "goal_cents": c.goal_cents,
                 "currency": c.currency,
                 "percent": percent,
+                "partner_name": p.name if p else "",
+                "partner_blurb": p.blurb if p else "",
+                "partner_website": p.website if p else "",
             }
         )
     return rows
