@@ -126,7 +126,8 @@ def test_active_campaigns_with_progress_is_aggregate_only():
     assert len(rows) == 1  # inactive excluded
     assert rows[0]["raised_cents"] == 2500
     assert rows[0]["percent"] == 25
-    # Only safe aggregate keys — never a donations queryset or donor data.
+    # Only safe aggregate keys — never a donations queryset or donor data. The F42 partner_*
+    # fields are partner metadata (a Partner has no user), not donor data.
     assert set(rows[0]) == {
         "title",
         "slug",
@@ -135,4 +136,7 @@ def test_active_campaigns_with_progress_is_aggregate_only():
         "goal_cents",
         "currency",
         "percent",
+        "partner_name",
+        "partner_blurb",
+        "partner_website",
     }

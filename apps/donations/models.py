@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
@@ -89,7 +90,13 @@ class SpendEntry(models.Model):
 class Campaign(models.Model):
     """A staff-curated, mission-tied funding campaign a donor can earmark a gift toward (F34).
     Text-only by design: NO end_date (would invite a countdown), NO logo/image (an ad surface),
-    NO website. Progress is shown as a calm static bar, aggregate-only."""
+    NO website. Progress is shown as a calm static bar, aggregate-only.
+
+    F42: may optionally name a verified civic Partner it supports, surfaced as a one-line text
+    credit beside the calm bar on /campaigns/. The partner is gated to Partner.objects.public()
+    at write time (admin formfield + clean) AND at read time (active_campaigns_with_progress),
+    so a partner deactivated/unverified after being named simply stops being credited — never an
+    ad/boost surface, no donor data involved (a Partner has no user)."""
 
     title = models.CharField(max_length=120)
     slug = models.SlugField(max_length=64, unique=True)
@@ -97,6 +104,16 @@ class Campaign(models.Model):
     goal_cents = models.PositiveIntegerField()
     currency = models.CharField(max_length=3, default="EUR")
     is_active = models.BooleanField(default=True)
+    # SET_NULL (like Donation.campaign): deleting a partner must never destroy a campaign or its
+    # donation history — the credit just disappears and the campaign stays general-fund-safe.
+    partner = models.ForeignKey(
+        "places.Partner",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="campaigns",
+        help_text="Optional verified civic partner this campaign credits on /campaigns/.",
+    )
     created = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -110,3 +127,16 @@ class Campaign(models.Model):
 
     def __str__(self):
         return self.title
+
+    def clean(self):
+        # Defence-in-depth: a campaign can only NAME a verified+active partner (the same
+        # public() chokepoint that gates every other partner read). The admin formfield already
+        # limits the choices; this catches any full_clean() path (forms, scripts using it).
+        super().clean()
+        if self.partner_id is not None:
+            from apps.places.models import Partner
+
+            if not Partner.objects.public().filter(pk=self.partner_id).exists():
+                raise ValidationError(
+                    {"partner": "Only a verified, active partner can be credited on a campaign."}
+                )

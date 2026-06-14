@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load money i18n %}
+{% load money i18n safe_urls %}
 {% block title %}{% trans "Campaigns" %}{% endblock %}
 {% block content %}
 <h1>{% trans "Campaigns" %}</h1>
@@ -14,6 +14,13 @@
       <div style="background:var(--accent);height:10px;width:{{ c.percent }}%"></div>
     </div>
     <p class="muted">{% blocktrans with raised=c.raised_cents|cents goal=c.goal_cents|cents %}Raised {{ raised }} of {{ goal }} EUR goal.{% endblocktrans %}</p>
+    {% comment %}F42: a one-line text credit for the verified civic partner this campaign supports
+       (shown only when active_campaigns_with_progress still finds the partner public). No logo,
+       no boost — an acknowledgement, mirroring the place_detail partner credit.{% endcomment %}
+    {% if c.partner_name %}
+      <p class="muted" style="font-size:.85rem">{% trans "In partnership with" %}
+        {% if c.partner_website|safe_href %}<a href="{{ c.partner_website|safe_href }}" rel="noopener noreferrer" target="_blank">{{ c.partner_name }}</a>{% else %}{{ c.partner_name }}{% endif %}{% if c.partner_blurb %} &mdash; {{ c.partner_blurb }}{% endif %}</p>
+    {% endif %}
     <a class="btn btn-sm" href="{% url 'donate' %}?campaign={{ c.slug }}">{% trans "Donate to this campaign" %}</a>
   </div>
 {% empty %}
