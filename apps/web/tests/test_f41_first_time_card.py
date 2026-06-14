@@ -130,3 +130,38 @@ def test_serializer_caps_first_time_note_at_logistics_max():
     s = ActivityUpdateSerializer(data={"first_time_note": "x" * (LOGISTICS_FIELD_MAX_LENGTH + 1)})
     assert not s.is_valid()
     assert "first_time_note" in s.errors
+
+
+def test_create_serializer_also_caps_first_time_note():
+    from apps.social.serializers import LOGISTICS_FIELD_MAX_LENGTH, ActivityCreateSerializer
+
+    s = ActivityCreateSerializer(data={"first_time_note": "x" * (LOGISTICS_FIELD_MAX_LENGTH + 1)})
+    assert not s.is_valid()
+    assert "first_time_note" in s.errors  # cap applies on the create path too
+
+
+def test_series_template_does_not_carry_first_time_note():
+    # Deliberate Activity-only scope: a spawned series instance starts with an empty note, never a
+    # stale template prompt. Pin it so a future refactor can't silently add it to the series.
+    from apps.social.serializers import SeriesCreateSerializer
+    from apps.web.forms import SeriesForm
+
+    assert "first_time_note" not in SeriesForm().fields
+    assert "first_time_note" not in SeriesCreateSerializer().fields
+
+
+def test_owner_sees_their_own_first_time_card():
+    owner = _user("f41_owner7")
+    activity = _activity(owner)
+    html = _client(owner).get(f"/activities/{activity.id}/").content.decode()
+    assert HEADING in html and NOTE in html  # the is_owner arm of the gate
+
+
+def test_first_time_note_is_html_escaped():
+    owner = _user("f41_owner8")
+    member = _user("f41_member8")
+    activity = _activity(owner, note="<script>alert(1)</script> meet at gate")
+    _member(activity, member)
+    html = _client(member).get(f"/activities/{activity.id}/").content.decode()
+    assert "<script>alert(1)</script>" not in html  # owner-curated text is auto-escaped
+    assert "&lt;script&gt;" in html
