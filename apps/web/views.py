@@ -256,6 +256,10 @@ def group_detail(request, pk):
         and group.cohort in (Cohort.CHILD, Cohort.TEEN)
         and group.status == Group.Status.ACTIVE
         and can_participate(user)
+        # Mirror the service's defence-in-depth recipient check so a legacy/misconfigured minor
+        # group never renders a control the service would then reject.
+        and group.is_staff_curated
+        and group.owner.is_staff
     )
 
     # The SOLE who-is-here surface: None for minors / non-members (no count either).
@@ -389,14 +393,25 @@ def group_ask(request, pk):
     if group is None:
         raise Http404("No such group.")
     try:
-        social.group_ask_organiser(request.user, group, request.POST.get("prompt"))
-        messages.success(
-            request,
-            gettext(
-                "Your question was sent to the organiser. They'll answer everyone here in an "
-                "announcement, not privately."
-            ),
-        )
+        delivered = social.group_ask_organiser(request.user, group, request.POST.get("prompt"))
+        if delivered:
+            messages.success(
+                request,
+                gettext(
+                    "Your question was sent to the organiser. They'll answer everyone here in an "
+                    "announcement, not privately."
+                ),
+            )
+        else:
+            # The organiser has question alerts turned off (we don't reveal that — just stay
+            # honest about non-delivery and point anything urgent at the safety button).
+            messages.info(
+                request,
+                gettext(
+                    "Your question couldn't be delivered to the organiser right now. If it's "
+                    "urgent or you feel unsafe, use the safety button instead."
+                ),
+            )
     except social.SocialError as exc:
         messages.error(request, _msg(exc))
     return redirect("group_detail", pk=pk)

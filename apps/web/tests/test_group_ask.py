@@ -11,7 +11,7 @@ from apps.accounts.identity.base import AssuranceResult
 from apps.accounts.models import AgeBand, Cohort, ParentalConsent, User
 from apps.accounts.services import apply_assurance
 from apps.communities.models import Area
-from apps.notifications.models import Notification
+from apps.notifications.models import Notification, NotificationPreference
 from apps.social import services as social
 from apps.social.models import GroupQuestionPrompt, Post
 from apps.taxonomy.models import ActivityCategory, ActivityType
@@ -108,3 +108,19 @@ def test_post_free_text_is_rejected(child_group):
     assert not Notification.objects.filter(
         recipient=staff, kind=Notification.Kind.GROUP_QUESTION
     ).exists()
+
+
+def test_post_when_organiser_muted_is_honest(child_group):
+    staff, group = child_group
+    child = _child("ga_muted")
+    social.join_group(child, group.id)
+    NotificationPreference.objects.create(
+        user=staff, muted_kinds=[Notification.Kind.GROUP_QUESTION.value]
+    )
+    resp = _client(child).post(f"/groups/{group.id}/ask/", {"prompt": VALID_PROMPT}, follow=True)
+    body = resp.content.decode().lower()
+    # No notification was delivered, and the child is told so honestly (not "was sent").
+    assert not Notification.objects.filter(
+        recipient=staff, kind=Notification.Kind.GROUP_QUESTION
+    ).exists()
+    assert "delivered to the organiser" in body  # honest non-delivery copy (no "was sent")

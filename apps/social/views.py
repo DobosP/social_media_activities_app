@@ -412,12 +412,13 @@ class GroupViewSet(viewsets.ViewSet):
         if group is None:
             raise NotFound("No such group.")
         try:
-            group_ask_organiser(request.user, group, request.data.get("prompt"))
+            delivered = group_ask_organiser(request.user, group, request.data.get("prompt"))
         except (NotAMember, NotEligible) as exc:
             raise PermissionDenied(str(exc)) from exc
         except InvalidState as exc:
             raise ValidationError(str(exc)) from exc
-        return Response({"sent": True})
+        # `sent` reflects ACTUAL delivery: False if the organiser muted this (mutable) kind.
+        return Response({"sent": delivered})
 
     @action(detail=True, methods=["get"])
     def activities(self, request, pk=None):

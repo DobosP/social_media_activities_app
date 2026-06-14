@@ -16,8 +16,14 @@ from rest_framework.test import APIClient
 
 from apps.accounts.models import AgeBand, Cohort, ParentalConsent
 from apps.communities.models import Area
-from apps.notifications.models import MUTABLE_KINDS, NON_MUTABLE_KINDS, Notification
+from apps.notifications.models import (
+    MUTABLE_KINDS,
+    NON_MUTABLE_KINDS,
+    Notification,
+    NotificationPreference,
+)
 from apps.safety.models import AuditLog
+from apps.safety.services import block_user
 from apps.social import services as social
 from apps.social.models import GroupQuestionPrompt, Post
 
@@ -118,6 +124,8 @@ def test_free_text_is_rejected(area, activity_type):
     with pytest.raises(social.InvalidState):
         social.group_ask_organiser(child, group, "my name is X, meet me at 5 Foo St")
     assert _q_count(staff) == 0
+    # The headline "never store free text" property: a rejected attempt writes NO audit row.
+    assert AuditLog.objects.filter(event="group.question_asked").count() == 0
 
 
 @pytest.mark.parametrize("bad", ["", None, "nonexistent_choice"])
@@ -128,6 +136,7 @@ def test_invalid_prompt_choices_rejected(area, activity_type, bad):
     social.join_group(child, group.id)
     with pytest.raises(social.InvalidState):
         social.group_ask_organiser(child, group, bad)
+    assert AuditLog.objects.filter(event="group.question_asked").count() == 0
 
 
 # --- who may ask ----------------------------------------------------------------------
@@ -240,3 +249,108 @@ def test_drf_ask_rejects_free_text(area, activity_type):
     resp = client.post(f"/api/social/groups/{group.id}/ask/", {"prompt": "meet me at my house"})
     assert resp.status_code == 400, resp.content
     assert _q_count(staff) == 0
+
+
+# --- block wall (defence-in-depth, mirrors join_group / post_announcement) -------------
+
+
+@pytest.mark.parametrize("direction", ["child_blocks_owner", "owner_blocks_child"])
+def test_blocked_pair_cannot_ask(area, activity_type, direction):
+    staff = _staff("blk_owner")
+    group = _child_group(staff, area, activity_type)
+    child = make_user("blk_child", AgeBand.UNDER_16, consented=True)
+    social.join_group(child, group.id)
+    if direction == "child_blocks_owner":
+        block_user(child, staff)
+    else:
+        block_user(staff, child)
+    # Either party blocking suppresses the organiser's only reply channel (announcement), so the
+    # question must be refused symmetrically — before any audit/notify. Invoked directly with the
+    # Group object (the service must hold the gate itself, not rely on the caller's pre-filter).
+    with pytest.raises(social.NotEligible):
+        social.group_ask_organiser(child, group, VALID_PROMPT)
+    assert _q_count(staff) == 0
+    assert AuditLog.objects.filter(event="group.question_asked").count() == 0
+
+
+# --- defence-in-depth: a non-staff / non-curated owner can't receive questions --------
+
+
+def test_non_staff_owner_cannot_receive_questions(area, activity_type):
+    staff = _staff("legacy_owner")
+    group = _child_group(staff, area, activity_type)
+    child = make_user("legacy_child", AgeBand.UNDER_16, consented=True)
+    social.join_group(child, group.id)
+    # Simulate a legacy/misconfigured row: the owner is no longer staff.
+    staff.is_staff = False
+    staff.save(update_fields=["is_staff"])
+    group.refresh_from_db()
+    with pytest.raises(social.NotEligible):
+        social.group_ask_organiser(child, group, VALID_PROMPT)
+    assert _q_count(staff) == 0
+
+
+def test_non_curated_group_cannot_receive_questions(area, activity_type):
+    staff = _staff("uncurated_owner")
+    group = _child_group(staff, area, activity_type)
+    child = make_user("uncurated_child", AgeBand.UNDER_16, consented=True)
+    social.join_group(child, group.id)
+    group.is_staff_curated = False
+    group.save(update_fields=["is_staff_curated"])
+    with pytest.raises(social.NotEligible):
+        social.group_ask_organiser(child, group, VALID_PROMPT)
+    assert _q_count(staff) == 0
+
+
+# --- both minor cohorts are covered (CHILD and TEEN), not just CHILD ------------------
+
+
+@pytest.mark.parametrize(
+    "cohort,band",
+    [(Cohort.CHILD, AgeBand.UNDER_16), (Cohort.TEEN, AgeBand.AGE_16_17)],
+)
+def test_ask_works_for_both_minor_cohorts(area, activity_type, cohort, band):
+    staff = _staff(f"mc_owner_{cohort}")
+    group = social.create_group(
+        staff, area=area, title="Minor Group", activity_type=activity_type, cohort=cohort
+    )
+    member = make_user(f"mc_member_{cohort}", band, consented=True)
+    social.join_group(member, group.id)
+
+    assert social.group_ask_organiser(member, group, VALID_PROMPT) is True
+    assert _q_count(staff) == 1
+    assert not Post.objects.filter(thread=group.thread).exists()
+
+
+# --- honest delivery signal when the organiser muted the (mutable) kind ----------------
+
+
+def test_muted_organiser_yields_false_no_overclaim(area, activity_type):
+    staff = _staff("mute_owner")
+    group = _child_group(staff, area, activity_type)
+    child = make_user("mute_child", AgeBand.UNDER_16, consented=True)
+    social.join_group(child, group.id)
+    # The organiser has turned off question alerts (GROUP_QUESTION is a mutable kind).
+    NotificationPreference.objects.create(
+        user=staff, muted_kinds=[Notification.Kind.GROUP_QUESTION.value]
+    )
+    # The service reports honest non-delivery (so the surfaces don't tell the child it was sent).
+    assert social.group_ask_organiser(child, group, VALID_PROMPT) is False
+    assert _q_count(staff) == 0
+    # The attempt is still audited (an attempt was genuinely made).
+    assert AuditLog.objects.filter(event="group.question_asked").count() == 1
+
+
+def test_drf_ask_reports_non_delivery_when_muted(area, activity_type):
+    staff = _staff("drf_mute_owner")
+    group = _child_group(staff, area, activity_type)
+    child = make_user("drf_mute_child", AgeBand.UNDER_16, consented=True)
+    social.join_group(child, group.id)
+    NotificationPreference.objects.create(
+        user=staff, muted_kinds=[Notification.Kind.GROUP_QUESTION.value]
+    )
+    client = APIClient()
+    client.force_authenticate(child)
+    resp = client.post(f"/api/social/groups/{group.id}/ask/", {"prompt": VALID_PROMPT})
+    assert resp.status_code == 200, resp.content
+    assert resp.json() == {"sent": False}
