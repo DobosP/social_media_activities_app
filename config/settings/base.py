@@ -422,7 +422,10 @@ else:
 # MessagePolicy (CSAR seam) + length cap apply to EVERY write (web/DRF/socket) via
 # social.post_to_thread. CHAT_MAX_LENGTH stays the canonical body cap (== POST_BODY_MAX_LENGTH).
 # Swap to add CSAR-driven scanning/encryption without re-architecting (see COMPLIANCE).
-CHAT_MESSAGE_POLICY = env("CHAT_MESSAGE_POLICY", default="apps.chat.policy.BasicMessagePolicy")
+# Default is NudgeMessagePolicy (F33): same trim/cap/empty posture as BasicMessagePolicy, plus a
+# SOFT, non-blocking contact-leak signal on ``nudge_hits`` — it never blocks, redacts, or reports,
+# so post_to_thread/edit_post behave identically. The user-facing nudge is delivered client-side.
+CHAT_MESSAGE_POLICY = env("CHAT_MESSAGE_POLICY", default="apps.chat.policy.NudgeMessagePolicy")
 CHAT_MAX_LENGTH = env.int("CHAT_MAX_LENGTH", default=4000)
 # Per-user thread-post rate limit (fixed window). Defaults preserve the old chat limits.
 # F8 one-tap "I feel unsafe": this web path is otherwise unthrottled. Generous cap (idempotency

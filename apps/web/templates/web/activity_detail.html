@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n static %}
 {% block title %}{{ activity.title }}{% endblock %}
 {% block content %}
 <p class="muted"><a href="{% url 'activity_list' %}">&larr; {% trans "Activities" %}</a></p>
@@ -371,6 +371,12 @@
 
 {% block scripts %}
 {% if is_member %}
+{{ presend_nudge|json_script:"presend-nudge" }}
+{% comment %}F33 pre-send safety nudge. Loaded NON-deferred and listed BEFORE the live-send
+   script below so its submit listener registers first: on "cancel" it stopImmediatePropagation()s
+   that handler (the WebSocket send) AND preventDefault()s the no-JS form POST, gating both paths.
+   Advisory only — it never blocks a post; with JS off the form POSTs normally and unaffected.{% endcomment %}
+<script src="{% static 'js/presend-nudge.js' %}"></script>
 <script>
 // Progressive enhancement over the server-rendered stream: live-append new messages via the
 // thread WebSocket. The page is fully functional with JS off (the compose form POSTs normally).
