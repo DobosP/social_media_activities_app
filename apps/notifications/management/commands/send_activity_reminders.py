@@ -13,6 +13,33 @@ from apps.notifications.models import Notification
 from apps.notifications.services import notify
 from apps.social.models import Activity, Membership
 
+# W2-F8: fold the owner-curated, MEMBER-ONLY logistics into the reminder body so members arrive
+# prepared without digging through the thread. Recipients are current MEMBERS only (the loop
+# filters state=MEMBER), so these member-gated fields never reach a non-member. Each line is
+# truncated and the whole body capped so a long note can't bloat the in-app / future push payload.
+_REMINDER_LOGISTICS = (
+    ("meeting_point", "Meet"),
+    ("what_to_bring", "Bring"),
+    ("getting_home_note", "Getting home"),
+    ("first_time_note", "First time"),
+)
+_REMINDER_FIELD_MAX = 120
+_REMINDER_BODY_MAX = 600
+
+
+def _reminder_body(activity) -> str:
+    """The reminder body: today's bare 'Starts {time}.' plus any present logistics as short
+    labelled lines (degrades to exactly the bare line when all logistics are blank)."""
+    lines = [f"Starts {activity.starts_at:%Y-%m-%d %H:%M}."]
+    for field, label in _REMINDER_LOGISTICS:
+        value = (getattr(activity, field, "") or "").strip()
+        if not value:
+            continue
+        if len(value) > _REMINDER_FIELD_MAX:
+            value = value[: _REMINDER_FIELD_MAX - 1].rstrip() + "…"
+        lines.append(f"{label}: {value}")
+    return "\n".join(lines)[:_REMINDER_BODY_MAX]
+
 
 class Command(BaseCommand):
     help = "Notify members of activities starting within the lookahead window."
@@ -48,7 +75,7 @@ class Command(BaseCommand):
                     membership.user,
                     Notification.Kind.EVENT_REMINDER,
                     title=f"“{activity.title}” is starting soon",
-                    body=f"Starts {activity.starts_at:%Y-%m-%d %H:%M}.",
+                    body=_reminder_body(activity),
                     url=url,
                 )
                 if delivered:
