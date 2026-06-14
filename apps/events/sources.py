@@ -18,6 +18,12 @@ _WEEKDAYS = {"MO": 0, "TU": 1, "WE": 2, "TH": 3, "FR": 4, "SA": 5, "SU": 6}
 _RRULE_HORIZON_DAYS = 90
 _RRULE_MAX_OCCURRENCES = 120
 _RRULE_ITER_GUARD = 4000
+# Per-occurrence external_id base cap. Kept well under 200 so the production sync prepends its
+# "feed<pk>:" namespace AND the ":<YYYYMMDD>" suffix still fit Event.external_id (max_length=200).
+_OCC_UID_MAX = 150
+# Whole-feed safety cap: a hostile/huge .ics of many recurring VEVENTs must not expand to a
+# runaway number of rows even with each event individually capped.
+_FEED_MAX_EVENTS = 2000
 
 
 @dataclass
@@ -92,7 +98,11 @@ def _expand_rrule(
             k, v = tok.split("=", 1)
             parts[k.strip().upper()] = v.strip()
     freq = parts.get("FREQ", "").upper()
-    if freq not in ("DAILY", "WEEKLY", "MONTHLY"):
+    byday_raw = parts.get("BYDAY")
+    # Unsupported rules degrade to a single occurrence (the series start). MONTHLY+BYDAY ("2nd
+    # Tuesday of the month") is deliberately unsupported — we will not silently emit the wrong
+    # day-of-month, so it degrades rather than misleads.
+    if freq not in ("DAILY", "WEEKLY", "MONTHLY") or (freq == "MONTHLY" and byday_raw):
         return [dtstart]
     interval = _pos_int(parts.get("INTERVAL"), 1)
     count = _pos_int(parts.get("COUNT"), None)
@@ -103,8 +113,9 @@ def _expand_rrule(
     out: list[datetime] = []
     seen = 0  # ALL occurrences from the start, so COUNT (which counts from dtstart) is honoured
 
-    def consider(dt) -> bool:
-        """Record an occurrence if it's in window; return False to STOP the whole expansion."""
+    def record(dt) -> bool:
+        """Record an occurrence if it's in window; return False to STOP the whole expansion.
+        A recognized rule that yields nothing in-window returns [] — NOT a stale [dtstart] stub."""
         nonlocal seen
         seen += 1
         if count is not None and seen > count:
@@ -117,45 +128,65 @@ def _expand_rrule(
             out.append(dt)
         return len(out) < max_occurrences
 
-    if freq == "WEEKLY" and parts.get("BYDAY"):
-        byday = sorted({_WEEKDAYS[d] for d in parts["BYDAY"].split(",") if d in _WEEKDAYS})
+    if freq == "WEEKLY" and byday_raw:
+        byday = sorted(
+            {_WEEKDAYS[t] for d in byday_raw.split(",") if (t := d.strip().upper()) in _WEEKDAYS}
+        )
         if not byday:
             byday = [dtstart.weekday()]
         week0 = dtstart - timedelta(days=dtstart.weekday())
         for wk in range(_RRULE_ITER_GUARD):
             base = week0 + timedelta(weeks=wk * interval)
-            if base > horizon and (until is None or base > until):
-                break
+            if base > horizon:
+                break  # weeks only move forward; an out-of-window UNTIL is handled by record()
             stopped = False
             for wd in byday:
                 occ = base + timedelta(days=wd)
                 if occ < dtstart:
                     continue  # before the series begins — not an occurrence
-                if not consider(occ):
+                if not record(occ):
                     stopped = True
                     break
             if stopped:
                 break
-    else:
+    elif freq == "MONTHLY":
+        # Re-anchor each occurrence from the IMMUTABLE dtstart (occ index k), so the day-of-month
+        # is re-clamped against the original day every month — never the cumulative Jan31->Feb28->
+        # Mar28 drift of feeding a clamped result back in.
+        for k in range(_RRULE_ITER_GUARD):
+            if not record(_add_months(dtstart, k * interval)):
+                break
+    else:  # DAILY / WEEKLY fixed step
         step = timedelta(weeks=interval) if freq == "WEEKLY" else timedelta(days=interval)
         dt = dtstart
+        # Fast-forward a far-past series into the window in one jump (still counting the skipped
+        # past occurrences toward COUNT), so the iteration budget is spent on visible dates rather
+        # than dead history — a years-old daily series still surfaces its upcoming occurrences.
+        if dt < floor:
+            skipped = (floor - dt) // step
+            if skipped > 0:
+                seen += skipped
+                dt = dt + step * skipped
+                if count is not None and seen >= count:
+                    return out  # COUNT already exhausted in the past => nothing upcoming
         for _ in range(_RRULE_ITER_GUARD):
-            if not consider(dt):
+            if not record(dt):
                 break
-            dt = _add_months(dt, interval) if freq == "MONTHLY" else dt + step
-    return out or [dtstart]
+            dt = dt + step
+    return out
 
 
 def _expanded_events(base: "RawEvent", rrule: str, now) -> list["RawEvent"]:
     """One RawEvent per RRULE occurrence, preserving the event's duration. Each occurrence gets a
-    distinct, length-SAFE external_id: ``<uid[:191]>:<YYYYMMDD>`` always fits the 200-char column
-    + its (source, external_id) unique constraint (a blank UID stays blank — upsert then keys on
-    place+title+start, which is per-occurrence distinct)."""
+    distinct, length-SAFE external_id: ``<uid[:_OCC_UID_MAX]>:<YYYYMMDD>`` — capped short enough
+    that the production sync's ``feed<pk>:`` namespace prefix still fits Event.external_id(200) +
+    its (source, external_id) unique constraint (a blank UID stays blank — upsert then keys on
+    place+title+start, which is per-occurrence distinct). Empty occurrence list => no events."""
     duration = (base.ends_at - base.starts_at) if base.ends_at else None
     occurrences = _expand_rrule(base.starts_at, rrule, now=now)
     events = []
     for occ in occurrences:
-        eid = f"{base.external_id[:191]}:{occ:%Y%m%d}" if base.external_id else ""
+        eid = f"{base.external_id[:_OCC_UID_MAX]}:{occ:%Y%m%d}" if base.external_id else ""
         events.append(
             RawEvent(
                 title=base.title,
@@ -197,6 +228,11 @@ def parse_ics(text: str, *, now=None) -> list[RawEvent]:
                 else:
                     events.append(base)
             current = None
+            # Whole-feed safety cap: stop parsing once the feed has produced enough events, so a
+            # hostile/huge .ics (many recurring VEVENTs) can't expand to a runaway row count.
+            if len(events) >= _FEED_MAX_EVENTS:
+                del events[_FEED_MAX_EVENTS:]
+                break
             continue
         if current is None or ":" not in line:
             continue
