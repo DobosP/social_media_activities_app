@@ -50,6 +50,7 @@ def test_build_user_export_has_expected_sections():
         "owned_activities",
         "owned_groups",
         "group_memberships",
+        "thread_posts",
         "donations",
         "api_access",
     }
@@ -150,3 +151,68 @@ def test_ward_export_unknown_user_is_404():
     client.force_authenticate(guardian)
     resp = client.get(reverse("ward-export", args=[uuid.uuid4()]))
     assert resp.status_code == 404
+
+
+# --- W2-F32: the user's own thread words in their takeout ------------------------------------
+
+
+def _thread_setup(owner_name, other_name, slug):
+    from apps.social.models import Membership
+
+    owner = _user(owner_name)
+    other = _user(other_name)
+    activity = _activity(owner, slug)
+    Membership.objects.create(
+        activity=activity, user=other, role=Membership.Role.MEMBER, state=Membership.State.MEMBER
+    )
+    return owner, other, activity
+
+
+def test_thread_posts_exports_only_the_users_own_words():
+    from apps.social import services as social
+
+    owner, other, activity = _thread_setup("tp_owner", "tp_other", "tp")
+    social.post_to_thread(owner, activity, "my plan: bring snacks")
+    theirs = social.post_to_thread(other, activity, "another members private words")
+    social.post_to_thread(owner, activity, "replying to you", reply_to=theirs.id)
+    social.post_announcement(owner, activity, "owner announcement here")
+
+    export = build_user_export(owner)
+    posts = export["thread_posts"]
+    bodies = [p["body"] for p in posts]
+    assert "my plan: bring snacks" in bodies
+    assert "replying to you" in bodies
+    assert any(p["is_announcement"] and p["body"] == "owner announcement here" for p in posts)
+    # HARD exclusion: another member's words never appear — not as a post, nor a reply snippet.
+    assert "another members private words" not in str(export)
+    # Strict allowlist shape (no reply_to/shared-target/attachment-bytes/author/thread internals).
+    assert set(posts[0]) == {
+        "thread_kind",
+        "thread_id",
+        "thread_title",
+        "body",
+        "is_announcement",
+        "edited",
+        "had_attachment",
+        "created_at",
+    }
+    assert posts[0]["thread_kind"] == "activity" and posts[0]["thread_id"] == activity.id
+
+
+def test_own_hidden_post_exports_as_neutral_removed_marker():
+    from apps.social import services as social
+
+    owner, _other, activity = _thread_setup("tp_h_owner", "tp_h_other", "tph")
+    p = social.post_to_thread(owner, activity, "this got moderated")
+    p.is_hidden = True
+    p.save(update_fields=["is_hidden"])
+    export = build_user_export(owner)
+    bodies = [r["body"] for r in export["thread_posts"]]
+    assert "this got moderated" not in bodies  # the original text is not disclosed
+    assert "[removed]" in bodies  # a neutral marker, never a moderator identity/reason
+
+
+def test_thread_posts_empty_for_a_user_who_never_posted():
+    user = _user("tp_silent")
+    assert build_user_export(user)["thread_posts"] == []
+    assert build_user_export(user)["schema_version"] == 2
