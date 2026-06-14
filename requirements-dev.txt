@@ -37,7 +37,9 @@ markdown-it-py==4.2.0
 mdurl==0.1.2
     # via markdown-it-py
 msgpack==1.1.2
-    # via cachecontrol
+    # via
+    #   -c requirements.txt
+    #   cachecontrol
 packageurl-python==0.17.6
     # via cyclonedx-python-lib
 packaging==26.2
@@ -80,7 +82,7 @@ requests==2.34.2
     #   pip-audit
 rich==15.0.0
     # via pip-audit
-ruff==0.15.14
+ruff==0.15.15
     # via -r requirements-dev.in
 sortedcontainers==2.4.0
     # via cyclonedx-python-lib
