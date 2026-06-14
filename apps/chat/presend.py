@@ -13,12 +13,24 @@ The ruleset lives here, in ONE place, and is consumed by two halves that must ne
   (``new RegExp(pattern, flags)`` in ``static/js/presend-nudge.js``).
 
 Because the patterns are emitted once and compiled on both sides, the two halves can't drift.
-The patterns are therefore authored in the regex subset that Python ``re`` and the JS RegExp
-engine parse identically (``(?:)``, ``|``, ``\\d``, ``\\s``, ``\\b``, character classes,
-quantifiers — no lookbehind, named groups, backreferences, or ``\\p{}``). Keyword anchors
-stay ASCII so ``\\b`` behaves the same in both engines (a leading-diacritic Romanian word
-like "șoseaua" would break the JS ``\\b``, so we match its ASCII spelling — an honest
-limitation for an advisory signal, not a safety wall).
+For that to hold the patterns must *behave* identically in Python ``re`` and the JS RegExp
+engine — not merely look alike. The two engines differ on Unicode-aware shorthands, so the
+patterns deliberately AVOID them:
+
+* ``\\d`` / ``\\w`` are Unicode-aware in Python ``re`` but ASCII-only in JS RegExp (which is
+  compiled without the ``u`` flag). We therefore use explicit ASCII classes — ``[0-9]`` and
+  ``[A-Za-z]`` — so both engines agree regardless of input. A lint test (test_presend.py)
+  forbids ``\\d``/``\\w`` from ever creeping back in.
+* ``\\b`` is anchored only on ASCII letters/digits (the keyword arms are ASCII), so the
+  word-boundary semantics match in both engines.
+* Allowed subset: ``(?:)``, ``|``, lookAHEAD ``(?=)``, ``\\s``/``\\S``, ``\\b``, character
+  classes, bounded quantifiers. Forbidden (Python-only or needs the JS ``u`` flag):
+  lookBEHIND, named groups/backreferences, ``\\p{}``.
+
+Honest limitation: because the ASCII ``[A-Za-z]`` class can't span a diacritic, a Romanian
+street NAME written with diacritics in number-first order ("5 Bună street") is matched by
+NEITHER engine — they agree (no drift), and the keyword-first form ("Strada Bună Ziua") is
+still caught by the RO arm's ``\\S+`` tail. This is an advisory signal, not a safety wall.
 
 This is a HEURISTIC, not a filter: it never blocks, never redacts, never reports, and some
 false positives are acceptable (the user simply confirms and proceeds). The real recourse
@@ -32,29 +44,36 @@ import re
 # deterministic. Adding/refining a rule here updates BOTH the server scan and the client nudge.
 PRESEND_RULES = (
     {
-        # A run of 9+ digits with single space/dot/hyphen separators — RO mobile/landline
-        # (07xx xxx xxx / 0264 xxx xxx) and international (+40 ...). Times/dates (≤8 digits, or
-        # broken by ":" / "/") fall under the threshold so they don't trip it.
+        # A telephone-SHAPED run, not just any long digit string: either a trunk prefix
+        # (+ / 00) followed by a long run, or a leading-0 national number (RO mobile 07xx xxx xxx
+        # / landline 0xxx xxx xxx). Requiring the prefix is what keeps multi-number content that
+        # is NOT a phone from tripping it — sports scores ("21 22 23 24 25") and PINs
+        # ("12345 6789") have no +/00 and don't start 0+two-digits. Times/dates break on ":"/"/".
         "key": "phone",
-        "pattern": r"(?:\+|00)?\d(?:[ .\-]?\d){8,}",
+        "pattern": r"(?:\+|00)[0-9 .\-]{7,}[0-9]|\b0[0-9]{2}[0-9 .\-]{5,}[0-9]\b",
         "flags": "",
     },
     {
+        # An email address. Local/domain parts are length-bounded so the two greedy runs can't
+        # backtrack quadratically on a long no-dot tail (the CHAT_MAX_LENGTH cap also bounds it).
         "key": "email",
-        "pattern": r"[^\s@]+@[^\s@]+\.[^\s@]+",
+        "pattern": r"[^\s@]{1,64}@[^\s@]{1,255}\.[^\s@]{2,}",
         "flags": "",
     },
     {
         # A street address in either ordering: RO keyword-first ("Strada Memorandumului 28",
-        # "Calea Turzii"), EN number-first ("12 Oak Street"), or a RO house number ("nr. 5").
-        # \b keeps "str" out of "construct". "road/lane/drive" are deliberately EXCLUDED — they
-        # fire on ordinary speech ("5 minutes drive away", "down the road").
+        # "Calea Turzii") or EN number-first ("12 Oak Street"). The EN arm requires the street
+        # word to END the phrase (lookahead: punctuation, end, or a following number) so compound
+        # nouns like "street level" / "avenue trees" / "street lamps" don't fire. \b keeps "str"
+        # out of "construct". "road/lane/drive" stay EXCLUDED — they fire on ordinary speech
+        # ("5 minutes drive away", "down the road"). A bare house number ("nr. 5") is NOT a rule
+        # on its own — it fired on jersey/ranking numbers — RO addresses carry it under a keyword.
         "key": "address",
         "pattern": (
             r"\b(?:"
             r"(?:strada|str|calea|bulevardul|bulevard|bdul|aleea|soseaua|piata)\b\.?\s+\S+"
-            r"|\d+\s+(?:\w+\s+){0,2}(?:street|avenue|boulevard|blvd)\b"
-            r"|nr\.?\s*\d+"
+            r"|[0-9]{1,4}\s+(?:[A-Za-z]+\s+){0,2}(?:street|avenue|boulevard|blvd)"
+            r"(?=[.,]|\s*$|\s+[0-9])"
             r")"
         ),
         "flags": "i",

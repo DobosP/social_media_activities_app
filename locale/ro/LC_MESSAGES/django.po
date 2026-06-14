@@ -3591,6 +3591,17 @@ msgstr "Transparență"
 msgid "Set language"
 msgstr "Setează limba"
 
+#. F33 pre-send safety nudge (apps/web/views.py activity_detail) — shown client-side via
+#. window.confirm before a thread post that looks like it shares contact details / a meet-alone plan.
+msgid ""
+"This looks like it might share contact details or a plan to meet one-to-one. "
+"To keep everyone safe — especially younger members — try to keep coordination "
+"inside the meetup. Post it anyway?"
+msgstr ""
+"Acest mesaj pare să conțină date de contact sau un plan de a vă întâlni între "
+"patru ochi. Pentru siguranța tuturor — mai ales a membrilor mai tineri — "
+"încercați să păstrați organizarea în cadrul activității. Trimiteți oricum?"
+
 #, python-format
 #~ msgid "In your cohort (<strong>%(cohort)s</strong>)."
 #~ msgstr "În cohorta ta (<strong>%(cohort)s</strong>)."

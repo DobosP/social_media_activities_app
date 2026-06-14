@@ -78,3 +78,19 @@ def test_non_member_gets_no_composer_and_no_nudge():
     html = _client(outsider).get(f"/activities/{activity.id}/").content.decode()
     assert CONFIG_ID not in html
     assert SCRIPT_SRC not in html
+
+
+def test_nudge_message_is_translated_to_romanian():
+    # Romanian is the launch market and this is a safety prompt — it must resolve in the RO
+    # catalog (a child seeing the warning in English defeats the purpose).
+    from django.utils.translation import gettext, override
+
+    msg = (
+        "This looks like it might share contact details or a plan to meet one-to-one. "
+        "To keep everyone safe — especially younger members — try to keep coordination "
+        "inside the meetup. Post it anyway?"
+    )
+    with override("ro"):
+        translated = gettext(msg)
+    assert translated and translated != msg  # a real RO translation exists
+    assert "siguranța" in translated

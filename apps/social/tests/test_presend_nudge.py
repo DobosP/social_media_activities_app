@@ -8,22 +8,29 @@ warning is delivered client-side; the human-initiated OFF_PLATFORM report stays 
 import pytest
 from django.utils import timezone
 
+from apps.accounts.models import AgeBand
 from apps.safety.models import Report
 from apps.social import services as social
 from apps.social.models import Membership
 
+from .conftest import make_user
+
 LEAK = "ping me on 0712 345 678 and come to my place after"
+
+
+def _thread_with_member(owner, member, place, activity_type):
+    activity = social.create_activity(
+        owner, place=place, activity_type=activity_type, title="Game", starts_at=timezone.now()
+    )
+    Membership.objects.create(
+        activity=activity, user=member, role=Membership.Role.MEMBER, state=Membership.State.MEMBER
+    )
+    return activity
 
 
 @pytest.fixture
 def thread_member(adult, adult2, place, activity_type):
-    activity = social.create_activity(
-        adult, place=place, activity_type=activity_type, title="Game", starts_at=timezone.now()
-    )
-    Membership.objects.create(
-        activity=activity, user=adult2, role=Membership.Role.MEMBER, state=Membership.State.MEMBER
-    )
-    return adult2, activity
+    return adult2, _thread_with_member(adult, adult2, place, activity_type)
 
 
 @pytest.mark.django_db
@@ -41,3 +48,28 @@ def test_contact_leak_post_never_auto_reports(thread_member):
     before = Report.objects.count()
     social.post_to_thread(member, activity, LEAK)
     assert Report.objects.count() == before  # the nudge must NEVER file a report itself
+
+
+@pytest.mark.django_db
+def test_edit_to_contact_leak_is_not_blocked(thread_member):
+    # edit_post is a SECOND write path through the policy with different branching; it must stay
+    # a pure pass-through too — a leak edit posts verbatim and files no report.
+    member, activity = thread_member
+    post = social.post_to_thread(member, activity, "see you there")
+    before = Report.objects.count()
+    edited = social.edit_post(member, post, LEAK)
+    assert edited.body == LEAK
+    assert Report.objects.count() == before
+
+
+@pytest.mark.django_db
+def test_minor_cohort_leak_post_is_not_blocked(place, activity_type):
+    # The non-blocking property is cohort-uniform (the policy never reads cohort). Pin it for a
+    # CHILD thread so a regression that ever blocked/altered a minor's post is caught immediately.
+    owner = make_user("child_owner", AgeBand.UNDER_16, consented=True)
+    member = make_user("child_member", AgeBand.UNDER_16, consented=True)
+    activity = _thread_with_member(owner, member, place, activity_type)
+    before = Report.objects.count()
+    post = social.post_to_thread(member, activity, LEAK)
+    assert post.body == LEAK
+    assert Report.objects.count() == before
