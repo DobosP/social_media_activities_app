@@ -120,3 +120,20 @@ def test_access_form_saves_hearing_loop_need():
     resp = c.post("/access/", {"needs_hearing_loop": "on"})
     assert resp.status_code == 302
     assert AccessPreference.objects.get(user=user).needs_hearing_loop is True
+
+
+def test_nearme_api_floats_matches_without_hiding():
+    from rest_framework.test import APIClient
+
+    user = _user("f32_nearme")
+    set_access_preference(user, needs_step_free=True)
+    # Without proximity, NearMe orders by id — create the unknown FIRST so the sort has to move
+    # the (later-id) match ahead of it.
+    unknown = _place("Unknown hall", {})
+    match = _place("Step-free hall", {"wheelchair": "yes"})
+    api = APIClient()
+    api.force_authenticate(user)
+    rows = api.get("/api/discovery/near-me/").json()
+    names = [r["name"] for r in rows]
+    assert match.name in names and unknown.name in names  # nothing dropped
+    assert names.index(match.name) < names.index(unknown.name)  # match floated to the top
