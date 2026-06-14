@@ -14,6 +14,10 @@
     <span><strong>{% trans "I need an accessible toilet" %}</strong></span>
   </label>
   <label class="row" style="gap:.5rem;align-items:flex-start;margin:.4rem 0">
+    <input type="checkbox" name="needs_hearing_loop"{% if pref.needs_hearing_loop %} checked{% endif %}>
+    <span><strong>{% trans "I need a hearing loop" %}</strong></span>
+  </label>
+  <label class="row" style="gap:.5rem;align-items:flex-start;margin:.4rem 0">
     <input type="checkbox" name="prefers_quiet"{% if pref.prefers_quiet %} checked{% endif %}>
     <span><strong>{% trans "I prefer quiet / sensory-friendly places" %}</strong>
       <br><span class="muted" style="font-size:.8rem">{% trans "Saved for the future &mdash; venue data for this isn't available yet, so it doesn't change what you see." %}</span></span>

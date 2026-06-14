@@ -59,7 +59,14 @@ class NearMeView(APIView):
         qs, point = apply_proximity(qs, p)
         if point is None:
             qs = qs.order_by("id")
-        return Response(PlaceCardSerializer(qs[:MAX_RESULTS], many=True).data)
+        # F32: a SOFT needs-aware nudge — float venues that confirm the viewer's stated access
+        # needs to the top, hiding nothing. No-op for an anonymous viewer (get_access_preference
+        # returns None). Materialise the capped slice first so the stable partition composes with
+        # the distance/id ordering above.
+        from apps.places.services import get_access_preference, sort_by_access_match
+
+        places = sort_by_access_match(list(qs[:MAX_RESULTS]), get_access_preference(request.user))
+        return Response(PlaceCardSerializer(places, many=True).data)
 
 
 class HappeningView(APIView):

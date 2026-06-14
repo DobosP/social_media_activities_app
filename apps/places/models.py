@@ -159,8 +159,11 @@ class AccessPreference(models.Model):
     )
     needs_step_free = models.BooleanField(default=False)
     needs_accessible_toilet = models.BooleanField(default=False)
+    # F32: backed by the honest OSM hearing_loop fact, so it drives the soft badge + needs-aware
+    # sort exactly like the other needs.
+    needs_hearing_loop = models.BooleanField(default=False)
     # Stored + shown as a forward-looking preference; no OSM tag satisfies it yet, so it drives
-    # no badge/sort in v1 (documented to the user).
+    # no badge/sort (documented to the user). Deliberately NOT wired into the sort (F32).
     prefers_quiet = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

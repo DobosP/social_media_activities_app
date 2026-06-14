@@ -89,6 +89,11 @@ def accessibility_facts(place) -> dict:
         "accessible_toilet": _tristate(raw.get("toilets:wheelchair")),
         "changing_table": _tristate(raw.get("changing_table")),
         "tactile_paving": _tristate(raw.get("tactile_paving")),
+        # F32: a couple more honest yes/no OSM keys. hearing_loop is unambiguously binary; for
+        # automatic_door the binary values map cleanly and any other value (button/motion/...)
+        # falls to 'unknown' (fail-closed), never a false 'true'.
+        "hearing_loop": _tristate(raw.get("hearing_loop")),
+        "automatic_door": _tristate(raw.get("automatic_door")),
     }
 
 
@@ -98,6 +103,8 @@ _FACT_LABELS = (
     ("accessible_toilet", "Accessible toilet"),
     ("changing_table", "Baby changing table"),
     ("tactile_paving", "Tactile paving"),
+    ("hearing_loop", "Hearing loop"),
+    ("automatic_door", "Automatic door"),
 )
 
 
@@ -172,6 +179,8 @@ def matches_access_preference(facts, pref) -> str:
         needs.append(facts.get("step_free", FACT_UNKNOWN))
     if pref.needs_accessible_toilet:
         needs.append(facts.get("accessible_toilet", FACT_UNKNOWN))
+    if getattr(pref, "needs_hearing_loop", False):
+        needs.append(facts.get("hearing_loop", FACT_UNKNOWN))
     if not needs:
         return FACT_UNKNOWN
     if any(state == FACT_FALSE for state in needs):
@@ -189,17 +198,53 @@ def get_access_preference(user):
 
 @transaction.atomic
 def set_access_preference(
-    user, *, needs_step_free=False, needs_accessible_toilet=False, prefers_quiet=False
+    user,
+    *,
+    needs_step_free=False,
+    needs_accessible_toilet=False,
+    needs_hearing_loop=False,
+    prefers_quiet=False,
 ) -> AccessPreference:
     pref, _ = AccessPreference.objects.update_or_create(
         user=user,
         defaults={
             "needs_step_free": needs_step_free,
             "needs_accessible_toilet": needs_accessible_toilet,
+            "needs_hearing_loop": needs_hearing_loop,
             "prefers_quiet": prefers_quiet,
         },
     )
     return pref
+
+
+def _has_access_need(pref) -> bool:
+    """True iff the viewer has stated at least one need that maps to an OSM-backed fact (so a
+    needs-aware sort has something to act on). prefers_quiet is excluded on purpose — it has no
+    honest venue source, so it must never reorder results."""
+    return bool(
+        pref
+        and (
+            pref.needs_step_free
+            or pref.needs_accessible_toilet
+            or getattr(pref, "needs_hearing_loop", False)
+        )
+    )
+
+
+def sort_by_access_match(places, pref):
+    """F32: a SOFT, needs-aware nudge over an ALREADY-ORDERED list of Place — stably move venues
+    that CONFIRM every stated need to the front, leaving everyone else (mismatch AND unknown) in
+    their original order. It NEVER hides or filters: an unknown-accessibility venue keeps its
+    place, it is just not promoted. A no-op when the viewer stated no need (returns the list
+    unchanged). Operates on a materialised list so it composes with the distance/name ordering
+    the queryset already applied. Facts come from raw_tags already loaded — no extra query."""
+    if not _has_access_need(pref):
+        return places
+    places = list(places)
+    # Python sort is stable, so within "match" and within "the rest" the incoming order is kept.
+    # False (match) sorts before True (not a match).
+    places.sort(key=lambda p: matches_access_preference(accessibility_facts(p), pref) != "match")
+    return places
 
 
 def verified_partners():
