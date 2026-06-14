@@ -35,7 +35,6 @@ class ActivitySerializer(serializers.ModelSerializer):
             "meeting_point",
             "what_to_bring",
             "organizer_note",
-            "getting_home_note",
             "cost_band",
             "difficulty",
             "accessibility_notes",
@@ -92,6 +91,8 @@ class ActivityCreateSerializer(serializers.Serializer):
     organizer_note = serializers.CharField(
         required=False, allow_blank=True, default="", max_length=LOGISTICS_FIELD_MAX_LENGTH
     )
+    # F18: accepted on write, but intentionally NOT echoed by the cohort-wide read serializers
+    # (it's the child-safety-sensitive getting-home plan, shown member-only on the web).
     getting_home_note = serializers.CharField(
         required=False, allow_blank=True, default="", max_length=LOGISTICS_FIELD_MAX_LENGTH
     )
@@ -171,6 +172,8 @@ class SeriesCreateSerializer(serializers.Serializer):
     organizer_note = serializers.CharField(
         required=False, allow_blank=True, default="", max_length=LOGISTICS_FIELD_MAX_LENGTH
     )
+    # F18: accepted on write, but intentionally NOT echoed by the cohort-wide read serializers
+    # (it's the child-safety-sensitive getting-home plan, shown member-only on the web).
     getting_home_note = serializers.CharField(
         required=False, allow_blank=True, default="", max_length=LOGISTICS_FIELD_MAX_LENGTH
     )
@@ -202,7 +205,6 @@ class SeriesSerializer(serializers.ModelSerializer):
             "meeting_point",
             "what_to_bring",
             "organizer_note",
-            "getting_home_note",
             "cost_band",
             "difficulty",
             "accessibility_notes",

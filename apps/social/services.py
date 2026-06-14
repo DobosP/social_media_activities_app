@@ -2163,10 +2163,14 @@ def thread_digest(activity, viewer) -> dict:
 def draft_activity_text(*, activity_type, place=None, starts_at=None, cohort=None) -> dict:
     """A deterministic (no ML) draft title + description composed from the organiser's OWN
     chosen type/place/time, to seed an empty create form (F36). A CHILD/TEEN organiser also
-    gets a short safety reminder AND a getting-home note seed (F18). Returns
-    {'title', 'description', 'getting_home_note'} (the note is "" for adults); callers only ever
-    seed EMPTY initial, never overwrite what the user typed. gettext fragments are str()-coerced
-    before slicing/concatenation (a lazy proxy can't be sliced)."""
+    gets a short safety reminder. Returns {'title', 'description'}; callers only ever seed
+    EMPTY initial, never overwrite what the user typed. gettext fragments are str()-coerced
+    before slicing/concatenation (a lazy proxy can't be sliced).
+
+    NB (F18): we deliberately do NOT seed getting_home_note. A template prompt stored verbatim
+    would be mirrored onto the CHILD guardian manifest as if it were the organiser's real plan,
+    defeating the "see the ACTUAL plan" purpose. The create form's help_text carries that
+    guidance instead, so nothing misleading is ever persisted."""
     has_place_name = bool(place and (place.name or "").strip())
     if has_place_name:
         title = str(_("%(type)s at %(place)s") % {"type": activity_type.name, "place": place.name})
@@ -2182,19 +2186,13 @@ def draft_activity_text(*, activity_type, place=None, starts_at=None, cohort=Non
     )
     # Minor signal = cohort, NOT requires_parental_consent (which is UNDER_16-only and would
     # silently skip TEEN organisers).
-    getting_home_note = ""
     if cohort in (Cohort.CHILD, Cohort.TEEN):
         # W7: same reminder, calmer label — guidance, not a "you are a child" badge.
         safety = str(_("Tip: meet in a public place and bring a friend."))
         description = "\n\n".join([base, safety])
-        # F18: an editable getting-home prompt, seeded only for minors. setdefault at the call
-        # site means it never overwrites what the organiser typed.
-        getting_home_note = str(
-            _("Agree how you'll get home before you go (e.g. who picks you up).")
-        )
     else:
         description = base
-    return {"title": title, "description": description, "getting_home_note": getting_home_note}
+    return {"title": title, "description": description}
 
 
 # --- F3: "we're here" arrival ping -----------------------------------------------------
