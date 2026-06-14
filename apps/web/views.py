@@ -66,7 +66,16 @@ from apps.safety.models import Block
 from apps.saved_searches import services as saved_searches
 from apps.saved_searches.models import SavedSearch
 from apps.social import services as social
-from apps.social.models import Activity, ActivitySeries, GroupMembership, JoinVote, Membership, Post
+from apps.social.models import (
+    Activity,
+    ActivitySeries,
+    Group,
+    GroupMembership,
+    GroupQuestionPrompt,
+    JoinVote,
+    Membership,
+    Post,
+)
 from apps.taxonomy.models import ActivityType
 
 from .forms import (
@@ -238,6 +247,17 @@ def group_detail(request, pk):
     is_member = my_membership is not None and my_membership.state == GroupMembership.State.MEMBER
     is_owner = group.owner_id == user.id
 
+    # F30: a minor-group MEMBER (never the staff curator/owner) may send the organiser one of a
+    # fixed set of questions — the only inbound voice in an otherwise announcement-only thread. The
+    # control is shown only when the service would accept it; the service re-gates on submit.
+    can_ask = (
+        is_member
+        and not is_owner
+        and group.cohort in (Cohort.CHILD, Cohort.TEEN)
+        and group.status == Group.Status.ACTIVE
+        and can_participate(user)
+    )
+
     # The SOLE who-is-here surface: None for minors / non-members (no count either).
     roster = social.group_roster(group, user)
     # Upcoming activities in the group's (area x type/category) coordinate — discovery, not roster.
@@ -290,6 +310,9 @@ def group_detail(request, pk):
             # The owner (for an adult group, a peer; for a minor group, the staff curator) is the
             # only one who may broadcast — independent of the cohort-walled thread read.
             "can_announce": is_owner,
+            # F30: minor-group inbound-question control + the fixed prompt set.
+            "can_ask": can_ask,
+            "question_prompts": GroupQuestionPrompt.choices,
             **_nav_context(user),
         },
     )
@@ -349,6 +372,31 @@ def group_announce(request, pk):
         return redirect("group_detail", pk=pk)
     try:
         social.post_announcement(request.user, group, body)
+    except social.SocialError as exc:
+        messages.error(request, _msg(exc))
+    return redirect("group_detail", pk=pk)
+
+
+@login_required
+@require_POST
+def group_ask(request, pk):
+    """F30 — a minor-group member sends one fixed-enum question to the staff organiser. No
+    Post is written and only the organiser is notified; the answer (if any) is a group-wide
+    announcement, never a private reply. All gating lives in the service."""
+    from django.utils.translation import gettext
+
+    group = social.group_by_id(pk, request.user)
+    if group is None:
+        raise Http404("No such group.")
+    try:
+        social.group_ask_organiser(request.user, group, request.POST.get("prompt"))
+        messages.success(
+            request,
+            gettext(
+                "Your question was sent to the organiser. They'll answer everyone here in an "
+                "announcement, not privately."
+            ),
+        )
     except social.SocialError as exc:
         messages.error(request, _msg(exc))
     return redirect("group_detail", pk=pk)

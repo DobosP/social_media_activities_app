@@ -3,6 +3,7 @@ from django.contrib.postgres.indexes import GinIndex, OpClass
 from django.db import models
 from django.db.models import Q, UniqueConstraint
 from django.db.models.functions import Upper
+from django.utils.translation import gettext_lazy as _
 
 from apps.accounts.models import Cohort
 
@@ -455,6 +456,22 @@ class GroupMembership(models.Model):
 
     def __str__(self):
         return f"{self.user} @ {self.group} ({self.state})"
+
+
+class GroupQuestionPrompt(models.TextChoices):
+    """F30 — the FIXED, closed set of questions a minor-group member may send its staff
+    organiser. There is deliberately NO free-text option: a closed enum removes the
+    grooming / PII-disclosure vector entirely (a child can never type a name, address, or
+    anything else into this channel). It is intentionally tiny and logistics/belonging
+    only — anything safety-related goes through the report / "I feel unsafe" path, never
+    here. Not a model field: the chosen prompt lives only in the resulting notification +
+    the audit row, never in a stored Post."""
+
+    NEXT_MEETUP = "next_meetup", _("When is the next meetup?")
+    WHERE = "where", _("Where exactly do we meet?")
+    WHAT_TO_BRING = "what_to_bring", _("What should I bring?")
+    HOW_IT_WORKS = "how_it_works", _("I'm new here — how does this group work?")
+    MORE_INFO = "more_info", _("Could you post more about what's coming up?")
 
 
 class Thread(models.Model):

@@ -22,6 +22,7 @@ class Notification(models.Model):
         MENTION = "mention", "Mention"
         ORGANIZER_ROLE = "organizer_role", "Organizer role changed"
         ACTIVITY_MATCH = "activity_match", "Saved-search match"  # F3 (mutable, opt-in)
+        GROUP_QUESTION = "group_question", "Group question"  # F30 (mutable, organiser-only)
         MODERATION = "moderation", "Moderation notice"
         SYSTEM = "system", "System"
 
@@ -84,6 +85,10 @@ WHY_REASONS = {
     ),
     Notification.Kind.ACTIVITY_MATCH: (
         "A new activity matched a search you saved (you can turn these off)."
+    ),
+    Notification.Kind.GROUP_QUESTION: (
+        "A member of an under-18 group you organise sent you one of a fixed set of "
+        "questions (you can turn these off)."
     ),
     Notification.Kind.MODERATION: (
         "A moderation decision affected your content or account (you cannot turn these off)."
