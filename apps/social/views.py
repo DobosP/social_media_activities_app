@@ -5,6 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from apps.accounts.services import is_guardian_of
 
@@ -650,3 +651,32 @@ class GaugeViewSet(viewsets.ViewSet):
         except SocialError as exc:
             raise ValidationError(str(exc)) from exc
         return Response(ActivitySerializer(activity).data, status=status.HTTP_201_CREATED)
+
+
+class OrganizerConsoleView(APIView):
+    """W2-F5 parity: the viewer's OWN organizer console as JSON — read-only, self-scoped, with the
+    per-item action flags only (a pending-join count is functional work, never a vanity score)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from .services import organizer_console
+
+        console = organizer_console(request.user)
+        return Response(
+            {
+                "activities": [
+                    {
+                        "id": r["activity"].id,
+                        "title": r["activity"].title,
+                        "starts_at": r["activity"].starts_at,
+                        "pending_joins": r["pending_joins"],
+                        "needs_supervisor": r["needs_supervisor"],
+                        "missing_meeting_point": r["missing_meeting_point"],
+                    }
+                    for r in console["activities"]
+                ],
+                "series": [{"id": s.id, "title": s.title} for s in console["series"]],
+                "groups": [{"id": g.id, "title": g.title} for g in console["groups"]],
+            }
+        )

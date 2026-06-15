@@ -2082,6 +2082,15 @@ def you_hub(request):
 
 
 @login_required
+def organize(request):
+    """W2-F5: the organizer console — every activity/series/group the viewer runs, each tagged
+    with the concrete action it needs now. Read-only; every row links into the existing
+    edit/admit/announce screens (the service performs nothing)."""
+    console = social.organizer_console(request.user)
+    return render(request, "web/organize.html", {**console, **_nav_context(request.user)})
+
+
+@login_required
 def inbox_hub(request):
     """Canonical Inbox entry point. The grouped nav links straight to each tab, so
     this only matters for a typed/bookmarked /inbox/ URL — land it on Alerts."""

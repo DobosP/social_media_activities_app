@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Run my meetups" %}{% endblock %}
+{% block content %}
+<h1>{% trans "Run my meetups" %}</h1>
+<p class="muted">{% trans "Everything you organise, with what each one needs next. Tap through to act." %}</p>
+
+<h2>{% trans "Activities" %}</h2>
+{% for row in activities %}
+  <div class="card">
+    <strong><a href="{% url 'activity_detail' row.activity.pk %}">{{ row.activity.title }}</a></strong>
+    <span class="tag">{{ row.activity.activity_type.name }}</span>
+    <p class="muted" style="margin:.3rem 0 0">&#128197; {{ row.activity.starts_at|date:"D d M, H:i" }}{% if row.activity.place %} &middot; {{ row.activity.place.display_name|default:row.activity.place.name }}{% endif %}</p>
+    {% comment %}W2-F5: functional action chips (work to do), never a vanity score. Each links to
+       the existing screen that performs the action — this console performs nothing.{% endcomment %}
+    {% if row.pending_joins or row.needs_supervisor or row.missing_meeting_point %}
+      <p style="margin:.4rem 0 0">
+        {% if row.pending_joins %}<a class="tag" href="{% url 'activity_detail' row.activity.pk %}">{% blocktrans count n=row.pending_joins %}{{ n }} waiting to join{% plural %}{{ n }} waiting to join{% endblocktrans %}</a>{% endif %}
+        {% if row.needs_supervisor %}<a class="tag fact--false" href="{% url 'activity_detail' row.activity.pk %}">{% trans "Needs a supervising guardian" %}</a>{% endif %}
+        {% if row.missing_meeting_point %}<a class="tag" href="{% url 'activity_edit' row.activity.pk %}">{% trans "Add a meeting point" %}</a>{% endif %}
+      </p>
+    {% else %}
+      <p class="muted" style="margin:.4rem 0 0">&#10003; {% trans "Nothing needed right now." %}</p>
+    {% endif %}
+  </div>
+{% empty %}
+  <p class="muted">{% trans "You're not organising any upcoming activities." %}
+    <a href="{% url 'activity_create' %}">{% trans "Organise one" %}</a>.</p>
+{% endfor %}
+
+{% if series %}
+  <h2>{% trans "Recurring series" %}</h2>
+  {% for s in series %}
+    <div class="card">
+      <strong><a href="{% url 'series_detail' s.pk %}">{{ s.title }}</a></strong>
+      <span class="tag">{{ s.get_cadence_display }}</span>
+      {% if s.next_starts_at %}<p class="muted" style="margin:.3rem 0 0">{% blocktrans with when=s.next_starts_at|date:"D d M, H:i" %}Next: {{ when }}{% endblocktrans %}</p>{% endif %}
+    </div>
+  {% endfor %}
+{% endif %}
+
+{% if groups %}
+  <h2>{% trans "Standing groups" %}</h2>
+  {% for g in groups %}
+    <div class="card">
+      <strong><a href="{% url 'group_detail' g.pk %}">{{ g.title }}</a></strong>
+    </div>
+  {% endfor %}
+{% endif %}
+{% endblock %}
