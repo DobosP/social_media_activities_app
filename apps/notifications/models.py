@@ -24,6 +24,7 @@ class Notification(models.Model):
         ACTIVITY_MATCH = "activity_match", "Saved-search match"  # F3 (mutable, opt-in)
         GROUP_QUESTION = "group_question", "Group question"  # F30 (mutable, organiser-only)
         INTEREST_CONVERTED = "interest_converted", "Gauge converted"  # F27 (mutable)
+        RSVP_NUDGE = "rsvp_nudge", "RSVP nudge"  # W2-F11 (mutable, at-most-once, self only)
         MODERATION = "moderation", "Moderation notice"
         SYSTEM = "system", "System"
 
@@ -94,6 +95,10 @@ WHY_REASONS = {
     ),
     Notification.Kind.INTEREST_CONVERTED: (
         "A meetup you signalled interest in became a real activity (you can turn these off)."
+    ),
+    Notification.Kind.RSVP_NUDGE: (
+        "A meetup you joined is coming up and you haven't said whether you're coming "
+        "(you can turn these off)."
     ),
     Notification.Kind.MODERATION: (
         "A moderation decision affected your content or account (you cannot turn these off)."

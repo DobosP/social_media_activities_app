@@ -33,6 +33,7 @@ DUE_JOBS = (
     ("expire_arrivals", {}),
     ("expire_interest", {}),  # F27 gauge expiry (ephemeral, self-healing)
     ("send_activity_reminders", {}),
+    ("rsvp_finalize_nudge", {}),  # W2-F11 one-shot 'still coming?' nudge to undecided members
     ("generate_communities", {}),
     ("reverify_sweep", {}),
     ("spawn_due_series", {}),
