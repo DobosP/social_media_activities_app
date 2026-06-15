@@ -905,10 +905,20 @@ def leave_activity(user, activity) -> Membership | None:
         raise InvalidState(_("The owner cannot leave their own activity."))
     membership.state = Membership.State.REMOVED
     # Reset the per-activity transient signals so a removed row carries nothing: the RSVP
-    # go/no-go (F20) and the "we met up" confirmation (F22). Keeps both scoped to live members.
+    # go/no-go (F20), the "we met up" confirmation (F22), and the W2-F9 transit cue. Keeps each
+    # scoped to live members so re-joining starts clean and nothing aggregates per-user.
     membership.attendance_intent = Membership.AttendanceIntent.UNKNOWN
     membership.met_confirmed_at = None
-    membership.save(update_fields=["state", "attendance_intent", "met_confirmed_at", "updated_at"])
+    membership.transit_status = Membership.TransitStatus.NONE
+    membership.save(
+        update_fields=[
+            "state",
+            "attendance_intent",
+            "met_confirmed_at",
+            "transit_status",
+            "updated_at",
+        ]
+    )
     return membership
 
 
@@ -2409,6 +2419,94 @@ def mark_arrived(user, activity) -> Membership:
             notified.add(guardian.id)
 
     record_audit("activity.arrived", actor=user, target=activity)
+    return membership
+
+
+# W2-F9: forward-only ordering for the transit cue. A request for a status at or below the
+# member's current rank is an idempotent no-op (never re-pings, never pings on a clear to
+# NONE), so a member emits at most two pings ever: ON_MY_WAY, then RUNNING_LATE.
+_TRANSIT_RANK = {
+    Membership.TransitStatus.NONE: 0,
+    Membership.TransitStatus.ON_MY_WAY: 1,
+    Membership.TransitStatus.RUNNING_LATE: 2,
+}
+# Server-composed, fixed copy keyed on the destination state — the notice is DERIVED from the
+# state, never the generic arrival line, and carries no member-authored text. Only these two
+# states are user-settable (NONE is reached only by expire_arrivals / leave_activity).
+_TRANSIT_COPY = {
+    Membership.TransitStatus.ON_MY_WAY: (
+        _("Someone is on the way"),
+        _("%(name)s is on the way to “%(title)s”."),
+    ),
+    Membership.TransitStatus.RUNNING_LATE: (
+        _("Someone is running late"),
+        _("%(name)s is running about 10 minutes late for “%(title)s”."),
+    ),
+}
+
+
+@transaction.atomic
+def set_transit_status(user, activity, status) -> Membership:
+    """A current member self-declares an ephemeral "on my way" / "running ~10 min late" cue, so
+    the group can hold the start a moment. Mirrors mark_arrived's every safety property — fixed
+    enum (no free text, no location), members-only, can_participate-gated, OPEN + arrival window,
+    blocked pairs excluded, CHILD-cohort guardian fan-out keyed on an ACTIVE GuardianRelationship,
+    audited, and cleared by expire_arrivals so it never becomes a punctuality record. Forward-only
+    and per-state idempotent: re-asserting the same (or an earlier) state never re-pings.
+
+    Like mark_arrived (and unlike the read-only-conversation gate on post_to_thread / reactions),
+    a seated GUARDIAN-role member MAY emit this cue: a guardian accompanying a CHILD meetup in
+    person is a real co-located participant, and "I'm on the way" is logistics, not conversation.
+    Kept deliberately identical to its arrival-ping sibling — change both together if that ever
+    shifts."""
+    from apps.safety.services import blocked_user_ids, record_audit
+
+    if status not in _TRANSIT_COPY:  # NONE / unknown values are not a user action
+        raise InvalidState(_("Choose a valid status."))
+    membership = current_members(activity).filter(user=user).first()
+    if membership is None:
+        raise NotAMember(_("Only current members can share a status."))
+    if not can_participate(user):
+        raise NotEligible(_("Sharing a status requires verified, consented participation."))
+    if activity.status != Activity.Status.OPEN:
+        raise InvalidState(_("You can only share a status for an active meetup."))
+    if not arrival_window_open(activity):
+        raise InvalidState(_("A status can only be shared around the start time."))
+    if _TRANSIT_RANK[status] <= _TRANSIT_RANK[membership.transit_status]:
+        return membership  # idempotent: same-or-earlier state never re-pings the group
+
+    membership.transit_status = status
+    membership.save(update_fields=["transit_status", "updated_at"])
+
+    blocked = blocked_user_ids(user)
+    title, body_template = _TRANSIT_COPY[status]
+    # The only arriver-derived string is display_name — the same low-entropy handle shown
+    # app-wide. No per-cue note exists, so no unmoderated child-authored text reaches an adult.
+    body = body_template % {
+        "name": user.display_name or user.username,
+        "title": activity.title,
+    }
+    url = f"/api/social/activities/{activity.id}/"
+    notified: set[int] = set()
+    for member in current_members(activity).exclude(user_id=user.id).select_related("user"):
+        if member.user_id in blocked:
+            continue
+        _notify(member.user, "arrival", title, body=body, url=url)
+        notified.add(member.user_id)
+
+    # CHILD cohort only (teens self-manage, matching mark_arrived). Keyed on an ACTIVE
+    # GuardianRelationship — never a loose is_child flag. Each guardian gets at most one ping.
+    if user.cohort == Cohort.CHILD:
+        for rel in GuardianRelationship.objects.filter(
+            ward=user, status=GuardianRelationship.Status.ACTIVE
+        ).select_related("guardian"):
+            guardian = rel.guardian
+            if guardian.id in blocked or guardian.id in notified:
+                continue
+            _notify(guardian, "arrival", title, body=body, url=url)
+            notified.add(guardian.id)
+
+    record_audit("activity.transit", actor=user, target=activity, reason=status)
     return membership
 
 

@@ -67,6 +67,7 @@ from .services import (
     resume_series,
     revoke_co_organizer,
     set_attendance_intent,
+    set_transit_status,
     transfer_ownership,
     unmark_interested,
     update_activity,
@@ -184,6 +185,17 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
         activity = self._activity_for(request.user, pk)
         try:
             membership = mark_arrived(request.user, activity)
+        except SocialError as exc:
+            raise PermissionDenied(str(exc)) from exc
+        return Response(MembershipSerializer(membership).data)
+
+    @action(detail=True, methods=["post"])
+    def transit(self, request, pk=None):
+        """Self-declared ephemeral "on my way" / "running late" cue (W2-F9). Always the
+        authenticated user — never on_behalf_of, mirroring `arrived`. Body: {"status": ...}."""
+        activity = self._activity_for(request.user, pk)
+        try:
+            membership = set_transit_status(request.user, activity, request.data.get("status"))
         except SocialError as exc:
             raise PermissionDenied(str(exc)) from exc
         return Response(MembershipSerializer(membership).data)

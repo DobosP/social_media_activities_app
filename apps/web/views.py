@@ -1332,6 +1332,18 @@ def activity_detail(request, pk):
     conn_enabled = is_member and not viewer_is_guardian and connections.is_enabled_for(user)
     conn_related_ids = connections.related_user_ids(user) if conn_enabled else set()
     my_arrival = my_membership.arrived_at if (is_member and my_membership) else None
+    # W2-F9: ephemeral "on my way / running late" cue. Forward-only, so a member only ever sees
+    # the buttons for states they haven't reached yet (mirrors set_transit_status's monotonic gate).
+    my_transit = (
+        my_membership.transit_status
+        if (is_member and my_membership)
+        else Membership.TransitStatus.NONE
+    )
+    can_say_on_my_way = is_member and my_transit == Membership.TransitStatus.NONE
+    can_say_running_late = is_member and my_transit in (
+        Membership.TransitStatus.NONE,
+        Membership.TransitStatus.ON_MY_WAY,
+    )
     # F35: the "catch up" digest, only for someone who can already see the thread. The numeric
     # summary inside it is cohort-gated by the viewer (None for minors — see thread_digest).
     digest = social.thread_digest(activity, user) if (is_member or user.is_staff) else None
@@ -1402,6 +1414,9 @@ def activity_detail(request, pk):
             ),
             "my_guardians": my_guardians,
             "my_arrival": my_arrival,
+            "my_transit": my_transit,
+            "can_say_on_my_way": can_say_on_my_way,
+            "can_say_running_late": can_say_running_late,
             "arrival_window_open": is_member and social.arrival_window_open(activity),
             "rsvp_summary": social.attendance_summary(activity),
             "met_summary": social.met_confirmation_summary(activity),
@@ -1800,6 +1815,21 @@ def activity_arrived(request, pk):
     try:
         social.mark_arrived(request.user, activity)
         messages.success(request, "Thanks - your group has been told you're here.")
+    except social.SocialError as exc:
+        messages.error(request, _msg(exc))
+    return redirect("activity_detail", pk=pk)
+
+
+@login_required
+@require_POST
+def activity_transit(request, pk):
+    """A member shares an ephemeral "on my way" / "running late" cue (W2-F9); the group (and a
+    child's guardian) are quietly told once per state. No location, no note — just the tap."""
+    activity = _visible_activity_or_404(request.user, pk)
+    status = (request.POST.get("status") or "").strip()
+    try:
+        social.set_transit_status(request.user, activity, status)
+        messages.success(request, "Thanks - your group has been told.")
     except social.SocialError as exc:
         messages.error(request, _msg(exc))
     return redirect("activity_detail", pk=pk)
