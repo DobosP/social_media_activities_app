@@ -24,8 +24,19 @@ class DonationAdmin(admin.ModelAdmin):
 class CampaignAdmin(admin.ModelAdmin):
     """Staff entry point for earmark campaigns (F34) + optional partner credit (F42)."""
 
-    list_display = ("title", "slug", "goal_cents", "currency", "is_active", "partner", "created")
-    list_filter = ("is_active", "currency")
+    # W2-F26: outcome + closed_at are plain editable model fields (the staff close-out write path);
+    # surfaced in the list so staff can see which campaigns are closed with an outcome published.
+    list_display = (
+        "title",
+        "slug",
+        "goal_cents",
+        "currency",
+        "is_active",
+        "partner",
+        "closed_at",
+        "created",
+    )
+    list_filter = ("is_active", "currency", "closed_at")
     search_fields = ("title", "slug")
     prepopulated_fields = {"slug": ("title",)}
     readonly_fields = ("created",)
@@ -44,6 +55,6 @@ class CampaignAdmin(admin.ModelAdmin):
 class SpendEntryAdmin(admin.ModelAdmin):
     """Staff entry point for the public spend ledger (F29)."""
 
-    list_display = ("category", "amount_cents", "currency", "period", "created_at")
-    list_filter = ("currency",)
+    list_display = ("category", "amount_cents", "currency", "period", "campaign", "created_at")
+    list_filter = ("currency", "campaign")  # W2-F26: filter spend by the campaign it delivered on
     search_fields = ("category", "note")
