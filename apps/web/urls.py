@@ -8,6 +8,8 @@ urlpatterns = [
     # F38: offline-resilient "my next meetups" + its root-scoped service worker (/sw.js).
     path("my-meetups/", views.my_meetups, name="my_meetups"),
     path("sw.js", views.service_worker, name="service_worker"),
+    # W2-F5: organizer console — what each activity/series/group you run needs now.
+    path("organize/", views.organize, name="organize"),
     # Auth
     path("register/", views.register, name="register"),
     path("login/", views.ThrottledLoginView.as_view(), name="login"),

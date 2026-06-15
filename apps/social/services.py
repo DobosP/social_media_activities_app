@@ -288,6 +288,73 @@ def is_organizer(user, activity) -> bool:
     ).exists()
 
 
+# W2-F5: how soon a blank meeting point becomes "needs attention" on the organizer console.
+ORGANIZER_PREP_WINDOW = timedelta(hours=48)
+
+
+def organizer_console(user) -> dict:
+    """W2-F5: a self-scoped read-only digest of everything ``user`` runs, each item tagged with the
+    concrete action it needs NOW. Composes the existing chokepoints — no new write/auth surface:
+
+    * ``activities``: OPEN, upcoming activities the user OWNS or co-organises (is_organizer), each
+      annotated with ``pending_joins`` (REQUESTED count), ``needs_supervisor`` (F29 — supervised
+      but no live supervisor seated), and ``missing_meeting_point`` (starts within 48h, blank);
+    * ``series``: the user's own recurring templates; ``groups``: the user's own standing groups.
+
+    Deterministic (soonest-first), bounded, and STRICTLY FUNCTIONAL — it surfaces work to do and
+    links into the existing edit/admit/announce screens; it performs nothing and exposes NO
+    per-organizer vanity counter (a pending-join count is a task, not a score)."""
+    if not getattr(user, "is_authenticated", False):
+        return {"activities": [], "series": [], "groups": []}
+    now = timezone.now()
+    # Owner OR co-organiser, resolved to ids first so the pending-join annotation can't be
+    # multiplied by the co-organiser membership join.
+    ids = set(Activity.objects.filter(owner=user).values_list("id", flat=True))
+    ids |= set(
+        Activity.objects.filter(
+            memberships__user=user,
+            memberships__role=Membership.Role.CO_ORGANIZER,
+            memberships__state=Membership.State.MEMBER,
+        ).values_list("id", flat=True)
+    )
+    activities = (
+        Activity.objects.filter(id__in=ids, status=Activity.Status.OPEN, starts_at__gte=now)
+        .select_related("place", "activity_type")
+        # F20: the template renders place.display_name, which reads place.corrections — prefetch
+        # so the list stays O(1) queries (the established pattern on every display_name surface).
+        .prefetch_related("place__corrections")
+        .annotate(
+            pending_n=Count(
+                "memberships",
+                filter=Q(memberships__state=Membership.State.REQUESTED),
+                distinct=True,
+            )
+        )
+        .order_by("starts_at", "id")[:100]
+    )
+    prep_cutoff = now + ORGANIZER_PREP_WINDOW
+    rows = [
+        {
+            "activity": a,
+            "pending_joins": a.pending_n,
+            "needs_supervisor": a.supervised and not supervision_satisfied(a),
+            "missing_meeting_point": a.starts_at <= prep_cutoff
+            and not (a.meeting_point or "").strip(),
+        }
+        for a in activities
+    ]
+    # Only series still in play — an ENDED series can never run again and needs nothing, so it
+    # has no place on a "what each one needs next" console (PAUSED stays: it's resumable).
+    series = list(
+        visible_series(user)
+        .filter(owner=user)
+        .exclude(status=ActivitySeries.Status.ENDED)
+        .order_by("next_starts_at", "id")[:100]
+    )
+    groups = list(visible_groups(user).filter(owner=user).order_by("title", "id")[:100])
+    return {"activities": rows, "series": series, "groups": groups}
+
+
 def thread_members(owner_obj):
     """Current MEMBER-state memberships of a thread owner — an Activity OR a Group. The single
     dispatcher the hardened thread gates (post_to_thread / can_read_thread / toggle_reaction /

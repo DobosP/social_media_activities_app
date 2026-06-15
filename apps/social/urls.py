@@ -1,3 +1,4 @@
+from django.urls import path
 from rest_framework.routers import SimpleRouter
 
 from .views import (
@@ -5,6 +6,7 @@ from .views import (
     GaugeViewSet,
     GroupViewSet,
     MembershipViewSet,
+    OrganizerConsoleView,
     PlaceProposalViewSet,
     SeriesViewSet,
 )
@@ -17,4 +19,7 @@ router.register("series", SeriesViewSet, basename="series")
 router.register("gauges", GaugeViewSet, basename="gauge")
 router.register("place-proposals", PlaceProposalViewSet, basename="place-proposal")
 
-urlpatterns = router.urls
+urlpatterns = [
+    path("organizer-console/", OrganizerConsoleView.as_view(), name="organizer-console"),
+    *router.urls,
+]
