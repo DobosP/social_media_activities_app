@@ -1816,6 +1816,20 @@ def activity_met(request, pk):
 
 @login_required
 @require_POST
+def activity_fallback(request, pk):
+    """W2-F10: the owner switches the meetup to its single pre-declared plan-B time, ONCE.
+    Members are re-notified of the new time, and the shift is recorded in the audit log."""
+    activity = _visible_activity_or_404(request.user, pk)
+    try:
+        social.invoke_fallback(request.user, activity)
+        messages.success(request, "Moved to your plan-B time - everyone has been told.")
+    except social.SocialError as exc:
+        messages.error(request, _msg(exc))
+    return redirect("activity_detail", pk=pk)
+
+
+@login_required
+@require_POST
 def activity_arrived(request, pk):
     """A member self-declares "I've arrived" (F3); their group (and a child's guardian) are
     quietly told. No location, no note — just the tap."""

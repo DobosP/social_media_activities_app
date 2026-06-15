@@ -512,6 +512,7 @@ def create_activity(
     difficulty=Activity.Difficulty.UNSPECIFIED,
     accessibility_notes="",
     beginners_welcome=False,
+    fallback_starts_at=None,
 ):
     if not can_create_activity(owner):
         raise NotEligible(
@@ -532,6 +533,10 @@ def create_activity(
         # Centralised here so every caller (web/DRF create, series spawn, F27 gauge convert)
         # inherits it — the web forms also check, but the DRF/convert serializers did not.
         raise InvalidState(_("End time cannot be before the start time."))
+    # W2-F10: a plan-B time only makes sense as a LATER backup. Centralised so web AND DRF agree
+    # (the web form also checks); the invoke-time strictly-future check is the separate safety gate.
+    if fallback_starts_at is not None and fallback_starts_at <= starts_at:
+        raise InvalidState(_("The plan-B time must be after the planned start."))
     # F25 gate: an activity may only be organised at a PUBLICLY-visible place — never at a
     # still-pending/rejected user-proposed venue. public_places() is the single visibility
     # chokepoint, so this holds identically on the web form and the DRF surface.
@@ -576,6 +581,7 @@ def create_activity(
         difficulty=difficulty,
         accessibility_notes=accessibility_notes,
         beginners_welcome=beginners_welcome,
+        fallback_starts_at=fallback_starts_at,
     )
     Membership.objects.create(
         activity=activity,
@@ -976,6 +982,7 @@ ACTIVITY_EDITABLE_FIELDS = (
     "difficulty",
     "accessibility_notes",
     "beginners_welcome",  # F17 per-activity flag
+    "fallback_starts_at",  # W2-F10 owner-curated plan-B time (consumed by invoke_fallback)
 )
 
 
@@ -1049,6 +1056,11 @@ def update_activity(owner, activity, **changes) -> Activity:
     new_ends = fields.get("ends_at", activity.ends_at)
     if new_ends is not None and new_ends < new_starts:
         raise InvalidState(_("End time cannot be before the start time."))
+    # W2-F10: keep the plan-B time after the (possibly newly-edited) start. invoke_fallback NULLs
+    # the fallback before its own update_activity call, so this never blocks the fallback path.
+    new_fallback = fields.get("fallback_starts_at", activity.fallback_starts_at)
+    if new_fallback is not None and new_fallback <= new_starts:
+        raise InvalidState(_("The plan-B time must be after the planned start."))
     new_capacity = fields.get("capacity", activity.capacity)
     if new_capacity is not None and new_capacity < participant_count(activity):
         raise InvalidState(_("Capacity cannot be lower than the current number of participants."))
@@ -1085,6 +1097,41 @@ def update_activity(owner, activity, **changes) -> Activity:
                 body=body,
                 url=f"/api/social/activities/{activity.id}/",
             )
+    return activity
+
+
+@transaction.atomic
+def invoke_fallback(owner, activity) -> Activity:
+    """W2-F10: shift a meetup to its single pre-declared plan-B time, ONCE — so a rained-out or
+    quorum-short meetup gently moves instead of dying. Organiser-only (owner or F22 co-organiser),
+    OPEN, and requires a fallback_starts_at that is still strictly in the future. Routes through
+    update_activity so it inherits _supersede_reminders + the member re-notify (and the CHILD
+    guardian manifest reflects the new time for free), and writes its OWN audit entry
+    (update_activity itself isn't audited). ONE-USE LATCH: fallback_starts_at is cleared in the SAME
+    transaction, so a re-invoke can never loop into an open-ended reschedule.
+
+    SAFETY BOUNDARY (F7): a later start could in principle push a CHILD meetup past a guardrail's
+    latest_start_hour — but that guardrail is a JOIN-time gate, not an edit-time one, exactly like
+    the existing update_activity time-change path. We deliberately do NOT add a ward-eviction path
+    here; the shift is surfaced to guardians read-time via the wards manifest, like any edit."""
+    from apps.safety.services import record_audit
+
+    if not is_organizer(owner, activity):
+        raise NotAMember(_("Only the activity organiser may use the plan-B time."))
+    if activity.status != Activity.Status.OPEN:
+        raise InvalidState(_("Only an open activity can fall back to its plan-B time."))
+    if activity.fallback_starts_at is None:
+        raise InvalidState(_("This activity has no plan-B time set."))
+    if activity.fallback_starts_at <= timezone.now():
+        raise InvalidState(_("The plan-B time has already passed."))
+    target = activity.fallback_starts_at
+    # One-use latch FIRST (same txn): clear the backup so it can't be reused into a reschedule loop.
+    activity.fallback_starts_at = None
+    activity.save(update_fields=["fallback_starts_at", "updated_at"])
+    # update_activity re-checks organiser/OPEN/before-start and fires the time-change re-notify; if
+    # it rejects (e.g. the ORIGINAL start has passed), the atomic block rolls the latch back too.
+    activity = update_activity(owner, activity, starts_at=target)
+    record_audit("activity.fallback_invoked", actor=owner, target=activity)
     return activity
 
 

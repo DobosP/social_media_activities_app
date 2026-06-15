@@ -49,6 +49,7 @@ class ActivitySerializer(serializers.ModelSerializer):
             "owner_can_override",
             "capacity",
             "min_to_go",
+            "fallback_starts_at",
             "status",
             "guardian_accompanied",
             "supervised",
@@ -79,6 +80,7 @@ class ActivityCreateSerializer(serializers.Serializer):
     join_threshold = serializers.FloatField(required=False, min_value=0.01, max_value=1.0)
     capacity = serializers.IntegerField(required=False, allow_null=True, min_value=1)
     min_to_go = serializers.IntegerField(required=False, allow_null=True, min_value=1)
+    fallback_starts_at = serializers.DateTimeField(required=False, allow_null=True)
     guardian_accompanied = serializers.BooleanField(required=False, default=False)
     # F29: require the owner's verified guardian to supervise (CHILD only; validated in service).
     supervised = serializers.BooleanField(required=False, default=False)
@@ -126,6 +128,7 @@ class ActivityUpdateSerializer(serializers.Serializer):
     ends_at = serializers.DateTimeField(required=False, allow_null=True)
     capacity = serializers.IntegerField(required=False, allow_null=True, min_value=1)
     min_to_go = serializers.IntegerField(required=False, allow_null=True, min_value=1)
+    fallback_starts_at = serializers.DateTimeField(required=False, allow_null=True)
     meeting_point = serializers.CharField(
         required=False, allow_blank=True, max_length=LOGISTICS_FIELD_MAX_LENGTH
     )
