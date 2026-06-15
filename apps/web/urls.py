@@ -60,6 +60,11 @@ urlpatterns = [
     path("activities/series/<int:pk>/", views.series_detail, name="series_detail"),
     path("activities/series/<int:pk>/pause/", views.series_pause, name="series_pause"),
     path("activities/series/<int:pk>/resume/", views.series_resume, name="series_resume"),
+    path(
+        "activities/series/<int:pk>/next-note/",
+        views.series_set_next_note,
+        name="series_set_next_note",
+    ),
     path("activities/series/<int:pk>/end/", views.series_end, name="series_end"),
     path("activities/<int:pk>/", views.activity_detail, name="activity_detail"),
     path("activities/<int:pk>/edit/", views.activity_edit, name="activity_edit"),

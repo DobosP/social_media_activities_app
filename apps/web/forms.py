@@ -60,6 +60,19 @@ def _validate_fallback(form, cleaned):
         form.add_error("fallback_starts_at", "The plan-B time must be after the planned start.")
 
 
+class NextInstanceNoteForm(forms.Form):
+    """W2-F14: a one-shot heads-up appended to ONLY the next spawned instance of a series. The
+    max_length mirrors the model cap (the nightly spawn never re-validates this form)."""
+
+    next_instance_note = forms.CharField(
+        required=False,
+        max_length=500,
+        widget=forms.Textarea(attrs={"rows": 2}),
+        label="Heads-up for the next meetup",
+        help_text="Added to the next scheduled meetup's organiser note, then cleared.",
+    )
+
+
 class RegisterForm(forms.Form):
     username = forms.CharField(max_length=150)
     display_name = forms.CharField(max_length=120, required=False)

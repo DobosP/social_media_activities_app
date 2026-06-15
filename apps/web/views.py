@@ -87,6 +87,7 @@ from .forms import (
     GaugeConvertForm,
     GaugeForm,
     GroupCreateForm,
+    NextInstanceNoteForm,
     PlaceProposeForm,
     PostForm,
     RegisterForm,
@@ -1576,9 +1577,30 @@ def series_detail(request, pk):
             "series": series,
             "is_owner": series.owner_id == request.user.id,
             "instances": series.instances.order_by("-starts_at")[:10],
+            # W2-F14: the one-shot "heads-up for the next meetup" note, pre-filled with what's set.
+            "next_note_form": NextInstanceNoteForm(
+                initial={"next_instance_note": series.next_instance_note}
+            ),
             **_nav_context(request.user),
         },
     )
+
+
+@login_required
+@require_POST
+def series_set_next_note(request, pk):
+    """W2-F14: owner stages a one-shot note for the next spawned instance (then auto-cleared)."""
+    series = _visible_series_or_404(request.user, pk)
+    form = NextInstanceNoteForm(request.POST)
+    if not form.is_valid():
+        messages.error(request, "That note is too long (max 500 characters).")
+        return redirect("series_detail", pk=pk)
+    try:
+        social.set_next_instance_note(request.user, series, form.cleaned_data["next_instance_note"])
+        messages.success(request, "Saved - it'll be added to the next meetup, then cleared.")
+    except social.SocialError as exc:
+        messages.error(request, _msg(exc))
+    return redirect("series_detail", pk=pk)
 
 
 @login_required

@@ -204,6 +204,10 @@ class ActivitySeries(models.Model):
     organizer_note = models.TextField(blank=True, default="")
     getting_home_note = models.TextField(blank=True, default="")  # F18
     accessibility_notes = models.TextField(blank=True, default="")
+    # W2-F14: a one-shot note APPENDED to ONLY the next spawned instance's organizer_note, then
+    # auto-cleared by spawn_due_series (consume-on-spawn). Capped at the MODEL layer (max_length)
+    # because the nightly spawn runs with no request and never re-validates a form. "" = nothing.
+    next_instance_note = models.CharField(max_length=500, blank=True, default="")
     cost_band = models.CharField(
         max_length=16, choices=Activity.CostBand.choices, default=Activity.CostBand.UNSPECIFIED
     )
