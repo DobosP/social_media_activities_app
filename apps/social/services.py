@@ -320,6 +320,9 @@ def organizer_console(user) -> dict:
     activities = (
         Activity.objects.filter(id__in=ids, status=Activity.Status.OPEN, starts_at__gte=now)
         .select_related("place", "activity_type")
+        # F20: the template renders place.display_name, which reads place.corrections — prefetch
+        # so the list stays O(1) queries (the established pattern on every display_name surface).
+        .prefetch_related("place__corrections")
         .annotate(
             pending_n=Count(
                 "memberships",
@@ -340,7 +343,14 @@ def organizer_console(user) -> dict:
         }
         for a in activities
     ]
-    series = list(visible_series(user).filter(owner=user).order_by("next_starts_at", "id")[:100])
+    # Only series still in play — an ENDED series can never run again and needs nothing, so it
+    # has no place on a "what each one needs next" console (PAUSED stays: it's resumable).
+    series = list(
+        visible_series(user)
+        .filter(owner=user)
+        .exclude(status=ActivitySeries.Status.ENDED)
+        .order_by("next_starts_at", "id")[:100]
+    )
     groups = list(visible_groups(user).filter(owner=user).order_by("title", "id")[:100])
     return {"activities": rows, "series": series, "groups": groups}
 

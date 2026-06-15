@@ -128,3 +128,47 @@ def test_drf_organizer_console_parity(adult, adult2, activity_type):
     data = api.get("/api/social/organizer-console/").json()
     row = next(r for r in data["activities"] if r["id"] == a.id)
     assert row["pending_joins"] == 1 and row["title"] == "Api game"
+
+
+def test_console_excludes_cancelled_completed_and_past_activities(adult, activity_type):
+    from apps.social.models import Activity
+
+    live = _activity(adult, activity_type, title="Live", meeting_point="x")
+    cancelled = _activity(adult, activity_type, title="Cancelled", meeting_point="x")
+    cancelled.status = Activity.Status.CANCELLED
+    cancelled.save(update_fields=["status"])
+    completed = _activity(adult, activity_type, title="Completed", meeting_point="x")
+    completed.status = Activity.Status.COMPLETED
+    completed.save(update_fields=["status"])
+    past = _activity(adult, activity_type, title="Past", meeting_point="x")
+    Activity.objects.filter(pk=past.pk).update(starts_at=timezone.now() - timedelta(hours=1))
+
+    ids = {r["activity"].id for r in social.organizer_console(adult)["activities"]}
+    assert live.id in ids
+    assert cancelled.id not in ids  # only OPEN activities are surfaced
+    assert completed.id not in ids
+    assert past.id not in ids  # only upcoming
+
+
+def test_console_excludes_ended_series_keeps_active(adult, activity_type):
+    active = social.create_series(
+        adult,
+        place=_place(),
+        activity_type=activity_type,
+        title="Active series",
+        cadence=ActivitySeries.Cadence.WEEKLY,
+        first_starts_at=timezone.now() + timedelta(days=2),
+    )
+    ended = social.create_series(
+        adult,
+        place=_place(),
+        activity_type=activity_type,
+        title="Ended series",
+        cadence=ActivitySeries.Cadence.WEEKLY,
+        first_starts_at=timezone.now() + timedelta(days=2),
+    )
+    ended.status = ActivitySeries.Status.ENDED
+    ended.save(update_fields=["status"])
+    ids = {s.id for s in social.organizer_console(adult)["series"]}
+    assert active.id in ids
+    assert ended.id not in ids  # a dead series needs nothing — off the console
