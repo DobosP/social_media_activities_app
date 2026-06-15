@@ -96,6 +96,11 @@ class Activity(models.Model):
     # "it's on / needs N more" chip is always derived LIVE from the current count, so it can never
     # lie after the count drops back below the threshold.
     go_confirmed_at = models.DateTimeField(null=True, blank=True)
+    # W2-F10: a single owner-curated plan-B start time so a rained-out / quorum-short meetup can
+    # gently shift ONCE instead of dying. A property of THE MEETUP (like min_to_go), never of any
+    # user. invoke_fallback consumes it via the audited update_activity time-change path and NULLs
+    # it in the same transaction (one-use latch). null = no backup time declared.
+    fallback_starts_at = models.DateTimeField(null=True, blank=True)
     # Children's activities may allow a parent/guardian to accompany (supervised,
     # group-only). Only meaningful for the CHILD cohort. See docs/SAFETY.md.
     guardian_accompanied = models.BooleanField(default=False)

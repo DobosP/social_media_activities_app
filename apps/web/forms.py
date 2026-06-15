@@ -43,6 +43,23 @@ def _dt_field(*, required=True):
     )
 
 
+def _fallback_field():
+    """W2-F10: the optional owner-curated plan-B start time (a single backup slot)."""
+    field = _dt_field(required=False)
+    field.label = "Plan-B start time"
+    field.help_text = (
+        "Optional backup start you can switch to once if the meetup can't run as planned."
+    )
+    return field
+
+
+def _validate_fallback(form, cleaned):
+    """A plan-B time only makes sense as a LATER backup than the planned start."""
+    starts, fallback = cleaned.get("starts_at"), cleaned.get("fallback_starts_at")
+    if starts and fallback and fallback <= starts:
+        form.add_error("fallback_starts_at", "The plan-B time must be after the planned start.")
+
+
 class RegisterForm(forms.Form):
     username = forms.CharField(max_length=150)
     display_name = forms.CharField(max_length=120, required=False)
@@ -73,6 +90,7 @@ class ActivityForm(forms.Form):
         label="Minimum to happen",
         help_text="Runs only if at least this many say they're going. Blank = no minimum.",
     )
+    fallback_starts_at = _fallback_field()
     meeting_point = _logistics_field("Where exactly to meet (e.g. north gate by the fountain).")
     what_to_bring = _logistics_field("What members should bring.")
     organizer_note = _logistics_field("A short note for members.")
@@ -128,6 +146,7 @@ class ActivityForm(forms.Form):
         starts, ends = cleaned.get("starts_at"), cleaned.get("ends_at")
         if starts and ends and ends < starts:
             self.add_error("ends_at", "End time cannot be before the start time.")
+        _validate_fallback(self, cleaned)
         # A ChoiceField(required=False) can yield "" — coerce to the sentinel so the model's
         # choices validation isn't bypassed (Activity.objects.create skips full_clean()).
         if not cleaned.get("cost_band"):
@@ -230,6 +249,7 @@ class ActivityEditForm(forms.Form):
         label="Minimum to happen",
         help_text="Runs only if at least this many say they're going. Blank = no minimum.",
     )
+    fallback_starts_at = _fallback_field()
     meeting_point = _logistics_field("Where exactly to meet (e.g. north gate by the fountain).")
     what_to_bring = _logistics_field("What members should bring.")
     organizer_note = _logistics_field("A short note for members.")
@@ -265,6 +285,7 @@ class ActivityEditForm(forms.Form):
         starts, ends = cleaned.get("starts_at"), cleaned.get("ends_at")
         if starts and ends and ends < starts:
             self.add_error("ends_at", "End time cannot be before the start time.")
+        _validate_fallback(self, cleaned)
         # A ChoiceField(required=False) can yield "" — coerce to the sentinel so the model's
         # choices validation isn't bypassed (Activity.objects.create skips full_clean()).
         if not cleaned.get("cost_band"):
