@@ -758,6 +758,28 @@ def resume_series(owner, series) -> ActivitySeries:
     return series
 
 
+NEXT_INSTANCE_NOTE_MAX = 500  # mirrors ActivitySeries.next_instance_note max_length
+
+
+@transaction.atomic
+def set_next_instance_note(owner, series, note: str) -> ActivitySeries:
+    """W2-F14: stage a one-shot note appended to ONLY the next spawned instance's organizer_note,
+    then auto-cleared on that spawn (consume-once) — timely per-occurrence guidance ("back pitch
+    this time, bring cleats") without waiting for the spawn or editing every instance. Owner-scoped;
+    refused on an ENDED series. Capped at the model max here too (the form also caps it, but the
+    nightly spawn never re-validates a form). Pass "" to clear a staged note."""
+    if series.owner_id != getattr(owner, "id", None):
+        raise NotAMember(_("Only the series owner may set the next-meetup note."))
+    if series.status == ActivitySeries.Status.ENDED:
+        raise InvalidState(_("This series has ended."))
+    series.next_instance_note = (note or "").strip()[:NEXT_INSTANCE_NOTE_MAX]
+    series.save(update_fields=["next_instance_note", "updated_at"])
+    from apps.safety.services import record_audit
+
+    record_audit("series.next_note_set", actor=owner, target=series)
+    return series
+
+
 @transaction.atomic
 def end_series(owner, series) -> ActivitySeries:
     """Owner ends a series permanently. Already-spawned instances stand (Activity.series is
@@ -870,6 +892,12 @@ def spawn_due_series(*, now=None) -> dict:
                 ends_at = None
                 if series.duration_minutes:
                     ends_at = series.next_starts_at + timedelta(minutes=series.duration_minutes)
+                # W2-F14: a staged one-shot note is APPENDED to this instance's organizer_note
+                # (never replacing the standing template note), then consumed below so it lands on
+                # exactly one spawn. Atomic + race-safe under the held select_for_update row.
+                instance_organizer_note = "\n\n".join(
+                    part for part in (series.organizer_note, series.next_instance_note) if part
+                )
                 activity = create_activity(
                     series.owner,
                     place=series.place,
@@ -885,7 +913,7 @@ def spawn_due_series(*, now=None) -> dict:
                     supervised=series.supervised,
                     meeting_point=series.meeting_point,
                     what_to_bring=series.what_to_bring,
-                    organizer_note=series.organizer_note,
+                    organizer_note=instance_organizer_note,
                     getting_home_note=series.getting_home_note,
                     cost_band=series.cost_band,
                     difficulty=series.difficulty,
@@ -894,10 +922,11 @@ def spawn_due_series(*, now=None) -> dict:
                 )
                 activity.series = series
                 activity.save(update_fields=["series"])
+                series.next_instance_note = ""  # consume the one-shot note (this spawn only)
                 series.next_starts_at = _advance_slot(
                     series.next_starts_at, series.cadence, series.anchor_day
                 )
-                series.save(update_fields=["next_starts_at", "updated_at"])
+                series.save(update_fields=["next_starts_at", "next_instance_note", "updated_at"])
                 record_audit(
                     "series.spawned", actor=series.owner, target=activity, series_id=series.id
                 )

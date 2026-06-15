@@ -31,6 +31,15 @@
         <button class="btn btn-sm btn-danger" type="submit">{% trans "End series" %}</button></form>
     {% endif %}
   </div>
+  {% comment %}W2-F14: a one-shot heads-up appended to ONLY the next scheduled meetup, then cleared.{% endcomment %}
+  {% if series.status != 'ended' %}
+    <form method="post" action="{% url 'series_set_next_note' series.pk %}" class="stack" style="margin-top:.8rem">{% csrf_token %}
+      <label for="{{ next_note_form.next_instance_note.id_for_label }}">{% trans "Heads-up for the next meetup" %}</label>
+      {{ next_note_form.next_instance_note }}
+      <span class="muted" style="font-size:.78rem">{% trans "Added to the next scheduled meetup's organiser note, then cleared automatically. Leave blank to clear." %}</span>
+      <div><button class="btn btn-sm" type="submit">{% trans "Save heads-up" %}</button></div>
+    </form>
+  {% endif %}
 </div>
 {% endif %}
 
