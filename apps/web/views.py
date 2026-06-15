@@ -1385,6 +1385,9 @@ def activity_detail(request, pk):
             "activity": activity,
             "members": members,
             "is_member": is_member,
+            # W2-F27: plain-language read-aloud brief; member-only logistics included only for a
+            # member (reuses the same is_member signal the page already computed).
+            "meetup_brief": social.plain_meetup_brief(activity, is_member=is_member),
             "is_owner": is_owner,
             "is_organizer": is_organizer,
             "can_manage_organizers": can_manage_organizers,

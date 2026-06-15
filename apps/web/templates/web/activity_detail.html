@@ -15,6 +15,18 @@
   {% if supervised %}{% if supervisor_present %}<span class="tag" title="{% trans 'The organiser&#39;s verified guardian is present as a read-only supervisor.' %}">{% trans "supervised" %}</span>{% else %}<span class="tag" title="{% trans 'This activity requires the organiser&#39;s guardian to supervise before anyone is admitted.' %}">{% trans "supervisor needed" %}</span>{% endif %}{% endif %}
 </div>
 
+{% comment %}W2-F27: a plain-language, read-aloud-friendly summary in one ARIA-landmarked region.
+   Member-only logistics are added by the service only for a member — no per-user counts ever.{% endcomment %}
+{% if meetup_brief %}
+<section class="card" aria-labelledby="brief-heading">
+  <h2 id="brief-heading" style="margin-top:0">{% trans "At a glance" %}</h2>
+  <dl class="brief">
+    {% for label, sentence in meetup_brief %}<dt>{{ label }}</dt><dd>{{ sentence }}</dd>
+    {% endfor %}
+  </dl>
+</section>
+{% endif %}
+
 {% if is_owner and supervised %}
 <div class="card">
   {% if supervisor_present %}

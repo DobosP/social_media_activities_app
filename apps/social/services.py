@@ -2347,6 +2347,59 @@ def draft_activity_text(*, activity_type, place=None, starts_at=None, cohort=Non
     return {"title": title, "description": description}
 
 
+# --- W2-F27: read-aloud-friendly plain-language meetup brief ---------------------------
+
+
+def plain_meetup_brief(activity, *, is_member: bool) -> list:
+    """A deterministic, template-only "read it aloud" brief of a meetup: short labelled declarative
+    sentences from already-stored fields, for screen-reader, low-literacy and elderly users. Returns
+    an ORDERED list of (label, sentence) pairs (render as ONE ARIA-landmarked region, no JS). Pure
+    read — no ML, no model write, no PII, no new query beyond the passed object.
+
+    Visibility mirrors EXACTLY the fields it draws from, reusing the caller's own ``is_member``
+    signal (never re-deriving membership): the cohort-visible chips (cost / difficulty /
+    accessibility) always show; the member-only logistics (meeting_point / what_to_bring /
+    organizer_note / getting_home_note / first_time_note) show ONLY to a member. Emits NO numeric
+    counts to anyone, so it can never leak a roster size to a minor (sidesteps thread_digest's
+    count-suppression entirely)."""
+    brief: list[tuple[str, str]] = []
+    brief.append((str(_("What")), str(activity.title)))
+    brief.append(
+        (str(_("Activity")), str(_("It is %(type)s.") % {"type": activity.activity_type.name}))
+    )
+    place_name = (getattr(activity.place, "name", "") or "").strip()
+    if place_name:
+        brief.append((str(_("Where")), str(_("It is at %(place)s.") % {"place": place_name})))
+    when = timezone.localtime(activity.starts_at)
+    brief.append(
+        (str(_("When")), str(_("It starts on %(when)s.") % {"when": f"{when:%A %d %B at %H:%M}"}))
+    )
+    # Cohort-visible "what to expect" chips (same audience as the cohort-visible serializer).
+    if activity.cost_band != Activity.CostBand.UNSPECIFIED:
+        brief.append((str(_("Cost")), str(activity.get_cost_band_display())))
+    if activity.difficulty != Activity.Difficulty.UNSPECIFIED:
+        brief.append(
+            (
+                str(_("Difficulty")),
+                str(_("It is %(level)s.") % {"level": activity.get_difficulty_display()}),
+            )
+        )
+    if (activity.accessibility_notes or "").strip():
+        brief.append((str(_("Access")), activity.accessibility_notes.strip()))
+    # Member-only logistics — included ONLY for a member (mirrors the member-gated card).
+    if is_member:
+        for label, value in (
+            (_("Where to meet"), activity.meeting_point),
+            (_("What to bring"), activity.what_to_bring),
+            (_("A note from the organiser"), activity.organizer_note),
+            (_("Getting home"), activity.getting_home_note),
+            (_("First time here"), activity.first_time_note),
+        ):
+            if (value or "").strip():
+                brief.append((str(label), value.strip()))
+    return brief
+
+
 # --- F3: "we're here" arrival ping -----------------------------------------------------
 
 
