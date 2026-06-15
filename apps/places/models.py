@@ -297,6 +297,12 @@ class PlaceFactVote(models.Model):
         FENCED = "fenced", "Fenced / away from traffic"
         SHADE = "shade", "Shade"
         PLAYGROUND = "playground", "Playground nearby"
+        # W2-F22 "getting there" facts — so minors/non-drivers can judge a venue beyond an address
+        # pin. Parking rides the OSM-first yes/no path on the venue's own parking sub-tag; transit
+        # has no venue-level tag and is crowd-only. (See services._FACT_OSM.)
+        BIKE_PARKING = "bike_parking", "Bike parking"
+        CAR_PARKING = "car_parking", "Car parking"
+        BUS_TRAM_NEARBY = "bus_tram_nearby", "Bus/tram nearby"
 
     place = models.ForeignKey(Place, on_delete=models.CASCADE, related_name="fact_votes")
     user = models.ForeignKey(
