@@ -377,6 +377,40 @@ def is_thread_frozen(owner_obj) -> bool:
     raise TypeError(f"Unknown thread owner type: {type(owner_obj)!r}")
 
 
+def thread_audience_summary(viewer, owner_obj) -> dict:
+    """W2-F34: a calm, honest "who can see this" summary for the thread composer — converts the
+    invisible scope gates into FELT assurance without adding any capability. Pure read: stores
+    nothing, changes no gate, opens no path; it only re-describes gates that already hold.
+
+    The thread audience is EXACTLY the same-cohort current members: can_read_thread walls out every
+    OTHER cohort (``user.cohort != activity.cohort -> False``). A supervisory guardian is always a
+    cross-cohort adult on a CHILD activity, so they genuinely CANNOT read the thread and are
+    deliberately NOT named here (that would be a false "an adult is reading" claim — the exact
+    overclaim this feature avoids; the page's "supervised" chip carries the supervision fact).
+
+    Returns:
+      - ``is_group``: phrasing flag (a Group thread vs an Activity thread).
+      - ``peer_count``: the number of OTHER current peer members — an ADULT-viewer-only surface
+        (None for CHILD/TEEN/anon), reusing the platform-wide count-suppression rule so a minor
+        never sees a roster size (they get a generic phrase in the template instead).
+    """
+    is_group = isinstance(owner_obj, Group)
+    peer_count = None
+    # The count shows ONLY to an adult viewer of an adult thread — the only audience that can both
+    # see a count (count-suppression: minors never do) AND legitimately read this thread (the
+    # same-cohort rule). Requiring the THREAD be adult too makes the helper self-protecting: a
+    # cross-cohort mis-call (e.g. an adult guardian + a CHILD thread) returns None, never a count.
+    if (
+        getattr(viewer, "cohort", None) == Cohort.ADULT
+        and getattr(owner_obj, "cohort", None) == Cohort.ADULT
+    ):
+        members = thread_members(owner_obj)
+        # Guardians are cross-cohort and can't read the thread, so they're never peers anyway.
+        peers = members if is_group else members.exclude(role=Membership.Role.GUARDIAN)
+        peer_count = peers.exclude(user_id=viewer.id).count()
+    return {"is_group": is_group, "peer_count": peer_count}
+
+
 def participant_count(activity) -> int:
     """Number of participants holding a position — members/owner, excluding guardians."""
     return voting_members(activity).count()
