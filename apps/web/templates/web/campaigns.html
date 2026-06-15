@@ -27,4 +27,24 @@
   <p class="muted">{% trans "No active campaigns right now." %}
     <a href="{% url 'donate' %}">{% trans "Support the general fund" %}</a>.</p>
 {% endfor %}
+
+{% comment %}W2-F26: the honest close-out loop. A plain record of what earmarked gifts funded —
+   NO goal bar, NO "we hit it!" framing; just the outcome, the amount raised, and any linked spend.{% endcomment %}
+{% if completed_campaigns %}
+  <h2 style="margin-top:1.5rem">{% trans "Completed campaigns" %}</h2>
+  <p class="muted">{% trans "What earmarked gifts have funded — a plain record, no targets or scores." %}</p>
+  {% for c in completed_campaigns %}
+    <div class="card">
+      <h3 style="margin-top:0">{{ c.title }}</h3>
+      <p>{{ c.outcome|linebreaks }}</p>
+      <p class="muted" style="font-size:.85rem">{% blocktrans with raised=c.raised_cents|cents when=c.closed_at|date:"j M Y" %}{{ raised }} EUR raised &middot; closed {{ when }}{% endblocktrans %}</p>
+      {% if c.spend_entries %}
+        <p class="muted" style="font-size:.85rem;margin-bottom:.2rem">{% trans "Where it went:" %}</p>
+        <ul class="members">
+          {% for s in c.spend_entries %}<li>{{ s.category }} &mdash; {{ s.amount_cents|cents }} {{ s.currency }}{% if s.period %} ({{ s.period }}){% endif %}</li>{% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+  {% endfor %}
+{% endif %}
 {% endblock %}

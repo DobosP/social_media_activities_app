@@ -2405,13 +2405,21 @@ def my_donations(request):
 
 
 def campaigns(request):
-    """F34: public list of active earmark campaigns with a calm, static progress bar."""
-    from apps.donations.services import active_campaigns_with_progress
+    """F34: public list of active earmark campaigns with a calm, static progress bar.
+    W2-F26: plus a neutral close-out section for completed campaigns with a published outcome."""
+    from apps.donations.services import (
+        active_campaigns_with_progress,
+        completed_campaigns_with_outcomes,
+    )
 
     return render(
         request,
         "web/campaigns.html",
-        {"campaigns": active_campaigns_with_progress(), **_nav_context(request.user)},
+        {
+            "campaigns": active_campaigns_with_progress(),
+            "completed_campaigns": completed_campaigns_with_outcomes(),
+            **_nav_context(request.user),
+        },
     )
 
 

@@ -73,6 +73,16 @@ class SpendEntry(models.Model):
     currency = models.CharField(max_length=3, default="EUR")
     period = models.CharField(max_length=60, blank=True)  # free-text label, e.g. "2026 Q1"
     note = models.CharField(max_length=300, blank=True)
+    # W2-F26: optional earmark to the campaign this spend delivered on (a verbatim copy of the
+    # Donation.campaign pattern). SET_NULL so deleting a campaign never destroys the spend record;
+    # an UNTAGGED row still tallies globally in spend_by_category but won't show under a close-out.
+    campaign = models.ForeignKey(
+        "donations.Campaign",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="spend_entries",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -104,6 +114,12 @@ class Campaign(models.Model):
     goal_cents = models.PositiveIntegerField()
     currency = models.CharField(max_length=3, default="EUR")
     is_active = models.BooleanField(default=True)
+    # W2-F26: the honest close-out loop. When staff close a campaign they publish a calm one-line
+    # plain-text outcome ("what your gift funded") + a closed_at; both set ONLY in CampaignAdmin.
+    # A campaign appears in the public close-out section ONLY with BOTH set (never a false
+    # "delivered" claim). Capped + autoescaped/|linebreaks at render — no scarcity/goal framing.
+    outcome = models.CharField(max_length=280, blank=True, default="")
+    closed_at = models.DateTimeField(null=True, blank=True)
     # SET_NULL (like Donation.campaign): deleting a partner must never destroy a campaign or its
     # donation history — the credit just disappears and the campaign stays general-fund-safe.
     partner = models.ForeignKey(

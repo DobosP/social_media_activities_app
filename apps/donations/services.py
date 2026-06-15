@@ -44,7 +44,9 @@ def active_campaigns_with_progress() -> list[dict]:
     select_related'd partner (no extra query / no N+1), mirroring Partner.objects.public(), so a
     partner deactivated after being named simply stops being credited."""
     qs = (
-        Campaign.objects.filter(is_active=True)
+        # W2-F26: a closed campaign (closed_at set) leaves the active "donate now" list and moves to
+        # the close-out section, so it never keeps soliciting after it's been wrapped up.
+        Campaign.objects.filter(is_active=True, closed_at__isnull=True)
         .select_related("partner")
         .annotate(
             raised=Sum(
@@ -75,6 +77,52 @@ def active_campaigns_with_progress() -> list[dict]:
             }
         )
     return rows
+
+
+def completed_campaigns_with_outcomes() -> list[dict]:
+    """W2-F26: closed earmark campaigns that published a plain-text outcome — the honest "what your
+    gift funded" close-out loop. A campaign appears ONLY when it has BOTH closed_at AND a non-empty
+    outcome, so a closed campaign with no outcome is correctly omitted (never a false "delivered"
+    claim). AGGREGATE-only (no donor objects/PII); linked spend rows are shown beside each (an
+    UNTAGGED spend row still tallies globally via spend_by_category but won't appear here — the
+    correct fail-safe). Two queries total, no N+1. Deliberately exposes NO goal/percent — a neutral
+    ledger close-out, never an "X of Y goal" or "we hit it!" surface."""
+    campaigns = [
+        c
+        for c in (
+            Campaign.objects.exclude(closed_at__isnull=True)
+            .exclude(outcome="")
+            .annotate(
+                raised=Sum(
+                    "donations__amount_cents",
+                    filter=Q(donations__status=Donation.Status.COMPLETED),
+                )
+            )
+            .order_by("-closed_at")
+        )
+        # Belt-and-suspenders beyond the cheap DB pre-filter: a whitespace-only outcome (reachable
+        # only off the admin write path, which strips) is never a published "delivered" claim.
+        if c.outcome.strip()
+    ]
+    spend_by_campaign: dict[int, list] = {}
+    for s in (
+        SpendEntry.objects.filter(campaign_id__in=[c.id for c in campaigns])
+        .values("campaign_id", "category", "amount_cents", "currency", "period")
+        .order_by("-amount_cents")
+    ):
+        spend_by_campaign.setdefault(s["campaign_id"], []).append(s)
+    return [
+        {
+            "title": c.title,
+            "slug": c.slug,
+            "outcome": c.outcome,
+            "closed_at": c.closed_at,
+            "raised_cents": c.raised or 0,
+            "currency": c.currency,
+            "spend_entries": spend_by_campaign.get(c.id, []),
+        }
+        for c in campaigns
+    ]
 
 
 def campaign_progress(campaign) -> dict:
