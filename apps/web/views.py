@@ -1388,6 +1388,11 @@ def activity_detail(request, pk):
             # W2-F27: plain-language read-aloud brief; member-only logistics included only for a
             # member (reuses the same is_member signal the page already computed).
             "meetup_brief": social.plain_meetup_brief(activity, is_member=is_member),
+            # W2-F34: a calm "who can see this" line for the composer (shown member-only, where the
+            # composer renders). peer_count is cohort-suppressed (None for minors) in the service.
+            "thread_audience": social.thread_audience_summary(user, activity)
+            if is_member
+            else None,
             "is_owner": is_owner,
             "is_organizer": is_organizer,
             "can_manage_organizers": can_manage_organizers,

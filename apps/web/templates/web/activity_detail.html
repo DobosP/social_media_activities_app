@@ -367,6 +367,16 @@
   </div>
 
   {% if is_member %}
+    {% comment %}W2-F34: a calm, honest "who can see this" line so the audience boundary is felt
+       before you type. Re-describes gates that already hold — no count to minors.{% endcomment %}
+    {% if thread_audience %}
+      <p class="muted" role="note" style="font-size:.78rem;margin:.6rem 0 0">
+        &#128274;
+        {% if thread_audience.is_group %}{% trans "Visible to members of this group only." %}{% else %}{% trans "Visible to members of this activity only." %}{% endif %}
+        {% trans "Never public, never indexed, never shown to other cohorts." %}
+        {% if thread_audience.peer_count is not None %}{% blocktrans count n=thread_audience.peer_count %}{{ n }} other person can see this.{% plural %}{{ n }} other people can see this.{% endblocktrans %}{% endif %}
+      </p>
+    {% endif %}
     <form method="post" id="compose" enctype="multipart/form-data"
           action="{% url 'activity_post' activity.pk %}" class="stack" style="margin-top:.6rem">{% csrf_token %}
       {% if reply_target %}
