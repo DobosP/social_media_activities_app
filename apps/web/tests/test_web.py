@@ -230,9 +230,12 @@ def test_account_delete_requires_login():
     assert "/login/" in resp.headers["Location"]
 
 
-def test_account_delete_is_post_only():
+def test_account_delete_get_shows_preview():
+    # F33: GET is now the honest counts-only erasure-preview confirmation step (was 405 when the
+    # view was @require_POST). The irreversible erase still happens only on POST.
     resp = _client(_user("del-get")).get("/account/delete/")
-    assert resp.status_code == 405
+    assert resp.status_code == 200
+    assert "What gets permanently deleted" in resp.content.decode()
 
 
 def test_account_delete_erases_and_logs_out():
@@ -268,7 +271,8 @@ def test_delete_control_lives_in_settings_and_profile_points_there():
     settings_page = c.get("/settings/")
     assert settings_page.status_code == 200
     assert b"Delete my account" in settings_page.content
-    assert b'action="/account/delete/"' in settings_page.content
+    # F33: the control is now a GET link to the erasure-preview page (was a direct POST form).
+    assert b'href="/account/delete/"' in settings_page.content
     profile = c.get("/profile/")
     assert profile.status_code == 200
     assert b"/settings/" in profile.content

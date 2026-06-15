@@ -71,10 +71,10 @@
   <p class="muted">{% trans "Your data belongs to you. Take a copy any time, or delete the account and the personal data that goes with it." %}</p>
   <div class="row">
     <a class="btn btn-secondary" href="{% url 'account_export' %}">{% trans "Download my data" %}</a>
-    <form method="post" action="{% url 'account_delete' %}" class="inline"
-          onsubmit="return confirm('{% trans 'Delete your account and personal data? This cannot be undone.' %}')">{% csrf_token %}
-      <button class="btn btn-danger" type="submit">{% trans "Delete my account" %}</button>
-    </form>
+    {% comment %}F33: link (GET) to the erasure-preview confirmation page — both entry points
+       (here and /my-privacy/) route through the honest preview before the irreversible POST,
+       so neither erases instantly.{% endcomment %}
+    <a class="btn btn-danger" href="{% url 'account_delete' %}">{% trans "Delete my account" %}</a>
   </div>
 </div>
 

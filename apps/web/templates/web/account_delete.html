@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Delete my account" %}{% endblock %}
+{% block content %}
+<h1>{% trans "Delete my account" %}</h1>
+<p class="muted">{% trans "This is permanent and cannot be undone. Here is what deleting your account removes — and the one thing that lawfully stays. Only you can see this page." %}</p>
+
+<div class="card">
+  <strong>{% trans "What gets permanently deleted" %}</strong>
+  <ul class="members">
+    <li>{% blocktrans count n=preview.destroyed.memberships %}{{ n }} activity membership{% plural %}{{ n }} activity memberships{% endblocktrans %}</li>
+    <li>{% blocktrans count n=preview.destroyed.owned_activities %}{{ n }} activity you organise (and its thread){% plural %}{{ n }} activities you organise (and their threads){% endblocktrans %}</li>
+    <li>{% blocktrans count n=preview.destroyed.owned_groups %}{{ n }} group you run (and its thread){% plural %}{{ n }} groups you run (and their threads){% endblocktrans %}</li>
+    <li>{% blocktrans count n=preview.destroyed.group_memberships %}{{ n }} group membership{% plural %}{{ n }} group memberships{% endblocktrans %}</li>
+    <li>{% blocktrans count n=preview.destroyed.thread_posts %}{{ n }} message you wrote in activity threads{% plural %}{{ n }} messages you wrote in activity threads{% endblocktrans %}</li>
+    <li>{% blocktrans count n=preview.destroyed.messages_sent %}{{ n }} private (end-to-end-encrypted) message you sent{% plural %}{{ n }} private (end-to-end-encrypted) messages you sent{% endblocktrans %}</li>
+    <li>{% blocktrans count n=preview.destroyed.photos %}{{ n }} photo you uploaded{% plural %}{{ n }} photos you uploaded{% endblocktrans %}</li>
+    <li>{% blocktrans count n=preview.destroyed.attachments %}{{ n }} file you shared in a thread{% plural %}{{ n }} files you shared in threads{% endblocktrans %}</li>
+    <li>{% blocktrans count n=preview.destroyed.age_assurance_records %}{{ n }} age-verification record{% plural %}{{ n }} age-verification records{% endblocktrans %}</li>
+    <li>{% blocktrans count n=preview.destroyed.parental_consents %}{{ n }} parental-consent record{% plural %}{{ n }} parental-consent records{% endblocktrans %}</li>
+    <li>{% blocktrans count n=preview.destroyed.guardian_links %}{{ n }} guardian link{% plural %}{{ n }} guardian links{% endblocktrans %}</li>
+  </ul>
+  <p class="muted">{% trans "Your profile, login, any device API access, and other account data (saved searches, preferences, blocks, notifications, connections) are deleted too." %}</p>
+</div>
+
+<div class="card">
+  <strong>{% trans "What lawfully stays" %}</strong>
+  <ul class="members">
+    <li>{% blocktrans count n=preview.retained.donations_anonymised %}{{ n }} donation stays as an anonymous financial record — the amount and status are kept for accounting, but the link to you is removed.{% plural %}{{ n }} donations stay as anonymous financial records — the amounts and statuses are kept for accounting, but the link to you is removed.{% endblocktrans %}</li>
+    <li>{% blocktrans count n=preview.retained.audit_entries_retained %}{{ n }} entry in our tamper-evident audit log is kept (the law requires this log can't be edited or deleted), but de-identified: the link to your account is removed, leaving only an internal reference number — never your username, name, or the content of your activities or messages. Deleting your account adds a final entry recording that it happened.{% plural %}{{ n }} entries in our tamper-evident audit log are kept (the law requires this log can't be edited or deleted), but de-identified: the link to your account is removed, leaving only an internal reference number — never your username, name, or the content of your activities or messages. Deleting your account adds a final entry recording that it happened.{% endblocktrans %}</li>
+  </ul>
+</div>
+
+<form method="post" action="{% url 'account_delete' %}" style="margin-top:1rem">{% csrf_token %}
+  <button class="btn btn-secondary" type="submit">{% trans "Permanently delete my account" %}</button>
+  <a class="btn btn-sm" href="{% url 'my_privacy' %}">{% trans "Cancel" %}</a>
+</form>
+{% endblock %}
