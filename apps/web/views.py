@@ -943,11 +943,11 @@ def place_detail(request, pk):
 
     corrections = pending_corrections(place, request.user)
     # F19: crowd venue facts (OSM-first, crowd overlay) + a SOFT kid badge (never hides a place).
+    from apps.places.services import KID_FACT_KEYS
+
     venue_fact_rows = venue_facts_detail(place, request.user)
     has_kid_facts = any(
-        row["state"] == "true"
-        and row["key"] in ("toilets", "fenced", "playground", "drinking_water")
-        for row in venue_fact_rows
+        row["state"] == "true" and row["key"] in KID_FACT_KEYS for row in venue_fact_rows
     )
     return render(
         request,

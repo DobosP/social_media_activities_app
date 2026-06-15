@@ -346,6 +346,14 @@ _FACT_OSM = {
     PlaceFactVote.FactKey.FENCED: ("present", ("barrier", "fence")),
     PlaceFactVote.FactKey.SHADE: ("present", ("natural", "tree")),
     PlaceFactVote.FactKey.INDOOR_SHELTER: (None, None),
+    # W2-F22 "getting there". Parking rides the yes/no "kv" path on the venue's OWN sub-tag
+    # (OSM convention: parking=yes / bicycle_parking=yes on the feature) — NOT amenity=parking,
+    # which is a venue's *primary type* (and isn't ingested for our venues), so it would never
+    # fire. _tristate fail-closes any descriptive value (stands/surface/…) to 'unknown', so the
+    # crowd overlay still fills the gap. Transit has no venue-level tag -> crowd-only.
+    PlaceFactVote.FactKey.BIKE_PARKING: ("kv", "bicycle_parking"),
+    PlaceFactVote.FactKey.CAR_PARKING: ("kv", "parking"),
+    PlaceFactVote.FactKey.BUS_TRAM_NEARBY: (None, None),
 }
 
 # Kid-relevant subset for the SOFT badge (never a composite score; never hides 'unknown').
@@ -355,6 +363,9 @@ _KID_FACTS = (
     PlaceFactVote.FactKey.PLAYGROUND,
     PlaceFactVote.FactKey.DRINKING_WATER,
 )
+# The same subset as bare key strings, so the web kid-badge filter reuses it instead of
+# hand-duplicating the list (single source of truth — F22 added non-kid facts beside it).
+KID_FACT_KEYS = frozenset(k.value for k in _KID_FACTS)
 
 
 def _osm_fact_state(place, fact_key) -> str:

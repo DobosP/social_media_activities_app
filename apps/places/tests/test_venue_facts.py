@@ -202,3 +202,46 @@ def test_covoting_is_not_a_shared_activity():
     vote_on_fact(a, place, FK.TOILETS, True)
     vote_on_fact(b, place, FK.TOILETS, True)
     assert shares_activity(a, b) is False
+
+
+# --- W2-F22: "getting there" facts (bike/car parking OSM-first, transit crowd-only) -----
+
+
+def test_getting_there_osm_kv_facts():
+    # The venue's OWN yes/no parking sub-tag drives the OSM-first state (parking=yes / =no);
+    # a descriptive value or a missing tag is 'unknown' (never a wrong false), and crowd fills it.
+    assert place_fact_status(_place({"bicycle_parking": "yes"}), FK.BIKE_PARKING) == "true"
+    assert place_fact_status(_place({"parking": "yes"}), FK.CAR_PARKING) == "true"
+    assert place_fact_status(_place({"parking": "no"}), FK.CAR_PARKING) == "false"
+    # A descriptive value (not yes/no) fail-closes to unknown, not a false 'true'.
+    assert place_fact_status(_place({"bicycle_parking": "stands"}), FK.BIKE_PARKING) == "unknown"
+    # amenity is a venue's PRIMARY type, never its parking signal -> unknown (then crowd fills).
+    assert place_fact_status(_place({"amenity": "parking"}), FK.CAR_PARKING) == "unknown"
+    assert place_fact_status(_place({}), FK.BIKE_PARKING) == "unknown"
+
+
+def test_bus_tram_is_crowd_only():
+    # No OSM source on the venue itself; stays unknown until a crowd quorum forms.
+    place = _place({"public_transport": "platform"})  # an unrelated tag must not flip it
+    assert place_fact_status(place, FK.BUS_TRAM_NEARBY) == "unknown"
+    for i in range(3):
+        vote_on_fact(_user(f"bt{i}"), place, FK.BUS_TRAM_NEARBY, True)
+    assert place_fact_status(place, FK.BUS_TRAM_NEARBY) == "true"
+
+
+def test_getting_there_facts_flow_through_venue_facts():
+    rows = {r["key"]: r for r in venue_facts(_place({"bicycle_parking": "yes"}))}
+    assert {"bike_parking", "car_parking", "bus_tram_nearby"} <= set(rows)
+    assert rows["bike_parking"]["state"] == "true"
+    # Detail surface marks the OSM-sourced bike fact and leaves the crowd-only transit fact open.
+    detail = {r["key"]: r for r in venue_facts_detail(_place({"bicycle_parking": "yes"}))}
+    assert detail["bike_parking"]["osm_sourced"] is True
+    assert detail["bus_tram_nearby"]["osm_sourced"] is False
+
+
+def test_getting_there_facts_are_not_kid_facts():
+    # F22 explicitly does NOT fold transit/parking into the kid-suitability badge.
+    place = _place({})
+    for i in range(3):
+        vote_on_fact(_user(f"gt{i}"), place, FK.BUS_TRAM_NEARBY, True)
+    assert has_kid_facts(place) is False
