@@ -597,6 +597,52 @@ def erase_user(actor: User, target: User) -> None:
     target.delete()
 
 
+def erasure_preview(actor: User, target: User) -> dict:
+    """W2-F33: an honest, COUNTS-ONLY inventory of what ``erase_user`` will destroy and the one
+    audit pseudonym that lawfully survives — so the irreversible right-to-erasure (GDPR Art.17)
+    stops being a black box. Strictly self-scoped: the SAME authorization guard as erase_user
+    (the user themselves, or an active guardian of the target). Returns ``.count()`` values only —
+    no titles, no content, nothing about any other member — mirroring the relations erase_user
+    actually cascades over, so the preview can neither over- nor under-promise (a divergence test
+    pins these counts to what erasure truly removes). Read-only; no audit side effect."""
+    if not (actor.id == target.id or is_guardian_of(actor, target)):
+        raise ValueError("You are not authorized to preview this account's erasure.")
+
+    from apps.messaging.models import Message
+    from apps.safety.models import AuditLog
+    from apps.social.models import Post
+
+    # Everything that erase_user destroys (CASCADE from the account, plus the explicit
+    # message/ciphertext wipe). Guardian links count BOTH directions (as guardian + as ward).
+    destroyed = {
+        "memberships": target.memberships.count(),
+        "owned_activities": target.owned_activities.count(),
+        "owned_groups": target.owned_groups.count(),
+        "group_memberships": target.group_memberships.count(),
+        "thread_posts": Post.objects.filter(author=target).count(),
+        "messages_sent": Message.objects.filter(sender=target).count(),
+        "photos": target.photos.count(),
+        "attachments": target.attachments.count(),  # files shared inside threads (CASCADE)
+        "age_assurance_records": target.age_assurances.count(),
+        "parental_consents": target.parental_consents.count(),
+        "guardian_links": target.wards.count() + target.guardians.count(),
+    }
+    # What lawfully stays — stated plainly so "you deleted everything" can never be a surprise.
+    retained = {
+        # Donations are financial records (Donation.donor is SET_NULL): the amount/status survive
+        # for accounting integrity, but the donor link is severed, so they no longer point to you.
+        "donations_anonymised": target.donations.count(),
+        # The hash-chained audit log is PERMANENT (a row can never be edited or deleted without
+        # breaking the tamper-evidence chain). Erasure SET_NULLs the actor FK on every row that
+        # references the user, keeping only a non-identifying internal reference (actor_ref) + event
+        # metadata — never a username/name or activity/message content. This is the user's CURRENT
+        # footprint; deletion ITSELF appends a few rows (account.erased + one per owned group), so
+        # the number that ultimately survives is NOT a fixed 1.
+        "audit_entries_retained": AuditLog.objects.filter(actor_ref=target.id).count(),
+    }
+    return {"destroyed": destroyed, "retained": retained}
+
+
 @transaction.atomic
 def grant_parental_consent(
     guardian: User, ward: User, *, scope="", expires_at=None

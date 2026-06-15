@@ -12,6 +12,7 @@ from apps.accounts.services import (
     apply_assurance,
     can_participate,
     erase_user,
+    erasure_preview,
     grant_parental_consent,
     link_guardian,
 )
@@ -91,6 +92,120 @@ def test_non_guardian_adult_cannot_erase_minor():
     with pytest.raises(ValueError):
         erase_user(other, child)
     assert User.objects.filter(id=child.id).exists()
+
+
+# --- W2-F33: erasure preview (counts-only, self-scoped, honest about what stays) ---
+
+
+def test_erasure_preview_is_self_or_guardian_scoped():
+    user = _user("preview_self")
+    preview = erasure_preview(user, user)
+    assert set(preview) == {"destroyed", "retained"}
+    assert all(isinstance(v, int) for v in preview["destroyed"].values())
+
+    stranger = _user("preview_stranger")
+    with pytest.raises(ValueError):
+        erasure_preview(stranger, user)
+
+    guardian = _user("preview_guardian")
+    ward = _user("preview_ward", AgeBand.UNDER_16)
+    link_guardian(guardian, ward)
+    assert "destroyed" in erasure_preview(guardian, ward)  # a guardian may preview their ward
+
+
+def test_erasure_preview_counts_match_what_erase_actually_does():
+    """Divergence guard: seed one real row of EVERY 'destroyed' category, prove the preview count
+    is faithful to the live ORM, then prove erase_user genuinely removes each one. Also pins the
+    'retained' contract: the donation survives anonymised, and the permanent audit log keeps the
+    user's footprint INCLUDING a group.owner_erased row per owned group — which is exactly why the
+    surviving-audit count is not a hardcoded 1."""
+    from django.contrib.gis.geos import Point
+
+    from apps.accounts.models import AgeAssurance, GuardianRelationship
+    from apps.communities.models import Area
+    from apps.donations.models import Donation
+    from apps.media.models import Attachment, Photo
+    from apps.messaging.models import Conversation, Message, Participant
+    from apps.places.models import Place
+    from apps.social import services as social
+    from apps.social.models import Membership, Post
+    from apps.taxonomy.models import ActivityCategory, ActivityType
+
+    user = _user("preview_full")  # +1 age-assurance record
+    user.is_staff = True  # group creation is staff-only on this deployment
+    user.save(update_fields=["is_staff"])
+    other = _user("preview_full_other")
+    ward = _user("preview_full_ward", AgeBand.UNDER_16)
+    link_guardian(user, ward)  # +1 guardian link (as guardian)
+
+    place = Place.objects.create(
+        name="Hall", location=Point(23.6, 46.77, srid=4326), source=Place.Source.OSM
+    )
+    cat = ActivityCategory.objects.create(slug="cat-pf", name="Sport")
+    atype = ActivityType.objects.create(slug="at-pf", name="Football", category=cat)
+    owned = social.create_activity(
+        user, place=place, activity_type=atype, title="Game", starts_at="2030-06-01T10:00Z"
+    )  # +1 owned_activity, +1 owner membership
+    post = social.post_to_thread(user, owned, "hello thread")  # +1 thread_post
+    others_act = social.create_activity(
+        other, place=place, activity_type=atype, title="Other", starts_at="2030-06-02T10:00Z"
+    )
+    Membership.objects.create(
+        activity=others_act, user=user, role=Membership.Role.MEMBER, state=Membership.State.MEMBER
+    )  # +1 membership (in someone else's activity)
+    area = Area.objects.create(city="Cluj-Napoca", slug="cluj-pf", name="Cluj-Napoca")
+    group = social.create_group(user, area=area, title="My Group", activity_type=atype)
+    assert group.owner_id == user.id  # +1 owned_group (+ an owner group membership)
+    Photo.objects.create(uploader=user, kind="profile")  # +1 photo
+    Attachment.objects.create(
+        post=post, uploader=user, kind="image", storage_key="k", content_type="image/png"
+    )  # +1 attachment
+    conv = Conversation.objects.create(
+        kind=Conversation.Kind.DIRECT, cohort=user.cohort, creator=user
+    )
+    Participant.objects.create(conversation=conv, user=user, state=Participant.State.ACTIVE)
+    Message.objects.create(conversation=conv, sender=user, ciphertext="x", iv="y")  # +1 message
+    Donation.objects.create(
+        donor=user, amount_cents=500, provider="dev", status=Donation.Status.COMPLETED
+    )
+
+    uid = user.id
+    donation_id = user.donations.get().id
+
+    # Every 'destroyed' count is faithful to the live ORM (the relations erase_user cascades over).
+    d = erasure_preview(user, user)["destroyed"]
+    assert d["memberships"] == user.memberships.count() >= 2
+    assert d["owned_activities"] == user.owned_activities.count() == 1
+    assert d["owned_groups"] == user.owned_groups.count() == 1
+    assert d["group_memberships"] == user.group_memberships.count() >= 1
+    assert d["thread_posts"] == Post.objects.filter(author=user).count() == 1
+    assert d["messages_sent"] == Message.objects.filter(sender=user).count() == 1
+    assert d["photos"] == user.photos.count() == 1
+    assert d["attachments"] == user.attachments.count() == 1
+    assert d["age_assurance_records"] == user.age_assurances.count() >= 1
+    assert d["guardian_links"] == 1
+    retained = erasure_preview(user, user)["retained"]
+    assert retained["donations_anonymised"] == 1
+    assert retained["audit_entries_retained"] == AuditLog.objects.filter(actor_ref=uid).count()
+
+    erase_user(user, user)
+
+    # ...and erasure truly destroys each seeded category.
+    assert not User.objects.filter(id=uid).exists()
+    assert AgeAssurance.objects.filter(user_id=uid).count() == 0
+    assert GuardianRelationship.objects.filter(guardian_id=uid).count() == 0
+    assert Membership.objects.filter(user_id=uid).count() == 0
+    assert Post.objects.filter(author_id=uid).count() == 0
+    assert Message.objects.filter(sender_id=uid).count() == 0
+    assert Photo.objects.filter(uploader_id=uid).count() == 0
+    assert Attachment.objects.filter(uploader_id=uid).count() == 0
+    # The donation survives as an anonymous financial record (donor severed), exactly as promised.
+    assert Donation.objects.get(id=donation_id).donor_id is None
+    # The audit log is permanent + honest: account.erased PLUS one group.owner_erased per owned
+    # group survive — so more than one row references the erased account (never a hardcoded 1).
+    assert AuditLog.objects.filter(event="account.erased").count() == 1
+    assert AuditLog.objects.filter(event="group.owner_erased").count() == 1
+    assert AuditLog.objects.filter(actor_ref=uid).count() >= 2
 
 
 def test_me_delete_self_erases():

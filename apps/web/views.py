@@ -3194,25 +3194,30 @@ def account_export(request):
 
 
 @login_required
-@require_POST
 def account_delete(request):
-    """Let a user erase their own account (GDPR Art. 17). Delegates to the accounts
-    domain service, which enforces the actual erasure/retention rules, then logs the
-    user out and returns them to the public landing page."""
-    # Imported lazily: erase_user is owned by the accounts domain service.
-    from apps.accounts.services import erase_user
+    """Let a user erase their own account (GDPR Art. 17). On GET, show an honest counts-only
+    preview of exactly what erasure destroys and the one audit pseudonym that lawfully survives
+    (F33) — this also fixes the my_privacy "Delete my account" link, which previously GET-hit a
+    POST-only endpoint and 405'd. On POST, delegate to the accounts domain service (which enforces
+    the real erasure/retention rules), then log the user out and return them to the landing page."""
+    # Imported lazily: these are owned by the accounts domain service.
+    from apps.accounts.services import erase_user, erasure_preview
 
-    try:
-        erase_user(request.user, request.user)
-    except (ValueError, PermissionError) as exc:
-        messages.error(request, _msg(exc))
-        return redirect("profile")
-    logout(request)
-    messages.success(
-        request,
-        "Your account and personal data have been deleted. We're sorry to see you go.",
-    )
-    return redirect("home")
+    if request.method == "POST":
+        try:
+            erase_user(request.user, request.user)
+        except (ValueError, PermissionError) as exc:
+            messages.error(request, _msg(exc))
+            return redirect("profile")
+        logout(request)
+        messages.success(
+            request,
+            "Your account and personal data have been deleted. We're sorry to see you go.",
+        )
+        return redirect("home")
+
+    preview = erasure_preview(request.user, request.user)
+    return render(request, "web/account_delete.html", {"preview": preview})
 
 
 # --- F27: gauge-interest (ephemeral proto-meetups) web --------------------------------
