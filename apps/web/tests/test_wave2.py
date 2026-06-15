@@ -125,3 +125,33 @@ def test_arrival_button_hidden_outside_window():
     _member(activity, member)
     page = _client(member).get(f"/activities/{activity.id}/").content.decode()
     assert "I've arrived" not in page
+
+
+# --- W2-F9: transit cue ----------------------------------------------------------------
+
+
+def test_transit_buttons_then_forward_only_progression():
+    owner = _user("f9owner")
+    member = _user("f9member")
+    activity = _activity(owner)  # starts in 5 min → inside the arrival window
+    _member(activity, member)
+    c = _client(member)
+    page = c.get(f"/activities/{activity.id}/").content.decode()
+    assert "On my way" in page
+    assert "Running ~10 min late" in page
+    resp = c.post(f"/activities/{activity.id}/transit/", {"status": "on_my_way"})
+    assert resp.status_code == 302
+    after = c.get(f"/activities/{activity.id}/").content.decode()
+    assert "you're on the way" in after
+    # Forward-only: the already-reached state's button is gone; only "running late" remains.
+    assert ">&#128694; On my way</button>" not in after
+    assert "Running ~10 min late" in after
+
+
+def test_transit_buttons_hidden_outside_window():
+    owner = _user("f9owner2")
+    member = _user("f9member2")
+    activity = _activity(owner, starts_in=timedelta(days=3))  # window closed
+    _member(activity, member)
+    page = _client(member).get(f"/activities/{activity.id}/").content.decode()
+    assert "On my way" not in page

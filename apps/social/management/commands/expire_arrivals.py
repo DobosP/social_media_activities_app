@@ -1,15 +1,16 @@
-"""Clear stale arrival pings (F3) so they never become a standing presence record.
+"""Clear stale arrival pings (F3) + transit cues (W2-F9) so neither becomes a presence record.
 
-An arrived_at timestamp is wiped once the activity's start is more than --retention-hours in
-the past — long enough that the ping is useful at meetup time, short enough that it is not a
-durable "who was where" log. Idempotent: only rows with a set arrived_at are touched, and the
-bulk update never re-pings anyone. Intended for the shared run_due_jobs cron tick.
+An arrived_at timestamp / transit_status is wiped once the activity's start is more than
+--retention-hours in the past — long enough that the cue is useful at meetup time, short enough
+that it is not a durable "who was where" log. Idempotent: only rows still carrying a cue are
+touched, and the bulk update never re-pings anyone. Intended for the shared run_due_jobs cron tick.
 """
 
 from datetime import timedelta
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
+from django.db.models import Q
 from django.utils import timezone
 
 from apps.social.models import Membership
@@ -33,7 +34,15 @@ class Command(BaseCommand):
     def handle(self, *args, **opts):
         now = timezone.now()
         cutoff = now - timedelta(hours=opts["retention_hours"])
-        cleared = Membership.objects.filter(
-            arrived_at__isnull=False, activity__starts_at__lt=cutoff
-        ).update(arrived_at=None, updated_at=now)  # .update() bypasses auto_now → set explicitly
-        self.stdout.write(self.style.SUCCESS(f"arrival pings cleared: {cleared}"))
+        # A transit cue can outlive its arrival (a member said "on my way" but never tapped
+        # arrived), so clear either signal that is still set on a long-past meetup.
+        cleared = (
+            Membership.objects.filter(activity__starts_at__lt=cutoff)
+            .filter(Q(arrived_at__isnull=False) | ~Q(transit_status=Membership.TransitStatus.NONE))
+            .update(  # .update() bypasses auto_now → set updated_at explicitly
+                arrived_at=None,
+                transit_status=Membership.TransitStatus.NONE,
+                updated_at=now,
+            )
+        )
+        self.stdout.write(self.style.SUCCESS(f"arrival/transit cues cleared: {cleared}"))

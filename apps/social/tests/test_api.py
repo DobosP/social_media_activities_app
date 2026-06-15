@@ -308,3 +308,50 @@ def test_arrived_ignores_on_behalf_of(child, place, activity_type, now):
     )
     assert resp.status_code == 404, resp.content  # acted as guardian, who can't see it
     assert activity.memberships.get(user=child).arrived_at is None
+
+
+# --- transit cue (W2-F9) ---
+
+
+def test_transit_action_sets_status(adult, place, activity_type, now):
+    activity = create_activity(
+        adult, place=place, activity_type=activity_type, title="Run", starts_at=now
+    )
+    resp = _client(adult).post(
+        f"/api/social/activities/{activity.id}/transit/",
+        {"status": "on_my_way"},
+        format="json",
+    )
+    assert resp.status_code == 200, resp.content
+    assert resp.data["transit_status"] == "on_my_way"
+    assert activity.memberships.get(user=adult).transit_status == "on_my_way"
+
+
+def test_transit_invalid_status_is_forbidden(adult, place, activity_type, now):
+    # A bogus/unknown status is rejected by the service (InvalidState); the action maps every
+    # SocialError to 403, matching its `arrived` sibling.
+    activity = create_activity(
+        adult, place=place, activity_type=activity_type, title="Run", starts_at=now
+    )
+    resp = _client(adult).post(
+        f"/api/social/activities/{activity.id}/transit/", {"status": "teleporting"}, format="json"
+    )
+    assert resp.status_code == 403, resp.content
+    assert activity.memberships.get(user=adult).transit_status == "none"
+
+
+def test_transit_ignores_on_behalf_of(child, place, activity_type, now):
+    # Like `arrived`, transit always acts as request.user — a guardian can't ghostwrite a child's
+    # cue: the adult guardian (different cohort, not a member) can't even see the child's activity.
+    guardian = make_user("apiguardian_transit")
+    link_guardian(guardian, child)
+    activity = create_activity(
+        child, place=place, activity_type=activity_type, title="Kids run", starts_at=now
+    )
+    resp = _client(guardian).post(
+        f"/api/social/activities/{activity.id}/transit/",
+        {"status": "on_my_way", "on_behalf_of": str(child.public_id)},
+        format="json",
+    )
+    assert resp.status_code == 404, resp.content  # acted as guardian, who can't see it
+    assert activity.memberships.get(user=child).transit_status == "none"

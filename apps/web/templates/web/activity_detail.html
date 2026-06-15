@@ -118,11 +118,38 @@
       <form method="post" action="{% url 'activity_leave' activity.pk %}" class="inline" style="float:right">{% csrf_token %}
         <button class="linkbtn" type="submit">{% trans "Leave" %}</button></form>
     {% endif %}
+    {% comment %}W2-F9: the read-only transit line lives OUTSIDE the window guard so a member can
+       still see what they last told the group between window-close and the nightly cue-clear;
+       once they've arrived it's moot, so it hides behind `not my_arrival`.{% endcomment %}
+    {% if not my_arrival %}
+      {% if my_transit == "on_my_way" %}
+        <p class="muted" style="margin:.4rem 0">&#128694; {% trans "You told the group you're on the way." %}</p>
+      {% elif my_transit == "running_late" %}
+        <p class="muted" style="margin:.4rem 0">&#8987; {% trans "You told the group you're running a little late." %}</p>
+      {% endif %}
+    {% endif %}
     {% if arrival_window_open and not my_arrival %}
       <form method="post" action="{% url 'activity_arrived' activity.pk %}" style="margin:.4rem 0">{% csrf_token %}
         <button class="btn btn-sm" type="submit">&#128205; {% trans "I've arrived" %}</button>
         <span class="muted" style="font-size:.75rem">{% trans "Tells the group you're here &mdash; no location shared." %}</span>
       </form>
+      {% if can_say_on_my_way or can_say_running_late %}
+        <div class="row" style="gap:.4rem;align-items:center;margin:.4rem 0;flex-wrap:wrap">
+          {% if can_say_on_my_way %}
+            <form method="post" action="{% url 'activity_transit' activity.pk %}" class="inline">{% csrf_token %}
+              <input type="hidden" name="status" value="on_my_way">
+              <button class="btn btn-sm" type="submit">&#128694; {% trans "On my way" %}</button>
+            </form>
+          {% endif %}
+          {% if can_say_running_late %}
+            <form method="post" action="{% url 'activity_transit' activity.pk %}" class="inline">{% csrf_token %}
+              <input type="hidden" name="status" value="running_late">
+              <button class="btn btn-sm" type="submit">&#8987; {% trans "Running ~10 min late" %}</button>
+            </form>
+          {% endif %}
+          <span class="muted" style="font-size:.75rem">{% trans "A quick heads-up &mdash; no location shared." %}</span>
+        </div>
+      {% endif %}
     {% elif my_arrival %}
       <p class="muted" style="margin:.4rem 0">&#10003; {% blocktrans with arrival_time=my_arrival|date:"H:i" %}You marked yourself here at {{ arrival_time }} &mdash; your group was notified.{% endblocktrans %}</p>
     {% endif %}

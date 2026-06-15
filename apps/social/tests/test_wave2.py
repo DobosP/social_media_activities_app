@@ -1,4 +1,4 @@
-"""Wave-2 features: arrival ping (F3), RSVP intent (F20), logistics card (F9)."""
+"""Wave-2: arrival ping (F3), transit cue (W2-F9), RSVP intent (F20), logistics card (F9)."""
 
 from datetime import timedelta
 
@@ -20,11 +20,14 @@ from apps.social.services import (
     leave_activity,
     mark_arrived,
     set_attendance_intent,
+    set_transit_status,
 )
 
 from .conftest import make_user
 
 pytestmark = pytest.mark.django_db
+
+T = Membership.TransitStatus
 
 
 def _activity(owner, place, activity_type, starts_at, **kw):
@@ -134,6 +137,141 @@ def test_expire_arrivals_clears_old_pings(adult, place, activity_type, now):
     Activity.objects.filter(pk=activity.pk).update(starts_at=now - timedelta(hours=12))
     call_command("expire_arrivals")
     assert activity.memberships.get(user=adult).arrived_at is None
+
+
+# --- W2-F9: ephemeral "on my way / running late" transit cue ---------------------------
+# Reuses Notification.Kind.ARRIVAL, so _arrivals_to() counts transit pings too.
+
+
+def test_transit_on_my_way_notifies_other_members(adult, adult2, place, activity_type, now):
+    activity = _activity(adult, place, activity_type, now)
+    _member(activity, adult2)
+    m = set_transit_status(adult, activity, T.ON_MY_WAY)
+    assert m.transit_status == T.ON_MY_WAY
+    assert _arrivals_to(adult2).count() == 1  # the other member is told
+    assert _arrivals_to(adult).count() == 0  # the sender is not pinged
+
+
+def test_transit_body_is_state_derived_and_text_free(adult, adult2, place, activity_type, now):
+    activity = _activity(adult, place, activity_type, now)
+    _member(activity, adult2)
+    set_transit_status(adult, activity, T.RUNNING_LATE)
+    note = _arrivals_to(adult2).get()
+    # Copy is derived from the state (not the generic "arrived" line) and carries only the
+    # display_name + title — no member-authored string.
+    assert adult.display_name in note.body
+    assert activity.title in note.body
+    assert "late" in note.body.lower()
+
+
+def test_transit_child_also_notifies_guardian(child, place, activity_type, now):
+    guardian = make_user("transit_guardian")  # ADULT
+    link_guardian(guardian, child)
+    activity = _activity(child, place, activity_type, now)  # CHILD cohort, child is owner-member
+    set_transit_status(child, activity, T.ON_MY_WAY)
+    assert _arrivals_to(guardian).count() == 1
+
+
+def test_transit_guardian_member_gets_single_ping(child, place, activity_type, now):
+    guardian = make_user("transit_guardian2")
+    link_guardian(guardian, child)
+    activity = _activity(child, place, activity_type, now, guardian_accompanied=True)
+    add_guardian(child, activity, guardian)  # guardian is both a current member and active guardian
+    set_transit_status(child, activity, T.ON_MY_WAY)
+    assert _arrivals_to(guardian).count() == 1
+
+
+def test_transit_same_state_is_idempotent(adult, adult2, place, activity_type, now):
+    activity = _activity(adult, place, activity_type, now)
+    _member(activity, adult2)
+    set_transit_status(adult, activity, T.ON_MY_WAY)
+    set_transit_status(adult, activity, T.ON_MY_WAY)  # re-tap of the same state
+    assert _arrivals_to(adult2).count() == 1  # not re-pinged
+
+
+def test_transit_forward_pings_again_backward_does_not(adult, adult2, place, activity_type, now):
+    activity = _activity(adult, place, activity_type, now)
+    _member(activity, adult2)
+    set_transit_status(adult, activity, T.ON_MY_WAY)  # ping 1
+    set_transit_status(adult, activity, T.RUNNING_LATE)  # ping 2 (forward)
+    m = set_transit_status(adult, activity, T.ON_MY_WAY)  # backward → no-op, no ping
+    assert m.transit_status == T.RUNNING_LATE  # state never moves backward
+    assert _arrivals_to(adult2).count() == 2  # capped at two distinct cues
+
+
+def test_transit_jump_straight_to_late_caps_at_one(adult, adult2, place, activity_type, now):
+    activity = _activity(adult, place, activity_type, now)
+    _member(activity, adult2)
+    set_transit_status(adult, activity, T.RUNNING_LATE)
+    set_transit_status(adult, activity, T.ON_MY_WAY)  # backward → no-op
+    assert _arrivals_to(adult2).count() == 1
+
+
+def test_transit_excludes_blocked_pair(adult, adult2, place, activity_type, now):
+    activity = _activity(adult, place, activity_type, now)
+    _member(activity, adult2)
+    block_user(adult2, adult)  # adult2 blocked the sender
+    set_transit_status(adult, activity, T.ON_MY_WAY)
+    assert _arrivals_to(adult2).count() == 0
+
+
+def test_transit_excludes_blocked_pair_either_direction(adult, adult2, place, activity_type, now):
+    # The exclusion is symmetric (blocked_user_ids filters both blocker and blocked), so a sender
+    # who blocked the recipient must also not ping them.
+    activity = _activity(adult, place, activity_type, now)
+    _member(activity, adult2)
+    block_user(adult, adult2)  # the SENDER blocked the recipient (reverse of the test above)
+    set_transit_status(adult, activity, T.ON_MY_WAY)
+    assert _arrivals_to(adult2).count() == 0
+
+
+def test_transit_invalid_status_rejected(adult, adult2, place, activity_type, now):
+    activity = _activity(adult, place, activity_type, now)
+    _member(activity, adult2)
+    with pytest.raises(InvalidState):
+        set_transit_status(adult, activity, "teleporting")
+    with pytest.raises(InvalidState):
+        set_transit_status(adult, activity, T.NONE)  # NONE is not a user action
+    assert _arrivals_to(adult2).count() == 0
+
+
+def test_transit_outside_window_rejected(adult, place, activity_type, now):
+    activity = _activity(adult, place, activity_type, now + timedelta(hours=6))
+    assert arrival_window_open(activity) is False
+    with pytest.raises(InvalidState):
+        set_transit_status(adult, activity, T.ON_MY_WAY)
+
+
+def test_transit_non_member_rejected(adult, place, activity_type, now):
+    activity = _activity(adult, place, activity_type, now)
+    outsider = make_user("transit_outsider")
+    with pytest.raises(NotAMember):
+        set_transit_status(outsider, activity, T.ON_MY_WAY)
+
+
+def test_transit_rejected_when_not_open(adult, place, activity_type, now):
+    activity = _activity(adult, place, activity_type, now)
+    cancel_activity(adult, activity)
+    with pytest.raises(InvalidState):
+        set_transit_status(adult, activity, T.ON_MY_WAY)
+
+
+def test_expire_arrivals_clears_transit_even_without_arrival(adult, place, activity_type, now):
+    activity = _activity(adult, place, activity_type, now)
+    set_transit_status(adult, activity, T.ON_MY_WAY)  # no mark_arrived → arrived_at stays NULL
+    Activity.objects.filter(pk=activity.pk).update(starts_at=now - timedelta(hours=12))
+    call_command("expire_arrivals")
+    m = activity.memberships.get(user=adult)
+    assert m.transit_status == T.NONE
+    assert m.arrived_at is None
+
+
+def test_leave_resets_transit_status(adult, adult2, place, activity_type, now):
+    activity = _activity(adult, place, activity_type, now)
+    _member(activity, adult2)
+    set_transit_status(adult2, activity, T.ON_MY_WAY)
+    leave_activity(adult2, activity)
+    assert activity.memberships.get(user=adult2).transit_status == T.NONE
 
 
 # --- F20: RSVP attendance intent -------------------------------------------------------

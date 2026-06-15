@@ -273,6 +273,17 @@ class Membership(models.Model):
         GOING = "going", "Coming"
         NOT_GOING = "not_going", "Can't make it"
 
+    class TransitStatus(models.TextChoices):
+        # W2-F9: an ephemeral, self-declared "I'm en route" cue alongside arrived_at — a fixed
+        # enum (no free text, no location, no member-authored string reaches an adult). The
+        # late bucket is a server constant ("~10 min"), never a member-entered figure. Cleared
+        # by expire_arrivals + reset on leave, so it is a moment-of-meetup nudge, NEVER a
+        # punctuality/reliability rollup. Set only forward (NONE→ON_MY_WAY→RUNNING_LATE) so a
+        # member emits at most two pings — see services.set_transit_status.
+        NONE = "none", "Not said"
+        ON_MY_WAY = "on_my_way", "On my way"
+        RUNNING_LATE = "running_late", "Running late"
+
     activity = models.ForeignKey(Activity, on_delete=models.CASCADE, related_name="memberships")
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="memberships"
@@ -286,6 +297,11 @@ class Membership(models.Model):
     # window and cleared a few hours after start by expire_arrivals, so it never becomes a
     # standing presence record. NOT geolocation — a tap, not a position.
     arrived_at = models.DateTimeField(null=True, blank=True)
+    # W2-F9: ephemeral self-declared "on my way / running late" cue (sibling of arrived_at).
+    # Same window + clearing lifecycle, so it is never a standing punctuality record.
+    transit_status = models.CharField(
+        max_length=16, choices=TransitStatus.choices, default=TransitStatus.NONE
+    )
     # F22: a member's private "yes, we met up" tap, allowed ONLY once activity.status ==
     # COMPLETED. A single per-member boolean (null = unset) about whether THE MEETUP happened —
     # never a rating/judgement of any person, NEVER aggregated per-user, NEVER read
