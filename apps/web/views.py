@@ -2652,6 +2652,14 @@ def event_detail(request, pk):
             "can_report_event": (
                 is_public_event and request.user.is_authenticated and can_participate(request.user)
             ),
+            # W4-F12: offer "convene a gauge around this" only on a PUBLIC event (whose place can
+            # seed a gauge) to a user who can actually create one.
+            "can_convene": (
+                is_public_event
+                and request.user.is_authenticated
+                and can_participate(request.user)
+                and event.place_id is not None
+            ),
             "share_targets": _share_targets(request.user),
             "share_kind": "event",
             "share_obj_id": event.pk,
@@ -3559,7 +3567,22 @@ def gauge_create(request):
                 messages.success(request, "Gauge started — peers can now signal interest.")
                 return redirect("gauge_detail", pk=gauge.pk)
     else:
-        form = GaugeForm()
+        # W4-F12: "convene around this event" — seed the gauge from a real public event the browser
+        # found but where no meetup has formed. Validate ?event= through events_with_public_places
+        # (so a pending F25 venue can never seed a gauge); seed place + type only and let the user
+        # pick their availability window. propose_interest re-validates everything on submit.
+        initial = {}
+        event_id = request.GET.get("event", "")
+        if event_id.isdigit():
+            from apps.events.services import events_with_public_places
+
+            event = events_with_public_places().filter(pk=event_id).first()
+            if event is not None:
+                if event.place_id:
+                    initial["place"] = event.place_id
+                if event.activity_type_id:
+                    initial["activity_type"] = event.activity_type_id
+        form = GaugeForm(initial=initial)
     return render(request, "web/gauge_form.html", {"form": form, **_nav_context(request.user)})
 
 
