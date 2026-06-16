@@ -17,7 +17,7 @@ from apps.notifications.services import notify
 from apps.safety.services import allow_action, record_audit
 from apps.social.models import Activity, ActivityInterest
 
-from .models import SavedSearch, SavedSearchMatch
+from .models import SavedSearch, SavedSearchGaugeMatch, SavedSearchMatch
 
 logger = logging.getLogger(__name__)
 
@@ -200,12 +200,58 @@ def matching_activities(saved_search, viewer):
     )
 
 
+def matching_gauges(saved_search, viewer):
+    """W3-F9 gauge-lane read primitive — the ActivityInterest sibling of matching_activities.
+    Cohort-walled twice (the viewer must be the saver in the search's pinned cohort, and the source
+    is the already cohort-pinned visible_gauges(viewer): cohort + not-converted + not-expired +
+    blocked-proposer). Then narrowed by ONLY the predicate dimensions a gauge actually carries —
+    area, activity_type XOR category, coarse_window. AREA-only geo, never a coordinate; the gauge
+    stays a COUNT-only signal (we never read who signalled).
+
+    A gauge has no beginners flag and no cost band — both are decided only at conversion, by the
+    proposer's later create_activity — so a search that constrains on either can NOT be shown to be
+    satisfied by any gauge. Rather than alert on a gauge that might convert to a non-matching
+    activity, such a search simply opts OUT of the gauge lane (it still gets activity alerts as
+    before). This keeps the gauge alert honest: it fires only when the gauge meets every stated
+    constraint."""
+    from apps.communities.services import _area_place_q
+    from apps.social.services import visible_gauges
+
+    if not getattr(viewer, "is_authenticated", False) or viewer.cohort != saved_search.cohort:
+        return ActivityInterest.objects.none()
+    if saved_search.beginners or saved_search.cost_band:
+        return ActivityInterest.objects.none()
+    qs = (
+        visible_gauges(viewer)
+        .exclude(proposer_id=viewer.id)  # never alert you to your OWN gauge
+        .exclude(interested_users=viewer)  # nor one you've already signalled on (you've seen it)
+    )
+    if saved_search.area_id:
+        qs = qs.filter(_area_place_q(saved_search.area))
+    if saved_search.activity_type_id:
+        qs = qs.filter(activity_type_id=saved_search.activity_type_id)
+    else:
+        qs = qs.filter(activity_type__category_id=saved_search.category_id)
+    if saved_search.coarse_window:
+        # A gauge's coarse_window is a stored choice (no time math), so this is an exact match —
+        # not the local-time Extract the activity lane needs (an Activity stores only a UTC point).
+        qs = qs.filter(coarse_window=saved_search.coarse_window)
+    # Soonest-to-EXPIRE first so that, under the per-saver rate cap, the deferred tail is the gauge
+    # with the most life left (still recoverable next tick) — never one about to lapse.
+    return qs.order_by("expires_at", "id")
+
+
 def match_saved_searches(*, now=None) -> dict:
     """Nightly matcher: for each saved search, fan out per-saver through the cohort read gate and
     fire ONE ACTIVITY_MATCH notice per (user, activity), EVER. Idempotency + 'one notice even across
     mute toggles' come from the SavedSearchMatch (user, activity) ledger. Per-search isolation,
     per-saver rate cap (anti-flood from one viral activity), per-tick cap. No request user — the
-    viewer is always the saver, so cohort isolation + blocking + hidden + status all hold."""
+    viewer is always the saver, so cohort isolation + blocking + hidden + status all hold.
+
+    W3-F9 adds a PARALLEL gauge lane in the same per-search atomic block: a GAUGE_MATCH notice, at
+    most once per (user, gauge), over matching interest gauges (SavedSearchGaugeMatch ledger). It
+    shares the per-saver rate cap key and the per-tick counters, so a viral activity AND a viral
+    gauge together can't out-flood the cap."""
     now = now or timezone.now()
     batch = getattr(settings, "SAVED_SEARCH_MATCH_BATCH", 1000)
     notify_limit = getattr(settings, "SAVED_SEARCH_NOTIFY_RATE_LIMIT", 50)
@@ -257,6 +303,41 @@ def match_saved_searches(*, now=None) -> dict:
                         title=f'New {activity.activity_type.name}: "{activity.title}"',
                         body=f"Starts {timezone.localtime(activity.starts_at):%a %d %b, %H:%M}.",
                         url=f"/activities/{activity.id}/",
+                    )
+                    if delivered:
+                        notified += 1
+                # W3-F9 gauge lane: the SAME saver, atomic block, per-saver rate cap key and
+                # per-tick counters — a second at-most-once-per-(user, gauge) fan-out over the
+                # matching interest gauges, recorded in its own SavedSearchGaugeMatch ledger.
+                for gauge in matching_gauges(ss, saver).iterator():
+                    if SavedSearchGaugeMatch.objects.filter(
+                        user=saver, interest_id=gauge.id
+                    ).exists():
+                        continue
+                    if not allow_action(
+                        saver,
+                        "saved_search_match",
+                        limit=notify_limit,
+                        window_seconds=notify_window,
+                    ):
+                        break
+                    _, created = SavedSearchGaugeMatch.objects.get_or_create(
+                        user=saver, interest=gauge
+                    )
+                    if not created:
+                        continue  # raced with a concurrent tick
+                    scanned += 1
+                    # No count in the frozen body — the live page shows the bounded ready/needs-N
+                    # signal. A frozen count would go stale AND flirt with inv.2 social-proof.
+                    delivered = notify(
+                        saver,
+                        Notification.Kind.GAUGE_MATCH,
+                        title=f"New interest gauge: {gauge.activity_type.name}",
+                        body=(
+                            f"Someone's gauging interest at {gauge.place.name} "
+                            f"({gauge.get_coarse_window_display()}). Add yours to help it start."
+                        ),
+                        url=f"/gauges/{gauge.id}/",
                     )
                     if delivered:
                         notified += 1
