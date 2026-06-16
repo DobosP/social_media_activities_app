@@ -2692,24 +2692,19 @@ def wards(request):
     )
 
 
-@login_required
-def my_meetups(request):
-    """F38: the viewer's OWN upcoming meetups (time, place, meeting point) + the guardians they
-    can turn to — a lean, no-JS page a member can read en route. A service worker serves it
-    NETWORK-FIRST and falls back to the last-cached copy offline (with a freshness stamp).
-
-    Strictly self-scoped and mirrors the wards-manifest read wall: only OPEN, upcoming meetups
-    the viewer is an admitted MEMBER of, in their CURRENT cohort, never moderator-hidden — so a
-    cancelled / hidden / past / stale-cross-cohort meetup is never shown (and the offline copy
-    can never resurrect one, because it was never cached)."""
-    now = timezone.now()
-    meetups = list(
+def _my_upcoming_meetups(user):
+    """The viewer's OWN upcoming meetups behind the same read wall the wards manifest enforces:
+    OPEN + future + admitted MEMBER + CURRENT cohort + never moderator-hidden. The single source of
+    truth for the /my-meetups/ page (F38) and the self-only /account/calendar.ics download (W3-F18)
+    — so neither can ever surface a cancelled / hidden / past / stale-cross-cohort meetup, nor a
+    CHILD's future place+time outside the cohort/consent wall."""
+    return (
         Activity.objects.filter(
-            memberships__user=request.user,
+            memberships__user=user,
             memberships__state=Membership.State.MEMBER,
             status=Activity.Status.OPEN,
-            starts_at__gte=now,
-            cohort=request.user.cohort,
+            starts_at__gte=timezone.now(),
+            cohort=user.cohort,
             is_hidden=False,
         )
         .select_related("place", "activity_type")
@@ -2718,6 +2713,15 @@ def my_meetups(request):
         .order_by("starts_at")
         .distinct()
     )
+
+
+@login_required
+def my_meetups(request):
+    """F38: the viewer's OWN upcoming meetups (time, place, meeting point) + the guardians they
+    can turn to — a lean, no-JS page a member can read en route. A service worker serves it
+    NETWORK-FIRST and falls back to the last-cached copy offline (with a freshness stamp)."""
+    now = timezone.now()
+    meetups = list(_my_upcoming_meetups(request.user))
     # The viewer's own safe-exit guardians (names only — no contact details), readable offline.
     my_guardians = [
         rel.guardian
@@ -2736,6 +2740,87 @@ def my_meetups(request):
             **_nav_context(request.user),
         },
     )
+
+
+def _ics_escape(text) -> str:
+    r"""RFC 5545 text escaping for SUMMARY/LOCATION: backslash FIRST, then semicolon, comma, and
+    every newline → literal ``\n`` (a raw newline would otherwise break the line-based grammar)."""
+    return (
+        (text or "")
+        .replace("\\", "\\\\")
+        .replace(";", "\\;")
+        .replace(",", "\\,")
+        .replace("\r\n", "\\n")
+        .replace("\n", "\\n")
+        .replace("\r", "\\n")
+    )
+
+
+def _ics_fold(line: str) -> str:
+    """RFC 5545 §3.1 content-line folding: no content line exceeds 75 OCTETS; a continuation begins
+    with CRLF + a single space (stripped on unfold). Split on UTF-8 octet boundaries so a multibyte
+    character is never severed (a SUMMARY/LOCATION can hold non-ASCII)."""
+    raw = line.encode("utf-8")
+    if len(raw) <= 75:
+        return line
+    chunks, start, limit = [], 0, 75
+    while start < len(raw):
+        end = min(start + limit, len(raw))
+        while end < len(raw) and (raw[end] & 0xC0) == 0x80:  # never split a continuation byte
+            end -= 1
+        chunks.append(raw[start:end].decode("utf-8"))
+        start, limit = end, 74  # continuation lines lose one octet to the leading space
+    return "\r\n ".join(chunks)
+
+
+def _build_calendar(activities, *, host: str) -> str:
+    """Build a minimal RFC 5545 VCALENDAR (one VEVENT per meetup) as a pure standard-library
+    string. Times are emitted in UTC (the stored tz-aware value, suffixed Z); every calendar client
+    converts them back to the reader's local zone. CRLF line breaks + 75-octet folding per spec."""
+    import datetime as _dt
+
+    def _utc(value) -> str:
+        return value.astimezone(_dt.UTC).strftime("%Y%m%dT%H%M%SZ")
+
+    stamp = _utc(timezone.now())
+    lines = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        f"PRODID:-//{host}//meetups//EN",
+        "CALSCALE:GREGORIAN",
+        "METHOD:PUBLISH",
+    ]
+    for a in activities:
+        lines += [
+            "BEGIN:VEVENT",
+            f"UID:meetup-{a.id}@{host}",
+            f"DTSTAMP:{stamp}",
+            f"DTSTART:{_utc(a.starts_at)}",
+        ]
+        if a.ends_at:
+            lines.append(f"DTEND:{_utc(a.ends_at)}")
+        lines.append(f"SUMMARY:{_ics_escape(a.title)}")
+        lines.append(f"LOCATION:{_ics_escape(a.place.display_name)}")
+        lines.append("END:VEVENT")
+    lines.append("END:VCALENDAR")
+    return "\r\n".join(_ics_fold(line) for line in lines) + "\r\n"
+
+
+@login_required
+def my_calendar(request):
+    """W3-F18: a self-only, one-time .ics DOWNLOAD of the viewer's OWN upcoming meetups (place +
+    time + type) so they can drop them into a phone/desktop calendar — a real show-up + dignity win
+    given the app has no push. Session-authenticated and served as a file attachment (mirrors
+    account_export's GET pattern), deliberately NOT a tokenized subscribable feed: a long-lived
+    secret URL fetched by an external calendar client with no session would disclose a member's —
+    possibly a CHILD's — future place+time outside the cohort/consent wall. Behind the same read
+    wall as /my-meetups/ (``_my_upcoming_meetups``)."""
+    from django.http import HttpResponse
+
+    payload = _build_calendar(_my_upcoming_meetups(request.user), host=request.get_host())
+    resp = HttpResponse(payload, content_type="text/calendar; charset=utf-8")
+    resp["Content-Disposition"] = f'attachment; filename="my-meetups-{request.user.public_id}.ics"'
+    return resp
 
 
 # F38: a minimal, root-scoped service worker. Served at /sw.js (root => scope "/" with no extra
