@@ -812,10 +812,16 @@ def home(request):
     starter_types = []
     if not recs.get_interests(user).exists():
         starter_types = recs.suggest_starter_interests(user)
+    # W3-F11: a distinct, always-on "welcomes beginners" strip (already deduped against
+    # `recommended` in build_home_feed). Its promoted cards are excluded from the soonest-first
+    # `upcoming` list below, so a newcomer sees beginner options up top without a card shown twice.
+    beginners = feed["beginners"]
+    beginners_ids = [a.id for a in beginners]
     beginners_only = request.GET.get("beginners") == "true"
     upcoming_qs = (
         social.visible_activities(user)
         .filter(status=Activity.Status.OPEN, starts_at__gte=timezone.now())
+        .exclude(id__in=beginners_ids)  # W3-F11: not a third copy of the promoted strip cards
         .select_related("place", "activity_type", "owner")
         .prefetch_related("place__corrections")  # F20: display_name without per-card N+1
     )
@@ -843,6 +849,7 @@ def home(request):
         {
             "recommended": recommended,
             "starter_types": starter_types,
+            "beginners": beginners,
             "upcoming": upcoming,
             "mine": mine,
             "events": feed["events"],

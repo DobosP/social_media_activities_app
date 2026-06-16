@@ -126,7 +126,7 @@ def test_feed_api_cohort_isolated_and_shaped(basketball, venue):
     api = APIClient()
     api.force_authenticate(adult)
     data = api.get("/api/discovery/feed/").json()
-    assert set(data) == {"recommended", "events", "group_updates"}
+    assert set(data) == {"recommended", "beginners", "events", "group_updates"}  # W3-F11 strip
     assert any(a["title"] == "Adults-only scrimmage" for a in data["recommended"])
     # no member counts / popularity fields on any feed card
     assert all("member_n" not in a and "member_count" not in a for a in data["recommended"])
@@ -134,6 +134,83 @@ def test_feed_api_cohort_isolated_and_shaped(basketball, venue):
     api.force_authenticate(child)
     child_data = api.get("/api/discovery/feed/").json()
     assert all(a["title"] != "Adults-only scrimmage" for a in child_data["recommended"])
+
+
+def test_beginner_friendly_filters_orders_and_dedups(basketball, venue):
+    from apps.discovery.services import beginner_friendly
+
+    org = _user("bf-org")
+    user = _user("bf-user")  # a newcomer (non-member) viewing the cohort's feed
+    now = timezone.now()
+
+    def _mk(title, starts_in, *, beginners):
+        return social.create_activity(
+            org,
+            place=venue,
+            activity_type=basketball,
+            title=title,
+            starts_at=now + starts_in,
+            beginners_welcome=beginners,
+        )
+
+    later = _mk("Beginners later", timedelta(days=3), beginners=True)
+    soon = _mk("Beginners soon", timedelta(days=1), beginners=True)
+    _mk("Not for beginners", timedelta(hours=2), beginners=False)
+
+    # beginners-welcome only, soonest-first — never the non-beginners (sooner) activity.
+    assert [a.id for a in beginner_friendly(user)] == [soon.id, later.id]
+    # exclude_ids dedups against cards already shown elsewhere (recommended/upcoming).
+    assert [a.id for a in beginner_friendly(user, exclude_ids=[soon.id])] == [later.id]
+
+
+def test_build_home_feed_beginners_disjoint_from_recommended(basketball, venue):
+    from apps.discovery.services import build_home_feed
+
+    org = _user("bf-feed-org")
+    user = _user("bf-feed-user")
+    social.create_activity(
+        org,
+        place=venue,
+        activity_type=basketball,
+        title="Beginners meetup",
+        starts_at=timezone.now() + timedelta(days=1),
+        beginners_welcome=True,
+    )
+    feed = build_home_feed(user)
+    assert "beginners" in feed  # the W3-F11 section exists on both surfaces
+    # The strip is never a second copy of a recommended card.
+    rec_ids = {a.id for a in feed["recommended"]}
+    beg_ids = {a.id for a in feed["beginners"]}
+    assert rec_ids.isdisjoint(beg_ids)
+
+
+def test_web_home_beginners_strip_shows_and_dedups_upcoming(client, basketball, venue):
+    # The beginners-welcome meetup lands in the W3-F11 strip (8 sooner fillers push it out of the
+    # recommended(8) block), and is promoted there exactly ONCE — excluded from "Upcoming" below.
+    org = _user("bf-web-org")
+    user = _user("bf-web-user")  # cold-start newcomer
+    now = timezone.now()
+    for i in range(8):
+        social.create_activity(
+            org,
+            place=venue,
+            activity_type=basketball,
+            title=f"Filler {i}",
+            starts_at=now + timedelta(hours=i + 1),
+            beginners_welcome=False,
+        )
+    social.create_activity(
+        org,
+        place=venue,
+        activity_type=basketball,
+        title="Welcoming hoops",
+        starts_at=now + timedelta(days=2),  # rank 9 by start -> out of recommended(8)
+        beginners_welcome=True,
+    )
+    client.force_login(user)
+    page = client.get("/").content.decode()
+    assert "New here? These welcome beginners" in page
+    assert page.count("Welcoming hoops") == 1  # promoted to the strip, not repeated in Upcoming
 
 
 def test_web_home_renders_feed_sections(client, basketball, venue):
