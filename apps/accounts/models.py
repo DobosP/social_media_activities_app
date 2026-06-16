@@ -160,6 +160,14 @@ class ParentalConsent(models.Model):
         REVOKED = "revoked", "Revoked"
         EXPIRED = "expired", "Expired"
 
+    class RenewalNotice(models.TextChoices):
+        # W3-F4 sent-marker: whether the nightly consent_renewal_sweep has already sent the
+        # expiring-soon renewal nudge for THIS consent term, so a tick never re-notifies. Reset to
+        # NONE whenever the consent is (re-)granted, giving each fresh term its own one nudge.
+        # (A LAPSE is marked by the ACTIVE->EXPIRED status flip instead, so no EXPIRED value here.)
+        NONE = "", "None"
+        SOON = "soon", "Renewal nudge sent"
+
     minor = models.ForeignKey(User, on_delete=models.CASCADE, related_name="parental_consents")
     guardian_identifier = models.CharField(max_length=255)
     status = models.CharField(max_length=16, choices=Status.choices, default=Status.PENDING)
@@ -167,6 +175,9 @@ class ParentalConsent(models.Model):
     granted_at = models.DateTimeField(null=True, blank=True)
     expires_at = models.DateTimeField(null=True, blank=True)
     revoked_at = models.DateTimeField(null=True, blank=True)
+    renewal_notice = models.CharField(
+        max_length=8, choices=RenewalNotice.choices, default=RenewalNotice.NONE, blank=True
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
