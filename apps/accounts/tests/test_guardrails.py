@@ -102,6 +102,7 @@ def test_empty_strings_mean_no_limit():
         "max_open_joins": None,
         "allowed_weekdays": None,
         "earliest_start_hour": None,
+        "allowed_categories": None,
     }
 
 
@@ -140,6 +141,7 @@ def test_strictest_across_two_guardians():
         "max_open_joins": 3,
         "allowed_weekdays": None,
         "earliest_start_hour": None,
+        "allowed_categories": None,
     }
 
 
@@ -333,3 +335,98 @@ def test_db_constraint_allows_nulls_and_boundaries():
         relationship=rel, latest_start_hour=0, max_open_joins=50
     )
     assert rail.pk is not None  # 0 and 50 are the inclusive boundaries; NULLs allowed too
+
+
+# --- W3-F2: guardian-curated activity-category allowlist ------------------------------
+
+
+def _category(slug, parent=None):
+    from apps.taxonomy.models import ActivityCategory
+
+    return ActivityCategory.objects.create(slug=slug, name=slug.title(), parent=parent)
+
+
+def test_rejects_unknown_category_slug():
+    guardian, child = _adult("g_cat_bad"), _child("c_cat_bad")
+    link_guardian(guardian, child)
+    _category("f2g-sport")
+    # "knitting" is not a real category -> fail-closed (raise), never silently dropped to "".
+    with pytest.raises(ValueError):
+        set_guardian_guardrail(guardian, child, allowed_categories=["f2g-sport", "f2g-nope"])
+
+
+def test_categories_normalise_sorted_unique():
+    guardian, child = _adult("g_cat_n"), _child("c_cat_n")
+    link_guardian(guardian, child)
+    _category("f2g-sport")
+    _category("f2g-reading")
+    rail = set_guardian_guardrail(
+        guardian, child, allowed_categories=["f2g-reading", "f2g-sport", "f2g-reading"]
+    )
+    assert rail.allowed_categories == ["f2g-reading", "f2g-sport"]  # sorted, de-duped
+    assert effective_guardrail(child)["allowed_categories"] == frozenset(
+        {"f2g-sport", "f2g-reading"}
+    )
+
+
+def test_empty_categories_mean_no_restriction():
+    guardian, child = _adult("g_cat_e"), _child("c_cat_e")
+    link_guardian(guardian, child)
+    set_guardian_guardrail(guardian, child, allowed_categories=[])
+    assert effective_guardrail(child)["allowed_categories"] is None  # not "block all"
+
+
+def test_category_intersection_can_be_empty_fail_closed():
+    # Two guardians with disjoint allowlists -> empty intersection -> NOTHING passes (strictest).
+    child = _child("c_cat_x")
+    g1, g2 = _adult("g_cat_x1"), _adult("g_cat_x2")
+    link_guardian(g1, child)
+    link_guardian(g2, child)
+    _category("f2g-sport")
+    _category("f2g-reading")
+    set_guardian_guardrail(g1, child, allowed_categories=["f2g-sport"])
+    set_guardian_guardrail(g2, child, allowed_categories=["f2g-reading"])
+    assert effective_guardrail(child)["allowed_categories"] == frozenset()
+
+
+def test_guardian_without_categories_does_not_loosen():
+    child = _child("c_cat_loose")
+    g1, g2 = _adult("g_cat_l1"), _adult("g_cat_l2")
+    link_guardian(g1, child)
+    link_guardian(g2, child)
+    _category("f2g-sport")
+    set_guardian_guardrail(g1, child, allowed_categories=["f2g-sport"])
+    # g2 set no category restriction -> g1's {sport} still applies (absent never widens).
+    assert effective_guardrail(child)["allowed_categories"] == frozenset({"f2g-sport"})
+
+
+def test_combined_block_all_flag_on_disjoint_categories():
+    child = _child("c_cat_block")
+    g1, g2 = _adult("g_cat_b1"), _adult("g_cat_b2")
+    link_guardian(g1, child)
+    link_guardian(g2, child)
+    _category("f2g-sport")
+    _category("f2g-reading")
+    set_guardian_guardrail(g1, child, allowed_categories=["f2g-sport"])
+    set_guardian_guardrail(g2, child, allowed_categories=["f2g-reading"])
+    # Disjoint category allowlists also mean the child matches no meetup -> legible, like weekdays.
+    assert guardianship_capabilities(g1, child)["guardrail_combined_blocks_all"] is True
+
+
+def test_capabilities_surface_categories():
+    guardian, child = _adult("g_cat_cap"), _child("c_cat_cap")
+    link_guardian(guardian, child)
+    _category("f2g-sport")
+    _category("f2g-reading")
+    set_guardian_guardrail(guardian, child, allowed_categories=["f2g-sport", "f2g-reading"])
+    caps = guardianship_capabilities(guardian, child)
+    assert caps["guardrail_allowed_categories"] == ["f2g-reading", "f2g-sport"]
+    assert caps["guardrail_combined_blocks_all"] is False
+
+
+@pytest.mark.parametrize("junk", [123, True, 5.0])
+def test_clean_categories_rejects_non_iterable(junk):
+    guardian, child = _adult("g_cat_ni"), _child("c_cat_ni")
+    link_guardian(guardian, child)
+    with pytest.raises(ValueError):
+        set_guardian_guardrail(guardian, child, allowed_categories=junk)

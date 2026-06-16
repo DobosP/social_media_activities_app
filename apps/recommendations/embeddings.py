@@ -8,19 +8,18 @@ taxonomy, so the same inputs always produce the same vector.
 import hashlib
 import math
 
+from apps.taxonomy.services import category_ancestry_slugs
+
 from .models import EMBEDDING_DIM
 
 
 def _slugs_for_type(activity_type) -> list[str]:
-    """The type slug plus its category ancestry, as namespaced tokens."""
-    tokens = [f"type:{activity_type.slug}"]
-    category = activity_type.category
-    depth = 0
-    while category is not None and depth < 16:
-        tokens.append(f"cat:{category.slug}")
-        category = category.parent
-        depth += 1
-    return tokens
+    """The type slug plus its category ancestry, as namespaced tokens. The ancestry walk is the
+    shared ``taxonomy.category_ancestry_slugs`` helper, so the embedding tokens and the W3-F2
+    child category-allowlist gate can never drift."""
+    return [f"type:{activity_type.slug}"] + [
+        f"cat:{slug}" for slug in category_ancestry_slugs(activity_type)
+    ]
 
 
 def hash_embed(tokens) -> list[float]:

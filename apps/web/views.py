@@ -2725,6 +2725,8 @@ def verify_age(request):
 
 @login_required
 def wards(request):
+    from apps.taxonomy.models import ActivityCategory
+
     ward_users = list(
         User.objects.filter(
             guardians__guardian=request.user,
@@ -2773,6 +2775,13 @@ def wards(request):
                 (6, "Sat"),
                 (7, "Sun"),
             ],
+            # W3-F2: top-level activity categories (slug, name) for the allowlist checkboxes. A
+            # ticked top category covers its whole subtree (the gate walks the type's ancestry).
+            "guardrail_categories": list(
+                ActivityCategory.objects.filter(parent__isnull=True)
+                .order_by("name")
+                .values_list("slug", "name")
+            ),
             **_nav_context(request.user),
         },
     )
@@ -3042,6 +3051,8 @@ def guardian_guardrail_set(request, ward_pk):
             # W3-F1: weekday checkboxes (getlist) + the earliest-start-hour bookend.
             allowed_weekdays=request.POST.getlist("allowed_weekdays"),
             earliest_start_hour=request.POST.get("earliest_start_hour", ""),
+            # W3-F2: activity-category allowlist checkboxes (getlist; none ticked = any type).
+            allowed_categories=request.POST.getlist("allowed_categories"),
         )
         messages.success(request, "Participation limits saved.")
     except ValueError as exc:

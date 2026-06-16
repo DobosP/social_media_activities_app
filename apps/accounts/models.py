@@ -1,6 +1,7 @@
 import uuid
 
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
@@ -273,6 +274,12 @@ class GuardianGuardrail(models.Model):
         blank=True,
         validators=[MinValueValidator(0), MaxValueValidator(23)],
     )
+    # W3-F2 "category envelope": an allowlist of activity-CATEGORY slugs. A CHILD ward may only
+    # join/organize/propose an activity whose type's category-ancestry intersects this set; []
+    # = NO category restriction (the calm default). Stored as slugs (not an M2M) to mirror the
+    # light shape of the weekday/hour guardrails; validated fail-closed (unknown slug raises) in
+    # set_guardian_guardrail, and the gate walks the ancestry via taxonomy.category_ancestry_slugs.
+    allowed_categories = ArrayField(models.SlugField(max_length=80), default=list, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
