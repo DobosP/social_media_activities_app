@@ -8,7 +8,7 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.utils import timezone
 
 from .models import (
@@ -20,6 +20,7 @@ from .models import (
     OpenNowReport,
     Partner,
     Place,
+    PlaceClosureReport,
     PlaceCorrection,
     PlaceCorrectionConfirmation,
     PlaceFactVote,
@@ -49,6 +50,13 @@ def public_places(qs=None):
     qs = Place.objects.all() if qs is None else qs
     return qs.filter(
         ~Q(source=Place.Source.USER) | Q(proposal__status=UserPlaceProposal.Status.PUBLISHED)
+    ).exclude(
+        # W3-F13: hide a venue a quorum of members reports as gone/permanently closed, so discovery
+        # stops sending groups there AND the create_activity write-gate (which routes through this
+        # same chokepoint) refuses it. A SELF-CONTAINED correlated subquery, NOT a named annotation,
+        # so the ~20 callers that use public_places() as a .values('id') subquery or a
+        # .filter(pk=...).exists() check inherit the block with no cooperation.
+        pk__in=_closed_place_ids()
     )
 
 
@@ -322,6 +330,83 @@ def clear_open_now_reports(place, *, moderator=None) -> int:
         from apps.safety.services import record_audit
 
         record_audit("place.open_now_reports_cleared", actor=moderator, target=place)
+    return n
+
+
+# --- W3-F13: 'this venue is gone' crowd closure overlay (ingest-safe) -------------------
+# Mirrors the F28 open-now overlay: counts-only, identities-free, read-time decay, NEVER written to
+# Place. Once a quorum of recent reports accrues, public_places() hides the venue from discovery AND
+# the create_activity write-gate. Distinct from F28 (wrong-hours, which downgrades but never hides).
+
+
+def _closure_settings():
+    return (
+        getattr(settings, "CLOSURE_REPORT_THRESHOLD", 3),
+        getattr(settings, "CLOSURE_REPORT_DECAY_SECONDS", 14 * 24 * 3600),
+    )
+
+
+def _closed_place_ids(*, now=None):
+    """The ids of places the closure overlay hides: >= threshold closure reports within the decay
+    window. A read-time correlated set (recomputed each call as the window slides), so a venue
+    self-heals once reports age out. Baked into public_places() as a subquery; never written to
+    Place (re-ingest safe)."""
+    threshold, decay = _closure_settings()
+    cutoff = (now or timezone.now()) - timedelta(seconds=decay)
+    return (
+        PlaceClosureReport.objects.filter(created_at__gte=cutoff)
+        .values("place")
+        .annotate(n=Count("id"))
+        .filter(n__gte=threshold)
+        .values_list("place", flat=True)
+    )
+
+
+def place_is_closed(place, *, now=None) -> bool:
+    """True once >= N independent closure reports accrue within the decay window (auto-decay: old
+    reports stop counting). Prefers a `recent_closure_n` annotation when present (avoids a per-row
+    query). The inverse-shaped sibling of hours_reliable."""
+    threshold, decay = _closure_settings()
+    recent = getattr(place, "recent_closure_n", None)
+    if recent is None:
+        cutoff = (now or timezone.now()) - timedelta(seconds=decay)
+        recent = place.closure_reports.filter(created_at__gte=cutoff).count()
+    return recent >= threshold
+
+
+@transaction.atomic
+def file_closure_report(reporter, place):
+    """File one 'this venue is gone / permanently closed' report (W3-F13). Idempotent per reporter
+    per place per decay window (anti-brigading); rate-limited across venues. Returns the report, or
+    None if throttled / already reported this window. Mirrors file_open_now_report exactly."""
+    from apps.accounts.services import can_participate
+    from apps.safety.services import allow_action
+
+    if not can_participate(reporter):
+        raise NotEligible("Verified, consented participation is required to report a closed venue.")
+    if not allow_action(
+        reporter,
+        "place_closure_report",
+        limit=getattr(settings, "CLOSURE_REPORT_RATE_LIMIT", 10),
+        window_seconds=getattr(settings, "CLOSURE_REPORT_RATE_WINDOW_SECONDS", 3600),
+    ):
+        return None  # over the cross-venue rate limit
+    _, decay = _closure_settings()
+    cutoff = timezone.now() - timedelta(seconds=decay)
+    if place.closure_reports.filter(reporter=reporter, created_at__gte=cutoff).exists():
+        return None  # one report per reporter per place per window
+    return PlaceClosureReport.objects.create(place=place, reporter=reporter)
+
+
+@transaction.atomic
+def clear_closure_reports(place, *, moderator=None) -> int:
+    """Staff reset — delete all closure reports so a wrongly-reported (or reopened) venue re-appears
+    in discovery on the next read. Audited when a moderator triggers it."""
+    n, _ = place.closure_reports.all().delete()
+    if moderator is not None:
+        from apps.safety.services import record_audit
+
+        record_audit("place.closure_reports_cleared", actor=moderator, target=place)
     return n
 
 

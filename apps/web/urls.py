@@ -47,6 +47,16 @@ urlpatterns = [
         views.place_open_now_reset,
         name="place_open_now_reset",
     ),
+    path(
+        "places/<int:pk>/closed/",
+        views.place_closure_report,
+        name="place_closure_report",
+    ),
+    path(
+        "places/<int:pk>/closed-reset/",
+        views.place_closure_reset,
+        name="place_closure_reset",
+    ),
     path("events/", views.events_list, name="events_list"),
     path("events/<int:pk>/", views.event_detail, name="event_detail"),
     path("events/<int:pk>/report/", views.event_report, name="event_report"),
