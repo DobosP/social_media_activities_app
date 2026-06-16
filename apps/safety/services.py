@@ -486,6 +486,38 @@ def _notify_statement_of_reasons(target, action, reason):
         pass
 
 
+def _notify_suspension_lifted(target):
+    """Symmetric bookend to the suspension notice — the other half of the DSA Art.17
+    moderation lifecycle. When a temporary suspension elapses the account is silently
+    reactivated; tell the user calmly that they can participate again, so the lifecycle
+    isn't an asymmetric silence. Best-effort: ``lift_expired_suspensions`` is NOT wrapped
+    in a single atomic block and saves per-row, so a notification failure must never abort
+    the nightly reactivation batch."""
+    try:
+        from apps.notifications.models import Notification
+        from apps.notifications.services import notify
+
+        recipient = _affected_user(target)
+        if recipient is None:
+            return
+        # Savepoint: isolate a DB-level notification failure to the notification alone,
+        # never the (already-applied) reactivation in the surrounding per-row loop.
+        with transaction.atomic():
+            notify(
+                recipient,
+                Notification.Kind.MODERATION,
+                title="Your suspension has ended",
+                body=(
+                    "Your account is active again and you can take part in activities. "
+                    "Thanks for your patience."
+                ),
+                url="",
+            )
+    except Exception:
+        # Symmetric dignity notice is non-critical relative to the reactivation itself.
+        pass
+
+
 @transaction.atomic
 def take_action(moderator, target, action, reason, *, notes="", report=None, expires_at=None):
     """Apply a moderation action and record it. Suspend/ban deactivate the target user."""
@@ -573,6 +605,9 @@ def lift_expired_suspensions() -> int:
                 target.is_active = True
                 target.save(update_fields=["is_active"])
                 record_audit("moderation.suspension_lifted", target=target)
+                # F17: symmetric end-of-suspension dignity notice (best-effort, savepoint-
+                # isolated so a notify failure can't abort this non-atomic per-row batch).
+                _notify_suspension_lifted(target)
                 reactivated += 1
         moderation.lifted_at = now
         moderation.save(update_fields=["lifted_at"])
