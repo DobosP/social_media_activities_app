@@ -53,7 +53,11 @@ def test_build_user_export_has_expected_sections():
         "thread_posts",
         "donations",
         "api_access",
+        "safety_record",  # W4-F22
+        "blocks",  # W4-F22
+        "privacy_settings",  # W4-F22
     }
+    assert export["schema_version"] == 3  # W4-F22 bumped 2 -> 3
     # W10 disclosure: token METADATA only — the export must never contain a key.
     assert export["api_access"] == {"api_token_issued": False, "issued_at": None}
     assert export["profile"]["username"] == "exp1"
@@ -215,7 +219,7 @@ def test_own_hidden_post_exports_as_neutral_removed_marker():
 def test_thread_posts_empty_for_a_user_who_never_posted():
     user = _user("tp_silent")
     assert build_user_export(user)["thread_posts"] == []
-    assert build_user_export(user)["schema_version"] == 2
+    assert build_user_export(user)["schema_version"] == 3
 
 
 def test_thread_posts_covers_group_threads_with_name_fallback():
@@ -261,3 +265,75 @@ def test_shared_post_target_content_never_leaks_into_thread_posts():
     # The shared activity's content is NOT pulled into the post projection (only the post's own
     # body + its thread title). (Its title appears under owned_activities — that's the user's own.)
     assert "SHARED_TARGET_SECRET" not in str(posts)
+
+
+# --- W4-F22: complete-the-export (own DSA record + blocks + privacy settings) ---------
+
+
+def test_export_includes_own_blocks():
+    import json
+
+    from apps.safety.services import block_user
+
+    user = _user("exp_blk")
+    target = _user("exp_blk_tgt")
+    block_user(user, target)
+    blocks = build_user_export(user)["blocks"]
+    assert len(blocks) == 1
+    assert blocks[0]["blocked"] == target.display_name
+    assert blocks[0]["blocked_public_id"] == str(target.public_id)
+    assert blocks[0]["created_at"]  # iso string, present
+    json.dumps(build_user_export(user))  # plain-json export must stay serialisable
+
+
+def test_export_safety_record_present_and_omits_moderator_identity():
+    import json
+
+    from apps.safety.models import ModerationAction, ReasonCode
+    from apps.safety.services import take_action
+
+    user = _user("exp_sr")
+    moderator = _user("exp_mod_secret_handle")
+    moderator.is_staff = True
+    moderator.save(update_fields=["is_staff"])
+    take_action(moderator, user, ModerationAction.Action.SUSPEND, ReasonCode.SPAM)
+
+    export = build_user_export(user)
+    assert "decisions" in export["safety_record"]
+    assert len(export["safety_record"]["decisions"]) >= 1
+    # The moderator's identity must NEVER appear in the affected user's export (Art.17 detail is the
+    # offender's; the moderator's handle is not the user's data).
+    assert "exp_mod_secret_handle" not in json.dumps(export)
+
+
+def test_export_safety_record_includes_own_filed_reports():
+    from apps.safety.services import file_report
+
+    reporter = _user("exp_rep")
+    target = _user("exp_rep_tgt")
+    from apps.safety.models import ReasonCode
+
+    file_report(reporter, target, ReasonCode.SPAM)
+    reports = build_user_export(reporter)["safety_record"]["reports"]
+    assert len(reports) == 1  # the reporter's OWN filed report is portable
+
+
+def test_export_includes_privacy_settings():
+    from apps.notifications.models import Notification
+    from apps.notifications.services import set_muted_kinds
+    from apps.places.models import AccessPreference
+
+    user = _user("exp_ps")
+    set_muted_kinds(user, [Notification.Kind.EVENT_REMINDER])
+    AccessPreference.objects.create(user=user, needs_step_free=True)
+
+    ps = build_user_export(user)["privacy_settings"]
+    assert "event_reminder" in ps["muted_notification_kinds"]
+    assert ps["access_preferences"]["needs_step_free"] is True
+
+
+def test_export_privacy_settings_handles_no_access_preference():
+    user = _user("exp_ps_none")
+    ps = build_user_export(user)["privacy_settings"]
+    assert ps["muted_notification_kinds"] == []
+    assert ps["access_preferences"] is None  # no row set yet

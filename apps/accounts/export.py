@@ -13,7 +13,7 @@ user's (or, via the guardian variant, their ward's) own data, never other member
 from django.utils import timezone
 
 # Export schema version, so consumers can detect format changes over time.
-EXPORT_SCHEMA_VERSION = 2  # W2-F32: added "thread_posts" (the user's own authored words)
+EXPORT_SCHEMA_VERSION = 3  # W4-F22: + safety_record, blocks, privacy_settings (own DSA + settings)
 
 
 def build_user_export(user) -> dict:
@@ -36,6 +36,11 @@ def build_user_export(user) -> dict:
         "thread_posts": _thread_posts(user),
         "donations": _donations_summary(user),
         "api_access": _api_access(user),
+        # W4-F22: the user's OWN DSA Art.16/17 record + block list + notification/access settings —
+        # data the platform holds + shows on-screen, now portable so "download my data" is complete.
+        "safety_record": _safety_record(user),
+        "blocks": _blocks(user),
+        "privacy_settings": _privacy_settings(user),
     }
 
 
@@ -250,6 +255,65 @@ def _donations_summary(user) -> dict:
             }
             for d in donations
         ],
+    }
+
+
+def _json_safe(value):
+    """Recursively coerce datetimes to ISO strings so a dict returned by a hardened service stays
+    serialisable by the plain-json export (account_export uses json.dumps, not the DRF encoder)."""
+    if isinstance(value, dict):
+        return {k: _json_safe(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_safe(v) for v in value]
+    if hasattr(value, "isoformat"):
+        return value.isoformat()
+    return value
+
+
+def _safety_record(user) -> dict:
+    """W4-F22: the user's OWN DSA Art.16/17 record — moderation decisions about their account/
+    content and the reports they filed — via the hardened, self-scoped ``safety_record_for``, which
+    already strips the moderator identity, other users, and who-reported. Routing through it (never
+    re-querying the raw FK rows) means the export can never widen exposure beyond what
+    /my-safety-record/ already shows on-screen."""
+    from apps.safety.services import safety_record_for
+
+    return _json_safe(safety_record_for(user))
+
+
+def _blocks(user) -> list:
+    """W4-F22: the user's OWN block actions — who they blocked and when. Mirrors exactly what the
+    /blocks page shows the blocker (the blocked user's display name + stable public id), never the
+    blocked user's other PII."""
+    from apps.safety.models import Block
+
+    return [
+        {
+            "blocked": b.blocked.display_name or b.blocked.username,
+            "blocked_public_id": str(b.blocked.public_id),
+            "created_at": _iso(b.created_at),
+        }
+        for b in Block.objects.filter(blocker=user).select_related("blocked").order_by("created_at")
+    ]
+
+
+def _privacy_settings(user) -> dict:
+    """W4-F22: the user's OWN notification mutes (F31) + stated accessibility preferences (F15) —
+    settings they chose and already see on-screen, now portable. No inferred / behavioural data."""
+    from apps.notifications.services import get_muted_kinds
+    from apps.places.models import AccessPreference
+
+    pref = AccessPreference.objects.filter(user=user).first()
+    return {
+        "muted_notification_kinds": sorted(get_muted_kinds(user)),
+        "access_preferences": {
+            "needs_step_free": pref.needs_step_free,
+            "needs_accessible_toilet": pref.needs_accessible_toilet,
+            "needs_hearing_loop": pref.needs_hearing_loop,
+            "prefers_quiet": pref.prefers_quiet,
+        }
+        if pref is not None
+        else None,
     }
 
 
