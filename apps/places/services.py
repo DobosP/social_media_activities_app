@@ -123,6 +123,38 @@ def accessibility_facts_display(place) -> list:
     return [{"key": key, "label": label, "state": facts[key]} for key, label in _FACT_LABELS]
 
 
+# W3-F15: plain-language state words for the read-aloud venue brief (honest about the unknowns).
+_PLAIN_STATE = {
+    FACT_TRUE: "yes",
+    FACT_FALSE: "no",
+    FACT_LIMITED: "limited",
+    FACT_UNKNOWN: "not recorded",
+}
+
+
+def place_plain_brief(place, *, venue_fact_rows=None) -> list:
+    """W3-F15: a deterministic, template-only "read it aloud" brief for a VENUE — short labelled
+    declarative sentences for screen-reader, low-literacy and elderly users. Returns an ORDERED list
+    of (label, sentence) pairs (render as ONE ARIA-landmarked region, no JS), mirroring W2-F27's
+    plain_meetup_brief. Pure read, no PII, NO numeric counts.
+
+    Always composed from place.display_name + display_address + the FREE accessibility dict-read
+    (accessibility_facts_display). Crowd venue facts are appended only when the caller passes the
+    pre-computed ``venue_fact_rows`` (the single-place detail surface). On the up-to-200-row places
+    list the caller passes None, so this NEVER triggers a per-row venue_facts() fact_votes query —
+    the N+1 the catalog warns of. venue_fact_rows is the {key,label,state} shape; counts ignored."""
+    brief = [("Place", str(place.display_name))]
+    address = (place.display_address or "").strip()
+    if address:
+        brief.append(("Where", f"It is at {address}."))
+    rows = list(accessibility_facts_display(place))
+    if venue_fact_rows:
+        rows += list(venue_fact_rows)
+    for row in rows:
+        brief.append((row["label"], _PLAIN_STATE.get(row["state"], "not recorded")))
+    return brief
+
+
 # --- F9: public meetup-place gate for children's activities --------------------------
 # A CHILD-cohort meetup may only be set at a known public venue type (a STAFF-curated
 # ChildVenueClass) or a per-place staff approval. Derived at READ time from the place's

@@ -91,6 +91,19 @@
   {% else %}<p class="muted">{% trans "No activities recorded here yet." %}</p>{% endif %}
 </div>
 
+{# W3-F15: a plain-language, read-aloud-friendly summary of the venue in ONE ARIA-landmarked region
+   (reuses the W2-F27 pattern). Composed from facts already in context — no extra query. Honest about
+   unknowns ('not recorded'); never asserts accessibility that isn't recorded, never a count. #}
+{% if place_brief %}
+<section class="card" aria-labelledby="place-brief-heading">
+  <h2 id="place-brief-heading" style="margin-top:0">{% trans "At a glance" %}</h2>
+  <dl class="brief">
+    {% for label, sentence in place_brief %}<dt>{{ label }}</dt><dd>{{ sentence }}</dd>
+    {% endfor %}
+  </dl>
+</section>
+{% endif %}
+
 <div class="card">
   <h2 style="margin-top:0">{% trans "Accessibility" %}</h2>
   {% if has_access_pref %}

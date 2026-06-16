@@ -961,11 +961,17 @@ def place_detail(request, pk):
     has_kid_facts = any(
         row["state"] == "true" and row["key"] in KID_FACT_KEYS for row in venue_fact_rows
     )
+    # W3-F15: read-aloud plain-language brief — composed from facts already in context (the free
+    # accessibility dict-read + the already-fetched venue_fact_rows), so no new query.
+    from apps.places.services import place_plain_brief
+
+    place_brief = place_plain_brief(place, venue_fact_rows=venue_fact_rows)
     return render(
         request,
         "web/place_detail.html",
         {
             "place": place,
+            "place_brief": place_brief,
             "meetups": meetups,
             "events": events,
             "edges": edges,
