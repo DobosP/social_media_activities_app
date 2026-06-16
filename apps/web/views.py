@@ -2088,6 +2088,7 @@ def saved_searches_page(request):
     if not saved_searches.can_save(request.user):
         messages.info(request, "Verify your account to save searches and get match alerts.")
         return redirect("home")
+    from apps.social.models import ActivityInterest
     from apps.taxonomy.models import ActivityCategory
 
     return render(
@@ -2098,6 +2099,7 @@ def saved_searches_page(request):
             "activity_types": ActivityType.objects.filter(is_active=True).order_by("name"),
             "categories": ActivityCategory.objects.all().order_by("name"),
             "cost_bands": Activity.CostBand.choices,
+            "coarse_windows": ActivityInterest.CoarseWindow.choices,
             **_nav_context(request.user),
         },
     )
@@ -2123,6 +2125,7 @@ def saved_search_create(request):
             city=city,  # the service resolves an Area after its anti-abuse gates
             beginners=request.POST.get("beginners") == "on",
             cost_band=request.POST.get("cost_band") or "",
+            coarse_window=request.POST.get("coarse_window") or "",
         )
         messages.success(
             request, "Search saved — we'll alert you when a matching activity appears."

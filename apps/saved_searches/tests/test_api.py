@@ -40,6 +40,27 @@ def test_owner_walled_and_non_int_404(adult, adult2, activity_type):
     assert owner.delete(f"{BASE}{s.pk}/").status_code == 204
 
 
+def test_create_via_api_accepts_and_returns_coarse_window(adult, activity_type):
+    from apps.social.models import ActivityInterest
+
+    window = ActivityInterest.CoarseWindow.WEEKDAY_EVENING.value
+    c = APIClient()
+    c.force_authenticate(adult)
+    r = c.post(BASE, {"activity_type": activity_type.id, "coarse_window": window}, format="json")
+    assert r.status_code == 201
+    assert r.data["coarse_window"] == window
+    assert SavedSearch.objects.get(pk=r.data["id"]).coarse_window == window
+
+
+def test_api_rejects_invalid_coarse_window(adult, activity_type):
+    c = APIClient()
+    c.force_authenticate(adult)
+    r = c.post(
+        BASE, {"activity_type": activity_type.id, "coarse_window": "whenever"}, format="json"
+    )
+    assert r.status_code == 400  # ChoiceField rejects the unknown value
+
+
 def test_serializer_allowlist_no_counters(adult, activity_type):
     s = ss.create_saved_search(adult, activity_type=activity_type, city="Cluj-Napoca")
     data = SavedSearchSerializer(s).data

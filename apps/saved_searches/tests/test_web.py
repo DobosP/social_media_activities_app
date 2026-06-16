@@ -21,6 +21,23 @@ def test_page_create_and_delete(client, adult, activity_type):
     assert not SavedSearch.objects.filter(pk=s.pk).exists()
 
 
+def test_web_create_threads_coarse_window(client, adult, activity_type):
+    from apps.social.models import ActivityInterest
+
+    client.force_login(adult)
+    r = client.post(
+        "/saved-searches/create/",
+        {
+            "activity_type": str(activity_type.id),
+            "coarse_window": ActivityInterest.CoarseWindow.WEEKEND_DAYTIME.value,
+            "next": "/saved-searches/",
+        },
+    )
+    assert r.status_code == 302
+    s = SavedSearch.objects.get(user=adult)
+    assert s.coarse_window == ActivityInterest.CoarseWindow.WEEKEND_DAYTIME
+
+
 def test_delete_is_owner_scoped_via_web(client, adult, adult2, activity_type):
     from apps.saved_searches import services as ss
 
