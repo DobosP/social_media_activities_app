@@ -10,6 +10,7 @@ It fans out to the existing per-app commands rather than re-implementing their l
   * ``expire_arrivals``        — clear stale arrival pings (keep them ephemeral).
   * ``send_activity_reminders``— notify members of activities starting soon.
   * ``organizer_prep_nudge``   — nudge organisers when a soon meetup still has no meeting point.
+  * ``supervisor_needed_nudge``— nudge a CHILD organiser's guardians when a supervisor is needed.
   * ``generate_communities``   — re-materialize the per-cohort community discovery labels.
   * ``reverify_sweep``         — nudge/evict minors on a stale age proof (active expiry).
   * ``consent_renewal_sweep``  — nudge guardians on an expiring parental consent; evict on lapse.
@@ -38,6 +39,7 @@ DUE_JOBS = (
     ("send_activity_reminders", {}),
     ("rsvp_finalize_nudge", {}),  # W2-F11 one-shot 'still coming?' nudge to undecided members
     ("organizer_prep_nudge", {}),  # W3-F6 prep nudge to organisers (blank meeting point)
+    ("supervisor_needed_nudge", {}),  # W3-F7 nudge a CHILD organiser's guardians (needs supervisor)
     ("generate_communities", {}),
     ("reverify_sweep", {}),
     ("consent_renewal_sweep", {}),  # W3-F4 active parental-consent expiry (nudge + lapse-evict)
