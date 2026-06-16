@@ -103,3 +103,12 @@ def test_age_band_shown_not_dob():
     assert "proven age band" in body
     # The page must never surface a raw DOB/identity field (we only ever store a band).
     assert "date of birth" in body  # only in the negative-space "we never store" statement
+
+
+def test_retention_clock_section_renders(settings):
+    # W3-F16: the data-retention clock section is present with derived durations.
+    settings.GUARDIAN_INVITE_TTL_DAYS = 7
+    body = _client(_user("pf_ret")).get("/my-privacy/").content.decode()
+    assert "How long your data is kept" in body
+    assert "Guardian invitations" in body
+    assert "7 days" in body

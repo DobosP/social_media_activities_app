@@ -29,6 +29,7 @@ DUE_JOBS = (
     ("purge_messaging", {}),
     ("purge_expired_attachments", {}),
     ("lift_suspensions", {}),
+    ("purge_guardian_invites", {}),  # W3-F16 delete expired guardian invites (minor-PII hygiene)
     ("auto_complete_activities", {}),
     ("expire_arrivals", {}),
     ("expire_interest", {}),  # F27 gauge expiry (ephemeral, self-healing)

@@ -89,6 +89,13 @@
   <a class="btn btn-sm btn-secondary" href="{% url 'account_delete' %}">{% trans "Delete my account" %}</a>
 </div>
 
+<h2>{% trans "How long your data is kept" %}</h2>
+<p class="muted">{% trans "We keep things only as long as they're useful, then they self-delete. Here's the clock for each kind of data." %}</p>
+<dl class="retention">
+  {% for r in retention %}<dt>{{ r.category }}</dt><dd>{{ r.ttl_description }}</dd>
+  {% endfor %}
+</dl>
+
 <h2>{% trans "What we never collect or do" %}</h2>
 <ul class="members">
   <li>{% trans "We never store your location — proximity uses your device's position only for the search you ask for, and is never saved." %}</li>
