@@ -40,6 +40,32 @@
 </div>
 {% endif %}
 
+{# W3-F13: report a venue as gone / permanently closed. A quorum hides it from discovery and blocks
+   new meetups there. The staff reset stays reachable even on an already-hidden (closed) place. #}
+{% if can_contribute %}
+<div class="card">
+  <h2 style="margin-top:0">{% trans "Is this place gone?" %}</h2>
+  <p class="muted" style="font-size:.85rem">{% trans "If this venue is demolished or permanently closed, let us know. If enough people agree, we'll stop sending groups here." %}</p>
+  <form method="post" action="{% url 'place_closure_report' place.pk %}" style="display:inline">
+    {% csrf_token %}
+    <button class="btn btn--light" type="submit">{% trans "Report: this venue is gone" %}</button>
+  </form>
+  {% if user.is_staff %}
+    <form method="post" action="{% url 'place_closure_reset' place.pk %}" style="display:inline">
+      {% csrf_token %}
+      <button class="btn btn--light" type="submit">{% trans "Clear closure reports (staff)" %}</button>
+    </form>
+  {% endif %}
+</div>
+{% elif user.is_staff %}
+<div class="card">
+  <form method="post" action="{% url 'place_closure_reset' place.pk %}" style="display:inline">
+    {% csrf_token %}
+    <button class="btn btn--light" type="submit">{% trans "Clear closure reports (staff)" %}</button>
+  </form>
+</div>
+{% endif %}
+
 {# F26: crowd-confirmed activity edges. Disputed edges are hidden (staff see them flagged). #}
 <div class="card">
   <h2 style="margin-top:0">{% trans "Activities here" %}</h2>

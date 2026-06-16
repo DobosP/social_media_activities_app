@@ -276,6 +276,33 @@ class OpenNowReport(models.Model):
         return f"open_now_report({self.place_id} by {self.reporter_id})"
 
 
+class PlaceClosureReport(models.Model):
+    """A member's 'this venue is gone / permanently closed' report (W3-F13). DEDICATED, ingest-safe
+    overlay: NEVER stored on Place (re-ingest's ``_resolve_place`` would clobber it). Once a quorum
+    of recent reports accrues, ``public_places()`` hides the venue from every discovery surface AND
+    the ``create_activity`` write-gate, so groups stop being sent to a building that no longer
+    exists. Derived at READ time from a count of recent reports (auto-decay), so a still-mapped
+    venue self-heals once the reports age out or on a staff reset."""
+
+    place = models.ForeignKey(Place, on_delete=models.CASCADE, related_name="closure_reports")
+    reporter = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="closure_reports"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        # No UniqueConstraint: uniqueness is TEMPORAL (one per reporter per place per decay window),
+        # enforced in the service so a post-decay report is allowed again. Explicit index names so
+        # the hand-authored migration is deterministic.
+        indexes = [
+            models.Index(fields=["place", "created_at"], name="closure_place_created_idx"),
+            models.Index(fields=["place", "reporter"], name="closure_place_reporter_idx"),
+        ]
+
+    def __str__(self):
+        return f"closure_report({self.place_id} by {self.reporter_id})"
+
+
 DEFAULT_FACT_QUORUM = 3
 
 

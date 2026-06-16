@@ -1163,6 +1163,40 @@ def place_open_now_reset(request, pk):
     return redirect("place_detail", pk=pk)
 
 
+@login_required
+@require_POST
+def place_closure_report(request, pk):
+    """W3-F13: report that a venue is gone / permanently closed. A quorum hides it from discovery
+    and blocks new meetups there (via public_places)."""
+    from apps.places.services import NotEligible, file_closure_report
+
+    place = get_object_or_404(Place, pk=pk)
+    try:
+        result = file_closure_report(request.user, place)
+    except NotEligible as exc:
+        messages.error(request, str(exc))
+    else:
+        if result is None:
+            messages.info(request, "Thanks - we already have your report for this place.")
+        else:
+            messages.success(request, "Thanks - we'll hide this venue if others agree it's gone.")
+    return redirect("place_detail", pk=pk)
+
+
+@login_required
+@require_POST
+def place_closure_reset(request, pk):
+    """W3-F13: staff reset of accumulated closure reports (wrongly reported / reopened venue)."""
+    from apps.places.services import clear_closure_reports
+
+    if not request.user.is_staff:
+        raise Http404("Not found.")
+    place = get_object_or_404(Place, pk=pk)
+    clear_closure_reports(place, moderator=request.user)
+    messages.success(request, "Closure reports cleared.")
+    return redirect("place_detail", pk=pk)
+
+
 # --- Activities ---------------------------------------------------------------------
 
 
