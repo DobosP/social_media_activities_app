@@ -1396,6 +1396,15 @@ def activity_detail(request, pk):
         Membership.TransitStatus.NONE,
         Membership.TransitStatus.ON_MY_WAY,
     )
+    # W3-F3: the "heading home" departure bookend, shown only to a CHILD member within the
+    # end-relative window (the service re-checks). my_departure renders the confirmation line.
+    my_departure = my_membership.departing_at if (is_member and my_membership) else None
+    can_mark_departing = (
+        is_member
+        and user.cohort == Cohort.CHILD
+        and not my_departure
+        and social.departure_window_open(activity)
+    )
     # F35: the "catch up" digest, only for someone who can already see the thread. The numeric
     # summary inside it is cohort-gated by the viewer (None for minors — see thread_digest).
     digest = social.thread_digest(activity, user) if (is_member or user.is_staff) else None
@@ -1475,6 +1484,8 @@ def activity_detail(request, pk):
             "my_guardians": my_guardians,
             "my_arrival": my_arrival,
             "my_transit": my_transit,
+            "my_departure": my_departure,
+            "can_mark_departing": can_mark_departing,
             "can_say_on_my_way": can_say_on_my_way,
             "can_say_running_late": can_say_running_late,
             "arrival_window_open": is_member and social.arrival_window_open(activity),
@@ -1927,6 +1938,20 @@ def activity_transit(request, pk):
     try:
         social.set_transit_status(request.user, activity, status)
         messages.success(request, "Thanks - your group has been told.")
+    except social.SocialError as exc:
+        messages.error(request, _msg(exc))
+    return redirect("activity_detail", pk=pk)
+
+
+@login_required
+@require_POST
+def activity_departing(request, pk):
+    """A CHILD member self-declares "I'm heading home" (W3-F3); only their active guardian(s)
+    are quietly told. No location, no note — just the tap. The departure bookend to arrival."""
+    activity = _visible_activity_or_404(request.user, pk)
+    try:
+        social.mark_departing(request.user, activity)
+        messages.success(request, "Thanks - the grown-ups who look after you have been told.")
     except social.SocialError as exc:
         messages.error(request, _msg(exc))
     return redirect("activity_detail", pk=pk)

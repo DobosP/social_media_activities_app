@@ -57,6 +57,7 @@ from .services import (
     leave_activity,
     leave_group,
     mark_arrived,
+    mark_departing,
     mark_interested,
     owner_admit,
     pause_series,
@@ -209,6 +210,17 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
         activity = self._activity_for(request.user, pk)
         try:
             membership = set_transit_status(request.user, activity, request.data.get("status"))
+        except SocialError as exc:
+            raise PermissionDenied(str(exc)) from exc
+        return Response(MembershipSerializer(membership).data)
+
+    @action(detail=True, methods=["post"])
+    def departing(self, request, pk=None):
+        """Self-declared "I'm heading home" (W3-F3) — the departure bookend to `arrived`. Always
+        the authenticated user; tells ONLY a CHILD member's active guardian(s)."""
+        activity = self._activity_for(request.user, pk)
+        try:
+            membership = mark_departing(request.user, activity)
         except SocialError as exc:
             raise PermissionDenied(str(exc)) from exc
         return Response(MembershipSerializer(membership).data)
