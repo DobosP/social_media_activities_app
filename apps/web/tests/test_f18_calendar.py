@@ -142,3 +142,17 @@ def test_uses_crlf_line_endings():
     body = _client(me).get(URL).content.decode()
     assert "\r\n" in body  # RFC 5545 requires CRLF line breaks
     assert "BEGIN:VCALENDAR\r\n" in body
+
+
+def test_long_summary_is_folded_to_75_octets():
+    me = _user("f18c_fold")
+    long_title = (
+        "A very long meetup title that comfortably exceeds the seventy five octet folding limit"
+    )
+    _activity(me, title=long_title)
+    body = _client(me).get(URL).content.decode()
+    # RFC 5545 §3.1: no content line may exceed 75 octets.
+    for line in body.split("\r\n"):
+        assert len(line.encode("utf-8")) <= 75, line
+    # Unfolding (drop each CRLF + leading space) must recover the SUMMARY value intact.
+    assert f"SUMMARY:{long_title}" in body.replace("\r\n ", "")

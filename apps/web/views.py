@@ -2750,10 +2750,27 @@ def _ics_escape(text) -> str:
     )
 
 
+def _ics_fold(line: str) -> str:
+    """RFC 5545 §3.1 content-line folding: no content line exceeds 75 OCTETS; a continuation begins
+    with CRLF + a single space (stripped on unfold). Split on UTF-8 octet boundaries so a multibyte
+    character is never severed (a SUMMARY/LOCATION can hold non-ASCII)."""
+    raw = line.encode("utf-8")
+    if len(raw) <= 75:
+        return line
+    chunks, start, limit = [], 0, 75
+    while start < len(raw):
+        end = min(start + limit, len(raw))
+        while end < len(raw) and (raw[end] & 0xC0) == 0x80:  # never split a continuation byte
+            end -= 1
+        chunks.append(raw[start:end].decode("utf-8"))
+        start, limit = end, 74  # continuation lines lose one octet to the leading space
+    return "\r\n ".join(chunks)
+
+
 def _build_calendar(activities, *, host: str) -> str:
     """Build a minimal RFC 5545 VCALENDAR (one VEVENT per meetup) as a pure standard-library
     string. Times are emitted in UTC (the stored tz-aware value, suffixed Z); every calendar client
-    converts them back to the reader's local zone. CRLF line breaks per the spec."""
+    converts them back to the reader's local zone. CRLF line breaks + 75-octet folding per spec."""
     import datetime as _dt
 
     def _utc(value) -> str:
@@ -2780,7 +2797,7 @@ def _build_calendar(activities, *, host: str) -> str:
         lines.append(f"LOCATION:{_ics_escape(a.place.display_name)}")
         lines.append("END:VEVENT")
     lines.append("END:VCALENDAR")
-    return "\r\n".join(lines) + "\r\n"
+    return "\r\n".join(_ics_fold(line) for line in lines) + "\r\n"
 
 
 @login_required
