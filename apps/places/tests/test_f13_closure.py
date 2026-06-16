@@ -222,6 +222,7 @@ def test_api_representation_exposes_no_closure_field():
 
     place = _place("Visible")
     data = APIClient().get("/api/places/").json()
-    rows = data["results"] if isinstance(data, dict) and "results" in data else data
-    row = next(r for r in rows if r["id"] == place.id)
-    assert not any(("closure" in k) or ("closed" in k) for k in row)
+    # The Place API is a GeoJSON FeatureCollection (GeoFeatureModelSerializer +
+    # CappedGeoJsonPagination): rows live under "features", model fields under "properties".
+    feature = next(f for f in data["features"] if f["id"] == place.id)
+    assert not any(("closure" in k) or ("closed" in k) for k in feature["properties"])
