@@ -111,12 +111,14 @@ def test_teen_ward_manifest_omits_extra_logistics():
     ward = _user("f18_teen", AgeBand.AGE_16_17)
     owner = _user("f18_towner", AgeBand.AGE_16_17)  # same TEEN cohort
     link_guardian(guardian, ward)
-    _member(_activity(owner, "f18-teen-type"), ward)
+    plan_b = "Teen plan B: the side entrance"
+    _member(_activity(owner, "f18-teen-type", fallback_meeting_point=plan_b), ward)
 
     body = _client(guardian).get("/wards/").content.decode()
     assert "Basketball" in body  # the basic meetup line still shows (type/place)
     assert MEETING not in body  # ...but teens self-manage: extra logistics not mirrored
     assert HOME not in body
+    assert plan_b not in body  # W3-F8: the plan-B spot is CHILD-only, never mirrored to a teen
 
 
 def test_cross_ward_guardian_does_not_see_other_wards_logistics():
