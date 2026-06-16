@@ -500,8 +500,9 @@ def _notify_suspension_lifted(target):
         recipient = _affected_user(target)
         if recipient is None:
             return
-        # Savepoint: isolate a DB-level notification failure to the notification alone,
-        # never the (already-applied) reactivation in the surrounding per-row loop.
+        # Own transaction: a DB-level notify failure rolls back only the notification. The
+        # reactivation + audit row already committed (this batch runs in autocommit — the
+        # caller is not @transaction.atomic), so they can never be undone by it.
         with transaction.atomic():
             notify(
                 recipient,
@@ -605,7 +606,7 @@ def lift_expired_suspensions() -> int:
                 target.is_active = True
                 target.save(update_fields=["is_active"])
                 record_audit("moderation.suspension_lifted", target=target)
-                # F17: symmetric end-of-suspension dignity notice (best-effort, savepoint-
+                # F17: symmetric end-of-suspension dignity notice (best-effort, transaction-
                 # isolated so a notify failure can't abort this non-atomic per-row batch).
                 _notify_suspension_lifted(target)
                 reactivated += 1
