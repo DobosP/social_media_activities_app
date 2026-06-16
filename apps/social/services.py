@@ -1379,14 +1379,34 @@ def _admit(membership: Membership) -> None:
     )
 
 
-def _evaluate_vote(membership: Membership) -> None:
-    """Promote a requested membership to member once approvals clear the threshold."""
+def _vote_threshold_met(membership: Membership) -> bool:
+    """Whether a requested membership's approvals have cleared the activity's join threshold — the
+    exact condition _evaluate_vote uses to admit. Extracted so the W3-F7 supervisor nudge re-runs
+    the SAME check — never a bare 'a REQUESTED row exists' (which must not summon a guardian)."""
     member_count = voting_members(membership.activity).count()
     if member_count == 0:
-        return
+        return False
     approvals = membership.votes.filter(approve=True).count()
-    if approvals / member_count >= membership.activity.join_threshold:
+    return approvals / member_count >= membership.activity.join_threshold
+
+
+def _evaluate_vote(membership: Membership) -> None:
+    """Promote a requested membership to member once approvals clear the threshold."""
+    if _vote_threshold_met(membership):
         _admit(membership)
+
+
+def join_stuck_on_supervision(activity) -> bool:
+    """W3-F7: True iff a supervised activity has at least one REQUESTED join that has CLEARED the
+    vote threshold (so it WOULD be admitted) but cannot settle because no supervisor is seated —
+    exactly the _admit fail-closed no-op. Never merely "a REQUESTED row exists"; a request nobody
+    has voted through must never summon a guardian."""
+    if not activity.supervised or supervision_satisfied(activity):
+        return False
+    return any(
+        _vote_threshold_met(m)
+        for m in activity.memberships.filter(state=Membership.State.REQUESTED)
+    )
 
 
 @transaction.atomic

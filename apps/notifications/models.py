@@ -29,6 +29,9 @@ class Notification(models.Model):
         RSVP_NUDGE = "rsvp_nudge", "RSVP nudge"  # W2-F11 (mutable, at-most-once, self only)
         # W3-F6 (mutable, at-most-once, organiser self only — never a member fan-out)
         ORGANIZER_PREP = "organizer_prep", "Organizer prep reminder"
+        # W3-F7 (mutable, at-most-once per (guardian, activity)) — to a CHILD organiser's ACTIVE
+        # guardians when their child's supervised meetup is stuck for lack of a seated supervisor.
+        SUPERVISOR_NEEDED = "supervisor_needed", "Supervisor needed"
         MODERATION = "moderation", "Moderation notice"
         SYSTEM = "system", "System"
 
@@ -109,6 +112,10 @@ WHY_REASONS = {
     ),
     Notification.Kind.ORGANIZER_PREP: (
         "A meetup you organise is coming up and still has no meeting point "
+        "(you can turn these off)."
+    ),
+    Notification.Kind.SUPERVISOR_NEEDED: (
+        "A child you look after is organising a meetup that needs an adult to supervise "
         "(you can turn these off)."
     ),
     Notification.Kind.MODERATION: (
