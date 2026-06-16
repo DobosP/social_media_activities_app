@@ -67,6 +67,12 @@ class Activity(models.Model):
     # getting_home_note (deliberately NOT on the cohort-visible ActivitySerializer) — it lowers the
     # social drop-at-the-door barrier without becoming a public discovery surface.
     first_time_note = models.TextField(blank=True, default="")
+    # W3-F8: an optional "plan B" gathering spot WITHIN the known venue (e.g. "if the courts are
+    # wet, the covered pavilion by the entrance"). MEMBER-ONLY like getting_home_note (kept off the
+    # cohort-visible ActivitySerializer) so it never widens a minor's location surface; rides the
+    # member reminder and the CHILD wards manifest. Text describing a spot in the known venue —
+    # never a stored user/child location, never a new Place.
+    fallback_meeting_point = models.TextField(blank=True, default="")
 
     # F8: optional "what to expect" fields so newcomers, disabled, and anxious users can
     # judge fit at a glance. Owner-curated; cost/difficulty are constrained choices,

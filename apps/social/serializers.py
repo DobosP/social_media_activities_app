@@ -111,6 +111,11 @@ class ActivityCreateSerializer(serializers.Serializer):
     first_time_note = serializers.CharField(
         required=False, allow_blank=True, default="", max_length=LOGISTICS_FIELD_MAX_LENGTH
     )
+    # W3-F8: plan-B spot within the venue. Member-only like getting_home_note (NOT on the
+    # cohort-wide read serializer — it must not widen a minor's location surface).
+    fallback_meeting_point = serializers.CharField(
+        required=False, allow_blank=True, default="", max_length=LOGISTICS_FIELD_MAX_LENGTH
+    )
     beginners_welcome = serializers.BooleanField(required=False, default=False)
 
 
@@ -142,6 +147,9 @@ class ActivityUpdateSerializer(serializers.Serializer):
         required=False, allow_blank=True, max_length=LOGISTICS_FIELD_MAX_LENGTH
     )
     first_time_note = serializers.CharField(
+        required=False, allow_blank=True, max_length=LOGISTICS_FIELD_MAX_LENGTH
+    )
+    fallback_meeting_point = serializers.CharField(
         required=False, allow_blank=True, max_length=LOGISTICS_FIELD_MAX_LENGTH
     )
     # No defaults below: a default would inject the field on every partial PATCH that omits

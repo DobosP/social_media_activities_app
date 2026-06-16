@@ -1675,6 +1675,8 @@ def activity_edit(request, pk):
                 "getting_home_note": activity.getting_home_note,
                 # Same prefill reason (F41): required=False would wipe the stored note on edit.
                 "first_time_note": activity.first_time_note,
+                # Same prefill reason (W3-F8): the plan-B spot must survive a routine edit.
+                "fallback_meeting_point": activity.fallback_meeting_point,
                 "cost_band": activity.cost_band,
                 "difficulty": activity.difficulty,
                 "accessibility_notes": activity.accessibility_notes,

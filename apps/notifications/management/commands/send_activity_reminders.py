@@ -22,6 +22,7 @@ _REMINDER_LOGISTICS = (
     ("what_to_bring", "Bring"),
     ("getting_home_note", "Getting home"),
     ("first_time_note", "First time"),
+    ("fallback_meeting_point", "Plan B"),  # W3-F8 plan-B spot within the venue
 )
 _REMINDER_FIELD_MAX = 120
 _REMINDER_BODY_MAX = 600

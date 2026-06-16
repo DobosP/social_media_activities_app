@@ -92,17 +92,33 @@ def test_child_ward_manifest_mirrors_logistics():
     assert "Ends:" in body  # ends_at mirrored
 
 
+def test_child_ward_manifest_mirrors_fallback_meeting_point():
+    # W3-F8: the plan-B spot rides the same CHILD-only, ACTIVE-guardian-keyed manifest mirror.
+    guardian = _user("f8_g")
+    ward = _user("f8_child", AgeBand.UNDER_16, consented=True)
+    owner = _user("f8_cowner", AgeBand.UNDER_16, consented=True)
+    link_guardian(guardian, ward)
+    plan_b = "Covered pavilion by the entrance if the courts are wet"
+    _member(_activity(owner, "f8-child-type", fallback_meeting_point=plan_b), ward)
+
+    body = _client(guardian).get("/wards/").content.decode()
+    assert plan_b in body
+    assert "Plan B location:" in body
+
+
 def test_teen_ward_manifest_omits_extra_logistics():
     guardian = _user("f18_gt")
     ward = _user("f18_teen", AgeBand.AGE_16_17)
     owner = _user("f18_towner", AgeBand.AGE_16_17)  # same TEEN cohort
     link_guardian(guardian, ward)
-    _member(_activity(owner, "f18-teen-type"), ward)
+    plan_b = "Teen plan B: the side entrance"
+    _member(_activity(owner, "f18-teen-type", fallback_meeting_point=plan_b), ward)
 
     body = _client(guardian).get("/wards/").content.decode()
     assert "Basketball" in body  # the basic meetup line still shows (type/place)
     assert MEETING not in body  # ...but teens self-manage: extra logistics not mirrored
     assert HOME not in body
+    assert plan_b not in body  # W3-F8: the plan-B spot is CHILD-only, never mirrored to a teen
 
 
 def test_cross_ward_guardian_does_not_see_other_wards_logistics():

@@ -128,6 +128,10 @@ class ActivityForm(forms.Form):
     first_time_note = _logistics_field(
         "What to expect on arrival (how to recognise the group, what happens first)."
     )
+    fallback_meeting_point = _logistics_field(
+        "Plan B spot within the venue if the main one's unavailable "
+        "(e.g. the covered pavilion by the entrance if the courts are wet)."
+    )
     beginners_welcome = forms.BooleanField(
         required=False,
         label="Beginners welcome",
@@ -286,6 +290,10 @@ class ActivityEditForm(forms.Form):
     )
     first_time_note = _logistics_field(
         "What to expect on arrival (how to recognise the group, what happens first)."
+    )
+    fallback_meeting_point = _logistics_field(
+        "Plan B spot within the venue if the main one's unavailable "
+        "(e.g. the covered pavilion by the entrance if the courts are wet)."
     )
     beginners_welcome = forms.BooleanField(
         required=False,
