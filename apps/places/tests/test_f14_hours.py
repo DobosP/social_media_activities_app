@@ -108,3 +108,27 @@ def test_name_publish_does_not_clear_open_now_reports():
     c = propose_place_correction(_user("np"), place, field=F.NAME, proposed_value="New Name")
     staff_publish_correction(_staff("modn"), c)
     assert place.open_now_reports.count() == 1
+
+
+def test_place_detail_renders_corrected_hours_card_and_posted_text():
+    from django.test import Client
+
+    place = _place()  # no OSM hours at all
+    c = propose_place_correction(
+        _user("wc"), place, field=F.HOURS, proposed_value="Mo-Fr 09:00-17:00"
+    )
+    staff_publish_correction(_staff("wmod"), c)
+    body = Client().get(f"/places/{place.id}/").content.decode()
+    assert "Opening hours" in body  # card renders (gated on display_opening_hours, not raw)
+    assert "Mo-Fr 09:00-17:00" in body  # the corrected 'Posted:' text, not a stale raw value
+
+
+def test_api_opening_hours_reflects_correction():
+    from rest_framework.test import APIClient
+
+    place = _place(opening_hours={"mo": [[540, 1080]]}, opening_hours_raw="Mo 09:00-18:00")
+    c = propose_place_correction(_user("ac"), place, field=F.HOURS, proposed_value="24/7")
+    staff_publish_correction(_staff("amod"), c)
+    props = APIClient().get("/api/places/").json()["features"][0]["properties"]
+    assert all(v == [[0, 1440]] for v in props["opening_hours"].values())  # corrected schedule
+    assert props["open_now"] is True  # and open_now agrees

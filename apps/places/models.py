@@ -127,6 +127,14 @@ class Place(gis_models.Model):
             return parse_opening_hours(corrected)
         return self.opening_hours
 
+    @property
+    def posted_hours_text(self) -> str:
+        """The human-readable opening-hours STRING to show the reader: the published crowd
+        correction's raw value if any, else the raw OSM string (W3-F14). The machine-readable
+        schedule is exposed as the parsed dict via display_opening_hours; this is just the source
+        text rendered beside the open/closed badge so the two never disagree."""
+        return self._applied_correction(PlaceCorrection.Field.HOURS) or self.opening_hours_raw
+
 
 class PlaceActivity(models.Model):
     """Edge connecting a Place to an ActivityType it supports."""
