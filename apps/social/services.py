@@ -298,7 +298,10 @@ def organizer_console(user) -> dict:
 
     * ``activities``: OPEN, upcoming activities the user OWNS or co-organises (is_organizer), each
       annotated with ``pending_joins`` (REQUESTED count), ``needs_supervisor`` (F29 — supervised
-      but no live supervisor seated), and ``missing_meeting_point`` (starts within 48h, blank);
+      but no live supervisor seated), ``missing_meeting_point`` (starts within 48h, blank), plus
+      (W3-F5) a ``readiness`` sub-dict (missing what-to-bring / getting-home (CHILD only) /
+      near-capacity), a ``quorum`` sub-dict (the calm "needs N more to go" line) and a
+      ``venue_flag`` (the place has a live wrong-hours data-quality flag — check before you go);
     * ``series``: the user's own recurring templates; ``groups``: the user's own standing groups.
 
     Deterministic (soonest-first), bounded, and STRICTLY FUNCTIONAL — it surfaces work to do and
@@ -306,7 +309,13 @@ def organizer_console(user) -> dict:
     per-organizer vanity counter (a pending-join count is a task, not a score)."""
     if not getattr(user, "is_authenticated", False):
         return {"activities": [], "series": [], "groups": []}
+    # F5: the venue-health flag reuses F28's decay window (same source the PlaceViewSet uses), so a
+    # stale wrong-hours report stops counting and the flag self-heals.
+    from apps.places.services import _open_now_settings, hours_reliable
+
     now = timezone.now()
+    _, _report_decay = _open_now_settings()
+    report_cutoff = now - timedelta(seconds=_report_decay)
     # Owner OR co-organiser, resolved to ids first so the pending-join annotation can't be
     # multiplied by the co-organiser membership join.
     ids = set(Activity.objects.filter(owner=user).values_list("id", flat=True))
@@ -323,26 +332,80 @@ def organizer_console(user) -> dict:
         # F20: the template renders place.display_name, which reads place.corrections — prefetch
         # so the list stays O(1) queries (the established pattern on every display_name surface).
         .prefetch_related("place__corrections")
+        # F5: batch every per-row read onto the single console queryset so the up-to-100-row list
+        # stays O(1) queries — never an attendance_summary()/participant_count()/hours_reliable()
+        # call inside the comprehension below. distinct=True is load-bearing: the counts span two
+        # multi-valued relations (memberships and place__open_now_reports), and without it the
+        # join fan-out would multiply each tally.
         .annotate(
             pending_n=Count(
                 "memberships",
                 filter=Q(memberships__state=Membership.State.REQUESTED),
                 distinct=True,
-            )
+            ),
+            # voting_members (state=MEMBER, never a supervisory guardian) — the quorum "total".
+            member_n=Count(
+                "memberships",
+                filter=Q(memberships__state=Membership.State.MEMBER)
+                & ~Q(memberships__role=Membership.Role.GUARDIAN),
+                distinct=True,
+            ),
+            # of those, the ones who've said they're GOING — the quorum "going".
+            going_n=Count(
+                "memberships",
+                filter=Q(memberships__state=Membership.State.MEMBER)
+                & ~Q(memberships__role=Membership.Role.GUARDIAN)
+                & Q(memberships__attendance_intent=Membership.AttendanceIntent.GOING),
+                distinct=True,
+            ),
+            # F28 recent wrong-hours reports for THIS activity's place — re-derived through the
+            # reverse FK (place__open_now_reports), NOT copied from the PlaceViewSet's direct
+            # annotation. Fed onto place.recent_report_n below so hours_reliable() reads it.
+            place_report_n=Count(
+                "place__open_now_reports",
+                filter=Q(place__open_now_reports__created_at__gte=report_cutoff),
+                distinct=True,
+            ),
         )
         .order_by("starts_at", "id")[:100]
     )
     prep_cutoff = now + ORGANIZER_PREP_WINDOW
-    rows = [
-        {
-            "activity": a,
-            "pending_joins": a.pending_n,
-            "needs_supervisor": a.supervised and not supervision_satisfied(a),
-            "missing_meeting_point": a.starts_at <= prep_cutoff
-            and not (a.meeting_point or "").strip(),
-        }
-        for a in activities
-    ]
+    rows = []
+    for a in activities:
+        place = a.place
+        # Feed the batched count onto the place so hours_reliable() reads the annotation instead
+        # of firing a per-row open_now_reports query.
+        place.recent_report_n = a.place_report_n
+        live = a.min_to_go is not None  # the queryset is already filtered to status=OPEN
+        rows.append(
+            {
+                "activity": a,
+                "pending_joins": a.pending_n,
+                "needs_supervisor": a.supervised and not supervision_satisfied(a),
+                "missing_meeting_point": a.starts_at <= prep_cutoff
+                and not (a.meeting_point or "").strip(),
+                # F5 night-before readiness — already-fetched fields only, no query. Each is a TASK
+                # snapshot (a gap to fix), never a per-organizer score.
+                "readiness": {
+                    "missing_what_to_bring": not (a.what_to_bring or "").strip(),
+                    # getting_home is a CHILD-only logistics field; surface its gap only there.
+                    "missing_getting_home": a.cohort == Cohort.CHILD
+                    and not (a.getting_home_note or "").strip(),
+                    "near_capacity": a.capacity is not None and a.member_n >= a.capacity,
+                },
+                # F5 calm "needs N more to go" quorum line — same shape as attendance_summary,
+                # computed from the batched counts (never a per-row attendance_summary() call).
+                "quorum": {
+                    "going": a.going_n,
+                    "total": a.member_n,
+                    "min_to_go": a.min_to_go if live else None,
+                    "met_minimum": (a.going_n >= a.min_to_go) if live else None,
+                    "remaining_needed": max(a.min_to_go - a.going_n, 0) if live else None,
+                },
+                # F5 "check this venue" task when the place has a live data-quality flag.
+                "venue_flag": not hours_reliable(place),
+            }
+        )
     # Only series still in play — an ENDED series can never run again and needs nothing, so it
     # has no place on a "what each one needs next" console (PAUSED stays: it's resumable).
     series = list(

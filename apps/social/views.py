@@ -698,6 +698,9 @@ class OrganizerConsoleView(APIView):
                         "pending_joins": r["pending_joins"],
                         "needs_supervisor": r["needs_supervisor"],
                         "missing_meeting_point": r["missing_meeting_point"],
+                        "readiness": r["readiness"],
+                        "quorum": r["quorum"],
+                        "venue_flag": r["venue_flag"],
                     }
                     for r in console["activities"]
                 ],
