@@ -580,6 +580,7 @@ def create_activity(
     organizer_note="",
     getting_home_note="",
     first_time_note="",
+    fallback_meeting_point="",
     cost_band=Activity.CostBand.UNSPECIFIED,
     difficulty=Activity.Difficulty.UNSPECIFIED,
     accessibility_notes="",
@@ -649,6 +650,7 @@ def create_activity(
         organizer_note=organizer_note,
         getting_home_note=getting_home_note,
         first_time_note=first_time_note,
+        fallback_meeting_point=fallback_meeting_point,
         cost_band=cost_band,
         difficulty=difficulty,
         accessibility_notes=accessibility_notes,
@@ -1079,6 +1081,7 @@ ACTIVITY_EDITABLE_FIELDS = (
     "organizer_note",
     "getting_home_note",  # F18 — mirrored onto a CHILD ward's guardian manifest
     "first_time_note",  # F41 — member-only "what to expect when you arrive" note
+    "fallback_meeting_point",  # W3-F8 — member-only plan-B spot within the venue
     "cost_band",  # F8 what-to-expect
     "difficulty",
     "accessibility_notes",
@@ -2576,6 +2579,7 @@ def plain_meetup_brief(activity, *, is_member: bool) -> list:
             (_("A note from the organiser"), activity.organizer_note),
             (_("Getting home"), activity.getting_home_note),
             (_("First time here"), activity.first_time_note),
+            (_("Plan B location"), activity.fallback_meeting_point),
         ):
             if (value or "").strip():
                 brief.append((str(label), value.strip()))

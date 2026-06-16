@@ -21,6 +21,7 @@
             {% if w.cohort == "child" %}
               {% if a.ends_at %}<br><span class="muted">{% trans "Ends:" %}</span> {{ a.ends_at|date:"D j M, H:i" }}{% endif %}
               {% if a.meeting_point %}<br><span class="muted">{% trans "Where to meet:" %}</span> {{ a.meeting_point|linebreaksbr }}{% endif %}
+              {% if a.fallback_meeting_point %}<br><span class="muted">{% trans "Plan B location:" %}</span> {{ a.fallback_meeting_point|linebreaksbr }}{% endif %}
               {% if a.getting_home_note %}<br><span class="muted">{% trans "Getting home:" %}</span> {{ a.getting_home_note|linebreaksbr }}{% endif %}
             {% endif %}</li>
         {% endfor %}
