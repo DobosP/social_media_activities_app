@@ -3,7 +3,7 @@ from django.db import models
 from django.db.models import Q
 
 from apps.accounts.models import Cohort
-from apps.social.models import Activity
+from apps.social.models import Activity, ActivityInterest
 
 
 class SavedSearch(models.Model):
@@ -44,6 +44,12 @@ class SavedSearch(models.Model):
     cost_band = models.CharField(
         max_length=16, choices=Activity.CostBand.choices, blank=True, default=""
     )  # applied only when non-empty; exact match (mirrors the F17 ?beginners filter)
+    # F12: optional schedule-fit window (weekday/weekend × daytime/evening). Reuses the shipped
+    # ActivityInterest.CoarseWindow choices; applied only when non-empty, judged in LOCAL time at
+    # read time (nothing time-derived is stored on the Activity). No coordinate, no per-user log.
+    coarse_window = models.CharField(
+        max_length=16, choices=ActivityInterest.CoarseWindow.choices, blank=True, default=""
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

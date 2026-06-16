@@ -31,6 +31,12 @@
         <option value="">{% trans "— any —" %}</option>
         {% for value, label in cost_bands %}{% if value != 'unspecified' %}<option value="{{ value }}">{{ label }}</option>{% endif %}{% endfor %}
       </select></label>
+    <label>{% trans "When (optional)" %}
+      <select name="coarse_window">
+        <option value="">{% trans "— any time —" %}</option>
+        {% for value, label in coarse_windows %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+      </select>
+      <span class="help">{% trans "Only alert me to meetups that fit this part of the week." %}</span></label>
     <label class="row"><input type="checkbox" name="beginners"> {% trans "Beginners-welcome activities only" %}</label>
     <button class="btn" type="submit">{% trans "Save search" %}</button>
   </form>
@@ -45,6 +51,7 @@
       {% if s.area %}<span class="tag">{{ s.area.name }}</span>{% endif %}
       {% if s.beginners %}<span class="tag">{% trans "beginners welcome" %}</span>{% endif %}
       {% if s.cost_band %}<span class="tag">{{ s.get_cost_band_display }}</span>{% endif %}
+      {% if s.coarse_window %}<span class="tag">{{ s.get_coarse_window_display }}</span>{% endif %}
     </div>
     <form method="post" action="{% url 'saved_search_delete' s.pk %}" class="inline">{% csrf_token %}
       <input type="hidden" name="next" value="{{ request.get_full_path }}">

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from apps.social.models import Activity
+from apps.social.models import Activity, ActivityInterest
 from apps.taxonomy.models import ActivityCategory, ActivityType
 
 from .models import SavedSearch
@@ -22,6 +22,12 @@ class SavedSearchCreateSerializer(serializers.Serializer):
     cost_band = serializers.ChoiceField(
         choices=Activity.CostBand.choices, required=False, allow_blank=True, default=""
     )
+    coarse_window = serializers.ChoiceField(
+        choices=ActivityInterest.CoarseWindow.choices,
+        required=False,
+        allow_blank=True,
+        default="",
+    )
 
     def validate(self, attrs):
         if bool(attrs.get("activity_type")) == bool(attrs.get("category")):
@@ -41,5 +47,14 @@ class SavedSearchSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SavedSearch
-        fields = ["id", "activity_type", "category", "area", "beginners", "cost_band", "created_at"]
+        fields = [
+            "id",
+            "activity_type",
+            "category",
+            "area",
+            "beginners",
+            "cost_band",
+            "coarse_window",
+            "created_at",
+        ]
         read_only_fields = fields

@@ -60,3 +60,22 @@ def test_model_has_no_coordinate_field():
     assert not (
         names & {"lat", "lon", "latitude", "longitude", "location", "coordinate", "point", "geom"}
     )
+
+
+def test_rejects_invalid_coarse_window(adult, activity_type):
+    with pytest.raises(ss.InvalidState):
+        ss.create_saved_search(adult, activity_type=activity_type, coarse_window="whenever")
+
+
+def test_coarse_window_distinguishes_otherwise_duplicate_searches(adult, activity_type):
+    from apps.social.models import ActivityInterest
+
+    cw = ActivityInterest.CoarseWindow
+    a = ss.create_saved_search(adult, activity_type=activity_type, coarse_window=cw.WEEKDAY_EVENING)
+    # Same type, different window — a distinct, allowable search (not a duplicate).
+    b = ss.create_saved_search(adult, activity_type=activity_type, coarse_window=cw.WEEKEND_DAYTIME)
+    assert a.coarse_window == cw.WEEKDAY_EVENING
+    assert b.coarse_window == cw.WEEKEND_DAYTIME
+    # ...but the SAME window again is the exact duplicate the dedup guard rejects.
+    with pytest.raises(ss.InvalidState):
+        ss.create_saved_search(adult, activity_type=activity_type, coarse_window=cw.WEEKDAY_EVENING)

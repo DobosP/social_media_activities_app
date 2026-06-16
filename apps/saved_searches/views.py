@@ -41,6 +41,7 @@ class SavedSearchViewSet(viewsets.ViewSet):
                 city=(data.get("city") or "").strip(),
                 beginners=data.get("beginners", False),
                 cost_band=data.get("cost_band", ""),
+                coarse_window=data.get("coarse_window", ""),
             )
         except services.NotEligible as exc:
             raise PermissionDenied(str(exc)) from exc

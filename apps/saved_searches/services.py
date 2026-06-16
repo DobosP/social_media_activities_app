@@ -6,6 +6,7 @@ import logging
 
 from django.conf import settings
 from django.db import transaction
+from django.db.models.functions import ExtractHour, ExtractIsoWeekDay
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -14,11 +15,39 @@ from apps.accounts.services import can_participate
 from apps.notifications.models import Notification
 from apps.notifications.services import notify
 from apps.safety.services import allow_action, record_audit
-from apps.social.models import Activity
+from apps.social.models import Activity, ActivityInterest
 
 from .models import SavedSearch, SavedSearchMatch
 
 logger = logging.getLogger(__name__)
+
+# F12: local-time boundary between a "daytime" and an "evening" coarse window. daytime = local
+# hour < 18; evening = local hour >= 18. weekday = Mon-Fri (ISO 1-5); weekend = Sat-Sun (ISO 6-7).
+_EVENING_START_HOUR = 18
+
+
+def _apply_coarse_window(qs, coarse_window):
+    """F12: narrow an Activity queryset to a CoarseWindow, judging weekday + hour in LOCAL time
+    (the project timezone, Europe/Bucharest) via tz-aware SQL Extract — so the result stays a
+    QuerySet (the matcher consumes it with ``.iterator()``) and the index scan / bounded query are
+    preserved. ``starts_at`` is stored UTC; a naive ``.weekday()``/``.hour`` would misclassify every
+    meetup by the 2-3h offset (incl. DST), silently dropping the actionable matches the feature
+    exists to surface."""
+    cw = ActivityInterest.CoarseWindow
+    tz = timezone.get_current_timezone()
+    qs = qs.alias(
+        _local_weekday=ExtractIsoWeekDay("starts_at", tzinfo=tz),
+        _local_hour=ExtractHour("starts_at", tzinfo=tz),
+    )
+    if coarse_window in (cw.WEEKDAY_DAYTIME, cw.WEEKDAY_EVENING):
+        qs = qs.filter(_local_weekday__lte=5)  # Mon-Fri
+    else:
+        qs = qs.filter(_local_weekday__gte=6)  # Sat-Sun
+    if coarse_window in (cw.WEEKDAY_DAYTIME, cw.WEEKEND_DAYTIME):
+        qs = qs.filter(_local_hour__lt=_EVENING_START_HOUR)
+    else:
+        qs = qs.filter(_local_hour__gte=_EVENING_START_HOUR)
+    return qs
 
 
 class SavedSearchError(Exception):
@@ -56,7 +85,14 @@ def saved_searches_for(user):
 
 @transaction.atomic
 def create_saved_search(
-    user, *, activity_type=None, category=None, city="", beginners=False, cost_band=""
+    user,
+    *,
+    activity_type=None,
+    category=None,
+    city="",
+    beginners=False,
+    cost_band="",
+    coarse_window="",
 ) -> SavedSearch:
     """Create an opt-in saved search. cohort is pinned from the user. Exactly one of
     activity_type / category. The optional `city` is resolved to an Area only AFTER the
@@ -72,6 +108,8 @@ def create_saved_search(
         raise InvalidState(_("That activity type isn't available."))
     if cost_band and cost_band not in {c for c, _label in Activity.CostBand.choices}:
         raise InvalidState(_("Invalid cost band."))
+    if coarse_window and coarse_window not in ActivityInterest.CoarseWindow.values:
+        raise InvalidState(_("Invalid time window."))
     if not allow_action(
         user,
         "saved_search_create",
@@ -97,6 +135,7 @@ def create_saved_search(
         area=area,
         beginners=beginners,
         cost_band=cost_band,
+        coarse_window=coarse_window,
     ).exists():
         raise InvalidState(_("You've already saved this search."))
     ss = SavedSearch.objects.create(
@@ -107,6 +146,7 @@ def create_saved_search(
         area=area,
         beginners=beginners,
         cost_band=cost_band,
+        coarse_window=coarse_window,
     )
     record_audit("saved_search.created", actor=user, target=ss)
     return ss
@@ -146,6 +186,10 @@ def matching_activities(saved_search, viewer):
         qs = qs.filter(beginners_welcome=True)
     if saved_search.cost_band:
         qs = qs.filter(cost_band=saved_search.cost_band)
+    if saved_search.coarse_window:
+        # F12: schedule-fit window, judged in local time at read time (no coordinate, nothing
+        # written on the Activity). Stays a QuerySet so the matcher's .iterator() still holds.
+        qs = _apply_coarse_window(qs, saved_search.coarse_window)
     # visible_activities does NOT filter status — add it so a cancelled/done meetup never alerts.
     # Soonest-first so that, under the per-saver rate cap, the deferred tail is the FARTHEST-out
     # (still recoverable next tick) — never an imminent match that would lapse before re-scan.
