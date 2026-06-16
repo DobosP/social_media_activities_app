@@ -803,6 +803,13 @@ def home(request):
 
     feed = build_home_feed(user, near_point=near_point, radius_m=radius_m, limit=8)
     recommended = feed["recommended"]
+    # W3-F10: only the genuine cold-start sliver (no recommendations AND no declared interests yet)
+    # gets the honest one-tap starter toggles. Gated on zero interests because the home quick-pick
+    # form submits ONLY the ticked types -> set_interests REPLACES, so it must never run for a user
+    # who already declared some (their interests page is the safe additive editor).
+    starter_types = []
+    if not recommended and not recs.get_interests(user).exists():
+        starter_types = recs.suggest_starter_interests(user)
     beginners_only = request.GET.get("beginners") == "true"
     upcoming_qs = (
         social.visible_activities(user)
@@ -833,6 +840,7 @@ def home(request):
         "web/home.html",
         {
             "recommended": recommended,
+            "starter_types": starter_types,
             "upcoming": upcoming,
             "mine": mine,
             "events": feed["events"],
@@ -2036,6 +2044,12 @@ def interests(request):
     chosen = set(
         UserInterest.objects.filter(user=request.user).values_list("activity_type__slug", flat=True)
     )
+    # W3-F10: honest "popular near you right now" starter toggles — the types with real upcoming
+    # local supply that the user hasn't declared yet. Shown above the full picker; excluded from the
+    # category groups below so each type's checkbox appears exactly once (never ranked/labelled by a
+    # nearby-count — that would be the inv.2 vanity metric).
+    starter = recs.suggest_starter_interests(request.user)
+    starter_slugs = {t.slug for t in starter}
     # W4: compact category-grouped picker — types arrive grouped so the template renders
     # one chip-section per category instead of one flat wall of checkboxes.
     options = (
@@ -2045,6 +2059,8 @@ def interests(request):
     )
     groups: dict = {}
     for t in options:
+        if t.slug in starter_slugs:
+            continue  # surfaced once, in the starter highlight above
         groups.setdefault(t.category, []).append(t)
     return render(
         request,
@@ -2053,6 +2069,7 @@ def interests(request):
             "groups": [(cat, types) for cat, types in groups.items()],
             "chosen": chosen,
             "chosen_count": len(chosen),
+            "starter": starter,
             **_nav_context(request.user),
         },
     )
