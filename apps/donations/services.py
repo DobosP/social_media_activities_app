@@ -1,7 +1,8 @@
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Q, Sum
 
-from .models import Campaign, Donation, SpendEntry
+from .models import Campaign, CostAnchor, Donation, SpendEntry
 from .providers import get_payment_provider, new_reference
 
 
@@ -164,6 +165,20 @@ def spend_total_cents(currency: str = "EUR") -> int:
     """Grand total of staff-entered spend (F29). Kept separate from completed_total_cents so the
     'received' and 'allocated' figures stay independent and are never framed as 'X of Y'."""
     return SpendEntry.objects.filter(currency=currency).aggregate(s=Sum("amount_cents"))["s"] or 0
+
+
+def cost_anchors(currency: str = "EUR") -> list[dict]:
+    """W3-F19: the active staff-authored 'what a gift makes possible' cost anchors for the donate
+    page. PURELY ILLUSTRATIVE — plain dicts of (label + amount + decorative category), ordered
+    largest-first and capped. There is deliberately NO live ratio against the SpendEntry actuals
+    and NO 'X of Y' goal/progress framing: ``spend_category`` is a non-binding label, never joined
+    to a computed total (the F29/F34/W2-F26 anti-vanity rule)."""
+    limit = getattr(settings, "COST_ANCHORS_MAX", 6)
+    return list(
+        CostAnchor.objects.filter(is_active=True, currency=currency)
+        .order_by("-amount_cents", "id")
+        .values("label", "amount_cents", "currency", "spend_category")[:limit]
+    )
 
 
 @transaction.atomic

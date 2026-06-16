@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Campaign, Donation, SpendEntry
+from .models import Campaign, CostAnchor, Donation, SpendEntry
 
 
 @admin.register(Donation)
@@ -58,3 +58,21 @@ class SpendEntryAdmin(admin.ModelAdmin):
     list_display = ("category", "amount_cents", "currency", "period", "campaign", "created_at")
     list_filter = ("currency", "campaign")  # W2-F26: filter spend by the campaign it delivered on
     search_fields = ("category", "note")
+
+
+@admin.register(CostAnchor)
+class CostAnchorAdmin(admin.ModelAdmin):
+    """Staff entry point for the donate-page cost anchors (W3-F19) — illustrative copy only,
+    never wired to actuals."""
+
+    list_display = (
+        "label",
+        "amount_cents",
+        "currency",
+        "spend_category",
+        "is_active",
+        "created_at",
+    )
+    list_filter = ("is_active", "currency")
+    search_fields = ("label", "spend_category")
+    readonly_fields = ("created_at",)

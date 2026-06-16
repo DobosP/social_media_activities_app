@@ -2370,7 +2370,7 @@ def messages_page(request):
 
 def donate(request):
     from apps.donations.models import Campaign
-    from apps.donations.services import DonationError, start_donation
+    from apps.donations.services import DonationError, cost_anchors, start_donation
 
     if request.method == "POST":
         form = DonateForm(request.POST)
@@ -2391,7 +2391,11 @@ def donate(request):
         if slug:
             initial["campaign"] = Campaign.objects.filter(slug=slug, is_active=True).first()
         form = DonateForm(initial=initial)
-    return render(request, "web/donate.html", {"form": form, **_nav_context(request.user)})
+    return render(
+        request,
+        "web/donate.html",
+        {"form": form, "cost_anchors": cost_anchors(), **_nav_context(request.user)},
+    )
 
 
 def transparency(request):

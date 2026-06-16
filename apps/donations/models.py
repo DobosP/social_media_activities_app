@@ -97,6 +97,37 @@ class SpendEntry(models.Model):
         return f"spend({self.category}: {self.amount_cents} {self.currency})"
 
 
+class CostAnchor(models.Model):
+    """W3-F19: a staff-authored 'what a gift makes possible' cost anchor shown beside the donate
+    form (e.g. "EUR 40 = one library room booking for a youth reading circle"). PURELY
+    ILLUSTRATIVE — a label + an amount, deliberately NOT a live ratio against the SpendEntry
+    actuals and NEVER an "X of Y" goal/progress bar (the whole F29/F34/W2-F26 suite exists to
+    avoid that framing). Has NO donor/donation FK and stores no PII. ``spend_category`` is a
+    DECORATIVE free-text label only (mirrors SpendEntry.category — never wired to a computed
+    total). Integer cents, like every other money field."""
+
+    label = models.CharField(max_length=280)
+    amount_cents = models.PositiveIntegerField()
+    currency = models.CharField(max_length=3, default="EUR")
+    # Decorative grouping label only (e.g. "Library room bookings") — NOT an FK to SpendEntry,
+    # never used to compute an actuals ratio. Mirrors SpendEntry.category's free-text shape.
+    spend_category = models.CharField(max_length=120, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        # Largest impact first — anchors the donor's imagination; never a countdown/scarcity order.
+        ordering = ["-amount_cents", "id"]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(amount_cents__gte=1), name="costanchor_positive_amount"
+            ),
+        ]
+
+    def __str__(self):
+        return f"anchor({self.label}: {self.amount_cents} {self.currency})"
+
+
 class Campaign(models.Model):
     """A staff-curated, mission-tied funding campaign a donor can earmark a gift toward (F34).
     Text-only by design: NO end_date (would invite a countdown), NO logo/image (an ad surface),
