@@ -179,6 +179,7 @@ class HomeFeedView(APIView):
         return Response(
             {
                 "recommended": FeedActivitySerializer(feed["recommended"], many=True).data,
+                "beginners": FeedActivitySerializer(feed["beginners"], many=True).data,
                 "events": FeedEventSerializer(feed["events"], many=True).data,
                 "group_updates": [
                     {

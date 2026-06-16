@@ -14,8 +14,8 @@ engagement (inv.2). Every section is bounded; there is no infinite scroll."""
 from apps.events.services import upcoming_events
 from apps.recommendations.models import UserInterest
 from apps.recommendations.services import recommended_with_reasons
-from apps.social.models import GroupMembership, Post
-from apps.social.services import visible_groups
+from apps.social.models import Activity, GroupMembership, Post
+from apps.social.services import visible_activities, visible_groups
 
 
 def interest_matched_events(user, *, limit=6):
@@ -72,13 +72,42 @@ def group_updates(user, *, limit=5):
     )
 
 
+def beginner_friendly(user, *, limit=6, exclude_ids=()):
+    """W3-F11: an always-on, low-stakes entry point for newcomers — upcoming OPEN activities in the
+    viewer's cohort that explicitly welcome beginners (the F17 ``beginners_welcome`` flag),
+    soonest-first and bounded. Routed through ``visible_activities`` so the cohort wall + the
+    blocked-owner exclusion hold; ordering is deterministic (never popularity/engagement — inv.2)
+    and NO join-derived count/badge is emitted. It lets a newcomer with no track record see where
+    they are explicitly wanted WITHOUT scanning the whole feed or knowing to toggle a filter.
+    ``exclude_ids`` drops activities already shown elsewhere on the page so the strip is distinct,
+    never a second copy of a card already on screen."""
+    from django.utils import timezone
+
+    return list(
+        visible_activities(user)
+        .filter(
+            status=Activity.Status.OPEN,
+            starts_at__gte=timezone.now(),
+            beginners_welcome=True,
+        )
+        .exclude(id__in=exclude_ids)
+        .select_related("place", "activity_type", "owner")
+        .order_by("starts_at")[:limit]
+    )
+
+
 def build_home_feed(user, *, near_point=None, radius_m=None, limit=8):
     """The typed home feed. Returns plain sections so the web view renders them
     directly and the API serializes them — one composition, two surfaces."""
+    recommended = recommended_with_reasons(
+        user, limit=limit, near_point=near_point, radius_m=radius_m
+    )
     return {
-        "recommended": recommended_with_reasons(
-            user, limit=limit, near_point=near_point, radius_m=radius_m
-        ),
+        "recommended": recommended,
+        # W3-F11: a DISTINCT, always-on beginners strip — deduped here against `recommended` so it
+        # is never a second copy of a card shown there (the web view additionally dedups it against
+        # its web-only "upcoming" block).
+        "beginners": beginner_friendly(user, exclude_ids=[a.id for a in recommended]),
         "events": interest_matched_events(user),
         "group_updates": group_updates(user),
     }
