@@ -187,3 +187,50 @@ class Campaign(models.Model):
                 raise ValidationError(
                     {"partner": "Only a verified, active partner can be credited on a campaign."}
                 )
+
+
+class InKindContribution(models.Model):
+    """W3-F20: a staff-entered NON-CASH civic contribution (a library donating room-hours, a club
+    lending equipment) for the public transparency ledger. Aggregate-only and donor-FK-free, exactly
+    like SpendEntry — it shows the FULL picture of civic backing beside the euro figures, but is
+    NEVER summed into 'Donations received' / 'Spending', nor framed as an 'X of Y' bar (the
+    F29/F34/W2-F26 anti-vanity rule). Money is OPTIONAL: an entry can be recorded as a quantity +
+    unit (e.g. 20 room-hours), as a euro value estimate, or both."""
+
+    category = models.CharField(max_length=120)
+    quantity = models.PositiveIntegerField(null=True, blank=True)
+    unit_text = models.CharField(max_length=60, blank=True)  # e.g. "room-hours", "kits"
+    # Optional euro-value estimate. Kept SEPARATE from completed_total_cents / spend_total_cents —
+    # never added into either, never an 'X of Y' figure.
+    value_cents = models.PositiveIntegerField(null=True, blank=True)
+    currency = models.CharField(max_length=3, default="EUR")
+    period = models.CharField(max_length=60, blank=True)  # free-text label, e.g. "2026 Q1"
+    note = models.CharField(max_length=300, blank=True)
+    # Optional credit to a verified civic partner. SET_NULL (like Campaign.partner) so deleting a
+    # partner never destroys the contribution record; gated to public() at admin + clean() time.
+    partner = models.ForeignKey(
+        "places.Partner",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="in_kind_contributions",
+        help_text="Optional verified civic partner credited for this contribution.",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"in_kind({self.category})"
+
+    def clean(self):
+        # Same defence-in-depth partner gate as Campaign.clean().
+        super().clean()
+        if self.partner_id is not None:
+            from apps.places.models import Partner
+
+            if not Partner.objects.public().filter(pk=self.partner_id).exists():
+                raise ValidationError(
+                    {"partner": "Only a verified, active partner can be credited."}
+                )

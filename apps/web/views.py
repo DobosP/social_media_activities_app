@@ -2458,6 +2458,7 @@ def transparency(request):
     category, as two clearly separate aggregate sections (never an 'X of Y goal' bar)."""
     from apps.donations.services import (
         completed_total_cents,
+        in_kind_by_category,
         spend_by_category,
         spend_total_cents,
     )
@@ -2470,6 +2471,7 @@ def transparency(request):
             "raised_cents": completed_total_cents("EUR"),
             "spend_rows": spend_by_category("EUR"),
             "spend_total_cents": spend_total_cents("EUR"),
+            "in_kind_rows": in_kind_by_category("EUR"),  # W3-F20 — its own separate section
             **_nav_context(request.user),
         },
     )

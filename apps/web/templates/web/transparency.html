@@ -23,5 +23,22 @@
     <p class="muted">{% trans "No spending has been published yet." %}</p>
   {% endif %}
 </div>
+
+{# W3-F20: non-cash civic support, a SEPARATE section. Never summed into the euro figures above and
+   never an 'X of Y' bar — quantities show in their own units; a euro estimate is shown only when set. #}
+{% if in_kind_rows %}
+<div class="card">
+  <h2 style="margin-top:0">{% trans "In-kind contributions" %}</h2>
+  <p class="muted">{% trans "Non-cash support from partners and the community &mdash; shown separately, not added to the cash figures above." %}</p>
+  <ul class="members">
+    {% for row in in_kind_rows %}
+      <li>{{ row.category }} &mdash;
+        {% if row.total_quantity %}<strong>{{ row.total_quantity }} {{ row.unit_text|default:_("units") }}</strong>{% endif %}
+        {% if row.total_cents %}{% if row.total_quantity %}&middot; {% endif %}<strong>{% blocktrans with total=row.total_cents|cents %}{{ total }} EUR (estimated value){% endblocktrans %}</strong>{% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
 <p><a class="btn" href="{% url 'donate' %}">{% trans "Support the platform" %}</a></p>
 {% endblock %}

@@ -1,8 +1,8 @@
 from django.conf import settings
 from django.db import transaction
-from django.db.models import Q, Sum
+from django.db.models import Count, Q, Sum
 
-from .models import Campaign, CostAnchor, Donation, SpendEntry
+from .models import Campaign, CostAnchor, Donation, InKindContribution, SpendEntry
 from .providers import get_payment_provider, new_reference
 
 
@@ -165,6 +165,24 @@ def spend_total_cents(currency: str = "EUR") -> int:
     """Grand total of staff-entered spend (F29). Kept separate from completed_total_cents so the
     'received' and 'allocated' figures stay independent and are never framed as 'X of Y'."""
     return SpendEntry.objects.filter(currency=currency).aggregate(s=Sum("amount_cents"))["s"] or 0
+
+
+def in_kind_by_category(currency: str = "EUR") -> list[dict]:
+    """W3-F20: staff-entered NON-CASH civic support, grouped by (category, unit), as plain dicts in
+    ONE query (no N+1). DELIBERATELY SEPARATE from the euro ledger: quantities are summed only
+    WITHIN a shared unit (never across incompatible units, e.g. room-hours + kits), and the optional
+    euro value stays its own figure — never added into completed_total_cents / spend_total_cents,
+    never an 'X of Y' bar. Donor-FK-free; identities never exposed."""
+    return list(
+        InKindContribution.objects.filter(currency=currency)
+        .values("category", "unit_text")
+        .annotate(
+            total_quantity=Sum("quantity"),
+            total_cents=Sum("value_cents"),
+            n=Count("id"),
+        )
+        .order_by("category", "unit_text")
+    )
 
 
 def cost_anchors(currency: str = "EUR") -> list[dict]:
