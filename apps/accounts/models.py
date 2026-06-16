@@ -262,6 +262,17 @@ class GuardianGuardrail(models.Model):
         blank=True,
         validators=[MinValueValidator(1), MaxValueValidator(50)],
     )
+    # W3-F1 "family calendar": narrow a CHILD ward's joinable WINDOW to real family rules.
+    #   - allowed_weekdays  -> canonical sorted ISO-day digits (Mon=1..Sun=7); the meetup's *local*
+    #     start weekday must be in this set. "" = NO weekday restriction (the common default).
+    #   - earliest_start_hour -> the meetup's *local* start hour must be >= this (0-23); the lower
+    #     bookend to latest_start_hour. Both NARROW only, join-time only, no PII (activity facts).
+    allowed_weekdays = models.CharField(max_length=7, blank=True, default="")
+    earliest_start_hour = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(23)],
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

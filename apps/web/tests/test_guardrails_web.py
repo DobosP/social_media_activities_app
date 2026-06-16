@@ -69,6 +69,36 @@ def test_guardian_saves_guardrail():
     assert rail.max_open_joins == 3
 
 
+def test_guardian_saves_family_calendar_window():
+    # W3-F1: weekday checkboxes (multi-value) + the earliest-start-hour bookend save correctly.
+    guardian, ward = _adult("gf3b"), _child("wf3b")
+    link_guardian(guardian, ward)
+    resp = _client(guardian).post(
+        f"/wards/{ward.pk}/limits/",
+        {"allowed_weekdays": ["1", "3", "5"], "earliest_start_hour": "9"},
+    )
+    assert resp.status_code == 302
+    rail = guardrail_for(guardian, ward)
+    assert rail.allowed_weekdays == "135"
+    assert rail.earliest_start_hour == 9
+    # The form + legibility panel reflect what was saved.
+    body = _client(guardian).get("/wards/").content.decode()
+    assert "no earlier than 9:00" in body
+
+
+def test_wards_surfaces_combined_block_all_notice():
+    # W3-F1: two guardians with disjoint day allowlists -> the child can join nothing; the guardian
+    # page must say so (the catalog-flagged silent-breakage gap).
+    guardian, ward = _adult("gf_b"), _child("wf_b")
+    other = _adult("gf_b2")
+    link_guardian(guardian, ward)
+    link_guardian(other, ward)
+    _client(guardian).post(f"/wards/{ward.pk}/limits/", {"allowed_weekdays": ["1", "2"]})
+    _client(other).post(f"/wards/{ward.pk}/limits/", {"allowed_weekdays": ["3", "4"]})
+    body = _client(guardian).get("/wards/").content.decode()
+    assert "no meetups currently match" in body
+
+
 def test_unchecked_supervised_only_clears_it():
     guardian, ward = _adult("gf3b"), _child("wf3b")
     link_guardian(guardian, ward)
