@@ -9,6 +9,7 @@ It fans out to the existing per-app commands rather than re-implementing their l
   * ``auto_complete_activities``— move past OPEN activities to COMPLETED.
   * ``expire_arrivals``        — clear stale arrival pings (keep them ephemeral).
   * ``send_activity_reminders``— notify members of activities starting soon.
+  * ``organizer_prep_nudge``   — nudge organisers when a soon meetup still has no meeting point.
   * ``generate_communities``   — re-materialize the per-cohort community discovery labels.
   * ``reverify_sweep``         — nudge/evict minors on a stale age proof (active expiry).
   * ``spawn_due_series``       — spawn the next instance of each due recurring activity series.
@@ -35,6 +36,7 @@ DUE_JOBS = (
     ("expire_interest", {}),  # F27 gauge expiry (ephemeral, self-healing)
     ("send_activity_reminders", {}),
     ("rsvp_finalize_nudge", {}),  # W2-F11 one-shot 'still coming?' nudge to undecided members
+    ("organizer_prep_nudge", {}),  # W3-F6 prep nudge to organisers (blank meeting point)
     ("generate_communities", {}),
     ("reverify_sweep", {}),
     ("spawn_due_series", {}),
