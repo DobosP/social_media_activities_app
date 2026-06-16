@@ -2571,6 +2571,41 @@ def thread_digest(activity, viewer) -> dict:
 # --- F36: template-driven activity draft helper ----------------------------------------
 
 
+# W4-F5: the whitelisted fields a "set up another like this" clone may pre-fill into a fresh create
+# form. Deliberately EXCLUDES starts_at (a clone is a NEW occurrence — the organiser picks when) and
+# anything membership/state/roster-derived. place + activity_type seed the form too; create_activity
+# re-validates ALL of them on submit (cohort re-pinned, place/type re-checked, child-venue +
+# category envelope re-applied), so a clone can never escape the create gate.
+_CLONE_PREFILL_FIELDS = (
+    "title",
+    "description",
+    "meeting_point",
+    "what_to_bring",
+    "organizer_note",
+    "getting_home_note",
+    "fallback_meeting_point",
+    "cost_band",
+    "difficulty",
+    "accessibility_notes",
+    "beginners_welcome",
+    "capacity",
+    "min_to_go",
+)
+
+
+def draft_from_activity(user, source) -> dict:
+    """W4-F5: a prefill dict for cloning the organiser's OWN past meetup into a new create form
+    ("set up another like this"). Returns {} unless `user` owns or co-organises `source`, so a
+    tampered ?from= pointing at someone else's activity injects nothing. PREFILL ONLY — every value
+    is re-validated through create_activity's full gate on submit; starts_at is never copied."""
+    if not (source.owner_id == user.id or is_organizer(user, source)):
+        return {}
+    prefill = {f: getattr(source, f) for f in _CLONE_PREFILL_FIELDS}
+    prefill["place"] = source.place_id
+    prefill["activity_type"] = source.activity_type_id
+    return prefill
+
+
 def draft_activity_text(*, activity_type, place=None, starts_at=None, cohort=None) -> dict:
     """A deterministic (no ML) draft title + description composed from the organiser's OWN
     chosen type/place/time, to seed an empty create form (F36). A CHILD/TEEN organiser also

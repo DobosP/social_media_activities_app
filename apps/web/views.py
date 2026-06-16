@@ -1552,6 +1552,17 @@ def activity_create(request):
             break
         except ValueError:
             continue
+    # W4-F5: "set up another like this" — seed from a meetup the organiser already ran. The
+    # ownership gate lives in social.draft_from_activity (a ?from= pointing at someone else's
+    # activity injects nothing); setdefault never overwrites an explicit GET param, and
+    # create_activity re-validates every seeded value on submit, so a clone can't escape the gate.
+    from_id = request.GET.get("from", "")
+    if from_id.isdigit():
+        source = Activity.objects.filter(pk=from_id).first()
+        if source is not None:
+            for field, value in social.draft_from_activity(request.user, source).items():
+                if value not in (None, ""):
+                    initial.setdefault(field, value)
     # F36: seed an editable draft title/description from the chosen type/place/time (composes
     # with the F40 prefill). setdefault only fills EMPTY slots — never overwrites the user's
     # input, and the POST path is untouched.
