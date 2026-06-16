@@ -553,6 +553,10 @@ def _passes_guardrails(user, activity) -> bool:
     earliest = rail.get("earliest_start_hour")
     if earliest is not None and local.hour < earliest:
         return False
+    # W3-F2 category envelope — the SAME decision fn the create chokepoints use (no drift), fed the
+    # rail we already loaded above (no extra query on the join path).
+    if not _type_in_category_envelope(rail.get("allowed_categories"), activity.activity_type):
+        return False
     cap = rail["max_open_joins"]
     if cap is not None:
         # Count the ward's current commitments to OPEN meetups (REQUESTED or MEMBER, not REMOVED).
@@ -566,6 +570,36 @@ def _passes_guardrails(user, activity) -> bool:
         if current >= cap:
             return False
     return True
+
+
+def _type_in_category_envelope(allowed, activity_type) -> bool:
+    """W3-F2 — the SINGLE place the category-envelope decision is made, so every child chokepoint
+    agrees. ``allowed`` is ``effective_guardrail(...)["allowed_categories"]``: None (no guardian set
+    a category restriction) -> True; otherwise a frozenset of allowed category slugs and the
+    activity's type passes iff its category-ancestry intersects it. An EMPTY frozenset (conflicting
+    guardian allowlists) -> False (fail-closed). The ancestry walk is the shared taxonomy helper, so
+    the safety gate and the recommendations embedding can't drift."""
+    if allowed is None:
+        return True
+    from apps.taxonomy.services import category_ancestry_slugs
+
+    return any(slug in allowed for slug in category_ancestry_slugs(activity_type))
+
+
+def category_envelope_allows(user, activity_type) -> bool:
+    """Whether a user may join/organize/propose this ``activity_type`` under their guardians'
+    W3-F2 category envelope. Non-CHILD and no-active-guardrail both pass with NO query. Wraps
+    ``_type_in_category_envelope`` for the create_activity / create_series / propose_interest
+    chokepoints, where no Activity exists yet (the join path uses the core fn directly with its
+    already-loaded rail). Enforcing at ALL FOUR chokepoints is load-bearing: a CHILD organizer is
+    auto-seated MEMBER inside create_activity WITHOUT passing the join gate, so a join-only check
+    would let a child escape the envelope by organizing the disallowed category themselves."""
+    if user.cohort != Cohort.CHILD:
+        return True
+    rail = effective_guardrail(user)
+    if rail is None:
+        return True
+    return _type_in_category_envelope(rail.get("allowed_categories"), activity_type)
 
 
 @transaction.atomic
@@ -639,6 +673,11 @@ def create_activity(
                     "approve this place."
                 )
             )
+    # W3-F2: a CHILD organizer is auto-seated MEMBER below WITHOUT passing can_join, so the
+    # guardian category envelope MUST be enforced here too — otherwise a child escapes the
+    # envelope by organizing the disallowed category themselves. Same shared gate as the join path.
+    if not category_envelope_allows(owner, activity_type):
+        raise InvalidState(_("Your guardian's settings don't allow this kind of activity yet."))
     activity = Activity.objects.create(
         owner=owner,
         place=place,
@@ -775,6 +814,10 @@ def create_series(
                     "approve this place."
                 )
             )
+    # W3-F2: enforce the guardian category envelope on a CHILD series too — every spawned instance
+    # re-checks it, but blocking at template time avoids a "zombie series" that never spawns.
+    if not category_envelope_allows(owner, activity_type):
+        raise InvalidState(_("Your guardian's settings don't allow this kind of activity yet."))
     duration = None
     if ends_at is not None and ends_at > first_starts_at:
         duration = int((ends_at - first_starts_at).total_seconds() // 60)
@@ -3366,6 +3409,10 @@ def propose_interest(proposer, *, place, activity_type, coarse_window) -> Activi
                     "approve this place."
                 )
             )
+    # W3-F2: enforce the guardian category envelope on a CHILD's gauge too — otherwise a child
+    # could float (and rally a quorum around) a disallowed-category meetup that then can't convert.
+    if not category_envelope_allows(proposer, activity_type):
+        raise InvalidState(_("Your guardian's settings don't allow this kind of activity yet."))
     if coarse_window not in ActivityInterest.CoarseWindow.values:
         raise InvalidState(_("Pick one of the listed time windows."))
     interest = ActivityInterest.objects.create(

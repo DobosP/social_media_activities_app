@@ -41,6 +41,7 @@
       {% if w.caps.guardrail_max_open_joins %}<li>{% blocktrans count n=w.caps.guardrail_max_open_joins %}&#10003; Limit set: at most {{ n }} open meetup at a time.{% plural %}&#10003; Limit set: at most {{ n }} open meetups at a time.{% endblocktrans %}</li>{% endif %}
       {% if w.caps.guardrail_earliest_start_hour is not None %}<li>{% blocktrans with hour=w.caps.guardrail_earliest_start_hour %}&#10003; Limit set: meetups starting no earlier than {{ hour }}:00.{% endblocktrans %}</li>{% endif %}
       {% if w.caps.guardrail_allowed_weekday_ints %}<li>{% trans "&#10003; Limit set: only on chosen days of the week." %}</li>{% endif %}
+      {% if w.caps.guardrail_allowed_categories %}<li>{% trans "&#10003; Limit set: only chosen kinds of activity." %}</li>{% endif %}
       <li>{% trans "&#10007; You cannot see their thread posts, photos, who else is there, or chat content (beyond the observer view above); you never enter their activities or cohort." %}</li>
     </ul>
     {% if w.caps.guardrail_combined_blocks_all %}
@@ -82,6 +83,17 @@
               {{ label }}</label>
           {% endfor %}
         </fieldset>
+        {% if guardrail_categories %}
+        <fieldset style="border:0;padding:0;margin:0">
+          <legend style="font-size:.85rem">{% trans "Only these kinds of activity (none ticked = any kind)" %}</legend>
+          {% for slug, name in guardrail_categories %}
+            <label class="inline" style="margin-right:.5rem">
+              <input type="checkbox" name="allowed_categories" value="{{ slug }}"
+                     {% if slug in w.caps.guardrail_allowed_categories %}checked{% endif %}>
+              {{ name }}</label>
+          {% endfor %}
+        </fieldset>
+        {% endif %}
         <label>{% trans "Most open meetups at once" %}
           <input type="number" name="max_open_joins" min="1" max="50" inputmode="numeric"
                  value="{{ w.caps.guardrail_max_open_joins|default_if_none:'' }}"

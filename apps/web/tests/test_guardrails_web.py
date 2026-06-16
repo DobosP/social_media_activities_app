@@ -86,6 +86,36 @@ def test_guardian_saves_family_calendar_window():
     assert "no earlier than 9:00" in body
 
 
+def test_guardian_saves_category_allowlist():
+    # W3-F2: the category checkboxes save, the form shows the labels, and the legibility line shows.
+    from apps.taxonomy.models import ActivityCategory
+
+    guardian, ward = _adult("gf_cat"), _child("wf_cat")
+    link_guardian(guardian, ward)
+    ActivityCategory.objects.create(slug="webf2-music", name="Music")
+    resp = _client(guardian).post(
+        f"/wards/{ward.pk}/limits/", {"allowed_categories": ["webf2-music"]}
+    )
+    assert resp.status_code == 302
+    assert guardrail_for(guardian, ward).allowed_categories == ["webf2-music"]
+    body = _client(guardian).get("/wards/").content.decode()
+    assert "Only these kinds of activity" in body  # the fieldset legend
+    assert "Music" in body  # the checkbox label
+    assert "only chosen kinds of activity" in body  # the legibility line, now that one is set
+
+
+def test_invalid_category_is_rejected_with_message():
+    guardian, ward = _adult("gf_cat2"), _child("wf_cat2")
+    link_guardian(guardian, ward)
+    resp = _client(guardian).post(
+        f"/wards/{ward.pk}/limits/",
+        {"allowed_categories": ["totally-not-real-cat"]},
+        follow=True,
+    )
+    assert guardrail_for(guardian, ward) is None  # fail-closed: nothing saved
+    assert b"valid activity categories" in resp.content
+
+
 def test_wards_surfaces_combined_block_all_notice():
     # W3-F1: two guardians with disjoint day allowlists -> the child can join nothing; the guardian
     # page must say so (the catalog-flagged silent-breakage gap).
@@ -167,3 +197,17 @@ def test_ward_sees_set_limits_on_guardianship_page():
     assert "17:00" in body
     # Legibility-only — the ward page never exposes an edit/limits action.
     assert f"/wards/{ward.pk}/limits/" not in body
+
+
+def test_ward_sees_category_limit_on_guardianship_page():
+    # W3-F2: the ward-side page surfaces the category envelope too (legibility parity with the
+    # guardian-side /wards/ page; also closes the latent W3-F1 weekday/earliest ward-side omission).
+    from apps.taxonomy.models import ActivityCategory
+
+    guardian, ward = _adult("gf7"), _child("wf7")
+    link_guardian(guardian, ward)
+    ActivityCategory.objects.create(slug="webf2g-art", name="Art")
+    _client(guardian).post(f"/wards/{ward.pk}/limits/", {"allowed_categories": ["webf2g-art"]})
+    body = _client(ward).get("/guardianship/").content.decode()
+    assert "Limits they&#x27;ve set" in body or "Limits they've set" in body
+    assert "Only certain kinds of activity" in body

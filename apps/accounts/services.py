@@ -473,6 +473,29 @@ def _clean_weekdays(value) -> str:
     return "".join(str(d) for d in sorted(days))
 
 
+def _clean_categories(value) -> list[str]:
+    """Normalise an allowlist of activity-CATEGORY slugs (W3-F2) to a canonical sorted-unique
+    list. Empty / None -> [] (NO category restriction — the common default). Junk (a non-iterable,
+    or any slug that is not a real ActivityCategory) RAISES, so a malformed value can never
+    silently parse to [] and WIDEN access (fail-closed at the input boundary, mirroring
+    _clean_weekdays). Accepts a list (form checkboxes) or a single slug string."""
+    if value is None or value == "":
+        return []
+    if isinstance(value, str):
+        value = [value]
+    if not isinstance(value, (list, tuple, set, frozenset)):
+        raise ValueError("Pick valid activity categories.")
+    slugs = {str(s).strip() for s in value if str(s).strip()}
+    if not slugs:
+        return []
+    from apps.taxonomy.models import ActivityCategory
+
+    known = set(ActivityCategory.objects.filter(slug__in=slugs).values_list("slug", flat=True))
+    if known != slugs:  # an unknown slug is junk -> raise, never silently drop (fail-closed)
+        raise ValueError("Pick valid activity categories.")
+    return sorted(slugs)
+
+
 def _clean_cap(value) -> int | None:
     """Normalise an optional open-meetup cap. Empty -> None (no cap)."""
     if value is None or value == "":
@@ -496,6 +519,7 @@ def set_guardian_guardrail(
     max_open_joins=None,
     allowed_weekdays=None,
     earliest_start_hour=None,
+    allowed_categories=None,
 ) -> GuardianGuardrail:
     """Create/update this guardian's guardrail for a CHILD ward. Gated strictly on an ACTIVE
     GuardianRelationship with a CHILD ward; audited inside the transaction. Inputs are
@@ -514,6 +538,7 @@ def set_guardian_guardrail(
     cap = _clean_cap(max_open_joins)
     weekdays = _clean_weekdays(allowed_weekdays)
     earliest = _clean_hour(earliest_start_hour)
+    categories = _clean_categories(allowed_categories)
     rail, _created = GuardianGuardrail.objects.update_or_create(
         relationship=rel,
         defaults={
@@ -522,6 +547,7 @@ def set_guardian_guardrail(
             "max_open_joins": cap,
             "allowed_weekdays": weekdays,
             "earliest_start_hour": earliest,
+            "allowed_categories": categories,
         },
     )
     from apps.safety.services import record_audit
@@ -535,6 +561,7 @@ def set_guardian_guardrail(
         max_open_joins=cap,
         allowed_weekdays=weekdays,
         earliest_start_hour=earliest,
+        allowed_categories=categories,
     )
     return rail
 
@@ -562,7 +589,9 @@ def effective_guardrail(ward: User) -> dict | None:
 
     ``allowed_weekdays`` is None when NO guardian set a weekday restriction, else a frozenset of
     ISO day ints (Mon=1..Sun=7); a conflicting intersection yields the EMPTY frozenset, which
-    correctly means "no weekday passes" (the strictest, fail-closed direction)."""
+    correctly means "no weekday passes" (the strictest, fail-closed direction).
+    ``allowed_categories`` (W3-F2) behaves identically: None when no guardian set an envelope, else
+    a frozenset of category slugs intersected across guardians (empty = nothing passes)."""
     rails = list(
         GuardianGuardrail.objects.filter(
             relationship__ward=ward,
@@ -582,12 +611,22 @@ def effective_guardrail(ward: User) -> dict | None:
         for s in weekday_sets[1:]:
             allowed_weekdays &= s
         allowed_weekdays = frozenset(allowed_weekdays)  # may be empty -> nothing passes
+    # W3-F2: a guardian with an empty allowed_categories imposes NO category restriction. The
+    # combine is the INTERSECTION across guardians who DID set one (fail-closed, like weekdays).
+    category_sets = [set(r.allowed_categories) for r in rails if r.allowed_categories]
+    allowed_categories = None
+    if category_sets:
+        allowed_categories = set(category_sets[0])
+        for s in category_sets[1:]:
+            allowed_categories &= s
+        allowed_categories = frozenset(allowed_categories)  # may be empty -> nothing passes
     return {
         "supervised_only": any(r.supervised_only for r in rails),
         "latest_start_hour": min(hours) if hours else None,
         "max_open_joins": min(caps) if caps else None,
         "allowed_weekdays": allowed_weekdays,
         "earliest_start_hour": max(earliest_hours) if earliest_hours else None,
+        "allowed_categories": allowed_categories,
     }
 
 
@@ -788,6 +827,9 @@ def guardianship_capabilities(guardian: User, ward: User) -> dict:
         eff
         and (
             eff["allowed_weekdays"] == frozenset()
+            # W3-F2: disjoint category allowlists across guardians -> empty intersection ->
+            # NO activity type passes. Legible here for the same reason as the weekday case.
+            or eff["allowed_categories"] == frozenset()
             or (
                 eff["earliest_start_hour"] is not None
                 and eff["latest_start_hour"] is not None
@@ -819,6 +861,9 @@ def guardianship_capabilities(guardian: User, ward: User) -> dict:
             [int(c) for c in rail.allowed_weekdays] if (rail and rail.allowed_weekdays) else []
         ),
         "guardrail_earliest_start_hour": rail.earliest_start_hour if rail else None,
+        # W3-F2: this guardian's own category envelope (slugs; [] = no restriction), surfaced so
+        # the edit form pre-ticks the chosen categories and the panel renders what the gate does.
+        "guardrail_allowed_categories": list(rail.allowed_categories) if rail else [],
         # True when the COMBINED limits across all this ward's guardians currently match NO meetup.
         "guardrail_combined_blocks_all": combined_blocks_all,
     }
