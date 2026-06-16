@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Campaign, CostAnchor, Donation, SpendEntry
+from .models import Campaign, CostAnchor, Donation, InKindContribution, SpendEntry
 
 
 @admin.register(Donation)
@@ -76,3 +76,31 @@ class CostAnchorAdmin(admin.ModelAdmin):
     list_filter = ("is_active", "currency")
     search_fields = ("label", "spend_category")
     readonly_fields = ("created_at",)
+
+
+@admin.register(InKindContribution)
+class InKindContributionAdmin(admin.ModelAdmin):
+    """Staff entry point for the non-cash civic-support ledger (W3-F20) — aggregate-only, shown in
+    its own section on /transparency/, never summed into the euro figures."""
+
+    list_display = (
+        "category",
+        "quantity",
+        "unit_text",
+        "value_cents",
+        "currency",
+        "period",
+        "partner",
+        "created_at",
+    )
+    list_filter = ("currency", "partner")
+    search_fields = ("category", "unit_text", "note")
+    readonly_fields = ("created_at",)
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        # Mirror CampaignAdmin: a contribution may only credit a verified+active partner.
+        if db_field.name == "partner":
+            from apps.places.models import Partner
+
+            kwargs["queryset"] = Partner.objects.public().order_by("name")
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
