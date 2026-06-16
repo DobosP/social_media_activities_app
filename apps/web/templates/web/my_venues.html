@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Check your venues" %}{% endblock %}
+{% block content %}
+<h1>{% trans "Venues worth a quick check" %}</h1>
+<p class="muted">{% blocktrans %}For the meetups you're going to, these venues have a data-quality flag right now &mdash; worth a quick check before you head out. This page is just for you and is never sent as a notification.{% endblocktrans %}</p>
+
+{% if venues %}
+  <ul class="members">
+    {% for v in venues %}
+      <li>
+        <a href="{% url 'place_detail' v.place.pk %}">{{ v.place.display_name }}</a>
+        {% for flag in v.flags %}
+          {% if flag == "closed" %}<span class="tag tag-warn">{% trans "reported closed" %}</span>
+          {% elif flag == "hours_unverified" %}<span class="tag">{% trans "posted hours unverified" %}</span>
+          {% elif flag == "correction_pending" %}<span class="tag">{% trans "a correction is pending" %}</span>{% endif %}
+        {% endfor %}
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p class="muted">{% trans "Nothing to flag &mdash; the venues for your upcoming meetups all look fine." %}</p>
+{% endif %}
+{% endblock %}

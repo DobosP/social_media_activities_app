@@ -2877,6 +2877,32 @@ def my_meetups(request):
     )
 
 
+@login_required
+def my_venues(request):
+    """W4-F18: a self-only data-quality digest — for the meetups the viewer is GOING to, flag any
+    whose venue currently reads crowd-reported-closed, unverified-hours, or has a pending crowd
+    correction, so they can check before heading out. Pure read: reuses _my_upcoming_meetups
+    verbatim (so it can never surface another member's meetup — a guardian sees their OWN, never a
+    ward's) and composes only existing overlay reads. A PAGE only — never a job or notification."""
+    from apps.places.services import venue_quality_flags
+
+    seen = set()
+    venues = []
+    for activity in _my_upcoming_meetups(request.user):
+        place = activity.place
+        if place is None or place.id in seen:
+            continue
+        seen.add(place.id)
+        flags = venue_quality_flags(place)
+        if flags:  # only surface venues that actually have a concern
+            venues.append({"place": place, "flags": flags})
+    return render(
+        request,
+        "web/my_venues.html",
+        {"venues": venues, **_nav_context(request.user)},
+    )
+
+
 def _ics_escape(text) -> str:
     r"""RFC 5545 text escaping for SUMMARY/LOCATION: backslash FIRST, then semicolon, comma, and
     every newline → literal ``\n`` (a raw newline would otherwise break the line-based grammar)."""

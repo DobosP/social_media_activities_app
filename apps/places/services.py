@@ -737,6 +737,29 @@ def staff_reject_correction(
     return correction
 
 
+# W4-F18: stable keys for the self-only venue data-quality digest. The digest template maps each to
+# a human, translatable label (places/services has no gettext, and keys keep the helper testable).
+VENUE_FLAG_CLOSED = "closed"
+VENUE_FLAG_HOURS_UNVERIFIED = "hours_unverified"
+VENUE_FLAG_CORRECTION_PENDING = "correction_pending"
+
+
+def venue_quality_flags(place) -> list[str]:
+    """W4-F18: the read-time data-quality concerns for ONE venue, composed from the EXISTING
+    ingest-safe overlays — crowd-reported-closed (F13), unverified posted hours (F28), and a pending
+    crowd correction (W3-F14). Counts-only / identity-free (inherits each source's allowlist); adds
+    no model and persists nothing. Returns stable keys; an empty list means "no known problems"."""
+    flags = []
+    if place_is_closed(place):
+        flags.append(VENUE_FLAG_CLOSED)
+    elif open_now_status(place) == "unverified":
+        # Only when not already flagged closed — "closed" is the stronger, more actionable signal.
+        flags.append(VENUE_FLAG_HOURS_UNVERIFIED)
+    if pending_corrections(place):
+        flags.append(VENUE_FLAG_CORRECTION_PENDING)
+    return flags
+
+
 def pending_corrections(place, viewer=None) -> list:
     """Open corrections for a place as COUNTS only (never proposer/confirmer identities), plus
     whether the viewer has already confirmed each (so the UI can disable their button)."""
