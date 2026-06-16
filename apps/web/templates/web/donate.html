@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n money %}
 {% block title %}{% trans "Support us" %}{% endblock %}
 {% block content %}
 <h1>{% trans "Support the project" %}</h1>
@@ -10,6 +10,17 @@
   {{ form.as_p }}
   <button class="btn" type="submit">{% trans "Donate" %}</button>
 </form>
+{% if cost_anchors %}
+<section class="card" aria-labelledby="anchors-h">
+  <h2 id="anchors-h">{% trans "What a gift makes possible" %}</h2>
+  <p class="muted">{% trans "A few illustrative examples of what donations fund &mdash; not a target, and not tied to any single gift." %}</p>
+  <ul>
+    {% for a in cost_anchors %}
+      <li><strong>{{ a.currency }} {{ a.amount_cents|cents }}</strong> &mdash; {{ a.label }}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
 <p class="muted">{% trans "You'll be taken to a secure checkout &mdash; no card data ever touches this app." %}</p>
 <p class="muted"><a href="{% url 'transparency' %}">{% trans "See where donations go" %}</a> &middot;
   <a href="{% url 'campaigns' %}">{% trans "Active campaigns" %}</a></p>
