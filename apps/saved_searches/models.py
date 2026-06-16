@@ -93,3 +93,25 @@ class SavedSearchMatch(models.Model):
 
     def __str__(self):
         return f"SavedSearchMatch(user={self.user_id}, activity={self.activity_id})"
+
+
+class SavedSearchGaugeMatch(models.Model):
+    """W3-F9: the gauge-lane sibling of SavedSearchMatch — a one-notice-per-(user, interest) ledger.
+    Written the first time an interest GAUGE matches a saved search AND passes the per-saver cohort
+    read gate (even when the notice is muted), so a saver is alerted at most ONCE per given gauge,
+    ever: never re-fired after un-mute, never replayed by recreating a search. Keyed on
+    (user, interest), NOT (search, interest), so two searches that both match a gauge alert once."""
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    interest = models.ForeignKey("social.ActivityInterest", on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "interest"], name="uq_ssgaugematch_user_interest"
+            ),
+        ]
+
+    def __str__(self):
+        return f"SavedSearchGaugeMatch(user={self.user_id}, interest={self.interest_id})"

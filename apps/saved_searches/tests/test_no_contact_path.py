@@ -25,3 +25,22 @@ def test_saved_search_match_does_not_enable_connection(adult, adult2, place, act
     ss.match_saved_searches()  # adult2 is alerted but never joined
     assert not shares_activity(adult, adult2)
     assert not can_connect(adult, adult2)
+
+
+def test_gauge_match_with_interest_does_not_enable_connection(adult, adult2, place, activity_type):
+    """W3-F9: even when the alerted saver SIGNALS interest on the matched gauge, the gauge M2M is
+    never a Membership — so it establishes no shared activity and opens no private-contact path."""
+    from apps.social import services as social
+    from apps.social.models import ActivityInterest
+
+    g = social.propose_interest(
+        adult,
+        place=place,
+        activity_type=activity_type,
+        coarse_window=ActivityInterest.CoarseWindow.WEEKDAY_DAYTIME,
+    )
+    ss.create_saved_search(adult2, activity_type=activity_type)
+    ss.match_saved_searches()  # adult2 is alerted to adult's gauge
+    social.mark_interested(adult2, g)  # …and signals interest
+    assert not shares_activity(adult, adult2)
+    assert not can_connect(adult, adult2)

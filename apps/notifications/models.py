@@ -22,6 +22,8 @@ class Notification(models.Model):
         MENTION = "mention", "Mention"
         ORGANIZER_ROLE = "organizer_role", "Organizer role changed"
         ACTIVITY_MATCH = "activity_match", "Saved-search match"  # F3 (mutable, opt-in)
+        # W3-F9 (mutable, opt-in, at-most-once per gauge) — the gauge-lane sibling of ACTIVITY_MATCH
+        GAUGE_MATCH = "gauge_match", "Saved-search gauge match"
         GROUP_QUESTION = "group_question", "Group question"  # F30 (mutable, organiser-only)
         INTEREST_CONVERTED = "interest_converted", "Gauge converted"  # F27 (mutable)
         RSVP_NUDGE = "rsvp_nudge", "RSVP nudge"  # W2-F11 (mutable, at-most-once, self only)
@@ -90,6 +92,9 @@ WHY_REASONS = {
     ),
     Notification.Kind.ACTIVITY_MATCH: (
         "A new activity matched a search you saved (you can turn these off)."
+    ),
+    Notification.Kind.GAUGE_MATCH: (
+        "A new interest gauge matched a search you saved (you can turn these off)."
     ),
     Notification.Kind.GROUP_QUESTION: (
         "A member of an under-18 group you organise sent you one of a fixed set of "
