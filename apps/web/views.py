@@ -803,6 +803,15 @@ def home(request):
 
     feed = build_home_feed(user, near_point=near_point, radius_m=radius_m, limit=8)
     recommended = feed["recommended"]
+    # W3-F10: the cold-start sliver — a user with NO declared interests yet — gets honest one-tap
+    # starter toggles (the types with real upcoming local supply), shown above the soonest-first
+    # fallback strip. Gated strictly on zero DECLARED interests (not on an empty `recommended`,
+    # which cold-starts to a non-empty soonest-first list) because the home quick-pick submits ONLY
+    # the ticked types -> set_interests REPLACES; a user who already declared some uses the additive
+    # interests page instead, so their set can never be wiped here.
+    starter_types = []
+    if not recs.get_interests(user).exists():
+        starter_types = recs.suggest_starter_interests(user)
     beginners_only = request.GET.get("beginners") == "true"
     upcoming_qs = (
         social.visible_activities(user)
@@ -833,6 +842,7 @@ def home(request):
         "web/home.html",
         {
             "recommended": recommended,
+            "starter_types": starter_types,
             "upcoming": upcoming,
             "mine": mine,
             "events": feed["events"],
@@ -2038,6 +2048,12 @@ def interests(request):
     chosen = set(
         UserInterest.objects.filter(user=request.user).values_list("activity_type__slug", flat=True)
     )
+    # W3-F10: honest "popular near you right now" starter toggles — the types with real upcoming
+    # local supply that the user hasn't declared yet. Shown above the full picker; excluded from the
+    # category groups below so each type's checkbox appears exactly once (never ranked/labelled by a
+    # nearby-count — that would be the inv.2 vanity metric).
+    starter = recs.suggest_starter_interests(request.user)
+    starter_slugs = {t.slug for t in starter}
     # W4: compact category-grouped picker — types arrive grouped so the template renders
     # one chip-section per category instead of one flat wall of checkboxes.
     options = (
@@ -2047,6 +2063,8 @@ def interests(request):
     )
     groups: dict = {}
     for t in options:
+        if t.slug in starter_slugs:
+            continue  # surfaced once, in the starter highlight above
         groups.setdefault(t.category, []).append(t)
     return render(
         request,
@@ -2055,6 +2073,7 @@ def interests(request):
             "groups": [(cat, types) for cat, types in groups.items()],
             "chosen": chosen,
             "chosen_count": len(chosen),
+            "starter": starter,
             **_nav_context(request.user),
         },
     )

@@ -61,6 +61,31 @@ def get_interests(user):
     return ActivityType.objects.filter(interested_users__user=user).order_by("slug")
 
 
+def suggest_starter_interests(user, *, limit=12):
+    """W3-F10: honest cold-start starter interests — the activity TYPES that genuinely have
+    upcoming, visible meetups in the user's cohort right now, minus the ones they already declared.
+    Seeds the recommendation signal from REAL local supply, so a zero-interest user's very first
+    feed can carry true "matches your interest in X" reasons instead of a bare soonest-first list.
+
+    Routes through visible_activities (cohort wall + is_hidden + blocked-owner inherited), is
+    deterministic (alphabetical), bounded, and COUNT-FREE: it never ranks by, nor exposes, a
+    per-type "N nearby" supply number — that would be the inv.2 vanity metric a discovery surface
+    must not show. Persistence flows ONLY through an explicit toggle -> set_interests (declared,
+    never inferred)."""
+    already = set(get_interests(user).values_list("id", flat=True))
+    nearby_type_ids = (
+        visible_activities(user)
+        .filter(status=Activity.Status.OPEN, starts_at__gte=timezone.now())
+        .values_list("activity_type_id", flat=True)
+        .distinct()
+    )
+    return list(
+        ActivityType.objects.filter(id__in=nearby_type_ids, is_active=True)
+        .exclude(id__in=already)
+        .order_by("name", "slug")[:limit]
+    )
+
+
 # --- Interest-graph avatar (the generated "constellation" profile picture) ----------------------
 #
 # The generated avatar visualises a user's DECLARED interests as a small graph: one glowing star

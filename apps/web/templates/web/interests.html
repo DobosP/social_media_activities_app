@@ -8,6 +8,20 @@
   activities you join). No tracking; only what you tell us here.{% endblocktrans %}</p>
 {% if chosen_count %}<p class="muted">{% blocktrans count counter=chosen_count %}{{ counter }} selected.{% plural %}{{ counter }} selected.{% endblocktrans %}</p>{% endif %}
 <form method="post">{% csrf_token %}
+  {% if starter %}
+    <div class="pick-group card card-accent" style="margin-bottom:.8rem">
+      <strong>{% trans "Popular near you right now" %}</strong>
+      <p class="muted" style="margin:.3rem 0 .5rem">{% trans "These activity types have meetups coming up in your area &mdash; tick any you'd like and we'll suggest matches." %}</p>
+      <div class="pick-row">
+        {% for t in starter %}
+          <label class="pick">
+            <input type="checkbox" name="interests" value="{{ t.slug }}">
+            <span>{{ t.name }}</span>
+          </label>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
   {% for category, types in groups %}
     <details class="pick-group" {% if forloop.counter <= 3 %}open{% endif %}>
       <summary>{{ category.name }} <span class="muted">({{ types|length }})</span></summary>
