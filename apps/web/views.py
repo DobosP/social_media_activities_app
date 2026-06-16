@@ -1430,6 +1430,13 @@ def activity_detail(request, pk):
     thread_results = None
     if thread_query and (is_member or user.is_staff) and social.can_read_thread(user, activity):
         thread_results = list(social.search_thread_posts(user, activity, thread_query))
+    # W4-F11: a calm inline prompt to the organiser when the meetup has hit its go-quorum (it's
+    # actually happening) but still has no meeting point — caught on the page they already visit,
+    # no notification, no job. Reuses the live attendance snapshot; self-suppresses once set.
+    rsvp_summary = social.attendance_summary(activity)
+    meeting_point_needed = is_organizer and social.quorum_locked_without_meeting_point(
+        activity, rsvp_summary
+    )
     # F33: the shared contact-leak ruleset + a translated confirm message, emitted to the
     # client composer (members only — that's the only surface with a compose form). The
     # ruleset is the SAME one the server policy uses (apps.chat.presend), so the two can't
@@ -1496,7 +1503,8 @@ def activity_detail(request, pk):
             "can_say_on_my_way": can_say_on_my_way,
             "can_say_running_late": can_say_running_late,
             "arrival_window_open": is_member and social.arrival_window_open(activity),
-            "rsvp_summary": social.attendance_summary(activity),
+            "rsvp_summary": rsvp_summary,
+            "meeting_point_needed": meeting_point_needed,
             "met_summary": social.met_confirmation_summary(activity),
             "my_met_confirmed": bool(my_membership.met_confirmed_at)
             if (is_member and my_membership)

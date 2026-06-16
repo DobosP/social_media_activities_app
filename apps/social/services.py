@@ -2491,6 +2491,16 @@ def attendance_summary(activity) -> dict:
     }
 
 
+def quorum_locked_without_meeting_point(activity, summary) -> bool:
+    """W4-F11: True when a meetup has reached its go-quorum (``summary['met_minimum']`` — it is
+    actually happening now) but still has NO meeting point — the highest-stakes reliability gap (a
+    confirmed meetup nobody can locate). Drives a calm inline prompt to the organiser on the page
+    they already visit (no notification, no job). ``summary`` is the activity's already-computed
+    attendance_summary (the LIVE quorum count, never a stored latch), so this self-suppresses the
+    instant a meeting point is set or the count drops below the minimum."""
+    return bool(summary.get("met_minimum")) and not (activity.meeting_point or "").strip()
+
+
 @transaction.atomic
 def set_met_confirmed(user, activity, confirmed: bool = True) -> Membership:
     """A participant privately confirms (or undoes) that a finished meetup actually happened

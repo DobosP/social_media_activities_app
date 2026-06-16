@@ -78,6 +78,17 @@
     {% trans "The organiser called it off &mdash; see your alerts for any details." %}{% endif %}</div>
 {% endif %}
 
+{% if meeting_point_needed %}
+  {% comment %}W4-F11: the meetup has reached its go-quorum (it's happening) but has no meeting
+     point — the highest-stakes reliability gap. A calm inline prompt (no notification, no job);
+     self-suppresses the instant a meeting point is set.{% endcomment %}
+  <div class="card card-accent" role="note">
+    <strong>{% trans "This meetup is going ahead &mdash; but has no meeting point yet." %}</strong>
+    <p class="muted" style="margin:.3rem 0 0">{% trans "Enough people have said they're coming. Add where to meet so everyone can find the group." %}
+      <a href="{% url 'activity_edit' activity.pk %}">{% trans "Add a meeting point" %}</a></p>
+  </div>
+{% endif %}
+
 {% if is_organizer and is_open %}
   <div class="card">
     <strong>{% trans "Organiser tools" %}</strong>
