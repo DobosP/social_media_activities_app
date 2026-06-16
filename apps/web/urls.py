@@ -211,5 +211,6 @@ urlpatterns = [
     path("my-activity-log/", views.activity_log, name="activity_log"),
     path("my-safety-record/", views.safety_record, name="safety_record"),
     path("account/export/", views.account_export, name="account_export"),
+    path("account/calendar.ics", views.my_calendar, name="my_calendar"),  # W3-F18 self-only .ics
     path("account/delete/", views.account_delete, name="account_delete"),
 ]

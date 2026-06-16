@@ -4,6 +4,8 @@
 {% block content %}
 <h1>{% trans "My next meetups" %}</h1>
 <p class="muted">{% blocktrans with when=generated_at|date:"D d M, H:i" %}Saved {{ when }}. The essentials to get there &mdash; readable even on a patchy connection.{% endblocktrans %}</p>
+{% if meetups %}<p><a class="btn btn-sm btn-secondary" href="{% url 'my_calendar' %}" download>&#128197; {% trans "Add to my calendar (.ics)" %}</a>
+  <span class="help">{% trans "A one-time download of your upcoming meetups for your phone or desktop calendar." %}</span></p>{% endif %}
 
 {% comment %}F38: revealed only when the browser is offline (progressive enhancement). The page
    itself is fully server-rendered and works with no JavaScript — this is just an honesty banner
