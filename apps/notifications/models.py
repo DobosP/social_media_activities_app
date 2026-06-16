@@ -25,6 +25,8 @@ class Notification(models.Model):
         GROUP_QUESTION = "group_question", "Group question"  # F30 (mutable, organiser-only)
         INTEREST_CONVERTED = "interest_converted", "Gauge converted"  # F27 (mutable)
         RSVP_NUDGE = "rsvp_nudge", "RSVP nudge"  # W2-F11 (mutable, at-most-once, self only)
+        # W3-F6 (mutable, at-most-once, organiser self only — never a member fan-out)
+        ORGANIZER_PREP = "organizer_prep", "Organizer prep reminder"
         MODERATION = "moderation", "Moderation notice"
         SYSTEM = "system", "System"
 
@@ -98,6 +100,10 @@ WHY_REASONS = {
     ),
     Notification.Kind.RSVP_NUDGE: (
         "A meetup you joined is coming up and you haven't said whether you're coming "
+        "(you can turn these off)."
+    ),
+    Notification.Kind.ORGANIZER_PREP: (
+        "A meetup you organise is coming up and still has no meeting point "
         "(you can turn these off)."
     ),
     Notification.Kind.MODERATION: (
