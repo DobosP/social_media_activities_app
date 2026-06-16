@@ -258,6 +258,7 @@ class MembershipSerializer(serializers.ModelSerializer):
             "attendance_intent",
             "arrived_at",
             "transit_status",
+            "departing_at",
             "created_at",
             "decided_at",
         ]

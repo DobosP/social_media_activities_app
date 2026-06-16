@@ -317,6 +317,11 @@ class Membership(models.Model):
     transit_status = models.CharField(
         max_length=16, choices=TransitStatus.choices, default=TransitStatus.NONE
     )
+    # W3-F3: ephemeral self-declared "heading home" ping — the departure bookend to arrived_at.
+    # Set by mark_departing (CHILD members only) from the meetup start until a few hours after it
+    # ends, fanning out ONLY to the child's active guardian(s); cleared by expire_arrivals so it
+    # never becomes a standing presence record. NOT geolocation — a tap, not a position.
+    departing_at = models.DateTimeField(null=True, blank=True)
     # F22: a member's private "yes, we met up" tap, allowed ONLY once activity.status ==
     # COMPLETED. A single per-member boolean (null = unset) about whether THE MEETUP happened —
     # never a rating/judgement of any person, NEVER aggregated per-user, NEVER read

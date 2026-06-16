@@ -42,6 +42,14 @@ logger = logging.getLogger(__name__)
 ARRIVAL_WINDOW_BEFORE_HOURS = 2
 ARRIVAL_WINDOW_AFTER_HOURS = 3
 
+# W3-F3: the "heading home" departure window is END-relative — a departure happens near the
+# meetup's end, so reusing the start-relative arrival window would leave the button dead exactly
+# when a departing child taps it. It opens at the meetup start and closes this many hours after
+# it ends (DEPARTURE_FALLBACK_DURATION_HOURS stands in for the meetup length when ends_at is
+# open-ended). Overridable via settings.
+DEPARTURE_WINDOW_AFTER_HOURS = 3
+DEPARTURE_FALLBACK_DURATION_HOURS = 3
+
 # F35 "catch up" digest — deterministic, bounded, no ML. Caps keep the read cheap.
 DIGEST_SCAN_LIMIT = 60  # hard cap on non-announcement posts pulled into Python
 DIGEST_RECENT_POSTS = 3  # most-recent posts always surfaced
@@ -1048,17 +1056,20 @@ def leave_activity(user, activity) -> Membership | None:
         raise InvalidState(_("The owner cannot leave their own activity."))
     membership.state = Membership.State.REMOVED
     # Reset the per-activity transient signals so a removed row carries nothing: the RSVP
-    # go/no-go (F20), the "we met up" confirmation (F22), and the W2-F9 transit cue. Keeps each
-    # scoped to live members so re-joining starts clean and nothing aggregates per-user.
+    # go/no-go (F20), the "we met up" confirmation (F22), the W2-F9 transit cue, and the W3-F3
+    # "heading home" ping. Keeps each scoped to live members so re-joining starts clean and
+    # nothing aggregates per-user.
     membership.attendance_intent = Membership.AttendanceIntent.UNKNOWN
     membership.met_confirmed_at = None
     membership.transit_status = Membership.TransitStatus.NONE
+    membership.departing_at = None
     membership.save(
         update_fields=[
             "state",
             "attendance_intent",
             "met_confirmed_at",
             "transit_status",
+            "departing_at",
             "updated_at",
         ]
     )
@@ -2658,6 +2669,85 @@ def mark_arrived(user, activity) -> Membership:
             notified.add(guardian.id)
 
     record_audit("activity.arrived", actor=user, target=activity)
+    return membership
+
+
+# --- W3-F3: "heading home" departure ping (the bookend to the arrival ping) ----------------
+
+
+def departure_window_open(activity) -> bool:
+    """Whether "heading home" may be marked right now: an OPEN activity from its start until a
+    few hours after it ends. END-relative on purpose (a departure happens near the end, not the
+    start), with a fallback assumed duration when ends_at is open-ended — so the button is live
+    exactly when a departing member would tap it, unlike the start-relative arrival window."""
+    if activity.status != Activity.Status.OPEN:
+        return False
+    now = timezone.now()
+    if now < activity.starts_at:
+        return False  # nobody heads home before the meetup has started
+    fallback = getattr(
+        settings, "DEPARTURE_FALLBACK_DURATION_HOURS", DEPARTURE_FALLBACK_DURATION_HOURS
+    )
+    after = getattr(settings, "DEPARTURE_WINDOW_AFTER_HOURS", DEPARTURE_WINDOW_AFTER_HOURS)
+    end = activity.ends_at or (activity.starts_at + timedelta(hours=fallback))
+    return now <= end + timedelta(hours=after)
+
+
+@transaction.atomic
+def mark_departing(user, activity) -> Membership:
+    """A current CHILD member self-declares "I'm heading home" — the departure bookend to
+    mark_arrived. Quietly tells ONLY their active guardian(s) (never the other members: a
+    departure is a guardian-reassurance signal, not group logistics), keyed strictly on an
+    ACTIVE GuardianRelationship, with blocked pairs excluded. Self-declared only (no
+    on-behalf-of), no free text, no location ever, idempotent, and cleared a few hours after the
+    meetup ends by expire_arrivals so it never becomes a presence record. CHILD-cohort only —
+    teens self-manage and only a CHILD has the supervisory guardian fan-out (matching the
+    guardian path of mark_arrived)."""
+    from django.urls import reverse
+
+    from apps.safety.services import blocked_user_ids, record_audit
+
+    membership = current_members(activity).filter(user=user).first()
+    if membership is None:
+        raise NotAMember(_("Only current members can mark themselves heading home."))
+    if not can_participate(user):
+        raise NotEligible(_("This requires verified, consented participation."))
+    if user.cohort != Cohort.CHILD:
+        raise InvalidState(_("Heading-home pings are for younger members with a guardian."))
+    if activity.status != Activity.Status.OPEN:
+        raise InvalidState(_("You can only do this for an active meetup."))
+    if not departure_window_open(activity):
+        raise InvalidState(_("You can mark heading home once the meetup has started."))
+    if membership.departing_at is not None:
+        return membership  # idempotent: a second tap never re-pings the guardian(s)
+
+    membership.departing_at = timezone.now()
+    membership.save(update_fields=["departing_at", "updated_at"])
+
+    blocked = blocked_user_ids(user)
+    # Server-composed, fixed copy. The only departer-derived string is display_name — the same
+    # low-entropy handle shown app-wide. No per-ping note exists, so no unmoderated child-authored
+    # text reaches an adult. Mutable ARRIVAL kind reused (a calm convenience cue, not a DSA notice).
+    title = _("Someone is heading home")
+    body = _("%(name)s is heading home from “%(title)s”.") % {
+        "name": user.display_name or user.username,
+        "title": activity.title,
+    }
+    # Link to the guardian's own /wards/ manifest, NOT the activity thread: an adult guardian is
+    # cross-cohort to a CHILD activity and is walled out of its thread, so the thread link would
+    # be a dead end for them.
+    url = reverse("wards")
+    notified: set[int] = set()
+    for rel in GuardianRelationship.objects.filter(
+        ward=user, status=GuardianRelationship.Status.ACTIVE
+    ).select_related("guardian"):
+        guardian = rel.guardian
+        if guardian.id in blocked or guardian.id in notified:
+            continue
+        _notify(guardian, "arrival", title, body=body, url=url)
+        notified.add(guardian.id)
+
+    record_audit("activity.departing", actor=user, target=activity)
     return membership
 
 
