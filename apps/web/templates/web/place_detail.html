@@ -170,7 +170,9 @@
           <select name="field">
             <option value="name">{% trans "Name" %}</option>
             <option value="address">{% trans "Address" %}</option>
-          </select></label>
+            <option value="hours">{% trans "Opening hours" %}</option>
+          </select>
+          <span class="help">{% trans "For hours, use e.g. Mo-Fr 09:00-18:00; Sa 10:00-14:00" %}</span></label>
         <label>{% trans "Corrected value" %}
           <input type="text" name="proposed_value" maxlength="255" required></label>
         <button class="btn btn-sm" type="submit">{% trans "Suggest correction" %}</button>

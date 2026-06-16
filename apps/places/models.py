@@ -113,6 +113,20 @@ class Place(gis_models.Model):
     def display_address(self) -> str:
         return self._applied_correction(PlaceCorrection.Field.ADDRESS) or self._raw_address()
 
+    @property
+    def display_opening_hours(self):
+        """The crowd-corrected opening-hours SCHEDULE if a HOURS correction was published, else the
+        raw ingested ``opening_hours`` dict (W3-F14). CRITICAL: this returns the PARSED dict that
+        ``is_open_at`` consumes — a published correction stores a RAW OSM string, so it is RE-PARSED
+        here at read time. Never re-parse ``self.opening_hours`` (it is already a dict). Read-time
+        only, so a re-ingest of ``opening_hours`` never clobbers the correction."""
+        corrected = self._applied_correction(PlaceCorrection.Field.HOURS)
+        if corrected:
+            from .enrichment.opening_hours import parse_opening_hours
+
+            return parse_opening_hours(corrected)
+        return self.opening_hours
+
 
 class PlaceActivity(models.Model):
     """Edge connecting a Place to an ActivityType it supports."""
@@ -363,6 +377,7 @@ class PlaceCorrection(models.Model):
     class Field(models.TextChoices):
         NAME = "name", "Name"
         ADDRESS = "address", "Address"
+        HOURS = "hours", "Opening hours"  # W3-F14 — validated via parse_opening_hours on propose
 
     class Status(models.TextChoices):
         PENDING = "pending", "Pending"
