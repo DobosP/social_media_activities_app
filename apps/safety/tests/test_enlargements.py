@@ -7,6 +7,7 @@ from rest_framework.test import APIClient
 from apps.accounts.identity.base import AssuranceResult
 from apps.accounts.models import AgeBand, User
 from apps.accounts.services import apply_assurance
+from apps.notifications.models import Notification
 from apps.safety.models import ModerationAction, ReasonCode, Report
 from apps.safety.services import (
     block_user,
@@ -50,6 +51,49 @@ def test_lift_expired_suspension_reactivates():
     assert offender.is_active is True
     # Idempotent — already lifted.
     assert lift_expired_suspensions() == 0
+
+
+def test_lift_expired_suspension_sends_one_moderation_notice():
+    # F17: the silent reactivation gets a symmetric, non-mutable MODERATION notice.
+    mod, offender = _user("mlift", staff=True), _user("olift")
+    take_action(
+        mod,
+        offender,
+        ModerationAction.Action.SUSPEND,
+        ReasonCode.SPAM,
+        expires_at=timezone.now() - timedelta(hours=1),
+    )
+    # Drop the suspend-time notice so we count only the end-of-suspension one.
+    Notification.objects.filter(recipient=offender).delete()
+
+    assert lift_expired_suspensions() == 1
+    notices = Notification.objects.filter(recipient=offender, kind=Notification.Kind.MODERATION)
+    assert notices.count() == 1
+    assert "suspension" in notices.get().title.lower()
+
+    # Idempotent: a second nightly pass neither reactivates nor re-notifies.
+    assert lift_expired_suspensions() == 0
+    assert notices.count() == 1
+
+
+def test_lift_does_not_notify_when_still_banned():
+    # A still-banned account is never reactivated, so it must get no "ended" notice.
+    mod, offender = _user("mban", staff=True), _user("oban")
+    take_action(
+        mod,
+        offender,
+        ModerationAction.Action.SUSPEND,
+        ReasonCode.SPAM,
+        expires_at=timezone.now() - timedelta(hours=1),
+    )
+    take_action(mod, offender, ModerationAction.Action.BAN, ReasonCode.GROOMING)
+    Notification.objects.filter(recipient=offender).delete()
+
+    assert lift_expired_suspensions() == 0
+    assert (
+        Notification.objects.filter(recipient=offender, kind=Notification.Kind.MODERATION).count()
+        == 0
+    )
 
 
 def test_expired_suspension_not_lifted_if_also_banned():
