@@ -174,3 +174,54 @@ def test_web_closure_reset_is_staff_only(settings):
     c = Client()
     c.force_login(plain)
     assert c.post(f"/places/{place.pk}/closed-reset/").status_code == 404  # non-staff -> 404
+
+
+def test_place_is_closed_honors_annotation():
+    # The recent_closure_n fast-path is reserved for a future per-row list surface; pin it so the
+    # branch isn't dead/untested (hiding itself happens upstream in public_places()).
+    place = _place()
+    place.recent_closure_n = 5
+    assert place_is_closed(place) is True
+    place.recent_closure_n = 0
+    assert place_is_closed(place) is False
+
+
+def test_staff_clear_is_audited(settings):
+    from apps.safety.models import AuditLog
+
+    settings.CLOSURE_REPORT_THRESHOLD = 1
+    staff, place = _user("auditmod", staff=True), _place()
+    file_closure_report(_user("rep"), place)
+    clear_closure_reports(place, moderator=staff)
+    assert AuditLog.objects.filter(event="place.closure_reports_cleared").count() == 1
+    # A reset with no moderator writes no audit row (accountability rides on the moderator arg).
+    other = _place("Other")
+    file_closure_report(_user("rep2"), other)
+    clear_closure_reports(other, moderator=None)
+    assert AuditLog.objects.filter(event="place.closure_reports_cleared").count() == 1
+
+
+def test_closed_place_detail_404s_for_member_but_staff_can_view(settings):
+    # The intended UX of hiding: a quorum-closed venue's detail page 404s for a regular member
+    # (it's gone from discovery), but staff can still reach it to reset.
+    settings.CLOSURE_REPORT_THRESHOLD = 2
+    place = _place()
+    _report(place, 2)
+    mc = Client()
+    mc.force_login(_user("viewer"))
+    assert mc.get(f"/places/{place.pk}/").status_code == 404
+    sc = Client()
+    sc.force_login(_user("vstaff", staff=True))
+    assert sc.get(f"/places/{place.pk}/").status_code == 200
+
+
+def test_api_representation_exposes_no_closure_field():
+    # inv.2: a closed place vanishes from the public API (routed through public_places); a VISIBLE
+    # place's serialized row carries no closure count or reporter identity.
+    from rest_framework.test import APIClient
+
+    place = _place("Visible")
+    data = APIClient().get("/api/places/").json()
+    rows = data["results"] if isinstance(data, dict) and "results" in data else data
+    row = next(r for r in rows if r["id"] == place.id)
+    assert not any(("closure" in k) or ("closed" in k) for k in row)

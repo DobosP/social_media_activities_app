@@ -364,8 +364,10 @@ def _closed_place_ids(*, now=None):
 
 def place_is_closed(place, *, now=None) -> bool:
     """True once >= N independent closure reports accrue within the decay window (auto-decay: old
-    reports stop counting). Prefers a `recent_closure_n` annotation when present (avoids a per-row
-    query). The inverse-shaped sibling of hours_reliable."""
+    reports stop counting). The inverse-shaped sibling of hours_reliable. Prefers a
+    `recent_closure_n` annotation, but that fast-path is RESERVED for a future place-list surface:
+    hiding happens upstream at the public_places() chokepoint, so no production read calls this per
+    row today (which is why no queryset annotates recent_closure_n yet)."""
     threshold, decay = _closure_settings()
     recent = getattr(place, "recent_closure_n", None)
     if recent is None:
