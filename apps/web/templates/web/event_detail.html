@@ -35,5 +35,9 @@
   {# F40: prefill the new activity's type + start time from this event (owner edits before submit). #}
   <p><a class="btn" href="{% url 'activity_create' %}?place={{ event.place.pk }}{% if event.activity_type %}&activity_type={{ event.activity_type.pk }}{% endif %}&starts_at={{ event.starts_at|date:'Y-m-d\TH:i'|urlencode }}">{% trans "Organise an activity to go together" %}</a></p>
 {% endif %}
+{% if can_convene %}
+  {# W4-F12: lower-commitment than organising — float an interest gauge seeded from this event. #}
+  <p><a class="btn btn-secondary" href="{% url 'gauge_create' %}?event={{ event.pk }}">{% trans "I'd go if someone convened &mdash; gauge interest" %}</a></p>
+{% endif %}
 {% include "web/_share_box.html" %}
 {% endblock %}
