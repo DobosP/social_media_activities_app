@@ -803,12 +803,14 @@ def home(request):
 
     feed = build_home_feed(user, near_point=near_point, radius_m=radius_m, limit=8)
     recommended = feed["recommended"]
-    # W3-F10: only the genuine cold-start sliver (no recommendations AND no declared interests yet)
-    # gets the honest one-tap starter toggles. Gated on zero interests because the home quick-pick
-    # form submits ONLY the ticked types -> set_interests REPLACES, so it must never run for a user
-    # who already declared some (their interests page is the safe additive editor).
+    # W3-F10: the cold-start sliver — a user with NO declared interests yet — gets honest one-tap
+    # starter toggles (the types with real upcoming local supply), shown above the soonest-first
+    # fallback strip. Gated strictly on zero DECLARED interests (not on an empty `recommended`,
+    # which cold-starts to a non-empty soonest-first list) because the home quick-pick submits ONLY
+    # the ticked types -> set_interests REPLACES; a user who already declared some uses the additive
+    # interests page instead, so their set can never be wiped here.
     starter_types = []
-    if not recommended and not recs.get_interests(user).exists():
+    if not recs.get_interests(user).exists():
         starter_types = recs.suggest_starter_interests(user)
     beginners_only = request.GET.get("beginners") == "true"
     upcoming_qs = (

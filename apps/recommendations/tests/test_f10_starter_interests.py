@@ -99,8 +99,48 @@ def test_excludes_inactive_types():
     assert "f10-bball5" not in [t.slug for t in services.suggest_starter_interests(me)]
 
 
+def test_excludes_cancelled_and_past_activity_types():
+    from apps.social.models import Activity
+
+    owner, me = _user("f10_x_o"), _user("f10_x_me")
+    cat = ActivityCategory.objects.create(slug="f10-sport7", name="Sport")
+    cancelled = _activity(owner, _type("f10-canc", "Canceltype", cat))
+    cancelled.status = Activity.Status.CANCELLED
+    cancelled.save(update_fields=["status"])
+    past = _activity(owner, _type("f10-past", "Pasttype", cat))
+    Activity.objects.filter(pk=past.pk).update(starts_at=timezone.now() - timedelta(hours=1))
+
+    slugs = [t.slug for t in services.suggest_starter_interests(me)]
+    assert "f10-canc" not in slugs  # not OPEN -> excluded
+    assert "f10-past" not in slugs  # already started -> excluded
+
+
 def test_empty_when_no_upcoming():
     assert services.suggest_starter_interests(_user("f10_empty")) == []
+
+
+def test_home_shows_starter_form_only_for_zero_interest_user():
+    from django.test import Client
+
+    owner = _user("f10_h_owner")
+    cat = ActivityCategory.objects.create(slug="f10-home", name="Sport")
+    _activity(owner, _type("f10-home-bball", "Basketball", cat))
+    cta = "New here? Pick what you'd come to"
+
+    # A zero-interest newcomer gets the one-tap starter quick-pick — even though the soonest-first
+    # `recommended` strip is non-empty (the gate is zero DECLARED interests, not empty recommended).
+    newbie = _user("f10_newbie")
+    c = Client()
+    c.force_login(newbie)
+    assert cta in c.get("/").content.decode()
+
+    # A user who already declared an interest must NOT see it: the form posts only the ticked types
+    # to set_interests (REPLACE), so rendering it would risk wiping their set.
+    haspref = _user("f10_haspref")
+    services.set_interests(haspref, ["f10-home-bball"])
+    c2 = Client()
+    c2.force_login(haspref)
+    assert cta not in c2.get("/").content.decode()
 
 
 def test_returns_plain_types_with_no_nearby_count():
