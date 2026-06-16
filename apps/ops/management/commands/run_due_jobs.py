@@ -12,6 +12,7 @@ It fans out to the existing per-app commands rather than re-implementing their l
   * ``organizer_prep_nudge``   — nudge organisers when a soon meetup still has no meeting point.
   * ``generate_communities``   — re-materialize the per-cohort community discovery labels.
   * ``reverify_sweep``         — nudge/evict minors on a stale age proof (active expiry).
+  * ``consent_renewal_sweep``  — nudge guardians on an expiring parental consent; evict on lapse.
   * ``spawn_due_series``       — spawn the next instance of each due recurring activity series.
   * ``match_saved_searches``   — alert savers when a new activity matches a saved search.
   * ``sync_event_feeds``       — pull registered external calendars (EventFeed) into Events.
@@ -39,6 +40,7 @@ DUE_JOBS = (
     ("organizer_prep_nudge", {}),  # W3-F6 prep nudge to organisers (blank meeting point)
     ("generate_communities", {}),
     ("reverify_sweep", {}),
+    ("consent_renewal_sweep", {}),  # W3-F4 active parental-consent expiry (nudge + lapse-evict)
     ("spawn_due_series", {}),
     ("match_saved_searches", {}),
     ("sync_event_feeds", {}),

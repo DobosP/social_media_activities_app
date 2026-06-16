@@ -173,6 +173,14 @@ ALLOW_MINOR_ONBOARDING = env.bool("ALLOW_MINOR_ONBOARDING", default=True)
 REVERIFY_REMINDER_DAYS = env.int("REVERIFY_REMINDER_DAYS", default=14)
 REVERIFY_SWEEP_BATCH = env.int("REVERIFY_SWEEP_BATCH", default=1000)
 
+# W3-F4 parental-consent renewal sweep (mirrors the reverify sweep above): the default validity a
+# newly granted/renewed consent gets, how many days before it lapses to nudge the ACTIVE guardians,
+# and a hard per-tick cap on EVICTIONS (audited if exceeded). Consents granted before W3-F4 have no
+# expiry and are grandfathered (never lapse) until they are next renewed.
+CONSENT_VALIDITY_DAYS = env.int("CONSENT_VALIDITY_DAYS", default=365)
+CONSENT_RENEWAL_REMINDER_DAYS = env.int("CONSENT_RENEWAL_REMINDER_DAYS", default=14)
+CONSENT_SWEEP_BATCH = env.int("CONSENT_SWEEP_BATCH", default=1000)
+
 # F4 recurring activity series: how many days ahead the nightly spawn job materialises the next
 # instance (so members can discover/join before it starts), and a hard per-tick cap on spawns (a
 # clock-skew / backlog event above this is capped rather than mass-creating activities in one run).

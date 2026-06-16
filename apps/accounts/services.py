@@ -257,6 +257,125 @@ def run_reverify_sweep(*, now=None) -> dict:
     return {"nudged": nudged, "paused": paused, "newly_expired": newly_expired}
 
 
+def _nudge_consent_renewal(minor: User, consent: ParentalConsent) -> None:
+    """W3-F4: a one-time SYSTEM nudge to each ACTIVE guardian that a ward's parental consent is
+    expiring soon, so they renew before it lapses (renewal is the guardian's action). NON-MUTABLE
+    SYSTEM channel — an access-continuity / compliance notice (DSA Art.16), never silenceable, so
+    a guardian can't mute the one warning that prevents their child being silently cut off. The
+    per-consent SOON marker makes it at-most-once per term."""
+    from apps.notifications.models import Notification
+    from apps.notifications.services import notify
+
+    for guardian in _active_guardians(minor):
+        notify(
+            guardian,
+            Notification.Kind.SYSTEM,
+            str(_("Your ward's parental consent is expiring soon")),
+            body=str(_("Renew your consent soon so they can keep joining and chatting.")),
+            url="/wards/",
+        )
+    consent.renewal_notice = ParentalConsent.RenewalNotice.SOON
+    consent.save(update_fields=["renewal_notice", "updated_at"])
+
+
+@transaction.atomic
+def _pause_lapsed_consent(minor: User, lapsed_consents: list) -> None:
+    """W3-F4: a CHILD ward's LAST valid parental consent has lapsed — evict them from cohort-pinned
+    rosters/conversations (has_valid_parental_consent already fails closed at every action gate;
+    this is the ACTIVE cleanup so a lapsed minor doesn't linger) and send a one-time SYSTEM notice
+    to the minor AND each ACTIVE guardian (the guardian renews). Mirrors _pause_lapsed_minor. The
+    ACTIVE->EXPIRED status flip on the lapsed consents is the handled-marker: the next tick finds
+    no ACTIVE consent for this minor and so never re-evicts/re-notifies."""
+    from apps.messaging.services import remove_user_from_conversations
+    from apps.notifications.models import Notification
+    from apps.notifications.services import notify
+    from apps.social.services import remove_user_from_groups
+
+    remove_user_from_groups(minor, reason="consent_lapsed")
+    remove_user_from_conversations(minor, reason="consent_lapsed")
+    for consent in lapsed_consents:
+        consent.status = ParentalConsent.Status.EXPIRED
+        consent.save(update_fields=["status", "updated_at"])
+    notify(
+        minor,
+        Notification.Kind.SYSTEM,
+        str(_("Your parental consent has expired")),
+        body=str(_("Ask a parent or guardian to renew their consent so you can take part again.")),
+        url="/guardianship/",
+    )
+    for guardian in _active_guardians(minor):
+        notify(
+            guardian,
+            Notification.Kind.SYSTEM,
+            str(_("Your ward's parental consent has expired")),
+            body=str(_("Renew your consent so they can keep joining and chatting.")),
+            url="/wards/",
+        )
+
+
+def run_consent_renewal_sweep(*, now=None) -> dict:
+    """W3-F4: ACTIVE enforcement of parental-consent expiry (otherwise only checked lazily by
+    has_valid_parental_consent at action time). For each minor with consent rows: if ALL their
+    ACTIVE consents have lapsed, evict them (+ a one-time SYSTEM notice to the minor + ACTIVE
+    guardians) and flip those consents EXPIRED; otherwise nudge the ACTIVE guardians once per
+    expiring-soon consent. The per-consent SOON marker + the ACTIVE->EXPIRED flip make every notice
+    at-most-once. Evictions are CAPPED per tick and the cap is AUDITED, so a clock-skew / mass-lapse
+    event can never silently evict a whole cohort. Consents with no expiry (pre-W3-F4 grants) never
+    lapse. Runs the SYSTEM (non-mutable) channel — no new mutable Kind."""
+    from apps.safety.services import record_audit
+
+    now = now or timezone.now()
+    reminder = getattr(settings, "CONSENT_RENEWAL_REMINDER_DAYS", 14)
+    cap = getattr(settings, "CONSENT_SWEEP_BATCH", 1000)
+    soon_cutoff = now + timedelta(days=reminder)
+
+    nudged = paused = newly_lapsed = 0
+    # Gate to users who still REQUIRE parental consent (CHILD cohort), mirroring run_reverify_sweep.
+    # An aged-up former minor who re-verified to TEEN/ADULT keeps their stale child-era
+    # consent rows (apply_assurance evicts from rosters on a cohort change but doesn't purge the
+    # consent rows) — yet no longer needs consent and can_participate is True for them, so they must
+    # NEVER be swept or evicted by a lapsed leftover consent.
+    minors = (
+        User.objects.filter(cohort=Cohort.CHILD, parental_consents__isnull=False)
+        .distinct()
+        .order_by("id")
+    )
+    for minor in minors.iterator():
+        try:
+            # Defence-in-depth beneath the cohort filter: never act on a user who needs no consent.
+            if not minor.requires_parental_consent:
+                continue
+            active = list(
+                ParentalConsent.objects.filter(minor=minor, status=ParentalConsent.Status.ACTIVE)
+            )
+            if not active:
+                continue  # no live consent term to watch (revoked/already-expired/none)
+            valid = [c for c in active if c.is_valid()]  # ACTIVE + (no expiry OR future expiry)
+            if not valid:
+                # Every ACTIVE consent has passed its expiry -> the minor can no longer participate.
+                newly_lapsed += 1
+                if paused < cap:
+                    _pause_lapsed_consent(minor, active)  # evict + notify + flip EXPIRED (once)
+                    paused += 1
+                # If capped, leave them ACTIVE so the next tick re-detects and evicts them.
+                continue
+            for consent in valid:
+                if (
+                    consent.expires_at is not None
+                    and consent.expires_at <= soon_cutoff
+                    and consent.renewal_notice == ParentalConsent.RenewalNotice.NONE
+                ):
+                    _nudge_consent_renewal(minor, consent)
+                    nudged += 1
+        except Exception:  # noqa: BLE001 — one bad minor must not starve the rest of the sweep
+            logger.exception("consent_renewal_sweep: skipping minor %s after an error", minor.pk)
+
+    if newly_lapsed > cap:
+        record_audit("accounts.consent_mass_lapse_guard", newly_lapsed=newly_lapsed, cap=cap)
+    record_audit("accounts.consent_swept", nudged=nudged, paused=paused, newly_lapsed=newly_lapsed)
+    return {"nudged": nudged, "paused": paused, "newly_lapsed": newly_lapsed}
+
+
 def can_participate(user: User) -> bool:
     """The gate D3/D4 uses: identity-verified with a *current* (unexpired) age
     assurance, and (if under 16) a valid parental consent on file."""
@@ -752,6 +871,12 @@ def grant_parental_consent(
         raise ValueError("Only a verified adult guardian can grant consent.")
     if not is_guardian_of(guardian, ward):
         raise ValueError("You are not a registered guardian of this user.")
+    # W3-F4: a consent now has a finite term so it can be re-affirmed (GDPR storage-limitation +
+    # genuine, current consent). Caller-supplied expires_at wins; otherwise default to
+    # CONSENT_VALIDITY_DAYS from now. renewal_notice resets to NONE so the fresh term gets its own
+    # expiring-soon nudge.
+    validity_days = getattr(settings, "CONSENT_VALIDITY_DAYS", 365)
+    effective_expires_at = expires_at or (timezone.now() + timedelta(days=validity_days))
     consent, _ = ParentalConsent.objects.update_or_create(
         minor=ward,
         guardian_identifier=str(guardian.public_id),
@@ -759,8 +884,9 @@ def grant_parental_consent(
             "status": ParentalConsent.Status.ACTIVE,
             "scope": scope,
             "granted_at": timezone.now(),
-            "expires_at": expires_at,
+            "expires_at": effective_expires_at,
             "revoked_at": None,
+            "renewal_notice": ParentalConsent.RenewalNotice.NONE,
         },
     )
     GuardianRelationship.objects.filter(
