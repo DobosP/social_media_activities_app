@@ -289,10 +289,12 @@ def hours_reliable(place, *, now=None) -> bool:
 
 def open_now_status(place, *, now=None):
     """open/closed (bool) from parsed hours, downgraded to the 'unverified' sentinel when recent
-    reports say the hours are wrong; None when hours are unknown. Read-time, ingest-safe (F28)."""
+    reports say the hours are wrong; None when hours are unknown. Read-time, ingest-safe (F28).
+    W3-F14: reads ``display_opening_hours`` (the published crowd correction's re-parsed dict, else
+    the raw ingested dict) so a quorum-corrected venue shows the accurate open/closed state."""
     from .enrichment.opening_hours import is_open_at
 
-    base = is_open_at(place.opening_hours, now or timezone.localtime())
+    base = is_open_at(place.display_opening_hours, now or timezone.localtime())
     if base is None:
         return None
     return base if hours_reliable(place, now=now) else "unverified"
@@ -605,7 +607,7 @@ def propose_place_correction(proposer, place, *, field, proposed_value) -> Place
     from apps.safety.services import record_audit
 
     if field not in PlaceCorrection.Field.values:
-        raise PlacesError("You can only correct the name or address.")
+        raise PlacesError("You can only correct the name, address or opening hours.")
     if not can_participate(proposer):
         raise NotEligible("Verified, consented participation is required to suggest a correction.")
     if not public_places().filter(pk=place.pk).exists():
@@ -613,6 +615,16 @@ def propose_place_correction(proposer, place, *, field, proposed_value) -> Place
     value = (proposed_value or "").strip()[:255]
     if not value:
         raise PlacesError("Enter the corrected value.")
+    # W3-F14: a HOURS correction must be machine-parseable so it can feed is_open_at at read time.
+    # Validate ON PROPOSE (the 255-char cap can't become a free-text channel) and RE-PARSE on read
+    # (see Place.display_opening_hours). The raw OSM string is stored; the dict is derived.
+    if field == PlaceCorrection.Field.HOURS:
+        from .enrichment.opening_hours import parse_opening_hours
+
+        if parse_opening_hours(value) is None:
+            raise PlacesError(
+                "Enter valid opening hours, e.g. 'Mo-Fr 09:00-18:00; Sa 10:00-14:00'."
+            )
     if place.corrections.filter(field=field, status=PlaceCorrection.Status.PENDING).exists():
         raise PlacesError("There's already an open correction for this field.")
     correction = PlaceCorrection.objects.create(
@@ -624,6 +636,18 @@ def propose_place_correction(proposer, place, *, field, proposed_value) -> Place
     )
     record_audit("place.correction_proposed", actor=proposer, target=place, field=field)
     return correction
+
+
+def _publish_correction(correction: PlaceCorrection) -> None:
+    """Mark a correction PUBLISHED (applied at read time via Place.display_*). W3-F14: when a HOURS
+    correction publishes, clear the F28 open-now reports — they were about the OLD, now-superseded
+    hours, so leaving them would make the freshly-corrected venue read 'unverified' at the same
+    time. NAME/ADDRESS corrections don't touch open_now_status, so they skip the clear."""
+    correction.status = PlaceCorrection.Status.PUBLISHED
+    correction.published_at = timezone.now()
+    correction.save(update_fields=["status", "published_at"])
+    if correction.field == PlaceCorrection.Field.HOURS:
+        clear_open_now_reports(correction.place)
 
 
 @transaction.atomic
@@ -639,9 +663,7 @@ def confirm_place_correction(user, correction: PlaceCorrection) -> PlaceCorrecti
         raise NotEligible("Verified, consented participation is required to confirm a correction.")
     PlaceCorrectionConfirmation.objects.get_or_create(correction=correction, user=user)
     if correction.confirmations.count() >= correction.required_confirmations:
-        correction.status = PlaceCorrection.Status.PUBLISHED
-        correction.published_at = timezone.now()
-        correction.save(update_fields=["status", "published_at"])
+        _publish_correction(correction)
     return correction
 
 
@@ -652,9 +674,7 @@ def staff_publish_correction(staff_user, correction: PlaceCorrection) -> PlaceCo
         raise NotEligible("Only staff may publish a correction.")
     if correction.status != PlaceCorrection.Status.PENDING:
         raise InvalidState("This correction is not pending.")
-    correction.status = PlaceCorrection.Status.PUBLISHED
-    correction.published_at = timezone.now()
-    correction.save(update_fields=["status", "published_at"])
+    _publish_correction(correction)
     from apps.safety.services import record_audit
 
     record_audit("place.correction_published", actor=staff_user, target=correction.place)

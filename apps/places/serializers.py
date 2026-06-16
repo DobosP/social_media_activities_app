@@ -17,9 +17,11 @@ class PlaceSerializer(GeoFeatureModelSerializer):
     activities = serializers.SerializerMethodField()
     distance_m = serializers.SerializerMethodField()
     open_now = serializers.SerializerMethodField()
-    # F20: render the crowd-corrected name/address (falls back to raw OSM). One read-time seam.
+    # F20 / W3-F14: render the crowd-corrected name/address/hours (each falls back to raw OSM) so
+    # the corrected schedule and `open_now` agree. `opening_hours_raw` stays the canonical OSM text.
     name = serializers.CharField(source="display_name", read_only=True)
     display_address = serializers.CharField(read_only=True)
+    opening_hours = serializers.JSONField(source="display_opening_hours", read_only=True)
 
     def get_activities(self, obj):
         # F26: disputed edges are hidden from discovery. Filter in Python over the prefetch.

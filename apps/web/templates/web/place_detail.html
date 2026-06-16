@@ -14,8 +14,9 @@
 {% if place.website|safe_href %}<p><a href="{{ place.website|safe_href }}" rel="noopener noreferrer" target="_blank">{% trans "Official website" %} &rarr;</a></p>{% endif %}
 {% if partner %}<p class="muted">{% trans "In partnership with" %} {% if partner.website|safe_href %}<a href="{{ partner.website|safe_href }}" rel="noopener noreferrer" target="_blank">{{ partner.name }}</a>{% else %}{{ partner.name }}{% endif %} <small>({{ partner.get_kind_display }})</small></p>{% endif %}
 
-{# F28: open-now status from the venue's parsed hours, downgraded to "unverified" by crowd reports. #}
-{% if place.opening_hours %}
+{# F28 open-now status + W3-F14 crowd-corrected hours: gate + 'Posted:' both use the EFFECTIVE
+   hours (a published correction, else raw OSM) so the badge and the posted text never disagree. #}
+{% if place.display_opening_hours %}
 <div class="card">
   <h2 style="margin-top:0">{% trans "Opening hours" %}</h2>
   {% if open_now is True %}<p><span class="tag fact--true">{% trans "Open now" %}</span></p>
@@ -24,7 +25,7 @@
     <p><span class="tag fact--limited">{% trans "Hours may be out of date" %}</span></p>
     <p class="muted" style="font-size:.85rem">{% trans "Visitors reported the posted hours were wrong here." %}</p>
   {% else %}<p class="muted">{% trans "Posted hours couldn't be read for right now." %}</p>{% endif %}
-  <p class="muted" style="font-size:.8rem">{% trans "Posted:" %} <code>{{ place.opening_hours }}</code></p>
+  <p class="muted" style="font-size:.8rem">{% trans "Posted:" %} <code>{{ place.posted_hours_text }}</code></p>
   {% if can_contribute %}
     <form method="post" action="{% url 'place_open_now_report' place.pk %}" style="display:inline">
       {% csrf_token %}
@@ -170,7 +171,9 @@
           <select name="field">
             <option value="name">{% trans "Name" %}</option>
             <option value="address">{% trans "Address" %}</option>
-          </select></label>
+            <option value="hours">{% trans "Opening hours" %}</option>
+          </select>
+          <span class="help">{% trans "For hours, use e.g. Mo-Fr 09:00-18:00; Sa 10:00-14:00" %}</span></label>
         <label>{% trans "Corrected value" %}
           <input type="text" name="proposed_value" maxlength="255" required></label>
         <button class="btn btn-sm" type="submit">{% trans "Suggest correction" %}</button>
