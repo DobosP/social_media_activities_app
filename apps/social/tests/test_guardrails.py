@@ -166,6 +166,63 @@ def test_drf_join_surface_enforces_guardrail():
     assert ok.status_code == 201, ok.content
 
 
+# --- W3-F1: family-calendar window enforcement (allowed weekdays + earliest hour) ---
+
+
+def _local_weekday(activity):
+    from django.utils import timezone
+
+    return timezone.localtime(activity.starts_at).isoweekday()
+
+
+def test_allowed_weekdays_blocks_other_days():
+    owner = _child("o_wd")
+    activity = _child_activity(owner, local_hour=10, slug="wd")
+    wd = _local_weekday(activity)
+    joiner = _child("j_wd")
+    guardian = _adult("p_wd")
+    link_guardian(guardian, joiner)
+    set_guardian_guardrail(guardian, joiner, allowed_weekdays=str(wd % 7 + 1))  # a DIFFERENT day
+    assert can_join(joiner, activity) is False
+    set_guardian_guardrail(guardian, joiner, allowed_weekdays=str(wd))  # the activity's own day
+    assert can_join(joiner, activity) is True
+
+
+def test_empty_weekdays_allow_any_day():
+    owner = _child("o_wd0")
+    activity = _child_activity(owner, slug="wd0")
+    joiner = _child("j_wd0")
+    guardian = _adult("p_wd0")
+    link_guardian(guardian, joiner)
+    set_guardian_guardrail(guardian, joiner, allowed_weekdays=[])  # no weekday restriction
+    assert can_join(joiner, activity) is True
+
+
+def test_disjoint_weekday_allowlists_block_all():
+    owner = _child("o_wdx")
+    activity = _child_activity(owner, local_hour=10, slug="wdx")
+    wd = _local_weekday(activity)
+    joiner = _child("j_wdx")
+    g1, g2 = _adult("p_wdx1"), _adult("p_wdx2")
+    link_guardian(g1, joiner)
+    link_guardian(g2, joiner)
+    set_guardian_guardrail(g1, joiner, allowed_weekdays=str(wd))  # allows the activity's day
+    set_guardian_guardrail(g2, joiner, allowed_weekdays=str(wd % 7 + 1))  # allows a different day
+    assert can_join(joiner, activity) is False  # empty intersection -> nothing passes
+
+
+def test_earliest_start_hour_blocks_early_meetup():
+    owner = _child("o_eh")
+    early = _child_activity(owner, local_hour=7, slug="eh_e")
+    ok = _child_activity(owner, local_hour=10, slug="eh_o")
+    joiner = _child("j_eh")
+    guardian = _adult("p_eh")
+    link_guardian(guardian, joiner)
+    set_guardian_guardrail(guardian, joiner, earliest_start_hour="9")
+    assert can_join(joiner, early) is False  # 07:00 local < 9
+    assert can_join(joiner, ok) is True  # 10:00 local >= 9
+
+
 def test_revoked_guardian_guardrail_no_longer_blocks():
     owner = _child("o5")
     late = _child_activity(owner, local_hour=22, slug="g5")

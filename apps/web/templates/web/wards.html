@@ -38,8 +38,14 @@
       {% if w.caps.guardrail_supervised_only %}<li>{% trans "&#10003; Limit set: only guardian-accompanied meetups." %}</li>{% endif %}
       {% if w.caps.guardrail_latest_start_hour is not None %}<li>{% blocktrans with hour=w.caps.guardrail_latest_start_hour %}&#10003; Limit set: meetups starting by {{ hour }}:00 at the latest.{% endblocktrans %}</li>{% endif %}
       {% if w.caps.guardrail_max_open_joins %}<li>{% blocktrans count n=w.caps.guardrail_max_open_joins %}&#10003; Limit set: at most {{ n }} open meetup at a time.{% plural %}&#10003; Limit set: at most {{ n }} open meetups at a time.{% endblocktrans %}</li>{% endif %}
+      {% if w.caps.guardrail_earliest_start_hour is not None %}<li>{% blocktrans with hour=w.caps.guardrail_earliest_start_hour %}&#10003; Limit set: meetups starting no earlier than {{ hour }}:00.{% endblocktrans %}</li>{% endif %}
+      {% if w.caps.guardrail_allowed_weekday_ints %}<li>{% trans "&#10003; Limit set: only on chosen days of the week." %}</li>{% endif %}
       <li>{% trans "&#10007; You cannot see their thread posts, photos, who else is there, or chat content (beyond the observer view above); you never enter their activities or cohort." %}</li>
     </ul>
+    {% if w.caps.guardrail_combined_blocks_all %}
+      <p class="muted" role="note" style="font-size:.85rem">&#9888;
+        {% trans "Combined with another guardian's limits, no meetups currently match — so they can join nothing right now. Loosen a limit if that isn't what you intend." %}</p>
+    {% endif %}
 
     {% if w.caps.can_set_guardrails %}
     <details class="card" style="margin:.6rem 0">
@@ -52,6 +58,13 @@
         <label class="inline">
           <input type="checkbox" name="supervised_only" {% if w.caps.guardrail_supervised_only %}checked{% endif %}>
           {% trans "Only guardian-accompanied meetups" %}</label>
+        <label>{% trans "Earliest start time" %}
+          <select name="earliest_start_hour">
+            <option value="">{% trans "No limit" %}</option>
+            {% for h in guardrail_hours %}
+              <option value="{{ h }}" {% if w.caps.guardrail_earliest_start_hour == h %}selected{% endif %}>{{ h }}:00</option>
+            {% endfor %}
+          </select></label>
         <label>{% trans "Latest start time" %}
           <select name="latest_start_hour">
             <option value="">{% trans "No limit" %}</option>
@@ -59,6 +72,15 @@
               <option value="{{ h }}" {% if w.caps.guardrail_latest_start_hour == h %}selected{% endif %}>{{ h }}:00</option>
             {% endfor %}
           </select></label>
+        <fieldset style="border:0;padding:0;margin:0">
+          <legend style="font-size:.85rem">{% trans "Only on these days (none ticked = any day)" %}</legend>
+          {% for num, label in guardrail_weekdays %}
+            <label class="inline" style="margin-right:.5rem">
+              <input type="checkbox" name="allowed_weekdays" value="{{ num }}"
+                     {% if num in w.caps.guardrail_allowed_weekday_ints %}checked{% endif %}>
+              {{ label }}</label>
+          {% endfor %}
+        </fieldset>
         <label>{% trans "Most open meetups at once" %}
           <input type="number" name="max_open_joins" min="1" max="50" inputmode="numeric"
                  value="{{ w.caps.guardrail_max_open_joins|default_if_none:'' }}"

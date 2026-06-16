@@ -470,8 +470,17 @@ def _passes_guardrails(user, activity) -> bool:
         return True
     if rail["supervised_only"] and not activity.guardian_accompanied:
         return False
+    local = timezone.localtime(activity.starts_at)
     latest = rail["latest_start_hour"]
-    if latest is not None and timezone.localtime(activity.starts_at).hour > latest:
+    if latest is not None and local.hour > latest:
+        return False
+    # W3-F1 family-calendar window. allowed_weekdays is None when unrestricted, else a frozenset
+    # of ISO days (an empty set — a conflicting intersection — blocks every day, fail-closed).
+    allowed_weekdays = rail.get("allowed_weekdays")
+    if allowed_weekdays is not None and local.isoweekday() not in allowed_weekdays:
+        return False
+    earliest = rail.get("earliest_start_hour")
+    if earliest is not None and local.hour < earliest:
         return False
     cap = rail["max_open_joins"]
     if cap is not None:

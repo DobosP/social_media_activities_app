@@ -100,6 +100,8 @@ def test_empty_strings_mean_no_limit():
         "supervised_only": False,
         "latest_start_hour": None,
         "max_open_joins": None,
+        "allowed_weekdays": None,
+        "earliest_start_hour": None,
     }
 
 
@@ -132,7 +134,104 @@ def test_strictest_across_two_guardians():
         g2, child, supervised_only=True, latest_start_hour="18", max_open_joins="3"
     )
     rail = effective_guardrail(child)
-    assert rail == {"supervised_only": True, "latest_start_hour": 18, "max_open_joins": 3}
+    assert rail == {
+        "supervised_only": True,
+        "latest_start_hour": 18,
+        "max_open_joins": 3,
+        "allowed_weekdays": None,
+        "earliest_start_hour": None,
+    }
+
+
+# --- W3-F1: family-calendar window (allowed weekdays + earliest start hour) ---
+
+
+# "12" is VALID (days 1+2, Mon+Tue); junk = an out-of-range digit (0/8/9) or a non-digit anywhere.
+@pytest.mark.parametrize("bad", ["8", "0", "x", "1x", "90", ["1", "9"]])
+def test_rejects_bad_weekdays(bad):
+    guardian, child = _adult("g_wd"), _child("c_wd")
+    link_guardian(guardian, child)
+    with pytest.raises(ValueError):
+        set_guardian_guardrail(guardian, child, allowed_weekdays=bad)
+
+
+def test_weekdays_normalise_to_canonical_sorted_unique():
+    guardian, child = _adult("g_wd2"), _child("c_wd2")
+    link_guardian(guardian, child)
+    rail = set_guardian_guardrail(guardian, child, allowed_weekdays=["3", "1", "3", "5"])
+    assert rail.allowed_weekdays == "135"  # sorted, de-duped
+    assert effective_guardrail(child)["allowed_weekdays"] == frozenset({1, 3, 5})
+
+
+def test_empty_weekdays_mean_no_restriction():
+    guardian, child = _adult("g_wd3"), _child("c_wd3")
+    link_guardian(guardian, child)
+    set_guardian_guardrail(guardian, child, allowed_weekdays=[])
+    assert effective_guardrail(child)["allowed_weekdays"] is None  # not "block all"
+
+
+def test_weekday_intersection_can_be_empty_fail_closed():
+    # Two guardians with disjoint allowlists -> empty intersection -> NOTHING passes (strictest).
+    child = _child("c_wd_x")
+    g1, g2 = _adult("g_wd_x1"), _adult("g_wd_x2")
+    link_guardian(g1, child)
+    link_guardian(g2, child)
+    set_guardian_guardrail(g1, child, allowed_weekdays="12")
+    set_guardian_guardrail(g2, child, allowed_weekdays="34")
+    assert effective_guardrail(child)["allowed_weekdays"] == frozenset()
+
+
+def test_earliest_start_hour_takes_the_latest_max_across_guardians():
+    child = _child("c_eh")
+    g1, g2 = _adult("g_eh1"), _adult("g_eh2")
+    link_guardian(g1, child)
+    link_guardian(g2, child)
+    set_guardian_guardrail(g1, child, earliest_start_hour="8")
+    set_guardian_guardrail(g2, child, earliest_start_hour="10")
+    assert effective_guardrail(child)["earliest_start_hour"] == 10  # strictest = latest earliest
+
+
+def test_capabilities_surface_family_calendar():
+    guardian, child = _adult("g_cap"), _child("c_cap")
+    link_guardian(guardian, child)
+    set_guardian_guardrail(guardian, child, allowed_weekdays="16", earliest_start_hour="9")
+    caps = guardianship_capabilities(guardian, child)
+    assert caps["guardrail_allowed_weekday_ints"] == [1, 6]
+    assert caps["guardrail_earliest_start_hour"] == 9
+    assert caps["guardrail_combined_blocks_all"] is False
+
+
+@pytest.mark.parametrize("junk", [123, True, 5.0])
+def test_clean_weekdays_rejects_non_iterable(junk):
+    # A bare non-iterable is junk -> ValueError (not the TypeError list() would raise), so the
+    # "junk RAISES, never widens" contract holds for any future caller.
+    guardian, child = _adult("g_ni"), _child("c_ni")
+    link_guardian(guardian, child)
+    with pytest.raises(ValueError):
+        set_guardian_guardrail(guardian, child, allowed_weekdays=junk)
+
+
+def test_combined_block_all_flag_on_disjoint_weekdays():
+    # Two guardians with disjoint allowlists -> empty intersection -> the child matches no meetup;
+    # that combined state must be LEGIBLE on each guardian's panel (not silent breakage).
+    child = _child("c_block")
+    g1, g2 = _adult("g_block1"), _adult("g_block2")
+    link_guardian(g1, child)
+    link_guardian(g2, child)
+    set_guardian_guardrail(g1, child, allowed_weekdays="12")
+    set_guardian_guardrail(g2, child, allowed_weekdays="34")
+    assert guardianship_capabilities(g1, child)["guardrail_combined_blocks_all"] is True
+    assert guardianship_capabilities(g2, child)["guardrail_combined_blocks_all"] is True
+
+
+def test_combined_block_all_flag_on_inverted_hour_window():
+    child = _child("c_inv")
+    g1, g2 = _adult("g_inv1"), _adult("g_inv2")
+    link_guardian(g1, child)
+    link_guardian(g2, child)
+    set_guardian_guardrail(g1, child, earliest_start_hour="20")  # no meetup starts >= 20 AND
+    set_guardian_guardrail(g2, child, latest_start_hour="10")  # <= 10 -> empty window
+    assert guardianship_capabilities(g1, child)["guardrail_combined_blocks_all"] is True
 
 
 def test_guardian_without_guardrail_does_not_loosen():

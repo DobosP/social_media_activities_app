@@ -2667,6 +2667,16 @@ def wards(request):
             "wards": ward_users,
             "minor_onboarding": minor_onboarding_enabled(),
             "guardrail_hours": range(24),
+            # W3-F1: (ISO day, short label) for the family-calendar weekday checkboxes.
+            "guardrail_weekdays": [
+                (1, "Mon"),
+                (2, "Tue"),
+                (3, "Wed"),
+                (4, "Thu"),
+                (5, "Fri"),
+                (6, "Sat"),
+                (7, "Sun"),
+            ],
             **_nav_context(request.user),
         },
     )
@@ -2848,6 +2858,9 @@ def guardian_guardrail_set(request, ward_pk):
             supervised_only=request.POST.get("supervised_only") == "on",
             latest_start_hour=request.POST.get("latest_start_hour", ""),
             max_open_joins=request.POST.get("max_open_joins", ""),
+            # W3-F1: weekday checkboxes (getlist) + the earliest-start-hour bookend.
+            allowed_weekdays=request.POST.getlist("allowed_weekdays"),
+            earliest_start_hour=request.POST.get("earliest_start_hour", ""),
         )
         messages.success(request, "Participation limits saved.")
     except ValueError as exc:

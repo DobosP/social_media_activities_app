@@ -445,6 +445,34 @@ def _clean_hour(value) -> int | None:
     return hour
 
 
+def _clean_weekdays(value) -> str:
+    """Normalise allowed ISO weekdays (Mon=1..Sun=7) to a canonical sorted digit string.
+    Empty / None -> "" (NO weekday restriction — the common default). Junk (anything not 1-7)
+    RAISES, so a malformed value can never silently parse to "all days" and WIDEN access
+    (fail-closed at the input boundary, mirroring _clean_hour). Accepts a list (form checkboxes)
+    or a string of digits."""
+    if value is None or value == "":
+        return ""
+    if not isinstance(value, (str, list, tuple, set, frozenset)):
+        # A bare non-iterable (e.g. an int) is junk — raise ValueError (not the TypeError that
+        # list() would), so the input-boundary contract "junk RAISES" holds for every caller.
+        raise ValueError("Pick valid days of the week.")
+    items = list(value)
+    days = set()
+    for item in items:
+        s = str(item).strip()
+        if not s:
+            continue
+        try:
+            d = int(s)
+        except (TypeError, ValueError):
+            raise ValueError("Pick valid days of the week.") from None
+        if not 1 <= d <= 7:
+            raise ValueError("Pick valid days of the week.")
+        days.add(d)
+    return "".join(str(d) for d in sorted(days))
+
+
 def _clean_cap(value) -> int | None:
     """Normalise an optional open-meetup cap. Empty -> None (no cap)."""
     if value is None or value == "":
@@ -466,6 +494,8 @@ def set_guardian_guardrail(
     supervised_only: bool = False,
     latest_start_hour=None,
     max_open_joins=None,
+    allowed_weekdays=None,
+    earliest_start_hour=None,
 ) -> GuardianGuardrail:
     """Create/update this guardian's guardrail for a CHILD ward. Gated strictly on an ACTIVE
     GuardianRelationship with a CHILD ward; audited inside the transaction. Inputs are
@@ -482,12 +512,16 @@ def set_guardian_guardrail(
         raise ValueError("Participation limits apply to children's accounts only.")
     hour = _clean_hour(latest_start_hour)
     cap = _clean_cap(max_open_joins)
+    weekdays = _clean_weekdays(allowed_weekdays)
+    earliest = _clean_hour(earliest_start_hour)
     rail, _created = GuardianGuardrail.objects.update_or_create(
         relationship=rel,
         defaults={
             "supervised_only": bool(supervised_only),
             "latest_start_hour": hour,
             "max_open_joins": cap,
+            "allowed_weekdays": weekdays,
+            "earliest_start_hour": earliest,
         },
     )
     from apps.safety.services import record_audit
@@ -499,6 +533,8 @@ def set_guardian_guardrail(
         supervised_only=bool(supervised_only),
         latest_start_hour=hour,
         max_open_joins=cap,
+        allowed_weekdays=weekdays,
+        earliest_start_hour=earliest,
     )
     return rail
 
@@ -519,9 +555,14 @@ def guardrail_for(guardian: User, ward: User) -> GuardianGuardrail | None:
 
 def effective_guardrail(ward: User) -> dict | None:
     """The STRICTEST guardrail across ALL of the ward's currently-ACTIVE guardians, combined
-    fail-closed: supervised_only if ANY guardian requires it, the EARLIEST latest_start_hour,
-    and the SMALLEST max_open_joins. A guardian with no guardrail row never loosens another's
-    limit. Returns None when no active guardrail applies (the common case → no enforcement)."""
+    fail-closed: supervised_only if ANY guardian requires it, the EARLIEST latest_start_hour, the
+    SMALLEST max_open_joins, the INTERSECTION of allowed weekdays (W3-F1), and the LATEST (MAX)
+    earliest_start_hour. A guardian with no guardrail row never loosens another's limit. Returns
+    None when no active guardrail applies (the common case → no enforcement).
+
+    ``allowed_weekdays`` is None when NO guardian set a weekday restriction, else a frozenset of
+    ISO day ints (Mon=1..Sun=7); a conflicting intersection yields the EMPTY frozenset, which
+    correctly means "no weekday passes" (the strictest, fail-closed direction)."""
     rails = list(
         GuardianGuardrail.objects.filter(
             relationship__ward=ward,
@@ -532,10 +573,21 @@ def effective_guardrail(ward: User) -> dict | None:
         return None
     hours = [r.latest_start_hour for r in rails if r.latest_start_hour is not None]
     caps = [r.max_open_joins for r in rails if r.max_open_joins is not None]
+    earliest_hours = [r.earliest_start_hour for r in rails if r.earliest_start_hour is not None]
+    # A guardian with an empty allowed_weekdays imposes NO weekday restriction (never widens).
+    weekday_sets = [{int(c) for c in r.allowed_weekdays} for r in rails if r.allowed_weekdays]
+    allowed_weekdays = None
+    if weekday_sets:
+        allowed_weekdays = set(weekday_sets[0])
+        for s in weekday_sets[1:]:
+            allowed_weekdays &= s
+        allowed_weekdays = frozenset(allowed_weekdays)  # may be empty -> nothing passes
     return {
         "supervised_only": any(r.supervised_only for r in rails),
         "latest_start_hour": min(hours) if hours else None,
         "max_open_joins": min(caps) if caps else None,
+        "allowed_weekdays": allowed_weekdays,
+        "earliest_start_hour": max(earliest_hours) if earliest_hours else None,
     }
 
 
@@ -727,6 +779,22 @@ def guardianship_capabilities(guardian: User, ward: User) -> dict:
     # F7: this guardian's own participation guardrail (CHILD wards only) — surfaced so the F13
     # legibility panels render exactly what can_join enforces, never a claim that can drift.
     rail = guardrail_for(guardian, ward) if is_child else None
+    # W3-F1: the COMBINED window across ALL active guardians can shut entirely (two guardians with
+    # disjoint allowed-weekday sets -> empty intersection; or a combined earliest > latest). That
+    # block-everything state must be LEGIBLE here, not silent breakage — so a guardian understands
+    # why their child currently matches no meetups even though their own limits look reasonable.
+    eff = effective_guardrail(ward) if is_child else None
+    combined_blocks_all = bool(
+        eff
+        and (
+            eff["allowed_weekdays"] == frozenset()
+            or (
+                eff["earliest_start_hour"] is not None
+                and eff["latest_start_hour"] is not None
+                and eff["earliest_start_hour"] > eff["latest_start_hour"]
+            )
+        )
+    )
     return {
         "relationship": (rel.relationship if rel else "") or "guardian",
         "consent_active": consent_active,
@@ -743,4 +811,14 @@ def guardianship_capabilities(guardian: User, ward: User) -> dict:
         "guardrail_supervised_only": bool(rail and rail.supervised_only),
         "guardrail_latest_start_hour": rail.latest_start_hour if rail else None,
         "guardrail_max_open_joins": rail.max_open_joins if rail else None,
+        # W3-F1: the family-calendar window, surfaced so the legibility panel + the edit form
+        # render exactly what _passes_guardrails enforces. allowed_weekdays is the stored ISO-day
+        # string ("" = no restriction); weekdays as a list of ints for convenient rendering.
+        "guardrail_allowed_weekdays": (rail.allowed_weekdays if rail else "") or "",
+        "guardrail_allowed_weekday_ints": (
+            [int(c) for c in rail.allowed_weekdays] if (rail and rail.allowed_weekdays) else []
+        ),
+        "guardrail_earliest_start_hour": rail.earliest_start_hour if rail else None,
+        # True when the COMBINED limits across all this ward's guardians currently match NO meetup.
+        "guardrail_combined_blocks_all": combined_blocks_all,
     }
