@@ -21,7 +21,7 @@
         {% if row.missing_meeting_point %}<a class="tag" href="{% url 'activity_edit' row.activity.pk %}">{% trans "Add a meeting point" %}</a>{% endif %}
         {% if row.readiness.missing_what_to_bring %}<a class="tag" href="{% url 'activity_edit' row.activity.pk %}">{% trans "Add what to bring" %}</a>{% endif %}
         {% if row.readiness.missing_getting_home %}<a class="tag fact--false" href="{% url 'activity_edit' row.activity.pk %}">{% trans "Add a getting-home plan" %}</a>{% endif %}
-        {% if row.readiness.near_capacity %}<span class="tag">{% trans "Nearly full" %}</span>{% endif %}
+        {% if row.readiness.near_capacity %}<span class="tag">{% trans "Full" %}</span>{% endif %}
         {% if row.venue_flag %}<a class="tag fact--false" href="{% url 'place_detail' row.activity.place.pk %}">{% trans "Check this venue's hours" %}</a>{% endif %}
       </p>
     {% else %}
