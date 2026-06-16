@@ -83,6 +83,8 @@
     <strong>{% trans "Organiser tools" %}</strong>
     <div class="row" style="gap:.5rem;margin-top:.4rem">
       <a class="btn btn-sm" href="{% url 'activity_edit' activity.pk %}">{% trans "Edit details" %}</a>
+      {# W4-F5: re-run this session without re-typing the venue/logistics (prefill only). #}
+      <a class="btn btn-sm btn-secondary" href="{% url 'activity_create' %}?from={{ activity.pk }}">{% trans "Set up another like this" %}</a>
     </div>
     {% comment %}W2-F10: switch to the single pre-declared plan-B time, once. Shown only while the
        meetup is open and a backup time is set; consumed (cleared) by invoke_fallback.{% endcomment %}
@@ -101,6 +103,15 @@
                placeholder="{% trans 'Optional: why (members will see this)' %}"></label>
       <button class="btn btn-sm btn-danger" type="submit">{% trans "Cancel activity" %}</button>
     </form>
+  </div>
+{% endif %}
+
+{% if is_organizer and not is_open %}
+  {% comment %}W4-F5: re-run a finished or cancelled session without re-typing the venue + logistics.
+     Prefill only — create_activity re-validates every field and re-pins the cohort on submit.{% endcomment %}
+  <div class="card">
+    <a class="btn btn-sm" href="{% url 'activity_create' %}?from={{ activity.pk }}">{% trans "Set up another like this" %}</a>
+    <span class="muted" style="font-size:.75rem">{% trans "Starts a new meetup pre-filled from this one &mdash; you pick the new time." %}</span>
   </div>
 {% endif %}
 
