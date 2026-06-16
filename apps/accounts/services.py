@@ -822,3 +822,93 @@ def guardianship_capabilities(guardian: User, ward: User) -> dict:
         # True when the COMBINED limits across all this ward's guardians currently match NO meetup.
         "guardrail_combined_blocks_all": combined_blocks_all,
     }
+
+
+def _humanize_seconds(secs: int) -> str:
+    """Plain-language duration for a TTL in seconds (e.g. 3600 -> '1 hour', 86400 -> '1 day')."""
+    if secs % 86400 == 0:
+        n = secs // 86400
+        return f"{n} day" if n == 1 else f"{n} days"
+    if secs % 3600 == 0:
+        n = secs // 3600
+        return f"{n} hour" if n == 1 else f"{n} hours"
+    if secs % 60 == 0:
+        n = secs // 60
+        return f"{n} minute" if n == 1 else f"{n} minutes"
+    return f"{secs} seconds"
+
+
+def retention_disclosure(user: User) -> list[dict]:
+    """W3-F16: a self-scoped, DURATIONS-ONLY statement of how long each category of the user's data
+    lives before it self-deletes — turning the platform's aggressive data-minimisation into a felt,
+    GDPR Art.5(e) (storage-limitation) legible surface. Pure read of constants/fields that already
+    drive live DUE_JOBS jobs + the user's OWN latest age proof; no PII, no location, no cohort.
+
+    Each ``ttl_description`` is DERIVED honestly from the live value, INCLUDING the disabled/null
+    cases (MESSAGING_RETENTION_DAYS=0 -> "no automatic deletion"; a null age-proof expiry -> "no
+    expiry set"), so this can never publish a FALSE storage-limitation claim — the load-bearing
+    correctness requirement. Returns an ordered list of {category, ttl_description}."""
+    is_minor = user.cohort in (Cohort.CHILD, Cohort.TEEN)
+    invite_days = getattr(settings, "GUARDIAN_INVITE_TTL_DAYS", 7)
+    token_days = getattr(settings, "API_TOKEN_MAX_AGE_DAYS", 90)
+    arrival_hours = getattr(settings, "ARRIVAL_RETENTION_HOURS", 6)
+    photo_floor = (
+        getattr(settings, "MEDIA_EPHEMERAL_MIN_TTL_MINORS_SECONDS", 86400)
+        if is_minor
+        else getattr(settings, "MEDIA_EPHEMERAL_MIN_TTL_SECONDS", 3600)
+    )
+    msg_days = getattr(settings, "MESSAGING_RETENTION_DAYS", 0)
+    if msg_days and msg_days > 0:
+        msg_text = (
+            f"Automatically deleted {msg_days} days after they're sent. You can also set a shorter "
+            "per-conversation disappearing timer."
+        )
+    else:
+        msg_text = (
+            "Kept until you delete them — there is no automatic deletion. You can set a "
+            "per-conversation disappearing timer to remove them sooner."
+        )
+    # Mirror is_assurance_current's exact ordering (the -id tiebreaker matters when two assurances
+    # share a verified_at) so the disclosed expiry is the OPERATIVE one, never a stale row's.
+    assurance = user.age_assurances.order_by("-verified_at", "-id").first()
+    if assurance and assurance.expires_at:
+        age_text = (
+            f"Your current age check expires on {assurance.expires_at:%d %b %Y}; after that you "
+            "re-verify (we still never store your date of birth)."
+        )
+    else:
+        age_text = (
+            "Your current age check has no set expiry. We store an age band only, never a "
+            "date of birth."
+        )
+    return [
+        {
+            "category": "Guardian invitations",
+            "ttl_description": (
+                f"Deleted {invite_days} days after they're sent (an accepted one's guardian link "
+                "lives on as a separate record)."
+            ),
+        },
+        {
+            "category": "Device app access",
+            "ttl_description": (
+                f"A device's sign-in is automatically revoked {token_days} days after it's granted."
+            ),
+        },
+        {
+            "category": "Arrival / on-my-way status",
+            "ttl_description": (
+                f"Cleared about {arrival_hours} hours after a meetup starts — it never becomes a "
+                "lasting record of where you were."
+            ),
+        },
+        {
+            "category": "Disappearing photos",
+            "ttl_description": (
+                f"A photo you mark as disappearing is removed after your chosen timer (at least "
+                f"{_humanize_seconds(photo_floor)})."
+            ),
+        },
+        {"category": "Private (encrypted) messages", "ttl_description": msg_text},
+        {"category": "Age verification", "ttl_description": age_text},
+    ]

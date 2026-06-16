@@ -34,6 +34,7 @@ from apps.accounts.services import (
     guardianship_capabilities,
     minor_onboarding_enabled,
     pending_guardian_invites_for,
+    retention_disclosure,
     revoke_guardian,
     set_guardian_guardrail,
 )
@@ -3179,6 +3180,8 @@ def my_privacy(request):
             "reports_count": len(record["reports"]),
             # W10 disclosure: a device may hold API access; the revoke lives in Settings.
             "api_token_exists": _api_token_exists(user),
+            # W3-F16: how long each category of the user's data is kept (durations only).
+            "retention": retention_disclosure(user),
             **_nav_context(user),
         },
     )
