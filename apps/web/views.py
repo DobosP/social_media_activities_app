@@ -2762,6 +2762,12 @@ def wards(request):
             .order_by("starts_at")
             .distinct()
         )
+        # W4-F2: annotate each meetup with the LIVE supervision state, computed at render time
+        # (never the static a.supervised flag), so the chip can't falsely reassure a parent that an
+        # adult is present after the supervisor has left. supervision_satisfied is the same live
+        # predicate the join-settle gate uses (GUARDIAN-role seat keyed on is_guardian_of OWNER).
+        for meetup in ward.meetups:
+            meetup.supervision_live = social.supervision_satisfied(meetup)
         # F13: the legible can/cannot boundary for this guardianship, from the real rules.
         # caps already carries this guardian's F7 guardrail values (for pre-filling the form).
         ward.caps = guardianship_capabilities(request.user, ward)
