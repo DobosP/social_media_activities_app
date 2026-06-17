@@ -374,6 +374,16 @@ def organizer_console(user) -> dict:
                 filter=Q(place__open_now_reports__created_at__gte=report_cutoff),
                 distinct=True,
             ),
+            # W4-F30: seated members bringing a personal support person — a logistical heads-up for
+            # the ORGANISER only (never capacity-counted, never a member-facing count). Excludes the
+            # supervisory GUARDIAN role, exactly like member_n/going_n above.
+            support_n=Count(
+                "memberships",
+                filter=Q(memberships__state=Membership.State.MEMBER)
+                & ~Q(memberships__role=Membership.Role.GUARDIAN)
+                & Q(memberships__brings_support_person=True),
+                distinct=True,
+            ),
         )
         .order_by("starts_at", "id")[:100]
     )
@@ -389,6 +399,8 @@ def organizer_console(user) -> dict:
             {
                 "activity": a,
                 "pending_joins": a.pending_n,
+                # W4-F30: organiser-only logistical count (members bringing a support person).
+                "support_companions": a.support_n,
                 "needs_supervisor": a.supervised and not supervision_satisfied(a),
                 "missing_meeting_point": a.starts_at <= prep_cutoff
                 and not (a.meeting_point or "").strip(),
@@ -1099,13 +1111,14 @@ def leave_activity(user, activity) -> Membership | None:
         raise InvalidState(_("The owner cannot leave their own activity."))
     membership.state = Membership.State.REMOVED
     # Reset the per-activity transient signals so a removed row carries nothing: the RSVP
-    # go/no-go (F20), the "we met up" confirmation (F22), the W2-F9 transit cue, and the W3-F3
-    # "heading home" ping. Keeps each scoped to live members so re-joining starts clean and
-    # nothing aggregates per-user.
+    # go/no-go (F20), the "we met up" confirmation (F22), the W2-F9 transit cue, the W3-F3
+    # "heading home" ping, and the W4-F30 support-person flag. Keeps each scoped to live members so
+    # re-joining starts clean and nothing aggregates per-user.
     membership.attendance_intent = Membership.AttendanceIntent.UNKNOWN
     membership.met_confirmed_at = None
     membership.transit_status = Membership.TransitStatus.NONE
     membership.departing_at = None
+    membership.brings_support_person = False
     membership.save(
         update_fields=[
             "state",
@@ -1113,9 +1126,45 @@ def leave_activity(user, activity) -> Membership | None:
             "met_confirmed_at",
             "transit_status",
             "departing_at",
+            "brings_support_person",
             "updated_at",
         ]
     )
+    return membership
+
+
+def support_companions_allowed_cohorts():
+    """W4-F30: cohorts that may declare a support-person companion — ADULTS-ONLY at launch (mirrors
+    Connections' cohort allowlist). A companion is structurally never a contact path, so this is
+    defence-in-depth, not the load-bearing safety boundary. UNASSIGNED is never allowed."""
+    allowed = set(getattr(settings, "SUPPORT_COMPANION_COHORTS", (Cohort.ADULT,)))
+    allowed.discard(Cohort.UNASSIGNED)
+    return allowed
+
+
+@transaction.atomic
+def set_support_companion(user, activity, brings: bool) -> Membership:
+    """W4-F30: a current member declares (or clears) that they're bringing ONE personal support
+    person (carer / PA / interpreter) so they can attend. A transient per-membership boolean —
+    NOT capacity-counted (it never consumes a seat or blocks another join — can_join/
+    participant_count are untouched), never aggregated per-user, never on a discovery surface;
+    surfaced ONLY to the organiser as a logistical count. ADULTS-ONLY at launch. Idempotent.
+
+    Uses voting_members (current MEMBER minus supervisory GUARDIAN) — a guardian is themselves the
+    child's support person, so them "bringing a support person" is meaningless, and it would diverge
+    from the guardian-excluded console count."""
+    membership = voting_members(activity).filter(user=user).first()
+    if membership is None:
+        raise NotAMember(_("Only current members can set this."))
+    if not can_participate(user):
+        raise NotEligible(_("This requires verified, consented participation."))
+    if user.cohort not in support_companions_allowed_cohorts():
+        raise NotEligible(_("Bringing a support person isn't available for this group yet."))
+    brings = bool(brings)
+    if membership.brings_support_person == brings:
+        return membership  # idempotent: no-op when unchanged
+    membership.brings_support_person = brings
+    membership.save(update_fields=["brings_support_person", "updated_at"])
     return membership
 
 

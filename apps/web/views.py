@@ -1412,6 +1412,16 @@ def activity_detail(request, pk):
         and not my_departure
         and social.departure_window_open(activity)
     )
+    # W4-F30: a member may declare they're bringing a personal support person (ADULTS-ONLY at
+    # launch). Not capacity-counted; the organiser sees only a logistical count.
+    my_brings_support = (
+        my_membership.brings_support_person if (is_member and my_membership) else False
+    )
+    can_set_support = (
+        is_member
+        and not viewer_is_guardian  # a supervisory guardian is not a participant bringing support
+        and user.cohort in social.support_companions_allowed_cohorts()
+    )
     # F35: the "catch up" digest, only for someone who can already see the thread. The numeric
     # summary inside it is cohort-gated by the viewer (None for minors — see thread_digest).
     digest = social.thread_digest(activity, user) if (is_member or user.is_staff) else None
@@ -1500,6 +1510,8 @@ def activity_detail(request, pk):
             "my_transit": my_transit,
             "my_departure": my_departure,
             "can_mark_departing": can_mark_departing,
+            "my_brings_support": my_brings_support,
+            "can_set_support": can_set_support,
             "can_say_on_my_way": can_say_on_my_way,
             "can_say_running_late": can_say_running_late,
             "arrival_window_open": is_member and social.arrival_window_open(activity),
@@ -1908,6 +1920,19 @@ def activity_rsvp(request, pk):
     activity = _visible_activity_or_404(request.user, pk)
     try:
         social.set_attendance_intent(request.user, activity, request.POST.get("intent"))
+    except social.SocialError as exc:
+        messages.error(request, _msg(exc))
+    return redirect("activity_detail", pk=pk)
+
+
+@login_required
+@require_POST
+def activity_support_companion(request, pk):
+    """W4-F30: a member toggles whether they're bringing a personal support person. Not
+    capacity-counted; no location, no new contact — the organiser sees only a logistical count."""
+    activity = _visible_activity_or_404(request.user, pk)
+    try:
+        social.set_support_companion(request.user, activity, request.POST.get("brings") == "on")
     except social.SocialError as exc:
         messages.error(request, _msg(exc))
     return redirect("activity_detail", pk=pk)

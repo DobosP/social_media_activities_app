@@ -471,6 +471,11 @@ CONNECTIONS_REQUEST_RATE_WINDOW_SECONDS = env.int(
     "CONNECTIONS_REQUEST_RATE_WINDOW_SECONDS", default=3600
 )
 
+# W4-F30: cohorts whose members may declare a (non-capacity-counted) support-person companion.
+# Adults only at launch (mirrors CONNECTIONS/GROUPS); a companion is structurally never a contact
+# path, so this is defence-in-depth. UNASSIGNED is discarded in code.
+SUPPORT_COMPANION_COHORTS = env.list("SUPPORT_COMPANION_COHORTS", default=["adult"])
+
 # --- Communities (derived geo x activity-type discovery labels, e.g. "Cluj-Napoca Football") ---
 # A community is materialized PER COHORT only when it clears ALL three floors, counted within
 # that cohort over distinct NON-GUARDIAN peers (the k-anon floor keeps a thin bucket from

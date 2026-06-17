@@ -332,6 +332,13 @@ class Membership(models.Model):
     # admitted membership, so the first-timer welcome (a self-dismissing banner + a line on
     # the join notification) fires at most once. null = not (yet) welcomed; never aggregated.
     welcomed_at = models.DateTimeField(null=True, blank=True)
+    # W4-F30: a member's own flag that they're bringing ONE personal support person (carer, PA, or
+    # sign-language interpreter) so they can attend. A transient per-membership boolean, reset on
+    # leave like the other per-activity signals — NEVER aggregated per-user, never on a discovery
+    # surface. The companion is NEVER a second User (not contactable, not in any roster/thread/feed)
+    # and is NEVER capacity-counted, so it can't consume a member seat, block another join, or open
+    # a cross-cohort / adult-minor backchannel. Surfaced ONLY to the organiser as a count.
+    brings_support_person = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

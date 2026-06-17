@@ -27,6 +27,9 @@
     {% else %}
       <p class="muted" style="margin:.4rem 0 0">&#10003; {% trans "Nothing needed right now." %}</p>
     {% endif %}
+    {% comment %}W4-F30: a calm logistical heads-up (NOT a gap/task, NOT a capacity figure) — how
+       many members are bringing a personal support person.{% endcomment %}
+    {% if row.support_companions %}<p class="muted" style="margin:.4rem 0 0">{% blocktrans count n=row.support_companions %}{{ n }} member is bringing a support person.{% plural %}{{ n }} members are bringing a support person.{% endblocktrans %}</p>{% endif %}
   </div>
 {% empty %}
   <p class="muted">{% trans "You're not organising any upcoming activities." %}
