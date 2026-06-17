@@ -185,6 +185,29 @@ def in_kind_by_category(currency: str = "EUR") -> list[dict]:
     )
 
 
+def civic_outcomes() -> list[dict]:
+    """W4-F24: the staff-authored civic-impact statements for the transparency page, newest first,
+    as plain dicts. PROSE ONLY — never an auto-derived count (mirrors in_kind_by_category's
+    aggregate-only, donor-FK-free shape; CivicOutcome has NO FK/query path to Activity/Membership/
+    Donation). A credited partner's name is re-gated to public() at read time, so a
+    since-deactivated partner's name drops to None."""
+    from .models import CivicOutcome
+
+    return [
+        {
+            "headline": o.headline,
+            "detail": o.detail,
+            "period": o.period,
+            "partner_name": (
+                o.partner.name
+                if (o.partner_id and o.partner.is_verified and o.partner.is_active)
+                else None
+            ),
+        }
+        for o in CivicOutcome.objects.filter(is_active=True).select_related("partner")
+    ]
+
+
 def cost_anchors(currency: str = "EUR") -> list[dict]:
     """W3-F19: the active staff-authored 'what a gift makes possible' cost anchors for the donate
     page. PURELY ILLUSTRATIVE — plain dicts of (label + amount + decorative category), ordered

@@ -2514,6 +2514,7 @@ def transparency(request):
     """F29: public 'where the money goes' — donations received and staff-entered spending by
     category, as two clearly separate aggregate sections (never an 'X of Y goal' bar)."""
     from apps.donations.services import (
+        civic_outcomes,
         completed_total_cents,
         in_kind_by_category,
         spend_by_category,
@@ -2525,6 +2526,7 @@ def transparency(request):
         "web/transparency.html",
         {
             "currency": "EUR",
+            "civic_outcomes": civic_outcomes(),  # W4-F24 — staff prose, its own section
             "raised_cents": completed_total_cents("EUR"),
             "spend_rows": spend_by_category("EUR"),
             "spend_total_cents": spend_total_cents("EUR"),
