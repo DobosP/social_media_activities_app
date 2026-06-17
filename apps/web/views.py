@@ -2845,6 +2845,10 @@ def wards(request):
         # F13: the legible can/cannot boundary for this guardianship, from the real rules.
         # caps already carries this guardian's F7 guardrail values (for pre-filling the form).
         ward.caps = guardianship_capabilities(request.user, ward)
+        # W4-F1: an honest dry-run of what the CURRENT combined guardrails allow — "could join N of
+        # the next M upcoming meetups". CHILD-only (None otherwise); reuses the real gate fns so it
+        # can't drift, and explains a too-tight combination instead of looking like a broken app.
+        ward.guardrail_preview = social.guardrail_preview(ward)
     return render(
         request,
         "web/wards.html",

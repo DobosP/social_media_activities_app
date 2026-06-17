@@ -52,6 +52,15 @@
       <p class="muted" role="note" style="font-size:.85rem">&#9888;
         {% trans "Combined with another guardian's limits, no meetups currently match — so they can join nothing right now. Loosen a limit if that isn't what you intend." %}</p>
     {% endif %}
+    {% if w.guardrail_preview %}
+      {% if w.guardrail_preview.total %}
+        <p class="muted" role="note" style="font-size:.85rem">
+          {% blocktrans with eligible=w.guardrail_preview.eligible total=w.guardrail_preview.total %}Right now, they could join {{ eligible }} of {{ total }} upcoming meetups with room in their cohort.{% endblocktrans %}</p>
+      {% else %}
+        <p class="muted" role="note" style="font-size:.85rem">
+          {% trans "No upcoming meetups to check against right now." %}</p>
+      {% endif %}
+    {% endif %}
 
     {% if w.caps.can_set_guardrails %}
     <details class="card" style="margin:.6rem 0">

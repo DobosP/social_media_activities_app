@@ -542,13 +542,19 @@ def _venue_ok_for_child(activity) -> bool:
     return is_child_safe_venue(activity.place)
 
 
-def _passes_guardrails(user, activity) -> bool:
+_RAIL_UNSET = object()
+
+
+def _passes_guardrails(user, activity, *, rail=_RAIL_UNSET) -> bool:
     """True iff the activity satisfies the strictest active guardian guardrail on a CHILD ward
     (F7). No guardrail -> always True. Each clause is a hard NARROW: supervised_only requires a
     guardian-accompanied meetup; latest_start_hour caps the meetup's *local* start hour; and
     max_open_joins caps how many OPEN meetups (non-removed memberships) the ward is already in.
-    Called only for CHILD users (see can_join)."""
-    rail = effective_guardrail(user)
+    Called only for CHILD users (see can_join). A caller that has already loaded
+    ``effective_guardrail(user)`` may pass it as ``rail`` to skip a redundant reload (W4-F1's
+    bounded preview) — the enforced decision is byte-identical."""
+    if rail is _RAIL_UNSET:
+        rail = effective_guardrail(user)
     if rail is None:
         return True
     if rail["supervised_only"] and not activity.guardian_accompanied:
@@ -582,6 +588,83 @@ def _passes_guardrails(user, activity) -> bool:
         if current >= cap:
             return False
     return True
+
+
+# W4-F1: how many upcoming meetups the dry-run preview scans. The copy states this bound, so the
+# count stays honest ("of the next N upcoming meetups") and the read stays cheap (inv.6).
+GUARDRAIL_PREVIEW_LIMIT = 50
+
+
+def guardrail_preview(ward, *, limit=GUARDRAIL_PREVIEW_LIMIT) -> dict | None:
+    """W4-F1 — an honest dry-run of what a CHILD ward's CURRENT combined guardrails actually allow:
+    "with these limits, your child could join N of the next M upcoming meetups in their cohort".
+    Read-only legibility for the guardian; it never widens access (preview only) and never leaks an
+    out-of-cohort meetup's existence (it scans only ``visible_activities(ward)``). CHILD-only — the
+    guardrails (and the child-venue gate) apply to no other cohort; returns None otherwise.
+
+    LOAD-BEARING (inv.2 honesty): the eligible count uses the SAME gates ``can_join`` enforces —
+    ``can_participate`` (a lapsed-consent/expired-assurance ward can join nothing), the
+    ``CHILD_PUBLIC_VENUES_ONLY`` venue gate (``_venue_ok_for_child``), and ``_passes_guardrails`` —
+    never a re-implementation, so the preview can't drift from the gate. Already-joined and
+    capacity-full meetups are EXCLUDED FROM THE DENOMINATOR (they're not guardrail blocks): counting
+    them would conflate "your limits block this" with "already joined / full", so the panel would
+    lie about WHY the count is low (the whole point is diagnosing an over-tight guardrail)."""
+    if ward.cohort != Cohort.CHILD:
+        return None
+    now = timezone.now()
+    candidates = list(
+        visible_activities(ward)
+        .filter(status=Activity.Status.OPEN, starts_at__gte=now)
+        # Batch the capacity check (mirrors participant_count = voting_members().count()): MEMBER
+        # state, guardians excluded — a full meetup drops from the count with no per-row query.
+        .annotate(
+            _voting_n=Count(
+                "memberships",
+                filter=Q(memberships__state=Membership.State.MEMBER)
+                & ~Q(memberships__role=Membership.Role.GUARDIAN),
+                distinct=True,
+            )
+        )
+        .order_by("starts_at")[:limit]
+    )
+    # One query for the "already joined" exclusion (mirrors can_join's `existing` check).
+    joined_ids = set(
+        Membership.objects.filter(user=ward, activity__in=candidates)
+        .exclude(state=Membership.State.REMOVED)
+        .values_list("activity_id", flat=True)
+    )
+    # Mirror can_join's FIRST gate: a ward whose parental consent has lapsed or whose age-assurance
+    # has expired can join NOTHING (apps/social/services.py can_join -> can_participate). It's
+    # ward-constant, so hoist it; omitting it would let the panel claim "could join N" for a child
+    # who currently can't join any meetup — a false reassurance and a drift from the real gate.
+    ward_can_participate = can_participate(ward)
+    # Hoist the rail once. no_rail mirrors _passes_guardrails' own early-return (rail is None ->
+    # always passes); passing the loaded rail back into it avoids a per-candidate reload (no drift —
+    # the same gate fn, same decision).
+    rail = effective_guardrail(ward)
+    no_rail = rail is None
+    # Mirror can_join's venue gate EXACTLY, including its CHILD_PUBLIC_VENUES_ONLY guard — applying
+    # _venue_ok_for_child unconditionally would diverge from the gate when the flag is off.
+    venue_gate_on = getattr(settings, "CHILD_PUBLIC_VENUES_ONLY", True)
+    venue_ok_cache: dict[int, bool] = {}
+    eligible = 0
+    total = 0
+    for a in candidates:
+        if a.id in joined_ids:
+            continue
+        if a.capacity is not None and a._voting_n >= a.capacity:
+            continue
+        total += 1
+        if not ward_can_participate:
+            continue
+        if venue_gate_on:
+            if a.place_id not in venue_ok_cache:
+                venue_ok_cache[a.place_id] = _venue_ok_for_child(a)
+            if not venue_ok_cache[a.place_id]:
+                continue
+        if no_rail or _passes_guardrails(ward, a, rail=rail):
+            eligible += 1
+    return {"eligible": eligible, "total": total}
 
 
 def _type_in_category_envelope(allowed, activity_type) -> bool:
