@@ -2793,8 +2793,15 @@ def wards(request):
         # (never the static a.supervised flag), so the chip can't falsely reassure a parent that an
         # adult is present after the supervisor has left. supervision_satisfied is the same live
         # predicate the join-settle gate uses (GUARDIAN-role seat keyed on is_guardian_of OWNER).
+        # W4-F4: a "why this venue is child-approved" credit (CHILD wards only — the F9 child-venue
+        # gate is CHILD-only). None when the venue reads 'unknown' at render time -> no credit.
+        from apps.places.services import child_venue_rationale
+
         for meetup in ward.meetups:
             meetup.supervision_live = social.supervision_satisfied(meetup)
+            meetup.child_venue_rationale = (
+                child_venue_rationale(meetup.place) if ward.cohort == Cohort.CHILD else None
+            )
         # F13: the legible can/cannot boundary for this guardianship, from the real rules.
         # caps already carries this guardian's F7 guardrail values (for pre-filling the form).
         ward.caps = guardianship_capabilities(request.user, ward)

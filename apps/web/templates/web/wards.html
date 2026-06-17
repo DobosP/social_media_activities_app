@@ -16,6 +16,10 @@
         {% for a in w.meetups %}
           <li>{{ a.starts_at|date:"D j M, H:i" }} &middot; {{ a.activity_type.name }}
             {% blocktrans with place=a.place.name|default:_("a place") %}at {{ place }}{% endblocktrans %}{% if a.place.address_city %}, {{ a.place.address_city }}{% endif %}{% if a.supervised %} &middot; {% if a.supervision_live %}{% trans "guardian-supervised" %}{% else %}{% trans "supervised &mdash; no adult seated yet" %}{% endif %}{% endif %}
+            {% comment %}W4-F4: why this venue is permitted for a child meetup (the F9 gate, made
+               legible). Shown only when it currently reads 'allowed' — never a false claim.{% endcomment %}
+            {% if a.child_venue_rationale %}<br><span class="muted" style="font-size:.8rem">&#10003;
+              {% if a.child_venue_rationale == "staff_verified" %}{% trans "Child-approved venue (staff-verified)" %}{% else %}{% trans "Child-approved venue (matches the public-venue rule)" %}{% endif %}</span>{% endif %}
             {% comment %}F18: mirror the owner-curated plan (end time, meeting spot, getting-home note)
                for CHILD wards only — teens self-manage. Read-only facts; there is no reply channel.{% endcomment %}
             {% if w.cohort == "child" %}
