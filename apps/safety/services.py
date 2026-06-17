@@ -121,6 +121,13 @@ def file_report(reporter, target, reason, detail="") -> Report:
 # text channel. Plain English to match the safety app's other notices (file_report's reporter ack).
 _UNSAFE_GUARDIAN_TITLE = "Safety alert: a child you look after asked for help"
 
+# W4-F3: the symmetric DSA loop for a minor. The offender gets the Art.17 statement of reasons and
+# the reporter gets the Art.16 outcome — but the legally-responsible guardian of an under-16 learned
+# nothing. This SYSTEM notice tells each ACTIVE guardian that a moderation OUTCOME concerning their
+# ward occurred, as a PURE POINTER to /wards/: no reason, no who-did-what, no moderator id (the
+# Art.17 detail belongs only to the offender). Plain English, matching the sibling alert above.
+_MODERATION_GUARDIAN_TITLE = "A moderation decision concerning a child you look after"
+
 # A panic-button report is filed with this fixed sentinel in `detail`, so its idempotency check can
 # NEVER collide with a user's free-text slow-path report that happens to also be OFF_PLATFORM (which
 # would otherwise suppress the guardian alert while the UI claims it fired). It also tells a
@@ -173,6 +180,68 @@ def _alert_guardians_unsafe(child) -> int:
                 )
         except Exception:
             continue  # best-effort: don't count a guardian we failed to actually reach
+        notified.add(guardian.id)
+    return len(notified)
+
+
+def _alert_guardians_of_moderation(*minors) -> int:
+    """W4-F3: tell each ACTIVE guardian of an affected CHILD that a moderation OUTCOME concerning
+    their ward occurred — the symmetric DSA loop (the minor gets the Art.16/17 detail; the
+    legally-responsible adult gets a pure pointer). Modelled exactly on _alert_guardians_unsafe:
+    keyed strictly on an ACTIVE GuardianRelationship (never a loose flag), blocked pairs excluded,
+    SYSTEM (non-mutable, but not baiting — one notice per outcome), savepoint-isolated so a notify
+    failure never turns the moderation action into a 500.
+
+    `minors` is the offender+reporter union (either may be None or a non-CHILD; both are dropped).
+    Dedup is ACROSS that whole union: a guardian of BOTH the offender and the reporter gets exactly
+    ONE notice for one outcome. The body carries ZERO reason/identity/moderator detail — the Art.17
+    statement of reasons belongs only to the offender, never the guardian."""
+    from django.urls import reverse
+
+    from apps.accounts.models import Cohort, GuardianRelationship
+    from apps.notifications.models import Notification
+    from apps.notifications.services import notify
+
+    # Only CHILD wards have guardians who must be looped; dedup the affected set first.
+    wards = {m for m in minors if m is not None and m.cohort == Cohort.CHILD}
+    if not wards:
+        return 0
+    body = (
+        "A moderation decision was made about something concerning a child you look after. "
+        "You can see their upcoming meetups on your guardian page."
+    )
+    url = reverse("wards")
+    blocked_cache: dict[int, set[int]] = {}
+    notified: set[int] = set()
+    for rel in (
+        GuardianRelationship.objects.filter(
+            ward__in=wards, status=GuardianRelationship.Status.ACTIVE
+        )
+        .select_related("guardian", "ward")
+        .order_by("ward_id", "guardian_id")
+    ):
+        guardian = rel.guardian
+        if guardian.id in notified:
+            continue
+        # Exclude a guardian blocked vs THIS specific ward (mirror _alert_guardians_unsafe's
+        # per-child blocked check); cache per ward so the union stays a couple of cheap queries.
+        if rel.ward_id not in blocked_cache:
+            blocked_cache[rel.ward_id] = blocked_user_ids(rel.ward)
+        if guardian.id in blocked_cache[rel.ward_id]:
+            continue
+        try:
+            # Savepoint so a notify DB failure rolls back ONLY the notify, never the surrounding
+            # atomic moderation action, and never turns take_action/dismiss_report into a 500.
+            with transaction.atomic():
+                notify(
+                    guardian,
+                    Notification.Kind.SYSTEM,
+                    _MODERATION_GUARDIAN_TITLE,
+                    body=body,
+                    url=url,
+                )
+        except Exception:
+            continue  # best-effort: don't mark a guardian we failed to actually reach
         notified.add(guardian.id)
     return len(notified)
 
@@ -562,6 +631,12 @@ def take_action(moderator, target, action, reason, *, notes="", report=None, exp
             "Your report was reviewed",
             "Thanks for your report. Our moderation team reviewed it and took action.",
         )
+    # W4-F3: tell the ACTIVE guardian(s) of the affected CHILD — offender (resolved from the
+    # content/account target) AND the reporter — that a moderation outcome concerning their ward
+    # occurred. Pure pointer to /wards/, deduped across the offender+reporter union.
+    _alert_guardians_of_moderation(
+        _affected_user(target), report.reporter if report is not None else None
+    )
     return record
 
 
@@ -578,6 +653,9 @@ def dismiss_report(moderator, report: Report, resolution: str = "") -> Report:
         "Your report was reviewed",
         "Thanks for your report. Our moderation team reviewed it and found no action was needed.",
     )
+    # W4-F3: a dismissal has no offender — the CHILD reporter is the only minor here, so alert their
+    # ACTIVE guardian(s) with the same pure-pointer SYSTEM notice (no detail, no who/why).
+    _alert_guardians_of_moderation(report.reporter)
     return report
 
 
