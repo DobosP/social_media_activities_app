@@ -7,9 +7,18 @@
   <a href="{{ clear_url }}">clear</a>.{% endblocktrans %}{% endif %}</p>
 <form method="get" action="{% url 'events_list' %}" class="search-bar" role="search">
   <input type="search" name="q" value="{{ query }}" placeholder="{% trans 'Search events…' %}" aria-label="{% trans 'Search events' %}" minlength="2">
+  {% if activity %}<input type="hidden" name="activity" value="{{ activity }}">{% endif %}
+  {% comment %}W4-F14: narrow to a city Area (composes with the search + type filters).{% endcomment %}
+  {% if areas %}
+    <select name="area" aria-label="{% trans 'Area' %}">
+      <option value="">{% trans "Any area" %}</option>
+      {% for a in areas %}<option value="{{ a.slug }}"{% if a.slug == area %} selected{% endif %}>{{ a.name }}</option>{% endfor %}
+    </select>
+  {% endif %}
   <button class="btn" type="submit">{% trans "Search" %}</button>
   {% if query %}<a class="muted" href="{% url 'events_list' %}">{% trans "clear" %}</a>{% endif %}
 </form>
+{% if area_name %}<p class="muted">{% blocktrans %}Showing events in <strong>{{ area_name }}</strong> only.{% endblocktrans %}</p>{% endif %}
 <div class="grid">
   {% for e in events %}
     <div class="card">
