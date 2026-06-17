@@ -207,6 +207,27 @@ def is_child_safe_venue(place) -> bool:
     return public_child_venue_class(place) == CHILD_VENUE_ALLOWED
 
 
+# W4-F4: stable keys for the guardian-manifest "why this venue is child-approved" credit. The
+# wards template maps each to a humanised label — never the raw OSM tags, so it can't become a
+# tag-scraping oracle.
+CHILD_VENUE_RATIONALE_STAFF = "staff_verified"
+CHILD_VENUE_RATIONALE_RULE = "rule_match"
+
+
+def child_venue_rationale(place) -> str | None:
+    """W4-F4: a short, humanised reason a venue is permitted for CHILD meetups, for the /wards/
+    manifest. Returns a stable key — "staff_verified" (a per-place ApprovedChildVenue override) or
+    "rule_match" (the place's tags match an active public-venue rule). Returns None when the venue
+    does NOT currently read 'allowed' (silent safe omission — never a false 'approved' claim for a
+    since-deactivated rule). Reuses the fail-closed public_child_venue_class; emits only the
+    'allowed' rationale, never an 'unknown/not-allowed' state."""
+    if public_child_venue_class(place) != CHILD_VENUE_ALLOWED:
+        return None
+    if ApprovedChildVenue.objects.filter(place=place).exists():
+        return CHILD_VENUE_RATIONALE_STAFF
+    return CHILD_VENUE_RATIONALE_RULE
+
+
 def matches_access_preference(facts, pref) -> str:
     """SOFT classifier for the badge — NEVER feeds a filter/exclude. Returns 'match' when every
     NEED the user set is satisfied (state 'true'), 'mismatch' when any set need is explicitly
