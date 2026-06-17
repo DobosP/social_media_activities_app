@@ -207,6 +207,21 @@
     {% elif my_departure %}
       <p class="muted" style="margin:.4rem 0">&#10003; {% blocktrans with departure_time=my_departure|date:"H:i" %}You let the grown-ups who look after you know you're heading home at {{ departure_time }}.{% endblocktrans %}</p>
     {% endif %}
+    {% comment %}W4-F30: a member's own "I'm bringing a support person" toggle (ADULTS-ONLY at
+       launch). Not capacity-counted — the organiser sees only a logistical count.{% endcomment %}
+    {% if can_set_support %}
+      {% if my_brings_support %}
+        <form method="post" action="{% url 'activity_support_companion' activity.pk %}" class="inline" style="margin:.4rem 0">{% csrf_token %}
+          <span class="muted">&#10003; {% trans "You're bringing a support person." %}</span>
+          <button class="linkbtn" type="submit">{% trans "clear" %}</button></form>
+      {% else %}
+        <form method="post" action="{% url 'activity_support_companion' activity.pk %}" style="margin:.4rem 0">{% csrf_token %}
+          <input type="hidden" name="brings" value="on">
+          <button class="btn btn-sm" type="submit">{% trans "I'm bringing a support person" %}</button>
+          <span class="muted" style="font-size:.75rem">{% trans "A carer, PA, or interpreter &mdash; not counted toward capacity." %}</span>
+        </form>
+      {% endif %}
+    {% endif %}
     <div class="row" style="gap:.4rem;align-items:center;margin:.4rem 0;flex-wrap:wrap">
       <span class="muted">{% blocktrans with going=rsvp_summary.going total=rsvp_summary.total %}Coming: <strong>{{ going }}</strong> of {{ total }}{% endblocktrans %}</span>
       {% comment %}F1 Quorum-go: LIVE derived state (never the go_confirmed_at latch) — flips back

@@ -106,6 +106,11 @@ urlpatterns = [
         name="activity_transfer_owner",
     ),
     path("activities/<int:pk>/rsvp/", views.activity_rsvp, name="activity_rsvp"),
+    path(
+        "activities/<int:pk>/support-person/",
+        views.activity_support_companion,
+        name="activity_support_companion",
+    ),
     path("activities/<int:pk>/arrived/", views.activity_arrived, name="activity_arrived"),
     path("activities/<int:pk>/transit/", views.activity_transit, name="activity_transit"),
     path("activities/<int:pk>/departing/", views.activity_departing, name="activity_departing"),
