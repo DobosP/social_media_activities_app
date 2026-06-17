@@ -234,3 +234,45 @@ class InKindContribution(models.Model):
                 raise ValidationError(
                     {"partner": "Only a verified, active partner can be credited."}
                 )
+
+
+class CivicOutcome(models.Model):
+    """W4-F24: a staff-authored civic-impact statement for the public transparency page — a prose
+    claim of what the platform's spend + partner backing produced (e.g. "Library reading circles ran
+    at 4 partner venues this season"). NARRATIVE + period-labelled, NEVER a live counter or "X of Y"
+    bar: it stores a sentence, NOT an auto-derived count of activities/users/attendance (the vanity
+    metric inv.2 forbids — and what got the prior auto-/impact proposals rejected). Deliberately has
+    NO FK to Activity/Membership/Donation, so it cannot accidentally surface a per-user rollup.
+    Mirrors InKindContribution/SpendEntry's aggregate-only, donor-FK-free shape."""
+
+    headline = models.CharField(max_length=280)
+    detail = models.CharField(max_length=300, blank=True)
+    period = models.CharField(max_length=60, blank=True)  # free-text label, e.g. "2026 season"
+    # Optional credit to a verified civic partner (SET_NULL like InKindContribution); public-gated.
+    partner = models.ForeignKey(
+        "places.Partner",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="civic_outcomes",
+        help_text="Optional verified civic partner credited for this outcome.",
+    )
+    is_active = models.BooleanField(default=True)  # staff retire a stale statement without deleting
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"civic_outcome({self.headline[:40]})"
+
+    def clean(self):
+        # Same defence-in-depth partner gate as Campaign/InKindContribution.clean().
+        super().clean()
+        if self.partner_id is not None:
+            from apps.places.models import Partner
+
+            if not Partner.objects.public().filter(pk=self.partner_id).exists():
+                raise ValidationError(
+                    {"partner": "Only a verified, active partner can be credited."}
+                )

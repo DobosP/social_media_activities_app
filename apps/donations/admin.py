@@ -1,6 +1,13 @@
 from django.contrib import admin
 
-from .models import Campaign, CostAnchor, Donation, InKindContribution, SpendEntry
+from .models import (
+    Campaign,
+    CivicOutcome,
+    CostAnchor,
+    Donation,
+    InKindContribution,
+    SpendEntry,
+)
 
 
 @admin.register(Donation)
@@ -99,6 +106,25 @@ class InKindContributionAdmin(admin.ModelAdmin):
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         # Mirror CampaignAdmin: a contribution may only credit a verified+active partner.
+        if db_field.name == "partner":
+            from apps.places.models import Partner
+
+            kwargs["queryset"] = Partner.objects.public().order_by("name")
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
+@admin.register(CivicOutcome)
+class CivicOutcomeAdmin(admin.ModelAdmin):
+    """Staff entry point for the W4-F24 civic-impact statements shown on /transparency/. Prose only
+    — never an auto-derived count; aggregate-only, no donor/activity link."""
+
+    list_display = ("headline", "period", "partner", "is_active", "created_at")
+    list_filter = ("is_active", "partner")
+    search_fields = ("headline", "detail", "period")
+    readonly_fields = ("created_at",)
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        # Only a verified+active partner may be credited (mirrors InKindContributionAdmin).
         if db_field.name == "partner":
             from apps.places.models import Partner
 

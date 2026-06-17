@@ -40,5 +40,21 @@
   </ul>
 </div>
 {% endif %}
+{% comment %}W4-F24: staff-authored civic-impact statements — narrative + period-labelled, a third
+   clearly-separate section. Prose only: never a live counter or "X of Y" bar.{% endcomment %}
+{% if civic_outcomes %}
+<div class="card">
+  <h2 style="margin-top:0">{% trans "What this made possible" %}</h2>
+  <p class="muted">{% trans "Staff-written notes on what the platform's spend and partner backing produced &mdash; in words, never a counter." %}</p>
+  <ul class="members">
+    {% for o in civic_outcomes %}
+      <li><strong>{{ o.headline }}</strong>{% if o.period %} <span class="muted">({{ o.period }})</span>{% endif %}
+        {% if o.detail %}<br><span class="muted">{{ o.detail }}</span>{% endif %}
+        {% if o.partner_name %}<br><span class="muted">{% blocktrans with p=o.partner_name %}with {{ p }}{% endblocktrans %}</span>{% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
 <p><a class="btn" href="{% url 'donate' %}">{% trans "Support the platform" %}</a></p>
 {% endblock %}
