@@ -12,7 +12,10 @@
 {% endif %}
 <p class="muted">{{ place.display_address }}{% if place.address_country %} {{ place.address_country }}{% endif %}</p>
 {% if place.website|safe_href %}<p><a href="{{ place.website|safe_href }}" rel="noopener noreferrer" target="_blank">{% trans "Official website" %} &rarr;</a></p>{% endif %}
-{% if partner %}<p class="muted">{% trans "In partnership with" %} {% if partner.website|safe_href %}<a href="{{ partner.website|safe_href }}" rel="noopener noreferrer" target="_blank">{{ partner.name }}</a>{% else %}{{ partner.name }}{% endif %} <small>({{ partner.get_kind_display }})</small></p>{% endif %}
+{% if partner %}<p class="muted">{% trans "In partnership with" %} {% if partner.website|safe_href %}<a href="{{ partner.website|safe_href }}" rel="noopener noreferrer" target="_blank">{{ partner.name }}</a>{% else %}{{ partner.name }}{% endif %} <small>({{ partner.get_kind_display }})</small></p>
+  {# W4-F31: the partner's own short standing note about this venue (staff-edited blurb, public()-gated). #}
+  {% if partner.blurb %}<p class="muted" style="font-style:italic">{{ partner.blurb }}</p>{% endif %}
+{% endif %}
 
 {# F28 open-now status + W3-F14 crowd-corrected hours: gate + 'Posted:' both use the EFFECTIVE
    hours (a published correction, else raw OSM) so the badge and the posted text never disagree. #}
