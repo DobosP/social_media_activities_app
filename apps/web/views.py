@@ -2582,10 +2582,16 @@ def partners_list(request):
 
 
 def events_list(request):
+    from apps.communities.models import Area
+    from apps.communities.services import _area_place_q
     from apps.events.services import search_events, upcoming_events
 
     query = (request.GET.get("q") or "").strip()
     activity = request.GET.get("activity")
+    # W4-F14: optional city-Area narrowing — the SAME address_city predicate SavedSearch/Group/
+    # Community use (no coordinate stored). Resolves by slug; an unknown slug -> no filter.
+    area_slug = request.GET.get("area")
+    area = Area.objects.filter(slug=area_slug).first() if area_slug else None
     if query:
         # The type filter composes with search — never silently dropped while the
         # "Filtered by X" banner shows (review W1-28).
@@ -2596,6 +2602,10 @@ def events_list(request):
         events = upcoming_events().order_by("starts_at")
         if activity:
             events = events.filter(activity_type__slug=activity)
+    # W4-F14: narrow to the selected city Area (composes with q/activity; a null-place event is
+    # correctly dropped once an area is chosen — no NULL-IN leak). Order stays soonest-first.
+    if area is not None:
+        events = events.filter(_area_place_q(area))
     return render(
         request,
         "web/events.html",
@@ -2603,6 +2613,9 @@ def events_list(request):
             "events": events[:100],
             "activity": activity,
             "query": query,
+            "areas": Area.objects.order_by("name"),
+            "area": area.slug if area else "",
+            "area_name": area.name if area else "",
             **_nav_context(request.user),
         },
     )
