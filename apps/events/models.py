@@ -17,6 +17,7 @@ class Event(models.Model):
         GOOGLE = "google", "Google"
         USER = "user", "User-submitted"
         MANUAL = "manual", "Manual"
+        SCRAPER = "roedu", "RO-EDU scraper"
 
     place = models.ForeignKey(
         "places.Place",
