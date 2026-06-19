@@ -37,3 +37,7 @@ pgvector>=0.3
 # run without them — recompile requirements.txt before enabling in production.
 channels-redis>=4.3.0
 sentry-sdk[django]>=2.61.1
+# P1 observability/hardening: a Content-Security-Policy (report-only first) for the web UI, and
+# Prometheus request metrics behind a token-gated /metrics endpoint.
+django-csp>=4.0
+django-prometheus>=2.5

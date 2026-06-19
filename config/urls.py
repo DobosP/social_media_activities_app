@@ -3,7 +3,7 @@ from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from apps.accounts.views import ObtainAPIToken
-from apps.ops.views import HealthView, ReadyView
+from apps.ops.views import HealthView, ReadyView, metrics_view
 
 # The API surface, mounted ONCE here and exposed under two prefixes below:
 #   * /api/v1/  — the CANONICAL, versioned base. New clients build against this; a future breaking
@@ -38,6 +38,7 @@ api_patterns = [
 urlpatterns = [
     path("healthz", HealthView.as_view(), name="healthz"),  # liveness (process up)
     path("readyz", ReadyView.as_view(), name="readyz"),  # readiness (DB + configured shared deps)
+    path("metrics", metrics_view, name="metrics"),  # Prometheus exposition (token-gated)
     path("admin/", admin.site.urls),
     # Versioned canonical FIRST so /api/v1/... resolves here; the alias then catches the rest.
     path("api/v1/", include(api_patterns)),
