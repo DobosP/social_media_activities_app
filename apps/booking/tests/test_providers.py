@@ -1,11 +1,26 @@
 from datetime import datetime
+from unittest.mock import patch
 
 import pytest
+import requests
 
 from apps.booking.providers.base import BookingError, BookingNotSupported
 from apps.booking.providers.deeplink import DeepLinkProvider
 from apps.booking.providers.demo_rest import DemoRestProvider
 from apps.booking.registry import get_booking_provider
+
+
+@patch("apps.ops.resilience.time.sleep", lambda *a, **k: None)  # no real backoff sleeps
+@patch("requests.request")
+def test_demo_rest_provider_failure_maps_to_booking_error(mock_req, settings):
+    # A transient provider/network failure surfaces as a clean BookingError (the view maps it),
+    # never an uncaught 500.
+    settings.BOOKING_DEMO_BASE_URL = "https://booking.example.test"
+    mock_req.side_effect = requests.ConnectionError("provider down")
+    with pytest.raises(BookingError):
+        DemoRestProvider().create_booking(
+            place_ref="v1", start=datetime(2026, 6, 20, 10), end=None, party_size=2, user_ref="u1"
+        )
 
 
 def test_registry_returns_builtins():

@@ -58,3 +58,16 @@ def _ensure_taxonomy_seed(request):
     else:
         request.getfixturevalue("db")
     _reseed_taxonomy()
+
+
+@pytest.fixture(autouse=True)
+def _reset_circuit_breakers():
+    """Isolate the in-process provider CircuitBreaker registry between tests. It is keyed on the
+    PRODUCTION 'stripe'/'booking' keys, so a provider-failure test could otherwise leave a breaker
+    near/at its threshold and make a LATER provider test fast-fail (ProviderUnavailable) before it
+    makes any HTTP call — an order-dependent flake (esp. under pytest-randomly). Cheap clear."""
+    from apps.ops.resilience import CircuitBreaker
+
+    CircuitBreaker._registry.clear()
+    yield
+    CircuitBreaker._registry.clear()
