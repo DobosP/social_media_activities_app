@@ -50,13 +50,17 @@ def test_cents_filter():
 
 
 def test_transparency_public_and_aggregate_only():
-    donor = _user("td")
+    # Make this order-independent: the public "raised" figure aggregates ALL completed donations, so
+    # the test must CONTROL that input rather than assume a globally-empty table (a leaked completed
+    # donation from another test was the historical flake). Rolled back at test end.
+    Donation.objects.all().delete()
+    donor = _user("xtransparencydonorx")  # distinctive: a 2-char name like "td" collides with <td>
     _completed(5000, donor=donor, ref="t1")
     SpendEntry.objects.create(category="EU hosting", amount_cents=2000)
     body = _client().get("/transparency/").content.decode()  # anonymous
     assert "EU hosting" in body
     assert "50.00 EUR" in body  # raised, formatted via |cents
-    assert "td" not in body  # NO donor name on the public page
+    assert "xtransparencydonorx" not in body  # NO donor name on the public page (aggregate-only)
     # No goal-bar / urgency framing between raised and allocated.
     assert "progressbar" not in body
     assert "of goal" not in body
