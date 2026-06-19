@@ -13,7 +13,7 @@ from django.contrib.auth.views import LoginView
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -289,10 +289,11 @@ def group_detail(request, pk):
             .order_by("-created_at")[:50]
         )
         posts, _has_older, _cursor = social.thread_page(group)
+        group_links = social.thread_allows_links(group)  # adult cohort only
         for p in posts:
-            p.body_html = social.highlight_mentions(p.body, {})
+            p.body_html = social.highlight_mentions(p.body, {}, allow_links=group_links)
             for r in p.replies.all():
-                r.body_html = social.highlight_mentions(r.body, {})
+                r.body_html = social.highlight_mentions(r.body, {}, allow_links=group_links)
         # Peer posting: a current member of a non-minor group who passes the read gate. Minor group
         # threads are announcement-only (the gate lives in post_to_thread); a staff non-member or
         # the minor-group curator posts nothing here — the curator broadcasts via the announce form.
@@ -1320,13 +1321,15 @@ def activity_detail(request, pk):
         rx = social.reactions_for_posts(all_rendered, user)
         # @mention roster computed ONCE (not per post) so highlighting the stream stays one query.
         roster = social.mention_roster(activity)
+        allow_links = social.thread_allows_links(activity)  # adult cohort only
         for p in all_rendered:
             p.attachment_list = by_post.get(p.id, [])
             slot = rx.get(p.id, {"present": [], "mine": set()})
             p.reaction_present = slot["present"]
             p.reaction_mine = slot["mine"]
-            # @mentions rendered as a safe highlight (escaped first; only real peers highlight).
-            p.body_html = social.highlight_mentions(p.body, roster)
+            # @mentions + safe markdown (escaped first; only real peers highlight; minors never
+            # get autolinked URLs).
+            p.body_html = social.highlight_mentions(p.body, roster, allow_links=allow_links)
     # No-JS quote-reply: a "Reply" link is ?reply_to=<id>#compose; pre-target the compose form.
     reply_target = None
     rt = request.GET.get("reply_to")
@@ -1463,6 +1466,29 @@ def activity_detail(request, pk):
             "inside the meetup. Post it anyway?"
         ),
     }
+    # Config for the live thread client (static/js/thread-chat.js), passed via json_script so it is
+    # XSS-safe. reactUrlTemplate carries a numeric sentinel the client swaps for a real post id (a
+    # live post has no server-reversed URL of its own). All UI copy is translated server-side here.
+    thread_chat_config = {
+        "threadId": activity.thread.id,
+        "meId": user.id,
+        "reactUrlTemplate": reverse("activity_post_react", args=[activity.pk, 987654321]),
+        "emojis": social.allowed_reactions(),
+        "i18n": {
+            "reply": gettext("Reply"),
+            "react": gettext("react"),
+            "edited": gettext("(edited)"),
+            "replyingTo": gettext("Replying to"),
+            "messageSent": gettext("Message sent."),
+            "newAnnouncement": gettext("New announcement posted."),
+            "newMessages": gettext("New messages"),
+            "livePaused": gettext("Live updates paused — reload to catch up."),
+            "typingOne": gettext("%(name)s is typing…"),
+            "typingTwo": gettext("%(a)s and %(b)s are typing…"),
+            "typingMany": gettext("Several people are typing…"),
+            "justNow": gettext("just now"),
+        },
+    }
     return render(
         request,
         "web/activity_detail.html",
@@ -1495,6 +1521,7 @@ def activity_detail(request, pk):
             "has_older": has_older,
             "older_cursor": older_cursor,
             "reaction_emojis": social.allowed_reactions(),
+            "thread_chat_config": thread_chat_config,
             "reply_target": reply_target,
             "photos": photos,
             "post_form": post_form,
@@ -2127,13 +2154,27 @@ def activity_post_delete(request, pk, post_id):
 @login_required
 @require_POST
 def activity_post_react(request, pk, post_id):
-    """Toggle the viewer's own emoji reaction on a thread post (anonymous, no count)."""
+    """Toggle the viewer's own emoji reaction on a thread post (anonymous, no count). Returns JSON
+    for the live (fetch) client so it can update chips without a reload; redirects for the no-JS
+    form POST. The live update for OTHER members rides the toggle's on-commit reaction broadcast."""
     activity = _visible_activity_or_404(request.user, pk)
     post = get_object_or_404(Post, pk=post_id, thread=activity.thread)
+    wants_json = request.headers.get("X-Requested-With") == "fetch"
     try:
         social.toggle_reaction(request.user, post, request.POST.get("emoji", ""))
     except social.SocialError as exc:
+        if wants_json:
+            return JsonResponse({"ok": False, "detail": _msg(exc)}, status=400)
         messages.error(request, _msg(exc))
+        return redirect(f"{reverse('activity_detail', args=[pk])}#post-{post_id}")
+    if wants_json:
+        # Echo back THIS viewer's resulting state (present = anonymous distinct emojis; mine = the
+        # viewer's own toggles) so the reactor's own chips update immediately, before/without the
+        # broadcast. Never a count, never a who-list.
+        slot = social.reactions_for_posts([post], request.user).get(
+            post.id, {"present": [], "mine": set()}
+        )
+        return JsonResponse({"ok": True, "present": slot["present"], "mine": sorted(slot["mine"])})
     return redirect(f"{reverse('activity_detail', args=[pk])}#post-{post_id}")
 
 

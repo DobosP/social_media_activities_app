@@ -1,16 +1,19 @@
 {% load i18n %}
 {% comment %}One thread message. Context: p (Post, with .snippet/.is_edited attached by thread_page),
    activity, user, is_member. Replies render the same partial one level deep.{% endcomment %}
-<article id="post-{{ p.pk }}" class="post{% if p.author_id == user.id %} post--mine{% endif %}"
+<article id="post-{{ p.pk }}" data-author="{{ p.author_id }}"
+         class="post{% if p.author_id == user.id %} post--mine{% endif %}"
          aria-label="{% blocktrans with author=p.author.display_name|default:p.author.username at=p.created_at|date:'j M H:i' %}Message from {{ author }} at {{ at }}{% endblocktrans %}">
   {% if p.snippet %}
     <div class="reply-quote muted">
       <a href="#post-{{ p.snippet.pk }}">{% blocktrans with author=p.snippet.author %}Replying to {{ author }}{% endblocktrans %}</a>: {{ p.snippet.text }}
     </div>
   {% endif %}
-  <div class="meta">{{ p.author.display_name|default:p.author.username }} &middot;
-    <a href="#post-{{ p.pk }}" class="muted" title="{% trans 'Link to this message' %}">{{ p.created_at|date:"j M H:i" }}</a>
-    {% if p.is_edited %}<span class="muted" style="font-size:.75rem">{% trans "(edited)" %}</span>{% endif %}
+  <div class="meta"><span class="author">{{ p.author.display_name|default:p.author.username }}</span> &middot;
+    {# <time datetime> lets the live client rewrite this to a relative "5m ago" with the exact time
+       on hover, with JS off it stays the absolute time and the permalink is untouched. #}
+    <a href="#post-{{ p.pk }}" class="muted" title="{% trans 'Link to this message' %}"><time datetime="{{ p.created_at|date:'c' }}">{{ p.created_at|date:"j M H:i" }}</time></a>
+    {% if p.is_edited %}<span class="muted edited-mark" style="font-size:.75rem">{% trans "(edited)" %}</span>{% endif %}
   </div>
   {% comment %}body_html is server-rendered safe HTML: escaped, newlines->br, @mentions of real peers
      wrapped in a mention span. Falls back to the plain escaped body if not attached.{% endcomment %}

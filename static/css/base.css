@@ -425,6 +425,63 @@ textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--accent)
 .pick input:focus-visible + span { outline: 3px solid var(--accent); outline-offset: 2px; }
 
 /* =============================================================================
+   W7 modern chat interactions — live polish layered over the W6 chrome. All of this
+   is JS-enhanced presentation; with JS off none of these elements appear (hidden by
+   default) and the server-rendered thread is unchanged. Consumes existing tokens only.
+   ============================================================================= */
+.thread { scroll-behavior: smooth; }
+
+/* Light markdown inside a post body (bold/italic/inline code). */
+.post code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .88em;
+  background: var(--chip-bg); border-radius: 4px; padding: .02rem .28rem;
+}
+
+/* Author-run grouping: a consecutive same-author post drops its repeated name header. font-size:0
+   collapses the "·" separator + author span without leaving a stray dot; the time + edited marker
+   are restored to size so the post stays permalinked + timestamped on hover. */
+.post--grouped { margin-top: -.1rem; }
+.post--grouped .meta { font-size: 0; }
+.post--grouped .meta .author { display: none; }
+.post--grouped .meta time,
+.post--grouped .meta .edited-mark { font-size: .78rem; }
+
+/* "New messages" pill: shown only when a live post lands while scrolled up (JS toggles [hidden]). */
+.thread-jump {
+  display: block; margin: .35rem auto 0; border: 1px solid var(--accent);
+  background: var(--accent-weak); color: var(--accent-strong); font-size: .82rem; font-weight: 600;
+  border-radius: var(--r-pill); padding: .25rem .9rem; cursor: pointer;
+}
+.thread-jump[hidden] { display: none; }
+.thread-jump:hover { box-shadow: var(--shadow); }
+
+/* Session-local unread divider (localStorage only — no server read-tracking). */
+.unread-sep { text-align: center; margin: .6rem 0 .3rem; border-top: 1px solid var(--accent); position: relative; }
+.unread-sep span {
+  position: relative; top: -.7rem; display: inline-block; font-size: .7rem; font-weight: 700;
+  letter-spacing: .02em; text-transform: uppercase; color: var(--accent-strong);
+  background: var(--bg); border-radius: var(--r-pill); padding: .05rem .6rem;
+}
+
+/* Transient typing hint (aria-hidden in the DOM; never announced). Reserve height to avoid jump. */
+.typing-indicator { min-height: 1.15rem; font-size: .82rem; color: var(--muted); margin: .15rem 0; font-style: italic; }
+.typing-indicator.is-active { animation: typing-pulse 1.6s ease-in-out infinite; }
+@keyframes typing-pulse { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+
+/* Connection-paused note (reconnect-with-backoff in flight). */
+.thread-conn { font-size: .8rem; color: var(--warn-fg); background: var(--warn-bg); border-radius: var(--r-sm); padding: .25rem .55rem; margin: .25rem 0; }
+.thread-conn[hidden] { display: none; }
+
+/* Sticky composer on small screens so typing doesn't mean scrolling past the whole thread. */
+@media (max-width: 640px) {
+  #compose {
+    position: sticky; bottom: 0; z-index: 5; background: var(--bg);
+    border-top: 1px solid var(--line); padding-top: .5rem; margin-left: -.2rem; margin-right: -.2rem;
+    padding-left: .2rem; padding-right: .2rem;
+  }
+}
+
+/* =============================================================================
    F12 display preferences — theme token re-maps. Only token VALUES change here;
    every rule above already consumes them. Source of truth = a functional cookie
    surfaced as data-theme / --scale on <html> by the context processor.

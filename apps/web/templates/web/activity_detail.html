@@ -423,6 +423,8 @@
       </div>
     {% empty %}<p class="muted" id="no-messages">{% trans "No messages yet. Say hello!" %}</p>{% endfor %}
   </div>
+  {# Appears only when a live message lands while you're scrolled up (JS-only; no read-tracking). #}
+  <button type="button" id="thread-jump" class="thread-jump" hidden>&darr; {% trans "New messages" %}</button>
 
   {% if is_member %}
     {% comment %}W2-F34: a calm, honest "who can see this" line so the audience boundary is felt
@@ -435,6 +437,9 @@
         {% if thread_audience.peer_count is not None %}{% blocktrans count n=thread_audience.peer_count %}{{ n }} other person can see this.{% plural %}{{ n }} other people can see this.{% endblocktrans %}{% endif %}
       </p>
     {% endif %}
+    {# Transient "X is typing…" — JS-only, never stored, aria-hidden so a busy thread isn't a
+       screen-reader replay (peer presence stays silent, like inbound peer messages). #}
+    <div id="typing-indicator" class="typing-indicator" aria-hidden="true"></div>
     <form method="post" id="compose" enctype="multipart/form-data"
           action="{% url 'activity_post' activity.pk %}" class="stack" style="margin-top:.6rem">{% csrf_token %}
       {% if reply_target %}
@@ -495,79 +500,14 @@
    that handler (the WebSocket send) AND preventDefault()s the no-JS form POST, gating both paths.
    Advisory only — it never blocks a post; with JS off the form POSTs normally and unaffected.{% endcomment %}
 <script src="{% static 'js/presend-nudge.js' %}"></script>
-<script>
-// Progressive enhancement over the server-rendered stream: live-append new messages via the
-// thread WebSocket. The page is fully functional with JS off (the compose form POSTs normally).
-(function () {
-  const threadId = {{ activity.thread.id }};
-  const ME_ID = {{ user.id }};
-  const list = document.getElementById("thread-list");
-  const status = document.getElementById("live-status");
-  const seen = new Set();
-  document.querySelectorAll('#thread-list [id^="post-"]').forEach(el => seen.add(el.id.slice(5)));
-
-  function esc(t) { const d = document.createElement("div"); d.textContent = t == null ? "" : t; return d.innerHTML; }
-  function render(d) {
-    if (seen.has(String(d.id))) return;          // dedupe by server pk (no double author-echo)
-    seen.add(String(d.id));
-    const noneEl = document.getElementById("no-messages");
-    if (noneEl) noneEl.remove();
-    const art = document.createElement("article");
-    art.id = "post-" + d.id;
-    // Match the server-rendered bubble styling: own messages right-align (post--mine).
-    art.className = "post" + (d.author_id === ME_ID ? " post--mine" : "");
-    let html = "";
-    if (d.reply_snippet) {
-      html += '<div class="reply-quote muted" style="font-size:.8rem;border-left:2px solid var(--line);padding-left:.5rem;margin-bottom:.2rem">{% trans "Replying to" %} ' +
-              esc(d.reply_snippet.author) + ": " + esc(d.reply_snippet.text) + "</div>";
-    }
-    const when = d.created_at ? new Date(d.created_at).toLocaleString() : "";
-    html += '<div class="meta">' + esc(d.author) + " &middot; " + esc(when) + "</div>";
-    html += "<div>" + esc(d.body).replace(/\n/g, "<br>") + "</div>";
-    // Live share card (a share-only post must not arrive as a blank bubble). The href
-    // is rebuilt from kind + integer id only — never from server-sent text.
-    if (d.share && d.share.kind && d.share.kind !== "gone" && Number.isInteger(d.share.id)) {
-      const paths = { activity: "/activities/", place: "/places/", event: "/events/" };
-      if (paths[d.share.kind]) {
-        html += '<a class="share-card" href="' + paths[d.share.kind] + d.share.id + '/">' +
-                '<span class="share-kind">' + esc(d.share.kind) + "</span><strong>" +
-                esc(d.share.title || "") + "</strong></a>";
-      }
-    }
-    art.innerHTML = html;
-    // Place a reply under its parent's group if that parent is in the rendered window; else as
-    // a plain top-level entry (the "Replying to" line preserves the relationship regardless).
-    let target = null;
-    if (d.reply_to) target = list.querySelector('.replies[data-parent="' + d.reply_to + '"]');
-    (target || list).appendChild(art);
-  }
-
-  const proto = location.protocol === "https:" ? "wss" : "ws";
-  const sock = new WebSocket(`${proto}://${location.host}/ws/chat/${threadId}/`);
-  sock.onmessage = (e) => {
-    const d = JSON.parse(e.data);
-    if (d.type !== "message") return;
-    render(d);
-    // Announce ONLY new announcements over the live region (peer chatter is silent).
-    if (d.is_announcement && status) status.textContent = "{% trans 'New announcement posted.' %}";
-  };
-
-  // With the socket open, send through it (no full reload); otherwise the form POSTs normally.
-  const form = document.getElementById("compose");
-  if (form) form.addEventListener("submit", (ev) => {
-    if (sock.readyState !== WebSocket.OPEN) return;            // graceful fallback to POST
-    const file = form.querySelector('input[name="attachment"]');
-    if (file && file.files && file.files.length) return;       // a file upload must POST, not WS
-    const ta = form.querySelector('textarea');
-    const rt = form.querySelector('input[name="reply_to"]');
-    const body = (ta.value || "").trim();
-    if (!body) return;
-    ev.preventDefault();
-    sock.send(JSON.stringify({ body: body, reply_to: rt && rt.value ? Number(rt.value) : null }));
-    ta.value = "";
-    if (status) status.textContent = "{% trans 'Message sent.' %}";
-  });
-})();
-</script>
+{{ thread_chat_config|json_script:"thread-chat-config" }}
+{% comment %}The modern live thread client: first-class live posts (mentions + markdown, edited
+   marker, reply, reactions, share cards), smooth near-bottom auto-scroll + a "new messages" pill,
+   relative timestamps, author-run grouping, a transient typing indicator, reconnect-with-backoff,
+   Enter-to-send + auto-grow composer, and a session-local unread divider (localStorage only — no
+   server read-tracking). Loaded AFTER presend-nudge.js (and non-deferred, same as before) so the
+   safety nudge's submit listener still registers FIRST and can gate both the WS send and the POST.
+   The page stays fully functional with JS off (the compose form POSTs; reactions are form POSTs).{% endcomment %}
+<script src="{% static 'js/thread-chat.js' %}"></script>
 {% endif %}
 {% endblock %}
