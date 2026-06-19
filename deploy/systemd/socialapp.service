@@ -1,0 +1,25 @@
+[Unit]
+Description=Social Activities app (daphne ASGI: REST API + Channels WebSocket chat)
+After=network.target postgresql.service redis-server.service
+Requires=postgresql.service redis-server.service
+
+[Service]
+User=app
+Group=app
+WorkingDirectory=/home/app/social_media_activities_app
+EnvironmentFile=/home/app/social_media_activities_app/.env
+# One-shot pre-start: apply migrations (PostGIS auto-enabled here) + bake static assets for WhiteNoise.
+ExecStartPre=/home/app/social_media_activities_app/.venv/bin/python manage.py migrate --noinput
+ExecStartPre=/home/app/social_media_activities_app/.venv/bin/python manage.py collectstatic --noinput
+ExecStart=/home/app/social_media_activities_app/.venv/bin/daphne -b 127.0.0.1 -p 8000 config.asgi:application
+Restart=always
+RestartSec=3
+# Hardening: the service needs only its own tree + the loopback DB/Redis.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/app/social_media_activities_app
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

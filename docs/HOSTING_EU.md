@@ -20,7 +20,7 @@
 
 | Component | What | Where | Cost |
 |---|---|---|---|
-| Compute | 1× Hetzner Cloud **CPX22** (2 vCPU / 4 GB / 80 GB NVMe) | Nuremberg/Falkenstein (DE) or Helsinki (FI) | **~€7.99/mo** |
+| Compute | 1× Hetzner Cloud **CPX21** (3 vCPU / 4 GB / 80 GB NVMe) | Nuremberg/Falkenstein (DE) or Helsinki (FI) | **~€7.99/mo** |
 | Database | PostgreSQL 16 + PostGIS 3 + `pgvector`, **co-located** (apt packages) | same box | €0 |
 | Cache + Channels | Redis, **co-located** (apt package) | same box | €0 |
 | App server | `daphne` (ASGI) behind Caddy/nginx for TLS | same box | €0 |
@@ -32,9 +32,9 @@ vector, *and* media blobs *and* backups — inside EU borders on an **EU-owned**
 **zero** per-user AI cost. Hetzner is a German company with EU datacenters (Germany, Finland),
 so there is no US-processor / Schrems-II transfer question to paper over with SCCs.
 
-**Even cheaper:** the **CX23** shared-vCPU box (~€3.99/mo, 2 vCPU / 4 GB) brings the total to
+**Even cheaper:** the **CX22** shared-vCPU box (~€4.49/mo, 2 vCPU / 4 GB) brings the total to
 **≈ €9/mo**. CX is fine to launch on; CPX (dedicated-ish AMD vCPU) gives steadier latency once
-WebSocket chat is active. Start on CX23 if you are pinching pennies, size up to CPX22 when CPU
+WebSocket chat is active. Start on CX22 if you are pinching pennies, size up to CPX21 when CPU
 steal becomes visible.
 
 > The full product engine is deliberately **deterministic / no-ML** (thread digests, draft
@@ -84,7 +84,7 @@ variant is given at the end if you prefer containers).
 ### 3.0 Provision
 
 1. Hetzner Cloud console → **New Server** → location **Falkenstein/Nuremberg (DE)** or
-   **Helsinki (FI)** (both EU). → image **Ubuntu 24.04** → type **CPX22** (or CX23).
+   **Helsinki (FI)** (both EU). → image **Ubuntu 24.04** → type **CPX21** (or CX22).
 2. Add your SSH key; enable the cloud firewall (allow 22/tcp from your IP, 80+443/tcp from all).
 3. Create a **Hetzner Object Storage** bucket in the **same EU region**; generate an S3
    access key/secret (used below for `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`).
@@ -98,7 +98,13 @@ sudo apt-get install -y \
   redis-server \
   python3.12 python3.12-venv python3-pip \
   binutils gdal-bin libgdal-dev libgeos-dev libproj-dev \   # GeoDjango native libs (mirror Dockerfile)
-  caddy                                                     # TLS reverse proxy (auto Let's Encrypt)
+  curl gnupg awscli
+
+# Caddy (TLS reverse proxy) is NOT in Ubuntu's default repos — add its apt repo first:
+curl -1sLf -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg.key https://dl.cloudsmith.io/public/caddy/stable/gpg.key
+sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg /usr/share/keyrings/caddy-stable-archive-keyring.gpg.key
+curl -1sLf https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt | sudo tee /etc/apt/sources.list.d/caddy-stable.list
+sudo apt-get update && sudo apt-get install -y caddy
 ```
 
 > The two database extension packages — **`postgresql-16-postgis-3`** and
@@ -474,13 +480,13 @@ their managed Postgres before committing, same as you would for Render.
 
 | Component | Provider | Est. €/mo | EU residency |
 |---|---|---|---|
-| Compute (CPX22; CX23 ≈ €3.99) | Hetzner Cloud (DE/FI) | 7.99 | ✅ EU-owned |
+| Compute (CPX21; CX22 ≈ €4.49) | Hetzner Cloud (DE/FI) | 7.99 | ✅ EU-owned |
 | PostgreSQL 16 + PostGIS + pgvector | co-located on the box | 0 | ✅ |
 | Redis (cache + Channels) | co-located on the box | 0 | ✅ |
 | `daphne` + WhiteNoise + Caddy TLS | co-located on the box | 0 | ✅ |
 | Object storage (blobs + backups) | Hetzner Object Storage (DE/FI) | 4.99 | ✅ EU-owned |
 | AI (optional, admin-only, Batch+Haiku) | none / Anthropic Batch | 0–<1 | n/a (avoid for minor data) |
-| **Total** | | **≈ €13** (≈ €9 on CX23) | **all EU** |
+| **Total** | | **≈ €13** (≈ €9.50 on CX22) | **all EU** |
 
 ### Scaled stack (when one box is outgrown)
 

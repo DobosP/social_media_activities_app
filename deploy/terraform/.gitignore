@@ -1,0 +1,10 @@
+# Terraform state + locals hold SECRETS and machine state — never commit them.
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+terraform.tfvars
+*.auto.tfvars
+crash.log
+override.tf
+override.tf.json
