@@ -285,6 +285,9 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
     # The OpenAPI schema + Swagger UI stay publicly readable despite deny-by-default perms.
     "SERVE_PERMISSIONS": ["rest_framework.permissions.AllowAny"],
+    # API versioning: the surface is mounted under /api/v1/ (canonical) + /api/ (alias). Document
+    # only the canonical /api/v1/ paths so the schema has one stable, versioned contract.
+    "PREPROCESSING_HOOKS": ["config.openapi.only_versioned_endpoints"],
     # Split request vs. response components so generated client models are accurate
     # (read-only/write-only fields don't bleed across).
     "COMPONENT_SPLIT_REQUEST": True,
