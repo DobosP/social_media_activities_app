@@ -82,9 +82,12 @@ def record_audit(event: str, *, actor=None, target=None, **data) -> AuditLog:
 
 
 def verify_audit_chain() -> bool:
-    """Recompute the chain; returns False if any row was tampered with or removed."""
+    """Recompute the chain; returns False if any row was tampered with or removed.
+
+    Streams with ``.iterator()`` so verification stays bounded in memory on a never-purged
+    (append-only) audit table — materializing every row would blow memory + the timeout at scale."""
     prev_hash = ""
-    for row in AuditLog.objects.order_by("id"):
+    for row in AuditLog.objects.order_by("id").iterator(chunk_size=2000):
         digest = _canonical(
             row.actor_ref, row.event, row.target_ref, row.data, row.created_at.isoformat()
         )

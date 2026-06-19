@@ -3,10 +3,11 @@ from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from apps.accounts.views import ObtainAPIToken
-from apps.ops.views import HealthView
+from apps.ops.views import HealthView, ReadyView
 
 urlpatterns = [
-    path("healthz", HealthView.as_view(), name="healthz"),
+    path("healthz", HealthView.as_view(), name="healthz"),  # liveness (process up)
+    path("readyz", ReadyView.as_view(), name="readyz"),  # readiness (DB + configured shared deps)
     path("admin/", admin.site.urls),
     path("api/accounts/", include("apps.accounts.urls")),
     # W10 mobile auth: opaque-token obtain/revoke (no JWT; throttled hard).

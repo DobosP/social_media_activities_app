@@ -36,6 +36,58 @@ class HealthView(APIView):
         return Response(body, status=code)
 
 
+class ReadyView(APIView):
+    """Readiness probe (P1): liveness (process up) PLUS every CONFIGURED shared dependency — the
+    DB, the cache/channel-layer (when Redis-backed), and object storage (when S3). Returns 503 if a
+    configured dep is down so an orchestrator drains the node instead of routing into a half-broken
+    instance (on which cross-process chat fan-out + rate-limiting would silently fail). /healthz
+    stays a pure liveness probe; point the readiness/health check here on a scaled-out deploy."""
+
+    permission_classes = [AllowAny]
+    throttle_classes = []  # never rate-limit a probe (would flap the node)
+
+    def get(self, request):
+        checks = {"database": self._check_db()}
+        # Cache: only meaningful as a readiness gate when it is the SHARED Redis backend; the
+        # per-process LocMem fallback is always "up" and not a cross-instance dependency.
+        if getattr(settings, "REDIS_URL", ""):
+            checks["cache"] = self._check_cache()
+        # Object storage: only when the S3 backend is selected (Local is the filesystem).
+        if getattr(settings, "MEDIA_STORAGE_BACKEND", "").endswith("S3StorageBackend"):
+            checks["storage"] = self._check_storage()
+        ready = all(checks.values())
+        code = status.HTTP_200_OK if ready else status.HTTP_503_SERVICE_UNAVAILABLE
+        return Response({"status": "ready" if ready else "degraded", **checks}, status=code)
+
+    def _check_db(self) -> bool:
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT 1")
+                cursor.fetchone()
+            return True
+        except Exception:
+            return False
+
+    def _check_cache(self) -> bool:
+        from django.core.cache import cache
+
+        try:
+            cache.set("readyz", "1", 5)
+            return cache.get("readyz") == "1"
+        except Exception:
+            return False
+
+    def _check_storage(self) -> bool:
+        from apps.media.storage import get_storage
+
+        try:
+            # A cheap negative existence check round-trips to the bucket without writing.
+            get_storage().exists("__readyz_probe__")
+            return True
+        except Exception:
+            return False
+
+
 class StatsView(APIView):
     """Aggregate counts only — never PII or per-user data. Staff-only."""
 
