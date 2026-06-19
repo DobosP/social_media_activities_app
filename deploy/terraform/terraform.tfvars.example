@@ -1,0 +1,31 @@
+# Copy to terraform.tfvars and fill in. terraform.tfvars + *.tfstate hold SECRETS — never commit
+# them (see .gitignore) and prefer an encrypted remote state backend for a real deploy.
+
+hcloud_token   = "REPLACE_hetzner_api_token"
+ssh_public_key = "ssh-ed25519 AAAA... you@host"
+admin_ip       = "203.0.113.4/32" # your IP/CIDR allowed to SSH
+location       = "fsn1"           # fsn1/nbg1 (DE) or hel1 (FI) — EU
+server_type    = "cpx22"
+domain         = "app.example.eu"
+app_repo_url   = "https://github.com/DobosP/social_media_activities_app.git" # private: embed a deploy token
+
+# secrets (rendered into the box .env). db_password MUST be URL/SQL-safe ([A-Za-z0-9._~-], enforced
+# by a variable validation) since it goes into the DSN + CREATE ROLE — generate with rand -hex.
+db_password       = "REPLACE_openssl_rand_hex_32"
+django_secret_key = "REPLACE_openssl_rand_hex_48"
+
+# EU object storage (Hetzner Object Storage shown)
+media_s3_bucket       = "socialapp-media"
+media_s3_endpoint_url = "https://fsn1.your-objectstorage.com"
+media_s3_region       = "eu-central"
+media_s3_sse          = "AES256"
+aws_access_key_id     = "REPLACE_s3_access_key"
+aws_secret_access_key = "REPLACE_s3_secret_key"
+
+# identity (launch-blocking: prod fails to boot with an empty issuer map + the EUDI provider)
+eudi_trusted_issuers = "{\"https://issuer.example.eu\":\"-----BEGIN PUBLIC KEY-----\\n...\\n-----END PUBLIC KEY-----\"}"
+
+# observability / retention (optional)
+sentry_dsn               = ""
+metrics_token            = "" # set + scrape /metrics with Authorization: Bearer <token>
+messaging_retention_days = 365

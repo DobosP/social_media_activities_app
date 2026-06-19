@@ -1,0 +1,118 @@
+#cloud-config
+# Bootstraps a blank Ubuntu 24.04 Hetzner box into the running, TLS-terminated single-box stack
+# from docs/HOSTING_EU.md §3: co-located Postgres(+PostGIS+pgvector) + Redis + daphne + Caddy, with
+# systemd units for the app, the daily run_due_jobs, and the DB backup. Rendered by Terraform
+# (templatefile) — the $${...} placeholders are Terraform variables (secrets + the domain); the
+# runcmd bash deliberately avoids $${...} so it is not mistaken for Terraform interpolation.
+package_update: true
+package_upgrade: true
+
+packages:
+  - postgresql-16
+  - postgresql-16-postgis-3
+  - postgresql-16-pgvector
+  - redis-server
+  - python3.12
+  - python3.12-venv
+  - python3-pip
+  - binutils
+  - gdal-bin
+  - libgdal-dev
+  - libgeos-dev
+  - libproj-dev
+  - git
+  - curl
+  - gnupg
+  - awscli
+  - unattended-upgrades
+  - fail2ban
+  # NOTE: caddy is NOT in Ubuntu's default repos — it is installed from its apt repo in runcmd.
+
+write_files:
+  # The app environment — rendered from Terraform vars, staged in /root and moved to the app tree
+  # (mode 600, owned by app) by runcmd AFTER the repo is cloned. EVERY value is single-quoted so
+  # both consumers read it literally: systemd EnvironmentFile does no escape processing inside single
+  # quotes (so the EUDI JSON's " and \n survive), and django-environ strips the matching quote pair.
+  # (db_password is constrained to a URL/SQL-safe charset by a Terraform validation, so the DSN +
+  # CREATE ROLE below are safe; keep all secrets free of a literal single quote.)
+  - path: /root/socialapp.env
+    permissions: "0600"
+    content: |
+      DJANGO_SETTINGS_MODULE='config.settings.prod'
+      DJANGO_SECRET_KEY='${django_secret_key}'
+      DATABASE_URL='postgis://app:${db_password}@localhost:5432/app'
+      DJANGO_ALLOWED_HOSTS='${domain}'
+      DJANGO_CSRF_TRUSTED_ORIGINS='https://${domain}'
+      REDIS_URL='redis://localhost:6379/0'
+      DJANGO_REQUIRE_SHARED_STATE='True'
+      MEDIA_STORAGE_BACKEND='apps.media.storage.S3StorageBackend'
+      MEDIA_S3_BUCKET='${media_s3_bucket}'
+      MEDIA_S3_ENDPOINT_URL='${media_s3_endpoint_url}'
+      MEDIA_S3_REGION='${media_s3_region}'
+      MEDIA_S3_ADDRESSING_STYLE='virtual'
+      MEDIA_S3_SSE='${media_s3_sse}'
+      MEDIA_REDIRECT_TO_PRESIGNED='True'
+      AWS_ACCESS_KEY_ID='${aws_access_key_id}'
+      AWS_SECRET_ACCESS_KEY='${aws_secret_access_key}'
+      IDENTITY_PROVIDER='apps.accounts.identity.providers.eudi.EUDIWalletProvider'
+      EUDI_SANDBOX='False'
+      EUDI_TRUSTED_ISSUERS='${eudi_trusted_issuers}'
+      MESSAGING_RETENTION_DAYS='${messaging_retention_days}'
+      SENTRY_DSN='${sentry_dsn}'
+      METRICS_TOKEN='${metrics_token}'
+  # Caddy: auto Let's Encrypt TLS + transparent reverse proxy (HTTP + Channels WebSockets).
+  - path: /etc/caddy/Caddyfile
+    permissions: "0644"
+    content: |
+      ${domain} {
+          encode zstd gzip
+          reverse_proxy 127.0.0.1:8000
+      }
+  # SSH hardening: key-only auth (no passwords).
+  - path: /etc/ssh/sshd_config.d/10-hardening.conf
+    permissions: "0644"
+    content: |
+      PasswordAuthentication no
+      PermitRootLogin prohibit-password
+
+runcmd:
+  # dash-safe (runcmd runs under /bin/sh): -o pipefail is a bashism, so use -eux and avoid pipes.
+  - set -eux
+  # Caddy from its official apt repo (not in Ubuntu's defaults). Download to files (no pipe) so a
+  # failed fetch fails the step under set -e; the source list references the dearmored key path.
+  - curl -1sLf -o /tmp/caddy.gpg.key https://dl.cloudsmith.io/public/caddy/stable/gpg.key
+  - gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg /tmp/caddy.gpg.key
+  - curl -1sLf -o /etc/apt/sources.list.d/caddy-stable.list https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt
+  - apt-get update
+  - apt-get install -y caddy
+  # Postgres + Redis stay bound to localhost (Ubuntu defaults) — never a public port.
+  - systemctl enable --now postgresql redis-server
+  # DB role + database + extensions (PostGIS is also auto-enabled by GeoDjango on migrate). The
+  # password is constrained to a URL/SQL-safe charset by the Terraform validation on db_password.
+  - sudo -u postgres psql -v ON_ERROR_STOP=1 -c "CREATE ROLE app LOGIN PASSWORD '${db_password}';"
+  - sudo -u postgres psql -v ON_ERROR_STOP=1 -c "CREATE DATABASE app OWNER app;"
+  - sudo -u postgres psql -v ON_ERROR_STOP=1 -d app -c "CREATE EXTENSION IF NOT EXISTS postgis;"
+  - sudo -u postgres psql -v ON_ERROR_STOP=1 -d app -c "CREATE EXTENSION IF NOT EXISTS vector;"
+  # Unprivileged app user + code + venv.
+  - useradd --system --create-home --shell /usr/sbin/nologin app
+  - sudo -u app git clone ${app_repo_url} /home/app/social_media_activities_app
+  - sudo -u app python3.12 -m venv /home/app/social_media_activities_app/.venv
+  - sudo -u app /home/app/social_media_activities_app/.venv/bin/pip install --upgrade pip
+  - sudo -u app /home/app/social_media_activities_app/.venv/bin/pip install -r /home/app/social_media_activities_app/requirements.txt
+  # Move the rendered .env into the app tree (600, owned by app) and shred the staging copy.
+  - install -m 600 -o app -g app /root/socialapp.env /home/app/social_media_activities_app/.env
+  - shred -u /root/socialapp.env
+  - chmod +x /home/app/social_media_activities_app/deploy/backup.sh
+  # systemd units (app + daily jobs + daily backup) shipped in the repo.
+  - install -m 644 /home/app/social_media_activities_app/deploy/systemd/socialapp.service /etc/systemd/system/socialapp.service
+  - install -m 644 /home/app/social_media_activities_app/deploy/systemd/socialapp-jobs.service /etc/systemd/system/socialapp-jobs.service
+  - install -m 644 /home/app/social_media_activities_app/deploy/systemd/socialapp-jobs.timer /etc/systemd/system/socialapp-jobs.timer
+  - install -m 644 /home/app/social_media_activities_app/deploy/systemd/socialapp-backup.service /etc/systemd/system/socialapp-backup.service
+  - install -m 644 /home/app/social_media_activities_app/deploy/systemd/socialapp-backup.timer /etc/systemd/system/socialapp-backup.timer
+  - systemctl daemon-reload
+  - systemctl enable --now socialapp socialapp-jobs.timer socialapp-backup.timer
+  - systemctl restart caddy
+  - systemctl restart ssh
+  # Automatic security updates + SSH brute-force protection.
+  - systemctl enable --now unattended-upgrades
+  - systemctl enable --now fail2ban

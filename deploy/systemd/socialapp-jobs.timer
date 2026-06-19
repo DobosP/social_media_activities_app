@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily 03:00 UTC run_due_jobs (GDPR Art.5(1)(e) retention + DSA suspension lifts)
+
+[Timer]
+OnCalendar=*-*-* 03:00:00 UTC
+# Persistent: if the box was asleep/down at 03:00, run the missed job at next boot (a missed
+# retention/suspension-lift pass is a compliance gap, not just availability).
+Persistent=true
+
+[Install]
+WantedBy=timers.target
