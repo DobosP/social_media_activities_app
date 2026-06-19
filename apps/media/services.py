@@ -101,6 +101,8 @@ def upload_photo(uploader, kind, data: bytes, *, thread=None) -> Photo:
         max_bytes=settings.MEDIA_MAX_UPLOAD_BYTES,
         max_dimension=getattr(settings, "MEDIA_MAX_DIMENSION", None),
         max_pixels=getattr(settings, "MEDIA_MAX_IMAGE_PIXELS", DEFAULT_MAX_PIXELS),
+        quality=getattr(settings, "MEDIA_IMAGE_QUALITY", 82),
+        output_format=getattr(settings, "MEDIA_IMAGE_OUTPUT_FORMAT", "") or None,
     )
     scanner = get_scanner()
     # Fail closed on a children's platform: if no effective content scanner is configured
@@ -141,8 +143,9 @@ def upload_photo(uploader, kind, data: bytes, *, thread=None) -> Photo:
         record_audit("media.profile_duplicate_rejected", actor=uploader, sha256=digest)
         raise DuplicateProfileImage("Please choose a different image.")
 
+    content_type = f"image/{extension_for(fmt)}"
     storage_key = f"{uuid.uuid4().hex}.{extension_for(fmt)}"
-    get_storage().save(storage_key, clean_bytes)
+    get_storage().save(storage_key, clean_bytes, content_type=content_type)
 
     if kind == Photo.Kind.PROFILE:
         _replace_existing_profile(uploader)
@@ -152,7 +155,7 @@ def upload_photo(uploader, kind, data: bytes, *, thread=None) -> Photo:
         kind=kind,
         thread=thread,
         storage_key=storage_key,
-        content_type=f"image/{extension_for(fmt)}",
+        content_type=content_type,
         byte_size=len(clean_bytes),
         sha256=digest,
         phash=fingerprint,
@@ -363,6 +366,8 @@ def attach_to_post(uploader, post, *, filename: str, data: bytes, ttl_seconds=No
                 max_bytes=_attachment_max_bytes(),
                 max_dimension=getattr(settings, "MEDIA_MAX_DIMENSION", None),
                 max_pixels=getattr(settings, "MEDIA_MAX_IMAGE_PIXELS", DEFAULT_MAX_PIXELS),
+                quality=getattr(settings, "MEDIA_IMAGE_QUALITY", 82),
+                output_format=getattr(settings, "MEDIA_IMAGE_OUTPUT_FORMAT", "") or None,
             )
         except ImageError as exc:
             # A non-image / non-PDF (or an unreadable/oversized image) — clean rejection, not a 500.
@@ -382,7 +387,7 @@ def attach_to_post(uploader, post, *, filename: str, data: bytes, ttl_seconds=No
 
     expires_at = _resolve_expiry(activity, ttl_seconds)
     storage_key = f"{uuid.uuid4().hex}.{ext}"
-    get_storage().save(storage_key, clean_bytes)
+    get_storage().save(storage_key, clean_bytes, content_type=content_type)
     att = Attachment.objects.create(
         post=post,
         uploader=uploader,

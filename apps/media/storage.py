@@ -12,7 +12,7 @@ from django.utils.module_loading import import_string
 
 class StorageBackend(ABC):
     @abstractmethod
-    def save(self, key: str, data: bytes) -> None: ...
+    def save(self, key: str, data: bytes, *, content_type: str | None = None) -> None: ...
 
     @abstractmethod
     def open(self, key: str) -> bytes: ...
@@ -38,7 +38,8 @@ class LocalStorageBackend(StorageBackend):
             raise ValueError("Invalid storage key.")
         return self.root / key
 
-    def save(self, key: str, data: bytes) -> None:
+    def save(self, key: str, data: bytes, *, content_type: str | None = None) -> None:
+        # content_type is irrelevant on the filesystem (the serving view sets it from the model).
         self._path(key).write_bytes(data)
 
     def open(self, key: str) -> bytes:
@@ -79,8 +80,17 @@ class S3StorageBackend(StorageBackend):
             ),
         )
 
-    def save(self, key: str, data: bytes) -> None:
-        self._client.put_object(Bucket=self.bucket, Key=key, Body=data)
+    def save(self, key: str, data: bytes, *, content_type: str | None = None) -> None:
+        # Objects are PRIVATE: no ACL is set, so the bucket's (private) default applies — they are
+        # only ever reachable through the signed, per-viewer, membership-scoped serving view. Set
+        # the stored ContentType for correct object metadata and optional server-side encryption.
+        extra = {}
+        if content_type:
+            extra["ContentType"] = content_type
+        sse = getattr(settings, "MEDIA_S3_SSE", "")
+        if sse:
+            extra["ServerSideEncryption"] = sse
+        self._client.put_object(Bucket=self.bucket, Key=key, Body=data, **extra)
 
     def open(self, key: str) -> bytes:
         return self._client.get_object(Bucket=self.bucket, Key=key)["Body"].read()
