@@ -23,6 +23,15 @@ class StorageBackend(ABC):
     @abstractmethod
     def delete(self, key: str) -> None: ...
 
+    def presigned_get_url(
+        self, key: str, *, expires_in: int, content_type=None, content_disposition=None
+    ) -> str | None:
+        """A short-lived URL the client can GET DIRECTLY from the object store (offloading the bytes
+        from the app process — the biggest single-process saturation fix). Returns None when the
+        backend can't presign (the default; the local filesystem backend always streams). Concrete
+        — not abstract — so existing backends keep working without change."""
+        return None
+
 
 class LocalStorageBackend(StorageBackend):
     """Filesystem-backed storage under MEDIA_ROOT/uploads. Not for production scale,
@@ -106,6 +115,21 @@ class S3StorageBackend(StorageBackend):
 
     def delete(self, key: str) -> None:
         self._client.delete_object(Bucket=self.bucket, Key=key)
+
+    def presigned_get_url(
+        self, key: str, *, expires_in: int, content_type=None, content_disposition=None
+    ) -> str:
+        # The caller has ALREADY done the per-viewer membership/cohort access check; this mints a
+        # short-lived (expires_in) direct URL. Response-header overrides pin the served content-type
+        # and, for a PDF, force a download — so a direct fetch keeps the inline-execution guard.
+        params = {"Bucket": self.bucket, "Key": key}
+        if content_type:
+            params["ResponseContentType"] = content_type
+        if content_disposition:
+            params["ResponseContentDisposition"] = content_disposition
+        return self._client.generate_presigned_url(
+            "get_object", Params=params, ExpiresIn=expires_in
+        )
 
 
 def get_storage() -> StorageBackend:

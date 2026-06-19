@@ -134,6 +134,19 @@ def test_participant_keys_includes_guardian(guardian, child1, child2, kids_chat)
     assert len(keys) == 3  # child1, child2, guardian
 
 
+def test_participant_keys_is_not_n_plus_one(
+    guardian, child1, child2, kids_chat, django_assert_max_num_queries
+):
+    """PERF-4: public keys are fetched in ONE batched query, not one per participant — so the
+    query count stays a small CONSTANT (a per-participant N+1 here amplified on group chats)."""
+    services.register_public_key(child1, PUBLIC_JWK)
+    services.register_public_key(child2, PUBLIC_JWK)
+    _link(guardian, child1)
+    services.add_guardian_observer(guardian, kids_chat)
+    with django_assert_max_num_queries(4):  # is_active + participants + ONE keys query
+        services.participant_keys(child1, kids_chat)
+
+
 # --- API ---
 def test_guardian_discovery_and_enroll_endpoints(guardian, child1, kids_chat):
     _link(guardian, child1)

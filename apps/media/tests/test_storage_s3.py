@@ -66,6 +66,33 @@ def test_s3_save_sets_content_type_and_server_side_encryption(mock_client):
     )
 
 
+@override_settings(MEDIA_S3_BUCKET="test-bucket")
+@patch("boto3.client")
+def test_s3_presigned_get_url_passes_response_overrides(mock_client):
+    from apps.media.storage import S3StorageBackend
+
+    s3 = MagicMock()
+    s3.generate_presigned_url.return_value = "https://signed.example/obj"
+    mock_client.return_value = s3
+    url = S3StorageBackend().presigned_get_url(
+        "k.pdf",
+        expires_in=300,
+        content_type="application/pdf",
+        content_disposition='attachment; filename="d.pdf"',
+    )
+    assert url == "https://signed.example/obj"
+    s3.generate_presigned_url.assert_called_once_with(
+        "get_object",
+        Params={
+            "Bucket": "test-bucket",
+            "Key": "k.pdf",
+            "ResponseContentType": "application/pdf",
+            "ResponseContentDisposition": 'attachment; filename="d.pdf"',
+        },
+        ExpiresIn=300,
+    )
+
+
 @override_settings(MEDIA_S3_BUCKET="test-bucket", MEDIA_S3_SSE="")
 @patch("boto3.client")
 def test_s3_save_omits_sse_and_content_type_when_unset(mock_client):

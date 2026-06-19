@@ -92,6 +92,15 @@ jobs:
       - uses: actions/checkout@v6
       - name: Build production image
         run: docker build -t social-activities-app:ci .
+      - name: Trivy image scan (report-only)
+        # Surfaces OS/library CVEs in the built image. Installed via the official script (no
+        # third-party action pin to drift) and report-only (--exit-code 0) so a base-image CVE
+        # doesn't block the build before it's triaged; flip --exit-code to 1 to enforce once the
+        # base image is on a clean cadence. --ignore-unfixed hides CVEs with no available fix.
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
+            | sh -s -- -b /usr/local/bin
+          trivy image --ignore-unfixed --severity CRITICAL,HIGH --exit-code 0 social-activities-app:ci
 
   audit:
     runs-on: ubuntu-latest
@@ -104,3 +113,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip pip-audit
           pip-audit -r requirements.txt -r requirements-dev.txt
+      - name: Bandit (Python SAST)
+        # Static security analysis of our own code. Tuned to high severity + high confidence so it
+        # is signal, not noise (the codebase is clean at this level today); blocks on a real finding.
+        run: |
+          python -m pip install bandit
+          bandit -r apps config -q --severity-level high --confidence-level high

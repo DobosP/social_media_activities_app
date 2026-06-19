@@ -228,6 +228,26 @@ def resolve_signed_token(token: str, viewer):
     return photo
 
 
+def maybe_presigned_url(storage_key, *, content_type, download_name=None) -> str | None:
+    """If MEDIA_REDIRECT_TO_PRESIGNED is on AND the backend can presign (S3), return a short-lived
+    presigned GET URL so the object store serves the bytes directly (offloading the app process).
+    Returns None to fall back to streaming through the app — the default, and always for the local
+    filesystem backend. CALLER CONTRACT: the per-viewer access check MUST already have passed, so a
+    URL is only minted for an authorized viewer. Its lifetime is the SHORT MEDIA_PRESIGNED_TTL (NOT
+    the longer token TTL) — bounding the window in which a revocation/hide/ephemeral-expiry is not
+    yet enforced (the redirect skips the streaming path's per-byte re-auth — see the settings note).
+    ``download_name`` (PDF) pins a forced-download disposition so a direct fetch can't run."""
+    if not getattr(settings, "MEDIA_REDIRECT_TO_PRESIGNED", False):
+        return None
+    disposition = f'attachment; filename="{download_name}"' if download_name else None
+    return get_storage().presigned_get_url(
+        storage_key,
+        expires_in=getattr(settings, "MEDIA_PRESIGNED_TTL", 60),
+        content_type=content_type,
+        content_disposition=disposition,
+    )
+
+
 # --- Thread attachments (images + PDF in the activity conversation) -----------------------
 #
 # Media lives IN the unified Post stream (apps/social), attached to the author's own message.

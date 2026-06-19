@@ -353,6 +353,19 @@ MEDIA_IMAGE_QUALITY = env.int("MEDIA_IMAGE_QUALITY", default=80)
 # this before any pixels are decoded (≈30 MP default — above real photos, below a bomb).
 MEDIA_MAX_IMAGE_PIXELS = env.int("MEDIA_MAX_IMAGE_PIXELS", default=30_000_000)
 MEDIA_SIGNED_URL_TTL = env.int("MEDIA_SIGNED_URL_TTL", default=300)
+# P1 scale (opt-in): when True AND the storage backend can presign (S3), the media-serving views
+# 302-redirect an AUTHORIZED viewer to a short-lived presigned object-store URL instead of streaming
+# the bytes through the app process — removing the biggest single-process saturation risk. Default
+# False keeps the secure streaming model. CHILD-SAFETY TRADE-OFF: while a minted presigned URL is
+# live, a block / moderation-hide / consent or guardian revocation / cohort drift / ephemeral expiry
+# does NOT take effect until it expires (the streaming path re-authorizes per byte; the redirect
+# does not). MEDIA_PRESIGNED_TTL is therefore DECOUPLED from (much shorter than) the token TTL, to
+# keep that revocation window small. PDFs keep forced-download + content-type via the presign
+# response overrides. Inert for the local filesystem backend (it can't presign, so it streams).
+MEDIA_REDIRECT_TO_PRESIGNED = env.bool("MEDIA_REDIRECT_TO_PRESIGNED", default=False)
+# Lifetime of a presigned media redirect URL (seconds). Short by design: it bounds the
+# direct-S3 access window during which a revocation/hide/expiry is not yet enforced.
+MEDIA_PRESIGNED_TTL = env.int("MEDIA_PRESIGNED_TTL", default=60)
 # Swappable safety-scanning posture (CSAR-dependent); default matches a hash blocklist.
 MEDIA_IMAGE_SCANNER = env("MEDIA_IMAGE_SCANNER", default="apps.media.scanning.HashBlocklistScanner")
 MEDIA_CSAM_HASH_BLOCKLIST = env.list("MEDIA_CSAM_HASH_BLOCKLIST", default=[])
