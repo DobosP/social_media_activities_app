@@ -514,9 +514,17 @@ def participant_keys(viewer, conversation) -> list[dict]:
     if not is_active_participant(viewer, conversation):
         raise MessagingError("You are not an active member of this conversation.")
     out = []
-    parts = conversation.participants.filter(state=Participant.State.ACTIVE).select_related("user")
+    parts = list(
+        conversation.participants.filter(state=Participant.State.ACTIVE).select_related("user")
+    )
+    # PERF-4: batch the active public keys in ONE query (was one query per participant — an N+1
+    # that amplified on large group conversations) keyed by user id (one active key per user).
+    keys_by_user = {
+        k.user_id: k
+        for k in PublicKey.objects.filter(user_id__in=[p.user_id for p in parts], active=True)
+    }
     for p in parts:
-        key = public_key_for(p.user)
+        key = keys_by_user.get(p.user_id)
         if key is None:
             continue
         out.append(

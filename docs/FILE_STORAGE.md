@@ -157,10 +157,14 @@ MEDIA_SIGNED_URL_TTL=300              # signed-token lifetime (seconds)
 
 ## 8. Scaling & future options (not built — keep the design simple first)
 
-- **CDN / direct GETs** — today the app streams every blob through the gate (correct + simple, fine
-  at launch scale). If image bandwidth grows, front the *serving view* with a CDN, or issue
-  short-lived presigned GETs for already-authorised viewers (the object `ContentType` is set on
-  upload precisely so a future presigned/CDN path serves the right type).
+- **Direct GETs (presigned redirect) — IMPLEMENTED, opt-in.** Set `MEDIA_REDIRECT_TO_PRESIGNED=True`
+  (S3 backend only): after the per-viewer access check, the serving view 302-redirects to a
+  short-lived (`MEDIA_PRESIGNED_TTL`, default 60s) presigned object-store URL so the bytes never
+  transit the app process — the biggest single-process saturation fix. PDFs keep forced-download +
+  content-type via the presign response overrides. **Trade-off:** while a presigned URL is live a
+  block / moderation-hide / consent revocation / ephemeral expiry is not yet enforced (the streaming
+  path re-authorizes per byte; the redirect does not) — hence the short, *decoupled* TTL. Default
+  OFF keeps the secure streaming model. Front it with a CDN for further egress savings.
 - **Thumbnails** — a separate small display variant would cut per-view bytes further, at the cost of
   a second stored object per image. Deferred to keep the one-upload-one-object design.
 - **Lifecycle rules** — ephemeral ("disappearing") pictures already expire + purge in-app; you can

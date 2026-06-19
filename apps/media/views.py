@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied, Throttled, ValidationError
 from rest_framework.parsers import FormParser, MultiPartParser
@@ -17,6 +17,7 @@ from .services import (
     MediaRejected,
     NotAuthorized,
     delete_photo,
+    maybe_presigned_url,
     resolve_attachment_token,
     resolve_signed_token,
     signed_url,
@@ -115,6 +116,10 @@ class MediaFileView(APIView):
             photo = resolve_signed_token(token, request.user)
         except NotAuthorized as exc:
             raise PermissionDenied(str(exc)) from exc
+        # Scale (opt-in): after the access check, offload the bytes to the object store directly.
+        presigned = maybe_presigned_url(photo.storage_key, content_type=photo.content_type)
+        if presigned:
+            return HttpResponseRedirect(presigned)
         data = get_storage().open(photo.storage_key)
         resp = HttpResponse(data, content_type=photo.content_type)
         resp["X-Content-Type-Options"] = "nosniff"
@@ -133,10 +138,19 @@ class AttachmentFileView(APIView):
             att = resolve_attachment_token(token, request.user)
         except NotAuthorized as exc:
             raise PermissionDenied(str(exc)) from exc
+        is_pdf = att.kind == att.Kind.FILE
+        download_name = (att.original_filename or "document.pdf") if is_pdf else None
+        # Scale (opt-in): redirect an authorized viewer to a presigned object-store URL. The PDF
+        # forced-download + content-type are preserved via the presign response overrides, so the
+        # inline-execution guard still holds on the direct fetch.
+        presigned = maybe_presigned_url(
+            att.storage_key, content_type=att.content_type, download_name=download_name
+        )
+        if presigned:
+            return HttpResponseRedirect(presigned)
         data = get_storage().open(att.storage_key)
         resp = HttpResponse(data, content_type=att.content_type)
         resp["X-Content-Type-Options"] = "nosniff"
-        if att.kind == att.Kind.FILE:
-            name = att.original_filename or "document.pdf"
-            resp["Content-Disposition"] = f'attachment; filename="{name}"'
+        if is_pdf:
+            resp["Content-Disposition"] = f'attachment; filename="{download_name}"'
         return resp
