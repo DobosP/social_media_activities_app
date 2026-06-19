@@ -30,6 +30,12 @@ RUN DJANGO_SECRET_KEY=build-time-only-not-used-at-runtime \
     IDENTITY_ALLOW_DEV_PROVIDER=True \
     DJANGO_SETTINGS_MODULE=config.settings.prod python manage.py collectstatic --noinput
 
+# P1 hardening: drop to an unprivileged user so a container escape / RCE doesn't land as root.
+# Done AFTER collectstatic (which writes staticfiles/) and the apt/pip layers (which need root).
+RUN useradd --system --create-home --uid 10001 appuser \
+    && chown -R appuser:appuser /app
+USER appuser
+
 EXPOSE 8000
 
 # ASGI (daphne) so the REST API and real-time chat WebSockets (D5) are served from

@@ -52,6 +52,14 @@ SECURE_HSTS_SECONDS = env.int("DJANGO_HSTS_SECONDS", default=31536000)  # 1 year
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+# Pin the browser security headers EXPLICITLY (P1) so the posture is auditable and a future
+# settings refactor can't silently regress an implicit Django default. (Permissions-Policy is set
+# by apps.ops.middleware.PermissionsPolicyMiddleware — Django has no setting for it.)
+SECURE_CONTENT_TYPE_NOSNIFF = True
+# "same-origin" (also Django's default — pinned here to make it auditable) sends NO referrer
+# cross-origin, the most privacy-preserving option for a child-safety platform (invariant 4).
+SECURE_REFERRER_POLICY = "same-origin"
+SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin"
 
 # Managed Postgres (e.g. Render) hands us a `postgres://` URL; this app is PostGIS,
 # so force the GeoDjango backend regardless of the URL scheme.

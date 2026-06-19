@@ -48,7 +48,13 @@ class Notification(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
-        indexes = [models.Index(fields=["recipient", "read_at"])]
+        indexes = [
+            models.Index(fields=["recipient", "read_at"]),
+            # Covering index for the inbox read ("my notifications, newest first" —
+            # filter recipient, sort -created_at). Without it the recipient filter still
+            # needs a separate sort once fan-out volume grows.
+            models.Index(fields=["recipient", "-created_at"], name="notif_recipient_created_idx"),
+        ]
 
     def __str__(self):
         return f"{self.kind} -> {self.recipient_id}"

@@ -5,6 +5,7 @@ It fans out to the existing per-app commands rather than re-implementing their l
 
   * ``purge_messaging``        — delete expired E2EE messages (retention / disappearing).
   * ``purge_expired_attachments``— reclaim expired temporary-picture blobs (hidden/reported exempt).
+  * ``purge_read_notifications``— delete old read, non-DSA notifications (storage hygiene at scale).
   * ``lift_suspensions``       — reactivate accounts whose temporary suspension elapsed.
   * ``auto_complete_activities``— move past OPEN activities to COMPLETED.
   * ``expire_arrivals``        — clear stale arrival pings (keep them ephemeral).
@@ -31,6 +32,7 @@ from django.core.management.base import BaseCommand, CommandError
 DUE_JOBS = (
     ("purge_messaging", {}),
     ("purge_expired_attachments", {}),
+    ("purge_read_notifications", {}),  # P1 storage hygiene (read, non-DSA notices past retention)
     ("lift_suspensions", {}),
     ("purge_guardian_invites", {}),  # W3-F16 delete expired guardian invites (minor-PII hygiene)
     ("auto_complete_activities", {}),

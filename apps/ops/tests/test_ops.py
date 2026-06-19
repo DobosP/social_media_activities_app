@@ -16,6 +16,43 @@ def test_healthz_is_public_and_reports_db():
     assert body["database"] is True
 
 
+def test_readyz_reports_ready_with_db_up():
+    resp = APIClient().get("/readyz")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["status"] == "ready"
+    assert body["database"] is True
+    # Cache/storage keys appear ONLY when those shared deps are configured (Redis / S3).
+    assert "cache" not in body  # no REDIS_URL in tests
+    assert "storage" not in body  # LocalStorageBackend in tests
+
+
+def test_readyz_degraded_503_when_db_down(monkeypatch):
+    from apps.ops import views as ops_views
+
+    monkeypatch.setattr(ops_views.ReadyView, "_check_db", lambda self: False)
+    resp = APIClient().get("/readyz")
+    assert resp.status_code == 503
+    assert resp.json()["status"] == "degraded"
+
+
+def test_bounded_pagination_caps_limit():
+    from rest_framework.request import Request
+    from rest_framework.test import APIRequestFactory
+
+    from apps.ops.pagination import BoundedLimitOffsetPagination
+
+    paginator = BoundedLimitOffsetPagination()
+    req = Request(APIRequestFactory().get("/?limit=5000"))
+    assert paginator.get_limit(req) == 200  # capped, not 5000
+
+
+def test_permissions_policy_header_present():
+    resp = APIClient().get("/healthz")
+    assert "camera=()" in resp["Permissions-Policy"]
+    assert "geolocation=(self)" in resp["Permissions-Policy"]
+
+
 def test_stats_requires_staff():
     user = User.objects.create_user(username="plain", password="pw")
     apply_assurance(user, AssuranceResult(age_band=AgeBand.ADULT, provider="dev"))

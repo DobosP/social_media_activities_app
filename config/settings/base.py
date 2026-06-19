@@ -62,6 +62,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "apps.ops.middleware.PermissionsPolicyMiddleware",
     # Reject oversized request bodies (by Content-Length) before anything reads the stream.
     "apps.ops.middleware.MaxBodySizeMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -103,6 +104,16 @@ DATABASES = {
         default="postgis://app:app@localhost:5432/app",
     ),
 }
+# P1 scale: when behind a transaction-pooling PgBouncer, server-side cursors break and persistent
+# server connections are counter-productive. Inert by default; set DB_POOLED=True (and
+# DB_CONN_MAX_AGE=0 in prod) once a pooler fronts Postgres. See docs/PRODUCTION_READINESS.md.
+if env.bool("DB_POOLED", default=False):
+    DATABASES["default"]["DISABLE_SERVER_SIDE_CURSORS"] = True
+    DATABASES["default"]["CONN_MAX_AGE"] = 0
+
+# Storage hygiene for the in-app notification table (read, non-DSA notices are purged past this by
+# the purge_read_notifications job; 0 disables). MODERATION/SYSTEM DSA notices are never purged.
+NOTIFICATION_RETENTION_DAYS = env.int("NOTIFICATION_RETENTION_DAYS", default=180)
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -235,7 +246,8 @@ REST_FRAMEWORK = {
     "DEFAULT_FILTER_BACKENDS": [
         "django_filters.rest_framework.DjangoFilterBackend",
     ],
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
+    # Bounded so a client can't request ?limit=50000 and force a giant unpaginated scan.
+    "DEFAULT_PAGINATION_CLASS": "apps.ops.pagination.BoundedLimitOffsetPagination",
     "PAGE_SIZE": 50,
     # Baseline anti-abuse throttling across the whole API (rates overridable via env).
     # For multi-process deploys, configure a shared cache (Redis) so counts are global.

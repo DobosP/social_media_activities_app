@@ -22,3 +22,22 @@ class MaxBodySizeMiddleware:
         except (TypeError, ValueError):
             pass
         return self.get_response(request)
+
+
+class PermissionsPolicyMiddleware:
+    """Emit a Permissions-Policy header (P1 hardening). Django has settings for the other security
+    headers (nosniff / referrer / HSTS) but none for Permissions-Policy, so we set it here. The
+    default locks down powerful features the app never uses server-side and scopes geolocation to
+    self (the web UI uses request-only proximity). Override via PERMISSIONS_POLICY."""
+
+    DEFAULT = "geolocation=(self), camera=(), microphone=(), payment=(), usb=(), interest-cohort=()"
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+        self.value = getattr(settings, "PERMISSIONS_POLICY", self.DEFAULT)
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        if self.value:
+            response.setdefault("Permissions-Policy", self.value)
+        return response
