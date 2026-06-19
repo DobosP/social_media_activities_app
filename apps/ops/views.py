@@ -88,6 +88,28 @@ class ReadyView(APIView):
             return False
 
 
+def metrics_view(request):
+    """Prometheus exposition (P1 observability) — request latency/count etc. collected by the
+    django_prometheus middleware. GATED on a bearer token (METRICS_TOKEN), CLOSED BY DEFAULT (empty
+    token => 403) so the endpoint is never world-readable. The scraper sends
+    ``Authorization: Bearer <METRICS_TOKEN>``. A plain Django view (not DRF) so the Prometheus
+    exposition response passes through unmodified. NOTE: django_prometheus counters are PER-PROCESS,
+    so on a multi-worker deploy scrape every instance (or aggregate) — same caveat as the cache /
+    channel-layer shared-state note."""
+    import hmac
+
+    from django.http import HttpResponseForbidden
+
+    token = getattr(settings, "METRICS_TOKEN", "")
+    provided = request.headers.get("Authorization", "")
+    # Constant-time compare so the token can't be recovered by timing the response.
+    if not token or not hmac.compare_digest(provided.encode(), f"Bearer {token}".encode()):
+        return HttpResponseForbidden("metrics unavailable")
+    from django_prometheus.exports import ExportToDjangoView
+
+    return ExportToDjangoView(request)
+
+
 class StatsView(APIView):
     """Aggregate counts only — never PII or per-user data. Staff-only."""
 
