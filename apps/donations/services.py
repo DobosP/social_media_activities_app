@@ -1,6 +1,9 @@
+import requests
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Count, Q, Sum
+
+from apps.ops.resilience import ProviderUnavailable
 
 from .models import Campaign, CostAnchor, Donation, InKindContribution, SpendEntry
 from .providers import get_payment_provider, new_reference
@@ -22,7 +25,15 @@ def start_donation(
         raise DonationError("That campaign is no longer accepting earmarked gifts.")
     provider = get_payment_provider()
     reference = new_reference()
-    intent = provider.create_intent(amount_cents, currency, reference=reference)
+    try:
+        intent = provider.create_intent(amount_cents, currency, reference=reference)
+    except (ProviderUnavailable, requests.RequestException) as exc:
+        # A transient provider/network failure becomes a clean donor-facing error (the view maps
+        # DonationError -> 400), never an uncaught 500. The Idempotency-Key on the Stripe call means
+        # any retry that DID succeed server-side won't have created a duplicate session.
+        raise DonationError(
+            "The payment provider is temporarily unavailable. Please try again."
+        ) from exc
     donation = Donation.objects.create(
         donor=donor if (donor and donor.is_authenticated) else None,
         amount_cents=amount_cents,

@@ -61,7 +61,7 @@ class StripePaymentProvider(PaymentProvider):
     API_URL = "https://api.stripe.com/v1/checkout/sessions"
 
     def create_intent(self, amount_cents: int, currency: str, *, reference: str) -> PaymentIntent:
-        import requests
+        from apps.ops.resilience import request_with_retries
 
         secret = getattr(settings, "STRIPE_SECRET_KEY", "")
         if not secret:
@@ -76,8 +76,18 @@ class StripePaymentProvider(PaymentProvider):
             "line_items[0][price_data][unit_amount]": amount_cents,
             "line_items[0][price_data][product_data][name]": "Donation",
         }
-        response = requests.post(self.API_URL, data=data, auth=(secret, ""), timeout=15)
-        response.raise_for_status()
+        # The unique per-donation `reference` as Stripe's Idempotency-Key makes a retried POST SAFE:
+        # Stripe dedupes identical idempotency-keyed requests, so a transient 5xx/timeout retry can
+        # never create a second Checkout Session (no double session, no double charge).
+        response = request_with_retries(
+            "POST",
+            self.API_URL,
+            data=data,
+            auth=(secret, ""),
+            headers={"Idempotency-Key": reference},
+            timeout=15,
+            breaker_key="stripe",
+        )
         body = response.json()
         return PaymentIntent(checkout_url=body["url"], external_ref=body["id"])
 
