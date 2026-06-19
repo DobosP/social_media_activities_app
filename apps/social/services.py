@@ -2225,11 +2225,21 @@ def broadcast_post(post, *, edited=False) -> None:
                     "id": target.pk,
                     "title": getattr(target, "title", "") or getattr(target, "name", ""),
                 }
+        # Server-render the body to the SAME safe HTML the no-JS page shows (mentions + markdown,
+        # adult-only autolinks), so a live-appended post is first-class — never a second-class
+        # plain-text bubble that changes appearance on reload. The roster is empty for a group
+        # thread (no name enumeration), matching the web view.
+        owner = post.thread.owner_object
+        roster = {} if isinstance(owner, Group) else mention_roster(owner)
+        body_html = str(
+            highlight_mentions(post.body, roster, allow_links=thread_allows_links(owner))
+        )
         payload = {
             "id": post.id,
             "author": author,
             "author_id": post.author_id,
             "body": post.body,
+            "body_html": body_html,
             "is_announcement": post.is_announcement,
             "reply_to": post.reply_to_id,
             "reply_snippet": snippet,
@@ -2243,6 +2253,53 @@ def broadcast_post(post, *, edited=False) -> None:
         )
     except Exception:  # noqa: BLE001 — live delivery is best-effort; never break the write
         pass
+
+
+def broadcast_reaction(post) -> None:
+    """Fan a post's CURRENT reaction set (distinct emojis only — never a count, never who) out to
+    the thread's live group so connected members see a reaction appear/disappear without a reload.
+    Best-effort like broadcast_post: a graceful no-op without a working channel layer, never raises
+    into the toggle. Delivery is re-authorised per-recipient in the consumer (chat_reaction)."""
+    try:
+        from asgiref.sync import async_to_sync
+        from channels.layers import get_channel_layer
+
+        layer = get_channel_layer()
+        if layer is None:
+            return
+        async_to_sync(layer.group_send)(
+            f"chat_{post.thread_id}",
+            {
+                "type": "chat.reaction",
+                "message": {"post_id": post.id, "present": post_reaction_emojis(post)},
+            },
+        )
+    except Exception:  # noqa: BLE001 — live delivery is best-effort; never break the write
+        pass
+
+
+def typing_identity(user, activity) -> dict | None:
+    """Whether ``user`` may emit a transient 'typing' signal into ``activity``'s thread, plus the
+    label peers see if so — ``{"author_id", "author"}`` or ``None``.
+
+    PRECONDITION: the caller MUST already have passed ``can_read_thread(user, activity)`` (the
+    consumer does, via ``_still_authorized``, and closes 4403 before the typing branch). That gate
+    already enforces is_hidden, can_participate (lapsed consent / expired assurance), cohort, and
+    blocked-vs-owner — so this function deliberately does NOT re-check them; it adds ONLY the
+    write-side deltas ``can_read_thread`` does not cover: a current member who is NOT a supervisory
+    guardian, on a thread that is not a minor-cohort announcement-only GROUP, and is not frozen.
+    (A typing signal should only ever come from someone who could actually post.) It is PURE
+    TRANSPORT — it writes nothing, is never stored, and never becomes a presence record (it must
+    not, per the no-behavioural-tracking invariant). Guardians never emit (no adult presence leaks
+    into a children's thread); a minor-cohort group thread stays enumeration-free."""
+    membership = thread_members(activity).filter(user=user).first()
+    if membership is None or membership.role == Membership.Role.GUARDIAN:
+        return None
+    if isinstance(activity, Group) and activity.cohort in (Cohort.CHILD, Cohort.TEEN):
+        return None
+    if is_thread_frozen(activity):
+        return None
+    return {"author_id": user.id, "author": user.display_name or user.username}
 
 
 # --- thread reactions (anonymous, COUNTLESS, no who-list) -----------------------------------
@@ -2295,12 +2352,16 @@ def toggle_reaction(user, post, emoji) -> bool:
     existing = PostReaction.objects.filter(post=post, user=user, emoji=emoji).first()
     if existing is not None:
         existing.delete()
-        return False
-    # get_or_create swallows a concurrent duplicate (a fast double-tap) as a benign no-op via its
-    # own savepoint, rather than poisoning this atomic block with an unhandled IntegrityError 500.
-    # (Don't bind the throwaway to ``_`` — that's the module-level gettext alias.)
-    _obj, created = PostReaction.objects.get_or_create(post=post, user=user, emoji=emoji)
-    return created
+        result = False
+    else:
+        # get_or_create swallows a concurrent duplicate (a fast double-tap) as a benign no-op via
+        # its own savepoint, rather than poisoning this atomic block with an unhandled
+        # IntegrityError 500. (Don't bind the throwaway to ``_`` — that's the gettext alias.)
+        _obj, created = PostReaction.objects.get_or_create(post=post, user=user, emoji=emoji)
+        result = created
+    # Live-update connected members' chips on commit (a rolled-back toggle broadcasts nothing).
+    transaction.on_commit(lambda: broadcast_reaction(post))
+    return result
 
 
 def post_reaction_emojis(post) -> list:
@@ -2348,34 +2409,91 @@ def resolve_mentions(activity, body, *, exclude_user=None) -> list:
     return result
 
 
-def highlight_mentions(body, roster):
-    """Render a thread body to SAFE HTML: HTML-escaped, newlines -> <br>, and every '@username'
-    that names a CURRENT peer member (a key in ``roster`` from ``mention_roster``) wrapped in
-    <span class="mention">. Escaping happens BEFORE any markup is inserted, so a hostile body can
-    never inject HTML; only the literal mention spans we add are trusted. A token that doesn't
-    resolve to a peer stays plain escaped text."""
+# Inline rendering for a thread body: @mentions + a SMALL, safe markdown subset (bold, italic,
+# inline code) and — only where ``allow_links`` is set (adult cohort) — autolinked http(s) URLs.
+# Each alternative captures exactly ONE named group, so ``match.lastgroup`` names the token that
+# matched. The renderer ESCAPES first (the literal gaps AND each token's inner text), then wraps
+# only with our own fixed tags — a hostile body can never inject HTML. Order matters: code before
+# bold before italic; the word-boundary lookarounds on italic stop ``snake_case``/``2*3`` from
+# becoming emphasis. The mention alternative mirrors MENTION_RE (used by resolve_mentions for the
+# ping fan-out) so the highlight and the ping can never drift apart.
+_THREAD_MD_RE = re.compile(
+    r"`(?P<code>[^`\n]+)`"
+    r"|\*\*(?P<bold>\S(?:[^\n]*?\S)?)\*\*"
+    r"|(?<![\w*])\*(?P<ital>\S(?:[^*\n]*?\S)?)\*(?![\w*])"
+    r"|(?<![\w_])_(?P<ital_us>\S(?:[^_\n]*?\S)?)_(?![\w_])"
+    r"|(?<![\w@])@(?P<mention>[\w.\-]{1,150})"
+    r"|(?P<url>https?://[^\s<]+)"
+)
+_URL_TRAILING = ".,;:!?"
+
+
+def thread_allows_links(activity) -> bool:
+    """Autolinking a bare URL is an ADULT-cohort-only affordance: a clickable external link in a
+    children's thread is a real safety surface (phishing/grooming), so minors' threads render a URL
+    as plain (non-clickable) escaped text. Single source of truth for the web view + the live
+    broadcast so the two render the same body."""
+    return getattr(activity, "cohort", None) == Cohort.ADULT
+
+
+def _safe_link(url: str) -> str:
+    from apps.safety.sanitize import safe_external_url
+
+    return safe_external_url(url)
+
+
+def highlight_mentions(body, roster, *, allow_links=False):
+    """Render a thread body to SAFE HTML. Three things happen, all escape-first so a hostile body
+    can never inject markup:
+      * @mentions of a CURRENT peer (a key in ``roster`` from ``mention_roster``) -> a calm
+        <span class="mention"> highlight; a token that doesn't name a peer stays plain text;
+      * a small markdown subset -> ``**x**`` -> <strong>, ``*x*``/``_x_`` -> <em>, `` `x` `` ->
+        <code> (no headings/blockquotes/raw-HTML/images — text-first, low surface);
+      * when ``allow_links`` (adult cohort only — see ``thread_allows_links``), a bare http(s) URL
+        becomes a sanitised, nofollow, new-tab <a>. Minors' threads NEVER autolink.
+    Newlines become <br>. Every literal gap and every token's inner text is HTML-escaped before any
+    of our fixed tags is added; only those tags are trusted."""
     from django.utils.html import escape
     from django.utils.safestring import mark_safe
 
     if not body:
         return mark_safe("")
 
-    def repl(match):
-        token = match.group(1)
-        if token.lower() in roster:
-            return f'<span class="mention">@{escape(token)}</span>'
-        return escape(match.group(0))  # not a real member — leave as escaped plain text
-
-    # Escape the gaps between mentions ourselves so the whole string is safe, then mark_safe.
-    pieces, last = [], 0
-    for m in MENTION_RE.finditer(body):
-        pieces.append(escape(body[last : m.start()]))
-        pieces.append(repl(m))
+    out, last = [], 0
+    for m in _THREAD_MD_RE.finditer(body):
+        out.append(escape(body[last : m.start()]))
+        kind = m.lastgroup
+        if kind == "code":
+            out.append("<code>" + escape(m.group("code")) + "</code>")
+        elif kind == "bold":
+            out.append("<strong>" + escape(m.group("bold")) + "</strong>")
+        elif kind in ("ital", "ital_us"):
+            out.append("<em>" + escape(m.group(kind)) + "</em>")
+        elif kind == "mention":
+            token = m.group("mention")
+            if token.lower() in roster:
+                out.append(f'<span class="mention">@{escape(token)}</span>')
+            else:
+                out.append(escape(m.group(0)))  # not a peer — plain escaped text
+        elif kind == "url":
+            raw = m.group("url")
+            trail = ""
+            while raw and raw[-1] in _URL_TRAILING:  # keep "see http://x.com." readable
+                trail = raw[-1] + trail
+                raw = raw[:-1]
+            safe = _safe_link(raw) if allow_links else ""
+            if safe:
+                out.append(
+                    f'<a href="{escape(safe)}" rel="noopener noreferrer nofollow" '
+                    f'target="_blank">{escape(raw)}</a>{escape(trail)}'
+                )
+            else:
+                out.append(escape(m.group("url")))  # minors / unsafe scheme -> plain text
         last = m.end()
-    pieces.append(escape(body[last:]))
-    # Normalise CRLF/CR before turning newlines into <br> so no stray \r survives (parity with
-    # the |linebreaksbr fallback). All segments are already escaped, so this only adds our <br>.
-    html = "".join(pieces).replace("\r\n", "\n").replace("\r", "\n").replace("\n", "<br>")
+    out.append(escape(body[last:]))
+    # Normalise CRLF/CR before turning newlines into <br>. All segments are already escaped, so
+    # this only adds our own <br> tags.
+    html = "".join(out).replace("\r\n", "\n").replace("\r", "\n").replace("\n", "<br>")
     return mark_safe(html)
 
 

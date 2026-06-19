@@ -72,6 +72,14 @@ if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS = [RENDER_EXTERNAL_HOSTNAME]
     CSRF_TRUSTED_ORIGINS = [f"https://{RENDER_EXTERNAL_HOSTNAME}"]
 
+# Non-Render EU hosting (e.g. a single Hetzner box behind Caddy/nginx — see docs/HOSTING_EU.md):
+# ALLOWED_HOSTS comes from DJANGO_ALLOWED_HOSTS (base.py); CSRF_TRUSTED_ORIGINS had no env hook, so
+# an HTTPS form POST from a custom domain failed CSRF. Allow explicit https origins to be supplied.
+# Each must include the scheme (Django requires it), e.g. "https://meet.example.eu".
+_CSRF_ORIGINS = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])
+if _CSRF_ORIGINS:
+    CSRF_TRUSTED_ORIGINS = [*globals().get("CSRF_TRUSTED_ORIGINS", []), *_CSRF_ORIGINS]
+
 # Serve static assets (admin, DRF/Swagger UI) from the app process via WhiteNoise,
 # so a single container needs no separate web server or CDN for a demo deploy.
 # WhiteNoise must sit immediately after SecurityMiddleware (index 0).

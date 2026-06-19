@@ -2,7 +2,12 @@ from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
 from apps.social.models import Thread
-from apps.social.services import SocialError, can_read_thread, post_to_thread_realtime
+from apps.social.services import (
+    SocialError,
+    can_read_thread,
+    post_to_thread_realtime,
+    typing_identity,
+)
 
 
 class ChatConsumer(AsyncJsonWebsocketConsumer):
@@ -41,6 +46,32 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         if not await self._still_authorized():
             await self.close(code=4403)
             return
+        # Transient 'typing' signal: emit-and-forget over the group. It is PURE TRANSPORT — no
+        # Post, no DB row, nothing stored — so it can never become a presence record. The gate
+        # (typing_identity) re-derives, on FRESH state, that the sender is a non-guardian member of
+        # a thread that isn't a minor-cohort announcement-only group, mirroring the write gate; a
+        # guardian or a muted minor-group member emits nothing. The handler self-excludes the typer.
+        if content.get("type") == "typing":
+            # PRECONDITION: _still_authorized() above already closed 4403 on a revoked/blocked/
+            # cohort-changed/erased sender, so the gate is enforced. The emit itself is pure
+            # best-effort transport — a transient channel-layer/DB hiccup on a keystroke-frequency
+            # 'typing' frame must be a silent no-op, never tear down an otherwise-healthy socket
+            # (mirrors broadcast_post / broadcast_reaction, which are likewise wrapped).
+            try:
+                info = await self._typing_identity()
+                if info is not None:
+                    await self.channel_layer.group_send(
+                        self.group_name,
+                        {
+                            "type": "chat.typing",
+                            "sender": self.channel_name,
+                            "author_id": info["author_id"],
+                            "author": info["author"],
+                        },
+                    )
+            except Exception:  # noqa: BLE001 — typing is best-effort; never break the socket
+                pass
+            return
         body = content.get("body", "")
         # Coerce the untrusted reply_to to an int-or-None at the boundary so a bad value can
         # never raise an uncaught ValueError that tears down the socket (the service also guards).
@@ -64,6 +95,28 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             return
         await self.send_json({"type": "message", **event["message"]})
 
+    async def chat_reaction(self, event):
+        # A post's distinct reaction set changed (anonymous, COUNTLESS — no count, no who). Same
+        # per-delivery re-auth as chat_message so a revoked member stops receiving updates.
+        if not await self._still_authorized():
+            await self.close(code=4403)
+            return
+        await self.send_json({"type": "reaction", **event["message"]})
+
+    async def chat_typing(self, event):
+        # Never echo a typer their own signal. Re-auth every delivery, so a member whose access was
+        # revoked since connecting stops seeing peers type. Transport-only; the client shows an
+        # ephemeral hint that is deliberately NOT announced to screen readers (peer presence is
+        # silent, matching the live-region rule for ordinary peer messages).
+        if event.get("sender") == self.channel_name:
+            return
+        if not await self._still_authorized():
+            await self.close(code=4403)
+            return
+        await self.send_json(
+            {"type": "typing", "author_id": event["author_id"], "author": event["author"]}
+        )
+
     @database_sync_to_async
     def _get_thread(self, thread_id):
         # Load BOTH owners so thread.owner_object resolves without an extra query whether this is
@@ -86,6 +139,23 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             Thread.objects.select_related("activity", "group").filter(pk=self.thread_id).first()
         )
         return thread is not None and can_read_thread(user, thread.owner_object)
+
+    @database_sync_to_async
+    def _typing_identity(self):
+        # Resolve the typing gate on FRESH state (reloaded user + thread, like _still_authorized):
+        # a guardian, a non-member, or a muted minor-group member gets None and emits nothing.
+        from django.contrib.auth import get_user_model
+
+        uid = getattr(self.user, "pk", None)
+        user = get_user_model().objects.filter(pk=uid).first() if uid else None
+        if user is None:
+            return None
+        thread = (
+            Thread.objects.select_related("activity", "group").filter(pk=self.thread_id).first()
+        )
+        if thread is None:
+            return None
+        return typing_identity(user, thread.owner_object)
 
     @database_sync_to_async
     def _persist(self, body, reply_to_id):
