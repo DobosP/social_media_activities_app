@@ -330,6 +330,13 @@ MEDIA_STORAGE_BACKEND = env(
 MEDIA_MAX_UPLOAD_BYTES = env.int("MEDIA_MAX_UPLOAD_BYTES", default=5 * 1024 * 1024)
 # Longest-side cap; larger uploads are downscaled (privacy + storage/bandwidth).
 MEDIA_MAX_DIMENSION = env.int("MEDIA_MAX_DIMENSION", default=2048)
+# Smart compression: transcode every uploaded image (photos AND thread attachments) to this codec
+# at MEDIA_IMAGE_QUALITY, so private blobs stay small (cheaper EU object storage + less egress).
+# WEBP is the recommended default (far smaller than the source PNG/JPEG for a phone photo); set to
+# an empty string to preserve the source format. Metadata is stripped + EXIF orientation baked in
+# regardless. One upload still = one stored object (no separate thumbnail to manage).
+MEDIA_IMAGE_OUTPUT_FORMAT = env("MEDIA_IMAGE_OUTPUT_FORMAT", default="WEBP")
+MEDIA_IMAGE_QUALITY = env.int("MEDIA_IMAGE_QUALITY", default=80)
 # Decompression-bomb ceiling: reject images whose header-declared pixel count exceeds
 # this before any pixels are decoded (≈30 MP default — above real photos, below a bomb).
 MEDIA_MAX_IMAGE_PIXELS = env.int("MEDIA_MAX_IMAGE_PIXELS", default=30_000_000)
@@ -542,6 +549,11 @@ MEDIA_S3_BUCKET = env("MEDIA_S3_BUCKET", default="")
 MEDIA_S3_ENDPOINT_URL = env("MEDIA_S3_ENDPOINT_URL", default="")
 MEDIA_S3_REGION = env("MEDIA_S3_REGION", default="")
 MEDIA_S3_ADDRESSING_STYLE = env("MEDIA_S3_ADDRESSING_STYLE", default="auto")
+# Server-side encryption at rest. Set to "AES256" for SSE-S3 (provider-managed keys) where the
+# bucket/provider supports it (AWS S3, MinIO; many EU S3-compatible providers). Empty = rely on
+# the provider's default-at-rest encryption. Objects are private + served only via signed,
+# per-viewer, membership-scoped URLs regardless of this setting.
+MEDIA_S3_SSE = env("MEDIA_S3_SSE", default="")
 
 # Build/version surfaced by /healthz (set from CI / image tag).
 APP_VERSION = env("APP_VERSION", default="0.1.0")
