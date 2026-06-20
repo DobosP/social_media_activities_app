@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 {% block title %}{% trans "Home" %}{% endblock %}
+{% block structured_data %}{% if structured_data %}<script type="application/ld+json">{{ structured_data }}</script>{% endif %}{% endblock %}
 {% block content %}
 <h1>{% blocktrans with name=user.display_name|default:user.username %}Hi {{ name }}{% endblocktrans %}</h1>
 {% if guardian_invites %}

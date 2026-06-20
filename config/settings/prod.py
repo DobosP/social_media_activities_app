@@ -79,6 +79,10 @@ RENDER_EXTERNAL_HOSTNAME = env("RENDER_EXTERNAL_HOSTNAME", default="")
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS = [RENDER_EXTERNAL_HOSTNAME]
     CSRF_TRUSTED_ORIGINS = [f"https://{RENDER_EXTERNAL_HOSTNAME}"]
+    # Default the canonical base URL to the Render host so the sitemap/canonical links
+    # work out of the box; an explicit SITE_BASE_URL (custom domain) always wins.
+    if not globals().get("SITE_BASE_URL"):
+        SITE_BASE_URL = f"https://{RENDER_EXTERNAL_HOSTNAME}"
 
 # Non-Render EU hosting (e.g. a single Hetzner box behind Caddy/nginx — see docs/HOSTING_EU.md):
 # ALLOWED_HOSTS comes from DJANGO_ALLOWED_HOSTS (base.py); CSRF_TRUSTED_ORIGINS had no env hook, so
