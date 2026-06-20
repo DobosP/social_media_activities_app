@@ -66,6 +66,8 @@ MIDDLEWARE = [
     # request metrics then wrap the rest of the stack: Before early, After last.
     "django.middleware.security.SecurityMiddleware",
     "django_prometheus.middleware.PrometheusBeforeMiddleware",
+    # Assign an X-Request-ID early so it tags every log line + the response + the Sentry scope.
+    "apps.ops.middleware.RequestIDMiddleware",
     "apps.ops.middleware.PermissionsPolicyMiddleware",
     # Content-Security-Policy (report-only by default — see CONTENT_SECURITY_POLICY_REPORT_ONLY).
     "csp.middleware.CSPMiddleware",
@@ -127,6 +129,39 @@ CONTENT_SECURITY_POLICY_REPORT_ONLY = {
 # Prometheus /metrics is gated on a bearer token — CLOSED BY DEFAULT (empty token => 403), never
 # world-readable. Set METRICS_TOKEN and have the scraper send `Authorization: Bearer <token>`.
 METRICS_TOKEN = env("METRICS_TOKEN", default="")
+
+# Structured logging + request correlation (P1). LOG_FORMAT=json (prod) emits one JSON line per
+# record with the X-Request-ID; "plain" (dev/test default) is human-readable. apps.* log at
+# LOG_LEVEL (default INFO — joins, moderation, retention); noisy libraries stay at WARNING.
+_LOG_FORMAT = env("LOG_FORMAT", default="plain")
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {"request_id": {"()": "apps.ops.observability.RequestIdFilter"}},
+    "formatters": {
+        "plain": {"format": "%(asctime)s %(levelname)s %(name)s [%(request_id)s] %(message)s"},
+        "json": {"()": "apps.ops.observability.JsonFormatter"},
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "filters": ["request_id"],
+            "formatter": "json" if _LOG_FORMAT == "json" else "plain",
+        },
+    },
+    "root": {"handlers": ["console"], "level": "WARNING"},
+    "loggers": {
+        "apps": {
+            "handlers": ["console"],
+            "level": env("LOG_LEVEL", default="INFO"),
+            "propagate": False,
+        },
+    },
+}
+
+# Cron heartbeat (dead-man's-switch): run_due_jobs pings this URL on a fully-successful run, so a
+# missed/failed nightly pass (GDPR retention / DSA suspension-lifts) raises an alert. "" disables.
+OPS_HEARTBEAT_URL = env("OPS_HEARTBEAT_URL", default="")
 
 # Postgres + PostGIS. django-environ maps the `postgis://` scheme to the
 # GeoDjango backend (django.contrib.gis.db.backends.postgis).

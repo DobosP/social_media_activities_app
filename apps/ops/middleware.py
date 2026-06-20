@@ -24,6 +24,38 @@ class MaxBodySizeMiddleware:
         return self.get_response(request)
 
 
+class RequestIDMiddleware:
+    """Assign/propagate an X-Request-ID per request (P1 observability): trust a bounded inbound id
+    from the proxy or mint a random one, store it in the request-id ContextVar (woven into logs),
+    echo it on the response, and tag the Sentry scope so an error links to the request's logs. The
+    id is random — never PII."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        import re
+        import uuid
+
+        from apps.ops.observability import set_request_id
+
+        # Allowlist a safe charset for an inbound id: a forged value with CR/LF/control chars would
+        # otherwise inject into plain-text logs AND make the response-header assignment below raise
+        # BadHeaderError (a 500). Anything that doesn't match is replaced with a fresh minted id.
+        raw = (request.headers.get("X-Request-ID") or "")[:64].strip()
+        rid = raw if re.fullmatch(r"[A-Za-z0-9._-]{1,64}", raw) else uuid.uuid4().hex
+        set_request_id(rid)
+        try:
+            import sentry_sdk
+
+            sentry_sdk.set_tag("request_id", rid)  # no-op when Sentry isn't configured
+        except Exception:  # noqa: BLE001 — observability must never break a request
+            pass
+        response = self.get_response(request)
+        response.headers["X-Request-ID"] = rid
+        return response
+
+
 class PermissionsPolicyMiddleware:
     """Emit a Permissions-Policy header (P1 hardening). Django has settings for the other security
     headers (nosniff / referrer / HSTS) but none for Permissions-Policy, so we set it here. The

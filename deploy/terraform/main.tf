@@ -52,5 +52,6 @@ resource "hcloud_server" "app" {
     sentry_dsn               = var.sentry_dsn
     metrics_token            = var.metrics_token
     messaging_retention_days = var.messaging_retention_days
+    ops_heartbeat_url        = var.ops_heartbeat_url
   })
 }

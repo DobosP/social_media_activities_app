@@ -60,6 +60,8 @@ write_files:
       MESSAGING_RETENTION_DAYS='${messaging_retention_days}'
       SENTRY_DSN='${sentry_dsn}'
       METRICS_TOKEN='${metrics_token}'
+      LOG_FORMAT='json'
+      OPS_HEARTBEAT_URL='${ops_heartbeat_url}'
   # Caddy: auto Let's Encrypt TLS + transparent reverse proxy (HTTP + Channels WebSockets).
   - path: /etc/caddy/Caddyfile
     permissions: "0644"
