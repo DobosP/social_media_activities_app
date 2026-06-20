@@ -2759,31 +2759,37 @@ def events_list(request):
 
 def things_to_do_index(request):
     from apps.web.landing import available_landings
+    from apps.web.seo import cache_public
 
     combos = available_landings()
     cities = {}
     for area, activity_type in combos:
         cities.setdefault(area, []).append(activity_type)
     grouped = sorted(cities.items(), key=lambda kv: kv[0].name)
-    return render(
-        request,
-        "web/landing_index.html",
-        {"grouped": grouped, **_nav_context(request.user)},
+    return cache_public(
+        render(
+            request,
+            "web/landing_index.html",
+            {"grouped": grouped, **_nav_context(request.user)},
+        )
     )
 
 
 def things_to_do_city(request, area_slug):
     from apps.communities.models import Area
     from apps.web.landing import available_landings
+    from apps.web.seo import cache_public
 
     area = get_object_or_404(Area, slug=area_slug, is_active=True)
     activities = [t for a, t in available_landings() if a.pk == area.pk]
     if not activities:
         raise Http404("Nothing here yet.")
-    return render(
-        request,
-        "web/landing_city.html",
-        {"area": area, "activities": activities, **_nav_context(request.user)},
+    return cache_public(
+        render(
+            request,
+            "web/landing_city.html",
+            {"area": area, "activities": activities, **_nav_context(request.user)},
+        )
     )
 
 
@@ -2793,7 +2799,8 @@ def things_to_do(request, area_slug, activity_slug):
     from apps.communities.models import Area
     from apps.taxonomy.models import ActivityType
     from apps.web.landing import landing_supply
-    from apps.web.structured_data import breadcrumb_ld, ld_json
+    from apps.web.seo import cache_public
+    from apps.web.structured_data import breadcrumb_ld, itemlist_ld, ld_json
 
     area = get_object_or_404(Area, slug=area_slug, is_active=True)
     activity_type = get_object_or_404(ActivityType, slug=activity_slug, is_active=True)
@@ -2802,6 +2809,8 @@ def things_to_do(request, area_slug, activity_slug):
     events = list(events[:50])
     if not (places or events):
         raise Http404("Nothing here yet.")
+    # ItemList of the upcoming events so answer engines can extract the list directly.
+    structured_data = ld_json(itemlist_ld(events, request)) if events else None
     breadcrumb_data = ld_json(
         breadcrumb_ld(
             [
@@ -2816,17 +2825,20 @@ def things_to_do(request, area_slug, activity_slug):
             request,
         )
     )
-    return render(
-        request,
-        "web/landing_detail.html",
-        {
-            "area": area,
-            "activity_type": activity_type,
-            "places": places,
-            "events": events,
-            "breadcrumb_data": breadcrumb_data,
-            **_nav_context(request.user),
-        },
+    return cache_public(
+        render(
+            request,
+            "web/landing_detail.html",
+            {
+                "area": area,
+                "activity_type": activity_type,
+                "places": places,
+                "events": events,
+                "structured_data": structured_data,
+                "breadcrumb_data": breadcrumb_data,
+                **_nav_context(request.user),
+            },
+        )
     )
 
 

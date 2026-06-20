@@ -124,25 +124,61 @@ def breadcrumb_ld(crumbs, request=None) -> dict:
     }
 
 
+def itemlist_ld(events, request=None) -> dict:
+    """schema.org ItemList of upcoming events for a landing page.
+
+    Lets an answer engine extract the list directly (name + canonical event URL), ordered as
+    shown. Built only from already-public ``upcoming_events()`` rows — no people, no cohort data.
+    """
+    items = []
+    for i, event in enumerate(events, start=1):
+        items.append(
+            {
+                "@type": "ListItem",
+                "position": i,
+                "name": event.title,
+                "url": absolute_url(event_path(event), request),
+            }
+        )
+    return {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        "itemListElement": items,
+    }
+
+
 def site_ld(request=None) -> dict:
     """Organization + WebSite (with a search action) for the home/landing page.
 
     Helps an answer engine name the site and learn its event/place search entry point.
     """
+    from django.conf import settings
+
     home = absolute_url("/", request)
+    org = {
+        "@type": ["Organization", "NGO"],
+        "name": "Activities",
+        "url": home,
+        "description": (
+            "A nonprofit, text-first platform that helps people meet in person for "
+            "real group activities at real places — sport, outdoors, games, reading "
+            "and more. First city: Cluj-Napoca, Romania."
+        ),
+    }
+    # Entity-resolution hints — only emitted when the operator configures them (env).
+    same_as = [u for u in getattr(settings, "SITE_SAMEAS", []) if u]
+    if same_as:
+        org["sameAs"] = same_as
+    area = getattr(settings, "SITE_AREA_SERVED", "")
+    if area:
+        org["areaServed"] = area
+    email = getattr(settings, "SITE_CONTACT_EMAIL", "")
+    if email:
+        org["email"] = email
     return {
         "@context": "https://schema.org",
         "@graph": [
-            {
-                "@type": "Organization",
-                "name": "Activities",
-                "url": home,
-                "description": (
-                    "A nonprofit, text-first platform that helps people meet in person for "
-                    "real group activities at real places — sport, outdoors, games, reading "
-                    "and more. First city: Cluj-Napoca, Romania."
-                ),
-            },
+            org,
             {
                 "@type": "WebSite",
                 "name": "Activities",

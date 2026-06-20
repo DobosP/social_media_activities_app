@@ -49,4 +49,6 @@ def seo(request):
     return {
         "canonical_url": absolute_url(request.path, request),
         "site_name": getattr(settings, "SITE_NAME", "Activities"),
+        "google_site_verification": getattr(settings, "GOOGLE_SITE_VERIFICATION", ""),
+        "bing_site_verification": getattr(settings, "BING_SITE_VERIFICATION", ""),
     }
