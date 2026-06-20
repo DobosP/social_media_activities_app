@@ -7,7 +7,13 @@
 {% block og_description %}{% blocktrans with name=place.display_name %}{{ name }} — a place to meet up for in-person group activities.{% endblocktrans %}{% endblock %}
 {% block structured_data %}{% if structured_data %}<script type="application/ld+json">{{ structured_data }}</script>{% endif %}{% endblock %}
 {% block content %}
-<p class="muted"><a href="{% url 'places_map' %}">&larr; {% trans "Places" %}</a></p>
+<nav class="breadcrumbs" aria-label="{% trans 'Breadcrumb' %}">
+  <ol>
+    <li><a href="{% url 'home' %}">{% trans "Home" %}</a></li>
+    <li><a href="{% url 'places_list' %}">{% trans "Places" %}</a></li>
+    <li><span aria-current="page">{{ place.display_name|default:_("Place") }}</span></li>
+  </ol>
+</nav>
 {# F20: render the crowd-corrected name/address (falls back to raw OSM); never written to Place. #}
 <h1>{{ place.display_name|default:_("Unnamed place") }}</h1>
 {% if pending_proposal %}

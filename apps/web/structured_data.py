@@ -15,7 +15,7 @@ import json
 
 from django.utils.safestring import mark_safe
 
-from .seo import absolute_url
+from .seo import absolute_url, event_path, place_path
 
 # Valid JSON but illegal inside a JS string literal — must be escaped in <script> context.
 _JSON_LD_ESCAPES = {
@@ -61,7 +61,7 @@ def place_node(place, request=None) -> dict:
     node = {
         "@type": "Place",
         "name": place.display_name,
-        "url": absolute_url(f"/places/{place.pk}/", request),
+        "url": absolute_url(place_path(place), request),
     }
     address = _postal_address(place)
     if address:
@@ -90,7 +90,7 @@ def event_ld(event, request=None) -> dict:
         "@type": "Event",
         "name": event.title,
         "startDate": event.starts_at.isoformat(),
-        "url": absolute_url(f"/events/{event.pk}/", request),
+        "url": absolute_url(event_path(event), request),
         "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
         "eventStatus": "https://schema.org/EventScheduled",
     }
@@ -103,6 +103,25 @@ def event_ld(event, request=None) -> dict:
     if event.url:
         node["sameAs"] = event.url
     return node
+
+
+def breadcrumb_ld(crumbs, request=None) -> dict:
+    """schema.org BreadcrumbList from an ordered list of ``{"name", "url"}`` dicts.
+
+    Earns the breadcrumb trail in search results and clarifies site structure for crawlers.
+    A crumb without a ``url`` (the current page) omits ``item``.
+    """
+    items = []
+    for i, crumb in enumerate(crumbs, start=1):
+        item = {"@type": "ListItem", "position": i, "name": crumb["name"]}
+        if crumb.get("url"):
+            item["item"] = absolute_url(crumb["url"], request)
+        items.append(item)
+    return {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": items,
+    }
 
 
 def site_ld(request=None) -> dict:

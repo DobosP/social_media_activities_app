@@ -45,6 +45,7 @@ class StaticViewSitemap(_BaseSitemap):
             "home",
             "places_list",
             "events_list",
+            "things_to_do_index",
             "partners",
             "transparency",
             "privacy",
@@ -65,7 +66,10 @@ class PlaceSitemap(_BaseSitemap):
         return public_places().order_by("pk")
 
     def location(self, place):
-        return reverse("place_detail", args=[place.pk])
+        # Keyword-rich canonical path (place_detail 301s the bare /places/<pk>/ form here).
+        from .seo import place_path
+
+        return place_path(place)
 
     def lastmod(self, place):
         return place.last_seen_at
@@ -78,17 +82,36 @@ class EventSitemap(_BaseSitemap):
     def items(self):
         from apps.events.services import upcoming_events
 
-        return upcoming_events().order_by("starts_at")
+        return upcoming_events().select_related("place").order_by("starts_at")
 
     def location(self, event):
-        return reverse("event_detail", args=[event.pk])
+        from .seo import event_path
+
+        return event_path(event)
 
     def lastmod(self, event):
         return event.updated_at
+
+
+class LandingSitemap(_BaseSitemap):
+    """Public city×activity landing pages that currently have real supply (no thin pages)."""
+
+    changefreq = "daily"
+    priority = 0.6
+
+    def items(self):
+        from .landing import available_landings
+
+        return list(available_landings())
+
+    def location(self, combo):
+        area, activity_type = combo
+        return reverse("things_to_do", args=[area.slug, activity_type.slug])
 
 
 SITEMAPS = {
     "static": StaticViewSitemap,
     "places": PlaceSitemap,
     "events": EventSitemap,
+    "landing": LandingSitemap,
 }

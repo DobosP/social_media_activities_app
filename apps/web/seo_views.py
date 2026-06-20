@@ -7,7 +7,8 @@ anything cohort-scoped, account-bound, or that needs login. The same policy appl
 bot — naming the AI crawlers makes the welcome explicit without opening private paths to them.
 """
 
-from django.http import HttpResponse
+from django.conf import settings
+from django.http import Http404, HttpResponse
 from django.urls import reverse
 
 from .seo import absolute_url, site_base_url
@@ -92,10 +93,23 @@ def robots_txt(request):
     return HttpResponse("\n".join(lines) + "\n", content_type="text/plain; charset=utf-8")
 
 
+def indexnow_key_file(request):
+    """Serve the IndexNow key verbatim at /indexnow.txt for the keyLocation handshake.
+
+    404 when no key is configured, so the path doesn't masquerade as a valid (empty) key.
+    """
+    key = getattr(settings, "INDEXNOW_KEY", "")
+    if not key:
+        raise Http404("IndexNow is not configured.")
+    return HttpResponse(key, content_type="text/plain; charset=utf-8")
+
+
 def llms_txt(request):
     """Emerging /llms.txt convention: a markdown brief pointing LLMs at the public surfaces."""
     places = absolute_url(reverse("places_list"), request)
     events = absolute_url(reverse("events_list"), request)
+    things_to_do = absolute_url(reverse("things_to_do_index"), request)
+    feed = absolute_url(reverse("events_feed"), request)
     partners = absolute_url(reverse("partners"), request)
     transparency = absolute_url(reverse("transparency"), request)
     sitemap = absolute_url("/sitemap.xml", request)
@@ -115,6 +129,8 @@ def llms_txt(request):
 
 - [Places (venues)]({places})
 - [Events (what's happening)]({events})
+- [Things to do by city & activity]({things_to_do})
+- [Events feed (RSS)]({feed})
 - [Civic partners]({partners})
 - [Donation transparency]({transparency})
 - [Sitemap]({sitemap})

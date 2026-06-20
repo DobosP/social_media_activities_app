@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Things to do" %}{% endblock %}
+{% block meta_description %}{% trans "Find things to do in person — venues and upcoming events by city and activity, from sport to reading. A nonprofit, text-first way to meet up." %}{% endblock %}
+{% block content %}
+<h1>{% trans "Things to do" %}</h1>
+<p class="muted">{% trans "Browse public venues and upcoming events by city and activity." %}</p>
+{% for area, activities in grouped %}
+  <section>
+    <h2><a href="{% url 'things_to_do_city' area.slug %}">{{ area.name }}</a></h2>
+    <ul class="link-list">
+      {% for t in activities %}
+        <li><a href="{% url 'things_to_do' area.slug t.slug %}">{{ t.name }} {% trans "in" %} {{ area.name }}</a></li>
+      {% endfor %}
+    </ul>
+  </section>
+{% empty %}
+  <p class="muted">{% trans "Nothing here yet — check back soon." %}</p>
+{% endfor %}
+{% endblock %}

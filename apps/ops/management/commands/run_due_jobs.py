@@ -49,6 +49,7 @@ DUE_JOBS = (
     ("match_saved_searches", {}),
     ("sync_event_feeds", {}),
     ("expire_api_tokens", {}),
+    ("indexnow_batch_submit", {}),  # ping Bing/Yandex with recently-changed public URLs (opt-in)
 )
 
 

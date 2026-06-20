@@ -935,8 +935,9 @@ def places_list(request):
     )
 
 
-def place_detail(request, pk):
+def place_detail(request, pk, slug=None):
     from apps.places.services import public_places
+    from apps.web.seo import absolute_url, place_path
 
     place = get_object_or_404(
         Place.objects.prefetch_related("place_activities__activity", "corrections"), pk=pk
@@ -1001,16 +1002,36 @@ def place_detail(request, pk):
     # schema.org JSON-LD for crawlers/answer engines — only on a publicly-visible venue (a
     # pending F25 place is viewable solely by its proposer/staff and must not be advertised).
     structured_data = None
+    breadcrumb_data = None
+    # SEO: the bare /places/<pk>/ and any decorative slug all render 200; the canonical <link>
+    # (+ og:url, sitemap, JSON-LD, internal links) point at the keyword-rich slugged path, so
+    # search engines consolidate to one URL with no redirect. Pending places keep the default
+    # (their name must not leak into a URL).
+    canonical_override = absolute_url(place_path(place) if is_public else request.path, request)
     if is_public:
-        from apps.web.structured_data import ld_json, place_ld
+        from django.utils.translation import gettext
+
+        from apps.web.structured_data import breadcrumb_ld, ld_json, place_ld
 
         structured_data = ld_json(place_ld(place, request))
+        breadcrumb_data = ld_json(
+            breadcrumb_ld(
+                [
+                    {"name": gettext("Home"), "url": "/"},
+                    {"name": gettext("Places"), "url": reverse("places_list")},
+                    {"name": place.display_name, "url": place_path(place)},
+                ],
+                request,
+            )
+        )
     return render(
         request,
         "web/place_detail.html",
         {
             "place": place,
             "structured_data": structured_data,
+            "breadcrumb_data": breadcrumb_data,
+            "canonical_url": canonical_override,
             "place_brief": place_brief,
             "meetups": meetups,
             "events": events,
@@ -2731,7 +2752,85 @@ def events_list(request):
     )
 
 
-def event_detail(request, pk):
+# --- Public city×activity "things to do" landing pages (SEO) --------------------------------
+# Login-free, open-data only: every query routes through public_places()/upcoming_events(), so a
+# cohort activity, a minor, or a pending venue can never appear. Empty combos 404 (no thin pages).
+
+
+def things_to_do_index(request):
+    from apps.web.landing import available_landings
+
+    combos = available_landings()
+    cities = {}
+    for area, activity_type in combos:
+        cities.setdefault(area, []).append(activity_type)
+    grouped = sorted(cities.items(), key=lambda kv: kv[0].name)
+    return render(
+        request,
+        "web/landing_index.html",
+        {"grouped": grouped, **_nav_context(request.user)},
+    )
+
+
+def things_to_do_city(request, area_slug):
+    from apps.communities.models import Area
+    from apps.web.landing import available_landings
+
+    area = get_object_or_404(Area, slug=area_slug, is_active=True)
+    activities = [t for a, t in available_landings() if a.pk == area.pk]
+    if not activities:
+        raise Http404("Nothing here yet.")
+    return render(
+        request,
+        "web/landing_city.html",
+        {"area": area, "activities": activities, **_nav_context(request.user)},
+    )
+
+
+def things_to_do(request, area_slug, activity_slug):
+    from django.utils.translation import gettext
+
+    from apps.communities.models import Area
+    from apps.taxonomy.models import ActivityType
+    from apps.web.landing import landing_supply
+    from apps.web.structured_data import breadcrumb_ld, ld_json
+
+    area = get_object_or_404(Area, slug=area_slug, is_active=True)
+    activity_type = get_object_or_404(ActivityType, slug=activity_slug, is_active=True)
+    places, events = landing_supply(area, activity_type)
+    places = list(places)
+    events = list(events[:50])
+    if not (places or events):
+        raise Http404("Nothing here yet.")
+    breadcrumb_data = ld_json(
+        breadcrumb_ld(
+            [
+                {"name": gettext("Home"), "url": "/"},
+                {"name": gettext("Things to do"), "url": reverse("things_to_do_index")},
+                {"name": area.name, "url": reverse("things_to_do_city", args=[area.slug])},
+                {
+                    "name": activity_type.name,
+                    "url": reverse("things_to_do", args=[area.slug, activity_type.slug]),
+                },
+            ],
+            request,
+        )
+    )
+    return render(
+        request,
+        "web/landing_detail.html",
+        {
+            "area": area,
+            "activity_type": activity_type,
+            "places": places,
+            "events": events,
+            "breadcrumb_data": breadcrumb_data,
+            **_nav_context(request.user),
+        },
+    )
+
+
+def event_detail(request, pk, slug=None):
     # Same F25 gate as the list: an event at a still-unpublished user-proposed place
     # must not disclose that place (or its name) on the detail page either. Mirror
     # place_detail's carve-out (review W1-13): the place's PROPOSER and staff may still
@@ -2765,20 +2864,41 @@ def event_detail(request, pk):
     # F21: read-time accuracy flag from crowd reports + the member report affordance. The report
     # form shows only on a PUBLIC event (mirrors the event_report gate — no form that would 404).
     from apps.events.services import event_reliability
+    from apps.web.seo import absolute_url, event_path
 
+    # SEO: canonical points at the keyword-rich slugged path (bare/decorative-slug URLs all 200);
+    # a pending event keeps the request path so a hidden place's name can't leak via the slug.
+    canonical_override = absolute_url(
+        event_path(event) if is_public_event else request.path, request
+    )
     # schema.org Event JSON-LD — only on a public event (a pending-place event is proposer/
     # staff-only and must not be advertised to crawlers).
     structured_data = None
+    breadcrumb_data = None
     if is_public_event:
-        from apps.web.structured_data import event_ld, ld_json
+        from django.utils.translation import gettext
+
+        from apps.web.structured_data import breadcrumb_ld, event_ld, ld_json
 
         structured_data = ld_json(event_ld(event, request))
+        breadcrumb_data = ld_json(
+            breadcrumb_ld(
+                [
+                    {"name": gettext("Home"), "url": "/"},
+                    {"name": gettext("Events"), "url": reverse("events_list")},
+                    {"name": event.title, "url": event_path(event)},
+                ],
+                request,
+            )
+        )
     return render(
         request,
         "web/event_detail.html",
         {
             "event": event,
             "structured_data": structured_data,
+            "breadcrumb_data": breadcrumb_data,
+            "canonical_url": canonical_override,
             "event_reliability": event_reliability(event),
             "can_report_event": (
                 is_public_event and request.user.is_authenticated and can_participate(request.user)

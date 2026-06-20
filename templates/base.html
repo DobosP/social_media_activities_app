@@ -18,6 +18,7 @@
   <meta property="og:url" content="{{ canonical_url }}">
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
   {% block structured_data %}{% endblock %}
+  {% if breadcrumb_data %}<script type="application/ld+json">{{ breadcrumb_data }}</script>{% endif %}
   {% block head %}{% endblock %}
 </head>
 <body>

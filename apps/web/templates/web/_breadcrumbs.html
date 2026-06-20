@@ -1,0 +1,10 @@
+{% comment %}Visible breadcrumb trail. Pass `crumbs` = list of {name, url} (last item = current,
+url optional). Mirrors the BreadcrumbList JSON-LD emitted in base.html.{% endcomment %}
+{% load i18n %}
+<nav class="breadcrumbs" aria-label="{% trans 'Breadcrumb' %}">
+  <ol>
+    {% for c in crumbs %}
+      <li>{% if c.url and not forloop.last %}<a href="{{ c.url }}">{{ c.name }}</a>{% else %}<span aria-current="page">{{ c.name }}</span>{% endif %}</li>
+    {% endfor %}
+  </ol>
+</nav>

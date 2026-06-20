@@ -25,6 +25,12 @@ SITE_BASE_URL = env("SITE_BASE_URL", default="").rstrip("/")
 # Display name used in <title>/OpenGraph; kept in settings so it is not hard-coded per page.
 SITE_NAME = env("SITE_NAME", default="Activities")
 
+# IndexNow (Bing/Yandex instant indexing) — fully opt-in. Disabled by default so dev/CI make no
+# outbound calls; set both to push recently-changed PUBLIC URLs from the run_due_jobs tick. The key
+# is also served verbatim at /indexnow.txt for the keyLocation handshake.
+INDEXNOW_ENABLED = env.bool("INDEXNOW_ENABLED", default=False)
+INDEXNOW_KEY = env("INDEXNOW_KEY", default="")
+
 INSTALLED_APPS = [
     # daphne must precede staticfiles so its ASGI runserver takes over (D5 chat).
     "daphne",

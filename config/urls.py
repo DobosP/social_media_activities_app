@@ -5,7 +5,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from apps.accounts.views import ObtainAPIToken
 from apps.ops.views import HealthView, ReadyView, metrics_view
-from apps.web.seo_views import llms_txt, robots_txt
+from apps.web.seo_views import indexnow_key_file, llms_txt, robots_txt
 from apps.web.sitemaps import SITEMAPS
 
 # The API surface, mounted ONCE here and exposed under two prefixes below:
@@ -46,6 +46,7 @@ urlpatterns = [
     # sitemap of ONLY public open-data pages (venues/events/info — never cohort/activity URLs).
     path("robots.txt", robots_txt, name="robots_txt"),
     path("llms.txt", llms_txt, name="llms_txt"),
+    path("indexnow.txt", indexnow_key_file, name="indexnow_key_file"),
     path("sitemap.xml", sitemap, {"sitemaps": SITEMAPS}, name="sitemap"),
     path("admin/", admin.site.urls),
     # Versioned canonical FIRST so /api/v1/... resolves here; the alias then catches the rest.

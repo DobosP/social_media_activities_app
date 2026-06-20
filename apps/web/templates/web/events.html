@@ -1,9 +1,11 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n seo_tags %}
 {% block title %}{% trans "What's happening" %}{% endblock %}
 {% block meta_description %}{% trans "Upcoming events at real places in Cluj-Napoca — sport, outdoors, games, reading and culture you can join in person." %}{% endblock %}
+{% block head %}<link rel="alternate" type="application/rss+xml" title="{% trans 'Upcoming events' %}" href="{% url 'events_feed' %}">{% endblock %}
 {% block content %}
 <h1>{% trans "What's happening" %}</h1>
+<p class="muted"><a href="{% url 'events_feed' %}">{% trans "Subscribe (RSS)" %}</a> &middot; <a href="{% url 'things_to_do_index' %}">{% trans "Browse by city &amp; activity" %}</a></p>
 <p class="muted">{% trans "Upcoming events at places near you. Find one you like, then organise an activity to go together." %}{% if activity %} {% url 'events_list' as clear_url %}{% blocktrans with activity_name=activity %}Filtered by <strong>{{ activity_name }}</strong> &middot;
   <a href="{{ clear_url }}">clear</a>.{% endblocktrans %}{% endif %}</p>
 <form method="get" action="{% url 'events_list' %}" class="search-bar" role="search">
@@ -23,10 +25,10 @@
 <div class="grid">
   {% for e in events %}
     <div class="card">
-      <h3><a href="{% url 'event_detail' e.pk %}">{{ e.title }}</a></h3>
+      <h3><a href="{{ e|event_url }}">{{ e.title }}</a></h3>
       <div>{% if e.activity_type %}<span class="tag">{{ e.activity_type.name }}</span>{% endif %}</div>
       <p class="muted">{{ e.starts_at|date:"D j M, H:i" }}{% if e.place %} &middot;
-        <a href="{% url 'place_detail' e.place.pk %}">{{ e.place.name }}</a>{% endif %}</p>
+        <a href="{{ e.place|place_url }}">{{ e.place.name }}</a>{% endif %}</p>
       {% if e.description %}<p>{{ e.description|truncatewords:22 }}</p>{% endif %}
     </div>
   {% empty %}<p class="muted">{% trans "No upcoming events yet." %}</p>{% endfor %}

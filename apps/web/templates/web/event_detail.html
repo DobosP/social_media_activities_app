@@ -7,7 +7,13 @@
 {% block og_description %}{% if event.description %}{{ event.description|striptags|truncatewords:30 }}{% else %}{{ event.title }}{% endif %}{% endblock %}
 {% block structured_data %}{% if structured_data %}<script type="application/ld+json">{{ structured_data }}</script>{% endif %}{% endblock %}
 {% block content %}
-<p class="muted"><a href="{% url 'events_list' %}">{% trans "&larr; Events" %}</a></p>
+<nav class="breadcrumbs" aria-label="{% trans 'Breadcrumb' %}">
+  <ol>
+    <li><a href="{% url 'home' %}">{% trans "Home" %}</a></li>
+    <li><a href="{% url 'events_list' %}">{% trans "Events" %}</a></li>
+    <li><span aria-current="page">{{ event.title }}</span></li>
+  </ol>
+</nav>
 <h1>{{ event.title }}</h1>
 <div>{% if event.activity_type %}<span class="tag">{{ event.activity_type.name }}</span>{% endif %}</div>
 <p class="muted">{{ event.starts_at|date:"l j F Y, H:i" }}{% if event.ends_at %} &ndash; {{ event.ends_at|date:"H:i" }}{% endif %}
