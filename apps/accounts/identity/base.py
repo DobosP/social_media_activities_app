@@ -21,6 +21,11 @@ class AssuranceResult:
     method: str = ""
     expires_at: datetime | None = None
     raw: dict = field(default_factory=dict)
+    # Transient holder subject from the wallet presentation, used ONLY to bind one person to
+    # one account (see accounts.services.bind_identity). It is deliberately NOT persisted into
+    # AgeAssurance.raw — only its HMAC is stored, in IdentityBinding. None for providers (dev
+    # stub) that establish no holder key.
+    holder_sub: str | None = None
 
     @property
     def parental_consent_required(self) -> bool:

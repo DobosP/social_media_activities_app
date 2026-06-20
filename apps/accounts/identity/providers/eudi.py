@@ -72,6 +72,9 @@ class EUDIWalletProvider(IdentityProvider):
             provider=self.name,
             method=presentation.get("method", "openid4vp"),
             expires_at=self._expiry(claims),
+            # The credential subject (holder pseudonym). Carried transiently so bind_identity()
+            # can record its HMAC for one-person-one-account; never persisted as raw PII.
+            holder_sub=claims.get("sub"),
             raw={
                 AGE_OVER_16: bool(claims.get(AGE_OVER_16)),
                 AGE_OVER_18: bool(claims.get(AGE_OVER_18)),

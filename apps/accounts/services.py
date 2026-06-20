@@ -1,3 +1,5 @@
+import hashlib
+import hmac
 import logging
 import secrets
 from datetime import timedelta
@@ -16,9 +18,16 @@ from .models import (
     GuardianGuardrail,
     GuardianLinkInvite,
     GuardianRelationship,
+    IdentityBinding,
     ParentalConsent,
     User,
 )
+
+
+class IdentityAlreadyBound(Exception):
+    """Raised when a wallet credential is already bound to a different, live account —
+    enforcing one real person = one account."""
+
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +68,65 @@ def apply_assurance(user: User, result) -> AgeAssurance:
         expires_at=result.expires_at,
         raw=result.raw,
     )
+
+
+def _holder_hash(holder_sub: str) -> str:
+    """Keyed HMAC of a wallet holder subject. The key (IDENTITY_BINDING_SECRET) keeps the
+    stored hash unlinkable to the raw subject, which we never store; the hash is stable per
+    wallet, so a duplicate registration collides on IdentityBinding.holder_hash."""
+    secret = settings.IDENTITY_BINDING_SECRET.encode()
+    return hmac.new(secret, holder_sub.encode(), hashlib.sha256).hexdigest()
+
+
+def identity_uniqueness_active(result) -> bool:
+    """Whether a result should drive one-account binding. Only when enforcement is on AND the
+    presentation actually proved possession of the holder key — the dev/sandbox flow proves no
+    key (`holder_proof` != "verified"), so it never binds and never 409s."""
+    if not getattr(settings, "IDENTITY_UNIQUENESS_ENFORCED", False):
+        return False
+    if not getattr(result, "holder_sub", None):
+        return False
+    return result.raw.get("holder_proof") == "verified"
+
+
+@transaction.atomic
+def bind_identity(user: User, result) -> IdentityBinding | None:
+    """Record that this person's wallet holder key owns this account, so the same credential
+    can never assure a second account. No-op (returns None) unless one-account enforcement is
+    active for this result. Raises IdentityAlreadyBound when the credential is live-bound to a
+    different account; transparently recovers a released/orphaned binding for this user."""
+    if not identity_uniqueness_active(result):
+        return None
+    from apps.safety.services import record_audit
+
+    holder_hash = _holder_hash(result.holder_sub)
+    existing = IdentityBinding.objects.select_for_update().filter(holder_hash=holder_hash).first()
+    if existing is not None:
+        if existing.user_id == user.pk:
+            return existing  # same person re-verifying the same wallet
+        if existing.user_id is not None and existing.released_at is None:
+            raise IdentityAlreadyBound("This identity is already linked to another account.")
+        # Released by the prior owner, or orphaned by GDPR erasure — free to re-bind.
+        existing.user = user
+        existing.released_at = None
+        existing.save(update_fields=["user", "released_at"])
+        record_audit("identity.bound", actor=user, target=existing, recovery=True)
+        return existing
+    # No row for this wallet. If the user already holds a (different-wallet) binding, keep it —
+    # never silently attach a second identity to one account.
+    if IdentityBinding.objects.filter(user=user).exists():
+        return None
+    binding = IdentityBinding.objects.create(holder_hash=holder_hash, user=user)
+    record_audit("identity.bound", actor=user, target=binding, recovery=False)
+    return binding
+
+
+def has_unique_identity(user: User) -> bool:
+    """True if this account holds a live one-person identity binding (or enforcement is off,
+    in which case uniqueness is not asserted on this deployment)."""
+    if not getattr(settings, "IDENTITY_UNIQUENESS_ENFORCED", False):
+        return True
+    return IdentityBinding.objects.filter(user=user, released_at__isnull=True).exists()
 
 
 def minor_onboarding_enabled() -> bool:

@@ -207,6 +207,31 @@ class ConsumedAgeNonce(models.Model):
         return f"consumed-nonce({self.nonce})"
 
 
+class IdentityBinding(models.Model):
+    """One real person = one account. A durable ledger of which wallet holder has claimed an
+    account, so the same EU Digital Identity credential can never assure two accounts.
+
+    Data minimisation: we store only an HMAC of the wallet's holder subject
+    (`holder_hash`), keyed by a server secret — never the raw subject, never any identity/DOB
+    claim. The hash is unlinkable to the subject without the key, but is stable per wallet, so
+    a duplicate registration collides on the unique constraint.
+
+    The link to `user` is SET_NULL (not CASCADE) so the binding SURVIVES account erasure: a
+    banned or erased person cannot silently re-register the same wallet. Legitimate recovery
+    (lost account, fresh start) is gated by `released_at` — a released binding is free to
+    re-bind; a live one is not."""
+
+    holder_hash = models.CharField(max_length=64, unique=True)
+    user = models.OneToOneField(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name="identity_binding"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    released_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"identity-binding({self.holder_hash[:12]}…)"
+
+
 class GuardianRelationship(models.Model):
     """An account-level legal-guardianship link: an adult `guardian` is the parent/
     protector of a minor `ward`. Established alongside parental consent; lets the

@@ -25,9 +25,11 @@ from apps.accounts.identity.base import IdentityVerificationError
 from apps.accounts.identity.registry import get_identity_provider
 from apps.accounts.models import AgeBand, Cohort, GuardianRelationship, User
 from apps.accounts.services import (
+    IdentityAlreadyBound,
     accept_guardian_link_invite,
     apply_assurance,
     assurance_provenance,
+    bind_identity,
     can_participate,
     create_guardian_link_invite,
     decline_guardian_link_invite,
@@ -754,12 +756,23 @@ def register(request):
                         user.display_name = data["display_name"]
                         user.save(update_fields=["display_name"])
                         result = get_identity_provider().verify(user, age_band=data["age_band"])
+                        # One real person = one account: refuse a duplicate wallet before the
+                        # account is committed (no-op unless uniqueness enforcement is on and
+                        # the provider proves holder-key possession).
+                        bind_identity(user, result)
                         apply_assurance(user, result)
                 except IdentityVerificationError:
                     messages.error(
                         request,
                         "We couldn't verify your age automatically. Your account wasn't "
                         "created - please try again and complete age verification.",
+                    )
+                    return redirect("register")
+                except IdentityAlreadyBound:
+                    messages.error(
+                        request,
+                        "An account already exists for this verified identity. Each person "
+                        "may hold only one account - please sign in instead.",
                     )
                     return redirect("register")
                 login(request, user)
