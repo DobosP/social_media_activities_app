@@ -17,7 +17,10 @@ jobs:
     runs-on: ubuntu-latest
     services:
       db:
-        image: postgis/postgis:16-3.5
+        # Digest-pinned so a future rebuild of the rolling 16-3.5 tag can't change the server
+        # minor under us (the 16-3.4 tag did exactly that and broke pg_trgm.so). Refresh the
+        # digest deliberately when bumping PostGIS. sha256 = postgis/postgis:16-3.5.
+        image: postgis/postgis:16-3.5@sha256:8b33190b6486ab9905dea999171817c1ac461733a7078dd4c836091c6e6b5d40
         env:
           POSTGRES_DB: app
           POSTGRES_USER: app
@@ -48,14 +51,19 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             binutils gdal-bin libgdal-dev libgeos-dev libproj-dev
       - name: Install pgvector into the Postgres service
-        # The postgis/postgis image ships PostGIS but not pgvector; the
-        # recommendations app's migration runs CREATE EXTENSION vector. Install the
-        # PGDG pgvector package into the running service container so it's available.
+        # The postgis/postgis image ships PostGIS but not pgvector; the recommendations app's
+        # migration runs CREATE EXTENSION vector. Install the PGDG pgvector package into the
+        # running service container. HOLD postgresql-16 first so the install can NEVER upgrade the
+        # server package (and its pg_trgm.so) out from under the already-running server — that
+        # exact mismatch broke every DB test before. The container is matched by image substring so
+        # the digest-pinned reference still resolves it.
         run: |
           set -euo pipefail
-          CID=$(docker ps --filter "ancestor=postgis/postgis:16-3.5" --format '{{.ID}}' | head -1)
+          CID=$(docker ps --format '{{.ID}} {{.Image}}' | awk '/postgis/{print $1; exit}')
           echo "Postgres service container: $CID"
-          docker exec "$CID" bash -lc "apt-get update && apt-get install -y --no-install-recommends postgresql-16-pgvector"
+          docker exec "$CID" bash -lc "apt-get update \
+            && apt-mark hold postgresql-16 \
+            && apt-get install -y --no-install-recommends postgresql-16-pgvector"
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
