@@ -5,7 +5,10 @@ on:
     branches: [main]
   pull_request:
   schedule:
-    - cron: "0 6 * * 1" # weekly dependency audit (Mon 06:00 UTC)
+    # Daily dependency audit: surfaces a newly-published CVE as its own scheduled-run alert within a
+    # day, instead of it first failing an unrelated PR up to a week later. Only the `audit` job runs
+    # on schedule (lint-test/docker-build are guarded off).
+    - cron: "0 6 * * *"
 
 concurrency:
   group: ci-${{ github.ref }}
