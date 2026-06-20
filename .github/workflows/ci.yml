@@ -124,6 +124,12 @@ jobs:
         with:
           python-version: "3.12"
       - name: pip-audit (dependency vulnerabilities)
+        # REPORT-ONLY on pull requests (mirrors the report-only Trivy image scan above): a
+        # freshly-published CVE in a pinned dep should not block unrelated feature work before it's
+        # triaged. It stays ENFORCING on push-to-main and on the daily `schedule` run, so a real
+        # CVE still gates the default branch and raises its own scheduled-run alert. Remediation is
+        # a deliberate pin bump (Dependabot opens the PR) — see docs/SECURITY.md.
+        continue-on-error: ${{ github.event_name == 'pull_request' }}
         run: |
           python -m pip install --upgrade pip pip-audit
           pip-audit -r requirements.txt -r requirements-dev.txt
