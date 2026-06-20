@@ -233,3 +233,29 @@ Built on the social core; see services/tests for exact behaviour. All uphold the
   `activity_post` creates Post + Attachment in **one transaction** (a rejected scan rolls back the post). `can_view_attachment`
   re-checks `can_read_thread` + `post.is_hidden` + block-vs-uploader; only the author/staff can delete. No video — deferred
   pending a real video-CSAM-scanning decision.
+- **One real person = one account (EUDI holder binding)** — `accounts.IdentityBinding` records a **keyed HMAC** of the EUDI
+  wallet holder subject (never the raw subject — data-minimal) so the same credential can't assure two accounts.
+  `bind_identity` (atomic, row-locked) is wired into `EUDIVerifyView` (**409** on a duplicate wallet) and web `register`; the
+  link is `SET_NULL` so it **survives erasure**. Gated by `settings.IDENTITY_UNIQUENESS_ENFORCED` (**default off**) AND a proven
+  holder key (`holder_proof == "verified"`), so the dev/sandbox flow is untouched. `AssuranceResult.holder_sub` is transient —
+  deliberately **never** copied into `AgeAssurance.raw`.
+- **Tiered account sanctions + authority referral** — three tiers on the existing `take_action`/`lift_expired_suspensions`/
+  hash-chained `AuditLog`: pause (`SUSPEND`), **`TIMED_BAN`** (auto-reactivates on expiry, via the shared lift path), and
+  lifetime `BAN` **plus** `accounts.BannedIdentity` (a holder-hash ledger so a lifetime ban **survives GDPR erasure** and blocks
+  wallet re-registration → `IdentityBanned`/**403**). `create_authority_referral` records a referral (subject by **`public_id`**,
+  impersonation-safe) pinned to its own audit entry; `referral_proof_pack` runs `verify_audit_chain` for a lawful request.
+  **Deliberately silent to the subject** (tipping off a grooming/CSAM suspect can defeat an investigation); the accompanying ban
+  still carries its DSA Art.17 notice. F19 self-record surfaces the subject's own sanctions (`is_sanction`).
+- **Anonymous adult-only discovery (opt-out)** — logged-out outsiders can find **ADULT** activities and groups "looking for
+  people", organiser **opt-out, default ON** (`Activity.is_publicly_listed`/`Group.is_publicly_listed`, a structural pin kept
+  out of `ACTIVITY_EDITABLE_FIELDS`). **Three independent walls** make minor exposure impossible: the viewer-less
+  `public_activities()`/`public_groups()` **hard-code `cohort=ADULT`**; `set_public_listing` refuses a non-adult object; and
+  `create_activity`/`create_group` force the flag False for a minor owner. New `AllowAny` `PublicActivitiesView`/
+  `PublicGroupsView` + a web `/discover/` page; card serializers expose **no owner PII**.
+- **Self-only progression (the evolving avatar)** — a felt sense of "evolving" derived live from the one real-world signal
+  (F22 `met_confirmed_at`), **stored nowhere new** (no model/migration). `social.self_confirmed_meetup_count` (self-only;
+  **regresses on leave**) → `progression_level`/`progression_intensity` modulate a purely-visual `intensity` kwarg on
+  `constellation_svg` (**`0.0` is byte-identical** to the base avatar). `recommendations.evolving_avatar_*` is shown only on
+  self-surfaces (`/me` `MeSerializer` + the web "Your journey" card); others see the base avatar unless
+  `settings.PROGRESSION_AVATAR_PUBLIC` (**default off**). No leaderboard, no cross-user comparison, no audit/streak nudges —
+  upholds inv.2.
