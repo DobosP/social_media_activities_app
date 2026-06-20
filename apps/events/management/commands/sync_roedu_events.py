@@ -35,7 +35,9 @@ class Command(BaseCommand):
         parser.add_argument("--api-url", default=None, help="ROEDU_API_URL override")
         parser.add_argument("--api-key", default="social-app-dev")
         parser.add_argument(
-            "--min-confidence", type=float, default=1.0,
+            "--min-confidence",
+            type=float,
+            default=1.0,
             help="hold lower-confidence (NER) events; default 1.0 = JSON-LD/iCal only",
         )
         parser.add_argument("--limit", type=int, default=None)
