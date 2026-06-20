@@ -117,3 +117,9 @@ variable "messaging_retention_days" {
   type        = number
   default     = 365
 }
+
+variable "ops_heartbeat_url" {
+  description = "Dead-man's-switch URL pinged after a fully-successful run_due_jobs (e.g. a healthchecks.io ping). \"\" disables."
+  type        = string
+  default     = ""
+}

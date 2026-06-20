@@ -64,6 +64,9 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        import logging
+
+        logger = logging.getLogger("apps.ops.run_due_jobs")
         jobs = self._jobs(options)
         failures = []
         for name, kwargs in jobs:
@@ -72,6 +75,11 @@ class Command(BaseCommand):
                 call_command(name, **kwargs)
             except Exception as exc:  # keep going: one bad job must not skip the others
                 failures.append(name)
+                # These are GDPR/DSA duties — a silent failure is a compliance miss, so log with a
+                # stack and report to Sentry (no-op when Sentry isn't configured) instead of only
+                # writing to a cron log nobody watches.
+                logger.exception("due job %s failed", name)
+                self._capture(exc, name)
                 self.stderr.write(self.style.ERROR(f"   {name} failed: {exc}"))
 
         ran = len(jobs)
@@ -79,7 +87,35 @@ class Command(BaseCommand):
             raise CommandError(
                 f"{len(failures)} of {ran} due job(s) failed: {', '.join(failures)}."
             )
+        # Only a fully-successful run pings the heartbeat — so a missed OR failed pass never pings
+        # and the external monitor alerts.
+        self._heartbeat()
         self.stdout.write(self.style.SUCCESS(f"All {ran} due job(s) completed."))
+
+    def _capture(self, exc, job_name):
+        """Report a failed job to Sentry, tagged by name. No-op if Sentry isn't configured."""
+        try:
+            import sentry_sdk
+
+            with sentry_sdk.new_scope() as scope:
+                scope.set_tag("due_job", job_name)
+                sentry_sdk.capture_exception(exc)
+        except Exception:  # noqa: BLE001 — reporting must never break the run
+            pass
+
+    def _heartbeat(self):
+        """Dead-man's-switch: GET OPS_HEARTBEAT_URL (e.g. a healthchecks.io ping). Best-effort."""
+        from django.conf import settings
+
+        url = getattr(settings, "OPS_HEARTBEAT_URL", "")
+        if not url:
+            return
+        try:
+            import requests
+
+            requests.get(url, timeout=10)
+        except Exception:  # noqa: BLE001 — a heartbeat failure must not fail the run
+            pass
 
     def _jobs(self, options):
         """Resolve the job list, threading optional per-job arguments."""

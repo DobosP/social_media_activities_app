@@ -29,3 +29,4 @@ eudi_trusted_issuers = "{\"https://issuer.example.eu\":\"-----BEGIN PUBLIC KEY--
 sentry_dsn               = ""
 metrics_token            = "" # set + scrape /metrics with Authorization: Bearer <token>
 messaging_retention_days = 365
+ops_heartbeat_url        = "" # e.g. a healthchecks.io ping URL; alerts if the nightly job misses
