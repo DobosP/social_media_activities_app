@@ -727,11 +727,10 @@ def create_authority_referral(
 ) -> AuthorityReferral:
     """Refer a user to an external authority for behaviour with real-world legal weight.
 
-    Pins the referral to the tip of the tamper-evident AuditLog (audit_anchor_hash) so the
-    chain backing it can be proven later, then records its own audit entry. The subject is
+    Records the referral in the tamper-evident AuditLog and pins it to that entry's hash
+    (audit_anchor_hash), so the chain backing it can be proven later. The subject is
     deliberately NOT notified — tipping off a grooming/CSAM suspect can defeat an
     investigation; any account sanction applied alongside carries its own DSA Art.17 notice."""
-    anchor = AuditLog.objects.order_by("-id").first()
     referral = AuthorityReferral.objects.create(
         subject_ref=user.public_id,
         reason=reason,
@@ -739,16 +738,19 @@ def create_authority_referral(
         reference=reference,
         report=report,
         referred_by=moderator,
-        audit_anchor_hash=anchor.hash if anchor else "",
         notes=notes,
     )
-    record_audit(
+    entry = record_audit(
         "authority.referral",
         actor=moderator,
         target=user,
         reason=reason,
         authority=authority,
     )
+    # Pin to the referral's own audit entry — always present and unambiguous, vs a tip snapshot
+    # that is empty on a fresh chain.
+    referral.audit_anchor_hash = entry.hash
+    referral.save(update_fields=["audit_anchor_hash"])
     return referral
 
 
