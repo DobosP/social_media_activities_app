@@ -16,6 +16,15 @@ SECRET_KEY = env("DJANGO_SECRET_KEY", default="insecure-dev-key-change-me")
 DEBUG = env.bool("DJANGO_DEBUG", default=False)
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=[])
 
+# Absolute base URL (scheme + host, no trailing slash) used to build canonical links,
+# the sitemap, and JSON-LD structured data for AI-agent / search discoverability. Leave
+# empty in dev (URLs are then derived from the request); prod derives it from
+# RENDER_EXTERNAL_HOSTNAME when unset (see prod.py). Set it to a custom domain
+# (e.g. "https://meet.example.eu") to flip every absolute URL with one env var.
+SITE_BASE_URL = env("SITE_BASE_URL", default="").rstrip("/")
+# Display name used in <title>/OpenGraph; kept in settings so it is not hard-coded per page.
+SITE_NAME = env("SITE_NAME", default="Activities")
+
 INSTALLED_APPS = [
     # daphne must precede staticfiles so its ASGI runserver takes over (D5 chat).
     "daphne",
@@ -25,6 +34,10 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # Ships no migrations and does NOT require django.contrib.sites — we supply the host
+    # from SITE_BASE_URL via a shim base class (apps/web/sitemaps.py), so adding this keeps
+    # `makemigrations --check` green while exposing a public sitemap for crawlers.
+    "django.contrib.sitemaps",
     # Required for OpClass to be registered as an index-expression wrapper (the W1
     # trigram expression indexes) — without the app's ready() hook, Django parenthesizes
     # the opclass into the expression and emits invalid SQL.
@@ -88,6 +101,8 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "apps.web.context_processors.display_preferences",
+                # Canonical URL + site name + OpenGraph defaults for every page <head>.
+                "apps.web.context_processors.seo",
             ],
         },
     },

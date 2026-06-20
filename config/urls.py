@@ -1,9 +1,12 @@
 from django.contrib import admin
+from django.contrib.sitemaps.views import sitemap
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from apps.accounts.views import ObtainAPIToken
 from apps.ops.views import HealthView, ReadyView
+from apps.web.seo_views import llms_txt, robots_txt
+from apps.web.sitemaps import SITEMAPS
 
 # The API surface, mounted ONCE here and exposed under two prefixes below:
 #   * /api/v1/  — the CANONICAL, versioned base. New clients build against this; a future breaking
@@ -38,6 +41,11 @@ api_patterns = [
 urlpatterns = [
     path("healthz", HealthView.as_view(), name="healthz"),  # liveness (process up)
     path("readyz", ReadyView.as_view(), name="readyz"),  # readiness (DB + configured shared deps)
+    # Discoverability for search engines + AI agents: crawl guidance, an LLM brief, and a
+    # sitemap of ONLY public open-data pages (venues/events/info — never cohort/activity URLs).
+    path("robots.txt", robots_txt, name="robots_txt"),
+    path("llms.txt", llms_txt, name="llms_txt"),
+    path("sitemap.xml", sitemap, {"sitemaps": SITEMAPS}, name="sitemap"),
     path("admin/", admin.site.urls),
     # Versioned canonical FIRST so /api/v1/... resolves here; the alias then catches the rest.
     path("api/v1/", include(api_patterns)),

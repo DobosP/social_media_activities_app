@@ -33,3 +33,20 @@ def display_preferences(request):
         "display_motion": motion,
         "display_scale": _SCALE[text],
     }
+
+
+def seo(request):
+    """Canonical URL + site name for the <head> (canonical link + OpenGraph defaults).
+
+    The canonical URL drops the query string so faceted/filtered variants of a public page
+    all point at one indexable URL. Built via the SITE_BASE_URL-aware helper so a custom
+    domain flips every canonical link with one env var.
+    """
+    from django.conf import settings
+
+    from .seo import absolute_url
+
+    return {
+        "canonical_url": absolute_url(request.path, request),
+        "site_name": getattr(settings, "SITE_NAME", "Activities"),
+    }

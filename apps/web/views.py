@@ -781,8 +781,11 @@ def register(request):
 
 
 def home(request):
+    from apps.web.structured_data import ld_json, site_ld
+
+    site_data = ld_json(site_ld(request))
     if not request.user.is_authenticated:
-        return render(request, "web/landing.html")
+        return render(request, "web/landing.html", {"structured_data": site_data})
     user = request.user
     from apps.discovery.proximity import parse_point
 
@@ -848,6 +851,7 @@ def home(request):
         request,
         "web/home.html",
         {
+            "structured_data": site_data,
             "recommended": recommended,
             "starter_types": starter_types,
             "beginners": beginners,
@@ -974,11 +978,19 @@ def place_detail(request, pk):
     from apps.places.services import place_plain_brief
 
     place_brief = place_plain_brief(place, venue_fact_rows=venue_fact_rows)
+    # schema.org JSON-LD for crawlers/answer engines — only on a publicly-visible venue (a
+    # pending F25 place is viewable solely by its proposer/staff and must not be advertised).
+    structured_data = None
+    if is_public:
+        from apps.web.structured_data import ld_json, place_ld
+
+        structured_data = ld_json(place_ld(place, request))
     return render(
         request,
         "web/place_detail.html",
         {
             "place": place,
+            "structured_data": structured_data,
             "place_brief": place_brief,
             "meetups": meetups,
             "events": events,
@@ -2724,11 +2736,19 @@ def event_detail(request, pk):
     # form shows only on a PUBLIC event (mirrors the event_report gate — no form that would 404).
     from apps.events.services import event_reliability
 
+    # schema.org Event JSON-LD — only on a public event (a pending-place event is proposer/
+    # staff-only and must not be advertised to crawlers).
+    structured_data = None
+    if is_public_event:
+        from apps.web.structured_data import event_ld, ld_json
+
+        structured_data = ld_json(event_ld(event, request))
     return render(
         request,
         "web/event_detail.html",
         {
             "event": event,
+            "structured_data": structured_data,
             "event_reliability": event_reliability(event),
             "can_report_event": (
                 is_public_event and request.user.is_authenticated and can_participate(request.user)

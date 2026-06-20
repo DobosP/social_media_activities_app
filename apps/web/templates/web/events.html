@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 {% block title %}{% trans "What's happening" %}{% endblock %}
+{% block meta_description %}{% trans "Upcoming events at real places in Cluj-Napoca — sport, outdoors, games, reading and culture you can join in person." %}{% endblock %}
 {% block content %}
 <h1>{% trans "What's happening" %}</h1>
 <p class="muted">{% trans "Upcoming events at places near you. Find one you like, then organise an activity to go together." %}{% if activity %} {% url 'events_list' as clear_url %}{% blocktrans with activity_name=activity %}Filtered by <strong>{{ activity_name }}</strong> &middot;
