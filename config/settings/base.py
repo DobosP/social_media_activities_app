@@ -31,6 +31,17 @@ SITE_NAME = env("SITE_NAME", default="Activities")
 INDEXNOW_ENABLED = env.bool("INDEXNOW_ENABLED", default=False)
 INDEXNOW_KEY = env("INDEXNOW_KEY", default="")
 
+# Search-engine ownership verification tokens (rendered as <meta> only when set) — let an
+# operator verify Google Search Console / Bing Webmaster Tools without DNS or a file upload.
+GOOGLE_SITE_VERIFICATION = env("GOOGLE_SITE_VERIFICATION", default="")
+BING_SITE_VERIFICATION = env("BING_SITE_VERIFICATION", default="")
+
+# Entity enrichment for the home-page Organization JSON-LD (helps Google Knowledge Graph + LLMs
+# resolve the org as one entity). Empty by default → nothing extra emitted.
+SITE_SAMEAS = env.list("SITE_SAMEAS", default=[])  # official URLs (repo, socials)
+SITE_CONTACT_EMAIL = env("SITE_CONTACT_EMAIL", default="")
+SITE_AREA_SERVED = env("SITE_AREA_SERVED", default="Cluj-Napoca")
+
 INSTALLED_APPS = [
     # daphne must precede staticfiles so its ASGI runserver takes over (D5 chat).
     "daphne",

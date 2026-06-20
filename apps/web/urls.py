@@ -1,9 +1,14 @@
 from django.contrib.auth import views as auth_views
 from django.urls import path
+from django.views.decorators.cache import cache_control
 
 from apps.events.feeds import UpcomingEventsAtomFeed, UpcomingEventsFeed
 
 from . import views
+from .seo import PUBLIC_CACHE_SECONDS
+
+# Anonymous open-data syndication feeds — publicly cacheable for crawl-budget/CDN friendliness.
+_feed_cache = cache_control(public=True, max_age=PUBLIC_CACHE_SECONDS)
 
 urlpatterns = [
     path("", views.home, name="home"),
@@ -65,8 +70,8 @@ urlpatterns = [
     # "hours-wrong" can't shadow them). The bare /places/<pk>/ 301s here.
     path("places/<int:pk>/<slug:slug>/", views.place_detail, name="place_detail_slug"),
     # Events syndication feed (literal "feed" can't match <int:pk>, so order is safe).
-    path("events/feed/", UpcomingEventsFeed(), name="events_feed"),
-    path("events/feed/atom/", UpcomingEventsAtomFeed(), name="events_feed_atom"),
+    path("events/feed/", _feed_cache(UpcomingEventsFeed()), name="events_feed"),
+    path("events/feed/atom/", _feed_cache(UpcomingEventsAtomFeed()), name="events_feed_atom"),
     path("events/", views.events_list, name="events_list"),
     path("events/<int:pk>/", views.event_detail, name="event_detail"),
     path("events/<int:pk>/report/", views.event_report, name="event_report"),

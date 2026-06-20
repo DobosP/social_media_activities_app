@@ -5,6 +5,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% if google_site_verification %}<meta name="google-site-verification" content="{{ google_site_verification }}">{% endif %}
+  {% if bing_site_verification %}<meta name="msvalidate.01" content="{{ bing_site_verification }}">{% endif %}
   <title>{% block title %}{% trans "Social Activities" %}{% endblock %}</title>
   {% comment %}SEO/discoverability: a per-page description, a query-stripped canonical URL, and
      text-only OpenGraph (no og:image — the product is text-first). Pages override meta_description

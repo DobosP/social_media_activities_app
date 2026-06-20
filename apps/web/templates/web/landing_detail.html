@@ -2,6 +2,7 @@
 {% load i18n seo_tags %}
 {% block title %}{% blocktrans with activity=activity_type.name city=area.name %}{{ activity }} in {{ city }}{% endblocktrans %}{% endblock %}
 {% block meta_description %}{% blocktrans with activity=activity_type.name city=area.name %}Where to do {{ activity }} in {{ city }} — public venues and upcoming events you can join in person. Nonprofit, no ads, no tracking.{% endblocktrans %}{% endblock %}
+{% block structured_data %}{% if structured_data %}<script type="application/ld+json">{{ structured_data }}</script>{% endif %}{% endblock %}
 {% block content %}
 <nav class="breadcrumbs" aria-label="{% trans 'Breadcrumb' %}">
   <ol>

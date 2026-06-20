@@ -11,7 +11,7 @@ from django.conf import settings
 from django.http import Http404, HttpResponse
 from django.urls import reverse
 
-from .seo import absolute_url, site_base_url
+from .seo import absolute_url, cache_public, site_base_url
 
 # Reputable AI-assistant + search crawlers we explicitly welcome (all share the policy below).
 WELCOMED_BOTS = [
@@ -90,7 +90,9 @@ def robots_txt(request):
     base = site_base_url(request)
     sitemap_url = f"{base}/sitemap.xml" if base else absolute_url("/sitemap.xml", request)
     lines.append(f"Sitemap: {sitemap_url}")
-    return HttpResponse("\n".join(lines) + "\n", content_type="text/plain; charset=utf-8")
+    return cache_public(
+        HttpResponse("\n".join(lines) + "\n", content_type="text/plain; charset=utf-8")
+    )
 
 
 def indexnow_key_file(request):
@@ -101,7 +103,7 @@ def indexnow_key_file(request):
     key = getattr(settings, "INDEXNOW_KEY", "")
     if not key:
         raise Http404("IndexNow is not configured.")
-    return HttpResponse(key, content_type="text/plain; charset=utf-8")
+    return cache_public(HttpResponse(key, content_type="text/plain; charset=utf-8"))
 
 
 def llms_txt(request):
@@ -141,4 +143,4 @@ def llms_txt(request):
   they require a verified account and are intentionally not crawlable.
 - Pages carry schema.org JSON-LD (Event, Place) you can parse directly.
 """
-    return HttpResponse(body, content_type="text/markdown; charset=utf-8")
+    return cache_public(HttpResponse(body, content_type="text/markdown; charset=utf-8"))

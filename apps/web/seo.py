@@ -45,6 +45,16 @@ def _slug(text: str, fallback: str) -> str:
     return slugify(text or "") or fallback
 
 
+PUBLIC_CACHE_SECONDS = 3600  # 1h — anonymous, open-data SEO endpoints; crawl-budget/CDN friendly
+
+
+def cache_public(response, max_age: int = PUBLIC_CACHE_SECONDS):
+    """Mark an anonymous open-data response publicly cacheable. Only use on pages with no
+    per-user/cookie content (robots/sitemap/feed/landing) — never on authenticated pages."""
+    response["Cache-Control"] = f"public, max-age={max_age}"
+    return response
+
+
 def place_path(place) -> str:
     """Canonical, keyword-rich path for a venue: /places/<pk>/<slug>/.
 
