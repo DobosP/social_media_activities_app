@@ -81,6 +81,9 @@ jobs:
           REDIS_URL: redis://localhost:6379/0
           IDENTITY_PROVIDER: apps.accounts.identity.providers.eudi.EUDIWalletProvider
           EUDI_SANDBOX: "False"
+          # A non-empty (dummy) trust anchor so the prod EUDI fail-closed guard passes and the
+          # deploy checks can run; check --deploy never verifies a credential, so no real key.
+          EUDI_TRUSTED_ISSUERS: '{"https://issuer.example/ci": "ci-deploy-check-dummy-not-a-real-key"}'
         run: |
           pip install channels-redis
           python manage.py check --deploy
