@@ -217,6 +217,14 @@ urlpatterns = [
     path("my-donations/", views.my_donations, name="my_donations"),
     path("campaigns/", views.campaigns, name="campaigns"),
     path("partners/", views.partners_list, name="partners"),
+    # Public (logged-out) discovery of adult activities & groups
+    path("discover/", views.discover, name="discover"),
+    path(
+        "activities/<int:pk>/listing/",
+        views.activity_listing_toggle,
+        name="activity_listing_toggle",
+    ),
+    path("groups/<int:pk>/listing/", views.group_listing_toggle, name="group_listing_toggle"),
     # Safety: reporting & blocking
     path("report/", views.report, name="report"),
     path("users/<int:pk>/block/", views.block_user_view, name="block_user"),

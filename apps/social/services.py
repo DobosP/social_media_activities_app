@@ -124,6 +124,62 @@ def can_see_activity(user, activity) -> bool:
     return _has_cohort(user) and user.cohort == activity.cohort
 
 
+def public_activities():
+    """Activities discoverable by ANYONE, including logged-out outsiders (F-public). A separate,
+    viewer-less read path — NEVER a widening of visible_activities (which is cohort-walled and
+    returns none() for anonymous users). The cohort is HARD-CODED to ADULT here, so a CHILD/TEEN
+    meetup can never reach the open internet regardless of its is_publicly_listed flag (the
+    structural minor-exposure wall). Also excludes opted-out, hidden, non-open, past, and
+    suspended/banned-owner (is_active=False) activities."""
+    return (
+        Activity.objects.filter(
+            cohort=Cohort.ADULT,
+            is_publicly_listed=True,
+            status=Activity.Status.OPEN,
+            is_hidden=False,
+            starts_at__gte=timezone.now(),
+            owner__is_active=True,
+        )
+        .select_related("activity_type", "place")
+        .order_by("starts_at")
+    )
+
+
+def public_groups():
+    """Standing groups discoverable by ANYONE, including logged-out outsiders. Like
+    public_activities, the cohort is HARD-CODED to ADULT (minor groups can never be exposed),
+    and opted-out/hidden/archived/suspended-owner groups are excluded."""
+    return (
+        Group.objects.filter(
+            cohort=Cohort.ADULT,
+            is_publicly_listed=True,
+            status=Group.Status.ACTIVE,
+            is_hidden=False,
+            owner__is_active=True,
+        )
+        .select_related("area", "category", "activity_type")
+        .order_by("title")
+    )
+
+
+@transaction.atomic
+def set_public_listing(owner, obj, listed: bool):
+    """Organiser opt-out toggle for anonymous discovery, over an Activity or a Group (both expose
+    owner_id + cohort). ADULT-only: refuses to set the flag on a non-adult object, so the toggle
+    can never make a minor's meetup/group publicly listed. Audited."""
+    if obj.owner_id != owner.id:
+        raise NotAMember(_("Only the organiser may change this."))
+    if obj.cohort != Cohort.ADULT:
+        raise InvalidState(_("Only adult activities and groups can be listed publicly."))
+    obj.is_publicly_listed = bool(listed)
+    obj.save(update_fields=["is_publicly_listed"])
+    from apps.safety.services import record_audit
+
+    event = "group.public_listing" if isinstance(obj, Group) else "activity.public_listing"
+    record_audit(event, actor=owner, target=obj, listed=obj.is_publicly_listed)
+    return obj
+
+
 # Search queries shorter than this return nothing (too noisy, and a 1-char probe is a
 # cheap enumeration surface). Shared by every search entry point (web + DRF).
 SEARCH_MIN_QUERY_LEN = 2
@@ -782,6 +838,9 @@ def create_activity(
         starts_at=starts_at,
         ends_at=ends_at,
         cohort=owner.cohort,
+        # Anonymous discovery is ADULT-only: a minor's meetup is never stored as publicly listed
+        # (defense-in-depth alongside the cohort=ADULT query wall in public_activities).
+        is_publicly_listed=(owner.cohort == Cohort.ADULT),
         join_threshold=DEFAULT_JOIN_THRESHOLD if join_threshold is None else join_threshold,
         capacity=capacity,
         min_to_go=min_to_go,
@@ -3472,6 +3531,9 @@ def create_group(
         cohort=target_cohort,
         title=title,
         description=description,
+        # Anonymous discovery is ADULT-only: a minor group is never stored as publicly listed
+        # (defense-in-depth alongside the cohort=ADULT query wall in public_groups).
+        is_publicly_listed=(target_cohort == Cohort.ADULT),
         is_staff_curated=is_staff_curated,
     )
     GroupMembership.objects.create(

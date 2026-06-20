@@ -80,3 +80,18 @@ class FeedEventSerializer(EventCardSerializer):
 
     def get_reason(self, obj):
         return getattr(obj, "feed_reason", "")
+
+
+class GroupCardSerializer(serializers.Serializer):
+    """A standing group as it appears in the anonymous public discovery feed. Strict allowlist —
+    NO owner/PII, no membership count (inv.2). Only what an outsider needs to decide to join."""
+
+    id = serializers.IntegerField()
+    title = serializers.CharField()
+    cohort = serializers.CharField()
+    city = serializers.CharField(source="area.name", default=None)
+    activity_type = serializers.SlugRelatedField(slug_field="slug", read_only=True)
+    description = serializers.SerializerMethodField()
+
+    def get_description(self, obj):
+        return (obj.description or "")[:280]

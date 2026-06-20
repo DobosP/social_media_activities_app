@@ -3478,6 +3478,59 @@ def unblock_user_view(request, pk):
     return redirect(_safe_next(request, "profile"))
 
 
+@login_required
+@require_POST
+def activity_listing_toggle(request, pk):
+    """Organiser opt-out toggle for anonymous discovery of an ADULT activity (default ON)."""
+    activity = get_object_or_404(Activity, pk=pk)
+    listed = request.POST.get("listed") == "1"
+    try:
+        social.set_public_listing(request.user, activity, listed)
+        messages.success(
+            request,
+            "This activity is now visible to people who aren't logged in."
+            if listed
+            else "This activity is now hidden from logged-out visitors.",
+        )
+    except (social.NotAMember, social.InvalidState) as exc:
+        messages.error(request, _msg(exc))
+    return redirect(_safe_next(request, "home"))
+
+
+@login_required
+@require_POST
+def group_listing_toggle(request, pk):
+    """Organiser opt-out toggle for anonymous discovery of an ADULT group (default ON)."""
+    group = get_object_or_404(Group, pk=pk)
+    listed = request.POST.get("listed") == "1"
+    try:
+        social.set_public_listing(request.user, group, listed)
+        messages.success(
+            request,
+            "This group is now visible to people who aren't logged in."
+            if listed
+            else "This group is now hidden from logged-out visitors.",
+        )
+    except (social.NotAMember, social.InvalidState) as exc:
+        messages.error(request, _msg(exc))
+    return redirect(_safe_next(request, "home"))
+
+
+def discover(request):
+    """Public, logged-out discovery of ADULT activities and groups looking for people. Sources
+    from the cohort=ADULT-walled social.public_activities()/public_groups() so a minor's meetup
+    or group can never appear here. Open to everyone (no login required)."""
+    from apps.discovery.views import MAX_RESULTS
+
+    activities = list(social.public_activities()[:MAX_RESULTS])
+    groups = list(social.public_groups()[:MAX_RESULTS])
+    return render(
+        request,
+        "web/discover.html",
+        {"activities": activities, "groups": groups},
+    )
+
+
 # --- Transparency: privacy & terms (W1-8) -------------------------------------------
 # Static legal pages. Copy is DRAFT placeholder text and must be reviewed/finalised by
 # the DPO/legal before launch; see the templates' leading banner.

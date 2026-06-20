@@ -23,6 +23,20 @@
   <form method="post" action="{% url 'group_archive' group.pk %}" class="inline"
         onsubmit="return confirm('{% trans "Archive this group? Its thread will be frozen." %}');">{% csrf_token %}
     <button class="btn btn-sm" type="submit">{% trans "Archive group" %}</button></form>
+  {% comment %}Public-listing opt-out (adults only): default ON; hidden for non-adult groups,
+     which can never be publicly listed.{% endcomment %}
+  {% if group.cohort == "adult" %}
+    <form method="post" action="{% url 'group_listing_toggle' group.pk %}" class="inline">{% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.path }}">
+      {% if group.is_publicly_listed %}
+        <input type="hidden" name="listed" value="0">
+        <button class="btn btn-sm btn-secondary" type="submit">{% trans "Hide from logged-out visitors" %}</button>
+      {% else %}
+        <input type="hidden" name="listed" value="1">
+        <button class="btn btn-sm" type="submit">{% trans "Show to logged-out visitors" %}</button>
+      {% endif %}
+    </form>
+  {% endif %}
 {% endif %}
 
 {% comment %}Roster panel — rendered ONLY when group_roster returned a list (an eligible ADULT member).
