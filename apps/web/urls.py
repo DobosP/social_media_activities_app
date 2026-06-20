@@ -1,6 +1,8 @@
 from django.contrib.auth import views as auth_views
 from django.urls import path
 
+from apps.events.feeds import UpcomingEventsAtomFeed, UpcomingEventsFeed
+
 from . import views
 
 urlpatterns = [
@@ -59,10 +61,25 @@ urlpatterns = [
         views.place_closure_reset,
         name="place_closure_reset",
     ),
+    # Keyword-rich canonical slug form (AFTER the specific place action routes so a slug like
+    # "hours-wrong" can't shadow them). The bare /places/<pk>/ 301s here.
+    path("places/<int:pk>/<slug:slug>/", views.place_detail, name="place_detail_slug"),
+    # Events syndication feed (literal "feed" can't match <int:pk>, so order is safe).
+    path("events/feed/", UpcomingEventsFeed(), name="events_feed"),
+    path("events/feed/atom/", UpcomingEventsAtomFeed(), name="events_feed_atom"),
     path("events/", views.events_list, name="events_list"),
     path("events/<int:pk>/", views.event_detail, name="event_detail"),
     path("events/<int:pk>/report/", views.event_report, name="event_report"),
     path("events/<int:pk>/report-reset/", views.event_report_reset, name="event_report_reset"),
+    path("events/<int:pk>/<slug:slug>/", views.event_detail, name="event_detail_slug"),
+    # Public city×activity landing pages ("things to do in <city>") — keyword-rich, namespaced.
+    path("things-to-do/", views.things_to_do_index, name="things_to_do_index"),
+    path("things-to-do/<slug:area_slug>/", views.things_to_do_city, name="things_to_do_city"),
+    path(
+        "things-to-do/<slug:area_slug>/<slug:activity_slug>/",
+        views.things_to_do,
+        name="things_to_do",
+    ),
     # Activities
     path("activities/", views.activity_list, name="activity_list"),
     path("activities/new/", views.activity_create, name="activity_create"),

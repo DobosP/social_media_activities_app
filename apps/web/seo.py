@@ -8,6 +8,7 @@ yields https. No people, no PII here: only paths to already-public pages flow th
 """
 
 from django.conf import settings
+from django.utils.text import slugify
 
 
 def site_base_url(request=None) -> str:
@@ -37,3 +38,22 @@ def absolute_url(path: str, request=None) -> str:
     if not path.startswith("/"):
         path = "/" + path
     return base + path
+
+
+def _slug(text: str, fallback: str) -> str:
+    """A keyword slug from human text (RO accents handled by slugify), or a fallback."""
+    return slugify(text or "") or fallback
+
+
+def place_path(place) -> str:
+    """Canonical, keyword-rich path for a venue: /places/<pk>/<slug>/.
+
+    The slug is derived read-time from display_name (never stored — a crowd correction to the
+    name updates the canonical URL on next read). place_detail 301s any other form to this.
+    """
+    return f"/places/{place.pk}/{_slug(place.display_name, 'place')}/"
+
+
+def event_path(event) -> str:
+    """Canonical, keyword-rich path for an event: /events/<pk>/<slug>/."""
+    return f"/events/{event.pk}/{_slug(event.title, 'event')}/"

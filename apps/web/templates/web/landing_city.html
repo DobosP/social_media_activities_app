@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% blocktrans with city=area.name %}Things to do in {{ city }}{% endblocktrans %}{% endblock %}
+{% block meta_description %}{% blocktrans with city=area.name %}Venues and upcoming events in {{ city }} — by activity. Find people and go, in person.{% endblocktrans %}{% endblock %}
+{% block content %}
+<nav class="breadcrumbs" aria-label="{% trans 'Breadcrumb' %}">
+  <ol>
+    <li><a href="{% url 'home' %}">{% trans "Home" %}</a></li>
+    <li><a href="{% url 'things_to_do_index' %}">{% trans "Things to do" %}</a></li>
+    <li><span aria-current="page">{{ area.name }}</span></li>
+  </ol>
+</nav>
+<h1>{% blocktrans with city=area.name %}Things to do in {{ city }}{% endblocktrans %}</h1>
+<ul class="link-list">
+  {% for t in activities %}
+    <li><a href="{% url 'things_to_do' area.slug t.slug %}">{{ t.name }} {% trans "in" %} {{ area.name }}</a></li>
+  {% endfor %}
+</ul>
+{% endblock %}

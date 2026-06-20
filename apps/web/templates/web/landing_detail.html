@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load i18n seo_tags %}
+{% block title %}{% blocktrans with activity=activity_type.name city=area.name %}{{ activity }} in {{ city }}{% endblocktrans %}{% endblock %}
+{% block meta_description %}{% blocktrans with activity=activity_type.name city=area.name %}Where to do {{ activity }} in {{ city }} — public venues and upcoming events you can join in person. Nonprofit, no ads, no tracking.{% endblocktrans %}{% endblock %}
+{% block content %}
+<nav class="breadcrumbs" aria-label="{% trans 'Breadcrumb' %}">
+  <ol>
+    <li><a href="{% url 'home' %}">{% trans "Home" %}</a></li>
+    <li><a href="{% url 'things_to_do_index' %}">{% trans "Things to do" %}</a></li>
+    <li><a href="{% url 'things_to_do_city' area.slug %}">{{ area.name }}</a></li>
+    <li><span aria-current="page">{{ activity_type.name }}</span></li>
+  </ol>
+</nav>
+<h1>{% blocktrans with activity=activity_type.name city=area.name %}{{ activity }} in {{ city }}{% endblocktrans %}</h1>
+
+{% if events %}
+  <h2>{% trans "Upcoming events" %}</h2>
+  <div class="grid">
+    {% for e in events %}
+      <div class="card">
+        <h3><a href="{{ e|event_url }}">{{ e.title }}</a></h3>
+        <p class="muted">{{ e.starts_at|date:"D j M, H:i" }}{% if e.place %} &middot;
+          <a href="{{ e.place|place_url }}">{{ e.place.name }}</a>{% endif %}</p>
+        {% if e.description %}<p>{{ e.description|truncatewords:22 }}</p>{% endif %}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+{% if places %}
+  <h2>{% trans "Places" %}</h2>
+  <ul class="link-list">
+    {% for p in places %}
+      <li><a href="{{ p|place_url }}">{{ p.display_name }}</a>{% if p.address_city %} <span class="muted">&middot; {{ p.address_city }}</span>{% endif %}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+<p class="muted"><a href="{% url 'events_feed' %}?activity={{ activity_type.slug }}&amp;area={{ area.slug }}">{% trans "Subscribe to this list (RSS)" %}</a></p>
+{% endblock %}

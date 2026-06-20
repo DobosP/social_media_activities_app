@@ -114,7 +114,7 @@ def test_sitemap_excludes_past_events():
 
 def test_place_detail_emits_valid_place_jsonld():
     place = _public_place()
-    html = Client().get(f"/places/{place.pk}/").content.decode()
+    html = Client().get(f"/places/{place.pk}/", follow=True).content.decode()
     blocks = _ld_blocks(html)
     place_nodes = [b for b in blocks if b.get("@type") == "Place"]
     assert place_nodes, "expected a schema.org Place block"
@@ -126,7 +126,7 @@ def test_place_detail_emits_valid_place_jsonld():
 def test_event_detail_emits_valid_event_jsonld():
     place = _public_place()
     event = _event(place)
-    html = Client().get(f"/events/{event.pk}/").content.decode()
+    html = Client().get(f"/events/{event.pk}/", follow=True).content.decode()
     blocks = _ld_blocks(html)
     events = [b for b in blocks if b.get("@type") == "Event"]
     assert events, "expected a schema.org Event block"
@@ -149,7 +149,7 @@ def test_jsonld_escapes_script_breakout():
         location=Point(23.6, 46.77, srid=4326),
         source=Place.Source.OSM,
     )
-    html = Client().get(f"/places/{place.pk}/").content.decode()
+    html = Client().get(f"/places/{place.pk}/", follow=True).content.decode()
     # The raw closing tag must be escaped inside the JSON-LD; parsing must still succeed.
     assert "</script><b>x</b>" not in html.split("application/ld+json")[1].split("</script>")[0]
     blocks = _ld_blocks(html)
@@ -169,8 +169,12 @@ def test_home_has_canonical_and_description():
 @override_settings(SITE_BASE_URL="https://meet.example.eu")
 def test_canonical_uses_configured_base_url():
     place = _public_place()
-    html = Client().get(f"/places/{place.pk}/").content.decode()
-    assert f'<link rel="canonical" href="https://meet.example.eu/places/{place.pk}/"' in html
+    # Bare URL 301s to the keyword-rich canonical; follow it and assert the canonical link.
+    html = Client().get(f"/places/{place.pk}/", follow=True).content.decode()
+    assert (
+        f'<link rel="canonical" href="https://meet.example.eu/places/{place.pk}/central-park/"'
+        in html
+    )
     # The sitemap picks up the same custom domain.
     body = Client().get("/sitemap.xml").content.decode()
     assert "https://meet.example.eu/places/" in body
