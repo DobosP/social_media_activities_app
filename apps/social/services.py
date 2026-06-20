@@ -180,6 +180,49 @@ def set_public_listing(owner, obj, listed: bool):
     return obj
 
 
+# --- Phase 4: self-only progression -------------------------------------------------------------
+# A felt sense of "evolving" earned by REAL in-person participation, derived live from the one
+# honest real-world signal (F22 "we met"), STORED NOWHERE NEW. Self-only by construction: it is
+# computed for a single user, regresses when they leave (met_confirmed_at is cleared on leave), is
+# never aggregated/ranked, and is shown only on that user's own surfaces. Upholds inv.2 (no vanity
+# metrics, no per-user history, no engagement-maxxing).
+
+# Confirmed-meetup counts at which the avatar steps up a level (1..5). Current standing, not a
+# lifetime high-score — leaving an activity lowers the count again, by design.
+PROGRESSION_THRESHOLDS = (1, 3, 6, 12, 24)
+
+
+def self_confirmed_meetup_count(user) -> int:
+    """How many of the user's OWN still-current memberships carry a confirmed 'we met' (F22). The
+    real-world progression signal — never another user's, never a stored rollup."""
+    return Membership.objects.filter(
+        user=user,
+        state=Membership.State.MEMBER,
+        met_confirmed_at__isnull=False,
+    ).count()
+
+
+def progression_level(count: int) -> int:
+    """Pure banding: the number of thresholds the count has reached (0..len(THRESHOLDS))."""
+    return sum(1 for t in PROGRESSION_THRESHOLDS if count >= t)
+
+
+def progression_intensity(count: int) -> float:
+    """The 0.0–1.0 visual intensity for the evolving avatar (level normalised to its max)."""
+    return progression_level(count) / len(PROGRESSION_THRESHOLDS)
+
+
+def progression_summary(user) -> dict:
+    """Self-only progression for the /me serializer + the web 'your journey' panel. Plain counts,
+    no comparison to anyone, no history beyond the live current standing."""
+    count = self_confirmed_meetup_count(user)
+    return {
+        "count": count,
+        "level": progression_level(count),
+        "max_level": len(PROGRESSION_THRESHOLDS),
+    }
+
+
 # Search queries shorter than this return nothing (too noisy, and a 1-char probe is a
 # cheap enumeration surface). Shared by every search entry point (web + DRF).
 SEARCH_MIN_QUERY_LEN = 2

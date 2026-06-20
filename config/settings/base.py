@@ -178,6 +178,12 @@ EUDI_TRUSTED_ISSUERS = env.json("EUDI_TRUSTED_ISSUERS", default={})
 IDENTITY_UNIQUENESS_ENFORCED = env.bool("IDENTITY_UNIQUENESS_ENFORCED", default=False)
 IDENTITY_BINDING_SECRET = env("IDENTITY_BINDING_SECRET", default=SECRET_KEY)
 
+# Phase 4 self-progression: the evolving avatar reflects a user's OWN confirmed real meetups and is
+# shown only on their own surfaces. When False (default), other people always see the BASE avatar —
+# zero observable progression signal to anyone else (no leaderboard, no cross-user comparison). Turn
+# on only if a deployment deliberately wants progression visible to peers.
+PROGRESSION_AVATAR_PUBLIC = env.bool("PROGRESSION_AVATAR_PUBLIC", default=False)
+
 # Whether minors can be onboarded (guardian-linked + consented) on this deployment.
 # The current guardian-link flow establishes a relationship on mutual confirmation but does
 # NOT cryptographically prove a real parent-child / legal-guardianship relationship, and no

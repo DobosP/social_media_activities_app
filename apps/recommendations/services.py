@@ -3,6 +3,7 @@ upcoming activities by interest similarity — always within the viewer's cohort
 
 import base64
 
+from django.conf import settings
 from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.measure import D
 from django.utils import timezone
@@ -172,19 +173,52 @@ def attach_interest_nodes(users):
     return users
 
 
-def interest_avatar_svg(user, *, px=80):
-    """The user's generated avatar SVG: their interest constellation, or the identicon fallback
-    when they have not declared any interests yet — so every account always has an avatar."""
+def _avatar_seed(user):
+    return getattr(user, "username", None) or str(getattr(user, "pk", "") or "?")
+
+
+def _avatar_svg(user, *, px, intensity):
     nodes, edges = interest_graph(user)
-    seed = getattr(user, "username", None) or str(getattr(user, "pk", "") or "?")
+    seed = _avatar_seed(user)
     if nodes:
-        return constellation_svg(seed, nodes, edges, px=px)
+        return constellation_svg(seed, nodes, edges, px=px, intensity=intensity)
     return identicon_svg(seed, px=px)
+
+
+def interest_avatar_svg(user, *, px=80):
+    """The user's generated avatar SVG, as seen by OTHERS (chat, connections, profiles): their
+    interest constellation, or the identicon fallback when they have declared no interests yet.
+
+    Phase 4: stays the BASE avatar (no progression) unless settings.PROGRESSION_AVATAR_PUBLIC is on
+    — so a user's confirmed-meetup progression carries zero observable signal to other people by
+    default. The self-only progression render is `evolving_avatar_svg`."""
+    intensity = 0.0
+    if getattr(settings, "PROGRESSION_AVATAR_PUBLIC", False):
+        from apps.social.services import progression_intensity, self_confirmed_meetup_count
+
+        intensity = progression_intensity(self_confirmed_meetup_count(user))
+    return _avatar_svg(user, px=px, intensity=intensity)
 
 
 def interest_avatar_data_uri(user, *, px=80):
     """``interest_avatar_svg`` as a base64 ``data:`` URI for an ``<img src>`` / JSON payload."""
     b64 = base64.b64encode(interest_avatar_svg(user, px=px).encode("utf-8")).decode("ascii")
+    return f"data:image/svg+xml;base64,{b64}"
+
+
+def evolving_avatar_svg(user, *, px=80):
+    """The user's avatar rendered with their OWN confirmed-meetup progression flourish (Phase 4).
+    For SELF-SURFACES ONLY (/me, the web 'your journey' panel) — never another user's avatar, and
+    it exposes no number. Derived live; stores nothing."""
+    from apps.social.services import progression_intensity, self_confirmed_meetup_count
+
+    intensity = progression_intensity(self_confirmed_meetup_count(user))
+    return _avatar_svg(user, px=px, intensity=intensity)
+
+
+def evolving_avatar_data_uri(user, *, px=80):
+    """``evolving_avatar_svg`` as a base64 ``data:`` URI."""
+    b64 = base64.b64encode(evolving_avatar_svg(user, px=px).encode("utf-8")).decode("ascii")
     return f"data:image/svg+xml;base64,{b64}"
 
 

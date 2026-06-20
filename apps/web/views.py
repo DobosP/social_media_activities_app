@@ -2438,9 +2438,19 @@ def profile(request):
             "pending_in": connections.pending_incoming(user)
             if connections.is_enabled_for(user)
             else [],
+            # Phase 4: SELF-ONLY progression. profile() renders only request.user, so the "your
+            # journey" card never shows another person's count (no other-user profile path sees it).
+            "progression": social.progression_summary(user),
+            "journey_avatar": _journey_avatar(user),
             **_nav_context(user),
         },
     )
+
+
+def _journey_avatar(user):
+    from apps.recommendations.services import evolving_avatar_data_uri
+
+    return evolving_avatar_data_uri(user, px=120)
 
 
 @login_required
