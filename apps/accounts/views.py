@@ -16,8 +16,11 @@ from .identity.providers.eudi import AGE_OVER_16, AGE_OVER_18, EUDIWalletProvide
 from .models import ConsumedAgeNonce, GuardianRelationship, User
 from .serializers import GuardianLinkInviteSerializer, MeSerializer, WardSerializer
 from .services import (
+    IdentityAlreadyBound,
+    IdentityBanned,
     accept_guardian_link_invite,
     apply_assurance,
+    bind_identity,
     create_guardian_link_invite,
     decline_guardian_link_invite,
     erase_user,
@@ -289,6 +292,17 @@ class EUDIVerifyView(APIView):
                 {"detail": "This verification has already been used."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+        # One real person = one account: bind this wallet's holder key to the account before
+        # applying the assurance, so the same credential can never assure two accounts. No-op
+        # unless uniqueness enforcement is active and the presentation proved holder-key
+        # possession (the dev/sandbox flow does not, so this never blocks it).
+        try:
+            bind_identity(request.user, result)
+        except IdentityBanned as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_403_FORBIDDEN)
+        except IdentityAlreadyBound as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_409_CONFLICT)
 
         apply_assurance(request.user, result)
         return Response(MeSerializer(request.user).data)

@@ -124,6 +124,12 @@ class Activity(models.Model):
     # Set by a moderator REMOVE action; hidden content is excluded from every member-facing
     # query (discovery, recommendations) but retained for audit/appeal. See apps/safety.
     is_hidden = models.BooleanField(default=False)
+    # Anonymous (logged-out) discovery opt-out — organiser-controlled, default ON. ONLY ever
+    # honoured for an ADULT activity: public_activities() hard-codes cohort=ADULT and
+    # create_activity forces this False for a minor, so a CHILD/TEEN meetup can NEVER reach the
+    # open internet regardless of this flag. Not in ACTIVITY_EDITABLE_FIELDS (a structural pin);
+    # toggled only via the cohort-gated set_public_listing service.
+    is_publicly_listed = models.BooleanField(default=True)
 
     # F4: the recurring series that auto-spawned this instance (null for one-off activities).
     # SET_NULL — ending/deleting a series leaves already-spawned, joined meetups standing as
@@ -429,6 +435,11 @@ class Group(models.Model):
     # Set by a moderator REMOVE action (safety.take_action); a hidden group is excluded from
     # every read surface (visible_groups, group_detail, thread gates) but retained for audit.
     is_hidden = models.BooleanField(default=False)
+    # Anonymous (logged-out) discovery opt-out — organiser-controlled, default ON. ONLY honoured
+    # for an ADULT group: public_groups() hard-codes cohort=ADULT and create_group forces this
+    # False for a minor, so a CHILD/TEEN group can NEVER reach the open internet. Toggled only via
+    # the cohort-gated set_public_listing service.
+    is_publicly_listed = models.BooleanField(default=True)
     # True for any CHILD/TEEN group (staff-curated only) and for staff-created adult groups.
     is_staff_curated = models.BooleanField(default=False)
 

@@ -35,6 +35,20 @@
 </div>
 
 <div class="card">
+  <h3>{% trans "Your journey" %}</h3>
+  <div class="row" style="align-items:center;gap:1rem">
+    <img class="avatar" src="{{ journey_avatar }}" width="120" height="120"
+         alt="{% trans 'your evolving avatar' %}"
+         title="{% trans 'Your avatar grows with the meetups you confirm in real life. Only you see this.' %}">
+    <div style="flex:1">
+      <p style="margin:.1rem 0"><strong>{% blocktrans with level=progression.level max=progression.max_level %}Level {{ level }} of {{ max }}{% endblocktrans %}</strong></p>
+      <p class="muted" style="margin:.1rem 0">{% blocktrans count count=progression.count %}{{ count }} meetup you've confirmed you went to.{% plural %}{{ count }} meetups you've confirmed you went to.{% endblocktrans %}</p>
+      <p class="helptext">{% trans "This grows from real, in-person meetups you confirm — and only you can see it. It's not a score others compare." %}</p>
+    </div>
+  </div>
+</div>
+
+<div class="card">
   <h3>{% trans "Interests" %}</h3>
   <p style="margin:.3rem 0">
     {% for i in interests %}<span class="tag">{{ i }}</span>{% empty %}<span class="muted">{% trans "none yet" %}</span>{% endfor %}

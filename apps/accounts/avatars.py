@@ -119,10 +119,16 @@ def _constellation_layout(rnd, n, size):
     return pts
 
 
-def constellation_svg(seed: str, nodes, edges, *, px: int = 80) -> str:
+def constellation_svg(seed: str, nodes, edges, *, px: int = 80, intensity: float = 0.0) -> str:
     """A constellation SVG for ``seed`` over ``nodes`` (each a dict with at least ``color``) and
     ``edges`` (``(i, j[, kind])`` index pairs). Falls back to a bare night sky for zero nodes.
-    Malformed / out-of-range edge indices are skipped rather than raising."""
+    Malformed / out-of-range edge indices are skipped rather than raising.
+
+    ``intensity`` (0.0–1.0) is a PURELY VISUAL self-progression flourish (Phase 4): at the default
+    ``0.0`` the output is byte-identical to a base avatar; above 0 it appends a faint expanding aura
+    and a few extra twinkles, generated from a SEPARATE prng so nothing already drawn changes. It
+    reflects the *viewer's own* confirmed real meetups and is only ever rendered on a self-surface —
+    never a number, never another user's avatar."""
     rnd = _prng(seed)
     n = len(nodes)
     uid = hashlib.sha256(f"{seed}|{px}|{n}".encode()).hexdigest()[:8]
@@ -239,6 +245,37 @@ def constellation_svg(seed: str, nodes, edges, *, px: int = 80) -> str:
             f'<circle r="{core_r * 1.9:.2f}" fill="{c}" opacity="0.95"/>'
             f'<circle r="{core_r:.2f}" fill="#ffffff"/></g>'
         )
+
+    # Phase 4 self-progression flourish: a deterministic aura + extra twinkles whose strength scales
+    # with `intensity`. Appended last, from a SEPARATE prng, so intensity==0.0 leaves the output
+    # byte-identical to a base avatar (the existing byte-stability tests rely on this).
+    if intensity and intensity > 0:
+        amt = max(0.0, min(1.0, float(intensity)))
+        glow = _prng(f"{seed}|glow")
+        cx = cy = S / 2.0
+        aura_r = S * (0.30 + 0.16 * amt)
+        aura_id = f"{uid}_aura"
+        parts.append(
+            f'<radialGradient id="{aura_id}" cx="50%" cy="50%" r="50%">'
+            f'<stop offset="0%" stop-color="#ffffff" stop-opacity="0"/>'
+            f'<stop offset="72%" stop-color="#cfe0ff" stop-opacity="0"/>'
+            f'<stop offset="100%" stop-color="#cfe0ff" stop-opacity="{0.10 + 0.30 * amt:.3f}"/>'
+            f"</radialGradient>"
+        )
+        parts.append(
+            f'<circle cx="{cx:.2f}" cy="{cy:.2f}" r="{aura_r:.2f}" '
+            f'fill="url(#{aura_id})" filter="url(#{star_blur})"/>'
+        )
+        twinkles = []
+        for _ in range(round(amt * 10)):
+            tx, ty = glow() * S, glow() * S
+            tr = max((0.5 + 0.9 * glow()) * (S / 240.0) * 1.8, 0.5)
+            twinkles.append(
+                f'<circle cx="{tx:.2f}" cy="{ty:.2f}" r="{tr:.2f}" '
+                f'fill="#ffffff" opacity="{0.30 + 0.45 * glow():.2f}"/>'
+            )
+        if twinkles:
+            parts.append(f"<g>{''.join(twinkles)}</g>")
 
     parts.append("</svg>")
     return "".join(parts)

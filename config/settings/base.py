@@ -251,6 +251,21 @@ EUDI_SANDBOX_ISSUER_KEY_PEM = env("EUDI_SANDBOX_ISSUER_KEY_PEM", default="")
 # {issuer_id: PEM public key} — the trust anchor; populated from the EU trust list in prod.
 EUDI_TRUSTED_ISSUERS = env.json("EUDI_TRUSTED_ISSUERS", default={})
 
+# One real person = one account. When a wallet presentation proves possession of the holder
+# key (holder_proof == "verified"), bind_identity() records an HMAC of the credential subject
+# so the same wallet can never assure two accounts. The HMAC key keeps the stored hash
+# unlinkable to the raw subject; the raw subject itself is NEVER stored. Enforcement is OFF by
+# default so the dev/sandbox flow (no key-binding proof) is unaffected; turn it on once real
+# EUDI wallets present proofs in production.
+IDENTITY_UNIQUENESS_ENFORCED = env.bool("IDENTITY_UNIQUENESS_ENFORCED", default=False)
+IDENTITY_BINDING_SECRET = env("IDENTITY_BINDING_SECRET", default=SECRET_KEY)
+
+# Phase 4 self-progression: the evolving avatar reflects a user's OWN confirmed real meetups and is
+# shown only on their own surfaces. When False (default), other people always see the BASE avatar —
+# zero observable progression signal to anyone else (no leaderboard, no cross-user comparison). Turn
+# on only if a deployment deliberately wants progression visible to peers.
+PROGRESSION_AVATAR_PUBLIC = env.bool("PROGRESSION_AVATAR_PUBLIC", default=False)
+
 # Whether minors can be onboarded (guardian-linked + consented) on this deployment.
 # The current guardian-link flow establishes a relationship on mutual confirmation but does
 # NOT cryptographically prove a real parent-child / legal-guardianship relationship, and no

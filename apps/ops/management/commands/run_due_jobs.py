@@ -6,7 +6,7 @@ It fans out to the existing per-app commands rather than re-implementing their l
   * ``purge_messaging``        — delete expired E2EE messages (retention / disappearing).
   * ``purge_expired_attachments``— reclaim expired temporary-picture blobs (hidden/reported exempt).
   * ``purge_read_notifications``— delete old read, non-DSA notifications (storage hygiene at scale).
-  * ``lift_suspensions``       — reactivate accounts whose temporary suspension elapsed.
+  * ``lift_suspensions``       — reactivate accounts whose suspension or timed ban elapsed.
   * ``auto_complete_activities``— move past OPEN activities to COMPLETED.
   * ``expire_arrivals``        — clear stale arrival pings (keep them ephemeral).
   * ``send_activity_reminders``— notify members of activities starting soon.

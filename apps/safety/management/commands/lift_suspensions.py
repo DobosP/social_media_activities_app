@@ -4,7 +4,7 @@ from apps.safety.services import lift_expired_suspensions
 
 
 class Command(BaseCommand):
-    help = "Reactivate accounts whose temporary suspension has elapsed (run on a schedule)."
+    help = "Reactivate accounts whose suspension or timed ban has elapsed (run on a schedule)."
 
     def handle(self, *args, **options):
         count = lift_expired_suspensions()

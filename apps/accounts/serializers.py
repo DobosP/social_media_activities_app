@@ -8,6 +8,10 @@ class MeSerializer(serializers.ModelSerializer):
     requires_parental_consent = serializers.BooleanField(read_only=True)
     can_participate = serializers.SerializerMethodField()
     is_guardian = serializers.BooleanField(read_only=True)
+    # Phase 4: SELF-ONLY progression + the evolving avatar. /me is self-only by definition, so it
+    # never exposes another user's number — no other-user serializer carries an equivalent field.
+    progression = serializers.SerializerMethodField()
+    avatar = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -22,10 +26,22 @@ class MeSerializer(serializers.ModelSerializer):
             "requires_parental_consent",
             "is_guardian",
             "can_participate",
+            "progression",
+            "avatar",
         ]
 
     def get_can_participate(self, obj) -> bool:
         return can_participate(obj)
+
+    def get_progression(self, obj) -> dict:
+        from apps.social.services import progression_summary
+
+        return progression_summary(obj)
+
+    def get_avatar(self, obj) -> str:
+        from apps.recommendations.services import evolving_avatar_data_uri
+
+        return evolving_avatar_data_uri(obj)
 
 
 class GuardianLinkInviteSerializer(serializers.ModelSerializer):

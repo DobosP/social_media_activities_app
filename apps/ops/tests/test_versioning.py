@@ -32,9 +32,9 @@ def test_schema_documents_v1_not_the_unversioned_alias():
     paths = resp.json().get("paths", {})
     assert paths, "schema should have paths"
     # The bare /api/ alias is NOT documented (no duplicate operationIds)...
-    assert not any(
-        p.startswith("/api/") and not p.startswith("/api/v1/") for p in paths
-    ), sorted(paths)[:8]
+    assert not any(p.startswith("/api/") and not p.startswith("/api/v1/") for p in paths), sorted(
+        paths
+    )[:8]
     # ...the canonical versioned surface IS...
     assert any(p.startswith("/api/v1/") for p in paths)
     # ...and the root ops probes are retained in the contract (not collateral-dropped by the hook).

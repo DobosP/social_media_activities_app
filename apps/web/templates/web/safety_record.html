@@ -10,7 +10,7 @@
   {% for d in decisions %}
     <div class="card">
       <strong>{{ d.action_label }}</strong> &middot; <span class="muted">{{ d.scope }}</span>
-      {% if d.is_suspension %}
+      {% if d.is_sanction %}
         <span class="tag">{% if d.is_active %}{% trans "active" %}{% else %}{% trans "no longer active" %}{% endif %}</span>
       {% endif %}
       <p>{% blocktrans with reason=d.reason_label %}Reason: {{ reason }}{% endblocktrans %}</p>

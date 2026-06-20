@@ -25,9 +25,12 @@ from apps.accounts.identity.base import IdentityVerificationError
 from apps.accounts.identity.registry import get_identity_provider
 from apps.accounts.models import AgeBand, Cohort, GuardianRelationship, User
 from apps.accounts.services import (
+    IdentityAlreadyBound,
+    IdentityBanned,
     accept_guardian_link_invite,
     apply_assurance,
     assurance_provenance,
+    bind_identity,
     can_participate,
     create_guardian_link_invite,
     decline_guardian_link_invite,
@@ -754,12 +757,29 @@ def register(request):
                         user.display_name = data["display_name"]
                         user.save(update_fields=["display_name"])
                         result = get_identity_provider().verify(user, age_band=data["age_band"])
+                        # One real person = one account: refuse a duplicate wallet before the
+                        # account is committed (no-op unless uniqueness enforcement is on and
+                        # the provider proves holder-key possession).
+                        bind_identity(user, result)
                         apply_assurance(user, result)
                 except IdentityVerificationError:
                     messages.error(
                         request,
                         "We couldn't verify your age automatically. Your account wasn't "
                         "created - please try again and complete age verification.",
+                    )
+                    return redirect("register")
+                except IdentityBanned:
+                    messages.error(
+                        request,
+                        "This identity is not permitted to register an account.",
+                    )
+                    return redirect("register")
+                except IdentityAlreadyBound:
+                    messages.error(
+                        request,
+                        "An account already exists for this verified identity. Each person "
+                        "may hold only one account - please sign in instead.",
                     )
                     return redirect("register")
                 login(request, user)
@@ -2430,9 +2450,19 @@ def profile(request):
             "pending_in": connections.pending_incoming(user)
             if connections.is_enabled_for(user)
             else [],
+            # Phase 4: SELF-ONLY progression. profile() renders only request.user, so the "your
+            # journey" card never shows another person's count (no other-user profile path sees it).
+            "progression": social.progression_summary(user),
+            "journey_avatar": _journey_avatar(user),
             **_nav_context(user),
         },
     )
+
+
+def _journey_avatar(user):
+    from apps.recommendations.services import evolving_avatar_data_uri
+
+    return evolving_avatar_data_uri(user, px=120)
 
 
 @login_required
@@ -3476,6 +3506,59 @@ def unblock_user_view(request, pk):
     safety.unblock_user(request.user, target)
     messages.success(request, f"Unblocked {target.display_name or target.username}.")
     return redirect(_safe_next(request, "profile"))
+
+
+@login_required
+@require_POST
+def activity_listing_toggle(request, pk):
+    """Organiser opt-out toggle for anonymous discovery of an ADULT activity (default ON)."""
+    activity = get_object_or_404(Activity, pk=pk)
+    listed = request.POST.get("listed") == "1"
+    try:
+        social.set_public_listing(request.user, activity, listed)
+        messages.success(
+            request,
+            "This activity is now visible to people who aren't logged in."
+            if listed
+            else "This activity is now hidden from logged-out visitors.",
+        )
+    except (social.NotAMember, social.InvalidState) as exc:
+        messages.error(request, _msg(exc))
+    return redirect(_safe_next(request, "home"))
+
+
+@login_required
+@require_POST
+def group_listing_toggle(request, pk):
+    """Organiser opt-out toggle for anonymous discovery of an ADULT group (default ON)."""
+    group = get_object_or_404(Group, pk=pk)
+    listed = request.POST.get("listed") == "1"
+    try:
+        social.set_public_listing(request.user, group, listed)
+        messages.success(
+            request,
+            "This group is now visible to people who aren't logged in."
+            if listed
+            else "This group is now hidden from logged-out visitors.",
+        )
+    except (social.NotAMember, social.InvalidState) as exc:
+        messages.error(request, _msg(exc))
+    return redirect(_safe_next(request, "home"))
+
+
+def discover(request):
+    """Public, logged-out discovery of ADULT activities and groups looking for people. Sources
+    from the cohort=ADULT-walled social.public_activities()/public_groups() so a minor's meetup
+    or group can never appear here. Open to everyone (no login required)."""
+    from apps.discovery.views import MAX_RESULTS
+
+    activities = list(social.public_activities()[:MAX_RESULTS])
+    groups = list(social.public_groups()[:MAX_RESULTS])
+    return render(
+        request,
+        "web/discover.html",
+        {"activities": activities, "groups": groups},
+    )
 
 
 # --- Transparency: privacy & terms (W1-8) -------------------------------------------

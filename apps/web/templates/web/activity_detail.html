@@ -97,6 +97,23 @@
       {# W4-F5: re-run this session without re-typing the venue/logistics (prefill only). #}
       <a class="btn btn-sm btn-secondary" href="{% url 'activity_create' %}?from={{ activity.pk }}">{% trans "Set up another like this" %}</a>
     </div>
+    {% comment %}Public-listing opt-out (adults only): let logged-out people discover this meetup,
+       default ON. Hidden for non-adult activities, which can never be publicly listed.{% endcomment %}
+    {% if is_open and activity.cohort == "adult" %}
+      <form method="post" action="{% url 'activity_listing_toggle' activity.pk %}" style="margin-top:.6rem">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.path }}">
+        {% if activity.is_publicly_listed %}
+          <input type="hidden" name="listed" value="0">
+          <button class="btn btn-sm btn-secondary" type="submit">{% trans "Hide from logged-out visitors" %}</button>
+          <span class="muted" style="font-size:.75rem">{% trans "Currently visible on the public discover page." %}</span>
+        {% else %}
+          <input type="hidden" name="listed" value="1">
+          <button class="btn btn-sm" type="submit">{% trans "Show to logged-out visitors" %}</button>
+          <span class="muted" style="font-size:.75rem">{% trans "Currently hidden from the public discover page." %}</span>
+        {% endif %}
+      </form>
+    {% endif %}
     {% comment %}W2-F10: switch to the single pre-declared plan-B time, once. Shown only while the
        meetup is open and a backup time is set; consumed (cleared) by invoke_fallback.{% endcomment %}
     {% if is_open and activity.fallback_starts_at %}

@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import (
+    AuthorityReferralView,
     BlockView,
     ModerationReportListView,
     ReportView,
@@ -15,5 +16,15 @@ urlpatterns = [
         "moderation/reports/<int:pk>/resolve/",
         ResolveReportView.as_view(),
         name="safety-mod-resolve",
+    ),
+    path(
+        "moderation/referrals/",
+        AuthorityReferralView.as_view(),
+        name="safety-mod-referral",
+    ),
+    path(
+        "moderation/referrals/<int:pk>/proof/",
+        AuthorityReferralView.as_view(),
+        name="safety-mod-referral-proof",
     ),
 ]

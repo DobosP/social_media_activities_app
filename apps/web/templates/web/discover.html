@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+<h1>{% trans "Activities &amp; groups looking for people" %}</h1>
+<p class="muted">{% trans "Open adult activities and groups near you. Sign in to ask to join. Children's activities are never shown here." %}</p>
+
+<h2>{% trans "Upcoming activities" %}</h2>
+<div class="grid">
+  {% for a in activities %}
+    <div class="card">
+      <strong>{{ a.title }}</strong>
+      <p class="muted">{{ a.activity_type.name }} &middot; {{ a.place.name }}</p>
+      <p>{{ a.starts_at|date:"j M Y, H:i" }}</p>
+    </div>
+  {% empty %}
+    <p class="muted">{% trans "No public activities right now &mdash; check back soon." %}</p>
+  {% endfor %}
+</div>
+
+<h2>{% trans "Groups" %}</h2>
+<div class="grid">
+  {% for g in groups %}
+    <div class="card">
+      <strong>{{ g.title }}</strong>
+      <p class="muted">{% if g.activity_type %}{{ g.activity_type.name }}{% else %}{{ g.category.name }}{% endif %} &middot; {{ g.area.name }}</p>
+      {% if g.description %}<p>{{ g.description|truncatechars:200 }}</p>{% endif %}
+    </div>
+  {% empty %}
+    <p class="muted">{% trans "No public groups right now &mdash; check back soon." %}</p>
+  {% endfor %}
+</div>
+
+<div class="row">
+  <a class="btn" href="{% url 'register' %}">{% trans "Join to take part" %}</a>
+</div>
+{% endblock %}

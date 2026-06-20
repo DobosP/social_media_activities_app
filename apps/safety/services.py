@@ -14,7 +14,7 @@ from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from .models import AuditLog, Block, ModerationAction, ReasonCode, Report
+from .models import AuditLog, AuthorityReferral, Block, ModerationAction, ReasonCode, Report
 
 
 class RateLimited(Exception):
@@ -604,11 +604,24 @@ def take_action(moderator, target, action, reason, *, notes="", report=None, exp
         report=report,
         expires_at=expires_at,
     )
-    if action in (ModerationAction.Action.SUSPEND, ModerationAction.Action.BAN):
+    if action in (
+        ModerationAction.Action.SUSPEND,
+        ModerationAction.Action.TIMED_BAN,
+        ModerationAction.Action.BAN,
+    ):
         # Deactivating blocks auth/login for the offending account.
         if hasattr(target, "is_active"):
             target.is_active = False
             target.save(update_fields=["is_active"])
+        # A lifetime BAN also blocks the person's wallet from ever re-registering — the
+        # identity-keyed ledger survives account erasure (hard recovery, by design).
+        if action == ModerationAction.Action.BAN:
+            from django.contrib.auth import get_user_model
+
+            if isinstance(target, get_user_model()):
+                from apps.accounts.services import ban_identity
+
+                ban_identity(target)
     elif action == ModerationAction.Action.REMOVE:
         # Hide the offending content from every member-facing surface (retained for
         # audit/appeal). Applies to content models that carry an is_hidden flag.
@@ -662,16 +675,21 @@ def dismiss_report(moderator, report: Report, resolution: str = "") -> Report:
     return report
 
 
+# Time-limited restrictions that auto-lift when they elapse (a lifetime BAN never does).
+_TIMED_RESTRICTIONS = (ModerationAction.Action.SUSPEND, ModerationAction.Action.TIMED_BAN)
+
+
 def lift_expired_suspensions() -> int:
-    """Reactivate accounts whose temporary suspension has elapsed, unless a ban or a
-    still-active suspension also applies. Returns the number of accounts reactivated."""
+    """Reactivate accounts whose temporary suspension or timed ban has elapsed, unless a
+    lifetime ban or a still-active timed restriction also applies. Returns the number of
+    accounts reactivated."""
     from django.contrib.auth import get_user_model
 
     user_model = get_user_model()
     now = timezone.now()
     reactivated = 0
     expired = ModerationAction.objects.filter(
-        action=ModerationAction.Action.SUSPEND, expires_at__lte=now, lifted_at__isnull=True
+        action__in=_TIMED_RESTRICTIONS, expires_at__lte=now, lifted_at__isnull=True
     )
     for moderation in expired:
         target = moderation.target
@@ -681,7 +699,7 @@ def lift_expired_suspensions() -> int:
             )
             banned = scope.filter(action=ModerationAction.Action.BAN).exists()
             still_suspended = scope.filter(
-                action=ModerationAction.Action.SUSPEND, expires_at__gt=now
+                action__in=_TIMED_RESTRICTIONS, expires_at__gt=now
             ).exists()
             if not banned and not still_suspended and not target.is_active:
                 target.is_active = True
@@ -694,6 +712,65 @@ def lift_expired_suspensions() -> int:
         moderation.lifted_at = now
         moderation.save(update_fields=["lifted_at"])
     return reactivated
+
+
+@transaction.atomic
+def create_authority_referral(
+    moderator,
+    user,
+    reason: str,
+    *,
+    authority: str,
+    report=None,
+    reference: str = "",
+    notes: str = "",
+) -> AuthorityReferral:
+    """Refer a user to an external authority for behaviour with real-world legal weight.
+
+    Records the referral in the tamper-evident AuditLog and pins it to that entry's hash
+    (audit_anchor_hash), so the chain backing it can be proven later. The subject is
+    deliberately NOT notified — tipping off a grooming/CSAM suspect can defeat an
+    investigation; any account sanction applied alongside carries its own DSA Art.17 notice."""
+    referral = AuthorityReferral.objects.create(
+        subject_ref=user.public_id,
+        reason=reason,
+        authority=authority,
+        reference=reference,
+        report=report,
+        referred_by=moderator,
+        notes=notes,
+    )
+    entry = record_audit(
+        "authority.referral",
+        actor=moderator,
+        target=user,
+        reason=reason,
+        authority=authority,
+    )
+    # Pin to the referral's own audit entry — always present and unambiguous, vs a tip snapshot
+    # that is empty on a fresh chain.
+    referral.audit_anchor_hash = entry.hash
+    referral.save(update_fields=["audit_anchor_hash"])
+    return referral
+
+
+def referral_proof_pack(referral: AuthorityReferral) -> dict:
+    """Read-only, allowlisted proof bundle for a lawful request: the referral metadata plus a
+    live verification of the hash-chained audit log. STRICTLY no PII beyond the subject's
+    public_id; no moderator identity, no private notes."""
+    try:
+        reason_label = ReasonCode(referral.reason).label
+    except ValueError:
+        reason_label = str(referral.reason)
+    return {
+        "subject_ref": str(referral.subject_ref),
+        "reason_label": reason_label,
+        "authority": AuthorityReferral.Authority(referral.authority).label,
+        "reference": referral.reference,
+        "created_at": referral.created_at,
+        "anchor_hash": referral.audit_anchor_hash,
+        "chain_valid": verify_audit_chain(),
+    }
 
 
 def allow_action(user, action: str, *, limit: int, window_seconds: int) -> bool:
@@ -757,18 +834,28 @@ def safety_record_for(user, *, limit: int = 50) -> dict:
             scope = "one of your activities"
         else:
             scope = "one of your posts"
-        is_suspension = a.action == ModerationAction.Action.SUSPEND
+        # A "sanction" restricts the account (suspend / timed ban / lifetime ban), as opposed
+        # to a warn/remove. Only sanctions carry an active/expired badge on the F19 page.
+        is_lifetime_ban = a.action == ModerationAction.Action.BAN
+        is_sanction = a.action in (
+            ModerationAction.Action.SUSPEND,
+            ModerationAction.Action.TIMED_BAN,
+            ModerationAction.Action.BAN,
+        )
         decisions.append(
             {
                 "action_label": ModerationAction.Action(a.action).label,
                 "reason_label": reason_label,
                 "scope": scope,
                 "created_at": a.created_at,
-                "is_suspension": is_suspension,
-                # Only meaningful for a suspension; "active" = not yet expired and not lifted.
-                "is_active": is_suspension
-                and (a.expires_at is None or a.expires_at > now)
-                and a.lifted_at is None,
+                "is_sanction": is_sanction,
+                # "active" = a lifetime ban (never lifts), or a timed restriction not yet
+                # expired and not lifted. Only meaningful when is_sanction.
+                "is_active": is_sanction
+                and (
+                    is_lifetime_ban
+                    or ((a.expires_at is None or a.expires_at > now) and a.lifted_at is None)
+                ),
             }
         )
 

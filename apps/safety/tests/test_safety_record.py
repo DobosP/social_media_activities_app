@@ -74,7 +74,7 @@ def test_no_moderator_identity_leak():
     blob = str(record)
     assert "sr_secretmod" not in blob  # neither username nor display_name of the moderator
     # The suspension row is present and flagged active (not expired / not lifted).
-    assert record["decisions"][0]["is_suspension"] is True
+    assert record["decisions"][0]["is_sanction"] is True
     assert record["decisions"][0]["is_active"] is True
 
 

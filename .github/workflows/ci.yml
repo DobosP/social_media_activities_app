@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       db:
-        image: postgis/postgis:16-3.4
+        image: postgis/postgis:16-3.5
         env:
           POSTGRES_DB: app
           POSTGRES_USER: app
@@ -53,7 +53,7 @@ jobs:
         # PGDG pgvector package into the running service container so it's available.
         run: |
           set -euo pipefail
-          CID=$(docker ps --filter "ancestor=postgis/postgis:16-3.4" --format '{{.ID}}' | head -1)
+          CID=$(docker ps --filter "ancestor=postgis/postgis:16-3.5" --format '{{.ID}}' | head -1)
           echo "Postgres service container: $CID"
           docker exec "$CID" bash -lc "apt-get update && apt-get install -y --no-install-recommends postgresql-16-pgvector"
       - name: Install dependencies
@@ -81,6 +81,9 @@ jobs:
           REDIS_URL: redis://localhost:6379/0
           IDENTITY_PROVIDER: apps.accounts.identity.providers.eudi.EUDIWalletProvider
           EUDI_SANDBOX: "False"
+          # A non-empty (dummy) trust anchor so the prod EUDI fail-closed guard passes and the
+          # deploy checks can run; check --deploy never verifies a credential, so no real key.
+          EUDI_TRUSTED_ISSUERS: '{"https://issuer.example/ci": "ci-deploy-check-dummy-not-a-real-key"}'
         run: |
           pip install channels-redis
           python manage.py check --deploy

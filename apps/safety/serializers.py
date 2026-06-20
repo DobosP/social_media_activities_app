@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import ModerationAction, ReasonCode, Report
+from .models import AuthorityReferral, ModerationAction, ReasonCode, Report
 
 
 class ReportSerializer(serializers.ModelSerializer):
@@ -62,4 +62,22 @@ class ResolveReportSerializer(serializers.Serializer):
     )
     reason = serializers.ChoiceField(choices=ReasonCode.choices, required=False)
     notes = serializers.CharField(required=False, allow_blank=True, default="")
+    # Duration for a time-limited restriction (SUSPEND or TIMED_BAN). Required for TIMED_BAN so
+    # it can never silently become a never-lifting permanent deactivation outside the BAN ledger.
     suspend_days = serializers.IntegerField(required=False, min_value=1)
+
+    def validate(self, attrs):
+        if attrs["decision"] == ModerationAction.Action.TIMED_BAN and not attrs.get("suspend_days"):
+            raise serializers.ValidationError(
+                {"suspend_days": "A timed ban requires a duration in days."}
+            )
+        return attrs
+
+
+class CreateAuthorityReferralSerializer(serializers.Serializer):
+    subject = serializers.UUIDField()  # the subject user's public_id
+    reason = serializers.ChoiceField(choices=ReasonCode.choices)
+    authority = serializers.ChoiceField(choices=AuthorityReferral.Authority.choices)
+    reference = serializers.CharField(required=False, allow_blank=True, default="", max_length=128)
+    report_id = serializers.IntegerField(required=False)
+    notes = serializers.CharField(required=False, allow_blank=True, default="")

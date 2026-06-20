@@ -155,6 +155,47 @@ class ActivitiesFeedView(APIView):
         return Response(ActivityCardSerializer(qs[:MAX_RESULTS], many=True).data)
 
 
+class PublicActivitiesView(APIView):
+    """Anonymous (logged-out) discovery of ADULT activities looking for people. A separate,
+    viewer-less path from the cohort-walled ActivitiesFeedView — sources from
+    social.public_activities(), which hard-codes cohort=ADULT so a minor meetup can never be
+    exposed. Optional ?activity=<slug> + request-only proximity. The card serializer carries no
+    owner/PII."""
+
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        from apps.social.services import public_activities
+
+        p = request.query_params
+        qs = public_activities()
+        if activity := p.get("activity"):
+            qs = qs.filter(activity_type__slug=activity)
+        qs, point = apply_proximity(qs, p, field="place__location")
+        if point is None:
+            qs = qs.order_by("starts_at")
+        return Response(ActivityCardSerializer(qs[:MAX_RESULTS], many=True).data)
+
+
+class PublicGroupsView(APIView):
+    """Anonymous (logged-out) discovery of ADULT standing groups looking for people. Sources from
+    social.public_groups() (cohort=ADULT hard-coded). Optional ?activity=<slug> filter; groups
+    have no point so no proximity. The card serializer carries no owner/PII."""
+
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        from apps.social.services import public_groups
+
+        p = request.query_params
+        qs = public_groups()
+        if activity := p.get("activity"):
+            qs = qs.filter(activity_type__slug=activity)
+        from .serializers import GroupCardSerializer
+
+        return Response(GroupCardSerializer(qs[:MAX_RESULTS], many=True).data)
+
+
 class HomeFeedView(APIView):
     """W2: the typed home feed for API clients (the future phone app) — the exact same
     ``build_home_feed`` composition the web home page renders, so both surfaces show the
