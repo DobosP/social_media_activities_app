@@ -1,0 +1,13 @@
+[Unit]
+Description=Postgres backup -> EU object storage (pg_dump | gzip -> S3 bucket)
+After=postgresql.service
+
+[Service]
+Type=oneshot
+User=app
+Group=app
+WorkingDirectory=/home/app/social_media_activities_app
+EnvironmentFile=/home/app/social_media_activities_app/.env
+ExecStart=/home/app/social_media_activities_app/deploy/backup.sh
+NoNewPrivileges=true
+PrivateTmp=true

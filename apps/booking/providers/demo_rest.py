@@ -29,21 +29,45 @@ class DemoRestProvider(BookingProvider):
         return {"Authorization": f"Bearer {self.api_key}"} if self.api_key else {}
 
     def _get(self, path: str, *, params: dict) -> dict:
+        # GET is idempotent → retry transient 5xx/timeouts. A provider failure becomes a clean
+        # BookingError (the view maps it), never an uncaught 500.
         import requests
 
-        resp = requests.get(
-            f"{self.base_url}{path}", params=params, headers=self._headers(), timeout=15
-        )
-        resp.raise_for_status()
+        from apps.ops.resilience import ProviderUnavailable, request_with_retries
+
+        try:
+            resp = request_with_retries(
+                "GET",
+                f"{self.base_url}{path}",
+                params=params,
+                headers=self._headers(),
+                timeout=15,
+                breaker_key="booking",
+            )
+        except (ProviderUnavailable, requests.RequestException) as exc:
+            raise BookingError("The booking provider is temporarily unavailable.") from exc
         return resp.json()
 
     def _post(self, path: str, *, json: dict) -> dict:
+        # POST (create/cancel) is NOT idempotent: retry ONLY a connection error (request never
+        # reached the server) — never a 5xx or read-timeout, which may have booked server-side.
         import requests
 
-        resp = requests.post(
-            f"{self.base_url}{path}", json=json, headers=self._headers(), timeout=15
-        )
-        resp.raise_for_status()
+        from apps.ops.resilience import ProviderUnavailable, request_with_retries
+
+        try:
+            resp = request_with_retries(
+                "POST",
+                f"{self.base_url}{path}",
+                json=json,
+                headers=self._headers(),
+                timeout=15,
+                breaker_key="booking",
+                retry_on_status=(),
+                retry_timeouts=False,
+            )
+        except (ProviderUnavailable, requests.RequestException) as exc:
+            raise BookingError("The booking provider is temporarily unavailable.") from exc
         return resp.json()
 
     def availability(self, *, place_ref: str, start: datetime, end: datetime) -> list[Slot]:

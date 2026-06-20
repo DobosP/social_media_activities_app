@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "django_filters",
     "drf_spectacular",
     "channels",
+    "django_prometheus",  # P1 observability: request metrics (exposed via the token-gated /metrics)
     # Local
     "apps.accounts",
     "apps.taxonomy",
@@ -74,8 +75,15 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    # SecurityMiddleware stays at index 0 (prod inserts WhiteNoise right after it). Prometheus
+    # request metrics then wrap the rest of the stack: Before early, After last.
     "django.middleware.security.SecurityMiddleware",
+    "django_prometheus.middleware.PrometheusBeforeMiddleware",
+    # Assign an X-Request-ID early so it tags every log line + the response + the Sentry scope.
+    "apps.ops.middleware.RequestIDMiddleware",
     "apps.ops.middleware.PermissionsPolicyMiddleware",
+    # Content-Security-Policy (report-only by default — see CONTENT_SECURITY_POLICY_REPORT_ONLY).
+    "csp.middleware.CSPMiddleware",
     # Reject oversized request bodies (by Content-Length) before anything reads the stream.
     "apps.ops.middleware.MaxBodySizeMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -86,6 +94,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -110,6 +119,64 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
+
+# Content-Security-Policy (P1 hardening) — REPORT-ONLY by default so it surfaces violations in the
+# browser WITHOUT breaking the UI. The web UI loads Leaflet (CSS+JS) from unpkg and OSM map tiles,
+# and uses pervasive inline styles (style-src 'unsafe-inline'). Inline <script> blocks are NOT
+# allowed here, so they are REPORTED — the path to enforcement is: nonce/extract the inline scripts,
+# then move this dict to CONTENT_SECURITY_POLICY (enforcing) once the reports are clean. With no
+# report-uri, violations surface in the browser console only; add a report endpoint to collect them.
+CONTENT_SECURITY_POLICY_REPORT_ONLY = {
+    "DIRECTIVES": {
+        "default-src": ["'self'"],
+        "script-src": ["'self'", "https://unpkg.com"],
+        "style-src": ["'self'", "'unsafe-inline'", "https://unpkg.com"],
+        "img-src": ["'self'", "data:", "https://*.tile.openstreetmap.org", "https://unpkg.com"],
+        "connect-src": ["'self'"],  # same-origin XHR/fetch + the chat WebSocket
+        "font-src": ["'self'"],
+        "object-src": ["'none'"],
+        "base-uri": ["'self'"],
+        "frame-ancestors": ["'none'"],
+        "form-action": ["'self'"],
+    },
+}
+
+# Prometheus /metrics is gated on a bearer token — CLOSED BY DEFAULT (empty token => 403), never
+# world-readable. Set METRICS_TOKEN and have the scraper send `Authorization: Bearer <token>`.
+METRICS_TOKEN = env("METRICS_TOKEN", default="")
+
+# Structured logging + request correlation (P1). LOG_FORMAT=json (prod) emits one JSON line per
+# record with the X-Request-ID; "plain" (dev/test default) is human-readable. apps.* log at
+# LOG_LEVEL (default INFO — joins, moderation, retention); noisy libraries stay at WARNING.
+_LOG_FORMAT = env("LOG_FORMAT", default="plain")
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {"request_id": {"()": "apps.ops.observability.RequestIdFilter"}},
+    "formatters": {
+        "plain": {"format": "%(asctime)s %(levelname)s %(name)s [%(request_id)s] %(message)s"},
+        "json": {"()": "apps.ops.observability.JsonFormatter"},
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "filters": ["request_id"],
+            "formatter": "json" if _LOG_FORMAT == "json" else "plain",
+        },
+    },
+    "root": {"handlers": ["console"], "level": "WARNING"},
+    "loggers": {
+        "apps": {
+            "handlers": ["console"],
+            "level": env("LOG_LEVEL", default="INFO"),
+            "propagate": False,
+        },
+    },
+}
+
+# Cron heartbeat (dead-man's-switch): run_due_jobs pings this URL on a fully-successful run, so a
+# missed/failed nightly pass (GDPR retention / DSA suspension-lifts) raises an alert. "" disables.
+OPS_HEARTBEAT_URL = env("OPS_HEARTBEAT_URL", default="")
 
 # Postgres + PostGIS. django-environ maps the `postgis://` scheme to the
 # GeoDjango backend (django.contrib.gis.db.backends.postgis).

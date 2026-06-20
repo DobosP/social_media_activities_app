@@ -4,7 +4,7 @@ from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from apps.accounts.views import ObtainAPIToken
-from apps.ops.views import HealthView, ReadyView
+from apps.ops.views import HealthView, ReadyView, metrics_view
 from apps.web.seo_views import llms_txt, robots_txt
 from apps.web.sitemaps import SITEMAPS
 
@@ -41,6 +41,7 @@ api_patterns = [
 urlpatterns = [
     path("healthz", HealthView.as_view(), name="healthz"),  # liveness (process up)
     path("readyz", ReadyView.as_view(), name="readyz"),  # readiness (DB + configured shared deps)
+    path("metrics", metrics_view, name="metrics"),  # Prometheus exposition (token-gated)
     # Discoverability for search engines + AI agents: crawl guidance, an LLM brief, and a
     # sitemap of ONLY public open-data pages (venues/events/info — never cohort/activity URLs).
     path("robots.txt", robots_txt, name="robots_txt"),

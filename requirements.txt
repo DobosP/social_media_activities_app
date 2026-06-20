@@ -63,12 +63,16 @@ django==5.2.15
     #   djangorestframework-gis
     #   drf-spectacular
     #   sentry-sdk
+django-csp==4.0
+    # via -r requirements.in
 django-environ==0.13.0
     # via -r requirements.in
 django-filter==25.2
     # via
     #   -r requirements.in
     #   djangorestframework-gis
+django-prometheus==2.5.0
+    # via -r requirements.in
 djangorestframework==3.17.1
     # via
     #   -r requirements.in
@@ -117,6 +121,8 @@ pgvector==0.4.2
     # via -r requirements.in
 pillow==12.2.0
     # via -r requirements.in
+prometheus-client==0.25.0
+    # via django-prometheus
 psycopg[binary]==3.3.4
     # via -r requirements.in
 psycopg-binary==3.3.4
