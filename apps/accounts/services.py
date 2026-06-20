@@ -14,6 +14,7 @@ from .models import (
     COHORT_BY_AGE_BAND,
     AgeAssurance,
     AgeBand,
+    BannedIdentity,
     Cohort,
     GuardianGuardrail,
     GuardianLinkInvite,
@@ -27,6 +28,11 @@ from .models import (
 class IdentityAlreadyBound(Exception):
     """Raised when a wallet credential is already bound to a different, live account —
     enforcing one real person = one account."""
+
+
+class IdentityBanned(Exception):
+    """Raised when a wallet credential belongs to a lifetime-banned person — they may not
+    register or recover an account (the ban survives erasure)."""
 
 
 logger = logging.getLogger(__name__)
@@ -100,6 +106,10 @@ def bind_identity(user: User, result) -> IdentityBinding | None:
     from apps.safety.services import record_audit
 
     holder_hash = _holder_hash(result.holder_sub)
+    # A lifetime ban is keyed by the wallet holder, so it survives account erasure: a banned
+    # person cannot re-register or recover, even onto a brand-new (orphaned) binding row.
+    if BannedIdentity.objects.filter(holder_hash=holder_hash).exists():
+        raise IdentityBanned("This identity is permanently banned and may not register.")
     existing = IdentityBinding.objects.select_for_update().filter(holder_hash=holder_hash).first()
     if existing is not None:
         if existing.user_id == user.pk:
@@ -127,6 +137,29 @@ def has_unique_identity(user: User) -> bool:
     if not getattr(settings, "IDENTITY_UNIQUENESS_ENFORCED", False):
         return True
     return IdentityBinding.objects.filter(user=user, released_at__isnull=True).exists()
+
+
+def identity_is_banned(holder_sub: str) -> bool:
+    """Whether a wallet holder is on the lifetime-ban ledger."""
+    return BannedIdentity.objects.filter(holder_hash=_holder_hash(holder_sub)).exists()
+
+
+@transaction.atomic
+def ban_identity(user: User) -> BannedIdentity | None:
+    """Record a lifetime ban keyed by this user's wallet holder, so the same EU Digital
+    Identity can never re-register — even after the account is erased. No-op (returns None)
+    when the user has no identity binding (e.g. uniqueness enforcement is off, or they were
+    never wallet-verified); the account-level BAN (is_active=False) still applies regardless.
+    Idempotent on the holder hash. Audited."""
+    from apps.safety.services import record_audit
+
+    binding = IdentityBinding.objects.filter(user=user).first()
+    if binding is None:
+        return None
+    banned, created = BannedIdentity.objects.get_or_create(holder_hash=binding.holder_hash)
+    if created:
+        record_audit("identity.banned", actor=user, target=banned)
+    return banned
 
 
 def minor_onboarding_enabled() -> bool:

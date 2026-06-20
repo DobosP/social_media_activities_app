@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import AuditLog, Block, ModerationAction, Report
+from .models import AuditLog, AuthorityReferral, Block, ModerationAction, Report
 
 
 @admin.register(Report)
@@ -55,6 +55,37 @@ class ModerationActionAdmin(admin.ModelAdmin):
 class BlockAdmin(admin.ModelAdmin):
     list_display = ("blocker", "blocked", "created_at")
     search_fields = ("blocker__username", "blocked__username")
+
+
+@admin.register(AuthorityReferral)
+class AuthorityReferralAdmin(admin.ModelAdmin):
+    """Read-only ledger of referrals to external authorities (legal defensibility)."""
+
+    list_display = ("id", "authority", "reason", "subject_ref", "referred_by", "created_at")
+    list_filter = ("authority", "reason")
+    search_fields = ("subject_ref", "reference")
+    readonly_fields = (
+        "subject_ref",
+        "reason",
+        "authority",
+        "reference",
+        "report",
+        "referred_by",
+        "audit_anchor_hash",
+        "notes",
+        "created_at",
+    )
+
+    def has_add_permission(self, request):
+        # Referrals are created through the audited service (create_authority_referral), never
+        # hand-typed in admin, so the audit anchor + chain entry are always captured.
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(AuditLog)

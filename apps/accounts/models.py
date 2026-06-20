@@ -232,6 +232,21 @@ class IdentityBinding(models.Model):
         return f"identity-binding({self.holder_hash[:12]}…)"
 
 
+class BannedIdentity(models.Model):
+    """Lifetime-ban ledger keyed by wallet holder, so a permanently-banned person cannot
+    re-register the same EU Digital Identity even after erasing their account.
+
+    Like IdentityBinding it stores ONLY the keyed HMAC of the holder subject (`holder_hash`),
+    never the raw subject. Populated by accounts.services.ban_identity() when a moderator
+    applies a lifetime BAN; checked in bind_identity() before any (re)bind."""
+
+    holder_hash = models.CharField(max_length=64, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"banned-identity({self.holder_hash[:12]}…)"
+
+
 class GuardianRelationship(models.Model):
     """An account-level legal-guardianship link: an adult `guardian` is the parent/
     protector of a minor `ward`. Established alongside parental consent; lets the

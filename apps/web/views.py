@@ -26,6 +26,7 @@ from apps.accounts.identity.registry import get_identity_provider
 from apps.accounts.models import AgeBand, Cohort, GuardianRelationship, User
 from apps.accounts.services import (
     IdentityAlreadyBound,
+    IdentityBanned,
     accept_guardian_link_invite,
     apply_assurance,
     assurance_provenance,
@@ -766,6 +767,12 @@ def register(request):
                         request,
                         "We couldn't verify your age automatically. Your account wasn't "
                         "created - please try again and complete age verification.",
+                    )
+                    return redirect("register")
+                except IdentityBanned:
+                    messages.error(
+                        request,
+                        "This identity is not permitted to register an account.",
                     )
                     return redirect("register")
                 except IdentityAlreadyBound:

@@ -12,9 +12,10 @@ from apps.accounts.permissions import IsModerator
 from apps.social import services as social
 from apps.social.models import Activity, Post
 
-from .models import ModerationAction, Report
+from .models import AuthorityReferral, ModerationAction, Report
 from .serializers import (
     BlockSerializer,
+    CreateAuthorityReferralSerializer,
     CreateReportSerializer,
     ModerationReportSerializer,
     ReportSerializer,
@@ -23,9 +24,11 @@ from .serializers import (
 from .services import (
     allow_action,
     block_user,
+    create_authority_referral,
     dismiss_report,
     file_report,
     record_audit,
+    referral_proof_pack,
     take_action,
     triage_order,
     unblock_user,
@@ -168,7 +171,8 @@ class ResolveReportView(APIView):
         if report.target is None:
             raise ValidationError("The report's target no longer exists.")
         expires_at = None
-        if data["decision"] == ModerationAction.Action.SUSPEND and data.get("suspend_days"):
+        timed = (ModerationAction.Action.SUSPEND, ModerationAction.Action.TIMED_BAN)
+        if data["decision"] in timed and data.get("suspend_days"):
             expires_at = timezone.now() + timedelta(days=data["suspend_days"])
         take_action(
             request.user,
@@ -181,3 +185,38 @@ class ResolveReportView(APIView):
         )
         report.refresh_from_db()
         return Response(ModerationReportSerializer(report).data)
+
+
+class AuthorityReferralView(APIView):
+    """Staff: refer a user to an external authority (real-world legal consequence) and read
+    back the tamper-evident proof pack for a lawful request. The subject is never notified."""
+
+    permission_classes = [IsModerator]
+
+    def post(self, request):
+        serializer = CreateAuthorityReferralSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        subject = User.objects.filter(public_id=data["subject"]).first()
+        if subject is None:
+            raise NotFound("No such user.")
+        report = None
+        if data.get("report_id"):
+            report = Report.objects.filter(pk=data["report_id"]).first()
+        referral = create_authority_referral(
+            request.user,
+            subject,
+            data["reason"],
+            authority=data["authority"],
+            report=report,
+            reference=data.get("reference", ""),
+            notes=data.get("notes", ""),
+        )
+        return Response(referral_proof_pack(referral), status=status.HTTP_201_CREATED)
+
+    def get(self, request, pk):
+        referral = AuthorityReferral.objects.filter(pk=pk).first()
+        if referral is None:
+            raise NotFound("No such referral.")
+        record_audit("authority.referral_proof_viewed", actor=request.user, target=referral)
+        return Response(referral_proof_pack(referral))

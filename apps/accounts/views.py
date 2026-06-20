@@ -17,6 +17,7 @@ from .models import ConsumedAgeNonce, GuardianRelationship, User
 from .serializers import GuardianLinkInviteSerializer, MeSerializer, WardSerializer
 from .services import (
     IdentityAlreadyBound,
+    IdentityBanned,
     accept_guardian_link_invite,
     apply_assurance,
     bind_identity,
@@ -298,6 +299,8 @@ class EUDIVerifyView(APIView):
         # possession (the dev/sandbox flow does not, so this never blocks it).
         try:
             bind_identity(request.user, result)
+        except IdentityBanned as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_403_FORBIDDEN)
         except IdentityAlreadyBound as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_409_CONFLICT)
 

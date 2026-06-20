@@ -92,6 +92,7 @@ class ModerationAction(models.Model):
         WARN = "warn", "Warn"
         REMOVE = "remove", "Remove content"
         SUSPEND = "suspend", "Suspend account"
+        TIMED_BAN = "timed_ban", "Timed ban"
         BAN = "ban", "Ban account"
 
     moderator = models.ForeignKey(
@@ -124,6 +125,49 @@ class ModerationAction(models.Model):
 
     def __str__(self):
         return f"{self.action} ({self.reason})"
+
+
+class AuthorityReferral(models.Model):
+    """A staff referral of a user to an external authority (e.g. a national hotline or police)
+    for behaviour with real-world legal weight — grooming/CSAM above all.
+
+    Built for legal defensibility, not surveillance: the subject is identified by their stable
+    `public_id` (impersonation-safe, and it survives account erasure), and `audit_anchor_hash`
+    pins the referral to the tip of the hash-chained AuditLog at referral time so the
+    tamper-evident record backing it can be proven later (see services.referral_proof_pack).
+    The subject is deliberately NOT notified (tipping off a suspect can defeat an
+    investigation); any accompanying account sanction carries its own DSA Art.17 notice."""
+
+    class Authority(models.TextChoices):
+        INHOPE = "inhope", "INHOPE / national hotline"
+        IGPR = "igpr", "Romanian Police (IGPR)"
+        POLICE = "police", "Other law enforcement"
+        OTHER = "other", "Other authority"
+
+    subject_ref = models.UUIDField()
+    reason = models.CharField(max_length=24, choices=ReasonCode.choices)
+    authority = models.CharField(max_length=16, choices=Authority.choices)
+    reference = models.CharField(max_length=128, blank=True)
+    report = models.ForeignKey(
+        Report, on_delete=models.SET_NULL, null=True, blank=True, related_name="referrals"
+    )
+    referred_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="authority_referrals",
+    )
+    audit_anchor_hash = models.CharField(max_length=64, blank=True)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["subject_ref", "-id"], name="safety_referral_subj_idx"),
+        ]
+
+    def __str__(self):
+        return f"referral({self.authority}, {self.reason})"
 
 
 class AuditLog(models.Model):
