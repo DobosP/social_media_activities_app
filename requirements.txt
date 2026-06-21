@@ -58,7 +58,9 @@ django==5.2.15
     # via
     #   -r requirements.in
     #   channels
+    #   django-csp
     #   django-filter
+    #   django-prometheus
     #   djangorestframework
     #   djangorestframework-gis
     #   drf-spectacular
@@ -115,6 +117,7 @@ numpy==2.4.6
     # via pgvector
 packaging==26.2
     # via
+    #   django-csp
     #   gunicorn
     #   incremental
 pgvector==0.4.2
