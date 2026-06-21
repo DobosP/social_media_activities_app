@@ -8,6 +8,7 @@ proves no holder key), so these tests turn it on explicitly.
 import jwt
 import pytest
 from cryptography.hazmat.primitives.asymmetric import ec
+from django.urls import reverse
 from rest_framework.test import APIClient
 
 from apps.accounts.identity.base import AssuranceResult
@@ -15,7 +16,9 @@ from apps.accounts.identity.eudi import issuer
 from apps.accounts.models import AgeBand, IdentityBinding, User
 from apps.accounts.services import (
     IdentityAlreadyBound,
+    IdentityBanned,
     apply_assurance,
+    ban_identity,
     bind_identity,
     has_unique_identity,
     identity_uniqueness_active,
@@ -119,6 +122,75 @@ def test_holder_subject_never_persisted_as_pii(settings):
     assert "super-secret-holder" not in binding.holder_hash
 
 
+# --- lifetime ban: the holder-hash ledger rejects re-binding (direct branch coverage) ---
+
+
+@pytest.mark.django_db
+def test_bind_identity_rejects_a_banned_holder(settings):
+    # Direct coverage of the BannedIdentity branch in bind_identity (the ban-evasion ledger).
+    settings.IDENTITY_UNIQUENESS_ENFORCED = True
+    owner = User.objects.create_user(username="banowner", password="pw")
+    bind_identity(owner, _verified_result(sub="holder-ban"))
+    ban_identity(owner)
+
+    # Any account presenting the banned wallet is refused outright. The ban check fires BEFORE the
+    # already-bound check (so the message is "banned", not "already linked"), and no new row is
+    # written for the newcomer.
+    newcomer = User.objects.create_user(username="bannewcomer", password="pw")
+    with pytest.raises(IdentityBanned):
+        bind_identity(newcomer, _verified_result(sub="holder-ban"))
+    assert IdentityBinding.objects.count() == 1  # only the owner's binding
+
+
+@pytest.mark.django_db
+def test_verify_age_web_refuses_a_banned_wallet(settings, client, monkeypatch):
+    # Surface symmetry: the web verify_age flow rejects a banned wallet too (assurance NOT applied).
+    settings.IDENTITY_UNIQUENESS_ENFORCED = True
+    from apps.accounts.identity.providers import eudi as eudi_provider
+
+    owner = User.objects.create_user(username="vaowner", password="pw")
+    bind_identity(owner, _verified_result(sub="holder-va-ban"))
+    ban_identity(owner)
+
+    # The sandbox issuer proves no holder key, so simulate the REAL EUDI flow this guards: have the
+    # provider return a verified-holder result for the (banned) wallet.
+    monkeypatch.setattr(
+        eudi_provider.EUDIWalletProvider,
+        "verify",
+        lambda self, user, presentation: _verified_result(sub="holder-va-ban"),
+    )
+    user = User.objects.create_user(username="vauser", password="pw")
+    client.force_login(user)
+    resp = client.post("/verify-age/", {"age": "adult"})
+    # Refused to profile (NOT a re-prompt to verify_age) and the age is never applied.
+    assert resp.status_code == 302 and resp.url == reverse("profile")
+    user.refresh_from_db()
+    assert user.is_identity_verified is False  # a banned identity never gets the age applied
+
+
+@pytest.mark.django_db
+def test_verify_age_web_refuses_an_already_bound_wallet(settings, client, monkeypatch):
+    # One person = one account on the web surface too: a wallet already bound to a DIFFERENT
+    # account is refused, and a second person's verified age is NEVER applied to this account.
+    settings.IDENTITY_UNIQUENESS_ENFORCED = True
+    from apps.accounts.identity.providers import eudi as eudi_provider
+
+    first = User.objects.create_user(username="vab-first", password="pw")
+    bind_identity(first, _verified_result(sub="holder-va-dup"))
+    monkeypatch.setattr(
+        eudi_provider.EUDIWalletProvider,
+        "verify",
+        lambda self, user, presentation: _verified_result(sub="holder-va-dup"),
+    )
+    second = User.objects.create_user(username="vab-second", password="pw")
+    client.force_login(second)
+    resp = client.post("/verify-age/", {"age": "adult"})
+    assert resp.status_code == 302 and resp.url == reverse("profile")
+    second.refresh_from_db()
+    assert second.is_identity_verified is False  # the shared wallet never verifies a 2nd account
+    assert IdentityBinding.objects.count() == 1  # still only first's binding
+
+
 # --- end-to-end OpenID4VP API flow: duplicate wallet is rejected with 409 ---
 
 
@@ -175,6 +247,25 @@ def test_duplicate_wallet_blocked_at_api(settings):
     second.refresh_from_db()
     assert second.is_identity_verified is False
     assert IdentityBinding.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_banned_wallet_blocked_at_api_with_403(settings):
+    # The ban-evasion ledger rejects a banned wallet through the real OpenID4VP endpoint with 403.
+    settings.IDENTITY_UNIQUENESS_ENFORCED = True
+    aud = settings.EUDI_CLIENT_ID
+    owner = User.objects.create_user(username="apibanowner", password="pw")
+    bind_identity(owner, _verified_result(sub="holder-api-ban"))
+    ban_identity(owner)
+
+    newcomer = User.objects.create_user(username="apibannew", password="pw")
+    c = APIClient()
+    c.force_authenticate(newcomer)
+    resp = _present(c, subject="holder-api-ban", audience=aud)
+    assert resp.status_code == 403
+    newcomer.refresh_from_db()
+    assert newcomer.is_identity_verified is False
+    assert IdentityBinding.objects.count() == 1  # no new binding for the banned newcomer
 
 
 # --- release paths: lifting a ban + voluntary fresh start ---

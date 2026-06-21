@@ -3153,6 +3153,21 @@ def verify_age(request):
         except IdentityVerificationError as exc:
             messages.error(request, f"Verification failed: {exc}")
             return redirect("verify_age")
+        # Surface symmetry with register / EUDIVerifyView: one real person = one account. A real
+        # wallet that proves holder-key possession binds here too (and a banned or already-bound
+        # wallet is refused BEFORE the age is applied); the sandbox proves no key, so it's a no-op.
+        try:
+            bind_identity(request.user, result)
+        except IdentityBanned:
+            messages.error(request, "This identity is not permitted to verify on this account.")
+            return redirect("profile")
+        except IdentityAlreadyBound:
+            messages.error(
+                request,
+                "That verified identity is already linked to another account. Each person may "
+                "hold only one account.",
+            )
+            return redirect("profile")
         apply_assurance(request.user, result)
         messages.success(
             request,
