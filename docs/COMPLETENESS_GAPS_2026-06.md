@@ -51,14 +51,17 @@ Legend: `[x]` done · `[ ]` open · **P0** ship-blocker/correctness · **P1** co
   - [ ] F19 `safety_record_for` caps own-content id sets (`[:500]`/`[:1000]`), so a user with more
     can't *contest* a decision on content beyond the cap from that page (the pre-auth surface still
     covers account sanctions). Query `ModerationAction` against the GFK columns directly.
-- [ ] **Public discovery defaults to opt-OUT** (`Activity.is_publicly_listed=True`); migration `0030`
-  default=True back-fills *all existing adult* activities/groups to public on deploy. Get explicit
-  DPO/legal sign-off vs privacy-by-default; decide whether adults should default opt-IN. Confirm the
-  back-fill is the intended rollout. `apps/social/models.py`, `apps/social/migrations/0030`.
-- [ ] **Anonymous public card exposes exact start time + named venue** of an adult meetup to the open
-  internet — consider a coarser time/venue display. Copy/privacy review. `apps/web/templates/web/discover.html`.
-- [ ] **No DRF endpoint for the public-listing opt-out toggle** — API-first organisers can't hide an
-  activity/group from public discovery (web-only today). `apps/discovery/` or `apps/social/` viewset.
+- [x] **Public discovery defaulted to opt-OUT.** DONE (`feat/privacy-default-discovery`, user-approved
+  as the privacy-by-default reading of invariant #4): `Activity`/`Group.is_publicly_listed` now defaults
+  **False**, both create paths no longer auto-list, and migration `0031` flips the default + un-lists
+  every row `0030` had auto-listed (irreversible-noop reverse). `set_public_listing` (ADULT-only) is now
+  the opt-IN toggle; the web toggle UI already renders the opt-in affordance. Adversarially reviewed:
+  all three ADULT-only walls hold (no minor can ever be listed), no creation path missed, migration safe.
+- [ ] **(LOW, optional) Anonymous public card exposes exact start time + named venue** of an adult
+  meetup — consider a coarser display. Copy/privacy review. `apps/web/templates/web/discover.html`.
+- [ ] **(LOW) No DRF endpoint for the public-listing opt-IN toggle** — API-first organisers can't make
+  an activity/group discoverable (web-only). Add a cohort-gated `set_public_listing` action to the
+  activity/group DRF viewset. `apps/discovery/` or `apps/social/` viewset.
 - [ ] **Progression "Level N of 5" copy is borderline gamification (inv. 2).** Product call: keep the
   self-only level, or revert to a plain meetup count. Keep `PROGRESSION_AVATAR_PUBLIC` off and assert
   it can never combine with minor cohorts. `apps/accounts/avatars.py`, `apps/recommendations/services.py`.

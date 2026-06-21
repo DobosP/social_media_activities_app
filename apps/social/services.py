@@ -164,9 +164,10 @@ def public_groups():
 
 @transaction.atomic
 def set_public_listing(owner, obj, listed: bool):
-    """Organiser opt-out toggle for anonymous discovery, over an Activity or a Group (both expose
-    owner_id + cohort). ADULT-only: refuses to set the flag on a non-adult object, so the toggle
-    can never make a minor's meetup/group publicly listed. Audited."""
+    """Organiser opt-IN toggle for anonymous discovery, over an Activity or a Group (both expose
+    owner_id + cohort). Nothing is listed at creation (privacy by default); this is the only way an
+    ADULT organiser turns listing ON. ADULT-only: refuses to set the flag on a non-adult object, so
+    the toggle can never make a minor's meetup/group publicly listed. Audited."""
     if obj.owner_id != owner.id:
         raise NotAMember(_("Only the organiser may change this."))
     if obj.cohort != Cohort.ADULT:
@@ -881,9 +882,10 @@ def create_activity(
         starts_at=starts_at,
         ends_at=ends_at,
         cohort=owner.cohort,
-        # Anonymous discovery is ADULT-only: a minor's meetup is never stored as publicly listed
-        # (defense-in-depth alongside the cohort=ADULT query wall in public_activities).
-        is_publicly_listed=(owner.cohort == Cohort.ADULT),
+        # Privacy by default (invariant #4): nothing is anonymously discoverable at creation. An
+        # ADULT organiser opts in later via set_public_listing; a minor's meetup can never be listed
+        # at all (the cohort-gated toggle + the cohort=ADULT query wall in public_activities).
+        is_publicly_listed=False,
         join_threshold=DEFAULT_JOIN_THRESHOLD if join_threshold is None else join_threshold,
         capacity=capacity,
         min_to_go=min_to_go,
@@ -3574,9 +3576,10 @@ def create_group(
         cohort=target_cohort,
         title=title,
         description=description,
-        # Anonymous discovery is ADULT-only: a minor group is never stored as publicly listed
-        # (defense-in-depth alongside the cohort=ADULT query wall in public_groups).
-        is_publicly_listed=(target_cohort == Cohort.ADULT),
+        # Privacy by default (invariant #4): not anonymously discoverable at creation. An ADULT
+        # owner opts in via set_public_listing; a minor group can never be listed (cohort-gated
+        # toggle + the cohort=ADULT query wall in public_groups).
+        is_publicly_listed=False,
         is_staff_curated=is_staff_curated,
     )
     GroupMembership.objects.create(

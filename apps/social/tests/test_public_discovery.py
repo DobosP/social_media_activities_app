@@ -1,5 +1,6 @@
-"""Phase 3: anonymous (logged-out) discovery of ADULT activities & groups, organiser opt-out,
-with three independent walls making minor exposure structurally impossible.
+"""Phase 3: anonymous (logged-out) discovery of ADULT activities & groups, organiser opt-IN
+(privacy by default, invariant #4), with three independent walls making minor exposure
+structurally impossible.
 """
 
 import pytest
@@ -52,13 +53,20 @@ def _adult_activity(owner, at, place):
     )
 
 
-# --- the cohort=ADULT query wall ---
+# --- privacy by default: nothing is listed until the organiser opts in ---
 
 
-def test_public_activities_lists_adult_open():
+def test_adult_activity_not_listed_by_default():
     owner = _user("ad")
     act = _adult_activity(owner, _type(), _place())
-    assert act.is_publicly_listed is True
+    assert act.is_publicly_listed is False  # opt-in: not discoverable at creation
+    assert act not in list(social.public_activities())
+
+
+def test_adult_activity_listed_after_opt_in():
+    owner = _user("adin")
+    act = _adult_activity(owner, _type(), _place())
+    social.set_public_listing(owner, act, True)
     assert act in list(social.public_activities())
 
 
@@ -83,16 +91,21 @@ def test_opted_out_and_hidden_and_suspended_owner_excluded():
     owner = _user("ad2")
     at, place = _type(), _place()
     opted_out = _adult_activity(owner, at, place)
-    social.set_public_listing(owner, opted_out, False)
+    social.set_public_listing(owner, opted_out, True)  # opt in...
+    social.set_public_listing(owner, opted_out, False)  # ...then back out
     assert opted_out not in list(social.public_activities())
 
+    # An opted-in but hidden activity is still excluded.
     hidden = _adult_activity(_user("ad3"), at, _place())
+    social.set_public_listing(hidden.owner, hidden, True)
     hidden.is_hidden = True
     hidden.save(update_fields=["is_hidden"])
     assert hidden not in list(social.public_activities())
 
+    # An opted-in activity whose owner is suspended is excluded.
     susp_owner = _user("ad4")
     by_suspended = _adult_activity(susp_owner, at, _place())
+    social.set_public_listing(susp_owner, by_suspended, True)
     susp_owner.is_active = False
     susp_owner.save(update_fields=["is_active"])
     assert by_suspended not in list(social.public_activities())
@@ -129,9 +142,9 @@ def test_create_activity_for_a_minor_is_not_publicly_listed():
     # A TEEN needs no parental consent, so they can create an activity — but it must never be
     # stored as publicly listed.
     teen = _user("teen3", AgeBand.AGE_16_17)
-    act = _adult_activity(teen, _type(), _place())  # helper; owner cohort drives the flag
+    act = _adult_activity(teen, _type(), _place())  # _adult_activity is just the create helper
     assert act.cohort == Cohort.TEEN
-    assert act.is_publicly_listed is False
+    assert act.is_publicly_listed is False  # opt-in default off, and a minor can never opt in
 
 
 # --- groups mirror the activity walls ---
@@ -143,7 +156,10 @@ def test_public_groups_excludes_minor_and_opted_out(settings):
     at = _type()
     area = Area.objects.create(city="Cluj-Napoca", slug="cluj-napoca", name="Cluj-Napoca")
     group = social.create_group(owner, area=area, title="Runners", activity_type=at)
-    assert group.is_publicly_listed is True
+    assert group.is_publicly_listed is False  # opt-in: not listed at creation
+    assert group not in list(social.public_groups())
+
+    social.set_public_listing(owner, group, True)
     assert group in list(social.public_groups())
 
     social.set_public_listing(owner, group, False)
@@ -168,7 +184,8 @@ def test_public_groups_excludes_minor_and_opted_out(settings):
 
 def test_public_api_is_anonymous_and_leaks_no_owner():
     owner = _user("ad7")
-    _adult_activity(owner, _type(), _place())
+    act = _adult_activity(owner, _type(), _place())
+    social.set_public_listing(owner, act, True)  # opt in so it appears
     client = APIClient()  # no authentication
     resp = client.get("/api/discovery/public/activities/")
     assert resp.status_code == 200
