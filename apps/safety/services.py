@@ -575,9 +575,9 @@ def _notify_suspension_lifted(target):
     """Symmetric bookend to the suspension notice — the other half of the DSA Art.17
     moderation lifecycle. When a temporary suspension elapses the account is silently
     reactivated; tell the user calmly that they can participate again, so the lifecycle
-    isn't an asymmetric silence. Best-effort: ``lift_expired_suspensions`` is NOT wrapped
-    in a single atomic block and saves per-row, so a notification failure must never abort
-    the nightly reactivation batch."""
+    isn't an asymmetric silence. Best-effort: ``lift_expired_suspensions`` calls this AFTER
+    the per-row reactivation transaction has committed, so a notification failure can never
+    roll back the reactivation nor abort the rest of the batch."""
     try:
         from apps.notifications.models import Notification
         from apps.notifications.services import notify
@@ -586,8 +586,8 @@ def _notify_suspension_lifted(target):
         if recipient is None:
             return
         # Own transaction: a DB-level notify failure rolls back only the notification. The
-        # reactivation + audit row already committed (this batch runs in autocommit — the
-        # caller is not @transaction.atomic), so they can never be undone by it.
+        # reactivation + audit row already committed (the caller runs this after its per-row
+        # transaction.atomic block commits), so they can never be undone by it.
         with transaction.atomic():
             notify(
                 recipient,
@@ -702,41 +702,71 @@ _ACCOUNT_SANCTIONS = (
 def lift_expired_suspensions() -> int:
     """Reactivate accounts whose temporary suspension or timed ban has elapsed, unless a
     lifetime ban or a still-active timed restriction also applies. Returns the number of
-    accounts reactivated."""
+    accounts reactivated.
+
+    Concurrency-safe: the cron fan-out (``run_due_jobs``) can overlap with a second tick or a
+    manual run, so each expiry is processed in its own transaction under a row lock. The
+    ModerationAction row is taken ``select_for_update(skip_locked=True)`` — a second worker steps
+    over a row the first is mid-processing instead of blocking on it — and re-checked for
+    ``lifted_at`` after acquiring the lock, so the same expiry is never lifted (audited +
+    notified) twice. The target account row is locked too, serialising the ``is_active``
+    read-modify-write so a concurrent lift of a *different* expired restriction on the same
+    account can't also reactivate it (a duplicate audit entry + dignity notice)."""
     from django.contrib.auth import get_user_model
 
     user_model = get_user_model()
     now = timezone.now()
     reactivated = 0
-    expired = ModerationAction.objects.filter(
-        action__in=_TIMED_RESTRICTIONS, expires_at__lte=now, lifted_at__isnull=True
+    # Cheap unlocked snapshot of the candidate ids; the lock + re-check happens per row below, so a
+    # row another worker lifts between the snapshot and our turn is skipped (its lifted_at is set).
+    candidate_ids = list(
+        ModerationAction.objects.filter(
+            action__in=_TIMED_RESTRICTIONS, expires_at__lte=now, lifted_at__isnull=True
+        ).values_list("id", flat=True)
     )
-    for moderation in expired:
-        target = moderation.target
-        if isinstance(target, user_model):
-            # Only UN-LIFTED actions still restrict — an appeal-overturned sanction stamps
-            # lifted_at (see _reverse_action), so without this filter the nightly batch would
-            # keep counting an overturned BAN/suspension and never reactivate the account,
-            # silently nullifying a granted DSA Art.17 appeal.
-            scope = ModerationAction.objects.filter(
-                target_type=moderation.target_type,
-                target_id=moderation.target_id,
-                lifted_at__isnull=True,
+    for action_id in candidate_ids:
+        reactivated_user = None
+        with transaction.atomic():
+            moderation = (
+                ModerationAction.objects.select_for_update(skip_locked=True)
+                .filter(pk=action_id, lifted_at__isnull=True)
+                .first()
             )
-            banned = scope.filter(action=ModerationAction.Action.BAN).exists()
-            still_suspended = scope.filter(
-                action__in=_TIMED_RESTRICTIONS, expires_at__gt=now
-            ).exists()
-            if not banned and not still_suspended and not target.is_active:
-                target.is_active = True
-                target.save(update_fields=["is_active"])
-                record_audit("moderation.suspension_lifted", target=target)
-                # F17: symmetric end-of-suspension dignity notice (best-effort, transaction-
-                # isolated so a notify failure can't abort this non-atomic per-row batch).
-                _notify_suspension_lifted(target)
-                reactivated += 1
-        moderation.lifted_at = now
-        moderation.save(update_fields=["lifted_at"])
+            if moderation is None:
+                # Already lifted by a concurrent run, or that run holds the lock — leave it to it.
+                continue
+            target = moderation.target
+            if isinstance(target, user_model):
+                # Lock the account row: serialise the is_active read-modify-write so two expired
+                # restrictions on the same account (processed here or by a concurrent run) can't
+                # both read is_active=False and double-reactivate.
+                target = user_model.objects.select_for_update().get(pk=target.pk)
+                # Only UN-LIFTED actions still restrict — an appeal-overturned sanction stamps
+                # lifted_at (see _reverse_action), so without this filter the nightly batch would
+                # keep counting an overturned BAN/suspension and never reactivate the account,
+                # silently nullifying a granted DSA Art.17 appeal.
+                scope = ModerationAction.objects.filter(
+                    target_type=moderation.target_type,
+                    target_id=moderation.target_id,
+                    lifted_at__isnull=True,
+                )
+                banned = scope.filter(action=ModerationAction.Action.BAN).exists()
+                still_suspended = scope.filter(
+                    action__in=_TIMED_RESTRICTIONS, expires_at__gt=now
+                ).exists()
+                if not banned and not still_suspended and not target.is_active:
+                    target.is_active = True
+                    target.save(update_fields=["is_active"])
+                    record_audit("moderation.suspension_lifted", target=target)
+                    reactivated += 1
+                    reactivated_user = target
+            moderation.lifted_at = now
+            moderation.save(update_fields=["lifted_at"])
+        # F17: symmetric end-of-suspension dignity notice — best-effort and strictly POST-commit
+        # (outside the lock), so a notify failure can never roll back the reactivation. Its own
+        # transaction.atomic inside _notify_suspension_lifted isolates a DB-level notify error.
+        if reactivated_user is not None:
+            _notify_suspension_lifted(reactivated_user)
     return reactivated
 
 
@@ -846,6 +876,10 @@ def _reverse_action(action) -> bool:
         return False
     reactivated = False
     if action.action in _ACCOUNT_SANCTIONS and isinstance(target, get_user_model()):
+        # Lock the account row so this reversal's is_active flip is serialised against a
+        # concurrent lift_expired_suspensions (or another reversal) on the same account — the
+        # same lock those paths take, so the reactivation + its audit can only happen once.
+        target = get_user_model().objects.select_for_update().get(pk=target.pk)
         scope = ModerationAction.objects.filter(
             target_type=action.target_type, target_id=action.target_id, lifted_at__isnull=True
         ).exclude(pk=action.pk)
