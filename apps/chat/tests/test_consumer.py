@@ -1,3 +1,10 @@
+# These are Channels WebsocketCommunicator tests, so they need ``transaction=True``: the consumer
+# reads the DB from a separate thread/connection (via database_sync_to_async) and would not see data
+# created inside the test's wrapping transaction. They deliberately do NOT use serialized_rollback —
+# its post-flush ``deserialize_db_from_string`` collides nondeterministically on django_content_type
+# (e.g. "admin, logentry already exists"), which is what made this suite flaky. The fixtures create
+# everything they need via get_or_create, so the seed-restore that serialized_rollback provides
+# isn't required here.
 import pytest
 from channels.db import database_sync_to_async
 from channels.routing import URLRouter
@@ -13,7 +20,7 @@ def _communicator(thread_id, user):
     return communicator
 
 
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
+@pytest.mark.django_db(transaction=True)
 async def test_member_can_connect_and_broadcast(thread, owner, member):
     owner_conn = _communicator(thread.id, owner)
     member_conn = _communicator(thread.id, member)
@@ -32,7 +39,7 @@ async def test_member_can_connect_and_broadcast(thread, owner, member):
     await member_conn.disconnect()
 
 
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
+@pytest.mark.django_db(transaction=True)
 async def test_outsider_connection_rejected(thread, outsider):
     conn = _communicator(thread.id, outsider)
     connected, _ = await conn.connect()
@@ -40,7 +47,7 @@ async def test_outsider_connection_rejected(thread, outsider):
     await conn.disconnect()
 
 
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
+@pytest.mark.django_db(transaction=True)
 async def test_group_thread_socket_uses_same_gate():
     """A GROUP thread routes through the SAME consumer gate as an activity thread (the consumer now
     passes thread.owner_object everywhere): a member connects + broadcasts; a non-member and a
@@ -90,7 +97,7 @@ async def test_group_thread_socket_uses_same_gate():
     await cc.disconnect()
 
 
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
+@pytest.mark.django_db(transaction=True)
 async def test_guardian_cannot_inject_via_socket(thread, owner):
     """A supervisory guardian may read the thread but the WebSocket write path must reject
     their message through the SAME gate as the web/DRF surfaces (no adult injecting into a
@@ -132,7 +139,7 @@ async def test_guardian_cannot_inject_via_socket(thread, owner):
     await conn.disconnect()
 
 
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
+@pytest.mark.django_db(transaction=True)
 async def test_live_message_carries_server_rendered_body_html(thread, owner, member):
     """A broadcast post carries body_html — the SAME safe HTML the no-JS page renders (peer
     @mention highlight + the markdown subset) — so a live-appended post is first-class, never a
@@ -153,7 +160,7 @@ async def test_live_message_carries_server_rendered_body_html(thread, owner, mem
     await member_conn.disconnect()
 
 
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
+@pytest.mark.django_db(transaction=True)
 async def test_typing_signal_reaches_peers_but_not_the_typer(thread, owner, member):
     """A transient typing signal fans out to OTHER members and never echoes back to the typer, and
     persists NOTHING (pure transport — never a presence record)."""
@@ -179,7 +186,7 @@ async def test_typing_signal_reaches_peers_but_not_the_typer(thread, owner, memb
     await member_conn.disconnect()
 
 
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
+@pytest.mark.django_db(transaction=True)
 async def test_guardian_typing_is_suppressed(thread, owner, member):
     """A supervisory guardian may READ, but their typing signal reaches nobody — no adult presence
     leaks into a children's thread (mirrors the write-gate guardian rejection)."""
@@ -218,7 +225,7 @@ async def test_guardian_typing_is_suppressed(thread, owner, member):
     await member_conn.disconnect()
 
 
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
+@pytest.mark.django_db(transaction=True)
 async def test_reaction_toggle_broadcasts_present_set(thread, owner, member):
     """Toggling a reaction live-updates connected members: a 'reaction' frame carries only the
     distinct emoji set (anonymous, COUNTLESS — no count, no who)."""
@@ -249,7 +256,7 @@ async def test_reaction_toggle_broadcasts_present_set(thread, owner, member):
     await member_conn.disconnect()
 
 
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
+@pytest.mark.django_db(transaction=True)
 async def test_typing_emit_failure_does_not_tear_down_socket(thread, owner, monkeypatch):
     """A transient failure while emitting the transport-only 'typing' signal must be a silent no-op,
     never a socket teardown — typing is best-effort, like broadcast_post / broadcast_reaction."""

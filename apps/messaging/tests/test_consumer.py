@@ -1,3 +1,8 @@
+# Channels WebsocketCommunicator tests: ``transaction=True`` is required (the consumer reads the DB
+# from a separate thread/connection and won't see data in the test's wrapping transaction). They
+# deliberately do NOT use serialized_rollback — its post-flush deserialize collides
+# nondeterministically on django_content_type, which made this suite flaky; the fixtures create
+# their own data, so the seed-restore it provides isn't needed here.
 import pytest
 from channels.routing import URLRouter
 from channels.testing import WebsocketCommunicator
@@ -20,7 +25,7 @@ def _communicator(conversation_id, user):
     return communicator
 
 
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
+@pytest.mark.django_db(transaction=True)
 async def test_active_members_relay_ciphertext():
     from channels.db import database_sync_to_async
 
@@ -54,7 +59,7 @@ async def test_active_members_relay_ciphertext():
     await b_conn.disconnect()
 
 
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
+@pytest.mark.django_db(transaction=True)
 async def test_invited_user_cannot_connect():
     from channels.db import database_sync_to_async
 
@@ -72,7 +77,7 @@ async def test_invited_user_cannot_connect():
     await conn.disconnect()
 
 
-@pytest.mark.django_db(transaction=True, serialized_rollback=True)
+@pytest.mark.django_db(transaction=True)
 async def test_outsider_connection_rejected():
     from channels.db import database_sync_to_async
 
