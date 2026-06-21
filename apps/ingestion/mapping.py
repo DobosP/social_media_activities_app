@@ -78,6 +78,14 @@ MAPPING: list[TagRule] = [
     # Culture & community venues
     TagRule("museum", {"tourism": "museum"}, "museum_visit", 0.8),
     TagRule("theatre", {"amenity": "theatre"}, "theatre_show", 0.8),
+    # An art gallery is an exhibition space — the closest seeded culture activity is
+    # museum_visit (its aliases already include "exhibition"). Slightly lower than a
+    # full museum.
+    TagRule("gallery", {"tourism": "gallery"}, "museum_visit", 0.7),
+    # A cinema screens films; open_air_cinema is the only seeded film activity and
+    # carries the "cinema" alias. Indoor cinemas aren't open-air, so keep confidence
+    # modest rather than asserting an exact venue match.
+    TagRule("cinema", {"amenity": "cinema"}, "open_air_cinema", 0.5),
 ]
 
 # Venues that imply several activities but name no specific sport. Emitted at

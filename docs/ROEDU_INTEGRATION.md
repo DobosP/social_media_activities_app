@@ -4,42 +4,105 @@ This app consumes the **RO-EDU data platform** (`romania_scraper.dataapi`) as on
 more ingestion source. Scope: **Cluj-Napoca first** (matches `INGEST_DEFAULT_CITY`),
 national later. Full design: `../roedu/docs/ROEDU_INTEGRATION_DESIGN.md` (§4, §11).
 
-## What's wired on this branch (`feat/roedu-ingestion`)
+The integration is merged on `main` (not a feature branch). This doc describes the
+**current, working state** — what's wired, how to run a demo, and the real gaps left.
+
+## What's wired (in `main` today)
+
+Places:
 - `apps/ingestion/sources/roedu_client.py` — vendored stdlib HTTP client for the
-  data API (no new dependency).
-- `apps/ingestion/sources/ro_scraper.py` — `RomaniaScraperAdapter` reading the
-  `venues` product → `RawPlace`. Synthesizes OSM-style tags from the venue name so
-  `ingestion.mapping` attaches a `PlaceActivity` edge.
+  data API (`urllib` only, no new dependency). Cursor pagination; **fail-closed** on
+  the platform's license gate (a page with `available != true` yields nothing).
+- `apps/ingestion/sources/ro_scraper.py` — `RomaniaScraperAdapter` (`name="roedu"`)
+  reads the `venues` product → `RawPlace`. It synthesizes OSM-style `tags` from the
+  venue name (`_tags_for`) so `ingestion.mapping` can attach a `PlaceActivity` edge.
 
-Enable it (no code change):
-```python
-# config/settings: INGESTION_EXTRA_ADAPTERS = {"roedu": "apps.ingestion.sources.ro_scraper.RomaniaScraperAdapter"}
-```
-```bash
-ROEDU_API_URL=http://<scraper-host>:8077 ROEDU_API_KEY=social-app-dev \
-  python manage.py ingest_places --source=roedu --city="Cluj-Napoca"
-```
+Events:
+- `apps/events/management/commands/sync_roedu_events.py` — pulls the `events`
+  product, resolves each event to an existing `Place` (geo + name via
+  `find_duplicate`), and upserts **facts only** (no scraped `description` — M2) via
+  the shared `upsert_event`. Defaults to `--min-confidence 1.0` (JSON-LD/iCal only;
+  NER events are held — M5).
+- `Event.Source.SCRAPER = "roedu"` exists (`apps/events/models.py`) and the
+  `0006_alter_event_source` migration is committed.
+- `BatchEventsView` (`apps/ingestion/views.py`) allows `source="roedu"` implicitly
+  (it allowlists `set(Event.Source.values)`), so an external pusher can POST roedu
+  events to `/api/ingestion/batch-events/` as well.
 
-## Still TODO on this branch (tracked from design §11)
-1. **Events ingest** — accept `source="roedu"` (B3): add a `SCRAPER`/`roedu` value
-   to `Event.Source` **and** the `BatchEventsView` allowlist; then a nightly job
-   pulls the `events` product and POSTs `/api/ingestion/batch-events/`
-   (`external_id` = `roedu:<dedup_key>`, `match-place` first). Needs a
-   `makemigrations events` (CI gate).
-2. **Child-venue safety (M4)** — keep `source="roedu"` OUT of the OSM child-venue
-   branch (already the case → fail-closed UNKNOWN); add a curated `ChildVenueClass`
-   allowlist for scraped cultural venues + a regression test asserting
-   `is_child_safe_venue` is False for an unmapped `roedu` place.
-3. **Scraped-event gating for minors (M5)** — auto-publish only `confidence==1.0`
-   events; hold NER events for staff review; don't surface outbound URLs to
-   CHILD/TEEN.
-4. **No copyrighted prose (M2)** — ingest event *facts* + `source_url` only; drop
-   `description` unless the source is open/public-domain.
-5. **Attribution (M3)** — add `attribution`/`license_name` to `Place`/`Event`;
-   render the credit (CC-BY/SA sources exist upstream).
-6. **Activity-type mapping** — add a rule in `apps/ingestion/mapping.py` for the
-   synthesized venue tags (`amenity=theatre/museum/...`) so edges resolve.
+Mapping:
+- `apps/ingestion/mapping.py` has `TagRule`s for every tag `_tags_for` can emit:
+  `amenity=theatre` → `theatre_show`, `tourism=museum` → `museum_visit`,
+  `tourism=gallery` → `museum_visit`, `amenity=cinema` → `open_air_cinema`,
+  `amenity=library` → `reading`, and the `arts_centre` default → a low-confidence
+  generic-venue fan-out (`workshop`/`dance_social`/`board_games`).
 
-The platform enforces the license/GDPR gate server-side (the `social-app-dev` key
-is redistributable-only, no `tdm_exception`), but treat that as defence-in-depth,
-not the only gate.
+Tests (no network, no DB — `django.test.SimpleTestCase`):
+- `apps/ingestion/tests/test_roedu_client.py` — config/env defaults, header +
+  URL/param building (drops `None`), cursor following, `available=false` fail-closed,
+  `max_records`.
+- `apps/ingestion/tests/test_roedu_adapter.py` — the full `_tags_for` heuristic and
+  `fetch()` (`RawPlace` field mapping, RO country, coord coercion, skip-no-coords).
+
+## Running a demo (order matters)
+
+The adapter is **pluggable, not built in**: `ingest_places` only knows about a
+`roedu` source if you register the adapter via `settings.INGESTION_EXTRA_ADAPTERS`.
+This is the #1 footgun — without it you get `CommandError: Unknown source: roedu`.
+
+1. Set env (see `.env.example`):
+   ```bash
+   ROEDU_API_URL=http://<scraper-host>:8077
+   ROEDU_API_KEY=social-app-dev
+   INGESTION_EXTRA_ADAPTERS={"roedu": "apps.ingestion.sources.ro_scraper.RomaniaScraperAdapter"}
+   ```
+   (`INGESTION_EXTRA_ADAPTERS` is read as JSON: `config/settings/base.py` does
+   `env.json("INGESTION_EXTRA_ADAPTERS", default={})`.)
+
+2. **Ingest venues first** — events need their Places to already exist so they can be
+   matched:
+   ```bash
+   python manage.py ingest_places --source=roedu --city="Cluj-Napoca"
+   ```
+
+3. **Then ingest events** (resolves each event to a venue Place; facts only):
+   ```bash
+   python manage.py sync_roedu_events --city="Cluj-Napoca"
+   # --dry-run to preview; --min-confidence 0 to include held NER events.
+   ```
+
+`sync_roedu_events` does NOT use `INGESTION_EXTRA_ADAPTERS` (it instantiates
+`RoeduClient` directly), but it depends on step 2 having run, so keep the env set
+for the whole sequence.
+
+## Safety model
+
+The platform enforces the license/GDPR gate **server-side** (the `social-app-dev`
+key is redistributable-only, no `tdm_exception`). Treat that as defence-in-depth —
+the client also fails closed (`available != true` ⇒ no records).
+
+`source="roedu"` is deliberately NOT one of the OSM/Overture child-venue classes, so
+a scraped venue stays child-venue-**UNKNOWN** (fail-closed) until a curated allowlist
+promotes it — it is never routed through the OSM tag branch (design §11 M4).
+
+## Remaining real gaps (not yet done)
+
+1. **Attribution / license rendering (M3)** — there are still NO `attribution` /
+   `license_name` fields on `Place` / `Event`, and no UI credit. Some upstream
+   sources are CC-BY/SA and require visible attribution; add the fields + render.
+2. **Curated child-venue allowlist for cultural venues (M4)** — the synthesized
+   classes a roedu venue gets (`theatre` / `museum` / `gallery` / `cinema` /
+   `arts_centre`) are **not** in `ChildVenueClass`
+   (`apps/places/migrations/0007_seed_child_venue_classes.py` seeds
+   library/park/sports_centre/school/community_centre/playground/nature_reserve/
+   college only). Correct fail-closed behavior today, but there's no allowlist
+   promoting safe cultural venues and no regression test asserting an unmapped
+   `roedu` place is child-UNKNOWN.
+3. **Scraped-event gating for minors (M5)** — `sync_roedu_events` holds
+   `confidence < 1.0` events, but there is no separate staff-review queue for held
+   NER events and no rule to suppress outbound `source_url` links for CHILD/TEEN.
+4. **Nightly automation** — both commands are manual; no scheduled job / cron wiring
+   pulls roedu places + events on a cadence yet.
+5. **`amenity=cinema` → `open_air_cinema` is a stopgap** — there is no plain indoor
+   "cinema" activity type in the taxonomy; the rule reuses `open_air_cinema` (which
+   carries the "cinema" alias) at low confidence. A dedicated `cinema` activity slug
+   would be cleaner.
