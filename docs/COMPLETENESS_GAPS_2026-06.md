@@ -42,9 +42,9 @@ Legend: `[x]` done · `[ ]` open · **P0** ship-blocker/correctness · **P1** co
   and a DRF `AppealView`; resolution via admin + DRF). No email (in-app-only invariant) — redress is
   the pre-auth surface. Adversarially reviewed; the review caught + fixed a real MED reactivation bug
   (`lift_expired_suspensions` now ignores appeal-overturned/lifted sanctions). Residual LOW follow-ups:
-  - [ ] Overturning a lifetime BAN reactivates the account but does **not** release the
-    `BannedIdentity` ledger row (no `release_identity_ban` service yet; inert unless
-    `IDENTITY_UNIQUENESS_ENFORCED`). Add `release_identity_ban` + call it from `_reverse_action`.
+  - [x] Overturning a lifetime BAN now releases the `BannedIdentity` ledger row
+    (`feat/eudi-binding-followups`): `accounts.release_identity_ban` is wired into `_reverse_action`
+    on BAN-overturn (no-op unless `IDENTITY_UNIQUENESS_ENFORCED` + wallet-bound).
   - [ ] Overturning a REMOVE on a Post the author **also** self-deleted (both use `is_hidden`, no
     provenance) would resurrect it; rare + recoverable (author can re-delete). Add a provenance field
     or skip un-hide when author-deleted.
@@ -69,16 +69,18 @@ Legend: `[x]` done · `[ ]` open · **P0** ship-blocker/correctness · **P1** co
 ## P2 — hardening / quality
 
 ### EUDI identity binding
-- [ ] Implement the durable per-user holder-id record so `EUDIWalletProvider._holder_id` returns a
-  real value and `_enforce_subject` actually binds a credential subject to an account (today always
-  `None` → per-account anti-transfer enforcement is inert; cross-registration uniqueness still works
-  via the `holder_hash` unique constraint). `apps/accounts/identity/providers/eudi.py`.
-- [ ] Implement `release_binding` (set `IdentityBinding.released_at`) or remove the dead recovery path
-  — the documented voluntary fresh-start path does not exist today. `apps/accounts/services.py`.
+- [ ] **DEFERRED (protocol uncertainty):** durable per-user holder-id so `_enforce_subject` enforces
+  the credential subject per account (today `_holder_id` always `None`; cross-registration uniqueness
+  already holds via `holder_hash`). Hinges on whether the EUDI credential `sub` is STABLE across
+  credential renewal/key-rotation for our RP — strict rejection would falsely block a legitimate
+  re-verify. Needs a protocol/product call before enabling; `release_binding` (now built) is the
+  intended escape hatch once it lands. `apps/accounts/identity/providers/eudi.py`.
+- [x] `release_binding` (set `IdentityBinding.released_at`) — built (`feat/eudi-binding-followups`):
+  the documented voluntary fresh-start path now exists + is admin-invokable.
 - [ ] Require a dedicated `IDENTITY_BINDING_SECRET`; it silently defaults to `SECRET_KEY`, so rotating
   `SECRET_KEY` would break every `holder_hash` lookup. Add a prod guard. `config/settings/`.
-- [ ] Register `IdentityBinding` / `BannedIdentity` in `apps/accounts/admin.py` + a moderator path to
-  inspect/unban/release (no way to lift a wrongful lifetime ban today).
+- [x] Register `IdentityBinding` / `BannedIdentity` in `apps/accounts/admin.py` + a moderator path to
+  inspect/release a binding and lift a wrongful identity ban — DONE (`feat/eudi-binding-followups`).
 - [ ] Make web sandbox `verify_age` (`apps/web/views.py`) call `bind_identity` for surface symmetry,
   or document why it intentionally does not.
 - [ ] Add a direct test for the ban-rejection branch inside `bind_identity` (BannedIdentity → 403).
