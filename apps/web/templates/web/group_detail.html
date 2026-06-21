@@ -23,8 +23,8 @@
   <form method="post" action="{% url 'group_archive' group.pk %}" class="inline"
         onsubmit="return confirm('{% trans "Archive this group? Its thread will be frozen." %}');">{% csrf_token %}
     <button class="btn btn-sm" type="submit">{% trans "Archive group" %}</button></form>
-  {% comment %}Public-listing opt-out (adults only): default ON; hidden for non-adult groups,
-     which can never be publicly listed.{% endcomment %}
+  {% comment %}Public-listing opt-IN (adults only): default OFF (privacy by default); hidden for
+     non-adult groups, which can never be publicly listed.{% endcomment %}
   {% if group.cohort == "adult" %}
     <form method="post" action="{% url 'group_listing_toggle' group.pk %}" class="inline">{% csrf_token %}
       <input type="hidden" name="next" value="{{ request.path }}">

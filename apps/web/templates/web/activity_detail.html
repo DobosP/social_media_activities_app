@@ -97,8 +97,8 @@
       {# W4-F5: re-run this session without re-typing the venue/logistics (prefill only). #}
       <a class="btn btn-sm btn-secondary" href="{% url 'activity_create' %}?from={{ activity.pk }}">{% trans "Set up another like this" %}</a>
     </div>
-    {% comment %}Public-listing opt-out (adults only): let logged-out people discover this meetup,
-       default ON. Hidden for non-adult activities, which can never be publicly listed.{% endcomment %}
+    {% comment %}Public-listing opt-IN (adults only): let logged-out people discover this meetup,
+       default OFF (privacy by default). Hidden for non-adult activities, which can never be listed.{% endcomment %}
     {% if is_open and activity.cohort == "adult" %}
       <form method="post" action="{% url 'activity_listing_toggle' activity.pk %}" style="margin-top:.6rem">
         {% csrf_token %}

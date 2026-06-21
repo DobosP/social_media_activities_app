@@ -3750,7 +3750,7 @@ def unblock_user_view(request, pk):
 @login_required
 @require_POST
 def activity_listing_toggle(request, pk):
-    """Organiser opt-out toggle for anonymous discovery of an ADULT activity (default ON)."""
+    """Organiser opt-IN toggle for anonymous discovery of an ADULT activity (default OFF)."""
     activity = get_object_or_404(Activity, pk=pk)
     listed = request.POST.get("listed") == "1"
     try:
@@ -3769,7 +3769,7 @@ def activity_listing_toggle(request, pk):
 @login_required
 @require_POST
 def group_listing_toggle(request, pk):
-    """Organiser opt-out toggle for anonymous discovery of an ADULT group (default ON)."""
+    """Organiser opt-IN toggle for anonymous discovery of an ADULT group (default OFF)."""
     group = get_object_or_404(Group, pk=pk)
     listed = request.POST.get("listed") == "1"
     try:
