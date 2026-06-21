@@ -8,6 +8,7 @@ yields https. No people, no PII here: only paths to already-public pages flow th
 """
 
 from django.conf import settings
+from django.utils.cache import patch_vary_headers
 from django.utils.text import slugify
 
 
@@ -48,9 +49,33 @@ def _slug(text: str, fallback: str) -> str:
 PUBLIC_CACHE_SECONDS = 3600  # 1h — anonymous, open-data SEO endpoints; crawl-budget/CDN friendly
 
 
-def cache_public(response, max_age: int = PUBLIC_CACHE_SECONDS):
-    """Mark an anonymous open-data response publicly cacheable. Only use on pages with no
-    per-user/cookie content (robots/sitemap/feed/landing) — never on authenticated pages."""
+def cache_public(response, request=None, max_age: int = PUBLIC_CACHE_SECONDS):
+    """Mark an open-data response cacheable — ``public`` for shared caches/CDNs *only* when it
+    is safe by construction, else ``private`` (the visitor's own browser, never shared).
+
+    Pass ``request`` for any page rendered from the cookie-bearing base layout (the landing
+    pages). Such a page is **never** marked ``public``, because the base template both injects
+    per-user nav when authenticated (unread count, guardian/connection flags) *and* mints a
+    per-session CSRF cookie + form token for the language switcher even for anonymous visitors
+    (the cookie is added by middleware after this returns, so it can't be detected here). A
+    shared cache marked ``public`` could replay one visitor's nav — or their ``Set-Cookie:
+    csrftoken`` + form token — to everyone hitting the same (cookie-less) cache entry. So:
+
+    * authenticated  -> ``private, no-cache`` (always revalidate; freshest per-user data), and
+    * anonymous      -> ``private, max-age`` (the visitor's own browser may reuse it; a shared
+      cache must not), plus ``Vary: Cookie`` as defence-in-depth if an intermediary ignores
+      ``private``.
+
+    Omit ``request`` only for pure open-data responses with *no* per-user/cookie content at all
+    (robots.txt / sitemap.xml / llms.txt) — those alone stay unconditionally ``public``."""
+    if request is not None:
+        patch_vary_headers(response, ("Cookie",))
+        user = getattr(request, "user", None)
+        if user is not None and user.is_authenticated:
+            response["Cache-Control"] = "private, no-cache"
+        else:
+            response["Cache-Control"] = f"private, max-age={max_age}"
+        return response
     response["Cache-Control"] = f"public, max-age={max_age}"
     return response
 

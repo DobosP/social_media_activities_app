@@ -10,6 +10,7 @@ import re
 from datetime import timedelta
 
 import pytest
+from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point
 from django.test import Client, override_settings
 from django.utils import timezone
@@ -127,10 +128,37 @@ def test_public_seo_endpoints_send_cache_control(path):
     resp = Client().get(path)
     assert resp.status_code == 200
     assert "public" in resp.headers.get("Cache-Control", "")
+    # A publicly-cacheable response must never carry a Set-Cookie — a shared cache would replay
+    # one visitor's cookie (e.g. csrftoken) to everyone. These open-data endpoints set none.
+    assert not resp.cookies, f"{path} set cookies on a public response: {list(resp.cookies)}"
 
 
-def test_landing_page_sends_cache_control():
+@pytest.mark.parametrize(
+    "path_tmpl", ["/things-to-do/", "/things-to-do/{slug}/", "/things-to-do/{slug}/{t}/"]
+)
+def test_landing_pages_are_private_not_public(path_tmpl):
+    # Regression (two leaks via a shared cache marked `public`): (1) an authenticated user's
+    # per-user nav (unread count, guardian/connection flags), and (2) ANY visitor's per-session
+    # CSRF cookie + form token from the base-layout language form. The landing pages render that
+    # base layout, so they must be `private` for everyone — never `public`.
     area, t, _, _ = _landing_fixture()
-    resp = Client().get(f"/things-to-do/{area.slug}/{t.slug}/")
-    assert resp.status_code == 200
-    assert "public" in resp.headers.get("Cache-Control", "")
+    path = path_tmpl.format(slug=area.slug, t=t.slug)
+    User = get_user_model()
+
+    # Anonymous: private (browser-only) + Vary: Cookie, never public.
+    anon = Client().get(path)
+    assert anon.status_code == 200
+    anon_cc = anon.headers.get("Cache-Control", "")
+    assert "public" not in anon_cc and "private" in anon_cc, anon_cc
+    assert "Cookie" in anon.headers.get("Vary", "")
+
+    # Authenticated: private + no-cache (always revalidate per-user data), never public.
+    client = Client()
+    client.force_login(
+        User.objects.create_user(username=f"r3{abs(hash(path_tmpl)) % 9999}", password="pw")
+    )
+    auth = client.get(path)
+    assert auth.status_code == 200
+    auth_cc = auth.headers.get("Cache-Control", "")
+    assert "public" not in auth_cc and "private" in auth_cc, auth_cc
+    assert "Cookie" in auth.headers.get("Vary", "")
