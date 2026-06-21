@@ -15,6 +15,35 @@ Legend: `[x]` done · `[ ]` open · **P0** ship-blocker/correctness · **P1** co
 
 ---
 
+## ⏭️ NEXT SESSION — START HERE (updated 2026-06-21)
+
+**Done & pushed this session** (origin/main @ `7663844`): P0 SEO cache-header fix · P1 DSA Art.17
+redress (`[x]` below) · P1 privacy-by-default discovery (`[x]`) · P2 EUDI binding release paths +
+admin tooling (`[x]`) · flaky chat/messaging consumer tests fixed (CI is green & deterministic again
+— full suite **2083 passed, 0 errors** twice). Each was adversarially reviewed before merge.
+
+**Recommended next pick → DSA sanctions hardening** (P2, pure engineering, no product decision):
+row-lock `lift_expired_suspensions` against concurrent cron (`select_for_update(skip_locked)` or a job
+lock) + add the missing HTTP-layer tests for the DRF moderation/referral views. See the P2 list below.
+
+**Then, remaining open work** (all itemised below with file pointers):
+- **P2 batch** (autonomous): `IDENTITY_BINDING_SECRET` prod guard · `request_id` into cron jobs ·
+  circuit-breaker locking + half-open · media docscan/managed-scanner tests · render.yaml `/readyz` +
+  `METRICS_TOKEN` (confirm Render vs Hetzner/Terraform deploy target first) · CSP report-uri ·
+  covering indexes / N+1 sweep · SEO stale-301 docstrings · IaC remote state backend + CI validation.
+- **P1 needing YOUR product/DPO call**: progression "Level N of 5" gamification copy (inv.2);
+  coarser anonymous public-card time/venue display; DRF opt-in toggle for public listing (LOW).
+- **DEFERRED (needs a protocol decision)**: EUDI strict per-account anti-transfer (`_enforce_subject`)
+  — see the EUDI section for why.
+- **CFG**: activation config before launch (EUDI trust list + flag, Stripe, media CSAM scanner + S3,
+  Sentry/metrics/heartbeat, SEO domain/console tokens, legal-copy finalisation).
+
+Cadence reminder: branch first → build → adversarial review (single agent for small, Workflow for
+complex/safety) → `pytest -q` full suite + `ruff check`/`format --check` + `makemigrations --check` →
+merge `--no-ff` → **ask before pushing** (the auto classifier blocks direct-to-main without per-instance OK).
+
+---
+
 ## P0 — correctness
 
 - [x] **SEO landing pages were `Cache-Control: public` while rendering cookie-bearing content.** A
