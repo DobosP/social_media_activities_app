@@ -15,7 +15,23 @@
 {% if query %}
 <p class="muted">{% blocktrans with q=query %}Results for “{{ q }}” — soonest first.{% endblocktrans %}</p>
 {% else %}{% include "web/_near_me.html" %}{% endif %}
-{% for a in activities %}{% include "web/_activity_card.html" %}{% empty %}
+{% comment %}Text-first view modes — presentation only, never changes which activities are shown.{% endcomment %}
+<nav class="muted" role="navigation" aria-label="{% trans 'View mode' %}" style="margin:.3rem 0">
+  {% trans "View:" %}
+  {% if view_mode == "grid" %}<strong>{% trans "grid" %}</strong>{% else %}<a href="?{{ base_qs }}{% if base_qs %}&amp;{% endif %}view=grid">{% trans "grid" %}</a>{% endif %}
+  &middot; {% if view_mode == "list" %}<strong>{% trans "list" %}</strong>{% else %}<a href="?{{ base_qs }}{% if base_qs %}&amp;{% endif %}view=list">{% trans "list" %}</a>{% endif %}
+  &middot; {% if view_mode == "card" %}<strong>{% trans "one at a time" %}</strong>{% else %}<a href="?{{ base_qs }}{% if base_qs %}&amp;{% endif %}view=card">{% trans "one at a time" %}</a>{% endif %}
+</nav>
+{% for a in activities %}
+  {% if view_mode == "list" %}{% include "web/_activity_row.html" %}{% else %}{% include "web/_activity_card.html" %}{% endif %}
+{% empty %}
 <p class="muted">{% if query %}{% trans "No upcoming activities match your search." %}{% else %}{% trans "Nothing upcoming yet. Be the first to organise something!" %}{% endif %}</p>
 {% if did_you_mean %}<p class="muted">{% blocktrans with term=did_you_mean termq=did_you_mean_q %}Did you mean <a href="?{{ termq }}">{{ term }}</a>?{% endblocktrans %}</p>{% endif %}{% endfor %}
+{% if view_mode == "card" and page_obj %}
+<nav class="row" role="navigation" aria-label="{% trans 'Pager' %}" style="gap:1rem;margin-top:.5rem;align-items:center">
+  {% if page_obj.has_previous %}<a class="btn" href="?{{ base_qs }}{% if base_qs %}&amp;{% endif %}view=card&amp;page={{ page_obj.previous_page_number }}">{% trans "← Previous" %}</a>{% endif %}
+  <span class="muted">{% blocktrans with n=page_obj.number total=page_obj.paginator.num_pages %}{{ n }} of {{ total }}{% endblocktrans %}</span>
+  {% if page_obj.has_next %}<a class="btn" href="?{{ base_qs }}{% if base_qs %}&amp;{% endif %}view=card&amp;page={{ page_obj.next_page_number }}">{% trans "Next →" %}</a>{% endif %}
+</nav>
+{% endif %}
 {% endblock %}

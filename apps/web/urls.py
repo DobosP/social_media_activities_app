@@ -177,6 +177,7 @@ urlpatterns = [
     path("inbox/", views.inbox_hub, name="inbox"),
     # Interests, profile, notifications, donations
     path("interests/", views.interests, name="interests"),
+    path("topics/", views.topic_preferences, name="topic_preferences"),
     path("access/", views.access_preferences, name="access_preferences"),
     path("profile/", views.profile, name="profile"),
     path("profile/avatar/", views.avatar_upload, name="avatar_upload"),
@@ -188,6 +189,11 @@ urlpatterns = [
         "wards/<int:ward_pk>/limits/",
         views.guardian_guardrail_set,
         name="guardian_guardrail_set",
+    ),
+    path(
+        "wards/<int:ward_pk>/topics/",
+        views.ward_topics_set,
+        name="ward_topics_set",
     ),
     path("guardianship/", views.my_guardians, name="my_guardians"),
     path(

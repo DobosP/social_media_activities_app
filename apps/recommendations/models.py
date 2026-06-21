@@ -11,7 +11,7 @@ from django.db import models
 from pgvector.django import HnswIndex, VectorField
 
 from apps.social.models import Activity
-from apps.taxonomy.models import ActivityType
+from apps.taxonomy.models import ActivityCategory, ActivityType
 
 # Fixed embedding dimension. Taxonomy slugs are feature-hashed into this space, so the
 # dimension is stable even as new activity types/categories are added.
@@ -36,6 +36,37 @@ class UserInterest(models.Model):
 
     def __str__(self):
         return f"{self.user} -> {self.activity_type.slug}"
+
+
+class TopicPreference(models.Model):
+    """A topic (taxonomy CATEGORY, e.g. "sport", "reading") a user wants the suggestion feed to
+    steer toward — the user's hand on the algorithm (inv.2: no black-box, no behavioural
+    inference). STATED, never inferred from behaviour, exactly like ``UserInterest``; the
+    difference is granularity (category vs activity type) and intent (it tunes *what is
+    surfaced*, not what is joinable).
+
+    It is a SOFT signal only: it re-orders and honestly labels cohort-visible suggestions but
+    NEVER hides anything (mirrors ``places.AccessPreference``) — so it can't quietly narrow a
+    child's world or become an engagement lever. For a CHILD ward an active guardian may set it
+    too ("the responsible person controls the feed"); the HARD child-safety category ENVELOPE
+    stays ``accounts.GuardianGuardrail.allowed_categories`` (join/create gate), a separate
+    concern. One row per (user, category)."""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="topic_preferences"
+    )
+    category = models.ForeignKey(
+        ActivityCategory, on_delete=models.CASCADE, related_name="preferring_users"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["user", "category"], name="uq_user_topic_pref"),
+        ]
+
+    def __str__(self):
+        return f"{self.user} -> #{self.category.slug}"
 
 
 class ActivityEmbedding(models.Model):

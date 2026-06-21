@@ -116,6 +116,28 @@
     </details>
     {% endif %}
 
+    {% if w.can_set_topics %}
+    <details class="card" style="margin:.6rem 0">
+      <summary>{% trans "Suggested topics for their feed" %}</summary>
+      <p class="muted" style="font-size:.85rem">{% blocktrans %}Pick the kinds of activity their suggestions should lean toward. This only nudges the order of what's suggested and adds an honest note &mdash; it never hides anything, and it never changes what they're allowed to join (use the participation limits above for that).{% endblocktrans %}</p>
+      <form method="post" action="{% url 'ward_topics_set' w.pk %}" class="stack">
+        {% csrf_token %}
+        {% if guardrail_categories %}
+        <fieldset style="border:0;padding:0;margin:0">
+          <legend style="font-size:.85rem">{% trans "Topics to lean toward (none ticked = no steering)" %}</legend>
+          {% for slug, name in guardrail_categories %}
+            <label class="inline" style="margin-right:.5rem">
+              <input type="checkbox" name="topics" value="{{ slug }}"
+                     {% if slug in w.topic_slugs %}checked{% endif %}>
+              {{ name }}</label>
+          {% endfor %}
+        </fieldset>
+        {% endif %}
+        <button class="btn btn-sm" type="submit">{% trans "Save topics" %}</button>
+      </form>
+    </details>
+    {% endif %}
+
     <form method="post" action="{% url 'guardian_revoke' w.pk %}" class="inline"
           onsubmit="return confirm('{% blocktrans with name=w.display_name|default:w.username %}End guardianship of {{ name }}? This also revokes the consent you granted.{% endblocktrans %}');">
       {% csrf_token %}

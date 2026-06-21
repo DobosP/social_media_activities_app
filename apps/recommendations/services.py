@@ -6,6 +6,7 @@ import base64
 from django.conf import settings
 from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.measure import D
+from django.db import transaction
 from django.utils import timezone
 from pgvector.django import CosineDistance
 
@@ -17,10 +18,11 @@ from apps.places.services import (
 )
 from apps.social.models import Activity, Membership
 from apps.social.services import visible_activities, with_counts
-from apps.taxonomy.models import ActivityType
+from apps.taxonomy.models import ActivityCategory, ActivityType
+from apps.taxonomy.services import category_ancestry_slugs
 
 from .embeddings import activity_vector, user_vector
-from .models import ActivityEmbedding, UserInterest
+from .models import ActivityEmbedding, TopicPreference, UserInterest
 
 # F5 distance-bounded recommendations (request-only proximity; CORE ONLY — no stored vector/area).
 # When the home feed carries request-only coordinates, the pgvector ranking is re-ranked in Python
@@ -60,6 +62,70 @@ def set_interests(user, slugs) -> list[ActivityType]:
 
 def get_interests(user):
     return ActivityType.objects.filter(interested_users__user=user).order_by("slug")
+
+
+# --- Topic preferences: the user's (or a guardian's) hand on the suggestion algorithm ----------
+# A SOFT, stated steering signal over taxonomy CATEGORIES. Mirrors places.AccessPreference: it
+# re-orders + honestly labels cohort-visible suggestions, but NEVER hides anything and NEVER
+# widens visibility past the cohort wall. See models.TopicPreference.
+
+
+@transaction.atomic
+def set_topic_preferences(user, slugs) -> list[ActivityCategory]:
+    """Replace the user's chosen topics with the given active category slugs (idempotent;
+    unknown/inactive slugs are silently dropped, so a stale form can't error). Returns the saved
+    categories. Used by the self-service /topics/ page AND by a guardian setting a ward's feed."""
+    # Only TOP-LEVEL categories are storable — that's all the pickers offer, and a top topic
+    # already covers its whole subtree via the category-ancestry walk. Constraining here keeps the
+    # stored set in lockstep with what the checkbox UIs can render + pre-check, even for a crafted
+    # request to the DRF/form endpoint.
+    categories = list(ActivityCategory.objects.filter(parent__isnull=True, slug__in=list(slugs)))
+    TopicPreference.objects.filter(user=user).delete()
+    TopicPreference.objects.bulk_create(
+        [TopicPreference(user=user, category=c) for c in categories]
+    )
+    return categories
+
+
+def get_topic_categories(user):
+    """The ActivityCategory rows the user has chosen as topics (alphabetical). Empty for an
+    anonymous user."""
+    if not getattr(user, "is_authenticated", False):
+        return ActivityCategory.objects.none()
+    return ActivityCategory.objects.filter(preferring_users__user=user).order_by("slug")
+
+
+def topic_preference_slugs(user) -> frozenset:
+    """The viewer's chosen topic-category slugs as a frozenset (empty when none / anonymous)."""
+    if not getattr(user, "is_authenticated", False):
+        return frozenset()
+    return frozenset(
+        TopicPreference.objects.filter(user=user).values_list("category__slug", flat=True)
+    )
+
+
+def activity_matches_topics(activity, slugs) -> bool:
+    """True iff the activity's type sits under one of the chosen topic categories. Uses the
+    shared category-ancestry walk, so choosing a parent topic (e.g. "sport") matches a
+    sub-category type (e.g. team_sport→basketball). Empty selection never matches."""
+    if not slugs:
+        return False
+    atype = getattr(activity, "activity_type", None)
+    if atype is None:
+        return False
+    return bool(set(category_ancestry_slugs(atype)) & set(slugs))
+
+
+def sort_by_topic_match(activities, slugs):
+    """A stable NUDGE that floats topic-matched activities to the front while leaving every other
+    activity in its original relative order — it NEVER filters or hides anything (mirrors
+    places.sort_by_access_match). No-op when the viewer chose no topics. Operates on an
+    already-materialised, already-cohort-gated list, so it can never widen visibility."""
+    if not slugs:
+        return list(activities)
+    materialised = list(activities)
+    # Stable sort: False (matched) sorts before True (not matched); equal keys keep input order.
+    return sorted(materialised, key=lambda a: not activity_matches_topics(a, slugs))
 
 
 def suggest_starter_interests(user, *, limit=12):
@@ -242,9 +308,11 @@ def recommend_activities(user, *, limit=20, near_point=None, radius_m=None):
     uvec = user_vector(user)
     if not any(uvec):  # cold start — no declared interests or joined activities yet
         return list(
-            with_counts(candidates.select_related("place", "activity_type", "owner")).order_by(
-                "starts_at"
-            )[:limit]
+            with_counts(
+                # category__parent is select_related so the topic-match ancestry walk
+                # (recommended_with_reasons) stays query-free — no per-card N+1.
+                candidates.select_related("place", "activity_type__category__parent", "owner")
+            ).order_by("starts_at")[:limit]
         )
 
     # F5: only when request-only coordinates are present do we over-fetch + Python re-rank by
@@ -253,7 +321,13 @@ def recommend_activities(user, *, limit=20, near_point=None, radius_m=None):
     ranked = (
         ActivityEmbedding.objects.filter(activity__in=candidates)
         .annotate(distance=CosineDistance("vector", uvec))
-        .select_related("activity", "activity__place", "activity__activity_type", "activity__owner")
+        .select_related(
+            "activity",
+            "activity__place",
+            # category__parent so the topic-match ancestry walk adds no per-card query.
+            "activity__activity_type__category__parent",
+            "activity__owner",
+        )
     )
     if proximity:
         # Distance() on the geography(4326) column returns metres (.m). Distinct alias from the
@@ -307,18 +381,25 @@ def recommended_with_reasons(user, *, limit=8, near_point=None, radius_m=None):
             "activity_type__slug", "activity_type__name"
         )
     )
+    topic_slugs = topic_preference_slugs(user)
     for a in recommended:
+        a.rec_topic_match = activity_matches_topics(a, topic_slugs)
         distance = getattr(a, "rec_distance", None)
         if distance is None:  # cold start — no vector signal (never a perfect-match 0.0)
             a.rec_reason = "soonest first"
-            continue
-        a.match_pct = max(0, min(100, round((1 - float(distance)) * 100)))
-        if a.activity_type.slug in interest_names:
-            a.rec_reason = f"matches your interest in {interest_names[a.activity_type.slug]}"
         else:
-            a.rec_reason = f"{a.match_pct}% match"
-        if getattr(a, "rec_near", False):
-            a.rec_reason += " · near you"
-        if getattr(a, "rec_access_match", False):
-            a.rec_reason += " · matches your access needs"
-    return recommended
+            a.match_pct = max(0, min(100, round((1 - float(distance)) * 100)))
+            if a.activity_type.slug in interest_names:
+                a.rec_reason = f"matches your interest in {interest_names[a.activity_type.slug]}"
+            else:
+                a.rec_reason = f"{a.match_pct}% match"
+            if getattr(a, "rec_near", False):
+                a.rec_reason += " · near you"
+            if getattr(a, "rec_access_match", False):
+                a.rec_reason += " · matches your access needs"
+        # The chosen-topic suffix is honest on BOTH the cold-start and the ranked path.
+        if a.rec_topic_match:
+            a.rec_reason += " · matches your chosen topics"
+    # SOFT nudge LAST: float chosen-topic suggestions to the front without hiding anything or
+    # disturbing the cohort wall (recommend_activities already gated visibility).
+    return sort_by_topic_match(recommended, topic_slugs)
