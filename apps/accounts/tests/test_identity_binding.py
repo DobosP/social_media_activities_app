@@ -175,3 +175,48 @@ def test_duplicate_wallet_blocked_at_api(settings):
     second.refresh_from_db()
     assert second.is_identity_verified is False
     assert IdentityBinding.objects.count() == 1
+
+
+# --- release paths: lifting a ban + voluntary fresh start ---
+
+
+@pytest.mark.django_db
+def test_release_identity_ban_lifts_ledger(settings):
+    settings.IDENTITY_UNIQUENESS_ENFORCED = True
+    from apps.accounts.models import BannedIdentity
+    from apps.accounts.services import ban_identity, identity_is_banned, release_identity_ban
+
+    user = User.objects.create_user(username="rb", password="pw")
+    bind_identity(user, _verified_result(sub="holder-rb"))
+    ban_identity(user)
+    assert identity_is_banned("holder-rb") is True
+
+    assert release_identity_ban(user) is True
+    assert identity_is_banned("holder-rb") is False
+    assert BannedIdentity.objects.count() == 0
+    assert release_identity_ban(user) is False  # idempotent
+
+
+@pytest.mark.django_db
+def test_release_identity_ban_noop_without_binding(settings):
+    settings.IDENTITY_UNIQUENESS_ENFORCED = True
+    from apps.accounts.services import release_identity_ban
+
+    assert release_identity_ban(User.objects.create_user(username="rb2", password="pw")) is False
+
+
+@pytest.mark.django_db
+def test_release_binding_frees_wallet_for_a_new_account(settings):
+    settings.IDENTITY_UNIQUENESS_ENFORCED = True
+    from apps.accounts.services import release_binding
+
+    a = User.objects.create_user(username="ra", password="pw")
+    bind_identity(a, _verified_result(sub="holder-shared"))
+    assert release_binding(a) is True
+    assert IdentityBinding.objects.first().released_at is not None
+
+    # The same wallet may now (re)bind a different account via bind_identity's recovery branch.
+    b = User.objects.create_user(username="rbn", password="pw")
+    bound = bind_identity(b, _verified_result(sub="holder-shared"))
+    assert bound is not None and bound.user_id == b.id
+    assert release_binding(a) is False  # a's binding was already released (idempotent)

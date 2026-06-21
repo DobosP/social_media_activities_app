@@ -210,6 +210,34 @@ def test_overturned_ban_does_not_keep_account_locked_after_timed_lifts():
     assert user.is_active is True
 
 
+def test_overturn_ban_releases_identity_ledger(settings):
+    # Overturning a lifetime BAN must also lift the wallet from the identity-ban ledger, so the
+    # vindicated person can register/recover again (closes the Art.17 BAN-overturn residual).
+    settings.IDENTITY_UNIQUENESS_ENFORCED = True
+    from apps.accounts.services import bind_identity, identity_is_banned
+
+    mod, user = _user("rl_mod", staff=True), _user("rl_user")
+    bind_identity(
+        user,
+        AssuranceResult(
+            age_band=AgeBand.ADULT,
+            verified=True,
+            provider="eudi",
+            method="openid4vp",
+            holder_sub="holder-rl",
+            raw={"age_over_16": True, "age_over_18": True, "holder_proof": "verified"},
+        ),
+    )
+    ban = take_action(mod, user, ModerationAction.Action.BAN, ReasonCode.HARASSMENT)
+    assert identity_is_banned("holder-rl") is True
+
+    appeal = file_appeal(user, ban, "wrongly banned")
+    resolve_appeal(mod, appeal, grant=True)
+    user.refresh_from_db()
+    assert user.is_active is True
+    assert identity_is_banned("holder-rl") is False  # ledger released on overturn
+
+
 def test_overturn_for_minor_alerts_active_guardian():
     # An appeal outcome is a moderation outcome about the (CHILD) affected user — the W4-F3
     # symmetric guardian loop must fire on resolution, keyed on an ACTIVE GuardianRelationship.

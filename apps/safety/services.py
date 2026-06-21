@@ -862,9 +862,13 @@ def _reverse_action(action) -> bool:
             target.is_active = True
             target.save(update_fields=["is_active"])
             reactivated = True
-        # NOTE: overturning a lifetime BAN reactivates the account but does NOT release the
-        # identity-ledger BannedIdentity row (no release_identity_ban service yet; it is inert
-        # unless IDENTITY_UNIQUENESS_ENFORCED). Tracked in docs/COMPLETENESS_GAPS_2026-06.md.
+        # Overturning a lifetime BAN also releases the wallet from the identity-ban ledger, so the
+        # vindicated person can register/recover again (no-op unless IDENTITY_UNIQUENESS_ENFORCED
+        # and they were wallet-bound). Only when no OTHER active BAN still keys the same wallet.
+        if action.action == ModerationAction.Action.BAN and not other_ban:
+            from apps.accounts.services import release_identity_ban
+
+            release_identity_ban(target)
     elif action.action == ModerationAction.Action.REMOVE and hasattr(target, "is_hidden"):
         other_remove = (
             ModerationAction.objects.filter(

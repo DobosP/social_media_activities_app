@@ -162,6 +162,44 @@ def ban_identity(user: User) -> BannedIdentity | None:
     return banned
 
 
+@transaction.atomic
+def release_identity_ban(user: User) -> bool:
+    """Reverse a lifetime identity ban — e.g. a DSA Art.17 appeal overturned the BAN. Removes this
+    user's wallet holder from the ban ledger so the same EU Digital Identity may register/recover
+    again. No-op (returns False) when the user has no binding or isn't on the ledger. Idempotent,
+    audited.
+
+    Keys off the user's live IdentityBinding, so it only reaches a ban whose account was NOT erased
+    (the appeal-overturn case). A ban that outlived erasure (orphaned binding) is lifted only by
+    staff via the admin BannedIdentity tool."""
+    from apps.safety.services import record_audit
+
+    binding = IdentityBinding.objects.filter(user=user).first()
+    if binding is None:
+        return False
+    deleted, _ = BannedIdentity.objects.filter(holder_hash=binding.holder_hash).delete()
+    if deleted:
+        record_audit("identity.ban_released", actor=user, target=binding)
+    return bool(deleted)
+
+
+@transaction.atomic
+def release_binding(user: User) -> bool:
+    """Voluntarily release this user's one-person identity binding (the documented 'fresh start'
+    path): mark it released so the SAME wallet is free to bind a new account later, without erasing
+    this one. No-op (returns False) when the user has no live binding. Audited. A deliberate
+    user/staff action — never automatic."""
+    from apps.safety.services import record_audit
+
+    binding = IdentityBinding.objects.filter(user=user, released_at__isnull=True).first()
+    if binding is None:
+        return False
+    binding.released_at = timezone.now()
+    binding.save(update_fields=["released_at"])
+    record_audit("identity.binding_released", actor=user, target=binding)
+    return True
+
+
 def minor_onboarding_enabled() -> bool:
     """Whether this deployment permits onboarding minors (guardian-linking + consent).
     OFF in production by default until a real parental-responsibility trust anchor exists
