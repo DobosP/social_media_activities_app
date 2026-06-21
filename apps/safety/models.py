@@ -127,6 +127,52 @@ class ModerationAction(models.Model):
         return f"{self.action} ({self.reason})"
 
 
+class ModerationAppeal(models.Model):
+    """A user's DSA Art.17 contest of a moderation decision that affected them — the internal
+    complaint-handling path the statement-of-reasons promises ("you may contest it").
+
+    One appeal per ModerationAction (the OneToOne); a moderator resolves it by UPHOLDing the
+    decision or OVERTURNing it (which reactivates the account / un-hides the content). The
+    appellant is the affected user themselves; ``appellant`` is SET_NULL so the row survives a
+    later erasure for the audit trail. The moderator's private decision_notes are NEVER shown to
+    the appellant (the self-scoped reader allowlists fields, mirroring F19)."""
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending review"
+        UPHELD = "upheld", "Upheld (decision stands)"
+        OVERTURNED = "overturned", "Overturned (decision reversed)"
+
+    action = models.OneToOneField(ModerationAction, on_delete=models.CASCADE, related_name="appeal")
+    appellant = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="appeals_filed",
+    )
+    statement = models.TextField()
+    status = models.CharField(max_length=12, choices=Status.choices, default=Status.PENDING)
+    decided_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="appeals_decided",
+    )
+    decision_notes = models.TextField(blank=True)
+    decided_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            # The moderator review queue lists PENDING oldest-first (fairness); the lone status
+            # filter plus ordering keeps it an index scan as the table grows.
+            models.Index(fields=["status", "created_at"], name="safety_appeal_status_idx"),
+        ]
+
+    def __str__(self):
+        return f"appeal(action={self.action_id}, {self.status})"
+
+
 class AuthorityReferral(models.Model):
     """A staff referral of a user to an external authority (e.g. a national hotline or police)
     for behaviour with real-world legal weight — grooming/CSAM above all.

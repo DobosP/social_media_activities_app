@@ -35,10 +35,22 @@ Legend: `[x]` done · `[ ]` open · **P0** ship-blocker/correctness · **P1** co
 
 ## P1 — compliance / product decisions
 
-- [ ] **DSA Art.17 redress is unreachable.** A SUSPEND/TIMED_BAN/BAN sets `is_active=False`, so the
-  offender cannot log in to read the in-app statement-of-reasons, and there is no appeal/contest
-  endpoint (the notice even says "you may contest it"). Deliver the Art.17 notice out-of-band
-  (email / pre-auth surface) **and** add a contest path. `apps/safety/services.py`, `apps/safety/views.py`.
+- [x] **DSA Art.17 redress is unreachable.** DONE (`feat/dsa-art17-redress`): a pre-auth
+  `/account/restricted/` surface lets a restricted user (is_active=False) prove credentials WITHOUT a
+  session to read their allowlisted statement of reasons, and a `ModerationAppeal` model +
+  `file_appeal`/`resolve_appeal` services give the contest path (also reachable from `/my-safety-record/`
+  and a DRF `AppealView`; resolution via admin + DRF). No email (in-app-only invariant) — redress is
+  the pre-auth surface. Adversarially reviewed; the review caught + fixed a real MED reactivation bug
+  (`lift_expired_suspensions` now ignores appeal-overturned/lifted sanctions). Residual LOW follow-ups:
+  - [ ] Overturning a lifetime BAN reactivates the account but does **not** release the
+    `BannedIdentity` ledger row (no `release_identity_ban` service yet; inert unless
+    `IDENTITY_UNIQUENESS_ENFORCED`). Add `release_identity_ban` + call it from `_reverse_action`.
+  - [ ] Overturning a REMOVE on a Post the author **also** self-deleted (both use `is_hidden`, no
+    provenance) would resurrect it; rare + recoverable (author can re-delete). Add a provenance field
+    or skip un-hide when author-deleted.
+  - [ ] F19 `safety_record_for` caps own-content id sets (`[:500]`/`[:1000]`), so a user with more
+    can't *contest* a decision on content beyond the cap from that page (the pre-auth surface still
+    covers account sanctions). Query `ModerationAction` against the GFK columns directly.
 - [ ] **Public discovery defaults to opt-OUT** (`Activity.is_publicly_listed=True`); migration `0030`
   default=True back-fills *all existing adult* activities/groups to public on deploy. Get explicit
   DPO/legal sign-off vs privacy-by-default; decide whether adults should default opt-IN. Confirm the

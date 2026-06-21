@@ -9,4 +9,5 @@
   <button class="btn" type="submit">{% trans "Log in" %}</button>
 </form>
 <p class="muted">{% trans "No account?" %} <a href="{% url 'register' %}">{% trans "Sign up" %}</a>.</p>
+<p class="muted">{% trans "Account restricted?" %} <a href="{% url 'account_restricted' %}">{% trans "See why and contest the decision" %}</a>.</p>
 {% endblock %}
