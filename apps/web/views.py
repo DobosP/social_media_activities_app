@@ -2771,7 +2771,8 @@ def things_to_do_index(request):
             request,
             "web/landing_index.html",
             {"grouped": grouped, **_nav_context(request.user)},
-        )
+        ),
+        request,
     )
 
 
@@ -2789,7 +2790,8 @@ def things_to_do_city(request, area_slug):
             request,
             "web/landing_city.html",
             {"area": area, "activities": activities, **_nav_context(request.user)},
-        )
+        ),
+        request,
     )
 
 
@@ -2838,7 +2840,8 @@ def things_to_do(request, area_slug, activity_slug):
                 "breadcrumb_data": breadcrumb_data,
                 **_nav_context(request.user),
             },
-        )
+        ),
+        request,
     )
 
 
