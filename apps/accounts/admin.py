@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
-from django.utils import timezone
 
 from .models import (
     AgeAssurance,
@@ -88,17 +87,25 @@ class IdentityBindingAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         return False  # bindings are written by bind_identity, never hand-created
 
+    def has_delete_permission(self, request, obj=None):
+        # No un-audited deletes of the one-account ledger; use the audited "Release" action.
+        return False
+
     @admin.action(description="Release selected bindings (allow re-bind)")
     def release_bindings(self, request, queryset):
-        from apps.safety.services import record_audit
+        # Route through the atomic, tested service so the audit write (select_for_update) runs in a
+        # transaction even though admin requests are autocommit. Orphaned (user=NULL) bindings are
+        # skipped: bind_identity already re-binds an orphaned row regardless of released_at.
+        from apps.accounts.services import release_binding
 
-        released = 0
-        for binding in queryset.filter(released_at__isnull=True):
-            binding.released_at = timezone.now()
-            binding.save(update_fields=["released_at"])
-            record_audit("identity.binding_released", actor=request.user, target=binding)
-            released += 1
-        self.message_user(request, f"Released {released} binding(s).")
+        released = sum(
+            1
+            for binding in queryset.select_related("user")
+            if binding.user_id and release_binding(binding.user, actor=request.user)
+        )
+        self.message_user(
+            request, f"Released {released} binding(s) (orphaned / already-released skipped)."
+        )
 
 
 @admin.register(BannedIdentity)
@@ -114,17 +121,27 @@ class BannedIdentityAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         return False  # the ledger is written by ban_identity, never hand-created
 
+    def has_delete_permission(self, request, obj=None):
+        # No un-audited deletes of the ban ledger; use the audited "Lift" action.
+        return False
+
     @admin.action(description="Lift selected identity bans (allow re-register)")
     def lift_bans(self, request, queryset):
+        # Can't reuse release_identity_ban here (it keys off a live user; this tool also covers an
+        # orphaned ban whose account was erased). Own transaction so the audit's select_for_update
+        # has an enclosing tx under autocommit admin requests.
+        from django.db import transaction
+
         from apps.safety.services import record_audit
 
         lifted = 0
-        for banned in queryset:
-            record_audit(
-                "identity.ban_released", actor=request.user, hash_prefix=banned.holder_hash[:12]
-            )
-            lifted += 1
-        queryset.delete()
+        with transaction.atomic():
+            for banned in queryset:
+                record_audit(
+                    "identity.ban_released", actor=request.user, hash_prefix=banned.holder_hash[:12]
+                )
+                lifted += 1
+            queryset.delete()
         self.message_user(request, f"Lifted {lifted} identity ban(s).")
 
 

@@ -865,6 +865,9 @@ def _reverse_action(action) -> bool:
         # Overturning a lifetime BAN also releases the wallet from the identity-ban ledger, so the
         # vindicated person can register/recover again (no-op unless IDENTITY_UNIQUENESS_ENFORCED
         # and they were wallet-bound). Only when no OTHER active BAN still keys the same wallet.
+        # Deliberately NOT savepoint-isolated (unlike the best-effort notify): the ledger release is
+        # part of the atomic appeal outcome — if it fails, the whole resolution should roll back
+        # rather than leave the account reactivated but the wallet still on the ban ledger.
         if action.action == ModerationAction.Action.BAN and not other_ban:
             from apps.accounts.services import release_identity_ban
 

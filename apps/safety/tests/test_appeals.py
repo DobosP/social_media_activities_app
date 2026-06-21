@@ -238,6 +238,34 @@ def test_overturn_ban_releases_identity_ledger(settings):
     assert identity_is_banned("holder-rl") is False  # ledger released on overturn
 
 
+def test_overturn_one_of_two_bans_keeps_wallet_on_ledger(settings):
+    # The `not other_ban` guard: overturning ONE lifetime BAN must NOT release the ledger (or
+    # reactivate) while a second, independent BAN still keys the same wallet/account.
+    settings.IDENTITY_UNIQUENESS_ENFORCED = True
+    from apps.accounts.services import bind_identity, identity_is_banned
+
+    mod, user = _user("tb_mod", staff=True), _user("tb_user")
+    bind_identity(
+        user,
+        AssuranceResult(
+            age_band=AgeBand.ADULT,
+            verified=True,
+            provider="eudi",
+            method="openid4vp",
+            holder_sub="holder-tb",
+            raw={"age_over_16": True, "age_over_18": True, "holder_proof": "verified"},
+        ),
+    )
+    ban1 = take_action(mod, user, ModerationAction.Action.BAN, ReasonCode.HARASSMENT)
+    # a second, independent lifetime ban on the same account
+    take_action(mod, user, ModerationAction.Action.BAN, ReasonCode.GROOMING)
+    appeal = file_appeal(user, ban1, "contest the first ban")
+    resolve_appeal(mod, appeal, grant=True)
+    user.refresh_from_db()
+    assert user.is_active is False  # the second BAN still deactivates
+    assert identity_is_banned("holder-tb") is True  # wallet stays on the ledger
+
+
 def test_overturn_for_minor_alerts_active_guardian():
     # An appeal outcome is a moderation outcome about the (CHILD) affected user — the W4-F3
     # symmetric guardian loop must fire on resolution, keyed on an ACTIVE GuardianRelationship.
