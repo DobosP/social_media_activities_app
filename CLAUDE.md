@@ -127,6 +127,19 @@ Built on the social core; see services/tests for exact behaviour. All uphold the
 - **Honest "why recommended" + beginners filter (F17)** — the home feed shows a true reason from the viewer's
   own declared interests ("matches your interest in X") or "soonest first" on cold-start, else the genuine
   "% match"; `Activity.beginners_welcome` adds a `?beginners=true` filter (the ranked strip stays unfiltered).
+- **Topic preferences (the user's hand on suggestions) + text-first browse modes** — `recommendations.TopicPreference`
+  lets a user STATE which taxonomy **categories** their suggestion feed should lean toward (declared, never inferred —
+  same contract as `UserInterest`/`AccessPreference`). It is **SOFT only**: `sort_by_topic_match` floats chosen-topic
+  meetups to the front of the *already cohort-gated* `recommended_with_reasons` list and adds an honest "· matches your
+  chosen topics" reason — it **never hides** a meetup, never widens visibility past the cohort wall, never tracks (upholds
+  inv.1/inv.2). `category_ancestry_slugs` means picking a parent topic ("sport") covers its sub-types. A **CHILD ward's
+  active guardian** can set the ward's topics from `/wards/` ("the responsible person controls the feed") via the same
+  `_active_ward_or_none` gate as the F7 guardrails — this is the SOFT steering layer; the **HARD** child-safety category
+  envelope stays `GuardianGuardrail.allowed_categories` (a separate join/create gate). Self-service `/topics/` + DRF
+  `TopicsView`; both call the one `set_topic_preferences` service. Two presentation-only browse modes on `/activities/`
+  (`?view=list|card` over the same `visible_activities` query — compact rows / one focused meetup with prev-next pager):
+  text-first, no images, **no swipe, no infinite scroll** (an explicit reshape of a photo-swipe ask that would have
+  broken inv.1/inv.2).
 - **"Organize one here" prefill (F40)** — an event's "Organise" link seeds the create form's activity type +
   start time; `activity_create` validates every GET value (type exists/active, time parses) before seeding.
 - **Catch-up thread digest (F35)** — `social.thread_digest` is a deterministic (no-ML) extractive recap

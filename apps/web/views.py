@@ -1417,6 +1417,25 @@ def activity_list(request):
     # Pre-encode the suggestion as a query string (a type name may contain a space or '&');
     # blocktrans can't apply |urlencode in its body, so build it here (W2-F1 review).
     did_you_mean_q = urlencode({"q": did_you_mean}) if did_you_mean else ""
+    # Two TEXT-FIRST browse modes over the SAME cohort-gated list (no images, no swipe, no
+    # infinite scroll): "grid" (default cards), "list" (compact rows), and "card" (one focused
+    # meetup at a time with prev/next). The mode is presentation-only — it never changes which
+    # activities are visible. Unknown values fall back to "grid".
+    view_mode = request.GET.get("view")
+    if view_mode not in ("grid", "list", "card"):
+        view_mode = "grid"
+    page_obj = None
+    if view_mode == "card":
+        from django.core.paginator import Paginator
+
+        # One meetup per page; .get_page() clamps out-of-range / non-int pages safely.
+        page_obj = Paginator(activities, 1).get_page(request.GET.get("page"))
+        activities = list(page_obj)
+    # Carry the current filters (minus page/view) so the view-mode + pager links don't drop them.
+    base_params = request.GET.copy()
+    for k in ("view", "page"):
+        base_params.pop(k, None)
+    base_qs = base_params.urlencode()
     return render(
         request,
         "web/activities.html",
@@ -1427,6 +1446,9 @@ def activity_list(request):
             "query": query,
             "did_you_mean": did_you_mean,
             "did_you_mean_q": did_you_mean_q,
+            "view_mode": view_mode,
+            "page_obj": page_obj,
+            "base_qs": base_qs,
             **_nav_context(request.user),
         },
     )
@@ -2394,6 +2416,31 @@ def interests(request):
 
 
 @login_required
+def topic_preferences(request):
+    """The user's own hand on the suggestion algorithm (inv.2): pick which TOPICS (top-level
+    taxonomy categories) the feed should steer toward. STATED, never inferred from behaviour; a
+    SOFT signal that only re-orders + honestly labels cohort-visible suggestions and NEVER hides
+    anything. Reads/writes only request.user."""
+    from apps.taxonomy.models import ActivityCategory
+
+    if request.method == "POST":
+        recs.set_topic_preferences(request.user, request.POST.getlist("topics"))
+        messages.success(request, "Your topics were saved.")
+        return redirect("topic_preferences")
+    return render(
+        request,
+        "web/topic_preferences.html",
+        {
+            # Top-level categories only — picking "sport" already covers its sub-types via the
+            # shared category-ancestry walk, so the picker stays short and calm.
+            "categories": ActivityCategory.objects.filter(parent__isnull=True).order_by("name"),
+            "chosen": set(recs.topic_preference_slugs(request.user)),
+            **_nav_context(request.user),
+        },
+    )
+
+
+@login_required
 def access_preferences(request):
     """F15: the user's OWN stated accessibility needs — a setting they choose, never inferred
     or tracked. Reads/writes only request.user (no cross-user surface)."""
@@ -3179,6 +3226,12 @@ def wards(request):
         # the next M upcoming meetups". CHILD-only (None otherwise); reuses the real gate fns so it
         # can't drift, and explains a too-tight combination instead of looking like a broken app.
         ward.guardrail_preview = social.guardrail_preview(ward)
+        # The ward's CURRENT chosen feed topics (SOFT suggestion steering) so the guardian's
+        # "topics this child's feed leans toward" form pre-checks them. Distinct from the HARD
+        # category envelope in caps above — this never restricts what the ward can join. CHILD-only,
+        # mirroring the F7 guardrail scope (the write path re-checks the same).
+        ward.can_set_topics = ward.cohort == Cohort.CHILD
+        ward.topic_slugs = set(recs.topic_preference_slugs(ward))
     return render(
         request,
         "web/wards.html",
@@ -3504,6 +3557,37 @@ def guardian_guardrail_set(request, ward_pk):
         messages.success(request, "Participation limits saved.")
     except ValueError as exc:
         messages.error(request, _msg(exc))
+    return redirect("wards")
+
+
+@login_required
+@require_POST
+def ward_topics_set(request, ward_pk):
+    """A guardian sets the TOPICS their CHILD ward's suggestion feed steers toward — "the
+    responsible person controls the feed". Same ACTIVE-guardian gate + throttle as the
+    participation limits. This is a SOFT signal (re-orders + honestly labels suggestions, never
+    hides anything); the HARD child-safety category ENVELOPE is the separate guardrail allowlist
+    on this same /wards/ page. The ward may also adjust their own topics — this is shared control,
+    not a lockout (a soft preference, not a safety gate)."""
+    ward = _active_ward_or_none(request.user, ward_pk)
+    if ward is None:
+        messages.error(request, "You are not this user's guardian.")
+        return redirect("wards")
+    # Guardian-set feed steering is for CHILD wards only — the same scope as the F7 guardrails
+    # (a teen self-manages; an aged-up adult with a lingering ACTIVE link is excluded here too).
+    if ward.cohort != Cohort.CHILD:
+        messages.error(request, "This setting is only available for a child's account.")
+        return redirect("wards")
+    if not safety.allow_action(
+        request.user,
+        "guardian_ward_topics",
+        limit=getattr(settings, "GUARDIAN_GUARDRAIL_RATE_LIMIT", 30),
+        window_seconds=getattr(settings, "GUARDIAN_GUARDRAIL_RATE_WINDOW_SECONDS", 3600),
+    ):
+        messages.error(request, "Too many updates; please try again later.")
+        return redirect("wards")
+    recs.set_topic_preferences(ward, request.POST.getlist("topics"))
+    messages.success(request, "Suggested topics saved.")
     return redirect("wards")
 
 

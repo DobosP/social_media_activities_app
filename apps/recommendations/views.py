@@ -29,6 +29,27 @@ class InterestsView(APIView):
         return Response({"interests": sorted(known), "ignored": unknown})
 
 
+class TopicsView(APIView):
+    """Read or replace the current user's chosen feed TOPICS (taxonomy category slugs) — the
+    user's hand on the suggestion algorithm. A SOFT signal that only re-orders + labels
+    cohort-visible suggestions, never hides anything."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        slugs = sorted(services.topic_preference_slugs(request.user))
+        return Response({"topics": slugs})
+
+    def put(self, request):
+        slugs = request.data.get("topics", [])
+        if not isinstance(slugs, list):
+            return Response({"detail": _("`topics` must be a list of category slugs.")}, status=400)
+        categories = services.set_topic_preferences(request.user, slugs)
+        known = {c.slug for c in categories}
+        unknown = [s for s in slugs if s not in known]
+        return Response({"topics": sorted(known), "ignored": unknown})
+
+
 class RecommendationsView(APIView):
     """Activities for you nearby: cohort-scoped, interest-ranked upcoming activities."""
 
