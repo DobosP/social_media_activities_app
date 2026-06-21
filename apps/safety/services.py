@@ -714,8 +714,14 @@ def lift_expired_suspensions() -> int:
     for moderation in expired:
         target = moderation.target
         if isinstance(target, user_model):
+            # Only UN-LIFTED actions still restrict — an appeal-overturned sanction stamps
+            # lifted_at (see _reverse_action), so without this filter the nightly batch would
+            # keep counting an overturned BAN/suspension and never reactivate the account,
+            # silently nullifying a granted DSA Art.17 appeal.
             scope = ModerationAction.objects.filter(
-                target_type=moderation.target_type, target_id=moderation.target_id
+                target_type=moderation.target_type,
+                target_id=moderation.target_id,
+                lifted_at__isnull=True,
             )
             banned = scope.filter(action=ModerationAction.Action.BAN).exists()
             still_suspended = scope.filter(
@@ -770,7 +776,11 @@ def restriction_statement_for(user):
     ``user`` — for the pre-auth redress surface. Returns None when the account is not under an
     active moderation restriction (so a self-deactivated / otherwise-inactive account reveals no
     moderation detail). Allowlisted: action + reason + dates + appeal status only — NEVER the
-    moderator's identity or private notes."""
+    moderator's identity or private notes.
+
+    Surfaces only the SINGLE most-recent active sanction (``_account_restriction_for``). On the
+    rare multi-sanction account the older becomes contestable once the newer is resolved;
+    reactivation stays correct because ``_reverse_action`` re-checks every other active sanction."""
     action = _account_restriction_for(user)
     if action is None:
         return None
@@ -911,6 +921,9 @@ def resolve_appeal(moderator, appeal, *, grant: bool, notes: str = "") -> Modera
     it via ``_reverse_action`` (reactivate account / un-hide content). Idempotent: a non-PENDING
     appeal is refused (AppealError). Audited; the affected user gets a non-mutable MODERATION
     outcome notice and, for a CHILD, the active guardian(s) are pinged via the symmetric loop."""
+    # Re-read under a row lock so two concurrent resolutions can't both pass the PENDING guard and
+    # double-reverse (reactivate twice / duplicate the audit + notify + guardian fan-out).
+    appeal = ModerationAppeal.objects.select_for_update().get(pk=appeal.pk)
     if appeal.status != ModerationAppeal.Status.PENDING:
         raise AppealError("This appeal has already been decided.")
     action = appeal.action

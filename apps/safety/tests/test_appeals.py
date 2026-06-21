@@ -185,6 +185,50 @@ def test_resolve_is_idempotent():
         resolve_appeal(mod, appeal, grant=True)
 
 
+def test_overturned_ban_does_not_keep_account_locked_after_timed_lifts():
+    # Regression (review MED): a user under a lifetime BAN + a future TIMED_BAN wins the BAN
+    # appeal. _reverse_action stamps BAN.lifted_at but can't reactivate yet (TIMED_BAN still
+    # active). When the TIMED_BAN later expires, lift_expired_suspensions must IGNORE the
+    # already-lifted BAN and reactivate — otherwise the granted appeal is silently nullified.
+    from apps.safety.services import lift_expired_suspensions
+
+    mod, user = _user("ov_mod", staff=True), _user("ov_user")
+    future = timezone.now() + dt.timedelta(days=1)
+    ban = take_action(mod, user, ModerationAction.Action.BAN, ReasonCode.HARASSMENT)
+    take_action(mod, user, ModerationAction.Action.TIMED_BAN, ReasonCode.SPAM, expires_at=future)
+    appeal = file_appeal(user, ban, "the ban was wrong")
+    resolve_appeal(mod, appeal, grant=True)
+    user.refresh_from_db()
+    assert user.is_active is False  # TIMED_BAN still in force, so not yet reactivated
+
+    # The timed ban now elapses; the nightly batch must reactivate (BAN was overturned/lifted).
+    timed = ModerationAction.objects.get(action=ModerationAction.Action.TIMED_BAN)
+    timed.expires_at = timezone.now() - dt.timedelta(minutes=1)
+    timed.save(update_fields=["expires_at"])
+    assert lift_expired_suspensions() == 1
+    user.refresh_from_db()
+    assert user.is_active is True
+
+
+def test_overturn_for_minor_alerts_active_guardian():
+    # An appeal outcome is a moderation outcome about the (CHILD) affected user — the W4-F3
+    # symmetric guardian loop must fire on resolution, keyed on an ACTIVE GuardianRelationship.
+    from apps.accounts.models import GuardianRelationship
+    from apps.notifications.models import Notification
+
+    mod = _user("gm_mod", staff=True)
+    child = _user("gm_child", band=AgeBand.UNDER_16)
+    guardian = _user("gm_guardian")
+    GuardianRelationship.objects.create(
+        guardian=guardian, ward=child, status=GuardianRelationship.Status.ACTIVE
+    )
+    action = take_action(mod, child, ModerationAction.Action.SUSPEND, ReasonCode.HARASSMENT)
+    appeal = file_appeal(child, action, "please review")
+    before = Notification.objects.filter(recipient=guardian).count()
+    resolve_appeal(mod, appeal, grant=True)
+    assert Notification.objects.filter(recipient=guardian).count() == before + 1
+
+
 def test_safety_record_shows_appeal_status_and_action_id():
     mod, user = _user("sr_mod", staff=True), _user("sr_user")
     action = take_action(mod, user, ModerationAction.Action.SUSPEND, ReasonCode.SPAM)
