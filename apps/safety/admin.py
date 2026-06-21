@@ -1,6 +1,13 @@
 from django.contrib import admin
 
-from .models import AuditLog, AuthorityReferral, Block, ModerationAction, Report
+from .models import (
+    AuditLog,
+    AuthorityReferral,
+    Block,
+    ModerationAction,
+    ModerationAppeal,
+    Report,
+)
 
 
 @admin.register(Report)
@@ -49,6 +56,60 @@ class ReportAdmin(admin.ModelAdmin):
 class ModerationActionAdmin(admin.ModelAdmin):
     list_display = ("id", "action", "reason", "target_type", "target_id", "moderator", "created_at")
     list_filter = ("action", "reason")
+
+
+@admin.register(ModerationAppeal)
+class ModerationAppealAdmin(admin.ModelAdmin):
+    """DSA Art.17 internal complaint-handling queue: review user contests and uphold or overturn.
+
+    Both actions go through the audited ``resolve_appeal`` service (never a raw status edit), so an
+    overturn reactivates the account / un-hides content and notifies the user + a CHILD's guardian.
+    """
+
+    list_display = ("id", "action", "status", "appellant", "created_at", "decided_at")
+    list_filter = ("status",)
+    readonly_fields = (
+        "action",
+        "appellant",
+        "statement",
+        "created_at",
+        "decided_by",
+        "decided_at",
+    )
+    actions = ("uphold", "overturn")
+
+    def has_add_permission(self, request):
+        # Appeals are filed by users through file_appeal, never hand-created in admin.
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    @admin.action(description="Uphold (decision stands)")
+    def uphold(self, request, queryset):
+        from .services import AppealError, resolve_appeal
+
+        done = 0
+        for appeal in queryset:
+            try:
+                resolve_appeal(request.user, appeal, grant=False)
+                done += 1
+            except AppealError as exc:
+                self.message_user(request, f"Appeal #{appeal.pk}: {exc}", level="warning")
+        self.message_user(request, f"Upheld {done} appeal(s).")
+
+    @admin.action(description="Overturn (reverse the decision)")
+    def overturn(self, request, queryset):
+        from .services import AppealError, resolve_appeal
+
+        done = 0
+        for appeal in queryset:
+            try:
+                resolve_appeal(request.user, appeal, grant=True)
+                done += 1
+            except AppealError as exc:
+                self.message_user(request, f"Appeal #{appeal.pk}: {exc}", level="warning")
+        self.message_user(request, f"Overturned {done} appeal(s).")
 
 
 @admin.register(Block)

@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Account restricted" %}{% endblock %}
+{% block content %}
+<h1>{% trans "Account restricted" %}</h1>
+
+{% if appeal_filed %}
+  <div class="card">
+    <p>{% trans "Thank you - your contest was received. Our moderation team will review it. If the decision is reversed, your account access will be restored." %}</p>
+    <p class="muted"><a href="{% url 'login' %}">{% trans "Back to log in" %}</a></p>
+  </div>
+
+{% elif active_account %}
+  <div class="card">
+    <p>{% trans "Your account is active. You can log in normally." %}</p>
+    <p><a class="btn" href="{% url 'login' %}">{% trans "Log in" %}</a></p>
+  </div>
+
+{% elif inactive_no_moderation %}
+  <div class="card">
+    <p>{% trans "Your account is not currently active, and there is no moderation decision to show. If you think this is a mistake, please get in touch." %}</p>
+    <p class="muted"><a href="{% url 'login' %}">{% trans "Back to log in" %}</a></p>
+  </div>
+
+{% elif statement %}
+  <p class="muted">{% trans "This is why your account is restricted. Only you can see it, after verifying your identity above." %}</p>
+  <div class="card">
+    <p><strong>{{ statement.action_label }}</strong></p>
+    <p>{% blocktrans with reason=statement.reason_label %}Reason: {{ reason }}{% endblocktrans %}</p>
+    <p class="muted">{{ statement.created_at|date:"j M Y, H:i" }}</p>
+    {% if statement.is_lifetime %}
+      <p>{% trans "This is a permanent restriction." %}</p>
+    {% elif statement.lifts_at %}
+      <p>{% blocktrans with when=statement.lifts_at|date:"j M Y, H:i" %}This restriction is due to lift on {{ when }}.{% endblocktrans %}</p>
+    {% else %}
+      <p>{% trans "This restriction does not have an automatic end date." %}</p>
+    {% endif %}
+  </div>
+
+  {% if error %}<p class="msg error">{{ error }}</p>{% endif %}
+
+  {% if appeal_token %}
+    <h2>{% trans "Contest this decision" %}</h2>
+    <p class="muted">{% trans "If you believe this decision is wrong, tell us why. Our moderation team will take another look." %}</p>
+    <form method="post" action="{% url 'account_restricted' %}">{% csrf_token %}
+      <input type="hidden" name="appeal_token" value="{{ appeal_token }}">
+      <p><textarea name="statement" rows="5" maxlength="2000" required
+                   placeholder="{% trans 'Explain why you think this decision is wrong...' %}"></textarea></p>
+      <button class="btn" type="submit">{% trans "Submit contest" %}</button>
+    </form>
+  {% elif statement.appeal_status_label %}
+    <div class="card">
+      <p>{% blocktrans with status=statement.appeal_status_label %}You have already contested this decision. Status: {{ status }}.{% endblocktrans %}</p>
+    </div>
+  {% endif %}
+
+{% else %}
+  <p class="muted">{% trans "If your account has been restricted, sign in here to see why and to contest the decision. This does not log you in." %}</p>
+  {% if error %}<p class="msg error">{{ error }}</p>{% endif %}
+  <form method="post" action="{% url 'account_restricted' %}">{% csrf_token %}
+    <p><label>{% trans "Username" %}<br>
+      <input type="text" name="username" autocomplete="username" required></label></p>
+    <p><label>{% trans "Password" %}<br>
+      <input type="password" name="password" autocomplete="current-password" required></label></p>
+    <button class="btn" type="submit">{% trans "Continue" %}</button>
+  </form>
+  <p class="muted"><a href="{% url 'login' %}">{% trans "Back to log in" %}</a></p>
+{% endif %}
+{% endblock %}

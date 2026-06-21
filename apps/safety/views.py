@@ -12,23 +12,32 @@ from apps.accounts.permissions import IsModerator
 from apps.social import services as social
 from apps.social.models import Activity, Post
 
-from .models import AuthorityReferral, ModerationAction, Report
+from .models import AuthorityReferral, ModerationAction, ModerationAppeal, Report
 from .serializers import (
+    AppealSerializer,
     BlockSerializer,
+    CreateAppealSerializer,
     CreateAuthorityReferralSerializer,
     CreateReportSerializer,
+    ModerationAppealSerializer,
     ModerationReportSerializer,
     ReportSerializer,
+    ResolveAppealSerializer,
     ResolveReportSerializer,
 )
 from .services import (
+    AppealError,
+    _affected_user,
     allow_action,
+    appeals_for,
     block_user,
     create_authority_referral,
     dismiss_report,
+    file_appeal,
     file_report,
     record_audit,
     referral_proof_pack,
+    resolve_appeal,
     take_action,
     triage_order,
     unblock_user,
@@ -185,6 +194,69 @@ class ResolveReportView(APIView):
         )
         report.refresh_from_db()
         return Response(ModerationReportSerializer(report).data)
+
+
+class AppealView(APIView):
+    """A user's own DSA Art.17 redress: file a contest against a decision that affected them, and
+    read back their own appeals. Strictly self-scoped (a logged-in surface — the suspended pre-auth
+    path is web-only, since a deactivated account has no API token)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response(AppealSerializer(appeals_for(request.user), many=True).data)
+
+    def post(self, request):
+        serializer = CreateAppealSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        action = ModerationAction.objects.filter(pk=data["action_id"]).first()
+        # 404 (not 403) when the action doesn't exist OR didn't affect the caller, so the endpoint
+        # never reveals the existence of someone else's moderation action.
+        if action is None or _affected_user(action.target) != request.user:
+            raise NotFound("No such decision.")
+        try:
+            appeal = file_appeal(request.user, action, data["statement"])
+        except AppealError as exc:
+            raise ValidationError(str(exc)) from exc
+        return Response(
+            {"status": appeal.status, "detail": "Your appeal was received."},
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class ModerationAppealListView(APIView):
+    """Staff: the DSA Art.17 internal complaint-handling queue. `?status=pending` (default lists
+    all). Oldest-first within the default so contests are worked fairly in order."""
+
+    permission_classes = [IsModerator]
+
+    def get(self, request):
+        appeals = ModerationAppeal.objects.select_related("action").order_by("created_at")
+        status_filter = request.query_params.get("status")
+        if status_filter:
+            appeals = appeals.filter(status=status_filter)
+        return Response(ModerationAppealSerializer(appeals[:200], many=True).data)
+
+
+class ResolveAppealView(APIView):
+    """Staff: decide an appeal — uphold (decision stands) or grant (overturn → reverse)."""
+
+    permission_classes = [IsModerator]
+
+    def post(self, request, pk):
+        appeal = ModerationAppeal.objects.filter(pk=pk).first()
+        if appeal is None:
+            raise NotFound("No such appeal.")
+        serializer = ResolveAppealSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        try:
+            resolve_appeal(request.user, appeal, grant=data["grant"], notes=data.get("notes", ""))
+        except AppealError as exc:
+            raise ValidationError(str(exc)) from exc
+        appeal.refresh_from_db()
+        return Response(ModerationAppealSerializer(appeal).data)
 
 
 class AuthorityReferralView(APIView):

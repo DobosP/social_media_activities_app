@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from .models import AuthorityReferral, ModerationAction, ReasonCode, Report
+from .models import AuthorityReferral, ModerationAction, ModerationAppeal, ReasonCode, Report
+from .services import APPEAL_MAX_LEN
 
 
 class ReportSerializer(serializers.ModelSerializer):
@@ -72,6 +73,49 @@ class ResolveReportSerializer(serializers.Serializer):
                 {"suspend_days": "A timed ban requires a duration in days."}
             )
         return attrs
+
+
+class CreateAppealSerializer(serializers.Serializer):
+    """A user contests a moderation action that affected them (DSA Art.17)."""
+
+    action_id = serializers.IntegerField(min_value=1)
+    statement = serializers.CharField(max_length=APPEAL_MAX_LEN, trim_whitespace=True)
+
+
+class AppealSerializer(serializers.Serializer):
+    """A user's own appeal, allowlisted — no moderator identity or decision_notes (mirrors F19)."""
+
+    action_label = serializers.CharField(read_only=True)
+    reason_label = serializers.CharField(read_only=True)
+    status = serializers.CharField(read_only=True)
+    status_label = serializers.CharField(read_only=True)
+    statement = serializers.CharField(read_only=True)
+    created_at = serializers.DateTimeField(read_only=True)
+    decided_at = serializers.DateTimeField(read_only=True)
+
+
+class ModerationAppealSerializer(serializers.ModelSerializer):
+    """Full appeal view for the staff queue (IsModerator-gated) — includes the appellant + notes."""
+
+    class Meta:
+        model = ModerationAppeal
+        fields = [
+            "id",
+            "action",
+            "appellant",
+            "statement",
+            "status",
+            "decided_by",
+            "decision_notes",
+            "decided_at",
+            "created_at",
+        ]
+        read_only_fields = fields
+
+
+class ResolveAppealSerializer(serializers.Serializer):
+    grant = serializers.BooleanField()  # True = overturn (reverse), False = uphold (stands)
+    notes = serializers.CharField(required=False, allow_blank=True, default="")
 
 
 class CreateAuthorityReferralSerializer(serializers.Serializer):

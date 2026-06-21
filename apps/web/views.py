@@ -67,7 +67,7 @@ from apps.places.services import (
 from apps.recommendations import services as recs
 from apps.recommendations.models import UserInterest
 from apps.safety import services as safety
-from apps.safety.models import Block
+from apps.safety.models import Block, ModerationAction
 from apps.saved_searches import services as saved_searches
 from apps.saved_searches.models import SavedSearch
 from apps.social import services as social
@@ -730,6 +730,110 @@ class ThrottledLoginView(LoginView):
         if not getattr(self, "_locked_out", False):
             self._record_failure(self._attempt_key())
         return super().form_invalid(form)
+
+
+# DSA Art.17 pre-auth redress surface ------------------------------------------------------
+# A SUSPEND/TIMED_BAN/BAN sets is_active=False, so the in-app statement-of-reasons is unreachable
+# (the user can't log in to read it). This lets them prove credentials WITHOUT a session to read
+# WHY, and to CONTEST it. The appeal form is authorised by a signed, short-lived, single-purpose
+# token, so the password is entered once and no session is ever granted.
+_RESTRICTION_APPEAL_SALT = "safety.restriction-appeal"
+_RESTRICTION_APPEAL_MAX_AGE = 1800  # 30 min to write a contest after viewing the statement
+
+
+def _restricted_statement_context(user, signer, *, error=None):
+    """Build the template context for a credential-verified restricted user: their allowlisted
+    statement of reasons plus (only when still contestable) a signed appeal-authorisation token."""
+    statement = safety.restriction_statement_for(user)
+    ctx = {"error": error}
+    if statement is None:
+        # is_active=False but not due to a current moderation restriction (e.g. self-deactivated):
+        # reveal no moderation detail.
+        ctx["inactive_no_moderation"] = True
+        return ctx
+    ctx["statement"] = statement
+    if statement["can_appeal"]:
+        ctx["appeal_token"] = signer.sign(f"{user.pk}:{statement['action_id']}")
+    return ctx
+
+
+def account_restricted(request):
+    """DSA Art.17 redress for a restricted (is_active=False) account: prove credentials to read the
+    statement of reasons and contest it, WITHOUT being granted a session. Credential checks share
+    the login brute-force lockout and are user-enumeration-safe; the appeal is token-authorised."""
+    from django.core import signing
+
+    if request.user.is_authenticated and request.user.is_active:
+        return redirect("home")
+
+    signer = signing.TimestampSigner(salt=_RESTRICTION_APPEAL_SALT)
+    limit = getattr(settings, "LOGIN_FAILURE_LIMIT", 10)
+    window = getattr(settings, "LOGIN_FAILURE_WINDOW_SECONDS", 900)
+
+    # --- Appeal submission (token-authorised; no credentials, no session) ---
+    if request.method == "POST" and request.POST.get("appeal_token"):
+        statement = request.POST.get("statement", "")
+        try:
+            payload = signer.unsign(
+                request.POST["appeal_token"], max_age=_RESTRICTION_APPEAL_MAX_AGE
+            )
+            user_pk, action_pk = (int(x) for x in payload.split(":"))
+        except (signing.BadSignature, ValueError):
+            messages.error(request, "Your session expired. Please sign in again to contest.")
+            return redirect("account_restricted")
+        user = User.objects.filter(pk=user_pk).first()
+        action = ModerationAction.objects.filter(pk=action_pk).first()
+        if user is None or action is None:
+            messages.error(request, "Your session expired. Please sign in again to contest.")
+            return redirect("account_restricted")
+        try:
+            safety.file_appeal(user, action, statement)
+        except safety.AppealError as exc:
+            # Re-render the statement with the error and a fresh token (file_appeal self-scopes).
+            return render(
+                request,
+                "web/account_restricted.html",
+                _restricted_statement_context(user, signer, error=str(exc)),
+            )
+        return render(request, "web/account_restricted.html", {"appeal_filed": True})
+
+    # --- Credential verification → show the statement of reasons ---
+    if request.method == "POST":
+        username = request.POST.get("username", "")
+        password = request.POST.get("password", "")
+        key = _login_attempt_key(username, _client_ip(request))
+        if (cache.get(key) or 0) >= limit:
+            return render(
+                request,
+                "web/account_restricted.html",
+                {"error": "Too many attempts. Please wait a few minutes and try again."},
+            )
+        user = User.objects.filter(username=username).first()
+        if user is None:
+            # Run the hasher anyway to equalise timing (mitigate username enumeration), then fail.
+            User().set_password(password)
+            valid = False
+        else:
+            valid = user.check_password(password)
+        if not valid:
+            try:
+                cache.incr(key)  # count on the SHARED login key — can't bypass the login lockout
+            except ValueError:
+                cache.set(key, 1, window)
+            return render(
+                request,
+                "web/account_restricted.html",
+                {"error": "We couldn't verify those details."},
+            )
+        cache.delete(key)  # successful proof clears the failure counter
+        if user.is_active:
+            # Not restricted — reveal nothing; send them to normal login.
+            return render(request, "web/account_restricted.html", {"active_account": True})
+        return render(
+            request, "web/account_restricted.html", _restricted_statement_context(user, signer)
+        )
+
+    return render(request, "web/account_restricted.html", {})
 
 
 def register(request):
@@ -3715,6 +3819,25 @@ def safety_record(request):
             **_nav_context(request.user),
         },
     )
+
+
+@login_required
+@require_POST
+def safety_record_appeal(request):
+    """F19/DSA Art.17: file a contest against a decision shown on /my-safety-record/ (logged-in
+    path — e.g. a content removal while the account is still active). Self-scoped via file_appeal;
+    a decision affecting someone else 404s rather than revealing it exists."""
+    action_id = request.POST.get("action_id", "")
+    statement = request.POST.get("statement", "")
+    action = ModerationAction.objects.filter(pk=action_id).first() if action_id.isdigit() else None
+    if action is None or safety._affected_user(action.target) != request.user:
+        raise Http404("No such decision.")
+    try:
+        safety.file_appeal(request.user, action, statement)
+        messages.success(request, "Thanks - your contest was received. We'll review it.")
+    except safety.AppealError as exc:
+        messages.error(request, str(exc))
+    return redirect("safety_record")
 
 
 @login_required

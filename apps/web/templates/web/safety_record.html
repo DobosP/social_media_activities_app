@@ -15,6 +15,19 @@
       {% endif %}
       <p>{% blocktrans with reason=d.reason_label %}Reason: {{ reason }}{% endblocktrans %}</p>
       <p class="muted">{{ d.created_at|date:"j M Y, H:i" }}</p>
+      {% if d.can_appeal %}
+        <details>
+          <summary>{% trans "Contest this decision" %}</summary>
+          <form method="post" action="{% url 'safety_record_appeal' %}">{% csrf_token %}
+            <input type="hidden" name="action_id" value="{{ d.action_id }}">
+            <p><textarea name="statement" rows="4" maxlength="2000" required
+                         placeholder="{% trans 'Explain why you think this is wrong...' %}"></textarea></p>
+            <button class="btn" type="submit">{% trans "Submit contest" %}</button>
+          </form>
+        </details>
+      {% elif d.appeal_status_label %}
+        <p class="muted">{% blocktrans with status=d.appeal_status_label %}Contest status: {{ status }}{% endblocktrans %}</p>
+      {% endif %}
     </div>
   {% empty %}
     <p class="muted">{% trans "No moderation decisions have affected your account or content." %}</p>
@@ -35,5 +48,5 @@
   {% endfor %}
 </div>
 
-<p class="muted" style="font-size:.85rem">{% trans "If you believe a decision is wrong, you'll be able to contest it here soon. In the meantime, replies to a moderation notice reach our team." %}</p>
+<p class="muted" style="font-size:.85rem">{% trans "If you believe a decision is wrong, you can contest it using the form on that decision. Our moderation team reviews every contest." %}</p>
 {% endblock %}

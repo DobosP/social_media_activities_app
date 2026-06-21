@@ -9,16 +9,29 @@ from datetime import timedelta
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from .models import AuditLog, AuthorityReferral, Block, ModerationAction, ReasonCode, Report
+from .models import (
+    AuditLog,
+    AuthorityReferral,
+    Block,
+    ModerationAction,
+    ModerationAppeal,
+    ReasonCode,
+    Report,
+)
 
 
 class RateLimited(Exception):
     """A rate-limited safety action exceeded its window cap (the caller should refuse gently)."""
+
+
+class AppealError(Exception):
+    """A moderation appeal could not be filed/resolved (not self-scoped, duplicate, rate-limited,
+    or already decided). The caller maps it to a gentle 4xx — never a 500."""
 
 
 def _notify_reporter(reporter, title, body):
@@ -677,6 +690,13 @@ def dismiss_report(moderator, report: Report, resolution: str = "") -> Report:
 
 # Time-limited restrictions that auto-lift when they elapse (a lifetime BAN never does).
 _TIMED_RESTRICTIONS = (ModerationAction.Action.SUSPEND, ModerationAction.Action.TIMED_BAN)
+# Actions that deactivate the account (block login) — the set that makes a statement of reasons
+# unreachable in-app, hence the pre-auth redress surface.
+_ACCOUNT_SANCTIONS = (
+    ModerationAction.Action.SUSPEND,
+    ModerationAction.Action.TIMED_BAN,
+    ModerationAction.Action.BAN,
+)
 
 
 def lift_expired_suspensions() -> int:
@@ -712,6 +732,228 @@ def lift_expired_suspensions() -> int:
         moderation.lifted_at = now
         moderation.save(update_fields=["lifted_at"])
     return reactivated
+
+
+# --- DSA Art.17 redress: reachable statement of reasons + internal appeal -----------------
+# A SUSPEND/TIMED_BAN/BAN sets is_active=False, so the in-app MODERATION statement of reasons is
+# unreachable (the offender cannot log in to read it). These give the offender (a) a pre-auth way
+# to READ why, and (b) an internal way to CONTEST it — the "you may contest it" the notice promises.
+
+APPEAL_MAX_LEN = 2000  # a contest statement is free text; capped so it can't be abused as storage
+APPEAL_RATE_LIMIT = 5  # appeals per window per user (the one-per-action guard also caps spam)
+APPEAL_RATE_WINDOW = 86400  # 24h
+
+
+def _account_restriction_for(user):
+    """The single moderation action currently restricting this user's account (most recent active
+    SUSPEND / TIMED_BAN / BAN), or None. 'Active' = a lifetime ban, or a timed/indefinite
+    restriction not yet expired and not lifted — mirrors lift_expired_suspensions + F19."""
+    from django.contrib.auth import get_user_model
+
+    if not isinstance(user, get_user_model()):
+        return None
+    user_ct = ContentType.objects.get_for_model(get_user_model())
+    now = timezone.now()
+    qs = ModerationAction.objects.filter(
+        target_type=user_ct,
+        target_id=user.id,
+        action__in=_ACCOUNT_SANCTIONS,
+        lifted_at__isnull=True,
+    ).filter(
+        Q(action=ModerationAction.Action.BAN) | Q(expires_at__isnull=True) | Q(expires_at__gt=now)
+    )
+    return qs.order_by("-created_at").first()
+
+
+def restriction_statement_for(user):
+    """Self-scoped DSA Art.17 statement of reasons for the restriction currently in force on
+    ``user`` — for the pre-auth redress surface. Returns None when the account is not under an
+    active moderation restriction (so a self-deactivated / otherwise-inactive account reveals no
+    moderation detail). Allowlisted: action + reason + dates + appeal status only — NEVER the
+    moderator's identity or private notes."""
+    action = _account_restriction_for(user)
+    if action is None:
+        return None
+    try:
+        reason_label = ReasonCode(action.reason).label
+    except ValueError:
+        reason_label = str(action.reason)
+    appeal = ModerationAppeal.objects.filter(action=action).first()
+    is_lifetime = action.action == ModerationAction.Action.BAN
+    return {
+        "action_id": action.id,
+        "action_label": ModerationAction.Action(action.action).label,
+        "reason_label": reason_label,
+        "created_at": action.created_at,
+        "is_lifetime": is_lifetime,
+        # None expires_at on a non-ban = indefinite suspension (no auto-lift date to show).
+        "lifts_at": None if is_lifetime else action.expires_at,
+        "appeal_status": appeal.status if appeal else None,
+        "appeal_status_label": appeal.get_status_display() if appeal else None,
+        "can_appeal": appeal is None,
+    }
+
+
+def file_appeal(user, action, statement: str) -> ModerationAppeal:
+    """File a DSA Art.17 appeal against a moderation ``action`` that affected ``user``.
+
+    Strictly self-scoped: a user may only contest an action whose AFFECTED user is themselves
+    (``_affected_user``), so it can't be used to probe or proxy another account. One appeal per
+    action (idempotent — DB-enforced via the OneToOne, with a friendly pre-check), rate-limited,
+    and audited. Raises ``AppealError`` (→ a gentle 4xx) on any guard; never a 500."""
+    statement = (statement or "").strip()
+    if not statement:
+        raise AppealError("Please tell us why you think this decision is wrong.")
+    if _affected_user(action.target) != user:
+        raise AppealError("You can only contest a decision about your own account or content.")
+    if ModerationAppeal.objects.filter(action=action).exists():
+        raise AppealError("You've already contested this decision; we're reviewing it.")
+    if not allow_action(user, "appeal", limit=APPEAL_RATE_LIMIT, window_seconds=APPEAL_RATE_WINDOW):
+        raise AppealError("You've contested several decisions recently; please wait a little.")
+    try:
+        with transaction.atomic():
+            appeal = ModerationAppeal.objects.create(
+                action=action, appellant=user, statement=statement[:APPEAL_MAX_LEN]
+            )
+            record_audit("moderation.appeal_filed", actor=user, target=action)
+    except IntegrityError as exc:
+        # Lost the race against a concurrent identical filing (OneToOne unique) — treat as dup.
+        raise AppealError("You've already contested this decision; we're reviewing it.") from exc
+    return appeal
+
+
+def _reverse_action(action) -> bool:
+    """Reverse a granted-appeal action, mirroring lift_expired_suspensions. Returns True iff an
+    account was reactivated. An account sanction reactivates the target user IF no OTHER un-lifted
+    active sanction applies; a REMOVE un-hides the content IF no other un-lifted REMOVE keeps it
+    hidden; a WARN has no material effect to undo (the OVERTURNED status is the record). The
+    overturned action is marked ``lifted_at`` so it no longer counts as active anywhere."""
+    from django.contrib.auth import get_user_model
+
+    now = timezone.now()
+    target = action.target
+    if target is None:
+        return False
+    reactivated = False
+    if action.action in _ACCOUNT_SANCTIONS and isinstance(target, get_user_model()):
+        scope = ModerationAction.objects.filter(
+            target_type=action.target_type, target_id=action.target_id, lifted_at__isnull=True
+        ).exclude(pk=action.pk)
+        other_ban = scope.filter(action=ModerationAction.Action.BAN).exists()
+        other_active_timed = (
+            scope.filter(action__in=_TIMED_RESTRICTIONS)
+            .filter(Q(expires_at__isnull=True) | Q(expires_at__gt=now))
+            .exists()
+        )
+        if action.lifted_at is None:
+            action.lifted_at = now
+            action.save(update_fields=["lifted_at"])
+        if not other_ban and not other_active_timed and not target.is_active:
+            target.is_active = True
+            target.save(update_fields=["is_active"])
+            reactivated = True
+        # NOTE: overturning a lifetime BAN reactivates the account but does NOT release the
+        # identity-ledger BannedIdentity row (no release_identity_ban service yet; it is inert
+        # unless IDENTITY_UNIQUENESS_ENFORCED). Tracked in docs/COMPLETENESS_GAPS_2026-06.md.
+    elif action.action == ModerationAction.Action.REMOVE and hasattr(target, "is_hidden"):
+        other_remove = (
+            ModerationAction.objects.filter(
+                target_type=action.target_type,
+                target_id=action.target_id,
+                action=ModerationAction.Action.REMOVE,
+                lifted_at__isnull=True,
+            )
+            .exclude(pk=action.pk)
+            .exists()
+        )
+        if action.lifted_at is None:
+            action.lifted_at = now
+            action.save(update_fields=["lifted_at"])
+        if not other_remove and target.is_hidden:
+            target.is_hidden = False
+            target.save(update_fields=["is_hidden"])
+    return reactivated
+
+
+def _notify_appeal_outcome(action, *, granted: bool):
+    """Close the DSA Art.17 loop: tell the affected user how their appeal was decided. Best-effort,
+    savepoint-isolated so a notify failure never rolls back the resolution. MODERATION is
+    non-mutable; if the account was reactivated the user can read it in-app, and if the decision
+    stands the pre-auth restricted surface shows the updated appeal status."""
+    try:
+        from apps.notifications.models import Notification
+        from apps.notifications.services import notify
+
+        recipient = _affected_user(action.target)
+        if recipient is None:
+            return
+        if granted:
+            title = "Your appeal succeeded"
+            body = (
+                "We reviewed your contest of a moderation decision and reversed it. Any "
+                "restriction from that decision has been removed."
+            )
+        else:
+            title = "Your appeal was reviewed"
+            body = (
+                "We reviewed your contest of a moderation decision and the decision stands. "
+                "Thank you for letting us take another look."
+            )
+        with transaction.atomic():
+            notify(recipient, Notification.Kind.MODERATION, title=title, body=body, url="")
+    except Exception:
+        pass
+
+
+@transaction.atomic
+def resolve_appeal(moderator, appeal, *, grant: bool, notes: str = "") -> ModerationAppeal:
+    """Moderator decides an appeal. UPHOLD leaves the decision in place; GRANT (overturn) reverses
+    it via ``_reverse_action`` (reactivate account / un-hide content). Idempotent: a non-PENDING
+    appeal is refused (AppealError). Audited; the affected user gets a non-mutable MODERATION
+    outcome notice and, for a CHILD, the active guardian(s) are pinged via the symmetric loop."""
+    if appeal.status != ModerationAppeal.Status.PENDING:
+        raise AppealError("This appeal has already been decided.")
+    action = appeal.action
+    appeal.status = ModerationAppeal.Status.OVERTURNED if grant else ModerationAppeal.Status.UPHELD
+    appeal.decided_by = moderator
+    appeal.decided_at = timezone.now()
+    appeal.decision_notes = notes
+    appeal.save(update_fields=["status", "decided_by", "decided_at", "decision_notes"])
+    if grant:
+        _reverse_action(action)
+    record_audit("moderation.appeal_resolved", actor=moderator, target=action, granted=grant)
+    _notify_appeal_outcome(action, granted=grant)
+    # An appeal outcome is a moderation outcome about the (possibly CHILD) affected user — reuse
+    # the W4-F3 symmetric guardian loop (pure /wards/ pointer, ACTIVE GuardianRelationship only).
+    _alert_guardians_of_moderation(_affected_user(action.target))
+    return appeal
+
+
+def appeals_for(user, *, limit: int = 50):
+    """A user's own appeals, allowlisted (no moderator identity / decision_notes). Newest first."""
+    rows = (
+        ModerationAppeal.objects.filter(appellant=user)
+        .select_related("action")
+        .order_by("-created_at")[:limit]
+    )
+    return [_appeal_summary(a) for a in rows]
+
+
+def _appeal_summary(appeal) -> dict:
+    action = appeal.action
+    try:
+        reason_label = ReasonCode(action.reason).label
+    except ValueError:
+        reason_label = str(action.reason)
+    return {
+        "action_label": ModerationAction.Action(action.action).label,
+        "reason_label": reason_label,
+        "status": appeal.status,
+        "status_label": appeal.get_status_display(),
+        "statement": appeal.statement,
+        "created_at": appeal.created_at,
+        "decided_at": appeal.decided_at,
+    }
 
 
 @transaction.atomic
@@ -816,18 +1058,26 @@ def safety_record_for(user, *, limit: int = 50) -> dict:
         | Q(target_type=activity_ct, target_id__in=own_activity_ids)
         | Q(target_type=post_ct, target_id__in=own_post_ids)
     )
-    decisions = []
-    for a in (
+    actions = list(
         ModerationAction.objects.filter(action_q)
         .only(
             "action", "reason", "target_type", "target_id", "expires_at", "lifted_at", "created_at"
         )
         .order_by("-created_at")[:limit]
-    ):
+    )
+    # One query for the appeal status of every shown decision (no N+1); a decision with no row is
+    # contestable, one with a row shows its status and can't be appealed again (one per action).
+    appeal_by_action = {
+        ap.action_id: ap
+        for ap in ModerationAppeal.objects.filter(action_id__in=[a.id for a in actions])
+    }
+    decisions = []
+    for a in actions:
         try:
             reason_label = ReasonCode(a.reason).label
         except ValueError:
             reason_label = str(a.reason)
+        appeal = appeal_by_action.get(a.id)
         if a.target_type_id == user_ct.id:
             scope = "your account"
         elif a.target_type_id == activity_ct.id:
@@ -844,6 +1094,8 @@ def safety_record_for(user, *, limit: int = 50) -> dict:
         )
         decisions.append(
             {
+                # action_id is needed to file a contest (the user's own action; not sensitive).
+                "action_id": a.id,
                 "action_label": ModerationAction.Action(a.action).label,
                 "reason_label": reason_label,
                 "scope": scope,
@@ -856,6 +1108,9 @@ def safety_record_for(user, *, limit: int = 50) -> dict:
                     is_lifetime_ban
                     or ((a.expires_at is None or a.expires_at > now) and a.lifted_at is None)
                 ),
+                # DSA Art.17 contest: contestable until appealed once; then show its status.
+                "can_appeal": appeal is None,
+                "appeal_status_label": appeal.get_status_display() if appeal else None,
             }
         )
 

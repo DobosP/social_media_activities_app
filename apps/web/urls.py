@@ -23,6 +23,8 @@ urlpatterns = [
     path("register/", views.register, name="register"),
     path("login/", views.ThrottledLoginView.as_view(), name="login"),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
+    # DSA Art.17 redress for a restricted account (reachable without a session).
+    path("account/restricted/", views.account_restricted, name="account_restricted"),
     # Discover
     path("places/", views.places_map, name="places_map"),
     path("places/list/", views.places_list, name="places_list"),
@@ -258,6 +260,7 @@ urlpatterns = [
     path("my-privacy/", views.my_privacy, name="my_privacy"),
     path("my-activity-log/", views.activity_log, name="activity_log"),
     path("my-safety-record/", views.safety_record, name="safety_record"),
+    path("my-safety-record/contest/", views.safety_record_appeal, name="safety_record_appeal"),
     path("account/export/", views.account_export, name="account_export"),
     path("account/calendar.ics", views.my_calendar, name="my_calendar"),  # W3-F18 self-only .ics
     path("account/delete/", views.account_delete, name="account_delete"),
