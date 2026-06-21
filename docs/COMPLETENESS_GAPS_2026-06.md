@@ -22,9 +22,15 @@ redress (`[x]` below) · P1 privacy-by-default discovery (`[x]`) · P2 EUDI bind
 admin tooling (`[x]`) · flaky chat/messaging consumer tests fixed (CI is green & deterministic again
 — full suite **2083 passed, 0 errors** twice). Each was adversarially reviewed before merge.
 
-**Recommended next pick → DSA sanctions hardening** (P2, pure engineering, no product decision):
-row-lock `lift_expired_suspensions` against concurrent cron (`select_for_update(skip_locked)` or a job
-lock) + add the missing HTTP-layer tests for the DRF moderation/referral views. See the P2 list below.
+**DONE → DSA sanctions hardening** (P2): row-locked `lift_expired_suspensions` (+ `_reverse_action`),
+HTTP-layer moderation/referral tests, indefinite-SUSPEND + authority-referral-SLA docs. Merged to main
+(`feat/dsa-sanctions-hardening`), adversarially reviewed (4 dimensions, 0 confirmed defects). See the
+DSA-sanctions P2 block below (now all `[x]`).
+
+**Recommended next pick → P2 batch (autonomous, pick one)**: `IDENTITY_BINDING_SECRET` prod guard
+(`config/settings/`, smallest + a real rotation footgun) · media docscan/managed-scanner tests
+(`apps/media/`) · circuit-breaker locking + half-open (`apps/ops/resilience.py`) · `request_id` into
+cron jobs.
 
 **Then, remaining open work** (all itemised below with file pointers):
 - **P2 batch** (autonomous): `IDENTITY_BINDING_SECRET` prod guard · `request_id` into cron jobs ·
@@ -114,15 +120,24 @@ merge `--no-ff` → **ask before pushing** (the auto classifier blocks direct-to
   or document why it intentionally does not.
 - [ ] Add a direct test for the ban-rejection branch inside `bind_identity` (BannedIdentity → 403).
 
-### DSA sanctions
-- [ ] `lift_expired_suspensions` saves per-row without locking → two concurrent `run_due_jobs` could
-  double-process. Add `select_for_update(skip_locked)` or a job lock. `apps/safety/...`.
-- [ ] No HTTP-layer tests for the DRF moderation/referral views (permission gating, `suspend_days`→
-  `expires_at`, TIMED_BAN duration validation, proof-view audit).
-- [ ] Authority referral is a ledger only — no external transmission (INHOPE/IGPR). Document/
-  operationalise the out-of-band reporting SLA, esp. CSAM mandatory-reporting timelines.
-- [ ] Indefinite SUSPEND (no `suspend_days`) silently becomes permanent deactivation outside the BAN
-  ledger — document to moderators + test.
+### DSA sanctions — DONE (`feat/dsa-sanctions-hardening`, merged to main; adversarially reviewed, 0 defects)
+- [x] `lift_expired_suspensions` now processes each expiry in its own transaction with
+  `select_for_update(skip_locked=True)` on the `ModerationAction` row (re-checked for `lifted_at`
+  under the lock) + a blocking lock on the target account row, so two concurrent `run_due_jobs`
+  ticks can't double-reactivate/audit/notify. The dignity notice fires strictly post-commit.
+  `_reverse_action` takes the same account-row lock (lift-vs-appeal-reversal serialized).
+- [x] HTTP-layer tests added (`apps/safety/tests/test_dsa_sanctions_hardening.py`): permission gating
+  (resolve + referral POST + proof GET), `suspend_days`→`expires_at` (SUSPEND + TIMED_BAN), TIMED_BAN
+  duration validation (400), proof-view audit, indefinite-SUSPEND-never-auto-lifts, multi-restriction
+  lift-once dedup.
+- [x] Authority referral out-of-band reporting SLA documented (`docs/RUNBOOK.md` Safety/incident-
+  response): the ledger does NOT transmit; the on-call moderator owns the INHOPE/IGPR report within
+  the legal window (CSAM = highest, without delay) and records the external reference. _External
+  transmission integration (auto-forward to a hotline API) remains a future build, now operationalised
+  as a manual duty._
+- [x] Indefinite SUSPEND (no `suspend_days`) documented to moderators (RUNBOOK sanction-duration
+  table: it never auto-lifts and is NOT on the `BannedIdentity` ledger — use `BAN` for permanent) +
+  regression test.
 
 ### Media storage
 - [ ] Built-in scanners are exact SHA-256 only (any re-encode/resize evades); perceptual dHash is a
