@@ -14,6 +14,7 @@ from .base import (
     EUDI_TRUSTED_ISSUERS,
     IDENTITY_ALLOW_DEV_PROVIDER,
     IDENTITY_PROVIDER,
+    IDENTITY_UNIQUENESS_ENFORCED,
     MEDIA_S3_ENDPOINT_URL,
     MEDIA_S3_REGION,
     MEDIA_STORAGE_BACKEND,
@@ -152,6 +153,19 @@ if os.environ.get("DJANGO_SETTINGS_MODULE") == "config.settings.prod":
         raise ImproperlyConfigured(
             "The EUDI identity provider requires a non-empty EUDI_TRUSTED_ISSUERS trust anchor "
             "in production (the EU trust list / issuer public keys)."
+        )
+    # IDENTITY_BINDING_SECRET keys the HMAC behind holder_hash — the one-account uniqueness check
+    # AND the lifetime ban-evasion ledger (BannedIdentity survives erasure). base.py defaults it to
+    # SECRET_KEY for dev/test, but once uniqueness is ENFORCED that coupling is a footgun: rotating
+    # SECRET_KEY (ordinary key hygiene) would silently change every holder_hash, so a banned wallet
+    # could re-register and a vindicated user could never recover. Demand a dedicated secret that is
+    # DISTINCT from SECRET_KEY (reusing the same value re-couples them — defeats the whole point).
+    _binding_secret = env("IDENTITY_BINDING_SECRET", default="")
+    if IDENTITY_UNIQUENESS_ENFORCED and (not _binding_secret or _binding_secret == SECRET_KEY):
+        raise ImproperlyConfigured(
+            "IDENTITY_UNIQUENESS_ENFORCED is on, so IDENTITY_BINDING_SECRET must be set to a "
+            "dedicated value DISTINCT from DJANGO_SECRET_KEY. Otherwise the two rotate together, "
+            "so rotating SECRET_KEY breaks every holder_hash (letting a banned wallet re-register)."
         )
     # EU data residency for minors' media (GDPR Ch. V): if S3-compatible storage is used,
     # require an EU region (or an explicit endpoint, e.g. an EU R2 bucket).

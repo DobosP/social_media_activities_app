@@ -27,10 +27,10 @@ HTTP-layer moderation/referral tests, indefinite-SUSPEND + authority-referral-SL
 (`feat/dsa-sanctions-hardening`), adversarially reviewed (4 dimensions, 0 confirmed defects). See the
 DSA-sanctions P2 block below (now all `[x]`).
 
-**Recommended next pick → P2 batch (autonomous, pick one)**: `IDENTITY_BINDING_SECRET` prod guard
-(`config/settings/`, smallest + a real rotation footgun) · media docscan/managed-scanner tests
+**Recommended next pick → P2 batch (autonomous, pick one)**: media docscan/managed-scanner tests
 (`apps/media/`) · circuit-breaker locking + half-open (`apps/ops/resilience.py`) · `request_id` into
-cron jobs.
+cron jobs · CSP report-uri. _(DONE: `IDENTITY_BINDING_SECRET` prod guard + the rest of the EUDI
+identity-binding cluster — `feat/eudi-binding-hardening`.)_
 
 **Then, remaining open work** (all itemised below with file pointers):
 - **P2 batch** (autonomous): `IDENTITY_BINDING_SECRET` prod guard · `request_id` into cron jobs ·
@@ -112,13 +112,18 @@ merge `--no-ff` → **ask before pushing** (the auto classifier blocks direct-to
   intended escape hatch once it lands. `apps/accounts/identity/providers/eudi.py`.
 - [x] `release_binding` (set `IdentityBinding.released_at`) — built (`feat/eudi-binding-followups`):
   the documented voluntary fresh-start path now exists + is admin-invokable.
-- [ ] Require a dedicated `IDENTITY_BINDING_SECRET`; it silently defaults to `SECRET_KEY`, so rotating
-  `SECRET_KEY` would break every `holder_hash` lookup. Add a prod guard. `config/settings/`.
+- [x] Require a dedicated `IDENTITY_BINDING_SECRET` — DONE (`feat/eudi-binding-hardening`): a prod boot
+  guard (`config/settings/prod.py`) rejects a missing **or** SECRET_KEY-equal value when
+  `IDENTITY_UNIQUENESS_ENFORCED` is on, so rotating `SECRET_KEY` can't silently rekey every
+  `holder_hash` (identity uniqueness + the ban-evasion ledger). base.py default carries a pointer note.
 - [x] Register `IdentityBinding` / `BannedIdentity` in `apps/accounts/admin.py` + a moderator path to
   inspect/release a binding and lift a wrongful identity ban — DONE (`feat/eudi-binding-followups`).
-- [ ] Make web sandbox `verify_age` (`apps/web/views.py`) call `bind_identity` for surface symmetry,
-  or document why it intentionally does not.
-- [ ] Add a direct test for the ban-rejection branch inside `bind_identity` (BannedIdentity → 403).
+- [x] Make web `verify_age` call `bind_identity` for surface symmetry — DONE
+  (`feat/eudi-binding-hardening`): a banned/already-bound wallet is now refused on the verify-age
+  surface too (before assurance is applied), mirroring `register`/`EUDIVerifyView`; no-op in sandbox.
+- [x] Direct test for the ban-rejection branch — DONE (`feat/eudi-binding-hardening`): a unit test of
+  the `BannedIdentity` branch in `bind_identity`, an API-layer 403, and web verify_age refusal tests
+  (banned + already-bound).
 
 ### DSA sanctions — DONE (`feat/dsa-sanctions-hardening`, merged to main; adversarially reviewed, 0 defects)
 - [x] `lift_expired_suspensions` now processes each expiry in its own transaction with

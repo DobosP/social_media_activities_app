@@ -275,6 +275,9 @@ EUDI_TRUSTED_ISSUERS = env.json("EUDI_TRUSTED_ISSUERS", default={})
 # default so the dev/sandbox flow (no key-binding proof) is unaffected; turn it on once real
 # EUDI wallets present proofs in production.
 IDENTITY_UNIQUENESS_ENFORCED = env.bool("IDENTITY_UNIQUENESS_ENFORCED", default=False)
+# Defaults to SECRET_KEY for dev/test convenience. In production with uniqueness ENFORCED this
+# default is rejected (see config/settings/prod.py): it must be a dedicated, stable secret, because
+# rotating SECRET_KEY would otherwise change every holder_hash and break the ban-evasion ledger.
 IDENTITY_BINDING_SECRET = env("IDENTITY_BINDING_SECRET", default=SECRET_KEY)
 
 # Phase 4 self-progression: the evolving avatar reflects a user's OWN confirmed real meetups and is
