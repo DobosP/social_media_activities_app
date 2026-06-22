@@ -167,10 +167,16 @@ merge `--no-ff` → **ask before pushing** (the auto classifier blocks direct-to
   report-uri collector) — will sit report-only indefinitely without follow-up.
 
 ### Provider resilience
-- [ ] Circuit-breaker mutators (`record_failure/record_success/allow`) aren't lock-protected (benign
-  under CPython GIL, but a correctness smell). `apps/ops/resilience.py`.
-- [ ] No half-open probe / success-threshold-to-close; recovery untested. No jitter/Retry-After, no
-  per-call breaker metrics/alert, no admin reset tooling. No shared (Redis) breaker state across workers.
+- [x] Circuit-breaker mutators now lock-protected — DONE (`feat/circuit-breaker-hardening`): a
+  per-instance `threading.Lock` wraps `allow`/`record_success`/`record_failure` so a probe budget +
+  failure count can't be raced. `apps/ops/resilience.py`.
+- [x] Half-open probe + success-threshold-to-close + admin `reset()` — DONE
+  (`feat/circuit-breaker-hardening`): CLOSED→OPEN→HALF_OPEN state machine; after the cooldown a
+  single (configurable `half_open_max`) probe is admitted while the rest still fail fast,
+  `success_threshold` consecutive probe successes close it, any probe failure re-opens with a fresh
+  cooldown (no thundering herd). Recovery + lock-safety unit-tested.
+- [ ] Remaining (lower priority): jitter / Retry-After honoring, per-call breaker metrics/alert,
+  shared (Redis) breaker state across workers.
 
 ### Observability
 - [ ] No CSP report-uri endpoint → report-only violations aren't collected (blocks moving CSP to enforce).
