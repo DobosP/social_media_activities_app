@@ -66,9 +66,18 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         import logging
+        import uuid
 
+        from apps.ops.observability import set_request_id
+
+        # Stamp a per-run correlation id so every log line this cron tick emits (and the per-job
+        # failures below) carries it, instead of the bare "-" that non-HTTP code logs by default —
+        # the same RequestIdFilter the HTTP path uses then picks it up.
+        run_id = f"job:run_due_jobs:{uuid.uuid4().hex[:12]}"
+        set_request_id(run_id)
         logger = logging.getLogger("apps.ops.run_due_jobs")
         jobs = self._jobs(options)
+        logger.info("run_due_jobs starting (%d job(s), run_id=%s)", len(jobs), run_id)
         failures = []
         for name, kwargs in jobs:
             self.stdout.write(f"-> {name}")

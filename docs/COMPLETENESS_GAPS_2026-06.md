@@ -163,8 +163,8 @@ merge `--no-ff` → **ask before pushing** (the auto classifier blocks direct-to
   (`notifications/0017`); no INCLUDE/covering indexes, none added to `Post`/`AuditLog`.
 - [ ] N+1 work was a single fix (`messaging.participant_keys`), not a systematic feed/thread/
   notification-list audit.
-- [ ] Report-only CSP has no enforcement path wired (no nonce/inline-script extraction, no
-  report-uri collector) — will sit report-only indefinitely without follow-up.
+- [~] Report-only CSP: the **report-uri collector is now wired** (`feat/observability-hardening`), so
+  violations are collected — the remaining step to ENFORCE is nonce/inline-script extraction.
 
 ### Provider resilience
 - [x] Circuit-breaker mutators now lock-protected — DONE (`feat/circuit-breaker-hardening`): a
@@ -179,9 +179,14 @@ merge `--no-ff` → **ask before pushing** (the auto classifier blocks direct-to
   shared (Redis) breaker state across workers.
 
 ### Observability
-- [ ] No CSP report-uri endpoint → report-only violations aren't collected (blocks moving CSP to enforce).
-- [ ] `request_id` doesn't propagate into cron/job processes (defaults to `-` outside HTTP).
-- [ ] No guard/test that `JsonFormatter` never serialises PII if a future log call passes a user object.
+- [x] CSP report collector — DONE (`feat/observability-hardening`): `CSPReportView` at
+  `/api/v1/ops/csp-report/` + `report-uri`/`report-to` (+ `Reporting-Endpoints` header) wired into the
+  report-only policy. AllowAny/no-auth/never-throttled, always 204s, bounded body, logs only
+  operational fields (control-char-stripped, no log-forging) behind a global per-minute log budget.
+- [x] `request_id` into cron — DONE (`feat/observability-hardening`): `run_due_jobs` stamps a per-run
+  `job:run_due_jobs:<hex>` id into the logging contextvar (no more `-` outside HTTP).
+- [x] JsonFormatter PII guard — DONE (`feat/observability-hardening`): regression test pinning the
+  allowlist formatter never serialises a user object attached to a record.
 - [ ] django_prometheus counters are per-process — multi-worker deploy needs per-instance scrape/aggregation.
 
 ### SEO

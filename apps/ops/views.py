@@ -1,7 +1,12 @@
 """Privacy-respecting observability (IS-6): a liveness/readiness probe and an
 AGGREGATE-only stats endpoint. No per-user analytics, no behavioural tracking."""
 
+import json
+import logging
+import re
+
 from django.conf import settings
+from django.core.cache import cache
 from django.db import connection
 from django.db.models import Sum
 from rest_framework import status
@@ -132,4 +137,81 @@ class StatsView(APIView):
                 "donations_completed": completed.count(),
                 "donations_total_cents": completed.aggregate(s=Sum("amount_cents"))["s"] or 0,
             }
+        )
+
+
+_csp_logger = logging.getLogger("apps.ops.csp_report")
+_CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f]")
+
+
+def _csp_clean(value, limit: int) -> str:
+    """Strip control chars (incl. CR/LF) then clamp — the CSP fields are attacker-controlled, so an
+    un-sanitised newline could forge a fake line in the plain (non-JSON) log formatter."""
+    return _CONTROL_CHARS.sub(" ", str(value))[:limit]
+
+
+class CSPReportView(APIView):
+    """Collects browser CSP violation reports for the report-only policy — the path to actually
+    ENFORCING CSP (today the policy is report-only with nowhere to send violations).
+
+    AllowAny + never throttled: browsers POST these unauthenticated and cross-context, and a dropped
+    report is a lost signal — so the endpoint ALWAYS returns 204. The raw body is read directly (the
+    ``application/csp-report`` / ``application/reports+json`` content types aren't DRF-parsed),
+    bounded, and only OPERATIONAL fields (directive / blocked-uri / document-uri — the app's own
+    URLs, never user PII) are logged, at a GLOBAL per-minute budget so a malicious flood of POSTs
+    can't balloon the logs."""
+
+    permission_classes = [AllowAny]
+    throttle_classes = []  # like /healthz: an unauthenticated browser-driven endpoint, never 429
+    # No authenticators: a browser may post the report WITH the session cookie, and DRF's
+    # SessionAuthentication would then enforce CSRF (no token on a browser report) and 403 it.
+    authentication_classes = []
+
+    _MAX_BODY = 8 * 1024
+    _LOG_BUDGET = 120  # log at most this many reports per minute (global); excess is still 204'd
+
+    def post(self, request):
+        if self._log_allowed():
+            self._log(request.body[: self._MAX_BODY])
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def _log_allowed(self) -> bool:
+        try:
+            n = cache.get_or_set("csp-report-log-budget", 0, 60)
+            if n >= self._LOG_BUDGET:
+                return False
+            try:
+                cache.incr("csp-report-log-budget")
+            except ValueError:
+                cache.set("csp-report-log-budget", 1, 60)
+        except Exception:
+            return True  # a cache hiccup must never silence a real violation report
+        return True
+
+    def _log(self, body: bytes) -> None:
+        try:
+            data = json.loads(body.decode("utf-8", "replace") or "{}")
+        except (ValueError, TypeError):
+            _csp_logger.info("CSP report (unparseable, %d bytes)", len(body))
+            return
+        # Unwrap the legacy {"csp-report": {...}} or Reporting-API [{"body": {...}}] envelope.
+        rep = {}
+        if isinstance(data, dict):
+            rep = data.get("csp-report") or data
+        elif isinstance(data, list) and data and isinstance(data[0], dict):
+            rep = data[0].get("body") or data[0]
+        if not isinstance(rep, dict):
+            return
+
+        def pick(*keys):
+            for k in keys:
+                if rep.get(k):
+                    return rep[k]
+            return ""
+
+        directive = _csp_clean(pick("effective-directive", "violated-directive"), 80)
+        blocked = _csp_clean(pick("blocked-uri", "blockedURL"), 200)
+        document = _csp_clean(pick("document-uri", "documentURL"), 200)
+        _csp_logger.info(
+            "CSP violation: directive=%s blocked=%s doc=%s", directive, blocked, document
         )

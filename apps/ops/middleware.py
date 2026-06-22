@@ -67,9 +67,15 @@ class PermissionsPolicyMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
         self.value = getattr(settings, "PERMISSIONS_POLICY", self.DEFAULT)
+        # Reporting-Endpoints (modern Reporting API): `name="url", ...` so the CSP `report-to csp`
+        # directive resolves to /ops/csp-report/. Computed once at startup.
+        endpoints = getattr(settings, "CSP_REPORTING_ENDPOINTS", {}) or {}
+        self.reporting_endpoints = ", ".join(f'{name}="{url}"' for name, url in endpoints.items())
 
     def __call__(self, request):
         response = self.get_response(request)
         if self.value:
             response.setdefault("Permissions-Policy", self.value)
+        if self.reporting_endpoints:
+            response.setdefault("Reporting-Endpoints", self.reporting_endpoints)
         return response
