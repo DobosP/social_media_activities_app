@@ -84,6 +84,28 @@ def _client(user):
     return c
 
 
+# Fake document scanners, wired by dotted path via override_settings(MEDIA_DOCUMENT_SCANNER=...).
+# (The default is the no-op scanner, so a wired+effective scanner needs a test double.)
+class _EffectiveCleanDocScanner:
+    def is_effective(self):
+        return True
+
+    def scan(self, data):
+        from apps.media.scanning import ScanResult
+
+        return ScanResult(clean=True)
+
+
+class _EffectiveMatchDocScanner:
+    def is_effective(self):
+        return True
+
+    def scan(self, data):
+        from apps.media.scanning import ScanResult
+
+        return ScanResult(clean=False, matched="Eicar-Test-Signature")
+
+
 # --- the attach gate -----------------------------------------------------------------------
 
 
@@ -181,6 +203,77 @@ def test_fail_closed_without_scanner():
     with override_settings(MEDIA_REQUIRE_SCANNER=True, MEDIA_CSAM_HASH_BLOCKLIST=[]):
         with pytest.raises(media.MediaRejected):
             media.attach_to_post(owner, post, filename="x.png", data=_png())
+
+
+# --- PDF document-scan (antivirus) branch in attach_to_post --------------------------------
+
+
+def test_pdf_fail_closed_without_document_scanner():
+    # The gap: a PDF must be REFUSED when document scanning is required but the default no-op
+    # scanner is wired (is_effective False). The image scan passes first (it's not required in
+    # test settings), so this isolates the document-scanner fail-closed gate.
+    owner = _adult("att_doc1")
+    activity = _activity(owner)
+    post = social.post_to_thread(owner, activity, "doc")
+    with override_settings(MEDIA_REQUIRE_DOCUMENT_SCANNER=True):  # default scanner is the no-op
+        with pytest.raises(media.MediaRejected, match="document scanner"):
+            media.attach_to_post(owner, post, filename="x.pdf", data=_pdf())
+    assert not Attachment.objects.filter(post=post).exists()
+
+
+def test_pdf_blocked_by_effective_document_scanner_match():
+    # An effective doc scanner that reports a signature hit blocks the PDF (no require flag needed).
+    owner = _adult("att_doc2")
+    activity = _activity(owner)
+    post = social.post_to_thread(owner, activity, "doc")
+    with override_settings(
+        MEDIA_DOCUMENT_SCANNER="apps.media.tests.test_attachments._EffectiveMatchDocScanner"
+    ):
+        with pytest.raises(media.MediaRejected, match="failed safety screening"):
+            media.attach_to_post(owner, post, filename="x.pdf", data=_pdf())
+    assert not Attachment.objects.filter(post=post).exists()
+
+
+def test_pdf_allowed_when_effective_document_scanner_is_clean():
+    # The fail-closed gate OPENS once a real, effective scanner clears the file — even with the
+    # require flag on. Proves the gate isn't just "always reject PDFs".
+    owner = _adult("att_doc3")
+    activity = _activity(owner)
+    post = social.post_to_thread(owner, activity, "doc")
+    with override_settings(
+        MEDIA_REQUIRE_DOCUMENT_SCANNER=True,
+        MEDIA_DOCUMENT_SCANNER="apps.media.tests.test_attachments._EffectiveCleanDocScanner",
+    ):
+        att = media.attach_to_post(owner, post, filename="ok.pdf", data=_pdf())
+    assert att.kind == Attachment.Kind.FILE
+    assert att.content_type == "application/pdf"
+
+
+def test_image_skips_the_document_scanner_gate():
+    # The document-scan gate is PDF-only — an image in the same thread is unaffected by a
+    # required-but-unwired document scanner.
+    owner = _adult("att_doc4")
+    activity = _activity(owner)
+    post = social.post_to_thread(owner, activity, "img")
+    with override_settings(MEDIA_REQUIRE_DOCUMENT_SCANNER=True):  # no-op doc scanner
+        att = media.attach_to_post(owner, post, filename="x.png", data=_png())
+    assert att.kind == Attachment.Kind.IMAGE
+
+
+def test_web_pdf_doc_scan_fail_closed_rolls_back_post():
+    # End-to-end: the web compose flow refusing a PDF on the document-scan gate must roll the
+    # Post back too (one transaction), so there is never a post without its (rejected) file.
+    owner = _adult("att_doc5")
+    activity = _activity(owner)
+    # Pin MEDIA_REQUIRE_SCANNER=False so the rejection is unambiguously the DOCUMENT gate (not the
+    # image gate) even if test settings change later.
+    with override_settings(MEDIA_REQUIRE_DOCUMENT_SCANNER=True, MEDIA_REQUIRE_SCANNER=False):
+        _client(owner).post(
+            f"/activities/{activity.id}/post/",
+            {"body": "with pdf", "attachment": BytesIO(_pdf())},
+        )
+    assert not activity.thread.posts.filter(body="with pdf").exists()
+    assert Attachment.objects.filter(post__thread=activity.thread).count() == 0
 
 
 # --- visibility + serving ------------------------------------------------------------------
