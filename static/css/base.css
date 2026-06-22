@@ -591,25 +591,39 @@ textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--accent)
 .browse[data-view="list"] .browse-item .card h3 { font-size: 1.02rem; }
 .browse[data-view="list"] .card-desc { display: none; }   /* keep rows tight + scannable */
 
-/* ---- CARDS: a focused deck. With NO JavaScript this is a readable stacked column. ---- */
-.browse[data-view="cards"] .browse-grid { gap: .9rem; }
+/* ---- CARDS: a phone-like carousel — a centred card with the neighbours peeking. browse-modes.js
+   translates the track to centre the active card; the server marks the first card .is-current so it
+   is centred on first paint. With NO JavaScript the <noscript> block in activities.html falls back
+   to a readable full-width column. ---- */
+.browse[data-view="cards"] .browse-deck { overflow: hidden; touch-action: pan-y; }
+.browse[data-view="cards"] .browse-grid {
+  display: flex; flex-direction: row; gap: 16px; align-items: stretch;
+  will-change: transform; transition: transform .3s cubic-bezier(.22, .61, .36, 1);
+}
+.browse[data-view="cards"] .browse-item {
+  flex: 0 0 min(82vw, 360px); opacity: .45; transform: scale(.93);
+  transition: opacity .28s ease, transform .28s ease;
+}
+.browse[data-view="cards"] .browse-item.is-current { opacity: 1; transform: none; }
+/* While dragging, the track follows the pointer with no easing and no text selection. */
+.browse[data-view="cards"].is-dragging .browse-grid,
+.browse[data-view="cards"].is-dragging .browse-item { transition: none; }
+.browse[data-view="cards"].is-dragging { cursor: grabbing; user-select: none; }
+
 .browse[data-view="cards"] .browse-item .card {
-  padding: 1.15rem 1.2rem; border-radius: var(--r-lg);
+  height: 100%; padding: 1.15rem 1.2rem; border-radius: var(--r-lg);
 }
 .browse[data-view="cards"] .browse-item .card h3 { font-size: 1.28rem; line-height: 1.25; }
 .browse[data-view="cards"] .browse-item .card-desc { font-size: 1rem; color: var(--lead); }
 
-/* Show ONE card at a time, stacked in one grid cell (no height jump). The server marks the first
-   card .is-current, so the right card shows on first paint (no flash) and JS just takes over;
-   without JS the <noscript> block in activities.html reveals all cards as a readable column. */
-.browse[data-view="cards"] .browse-grid { display: grid; }
-.browse[data-view="cards"] .browse-item {
-  grid-area: 1 / 1; opacity: 0; transform: translateX(16px) scale(.985);
-  pointer-events: none; transition: opacity .22s ease, transform .22s ease;
+/* Generated abstract accent banner — shown ONLY in the Cards deck (decorative, never a photo). */
+.card-accent { display: none; }
+.browse[data-view="cards"] .card-accent {
+  display: block; height: 92px; overflow: hidden;
+  margin: -1.15rem -1.2rem .9rem; border-radius: var(--r-lg) var(--r-lg) 0 0;
 }
-.browse[data-view="cards"] .browse-item.is-current {
-  opacity: 1; transform: none; pointer-events: auto;
-}
+.card-accent svg { display: block; width: 100%; height: 100%; }
+
 /* The deck moves keyboard focus onto the active card (tabindex=-1); show where it landed. */
 .browse-item:focus { outline: none; }
 .browse-item:focus-visible {

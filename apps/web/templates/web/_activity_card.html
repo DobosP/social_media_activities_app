@@ -1,5 +1,6 @@
-{% load i18n %}
+{% load i18n avatars %}
 <div class="card">
+  {% if show_accent %}<div class="card-accent" aria-hidden="true">{% activity_accent a %}</div>{% endif %}
   {% if a.rec_reason %}<span class="score">{{ a.rec_reason }}</span>{% elif a.match_pct %}<span class="score">{% blocktrans with pct=a.match_pct %}{{ pct }}% match{% endblocktrans %}</span>{% endif %}
   <h3><a href="{% url 'activity_detail' a.pk %}">{{ a.title }}</a></h3>
   <div>

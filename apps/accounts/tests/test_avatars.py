@@ -58,3 +58,34 @@ def test_chat_config_carries_my_generated_avatar():
     c.force_login(u)
     html = c.get("/messages/").content.decode()
     assert identicon_data_uri("yan") in html  # me.avatar embedded in the messaging config
+
+
+# --- activity accent banner (the procedural, non-photo card decoration) --------------------
+
+
+def test_activity_accent_is_deterministic_and_distinct():
+    from apps.accounts.avatars import activity_accent_svg
+
+    assert activity_accent_svg("basketball:Hoops") == activity_accent_svg("basketball:Hoops")
+    assert activity_accent_svg("basketball:Hoops") != activity_accent_svg("chess:Club")
+
+
+def test_activity_accent_is_inline_svg_not_a_photo():
+    from apps.accounts.avatars import activity_accent_svg
+
+    svg = activity_accent_svg("yoga:Park flow")
+    assert svg.startswith("<svg") and svg.endswith("</svg>")
+    assert 'aria-hidden="true"' in svg  # decorative
+    assert "<image" not in svg and "<img" not in svg  # never a raster/photo
+
+
+def test_activity_accent_never_emits_the_seed_string():
+    # The mark_safe in the templatetag is only safe because the (untrusted) seed is used solely to
+    # seed the PRNG/hash — it is NEVER written into the SVG markup. Guard that invariant.
+    from apps.accounts.avatars import activity_accent_svg
+
+    seed = '<script>alert(1)</script>:" onload="x'
+    svg = activity_accent_svg(seed)
+    assert "<script>" not in svg
+    assert "onload" not in svg
+    assert "alert" not in svg

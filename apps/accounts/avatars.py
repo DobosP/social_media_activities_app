@@ -286,3 +286,51 @@ def constellation_data_uri(seed: str, nodes, edges, *, px: int = 80) -> str:
     svg = constellation_svg(seed, nodes, edges, px=px)
     b64 = base64.b64encode(svg.encode("utf-8")).decode("ascii")
     return f"data:image/svg+xml;base64,{b64}"
+
+
+# --- Activity accent: an abstract generative banner for an activity card ------------------------
+#
+# A purely DECORATIVE, deterministic banner (gradient + soft abstract shapes) that gives each
+# activity card a distinct visual identity in the focused "Cards" browse mode. It is generative art,
+# NOT a photo and never user content — so it upholds inv.1 (text-first; no photo/image-perfect
+# surface), exactly like the avatars. Same seed -> same banner. The output SVG contains ONLY
+# numbers + hsl() colours + a per-seed id namespace — no part of the seed string is ever emitted
+# into the markup, so it is safe to inline as trusted HTML.
+
+
+def activity_accent_svg(seed: str, *, width: int = 320, height: int = 120) -> str:
+    """A deterministic abstract banner SVG (inline) for ``seed`` (e.g. an activity's type + title).
+    Calm, even palette derived from the seed hash; ids namespaced per-seed so many can be inlined
+    on one page. Decorative (``aria-hidden``)."""
+    rnd = _prng(seed)
+    digest = hashlib.sha256((seed or "?").encode("utf-8")).digest()
+    uid = "ac" + digest[:5].hex()  # stable per-seed namespace for the gradient id
+    hue = ((digest[0] << 8) | digest[1]) % 360
+    hue2 = (hue + 32) % 360
+    deep = f"hsl({hue}, 44%, 40%)"
+    bright = f"hsl({hue2}, 46%, 54%)"
+    tint = f"hsl({hue}, 38%, 90%)"
+    shapes = []
+    for _ in range(4):  # soft translucent discs
+        cx = round(rnd() * width, 1)
+        cy = round(rnd() * height, 1)
+        r = round(20 + rnd() * 48, 1)
+        op = round(0.08 + rnd() * 0.20, 2)
+        shapes.append(f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="{tint}" opacity="{op}"/>')
+    for _ in range(2):  # a couple of faint diagonals
+        y1 = round(rnd() * height, 1)
+        y2 = round(rnd() * height, 1)
+        shapes.append(
+            f'<line x1="0" y1="{y1}" x2="{width}" y2="{y2}" '
+            f'stroke="{tint}" stroke-width="1.5" opacity="0.16"/>'
+        )
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" '
+        f'width="100%" height="100%" preserveAspectRatio="xMidYMid slice" '
+        f'role="img" aria-hidden="true" focusable="false">'
+        f'<defs><linearGradient id="{uid}" x1="0" y1="0" x2="1" y2="1">'
+        f'<stop offset="0" stop-color="{deep}"/><stop offset="1" stop-color="{bright}"/>'
+        f"</linearGradient></defs>"
+        f'<rect width="{width}" height="{height}" fill="url(#{uid})"/>'
+        f"{''.join(shapes)}</svg>"
+    )
