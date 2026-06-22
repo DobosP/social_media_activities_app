@@ -30,37 +30,125 @@ class ProviderUnavailable(Exception):
 
 
 class CircuitBreaker:
-    """A tiny per-key breaker: after ``threshold`` consecutive failures it OPENS for ``cooldown``
-    seconds, failing fast so a down provider doesn't tie up a worker for ``timeout * attempts`` on
-    every call. State is IN-PROCESS (a module dict) — on a multi-worker deploy each process has its
-    own breaker; a cross-process breaker would need shared state (Redis). Adequate per-process
-    fail-fast; the cost of being wrong is at most one wasted call per process per cooldown."""
+    """A tiny per-key breaker with a CLOSED -> OPEN -> HALF_OPEN state machine:
+
+    * CLOSED — calls pass; ``threshold`` consecutive failures OPEN it.
+    * OPEN — calls fail fast for ``cooldown`` seconds (a down provider never ties up a worker for
+      ``timeout * attempts`` on every call).
+    * HALF_OPEN (once the cooldown elapses) — at most ``half_open_max`` probe call(s) are let
+      through while everything else keeps failing fast; ``success_threshold`` consecutive probe
+      successes CLOSE it, and ANY probe failure re-OPENS it with a fresh cooldown. So a flapping
+      provider isn't hit by a thundering herd the instant the cooldown ends.
+
+    Every transition holds ``self._lock``, so concurrent workers in one process can't lose a failure
+    count nor admit more than ``half_open_max`` probes (the previous version mutated unguarded —
+    benign under the GIL, but a real correctness smell once a probe budget exists). State is
+    IN-PROCESS (a module dict): a cross-process breaker would need shared state (Redis); per-process
+    fail-fast is adequate (worst case, a few wasted probes per process per cooldown).
+
+    Contract: a caller MUST pair every ``allow() is True`` with exactly one ``record_success`` /
+    ``record_failure`` — because in HALF_OPEN ``allow`` reserves a probe slot.
+    ``request_with_retries`` upholds it (one ``allow`` at entry, one ``record_*`` per call)."""
+
+    CLOSED, OPEN, HALF_OPEN = "closed", "open", "half_open"
 
     _registry: dict[str, CircuitBreaker] = {}
-    _lock = threading.Lock()
+    _registry_lock = threading.Lock()
 
-    def __init__(self, threshold: int, cooldown: float):
+    def __init__(
+        self,
+        threshold: int,
+        cooldown: float,
+        *,
+        success_threshold: int = 1,
+        half_open_max: int = 1,
+    ):
         self.threshold = threshold
         self.cooldown = cooldown
+        self.success_threshold = max(1, success_threshold)
+        self.half_open_max = max(1, half_open_max)
+        self._lock = threading.Lock()
+        self.state = self.CLOSED
         self.failures = 0
+        self.successes = 0
         self.open_until = 0.0
+        self._probes = 0  # in-flight HALF_OPEN probe calls
 
     @classmethod
-    def get(cls, key: str, *, threshold: int = 5, cooldown: float = 30.0) -> CircuitBreaker:
-        with cls._lock:
-            return cls._registry.setdefault(key, cls(threshold, cooldown))
+    def get(
+        cls,
+        key: str,
+        *,
+        threshold: int = 5,
+        cooldown: float = 30.0,
+        success_threshold: int = 1,
+        half_open_max: int = 1,
+    ) -> CircuitBreaker:
+        with cls._registry_lock:
+            return cls._registry.setdefault(
+                key,
+                cls(
+                    threshold,
+                    cooldown,
+                    success_threshold=success_threshold,
+                    half_open_max=half_open_max,
+                ),
+            )
 
     def allow(self) -> bool:
-        return time.monotonic() >= self.open_until
+        """Reserve permission to make ONE call (see the contract in the class docstring)."""
+        with self._lock:
+            if self.state == self.OPEN:
+                if time.monotonic() < self.open_until:
+                    return False
+                # Cooldown elapsed: enter HALF_OPEN and let THIS call be the first probe.
+                self.state = self.HALF_OPEN
+                self.successes = 0
+                self._probes = 0
+            if self.state == self.HALF_OPEN:
+                if self._probes >= self.half_open_max:
+                    return False
+                self._probes += 1
+                return True
+            return True  # CLOSED
 
     def record_success(self) -> None:
-        self.failures = 0
-        self.open_until = 0.0
+        with self._lock:
+            if self.state == self.HALF_OPEN:
+                self._probes = max(0, self._probes - 1)
+                self.successes += 1
+                if self.successes >= self.success_threshold:
+                    self._reset_locked()
+            else:
+                self.failures = 0  # a success clears the consecutive-failure streak
 
     def record_failure(self) -> None:
-        self.failures += 1
-        if self.failures >= self.threshold:
-            self.open_until = time.monotonic() + self.cooldown
+        with self._lock:
+            if self.state == self.HALF_OPEN:
+                self._probes = max(0, self._probes - 1)
+                self._open_locked(time.monotonic())  # a probe failed -> straight back to OPEN
+            else:
+                self.failures += 1
+                if self.failures >= self.threshold:
+                    self._open_locked(time.monotonic())
+
+    def reset(self) -> None:
+        """Force the breaker CLOSED (admin / test tooling)."""
+        with self._lock:
+            self._reset_locked()
+
+    def _open_locked(self, now: float) -> None:
+        self.state = self.OPEN
+        self.open_until = now + self.cooldown
+        self.successes = 0
+        self._probes = 0
+
+    def _reset_locked(self) -> None:
+        self.state = self.CLOSED
+        self.failures = 0
+        self.successes = 0
+        self._probes = 0
+        self.open_until = 0.0
 
 
 def request_with_retries(

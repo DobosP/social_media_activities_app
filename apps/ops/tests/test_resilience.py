@@ -89,3 +89,94 @@ def test_breaker_opens_after_threshold_and_fails_fast(mock_req):
         request_with_retries("GET", "https://x", max_attempts=1, backoff=0, breaker_key=key)
     assert mock_req.call_count == calls
     CircuitBreaker._registry.clear()
+
+
+# --- half-open recovery + lock safety (unit-level state machine) ---------------------------
+
+
+def test_breaker_half_open_admits_one_probe_then_closes_on_success():
+    b = CircuitBreaker(threshold=2, cooldown=0.0)  # cooldown 0 -> probe available immediately
+    b.record_failure()
+    b.record_failure()
+    assert b.state == CircuitBreaker.OPEN
+    # First allow() after the cooldown enters HALF_OPEN and reserves the single probe slot.
+    assert b.allow() is True
+    assert b.state == CircuitBreaker.HALF_OPEN
+    assert b.allow() is False  # only half_open_max (=1) probe is admitted; the rest fail fast
+    b.record_success()  # success_threshold (=1) reached -> CLOSED
+    assert b.state == CircuitBreaker.CLOSED
+    assert b.allow() is True
+
+
+def test_breaker_half_open_failure_reopens_with_fresh_cooldown():
+    b = CircuitBreaker(threshold=1, cooldown=0.0)
+    b.record_failure()  # threshold 1 -> OPEN
+    assert b.allow() is True  # the half-open probe
+    b.record_failure()  # the probe failed -> straight back to OPEN
+    assert b.state == CircuitBreaker.OPEN
+
+
+def test_breaker_success_threshold_requires_consecutive_probes():
+    b = CircuitBreaker(threshold=1, cooldown=0.0, success_threshold=2)
+    b.record_failure()
+    assert b.allow() is True  # probe 1
+    b.record_success()  # 1/2 — still half-open
+    assert b.state == CircuitBreaker.HALF_OPEN
+    assert b.allow() is True  # probe 2 (slot freed by the prior record_success)
+    b.record_success()  # 2/2 -> CLOSED
+    assert b.state == CircuitBreaker.CLOSED
+
+
+def test_breaker_open_stays_open_during_cooldown_then_reset():
+    b = CircuitBreaker(threshold=1, cooldown=999)
+    b.record_failure()
+    assert b.allow() is False  # OPEN, long cooldown -> fail fast
+    b.reset()
+    assert b.state == CircuitBreaker.CLOSED
+    assert b.allow() is True
+
+
+def test_breaker_failure_count_is_lock_safe_under_threads():
+    import threading
+
+    b = CircuitBreaker(threshold=10_000, cooldown=0.0)  # high threshold so it never opens here
+
+    def hammer():
+        for _ in range(1000):
+            b.record_failure()
+
+    threads = [threading.Thread(target=hammer) for _ in range(8)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    # A concurrent-access smoke test: many record_failure() calls interleave without crashing and
+    # land the exact count. NOTE this alone is not a definitive lock guard — under CPython's GIL a
+    # plain ``+=`` rarely loses updates, so it could pass even without the lock. The AUTHORITATIVE
+    # lock guard is test_breaker_half_open_admits_only_one_probe_under_contention below, whose wide
+    # check-then-reserve window genuinely goes red if the lock is removed.
+    assert b.failures == 8000
+
+
+def test_breaker_half_open_admits_only_one_probe_under_contention():
+    import threading
+
+    b = CircuitBreaker(threshold=1, cooldown=0.0)
+    b.record_failure()  # OPEN with a 0s cooldown -> the very next allow() can probe
+    results = []
+    guard = threading.Lock()
+
+    def probe():
+        ok = b.allow()
+        with guard:
+            results.append(ok)
+
+    threads = [threading.Thread(target=probe) for _ in range(24)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    # The lock makes the check-then-reserve atomic, so EXACTLY one probe is admitted (without it,
+    # several threads could pass the budget check before any increment and all be let through).
+    assert results.count(True) == 1
+    assert results.count(False) == 23
