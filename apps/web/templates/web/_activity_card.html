@@ -14,5 +14,5 @@
   </div>
   <p class="muted">{{ a.starts_at|date:"D j M, H:i" }} &middot;
     {{ a.place.display_name|default:_("a place") }}{% if a.place.address_city %}, {{ a.place.address_city }}{% endif %}{% if a.distance %} &middot; {% blocktrans with km=a.distance.km|floatformat:1 %}{{ km }} km away{% endblocktrans %}{% endif %}</p>
-  {% if a.description %}<p>{{ a.description|truncatewords:22 }}</p>{% endif %}
+  {% if a.description %}<p class="card-desc">{{ a.description|truncatewords:22 }}</p>{% endif %}
 </div>

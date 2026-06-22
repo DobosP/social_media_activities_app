@@ -140,34 +140,43 @@ def test_browse_modes_are_text_first_and_switchable():
 
     c = _client(user)
     # Baseline: a no-results page carries only the page chrome (incl. the single nav avatar — the
-    # one allowed profile picture). The FEED itself must add zero images in every mode.
+    # one allowed profile picture). The FEED itself must add zero IMAGES in every mode (the toggle
+    # icons are inline <svg>, not <img>).
     chrome_imgs = c.get("/activities/?q=zzzznomatchzzz").content.decode().count("<img")
-    for mode, marker in [
-        ("grid", "<strong>grid</strong>"),
-        ("list", "<strong>list</strong>"),
-        ("card", "<strong>one at a time</strong>"),
-    ]:
+    # Default (no ?view=) is the calm List mode.
+    assert 'data-view="list"' in c.get("/activities/").content.decode()
+    for mode in ("list", "cards"):
         body = c.get(f"/activities/?view={mode}").content.decode()
-        assert marker in body, mode
+        assert f'data-view="{mode}"' in body, mode
         assert "Hoops one" in body  # the activity is shown in every mode
         assert body.count("<img") == chrome_imgs, mode  # text-first: the feed adds no images
 
-    # Unknown view falls back to grid (never errors).
-    fallback = c.get("/activities/?view=swipe").content.decode()
-    assert "<strong>grid</strong>" in fallback
+    # Unknown view falls back to list (never errors), and the progressive-enhancement JS is wired.
+    cards_body = c.get("/activities/?view=cards").content.decode()
+    assert "browse-modes.js" in cards_body
+    assert 'data-view="list"' in c.get("/activities/?view=swipe").content.decode()
 
 
-def test_card_mode_paginates_one_at_a_time():
+def test_cards_mode_renders_a_focused_deck():
     user = _adult("tpw-card")
     _, _, bball = _topics()
     _activity(user, bball, "Hoops A")
     _activity(user, bball, "Hoops B")
 
+    body = _client(user).get("/activities/?view=cards").content.decode()
+    assert 'data-view="cards"' in body
+    assert "data-browse-deck" in body  # the deck container the JS drives
+    assert "data-deck-next" in body and "data-deck-prev" in body  # deck navigation chrome
+    assert body.count('class="browse-item') == 2  # both meetups rendered into the deck
+    assert body.count("is-current") == 1  # the server marks the first card so there's no load flash
+    assert "Hoops A" in body and "Hoops B" in body
+
+
+def test_browse_out_of_range_page_is_safe():
+    # get_page() clamps an absurd/non-int page so deep-linking can't 500.
+    user = _adult("tpw-page")
+    _, _, bball = _topics()
+    _activity(user, bball, "Hoops")
     c = _client(user)
-    p1 = c.get("/activities/?view=card").content.decode()
-    assert "of 2" in p1  # "1 of 2"
-    assert "Next" in p1
-    # Second page exists and the pager advances.
-    p2 = c.get("/activities/?view=card&page=2").content.decode()
-    assert "2 of 2" in p2
-    assert "Previous" in p2
+    assert c.get("/activities/?view=cards&page=999").status_code == 200
+    assert c.get("/activities/?view=list&page=oops").status_code == 200

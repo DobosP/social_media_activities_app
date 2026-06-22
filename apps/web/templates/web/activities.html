@@ -1,37 +1,72 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n static %}
 {% block title %}{% trans "Activities" %}{% endblock %}
 {% block content %}
 <h1>{% trans "Upcoming activities" %}</h1>
 <p class="muted">{% trans "Shown to people your age only." %}
-  <a href="{% url 'activity_create' %}">{% trans "Organise one →" %}</a>
+  <a href="{% url 'activity_create' %}">{% trans "Organize one →" %}</a>
   &middot; {% if beginners_only %}<a href="{% url 'activity_list' %}">{% trans "show all" %}</a> {% trans "(beginners-welcome only)" %}{% else %}<a href="?beginners=true">{% trans "beginners welcome only" %}</a>{% endif %}</p>
+
 <form method="get" action="{% url 'activity_list' %}" class="search-bar" role="search">
   <input type="search" name="q" value="{{ query }}" placeholder="{% trans 'Search activities, venues, types…' %}" aria-label="{% trans 'Search activities' %}" minlength="2">
   {% if beginners_only %}<input type="hidden" name="beginners" value="true">{% endif %}
+  {% if view_mode == "cards" %}<input type="hidden" name="view" value="cards">{% endif %}
   <button class="btn" type="submit">{% trans "Search" %}</button>
   {% if query %}<a class="muted" href="{% url 'activity_list' %}">{% trans "clear" %}</a>{% endif %}
 </form>
+
 {% if query %}
 <p class="muted">{% blocktrans with q=query %}Results for “{{ q }}” — soonest first.{% endblocktrans %}</p>
 {% else %}{% include "web/_near_me.html" %}{% endif %}
-{% comment %}Text-first view modes — presentation only, never changes which activities are shown.{% endcomment %}
-<nav class="muted" role="navigation" aria-label="{% trans 'View mode' %}" style="margin:.3rem 0">
-  {% trans "View:" %}
-  {% if view_mode == "grid" %}<strong>{% trans "grid" %}</strong>{% else %}<a href="?{{ base_qs }}{% if base_qs %}&amp;{% endif %}view=grid">{% trans "grid" %}</a>{% endif %}
-  &middot; {% if view_mode == "list" %}<strong>{% trans "list" %}</strong>{% else %}<a href="?{{ base_qs }}{% if base_qs %}&amp;{% endif %}view=list">{% trans "list" %}</a>{% endif %}
-  &middot; {% if view_mode == "card" %}<strong>{% trans "one at a time" %}</strong>{% else %}<a href="?{{ base_qs }}{% if base_qs %}&amp;{% endif %}view=card">{% trans "one at a time" %}</a>{% endif %}
-</nav>
-{% for a in activities %}
-  {% if view_mode == "list" %}{% include "web/_activity_row.html" %}{% else %}{% include "web/_activity_card.html" %}{% endif %}
-{% empty %}
-<p class="muted">{% if query %}{% trans "No upcoming activities match your search." %}{% else %}{% trans "Nothing upcoming yet. Be the first to organise something!" %}{% endif %}</p>
-{% if did_you_mean %}<p class="muted">{% blocktrans with term=did_you_mean termq=did_you_mean_q %}Did you mean <a href="?{{ termq }}">{{ term }}</a>?{% endblocktrans %}</p>{% endif %}{% endfor %}
-{% if view_mode == "card" and page_obj %}
-<nav class="row" role="navigation" aria-label="{% trans 'Pager' %}" style="gap:1rem;margin-top:.5rem;align-items:center">
-  {% if page_obj.has_previous %}<a class="btn" href="?{{ base_qs }}{% if base_qs %}&amp;{% endif %}view=card&amp;page={{ page_obj.previous_page_number }}">{% trans "← Previous" %}</a>{% endif %}
-  <span class="muted">{% blocktrans with n=page_obj.number total=page_obj.paginator.num_pages %}{{ n }} of {{ total }}{% endblocktrans %}</span>
-  {% if page_obj.has_next %}<a class="btn" href="?{{ base_qs }}{% if base_qs %}&amp;{% endif %}view=card&amp;page={{ page_obj.next_page_number }}">{% trans "Next →" %}</a>{% endif %}
+
+{# Presentation-only view switch (List / Cards). The links work with no JavaScript; browse-modes.js
+   upgrades them to an instant client-side toggle + a swipeable focused deck. No images; swipe/keys
+   only NAVIGATE between meetups — nothing is liked, ranked, or recorded. #}
+<div class="browse-toolbar">
+  <div class="seg" role="group" aria-label="{% trans 'Choose how to view activities' %}" data-browse-toggle>
+    <a class="seg-btn{% if view_mode == 'list' %} is-active{% endif %}" data-view-btn="list"
+       href="?{{ base_qs }}{% if base_qs %}&amp;{% endif %}view=list"{% if view_mode == 'list' %} aria-current="page"{% endif %}>
+      <svg class="ico" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><rect x="1" y="3" width="14" height="2" rx="1"/><rect x="1" y="7" width="14" height="2" rx="1"/><rect x="1" y="11" width="14" height="2" rx="1"/></svg>{% trans "List" %}</a>
+    <a class="seg-btn{% if view_mode == 'cards' %} is-active{% endif %}" data-view-btn="cards"
+       href="?{{ base_qs }}{% if base_qs %}&amp;{% endif %}view=cards"{% if view_mode == 'cards' %} aria-current="page"{% endif %}>
+      <svg class="ico" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><rect x="4" y="2" width="9" height="11" rx="2" opacity=".4"/><rect x="2.5" y="4" width="9" height="10" rx="2"/></svg>{% trans "Cards" %}</a>
+  </div>
+  {% if page_obj.paginator.count %}<p class="muted browse-count">{{ page_obj.paginator.count }} {% trans "upcoming" %}</p>{% endif %}
+</div>
+
+{# With JavaScript OFF the Cards deck can't page, so reveal every card as a readable column. #}
+<noscript><style>
+  .browse[data-view="cards"] .browse-grid { display: flex; flex-direction: column; gap: .9rem; }
+  .browse[data-view="cards"] .browse-item { opacity: 1 !important; transform: none !important; pointer-events: auto !important; }
+</style></noscript>
+<div class="browse" data-browse data-view="{{ view_mode }}">
+  <div class="browse-deck" data-browse-deck>
+    <div class="browse-grid">
+      {% for a in activities %}
+      <article class="browse-item{% if forloop.first %} is-current{% endif %}" data-title="{{ a.title }}">{% include "web/_activity_card.html" %}</article>
+      {% empty %}
+      <p class="muted">{% if query %}{% trans "No upcoming activities match your search." %}{% else %}{% trans "Nothing upcoming yet. Be the first to organise something!" %}{% endif %}</p>
+      {% if did_you_mean %}<p class="muted">{% blocktrans with term=did_you_mean termq=did_you_mean_q %}Did you mean <a href="?{{ termq }}">{{ term }}</a>?{% endblocktrans %}</p>{% endif %}
+      {% endfor %}
+    </div>
+  </div>
+  {% if activities %}
+  <div class="browse-deck-nav">
+    <button class="btn btn-secondary btn-sm" type="button" data-deck-prev>{% trans "← Prev" %}</button>
+    <span class="browse-deck-pos" data-deck-pos aria-hidden="true"></span>
+    <button class="btn btn-secondary btn-sm" type="button" data-deck-next>{% trans "Next →" %}</button>
+  </div>
+  {% endif %}
+  <p class="visually-hidden" role="status" aria-live="polite" data-browse-status></p>
+</div>
+
+{% if page_obj.has_other_pages %}
+<nav class="row" role="navigation" aria-label="{% trans 'Pages' %}" style="gap:1rem;margin-top:1rem;align-items:center;justify-content:center">
+  {% if page_obj.has_previous %}<a class="btn btn-secondary btn-sm" href="?{{ base_qs }}{% if base_qs %}&amp;{% endif %}view={{ view_mode }}&amp;page={{ page_obj.previous_page_number }}">{% trans "← Newer" %}</a>{% endif %}
+  <span class="muted">{% blocktrans with n=page_obj.number total=page_obj.paginator.num_pages %}Page {{ n }} of {{ total }}{% endblocktrans %}</span>
+  {% if page_obj.has_next %}<a class="btn btn-secondary btn-sm" href="?{{ base_qs }}{% if base_qs %}&amp;{% endif %}view={{ view_mode }}&amp;page={{ page_obj.next_page_number }}">{% trans "More →" %}</a>{% endif %}
 </nav>
 {% endif %}
 {% endblock %}
+
+{% block scripts %}<script src="{% static 'js/browse-modes.js' %}" defer></script>{% endblock %}

@@ -551,3 +551,78 @@ textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--accent)
   animation-duration: .001ms !important; animation-iteration-count: 1 !important;
   transition-duration: .001ms !important; scroll-behavior: auto !important;
 }
+
+/* =============================================================================
+   Browse modes — /activities/ List + focused Card deck (progressive enhancement).
+   The server sets the initial mode via data-view; static/js/browse-modes.js enhances
+   it. Animations are plain transitions, so the reduced-motion block above neutralises
+   them automatically. Cards are text-only (no images) — inv.1 text-first.
+   ============================================================================= */
+.browse-toolbar {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: .6rem; margin: .2rem 0 .9rem;
+}
+.seg {
+  display: inline-flex; gap: 2px; padding: 3px;
+  background: var(--bg-subtle); border: 1px solid var(--line); border-radius: var(--r-pill);
+}
+.seg-btn {
+  appearance: none; border: 0; background: transparent; cursor: pointer;
+  font: inherit; font-size: .86rem; font-weight: 600; line-height: 1; color: var(--muted);
+  padding: .42rem .95rem; border-radius: var(--r-pill); text-decoration: none;
+  display: inline-flex; align-items: center; gap: .4rem;
+  transition: background-color .15s ease, color .15s ease, box-shadow .15s ease;
+}
+.seg-btn:hover { color: var(--fg); text-decoration: none; }
+.seg-btn.is-active {
+  background: var(--card); color: var(--accent-strong); box-shadow: var(--shadow-sm);
+}
+.seg-btn .ico { width: 1.05em; height: 1.05em; flex: none; }
+.browse-count { margin: 0; font-size: .85rem; }
+
+.browse-grid { display: flex; flex-direction: column; gap: .6rem; }
+
+/* ---- LIST: compact, scannable rows ---- */
+.browse[data-view="list"] .browse-item .card {
+  padding: .7rem .9rem;
+  transition: border-color .15s ease, box-shadow .15s ease, transform .04s ease;
+}
+.browse[data-view="list"] .browse-item .card:hover { box-shadow: var(--shadow); }
+.browse[data-view="list"] .browse-item .card h3 { font-size: 1.02rem; }
+.browse[data-view="list"] .card-desc { display: none; }   /* keep rows tight + scannable */
+
+/* ---- CARDS: a focused deck. With NO JavaScript this is a readable stacked column. ---- */
+.browse[data-view="cards"] .browse-grid { gap: .9rem; }
+.browse[data-view="cards"] .browse-item .card {
+  padding: 1.15rem 1.2rem; border-radius: var(--r-lg);
+}
+.browse[data-view="cards"] .browse-item .card h3 { font-size: 1.28rem; line-height: 1.25; }
+.browse[data-view="cards"] .browse-item .card-desc { font-size: 1rem; color: var(--lead); }
+
+/* Show ONE card at a time, stacked in one grid cell (no height jump). The server marks the first
+   card .is-current, so the right card shows on first paint (no flash) and JS just takes over;
+   without JS the <noscript> block in activities.html reveals all cards as a readable column. */
+.browse[data-view="cards"] .browse-grid { display: grid; }
+.browse[data-view="cards"] .browse-item {
+  grid-area: 1 / 1; opacity: 0; transform: translateX(16px) scale(.985);
+  pointer-events: none; transition: opacity .22s ease, transform .22s ease;
+}
+.browse[data-view="cards"] .browse-item.is-current {
+  opacity: 1; transform: none; pointer-events: auto;
+}
+/* The deck moves keyboard focus onto the active card (tabindex=-1); show where it landed. */
+.browse-item:focus { outline: none; }
+.browse-item:focus-visible {
+  outline: 3px solid var(--accent); outline-offset: 4px; border-radius: var(--r-lg);
+}
+
+/* Deck chrome (prev / position / next) — only meaningful once JS is on. */
+.browse-deck-nav {
+  display: none; align-items: center; justify-content: center; gap: 1rem; margin-top: .9rem;
+}
+.browse.is-enhanced[data-view="cards"] .browse-deck-nav { display: flex; }
+.browse-deck-pos {
+  font-size: .9rem; font-variant-numeric: tabular-nums; min-width: 4.5ch;
+  text-align: center; color: var(--muted);
+}
+.browse-deck-nav .btn[disabled] { opacity: .4; pointer-events: none; }

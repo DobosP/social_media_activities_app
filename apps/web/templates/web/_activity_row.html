@@ -1,8 +1,0 @@
-{% load i18n %}
-{% comment %}Compact text-first list row (no description, no image) — the "list" browse mode.{% endcomment %}
-<div class="card" style="padding:.45rem .7rem">
-  <a href="{% url 'activity_detail' a.pk %}"><strong>{{ a.title }}</strong></a>
-  {% if a.rec_reason %} <span class="score">{{ a.rec_reason }}</span>{% endif %}
-  {% if a.beginners_welcome %} <span class="tag">{% trans "beginners welcome" %}</span>{% endif %}
-  <div class="muted" style="font-size:.85rem">{{ a.activity_type.name }} &middot; {{ a.starts_at|date:"D j M, H:i" }} &middot; {{ a.place.display_name|default:_("a place") }}{% if a.place.address_city %}, {{ a.place.address_city }}{% endif %}{% if a.distance %} &middot; {% blocktrans with km=a.distance.km|floatformat:1 %}{{ km }} km away{% endblocktrans %}{% endif %}</div>
-</div>

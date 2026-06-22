@@ -1417,20 +1417,18 @@ def activity_list(request):
     # Pre-encode the suggestion as a query string (a type name may contain a space or '&');
     # blocktrans can't apply |urlencode in its body, so build it here (W2-F1 review).
     did_you_mean_q = urlencode({"q": did_you_mean}) if did_you_mean else ""
-    # Two TEXT-FIRST browse modes over the SAME cohort-gated list (no images, no swipe, no
-    # infinite scroll): "grid" (default cards), "list" (compact rows), and "card" (one focused
-    # meetup at a time with prev/next). The mode is presentation-only — it never changes which
-    # activities are visible. Unknown values fall back to "grid".
-    view_mode = request.GET.get("view")
-    if view_mode not in ("grid", "list", "card"):
-        view_mode = "grid"
-    page_obj = None
-    if view_mode == "card":
-        from django.core.paginator import Paginator
+    # Two TEXT-FIRST browse modes over the SAME cohort-gated list: "list" (compact scannable rows,
+    # the calm default) and "cards" (a focused deck — one meetup at a time that you page through).
+    # The mode is PRESENTATION-ONLY: it never changes which activities are visible, never records a
+    # swipe, never ranks people. Both are bounded + paginated (no infinite scroll); the card deck
+    # moves within a page client-side (browse-modes.js, progressive enhancement) and the pager
+    # advances to the next page. No images anywhere (inv.1 text-first). Unknown value -> "list".
+    from django.core.paginator import Paginator
 
-        # One meetup per page; .get_page() clamps out-of-range / non-int pages safely.
-        page_obj = Paginator(activities, 1).get_page(request.GET.get("page"))
-        activities = list(page_obj)
+    view_mode = "cards" if request.GET.get("view") == "cards" else "list"
+    # .get_page() clamps out-of-range / non-int pages safely; one page bounds the rendered DOM.
+    page_obj = Paginator(activities, 24).get_page(request.GET.get("page"))
+    activities = list(page_obj)
     # Carry the current filters (minus page/view) so the view-mode + pager links don't drop them.
     base_params = request.GET.copy()
     for k in ("view", "page"):
