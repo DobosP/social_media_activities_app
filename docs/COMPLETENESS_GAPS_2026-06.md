@@ -27,10 +27,10 @@ HTTP-layer moderation/referral tests, indefinite-SUSPEND + authority-referral-SL
 (`feat/dsa-sanctions-hardening`), adversarially reviewed (4 dimensions, 0 confirmed defects). See the
 DSA-sanctions P2 block below (now all `[x]`).
 
-**Recommended next pick → P2 batch (autonomous, pick one)**: media docscan/managed-scanner tests
-(`apps/media/`) · circuit-breaker locking + half-open (`apps/ops/resilience.py`) · `request_id` into
-cron jobs · CSP report-uri. _(DONE: `IDENTITY_BINDING_SECRET` prod guard + the rest of the EUDI
-identity-binding cluster — `feat/eudi-binding-hardening`.)_
+**Recommended next pick → P2 batch (autonomous, pick one)**: circuit-breaker locking + half-open
+(`apps/ops/resilience.py`) · `request_id` into cron jobs · CSP report-uri · covering indexes / N+1
+sweep. _(DONE: `IDENTITY_BINDING_SECRET` prod guard + EUDI cluster — `feat/eudi-binding-hardening`;
+media docscan/ManagedScanner/PDF fail-closed tests — `test/media-scanner-coverage`.)_
 
 **Then, remaining open work** (all itemised below with file pointers):
 - **P2 batch** (autonomous): `IDENTITY_BINDING_SECRET` prod guard · `request_id` into cron jobs ·
@@ -147,8 +147,12 @@ merge `--no-ff` → **ask before pushing** (the auto classifier blocks direct-to
 ### Media storage
 - [ ] Built-in scanners are exact SHA-256 only (any re-encode/resize evades); perceptual dHash is a
   weak supplement. Decide on a managed perceptual (PhotoDNA-class) matcher for a child platform.
-- [ ] Add tests for `docscan.py` (ClamdScanner INSTREAM + fail-closed; Noop) and `ManagedScanner`
-  (happy + fail-closed-on-error); test the PDF fail-closed branch in `attach_to_post`.
+- [x] Add tests for `docscan.py` + `ManagedScanner` + the PDF fail-closed branch — DONE
+  (`test/media-scanner-coverage`): `apps/media/tests/test_scanners.py` covers ClamdScanner
+  (INSTREAM clean/infected/fail-closed-on-dead-daemon/framing), Noop + `get_document_scanner`, and
+  ManagedScanner (clean/match/`flagged`/fail-closed on network+HTTP+malformed+unconfigured);
+  `test_attachments.py` covers the `attach_to_post` PDF document-scan branch (fail-closed without a
+  scanner, blocked-on-match, allowed-when-clean, image-skips-doc-gate, web post rollback). 37 new tests.
 - [ ] No automated orphan-blob reconciliation/observability (purge failures only logged).
 
 ### P1 hardening
