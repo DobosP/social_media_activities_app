@@ -84,7 +84,9 @@ def place_path(place) -> str:
     """Canonical, keyword-rich path for a venue: /places/<pk>/<slug>/.
 
     The slug is derived read-time from display_name (never stored — a crowd correction to the
-    name updates the canonical URL on next read). place_detail 301s any other form to this.
+    name updates the canonical URL on next read). place_detail serves every form (bare
+    /places/<pk>/ or a stale slug) at 200 and points here via a canonical <link> — no redirect,
+    so a slug change never 301-churns links people have already shared.
     """
     return f"/places/{place.pk}/{_slug(place.display_name, 'place')}/"
 

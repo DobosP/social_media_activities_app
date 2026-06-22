@@ -1,7 +1,8 @@
 """Template filters for canonical, keyword-rich place/event URLs (SEO slugs).
 
-Linking via these avoids the 301 hop that a bare ``{% url 'place_detail' pk %}`` would take, so
-crawlers following internal links land straight on the canonical slugged path.
+Linking via these gives crawlers the keyword-rich slugged path directly. place_detail serves any
+form at 200 with a canonical <link> (it never 301-redirects), so the rich path is simply the
+better internal link to publish — crawlers land on it without relying on a canonical hop.
 """
 
 from django import template

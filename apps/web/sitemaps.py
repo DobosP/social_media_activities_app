@@ -66,7 +66,8 @@ class PlaceSitemap(_BaseSitemap):
         return public_places().order_by("pk")
 
     def location(self, place):
-        # Keyword-rich canonical path (place_detail 301s the bare /places/<pk>/ form here).
+        # Keyword-rich canonical path (place_detail serves the bare /places/<pk>/ form at 200 with
+        # this as its canonical <link> — no redirect).
         from .seo import place_path
 
         return place_path(place)

@@ -223,6 +223,25 @@ def test_submit_urls_posts_when_enabled():
         assert payload["urlList"] == ["https://meet.example.eu/places/1/central-park/"]
 
 
+@override_settings(
+    INDEXNOW_ENABLED=True, INDEXNOW_KEY="abc123key", SITE_BASE_URL="https://meet.example.eu"
+)
+def test_submit_urls_blocks_a_private_endpoint_before_any_network(monkeypatch):
+    # The IndexNow submit goes through the SSRF-safe channel (safety.net.safe_get). If the endpoint
+    # were ever (mis)configured to an internal/link-local address, safe_get must reject it BEFORE
+    # any outbound I/O — never exfiltrate to e.g. the cloud metadata service.
+    import requests
+
+    from apps.web import indexnow
+
+    monkeypatch.setattr(indexnow, "INDEXNOW_ENDPOINT", "http://169.254.169.254/indexnow")
+    network_hits = []
+    monkeypatch.setattr(requests, "request", lambda *a, **k: network_hits.append((a, k)))
+    # submit_urls is best-effort (never raises); a blocked endpoint just yields False.
+    assert indexnow.submit_urls(["https://meet.example.eu/places/1/x/"]) is False
+    assert network_hits == []  # _validate_host raised UnsafeURLError before requests.request ran
+
+
 # --- Sitemap regression --------------------------------------------------------------------
 
 
