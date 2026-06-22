@@ -6,10 +6,23 @@ For a *list* of users, call ``apps.recommendations.services.attach_interest_node
 view first so each avatar renders from prefetched interests instead of one query per row."""
 
 from django import template
+from django.utils.safestring import mark_safe
 
-from apps.accounts.avatars import identicon_data_uri
+from apps.accounts.avatars import activity_accent_svg, identicon_data_uri
 
 register = template.Library()
+
+
+@register.simple_tag
+def activity_accent(activity):
+    """Inline procedural SVG banner for an activity card (the focused Cards browse mode). Decorative
+    generative art, NOT a photo (inv.1 text-first). Deterministic from the activity's type + title.
+    mark_safe is safe here: activity_accent_svg emits only numbers + hsl() colours + a hashed id
+    namespace — no part of the (untrusted) seed string is ever written into the SVG markup."""
+    atype = getattr(activity, "activity_type", None)
+    slug = getattr(atype, "slug", "") or ""
+    seed = f"{slug}:{getattr(activity, 'title', '')}"
+    return mark_safe(activity_accent_svg(seed))  # noqa: S308 - server-composed SVG, no user HTML
 
 
 @register.filter(name="avatar_uri")

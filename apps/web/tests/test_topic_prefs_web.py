@@ -170,6 +170,9 @@ def test_cards_mode_renders_a_focused_deck():
     assert body.count('class="browse-item') == 2  # both meetups rendered into the deck
     assert body.count("is-current") == 1  # the server marks the first card so there's no load flash
     assert "Hoops A" in body and "Hoops B" in body
+    # Each card has a generated abstract accent banner — inline <svg> (decorative), never an <img>.
+    assert body.count('class="card-accent"') == 2
+    assert "<svg" in body and 'fill="url(#ac' in body  # the procedural gradient banner
 
 
 def test_browse_out_of_range_page_is_safe():
