@@ -169,7 +169,8 @@ def test_home_has_canonical_and_description():
 @override_settings(SITE_BASE_URL="https://meet.example.eu")
 def test_canonical_uses_configured_base_url():
     place = _public_place()
-    # Bare URL 301s to the keyword-rich canonical; follow it and assert the canonical link.
+    # Bare URL renders at 200 with a canonical <link> to the keyword-rich path (no redirect);
+    # follow=True is a harmless no-op here, kept for robustness if that ever changes.
     html = Client().get(f"/places/{place.pk}/", follow=True).content.decode()
     assert (
         f'<link rel="canonical" href="https://meet.example.eu/places/{place.pk}/central-park/"'

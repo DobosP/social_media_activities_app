@@ -190,10 +190,14 @@ merge `--no-ff` → **ask before pushing** (the auto classifier blocks direct-to
 - [ ] django_prometheus counters are per-process — multi-worker deploy needs per-instance scrape/aggregation.
 
 ### SEO
-- [ ] Fix stale docstrings/comments claiming a `301` redirect (`apps/web/seo.py:64`, `sitemaps.py`,
-  the `test_seo_discoverability.py` comment) — actual behaviour is `200` + canonical link.
+- [x] Fix stale `301`-redirect docstrings/comments — DONE (`feat/seo-cleanup`): corrected `seo.py`
+  `place_path`, `sitemaps.py`, `seo_tags.py`, and the `test_seo_discoverability.py` comment to the real
+  behaviour (200 + canonical `<link>`, never a redirect). Docs/comments only — no behaviour change.
 - [ ] Thin observability on the IndexNow job; consider surfacing submit success/failure to the heartbeat.
-- [ ] No e2e test that a private/internal URL is rejected through `submit_urls` (relies on `safety/net.py`).
+- [x] e2e test that a private/internal URL is rejected through the IndexNow submit — DONE
+  (`feat/seo-cleanup`): `test_submit_urls_blocks_a_private_endpoint_before_any_network` points the
+  endpoint at a link-local IP and asserts `safe_get` rejects it (UnsafeURLError) BEFORE any
+  `requests.request` — no exfiltration to e.g. the cloud metadata service.
 
 ### IaC
 - [ ] No remote/encrypted Terraform state backend — `*.tfstate` (DB password, S3 keys, Django secret,
