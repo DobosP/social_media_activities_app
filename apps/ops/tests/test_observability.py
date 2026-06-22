@@ -106,3 +106,131 @@ def test_request_id_rejects_crlf_injection():
     assert "\r" not in rid and "\n" not in rid
     assert rid != "a\r\nSet-Cookie: evil=1"  # replaced, not reflected
     assert len(rid) == 32  # a freshly minted uuid hex
+
+
+def test_run_due_jobs_stamps_a_run_id_into_the_logging_context(monkeypatch):
+    # Outside an HTTP request the correlation id defaults to "-"; run_due_jobs must stamp a per-run
+    # id so every job's logs are correlated. We capture get_request_id() DURING each job.
+    from django.core.management import call_command
+
+    import apps.ops.management.commands.run_due_jobs as mod
+    from apps.ops.observability import get_request_id, set_request_id
+
+    set_request_id("-")
+    seen = []
+    monkeypatch.setattr(mod, "call_command", lambda *a, **k: seen.append(get_request_id()))
+    call_command("run_due_jobs")
+    set_request_id("-")  # don't leak the run id into other tests' context
+    assert seen and all(rid.startswith("job:run_due_jobs:") for rid in seen)
+    assert len(set(seen)) == 1  # one id for the whole run
+
+
+# --- CSP violation-report collector --------------------------------------------------------
+
+
+_CSP_REPORT_URL = "/api/v1/ops/csp-report/"  # apps.ops.urls is mounted under /api/v1/
+
+
+def test_csp_header_carries_report_directives_and_reporting_endpoints():
+    resp = APIClient().get("/healthz")
+    csp = resp.get("Content-Security-Policy-Report-Only", "")
+    assert f"report-uri {_CSP_REPORT_URL}" in csp
+    assert "report-to csp" in csp
+    assert f'csp="{_CSP_REPORT_URL}"' in resp.get("Reporting-Endpoints", "")
+
+
+def test_csp_report_endpoint_204s_anonymously():
+    body = {
+        "csp-report": {
+            "effective-directive": "script-src",
+            "blocked-uri": "https://evil.example/x.js",
+            "document-uri": "https://meet.test/page",
+        }
+    }
+    # No auth, no CSRF token — a browser-driven report must always be accepted.
+    assert APIClient().post(_CSP_REPORT_URL, body, format="json").status_code == 204
+    # A garbage / unparseable body is also tolerated (never a 500).
+    garbage = APIClient().post(_CSP_REPORT_URL, b"not json", content_type="text/plain")
+    assert garbage.status_code == 204
+
+
+def test_csp_report_logs_only_operational_fields():
+    import logging
+
+    from django.core.cache import cache
+
+    cache.delete("csp-report-log-budget")  # fresh log budget for a deterministic assert
+    body = {
+        "csp-report": {
+            "effective-directive": "img-src",
+            "blocked-uri": "https://bad.example/pic",
+            "document-uri": "https://meet.test/a",
+        }
+    }
+    # Attach directly to the logger (the "apps" logger has propagate=False, so caplog's root
+    # handler wouldn't see it).
+    records = []
+    handler = logging.Handler()
+    handler.emit = records.append
+    logger = logging.getLogger("apps.ops.csp_report")
+    logger.addHandler(handler)
+    try:
+        APIClient().post(_CSP_REPORT_URL, body, format="json")
+    finally:
+        logger.removeHandler(handler)
+    msgs = [r.getMessage() for r in records]
+    assert any("CSP violation" in m and "img-src" in m for m in msgs)
+
+
+def test_csp_report_strips_control_chars_to_prevent_log_forging():
+    import logging
+
+    from django.core.cache import cache
+
+    cache.delete("csp-report-log-budget")
+    body = {
+        "csp-report": {
+            "effective-directive": "script-src",
+            "blocked-uri": "https://x/\r\n2026-01-01 INFO forged-line",  # attacker-controlled
+            "document-uri": "https://meet.test/",
+        }
+    }
+    records = []
+    handler = logging.Handler()
+    handler.emit = records.append
+    logger = logging.getLogger("apps.ops.csp_report")
+    logger.addHandler(handler)
+    try:
+        APIClient().post(_CSP_REPORT_URL, body, format="json")
+    finally:
+        logger.removeHandler(handler)
+    assert records
+    msg = records[0].getMessage()
+    assert "\n" not in msg and "\r" not in msg  # CRLF stripped -> no forged second log line
+    assert "forged-line" in msg  # the (sanitised) content is still there, just on one line
+
+
+def test_json_formatter_never_leaks_a_user_object_on_the_record():
+    # Guard the allowlist: a future `logger.info("x", extra={"user": u})` attaches the user to the
+    # record, but JsonFormatter must emit ONLY its fixed operational fields — never the user's PII.
+    import json
+    import logging
+
+    from apps.ops.observability import JsonFormatter
+
+    class _FakeUser:
+        username = "alice.secret"
+        email = "alice@example.com"
+        display_name = "Alice Secret"
+
+        def __str__(self):
+            return self.username  # even a PII-leaking __str__ must not reach the JSON
+
+    rec = logging.LogRecord("apps.demo", logging.INFO, __file__, 1, "did a thing", (), None)
+    rec.user = _FakeUser()
+    rec.request_id = "rid"
+    out = JsonFormatter().format(rec)
+    assert "alice.secret" not in out
+    assert "alice@example.com" not in out
+    assert "Alice Secret" not in out
+    assert set(json.loads(out)) <= {"ts", "level", "logger", "msg", "request_id", "exc"}

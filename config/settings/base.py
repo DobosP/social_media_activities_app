@@ -155,8 +155,17 @@ CONTENT_SECURITY_POLICY_REPORT_ONLY = {
         "base-uri": ["'self'"],
         "frame-ancestors": ["'none'"],
         "form-action": ["'self'"],
+        # Collect violations: report-uri (works in all current browsers) + report-to (modern,
+        # references the "csp" group in the Reporting-Endpoints header set by the ops middleware).
+        # The endpoint just logs + 204s — see apps.ops.views.CSPReportView (apps.ops.urls is mounted
+        # under /api/v1/, so the collector lives at /api/v1/ops/csp-report/).
+        "report-uri": ["/api/v1/ops/csp-report/"],
+        "report-to": ["csp"],
     },
 }
+# Reporting-API endpoint group name -> URL, emitted as the Reporting-Endpoints header by
+# apps.ops.middleware.PermissionsPolicyMiddleware so the report-to directive above resolves.
+CSP_REPORTING_ENDPOINTS = {"csp": "/api/v1/ops/csp-report/"}
 
 # Prometheus /metrics is gated on a bearer token — CLOSED BY DEFAULT (empty token => 403), never
 # world-readable. Set METRICS_TOKEN and have the scraper send `Authorization: Bearer <token>`.
