@@ -28,7 +28,10 @@ class Command(BaseCommand):
     help = "Ingest places from a data source (OSM/Overpass or Overture) into the knowledge graph."
 
     def add_arguments(self, parser):
-        parser.add_argument("--source", default="osm", choices=["osm", "overture"])
+        # W9 registry sources (INGESTION_EXTRA_ADAPTERS) are valid --source values too;
+        # without this the static choices reject them before _build_adapter() runs.
+        _extra = list((getattr(settings, "INGESTION_EXTRA_ADAPTERS", {}) or {}).keys())
+        parser.add_argument("--source", default="osm", choices=["osm", "overture", *_extra])
         parser.add_argument("--city", default=None, help="Administrative area name (OSM only)")
         parser.add_argument("--bbox", default=None, help="minlon,minlat,maxlon,maxlat")
         parser.add_argument("--dry-run", action="store_true")

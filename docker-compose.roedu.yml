@@ -1,0 +1,22 @@
+# Local-dev override: wire the `web` service to a host-side ro_data_server so the
+# social app can ingest the real RO-EDU Cluj events/places. Compose-merges on top of
+# docker-compose.local.yml (which provides the postgis db + DATABASE_URL).
+#
+#   docker compose -f docker-compose.local.yml -f docker-compose.roedu.yml \
+#     run --rm web python manage.py ingest_places --source=roedu --city="Cluj-Napoca"
+#
+# host.docker.internal:host-gateway gives the container a route to the host, where
+# ro_data_server listens on :8077. NOTE: that server binds loopback-only by policy
+# (never 0.0.0.0 — see ro_data_server CLAUDE.md), which a bridge container cannot
+# reach; for a loopback-only server run the ingest with host networking instead —
+# see ro_data_server/demo/ingest_real_cluj.sh (it passes these same env vars via
+# `docker run --network host --env-file`). INGESTION_EXTRA_ADAPTERS registers the
+# `roedu` adapter (without it, ingest_places --source=roedu errors "Unknown source").
+services:
+  web:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      ROEDU_API_URL: "http://host.docker.internal:8077"
+      ROEDU_API_KEY: "social-app-dev"
+      INGESTION_EXTRA_ADAPTERS: '{"roedu": "apps.ingestion.sources.ro_scraper.RomaniaScraperAdapter"}'
