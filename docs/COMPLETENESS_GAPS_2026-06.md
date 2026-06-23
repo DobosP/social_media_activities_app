@@ -15,38 +15,30 @@ Legend: `[x]` done · `[ ]` open · **P0** ship-blocker/correctness · **P1** co
 
 ---
 
-## ⏭️ NEXT SESSION — START HERE (updated 2026-06-21)
+## ⏭️ NEXT SESSION — START HERE (updated 2026-06-23)
 
-**Done & pushed this session** (origin/main @ `7663844`): P0 SEO cache-header fix · P1 DSA Art.17
-redress (`[x]` below) · P1 privacy-by-default discovery (`[x]`) · P2 EUDI binding release paths +
-admin tooling (`[x]`) · flaky chat/messaging consumer tests fixed (CI is green & deterministic again
-— full suite **2083 passed, 0 errors** twice). Each was adversarially reviewed before merge.
+**Done & pushed this session** (origin/main @ `6433978`, suite **2151 passed**):
+- Topic-preference feed + SOFT stated topic steering; guardian controls CHILD ward's feed
+- `?view=list|card` text-first browse modes + Cards carousel: pointer-drag, ←/→, reduced-motion
+- Phone-like Cards: generated abstract SVG accents (`activity_accent_svg`, procedural, XSS-safe)
+- Media docscan + ManagedScanner + PDF fail-closed test coverage (37 new tests)
+- EUDI: `IDENTITY_BINDING_SECRET` prod guard + web `verify_age → bind_identity` symmetry + ban-rejection tests
+- Circuit-breaker CLOSED→OPEN→HALF_OPEN + per-instance `threading.Lock` + admin `reset()`
+- CSP report-uri collector at `/api/v1/ops/csp-report/` + `request_id` in cron + PII-guard test
+- SEO: stale-301 docstring corrections + IndexNow SSRF e2e test
 
-**DONE → DSA sanctions hardening** (P2): row-locked `lift_expired_suspensions` (+ `_reverse_action`),
-HTTP-layer moderation/referral tests, indefinite-SUSPEND + authority-referral-SLA docs. Merged to main
-(`feat/dsa-sanctions-hardening`), adversarially reviewed (4 dimensions, 0 confirmed defects). See the
-DSA-sanctions P2 block below (now all `[x]`).
+All adversarially reviewed before merge. Working tree clean, 0 ahead/behind origin/main.
 
-**Recommended next pick → P2 batch (autonomous, pick one)**: circuit-breaker locking + half-open
-(`apps/ops/resilience.py`) · `request_id` into cron jobs · CSP report-uri · covering indexes / N+1
-sweep. _(DONE: `IDENTITY_BINDING_SECRET` prod guard + EUDI cluster — `feat/eudi-binding-hardening`;
-media docscan/ManagedScanner/PDF fail-closed tests — `test/media-scanner-coverage`.)_
+**Remaining open work is itemised in the sections below. Build plans: `## NEXT STEPS` at the bottom.**
 
-**Then, remaining open work** (all itemised below with file pointers):
-- **P2 batch** (autonomous): `IDENTITY_BINDING_SECRET` prod guard · `request_id` into cron jobs ·
-  circuit-breaker locking + half-open · media docscan/managed-scanner tests · render.yaml `/readyz` +
-  `METRICS_TOKEN` (confirm Render vs Hetzner/Terraform deploy target first) · CSP report-uri ·
-  covering indexes / N+1 sweep · SEO stale-301 docstrings · IaC remote state backend + CI validation.
-- **P1 needing YOUR product/DPO call**: progression "Level N of 5" gamification copy (inv.2);
-  coarser anonymous public-card time/venue display; DRF opt-in toggle for public listing (LOW).
-- **DEFERRED (needs a protocol decision)**: EUDI strict per-account anti-transfer (`_enforce_subject`)
-  — see the EUDI section for why.
-- **CFG**: activation config before launch (EUDI trust list + flag, Stripe, media CSAM scanner + S3,
-  Sentry/metrics/heartbeat, SEO domain/console tokens, legal-copy finalisation).
+**Product/DPO calls still needed before touching**:
+- Progression "Level N" gamification copy (inv.2) — keep or revert to plain count?
+- Coarser anonymous public-card time/venue display — exact or rounded/neighbourhood?
+- PhotoDNA / perceptual hash vendor — which managed scanner for a child platform?
 
-Cadence reminder: branch first → build → adversarial review (single agent for small, Workflow for
-complex/safety) → `pytest -q` full suite + `ruff check`/`format --check` + `makemigrations --check` →
-merge `--no-ff` → **ask before pushing** (the auto classifier blocks direct-to-main without per-instance OK).
+**Cadence**: `git checkout -b feat/<name>` → build → adversarial review (single agent for small;
+Workflow for complex/safety) → `pytest -q` + `ruff check`/`format --check` + `makemigrations --check`
+→ merge `--no-ff` → push directly (standing user auth for direct-to-main push).
 
 ---
 
@@ -230,3 +222,138 @@ merge `--no-ff` → **ask before pushing** (the auto classifier blocks direct-to
   `llms.txt` + Organization description copy.
 - [ ] **Legal copy:** static legal pages are DRAFT placeholder text (`apps/web/views.py:3697`) — needs
   review/finalisation before launch.
+
+---
+
+## NEXT STEPS — concrete plans for remaining open items
+
+Ordered by size + dependency. Each item is ready to build unless marked "decision needed first."
+
+### Small builds (< half-day each)
+
+**1. render.yaml health + metrics wiring**
+Two config-only lines in `render.yaml`.
+- Change `healthCheckPath: /healthz` → `/healthz` is fine for liveness but `/readyz` is the richer
+  shipped endpoint. Change to `healthCheckPath: /readyz` (checks DB + cache connectivity).
+- Add `METRICS_TOKEN` to the env var list so `/metrics` returns 200 instead of 403.
+No code change; no test needed; no review required.
+
+**2. Progression cross-user visibility test**
+`apps/web/tests/test_profile.py` (or wherever the public profile view is tested).
+Add `test_profile_does_not_leak_progression_to_others`: log in as user B, GET `/profile/<user-A-pk>/`,
+assert neither `progression_level` nor `intensity` appears in the response (base avatar only).
+Verifies the "guaranteed by view structure" claim with an explicit regression guard.
+
+**3. DRF opt-in toggle for public listing**
+`apps/social/views.py` — add a `@action(detail=True, methods=["post"])` named `set_public_listing`
+to `ActivityViewSet` (and `GroupViewSet`). Call `social.services.set_public_listing(activity, value)`.
+Gate: `request.user == activity.organizer` + `cohort == ADULT` (service already enforces the
+ADULT-only wall; the action just exposes it). Return 200 + the updated serialized object.
+Existing service already has the full guard; this is a thin DRF plumbing task.
+
+**4. IndexNow heartbeat observability**
+`apps/web/seo.py:submit_urls()` — after the `safe_get` call, count successes/failures, log a
+structured summary line, and (if `settings.OPS_HEARTBEAT_URL` is set) POST
+`{"status": "ok", "submitted": n, "failed": m}` via `apps.ops.heartbeat.ping_heartbeat()`.
+`apps/ops/heartbeat.py` already exists for this pattern. ~10 lines.
+
+### Medium builds (half-day to 1 day)
+
+**5. Post provenance field (DSA Art.17 follow-up)**
+Prevent a mod-remove overturn from resurrecting an author-self-deleted post.
+- `apps/social/models.py` `Post`: add `is_author_deleted = models.BooleanField(default=False)`.
+- `apps/social/services.py` `delete_own_post`: set `post.is_author_deleted = True` (alongside
+  existing `post.is_hidden = True`).
+- `apps/safety/services.py` `_reverse_action` (BAN/SUSPEND/REMOVE overturn): when un-hiding a
+  `Post`, skip the `post.is_hidden = False` step if `post.is_author_deleted` (log instead).
+- Migration: `social/0NNN_post_author_deleted.py` (boolean default=False, no data migration).
+- Test: `test_overturn_remove_does_not_resurrect_author_deleted_post`.
+
+**6. F19 safety record: remove cap on contesting beyond [:500]**
+`apps/safety/services.py:safety_record_for()` — the current `[:500]`/`[:1000]` id-set caps mean
+a user with many posts/activities can't contest a decision on content beyond the cap from the
+pre-auth `/account/restricted/` surface.
+Fix: replace the id-set approach with a direct `ModerationAction` query using GFK columns:
+`ModerationAction.objects.filter(target_content_type=ct, target_object_id__in=Subquery(...))`
+with a paginated outer query (e.g. `order_by("-created_at")[:200]` slices over the most recent
+200 actions, enough to cover any realistic backlog while bounding the query). Test: add a user
+with 600 posts and assert all sanction decisions are reachable in the serialized output.
+
+**7. IaC hardening (four small sub-tasks)**
+Each is a standalone commit on a `chore/iac-hardening` branch:
+- `terraform/main.tf`: add `backend "s3" { bucket = var.tf_state_bucket ... }` block (or
+  Terraform Cloud `backend "remote" {}`). Document the bootstrap step in `docs/HOSTING_EU.md`.
+- `terraform/`: add an S3 backup lifecycle rule resource expiring objects after 90 days.
+- `.github/workflows/ci.yml` (or `render.yaml` build command): add a lint step:
+  `terraform fmt -check && terraform validate && tflint --chdir=terraform/`.
+- `terraform/variables.tf`: fix `server_type` default `cpx21` → `cpx22` (matches README);
+  update `docs/HOSTING_EU.md` to name terraform/cloud-init/tfvars.
+No adversarial review needed (IaC/docs only); ruff is irrelevant; run `terraform validate` locally.
+
+### CSP enforcement path (medium, sequence matters)
+
+**8. Move CSP from report-only to enforced**
+_Prerequisite_: let the report-only CSP run in prod for at least one week and review the violation
+log at `apps.ops.csp_report` to find any remaining inline scripts.
+
+Steps (on a `feat/csp-enforce` branch):
+1. Grep `apps/web/templates/` for `<script>` without `src=` — any inline JS must move to an
+   external file in `static/js/` (already done for `browse-modes.js` and `map.js`) or get a nonce
+   via `{% csp_nonce %}` (django-csp provides this; ensure `CONTENT_SECURITY_POLICY["nonces"]`
+   includes `"script-src"`).
+2. Remove `"unsafe-inline"` from the `script-src` directive in `config/settings/base.py`.
+3. Move the full directive dict from `CONTENT_SECURITY_POLICY_REPORT_ONLY` to
+   `CONTENT_SECURITY_POLICY` (keep report-only dict for staging monitoring).
+4. Add a browser-level test (Playwright or a simple GET-and-parse) asserting the prod-like response
+   header is `Content-Security-Policy:` not `Content-Security-Policy-Report-Only:`.
+Adversarial review focus: any path that emits `<script>…</script>` inline that would break on
+enforcement (Leaflet, chart code, Django's admin, etc.).
+
+### Deferred (needs a decision before touching)
+
+**9. EUDI `_enforce_subject` — per-account holder-id anti-transfer**
+`apps/accounts/identity/providers/eudi.py` — `_holder_id` always returns `None` today; the check
+is a no-op. The `holder_hash` uniqueness via `IdentityBinding` already prevents same-wallet
+re-registration across accounts. The missing piece is per-session subject verification (same wallet
+presents the same `sub` claim). Blocked on whether EUDI wallet `sub` is stable across credential
+renewal/key-rotation for our RP — a false rejection would lock out a legitimate user. Wait for EU
+protocol clarity (~Q4 2026). `release_binding` (built) is the escape hatch once this lands.
+
+**10. Multi-worker Prometheus aggregation**
+`config/settings/base.py`, `config/urls.py` — the single-box launch is a deliberate SPOF; this
+only matters at multi-dyno/worker scale. When scaling up: enable django-prometheus
+`PROMETHEUS_MULTIPROC_DIR` (shared tmpfs across workers) or deploy a Pushgateway. Deferred until
+scale is needed.
+
+**11. Shared (Redis) circuit-breaker state**
+`apps/ops/resilience.py` — current per-process `CircuitBreaker` works for a single-worker deploy;
+a multi-worker deploy sees independent per-process breakers (no shared open/close signal).
+When multiple workers are deployed: add `RedisCircuitBreaker` subclass storing state in Redis
+(atomic `SET NX`/`GET` ops). Deferred until multi-worker scale.
+
+**12. Covering indexes / systematic N+1 audit**
+Correctly deferred — needs `EXPLAIN ANALYZE` on a prod-sized table before writing migrations.
+A speculative `AddIndexConcurrently` on `Post` or `AuditLog` without evidence risks a slow
+table scan at the worst time. When prod has meaningful traffic: `EXPLAIN (ANALYZE, BUFFERS)` the
+slowest queries, then write targeted `AddIndexConcurrently` migrations with `INCLUDE` columns.
+
+### Decisions needed (product / DPO / legal — no build yet)
+
+**13. Progression "Level N of 5" gamification copy**
+`apps/accounts/avatars.py:progression_level`, `apps/recommendations/services.py:progression_intensity`.
+Currently self-only and never public (`PROGRESSION_AVATAR_PUBLIC` default off; tests pin it).
+Decision: keep the "Level N" label (soft, no leaderboard, no nudges, upholds inv.2 because it's
+purely self-visible) — or revert to a plain meetup count string. Either path is a 5-line change.
+
+**14. Coarser anonymous public-card display**
+`apps/web/templates/web/discover.html` — the anonymous `/discover/` page shows exact `start_time`
+and named venue of adult meetups. Privacy call: should the public view show a rounded hour and
+neighbourhood string instead? The ADULT-cohort wall is absolute; the question is granularity of the
+displayed fields. Decision needed from product/DPO before touching the template.
+
+**15. PhotoDNA / perceptual hash matcher for minors**
+`apps/media/scanners.py` — SHA-256 blocklist is exact-only (any re-encode evades). A managed
+perceptual CSAM scanner (PhotoDNA-class, e.g. Microsoft CSAM API, AWS Rekognition Custom Labels)
+is the correct long-term solution for a child platform. Decision: vendor (cost, EU data residency,
+DPA, SLA), then wire as a second `ManagedScanner` behind `MEDIA_CSAM_SCANNER_*` settings.
+`MEDIA_REQUIRE_SCANNER=True` in prod enforces fail-closed until a scanner is configured.
