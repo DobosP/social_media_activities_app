@@ -204,6 +204,13 @@ LOGGING = {
 # missed/failed nightly pass (GDPR retention / DSA suspension-lifts) raises an alert. "" disables.
 OPS_HEARTBEAT_URL = env("OPS_HEARTBEAT_URL", default="")
 
+# Durable off-request task foundation (apps.ops.tasks; drained by the process_deferred_tasks job
+# inside run_due_jobs). Postgres-backed, no broker — see docs/ASYNC_TASKS.md.
+DEFERRED_TASKS_BATCH = env.int("DEFERRED_TASKS_BATCH", default=100)  # max tasks per drain pass
+DEFERRED_TASKS_MAX_ATTEMPTS = env.int("DEFERRED_TASKS_MAX_ATTEMPTS", default=5)  # then FAILED
+DEFERRED_TASKS_BACKOFF_BASE = env.int("DEFERRED_TASKS_BACKOFF_BASE", default=30)  # seconds
+DEFERRED_TASKS_MAX_BACKOFF = env.int("DEFERRED_TASKS_MAX_BACKOFF", default=3600)  # seconds (cap)
+
 # Postgres + PostGIS. django-environ maps the `postgis://` scheme to the
 # GeoDjango backend (django.contrib.gis.db.backends.postgis).
 DATABASES = {

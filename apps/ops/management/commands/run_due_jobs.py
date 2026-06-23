@@ -19,6 +19,7 @@ It fans out to the existing per-app commands rather than re-implementing their l
   * ``match_saved_searches``   — alert savers when a new activity matches a saved search.
   * ``sync_event_feeds``       — pull registered external calendars (EventFeed) into Events.
   * ``expire_api_tokens``      — delete stale API tokens (forced re-login; no forever-credentials).
+  * ``process_deferred_tasks``— drain the durable off-request task queue (apps.ops.tasks).
 
 Each job is isolated: a failure in one is reported but does not abort the rest, so a
 single broken job never blocks the others on a shared cron tick. Exit status is non-zero
@@ -50,6 +51,9 @@ DUE_JOBS = (
     ("sync_event_feeds", {}),
     ("expire_api_tokens", {}),
     ("indexnow_batch_submit", {}),  # ping Bing/Yandex with recently-changed public URLs (opt-in)
+    # Drain the durable off-request task queue LAST, so any task an earlier job enqueued this tick
+    # is picked up the same tick (apps.ops.tasks; no-op until the first handler is registered).
+    ("process_deferred_tasks", {}),
 )
 
 
