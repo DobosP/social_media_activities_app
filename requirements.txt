@@ -67,7 +67,7 @@ django==5.2.15
     #   sentry-sdk
 django-csp==4.0
     # via -r requirements.in
-django-environ==0.13.0
+django-environ==0.14.0
     # via -r requirements.in
 django-filter==25.2
     # via
