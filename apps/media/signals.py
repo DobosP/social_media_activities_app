@@ -1,10 +1,10 @@
 """Storage-blob lifecycle signals.
 
-Photo rows cascade-delete when their uploader (or thread) is deleted — e.g. on a GDPR
-Art. 17 account erasure. Django's cascade only removes the DB rows, so without this the
-image *bytes* would orphan in object storage and a child's photos could survive deletion.
-This `pre_delete` receiver fires for every Photo removal path (single delete, queryset
-delete, and cascade) and removes the backing blob first.
+Photo/Attachment rows cascade-delete when their uploader (or thread/post) is deleted — e.g. on a
+GDPR Art. 17 account erasure. Django's cascade only removes the DB rows, so without this the
+image/file *bytes* would orphan in object storage and a child's media could survive deletion.
+These `pre_delete` receivers fire for every removal path (single delete, queryset delete, and
+cascade) and remove the backing blob first.
 """
 
 import logging
@@ -12,7 +12,7 @@ import logging
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 
-from .models import Photo
+from .models import Attachment, Photo
 from .storage import get_storage
 
 logger = logging.getLogger(__name__)
@@ -29,3 +29,20 @@ def delete_blob_on_photo_delete(sender, instance: Photo, **kwargs) -> None:
         get_storage().delete(instance.storage_key)
     except Exception:  # never let a storage hiccup block account/content erasure
         logger.exception("Failed to delete media blob %s during Photo delete", instance.storage_key)
+
+
+@receiver(pre_delete, sender=Attachment, dispatch_uid="media_attachment_delete_blob")
+def delete_blob_on_attachment_delete(sender, instance: Attachment, **kwargs) -> None:
+    """Remove the stored blob before the Attachment row is deleted.
+
+    ``delete_attachment`` may already have removed it explicitly; storage deletion is idempotent, so
+    the signal is still safe and covers cascade/queryset delete paths.
+    """
+    if not instance.storage_key:
+        return
+    try:
+        get_storage().delete(instance.storage_key)
+    except Exception:  # never let a storage hiccup block account/content erasure
+        logger.exception(
+            "Failed to delete media blob %s during Attachment delete", instance.storage_key
+        )
