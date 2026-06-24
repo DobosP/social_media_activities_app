@@ -84,7 +84,7 @@ djangorestframework-gis==1.2.1
     # via -r requirements.in
 drf-spectacular==0.29.0
     # via -r requirements.in
-duckdb==1.5.3
+duckdb==1.5.4
     # via -r requirements.in
 gunicorn==26.0.0
     # via -r requirements.in
