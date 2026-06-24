@@ -171,8 +171,6 @@ def upload_photo(uploader, kind, data: bytes, *, thread=None) -> Photo:
 def _replace_existing_profile(uploader) -> None:
     existing = Photo.objects.filter(uploader=uploader, kind=Photo.Kind.PROFILE).first()
     if existing:
-        if existing.storage_key:
-            get_storage().delete(existing.storage_key)
         existing.delete()
 
 
@@ -188,8 +186,6 @@ def delete_photo(actor, photo: Photo) -> None:
     """Delete a photo. Allowed for the uploader or staff (moderation removal)."""
     if actor.id != photo.uploader_id and not getattr(actor, "is_staff", False):
         raise NotAuthorized("Not allowed to delete this photo.")
-    if photo.storage_key:
-        get_storage().delete(photo.storage_key)
     record_audit("media.deleted", actor=actor, target=photo)
     photo.delete()
 
@@ -501,8 +497,6 @@ def delete_attachment(actor, attachment) -> None:
     (the message may still carry text) — to remove the whole message use the post path."""
     if actor.id != attachment.uploader_id and not getattr(actor, "is_staff", False):
         raise NotAuthorized("Not allowed to delete this file.")
-    if attachment.storage_key:
-        get_storage().delete(attachment.storage_key)
     record_audit("media.attachment_deleted", actor=actor, target=attachment)
     attachment.delete()
 
