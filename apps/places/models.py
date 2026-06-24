@@ -20,6 +20,7 @@ class Place(gis_models.Model):
         OVERTURE = "overture", "Overture Maps"
         GOOGLE = "google", "Google"
         USER = "user", "User-submitted"
+        ROEDU = "roedu", "RO-EDU"
 
     name = models.CharField(max_length=255, blank=True)
     location = gis_models.PointField(geography=True, srid=4326)
@@ -42,6 +43,9 @@ class Place(gis_models.Model):
     osm_id = models.BigIntegerField(null=True, blank=True)
     external_id = models.CharField(max_length=128, blank=True)
     raw_tags = models.JSONField(default=dict, blank=True)
+    attribution = models.CharField(max_length=255, blank=True)
+    license_name = models.CharField(max_length=120, blank=True)
+    provenance_url = models.URLField(max_length=500, blank=True)
 
     # FUTURE: created_by FK to accounts.User (null=True) for user-submitted places.
     first_seen_at = models.DateTimeField(auto_now_add=True)
@@ -77,6 +81,7 @@ class Place(gis_models.Model):
         # Overture, Google/Wikidata enrichment) and is served RAW over the JSON API, so
         # only a safe http(s) URL is ever persisted — at the single write chokepoint.
         self.website = safe_external_url(self.website)
+        self.provenance_url = safe_external_url(self.provenance_url)
         super().save(*args, **kwargs)
 
     @property

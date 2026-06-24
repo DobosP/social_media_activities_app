@@ -89,6 +89,27 @@ def test_upsert_without_uid_keys_on_place_title_start():
     assert Event.objects.filter(title="Picnic").count() == 1
 
 
+def test_upsert_stores_optional_source_credit():
+    place = Place.objects.create(
+        name="Hall", location=Point(23.6, 46.77, srid=4326), source=Place.Source.ROEDU
+    )
+    starts = timezone.now() + timedelta(days=1)
+    raw = RawEvent(
+        title="Concert",
+        starts_at=starts,
+        url="https://events.example/concert",
+        source="roedu",
+        external_id="roedu:concert-1",
+        attribution="RO-EDU",
+        license_name="CC BY 4.0",
+        provenance_url="https://data.example/events/concert-1",
+    )
+    event = upsert_event(raw, place=place, source="roedu")
+    assert event.attribution == "RO-EDU"
+    assert event.license_name == "CC BY 4.0"
+    assert event.provenance_url == "https://data.example/events/concert-1"
+
+
 def test_events_api_lists_upcoming_only():
     place = Place.objects.create(
         name="Hall", location=Point(23.6, 46.77, srid=4326), source=Place.Source.OSM
@@ -108,6 +129,31 @@ def test_events_api_lists_upcoming_only():
     assert "Old" not in titles
 
     assert client.get("/api/events/?include_past=true").json()["count"] == 2
+
+
+def test_events_api_exposes_attribution_credit():
+    place = Place.objects.create(
+        name="Hall", location=Point(23.6, 46.77, srid=4326), source=Place.Source.ROEDU
+    )
+    Event.objects.create(
+        title="RO-EDU event",
+        starts_at=timezone.now() + timedelta(days=1),
+        source=Event.Source.SCRAPER,
+        external_id="roedu:e-api",
+        place=place,
+        attribution="RO-EDU",
+        license_name="CC BY 4.0",
+        provenance_url="https://data.example/events/e-api",
+    )
+
+    client = APIClient()
+    client.force_authenticate(_user("e-credit"))
+    item = client.get("/api/events/").json()["results"][0]
+    assert item["attribution_credit"] == {
+        "attribution": "RO-EDU",
+        "license_name": "CC BY 4.0",
+        "provenance_url": "https://data.example/events/e-api",
+    }
 
 
 # --- W2-F6: bounded RRULE expansion ----------------------------------------------------------

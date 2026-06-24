@@ -11,6 +11,8 @@ from django.db import transaction
 from django.db.models import Count, Q
 from django.utils import timezone
 
+from apps.safety.sanitize import safe_external_url
+
 from .models import (
     DEFAULT_CORRECTION_QUORUM,
     DEFAULT_FACT_QUORUM,
@@ -199,6 +201,22 @@ def public_child_venue_class(place) -> str:
                 return CHILD_VENUE_ALLOWED
     # GOOGLE / any other source whose tag shape we don't yet resolve -> unknown (fail-closed).
     return CHILD_VENUE_UNKNOWN
+
+
+def place_attribution(place) -> dict[str, str] | None:
+    """Neutral source credit for public rendering. Blank metadata stays silent."""
+    if not place:
+        return None
+    attribution = (place.attribution or "").strip()
+    license_name = (place.license_name or "").strip()
+    provenance_url = safe_external_url(place.provenance_url)
+    if not any((attribution, license_name, provenance_url)):
+        return None
+    return {
+        "attribution": attribution,
+        "license_name": license_name,
+        "provenance_url": provenance_url,
+    }
 
 
 def is_child_safe_venue(place) -> bool:

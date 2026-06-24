@@ -39,6 +39,9 @@ _NAME_TAGS: list[tuple[tuple[str, ...], dict]] = [
     (("cinema", "film"), {"amenity": "cinema"}),
 ]
 _DEFAULT_TAGS = {"amenity": "arts_centre"}
+_ATTRIBUTION_KEYS = ("attribution", "credit", "source_name", "publisher", "provider")
+_LICENSE_KEYS = ("license_name", "license", "licence", "license_title")
+_PROVENANCE_KEYS = ("provenance_url", "source_url", "url")
 
 
 def _tags_for(name: str) -> dict:
@@ -47,6 +50,17 @@ def _tags_for(name: str) -> dict:
         if any(n in low for n in needles):
             return dict(tags)
     return dict(_DEFAULT_TAGS)
+
+
+def _first_text(record: dict, keys: tuple[str, ...], *, max_length: int) -> str:
+    for key in keys:
+        value = record.get(key)
+        if value is None:
+            continue
+        text = str(value).strip()
+        if text:
+            return text[:max_length]
+    return ""
 
 
 class RomaniaScraperAdapter(SourceAdapter):
@@ -85,4 +99,7 @@ class RomaniaScraperAdapter(SourceAdapter):
                 },
                 website=v.get("source_url") or "",
                 external_id=str(v.get("id") or ""),
+                attribution=_first_text(v, _ATTRIBUTION_KEYS, max_length=255),
+                license_name=_first_text(v, _LICENSE_KEYS, max_length=120),
+                provenance_url=_first_text(v, _PROVENANCE_KEYS, max_length=500),
             )

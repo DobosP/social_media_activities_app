@@ -30,6 +30,9 @@ def upsert_event(
         # never be rendered as a javascript:/data: href (stored XSS).
         "url": safe_external_url(raw.url),
         "source": src,
+        "attribution": raw.attribution,
+        "license_name": raw.license_name,
+        "provenance_url": safe_external_url(raw.provenance_url),
     }
     if raw.external_id:
         event, _ = Event.objects.update_or_create(
@@ -52,6 +55,22 @@ def events_with_public_places():
     return Event.objects.select_related("place", "activity_type").filter(
         Q(place__isnull=True) | Q(place_id__in=public_places().values("id"))
     )
+
+
+def event_attribution(event) -> dict[str, str] | None:
+    """Neutral source credit for public rendering. Blank metadata stays silent."""
+    if not event:
+        return None
+    attribution = (event.attribution or "").strip()
+    license_name = (event.license_name or "").strip()
+    provenance_url = safe_external_url(event.provenance_url)
+    if not any((attribution, license_name, provenance_url)):
+        return None
+    return {
+        "attribution": attribution,
+        "license_name": license_name,
+        "provenance_url": provenance_url,
+    }
 
 
 def upcoming_events():

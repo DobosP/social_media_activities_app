@@ -74,6 +74,9 @@ def test_ingest_stores_website_and_with_website_filter(monkeypatch):
             lat=46.77,
             tags={"leisure": "sports_hall"},
             website="https://venue.example.ro",
+            attribution="OpenStreetMap contributors",
+            license_name="ODbL",
+            provenance_url="https://www.openstreetmap.org/node/101",
         ),
         RawPlace(
             source="osm",
@@ -98,7 +101,11 @@ def test_ingest_stores_website_and_with_website_filter(monkeypatch):
 
     assert Place.objects.filter(osm_id=101).exists()
     assert not Place.objects.filter(osm_id=102).exists()  # filtered out (no website)
-    assert Place.objects.get(osm_id=101).website == "https://venue.example.ro"
+    place = Place.objects.get(osm_id=101)
+    assert place.website == "https://venue.example.ro"
+    assert place.attribution == "OpenStreetMap contributors"
+    assert place.license_name == "ODbL"
+    assert place.provenance_url == "https://www.openstreetmap.org/node/101"
 
 
 @pytest.mark.django_db

@@ -26,6 +26,21 @@ from apps.events.sources import RawEvent
 from apps.ingestion.sources.roedu_client import RoeduClient
 from apps.places.enrichment.dedup import find_duplicate
 
+_ATTRIBUTION_KEYS = ("attribution", "credit", "source_name", "publisher", "provider")
+_LICENSE_KEYS = ("license_name", "license", "licence", "license_title")
+_PROVENANCE_KEYS = ("provenance_url", "source_url", "url")
+
+
+def _first_text(record: dict, keys: tuple[str, ...], *, max_length: int) -> str:
+    for key in keys:
+        value = record.get(key)
+        if value is None:
+            continue
+        text = str(value).strip()
+        if text:
+            return text[:max_length]
+    return ""
+
 
 class Command(BaseCommand):
     help = "Pull events from the RO-EDU data platform and upsert them (facts only)."
@@ -65,6 +80,9 @@ class Command(BaseCommand):
                 url=rec.get("source_url") or "",
                 external_id=f"roedu:{rec['id']}",
                 source="roedu",
+                attribution=_first_text(rec, _ATTRIBUTION_KEYS, max_length=255),
+                license_name=_first_text(rec, _LICENSE_KEYS, max_length=120),
+                provenance_url=_first_text(rec, _PROVENANCE_KEYS, max_length=500),
             )
             place = self._resolve_place(venues.get(rec.get("venue_id")))
             if place is None:

@@ -1079,7 +1079,7 @@ def place_detail(request, pk, slug=None):
     # F26: activity edges with per-viewer vote summaries; F28: open-now status from parsed hours,
     # downgraded to "unverified" when recent reports say the posted hours are wrong.
     from apps.places.edges import edge_vote_summary
-    from apps.places.services import open_now_status, venue_facts_detail
+    from apps.places.services import open_now_status, place_attribution, venue_facts_detail
 
     edges = [
         pa for pa in place.place_activities.all() if not pa.is_disputed or request.user.is_staff
@@ -1149,6 +1149,7 @@ def place_detail(request, pk, slug=None):
             "access_match": access_match,
             "has_access_pref": pref is not None,
             "partner": partner_for_place(place),
+            "attribution_credit": place_attribution(place),
             "pending_proposal": proposal if pending else None,
             # W6: share this venue into one of the viewer's activity chats (public only).
             "share_targets": _share_targets(request.user) if is_public else [],
@@ -3027,7 +3028,7 @@ def event_detail(request, pk, slug=None):
             raise Http404("No event matches the given query.")
     # F21: read-time accuracy flag from crowd reports + the member report affordance. The report
     # form shows only on a PUBLIC event (mirrors the event_report gate — no form that would 404).
-    from apps.events.services import event_reliability
+    from apps.events.services import event_attribution, event_reliability
     from apps.web.seo import absolute_url, event_path
 
     # SEO: canonical points at the keyword-rich slugged path (bare/decorative-slug URLs all 200);
@@ -3064,6 +3065,7 @@ def event_detail(request, pk, slug=None):
             "breadcrumb_data": breadcrumb_data,
             "canonical_url": canonical_override,
             "event_reliability": event_reliability(event),
+            "attribution_credit": event_attribution(event),
             "can_report_event": (
                 is_public_event and request.user.is_authenticated and can_participate(request.user)
             ),

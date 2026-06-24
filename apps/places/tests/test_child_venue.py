@@ -67,6 +67,19 @@ def test_google_source_is_unknown_failclosed():
     assert is_child_safe_venue(_place(source=Place.Source.GOOGLE, raw_tags={"x": "y"})) is False
 
 
+def test_roedu_cultural_tags_are_unknown_failclosed():
+    p = _place(source=Place.Source.ROEDU, raw_tags={"amenity": "theatre"})
+    assert public_child_venue_class(p) == "unknown"
+    assert is_child_safe_venue(p) is False
+
+
+def test_roedu_staff_approval_is_allowed():
+    p = _place(source=Place.Source.ROEDU, raw_tags={"tourism": "museum"})
+    ApprovedChildVenue.objects.create(place=p)
+    assert public_child_venue_class(p) == "allowed"
+    assert is_child_safe_venue(p) is True
+
+
 def test_staff_approval_overrides_unknown():
     p = _place(raw_tags={"amenity": "bar"})  # would be unknown
     assert is_child_safe_venue(p) is False

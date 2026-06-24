@@ -89,6 +89,26 @@ def test_create_activity_and_view_detail():
     assert b"Web game" in detail.content
 
 
+def test_place_detail_renders_attribution_credit():
+    owner = _user("web-place-credit")
+    place = Place.objects.create(
+        name="RO-EDU Hall",
+        location=Point(23.6, 46.77, srid=4326),
+        source=Place.Source.ROEDU,
+        external_id="hall-1",
+        attribution="RO-EDU",
+        license_name="CC BY 4.0",
+        provenance_url="https://data.example/venues/hall-1",
+    )
+
+    resp = _client(owner).get(f"/places/{place.pk}/")
+    assert resp.status_code == 200
+    body = resp.content.decode()
+    assert "Source credit:" in body
+    assert "RO-EDU" in body
+    assert "CC BY 4.0" in body
+
+
 def test_join_then_owner_vote_admits_member():
     owner = _user("web-o2")
     activity = create_activity(

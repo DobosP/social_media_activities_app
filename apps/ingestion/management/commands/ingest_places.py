@@ -163,6 +163,9 @@ class Command(BaseCommand):
                 "website": safe_external_url(raw.website),
                 "phone": raw.phone,
                 "raw_tags": raw.tags,
+                "attribution": raw.attribution,
+                "license_name": raw.license_name,
+                "provenance_url": safe_external_url(raw.provenance_url),
                 "last_seen_at": timezone.now(),
             }
 
@@ -222,6 +225,15 @@ class Command(BaseCommand):
         if not canonical.phone and raw.phone:
             canonical.phone = raw.phone
             update_fields.append("phone")
+        if not canonical.attribution and raw.attribution:
+            canonical.attribution = raw.attribution
+            update_fields.append("attribution")
+        if not canonical.license_name and raw.license_name:
+            canonical.license_name = raw.license_name
+            update_fields.append("license_name")
+        if not canonical.provenance_url and safe_external_url(raw.provenance_url):
+            canonical.provenance_url = safe_external_url(raw.provenance_url)
+            update_fields.append("provenance_url")
         canonical.save(update_fields=update_fields)
 
     @staticmethod

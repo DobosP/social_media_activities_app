@@ -16,6 +16,9 @@ Places:
 - `apps/ingestion/sources/ro_scraper.py` — `RomaniaScraperAdapter` (`name="roedu"`)
   reads the `venues` product → `RawPlace`. It synthesizes OSM-style `tags` from the
   venue name (`_tags_for`) so `ingestion.mapping` can attach a `PlaceActivity` edge.
+- `Place` records now store optional source credit fields (`attribution`,
+  `license_name`, `provenance_url`) and the RO-EDU adapter maps those fields when
+  present. Blank upstream metadata stays blank.
 
 Events:
 - `apps/events/management/commands/sync_roedu_events.py` — pulls the `events`
@@ -23,6 +26,8 @@ Events:
   `find_duplicate`), and upserts **facts only** (no scraped `description` — M2) via
   the shared `upsert_event`. Defaults to `--min-confidence 1.0` (JSON-LD/iCal only;
   NER events are held — M5).
+- `Event` records now store the same optional source credit fields and
+  `sync_roedu_events` maps RO-EDU/source metadata into them when available.
 - `Event.Source.SCRAPER = "roedu"` exists (`apps/events/models.py`) and the
   `0006_alter_event_source` migration is committed.
 - `BatchEventsView` (`apps/ingestion/views.py`) allows `source="roedu"` implicitly
@@ -41,7 +46,10 @@ Tests (no network, no DB — `django.test.SimpleTestCase`):
   URL/param building (drops `None`), cursor following, `available=false` fail-closed,
   `max_records`.
 - `apps/ingestion/tests/test_roedu_adapter.py` — the full `_tags_for` heuristic and
-  `fetch()` (`RawPlace` field mapping, RO country, coord coercion, skip-no-coords).
+  `fetch()` (`RawPlace` field mapping, RO country, coord coercion, skip-no-coords,
+  optional attribution/license/provenance mapping).
+- DB-backed regression tests cover RO-EDU event credit mapping, API credit rendering,
+  web credit rendering, and `source="roedu"` child-venue fail-closed behavior.
 
 ## Running a demo (order matters)
 
@@ -80,29 +88,30 @@ The platform enforces the license/GDPR gate **server-side** (the `social-app-dev
 key is redistributable-only, no `tdm_exception`). Treat that as defence-in-depth —
 the client also fails closed (`available != true` ⇒ no records).
 
-`source="roedu"` is deliberately NOT one of the OSM/Overture child-venue classes, so
-a scraped venue stays child-venue-**UNKNOWN** (fail-closed) until a curated allowlist
-promotes it — it is never routed through the OSM tag branch (design §11 M4).
+`source="roedu"` is deliberately NOT routed through the OSM/Overture child-venue
+class branches, even though its venue adapter synthesizes OSM-style cultural tags
+for activity mapping. A scraped venue stays child-venue-**UNKNOWN** (fail-closed)
+until staff add a per-place `ApprovedChildVenue` approval. Regression tests assert
+that an unmapped `roedu` theatre/museum is not child-safe, and that the explicit
+staff-approval path still promotes a specific venue.
+
+Public/member render paths now show a neutral "Source credit" line for places and
+events when attribution/license/provenance metadata exists. The serializers expose
+the same fields plus an `attribution_credit` display object.
 
 ## Remaining real gaps (not yet done)
 
-1. **Attribution / license rendering (M3)** — there are still NO `attribution` /
-   `license_name` fields on `Place` / `Event`, and no UI credit. Some upstream
-   sources are CC-BY/SA and require visible attribution; add the fields + render.
-2. **Curated child-venue allowlist for cultural venues (M4)** — the synthesized
-   classes a roedu venue gets (`theatre` / `museum` / `gallery` / `cinema` /
-   `arts_centre`) are **not** in `ChildVenueClass`
-   (`apps/places/migrations/0007_seed_child_venue_classes.py` seeds
-   library/park/sports_centre/school/community_centre/playground/nature_reserve/
-   college only). Correct fail-closed behavior today, but there's no allowlist
-   promoting safe cultural venues and no regression test asserting an unmapped
-   `roedu` place is child-UNKNOWN.
-3. **Scraped-event gating for minors (M5)** — `sync_roedu_events` holds
+1. **Curated cultural child-venue policy (M4 follow-up)** — this slice kept the
+   product fail-closed and added regression coverage. It did **not** add a broad
+   RO-EDU cultural class allowlist. Staff can approve vetted individual venues via
+   `ApprovedChildVenue`; a broader theatre/museum/gallery/cinema policy still needs
+   safeguarding review before seeding any class-level rule.
+2. **Scraped-event gating for minors (M5)** — `sync_roedu_events` holds
    `confidence < 1.0` events, but there is no separate staff-review queue for held
    NER events and no rule to suppress outbound `source_url` links for CHILD/TEEN.
-4. **Nightly automation** — both commands are manual; no scheduled job / cron wiring
+3. **Nightly automation** — both commands are manual; no scheduled job / cron wiring
    pulls roedu places + events on a cadence yet.
-5. **`amenity=cinema` → `open_air_cinema` is a stopgap** — there is no plain indoor
+4. **`amenity=cinema` → `open_air_cinema` is a stopgap** — there is no plain indoor
    "cinema" activity type in the taxonomy; the rule reuses `open_air_cinema` (which
    carries the "cinema" alias) at low confidence. A dedicated `cinema` activity slug
    would be cleaner.

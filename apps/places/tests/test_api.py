@@ -73,3 +73,27 @@ def test_geojson_shape(client):
     feature = body["features"][0]
     assert feature["geometry"]["type"] == "Point"
     assert len(feature["geometry"]["coordinates"]) == 2
+
+
+@pytest.mark.django_db
+def test_place_api_exposes_attribution_credit(client):
+    place = Place.objects.create(
+        name="RO-EDU Theatre",
+        location=Point(23.60, 46.78, srid=4326),
+        source=Place.Source.ROEDU,
+        external_id="theatre-1",
+        attribution="RO-EDU",
+        license_name="CC BY 4.0",
+        provenance_url="https://data.example/venues/theatre-1",
+    )
+    reading = ActivityType.objects.get(slug="reading")
+    PlaceActivity.objects.create(place=place, activity=reading, confidence=0.95)
+
+    resp = client.get("/api/places/")
+    assert resp.status_code == 200
+    props = resp.json()["features"][0]["properties"]
+    assert props["attribution_credit"] == {
+        "attribution": "RO-EDU",
+        "license_name": "CC BY 4.0",
+        "provenance_url": "https://data.example/venues/theatre-1",
+    }

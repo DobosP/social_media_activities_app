@@ -41,6 +41,9 @@ class Event(models.Model):
 
     source = models.CharField(max_length=16, choices=Source.choices, default=Source.MANUAL)
     external_id = models.CharField(max_length=200, blank=True)
+    attribution = models.CharField(max_length=255, blank=True)
+    license_name = models.CharField(max_length=120, blank=True)
+    provenance_url = models.URLField(max_length=500, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -69,6 +72,7 @@ class Event(models.Model):
     def save(self, *args, **kwargs):
         # Untrusted feed URL served raw over the API — persist only safe http(s) links.
         self.url = safe_external_url(self.url)
+        self.provenance_url = safe_external_url(self.provenance_url)
         super().save(*args, **kwargs)
 
 

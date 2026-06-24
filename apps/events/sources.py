@@ -35,6 +35,9 @@ class RawEvent:
     url: str = ""
     external_id: str = ""
     source: str = "ical"
+    attribution: str = ""
+    license_name: str = ""
+    provenance_url: str = ""
 
 
 class EventSource(ABC):

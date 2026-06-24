@@ -22,6 +22,7 @@ class PlaceSerializer(GeoFeatureModelSerializer):
     name = serializers.CharField(source="display_name", read_only=True)
     display_address = serializers.CharField(read_only=True)
     opening_hours = serializers.JSONField(source="display_opening_hours", read_only=True)
+    attribution_credit = serializers.SerializerMethodField()
 
     def get_activities(self, obj):
         # F26: disputed edges are hidden from discovery. Filter in Python over the prefetch.
@@ -49,6 +50,10 @@ class PlaceSerializer(GeoFeatureModelSerializer):
             "source",
             "osm_type",
             "osm_id",
+            "attribution",
+            "license_name",
+            "provenance_url",
+            "attribution_credit",
             "activities",
             "distance_m",
         ]
@@ -65,3 +70,8 @@ class PlaceSerializer(GeoFeatureModelSerializer):
         from .services import open_now_status
 
         return open_now_status(obj)
+
+    def get_attribution_credit(self, obj):
+        from .services import place_attribution
+
+        return place_attribution(obj)

@@ -93,7 +93,15 @@ class FetchTests(SimpleTestCase):
         return base
 
     def test_fetch_maps_venue_to_rawplace(self):
-        client = FakeRoeduClient([self._venue()])
+        client = FakeRoeduClient(
+            [
+                self._venue(
+                    attribution="Primaria Cluj-Napoca",
+                    license_name="CC BY 4.0",
+                    provenance_url="https://data.example/venues/101",
+                )
+            ]
+        )
         adapter = RomaniaScraperAdapter(client=client)
         out = list(adapter.fetch(city="Cluj-Napoca"))
 
@@ -106,6 +114,9 @@ class FetchTests(SimpleTestCase):
         self.assertEqual(rp.lon, 23.5949)
         # website comes from the venue's source_url.
         self.assertEqual(rp.website, "https://teatrulnationalcluj.ro")
+        self.assertEqual(rp.attribution, "Primaria Cluj-Napoca")
+        self.assertEqual(rp.license_name, "CC BY 4.0")
+        self.assertEqual(rp.provenance_url, "https://data.example/venues/101")
         # address normalized with country forced to RO.
         self.assertEqual(rp.address["street"], "Piața Ștefan cel Mare 2-4")
         self.assertEqual(rp.address["city"], "Cluj-Napoca")
@@ -158,6 +169,9 @@ class FetchTests(SimpleTestCase):
         rp = list(adapter.fetch())[0]
         self.assertEqual(rp.external_id, "9")
         self.assertEqual(rp.website, "")
+        self.assertEqual(rp.attribution, "")
+        self.assertEqual(rp.license_name, "")
+        self.assertEqual(rp.provenance_url, "")
         self.assertEqual(rp.address["street"], "")
         self.assertEqual(rp.tags, {"tourism": "gallery"})
 

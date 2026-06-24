@@ -19,6 +19,9 @@ class RawPlace:
     osm_type: str | None = None
     osm_id: int | None = None
     external_id: str | None = None
+    attribution: str = ""
+    license_name: str = ""
+    provenance_url: str = ""
 
 
 class SourceAdapter(ABC):

@@ -23,6 +23,14 @@
 {% endif %}
 {% if event.description %}<p>{{ event.description|linebreaks }}</p>{% endif %}
 {% if event.url|safe_href %}<p><a href="{{ event.url|safe_href }}" rel="noopener noreferrer" target="_blank">{% trans "Event website &rarr;" %}</a></p>{% endif %}
+{% if attribution_credit %}
+  <p class="muted" style="font-size:.85rem">
+    {% trans "Source credit:" %}
+    {% if attribution_credit.attribution %}{{ attribution_credit.attribution }}{% else %}{{ event.get_source_display }}{% endif %}
+    {% if attribution_credit.license_name %} &middot; {{ attribution_credit.license_name }}{% endif %}
+    {% if attribution_credit.provenance_url %} &middot; <a href="{{ attribution_credit.provenance_url }}" rel="noopener noreferrer" target="_blank">{% trans "source record" %}</a>{% endif %}
+  </p>
+{% endif %}
 
 {# F21: crowd accuracy reports — counts-only, decaying, ingest-safe. Never shows who reported. #}
 {% if can_report_event %}
