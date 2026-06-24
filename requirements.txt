@@ -20,9 +20,9 @@ autobahn==25.12.2
     # via daphne
 automat==25.4.16
     # via twisted
-boto3==1.43.22
+boto3==1.43.36
     # via -r requirements.in
-botocore==1.43.22
+botocore==1.43.36
     # via
     #   boto3
     #   s3transfer
@@ -162,7 +162,7 @@ rpds-py==0.30.0
     # via
     #   jsonschema
     #   referencing
-s3transfer==0.18.0
+s3transfer==0.19.0
     # via boto3
 sentry-sdk[django]==2.61.1
     # via -r requirements.in
