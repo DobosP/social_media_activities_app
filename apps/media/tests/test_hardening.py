@@ -11,6 +11,7 @@ from uuid import uuid4
 
 import pytest
 from django.contrib.gis.geos import Point
+from django.db import transaction
 from django.utils import timezone
 from PIL import Image
 
@@ -59,6 +60,7 @@ def test_accepts_normal_image_under_pixel_budget():
     assert size == (100, 100)
 
 
+@pytest.mark.django_db(transaction=True)
 def test_user_deletion_erases_media_blob():
     user = User.objects.create_user(username="blob_owner", password="pw")
     apply_assurance(user, AssuranceResult(age_band=AgeBand.ADULT, provider="dev"))
@@ -72,6 +74,24 @@ def test_user_deletion_erases_media_blob():
     assert get_storage().exists(key) is False
 
 
+@pytest.mark.django_db(transaction=True)
+def test_rolled_back_user_deletion_keeps_media_blob():
+    user = User.objects.create_user(username="rollback_blob_owner", password="pw")
+    apply_assurance(user, AssuranceResult(age_band=AgeBand.ADULT, provider="dev"))
+    photo = upload_photo(user, Photo.Kind.PROFILE, _png())
+    key = photo.storage_key
+    assert get_storage().exists(key) is True
+
+    with pytest.raises(RuntimeError):
+        with transaction.atomic():
+            user.delete()
+            raise RuntimeError("abort deletion")
+
+    assert Photo.objects.filter(id=photo.id).exists() is True
+    assert get_storage().exists(key) is True
+
+
+@pytest.mark.django_db(transaction=True)
 def test_user_deletion_erases_attachment_blob():
     user = User.objects.create_user(username="attachment_blob_owner", password="pw")
     apply_assurance(user, AssuranceResult(age_band=AgeBand.ADULT, provider="dev"))
