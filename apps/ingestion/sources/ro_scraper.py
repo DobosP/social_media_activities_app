@@ -26,7 +26,7 @@ import os
 from collections.abc import Iterator
 
 from .base import RawPlace, SourceAdapter
-from .roedu_client import RoeduClient
+from .roedu_client import RoeduClient, is_redistributable_app_pack_item
 
 # Heuristic: Romanian venue-name keyword -> OSM-style tag the mapping rules read.
 _NAME_TAGS: list[tuple[tuple[str, ...], dict]] = [
@@ -42,6 +42,7 @@ _DEFAULT_TAGS = {"amenity": "arts_centre"}
 _ATTRIBUTION_KEYS = ("attribution", "credit", "source_name", "publisher", "provider")
 _LICENSE_KEYS = ("license_name", "license", "licence", "license_title")
 _PROVENANCE_KEYS = ("provenance_url", "source_url", "url")
+_APP_PACK_PLACE_KINDS = frozenset({"venue", "place"})
 
 
 def _tags_for(name: str) -> dict:
@@ -63,14 +64,65 @@ def _first_text(record: dict, keys: tuple[str, ...], *, max_length: int) -> str:
     return ""
 
 
+def _app_pack_tags_for(item: dict) -> dict:
+    facets = item.get("facets") if isinstance(item.get("facets"), dict) else {}
+    stable_tags = item.get("tags") if isinstance(item.get("tags"), list) else []
+    category = str(
+        facets.get("venue_category") or facets.get("place_category") or facets.get("category") or ""
+    ).strip()
+
+    tags = _tags_for(" ".join([item.get("title") or "", category]))
+    if stable_tags:
+        tags["roedu:tags"] = [str(tag) for tag in stable_tags if str(tag).strip()]
+    for facet in ("city", "county", "category", "venue_category", "place_category"):
+        value = facets.get(facet)
+        if value is not None and str(value).strip():
+            tags[f"roedu:{facet}"] = str(value).strip()
+    if item.get("source"):
+        tags["roedu:source"] = str(item["source"]).strip()
+    if item.get("confidence") is not None:
+        tags["roedu:confidence"] = item["confidence"]
+    return tags
+
+
+def app_pack_item_to_raw_place(item: dict, *, city: str | None = None) -> RawPlace | None:
+    if item.get("kind") not in _APP_PACK_PLACE_KINDS:
+        return None
+    location = item.get("location") if isinstance(item.get("location"), dict) else {}
+    lat, lon = location.get("lat"), location.get("lon")
+    if lat is None or lon is None:
+        return None
+    facets = item.get("facets") if isinstance(item.get("facets"), dict) else {}
+    address = item.get("address") if isinstance(item.get("address"), dict) else {}
+    return RawPlace(
+        source="roedu",
+        name=item.get("title") or "",
+        lon=float(lon),
+        lat=float(lat),
+        tags=_app_pack_tags_for(item),
+        address={
+            "street": address.get("street") or "",
+            "city": address.get("city") or facets.get("city") or city or "",
+            "county": address.get("county") or facets.get("county") or "",
+            "country": address.get("country") or "RO",
+        },
+        website=item.get("website") or "",
+        external_id=str(item.get("id") or ""),
+        attribution=str(item.get("source") or "")[:255],
+        license_name=str(item.get("license") or "")[:120],
+        provenance_url="",
+    )
+
+
 class RomaniaScraperAdapter(SourceAdapter):
     name = "roedu"
 
-    def __init__(self, client: RoeduClient | None = None) -> None:
+    def __init__(self, client: RoeduClient | None = None, *, app_pack: str | None = None) -> None:
         self._client = client or RoeduClient(
             base_url=os.environ.get("ROEDU_API_URL"),
             api_key=os.environ.get("ROEDU_API_KEY", "social-app-dev"),
         )
+        self.app_pack = app_pack or os.environ.get("ROEDU_APP_PACK") or None
 
     def fetch(
         self,
@@ -82,6 +134,15 @@ class RomaniaScraperAdapter(SourceAdapter):
         filters: dict = {}
         if city:
             filters["city"] = city
+        if self.app_pack:
+            filters.setdefault("kind", "venue")
+            for item in self._client.iter_app_pack(self.app_pack, max_records=limit, **filters):
+                if not is_redistributable_app_pack_item(item):
+                    continue
+                raw = app_pack_item_to_raw_place(item, city=city)
+                if raw is not None:
+                    yield raw
+            return
         for v in self._client.iter("venues", max_records=limit, **filters):
             lat, lon = v.get("lat"), v.get("lon")
             if lat is None or lon is None:

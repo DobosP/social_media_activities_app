@@ -184,6 +184,111 @@ class RoeduClientRequestTests(SimpleTestCase):
         self.assertEqual([r["id"] for r in out], [1])
         self.assertEqual(len(fake.calls), 1)
 
+    def test_app_pack_page_uses_expected_public_path_and_filters(self):
+        page = {
+            "pack_id": "roedu:social_media_activities_app:events_places:v1",
+            "app": "social_media_activities_app",
+            "layer": "redistributable",
+            "schema_version": 1,
+            "items": [],
+            "pagination": {"next_cursor": None},
+            "withheld": 0,
+            "errors": [],
+        }
+        fake = _canned_urlopen({"/v1/app-packs/social_media_activities_app/events_places": page})
+        with self._patched(fake):
+            client = RoeduClient("http://h:8077", api_key="k")
+            client.app_pack_page("events_places", city="Cluj-Napoca", kind="venue")
+        url = fake.calls[0]["url"]
+        self.assertTrue(
+            url.startswith("http://h:8077/v1/app-packs/social_media_activities_app/events_places?")
+        )
+        self.assertIn("layer=redistributable", url)
+        self.assertIn("city=Cluj-Napoca", url)
+        self.assertIn("kind=venue", url)
+
+    def test_iter_app_pack_filters_unknown_or_internal_legal_metadata_fail_closed(self):
+        page = {
+            "pack_id": "roedu:social_media_activities_app:events_places:v1",
+            "app": "social_media_activities_app",
+            "layer": "redistributable",
+            "schema_version": 1,
+            "items": [
+                {
+                    "id": "event-ok",
+                    "kind": "event",
+                    "title": "Concert",
+                    "tags": ["category:music"],
+                    "facets": {"city": "Cluj-Napoca", "category": "music"},
+                    "source": "fixture",
+                    "provenance": {},
+                    "license": "CC BY 4.0",
+                    "access_type": "open_license",
+                    "legal_basis": "fixture license",
+                    "gdpr_relevant": False,
+                    "redistributable": True,
+                    "confidence": 1.0,
+                },
+                {
+                    "id": "tdm-only",
+                    "kind": "event",
+                    "title": "Internal",
+                    "tags": [],
+                    "facets": {},
+                    "source": "fixture",
+                    "license": "TDM only",
+                    "access_type": "tdm_exception",
+                    "legal_basis": "internal text/data mining",
+                    "gdpr_relevant": False,
+                    "redistributable": False,
+                    "confidence": 0.6,
+                },
+                {
+                    "id": "missing-legal",
+                    "kind": "venue",
+                    "title": "Unknown",
+                    "tags": [],
+                    "facets": {},
+                    "source": "fixture",
+                    "license": "Unknown",
+                    "access_type": "open_license",
+                    "gdpr_relevant": False,
+                    "redistributable": True,
+                    "confidence": 1.0,
+                },
+                {
+                    "id": "gdpr",
+                    "kind": "venue",
+                    "title": "Personal Data",
+                    "tags": [],
+                    "facets": {},
+                    "source": "fixture",
+                    "license": "CC BY 4.0",
+                    "access_type": "open_license",
+                    "legal_basis": "fixture license",
+                    "gdpr_relevant": True,
+                    "redistributable": True,
+                    "confidence": 1.0,
+                },
+            ],
+            "pagination": {"next_cursor": None},
+            "withheld": 3,
+            "errors": [],
+        }
+        fake = _canned_urlopen({"/v1/app-packs/social_media_activities_app/events_places": page})
+        with self._patched(fake):
+            client = RoeduClient("http://h:8077", api_key="k")
+            out = list(client.iter_app_pack("events_places"))
+        self.assertEqual([item["id"] for item in out], ["event-ok"])
+
+    def test_iter_app_pack_rejects_non_redistributable_layer(self):
+        fake = _canned_urlopen({})
+        with self._patched(fake):
+            client = RoeduClient("http://h:8077", api_key="k")
+            out = list(client.iter_app_pack("events_places", layer="internal"))
+        self.assertEqual(out, [])
+        self.assertEqual(fake.calls, [])
+
     # --- helper: patch the client's single HTTP boundary ---
     def _patched(self, fake_urlopen):
         import contextlib
