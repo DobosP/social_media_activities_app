@@ -9,7 +9,11 @@ from __future__ import annotations
 
 from django.test import SimpleTestCase
 
-from apps.ingestion.sources.ro_scraper import RomaniaScraperAdapter, _tags_for
+from apps.ingestion.sources.ro_scraper import (
+    RomaniaScraperAdapter,
+    _tags_for,
+    app_pack_item_to_raw_place,
+)
 
 
 class FakeRoeduClient:
@@ -21,6 +25,10 @@ class FakeRoeduClient:
 
     def iter(self, product, *, limit=200, max_records=None, **filters):
         self.calls.append({"product": product, "max_records": max_records, "filters": filters})
+        yield from self._records
+
+    def iter_app_pack(self, pack, *, max_records=None, **filters):
+        self.calls.append({"pack": pack, "max_records": max_records, "filters": filters})
         yield from self._records
 
 
@@ -182,3 +190,87 @@ class FetchTests(SimpleTestCase):
         from apps.ingestion.sources.roedu_client import RoeduClient
 
         self.assertIsInstance(adapter._client, RoeduClient)
+
+
+class AppPackMappingTests(SimpleTestCase):
+    def _item(self, **over):
+        base = {
+            "id": "venue-1",
+            "kind": "venue",
+            "title": "Biblioteca Județeană Cluj",
+            "tags": ["venue:library", "audience:public"],
+            "facets": {
+                "city": "Cluj-Napoca",
+                "county": "Cluj",
+                "category": "library",
+                "venue_category": "library",
+            },
+            "source": "synthetic-fixture",
+            "license": "CC BY 4.0",
+            "access_type": "open_license",
+            "legal_basis": "fixture license",
+            "gdpr_relevant": False,
+            "redistributable": True,
+            "confidence": 0.95,
+            "location": {"lat": 46.77, "lon": 23.59},
+            "address": {"street": "Strada Test 1"},
+            "website": "https://library.example.test",
+        }
+        base.update(over)
+        return base
+
+    def test_app_pack_item_maps_tags_facets_and_license_to_raw_place(self):
+        raw = app_pack_item_to_raw_place(self._item(), city="Fallback")
+
+        self.assertIsNotNone(raw)
+        self.assertEqual(raw.source, "roedu")
+        self.assertEqual(raw.external_id, "venue-1")
+        self.assertEqual(raw.name, "Biblioteca Județeană Cluj")
+        self.assertEqual((raw.lat, raw.lon), (46.77, 23.59))
+        self.assertEqual(raw.website, "https://library.example.test")
+        self.assertEqual(raw.attribution, "synthetic-fixture")
+        self.assertEqual(raw.license_name, "CC BY 4.0")
+        self.assertEqual(raw.provenance_url, "")
+        self.assertEqual(raw.address["street"], "Strada Test 1")
+        self.assertEqual(raw.address["city"], "Cluj-Napoca")
+        self.assertEqual(raw.address["county"], "Cluj")
+        self.assertEqual(raw.address["country"], "RO")
+        self.assertEqual(raw.tags["amenity"], "library")
+        self.assertEqual(raw.tags["roedu:tags"], ["venue:library", "audience:public"])
+        self.assertEqual(raw.tags["roedu:city"], "Cluj-Napoca")
+        self.assertEqual(raw.tags["roedu:county"], "Cluj")
+        self.assertEqual(raw.tags["roedu:category"], "library")
+        self.assertEqual(raw.tags["roedu:venue_category"], "library")
+        self.assertEqual(raw.tags["roedu:source"], "synthetic-fixture")
+        self.assertEqual(raw.tags["roedu:confidence"], 0.95)
+
+    def test_app_pack_mapping_handles_missing_tags_gracefully(self):
+        raw = app_pack_item_to_raw_place(
+            self._item(tags=None, facets={}, title="Loc Cultural", address={}),
+            city="Cluj-Napoca",
+        )
+
+        self.assertIsNotNone(raw)
+        self.assertEqual(
+            raw.tags,
+            {
+                "amenity": "arts_centre",
+                "roedu:source": "synthetic-fixture",
+                "roedu:confidence": 0.95,
+            },
+        )
+        self.assertEqual(raw.address["city"], "Cluj-Napoca")
+
+    def test_app_pack_mapping_skips_non_places_and_missing_coordinates(self):
+        self.assertIsNone(app_pack_item_to_raw_place(self._item(kind="event")))
+        self.assertIsNone(app_pack_item_to_raw_place(self._item(location={"lat": 46.77})))
+
+    def test_fetch_can_consume_configured_app_pack(self):
+        client = FakeRoeduClient([self._item()])
+        adapter = RomaniaScraperAdapter(client=client, app_pack="events_places")
+        out = list(adapter.fetch(city="Cluj-Napoca", limit=5))
+
+        self.assertEqual([raw.external_id for raw in out], ["venue-1"])
+        self.assertEqual(client.calls[0]["pack"], "events_places")
+        self.assertEqual(client.calls[0]["max_records"], 5)
+        self.assertEqual(client.calls[0]["filters"], {"kind": "venue", "city": "Cluj-Napoca"})

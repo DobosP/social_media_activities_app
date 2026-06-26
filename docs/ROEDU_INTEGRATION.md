@@ -13,9 +13,20 @@ Places:
 - `apps/ingestion/sources/roedu_client.py` — vendored stdlib HTTP client for the
   data API (`urllib` only, no new dependency). Cursor pagination; **fail-closed** on
   the platform's license gate (a page with `available != true` yields nothing).
+  It also has an additive app-pack reader for
+  `GET ${ROEDU_API_URL}/v1/app-packs/social_media_activities_app/<pack>?layer=redistributable`
+  with `X-API-Key: ${ROEDU_API_KEY}`. The client repeats the public gate and yields
+  only items with `redistributable=true`, `access_type` in
+  `public_document|open_license|public_domain`, non-empty `legal_basis`, and
+  `gdpr_relevant=false`; missing/unknown metadata is withheld client-side.
 - `apps/ingestion/sources/ro_scraper.py` — `RomaniaScraperAdapter` (`name="roedu"`)
   reads the `venues` product → `RawPlace`. It synthesizes OSM-style `tags` from the
   venue name (`_tags_for`) so `ingestion.mapping` can attach a `PlaceActivity` edge.
+  When constructed with `app_pack="<pack>"` or `ROEDU_APP_PACK=<pack>`, it consumes
+  redistributable app-pack `venue`/`place` items instead. It maps `tags` and `facets.city`,
+  `facets.county`, `facets.category`, `facets.venue_category`/`place_category`,
+  `source`, and `confidence` into namespaced `raw_tags` while still requiring
+  `location.lat`/`location.lon` for ingest.
 - `Place` records now store optional source credit fields (`attribution`,
   `license_name`, `provenance_url`) and the RO-EDU adapter maps those fields when
   present. Blank upstream metadata stays blank.
@@ -26,6 +37,13 @@ Events:
   `find_duplicate`), and upserts **facts only** (no scraped `description` — M2) via
   the shared `upsert_event`. Defaults to `--min-confidence 1.0` (JSON-LD/iCal only;
   NER events are held — M5).
+  It also supports `--app-pack <pack>` for the same redistributable app-pack
+  endpoint. App-pack event items use `id`, `kind=event`, `title`,
+  `start_datetime`/`starts_at`, `end_datetime`/`ends_at`, `place_id`/`venue_id`,
+  `source`, `license`, `access_type`, `legal_basis`, `gdpr_relevant`,
+  `redistributable`, `confidence`, `tags`, and `facets` (`city`, `county`,
+  `category`). Descriptions are always stored as `""`; item bodies, source URLs,
+  internal paths, checksums, and internal provenance are not copied into `Event`.
 - `Event` records now store the same optional source credit fields and
   `sync_roedu_events` maps RO-EDU/source metadata into them when available.
 - `Event.Source.SCRAPER = "roedu"` exists (`apps/events/models.py`) and the
@@ -78,6 +96,27 @@ This is the #1 footgun — without it you get `CommandError: Unknown source: roe
    # --dry-run to preview; --min-confidence 0 to include held NER events.
    ```
 
+App-pack fixture/serving-layer path, once the serving endpoint exists:
+
+```bash
+ROEDU_API_URL=http://<server-host>:8077
+ROEDU_API_KEY=<set-in-environment>
+ROEDU_APP_PACK=events_places
+python manage.py ingest_places --source=roedu --city="Cluj-Napoca"
+python manage.py sync_roedu_events --city="Cluj-Napoca" --app-pack events_places
+```
+
+The expected HTTP request is:
+
+```text
+GET ${ROEDU_API_URL}/v1/app-packs/social_media_activities_app/events_places?layer=redistributable&city=Cluj-Napoca
+X-API-Key: ${ROEDU_API_KEY}
+Accept: application/json
+```
+
+The current tests use synthetic fixtures for that payload; they do not import
+producer internals or require a live server endpoint.
+
 `sync_roedu_events` does NOT use `INGESTION_EXTRA_ADAPTERS` (it instantiates
 `RoeduClient` directly), but it depends on step 2 having run, so keep the env set
 for the whole sequence.
@@ -87,6 +126,12 @@ for the whole sequence.
 The platform enforces the license/GDPR gate **server-side** (the `social-app-dev`
 key is redistributable-only, no `tdm_exception`). Treat that as defence-in-depth —
 the client also fails closed (`available != true` ⇒ no records).
+For app packs, the client additionally withholds any item missing explicit
+redistributable legal/GDPR metadata. This social app does not expose or request the
+internal/all layer over HTTP because no internal/admin/ops scope is proven here.
+Redistributable app-pack examples and client-visible payloads must not include
+internal artifact paths, internal checksums, internal `llms.txt` entries, internal
+source URLs, or TDM-only item bodies.
 
 `source="roedu"` is deliberately NOT routed through the OSM/Overture child-venue
 class branches, even though its venue adapter synthesizes OSM-style cultural tags

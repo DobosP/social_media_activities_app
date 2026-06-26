@@ -25,6 +25,23 @@ import urllib.parse
 import urllib.request
 from collections.abc import Iterator
 
+REDISTRIBUTABLE_ACCESS_TYPES = frozenset({"public_document", "open_license", "public_domain"})
+
+
+def is_redistributable_app_pack_item(item: dict) -> bool:
+    """Return whether an app-pack item is safe for public/app consumers.
+
+    The serving layer is expected to enforce this first. This client repeats the
+    gate so missing/unknown legal or GDPR metadata fails closed if a fixture or
+    future endpoint regresses.
+    """
+    return (
+        item.get("redistributable") is True
+        and item.get("access_type") in REDISTRIBUTABLE_ACCESS_TYPES
+        and bool(str(item.get("legal_basis") or "").strip())
+        and item.get("gdpr_relevant") is False
+    )
+
 
 class RoeduClient:
     def __init__(
@@ -59,6 +76,19 @@ class RoeduClient:
         params = {"cursor": cursor, "limit": limit, **filters}
         return self._get(f"/v1/products/{product}", params)
 
+    def app_pack_page(
+        self,
+        pack: str,
+        *,
+        app: str = "social_media_activities_app",
+        layer: str = "redistributable",
+        cursor: str | None = None,
+        limit: int = 200,
+        **filters,
+    ) -> dict:
+        params = {"layer": layer, "cursor": cursor, "limit": limit, **filters}
+        return self._get(f"/v1/app-packs/{app}/{pack}", params)
+
     def iter(
         self, product: str, *, limit: int = 200, max_records: int | None = None, **filters
     ) -> Iterator[dict]:
@@ -75,5 +105,49 @@ class RoeduClient:
                 if max_records and seen >= max_records:
                     return
             cursor = page.get("next_cursor")
+            if not cursor:
+                return
+
+    def iter_app_pack(
+        self,
+        pack: str,
+        *,
+        app: str = "social_media_activities_app",
+        layer: str = "redistributable",
+        limit: int = 200,
+        max_records: int | None = None,
+        **filters,
+    ) -> Iterator[dict]:
+        """Yield redistributable app-pack items, following app-pack cursors.
+
+        Public social consumers only read the redistributable layer. Requests for
+        other layers deliberately yield nothing because this app has no proven
+        internal/all HTTP gate.
+        """
+        if layer != "redistributable":
+            return
+
+        cursor = None
+        seen = 0
+        while True:
+            page = self.app_pack_page(
+                pack,
+                app=app,
+                layer=layer,
+                cursor=cursor,
+                limit=limit,
+                **filters,
+            )
+            if page.get("layer") != "redistributable":
+                return
+            for item in page.get("items", []):
+                if not is_redistributable_app_pack_item(item):
+                    continue
+                yield item
+                seen += 1
+                if max_records and seen >= max_records:
+                    return
+            pagination = page.get("pagination") or {}
+            cursor = pagination.get("next_cursor")
             if not cursor:
                 return
