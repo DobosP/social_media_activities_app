@@ -76,10 +76,32 @@ def place_node(place, request=None) -> dict:
     return node
 
 
-def place_ld(place, request=None) -> dict:
-    """Top-level JSON-LD for a venue detail page."""
+def _event_node(event, request=None) -> dict:
+    """A compact nested Event node (name + start + canonical url) for a Place's event list."""
+    node = {
+        "@type": "Event",
+        "name": event.title,
+        "startDate": event.starts_at.isoformat(),
+        "url": absolute_url(event_path(event), request),
+    }
+    if event.ends_at:
+        node["endDate"] = event.ends_at.isoformat()
+    return node
+
+
+def place_ld(place, request=None, events=None) -> dict:
+    """Top-level JSON-LD for a venue detail page.
+
+    ``events`` (the venue's already-public upcoming events, as on place_detail) are embedded as
+    nested ``Event`` nodes so an answer engine can resolve "what's on at <venue>" from one page.
+    Capped so the block stays lean; built only from public ``Event`` rows — no people, no cohorts.
+    """
     node = place_node(place, request)
     node["@context"] = "https://schema.org"
+    if events:
+        nodes = [_event_node(e, request) for e in list(events)[:10]]
+        if nodes:
+            node["event"] = nodes
     return node
 
 
@@ -124,20 +146,21 @@ def breadcrumb_ld(crumbs, request=None) -> dict:
     }
 
 
-def itemlist_ld(events, request=None) -> dict:
-    """schema.org ItemList of upcoming events for a landing page.
+def itemlist_ld(entries, request=None) -> dict:
+    """schema.org ItemList from ordered ``{"name", "url"}`` entries (url is a root-relative path).
 
-    Lets an answer engine extract the list directly (name + canonical event URL), ordered as
-    shown. Built only from already-public ``upcoming_events()`` rows — no people, no cohort data.
+    Lets an answer engine extract a page's list directly (events on a landing page, venues on the
+    places list, events on the events list), ordered as shown. Callers build the entries only from
+    already-public ``upcoming_events()`` / ``public_places()`` rows — no people, no cohort data.
     """
     items = []
-    for i, event in enumerate(events, start=1):
+    for i, entry in enumerate(entries, start=1):
         items.append(
             {
                 "@type": "ListItem",
                 "position": i,
-                "name": event.title,
-                "url": absolute_url(event_path(event), request),
+                "name": entry["name"],
+                "url": absolute_url(entry["url"], request),
             }
         )
     return {
@@ -145,6 +168,16 @@ def itemlist_ld(events, request=None) -> dict:
         "@type": "ItemList",
         "itemListElement": items,
     }
+
+
+def event_entries(events):
+    """``{"name","url"}`` entries for ``itemlist_ld`` from Event rows (canonical slugged paths)."""
+    return [{"name": e.title, "url": event_path(e)} for e in events]
+
+
+def place_entries(places):
+    """``{"name","url"}`` entries for ``itemlist_ld`` from Place rows (canonical slugged paths)."""
+    return [{"name": p.display_name, "url": place_path(p)} for p in places]
 
 
 def site_ld(request=None) -> dict:

@@ -43,12 +43,18 @@ def seo(request):
     domain flips every canonical link with one env var.
     """
     from django.conf import settings
+    from django.utils.translation import get_language
 
     from .seo import absolute_url
 
+    # OpenGraph locale from the active language (ro/en today; falls back to en_US). Helps social
+    # previews + crawlers tag the page's language without a per-language URL scheme.
+    lang = (get_language() or "en").split("-")[0]
+    og_locale = {"ro": "ro_RO", "en": "en_US"}.get(lang, "en_US")
     return {
         "canonical_url": absolute_url(request.path, request),
         "site_name": getattr(settings, "SITE_NAME", "Activities"),
+        "og_locale": og_locale,
         "google_site_verification": getattr(settings, "GOOGLE_SITE_VERIFICATION", ""),
         "bing_site_verification": getattr(settings, "BING_SITE_VERIFICATION", ""),
     }

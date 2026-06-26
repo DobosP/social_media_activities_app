@@ -218,6 +218,16 @@
   <p class="muted" style="font-size:.8rem">{% trans "Corrections need a few independent confirmations before they show. We never change the map's own data, and never show who suggested or confirmed." %}</p>
 </div>
 
+{# SEO/discovery: internal links to the city×activity landing pages this venue belongs to.
+   Public (shown to everyone); every link is supply-checked server-side so none can 404. #}
+{% if related_city or related_landings %}
+<nav class="muted" aria-label="{% trans 'Explore' %}" style="margin:1rem 0">
+  {% if related_landings %}<p>{% trans "Find more to do here:" %}
+    {% for l in related_landings %}<a href="{{ l.url }}">{{ l.name }}</a>{% if not forloop.last %} &middot; {% endif %}{% endfor %}</p>{% endif %}
+  {% if related_city %}<p><a href="{{ related_city.url }}">{% blocktrans with city=related_city.name %}Discover more in {{ city }} &rarr;{% endblocktrans %}</a></p>{% endif %}
+</nav>
+{% endif %}
+
 {% if user.is_authenticated %}
   <p style="margin-top:1rem">
     <a class="btn" href="{% url 'activity_create' %}?place={{ place.pk }}">{% trans "Organise an activity here" %}</a>

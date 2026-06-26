@@ -1022,6 +1022,13 @@ def places_list(request):
             r for r in accessibility_facts_display(p) if r["state"] in ("true", "limited")
         ]
         p.access_match = matches_access_preference(accessibility_facts(p), pref) == "match"
+    from apps.web.structured_data import itemlist_ld, ld_json, place_entries
+
+    # ItemList of the listed venues so an answer engine can extract them (public places only).
+    structured_data = ld_json(itemlist_ld(place_entries(capped), request)) if capped else None
+    # A filtered/proximity result page is thin/duplicate/personalised — keep it out of the index;
+    # the canonical unfiltered list stays indexable. Still crawled (follow) for its links.
+    filtered = point is not None or any(request.GET.get(k) for k in ("activity", "city", "source"))
     return render(
         request,
         "web/places_list.html",
@@ -1029,6 +1036,8 @@ def places_list(request):
             "places": capped,
             "near_active": point is not None,
             "truncated": len(capped) == 200,
+            "structured_data": structured_data,
+            "filtered": filtered,
             "filters": {
                 "activity": request.GET.get("activity", ""),
                 "city": request.GET.get("city", ""),
@@ -1107,6 +1116,8 @@ def place_detail(request, pk, slug=None):
     # pending F25 place is viewable solely by its proposer/staff and must not be advertised).
     structured_data = None
     breadcrumb_data = None
+    related_city = None
+    related_landings = []
     # SEO: the bare /places/<pk>/ and any decorative slug all render 200; the canonical <link>
     # (+ og:url, sitemap, JSON-LD, internal links) point at the keyword-rich slugged path, so
     # search engines consolidate to one URL with no redirect. Pending places keep the default
@@ -1115,9 +1126,11 @@ def place_detail(request, pk, slug=None):
     if is_public:
         from django.utils.translation import gettext
 
+        from apps.web.landing import related_landings_for_place
         from apps.web.structured_data import breadcrumb_ld, ld_json, place_ld
 
-        structured_data = ld_json(place_ld(place, request))
+        # Embed the venue's upcoming public events in the Place JSON-LD ("what's on at X").
+        structured_data = ld_json(place_ld(place, request, events=events))
         breadcrumb_data = ld_json(
             breadcrumb_ld(
                 [
@@ -1128,6 +1141,8 @@ def place_detail(request, pk, slug=None):
                 request,
             )
         )
+        # Internal links to the city×activity landing pages this venue belongs to (no dead links).
+        related_city, related_landings = related_landings_for_place(place)
     return render(
         request,
         "web/place_detail.html",
@@ -1135,6 +1150,8 @@ def place_detail(request, pk, slug=None):
             "place": place,
             "structured_data": structured_data,
             "breadcrumb_data": breadcrumb_data,
+            "related_city": related_city,
+            "related_landings": related_landings,
             "canonical_url": canonical_override,
             "place_brief": place_brief,
             "meetups": meetups,
@@ -2887,16 +2904,26 @@ def events_list(request):
     # correctly dropped once an area is chosen — no NULL-IN leak). Order stays soonest-first.
     if area is not None:
         events = events.filter(_area_place_q(area))
+    from apps.web.structured_data import event_entries, itemlist_ld, ld_json
+
+    events = list(events[:100])
+    # ItemList so an answer engine can extract the visible list directly (public events only).
+    structured_data = ld_json(itemlist_ld(event_entries(events), request)) if events else None
+    # A filtered/search result page is thin/duplicate — keep it out of the index (the canonical
+    # unfiltered list stays indexable). The page is still crawled (follow) for its links.
+    filtered = bool(query or activity or area_slug)
     return render(
         request,
         "web/events.html",
         {
-            "events": events[:100],
+            "events": events,
             "activity": activity,
             "query": query,
             "areas": Area.objects.order_by("name"),
             "area": area.slug if area else "",
             "area_name": area.name if area else "",
+            "structured_data": structured_data,
+            "filtered": filtered,
             **_nav_context(request.user),
         },
     )
@@ -2952,7 +2979,7 @@ def things_to_do(request, area_slug, activity_slug):
     from apps.taxonomy.models import ActivityType
     from apps.web.landing import landing_supply
     from apps.web.seo import cache_public
-    from apps.web.structured_data import breadcrumb_ld, itemlist_ld, ld_json
+    from apps.web.structured_data import breadcrumb_ld, event_entries, itemlist_ld, ld_json
 
     area = get_object_or_404(Area, slug=area_slug, is_active=True)
     activity_type = get_object_or_404(ActivityType, slug=activity_slug, is_active=True)
@@ -2962,7 +2989,7 @@ def things_to_do(request, area_slug, activity_slug):
     if not (places or events):
         raise Http404("Nothing here yet.")
     # ItemList of the upcoming events so answer engines can extract the list directly.
-    structured_data = ld_json(itemlist_ld(events, request)) if events else None
+    structured_data = ld_json(itemlist_ld(event_entries(events), request)) if events else None
     breadcrumb_data = ld_json(
         breadcrumb_ld(
             [
@@ -3040,9 +3067,11 @@ def event_detail(request, pk, slug=None):
     # staff-only and must not be advertised to crawlers).
     structured_data = None
     breadcrumb_data = None
+    related_landing = None
     if is_public_event:
         from django.utils.translation import gettext
 
+        from apps.web.landing import landing_for_event
         from apps.web.structured_data import breadcrumb_ld, event_ld, ld_json
 
         structured_data = ld_json(event_ld(event, request))
@@ -3056,6 +3085,8 @@ def event_detail(request, pk, slug=None):
                 request,
             )
         )
+        # Internal link to the city×activity landing this event belongs to (always live supply).
+        related_landing = landing_for_event(event)
     return render(
         request,
         "web/event_detail.html",
@@ -3063,6 +3094,7 @@ def event_detail(request, pk, slug=None):
             "event": event,
             "structured_data": structured_data,
             "breadcrumb_data": breadcrumb_data,
+            "related_landing": related_landing,
             "canonical_url": canonical_override,
             "event_reliability": event_reliability(event),
             "attribution_credit": event_attribution(event),

@@ -12,12 +12,18 @@
      text-only OpenGraph (no og:image — the product is text-first). Pages override meta_description
      and og_type; structured_data carries schema.org JSON-LD on place/event/home.{% endcomment %}
   <meta name="description" content="{% block meta_description %}{% trans "A nonprofit, text-first way to meet up in person for real group activities at real places. First city: Cluj-Napoca." %}{% endblock %}">
+  {% comment %}Index hygiene: thin/filtered result pages override meta_robots to "noindex, follow"
+     so only canonical pages are indexed (the page is still crawled for its links).{% endcomment %}
+  <meta name="robots" content="{% block meta_robots %}index, follow{% endblock %}">
   <link rel="canonical" href="{{ canonical_url }}">
   <meta property="og:site_name" content="{{ site_name }}">
   <meta property="og:type" content="{% block og_type %}website{% endblock %}">
   <meta property="og:title" content="{% block og_title %}{% trans "Social Activities" %}{% endblock %}">
   <meta property="og:description" content="{% block og_description %}{% trans "A nonprofit, text-first way to meet up in person for real group activities at real places." %}{% endblock %}">
   <meta property="og:url" content="{{ canonical_url }}">
+  <meta property="og:locale" content="{{ og_locale }}">
+  {% comment %}Text-first: a summary card (no large image — there is no og:image by design).{% endcomment %}
+  <meta name="twitter:card" content="summary">
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
   {% block structured_data %}{% endblock %}
   {% if breadcrumb_data %}<script type="application/ld+json">{{ breadcrumb_data }}</script>{% endif %}

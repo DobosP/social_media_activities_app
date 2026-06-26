@@ -23,6 +23,7 @@
 {% endif %}
 {% if event.description %}<p>{{ event.description|linebreaks }}</p>{% endif %}
 {% if event.url|safe_href %}<p><a href="{{ event.url|safe_href }}" rel="noopener noreferrer" target="_blank">{% trans "Event website &rarr;" %}</a></p>{% endif %}
+{% if related_landing %}<p class="muted">{% blocktrans with name=related_landing.name url=related_landing.url %}More: <a href="{{ url }}">{{ name }}</a>{% endblocktrans %}</p>{% endif %}
 {% if attribution_credit %}
   <p class="muted" style="font-size:.85rem">
     {% trans "Source credit:" %}
