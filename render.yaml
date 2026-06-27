@@ -22,7 +22,7 @@ services:
     plan: free
     region: frankfurt
     dockerfilePath: ./Dockerfile
-    healthCheckPath: /healthz
+    healthCheckPath: /readyz
     # daphne (ASGI) serves the REST API AND the chat WebSockets from one process.
     dockerCommand: daphne -b 0.0.0.0 -p $PORT config.asgi:application
     # Runs once per deploy before traffic shifts; GeoDjango auto-enables the PostGIS
@@ -47,6 +47,8 @@ services:
       - key: EUDI_SANDBOX
         value: "False"
       - key: EUDI_TRUSTED_ISSUERS # JSON {issuer: PEM} — operator-supplied secret
+        sync: false
+      - key: METRICS_TOKEN # bearer token for /metrics scrapes
         sync: false
       # Optional: set REDIS_URL + DJANGO_REQUIRE_SHARED_STATE=True when scaling beyond one
       # process; ALLOW_MINOR_ONBOARDING stays False until a verifiable trust anchor + DPIA.

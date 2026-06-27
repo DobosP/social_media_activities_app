@@ -44,7 +44,23 @@ def submit_urls(urls) -> bool:
         from apps.safety.net import safe_get
 
         safe_get(INDEXNOW_ENDPOINT, method="POST", json=payload, timeout=10, max_bytes=1024 * 64)
+        _report_summary(submitted=len(payload["urlList"]), failed=0)
         return True
     except Exception:  # noqa: BLE001 — best-effort; log and move on
         logger.warning("IndexNow submit failed", exc_info=True)
+        _report_summary(submitted=0, failed=len(payload["urlList"]))
         return False
+
+
+def _report_summary(*, submitted: int, failed: int) -> None:
+    status = "ok" if failed == 0 else "failed"
+    logger.info(
+        "IndexNow submit summary status=%s submitted=%d failed=%d",
+        status,
+        submitted,
+        failed,
+    )
+    if getattr(settings, "OPS_HEARTBEAT_URL", ""):
+        from apps.ops.heartbeat import ping_heartbeat
+
+        ping_heartbeat({"status": status, "submitted": submitted, "failed": failed})

@@ -119,17 +119,9 @@ class Command(BaseCommand):
 
     def _heartbeat(self):
         """Dead-man's-switch: GET OPS_HEARTBEAT_URL (e.g. a healthchecks.io ping). Best-effort."""
-        from django.conf import settings
+        from apps.ops.heartbeat import ping_heartbeat
 
-        url = getattr(settings, "OPS_HEARTBEAT_URL", "")
-        if not url:
-            return
-        try:
-            import requests
-
-            requests.get(url, timeout=10)
-        except Exception:  # noqa: BLE001 — a heartbeat failure must not fail the run
-            pass
+        ping_heartbeat()
 
     def _jobs(self, options):
         """Resolve the job list, threading optional per-job arguments."""

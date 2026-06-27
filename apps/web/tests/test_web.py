@@ -136,6 +136,28 @@ def test_interests_save_and_show_on_profile():
     assert profile.status_code == 200
 
 
+def test_profile_does_not_leak_another_users_progression():
+    other = _user("web-progression-other")
+    viewer = _user("web-progression-viewer")
+    c = _client(viewer)
+
+    other_profile = c.get(f"/profile/{other.pk}/")
+    assert other_profile.status_code == 404
+    assert other.username.encode() not in other_profile.content
+    assert b"progression" not in other_profile.content
+    assert b"intensity" not in other_profile.content
+
+    profile = c.get("/profile/")
+
+    assert profile.status_code == 200
+    body = profile.content.decode()
+    assert other.username not in body
+    assert f"/profile/{other.pk}/" not in body
+    assert "progression_level" not in body
+    assert "progression_intensity" not in body
+    assert "intensity" not in body
+
+
 def test_cohort_isolation_detail_404_for_other_cohort():
     owner = _user("web-adult")
     activity = create_activity(

@@ -224,6 +224,41 @@ def test_submit_urls_posts_when_enabled():
 
 
 @override_settings(
+    INDEXNOW_ENABLED=True,
+    INDEXNOW_KEY="abc123key",
+    SITE_BASE_URL="https://meet.example.eu",
+    OPS_HEARTBEAT_URL="https://ping.example/indexnow",
+)
+def test_submit_urls_pings_heartbeat_summary_when_configured():
+    from apps.web import indexnow
+
+    with (
+        mock.patch("apps.safety.net.safe_get") as sg,
+        mock.patch("apps.ops.heartbeat.ping_heartbeat") as heartbeat,
+    ):
+        assert indexnow.submit_urls(["https://meet.example.eu/places/1/central-park/"]) is True
+        sg.assert_called_once()
+        heartbeat.assert_called_once_with({"status": "ok", "submitted": 1, "failed": 0})
+
+
+@override_settings(
+    INDEXNOW_ENABLED=True,
+    INDEXNOW_KEY="abc123key",
+    SITE_BASE_URL="https://meet.example.eu",
+    OPS_HEARTBEAT_URL="https://ping.example/indexnow",
+)
+def test_submit_urls_pings_failure_summary_when_submit_fails():
+    from apps.web import indexnow
+
+    with (
+        mock.patch("apps.safety.net.safe_get", side_effect=RuntimeError("network down")),
+        mock.patch("apps.ops.heartbeat.ping_heartbeat") as heartbeat,
+    ):
+        assert indexnow.submit_urls(["https://meet.example.eu/places/1/central-park/"]) is False
+        heartbeat.assert_called_once_with({"status": "failed", "submitted": 0, "failed": 1})
+
+
+@override_settings(
     INDEXNOW_ENABLED=True, INDEXNOW_KEY="abc123key", SITE_BASE_URL="https://meet.example.eu"
 )
 def test_submit_urls_blocks_a_private_endpoint_before_any_network(monkeypatch):
