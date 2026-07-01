@@ -20,9 +20,9 @@ autobahn==25.12.2
     # via daphne
 automat==25.4.16
     # via twisted
-boto3==1.43.36
+boto3==1.43.38
     # via -r requirements.in
-botocore==1.43.36
+botocore==1.43.38
     # via
     #   boto3
     #   s3transfer
