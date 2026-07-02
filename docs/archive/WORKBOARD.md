@@ -1,3 +1,8 @@
+> **COMPLETED (2026-07-02):** every track on this board is merged (Phase 1 D1–D10 + the Phase-2
+> tracks). The multi-agent workboard/branch-claim workflow itself is superseded by the fleet
+> `AGENTS.md` (2026-06-24; single-session cadence, no push/merge without Paul's ask) — see
+> `../../STATUS.md` for current state. Historical registry.
+
 # Workboard — who is building what
 
 Live registry of active work so parallel **sessions/agents don't collide**. It is the

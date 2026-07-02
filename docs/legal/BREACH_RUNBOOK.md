@@ -54,4 +54,4 @@ Tabletop-rehearse this runbook before onboarding minors; record the date and gap
 L-CSAM-SOP, breach-runbook are launch-blockers.)
 
 *Uncertainties requiring counsel: exact ANSPDCP form, IGPR/INHOPE route, DSA Art.18 applicability —
-see `docs/AUDIT_STRESS_2026-05-29.md` §4.*
+see `docs/archive/AUDIT_STRESS_2026-05-29.md` §4.*

@@ -4,7 +4,8 @@ Operator guide for the four features merged in #65 (identity uniqueness, tiered 
 authority referral, anonymous adult-only discovery, self-only progression). All four are in
 `main`; the production-sensitive ones ship **dark behind a flag** and are listed here with the
 exact env var, default, prerequisite, and what flipping it does. Feature behaviour itself is
-documented in `CLAUDE.md` ("Show-up & safety" feature set) and the code; this doc is only how to
+documented in `FEATURES_BUILT.md` (the built-feature catalog, moved out of `CLAUDE.md`
+2026-07-02) and the code; this doc is only how to
 turn it on safely.
 
 ## Feature flags

@@ -38,7 +38,7 @@ WebSocket chat is active. Start on CX22 if you are pinching pennies, size up to 
 steal becomes visible.
 
 > The full product engine is deliberately **deterministic / no-ML** (thread digests, draft
-> text, communities are template/predicate-based — see `CLAUDE.md`), so a 2-vCPU/4-GB box with
+> text, communities are template/predicate-based — see `FEATURES_BUILT.md`), so a 2-vCPU/4-GB box with
 > co-located Postgres comfortably serves a single-city launch. No worker fleet, no Kubernetes.
 
 ---
@@ -349,8 +349,8 @@ Backblaze B2 all work unchanged.
 
 **How blobs are exposed:** never publicly. Objects are private; they are served only through a
 **signed, expiring, per-viewer, membership-scoped URL** (`MEDIA_SIGNED_URL_TTL`, default
-**300 s** — `base.py`), via the `AttachmentFileView` / signed-token path described in `CLAUDE.md`
-("Group-thread media"). PDFs are **adults-only** (`MEDIA_FILE_COHORTS`, default `["adult"]`) and
+**300 s** — `base.py`), via the `AttachmentFileView` / signed-token path described in
+`FEATURES_BUILT.md` ("Group-thread media"). PDFs are **adults-only** (`MEDIA_FILE_COHORTS`, default `["adult"]`) and
 force-downloaded. So bucket configuration is simply: **private bucket, no public read** — the
 app mints short-lived URLs; you never set an object ACL to public.
 
@@ -361,12 +361,18 @@ app mints short-lived URLs; you never set an object ACL to public.
 | **Hetzner Object Storage** *(recommended at launch)* | **EU-owned (DE/FI)** | ~€1/TB after 1 TB included | Simplest — same vendor/region as the box; no extra processor; EU residency is unambiguous. Use `MEDIA_S3_ADDRESSING_STYLE=virtual`. |
 | Cloudflare R2 | US processor, **EU-jurisdiction flag** available | **$0 egress** | Cheapest if media bandwidth ever explodes; but US-owned → needs a **DPA + SCCs**, and you must set the EU-jurisdiction flag on the bucket. The `.env.example` already shows an R2 endpoint as an example. |
 | Backblaze B2 (EU region) | US processor, EU region | metered | Cheap storage; US-owned → DPA/SCCs; less in-stack than Hetzner. |
-| MinIO (self-host) | wherever you run it | n/a | Only worth it if you want blobs on the *same box*; loses the "blobs survive a box rebuild" property — not recommended over Hetzner Object Storage at this price. |
+| MinIO (self-host) | wherever you run it | n/a | **BANNED org-wide** (upstream repo archived 2026-02 — see `unified-deployment-architecture/docs/infrastructure-decision.md`); do not deploy. Also loses the "blobs survive a box rebuild" property. |
 
 **Recommendation:** **Hetzner Object Storage at launch** (in-stack, EU-owned, residency trivially
 satisfied). Switch to **Cloudflare R2** *only if* media egress ever grows enough that zero-egress
 pricing dominates — at which point sign an R2 DPA + set the EU-jurisdiction flag, and the
 `prod.py` guardrail is satisfied by R2's `endpoint_url` even without an `eu*` region string.
+
+> **Org-rule caveat (2026-07-02):** the R2 fallback above can never apply to this app's user media.
+> Org-wide, Cloudflare R2 serves ONLY the public, non-personal Gold corpus — anything
+> borderline-personal, **including minors' media, never goes to R2**, DPA or not (see
+> `unified-deployment-architecture/docs/infrastructure-decision.md`). If egress economics ever bite,
+> the escape hatch is another EU-owned S3 provider, not R2.
 
 ### Backups: `pg_dump` → object storage
 
@@ -465,7 +471,7 @@ their managed Postgres before committing, same as you would for Render.
       bucket; `ALLOW_MINOR_ONBOARDING=False` until a verifiable trust anchor + DPIA. Never send
       minor-related text to a non-EU AI endpoint.
 - [ ] **App-level GDPR/DSA flows are already built** — GDPR **erasure** lives in the `ops` app;
-      DSA Art.16/17 notice + moderation flows are in `safety`/`notifications` (see `CLAUDE.md`).
+      DSA Art.16/17 notice + moderation flows are in `safety`/`notifications` (see `FEATURES_BUILT.md`).
       Hosting must keep the daily `run_due_jobs` timer alive so retention/suspension-lift actually run.
 - [ ] **TLS + secure transport** — Caddy/nginx Let's Encrypt; `prod.py` already enforces
       `SECURE_SSL_REDIRECT`, HSTS (1 yr), secure cookies, `X-Forwarded-Proto`.

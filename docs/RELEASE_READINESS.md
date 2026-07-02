@@ -4,7 +4,7 @@ Maps the launch gate in [SAFETY](SAFETY.md) (and the brief) to where each contro
 implemented and verified. Status reflects code on `main`.
 
 > **2026-05 audit correction.** This gate was reconciled against the code in
-> [AUDIT_2026-05](AUDIT_2026-05.md). Two prior claims here were **wrong**: a full **D10
+> [AUDIT_2026-05](archive/AUDIT_2026-05.md) (archived). Two prior claims here were **wrong**: a full **D10
 > direct/group messaging** subsystem *does* exist (the old "no DM system exists" line is
 > removed below), and image scanning was a **no-op** as shipped. Both are corrected, and
 > the messaging consent/cohort gaps were fixed (Wave 0). Several launch-blockers remain
@@ -33,7 +33,7 @@ implemented and verified. Status reflects code on `main`.
 | Liveness/readiness probe | `GET /healthz` (`apps/ops`) | ✅ |
 | Privacy-respecting (aggregate-only) observability | `GET /api/ops/stats` staff-only; no per-user analytics (IS-6) | ✅ |
 | Donation funding (no ads, no tracking) | `apps/donations` (pluggable provider, no card data stored; deep-link default + **Stripe Checkout** provider) | ✅ |
-| Media blobs in object storage (prod scale) | `apps/media/storage.S3StorageBackend` (S3 / Cloudflare R2 / MinIO); set `MEDIA_STORAGE_BACKEND` + `MEDIA_S3_BUCKET` | ✅ available |
+| Media blobs in object storage (prod scale) | `apps/media/storage.S3StorageBackend` (S3-compatible; Hetzner Object Storage per [HOSTING_EU](HOSTING_EU.md)); set `MEDIA_STORAGE_BACKEND` + `MEDIA_S3_BUCKET` | ✅ available |
 | Real-time chat served in prod (ASGI) | `Dockerfile` runs `daphne config.asgi` | ✅ |
 | CI gate (ruff, format, migrations, tests, pip-audit, docker build) | `.github/workflows` | ✅ |
 | Backups / restore, cost controls, CDN | see [RUNBOOK](RUNBOOK.md) | 📋 documented (provisioning is a deploy-time task) |
@@ -56,7 +56,7 @@ tracked here, not code:
 The **core child-safety invariants** (cohort isolation, consent-gated participation incl.
 messaging, guardian read-only, blocking, fail-closed media) are implemented, integrated,
 and covered by regression tests. **However, the engineering gate is not yet fully met:**
-the 2026-05 audit ([AUDIT_2026-05](AUDIT_2026-05.md)) found launch-blockers that remain
+the 2026-05 audit ([AUDIT_2026-05](archive/AUDIT_2026-05.md), archived) found launch-blockers that remain
 open (Wave 1) — no shared cache so rate-limits/channel-layer are per-process; no
 brute-force protection on login; retention/suspension purges are not scheduled in the
 deploy; and no GDPR erasure path. Those plus **deployment provisioning** and

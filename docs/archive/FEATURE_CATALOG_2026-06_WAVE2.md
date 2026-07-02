@@ -1,3 +1,7 @@
+> **COMPLETED (2026-07-02):** ideation record — the starter set (W2-F1/F5/F6/F8/F32) shipped, and
+> code markers show further W2 items landed (W2-F9/F10/F11/F14/F22/F26/F27/F33/F34). Unshipped
+> candidates are backlog-only, not commitments — current state: `../../STATUS.md`.
+
 # Feature catalog — 2026-06 ideation, WAVE 2
 
 > Produced by the feature-ideation-catalog workflow (111 agents): map → ideate (11 lenses)

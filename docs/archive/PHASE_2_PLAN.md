@@ -1,3 +1,8 @@
+> **COMPLETED (2026-07-02):** the P1–P7 tracks shipped (discovery/feed API, data providers,
+> pgvector recommendations, notifications, legal drafts in `../legal/`, RO/EN i18n, threat model +
+> security review) — see `../../STATUS.md` and `../PRODUCTION_READINESS.md` for the current state;
+> what remains is operational substrate + legal sign-off, not Phase-2 feature work.
+
 # Phase 2 plan — from "built" to "launched & loved"
 
 Phase 1 delivered the **whole product engine**: identity/age-cohorts + consent, the

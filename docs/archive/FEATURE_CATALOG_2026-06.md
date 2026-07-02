@@ -1,3 +1,7 @@
+> **COMPLETED (2026-07-02):** essentially fully shipped — F1–F9, F11–F22, F25–F43 merged (per the
+> WAVE-2 catalog header); F10 unshipped, F23/F24 deferred pending Stripe production activation.
+> Historical ideation record — current state: `../../STATUS.md`.
+
 # Feature catalog — 2026-06 ideation
 
 > Produced by the feature-ideation-catalog workflow (105 agents): map → ideate (11 lenses)

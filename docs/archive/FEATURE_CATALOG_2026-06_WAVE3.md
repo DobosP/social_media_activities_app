@@ -1,3 +1,7 @@
+> **COMPLETED (2026-07-02):** ideation record — W3-F1/F16 shipped first (per the WAVE-4 header) and
+> code markers show most of W3-F1..F20 landed (all except F12/F17). Unshipped candidates are
+> backlog-only, not commitments — current state: `../../STATUS.md`.
+
 # Feature catalog — 2026-06 ideation, WAVE 3
 
 > Produced by the feature-ideation-catalog workflow: map → ideate (per-theme lenses) →

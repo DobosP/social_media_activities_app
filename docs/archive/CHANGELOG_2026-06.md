@@ -1,3 +1,6 @@
+> **COMPLETED (2026-07-02):** immutable dated changelog of the 2026-06-07/08 session — current
+> state lives in `../../STATUS.md`.
+
 # Changelog — 2026-06 session
 
 What shipped in the 2026-06-07/08 session, in order. Each item was built as its own branch and

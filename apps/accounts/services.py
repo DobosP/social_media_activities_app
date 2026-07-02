@@ -204,7 +204,7 @@ def minor_onboarding_enabled() -> bool:
     """Whether this deployment permits onboarding minors (guardian-linking + consent).
     OFF in production by default until a real parental-responsibility trust anchor exists
     (the mutual-click guardian link is not verifiable proof of a parent-child relationship).
-    See settings.ALLOW_MINOR_ONBOARDING and docs/AUDIT_STRESS_2026-05-29.md (L-GUARDIAN)."""
+    See settings.ALLOW_MINOR_ONBOARDING and docs/archive/AUDIT_STRESS_2026-05-29.md (L-GUARDIAN)."""
     return getattr(settings, "ALLOW_MINOR_ONBOARDING", True)
 
 

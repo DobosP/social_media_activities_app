@@ -6,7 +6,9 @@ Operational guide for running the service in production. Pairs with
 ## Deployment
 
 - **Topology (beta, one city):** single EU VPS → managed EU Postgres (PostGIS) as load
-  grows; object storage (R2/MinIO) for media blobs; CDN for static assets.
+  grows; object storage (Hetzner Object Storage, EU — see [HOSTING_EU](HOSTING_EU.md);
+  minors' media never goes to R2, MinIO is banned org-wide) for media blobs; CDN for
+  static assets.
 - **App server:** ASGI via `daphne config.asgi:application` (the `Dockerfile` default) so
   WebSocket chat works. Behind TLS-terminating reverse proxy; `SECURE_PROXY_SSL_HEADER`
   is set in `config/settings/prod.py`.

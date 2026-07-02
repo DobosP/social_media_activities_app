@@ -1,3 +1,7 @@
+> **COMPLETED (2026-07-02):** ideation record — 13 of 31 candidates landed (code markers
+> W4-F1–F5/F11/F12/F14/F18/F22/F24/F30/F31); the rest are backlog-only, not commitments — current
+> state: `../../STATUS.md`.
+
 # Feature catalog — 2026-06 ideation, WAVE 4
 
 > Produced by the feature-ideation-catalog workflow: map → ideate (per-theme lenses) →

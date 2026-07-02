@@ -8,7 +8,8 @@ Design notes tied to the hard invariants:
   "people you may know" feed (that would be an engagement pattern + a targeting surface).
 - CONNECTIONS ARE COHORT-ISOLATED. ``can_connect`` requires the same cohort AND a shared
   activity (activities are cohort-pinned), so an adult<->minor connection is impossible — the
-  same guarantee ``messaging.can_message`` makes. Minors are gated OFF at launch by setting.
+  same guarantee ``messaging.can_message`` makes. All cohorts are enabled by default, each
+  within its own cohort; UNASSIGNED is never allowed (see ``_allowed_cohorts``).
 - NO BEHAVIOURAL ROLLUP. Eligibility is derived live from ``social.Membership``; the
   Connection row stores no counts / "met N times" / reliability.
 """

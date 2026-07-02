@@ -5,21 +5,26 @@ A nonprofit, open-source platform for organizing **in-person** activities — sp
 people to real physical places. Text-first and deliberately the opposite of image-perfect /
 short-video social media.
 
-This repository now implements the **full product engine (D1–D10)**: the foundation +
-Romanian place data, identity / age-cohorts + parental consent, the social core with
-join-by-vote, safety/moderation, per-activity chat, **end-to-end-encrypted direct & group
-messaging**, private media, richer place/event data, booking, donations/ops, a
-server-rendered web UI, notifications and recommendations. It is **not yet
-production-ready** — see the **[2026-05 audit](docs/AUDIT_2026-05.md)** for the verified
-state, the remaining launch-blockers, and the child-safety hardening in progress.
+This repository now implements the **full product engine (D1–D10 + four feature waves)**: the
+foundation + Romanian place data, identity / age-cohorts + parental consent, the social core
+with join-by-vote, safety/moderation, the unified activity thread with live delivery,
+**end-to-end-encrypted direct & group messaging**, private media, richer place/event data,
+booking, donations/ops, a server-rendered web UI, notifications and recommendations. It is
+**not yet launched** — current state lives in **[STATUS.md](STATUS.md)**; the remaining
+operational/legal gaps are in **[docs/PRODUCTION_READINESS.md](docs/PRODUCTION_READINESS.md)**.
 
 ## Stack
 
-- **Django 5.1 + Django REST Framework** (+ `djangorestframework-gis`, `django-filter`)
+- **Django 5.2 LTS + Django REST Framework** (+ `djangorestframework-gis`, `django-filter`)
 - **PostgreSQL + PostGIS** via **GeoDjango** — the single primary datastore (relational +
-  geospatial + graph; no separate graph DB)
-- **OpenStreetMap / Overpass** as the first (free) place-data source; an Overture adapter
-  seam is stubbed for later
+  geospatial + graph + `pgvector`; no separate graph/vector DB)
+- **ASGI/Channels** for real-time thread delivery; S3-compatible object storage for blobs
+- **OpenStreetMap / Overpass** as the first (free) place-data source, plus Overture, the
+  RO-EDU data platform, and events feeds — see [docs/DATA_PROVIDERS.md](docs/DATA_PROVIDERS.md)
+- **Deploy:** the launch target is a **single Hetzner EU box + Hetzner Object Storage** via
+  `deploy/` (Terraform + cloud-init) — see [docs/HOSTING_EU.md](docs/HOSTING_EU.md) and
+  `docs/adr/0001`. `render.yaml` is a **free-tier demo only**. The org-level hosting-provider
+  procurement is intentionally **not yet finalized**; the IaC has never been applied.
 
 ## Quick start (Docker)
 
@@ -28,6 +33,23 @@ docker compose up --build
 # web runs migrations (incl. the activity taxonomy seed) then serves http://localhost:8000
 docker compose exec web python manage.py createsuperuser   # for /admin
 ```
+
+### Local variant: host already runs Postgres on 5432 (dev machines)
+
+Use the untracked `docker-compose.local.yml` (its db exposes no host port):
+
+```bash
+docker compose -f docker-compose.local.yml up -d          # NOTE: no --build (see below)
+# pgvector once: exec -T db bash -lc "apt-get update && apt-get install -y postgresql-16-pgvector"
+docker compose -f docker-compose.local.yml exec -T web pip install -r requirements-dev.txt
+docker compose -f docker-compose.local.yml exec -T \
+  -e DJANGO_SETTINGS_MODULE=config.settings.test -e DJANGO_SECRET_KEY=ci-secret-not-for-prod \
+  -e DATABASE_URL=postgis://app:app@db:5432/app web pytest -q
+```
+
+The compose volume-mounts `./:/app`, so the running container always uses current code (no rebuild
+needed). The production image installs `requirements.txt` only (no pytest) — install dev deps as
+above. CI gates are listed in `CLAUDE.md`; targeted test commands in `docs/agent-testing.md`.
 
 ## Quick start (local, no Docker)
 
@@ -104,12 +126,13 @@ Dependencies are fully pinned (compiled from `requirements*.in`) and tracked for
 **Full roadmap & design docs live in [`docs/`](docs/README.md)** — the phased plan (D1–D9) with a
 dependency graph and feature traceability is in [`docs/ROADMAP.md`](docs/ROADMAP.md); see also
 [ARCHITECTURE](docs/ARCHITECTURE.md), [COMPLIANCE](docs/COMPLIANCE.md), [SAFETY](docs/SAFETY.md),
-[SECURITY](docs/SECURITY.md), [DATA_AND_INTEGRATIONS](docs/DATA_AND_INTEGRATIONS.md), and
-[MULTI_AGENT_BUILD](docs/MULTI_AGENT_BUILD.md) (parallel multi-agent development).
+[SECURITY](docs/SECURITY.md), and [DATA_AND_INTEGRATIONS](docs/DATA_AND_INTEGRATIONS.md).
+Decisions are recorded in [`docs/adr/`](docs/adr/); dated audits/plans are archived in
+[`docs/archive/`](docs/archive/).
 
 The items below were "later deliverables" when this README was written at D1; **they have
 since been built** (D2–D10). The list is kept for historical context — see
-[docs/ROADMAP.md](docs/ROADMAP.md) and [docs/AUDIT_2026-05.md](docs/AUDIT_2026-05.md) for
+[STATUS.md](STATUS.md) and [docs/PRODUCTION_READINESS.md](docs/PRODUCTION_READINESS.md) for
 current, verified status:
 
 - **Accounts & identity** — pluggable provider integrating the EU **EUDI Wallet** + the EU

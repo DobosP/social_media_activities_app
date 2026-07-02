@@ -3,6 +3,12 @@
 How the system is shaped today (D1) and how every future deliverable plugs into seams that
 already exist. See [ROADMAP](ROADMAP.md) for sequencing.
 
+> **Note (2026-07-02):** the seams below have long since been filled — the full engine
+> (D1–D10 + four feature waves) is built on them. Before building *anything*, read
+> [PRODUCTION_READINESS](PRODUCTION_READINESS.md) **§0 "Already built — do NOT rebuild"**;
+> a generic checklist (or this D1-era map read alone) wrongly flags features that already
+> exist. Deploy target detail: [HOSTING_EU](HOSTING_EU.md) + `adr/0001`.
+
 ## Principles
 
 - **Postgres is the primary datastore.** Relational data, the activity **graph**, and
@@ -101,3 +107,37 @@ user-confirmed/manual edges are never overwritten by re-ingestion.
 - **Relational graph (no graph DB)** — simpler ops, one datastore, fine at this scale; `pgvector`
   later for similarity (D7).
 - **Adapter patterns** (sources, identity, booking) — isolate third parties behind interfaces.
+
+## Working conventions (current, post-D10)
+
+Moved here from `CLAUDE.md` on 2026-07-02 (CLAUDE.md keeps the five-line essence; this is the
+full statement — do not weaken):
+
+- **Domain logic lives in `apps/<app>/services.py`.** Both the DRF views (`apps/<app>/views.py`)
+  and the web views (`apps/web/views.py`) call the *same* service functions, so the safety gates
+  (cohort isolation, consent, blocking) hold identically on both surfaces. Don't put business
+  logic in a view or template — add/extend a service.
+- All state-changing services are `@transaction.atomic`. Audit via the hash-chained log:
+  `from apps.safety.services import record_audit` (it takes a row lock, so call it *inside* the
+  transaction).
+- In-app notifications only: `apps.notifications.services.notify(recipient, kind, title, ...)`.
+  Adding a `Notification.Kind` needs a (no-op) `makemigrations notifications` to keep CI green.
+- Periodic jobs are management commands fanned out by `apps/ops/.../run_due_jobs.py` (`DUE_JOBS`).
+- Cohort isolation: `social.services.visible_activities`/`can_see_activity` gate by the viewer's
+  cohort; `blocked_user_ids(user)` excludes blocked pairs from feeds and notification fan-outs.
+
+### Apps (current)
+
+`taxonomy` (activity graph) · `places` (PostGIS + geo API) · `ingestion` (OSM/Overture adapters)
+· `accounts` (custom User, cohorts, EUDI age assurance, guardian links) · `social` (activities,
+threads, join-by-vote, memberships) · `safety` (reporting, blocking, moderation, audit) · `chat`
+(WebSocket *transport* over the `social.Post` stream — no message store of its own) ·
+`messaging` (E2EE direct/group) · `media` (profile + private photos + thread image/PDF attachments) ·
+`events` (iCal feeds) · `booking` · `discovery` + `recommendations` (feeds, pgvector) ·
+`notifications` · `donations` · `connections` (find/reconnect with people you've shared an
+activity with — the discovery layer in front of `messaging`) · `communities` (derived per-cohort
+geo×type discovery labels, e.g. "Cluj-Napoca Football") ·
+`ops` (`/healthz`, jobs, GDPR erasure) · `web` (server-rendered UI).
+
+Behavioral contracts for every shipped feature (and the invariant gates each one carries):
+[FEATURES_BUILT](FEATURES_BUILT.md).

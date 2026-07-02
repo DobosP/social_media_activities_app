@@ -2,7 +2,7 @@
 
 > **STATUS: DRAFT — for a qualified DPO/lawyer to finalize. NOT legal advice.** Owner column:
 > **E** = engineering (in-repo), **D** = DPO/legal (human artifact). **B** = blocks a public beta
-> with minors. Reconciled with `docs/AUDIT_STRESS_2026-05-29.md`.
+> with minors. Reconciled with `docs/archive/AUDIT_STRESS_2026-05-29.md`.
 
 ## Phase 0 — Governance (D)
 - [ ] **B** Appoint + register a DPO with ANSPDCP; publish contact (replace `dpo@example.org`).
@@ -49,4 +49,4 @@
 
 ## Open uncertainties (counsel must resolve)
 ePrivacy derogation status; CSAR trilogue outcome; EUDI rollout timeline; RO L190/2025 in-force date;
-DSA Art.18 + enterprise-size classification. See `docs/AUDIT_STRESS_2026-05-29.md` §4.
+DSA Art.18 + enterprise-size classification. See `docs/archive/AUDIT_STRESS_2026-05-29.md` §4.

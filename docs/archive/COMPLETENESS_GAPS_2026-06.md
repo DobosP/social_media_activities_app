@@ -1,3 +1,7 @@
+> **SUPERSEDED (2026-07-02):** as the session entry point — new sessions start at the repo-root
+> `STATUS.md`, never here. The open **P0/P1/P2 items below remain the live gap tracker** for the
+> audited 2026-06 feature waves (STATUS.md points here for them).
+
 # Completeness & gap tracker — last-2-sessions features (2026-06-21)
 
 Source: a 10-agent completeness audit of the complex features merged via PRs #64–#71 (the
@@ -16,6 +20,9 @@ Legend: `[x]` done · `[ ]` open · **P0** ship-blocker/correctness · **P1** co
 ---
 
 ## ⏭️ NEXT SESSION — START HERE (updated 2026-06-23)
+
+> **Session entry moved (2026-07-02):** new sessions start at `STATUS.md`, not this file. This doc
+> remains the gap tracker for the audited feature waves (open P0/P1/P2 items below).
 
 **Done & pushed this session** (origin/main @ `6433978`, suite **2151 passed**):
 - Topic-preference feed + SOFT stated topic steering; guardian controls CHILD ward's feed
@@ -38,7 +45,8 @@ All adversarially reviewed before merge. Working tree clean, 0 ahead/behind orig
 
 **Cadence**: `git checkout -b feat/<name>` → build → adversarial review (single agent for small;
 Workflow for complex/safety) → `pytest -q` + `ruff check`/`format --check` + `makemigrations --check`
-→ merge `--no-ff` → push directly (standing user auth for direct-to-main push).
+→ local merge `--no-ff`. The cadence **ends there**: do NOT push/merge unless Paul explicitly
+asks — see `AGENTS.md`.
 
 ---
 

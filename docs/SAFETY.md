@@ -5,6 +5,12 @@ Safety is not a feature bolted on at the end — it's a constraint on every deli
 the reference for those constraints. Primary delivery is **D4**, but the rules here bind D2, D3,
 D5, and D6 too. See [ROADMAP](ROADMAP.md) and [COMPLIANCE](COMPLIANCE.md).
 
+> **Standing release posture:** the 2026-05-29 stress audit's **NO-GO for a public beta with
+> minors** ([archive/AUDIT_STRESS_2026-05-29.md](archive/AUDIT_STRESS_2026-05-29.md) §1) remains
+> the policy baseline — minors stay structurally OFF until DPIA + DPO + verifiable parental
+> consent + a real EUDI trust anchor exist, regardless of engineering progress since
+> ([PRODUCTION_READINESS](PRODUCTION_READINESS.md) §2e).
+
 ## Threat model (who we protect against)
 
 - **Grooming / predatory adults** targeting minors — the top priority.

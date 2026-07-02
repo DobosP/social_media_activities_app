@@ -1,3 +1,8 @@
+> **SUPERSEDED (2026-07-02):** the engineering findings are superseded by
+> `../PRODUCTION_READINESS.md` (code-grounded 2026-06-19). The §1 **NO-GO for a public beta with
+> minors** reasoning remains policy-relevant and is linked from `../SAFETY.md`: minors stay OFF
+> until DPIA + DPO + verifiable parental consent + a real EUDI trust anchor. Immutable dated record.
+
 # Security, Privacy & Child-Safety Audit — Social Activities Platform (`claude/wave1-prod-hardening`)
 
 **Target:** Django 5.2 + DRF + PostGIS in-person-activity platform (Romania/EU, nonprofit, **includes minors**)

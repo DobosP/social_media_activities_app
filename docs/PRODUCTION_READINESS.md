@@ -1,8 +1,12 @@
 # Production-readiness & scalability roadmap
 
-**Code-grounded as of 2026-06-19.** Supersedes the engineering registers in `AUDIT_2026-05.md`,
-`AUDIT_STRESS_2026-05-29.md`, and `PRODUCTION_HARDENING_PLAN_2026-05.md` — most of those
-engineering blockers are now fixed in code (verified). Build on this + `SCALING.md` + `HOSTING_EU.md`.
+**Code-grounded as of 2026-06-19; §0 spot-re-verified 2026-07-02** (SSRF `apps/safety/net.py`,
+HNSW migration `recommendations/0002`, prod `CONN_MAX_AGE`/`statement_timeout`, Redis-flip
+CACHES/CHANNEL_LAYERS all confirmed present; §2b updated — the task-queue foundation shipped
+2026-06-23). Supersedes the engineering registers in `archive/AUDIT_2026-05.md`,
+`archive/AUDIT_STRESS_2026-05-29.md`, and `archive/PRODUCTION_HARDENING_PLAN_2026-05.md`
+(archived 2026-07-02) — most of those engineering blockers are fixed in code (verified).
+Build on this + `SCALING.md` + `HOSTING_EU.md`. Feeds the repo-root `STATUS.md`.
 
 > **Headline:** the product engine (D1–D10 + 4 feature waves) is built and tested (~1900-green
 > suite), and the HTTP path is genuinely **stateless + load-balancer-ready** (DB sessions, opaque
@@ -22,6 +26,10 @@ pgvector ANN index · SSL-redirect + 1-yr HSTS + secure cookies · prod boot ass
 EU media residency, shared-state) · opt-in Sentry (privacy-safe) · `run_due_jobs` retention
 scheduler · RO/EN localization · CI gates (ruff, migrations, `check --deploy`, pytest, docker build,
 weekly pip-audit) · well-indexed hot read paths + `statement_timeout`.
+
+Feature-level behavioral contracts (what each shipped feature guarantees and the invariant gates
+it carries) live in [FEATURES_BUILT.md](FEATURES_BUILT.md) — check it before building any
+"missing" feature.
 
 ---
 
@@ -52,10 +60,11 @@ it's a **provisioning** gap (the shipped `render.yaml` is a free-tier *demo*).
   the `pg_dump`→EU-bucket script (or managed snapshots) and run one real `pg_restore` + smoke test;
   document RTO/RPO; enable bucket versioning for media.
 
-### 2b. Async work substrate (the one genuinely-missing code component)
-- **No task queue exists** (no Celery/Dramatiq/RQ/django-q anywhere). Add one — given the
-  Postgres-primary, no-Redis-by-default design, prefer **django-tasks (Django 5.2 native)** or
-  **procrastinate/django-q2 on the existing Postgres**, or Celery+Redis once Redis is provisioned.
+### 2b. Async work substrate
+- ~~No task queue exists~~ **DONE (2026-06-23): the foundation shipped** — a Postgres-backed
+  `DeferredTask` queue (`apps/ops/tasks.py`, transactional `enqueue`, `SKIP LOCKED` claims,
+  bounded retries) drained by the existing `run_due_jobs` cron. No Celery/Redis-broker by
+  design — see `ASYNC_TASKS.md` + `adr/0003`. **No production task kind is registered yet.**
 - Then move off the request/socket thread: **media safety scanning** (bound it with a strict
   timeout + circuit breaker + a quarantined `pending_scan` state), **GDPR erasure/export** (unbounded
   cascade can hit the request timeout → partial erasure = legal risk), notification fan-out, and the

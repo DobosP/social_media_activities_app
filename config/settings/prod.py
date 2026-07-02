@@ -27,7 +27,7 @@ DEBUG = False
 # Adults-only in production until a real parental-responsibility trust anchor is wired
 # (the mutual-click guardian link is NOT verifiable proof of a parent-child relationship).
 # Explicitly opt in (ALLOW_MINOR_ONBOARDING=True) only after that — and after the DPIA /
-# RO-counsel sign-off. See docs/AUDIT_STRESS_2026-05-29.md (L-GUARDIAN / L-ANCHOR).
+# RO-counsel sign-off. See docs/archive/AUDIT_STRESS_2026-05-29.md (L-GUARDIAN / L-ANCHOR).
 ALLOW_MINOR_ONBOARDING = env.bool("ALLOW_MINOR_ONBOARDING", default=False)
 
 # Fail closed on secrets. base.py ships a dev-only SECRET_KEY default so local/test

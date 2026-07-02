@@ -1,5 +1,15 @@
 # Deploy — reproducible single-box EU stack (Terraform + cloud-init)
 
+> **STATUS (2026-07-02):** the org-level provider decision is **RECOMMENDED, NOT CONFIRMED** — no
+> provider is procured. This IaC has **never been applied**; **no infrastructure exists**. Launch is
+> **HARD-BLOCKED** on the GDPR stack (DPIA + DPO + verifiable parental consent — see the org
+> `unified-deployment-architecture/docs/00-master-plan.md`). Do **NOT** run `terraform apply` (it
+> provisions paid resources) without Paul's explicit go-ahead. The hosting provider is
+> **intentionally not yet decided** (owner note, 2026-07-02): Hetzner and the box sizes named here
+> (CPX22) and in the org plan (CX23) are **candidate sizings, not commitments** — the final
+> provider + size are chosen at procurement time (see `unified-deployment-architecture/docs/adr/`
+> ADR-0002 recommendation + ADR-0004 provider-neutral rule).
+
 Infrastructure-as-code for the recommended cheap, EU-resident launch box in
 [`docs/HOSTING_EU.md`](../docs/HOSTING_EU.md) §3. One `terraform apply` provisions a Hetzner Cloud
 server + firewall, and cloud-init bootstraps the whole stack:

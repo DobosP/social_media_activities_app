@@ -5,6 +5,13 @@ place information as possible so users rarely create places, and **(2)** whether
 **bookings through the app** via providers' REST APIs. See [ROADMAP](ROADMAP.md) D1/D7/D8 and
 [ARCHITECTURE](ARCHITECTURE.md) (adapter seams).
 
+> **As-of note (2026-07-02, May-era doc):** the source landscape has grown since this was
+> written — **RO-EDU** (`romania_scraper` data API) is now a wired places/events ingestion
+> source ([ROEDU_INTEGRATION](ROEDU_INTEGRATION.md), 2026-06); the live provider registry
+> (Foursquare/Ticketmaster/Wikidata/Geofabrik etc.) is [DATA_PROVIDERS](DATA_PROVIDERS.md);
+> and the events pipeline (`apps/events/`, iCal + RO-EDU sync) shipped. The strategy below
+> (free-first, adapter seams, D8 phasing) still stands.
+
 ## Guiding rule: free-first, compute-efficient, cheap
 
 We're a donation-funded nonprofit, so: **open data first**, paid APIs only where they clearly earn

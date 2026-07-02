@@ -11,7 +11,8 @@ but are required to glue the product together safely.
 > actually built; and a few "shipped" items aren't fully reachable (activity-create has no
 > live API route, the place-quorum is admin-only, booking is a demo stub, the web UI isn't
 > translated). The verified state, the open launch-blockers, and the child-safety fixes
-> already applied are in **[AUDIT_2026-05](AUDIT_2026-05.md)** — read it alongside this.
+> already applied are in **[AUDIT_2026-05](archive/AUDIT_2026-05.md)** (archived; superseded by
+> [PRODUCTION_READINESS](PRODUCTION_READINESS.md)) — read those alongside this.
 
 See also: [ARCHITECTURE](ARCHITECTURE.md) · [COMPLIANCE](COMPLIANCE.md) ·
 [SAFETY](SAFETY.md) · [SECURITY](SECURITY.md) · [DATA_AND_INTEGRATIONS](DATA_AND_INTEGRATIONS.md) ·
@@ -185,7 +186,7 @@ These thread through multiple deliverables. Skipping them creates rework or lega
 
 - **Goal.** The *only* images in the product: one profile picture, and photos shared **privately
   inside an activity thread** (visible only to that thread's members). No public photo feed.
-- **Scope.** S3-compatible **object storage** (Cloudflare R2 or self-hosted MinIO) — Postgres
+- **Scope.** S3-compatible **object storage** (Hetzner Object Storage — see [HOSTING_EU](HOSTING_EU.md)) — Postgres
   keeps relational/graph/geo data, blobs go to cheap object storage; upload limits; **image
   safety scanning** (e.g. CSAM hash-matching where lawful) before a photo is visible; EXIF/GPS
   stripping; signed, expiring URLs scoped to thread membership.
@@ -266,10 +267,11 @@ these cross-cutting enhancements have also shipped:
   2026-05 audit; its consent/cohort enforcement gaps were fixed in audit Wave 0.)*
 
 **What remains is partly go-live work — but the 2026-05 audit
-([AUDIT_2026-05](AUDIT_2026-05.md)) also found real engineering launch-blockers in shipped
+([AUDIT_2026-05](archive/AUDIT_2026-05.md), archived) also found real engineering launch-blockers in shipped
 code** (some fixed in "Wave 0"): a shared cache for global rate-limits + WebSocket fan-out,
 brute-force protection on auth, scheduled retention/suspension purges, and a GDPR erasure
-path. Remaining go-live items are in [PHASE_2_PLAN](PHASE_2_PLAN.md): real provider keys
+path. Remaining go-live items were tracked in [PHASE_2_PLAN](archive/PHASE_2_PLAN.md)
+(archived — completed; the live list is [PRODUCTION_READINESS](PRODUCTION_READINESS.md)): real provider keys
 (Foursquare/Ticketmaster/Google), legal/compliance sign-off (DPIA, ToS, DSA), a real CSAM
 scanner, and an independent security review.
 
@@ -280,7 +282,7 @@ scanner, and an independent security review.
 Every feature you described, and where it lives. **Note (2026-05 audit):** the ⏳ marks
 below are stale — the D2/D3/D5/D6/D8 items shown as "planned" are in fact **shipped**
 (and D10 added username-addressable secure messaging on top). See
-[AUDIT_2026-05](AUDIT_2026-05.md) for the verified status and the caveats (e.g. the
+[AUDIT_2026-05](archive/AUDIT_2026-05.md) (archived) for the verified status and the caveats (e.g. the
 activity-create API route and the user-place quorum API are not yet wired).
 
 | Feature from the brief | Deliverable | Status |

@@ -1,3 +1,4 @@
+# DEMO/FALLBACK ONLY — the real launch is deploy/ (Hetzner single box), see docs/HOSTING_EU.md + docs/adr/0001.
 # Render Blueprint: one platform for both the app server and the PostGIS database.
 # Connect this repo in the Render dashboard ("New +" -> "Blueprint") and Render reads
 # this file, provisions the database, builds the Docker image, runs migrations, and

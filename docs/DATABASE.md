@@ -4,6 +4,12 @@ How this project should use **PostgreSQL 16 + PostGIS** (via Django 5.2 + psycop
 so the database stays fast and safe as it grows. Grounded in the current code; pairs
 with [ARCHITECTURE](ARCHITECTURE.md), [SECURITY](SECURITY.md), and [RUNBOOK](RUNBOOK.md).
 
+> **As-of note (2026-07-02, May-era doc):** several ▶️ items below have since landed —
+> `config/settings/prod.py` sets `CONN_MAX_AGE=60` + `CONN_HEALTH_CHECKS` (§1 done) and a 30s
+> `statement_timeout` (§6 done), and §5's pgvector plan shipped (HNSW index,
+> `recommendations/0002`). Verify any recommendation against current settings before acting;
+> live priorities are in [PRODUCTION_READINESS](PRODUCTION_READINESS.md) §3.
+
 Status legend: ✅ in place · ▶️ recommended next · ⏳ later/scale.
 
 ## 1. Connections — reuse them (biggest quick win)
@@ -98,7 +104,8 @@ The schema already declares ~47 indexes/constraints. Principles to keep:
 
 ## 5. pgvector readiness (Phase 2 recommendations)
 
-`PHASE_2_PLAN` P3 plans interest-similarity recommendations with **pgvector**:
+`archive/PHASE_2_PLAN.md` P3 planned interest-similarity recommendations with **pgvector**
+(since shipped — `VectorField` + HNSW index live in `apps/recommendations/`):
 - Add `pgvector` (Postgres extension) via `CreateExtension("vector")`, store embeddings
   in a `VectorField`, and index with **HNSW** (`vector_cosine_ops`) for fast ANN.
 - Keep embeddings in their own table/columns so the core write path isn't slowed.

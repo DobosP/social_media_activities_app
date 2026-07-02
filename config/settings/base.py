@@ -308,7 +308,7 @@ PROGRESSION_AVATAR_PUBLIC = env.bool("PROGRESSION_AVATAR_PUBLIC", default=False)
 # production-grade age/parental-responsibility trust anchor exists yet (EUDI wallets not live;
 # the EU age-verification app was bypassed). So this is ON for dev/test but prod.py defaults
 # it OFF — a prod deploy runs adults-only until a real trust anchor (EUDI guardian flow /
-# national eID / blessed out-of-band process) is wired. See docs/AUDIT_STRESS_2026-05-29.md.
+# national eID / blessed out-of-band process) is wired. See docs/archive/AUDIT_STRESS_2026-05-29.md.
 ALLOW_MINOR_ONBOARDING = env.bool("ALLOW_MINOR_ONBOARDING", default=True)
 
 # F6 re-verify-or-pause sweep: how many days before an age proof lapses to nudge re-verification,
@@ -640,8 +640,9 @@ CONNECTIONS_REQUEST_RATE_WINDOW_SECONDS = env.int(
 )
 
 # W4-F30: cohorts whose members may declare a (non-capacity-counted) support-person companion.
-# Adults only at launch (mirrors CONNECTIONS/GROUPS); a companion is structurally never a contact
-# path, so this is defence-in-depth. UNASSIGNED is discarded in code.
+# Adults only at launch (mirrors GROUPS_USER_CREATION_COHORTS; connections is no longer an
+# adults-only precedent — see docs/adr/0002-cohort-connections-policy.md); a companion is
+# structurally never a contact path, so this is defence-in-depth. UNASSIGNED is discarded in code.
 SUPPORT_COMPANION_COHORTS = env.list("SUPPORT_COMPANION_COHORTS", default=["adult"])
 
 # --- Communities (derived geo x activity-type discovery labels, e.g. "Cluj-Napoca Football") ---
@@ -660,8 +661,9 @@ COMMUNITY_ACTIVITIES_PAGE_SIZE = env.int("COMMUNITY_ACTIVITIES_PAGE_SIZE", defau
 # staff-curated and additionally gated behind ALLOW_MINOR_ONBOARDING — they ship dark in prod.
 GROUPS_ALLOW_USER_CREATED = env.bool("GROUPS_ALLOW_USER_CREATED", default=False)
 # Hard-wall: cohorts whose members may SELF-CREATE a group. CHILD/TEEN/UNASSIGNED are discarded
-# unconditionally in code (create_group), so a minor can never own a group even by misconfig
-# (mirrors CONNECTIONS_ALLOWED_COHORTS). Adults only at launch.
+# unconditionally in code (create_group), so a minor can never own a group even by misconfig.
+# Adults only at launch. (This wall stands on its own — the CONNECTIONS_ALLOWED_COHORTS hard-wall
+# it once mirrored was removed 2026-05-30; see docs/adr/0002-cohort-connections-policy.md.)
 GROUPS_USER_CREATION_COHORTS = env.list("GROUPS_USER_CREATION_COHORTS", default=["adult"])
 # Anti-spam / anti-reconnaissance rate limits (dedicated buckets, distinct from thread_post).
 GROUP_CREATE_RATE_LIMIT = env.int("GROUP_CREATE_RATE_LIMIT", default=5)

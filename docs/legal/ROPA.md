@@ -41,4 +41,28 @@ Cohort isolation; consent gate; E2EE relay; fail-closed media scanning + EXIF st
 cookies; deny-by-default DRF perms; rate limits + body cap + SSRF guard; hash-chained tamper-evident
 audit; GDPR-erasure-resilient audit chain (`actor_ref`).
 
-*Sources/uncertainties: see `docs/AUDIT_STRESS_2026-05-29.md` §4.*
+## 5. KNOWN GAPS in this draft (2026-07-02 — for the DPO to close)
+
+The records above are May-era; the code has moved. Before sign-off, the DPO must reconcile:
+
+1. **P5 is stale**: `CHAT_RETENTION_DAYS`/`purge_chat` were removed — activity-thread posts are
+   now **permanent + audited** (deliberate child-safety retention posture). Rewrite P5's
+   retention basis accordingly.
+2. **P7 recipient is stale**: launch storage decision = **Hetzner Object Storage (EU)** —
+   `docs/adr/0001`; Cloudflare **R2 must never hold user media** (org rule: minors' data
+   EU-owned only). P7 also omits **group-thread attachments** incl. adults-only PDF files
+   (`media.Attachment`) — extend or add a record.
+3. **Hosting processor rows assume Render**: launch target is a Hetzner EU box (`deploy/`,
+   ADR-0001); the org hosting-provider procurement is **not yet final** — fill the processor
+   table only once procured. Render remains a demo-tier fallback.
+4. **Processing added since May with no record yet**: EUDI holder-binding keyed HMAC
+   (`IdentityBinding`) + **`BannedIdentity` ledger that deliberately survives erasure**
+   (needs its own record + Art. 17(3) analysis); authority referrals / proof packs;
+   moderation appeals; connections (mutual opt-in contact); notification preferences;
+   self-declared arrival pings; donation campaigns; public adult-only discovery listing.
+5. **RO-EDU ingestion** (`docs/ROEDU_INTEGRATION.md`): venue/event **facts** from the RO-EDU
+   platform, gated to redistributable + `gdpr_relevant=false` items client-side — confirm the
+   non-personal classification holds (organiser names in event titles?) and record the
+   attribution/licensing obligations.
+
+*Sources/uncertainties: see `docs/archive/AUDIT_STRESS_2026-05-29.md` §4.*

@@ -3,7 +3,7 @@
 > **STATUS: DRAFT — scaffolded from the verified code state for a qualified DPO/lawyer to
 > finalize. NOT legal advice.** A DPIA is **mandatory** here (GDPR Art. 35): large-scale
 > processing of **children's** personal data, age verification, and innovative tech (E2EE).
-> Authoritative technical state: `docs/AUDIT_STRESS_2026-05-29.md`.
+> Authoritative technical state: `docs/archive/AUDIT_STRESS_2026-05-29.md`.
 
 ## 0. Document control
 | | |
@@ -59,4 +59,4 @@ verifiable age/guardianship trust anchor. See `COMPLIANCE_CHECKLIST.md` + the au
 4. DSA Art. 18 criminal-notification duty + enterprise-size classification.
 
 *Items requiring counsel (uncertain): ePrivacy derogation status, CSAR trilogue, EUDI timeline, RO
-L190/2025 in-force date — see `docs/AUDIT_STRESS_2026-05-29.md` §4.*
+L190/2025 in-force date — see `docs/archive/AUDIT_STRESS_2026-05-29.md` §4.*

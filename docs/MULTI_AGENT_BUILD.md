@@ -1,3 +1,9 @@
+> **SUPERSEDED (2026-07-02):** this May-era workboard/branch-claim coordination contract is no
+> longer in use — the fleet-standard `AGENTS.md` (2026-06-24) governs sessions now (read order,
+> one slice per branch/worktree, **no push/merge unless Paul explicitly asks**), and the
+> [WORKBOARD](archive/WORKBOARD.md) is archived with all tracks merged. Kept as a historical
+> reference for the parallel-build pattern.
+
 # Building with multiple agents in parallel
 
 This project is meant to be built by **several Claude Code agents/sessions working concurrently**,
@@ -5,7 +11,7 @@ not one at a time. This doc is the coordination contract: read it **before** sta
 agents don't step on each other. It complements [ROADMAP](ROADMAP.md) (what to build, in what
 order) and [ARCHITECTURE](ARCHITECTURE.md) (the seams).
 
-The live **who-is-building-what registry is [WORKBOARD](WORKBOARD.md)** — read it on `main` and
+The live **who-is-building-what registry is [WORKBOARD](archive/WORKBOARD.md)** — read it on `main` and
 **claim your track there before coding**. Each session is identified by its branch name.
 
 > TL;DR: one agent per **app/module** on its **own branch (or git worktree)**; code against
@@ -55,7 +61,7 @@ isn't parallelism itself — it's the few **shared edit points** and **ordering 
 
 ### What can run concurrently (current snapshot)
 
-Already merged to `main`: **D1**, **IS-2**, **D2 (scaffold)**. Live registry: [WORKBOARD](WORKBOARD.md).
+Already merged to `main`: **D1**, **IS-2**, **D2 (scaffold)**. Live registry: [WORKBOARD](archive/WORKBOARD.md).
 
 | Track | Owns (paths) | Depends on (merged) | Status |
 |---|---|---|---|
@@ -72,7 +78,7 @@ the execution plan below). D4/D5/D6/D8 unblock as their upstreams merge.
 
 ## The workflow per agent
 
-1. **Claim a track** on the [WORKBOARD](WORKBOARD.md) (set branch + status) as your **first commit**,
+1. **Claim a track** on the [WORKBOARD](archive/WORKBOARD.md) (set branch + status) as your **first commit**,
    so other sessions can see it.
 2. **Isolate**: work on a dedicated branch `claude/<track>-<slug>` — the branch name **is** your
    session id — or a **git worktree** (Claude Code's `Agent` tool supports `isolation: "worktree"`)
@@ -93,7 +99,7 @@ synchronize through a few explicit, shared points rather than trying to share li
 
 1. **`main` is the single source of truth.** Everyone branches from `main` and integrates back into
    `main`. Nothing is "done" until it's merged there.
-2. **The [WORKBOARD](WORKBOARD.md) is the shared intent.** Claim your track (branch + owned paths)
+2. **The [WORKBOARD](archive/WORKBOARD.md) is the shared intent.** Claim your track (branch + owned paths)
    before coding; read it before starting so you know what others own. This is how sessions "see"
    each other across branches.
 3. **Ownership keeps branches disjoint.** Stay in your "Owns" paths → branches rarely touch the
@@ -132,10 +138,10 @@ are shared (D3 adds one line each — keep append-only).
 
 Give each new session this (swap in the track):
 
-> You are one of several parallel agents on this repo. **Before coding**, read `docs/WORKBOARD.md`,
+> You are one of several parallel agents on this repo. **Before coding**, read `docs/archive/WORKBOARD.md`,
 > `docs/MULTI_AGENT_BUILD.md`, `docs/ROADMAP.md`, `docs/ARCHITECTURE.md`, plus `docs/SAFETY.md`,
 > `docs/COMPLIANCE.md`, `docs/SECURITY.md`. Branch from `main` as **`<branch>`**, and **claim your
-> row on `docs/WORKBOARD.md` in your first commit**. Build **`<track>`** per its `docs/ROADMAP.md`
+> row on `docs/archive/WORKBOARD.md` in your first commit**. Build **`<track>`** per its `docs/ROADMAP.md`
 > section, touching **only** your owned paths (`<paths>`); for the shared `config/` files make
 > minimal append-only edits. Reuse existing seams (D1 `Place`/`ActivityType`, D2 `accounts.User` +
 > `can_participate` cohort/consent gate). Enforce the product invariants (text-first; cohort
@@ -159,7 +165,7 @@ Per-track specifics:
 ## Roles
 
 - **Lead / integrator** (one agent or a human): owns merge order per the dep graph, owns
-  `config/` wiring, resolves cross-cutting conflicts, keeps the [WORKBOARD](WORKBOARD.md) +
+  `config/` wiring, resolves cross-cutting conflicts, keeps the [WORKBOARD](archive/WORKBOARD.md) +
   [ROADMAP](ROADMAP.md) current.
 - **Track agents**: build one app/deliverable each within their ownership.
 
