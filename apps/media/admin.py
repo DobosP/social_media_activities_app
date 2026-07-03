@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Attachment, Photo
+from .models import ActivityCover, Attachment, Photo
 
 
 @admin.register(Photo)
@@ -23,4 +23,19 @@ class AttachmentAdmin(admin.ModelAdmin):
         "width",
         "height",
         "created_at",
+    )
+
+
+@admin.register(ActivityCover)
+class ActivityCoverAdmin(admin.ModelAdmin):
+    list_display = ("id", "activity", "uploader", "content_type", "byte_size", "created_at")
+    search_fields = ("activity__title", "uploader__username", "sha256", "alt_text")
+    readonly_fields = (
+        "sha256",
+        "storage_key",
+        "byte_size",
+        "width",
+        "height",
+        "created_at",
+        "updated_at",
     )

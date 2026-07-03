@@ -4,17 +4,20 @@
 `docs/archive/COMPLETENESS_GAPS_2026-06.md`). On any doc conflict: this file > newest-dated ADR in
 `docs/adr/` > everything else.
 
-Last verified: 2026-07-02
+Last verified: 2026-07-03
 
 ## What this is
 
-Text-first, no-ads, deterministic/no-ML local-activities social app (children-first, in-person,
+Activity-first, no-ads, deterministic/no-ML local-activities social app (children-first, in-person,
 first launch city Cluj-Napoca; EU residency non-negotiable; donations only). `CLAUDE.md` has the
 hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contracts:
 `docs/FEATURES_BUILT.md`); `docs/SAFETY.md` is the safety-invariant authority.
 
 ## Current state
 
+- **Mobile photo-heavy activity cards are accepted in this branch** (ADR-0007): one contextual
+  cover photo per activity may appear on discovery cards, with generated accent fallback; no
+  short video, galleries, public user photo feeds, like/pass/swipe telemetry, or engagement ranking.
 - **The product engine (D1–D10 + four feature waves) is BUILT and tested** (~2150-green suite).
   Before building anything, read `docs/PRODUCTION_READINESS.md` **§0 "Already built — do NOT
   rebuild"** — a generic checklist wrongly flags features that already exist (Redis-ready caches/

@@ -13,7 +13,7 @@ from django.db import transaction
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 
-from .models import Attachment, Photo
+from .models import ActivityCover, Attachment, Photo
 from .storage import get_storage
 
 logger = logging.getLogger(__name__)
@@ -52,3 +52,11 @@ def delete_blob_on_attachment_delete(sender, instance: Attachment, **kwargs) -> 
     if not instance.storage_key:
         return
     _delete_blob_after_commit(instance.storage_key, model_name="Attachment")
+
+
+@receiver(pre_delete, sender=ActivityCover, dispatch_uid="media_activity_cover_delete_blob")
+def delete_blob_on_activity_cover_delete(sender, instance: ActivityCover, **kwargs) -> None:
+    """Remove the stored cover blob once the ActivityCover row deletion commits."""
+    if not instance.storage_key:
+        return
+    _delete_blob_after_commit(instance.storage_key, model_name="ActivityCover")

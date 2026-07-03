@@ -44,6 +44,7 @@ from apps.accounts.services import (
 from apps.events.models import Event
 from apps.media.models import Photo
 from apps.media.services import (
+    activity_visual,
     MediaError,
     NotAuthorized,
     signed_url,
@@ -170,7 +171,7 @@ def community_detail(request, slug):
     limit = getattr(settings, "COMMUNITY_ACTIVITIES_PAGE_SIZE", 100)
     activities = list(
         communities.community_activities(community, request.user)
-        .select_related("place", "activity_type", "owner")
+        .select_related("place", "activity_type", "owner", "cover")
         .prefetch_related("place__corrections")[:limit]  # F20: _activity_card display_name
     )
     # Read-time linkage: if a standing GROUP exists on the same (cohort, area, type/category)
@@ -275,7 +276,7 @@ def group_detail(request, pk):
     # Upcoming activities in the group's (area x type/category) coordinate — discovery, not roster.
     feed = list(
         social.group_feed_activities(group, user)
-        .select_related("place", "activity_type", "owner")
+        .select_related("place", "activity_type", "owner", "cover")
         .prefetch_related("place__corrections")[:50]  # F20: _activity_card display_name
     )
 
@@ -950,7 +951,7 @@ def home(request):
         social.visible_activities(user)
         .filter(status=Activity.Status.OPEN, starts_at__gte=timezone.now())
         .exclude(id__in=beginners_ids)  # W3-F11: not a third copy of the promoted strip cards
-        .select_related("place", "activity_type", "owner")
+        .select_related("place", "activity_type", "owner", "cover")
         .prefetch_related("place__corrections")  # F20: display_name without per-card N+1
     )
     if beginners_only:
@@ -1072,7 +1073,7 @@ def place_detail(request, pk, slug=None):
         meetups = (
             social.visible_activities(request.user)
             .filter(place=place, status=Activity.Status.OPEN, starts_at__gte=timezone.now())
-            .select_related("place", "activity_type", "owner")
+            .select_related("place", "activity_type", "owner", "cover")
             .prefetch_related("place__corrections")  # F20: _activity_card display_name
             .order_by("starts_at")
         )
@@ -1426,7 +1427,7 @@ def activity_list(request):
         activities = (
             social.visible_activities(request.user)
             .filter(status=Activity.Status.OPEN, starts_at__gte=timezone.now())
-            .select_related("place", "activity_type", "owner")
+            .select_related("place", "activity_type", "owner", "cover")
             .prefetch_related("place__corrections")  # F20: _activity_card display_name
         )
         if beginners_only:
@@ -1435,18 +1436,21 @@ def activity_list(request):
     # Pre-encode the suggestion as a query string (a type name may contain a space or '&');
     # blocktrans can't apply |urlencode in its body, so build it here (W2-F1 review).
     did_you_mean_q = urlencode({"q": did_you_mean}) if did_you_mean else ""
-    # Two TEXT-FIRST browse modes over the SAME cohort-gated list: "list" (compact scannable rows,
-    # the calm default) and "cards" (a focused deck — one meetup at a time that you page through).
+    # Two browse modes over the SAME cohort-gated list: "list" (compact scannable rows,
+    # the calm default) and "cards" (a focused visual deck - one meetup at a time).
     # The mode is PRESENTATION-ONLY: it never changes which activities are visible, never records a
     # swipe, never ranks people. Both are bounded + paginated (no infinite scroll); the card deck
     # moves within a page client-side (browse-modes.js, progressive enhancement) and the pager
-    # advances to the next page. No images anywhere (inv.1 text-first). Unknown value -> "list".
+    # advances to the next page. Cards may show one cover photo or a generated accent; unknown
+    # value -> "list".
     from django.core.paginator import Paginator
 
     view_mode = "cards" if request.GET.get("view") == "cards" else "list"
     # .get_page() clamps out-of-range / non-int pages safely; one page bounds the rendered DOM.
     page_obj = Paginator(activities, 24).get_page(request.GET.get("page"))
     activities = list(page_obj)
+    for a in activities:
+        a.visual = activity_visual(a, request.user)
     # Carry the current filters (minus page/view) so the view-mode + pager links don't drop them.
     base_params = request.GET.copy()
     for k in ("view", "page"):

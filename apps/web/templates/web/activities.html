@@ -20,8 +20,9 @@
 {% else %}{% include "web/_near_me.html" %}{% endif %}
 
 {# Presentation-only view switch (List / Cards). The links work with no JavaScript; browse-modes.js
-   upgrades them to an instant client-side toggle + a swipeable focused deck. No images; swipe/keys
-   only NAVIGATE between meetups — nothing is liked, ranked, or recorded. #}
+   upgrades them to an instant client-side toggle + a swipeable focused deck. Cards may
+   show one contextual cover photo; swipe/keys only NAVIGATE between meetups — nothing is
+   liked, ranked, or recorded. #}
 <div class="browse-toolbar">
   <div class="seg" role="group" aria-label="{% trans 'Choose how to view activities' %}" data-browse-toggle>
     <a class="seg-btn{% if view_mode == 'list' %} is-active{% endif %}" data-view-btn="list"
@@ -56,6 +57,7 @@
     <button class="btn btn-secondary btn-sm" type="button" data-deck-prev>{% trans "← Prev" %}</button>
     <span class="browse-deck-pos" data-deck-pos aria-hidden="true"></span>
     <button class="btn btn-secondary btn-sm" type="button" data-deck-next>{% trans "Next →" %}</button>
+    <button class="btn btn-secondary btn-sm" type="button" data-deck-shuffle>{% trans "Shuffle" %}</button>
   </div>
   {% endif %}
   <p class="visually-hidden" role="status" aria-live="polite" data-browse-status></p>

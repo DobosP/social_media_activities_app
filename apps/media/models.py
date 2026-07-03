@@ -4,9 +4,11 @@ from django.db.models import Q, UniqueConstraint
 
 
 class Photo(models.Model):
-    """An uploaded image. The ONLY images in the product: a single profile picture
-    per user, or a photo shared privately inside an activity thread. Visibility is
-    enforced in services (membership + cohort + scan status); see docs/SAFETY.md."""
+    """An uploaded image for a profile or private activity thread.
+
+    Public activity-card cover photos live in ActivityCover below because Photo's
+    constraints and visibility semantics are intentionally profile/thread-specific.
+    """
 
     class Kind(models.TextChoices):
         PROFILE = "profile", "Profile picture"
@@ -128,3 +130,34 @@ class Attachment(models.Model):
         if self.expires_at is None:
             return True
         return self.expires_at > (now or timezone.now())
+
+
+class ActivityCover(models.Model):
+    """One contextual cover photo for a discoverable activity card.
+
+    Visibility is never independent: services re-check the owning activity through
+    visible_activities()/public_activities() before issuing or resolving a URL.
+    """
+
+    activity = models.OneToOneField(
+        "social.Activity", on_delete=models.CASCADE, related_name="cover"
+    )
+    uploader = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="activity_covers"
+    )
+    storage_key = models.CharField(max_length=128)
+    content_type = models.CharField(max_length=64)
+    byte_size = models.PositiveIntegerField(default=0)
+    sha256 = models.CharField(max_length=64, blank=True)
+    width = models.PositiveIntegerField(default=0)
+    height = models.PositiveIntegerField(default=0)
+    exif_stripped = models.BooleanField(default=False)
+    alt_text = models.CharField(max_length=140, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["activity", "created_at"])]
+
+    def __str__(self):
+        return f"activity-cover(activity={self.activity_id})"

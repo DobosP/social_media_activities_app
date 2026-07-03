@@ -556,7 +556,7 @@ textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--accent)
    Browse modes — /activities/ List + focused Card deck (progressive enhancement).
    The server sets the initial mode via data-view; static/js/browse-modes.js enhances
    it. Animations are plain transitions, so the reduced-motion block above neutralises
-   them automatically. Cards are text-only (no images) — inv.1 text-first.
+   them automatically. Cards may show one contextual cover photo or a generated accent.
    ============================================================================= */
 .browse-toolbar {
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
@@ -605,6 +605,9 @@ textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--accent)
   transition: opacity .28s ease, transform .28s ease;
 }
 .browse[data-view="cards"] .browse-item.is-current { opacity: 1; transform: none; }
+.browse[data-view="cards"].is-dragging .browse-item.is-current {
+  transform: rotate(var(--drag-rot, 0deg)) scale(1.01);
+}
 /* While dragging, the track follows the pointer with no easing and no text selection. */
 .browse[data-view="cards"].is-dragging .browse-grid,
 .browse[data-view="cards"].is-dragging .browse-item { transition: none; }
@@ -616,12 +619,14 @@ textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--accent)
 .browse[data-view="cards"] .browse-item .card h3 { font-size: 1.28rem; line-height: 1.25; }
 .browse[data-view="cards"] .browse-item .card-desc { font-size: 1rem; color: var(--lead); }
 
-/* Generated abstract accent banner — shown ONLY in the Cards deck (decorative, never a photo). */
-.card-accent { display: none; }
-.browse[data-view="cards"] .card-accent {
-  display: block; height: 92px; overflow: hidden;
+/* Card visual slot: one contextual cover photo when present, generated accent otherwise. */
+.card-visual { display: none; }
+.browse[data-view="cards"] .card-visual {
+  display: block; height: clamp(150px, 42vw, 220px); overflow: hidden;
   margin: -1.15rem -1.2rem .9rem; border-radius: var(--r-lg) var(--r-lg) 0 0;
+  background: var(--bg-subtle);
 }
+.card-visual img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .card-accent svg { display: block; width: 100%; height: 100%; }
 
 /* The deck moves keyboard focus onto the active card (tabindex=-1); show where it landed. */
@@ -632,7 +637,8 @@ textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--accent)
 
 /* Deck chrome (prev / position / next) — only meaningful once JS is on. */
 .browse-deck-nav {
-  display: none; align-items: center; justify-content: center; gap: 1rem; margin-top: .9rem;
+  display: none; flex-wrap: wrap; align-items: center; justify-content: center;
+  gap: .6rem 1rem; margin-top: .9rem;
 }
 .browse.is-enhanced[data-view="cards"] .browse-deck-nav { display: flex; }
 .browse-deck-pos {

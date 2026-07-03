@@ -11,11 +11,22 @@ reasons. Three typed sections, each behind its existing read gate:
 Ordering is deterministic (soonest-first / newest-first) — never popularity, never
 engagement (inv.2). Every section is bounded; there is no infinite scroll."""
 
+import hashlib
+
+from django.conf import settings
+from django.contrib.gis.db.models.functions import Distance
+from django.contrib.gis.measure import D
+from django.core import signing
+from django.utils import timezone
+
 from apps.events.services import upcoming_events
 from apps.recommendations.models import UserInterest
 from apps.recommendations.services import recommended_with_reasons
 from apps.social.models import Activity, GroupMembership, Post
 from apps.social.services import visible_activities, visible_groups
+
+_DECK_CURSOR_SALT = "discovery.activity_deck_cursor"
+DEFAULT_DECK_SEED = "default"
 
 
 def interest_matched_events(user, *, limit=6):
@@ -110,4 +121,90 @@ def build_home_feed(user, *, near_point=None, radius_m=None, limit=8):
         "beginners": beginner_friendly(user, exclude_ids=[a.id for a in recommended]),
         "events": interest_matched_events(user),
         "group_updates": group_updates(user),
+    }
+
+
+def _clamp_deck_limit(limit) -> int:
+    try:
+        parsed = int(limit)
+    except (TypeError, ValueError):
+        parsed = 12
+    return max(1, min(parsed, 24))
+
+
+def _decode_deck_cursor(cursor: str, *, seed: str) -> int:
+    if not cursor:
+        return 0
+    try:
+        payload = signing.loads(cursor, salt=_DECK_CURSOR_SALT)
+    except signing.BadSignature:
+        return 0
+    if payload.get("seed") != seed:
+        return 0
+    try:
+        return max(0, int(payload.get("offset", 0)))
+    except (TypeError, ValueError):
+        return 0
+
+
+def _encode_deck_cursor(*, seed: str, offset: int, total: int) -> str:
+    if offset >= total:
+        return ""
+    return signing.dumps({"seed": seed, "offset": offset}, salt=_DECK_CURSOR_SALT)
+
+
+def _deck_shuffle_key(seed: str, activity_id: int) -> str:
+    return hashlib.sha256(f"{seed}:{activity_id}".encode("utf-8")).hexdigest()
+
+
+def activity_deck(
+    user,
+    *,
+    seed="",
+    cursor="",
+    limit=12,
+    near_point=None,
+    radius_m=None,
+    activity=None,
+    beginners=False,
+):
+    """Mobile activity-card deck: visible, open, future activities with deterministic shuffle.
+
+    This is read-only presentation. It records no swipe/like/pass events and returns no engagement
+    ranking signals; swipes are client navigation over this bounded page.
+    """
+    deck_seed = (seed or DEFAULT_DECK_SEED)[:128]
+    page_size = _clamp_deck_limit(limit)
+    qs = (
+        visible_activities(user)
+        .filter(status=Activity.Status.OPEN, starts_at__gte=timezone.now())
+        .select_related("activity_type", "place", "cover")
+    )
+    if activity:
+        qs = qs.filter(activity_type__slug=activity)
+    if beginners:
+        qs = qs.filter(beginners_welcome=True)
+    if near_point is not None:
+        qs = qs.filter(place__isnull=False).annotate(
+            distance=Distance("place__location", near_point)
+        )
+        if radius_m is not None:
+            try:
+                qs = qs.filter(place__location__distance_lte=(near_point, D(m=float(radius_m))))
+            except (TypeError, ValueError):
+                pass
+        qs = qs.order_by("distance", "starts_at", "id")
+    else:
+        qs = qs.order_by("starts_at", "id")
+
+    candidate_cap = max(page_size * 10, getattr(settings, "DISCOVERY_DECK_CANDIDATE_CAP", 240))
+    candidates = list(qs[:candidate_cap])
+    ordered = sorted(candidates, key=lambda a: (_deck_shuffle_key(deck_seed, a.id), a.id))
+    offset = _decode_deck_cursor(cursor, seed=deck_seed)
+    page = ordered[offset : offset + page_size]
+    next_offset = offset + page_size
+    return {
+        "deck_seed": deck_seed,
+        "next_cursor": _encode_deck_cursor(seed=deck_seed, offset=next_offset, total=len(ordered)),
+        "items": page,
     }

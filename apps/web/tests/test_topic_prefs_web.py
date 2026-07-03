@@ -1,16 +1,20 @@
 """Web surfaces for topic preferences (self-service /topics/ + guardian /wards/<pk>/topics/) and
-the two TEXT-FIRST browse modes (?view=list|card) on the activities list.
+the two browse modes (?view=list|cards) on the activities list.
 
-Invariant guards baked in: the browse modes never render an <img>, and a non-guardian can never
-set a ward's feed."""
+Invariant guards baked in: cards may render one activity cover image, but never video or
+like/pass/swipe telemetry; a non-guardian can never set a ward's feed."""
+
+from io import BytesIO
 
 import pytest
 from django.contrib.gis.geos import Point
 from django.test import Client
+from PIL import Image
 
 from apps.accounts.identity.base import AssuranceResult
 from apps.accounts.models import AgeBand, ParentalConsent, User
 from apps.accounts.services import apply_assurance, link_guardian
+from apps.media.services import upload_activity_cover
 from apps.places.models import Place
 from apps.recommendations import services as recs
 from apps.social.services import create_activity
@@ -19,6 +23,11 @@ from apps.taxonomy.models import ActivityCategory, ActivityType
 pytestmark = pytest.mark.django_db
 
 PW = "sup3r-secret-pw"
+
+
+@pytest.fixture(autouse=True)
+def _media_root(tmp_path, settings):
+    settings.MEDIA_ROOT = tmp_path / "media"
 
 
 def _adult(name):
@@ -40,6 +49,12 @@ def _teen(name):
     u = User.objects.create_user(username=name, password=PW, display_name=name)
     apply_assurance(u, AssuranceResult(age_band=AgeBand.AGE_16_17, provider="dev"))
     return u
+
+
+def _png(color=(10, 120, 200), size=(16, 12)):
+    out = BytesIO()
+    Image.new("RGB", size, color).save(out, format="PNG")
+    return out.getvalue()
 
 
 def _client(user):
@@ -130,30 +145,33 @@ def test_guardian_cannot_set_non_child_ward_topics():
     assert "Suggested topics for their feed" not in body
 
 
-# --- text-first browse modes ---------------------------------------------------------------
+# --- mobile activity-card browse modes ----------------------------------------------------
 
 
-def test_browse_modes_are_text_first_and_switchable():
+def test_browse_modes_allow_cover_images_without_engagement_telemetry():
     user = _adult("tpw-browse")
     _, _, bball = _topics()
-    _activity(user, bball, "Hoops one")
+    covered = _activity(user, bball, "Hoops one")
+    _activity(user, bball, "Hoops fallback")
+    upload_activity_cover(user, covered, _png(), alt_text="Outdoor court")
 
     c = _client(user)
-    # Baseline: a no-results page carries only the page chrome (incl. the single nav avatar — the
-    # one allowed profile picture). The FEED itself must add zero IMAGES in every mode (the toggle
-    # icons are inline <svg>, not <img>).
-    chrome_imgs = c.get("/activities/?q=zzzznomatchzzz").content.decode().count("<img")
-    # Default (no ?view=) is the calm List mode.
     assert 'data-view="list"' in c.get("/activities/").content.decode()
     for mode in ("list", "cards"):
         body = c.get(f"/activities/?view={mode}").content.decode()
         assert f'data-view="{mode}"' in body, mode
-        assert "Hoops one" in body  # the activity is shown in every mode
-        assert body.count("<img") == chrome_imgs, mode  # text-first: the feed adds no images
+        assert "Hoops one" in body and "Hoops fallback" in body
+        assert "activity-cover-file" in body, mode
+        assert 'alt="Outdoor court"' in body, mode
+        assert "<video" not in body.lower(), mode
+        assert 'name="like"' not in body and 'name="pass"' not in body
+        assert "swipe" not in body.lower()
+        assert "/like" not in body and "/pass" not in body
 
-    # Unknown view falls back to list (never errors), and the progressive-enhancement JS is wired.
     cards_body = c.get("/activities/?view=cards").content.decode()
     assert "browse-modes.js" in cards_body
+    assert "data-deck-shuffle" in cards_body
+    assert 'class="card-visual card-accent"' in cards_body
     assert 'data-view="list"' in c.get("/activities/?view=swipe").content.decode()
 
 
@@ -167,11 +185,12 @@ def test_cards_mode_renders_a_focused_deck():
     assert 'data-view="cards"' in body
     assert "data-browse-deck" in body  # the deck container the JS drives
     assert "data-deck-next" in body and "data-deck-prev" in body  # deck navigation chrome
+    assert "data-deck-shuffle" in body  # local page/deck shuffle, no server write
     assert body.count('class="browse-item') == 2  # both meetups rendered into the deck
     assert body.count("is-current") == 1  # the server marks the first card so there's no load flash
     assert "Hoops A" in body and "Hoops B" in body
     # Each card has a generated abstract accent banner — inline <svg> (decorative), never an <img>.
-    assert body.count('class="card-accent"') == 2
+    assert body.count('class="card-visual card-accent"') == 2
     assert "<svg" in body and 'fill="url(#ac' in body  # the procedural gradient banner
 
 

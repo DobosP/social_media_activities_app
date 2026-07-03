@@ -24,7 +24,8 @@ A nonprofit, open-source platform to help people — **children first**, also ad
 person to do real activities (sports, reading, board/video games). It is deliberately the
 **opposite** of image-perfect / short-video social media:
 
-- **Text-first.** No public photo feeds. Photos exist only privately inside an activity thread.
+- **Activity-first.** Discovery cards may show one contextual cover photo per activity; no
+  short-video, public galleries, public user photo feeds, likes/pass tracking, or engagement ranking.
 - **Safe by design**, especially for minors: EU-grade identity/age assurance, age-cohort
   isolation, strong moderation, no adult↔minor private contact.
 - **Real places.** The app already knows where activities can happen (seeded from open data),
@@ -50,7 +51,7 @@ graph TD
     D3["D3 Social core (threads, activities, join-by-vote)"]
     D4["D4 Safety & moderation"]
     D5["D5 Chat"]
-    D6["D6 Media (profile + private thread photos)"]
+    D6["D6 Media (profile + private thread photos + activity covers)"]
     D7["D7 Richer location data & discovery"]
     D8["D8 Booking integration"]
     D9["D9 Nonprofit, ops & launch"]
@@ -182,17 +183,20 @@ These thread through multiple deliverables. Skipping them creates rework or lega
   cannot; messages are moderatable; the scanning/encryption strategy is a documented, swappable
   policy.
 
-## D6 · Media — profile + private thread photos ✅ (shipped)
+## D6 · Media — profile, private thread photos, and activity covers ✅ (shipped)
 
-- **Goal.** The *only* images in the product: one profile picture, and photos shared **privately
-  inside an activity thread** (visible only to that thread's members). No public photo feed.
+- **Goal.** Keep image surfaces scoped: one profile picture, photos shared **privately
+  inside an activity thread** (visible only to that thread's members), and one contextual cover
+  photo per activity card when the activity itself is visible. No public user photo feeds, galleries,
+  short video, or engagement media surfaces.
 - **Scope.** S3-compatible **object storage** (Hetzner Object Storage — see [HOSTING_EU](HOSTING_EU.md)) — Postgres
   keeps relational/graph/geo data, blobs go to cheap object storage; upload limits; **image
   safety scanning** (e.g. CSAM hash-matching where lawful) before a photo is visible; EXIF/GPS
-  stripping; signed, expiring URLs scoped to thread membership.
+  stripping; signed, expiring URLs scoped to thread membership or activity visibility.
 - **Depends on.** D3 (threads), D4 (safety scanning).
-- **Definition of done.** A user can set a profile picture and post photos in a thread that only
-  members can see; uploads are size-limited, metadata-stripped, and safety-screened.
+- **Definition of done.** A user can set a profile picture, post photos in a thread that only
+  members can see, and manage one contextual activity cover; uploads are size-limited,
+  metadata-stripped, and safety-screened.
 
 ## D7 · Richer location data & discovery ✅ (shipped)
 

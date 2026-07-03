@@ -16,7 +16,8 @@ register = template.Library()
 @register.simple_tag
 def activity_accent(activity):
     """Inline procedural SVG banner for an activity card (the focused Cards browse mode). Decorative
-    generative art, NOT a photo (inv.1 text-first). Deterministic from the activity's type + title.
+    generative art used when an activity has no cover photo. Deterministic from the activity's
+    type + title.
     mark_safe is safe here: activity_accent_svg emits only numbers + hsl() colours + a hashed id
     namespace — no part of the (untrusted) seed string is ever written into the SVG markup."""
     atype = getattr(activity, "activity_type", None)

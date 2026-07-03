@@ -13,13 +13,14 @@ from django.db import transaction
 from apps.safety.services import is_blocked, record_audit
 from apps.social.services import current_members
 
-from .models import Attachment, Photo
+from .models import ActivityCover, Attachment, Photo
 from .processing import DEFAULT_MAX_PIXELS, extension_for, validate_and_strip
 from .scanning import get_scanner
 from .storage import get_storage
 
 _SIGNING_SALT = "media.signed_url"
 _ATTACH_SIGNING_SALT = "media.attachment_url"
+_COVER_SIGNING_SALT = "media.activity_cover_url"
 PDF_MAGIC = b"%PDF-"
 logger = logging.getLogger(__name__)
 
@@ -172,6 +173,217 @@ def _replace_existing_profile(uploader) -> None:
     existing = Photo.objects.filter(uploader=uploader, kind=Photo.Kind.PROFILE).first()
     if existing:
         existing.delete()
+
+
+def _delete_storage_key_after_commit(storage_key: str, *, model_name: str) -> None:
+    def _delete() -> None:
+        try:
+            get_storage().delete(storage_key)
+        except Exception:
+            logger.exception(
+                "Failed to delete media blob %s during %s replace", storage_key, model_name
+            )
+
+    transaction.on_commit(_delete)
+
+
+def _viewer_id(viewer):
+    if viewer is None or not getattr(viewer, "is_authenticated", False):
+        return None
+    return viewer.id
+
+
+def _can_manage_activity_cover(user, activity) -> bool:
+    user_id = _viewer_id(user)
+    return bool(getattr(user, "is_staff", False) or user_id == activity.owner_id)
+
+
+def _activity_accepts_cover_upload(activity) -> bool:
+    from django.utils import timezone
+
+    from apps.social.models import Activity
+
+    return (
+        activity.status == Activity.Status.OPEN
+        and not activity.is_hidden
+        and activity.starts_at > timezone.now()
+    )
+
+
+@transaction.atomic
+def upload_activity_cover(uploader, activity, data: bytes, *, alt_text="") -> ActivityCover:
+    """Create or replace an activity's contextual cover photo.
+
+    Cover photos use the same fail-closed safety pipeline as profile/thread images.
+    The activity itself remains optional for create_activity; cards fall back to a
+    generated accent when no cover is present.
+    """
+    if not _can_manage_activity_cover(uploader, activity):
+        raise NotAuthorized("Only the organizer or staff can manage this activity cover.")
+    if not _activity_accepts_cover_upload(activity):
+        raise MediaRejected("Covers can only be changed before an open, visible activity starts.")
+
+    clean_bytes, fmt, (width, height) = validate_and_strip(
+        data,
+        max_bytes=settings.MEDIA_MAX_UPLOAD_BYTES,
+        max_dimension=getattr(settings, "MEDIA_MAX_DIMENSION", None),
+        max_pixels=getattr(settings, "MEDIA_MAX_IMAGE_PIXELS", DEFAULT_MAX_PIXELS),
+        quality=getattr(settings, "MEDIA_IMAGE_QUALITY", 82),
+        output_format=getattr(settings, "MEDIA_IMAGE_OUTPUT_FORMAT", "") or None,
+    )
+    scanner = get_scanner()
+    if getattr(settings, "MEDIA_REQUIRE_SCANNER", True) and not scanner.is_effective():
+        record_audit("media.cover_upload_blocked", actor=uploader, reason="no_scanner")
+        raise MediaRejected(
+            "Cover uploads are unavailable until a content safety scanner is configured."
+        )
+    orig_digest = hashlib.sha256(data).hexdigest()
+    result = scanner.scan(data)
+    if not result.clean:
+        record_audit("media.blocked", actor=uploader, reason="scan_match", sha256=orig_digest)
+        raise MediaRejected("Image failed safety screening and was not stored.")
+
+    ext = extension_for(fmt)
+    content_type = f"image/{ext}"
+    storage_key = f"activity-covers/{uuid.uuid4().hex}.{ext}"
+    storage = get_storage()
+    storage.save(storage_key, clean_bytes, content_type=content_type)
+    try:
+        existing = ActivityCover.objects.select_for_update().filter(activity=activity).first()
+        if existing is None:
+            cover = ActivityCover.objects.create(
+                activity=activity,
+                uploader=uploader,
+                storage_key=storage_key,
+                content_type=content_type,
+                byte_size=len(clean_bytes),
+                sha256=hashlib.sha256(clean_bytes).hexdigest(),
+                width=width,
+                height=height,
+                exif_stripped=True,
+                alt_text=(alt_text or "").strip()[:140],
+            )
+        else:
+            old_key = existing.storage_key
+            existing.uploader = uploader
+            existing.storage_key = storage_key
+            existing.content_type = content_type
+            existing.byte_size = len(clean_bytes)
+            existing.sha256 = hashlib.sha256(clean_bytes).hexdigest()
+            existing.width = width
+            existing.height = height
+            existing.exif_stripped = True
+            existing.alt_text = (alt_text or "").strip()[:140]
+            existing.save(
+                update_fields=[
+                    "uploader",
+                    "storage_key",
+                    "content_type",
+                    "byte_size",
+                    "sha256",
+                    "width",
+                    "height",
+                    "exif_stripped",
+                    "alt_text",
+                    "updated_at",
+                ]
+            )
+            cover = existing
+            if old_key and old_key != storage_key:
+                _delete_storage_key_after_commit(old_key, model_name="ActivityCover")
+        record_audit(
+            "media.activity_cover_uploaded", actor=uploader, target=activity, cover_id=cover.id
+        )
+        return cover
+    except Exception:
+        try:
+            storage.delete(storage_key)
+        except Exception:
+            logger.exception(
+                "Failed to clean up activity cover blob after DB error: %s", storage_key
+            )
+        raise
+
+
+@transaction.atomic
+def delete_activity_cover(actor, cover) -> None:
+    if not _can_manage_activity_cover(actor, cover.activity):
+        raise NotAuthorized("Only the organizer or staff can delete this activity cover.")
+    record_audit("media.activity_cover_deleted", actor=actor, target=cover.activity)
+    cover.delete()
+
+
+def _public_can_view_cover(cover) -> bool:
+    from apps.social.services import public_activities
+
+    return public_activities().filter(pk=cover.activity_id).exists()
+
+
+def can_view_activity_cover(viewer, cover) -> bool:
+    if not cover or not cover.storage_key:
+        return False
+    if getattr(viewer, "is_staff", False):
+        return True
+    viewer_id = _viewer_id(viewer)
+    if viewer_id is None:
+        return _public_can_view_cover(cover)
+
+    from apps.social.services import visible_activities
+
+    return visible_activities(viewer).filter(pk=cover.activity_id).exists()
+
+
+def activity_cover_signed_url(cover, viewer=None) -> str:
+    if not can_view_activity_cover(viewer, cover):
+        raise NotAuthorized("Not allowed to view this activity cover.")
+    viewer_id = _viewer_id(viewer)
+    payload = {"cover_id": cover.id}
+    if viewer_id is None:
+        payload["public"] = True
+    else:
+        payload["viewer_id"] = viewer_id
+    token = signing.dumps(payload, salt=_COVER_SIGNING_SALT)
+    return f"/api/media/activity-cover-file/{token}/"
+
+
+def resolve_activity_cover_token(token: str, viewer=None):
+    try:
+        payload = signing.loads(
+            token, salt=_COVER_SIGNING_SALT, max_age=settings.MEDIA_SIGNED_URL_TTL
+        )
+    except signing.BadSignature as exc:
+        raise NotAuthorized("Invalid or expired activity cover link.") from exc
+    cover = (
+        ActivityCover.objects.filter(id=payload.get("cover_id"))
+        .select_related("activity", "activity__owner", "uploader")
+        .first()
+    )
+    if cover is None:
+        raise NotAuthorized("Not allowed to view this activity cover.")
+    if payload.get("public") is True:
+        if not _public_can_view_cover(cover):
+            raise NotAuthorized("Not allowed to view this activity cover.")
+        return cover
+    viewer_id = _viewer_id(viewer)
+    if viewer_id is None or payload.get("viewer_id") != viewer_id:
+        raise NotAuthorized("This activity cover link was issued to a different user.")
+    if not can_view_activity_cover(viewer, cover):
+        raise NotAuthorized("Not allowed to view this activity cover.")
+    return cover
+
+
+def activity_visual(activity, viewer=None) -> dict:
+    try:
+        cover = activity.cover
+    except ActivityCover.DoesNotExist:
+        cover = None
+    if cover is not None and can_view_activity_cover(viewer, cover):
+        return {
+            "kind": "activity_cover_photo",
+            "url": activity_cover_signed_url(cover, viewer),
+            "alt": cover.alt_text or activity.title,
+        }
+    return {"kind": "generated_accent"}
 
 
 def thread_photos(viewer, thread):

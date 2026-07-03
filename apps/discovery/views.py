@@ -9,7 +9,12 @@ from apps.events.models import Event
 from apps.places.models import Place
 
 from .proximity import apply_proximity, parse_point
-from .serializers import ActivityCardSerializer, EventCardSerializer, PlaceCardSerializer
+from .serializers import (
+    ActivityCardSerializer,
+    ActivityDeckSerializer,
+    EventCardSerializer,
+    PlaceCardSerializer,
+)
 
 # Discovery feeds are read-only projections over existing data. Place/event data is
 # public; the activities feed is cohort-scoped + block-aware (reuses social.services).
@@ -145,14 +150,45 @@ class ActivitiesFeedView(APIView):
         qs = (
             visible_activities(request.user)
             .filter(status=Activity.Status.OPEN, starts_at__gte=timezone.now())
-            .select_related("activity_type", "place")
+            .select_related("activity_type", "place", "cover")
         )
         if activity := p.get("activity"):
             qs = qs.filter(activity_type__slug=activity)
         qs, point = apply_proximity(qs, p, field="place__location")
         if point is None:
             qs = qs.order_by("starts_at")
-        return Response(ActivityCardSerializer(qs[:MAX_RESULTS], many=True).data)
+        return Response(
+            ActivityCardSerializer(qs[:MAX_RESULTS], many=True, context={"request": request}).data
+        )
+
+
+class ActivityDeckView(APIView):
+    """Mobile card deck over visible activities. Swipes are client-side navigation only."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from .services import activity_deck
+
+        p = request.query_params
+        point = parse_point(p)
+        radius_m = None
+        if point is not None and p.get("radius_m"):
+            try:
+                radius_m = float(p.get("radius_m"))
+            except (TypeError, ValueError):
+                radius_m = None
+        deck = activity_deck(
+            request.user,
+            seed=p.get("seed", ""),
+            cursor=p.get("cursor", ""),
+            limit=p.get("limit", 12),
+            near_point=point,
+            radius_m=radius_m,
+            activity=p.get("activity") or None,
+            beginners=_truthy(p, "beginners"),
+        )
+        return Response(ActivityDeckSerializer(deck, context={"request": request}).data)
 
 
 class PublicActivitiesView(APIView):
@@ -174,7 +210,9 @@ class PublicActivitiesView(APIView):
         qs, point = apply_proximity(qs, p, field="place__location")
         if point is None:
             qs = qs.order_by("starts_at")
-        return Response(ActivityCardSerializer(qs[:MAX_RESULTS], many=True).data)
+        return Response(
+            ActivityCardSerializer(qs[:MAX_RESULTS], many=True, context={"request": request}).data
+        )
 
 
 class PublicGroupsView(APIView):
@@ -219,8 +257,12 @@ class HomeFeedView(APIView):
         feed = build_home_feed(request.user, near_point=point, radius_m=radius_m)
         return Response(
             {
-                "recommended": FeedActivitySerializer(feed["recommended"], many=True).data,
-                "beginners": FeedActivitySerializer(feed["beginners"], many=True).data,
+                "recommended": FeedActivitySerializer(
+                    feed["recommended"], many=True, context={"request": request}
+                ).data,
+                "beginners": FeedActivitySerializer(
+                    feed["beginners"], many=True, context={"request": request}
+                ).data,
                 "events": FeedEventSerializer(feed["events"], many=True).data,
                 "group_updates": [
                     {

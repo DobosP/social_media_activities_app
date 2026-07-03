@@ -1,27 +1,36 @@
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseRedirect
 from rest_framework import status
-from rest_framework.exceptions import PermissionDenied, Throttled, ValidationError
+from rest_framework.exceptions import (
+    NotAuthenticated,
+    PermissionDenied,
+    Throttled,
+    ValidationError,
+)
 from rest_framework.parsers import FormParser, MultiPartParser
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.safety.services import allow_action
-from apps.social.models import Thread
+from apps.social.models import Activity, Thread
 
-from .models import Photo
-from .serializers import PhotoSerializer
+from .models import ActivityCover, Photo
+from .serializers import ActivityCoverSerializer, PhotoSerializer
 from .services import (
     DuplicateProfileImage,
     MediaRejected,
     NotAuthorized,
+    activity_cover_signed_url,
+    delete_activity_cover,
     delete_photo,
     maybe_presigned_url,
+    resolve_activity_cover_token,
     resolve_attachment_token,
     resolve_signed_token,
     signed_url,
     thread_photos,
+    upload_activity_cover,
     upload_photo,
 )
 from .storage import get_storage
@@ -106,6 +115,70 @@ class ThreadPhotosView(APIView):
         return Response(PhotoSerializer(photos, many=True, context=ctx).data)
 
 
+class ActivityCoverView(APIView):
+    """Create, replace, read, or delete one cover photo for an activity."""
+
+    permission_classes = [AllowAny]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def _cover(self, activity_id):
+        return (
+            ActivityCover.objects.filter(activity_id=activity_id)
+            .select_related("activity", "activity__owner", "uploader")
+            .first()
+        )
+
+    def get(self, request, activity_id):
+        cover = self._cover(activity_id)
+        if cover is None:
+            raise ValidationError("No activity cover.")
+        viewer = request.user if request.user.is_authenticated else None
+        try:
+            url = activity_cover_signed_url(cover, viewer)
+        except NotAuthorized as exc:
+            raise PermissionDenied(str(exc)) from exc
+        ctx = {"signed_urls": {cover.id: url}}
+        return Response(ActivityCoverSerializer(cover, context=ctx).data)
+
+    def put(self, request, activity_id):
+        if not request.user.is_authenticated:
+            raise NotAuthenticated("Authentication required.")
+        upload = request.FILES.get("file")
+        if upload is None:
+            raise ValidationError({"file": "An image file is required."})
+        activity = Activity.objects.select_related("owner").filter(pk=activity_id).first()
+        if activity is None:
+            raise ValidationError("No such activity.")
+        try:
+            cover = upload_activity_cover(
+                request.user,
+                activity,
+                upload.read(),
+                alt_text=request.data.get("alt_text", ""),
+            )
+            url = activity_cover_signed_url(cover, request.user)
+        except MediaRejected as exc:
+            raise PermissionDenied(str(exc)) from exc
+        except NotAuthorized as exc:
+            raise PermissionDenied(str(exc)) from exc
+        except ValueError as exc:
+            raise ValidationError(str(exc)) from exc
+        ctx = {"signed_urls": {cover.id: url}}
+        return Response(ActivityCoverSerializer(cover, context=ctx).data)
+
+    def delete(self, request, activity_id):
+        if not request.user.is_authenticated:
+            raise NotAuthenticated("Authentication required.")
+        cover = self._cover(activity_id)
+        if cover is None:
+            raise ValidationError("No activity cover.")
+        try:
+            delete_activity_cover(request.user, cover)
+        except NotAuthorized as exc:
+            raise PermissionDenied(str(exc)) from exc
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class MediaFileView(APIView):
     """Serve raw bytes for a signed, unexpired, membership-scoped media link."""
 
@@ -153,4 +226,24 @@ class AttachmentFileView(APIView):
         resp["X-Content-Type-Options"] = "nosniff"
         if is_pdf:
             resp["Content-Disposition"] = f'attachment; filename="{download_name}"'
+        return resp
+
+
+class ActivityCoverFileView(APIView):
+    """Serve a signed activity-cover URL after re-checking activity visibility."""
+
+    permission_classes = [AllowAny]
+
+    def get(self, request, token):
+        viewer = request.user if request.user.is_authenticated else None
+        try:
+            cover = resolve_activity_cover_token(token, viewer)
+        except NotAuthorized as exc:
+            raise PermissionDenied(str(exc)) from exc
+        presigned = maybe_presigned_url(cover.storage_key, content_type=cover.content_type)
+        if presigned:
+            return HttpResponseRedirect(presigned)
+        data = get_storage().open(cover.storage_key)
+        resp = HttpResponse(data, content_type=cover.content_type)
+        resp["X-Content-Type-Options"] = "nosniff"
         return resp

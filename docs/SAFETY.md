@@ -32,11 +32,13 @@ D5, and D6 too. See [ROADMAP](ROADMAP.md) and [COMPLIANCE](COMPLIANCE.md).
 3. **Verified age + parental consent before participation** for under-16 (D2). No consent → no
    access (age-gating).
 4. **Private by default.** Threads and their photos are visible only to that activity's members
-   (D6). No public photo feed, no public profiles beyond a minimal display name + avatar.
+   (D6). Discovery cards may show one contextual cover photo only when the activity itself is
+   visible; anonymous public cover cards remain adult-only through `public_activities()`. No public
+   user photo feeds or public profiles beyond a minimal display name + avatar.
 5. **Consent-based joining.** New members are admitted only via the **two-thirds vote** (D3), so a
    group controls who joins its activity.
-6. **Text-first.** The only images are one profile picture and **private, in-thread** photos — both
-   safety-screened (D6).
+6. **Scoped image surfaces.** Images are limited to one profile picture, private in-thread photos,
+   and one contextual activity cover photo on discovery cards — all safety-screened (D6).
 
 ## Controls by deliverable
 
@@ -54,7 +56,10 @@ D5, and D6 too. See [ROADMAP](ROADMAP.md) and [COMPLIANCE](COMPLIANCE.md).
 - **D5 (chat):** rooms scoped to membership + cohort; moderation hooks; retention policy; scanning
   posture swappable pending CSAR ([COMPLIANCE](COMPLIANCE.md)).
 - **D6 (media):** **image safety scanning** (CSAM hash-matching where lawful) before a photo is
-  visible; EXIF/GPS stripping; size limits; signed, expiring, membership-scoped URLs.
+  visible; EXIF/GPS stripping; size limits; signed, expiring URLs. Thread media stays
+  membership-scoped; activity cover photos follow the owning activity's visibility gates
+  (`visible_activities()` for authenticated viewers, `public_activities()` for anonymous adult-only
+  public cards).
   Since W8 the built-in blocklist also matches a **perceptual (dHash) layer** (a casual
   re-encode/resize no longer evades it; honest limits in `apps/media/perceptual.py`), and
   PDFs pass a swappable **document/AV scanner seam** (clamd; fail-closed when required).
