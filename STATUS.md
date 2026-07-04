@@ -48,6 +48,11 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
   cheap liveness only; `/readyz` checks the DB plus Redis cache and object storage only when those
   dependencies are configured; `X-Request-ID` is echoed, attached to log records, tagged in Sentry
   scope, and included in PII-safe structured request logs when enabled.
+- **Media egress presigned redirect is implemented** (ADR-0012): when
+  `MEDIA_REDIRECT_TO_PRESIGNED=True` and the selected storage backend supports presigning,
+  media-serving views re-check viewer authorization before returning a short-lived 307 object-store
+  redirect. Local/dev/test filesystem storage still streams through Django; scanner and
+  fail-closed upload gates are unchanged.
 - **Open work** = the open **P0/P1/P2 items in `docs/archive/COMPLETENESS_GAPS_2026-06.md`** (gap tracker
   for the audited feature waves) + the remaining operational substrate in
   `docs/PRODUCTION_READINESS.md` (provisioning shared state, deploy-time Sentry/alert wiring,

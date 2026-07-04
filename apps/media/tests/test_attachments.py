@@ -12,11 +12,11 @@ from django.utils import timezone
 from PIL import Image
 
 from apps.accounts.identity.base import AssuranceResult
-from apps.accounts.models import AgeBand, ParentalConsent, User
+from apps.accounts.models import AgeBand, Cohort, ParentalConsent, User
 from apps.accounts.services import apply_assurance
 from apps.media import services as media
 from apps.media.models import Attachment
-from apps.places.models import Place
+from apps.places.models import ApprovedChildVenue, Place
 from apps.safety.services import block_user
 from apps.social import services as social
 from apps.social.models import Membership
@@ -63,6 +63,8 @@ def _activity(owner, slug="att-bball"):
     place = Place.objects.create(
         name="Court", location=Point(23.6, 46.77, srid=4326), source=Place.Source.OSM
     )
+    if owner.cohort == Cohort.CHILD:
+        ApprovedChildVenue.objects.create(place=place)
     return social.create_activity(
         owner,
         place=place,

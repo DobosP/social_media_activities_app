@@ -36,6 +36,12 @@ from .services import (
 from .storage import get_storage
 
 
+def _temporary_redirect(url: str) -> HttpResponseRedirect:
+    response = HttpResponseRedirect(url)
+    response.status_code = 307
+    return response
+
+
 class PhotoUploadView(APIView):
     """Upload a profile picture or a thread photo (multipart `file`)."""
 
@@ -192,7 +198,7 @@ class MediaFileView(APIView):
         # Scale (opt-in): after the access check, offload the bytes to the object store directly.
         presigned = maybe_presigned_url(photo.storage_key, content_type=photo.content_type)
         if presigned:
-            return HttpResponseRedirect(presigned)
+            return _temporary_redirect(presigned)
         data = get_storage().open(photo.storage_key)
         resp = HttpResponse(data, content_type=photo.content_type)
         resp["X-Content-Type-Options"] = "nosniff"
@@ -220,7 +226,7 @@ class AttachmentFileView(APIView):
             att.storage_key, content_type=att.content_type, download_name=download_name
         )
         if presigned:
-            return HttpResponseRedirect(presigned)
+            return _temporary_redirect(presigned)
         data = get_storage().open(att.storage_key)
         resp = HttpResponse(data, content_type=att.content_type)
         resp["X-Content-Type-Options"] = "nosniff"
@@ -242,7 +248,7 @@ class ActivityCoverFileView(APIView):
             raise PermissionDenied(str(exc)) from exc
         presigned = maybe_presigned_url(cover.storage_key, content_type=cover.content_type)
         if presigned:
-            return HttpResponseRedirect(presigned)
+            return _temporary_redirect(presigned)
         data = get_storage().open(cover.storage_key)
         resp = HttpResponse(data, content_type=cover.content_type)
         resp["X-Content-Type-Options"] = "nosniff"

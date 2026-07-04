@@ -31,23 +31,22 @@
 - **Feed API**: `GET /api/discovery/feed/` (W2) — the typed home feed, identical
   composition to the web home.
 - **M2M ingestion API** (W9) for the external aggregator (admin/token-gated).
+- **Media off the app process** (2026-07-04): opt-in presigned object-store redirects
+  after the viewer authorization check, with local filesystem streaming fallback.
 
 ## Ordered backlog (do when load justifies, not before)
 
-1. **Media off the app process** (highest impact): generate S3 presigned GET URLs after
-   the permission check and 307-redirect, instead of streaming every image byte through
-   Django. Keeps the per-viewer membership gate, removes the byte-pumping.
-2. **Read-replica routing**: a database router sending the read-only hot paths
+1. **Read-replica routing**: a database router sending the read-only hot paths
    (visible_activities lists, feeds, thread pages) to a replica. All gates are
    query-level, so replica reads stay safe.
-3. **pgbouncer (transaction pooling)** in front of Postgres once connection counts climb.
-4. **Conditional GETs / fragment caching**: ETags on activity/event lists keyed on
+2. **pgbouncer (transaction pooling)** in front of Postgres once connection counts climb.
+3. **Conditional GETs / fragment caching**: ETags on activity/event lists keyed on
    max(updated_at); 5–10 min cache for taxonomy + public places responses.
-5. **blocked_user_ids caching** (60s TTL, invalidated on block/unblock) if profiling
+4. **blocked_user_ids caching** (60s TTL, invalidated on block/unblock) if profiling
    shows it hot — it runs on every visibility check.
-6. **Async media scanning** only if external scanner latency (Arachnid/PhotoDNA round
+5. **Async media scanning** only if external scanner latency (Arachnid/PhotoDNA round
    trip) starts failing uploads — keep fail-closed semantics if so.
-7. **Keyset cursors on the remaining offset-paginated lists** for mobile clients.
+6. **Keyset cursors on the remaining offset-paginated lists** for mobile clients.
 
 ## Non-goals (product invariants, not debt)
 

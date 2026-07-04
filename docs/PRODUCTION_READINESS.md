@@ -23,9 +23,10 @@ DRF permissions · drf-spectacular + Swagger · DRF throttle scopes with XFF/`NU
 request-body-size middleware · per-delivery WebSocket re-auth (4403) · SSRF safe-fetch
 (`apps/safety/net.py`) · GDPR `erase_user` + export endpoints · brute-force login lockout · HNSW
 pgvector ANN index · SSL-redirect + 1-yr HSTS + secure cookies · prod boot assertions (no dev IdP,
-EU media residency, shared-state) · opt-in Sentry (privacy-safe) · `run_due_jobs` retention
-scheduler · RO/EN localization · CI gates (ruff, migrations, `check --deploy`, pytest, docker build,
-weekly pip-audit) · well-indexed hot read paths + `statement_timeout`.
+EU media residency, shared-state) · opt-in Sentry (privacy-safe) · authorized presigned media
+redirect seam with local streaming fallback · `run_due_jobs` retention scheduler · RO/EN
+localization · CI gates (ruff, migrations, `check --deploy`, pytest, docker build, weekly
+pip-audit) · well-indexed hot read paths + `statement_timeout`.
 
 Feature-level behavioral contracts (what each shipped feature guarantees and the invariant gates
 it carries) live in [FEATURES_BUILT.md](FEATURES_BUILT.md) — check it before building any
@@ -119,9 +120,10 @@ it's a **provisioning** gap (the shipped `render.yaml` is a free-tier *demo*).
 
 ### Horizontal scaling (after Redis)
 - **Multiple workers behind the LB** (uvicorn-workers/multi-replica to use all cores).
-- **Media egress off the app process** — every blob (≤7 MiB) is buffered + streamed through the
-  single daphne loop. Add `presigned_get_url` to the S3 backend and **302/307-redirect after the
-  membership check** so bytes never transit the app (the `SCALING.md` #1 item); optionally CDN-front.
+- **Media egress off the app process — DONE (2026-07-04)**: `StorageBackend.presigned_get_url()`
+  lets the S3 backend mint short-lived private GET URLs when `MEDIA_REDIRECT_TO_PRESIGNED=True`.
+  Media file views re-check the signed token and current viewer authorization before a 307 redirect;
+  local/dev/test filesystem storage returns no presign URL and keeps streaming through Django.
 - **PgBouncer** (transaction pooling) before scaling past one process; set `CONN_MAX_AGE=0` +
   disable server-side cursors when pooling.
 

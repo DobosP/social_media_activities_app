@@ -19,6 +19,7 @@ upload ─▶ size/format/bomb checks ─▶ safety scan (original bytes, fail-c
 row in Postgres (Photo / media.Attachment): storage_key, content_type, byte_size, sha256, w/h, …
                                    │
 serve ─▶ signed, per-viewer, membership-scoped token ─▶ view re-checks access ─▶ streams bytes
+         or 307-redirects to a short presigned object-store URL when explicitly enabled
          (images inline + nosniff; PDF forced-download + nosniff; never a public bucket URL)
 ```
 
@@ -155,10 +156,10 @@ MEDIA_SIGNED_URL_TTL=300              # signed-token lifetime (seconds)
    the app never needs public read.
 3. Deploy. The prod boot guardrail confirms EU residency; uploads now land in Hetzner, compressed.
 
-## 8. Scaling & future options (not built — keep the design simple first)
+## 8. Scaling & future options
 
 - **Direct GETs (presigned redirect) — IMPLEMENTED, opt-in.** Set `MEDIA_REDIRECT_TO_PRESIGNED=True`
-  (S3 backend only): after the per-viewer access check, the serving view 302-redirects to a
+  (S3 backend only): after the per-viewer access check, the serving view 307-redirects to a
   short-lived (`MEDIA_PRESIGNED_TTL`, default 60s) presigned object-store URL so the bytes never
   transit the app process — the biggest single-process saturation fix. PDFs keep forced-download +
   content-type via the presign response overrides. **Trade-off:** while a presigned URL is live a
