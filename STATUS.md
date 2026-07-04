@@ -47,6 +47,9 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
   browser reports with an 8 KiB body cap, stores only sanitized directive/blocked/document triples
   in process memory for tests/debugging, logs only those fields under a global budget, and operators
   can group exported report-only payloads with `digest_csp_reports`.
+- **Explicit browser security headers are implemented** (ADR-0015): shared settings pin
+  `nosniff`, `Referrer-Policy: same-origin`, `Cross-Origin-Opener-Policy: same-origin`, and a
+  conservative `Permissions-Policy` that disables camera/microphone and scopes geolocation to self.
 - **Readiness and request-correlation observability are implemented** (ADR-0011, ADR-0013):
   `/healthz` is cheap liveness only; `/readyz` checks the DB plus Redis cache and object storage
   only when those dependencies are configured; SIGTERM/SIGINT or the ops test seam flips `/readyz`
