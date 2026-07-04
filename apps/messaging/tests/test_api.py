@@ -192,6 +192,20 @@ def test_v1_conversation_list_is_cursor_paginated(settings, adult_a):
     assert body["next_cursor"]
 
 
+def test_v1_conversation_list_query_count_is_constant(
+    settings, adult_a, django_assert_max_num_queries
+):
+    settings.MESSAGING_CONVERSATION_LIST_LIMIT = 20
+    for i in range(8):
+        partner = make_user(f"v1_q_partner_{i}")
+        services.start_direct(adult_a, partner)
+
+    with django_assert_max_num_queries(5):
+        resp = client_for(adult_a).get("/api/v1/messaging/conversations/", {"limit": 6})
+    assert resp.status_code == 200, resp.content
+    assert len(resp.json()["results"]) == 6
+
+
 def test_message_history_is_bounded(settings, adult_a, adult_b):
     settings.MESSAGING_MESSAGE_PAGE_LIMIT = 5
     conv = _active_direct(adult_a, adult_b)
@@ -238,3 +252,23 @@ def test_v1_message_history_uses_older_cursor(settings, adult_a, adult_b):
     assert len(bounded.data["results"]) == 5
     smaller = client_for(adult_b).get(url, {"limit": 2})
     assert len(smaller.data["results"]) == 2
+
+
+def test_v1_message_history_query_count_is_constant(
+    settings, adult_a, adult_b, django_assert_max_num_queries
+):
+    settings.MESSAGING_MESSAGE_PAGE_LIMIT = 20
+    conv = _active_direct(adult_a, adult_b)
+    keys = keys_for(conv)
+    for i in range(12):
+        services.post_message(
+            adult_a, conv, ciphertext=f"Y2lwaGVyq{i}", iv="aXY=", recipient_keys=keys
+        )
+
+    with django_assert_max_num_queries(6):
+        resp = client_for(adult_b).get(
+            f"/api/v1/messaging/conversations/{conv.id}/messages/",
+            {"limit": 10},
+        )
+    assert resp.status_code == 200, resp.content
+    assert len(resp.json()["results"]) == 10

@@ -4,7 +4,8 @@ tamper-evident audit log, and a lightweight rate limiter. See docs/SAFETY.md."""
 import hashlib
 import json
 from collections import namedtuple
-from datetime import timedelta
+from dataclasses import dataclass
+from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
@@ -32,6 +33,15 @@ class RateLimited(Exception):
 class AppealError(Exception):
     """A moderation appeal could not be filed/resolved (not self-scoped, duplicate, rate-limited,
     or already decided). The caller maps it to a gentle 4xx — never a 500."""
+
+
+@dataclass(frozen=True)
+class AuditChainCheckpoint:
+    """A trusted high-water mark for incremental audit-chain verification."""
+
+    last_id: int
+    last_hash: str
+    created_at: datetime | None = None
 
 
 def _notify_reporter(reporter, title, body):
@@ -94,21 +104,52 @@ def record_audit(event: str, *, actor=None, target=None, **data) -> AuditLog:
     )
 
 
-def verify_audit_chain() -> bool:
-    """Recompute the chain; returns False if any row was tampered with or removed.
-
-    Streams with ``.iterator()`` so verification stays bounded in memory on a never-purged
-    (append-only) audit table — materializing every row would blow memory + the timeout at scale."""
-    prev_hash = ""
-    for row in AuditLog.objects.order_by("id").iterator(chunk_size=2000):
+def _verify_audit_rows(qs, *, prev_hash: str) -> tuple[bool, AuditChainCheckpoint]:
+    last_id = 0
+    last_created_at = None
+    for row in qs.iterator(chunk_size=2000):
         digest = _canonical(
             row.actor_ref, row.event, row.target_ref, row.data, row.created_at.isoformat()
         )
         expected = hashlib.sha256((prev_hash + digest).encode()).hexdigest()
         if row.prev_hash != prev_hash or row.hash != expected:
-            return False
+            return False, AuditChainCheckpoint(last_id, prev_hash, last_created_at)
         prev_hash = row.hash
-    return True
+        last_id = row.id
+        last_created_at = row.created_at
+    return True, AuditChainCheckpoint(last_id, prev_hash, last_created_at)
+
+
+def verify_audit_chain(*, checkpoint: AuditChainCheckpoint | None = None) -> bool:
+    """Recompute the chain; returns False if any checked row was tampered with or removed.
+
+    Streams with ``.iterator()`` so verification stays bounded in memory on a never-purged
+    (append-only) audit table — materializing every row would blow memory + the timeout at scale.
+
+    Passing a previously verified checkpoint checks only the append-only extension after that
+    high-water mark. It is an optimisation for recurring verification jobs, not a substitute for
+    periodic full verification of old history.
+    """
+    qs = AuditLog.objects.order_by("id")
+    prev_hash = ""
+    if checkpoint is not None:
+        if checkpoint.last_id > 0:
+            if not AuditLog.objects.filter(
+                id=checkpoint.last_id, hash=checkpoint.last_hash
+            ).exists():
+                return False
+        elif checkpoint.last_hash:
+            return False
+        qs = qs.filter(id__gt=checkpoint.last_id)
+        prev_hash = checkpoint.last_hash
+    ok, _ = _verify_audit_rows(qs, prev_hash=prev_hash)
+    return ok
+
+
+def verified_audit_checkpoint() -> AuditChainCheckpoint | None:
+    """Verify the full audit chain and return its current trusted high-water mark."""
+    ok, checkpoint = _verify_audit_rows(AuditLog.objects.order_by("id"), prev_hash="")
+    return checkpoint if ok else None
 
 
 @transaction.atomic

@@ -59,7 +59,9 @@ Design, operations and decision docs for the Social Activities App.
 
 - [adr/](adr/) — **Architecture Decision Records** (`0000-template.md`): 0001 Hetzner hosting ·
   0002 cohort/connections policy · 0003 Postgres DeferredTask, no Celery · 0004 media screening ·
-  0005 dependency pinning · 0006 E2EE over scanning. On conflict: `STATUS.md` > newest ADR > other docs.
+  0005 dependency pinning · 0006 E2EE over scanning · 0007 mobile photo activity cards · 0008 API
+  v1/deferred task kinds · 0009 query retention/audit checkpoints. On conflict: `STATUS.md` >
+  newest ADR > other docs.
 - [archive/](archive/) — dated, superseded/completed records (2026-05 audits, hardening plan,
   Phase-2 plan, workboard, feature catalogs, 2026-06 changelog, gap tracker). Each carries a
   banner; immutable — do not update.

@@ -608,10 +608,10 @@ def can_view(user, conversation) -> bool:
     loses read access (enforced per-delivery on the live socket too)."""
     if not getattr(user, "is_active", False):
         return False
-    if not is_active_participant(user, conversation):
-        return False
     p = _participant(conversation, user)
-    if p and p.role == Participant.Role.GUARDIAN:
+    if not p or p.state != Participant.State.ACTIVE:
+        return False
+    if p.role == Participant.Role.GUARDIAN:
         return True
     # Cohort isolation must hold at READ time, not only at join/send: a participant whose
     # cohort changed can no longer read a conversation pinned to a different cohort.

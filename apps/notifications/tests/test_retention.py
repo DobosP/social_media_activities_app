@@ -10,6 +10,8 @@ from django.test import override_settings
 from django.utils import timezone
 
 from apps.notifications.models import Notification
+from apps.ops import tasks
+from apps.ops.models import DeferredTask
 
 pytestmark = pytest.mark.django_db
 User = get_user_model()
@@ -39,6 +41,7 @@ def test_purges_only_old_read_non_dsa():
     old_read_system = _notif(u, kind=Notification.Kind.SYSTEM, read=True, age_days=400)
 
     call_command("purge_read_notifications")
+    tasks.run_pending_tasks()
 
     surviving = set(Notification.objects.values_list("pk", flat=True))
     assert old_read.pk not in surviving  # old + read + non-DSA -> purged
@@ -53,4 +56,21 @@ def test_retention_disabled_purges_nothing():
     u = User.objects.create_user(username="ret0", password="pw")
     old_read = _notif(u, kind=Notification.Kind.JOIN_APPROVED, read=True, age_days=400)
     call_command("purge_read_notifications")
+    tasks.run_pending_tasks()
     assert Notification.objects.filter(pk=old_read.pk).exists()
+    assert not DeferredTask.objects.filter(kind="notifications.retention_purge").exists()
+
+
+@override_settings(NOTIFICATION_RETENTION_DAYS=180, NOTIFICATION_RETENTION_BATCH=2)
+def test_retention_task_is_bounded():
+    u = User.objects.create_user(username="ret_batch", password="pw")
+    old = [
+        _notif(u, kind=Notification.Kind.JOIN_APPROVED, read=True, age_days=400)
+        for _ in range(3)
+    ]
+
+    call_command("purge_read_notifications")
+    tasks.run_pending_tasks()
+
+    remaining = set(Notification.objects.values_list("pk", flat=True))
+    assert sum(n.pk not in remaining for n in old) == 2

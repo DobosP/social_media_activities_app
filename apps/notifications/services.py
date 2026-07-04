@@ -79,3 +79,25 @@ def mark_all_read(user) -> int:
 
 def unread_count(user) -> int:
     return Notification.objects.filter(recipient=user, read_at__isnull=True).count()
+
+
+def purge_read_notifications(*, days: int, batch_size: int) -> int:
+    """Delete one bounded batch of old READ, mutable notifications.
+
+    MODERATION and SYSTEM are DSA/safety notices and are never purged here. Unread notifications
+    are also kept, because the user has not seen them yet. The bounded ID subquery keeps each
+    deferred task's lock/delete footprint predictable as fan-out volume grows.
+    """
+    if days <= 0 or batch_size <= 0:
+        return 0
+    cutoff = timezone.now() - timezone.timedelta(days=days)
+    ids = list(
+        Notification.objects.filter(read_at__isnull=False, created_at__lt=cutoff)
+        .exclude(kind__in=[k.value for k in NON_MUTABLE_KINDS])
+        .order_by("created_at", "id")
+        .values_list("id", flat=True)[:batch_size]
+    )
+    if not ids:
+        return 0
+    deleted, _ = Notification.objects.filter(id__in=ids).delete()
+    return deleted

@@ -250,6 +250,7 @@ def test_production_registry_has_reviewed_handlers():
             "erasure.blob_cleanup",
             "media.scan.dispatch",
             "notify.activity_fanout",
+            "notifications.retention_purge",
         }
     )
 
@@ -340,6 +341,40 @@ def test_notify_activity_fanout_handler_is_bounded_and_idempotent():
         ).count()
         == 1
     )
+
+
+@override_settings(NOTIFICATION_RETENTION_DAYS=180, NOTIFICATION_RETENTION_BATCH=1)
+def test_notification_retention_handler_keeps_unread_and_dsa_notices():
+    from datetime import timedelta
+
+    from apps.accounts.models import User
+    from apps.notifications.models import Notification
+    from apps.ops import handlers  # noqa: F401
+
+    user = User.objects.create_user(username="deferred_retention", password="pw")
+
+    def _notification(kind, *, read):
+        row = Notification.objects.create(
+            recipient=user,
+            kind=kind,
+            title="old",
+            read_at=timezone.now() if read else None,
+        )
+        Notification.objects.filter(pk=row.pk).update(
+            created_at=timezone.now() - timedelta(days=400)
+        )
+        return row
+
+    purgeable = _notification(Notification.Kind.JOIN_APPROVED, read=True)
+    unread = _notification(Notification.Kind.JOIN_APPROVED, read=False)
+    system = _notification(Notification.Kind.SYSTEM, read=True)
+
+    tasks.enqueue("notifications.retention_purge", {"days": 180, "batch_size": 99})
+    assert tasks.run_pending_tasks()["done"] == 1
+
+    assert not Notification.objects.filter(pk=purgeable.pk).exists()
+    assert Notification.objects.filter(pk=unread.pk).exists()
+    assert Notification.objects.filter(pk=system.pk).exists()
 
 
 def test_cron_run_command_handler_allowlists_due_jobs(monkeypatch):

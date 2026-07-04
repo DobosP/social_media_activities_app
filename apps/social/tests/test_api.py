@@ -253,6 +253,21 @@ def test_v1_mine_membership_list_is_cursor_paginated(settings, adult, place, act
     assert body["next_cursor"]
 
 
+def test_v1_mine_membership_list_query_count_is_constant(
+    settings, adult, place, activity_type, now, django_assert_max_num_queries
+):
+    settings.SOCIAL_MEMBERSHIP_LIST_LIMIT = 20
+    for i in range(12):
+        create_activity(
+            adult, place=place, activity_type=activity_type, title=f"Mine q{i}", starts_at=now
+        )
+
+    with django_assert_max_num_queries(4):
+        resp = _client(adult).get("/api/v1/social/activities/mine/", {"limit": 10})
+    assert resp.status_code == 200, resp.content
+    assert len(resp.json()["results"]) == 10
+
+
 # --- lifecycle / edit over the API (F1/F2) ---
 
 

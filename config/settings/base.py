@@ -229,6 +229,7 @@ if env.bool("DB_POOLED", default=False):
 # Storage hygiene for the in-app notification table (read, non-DSA notices are purged past this by
 # the purge_read_notifications job; 0 disables). MODERATION/SYSTEM DSA notices are never purged.
 NOTIFICATION_RETENTION_DAYS = env.int("NOTIFICATION_RETENTION_DAYS", default=180)
+NOTIFICATION_RETENTION_BATCH = env.int("NOTIFICATION_RETENTION_BATCH", default=1000)
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},

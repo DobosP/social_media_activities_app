@@ -26,11 +26,18 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
 - **API v1 hardening slice is implemented** (ADR-0008): canonical `/api/v1/` plus transitional
   `/api/` alias; DRF `URLPathVersioning`; bounded global limit/offset pagination; cursor/limit
   envelopes on v1 discovery, thread, messaging, social-list, and notification-style APIViews; and
-  focused N+1/query-count guards for thread and notification list surfaces.
+  focused N+1/query-count guards for thread, notification, messaging, and social membership list
+  surfaces.
 - **DeferredTask has production task kinds registered** for bounded blob cleanup, activity
   notification fan-out, allowlisted cron-command splitting, and a fail-closed/audited media-scan
-  placeholder. Media row-delete signals now enqueue blob cleanup instead of deleting storage on
-  the request path; synchronous media scan admission remains fail-closed.
+  placeholder. **Notification retention now schedules a bounded `notifications.retention_purge`
+  task** that deletes only old read mutable notices; unread and MODERATION/SYSTEM safety/DSA notices
+  are excluded. Media row-delete signals now enqueue blob cleanup instead of deleting storage on the
+  request path; synchronous media scan admission remains fail-closed.
+- **Database/read-path hardening slice is implemented** (ADR-0009): Notification inbox reads have a
+  concurrent `(recipient, -created_at)` index migration; `verify_audit_chain()` streams rows and
+  exposes a verified high-water checkpoint helper for incremental extension checks. No migration
+  linter dependency is present yet; zero-downtime CI linting remains open.
 - **Open work** = the open **P0/P1/P2 items in `docs/archive/COMPLETENESS_GAPS_2026-06.md`** (gap tracker
   for the audited feature waves) + the operational substrate in `docs/PRODUCTION_READINESS.md`
   (provisioning shared state, async task queue, observability, edge security). Almost none of it

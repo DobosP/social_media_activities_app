@@ -65,8 +65,8 @@ it's a **provisioning** gap (the shipped `render.yaml` is a free-tier *demo*).
   `DeferredTask` queue (`apps/ops/tasks.py`, transactional `enqueue`, `SKIP LOCKED` claims,
   bounded retries) drained by the existing `run_due_jobs` cron. No Celery/Redis-broker by
   design — see `ASYNC_TASKS.md` + `adr/0003`. **Updated 2026-07-04:** production kinds are now
-  registered for blob cleanup, activity notification fan-out, allowlisted cron-command splitting,
-  and a fail-closed media-scan placeholder.
+  registered for blob cleanup, activity notification fan-out, bounded notification retention,
+  allowlisted cron-command splitting, and a fail-closed media-scan placeholder.
 - Remaining async moves: a real withheld-state media scanner (strict timeout/circuit breaker),
   full GDPR export/erasure orchestration beyond blob cleanup, broadcast group_send, and converting
   the serial daily cron call sites to enqueue `cron.run_command` tasks where useful.
@@ -112,8 +112,9 @@ it's a **provisioning** gap (the shipped `render.yaml` is a free-tier *demo*).
   messaging conversation/history reads, and notification lists. The `/api/` alias keeps legacy
   response shapes while still retaining existing hard caps.
 - **N+1 CI guard — PARTIAL (2026-07-04)**: existing `participant_keys()` guard remains; added
-  query-count guards for v1 thread reads and notification list reads. Broader prod-sized
-  `EXPLAIN`/index work remains deferred until there is representative traffic.
+  query-count guards for v1 thread reads, notification list reads, messaging conversation/history
+  reads, and social membership list reads. Broader prod-sized `EXPLAIN`/index work remains
+  deferred until there is representative traffic.
 
 ### Horizontal scaling (after Redis)
 - **Multiple workers behind the LB** (uvicorn-workers/multi-replica to use all cores).
@@ -124,16 +125,20 @@ it's a **provisioning** gap (the shipped `render.yaml` is a free-tier *demo*).
   disable server-side cursors when pooling.
 
 ### Database over time
-- **Notification covering index** `(recipient, -created_at)` (cheap; the inbox sort currently can't
-  use the `(recipient, read_at)` index).
-- **High-growth tables** (Post, Notification, AuditLog) — add a Notification retention purge (read
-  notifications aren't safety records); plan declarative monthly RANGE partitioning of AuditLog/Post
-  before tens of millions of rows.
-- **`verify_audit_chain` full-table scan** — stream with `.iterator()` + a verified high-water
-  checkpoint.
+- **Notification covering index — DONE (2026-07-04)**: `notifications/0017` adds
+  `(recipient, -created_at)` with `AddIndexConcurrently` / `atomic=False` for inbox reads.
+- **Notification retention — DONE (2026-07-04)**: `notifications.retention_purge` deletes one
+  bounded batch of old read mutable notices; unread and MODERATION/SYSTEM safety/DSA notices are
+  excluded.
+- **Audit chain verification — DONE (2026-07-04)**: `verify_audit_chain()` streams with
+  `.iterator()` and `verified_audit_checkpoint()` returns a verified high-water mark for incremental
+  extension checks. Periodic full verification remains the way to re-check old history.
+- **High-growth tables** (Post, AuditLog) — plan declarative monthly RANGE partitioning before tens
+  of millions of rows.
 - **Read-replica routing** (env-gated `REPLICA_DATABASE_URL` + a router for public read-only GETs).
-- **Zero-downtime migration discipline** — expand/contract convention +
-  `AddIndexConcurrently`/`atomic=False` for index builds on hot tables + a CI migration linter.
+- **Zero-downtime migration discipline — PARTIAL**: hot-table index builds now have a concrete
+  `AddIndexConcurrently`/`atomic=False` example; no migration-linter dependency or CI seam exists
+  yet, so automated zero-downtime migration linting remains open.
 
 ### Reliability
 - **Retries / circuit-breakers** for Stripe + booking (the Overpass/scanner pattern, applied
