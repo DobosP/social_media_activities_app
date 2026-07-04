@@ -42,6 +42,11 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
   handlers were removed from key server-rendered web pages, JSON script islands carry CSP nonces,
   Leaflet/chat/offline-meetups flows use static JS, and `DJANGO_CSP_ENFORCE=True` flips the shared
   policy from report-only to enforcing after deployed violation reports are reviewed.
+- **Media egress presigned redirect is implemented** (ADR-0012): when
+  `MEDIA_REDIRECT_TO_PRESIGNED=True` and the selected storage backend supports presigning,
+  media-serving views re-check viewer authorization before returning a short-lived 307 object-store
+  redirect. Local/dev/test filesystem storage still streams through Django; scanner and
+  fail-closed upload gates are unchanged.
 - **Open work** = the open **P0/P1/P2 items in `docs/archive/COMPLETENESS_GAPS_2026-06.md`** (gap tracker
   for the audited feature waves) + the operational substrate in `docs/PRODUCTION_READINESS.md`
   (provisioning shared state, async task queue, observability, edge security). Almost none of it
