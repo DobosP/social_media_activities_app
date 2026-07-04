@@ -13,6 +13,7 @@ from apps.safety.services import (
     is_blocked,
     take_action,
     unblock_user,
+    verified_audit_checkpoint,
     verify_audit_chain,
 )
 
@@ -80,6 +81,40 @@ def test_audit_chain_verifies_and_detects_tampering():
     row.data = {"event": "altered"}
     row.save(update_fields=["data"])
     assert verify_audit_chain() is False
+
+
+def test_audit_chain_checkpoint_verifies_append_only_extension():
+    a, b = _user("cp1"), _user("cp2")
+    file_report(a, b, ReasonCode.SPAM)
+    checkpoint = verified_audit_checkpoint()
+    assert checkpoint is not None
+    assert checkpoint.last_id == AuditLog.objects.latest("id").id
+
+    block_user(a, b)
+    assert verify_audit_chain(checkpoint=checkpoint) is True
+
+    row = AuditLog.objects.get(pk=checkpoint.last_id)
+    row.hash = "0" * 64
+    row.save(update_fields=["hash"])
+    assert verify_audit_chain(checkpoint=checkpoint) is False
+
+
+def test_empty_audit_checkpoint_can_seed_incremental_verification():
+    checkpoint = verified_audit_checkpoint()
+    assert checkpoint is not None
+    assert checkpoint.last_id == 0
+    assert checkpoint.last_hash == ""
+    assert verify_audit_chain(checkpoint=checkpoint) is True
+
+
+def test_audit_checkpoint_returns_none_on_tamper():
+    a, b = _user("cp_bad1"), _user("cp_bad2")
+    file_report(a, b, ReasonCode.SPAM)
+    row = AuditLog.objects.order_by("id").first()
+    row.data = {"event": "altered"}
+    row.save(update_fields=["data"])
+
+    assert verified_audit_checkpoint() is None
 
 
 def test_rate_limiter_blocks_over_limit():

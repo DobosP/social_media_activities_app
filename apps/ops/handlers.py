@@ -114,6 +114,24 @@ def notify_activity_fanout(payload: dict) -> None:
         notify(membership.user, kind, title, body=body, url=url)
 
 
+@register("notifications.retention_purge")
+def notifications_retention_purge(payload: dict) -> None:
+    """Delete one bounded batch of old read, mutable notifications."""
+    from apps.notifications.services import purge_read_notifications
+
+    default_days = getattr(settings, "NOTIFICATION_RETENTION_DAYS", 180)
+    max_batch = getattr(settings, "NOTIFICATION_RETENTION_BATCH", 1000)
+    try:
+        days = int(payload.get("days") or default_days)
+    except (TypeError, ValueError):
+        days = default_days
+    try:
+        requested_batch = int(payload.get("batch_size") or max_batch)
+    except (TypeError, ValueError):
+        requested_batch = max_batch
+    purge_read_notifications(days=days, batch_size=max(0, min(requested_batch, max_batch)))
+
+
 @register("cron.run_command")
 def cron_run_command(payload: dict) -> None:
     """Run one allowlisted periodic command as its own retryable task."""

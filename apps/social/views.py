@@ -318,7 +318,7 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
         memberships = (
             Membership.objects.filter(user=actor)
             .exclude(state=Membership.State.REMOVED)
-            .select_related("activity")
+            .select_related("activity", "user")
             .order_by("-created_at")
         )
         if is_versioned_api_request(request):

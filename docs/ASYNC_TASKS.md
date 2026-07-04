@@ -4,6 +4,8 @@
 (`apps/ops/tasks.py`, `apps/ops/models.py:DeferredTask`, the `process_deferred_tasks` command) plus
 the first production task kinds in `apps/ops/handlers.py`: `erasure.blob_cleanup`,
 `notify.activity_fanout`, `cron.run_command`, and the fail-closed `media.scan.dispatch` placeholder.
+**Updated 2026-07-04:** `notifications.retention_purge` is also registered for bounded notification
+table hygiene.
 
 ## Why this exists
 
@@ -14,6 +16,8 @@ Some work is too heavy or too latency-sensitive to do inside the web request:
 - **Media scanning** of a freshly-uploaded image/PDF can be slow (an external scanner round-trip).
 - **Notification fan-out** to every member of a large activity/group is O(members) inserts on the
   request thread.
+- **Notification retention** can delete many old inbox convenience rows; it must stay bounded and
+  must never delete unread or safety/DSA notices.
 
 The product invariants constrain the solution: **Postgres is the single datastore** (inv.6) and we
 **avoid heavy deps and per-user cloud spend**. So this is a *Postgres-backed* work queue drained by
@@ -125,3 +129,11 @@ Pick **one** as the first real handler; each is a small, reviewable change.
   live. DSA-mandated MODERATION/SYSTEM notices that must be immediate should stay synchronous.
 - **Safety:** the mute/block/DSA gate stays inside `notify` and is re-evaluated at send time, so
   deferral changes only *when*, never *who*.
+
+### 4. Notification retention *(implemented)*
+- **Today:** `purge_read_notifications` schedules `notifications.retention_purge`; the existing
+  `run_due_jobs` tick drains it through `process_deferred_tasks`.
+- **Handler:** deletes one settings-capped batch (`NOTIFICATION_RETENTION_BATCH`, default 1000) of
+  notifications older than `NOTIFICATION_RETENTION_DAYS`.
+- **Safety:** only read mutable notices are eligible. Unread notices are kept, and MODERATION/SYSTEM
+  notices are permanently excluded because they carry DSA/safety obligations.
