@@ -146,11 +146,11 @@ class CSPReportView(APIView):
     ENFORCING CSP (today the policy is report-only with nowhere to send violations).
 
     AllowAny + never throttled: browsers POST these unauthenticated and cross-context, and a dropped
-    report is a lost signal — so the endpoint ALWAYS returns 204. The raw body is read directly (the
-    ``application/csp-report`` / ``application/reports+json`` content types aren't DRF-parsed),
-    bounded, and only OPERATIONAL fields (directive / blocked-uri / document-uri — the app's own
-    URLs, never user PII) are logged, at a GLOBAL per-minute budget so a malicious flood of POSTs
-    can't balloon the logs."""
+    report is a lost signal — so the endpoint ALWAYS returns 204. The raw body is read directly
+    only after a size check (the ``application/csp-report`` / ``application/reports+json`` content
+    types aren't DRF-parsed), and only OPERATIONAL fields (directive / blocked-uri / document-uri
+    with URL query/fragment stripped) are logged and remembered in a process-local debug buffer, at
+    a GLOBAL per-minute budget so a malicious flood of POSTs can't balloon the logs."""
 
     permission_classes = [AllowAny]
     throttle_classes = []  # like /healthz: an unauthenticated browser-driven endpoint, never 429
@@ -158,12 +158,11 @@ class CSPReportView(APIView):
     # SessionAuthentication would then enforce CSRF (no token on a browser report) and 403 it.
     authentication_classes = []
 
-    _MAX_BODY = 8 * 1024
     _LOG_BUDGET = 120  # log at most this many reports per minute (global); excess is still 204'd
 
     def post(self, request):
         if self._log_allowed():
-            self._log(request.body[: self._MAX_BODY])
+            self._ingest_and_log(request)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def _log_allowed(self) -> bool:
@@ -179,18 +178,33 @@ class CSPReportView(APIView):
             return True  # a cache hiccup must never silence a real violation report
         return True
 
-    def _log(self, body: bytes) -> None:
-        from apps.ops.csp import parse_csp_report
+    def _ingest_and_log(self, request) -> None:
+        from apps.ops.csp import MAX_CSP_REPORT_BODY_BYTES, ingest_csp_report
 
-        try:
-            violations = parse_csp_report(body)
-        except ValueError:
+        content_length = self._content_length(request)
+        if content_length is not None and content_length > MAX_CSP_REPORT_BODY_BYTES:
+            _csp_logger.info("CSP report (oversized, %d bytes)", content_length)
+            return
+
+        body = request.body
+        if len(body) > MAX_CSP_REPORT_BODY_BYTES:
+            _csp_logger.info("CSP report (oversized, %d bytes)", len(body))
+            return
+
+        result = ingest_csp_report(body)
+        if result.malformed:
             _csp_logger.info("CSP report (unparseable, %d bytes)", len(body))
             return
-        for violation in violations:
+        for violation in result.violations:
             _csp_logger.info(
                 "CSP violation: directive=%s blocked=%s doc=%s",
                 violation.directive,
                 violation.blocked,
                 violation.document,
             )
+
+    def _content_length(self, request) -> int | None:
+        try:
+            return int(request.META.get("CONTENT_LENGTH") or "")
+        except (TypeError, ValueError):
+            return None

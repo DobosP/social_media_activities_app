@@ -162,8 +162,9 @@ _CONTENT_SECURITY_POLICY = {
         "form-action": ["'self'"],
         # Collect violations: report-uri (works in all current browsers) + report-to (modern,
         # references the "csp" group in the Reporting-Endpoints header set by the ops middleware).
-        # The endpoint just logs + 204s — see apps.ops.views.CSPReportView (apps.ops.urls is mounted
-        # under /api/v1/, so the collector lives at /api/v1/ops/csp-report/).
+        # The endpoint sanitizes, logs, and 204s — see apps.ops.views.CSPReportView
+        # (apps.ops.urls is mounted under /api/v1/, so the collector lives at
+        # /api/v1/ops/csp-report/).
         "report-uri": ["/api/v1/ops/csp-report/"],
         "report-to": "csp",
     },

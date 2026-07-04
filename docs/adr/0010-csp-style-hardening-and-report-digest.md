@@ -1,7 +1,7 @@
 # ADR-0010: CSP style hardening and report digest
 
 Date: 2026-07-04
-Status: accepted
+Status: superseded-by ADR-0014
 
 ## Decision
 Keep django-csp report-only by default and keep `DJANGO_CSP_ENFORCE=True` as the explicit

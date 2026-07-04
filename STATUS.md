@@ -38,12 +38,15 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
   inbox reads have a concurrent `(recipient, -created_at)` index migration; `verify_audit_chain()`
   streams rows and exposes a verified high-water checkpoint helper for incremental extension checks.
   No migration linter dependency is present yet; zero-downtime CI linting remains open.
-- **CSP enforcement hardening is implemented** (ADR-0010): executable inline scripts, inline event
+- **CSP enforcement hardening is implemented** (ADR-0014): executable inline scripts, inline event
   handlers, inline style attributes, and inline style blocks were removed from key CSP-smoked
   server-rendered pages; JSON/JSON-LD script islands carry CSP nonces; Leaflet/chat/offline-meetups
   flows use static JS; the shared policy no longer includes `style-src 'unsafe-inline'`; and
   `DJANGO_CSP_ENFORCE=True` remains the explicit enforcement switch after deployed violation reports
-  are reviewed. Operators can group exported report-only payloads with `digest_csp_reports`.
+  are reviewed. The report-only collector at `/api/v1/ops/csp-report/` accepts unauthenticated
+  browser reports with an 8 KiB body cap, stores only sanitized directive/blocked/document triples
+  in process memory for tests/debugging, logs only those fields under a global budget, and operators
+  can group exported report-only payloads with `digest_csp_reports`.
 - **Readiness and request-correlation observability are implemented** (ADR-0011, ADR-0013):
   `/healthz` is cheap liveness only; `/readyz` checks the DB plus Redis cache and object storage
   only when those dependencies are configured; SIGTERM/SIGINT or the ops test seam flips `/readyz`
