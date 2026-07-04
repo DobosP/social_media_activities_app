@@ -7,6 +7,7 @@ is served at root scope with the right content type; its offline/purge behaviour
 """
 
 from datetime import timedelta
+from pathlib import Path
 
 import pytest
 from django.contrib.gis.geos import Point
@@ -163,15 +164,19 @@ def test_service_worker_served_at_root_with_correct_headers():
 def test_sw_registration_and_purge_wiring_present_for_member_absent_for_anon():
     member = _user("f38_reg")
     on = _client(member).get("/my-meetups/").content.decode()
-    assert "/sw.js" in on and "serviceWorker" in on
+    assert "js/site.js" in on and "js/my-meetups.js" in on
     # The shared-phone safety wiring is the core of F38 — pin it so it can't silently regress.
-    assert "mz-meetups-owner" in on  # user-switch purge
-    assert "caches.delete" in on  # reliable page-level purge (not only postMessage)
-    assert '"purge"' in on
-    assert 'form[action$="/logout/"]' in on  # logout-submit purge hook
+    assert "data-meetups-owner" in on  # user-switch purge config
     assert str(member.public_id) in on  # the owner identity baked in
     off = Client().get("/").content.decode()
     assert "/sw.js" not in off and "mz-meetups-owner" not in off  # anon gets no SW + no wiring
+
+    site_js = Path("static/js/site.js").read_text()
+    assert "serviceWorker" in site_js
+    assert "mz-meetups-owner" in site_js
+    assert "caches.delete" in site_js  # reliable page-level purge (not only postMessage)
+    assert '"purge"' in site_js
+    assert 'form[action$="/logout/"]' in site_js  # logout-submit purge hook
 
 
 def test_removed_or_requested_membership_does_not_appear():

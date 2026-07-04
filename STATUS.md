@@ -31,6 +31,10 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
   notification fan-out, allowlisted cron-command splitting, and a fail-closed/audited media-scan
   placeholder. Media row-delete signals now enqueue blob cleanup instead of deleting storage on
   the request path; synchronous media scan admission remains fail-closed.
+- **CSP enforcement prep is implemented** (ADR-0009): executable inline scripts and inline event
+  handlers were removed from key server-rendered web pages, JSON script islands carry CSP nonces,
+  Leaflet/chat/offline-meetups flows use static JS, and `DJANGO_CSP_ENFORCE=True` flips the shared
+  policy from report-only to enforcing after deployed violation reports are reviewed.
 - **Open work** = the open **P0/P1/P2 items in `docs/archive/COMPLETENESS_GAPS_2026-06.md`** (gap tracker
   for the audited feature waves) + the operational substrate in `docs/PRODUCTION_READINESS.md`
   (provisioning shared state, async task queue, observability, edge security). Almost none of it

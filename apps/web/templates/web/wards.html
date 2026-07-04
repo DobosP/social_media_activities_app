@@ -138,8 +138,8 @@
     </details>
     {% endif %}
 
-    <form method="post" action="{% url 'guardian_revoke' w.pk %}" class="inline"
-          onsubmit="return confirm('{% blocktrans with name=w.display_name|default:w.username %}End guardianship of {{ name }}? This also revokes the consent you granted.{% endblocktrans %}');">
+	    <form method="post" action="{% url 'guardian_revoke' w.pk %}" class="inline"
+	          data-confirm="{% blocktrans with name=w.display_name|default:w.username %}End guardianship of {{ name }}? This also revokes the consent you granted.{% endblocktrans %}">
       {% csrf_token %}
       <button class="btn btn-sm btn-danger" type="submit">{% trans "End guardianship" %}</button>
     </form>

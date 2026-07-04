@@ -3,7 +3,7 @@
 {% block title %}{% trans "Places (text list)" %}{% endblock %}
 {% block meta_description %}{% trans "Parks, libraries and sports venues in Cluj-Napoca where people meet up for in-person group activities." %}{% endblock %}
 {% block meta_robots %}{% if filtered %}noindex, follow{% else %}index, follow{% endif %}{% endblock %}
-{% block structured_data %}{% if structured_data %}<script type="application/ld+json">{{ structured_data }}</script>{% endif %}{% endblock %}
+{% block structured_data %}{% if structured_data %}<script nonce="{{ request.csp_nonce }}" type="application/ld+json">{{ structured_data }}</script>{% endif %}{% endblock %}
 {% block content %}
 <h1>{% trans "Places" %}</h1>
 <p class="muted">{% trans "A plain text list of venues &mdash; no map or JavaScript needed." %}

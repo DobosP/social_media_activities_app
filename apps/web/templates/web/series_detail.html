@@ -26,8 +26,8 @@
         <button class="btn btn-sm" type="submit">{% trans "Resume" %}</button></form>
     {% endif %}
     {% if series.status != 'ended' %}
-      <form method="post" action="{% url 'series_end' series.pk %}"
-            onsubmit="return confirm('{% trans "End this series? No more meetups will be scheduled. This can't be undone." %}');">{% csrf_token %}
+	      <form method="post" action="{% url 'series_end' series.pk %}"
+	            data-confirm="{% trans "End this series? No more meetups will be scheduled. This can't be undone." %}">{% csrf_token %}
         <button class="btn btn-sm btn-danger" type="submit">{% trans "End series" %}</button></form>
     {% endif %}
   </div>

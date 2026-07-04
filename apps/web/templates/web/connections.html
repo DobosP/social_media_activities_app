@@ -83,8 +83,8 @@
           <input type="hidden" name="public_id" value="{{ u.public_id }}">
           <button class="btn btn-sm" type="submit">{% trans "Message" %}</button>
         </form>
-        <form method="post" action="{% url 'connection_remove' %}" class="inline"
-              onsubmit="return confirm('{% trans "Remove this connection?" %}');">{% csrf_token %}
+	        <form method="post" action="{% url 'connection_remove' %}" class="inline"
+	              data-confirm="{% trans 'Remove this connection?' %}">{% csrf_token %}
           <input type="hidden" name="public_id" value="{{ u.public_id }}">
           <button class="linkbtn" type="submit">{% trans "Remove" %}</button>
         </form>

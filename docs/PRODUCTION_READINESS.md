@@ -145,8 +145,11 @@ it's a **provisioning** gap (the shipped `render.yaml` is a free-tier *demo*).
   gauge) scraped by a free Grafana/Prometheus.
 
 ### Security hardening
-- **CSP** (django-csp, report-only → enforce; tighten for Leaflet + the chat aria-live region) — the
-  highest-value missing browser-side control for a child-facing UI.
+- **CSP enforcement switch — PREPARED (2026-07-04)**: django-csp uses one shared policy in
+  report-only by default; key SSR pages have executable inline scripts/event handlers extracted to
+  static files, JSON script islands are nonced, and `DJANGO_CSP_ENFORCE=True` flips the same policy
+  to `Content-Security-Policy` after production violation reports are reviewed. Remaining tightening:
+  remove pervasive inline style attributes and the temporary `style-src` inline allowance.
 - **Explicit security headers** — pin `SECURE_CONTENT_TYPE_NOSNIFF`/`SECURE_REFERRER_POLICY`/COOP +
   a `Permissions-Policy` (lock camera/mic, scope geolocation to self).
 - **SAST + container scanning** in CI — CodeQL/Semgrep (Django ruleset) + Bandit + Trivy/Grype on the
