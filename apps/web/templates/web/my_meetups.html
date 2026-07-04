@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n static %}
 {% block title %}{% trans "My meetups" %}{% endblock %}
 {% block content %}
 <h1>{% trans "My next meetups" %}</h1>
@@ -38,25 +38,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
-// F38: reveal the "saved copy" banner whenever this page might be a cached copy. We do NOT trust
-// navigator.onLine alone (it reports true on captive portals / WiFi-with-no-backhaul — exactly the
-// patchy case this page is for), so we actively PROBE a same-origin endpoint the service worker
-// never caches (/healthz). If the probe fails, the live page couldn't have loaded, so this is the
-// cached copy → show the banner. No-JS users never see the banner; the page content is identical.
-(function () {
-  var note = document.getElementById("offline-note");
-  if (!note) return;
-  function reveal() { note.hidden = false; }
-  function probe() {
-    if (!navigator.onLine) { reveal(); return; }
-    fetch("/healthz", { cache: "no-store" })
-      .then(function (r) { note.hidden = !!(r && r.ok); })
-      .catch(reveal);
-  }
-  probe();
-  window.addEventListener("offline", reveal);
-  window.addEventListener("online", probe);
-})();
-</script>
+<script src="{% static 'js/my-meetups.js' %}" defer></script>
 {% endblock %}

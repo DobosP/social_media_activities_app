@@ -77,8 +77,8 @@
       {% if p.author_id == user.id %}
         &middot; <a href="#edit-{{ p.pk }}">{% trans "Edit" %}</a>
         &middot;
-        <form method="post" action="{% url 'activity_post_delete' activity.pk p.pk %}" class="inline"
-              onsubmit="return confirm('{% trans "Delete your message? This can\'t be undone." %}');">{% csrf_token %}
+	        <form method="post" action="{% url 'activity_post_delete' activity.pk p.pk %}" class="inline"
+	              data-confirm="{% trans "Delete your message? This can't be undone." %}">{% csrf_token %}
           <button class="linkbtn" type="submit">{% trans "Delete" %}</button>
         </form>
         {# No-JS in-place edit: a target-revealed form, classic POST/redirect. #}

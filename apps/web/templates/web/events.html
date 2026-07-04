@@ -3,7 +3,7 @@
 {% block title %}{% trans "What's happening" %}{% endblock %}
 {% block meta_description %}{% trans "Upcoming events at real places in Cluj-Napoca — sport, outdoors, games, reading and culture you can join in person." %}{% endblock %}
 {% block meta_robots %}{% if filtered %}noindex, follow{% else %}index, follow{% endif %}{% endblock %}
-{% block structured_data %}{% if structured_data %}<script type="application/ld+json">{{ structured_data }}</script>{% endif %}{% endblock %}
+{% block structured_data %}{% if structured_data %}<script nonce="{{ request.csp_nonce }}" type="application/ld+json">{{ structured_data }}</script>{% endif %}{% endblock %}
 {% block head %}<link rel="alternate" type="application/rss+xml" title="{% trans 'Upcoming events' %}" href="{% url 'events_feed' %}">{% endblock %}
 {% block content %}
 <h1>{% trans "What's happening" %}</h1>

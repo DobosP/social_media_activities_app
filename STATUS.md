@@ -34,10 +34,14 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
   task** that deletes only old read mutable notices; unread and MODERATION/SYSTEM safety/DSA notices
   are excluded. Media row-delete signals now enqueue blob cleanup instead of deleting storage on the
   request path; synchronous media scan admission remains fail-closed.
-- **Database/read-path hardening slice is implemented** (ADR-0009): Notification inbox reads have a
-  concurrent `(recipient, -created_at)` index migration; `verify_audit_chain()` streams rows and
-  exposes a verified high-water checkpoint helper for incremental extension checks. No migration
-  linter dependency is present yet; zero-downtime CI linting remains open.
+- **Database/read-path hardening slice is implemented** (ADR-0009 query/retention): Notification
+  inbox reads have a concurrent `(recipient, -created_at)` index migration; `verify_audit_chain()`
+  streams rows and exposes a verified high-water checkpoint helper for incremental extension checks.
+  No migration linter dependency is present yet; zero-downtime CI linting remains open.
+- **CSP enforcement prep is implemented** (ADR-0009 CSP): executable inline scripts and inline event
+  handlers were removed from key server-rendered web pages, JSON script islands carry CSP nonces,
+  Leaflet/chat/offline-meetups flows use static JS, and `DJANGO_CSP_ENFORCE=True` flips the shared
+  policy from report-only to enforcing after deployed violation reports are reviewed.
 - **Open work** = the open **P0/P1/P2 items in `docs/archive/COMPLETENESS_GAPS_2026-06.md`** (gap tracker
   for the audited feature waves) + the operational substrate in `docs/PRODUCTION_READINESS.md`
   (provisioning shared state, async task queue, observability, edge security). Almost none of it

@@ -5,7 +5,7 @@
 {% block og_title %}{{ event.title }}{% endblock %}
 {% block meta_description %}{% if event.description %}{{ event.description|striptags|truncatewords:30 }}{% else %}{% blocktrans with title=event.title %}{{ title }} — an event you can attend in person.{% endblocktrans %}{% endif %}{% endblock %}
 {% block og_description %}{% if event.description %}{{ event.description|striptags|truncatewords:30 }}{% else %}{{ event.title }}{% endif %}{% endblock %}
-{% block structured_data %}{% if structured_data %}<script type="application/ld+json">{{ structured_data }}</script>{% endif %}{% endblock %}
+{% block structured_data %}{% if structured_data %}<script nonce="{{ request.csp_nonce }}" type="application/ld+json">{{ structured_data }}</script>{% endif %}{% endblock %}
 {% block content %}
 <nav class="breadcrumbs" aria-label="{% trans 'Breadcrumb' %}">
   <ol>

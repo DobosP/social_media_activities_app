@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import environ
+from csp.constants import NONCE
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -137,20 +138,21 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
-# Content-Security-Policy (P1 hardening) — REPORT-ONLY by default so it surfaces violations in the
-# browser WITHOUT breaking the UI. The web UI loads Leaflet (CSS+JS) from unpkg and OSM map tiles,
-# and uses pervasive inline styles (style-src 'unsafe-inline'). Inline <script> blocks are NOT
-# allowed here, so they are REPORTED — the path to enforcement is: nonce/extract the inline scripts,
-# then move this dict to CONTENT_SECURITY_POLICY (enforcing) once the reports are clean. With no
-# report-uri, violations surface in the browser console only; add a report endpoint to collect them.
-CONTENT_SECURITY_POLICY_REPORT_ONLY = {
+# Content-Security-Policy (P1 hardening). Report-only remains the default so production can collect
+# browser reports before breaking UI. The server-rendered web UI now loads executable page scripts
+# from static files and nonces the remaining JSON script islands. Flip DJANGO_CSP_ENFORCE=True only
+# after reviewing collected reports from /api/v1/ops/csp-report/ for the deployed templates/assets.
+_CONTENT_SECURITY_POLICY = {
     "DIRECTIVES": {
         "default-src": ["'self'"],
-        "script-src": ["'self'", "https://unpkg.com"],
+        "script-src": ["'self'", "https://unpkg.com", NONCE],
         "style-src": ["'self'", "'unsafe-inline'", "https://unpkg.com"],
         "img-src": ["'self'", "data:", "https://*.tile.openstreetmap.org", "https://unpkg.com"],
-        "connect-src": ["'self'"],  # same-origin XHR/fetch + the chat WebSocket
+        # Same-origin fetch/XHR plus same-host WebSockets for activity chat and E2EE messaging.
+        # Some browsers do not treat 'self' as covering ws:// / wss://, so keep schemes explicit.
+        "connect-src": ["'self'", "ws:", "wss:"],
         "font-src": ["'self'"],
+        "worker-src": ["'self'"],
         "object-src": ["'none'"],
         "base-uri": ["'self'"],
         "frame-ancestors": ["'none'"],
@@ -160,9 +162,14 @@ CONTENT_SECURITY_POLICY_REPORT_ONLY = {
         # The endpoint just logs + 204s — see apps.ops.views.CSPReportView (apps.ops.urls is mounted
         # under /api/v1/, so the collector lives at /api/v1/ops/csp-report/).
         "report-uri": ["/api/v1/ops/csp-report/"],
-        "report-to": ["csp"],
+        "report-to": "csp",
     },
 }
+CSP_ENFORCE = env.bool("DJANGO_CSP_ENFORCE", default=False)
+if CSP_ENFORCE:
+    CONTENT_SECURITY_POLICY = _CONTENT_SECURITY_POLICY
+else:
+    CONTENT_SECURITY_POLICY_REPORT_ONLY = _CONTENT_SECURITY_POLICY
 # Reporting-API endpoint group name -> URL, emitted as the Reporting-Endpoints header by
 # apps.ops.middleware.PermissionsPolicyMiddleware so the report-to directive above resolves.
 CSP_REPORTING_ENDPOINTS = {"csp": "/api/v1/ops/csp-report/"}

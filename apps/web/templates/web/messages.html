@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static i18n %}
+{% load csp_helpers static i18n %}
 {% block title %}{% trans "Messages" %}{% endblock %}
 {% block content %}
 <div class="mz-head">
@@ -12,7 +12,7 @@
 
 {# Setting csrf_token here ensures the cookie is present for the JS API calls. #}
 <span style="display:none">{{ csrf_token }}</span>
-{{ messaging_config|json_script:"mz-config" }}
+{% nonced_json_script messaging_config "mz-config" %}
 
 <p id="mz-status" class="muted">{% blocktrans %}Setting up secure messaging&hellip;{% endblocktrans %}</p>
 

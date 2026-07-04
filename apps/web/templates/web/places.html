@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n static %}
 {% block title %}{% trans "Places" %}{% endblock %}
 {% block head %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
@@ -10,43 +10,13 @@
 <p><a href="{% url 'places_list' %}">{% trans "View as a text list (no map needed)" %} &rarr;</a>
   {% if user.is_authenticated %}&middot; <a href="{% url 'place_propose' %}">{% trans "Add a missing place" %}</a>
   &middot; <a href="{% url 'places_pending' %}">{% trans "Pending places" %}</a>{% endif %}</p>
-<div id="map"></div>
+<div id="map"
+     data-places-url="/api/places/?page_size=500"
+     data-place-path="/places/"
+     data-unnamed="{% trans 'Unnamed place' %}"
+     data-link-label="{% trans 'View & organise' %} &rarr;"></div>
 {% endblock %}
 {% block scripts %}
-{% comment %}
-i18n known gap: the JS map-popup strings below ('Unnamed place', 'View & organise →') are not yet
-localized — JS-side i18n (a trans tag emitted into the script, or a data-* config the JS reads) is a
-separate follow-up. The no-JS /places/list/ fallback IS fully localized.
-{% endcomment %}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-<script>
-  const map = L.map('map').setView([46.770, 23.591], 13); // Cluj-Napoca
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'
-  }).addTo(map);
-  fetch('/api/places/?page_size=500', {headers: {'Accept': 'application/json'}})
-    .then(r => r.json())
-    .then(data => {
-      const feats = data.features || [];
-      const pts = [];
-      feats.forEach(f => {
-        const c = f.geometry && f.geometry.coordinates;
-        if (!c) return;
-        const p = f.properties || {};
-        const id = f.id;
-        const m = L.marker([c[1], c[0]]).addTo(map);
-        const name = (p.name || 'Unnamed place');
-        const link = document.createElement('a');
-        link.href = '/places/' + id + '/';
-        link.textContent = 'View & organise →';
-        const div = document.createElement('div');
-        const strong = document.createElement('strong');
-        strong.textContent = name;
-        div.appendChild(strong); div.appendChild(document.createElement('br')); div.appendChild(link);
-        m.bindPopup(div);
-        pts.push([c[1], c[0]]);
-      });
-      if (pts.length) map.fitBounds(pts, {padding: [30, 30]});
-    });
-</script>
+<script src="{% static 'js/places-map.js' %}" defer></script>
 {% endblock %}

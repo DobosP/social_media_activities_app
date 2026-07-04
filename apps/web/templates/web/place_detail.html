@@ -5,7 +5,7 @@
 {% block og_title %}{{ place.display_name|default:_("Place") }}{% endblock %}
 {% block meta_description %}{% blocktrans with name=place.display_name addr=place.display_address %}{{ name }} — a place to meet up for in-person group activities. {{ addr }}{% endblocktrans %}{% endblock %}
 {% block og_description %}{% blocktrans with name=place.display_name %}{{ name }} — a place to meet up for in-person group activities.{% endblocktrans %}{% endblock %}
-{% block structured_data %}{% if structured_data %}<script type="application/ld+json">{{ structured_data }}</script>{% endif %}{% endblock %}
+{% block structured_data %}{% if structured_data %}<script nonce="{{ request.csp_nonce }}" type="application/ld+json">{{ structured_data }}</script>{% endif %}{% endblock %}
 {% block content %}
 <nav class="breadcrumbs" aria-label="{% trans 'Breadcrumb' %}">
   <ol>

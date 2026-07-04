@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n static %}
 {% block title %}{% trans "Organise an activity" %}{% endblock %}
 {% block head %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
@@ -36,102 +36,5 @@ never stored or submitted (the only thing saved is which existing public place y
 {% endblock %}
 {% block scripts %}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-<script>
-(function () {
-  var mapEl = document.getElementById('map');
-  var select = document.getElementById('id_place');
-  // No-JS / no-Leaflet / no place field: the dropdown alone fully works — do nothing.
-  // (The picker stays hidden by default so a no-JS visitor never sees an empty map box.)
-  if (!mapEl || !select || typeof L === 'undefined') { return; }
-  var section = document.getElementById('place-picker');
-  if (section) { section.hidden = false; }  // reveal only once JS + Leaflet are confirmed present
-  var statusEl = document.getElementById('place-picker-status');
-  var chooseLabel = mapEl.dataset.chooseLabel;
-  var selectedPrefix = mapEl.dataset.selectedPrefix;
-  var unnamed = mapEl.dataset.unnamed;
-  var placesUrl = mapEl.dataset.placesUrl;
-
-  var map = L.map('map').setView([46.770, 23.591], 13); // Cluj-Napoca
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'
-  }).addTo(map);
-  var layer = L.layerGroup().addTo(map);
-
-  function optionFor(id) { return select.querySelector('option[value="' + id + '"]'); }
-
-  function selectPlace(id, name) {
-    // Only ever select a place the dropdown actually offers (both come from public_places()).
-    if (!optionFor(id)) { return; }
-    select.value = String(id);
-    select.dispatchEvent(new Event('change', { bubbles: true }));
-    if (statusEl) { statusEl.textContent = selectedPrefix + ' ' + name; }
-  }
-
-  function render(features, recenter) {
-    layer.clearLayers();
-    var pts = [];
-    features.forEach(function (f) {
-      var c = f.geometry && f.geometry.coordinates;
-      if (!c) { return; }
-      var opt = optionFor(f.id);
-      if (!opt) { return; }  // skip a place that isn't selectable in this form
-      var name = (f.properties && f.properties.name) || unnamed;
-      var marker = L.marker([c[1], c[0]]).addTo(layer);
-      var box = document.createElement('div');
-      var strong = document.createElement('strong');
-      strong.textContent = name;
-      var btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'btn btn-sm';
-      btn.textContent = chooseLabel;
-      btn.addEventListener('click', function () { selectPlace(f.id, name); map.closePopup(); });
-      box.appendChild(strong);
-      box.appendChild(document.createElement('br'));
-      box.appendChild(btn);
-      marker.bindPopup(box);
-      pts.push([c[1], c[0]]);
-    });
-    if (recenter) { map.setView(recenter, 14); }
-    else if (pts.length) { map.fitBounds(pts, { padding: [30, 30] }); }
-  }
-
-  function load(query, recenter) {
-    fetch(placesUrl + query, { headers: { 'Accept': 'application/json' } })
-      .then(function (r) { return r.json(); })
-      .then(function (data) { render(data.features || [], recenter); })
-      .catch(function () { /* leave the dropdown as the fallback */ });
-  }
-
-  load('?page_size=500');
-
-  var btn = document.getElementById('place-near-me');
-  if (btn && navigator.geolocation) {
-    btn.addEventListener('click', function () {
-      var orig = btn.textContent;
-      btn.disabled = true;
-      btn.textContent = btn.dataset.locating;
-      navigator.geolocation.getCurrentPosition(function (pos) {
-        var lon = pos.coords.longitude.toFixed(6);
-        var lat = pos.coords.latitude.toFixed(6);
-        // Request-only coordinates: they go into the proximity query, never stored or submitted.
-        load('?near_lon=' + lon + '&near_lat=' + lat + '&radius_m=8000&page_size=200', [lat, lon]);
-        btn.disabled = false;
-        btn.textContent = orig;
-      }, function () {
-        btn.disabled = false;
-        btn.textContent = btn.dataset.unavailable;
-      });
-    });
-  } else if (btn) {
-    btn.style.display = 'none';  // no geolocation support: hide the affordance, keep the map
-  }
-
-  // Reflect a manual dropdown choice in the status line too.
-  select.addEventListener('change', function () {
-    if (!statusEl) { return; }
-    var opt = optionFor(select.value);
-    statusEl.textContent = opt ? (selectedPrefix + ' ' + opt.textContent) : '';
-  });
-})();
-</script>
+<script src="{% static 'js/place-picker.js' %}" defer></script>
 {% endblock %}

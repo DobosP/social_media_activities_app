@@ -26,7 +26,7 @@
   <meta name="twitter:card" content="summary">
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
   {% block structured_data %}{% endblock %}
-  {% if breadcrumb_data %}<script type="application/ld+json">{{ breadcrumb_data }}</script>{% endif %}
+  {% if breadcrumb_data %}<script nonce="{{ request.csp_nonce }}" type="application/ld+json">{{ breadcrumb_data }}</script>{% endif %}
   {% block head %}{% endblock %}
 </head>
 <body>
@@ -132,7 +132,7 @@
        Persists to the session via set_language; no-JS friendly submit button.{% endcomment %}
     <form method="post" action="{% url 'set_language' %}" class="inline lang-switch">{% csrf_token %}
       <input type="hidden" name="next" value="{{ request.path }}">
-      <select name="language" aria-label="{% trans 'Language' %}" onchange="this.form.submit()">
+      <select name="language" aria-label="{% trans 'Language' %}" data-auto-submit>
         {% get_current_language as cur_lang %}
         {% get_available_languages as available_langs %}
         {% for code, name in available_langs %}
@@ -145,49 +145,11 @@
 </footer>
 
 {% comment %}
-The nav is intentionally JS-free: every <details> menu/drawer toggles on click and
-works with scripting disabled — keeping the global chrome calm and static (no
-per-page script in the base), in line with the text-first product ethos. Pages that
-genuinely need interactivity add their own scripts block below.
+The nav itself is JS-free: every <details> menu/drawer toggles on click and works with scripting
+disabled. The shared static helper only handles language auto-submit, data-confirm forms, and the
+authenticated offline-meetups service-worker purge wiring.
 {% endcomment %}
+<script id="site-js" src="{% static 'js/site.js' %}" defer{% if user.is_authenticated %} data-meetups-owner="{{ user.public_id }}"{% endif %}></script>
 {% block scripts %}{% endblock %}
-{% if user.is_authenticated %}
-{% comment %}F38: register the root-scoped service worker that makes /my-meetups/ readable offline.
-   It is purged the instant the user logs out (stock LogoutView has no server hook) AND whenever
-   the logged-in user changes on this device — so a shared/borrowed phone never serves one
-   member's saved meetups to another. No-JS users get no SW (and so no on-device cache) at all.{% endcomment %}
-<script>
-(function () {
-  if (!("serviceWorker" in navigator)) return;
-  var me = "{{ user.public_id }}";
-  function purge() {
-    try {
-      // Delete the cache DIRECTLY from the page so it works even before the SW controls this load
-      // (the controller-null window) — and ALSO message the SW, whose waitUntil reliably finishes
-      // the delete even as the logout POST navigates away. Belt and suspenders for child-safety data.
-      if (window.caches) caches.delete("mz-meetups-v1");
-      if (navigator.serviceWorker.controller) {
-        navigator.serviceWorker.controller.postMessage({ type: "purge" });
-      }
-    } catch (e) {}
-  }
-  try {
-    // A different member is now logged in on this device — drop the previous member's cache.
-    if (window.localStorage && localStorage.getItem("mz-meetups-owner") !== me) {
-      purge();
-      localStorage.setItem("mz-meetups-owner", me);
-    }
-  } catch (e) {}
-  navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(function () {});
-  // Purge on logout, before the form POSTs.
-  document.querySelectorAll('form[action$="/logout/"]').forEach(function (f) {
-    f.addEventListener("submit", function () {
-      purge();
-      try { if (window.localStorage) localStorage.removeItem("mz-meetups-owner"); } catch (e) {}
-    });
-  });
-})();
-</script>
-{% endif %}
 </body>
 </html>

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n static %}
+{% load csp_helpers i18n static %}
 {% block title %}{{ activity.title }}{% endblock %}
 {% block content %}
 <p class="muted"><a href="{% url 'activity_list' %}">&larr; {% trans "Activities" %}</a></p>
@@ -117,14 +117,14 @@
     {% comment %}W2-F10: switch to the single pre-declared plan-B time, once. Shown only while the
        meetup is open and a backup time is set; consumed (cleared) by invoke_fallback.{% endcomment %}
     {% if is_open and activity.fallback_starts_at %}
-      <form method="post" action="{% url 'activity_fallback' activity.pk %}" style="margin-top:.6rem"
-            onsubmit="return confirm('{% trans "Move this meetup to your plan-B time and notify everyone?" %}');">{% csrf_token %}
+	      <form method="post" action="{% url 'activity_fallback' activity.pk %}" style="margin-top:.6rem"
+	            data-confirm="{% trans 'Move this meetup to your plan-B time and notify everyone?' %}">{% csrf_token %}
         <button class="btn btn-sm" type="submit">{% blocktrans with t=activity.fallback_starts_at|date:"D j M, H:i" %}Switch to plan-B time ({{ t }}){% endblocktrans %}</button>
         <span class="muted" style="font-size:.75rem">{% trans "Moves the meetup once to your backup time and tells everyone." %}</span>
       </form>
     {% endif %}
-    <form method="post" action="{% url 'activity_cancel' activity.pk %}" class="stack" style="margin-top:.6rem"
-          onsubmit="return confirm('{% trans "Cancel this activity? Every member will be notified." %}');">
+	    <form method="post" action="{% url 'activity_cancel' activity.pk %}" class="stack" style="margin-top:.6rem"
+	          data-confirm="{% trans 'Cancel this activity? Every member will be notified.' %}">
       {% csrf_token %}
       <label>{% trans "Cancel this activity" %}
         <input type="text" name="reason" maxlength="200"
@@ -161,8 +161,8 @@
               <input type="hidden" name="user_id" value="{{ m.user.id }}">
               <button class="btn btn-sm" style="font-size:.8rem" type="submit">{% trans "Make co-organiser" %}</button></form>
           {% endif %}
-          <form method="post" action="{% url 'activity_transfer_owner' activity.pk %}" class="inline"
-                onsubmit="return confirm('{% trans "Hand this activity over? They become the organiser and you become a regular member." %}');">{% csrf_token %}
+	          <form method="post" action="{% url 'activity_transfer_owner' activity.pk %}" class="inline"
+	                data-confirm="{% trans 'Hand this activity over? They become the organiser and you become a regular member.' %}">{% csrf_token %}
             <input type="hidden" name="user_id" value="{{ m.user.id }}">
             <button class="linkbtn" style="font-size:.8rem" type="submit">{% trans "Hand over" %}</button></form>
         </li>
@@ -511,13 +511,13 @@
 
 {% block scripts %}
 {% if is_member %}
-{{ presend_nudge|json_script:"presend-nudge" }}
+{% nonced_json_script presend_nudge "presend-nudge" %}
 {% comment %}F33 pre-send safety nudge. Loaded NON-deferred and listed BEFORE the live-send
    script below so its submit listener registers first: on "cancel" it stopImmediatePropagation()s
    that handler (the WebSocket send) AND preventDefault()s the no-JS form POST, gating both paths.
    Advisory only — it never blocks a post; with JS off the form POSTs normally and unaffected.{% endcomment %}
 <script src="{% static 'js/presend-nudge.js' %}"></script>
-{{ thread_chat_config|json_script:"thread-chat-config" }}
+{% nonced_json_script thread_chat_config "thread-chat-config" %}
 {% comment %}The modern live thread client: first-class live posts (mentions + markdown, edited
    marker, reply, reactions, share cards), smooth near-bottom auto-scroll + a "new messages" pill,
    relative timestamps, author-run grouping, a transient typing indicator, reconnect-with-backoff,
