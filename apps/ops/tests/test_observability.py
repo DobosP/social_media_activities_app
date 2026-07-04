@@ -57,9 +57,50 @@ def test_json_formatter_emits_request_id_and_fields():
 
     rec = logging.LogRecord("apps.demo", logging.INFO, __file__, 1, "hello %s", ("world",), None)
     rec.request_id = "rid-xyz"
+    rec.method = "GET"
+    rec.path = "/healthz"
+    rec.status_code = 200
+    rec.duration_ms = 3
     out = json.loads(JsonFormatter().format(rec))
     assert out["request_id"] == "rid-xyz"
     assert out["level"] == "INFO" and out["logger"] == "apps.demo" and out["msg"] == "hello world"
+    assert out["method"] == "GET"
+    assert out["path"] == "/healthz"
+    assert out["status_code"] == 200
+    assert out["duration_ms"] == 3
+
+
+@override_settings(REQUEST_LOGGING_ENABLED=True)
+def test_request_log_emits_request_id_and_pii_safe_shape():
+    import logging
+
+    records = []
+    handler = logging.Handler()
+    handler.emit = records.append
+    logger = logging.getLogger("apps.ops.request")
+    old_level = logger.level
+    logger.setLevel(logging.INFO)
+    logger.addHandler(handler)
+    try:
+        resp = APIClient().get(
+            "/healthz?email=alice@example.test&token=secret",
+            HTTP_X_REQUEST_ID="trace-abc-123",
+        )
+    finally:
+        logger.removeHandler(handler)
+        logger.setLevel(old_level)
+
+    assert resp.status_code == 200
+    assert records
+    rec = records[-1]
+    assert rec.request_id == "trace-abc-123"
+    assert rec.method == "GET"
+    assert rec.path == "/healthz"
+    assert rec.status_code == 200
+    assert isinstance(rec.duration_ms, int)
+    rendered = rec.getMessage() + rec.path + getattr(rec, "route", "")
+    assert "alice@example.test" not in rendered
+    assert "secret" not in rendered
 
 
 # --- run_due_jobs: Sentry capture on failure + heartbeat on success -----------------------
@@ -233,4 +274,16 @@ def test_json_formatter_never_leaks_a_user_object_on_the_record():
     assert "alice.secret" not in out
     assert "alice@example.com" not in out
     assert "Alice Secret" not in out
-    assert set(json.loads(out)) <= {"ts", "level", "logger", "msg", "request_id", "exc"}
+    assert set(json.loads(out)) <= {
+        "ts",
+        "level",
+        "logger",
+        "msg",
+        "request_id",
+        "method",
+        "path",
+        "route",
+        "status_code",
+        "duration_ms",
+        "exc",
+    }

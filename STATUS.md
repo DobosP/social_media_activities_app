@@ -42,10 +42,14 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
   handlers were removed from key server-rendered web pages, JSON script islands carry CSP nonces,
   Leaflet/chat/offline-meetups flows use static JS, and `DJANGO_CSP_ENFORCE=True` flips the shared
   policy from report-only to enforcing after deployed violation reports are reviewed.
+- **Readiness and request-correlation observability are implemented** (ADR-0010): `/healthz` is
+  cheap liveness only; `/readyz` checks the DB plus Redis cache and object storage only when those
+  dependencies are configured; `X-Request-ID` is echoed, attached to log records, tagged in Sentry
+  scope, and included in PII-safe structured request logs when enabled.
 - **Open work** = the open **P0/P1/P2 items in `docs/archive/COMPLETENESS_GAPS_2026-06.md`** (gap tracker
-  for the audited feature waves) + the operational substrate in `docs/PRODUCTION_READINESS.md`
-  (provisioning shared state, async task queue, observability, edge security). Almost none of it
-  is feature work.
+  for the audited feature waves) + the remaining operational substrate in
+  `docs/PRODUCTION_READINESS.md` (provisioning shared state, deploy-time Sentry/alert wiring,
+  graceful shutdown readiness draining, edge security). Almost none of it is feature work.
 - **Deploy**: launch target = **single Hetzner EU box + Hetzner Object Storage** via `deploy/`
   (Terraform + cloud-init) — see `docs/adr/0001` + `docs/HOSTING_EU.md`. `render.yaml` is a
   free-tier demo only. The Terraform has **never been applied — no infra exists**; never

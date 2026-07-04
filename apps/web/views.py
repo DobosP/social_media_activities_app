@@ -44,9 +44,9 @@ from apps.accounts.services import (
 from apps.events.models import Event
 from apps.media.models import Photo
 from apps.media.services import (
-    activity_visual,
     MediaError,
     NotAuthorized,
+    activity_visual,
     signed_url,
     thread_photos,
     upload_photo,

@@ -16,8 +16,10 @@ from rest_framework.views import APIView
 
 
 class HealthView(APIView):
-    """Liveness + DB readiness probe for load balancers / uptime checks. Returns 503
-    when the database is unreachable so orchestrators can route around the instance."""
+    """Cheap liveness probe for load balancers / uptime checks.
+
+    It deliberately avoids dependency checks; use /readyz for DB/cache/storage readiness.
+    """
 
     permission_classes = [AllowAny]
     # The probe must never be rate-limited: sharing the global anon throttle would let
@@ -25,20 +27,7 @@ class HealthView(APIView):
     throttle_classes = []
 
     def get(self, request):
-        db_ok = True
-        try:
-            with connection.cursor() as cursor:
-                cursor.execute("SELECT 1")
-                cursor.fetchone()
-        except Exception:
-            db_ok = False
-        body = {
-            "status": "ok" if db_ok else "degraded",
-            "database": db_ok,
-            "version": getattr(settings, "APP_VERSION", "unknown"),
-        }
-        code = status.HTTP_200_OK if db_ok else status.HTTP_503_SERVICE_UNAVAILABLE
-        return Response(body, status=code)
+        return Response({"status": "ok", "version": getattr(settings, "APP_VERSION", "unknown")})
 
 
 class ReadyView(APIView):

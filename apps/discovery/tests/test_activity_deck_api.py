@@ -92,8 +92,7 @@ def test_activity_deck_requires_auth_and_returns_visuals_and_actions():
         "web_url": f"/activities/{with_cover.id}/",
     }
     assert all(
-        "like" not in item and "swipe" not in item and "pass" not in item
-        for item in body["items"]
+        "like" not in item and "swipe" not in item and "pass" not in item for item in body["items"]
     )
 
 
@@ -137,15 +136,17 @@ def test_activity_deck_filters_visibility_future_open_activity_and_beginner_flag
     past.starts_at = timezone.now() - timedelta(days=1)
     past.save(update_fields=["starts_at"])
 
-    adult_data = _client(viewer).get(
-        "/api/v1/discovery/activity-deck/", {"seed": "gates", "beginners": "true"}
-    ).json()
+    adult_data = (
+        _client(viewer)
+        .get("/api/v1/discovery/activity-deck/", {"seed": "gates", "beginners": "true"})
+        .json()
+    )
     titles = {item["title"] for item in adult_data["items"]}
     assert titles == {visible.title}
 
-    all_items = _client(viewer).get(
-        "/api/v1/discovery/activity-deck/", {"seed": "gates"}
-    ).json()["items"]
+    all_items = (
+        _client(viewer).get("/api/v1/discovery/activity-deck/", {"seed": "gates"}).json()["items"]
+    )
     all_titles = {item["title"] for item in all_items}
     assert visible.title in all_titles and not_beginner.title in all_titles
     assert "Cancelled" not in all_titles
@@ -162,10 +163,14 @@ def test_activity_deck_proximity_uses_request_only_coordinates():
     near = _activity(owner, "Near", place=_place("Near Park", 23.6, 46.77))
     _activity(owner, "Far", place=_place("Far Park", 26.1, 44.43))
 
-    data = _client(viewer).get(
-        "/api/v1/discovery/activity-deck/",
-        {"seed": "near", "near_lon": 23.6, "near_lat": 46.77, "radius_m": 5000},
-    ).json()
+    data = (
+        _client(viewer)
+        .get(
+            "/api/v1/discovery/activity-deck/",
+            {"seed": "near", "near_lon": 23.6, "near_lat": 46.77, "radius_m": 5000},
+        )
+        .json()
+    )
 
     assert [item["title"] for item in data["items"]] == [near.title]
     assert data["items"][0]["distance_m"] is not None

@@ -17,6 +17,7 @@ EUDI_SANDBOX = True
 # (the LocMemCache persists within a test process). Throttling is verified explicitly
 # in tests/test_api_security.py via a settings override.
 REST_FRAMEWORK = {**REST_FRAMEWORK, "DEFAULT_THROTTLE_CLASSES": [], "DEFAULT_THROTTLE_RATES": {}}
+REQUEST_LOGGING_ENABLED = False
 
 # Keep uploaded test blobs out of the repo tree.
 MEDIA_ROOT = tempfile.mkdtemp(prefix="test-media-")
