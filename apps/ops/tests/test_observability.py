@@ -223,6 +223,119 @@ def test_csp_report_logs_only_operational_fields():
     assert any("CSP violation" in m and "img-src" in m for m in msgs)
 
 
+def test_csp_report_with_session_cookie_never_logs_cookie_or_url_query():
+    import logging
+
+    from django.core.cache import cache
+
+    from apps.ops.csp import clear_recent_csp_violations, recent_csp_violations
+
+    cache.delete("csp-report-log-budget")
+    clear_recent_csp_violations()
+    body = {
+        "csp-report": {
+            "effective-directive": "connect-src",
+            "blocked-uri": "https://bad.example/api?token=blocked-secret#frag",
+            "document-uri": "https://meet.test/thread?session=doc-secret#messages",
+        }
+    }
+    records = []
+    handler = logging.Handler()
+    handler.emit = records.append
+    logger = logging.getLogger("apps.ops.csp_report")
+    logger.addHandler(handler)
+    try:
+        resp = APIClient(enforce_csrf_checks=True).post(
+            _CSP_REPORT_URL,
+            body,
+            format="json",
+            HTTP_COOKIE="sessionid=cookie-secret; csrftoken=csrf-secret",
+        )
+    finally:
+        logger.removeHandler(handler)
+
+    assert resp.status_code == 204
+    rendered = "\n".join(r.getMessage() for r in records)
+    assert "cookie-secret" not in rendered
+    assert "csrf-secret" not in rendered
+    assert "blocked-secret" not in rendered
+    assert "doc-secret" not in rendered
+    assert recent_csp_violations() == [
+        {
+            "directive": "connect-src",
+            "blocked": "https://bad.example/api",
+            "document": "https://meet.test/thread",
+        }
+    ]
+
+
+def test_csp_report_rejects_oversized_body_without_parsing_attacker_fields():
+    import logging
+
+    from django.core.cache import cache
+
+    from apps.ops.csp import MAX_CSP_REPORT_BODY_BYTES, clear_recent_csp_violations
+
+    cache.delete("csp-report-log-budget")
+    clear_recent_csp_violations()
+    body = (
+        b'{"csp-report":{"effective-directive":"script-src","blocked-uri":'
+        b'"https://bad.example/oversized-secret.js","document-uri":"https://meet.test/"},'
+        + (b'"pad":"' + (b"x" * MAX_CSP_REPORT_BODY_BYTES) + b'"}')
+    )
+    records = []
+    handler = logging.Handler()
+    handler.emit = records.append
+    logger = logging.getLogger("apps.ops.csp_report")
+    logger.addHandler(handler)
+    try:
+        resp = APIClient().post(_CSP_REPORT_URL, body, content_type="application/csp-report")
+    finally:
+        logger.removeHandler(handler)
+
+    assert resp.status_code == 204
+    rendered = "\n".join(r.getMessage() for r in records)
+    assert "oversized" in rendered
+    assert "oversized-secret" not in rendered
+
+
+def test_csp_report_ingests_reporting_api_batches_into_sanitized_memory_buffer():
+    from django.core.cache import cache
+
+    from apps.ops.csp import clear_recent_csp_violations, recent_csp_violations
+
+    cache.delete("csp-report-log-budget")
+    clear_recent_csp_violations()
+    body = [
+        {
+            "type": "csp-violation",
+            "body": {
+                "effective-directive": "style-src-attr",
+                "blockedURL": "inline",
+                "documentURL": "https://meet.test/a?drop=this",
+            },
+        },
+        {
+            "type": "csp-violation",
+            "body": {
+                "effective-directive": "img-src",
+                "blockedURL": "data:image/svg+xml,secret",
+                "documentURL": "https://meet.test/b#frag",
+            },
+        },
+    ]
+
+    assert APIClient().post(_CSP_REPORT_URL, body, format="json").status_code == 204
+    assert recent_csp_violations() == [
+        {
+            "directive": "style-src-attr",
+            "blocked": "inline",
+            "document": "https://meet.test/a",
+        },
+        {"directive": "img-src", "blocked": "data:", "document": "https://meet.test/b"},
+    ]
+
+
 def test_csp_report_strips_control_chars_to_prevent_log_forging():
     import logging
 
@@ -283,6 +396,36 @@ def test_csp_report_digest_groups_violations_and_counts_malformed_payloads():
         "document": "https://meet.test/activities/1/",
     }
     assert summary["groups"][1]["directive"] == "script-src"
+
+
+def test_digest_csp_reports_command_reads_jsonl_and_reuses_sanitizer(tmp_path):
+    from io import StringIO
+
+    from django.core.management import call_command
+
+    payloads = tmp_path / "csp.jsonl"
+    payloads.write_text(
+        "\n".join(
+            [
+                (
+                    '{"csp-report":{"effective-directive":"script-src",'
+                    '"blocked-uri":"https://cdn.example/app.js?token=drop",'
+                    '"document-uri":"https://meet.test/a#frag"}}'
+                ),
+                "not json",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    out = StringIO()
+
+    call_command("digest_csp_reports", str(payloads), stdout=out)
+
+    rendered = out.getvalue()
+    assert "total=1 malformed=1" in rendered
+    assert "blocked=https://cdn.example/app.js" in rendered
+    assert "token=drop" not in rendered
+    assert "#frag" not in rendered
 
 
 def test_json_formatter_never_leaks_a_user_object_on_the_record():

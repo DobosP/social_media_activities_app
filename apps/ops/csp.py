@@ -12,10 +12,15 @@ import re
 from collections import Counter
 from collections.abc import Iterable
 from dataclasses import dataclass
+from threading import Lock
 from typing import Any
 from urllib.parse import urlsplit
 
 _CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f]")
+MAX_CSP_REPORT_BODY_BYTES = 8 * 1024
+_RECENT_REPORT_LIMIT = 200
+_recent_report_lock = Lock()
+_recent_reports: list[dict[str, str]] = []
 
 
 @dataclass(frozen=True)
@@ -23,6 +28,12 @@ class CSPViolation:
     directive: str
     blocked: str
     document: str
+
+
+@dataclass(frozen=True)
+class CSPIngestResult:
+    violations: list[CSPViolation]
+    malformed: bool = False
 
 
 def csp_clean(value: Any, limit: int) -> str:
@@ -111,6 +122,50 @@ def parse_csp_report(payload: bytes | str | dict[str, Any] | list[Any]) -> list[
         document = _normalise_uri(_pick(rep, "document-uri", "documentURL"))
         violations.append(CSPViolation(directive=directive, blocked=blocked, document=document))
     return violations
+
+
+def serialize_csp_violation(violation: CSPViolation) -> dict[str, str]:
+    """Return the only CSP report fields allowed to leave the parser boundary."""
+    return {
+        "directive": violation.directive,
+        "blocked": violation.blocked,
+        "document": violation.document,
+    }
+
+
+def remember_csp_violations(violations: Iterable[CSPViolation]) -> None:
+    """Keep a process-local ring buffer of sanitized CSP triples for operator tests/debugging.
+
+    This is deliberately not a DB model and not a raw-payload store. Multi-process deployments still
+    rely on application logs or exported report files for durable review; this buffer only exposes
+    the same sanitized fields that the digest helper groups.
+    """
+    records = [serialize_csp_violation(violation) for violation in violations]
+    if not records:
+        return
+    with _recent_report_lock:
+        _recent_reports.extend(records)
+        del _recent_reports[:-_RECENT_REPORT_LIMIT]
+
+
+def recent_csp_violations() -> list[dict[str, str]]:
+    with _recent_report_lock:
+        return list(_recent_reports)
+
+
+def clear_recent_csp_violations() -> None:
+    with _recent_report_lock:
+        _recent_reports.clear()
+
+
+def ingest_csp_report(payload: bytes | str | dict[str, Any] | list[Any]) -> CSPIngestResult:
+    """Parse and remember a browser CSP report without retaining raw attacker-controlled input."""
+    try:
+        violations = parse_csp_report(payload)
+    except ValueError:
+        return CSPIngestResult(violations=[], malformed=True)
+    remember_csp_violations(violations)
+    return CSPIngestResult(violations=violations)
 
 
 def digest_csp_reports(
