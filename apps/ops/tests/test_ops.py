@@ -8,6 +8,15 @@ from apps.accounts.services import apply_assurance
 pytestmark = pytest.mark.django_db
 
 
+@pytest.fixture(autouse=True)
+def _reset_readiness_drain():
+    from apps.ops.readiness import reset_draining_for_tests
+
+    reset_draining_for_tests()
+    yield
+    reset_draining_for_tests()
+
+
 def test_healthz_is_public_and_cheap_liveness():
     resp = APIClient().get("/healthz")
     assert resp.status_code == 200
@@ -31,6 +40,7 @@ def test_readyz_reports_ready_with_db_up():
     assert resp.status_code == 200
     body = resp.json()
     assert body["status"] == "ready"
+    assert body["draining"] is False
     assert body["database"] is True
     # Cache/storage keys appear ONLY when those shared deps are configured (Redis / S3).
     assert "cache" not in body  # no REDIS_URL in tests
@@ -43,7 +53,7 @@ def test_readyz_degraded_503_when_db_down(monkeypatch):
     monkeypatch.setattr(ops_views.ReadyView, "_check_db", lambda self: False)
     resp = APIClient().get("/readyz")
     assert resp.status_code == 503
-    assert resp.json()["status"] == "degraded"
+    assert resp.json() == {"status": "degraded", "draining": False, "database": False}
 
 
 def test_readyz_degraded_503_when_configured_cache_down(monkeypatch, settings):
@@ -54,7 +64,41 @@ def test_readyz_degraded_503_when_configured_cache_down(monkeypatch, settings):
     monkeypatch.setattr(ops_views.ReadyView, "_check_cache", lambda self: False)
     resp = APIClient().get("/readyz")
     assert resp.status_code == 503
-    assert resp.json() == {"status": "degraded", "database": True, "cache": False}
+    assert resp.json() == {
+        "status": "degraded",
+        "draining": False,
+        "database": True,
+        "cache": False,
+    }
+
+
+def test_readyz_draining_503_when_shutdown_drain_set(monkeypatch):
+    from apps.ops import views as ops_views
+    from apps.ops.readiness import mark_draining
+
+    def fail_if_called(self):
+        raise AssertionError("/readyz must not check dependencies while draining")
+
+    monkeypatch.setattr(ops_views.ReadyView, "_check_db", fail_if_called)
+    mark_draining()
+
+    resp = APIClient().get("/readyz")
+    assert resp.status_code == 503
+    assert resp.json() == {"status": "draining", "draining": True}
+
+
+def test_shutdown_signal_handler_marks_draining_and_chains(monkeypatch):
+    from apps.ops import readiness
+
+    called = []
+    monkeypatch.setitem(
+        readiness._previous_handlers, 15, lambda signum, frame: called.append(signum)
+    )
+
+    readiness._handle_shutdown_signal(15, None)
+
+    assert readiness.is_draining() is True
+    assert called == [15]
 
 
 def test_bounded_pagination_caps_limit():

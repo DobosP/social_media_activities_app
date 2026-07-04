@@ -10,3 +10,6 @@ class OpsConfig(AppConfig):
         # Import the deferred-task handler module so its @register calls run at startup, before any
         # enqueue() can fire (enqueue fails fast on an unregistered kind). Import-only side effect.
         from . import handlers  # noqa: F401
+        from .readiness import install_shutdown_signal_handlers
+
+        install_shutdown_signal_handlers()

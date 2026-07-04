@@ -12,6 +12,8 @@ from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.ops.readiness import is_draining
+
 
 class HealthView(APIView):
     """Cheap liveness probe for load balancers / uptime checks.
@@ -39,6 +41,12 @@ class ReadyView(APIView):
     throttle_classes = []  # never rate-limit a probe (would flap the node)
 
     def get(self, request):
+        if is_draining():
+            return Response(
+                {"status": "draining", "draining": True},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
         checks = {"database": self._check_db()}
         # Cache: only meaningful as a readiness gate when it is the SHARED Redis backend; the
         # per-process LocMem fallback is always "up" and not a cross-instance dependency.
@@ -49,7 +57,10 @@ class ReadyView(APIView):
             checks["storage"] = self._check_storage()
         ready = all(checks.values())
         code = status.HTTP_200_OK if ready else status.HTTP_503_SERVICE_UNAVAILABLE
-        return Response({"status": "ready" if ready else "degraded", **checks}, status=code)
+        return Response(
+            {"status": "ready" if ready else "degraded", "draining": False, **checks},
+            status=code,
+        )
 
     def _check_db(self) -> bool:
         try:
