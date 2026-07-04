@@ -58,6 +58,9 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
   media-serving views re-check viewer authorization before returning a short-lived 307 object-store
   redirect. Local/dev/test filesystem storage still streams through Django; scanner and
   fail-closed upload gates are unchanged.
+- **The child-safety anti-abuse limiter uses atomic cache primitives**: `allow_action()` seeds new
+  fixed windows with cache `add()`/NX semantics and increments existing windows with backend
+  `incr()`, preserving TTLs, limits, and the existing missing-key fallback behavior.
 - **Open work** = the open **P0/P1/P2 items in `docs/archive/COMPLETENESS_GAPS_2026-06.md`** (gap tracker
   for the audited feature waves) + the remaining operational substrate in
   `docs/PRODUCTION_READINESS.md` (provisioning shared state, deploy-time Sentry/alert wiring,

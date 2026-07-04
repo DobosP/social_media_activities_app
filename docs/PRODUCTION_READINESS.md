@@ -90,7 +90,8 @@ it's a **provisioning** gap (the shipped `render.yaml` is a free-tier *demo*).
   single infra-security gap for a public launch.
 - **Durable rate-limit / lockout** — same fix as §1 (Redis), called out because without it
   brute-force/credential-stuffing protection is effectively weak on a multi-process or
-  cold-starting deploy; also make the safety limiter `incr` atomic (NX-init + incr).
+  cold-starting deploy. The in-app safety limiter now uses NX-style cache initialization plus
+  backend `incr`; provisioning shared Redis remains open.
 
 ### 2e. Legal / external (not code — gating the *child-first* mission)
 - **DPIA / ROPA / breach runbook exist as drafts** — need DPO appointment, RO-counsel sign-off, and

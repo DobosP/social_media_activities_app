@@ -5,6 +5,7 @@ from apps.accounts.identity.base import AssuranceResult
 from apps.accounts.models import AgeBand, User
 from apps.accounts.services import apply_assurance
 from apps.places.models import Place
+from apps.safety import services as safety_services
 from apps.safety.models import AuditLog, Block, ModerationAction, ReasonCode, Report
 from apps.safety.services import (
     allow_action,
@@ -24,6 +25,33 @@ def _user(name, band=AgeBand.ADULT):
     u = User.objects.create_user(username=name, password="pw", display_name=name)
     apply_assurance(u, AssuranceResult(age_band=band, provider="dev"))
     return u
+
+
+class RecordingLimiterCache:
+    def __init__(self):
+        self.values = {}
+        self.timeouts = {}
+        self.calls = []
+
+    def add(self, key, value, timeout):
+        self.calls.append(("add", key, value, timeout))
+        if key in self.values:
+            return False
+        self.values[key] = value
+        self.timeouts[key] = timeout
+        return True
+
+    def incr(self, key):
+        self.calls.append(("incr", key))
+        if key not in self.values:
+            raise ValueError("missing key")
+        self.values[key] += 1
+        return self.values[key]
+
+    def set(self, key, value, timeout):
+        self.calls.append(("set", key, value, timeout))
+        self.values[key] = value
+        self.timeouts[key] = timeout
 
 
 def test_file_report_creates_record_and_audit():
@@ -122,6 +150,70 @@ def test_rate_limiter_blocks_over_limit():
     assert allow_action(u, "report", limit=2, window_seconds=60) is True
     assert allow_action(u, "report", limit=2, window_seconds=60) is True
     assert allow_action(u, "report", limit=2, window_seconds=60) is False
+
+
+def test_rate_limiter_first_hit_uses_atomic_add(monkeypatch):
+    u = _user("atomic-first")
+    fake_cache = RecordingLimiterCache()
+    monkeypatch.setattr(safety_services, "cache", fake_cache)
+
+    assert allow_action(u, "report", limit=2, window_seconds=60) is True
+
+    key = f"ratelimit:report:{u.id}"
+    assert fake_cache.values[key] == 1
+    assert fake_cache.timeouts[key] == 60
+    assert fake_cache.calls == [("add", key, 1, 60)]
+
+
+def test_rate_limiter_increments_existing_window_without_resetting_ttl(monkeypatch):
+    u = _user("atomic-existing")
+    fake_cache = RecordingLimiterCache()
+    monkeypatch.setattr(safety_services, "cache", fake_cache)
+
+    assert allow_action(u, "report", limit=3, window_seconds=60) is True
+    fake_cache.timeouts[f"ratelimit:report:{u.id}"] = 37
+
+    assert allow_action(u, "report", limit=3, window_seconds=60) is True
+
+    key = f"ratelimit:report:{u.id}"
+    assert fake_cache.values[key] == 2
+    assert fake_cache.timeouts[key] == 37
+    assert ("set", key, 2, 60) not in fake_cache.calls
+    assert fake_cache.calls[-2:] == [("add", key, 1, 60), ("incr", key)]
+
+
+def test_rate_limiter_reseeds_if_existing_window_disappears(monkeypatch):
+    class DisappearingCache(RecordingLimiterCache):
+        def add(self, key, value, timeout):
+            self.calls.append(("add", key, value, timeout))
+            return False
+
+    u = _user("atomic-disappears")
+    fake_cache = DisappearingCache()
+    monkeypatch.setattr(safety_services, "cache", fake_cache)
+
+    assert allow_action(u, "report", limit=2, window_seconds=60) is True
+
+    key = f"ratelimit:report:{u.id}"
+    assert fake_cache.values[key] == 1
+    assert fake_cache.timeouts[key] == 60
+    assert fake_cache.calls == [
+        ("add", key, 1, 60),
+        ("incr", key),
+        ("set", key, 1, 60),
+    ]
+
+
+def test_rate_limiter_cache_backend_errors_propagate(monkeypatch):
+    class FailingCache(RecordingLimiterCache):
+        def add(self, key, value, timeout):
+            raise RuntimeError("cache unavailable")
+
+    u = _user("atomic-cache-fail")
+    monkeypatch.setattr(safety_services, "cache", FailingCache())
+
+    with pytest.raises(RuntimeError, match="cache unavailable"):
+        allow_action(u, "report", limit=2, window_seconds=60)
 
 
 def test_report_api_flow():
