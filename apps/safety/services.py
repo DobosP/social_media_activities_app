@@ -1111,16 +1111,23 @@ def referral_proof_pack(referral: AuthorityReferral) -> dict:
 
 
 def allow_action(user, action: str, *, limit: int, window_seconds: int) -> bool:
-    """Simple fixed-window rate limiter (anti-abuse). Returns False when over the limit."""
-    key = f"ratelimit:{action}:{user.id}"
-    count = cache.get_or_set(key, 0, window_seconds)
-    if count >= limit:
+    """Simple fixed-window rate limiter (anti-abuse). Returns False when over the limit.
+
+    The first hit uses cache.add(), which maps to an NX-style write on shared backends such
+    as Redis, so concurrent processes cannot all seed the same fresh window before counting.
+    Existing windows rely on the backend's atomic incr() and preserve the original TTL.
+    """
+    if limit <= 0:
         return False
+    key = f"ratelimit:{action}:{user.id}"
     try:
-        cache.incr(key)
+        if cache.add(key, 1, window_seconds):
+            return True
+        count = cache.incr(key)
     except ValueError:
         cache.set(key, 1, window_seconds)
-    return True
+        return True
+    return count <= limit
 
 
 def safety_record_for(user, *, limit: int = 50) -> dict:
