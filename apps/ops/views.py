@@ -1,9 +1,7 @@
 """Privacy-respecting observability (IS-6): a liveness/readiness probe and an
 AGGREGATE-only stats endpoint. No per-user analytics, no behavioural tracking."""
 
-import json
 import logging
-import re
 
 from django.conf import settings
 from django.core.cache import cache
@@ -141,13 +139,6 @@ class StatsView(APIView):
 
 
 _csp_logger = logging.getLogger("apps.ops.csp_report")
-_CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f]")
-
-
-def _csp_clean(value, limit: int) -> str:
-    """Strip control chars (incl. CR/LF) then clamp — the CSP fields are attacker-controlled, so an
-    un-sanitised newline could forge a fake line in the plain (non-JSON) log formatter."""
-    return _CONTROL_CHARS.sub(" ", str(value))[:limit]
 
 
 class CSPReportView(APIView):
@@ -189,29 +180,17 @@ class CSPReportView(APIView):
         return True
 
     def _log(self, body: bytes) -> None:
+        from apps.ops.csp import parse_csp_report
+
         try:
-            data = json.loads(body.decode("utf-8", "replace") or "{}")
-        except (ValueError, TypeError):
+            violations = parse_csp_report(body)
+        except ValueError:
             _csp_logger.info("CSP report (unparseable, %d bytes)", len(body))
             return
-        # Unwrap the legacy {"csp-report": {...}} or Reporting-API [{"body": {...}}] envelope.
-        rep = {}
-        if isinstance(data, dict):
-            rep = data.get("csp-report") or data
-        elif isinstance(data, list) and data and isinstance(data[0], dict):
-            rep = data[0].get("body") or data[0]
-        if not isinstance(rep, dict):
-            return
-
-        def pick(*keys):
-            for k in keys:
-                if rep.get(k):
-                    return rep[k]
-            return ""
-
-        directive = _csp_clean(pick("effective-directive", "violated-directive"), 80)
-        blocked = _csp_clean(pick("blocked-uri", "blockedURL"), 200)
-        document = _csp_clean(pick("document-uri", "documentURL"), 200)
-        _csp_logger.info(
-            "CSP violation: directive=%s blocked=%s doc=%s", directive, blocked, document
-        )
+        for violation in violations:
+            _csp_logger.info(
+                "CSP violation: directive=%s blocked=%s doc=%s",
+                violation.directive,
+                violation.blocked,
+                violation.document,
+            )

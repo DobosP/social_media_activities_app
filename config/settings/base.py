@@ -140,13 +140,14 @@ ASGI_APPLICATION = "config.asgi.application"
 
 # Content-Security-Policy (P1 hardening). Report-only remains the default so production can collect
 # browser reports before breaking UI. The server-rendered web UI now loads executable page scripts
-# from static files and nonces the remaining JSON script islands. Flip DJANGO_CSP_ENFORCE=True only
-# after reviewing collected reports from /api/v1/ops/csp-report/ for the deployed templates/assets.
+# from static files, nonces the remaining JSON script islands, and keeps key SSR pages free of
+# inline style attributes/blocks. Flip DJANGO_CSP_ENFORCE=True only after reviewing collected
+# reports from /api/v1/ops/csp-report/ for the deployed templates/assets.
 _CONTENT_SECURITY_POLICY = {
     "DIRECTIVES": {
         "default-src": ["'self'"],
         "script-src": ["'self'", "https://unpkg.com", NONCE],
-        "style-src": ["'self'", "'unsafe-inline'", "https://unpkg.com"],
+        "style-src": ["'self'", "https://unpkg.com"],
         "img-src": ["'self'", "data:", "https://*.tile.openstreetmap.org", "https://unpkg.com"],
         # Same-origin fetch/XHR plus same-host WebSockets for activity chat and E2EE messaging.
         # Some browsers do not treat 'self' as covering ws:// / wss://, so keep schemes explicit.

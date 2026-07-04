@@ -18,11 +18,11 @@
   <div class="card">
     <strong><a href="{% url 'activity_detail' a.pk %}">{{ a.title }}</a></strong>
     <span class="tag">{{ a.activity_type.name }}</span>
-    <p class="muted" style="margin:.3rem 0 0">
+    <p class="muted compact-copy">
       &#128197; {{ a.starts_at|date:"D d M, H:i" }}{% if a.ends_at %} &ndash; {{ a.ends_at|date:"H:i" }}{% endif %}
       {% if a.place %}<br>&#128205; {{ a.place.display_name|default:a.place.name|default:_("Place") }}{% endif %}
     </p>
-    {% if a.meeting_point %}<p style="margin:.3rem 0 0"><span class="muted">{% trans "Where to meet:" %}</span><br>{{ a.meeting_point|linebreaksbr }}</p>{% endif %}
+    {% if a.meeting_point %}<p class="compact-copy"><span class="muted">{% trans "Where to meet:" %}</span><br>{{ a.meeting_point|linebreaksbr }}</p>{% endif %}
   </div>
 {% empty %}
   <p class="muted">{% trans "No upcoming meetups yet." %} <a href="{% url 'activity_list' %}">{% trans "Find one to join" %}</a>.</p>
@@ -31,7 +31,7 @@
 {% if my_guardians %}
   <div class="card">
     <strong>{% trans "Grown-ups you can turn to" %}</strong>
-    <p class="muted" style="margin:.3rem 0 0">{% trans "If something doesn't feel right, you can reach out to:" %}</p>
+    <p class="muted compact-copy">{% trans "If something doesn't feel right, you can reach out to:" %}</p>
     <ul class="members">{% for g in my_guardians %}<li>{{ g.display_name|default:g.username }}</li>{% endfor %}</ul>
   </div>
 {% endif %}

@@ -396,8 +396,7 @@
           openConversation(conv.id);
         });
         const decline = document.createElement("button");
-        decline.className = "linkbtn";
-        decline.style.marginLeft = ".3rem";
+        decline.className = "linkbtn mz-decline";
         decline.textContent = "Decline";
         decline.addEventListener("click", async (e) => {
           e.stopPropagation();
@@ -471,10 +470,10 @@
     }
     const pending = convs.filter((c) => c.my_state !== "active");
     if (!pending.length) {
-      els.guardianSection.style.display = "none";
+      els.guardianSection.hidden = true;
       return;
     }
-    els.guardianSection.style.display = "";
+    els.guardianSection.hidden = false;
     els.guardianList.innerHTML = "";
     pending.forEach((conv) => {
       const item = document.createElement("div");
@@ -552,8 +551,7 @@
     });
     if (!own && msg.sender) {
       const report = document.createElement("button");
-      report.className = "linkbtn";
-      report.style.marginLeft = ".4rem";
+      report.className = "linkbtn mz-report";
       report.textContent = "report";
       report.addEventListener("click", () => reportMessage(msg, plaintext));
       time.appendChild(report);
@@ -569,19 +567,19 @@
       pick.title = "Add a reaction";
       const tray = document.createElement("span");
       tray.className = "mz-react-tray";
-      tray.style.display = "none";
+      tray.hidden = true;
       REACTIONS.forEach((e) => {
         const b = document.createElement("button");
         b.className = "mz-react-emoji";
         b.textContent = e;
         b.addEventListener("click", () => {
-          tray.style.display = "none";
+          tray.hidden = true;
           sendReaction(msg.id, e);
         });
         tray.appendChild(b);
       });
       pick.addEventListener("click", () => {
-        tray.style.display = tray.style.display === "none" ? "inline" : "none";
+        tray.hidden = !tray.hidden;
       });
       react.appendChild(pick);
       react.appendChild(tray);
@@ -775,8 +773,8 @@
       (p) => p.state === "active" && p.role === "guardian"
     );
     if (conv.my_role === "guardian") {
-      els.composer.style.display = "none";
-      els.toolbar.style.display = "none";
+      els.composer.hidden = true;
+      els.toolbar.hidden = true;
     }
     if (!guardians.length) return;
     const names = guardians.map((p) => p.user.display_name || p.user.username).join(", ");
@@ -810,14 +808,14 @@
     Object.keys(appliedReactions).forEach((k) => delete appliedReactions[k]);
 
     if (current.my_state !== "active") {
-      els.composer.style.display = "none";
-      els.toolbar.style.display = "none";
+      els.composer.hidden = true;
+      els.toolbar.hidden = true;
       els.verify.innerHTML = "";
       els.log.innerHTML = '<p class="muted">Accept the invitation to read and reply.</p>';
       return;
     }
-    els.composer.style.display = "";
-    els.toolbar.style.display = "";
+    els.composer.hidden = false;
+    els.toolbar.hidden = false;
     els.timer.value = String(current.disappearing_seconds || 0);
 
     renderGuardianNotice(current);

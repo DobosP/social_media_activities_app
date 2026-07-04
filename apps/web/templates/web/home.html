@@ -48,11 +48,11 @@
      set_interests (declared, never inferred); no per-type "N nearby" count is ever shown.{% endcomment %}
   <form method="post" action="{% url 'interests' %}" class="card card-accent">{% csrf_token %}
     <strong>{% trans "New here? Pick what you'd come to" %}</strong>
-    <p class="muted" style="margin:.3rem 0 .5rem">{% trans "These activity types have meetups coming up near you. Tick a few and we'll suggest matches." %}</p>
+    <p class="muted starter-copy">{% trans "These activity types have meetups coming up near you. Tick a few and we'll suggest matches." %}</p>
     <div class="pick-row">
       {% for t in starter_types %}<label class="pick"><input type="checkbox" name="interests" value="{{ t.slug }}"> <span>{{ t.name }}</span></label>{% endfor %}
     </div>
-    <button class="btn" type="submit" style="margin-top:.6rem">{% trans "Save &amp; see matches" %}</button>
+    <button class="btn starter-submit" type="submit">{% trans "Save &amp; see matches" %}</button>
   </form>
 {% endif %}
 
