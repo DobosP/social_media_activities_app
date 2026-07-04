@@ -112,10 +112,15 @@ def test_bounded_pagination_caps_limit():
     assert paginator.get_limit(req) == 200  # capped, not 5000
 
 
-def test_permissions_policy_header_present():
+def test_browser_security_headers_present_on_normal_response():
     resp = APIClient().get("/healthz")
-    assert "camera=()" in resp["Permissions-Policy"]
-    assert "geolocation=(self)" in resp["Permissions-Policy"]
+    assert resp["X-Content-Type-Options"] == "nosniff"
+    assert resp["Referrer-Policy"] == "same-origin"
+    assert resp["Cross-Origin-Opener-Policy"] == "same-origin"
+    assert (
+        resp["Permissions-Policy"]
+        == "geolocation=(self), camera=(), microphone=(), payment=(), usb=(), interest-cohort=()"
+    )
 
 
 def test_stats_requires_staff():

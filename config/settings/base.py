@@ -119,6 +119,17 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "config.urls"
 
+# Browser security headers (ADR-0015). SecurityMiddleware emits the first three headers for every
+# response; Permissions-Policy is emitted by apps.ops.middleware.PermissionsPolicyMiddleware because
+# Django does not provide a built-in setting for it. Geolocation stays same-origin for request-only
+# proximity flows; camera/microphone and other powerful browser features are disabled.
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = "same-origin"
+SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin"
+PERMISSIONS_POLICY = (
+    "geolocation=(self), camera=(), microphone=(), payment=(), usb=(), interest-cohort=()"
+)
+
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",

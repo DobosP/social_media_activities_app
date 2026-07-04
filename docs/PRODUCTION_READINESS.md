@@ -161,8 +161,10 @@ it's a **provisioning** gap (the shipped `render.yaml` is a free-tier *demo*).
   the same policy to `Content-Security-Policy` after production violation reports are reviewed.
   Operators can group exported report-only payloads with `digest_csp_reports`; remaining review is
   to fix any deployed violations from pages outside the CSP smoke set before enforcing.
-- **Explicit security headers** — pin `SECURE_CONTENT_TYPE_NOSNIFF`/`SECURE_REFERRER_POLICY`/COOP +
-  a `Permissions-Policy` (lock camera/mic, scope geolocation to self).
+- **Explicit security headers — DONE (2026-07-04)**: shared settings pin
+  `SECURE_CONTENT_TYPE_NOSNIFF=True`, `SECURE_REFERRER_POLICY="same-origin"`,
+  `SECURE_CROSS_ORIGIN_OPENER_POLICY="same-origin"`, and a conservative `Permissions-Policy` that
+  disables camera/microphone while scoping geolocation to self (ADR-0015).
 - **SAST + container scanning** in CI — CodeQL/Semgrep (Django ruleset) + Bandit + Trivy/Grype on the
   built image (fail on HIGH/CRITICAL).
 - **Container non-root** (matters on the self-hosted Hetzner path) + read-only rootfs.
