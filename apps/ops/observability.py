@@ -8,13 +8,17 @@ in dev/test for readability. Privacy: the id is a random token, never PII (invar
 
 import json
 import logging
-from contextvars import ContextVar
+from contextvars import ContextVar, Token
 
 _request_id: ContextVar[str] = ContextVar("request_id", default="-")
 
 
-def set_request_id(value: str) -> None:
-    _request_id.set(value or "-")
+def set_request_id(value: str) -> Token[str]:
+    return _request_id.set(value or "-")
+
+
+def reset_request_id(token: Token[str]) -> None:
+    _request_id.reset(token)
 
 
 def get_request_id() -> str:
@@ -32,6 +36,8 @@ class RequestIdFilter(logging.Filter):
 class JsonFormatter(logging.Formatter):
     """One JSON object per log line. Keeps only non-PII operational fields."""
 
+    _OPTIONAL_FIELDS = ("method", "path", "route", "status_code", "duration_ms")
+
     def format(self, record: logging.LogRecord) -> str:
         payload = {
             "ts": self.formatTime(record, "%Y-%m-%dT%H:%M:%S%z"),
@@ -40,6 +46,9 @@ class JsonFormatter(logging.Formatter):
             "msg": record.getMessage(),
             "request_id": getattr(record, "request_id", "-"),
         }
+        for field in self._OPTIONAL_FIELDS:
+            if hasattr(record, field):
+                payload[field] = getattr(record, field)
         if record.exc_info:
             payload["exc"] = self.formatException(record.exc_info)
         return json.dumps(payload, default=str)

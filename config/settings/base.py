@@ -99,6 +99,8 @@ MIDDLEWARE = [
     "django_prometheus.middleware.PrometheusBeforeMiddleware",
     # Assign an X-Request-ID early so it tags every log line + the response + the Sentry scope.
     "apps.ops.middleware.RequestIDMiddleware",
+    # PII-safe request completion logs, carrying the request id from the middleware above.
+    "apps.ops.middleware.RequestLogMiddleware",
     "apps.ops.middleware.PermissionsPolicyMiddleware",
     # Content-Security-Policy (report-only by default — see CONTENT_SECURITY_POLICY_REPORT_ONLY).
     "csp.middleware.CSPMiddleware",
@@ -183,6 +185,7 @@ METRICS_TOKEN = env("METRICS_TOKEN", default="")
 # record with the X-Request-ID; "plain" (dev/test default) is human-readable. apps.* log at
 # LOG_LEVEL (default INFO — joins, moderation, retention); noisy libraries stay at WARNING.
 _LOG_FORMAT = env("LOG_FORMAT", default="plain")
+REQUEST_LOGGING_ENABLED = env.bool("REQUEST_LOGGING_ENABLED", default=not DEBUG)
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,

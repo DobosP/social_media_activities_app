@@ -65,8 +65,7 @@ def test_retention_disabled_purges_nothing():
 def test_retention_task_is_bounded():
     u = User.objects.create_user(username="ret_batch", password="pw")
     old = [
-        _notif(u, kind=Notification.Kind.JOIN_APPROVED, read=True, age_days=400)
-        for _ in range(3)
+        _notif(u, kind=Notification.Kind.JOIN_APPROVED, read=True, age_days=400) for _ in range(3)
     ]
 
     call_command("purge_read_notifications")

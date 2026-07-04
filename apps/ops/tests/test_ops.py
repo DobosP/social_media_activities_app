@@ -8,12 +8,22 @@ from apps.accounts.services import apply_assurance
 pytestmark = pytest.mark.django_db
 
 
-def test_healthz_is_public_and_reports_db():
+def test_healthz_is_public_and_cheap_liveness():
     resp = APIClient().get("/healthz")
     assert resp.status_code == 200
     body = resp.json()
     assert body["status"] == "ok"
-    assert body["database"] is True
+    assert "database" not in body
+
+
+def test_healthz_does_not_check_db(monkeypatch):
+    def fail_if_called(*args, **kwargs):
+        raise AssertionError("/healthz must not touch the database")
+
+    monkeypatch.setattr("django.db.backends.base.base.BaseDatabaseWrapper.cursor", fail_if_called)
+    resp = APIClient().get("/healthz")
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "ok"
 
 
 def test_readyz_reports_ready_with_db_up():
@@ -34,6 +44,17 @@ def test_readyz_degraded_503_when_db_down(monkeypatch):
     resp = APIClient().get("/readyz")
     assert resp.status_code == 503
     assert resp.json()["status"] == "degraded"
+
+
+def test_readyz_degraded_503_when_configured_cache_down(monkeypatch, settings):
+    from apps.ops import views as ops_views
+
+    settings.REDIS_URL = "redis://redis.example/0"
+    monkeypatch.setattr(ops_views.ReadyView, "_check_db", lambda self: True)
+    monkeypatch.setattr(ops_views.ReadyView, "_check_cache", lambda self: False)
+    resp = APIClient().get("/readyz")
+    assert resp.status_code == 503
+    assert resp.json() == {"status": "degraded", "database": True, "cache": False}
 
 
 def test_bounded_pagination_caps_limit():

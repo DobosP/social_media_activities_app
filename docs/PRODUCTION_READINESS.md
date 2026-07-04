@@ -72,9 +72,10 @@ it's a **provisioning** gap (the shipped `render.yaml` is a free-tier *demo*).
   the serial daily cron call sites to enqueue `cron.run_command` tasks where useful.
 
 ### 2c. Observability (operate-it-live basics)
-- **Structured logging + request/correlation IDs** — today: plain text, WARNING+ only, no JSON, no
-  way to trace a request across HTTP + WS + audit. Add a `LOGGING` dict + a request-id middleware
-  (propagate into Sentry scope; keep PII-free).
+- **Structured logging + request/correlation IDs — DONE (2026-07-04)**: `X-Request-ID` is minted or
+  safely propagated, echoed on responses, added to log records, tagged on the Sentry scope, and
+  emitted in PII-safe request logs when `REQUEST_LOGGING_ENABLED` is on. `LOG_FORMAT=json` switches
+  to JSON lines; production defaults to JSON while dev/test stay quiet/readable.
 - **Wire Sentry at deploy** (`SENTRY_DSN` on web *and* cron) + capture **periodic-job failures**
   (a silently failing `consent_renewal_sweep`/`purge_messaging` is a GDPR/safety miss) + a cron
   check-in monitor for missed nightly ticks. Add the Channels integration for WS exceptions.
@@ -143,9 +144,10 @@ it's a **provisioning** gap (the shipped `render.yaml` is a free-tier *demo*).
 ### Reliability
 - **Retries / circuit-breakers** for Stripe + booking (the Overpass/scanner pattern, applied
   consistently) so a transient 5xx isn't a 500 that pins a worker for 15s.
-- **`/readyz`** (checks DB/Redis/storage when configured; `/healthz` stays pure liveness) +
-  **graceful shutdown** (drain on SIGTERM, flip `/readyz` to 503) for zero-downtime once ≥2
-  instances.
+- **`/readyz` — PARTIAL (2026-07-04)**: `/healthz` is pure liveness; `/readyz` checks DB plus
+  Redis/storage only when configured and returns degraded booleans without backend details.
+  Remaining: graceful shutdown drain that flips `/readyz` to 503 on SIGTERM for zero-downtime once
+  ≥2 instances.
 - **Operational metrics** — django-prometheus `/metrics` (request latency/status, DB timing, live WS
   gauge) scraped by a free Grafana/Prometheus.
 

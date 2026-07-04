@@ -1,7 +1,15 @@
 """Operational middleware."""
 
+import logging
+import re
+import time
+import uuid
+
 from django.conf import settings
 from django.http import JsonResponse
+
+_CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f]")
+_REQUEST_ID_RE = re.compile(r"[A-Za-z0-9._-]{1,64}")
 
 
 class MaxBodySizeMiddleware:
@@ -34,26 +42,75 @@ class RequestIDMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        import re
-        import uuid
-
-        from apps.ops.observability import set_request_id
+        from apps.ops.observability import reset_request_id, set_request_id
 
         # Allowlist a safe charset for an inbound id: a forged value with CR/LF/control chars would
         # otherwise inject into plain-text logs AND make the response-header assignment below raise
         # BadHeaderError (a 500). Anything that doesn't match is replaced with a fresh minted id.
         raw = (request.headers.get("X-Request-ID") or "")[:64].strip()
-        rid = raw if re.fullmatch(r"[A-Za-z0-9._-]{1,64}", raw) else uuid.uuid4().hex
-        set_request_id(rid)
+        rid = raw if _REQUEST_ID_RE.fullmatch(raw) else uuid.uuid4().hex
+        token = set_request_id(rid)
         try:
             import sentry_sdk
 
             sentry_sdk.set_tag("request_id", rid)  # no-op when Sentry isn't configured
         except Exception:  # noqa: BLE001 — observability must never break a request
             pass
-        response = self.get_response(request)
-        response.headers["X-Request-ID"] = rid
+        try:
+            response = self.get_response(request)
+            response.headers["X-Request-ID"] = rid
+            return response
+        finally:
+            reset_request_id(token)
+
+
+class RequestLogMiddleware:
+    """Emit one PII-safe operational request log after each response.
+
+    The log deliberately excludes query strings, request/response bodies, headers, cookies, users,
+    and IP addresses. It carries only method, sanitized path/route, status, duration, and the
+    request id injected by RequestIDMiddleware.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+        self.enabled = getattr(settings, "REQUEST_LOGGING_ENABLED", True)
+        self.logger = logging.getLogger("apps.ops.request")
+
+    def __call__(self, request):
+        started = time.monotonic()
+        try:
+            response = self.get_response(request)
+        except Exception:
+            if self.enabled:
+                self._log(request, 500, started, failed=True)
+            raise
+        if self.enabled:
+            self._log(request, response.status_code, started)
         return response
+
+    def _log(self, request, status_code: int, started: float, *, failed: bool = False) -> None:
+        from apps.ops.observability import get_request_id
+
+        duration_ms = int((time.monotonic() - started) * 1000)
+        resolver_match = getattr(request, "resolver_match", None)
+        route = getattr(resolver_match, "route", "") if resolver_match else ""
+        extra = {
+            "request_id": get_request_id(),
+            "method": request.method,
+            "path": _safe_log_value(getattr(request, "path_info", ""), 240),
+            "route": _safe_log_value(route or "-", 240),
+            "status_code": status_code,
+            "duration_ms": duration_ms,
+        }
+        if failed:
+            self.logger.exception("request_failed", extra=extra)
+        else:
+            self.logger.info("request", extra=extra)
+
+
+def _safe_log_value(value: str, limit: int) -> str:
+    return _CONTROL_CHARS.sub(" ", str(value or ""))[:limit]
 
 
 class PermissionsPolicyMiddleware:

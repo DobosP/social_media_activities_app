@@ -15,6 +15,7 @@ from .base import (
     IDENTITY_ALLOW_DEV_PROVIDER,
     IDENTITY_PROVIDER,
     IDENTITY_UNIQUENESS_ENFORCED,
+    LOGGING,
     MEDIA_S3_ENDPOINT_URL,
     MEDIA_S3_REGION,
     MEDIA_STORAGE_BACKEND,
@@ -23,6 +24,14 @@ from .base import (
 )
 
 DEBUG = False
+
+# Production defaults to machine-ingestible JSON logs; operators can still set LOG_FORMAT=plain for
+# emergency console debugging. Local dev/test settings keep plain logs and request logging quiet.
+LOGGING = copy.deepcopy(LOGGING)
+LOGGING["handlers"]["console"]["formatter"] = (
+    "json" if env("LOG_FORMAT", default="json") == "json" else "plain"
+)
+REQUEST_LOGGING_ENABLED = env.bool("REQUEST_LOGGING_ENABLED", default=True)
 
 # Adults-only in production until a real parental-responsibility trust anchor is wired
 # (the mutual-click guardian link is NOT verifiable proof of a parent-child relationship).
