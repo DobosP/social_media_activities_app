@@ -11,7 +11,7 @@
   Changing the start time re-notifies everyone who joined.{% endblocktrans %}</p>
 <form method="post" class="stack">{% csrf_token %}
   {{ form.as_p }}
-  <div class="row" style="gap:.5rem">
+  <div class="row activity-form-actions">
     <button class="btn" type="submit">{% trans "Save changes" %}</button>
     <a class="btn btn-secondary" href="{% url 'activity_detail' activity.pk %}">{% trans "Cancel" %}</a>
   </div>

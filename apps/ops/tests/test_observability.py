@@ -210,6 +210,40 @@ def test_csp_report_strips_control_chars_to_prevent_log_forging():
     assert "forged-line" in msg  # the (sanitised) content is still there, just on one line
 
 
+def test_csp_report_digest_groups_violations_and_counts_malformed_payloads():
+    from apps.ops.csp import digest_csp_reports
+
+    summary = digest_csp_reports(
+        [
+            {
+                "csp-report": {
+                    "effective-directive": "style-src-attr",
+                    "blocked-uri": "inline",
+                    "document-uri": "https://meet.test/activities/1/?secret=drop",
+                }
+            },
+            {
+                "csp-report": {
+                    "violated-directive": "style-src-attr 'self'",
+                    "blocked-uri": "inline",
+                    "document-uri": "https://meet.test/activities/1/#frag",
+                }
+            },
+            b"not json",
+            [{"body": {"effective-directive": "script-src", "blockedURL": "data:text/js,evil"}}],
+        ]
+    )
+    assert summary["total"] == 3
+    assert summary["malformed"] == 1
+    assert summary["groups"][0] == {
+        "count": 2,
+        "directive": "style-src-attr",
+        "blocked": "inline",
+        "document": "https://meet.test/activities/1/",
+    }
+    assert summary["groups"][1]["directive"] == "script-src"
+
+
 def test_json_formatter_never_leaks_a_user_object_on_the_record():
     # Guard the allowlist: a future `logger.info("x", extra={"user": u})` attaches the user to the
     # record, but JsonFormatter must emit ONLY its fixed operational fields — never the user's PII.

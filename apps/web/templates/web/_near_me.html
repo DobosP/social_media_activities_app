@@ -2,12 +2,12 @@
 ?near_lon/&near_lat to this page's URL so the server can sort closest-first; the coordinates
 are never stored. Include once per page; reads `near_active` from the view context.{% endcomment %}
 {% load i18n static %}
-<div class="row" style="gap:.5rem;align-items:center;margin:.3rem 0;flex-wrap:wrap">
+<div class="row near-me-row">
   <button type="button" id="near-me-btn" class="btn btn-sm btn-secondary" data-near-me
           data-locating="{% trans 'Locating...' %}"
           data-unavailable="{% trans 'Location unavailable' %}">&#128205; {% trans "Sort by nearest" %}</button>
   {% if near_active %}<span class="muted">{% trans "Sorted by distance from you." %}</span>
     <a class="muted" href="?">{% trans "Clear" %}</a>{% endif %}
-  <span class="muted" style="font-size:.75rem">{% trans "Your location is used only to sort this page &mdash; never stored." %}</span>
+  <span class="muted near-me-note">{% trans "Your location is used only to sort this page &mdash; never stored." %}</span>
 </div>
 <script src="{% static 'js/near-me.js' %}" defer></script>

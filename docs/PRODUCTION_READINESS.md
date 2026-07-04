@@ -150,11 +150,13 @@ it's a **provisioning** gap (the shipped `render.yaml` is a free-tier *demo*).
   gauge) scraped by a free Grafana/Prometheus.
 
 ### Security hardening
-- **CSP enforcement switch — PREPARED (2026-07-04)**: django-csp uses one shared policy in
-  report-only by default; key SSR pages have executable inline scripts/event handlers extracted to
-  static files, JSON script islands are nonced, and `DJANGO_CSP_ENFORCE=True` flips the same policy
-  to `Content-Security-Policy` after production violation reports are reviewed. Remaining tightening:
-  remove pervasive inline style attributes and the temporary `style-src` inline allowance.
+- **CSP enforcement switch — HARDENED (2026-07-04)**: django-csp uses one shared policy in
+  report-only by default; key SSR pages have executable inline scripts/event handlers and practical
+  inline style attributes/blocks extracted to static CSS/JS, JSON script islands are nonced, the
+  shared policy no longer includes `style-src 'unsafe-inline'`, and `DJANGO_CSP_ENFORCE=True` flips
+  the same policy to `Content-Security-Policy` after production violation reports are reviewed.
+  Operators can group exported report-only payloads with `digest_csp_reports`; remaining review is
+  to fix any deployed violations from pages outside the CSP smoke set before enforcing.
 - **Explicit security headers** — pin `SECURE_CONTENT_TYPE_NOSNIFF`/`SECURE_REFERRER_POLICY`/COOP +
   a `Permissions-Policy` (lock camera/mic, scope geolocation to self).
 - **SAST + container scanning** in CI — CodeQL/Semgrep (Django ruleset) + Bandit + Trivy/Grype on the

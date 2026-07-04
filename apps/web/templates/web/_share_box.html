@@ -6,7 +6,7 @@
 {% if share_targets %}
 <details class="share-box">
   <summary class="muted">{% trans "Share" %}</summary>
-  <form method="post" action="{% url 'share_to_thread' %}" class="stack" style="margin-top:.4rem;max-width:26rem">{% csrf_token %}
+  <form method="post" action="{% url 'share_to_thread' %}" class="stack u-form-narrow">{% csrf_token %}
     <input type="hidden" name="kind" value="{{ share_kind }}">
     <input type="hidden" name="obj_id" value="{{ share_obj_id }}">
     <input type="hidden" name="next" value="{{ request.path }}">

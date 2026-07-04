@@ -35,12 +35,6 @@
   {% if page_obj.paginator.count %}<p class="muted browse-count">{{ page_obj.paginator.count }} {% trans "upcoming" %}</p>{% endif %}
 </div>
 
-{# With JavaScript OFF the Cards carousel can't move, so fall back to a readable full-width column. #}
-<noscript><style>
-  .browse[data-view="cards"] .browse-deck { overflow: visible; }
-  .browse[data-view="cards"] .browse-grid { flex-direction: column; gap: .9rem; transform: none !important; }
-  .browse[data-view="cards"] .browse-item { flex: 1 1 auto !important; opacity: 1 !important; transform: none !important; }
-</style></noscript>
 <div class="browse" data-browse data-view="{{ view_mode }}">
   <div class="browse-deck" data-browse-deck>
     <div class="browse-grid">
@@ -64,7 +58,7 @@
 </div>
 
 {% if page_obj.has_other_pages %}
-<nav class="row" role="navigation" aria-label="{% trans 'Pages' %}" style="gap:1rem;margin-top:1rem;align-items:center;justify-content:center">
+<nav class="row u-page-nav" role="navigation" aria-label="{% trans 'Pages' %}">
   {% if page_obj.has_previous %}<a class="btn btn-secondary btn-sm" href="?{{ base_qs }}{% if base_qs %}&amp;{% endif %}view={{ view_mode }}&amp;page={{ page_obj.previous_page_number }}">{% trans "← Newer" %}</a>{% endif %}
   <span class="muted">{% blocktrans with n=page_obj.number total=page_obj.paginator.num_pages %}Page {{ n }} of {{ total }}{% endblocktrans %}</span>
   {% if page_obj.has_next %}<a class="btn btn-secondary btn-sm" href="?{{ base_qs }}{% if base_qs %}&amp;{% endif %}view={{ view_mode }}&amp;page={{ page_obj.next_page_number }}">{% trans "More →" %}</a>{% endif %}

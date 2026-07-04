@@ -13,7 +13,7 @@
     {# <time datetime> lets the live client rewrite this to a relative "5m ago" with the exact time
        on hover, with JS off it stays the absolute time and the permalink is untouched. #}
     <a href="#post-{{ p.pk }}" class="muted" title="{% trans 'Link to this message' %}"><time datetime="{{ p.created_at|date:'c' }}">{{ p.created_at|date:"j M H:i" }}</time></a>
-    {% if p.is_edited %}<span class="muted edited-mark" style="font-size:.75rem">{% trans "(edited)" %}</span>{% endif %}
+    {% if p.is_edited %}<span class="muted edited-mark">{% trans "(edited)" %}</span>{% endif %}
   </div>
   {% comment %}body_html is server-rendered safe HTML: escaped, newlines->br, @mentions of real peers
      wrapped in a mention span. Falls back to the plain escaped body if not attached.{% endcomment %}
@@ -43,21 +43,20 @@
   {% endif %}
   {% for att in p.attachment_list %}
     {% if att.expired %}
-      <p class="muted" style="margin:.3rem 0 0;font-size:.8rem">🕓 {% trans "This temporary picture has disappeared." %}</p>
+      <p class="muted post-attachment-note">🕓 {% trans "This temporary picture has disappeared." %}</p>
     {% elif att.kind == "image" %}
       <a href="{{ att.url }}" target="_blank" rel="noopener noreferrer">
-        <img src="{{ att.url }}" alt="{% trans 'shared image' %}" loading="lazy"
-             style="max-width:280px;max-height:280px;border-radius:8px;margin-top:.3rem"></a>
-      {% if att.expires_at %}<p class="muted" style="font-size:.72rem;margin:.1rem 0 0">🕓 {% blocktrans with when=att.expires_at|timeuntil %}disappears {{ when }}{% endblocktrans %}</p>{% endif %}
+        <img class="post-attachment-img" src="{{ att.url }}" alt="{% trans 'shared image' %}" loading="lazy"></a>
+      {% if att.expires_at %}<p class="muted post-attachment-expiry">🕓 {% blocktrans with when=att.expires_at|timeuntil %}disappears {{ when }}{% endblocktrans %}</p>{% endif %}
     {% else %}
-      <p style="margin:.3rem 0 0">&#128206;
+      <p class="post-pdf">&#128206;
         <a href="{{ att.url }}">{{ att.original_filename|default:"document.pdf" }}</a>
-        <span class="muted" style="font-size:.75rem">{% trans "(PDF &mdash; downloads)" %}</span>
-        {% if att.expires_at %}<span class="muted" style="font-size:.72rem">&middot; 🕓 {% blocktrans with when=att.expires_at|timeuntil %}disappears {{ when }}{% endblocktrans %}</span>{% endif %}</p>
+        <span class="muted small-copy">{% trans "(PDF &mdash; downloads)" %}</span>
+        {% if att.expires_at %}<span class="muted tiny-copy">&middot; 🕓 {% blocktrans with when=att.expires_at|timeuntil %}disappears {{ when }}{% endblocktrans %}</span>{% endif %}</p>
     {% endif %}
   {% endfor %}
   {# Reactions: anonymous + COUNTLESS — only which emojis are present, never how many or who. #}
-  <div class="rx" style="margin-top:.25rem">
+  <div class="rx">
     {% for e in p.reaction_present %}<span class="rx-chip{% if e in p.reaction_mine %} rx-mine{% endif %}">{{ e }}</span>{% endfor %}
     {% if is_member %}
       <details class="rx-pick">
@@ -72,7 +71,7 @@
     {% endif %}
   </div>
   {% if is_member %}
-    <div class="post-actions" style="font-size:.75rem;margin-top:.2rem">
+    <div class="post-actions">
       <a href="?reply_to={{ p.pk }}#compose">{% trans "Reply" %}</a>
       {% if p.author_id == user.id %}
         &middot; <a href="#edit-{{ p.pk }}">{% trans "Edit" %}</a>
@@ -83,7 +82,7 @@
         </form>
         {# No-JS in-place edit: a target-revealed form, classic POST/redirect. #}
         <form method="post" id="edit-{{ p.pk }}" class="post-edit" action="{% url 'activity_post_edit' activity.pk p.pk %}"
-              style="margin-top:.3rem">{% csrf_token %}
+              >{% csrf_token %}
           <textarea name="body" rows="2" maxlength="4000" required aria-label="{% trans 'Edit your message' %}">{{ p.body }}</textarea>
           <button class="btn btn-sm" type="submit">{% trans "Save edit" %}</button>
         </form>

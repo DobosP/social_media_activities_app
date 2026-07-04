@@ -18,6 +18,7 @@ pytestmark = pytest.mark.django_db
 PW = "pw-123-secret"
 SCRIPT_RE = re.compile(r"<script\b(?P<attrs>[^>]*)>(?P<body>.*?)</script>", re.I | re.S)
 EVENT_HANDLER_RE = re.compile(r"\son[a-zA-Z]+\s*=")
+STYLE_ATTR_RE = re.compile(r"\sstyle\s*=", re.I)
 
 
 def _user(name):
@@ -65,6 +66,7 @@ def test_csp_report_only_policy_has_nonce_ready_script_src_without_inline_script
     csp = resp["Content-Security-Policy-Report-Only"]
     assert "script-src 'self' https://unpkg.com" in csp
     assert "'unsafe-inline'" not in csp.split("script-src", 1)[1].split(";", 1)[0]
+    assert "'unsafe-inline'" not in csp.split("style-src", 1)[1].split(";", 1)[0]
     assert "report-uri /api/v1/ops/csp-report/" in csp
     assert resp.get("Content-Security-Policy", "") == ""
 
@@ -79,15 +81,35 @@ def test_nonced_json_script_adds_matching_header_nonce_on_messages_page():
     assert f"'nonce-{nonce}'" in resp["Content-Security-Policy-Report-Only"]
 
 
-def test_key_pages_render_no_inline_executable_scripts_or_inline_event_handlers():
+def test_key_pages_render_no_inline_executable_scripts_events_or_styles():
     user = _user("csp_pages")
     client = _client(user)
     activity = _activity(user)
-    paths = ["/places/", "/activities/new/", "/my-meetups/", f"/activities/{activity.pk}/"]
+    paths = [
+        "/",
+        "/places/",
+        "/activities/",
+        "/activities/new/",
+        "/messages/",
+        "/my-meetups/",
+        f"/activities/{activity.pk}/",
+    ]
     for path in paths:
         html = client.get(path).content.decode()
         assert list(_inline_executable_scripts(html)) == []
         assert EVENT_HANDLER_RE.search(html) is None
+        assert STYLE_ATTR_RE.search(html) is None
+
+
+def test_structured_json_ld_keeps_nonce_without_inline_executable_script():
+    resp = Client().get("/")
+    html = resp.content.decode()
+    script = re.search(
+        r'<script (?=[^>]*type="application/ld\+json")(?=[^>]*nonce="([^"]+)")', html
+    )
+    assert script
+    assert f"'nonce-{script.group(1)}'" in resp["Content-Security-Policy-Report-Only"]
+    assert list(_inline_executable_scripts(html)) == []
 
 
 def test_activity_detail_confirmations_use_data_attributes_not_inline_handlers():

@@ -15,11 +15,11 @@ progressive enhancement over the place dropdown in the form below — with no Ja
 dropdown alone fully works. Geolocation is request-only: it is used only to sort the map and is
 never stored or submitted (the only thing saved is which existing public place you choose).{% endcomment %}
 <section id="place-picker" aria-label="{% trans 'Find a place on the map' %}" hidden>
-  <div class="row" style="margin:.3rem 0">
+  <div class="row place-picker-controls">
     <button type="button" id="place-near-me" class="btn btn-sm btn-secondary"
       data-locating="{% trans 'Locating…' %}"
       data-unavailable="{% trans 'Location unavailable' %}">&#128205; {% trans "Find places near me" %}</button>
-    <span class="muted" style="font-size:.75rem">{% trans "Your location is used only to sort the map &mdash; never stored." %}</span>
+    <span class="muted activity-note">{% trans "Your location is used only to sort the map &mdash; never stored." %}</span>
   </div>
   <div id="map"
     data-places-url="/api/places/"

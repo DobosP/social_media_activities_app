@@ -1,7 +1,7 @@
 """F12 — display preferences (dark/high-contrast theme, larger text, reduced motion). Pins: the
 settings page works signed-out (no login required); a POST persists validated values to functional
 cookies + redirects; the context processor stamps the chosen values onto <html> on every page;
-defaults are "auto"/"normal"/no-scale; and a tampered/garbage value is ignored (no junk cookie)."""
+defaults are "auto"/"normal"; and a tampered/garbage value is ignored (no junk cookie)."""
 
 import pytest
 from django.test import Client
@@ -50,8 +50,9 @@ def test_chosen_theme_is_stamped_on_html_for_every_page():
     c.cookies["display_motion"] = "reduce"
     body = c.get("/display/").content.decode()
     assert 'data-theme="dark"' in body
+    assert 'data-text="larger"' in body
     assert 'data-motion="reduce"' in body
-    assert "--scale: 1.3" in body  # "larger" -> 1.3x rem base
+    assert 'style="--scale' not in body
 
 
 def test_defaults_when_no_cookie(rf):
@@ -61,7 +62,6 @@ def test_defaults_when_no_cookie(rf):
         "display_theme": "auto",
         "display_text": "normal",
         "display_motion": "auto",
-        "display_scale": "1",
     }
 
 
@@ -72,10 +72,9 @@ def test_context_processor_rejects_tampered_cookie(rf):
     ctx = display_preferences(request)
     assert ctx["display_theme"] == "auto"  # fell back to default
     assert ctx["display_text"] == "normal"
-    assert ctx["display_scale"] == "1"
 
 
 def test_default_page_has_auto_theme():
     body = Client().get("/display/").content.decode()
     assert 'data-theme="auto"' in body
-    assert "--scale: 1;" in body
+    assert 'data-text="normal"' in body

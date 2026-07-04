@@ -1,7 +1,7 @@
 # ADR-0009: CSP enforcement prep
 
 Date: 2026-07-04
-Status: accepted
+Status: superseded-by ADR-0010
 
 ## Decision
 Keep django-csp report-only by default, but use one shared CSP policy that can be flipped to
