@@ -44,10 +44,12 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
   flows use static JS; the shared policy no longer includes `style-src 'unsafe-inline'`; and
   `DJANGO_CSP_ENFORCE=True` remains the explicit enforcement switch after deployed violation reports
   are reviewed. Operators can group exported report-only payloads with `digest_csp_reports`.
-- **Readiness and request-correlation observability are implemented** (ADR-0011): `/healthz` is
-  cheap liveness only; `/readyz` checks the DB plus Redis cache and object storage only when those
-  dependencies are configured; `X-Request-ID` is echoed, attached to log records, tagged in Sentry
-  scope, and included in PII-safe structured request logs when enabled.
+- **Readiness and request-correlation observability are implemented** (ADR-0011, ADR-0013):
+  `/healthz` is cheap liveness only; `/readyz` checks the DB plus Redis cache and object storage
+  only when those dependencies are configured; SIGTERM/SIGINT or the ops test seam flips `/readyz`
+  to 503 with only a safe `draining` boolean while preserving liveness; `X-Request-ID` is echoed,
+  attached to log records, tagged in Sentry scope, and included in PII-safe structured request logs
+  when enabled.
 - **Media egress presigned redirect is implemented** (ADR-0012): when
   `MEDIA_REDIRECT_TO_PRESIGNED=True` and the selected storage backend supports presigning,
   media-serving views re-check viewer authorization before returning a short-lived 307 object-store
@@ -56,7 +58,7 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
 - **Open work** = the open **P0/P1/P2 items in `docs/archive/COMPLETENESS_GAPS_2026-06.md`** (gap tracker
   for the audited feature waves) + the remaining operational substrate in
   `docs/PRODUCTION_READINESS.md` (provisioning shared state, deploy-time Sentry/alert wiring,
-  graceful shutdown readiness draining, edge security). Almost none of it is feature work.
+  edge security). Almost none of it is feature work.
 - **Deploy**: launch target = **single Hetzner EU box + Hetzner Object Storage** via `deploy/`
   (Terraform + cloud-init) — see `docs/adr/0001` + `docs/HOSTING_EU.md`. `render.yaml` is a
   free-tier demo only. The Terraform has **never been applied — no infra exists**; never

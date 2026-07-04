@@ -146,10 +146,10 @@ it's a **provisioning** gap (the shipped `render.yaml` is a free-tier *demo*).
 ### Reliability
 - **Retries / circuit-breakers** for Stripe + booking (the Overpass/scanner pattern, applied
   consistently) so a transient 5xx isn't a 500 that pins a worker for 15s.
-- **`/readyz` — PARTIAL (2026-07-04)**: `/healthz` is pure liveness; `/readyz` checks DB plus
+- **`/readyz` — DONE (2026-07-04)**: `/healthz` is pure liveness; `/readyz` checks DB plus
   Redis/storage only when configured and returns degraded booleans without backend details.
-  Remaining: graceful shutdown drain that flips `/readyz` to 503 on SIGTERM for zero-downtime once
-  ≥2 instances.
+  SIGTERM/SIGINT and the ops test seam mark the process as draining, making `/readyz` return 503
+  with only a safe `draining` boolean while `/healthz` remains liveness.
 - **Operational metrics** — django-prometheus `/metrics` (request latency/status, DB timing, live WS
   gauge) scraped by a free Grafana/Prometheus.
 
