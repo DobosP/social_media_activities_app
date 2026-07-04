@@ -80,6 +80,35 @@ def test_api_list_mark_read_and_read_all():
     assert unread_count(user) == 0
 
 
+def test_v1_notification_list_is_cursor_paginated():
+    user = _adult("api_v1")
+    for i in range(6):
+        notify(user, Notification.Kind.SYSTEM, f"N {i}")
+    client = APIClient()
+    client.force_authenticate(user)
+
+    resp = client.get("/api/v1/notifications/", {"limit": 2})
+    assert resp.status_code == 200, resp.content
+    body = resp.json()
+    assert body["unread_count"] == 6
+    assert body["limit"] == 2
+    assert len(body["results"]) == 2
+    assert body["next_cursor"]
+
+
+def test_notification_list_query_count_is_constant(django_assert_max_num_queries):
+    user = _adult("api_q")
+    for i in range(12):
+        notify(user, Notification.Kind.SYSTEM, f"N {i}")
+    client = APIClient()
+    client.force_authenticate(user)
+
+    with django_assert_max_num_queries(3):
+        resp = client.get("/api/v1/notifications/", {"limit": 10})
+    assert resp.status_code == 200
+    assert len(resp.json()["results"]) == 10
+
+
 def test_only_own_notifications_visible():
     owner = _adult("owns")
     other = _adult("other")

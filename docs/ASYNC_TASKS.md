@@ -1,8 +1,9 @@
 # Off-request work — the durable deferred-task foundation
 
-**Code-grounded as of 2026-06-23.** Ships the *foundation* only (`apps/ops/tasks.py`,
-`apps/ops/models.py:DeferredTask`, the `process_deferred_tasks` command). No production task kind is
-registered yet — this document is the contract plus the concrete plan for the first real callers.
+**Code-grounded as of 2026-07-04.** Ships the Postgres-backed queue
+(`apps/ops/tasks.py`, `apps/ops/models.py:DeferredTask`, the `process_deferred_tasks` command) plus
+the first production task kinds in `apps/ops/handlers.py`: `erasure.blob_cleanup`,
+`notify.activity_fanout`, `cron.run_command`, and the fail-closed `media.scan.dispatch` placeholder.
 
 ## Why this exists
 
@@ -94,35 +95,33 @@ JSON-serialisable **IDs and minimal scalars only.** Rows are stored in the clear
 
 Pick **one** as the first real handler; each is a small, reviewable change.
 
-### 1. GDPR-erasure blob cleanup *(recommended first — lowest risk, clear win)*
-- **Today:** `apps.accounts.services.erase_user` deletes the account graph synchronously; photo/
-  attachment row deletes signal object-store blob cleanup on the request path. The privacy
-  guarantee (rows gone) is synchronous and must **stay** synchronous.
-- **Change:** keep the row deletion synchronous; collect the blob keys to purge *before* delete and
-  `enqueue("erasure.blob_cleanup", {"blob_keys": [...]}, dedup_key="erase:<public_id>")` inside the
-  same `@transaction.atomic` (so a rolled-back erasure enqueues no cleanup). The handler deletes
-  each blob from storage, ignoring already-gone keys (idempotent). A storage outage now retries
+### 1. GDPR-erasure blob cleanup *(implemented)*
+- **Today:** `apps.accounts.services.erase_user` deletes the account graph synchronously; photo,
+  attachment, and activity-cover row deletes enqueue `erasure.blob_cleanup` inside the delete
+  transaction. The privacy guarantee (rows gone) is synchronous and stays synchronous.
+- **Handler:** `erasure.blob_cleanup` accepts a bounded `blob_keys` list, deletes each object-store
+  key idempotently, and writes an audit row with the blob count. A storage outage now retries
   instead of failing the user's erasure.
 - **Safety:** no gate moves — the user's data is already unreachable the instant the rows commit.
 
-### 2. Media scanning
+### 2. Media scanning *(fail-closed placeholder only)*
 - **Today:** `apps.media.services.attach_to_post` scans **fail-closed before** the attachment is
   viewable. Keep that gate.
-- **Change (only if needed for latency):** persist the attachment in a **withheld** state, then
-  `enqueue("media.scan", {"attachment_id": id})`. The handler runs the *existing* scanner and flips
-  the attachment to viewable **only on a clean result**; a non-clean/ineffective result keeps it
-  withheld (fail-closed) and records the rejection. **`can_view_attachment` must treat un-scanned as
-  not-viewable.** Never admit-then-scan. (Until this is proven, the synchronous scan is the correct,
-  safer default — defer only with a deliberate review.)
+- **Current deferred kind:** `media.scan.dispatch` records an audited no-op and does not mark
+  anything clean or visible, because there is no withheld media state yet. Synchronous scan remains
+  the admission gate.
+- **Future change (only if needed for latency):** persist the attachment in a **withheld** state,
+  then enqueue a real scanner task. The handler may flip the attachment to viewable **only on a
+  clean result**; a non-clean/ineffective result keeps it withheld. **`can_view_attachment` must
+  treat un-scanned as not-viewable.** Never admit-then-scan.
 
-### 3. Notification fan-out
+### 3. Notification fan-out *(first kind implemented)*
 - **Today:** `apps.social.services.post_announcement` and member notifications loop
   `notifications.notify` per recipient on the request path; `notify` applies the per-recipient
   mute/DSA gate and blocked-pair exclusion at send time.
-- **Change:** for large fan-outs, `enqueue("notify.fanout", {"activity_id": a, "kind": k, ...})` and
-  have the handler re-derive the recipient set **through the same gated services** (`notify`,
-  `blocked_user_ids`) — never a pre-expanded recipient list (membership/blocks may change between
-  enqueue and run). DSA-mandated MODERATION/SYSTEM notices that must be immediate should stay
-  synchronous.
+- **Current kind:** `notify.activity_fanout` re-derives current activity members, excludes the
+  actor and blocked pairs, dedups by `(recipient, kind, url, title)`, and calls the
+  `notifications.notify()` chokepoint so mutable preferences and DSA non-mutable carve-outs stay
+  live. DSA-mandated MODERATION/SYSTEM notices that must be immediate should stay synchronous.
 - **Safety:** the mute/block/DSA gate stays inside `notify` and is re-evaluated at send time, so
   deferral changes only *when*, never *who*.

@@ -6,6 +6,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.ops.pagination import cursor_page, is_versioned_api_request, parse_limit
+
 from . import services
 from .models import Conversation, Message, Participant
 from .serializers import (
@@ -122,7 +124,22 @@ class ConversationListCreateView(APIView):
                 | _Q(participants__user__username__icontains=query)
             )
             qs = qs.filter(_Q(title__icontains=query) | name_match).distinct()
-        convs = list(qs.prefetch_related("participants__user")[:limit])
+        qs = qs.prefetch_related("participants__user")
+        if is_versioned_api_request(request):
+            convs, next_cursor, page_limit = cursor_page(
+                request, qs, default_limit=min(limit, 50), max_limit=limit
+            )
+            _attach_avatars([p.user for c in convs for p in c.participants.all()])
+            return Response(
+                {
+                    "next_cursor": next_cursor,
+                    "limit": page_limit,
+                    "results": ConversationSerializer(
+                        convs, many=True, context={"request": request}
+                    ).data,
+                }
+            )
+        convs = list(qs[:limit])
         _attach_avatars([p.user for c in convs for p in c.participants.all()])
         return Response(ConversationSerializer(convs, many=True, context={"request": request}).data)
 
@@ -270,11 +287,22 @@ class GuardianConversationsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        convs = list(
-            services.guardian_observable_conversations(request.user).prefetch_related(
-                "participants__user"
-            )
+        qs = services.guardian_observable_conversations(request.user).prefetch_related(
+            "participants__user"
         )
+        if is_versioned_api_request(request):
+            convs, next_cursor, page_limit = cursor_page(request, qs)
+            _attach_avatars([p.user for c in convs for p in c.participants.all()])
+            return Response(
+                {
+                    "next_cursor": next_cursor,
+                    "limit": page_limit,
+                    "results": ConversationSerializer(
+                        convs, many=True, context={"request": request}
+                    ).data,
+                }
+            )
+        convs = list(qs)
         _attach_avatars([p.user for c in convs for p in c.participants.all()])
         return Response(ConversationSerializer(convs, many=True, context={"request": request}).data)
 
@@ -295,18 +323,35 @@ class ConversationMessagesView(APIView):
         # conversation can never return an unbounded page. A caller-supplied
         # `?limit=` may only shrink the window, never exceed the hard cap.
         max_limit = getattr(settings, "MESSAGING_MESSAGE_PAGE_LIMIT", 50)
-        limit = max_limit
-        requested = request.query_params.get("limit")
-        if requested:
-            try:
-                limit = max(1, min(int(requested), max_limit))
-            except ValueError:
-                limit = max_limit
+        limit = parse_limit(request, default=max_limit, max_limit=max_limit)
         try:
-            msgs = services.messages_for(request.user, conv, limit=limit, after_id=after_id)
+            before_id = None
+            if is_versioned_api_request(request):
+                try:
+                    before_id = int(request.query_params.get("cursor") or "") or None
+                except (TypeError, ValueError):
+                    before_id = None
+            fetch_limit = limit + 1 if is_versioned_api_request(request) else limit
+            msgs = services.messages_for(
+                request.user, conv, limit=fetch_limit, after_id=after_id, before_id=before_id
+            )
         except services.MessagingError as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_403_FORBIDDEN)
+        next_cursor = ""
+        if is_versioned_api_request(request) and len(msgs) > limit:
+            msgs = msgs[1:]
+            next_cursor = str(msgs[0].id) if msgs else ""
         _attach_avatars([m.sender for m in msgs if m.sender_id])
+        if is_versioned_api_request(request):
+            return Response(
+                {
+                    "next_cursor": next_cursor,
+                    "limit": limit,
+                    "results": MessageSerializer(
+                        msgs, many=True, context={"request": request}
+                    ).data,
+                }
+            )
         return Response(MessageSerializer(msgs, many=True, context={"request": request}).data)
 
     def post(self, request, pk):

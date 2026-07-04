@@ -154,7 +154,7 @@ def _encode_deck_cursor(*, seed: str, offset: int, total: int) -> str:
 
 
 def _deck_shuffle_key(seed: str, activity_id: int) -> str:
-    return hashlib.sha256(f"{seed}:{activity_id}".encode("utf-8")).hexdigest()
+    return hashlib.sha256(f"{seed}:{activity_id}".encode()).hexdigest()
 
 
 def activity_deck(

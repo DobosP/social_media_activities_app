@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.events.models import Event
+from apps.ops.pagination import cursor_response, is_versioned_api_request
 from apps.places.models import Place
 
 from .proximity import apply_proximity, parse_point
@@ -19,10 +20,9 @@ from .serializers import (
 # Discovery feeds are read-only projections over existing data. Place/event data is
 # public; the activities feed is cohort-scoped + block-aware (reuses social.services).
 
-# These are bare APIViews (not paginated viewsets), so each feed applies a hard,
-# server-controlled row cap via qs[:MAX_RESULTS]. The slice is non-negotiable by the
-# client — it bounds DB work and response size so a single request can never dump the
-# whole table. Keep every feed's slice using this constant.
+# The transitional /api/ alias keeps the legacy hard-capped arrays via qs[:MAX_RESULTS]. The
+# canonical /api/v1/ surface wraps the same feeds in cursor/limit envelopes capped by
+# apps.ops.pagination.MAX_CURSOR_LIMIT.
 MAX_RESULTS = 100
 
 
@@ -70,6 +70,13 @@ class NearMeView(APIView):
         # the distance/id ordering above.
         from apps.places.services import get_access_preference, sort_by_access_match
 
+        if is_versioned_api_request(request):
+            # The access-preference sort is a stable partition over a bounded candidate set. It
+            # never stores viewer location and never widens the public_places() gate.
+            places = sort_by_access_match(
+                list(qs[: MAX_RESULTS * 3]), get_access_preference(request.user)
+            )
+            return cursor_response(request, places, PlaceCardSerializer)
         places = sort_by_access_match(list(qs[:MAX_RESULTS]), get_access_preference(request.user))
         return Response(PlaceCardSerializer(places, many=True).data)
 
@@ -131,6 +138,8 @@ class HappeningView(APIView):
                     pass
         # Chronological feed regardless of proximity (nearest-soonest stays useful).
         qs = qs.order_by("starts_at")
+        if is_versioned_api_request(request):
+            return cursor_response(request, qs, EventCardSerializer)
         return Response(EventCardSerializer(qs[:MAX_RESULTS], many=True).data)
 
 
@@ -157,6 +166,10 @@ class ActivitiesFeedView(APIView):
         qs, point = apply_proximity(qs, p, field="place__location")
         if point is None:
             qs = qs.order_by("starts_at")
+        if is_versioned_api_request(request):
+            return cursor_response(
+                request, qs, ActivityCardSerializer, context={"request": request}
+            )
         return Response(
             ActivityCardSerializer(qs[:MAX_RESULTS], many=True, context={"request": request}).data
         )
@@ -210,6 +223,10 @@ class PublicActivitiesView(APIView):
         qs, point = apply_proximity(qs, p, field="place__location")
         if point is None:
             qs = qs.order_by("starts_at")
+        if is_versioned_api_request(request):
+            return cursor_response(
+                request, qs, ActivityCardSerializer, context={"request": request}
+            )
         return Response(
             ActivityCardSerializer(qs[:MAX_RESULTS], many=True, context={"request": request}).data
         )
@@ -231,6 +248,8 @@ class PublicGroupsView(APIView):
             qs = qs.filter(activity_type__slug=activity)
         from .serializers import GroupCardSerializer
 
+        if is_versioned_api_request(request):
+            return cursor_response(request, qs, GroupCardSerializer)
         return Response(GroupCardSerializer(qs[:MAX_RESULTS], many=True).data)
 
 

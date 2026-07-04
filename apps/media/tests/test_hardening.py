@@ -22,6 +22,7 @@ from apps.media.models import Attachment, Photo
 from apps.media.processing import ImageError, validate_and_strip
 from apps.media.services import upload_photo
 from apps.media.storage import get_storage
+from apps.ops.tasks import run_pending_tasks
 from apps.places.models import Place
 from apps.social import services as social
 from apps.taxonomy.models import ActivityCategory, ActivityType
@@ -68,7 +69,8 @@ def test_user_deletion_erases_media_blob():
     key = photo.storage_key
     assert get_storage().exists(key) is True
 
-    user.delete()  # cascades Photo delete; the pre_delete signal must remove the blob
+    user.delete()  # cascades Photo delete; the pre_delete signal must enqueue blob cleanup
+    run_pending_tasks()
 
     assert Photo.objects.filter(id=photo.id).exists() is False
     assert get_storage().exists(key) is False
@@ -121,7 +123,8 @@ def test_user_deletion_erases_attachment_blob():
     )
     assert get_storage().exists(key) is True
 
-    user.delete()  # cascades Attachment delete; the pre_delete signal must remove the blob
+    user.delete()  # cascades Attachment delete; the pre_delete signal must enqueue blob cleanup
+    run_pending_tasks()
 
     assert Attachment.objects.filter(id=attachment.id).exists() is False
     assert get_storage().exists(key) is False

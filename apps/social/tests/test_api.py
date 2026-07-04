@@ -6,6 +6,7 @@ from rest_framework.test import APIClient
 
 from apps.accounts.models import AgeBand
 from apps.accounts.services import link_guardian
+from apps.places.models import ApprovedChildVenue
 from apps.social.models import Activity, Membership, Post
 from apps.social.serializers import ACTIVITY_DESCRIPTION_MAX_LENGTH, POST_BODY_MAX_LENGTH
 from apps.social.services import create_activity
@@ -19,6 +20,11 @@ def _client(user):
     client = APIClient()
     client.force_authenticate(user)
     return client
+
+
+def _approve_child_venue(place):
+    ApprovedChildVenue.objects.get_or_create(place=place)
+    return place
 
 
 def test_activities_require_auth():
@@ -149,6 +155,45 @@ def test_thread_posts_list_is_bounded(settings, adult, place, activity_type, now
     assert body[-1]["body"] == "post 11"
 
 
+def test_v1_thread_posts_are_cursor_paginated(settings, adult, place, activity_type, now):
+    settings.SOCIAL_THREAD_POST_LIMIT = 5
+    activity = create_activity(
+        adult, place=place, activity_type=activity_type, title="Hike", starts_at=now
+    )
+    for i in range(12):
+        Post.objects.create(thread=activity.thread, author=adult, body=f"post {i}")
+
+    first = _client(adult).get(f"/api/v1/social/activities/{activity.id}/posts/", {"limit": 3})
+    assert first.status_code == 200, first.content
+    body = first.json()
+    assert set(body) == {"next_cursor", "limit", "results"}
+    assert body["limit"] == 3
+    assert [row["body"] for row in body["results"]] == ["post 9", "post 10", "post 11"]
+    assert body["next_cursor"]
+
+    older = _client(adult).get(
+        f"/api/v1/social/activities/{activity.id}/posts/",
+        {"limit": 3, "cursor": body["next_cursor"]},
+    )
+    assert [row["body"] for row in older.json()["results"]] == ["post 6", "post 7", "post 8"]
+
+
+def test_v1_thread_posts_query_count_is_constant(
+    settings, adult, place, activity_type, now, django_assert_max_num_queries
+):
+    settings.SOCIAL_THREAD_POST_LIMIT = 20
+    activity = create_activity(
+        adult, place=place, activity_type=activity_type, title="Hike", starts_at=now
+    )
+    for i in range(15):
+        Post.objects.create(thread=activity.thread, author=adult, body=f"post {i}")
+
+    with django_assert_max_num_queries(8):
+        resp = _client(adult).get(f"/api/v1/social/activities/{activity.id}/posts/", {"limit": 10})
+    assert resp.status_code == 200, resp.content
+    assert len(resp.json()["results"]) == 10
+
+
 def test_thread_posts_get_requires_membership(adult, adult2, place, activity_type, now):
     # A same-cohort NON-member must NOT be able to read a private activity thread via the API
     # (cohort-isolation: _activity_for only checks cohort-visibility; can_read_thread is the bar).
@@ -166,6 +211,7 @@ def test_thread_posts_get_requires_membership(adult, adult2, place, activity_typ
 def test_posts_cannot_be_ghostwritten_on_behalf_of(child, place, activity_type, now):
     # A guardian must not ghostwrite a thread post as their ward via on_behalf_of (a message is
     # a first-person utterance, like an arrival ping). The author is pinned to request.user.
+    _approve_child_venue(place)
     activity = create_activity(
         child, place=place, activity_type=activity_type, title="Kids game", starts_at=now
     )
@@ -191,6 +237,20 @@ def test_mine_membership_list_is_bounded(settings, adult, place, activity_type, 
     resp = _client(adult).get("/api/social/activities/mine/")
     assert resp.status_code == 200, resp.content
     assert len(resp.json()) == 3
+
+
+def test_v1_mine_membership_list_is_cursor_paginated(settings, adult, place, activity_type, now):
+    settings.SOCIAL_MEMBERSHIP_LIST_LIMIT = 4
+    for i in range(7):
+        create_activity(
+            adult, place=place, activity_type=activity_type, title=f"Mine {i}", starts_at=now
+        )
+    resp = _client(adult).get("/api/v1/social/activities/mine/", {"limit": 2})
+    assert resp.status_code == 200, resp.content
+    body = resp.json()
+    assert body["limit"] == 2
+    assert len(body["results"]) == 2
+    assert body["next_cursor"]
 
 
 # --- lifecycle / edit over the API (F1/F2) ---
@@ -298,6 +358,7 @@ def test_arrived_ignores_on_behalf_of(child, place, activity_type, now):
     # so the adult guardian (different cohort, not a member) cannot reach the child's activity.
     guardian = make_user("apiguardian")
     link_guardian(guardian, child)
+    _approve_child_venue(place)
     activity = create_activity(
         child, place=place, activity_type=activity_type, title="Kids run", starts_at=now
     )
@@ -345,6 +406,7 @@ def test_transit_ignores_on_behalf_of(child, place, activity_type, now):
     # cue: the adult guardian (different cohort, not a member) can't even see the child's activity.
     guardian = make_user("apiguardian_transit")
     link_guardian(guardian, child)
+    _approve_child_venue(place)
     activity = create_activity(
         child, place=place, activity_type=activity_type, title="Kids run", starts_at=now
     )

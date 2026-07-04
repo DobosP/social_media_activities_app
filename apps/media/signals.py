@@ -4,29 +4,33 @@ Photo/Attachment rows cascade-delete when their uploader (or thread/post) is del
 GDPR Art. 17 account erasure. Django's cascade only removes the DB rows, so without this the
 image/file *bytes* would orphan in object storage and a child's media could survive deletion.
 These `pre_delete` receivers fire for every removal path (single delete, queryset delete, and
-cascade) and schedule backing-blob removal after the database deletion commits.
+cascade) and durably enqueue backing-blob removal in the same database transaction.
 """
 
 import logging
 
-from django.db import transaction
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 
+from apps.ops.tasks import enqueue
+
 from .models import ActivityCover, Attachment, Photo
-from .storage import get_storage
 
 logger = logging.getLogger(__name__)
 
 
-def _delete_blob_after_commit(key: str, *, model_name: str) -> None:
-    def _delete() -> None:
-        try:
-            get_storage().delete(key)
-        except Exception:
-            logger.exception("Failed to delete media blob %s during %s delete", key, model_name)
-
-    transaction.on_commit(_delete)
+def _enqueue_blob_cleanup(key: str, *, model_name: str) -> None:
+    try:
+        enqueue(
+            "erasure.blob_cleanup",
+            {"blob_keys": [key]},
+            dedup_key=f"blob:{key}",
+        )
+    except Exception:
+        logger.exception(
+            "Failed to enqueue media blob cleanup for %s during %s delete", key, model_name
+        )
+        raise
 
 
 @receiver(pre_delete, sender=Photo, dispatch_uid="media_photo_delete_blob")
@@ -39,7 +43,7 @@ def delete_blob_on_photo_delete(sender, instance: Photo, **kwargs) -> None:
     """
     if not instance.storage_key:
         return
-    _delete_blob_after_commit(instance.storage_key, model_name="Photo")
+    _enqueue_blob_cleanup(instance.storage_key, model_name="Photo")
 
 
 @receiver(pre_delete, sender=Attachment, dispatch_uid="media_attachment_delete_blob")
@@ -51,7 +55,7 @@ def delete_blob_on_attachment_delete(sender, instance: Attachment, **kwargs) -> 
     """
     if not instance.storage_key:
         return
-    _delete_blob_after_commit(instance.storage_key, model_name="Attachment")
+    _enqueue_blob_cleanup(instance.storage_key, model_name="Attachment")
 
 
 @receiver(pre_delete, sender=ActivityCover, dispatch_uid="media_activity_cover_delete_blob")
@@ -59,4 +63,4 @@ def delete_blob_on_activity_cover_delete(sender, instance: ActivityCover, **kwar
     """Remove the stored cover blob once the ActivityCover row deletion commits."""
     if not instance.storage_key:
         return
-    _delete_blob_after_commit(instance.storage_key, model_name="ActivityCover")
+    _enqueue_blob_cleanup(instance.storage_key, model_name="ActivityCover")

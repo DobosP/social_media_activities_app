@@ -42,14 +42,18 @@ class LocalStorageBackend(StorageBackend):
         self.root.mkdir(parents=True, exist_ok=True)
 
     def _path(self, key: str) -> Path:
-        # Keys are app-generated (uuid hex); reject traversal defensively.
-        if "/" in key or "\\" in key or ".." in key:
+        # Keys are app-generated. Allow app-owned subdirectories (activity-covers/...) while
+        # rejecting traversal and absolute paths defensively.
+        path = Path(key)
+        if path.is_absolute() or "\\" in key or ".." in path.parts:
             raise ValueError("Invalid storage key.")
-        return self.root / key
+        return self.root / path
 
     def save(self, key: str, data: bytes, *, content_type: str | None = None) -> None:
         # content_type is irrelevant on the filesystem (the serving view sets it from the model).
-        self._path(key).write_bytes(data)
+        path = self._path(key)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(data)
 
     def open(self, key: str) -> bytes:
         return self._path(key).read_bytes()

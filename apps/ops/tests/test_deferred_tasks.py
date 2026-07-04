@@ -240,12 +240,129 @@ def test_duplicate_registration_raises_but_same_callable_is_noop():
         tasks.register("test.dup")(lambda payload: None)  # different callable -> error
 
 
-def test_production_registry_starts_empty():
-    """The foundation ships with no production handlers yet (see docs/ASYNC_TASKS.md). This pins
-    that fact so adding the first real handler is a deliberate, reviewed act."""
+def test_production_registry_has_reviewed_handlers():
+    """Production handlers are explicit and reviewed; adding a kind changes this allowlist."""
     from apps.ops import handlers  # noqa: F401  (import triggers any @register)
 
-    assert tasks.registered_kinds() == frozenset()
+    assert tasks.registered_kinds() == frozenset(
+        {
+            "cron.run_command",
+            "erasure.blob_cleanup",
+            "media.scan.dispatch",
+            "notify.activity_fanout",
+        }
+    )
+
+
+def test_blob_cleanup_handler_deletes_storage_key(settings, tmp_path):
+    from apps.media.storage import get_storage
+    from apps.ops import handlers  # noqa: F401
+
+    settings.MEDIA_ROOT = tmp_path / "media"
+    key = "deferred-cleanup.txt"
+    get_storage().save(key, b"old bytes", content_type="text/plain")
+    assert get_storage().exists(key) is True
+
+    tasks.enqueue("erasure.blob_cleanup", {"blob_keys": [key]}, dedup_key=f"blob:{key}")
+    assert tasks.run_pending_tasks()["done"] == 1
+
+    assert get_storage().exists(key) is False
+
+
+def test_media_scan_dispatch_fails_closed_and_audits():
+    from apps.ops import handlers  # noqa: F401
+    from apps.safety.models import AuditLog
+
+    tasks.enqueue("media.scan.dispatch", {"attachment_id": 123}, max_attempts=1)
+    summary = tasks.run_pending_tasks()
+
+    assert summary["done"] == 1
+    assert AuditLog.objects.filter(event="media.scan_dispatch_blocked").exists()
+
+
+def test_notify_activity_fanout_handler_is_bounded_and_idempotent():
+    from django.contrib.gis.geos import Point
+
+    from apps.accounts.identity.base import AssuranceResult
+    from apps.accounts.models import AgeBand, User
+    from apps.accounts.services import apply_assurance
+    from apps.notifications.models import Notification
+    from apps.ops import handlers  # noqa: F401
+    from apps.places.models import Place
+    from apps.social.models import Membership
+    from apps.social.services import create_activity
+    from apps.taxonomy.models import ActivityCategory, ActivityType
+
+    owner = User.objects.create_user(username="fanout_owner", password="pw", display_name="Owner")
+    member = User.objects.create_user(
+        username="fanout_member", password="pw", display_name="Member"
+    )
+    apply_assurance(owner, AssuranceResult(age_band=AgeBand.ADULT, provider="dev"))
+    apply_assurance(member, AssuranceResult(age_band=AgeBand.ADULT, provider="dev"))
+    place = Place.objects.create(
+        name="Fanout Place", location=Point(23.6, 46.77, srid=4326), source=Place.Source.OSM
+    )
+    category = ActivityCategory.objects.create(slug="fanout-cat", name="Fanout")
+    activity_type = ActivityType.objects.create(
+        slug="fanout-type", name="Fanout Type", category=category
+    )
+
+    activity = create_activity(
+        owner,
+        place=place,
+        activity_type=activity_type,
+        title="Fanout",
+        starts_at=timezone.now() + timezone.timedelta(days=1),
+    )
+    Membership.objects.create(
+        activity=activity,
+        user=member,
+        role=Membership.Role.MEMBER,
+        state=Membership.State.MEMBER,
+        decided_at=timezone.now(),
+    )
+    payload = {
+        "activity_id": activity.id,
+        "exclude_user_id": owner.id,
+        "kind": Notification.Kind.ANNOUNCEMENT,
+        "title": "Announcement: Fanout",
+        "body": "Bring water",
+        "url": f"/api/social/activities/{activity.id}/",
+    }
+    tasks.enqueue("notify.activity_fanout", payload, dedup_key=f"notify:{activity.id}")
+    tasks.run_pending_tasks()
+    tasks.enqueue("notify.activity_fanout", payload, dedup_key=f"notify:{activity.id}:again")
+    tasks.run_pending_tasks()
+
+    assert (
+        Notification.objects.filter(
+            recipient=member, kind=Notification.Kind.ANNOUNCEMENT, title="Announcement: Fanout"
+        ).count()
+        == 1
+    )
+
+
+def test_cron_run_command_handler_allowlists_due_jobs(monkeypatch):
+    from apps.ops import handlers  # noqa: F401
+
+    called = []
+    monkeypatch.setattr(
+        "apps.ops.handlers.call_command", lambda name, **kwargs: called.append(name)
+    )
+
+    tasks.enqueue("cron.run_command", {"command": "expire_api_tokens"})
+    tasks.run_pending_tasks()
+
+    assert called == ["expire_api_tokens"]
+
+
+def test_cron_run_command_handler_rejects_unknown_command():
+    from apps.ops import handlers  # noqa: F401
+
+    tasks.enqueue("cron.run_command", {"command": "shell"}, max_attempts=1)
+    summary = tasks.run_pending_tasks()
+
+    assert summary["failed"] == 1
 
 
 # --- command + cron wiring --------------------------------------------------------------------

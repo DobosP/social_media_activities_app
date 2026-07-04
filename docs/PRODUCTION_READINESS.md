@@ -64,12 +64,12 @@ it's a **provisioning** gap (the shipped `render.yaml` is a free-tier *demo*).
 - ~~No task queue exists~~ **DONE (2026-06-23): the foundation shipped** — a Postgres-backed
   `DeferredTask` queue (`apps/ops/tasks.py`, transactional `enqueue`, `SKIP LOCKED` claims,
   bounded retries) drained by the existing `run_due_jobs` cron. No Celery/Redis-broker by
-  design — see `ASYNC_TASKS.md` + `adr/0003`. **No production task kind is registered yet.**
-- Then move off the request/socket thread: **media safety scanning** (bound it with a strict
-  timeout + circuit breaker + a quarantined `pending_scan` state), **GDPR erasure/export** (unbounded
-  cascade can hit the request timeout → partial erasure = legal risk), notification fan-out, and the
-  broadcast group_send. Convert the serial daily cron into enqueued tasks (parallel + per-job retry +
-  dead-letter).
+  design — see `ASYNC_TASKS.md` + `adr/0003`. **Updated 2026-07-04:** production kinds are now
+  registered for blob cleanup, activity notification fan-out, allowlisted cron-command splitting,
+  and a fail-closed media-scan placeholder.
+- Remaining async moves: a real withheld-state media scanner (strict timeout/circuit breaker),
+  full GDPR export/erasure orchestration beyond blob cleanup, broadcast group_send, and converting
+  the serial daily cron call sites to enqueue `cron.run_command` tasks where useful.
 
 ### 2c. Observability (operate-it-live basics)
 - **Structured logging + request/correlation IDs** — today: plain text, WARNING+ only, no JSON, no
@@ -105,13 +105,15 @@ it's a **provisioning** gap (the shipped `render.yaml` is a free-tier *demo*).
 ## 3. P1 — to scale (and harden)
 
 ### API / DRF contract
-- **API versioning** — no `/v1`, no `DEFAULT_VERSIONING_CLASS`. Add `URLPathVersioning` (mount under
-  `/api/v1/`, keep a transitional alias) *now*, before a native client ships against the contract.
-- **Pagination bounds** — `LimitOffset` has no `max_limit` (a client can request `?limit=50000`) and
-  the highest-traffic discovery feeds are hard-sliced `APIView`s with **no pagination at all**. Set a
-  `max_limit` default + give discovery/thread feeds a cursor paginator.
-- **N+1 CI guard** — fix `participant_keys()` (one query/participant) and add an
-  `assertNumQueries`/nplusone test around the top list endpoints so regressions fail the build.
+- **API versioning — DONE (2026-07-04)**: canonical `/api/v1/`, transitional `/api/` alias, DRF
+  `URLPathVersioning`, and OpenAPI filtering that documents only the versioned API paths.
+- **Pagination bounds — DONE (2026-07-04 for app APIViews)**: global bounded limit/offset plus
+  cursor/limit envelopes on `/api/v1/` discovery feeds, activity thread reads, social list actions,
+  messaging conversation/history reads, and notification lists. The `/api/` alias keeps legacy
+  response shapes while still retaining existing hard caps.
+- **N+1 CI guard — PARTIAL (2026-07-04)**: existing `participant_keys()` guard remains; added
+  query-count guards for v1 thread reads and notification list reads. Broader prod-sized
+  `EXPLAIN`/index work remains deferred until there is representative traffic.
 
 ### Horizontal scaling (after Redis)
 - **Multiple workers behind the LB** (uvicorn-workers/multi-replica to use all cores).

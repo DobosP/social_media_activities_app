@@ -379,6 +379,9 @@ REST_FRAMEWORK = {
     "DEFAULT_FILTER_BACKENDS": [
         "django_filters.rest_framework.DjangoFilterBackend",
     ],
+    "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.URLPathVersioning",
+    "DEFAULT_VERSION": "v1",
+    "ALLOWED_VERSIONS": ("v1",),
     # Bounded so a client can't request ?limit=50000 and force a giant unpaginated scan.
     "DEFAULT_PAGINATION_CLASS": "apps.ops.pagination.BoundedLimitOffsetPagination",
     "PAGE_SIZE": 50,

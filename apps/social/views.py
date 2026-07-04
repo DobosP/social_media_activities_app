@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db.models import Q
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
@@ -8,8 +9,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.accounts.services import is_guardian_of
+from apps.ops.pagination import cursor_response, is_versioned_api_request, parse_limit
 
-from .models import Membership, UserPlaceProposal
+from .models import Membership, Post, UserPlaceProposal
 from .serializers import (
     ActivityCreateSerializer,
     ActivitySerializer,
@@ -317,8 +319,17 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
             Membership.objects.filter(user=actor)
             .exclude(state=Membership.State.REMOVED)
             .select_related("activity")
-            .order_by("-created_at")[:limit]
+            .order_by("-created_at")
         )
+        if is_versioned_api_request(request):
+            return cursor_response(
+                request,
+                memberships,
+                MembershipSerializer,
+                default_limit=min(limit, 50),
+                max_limit=limit,
+            )
+        memberships = memberships[:limit]
         return Response(MembershipSerializer(memberships, many=True).data)
 
     @action(detail=True, methods=["get", "post"])
@@ -356,6 +367,45 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
         # same-cohort NON-member could read a private activity thread (cohort-isolation leak).
         if not can_read_thread(actor, activity):
             raise PermissionDenied("This activity's thread is private to its members.")
+        if is_versioned_api_request(request):
+            limit = parse_limit(
+                request,
+                default=getattr(settings, "SOCIAL_THREAD_POST_LIMIT", 100),
+                max_limit=getattr(settings, "SOCIAL_THREAD_POST_LIMIT", 100),
+            )
+            qs = (
+                activity.thread.posts.filter(is_hidden=False)
+                .select_related("author", "shared_activity", "shared_place", "shared_event")
+                .order_by("-created_at", "-id")
+            )
+            before_id = request.query_params.get("cursor")
+            try:
+                before_id = int(before_id) if before_id else None
+            except (TypeError, ValueError):
+                before_id = None
+            anchor = (
+                Post.objects.filter(pk=before_id, thread=activity.thread).first()
+                if before_id is not None
+                else None
+            )
+            if anchor is not None:
+                qs = qs.filter(
+                    Q(created_at__lt=anchor.created_at)
+                    | Q(created_at=anchor.created_at, id__lt=anchor.id)
+                )
+            posts = list(qs[: limit + 1])
+            has_older = len(posts) > limit
+            posts = posts[:limit]
+            older_cursor = posts[-1].id if has_older and posts else ""
+            posts.reverse()
+            attach_share_cards(posts)
+            return Response(
+                {
+                    "next_cursor": str(older_cursor),
+                    "limit": limit,
+                    "results": PostSerializer(posts, many=True).data,
+                }
+            )
         # Hard-cap the thread read to the newest N (chronological), excluding hidden posts,
         # so a long thread can't force an unbounded queryset/serialization.
         limit = getattr(settings, "SOCIAL_THREAD_POST_LIMIT", 100)
@@ -386,7 +436,10 @@ class GroupViewSet(viewsets.ViewSet):
     lookup_value_regex = r"[0-9]+"
 
     def list(self, request):
-        return Response(GroupSerializer(visible_groups(request.user), many=True).data)
+        qs = visible_groups(request.user)
+        if is_versioned_api_request(request):
+            return cursor_response(request, qs, GroupSerializer)
+        return Response(GroupSerializer(qs, many=True).data)
 
     def retrieve(self, request, pk=None):
         group = group_by_id(pk, request.user)
@@ -475,7 +528,17 @@ class GroupViewSet(viewsets.ViewSet):
         from apps.discovery.serializers import ActivityCardSerializer
 
         limit = getattr(settings, "COMMUNITY_ACTIVITIES_PAGE_SIZE", 100)
-        acts = group_feed_activities(group, request.user)[:limit]
+        acts = group_feed_activities(group, request.user)
+        if is_versioned_api_request(request):
+            return cursor_response(
+                request,
+                acts,
+                ActivityCardSerializer,
+                default_limit=min(limit, 50),
+                max_limit=limit,
+                context={"request": request},
+            )
+        acts = acts[:limit]
         return Response(ActivityCardSerializer(acts, many=True).data)
 
 
@@ -495,7 +558,10 @@ class SeriesViewSet(viewsets.ViewSet):
         return series
 
     def list(self, request):
-        return Response(SeriesSerializer(visible_series(request.user), many=True).data)
+        qs = visible_series(request.user)
+        if is_versioned_api_request(request):
+            return cursor_response(request, qs, SeriesSerializer)
+        return Response(SeriesSerializer(qs, many=True).data)
 
     def retrieve(self, request, pk=None):
         return Response(SeriesSerializer(self._get(request, pk)).data)
@@ -581,6 +647,8 @@ class PlaceProposalViewSet(viewsets.ViewSet):
     def list(self, request):
         # Pending proposals OTHER verified users may confirm (count-annotated, proposer excluded).
         qs = pending_proposals_for(request.user)
+        if is_versioned_api_request(request):
+            return cursor_response(request, qs, PlaceProposalSerializer)
         return Response(PlaceProposalSerializer(qs, many=True).data)
 
     def create(self, request):
@@ -643,7 +711,10 @@ class GaugeViewSet(viewsets.ViewSet):
         return gauge
 
     def list(self, request):
-        return Response(GaugeSerializer(visible_gauges(request.user), many=True).data)
+        qs = visible_gauges(request.user)
+        if is_versioned_api_request(request):
+            return cursor_response(request, qs, GaugeSerializer)
+        return Response(GaugeSerializer(qs, many=True).data)
 
     def retrieve(self, request, pk=None):
         return Response(GaugeSerializer(self._get(request, pk)).data)

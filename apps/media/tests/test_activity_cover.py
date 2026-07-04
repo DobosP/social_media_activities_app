@@ -14,6 +14,7 @@ from apps.accounts.services import apply_assurance
 from apps.media import services as media
 from apps.media.models import ActivityCover
 from apps.media.storage import get_storage
+from apps.ops.tasks import run_pending_tasks
 from apps.places.models import Place
 from apps.safety.services import block_user
 from apps.social import services as social
@@ -171,6 +172,7 @@ def test_replacing_cover_reclaims_previous_blob_after_commit(tmp_path, settings)
     assert second.storage_key != first_key
     assert ActivityCover.objects.filter(activity=activity).count() == 1
     assert get_storage().exists(second.storage_key) is True
+    run_pending_tasks()
     assert get_storage().exists(first_key) is False
 
 

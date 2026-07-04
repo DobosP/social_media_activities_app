@@ -4,7 +4,7 @@
 `docs/archive/COMPLETENESS_GAPS_2026-06.md`). On any doc conflict: this file > newest-dated ADR in
 `docs/adr/` > everything else.
 
-Last verified: 2026-07-03
+Last verified: 2026-07-04
 
 ## What this is
 
@@ -23,6 +23,14 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
   rebuild"** — a generic checklist wrongly flags features that already exist (Redis-ready caches/
   channels, opaque tokens, throttles, SSRF safe-fetch, GDPR erasure/export, pgvector ANN, prod
   boot assertions, CI gates, …).
+- **API v1 hardening slice is implemented** (ADR-0008): canonical `/api/v1/` plus transitional
+  `/api/` alias; DRF `URLPathVersioning`; bounded global limit/offset pagination; cursor/limit
+  envelopes on v1 discovery, thread, messaging, social-list, and notification-style APIViews; and
+  focused N+1/query-count guards for thread and notification list surfaces.
+- **DeferredTask has production task kinds registered** for bounded blob cleanup, activity
+  notification fan-out, allowlisted cron-command splitting, and a fail-closed/audited media-scan
+  placeholder. Media row-delete signals now enqueue blob cleanup instead of deleting storage on
+  the request path; synchronous media scan admission remains fail-closed.
 - **Open work** = the open **P0/P1/P2 items in `docs/archive/COMPLETENESS_GAPS_2026-06.md`** (gap tracker
   for the audited feature waves) + the operational substrate in `docs/PRODUCTION_READINESS.md`
   (provisioning shared state, async task queue, observability, edge security). Almost none of it

@@ -20,6 +20,7 @@ import json
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 
 from apps.accounts.models import Cohort, GuardianRelationship
@@ -744,7 +745,7 @@ def post_message(
     return message
 
 
-def messages_for(user, conversation, *, limit=50, after_id=None) -> list[Message]:
+def messages_for(user, conversation, *, limit=50, after_id=None, before_id=None) -> list[Message]:
     """Return messages this user can decrypt (those with a key wrapped to them),
     each annotated with `my_key` (the recipient's own MessageKey)."""
     if not can_view(user, conversation):
@@ -754,10 +755,19 @@ def messages_for(user, conversation, *, limit=50, after_id=None) -> list[Message
         .select_related("sender")
         .distinct()
     )
-    if after_id:
+    if before_id:
+        anchor = Message.objects.filter(pk=before_id, conversation=conversation).first()
+        if anchor is not None:
+            qs = qs.filter(
+                Q(created_at__lt=anchor.created_at)
+                | Q(created_at=anchor.created_at, id__lt=anchor.id)
+            )
+        msgs = list(qs.order_by("-created_at", "-id")[:limit])
+        msgs.reverse()
+    elif after_id:
         msgs = list(qs.filter(id__gt=after_id).order_by("created_at")[:limit])
     else:
-        msgs = list(qs.order_by("-created_at")[:limit])
+        msgs = list(qs.order_by("-created_at", "-id")[:limit])
         msgs.reverse()
     key_map = {
         mk.message_id: mk for mk in MessageKey.objects.filter(message__in=msgs, recipient=user)

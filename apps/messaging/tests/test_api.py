@@ -179,6 +179,19 @@ def test_conversation_list_is_bounded(settings, adult_a):
     assert len(resp.data) == 3
 
 
+def test_v1_conversation_list_is_cursor_paginated(settings, adult_a):
+    settings.MESSAGING_CONVERSATION_LIST_LIMIT = 4
+    for i in range(6):
+        partner = make_user(f"v1_partner_{i}")
+        services.start_direct(adult_a, partner)
+    resp = client_for(adult_a).get("/api/v1/messaging/conversations/", {"limit": 2})
+    assert resp.status_code == 200, resp.content
+    body = resp.json()
+    assert body["limit"] == 2
+    assert len(body["results"]) == 2
+    assert body["next_cursor"]
+
+
 def test_message_history_is_bounded(settings, adult_a, adult_b):
     settings.MESSAGING_MESSAGE_PAGE_LIMIT = 5
     conv = _active_direct(adult_a, adult_b)
@@ -194,8 +207,34 @@ def test_message_history_is_bounded(settings, adult_a, adult_b):
     assert len(history.data) == 5
     assert history.data[-1]["ciphertext"] == "Y2lwaGVy8"
 
+
+def test_v1_message_history_uses_older_cursor(settings, adult_a, adult_b):
+    settings.MESSAGING_MESSAGE_PAGE_LIMIT = 5
+    conv = _active_direct(adult_a, adult_b)
+    keys = keys_for(conv)
+    for i in range(9):
+        services.post_message(
+            adult_a, conv, ciphertext=f"Y2lwaGVy{i}", iv="aXY=", recipient_keys=keys
+        )
+    url = f"/api/v1/messaging/conversations/{conv.id}/messages/"
+    first = client_for(adult_b).get(url, {"limit": 3})
+    assert first.status_code == 200, first.content
+    body = first.json()
+    assert [row["ciphertext"] for row in body["results"]] == [
+        "Y2lwaGVy6",
+        "Y2lwaGVy7",
+        "Y2lwaGVy8",
+    ]
+    older = client_for(adult_b).get(url, {"limit": 3, "cursor": body["next_cursor"]})
+    assert [row["ciphertext"] for row in older.json()["results"]] == [
+        "Y2lwaGVy3",
+        "Y2lwaGVy4",
+        "Y2lwaGVy5",
+    ]
+
     # A caller-supplied ?limit may shrink the window but never exceed the hard cap.
     bounded = client_for(adult_b).get(url, {"limit": 50})
-    assert len(bounded.data) == 5
+    assert bounded.data["limit"] == 5
+    assert len(bounded.data["results"]) == 5
     smaller = client_for(adult_b).get(url, {"limit": 2})
-    assert len(smaller.data) == 2
+    assert len(smaller.data["results"]) == 2
