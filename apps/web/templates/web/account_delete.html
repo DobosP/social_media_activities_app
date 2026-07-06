@@ -31,7 +31,7 @@
   </ul>
 </div>
 
-<form method="post" action="{% url 'account_delete' %}" style="margin-top:1rem">{% csrf_token %}
+<form method="post" action="{% url 'account_delete' %}" class="u-mt-lg">{% csrf_token %}
   <button class="btn btn-secondary" type="submit">{% trans "Permanently delete my account" %}</button>
   <a class="btn btn-sm" href="{% url 'my_privacy' %}">{% trans "Cancel" %}</a>
 </form>

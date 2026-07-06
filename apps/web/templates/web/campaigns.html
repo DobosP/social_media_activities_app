@@ -6,19 +6,19 @@
 <p class="muted">{% trans "Specific things your donation can support. Earmark a gift to one, or give to the general fund. Figures shown in EUR." %}</p>
 {% for c in campaigns %}
   <div class="card">
-    <h2 style="margin-top:0">{{ c.title }}</h2>
+    <h2 class="u-mt-0">{{ c.title }}</h2>
     {% if c.description %}<p>{{ c.description|linebreaks }}</p>{% endif %}
     <div role="progressbar" aria-valuenow="{{ c.percent }}" aria-valuemin="0" aria-valuemax="100"
          aria-label="{% blocktrans with raised=c.raised_cents|cents goal=c.goal_cents|cents %}raised {{ raised }} of {{ goal }} EUR goal{% endblocktrans %}"
-         style="background:var(--chip-bg);border-radius:6px;height:10px;overflow:hidden;margin:.4rem 0">
-      <div style="background:var(--accent);height:10px;width:{{ c.percent }}%"></div>
+         class="meter">
+      <div style="width:{{ c.percent }}%"></div>
     </div>
     <p class="muted">{% blocktrans with raised=c.raised_cents|cents goal=c.goal_cents|cents %}Raised {{ raised }} of {{ goal }} EUR goal.{% endblocktrans %}</p>
     {% comment %}F42: a one-line text credit for the verified civic partner this campaign supports
        (shown only when active_campaigns_with_progress still finds the partner public). No logo,
        no boost — an acknowledgement, mirroring the place_detail partner credit.{% endcomment %}
     {% if c.partner_name %}
-      <p class="muted" style="font-size:.85rem">{% trans "In partnership with" %}
+      <p class="muted activity-meta-note">{% trans "In partnership with" %}
         {% if c.partner_website|safe_href %}<a href="{{ c.partner_website|safe_href }}" rel="noopener noreferrer" target="_blank">{{ c.partner_name }}</a>{% else %}{{ c.partner_name }}{% endif %}{% if c.partner_blurb %} &mdash; {{ c.partner_blurb }}{% endif %}</p>
     {% endif %}
     <a class="btn btn-sm" href="{% url 'donate' %}?campaign={{ c.slug }}">{% trans "Donate to this campaign" %}</a>
@@ -31,15 +31,15 @@
 {% comment %}W2-F26: the honest close-out loop. A plain record of what earmarked gifts funded —
    NO goal bar, NO "we hit it!" framing; just the outcome, the amount raised, and any linked spend.{% endcomment %}
 {% if completed_campaigns %}
-  <h2 style="margin-top:1.5rem">{% trans "Completed campaigns" %}</h2>
+  <h2 class="u-mt-lg">{% trans "Completed campaigns" %}</h2>
   <p class="muted">{% trans "What earmarked gifts have funded — a plain record, no targets or scores." %}</p>
   {% for c in completed_campaigns %}
     <div class="card">
-      <h3 style="margin-top:0">{{ c.title }}</h3>
+      <h3 class="u-mt-0">{{ c.title }}</h3>
       <p>{{ c.outcome|linebreaks }}</p>
-      <p class="muted" style="font-size:.85rem">{% blocktrans with raised=c.raised_cents|cents when=c.closed_at|date:"j M Y" %}{{ raised }} EUR raised &middot; closed {{ when }}{% endblocktrans %}</p>
+      <p class="muted activity-meta-note">{% blocktrans with raised=c.raised_cents|cents when=c.closed_at|date:"j M Y" %}{{ raised }} EUR raised &middot; closed {{ when }}{% endblocktrans %}</p>
       {% if c.spend_entries %}
-        <p class="muted" style="font-size:.85rem;margin-bottom:.2rem">{% trans "Where it went:" %}</p>
+        <p class="muted activity-meta-note u-mb-0">{% trans "Where it went:" %}</p>
         <ul class="members">
           {% for s in c.spend_entries %}<li>{{ s.category }} &mdash; {{ s.amount_cents|cents }} {{ s.currency }}{% if s.period %} ({{ s.period }}){% endif %}</li>{% endfor %}
         </ul>

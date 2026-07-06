@@ -6,12 +6,12 @@
 <p class="muted">{% trans "We're funded only by donations &mdash; no ads, no tracking. Figures are shown in EUR, entered by our team and updated periodically." %}</p>
 
 <div class="card">
-  <h2 style="margin-top:0">{% trans "Donations received" %}</h2>
+  <h2 class="u-mt-0">{% trans "Donations received" %}</h2>
   <p><strong>{% blocktrans with raised=raised_cents|cents %}{{ raised }} EUR{% endblocktrans %}</strong> {% trans "from completed donations." %}</p>
 </div>
 
 <div class="card">
-  <h2 style="margin-top:0">{% trans "Spending by category" %}</h2>
+  <h2 class="u-mt-0">{% trans "Spending by category" %}</h2>
   {% if spend_rows %}
     <ul class="members">
       {% for row in spend_rows %}
@@ -28,7 +28,7 @@
    never an 'X of Y' bar — quantities show in their own units; a euro estimate is shown only when set. #}
 {% if in_kind_rows %}
 <div class="card">
-  <h2 style="margin-top:0">{% trans "In-kind contributions" %}</h2>
+  <h2 class="u-mt-0">{% trans "In-kind contributions" %}</h2>
   <p class="muted">{% trans "Non-cash support from partners and the community &mdash; shown separately, not added to the cash figures above." %}</p>
   <ul class="members">
     {% for row in in_kind_rows %}
@@ -44,7 +44,7 @@
    clearly-separate section. Prose only: never a live counter or "X of Y" bar.{% endcomment %}
 {% if civic_outcomes %}
 <div class="card">
-  <h2 style="margin-top:0">{% trans "What this made possible" %}</h2>
+  <h2 class="u-mt-0">{% trans "What this made possible" %}</h2>
   <p class="muted">{% trans "Staff-written notes on what the platform's spend and partner backing produced &mdash; in words, never a counter." %}</p>
   <ul class="members">
     {% for o in civic_outcomes %}

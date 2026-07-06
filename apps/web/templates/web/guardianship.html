@@ -9,16 +9,16 @@
   <div class="card">
     <strong>{{ g.display_name|default:g.username }}</strong>
     <span class="tag">{{ g.caps.relationship }}</span>
-    <h3 style="margin:.5rem 0 .3rem">{% trans "What they can see about you" %}</h3>
-    <ul class="muted" style="font-size:.85rem">
+    <h3 class="u-mt-half u-mb-0">{% trans "What they can see about you" %}</h3>
+    <ul class="muted activity-meta-note">
       <li>{% trans "&#10003; Where and when your upcoming meetups are (place, time, activity type)." %}</li>
       {% if g.caps.can_get_arrival_pings %}<li>{% trans "&#10003; An alert when you tap &ldquo;I've arrived&rdquo; at a meetup." %}</li>{% endif %}
       {% if g.caps.can_observe_messaging %}<li>{% trans "&#10003; If they have set up secure messaging, they can read your group chats as a visible observer (you can see them in the chat)." %}</li>{% endif %}
       <li>{% trans "&#10007; They cannot read your activity threads, see your photos or who else is there, post as you, or join your activities. They are never in your cohort." %}</li>
     </ul>
     {% if g.caps.guardrail_supervised_only or g.caps.guardrail_latest_start_hour is not None or g.caps.guardrail_max_open_joins or g.caps.guardrail_earliest_start_hour is not None or g.caps.guardrail_allowed_weekday_ints or g.caps.guardrail_allowed_categories %}
-    <h3 style="margin:.5rem 0 .3rem">{% trans "Limits they've set on the meetups you can join" %}</h3>
-    <ul class="muted" style="font-size:.85rem">
+    <h3 class="u-mt-half u-mb-0">{% trans "Limits they've set on the meetups you can join" %}</h3>
+    <ul class="muted activity-meta-note">
       {% if g.caps.guardrail_supervised_only %}<li>{% trans "Only guardian-accompanied meetups." %}</li>{% endif %}
       {% if g.caps.guardrail_earliest_start_hour is not None %}<li>{% blocktrans with hour=g.caps.guardrail_earliest_start_hour %}Meetups that start no earlier than {{ hour }}:00.{% endblocktrans %}</li>{% endif %}
       {% if g.caps.guardrail_latest_start_hour is not None %}<li>{% blocktrans with hour=g.caps.guardrail_latest_start_hour %}Meetups that start by {{ hour }}:00 at the latest.{% endblocktrans %}</li>{% endif %}
@@ -32,7 +32,7 @@
   <p class="muted">{% trans "No one is registered as your guardian." %}</p>
 {% endfor %}
 {% if guardians %}
-  <p class="muted" style="font-size:.85rem">{% blocktrans %}This page doesn't have a &ldquo;remove&rdquo; button. To change
+  <p class="muted activity-meta-note">{% blocktrans %}This page doesn't have a &ldquo;remove&rdquo; button. To change
     a guardianship link, talk to your guardian. If something feels wrong, use <strong>Report</strong> on an
     activity or person, or leave the activity.{% endblocktrans %}</p>
 {% endif %}

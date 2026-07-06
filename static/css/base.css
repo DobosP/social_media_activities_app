@@ -137,9 +137,19 @@ small { font-size: .82rem; }
 .u-mb-lg { margin-bottom: 1rem; }
 .u-row-start { display: flex; gap: .6rem; align-items: flex-start; flex-wrap: wrap; }
 .u-mr-half { margin-right: .5rem; }
+.u-nowrap { white-space: nowrap; }
 /* Bare checkbox/radio groups inside forms: strip the boxed fieldset chrome. */
 .fieldset-plain { border: 0; padding: 0; margin: 0; }
 .fieldset-plain legend { font-size: .85rem; padding: 0; }
+
+/* Donation-campaign progress meter (campaigns.html). The bar width stays a
+   per-row inline style (dynamic percent) — everything static lives here. */
+.meter { background: var(--chip-bg); border-radius: var(--r-pill); height: 10px; overflow: hidden; margin: .4rem 0; }
+.meter > div { background: var(--accent); height: 100%; }
+
+/* Community graph canvas (communities_graph.html). Deliberately dark in every
+   theme: the vendored 3d-force-graph draws light nodes/links on this surface. */
+.graph-canvas { height: 62vh; border: 1px solid var(--line); border-radius: var(--r); background: #0e0f16; }
 
 /* =============================================================================
    Header & primary navigation — grouped bar (desktop) / slide-out drawer (mobile)
