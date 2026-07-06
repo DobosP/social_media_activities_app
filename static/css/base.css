@@ -127,6 +127,19 @@ small { font-size: .82rem; }
 .u-inline-flex { display: inline-flex; align-items: center; }
 .u-form-narrow { margin-top: .4rem; max-width: 26rem; }
 .u-page-nav { gap: 1rem; margin-top: 1rem; align-items: center; justify-content: center; }
+/* ADR-0016 P3: utilities covering the inline-style long tail (batch-2 leftovers). */
+.u-m-0 { margin: 0; }
+.u-mb-0 { margin-bottom: 0; }
+.u-mt-half { margin-top: .5rem; }
+.u-my-half { margin-top: .5rem; margin-bottom: .5rem; }
+.u-mt-lg { margin-top: 1rem; }
+.u-my-lg { margin-top: 1rem; margin-bottom: 1rem; }
+.u-mb-lg { margin-bottom: 1rem; }
+.u-row-start { display: flex; gap: .6rem; align-items: flex-start; flex-wrap: wrap; }
+.u-mr-half { margin-right: .5rem; }
+/* Bare checkbox/radio groups inside forms: strip the boxed fieldset chrome. */
+.fieldset-plain { border: 0; padding: 0; margin: 0; }
+.fieldset-plain legend { font-size: .85rem; padding: 0; }
 
 /* =============================================================================
    Header & primary navigation — grouped bar (desktop) / slide-out drawer (mobile)

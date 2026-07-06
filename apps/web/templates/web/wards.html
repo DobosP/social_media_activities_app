@@ -10,7 +10,7 @@
   <div class="card">
     <strong>{{ w.display_name|default:w.username }}</strong>
     <span class="tag">{{ w.get_cohort_display }}</span>
-    <h3 style="margin:.5rem 0 .3rem">{% trans "Upcoming meetups" %}</h3>
+    <h3 class="u-mt-half u-mb-0">{% trans "Upcoming meetups" %}</h3>
     {% if w.meetups %}
       <ul class="members">
         {% for a in w.meetups %}
@@ -18,7 +18,7 @@
             {% blocktrans with place=a.place.name|default:_("a place") %}at {{ place }}{% endblocktrans %}{% if a.place.address_city %}, {{ a.place.address_city }}{% endif %}{% if a.supervised %} &middot; {% if a.supervision_live %}{% trans "guardian-supervised" %}{% else %}{% trans "supervised &mdash; no adult seated yet" %}{% endif %}{% endif %}
             {% comment %}W4-F4: why this venue is permitted for a child meetup (the F9 gate, made
                legible). Shown only when it currently reads 'allowed' — never a false claim.{% endcomment %}
-            {% if a.child_venue_rationale %}<br><span class="muted" style="font-size:.8rem">&#10003;
+            {% if a.child_venue_rationale %}<br><span class="muted u-text-sm">&#10003;
               {% if a.child_venue_rationale == "staff_verified" %}{% trans "Child-approved venue (staff-verified)" %}{% else %}{% trans "Child-approved venue (matches the public-venue rule)" %}{% endif %}</span>{% endif %}
             {% comment %}F18: mirror the owner-curated plan (end time, meeting spot, getting-home note)
                for CHILD wards only — teens self-manage. Read-only facts; there is no reply channel.{% endcomment %}
@@ -34,8 +34,8 @@
       <p class="muted">{% trans "No upcoming meetups." %}</p>
     {% endif %}
 
-    <h3 style="margin:.6rem 0 .3rem">{% trans "What this guardianship lets you do" %}</h3>
-    <ul class="muted" style="font-size:.85rem">
+    <h3 class="u-mt-half u-mb-0">{% trans "What this guardianship lets you do" %}</h3>
+    <ul class="muted activity-meta-note">
       <li>{% trans "&#10003; See their upcoming meetups (place, time, activity type) &mdash; shown above." %}</li>
       {% if w.caps.can_get_arrival_pings %}<li>{% trans "&#10003; Get an alert when they tap &ldquo;I've arrived&rdquo; at a meetup." %}</li>{% endif %}
       {% if w.caps.can_observe_messaging %}<li>{% trans "&#10003; If you've set up secure messaging, read their group chats as a visible, read-only observer." %}</li>{% endif %}
@@ -49,23 +49,23 @@
       <li>{% trans "&#10007; You cannot see their thread posts, photos, who else is there, or chat content (beyond the observer view above); you never enter their activities or cohort." %}</li>
     </ul>
     {% if w.caps.guardrail_combined_blocks_all %}
-      <p class="muted" role="note" style="font-size:.85rem">&#9888;
+      <p class="muted activity-meta-note" role="note">&#9888;
         {% trans "Combined with another guardian's limits, no meetups currently match — so they can join nothing right now. Loosen a limit if that isn't what you intend." %}</p>
     {% endif %}
     {% if w.guardrail_preview %}
       {% if w.guardrail_preview.total %}
-        <p class="muted" role="note" style="font-size:.85rem">
+        <p class="muted activity-meta-note" role="note">
           {% blocktrans with eligible=w.guardrail_preview.eligible total=w.guardrail_preview.total %}Right now, they could join {{ eligible }} of {{ total }} upcoming meetups with room in their cohort.{% endblocktrans %}</p>
       {% else %}
-        <p class="muted" role="note" style="font-size:.85rem">
+        <p class="muted activity-meta-note" role="note">
           {% trans "No upcoming meetups to check against right now." %}</p>
       {% endif %}
     {% endif %}
 
     {% if w.caps.can_set_guardrails %}
-    <details class="card" style="margin:.6rem 0">
+    <details class="card card-muted u-my-half">
       <summary>{% trans "Set participation limits" %}</summary>
-      <p class="muted" style="font-size:.85rem">{% blocktrans %}Optional, conservative limits on the meetups
+      <p class="muted activity-meta-note">{% blocktrans %}Optional, conservative limits on the meetups
         your child can join. These only ever make their options narrower &mdash; they never open anything up.
         If more than one guardian sets a limit, the strictest one applies.{% endblocktrans %}</p>
       <form method="post" action="{% url 'guardian_guardrail_set' w.pk %}" class="stack">
@@ -87,20 +87,20 @@
               <option value="{{ h }}" {% if w.caps.guardrail_latest_start_hour == h %}selected{% endif %}>{{ h }}:00</option>
             {% endfor %}
           </select></label>
-        <fieldset style="border:0;padding:0;margin:0">
-          <legend style="font-size:.85rem">{% trans "Only on these days (none ticked = any day)" %}</legend>
+        <fieldset class="fieldset-plain">
+          <legend>{% trans "Only on these days (none ticked = any day)" %}</legend>
           {% for num, label in guardrail_weekdays %}
-            <label class="inline" style="margin-right:.5rem">
+            <label class="inline u-mr-half">
               <input type="checkbox" name="allowed_weekdays" value="{{ num }}"
                      {% if num in w.caps.guardrail_allowed_weekday_ints %}checked{% endif %}>
               {{ label }}</label>
           {% endfor %}
         </fieldset>
         {% if guardrail_categories %}
-        <fieldset style="border:0;padding:0;margin:0">
-          <legend style="font-size:.85rem">{% trans "Only these kinds of activity (none ticked = any kind)" %}</legend>
+        <fieldset class="fieldset-plain">
+          <legend>{% trans "Only these kinds of activity (none ticked = any kind)" %}</legend>
           {% for slug, name in guardrail_categories %}
-            <label class="inline" style="margin-right:.5rem">
+            <label class="inline u-mr-half">
               <input type="checkbox" name="allowed_categories" value="{{ slug }}"
                      {% if slug in w.caps.guardrail_allowed_categories %}checked{% endif %}>
               {{ name }}</label>
@@ -117,16 +117,16 @@
     {% endif %}
 
     {% if w.can_set_topics %}
-    <details class="card" style="margin:.6rem 0">
+    <details class="card card-muted u-my-half">
       <summary>{% trans "Suggested topics for their feed" %}</summary>
-      <p class="muted" style="font-size:.85rem">{% blocktrans %}Pick the kinds of activity their suggestions should lean toward. This only nudges the order of what's suggested and adds an honest note &mdash; it never hides anything, and it never changes what they're allowed to join (use the participation limits above for that).{% endblocktrans %}</p>
+      <p class="muted activity-meta-note">{% blocktrans %}Pick the kinds of activity their suggestions should lean toward. This only nudges the order of what's suggested and adds an honest note &mdash; it never hides anything, and it never changes what they're allowed to join (use the participation limits above for that).{% endblocktrans %}</p>
       <form method="post" action="{% url 'ward_topics_set' w.pk %}" class="stack">
         {% csrf_token %}
         {% if guardrail_categories %}
-        <fieldset style="border:0;padding:0;margin:0">
-          <legend style="font-size:.85rem">{% trans "Topics to lean toward (none ticked = no steering)" %}</legend>
+        <fieldset class="fieldset-plain">
+          <legend>{% trans "Topics to lean toward (none ticked = no steering)" %}</legend>
           {% for slug, name in guardrail_categories %}
-            <label class="inline" style="margin-right:.5rem">
+            <label class="inline u-mr-half">
               <input type="checkbox" name="topics" value="{{ slug }}"
                      {% if slug in w.topic_slugs %}checked{% endif %}>
               {{ name }}</label>
