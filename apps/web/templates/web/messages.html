@@ -8,7 +8,7 @@
 </div>
 {% include "web/_inbox_tabs.html" with active="messages" %}
 <p class="muted mz-intro">{% trans "Private chats only you and the other people can read." %}
-  {% trans "You can only message people in your own age group, and they must accept your first message." %}</p>
+  {% trans "Start with a connection or username; first messages arrive as requests." %}</p>
 
 {# Setting csrf_token here ensures the cookie is present for the JS API calls. #}
 <span class="csrf-primer">{{ csrf_token }}</span>
@@ -19,7 +19,21 @@
 <div class="mz-app card" id="mz-app">
   <aside class="mz-sidebar" id="mz-sidebar">
     {# Quick-start a chat with one of your connections #}
+    <div class="mz-start-head">
+      <strong>{% trans "Start a chat" %}</strong>
+      <span class="muted">{% trans "same age group only" %}</span>
+    </div>
     <div id="mz-connections" class="mz-connections"></div>
+
+    <form id="mz-new-form" class="mz-new mz-new-primary" aria-label="{% trans 'Start a new chat' %}">
+      <label>{% trans "Username or group" %}
+        <input name="usernames" autocomplete="off" placeholder="{% trans 'alex or alex, sam' %}" required></label>
+      <label>{% trans "Group name" %} <small class="muted">{% trans "(optional)" %}</small>
+        <input name="title" autocomplete="off" placeholder="{% trans 'Trail crew' %}"></label>
+      <input type="hidden" name="kind" value="direct">
+      <button class="btn btn-sm" type="submit">{% trans "Start chat" %}</button>
+      <p class="muted mz-form-hint">{% trans "They must accept before they can read your messages." %}</p>
+    </form>
 
     {# W6: find a chat — filters the loaded list by name/title (metadata only; bodies are E2EE). #}
     <input id="mz-conv-search" type="search" autocomplete="off"
@@ -36,15 +50,7 @@
     <div id="mz-conversations" class="mz-conv-list"><p class="muted">{% blocktrans %}Loading&hellip;{% endblocktrans %}</p></div>
 
     <details class="mz-more">
-      <summary>{% trans "New group &amp; device options" %}</summary>
-      <form id="mz-new-form" class="mz-new">
-        <label>{% trans "Usernames" %} <small class="muted">{% trans "(comma/space separated; 2+ = group)" %}</small>
-          <input name="usernames" autocomplete="off" placeholder="{% trans 'e.g. alex, sam' %}" required></label>
-        <label>{% trans "Group name" %} <small class="muted">{% trans "(optional)" %}</small>
-          <input name="title" autocomplete="off" placeholder="{% trans 'Trail crew' %}"></label>
-        <input type="hidden" name="kind" value="direct">
-        <button class="btn btn-sm" type="submit">{% trans "Start" %}</button>
-      </form>
+      <summary>{% trans "Device and guardian options" %}</summary>
       <div id="mz-guardian-section" hidden>
         <h4 class="mz-guardian-title">{% trans "Guardian oversight" %}</h4>
         <p class="muted mz-guardian-copy">{% trans "Conversations of the person you look after. Observing is read-only and visible to everyone in the chat." %}</p>
@@ -84,7 +90,11 @@
     <div id="mz-guardian"></div>
     <div id="mz-verify"></div>
     <div id="mz-log" class="mz-log">
-      <p class="muted mz-empty">{% trans "Pick a conversation on the left, or start one with a connection." %}</p>
+      <div class="mz-empty">
+        <strong>{% trans "Choose a chat to read messages." %}</strong>
+        <p class="muted">{% trans "Use Start a chat for a username, tap a connection shortcut, or open Requests when someone has invited you." %}</p>
+        <p class="muted">{% trans "Chats stay end-to-end encrypted and inside your age group." %}</p>
+      </div>
     </div>
     <form id="mz-composer" class="mz-composer" hidden>
       <input id="mz-input" autocomplete="off" placeholder="{% trans 'Write an encrypted message&hellip;' %}">
