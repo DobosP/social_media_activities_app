@@ -25,7 +25,7 @@
 {% if event.url|safe_href %}<p><a href="{{ event.url|safe_href }}" rel="noopener noreferrer" target="_blank">{% trans "Event website &rarr;" %}</a></p>{% endif %}
 {% if related_landing %}<p class="muted">{% blocktrans with name=related_landing.name url=related_landing.url %}More: <a href="{{ url }}">{{ name }}</a>{% endblocktrans %}</p>{% endif %}
 {% if attribution_credit %}
-  <p class="muted" style="font-size:.85rem">
+  <p class="muted activity-meta-note">
     {% trans "Source credit:" %}
     {% if attribution_credit.attribution %}{{ attribution_credit.attribution }}{% else %}{{ event.get_source_display }}{% endif %}
     {% if attribution_credit.license_name %} &middot; {{ attribution_credit.license_name }}{% endif %}
@@ -36,14 +36,14 @@
 {# F21: crowd accuracy reports — counts-only, decaying, ingest-safe. Never shows who reported. #}
 {% if can_report_event %}
 <div class="card">
-  <h2 style="margin-top:0">{% trans "Is this event wrong?" %}</h2>
+  <h2 class="u-mt-0">{% trans "Is this event wrong?" %}</h2>
   <form method="post" action="{% url 'event_report' event.pk %}" class="inline">
     {% csrf_token %}
     <button class="btn btn--light" name="kind" value="cancelled">{% trans "Cancelled" %}</button>
     <button class="btn btn--light" name="kind" value="moved">{% trans "Moved" %}</button>
     <button class="btn btn--light" name="kind" value="wrong_time">{% trans "Wrong time" %}</button>
   </form>
-  <p class="muted" style="font-size:.8rem">{% trans "If enough members report it, we'll flag the event and stop showing it. We never show who reported." %}</p>
+  <p class="muted u-text-sm">{% trans "If enough members report it, we'll flag the event and stop showing it. We never show who reported." %}</p>
   {% if user.is_staff %}
     <form method="post" action="{% url 'event_report_reset' event.pk %}" class="inline">
       {% csrf_token %}<button class="btn btn-sm btn-secondary" type="submit">{% trans "Clear reports (staff)" %}</button>

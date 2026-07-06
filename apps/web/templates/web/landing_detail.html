@@ -37,7 +37,7 @@
   </ul>
 {% endif %}
 
-<nav class="muted" aria-label="{% trans 'Explore' %}" style="margin-top:1rem">
+<nav class="muted u-page-nav" aria-label="{% trans 'Explore' %}">
   <p><a href="{% url 'things_to_do_city' area.slug %}">{% blocktrans with city=area.name %}Browse other activities in {{ city }} &rarr;{% endblocktrans %}</a></p>
 </nav>
 <p class="muted"><a href="{% url 'events_feed' %}?activity={{ activity_type.slug }}&amp;area={{ area.slug }}">{% trans "Subscribe to this list (RSS)" %}</a></p>
