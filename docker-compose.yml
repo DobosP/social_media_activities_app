@@ -1,6 +1,10 @@
 services:
   db:
-    image: postgis/postgis:16-3.4
+    # Seeded PostGIS + pgvector image (extensions + RO-EDU test data baked in) so
+    # a fresh volume comes up with data ready. See Dockerfile.db.
+    build:
+      context: .
+      dockerfile: Dockerfile.db
     environment:
       POSTGRES_DB: app
       POSTGRES_USER: app

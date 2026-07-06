@@ -1,0 +1,18 @@
+# Seeded PostGIS + pgvector database image for local + cloud test data.
+#
+# Fixes the two local-setup gaps of the plain postgis image and bakes the RO-EDU
+# test data in, so `docker compose up` on any device comes up with data ready —
+# no corpus, no ingest, no network. The base postgis image lacks the `vector`
+# (pgvector) extension the app's migrations require; we add it here.
+#
+# The seed loads ONCE, on first init of an empty data volume (the standard
+# Postgres `/docker-entrypoint-initdb.d/` convention). To refresh the data from
+# the corpus, regenerate db/seed.sql and rebuild (see the platform refresh script).
+FROM postgis/postgis:16-3.4
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends postgresql-16-pgvector \
+    && rm -rf /var/lib/apt/lists/*
+
+# 30- so it runs AFTER the base image's own postgis init scripts (10-/20-).
+COPY db/seed.sql /docker-entrypoint-initdb.d/30-roedu-seed.sql
