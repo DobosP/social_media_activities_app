@@ -15,6 +15,16 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
 
 ## Current state
 
+- **Frontend redesign program is underway** (ADR-0016, branches `claude/redesign-social-p*`):
+  React/Vite SPA with shared `@roedu/ui` (v0.3.0, CSP-safe) and the bespoke "Aurora Social"
+  theme (indigo/teal, mobile-first, dark-native). Phase 1 shipped: token rebrand of the
+  legacy CSS (light/dark/contrast), vendored Bricolage Grotesque display font, mobile
+  bottom tab bar in base.html, `frontend/` scaffold + Docker node build stage + `spa_entry`
+  nonce'd asset tag, `.btn--light` defined, Leaflet vendored locally (CSP unpkg allowance
+  kept — removal is a follow-up hardening slice), inline-style cleanup batch 1. E2EE
+  messaging/maps/graph/donations/safety UIs are untouched (restyle-in-place in Phase 4;
+  migration is a later program). Theme values live in BOTH frontend/src/theme.ts and
+  static/css/base.css until the legacy layer retires.
 - **Mobile photo-heavy activity cards are accepted in this branch** (ADR-0007): one contextual
   cover photo per activity may appear on discovery cards, with generated accent fallback; no
   short video, galleries, public user photo feeds, like/pass/swipe telemetry, or engagement ranking.

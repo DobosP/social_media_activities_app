@@ -34,6 +34,10 @@ docker compose up --build
 docker compose exec web python manage.py createsuperuser   # for /admin
 ```
 
+The image build also compiles the React frontend (`frontend/`, Vite → `static/frontend/`;
+see ADR-0016). For frontend work outside Docker: `cd frontend && npm install && npm run build`
+(node 22; `npm run dev` serves the SPA on :5173 proxying to runserver).
+
 ### Local variant: host already runs Postgres on 5432 (dev machines)
 
 Use the untracked `docker-compose.local.yml` (its db exposes no host port):
