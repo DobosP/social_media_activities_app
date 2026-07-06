@@ -57,7 +57,7 @@
 {% endif %}
 
 <h2>{% trans "Recommended for you" %}</h2>
-{% for a in recommended %}{% include "web/_activity_card.html" %}{% empty %}
+{% for a in recommended %}{% include "web/_activity_card.html" with show_accent=True %}{% empty %}
 <p class="muted">{% trans "No suggestions yet &mdash;" %} <a href="{% url 'interests' %}">{% trans "tell us what you like" %}</a>
   {% trans "or browse upcoming activities below." %}</p>{% endfor %}
 
@@ -66,19 +66,19 @@
    not a third copy. No counts/badges; shown only when it surfaces something new.{% endcomment %}
 {% if beginners %}
 <h2>{% trans "New here? These welcome beginners" %}</h2>
-{% for a in beginners %}{% include "web/_activity_card.html" %}{% endfor %}
+{% for a in beginners %}{% include "web/_activity_card.html" with show_accent=True %}{% endfor %}
 {% endif %}
 
 {% if mine %}
 <h2>{% trans "Your activities" %}</h2>
-{% for a in mine %}{% include "web/_activity_card.html" %}{% endfor %}
+{% for a in mine %}{% include "web/_activity_card.html" with show_accent=True %}{% endfor %}
 {% endif %}
 
 <h2>{% trans "Upcoming for you" %}
   {% if beginners_only %}<a class="muted" href="?"><small>{% trans "show all" %}</small></a>{% else %}<a class="muted" href="?beginners=true"><small>{% trans "beginners welcome only" %}</small></a>{% endif %}
 </h2>
 {% include "web/_near_me.html" %}
-{% for a in upcoming %}{% include "web/_activity_card.html" %}{% empty %}
+{% for a in upcoming %}{% include "web/_activity_card.html" with show_accent=True %}{% empty %}
 <p class="muted">{% trans "Nothing upcoming yet. Be the first to organise something!" %}</p>{% endfor %}
 
 {% if events %}

@@ -311,7 +311,9 @@ def recommend_activities(user, *, limit=20, near_point=None, radius_m=None):
             with_counts(
                 # category__parent is select_related so the topic-match ancestry walk
                 # (recommended_with_reasons) stays query-free — no per-card N+1.
-                candidates.select_related("place", "activity_type__category__parent", "owner")
+                candidates.select_related(
+                    "place", "activity_type__category__parent", "owner", "cover"
+                )
             ).order_by("starts_at")[:limit]
         )
 
@@ -327,6 +329,7 @@ def recommend_activities(user, *, limit=20, near_point=None, radius_m=None):
             # category__parent so the topic-match ancestry walk adds no per-card query.
             "activity__activity_type__category__parent",
             "activity__owner",
+            "activity__cover",
         )
     )
     if proximity:

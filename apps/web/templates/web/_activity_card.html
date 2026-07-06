@@ -1,5 +1,5 @@
 {% load i18n avatars %}
-<div class="card">
+<div class="card activity-card">
   {% if show_accent %}
     {% if a.visual.kind == "activity_cover_photo" %}
       <figure class="card-visual card-visual--photo">
@@ -9,19 +9,21 @@
       <div class="card-visual card-accent" aria-hidden="true">{% activity_accent a %}</div>
     {% endif %}
   {% endif %}
-  {% if a.rec_reason %}<span class="score">{{ a.rec_reason }}</span>{% elif a.match_pct %}<span class="score">{% blocktrans with pct=a.match_pct %}{{ pct }}% match{% endblocktrans %}</span>{% endif %}
-  <h3><a href="{% url 'activity_detail' a.pk %}">{{ a.title }}</a></h3>
-  <div>
-    <span class="tag">{{ a.activity_type.name }}</span>
-    {% comment %}W7: no cohort badge — everyone only ever sees their own cohort's
-       activities, so the tag was pure "you are a child" signage.{% endcomment %}
-    {% if a.cost_band and a.cost_band != "unspecified" %}<span class="tag">{{ a.get_cost_band_display }}</span>{% endif %}
-    {% if a.difficulty and a.difficulty != "unspecified" %}<span class="tag">{{ a.get_difficulty_display }}</span>{% endif %}
-    {% if a.beginners_welcome %}<span class="tag">{% trans "beginners welcome" %}</span>{% endif %}
-    {% if a.status and a.status != "open" %}<span class="tag">{{ a.get_status_display }}</span>{% endif %}
-    {% if a.guardian_accompanied %}<span class="tag">{% trans "guardian-accompanied" %}</span>{% endif %}
+  <div class="activity-card-body">
+    {% if a.rec_reason %}<span class="score">{{ a.rec_reason }}</span>{% elif a.match_pct %}<span class="score">{% blocktrans with pct=a.match_pct %}{{ pct }}% match{% endblocktrans %}</span>{% endif %}
+    <h3><a href="{% url 'activity_detail' a.pk %}">{{ a.title }}</a></h3>
+    <div>
+      <span class="tag">{{ a.activity_type.name }}</span>
+      {% comment %}W7: no cohort badge — everyone only ever sees their own cohort's
+         activities, so the tag was pure "you are a child" signage.{% endcomment %}
+      {% if a.cost_band and a.cost_band != "unspecified" %}<span class="tag">{{ a.get_cost_band_display }}</span>{% endif %}
+      {% if a.difficulty and a.difficulty != "unspecified" %}<span class="tag">{{ a.get_difficulty_display }}</span>{% endif %}
+      {% if a.beginners_welcome %}<span class="tag">{% trans "beginners welcome" %}</span>{% endif %}
+      {% if a.status and a.status != "open" %}<span class="tag">{{ a.get_status_display }}</span>{% endif %}
+      {% if a.guardian_accompanied %}<span class="tag">{% trans "guardian-accompanied" %}</span>{% endif %}
+    </div>
+    <p class="muted">{{ a.starts_at|date:"D j M, H:i" }} &middot;
+      {{ a.place.display_name|default:_("a place") }}{% if a.place.address_city %}, {{ a.place.address_city }}{% endif %}{% if a.distance %} &middot; {% blocktrans with km=a.distance.km|floatformat:1 %}{{ km }} km away{% endblocktrans %}{% endif %}</p>
+    {% if a.description %}<p class="card-desc">{{ a.description|truncatewords:22 }}</p>{% endif %}
   </div>
-  <p class="muted">{{ a.starts_at|date:"D j M, H:i" }} &middot;
-    {{ a.place.display_name|default:_("a place") }}{% if a.place.address_city %}, {{ a.place.address_city }}{% endif %}{% if a.distance %} &middot; {% blocktrans with km=a.distance.km|floatformat:1 %}{{ km }} km away{% endblocktrans %}{% endif %}</p>
-  {% if a.description %}<p class="card-desc">{{ a.description|truncatewords:22 }}</p>{% endif %}
 </div>

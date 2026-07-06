@@ -927,6 +927,13 @@ def register(request):
 # --- Home / discovery ---------------------------------------------------------------
 
 
+def _attach_activity_visuals(activities, viewer):
+    items = list(activities)
+    for activity in items:
+        activity.visual = activity_visual(activity, viewer)
+    return items
+
+
 def home(request):
     from apps.web.structured_data import ld_json, site_ld
 
@@ -979,7 +986,7 @@ def home(request):
     if beginners_only:
         upcoming_qs = upcoming_qs.filter(beginners_welcome=True)
     upcoming_qs, near_active = _order_feed_by_location(upcoming_qs, request.GET)
-    upcoming = upcoming_qs[:20]
+    upcoming = _attach_activity_visuals(upcoming_qs[:20], user)
     # "Your activities" shows only live meetups: a cancelled/completed one shouldn't sit in
     # the active list pulling members toward a meetup that isn't happening (F1 lifecycle).
     mine = (
@@ -989,11 +996,14 @@ def home(request):
             memberships__state=Membership.State.MEMBER,
             status=Activity.Status.OPEN,
         )
-        .select_related("place", "activity_type", "cover")  # cover: ADR-0016 card visuals
+        .select_related("place", "activity_type", "cover")
         .prefetch_related("place__corrections")  # F20
         .distinct()
         .order_by("starts_at")
     )
+    recommended = _attach_activity_visuals(recommended, user)
+    beginners = _attach_activity_visuals(beginners, user)
+    mine = _attach_activity_visuals(mine, user)
     if views_spa.spa_enabled():
         # ADR-0016: same computed feed, React presentation. Legacy render below
         # stays the default until the SOCIAL_REACT_UI switch flips.
@@ -1497,9 +1507,7 @@ def activity_list(request):
     view_mode = "cards" if request.GET.get("view") == "cards" else "list"
     # .get_page() clamps out-of-range / non-int pages safely; one page bounds the rendered DOM.
     page_obj = Paginator(activities, 24).get_page(request.GET.get("page"))
-    activities = list(page_obj)
-    for a in activities:
-        a.visual = activity_visual(a, request.user)
+    activities = _attach_activity_visuals(page_obj, request.user)
     # Carry the current filters (minus page/view) so the view-mode + pager links don't drop them.
     base_params = request.GET.copy()
     for k in ("view", "page"):

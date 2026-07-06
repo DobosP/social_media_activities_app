@@ -102,7 +102,7 @@ def beginner_friendly(user, *, limit=6, exclude_ids=()):
             beginners_welcome=True,
         )
         .exclude(id__in=exclude_ids)
-        .select_related("place", "activity_type", "owner")
+        .select_related("place", "activity_type", "owner", "cover")
         .order_by("starts_at")[:limit]
     )
 
