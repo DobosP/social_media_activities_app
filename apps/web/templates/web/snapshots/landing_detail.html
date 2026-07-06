@@ -1,0 +1,23 @@
+{% load i18n seo_tags %}
+{% comment %}Crawler/noscript snapshot for a React city×activity landing page.{% endcomment %}
+<h1>{% blocktrans with activity=activity_type.name city=area.name %}{{ activity }} in {{ city }}{% endblocktrans %}</h1>
+{% if events %}
+  <h2>{% trans "Upcoming events" %}</h2>
+  <div class="grid">
+    {% for e in events %}
+      <div class="card">
+        <h3><a href="{{ e|event_url }}">{{ e.title }}</a></h3>
+        <p class="muted">{{ e.starts_at|date:"D j M, H:i" }}{% if e.place %} &middot;
+          <a href="{{ e.place|place_url }}">{{ e.place.name }}</a>{% endif %}</p>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+{% if places %}
+  <h2>{% trans "Places" %}</h2>
+  <ul class="link-list">
+    {% for p in places %}
+      <li><a href="{{ p|place_url }}">{{ p.display_name }}</a>{% if p.address_city %} <span class="muted">&middot; {{ p.address_city }}</span>{% endif %}</li>
+    {% endfor %}
+  </ul>
+{% endif %}

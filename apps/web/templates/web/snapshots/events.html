@@ -1,0 +1,15 @@
+{% load i18n seo_tags %}
+{% comment %}Crawler/noscript snapshot for the React events screen — the indexable
+   extract of web/events.html (React replaces this on hydration).{% endcomment %}
+<h1>{% trans "What's happening" %}</h1>
+<div class="grid">
+  {% for e in events %}
+    <div class="card">
+      <h3><a href="{{ e|event_url }}">{{ e.title }}</a></h3>
+      {% if e.activity_type %}<span class="tag">{{ e.activity_type.name }}</span>{% endif %}
+      <p class="muted">{{ e.starts_at|date:"D j M, H:i" }}{% if e.place %} &middot;
+        <a href="{{ e.place|place_url }}">{{ e.place.name }}</a>{% endif %}</p>
+      {% if e.description %}<p>{{ e.description|truncatewords:22 }}</p>{% endif %}
+    </div>
+  {% empty %}<p class="muted">{% trans "No upcoming events yet." %}</p>{% endfor %}
+</div>

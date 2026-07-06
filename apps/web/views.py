@@ -1047,6 +1047,21 @@ def places_list(request):
     # A filtered/proximity result page is thin/duplicate/personalised — keep it out of the index;
     # the canonical unfiltered list stays indexable. Still crawled (follow) for its links.
     filtered = point is not None or any(request.GET.get(k) for k in ("activity", "city", "source"))
+    list_filters = {
+        "activity": request.GET.get("activity", ""),
+        "city": request.GET.get("city", ""),
+        "source": request.GET.get("source", ""),
+    }
+    if views_spa.spa_enabled():
+        return views_spa.places_spa(
+            request,
+            places=capped,
+            filters=list_filters,
+            near_active=point is not None,
+            truncated=len(capped) == 200,
+            filtered=filtered,
+            structured_data=structured_data,
+        )
     return render(
         request,
         "web/places_list.html",
@@ -1056,11 +1071,7 @@ def places_list(request):
             "truncated": len(capped) == 200,
             "structured_data": structured_data,
             "filtered": filtered,
-            "filters": {
-                "activity": request.GET.get("activity", ""),
-                "city": request.GET.get("city", ""),
-                "source": request.GET.get("source", ""),
-            },
+            "filters": list_filters,
             **_nav_context(request.user),
         },
     )
@@ -2948,6 +2959,18 @@ def events_list(request):
     # A filtered/search result page is thin/duplicate — keep it out of the index (the canonical
     # unfiltered list stays indexable). The page is still crawled (follow) for its links.
     filtered = bool(query or activity or area_slug)
+    if views_spa.spa_enabled():
+        return views_spa.events_spa(
+            request,
+            events=events,
+            query=query,
+            activity=activity,
+            areas=Area.objects.order_by("name"),
+            area=area.slug if area else "",
+            area_name=area.name if area else "",
+            filtered=filtered,
+            structured_data=structured_data,
+        )
     return render(
         request,
         "web/events.html",
@@ -2979,6 +3002,8 @@ def things_to_do_index(request):
     for area, activity_type in combos:
         cities.setdefault(area, []).append(activity_type)
     grouped = sorted(cities.items(), key=lambda kv: kv[0].name)
+    if views_spa.spa_enabled():
+        return cache_public(views_spa.landing_index_spa(request, grouped=grouped), request)
     return cache_public(
         render(
             request,
@@ -2998,6 +3023,10 @@ def things_to_do_city(request, area_slug):
     activities = [t for a, t in available_landings() if a.pk == area.pk]
     if not activities:
         raise Http404("Nothing here yet.")
+    if views_spa.spa_enabled():
+        return cache_public(
+            views_spa.landing_city_spa(request, area=area, activities=activities), request
+        )
     return cache_public(
         render(
             request,
@@ -3040,6 +3069,19 @@ def things_to_do(request, area_slug, activity_slug):
             request,
         )
     )
+    if views_spa.spa_enabled():
+        return cache_public(
+            views_spa.landing_detail_spa(
+                request,
+                area=area,
+                activity_type=activity_type,
+                places=places,
+                events=events,
+                structured_data=structured_data,
+                breadcrumb_data=breadcrumb_data,
+            ),
+            request,
+        )
     return cache_public(
         render(
             request,

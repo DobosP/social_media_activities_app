@@ -126,3 +126,65 @@ def test_activity_card_contract_without_cover():
     assert card["tags"][0] == "Basketball"
     assert "·" in card["meta"]
     assert card["score"] is None
+
+
+@override_settings(SOCIAL_REACT_UI=True)
+def test_public_events_spa_keeps_seo_and_snapshot():
+    from apps.events.models import Event
+
+    owner = _user("spa-seo-user")
+    activity = _activity(owner)
+    event = Event.objects.create(
+        title="Saturday spa football",
+        starts_at=timezone.now() + timedelta(days=3),
+        place=activity.place,
+        activity_type=activity.activity_type,
+        source=Event.Source.MANUAL,
+    )
+
+    response = Client().get("/events/")  # anonymous
+    assert response.status_code == 200
+    html = response.content.decode()
+    assert "web/spa.html" in [t.name for t in response.templates]
+    # Crawler/noscript snapshot inside #root: real title + link before hydration.
+    assert "Saturday spa football" in html
+    # JSON-LD ItemList survives the SPA shell.
+    assert 'type="application/ld+json"' in html
+    assert '"ItemList"' in html
+    assert 'rel="alternate" type="application/rss+xml"' in html
+
+    payload = json.loads(Client().get("/events/", {"_data": "1"}).content)
+    assert payload["route"] == "events"
+    assert payload["csrf"] == ""  # public payload: cacheable, no token
+    assert payload["data"]["events"][0]["pk"] == event.pk
+
+    # Filtered result pages stay out of the index, exactly like the legacy page.
+    filtered = Client().get("/events/", {"q": "football"}).content.decode()
+    assert "noindex, follow" in filtered
+
+
+@override_settings(SOCIAL_REACT_UI=True)
+def test_public_places_spa_lists_and_json():
+    owner = _user("spa-places-user")
+    _activity(owner)  # creates the Place
+
+    response = Client().get("/places/list/")
+    assert response.status_code == 200
+    html = response.content.decode()
+    assert 'data-route="places"' in html
+    assert "SPA Court" in html  # snapshot content
+
+    payload = json.loads(Client().get("/places/list/", {"_data": "1"}).content)
+    assert payload["route"] == "places"
+    assert payload["data"]["places"][0]["name"] == "SPA Court"
+
+
+@override_settings(SOCIAL_REACT_UI=True)
+def test_public_things_index_spa():
+    response = Client().get("/things-to-do/")
+    assert response.status_code == 200
+    html = response.content.decode()
+    assert 'data-route="things-index"' in html
+    payload = json.loads(Client().get("/things-to-do/", {"_data": "1"}).content)
+    assert payload["route"] == "things-index"
+    assert "cities" in payload["data"]

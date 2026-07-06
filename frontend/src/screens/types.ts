@@ -74,3 +74,68 @@ export interface OrganizeData {
   urls: { organizeNew: string };
   ui: Record<string, string>;
 }
+
+export interface EventRow {
+  pk: number;
+  url: string;
+  title: string;
+  type: string;
+  when: string;
+  place: { name: string; url: string } | null;
+  description: string;
+}
+
+export interface EventsData {
+  events: EventRow[];
+  filters: { query: string; activity: string; area: string; areaName: string };
+  areas: { slug: string; name: string }[];
+  urls: { action: string; rss: string; thingsIndex: string };
+  ui: Record<string, string>;
+}
+
+export interface PlaceRow {
+  pk: number;
+  url: string;
+  name: string;
+  street: string;
+  city: string;
+  distance: string;
+  activities: string[];
+  accessMatch: boolean;
+  accessTags: { label: string; state: string }[];
+}
+
+export interface PlacesData {
+  places: PlaceRow[];
+  filters: { activity: string; city: string; source: string };
+  flags: { nearActive: boolean; truncated: boolean };
+  urls: { action: string; map: string };
+  ui: Record<string, string>;
+}
+
+export interface Crumb {
+  name: string;
+  url: string | null;
+}
+
+export interface ThingsIndexData {
+  cities: { name: string; url: string; links: { url: string; label: string }[] }[];
+  ui: Record<string, string>;
+}
+
+export interface ThingsCityData {
+  city: string;
+  links: { url: string; label: string }[];
+  breadcrumbs: Crumb[];
+  ui: Record<string, string>;
+}
+
+export interface ThingsDetailData {
+  city: string;
+  activity: string;
+  events: EventRow[];
+  places: { url: string; name: string; city: string }[];
+  breadcrumbs: Crumb[];
+  urls: { exploreCity: string; rss: string };
+  ui: Record<string, string>;
+}

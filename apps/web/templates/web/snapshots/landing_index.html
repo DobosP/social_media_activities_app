@@ -1,0 +1,15 @@
+{% load i18n %}
+{% comment %}Crawler/noscript snapshot for the React things-to-do index.{% endcomment %}
+<h1>{% trans "Things to do" %}</h1>
+{% for area, activities in grouped %}
+  <section>
+    <h2><a href="{% url 'things_to_do_city' area.slug %}">{{ area.name }}</a></h2>
+    <ul class="link-list">
+      {% for t in activities %}
+        <li><a href="{% url 'things_to_do' area.slug t.slug %}">{{ t.name }} {% trans "in" %} {{ area.name }}</a></li>
+      {% endfor %}
+    </ul>
+  </section>
+{% empty %}
+  <p class="muted">{% trans "Nothing here yet — check back soon." %}</p>
+{% endfor %}
