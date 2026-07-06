@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Q
-from rest_framework import status, viewsets
+from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
@@ -70,6 +70,7 @@ from .services import (
     request_to_join,
     resume_series,
     revoke_co_organizer,
+    set_public_listing,
     set_attendance_intent,
     set_transit_status,
     transfer_ownership,
@@ -95,6 +96,17 @@ def resolve_actor(request):
     if not is_guardian_of(request.user, ward):
         raise PermissionDenied("You are not this user's guardian.")
     return ward
+
+
+def _public_listing_value(request) -> bool:
+    # TODO(recovered): re-verify against original spec.
+    if "listed" in request.data:
+        raw = request.data["listed"]
+    elif "is_publicly_listed" in request.data:
+        raw = request.data["is_publicly_listed"]
+    else:
+        raise ValidationError({"listed": "This field is required."})
+    return serializers.BooleanField().run_validation(raw)
 
 
 class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
@@ -176,6 +188,17 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
         activity = self._activity_for(actor, pk)
         try:
             activity = invoke_fallback(actor, activity)
+        except SocialError as exc:
+            raise PermissionDenied(str(exc)) from exc
+        return Response(ActivitySerializer(activity).data)
+
+    @action(detail=True, methods=["post"])
+    def set_public_listing(self, request, pk=None):
+        """Owner opt-in/out for anonymous adult discovery."""
+        activity = self._activity_for(request.user, pk)
+        listed = _public_listing_value(request)
+        try:
+            activity = set_public_listing(request.user, activity, listed)
         except SocialError as exc:
             raise PermissionDenied(str(exc)) from exc
         return Response(ActivitySerializer(activity).data)
@@ -479,6 +502,19 @@ class GroupViewSet(viewsets.ViewSet):
             raise ValidationError(str(exc)) from exc
         group = group_by_id(pk, request.user)
         return Response(GroupSerializer(group).data if group else {})
+
+    @action(detail=True, methods=["post"])
+    def set_public_listing(self, request, pk=None):
+        """Owner opt-in/out for anonymous adult discovery."""
+        group = group_by_id(pk, request.user)
+        if group is None:
+            raise NotFound("No such group.")
+        listed = _public_listing_value(request)
+        try:
+            group = set_public_listing(request.user, group, listed)
+        except SocialError as exc:
+            raise PermissionDenied(str(exc)) from exc
+        return Response(GroupSerializer(group).data)
 
     @action(detail=True, methods=["post"])
     def leave(self, request, pk=None):

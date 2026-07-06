@@ -53,6 +53,7 @@ class ActivitySerializer(serializers.ModelSerializer):
             "status",
             "guardian_accompanied",
             "supervised",
+            "is_publicly_listed",
             "open_positions",
             "created_at",
         ]
@@ -283,6 +284,7 @@ class GroupSerializer(serializers.Serializer):
     cohort = serializers.CharField(read_only=True)
     status = serializers.CharField(read_only=True)
     is_staff_curated = serializers.BooleanField(read_only=True)
+    is_publicly_listed = serializers.BooleanField(read_only=True)
     created_at = serializers.DateTimeField(read_only=True)
 
     def get_activity_type(self, obj):
