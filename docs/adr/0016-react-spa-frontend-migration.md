@@ -64,8 +64,14 @@ Constraints that hold throughout:
    **The activity_detail React shell is deferred to the sensitive-subsystems track**: it
    embeds the live thread + F33 pre-send safety nudge (script-order-sensitive) and ~25
    POST flows — exactly the "complex, migrate last" bucket.
-3. **Profile/settings/communities** in React; child-safety screens (wards, guardianship,
-   verify-age, privacy/safety records, account delete) stay Django + restyle only.
+3. **Profile/settings/communities (shipped)**: /you, /settings, profile, interests,
+   topics, access, notifications + preferences, connections, saved searches, communities
+   + community detail as React screens. Every P3 mutation is a classic POST that
+   redirects with a flash (recon-verified), so screens render plain forms with the
+   payload CSRF — no client mutation state. Account/inbox nav renders from one source
+   (account_nav/you_tabs/inbox_tabs). Child-safety screens stay Django + restyle-only
+   (class-level; wards nested-card hierarchy fixed). Actions whose pk rides in the URL
+   path ship as `{pk}` template strings, not reverse() (which would NoReverseMatch).
 4. **Sensitive subsystems restyled in place** (messaging, maps, graph, donations, legal).
 
 ## Why

@@ -15,6 +15,17 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
 
 ## Current state
 
+- **Redesign Phase 3 shipped** (`claude/redesign-social-p3`): the account & community
+  surfaces — /you, /settings, profile, interests, topics, access, notifications (+
+  preferences), connections, saved searches, communities list + community detail — are
+  React screens behind the same `SOCIAL_REACT_UI` switch, all classic-POST round-trips
+  (every P3 mutation redirects with a flash — no client mutation state). Account/inbox
+  navigation now renders from ONE source (`account_nav`/`you_tabs`/`inbox_tabs` in
+  views_spa.py), closing the recon's duplicated-nav finding. Child-safety pages (wards,
+  guardianship, verify-age, privacy/safety/log, account delete) stay server-rendered and
+  got a class-only restyle (wards nested cards subordinated; 20 inline styles removed
+  with new u-*/fieldset-plain utilities). communities graph page untouched (vendored
+  3d-force-graph); stale groups.html removed (route already redirected).
 - **Redesign Phase 2 shipped** (`claude/redesign-social-p2`): home, activities browse
   (list + card deck), organizer console, **and the public SEO screens (events, places
   list, things-to-do index/city/detail)** rebuilt as React screens fed by per-view JSON
