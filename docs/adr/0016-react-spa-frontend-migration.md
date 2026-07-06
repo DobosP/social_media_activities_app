@@ -72,7 +72,12 @@ Constraints that hold throughout:
    (account_nav/you_tabs/inbox_tabs). Child-safety screens stay Django + restyle-only
    (class-level; wards nested-card hierarchy fixed). Actions whose pk rides in the URL
    path ship as `{pk}` template strings, not reverse() (which would NoReverseMatch).
-4. **Sensitive subsystems restyled in place** (messaging, maps, graph, donations, legal).
+4. **Sensitive subsystems restyled in place (shipped)**: messaging, map chrome, graph
+   page, donations/campaigns/transparency, safety/legal — class-level only, JS untouched
+   (e2ee-messaging.js and places-map.js were already fully class-driven; the community
+   graph canvas got `.graph-canvas`, deliberately dark in every theme). One deliberate
+   inline style remains app-wide: the campaigns meter's dynamic width. Their React
+   migration (plus the activity-detail shell) is a separate future program.
 
 ## Why
 

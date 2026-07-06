@@ -15,6 +15,15 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
 
 ## Current state
 
+- **Redesign Phase 4 shipped** (`claude/redesign-social-p4`) — the redesign program's
+  final phase: the sensitive subsystems were restyled IN PLACE, zero behavior changes.
+  Messaging (e2ee-messaging.js untouched — it was already fully class-driven, so the P1
+  token remap themes it), places map chrome, communities graph page (canvas got a real
+  `.graph-canvas` class, deliberately dark in all themes for the vendored force-graph;
+  graph JS untouched), donations/campaigns/transparency and safety/legal pages: all
+  inline styles replaced with utilities (one deliberate exception: the campaigns
+  progress-meter dynamic width). The React migration of these subsystems remains a
+  SEPARATE future program per ADR-0016.
 - **Redesign Phase 3 shipped** (`claude/redesign-social-p3`): the account & community
   surfaces — /you, /settings, profile, interests, topics, access, notifications (+
   preferences), connections, saved searches, communities list + community detail — are
