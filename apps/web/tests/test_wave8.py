@@ -1,5 +1,7 @@
 """Web tests for wave-8: F29 (transparency + receipts), F34 (campaigns), F37 (partners)."""
 
+import re
+
 import pytest
 from django.contrib.gis.geos import Point
 from django.test import Client
@@ -102,7 +104,14 @@ def test_campaigns_page_is_calm_and_static():
     # No dark patterns: no countdown/scarcity/vanity/auto-refresh/JS animation.
     for bad in ("countdown", "to go", "left!", "people donated", "donors gave", "http-equiv"):
         assert bad not in body
-    assert "<script" not in body
+    # "Static" means no inline/page-specific JS (no animation, no live counters).
+    # The base shell ships one global static utility script (site.js, CSP slice
+    # 5571b4d) and nonced non-executable JSON islands — neither animates this page.
+    for attrs, inner in re.findall(r"<script([^>]*)>(.*?)</script>", body, flags=re.DOTALL):
+        if re.search(r'type="application/(ld\+)?json"', attrs):
+            continue  # data island, not executable
+        assert 'src="/static/js/' in attrs, f"unexpected executable script: {attrs}"
+        assert not inner.strip(), "static includes must have empty bodies"
 
 
 # --- F37 -------------------------------------------------------------------------------

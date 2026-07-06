@@ -71,7 +71,7 @@ def _event(place, activity_type, *, days=3, title="Saturday football"):
 
 def _ld_blocks(html):
     blocks = re.findall(
-        r'<script type="application/ld\+json">(.*?)</script>', html, flags=re.DOTALL
+        r'<script[^>]*type="application/ld\+json"[^>]*>(.*?)</script>', html, flags=re.DOTALL
     )
     return [json.loads(b) for b in blocks]
 

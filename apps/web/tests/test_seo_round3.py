@@ -27,7 +27,7 @@ CITY = "Cluj-Napoca"
 
 def _ld_blocks(html):
     blocks = re.findall(
-        r'<script type="application/ld\+json">(.*?)</script>', html, flags=re.DOTALL
+        r'<script[^>]*type="application/ld\+json"[^>]*>(.*?)</script>', html, flags=re.DOTALL
     )
     return [json.loads(b) for b in blocks]
 

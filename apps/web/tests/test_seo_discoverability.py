@@ -51,7 +51,7 @@ def _event(place):
 def _ld_blocks(html):
     """Parse every application/ld+json script block out of a rendered page."""
     blocks = re.findall(
-        r'<script type="application/ld\+json">(.*?)</script>', html, flags=re.DOTALL
+        r'<script[^>]*type="application/ld\+json"[^>]*>(.*?)</script>', html, flags=re.DOTALL
     )
     return [json.loads(b) for b in blocks]
 

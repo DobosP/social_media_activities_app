@@ -4,11 +4,13 @@ the two browse modes (?view=list|cards) on the activities list.
 Invariant guards baked in: cards may render one activity cover image, but never video or
 like/pass/swipe telemetry; a non-guardian can never set a ward's feed."""
 
+from datetime import timedelta
 from io import BytesIO
 
 import pytest
 from django.contrib.gis.geos import Point
 from django.test import Client
+from django.utils import timezone
 from PIL import Image
 
 from apps.accounts.identity.base import AssuranceResult
@@ -75,7 +77,11 @@ def _activity(owner, atype, title):
         name="P", location=Point(23.6, 46.77, srid=4326), source=Place.Source.OSM
     )
     return create_activity(
-        owner, place=place, activity_type=atype, title=title, starts_at="2030-01-01T10:00Z"
+        owner,
+        place=place,
+        activity_type=atype,
+        title=title,
+        starts_at=timezone.now() + timedelta(days=30),
     )
 
 
