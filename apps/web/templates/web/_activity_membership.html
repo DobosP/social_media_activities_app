@@ -1,0 +1,201 @@
+{% load i18n %}
+{% if is_member %}
+  <div class="card">
+    <strong>{% trans "You're a member" %}{% if is_owner %} {% trans "(owner)" %}{% elif is_organizer %} {% trans "(co-organiser)" %}{% endif %}.</strong>
+    {% if not is_owner %}
+      <form method="post" action="{% url 'activity_leave' activity.pk %}" class="inline u-float-right">{% csrf_token %}
+        <button class="linkbtn" type="submit">{% trans "Leave" %}</button></form>
+    {% endif %}
+    {% comment %}W2-F9: the read-only transit line lives OUTSIDE the window guard so a member can
+       still see what they last told the group between window-close and the nightly cue-clear;
+       once they've arrived it's moot, so it hides behind `not my_arrival`.{% endcomment %}
+    {% if not my_arrival %}
+      {% if my_transit == "on_my_way" %}
+        <p class="muted message-copy">&#128694; {% trans "You told the group you're on the way." %}</p>
+      {% elif my_transit == "running_late" %}
+        <p class="muted message-copy">&#8987; {% trans "You told the group you're running a little late." %}</p>
+      {% endif %}
+    {% endif %}
+    {% if arrival_window_open and not my_arrival %}
+      <form method="post" action="{% url 'activity_arrived' activity.pk %}" class="activity-inline-form">{% csrf_token %}
+        <button class="btn btn-sm" type="submit">&#128205; {% trans "I've arrived" %}</button>
+        <span class="muted activity-note">{% trans "Tells the group you're here &mdash; no location shared." %}</span>
+      </form>
+      {% if can_say_on_my_way or can_say_running_late %}
+        <div class="row u-row-tight">
+          {% if can_say_on_my_way %}
+            <form method="post" action="{% url 'activity_transit' activity.pk %}" class="inline">{% csrf_token %}
+              <input type="hidden" name="status" value="on_my_way">
+              <button class="btn btn-sm" type="submit">&#128694; {% trans "On my way" %}</button>
+            </form>
+          {% endif %}
+          {% if can_say_running_late %}
+            <form method="post" action="{% url 'activity_transit' activity.pk %}" class="inline">{% csrf_token %}
+              <input type="hidden" name="status" value="running_late">
+              <button class="btn btn-sm" type="submit">&#8987; {% trans "Running ~10 min late" %}</button>
+            </form>
+          {% endif %}
+          <span class="muted activity-note">{% trans "A quick heads-up &mdash; no location shared." %}</span>
+        </div>
+      {% endif %}
+    {% elif my_arrival %}
+      <p class="muted message-copy">&#10003; {% blocktrans with arrival_time=my_arrival|date:"H:i" %}You marked yourself here at {{ arrival_time }} &mdash; your group was notified.{% endblocktrans %}</p>
+    {% endif %}
+    {% comment %}W3-F3: the "heading home" departure bookend to "I've arrived". Shown only to a
+       CHILD member within the end-relative window; it tells ONLY the grown-ups who look after
+       them (never the group), with no location.{% endcomment %}
+    {% if can_mark_departing %}
+      <form method="post" action="{% url 'activity_departing' activity.pk %}" class="activity-inline-form">{% csrf_token %}
+        <button class="btn btn-sm" type="submit">&#127968; {% trans "I'm heading home" %}</button>
+        <span class="muted activity-note">{% trans "Tells the grown-ups who look after you &mdash; no location shared." %}</span>
+      </form>
+    {% elif my_departure %}
+      <p class="muted message-copy">&#10003; {% blocktrans with departure_time=my_departure|date:"H:i" %}You let the grown-ups who look after you know you're heading home at {{ departure_time }}.{% endblocktrans %}</p>
+    {% endif %}
+    {% comment %}W4-F30: a member's own "I'm bringing a support person" toggle (ADULTS-ONLY at
+       launch). Not capacity-counted — the organiser sees only a logistical count.{% endcomment %}
+    {% if can_set_support %}
+      {% if my_brings_support %}
+        <form method="post" action="{% url 'activity_support_companion' activity.pk %}" class="inline activity-inline-form">{% csrf_token %}
+          <span class="muted">&#10003; {% trans "You're bringing a support person." %}</span>
+          <button class="linkbtn" type="submit">{% trans "clear" %}</button></form>
+      {% else %}
+        <form method="post" action="{% url 'activity_support_companion' activity.pk %}" class="activity-inline-form">{% csrf_token %}
+          <input type="hidden" name="brings" value="on">
+          <button class="btn btn-sm" type="submit">{% trans "I'm bringing a support person" %}</button>
+          <span class="muted activity-note">{% trans "A carer, PA, or interpreter &mdash; not counted toward capacity." %}</span>
+        </form>
+      {% endif %}
+    {% endif %}
+    <div class="row u-row-tight">
+      <span class="muted">{% blocktrans with going=rsvp_summary.going total=rsvp_summary.total %}Coming: <strong>{{ going }}</strong> of {{ total }}{% endblocktrans %}</span>
+      {% comment %}F1 Quorum-go: LIVE derived state (never the go_confirmed_at latch) — flips back
+         to "needs N more" honestly if the count drops below the threshold again.{% endcomment %}
+      {% if rsvp_summary.min_to_go %}
+        {% if rsvp_summary.met_minimum %}
+          <span class="tag">&#10003; {% trans "It's on" %}</span>
+        {% else %}
+          <span class="muted">{% blocktrans count n=rsvp_summary.remaining_needed %}needs {{ n }} more to happen{% plural %}needs {{ n }} more to happen{% endblocktrans %}</span>
+        {% endif %}
+      {% endif %}
+      <form class="inline" method="post" action="{% url 'activity_rsvp' activity.pk %}">{% csrf_token %}
+        <input type="hidden" name="intent" value="going">
+        <button class="btn btn-sm{% if my_membership.attendance_intent != 'going' %} btn-secondary{% endif %}" type="submit">{% trans "I'm coming" %}</button></form>
+      <form class="inline" method="post" action="{% url 'activity_rsvp' activity.pk %}">{% csrf_token %}
+        <input type="hidden" name="intent" value="not_going">
+        <button class="btn btn-sm{% if my_membership.attendance_intent != 'not_going' %} btn-secondary{% endif %}" type="submit">{% trans "Can't make it" %}</button></form>
+      {% if my_membership.attendance_intent != 'unknown' %}
+        <form class="inline" method="post" action="{% url 'activity_rsvp' activity.pk %}">{% csrf_token %}
+          <input type="hidden" name="intent" value="unknown">
+          <button class="linkbtn" type="submit">{% trans "clear" %}</button></form>
+      {% endif %}
+    </div>
+    {% if is_completed %}
+      {# F22: post-meetup "did we meet?" — a count only, never who-confirmed, never per-person. #}
+      <div class="meetup-confirm">
+        <strong>{% trans "Did this meet up?" %}</strong>
+        <span class="muted">{% blocktrans with confirmed=met_summary.confirmed total=met_summary.total %}Confirmed: <strong>{{ confirmed }}</strong> of {{ total }}{% endblocktrans %}</span>
+        {% if my_met_confirmed %}
+          <form class="inline" method="post" action="{% url 'activity_met' activity.pk %}">{% csrf_token %}
+            <input type="hidden" name="met" value="no">
+            <span class="muted">&#10003; {% trans "you confirmed" %} &middot;</span>
+            <button class="linkbtn" type="submit">{% trans "undo" %}</button></form>
+        {% else %}
+          <form class="inline" method="post" action="{% url 'activity_met' activity.pk %}">{% csrf_token %}
+            <button class="btn btn-sm" type="submit">{% trans "Yes, we met up" %}</button></form>
+        {% endif %}
+      </div>
+    {% endif %}
+    <h3>{% trans "Pending join requests" %}</h3>
+    {% for m in pending %}
+      <div class="row u-space-between">
+        <div>{{ m.user.display_name|default:m.user.username }}
+          <span class="muted">&mdash; {% blocktrans with approvals=m.approvals needed=m.needed %}{{ approvals }}/{{ needed }} approvals{% endblocktrans %}</span></div>
+        <div class="vote-row">
+          {% if m.my_vote is not None %}<span class="muted">{% blocktrans with vote=m.my_vote|yesno:_("approve,deny") %}you voted {{ vote }}{% endblocktrans %}</span>{% endif %}
+          <form class="inline" method="post" action="{% url 'membership_vote' activity.pk m.id %}">{% csrf_token %}
+            <input type="hidden" name="vote" value="approve">
+            <button class="btn btn-sm" type="submit">{% trans "Approve" %}</button></form>
+          <form class="inline" method="post" action="{% url 'membership_vote' activity.pk m.id %}">{% csrf_token %}
+            <input type="hidden" name="vote" value="deny">
+            <button class="btn btn-sm btn-secondary" type="submit">{% trans "Deny" %}</button></form>
+        </div>
+      </div>
+    {% empty %}<p class="muted">{% trans "No pending requests." %}</p>{% endfor %}
+  </div>
+{% elif my_membership and my_membership.state == "requested" %}
+  <div class="banner">{% trans "Your join request is pending a vote of current members." %}</div>
+{% elif can_join %}
+  <form method="post" action="{% url 'activity_join' activity.pk %}">{% csrf_token %}
+    <button class="btn" type="submit">{% trans "Request to join" %}</button></form>
+{% elif user.cohort != activity.cohort %}
+  <div class="banner">{% trans "This activity isn't open to your account." %}</div>
+{% endif %}
+
+{% if show_welcome %}
+  {# F39: a systemic welcome banner for a first-timer — rendered by the app, never a member post. #}
+  <div class="card card-accent">
+    <strong>{% trans "Welcome to your first meetup!" %}</strong>
+    <p class="muted compact-copy">{% blocktrans %}Say a quick hello in the thread below, check the
+      logistics, and turn up &mdash; the group is glad you joined.{% endblocktrans %}</p>
+  </div>
+{% endif %}
+
+{% comment %}F41: owner-curated "what to expect when you arrive" note for a nervous first-timer.
+   Member-gated (same wall as the logistics card), visible to ALL members so it isn't write-only
+   after the welcome window — it just gets a calm accent during that window (show_welcome). No
+   badge/streak/countdown. linebreaksbr keeps it auto-escaped.{% endcomment %}
+{% if is_member or is_owner %}{% if activity.first_time_note %}
+  <div class="card{% if show_welcome %} card-accent{% endif %}">
+    <strong>{% trans "First time here?" %}</strong>
+    <p class="message-copy">{{ activity.first_time_note|linebreaksbr }}</p>
+  </div>
+{% endif %}{% endif %}
+
+{% if is_member and not is_owner %}
+  <div class="card card-danger">
+    <strong>{% trans "Feeling unsafe or uncomfortable?" %}</strong>
+    <p class="muted compact-copy">{% blocktrans %}You can leave any time &mdash; nothing is shared about you for
+      doing so. If something doesn't feel right, tell a moderator, or talk to a grown-up you trust.{% endblocktrans %}</p>
+    {% if my_guardians %}
+      <p class="muted">{% trans "People you can talk to:" %}
+        {% for g in my_guardians %}<strong>{{ g.display_name|default:g.username }}</strong>{% if not forloop.last %}, {% endif %}{% endfor %}.</p>
+    {% endif %}
+    {% comment %}F8: one-tap "I feel unsafe" — the fast path for a scared member. A single press files
+    a real moderation report and (if you're a child) tells the grown-ups who look after you — no form
+    to fill in. The detailed reason-code report stays available below as the slow path.{% endcomment %}
+    <form method="post" action="{% url 'activity_unsafe' activity.pk %}" class="inline activity-inline-form">{% csrf_token %}
+      <button class="btn btn-danger" type="submit">&#9888;&#65039; {% trans "I feel unsafe &mdash; tell someone now" %}</button>
+    </form>
+    <div class="row u-row-gap">
+      <a class="btn btn-sm btn-secondary" href="{% url 'report' %}?type=activity&id={{ activity.pk }}">{% trans "Report with details" %}</a>
+      <form method="post" action="{% url 'activity_leave' activity.pk %}" class="inline">{% csrf_token %}
+        <button class="btn btn-sm btn-secondary" type="submit">{% trans "Leave this activity" %}</button></form>
+    </div>
+  </div>
+{% endif %}
+
+{% if is_member or is_owner %}{% if activity.meeting_point or activity.fallback_meeting_point or activity.what_to_bring or activity.organizer_note or activity.getting_home_note %}
+  <div class="card card-accent">
+    <strong>{% trans "Meetup logistics" %}</strong>
+    {% if activity.meeting_point %}<p class="message-copy"><span class="muted">{% trans "Where to meet:" %}</span><br>{{ activity.meeting_point|linebreaksbr }}</p>{% endif %}
+    {% if activity.fallback_meeting_point %}<p class="message-copy"><span class="muted">{% trans "Plan B if the spot's unavailable:" %}</span><br>{{ activity.fallback_meeting_point|linebreaksbr }}</p>{% endif %}
+    {% if activity.what_to_bring %}<p class="message-copy"><span class="muted">{% trans "What to bring:" %}</span><br>{{ activity.what_to_bring|linebreaksbr }}</p>{% endif %}
+    {% if activity.organizer_note %}<p class="message-copy"><span class="muted">{% trans "From the organiser:" %}</span><br>{{ activity.organizer_note|linebreaksbr }}</p>{% endif %}
+    {% if activity.getting_home_note %}<p class="message-copy"><span class="muted">{% trans "Getting home:" %}</span><br>{{ activity.getting_home_note|linebreaksbr }}</p>{% endif %}
+  </div>
+{% endif %}{% endif %}
+
+<h2>{% trans "Members" %}</h2>
+<ul class="members">
+  {% for m in members %}<li>{{ m.user.display_name|default:m.user.username }}{% if m.role == "owner" %} &middot; {% trans "owner" %}{% elif m.role == "co_organizer" %} &middot; {% trans "co-organiser" %}{% elif m.role == "guardian" %} &middot; {% trans "guardian" %}{% endif %}{% if m.user.id != user.id %}
+    &middot; <a class="member-action-link" href="{% url 'report' %}?type=user&id={{ m.user.id }}">{% trans "report" %}</a>
+    {% if conn_enabled and m.role != "guardian" and m.user.id not in conn_related_ids %}
+    <form method="post" action="{% url 'connection_request' %}" class="inline">{% csrf_token %}
+      <input type="hidden" name="public_id" value="{{ m.user.public_id }}">
+      <input type="hidden" name="next" value="{% url 'activity_detail' activity.pk %}">
+      <button class="btn btn-sm member-action-btn" type="submit">{% trans "connect" %}</button></form>{% endif %}
+    <form method="post" action="{% url 'block_user' m.user.id %}" class="inline">{% csrf_token %}
+      <input type="hidden" name="next" value="{% url 'activity_detail' activity.pk %}">
+      <button class="linkbtn member-action-btn" type="submit">{% trans "block" %}</button></form>{% endif %}</li>{% endfor %}
+</ul>

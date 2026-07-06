@@ -6,20 +6,20 @@
 <h1>{% trans "Community graph" %}</h1>
 <p class="muted">{% trans "Drag to rotate, scroll to zoom, click a node to focus, click a community to open it." %}</p>
 
-<div class="row" style="gap:.6rem;align-items:center;margin:.5rem 0">
+<div class="row u-my-half">
   <label class="visually-hidden" for="mz-graph-search">{% trans "Search the graph" %}</label>
-  <input id="mz-graph-search" placeholder="{% trans 'Search the graph…' %}" autocomplete="off" style="flex:1">
-  <label class="muted" style="font-size:.85rem;white-space:nowrap">
+  <input id="mz-graph-search" placeholder="{% trans 'Search the graph…' %}" autocomplete="off" class="u-flex-1">
+  <label class="muted activity-meta-note u-nowrap">
     <input type="checkbox" id="mz-graph-counts" checked> {% trans "show counts" %}</label>
 </div>
 
-<div id="mz-graph" style="height:62vh;border:1px solid var(--line);border-radius:8px;background:#0b1411"></div>
+<div id="mz-graph" class="graph-canvas"></div>
 <noscript><p class="muted">{% trans "The graph needs JavaScript" %} &mdash;
   <a href="{% url 'communities' %}">{% trans "browse the list instead" %}</a>.</p></noscript>
 
-<details style="margin-top:.6rem">
+<details class="u-mt-md">
   <summary class="muted">{% blocktrans %}All communities (text list &mdash; always works){% endblocktrans %}</summary>
-  <ul class="members" style="margin-top:.4rem">
+  <ul class="members u-mt-sm">
     {% for c in communities %}
       <li><a href="{% url 'community_detail' c.slug %}">{{ c.name }}</a></li>
     {% empty %}<li class="muted">{% trans "No communities yet." %}</li>{% endfor %}

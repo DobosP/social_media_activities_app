@@ -18,6 +18,11 @@ db.sqlite3
 /staticfiles/
 /media/
 
+# Frontend (React/Vite) — built output lands in static/frontend/ (never committed;
+# rebuilt in the Docker frontend stage / by `npm run build` in frontend/)
+/static/frontend/
+frontend/node_modules/
+
 # Env / secrets
 .env
 

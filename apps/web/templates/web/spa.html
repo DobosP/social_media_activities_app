@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load csp_helpers spa_assets %}
+{% comment %}Shell for React-migrated screens (ADR-0016 Phase 2). Server chrome
+   (header, tab bar, footer, flash messages) stays Django-rendered around the
+   React root; the screen's data rides in the nonced JSON island below.
+   Public SEO screens pass head parity through spa_* context vars plus a
+   server-rendered crawler/noscript snapshot inside #root that React replaces
+   on hydration (spa_snapshot_template).{% endcomment %}
+{% block title %}{{ spa_title }}{% endblock %}
+{% block meta_description %}{% if spa_meta_description %}{{ spa_meta_description }}{% else %}{{ block.super }}{% endif %}{% endblock %}
+{% block meta_robots %}{% if spa_meta_robots %}{{ spa_meta_robots }}{% else %}{{ block.super }}{% endif %}{% endblock %}
+{% block og_title %}{{ spa_title }}{% endblock %}
+{% block og_description %}{% if spa_meta_description %}{{ spa_meta_description }}{% else %}{{ block.super }}{% endif %}{% endblock %}
+{% block structured_data %}{% if spa_structured_data %}<script nonce="{{ request.csp_nonce }}" type="application/ld+json">{{ spa_structured_data }}</script>{% endif %}{% endblock %}
+{% block head %}{% if spa_rss %}<link rel="alternate" type="application/rss+xml" title="{{ spa_rss.title }}" href="{{ spa_rss.url }}">{% endif %}{% endblock %}
+{% block content %}
+<div id="root" data-route="{{ spa_route }}">
+  {% if spa_snapshot_template %}{% include spa_snapshot_template %}{% endif %}
+</div>
+{% if not spa_snapshot_template %}<noscript><p class="banner">{{ spa_title }}</p></noscript>{% endif %}
+{% nonced_json_script spa_bootstrap "spa-bootstrap" %}
+{% endblock %}
+{% block scripts %}{% spa_entry "src/main.tsx" %}{% endblock %}

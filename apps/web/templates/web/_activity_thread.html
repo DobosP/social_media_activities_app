@@ -1,0 +1,136 @@
+{% load i18n %}
+{% if is_member or user.is_staff %}
+  {% if digest and digest.has_content %}
+    {# F35: deterministic "catch up" recap — a condensed view of the CURRENT thread, no JS. #}
+    <details class="card card-accent">
+      <summary><strong>{% trans "Catch up" %}</strong> <span class="muted">&mdash; {% trans "what you missed" %}</span></summary>
+      {% if digest.member_count is not None %}<p class="muted digest-line">{% blocktrans count member_count=digest.member_count with going=digest.going total=digest.total %}{{ going }} of {{ total }} coming &middot; {{ member_count }} member.{% plural %}{{ going }} of {{ total }} coming &middot; {{ member_count }} members.{% endblocktrans %}</p>{% endif %}
+      {% if digest.announcements %}<p class="muted digest-heading">{% trans "Latest announcements:" %}</p>
+        {% for p in digest.announcements %}<div class="post post-announcement"><div class="meta">&#128204; {{ p.author.display_name|default:p.author.username }} &middot; {{ p.created_at|date:"j M H:i" }}</div><div>{{ p.body|truncatechars:200|linebreaksbr }}</div></div>{% endfor %}{% endif %}
+      {% if digest.logistical %}<p class="muted message-copy">{% trans "Logistics mentioned:" %}</p>
+        {% for p in digest.logistical %}<div class="post"><div class="meta">{{ p.author.display_name|default:p.author.username }} &middot; {{ p.created_at|date:"j M H:i" }}</div><div>{{ p.body|truncatechars:200|linebreaksbr }}</div></div>{% endfor %}{% endif %}
+      {% if digest.recent %}<p class="muted message-copy">{% trans "Most recent:" %}</p>
+        {% for p in digest.recent %}<div class="post"><div class="meta">{{ p.author.display_name|default:p.author.username }} &middot; {{ p.created_at|date:"j M H:i" }}</div><div>{{ p.body|truncatechars:200|linebreaksbr }}</div></div>{% endfor %}{% endif %}
+    </details>
+  {% endif %}
+  {# One conversation: pinned announcements on top, then the single chronological stream. #}
+  <h2 id="messages">{% trans "Messages" %}</h2>
+  {% if is_organizer %}
+    <form method="post" action="{% url 'activity_announce' activity.pk %}" class="stack announce-form">{% csrf_token %}
+      <label>{% trans "Post an announcement" %} <span class="muted">{% trans "(pinned; notifies every member)" %}</span>
+        <textarea name="body" rows="2" maxlength="4000" required
+                  placeholder="{% trans 'Meet at the north gate; bring water; time changed...' %}"></textarea></label>
+      <button class="btn btn-sm" type="submit">{% trans "Post announcement" %}</button>
+    </form>
+  {% endif %}
+  {% if announcements %}
+    <div class="thread" aria-label="{% trans 'Pinned announcements' %}">
+      {% for p in announcements %}
+        <div class="post post-announcement">
+          <div class="meta">&#128204; {{ p.author.display_name|default:p.author.username }} &middot; {{ p.created_at|date:"j M H:i" }}</div>
+          <div>{{ p.body|linebreaksbr }}</div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <form method="get" action="{% url 'activity_detail' activity.pk %}" class="search-bar" role="search">
+    <input type="search" name="tq" value="{{ thread_query }}" placeholder="{% trans 'Search this conversation…' %}"
+           aria-label="{% trans 'Search this conversation' %}" minlength="2">
+    <button class="btn btn-sm btn-secondary" type="submit">{% trans "Search" %}</button>
+    {% if thread_query %}<a class="muted" href="{% url 'activity_detail' activity.pk %}#messages">{% trans "clear" %}</a>{% endif %}
+  </form>
+  {% if thread_query %}
+    <div class="card card-muted" aria-label="{% trans 'Search results' %}">
+      <p class="muted thread-search-count">{% blocktrans count counter=thread_results|length %}{{ counter }} message matches.{% plural %}{{ counter }} messages match.{% endblocktrans %}</p>
+      {% for p in thread_results %}
+        <div class="post">
+          <div class="meta">{{ p.author.display_name|default:p.author.username }} &middot;
+            <a href="{% url 'activity_detail' activity.pk %}#post-{{ p.pk }}">{{ p.created_at|date:"j M H:i" }}</a></div>
+          <div>{{ p.body|truncatechars:240|linebreaksbr }}</div>
+        </div>
+      {% empty %}<p class="muted">{% trans "Nothing matched." %}</p>{% endfor %}
+    </div>
+  {% endif %}
+
+  {% if has_older %}
+    <p><a href="?before={{ older_cursor }}#messages" rel="prev">&uarr; {% trans "Older messages" %}</a></p>
+  {% endif %}
+  <div id="thread-list" class="thread">
+    {% for p in posts %}
+      {% ifchanged p.created_at|date:"Y-m-d" %}
+        <div class="day-sep" aria-hidden="true"><span>{{ p.created_at|date:"D j M" }}</span></div>
+      {% endifchanged %}
+      {% include "web/_post.html" %}
+      <div class="replies" data-parent="{{ p.pk }}">
+        {% for r in p.replies.all %}{% include "web/_post.html" with p=r %}{% endfor %}
+      </div>
+    {% empty %}<p class="muted" id="no-messages">{% trans "No messages yet. Say hello!" %}</p>{% endfor %}
+  </div>
+  {# Appears only when a live message lands while you're scrolled up (JS-only; no read-tracking). #}
+  <button type="button" id="thread-jump" class="thread-jump" hidden>&darr; {% trans "New messages" %}</button>
+
+  {% if is_member %}
+    {% comment %}W2-F34: a calm, honest "who can see this" line so the audience boundary is felt
+       before you type. Re-describes gates that already hold — no count to minors.{% endcomment %}
+    {% if thread_audience %}
+      <p class="muted compose-note" role="note">
+        &#128274;
+        {% if thread_audience.is_group %}{% trans "Visible to members of this group only." %}{% else %}{% trans "Visible to members of this activity only." %}{% endif %}
+        {% trans "Never public, never indexed, never shown to other cohorts." %}
+        {% if thread_audience.peer_count is not None %}{% blocktrans count n=thread_audience.peer_count %}{{ n }} other person can see this.{% plural %}{{ n }} other people can see this.{% endblocktrans %}{% endif %}
+      </p>
+    {% endif %}
+    {# Transient "X is typing…" — JS-only, never stored, aria-hidden so a busy thread isn't a
+       screen-reader replay (peer presence stays silent, like inbound peer messages). #}
+    <div id="typing-indicator" class="typing-indicator" aria-hidden="true"></div>
+    <form method="post" id="compose" enctype="multipart/form-data"
+          action="{% url 'activity_post' activity.pk %}" class="stack compose-form">{% csrf_token %}
+      {% if reply_target %}
+        <p class="muted compose-reply-note">{% blocktrans with reply_author=reply_target.author.display_name|default:reply_target.author.username %}Replying to
+          {{ reply_author }}{% endblocktrans %}
+          &middot; <a href="{% url 'activity_detail' activity.pk %}#compose">{% trans "cancel" %}</a></p>
+      {% endif %}
+      {{ post_form.reply_to }}
+      <label class="visually-hidden" for="{{ post_form.body.id_for_label }}">{% trans "Write a message" %}</label>
+      {{ post_form.body }}
+      <div class="row compose-row">
+        <label class="visually-hidden" for="{{ post_form.attachment.id_for_label }}">{% trans "Attach a photo or PDF" %}</label>
+        <input type="file" name="attachment" id="{{ post_form.attachment.id_for_label }}"
+               accept="image/png,image/jpeg,image/webp,application/pdf">
+        <label class="muted compose-select-label">
+          🕓 <span class="visually-hidden">{% trans "Make this picture temporary" %}</span>
+          <select name="disappear">
+            <option value="">{% trans "Keep" %}</option>
+            {% for secs, label in ephemeral_options %}<option value="{{ secs }}">{% blocktrans %}Disappear after {{ label }}{% endblocktrans %}</option>{% endfor %}
+          </select></label>
+        <button class="btn btn-sm" type="submit">{% trans "Post" %}</button>
+      </div>
+      <label class="compose-ping-label">
+        <input type="checkbox" name="ping" value="on">
+        {% blocktrans %}Notify the people I&nbsp;<span class="mention">@mention</span>{% endblocktrans %}
+        <span class="muted">{% trans "(off = they just see the tag)" %}</span></label>
+      <p class="muted compose-upload-note">{% blocktrans %}Photos &amp; PDFs are private to
+        members and safety-screened on upload. No video.{% endblocktrans %}</p>
+    </form>
+    {% comment %}Live region: announces ONLY the viewer's own send + new announcements (never every
+       inbound peer message), so a busy thread is not a screen-reader replay or a nudge.{% endcomment %}
+    <div id="live-status" class="visually-hidden" role="status" aria-live="polite"></div>
+  {% endif %}
+
+  <h2>{% trans "Photos" %}</h2>
+  <p class="muted">{% trans "Private to members &mdash; location metadata is stripped on upload." %}</p>
+  {% if is_member %}
+    <form method="post" action="{% url 'activity_photo' activity.pk %}" enctype="multipart/form-data" class="row">{% csrf_token %}
+      <input type="file" name="image" accept="image/*" required>
+      <button class="btn btn-sm" type="submit">{% trans "Add photo" %}</button>
+    </form>
+  {% endif %}
+  <div class="photos">
+    {% for ph in photos %}<img src="{{ ph.url }}" alt="{% trans 'thread photo' %}">{% empty %}
+    <p class="muted">{% trans "No photos yet." %}</p>{% endfor %}
+  </div>
+
+{% else %}
+  <p class="muted">{% trans "The messages and photos are private to members. Request to join to take part." %}</p>
+{% endif %}

@@ -18,7 +18,7 @@
       <img class="avatar" src="{{ profile_user|avatar_uri }}" width="96" height="96"
            alt="{% trans 'generated avatar' %}" title="{% trans 'Your generated avatar (upload a photo to replace it)' %}">
     {% endif %}
-    <div style="flex:1">
+    <div class="u-flex-1">
       <p style="margin:.1rem 0"><strong>{{ profile_user.username }}</strong></p>
       <p class="muted" style="margin:.1rem 0">
         {{ profile_user.get_age_band_display }} <span class="muted">{% trans "(demo)" %}</span> &middot;
@@ -40,7 +40,7 @@
     <img class="avatar" src="{{ journey_avatar }}" width="120" height="120"
          alt="{% trans 'your evolving avatar' %}"
          title="{% trans 'Your avatar grows with the meetups you confirm in real life. Only you see this.' %}">
-    <div style="flex:1">
+    <div class="u-flex-1">
       <p style="margin:.1rem 0"><strong>{% blocktrans with level=progression.level max=progression.max_level %}Level {{ level }} of {{ max }}{% endblocktrans %}</strong></p>
       <p class="muted" style="margin:.1rem 0">{% blocktrans count count=progression.count %}{{ count }} meetup you've confirmed you went to.{% plural %}{{ count }} meetups you've confirmed you went to.{% endblocktrans %}</p>
       <p class="helptext">{% trans "This grows from real, in-person meetups you confirm — and only you can see it. It's not a score others compare." %}</p>
@@ -59,7 +59,7 @@
 
 <div class="card">
   <h3>{% trans "Connections" %}</h3>
-  <p class="muted" style="margin-top:0">{% url 'connections' as connections_url %}{% blocktrans %}People you've met at activities &mdash;
+  <p class="muted u-mt-0">{% url 'connections' as connections_url %}{% blocktrans %}People you've met at activities &mdash;
     <a href="{{ connections_url }}">manage</a>.{% endblocktrans %}</p>
   {% if pending_in %}
     <div class="banner">{% blocktrans count counter=pending_in|length %}{{ counter }} pending connection request{% plural %}{{ counter }} pending connection requests{% endblocktrans %}
@@ -100,7 +100,7 @@
     <p class="muted">{% trans "Prove your age band with the EU Digital Identity wallet &mdash; the app only ever learns an over-16/over-18 band, never your birthdate." %}</p>
     <a class="btn" href="{% url 'verify_age' %}">{% trans "Verify with EU Digital Identity" %}</a>
   {% endif %}
-  <p class="muted" style="font-size:.8rem">{% trans "Re-verifying into a different age band may change which activities and conversations you can take part in." %}</p>
+  <p class="muted u-text-sm">{% trans "Re-verifying into a different age band may change which activities and conversations you can take part in." %}</p>
   <p class="row">
     {% if profile_user.is_guardian %}<a class="btn btn-secondary btn-sm" href="{% url 'wards' %}">{% trans "Your wards" %}</a>{% endif %}
     {% if has_guardians %}<a class="btn btn-secondary btn-sm" href="{% url 'my_guardians' %}">{% trans "Your guardians" %}</a>{% endif %}

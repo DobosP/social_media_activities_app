@@ -1,0 +1,8 @@
+{% load i18n %}
+{% comment %}Crawler/noscript snapshot for a React things-to-do city page.{% endcomment %}
+<h1>{% blocktrans with city=area.name %}Things to do in {{ city }}{% endblocktrans %}</h1>
+<ul class="link-list">
+  {% for t in activities %}
+    <li><a href="{% url 'things_to_do' area.slug t.slug %}">{{ t.name }} {% trans "in" %} {{ area.name }}</a></li>
+  {% endfor %}
+</ul>

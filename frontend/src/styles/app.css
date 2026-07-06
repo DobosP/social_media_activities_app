@@ -1,0 +1,68 @@
+/* Social Activities SPA screens — app-specific styles (prefix: sa-).
+   Themeable values come from @roedu/ui tokens (var(--roedu-*)); the legacy page
+   chrome around the React root uses the mirrored tokens in static/css/base.css.
+   CSP: this is a real stylesheet — components add classes, never style attrs. */
+
+/* ---- Screen scaffolding ---------------------------------------------------- */
+.sa-screen { display: flex; flex-direction: column; gap: var(--roedu-space-lg); padding-block: var(--roedu-space-md); }
+.sa-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--roedu-space-sm); }
+.sa-section-head h2 { margin: 0; }
+.sa-section-head .sa-more { font-size: var(--roedu-font-size-sm); font-weight: 600; white-space: nowrap; }
+
+/* ---- Activity card (ADR-0007: one contextual cover OR generated accent) ---- */
+.sa-card-grid { display: grid; gap: var(--roedu-space-md); grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.sa-acard {
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--roedu-color-surface);
+  border: 1px solid var(--roedu-color-border);
+  border-radius: var(--roedu-radius-lg);
+  box-shadow: var(--roedu-shadow-sm);
+  transition: box-shadow .15s ease, transform .15s ease, border-color .15s ease;
+}
+.sa-acard:hover { box-shadow: var(--roedu-shadow-md); transform: translateY(-2px); }
+.sa-acard__visual {
+  position: relative; aspect-ratio: 5 / 2; display: flex; align-items: flex-end;
+  background: var(--sa-acard-accent, var(--roedu-color-surface-muted));
+  background-size: cover; background-position: center;
+}
+.sa-acard__visual img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.sa-acard__badges { position: relative; z-index: 1; display: flex; gap: var(--roedu-space-xs); flex-wrap: wrap; padding: var(--roedu-space-sm); }
+.sa-acard__body { display: flex; flex-direction: column; gap: var(--roedu-space-xs); padding: var(--roedu-space-md); }
+.sa-acard__title { margin: 0; font-size: var(--roedu-font-size-lg); font-family: var(--roedu-font-heading); line-height: 1.25; }
+.sa-acard__title a { color: var(--roedu-color-text); text-decoration: none; }
+.sa-acard__title a:hover { color: var(--roedu-color-primary); }
+.sa-acard__meta { color: var(--roedu-color-text-muted); font-size: var(--roedu-font-size-sm); display: flex; gap: var(--roedu-space-xs); flex-wrap: wrap; align-items: center; }
+.sa-acard__meta svg { width: 1em; height: 1em; flex: none; }
+
+/* ---- Browse: list/deck toggle + deck ---------------------------------------
+   The deck is NAVIGATION over a bounded server-provided set (ADR-0007: swipes
+   never POST, no like/pass telemetry). */
+.sa-toolbar { display: flex; align-items: center; justify-content: space-between; gap: var(--roedu-space-sm); flex-wrap: wrap; }
+.sa-deck { position: relative; overflow: hidden; padding-block: var(--roedu-space-md); }
+.sa-deck__track { display: flex; align-items: stretch; gap: var(--roedu-space-md); transition: transform .28s cubic-bezier(.2, .7, .3, 1); will-change: transform; }
+.sa-deck__item { flex: 0 0 min(84vw, 400px); opacity: .55; transform: scale(.94); transition: opacity .28s ease, transform .28s ease; }
+.sa-deck__item.is-current { opacity: 1; transform: scale(1); }
+.sa-deck__nav { display: flex; justify-content: center; gap: var(--roedu-space-sm); margin-top: var(--roedu-space-sm); }
+.sa-deck__count { color: var(--roedu-color-text-muted); font-size: var(--roedu-font-size-sm); align-self: center; }
+
+/* ---- Simple stat/dash rows (my-meetups, organize) --------------------------- */
+.sa-stat-row { display: grid; gap: var(--roedu-space-sm); grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+.sa-stat {
+  background: var(--roedu-color-surface); border: 1px solid var(--roedu-color-border);
+  border-radius: var(--roedu-radius-md); padding: var(--roedu-space-md);
+  display: flex; flex-direction: column; gap: 2px;
+}
+.sa-stat b { font-size: var(--roedu-font-size-xl); font-family: var(--roedu-font-heading); }
+.sa-stat span { color: var(--roedu-color-text-muted); font-size: var(--roedu-font-size-sm); }
+
+.sa-empty { color: var(--roedu-color-text-muted); text-align: center; padding: var(--roedu-space-xl) var(--roedu-space-md); }
+
+/* Reduced motion (mirrors the legacy data-motion contract on <html>) */
+:root[data-motion='reduce'] .sa-acard,
+:root[data-motion='reduce'] .sa-deck__track,
+:root[data-motion='reduce'] .sa-deck__item { transition: none; }
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion='full']) .sa-acard,
+  :root:not([data-motion='full']) .sa-deck__track,
+  :root:not([data-motion='full']) .sa-deck__item { transition: none; }
+}

@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% load spa_assets %}
+{% comment %}Phase-1 SPA pipeline proof (DEBUG-only route): mounts the React design
+   preview inside the normal shell. Real SPA screens get their own shell template
+   with per-route SEO head in Phase 2.{% endcomment %}
+{% block title %}Aurora Social — preview{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+{% block content %}
+<div id="root"></div>
+{% endblock %}
+{% block scripts %}{% spa_entry "src/main.tsx" %}{% endblock %}

@@ -18,7 +18,7 @@
     <p class="muted" style="margin:0">
       {% if g.activity_type %}{{ g.activity_type.name }}{% else %}{% blocktrans with category=g.category.name %}All {{ category }}{% endblocktrans %}{% endif %}
       &middot; {{ g.area.name }}</p>
-    {% if g.description %}<p style="margin:.3rem 0 0">{{ g.description|truncatewords:24 }}</p>{% endif %}
+    {% if g.description %}<p class="u-my-xs">{{ g.description|truncatewords:24 }}</p>{% endif %}
   </div>
 {% empty %}
   <p class="muted">{% trans "No groups here yet." %}{% if can_create %} <a href="{% url 'group_create' %}">{% trans "Start the first one." %}</a>{% endif %}</p>

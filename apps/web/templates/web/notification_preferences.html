@@ -11,9 +11,9 @@
     <label class="row" style="gap:.5rem;align-items:flex-start;margin:.4rem 0">
       <input type="checkbox" name="muted" value="{{ row.value }}"{% if row.muted %} checked{% endif %}>
       <span><strong>{% blocktrans with label=row.label %}Mute: {{ label }}{% endblocktrans %}</strong>
-        <br><span class="muted" style="font-size:.8rem">{{ row.reason }}</span>
+        <br><span class="muted u-text-sm">{{ row.reason }}</span>
         {% if row.value == "arrival" %}
-          <br><span class="muted" style="font-size:.8rem">{% blocktrans %}Note: muting this also turns off arrival
+          <br><span class="muted u-text-sm">{% blocktrans %}Note: muting this also turns off arrival
           alerts for a child you supervise.{% endblocktrans %}</span>
         {% endif %}
       </span>

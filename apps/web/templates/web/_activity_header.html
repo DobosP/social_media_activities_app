@@ -1,0 +1,47 @@
+{% load i18n %}
+<p class="muted"><a href="{% url 'activity_list' %}">&larr; {% trans "Activities" %}</a></p>
+<h1>{{ activity.title }}</h1>
+<div>
+  <span class="tag">{{ activity.activity_type.name }}</span>
+  {% if activity.cost_band != "unspecified" %}<span class="tag">{{ activity.get_cost_band_display }}</span>{% endif %}
+  {% if activity.difficulty != "unspecified" %}<span class="tag">{{ activity.get_difficulty_display }}</span>{% endif %}
+  {% if activity.beginners_welcome %}<span class="tag">{% trans "beginners welcome" %}</span>{% endif %}
+  {% if activity.status != "open" %}<span class="tag">{{ activity.get_status_display }}</span>{% endif %}
+  {% if activity.guardian_accompanied %}<span class="tag">{% trans "guardian-accompanied" %}</span>{% endif %}
+  {% if child_safe_venue %}<span class="tag" title="{% trans 'A known public venue type, approved for children&#39;s meetups.' %}">{% trans "approved public venue" %}</span>{% endif %}
+  {% if supervised %}{% if supervisor_present %}<span class="tag" title="{% trans 'The organiser&#39;s verified guardian is present as a read-only supervisor.' %}">{% trans "supervised" %}</span>{% else %}<span class="tag" title="{% trans 'This activity requires the organiser&#39;s guardian to supervise before anyone is admitted.' %}">{% trans "supervisor needed" %}</span>{% endif %}{% endif %}
+</div>
+
+{% comment %}W2-F27: a plain-language, read-aloud-friendly summary in one ARIA-landmarked region.
+   Member-only logistics are added by the service only for a member — no per-user counts ever.{% endcomment %}
+{% if meetup_brief %}
+<section class="card" aria-labelledby="brief-heading">
+  <h2 id="brief-heading" class="u-mt-0">{% trans "At a glance" %}</h2>
+  <dl class="brief">
+    {% for label, sentence in meetup_brief %}<dt>{{ label }}</dt><dd>{{ sentence }}</dd>
+    {% endfor %}
+  </dl>
+</section>
+{% endif %}
+
+{% include "web/_activity_safety.html" %}
+<p class="muted">{{ activity.starts_at|date:"l j F Y, H:i" }}{% if activity.ends_at %} &ndash; {{ activity.ends_at|date:"H:i" }}{% endif %}<br>
+  {% url 'place_detail' activity.place.pk as place_url %}{% blocktrans with place_name=activity.place.display_name|default:_("a place") %}at <a href="{{ place_url }}">{{ place_name }}</a>{% endblocktrans %}{% if activity.place.address_city %}, {{ activity.place.address_city }}{% endif %}</p>
+{% if activity_communities %}
+  <p class="muted activity-meta-note">{% trans "Part of:" %}
+    {% for c in activity_communities %}<a class="tag" href="{% url 'community_detail' c.slug %}">{{ c.name }}</a> {% endfor %}</p>
+{% endif %}
+{% if can_create_group %}
+  <p class="muted activity-meta-note">{% url 'group_create' as group_create_url %}{% blocktrans with city=activity.place.address_city|urlencode type=activity.activity_type.slug %}Enjoying this crowd?
+    <a href="{{ group_create_url }}?city={{ city }}&amp;type={{ type }}">Start a standing group</a> so it keeps happening.{% endblocktrans %}</p>
+{% endif %}
+{% include "web/_share_box.html" %}
+{% if activity.description %}<p>{{ activity.description|linebreaks }}</p>{% endif %}
+{% if activity.accessibility_notes %}<p class="muted"><strong>{% trans "Accessibility:" %}</strong><br>{{ activity.accessibility_notes|linebreaksbr }}</p>{% endif %}
+<p class="muted">{% blocktrans with owner_name=activity.owner.display_name|default:activity.owner.username %}Organised by {{ owner_name }}.{% endblocktrans %}
+  {% if not is_owner %}&middot; <a href="{% url 'report' %}?type=activity&id={{ activity.pk }}">{% trans "Report" %}</a>{% endif %}</p>
+
+{% if not is_open %}
+  <div class="banner">{% blocktrans with status_display=activity.get_status_display|lower %}This activity is {{ status_display }}.{% endblocktrans %}{% if activity.status == "cancelled" %}
+    {% trans "The organiser called it off &mdash; see your alerts for any details." %}{% endif %}</div>
+{% endif %}

@@ -58,9 +58,9 @@
 {% if show_thread %}
   <h2>{% trans "Conversation" %}</h2>
   {% for a in announcements %}
-    <article class="post" style="border-left:3px solid var(--accent,#888);padding-left:.5rem">
+    <article class="post post-announcement">
       <div class="meta">&#128204; {{ a.author.display_name|default:a.author.username }} &middot; {{ a.created_at|date:'j M H:i' }}
-        {% if a.author_id != user.id %}&middot; <a class="muted" style="font-size:.75rem" href="{% url 'report' %}?type=post&amp;id={{ a.pk }}">{% trans "report" %}</a>{% endif %}</div>
+        {% if a.author_id != user.id %}&middot; <a class="muted u-text-xs" href="{% url 'report' %}?type=post&amp;id={{ a.pk }}">{% trans "report" %}</a>{% endif %}</div>
       <div>{{ a.body|linebreaksbr }}</div>
     </article>
   {% endfor %}
@@ -68,7 +68,7 @@
     <article id="post-{{ p.pk }}" class="post">
       <div class="meta">{{ p.author.display_name|default:p.author.username }} &middot;
         <a href="#post-{{ p.pk }}" class="muted">{{ p.created_at|date:'j M H:i' }}</a>
-        {% if p.author_id != user.id %}&middot; <a class="muted" style="font-size:.75rem" href="{% url 'report' %}?type=post&amp;id={{ p.pk }}">{% trans "report" %}</a>{% endif %}</div>
+        {% if p.author_id != user.id %}&middot; <a class="muted u-text-xs" href="{% url 'report' %}?type=post&amp;id={{ p.pk }}">{% trans "report" %}</a>{% endif %}</div>
       <div>{{ p.body_html }}</div>
     </article>
   {% empty %}

@@ -1,0 +1,13 @@
+{% load i18n %}
+{% comment %}Crawler/noscript snapshot for the React places list screen.{% endcomment %}
+<h1>{% trans "Places" %}</h1>
+<ul class="members">
+  {% for p in places %}
+    <li>
+      <a href="{% url 'place_detail' p.pk %}">{{ p.name|default:_("Unnamed place") }}</a>
+      {% if p.address_street %}<span class="muted">&middot; {{ p.address_street }}{% if p.address_city %}, {{ p.address_city }}{% endif %}</span>{% elif p.address_city %}<span class="muted">&middot; {{ p.address_city }}</span>{% endif %}
+    </li>
+  {% empty %}
+    <li class="muted">{% trans "No places match." %}</li>
+  {% endfor %}
+</ul>

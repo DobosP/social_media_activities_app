@@ -8,7 +8,7 @@
 <h1>{% trans "Places" %}</h1>
 <p class="muted">{% trans "A plain text list of venues &mdash; no map or JavaScript needed." %}
   <a href="{% url 'places_map' %}">{% trans "Switch to the map" %} &rarr;</a></p>
-<form method="get" class="row" style="gap:.5rem;flex-wrap:wrap;margin:.4rem 0">
+<form method="get" class="row u-row-gap u-my-sm">
   <label>{% trans "City" %} <input type="text" name="city" value="{{ filters.city }}"></label>
   <label>{% trans "Activity" %} <input type="text" name="activity" value="{{ filters.activity }}" placeholder="{% trans 'slug, e.g. basketball' %}"></label>
   <button class="btn btn-sm" type="submit">{% trans "Filter" %}</button>

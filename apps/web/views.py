@@ -83,6 +83,7 @@ from apps.social.models import (
     Post,
 )
 from apps.taxonomy.models import ActivityType
+from apps.web import views_spa
 
 from .forms import (
     _DT_FORMATS,
@@ -129,6 +130,10 @@ def communities_page(request):
     groups_page = Paginator(social.visible_groups(request.user), 30).get_page(
         request.GET.get("gpage")
     )
+    if views_spa.spa_enabled():
+        return views_spa.communities_spa(
+            request, page=page, groups_page=groups_page, can_create=_can_create_group(request.user)
+        )
     return render(
         request,
         "web/communities.html",
@@ -178,6 +183,10 @@ def community_detail(request, slug):
     # coordinate AND is visible to this viewer, offer a "join the standing group" link (name only,
     # no count). Sourced from visible_groups, so a child can never discover an adult group this way.
     linked_group = social.linked_group_for_community(community, request.user)
+    if views_spa.spa_enabled():
+        return views_spa.community_detail_spa(
+            request, community=community, activities=activities, linked_group=linked_group
+        )
     return render(
         request,
         "web/community_detail.html",
@@ -473,6 +482,19 @@ def connections_page(request):
     # Batch-load interests so the constellation avatars in these lists don't N+1 (one query total);
     # the |avatar_uri filter then renders each from the cached nodes. incoming/outgoing show names.
     attach_interest_nodes(list(conn_page.object_list) + results)
+    if views_spa.spa_enabled():
+        return views_spa.connections_spa(
+            request,
+            nav=_nav_context(request.user),
+            connections=conn_page.object_list,
+            conn_page=conn_page,
+            conn_query=conn_query,
+            conn_total=len(conns),
+            incoming=connections.pending_incoming(request.user),
+            outgoing=connections.pending_outgoing(request.user),
+            query=query,
+            results=results,
+        )
     return render(
         request,
         "web/connections.html",
@@ -967,11 +989,27 @@ def home(request):
             memberships__state=Membership.State.MEMBER,
             status=Activity.Status.OPEN,
         )
-        .select_related("place", "activity_type")
+        .select_related("place", "activity_type", "cover")  # cover: ADR-0016 card visuals
         .prefetch_related("place__corrections")  # F20
         .distinct()
         .order_by("starts_at")
     )
+    if views_spa.spa_enabled():
+        # ADR-0016: same computed feed, React presentation. Legacy render below
+        # stays the default until the SOCIAL_REACT_UI switch flips.
+        return views_spa.home_spa(
+            request,
+            recommended=recommended,
+            starter_types=starter_types,
+            beginners=beginners,
+            upcoming=upcoming,
+            mine=mine,
+            events=feed["events"],
+            group_updates=feed["group_updates"],
+            near_active=near_active,
+            beginners_only=beginners_only,
+            guardian_invites=list(pending_guardian_invites_for(user)),
+        )
     return render(
         request,
         "web/home.html",
@@ -1030,6 +1068,21 @@ def places_list(request):
     # A filtered/proximity result page is thin/duplicate/personalised — keep it out of the index;
     # the canonical unfiltered list stays indexable. Still crawled (follow) for its links.
     filtered = point is not None or any(request.GET.get(k) for k in ("activity", "city", "source"))
+    list_filters = {
+        "activity": request.GET.get("activity", ""),
+        "city": request.GET.get("city", ""),
+        "source": request.GET.get("source", ""),
+    }
+    if views_spa.spa_enabled():
+        return views_spa.places_spa(
+            request,
+            places=capped,
+            filters=list_filters,
+            near_active=point is not None,
+            truncated=len(capped) == 200,
+            filtered=filtered,
+            structured_data=structured_data,
+        )
     return render(
         request,
         "web/places_list.html",
@@ -1039,11 +1092,7 @@ def places_list(request):
             "truncated": len(capped) == 200,
             "structured_data": structured_data,
             "filtered": filtered,
-            "filters": {
-                "activity": request.GET.get("activity", ""),
-                "city": request.GET.get("city", ""),
-                "source": request.GET.get("source", ""),
-            },
+            "filters": list_filters,
             **_nav_context(request.user),
         },
     )
@@ -1456,6 +1505,19 @@ def activity_list(request):
     for k in ("view", "page"):
         base_params.pop(k, None)
     base_qs = base_params.urlencode()
+    if views_spa.spa_enabled():
+        return views_spa.browse_spa(
+            request,
+            activities=activities,
+            page_obj=page_obj,
+            view_mode=view_mode,
+            query=query,
+            did_you_mean=did_you_mean,
+            did_you_mean_q=did_you_mean_q,
+            near_active=near_active,
+            beginners_only=beginners_only,
+            base_qs=base_qs,
+        )
     return render(
         request,
         "web/activities.html",
@@ -2422,6 +2484,14 @@ def interests(request):
         if t.slug in starter_slugs:
             continue  # surfaced once, in the starter highlight above
         groups.setdefault(t.category, []).append(t)
+    if views_spa.spa_enabled():
+        return views_spa.interests_spa(
+            request,
+            groups=[(cat, types) for cat, types in groups.items()],
+            chosen=chosen,
+            chosen_count=len(chosen),
+            starter=starter,
+        )
     return render(
         request,
         "web/interests.html",
@@ -2447,6 +2517,12 @@ def topic_preferences(request):
         recs.set_topic_preferences(request.user, request.POST.getlist("topics"))
         messages.success(request, "Your topics were saved.")
         return redirect("topic_preferences")
+    if views_spa.spa_enabled():
+        return views_spa.topics_spa(
+            request,
+            categories=ActivityCategory.objects.filter(parent__isnull=True).order_by("name"),
+            chosen=set(recs.topic_preference_slugs(request.user)),
+        )
     return render(
         request,
         "web/topic_preferences.html",
@@ -2474,6 +2550,8 @@ def access_preferences(request):
         )
         messages.success(request, "Your access preferences were saved.")
         return redirect("access_preferences")
+    if views_spa.spa_enabled():
+        return views_spa.access_spa(request, pref=get_access_preference(request.user))
     return render(
         request,
         "web/access_preferences.html",
@@ -2493,6 +2571,15 @@ def saved_searches_page(request):
     from apps.social.models import ActivityInterest
     from apps.taxonomy.models import ActivityCategory
 
+    if views_spa.spa_enabled():
+        return views_spa.saved_searches_spa(
+            request,
+            items=saved_searches.saved_searches_for(request.user),
+            activity_types=ActivityType.objects.filter(is_active=True).order_by("name"),
+            categories=ActivityCategory.objects.all().order_by("name"),
+            cost_bands=Activity.CostBand.choices,
+            coarse_windows=ActivityInterest.CoarseWindow.choices,
+        )
     return render(
         request,
         "web/saved_searches.html",
@@ -2558,6 +2645,8 @@ def you_hub(request):
     """The 'You' account & settings overview — a single home for the personal pages
     that used to be scattered across the top nav. Pure links; nav_badges() supplies
     has_guardians / connections_enabled for the conditional cards."""
+    if views_spa.spa_enabled():
+        return views_spa.you_spa(request, nav=_nav_context(request.user))
     return render(request, "web/you.html", _nav_context(request.user))
 
 
@@ -2567,6 +2656,8 @@ def organize(request):
     with the concrete action it needs now. Read-only; every row links into the existing
     edit/admit/announce screens (the service performs nothing)."""
     console = social.organizer_console(request.user)
+    if views_spa.spa_enabled():
+        return views_spa.organize_spa(request, **console)
     return render(request, "web/organize.html", {**console, **_nav_context(request.user)})
 
 
@@ -2589,6 +2680,17 @@ def settings_hub(request):
     # and revoke it with their session — losing the device no longer means an
     # invisible, irrevocable credential.
     api_token = Token.objects.filter(user=request.user).first()
+    if views_spa.spa_enabled():
+        from django.conf import settings as dj_settings
+        from django.utils.translation import get_language
+
+        return views_spa.settings_spa(
+            request,
+            nav=_nav_context(request.user),
+            api_token_created=api_token.created if api_token else None,
+            languages=dj_settings.LANGUAGES,
+            current_language=get_language(),
+        )
     return render(
         request,
         "web/settings.html",
@@ -2628,6 +2730,19 @@ def profile(request):
         .values_list("activity_type__name", flat=True)
     )
     blocked = [b.blocked for b in Block.objects.filter(blocker=user).select_related("blocked")]
+    if views_spa.spa_enabled():
+        return views_spa.profile_spa(
+            request,
+            nav=_nav_context(user),
+            avatar_url=_avatar_url(user, user),
+            can_participate=can_participate(user),
+            provenance=assurance_provenance(user),
+            interests=chosen,
+            blocked=blocked,
+            connections=connections.connections_for(user),
+            progression=social.progression_summary(user),
+            journey_avatar=_journey_avatar(user),
+        )
     return render(
         request,
         "web/profile.html",
@@ -2689,6 +2804,8 @@ def notifications_list(request):
     items = list(Notification.objects.filter(recipient=request.user)[:50])
     for n in items:
         n.why = notifications.why_reason(n.kind)
+    if views_spa.spa_enabled():
+        return views_spa.notifications_spa(request, items=items, nav=_nav_context(request.user))
     return render(request, "web/notifications.html", {"items": items, **_nav_context(request.user)})
 
 
@@ -2719,6 +2836,8 @@ def notification_preferences(request):
         }
         for k in MUTABLE_KINDS
     ]
+    if views_spa.spa_enabled():
+        return views_spa.notification_preferences_spa(request, rows=rows)
     return render(
         request,
         "web/notification_preferences.html",
@@ -2916,6 +3035,18 @@ def events_list(request):
     # A filtered/search result page is thin/duplicate — keep it out of the index (the canonical
     # unfiltered list stays indexable). The page is still crawled (follow) for its links.
     filtered = bool(query or activity or area_slug)
+    if views_spa.spa_enabled():
+        return views_spa.events_spa(
+            request,
+            events=events,
+            query=query,
+            activity=activity,
+            areas=Area.objects.order_by("name"),
+            area=area.slug if area else "",
+            area_name=area.name if area else "",
+            filtered=filtered,
+            structured_data=structured_data,
+        )
     return render(
         request,
         "web/events.html",
@@ -2947,6 +3078,8 @@ def things_to_do_index(request):
     for area, activity_type in combos:
         cities.setdefault(area, []).append(activity_type)
     grouped = sorted(cities.items(), key=lambda kv: kv[0].name)
+    if views_spa.spa_enabled():
+        return cache_public(views_spa.landing_index_spa(request, grouped=grouped), request)
     return cache_public(
         render(
             request,
@@ -2966,6 +3099,10 @@ def things_to_do_city(request, area_slug):
     activities = [t for a, t in available_landings() if a.pk == area.pk]
     if not activities:
         raise Http404("Nothing here yet.")
+    if views_spa.spa_enabled():
+        return cache_public(
+            views_spa.landing_city_spa(request, area=area, activities=activities), request
+        )
     return cache_public(
         render(
             request,
@@ -3008,6 +3145,19 @@ def things_to_do(request, area_slug, activity_slug):
             request,
         )
     )
+    if views_spa.spa_enabled():
+        return cache_public(
+            views_spa.landing_detail_spa(
+                request,
+                area=area,
+                activity_type=activity_type,
+                places=places,
+                events=events,
+                structured_data=structured_data,
+                breadcrumb_data=breadcrumb_data,
+            ),
+            request,
+        )
     return cache_public(
         render(
             request,
@@ -4280,3 +4430,9 @@ def gauge_convert(request, pk):
         "web/gauge_convert.html",
         {"form": form, "gauge": gauge, **_nav_context(request.user)},
     )
+
+
+@login_required
+def spa_preview(request):
+    """Phase-1 React pipeline proof (DEBUG-only URL): Aurora design preview."""
+    return render(request, "web/spa_preview.html", _nav_context(request.user))

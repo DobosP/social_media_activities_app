@@ -15,6 +15,49 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
 
 ## Current state
 
+- **Redesign Phase 4 shipped** (`claude/redesign-social-p4`) — the redesign program's
+  final phase: the sensitive subsystems were restyled IN PLACE, zero behavior changes.
+  Messaging (e2ee-messaging.js untouched — it was already fully class-driven, so the P1
+  token remap themes it), places map chrome, communities graph page (canvas got a real
+  `.graph-canvas` class, deliberately dark in all themes for the vendored force-graph;
+  graph JS untouched), donations/campaigns/transparency and safety/legal pages: all
+  inline styles replaced with utilities (one deliberate exception: the campaigns
+  progress-meter dynamic width). The React migration of these subsystems remains a
+  SEPARATE future program per ADR-0016.
+- **Redesign Phase 3 shipped** (`claude/redesign-social-p3`): the account & community
+  surfaces — /you, /settings, profile, interests, topics, access, notifications (+
+  preferences), connections, saved searches, communities list + community detail — are
+  React screens behind the same `SOCIAL_REACT_UI` switch, all classic-POST round-trips
+  (every P3 mutation redirects with a flash — no client mutation state). Account/inbox
+  navigation now renders from ONE source (`account_nav`/`you_tabs`/`inbox_tabs` in
+  views_spa.py), closing the recon's duplicated-nav finding. Child-safety pages (wards,
+  guardianship, verify-age, privacy/safety/log, account delete) stay server-rendered and
+  got a class-only restyle (wards nested cards subordinated; 20 inline styles removed
+  with new u-*/fieldset-plain utilities). communities graph page untouched (vendored
+  3d-force-graph); stale groups.html removed (route already redirected).
+- **Redesign Phase 2 shipped** (`claude/redesign-social-p2`): home, activities browse
+  (list + card deck), organizer console, **and the public SEO screens (events, places
+  list, things-to-do index/city/detail)** rebuilt as React screens fed by per-view JSON
+  bootstrap (`apps/web/views_spa.py` + `web/spa.html` + `?_data=1` soft navigation), behind
+  the **`SOCIAL_REACT_UI` kill switch (default OFF — legacy SSR + full test suite unchanged;
+  dev defaults ON)**. Public screens keep full SEO parity when the flag is on: same
+  meta description/robots (noindex on filtered), JSON-LD, RSS alternates, breadcrumbs,
+  plus a server-rendered crawler/noscript snapshot inside `#root` (web/snapshots/*) that
+  React replaces on hydration; their `?_data=1` payloads carry no CSRF token so
+  `cache_public` still applies. `/my-meetups/` intentionally stays SSR (F38 offline safety
+  page). `activity_detail.html` split into 5 behavior-identical partials; its React shell
+  is deferred to the sensitive track (embeds the thread + pre-send safety nudge).
+  Remaining inline-style leftovers need a small new-utility set — folded into Phase 3.
+- **Frontend redesign program is underway** (ADR-0016, branches `claude/redesign-social-p*`):
+  React/Vite SPA with shared `@roedu/ui` (v0.3.0, CSP-safe) and the bespoke "Aurora Social"
+  theme (indigo/teal, mobile-first, dark-native). Phase 1 shipped: token rebrand of the
+  legacy CSS (light/dark/contrast), vendored Bricolage Grotesque display font, mobile
+  bottom tab bar in base.html, `frontend/` scaffold + Docker node build stage + `spa_entry`
+  nonce'd asset tag, `.btn--light` defined, Leaflet vendored locally (CSP unpkg allowance
+  kept — removal is a follow-up hardening slice), inline-style cleanup batch 1. E2EE
+  messaging/maps/graph/donations/safety UIs are untouched (restyle-in-place in Phase 4;
+  migration is a later program). Theme values live in BOTH frontend/src/theme.ts and
+  static/css/base.css until the legacy layer retires.
 - **Mobile photo-heavy activity cards are accepted in this branch** (ADR-0007): one contextual
   cover photo per activity may appear on discovery cards, with generated accent fallback; no
   short video, galleries, public user photo feeds, like/pass/swipe telemetry, or engagement ranking.
