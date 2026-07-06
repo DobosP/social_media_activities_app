@@ -4,7 +4,7 @@
 `docs/archive/COMPLETENESS_GAPS_2026-06.md`). On any doc conflict: this file > newest-dated ADR in
 `docs/adr/` > everything else.
 
-Last verified: 2026-07-04
+Last verified: 2026-07-06
 
 ## What this is
 
@@ -15,6 +15,28 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
 
 ## Current state
 
+- **Frontend redesign follow-ups (the open list, in rough priority order):**
+  1. **Flip `SOCIAL_REACT_UI`** per environment once the React screens are reviewed
+     on-device (dev already defaults ON; the kill switch stays for instant rollback).
+  2. **Later migration program** (own sessions, own recon — deliberately NOT part of the
+     shipped redesign): activity-detail React shell (embeds the live thread + F33
+     pre-send safety nudge whose script order is load-bearing), E2EE messaging UI
+     (crypto/IndexedDB/transport must stay byte-identical), Leaflet map screens,
+     3d-force-graph, donation flows.
+  3. **CSP unpkg removal slice**: Leaflet is vendored since Phase 1, so the
+     `https://unpkg.com` allowances in script-src/style-src/img-src can go — needs the
+     two tests that assert them updated in the same commit
+     (apps/web/tests/test_csp_templates.py, apps/ops/tests/test_observability.py).
+  4. **roedu-ui housekeeping**: `claude/csp-safe-styling` (v0.3.0, CSP-safe styling)
+     merged to roedu-ui main; consider GitHub Packages publishing so consumers can drop
+     the vendored-tarball pattern; promote genuinely shared screen components
+     (TabStrip/EventCard patterns) upstream.
+  5. **Legacy layer retirement** (after ALL screens migrate): delete the legacy
+     templates the SPA replaced, collapse the token mirror (frontend/src/theme.ts
+     becomes the single source; static/css/base.css keeps only server-chrome styles),
+     remove the SOCIAL_REACT_UI branches from views.
+  6. The campaigns progress meter keeps the app's one deliberate inline style (dynamic
+     width); revisit if CSP style-src ever needs to cover it (e.g. width-bucket classes).
 - **Redesign Phase 4 shipped** (`claude/redesign-social-p4`) — the redesign program's
   final phase: the sensitive subsystems were restyled IN PLACE, zero behavior changes.
   Messaging (e2ee-messaging.js untouched — it was already fully class-driven, so the P1
