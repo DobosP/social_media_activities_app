@@ -81,6 +81,12 @@ def test_messages_page_hands_client_its_connections():
     usernames = [c["username"] for c in cfg["connections"]]
     assert b.username in usernames
     assert cfg["me"]["username"] == a.username
+    # The inbox now exposes the low-friction start path in the main sidebar, not behind
+    # an advanced disclosure.
+    assert "Start a chat" in page
+    assert "Username or group" in page
+    assert "They must accept before they can read your messages." in page
+    assert "Device and guardian options" in page
 
 
 def test_messages_page_connections_are_empty_without_any():
@@ -89,3 +95,4 @@ def test_messages_page_connections_are_empty_without_any():
     raw = page.split('id="mz-config"', 1)[1].split(">", 1)[1].split("</script>", 1)[0]
     cfg = json.loads(raw)
     assert cfg["connections"] == []
+    assert "Use Start a chat for a username" in page
