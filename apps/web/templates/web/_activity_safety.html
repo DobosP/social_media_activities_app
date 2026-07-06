@@ -1,0 +1,31 @@
+{% load i18n %}
+{% if is_owner and supervised %}
+<div class="card">
+  {% if supervisor_present %}
+    <p class="muted">{% trans "&#10003; A supervising guardian is in place — members can be admitted." %}</p>
+  {% else %}
+    <p>{% trans "This activity requires a supervising guardian. No one can be admitted until one of your guardians joins as a read-only supervisor." %}</p>
+    {% if owner_supervisor_candidates %}
+      <form method="post" action="{% url 'activity_add_supervisor' activity.pk %}" class="stack">
+        {% csrf_token %}
+        <label>{% trans "Add a guardian as supervisor" %}
+          <select name="user_id">
+            {% for g in owner_supervisor_candidates %}<option value="{{ g.id }}">{{ g.display_name|default:g.username }}</option>{% endfor %}
+          </select></label>
+        <button class="btn btn-sm" type="submit">{% trans "Add supervisor" %}</button>
+      </form>
+    {% else %}
+      <p class="muted">{% url 'wards' as wards_url %}{% blocktrans %}You have no registered guardian to add. A guardianship link must be set up first.{% endblocktrans %}</p>
+    {% endif %}
+  {% endif %}
+  <form method="post" action="{% url 'activity_set_supervision' activity.pk %}" class="inline">
+    {% csrf_token %}<input type="hidden" name="supervised" value="off">
+    <button class="btn btn-sm btn-secondary" type="submit">{% trans "Stop requiring a supervisor" %}</button>
+  </form>
+</div>
+{% elif is_owner and is_open and activity.cohort == "child" and activity.guardian_accompanied %}
+<form method="post" action="{% url 'activity_set_supervision' activity.pk %}" class="inline activity-inline-form">
+  {% csrf_token %}<input type="hidden" name="supervised" value="on">
+  <button class="btn btn-sm btn-secondary" type="submit">{% trans "Require a supervising guardian" %}</button>
+</form>
+{% endif %}
