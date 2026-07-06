@@ -35,6 +35,18 @@ def spa_enabled() -> bool:
     return bool(getattr(settings, "SOCIAL_REACT_UI", False))
 
 
+def form_errors(form) -> dict:
+    """Bound-form errors as {field: [messages]} (incl. __all__) for a bootstrap payload.
+
+    P3 form screens keep the classic POST flow: success redirects (flash message
+    renders in the server chrome), failure re-renders the SPA shell with the same
+    bootstrap plus these errors so React can mark the fields.
+    """
+    if form is None or not getattr(form, "is_bound", False):
+        return {}
+    return {field: [str(msg) for msg in msgs] for field, msgs in form.errors.items()}
+
+
 def spa_response(
     request,
     route: str,
@@ -652,3 +664,544 @@ def landing_detail_spa(
             "events": events,
         },
     )
+
+
+# --- account & community screens (P3) -------------------------------------------
+# Recon verdict: every POST on these surfaces redirects (flash in server chrome) —
+# React renders classic forms with the payload csrf; no error marshalling needed.
+# The nav builders below are the single source for account/inbox destinations
+# (recon P1 problem #6): the /you and /settings screens and the tab strips all
+# render from them.
+
+
+def _user_row(u) -> dict:
+    return {"publicId": str(u.public_id), "name": u.display_name or u.username}
+
+
+def account_nav(nav: dict) -> dict:
+    """Grouped account destinations; labels are existing msgids (you.html/settings.html)."""
+    groups = [
+        {
+            "title": _("Profile & preferences"),
+            "links": [
+                {"label": _("Your profile"), "url": reverse("profile")},
+                {"label": _("Interests"), "url": reverse("interests")},
+                {
+                    "label": _("Your topics (tune suggestions)"),
+                    "url": reverse("topic_preferences"),
+                },
+                {"label": _("Access needs"), "url": reverse("access_preferences")},
+                {
+                    "label": _("Display (theme, text size, motion)"),
+                    "url": reverse("display_preferences"),
+                },
+                {"label": _("Age verification"), "url": reverse("verify_age")},
+            ],
+        },
+        {
+            "title": _("Inbox"),
+            "links": [
+                {
+                    "label": _("Alerts"),
+                    "url": reverse("notifications"),
+                    "pill": nav.get("unread_notifications") or 0,
+                },
+                {"label": _("Messages"), "url": reverse("messages")},
+                *(
+                    [{"label": _("Connections"), "url": reverse("connections")}]
+                    if nav.get("connections_enabled")
+                    else []
+                ),
+                {"label": _("Saved searches"), "url": reverse("saved_searches")},
+                {"label": _("Notification settings"), "url": reverse("notification_preferences")},
+            ],
+        },
+        {
+            "title": _("Privacy & safety"),
+            "links": [
+                {"label": _("Privacy & your data"), "url": reverse("my_privacy")},
+                {"label": _("Your safety record"), "url": reverse("safety_record")},
+                {"label": _("Your activity log"), "url": reverse("activity_log")},
+                {"label": _("Wards you look after"), "url": reverse("wards")},
+                *(
+                    [{"label": _("Your guardians"), "url": reverse("guardianship")}]
+                    if nav.get("has_guardians")
+                    else []
+                ),
+            ],
+        },
+        {
+            "title": _("Giving"),
+            "links": [
+                {"label": _("My donations"), "url": reverse("my_donations")},
+                {"label": _("Support this platform"), "url": reverse("donate")},
+                {"label": _("Campaigns"), "url": reverse("campaigns")},
+                {"label": _("Where the money goes"), "url": reverse("transparency")},
+            ],
+        },
+    ]
+    return {"groups": groups, "logoutAction": reverse("logout"), "logoutLabel": _("Log out")}
+
+
+def you_tabs(nav: dict) -> list[dict]:
+    return [
+        {"label": _("Overview"), "url": reverse("you")},
+        {"label": _("Profile"), "url": reverse("profile")},
+        {"label": _("Interests"), "url": reverse("interests")},
+        {"label": _("Display"), "url": reverse("display_preferences")},
+        {"label": _("Privacy & data"), "url": reverse("my_privacy")},
+        {"label": _("Donations"), "url": reverse("my_donations")},
+        *(
+            [{"label": _("Guardians"), "url": reverse("guardianship")}]
+            if nav.get("has_guardians")
+            else []
+        ),
+        {"label": _("Settings"), "url": reverse("settings")},
+    ]
+
+
+def inbox_tabs(nav: dict) -> list[dict]:
+    return [
+        {
+            "label": _("Alerts"),
+            "url": reverse("notifications"),
+            "pill": nav.get("unread_notifications") or 0,
+        },
+        {"label": _("Messages"), "url": reverse("messages")},
+        *(
+            [{"label": _("Connections"), "url": reverse("connections")}]
+            if nav.get("connections_enabled")
+            else []
+        ),
+    ]
+
+
+def you_spa(request, *, nav):
+    user = request.user
+    data = {
+        "name": user.display_name or user.username,
+        "username": user.username,
+        "isGuardian": bool(getattr(user, "is_guardian", False)),
+        "tabs": you_tabs(nav),
+        "nav": account_nav(nav),
+        "ui": {"title": _("Account & settings")},
+    }
+    return spa_response(request, "you", data, title=_("Account & settings"))
+
+
+def settings_spa(request, *, nav, api_token_created, languages, current_language):
+    data = {
+        "tabs": you_tabs(nav),
+        "nav": account_nav(nav),
+        "language": {
+            "action": reverse("set_language"),
+            "next": request.path,
+            "current": current_language,
+            "options": [{"code": code, "name": name} for code, name in languages],
+        },
+        "apiToken": {
+            "created": date_fmt(api_token_created, "D d M Y, H:i") if api_token_created else "",
+            "revokeAction": reverse("api_token_revoke") if api_token_created else "",
+        },
+        "account": {
+            "export": reverse("account_export"),
+            "delete": reverse("account_delete"),
+        },
+        "ui": {
+            "title": _("Settings"),
+            "language": _("Language"),
+            "languageHelp": _("Choose the language this site is shown in."),
+            "save": _("Save"),
+            "apiAccess": _("API access"),
+            "revoke": _("Revoke API access"),
+            "noToken": _("No device currently holds API access to your account."),
+            "yourAccount": _("Your account"),
+            "download": _("Download my data"),
+            "delete": _("Delete my account"),
+        },
+    }
+    return spa_response(request, "settings", data, title=_("Settings"))
+
+
+def profile_spa(
+    request,
+    *,
+    nav,
+    avatar_url,
+    can_participate,
+    provenance,
+    interests,
+    blocked,
+    connections,
+    progression,
+    journey_avatar,
+):
+    user = request.user
+    prov = None
+    if provenance and provenance.get("has_row"):
+        prov = {
+            "isCurrent": bool(provenance.get("is_current")),
+            "bandDisplay": provenance.get("band_display") or "",
+            "provider": provenance.get("provider") or "",
+            "method": provenance.get("method") or "",
+            "verifiedAt": (
+                date_fmt(provenance["verified_at"], "d M Y")
+                if provenance.get("verified_at")
+                else ""
+            ),
+            "expiresAt": (
+                date_fmt(provenance["expires_at"], "d M Y") if provenance.get("expires_at") else ""
+            ),
+            "status": provenance.get("status") or "",
+            "expiresSoon": bool(provenance.get("expires_soon")),
+            "daysLeft": provenance.get("days_left"),
+        }
+    shown = list(connections[:8])
+    data = {
+        "name": user.display_name or user.username,
+        "username": user.username,
+        "ageBand": user.get_age_band_display() if getattr(user, "age_band", None) else "",
+        "identityVerified": bool(getattr(user, "is_identity_verified", False)),
+        "canParticipate": bool(can_participate),
+        "avatarUrl": avatar_url or "",
+        "journeyAvatar": journey_avatar or "",
+        "progression": {
+            "count": progression.get("count", 0),
+            "level": progression.get("level", 0),
+            "maxLevel": progression.get("max_level", 0),
+        }
+        if progression
+        else None,
+        "provenance": prov,
+        "interests": list(interests),
+        "connections": [_user_row(u) for u in shown],
+        "connectionsTotal": len(connections),
+        "blocked": [{"pk": b.pk, "name": b.display_name or b.username} for b in blocked],
+        "tabs": you_tabs(nav),
+        "actions": {
+            "avatarUpload": reverse("avatar_upload"),
+            "connectionMessage": reverse("connection_message"),
+            "unblock": "/users/{pk}/unblock/",
+            "verifyAge": reverse("verify_age"),
+            "interestsEdit": reverse("interests"),
+            "connections": reverse("connections"),
+        },
+        "ui": {
+            "title": _("Profile"),
+            "updatePhoto": _("Update photo"),
+            "journey": _("Your journey"),
+            "interests": _("Interests"),
+            "edit": _("edit"),
+            "connections": _("Connections"),
+            "message": _("Message"),
+            "ageVerification": _("Age verification"),
+            "verifiedAs": _("Verified as:"),
+            "current": _("Current"),
+            "reVerify": _("Re-verify"),
+            "verifyEudi": _("Verify with EU Digital Identity"),
+            "blocked": _("Blocked users"),
+            "unblock": _("unblock"),
+        },
+    }
+    return spa_response(request, "profile", data, title=_("Profile"))
+
+
+def interests_spa(request, *, groups, chosen, chosen_count, starter):
+    data = {
+        "groups": [
+            {
+                "category": cat.name,
+                "types": [
+                    {"slug": t.slug, "name": t.name, "checked": t.slug in chosen} for t in types
+                ],
+            }
+            for cat, types in groups
+        ],
+        "starter": [{"slug": t.slug, "name": t.name, "checked": t.slug in chosen} for t in starter],
+        "chosenCount": chosen_count,
+        "action": reverse("interests"),
+        "ui": {
+            "title": _("Your interests"),
+            "starterHead": _("Popular near you right now"),
+            "save": _("Save interests"),
+        },
+    }
+    return spa_response(request, "interests", data, title=_("Your interests"))
+
+
+def topics_spa(request, *, categories, chosen):
+    data = {
+        "topics": [
+            {
+                "slug": c.slug,
+                "name": c.name,
+                "description": c.description or "",
+                "checked": c.slug in chosen,
+            }
+            for c in categories
+        ],
+        "action": reverse("topic_preferences"),
+        "ui": {
+            "title": _("Your topics"),
+            "lean": _("Topics to lean toward"),
+            "empty": _("No topics are available yet."),
+            "save": _("Save topics"),
+        },
+    }
+    return spa_response(request, "topics", data, title=_("Your topics"))
+
+
+def access_spa(request, *, pref):
+    fields = [
+        ("needs_step_free", _("I need step-free access")),
+        ("needs_accessible_toilet", _("I need an accessible toilet")),
+        ("needs_hearing_loop", _("I need a hearing loop")),
+        ("prefers_quiet", _("I prefer quiet / sensory-friendly places")),
+    ]
+    data = {
+        "fields": [
+            {"name": name, "label": label, "checked": bool(getattr(pref, name, False))}
+            for name, label in fields
+        ],
+        "action": reverse("access_preferences"),
+        "ui": {"title": _("Access preferences"), "save": _("Save preferences")},
+    }
+    return spa_response(request, "access", data, title=_("Access preferences"))
+
+
+def notifications_spa(request, *, items, nav):
+    from apps.web.templatetags.safe_urls import safe_href
+
+    data = {
+        "tabs": inbox_tabs(nav),
+        "items": [
+            {
+                "title": n.title,
+                "body": n.body or "",
+                "why": getattr(n, "why", "") or "",
+                "when": date_fmt(n.created_at, "D d M, H:i"),
+                "url": safe_href(n.url) or "",
+                "unread": n.read_at is None,
+            }
+            for n in items
+        ],
+        "actions": {"readAll": reverse("notifications_read_all")},
+        "urls": {"preferences": reverse("notification_preferences")},
+        "ui": {
+            "title": _("Notifications"),
+            "markAllRead": _("Mark all read"),
+            "settings": _("Notification settings"),
+            "new": _("new"),
+            "view": _("view"),
+            "empty": _("No notifications yet."),
+        },
+    }
+    return spa_response(request, "notifications", data, title=_("Notifications"))
+
+
+def notification_preferences_spa(request, *, rows):
+    data = {
+        "rows": [
+            {
+                "value": r["value"],
+                "label": r["label"],
+                "reason": r["reason"],
+                "muted": bool(r["muted"]),
+            }
+            for r in rows
+        ],
+        "action": reverse("notification_preferences"),
+        "ui": {"title": _("Notification settings"), "save": _("Save settings")},
+    }
+    return spa_response(request, "notification-preferences", data, title=_("Notification settings"))
+
+
+def connections_spa(
+    request,
+    *,
+    nav,
+    connections,
+    conn_page,
+    conn_query,
+    conn_total,
+    incoming,
+    outgoing,
+    query,
+    results,
+):
+    data = {
+        "tabs": inbox_tabs(nav),
+        "searchQuery": query,
+        "results": [_user_row(u) for u in results],
+        "incoming": [{"pk": c.pk, "user": _user_row(c.requester)} for c in incoming],
+        "outgoing": [{"pk": c.pk, "user": _user_row(c.addressee)} for c in outgoing],
+        "connections": [_user_row(u) for u in connections],
+        "filterQuery": conn_query,
+        "total": conn_total,
+        "page": {
+            "number": conn_page.number,
+            "numPages": conn_page.paginator.num_pages,
+            "previous": conn_page.previous_page_number() if conn_page.has_previous() else None,
+            "next": conn_page.next_page_number() if conn_page.has_next() else None,
+        },
+        "actions": {
+            "search": reverse("connections"),
+            "request": reverse("connection_request"),
+            # pk rides in the URL path for these two (see apps/web/urls.py) — the
+            # screen fills the {pk} template, same pattern as unblock/saved-search delete.
+            "respond": "/connections/{pk}/respond/",
+            "withdraw": "/connections/{pk}/withdraw/",
+            "message": reverse("connection_message"),
+            "remove": reverse("connection_remove"),
+        },
+        "ui": {
+            "title": _("Connections"),
+            "searchLabel": _("Search people you've met"),
+            "search": _("Search"),
+            "resultsHead": _("Search results"),
+            "connect": _("Connect"),
+            "incoming": _("Requests to you"),
+            "accept": _("Accept"),
+            "decline": _("Decline"),
+            "outgoing": _("Sent requests"),
+            "pending": _("pending"),
+            "withdraw": _("Withdraw"),
+            "yours": _("Your connections"),
+            "filterLabel": _("Filter your connections"),
+            "filter": _("Filter"),
+            "clear": _("clear"),
+            "message": _("Message"),
+            "remove": _("Remove"),
+            "prev": _("Previous"),
+            "next": _("Next"),
+        },
+    }
+    return spa_response(request, "connections", data, title=_("Connections"))
+
+
+def saved_searches_spa(request, *, items, activity_types, categories, cost_bands, coarse_windows):
+    def item_row(s):
+        what = s.activity_type.name if s.activity_type else (s.category.name if s.category else "")
+        extras = []
+        if getattr(s, "area", None):
+            extras.append(s.area.name)
+        if s.cost_band:
+            extras.append(s.get_cost_band_display())
+        if s.coarse_window:
+            extras.append(s.get_coarse_window_display())
+        if s.beginners:
+            extras.append(_("beginners welcome"))
+        return {"pk": s.pk, "what": what, "extras": extras}
+
+    data = {
+        "items": [item_row(s) for s in items],
+        "options": {
+            "activityTypes": [{"slug": t.slug, "name": t.name} for t in activity_types],
+            "categories": [{"slug": c.slug, "name": c.name} for c in categories],
+            "costBands": [{"value": v, "label": str(label)} for v, label in cost_bands],
+            "coarseWindows": [{"value": v, "label": str(label)} for v, label in coarse_windows],
+        },
+        "actions": {
+            "create": reverse("saved_search_create"),
+            "delete": "/saved-searches/{pk}/delete/",
+        },
+        "next": request.path,
+        "ui": {
+            "title": _("Saved searches"),
+            "createHead": _("Save a new search"),
+            "activityType": _("Activity type"),
+            "orCategory": _("...or a whole category"),
+            "city": _("City (optional)"),
+            "cost": _("Cost (optional)"),
+            "when": _("When (optional)"),
+            "beginners": _("Beginners-welcome activities only"),
+            "save": _("Save search"),
+            "yours": _("Your saved searches"),
+            "remove": _("Remove"),
+        },
+    }
+    return spa_response(request, "saved-searches", data, title=_("Saved searches"))
+
+
+def communities_spa(request, *, page, groups_page, can_create):
+    def page_dict(p):
+        return {
+            "number": p.number,
+            "numPages": p.paginator.num_pages,
+            "previous": p.previous_page_number() if p.has_previous() else None,
+            "next": p.next_page_number() if p.has_next() else None,
+        }
+
+    data = {
+        "groups": [
+            {
+                "pk": g.pk,
+                "url": reverse("group_detail", args=[g.pk]),
+                "title": g.title,
+                "type": g.activity_type.name if g.activity_type else "",
+                "category": g.category.name if getattr(g, "category", None) else "",
+                "area": g.area.name if getattr(g, "area", None) else "",
+                "description": truncatewords(g.description, 22) if g.description else "",
+            }
+            for g in groups_page.object_list
+        ],
+        "communities": [
+            {
+                "slug": c.slug,
+                "url": reverse("community_detail", args=[c.slug]),
+                "name": c.name,
+                "tier": c.tier or "",
+                "category": c.category.name if getattr(c, "category", None) else "",
+                "area": c.area.name if getattr(c, "area", None) else "",
+            }
+            for c in page.object_list
+        ],
+        "pages": {"communities": page_dict(page), "groups": page_dict(groups_page)},
+        "canCreate": bool(can_create),
+        "urls": {
+            "graph": reverse("community_graph"),
+            "createGroup": reverse("group_create"),
+            "action": reverse("communities"),
+        },
+        "ui": {
+            "title": _("Communities & groups"),
+            "graph": _("Explore as a 3D graph"),
+            "startGroup": _("+ Start a group"),
+            "groupsHead": _("Groups — join and belong"),
+            "groupsEmpty": _("No groups here yet."),
+            "startFirst": _("Start the first one."),
+            "communitiesHead": _("Around your city"),
+            "prev": _("Previous"),
+            "next": _("Next"),
+        },
+    }
+    return spa_response(request, "communities", data, title=_("Communities & groups"))
+
+
+def community_detail_spa(request, *, community, activities, linked_group):
+    type_name = (
+        community.activity_type.name
+        if community.activity_type
+        else (community.category.name if getattr(community, "category", None) else "")
+    )
+    data = {
+        "name": community.name,
+        "lead": _("Upcoming %(type_name)s activities in %(area)s — soonest first.")
+        % {"type_name": type_name, "area": community.area.name if community.area else ""},
+        "linkedGroup": (
+            {
+                "url": reverse("group_detail", args=[linked_group.pk]),
+                "label": _("Join the standing group: %(title)s") % {"title": linked_group.title},
+            }
+            if linked_group
+            else None
+        ),
+        "cards": [activity_card(a, request.user) for a in activities],
+        "urls": {"communities": reverse("communities"), "organizeNew": reverse("activity_create")},
+        "ui": {
+            "back": _("Communities"),
+            "empty": _("No upcoming activities here right now."),
+            "organise": _("Organise one"),
+        },
+    }
+    return spa_response(request, "community-detail", data, title=community.name)

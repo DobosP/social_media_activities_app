@@ -188,3 +188,78 @@ def test_public_things_index_spa():
     payload = json.loads(Client().get("/things-to-do/", {"_data": "1"}).content)
     assert payload["route"] == "things-index"
     assert "cities" in payload["data"]
+
+
+P3_SCREENS = [
+    ("/you/", "web/you.html", "you"),
+    ("/settings/", "web/settings.html", "settings"),
+    ("/profile/", "web/profile.html", "profile"),
+    ("/interests/", "web/interests.html", "interests"),
+    ("/topics/", "web/topic_preferences.html", "topics"),
+    ("/access/", "web/access_preferences.html", "access"),
+    ("/notifications/", "web/notifications.html", "notifications"),
+    (
+        "/notifications/preferences/",
+        "web/notification_preferences.html",
+        "notification-preferences",
+    ),
+    ("/connections/", "web/connections.html", "connections"),
+    ("/saved-searches/", "web/saved_searches.html", "saved-searches"),
+    ("/communities/", "web/communities.html", "communities"),
+]
+
+
+def test_p3_flag_off_serves_legacy_templates():
+    client = _client(_user("p3-legacy"))
+    for url, template, _route in P3_SCREENS:
+        response = client.get(url)
+        assert response.status_code == 200, url
+        assert template in [t.name for t in response.templates], url
+
+
+@override_settings(SOCIAL_REACT_UI=True)
+def test_p3_flag_on_serves_spa_shell_and_json():
+    client = _client(_user("p3-spa"))
+    for url, _template, route in P3_SCREENS:
+        response = client.get(url)
+        assert response.status_code == 200, url
+        assert "web/spa.html" in [t.name for t in response.templates], url
+        assert f'data-route="{route}"' in response.content.decode(), url
+        payload = json.loads(client.get(url, {"_data": "1"}).content)
+        assert payload["route"] == route, url
+        assert payload["csrf"], url
+
+
+@override_settings(SOCIAL_REACT_UI=True)
+def test_p3_account_nav_single_source():
+    client = _client(_user("p3-nav"))
+    you = json.loads(client.get("/you/", {"_data": "1"}).content)["data"]
+    settings_payload = json.loads(client.get("/settings/", {"_data": "1"}).content)["data"]
+    groups = [g["title"] for g in you["nav"]["groups"]]
+    assert groups == [g["title"] for g in settings_payload["nav"]["groups"]]
+    assert you["tabs"] == settings_payload["tabs"]
+    assert you["nav"]["logoutAction"]
+
+
+@override_settings(SOCIAL_REACT_UI=True)
+def test_p3_community_detail_reuses_card_contract():
+    from apps.accounts.models import Cohort
+    from apps.communities.models import Area, Community
+
+    user = _user("p3-community")
+    activity = _activity(user, title="Community pickup")
+    area = Area.objects.create(name="Cluj-Napoca", slug="cluj-napoca")
+    community = Community.objects.create(
+        cohort=Cohort.ADULT,
+        area=area,
+        category=activity.activity_type.category,
+        activity_type=activity.activity_type,
+        tier=Community.Tier.TYPE,
+        slug="basketball-cluj",
+        name="Basketball in Cluj",
+        is_published=True,
+    )
+    client = _client(user)
+    payload = json.loads(client.get(f"/communities/{community.slug}/", {"_data": "1"}).content)
+    assert payload["route"] == "community-detail"
+    assert payload["data"]["name"] == "Basketball in Cluj"
