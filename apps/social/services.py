@@ -330,7 +330,7 @@ def search_activities(viewer, query, *, beginners=False, limit=SEARCH_MAX_RESULT
         qs = qs.filter(beginners_welcome=True)
     return (
         activity_search_filter(qs, query)
-        .select_related("place", "activity_type", "owner")
+        .select_related("place", "activity_type", "owner", "cover")
         .order_by("starts_at", "id")[: max(1, min(int(limit), SEARCH_MAX_RESULTS))]
     )
 

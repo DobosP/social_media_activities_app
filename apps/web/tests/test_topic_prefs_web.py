@@ -181,6 +181,23 @@ def test_browse_modes_allow_cover_images_without_engagement_telemetry():
     assert 'data-view="list"' in c.get("/activities/?view=swipe").content.decode()
 
 
+def test_home_activity_sections_render_contextual_visuals_without_media_feed_behaviour():
+    user = _adult("tpw-home-visual")
+    _, _, bball = _topics()
+    covered = _activity(user, bball, "Home hoops")
+    _activity(user, bball, "Home fallback")
+    upload_activity_cover(user, covered, _png(), alt_text="Home court")
+
+    body = _client(user).get("/").content.decode()
+    assert "Home hoops" in body and "Home fallback" in body
+    assert "activity-cover-file" in body
+    assert 'alt="Home court"' in body
+    assert 'class="card-visual card-accent"' in body
+    assert "<video" not in body.lower()
+    assert 'name="like"' not in body and 'name="pass"' not in body
+    assert "/like" not in body and "/pass" not in body
+
+
 def test_cards_mode_renders_a_focused_deck():
     user = _adult("tpw-card")
     _, _, bball = _topics()
