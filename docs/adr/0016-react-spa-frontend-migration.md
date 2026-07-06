@@ -55,8 +55,15 @@ Constraints that hold throughout:
    **`/my-meetups/` deliberately stays server-rendered**: it is the F38 offline-saved
    safety page (meeting points readable with no signal); its delivery must not depend on
    SPA hydration. activity_detail.html split into five partials (header/safety/organizer/
-   membership/thread — behavior-identical; React migration of its shell plus the public
-   places/events/things-to-do screens with the SEO-snapshot mechanism = P2b.
+   membership/thread — behavior-identical).
+   **P2b (shipped)**: public SEO screens — events, places list, things-to-do
+   index/city/detail — as React screens with full head parity (description, robots incl.
+   noindex-on-filtered, JSON-LD, RSS alternates, breadcrumb data) plus a server-rendered
+   crawler/noscript snapshot inside `#root` (`web/snapshots/*`, replaced on hydration).
+   Public `?_data=1` payloads omit the CSRF token so `cache_public` keeps applying.
+   **The activity_detail React shell is deferred to the sensitive-subsystems track**: it
+   embeds the live thread + F33 pre-send safety nudge (script-order-sensitive) and ~25
+   POST flows — exactly the "complex, migrate last" bucket.
 3. **Profile/settings/communities** in React; child-safety screens (wards, guardianship,
    verify-age, privacy/safety records, account delete) stay Django + restyle only.
 4. **Sensitive subsystems restyled in place** (messaging, maps, graph, donations, legal).

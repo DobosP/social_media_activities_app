@@ -15,13 +15,19 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
 
 ## Current state
 
-- **Redesign Phase 2a shipped** (`claude/redesign-social-p2`): home, activities browse
-  (list + card deck), and organizer console rebuilt as React screens fed by per-view JSON
+- **Redesign Phase 2 shipped** (`claude/redesign-social-p2`): home, activities browse
+  (list + card deck), organizer console, **and the public SEO screens (events, places
+  list, things-to-do index/city/detail)** rebuilt as React screens fed by per-view JSON
   bootstrap (`apps/web/views_spa.py` + `web/spa.html` + `?_data=1` soft navigation), behind
   the **`SOCIAL_REACT_UI` kill switch (default OFF — legacy SSR + full test suite unchanged;
-  dev defaults ON)**. `/my-meetups/` intentionally stays SSR (F38 offline safety page).
-  `activity_detail.html` split into 5 behavior-identical partials. P2b next: activity
-  detail shell + public SEO screens (places/events/things-to-do) with crawler snapshots.
+  dev defaults ON)**. Public screens keep full SEO parity when the flag is on: same
+  meta description/robots (noindex on filtered), JSON-LD, RSS alternates, breadcrumbs,
+  plus a server-rendered crawler/noscript snapshot inside `#root` (web/snapshots/*) that
+  React replaces on hydration; their `?_data=1` payloads carry no CSRF token so
+  `cache_public` still applies. `/my-meetups/` intentionally stays SSR (F38 offline safety
+  page). `activity_detail.html` split into 5 behavior-identical partials; its React shell
+  is deferred to the sensitive track (embeds the thread + pre-send safety nudge).
+  Remaining inline-style leftovers need a small new-utility set — folded into Phase 3.
 - **Frontend redesign program is underway** (ADR-0016, branches `claude/redesign-social-p*`):
   React/Vite SPA with shared `@roedu/ui` (v0.3.0, CSP-safe) and the bespoke "Aurora Social"
   theme (indigo/teal, mobile-first, dark-native). Phase 1 shipped: token rebrand of the
