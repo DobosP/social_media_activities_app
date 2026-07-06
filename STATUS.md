@@ -15,6 +15,13 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
 
 ## Current state
 
+- **Redesign Phase 2a shipped** (`claude/redesign-social-p2`): home, activities browse
+  (list + card deck), and organizer console rebuilt as React screens fed by per-view JSON
+  bootstrap (`apps/web/views_spa.py` + `web/spa.html` + `?_data=1` soft navigation), behind
+  the **`SOCIAL_REACT_UI` kill switch (default OFF — legacy SSR + full test suite unchanged;
+  dev defaults ON)**. `/my-meetups/` intentionally stays SSR (F38 offline safety page).
+  `activity_detail.html` split into 5 behavior-identical partials. P2b next: activity
+  detail shell + public SEO screens (places/events/things-to-do) with crawler snapshots.
 - **Frontend redesign program is underway** (ADR-0016, branches `claude/redesign-social-p*`):
   React/Vite SPA with shared `@roedu/ui` (v0.3.0, CSP-safe) and the bespoke "Aurora Social"
   theme (indigo/teal, mobile-first, dark-native). Phase 1 shipped: token rebrand of the

@@ -44,9 +44,19 @@ Constraints that hold throughout:
    defined; vendored Leaflet assets (CSP unpkg allowance kept — removing it is a
    follow-up hardening slice with test updates); inline-style cleanup batch 1;
    DEBUG-only `/app/preview/` pipeline proof.
-2. **High-traffic screens** in React: authenticated home, browse deck/list, my-meetups,
-   organize; activity_detail split into partials then migrated (thread island kept);
-   public places/events/things-to-do in React with the SEO-snapshot mechanism.
+2. **High-traffic screens** in React (P2a shipped): authenticated home, browse deck/list,
+   organize — one Django view per screen serving BOTH the SPA shell (web/spa.html,
+   `nonced_json_script` bootstrap island) and `?_data=1` JSON for client-side navigation
+   (apps/web/views_spa.py builders reuse the legacy views' service results; display
+   strings ship pre-translated/pre-formatted — no new msgids, no client i18n).
+   Gated by the **`SOCIAL_REACT_UI` kill switch** (default OFF; dev ON): the legacy
+   templates keep rendering — and the test suite keeps asserting them — until the flag
+   flips per environment (same pattern as ro_teacher's `RO_TEACHER_REACT_UI`).
+   **`/my-meetups/` deliberately stays server-rendered**: it is the F38 offline-saved
+   safety page (meeting points readable with no signal); its delivery must not depend on
+   SPA hydration. activity_detail.html split into five partials (header/safety/organizer/
+   membership/thread — behavior-identical; React migration of its shell plus the public
+   places/events/things-to-do screens with the SEO-snapshot mechanism = P2b.
 3. **Profile/settings/communities** in React; child-safety screens (wards, guardianship,
    verify-age, privacy/safety records, account delete) stay Django + restyle only.
 4. **Sensitive subsystems restyled in place** (messaging, maps, graph, donations, legal).
