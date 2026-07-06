@@ -15,6 +15,7 @@ THEMES = ("auto", "light", "dark", "contrast")
 TEXT_SIZES = ("normal", "large", "larger")
 MOTIONS = ("auto", "reduce", "full")
 
+
 def _pick(value, allowed, default):
     return value if value in allowed else default
 
