@@ -24,12 +24,14 @@
   <meta property="og:locale" content="{{ og_locale }}">
   {% comment %}Text-first: a summary card (no large image — there is no og:image by design).{% endcomment %}
   <meta name="twitter:card" content="summary">
+  <link rel="preload" href="{% static 'fonts/bricolage-grotesque-latin-ext-wght-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="{% static 'fonts/bricolage-grotesque-latin-wght-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
   {% block structured_data %}{% endblock %}
   {% if breadcrumb_data %}<script nonce="{{ request.csp_nonce }}" type="application/ld+json">{{ breadcrumb_data }}</script>{% endif %}
   {% block head %}{% endblock %}
 </head>
-<body>
+<body{% if user.is_authenticated %} class="has-tabbar"{% endif %}>
 <a class="skip-link" href="#main">{% trans "Skip to main content" %}</a>
 <header class="site-header" role="banner">
   <div class="container nav-wrap">
@@ -116,6 +118,31 @@
   {% endif %}
   {% block content %}{% endblock %}
 </main>
+
+{% if user.is_authenticated %}
+{% comment %}Mobile bottom tab bar — the primary phone navigation (fixed, <880px only,
+   see base.css .tabbar). Plain server-rendered links (JS-free); labels reuse existing
+   translated strings; active state from the resolved URL name.{% endcomment %}
+{% with url_name=request.resolver_match.url_name %}
+<nav class="tabbar" aria-label="{% trans 'Menu' %}">
+  <a href="{% url 'home' %}"{% if url_name == 'home' %} class="is-active" aria-current="page"{% endif %}>
+    <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>
+    {% trans "Activities" %}</a>
+  <a href="{% url 'activity_list' %}"{% if url_name == 'activity_list' or url_name == 'activity_detail' %} class="is-active" aria-current="page"{% endif %}>
+    <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg>
+    {% trans "Browse" %}</a>
+  <a class="tab-cta{% if url_name == 'activity_create' %} is-active{% endif %}" href="{% url 'activity_create' %}"{% if url_name == 'activity_create' %} aria-current="page"{% endif %}>
+    <span class="ico-wrap"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>
+    {% trans "Organize" %}</a>
+  <a href="{% url 'notifications' %}"{% if url_name == 'notifications' or url_name == 'messages' or url_name == 'connections' %} class="is-active" aria-current="page"{% endif %}>
+    <span class="ico-wrap"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>{% if unread_notifications %}<span class="pill">{{ unread_notifications }}</span>{% endif %}</span>
+    {% trans "Inbox" %}</a>
+  <a href="{% url 'you' %}"{% if url_name == 'you' or url_name == 'profile' or url_name == 'settings' %} class="is-active" aria-current="page"{% endif %}>
+    <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-3.9 3.6-6.5 8-6.5s8 2.6 8 6.5"/></svg>
+    {% trans "Profile" %}</a>
+</nav>
+{% endwith %}
+{% endif %}
 
 <footer class="site-footer" role="contentinfo">
   <div class="container">
