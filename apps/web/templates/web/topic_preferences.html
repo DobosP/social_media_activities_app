@@ -11,7 +11,7 @@
     {% for cat in categories %}
     <label class="row" style="gap:.5rem;align-items:flex-start;margin:.35rem 0">
       <input type="checkbox" name="topics" value="{{ cat.slug }}"{% if cat.slug in chosen %} checked{% endif %}>
-      <span><strong>{{ cat.name }}</strong>{% if cat.description %}<br><span class="muted" style="font-size:.8rem">{{ cat.description }}</span>{% endif %}</span>
+      <span><strong>{{ cat.name }}</strong>{% if cat.description %}<br><span class="muted u-text-sm">{{ cat.description }}</span>{% endif %}</span>
     </label>
     {% empty %}
     <p class="muted">{% trans "No topics are available yet." %}</p>

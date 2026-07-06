@@ -36,7 +36,7 @@
     <form method="post" action="{% url 'series_set_next_note' series.pk %}" class="stack" style="margin-top:.8rem">{% csrf_token %}
       <label for="{{ next_note_form.next_instance_note.id_for_label }}">{% trans "Heads-up for the next meetup" %}</label>
       {{ next_note_form.next_instance_note }}
-      <span class="muted" style="font-size:.78rem">{% trans "Added to the next scheduled meetup's organiser note, then cleared automatically. Leave blank to clear." %}</span>
+      <span class="muted u-text-note">{% trans "Added to the next scheduled meetup's organiser note, then cleared automatically. Leave blank to clear." %}</span>
       <div><button class="btn btn-sm" type="submit">{% trans "Save heads-up" %}</button></div>
     </form>
   {% endif %}

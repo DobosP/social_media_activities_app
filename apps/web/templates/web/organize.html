@@ -10,7 +10,7 @@
   <div class="card">
     <strong><a href="{% url 'activity_detail' row.activity.pk %}">{{ row.activity.title }}</a></strong>
     <span class="tag">{{ row.activity.activity_type.name }}</span>
-    <p class="muted" style="margin:.3rem 0 0">&#128197; {{ row.activity.starts_at|date:"D d M, H:i" }}{% if row.activity.place %} &middot; {{ row.activity.place.display_name|default:row.activity.place.name }}{% endif %}</p>
+    <p class="muted u-my-xs">&#128197; {{ row.activity.starts_at|date:"D d M, H:i" }}{% if row.activity.place %} &middot; {{ row.activity.place.display_name|default:row.activity.place.name }}{% endif %}</p>
     {% comment %}W2-F5/W3-F5: functional action chips (work to do), never a vanity score. Each links
        to the existing screen that performs the action — this console performs nothing.{% endcomment %}
     {% if row.pending_joins or row.needs_supervisor or row.missing_meeting_point or row.quorum.remaining_needed or row.readiness.missing_what_to_bring or row.readiness.missing_getting_home or row.readiness.near_capacity or row.venue_flag %}
@@ -42,7 +42,7 @@
     <div class="card">
       <strong><a href="{% url 'series_detail' s.pk %}">{{ s.title }}</a></strong>
       <span class="tag">{{ s.get_cadence_display }}</span>
-      {% if s.next_starts_at %}<p class="muted" style="margin:.3rem 0 0">{% blocktrans with when=s.next_starts_at|date:"D d M, H:i" %}Next: {{ when }}{% endblocktrans %}</p>{% endif %}
+      {% if s.next_starts_at %}<p class="muted u-my-xs">{% blocktrans with when=s.next_starts_at|date:"D d M, H:i" %}Next: {{ when }}{% endblocktrans %}</p>{% endif %}
     </div>
   {% endfor %}
 {% endif %}

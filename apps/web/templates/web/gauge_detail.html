@@ -12,7 +12,7 @@
 <div class="card card-accent">
   {% if ready %}
     <strong>{% trans "Ready to start" %}</strong>
-    <p style="margin:.3rem 0 0">{% trans "Enough people are interested to start this as a real meetup." %}</p>
+    <p class="u-my-xs">{% trans "Enough people are interested to start this as a real meetup." %}</p>
   {% else %}
     <strong>{% blocktrans count counter=remaining %}Needs {{ counter }} more to be ready{% plural %}Needs {{ counter }} more to be ready{% endblocktrans %}</strong>
   {% endif %}

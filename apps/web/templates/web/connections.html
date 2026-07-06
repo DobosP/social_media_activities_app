@@ -12,7 +12,7 @@
 <form method="get" action="{% url 'connections' %}" class="row" role="search" style="margin:1rem 0">
   <label class="visually-hidden" for="conn-q">{% trans "Search people you've met" %}</label>
   <input id="conn-q" name="q" value="{{ query }}" autocomplete="off"
-         placeholder="{% trans "Search someone you've met by name..." %}" style="flex:1">
+         placeholder="{% trans "Search someone you've met by name..." %}" class="u-flex-1">
   <button class="btn btn-sm" type="submit">{% trans "Search" %}</button>
 </form>
 
@@ -70,7 +70,7 @@
 <form method="get" action="{% url 'connections' %}" class="row" role="search" style="margin:.5rem 0">
   <label class="visually-hidden" for="conn-cq">{% trans "Filter your connections" %}</label>
   <input id="conn-cq" name="cq" value="{{ conn_query }}" autocomplete="off"
-         placeholder="{% trans 'Filter your connections…' %}" style="flex:1">
+         placeholder="{% trans 'Filter your connections…' %}" class="u-flex-1">
   <button class="btn btn-sm btn-secondary" type="submit">{% trans "Filter" %}</button>
   {% if conn_query %}<a class="muted" href="{% url 'connections' %}">{% trans "clear" %}</a>{% endif %}
 </form>
