@@ -83,6 +83,7 @@ from apps.social.models import (
     Post,
 )
 from apps.taxonomy.models import ActivityType
+from apps.web import views_spa
 
 from .forms import (
     _DT_FORMATS,
@@ -967,11 +968,27 @@ def home(request):
             memberships__state=Membership.State.MEMBER,
             status=Activity.Status.OPEN,
         )
-        .select_related("place", "activity_type")
+        .select_related("place", "activity_type", "cover")  # cover: ADR-0016 card visuals
         .prefetch_related("place__corrections")  # F20
         .distinct()
         .order_by("starts_at")
     )
+    if views_spa.spa_enabled():
+        # ADR-0016: same computed feed, React presentation. Legacy render below
+        # stays the default until the SOCIAL_REACT_UI switch flips.
+        return views_spa.home_spa(
+            request,
+            recommended=recommended,
+            starter_types=starter_types,
+            beginners=beginners,
+            upcoming=upcoming,
+            mine=mine,
+            events=feed["events"],
+            group_updates=feed["group_updates"],
+            near_active=near_active,
+            beginners_only=beginners_only,
+            guardian_invites=list(pending_guardian_invites_for(user)),
+        )
     return render(
         request,
         "web/home.html",
@@ -1456,6 +1473,19 @@ def activity_list(request):
     for k in ("view", "page"):
         base_params.pop(k, None)
     base_qs = base_params.urlencode()
+    if views_spa.spa_enabled():
+        return views_spa.browse_spa(
+            request,
+            activities=activities,
+            page_obj=page_obj,
+            view_mode=view_mode,
+            query=query,
+            did_you_mean=did_you_mean,
+            did_you_mean_q=did_you_mean_q,
+            near_active=near_active,
+            beginners_only=beginners_only,
+            base_qs=base_qs,
+        )
     return render(
         request,
         "web/activities.html",
@@ -2567,6 +2597,8 @@ def organize(request):
     with the concrete action it needs now. Read-only; every row links into the existing
     edit/admit/announce screens (the service performs nothing)."""
     console = social.organizer_console(request.user)
+    if views_spa.spa_enabled():
+        return views_spa.organize_spa(request, **console)
     return render(request, "web/organize.html", {**console, **_nav_context(request.user)})
 
 

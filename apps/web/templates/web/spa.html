@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load csp_helpers spa_assets %}
+{% comment %}Shell for React-migrated screens (ADR-0016 Phase 2). Server chrome
+   (header, tab bar, footer, flash messages) stays Django-rendered around the
+   React root; the screen's data rides in the nonced JSON island below. Public
+   SEO screens add per-route meta + a crawler/noscript snapshot via the blocks.{% endcomment %}
+{% block title %}{{ spa_title }}{% endblock %}
+{% block content %}
+<div id="root" data-route="{{ spa_route }}">
+  {% block spa_snapshot %}{% endblock %}
+</div>
+<noscript><p class="banner">{% block spa_noscript %}{{ spa_title }}{% endblock %}</p></noscript>
+{% nonced_json_script spa_bootstrap "spa-bootstrap" %}
+{% endblock %}
+{% block scripts %}{% spa_entry "src/main.tsx" %}{% endblock %}

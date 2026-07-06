@@ -189,6 +189,11 @@ else:
 # apps.ops.middleware.PermissionsPolicyMiddleware so the report-to directive above resolves.
 CSP_REPORTING_ENDPOINTS = {"csp": "/api/v1/ops/csp-report/"}
 
+# ADR-0016 kill switch: migrated web screens serve the React SPA shell instead of their
+# legacy templates. Default OFF everywhere (tests keep asserting the SSR output); dev
+# defaults it ON for review; prod flips per-environment once a phase is verified.
+SOCIAL_REACT_UI = env.bool("SOCIAL_REACT_UI", default=False)
+
 # Prometheus /metrics is gated on a bearer token — CLOSED BY DEFAULT (empty token => 403), never
 # world-readable. Set METRICS_TOKEN and have the scraper send `Authorization: Bearer <token>`.
 METRICS_TOKEN = env("METRICS_TOKEN", default="")
