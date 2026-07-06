@@ -2,7 +2,7 @@
 {% load i18n static %}
 {% block title %}{% trans "Organise an activity" %}{% endblock %}
 {% block head %}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">
 {% endblock %}
 {% block content %}
 <h1>{% trans "Organise an activity" %}</h1>
@@ -35,6 +35,6 @@ never stored or submitted (the only thing saved is which existing public place y
 </form>
 {% endblock %}
 {% block scripts %}
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
 <script src="{% static 'js/place-picker.js' %}" defer></script>
 {% endblock %}

@@ -2,7 +2,7 @@
 {% load i18n static %}
 {% block title %}{% trans "Places" %}{% endblock %}
 {% block head %}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">
 {% endblock %}
 {% block content %}
 <h1>{% trans "Places" %}</h1>
@@ -17,6 +17,6 @@
      data-link-label="{% trans 'View & organise' %} &rarr;"></div>
 {% endblock %}
 {% block scripts %}
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
 <script src="{% static 'js/places-map.js' %}" defer></script>
 {% endblock %}
