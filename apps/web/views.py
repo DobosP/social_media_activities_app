@@ -4280,3 +4280,9 @@ def gauge_convert(request, pk):
         "web/gauge_convert.html",
         {"form": form, "gauge": gauge, **_nav_context(request.user)},
     )
+
+
+@login_required
+def spa_preview(request):
+    """Phase-1 React pipeline proof (DEBUG-only URL): Aurora design preview."""
+    return render(request, "web/spa_preview.html", _nav_context(request.user))

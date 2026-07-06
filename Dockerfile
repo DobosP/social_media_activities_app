@@ -1,3 +1,15 @@
+# --- Frontend build stage: the React/Vite SPA (frontend/) compiles to hashed
+# static assets + a manifest that collectstatic below bakes into the image.
+# @roedu/ui comes from the committed tarball in frontend/vendor/ (no registry auth).
+FROM node:22-slim AS frontend
+
+WORKDIR /fe/frontend
+COPY frontend/package.json frontend/package-lock.json ./
+COPY frontend/vendor ./vendor
+RUN npm ci
+COPY frontend ./
+RUN npm run build
+
 FROM python:3.12-slim AS base
 
 ENV PYTHONUNBUFFERED=1 \
@@ -18,6 +30,10 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
+
+# Built SPA assets from the frontend stage (vite outDir is ../static/frontend,
+# i.e. /fe/static/frontend there) land where STATICFILES_DIRS expects them.
+COPY --from=frontend /fe/static/frontend /app/static/frontend
 
 # Bake static assets into the image so WhiteNoise can serve them at runtime.
 # collectstatic needs no database connection. Prod settings now require DJANGO_SECRET_KEY

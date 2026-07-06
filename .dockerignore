@@ -10,3 +10,5 @@ __pycache__
 .env
 *.md
 !README.md
+frontend/node_modules
+static/frontend

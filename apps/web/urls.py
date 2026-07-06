@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import views as auth_views
 from django.urls import path
 from django.views.decorators.cache import cache_control
@@ -271,3 +272,8 @@ urlpatterns = [
     path("account/calendar.ics", views.my_calendar, name="my_calendar"),  # W3-F18 self-only .ics
     path("account/delete/", views.account_delete, name="account_delete"),
 ]
+
+# DEBUG-only: Phase-1 React/Vite pipeline proof (Aurora design preview). Real SPA
+# routes arrive with redesign Phase 2 and will not be DEBUG-gated.
+if settings.DEBUG:
+    urlpatterns += [path("app/preview/", views.spa_preview, name="spa_preview")]
