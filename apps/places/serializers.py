@@ -2,7 +2,7 @@ from rest_framework import serializers
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
 from .models import Place, PlaceActivity
-from .services import place_top_level_categories
+from .services import derived_place_label, place_top_level_categories
 
 
 class PlaceActivitySerializer(serializers.ModelSerializer):
@@ -24,10 +24,13 @@ class PlaceSerializer(GeoFeatureModelSerializer):
     image_thumb = serializers.SerializerMethodField()
     # F20 / W3-F14: render the crowd-corrected name/address/hours (each falls back to raw OSM) so
     # the corrected schedule and `open_now` agree. `opening_hours_raw` stays the canonical OSM text.
-    name = serializers.CharField(source="display_name", read_only=True)
+    name = serializers.SerializerMethodField()
     display_address = serializers.CharField(read_only=True)
     opening_hours = serializers.JSONField(source="display_opening_hours", read_only=True)
     attribution_credit = serializers.SerializerMethodField()
+
+    def get_name(self, obj):
+        return derived_place_label(obj)
 
     def get_activities(self, obj):
         # F26: disputed edges are hidden from discovery. Filter in Python over the prefetch.

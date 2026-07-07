@@ -3,6 +3,7 @@ from collections import Counter
 
 from django.conf import settings
 from django.contrib.gis.geos import Point
+from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
@@ -54,6 +55,11 @@ class Command(BaseCommand):
             "--with-website",
             action="store_true",
             help="Only ingest places that have a website (reservation-capable venues first).",
+        )
+        parser.add_argument(
+            "--aggregate",
+            action="store_true",
+            help="After ingest, merge unnamed sport sub-venues into nearby named complexes.",
         )
 
     def _build_adapter(self, source: str, opts) -> SourceAdapter:
@@ -137,6 +143,13 @@ class Command(BaseCommand):
             self._upsert(raw, matches, types, counts, dedup=dedup)
 
         self._report(dry_run, counts, unmapped)
+        if opts["aggregate"] and source in {"osm", "overture"}:
+            aggregate_opts = {"source": source, "dry_run": dry_run}
+            if opts["bbox"]:
+                aggregate_opts["bbox"] = opts["bbox"]
+            elif city:
+                aggregate_opts["city"] = city
+            call_command("aggregate_unnamed_places", **aggregate_opts)
 
     @staticmethod
     def _unmapped_signature(raw: RawPlace) -> str:

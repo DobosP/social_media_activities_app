@@ -15,6 +15,12 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
 
 ## Current state
 
+- **Lane C map-quality work is implemented locally** (2026-07-07, ADR-0021): the places map
+  now filters typed/selected concepts and category chips via high-confidence (`>=0.5`) GeoJSON
+  place-activity edges client-side; unnamed places render read-time labels from their strongest
+  non-disputed activity edge; and `aggregate_unnamed_places` plus opt-in `ingest_places --aggregate`
+  can merge unnamed OSM/Overture sport sub-venues into nearby named public complexes. API filter
+  defaults stay unchanged; explicit `min_confidence` composes with activity/category filters.
 - **ADR-0020 shipped** (2026-07-07, owner feedback on ADR-0019): activities can carry up to 2
   envelope-gated **secondary types** (search/filters match them; chips on cards); the create/edit
   form is a **step wizard** (Ce → Unde → Când și cât → Detalii; no-JS renders stacked) with a

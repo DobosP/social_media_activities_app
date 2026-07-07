@@ -84,6 +84,28 @@ def place_top_level_categories(place) -> list[dict]:
     return [{"slug": slug, "name": name} for slug, name in pairs.items()]
 
 
+def derived_place_label(place) -> str:
+    """Read-time label for unnamed imported places; never writes back to Place."""
+    display_name = (getattr(place, "display_name", "") or "").strip()
+    if display_name:
+        return display_name
+
+    edges = [
+        edge
+        for edge in place.place_activities.all()
+        if not edge.is_disputed and getattr(edge, "activity", None) is not None
+    ]
+    if not edges:
+        return ""
+
+    edge = max(edges, key=lambda item: (item.confidence, item.id or 0))
+    category = edge.activity.category
+    top_category = category.parent or category
+    # i18n-followup: Romanian-first synthetic labels for unnamed map data.
+    prefix = "Teren" if top_category.slug == "sport" else "Spațiu"
+    return f"{prefix} {edge.activity.name}"
+
+
 FACT_TRUE = "true"
 FACT_FALSE = "false"
 FACT_LIMITED = "limited"

@@ -29,7 +29,7 @@
         </figure>
       {% endif %}
       <div class="place-list-body">
-        <a href="{% url 'place_detail' p.pk %}">{{ p.name|default:_("Unnamed place") }}</a>
+        <a href="{% url 'place_detail' p.pk %}">{{ p.label|default:_("Unnamed place") }}</a>
         {% if p.address_street %}<span class="muted">&middot; {{ p.address_street }}{% if p.address_city %}, {{ p.address_city }}{% endif %}</span>{% elif p.address_city %}<span class="muted">&middot; {{ p.address_city }}</span>{% endif %}
         {% if p.distance %}<span class="muted">&middot; {% blocktrans with meters=p.distance.m|floatformat:0 %}{{ meters }} m away{% endblocktrans %}</span>{% endif %}
         <span class="place-row-chips">
