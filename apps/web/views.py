@@ -13,7 +13,7 @@ from django.contrib.auth.views import LoginView
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -121,6 +121,51 @@ def _can_create_group(user) -> bool:
     return user.cohort in getattr(settings, "GROUPS_USER_CREATION_COHORTS", ["adult"])
 
 
+def _top_level_category(category):
+    seen = set()
+    while getattr(category, "parent", None) is not None and category.pk not in seen:
+        seen.add(category.pk)
+        category = category.parent
+    return category
+
+
+def activity_type_vocabulary():
+    """Tiny client vocabulary for ADR-0020 concept comboboxes."""
+    from apps.taxonomy.models import ActivityRelation
+
+    types = list(
+        ActivityType.objects.filter(is_active=True)
+        .select_related("category__parent")
+        .order_by("name")
+    )
+    by_id = {t.id: t for t in types}
+    aliases = {t.id: [a for a in (t.aliases or []) if isinstance(a, str)] for t in types}
+    relations = ActivityRelation.objects.filter(
+        Q(source_id__in=by_id) | Q(target_id__in=by_id),
+        kind__in=[ActivityRelation.Kind.SYNONYM, ActivityRelation.Kind.VARIANT],
+    ).select_related("source", "target")
+    for rel in relations:
+        if rel.source_id in by_id and rel.target_id in by_id:
+            aliases[rel.source_id].extend([rel.target.name, rel.target.slug])
+            if rel.symmetric:
+                aliases[rel.target_id].extend([rel.source.name, rel.source.slug])
+    rows = []
+    for activity_type in types:
+        category = _top_level_category(activity_type.category)
+        deduped_aliases = list(dict.fromkeys(aliases[activity_type.id]))
+        rows.append(
+            {
+                "id": activity_type.id,
+                "slug": activity_type.slug,
+                "name": activity_type.name,
+                "aliases": deduped_aliases,
+                "category": category.slug,
+                "categoryName": category.name,
+            }
+        )
+    return rows
+
+
 @login_required
 def communities_page(request):
     """W5: the ONE communities surface — joinable standing groups and auto-detected
@@ -183,7 +228,8 @@ def community_detail(request, slug):
     activities = list(
         communities.community_activities(community, request.user)
         .select_related("place", "activity_type", "owner", "cover")
-        .prefetch_related("place__corrections")[:limit]  # F20: _activity_card display_name
+        # F20 display_name + ADR-0020 secondary chips without per-card N+1.
+        .prefetch_related("place__corrections", "secondary_types")[:limit]
     )
     # Read-time linkage: if a standing GROUP exists on the same (cohort, area, type/category)
     # coordinate AND is visible to this viewer, offer a "join the standing group" link (name only,
@@ -292,7 +338,8 @@ def group_detail(request, pk):
     feed = list(
         social.group_feed_activities(group, user)
         .select_related("place", "activity_type", "owner", "cover")
-        .prefetch_related("place__corrections")[:50]  # F20: _activity_card display_name
+        # F20 display_name + ADR-0020 secondary chips without per-card N+1.
+        .prefetch_related("place__corrections", "secondary_types")[:50]
     )
 
     # The moderated thread (members who pass the read gate). @mentions are NOT resolved on group
@@ -986,7 +1033,7 @@ def home(request):
         .filter(status=Activity.Status.OPEN, starts_at__gte=timezone.now())
         .exclude(id__in=beginners_ids)  # W3-F11: not a third copy of the promoted strip cards
         .select_related("place", "activity_type", "owner", "cover")
-        .prefetch_related("place__corrections")  # F20: display_name without per-card N+1
+        .prefetch_related("place__corrections", "secondary_types")  # F20 + ADR-0020 chips
     )
     if beginners_only:
         upcoming_qs = upcoming_qs.filter(beginners_welcome=True)
@@ -1002,7 +1049,7 @@ def home(request):
             status=Activity.Status.OPEN,
         )
         .select_related("place", "activity_type", "cover")
-        .prefetch_related("place__corrections")  # F20
+        .prefetch_related("place__corrections", "secondary_types")  # F20 + ADR-0020 chips
         .distinct()
         .order_by("starts_at")
     )
@@ -1182,7 +1229,8 @@ def place_detail(request, pk, slug=None):
             social.visible_activities(request.user)
             .filter(place=place, status=Activity.Status.OPEN, starts_at__gte=timezone.now())
             .select_related("place", "activity_type", "owner", "cover")
-            .prefetch_related("place__corrections")  # F20: _activity_card display_name
+            # F20 display_name + ADR-0020 secondary chips without per-card N+1.
+            .prefetch_related("place__corrections", "secondary_types")
             .order_by("starts_at")
         )
     events = (
@@ -1534,7 +1582,7 @@ def _visible_activity_or_404(user, pk) -> Activity:
     activity = get_object_or_404(
         Activity.objects.select_related(
             "place", "activity_type", "owner", "thread"
-        ).prefetch_related("place__corrections"),
+        ).prefetch_related("place__corrections", "secondary_types"),
         pk=pk,
     )
     # Staff/moderators may still open removed content (for review/appeal); members may not.
@@ -1559,7 +1607,7 @@ def activity_list(request):
         activities = list(
             social.search_activities(
                 request.user, query, beginners=beginners_only
-            ).prefetch_related("place__corrections")  # F20
+            ).prefetch_related("place__corrections", "secondary_types")  # F20 + ADR-0020 chips
         )
         if not activities:
             did_you_mean = social.search_did_you_mean(request.user, query)
@@ -1568,7 +1616,8 @@ def activity_list(request):
             social.visible_activities(request.user)
             .filter(status=Activity.Status.OPEN, starts_at__gte=timezone.now())
             .select_related("place", "activity_type", "owner", "cover")
-            .prefetch_related("place__corrections")  # F20: _activity_card display_name
+            # F20 display_name + ADR-0020 secondary chips without per-card N+1.
+            .prefetch_related("place__corrections", "secondary_types")
         )
         if beginners_only:
             activities = activities.filter(beginners_welcome=True)
@@ -1991,7 +2040,15 @@ def activity_create(request):
                 return redirect("activity_detail", pk=activity.pk)
     else:
         form = ActivityForm(initial=initial, user=request.user)
-    return render(request, "web/activity_form.html", {"form": form, **_nav_context(request.user)})
+    return render(
+        request,
+        "web/activity_form.html",
+        {
+            "form": form,
+            "type_vocabulary": activity_type_vocabulary(),
+            **_nav_context(request.user),
+        },
+    )
 
 
 # --- F4: recurring series (web) ------------------------------------------------------
@@ -2125,7 +2182,11 @@ def activity_edit(request, pk):
         messages.error(request, "Only the organiser can edit this activity.")
         return redirect("activity_detail", pk=pk)
     if request.method == "POST":
-        form = ActivityEditForm(request.POST, user=request.user)
+        form = ActivityEditForm(
+            request.POST,
+            user=request.user,
+            initial={"activity_type": activity.activity_type_id},
+        )
         if form.is_valid():
             fields = dict(form.cleaned_data)
             new_place = fields.pop("place", None)
@@ -2145,6 +2206,8 @@ def activity_edit(request, pk):
             user=request.user,
             initial={
                 "place": activity.place_id,
+                "activity_type": activity.activity_type_id,
+                "secondary_types": list(activity.secondary_types.values_list("pk", flat=True)),
                 "title": activity.title,
                 "description": activity.description,
                 "starts_at": activity.starts_at,
@@ -2167,7 +2230,12 @@ def activity_edit(request, pk):
     return render(
         request,
         "web/activity_edit.html",
-        {"form": form, "activity": activity, **_nav_context(request.user)},
+        {
+            "form": form,
+            "activity": activity,
+            "type_vocabulary": activity_type_vocabulary(),
+            **_nav_context(request.user),
+        },
     )
 
 

@@ -111,6 +111,7 @@ def activity_card(a, viewer) -> dict:
         vis = {"kind": "accent", "svg": activity_accent_svg(seed)}
 
     tags = [a.activity_type.name]
+    tags.extend(t.name for t in a.secondary_types.all())
     if a.cost_band and a.cost_band != "unspecified":
         tags.append(a.get_cost_band_display())
     if a.difficulty and a.difficulty != "unspecified":

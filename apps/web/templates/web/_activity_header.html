@@ -3,6 +3,7 @@
 <h1>{{ activity.title }}</h1>
 <div>
   <span class="tag">{{ activity.activity_type.name }}</span>
+  {% for secondary_type in activity.secondary_types.all %}<span class="tag tag-muted">{{ secondary_type.name }}</span>{% endfor %}
   {% if activity.cost_amount or activity.cost_amount == 0 %}
     {% if activity.cost_note %}
       <span class="tag">{% blocktrans with amount=activity.cost_amount note=activity.cost_note %}≈ {{ amount }} RON — {{ note }}{% endblocktrans %}</span>

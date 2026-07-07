@@ -176,30 +176,40 @@ class ActivityForm(forms.Form):
         ),
     )
 
-    # ADR-0019 §4: progressive disclosure. The template renders one <details> group per
-    # section (Essentials open; the rest collapsed) instead of a 20-field wall. Field
-    # names not listed (e.g. supervised, place, activity_type, title, starts_at) render
-    # in the always-open essentials block.
-    ESSENTIAL_FIELDS = (
-        "place",
-        "activity_type",
-        "secondary_types",
-        "title",
-        "starts_at",
-        "supervised",
-    )
-    SECTIONS = (
-        ("schedule", "Schedule & size", ("description", "ends_at", "capacity", "min_to_go")),
-        ("cost", "Cost", ("cost_band", "cost_amount", "cost_note")),
+    # ADR-0020 §2: one POST, progressively enhanced stepper. With JS off the template
+    # renders all fieldsets stacked; with JS on form-wizard.js shows one panel at a time.
+    STEPS = (
         (
-            "access",
-            "Accessibility & welcome",
-            ("difficulty", "accessibility_notes", "beginners_welcome", "first_time_note"),
+            "what",
+            "Ce faceți",
+            ("activity_type", "secondary_types", "title", "description"),
+        ),
+        ("where", "Unde", ("place", "supervised")),
+        (
+            "when",
+            "Când și cât",
+            (
+                "starts_at",
+                "ends_at",
+                "capacity",
+                "min_to_go",
+                "cost_band",
+                "cost_amount",
+                "cost_note",
+            ),
         ),
         (
-            "logistics",
-            "Logistics for members",
-            ("meeting_point", "what_to_bring", "organizer_note"),
+            "details",
+            "Detalii",
+            (
+                "difficulty",
+                "accessibility_notes",
+                "beginners_welcome",
+                "first_time_note",
+                "meeting_point",
+                "what_to_bring",
+                "organizer_note",
+            ),
         ),
     )
 
@@ -212,15 +222,21 @@ class ActivityForm(forms.Form):
         # the form never offers an option create_activity would reject.
         if user is None or getattr(user, "cohort", None) != Cohort.CHILD:
             self.fields.pop("supervised", None)
+        self._mark_combobox_fields()
 
-    def essential_fields(self):
-        return [self[name] for name in self.ESSENTIAL_FIELDS if name in self.fields]
+    def _mark_combobox_fields(self):
+        if "activity_type" in self.fields:
+            self.fields["activity_type"].widget.attrs["data-combobox"] = "single"
+        if "secondary_types" in self.fields:
+            self.fields["secondary_types"].widget.attrs.update(
+                {"data-combobox": "multiple", "data-combobox-max": "2"}
+            )
 
-    def sections(self):
-        """(key, title, [bound fields]) groups for the template's <details> rendering."""
+    def steps(self):
+        """(key, title, [bound fields]) groups for the wizard template."""
         return [
             (key, title, [self[name] for name in names if name in self.fields])
-            for key, title, names in self.SECTIONS
+            for key, title, names in self.STEPS
         ]
 
     def clean(self):
@@ -317,6 +333,13 @@ class ActivityEditForm(forms.Form):
     notifies every member."""
 
     place = forms.ModelChoiceField(queryset=Place.objects.none())
+    activity_type = forms.ModelChoiceField(
+        queryset=ActivityType.objects.filter(is_active=True).order_by("name"),
+        required=False,
+        disabled=True,
+        label="Activity type",
+        help_text="The primary type is fixed after the activity is created.",
+    )
     secondary_types = forms.ModelMultipleChoiceField(
         queryset=ActivityType.objects.filter(is_active=True).order_by("name"),
         required=False,
@@ -368,8 +391,7 @@ class ActivityEditForm(forms.Form):
         help_text="Tick if first-timers are explicitly welcome.",
     )
 
-    ESSENTIAL_FIELDS = ("place", "secondary_types", "title", "starts_at")
-    SECTIONS = ActivityForm.SECTIONS
+    STEPS = ActivityForm.STEPS
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -379,9 +401,10 @@ class ActivityEditForm(forms.Form):
         ].help_text = (
             "Changing the venue notifies every member (the meetup moves, it doesn't restart)."
         )
+        self._mark_combobox_fields()
 
-    essential_fields = ActivityForm.essential_fields
-    sections = ActivityForm.sections
+    _mark_combobox_fields = ActivityForm._mark_combobox_fields
+    steps = ActivityForm.steps
 
     def clean(self):
         cleaned = super().clean()

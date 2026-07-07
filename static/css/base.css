@@ -397,6 +397,7 @@ small { font-size: .82rem; }
   background: var(--chip-bg); color: var(--chip-fg);
   padding: .15rem .55rem; border-radius: var(--r-pill); margin: 0 .25rem .2rem 0;
 }
+.tag-muted { background: var(--bg-subtle); color: var(--muted); }
 a.tag:hover { background: var(--accent-weak); color: var(--accent-strong); text-decoration: none; }
 .score { float: right; color: var(--accent); font-weight: 700; font-size: .82rem; }
 
@@ -426,6 +427,43 @@ ul.errorlist { color: var(--warn-fg); padding-left: 1rem; margin: .2rem 0; }
 .form-section > summary { cursor: pointer; font-weight: 700; }
 .form-section-body { margin-top: .75rem; }
 .muted-link { color: var(--muted); }
+.wizard-steps { display: flex; flex-wrap: wrap; gap: .45rem; margin: 1rem 0; }
+.wizard-step {
+  display: inline-flex; align-items: center; gap: .4rem; min-height: 2.35rem;
+  border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--card);
+  color: var(--fg); cursor: pointer; font: inherit; font-weight: 650; padding: .4rem .65rem;
+}
+.wizard-step.is-active { background: var(--accent-weak); border-color: var(--accent); color: var(--accent-strong); }
+.wizard-step-index {
+  display: inline-flex; align-items: center; justify-content: center; width: 1.45rem; height: 1.45rem;
+  border-radius: var(--r-pill); background: var(--chip-bg); color: var(--chip-fg); font-size: .78rem;
+}
+.wizard-step.is-active .wizard-step-index { background: var(--accent); color: var(--accent-fg); }
+.wizard-actions { margin-top: 1rem; }
+.combobox { position: relative; display: flex; flex-direction: column; gap: .35rem; }
+.combobox-list {
+  position: absolute; left: 0; right: 0; top: calc(100% + .2rem); z-index: 20;
+  display: flex; flex-direction: column; max-height: 15rem; overflow: auto;
+  border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--card); box-shadow: var(--shadow-pop);
+}
+.combobox-option {
+  width: 100%; border: 0; border-radius: 0; background: var(--card); color: var(--fg);
+  cursor: pointer; font: inherit; text-align: left; padding: .5rem .65rem;
+}
+.combobox-option:hover, .combobox-option.is-active { background: var(--bg-subtle); }
+.combobox-option.is-disabled { color: var(--muted); cursor: default; }
+.combobox-chips { display: flex; flex-wrap: wrap; gap: .35rem; }
+.combobox-chip {
+  display: inline-flex; align-items: center; gap: .25rem; padding: .18rem .45rem;
+  border-radius: var(--r-pill); background: var(--bg-subtle); color: var(--muted); font-size: .82rem; font-weight: 650;
+}
+.combobox-chip-remove {
+  border: 0; background: transparent; color: inherit; cursor: pointer; font: inherit; line-height: 1; padding: 0 .1rem;
+}
+@media (max-width: 640px) {
+  .wizard-step, .wizard-actions .btn { width: 100%; }
+  .wizard-actions { align-items: stretch; }
+}
 .interest-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: .35rem; }
 .interest-grid label { font-weight: 400; display: flex; gap: .45rem; align-items: center; }
 

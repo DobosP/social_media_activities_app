@@ -1,0 +1,38 @@
+{% load csp_helpers i18n %}
+{% nonced_json_script type_vocabulary "activity-type-vocabulary" %}
+<form method="post" class="stack activity-wizard" data-wizard>{% csrf_token %}
+  <nav class="wizard-steps" hidden aria-label="{% trans 'Form steps' %}">
+    {% for key, title, fields in form.steps %}
+      <button type="button" class="wizard-step" data-wizard-step="{{ forloop.counter0 }}">
+        <span class="wizard-step-index">{{ forloop.counter }}</span>
+        <span>{{ title }}</span>
+      </button>
+    {% endfor %}
+  </nav>
+
+  {% for key, title, fields in form.steps %}
+    <fieldset class="form-section wizard-panel" data-wizard-panel data-step-key="{{ key }}">
+      <legend>{{ title }}</legend>
+      <div class="form-section-body">
+        {% for field in fields %}
+          <div class="form-field">
+            {{ field.errors }}
+            {{ field.label_tag }}
+            {{ field }}
+            {% if field.help_text %}<div class="helptext">{{ field.help_text }}</div>{% endif %}
+            {% if field.name == "place" and show_place_propose %}
+              <div class="helptext"><a class="muted-link" href="{% url 'place_propose' %}?return=organize">{% trans "Can't find the place? Add a missing place →" %}</a></div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </fieldset>
+  {% endfor %}
+
+  <div class="row activity-form-actions wizard-actions">
+    <button class="btn btn-secondary" type="button" data-wizard-back hidden>{% trans "Back" %}</button>
+    <button class="btn" type="button" data-wizard-next hidden>{% trans "Next" %}</button>
+    <button class="btn" type="submit" data-wizard-submit>{{ submit_label }}</button>
+    {% if cancel_url %}<a class="btn btn-secondary" href="{{ cancel_url }}">{% trans "Cancel" %}</a>{% endif %}
+  </div>
+</form>

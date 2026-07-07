@@ -141,6 +141,7 @@ def public_activities():
             owner__is_active=True,
         )
         .select_related("activity_type", "place")
+        .prefetch_related("secondary_types")
         .order_by("starts_at")
     )
 
@@ -440,7 +441,7 @@ def organizer_console(user) -> dict:
         .select_related("place", "activity_type")
         # F20: the template renders place.display_name, which reads place.corrections — prefetch
         # so the list stays O(1) queries (the established pattern on every display_name surface).
-        .prefetch_related("place__corrections")
+        .prefetch_related("place__corrections", "secondary_types")
         # F5: batch every per-row read onto the single console queryset so the up-to-100-row list
         # stays O(1) queries — never an attendance_summary()/participant_count()/hours_reliable()
         # call inside the comprehension below. distinct=True is load-bearing: the counts span two
