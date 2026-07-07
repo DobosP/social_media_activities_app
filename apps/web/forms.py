@@ -116,6 +116,12 @@ class ActivityForm(forms.Form):
     activity_type = forms.ModelChoiceField(
         queryset=ActivityType.objects.filter(is_active=True).order_by("name")
     )
+    secondary_types = forms.ModelMultipleChoiceField(
+        queryset=ActivityType.objects.filter(is_active=True).order_by("name"),
+        required=False,
+        label="Also counts as",
+        help_text="Optional — up to 2 more types, so more people find it.",
+    )
     title = forms.CharField(max_length=200)
     description = forms.CharField(widget=forms.Textarea(attrs={"rows": 4}), required=False)
     starts_at = _dt_field()
@@ -174,7 +180,14 @@ class ActivityForm(forms.Form):
     # section (Essentials open; the rest collapsed) instead of a 20-field wall. Field
     # names not listed (e.g. supervised, place, activity_type, title, starts_at) render
     # in the always-open essentials block.
-    ESSENTIAL_FIELDS = ("place", "activity_type", "title", "starts_at", "supervised")
+    ESSENTIAL_FIELDS = (
+        "place",
+        "activity_type",
+        "secondary_types",
+        "title",
+        "starts_at",
+        "supervised",
+    )
     SECTIONS = (
         ("schedule", "Schedule & size", ("description", "ends_at", "capacity", "min_to_go")),
         ("cost", "Cost", ("cost_band", "cost_amount", "cost_note")),
@@ -304,6 +317,12 @@ class ActivityEditForm(forms.Form):
     notifies every member."""
 
     place = forms.ModelChoiceField(queryset=Place.objects.none())
+    secondary_types = forms.ModelMultipleChoiceField(
+        queryset=ActivityType.objects.filter(is_active=True).order_by("name"),
+        required=False,
+        label="Also counts as",
+        help_text="Optional — up to 2 more types, so more people find it.",
+    )
     title = forms.CharField(max_length=200)
     description = forms.CharField(widget=forms.Textarea(attrs={"rows": 4}), required=False)
     starts_at = _dt_field()
@@ -349,7 +368,7 @@ class ActivityEditForm(forms.Form):
         help_text="Tick if first-timers are explicitly welcome.",
     )
 
-    ESSENTIAL_FIELDS = ("place", "title", "starts_at")
+    ESSENTIAL_FIELDS = ("place", "secondary_types", "title", "starts_at")
     SECTIONS = ActivityForm.SECTIONS
 
     def __init__(self, *args, user=None, **kwargs):

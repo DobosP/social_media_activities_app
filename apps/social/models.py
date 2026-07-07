@@ -49,6 +49,13 @@ class Activity(models.Model):
     activity_type = models.ForeignKey(
         "taxonomy.ActivityType", on_delete=models.PROTECT, related_name="social_activities"
     )
+    # ADR-0020: optional SECONDARY types (cap 2, enforced in services). The FK above stays
+    # the PRIMARY type — cohort/envelope/series/community contracts key on it; secondaries
+    # only broaden discovery matching and card chips. Guardian category envelopes are
+    # enforced on EVERY type at create/edit (see create_activity / update_activity).
+    secondary_types = models.ManyToManyField(
+        "taxonomy.ActivityType", blank=True, related_name="secondary_activities"
+    )
 
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
