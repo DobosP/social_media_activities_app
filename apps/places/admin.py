@@ -10,6 +10,7 @@ from .models import (
     Partner,
     Place,
     PlaceActivity,
+    PlaceClaim,
     PlaceCorrection,
 )
 from .services import clear_open_now_reports, staff_publish_correction, staff_reject_correction
@@ -135,3 +136,42 @@ class ApprovedChildVenueAdmin(admin.ModelAdmin):
     search_fields = ("place__name", "note")
     autocomplete_fields = ("place", "approved_by")
     readonly_fields = ("created_at",)
+
+
+@admin.register(PlaceClaim)
+class PlaceClaimAdmin(admin.ModelAdmin):
+    """ADR-0019 §6: the staff review queue for venue claims. Approve creates/refreshes the
+    verified partner stewarding the place; both decisions notify the claimant and audit."""
+
+    list_display = ("place", "org_name", "kind", "claimant", "status", "created_at")
+    list_filter = ("status", "kind")
+    search_fields = ("place__name", "org_name", "cui", "claimant__username")
+    autocomplete_fields = ("place", "claimant")
+    readonly_fields = ("created_at", "decided_by", "decided_at", "partner")
+    actions = ("approve_claims", "reject_claims")
+
+    @admin.action(description="Approve selected pending claims")
+    def approve_claims(self, request, queryset):
+        from .services import ClaimError, approve_place_claim
+
+        done = 0
+        for claim in queryset.filter(status=PlaceClaim.Status.PENDING):
+            try:
+                approve_place_claim(request.user, claim)
+                done += 1
+            except ClaimError as exc:
+                self.message_user(request, f"{claim}: {exc}", level=30)
+        self.message_user(request, f"Approved {done} claim(s).")
+
+    @admin.action(description="Reject selected pending claims")
+    def reject_claims(self, request, queryset):
+        from .services import ClaimError, reject_place_claim
+
+        done = 0
+        for claim in queryset.filter(status=PlaceClaim.Status.PENDING):
+            try:
+                reject_place_claim(request.user, claim)
+                done += 1
+            except ClaimError as exc:
+                self.message_user(request, f"{claim}: {exc}", level=30)
+        self.message_user(request, f"Rejected {done} claim(s).")

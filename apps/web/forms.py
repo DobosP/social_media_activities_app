@@ -2,7 +2,7 @@ from django import forms
 
 from apps.accounts.models import AgeBand, Cohort
 from apps.donations.models import Campaign
-from apps.places.models import Place
+from apps.places.models import Partner, Place
 from apps.safety.models import ReasonCode
 from apps.social.models import Activity, ActivityInterest, ActivitySeries
 from apps.social.serializers import (
@@ -458,3 +458,35 @@ class GaugeConvertForm(forms.Form):
         if starts and ends and ends < starts:
             self.add_error("ends_at", "End time cannot be before the start time.")
         return cleaned
+
+
+class PlaceClaimForm(forms.Form):
+    """ADR-0019 §6: 'Is this your venue?' — a business/institution asks to steward a place.
+    Staff verify in the admin; nothing on the venue changes until approval."""
+
+    org_name = forms.CharField(max_length=255, label="Organisation / business name")
+    kind = forms.ChoiceField(
+        choices=Partner.Kind.choices,
+        initial=Partner.Kind.BUSINESS,
+        label="What kind of organisation is it?",
+    )
+    official_website = forms.URLField(
+        required=False, max_length=500, label="Official website", assume_scheme="https"
+    )
+    contact_email = forms.EmailField(
+        required=False,
+        label="Contact email",
+        help_text="Ideally on the organisation's own domain — it speeds up verification.",
+    )
+    cui = forms.CharField(
+        required=False,
+        max_length=16,
+        label="CUI (company registry id)",
+        help_text="Optional, but the fastest way for us to verify a business.",
+    )
+    evidence = forms.CharField(
+        required=False,
+        max_length=500,
+        widget=forms.Textarea(attrs={"rows": 3}),
+        label="How can we verify you run this venue?",
+    )
