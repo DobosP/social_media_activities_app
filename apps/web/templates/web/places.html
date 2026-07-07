@@ -2,7 +2,7 @@
 {% load i18n static %}
 {% block title %}{% trans "Places" %}{% endblock %}
 {% block head %}
-<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">
+<link rel="stylesheet" href="{% static 'vendor/maplibre/maplibre-gl.css' %}">
 {% endblock %}
 {% block content %}
 <h1>{% trans "Places" %}</h1>
@@ -10,13 +10,25 @@
 <p><a href="{% url 'places_list' %}">{% trans "View as a text list (no map needed)" %} &rarr;</a>
   {% if user.is_authenticated %}&middot; <a href="{% url 'place_propose' %}">{% trans "Add a missing place" %}</a>
   &middot; <a href="{% url 'places_pending' %}">{% trans "Pending places" %}</a>{% endif %}</p>
+{# i18n-followup: new temporary English aria label for the map filter row. #}
+<div class="map-chip-row" aria-label="Place map filters">
+  {% for category in categories %}
+    <button class="map-chip" type="button" data-map-filter="category" data-filter-value="{{ category.slug }}" aria-pressed="false">{{ category.name }}</button>
+  {% endfor %}
+  {# i18n-followup: new temporary English label for the map filter. #}
+  <button class="map-chip" type="button" data-map-filter="has-upcoming" aria-pressed="false">Happening soon</button>
+  <button class="map-chip" type="button" data-map-filter="open-now" aria-pressed="false">{% trans "Open now" %}</button>
+</div>
 <div id="map"
+     class="places-map"
      data-places-url="/api/places/?page_size=500"
      data-place-path="/places/"
+     data-worker-url="{% static 'vendor/maplibre/maplibre-gl-csp-worker.js' %}"
      data-unnamed="{% trans 'Unnamed place' %}"
+     data-open-now-label="{% trans 'Open now' %}"
      data-link-label="{% trans 'View & organise' %} &rarr;"></div>
 {% endblock %}
 {% block scripts %}
-<script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
+<script src="{% static 'vendor/maplibre/maplibre-gl-csp.js' %}"></script>
 <script src="{% static 'js/places-map.js' %}" defer></script>
 {% endblock %}

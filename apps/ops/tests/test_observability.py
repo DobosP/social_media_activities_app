@@ -177,6 +177,7 @@ def test_csp_header_carries_report_directives_and_reporting_endpoints():
     csp = resp.get("Content-Security-Policy-Report-Only", "")
     assert f"report-uri {_CSP_REPORT_URL}" in csp
     assert "report-to csp" in csp
+    assert "connect-src 'self' ws: wss: https://tiles.openfreemap.org" in csp
     assert f'csp="{_CSP_REPORT_URL}"' in resp.get("Reporting-Endpoints", "")
 
 

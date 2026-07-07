@@ -7,8 +7,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework_gis.filters import InBBoxFilter
 from rest_framework_gis.pagination import GeoJsonPagination
 
-from .filters import PlaceFilter
-from .models import Place
+from .filters import PlaceFilter, annotate_has_upcoming
+from .models import Place, PlaceActivity
 from .serializers import PlaceSerializer
 
 # Hard ceiling on how many places one request may pull, regardless of the
@@ -45,7 +45,7 @@ class PlaceViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         from datetime import timedelta
 
-        from django.db.models import Count, Q
+        from django.db.models import Count, Prefetch, Q
         from django.utils import timezone
 
         from .services import _open_now_settings, public_places
@@ -59,7 +59,13 @@ class PlaceViewSet(viewsets.ReadOnlyModelViewSet):
             public_places(
                 # F20: prefetch corrections so the serializer's display_name/display_address
                 # don't fire a per-place query across the (up to 500-place) list.
-                Place.objects.prefetch_related("place_activities__activity", "corrections")
+                Place.objects.prefetch_related(
+                    Prefetch(
+                        "place_activities",
+                        queryset=PlaceActivity.objects.select_related("activity__category__parent"),
+                    ),
+                    "corrections",
+                )
             )
             .annotate(
                 recent_report_n=Count(
@@ -69,6 +75,7 @@ class PlaceViewSet(viewsets.ReadOnlyModelViewSet):
             )
             .order_by("id")
         )
+        qs = annotate_has_upcoming(qs, self.request.user)
         params = self.request.query_params
         near_lon, near_lat = params.get("near_lon"), params.get("near_lat")
         if near_lon is not None and near_lat is not None:

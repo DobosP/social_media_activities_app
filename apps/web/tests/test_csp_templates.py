@@ -67,8 +67,18 @@ def test_csp_report_only_policy_has_nonce_ready_script_src_without_inline_script
     assert "script-src 'self' https://unpkg.com" in csp
     assert "'unsafe-inline'" not in csp.split("script-src", 1)[1].split(";", 1)[0]
     assert "'unsafe-inline'" not in csp.split("style-src", 1)[1].split(";", 1)[0]
+    assert "connect-src 'self' ws: wss: https://tiles.openfreemap.org" in csp
     assert "report-uri /api/v1/ops/csp-report/" in csp
     assert resp.get("Content-Security-Policy", "") == ""
+
+
+def test_places_map_uses_vendored_maplibre_without_leaflet():
+    html = Client().get("/places/").content.decode()
+
+    assert "vendor/maplibre/maplibre-gl.css" in html
+    assert "vendor/maplibre/maplibre-gl-csp.js" in html
+    assert "vendor/maplibre/maplibre-gl-csp-worker.js" in html
+    assert "vendor/leaflet" not in html
 
 
 def test_nonced_json_script_adds_matching_header_nonce_on_messages_page():

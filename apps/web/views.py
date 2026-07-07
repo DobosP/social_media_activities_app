@@ -54,7 +54,7 @@ from apps.media.services import (
 from apps.notifications import services as notifications
 from apps.notifications.models import Notification
 from apps.places.filters import PlaceFilter
-from apps.places.models import Place
+from apps.places.models import Place, PlaceActivity
 from apps.places.services import (
     accessibility_facts,
     accessibility_facts_display,
@@ -1040,8 +1040,35 @@ def home(request):
     )
 
 
+def _places_map_categories(city=""):
+    from apps.places.services import public_places
+
+    places = public_places(Place.objects.all())
+    if city:
+        places = places.filter(address_city__iexact=city)
+    edges = (
+        PlaceActivity.objects.filter(place__in=places, is_disputed=False)
+        .select_related("activity__category__parent")
+        .order_by("activity__category__parent__name", "activity__category__name")
+    )
+    categories = {}
+    for edge in edges:
+        category = edge.activity.category
+        top = category.parent or category
+        categories.setdefault(top.slug, {"slug": top.slug, "name": top.name})
+    return sorted(categories.values(), key=lambda row: row["name"].casefold())
+
+
 def places_map(request):
-    return render(request, "web/places.html", _nav_context(request.user))
+    city = request.GET.get("city", "")
+    return render(
+        request,
+        "web/places.html",
+        {
+            "categories": _places_map_categories(city),
+            **_nav_context(request.user),
+        },
+    )
 
 
 def places_list(request):
