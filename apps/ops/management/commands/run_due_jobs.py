@@ -49,6 +49,7 @@ DUE_JOBS = (
     ("spawn_due_series", {}),
     ("match_saved_searches", {}),
     ("sync_event_feeds", {}),
+    ("sync_roedu", {}),  # ADR-0019 §7: roedu venues + event facts + Commons covers (opt-in)
     ("expire_api_tokens", {}),
     ("indexnow_batch_submit", {}),  # ping Bing/Yandex with recently-changed public URLs (opt-in)
     # Drain the durable off-request task queue LAST, so any task an earlier job enqueued this tick

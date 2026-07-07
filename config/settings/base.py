@@ -156,6 +156,11 @@ ASGI_APPLICATION = "config.asgi.application"
 # from static files, nonces the remaining JSON script islands, and keeps key SSR pages free of
 # inline style attributes/blocks. Flip DJANGO_CSP_ENFORCE=True only after reviewing collected
 # reports from /api/v1/ops/csp-report/ for the deployed templates/assets.
+# ADR-0019 §7: the daily sync_roedu due-job is an explicit operator opt-in (the RO-EDU
+# serving layer isn't reachable from every environment; a skip must not fail the tick).
+ROEDU_SYNC_ENABLED = env.bool("ROEDU_SYNC_ENABLED", default=False)
+ROEDU_SYNC_CITY = env("ROEDU_SYNC_CITY", default="Cluj-Napoca")
+
 _CONTENT_SECURITY_POLICY = {
     "DIRECTIVES": {
         "default-src": ["'self'"],
