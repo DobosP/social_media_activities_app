@@ -69,8 +69,9 @@ Quickstart + the local Docker recipe (host Postgres on 5432 → untracked `docke
 
 ## Git policy
 
-Branch/worktree per slice; commit locally on green; **do not push or merge unless Paul explicitly
-asks**. `git diff --check` before finishing. Full agent rules: `AGENTS.md`.
+Branch/worktree per slice; commit on green. **Direct merge + push to `main` is allowed once the
+test gate is green** (owner decision 2026-07-07, development phase — never land a red suite).
+`git diff --check` before finishing. Full agent rules: `AGENTS.md`.
 
 ## Docs map
 
