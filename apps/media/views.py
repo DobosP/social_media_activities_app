@@ -27,6 +27,7 @@ from .services import (
     maybe_presigned_url,
     resolve_activity_cover_token,
     resolve_attachment_token,
+    resolve_place_cover_token,
     resolve_signed_token,
     signed_url,
     thread_photos,
@@ -244,6 +245,25 @@ class ActivityCoverFileView(APIView):
         viewer = request.user if request.user.is_authenticated else None
         try:
             cover = resolve_activity_cover_token(token, viewer)
+        except NotAuthorized as exc:
+            raise PermissionDenied(str(exc)) from exc
+        presigned = maybe_presigned_url(cover.storage_key, content_type=cover.content_type)
+        if presigned:
+            return _temporary_redirect(presigned)
+        data = get_storage().open(cover.storage_key)
+        resp = HttpResponse(data, content_type=cover.content_type)
+        resp["X-Content-Type-Options"] = "nosniff"
+        return resp
+
+
+class PlaceCoverFileView(APIView):
+    """Serve a signed place-cover URL after re-checking the place is public."""
+
+    permission_classes = [AllowAny]
+
+    def get(self, request, token):
+        try:
+            cover = resolve_place_cover_token(token)
         except NotAuthorized as exc:
             raise PermissionDenied(str(exc)) from exc
         presigned = maybe_presigned_url(cover.storage_key, content_type=cover.content_type)

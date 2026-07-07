@@ -820,3 +820,30 @@ def pending_corrections(place, viewer=None) -> list:
             }
         )
     return out
+
+
+def place_visual(place) -> dict:
+    """The place-card/hero visual contract (ADR-0019 §2): the cached Commons/business
+    cover when the place is public and has one, else a deterministic generated accent
+    (same machinery as activity cards — ADR-0007). Cover dicts carry ``attribution``,
+    which MUST be rendered next to the image (license compliance)."""
+    from apps.media.services import place_cover_signed_url
+
+    cover = getattr(place, "cover", None)
+    if cover is not None and cover.storage_key:
+        url = place_cover_signed_url(cover)
+        if url:
+            return {
+                "kind": "place_cover_photo",
+                "url": url,
+                "alt": cover.alt_text or place.display_name,
+                "attribution": cover.attribution,
+                "license_name": cover.license_name,
+                "source_page_url": cover.source_page_url,
+            }
+    from apps.accounts.avatars import activity_accent_svg
+
+    edges = [e for e in place.place_activities.all() if not e.is_disputed]
+    seed_hint = edges[0].activity.slug if edges else place.address_city
+    seed = f"place:{seed_hint}:{place.display_name or place.pk}"
+    return {"kind": "accent", "svg": activity_accent_svg(seed)}

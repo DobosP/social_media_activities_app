@@ -855,3 +855,40 @@ def attachments_for_posts(posts, viewer):
             att.expired = True
         by_post.setdefault(att.post_id, []).append(att)
     return by_post
+
+
+# --- Place covers (ADR-0019 §2) -------------------------------------------------------
+# Venue images are public content on public places: no viewer binding, but the place's
+# public status is re-checked at BOTH issue and resolve time so a hidden/pending venue
+# never leaks its image through an old link.
+
+_PLACE_COVER_SIGNING_SALT = "media.place_cover_url"
+
+
+def _place_is_public(place_id) -> bool:
+    from apps.places.services import public_places
+
+    return public_places().filter(pk=place_id).exists()
+
+
+def place_cover_signed_url(cover) -> str | None:
+    """A short-lived serving URL for a public place's cover, or None."""
+    if not cover or not cover.storage_key or not _place_is_public(cover.place_id):
+        return None
+    token = signing.dumps({"place_cover_id": cover.id}, salt=_PLACE_COVER_SIGNING_SALT)
+    return f"/api/media/place-cover-file/{token}/"
+
+
+def resolve_place_cover_token(token: str):
+    from apps.places.models import PlaceCover
+
+    try:
+        payload = signing.loads(
+            token, salt=_PLACE_COVER_SIGNING_SALT, max_age=settings.MEDIA_SIGNED_URL_TTL
+        )
+    except signing.BadSignature as exc:
+        raise NotAuthorized("Invalid or expired place cover link.") from exc
+    cover = PlaceCover.objects.filter(id=payload.get("place_cover_id")).first()
+    if cover is None or not _place_is_public(cover.place_id):
+        raise NotAuthorized("Not allowed to view this place cover.")
+    return cover
