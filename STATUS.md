@@ -15,6 +15,7 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
 
 ## Current state
 
+- **Places map v2 shipped** (`claude/places-map-v2`, ADR-0019 §1, 2026-07-07): `/places/` now uses vendored MapLibre GL CSP assets with OpenFreeMap vector tiles, clustered GeoJSON points, DOM-built popups, category/upcoming/open-now filter chips, additive GeoJSON category/open-now/upcoming properties, and a narrow CSP `connect-src https://tiles.openfreemap.org` allowance. Leaflet remains vendored for the place picker/offline flows.
 - **Merge-audit P1/P2 web fixes landed locally** (2026-07-07): React saved-search POSTs may submit
   activity type/category slugs and the server resolves them; home activity cards render contextual
   cover alt text under the enforced web contract; public-listing mutation input is fixed by

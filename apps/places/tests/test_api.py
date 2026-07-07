@@ -1,8 +1,14 @@
+from datetime import timedelta
+
 import pytest
 from django.contrib.gis.geos import Point
+from django.utils import timezone
 from rest_framework.test import APIClient
 
+from apps.accounts.models import Cohort, User
+from apps.events.models import Event
 from apps.places.models import Place, PlaceActivity
+from apps.social.models import Activity
 from apps.taxonomy.models import ActivityType
 
 
@@ -97,3 +103,78 @@ def test_place_api_exposes_attribution_credit(client):
         "license_name": "CC BY 4.0",
         "provenance_url": "https://data.example/venues/theatre-1",
     }
+
+
+@pytest.mark.django_db
+def test_category_properties_and_filter_use_top_level_non_disputed_edges(client):
+    basketball = ActivityType.objects.get(slug="basketball")
+    reading = ActivityType.objects.get(slug="reading")
+    court = _make_place("Court", 23.59, 46.77, 20)
+    library = _make_place("Library", 23.60, 46.78, 21)
+    PlaceActivity.objects.create(place=court, activity=basketball, confidence=0.9)
+    PlaceActivity.objects.create(place=court, activity=reading, confidence=0.9, is_disputed=True)
+    PlaceActivity.objects.create(place=library, activity=reading, confidence=0.95)
+
+    resp = client.get("/api/places/", {"category": "sport"})
+
+    assert resp.status_code == 200
+    features = resp.json()["features"]
+    assert [f["properties"]["name"] for f in features] == ["Court"]
+    props = features[0]["properties"]
+    assert props["categories"] == ["sport"]
+    assert props["category_labels"] == ["Sport"]
+
+    resp = client.get("/api/places/", {"category": "reading"})
+    assert [f["properties"]["name"] for f in resp.json()["features"]] == ["Library"]
+
+
+@pytest.mark.django_db
+def test_has_upcoming_property_and_filter_include_public_activities_and_events(client):
+    basketball = ActivityType.objects.get(slug="basketball")
+    court = _make_place("Court", 23.59, 46.77, 30)
+    hall = _make_place("Hall", 23.60, 46.78, 31)
+    quiet = _make_place("Quiet", 23.61, 46.79, 32)
+    for place in (court, hall, quiet):
+        PlaceActivity.objects.create(place=place, activity=basketball, confidence=0.9)
+    owner = User.objects.create_user(username="map-owner", password="pw")
+    Activity.objects.create(
+        owner=owner,
+        place=court,
+        activity_type=basketball,
+        title="Public pickup",
+        starts_at=timezone.now() + timedelta(days=1),
+        cohort=Cohort.ADULT,
+        status=Activity.Status.OPEN,
+        is_publicly_listed=True,
+    )
+    Event.objects.create(
+        place=hall, title="Venue calendar", starts_at=timezone.now() + timedelta(days=2)
+    )
+
+    resp = client.get("/api/places/")
+
+    assert resp.status_code == 200
+    by_name = {f["properties"]["name"]: f["properties"] for f in resp.json()["features"]}
+    assert by_name["Court"]["has_upcoming"] is True
+    assert by_name["Hall"]["has_upcoming"] is True
+    assert by_name["Quiet"]["has_upcoming"] is False
+
+    resp = client.get("/api/places/", {"has_upcoming": "true"})
+    assert {f["properties"]["name"] for f in resp.json()["features"]} == {
+        "Court",
+        "Hall",
+    }
+
+
+@pytest.mark.django_db
+def test_places_map_geojson_query_count_is_bounded(client, django_assert_num_queries):
+    basketball = ActivityType.objects.get(slug="basketball")
+    for i in range(4):
+        place = _make_place(f"Court {i}", 23.59 + i / 1000, 46.77, 40 + i)
+        PlaceActivity.objects.create(place=place, activity=basketball, confidence=0.9)
+
+    with django_assert_num_queries(4):
+        resp = client.get("/api/places/", {"page_size": 500})
+
+    assert resp.status_code == 200
+    assert len(resp.json()["features"]) == 4

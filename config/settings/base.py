@@ -164,7 +164,12 @@ _CONTENT_SECURITY_POLICY = {
         "img-src": ["'self'", "data:", "https://*.tile.openstreetmap.org", "https://unpkg.com"],
         # Same-origin fetch/XHR plus same-host WebSockets for activity chat and E2EE messaging.
         # Some browsers do not treat 'self' as covering ws:// / wss://, so keep schemes explicit.
-        "connect-src": ["'self'", "ws:", "wss:"],
+        "connect-src": [
+            "'self'",
+            "ws:",
+            "wss:",
+            "https://tiles.openfreemap.org",
+        ],
         "font-src": ["'self'"],
         "worker-src": ["'self'"],
         "object-src": ["'none'"],

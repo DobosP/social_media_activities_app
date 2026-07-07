@@ -468,6 +468,49 @@ ul.errorlist { color: var(--warn-fg); padding-left: 1rem; margin: .2rem 0; }
    Map & footer
    ============================================================================= */
 #map { height: 460px; border-radius: var(--r); border: 1px solid var(--line); }
+.places-map { height: max(60vh, 520px); min-height: 60vh; overflow: hidden; background: var(--bg-subtle); }
+.map-chip-row {
+  display: flex; gap: .45rem; align-items: center; overflow-x: auto; padding: .2rem 0 .7rem;
+  margin: .45rem 0 .55rem; scrollbar-width: thin;
+}
+.map-chip {
+  flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
+  min-height: 2.15rem; padding: .38rem .75rem; border: 1px solid var(--line);
+  border-radius: var(--r-pill); background: var(--card); color: var(--fg); cursor: pointer;
+  font: inherit; font-size: .86rem; font-weight: 650; white-space: nowrap;
+}
+.map-chip:hover { background: var(--bg-subtle); }
+.map-chip.is-active {
+  background: var(--accent); color: var(--accent-fg); border-color: var(--accent);
+}
+.maplibregl-canvas.is-clickable { cursor: pointer; }
+.maplibregl-popup-content {
+  color: var(--fg); background: var(--card); border-radius: var(--r-sm);
+  box-shadow: var(--shadow-pop); border: 1px solid var(--line); padding: .8rem .85rem;
+}
+.maplibregl-popup-tip { border-top-color: var(--card); border-bottom-color: var(--card); }
+.map-popup { display: flex; flex-direction: column; gap: .45rem; min-width: 190px; }
+.map-popup-title { color: var(--fg); font-weight: 750; line-height: 1.25; }
+.map-popup-title:hover { color: var(--accent); }
+.map-popup-chips { display: flex; flex-wrap: wrap; gap: .25rem; }
+.map-popup-chip {
+  display: inline-flex; align-items: center; max-width: 100%; padding: .12rem .48rem;
+  border-radius: var(--r-pill); background: var(--chip-bg); color: var(--chip-fg);
+  font-size: .72rem; font-weight: 650; line-height: 1.35;
+}
+.map-popup-open {
+  display: inline-flex; align-items: center; gap: .35rem; color: var(--ok-fg);
+  font-size: .82rem; font-weight: 650;
+}
+.map-popup-open-dot { width: .55rem; height: .55rem; border-radius: 50%; background: var(--ok-fg); flex: 0 0 auto; }
+.map-popup-link { font-weight: 700; }
+@media (max-width: 620px) {
+  .places-map { height: 64vh; min-height: 60vh; border-radius: var(--r-sm); }
+  .map-chip-row {
+    margin-left: -1.25rem; margin-right: -1.25rem; padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+}
 .site-footer {
   color: var(--muted); font-size: .85rem; margin-top: 3rem; padding: 1.75rem 0;
   border-top: 1px solid var(--line); background: var(--bg-subtle);

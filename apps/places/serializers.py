@@ -17,6 +17,9 @@ class PlaceSerializer(GeoFeatureModelSerializer):
     activities = serializers.SerializerMethodField()
     distance_m = serializers.SerializerMethodField()
     open_now = serializers.SerializerMethodField()
+    categories = serializers.SerializerMethodField()
+    category_labels = serializers.SerializerMethodField()
+    has_upcoming = serializers.SerializerMethodField()
     # F20 / W3-F14: render the crowd-corrected name/address/hours (each falls back to raw OSM) so
     # the corrected schedule and `open_now` agree. `opening_hours_raw` stays the canonical OSM text.
     name = serializers.CharField(source="display_name", read_only=True)
@@ -28,6 +31,25 @@ class PlaceSerializer(GeoFeatureModelSerializer):
         # F26: disputed edges are hidden from discovery. Filter in Python over the prefetch.
         edges = [pa for pa in obj.place_activities.all() if not pa.is_disputed]
         return PlaceActivitySerializer(edges, many=True).data
+
+    def _category_pairs(self, obj):
+        pairs = {}
+        for edge in obj.place_activities.all():
+            if edge.is_disputed:
+                continue
+            category = edge.activity.category
+            top = category.parent or category
+            pairs.setdefault(top.slug, top.name)
+        return pairs
+
+    def get_categories(self, obj):
+        return list(self._category_pairs(obj).keys())
+
+    def get_category_labels(self, obj):
+        return list(self._category_pairs(obj).values())
+
+    def get_has_upcoming(self, obj):
+        return bool(getattr(obj, "has_upcoming", False))
 
     class Meta:
         model = Place
@@ -44,6 +66,9 @@ class PlaceSerializer(GeoFeatureModelSerializer):
             "opening_hours_raw",
             "opening_hours",
             "open_now",
+            "categories",
+            "category_labels",
+            "has_upcoming",
             "website",
             "phone",
             "is_bookable",
