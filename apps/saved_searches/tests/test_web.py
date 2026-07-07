@@ -61,9 +61,7 @@ def test_spa_create_accepts_readable_activity_type_slug(client, adult, activity_
 def test_spa_create_accepts_readable_category_slug(client, adult, category):
     client.force_login(adult)
     payload = client.get("/saved-searches/", {"_data": "1"}).json()
-    assert category.slug in {
-        option["slug"] for option in payload["data"]["options"]["categories"]
-    }
+    assert category.slug in {option["slug"] for option in payload["data"]["options"]["categories"]}
 
     response = client.post(
         "/saved-searches/create/",

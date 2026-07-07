@@ -14,7 +14,6 @@ from django.db import connection, transaction
 from apps.events.models import Event
 from apps.places.models import Place, PlaceActivity
 
-
 DEFAULT_SEED_PATH = Path(settings.BASE_DIR) / "db" / "seed-data.sql"
 
 

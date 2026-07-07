@@ -29,9 +29,7 @@ def _activity(owner, place, activity_type):
 
 
 def _area(slug):
-    return Area.objects.create(
-        city="Cluj-Napoca", slug=f"pub-api-{slug}", name="Cluj-Napoca"
-    )
+    return Area.objects.create(city="Cluj-Napoca", slug=f"pub-api-{slug}", name="Cluj-Napoca")
 
 
 def _group(owner, activity_type, *, area=None):
