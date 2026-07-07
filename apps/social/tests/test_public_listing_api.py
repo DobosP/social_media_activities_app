@@ -103,6 +103,37 @@ def test_activity_set_public_listing_rejects_minor_owner(place, activity_type):
     assert activity.is_publicly_listed is False
 
 
+def test_activity_set_public_listing_requires_canonical_field(adult, place, activity_type):
+    activity = _activity(adult, place, activity_type)
+    client = _client(adult)
+
+    missing = client.post(
+        f"/api/social/activities/{activity.id}/set_public_listing/",
+        {},
+        format="json",
+    )
+    assert missing.status_code == 400
+    assert "listed" in missing.json()
+
+    malformed = client.post(
+        f"/api/social/activities/{activity.id}/set_public_listing/",
+        {"listed": "sometimes"},
+        format="json",
+    )
+    assert malformed.status_code == 400
+    assert "listed" in malformed.json()
+
+    ambiguous = client.post(
+        f"/api/social/activities/{activity.id}/set_public_listing/",
+        {"listed": True, "is_publicly_listed": False},
+        format="json",
+    )
+    assert ambiguous.status_code == 400
+    assert "listed" in ambiguous.json()
+    activity.refresh_from_db()
+    assert activity.is_publicly_listed is False
+
+
 def test_group_set_public_listing_owner_toggles_and_serializer_exposes_flag(
     adult, activity_type, settings
 ):

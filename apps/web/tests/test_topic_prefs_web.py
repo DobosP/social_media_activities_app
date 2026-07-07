@@ -181,11 +181,6 @@ def test_browse_modes_allow_cover_images_without_engagement_telemetry():
     assert 'data-view="list"' in c.get("/activities/?view=swipe").content.decode()
 
 
-@pytest.mark.xfail(
-    reason="TODO(recovered): home sections render the cover figure but not the alt text; "
-    "the original (lost) implementation detail for home contextual visuals needs re-verification",
-    strict=True,
-)
 def test_home_activity_sections_render_contextual_visuals_without_media_feed_behaviour():
     user = _adult("tpw-home-visual")
     _, _, bball = _topics()

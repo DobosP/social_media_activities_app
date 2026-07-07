@@ -242,6 +242,54 @@ def test_p3_account_nav_single_source():
 
 
 @override_settings(SOCIAL_REACT_UI=True)
+def test_p3_spa_mutation_posts_round_trip_to_existing_services():
+    from apps.notifications import services as notification_services
+    from apps.notifications.models import Notification
+    from apps.places.services import get_access_preference
+    from apps.recommendations import services as recommendation_services
+    from apps.saved_searches.models import SavedSearch
+
+    user = _user("p3-posts")
+    activity = _activity(user, title="P3 mutation seed")
+    client = _client(user)
+    category = activity.activity_type.category
+
+    interests = client.post("/interests/", {"interests": [activity.activity_type.slug]})
+    assert interests.status_code == 302
+    assert {t.slug for t in recommendation_services.get_interests(user)} == {
+        activity.activity_type.slug
+    }
+
+    topics = client.post("/topics/", {"topics": [category.slug]})
+    assert topics.status_code == 302
+    assert recommendation_services.topic_preference_slugs(user) == frozenset({category.slug})
+
+    access = client.post("/access/", {"needs_step_free": "on", "prefers_quiet": "on"})
+    assert access.status_code == 302
+    pref = get_access_preference(user)
+    assert pref.needs_step_free is True
+    assert pref.prefers_quiet is True
+    assert pref.needs_hearing_loop is False
+
+    muted = Notification.Kind.ACTIVITY_MATCH.value
+    prefs = client.post("/notifications/preferences/", {"muted": [muted]})
+    assert prefs.status_code == 302
+    assert notification_services.get_muted_kinds(user) == {muted}
+
+    saved = client.post(
+        "/saved-searches/create/",
+        {"activity_type": activity.activity_type.slug, "next": "/saved-searches/"},
+    )
+    assert saved.status_code == 302
+    search = SavedSearch.objects.get(user=user)
+    assert search.activity_type == activity.activity_type
+
+    delete = client.post(f"/saved-searches/{search.pk}/delete/", {"next": "/saved-searches/"})
+    assert delete.status_code == 302
+    assert not SavedSearch.objects.filter(pk=search.pk).exists()
+
+
+@override_settings(SOCIAL_REACT_UI=True)
 def test_p3_community_detail_reuses_card_contract():
     from apps.accounts.models import Cohort
     from apps.communities.models import Area, Community

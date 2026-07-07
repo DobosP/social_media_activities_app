@@ -2610,10 +2610,20 @@ def saved_search_create(request):
     at_id = (request.POST.get("activity_type") or "").strip()
     cat_id = (request.POST.get("category") or "").strip()
     city = (request.POST.get("city") or "").strip()
-    activity_type = (
-        ActivityType.objects.filter(pk=at_id, is_active=True).first() if at_id.isdigit() else None
-    )
-    category = ActivityCategory.objects.filter(pk=cat_id).first() if cat_id.isdigit() else None
+    activity_type = None
+    if at_id:
+        activity_type = (
+            ActivityType.objects.filter(pk=at_id, is_active=True).first()
+            if at_id.isdigit()
+            else None
+        )
+        if activity_type is None:
+            activity_type = ActivityType.objects.filter(slug=at_id, is_active=True).first()
+    category = None
+    if cat_id:
+        category = ActivityCategory.objects.filter(pk=cat_id).first() if cat_id.isdigit() else None
+        if category is None:
+            category = ActivityCategory.objects.filter(slug=cat_id).first()
     try:
         saved_searches.create_saved_search(
             request.user,

@@ -15,6 +15,11 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
 
 ## Current state
 
+- **Merge-audit P1/P2 web fixes landed locally** (2026-07-07): React saved-search POSTs may submit
+  activity type/category slugs and the server resolves them; home activity cards render contextual
+  cover alt text under the enforced web contract; public-listing mutation input is fixed by
+  ADR-0018 (`listed` canonical, legacy `is_publicly_listed` only when sent alone); Phase-3 React
+  mutation POSTs have focused regression coverage.
 - **Local RO-EDU seed is post-migrate data-only** (ADR-0017): `Dockerfile.db` installs pgvector
   only; compose runs `migrate` then `load_roedu_seed`, which loads `db/seed-data.sql` once and
   leaves schema/`django_migrations` solely to Django migrations.

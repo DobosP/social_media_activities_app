@@ -99,14 +99,21 @@ def resolve_actor(request):
 
 
 def _public_listing_value(request) -> bool:
-    # TODO(recovered): re-verify against original spec.
     if "listed" in request.data:
+        if "is_publicly_listed" in request.data:
+            raise ValidationError(
+                {"listed": "Use the canonical 'listed' field; do not send both fields."}
+            )
         raw = request.data["listed"]
     elif "is_publicly_listed" in request.data:
+        # Backward-compatible legacy alias for clients that shipped before ADR-0018.
         raw = request.data["is_publicly_listed"]
     else:
         raise ValidationError({"listed": "This field is required."})
-    return serializers.BooleanField().run_validation(raw)
+    try:
+        return serializers.BooleanField().run_validation(raw)
+    except ValidationError as exc:
+        raise ValidationError({"listed": exc.detail}) from exc
 
 
 class ActivityViewSet(viewsets.ReadOnlyModelViewSet):

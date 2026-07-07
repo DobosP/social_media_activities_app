@@ -1,6 +1,7 @@
 """F3 web CRUD: the save-only page, create, and owner-scoped delete."""
 
 import pytest
+from django.test import override_settings
 
 from apps.saved_searches.models import SavedSearch
 
@@ -36,6 +37,42 @@ def test_web_create_threads_coarse_window(client, adult, activity_type):
     assert r.status_code == 302
     s = SavedSearch.objects.get(user=adult)
     assert s.coarse_window == ActivityInterest.CoarseWindow.WEEKEND_DAYTIME
+
+
+@override_settings(SOCIAL_REACT_UI=True)
+def test_spa_create_accepts_readable_activity_type_slug(client, adult, activity_type):
+    client.force_login(adult)
+    payload = client.get("/saved-searches/", {"_data": "1"}).json()
+    assert activity_type.slug in {
+        option["slug"] for option in payload["data"]["options"]["activityTypes"]
+    }
+
+    response = client.post(
+        "/saved-searches/create/",
+        {"activity_type": activity_type.slug, "next": "/saved-searches/"},
+    )
+
+    assert response.status_code == 302
+    saved = SavedSearch.objects.get(user=adult)
+    assert saved.activity_type == activity_type
+
+
+@override_settings(SOCIAL_REACT_UI=True)
+def test_spa_create_accepts_readable_category_slug(client, adult, category):
+    client.force_login(adult)
+    payload = client.get("/saved-searches/", {"_data": "1"}).json()
+    assert category.slug in {
+        option["slug"] for option in payload["data"]["options"]["categories"]
+    }
+
+    response = client.post(
+        "/saved-searches/create/",
+        {"category": category.slug, "next": "/saved-searches/"},
+    )
+
+    assert response.status_code == 302
+    saved = SavedSearch.objects.get(user=adult)
+    assert saved.category == category
 
 
 def test_delete_is_owner_scoped_via_web(client, adult, adult2, activity_type):
