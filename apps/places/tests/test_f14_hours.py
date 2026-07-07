@@ -119,7 +119,7 @@ def test_place_detail_renders_corrected_hours_card_and_posted_text():
     )
     staff_publish_correction(_staff("wmod"), c)
     body = Client().get(f"/places/{place.id}/").content.decode()
-    assert "Opening hours" in body  # card renders (gated on display_opening_hours, not raw)
+    assert "Hours" in body  # section renders (gated on display_opening_hours, not raw)
     assert "Mo-Fr 09:00-17:00" in body  # the corrected 'Posted:' text, not a stale raw value
 
 

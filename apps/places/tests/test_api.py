@@ -7,7 +7,7 @@ from rest_framework.test import APIClient
 
 from apps.accounts.models import Cohort, User
 from apps.events.models import Event
-from apps.places.models import Place, PlaceActivity
+from apps.places.models import Place, PlaceActivity, PlaceCover
 from apps.social.models import Activity
 from apps.taxonomy.models import ActivityType
 
@@ -79,6 +79,24 @@ def test_geojson_shape(client):
     feature = body["features"][0]
     assert feature["geometry"]["type"] == "Point"
     assert len(feature["geometry"]["coordinates"]) == 2
+    assert feature["properties"]["image_thumb"] is None
+
+
+@pytest.mark.django_db
+def test_geojson_image_thumb_uses_cover_photo_only(client):
+    place = _make_place("Covered Library", 23.60, 46.78, 4)
+    PlaceCover.objects.create(
+        place=place,
+        source=PlaceCover.Source.WIKIMEDIA,
+        storage_key="place-covers/covered.jpg",
+        content_type="image/jpeg",
+    )
+
+    resp = client.get("/api/places/")
+
+    assert resp.status_code == 200
+    props = resp.json()["features"][0]["properties"]
+    assert props["image_thumb"].startswith("/api/media/place-cover-file/")
 
 
 @pytest.mark.django_db

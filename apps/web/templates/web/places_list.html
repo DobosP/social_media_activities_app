@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load safe_urls i18n %}
 {% block title %}{% trans "Places (text list)" %}{% endblock %}
 {% block meta_description %}{% trans "Parks, libraries and sports venues in Cluj-Napoca where people meet up for in-person group activities." %}{% endblock %}
 {% block meta_robots %}{% if filtered %}noindex, follow{% else %}index, follow{% endif %}{% endblock %}
@@ -15,15 +15,28 @@
 </form>
 {% include "web/_near_me.html" %}
 {% if truncated %}<p class="muted">{% trans "Showing the first 200 places &mdash; narrow with a city or activity filter." %}</p>{% endif %}
-<ul class="members">
+<ul class="members place-list">
   {% for p in places %}
-    <li>
-      <a href="{% url 'place_detail' p.pk %}">{{ p.name|default:_("Unnamed place") }}</a>
-      {% if p.address_street %}<span class="muted">&middot; {{ p.address_street }}{% if p.address_city %}, {{ p.address_city }}{% endif %}</span>{% elif p.address_city %}<span class="muted">&middot; {{ p.address_city }}</span>{% endif %}
-      {% if p.distance %}<span class="muted">&middot; {% blocktrans with meters=p.distance.m|floatformat:0 %}{{ meters }} m away{% endblocktrans %}</span>{% endif %}
-      {% for pa in p.place_activities.all %}<span class="tag">{{ pa.activity.name }}</span>{% endfor %}
-      {% if p.access_match %}<span class="tag fact--true">&#10003; {% trans "Matches your access needs" %}</span>{% endif %}
-      {% if p.access_tags %}{% for r in p.access_tags %}<span class="tag fact--{{ r.state }}">{{ r.label }}{% if r.state == "limited" %} {% trans "(limited)" %}{% endif %}</span>{% endfor %}{% endif %}
+    <li class="place-list-row">
+      {% if p.visual %}
+        <figure class="place-list-visual">
+          {% if p.visual.kind == "place_cover_photo" %}
+            <img src="{{ p.visual.url }}" alt="{{ p.visual.alt }}" loading="lazy" decoding="async">
+            {% if p.visual.attribution %}<figcaption class="place-cover-attribution">{% if p.visual.source_page_url|safe_href %}<a href="{{ p.visual.source_page_url|safe_href }}" rel="noopener noreferrer" target="_blank">{{ p.visual.attribution }}</a>{% else %}{{ p.visual.attribution }}{% endif %}</figcaption>{% endif %}
+          {% else %}
+            <span aria-hidden="true">{{ p.visual.svg }}</span>
+          {% endif %}
+        </figure>
+      {% endif %}
+      <div class="place-list-body">
+        <a href="{% url 'place_detail' p.pk %}">{{ p.name|default:_("Unnamed place") }}</a>
+        {% if p.address_street %}<span class="muted">&middot; {{ p.address_street }}{% if p.address_city %}, {{ p.address_city }}{% endif %}</span>{% elif p.address_city %}<span class="muted">&middot; {{ p.address_city }}</span>{% endif %}
+        {% if p.distance %}<span class="muted">&middot; {% blocktrans with meters=p.distance.m|floatformat:0 %}{{ meters }} m away{% endblocktrans %}</span>{% endif %}
+        <span class="place-row-chips">
+          {% for category in p.category_chips %}<span class="tag">{{ category.name }}</span>{% endfor %}
+          {% if p.access_match %}<span class="tag fact--true">&#10003; {% trans "Matches your access needs" %}</span>{% endif %}
+        </span>
+      </div>
     </li>
   {% empty %}
     <li class="muted">{% trans "No places match." %}</li>

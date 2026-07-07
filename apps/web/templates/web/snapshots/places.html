@@ -1,11 +1,27 @@
-{% load i18n %}
+{% load safe_urls i18n %}
 {% comment %}Crawler/noscript snapshot for the React places list screen.{% endcomment %}
 <h1>{% trans "Places" %}</h1>
-<ul class="members">
+<ul class="members place-list">
   {% for p in places %}
-    <li>
-      <a href="{% url 'place_detail' p.pk %}">{{ p.name|default:_("Unnamed place") }}</a>
-      {% if p.address_street %}<span class="muted">&middot; {{ p.address_street }}{% if p.address_city %}, {{ p.address_city }}{% endif %}</span>{% elif p.address_city %}<span class="muted">&middot; {{ p.address_city }}</span>{% endif %}
+    <li class="place-list-row">
+      {% if p.visual %}
+        <figure class="place-list-visual">
+          {% if p.visual.kind == "place_cover_photo" %}
+            <img src="{{ p.visual.url }}" alt="{{ p.visual.alt }}" loading="lazy" decoding="async">
+            {% if p.visual.attribution %}<figcaption class="place-cover-attribution">{% if p.visual.source_page_url|safe_href %}<a href="{{ p.visual.source_page_url|safe_href }}" rel="noopener noreferrer" target="_blank">{{ p.visual.attribution }}</a>{% else %}{{ p.visual.attribution }}{% endif %}</figcaption>{% endif %}
+          {% else %}
+            <span aria-hidden="true">{{ p.visual.svg }}</span>
+          {% endif %}
+        </figure>
+      {% endif %}
+      <div class="place-list-body">
+        <a href="{% url 'place_detail' p.pk %}">{{ p.name|default:_("Unnamed place") }}</a>
+        {% if p.address_street %}<span class="muted">&middot; {{ p.address_street }}{% if p.address_city %}, {{ p.address_city }}{% endif %}</span>{% elif p.address_city %}<span class="muted">&middot; {{ p.address_city }}</span>{% endif %}
+        <span class="place-row-chips">
+          {% for category in p.category_chips %}<span class="tag">{{ category.name }}</span>{% endfor %}
+          {% if p.access_match %}<span class="tag fact--true">&#10003; {% trans "Matches your access needs" %}</span>{% endif %}
+        </span>
+      </div>
     </li>
   {% empty %}
     <li class="muted">{% trans "No places match." %}</li>

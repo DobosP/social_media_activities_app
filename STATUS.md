@@ -30,8 +30,15 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
     icon to `/messages/`), alerts move to a header bell with the existing unread pill, the Inbox
     subnav is retired on SSR and React payloads, Connections are promoted on profile/account
     menus, and Support leaves the primary nav for footer/account/giving paths.
-  - Remaining: P4 organizer form v2 + move-activity · P5 place detail/list declutter · P6
-    business partner claims · P7 scheduled roedu sync (see the ADR's phasing).
+  - **P5 place detail/list declutter is implemented in this worktree**
+    (`claude/place-detail-declutter`, §5 + §2 display wiring): place detail now leads with
+    `place_visual()` hero imagery, topic chips, open-now/access-positive decision badges,
+    address/website/partner context, and moves community facts, hours,
+    source/corrections/closure/share flows into native collapsed disclosures; places list/SPA rows
+    show cover/accent visuals, top-level category chips, and only the positive access-match badge;
+    map GeoJSON/popups carry photo thumbnails only.
+  - Remaining: P4 organizer form v2 + move-activity · P6 business partner claims · P7
+    scheduled roedu sync (see the ADR's phasing).
 - **Merge-audit P1/P2 web fixes landed locally** (2026-07-07): React saved-search POSTs may submit
   activity type/category slugs and the server resolves them; home activity cards render contextual
   cover alt text under the enforced web contract; public-listing mutation input is fixed by

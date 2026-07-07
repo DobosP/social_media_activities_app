@@ -101,6 +101,14 @@
     var wrapper = document.createElement("div");
     wrapper.className = "map-popup";
 
+    if (typeof props.image_thumb === "string" && props.image_thumb) {
+      var thumb = document.createElement("img");
+      thumb.className = "map-popup-thumb";
+      thumb.src = props.image_thumb;
+      thumb.alt = "";
+      wrapper.appendChild(thumb);
+    }
+
     var title = document.createElement(placeId ? "a" : "strong");
     title.className = "map-popup-title";
     title.textContent = props.name || unnamed;

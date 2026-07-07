@@ -46,32 +46,52 @@ export function PlacesScreen({ payload }: ScreenProps) {
       ) : (
         <ul className="members">
           {data.places.map((p) => (
-            <li key={p.pk}>
-              <a href={p.url}>{p.name}</a>
-              {(p.street || p.city) && (
-                <span className="muted">
-                  {' · '}
-                  {p.street}
-                  {p.street && p.city ? `, ${p.city}` : p.city}
+            <li key={p.pk} className="sa-place-row">
+              {p.visual && (
+                <figure className="sa-place-row__visual">
+                  {p.visual.kind === 'photo' ? (
+                    <>
+                      <img src={p.visual.url} alt={p.visual.alt} loading="lazy" decoding="async" />
+                      {p.visual.attribution && (
+                        <figcaption className="muted">
+                          {p.visual.sourcePageUrl ? (
+                            <a href={p.visual.sourcePageUrl} rel="noopener noreferrer" target="_blank">
+                              {p.visual.attribution}
+                            </a>
+                          ) : (
+                            p.visual.attribution
+                          )}
+                        </figcaption>
+                      )}
+                    </>
+                  ) : (
+                    <span aria-hidden="true" dangerouslySetInnerHTML={{ __html: p.visual.svg }} />
+                  )}
+                </figure>
+              )}
+              <div className="sa-place-row__body">
+                <a href={p.url}>{p.name}</a>
+                {(p.street || p.city) && (
+                  <span className="muted">
+                    {' · '}
+                    {p.street}
+                    {p.street && p.city ? `, ${p.city}` : p.city}
+                  </span>
+                )}
+                {p.distance && <span className="muted"> · {p.distance}</span>}
+                <span className="sa-place-row__chips">
+                  {p.categoryChips.map((name) => (
+                    <Badge key={name} tone="neutral" size="sm">
+                      {name}
+                    </Badge>
+                  ))}
+                  {p.accessMatch && (
+                    <Badge tone="success" size="sm">
+                      ✓ {ui.accessMatch}
+                    </Badge>
+                  )}
                 </span>
-              )}
-              {p.distance && <span className="muted"> · {p.distance}</span>}{' '}
-              {p.activities.map((name) => (
-                <Badge key={name} tone="neutral" size="sm">
-                  {name}
-                </Badge>
-              ))}
-              {p.accessMatch && (
-                <Badge tone="success" size="sm">
-                  ✓ {ui.accessMatch}
-                </Badge>
-              )}
-              {p.accessTags.map((t) => (
-                <Badge key={t.label} tone={t.state === 'true' ? 'success' : 'neutral'} size="sm">
-                  {t.label}
-                  {t.state === 'limited' ? ` ${ui.limited}` : ''}
-                </Badge>
-              ))}
+              </div>
             </li>
           ))}
         </ul>
