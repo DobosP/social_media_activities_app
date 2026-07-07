@@ -102,7 +102,9 @@ GENERIC_VENUES: dict[str, tuple[dict, list[str], float]] = {
     # Parks host casual outdoor games and are natural running/cycling spots.
     "park": (
         {"leisure": "park"},
-        ["football", "basketball", "streetball", "chess", "running", "cycling"],
+        # NB: "streetball" is an ALIAS of basketball in the seeded taxonomy, not a slug —
+        # listing it here crashed every OSM ingest that reached the park rule.
+        ["football", "basketball", "chess", "running", "cycling"],
         0.2,
     ),
     "nature_reserve": ({"leisure": "nature_reserve"}, ["hiking", "running"], 0.3),

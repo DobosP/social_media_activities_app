@@ -45,7 +45,9 @@ def test_overpass_website_falls_back_to_contact_tag():
 
 def test_park_maps_to_outdoor_activities():
     slugs = {slug for slug, _, _ in match_element({"leisure": "park", "name": "Central Park"})}
-    assert {"football", "basketball", "streetball", "chess"} <= slugs
+    # "streetball" is an alias of basketball, not a slug — it crashed live ingest when
+    # the park rule listed it (regression pinned in test_mapping_slugs.py).
+    assert {"football", "basketball", "chess"} <= slugs
 
 
 # --- DB-backed: ingest upsert + booking seeding ---
