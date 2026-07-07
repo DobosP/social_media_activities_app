@@ -113,6 +113,8 @@ def test_places_map_search_controls_and_vocabulary_island_are_nonced():
         "aliases": ["racket"],
         "category": "csp-map-sport",
         "categoryName": "Sport",
+        "topCategory": "csp-map-sport",
+        "topCategoryName": "Sport",
     } in payload
     assert list(_inline_executable_scripts(html)) == []
 

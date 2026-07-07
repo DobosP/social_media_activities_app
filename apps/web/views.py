@@ -60,6 +60,7 @@ from apps.places.models import Place, PlaceActivity
 from apps.places.services import (
     accessibility_facts,
     accessibility_facts_display,
+    derived_place_label,
     get_access_preference,
     is_child_safe_venue,
     matches_access_preference,
@@ -1114,7 +1115,7 @@ def _places_map_categories(city=""):
 def _places_map_type_vocabulary():
     types = (
         ActivityType.objects.filter(is_active=True)
-        .select_related("category")
+        .select_related("category__parent")
         .order_by("category__name", "name")
     )
     return [
@@ -1124,6 +1125,8 @@ def _places_map_type_vocabulary():
             "aliases": (activity_type.aliases if isinstance(activity_type.aliases, list) else []),
             "category": activity_type.category.slug,
             "categoryName": activity_type.category.name,
+            "topCategory": (activity_type.category.parent or activity_type.category).slug,
+            "topCategoryName": (activity_type.category.parent or activity_type.category).name,
         }
         for activity_type in types
     ]
@@ -1176,6 +1179,7 @@ def places_list(request):
         p.access_tags = []
         p.access_match = matches_access_preference(accessibility_facts(p), pref) == "match"
         p.category_chips = place_top_level_categories(p)
+        p.label = derived_place_label(p)
         p.visual = place_visual(p)
         if p.visual.get("kind") == "accent":
             p.visual["svg"] = mark_safe(p.visual["svg"])
@@ -1297,6 +1301,7 @@ def place_detail(request, pk, slug=None):
     # accessibility dict-read + the already-fetched venue_fact_rows), so no new query.
     from apps.places.services import place_plain_brief
 
+    place_label = derived_place_label(place)
     place_brief = place_plain_brief(place, venue_fact_rows=venue_fact_rows)
     # schema.org JSON-LD for crawlers/answer engines — only on a publicly-visible venue (a
     # pending F25 place is viewable solely by its proposer/staff and must not be advertised).
@@ -1322,7 +1327,7 @@ def place_detail(request, pk, slug=None):
                 [
                     {"name": gettext("Home"), "url": "/"},
                     {"name": gettext("Places"), "url": reverse("places_list")},
-                    {"name": place.display_name, "url": place_path(place)},
+                    {"name": place_label, "url": place_path(place)},
                 ],
                 request,
             )
@@ -1334,6 +1339,7 @@ def place_detail(request, pk, slug=None):
         "web/place_detail.html",
         {
             "place": place,
+            "place_label": place_label,
             "structured_data": structured_data,
             "breadcrumb_data": breadcrumb_data,
             "related_city": related_city,

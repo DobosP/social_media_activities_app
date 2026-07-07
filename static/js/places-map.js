@@ -4,6 +4,7 @@
   var STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
   var DEFAULT_CENTER = [23.591, 46.77];
   var DEFAULT_ZOOM = 12;
+  var MIN_CONCEPT_CONFIDENCE = 0.5;
 
   var mapEl = document.getElementById("map");
   if (!mapEl || typeof maplibregl === "undefined") return;
@@ -89,24 +90,28 @@
         aliases: aliases,
         category: row.category || "",
         categoryName: row.categoryName || "",
+        topCategory: row.topCategory || row.category || "",
+        topCategoryName: row.topCategoryName || row.categoryName || "",
         label: row.name,
         meta: row.categoryName || "Activity",
         searchText: haystack([row.slug, row.name, row.category, row.categoryName].concat(aliases))
       };
       out.push(item);
       bySlug[normalizeText(row.slug)] = item;
-      if (row.category && !categories[row.category]) {
-        categories[row.category] = {
+      var topCategory = row.topCategory || row.category;
+      var topCategoryName = row.topCategoryName || row.categoryName;
+      if (topCategory && !categories[topCategory]) {
+        categories[topCategory] = {
           kind: "concept",
           conceptKind: "category",
-          slug: row.category,
-          name: row.categoryName || row.category,
+          slug: topCategory,
+          name: topCategoryName || topCategory,
           aliases: [],
-          category: row.category,
-          categoryName: row.categoryName || row.category,
-          label: row.categoryName || row.category,
+          category: topCategory,
+          categoryName: topCategoryName || topCategory,
+          label: topCategoryName || topCategory,
           meta: "Category",
-          searchText: haystack([row.category, row.categoryName])
+          searchText: haystack([topCategory, topCategoryName])
         };
       }
     });
@@ -116,17 +121,18 @@
     return { items: out, bySlug: bySlug };
   }
 
+  function highConfidenceActivities(feature) {
+    var props = feature.properties || {};
+    return normalizeList(props.activities).filter(function (activity) {
+      return activity && Number(activity.confidence || 0) >= MIN_CONCEPT_CONFIDENCE;
+    });
+  }
+
   function featureSearchText(feature) {
     var props = feature.properties || {};
-    var values = [props.name].concat(normalizeList(props.categories), normalizeList(props.category_labels));
-    normalizeList(props.activities).forEach(function (activity) {
-      if (!activity) return;
-      values.push(activity.slug, activity.name);
-      var vocab = vocabularyBySlug[normalizeText(activity.slug)];
-      if (vocab) {
-        values.push(vocab.name, vocab.category, vocab.categoryName);
-        values = values.concat(vocab.aliases || []);
-      }
+    var values = [props.name];
+    highConfidenceActivities(feature).forEach(function (activity) {
+      values.push(activity.name);
     });
     return haystack(values);
   }
@@ -138,21 +144,23 @@
     });
   }
 
+  function activityMatchesCategory(activity, concept) {
+    var vocab = vocabularyBySlug[normalizeText(activity.slug)];
+    if (!vocab) return false;
+    var needles = uniqueNormalized([concept.slug, concept.name].concat(concept.aliases || []));
+    return (
+      valueMatchesAny(vocab.category, needles) ||
+      valueMatchesAny(vocab.categoryName, needles) ||
+      valueMatchesAny(vocab.topCategory, needles) ||
+      valueMatchesAny(vocab.topCategoryName, needles)
+    );
+  }
+
   function featureMatchesConcept(feature, concept) {
     if (!concept) return true;
-    var props = feature.properties || {};
-    var needles = uniqueNormalized([concept.slug, concept.name].concat(concept.aliases || []));
-    if (normalizeList(props.categories).some(function (slug) { return valueMatchesAny(slug, needles); })) {
-      return true;
-    }
-    if (
-      concept.conceptKind === "category" &&
-      normalizeList(props.category_labels).some(function (label) { return valueMatchesAny(label, needles); })
-    ) {
-      return true;
-    }
-    return normalizeList(props.activities).some(function (activity) {
-      return activity && (valueMatchesAny(activity.slug, needles) || valueMatchesAny(activity.name, needles));
+    return highConfidenceActivities(feature).some(function (activity) {
+      if (concept.conceptKind === "category") return activityMatchesCategory(activity, concept);
+      return activity && normalizeText(activity.slug) === normalizeText(concept.slug);
     });
   }
 
@@ -165,7 +173,12 @@
   function filteredData(data) {
     var features = (data && data.features ? data.features : []).filter(function (feature) {
       var props = feature.properties || {};
-      if (activeFilters.category && normalizeList(props.categories).indexOf(activeFilters.category) === -1) {
+      if (
+        activeFilters.category &&
+        !highConfidenceActivities(feature).some(function (activity) {
+          return activityMatchesCategory(activity, { conceptKind: "category", slug: activeFilters.category, name: activeFilters.category, aliases: [] });
+        })
+      ) {
         return false;
       }
       if (activeFilters.hasUpcoming && props.has_upcoming !== true) return false;

@@ -55,13 +55,28 @@ class PlaceFilter(django_filters.FilterSet):
         field_name="place_activities__confidence", lookup_expr="gte"
     )
 
+    def _min_confidence(self):
+        if not self.request:
+            return None
+        raw = self.request.GET.get("min_confidence")
+        if raw in (None, ""):
+            return None
+        try:
+            return float(raw)
+        except (TypeError, ValueError):
+            return None
+
     def filter_activity(self, qs, name, value):
         # F26: a place matches ?activity only via a NON-disputed edge (conjoined so the SAME
         # edge must satisfy both conditions, not two different edges).
-        return qs.filter(
-            place_activities__activity__slug__iexact=value,
-            place_activities__is_disputed=False,
-        )
+        filters = {
+            "place_activities__activity__slug__iexact": value,
+            "place_activities__is_disputed": False,
+        }
+        min_confidence = self._min_confidence()
+        if min_confidence is not None:
+            filters["place_activities__confidence__gte"] = min_confidence
+        return qs.filter(**filters)
 
     def filter_category(self, qs, name, value):
         # Match top-level taxonomy category slugs. Seeded subcategories are one level deep
@@ -70,13 +85,14 @@ class PlaceFilter(django_filters.FilterSet):
         # category clause bind to the SAME edge row (chained filters on a to-many relation
         # would let a disputed edge satisfy one clause and a different edge the other);
         # distinct() because several edges of one place can share a top-level category.
-        return qs.filter(
-            Q(place_activities__is_disputed=False)
-            & (
-                Q(place_activities__activity__category__slug__iexact=value)
-                | Q(place_activities__activity__category__parent__slug__iexact=value)
-            )
-        ).distinct()
+        edge_filter = Q(place_activities__is_disputed=False) & (
+            Q(place_activities__activity__category__slug__iexact=value)
+            | Q(place_activities__activity__category__parent__slug__iexact=value)
+        )
+        min_confidence = self._min_confidence()
+        if min_confidence is not None:
+            edge_filter &= Q(place_activities__confidence__gte=min_confidence)
+        return qs.filter(edge_filter).distinct()
 
     def filter_has_upcoming(self, qs, name, value):
         if "has_upcoming" not in qs.query.annotations:

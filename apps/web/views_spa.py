@@ -29,6 +29,8 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.utils.translation import ngettext
 
+from apps.places.services import derived_place_label
+
 
 def spa_enabled() -> bool:
     """ADR-0016 kill switch: React screens serve only when SOCIAL_REACT_UI=True."""
@@ -484,7 +486,7 @@ def _place_visual_row(p) -> dict | None:
         return {
             "kind": "photo",
             "url": visual.get("url", ""),
-            "alt": visual.get("alt") or p.name or _("Unnamed place"),
+            "alt": visual.get("alt") or derived_place_label(p) or _("Unnamed place"),
             "attribution": visual.get("attribution", ""),
             "licenseName": visual.get("license_name", ""),
             "sourcePageUrl": visual.get("source_page_url", ""),
@@ -502,7 +504,7 @@ def places_spa(request, *, places, filters, near_active, truncated, filtered, st
             {
                 "pk": p.pk,
                 "url": reverse("place_detail", args=[p.pk]),
-                "name": p.name or _("Unnamed place"),
+                "name": derived_place_label(p) or _("Unnamed place"),
                 "street": p.address_street or "",
                 "city": p.address_city or "",
                 "distance": (
