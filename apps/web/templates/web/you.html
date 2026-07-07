@@ -16,13 +16,7 @@
       <a href="{% url 'access_preferences' %}">{% trans "Access needs" %}</a>
       <a href="{% url 'display_preferences' %}">{% trans "Display (theme, text size, motion)" %}</a>
       <a href="{% url 'verify_age' %}">{% trans "Age verification" %}</a>
-    </div>
-  </div>
-
-  <div class="card">
-    <h3>{% trans "Inbox" %}</h3>
-    <div class="stack">
-      <a href="{% url 'notifications' %}">{% trans "Alerts" %}{% if unread_notifications %} <span class="pill">{{ unread_notifications }}</span>{% endif %}</a>
+      <a href="{% url 'notifications' %}">{% trans "Notifications" %}{% if unread_notifications %} <span class="pill">{{ unread_notifications }}</span>{% endif %}</a>
       <a href="{% url 'messages' %}">{% trans "Messages" %}</a>
       {% if connections_enabled %}<a href="{% url 'connections' %}">{% trans "Connections" %}</a>{% endif %}
       <a href="{% url 'saved_searches' %}">{% trans "Saved searches" %}</a>

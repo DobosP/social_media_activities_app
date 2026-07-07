@@ -242,6 +242,23 @@ def test_p3_account_nav_single_source():
 
 
 @override_settings(SOCIAL_REACT_UI=True)
+def test_p3_inbox_tabs_retired_from_spa_payloads():
+    client = _client(_user("p3-nav-ia"))
+
+    you = json.loads(client.get("/you/", {"_data": "1"}).content)["data"]
+    assert "Inbox" not in [group["title"] for group in you["nav"]["groups"]]
+    account_labels = [link["label"] for group in you["nav"]["groups"] for link in group["links"]]
+    assert "Notifications" in account_labels
+    assert "Messages" in account_labels
+    assert "Connections" in account_labels
+
+    notifications = json.loads(client.get("/notifications/", {"_data": "1"}).content)["data"]
+    connections_payload = json.loads(client.get("/connections/", {"_data": "1"}).content)["data"]
+    assert "tabs" not in notifications
+    assert "tabs" not in connections_payload
+
+
+@override_settings(SOCIAL_REACT_UI=True)
 def test_p3_spa_mutation_posts_round_trip_to_existing_services():
     from apps.notifications import services as notification_services
     from apps.notifications.models import Notification

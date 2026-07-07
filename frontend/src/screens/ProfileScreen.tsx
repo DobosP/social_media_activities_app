@@ -40,6 +40,41 @@ export function ProfileScreen({ payload }: ScreenProps) {
       </Card>
 
       <Card>
+        <div className="sa-section-head">
+          <h2>{ui.connections}</h2>
+          <SmartLink className="sa-more" href={data.actions.connections}>
+            {ui.edit}
+          </SmartLink>
+        </div>
+        {data.pendingIncomingCount > 0 && (
+          <div className="banner">
+            {ui.pendingRequests} · <SmartLink href={data.actions.connections}>{ui.review}</SmartLink>
+          </div>
+        )}
+        {data.connections.length > 0 && (
+          <ul className="members">
+            {data.connections.map((connection) => (
+              <li key={connection.publicId}>
+                {connection.name}
+                <form method="post" action={data.actions.connectionMessage} className="inline">
+                  <input type="hidden" name="csrfmiddlewaretoken" value={payload.csrf} />
+                  <input type="hidden" name="public_id" value={connection.publicId} />
+                  <Button type="submit" size="sm">
+                    {ui.message}
+                  </Button>
+                </form>
+              </li>
+            ))}
+          </ul>
+        )}
+        {data.connectionsTotal > data.connections.length && (
+          <p className="muted">
+            <SmartLink href={data.actions.connections}>{ui.seeAllConnections}</SmartLink>
+          </p>
+        )}
+      </Card>
+
+      <Card>
         <h2>{ui.journey}</h2>
         <Stack direction="row" gap="md" align="center" wrap>
           {data.journeyAvatar && (
@@ -71,38 +106,6 @@ export function ProfileScreen({ payload }: ScreenProps) {
               </span>
             ))}
           </div>
-        )}
-      </Card>
-
-      <Card>
-        <div className="sa-section-head">
-          <h2>{ui.connections}</h2>
-          <SmartLink className="sa-more" href={data.actions.connections}>
-            {ui.edit}
-          </SmartLink>
-        </div>
-        {data.connections.length > 0 && (
-          <ul className="members">
-            {data.connections.map((connection) => (
-              <li key={connection.publicId}>
-                {connection.name}
-                <form method="post" action={data.actions.connectionMessage} className="inline">
-                  <input type="hidden" name="csrfmiddlewaretoken" value={payload.csrf} />
-                  <input type="hidden" name="public_id" value={connection.publicId} />
-                  <Button type="submit" size="sm">
-                    {ui.message}
-                  </Button>
-                </form>
-              </li>
-            ))}
-          </ul>
-        )}
-        {data.connectionsTotal > data.connections.length && (
-          <p className="muted">
-            <SmartLink href={data.actions.connections}>
-              {data.connectionsTotal} {ui.connections} →
-            </SmartLink>
-          </p>
         )}
       </Card>
 

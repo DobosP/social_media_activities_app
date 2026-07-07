@@ -15,6 +15,11 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
 
 ## Current state
 
+- **Navigation IA shipped** (`claude/nav-ia`, ADR-0019 §3, 2026-07-07):
+  chat is first-class via `/messages/`, notification alerts move to a bell with the existing unread
+  count, the Inbox tab/sub-nav is retired from SSR and React payloads, Connections are promoted on
+  profile/account menus, and Support leaves primary nav while staying in footer/account/donation
+  paths. Verification is recorded in `P3_LANE_NOTES.md`.
 - **Merge-audit P1/P2 web fixes landed locally** (2026-07-07): React saved-search POSTs may submit
   activity type/category slugs and the server resolves them; home activity cards render contextual
   cover alt text under the enforced web contract; public-listing mutation input is fixed by
@@ -59,8 +64,8 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
   preferences), connections, saved searches, communities list + community detail — are
   React screens behind the same `SOCIAL_REACT_UI` switch, all classic-POST round-trips
   (every P3 mutation redirects with a flash — no client mutation state). Account/inbox
-  navigation now renders from ONE source (`account_nav`/`you_tabs`/`inbox_tabs` in
-  views_spa.py), closing the recon's duplicated-nav finding. Child-safety pages (wards,
+  navigation now renders from ONE source (`account_nav`/`you_tabs` in views_spa.py), with the
+  retired inbox tab strip removed from React notifications/connections payloads. Child-safety pages (wards,
   guardianship, verify-age, privacy/safety/log, account delete) stay server-rendered and
   got a class-only restyle (wards nested cards subordinated; 20 inline styles removed
   with new u-*/fieldset-plain utilities). communities graph page untouched (vendored

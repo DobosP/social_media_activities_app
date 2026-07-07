@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom';
 import { Button, Stack } from '@roedu/ui';
-import { TabStrip } from '../components/TabStrip';
 import type { ScreenProps } from './registry';
 import type { ConnectionsData } from './types3';
 
@@ -34,7 +33,6 @@ export function ConnectionsScreen({ payload }: ScreenProps) {
   return (
     <div className="sa-screen">
       <h1>{ui.title}</h1>
-      <TabStrip tabs={data.tabs} />
 
       <form
         className="sa-toolbar"

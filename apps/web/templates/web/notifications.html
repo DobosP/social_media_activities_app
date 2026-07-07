@@ -3,7 +3,6 @@
 {% block title %}{% trans "Notifications" %}{% endblock %}
 {% block content %}
 <h1>{% trans "Notifications" %}</h1>
-{% include "web/_inbox_tabs.html" with active="alerts" %}
 <div class="row">
   {% if items %}
     <form method="post" action="{% url 'notifications_read_all' %}">{% csrf_token %}

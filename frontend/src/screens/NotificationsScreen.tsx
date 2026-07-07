@@ -1,6 +1,5 @@
 import { Badge, Button, Card, Stack } from '@roedu/ui';
 import { SmartLink } from '../components/SmartLink';
-import { TabStrip } from '../components/TabStrip';
 import type { ScreenProps } from './registry';
 import type { NotificationsData } from './types3';
 
@@ -15,7 +14,6 @@ export function NotificationsScreen({ payload }: ScreenProps) {
           {ui.settings}
         </SmartLink>
       </div>
-      <TabStrip tabs={data.tabs} />
       {data.items.some((n) => n.unread) && (
         <form method="post" action={data.actions.readAll} className="inline">
           <input type="hidden" name="csrfmiddlewaretoken" value={payload.csrf} />
