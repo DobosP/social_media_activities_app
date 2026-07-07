@@ -493,6 +493,45 @@ ul.errorlist { color: var(--warn-fg); padding-left: 1rem; margin: .2rem 0; }
    ============================================================================= */
 #map { height: 460px; border-radius: var(--r); border: 1px solid var(--line); }
 .places-map { height: max(60vh, 520px); min-height: 60vh; overflow: hidden; background: var(--bg-subtle); }
+.map-search {
+  display: grid; gap: .35rem; margin: .65rem 0 .55rem;
+}
+.map-search label {
+  font-size: .86rem; font-weight: 700; color: var(--fg);
+}
+.map-search-control {
+  display: flex; gap: .45rem; align-items: stretch;
+}
+.map-search-control input {
+  flex: 1 1 auto; min-width: 0; min-height: 2.5rem;
+}
+.map-search-clear {
+  flex: 0 0 auto; min-height: 2.5rem; min-width: 2.5rem; padding: .35rem .7rem;
+  border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--card);
+  color: var(--fg); cursor: pointer; font: inherit; font-size: .86rem; font-weight: 700;
+}
+.map-search-clear:hover { background: var(--bg-subtle); }
+.map-search-listbox {
+  display: grid; gap: .2rem; max-height: min(45vh, 18rem); overflow-y: auto;
+  padding: .25rem; border: 1px solid var(--line); border-radius: var(--r-sm);
+  background: var(--card); box-shadow: var(--shadow); scrollbar-width: thin;
+}
+.map-search-listbox[hidden],
+.map-search-clear[hidden] { display: none; }
+.map-search-option {
+  display: flex; align-items: center; justify-content: space-between; gap: .75rem;
+  width: 100%; min-height: 2.5rem; padding: .45rem .6rem; border: 0;
+  border-radius: var(--r-sm); background: transparent; color: var(--fg); cursor: pointer;
+  font: inherit; text-align: left;
+}
+.map-search-option:hover,
+.map-search-option.is-active { background: var(--accent-weak); }
+.map-search-option-label {
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700;
+}
+.map-search-option-meta {
+  flex: 0 0 auto; color: var(--muted); font-size: .78rem;
+}
 .map-chip-row {
   display: flex; gap: .45rem; align-items: center; overflow-x: auto; padding: .2rem 0 .7rem;
   margin: .45rem 0 .55rem; scrollbar-width: thin;
@@ -617,6 +656,8 @@ textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--accent)
 .place-list-visual .place-cover-attribution { padding: .15rem 0 0; background: transparent; }
 .place-list-body { min-width: 0; }
 @media (max-width: 680px) {
+  .map-search-control { flex-wrap: wrap; }
+  .map-search-clear { flex: 1 0 auto; }
   .place-hero { grid-template-columns: 1fr; }
   .place-cover img,
   .place-cover-accent svg,

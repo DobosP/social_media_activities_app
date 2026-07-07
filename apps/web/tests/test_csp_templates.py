@@ -1,3 +1,4 @@
+import json
 import re
 from datetime import timedelta
 
@@ -79,6 +80,41 @@ def test_places_map_uses_vendored_maplibre_without_leaflet():
     assert "vendor/maplibre/maplibre-gl-csp.js" in html
     assert "vendor/maplibre/maplibre-gl-csp-worker.js" in html
     assert "vendor/leaflet" not in html
+
+
+def test_places_map_search_controls_and_vocabulary_island_are_nonced():
+    cat, _ = ActivityCategory.objects.get_or_create(
+        slug="csp-map-sport", defaults={"name": "Sport"}
+    )
+    ActivityType.objects.get_or_create(
+        slug="csp-map-tennis",
+        defaults={"name": "Tennis", "category": cat, "aliases": ["racket"]},
+    )
+
+    resp = Client().get("/places/")
+    html = resp.content.decode()
+
+    assert 'for="map-search"' in html
+    assert 'id="map-search"' in html
+    assert 'data-vocab-island="places-type-vocabulary"' in html
+    assert 'id="map-search-listbox"' in html
+    script = re.search(
+        r'<script (?=[^>]*id="places-type-vocabulary")(?=[^>]*nonce="([^"]+)")'
+        r'(?=[^>]*type="application/json")[^>]*>(?P<body>.*?)</script>',
+        html,
+        re.S,
+    )
+    assert script
+    assert f"'nonce-{script.group(1)}'" in resp["Content-Security-Policy-Report-Only"]
+    payload = json.loads(script.group("body"))
+    assert {
+        "slug": "csp-map-tennis",
+        "name": "Tennis",
+        "aliases": ["racket"],
+        "category": "csp-map-sport",
+        "categoryName": "Sport",
+    } in payload
+    assert list(_inline_executable_scripts(html)) == []
 
 
 def test_nonced_json_script_adds_matching_header_nonce_on_messages_page():

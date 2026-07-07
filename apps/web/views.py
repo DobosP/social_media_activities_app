@@ -1064,6 +1064,24 @@ def _places_map_categories(city=""):
     return sorted(categories.values(), key=lambda row: row["name"].casefold())
 
 
+def _places_map_type_vocabulary():
+    types = (
+        ActivityType.objects.filter(is_active=True)
+        .select_related("category")
+        .order_by("category__name", "name")
+    )
+    return [
+        {
+            "slug": activity_type.slug,
+            "name": activity_type.name,
+            "aliases": (activity_type.aliases if isinstance(activity_type.aliases, list) else []),
+            "category": activity_type.category.slug,
+            "categoryName": activity_type.category.name,
+        }
+        for activity_type in types
+    ]
+
+
 def places_map(request):
     city = request.GET.get("city", "")
     return render(
@@ -1071,6 +1089,7 @@ def places_map(request):
         "web/places.html",
         {
             "categories": _places_map_categories(city),
+            "type_vocabulary": _places_map_type_vocabulary(),
             **_nav_context(request.user),
         },
     )
