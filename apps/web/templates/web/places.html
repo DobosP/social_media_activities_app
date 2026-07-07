@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n static %}
+{% load csp_helpers i18n static %}
 {% block title %}{% trans "Places" %}{% endblock %}
 {% block head %}
 <link rel="stylesheet" href="{% static 'vendor/maplibre/maplibre-gl.css' %}">
@@ -10,6 +10,23 @@
 <p><a href="{% url 'places_list' %}">{% trans "View as a text list (no map needed)" %} &rarr;</a>
   {% if user.is_authenticated %}&middot; <a href="{% url 'place_propose' %}">{% trans "Add a missing place" %}</a>
   &middot; <a href="{% url 'places_pending' %}">{% trans "Pending places" %}</a>{% endif %}</p>
+{% nonced_json_script type_vocabulary "places-type-vocabulary" %}
+<div class="map-search" data-map-search-root>
+  <label for="map-search">{% trans "Caută un loc sau o activitate" %}</label>
+  <div class="map-search-control">
+    <input id="map-search"
+           type="search"
+           autocomplete="off"
+           role="combobox"
+           aria-autocomplete="list"
+           aria-expanded="false"
+           aria-controls="map-search-listbox"
+           data-vocab-island="places-type-vocabulary">
+    {# i18n-followup: new temporary English label for the map search reset button. #}
+    <button class="map-search-clear" type="button" data-map-search-clear hidden aria-label="{% trans 'Clear map search' %}">{% trans "Clear" %}</button>
+  </div>
+  <div id="map-search-listbox" class="map-search-listbox" role="listbox" hidden></div>
+</div>
 {# i18n-followup: new temporary English aria label for the map filter row. #}
 <div class="map-chip-row" aria-label="Place map filters">
   {% for category in categories %}

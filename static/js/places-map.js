@@ -15,9 +15,18 @@
   var openNowLabel = mapEl.dataset.openNowLabel || "Open now";
   var linkLabel = mapEl.dataset.linkLabel || "View";
   var rootStyle = window.getComputedStyle(document.documentElement);
-  var activeFilters = { category: "", hasUpcoming: false, openNow: false };
+  var searchInput = document.getElementById("map-search");
+  var searchListbox = document.getElementById("map-search-listbox");
+  var searchClear = document.querySelector("[data-map-search-clear]");
+  var activeFilters = { category: "", hasUpcoming: false, openNow: false, concept: null, query: "" };
   var lastApiData = emptyFeatureCollection();
   var loaded = false;
+  var activePopup = null;
+  var vocabulary = buildVocabulary();
+  var vocabularyBySlug = vocabulary.bySlug;
+  var suggestionItems = [];
+  var activeSuggestion = -1;
+  var searchTimer = null;
 
   function cssVar(name, fallback) {
     return rootStyle.getPropertyValue(name).trim() || fallback;
@@ -33,27 +42,143 @@
     return [];
   }
 
+  function normalizeText(value) {
+    return String(value || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+  }
+
+  function uniqueNormalized(values) {
+    var seen = {};
+    return values.filter(function (value) {
+      var key = normalizeText(value);
+      if (!key || seen[key]) return false;
+      seen[key] = true;
+      return true;
+    });
+  }
+
+  function haystack(values) {
+    return normalizeText(uniqueNormalized(values).join(" "));
+  }
+
+  function buildVocabulary() {
+    var out = [];
+    var categories = {};
+    var bySlug = {};
+    if (!searchInput) return { items: out, bySlug: bySlug };
+    var islandId = searchInput.dataset.vocabIsland || "";
+    var island = islandId ? document.getElementById(islandId) : null;
+    var rows = [];
+    if (island && island.textContent) {
+      try {
+        rows = JSON.parse(island.textContent);
+      } catch (err) {
+        rows = [];
+      }
+    }
+    rows.forEach(function (row) {
+      if (!row || !row.slug || !row.name) return;
+      var aliases = normalizeList(row.aliases);
+      var item = {
+        kind: "concept",
+        conceptKind: "type",
+        slug: row.slug,
+        name: row.name,
+        aliases: aliases,
+        category: row.category || "",
+        categoryName: row.categoryName || "",
+        label: row.name,
+        meta: row.categoryName || "Activity",
+        searchText: haystack([row.slug, row.name, row.category, row.categoryName].concat(aliases))
+      };
+      out.push(item);
+      bySlug[normalizeText(row.slug)] = item;
+      if (row.category && !categories[row.category]) {
+        categories[row.category] = {
+          kind: "concept",
+          conceptKind: "category",
+          slug: row.category,
+          name: row.categoryName || row.category,
+          aliases: [],
+          category: row.category,
+          categoryName: row.categoryName || row.category,
+          label: row.categoryName || row.category,
+          meta: "Category",
+          searchText: haystack([row.category, row.categoryName])
+        };
+      }
+    });
+    Object.keys(categories).forEach(function (slug) {
+      out.push(categories[slug]);
+    });
+    return { items: out, bySlug: bySlug };
+  }
+
+  function featureSearchText(feature) {
+    var props = feature.properties || {};
+    var values = [props.name].concat(normalizeList(props.categories), normalizeList(props.category_labels));
+    normalizeList(props.activities).forEach(function (activity) {
+      if (!activity) return;
+      values.push(activity.slug, activity.name);
+      var vocab = vocabularyBySlug[normalizeText(activity.slug)];
+      if (vocab) {
+        values.push(vocab.name, vocab.category, vocab.categoryName);
+        values = values.concat(vocab.aliases || []);
+      }
+    });
+    return haystack(values);
+  }
+
+  function valueMatchesAny(value, needles) {
+    var normalized = normalizeText(value);
+    return needles.some(function (needle) {
+      return normalized === normalizeText(needle);
+    });
+  }
+
+  function featureMatchesConcept(feature, concept) {
+    if (!concept) return true;
+    var props = feature.properties || {};
+    var needles = uniqueNormalized([concept.slug, concept.name].concat(concept.aliases || []));
+    if (normalizeList(props.categories).some(function (slug) { return valueMatchesAny(slug, needles); })) {
+      return true;
+    }
+    if (
+      concept.conceptKind === "category" &&
+      normalizeList(props.category_labels).some(function (label) { return valueMatchesAny(label, needles); })
+    ) {
+      return true;
+    }
+    return normalizeList(props.activities).some(function (activity) {
+      return activity && (valueMatchesAny(activity.slug, needles) || valueMatchesAny(activity.name, needles));
+    });
+  }
+
+  function featureMatchesFreeQuery(feature) {
+    var query = normalizeText(activeFilters.query);
+    if (!query) return true;
+    return featureSearchText(feature).indexOf(query) !== -1;
+  }
+
   function filteredData(data) {
     var features = (data && data.features ? data.features : []).filter(function (feature) {
       var props = feature.properties || {};
-      return !activeFilters.openNow || props.open_now === true;
+      if (activeFilters.category && normalizeList(props.categories).indexOf(activeFilters.category) === -1) {
+        return false;
+      }
+      if (activeFilters.hasUpcoming && props.has_upcoming !== true) return false;
+      if (activeFilters.openNow && props.open_now !== true) return false;
+      if (!featureMatchesConcept(feature, activeFilters.concept)) return false;
+      if (!activeFilters.concept && !featureMatchesFreeQuery(feature)) return false;
+      return true;
     });
     return { type: "FeatureCollection", features: features };
   }
 
   function placesRequestUrl() {
-    var url = new URL(placesUrl, window.location.origin);
-    if (activeFilters.category) {
-      url.searchParams.set("category", activeFilters.category);
-    } else {
-      url.searchParams.delete("category");
-    }
-    if (activeFilters.hasUpcoming) {
-      url.searchParams.set("has_upcoming", "true");
-    } else {
-      url.searchParams.delete("has_upcoming");
-    }
-    return url.toString();
+    return new URL(placesUrl, window.location.origin).toString();
   }
 
   function setSourceData(data, fit) {
@@ -152,6 +277,17 @@
     return wrapper;
   }
 
+  function openFeaturePopup(feature, fly) {
+    var coords = feature.geometry && feature.geometry.coordinates;
+    if (!coords) return;
+    if (activePopup) activePopup.remove();
+    if (fly) map.easeTo({ center: coords, zoom: Math.max(map.getZoom(), 15) });
+    activePopup = new maplibregl.Popup({ closeButton: true, maxWidth: "280px" })
+      .setLngLat(coords)
+      .setDOMContent(buildPopup(feature))
+      .addTo(map);
+  }
+
   function setChipState() {
     document.querySelectorAll("[data-map-filter]").forEach(function (button) {
       var kind = button.dataset.mapFilter;
@@ -172,13 +308,13 @@
           var value = button.dataset.filterValue || "";
           activeFilters.category = activeFilters.category === value ? "" : value;
           setChipState();
-          loadPlaces(true);
+          setSourceData(lastApiData, true);
           return;
         }
         if (kind === "has-upcoming") {
           activeFilters.hasUpcoming = !activeFilters.hasUpcoming;
           setChipState();
-          loadPlaces(true);
+          setSourceData(lastApiData, true);
           return;
         }
         if (kind === "open-now") {
@@ -188,6 +324,158 @@
         }
       });
     });
+  }
+
+  function hideSuggestions() {
+    if (!searchListbox || !searchInput) return;
+    searchListbox.hidden = true;
+    searchInput.setAttribute("aria-expanded", "false");
+    searchInput.removeAttribute("aria-activedescendant");
+    activeSuggestion = -1;
+  }
+
+  function setActiveSuggestion(index) {
+    activeSuggestion = index;
+    Array.prototype.forEach.call(searchListbox.children, function (row, rowIndex) {
+      var active = rowIndex === activeSuggestion;
+      row.classList.toggle("is-active", active);
+      row.setAttribute("aria-selected", active ? "true" : "false");
+      if (active && searchInput) searchInput.setAttribute("aria-activedescendant", row.id);
+    });
+  }
+
+  function placeSuggestions(query) {
+    var seen = {};
+    return (lastApiData.features || []).reduce(function (items, feature) {
+      var props = feature.properties || {};
+      var name = props.name || unnamed;
+      var key = String(feature.id || props.id || name);
+      if (seen[key] || normalizeText(name).indexOf(query) === -1) return items;
+      seen[key] = true;
+      items.push({ kind: "place", label: name, meta: "Place", feature: feature });
+      return items;
+    }, []);
+  }
+
+  function matchingSuggestions() {
+    var query = normalizeText(searchInput ? searchInput.value : "");
+    if (!query) return [];
+    var concepts = vocabulary.items.filter(function (item) {
+      return item.searchText.indexOf(query) !== -1;
+    });
+    return concepts.slice(0, 6).concat(placeSuggestions(query).slice(0, 6)).slice(0, 8);
+  }
+
+  function renderSuggestions() {
+    if (!searchInput || !searchListbox) return;
+    suggestionItems = matchingSuggestions();
+    searchListbox.textContent = "";
+    if (!suggestionItems.length) {
+      hideSuggestions();
+      return;
+    }
+    suggestionItems.forEach(function (item, index) {
+      var row = document.createElement("button");
+      row.type = "button";
+      row.id = "map-search-option-" + index;
+      row.className = "map-search-option";
+      row.setAttribute("role", "option");
+      row.setAttribute("aria-selected", "false");
+      row.addEventListener("click", function () { selectSuggestion(index); });
+      var label = document.createElement("span");
+      label.className = "map-search-option-label";
+      label.textContent = item.label;
+      var meta = document.createElement("span");
+      meta.className = "map-search-option-meta";
+      meta.textContent = item.meta;
+      row.appendChild(label);
+      row.appendChild(meta);
+      searchListbox.appendChild(row);
+    });
+    searchListbox.hidden = false;
+    searchInput.setAttribute("aria-expanded", "true");
+    setActiveSuggestion(0);
+  }
+
+  function updateClearButton() {
+    if (!searchClear) return;
+    searchClear.hidden = !(activeFilters.query || activeFilters.concept);
+  }
+
+  function applySearch(fit) {
+    if (!searchInput) return;
+    activeFilters.query = searchInput.value;
+    setSourceData(lastApiData, fit);
+    updateClearButton();
+  }
+
+  function scheduleSearchUpdate() {
+    window.clearTimeout(searchTimer);
+    searchTimer = window.setTimeout(function () {
+      applySearch(false);
+      renderSuggestions();
+    }, 150);
+  }
+
+  function selectSuggestion(index) {
+    var item = suggestionItems[index];
+    if (!item || !searchInput) return;
+    if (item.kind === "concept") {
+      activeFilters.concept = item;
+      activeFilters.query = item.label;
+      searchInput.value = item.label;
+      setSourceData(lastApiData, true);
+    } else if (item.kind === "place") {
+      activeFilters.concept = null;
+      activeFilters.query = item.label;
+      searchInput.value = item.label;
+      setSourceData(lastApiData, false);
+      openFeaturePopup(item.feature, true);
+    }
+    updateClearButton();
+    hideSuggestions();
+  }
+
+  function clearSearch() {
+    if (!searchInput) return;
+    searchInput.value = "";
+    activeFilters.concept = null;
+    activeFilters.query = "";
+    hideSuggestions();
+    updateClearButton();
+    setSourceData(lastApiData, true);
+    searchInput.focus();
+  }
+
+  function bindSearch() {
+    if (!searchInput || !searchListbox) return;
+    searchInput.addEventListener("input", function () {
+      activeFilters.concept = null;
+      scheduleSearchUpdate();
+    });
+    searchInput.addEventListener("focus", renderSuggestions);
+    searchInput.addEventListener("blur", function () {
+      window.setTimeout(hideSuggestions, 120);
+    });
+    searchInput.addEventListener("keydown", function (event) {
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        if (searchListbox.hidden) renderSuggestions();
+        else setActiveSuggestion(Math.min(activeSuggestion + 1, suggestionItems.length - 1));
+      } else if (event.key === "ArrowUp") {
+        event.preventDefault();
+        if (searchListbox.hidden) renderSuggestions();
+        else setActiveSuggestion(Math.max(activeSuggestion - 1, 0));
+      } else if (event.key === "Enter" && !searchListbox.hidden && activeSuggestion >= 0) {
+        event.preventDefault();
+        selectSuggestion(activeSuggestion);
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        if (!searchListbox.hidden) hideSuggestions();
+        else clearSearch();
+      }
+    });
+    if (searchClear) searchClear.addEventListener("click", clearSearch);
   }
 
   if (typeof maplibregl.setWorkerUrl === "function") {
@@ -273,10 +561,7 @@
     map.on("click", "place-points", function (event) {
       var feature = event.features && event.features[0];
       if (!feature) return;
-      new maplibregl.Popup({ closeButton: true, maxWidth: "280px" })
-        .setLngLat(feature.geometry.coordinates)
-        .setDOMContent(buildPopup(feature))
-        .addTo(map);
+      openFeaturePopup(feature, false);
     });
 
     ["place-clusters", "place-points"].forEach(function (layer) {
@@ -285,6 +570,7 @@
     });
 
     bindFilters();
+    bindSearch();
     setChipState();
     loadPlaces(true);
   });
