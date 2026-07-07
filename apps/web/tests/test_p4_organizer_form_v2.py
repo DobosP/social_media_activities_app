@@ -2,6 +2,7 @@ from datetime import timedelta
 
 import pytest
 from django.contrib.gis.geos import Point
+from django.template.loader import render_to_string
 from django.test import Client
 from django.utils import timezone
 
@@ -13,7 +14,8 @@ from apps.places.models import Place
 from apps.social.models import Activity, Membership
 from apps.social.services import create_activity
 from apps.taxonomy.models import ActivityCategory, ActivityType
-from apps.web.forms import ActivityForm
+from apps.web import views_spa
+from apps.web.forms import ActivityEditForm, ActivityForm
 
 pytestmark = pytest.mark.django_db
 
@@ -30,9 +32,9 @@ def _place(name="Court"):
     )
 
 
-def _type(slug="p4-basketball"):
+def _type(slug="p4-basketball", name="Basketball"):
     cat, _ = ActivityCategory.objects.get_or_create(slug="p4-sport", defaults={"name": "Sport"})
-    return ActivityType.objects.create(slug=slug, name="Basketball", category=cat)
+    return ActivityType.objects.create(slug=slug, name=name, category=cat)
 
 
 def _form_data(place, activity_type, starts_at, **overrides):
@@ -80,16 +82,69 @@ def test_activity_form_cost_amount_with_free_band_is_field_error():
     assert "cost_amount" in form.errors
 
 
-def test_activity_form_sections_cover_each_visible_field_once():
-    user = _user("p4-form-sections")
-    form = ActivityForm(user=user)
-    rendered = [field.name for field in form.essential_fields()]
-    for _key, _title, fields in form.sections():
+def _step_field_names(form):
+    rendered = []
+    for _key, _title, fields in form.steps():
         rendered.extend(field.name for field in fields)
-    visible = [name for name, field in form.fields.items() if not field.widget.is_hidden]
+    return rendered
 
-    assert sorted(rendered) == sorted(visible)
-    assert len(rendered) == len(set(rendered))
+
+def test_activity_form_steps_cover_each_visible_field_once():
+    user = _user("p4-form-steps")
+    for form in (ActivityForm(user=user), ActivityEditForm(user=user)):
+        rendered = _step_field_names(form)
+        visible = [name for name, field in form.fields.items() if not field.widget.is_hidden]
+
+        assert sorted(rendered) == sorted(visible)
+        assert len(rendered) == len(set(rendered))
+
+
+def test_activity_create_page_renders_wizard_and_nonce_vocabulary_island():
+    user = _user("p4-wizard-page")
+    _place()
+    _type("p4-wizard-type", "Șah")
+    client = Client()
+    client.force_login(user)
+
+    resp = client.get("/activities/new/")
+    html = resp.content.decode()
+
+    assert resp.status_code == 200
+    assert "data-wizard" in html
+    assert "data-wizard-panel" in html
+    assert 'id="activity-type-vocabulary"' in html
+    assert 'nonce="' in html
+    assert 'data-combobox="single"' in html
+    assert 'data-combobox="multiple"' in html
+    # the nav chrome legitimately uses <details>; only the FORM toggles are retired
+    assert '<details class="form-section"' not in html
+
+
+def test_activity_create_post_persists_secondary_types():
+    owner = _user("p4-create-secondary")
+    place = _place("Secondary court")
+    primary = _type("p4-create-primary", "Basketball")
+    chess = _type("p4-create-chess", "Șah")
+    running = _type("p4-create-running", "Alergare")
+    client = Client()
+    client.force_login(owner)
+
+    resp = client.post(
+        "/activities/new/",
+        _form_data(
+            place,
+            primary,
+            timezone.now() + timedelta(days=1),
+            secondary_types=[str(chess.pk), str(running.pk)],
+        ),
+    )
+
+    activity = Activity.objects.get(title="Pickup game")
+    assert resp.status_code == 302
+    assert list(activity.secondary_types.order_by("name").values_list("name", flat=True)) == [
+        "Alergare",
+        "Șah",
+    ]
 
 
 def test_place_propose_return_to_organize_redirects_to_create_with_place():
@@ -120,10 +175,13 @@ def test_activity_edit_initial_includes_place_and_moving_notifies_member():
     activity_type = _type("p4-edit-type")
     old_place = _place("Old hall")
     new_place = _place("New hall")
+    chess = _type("p4-edit-chess", "Șah")
+    running = _type("p4-edit-running", "Alergare")
     activity = create_activity(
         owner,
         place=old_place,
         activity_type=activity_type,
+        secondary_types=[chess],
         title="Move me",
         starts_at=(timezone.now() + timedelta(days=2)).replace(second=0, microsecond=0),
     )
@@ -141,6 +199,7 @@ def test_activity_edit_initial_includes_place_and_moving_notifies_member():
         {
             "place": str(new_place.pk),
             "title": activity.title,
+            "secondary_types": [str(running.pk)],
             "description": activity.description,
             "starts_at": activity.starts_at.strftime("%Y-%m-%dT%H:%M"),
             "ends_at": "",
@@ -162,6 +221,9 @@ def test_activity_edit_initial_includes_place_and_moving_notifies_member():
 
     assert resp.status_code == 302
     assert activity.place == new_place
+    assert list(activity.secondary_types.order_by("name").values_list("name", flat=True)) == [
+        "Alergare"
+    ]
     notice = Notification.objects.filter(
         recipient=member,
         kind=Notification.Kind.ACTIVITY_UPDATED,
@@ -169,3 +231,28 @@ def test_activity_edit_initial_includes_place_and_moving_notifies_member():
     ).get()
     assert "Old hall" in notice.body
     assert "New hall" in notice.body
+
+
+def test_activity_card_and_spa_payload_include_secondary_type_chips():
+    owner = _user("p4-card-secondary")
+    place = _place("Card hall")
+    primary = _type("p4-card-primary", "Basketball")
+    chess = _type("p4-card-chess", "Șah")
+    activity = create_activity(
+        owner,
+        place=place,
+        activity_type=primary,
+        secondary_types=[chess],
+        title="Card secondary",
+        starts_at=timezone.now() + timedelta(days=1),
+    )
+
+    html = render_to_string("web/_activity_card.html", {"a": activity, "show_accent": False})
+    payload = views_spa.activity_card(activity, owner)
+    client = Client()
+    client.force_login(owner)
+    detail_html = client.get(f"/activities/{activity.pk}/").content.decode()
+
+    assert 'class="tag tag-muted">Șah</span>' in html
+    assert 'class="tag tag-muted">Șah</span>' in detail_html
+    assert payload["tags"][:2] == ["Basketball", "Șah"]

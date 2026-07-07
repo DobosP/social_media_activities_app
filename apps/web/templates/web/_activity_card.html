@@ -14,6 +14,7 @@
     <h3><a href="{% url 'activity_detail' a.pk %}">{{ a.title }}</a></h3>
     <div>
       <span class="tag">{{ a.activity_type.name }}</span>
+      {% for secondary_type in a.secondary_types.all %}<span class="tag tag-muted">{{ secondary_type.name }}</span>{% endfor %}
       {% comment %}W7: no cohort badge — everyone only ever sees their own cohort's
          activities, so the tag was pure "you are a child" signage.{% endcomment %}
       {% if a.cost_band and a.cost_band != "unspecified" %}<span class="tag">{{ a.get_cost_band_display }}</span>{% endif %}

@@ -7,6 +7,7 @@ from django.conf import settings
 from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.measure import D
 from django.db import transaction
+from django.db.models import prefetch_related_objects
 from django.utils import timezone
 from pgvector.django import CosineDistance
 
@@ -313,7 +314,7 @@ def recommend_activities(user, *, limit=20, near_point=None, radius_m=None):
                 # (recommended_with_reasons) stays query-free — no per-card N+1.
                 candidates.select_related(
                     "place", "activity_type__category__parent", "owner", "cover"
-                )
+                ).prefetch_related("secondary_types")
             ).order_by("starts_at")[:limit]
         )
 
@@ -361,6 +362,7 @@ def recommend_activities(user, *, limit=20, near_point=None, radius_m=None):
     # Attach member/participant counts in ONE query so the serializer doesn't fall back to
     # a per-row COUNT (the W2-2 N+1) on the ranked recommendations path.
     if activities:
+        prefetch_related_objects(activities, "secondary_types")
         annotated = {
             a.id: a for a in with_counts(Activity.objects.filter(id__in=[a.id for a in activities]))
         }

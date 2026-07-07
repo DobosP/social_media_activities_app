@@ -141,6 +141,7 @@ def public_activities():
             owner__is_active=True,
         )
         .select_related("activity_type", "place")
+        .prefetch_related("secondary_types")
         .order_by("starts_at")
     )
 
@@ -275,11 +276,12 @@ def activity_search_filter(qs, query):
         | Q(description__icontains=query)
         | Q(place__name__icontains=query)
         | Q(activity_type__name__icontains=query)
+        | Q(secondary_types__name__icontains=query)  # ADR-0020
     )
     type_ids = _matching_type_ids(query)
     if type_ids:
-        predicate |= Q(activity_type_id__in=type_ids)
-    return qs.filter(predicate)
+        predicate |= Q(activity_type_id__in=type_ids) | Q(secondary_types__in=type_ids)
+    return qs.filter(predicate).distinct()
 
 
 def search_did_you_mean(viewer, query, *, threshold=0.3):
@@ -439,7 +441,7 @@ def organizer_console(user) -> dict:
         .select_related("place", "activity_type")
         # F20: the template renders place.display_name, which reads place.corrections — prefetch
         # so the list stays O(1) queries (the established pattern on every display_name surface).
-        .prefetch_related("place__corrections")
+        .prefetch_related("place__corrections", "secondary_types")
         # F5: batch every per-row read onto the single console queryset so the up-to-100-row list
         # stays O(1) queries — never an attendance_summary()/participant_count()/hours_reliable()
         # call inside the comprehension below. distinct=True is load-bearing: the counts span two
@@ -794,6 +796,29 @@ def category_envelope_allows(user, activity_type) -> bool:
     return _type_in_category_envelope(rail.get("allowed_categories"), activity_type)
 
 
+MAX_SECONDARY_TYPES = 2
+
+
+def _validated_secondary_types(owner, activity_type, secondary_types):
+    """ADR-0020: normalize + gate the optional secondary types. Cap, active-only,
+    primary excluded, deduped — and the guardian category envelope must allow EVERY
+    type (a child must not smuggle a disallowed category in as a secondary)."""
+    cleaned = []
+    for extra in secondary_types or []:
+        if extra.pk == activity_type.pk or extra in cleaned:
+            continue
+        if not extra.is_active:
+            raise InvalidState(_("That activity type isn't available."))
+        if not category_envelope_allows(owner, extra):
+            raise InvalidState(_("Your guardian's settings don't allow this kind of activity yet."))
+        cleaned.append(extra)
+    if len(cleaned) > MAX_SECONDARY_TYPES:
+        raise InvalidState(
+            _("Pick at most %(n)d extra activity types.") % {"n": MAX_SECONDARY_TYPES}
+        )
+    return cleaned
+
+
 def _own_pending_place(owner, place) -> bool:
     """ADR-0019 §4: whether ``place`` is the owner's OWN still-pending co-creation proposal
     (the only non-public venue an ADULT organiser may convene at while the quorum runs)."""
@@ -823,6 +848,7 @@ def create_activity(
     getting_home_note="",
     first_time_note="",
     fallback_meeting_point="",
+    secondary_types=None,
     cost_band=Activity.CostBand.UNSPECIFIED,
     cost_amount=None,
     cost_note="",
@@ -934,6 +960,9 @@ def create_activity(
         state=Membership.State.MEMBER,
         decided_at=timezone.now(),
     )
+    extra_types = _validated_secondary_types(owner, activity_type, secondary_types)
+    if extra_types:
+        activity.secondary_types.set(extra_types)
     Thread.objects.create(activity=activity)
     return activity
 
@@ -1471,6 +1500,13 @@ def update_activity(owner, activity, **changes) -> Activity:
     if activity.starts_at <= timezone.now():
         raise InvalidState(_("This activity has already started and can no longer be edited."))
 
+    new_secondary = changes.pop("secondary_types", None)
+    if new_secondary is not None:
+        # ADR-0020: same per-type envelope/cap gates as creation; silent no-notify change
+        # (types refine discovery, they don't alter the commitment members made).
+        activity.secondary_types.set(
+            _validated_secondary_types(owner, activity.activity_type, new_secondary)
+        )
     fields = {k: v for k, v in changes.items() if k in ACTIVITY_EDITABLE_FIELDS}
     new_starts = fields.get("starts_at", activity.starts_at)
     new_ends = fields.get("ends_at", activity.ends_at)

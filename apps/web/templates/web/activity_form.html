@@ -29,39 +29,12 @@ never stored or submitted (the only thing saved is which existing public place y
   <p id="place-picker-status" class="muted" aria-live="polite"></p>
 </section>
 
-<form method="post">{% csrf_token %}
-  <div class="form-essentials">
-    {% for field in form.essential_fields %}
-      <div class="form-field">
-        {{ field.errors }}
-        {{ field.label_tag }}
-        {{ field }}
-        {% if field.help_text %}<div class="helptext">{{ field.help_text }}</div>{% endif %}
-        {% if field.name == "place" %}
-          <div class="helptext"><a class="muted-link" href="{% url 'place_propose' %}?return=organize">{% trans "Can't find the place? Add a missing place →" %}</a></div>
-        {% endif %}
-      </div>
-    {% endfor %}
-  </div>
-  {% for key, title, fields in form.sections %}
-    <details class="form-section"{% for field in fields %}{% if field.errors %} open{% endif %}{% endfor %}>
-      <summary>{{ title }}</summary>
-      <div class="form-section-body">
-        {% for field in fields %}
-          <div class="form-field">
-            {{ field.errors }}
-            {{ field.label_tag }}
-            {{ field }}
-            {% if field.help_text %}<div class="helptext">{{ field.help_text }}</div>{% endif %}
-          </div>
-        {% endfor %}
-      </div>
-    </details>
-  {% endfor %}
-  <button class="btn" type="submit">{% trans "Create activity" %}</button>
-</form>
+{% trans "Create activity" as submit_label %}
+{% include "web/_activity_form_wizard.html" with submit_label=submit_label show_place_propose=True %}
 {% endblock %}
 {% block scripts %}
 <script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
 <script src="{% static 'js/place-picker.js' %}" defer></script>
+<script src="{% static 'js/concept-combobox.js' %}" defer></script>
+<script src="{% static 'js/form-wizard.js' %}" defer></script>
 {% endblock %}
