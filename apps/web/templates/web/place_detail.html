@@ -51,6 +51,7 @@
     </p>
     <p class="muted">{{ place.display_address }}{% if place.address_country %} {{ place.address_country }}{% endif %}</p>
     {% if place.website|safe_href %}<p><a class="btn btn--light" href="{{ place.website|safe_href }}" rel="noopener noreferrer" target="_blank">{% trans "Official website" %} &rarr;</a></p>{% endif %}
+    {% if official_partner %}<p><span class="tag fact--true">{% trans "Official venue page" %} &#10003;</span> <span class="muted">{% blocktrans with name=official_partner.name %}Maintained with {{ name }}{% endblocktrans %}</span></p>{% endif %}
     {% if partner %}<p class="muted">{% trans "In partnership with" %} {% if partner.website|safe_href %}<a href="{{ partner.website|safe_href }}" rel="noopener noreferrer" target="_blank">{{ partner.name }}</a>{% else %}{{ partner.name }}{% endif %} <small>({{ partner.get_kind_display }})</small></p>
       {% if partner.blurb %}<p class="muted partner-blurb">{{ partner.blurb }}</p>{% endif %}
     {% endif %}
@@ -215,6 +216,9 @@
 <details class="place-section">
   {# i18n-followup: new collapsed place-detail section label. #}
   <summary>{% trans "Data & corrections" %}</summary>
+  {% if user.is_authenticated and not official_partner %}
+    <p class="muted"><a class="muted-link" href="{% url 'place_claim' place.pk %}">{% trans "Is this your venue? Claim it" %} &rarr;</a></p>
+  {% endif %}
   {% if attribution_credit %}
     <p class="muted activity-meta-note">
       {% trans "Source credit:" %}

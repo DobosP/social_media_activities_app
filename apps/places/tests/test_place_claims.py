@@ -133,3 +133,16 @@ def test_claim_web_flow(client, adult, place):
     )
     assert resp.status_code == 302
     assert PlaceClaim.objects.filter(place=place, claimant=adult).exists()
+
+
+def test_place_detail_shows_official_badge_and_claim_link(client, adult, staff, place):
+    client.force_login(adult)
+    body = client.get(f"/places/{place.pk}/").content.decode()
+    assert "Is this your venue? Claim it" in body
+    assert "Official venue page" not in body
+
+    approve_place_claim(staff, _claim(adult, place))
+
+    body = client.get(f"/places/{place.pk}/").content.decode()
+    assert "Official venue page" in body
+    assert "Is this your venue? Claim it" not in body
