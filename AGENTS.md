@@ -17,7 +17,8 @@
 ## Safety
 - Never read or print secrets from `.env`, settings, cookies, tokens, or auth stores.
 - Do not weaken child-safety, privacy, moderation, or GDPR erasure paths.
-- Do not push or merge unless Paul explicitly asks.
+- Direct merge + push to `main` is allowed once the test gate is green (owner
+  decision 2026-07-07, development phase). Never land a red suite.
 
 ## Commands
 - Targeted deferred-task test in the local container: `docker compose -p socialfix -f docker-compose.local.yml exec -T web sh -lc 'python -m pytest apps/ops/tests/test_deferred_tasks.py -q'`
