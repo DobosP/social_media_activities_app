@@ -35,15 +35,6 @@
         {% endif %}
       </form>
     {% endif %}
-    {% comment %}W2-F10: switch to the single pre-declared plan-B time, once. Shown only while the
-       meetup is open and a backup time is set; consumed (cleared) by invoke_fallback.{% endcomment %}
-    {% if is_open and activity.fallback_starts_at %}
-	      <form method="post" action="{% url 'activity_fallback' activity.pk %}" class="activity-action-form"
-	            data-confirm="{% trans 'Move this meetup to your plan-B time and notify everyone?' %}">{% csrf_token %}
-        <button class="btn btn-sm" type="submit">{% blocktrans with t=activity.fallback_starts_at|date:"D j M, H:i" %}Switch to plan-B time ({{ t }}){% endblocktrans %}</button>
-        <span class="muted activity-note">{% trans "Moves the meetup once to your backup time and tells everyone." %}</span>
-      </form>
-    {% endif %}
 	    <form method="post" action="{% url 'activity_cancel' activity.pk %}" class="stack activity-action-form"
 	          data-confirm="{% trans 'Cancel this activity? Every member will be notified.' %}">
       {% csrf_token %}

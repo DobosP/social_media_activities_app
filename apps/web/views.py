@@ -1300,10 +1300,27 @@ def place_propose(request):
                 messages.success(
                     request, "Thanks! Your place is pending — neighbours can now confirm it."
                 )
+                # ADR-0019 §4: when the proposal started from the organizer form, bounce
+                # straight back there with the new place preselected — an ADULT organiser
+                # may convene at their own pending proposal immediately (create_activity
+                # re-gates), so "the place doesn't exist yet" no longer derails creating
+                # the meetup. A fixed allowlisted target, never an open ?next= redirect.
+                if request.POST.get("return_to") == "organize":
+                    return redirect(f"{reverse('activity_create')}?place={proposal.place_id}")
                 return redirect("place_detail", pk=proposal.place_id)
     else:
         form = PlaceProposeForm()
-    return render(request, "web/place_propose.html", {"form": form, **_nav_context(request.user)})
+    return render(
+        request,
+        "web/place_propose.html",
+        {
+            "form": form,
+            "return_to": (
+                request.GET.get("return") if request.GET.get("return") == "organize" else ""
+            ),
+            **_nav_context(request.user),
+        },
+    )
 
 
 @login_required
@@ -2063,16 +2080,23 @@ def series_end(request, pk):
 
 @login_required
 def activity_edit(request, pk):
-    """Owner edits an OPEN, not-yet-started activity (F2). Place/type are not editable."""
+    """Owner edits an OPEN, not-yet-started activity (F2). The venue routes through the
+    audited move_activity path (ADR-0019 §4 — every member is notified); type stays locked."""
     activity = _visible_activity_or_404(request.user, pk)
     if not social.is_organizer(request.user, activity):  # F22: owner OR co-organiser
         messages.error(request, "Only the organiser can edit this activity.")
         return redirect("activity_detail", pk=pk)
     if request.method == "POST":
-        form = ActivityEditForm(request.POST)
+        form = ActivityEditForm(request.POST, user=request.user)
         if form.is_valid():
+            fields = dict(form.cleaned_data)
+            new_place = fields.pop("place", None)
             try:
-                social.update_activity(request.user, activity, **form.cleaned_data)
+                # Venue first: if the move is refused by the venue gates, NOTHING is
+                # applied — an edit whose destination is invalid shouldn't half-land.
+                if new_place is not None and new_place.pk != activity.place_id:
+                    social.move_activity(request.user, activity, place=new_place)
+                social.update_activity(request.user, activity, **fields)
             except social.SocialError as exc:
                 messages.error(request, _msg(exc))
             else:
@@ -2080,7 +2104,9 @@ def activity_edit(request, pk):
                 return redirect("activity_detail", pk=pk)
     else:
         form = ActivityEditForm(
+            user=request.user,
             initial={
+                "place": activity.place_id,
                 "title": activity.title,
                 "description": activity.description,
                 "starts_at": activity.starts_at,
@@ -2090,19 +2116,15 @@ def activity_edit(request, pk):
                 "meeting_point": activity.meeting_point,
                 "what_to_bring": activity.what_to_bring,
                 "organizer_note": activity.organizer_note,
-                # Must prefill: the edit form's getting_home_note is required=False, so an absent
-                # initial would submit "" on any routine edit and silently wipe the stored note
-                # (the very field F18 mirrors to the CHILD guardian manifest).
-                "getting_home_note": activity.getting_home_note,
-                # Same prefill reason (F41): required=False would wipe the stored note on edit.
+                # Must prefill (F41): required=False would wipe the stored note on edit.
                 "first_time_note": activity.first_time_note,
-                # Same prefill reason (W3-F8): the plan-B spot must survive a routine edit.
-                "fallback_meeting_point": activity.fallback_meeting_point,
                 "cost_band": activity.cost_band,
+                "cost_amount": activity.cost_amount,
+                "cost_note": activity.cost_note,
                 "difficulty": activity.difficulty,
                 "accessibility_notes": activity.accessibility_notes,
                 "beginners_welcome": activity.beginners_welcome,
-            }
+            },
         )
     return render(
         request,
@@ -2268,20 +2290,6 @@ def activity_met(request, pk):
     confirmed = request.POST.get("met") != "no"
     try:
         social.set_met_confirmed(request.user, activity, confirmed)
-    except social.SocialError as exc:
-        messages.error(request, _msg(exc))
-    return redirect("activity_detail", pk=pk)
-
-
-@login_required
-@require_POST
-def activity_fallback(request, pk):
-    """W2-F10: the owner switches the meetup to its single pre-declared plan-B time, ONCE.
-    Members are re-notified of the new time, and the shift is recorded in the audit log."""
-    activity = _visible_activity_or_404(request.user, pk)
-    try:
-        social.invoke_fallback(request.user, activity)
-        messages.success(request, "Moved to your plan-B time - everyone has been told.")
     except social.SocialError as exc:
         messages.error(request, _msg(exc))
     return redirect("activity_detail", pk=pk)

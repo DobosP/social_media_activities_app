@@ -1,19 +1,63 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n static %}
 {% block title %}{% blocktrans with activity_title=activity.title %}Edit {{ activity_title }}{% endblocktrans %}{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">
+{% endblock %}
 {% block content %}
 <p class="muted"><a href="{% url 'activity_detail' activity.pk %}">{% trans "&larr; Back to activity" %}</a></p>
 <h1>{% trans "Edit activity" %}</h1>
-<p class="muted">{% blocktrans with place_name=activity.place.name|default:_("a place") type_name=activity.activity_type.name %}You can change the title, description, time, end time, capacity and the meetup
-  logistics (where to meet, what to bring, an organiser note). The place
-  (<strong>{{ place_name }}</strong>) and activity type
-  (<strong>{{ type_name }}</strong>) are fixed once an activity exists.
-  Changing the start time re-notifies everyone who joined.{% endblocktrans %}</p>
+<p class="muted">{% blocktrans with type_name=activity.activity_type.name %}You can change the title, venue, time, end time, capacity and the meetup
+  logistics. The activity type (<strong>{{ type_name }}</strong>) is fixed once an activity exists.
+  Changing the venue or start time re-notifies everyone who joined.{% endblocktrans %}</p>
+
+<section id="place-picker" aria-label="{% trans 'Find a place on the map' %}" hidden>
+  <div class="row place-picker-controls">
+    <button type="button" id="place-near-me" class="btn btn-sm btn-secondary"
+      data-locating="{% trans 'Locating...' %}"
+      data-unavailable="{% trans 'Location unavailable' %}">&#128205; {% trans "Find places near me" %}</button>
+    <span class="muted activity-note">{% trans "Your location is used only to sort the map &mdash; never stored." %}</span>
+  </div>
+  <div id="map"
+    data-places-url="/api/places/"
+    data-choose-label="{% trans 'Choose this place' %}"
+    data-selected-prefix="{% trans 'Selected place:' %}"
+    data-unnamed="{% trans 'Unnamed place' %}"></div>
+  <p id="place-picker-status" class="muted" aria-live="polite"></p>
+</section>
 <form method="post" class="stack">{% csrf_token %}
-  {{ form.as_p }}
+  <div class="form-essentials">
+    {% for field in form.essential_fields %}
+      <div class="form-field">
+        {{ field.errors }}
+        {{ field.label_tag }}
+        {{ field }}
+        {% if field.help_text %}<div class="helptext">{{ field.help_text }}</div>{% endif %}
+      </div>
+    {% endfor %}
+  </div>
+  {% for key, title, fields in form.sections %}
+    <details class="form-section"{% for field in fields %}{% if field.errors %} open{% endif %}{% endfor %}>
+      <summary>{{ title }}</summary>
+      <div class="form-section-body">
+        {% for field in fields %}
+          <div class="form-field">
+            {{ field.errors }}
+            {{ field.label_tag }}
+            {{ field }}
+            {% if field.help_text %}<div class="helptext">{{ field.help_text }}</div>{% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </details>
+  {% endfor %}
   <div class="row activity-form-actions">
     <button class="btn" type="submit">{% trans "Save changes" %}</button>
     <a class="btn btn-secondary" href="{% url 'activity_detail' activity.pk %}">{% trans "Cancel" %}</a>
   </div>
 </form>
+{% endblock %}
+{% block scripts %}
+<script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
+<script src="{% static 'js/place-picker.js' %}" defer></script>
 {% endblock %}

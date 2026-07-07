@@ -28,7 +28,6 @@ def _activity(adult, place, activity_type, now):
         meeting_point="By the north gate",
         what_to_bring="Water",
         organizer_note="We start on time",
-        getting_home_note="Bus 25 outside",
         first_time_note="Look for the blue flag",
     )
 
@@ -60,11 +59,11 @@ def test_cohort_visible_chips_shown_even_to_non_member(adult, place, activity_ty
 def test_member_only_logistics_hidden_from_non_member(adult, place, activity_type, now):
     a = _activity(adult, place, activity_type, now)
     non_member = _text(plain_meetup_brief(a, is_member=False))
-    for secret in ("north gate", "Water", "start on time", "Bus 25", "blue flag"):
+    for secret in ("north gate", "Water", "start on time", "blue flag"):
         assert secret not in non_member
     # ...and the same logistics ARE shown to a member.
     member = _text(plain_meetup_brief(a, is_member=True))
-    for shown in ("north gate", "Water", "Bus 25", "blue flag"):
+    for shown in ("north gate", "Water", "blue flag"):
         assert shown in member
 
 

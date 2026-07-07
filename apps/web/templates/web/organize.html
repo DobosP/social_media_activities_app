@@ -13,14 +13,13 @@
     <p class="muted u-my-xs">&#128197; {{ row.activity.starts_at|date:"D d M, H:i" }}{% if row.activity.place %} &middot; {{ row.activity.place.display_name|default:row.activity.place.name }}{% endif %}</p>
     {% comment %}W2-F5/W3-F5: functional action chips (work to do), never a vanity score. Each links
        to the existing screen that performs the action — this console performs nothing.{% endcomment %}
-    {% if row.pending_joins or row.needs_supervisor or row.missing_meeting_point or row.quorum.remaining_needed or row.readiness.missing_what_to_bring or row.readiness.missing_getting_home or row.readiness.near_capacity or row.venue_flag %}
+    {% if row.pending_joins or row.needs_supervisor or row.missing_meeting_point or row.quorum.remaining_needed or row.readiness.missing_what_to_bring or row.readiness.near_capacity or row.venue_flag %}
       <p style="margin:.4rem 0 0">
         {% if row.pending_joins %}<a class="tag" href="{% url 'activity_detail' row.activity.pk %}">{% blocktrans count n=row.pending_joins %}{{ n }} waiting to join{% plural %}{{ n }} waiting to join{% endblocktrans %}</a>{% endif %}
         {% if row.needs_supervisor %}<a class="tag fact--false" href="{% url 'activity_detail' row.activity.pk %}">{% trans "Needs a supervising guardian" %}</a>{% endif %}
         {% if row.quorum.remaining_needed %}<a class="tag" href="{% url 'activity_detail' row.activity.pk %}">{% blocktrans count n=row.quorum.remaining_needed %}Needs {{ n }} more to go{% plural %}Needs {{ n }} more to go{% endblocktrans %}</a>{% endif %}
         {% if row.missing_meeting_point %}<a class="tag" href="{% url 'activity_edit' row.activity.pk %}">{% trans "Add a meeting point" %}</a>{% endif %}
         {% if row.readiness.missing_what_to_bring %}<a class="tag" href="{% url 'activity_edit' row.activity.pk %}">{% trans "Add what to bring" %}</a>{% endif %}
-        {% if row.readiness.missing_getting_home %}<a class="tag fact--false" href="{% url 'activity_edit' row.activity.pk %}">{% trans "Add a getting-home plan" %}</a>{% endif %}
         {% if row.readiness.near_capacity %}<span class="tag">{% trans "Full" %}</span>{% endif %}
         {% if row.venue_flag %}<a class="tag fact--false" href="{% url 'place_detail' row.activity.place.pk %}">{% trans "Check this venue's hours" %}</a>{% endif %}
       </p>

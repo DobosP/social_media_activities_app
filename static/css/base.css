@@ -416,6 +416,16 @@ input[type=file] { padding: .4rem; background: var(--bg-subtle); }
 fieldset { margin: .9rem 0; border: 1px solid var(--line); border-radius: var(--r-sm); padding: .7rem .9rem; }
 legend { padding: 0 .35rem; }
 ul.errorlist { color: var(--warn-fg); padding-left: 1rem; margin: .2rem 0; }
+.form-essentials, .form-section-body { display: flex; flex-direction: column; gap: .65rem; }
+.form-essentials { margin: 1rem 0; }
+.form-field { min-width: 0; }
+.form-section {
+  border: 1px solid var(--line); border-radius: var(--r-sm); padding: .75rem .9rem;
+  background: var(--card); margin: .8rem 0;
+}
+.form-section > summary { cursor: pointer; font-weight: 700; }
+.form-section-body { margin-top: .75rem; }
+.muted-link { color: var(--muted); }
 .interest-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: .35rem; }
 .interest-grid label { font-weight: 400; display: flex; gap: .45rem; align-items: center; }
 

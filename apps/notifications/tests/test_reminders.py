@@ -123,7 +123,7 @@ def test_reminder_body_degrades_to_bare_line_when_all_blank():
     # Exactly today's bare line — no dangling labels.
     assert body.startswith("Starts ")
     assert "\n" not in body
-    for label in ("Meet:", "Bring:", "Getting home:", "First time:"):
+    for label in ("Meet:", "Bring:", "First time:", "Plan B:"):
         assert label not in body
 
 
@@ -134,7 +134,6 @@ def test_reminder_body_truncates_long_field_and_caps_total():
         "long",
         meeting_point="x" * 500,
         what_to_bring="y" * 500,
-        getting_home_note="z" * 500,
         first_time_note="w" * 500,
     )
     call_command("send_activity_reminders", stdout=StringIO())

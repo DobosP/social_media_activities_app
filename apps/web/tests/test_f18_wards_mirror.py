@@ -1,10 +1,9 @@
-"""F18 — mirror meetup logistics (meeting point, end time, getting-home note) onto the
-read-only guardian manifest for CHILD wards only (teens self-manage), and show the new
-getting_home_note in the member-gated logistics card.
+"""F18 — mirror child meetup logistics onto the read-only guardian manifest.
 
-The manifest stays read-only (no reply channel = no adult↔minor contact path), keyed on the
+The manifest stays read-only (no reply channel = no adult<->minor contact path), keyed on the
 ACTIVE GuardianRelationship the wards query already uses, and mirrors an activity ONLY when its
-cohort still matches the ward and it is not moderator-hidden.
+cohort still matches the ward and it is not moderator-hidden. ADR-0019 removed getting-home and
+Plan-B rows from this product surface.
 """
 
 from datetime import timedelta
@@ -88,22 +87,8 @@ def test_child_ward_manifest_mirrors_logistics():
 
     body = _client(guardian).get("/wards/").content.decode()
     assert MEETING in body  # meeting_point mirrored
-    assert HOME in body  # getting_home_note mirrored
+    assert HOME not in body  # retired row is no longer mirrored
     assert "Ends:" in body  # ends_at mirrored
-
-
-def test_child_ward_manifest_mirrors_fallback_meeting_point():
-    # W3-F8: the plan-B spot rides the same CHILD-only, ACTIVE-guardian-keyed manifest mirror.
-    guardian = _user("f8_g")
-    ward = _user("f8_child", AgeBand.UNDER_16, consented=True)
-    owner = _user("f8_cowner", AgeBand.UNDER_16, consented=True)
-    link_guardian(guardian, ward)
-    plan_b = "Covered pavilion by the entrance if the courts are wet"
-    _member(_activity(owner, "f8-child-type", fallback_meeting_point=plan_b), ward)
-
-    body = _client(guardian).get("/wards/").content.decode()
-    assert plan_b in body
-    assert "Plan B location:" in body
 
 
 def test_teen_ward_manifest_omits_extra_logistics():
@@ -123,7 +108,8 @@ def test_teen_ward_manifest_omits_extra_logistics():
 
 def test_cross_ward_guardian_does_not_see_other_wards_logistics():
     # Load-bearing isolation: a guardian of ward B (with their OWN child meetup) must not see
-    # ward A's getting-home note. Exercises the per-ward mirror loop, not an empty-loop no-op.
+    # ward A's retired getting-home row. Exercises the per-ward mirror loop, not an
+    # empty-loop no-op.
     g_a = _user("f18_ga")
     ward_a = _user("f18_wa", AgeBand.UNDER_16, consented=True)
     owner_a = _user("f18_oa", AgeBand.UNDER_16, consented=True)
@@ -137,7 +123,7 @@ def test_cross_ward_guardian_does_not_see_other_wards_logistics():
     _member(_activity(owner_b, "f18-b", home="Different note: walk with neighbour"), ward_b)
 
     body = _client(g_b).get("/wards/").content.decode()
-    assert "Different note: walk with neighbour" in body  # own ward's note shows
+    assert "Different note: walk with neighbour" not in body  # retired row is hidden
     assert HOME not in body  # the other guardian's ward's note does NOT
 
 
@@ -149,7 +135,7 @@ def test_revoked_guardian_loses_ward_logistics():
     link_guardian(guardian, ward)
     _member(_activity(owner, "f18-rev-type"), ward)
 
-    assert HOME in _client(guardian).get("/wards/").content.decode()  # active: visible
+    assert MEETING in _client(guardian).get("/wards/").content.decode()  # active: visible
     revoke_guardian(guardian, ward)
     body = _client(guardian).get("/wards/").content.decode()
     assert HOME not in body
@@ -200,42 +186,33 @@ def test_non_guardian_sees_no_manifest():
     assert HOME not in body  # has no wards at all
 
 
-# --- member-gated logistics card + the edit round-trip must not wipe the note ----------
+# --- member-gated logistics card -----------------------------------------------------
 
 
-def test_member_sees_getting_home_note_on_activity_detail():
+def test_member_logistics_card_omits_retired_fields():
     owner = _user("f18_aowner")
     member = _user("f18_amember")
     outsider = _user("f18_aoutsider")
-    activity = _activity(owner, "f18-adult-type")
+    activity = _activity(
+        owner,
+        "f18-adult-type",
+        fallback_meeting_point="Covered pavilion if the court is wet",
+    )
     _member(activity, member)
 
-    assert HOME in _client(member).get(f"/activities/{activity.id}/").content.decode()
-    # A non-member doesn't get the member-gated logistics card.
-    assert HOME not in _client(outsider).get(f"/activities/{activity.id}/").content.decode()
+    member_body = _client(member).get(f"/activities/{activity.id}/").content.decode()
+    assert MEETING in member_body
+    assert HOME not in member_body
+    assert "Covered pavilion" not in member_body
+    # A non-member still does not get the member-gated logistics card.
+    assert MEETING not in _client(outsider).get(f"/activities/{activity.id}/").content.decode()
 
 
-def test_activity_edit_preserves_getting_home_note():
-    # A routine edit (the form prefills getting_home_note) must NOT wipe the stored note.
+def test_activity_edit_form_does_not_render_retired_getting_home_field():
     owner = _user("f18_eowner")
     activity = _activity(owner, "f18-edit-type")
-    # The GET edit form pre-fills it...
+
     resp = _client(owner).get(f"/activities/{activity.id}/edit/")
-    assert resp.context["form"].initial["getting_home_note"] == HOME
-    # ...so a title-only change re-submits the prefilled note unchanged.
-    _client(owner).post(
-        f"/activities/{activity.id}/edit/",
-        {
-            "title": "Renamed game",
-            "starts_at": (activity.starts_at).strftime("%Y-%m-%dT%H:%M"),
-            "meeting_point": activity.meeting_point,
-            "what_to_bring": activity.what_to_bring,
-            "organizer_note": activity.organizer_note,
-            "getting_home_note": activity.getting_home_note,
-            "cost_band": activity.cost_band,
-            "difficulty": activity.difficulty,
-            "accessibility_notes": activity.accessibility_notes,
-        },
-    )
-    activity.refresh_from_db()
-    assert activity.getting_home_note == HOME
+
+    assert "getting_home_note" not in resp.context["form"].fields
+    assert HOME not in resp.content.decode()

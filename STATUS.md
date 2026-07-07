@@ -30,8 +30,11 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
     icon to `/messages/`), alerts move to a header bell with the existing unread pill, the Inbox
     subnav is retired on SSR and React payloads, Connections are promoted on profile/account
     menus, and Support leaves the primary nav for footer/account/giving paths.
-  - Remaining: P4 organizer form v2 + move-activity · P5 place detail/list declutter · P6
-    business partner claims · P7 scheduled roedu sync (see the ADR's phasing).
+  - **P4 organizer form v2 + move-activity is staged in `claude/organizer-form-v2` but not
+    verified here**: core model/service/form/view work plus breadth templates, mirrors, and focused
+    tests are in the worktree; container pytest was blocked by Docker engine permissions. Remaining
+    after verification/landing: P5 place detail/list declutter · P6 business partner claims · P7
+    scheduled roedu sync (see the ADR's phasing).
 - **Merge-audit P1/P2 web fixes landed locally** (2026-07-07): React saved-search POSTs may submit
   activity type/category slugs and the server resolves them; home activity cards render contextual
   cover alt text under the enforced web contract; public-listing mutation input is fixed by

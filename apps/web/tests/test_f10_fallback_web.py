@@ -1,5 +1,4 @@
-"""W2-F10 (web + DRF): the owner switches a meetup to its plan-B time once; members are re-notified
-and the button disappears (the backup is consumed)."""
+"""W2-F10 compatibility plus ADR-0019 web retirement of the fallback route."""
 
 from datetime import timedelta
 
@@ -44,20 +43,15 @@ def _activity(owner, *, fallback=True):
     )
 
 
-def test_web_owner_switches_to_plan_b():
+def test_web_fallback_route_is_gone_and_button_is_hidden():
     owner = _user("f10owner")
     activity = _activity(owner)
     c = Client()
     c.force_login(owner)
+
     page = c.get(f"/activities/{activity.id}/").content.decode()
-    assert "Switch to plan-B time" in page
-    resp = c.post(f"/activities/{activity.id}/fallback/")
-    assert resp.status_code == 302
-    activity.refresh_from_db()
-    assert activity.fallback_starts_at is None  # consumed
-    # The button is gone now that the backup is used.
-    after = c.get(f"/activities/{activity.id}/").content.decode()
-    assert "Switch to plan-B time" not in after
+    assert "Switch to plan-B time" not in page
+    assert c.post(f"/activities/{activity.id}/fallback/").status_code == 404
 
 
 def test_web_button_hidden_without_a_backup():
@@ -69,19 +63,10 @@ def test_web_button_hidden_without_a_backup():
     assert "Switch to plan-B time" not in page
 
 
-def test_edit_form_rejects_fallback_before_start():
+def test_edit_form_no_longer_exposes_fallback_time():
     from apps.web.forms import ActivityEditForm
 
-    now = timezone.now()
-    form = ActivityEditForm(
-        data={
-            "title": "Hike",
-            "starts_at": (now + timedelta(hours=2)).strftime("%Y-%m-%dT%H:%M"),
-            "fallback_starts_at": (now + timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M"),
-        }
-    )
-    assert not form.is_valid()
-    assert "fallback_starts_at" in form.errors
+    assert "fallback_starts_at" not in ActivityEditForm().fields
 
 
 def test_drf_fallback_action_moves_time():

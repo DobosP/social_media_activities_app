@@ -80,6 +80,11 @@ class Activity(models.Model):
     cost_band = models.CharField(
         max_length=16, choices=CostBand.choices, default=CostBand.UNSPECIFIED
     )
+    # ADR-0019 §4: an optional concrete per-person amount (RON) + what it covers, valid only
+    # alongside a LOW/PAID band — "≈ 25 RON — echipament inclus" beats a bare "Paid". A fact
+    # about the meetup, never a payment rail (donations stay the only money path).
+    cost_amount = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True)
+    cost_note = models.CharField(max_length=120, blank=True, default="")
     difficulty = models.CharField(
         max_length=16, choices=Difficulty.choices, default=Difficulty.UNSPECIFIED
     )

@@ -327,8 +327,6 @@ def organize_spa(request, *, activities, series, groups):
         readiness = row.get("readiness") or {}
         if readiness.get("missing_what_to_bring"):
             badges.append({"label": _("Add what to bring"), "url": edit, "tone": "info"})
-        if readiness.get("missing_getting_home"):
-            badges.append({"label": _("Add a getting-home plan"), "url": edit, "tone": "danger"})
         if readiness.get("near_capacity"):
             badges.append({"label": _("Full"), "url": None, "tone": "info"})
         if row.get("venue_flag") and getattr(a, "place", None):

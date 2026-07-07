@@ -194,16 +194,10 @@ def test_readiness_near_capacity(adult, adult2, activity_type):
     assert rows[roomy.id]["readiness"]["near_capacity"] is False
 
 
-def test_readiness_missing_getting_home_is_child_only(adult, activity_type):
-    from apps.accounts.models import Cohort
-
-    child_act = _activity(adult, activity_type, title="Child act", meeting_point="x")
-    child_act.cohort = Cohort.CHILD  # exercise the CHILD branch without full minor onboarding
-    child_act.save(update_fields=["cohort"])
-    adult_act = _activity(adult, activity_type, title="Adult act", meeting_point="x")
+def test_readiness_omits_retired_getting_home_flag(adult, activity_type):
+    activity = _activity(adult, activity_type, title="Act", meeting_point="x")
     rows = {r["activity"].id: r for r in social.organizer_console(adult)["activities"]}
-    assert rows[child_act.id]["readiness"]["missing_getting_home"] is True  # CHILD + blank
-    assert rows[adult_act.id]["readiness"]["missing_getting_home"] is False  # not a CHILD meetup
+    assert "missing_getting_home" not in rows[activity.id]["readiness"]
 
 
 def test_quorum_line_needs_n_more(adult, adult2, activity_type):

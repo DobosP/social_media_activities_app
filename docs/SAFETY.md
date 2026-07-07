@@ -86,6 +86,14 @@ clear reporting from the activity screen. Track as safety backlog.
   venue type — a staff-curated `places.ChildVenueClass` allowlist (library/park/school/sports/
   community), matched at read time, or a per-place staff approval (`ApprovedChildVenue`). Enforced
   in `create_activity`/`create_series`/`can_join`, fail-closed, behind `CHILD_PUBLIC_VENUES_ONLY`.
+- **Venue moves are gated like creation (ADR-0019 §4).** An activity's place is still NOT in
+  `ACTIVITY_EDITABLE_FIELDS`; the ONLY path that changes it is the audited `move_activity`
+  service, which re-runs the same venue gates as creation — the `public_places()` chokepoint,
+  the F9 child-safe-venue gate, and the ADULT-only own-pending-proposal carve-out — then
+  notifies every member and supersedes stale reminders. So a move can never reach a venue that
+  creation would have refused (no bait-and-switch into an ungated place). The one-shot plan-B
+  fallback affordance was retired in favour of this path (owner decision 2026-07-07); the
+  guardian-manifest "getting home" row retired with its field in the same decision.
 - **Verified-adult supervisor seat (F29).** A CHILD activity may REQUIRE supervision
   (`Activity.supervised`, set at create or via the guarded `set_activity_supervision` — never via
   the editable-fields path). A join then cannot **settle** (`_admit`) until the owner's OWN verified

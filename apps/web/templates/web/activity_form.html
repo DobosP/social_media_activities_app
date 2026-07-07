@@ -30,7 +30,34 @@ never stored or submitted (the only thing saved is which existing public place y
 </section>
 
 <form method="post">{% csrf_token %}
-  {{ form.as_p }}
+  <div class="form-essentials">
+    {% for field in form.essential_fields %}
+      <div class="form-field">
+        {{ field.errors }}
+        {{ field.label_tag }}
+        {{ field }}
+        {% if field.help_text %}<div class="helptext">{{ field.help_text }}</div>{% endif %}
+        {% if field.name == "place" %}
+          <div class="helptext"><a class="muted-link" href="{% url 'place_propose' %}?return=organize">{% trans "Can't find the place? Add a missing place →" %}</a></div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+  {% for key, title, fields in form.sections %}
+    <details class="form-section"{% for field in fields %}{% if field.errors %} open{% endif %}{% endfor %}>
+      <summary>{{ title }}</summary>
+      <div class="form-section-body">
+        {% for field in fields %}
+          <div class="form-field">
+            {{ field.errors }}
+            {{ field.label_tag }}
+            {{ field }}
+            {% if field.help_text %}<div class="helptext">{{ field.help_text }}</div>{% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </details>
+  {% endfor %}
   <button class="btn" type="submit">{% trans "Create activity" %}</button>
 </form>
 {% endblock %}
