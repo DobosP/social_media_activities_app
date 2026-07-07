@@ -164,9 +164,12 @@ ROEDU_SYNC_CITY = env("ROEDU_SYNC_CITY", default="Cluj-Napoca")
 _CONTENT_SECURITY_POLICY = {
     "DIRECTIVES": {
         "default-src": ["'self'"],
-        "script-src": ["'self'", "https://unpkg.com", NONCE],
-        "style-src": ["'self'", "https://unpkg.com"],
-        "img-src": ["'self'", "data:", "https://*.tile.openstreetmap.org", "https://unpkg.com"],
+        # ADR-0016 follow-up landed: Leaflet + MapLibre are fully vendored (static/vendor/),
+        # so no third-party script/style/img CDN remains — only OSM raster tiles for the
+        # Leaflet place picker.
+        "script-src": ["'self'", NONCE],
+        "style-src": ["'self'"],
+        "img-src": ["'self'", "data:", "https://*.tile.openstreetmap.org"],
         # Same-origin fetch/XHR plus same-host WebSockets for activity chat and E2EE messaging.
         # Some browsers do not treat 'self' as covering ws:// / wss://, so keep schemes explicit.
         "connect-src": [

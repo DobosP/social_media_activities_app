@@ -58,6 +58,25 @@
   </div>
 </section>
 
+{% if official_claim %}
+<details class="place-official-image">
+  <summary>{% trans "Official image" %}</summary>
+  <p class="muted">{% trans "One image, shown on the venue page. Uploads are scanned and EXIF-stripped; it replaces any cached Wikimedia image." %}</p>
+  <form method="post" action="{% url 'place_official_image' place.pk %}" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ official_image_form.as_p }}
+    <button type="submit" class="btn">{% trans "Upload image" %}</button>
+  </form>
+  {% if place.cover %}
+  <form method="post" action="{% url 'place_official_image' place.pk %}">
+    {% csrf_token %}
+    <input type="hidden" name="remove" value="1">
+    <button type="submit" class="btn btn--light">{% trans "Remove the current image" %}</button>
+  </form>
+  {% endif %}
+</details>
+{% endif %}
+
 {% if user.is_authenticated %}
   <p class="place-primary-cta">
     <a class="btn" href="{% url 'activity_create' %}?place={{ place.pk }}">{% trans "Organise an activity here" %}</a>

@@ -6,6 +6,7 @@ import logging
 
 from django.conf import settings
 from django.db import transaction
+from django.db.models import Q
 from django.db.models.functions import ExtractHour, ExtractIsoWeekDay
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -178,10 +179,21 @@ def matching_activities(saved_search, viewer):
     )  # don't alert you to your own meetup
     if saved_search.area_id:
         qs = qs.filter(_area_place_q(saved_search.area))
+    # ADR-0020 follow-up landed: a saved type/category matches as PRIMARY OR SECONDARY, the
+    # same OR-across-both rule as the browse filter and free-text search. distinct() because
+    # the secondary_types M2M join can multiply rows; the (user, activity) ledger still
+    # guarantees at-most-one notice regardless. (matching_gauges below stays primary-only:
+    # an ActivityInterest gauge carries a single activity_type, no secondary set.)
     if saved_search.activity_type_id:
-        qs = qs.filter(activity_type_id=saved_search.activity_type_id)
+        qs = qs.filter(
+            Q(activity_type_id=saved_search.activity_type_id)
+            | Q(secondary_types=saved_search.activity_type_id)
+        ).distinct()
     else:
-        qs = qs.filter(activity_type__category_id=saved_search.category_id)
+        qs = qs.filter(
+            Q(activity_type__category_id=saved_search.category_id)
+            | Q(secondary_types__category_id=saved_search.category_id)
+        ).distinct()
     if saved_search.beginners:
         qs = qs.filter(beginners_welcome=True)
     if saved_search.cost_band:

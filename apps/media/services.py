@@ -313,6 +313,115 @@ def delete_activity_cover(actor, cover) -> None:
     cover.delete()
 
 
+def _can_manage_place_cover(user, place):
+    """staff, or the approved business claimant (P6b) — returns (allowed, claim_or_None)."""
+    from apps.places.services import approved_business_claim_for
+
+    if getattr(user, "is_staff", False):
+        return True, approved_business_claim_for(user, place)
+    claim = approved_business_claim_for(user, place)
+    return claim is not None, claim
+
+
+@transaction.atomic
+def upload_place_cover(uploader, place, data: bytes, *, alt_text=""):
+    """P6b (ADR-0019 §2 lane 2): a verified business claimant (or staff) uploads the ONE
+    official venue image, through the exact fail-closed pipeline as every other upload
+    (validate → EXIF strip → scan → store). Replaces any existing cover (a business image
+    outranks the cached Commons one); the idempotent resolver never overwrites an existing
+    cover, so a BUSINESS cover is stable across enrichment re-runs. Goes live immediately
+    post-scan — claim approval already put a human in the loop; staff recovery is the
+    PlaceCover admin. NOT a child-safety signal: imagery never feeds venue approval."""
+    from apps.places.models import PlaceCover
+    from apps.places.services import public_places
+
+    allowed, claim = _can_manage_place_cover(uploader, place)
+    if not allowed:
+        raise NotAuthorized("Only the venue's approved business claimant can manage its image.")
+    if not public_places().filter(pk=place.pk).exists():
+        raise MediaRejected("Only a public venue can carry an official image.")
+
+    clean_bytes, fmt, (width, height) = validate_and_strip(
+        data,
+        max_bytes=settings.MEDIA_MAX_UPLOAD_BYTES,
+        max_dimension=getattr(settings, "MEDIA_MAX_DIMENSION", None),
+        max_pixels=getattr(settings, "MEDIA_MAX_IMAGE_PIXELS", DEFAULT_MAX_PIXELS),
+        quality=getattr(settings, "MEDIA_IMAGE_QUALITY", 82),
+        output_format=getattr(settings, "MEDIA_IMAGE_OUTPUT_FORMAT", "") or None,
+    )
+    scanner = get_scanner()
+    if getattr(settings, "MEDIA_REQUIRE_SCANNER", True) and not scanner.is_effective():
+        record_audit("media.cover_upload_blocked", actor=uploader, reason="no_scanner")
+        raise MediaRejected(
+            "Cover uploads are unavailable until a content safety scanner is configured."
+        )
+    orig_digest = hashlib.sha256(data).hexdigest()
+    result = scanner.scan(data)
+    if not result.clean:
+        record_audit("media.blocked", actor=uploader, reason="scan_match", sha256=orig_digest)
+        raise MediaRejected("Image failed safety screening and was not stored.")
+
+    partner = claim.partner if claim is not None else None
+    if partner is None:
+        from apps.places.services import official_partner_for_place
+
+        partner = official_partner_for_place(place)
+    attribution = f"Official image: {partner.name}" if partner else "Official image"
+    source_page_url = (partner.website if partner else "") or place.website or ""
+
+    ext = extension_for(fmt)
+    content_type = f"image/{ext}"
+    storage_key = f"place-covers/{uuid.uuid4().hex}.{ext}"
+    storage = get_storage()
+    storage.save(storage_key, clean_bytes, content_type=content_type)
+    try:
+        existing = PlaceCover.objects.select_for_update().filter(place=place).first()
+        fields = {
+            "source": PlaceCover.Source.BUSINESS,
+            "uploaded_by": uploader,
+            "storage_key": storage_key,
+            "content_type": content_type,
+            "byte_size": len(clean_bytes),
+            "sha256": hashlib.sha256(clean_bytes).hexdigest(),
+            "width": width,
+            "height": height,
+            "exif_stripped": True,
+            "attribution": attribution,
+            "license_name": "Used with permission",
+            "source_page_url": source_page_url,
+            "alt_text": (alt_text or "").strip()[:140],
+        }
+        if existing is None:
+            cover = PlaceCover.objects.create(place=place, **fields)
+        else:
+            old_key = existing.storage_key
+            for name, value in fields.items():
+                setattr(existing, name, value)
+            existing.save(update_fields=[*fields.keys(), "updated_at"])
+            cover = existing
+            if old_key and old_key != storage_key:
+                _delete_storage_key_after_commit(old_key, model_name="PlaceCover")
+        record_audit("media.place_cover_uploaded", actor=uploader, target=place, cover_id=cover.id)
+        return cover
+    except Exception:
+        try:
+            storage.delete(storage_key)
+        except Exception:
+            logger.exception("Failed to clean up place cover blob after DB error: %s", storage_key)
+        raise
+
+
+@transaction.atomic
+def delete_place_cover(actor, cover) -> None:
+    """Remove a venue's official image (claimant retracts it, or staff recovery). The
+    pre_delete signal reclaims the blob after commit, like every other media model."""
+    allowed, _claim = _can_manage_place_cover(actor, cover.place)
+    if not allowed:
+        raise NotAuthorized("Only the venue's approved business claimant can manage its image.")
+    record_audit("media.place_cover_deleted", actor=actor, target=cover.place)
+    cover.delete()
+
+
 def _public_can_view_cover(cover) -> bool:
     from apps.social.services import public_activities
 

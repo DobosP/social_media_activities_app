@@ -845,9 +845,7 @@ def create_activity(
     meeting_point="",
     what_to_bring="",
     organizer_note="",
-    getting_home_note="",
     first_time_note="",
-    fallback_meeting_point="",
     secondary_types=None,
     cost_band=Activity.CostBand.UNSPECIFIED,
     cost_amount=None,
@@ -855,7 +853,6 @@ def create_activity(
     difficulty=Activity.Difficulty.UNSPECIFIED,
     accessibility_notes="",
     beginners_welcome=False,
-    fallback_starts_at=None,
 ):
     if not can_create_activity(owner):
         raise NotEligible(
@@ -876,10 +873,6 @@ def create_activity(
         # Centralised here so every caller (web/DRF create, series spawn, F27 gauge convert)
         # inherits it — the web forms also check, but the DRF/convert serializers did not.
         raise InvalidState(_("End time cannot be before the start time."))
-    # W2-F10: a plan-B time only makes sense as a LATER backup. Centralised so web AND DRF agree
-    # (the web form also checks); the invoke-time strictly-future check is the separate safety gate.
-    if fallback_starts_at is not None and fallback_starts_at <= starts_at:
-        raise InvalidState(_("The plan-B time must be after the planned start."))
     # ADR-0019 §4: a concrete amount only alongside a LOW/PAID band — the pair is one fact.
     if cost_amount is not None and cost_band not in (
         Activity.CostBand.LOW,
@@ -942,16 +935,13 @@ def create_activity(
         meeting_point=meeting_point,
         what_to_bring=what_to_bring,
         organizer_note=organizer_note,
-        getting_home_note=getting_home_note,
         first_time_note=first_time_note,
-        fallback_meeting_point=fallback_meeting_point,
         cost_band=cost_band,
         cost_amount=cost_amount,
         cost_note=cost_note,
         difficulty=difficulty,
         accessibility_notes=accessibility_notes,
         beginners_welcome=beginners_welcome,
-        fallback_starts_at=fallback_starts_at,
     )
     Membership.objects.create(
         activity=activity,
@@ -1025,8 +1015,9 @@ def create_series(
     meeting_point="",
     what_to_bring="",
     organizer_note="",
-    getting_home_note="",
     cost_band=Activity.CostBand.UNSPECIFIED,
+    cost_amount=None,
+    cost_note="",
     difficulty=Activity.Difficulty.UNSPECIFIED,
     accessibility_notes="",
     beginners_welcome=False,
@@ -1046,6 +1037,12 @@ def create_series(
         raise InvalidState(_("Only children's activities can be guardian-accompanied."))
     if min_to_go is not None and capacity is not None and min_to_go > capacity:
         raise InvalidState(_("Minimum to happen can't be more than the capacity."))
+    # ADR-0019 §4 parity with create_activity: a concrete amount only alongside a LOW/PAID band.
+    if cost_amount is not None and cost_band not in (
+        Activity.CostBand.LOW,
+        Activity.CostBand.PAID,
+    ):
+        raise InvalidState(_("A cost amount only makes sense for a low-cost or paid meetup."))
     if cadence not in ActivitySeries.Cadence.values:
         raise InvalidState(_("Invalid cadence."))
     from apps.places.services import public_places
@@ -1092,8 +1089,9 @@ def create_series(
         meeting_point=meeting_point,
         what_to_bring=what_to_bring,
         organizer_note=organizer_note,
-        getting_home_note=getting_home_note,
         cost_band=cost_band,
+        cost_amount=cost_amount,
+        cost_note=cost_note,
         difficulty=difficulty,
         accessibility_notes=accessibility_notes,
         beginners_welcome=beginners_welcome,
@@ -1291,8 +1289,9 @@ def spawn_due_series(*, now=None) -> dict:
                     meeting_point=series.meeting_point,
                     what_to_bring=series.what_to_bring,
                     organizer_note=instance_organizer_note,
-                    getting_home_note=series.getting_home_note,
                     cost_band=series.cost_band,
+                    cost_amount=series.cost_amount,
+                    cost_note=series.cost_note,
                     difficulty=series.difficulty,
                     accessibility_notes=series.accessibility_notes,
                     beginners_welcome=series.beginners_welcome,
@@ -1422,16 +1421,13 @@ ACTIVITY_EDITABLE_FIELDS = (
     "meeting_point",  # F9 logistics — owner-curated, routed through the same edit path
     "what_to_bring",
     "organizer_note",
-    "getting_home_note",  # F18 — mirrored onto a CHILD ward's guardian manifest
     "first_time_note",  # F41 — member-only "what to expect when you arrive" note
-    "fallback_meeting_point",  # W3-F8 — member-only plan-B spot within the venue
     "cost_band",  # F8 what-to-expect
     "cost_amount",  # ADR-0019 §4 — concrete per-person amount (RON), LOW/PAID bands only
     "cost_note",
     "difficulty",
     "accessibility_notes",
     "beginners_welcome",  # F17 per-activity flag
-    "fallback_starts_at",  # W2-F10 owner-curated plan-B time (consumed by invoke_fallback)
 )
 
 
@@ -1512,11 +1508,6 @@ def update_activity(owner, activity, **changes) -> Activity:
     new_ends = fields.get("ends_at", activity.ends_at)
     if new_ends is not None and new_ends < new_starts:
         raise InvalidState(_("End time cannot be before the start time."))
-    # W2-F10: keep the plan-B time after the (possibly newly-edited) start. invoke_fallback NULLs
-    # the fallback before its own update_activity call, so this never blocks the fallback path.
-    new_fallback = fields.get("fallback_starts_at", activity.fallback_starts_at)
-    if new_fallback is not None and new_fallback <= new_starts:
-        raise InvalidState(_("The plan-B time must be after the planned start."))
     new_capacity = fields.get("capacity", activity.capacity)
     if new_capacity is not None and new_capacity < participant_count(activity):
         raise InvalidState(_("Capacity cannot be lower than the current number of participants."))
@@ -1626,41 +1617,6 @@ def move_activity(owner, activity, *, place) -> Activity:
     from apps.safety.services import record_audit
 
     record_audit("activity.moved", actor=owner, target=activity)
-    return activity
-
-
-@transaction.atomic
-def invoke_fallback(owner, activity) -> Activity:
-    """W2-F10: shift a meetup to its single pre-declared plan-B time, ONCE — so a rained-out or
-    quorum-short meetup gently moves instead of dying. Organiser-only (owner or F22 co-organiser),
-    OPEN, and requires a fallback_starts_at that is still strictly in the future. Routes through
-    update_activity so it inherits _supersede_reminders + the member re-notify (and the CHILD
-    guardian manifest reflects the new time for free), and writes its OWN audit entry
-    (update_activity itself isn't audited). ONE-USE LATCH: fallback_starts_at is cleared in the SAME
-    transaction, so a re-invoke can never loop into an open-ended reschedule.
-
-    SAFETY BOUNDARY (F7): a later start could in principle push a CHILD meetup past a guardrail's
-    latest_start_hour — but that guardrail is a JOIN-time gate, not an edit-time one, exactly like
-    the existing update_activity time-change path. We deliberately do NOT add a ward-eviction path
-    here; the shift is surfaced to guardians read-time via the wards manifest, like any edit."""
-    from apps.safety.services import record_audit
-
-    if not is_organizer(owner, activity):
-        raise NotAMember(_("Only the activity organiser may use the plan-B time."))
-    if activity.status != Activity.Status.OPEN:
-        raise InvalidState(_("Only an open activity can fall back to its plan-B time."))
-    if activity.fallback_starts_at is None:
-        raise InvalidState(_("This activity has no plan-B time set."))
-    if activity.fallback_starts_at <= timezone.now():
-        raise InvalidState(_("The plan-B time has already passed."))
-    target = activity.fallback_starts_at
-    # One-use latch FIRST (same txn): clear the backup so it can't be reused into a reschedule loop.
-    activity.fallback_starts_at = None
-    activity.save(update_fields=["fallback_starts_at", "updated_at"])
-    # update_activity re-checks organiser/OPEN/before-start and fires the time-change re-notify; if
-    # it rejects (e.g. the ORIGINAL start has passed), the atomic block rolls the latch back too.
-    activity = update_activity(owner, activity, starts_at=target)
-    record_audit("activity.fallback_invoked", actor=owner, target=activity)
     return activity
 
 

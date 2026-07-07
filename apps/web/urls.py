@@ -31,6 +31,11 @@ urlpatterns = [
     path("places/list/", views.places_list, name="places_list"),
     path("places/propose/", views.place_propose, name="place_propose"),
     path("places/<int:pk>/claim/", views.place_claim, name="place_claim"),
+    path(
+        "places/<int:pk>/official-image/",
+        views.place_official_image,
+        name="place_official_image",
+    ),
     path("places/pending/", views.places_pending, name="places_pending"),
     path(
         "places/pending/<int:proposal_id>/confirm/",

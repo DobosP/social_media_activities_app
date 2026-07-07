@@ -256,3 +256,58 @@ def test_activity_card_and_spa_payload_include_secondary_type_chips():
     assert 'class="tag tag-muted">Șah</span>' in html
     assert 'class="tag tag-muted">Șah</span>' in detail_html
     assert payload["tags"][:2] == ["Basketball", "Șah"]
+
+
+# --- ADR-0019 §4 parity: SeriesForm carries the same concrete-cost pairing rules --------
+
+
+def _series_form_data(place, activity_type, first_starts_at, **overrides):
+    data = {
+        "place": str(place.pk),
+        "activity_type": str(activity_type.pk),
+        "title": "Weekly game",
+        "cadence": "weekly",
+        "first_starts_at": first_starts_at.strftime("%Y-%m-%dT%H:%M"),
+        "cost_band": Activity.CostBand.UNSPECIFIED,
+        "difficulty": Activity.Difficulty.UNSPECIFIED,
+    }
+    data.update(overrides)
+    return data
+
+
+def test_series_form_cost_amount_coerces_unspecified_band_to_paid():
+    from apps.web.forms import SeriesForm
+
+    user = _user("p4-series-cost")
+    place = _place()
+    activity_type = _type("p4-series-cost")
+    form = SeriesForm(
+        data=_series_form_data(
+            place, activity_type, timezone.now() + timedelta(days=1), cost_amount="25"
+        ),
+        user=user,
+    )
+
+    assert form.is_valid(), form.errors
+    assert form.cleaned_data["cost_band"] == Activity.CostBand.PAID
+
+
+def test_series_form_cost_amount_with_free_band_is_field_error():
+    from apps.web.forms import SeriesForm
+
+    user = _user("p4-series-free")
+    place = _place()
+    activity_type = _type("p4-series-free-type")
+    form = SeriesForm(
+        data=_series_form_data(
+            place,
+            activity_type,
+            timezone.now() + timedelta(days=1),
+            cost_band=Activity.CostBand.FREE,
+            cost_amount="25",
+        ),
+        user=user,
+    )
+
+    assert not form.is_valid()
+    assert "cost_amount" in form.errors

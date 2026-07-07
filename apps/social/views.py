@@ -54,7 +54,6 @@ from .services import (
     group_by_id,
     group_feed_activities,
     group_roster,
-    invoke_fallback,
     join_group,
     leave_activity,
     leave_group,
@@ -183,18 +182,6 @@ class ActivityViewSet(viewsets.ReadOnlyModelViewSet):
         activity = self._activity_for(actor, pk)
         try:
             cancel_activity(actor, activity, reason=request.data.get("reason", ""))
-        except SocialError as exc:
-            raise PermissionDenied(str(exc)) from exc
-        return Response(ActivitySerializer(activity).data)
-
-    @action(detail=True, methods=["post"])
-    def fallback(self, request, pk=None):
-        """Owner switches the meetup to its single pre-declared plan-B time, once (W2-F10).
-        Members are re-notified of the new time, and the shift is recorded in the audit log."""
-        actor = self._actor(request)
-        activity = self._activity_for(actor, pk)
-        try:
-            activity = invoke_fallback(actor, activity)
         except SocialError as exc:
             raise PermissionDenied(str(exc)) from exc
         return Response(ActivitySerializer(activity).data)

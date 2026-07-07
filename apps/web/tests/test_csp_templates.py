@@ -65,7 +65,9 @@ def _inline_executable_scripts(html):
 def test_csp_report_only_policy_has_nonce_ready_script_src_without_inline_script_allowance():
     resp = Client().get("/")
     csp = resp["Content-Security-Policy-Report-Only"]
-    assert "script-src 'self' https://unpkg.com" in csp
+    assert "script-src 'self'" in csp
+    # ADR-0016 follow-up: all map assets are vendored — no CDN allowance remains.
+    assert "https://unpkg.com" not in csp
     assert "'unsafe-inline'" not in csp.split("script-src", 1)[1].split(";", 1)[0]
     assert "'unsafe-inline'" not in csp.split("style-src", 1)[1].split(";", 1)[0]
     assert "connect-src 'self' ws: wss: https://tiles.openfreemap.org" in csp

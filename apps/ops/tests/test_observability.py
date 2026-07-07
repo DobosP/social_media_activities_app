@@ -8,11 +8,11 @@ from rest_framework.test import APIClient
 pytestmark = pytest.mark.django_db
 
 
-def test_csp_report_only_header_present_and_allows_leaflet():
+def test_csp_report_only_header_present_without_cdn_allowance():
     resp = APIClient().get("/healthz")
     csp = resp.get("Content-Security-Policy-Report-Only", "")
     assert "default-src 'self'" in csp
-    assert "https://unpkg.com" in csp  # Leaflet CDN allowed
+    assert "https://unpkg.com" not in csp  # ADR-0016 follow-up: map assets vendored, CDN gone
     assert "https://*.tile.openstreetmap.org" in csp  # OSM map tiles allowed
     # Report-only must NOT also be enforcing (no enforcing header set).
     assert resp.get("Content-Security-Policy", "") == ""

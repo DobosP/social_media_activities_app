@@ -66,20 +66,13 @@ class Activity(models.Model):
     meeting_point = models.TextField(blank=True, default="")
     what_to_bring = models.TextField(blank=True, default="")
     organizer_note = models.TextField(blank=True, default="")
-    # F18: a short "getting home" note (e.g. nearest bus stop, pickup point). Owner-curated,
-    # same edit path + cap as the other logistics; mirrored onto a CHILD ward's guardian manifest.
-    getting_home_note = models.TextField(blank=True, default="")
     # F41: a "what to expect when you arrive" note for a nervous first-timer (how to recognise the
-    # group, what happens first). Owner-curated, same edit path + cap. MEMBER-ONLY like
-    # getting_home_note (deliberately NOT on the cohort-visible ActivitySerializer) — it lowers the
-    # social drop-at-the-door barrier without becoming a public discovery surface.
+    # group, what happens first). Owner-curated, same edit path + cap. MEMBER-ONLY (deliberately
+    # NOT on the cohort-visible ActivitySerializer) — it lowers the social drop-at-the-door
+    # barrier without becoming a public discovery surface.
+    # (ADR-0019 §4 cleanup landed: getting_home_note + fallback_meeting_point columns dropped —
+    # the audited move_activity path replaced the whole plan-B affordance.)
     first_time_note = models.TextField(blank=True, default="")
-    # W3-F8: an optional "plan B" gathering spot WITHIN the known venue (e.g. "if the courts are
-    # wet, the covered pavilion by the entrance"). MEMBER-ONLY like getting_home_note (kept off the
-    # cohort-visible ActivitySerializer) so it never widens a minor's location surface; rides the
-    # member reminder and the CHILD wards manifest. Text describing a spot in the known venue —
-    # never a stored user/child location, never a new Place.
-    fallback_meeting_point = models.TextField(blank=True, default="")
 
     # F8: optional "what to expect" fields so newcomers, disabled, and anxious users can
     # judge fit at a glance. Owner-curated; cost/difficulty are constrained choices,
@@ -114,11 +107,6 @@ class Activity(models.Model):
     # "it's on / needs N more" chip is always derived LIVE from the current count, so it can never
     # lie after the count drops back below the threshold.
     go_confirmed_at = models.DateTimeField(null=True, blank=True)
-    # W2-F10: a single owner-curated plan-B start time so a rained-out / quorum-short meetup can
-    # gently shift ONCE instead of dying. A property of THE MEETUP (like min_to_go), never of any
-    # user. invoke_fallback consumes it via the audited update_activity time-change path and NULLs
-    # it in the same transaction (one-use latch). null = no backup time declared.
-    fallback_starts_at = models.DateTimeField(null=True, blank=True)
     # Children's activities may allow a parent/guardian to accompany (supervised,
     # group-only). Only meaningful for the CHILD cohort. See docs/SAFETY.md.
     guardian_accompanied = models.BooleanField(default=False)
@@ -226,7 +214,6 @@ class ActivitySeries(models.Model):
     meeting_point = models.TextField(blank=True, default="")
     what_to_bring = models.TextField(blank=True, default="")
     organizer_note = models.TextField(blank=True, default="")
-    getting_home_note = models.TextField(blank=True, default="")  # F18
     accessibility_notes = models.TextField(blank=True, default="")
     # W2-F14: a one-shot note APPENDED to ONLY the next spawned instance's organizer_note, then
     # auto-cleared by spawn_due_series (consume-on-spawn). Capped at the MODEL layer (max_length)
@@ -235,6 +222,10 @@ class ActivitySeries(models.Model):
     cost_band = models.CharField(
         max_length=16, choices=Activity.CostBand.choices, default=Activity.CostBand.UNSPECIFIED
     )
+    # ADR-0019 §4 parity: the concrete per-person amount (RON) + what it covers, templated onto
+    # every spawned instance like cost_band. Same LOW/PAID-only rule, enforced in create_series.
+    cost_amount = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True)
+    cost_note = models.CharField(max_length=120, blank=True, default="")
     difficulty = models.CharField(
         max_length=16, choices=Activity.Difficulty.choices, default=Activity.Difficulty.UNSPECIFIED
     )

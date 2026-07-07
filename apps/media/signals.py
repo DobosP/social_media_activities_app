@@ -64,3 +64,13 @@ def delete_blob_on_activity_cover_delete(sender, instance: ActivityCover, **kwar
     if not instance.storage_key:
         return
     _enqueue_blob_cleanup(instance.storage_key, model_name="ActivityCover")
+
+
+@receiver(pre_delete, sender="places.PlaceCover", dispatch_uid="media_place_cover_delete_blob")
+def delete_blob_on_place_cover_delete(sender, instance, **kwargs) -> None:
+    """Remove the stored venue-cover blob once the PlaceCover row deletion commits (P6b:
+    business uploads + cached Commons images both live in our object storage). Lazy sender
+    string avoids a hard media -> places import at app-load time."""
+    if not instance.storage_key:
+        return
+    _enqueue_blob_cleanup(instance.storage_key, model_name="PlaceCover")

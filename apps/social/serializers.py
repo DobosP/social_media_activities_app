@@ -49,7 +49,6 @@ class ActivitySerializer(serializers.ModelSerializer):
             "owner_can_override",
             "capacity",
             "min_to_go",
-            "fallback_starts_at",
             "status",
             "guardian_accompanied",
             "supervised",
@@ -81,7 +80,6 @@ class ActivityCreateSerializer(serializers.Serializer):
     join_threshold = serializers.FloatField(required=False, min_value=0.01, max_value=1.0)
     capacity = serializers.IntegerField(required=False, allow_null=True, min_value=1)
     min_to_go = serializers.IntegerField(required=False, allow_null=True, min_value=1)
-    fallback_starts_at = serializers.DateTimeField(required=False, allow_null=True)
     guardian_accompanied = serializers.BooleanField(required=False, default=False)
     # F29: require the owner's verified guardian to supervise (CHILD only; validated in service).
     supervised = serializers.BooleanField(required=False, default=False)
@@ -94,11 +92,6 @@ class ActivityCreateSerializer(serializers.Serializer):
     organizer_note = serializers.CharField(
         required=False, allow_blank=True, default="", max_length=LOGISTICS_FIELD_MAX_LENGTH
     )
-    # F18: accepted on write, but intentionally NOT echoed by the cohort-wide read serializers
-    # (it's the child-safety-sensitive getting-home plan, shown member-only on the web).
-    getting_home_note = serializers.CharField(
-        required=False, allow_blank=True, default="", max_length=LOGISTICS_FIELD_MAX_LENGTH
-    )
     cost_band = serializers.ChoiceField(
         choices=Activity.CostBand.choices, required=False, default=Activity.CostBand.UNSPECIFIED
     )
@@ -108,13 +101,8 @@ class ActivityCreateSerializer(serializers.Serializer):
     accessibility_notes = serializers.CharField(
         required=False, allow_blank=True, default="", max_length=LOGISTICS_FIELD_MAX_LENGTH
     )
-    # F41: accepted on write, member-only like getting_home_note (NOT on the cohort-wide read).
+    # F41: accepted on write, member-only (NOT on the cohort-wide read serializer).
     first_time_note = serializers.CharField(
-        required=False, allow_blank=True, default="", max_length=LOGISTICS_FIELD_MAX_LENGTH
-    )
-    # W3-F8: plan-B spot within the venue. Member-only like getting_home_note (NOT on the
-    # cohort-wide read serializer — it must not widen a minor's location surface).
-    fallback_meeting_point = serializers.CharField(
         required=False, allow_blank=True, default="", max_length=LOGISTICS_FIELD_MAX_LENGTH
     )
     beginners_welcome = serializers.BooleanField(required=False, default=False)
@@ -134,7 +122,6 @@ class ActivityUpdateSerializer(serializers.Serializer):
     ends_at = serializers.DateTimeField(required=False, allow_null=True)
     capacity = serializers.IntegerField(required=False, allow_null=True, min_value=1)
     min_to_go = serializers.IntegerField(required=False, allow_null=True, min_value=1)
-    fallback_starts_at = serializers.DateTimeField(required=False, allow_null=True)
     meeting_point = serializers.CharField(
         required=False, allow_blank=True, max_length=LOGISTICS_FIELD_MAX_LENGTH
     )
@@ -144,13 +131,7 @@ class ActivityUpdateSerializer(serializers.Serializer):
     organizer_note = serializers.CharField(
         required=False, allow_blank=True, max_length=LOGISTICS_FIELD_MAX_LENGTH
     )
-    getting_home_note = serializers.CharField(
-        required=False, allow_blank=True, max_length=LOGISTICS_FIELD_MAX_LENGTH
-    )
     first_time_note = serializers.CharField(
-        required=False, allow_blank=True, max_length=LOGISTICS_FIELD_MAX_LENGTH
-    )
-    fallback_meeting_point = serializers.CharField(
         required=False, allow_blank=True, max_length=LOGISTICS_FIELD_MAX_LENGTH
     )
     # No defaults below: a default would inject the field on every partial PATCH that omits
@@ -189,11 +170,6 @@ class SeriesCreateSerializer(serializers.Serializer):
         required=False, allow_blank=True, default="", max_length=LOGISTICS_FIELD_MAX_LENGTH
     )
     organizer_note = serializers.CharField(
-        required=False, allow_blank=True, default="", max_length=LOGISTICS_FIELD_MAX_LENGTH
-    )
-    # F18: accepted on write, but intentionally NOT echoed by the cohort-wide read serializers
-    # (it's the child-safety-sensitive getting-home plan, shown member-only on the web).
-    getting_home_note = serializers.CharField(
         required=False, allow_blank=True, default="", max_length=LOGISTICS_FIELD_MAX_LENGTH
     )
     cost_band = serializers.ChoiceField(

@@ -60,6 +60,7 @@ from apps.places.models import Place, PlaceActivity
 from apps.places.services import (
     accessibility_facts,
     accessibility_facts_display,
+    approved_business_claim_for,
     derived_place_label,
     get_access_preference,
     is_child_safe_venue,
@@ -101,6 +102,7 @@ from .forms import (
     GroupCreateForm,
     NextInstanceNoteForm,
     PlaceClaimForm,
+    PlaceOfficialImageForm,
     PlaceProposeForm,
     PostForm,
     RegisterForm,
@@ -1361,6 +1363,9 @@ def place_detail(request, pk, slug=None):
             "has_access_pref": pref is not None,
             "partner": partner_for_place(place),
             "official_partner": official_partner_for_place(place),
+            # P6b: the viewer's own approved business claim unlocks the official-image panel.
+            "official_claim": approved_business_claim_for(request.user, place),
+            "official_image_form": PlaceOfficialImageForm(),
             "place_visual": visual,
             "category_chips": place_top_level_categories(place),
             "attribution_credit": place_attribution(place),
@@ -3202,6 +3207,51 @@ def place_claim(request, pk):
         "web/place_claim.html",
         {"form": form, "place": place, **_nav_context(request.user)},
     )
+
+
+@login_required
+def place_official_image(request, pk):
+    """P6b (ADR-0019 §2 lane 2): the venue's approved business claimant uploads, replaces
+    or removes the ONE official image. The media service is the permission + safety
+    chokepoint (claimant/staff check, validate → EXIF strip → fail-closed scan → store);
+    this surface only routes the multipart POST. 404 (not 403) for everyone else so the
+    endpoint doesn't advertise which venues are claimed."""
+    from apps.media.services import MediaError, delete_place_cover, upload_place_cover
+    from apps.places.services import approved_business_claim_for, public_places
+
+    place = get_object_or_404(public_places(Place.objects.all()), pk=pk)
+    if not request.user.is_staff and approved_business_claim_for(request.user, place) is None:
+        raise Http404("No place matches the given query.")
+    if request.method != "POST":
+        return redirect("place_detail", pk=pk)
+    if request.POST.get("remove"):
+        cover = getattr(place, "cover", None)
+        if cover is not None:
+            try:
+                delete_place_cover(request.user, cover)
+            except MediaError as exc:
+                messages.error(request, str(exc))
+            else:
+                messages.success(request, "The official image was removed.")
+        return redirect("place_detail", pk=pk)
+    form = PlaceOfficialImageForm(request.POST, request.FILES)
+    if not form.is_valid():
+        for field_errors in form.errors.values():
+            for err in field_errors:
+                messages.error(request, err)
+        return redirect("place_detail", pk=pk)
+    try:
+        upload_place_cover(
+            request.user,
+            place,
+            form.cleaned_data["image"].read(),
+            alt_text=form.cleaned_data.get("alt_text", ""),
+        )
+    except MediaError as exc:
+        messages.error(request, str(exc))
+    else:
+        messages.success(request, "The official image was updated.")
+    return redirect("place_detail", pk=pk)
 
 
 def partners_list(request):

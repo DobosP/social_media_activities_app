@@ -15,6 +15,32 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
 
 ## Current state
 
+- **ADR-0019/0020 follow-up sweep landed** (2026-07-07, this session — five slices, each
+  gated on the full suite):
+  1. **Saved-search secondary-type matching** (the ADR-0020 noted follow-up): a saved
+     type/category now matches PRIMARY OR SECONDARY types with `distinct()`, mirroring the
+     browse filter; the `(user, activity)` ledger still guarantees one notice.
+     `matching_gauges` stays primary-only (a gauge carries no secondary set).
+  2. **Series concrete cost** (P6-adjacent parity): `ActivitySeries.cost_amount/cost_note`
+     (migration 0034) template onto every spawned instance; `SeriesForm` reuses
+     `_cost_amount_field`/`_clean_cost`; same LOW/PAID-only service rule as activities.
+     Deliberately NOT on the DRF series serializers — the whole DRF surface exposes
+     `cost_band` only; API cost exposure should land for Activity+Series together.
+  3. **Retired-column drop** (ADR-0019 §4 cleanup): `getting_home_note`,
+     `fallback_starts_at`, `fallback_meeting_point` + series `getting_home_note` are gone
+     from models/DRF/services (migration 0035); the `invoke_fallback` service + DRF
+     `/fallback/` action are deleted (audited `move_activity` is the replacement).
+     Negative regressions: `apps/social/tests/test_retired_plan_b_fields.py`.
+  4. **P6b business venue image**: an APPROVED business claimant (or staff) uploads the ONE
+     official image through the D6 pipeline (validate → EXIF strip → fail-closed scan →
+     store) via `upload_place_cover`; `PlaceCover` gains `uploaded_by/sha256/exif_stripped`
+     (places migration 0017) + a blob-cleanup signal + admin; permission anchor
+     `approved_business_claim_for` (requires a still-verified/active partner); web panel on
+     place detail (`/places/<pk>/official-image/`, 404 to non-claimants). Replaces a cached
+     Commons cover; the idempotent resolver never overwrites it. Not a child-safety signal.
+  5. **CSP unpkg removal** (ADR-0016 follow-up slice): `https://unpkg.com` dropped from
+     script-src/style-src/img-src (all map assets vendored since ADR-0019); the two
+     asserting tests updated in the same commit.
 - **Lane C map-quality work is implemented locally** (2026-07-07, ADR-0021): the places map
   now filters typed/selected concepts and category chips via high-confidence (`>=0.5`) GeoJSON
   place-activity edges client-side; unnamed places render read-time labels from their strongest
@@ -69,10 +95,11 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
   - **P7 scheduled roedu sync shipped** (`claude/roedu-sync-job`, §7): daily `sync_roedu`
     due-job (roedu venue ingest + event facts + Commons covers), opt-in via
     `ROEDU_SYNC_ENABLED` + `ROEDU_API_KEY` so a dev box or outage never fails the tick.
-  - Remaining follow-ups (deliberate, non-blocking): business image upload via the D6
-    pipeline (P6b), SeriesForm cost fields, producer `updated_since` + venue category/url
-    (logged in ro_data_server backlog P1), a dark map style variant, retired-column drop
-    migration once nothing references them.
+  - Remaining follow-ups (deliberate, non-blocking): producer `updated_since` + venue
+    category/url (logged in ro_data_server backlog P1), a dark map style variant, and
+    saved-search alerts for series templates. P6b business image upload, SeriesForm cost
+    fields, and the retired-column drop migration all LANDED 2026-07-07 (see the
+    follow-up-sweep entry at the top of Current state).
 - **Merge-audit P1/P2 web fixes landed locally** (2026-07-07): React saved-search POSTs may submit
   activity type/category slugs and the server resolves them; home activity cards render contextual
   cover alt text under the enforced web contract; public-listing mutation input is fixed by
@@ -89,10 +116,7 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
      pre-send safety nudge whose script order is load-bearing), E2EE messaging UI
      (crypto/IndexedDB/transport must stay byte-identical), Leaflet map screens,
      3d-force-graph, donation flows.
-  3. **CSP unpkg removal slice**: Leaflet is vendored since Phase 1, so the
-     `https://unpkg.com` allowances in script-src/style-src/img-src can go — needs the
-     two tests that assert them updated in the same commit
-     (apps/web/tests/test_csp_templates.py, apps/ops/tests/test_observability.py).
+  3. ~~CSP unpkg removal slice~~ — DONE 2026-07-07 (follow-up sweep, slice 5).
   4. **roedu-ui housekeeping**: `claude/csp-safe-styling` (v0.3.0, CSP-safe styling)
      merged to roedu-ui main; consider GitHub Packages publishing so consumers can drop
      the vendored-tarball pattern; promote genuinely shared screen components

@@ -12,6 +12,7 @@ from .models import (
     PlaceActivity,
     PlaceClaim,
     PlaceCorrection,
+    PlaceCover,
 )
 from .services import clear_open_now_reports, staff_publish_correction, staff_reject_correction
 
@@ -175,3 +176,25 @@ class PlaceClaimAdmin(admin.ModelAdmin):
             except ClaimError as exc:
                 self.message_user(request, f"{claim}: {exc}", level=30)
         self.message_user(request, f"Rejected {done} claim(s).")
+
+
+@admin.register(PlaceCover)
+class PlaceCoverAdmin(admin.ModelAdmin):
+    """P6b staff recovery surface for venue images (business uploads + cached Commons).
+    Deleting a row reclaims the stored blob via the media pre_delete signal."""
+
+    list_display = ("place", "source", "uploaded_by", "byte_size", "updated_at")
+    list_filter = ("source",)
+    search_fields = ("place__name", "attribution", "uploaded_by__username")
+    autocomplete_fields = ("place", "uploaded_by")
+    readonly_fields = (
+        "storage_key",
+        "content_type",
+        "byte_size",
+        "width",
+        "height",
+        "sha256",
+        "exif_stripped",
+        "created_at",
+        "updated_at",
+    )

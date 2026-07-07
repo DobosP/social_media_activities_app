@@ -286,6 +286,13 @@ class SeriesForm(forms.Form):
         initial=Activity.CostBand.UNSPECIFIED,
         help_text="Roughly what it costs to take part.",
     )
+    cost_amount = _cost_amount_field()
+    cost_note = forms.CharField(
+        required=False,
+        max_length=120,
+        label="What the cost covers",
+        help_text="e.g. court rental, materials, entry ticket.",
+    )
     difficulty = forms.ChoiceField(
         choices=Activity.Difficulty.choices,
         required=False,
@@ -321,6 +328,7 @@ class SeriesForm(forms.Form):
             self.add_error("ends_at", "End time cannot be before the start time.")
         if not cleaned.get("cost_band"):
             cleaned["cost_band"] = Activity.CostBand.UNSPECIFIED
+        _clean_cost(self, cleaned)
         if not cleaned.get("difficulty"):
             cleaned["difficulty"] = Activity.Difficulty.UNSPECIFIED
         return cleaned
@@ -594,4 +602,21 @@ class PlaceClaimForm(forms.Form):
         max_length=500,
         widget=forms.Textarea(attrs={"rows": 3}),
         label="How can we verify you run this venue?",
+    )
+
+
+class PlaceOfficialImageForm(forms.Form):
+    """P6b (ADR-0019 §2 lane 2): the approved business claimant uploads the ONE official
+    venue image. The media service runs the full fail-closed pipeline (validate → EXIF
+    strip → scan → store); this form just gathers the file + an explicit rights statement."""
+
+    image = forms.FileField(label="Venue image")
+    alt_text = forms.CharField(
+        required=False,
+        max_length=140,
+        label="Describe the image",
+        help_text="Short alt text for screen readers (e.g. “the main hall set up for games”).",
+    )
+    rights_confirmed = forms.BooleanField(
+        label="We hold the rights to this image and licence its display here.",
     )

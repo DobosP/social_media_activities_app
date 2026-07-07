@@ -3,7 +3,8 @@
 The manifest stays read-only (no reply channel = no adult<->minor contact path), keyed on the
 ACTIVE GuardianRelationship the wards query already uses, and mirrors an activity ONLY when its
 cohort still matches the ward and it is not moderator-hidden. ADR-0019 removed getting-home and
-Plan-B rows from this product surface.
+Plan-B from the product entirely (the columns are dropped; see the retired-fields regressions in
+apps/social/tests/test_retired_plan_b_fields.py).
 """
 
 from datetime import timedelta
@@ -24,7 +25,6 @@ from apps.taxonomy.models import ActivityCategory, ActivityType
 pytestmark = pytest.mark.django_db
 PW = "sup3r-secret-pw"
 MEETING = "North gate by the fountain"
-HOME = "Bus 25 home; parent pickup at 8pm"
 
 
 def _user(name, band=AgeBand.ADULT, *, consented=False):
@@ -63,7 +63,7 @@ def _member(activity, user):
     )
 
 
-def _activity(owner, slug, *, meeting=MEETING, home=HOME, **kw):
+def _activity(owner, slug, *, meeting=MEETING, **kw):
     now = timezone.now()
     return create_activity(
         owner,
@@ -73,7 +73,6 @@ def _activity(owner, slug, *, meeting=MEETING, home=HOME, **kw):
         starts_at=now + timedelta(days=1),
         ends_at=now + timedelta(days=1, hours=2),
         meeting_point=meeting,
-        getting_home_note=home,
         **kw,
     )
 
@@ -87,7 +86,6 @@ def test_child_ward_manifest_mirrors_logistics():
 
     body = _client(guardian).get("/wards/").content.decode()
     assert MEETING in body  # meeting_point mirrored
-    assert HOME not in body  # retired row is no longer mirrored
     assert "Ends:" in body  # ends_at mirrored
 
 
@@ -96,35 +94,32 @@ def test_teen_ward_manifest_omits_extra_logistics():
     ward = _user("f18_teen", AgeBand.AGE_16_17)
     owner = _user("f18_towner", AgeBand.AGE_16_17)  # same TEEN cohort
     link_guardian(guardian, ward)
-    plan_b = "Teen plan B: the side entrance"
-    _member(_activity(owner, "f18-teen-type", fallback_meeting_point=plan_b), ward)
+    _member(_activity(owner, "f18-teen-type"), ward)
 
     body = _client(guardian).get("/wards/").content.decode()
     assert "Basketball" in body  # the basic meetup line still shows (type/place)
     assert MEETING not in body  # ...but teens self-manage: extra logistics not mirrored
-    assert HOME not in body
-    assert plan_b not in body  # W3-F8: the plan-B spot is CHILD-only, never mirrored to a teen
 
 
 def test_cross_ward_guardian_does_not_see_other_wards_logistics():
     # Load-bearing isolation: a guardian of ward B (with their OWN child meetup) must not see
-    # ward A's retired getting-home row. Exercises the per-ward mirror loop, not an
-    # empty-loop no-op.
+    # ward A's logistics. Exercises the per-ward mirror loop, not an empty-loop no-op.
+    ward_a_meeting = "Ward A meets at the fountain"
     g_a = _user("f18_ga")
     ward_a = _user("f18_wa", AgeBand.UNDER_16, consented=True)
     owner_a = _user("f18_oa", AgeBand.UNDER_16, consented=True)
     link_guardian(g_a, ward_a)
-    _member(_activity(owner_a, "f18-a", home=HOME), ward_a)
+    _member(_activity(owner_a, "f18-a", meeting=ward_a_meeting), ward_a)
 
     g_b = _user("f18_gb")
     ward_b = _user("f18_wb", AgeBand.UNDER_16, consented=True)
     owner_b = _user("f18_ob", AgeBand.UNDER_16, consented=True)
     link_guardian(g_b, ward_b)
-    _member(_activity(owner_b, "f18-b", home="Different note: walk with neighbour"), ward_b)
+    _member(_activity(owner_b, "f18-b"), ward_b)
 
     body = _client(g_b).get("/wards/").content.decode()
-    assert "Different note: walk with neighbour" not in body  # retired row is hidden
-    assert HOME not in body  # the other guardian's ward's note does NOT
+    assert MEETING in body  # their own ward's meeting point IS mirrored
+    assert ward_a_meeting not in body  # the other guardian's ward's logistics are NOT
 
 
 def test_revoked_guardian_loses_ward_logistics():
@@ -138,7 +133,6 @@ def test_revoked_guardian_loses_ward_logistics():
     assert MEETING in _client(guardian).get("/wards/").content.decode()  # active: visible
     revoke_guardian(guardian, ward)
     body = _client(guardian).get("/wards/").content.decode()
-    assert HOME not in body
     assert MEETING not in body
     assert ward.display_name not in body  # ward off the manifest entirely
 
@@ -161,8 +155,7 @@ def test_stale_cross_cohort_membership_not_mirrored():
     link_guardian(guardian, ward)
 
     body = _client(guardian).get("/wards/").content.decode()
-    assert HOME not in body  # cross-cohort activity is walled off
-    assert MEETING not in body
+    assert MEETING not in body  # cross-cohort activity is walled off
 
 
 def test_hidden_activity_not_mirrored():
@@ -176,34 +169,27 @@ def test_hidden_activity_not_mirrored():
     activity.save(update_fields=["is_hidden"])
 
     body = _client(guardian).get("/wards/").content.decode()
-    assert HOME not in body
     assert MEETING not in body
 
 
 def test_non_guardian_sees_no_manifest():
     stranger = _user("f18_stranger")
     body = _client(stranger).get("/wards/").content.decode()
-    assert HOME not in body  # has no wards at all
+    assert MEETING not in body  # has no wards at all
 
 
 # --- member-gated logistics card -----------------------------------------------------
 
 
-def test_member_logistics_card_omits_retired_fields():
+def test_member_logistics_card_is_member_gated():
     owner = _user("f18_aowner")
     member = _user("f18_amember")
     outsider = _user("f18_aoutsider")
-    activity = _activity(
-        owner,
-        "f18-adult-type",
-        fallback_meeting_point="Covered pavilion if the court is wet",
-    )
+    activity = _activity(owner, "f18-adult-type")
     _member(activity, member)
 
     member_body = _client(member).get(f"/activities/{activity.id}/").content.decode()
     assert MEETING in member_body
-    assert HOME not in member_body
-    assert "Covered pavilion" not in member_body
     # A non-member still does not get the member-gated logistics card.
     assert MEETING not in _client(outsider).get(f"/activities/{activity.id}/").content.decode()
 
@@ -215,4 +201,3 @@ def test_activity_edit_form_does_not_render_retired_getting_home_field():
     resp = _client(owner).get(f"/activities/{activity.id}/edit/")
 
     assert "getting_home_note" not in resp.context["form"].fields
-    assert HOME not in resp.content.decode()

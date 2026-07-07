@@ -442,3 +442,41 @@ def test_series_delete_detaches_instances(adult, place, activity_type, now):
     a.refresh_from_db()
     assert a.series_id is None  # SET_NULL: the meetup stands as a one-off
     assert Activity.objects.filter(pk=a.pk).exists()
+
+
+# --- ADR-0019 §4 parity: concrete cost templates onto every spawned instance -----------
+
+
+def test_series_concrete_cost_copied_to_spawned_instance(adult, place, activity_type, now):
+    s = social.create_series(
+        adult,
+        place=place,
+        activity_type=activity_type,
+        title="Paid run",
+        cadence=ActivitySeries.Cadence.WEEKLY,
+        first_starts_at=now + timedelta(days=1),
+        cost_band=Activity.CostBand.PAID,
+        cost_amount="25.00",
+        cost_note="court rental",
+    )
+    assert str(s.cost_amount) == "25.00" and s.cost_note == "court rental"
+    social.spawn_due_series(now=now)
+    a = Activity.objects.get(series=s)
+    assert str(a.cost_amount) == "25.00"
+    assert a.cost_note == "court rental"
+    assert a.cost_band == Activity.CostBand.PAID
+
+
+def test_create_series_rejects_cost_amount_on_free_band(adult, place, activity_type, now):
+    # Same one-fact rule as create_activity: an amount contradicts an explicitly FREE series.
+    with pytest.raises(social.InvalidState):
+        social.create_series(
+            adult,
+            place=place,
+            activity_type=activity_type,
+            title="x",
+            cadence=ActivitySeries.Cadence.WEEKLY,
+            first_starts_at=now + timedelta(days=1),
+            cost_band=Activity.CostBand.FREE,
+            cost_amount="10.00",
+        )

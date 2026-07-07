@@ -1028,3 +1028,30 @@ def official_partner_for_place(place):
         .order_by("id")
         .first()
     )
+
+
+def approved_business_claim_for(user, place):
+    """The user's APPROVED business claim on this place, or None — the single permission
+    anchor for the official-image panel (P6b, ADR-0019 §2 lane 2 / §6). Requires the linked
+    Partner to still be verified + active + BUSINESS + on this exact place, so a partner
+    that staff later revoke/deactivate silently loses the upload surface too. Read-only
+    helper; the media service re-checks it at write time."""
+    from .models import Partner, PlaceClaim
+
+    if not getattr(user, "is_authenticated", False):
+        return None
+    return (
+        PlaceClaim.objects.filter(
+            place=place,
+            claimant=user,
+            status=PlaceClaim.Status.APPROVED,
+            kind=Partner.Kind.BUSINESS,
+            partner__isnull=False,
+            partner__is_verified=True,
+            partner__is_active=True,
+            partner__place=place,
+        )
+        .select_related("partner")
+        .order_by("-decided_at")
+        .first()
+    )

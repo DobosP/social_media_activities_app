@@ -524,6 +524,18 @@ class PlaceCover(models.Model):
     license_name = models.CharField(max_length=120, blank=True)
     source_page_url = models.URLField(max_length=500, blank=True)
     alt_text = models.CharField(max_length=140, blank=True)
+    # P6b (ADR-0019 §2 lane 2): provenance of a BUSINESS upload through the D6 media
+    # pipeline — who uploaded it, the stored bytes' digest, and the strip guarantee.
+    # Blank/null for WIKIMEDIA covers (their provenance is attribution/source_page_url).
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="uploaded_place_covers",
+    )
+    sha256 = models.CharField(max_length=64, blank=True)
+    exif_stripped = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

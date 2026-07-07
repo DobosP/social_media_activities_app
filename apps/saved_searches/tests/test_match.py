@@ -277,3 +277,42 @@ def test_coarse_window_judged_in_local_time_not_utc(adult, adult2, place, activi
     s = ss.create_saved_search(adult, activity_type=activity_type, coarse_window=CW.WEEKDAY_EVENING)
     evening_local = _at(adult2, place, activity_type, _local_dt(2, 19))  # Tue 19:00 local
     assert evening_local.id in _match_ids(s, adult)
+
+
+# --- ADR-0020 follow-up: saved type/category matches PRIMARY OR SECONDARY types ---
+
+
+def test_type_search_matches_secondary_type(adult, adult2, place, activity_type, other_type):
+    ss.create_saved_search(adult, activity_type=other_type)
+    a = _activity(adult2, place, activity_type, secondary_types=[other_type])
+    result = ss.match_saved_searches()
+    assert result["notified"] == 1
+    n = Notification.objects.get(recipient=adult, kind=Notification.Kind.ACTIVITY_MATCH)
+    assert n.url == f"/activities/{a.id}/"
+
+
+def test_category_search_matches_secondary_type_category(adult, adult2, place, category):
+    # Primary type lives in a DIFFERENT category; only the secondary type maps to the saved
+    # category — the category tier must resolve through secondary types too.
+    from apps.taxonomy.models import ActivityCategory, ActivityType
+
+    other_cat = ActivityCategory.objects.create(slug="ss-culture", name="Culture")
+    primary = ActivityType.objects.create(slug="ss-chess", name="Chess", category=other_cat)
+    sport_type = ActivityType.objects.create(slug="ss-run", name="Running", category=category)
+    ss.create_saved_search(adult, category=category)
+    _activity(adult2, place, primary, secondary_types=[sport_type])
+    ss.match_saved_searches()
+    assert _match_count(adult) == 1
+
+
+def test_category_secondary_join_dedupes_activity_rows(
+    adult, adult2, place, activity_type, other_type
+):
+    # Primary AND secondary both map to the saved category: the M2M OR join must not
+    # yield duplicate rows (distinct()) nor duplicate notices (ledger).
+    s = ss.create_saved_search(adult, category=activity_type.category)
+    a = _activity(adult2, place, activity_type, secondary_types=[other_type])
+    ids = list(ss.matching_activities(s, adult).values_list("id", flat=True))
+    assert ids.count(a.id) == 1
+    ss.match_saved_searches()
+    assert _match_count(adult) == 1
