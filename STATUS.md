@@ -15,6 +15,16 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
 
 ## Current state
 
+- **ADR-0020 shipped** (2026-07-07, owner feedback on ADR-0019): activities can carry up to 2
+  envelope-gated **secondary types** (search/filters match them; chips on cards); the create/edit
+  form is a **step wizard** (Ce → Unde → Când și cât → Detalii; no-JS renders stacked) with a
+  **concept typeahead** over the nonce'd 38-type vocabulary (names+aliases, diacritics-normalized;
+  single for primary, chip-multi for secondary); the places map gained the same typeahead applying
+  **live** (place-name matches fly-to; concept matches filter the GeoJSON client-side);
+  `generate_demo_events` (DEBUG-only) reschedules the aged-out seed events + synthesizes [DEMO]
+  extras — the empty /events/ was the static seed decaying past `upcoming`. Bonus live-found fix:
+  the OSM park mapping listed alias 'streetball' as a type slug and crashed ingest (regression
+  test pins mapping slugs to the taxonomy).
 - **ADR-0019 Places v2 + IA redesign program is underway** (2026-07-07; owner direction). Landed:
   - **P1 places map v2** (`claude/places-map-v2`, §1): `/places/` uses vendored MapLibre GL CSP
     assets with OpenFreeMap vector tiles, clustered GeoJSON points, DOM-built popups,
