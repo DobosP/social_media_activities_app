@@ -1136,3 +1136,20 @@ textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--accent)
   .mz-composer { position: sticky; bottom: 0; background: var(--card); }
   #mz-msg-search { width: 8rem; }
 }
+
+/* Breadcrumbs (SSR pages: event detail, place detail, landing) — without this the <ol>
+   rendered as a bare numbered list ("1 Acasă 2 Evenimente …"). */
+.breadcrumbs ol {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted, #8b8fa3);
+}
+.breadcrumbs li { display: flex; align-items: center; gap: 0.35rem; }
+.breadcrumbs li + li::before { content: "›"; opacity: 0.6; }
+.breadcrumbs a { color: inherit; }
+.breadcrumbs [aria-current="page"] { color: var(--color-text, inherit); font-weight: 500; }
