@@ -98,6 +98,7 @@ from .forms import (
     GaugeForm,
     GroupCreateForm,
     NextInstanceNoteForm,
+    PlaceClaimForm,
     PlaceProposeForm,
     PostForm,
     RegisterForm,
@@ -3074,6 +3075,37 @@ def campaigns(request):
             "completed_campaigns": completed_campaigns_with_outcomes(),
             **_nav_context(request.user),
         },
+    )
+
+
+@login_required
+def place_claim(request, pk):
+    """ADR-0019 §6: a venue owner/operator files a stewardship claim ('Is this your
+    venue?'). ADULT-only via the service gate; staff decide in the admin; the venue
+    changes nothing until approval — so this surface can stay thin."""
+    from apps.places.services import ClaimError, file_place_claim, public_places
+
+    place = get_object_or_404(public_places(Place.objects.all()), pk=pk)
+    if request.method == "POST":
+        form = PlaceClaimForm(request.POST)
+        if form.is_valid():
+            try:
+                file_place_claim(request.user, place, **form.cleaned_data)
+            except ClaimError as exc:
+                messages.error(request, str(exc))
+            else:
+                messages.success(
+                    request,
+                    "Thanks — we received your claim. A moderator will verify it and "
+                    "you'll get a notification either way.",
+                )
+                return redirect("place_detail", pk=pk)
+    else:
+        form = PlaceClaimForm()
+    return render(
+        request,
+        "web/place_claim.html",
+        {"form": form, "place": place, **_nav_context(request.user)},
     )
 
 

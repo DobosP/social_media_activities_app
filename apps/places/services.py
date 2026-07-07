@@ -863,3 +863,146 @@ def place_visual(place) -> dict:
     seed_hint = edges[0].activity.slug if edges else place.address_city
     seed = f"place:{seed_hint}:{place.display_name or place.pk}"
     return {"kind": "accent", "svg": activity_accent_svg(seed)}
+
+
+# --- ADR-0019 §6: business/venue claims ------------------------------------------------
+
+
+class ClaimError(PlacesError):
+    """Expected claim-flow failures (duplicate pending claim, wrong state, not eligible)."""
+
+
+def file_place_claim(
+    claimant,
+    place,
+    *,
+    org_name,
+    kind="business",
+    official_website="",
+    contact_email="",
+    cui="",
+    evidence="",
+):
+    """A venue owner/operator asks to steward their place. ADULT cohort + participation
+    gates; one pending claim per (place, claimant); staff decide in the admin. The claim
+    is data-only — nothing about the place changes until approval."""
+    from django.db import IntegrityError
+
+    from apps.accounts.models import Cohort
+    from apps.accounts.services import can_participate
+    from apps.safety.services import record_audit
+
+    from .models import PlaceClaim
+
+    if not can_participate(claimant) or getattr(claimant, "cohort", None) != Cohort.ADULT:
+        raise ClaimError("Only verified adult accounts can claim a venue.")
+    if not public_places().filter(pk=place.pk).exists():
+        raise ClaimError("Only public venues can be claimed.")
+    if not (org_name or "").strip():
+        raise ClaimError("The organisation name is required.")
+    try:
+        claim = PlaceClaim.objects.create(
+            place=place,
+            claimant=claimant,
+            org_name=org_name.strip()[:255],
+            kind=kind or PlaceClaim._meta.get_field("kind").default,
+            official_website=official_website,
+            contact_email=contact_email,
+            cui=(cui or "").strip()[:16],
+            evidence=(evidence or "").strip()[:500],
+        )
+    except IntegrityError as exc:
+        raise ClaimError("You already have a pending claim for this venue.") from exc
+    record_audit("places.claim_filed", actor=claimant, target=place, claim_id=claim.id)
+    return claim
+
+
+def approve_place_claim(staff, claim):
+    """Staff approval: create/refresh the verified Partner stewarding the place, backfill
+    the place's website when empty, badge the venue as officially maintained. Idempotent
+    on repeat approval attempts (already-decided claims are refused)."""
+    from django.db import transaction
+    from django.utils import timezone
+
+    from apps.notifications.services import notify
+    from apps.safety.services import record_audit
+
+    from .models import Partner, PlaceClaim
+
+    if not getattr(staff, "is_staff", False):
+        raise ClaimError("Only staff can decide venue claims.")
+    if claim.status != PlaceClaim.Status.PENDING:
+        raise ClaimError("This claim was already decided.")
+    with transaction.atomic():
+        partner, _created = Partner.objects.update_or_create(
+            place=claim.place,
+            name=claim.org_name,
+            defaults={
+                "kind": claim.kind,
+                "website": claim.official_website,
+                "is_verified": True,
+                "is_active": True,
+            },
+        )
+        claim.status = PlaceClaim.Status.APPROVED
+        claim.partner = partner
+        claim.decided_by = staff
+        claim.decided_at = timezone.now()
+        claim.save(update_fields=["status", "partner", "decided_by", "decided_at"])
+        if not claim.place.website and claim.official_website:
+            claim.place.website = claim.official_website
+            claim.place.save(update_fields=["website", "last_seen_at"])
+        record_audit("places.claim_approved", actor=staff, target=claim.place, claim_id=claim.id)
+    notify(
+        claim.claimant,
+        "system",
+        "Your venue claim was approved",
+        body=f"{claim.org_name} now stewards “{claim.place.display_name}”.",
+        url=f"/places/{claim.place_id}/",
+    )
+    return claim
+
+
+def reject_place_claim(staff, claim, *, reason=""):
+    from django.utils import timezone
+
+    from apps.notifications.services import notify
+    from apps.safety.services import record_audit
+
+    from .models import PlaceClaim
+
+    if not getattr(staff, "is_staff", False):
+        raise ClaimError("Only staff can decide venue claims.")
+    if claim.status != PlaceClaim.Status.PENDING:
+        raise ClaimError("This claim was already decided.")
+    claim.status = PlaceClaim.Status.REJECTED
+    claim.decided_by = staff
+    claim.decided_at = timezone.now()
+    claim.save(update_fields=["status", "decided_by", "decided_at"])
+    record_audit(
+        "places.claim_rejected", actor=staff, target=claim.place, claim_id=claim.id, reason=reason
+    )
+    body = "It couldn't be verified."
+    if (reason or "").strip():
+        body = f"It couldn't be verified: {reason.strip()[:200]}"
+    notify(
+        claim.claimant,
+        "system",
+        "Your venue claim was not approved",
+        body=body,
+        url=f"/places/{claim.place_id}/",
+    )
+    return claim
+
+
+def official_partner_for_place(place):
+    """The verified BUSINESS partner stewarding this venue, if any — drives the
+    'Official venue page ✓' badge. Any-kind partner display stays partner_for_place()."""
+    from .models import Partner
+
+    return (
+        Partner.objects.public()
+        .filter(place=place, kind=Partner.Kind.BUSINESS)
+        .order_by("id")
+        .first()
+    )

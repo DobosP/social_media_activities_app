@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% load safe_urls i18n %}
-{% block title %}{% trans "Civic partners" %}{% endblock %}
+{% block title %}{% trans "Civic & venue partners" %}{% endblock %}
 {% block content %}
-<h1>{% trans "Civic partners" %}</h1>
-<p class="muted">{% trans "Libraries, schools, NGOs and civic bodies we work with. This is an acknowledgement of their support &mdash; not advertising. Partners are staff-curated and never paid for placement." %}</p>
+<h1>{% trans "Civic & venue partners" %}</h1>
+<p class="muted">{% trans "Libraries, schools, NGOs, civic bodies and local businesses that steward real venues. This is an acknowledgement &mdash; not advertising. Partners are staff-verified and never pay for placement; a partner venue ranks exactly like every other place." %}</p>
 {% for p in partners %}
   <div class="card">
     <strong>{{ p.name }}</strong> <span class="tag">{{ p.get_kind_display }}</span>

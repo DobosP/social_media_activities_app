@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Claim this venue" %}{% endblock %}
+{% block content %}
+<h1>{% trans "Is this your venue?" %}</h1>
+<p class="muted">{{ place.display_name }}{% if place.display_address %} &mdash; {{ place.display_address }}{% endif %}</p>
+<p class="muted">{% trans "If you run this place, claim it: once a moderator verifies you, your organisation is listed as its steward and the page links your official website. Claiming is free and never paid placement &mdash; claimed venues rank exactly like every other place." %}</p>
+<form method="post" class="card">{% csrf_token %}
+  {{ form.as_p }}
+  <button class="btn" type="submit">{% trans "Submit claim" %}</button>
+</form>
+{% endblock %}

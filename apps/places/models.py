@@ -218,6 +218,9 @@ class Partner(models.Model):
         CIVIC = "civic", "Civic body"
         HEALTHCARE = "healthcare", "Healthcare"
         CULTURAL = "cultural", "Cultural"
+        # ADR-0019 §6: venues are businesses too. Same text-only, no-boost rules as every
+        # other partner kind — a portal to their official presence, never an ad.
+        BUSINESS = "business", "Local business"
         OTHER = "other", "Other"
 
     name = models.CharField(max_length=255)
@@ -526,3 +529,62 @@ class PlaceCover(models.Model):
 
     def __str__(self):
         return f"place-cover(place={self.place_id}, {self.source})"
+
+
+class PlaceClaim(models.Model):
+    """ADR-0019 §6: a venue owner/operator claims their place ("Is this your venue?").
+
+    Staff verify manually (CUI optional evidence, Django admin actions); approval creates
+    or links a verified business Partner stewarding the place and unlocks the "Official
+    venue page" badge. HARD LINES preserved: no ranking boost, no featured placement, no
+    ads, no payment — a claimed business renders through the same components as every
+    other place (Partner stays TEXT-ONLY). ADULT-cohort claimants only.
+    """
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        APPROVED = "approved", "Approved"
+        REJECTED = "rejected", "Rejected"
+
+    place = models.ForeignKey(Place, on_delete=models.CASCADE, related_name="claims")
+    claimant = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="place_claims"
+    )
+    org_name = models.CharField(max_length=255)
+    kind = models.CharField(max_length=16, choices=Partner.Kind.choices, default="business")
+    official_website = models.URLField(max_length=500, blank=True)
+    contact_email = models.EmailField(blank=True)
+    # Romanian company registry id (CUI) — optional supporting evidence, staff-verified.
+    cui = models.CharField(max_length=16, blank=True)
+    evidence = models.TextField(blank=True, validators=[MaxLengthValidator(500)])
+    status = models.CharField(max_length=16, choices=Status.choices, default=Status.PENDING)
+    partner = models.ForeignKey(
+        Partner, on_delete=models.SET_NULL, null=True, blank=True, related_name="claims"
+    )
+    decided_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="decided_place_claims",
+    )
+    decided_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(
+                fields=["place", "claimant"],
+                condition=Q(status="pending"),
+                name="uq_placeclaim_pending_per_user",
+            ),
+        ]
+        indexes = [models.Index(fields=["status", "created_at"])]
+
+    def __str__(self):
+        return f"claim({self.place_id} by {self.claimant_id}, {self.status})"
+
+    def save(self, *args, **kwargs):
+        # Same stored-XSS guard as Place.website — untrusted URL at the write chokepoint.
+        self.official_website = safe_external_url(self.official_website)
+        super().save(*args, **kwargs)
