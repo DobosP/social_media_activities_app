@@ -4,7 +4,7 @@
 `docs/archive/COMPLETENESS_GAPS_2026-06.md`). On any doc conflict: this file > newest-dated ADR in
 `docs/adr/` > everything else.
 
-Last verified: 2026-07-06
+Last verified: 2026-07-07
 
 ## What this is
 
@@ -15,6 +15,9 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
 
 ## Current state
 
+- **Local RO-EDU seed is post-migrate data-only** (ADR-0017): `Dockerfile.db` installs pgvector
+  only; compose runs `migrate` then `load_roedu_seed`, which loads `db/seed-data.sql` once and
+  leaves schema/`django_migrations` solely to Django migrations.
 - **Frontend redesign follow-ups (the open list, in rough priority order):**
   1. **Flip `SOCIAL_REACT_UI`** per environment once the React screens are reviewed
      on-device (dev already defaults ON; the kill switch stays for instant rollback).

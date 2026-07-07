@@ -1,7 +1,7 @@
 services:
   db:
-    # Seeded PostGIS + pgvector image (extensions + RO-EDU test data baked in) so
-    # a fresh volume comes up with data ready. See Dockerfile.db.
+    # PostGIS + pgvector image only. Schema comes from Django migrations; RO-EDU
+    # demo data is loaded by the web service after migrate. See db/README.md.
     build:
       context: .
       dockerfile: Dockerfile.db
@@ -23,6 +23,7 @@ services:
     build: .
     command: >
       sh -c "python manage.py migrate &&
+             python manage.py load_roedu_seed &&
              python manage.py runserver 0.0.0.0:8000"
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.dev

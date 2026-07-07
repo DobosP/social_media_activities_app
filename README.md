@@ -30,7 +30,7 @@ operational/legal gaps are in **[docs/PRODUCTION_READINESS.md](docs/PRODUCTION_R
 
 ```bash
 docker compose up --build
-# web runs migrations (incl. the activity taxonomy seed) then serves http://localhost:8000
+# web runs migrations, loads the local RO-EDU data seed once, then serves http://localhost:8000
 docker compose exec web python manage.py createsuperuser   # for /admin
 ```
 
