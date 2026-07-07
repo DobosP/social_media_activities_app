@@ -100,9 +100,19 @@ export interface PlaceRow {
   street: string;
   city: string;
   distance: string;
-  activities: string[];
+  categoryChips: string[];
+  visual:
+    | {
+        kind: 'photo';
+        url: string;
+        alt: string;
+        attribution: string;
+        licenseName: string;
+        sourcePageUrl: string;
+      }
+    | { kind: 'accent'; svg: string }
+    | null;
   accessMatch: boolean;
-  accessTags: { label: string; state: string }[];
 }
 
 export interface PlacesData {

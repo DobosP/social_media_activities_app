@@ -13,12 +13,14 @@ from django.contrib.auth.views import LoginView
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import Prefetch
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django.utils.http import url_has_allowed_host_and_scheme, urlencode
+from django.utils.safestring import mark_safe
 from django.views.decorators.http import require_POST
 
 from apps.accounts.identity.base import IdentityVerificationError
@@ -62,6 +64,8 @@ from apps.places.services import (
     is_child_safe_venue,
     matches_access_preference,
     partner_for_place,
+    place_top_level_categories,
+    place_visual,
     set_access_preference,
     sort_by_access_match,
 )
@@ -1077,7 +1081,15 @@ def places_list(request):
     from apps.places.services import public_places
 
     # F25: hide pending user-proposed places from the public list.
-    qs = public_places(Place.objects.prefetch_related("place_activities__activity"))
+    qs = public_places(
+        Place.objects.select_related("cover").prefetch_related(
+            Prefetch(
+                "place_activities",
+                queryset=PlaceActivity.objects.select_related("activity__category__parent"),
+            ),
+            "corrections",
+        )
+    )
     # .distinct() is load-bearing: PlaceFilter joins place_activities for ?activity/?min_confidence
     # and would otherwise multiply rows (mirrors PlaceViewSet.get_queryset).
     qs = PlaceFilter(request.GET, queryset=qs).qs.distinct()
@@ -1090,13 +1102,15 @@ def places_list(request):
     # AFTER the distance/name ordering + materialisation, so it composes rather than replaces.
     pref = get_access_preference(request.user)
     capped = sort_by_access_match(capped, pref)
-    # F15 compose: attach the venue's positive accessibility facts as terse badges per row, plus a
-    # subtle "matches your needs" marker on the rows the nudge promoted.
+    # F15/F32 compose: keep only the positive "matches your needs" marker on rows;
+    # neutral/limited access facts stay on the detail disclosure.
     for p in capped:
-        p.access_tags = [
-            r for r in accessibility_facts_display(p) if r["state"] in ("true", "limited")
-        ]
+        p.access_tags = []
         p.access_match = matches_access_preference(accessibility_facts(p), pref) == "match"
+        p.category_chips = place_top_level_categories(p)
+        p.visual = place_visual(p)
+        if p.visual.get("kind") == "accent":
+            p.visual["svg"] = mark_safe(p.visual["svg"])
     from apps.web.structured_data import itemlist_ld, ld_json, place_entries
 
     # ItemList of the listed venues so an answer engine can extract them (public places only).
@@ -1139,7 +1153,14 @@ def place_detail(request, pk, slug=None):
     from apps.web.seo import absolute_url, place_path
 
     place = get_object_or_404(
-        Place.objects.prefetch_related("place_activities__activity", "corrections"), pk=pk
+        Place.objects.select_related("cover").prefetch_related(
+            Prefetch(
+                "place_activities",
+                queryset=PlaceActivity.objects.select_related("activity__category__parent"),
+            ),
+            "corrections",
+        ),
+        pk=pk,
     )
     # F25: a still-pending user place is viewable ONLY by its proposer or staff (404 otherwise),
     # so the quorum isn't bypassed and the public never sees it before it's published.
@@ -1190,6 +1211,16 @@ def place_detail(request, pk, slug=None):
     from apps.places.services import KID_FACT_KEYS
 
     venue_fact_rows = venue_facts_detail(place, request.user)
+    access_fact_rows = accessibility_facts_display(place)
+    recorded_access_facts = [
+        row for row in access_fact_rows if row["state"] in ("true", "limited", "false")
+    ]
+    recorded_venue_facts = [
+        row for row in venue_fact_rows if row["state"] in ("true", "limited", "false")
+    ]
+    visual = place_visual(place)
+    if visual.get("kind") == "accent":
+        visual["svg"] = mark_safe(visual["svg"])
     has_kid_facts = any(
         row["state"] == "true" and row["key"] in KID_FACT_KEYS for row in venue_fact_rows
     )
@@ -1247,11 +1278,15 @@ def place_detail(request, pk, slug=None):
             "open_now": open_now_status(place),
             "corrections": corrections,
             "venue_facts": venue_fact_rows,
+            "recorded_venue_facts": recorded_venue_facts,
             "has_kid_facts": has_kid_facts,
-            "access_facts": accessibility_facts_display(place),
+            "access_facts": access_fact_rows,
+            "recorded_access_facts": recorded_access_facts,
             "access_match": access_match,
             "has_access_pref": pref is not None,
             "partner": partner_for_place(place),
+            "place_visual": visual,
+            "category_chips": place_top_level_categories(place),
             "attribution_credit": place_attribution(place),
             "pending_proposal": proposal if pending else None,
             # W6: share this venue into one of the viewer's activity chats (public only).

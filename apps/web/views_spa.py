@@ -475,6 +475,24 @@ def events_spa(
     )
 
 
+def _place_visual_row(p) -> dict | None:
+    visual = getattr(p, "visual", None)
+    if not visual:
+        return None
+    if visual.get("kind") == "place_cover_photo":
+        return {
+            "kind": "photo",
+            "url": visual.get("url", ""),
+            "alt": visual.get("alt") or p.name or _("Unnamed place"),
+            "attribution": visual.get("attribution", ""),
+            "licenseName": visual.get("license_name", ""),
+            "sourcePageUrl": visual.get("source_page_url", ""),
+        }
+    if visual.get("kind") == "accent":
+        return {"kind": "accent", "svg": str(visual.get("svg", ""))}
+    return None
+
+
 def places_spa(request, *, places, filters, near_active, truncated, filtered, structured_data):
     rows = []
     for p in places:
@@ -491,12 +509,11 @@ def places_spa(request, *, places, filters, near_active, truncated, filtered, st
                     if distance is not None
                     else ""
                 ),
-                "activities": [pa.activity.name for pa in p.place_activities.all()],
-                "accessMatch": bool(getattr(p, "access_match", False)),
-                "accessTags": [
-                    {"label": r["label"], "state": r["state"]}
-                    for r in getattr(p, "access_tags", [])
+                "categoryChips": [
+                    category["name"] for category in getattr(p, "category_chips", [])
                 ],
+                "visual": _place_visual_row(p),
+                "accessMatch": bool(getattr(p, "access_match", False)),
             }
         )
     data = {
@@ -514,7 +531,6 @@ def places_spa(request, *, places, filters, near_active, truncated, filtered, st
             "truncated": _("Showing the first 200 places — narrow with a city or activity filter."),
             "empty": _("No places match."),
             "accessMatch": _("Matches your access needs"),
-            "limited": _("(limited)"),
         },
     }
     return spa_response(

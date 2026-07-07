@@ -14,225 +14,54 @@
     <li><span aria-current="page">{{ place.display_name|default:_("Place") }}</span></li>
   </ol>
 </nav>
-{# F20: render the crowd-corrected name/address (falls back to raw OSM); never written to Place. #}
-<h1>{{ place.display_name|default:_("Unnamed place") }}</h1>
 {% if pending_proposal %}
   <div class="banner">{% blocktrans with confirmed=pending_proposal.confirmations.count required=pending_proposal.required_confirmations %}This place is pending &mdash; it needs
     {{ confirmed }} of {{ required }}
     confirmations before it's public. For now only you and moderators can see it.{% endblocktrans %}</div>
 {% endif %}
-<p class="muted">{{ place.display_address }}{% if place.address_country %} {{ place.address_country }}{% endif %}</p>
-{% if place.website|safe_href %}<p><a href="{{ place.website|safe_href }}" rel="noopener noreferrer" target="_blank">{% trans "Official website" %} &rarr;</a></p>{% endif %}
-{% if attribution_credit %}
-  <p class="muted activity-meta-note">
-    {% trans "Source credit:" %}
-    {% if attribution_credit.attribution %}{{ attribution_credit.attribution }}{% else %}{{ place.get_source_display }}{% endif %}
-    {% if attribution_credit.license_name %} &middot; {{ attribution_credit.license_name }}{% endif %}
-    {% if attribution_credit.provenance_url %} &middot; <a href="{{ attribution_credit.provenance_url }}" rel="noopener noreferrer" target="_blank">{% trans "source record" %}</a>{% endif %}
-  </p>
-{% endif %}
-{% if partner %}<p class="muted">{% trans "In partnership with" %} {% if partner.website|safe_href %}<a href="{{ partner.website|safe_href }}" rel="noopener noreferrer" target="_blank">{{ partner.name }}</a>{% else %}{{ partner.name }}{% endif %} <small>({{ partner.get_kind_display }})</small></p>
-  {# W4-F31: the partner's own short standing note about this venue (staff-edited blurb, public()-gated). #}
-  {% if partner.blurb %}<p class="muted" style="font-style:italic">{{ partner.blurb }}</p>{% endif %}
-{% endif %}
 
-{# F28 open-now status + W3-F14 crowd-corrected hours: gate + 'Posted:' both use the EFFECTIVE
-   hours (a published correction, else raw OSM) so the badge and the posted text never disagree. #}
-{% if place.display_opening_hours %}
-<div class="card">
-  <h2 class="u-mt-0">{% trans "Opening hours" %}</h2>
-  {% if open_now is True %}<p><span class="tag fact--true">{% trans "Open now" %}</span></p>
-  {% elif open_now is False %}<p><span class="tag fact--false">{% trans "Closed now" %}</span></p>
-  {% elif open_now == "unverified" %}
-    <p><span class="tag fact--limited">{% trans "Hours may be out of date" %}</span></p>
-    <p class="muted activity-meta-note">{% trans "Visitors reported the posted hours were wrong here." %}</p>
-  {% else %}<p class="muted">{% trans "Posted hours couldn't be read for right now." %}</p>{% endif %}
-  <p class="muted u-text-sm">{% trans "Posted:" %} <code>{{ place.posted_hours_text }}</code></p>
-  {% if can_contribute %}
-    <form method="post" action="{% url 'place_open_now_report' place.pk %}" class="inline">
-      {% csrf_token %}
-      <button class="btn btn--light" type="submit">{% trans "Report: closed when it said open" %}</button>
-    </form>
-  {% endif %}
-  {% if user.is_staff %}
-    <form method="post" action="{% url 'place_open_now_reset' place.pk %}" class="inline">
-      {% csrf_token %}
-      <button class="btn btn--light" type="submit">{% trans "Clear hours reports (staff)" %}</button>
-    </form>
-  {% endif %}
-</div>
-{% endif %}
-
-{# W3-F13: report a venue as gone / permanently closed. A quorum hides it from discovery and blocks
-   new meetups there. The staff reset stays reachable even on an already-hidden (closed) place. #}
-{% if can_contribute %}
-<div class="card">
-  <h2 class="u-mt-0">{% trans "Is this place gone?" %}</h2>
-  <p class="muted activity-meta-note">{% trans "If this venue is demolished or permanently closed, let us know. If enough people agree, we'll stop sending groups here." %}</p>
-  <form method="post" action="{% url 'place_closure_report' place.pk %}" class="inline">
-    {% csrf_token %}
-    <button class="btn btn--light" type="submit">{% trans "Report: this venue is gone" %}</button>
-  </form>
-  {% if user.is_staff %}
-    <form method="post" action="{% url 'place_closure_reset' place.pk %}" class="inline">
-      {% csrf_token %}
-      <button class="btn btn--light" type="submit">{% trans "Clear closure reports (staff)" %}</button>
-    </form>
-  {% endif %}
-</div>
-{% elif user.is_staff %}
-<div class="card">
-  <form method="post" action="{% url 'place_closure_reset' place.pk %}" class="inline">
-    {% csrf_token %}
-    <button class="btn btn--light" type="submit">{% trans "Clear closure reports (staff)" %}</button>
-  </form>
-</div>
-{% endif %}
-
-{# F26: crowd-confirmed activity edges. Disputed edges are hidden (staff see them flagged). #}
-<div class="card">
-  <h2 class="u-mt-0">{% trans "Activities here" %}</h2>
-  {% if edges %}
-  <ul class="members">
-    {% for pa in edges %}
-      <li>
-        <span class="tag {% if pa.summary.is_confirmed %}fact--true{% elif pa.is_disputed %}fact--false{% endif %}">{{ pa.activity.name }}</span>
-        {% if pa.summary.is_confirmed %}<small class="muted">{% trans "community-confirmed" %}</small>
-        {% elif pa.is_disputed %}<small class="muted">{% trans "disputed &mdash; hidden from search (staff view)" %}</small>
-        {% else %}<small class="muted">{% blocktrans with confirms=pa.summary.confirms required=pa.summary.required %}{{ confirms }}/{{ required }} confirms{% endblocktrans %}{% if pa.summary.disputes %}{% blocktrans with disputes=pa.summary.disputes %}, {{ disputes }} disputed{% endblocktrans %}{% endif %}</small>{% endif %}
-        {% if can_contribute %}
-          <form method="post" action="{% url 'edge_vote' place.pk pa.pk %}" class="inline">
-            {% csrf_token %}
-            <button class="btn btn--light" name="vote" value="confirm" {% if pa.summary.my_vote == "confirm" %}disabled{% endif %}>{% trans "Confirm" %}</button>
-            <button class="btn btn--light" name="vote" value="dispute" {% if pa.summary.my_vote == "dispute" %}disabled{% endif %}>{% trans "Dispute" %}</button>
-          </form>
-        {% endif %}
-      </li>
-    {% endfor %}
-  </ul>
-  {% else %}<p class="muted">{% trans "No activities recorded here yet." %}</p>{% endif %}
-</div>
-
-{# W3-F15: a plain-language, read-aloud-friendly summary of the venue in ONE ARIA-landmarked region
-   (reuses the W2-F27 pattern). Composed from facts already in context — no extra query. Honest about
-   unknowns ('not recorded'); never asserts accessibility that isn't recorded, never a count. #}
-{% if place_brief %}
-<section class="card" aria-labelledby="place-brief-heading">
-  <h2 id="place-brief-heading" class="u-mt-0">{% trans "At a glance" %}</h2>
-  <dl class="brief">
-    {% for label, sentence in place_brief %}<dt>{{ label }}</dt><dd>{{ sentence }}</dd>
-    {% endfor %}
-  </dl>
+<section class="place-hero" aria-labelledby="place-title">
+  <figure class="place-cover">
+    {% if place_visual.kind == "place_cover_photo" %}
+      <img src="{{ place_visual.url }}" alt="{{ place_visual.alt }}">
+      {% if place_visual.attribution %}
+        <figcaption class="place-cover-attribution">
+          {% if place_visual.source_page_url|safe_href %}<a href="{{ place_visual.source_page_url|safe_href }}" rel="noopener noreferrer" target="_blank">{{ place_visual.attribution }}</a>{% else %}{{ place_visual.attribution }}{% endif %}
+          {% if place_visual.license_name %} &middot; {{ place_visual.license_name }}{% endif %}
+        </figcaption>
+      {% endif %}
+    {% else %}
+      <div class="place-cover-accent" aria-hidden="true">{{ place_visual.svg }}</div>
+    {% endif %}
+  </figure>
+  <div class="place-hero-body">
+    <h1 id="place-title">{{ place.display_name|default:_("Unnamed place") }}</h1>
+    {% if category_chips %}
+      {# i18n-followup: new concise aria label for top-level place topic chips. #}
+      <div class="place-chip-row" aria-label="{% trans 'Activity categories' %}">
+        {% for category in category_chips %}<span class="map-chip place-chip">{{ category.name }}</span>{% endfor %}
+      </div>
+    {% endif %}
+    <p class="place-hero-badges">
+      {% if open_now is True %}<span class="tag fact--true">{% trans "Open now" %}</span>
+      {% elif open_now is False %}<span class="tag fact--false">{% trans "Closed now" %}</span>
+      {% elif open_now == "unverified" %}<span class="tag fact--limited">{% trans "Hours may be out of date" %}</span>
+      {% elif place.display_opening_hours %}<span class="muted">{% trans "Posted hours couldn't be read for right now." %}</span>{% endif %}
+      {% if has_access_pref and access_match == "match" %}<span class="tag fact--true">{% trans "Matches your access needs" %}</span>{% endif %}
+    </p>
+    <p class="muted">{{ place.display_address }}{% if place.address_country %} {{ place.address_country }}{% endif %}</p>
+    {% if place.website|safe_href %}<p><a class="btn btn--light" href="{{ place.website|safe_href }}" rel="noopener noreferrer" target="_blank">{% trans "Official website" %} &rarr;</a></p>{% endif %}
+    {% if partner %}<p class="muted">{% trans "In partnership with" %} {% if partner.website|safe_href %}<a href="{{ partner.website|safe_href }}" rel="noopener noreferrer" target="_blank">{{ partner.name }}</a>{% else %}{{ partner.name }}{% endif %} <small>({{ partner.get_kind_display }})</small></p>
+      {% if partner.blurb %}<p class="muted partner-blurb">{{ partner.blurb }}</p>{% endif %}
+    {% endif %}
+  </div>
 </section>
-{% endif %}
-
-<div class="card">
-  <h2 class="u-mt-0">{% trans "Accessibility" %}</h2>
-  {% if has_access_pref %}
-    {% if access_match == "match" %}<p><span class="tag fact--true">{% trans "Matches your access needs" %}</span></p>
-    {% elif access_match == "mismatch" %}<p><span class="tag fact--false">{% trans "May not meet your access needs" %}</span></p>
-    {% else %}<p class="muted">{% trans "Some of your access needs aren't recorded for this venue." %}</p>{% endif %}
-  {% else %}
-    {% url 'access_preferences' as access_prefs_url %}
-    <p class="muted">{% blocktrans %}<a href="{{ access_prefs_url }}">Set your access preferences</a> to see at a glance whether a venue matches your needs.{% endblocktrans %}</p>
-  {% endif %}
-  <ul class="members">
-    {% for f in access_facts %}
-      <li>{{ f.label }}:
-        {% if f.state == "true" %}<span class="tag fact--true">{% trans "yes" %}</span>
-        {% elif f.state == "limited" %}<span class="tag fact--limited">{% trans "limited" %}</span>
-        {% elif f.state == "false" %}<span class="tag fact--false">{% trans "no" %}</span>
-        {% else %}<span class="muted">{% trans "not recorded" %}</span>{% endif %}
-      </li>
-    {% endfor %}
-  </ul>
-  <p class="muted u-text-sm">{% trans "From the venue's open data &mdash; we never claim a place is accessible when it isn't recorded." %}</p>
-</div>
-
-{# F19: crowd-confirmed venue facts (OSM-first, members fill in the gaps). Counts only, never voter
-   names; never a composite "safe for kids" score. The kid badge is soft — it never hides a place. #}
-<div class="card">
-  <h2 class="u-mt-0">{% trans "What's at this venue" %}</h2>
-  {% if has_kid_facts %}<p><span class="tag fact--true">{% trans "Has kid-friendly facilities" %}</span></p>{% endif %}
-  <ul class="members">
-    {% for f in venue_facts %}
-      <li>{{ f.label }}:
-        {% if f.state == "true" %}<span class="tag fact--true">{% trans "yes" %}</span>
-        {% elif f.state == "false" %}<span class="tag fact--false">{% trans "no" %}</span>
-        {% else %}<span class="muted">{% trans "not recorded" %}</span>{% endif %}
-        {% if f.osm_sourced %}
-          <small class="muted">{% trans "from map data" %}</small>
-        {% else %}
-          <small class="muted">{% blocktrans with yes=f.yes no=f.no required=f.required %}{{ yes }} yes / {{ no }} no (needs {{ required }}){% endblocktrans %}</small>
-          {% if can_contribute %}
-          <form method="post" action="{% url 'fact_vote' place.pk %}" class="inline">
-            {% csrf_token %}
-            <input type="hidden" name="fact_key" value="{{ f.key }}">
-            <button class="btn btn--light" name="value" value="yes" {% if f.my_vote is True %}disabled{% endif %}>{% trans "Yes" %}</button>
-            <button class="btn btn--light" name="value" value="no" {% if f.my_vote is False %}disabled{% endif %}>{% trans "No" %}</button>
-          </form>
-          {% endif %}
-        {% endif %}
-      </li>
-    {% endfor %}
-  </ul>
-  <p class="muted u-text-sm">{% trans "Map data first; otherwise members confirm. We never claim a fact that isn't recorded, and never show who voted." %}</p>
-</div>
-
-{# F20: crowd-corrected name/address. Pending corrections show COUNTS only (no proposer/confirmer). #}
-<div class="card">
-  <h2 class="u-mt-0">{% trans "Name &amp; address" %}</h2>
-  {% if corrections %}
-    <ul class="members">
-      {% for c in corrections %}
-        <li>{{ c.field_label }} &rarr; <strong>{{ c.proposed_value }}</strong>
-          <small class="muted">{% blocktrans with confirms=c.confirms required=c.required %}{{ confirms }}/{{ required }} confirms{% endblocktrans %}</small>
-          {% if can_contribute and not c.is_proposer %}
-            <form method="post" action="{% url 'place_correction_confirm' place.pk c.id %}" class="inline">
-              {% csrf_token %}
-              <button class="btn btn--light" {% if c.confirmed_by_me %}disabled{% endif %}>{% trans "Confirm" %}</button>
-            </form>
-          {% endif %}
-        </li>
-      {% endfor %}
-    </ul>
-  {% endif %}
-  {% if can_contribute %}
-    <details>
-      <summary>{% trans "Suggest a correction" %}</summary>
-      <form method="post" action="{% url 'place_correction_propose' place.pk %}" class="stack">
-        {% csrf_token %}
-        <label>{% trans "What's wrong?" %}
-          <select name="field">
-            <option value="name">{% trans "Name" %}</option>
-            <option value="address">{% trans "Address" %}</option>
-            <option value="hours">{% trans "Opening hours" %}</option>
-          </select>
-          <span class="help">{% trans "For hours, use e.g. Mo-Fr 09:00-18:00; Sa 10:00-14:00" %}</span></label>
-        <label>{% trans "Corrected value" %}
-          <input type="text" name="proposed_value" maxlength="255" required></label>
-        <button class="btn btn-sm" type="submit">{% trans "Suggest correction" %}</button>
-      </form>
-    </details>
-  {% endif %}
-  <p class="muted u-text-sm">{% trans "Corrections need a few independent confirmations before they show. We never change the map's own data, and never show who suggested or confirmed." %}</p>
-</div>
-
-{# SEO/discovery: internal links to the city×activity landing pages this venue belongs to.
-   Public (shown to everyone); every link is supply-checked server-side so none can 404. #}
-{% if related_city or related_landings %}
-<nav class="muted" aria-label="{% trans 'Explore' %}" style="margin:1rem 0">
-  {% if related_landings %}<p>{% trans "Find more to do here:" %}
-    {% for l in related_landings %}<a href="{{ l.url }}">{{ l.name }}</a>{% if not forloop.last %} &middot; {% endif %}{% endfor %}</p>{% endif %}
-  {% if related_city %}<p><a href="{{ related_city.url }}">{% blocktrans with city=related_city.name %}Discover more in {{ city }} &rarr;{% endblocktrans %}</a></p>{% endif %}
-</nav>
-{% endif %}
 
 {% if user.is_authenticated %}
-  <p style="margin-top:1rem">
+  <p class="place-primary-cta">
     <a class="btn" href="{% url 'activity_create' %}?place={{ place.pk }}">{% trans "Organise an activity here" %}</a>
   </p>
-  {% include "web/_share_box.html" %}
+
   <h2>{% trans "Upcoming here" %}</h2>
   {% for a in meetups %}{% include "web/_activity_card.html" %}{% empty %}
   <p class="muted">{% trans "No upcoming activities here yet." %}</p>{% endfor %}
@@ -251,4 +80,220 @@
   <div class="banner">{% blocktrans %}<a href="{{ login_url }}">Log in</a> or
     <a href="{{ register_url }}">sign up</a> to organise or join activities here.{% endblocktrans %}</div>
 {% endif %}
+
+<details class="place-section">
+  {# i18n-followup: new collapsed place-detail section label. #}
+  <summary>{% trans "Community facts" %}</summary>
+  {% if recorded_access_facts or recorded_venue_facts %}
+    <div class="place-recorded-facts">
+      {# i18n-followup: new heading for the non-unknown facts surfaced first inside Community facts. #}
+      <h3>{% trans "Recorded facts" %}</h3>
+      <ul class="members">
+        {% for f in recorded_access_facts %}
+          <li>{{ f.label }}:
+            {% if f.state == "true" %}<span class="tag fact--true">{% trans "yes" %}</span>
+            {% elif f.state == "limited" %}<span class="tag fact--limited">{% trans "limited" %}</span>
+            {% elif f.state == "false" %}<span class="tag fact--false">{% trans "no" %}</span>{% endif %}
+          </li>
+        {% endfor %}
+        {% for f in recorded_venue_facts %}
+          <li>{{ f.label }}:
+            {% if f.state == "true" %}<span class="tag fact--true">{% trans "yes" %}</span>
+            {% elif f.state == "limited" %}<span class="tag fact--limited">{% trans "limited" %}</span>
+            {% elif f.state == "false" %}<span class="tag fact--false">{% trans "no" %}</span>{% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  <div class="card">
+    <h2 class="u-mt-0">{% trans "Activities here" %}</h2>
+    {% if edges %}
+    <ul class="members">
+      {% for pa in edges %}
+        <li>
+          <span class="tag {% if pa.summary.is_confirmed %}fact--true{% elif pa.is_disputed %}fact--false{% endif %}">{{ pa.activity.name }}</span>
+          {% if pa.summary.is_confirmed %}<small class="muted">{% trans "community-confirmed" %}</small>
+          {% elif pa.is_disputed %}<small class="muted">{% trans "disputed &mdash; hidden from search (staff view)" %}</small>
+          {% else %}<small class="muted">{% blocktrans with confirms=pa.summary.confirms required=pa.summary.required %}{{ confirms }}/{{ required }} confirms{% endblocktrans %}{% if pa.summary.disputes %}{% blocktrans with disputes=pa.summary.disputes %}, {{ disputes }} disputed{% endblocktrans %}{% endif %}</small>{% endif %}
+          {% if can_contribute %}
+            <form method="post" action="{% url 'edge_vote' place.pk pa.pk %}" class="inline">
+              {% csrf_token %}
+              <button class="btn btn--light" name="vote" value="confirm" {% if pa.summary.my_vote == "confirm" %}disabled{% endif %}>{% trans "Confirm" %}</button>
+              <button class="btn btn--light" name="vote" value="dispute" {% if pa.summary.my_vote == "dispute" %}disabled{% endif %}>{% trans "Dispute" %}</button>
+            </form>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+    {% else %}<p class="muted">{% trans "No activities recorded here yet." %}</p>{% endif %}
+  </div>
+
+  {% if place_brief %}
+  <section class="card" aria-labelledby="place-brief-heading">
+    <h2 id="place-brief-heading" class="u-mt-0">{% trans "At a glance" %}</h2>
+    <dl class="brief">
+      {% for label, sentence in place_brief %}<dt>{{ label }}</dt><dd>{{ sentence }}</dd>
+      {% endfor %}
+    </dl>
+  </section>
+  {% endif %}
+
+  <div class="card">
+    <h2 class="u-mt-0">{% trans "Accessibility" %}</h2>
+    {% if has_access_pref %}
+      {% if access_match == "match" %}<p><span class="tag fact--true">{% trans "Matches your access needs" %}</span></p>
+      {% elif access_match == "mismatch" %}<p><span class="tag fact--false">{% trans "May not meet your access needs" %}</span></p>
+      {% else %}<p class="muted">{% trans "Some of your access needs aren't recorded for this venue." %}</p>{% endif %}
+    {% else %}
+      {% url 'access_preferences' as access_prefs_url %}
+      <p class="muted">{% blocktrans %}<a href="{{ access_prefs_url }}">Set your access preferences</a> to see at a glance whether a venue matches your needs.{% endblocktrans %}</p>
+    {% endif %}
+    <ul class="members">
+      {% for f in access_facts %}
+        <li>{{ f.label }}:
+          {% if f.state == "true" %}<span class="tag fact--true">{% trans "yes" %}</span>
+          {% elif f.state == "limited" %}<span class="tag fact--limited">{% trans "limited" %}</span>
+          {% elif f.state == "false" %}<span class="tag fact--false">{% trans "no" %}</span>
+          {% else %}<span class="muted">{% trans "not recorded" %}</span>{% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+    <p class="muted u-text-sm">{% trans "From the venue's open data &mdash; we never claim a place is accessible when it isn't recorded." %}</p>
+  </div>
+
+  <div class="card">
+    <h2 class="u-mt-0">{% trans "What's at this venue" %}</h2>
+    {% if has_kid_facts %}<p><span class="tag fact--true">{% trans "Has kid-friendly facilities" %}</span></p>{% endif %}
+    <ul class="members">
+      {% for f in venue_facts %}
+        <li>{{ f.label }}:
+          {% if f.state == "true" %}<span class="tag fact--true">{% trans "yes" %}</span>
+          {% elif f.state == "false" %}<span class="tag fact--false">{% trans "no" %}</span>
+          {% else %}<span class="muted">{% trans "not recorded" %}</span>{% endif %}
+          {% if f.osm_sourced %}
+            <small class="muted">{% trans "from map data" %}</small>
+          {% else %}
+            <small class="muted">{% blocktrans with yes=f.yes no=f.no required=f.required %}{{ yes }} yes / {{ no }} no (needs {{ required }}){% endblocktrans %}</small>
+            {% if can_contribute %}
+            <form method="post" action="{% url 'fact_vote' place.pk %}" class="inline">
+              {% csrf_token %}
+              <input type="hidden" name="fact_key" value="{{ f.key }}">
+              <button class="btn btn--light" name="value" value="yes" {% if f.my_vote is True %}disabled{% endif %}>{% trans "Yes" %}</button>
+              <button class="btn btn--light" name="value" value="no" {% if f.my_vote is False %}disabled{% endif %}>{% trans "No" %}</button>
+            </form>
+            {% endif %}
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+    <p class="muted u-text-sm">{% trans "Map data first; otherwise members confirm. We never claim a fact that isn't recorded, and never show who voted." %}</p>
+  </div>
+</details>
+
+{% if place.display_opening_hours %}
+<details class="place-section">
+  <summary>{% trans "Hours" %}</summary>
+  <p class="muted u-text-sm">{% trans "Posted:" %} <code>{{ place.posted_hours_text }}</code></p>
+  {% if open_now == "unverified" %}<p class="muted activity-meta-note">{% trans "Visitors reported the posted hours were wrong here." %}</p>{% endif %}
+  {% if can_contribute %}
+    <form method="post" action="{% url 'place_open_now_report' place.pk %}" class="inline">
+      {% csrf_token %}
+      <button class="btn btn--light" type="submit">{% trans "Report: closed when it said open" %}</button>
+    </form>
+  {% endif %}
+  {% if user.is_staff %}
+    <form method="post" action="{% url 'place_open_now_reset' place.pk %}" class="inline">
+      {% csrf_token %}
+      <button class="btn btn--light" type="submit">{% trans "Clear hours reports (staff)" %}</button>
+    </form>
+  {% endif %}
+</details>
+{% endif %}
+
+<details class="place-section">
+  {# i18n-followup: new collapsed place-detail section label. #}
+  <summary>{% trans "Data & corrections" %}</summary>
+  {% if attribution_credit %}
+    <p class="muted activity-meta-note">
+      {% trans "Source credit:" %}
+      {% if attribution_credit.attribution %}{{ attribution_credit.attribution }}{% else %}{{ place.get_source_display }}{% endif %}
+      {% if attribution_credit.license_name %} &middot; {{ attribution_credit.license_name }}{% endif %}
+      {% if attribution_credit.provenance_url %} &middot; <a href="{{ attribution_credit.provenance_url }}" rel="noopener noreferrer" target="_blank">{% trans "source record" %}</a>{% endif %}
+    </p>
+  {% endif %}
+
+  <div class="card">
+    <h2 class="u-mt-0">{% trans "Name &amp; address" %}</h2>
+    {% if corrections %}
+      <ul class="members">
+        {% for c in corrections %}
+          <li>{{ c.field_label }} &rarr; <strong>{{ c.proposed_value }}</strong>
+            <small class="muted">{% blocktrans with confirms=c.confirms required=c.required %}{{ confirms }}/{{ required }} confirms{% endblocktrans %}</small>
+            {% if can_contribute and not c.is_proposer %}
+              <form method="post" action="{% url 'place_correction_confirm' place.pk c.id %}" class="inline">
+                {% csrf_token %}
+                <button class="btn btn--light" {% if c.confirmed_by_me %}disabled{% endif %}>{% trans "Confirm" %}</button>
+              </form>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+    {% if can_contribute %}
+      <details>
+        <summary>{% trans "Suggest a correction" %}</summary>
+        <form method="post" action="{% url 'place_correction_propose' place.pk %}" class="stack">
+          {% csrf_token %}
+          <label>{% trans "What's wrong?" %}
+            <select name="field">
+              <option value="name">{% trans "Name" %}</option>
+              <option value="address">{% trans "Address" %}</option>
+              <option value="hours">{% trans "Opening hours" %}</option>
+            </select>
+            <span class="help">{% trans "For hours, use e.g. Mo-Fr 09:00-18:00; Sa 10:00-14:00" %}</span></label>
+          <label>{% trans "Corrected value" %}
+            <input type="text" name="proposed_value" maxlength="255" required></label>
+          <button class="btn btn-sm" type="submit">{% trans "Suggest correction" %}</button>
+        </form>
+      </details>
+    {% endif %}
+    <p class="muted u-text-sm">{% trans "Corrections need a few independent confirmations before they show. We never change the map's own data, and never show who suggested or confirmed." %}</p>
+  </div>
+
+  {% if can_contribute %}
+  <div class="card">
+    <h2 class="u-mt-0">{% trans "Is this place gone?" %}</h2>
+    <p class="muted activity-meta-note">{% trans "If this venue is demolished or permanently closed, let us know. If enough people agree, we'll stop sending groups here." %}</p>
+    <form method="post" action="{% url 'place_closure_report' place.pk %}" class="inline">
+      {% csrf_token %}
+      <button class="btn btn--light" type="submit">{% trans "Report: this venue is gone" %}</button>
+    </form>
+    {% if user.is_staff %}
+      <form method="post" action="{% url 'place_closure_reset' place.pk %}" class="inline">
+        {% csrf_token %}
+        <button class="btn btn--light" type="submit">{% trans "Clear closure reports (staff)" %}</button>
+      </form>
+    {% endif %}
+  </div>
+  {% elif user.is_staff %}
+  <div class="card">
+    <form method="post" action="{% url 'place_closure_reset' place.pk %}" class="inline">
+      {% csrf_token %}
+      <button class="btn btn--light" type="submit">{% trans "Clear closure reports (staff)" %}</button>
+    </form>
+  </div>
+  {% endif %}
+
+  {% include "web/_share_box.html" %}
+
+  {% if related_city or related_landings %}
+  <nav class="muted place-explore" aria-label="{% trans 'Explore' %}">
+    {% if related_landings %}<p>{% trans "Find more to do here:" %}
+      {% for l in related_landings %}<a href="{{ l.url }}">{{ l.name }}</a>{% if not forloop.last %} &middot; {% endif %}{% endfor %}</p>{% endif %}
+    {% if related_city %}<p><a href="{{ related_city.url }}">{% blocktrans with city=related_city.name %}Discover more in {{ city }} &rarr;{% endblocktrans %}</a></p>{% endif %}
+  </nav>
+  {% endif %}
+</details>
 {% endblock %}

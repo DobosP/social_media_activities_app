@@ -2,6 +2,7 @@ from rest_framework import serializers
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
 from .models import Place, PlaceActivity
+from .services import place_top_level_categories
 
 
 class PlaceActivitySerializer(serializers.ModelSerializer):
@@ -20,6 +21,7 @@ class PlaceSerializer(GeoFeatureModelSerializer):
     categories = serializers.SerializerMethodField()
     category_labels = serializers.SerializerMethodField()
     has_upcoming = serializers.SerializerMethodField()
+    image_thumb = serializers.SerializerMethodField()
     # F20 / W3-F14: render the crowd-corrected name/address/hours (each falls back to raw OSM) so
     # the corrected schedule and `open_now` agree. `opening_hours_raw` stays the canonical OSM text.
     name = serializers.CharField(source="display_name", read_only=True)
@@ -32,21 +34,11 @@ class PlaceSerializer(GeoFeatureModelSerializer):
         edges = [pa for pa in obj.place_activities.all() if not pa.is_disputed]
         return PlaceActivitySerializer(edges, many=True).data
 
-    def _category_pairs(self, obj):
-        pairs = {}
-        for edge in obj.place_activities.all():
-            if edge.is_disputed:
-                continue
-            category = edge.activity.category
-            top = category.parent or category
-            pairs.setdefault(top.slug, top.name)
-        return pairs
-
     def get_categories(self, obj):
-        return list(self._category_pairs(obj).keys())
+        return [category["slug"] for category in place_top_level_categories(obj)]
 
     def get_category_labels(self, obj):
-        return list(self._category_pairs(obj).values())
+        return [category["name"] for category in place_top_level_categories(obj)]
 
     def get_has_upcoming(self, obj):
         return bool(getattr(obj, "has_upcoming", False))
@@ -69,6 +61,7 @@ class PlaceSerializer(GeoFeatureModelSerializer):
             "categories",
             "category_labels",
             "has_upcoming",
+            "image_thumb",
             "website",
             "phone",
             "is_bookable",
@@ -82,6 +75,14 @@ class PlaceSerializer(GeoFeatureModelSerializer):
             "activities",
             "distance_m",
         ]
+
+    def get_image_thumb(self, obj):
+        from .services import place_visual
+
+        visual = place_visual(obj)
+        if visual.get("kind") == "place_cover_photo":
+            return visual.get("url")
+        return None
 
     def get_distance_m(self, obj):
         distance = getattr(obj, "distance", None)

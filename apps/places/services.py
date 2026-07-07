@@ -68,6 +68,22 @@ def edge_is_publicly_visible(edge) -> bool:
     return public_places().filter(pk=edge.place_id).exists()
 
 
+def place_top_level_categories(place) -> list[dict]:
+    """Top-level taxonomy chips for a place, ignoring disputed edges.
+
+    Mirrors the map GeoJSON collapse rule: an activity type's parent category wins when present,
+    otherwise the activity's own category is already top-level.
+    """
+    pairs = {}
+    for edge in place.place_activities.all():
+        if edge.is_disputed:
+            continue
+        category = edge.activity.category
+        top = category.parent or category
+        pairs.setdefault(top.slug, top.name)
+    return [{"slug": slug, "name": name} for slug, name in pairs.items()]
+
+
 FACT_TRUE = "true"
 FACT_FALSE = "false"
 FACT_LIMITED = "limited"

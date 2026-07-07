@@ -6,6 +6,7 @@ from unittest.mock import patch
 import pytest
 from django.contrib.gis.geos import Point
 from django.core.management import call_command
+from django.test import Client
 
 from apps.media.services import place_cover_signed_url
 from apps.media.storage import get_storage
@@ -133,6 +134,7 @@ def _cover_for(place, key=b"imgbytes"):
         content_type="image/jpeg",
         attribution="Ana Pop, CC BY-SA 4.0, via Wikimedia Commons",
         license_name="CC BY-SA 4.0",
+        source_page_url="https://commons.wikimedia.org/wiki/File:Central_Park.jpg",
         alt_text="Parcul Central",
     )
 
@@ -182,6 +184,28 @@ def test_place_visual_generates_deterministic_accent_without_cover():
     assert first["kind"] == "accent"
     assert first["svg"] == second["svg"]
     assert "<svg" in first["svg"]
+
+
+def test_place_detail_hero_renders_cover_with_attribution():
+    place = _place()
+    _cover_for(place)
+
+    body = Client().get(f"/places/{place.pk}/").content.decode()
+
+    assert 'class="place-cover"' in body
+    assert '<img src="/api/media/place-cover-file/' in body
+    assert 'alt="Parcul Central"' in body
+    assert "Ana Pop, CC BY-SA 4.0, via Wikimedia Commons" in body
+    assert "https://commons.wikimedia.org/wiki/File:Central_Park.jpg" in body
+
+
+def test_place_detail_hero_renders_accent_without_cover():
+    place = _place(name="Sala Sporturilor")
+
+    body = Client().get(f"/places/{place.pk}/").content.decode()
+
+    assert 'class="place-cover-accent"' in body
+    assert "<svg" in body
 
 
 # --- command --------------------------------------------------------------------------

@@ -43,14 +43,18 @@ def test_place_detail_shows_honest_facts():
     place = _place(raw_tags={"wheelchair": "yes"})
     body = _client(_user("a15a")).get(f"/places/{place.id}/").content.decode()
     assert "Step-free access" in body
-    assert "not recorded" in body  # the un-tagged facts render honestly, not as "yes"
+    marker = body.index("Community facts")
+    assert "not recorded" in body[marker:]  # unknown facts stay reachable inside disclosure
+    assert "not recorded" not in body[:marker]
 
 
 def test_unknown_accessibility_not_claimed():
     place = _place(raw_tags={})  # nothing recorded
     body = _client(_user("a15b")).get(f"/places/{place.id}/").content.decode()
-    assert "not recorded" in body
-    assert "fact--true" not in body  # never a green "yes" badge on unknown data
+    marker = body.index("Community facts")
+    assert "not recorded" in body[marker:]
+    assert "not recorded" not in body[:marker]
+    assert "fact--true" not in body[:marker]  # never a green "yes" badge on unknown data
 
 
 def test_access_preference_save_and_match_badge():
@@ -92,11 +96,14 @@ def test_places_list_is_public():
     assert _client().get("/places/list/").status_code == 200
 
 
-def test_places_list_shows_accessibility_badge():
+def test_places_list_drops_neutral_accessibility_badges():
     _place(name="Step-free Hall", raw_tags={"wheelchair": "yes"})
+    _place(name="Limited Hall", raw_tags={"wheelchair": "limited"})
     body = _client().get("/places/list/").content.decode()
     assert "Step-free Hall" in body
-    assert "Step-free access" in body  # F15 badge composed onto the F16 list
+    assert "Limited Hall" in body
+    assert "Step-free access" not in body
+    assert "(limited)" not in body
 
 
 def test_places_list_city_filter():

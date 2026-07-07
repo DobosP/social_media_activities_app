@@ -59,7 +59,7 @@ class PlaceViewSet(viewsets.ReadOnlyModelViewSet):
             public_places(
                 # F20: prefetch corrections so the serializer's display_name/display_address
                 # don't fire a per-place query across the (up to 500-place) list.
-                Place.objects.prefetch_related(
+                Place.objects.select_related("cover").prefetch_related(
                     Prefetch(
                         "place_activities",
                         queryset=PlaceActivity.objects.select_related("activity__category__parent"),

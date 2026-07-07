@@ -30,11 +30,33 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
     icon to `/messages/`), alerts move to a header bell with the existing unread pill, the Inbox
     subnav is retired on SSR and React payloads, Connections are promoted on profile/account
     menus, and Support leaves the primary nav for footer/account/giving paths.
-  - **P4 organizer form v2 + move-activity is staged in `claude/organizer-form-v2` but not
-    verified here**: core model/service/form/view work plus breadth templates, mirrors, and focused
-    tests are in the worktree; container pytest was blocked by Docker engine permissions. Remaining
-    after verification/landing: P5 place detail/list declutter · P6 business partner claims · P7
-    scheduled roedu sync (see the ADR's phasing).
+  - **P4 organizer form v2 + move-activity shipped** (`claude/organizer-form-v2`, §4): the
+    create/edit forms are progressive-disclosure sections; `getting_home_note` and both Plan-B
+    fallback fields left the product (DB columns + DRF fields stay, deprecated); the audited
+    `move_activity` service replaces the one-shot fallback — venue changes re-run the creation
+    gates and notify every member; `cost_amount` (RON) + `cost_note` make cost concrete;
+    ADULT organisers may convene at their OWN pending proposal via the inline
+    "add a missing place" bounce-back (children stay on published, child-safe venues).
+    SAFETY.md records the venue-move boundary. Full suite 2325 green at commit time.
+  - **P5 place detail/list declutter shipped** (`claude/place-detail-declutter`, §5 + §2
+    display wiring): place detail leads with a `place_visual()` hero (cover + rendered
+    attribution or generated accent), topic chips, open-now/access-positive badges and the
+    Organise CTA; community facts / hours / source / corrections / closure / share collapse
+    into native disclosures with only recorded facts surfaced by default; list/SPA rows show
+    visuals + category chips and keep only the positive access badge; GeoJSON adds
+    `image_thumb`; map popups show thumbnails.
+  - **P6 venue claims shipped** (`claude/business-claims`, §6): `Partner.Kind` gains
+    `business`; `PlaceClaim` + services (ADULT claimants, staff admin approve/reject with
+    audit + notification); approval links a verified partner stewarding the place and
+    backfills its website; `/places/<pk>/claim/`; partners page copy widened. Same
+    no-boost/no-ads lines as every partner kind.
+  - **P7 scheduled roedu sync shipped** (`claude/roedu-sync-job`, §7): daily `sync_roedu`
+    due-job (roedu venue ingest + event facts + Commons covers), opt-in via
+    `ROEDU_SYNC_ENABLED` + `ROEDU_API_KEY` so a dev box or outage never fails the tick.
+  - Remaining follow-ups (deliberate, non-blocking): business image upload via the D6
+    pipeline (P6b), SeriesForm cost fields, producer `updated_since` + venue category/url
+    (logged in ro_data_server backlog P1), a dark map style variant, retired-column drop
+    migration once nothing references them.
 - **Merge-audit P1/P2 web fixes landed locally** (2026-07-07): React saved-search POSTs may submit
   activity type/category slugs and the server resolves them; home activity cards render contextual
   cover alt text under the enforced web contract; public-listing mutation input is fixed by
