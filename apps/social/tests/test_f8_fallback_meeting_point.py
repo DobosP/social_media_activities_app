@@ -60,13 +60,15 @@ def test_write_serializers_enforce_length_cap():
     assert at_cap.is_valid(), at_cap.errors
 
 
-def test_reminder_body_folds_in_fallback_member_only(adult, place, activity_type, now):
+def test_reminder_body_omits_retired_fallback_line(adult, place, activity_type, now):
+    """ADR-0019 §4: the Plan-B spot was retired from the product; a legacy value stored on
+    an old activity must no longer leak into member reminders."""
     from apps.notifications.management.commands.send_activity_reminders import _reminder_body
 
     a = _activity(adult, place, activity_type, now, fallback_meeting_point="the foyer if it rains")
     body = _reminder_body(a)
-    assert "the foyer if it rains" in body
-    assert "Plan B" in body
+    assert "the foyer if it rains" not in body
+    assert "Plan B" not in body
 
 
 def test_routine_edit_omitting_fallback_does_not_wipe_it(adult, place, activity_type, now):

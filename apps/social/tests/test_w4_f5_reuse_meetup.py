@@ -26,6 +26,9 @@ def _source(owner, place, activity_type, now, **kw):
         beginners_welcome=True,
         capacity=10,
         min_to_go=3,
+        cost_band=Activity.CostBand.PAID,
+        cost_amount=25,
+        cost_note="Court rental",
         **kw,
     )
 
@@ -41,6 +44,8 @@ def test_draft_from_activity_prefills_whitelisted_fields_for_owner(
     assert prefill["beginners_welcome"] is True
     assert prefill["capacity"] == 10
     assert prefill["min_to_go"] == 3
+    assert prefill["cost_amount"] == source.cost_amount
+    assert prefill["cost_note"] == "Court rental"
     assert prefill["place"] == place.id
     assert prefill["activity_type"] == activity_type.id
     # A clone is a NEW occurrence — the organiser picks the time; never copy the old one.
@@ -116,8 +121,9 @@ def test_cloned_form_still_creates_through_the_full_gate(adult, place, activity_
             "meeting_point": initial.get("meeting_point", ""),
             "what_to_bring": initial.get("what_to_bring", ""),
             "organizer_note": initial.get("organizer_note", ""),
-            "getting_home_note": initial.get("getting_home_note", ""),
             "cost_band": initial.get("cost_band", ""),
+            "cost_amount": initial.get("cost_amount", ""),
+            "cost_note": initial.get("cost_note", ""),
             "difficulty": initial.get("difficulty", ""),
             "accessibility_notes": initial.get("accessibility_notes", ""),
         },

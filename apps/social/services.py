@@ -508,9 +508,6 @@ def organizer_console(user) -> dict:
                 # snapshot (a gap to fix), never a per-organizer score.
                 "readiness": {
                     "missing_what_to_bring": not (a.what_to_bring or "").strip(),
-                    # getting_home is a CHILD-only logistics field; surface its gap only there.
-                    "missing_getting_home": a.cohort == Cohort.CHILD
-                    and not (a.getting_home_note or "").strip(),
                     "near_capacity": a.capacity is not None and a.member_n >= a.capacity,
                 },
                 # F5 calm "needs N more to go" quorum line — same shape as attendance_summary,
@@ -797,6 +794,14 @@ def category_envelope_allows(user, activity_type) -> bool:
     return _type_in_category_envelope(rail.get("allowed_categories"), activity_type)
 
 
+def _own_pending_place(owner, place) -> bool:
+    """ADR-0019 §4: whether ``place`` is the owner's OWN still-pending co-creation proposal
+    (the only non-public venue an ADULT organiser may convene at while the quorum runs)."""
+    return UserPlaceProposal.objects.filter(
+        place=place, proposer=owner, status=UserPlaceProposal.Status.PENDING
+    ).exists()
+
+
 @transaction.atomic
 def create_activity(
     owner,
@@ -819,6 +824,8 @@ def create_activity(
     first_time_note="",
     fallback_meeting_point="",
     cost_band=Activity.CostBand.UNSPECIFIED,
+    cost_amount=None,
+    cost_note="",
     difficulty=Activity.Difficulty.UNSPECIFIED,
     accessibility_notes="",
     beginners_welcome=False,
@@ -847,13 +854,28 @@ def create_activity(
     # (the web form also checks); the invoke-time strictly-future check is the separate safety gate.
     if fallback_starts_at is not None and fallback_starts_at <= starts_at:
         raise InvalidState(_("The plan-B time must be after the planned start."))
+    # ADR-0019 §4: a concrete amount only alongside a LOW/PAID band — the pair is one fact.
+    if cost_amount is not None and cost_band not in (
+        Activity.CostBand.LOW,
+        Activity.CostBand.PAID,
+    ):
+        raise InvalidState(_("A cost amount only makes sense for a low-cost or paid meetup."))
     # F25 gate: an activity may only be organised at a PUBLICLY-visible place — never at a
     # still-pending/rejected user-proposed venue. public_places() is the single visibility
     # chokepoint, so this holds identically on the web form and the DRF surface.
+    # ADR-0019 §4 carve-out: an ADULT organiser (only — conservative default keeps TEEN out)
+    # may convene at their OWN still-PENDING proposal, never guardian-accompanied, so a new
+    # venue is usable the moment it's suggested while children stay on published places.
     from apps.places.services import public_places
 
     if place is None or not public_places().filter(pk=place.pk).exists():
-        raise InvalidState(_("That place isn't available to organise an activity at yet."))
+        if (
+            place is None
+            or owner.cohort != Cohort.ADULT
+            or guardian_accompanied
+            or not _own_pending_place(owner, place)
+        ):
+            raise InvalidState(_("That place isn't available to organise an activity at yet."))
     # F9: a CHILD-cohort meetup may only be set at a known public venue type (or a staff-approved
     # place). Fail-closed, but the message names the staff-approval path rather than silently
     # over-blocking. Gated behind CHILD_PUBLIC_VENUES_ONLY (default ON).
@@ -898,6 +920,8 @@ def create_activity(
         first_time_note=first_time_note,
         fallback_meeting_point=fallback_meeting_point,
         cost_band=cost_band,
+        cost_amount=cost_amount,
+        cost_note=cost_note,
         difficulty=difficulty,
         accessibility_notes=accessibility_notes,
         beginners_welcome=beginners_welcome,
@@ -1373,6 +1397,8 @@ ACTIVITY_EDITABLE_FIELDS = (
     "first_time_note",  # F41 — member-only "what to expect when you arrive" note
     "fallback_meeting_point",  # W3-F8 — member-only plan-B spot within the venue
     "cost_band",  # F8 what-to-expect
+    "cost_amount",  # ADR-0019 §4 — concrete per-person amount (RON), LOW/PAID bands only
+    "cost_note",
     "difficulty",
     "accessibility_notes",
     "beginners_welcome",  # F17 per-activity flag
@@ -1458,6 +1484,14 @@ def update_activity(owner, activity, **changes) -> Activity:
     new_capacity = fields.get("capacity", activity.capacity)
     if new_capacity is not None and new_capacity < participant_count(activity):
         raise InvalidState(_("Capacity cannot be lower than the current number of participants."))
+    # ADR-0019 §4: keep the amount↔band pairing honest through edits too.
+    new_cost_amount = fields.get("cost_amount", activity.cost_amount)
+    new_cost_band = fields.get("cost_band", activity.cost_band)
+    if new_cost_amount is not None and new_cost_band not in (
+        Activity.CostBand.LOW,
+        Activity.CostBand.PAID,
+    ):
+        raise InvalidState(_("A cost amount only makes sense for a low-cost or paid meetup."))
     new_min_to_go = fields.get("min_to_go", activity.min_to_go)
     if new_min_to_go is not None and new_capacity is not None and new_min_to_go > new_capacity:
         raise InvalidState(_("Minimum to happen can't be more than the capacity."))
@@ -1491,6 +1525,71 @@ def update_activity(owner, activity, **changes) -> Activity:
                 body=body,
                 url=f"/api/social/activities/{activity.id}/",
             )
+    return activity
+
+
+@transaction.atomic
+def move_activity(owner, activity, *, place) -> Activity:
+    """ADR-0019 §4: organiser moves an OPEN, not-yet-started meetup to a different venue,
+    with every member notified — the product replacement for the retired one-shot plan-B
+    latch (change the time via update_activity, the venue via this path, both notify).
+
+    Place stays OUT of ACTIVITY_EDITABLE_FIELDS on purpose: this dedicated path re-runs
+    the SAME venue gates as creation — the public_places() chokepoint, the CHILD
+    child-safe-venue gate, and the ADULT-only own-pending-proposal carve-out — so a move
+    can never reach a venue creation would have refused (no bait-and-switch into an
+    ungated place; see docs/SAFETY.md). Stale reminders are superseded so the re-fired
+    reminder names the new venue and nobody travels to the old one."""
+    from apps.places.services import public_places
+
+    if not is_organizer(owner, activity):
+        raise NotAMember(_("Only the activity organiser may move it."))
+    if activity.status != Activity.Status.OPEN:
+        raise InvalidState(_("Only an open activity can be moved."))
+    if activity.starts_at <= timezone.now():
+        raise InvalidState(_("This activity has already started and can no longer be moved."))
+    if place is None:
+        raise InvalidState(_("Pick the venue to move to."))
+    if place.pk == activity.place_id:
+        return activity  # idempotent no-op
+    if not public_places().filter(pk=place.pk).exists():
+        if (
+            activity.cohort != Cohort.ADULT
+            or activity.guardian_accompanied
+            or not _own_pending_place(owner, place)
+        ):
+            raise InvalidState(_("That place isn't available to organise an activity at yet."))
+    if activity.cohort == Cohort.CHILD and getattr(settings, "CHILD_PUBLIC_VENUES_ONLY", True):
+        from apps.places.services import is_child_safe_venue
+
+        if not is_child_safe_venue(place):
+            raise InvalidState(
+                _(
+                    "This venue isn't on the approved list for children's activities yet. Pick a "
+                    "library, park, school, sports or community venue — or ask a moderator to "
+                    "approve this place."
+                )
+            )
+    old_name = activity.place.display_name or str(activity.place)
+    activity.place = place
+    activity.save(update_fields=["place", "updated_at"])
+    _supersede_reminders(activity)
+    body = _("“%(title)s” moved venue: now at %(new)s (was %(old)s).") % {
+        "title": activity.title,
+        "new": place.display_name or str(place),
+        "old": old_name,
+    }
+    for membership in current_members(activity).exclude(user_id=owner.id).select_related("user"):
+        _notify(
+            membership.user,
+            "activity_updated",
+            _("An activity you joined changed"),
+            body=body,
+            url=f"/api/social/activities/{activity.id}/",
+        )
+    from apps.safety.services import record_audit
+
+    record_audit("activity.moved", actor=owner, target=activity)
     return activity
 
 
@@ -2946,9 +3045,9 @@ _CLONE_PREFILL_FIELDS = (
     "meeting_point",
     "what_to_bring",
     "organizer_note",
-    "getting_home_note",
-    "fallback_meeting_point",
     "cost_band",
+    "cost_amount",
+    "cost_note",
     "difficulty",
     "accessibility_notes",
     "beginners_welcome",
@@ -2976,11 +3075,7 @@ def draft_activity_text(*, activity_type, place=None, starts_at=None, cohort=Non
     gets a short safety reminder. Returns {'title', 'description'}; callers only ever seed
     EMPTY initial, never overwrite what the user typed. gettext fragments are str()-coerced
     before slicing/concatenation (a lazy proxy can't be sliced).
-
-    NB (F18): we deliberately do NOT seed getting_home_note. A template prompt stored verbatim
-    would be mirrored onto the CHILD guardian manifest as if it were the organiser's real plan,
-    defeating the "see the ACTUAL plan" purpose. The create form's help_text carries that
-    guidance instead, so nothing misleading is ever persisted."""
+    """
     has_place_name = bool(place and (place.name or "").strip())
     if has_place_name:
         title = str(_("%(type)s at %(place)s") % {"type": activity_type.name, "place": place.name})
@@ -3017,7 +3112,7 @@ def plain_meetup_brief(activity, *, is_member: bool) -> list:
     Visibility mirrors EXACTLY the fields it draws from, reusing the caller's own ``is_member``
     signal (never re-deriving membership): the cohort-visible chips (cost / difficulty /
     accessibility) always show; the member-only logistics (meeting_point / what_to_bring /
-    organizer_note / getting_home_note / first_time_note) show ONLY to a member. Emits NO numeric
+    organizer_note / first_time_note) show ONLY to a member. Emits NO numeric
     counts to anyone, so it can never leak a roster size to a minor (sidesteps thread_digest's
     count-suppression entirely)."""
     brief: list[tuple[str, str]] = []
@@ -3050,9 +3145,7 @@ def plain_meetup_brief(activity, *, is_member: bool) -> list:
             (_("Where to meet"), activity.meeting_point),
             (_("What to bring"), activity.what_to_bring),
             (_("A note from the organiser"), activity.organizer_note),
-            (_("Getting home"), activity.getting_home_note),
             (_("First time here"), activity.first_time_note),
-            (_("Plan B location"), activity.fallback_meeting_point),
         ):
             if (value or "").strip():
                 brief.append((str(label), value.strip()))

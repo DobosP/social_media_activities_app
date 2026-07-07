@@ -3,7 +3,13 @@
 <h1>{{ activity.title }}</h1>
 <div>
   <span class="tag">{{ activity.activity_type.name }}</span>
-  {% if activity.cost_band != "unspecified" %}<span class="tag">{{ activity.get_cost_band_display }}</span>{% endif %}
+  {% if activity.cost_amount or activity.cost_amount == 0 %}
+    {% if activity.cost_note %}
+      <span class="tag">{% blocktrans with amount=activity.cost_amount note=activity.cost_note %}≈ {{ amount }} RON — {{ note }}{% endblocktrans %}</span>
+    {% else %}
+      <span class="tag">{% blocktrans with amount=activity.cost_amount %}≈ {{ amount }} RON{% endblocktrans %}</span>
+    {% endif %}
+  {% elif activity.cost_band != "unspecified" %}<span class="tag">{{ activity.get_cost_band_display }}</span>{% endif %}
   {% if activity.difficulty != "unspecified" %}<span class="tag">{{ activity.get_difficulty_display }}</span>{% endif %}
   {% if activity.beginners_welcome %}<span class="tag">{% trans "beginners welcome" %}</span>{% endif %}
   {% if activity.status != "open" %}<span class="tag">{{ activity.get_status_display }}</span>{% endif %}

@@ -139,7 +139,6 @@ urlpatterns = [
     path("activities/<int:pk>/arrived/", views.activity_arrived, name="activity_arrived"),
     path("activities/<int:pk>/transit/", views.activity_transit, name="activity_transit"),
     path("activities/<int:pk>/departing/", views.activity_departing, name="activity_departing"),
-    path("activities/<int:pk>/fallback/", views.activity_fallback, name="activity_fallback"),
     path("activities/<int:pk>/met/", views.activity_met, name="activity_met"),
     path("activities/<int:pk>/join/", views.activity_join, name="activity_join"),
     path("activities/<int:pk>/leave/", views.activity_leave, name="activity_leave"),

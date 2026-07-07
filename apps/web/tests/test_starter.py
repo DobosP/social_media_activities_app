@@ -118,6 +118,7 @@ def test_owner_edits_activity():
     resp = c.post(
         f"/activities/{activity.id}/edit/",
         {
+            "place": str(activity.place_id),  # ADR-0019 §4: venue is an edit-form field now
             "title": "New name",
             "description": "bring water",
             "starts_at": (timezone.now() + timedelta(days=2)).strftime("%Y-%m-%dT%H:%M"),

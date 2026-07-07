@@ -43,21 +43,28 @@ def _dt_field(*, required=True):
     )
 
 
-def _fallback_field():
-    """W2-F10: the optional owner-curated plan-B start time (a single backup slot)."""
-    field = _dt_field(required=False)
-    field.label = "Plan-B start time"
-    field.help_text = (
-        "Optional backup start you can switch to once if the meetup can't run as planned."
+def _cost_amount_field():
+    """ADR-0019 §4: optional concrete per-person amount (RON) alongside a LOW/PAID band."""
+    return forms.DecimalField(
+        required=False,
+        min_value=0,
+        max_digits=7,
+        decimal_places=2,
+        label="About how much (RON)",
+        help_text="Per person, roughly. Leave blank if free or unknown.",
     )
-    return field
 
 
-def _validate_fallback(form, cleaned):
-    """A plan-B time only makes sense as a LATER backup than the planned start."""
-    starts, fallback = cleaned.get("starts_at"), cleaned.get("fallback_starts_at")
-    if starts and fallback and fallback <= starts:
-        form.add_error("fallback_starts_at", "The plan-B time must be after the planned start.")
+def _clean_cost(form, cleaned):
+    """Keep the amount↔band pairing honest at the form edge (the service re-checks):
+    an amount with an UNSPECIFIED band means the organiser skipped the dropdown — coerce
+    to PAID; an amount on an explicitly FREE meetup is a contradiction to fix."""
+    amount = cleaned.get("cost_amount")
+    if amount is not None:
+        if cleaned.get("cost_band") == Activity.CostBand.FREE:
+            form.add_error("cost_amount", "A free meetup can't also have a cost amount.")
+        elif cleaned.get("cost_band") in ("", Activity.CostBand.UNSPECIFIED):
+            cleaned["cost_band"] = Activity.CostBand.PAID
 
 
 class NextInstanceNoteForm(forms.Form):
@@ -84,10 +91,27 @@ class RegisterForm(forms.Form):
     )
 
 
+def _organizer_place_qs(user):
+    """The venues this organiser may pick (F25 chokepoint): public places, plus — for an
+    ADULT organiser only — their OWN still-pending proposals (ADR-0019 §4). The service
+    re-runs the same gate on submit, so this is UX truth, not the security boundary."""
+    from apps.places.services import public_places
+    from apps.social.models import UserPlaceProposal
+
+    qs = public_places(Place.objects.order_by("name"))
+    if user is not None and getattr(user, "cohort", None) == Cohort.ADULT:
+        own_pending = Place.objects.filter(
+            proposal__proposer=user, proposal__status=UserPlaceProposal.Status.PENDING
+        )
+        qs = (qs | own_pending).distinct().order_by("name")
+    return qs
+
+
 class ActivityForm(forms.Form):
-    # The queryset is narrowed to public_places() in __init__ (F25): a still-pending/rejected
-    # user-proposed venue must never be offered, and a tampered POST carrying a pending place id
-    # must fail form validation. Start from .none() so the field is never accidentally open.
+    # The queryset is narrowed in __init__ (F25 + the ADR-0019 own-pending carve-out): a
+    # rejected or third-party pending venue must never be offered, and a tampered POST
+    # carrying such a place id must fail form validation. Start from .none() so the field
+    # is never accidentally open.
     place = forms.ModelChoiceField(queryset=Place.objects.none())
     activity_type = forms.ModelChoiceField(
         queryset=ActivityType.objects.filter(is_active=True).order_by("name")
@@ -103,18 +127,21 @@ class ActivityForm(forms.Form):
         label="Minimum to happen",
         help_text="Runs only if at least this many say they're going. Blank = no minimum.",
     )
-    fallback_starts_at = _fallback_field()
     meeting_point = _logistics_field("Where exactly to meet (e.g. north gate by the fountain).")
     what_to_bring = _logistics_field("What members should bring.")
     organizer_note = _logistics_field("A short note for members.")
-    getting_home_note = _logistics_field(
-        "How members get home (e.g. nearest bus stop, pickup point)."
-    )
     cost_band = forms.ChoiceField(
         choices=Activity.CostBand.choices,
         required=False,
         initial=Activity.CostBand.UNSPECIFIED,
         help_text="Roughly what it costs to take part.",
+    )
+    cost_amount = _cost_amount_field()
+    cost_note = forms.CharField(
+        required=False,
+        max_length=120,
+        label="What the cost covers",
+        help_text="e.g. court rental, materials, entry ticket.",
     )
     difficulty = forms.ChoiceField(
         choices=Activity.Difficulty.choices,
@@ -127,10 +154,6 @@ class ActivityForm(forms.Form):
     )
     first_time_note = _logistics_field(
         "What to expect on arrival (how to recognise the group, what happens first)."
-    )
-    fallback_meeting_point = _logistics_field(
-        "Plan B spot within the venue if the main one's unavailable "
-        "(e.g. the covered pavilion by the entrance if the courts are wet)."
     )
     beginners_welcome = forms.BooleanField(
         required=False,
@@ -147,27 +170,56 @@ class ActivityForm(forms.Form):
         ),
     )
 
+    # ADR-0019 §4: progressive disclosure. The template renders one <details> group per
+    # section (Essentials open; the rest collapsed) instead of a 20-field wall. Field
+    # names not listed (e.g. supervised, place, activity_type, title, starts_at) render
+    # in the always-open essentials block.
+    ESSENTIAL_FIELDS = ("place", "activity_type", "title", "starts_at", "supervised")
+    SECTIONS = (
+        ("schedule", "Schedule & size", ("description", "ends_at", "capacity", "min_to_go")),
+        ("cost", "Cost", ("cost_band", "cost_amount", "cost_note")),
+        (
+            "access",
+            "Accessibility & welcome",
+            ("difficulty", "accessibility_notes", "beginners_welcome", "first_time_note"),
+        ),
+        (
+            "logistics",
+            "Logistics for members",
+            ("meeting_point", "what_to_bring", "organizer_note"),
+        ),
+    )
+
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
-        from apps.places.services import public_places
-
-        # Only publicly-visible places (F25 chokepoint), ordered for the dropdown + the map picker.
-        self.fields["place"].queryset = public_places(Place.objects.order_by("name"))
+        # Publicly-visible places (F25 chokepoint) — plus, for an ADULT organiser, their OWN
+        # still-pending proposals (ADR-0019 §4 carve-out; create_activity re-gates on submit).
+        self.fields["place"].queryset = _organizer_place_qs(user)
         # The supervised pin is meaningful only for a CHILD owner — hide it for everyone else so
         # the form never offers an option create_activity would reject.
         if user is None or getattr(user, "cohort", None) != Cohort.CHILD:
             self.fields.pop("supervised", None)
+
+    def essential_fields(self):
+        return [self[name] for name in self.ESSENTIAL_FIELDS if name in self.fields]
+
+    def sections(self):
+        """(key, title, [bound fields]) groups for the template's <details> rendering."""
+        return [
+            (key, title, [self[name] for name in names if name in self.fields])
+            for key, title, names in self.SECTIONS
+        ]
 
     def clean(self):
         cleaned = super().clean()
         starts, ends = cleaned.get("starts_at"), cleaned.get("ends_at")
         if starts and ends and ends < starts:
             self.add_error("ends_at", "End time cannot be before the start time.")
-        _validate_fallback(self, cleaned)
         # A ChoiceField(required=False) can yield "" — coerce to the sentinel so the model's
         # choices validation isn't bypassed (Activity.objects.create skips full_clean()).
         if not cleaned.get("cost_band"):
             cleaned["cost_band"] = Activity.CostBand.UNSPECIFIED
+        _clean_cost(self, cleaned)
         if not cleaned.get("difficulty"):
             cleaned["difficulty"] = Activity.Difficulty.UNSPECIFIED
         return cleaned
@@ -199,9 +251,6 @@ class SeriesForm(forms.Form):
     meeting_point = _logistics_field("Where exactly to meet (e.g. north gate by the fountain).")
     what_to_bring = _logistics_field("What members should bring.")
     organizer_note = _logistics_field("A short note for members.")
-    getting_home_note = _logistics_field(
-        "How members get home (e.g. nearest bus stop, pickup point)."
-    )
     cost_band = forms.ChoiceField(
         choices=Activity.CostBand.choices,
         required=False,
@@ -232,9 +281,7 @@ class SeriesForm(forms.Form):
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
-        from apps.places.services import public_places
-
-        self.fields["place"].queryset = public_places(Place.objects.order_by("name"))
+        self.fields["place"].queryset = _organizer_place_qs(user)
         if user is None or getattr(user, "cohort", None) != Cohort.CHILD:
             self.fields.pop("supervised", None)
 
@@ -251,10 +298,12 @@ class SeriesForm(forms.Form):
 
 
 class ActivityEditForm(forms.Form):
-    """Edit an existing activity. Place and activity type are deliberately omitted: they
-    are locked once the meetup exists (identity + cohort pin) — see
-    social.services.ACTIVITY_EDITABLE_FIELDS."""
+    """Edit an existing activity. Activity type stays locked (identity + cohort pin — see
+    social.services.ACTIVITY_EDITABLE_FIELDS); the venue is now editable via the dedicated,
+    audited move_activity path (ADR-0019 §4), which re-runs the creation venue gates and
+    notifies every member."""
 
+    place = forms.ModelChoiceField(queryset=Place.objects.none())
     title = forms.CharField(max_length=200)
     description = forms.CharField(widget=forms.Textarea(attrs={"rows": 4}), required=False)
     starts_at = _dt_field()
@@ -266,18 +315,21 @@ class ActivityEditForm(forms.Form):
         label="Minimum to happen",
         help_text="Runs only if at least this many say they're going. Blank = no minimum.",
     )
-    fallback_starts_at = _fallback_field()
     meeting_point = _logistics_field("Where exactly to meet (e.g. north gate by the fountain).")
     what_to_bring = _logistics_field("What members should bring.")
     organizer_note = _logistics_field("A short note for members.")
-    getting_home_note = _logistics_field(
-        "How members get home (e.g. nearest bus stop, pickup point)."
-    )
     cost_band = forms.ChoiceField(
         choices=Activity.CostBand.choices,
         required=False,
         initial=Activity.CostBand.UNSPECIFIED,
         help_text="Roughly what it costs to take part.",
+    )
+    cost_amount = _cost_amount_field()
+    cost_note = forms.CharField(
+        required=False,
+        max_length=120,
+        label="What the cost covers",
+        help_text="e.g. court rental, materials, entry ticket.",
     )
     difficulty = forms.ChoiceField(
         choices=Activity.Difficulty.choices,
@@ -291,26 +343,37 @@ class ActivityEditForm(forms.Form):
     first_time_note = _logistics_field(
         "What to expect on arrival (how to recognise the group, what happens first)."
     )
-    fallback_meeting_point = _logistics_field(
-        "Plan B spot within the venue if the main one's unavailable "
-        "(e.g. the covered pavilion by the entrance if the courts are wet)."
-    )
     beginners_welcome = forms.BooleanField(
         required=False,
         label="Beginners welcome",
         help_text="Tick if first-timers are explicitly welcome.",
     )
 
+    ESSENTIAL_FIELDS = ("place", "title", "starts_at")
+    SECTIONS = ActivityForm.SECTIONS
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["place"].queryset = _organizer_place_qs(user)
+        self.fields[
+            "place"
+        ].help_text = (
+            "Changing the venue notifies every member (the meetup moves, it doesn't restart)."
+        )
+
+    essential_fields = ActivityForm.essential_fields
+    sections = ActivityForm.sections
+
     def clean(self):
         cleaned = super().clean()
         starts, ends = cleaned.get("starts_at"), cleaned.get("ends_at")
         if starts and ends and ends < starts:
             self.add_error("ends_at", "End time cannot be before the start time.")
-        _validate_fallback(self, cleaned)
         # A ChoiceField(required=False) can yield "" — coerce to the sentinel so the model's
         # choices validation isn't bypassed (Activity.objects.create skips full_clean()).
         if not cleaned.get("cost_band"):
             cleaned["cost_band"] = Activity.CostBand.UNSPECIFIED
+        _clean_cost(self, cleaned)
         if not cleaned.get("difficulty"):
             cleaned["difficulty"] = Activity.Difficulty.UNSPECIFIED
         return cleaned
