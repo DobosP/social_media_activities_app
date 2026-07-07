@@ -492,3 +492,37 @@ class ApprovedChildVenue(models.Model):
 
     def __str__(self):
         return f"child_approved({self.place_id})"
+
+
+class PlaceCover(models.Model):
+    """One contextual venue image per place (ADR-0019 §2).
+
+    Sourced from Wikimedia Commons (cached in our object storage WITH attribution +
+    license — Commons only hosts free licenses, and caching avoids leaking visitor IPs
+    to a third party) or, later, a verified business partner upload through the D6
+    media pipeline. Google Places photos are deliberately unsupported (ToS §3.2.3(b)
+    forbids caching/storing them). One image per place mirrors the ADR-0007
+    one-contextual-photo discipline: venue context, not an engagement surface.
+    """
+
+    class Source(models.TextChoices):
+        WIKIMEDIA = "wikimedia", "Wikimedia Commons"
+        BUSINESS = "business", "Business partner upload"
+
+    place = models.OneToOneField(Place, on_delete=models.CASCADE, related_name="cover")
+    source = models.CharField(max_length=16, choices=Source.choices)
+    storage_key = models.CharField(max_length=128)
+    content_type = models.CharField(max_length=64)
+    byte_size = models.PositiveIntegerField(default=0)
+    width = models.PositiveIntegerField(default=0)
+    height = models.PositiveIntegerField(default=0)
+    # Rendered verbatim next to the image wherever it appears (license compliance).
+    attribution = models.CharField(max_length=255, blank=True)
+    license_name = models.CharField(max_length=120, blank=True)
+    source_page_url = models.URLField(max_length=500, blank=True)
+    alt_text = models.CharField(max_length=140, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"place-cover(place={self.place_id}, {self.source})"

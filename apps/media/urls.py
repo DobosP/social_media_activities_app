@@ -7,6 +7,7 @@ from .views import (
     MediaFileView,
     PhotoDetailView,
     PhotoUploadView,
+    PlaceCoverFileView,
     ThreadPhotosView,
 )
 
@@ -25,5 +26,10 @@ urlpatterns = [
         "activity-cover-file/<str:token>/",
         ActivityCoverFileView.as_view(),
         name="media-activity-cover-file",
+    ),
+    path(
+        "place-cover-file/<str:token>/",
+        PlaceCoverFileView.as_view(),
+        name="media-place-cover-file",
     ),
 ]
