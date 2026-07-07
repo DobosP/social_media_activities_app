@@ -669,8 +669,8 @@ def landing_detail_spa(
 # --- account & community screens (P3) -------------------------------------------
 # Recon verdict: every POST on these surfaces redirects (flash in server chrome) —
 # React renders classic forms with the payload csrf; no error marshalling needed.
-# The nav builders below are the single source for account/inbox destinations
-# (recon P1 problem #6): the /you and /settings screens and the tab strips all
+# The nav builders below are the single source for account destinations
+# (recon P1 problem #6): the /you and /settings screens and account tab strips
 # render from them.
 
 
@@ -696,13 +696,8 @@ def account_nav(nav: dict) -> dict:
                     "url": reverse("display_preferences"),
                 },
                 {"label": _("Age verification"), "url": reverse("verify_age")},
-            ],
-        },
-        {
-            "title": _("Inbox"),
-            "links": [
                 {
-                    "label": _("Alerts"),
+                    "label": _("Notifications"),
                     "url": reverse("notifications"),
                     "pill": nav.get("unread_notifications") or 0,
                 },
@@ -757,22 +752,6 @@ def you_tabs(nav: dict) -> list[dict]:
             else []
         ),
         {"label": _("Settings"), "url": reverse("settings")},
-    ]
-
-
-def inbox_tabs(nav: dict) -> list[dict]:
-    return [
-        {
-            "label": _("Alerts"),
-            "url": reverse("notifications"),
-            "pill": nav.get("unread_notifications") or 0,
-        },
-        {"label": _("Messages"), "url": reverse("messages")},
-        *(
-            [{"label": _("Connections"), "url": reverse("connections")}]
-            if nav.get("connections_enabled")
-            else []
-        ),
     ]
 
 
@@ -833,6 +812,7 @@ def profile_spa(
     interests,
     blocked,
     connections,
+    pending_in,
     progression,
     journey_avatar,
 ):
@@ -876,6 +856,7 @@ def profile_spa(
         "interests": list(interests),
         "connections": [_user_row(u) for u in shown],
         "connectionsTotal": len(connections),
+        "pendingIncomingCount": len(pending_in),
         "blocked": [{"pk": b.pk, "name": b.display_name or b.username} for b in blocked],
         "tabs": you_tabs(nav),
         "actions": {
@@ -894,6 +875,14 @@ def profile_spa(
             "edit": _("edit"),
             "connections": _("Connections"),
             "message": _("Message"),
+            "pendingRequests": ngettext(
+                "%(counter)s pending connection request",
+                "%(counter)s pending connection requests",
+                len(pending_in),
+            )
+            % {"counter": len(pending_in)},
+            "review": _("review"),
+            "seeAllConnections": _("See all %(total)s connections →") % {"total": len(connections)},
             "ageVerification": _("Age verification"),
             "verifiedAs": _("Verified as:"),
             "current": _("Current"),
@@ -969,11 +958,10 @@ def access_spa(request, *, pref):
     return spa_response(request, "access", data, title=_("Access preferences"))
 
 
-def notifications_spa(request, *, items, nav):
+def notifications_spa(request, *, items):
     from apps.web.templatetags.safe_urls import safe_href
 
     data = {
-        "tabs": inbox_tabs(nav),
         "items": [
             {
                 "title": n.title,
@@ -1019,7 +1007,6 @@ def notification_preferences_spa(request, *, rows):
 def connections_spa(
     request,
     *,
-    nav,
     connections,
     conn_page,
     conn_query,
@@ -1030,7 +1017,6 @@ def connections_spa(
     results,
 ):
     data = {
-        "tabs": inbox_tabs(nav),
         "searchQuery": query,
         "results": [_user_row(u) for u in results],
         "incoming": [{"pk": c.pk, "user": _user_row(c.requester)} for c in incoming],

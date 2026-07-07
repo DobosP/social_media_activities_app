@@ -485,7 +485,6 @@ def connections_page(request):
     if views_spa.spa_enabled():
         return views_spa.connections_spa(
             request,
-            nav=_nav_context(request.user),
             connections=conn_page.object_list,
             conn_page=conn_page,
             conn_query=conn_query,
@@ -2708,8 +2707,7 @@ def organize(request):
 
 @login_required
 def inbox_hub(request):
-    """Canonical Inbox entry point. The grouped nav links straight to each tab, so
-    this only matters for a typed/bookmarked /inbox/ URL — land it on Alerts."""
+    """Retired Inbox entry point. A typed/bookmarked /inbox/ URL lands on notifications."""
     return redirect("notifications")
 
 
@@ -2785,6 +2783,9 @@ def profile(request):
             interests=chosen,
             blocked=blocked,
             connections=connections.connections_for(user),
+            pending_in=(
+                connections.pending_incoming(user) if connections.is_enabled_for(user) else []
+            ),
             progression=social.progression_summary(user),
             journey_avatar=_journey_avatar(user),
         )
@@ -2850,7 +2851,7 @@ def notifications_list(request):
     for n in items:
         n.why = notifications.why_reason(n.kind)
     if views_spa.spa_enabled():
-        return views_spa.notifications_spa(request, items=items, nav=_nav_context(request.user))
+        return views_spa.notifications_spa(request, items=items)
     return render(request, "web/notifications.html", {"items": items, **_nav_context(request.user)})
 
 

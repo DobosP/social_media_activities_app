@@ -45,6 +45,14 @@
     {% comment %}Focusable (keyboard/SR can toggle the drawer) but visually hidden; the <label> is
        the visible control and supplies the accessible name. Its focus ring shows on the label.{% endcomment %}
     <input type="checkbox" id="nav-toggle" class="nav-toggle-cb">
+    {% if user.is_authenticated %}
+      <div class="nav-mobile-actions" aria-label="{% trans 'Notifications' %}">
+        <a class="nav-icon-link" href="{% url 'notifications' %}" aria-label="{% trans 'Notifications' %}">
+          <span class="ico-wrap"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>{% if unread_notifications %}<span class="pill">{{ unread_notifications }}</span>{% endif %}</span>
+          <span class="visually-hidden">{% trans "Notifications" %}</span>
+        </a>
+      </div>
+    {% endif %}
     <label for="nav-toggle" class="nav-toggle"><span aria-hidden="true">&#9776;</span> {% trans "Menu" %}</label>
     <nav class="nav" role="navigation" aria-label="{% trans 'Primary' %}">
 
@@ -67,20 +75,17 @@
           </div>
         </details>
 
-        {% if user.is_authenticated %}
-          <details class="nav-menu">
-            <summary>{% trans "Inbox" %}{% if unread_notifications %} <span class="pill">{{ unread_notifications }}</span>{% endif %}</summary>
-            <div class="nav-panel">
-              <a href="{% url 'notifications' %}">{% trans "Alerts" %}{% if unread_notifications %} <span class="pill">{{ unread_notifications }}</span>{% endif %}</a>
-              <a href="{% url 'messages' %}">{% trans "Messages" %}</a>
-              {% if connections_enabled %}<a href="{% url 'connections' %}">{% trans "Connections" %}</a>{% endif %}
-            </div>
-          </details>
-        {% endif %}
-
         <span class="spacer"></span>
 
         {% if user.is_authenticated %}
+          <a class="nav-link nav-icon-link nav-desktop-action" href="{% url 'notifications' %}" aria-label="{% trans 'Notifications' %}">
+            <span class="ico-wrap"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>{% if unread_notifications %}<span class="pill">{{ unread_notifications }}</span>{% endif %}</span>
+            <span class="visually-hidden">{% trans "Notifications" %}</span>
+          </a>
+          <a class="nav-link nav-icon-link nav-desktop-action" href="{% url 'messages' %}" aria-label="{% trans 'Messages' %}">
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>
+            <span class="visually-hidden">{% trans "Messages" %}</span>
+          </a>
           {% comment %}W3: the account menu opens from the user's avatar (generated
              constellation/identicon — a deterministic data URI, no media fetch). Known
              cost: |avatar_uri runs one indexed interests query + a small SVG render per
@@ -91,20 +96,20 @@
               <span class="nav-username">{{ user.display_name|default:user.username }}</span></summary>
             <div class="nav-panel">
               <a href="{% url 'profile' %}">{% trans "Profile" %}</a>
+              {% if connections_enabled %}<a href="{% url 'connections' %}">{% trans "Connections" %}</a>{% endif %}
               <a href="{% url 'my_meetups' %}">{% trans "My meetups" %}</a>
               <a href="{% url 'organize' %}">{% trans "Run my meetups" %}</a>
               <a href="{% url 'you' %}">{% trans "Account overview" %}</a>
               <a href="{% url 'settings' %}">{% trans "Settings" %}</a>
+              <a href="{% url 'donate' %}">{% trans "Support" %}</a>
               <div class="sep"></div>
               <form method="post" action="{% url 'logout' %}" class="inline">{% csrf_token %}
                 <button class="linkbtn" type="submit">{% trans "Log out" %}</button></form>
             </div>
           </details>
-          <a class="nav-link" href="{% url 'donate' %}">{% trans "Support" %}</a>
         {% else %}
           <a class="nav-link nav-end" href="{% url 'login' %}">{% trans "Log in" %}</a>
           <a class="nav-link nav-cta" href="{% url 'register' %}">{% trans "Sign up" %}</a>
-          <a class="nav-link" href="{% url 'donate' %}">{% trans "Support" %}</a>
         {% endif %}
       </nav>
   </div>
@@ -127,17 +132,17 @@
 <nav class="tabbar" aria-label="{% trans 'Menu' %}">
   <a href="{% url 'home' %}"{% if url_name == 'home' %} class="is-active" aria-current="page"{% endif %}>
     <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>
-    {% trans "Activities" %}</a>
+    {% trans "Home" %}</a>
   <a href="{% url 'activity_list' %}"{% if url_name == 'activity_list' or url_name == 'activity_detail' %} class="is-active" aria-current="page"{% endif %}>
     <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg>
     {% trans "Browse" %}</a>
   <a class="tab-cta{% if url_name == 'activity_create' %} is-active{% endif %}" href="{% url 'activity_create' %}"{% if url_name == 'activity_create' %} aria-current="page"{% endif %}>
     <span class="ico-wrap"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>
     {% trans "Organize" %}</a>
-  <a href="{% url 'notifications' %}"{% if url_name == 'notifications' or url_name == 'messages' or url_name == 'connections' %} class="is-active" aria-current="page"{% endif %}>
-    <span class="ico-wrap"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>{% if unread_notifications %}<span class="pill">{{ unread_notifications }}</span>{% endif %}</span>
-    {% trans "Inbox" %}</a>
-  <a href="{% url 'you' %}"{% if url_name == 'you' or url_name == 'profile' or url_name == 'settings' %} class="is-active" aria-current="page"{% endif %}>
+  <a href="{% url 'messages' %}"{% if url_name == 'messages' %} class="is-active" aria-current="page"{% endif %}>
+    <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>
+    {# i18n-followup: no existing "Chat" msgid in locale/ro; target IA requires this label. #}Chat</a>
+  <a href="{% url 'you' %}"{% if url_name == 'you' or url_name == 'profile' or url_name == 'settings' or url_name == 'connections' %} class="is-active" aria-current="page"{% endif %}>
     <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-3.9 3.6-6.5 8-6.5s8 2.6 8 6.5"/></svg>
     {% trans "Profile" %}</a>
 </nav>
@@ -152,6 +157,7 @@
       <a href="{% url 'privacy' %}">{% trans "Privacy" %}</a> &middot;
       <a href="{% url 'terms' %}">{% trans "Terms" %}</a> &middot;
       <a href="{% url 'transparency' %}">{% trans "Transparency" %}</a> &middot;
+      <a href="{% url 'donate' %}">{% trans "Support the platform" %}</a> &middot;
       <a href="{% url 'display_preferences' %}">{% trans "Display" %}</a>
       {% if user.is_authenticated %} &middot; <a href="{% url 'settings' %}">{% trans "Settings" %}</a>{% endif %}
     </p>

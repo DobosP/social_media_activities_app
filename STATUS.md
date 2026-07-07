@@ -15,7 +15,23 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
 
 ## Current state
 
-- **Places map v2 shipped** (`claude/places-map-v2`, ADR-0019 §1, 2026-07-07): `/places/` now uses vendored MapLibre GL CSP assets with OpenFreeMap vector tiles, clustered GeoJSON points, DOM-built popups, category/upcoming/open-now filter chips, additive GeoJSON category/open-now/upcoming properties, and a narrow CSP `connect-src https://tiles.openfreemap.org` allowance. Leaflet remains vendored for the place picker/offline flows.
+- **ADR-0019 Places v2 + IA redesign program is underway** (2026-07-07; owner direction). Landed:
+  - **P1 places map v2** (`claude/places-map-v2`, §1): `/places/` uses vendored MapLibre GL CSP
+    assets with OpenFreeMap vector tiles, clustered GeoJSON points, DOM-built popups,
+    category/upcoming/open-now filter chips, additive GeoJSON category/open-now/upcoming
+    properties, and a narrow CSP `connect-src https://tiles.openfreemap.org` allowance. Leaflet
+    remains vendored for the place picker/offline flows.
+  - **P2 place cover images** (`claude/place-images`, §2): one `PlaceCover` per place from the
+    Wikimedia Commons ladder (`wikimedia_commons`/`image`/`wikidata` P18 in `raw_tags`), cached
+    in object storage with attribution + license, signed public serving route, deterministic
+    generated-accent fallback via `place_visual()`, idempotent `resolve_place_covers` command.
+    Display wiring on detail/list/map cards is the P5 slice.
+  - **P3 navigation IA** (`claude/nav-ia`, §3): chat is first-class (mobile Chat tab + desktop
+    icon to `/messages/`), alerts move to a header bell with the existing unread pill, the Inbox
+    subnav is retired on SSR and React payloads, Connections are promoted on profile/account
+    menus, and Support leaves the primary nav for footer/account/giving paths.
+  - Remaining: P4 organizer form v2 + move-activity · P5 place detail/list declutter · P6
+    business partner claims · P7 scheduled roedu sync (see the ADR's phasing).
 - **Merge-audit P1/P2 web fixes landed locally** (2026-07-07): React saved-search POSTs may submit
   activity type/category slugs and the server resolves them; home activity cards render contextual
   cover alt text under the enforced web contract; public-listing mutation input is fixed by
@@ -60,8 +76,8 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
   preferences), connections, saved searches, communities list + community detail — are
   React screens behind the same `SOCIAL_REACT_UI` switch, all classic-POST round-trips
   (every P3 mutation redirects with a flash — no client mutation state). Account/inbox
-  navigation now renders from ONE source (`account_nav`/`you_tabs`/`inbox_tabs` in
-  views_spa.py), closing the recon's duplicated-nav finding. Child-safety pages (wards,
+  navigation now renders from ONE source (`account_nav`/`you_tabs` in views_spa.py), with the
+  retired inbox tab strip removed from React notifications/connections payloads. Child-safety pages (wards,
   guardianship, verify-age, privacy/safety/log, account delete) stay server-rendered and
   got a class-only restyle (wards nested cards subordinated; 20 inline styles removed
   with new u-*/fieldset-plain utilities). communities graph page untouched (vendored

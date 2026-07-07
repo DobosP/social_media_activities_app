@@ -66,6 +66,7 @@ export interface ProfileData {
   interests: string[];
   connections: { publicId: string; name: string }[];
   connectionsTotal: number;
+  pendingIncomingCount: number;
   blocked: { pk: number; name: string }[];
   tabs: Tab[];
   actions: Record<string, string>;
@@ -93,7 +94,6 @@ export interface AccessData {
 }
 
 export interface NotificationsData {
-  tabs: Tab[];
   items: { title: string; body: string; why: string; when: string; url: string; unread: boolean }[];
   actions: { readAll: string };
   urls: { preferences: string };
@@ -107,7 +107,6 @@ export interface NotificationPreferencesData {
 }
 
 export interface ConnectionsData {
-  tabs: Tab[];
   searchQuery: string;
   results: { publicId: string; name: string }[];
   incoming: { pk: number; user: { publicId: string; name: string } }[];

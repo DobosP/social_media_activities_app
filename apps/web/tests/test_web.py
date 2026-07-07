@@ -1,3 +1,4 @@
+import re
 from unittest import mock
 
 import pytest
@@ -46,6 +47,55 @@ def _client(user):
 
 def test_landing_is_public():
     assert Client().get("/").status_code == 200
+
+
+def _strip_tags(html):
+    return re.sub(r"<[^>]+>", " ", html)
+
+
+def test_navigation_ia_authenticated_chrome():
+    from apps.notifications.models import Notification
+    from apps.notifications.services import notify
+
+    user = _user("navia")
+    notify(user, Notification.Kind.JOIN_APPROVED, "joined")
+    body = _client(user).get("/").content.decode()
+
+    assert 'href="/notifications/" aria-label="Notifications"' in body
+    assert 'href="/messages/" aria-label="Messages"' in body
+    assert '<span class="pill">1</span>' in body
+    assert 'class="nav-link" href="/donate/"' not in body
+    assert 'href="/donate/">Support the platform</a>' in body
+
+    tabbar = re.search(r'<nav class="tabbar"[^>]*>(.*?)</nav>', body, re.S)
+    assert tabbar
+    tabbar_html = tabbar.group(1)
+    hrefs = re.findall(r'<a [^>]*href="([^"]+)"', tabbar_html)
+    labels = [
+        re.sub(r"\s+", " ", _strip_tags(a).strip())
+        for a in re.findall(r"<a [^>]*>(.*?)</a>", tabbar_html, re.S)
+    ]
+    assert hrefs == ["/", "/activities/", "/activities/new/", "/messages/", "/you/"]
+    assert labels == ["Home", "Browse", "Organize", "Chat", "Profile"]
+    assert "/notifications/" not in hrefs
+    assert 'class="pill"' not in tabbar_html
+
+
+def test_navigation_ia_logged_out_support_leaves_primary_nav():
+    body = Client().get("/").content.decode()
+
+    assert 'href="/login/"' in body
+    assert 'href="/register/"' in body
+    assert 'class="nav-link" href="/donate/"' not in body
+    assert 'href="/donate/">Support the platform</a>' in body
+
+
+def test_inbox_subtabs_are_retired_from_standalone_pages():
+    client = _client(_user("navia-tabs"))
+    for path in ["/notifications/", "/messages/", "/connections/"]:
+        body = client.get(path).content.decode()
+        assert '<nav class="tabs" aria-label="Inbox"' not in body
+        assert "web/_inbox_tabs.html" not in body
 
 
 def test_register_logs_in_and_home_renders():

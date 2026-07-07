@@ -1,7 +1,0 @@
-{% load i18n %}
-{# Inbox section sub-nav. Pass `active` = alerts | messages | connections. #}
-<nav class="tabs" aria-label="{% trans 'Inbox' %}">
-  <a href="{% url 'notifications' %}"{% if active == 'alerts' %} class="is-active" aria-current="page"{% endif %}>{% trans "Alerts" %}{% if unread_notifications %} <span class="pill">{{ unread_notifications }}</span>{% endif %}</a>
-  <a href="{% url 'messages' %}"{% if active == 'messages' %} class="is-active" aria-current="page"{% endif %}>{% trans "Messages" %}</a>
-  {% if connections_enabled %}<a href="{% url 'connections' %}"{% if active == 'connections' %} class="is-active" aria-current="page"{% endif %}>{% trans "Connections" %}</a>{% endif %}
-</nav>

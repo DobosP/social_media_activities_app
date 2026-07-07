@@ -231,9 +231,23 @@ small { font-size: .82rem; }
   background: var(--accent); color: var(--accent-fg); border-radius: var(--r-pill);
   font-size: .7rem; font-weight: 700; line-height: 1; padding: .18rem .4rem; min-width: 1.1em; text-align: center;
 }
+.nav-icon-link {
+  position: relative; justify-content: center;
+}
+.nav-icon-link .ico { width: 22px; height: 22px; flex: none; }
+.nav-icon-link .ico-wrap { position: relative; display: inline-flex; }
+.nav-icon-link .ico-wrap .pill { position: absolute; top: -6px; right: -10px; }
+.nav-mobile-actions { display: none; align-items: center; gap: .25rem; }
+.nav-mobile-actions .nav-icon-link {
+  display: inline-flex; align-items: center; padding: .45rem; border-radius: var(--r-sm); color: var(--fg);
+}
+.nav-mobile-actions .nav-icon-link:hover { background: var(--bg-subtle); text-decoration: none; }
 
 /* Mobile (< 880px): the menu is hidden until the ☰ checkbox reveals it as a panel. */
 @media (max-width: 879px) {
+  .nav-mobile-actions { display: inline-flex; margin-left: auto; }
+  .nav-mobile-actions ~ .nav-toggle { margin-left: 0; }
+  .nav-desktop-action { display: none; }
   .nav { display: none; }
   .nav-toggle-cb:checked ~ .nav {
     display: flex; position: absolute; left: 0; right: 0; top: 100%;
@@ -302,7 +316,7 @@ small { font-size: .82rem; }
 :root[data-theme="contrast"] .tabbar .tab-cta .ico-wrap { background-image: none; color: var(--accent-fg); }
 
 /* =============================================================================
-   Section sub-navigation (Inbox / You hub tabs)
+   Section sub-navigation (account hub tabs)
    ============================================================================= */
 .tabs {
   display: flex; gap: .25rem; flex-wrap: wrap; margin: .4rem 0 1.3rem;
