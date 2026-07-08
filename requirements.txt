@@ -113,14 +113,12 @@ msgpack==1.2.1
     # via
     #   autobahn
     #   channels-redis
-numpy==2.4.6
-    # via pgvector
 packaging==26.2
     # via
     #   django-csp
     #   gunicorn
     #   incremental
-pgvector==0.4.2
+pgvector==0.5.0
     # via -r requirements.in
 pillow==12.2.0
     # via -r requirements.in
