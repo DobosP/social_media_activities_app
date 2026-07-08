@@ -14,7 +14,7 @@ django-filter>=25.2
 django-environ>=0.14.0
 psycopg[binary]>=3.2
 requests>=2.32
-drf-spectacular>=0.29
+drf-spectacular>=0.30.0
 gunicorn>=23.0
 # Serve static files from the app process (single-container deploy, e.g. Render).
 whitenoise>=6.7
