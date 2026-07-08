@@ -24,7 +24,7 @@ duckdb>=1.5.4
 channels>=4.2
 daphne>=4.1
 # D6: image processing — EXIF/GPS stripping and re-encoding for uploaded photos.
-Pillow>=11.0
+Pillow>=12.3.0
 # D2: EUDI age-attestation verification — JWS (ES256) signature checks.
 PyJWT[crypto]>=2.9
 # D6/prod: S3-compatible object storage backend for media blobs (R2/MinIO/AWS).
