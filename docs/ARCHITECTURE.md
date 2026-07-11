@@ -94,6 +94,10 @@ user-confirmed/manual edges are never overwritten by re-ingestion.
 
 - **Now → small:** single EU VPS (e.g. Hetzner) running Docker Compose (PostGIS + app). EU data
   residency from day one (GDPR + children's data).
+- **Bounded launch runtime (ADR-0022):** one ASGI process starts with four worker threads and a
+  process-local psycopg pool capped at four connections; Django persistent connections stay off.
+  The browser loads a Preact compatibility runtime plus only the requested screen chunk, under a
+  40 KiB gzip initial JS+CSS budget.
 - **Growing:** managed EU Postgres; app horizontally scalable (stateless web + ASGI workers for
   chat); object storage for blobs; CDN for static; caching as needed.
 - **Cost discipline:** free open-data sources first; paid APIs (Google) only where they earn
@@ -103,6 +107,8 @@ user-confirmed/manual edges are never overwritten by re-ingestion.
 
 - **Django + DRF** — batteries-included (admin = moderation tooling), mature GeoDjango, fast for a
   small/nonprofit team.
+- **React-compatible TypeScript + Preact runtime** — keeps `@roedu/ui`/React Router source
+  contracts while code-splitting screens and minimizing parse/transfer cost on lower-end devices.
 - **PostGIS / GeoDjango** — geo in the same DB as everything else.
 - **Relational graph (no graph DB)** — simpler ops, one datastore, fine at this scale; `pgvector`
   later for similarity (D7).

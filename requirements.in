@@ -12,10 +12,9 @@ djangorestframework>=3.17,<3.18
 djangorestframework-gis>=1.2
 django-filter>=25.2
 django-environ>=0.14.0
-psycopg[binary]>=3.2
+psycopg[binary,pool]>=3.2
 requests>=2.32
 drf-spectacular>=0.29
-gunicorn>=23.0
 # Serve static files from the app process (single-container deploy, e.g. Render).
 whitenoise>=6.7
 # D7: Overture places ingestion reads GeoParquet via DuckDB.
@@ -30,7 +29,7 @@ PyJWT[crypto]>=2.9
 # D6/prod: S3-compatible object storage backend for media blobs (R2/MinIO/AWS).
 boto3>=1.43.36
 # P3: pgvector-backed interest similarity for recommendations.
-pgvector>=0.3
+pgvector>=0.5,<0.6
 # Production-only (activated by env): a shared Redis backs the cache (global rate limits)
 # AND the Channels layer (cross-process WebSocket fan-out) when REDIS_URL is set;
 # error tracking when SENTRY_DSN is set. Neither is imported unless configured, so dev/CI

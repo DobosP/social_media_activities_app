@@ -4,7 +4,7 @@
 `docs/archive/COMPLETENESS_GAPS_2026-06.md`). On any doc conflict: this file > newest-dated ADR in
 `docs/adr/` > everything else.
 
-Last verified: 2026-07-07
+Last verified: 2026-07-11
 
 ## What this is
 
@@ -15,6 +15,33 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
 
 ## Current state
 
+- **Resource-bounded runtime baseline implemented (ADR-0022, 2026-07-11):** React-compatible
+  source now builds through `preact/compat`; all non-home screens are lazy route chunks; and the
+  build recursively measures initial static JS+CSS against a 40 KiB gzip hard budget (36.71 KiB in
+  the verified build). The frontend uses Preact 10.29.7, React Router 6.30.4, TypeScript 7.0.2,
+  and Vite 8.1.4. TypeScript's removed `baseUrl` option is gone; Router 7 is intentionally deferred
+  because it imports React APIs absent from Preact 10. Production ASGI uses `CONN_MAX_AGE=0`, a
+  validated/env-tunable psycopg pool (0–4 connections, 10 s wait), and a four-thread deployment
+  cap. The final Docker stage is pinned to Bookworm runtime images, carries shared GeoDjango
+  libraries instead of development packages, drops unused Gunicorn, and runs as `appuser`.
+- **Clean-version and image verification passed (2026-07-11):** Python 3.12 regenerated both pip
+  locks; `pip check` is clean and `pip-audit` reports no known vulnerabilities. `pgvector-python`
+  0.5.0 removes its NumPy dependency and returns `VectorField` values as lists (covered by a
+  recommendation regression); the separate database extension is 0.8.4. All 2,365 backend tests
+  passed against the final PostgreSQL 16.14 image; the 67 integration-focused and 10 pool-boundary
+  tests also passed separately. All three frontend contract tests,
+  typecheck, build, the 36.71 KiB gzip gate, and the complete npm audit passed with zero reported
+  vulnerabilities. Production migrations plus a real pooled SQL query passed; Redis 8 cache and
+  Channels send/receive smokes passed as well. The non-root production image is
+  600,460,607 bytes versus 1,317,185,980 bytes before the change. Separate ASGI startup readings
+  measured 129,316 KiB maximum RSS and 130,404 KiB current RSS. The database build explicitly
+  updates the lagging upstream tag and OS closure to PostgreSQL 16.14 with no remaining package
+  upgrades, and reports PostGIS 3.5.2 plus pgvector 0.8.4; migrations and a pooled query pass on
+  that image. PostGIS 3.6 remains deferred because
+  docker-postgis does not publish `16-3.6`; its recommended `18-3.6` image changes both the
+  PostgreSQL major and volume path and needs a planned dump/restore rehearsal. CI runs the
+  frontend contracts, typecheck, build, and bundle gate directly in addition to the
+  production-image build.
 - **ADR-0019/0020 follow-up sweep landed** (2026-07-07, this session — five slices, each
   gated on the full suite):
   1. **Saved-search secondary-type matching** (the ADR-0020 noted follow-up): a saved
@@ -173,7 +200,8 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
 - **Mobile photo-heavy activity cards are accepted in this branch** (ADR-0007): one contextual
   cover photo per activity may appear on discovery cards, with generated accent fallback; no
   short video, galleries, public user photo feeds, like/pass/swipe telemetry, or engagement ranking.
-- **The product engine (D1–D10 + four feature waves) is BUILT and tested** (~2150-green suite).
+- **The product engine (D1–D10 + four feature waves) is BUILT and tested** (2,365-test green suite
+  as verified 2026-07-11).
   Before building anything, read `docs/PRODUCTION_READINESS.md` **§0 "Already built — do NOT
   rebuild"** — a generic checklist wrongly flags features that already exist (Redis-ready caches/
   channels, opaque tokens, throttles, SSRF safe-fetch, GDPR erasure/export, pgvector ANN, prod
@@ -228,6 +256,9 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
   free-tier demo only. The Terraform has **never been applied — no infra exists**; never
   `terraform apply` (paid) without Paul. Launch itself is HARD-BLOCKED on the GDPR stack
   (DPIA + DPO + verifiable parental consent — org-level gate).
+  **Frontend release gate:** that source-clone cloud-init path does not compile Vite assets, so
+  `SOCIAL_REACT_UI` stays off there until deployment consumes a green-CI versioned artifact;
+  the Docker image already builds and carries the assets (ADR-0022).
 - **Cohort policy (code truth)**: all cohorts may use connections by default, **each strictly
   within its own cohort**; UNASSIGNED never; cross-age structurally impossible via the
   same-cohort gate — see `docs/adr/0002`. Groups self-creation still hard-walls CHILD/TEEN.

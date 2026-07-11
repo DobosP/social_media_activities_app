@@ -19,6 +19,8 @@ operational/legal gaps are in **[docs/PRODUCTION_READINESS.md](docs/PRODUCTION_R
 - **PostgreSQL + PostGIS** via **GeoDjango** — the single primary datastore (relational +
   geospatial + graph + `pgvector`; no separate graph/vector DB)
 - **ASGI/Channels** for real-time thread delivery; S3-compatible object storage for blobs
+- **React-compatible TypeScript 7 compiled with Preact 10/Vite 8** for interactive screens;
+  Django keeps the document/SEO shell and the initial JS+CSS build is capped at 40 KiB gzip
 - **OpenStreetMap / Overpass** as the first (free) place-data source, plus Overture, the
   RO-EDU data platform, and events feeds — see [docs/DATA_PROVIDERS.md](docs/DATA_PROVIDERS.md)
 - **Deploy:** the launch target is a **single Hetzner EU box + Hetzner Object Storage** via
@@ -34,9 +36,11 @@ docker compose up --build
 docker compose exec web python manage.py createsuperuser   # for /admin
 ```
 
-The image build also compiles the React frontend (`frontend/`, Vite → `static/frontend/`;
-see ADR-0016). For frontend work outside Docker: `cd frontend && npm install && npm run build`
-(node 22; `npm run dev` serves the SPA on :5173 proxying to runserver).
+The image build also compiles the React-compatible Preact frontend (`frontend/`, Vite →
+`static/frontend/`; see ADR-0016 and ADR-0022). For frontend work outside Docker: `cd frontend &&
+npm ci && npm test && npm run build` (Node 24; the lock currently uses TypeScript 7.0.2, Preact
+10.29.7, React Router 6.30.4, and Vite 8.1.4; `npm run dev` serves the SPA on :5173 proxying to
+runserver).
 
 ### Local variant: host already runs Postgres on 5432 (dev machines)
 

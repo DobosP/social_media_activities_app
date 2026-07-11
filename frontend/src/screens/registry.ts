@@ -1,24 +1,70 @@
-import type { ComponentType } from 'react';
+import { lazy, type ComponentType } from 'react';
 import { matchPath } from 'react-router-dom';
 import type { SpaPayload } from '../lib/bootstrap';
 import { HomeScreen } from './HomeScreen';
-import { BrowseScreen } from './BrowseScreen';
-import { OrganizeScreen } from './OrganizeScreen';
-import { EventsScreen } from './EventsScreen';
-import { PlacesScreen } from './PlacesScreen';
-import { ThingsCityScreen, ThingsDetailScreen, ThingsIndexScreen } from './ThingsScreens';
-import { YouScreen } from './YouScreen';
-import { SettingsScreen } from './SettingsScreen';
-import { ProfileScreen } from './ProfileScreen';
-import { InterestsScreen } from './InterestsScreen';
-import { TopicsScreen } from './TopicsScreen';
-import { AccessScreen } from './AccessScreen';
-import { NotificationsScreen } from './NotificationsScreen';
-import { NotificationPreferencesScreen } from './NotificationPreferencesScreen';
-import { ConnectionsScreen } from './ConnectionsScreen';
-import { SavedSearchesScreen } from './SavedSearchesScreen';
-import { CommunitiesScreen } from './CommunitiesScreen';
-import { CommunityDetailScreen } from './CommunityDetailScreen';
+
+// The server supplies data for exactly one route at a time. Keep the landing
+// screen eager and fetch every other screen only on first navigation so a
+// low-end phone does not parse the whole product during its first visit.
+const BrowseScreen = lazy(() =>
+  import('./BrowseScreen').then((module) => ({ default: module.BrowseScreen })),
+);
+const OrganizeScreen = lazy(() =>
+  import('./OrganizeScreen').then((module) => ({ default: module.OrganizeScreen })),
+);
+const EventsScreen = lazy(() =>
+  import('./EventsScreen').then((module) => ({ default: module.EventsScreen })),
+);
+const PlacesScreen = lazy(() =>
+  import('./PlacesScreen').then((module) => ({ default: module.PlacesScreen })),
+);
+const ThingsIndexScreen = lazy(() =>
+  import('./ThingsScreens').then((module) => ({ default: module.ThingsIndexScreen })),
+);
+const ThingsCityScreen = lazy(() =>
+  import('./ThingsScreens').then((module) => ({ default: module.ThingsCityScreen })),
+);
+const ThingsDetailScreen = lazy(() =>
+  import('./ThingsScreens').then((module) => ({ default: module.ThingsDetailScreen })),
+);
+const YouScreen = lazy(() =>
+  import('./YouScreen').then((module) => ({ default: module.YouScreen })),
+);
+const SettingsScreen = lazy(() =>
+  import('./SettingsScreen').then((module) => ({ default: module.SettingsScreen })),
+);
+const ProfileScreen = lazy(() =>
+  import('./ProfileScreen').then((module) => ({ default: module.ProfileScreen })),
+);
+const InterestsScreen = lazy(() =>
+  import('./InterestsScreen').then((module) => ({ default: module.InterestsScreen })),
+);
+const TopicsScreen = lazy(() =>
+  import('./TopicsScreen').then((module) => ({ default: module.TopicsScreen })),
+);
+const AccessScreen = lazy(() =>
+  import('./AccessScreen').then((module) => ({ default: module.AccessScreen })),
+);
+const NotificationsScreen = lazy(() =>
+  import('./NotificationsScreen').then((module) => ({ default: module.NotificationsScreen })),
+);
+const NotificationPreferencesScreen = lazy(() =>
+  import('./NotificationPreferencesScreen').then((module) => ({
+    default: module.NotificationPreferencesScreen,
+  })),
+);
+const ConnectionsScreen = lazy(() =>
+  import('./ConnectionsScreen').then((module) => ({ default: module.ConnectionsScreen })),
+);
+const SavedSearchesScreen = lazy(() =>
+  import('./SavedSearchesScreen').then((module) => ({ default: module.SavedSearchesScreen })),
+);
+const CommunitiesScreen = lazy(() =>
+  import('./CommunitiesScreen').then((module) => ({ default: module.CommunitiesScreen })),
+);
+const CommunityDetailScreen = lazy(() =>
+  import('./CommunityDetailScreen').then((module) => ({ default: module.CommunityDetailScreen })),
+);
 
 export interface ScreenProps {
   payload: SpaPayload;

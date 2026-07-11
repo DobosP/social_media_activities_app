@@ -1,4 +1,4 @@
-import { StrictMode } from 'react';
+import { StrictMode, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 import '@roedu/ui/styles.css';
@@ -16,7 +16,9 @@ if (el) {
   createRoot(el).render(
     <StrictMode>
       <ThemeProvider theme={themeFromDocument()}>
-        {isSpaShell ? <RouterProvider router={makeRouter()} /> : <PreviewApp />}
+        <Suspense fallback={<div role="status">Se încarcă…</div>}>
+          {isSpaShell ? <RouterProvider router={makeRouter()} /> : <PreviewApp />}
+        </Suspense>
       </ThemeProvider>
     </StrictMode>,
   );

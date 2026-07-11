@@ -5,8 +5,16 @@
 # data through `/docker-entrypoint-initdb.d/`: Django migrations are the only
 # schema authority, and RO-EDU demo data loads from the web container after
 # `manage.py migrate`.
-FROM postgis/postgis:16-3.4
+FROM postgis/postgis:16-3.5
 
+# The upstream 16-3.5 tag can lag OS and PostgreSQL security updates. Refresh
+# the whole base from its Debian/PGDG repositories, and name the server/client
+# explicitly, while retaining the volume-compatible PG16 major line.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends postgresql-16-pgvector \
+    && apt-get upgrade -y --no-install-recommends \
+    && apt-get install -y --no-install-recommends \
+        postgresql-16 \
+        postgresql-client-16 \
+        postgresql-16-pgvector \
+    && apt-get autoremove -y --purge \
     && rm -rf /var/lib/apt/lists/*

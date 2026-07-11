@@ -41,7 +41,11 @@ def test_signal_creates_embedding_on_activity_create():
     owner = _user("rec-o0")
     bball, _ = _types()
     activity = _activity(owner, bball, "Hoops")
-    assert ActivityEmbedding.objects.filter(activity=activity).exists()
+    embedding = ActivityEmbedding.objects.get(activity=activity)
+    # pgvector-python 0.5 deliberately returns plain lists instead of importing NumPy.
+    # Keep that lower-memory contract covered because recommendation code consumes the value.
+    assert isinstance(embedding.vector, list)
+    assert len(embedding.vector) == 64
 
 
 def test_recommendations_rank_by_declared_interest():

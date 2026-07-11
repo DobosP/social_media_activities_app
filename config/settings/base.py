@@ -261,8 +261,8 @@ DATABASES = {
     ),
 }
 # P1 scale: when behind a transaction-pooling PgBouncer, server-side cursors break and persistent
-# server connections are counter-productive. Inert by default; set DB_POOLED=True (and
-# DB_CONN_MAX_AGE=0 in prod) once a pooler fronts Postgres. See docs/PRODUCTION_READINESS.md.
+# server connections are counter-productive. Inert by default; set DB_POOLED=True (and disable the
+# process-local pool in prod) once a pooler fronts Postgres. See docs/PRODUCTION_READINESS.md.
 if env.bool("DB_POOLED", default=False):
     DATABASES["default"]["DISABLE_SERVER_SIDE_CURSORS"] = True
     DATABASES["default"]["CONN_MAX_AGE"] = 0

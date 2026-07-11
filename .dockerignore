@@ -1,5 +1,9 @@
 .git
 .gitignore
+.github
+.agents
+.claude
+.codex
 .venv
 venv
 env
@@ -12,3 +16,11 @@ __pycache__
 !README.md
 frontend/node_modules
 static/frontend
+staticfiles
+media
+**/tests
+tests
+conftest.py
+requirements-dev.in
+requirements-dev.txt
+.pre-commit-config.yaml

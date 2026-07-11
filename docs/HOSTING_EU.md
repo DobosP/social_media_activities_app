@@ -147,6 +147,11 @@ name below is a real env var read by the repo's settings** — see the grounding
 DJANGO_SETTINGS_MODULE=config.settings.prod
 DJANGO_SECRET_KEY=<openssl rand -hex 48>                 # prod.py FAILS to boot on the dev default
 DATABASE_URL=postgis://app:CHANGE_ME_STRONG@localhost:5432/app   # prod.py force-sets the PostGIS engine regardless
+ASGI_THREADS=4
+DB_POOL_ENABLED=True
+DB_POOL_MIN_SIZE=0
+DB_POOL_MAX_SIZE=4
+DB_POOL_TIMEOUT=10
 
 # --- hosts / CSRF (NON-RENDER BOX — set BOTH explicitly) ---
 DJANGO_ALLOWED_HOSTS=app.example.eu                      # base.py: env.list("DJANGO_ALLOWED_HOSTS")
@@ -182,7 +187,8 @@ MESSAGING_RETENTION_DAYS=365                             # E2EE direct/group mes
   default `insecure-dev-key-change-me`. Generate a unique one.
 - `DATABASE_URL=postgis://…` — `prod.py` **force-sets** `ENGINE = django.contrib.gis.db.backends.postgis`
   regardless of the URL scheme, so the GeoDjango backend is always used. It also adds a
-  `statement_timeout` (default 30 s), `CONN_MAX_AGE=60`, and connection health checks — no action needed.
+  `statement_timeout` (default 30 s), disables per-thread ASGI persistence, and uses the bounded
+  psycopg pool above. `ASGI_THREADS=4` keeps the matching Channels thread/connection ceiling small.
 - `MEDIA_S3_*` — `apps/media/storage.py::S3StorageBackend` is a **custom boto3 client** (not
   django-storages). It reads `MEDIA_S3_BUCKET`, `MEDIA_S3_ENDPOINT_URL`, `MEDIA_S3_REGION`,
   `MEDIA_S3_ADDRESSING_STYLE` from settings and the AWS creds from boto3's default env chain.

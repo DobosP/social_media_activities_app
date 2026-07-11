@@ -1,7 +1,7 @@
-# --- Frontend build stage: the React/Vite SPA (frontend/) compiles to hashed
+# --- Frontend build stage: the React-compatible Preact/Vite SPA compiles to hashed
 # static assets + a manifest that collectstatic below bakes into the image.
 # @roedu/ui comes from the committed tarball in frontend/vendor/ (no registry auth).
-FROM node:22-slim AS frontend
+FROM node:24-bookworm-slim AS frontend
 
 WORKDIR /fe/frontend
 COPY frontend/package.json frontend/package-lock.json ./
@@ -10,18 +10,19 @@ RUN npm ci
 COPY frontend ./
 RUN npm run build
 
-FROM python:3.12-slim AS base
+FROM python:3.12-slim-bookworm AS base
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
-# GeoDjango native libraries (GDAL/GEOS/PROJ). This is the #1 GeoDjango gotcha.
+# GeoDjango needs the shared GDAL/GEOS/PROJ libraries at runtime, not their headers or command-line
+# tools. Keeping the development packages out of this final stage removes hundreds of MB while
+# retaining the libraries Django loads through ctypes.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         binutils \
-        gdal-bin \
-        libgdal-dev \
-        libgeos-dev \
-        libproj-dev \
+        libgdal32 \
+        libgeos-c1v5 \
+        libproj25 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

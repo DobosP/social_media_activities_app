@@ -1,6 +1,6 @@
 # Production-readiness & scalability roadmap
 
-**Code-grounded as of 2026-06-19; §0 spot-re-verified 2026-07-02** (SSRF `apps/safety/net.py`,
+**Code-grounded as of 2026-06-19; §0 spot-re-verified 2026-07-11** (SSRF `apps/safety/net.py`,
 HNSW migration `recommendations/0002`, prod `CONN_MAX_AGE`/`statement_timeout`, Redis-flip
 CACHES/CHANNEL_LAYERS all confirmed present; §2b updated — the task-queue foundation shipped
 2026-06-23). Supersedes the engineering registers in `archive/AUDIT_2026-05.md`,
@@ -8,7 +8,7 @@ CACHES/CHANNEL_LAYERS all confirmed present; §2b updated — the task-queue fou
 (archived 2026-07-02) — most of those engineering blockers are fixed in code (verified).
 Build on this + `SCALING.md` + `HOSTING_EU.md`. Feeds the repo-root `STATUS.md`.
 
-> **Headline:** the product engine (D1–D10 + 4 feature waves) is built and tested (~1900-green
+> **Headline:** the product engine (D1–D10 + 4 feature waves) is built and tested (2,365-green
 > suite), and the HTTP path is genuinely **stateless + load-balancer-ready** (DB sessions, opaque
 > API tokens, `SECURE_PROXY_SSL_HEADER` + `NUM_PROXIES`, a shared-state boot guard). What's missing
 > is the **operational substrate** to run it live and at scale, plus **legal sign-off**. Almost none
@@ -17,7 +17,7 @@ Build on this + `SCALING.md` + `HOSTING_EU.md`. Feeds the repo-root `STATUS.md`.
 ## 0. Already built — do NOT rebuild
 
 Verified present in code (a generic checklist would wrongly flag these):
-Redis-backed `CACHES` + `CHANNEL_LAYERS` (flip on `REDIS_URL`, `base.py:415`) · opaque
+Redis-backed `CACHES` + `CHANNEL_LAYERS` (flip on `REDIS_URL`, `base.py:621`) · opaque
 `TokenAuthentication` + hardened/throttled token-obtain (mobile/3rd-party ready) · deny-by-default
 DRF permissions · drf-spectacular + Swagger · DRF throttle scopes with XFF/`NUM_PROXIES` handling ·
 request-body-size middleware · per-delivery WebSocket re-auth (4403) · SSRF safe-fetch

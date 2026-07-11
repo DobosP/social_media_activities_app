@@ -6,8 +6,8 @@ building a "new" feature — much of what gets asked for already exists, with de
 Ops-level do-not-rebuild list: [PRODUCTION_READINESS](PRODUCTION_READINESS.md) §0. Dated
 wave-by-wave build records: `archive/FEATURE_CATALOG_2026-06*.md` (immutable).
 
-Last verified: 2026-07-02 — contracts match `apps/*/services.py` + tests as of the ~2150-green
-suite (see `STATUS.md`).
+Last verified: 2026-07-11 — contracts match `apps/*/services.py` + the 2,365-test green suite
+(see `STATUS.md`).
 
 ## The catalog
 

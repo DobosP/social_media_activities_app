@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
+import preact from '@preact/preset-vite';
 
 // The SPA is served by Django: `vite build` emits hashed assets into
 // static/frontend/ (picked up by collectstatic/WhiteNoise) plus a manifest that
@@ -7,7 +7,10 @@ import react from '@vitejs/plugin-react';
 // nonce. In dev, `vite` serves the SPA standalone and proxies API + static
 // requests to runserver so everything stays same-origin.
 export default defineConfig({
-  plugins: [react()],
+  // Preact's official compatibility preset aliases React imports from this app,
+  // React Router, and @roedu/ui. Source code stays React-compatible while the
+  // browser receives the much smaller Preact runtime.
+  plugins: [preact()],
   base: '/static/frontend/',
   build: {
     outDir: '../static/frontend',
@@ -22,7 +25,9 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': { target: 'http://127.0.0.1:8000', changeOrigin: true },
-      '/static': { target: 'http://127.0.0.1:8000', changeOrigin: true },
+      // Do not proxy this frontend's own /static/frontend/ base back to
+      // Django; Vite 8 otherwise follows its base redirect into the proxy.
+      '^/static/(?!frontend/)': { target: 'http://127.0.0.1:8000', changeOrigin: true },
     },
   },
 });

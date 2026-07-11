@@ -9,6 +9,12 @@
 > (CPX22) and in the org plan (CX23) are **candidate sizings, not commitments** — the final
 > provider + size are chosen at procurement time (see `unified-deployment-architecture/docs/adr/`
 > ADR-0002 recommendation + ADR-0004 provider-neutral rule).
+>
+> **FRONTEND RELEASE GATE (2026-07-11, ADR-0022):** this direct cloud-init path clones the source
+> and installs Python dependencies, but does not compile `static/frontend`. Keep
+> `SOCIAL_REACT_UI=False` here. The Docker image does compile the frontend; this path must consume a
+> green-CI versioned release artifact containing Vite + collected static assets before the switch
+> can be enabled.
 
 Infrastructure-as-code for the recommended cheap, EU-resident launch box in
 [`docs/HOSTING_EU.md`](../docs/HOSTING_EU.md) §3. One `terraform apply` provisions a Hetzner Cloud
@@ -85,6 +91,11 @@ gunzip -c /tmp/<file>.sql.gz | psql "postgresql://app:<pw>@localhost:5432/app_re
 ssh into the box; sudo -u app git -C /home/app/social_media_activities_app pull
 sudo systemctl restart socialapp   # ExecStartPre runs migrate + collectstatic
 ```
+
+This source-pull procedure updates the legacy/server-rendered path only; it does not build the
+React-compatible frontend. Do not enable `SOCIAL_REACT_UI` through it. The tracked follow-up is a
+versioned release artifact built once in CI, rather than installing Node or compiling on the small
+production host.
 
 > A green-CI-gated deploy hook (so only passing commits ship) is a `docs/PRODUCTION_READINESS.md`
 > P1 follow-up; today this is a manual pull+restart.

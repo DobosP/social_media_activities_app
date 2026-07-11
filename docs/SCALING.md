@@ -17,8 +17,9 @@
   place) + W1 trigram GIN for search; Post (thread,reply_to,created_at);
   GroupMembership (group,state)/(user,state); Notification (recipient,read_at);
   Event (place,starts_at)/(starts_at) + trigram.
-- **Connection hygiene**: prod sets `CONN_MAX_AGE=60`, health checks, a 30s statement
-  timeout (DoS guard), request-body caps, global DRF throttles (shared via Redis).
+- **Connection hygiene**: ASGI prod sets `CONN_MAX_AGE=0` and uses a bounded psycopg pool
+  (0–4 connections by default), health checks, a 30s statement timeout (DoS guard),
+  request-body caps, global DRF throttles (shared via Redis).
 - **EU residency**: S3 region pinned EU; Redis for cross-process cache/Channels.
 
 ## Shipped in W10

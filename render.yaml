@@ -40,6 +40,16 @@ services:
           property: connectionString
       - key: PYTHONUNBUFFERED
         value: "1"
+      - key: ASGI_THREADS
+        value: "4"
+      - key: DB_POOL_ENABLED
+        value: "True"
+      - key: DB_POOL_MIN_SIZE
+        value: "0"
+      - key: DB_POOL_MAX_SIZE
+        value: "4"
+      - key: DB_POOL_TIMEOUT
+        value: "10"
       # REQUIRED for prod to boot (fail-closed assertions): a real identity provider + EU
       # trust anchor — the dev self-declaration stub and EUDI sandbox are rejected in prod.
       # Set these in the Render dashboard (secrets); sync:false keeps them out of the blueprint.

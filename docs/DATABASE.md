@@ -4,40 +4,33 @@ How this project should use **PostgreSQL 16 + PostGIS** (via Django 5.2 + psycop
 so the database stays fast and safe as it grows. Grounded in the current code; pairs
 with [ARCHITECTURE](ARCHITECTURE.md), [SECURITY](SECURITY.md), and [RUNBOOK](RUNBOOK.md).
 
-> **As-of note (2026-07-02, May-era doc):** several ▶️ items below have since landed —
-> `config/settings/prod.py` sets `CONN_MAX_AGE=60` + `CONN_HEALTH_CHECKS` (§1 done) and a 30s
-> `statement_timeout` (§6 done), and §5's pgvector plan shipped (HNSW index,
-> `recommendations/0002`). Verify any recommendation against current settings before acting;
-> live priorities are in [PRODUCTION_READINESS](PRODUCTION_READINESS.md) §3.
+> **Updated 2026-07-11 (ADR-0022):** the ASGI deployment follows current Django guidance:
+> `CONN_MAX_AGE=0`, a bounded psycopg client pool, connection health checks, and a 30s statement
+> timeout. Section 5's pgvector plan has also shipped (HNSW index, `recommendations/0002`). The
+> local database build keeps the PG16 major/volume contract but explicitly refreshes the lagging
+> upstream OS packages and PostgreSQL server to the current 16.14 security minor.
 
 Status legend: ✅ in place · ▶️ recommended next · ⏳ later/scale.
 
-## 1. Connections — reuse them (biggest quick win)
+## 1. Connections — bounded ASGI pooling
 
-The app currently opens a **new connection per request** (`env.db()` with no
-persistence). Opening a Postgres connection is expensive; reuse is the highest-impact
-change.
+ASGI must not retain one persistent Django connection per worker thread. Production therefore
+uses psycopg's process-local pool and returns each request's connection to it.
 
-- ▶️ **Persistent connections.** Set `CONN_MAX_AGE` (e.g. 60s) and
-  `CONN_HEALTH_CHECKS=True` so Django reuses a live connection across requests and
-  drops dead ones:
+- ✅ **ASGI-safe client pool.** `prod.py` sets `CONN_MAX_AGE=0`, keeps health checks, and
+  configures a small pool whose bounds are environment-tunable:
 
   ```python
-  # config/settings/base.py — after DATABASES = {...}
-  DATABASES["default"]["CONN_MAX_AGE"] = env.int("DB_CONN_MAX_AGE", default=60)
-  DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
+  DATABASES["default"]["CONN_MAX_AGE"] = 0
+  DATABASES["default"]["OPTIONS"]["pool"] = {
+      "min_size": 0,
+      "max_size": 4,
+      "timeout": 10.0,
+  }
   ```
 
-- ▶️ **Server-side pooling for multi-worker deploys.** With gunicorn/daphne running
-  several workers, `CONN_MAX_AGE` keeps `workers × threads` connections open. psycopg 3
-  supports a built-in pool (Django 5.1+):
-
-  ```python
-  DATABASES["default"]["OPTIONS"] = {"pool": {"min_size": 2, "max_size": 10}}
-  ```
-
-  ⏳ At higher scale put **PgBouncer** (transaction pooling) in front instead, and set
-  `CONN_MAX_AGE=0` so the app leans on the bouncer. Transaction pooling forbids
+- ⏳ At higher scale put **PgBouncer** (transaction pooling) in front, disable the client pool
+  with `DB_POOL_ENABLED=False`, and set `DB_POOLED=True`. Transaction pooling forbids
   session-level state (no server-side cursors / `SET`), which suits this app.
 - Keep `max_connections` on the server modest; size the pool to it. A managed EU
   Postgres (per RUNBOOK) typically caps connections low on small plans.
@@ -102,13 +95,15 @@ The schema already declares ~47 indexes/constraints. Principles to keep:
   `prepare_database()` during `migrate`; the DB role needs `CREATE EXTENSION` rights on
   first deploy (see RUNBOOK).
 
-## 5. pgvector readiness (Phase 2 recommendations)
+## 5. pgvector recommendations (shipped)
 
-`archive/PHASE_2_PLAN.md` P3 planned interest-similarity recommendations with **pgvector**
-(since shipped — `VectorField` + HNSW index live in `apps/recommendations/`):
-- Add `pgvector` (Postgres extension) via `CreateExtension("vector")`, store embeddings
-  in a `VectorField`, and index with **HNSW** (`vector_cosine_ops`) for fast ANN.
-- Keep embeddings in their own table/columns so the core write path isn't slowed.
+Interest-similarity recommendations use a `VectorField` plus an **HNSW** index with
+`vector_cosine_ops` in `apps/recommendations/`; embeddings stay in their own table so the core
+write path is not slowed. The verified local database image runs pgvector extension 0.8.4.
+
+Do not confuse that server extension with the `pgvector-python` adapter. The Python lock uses
+0.5.0, which removes NumPy and returns Django `VectorField` values as plain lists. Recommendation
+code consumes that sequence contract and a regression test pins it.
 
 ## 6. Security
 
@@ -120,8 +115,8 @@ The schema already declares ~47 indexes/constraints. Principles to keep:
 - ▶️ **TLS to the database** in production: `OPTIONS={"sslmode": "require"}` (or
   `verify-full` with a CA) — managed EU Postgres supports it.
 - ✅ Secrets only via env (`DATABASE_URL`), never committed.
-- ▶️ Statement timeout to bound abuse / runaway queries:
-  `OPTIONS={"options": "-c statement_timeout=5000"}` (5s).
+- ✅ Statement timeout bounds abuse/runaway queries; production defaults
+  `DB_STATEMENT_TIMEOUT_MS` to 30,000 ms.
 - ✅ Data minimization (age band not DOB, no card data, EXIF stripped) keeps the most
   sensitive data out of the DB entirely — see COMPLIANCE/SAFETY.
 
@@ -137,9 +132,9 @@ The schema already declares ~47 indexes/constraints. Principles to keep:
 
 ## Checklist (do in this order)
 
-1. ▶️ `CONN_MAX_AGE` + `CONN_HEALTH_CHECKS` (cheapest, biggest win).
-2. ▶️ TLS (`sslmode`) + `statement_timeout` in prod `OPTIONS`.
+1. ✅ ASGI `CONN_MAX_AGE=0` + bounded psycopg pool + `CONN_HEALTH_CHECKS`.
+2. ▶️ TLS (`sslmode`) (`statement_timeout` is already set in prod `OPTIONS`).
 3. ▶️ Least-privilege app role; separate DDL/read-only roles.
 4. ▶️ `assertNumQueries` guards on hot endpoints; fix any N+1.
 5. ▶️ Partial/trigram indexes where `EXPLAIN` shows scans; keyset pagination on feeds.
-6. ⏳ psycopg pool / PgBouncer and pgvector when scale / Phase 2 require them.
+6. ⏳ PgBouncer when connection counts justify another process (pgvector already shipped).

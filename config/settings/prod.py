@@ -1,6 +1,7 @@
 """Production settings. ALLOWED_HOSTS / secrets come from the environment."""
 
 import copy
+import math
 import os
 
 from django.core.exceptions import ImproperlyConfigured
@@ -75,14 +76,47 @@ SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin"
 # so force the GeoDjango backend regardless of the URL scheme.
 DATABASES["default"]["ENGINE"] = "django.contrib.gis.db.backends.postgis"  # noqa: F405
 
-# Production DB resilience (threat model finding #2): cap runaway queries as a DoS
-# guard, reuse connections, and health-check pooled connections (Django 4.1+).
+# Production DB resilience (ADR-0022): cap runaway queries as a DoS guard. ASGI must not use
+# Django's per-thread persistent connections (Django's own deployment guidance), so keep
+# CONN_MAX_AGE at zero and use psycopg's bounded process-local pool instead. The default pool is
+# deliberately tiny for the single-box launch and can be disabled once PgBouncer fronts Postgres.
 DATABASES["default"].setdefault("OPTIONS", {})  # noqa: F405
 DATABASES["default"]["OPTIONS"]["options"] = (  # noqa: F405
     f"-c statement_timeout={env.int('DB_STATEMENT_TIMEOUT_MS', default=30000)}"
 )
-DATABASES["default"]["CONN_MAX_AGE"] = env.int("DB_CONN_MAX_AGE", default=60)  # noqa: F405
+DATABASES["default"]["CONN_MAX_AGE"] = 0  # noqa: F405
 DATABASES["default"]["CONN_HEALTH_CHECKS"] = True  # noqa: F405
+
+DB_POOL_ENABLED = env.bool("DB_POOL_ENABLED", default=True)
+DB_POOL_MIN_SIZE = env.int("DB_POOL_MIN_SIZE", default=0)
+DB_POOL_MAX_SIZE = env.int("DB_POOL_MAX_SIZE", default=4)
+DB_POOL_TIMEOUT = env.float("DB_POOL_TIMEOUT", default=10.0)
+
+
+def _database_pool_options() -> dict[str, int | float]:
+    """Return a validated psycopg pool config, small enough for the launch box."""
+    if DB_POOL_MIN_SIZE < 0:
+        raise ImproperlyConfigured("DB_POOL_MIN_SIZE must be >= 0")
+    if DB_POOL_MAX_SIZE < 1:
+        raise ImproperlyConfigured("DB_POOL_MAX_SIZE must be >= 1")
+    if DB_POOL_MIN_SIZE > DB_POOL_MAX_SIZE:
+        raise ImproperlyConfigured("DB_POOL_MIN_SIZE must not exceed DB_POOL_MAX_SIZE")
+    if not math.isfinite(DB_POOL_TIMEOUT) or DB_POOL_TIMEOUT <= 0:
+        raise ImproperlyConfigured("DB_POOL_TIMEOUT must be finite and > 0")
+    return {
+        "min_size": DB_POOL_MIN_SIZE,
+        "max_size": DB_POOL_MAX_SIZE,
+        "timeout": DB_POOL_TIMEOUT,
+    }
+
+
+if DB_POOL_ENABLED:
+    if env.bool("DB_POOLED", default=False):
+        raise ImproperlyConfigured(
+            "DB_POOL_ENABLED and DB_POOLED cannot both be true; disable the client pool when "
+            "using an external transaction pooler."
+        )
+    DATABASES["default"]["OPTIONS"]["pool"] = _database_pool_options()  # noqa: F405
 
 # Render injects the public hostname at runtime; trust it for hosts + CSRF.
 RENDER_EXTERNAL_HOSTNAME = env("RENDER_EXTERNAL_HOSTNAME", default="")
