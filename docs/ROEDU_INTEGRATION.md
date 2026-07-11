@@ -19,6 +19,10 @@ Places:
   only items with `redistributable=true`, `access_type` in
   `public_document|open_license|public_domain`, non-empty `legal_basis`, and
   `gdpr_relevant=false`; missing/unknown metadata is withheld client-side.
+  Snapshot consumers use `read_app_pack`, which additionally retains pack/release/snapshot
+  identity, requires one consistent identity across every page, rejects cursor cycles, and marks
+  a read complete only when the server declares a full complete snapshot and local pagination
+  reaches the end without a record limit.
 - `apps/ingestion/sources/ro_scraper.py` — `RomaniaScraperAdapter` (`name="roedu"`)
   reads the `venues` product → `RawPlace`. It synthesizes OSM-style `tags` from the
   venue name (`_tags_for`) so `ingestion.mapping` can attach a `PlaceActivity` edge.
@@ -42,8 +46,18 @@ Events:
   `start_datetime`/`starts_at`, `end_datetime`/`ends_at`, `place_id`/`venue_id`,
   `source`, `license`, `access_type`, `legal_basis`, `gdpr_relevant`,
   `redistributable`, `confidence`, `tags`, and `facets` (`city`, `county`,
-  `category`). Descriptions are always stored as `""`; item bodies, source URLs,
+  `category`). It also consumes `status`/`lifecycle_status`, cancellation/deletion/tombstone
+  markers, stable venue IDs, source first/last/updated timestamps, and immutable pack snapshot
+  identity when present. Descriptions are always stored as `""`; item bodies, source URLs,
   internal paths, checksums, and internal provenance are not copied into `Event`.
+- Producer category is retained and mapped deterministically to the local activity taxonomy, then
+  title-classified only as a fallback. Low-confidence rows are retained for staff review but are
+  excluded from all public event surfaces. Cancelled/postponed/removed rows are not upcoming.
+- A body-less tombstone can be applied from a legacy `--updated-since` delta. Absence is inferred
+  only for a complete, unbounded, well-formed immutable app-pack snapshot, scoped by `(pack_id,
+  city)` and committed atomically with its checkpoint. Partial pages, limits, malformed items,
+  legacy snapshots, and deltas never infer absence. Older snapshots fail closed unless an operator
+  explicitly uses `--allow-snapshot-rollback` (ADR-0023).
 - `Event` records now store the same optional source credit fields and
   `sync_roedu_events` maps RO-EDU/source metadata into them when available.
 - `Event.Source.SCRAPER = "roedu"` exists (`apps/events/models.py`) and the
@@ -121,6 +135,9 @@ producer internals or require a live server endpoint.
 `RoeduClient` directly), but it depends on step 2 having run, so keep the env set
 for the whole sequence.
 
+The scheduled `sync_roedu` wrapper reads `ROEDU_APP_PACK`. When set, venue ingestion and event
+sync both use that app pack; when absent, both use legacy products. One run never mixes modes.
+
 ## Safety model
 
 The platform enforces the license/GDPR gate **server-side** (the `social-app-dev`
@@ -151,11 +168,11 @@ the same fields plus an `attribution_credit` display object.
    RO-EDU cultural class allowlist. Staff can approve vetted individual venues via
    `ApprovedChildVenue`; a broader theatre/museum/gallery/cinema policy still needs
    safeguarding review before seeding any class-level rule.
-2. **Scraped-event gating for minors (M5)** — `sync_roedu_events` holds
-   `confidence < 1.0` events, but there is no separate staff-review queue for held
-   NER events and no rule to suppress outbound `source_url` links for CHILD/TEEN.
-3. **Nightly automation** — both commands are manual; no scheduled job / cron wiring
-   pulls roedu places + events on a cadence yet.
+2. **Held-event review UX (M5 follow-up)** — `sync_roedu_events` retains
+   `confidence < 1.0` events behind the public gate and exposes them in admin filters, but there is
+   no dedicated approve/reject workflow. Redistributable app packs never copy outbound source URLs.
+3. **Additional safe event facts** — ticket/price/free/availability and recurrence are not yet
+   projected into the consumer model; add them only with producer/server schema tests and honest UI.
 4. **`amenity=cinema` → `open_air_cinema` is a stopgap** — there is no plain indoor
    "cinema" activity type in the taxonomy; the rule reuses `open_air_cinema` (which
    carries the "cinema" alias) at low confidence. A dedicated `cinema` activity slug

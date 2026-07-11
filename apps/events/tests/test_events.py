@@ -131,6 +131,23 @@ def test_events_api_lists_upcoming_only():
     assert client.get("/api/events/?include_past=true").json()["count"] == 2
 
 
+def test_events_api_default_excludes_source_cancelled_event():
+    Event.objects.create(
+        title="Cancelled upstream",
+        starts_at=timezone.now() + timedelta(days=1),
+        source=Event.Source.SCRAPER,
+        external_id="roedu:cancelled-api",
+        lifecycle_status=Event.LifecycleStatus.CANCELLED,
+    )
+    client = APIClient()
+    client.force_authenticate(_user("e-cancelled"))
+
+    assert client.get("/api/events/").json()["count"] == 0
+    history = client.get("/api/events/?include_past=true").json()
+    assert history["count"] == 1
+    assert history["results"][0]["lifecycle_status"] == "cancelled"
+
+
 def test_events_api_exposes_attribution_credit():
     place = Place.objects.create(
         name="Hall", location=Point(23.6, 46.77, srid=4326), source=Place.Source.ROEDU

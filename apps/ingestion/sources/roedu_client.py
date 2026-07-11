@@ -24,8 +24,31 @@ import os
 import urllib.parse
 import urllib.request
 from collections.abc import Iterator
+from dataclasses import dataclass
 
 REDISTRIBUTABLE_ACCESS_TYPES = frozenset({"public_document", "open_license", "public_domain"})
+
+
+class RoeduContractError(ValueError):
+    """The serving response changed identity while it was being paged."""
+
+
+@dataclass(frozen=True)
+class AppPackRead:
+    items: tuple[dict, ...]
+    pack_id: str
+    snapshot_id: str
+    release_id: str
+    snapshot_generated_at: str
+    snapshot_mode: str
+    snapshot_complete: bool
+
+
+def _consistent_metadata(current: str, incoming, field: str) -> str:
+    incoming = str(incoming or "").strip()
+    if current and incoming and current != incoming:
+        raise RoeduContractError(f"app-pack {field} changed while paging")
+    return current or incoming
 
 
 def is_redistributable_app_pack_item(item: dict) -> bool:
@@ -151,3 +174,113 @@ class RoeduClient:
             cursor = pagination.get("next_cursor")
             if not cursor:
                 return
+
+    def read_app_pack(
+        self,
+        pack: str,
+        *,
+        app: str = "social_media_activities_app",
+        layer: str = "redistributable",
+        limit: int = 200,
+        max_records: int | None = None,
+        **filters,
+    ) -> AppPackRead:
+        """Read one immutable app-pack view and retain its snapshot identity.
+
+        The existing iterator remains the lightweight adapter boundary. Sync jobs
+        use this materialized form because absence reconciliation is safe only
+        after every page has carried one consistent, complete snapshot identity.
+        """
+        if layer != "redistributable":
+            return AppPackRead((), "", "", "", "", "", False)
+
+        cursor = None
+        seen_cursors: set[str] = set()
+        items: list[dict] = []
+        pack_id = snapshot_id = release_id = generated_at = snapshot_mode = ""
+        declared_complete = True
+        identity_complete = True
+        items_valid = True
+        locally_complete = False
+        while True:
+            page = self.app_pack_page(
+                pack,
+                app=app,
+                layer=layer,
+                cursor=cursor,
+                limit=limit,
+                **filters,
+            )
+            if page.get("layer") != "redistributable":
+                break
+            page_generated_at = page.get("snapshot_generated_at") or page.get("generated_at")
+            identity_complete = identity_complete and all(
+                bool(str(value or "").strip())
+                for value in (
+                    page.get("pack_id"),
+                    page.get("snapshot_id"),
+                    page.get("release_id"),
+                    page_generated_at,
+                    page.get("snapshot_mode"),
+                )
+            )
+            pack_id = _consistent_metadata(pack_id, page.get("pack_id"), "pack_id")
+            snapshot_id = _consistent_metadata(snapshot_id, page.get("snapshot_id"), "snapshot_id")
+            release_id = _consistent_metadata(release_id, page.get("release_id"), "release_id")
+            generated_at = _consistent_metadata(
+                generated_at,
+                page_generated_at,
+                "snapshot_generated_at",
+            )
+            snapshot_mode = _consistent_metadata(
+                snapshot_mode, page.get("snapshot_mode"), "snapshot_mode"
+            )
+            declared_complete = declared_complete and page.get("snapshot_complete") is True
+            page_items = page.get("items", [])
+            if not isinstance(page_items, list):
+                items_valid = False
+                page_items = []
+            for item in page_items:
+                if not isinstance(item, dict) or not is_redistributable_app_pack_item(item):
+                    items_valid = False
+                    continue
+                items.append(item)
+                if max_records and len(items) >= max_records:
+                    return AppPackRead(
+                        tuple(items),
+                        pack_id,
+                        snapshot_id,
+                        release_id,
+                        generated_at,
+                        snapshot_mode,
+                        False,
+                    )
+            pagination = page.get("pagination") or {}
+            next_cursor = pagination.get("next_cursor")
+            if not next_cursor:
+                locally_complete = True
+                break
+            next_cursor = str(next_cursor)
+            if next_cursor in seen_cursors:
+                raise RoeduContractError("app-pack cursor repeated while paging")
+            seen_cursors.add(next_cursor)
+            cursor = next_cursor
+
+        strong_metadata = bool(
+            identity_complete
+            and items_valid
+            and pack_id
+            and snapshot_id
+            and release_id
+            and generated_at
+            and snapshot_mode == "full"
+        )
+        return AppPackRead(
+            tuple(items),
+            pack_id,
+            snapshot_id,
+            release_id,
+            generated_at,
+            snapshot_mode,
+            locally_complete and declared_complete and strong_metadata,
+        )

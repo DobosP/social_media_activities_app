@@ -4,7 +4,7 @@
 `docs/archive/COMPLETENESS_GAPS_2026-06.md`). On any doc conflict: this file > newest-dated ADR in
 `docs/adr/` > everything else.
 
-Last verified: 2026-07-11
+Last verified: 2026-07-12
 
 ## What this is
 
@@ -15,6 +15,16 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
 
 ## Current state
 
+- **RO-EDU event lifecycle/snapshot reconciliation is implemented (ADR-0023, 2026-07-12):**
+  imported events retain source category/confidence/lifecycle, stable venue ID, source timestamps,
+  and immutable pack/release/snapshot identity; category maps to `ActivityType`; cancellations,
+  tombstones, and held low-confidence records stay out of public discovery. Body-less product/delta
+  tombstones apply idempotently. Only a fully paged, unbounded, well-formed `snapshot_mode=full`
+  app pack may infer absence within its exact `(pack_id, city)` scope, atomically with its checkpoint;
+  partial/delta/legacy reads never infer absence, page identity drift fails closed, and older
+  snapshots require explicit rollback authorization. The daily wrapper uses one consistent
+  app-pack-or-legacy mode for both place and event stages. Facts-only prose withholding and the
+  existing child-venue fail-closed policy are unchanged.
 - **Resource-bounded runtime baseline implemented (ADR-0022, 2026-07-11):** React-compatible
   source now builds through `preact/compat`; all non-home screens are lazy route chunks; and the
   build recursively measures initial static JS+CSS against a 40 KiB gzip hard budget (36.71 KiB in

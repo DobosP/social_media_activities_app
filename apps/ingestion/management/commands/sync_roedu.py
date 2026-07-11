@@ -33,8 +33,12 @@ class Command(BaseCommand):
             self.stdout.write("sync_roedu: skipped (no ROEDU_API_KEY in the environment).")
             return
         city = opts["city"] or getattr(settings, "ROEDU_SYNC_CITY", "Cluj-Napoca")
+        app_pack = (os.environ.get("ROEDU_APP_PACK") or "").strip()
         call_command("ingest_places", "--source", "roedu", "--city", city)
-        call_command("sync_roedu_events", "--city", city)
+        event_args = ["--city", city]
+        if app_pack:
+            event_args.extend(["--app-pack", app_pack])
+        call_command("sync_roedu_events", *event_args)
         # New venues may carry Commons/Wikidata refs — resolve a bounded batch per tick.
         call_command("resolve_place_covers", "--city", city, "--limit", "100")
         self.stdout.write(self.style.SUCCESS(f"sync_roedu: completed for {city}."))

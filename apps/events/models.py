@@ -19,6 +19,19 @@ class Event(models.Model):
         MANUAL = "manual", "Manual"
         SCRAPER = "roedu", "RO-EDU scraper"
 
+    class LifecycleStatus(models.TextChoices):
+        """Source-owned event state, separate from member accuracy reports."""
+
+        SCHEDULED = "scheduled", "Scheduled"
+        RESCHEDULED = "rescheduled", "Rescheduled"
+        POSTPONED = "postponed", "Postponed"
+        CANCELLED = "cancelled", "Cancelled"
+        SOLD_OUT = "sold_out", "Sold out"
+        MOVED_ONLINE = "moved_online", "Moved online"
+        EXPIRED = "expired", "Expired"
+        REMOVED = "removed", "Removed upstream"
+        UNKNOWN = "unknown", "Unknown"
+
     place = models.ForeignKey(
         "places.Place",
         on_delete=models.CASCADE,
@@ -45,6 +58,27 @@ class Event(models.Model):
     license_name = models.CharField(max_length=120, blank=True)
     provenance_url = models.URLField(max_length=500, blank=True)
 
+    # RO-EDU source facts. These remain separate from the app's member-created
+    # Activity lifecycle and from EventReport's crowd accuracy overlay.
+    source_category = models.CharField(max_length=64, blank=True)
+    source_confidence = models.FloatField(null=True, blank=True)
+    is_import_held = models.BooleanField(default=False)
+    lifecycle_status = models.CharField(
+        max_length=24,
+        choices=LifecycleStatus.choices,
+        default=LifecycleStatus.SCHEDULED,
+    )
+    is_tombstone = models.BooleanField(default=False)
+    source_venue_id = models.CharField(max_length=200, blank=True)
+    source_city = models.CharField(max_length=128, blank=True)
+    source_pack_id = models.CharField(max_length=255, blank=True)
+    source_snapshot_id = models.CharField(max_length=255, blank=True)
+    source_release_id = models.CharField(max_length=255, blank=True)
+    source_snapshot_generated_at = models.DateTimeField(null=True, blank=True)
+    source_first_seen_at = models.DateTimeField(null=True, blank=True)
+    source_last_seen_at = models.DateTimeField(null=True, blank=True)
+    source_updated_at = models.DateTimeField(null=True, blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -59,6 +93,14 @@ class Event(models.Model):
         indexes = [
             models.Index(fields=["place", "starts_at"]),
             models.Index(fields=["starts_at"]),
+            models.Index(
+                fields=["is_tombstone", "is_import_held", "lifecycle_status", "starts_at"],
+                name="event_lifecycle_start_idx",
+            ),
+            models.Index(
+                fields=["source", "source_pack_id", "source_city"],
+                name="event_roedu_scope_idx",
+            ),
             # W1 search: trigram GIN on UPPER(col) — icontains compiles to UPPER() LIKE on
             # Postgres, so only an expression index matches (review finding W1-14).
             GinIndex(OpClass(Upper("title"), name="gin_trgm_ops"), name="event_title_trgm"),
@@ -74,6 +116,25 @@ class Event(models.Model):
         self.url = safe_external_url(self.url)
         self.provenance_url = safe_external_url(self.provenance_url)
         super().save(*args, **kwargs)
+
+
+class RoeduEventSyncState(models.Model):
+    """Last completely reconciled immutable RO-EDU event snapshot per scope."""
+
+    pack_id = models.CharField(max_length=255)
+    city = models.CharField(max_length=128)
+    snapshot_id = models.CharField(max_length=255)
+    release_id = models.CharField(max_length=255, blank=True)
+    snapshot_generated_at = models.DateTimeField()
+    completed_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(fields=["pack_id", "city"], name="uq_roedu_event_sync_scope"),
+        ]
+
+    def __str__(self):
+        return f"{self.pack_id}:{self.city}@{self.snapshot_id}"
 
 
 class EventFeed(models.Model):

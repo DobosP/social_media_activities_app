@@ -107,6 +107,12 @@ def place_ld(place, request=None, events=None) -> dict:
 
 def event_ld(event, request=None) -> dict:
     """Top-level JSON-LD Event for an event detail page (offline, in-person)."""
+    lifecycle_urls = {
+        "cancelled": "https://schema.org/EventCancelled",
+        "postponed": "https://schema.org/EventPostponed",
+        "rescheduled": "https://schema.org/EventRescheduled",
+        "moved_online": "https://schema.org/EventMovedOnline",
+    }
     node = {
         "@context": "https://schema.org",
         "@type": "Event",
@@ -114,7 +120,9 @@ def event_ld(event, request=None) -> dict:
         "startDate": event.starts_at.isoformat(),
         "url": absolute_url(event_path(event), request),
         "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
-        "eventStatus": "https://schema.org/EventScheduled",
+        "eventStatus": lifecycle_urls.get(
+            event.lifecycle_status, "https://schema.org/EventScheduled"
+        ),
     }
     if event.description:
         node["description"] = event.description

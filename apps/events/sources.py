@@ -38,6 +38,20 @@ class RawEvent:
     attribution: str = ""
     license_name: str = ""
     provenance_url: str = ""
+    source_category: str = ""
+    source_confidence: float | None = None
+    is_import_held: bool = False
+    lifecycle_status: str = ""
+    is_tombstone: bool | None = None
+    source_venue_id: str = ""
+    source_city: str = ""
+    source_pack_id: str = ""
+    source_snapshot_id: str = ""
+    source_release_id: str = ""
+    source_snapshot_generated_at: datetime | None = None
+    source_first_seen_at: datetime | None = None
+    source_last_seen_at: datetime | None = None
+    source_updated_at: datetime | None = None
 
 
 class EventSource(ABC):

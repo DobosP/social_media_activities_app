@@ -5,6 +5,7 @@ from rest_framework.test import APIClient
 from apps.accounts.identity.base import AssuranceResult
 from apps.accounts.models import AgeBand, User
 from apps.accounts.services import apply_assurance
+from apps.events.models import Event
 from apps.social.models import Activity
 from apps.taxonomy.models import ActivityType
 
@@ -51,6 +52,14 @@ def test_happening_proximity(seed):
     near = APIClient().get("/api/discovery/happening/", NEAR)
     assert [e["title"] for e in near.data] == ["Pickup game"]
     assert near.data[0]["distance_m"] is not None
+
+
+def test_source_cancelled_event_is_absent_from_happening_and_has_events(seed):
+    seed["event"].lifecycle_status = Event.LifecycleStatus.CANCELLED
+    seed["event"].save(update_fields=["lifecycle_status"])
+
+    assert APIClient().get("/api/discovery/happening/").data == []
+    assert APIClient().get("/api/discovery/near-me/", {"has_events": "true"}).data == []
 
 
 def test_activities_feed_requires_auth(seed):

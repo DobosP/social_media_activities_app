@@ -8,8 +8,33 @@ from django.utils import timezone
 from apps.safety.sanitize import safe_external_url
 
 from .classify import classify_activity
-from .models import Event, EventReport
+from .models import Event, EventReport, RoeduEventSyncState
 from .sources import RawEvent
+
+DISCOVERABLE_LIFECYCLE_STATUSES = (
+    Event.LifecycleStatus.SCHEDULED,
+    Event.LifecycleStatus.RESCHEDULED,
+    Event.LifecycleStatus.SOLD_OUT,
+    Event.LifecycleStatus.MOVED_ONLINE,
+)
+
+
+class StaleRoeduSnapshot(ValueError):
+    """An older/different immutable snapshot would overwrite a newer completed sync."""
+
+
+def _normalized_lifecycle(value: str, *, default: str) -> str:
+    value = (value or "").strip().lower()
+    return value if value in Event.LifecycleStatus.values else default
+
+
+def event_is_discoverable(event: Event) -> bool:
+    """Whether an upstream event may appear as a current happening."""
+    return (
+        not event.is_tombstone
+        and not event.is_import_held
+        and event.lifecycle_status in DISCOVERABLE_LIFECYCLE_STATUSES
+    )
 
 
 @transaction.atomic
@@ -19,9 +44,46 @@ def upsert_event(
     """Create or update an Event from a RawEvent. Keyed by (source, external_id) when a
     feed UID is present, otherwise by (place, title, starts_at)."""
     src = source or raw.source
+    if raw.external_id:
+        lookup = {"source": src, "external_id": raw.external_id}
+    else:
+        lookup = {"place": place, "title": raw.title, "starts_at": raw.starts_at}
+    existing = Event.objects.select_for_update().filter(**lookup).first()
+
+    # A late delta must not revert a newer source observation. Snapshot-level
+    # ordering is checked separately because a content hash alone is unordered.
+    incoming_observed_at = raw.source_updated_at or raw.source_last_seen_at
+    if (
+        existing is not None
+        and src == Event.Source.SCRAPER
+        and incoming_observed_at is not None
+        and (existing.source_updated_at or existing.source_last_seen_at) is not None
+        and incoming_observed_at < (existing.source_updated_at or existing.source_last_seen_at)
+    ):
+        return existing
+
+    lifecycle_default = (
+        existing.lifecycle_status if existing is not None else Event.LifecycleStatus.SCHEDULED
+    )
+    lifecycle_status = _normalized_lifecycle(
+        raw.lifecycle_status,
+        default=lifecycle_default,
+    )
+    is_tombstone = raw.is_tombstone
+    if is_tombstone is None:
+        is_tombstone = existing.is_tombstone if existing is not None else False
+    if is_tombstone:
+        lifecycle_status = Event.LifecycleStatus.REMOVED
+
+    def keep(new, field):
+        if new not in (None, ""):
+            return new
+        return getattr(existing, field) if existing is not None else new
+
     defaults = {
         "place": place,
-        "activity_type": activity_type,
+        "activity_type": activity_type
+        or (existing.activity_type if existing is not None else None),
         "title": raw.title,
         "description": raw.description,
         "starts_at": raw.starts_at,
@@ -33,16 +95,179 @@ def upsert_event(
         "attribution": raw.attribution,
         "license_name": raw.license_name,
         "provenance_url": safe_external_url(raw.provenance_url),
+        "source_category": keep(raw.source_category[:64], "source_category"),
+        "source_confidence": keep(raw.source_confidence, "source_confidence"),
+        "is_import_held": raw.is_import_held,
+        "lifecycle_status": lifecycle_status,
+        "is_tombstone": is_tombstone,
+        "source_venue_id": keep(raw.source_venue_id[:200], "source_venue_id"),
+        "source_city": keep(raw.source_city[:128], "source_city"),
+        "source_pack_id": keep(raw.source_pack_id[:255], "source_pack_id"),
+        "source_snapshot_id": keep(raw.source_snapshot_id[:255], "source_snapshot_id"),
+        "source_release_id": keep(raw.source_release_id[:255], "source_release_id"),
+        "source_snapshot_generated_at": keep(
+            raw.source_snapshot_generated_at, "source_snapshot_generated_at"
+        ),
+        "source_first_seen_at": keep(raw.source_first_seen_at, "source_first_seen_at"),
+        "source_last_seen_at": keep(raw.source_last_seen_at, "source_last_seen_at"),
+        "source_updated_at": keep(raw.source_updated_at, "source_updated_at"),
     }
-    if raw.external_id:
-        event, _ = Event.objects.update_or_create(
-            source=src, external_id=raw.external_id, defaults=defaults
-        )
+    if existing is None:
+        event = Event.objects.create(**{**defaults, **lookup})
     else:
-        event, _ = Event.objects.update_or_create(
-            place=place, title=raw.title, starts_at=raw.starts_at, defaults=defaults
-        )
+        for field, value in defaults.items():
+            setattr(existing, field, value)
+        existing.save(update_fields=[*defaults, "updated_at"])
+        event = existing
     return event
+
+
+@transaction.atomic
+def tombstone_roedu_event(
+    external_id: str,
+    *,
+    source_pack_id: str = "",
+    source_snapshot_id: str = "",
+    source_release_id: str = "",
+    source_snapshot_generated_at=None,
+    source_updated_at=None,
+) -> Event | None:
+    """Apply a body-less RO-EDU deletion marker without creating a fake event."""
+    event = (
+        Event.objects.select_for_update()
+        .filter(source=Event.Source.SCRAPER, external_id=external_id)
+        .first()
+    )
+    if event is None:
+        return None
+    if (
+        source_updated_at is not None
+        and (event.source_updated_at or event.source_last_seen_at) is not None
+        and source_updated_at < (event.source_updated_at or event.source_last_seen_at)
+    ):
+        return event
+    event.lifecycle_status = Event.LifecycleStatus.REMOVED
+    event.is_tombstone = True
+    if source_pack_id:
+        event.source_pack_id = source_pack_id[:255]
+    if source_snapshot_id:
+        event.source_snapshot_id = source_snapshot_id[:255]
+    if source_release_id:
+        event.source_release_id = source_release_id[:255]
+    if source_snapshot_generated_at is not None:
+        event.source_snapshot_generated_at = source_snapshot_generated_at
+    if source_updated_at is not None:
+        event.source_updated_at = source_updated_at
+    event.save(
+        update_fields=[
+            "lifecycle_status",
+            "is_tombstone",
+            "source_pack_id",
+            "source_snapshot_id",
+            "source_release_id",
+            "source_snapshot_generated_at",
+            "source_updated_at",
+            "updated_at",
+        ]
+    )
+    return event
+
+
+def _check_snapshot_order(
+    state: RoeduEventSyncState | None,
+    *,
+    snapshot_id: str,
+    snapshot_generated_at,
+    allow_rollback: bool,
+) -> None:
+    if state is None or allow_rollback:
+        return
+    if snapshot_generated_at < state.snapshot_generated_at:
+        raise StaleRoeduSnapshot(
+            f"snapshot {snapshot_id!r} predates completed snapshot {state.snapshot_id!r}"
+        )
+    if snapshot_generated_at == state.snapshot_generated_at and snapshot_id != state.snapshot_id:
+        raise StaleRoeduSnapshot(
+            "different snapshot ids share the same generation timestamp; explicit rollback "
+            "approval is required"
+        )
+
+
+@transaction.atomic
+def check_roedu_snapshot_order(
+    *,
+    pack_id: str,
+    city: str,
+    snapshot_id: str,
+    snapshot_generated_at,
+    allow_rollback: bool = False,
+) -> None:
+    """Lock and validate a full snapshot before any consumer rows are changed."""
+    state = (
+        RoeduEventSyncState.objects.select_for_update()
+        .filter(pack_id=pack_id, city__iexact=city)
+        .first()
+    )
+    _check_snapshot_order(
+        state,
+        snapshot_id=snapshot_id,
+        snapshot_generated_at=snapshot_generated_at,
+        allow_rollback=allow_rollback,
+    )
+
+
+@transaction.atomic
+def reconcile_roedu_snapshot(
+    *,
+    pack_id: str,
+    city: str,
+    snapshot_id: str,
+    release_id: str,
+    snapshot_generated_at,
+    seen_external_ids: set[str],
+    allow_rollback: bool = False,
+) -> int:
+    """Tombstone rows absent from one complete, immutable, snapshot-bound scope.
+
+    Partial pages, deltas, legacy products, and responses without strong snapshot
+    metadata must never call this service. Replays of an older snapshot fail closed
+    unless an operator explicitly opts into rollback.
+    """
+    state = (
+        RoeduEventSyncState.objects.select_for_update()
+        .filter(pack_id=pack_id, city__iexact=city)
+        .first()
+    )
+    _check_snapshot_order(
+        state,
+        snapshot_id=snapshot_id,
+        snapshot_generated_at=snapshot_generated_at,
+        allow_rollback=allow_rollback,
+    )
+    scope = Event.objects.filter(
+        source=Event.Source.SCRAPER,
+        source_pack_id=pack_id,
+        source_city__iexact=city,
+        is_tombstone=False,
+    ).exclude(external_id__in=seen_external_ids)
+    retracted = scope.update(
+        lifecycle_status=Event.LifecycleStatus.REMOVED,
+        is_tombstone=True,
+        source_snapshot_id=snapshot_id,
+        source_release_id=release_id,
+        source_snapshot_generated_at=snapshot_generated_at,
+        updated_at=timezone.now(),
+    )
+    RoeduEventSyncState.objects.update_or_create(
+        pack_id=pack_id,
+        city=city,
+        defaults={
+            "snapshot_id": snapshot_id,
+            "release_id": release_id,
+            "snapshot_generated_at": snapshot_generated_at,
+        },
+    )
+    return retracted
 
 
 def events_with_public_places():
@@ -53,7 +278,9 @@ def events_with_public_places():
     from apps.places.services import public_places
 
     return Event.objects.select_related("place", "activity_type").filter(
-        Q(place__isnull=True) | Q(place_id__in=public_places().values("id"))
+        Q(place__isnull=True) | Q(place_id__in=public_places().values("id")),
+        is_tombstone=False,
+        is_import_held=False,
     )
 
 
@@ -75,7 +302,11 @@ def event_attribution(event) -> dict[str, str] | None:
 
 def upcoming_events():
     """The F25-gated base, narrowed to upcoming."""
-    return events_with_public_places().filter(starts_at__gte=timezone.now())
+    return events_with_public_places().filter(
+        starts_at__gte=timezone.now(),
+        is_import_held=False,
+        lifecycle_status__in=DISCOVERABLE_LIFECYCLE_STATUSES,
+    )
 
 
 def search_events(query, *, activity_slug=None, limit=100):
@@ -156,6 +387,8 @@ def file_event_report(reporter, event, kind):
 
     if kind not in EventReport.Kind.values:
         raise ValueError("Unknown event report kind.")
+    if not event_is_discoverable(event):
+        raise ValueError("This event is no longer listed as an upcoming activity.")
     if not can_participate(reporter):
         raise PermissionError("Verified, consented participation is required to report an event.")
     if not allow_action(

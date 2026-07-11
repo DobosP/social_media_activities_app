@@ -92,6 +92,22 @@ def test_share_event_venue_gate_and_only_one_share(setup, place):
         social.post_to_thread(member, activity, "", share_event=event.pk, share_place=place.pk)
 
 
+def test_share_event_rejects_source_cancellation_and_regates_existing_card(setup, place):
+    owner, member, activity = setup
+    event = Event.objects.create(
+        title="Open day",
+        starts_at=timezone.now() + timedelta(days=2),
+        place=place,
+    )
+    post = social.post_to_thread(member, activity, "", share_event=event.pk)
+    event.lifecycle_status = Event.LifecycleStatus.CANCELLED
+    event.save(update_fields=["lifecycle_status"])
+    post.refresh_from_db()
+    assert social.share_card(post) == {"kind": "gone"}
+    with pytest.raises(social.InvalidState):
+        social.post_to_thread(member, activity, "", share_event=event.pk)
+
+
 def test_web_share_endpoint_and_thread_search(client, setup, place, activity_type):
     owner, member, activity = setup
     client.force_login(member)

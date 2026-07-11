@@ -1,9 +1,8 @@
-from django.utils import timezone
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 
 from .serializers import EventSerializer
-from .services import events_with_public_places
+from .services import events_with_public_places, upcoming_events
 
 
 class EventViewSet(viewsets.ReadOnlyModelViewSet):
@@ -16,10 +15,12 @@ class EventViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         # F25 gate (review W1-3): same base queryset as every other event surface — an
         # event at a still-unpublished user-proposed place must not leak it here either.
-        qs = events_with_public_places()
         params = self.request.query_params
-        if params.get("include_past") not in ("true", "1"):
-            qs = qs.filter(starts_at__gte=timezone.now())
+        qs = (
+            events_with_public_places()
+            if params.get("include_past") in ("true", "1")
+            else upcoming_events()
+        )
         place_id = params.get("place")
         if place_id:
             qs = qs.filter(place_id=place_id)

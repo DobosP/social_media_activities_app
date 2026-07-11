@@ -289,6 +289,114 @@ class RoeduClientRequestTests(SimpleTestCase):
         self.assertEqual(out, [])
         self.assertEqual(fake.calls, [])
 
+    def test_read_app_pack_retains_one_consistent_complete_snapshot_identity(self):
+        def item(item_id):
+            return {
+                "id": item_id,
+                "kind": "event",
+                "title": item_id,
+                "access_type": "open_license",
+                "legal_basis": "fixture license",
+                "gdpr_relevant": False,
+                "redistributable": True,
+            }
+
+        responses = [
+            {
+                "pack_id": "roedu:social_media_activities_app:events:v1",
+                "layer": "redistributable",
+                "snapshot_id": "sha256-snapshot",
+                "release_id": "sha256-release",
+                "snapshot_generated_at": "2026-07-12T08:00:00Z",
+                "snapshot_mode": "full",
+                "snapshot_complete": True,
+                "items": [item("one")],
+                "pagination": {"next_cursor": "snapshot-bound-c1"},
+            },
+            {
+                "pack_id": "roedu:social_media_activities_app:events:v1",
+                "layer": "redistributable",
+                "snapshot_id": "sha256-snapshot",
+                "release_id": "sha256-release",
+                "snapshot_generated_at": "2026-07-12T08:00:00Z",
+                "snapshot_mode": "full",
+                "snapshot_complete": True,
+                "items": [item("two")],
+                "pagination": {"next_cursor": None},
+            },
+        ]
+
+        def fake_urlopen(req, timeout=None):
+            return _FakeResponse(json.dumps(responses.pop(0)).encode("utf-8"))
+
+        with self._patched(fake_urlopen):
+            result = RoeduClient("http://h:8077", api_key="k").read_app_pack("events")
+        self.assertEqual([item["id"] for item in result.items], ["one", "two"])
+        self.assertEqual(result.snapshot_id, "sha256-snapshot")
+        self.assertTrue(result.snapshot_complete)
+
+    def test_read_app_pack_rejects_snapshot_identity_drift_between_pages(self):
+        base = {
+            "pack_id": "roedu:social_media_activities_app:events:v1",
+            "layer": "redistributable",
+            "release_id": "sha256-release",
+            "snapshot_generated_at": "2026-07-12T08:00:00Z",
+            "snapshot_mode": "full",
+            "snapshot_complete": True,
+            "items": [],
+        }
+        responses = [
+            {**base, "snapshot_id": "snapshot-a", "pagination": {"next_cursor": "c1"}},
+            {**base, "snapshot_id": "snapshot-b", "pagination": {"next_cursor": None}},
+        ]
+
+        def fake_urlopen(req, timeout=None):
+            return _FakeResponse(json.dumps(responses.pop(0)).encode("utf-8"))
+
+        with self._patched(fake_urlopen), self.assertRaises(rc.RoeduContractError):
+            RoeduClient("http://h:8077", api_key="k").read_app_pack("events")
+
+    def test_read_app_pack_never_declares_complete_when_a_page_omits_identity(self):
+        base = {
+            "pack_id": "roedu:social_media_activities_app:events:v1",
+            "layer": "redistributable",
+            "snapshot_id": "snapshot-a",
+            "release_id": "release-a",
+            "snapshot_generated_at": "2026-07-12T08:00:00Z",
+            "snapshot_mode": "full",
+            "snapshot_complete": True,
+            "items": [],
+        }
+        responses = [
+            {**base, "pagination": {"next_cursor": "c1"}},
+            {**base, "release_id": "", "pagination": {"next_cursor": None}},
+        ]
+
+        def fake_urlopen(req, timeout=None):
+            return _FakeResponse(json.dumps(responses.pop(0)).encode("utf-8"))
+
+        with self._patched(fake_urlopen):
+            result = RoeduClient("http://h:8077", api_key="k").read_app_pack("events")
+        self.assertFalse(result.snapshot_complete)
+
+    def test_read_app_pack_never_reconciles_after_client_withholds_invalid_item(self):
+        page = {
+            "pack_id": "roedu:social_media_activities_app:events:v1",
+            "layer": "redistributable",
+            "snapshot_id": "snapshot-a",
+            "release_id": "release-a",
+            "snapshot_generated_at": "2026-07-12T08:00:00Z",
+            "snapshot_mode": "full",
+            "snapshot_complete": True,
+            "items": [{"id": "missing-policy", "kind": "event"}],
+            "pagination": {"next_cursor": None},
+        }
+        fake = _canned_urlopen({"/v1/app-packs/": page})
+        with self._patched(fake):
+            result = RoeduClient("http://h:8077", api_key="k").read_app_pack("events")
+        self.assertEqual(result.items, ())
+        self.assertFalse(result.snapshot_complete)
+
     # --- helper: patch the client's single HTTP boundary ---
     def _patched(self, fake_urlopen):
         import contextlib

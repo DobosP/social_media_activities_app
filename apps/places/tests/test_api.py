@@ -168,6 +168,12 @@ def test_has_upcoming_property_and_filter_include_public_activities_and_events(c
     Event.objects.create(
         place=hall, title="Venue calendar", starts_at=timezone.now() + timedelta(days=2)
     )
+    Event.objects.create(
+        place=quiet,
+        title="Cancelled venue calendar",
+        starts_at=timezone.now() + timedelta(days=2),
+        lifecycle_status=Event.LifecycleStatus.CANCELLED,
+    )
 
     resp = client.get("/api/places/")
 
