@@ -67,13 +67,23 @@ write_files:
       METRICS_TOKEN='${metrics_token}'
       LOG_FORMAT='json'
       OPS_HEARTBEAT_URL='${ops_heartbeat_url}'
+      # Populates the public agent-snapshot JSON tree consumed by the optional Go agentapi
+      # sidecar below; run_due_jobs writes here when export_agent_snapshot is a due job.
+      AGENT_SNAPSHOT_DIR='/home/app/social_media_activities_app/var/agent_snapshot'
   # Caddy: auto Let's Encrypt TLS + transparent reverse proxy (HTTP + Channels WebSockets).
   - path: /etc/caddy/Caddyfile
     permissions: "0644"
     content: |
       ${domain} {
           encode zstd gzip
-          reverse_proxy 127.0.0.1:8000
+          # /agent/* is the optional Go agent-API sidecar (agentapi.service); it 502s
+          # harmlessly if not deployed.
+          handle /agent/* {
+              reverse_proxy 127.0.0.1:8090
+          }
+          handle {
+              reverse_proxy 127.0.0.1:8000
+          }
       }
   # SSH hardening: key-only auth (no passwords).
   - path: /etc/ssh/sshd_config.d/10-hardening.conf

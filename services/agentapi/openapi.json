@@ -1,0 +1,822 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "agentapi — public open-data snapshot API",
+    "description": "Read-only API serving a gate-filtered, public, PII-free snapshot of events, places, activities and taxonomy for AI agent consumption. Backed by an in-memory snapshot reloaded periodically from disk; no database access.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "/agent/v1"
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "Landing document",
+        "operationId": "getLanding",
+        "responses": {
+          "200": {
+            "description": "Human-readable landing document.",
+            "content": {
+              "text/markdown": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/openapi.json": {
+      "get": {
+        "summary": "This OpenAPI document",
+        "operationId": "getOpenAPI",
+        "responses": {
+          "200": {
+            "description": "OpenAPI 3.1 document.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/manifest": {
+      "get": {
+        "summary": "Snapshot manifest",
+        "operationId": "getManifest",
+        "description": "Returns the snapshot manifest verbatim, plus snapshot_loaded_at and record_counts server info.",
+        "responses": {
+          "200": {
+            "description": "Manifest.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Manifest"
+                }
+              }
+            }
+          },
+          "503": {
+            "$ref": "#/components/responses/SnapshotUnavailable"
+          }
+        }
+      }
+    },
+    "/events": {
+      "get": {
+        "summary": "List events",
+        "operationId": "listEvents",
+        "parameters": [
+          {
+            "name": "activity",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Activity slug equality filter."
+          },
+          {
+            "name": "city",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Case-insensitive equality on place_summary.city."
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "RFC3339 or YYYY-MM-DD; inclusive lower bound on starts_at."
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "RFC3339 or YYYY-MM-DD; exclusive upper bound on starts_at (date-only means end of that day)."
+          },
+          {
+            "name": "near",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "lat,lon center point for a radius filter."
+          },
+          {
+            "name": "radius_m",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 5000,
+              "maximum": 100000
+            },
+            "description": "Radius in meters, used with near."
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Case-insensitive substring match on title."
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          },
+          {
+            "$ref": "#/components/parameters/Offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Matching events.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventListEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "503": {
+            "$ref": "#/components/responses/SnapshotUnavailable"
+          }
+        }
+      }
+    },
+    "/events/{id}": {
+      "get": {
+        "summary": "Get an event",
+        "operationId": "getEvent",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Event.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventDetailEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "503": {
+            "$ref": "#/components/responses/SnapshotUnavailable"
+          }
+        }
+      }
+    },
+    "/places": {
+      "get": {
+        "summary": "List places",
+        "operationId": "listPlaces",
+        "parameters": [
+          {
+            "name": "activity",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Membership in the place's activity_types."
+          },
+          {
+            "name": "city",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Case-insensitive equality on city."
+          },
+          {
+            "name": "near",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "lat,lon center point for a radius filter."
+          },
+          {
+            "name": "radius_m",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 5000,
+              "maximum": 100000
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Case-insensitive substring match on name."
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          },
+          {
+            "$ref": "#/components/parameters/Offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Matching places.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaceListEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "503": {
+            "$ref": "#/components/responses/SnapshotUnavailable"
+          }
+        }
+      }
+    },
+    "/places/{id}": {
+      "get": {
+        "summary": "Get a place",
+        "operationId": "getPlace",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Place.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaceDetailEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "503": {
+            "$ref": "#/components/responses/SnapshotUnavailable"
+          }
+        }
+      }
+    },
+    "/activities": {
+      "get": {
+        "summary": "List activity instances",
+        "operationId": "listActivities",
+        "parameters": [
+          {
+            "name": "activity",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Equality on activity_type."
+          },
+          {
+            "name": "place",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Equality on place_id."
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          },
+          {
+            "$ref": "#/components/parameters/Offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Matching activity instances.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityListEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "503": {
+            "$ref": "#/components/responses/SnapshotUnavailable"
+          }
+        }
+      }
+    },
+    "/taxonomy": {
+      "get": {
+        "summary": "Activity/category taxonomy",
+        "operationId": "getTaxonomy",
+        "description": "Returned verbatim from the snapshot's taxonomy.json.",
+        "responses": {
+          "200": {
+            "description": "Taxonomy document.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "503": {
+            "$ref": "#/components/responses/SnapshotUnavailable"
+          }
+        }
+      }
+    },
+    "/healthz": {
+      "get": {
+        "summary": "Liveness and snapshot freshness",
+        "operationId": "getHealthz",
+        "description": "Not subject to rate limiting.",
+        "responses": {
+          "200": {
+            "description": "A snapshot is loaded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "ok"
+                      ]
+                    },
+                    "snapshot_generated_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "snapshot_age_seconds": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "snapshot_generated_at",
+                    "snapshot_age_seconds"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "No snapshot has ever loaded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "no_snapshot"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "status"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "Limit": {
+        "name": "limit",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "default": 50,
+          "minimum": 0
+        },
+        "description": "Max records to return; clamped to this deployment's configured maximum."
+      },
+      "Offset": {
+        "name": "offset",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "default": 0,
+          "minimum": 0
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Invalid query parameter.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "No record with that id.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "SnapshotUnavailable": {
+        "description": "No snapshot has been loaded yet.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": [
+                  "invalid_parameter",
+                  "not_found",
+                  "rate_limited",
+                  "snapshot_unavailable",
+                  "method_not_allowed",
+                  "internal_error"
+                ]
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ]
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "Manifest": {
+        "type": "object",
+        "description": "The manifest.json contents verbatim, plus snapshot_loaded_at and record_counts.",
+        "properties": {
+          "schema_version": {
+            "type": "integer"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "site": {
+            "type": "string"
+          },
+          "datasets": {
+            "type": "object"
+          },
+          "licenses": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "truncated": {
+            "type": "boolean"
+          },
+          "snapshot_loaded_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "record_counts": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "Event": {
+        "type": "object",
+        "description": "An event record. Additional fields beyond those listed here may be present and are passed through unchanged.",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "starts_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ends_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "url": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "attribution": {
+            "type": "string"
+          },
+          "license_name": {
+            "type": "string"
+          },
+          "provenance_url": {
+            "type": "string"
+          },
+          "attribution_credit": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Structured source credit, or null when the record carries none.",
+            "properties": {
+              "attribution": {
+                "type": "string"
+              },
+              "license_name": {
+                "type": "string"
+              },
+              "provenance_url": {
+                "type": "string"
+              }
+            }
+          },
+          "place_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "path": {
+            "type": "string"
+          },
+          "place_summary": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "city": {
+                "type": "string"
+              },
+              "lat": {
+                "type": "number"
+              },
+              "lon": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "starts_at"
+        ]
+      },
+      "Place": {
+        "type": "object",
+        "description": "A place record. Additional fields beyond those listed here may be present and are passed through unchanged.",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "lat": {
+            "type": "number"
+          },
+          "lon": {
+            "type": "number"
+          },
+          "activity_types": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "Activity": {
+        "type": "object",
+        "description": "An activity instance record. Additional fields beyond those listed here may be present and are passed through unchanged.",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "starts_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string"
+          },
+          "activity_type": {
+            "type": "string"
+          },
+          "place_id": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ]
+      },
+      "EventListEnvelope": {
+        "$ref": "#/components/schemas/ListEnvelope"
+      },
+      "PlaceListEnvelope": {
+        "$ref": "#/components/schemas/ListEnvelope"
+      },
+      "ActivityListEnvelope": {
+        "$ref": "#/components/schemas/ListEnvelope"
+      },
+      "ListEnvelope": {
+        "type": "object",
+        "properties": {
+          "api_version": {
+            "type": "string"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "count": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "offset": {
+            "type": "integer"
+          },
+          "license": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "site": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        },
+        "required": [
+          "api_version",
+          "generated_at",
+          "count",
+          "total",
+          "limit",
+          "offset",
+          "data"
+        ]
+      },
+      "EventDetailEnvelope": {
+        "$ref": "#/components/schemas/DetailEnvelope"
+      },
+      "PlaceDetailEnvelope": {
+        "$ref": "#/components/schemas/DetailEnvelope"
+      },
+      "DetailEnvelope": {
+        "type": "object",
+        "properties": {
+          "api_version": {
+            "type": "string"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "license": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "site": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "api_version",
+          "generated_at",
+          "data"
+        ]
+      }
+    }
+  }
+}

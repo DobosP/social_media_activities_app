@@ -32,6 +32,12 @@ SITE_NAME = env("SITE_NAME", default="Activities")
 INDEXNOW_ENABLED = env.bool("INDEXNOW_ENABLED", default=False)
 INDEXNOW_KEY = env("INDEXNOW_KEY", default="")
 
+# Agent snapshot exporter — fully opt-in. Directory the export_agent_snapshot job writes the
+# gate-filtered PUBLIC JSON files to (events/places/activities/taxonomy + manifest), which a Go
+# sidecar serves to answer engines / agents. Empty (default) disables the feature (no-op), so
+# dev/CI write nothing unless a path is configured.
+AGENT_SNAPSHOT_DIR = env("AGENT_SNAPSHOT_DIR", default="")
+
 # Search-engine ownership verification tokens (rendered as <meta> only when set) — let an
 # operator verify Google Search Console / Bing Webmaster Tools without DNS or a file upload.
 GOOGLE_SITE_VERIFICATION = env("GOOGLE_SITE_VERIFICATION", default="")
