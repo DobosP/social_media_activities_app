@@ -15,7 +15,6 @@ DISCOVERABLE_LIFECYCLE_STATUSES = (
     Event.LifecycleStatus.SCHEDULED,
     Event.LifecycleStatus.RESCHEDULED,
     Event.LifecycleStatus.SOLD_OUT,
-    Event.LifecycleStatus.MOVED_ONLINE,
 )
 
 
@@ -111,6 +110,13 @@ def upsert_event(
         "source_first_seen_at": keep(raw.source_first_seen_at, "source_first_seen_at"),
         "source_last_seen_at": keep(raw.source_last_seen_at, "source_last_seen_at"),
         "source_updated_at": keep(raw.source_updated_at, "source_updated_at"),
+        "source_recurrence": keep(raw.source_recurrence[:1000], "source_recurrence"),
+        "source_timezone": keep(raw.source_timezone[:64], "source_timezone"),
+        "source_price_min": keep(raw.source_price_min, "source_price_min"),
+        "source_price_max": keep(raw.source_price_max, "source_price_max"),
+        "source_currency": keep(raw.source_currency[:3], "source_currency"),
+        "source_is_free": keep(raw.source_is_free, "source_is_free"),
+        "source_availability": keep(raw.source_availability[:16], "source_availability"),
     }
     if existing is None:
         event = Event.objects.create(**{**defaults, **lookup})

@@ -78,6 +78,13 @@ class Event(models.Model):
     source_first_seen_at = models.DateTimeField(null=True, blank=True)
     source_last_seen_at = models.DateTimeField(null=True, blank=True)
     source_updated_at = models.DateTimeField(null=True, blank=True)
+    source_recurrence = models.CharField(max_length=1000, blank=True)
+    source_timezone = models.CharField(max_length=64, blank=True)
+    source_price_min = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    source_price_max = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    source_currency = models.CharField(max_length=3, blank=True)
+    source_is_free = models.BooleanField(null=True, blank=True)
+    source_availability = models.CharField(max_length=16, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

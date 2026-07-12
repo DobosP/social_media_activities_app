@@ -15,6 +15,24 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
 
 ## Current state
 
+- **Canonical RO-EDU social app-pack consumption is implemented on `v_2` (ADR-0024,
+  2026-07-12):** the only accepted product is
+  `roedu:social_media_activities_app:events_places:v1`. Every page must carry schema v1,
+  one stable promoted release/snapshot identity, offset-aware generation time, and coherent
+  full/partial completeness. Every venue, event, and body-less tombstone is checked against an
+  exact facts-only allowlist plus policy schema 4/ruleset 6 and acquisition schema 3 attestation;
+  aliases, unsafe URLs, prose/person fields, malformed relationships, duplicates, policy drift,
+  and page drift fail closed. Events now retain ticket URL, recurrence, timezone, price range,
+  currency, free/paid flag, and availability (events migration 0009), and the read-only event API
+  exposes those safe source facts. Complete-snapshot absence reconciliation remains possible only
+  after an unbounded clean read. A live canonical event must resolve to its served local venue, and
+  `moved_online` remains stored as source truth but is excluded from this in-person app's discovery.
+  Child-venue approval and low-confidence public gates are unchanged. The pure client/adapter gate
+  is **53 passed**, adversarial item/page fuzz raises no uncaught exceptions, and the actual
+  producer→promoted-server payload passes as a complete read. Ruff, format, compile, and diff checks
+  are clean. DB/PostGIS tests and `makemigrations --check` remain unclaimed in this environment
+  because the app runtime dependencies are absent and the Docker/external execution quota is
+  unavailable; the new migration/model parity was independently reviewed statically.
 - **RO-EDU event lifecycle/snapshot reconciliation is implemented (ADR-0023, 2026-07-12):**
   imported events retain source category/confidence/lifecycle, stable venue ID, source timestamps,
   and immutable pack/release/snapshot identity; category maps to `ActivityType`; cancellations,

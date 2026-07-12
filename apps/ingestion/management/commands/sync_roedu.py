@@ -16,11 +16,20 @@ import os
 
 from django.conf import settings
 from django.core.management import call_command
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
+
+from apps.ingestion.sources.roedu_client import (
+    SOCIAL_APP_PACK_ID,
+    RoeduContractError,
+    require_canonical_social_pack,
+)
 
 
 class Command(BaseCommand):
-    help = "Daily RO-EDU sync: roedu venues + event facts + Commons covers (ADR-0019 §7)."
+    help = (
+        "Daily RO-EDU sync: roedu venues + event facts + Commons covers; "
+        f"canonical pack {SOCIAL_APP_PACK_ID}."
+    )
 
     def add_arguments(self, parser):
         parser.add_argument("--city", default=None, help="default: ROEDU_SYNC_CITY setting")
@@ -34,6 +43,13 @@ class Command(BaseCommand):
             return
         city = opts["city"] or getattr(settings, "ROEDU_SYNC_CITY", "Cluj-Napoca")
         app_pack = (os.environ.get("ROEDU_APP_PACK") or "").strip()
+        if app_pack:
+            try:
+                app_pack = require_canonical_social_pack(app_pack)
+            except RoeduContractError as exc:
+                # Validate before venue ingestion: a near-miss/legacy product
+                # must never leave a half-applied mixed-mode run.
+                raise CommandError(str(exc)) from exc
         call_command("ingest_places", "--source", "roedu", "--city", city)
         event_args = ["--city", city]
         if app_pack:

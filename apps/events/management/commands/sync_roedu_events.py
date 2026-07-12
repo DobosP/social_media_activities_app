@@ -10,6 +10,7 @@ infer absence. Explicit cancellation/deletion records are applied in either mode
 from __future__ import annotations
 
 from contextlib import nullcontext
+from decimal import Decimal
 
 from django.contrib.gis.geos import Point
 from django.core.management.base import BaseCommand, CommandError
@@ -28,9 +29,12 @@ from apps.events.services import (
 )
 from apps.events.sources import RawEvent
 from apps.ingestion.sources.roedu_client import (
+    SOCIAL_APP_PACK_ID,
     AppPackRead,
     RoeduClient,
     RoeduContractError,
+    is_canonical_social_app_pack_item,
+    require_canonical_social_pack,
 )
 from apps.places.enrichment.dedup import find_duplicate
 from apps.places.models import Place
@@ -140,7 +144,7 @@ def _lifecycle(record: dict) -> tuple[str, bool]:
 
 
 def _app_pack_venue_for_resolution(item: dict) -> dict | None:
-    if item.get("kind") not in {"venue", "place"}:
+    if item.get("kind") not in {"venue", "place"} or not is_canonical_social_app_pack_item(item):
         return None
     location = item.get("location") if isinstance(item.get("location"), dict) else {}
     if location.get("lat") is None or location.get("lon") is None:
@@ -161,6 +165,8 @@ def _raw_event(
     app_pack: AppPackRead | None = None,
     snapshot_generated_at=None,
 ) -> RawEvent | None:
+    if app_pack is not None and not is_canonical_social_app_pack_item(record):
+        return None
     starts = parse_datetime(record.get("start_datetime") or record.get("starts_at") or "")
     title = str(record.get("title") or "").strip()
     external_id = _external_id(record)
@@ -181,7 +187,7 @@ def _raw_event(
         starts_at=starts,
         ends_at=ends,
         description="",  # M2: never store app-pack bodies or scraped prose
-        url="" if app_pack else record.get("source_url") or "",
+        url=(record.get("ticket_url") or "") if app_pack else record.get("source_url") or "",
         external_id=external_id,
         source=Event.Source.SCRAPER,
         attribution=(
@@ -209,6 +215,17 @@ def _raw_event(
         source_first_seen_at=_optional_datetime(record, "first_seen", "first_seen_at"),
         source_last_seen_at=_optional_datetime(record, "last_seen", "last_seen_at"),
         source_updated_at=_optional_datetime(record, "updated_at", "last_modified"),
+        source_recurrence=str(record.get("recurrence") or ""),
+        source_timezone=str(record.get("timezone") or ""),
+        source_price_min=(
+            Decimal(str(record["price_min"])) if record.get("price_min") is not None else None
+        ),
+        source_price_max=(
+            Decimal(str(record["price_max"])) if record.get("price_max") is not None else None
+        ),
+        source_currency=str(record.get("currency") or ""),
+        source_is_free=(record.get("is_free") if isinstance(record.get("is_free"), bool) else None),
+        source_availability=str(record.get("availability") or ""),
     )
 
 
@@ -246,6 +263,11 @@ class Command(BaseCommand):
     def handle(self, *args, **opts):
         if opts["app_pack"] and opts["updated_since"]:
             raise CommandError("--app-pack and --updated-since are mutually exclusive")
+        if opts["app_pack"]:
+            try:
+                opts["app_pack"] = require_canonical_social_pack(opts["app_pack"])
+            except RoeduContractError as exc:
+                raise CommandError(str(exc)) from exc
         client = RoeduClient(base_url=opts["api_url"], api_key=opts["api_key"])
         app_pack = None
         snapshot_generated_at = None
@@ -259,6 +281,8 @@ class Command(BaseCommand):
             except RoeduContractError as exc:
                 raise CommandError(str(exc)) from exc
             records = app_pack.items
+            if app_pack.pack_id != SOCIAL_APP_PACK_ID:
+                raise CommandError("RO-EDU client returned the wrong social app-pack")
             snapshot_generated_at = _optional_datetime(
                 {"generated_at": app_pack.snapshot_generated_at}, "generated_at"
             )
@@ -307,9 +331,15 @@ class Command(BaseCommand):
             for record in records:
                 if app_pack and record.get("kind") not in _APP_PACK_EVENT_KINDS:
                     continue
+                if app_pack and not is_canonical_social_app_pack_item(record):
+                    counters["bad_record"] += 1
+                    continue
                 external_id = _external_id(record)
                 _, is_tombstone = _lifecycle(record)
                 if not external_id:
+                    counters["bad_record"] += 1
+                    continue
+                if external_id in seen_external_ids:
                     counters["bad_record"] += 1
                     continue
                 seen_external_ids.add(external_id)
@@ -340,9 +370,19 @@ class Command(BaseCommand):
                 if raw.is_import_held:
                     counters["held"] += 1
                 venue_id = raw.source_venue_id
+                if app_pack and venue_id and venue_id not in venues:
+                    counters["bad_record"] += 1
+                    continue
                 place = self._resolve_place(venues.get(venue_id), venue_id=venue_id)
                 if place is None:
                     counters["no_place"] += 1
+                    if app_pack:
+                        # Canonical social rows describe in-person events at a
+                        # served venue. Never create a discoverable null-place
+                        # event when the local venue stage failed to materialize
+                        # that required relationship.
+                        counters["bad_record"] += 1
+                        continue
                 activity_type = classify_roedu_activity(raw.source_category, raw.title)
                 if not opts["dry_run"]:
                     upsert_event(

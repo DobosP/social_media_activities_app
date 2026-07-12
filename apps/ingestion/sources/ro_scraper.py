@@ -26,7 +26,12 @@ import os
 from collections.abc import Iterator
 
 from .base import RawPlace, SourceAdapter
-from .roedu_client import RoeduClient, is_redistributable_app_pack_item
+from .roedu_client import (
+    SOCIAL_APP_PACK_ID,
+    RoeduClient,
+    is_canonical_social_app_pack_item,
+    require_canonical_social_pack,
+)
 
 # Heuristic: Romanian venue-name keyword -> OSM-style tag the mapping rules read.
 _NAME_TAGS: list[tuple[tuple[str, ...], dict]] = [
@@ -86,7 +91,7 @@ def _app_pack_tags_for(item: dict) -> dict:
 
 
 def app_pack_item_to_raw_place(item: dict, *, city: str | None = None) -> RawPlace | None:
-    if item.get("kind") not in _APP_PACK_PLACE_KINDS:
+    if item.get("kind") not in _APP_PACK_PLACE_KINDS or not is_canonical_social_app_pack_item(item):
         return None
     location = item.get("location") if isinstance(item.get("location"), dict) else {}
     lat, lon = location.get("lat"), location.get("lon")
@@ -116,13 +121,15 @@ def app_pack_item_to_raw_place(item: dict, *, city: str | None = None) -> RawPla
 
 class RomaniaScraperAdapter(SourceAdapter):
     name = "roedu"
+    canonical_app_pack = SOCIAL_APP_PACK_ID
 
     def __init__(self, client: RoeduClient | None = None, *, app_pack: str | None = None) -> None:
         self._client = client or RoeduClient(
             base_url=os.environ.get("ROEDU_API_URL"),
             api_key=os.environ.get("ROEDU_API_KEY", "social-app-dev"),
         )
-        self.app_pack = app_pack or os.environ.get("ROEDU_APP_PACK") or None
+        configured_pack = app_pack or os.environ.get("ROEDU_APP_PACK") or None
+        self.app_pack = require_canonical_social_pack(configured_pack) if configured_pack else None
 
     def fetch(
         self,
@@ -137,7 +144,7 @@ class RomaniaScraperAdapter(SourceAdapter):
         if self.app_pack:
             filters.setdefault("kind", "venue")
             for item in self._client.iter_app_pack(self.app_pack, max_records=limit, **filters):
-                if not is_redistributable_app_pack_item(item):
+                if not is_canonical_social_app_pack_item(item):
                     continue
                 raw = app_pack_item_to_raw_place(item, city=city)
                 if raw is not None:

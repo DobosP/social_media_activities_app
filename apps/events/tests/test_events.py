@@ -1,4 +1,5 @@
 from datetime import timedelta
+from decimal import Decimal
 
 import pytest
 from django.contrib.gis.geos import Point
@@ -148,6 +149,23 @@ def test_events_api_default_excludes_source_cancelled_event():
     assert history["results"][0]["lifecycle_status"] == "cancelled"
 
 
+def test_events_api_excludes_moved_online_event_from_in_person_discovery():
+    Event.objects.create(
+        title="Moved online upstream",
+        starts_at=timezone.now() + timedelta(days=1),
+        source=Event.Source.SCRAPER,
+        external_id="roedu:moved-online-api",
+        lifecycle_status=Event.LifecycleStatus.MOVED_ONLINE,
+    )
+    client = APIClient()
+    client.force_authenticate(_user("e-moved-online"))
+
+    assert client.get("/api/events/").json()["count"] == 0
+    history = client.get("/api/events/?include_past=true").json()
+    assert history["count"] == 1
+    assert history["results"][0]["lifecycle_status"] == "moved_online"
+
+
 def test_events_api_exposes_attribution_credit():
     place = Place.objects.create(
         name="Hall", location=Point(23.6, 46.77, srid=4326), source=Place.Source.ROEDU
@@ -171,6 +189,34 @@ def test_events_api_exposes_attribution_credit():
         "license_name": "CC BY 4.0",
         "provenance_url": "https://data.example/events/e-api",
     }
+
+
+def test_events_api_exposes_roedu_safe_event_facts():
+    Event.objects.create(
+        title="RO-EDU priced event",
+        starts_at=timezone.now() + timedelta(days=1),
+        source=Event.Source.SCRAPER,
+        external_id="roedu:e-safe-facts",
+        source_recurrence="FREQ=WEEKLY",
+        source_timezone="Europe/Bucharest",
+        source_price_min=Decimal("20.00"),
+        source_price_max=Decimal("50.00"),
+        source_currency="RON",
+        source_is_free=False,
+        source_availability="available",
+    )
+
+    client = APIClient()
+    client.force_authenticate(_user("e-safe-facts"))
+    item = client.get("/api/events/").json()["results"][0]
+
+    assert item["source_recurrence"] == "FREQ=WEEKLY"
+    assert item["source_timezone"] == "Europe/Bucharest"
+    assert item["source_price_min"] == "20.00"
+    assert item["source_price_max"] == "50.00"
+    assert item["source_currency"] == "RON"
+    assert item["source_is_free"] is False
+    assert item["source_availability"] == "available"
 
 
 # --- W2-F6: bounded RRULE expansion ----------------------------------------------------------
