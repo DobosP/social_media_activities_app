@@ -7,6 +7,7 @@
 - Role: TakesTime — Django/PostGIS children-first in-person activity matching (nonprofit).
 - Upstream: `ro_data_server` (venues/events/news/connections), `roedu-ui` · Downstream: none.
 - Fleet map + parallel-agent protocol: `~/work/AGENTS.md` (agent-ops ADR-0025).
+- Secrets: registry `agent-ops/secrets/secrets.manifest.yaml`; the app's ROEDU key deploys via `agent-ops/secrets/deploy-secrets.sh` (ADR-0027); never commit values.
 
 ## Parallel work (mandatory)
 - This shared checkout stays on `main`, clean — never switch branches or commit task work here.
