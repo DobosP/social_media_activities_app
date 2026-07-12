@@ -41,12 +41,29 @@
       <p class="share-card share-card--gone muted">{% trans "This shared item is no longer available." %}</p>
     {% endif %}
   {% endif %}
+  {# .post-media is the live-update anchor: the chat client replaces this block in place
+     when an attachment changes state (video ready/failed) — keep the wrapper. #}
+  <div class="post-media">
   {% for att in p.attachment_list %}
-    {% if att.expired %}
+    {% if att.blocked %}
+      {# Staff-only (members never receive a blocked row): honest moderation state. #}
+      <p class="muted post-attachment-note">🛑 {% trans "Blocked by safety screening — evidence retained for moderation." %}</p>
+    {% elif att.processing %}
+      <p class="muted post-attachment-note">🎬 {% trans "Video is being prepared — it will appear here shortly." %}</p>
+    {% elif att.failed %}
+      <p class="muted post-attachment-note">🎬 {% trans "This video couldn't be processed." %}</p>
+    {% elif att.expired %}
       <p class="muted post-attachment-note">🕓 {% trans "This temporary picture has disappeared." %}</p>
     {% elif att.kind == "image" %}
+      {# The stream shows the small rendition; the full image is one click away. #}
       <a href="{{ att.url }}" target="_blank" rel="noopener noreferrer">
-        <img class="post-attachment-img" src="{{ att.url }}" alt="{% trans 'shared image' %}" loading="lazy"></a>
+        <img class="post-attachment-img" src="{{ att.thumb_url|default:att.url }}" alt="{% trans 'shared image' %}" loading="lazy"></a>
+      {% if att.expires_at %}<p class="muted post-attachment-expiry">🕓 {% blocktrans with when=att.expires_at|timeuntil %}disappears {{ when }}{% endblocktrans %}</p>{% endif %}
+    {% elif att.kind == "video" %}
+      {# Calm player only (ADR-0026): no autoplay, no loop, metadata-only preload. #}
+      <video class="post-attachment-video" controls preload="metadata" playsinline
+             {% if att.poster_url %}poster="{{ att.poster_url }}"{% endif %}
+             src="{{ att.url }}"></video>
       {% if att.expires_at %}<p class="muted post-attachment-expiry">🕓 {% blocktrans with when=att.expires_at|timeuntil %}disappears {{ when }}{% endblocktrans %}</p>{% endif %}
     {% else %}
       <p class="post-pdf">&#128206;
@@ -55,6 +72,7 @@
         {% if att.expires_at %}<span class="muted tiny-copy">&middot; 🕓 {% blocktrans with when=att.expires_at|timeuntil %}disappears {{ when }}{% endblocktrans %}</span>{% endif %}</p>
     {% endif %}
   {% endfor %}
+  </div>
   {# Reactions: anonymous + COUNTLESS — only which emojis are present, never how many or who. #}
   <div class="rx">
     {% for e in p.reaction_present %}<span class="rx-chip{% if e in p.reaction_mine %} rx-mine{% endif %}">{{ e }}</span>{% endfor %}

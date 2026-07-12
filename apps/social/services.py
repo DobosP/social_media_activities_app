@@ -2442,11 +2442,38 @@ def broadcast_post(post, *, edited=False) -> None:
             "edited": edited
             or (post.updated_at and post.created_at and post.updated_at > post.created_at),
             "created_at": post.created_at.isoformat() if post.created_at else None,
+            # IDs only (ADR-0026): signed media URLs are PER-VIEWER, so the group payload can
+            # never carry one — each member's consumer resolves these through the full media
+            # gate (can_view_attachment + variants) at delivery time.
+            "attachment_ids": list(post.attachments.values_list("id", flat=True)),
         }
         async_to_sync(layer.group_send)(
             f"chat_{post.thread_id}", {"type": "chat.message", "message": payload}
         )
     except Exception:  # noqa: BLE001 — live delivery is best-effort; never break the write
+        pass
+
+
+def broadcast_attachment_update(post) -> None:
+    """Fan out 'this post's attachments changed state' (ADR-0026: a video finished/failed its
+    off-request processing) so connected members swap the 'being prepared' placeholder for the
+    player without a reload. IDs only — every member's consumer re-resolves per-viewer URLs
+    through the media gate. Best-effort like broadcast_post."""
+    try:
+        from asgiref.sync import async_to_sync
+        from channels.layers import get_channel_layer
+
+        layer = get_channel_layer()
+        if layer is None:
+            return
+        payload = {
+            "post_id": post.id,
+            "attachment_ids": list(post.attachments.values_list("id", flat=True)),
+        }
+        async_to_sync(layer.group_send)(
+            f"chat_{post.thread_id}", {"type": "chat.attachments", "message": payload}
+        )
+    except Exception:  # noqa: BLE001 — live delivery is best-effort; never break the update
         pass
 
 

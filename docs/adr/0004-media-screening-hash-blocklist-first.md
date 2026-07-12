@@ -1,7 +1,7 @@
 # ADR-0004: Media screening — fail-closed hash blocklist now, vetted perceptual-hash vendor later
 
 Date: 2026-06-13
-Status: accepted
+Status: accepted (the "no video" line is superseded by ADR-0026; everything else stands)
 
 ## Decision
 Screen uploaded media with a **fail-closed, in-repo hash layer now** — exact SHA-256 blocklist +
@@ -9,7 +9,8 @@ a Pillow-only 64-bit dHash perceptual supplement (`apps/media/perceptual.py`), s
 bytes inside the upload transaction, uploads refused unless a scanner is effective
 (`MEDIA_REQUIRE_SCANNER`) — and adopt a **vetted managed perceptual matcher later** (Arachnid
 Shield / PhotoDNA-class via the `ManagedScanner` seam). Structural rules stand regardless:
-EXIF-strip via full re-encode, PDF adults-only + forced download, **no video**, **no media in
+EXIF-strip via full re-encode, PDF adults-only + forced download, **no video** (superseded by
+ADR-0026: private-thread, adults-only, fail-closed video attachments), **no media in
 E2EE DMs**. Decided 2026-06-13 (W8, `f11e3eb`); full plan `docs/MEDIA_FILTERING.md`.
 
 ## Context / why
@@ -30,6 +31,8 @@ lists) is access-controlled and needs org vetting — unavailable at launch.
   (apply early — weeks of lead time); clamd is the document-scanner path when deployed.
 - Human review precedes any report/permanent action; reporting channels (NCMEC as foreign ESP,
   esc_ABUZ/INHOPE, DSA Art. 18) must be registered before scale.
-- Never build: own classifier, E2EE client-side scanning, video support (each needs its own ADR).
+- Never build: own classifier, E2EE client-side scanning, video support (each needs its own
+  ADR — video got one: ADR-0026, private threads only, adults-only, default-off).
 - The perceptual-vendor choice is an **open DPO/product call** (tracked in the gap tracker).
-- Supersedes: none (first media-screening decision record). Superseded-by: none.
+- Supersedes: none (first media-screening decision record). Superseded-by: ADR-0026 (the
+  "no video" line only).

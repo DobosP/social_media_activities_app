@@ -17,9 +17,11 @@ from .base import (
     IDENTITY_PROVIDER,
     IDENTITY_UNIQUENESS_ENFORCED,
     LOGGING,
+    MEDIA_IMAGE_OUTPUT_FORMAT,
     MEDIA_S3_ENDPOINT_URL,
     MEDIA_S3_REGION,
     MEDIA_STORAGE_BACKEND,
+    MEDIA_VIDEO_ENABLED,
     MIDDLEWARE,
     env,
 )
@@ -219,6 +221,25 @@ if os.environ.get("DJANGO_SETTINGS_MODULE") == "config.settings.prod":
             "Media object storage must be in an EU region (set MEDIA_S3_REGION=eu-* or an EU "
             "MEDIA_S3_ENDPOINT_URL) for minors' data residency."
         )
+    # ADR-0026 fail-at-boot (not at first upload) guardrails for the media pipeline:
+    # a configured AVIF output needs a Pillow build that can actually encode it, ...
+    if MEDIA_IMAGE_OUTPUT_FORMAT.upper() == "AVIF":
+        from PIL import features as _pil_features
+
+        if not _pil_features.check("avif"):
+            raise ImproperlyConfigured(
+                "MEDIA_IMAGE_OUTPUT_FORMAT=AVIF but this Pillow build has no AVIF encoder. "
+                "Install Pillow>=11.3 official wheels or set MEDIA_IMAGE_OUTPUT_FORMAT=WEBP."
+            )
+    # ... and enabling video without ffmpeg/ffprobe would strand every upload in `pending`.
+    if MEDIA_VIDEO_ENABLED:
+        import shutil as _shutil
+
+        if not (_shutil.which("ffmpeg") and _shutil.which("ffprobe")):
+            raise ImproperlyConfigured(
+                "MEDIA_VIDEO_ENABLED=True but ffmpeg/ffprobe are not installed on this host "
+                "(the Docker image installs them; set MEDIA_VIDEO_ENABLED=False otherwise)."
+            )
 
 # --- Error tracking (opt-in via SENTRY_DSN; sentry-sdk is only imported when configured) ---
 SENTRY_DSN = env("SENTRY_DSN", default="")

@@ -26,10 +26,12 @@ product engine (D1–D10) is built; see `STATUS.md` and `docs/PRODUCTION_READINE
 
 These are the product, not preferences. A change that breaks one is wrong even if it passes tests.
 
-1. **Activity-first, not engagement-photo feeds.** Discovery cards may show one contextual
-   cover photo per activity. No short-video, public galleries, public user photo feeds,
-   image-perfect surfaces, likes/pass tracking, or vanity media metrics. Other photos remain
-   private thread photos plus one profile picture max.
+1. **Activity-first, not engagement-media feeds.** Discovery cards may show one contextual
+   cover photo per activity. No public/discovery short-video or video feeds, public galleries,
+   public user photo feeds, image-perfect surfaces, autoplay/loops, likes/pass tracking, or
+   vanity media metrics. Other photos remain private thread photos plus one profile picture
+   max; video exists ONLY as a private-thread attachment under ADR-0026's gates (default-off,
+   adults-only, fail-closed scanned, calm player).
 2. **No ads, no behavioural tracking, no engagement-maxxing.** No dark patterns, no per-user
    reliability/attendance history, no vanity metrics. Funded by donations only.
 3. **Child safety is the core promise.** Age-**cohort isolation**; **no adult↔minor private

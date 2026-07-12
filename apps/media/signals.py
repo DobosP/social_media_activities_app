@@ -33,6 +33,16 @@ def _enqueue_blob_cleanup(key: str, *, model_name: str) -> None:
         raise
 
 
+def _enqueue_all_blob_cleanups(instance, *, model_name: str, extra_fields=()) -> None:
+    """Enqueue cleanup for the primary blob plus every rendition/side object a row may carry
+    (ADR-0026: thumbs, video poster, quarantined video source). One task per key keeps the
+    per-key dedup semantics."""
+    for field in ("storage_key", *extra_fields):
+        key = getattr(instance, field, "")
+        if key:
+            _enqueue_blob_cleanup(key, model_name=model_name)
+
+
 @receiver(pre_delete, sender=Photo, dispatch_uid="media_photo_delete_blob")
 def delete_blob_on_photo_delete(sender, instance: Photo, **kwargs) -> None:
     """Remove the stored blob once the Photo row deletion commits.
@@ -41,29 +51,30 @@ def delete_blob_on_photo_delete(sender, instance: Photo, **kwargs) -> None:
     a restored row could point at already-removed bytes. ``on_commit`` keeps the DB row and blob
     lifecycle aligned while still covering cascades/queryset deletes.
     """
-    if not instance.storage_key:
-        return
-    _enqueue_blob_cleanup(instance.storage_key, model_name="Photo")
+    _enqueue_all_blob_cleanups(instance, model_name="Photo", extra_fields=("thumb_storage_key",))
 
 
 @receiver(pre_delete, sender=Attachment, dispatch_uid="media_attachment_delete_blob")
 def delete_blob_on_attachment_delete(sender, instance: Attachment, **kwargs) -> None:
-    """Remove the stored blob once the Attachment row deletion commits.
+    """Remove every stored blob (main + thumb + video poster/source) once the Attachment row
+    deletion commits.
 
-    Storage deletion is idempotent, so this is safe when the blob was already reclaimed
-    (e.g. expired temporary attachments clear ``storage_key`` before retaining the row).
+    Storage deletion is idempotent, so this is safe when a blob was already reclaimed
+    (e.g. expired temporary attachments clear their keys before retaining the row).
     """
-    if not instance.storage_key:
-        return
-    _enqueue_blob_cleanup(instance.storage_key, model_name="Attachment")
+    _enqueue_all_blob_cleanups(
+        instance,
+        model_name="Attachment",
+        extra_fields=("thumb_storage_key", "poster_storage_key", "source_storage_key"),
+    )
 
 
 @receiver(pre_delete, sender=ActivityCover, dispatch_uid="media_activity_cover_delete_blob")
 def delete_blob_on_activity_cover_delete(sender, instance: ActivityCover, **kwargs) -> None:
-    """Remove the stored cover blob once the ActivityCover row deletion commits."""
-    if not instance.storage_key:
-        return
-    _enqueue_blob_cleanup(instance.storage_key, model_name="ActivityCover")
+    """Remove the stored cover blob(s) once the ActivityCover row deletion commits."""
+    _enqueue_all_blob_cleanups(
+        instance, model_name="ActivityCover", extra_fields=("thumb_storage_key",)
+    )
 
 
 @receiver(pre_delete, sender="places.PlaceCover", dispatch_uid="media_place_cover_delete_blob")

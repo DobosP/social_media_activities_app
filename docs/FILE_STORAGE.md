@@ -1,11 +1,12 @@
 # File storage — secure, EU-resident, cheap, smart-compressed
 
-How private blobs (profile pictures, in-thread photos, PDF attachments) are stored, served, and
-kept small. Design goals, in priority order: **child-safe + secure → EU data residency → cheap**.
-PostgreSQL stays the single primary datastore (relational + geo + graph + pgvector); only *bytes*
-live in object storage.
+How private blobs (profile pictures, in-thread photos, PDF attachments, and — ADR-0026,
+default-off — short in-thread videos) are stored, served, and kept small. Design goals, in
+priority order: **child-safe + secure → EU data residency → cheap**. PostgreSQL stays the single
+primary datastore (relational + geo + graph + pgvector); only *bytes* live in object storage.
 
-See also: `docs/HOSTING_EU.md` (where to run it) and `docs/SAFETY.md` (safety invariants).
+See also: `docs/HOSTING_EU.md` (where to run it), `docs/SAFETY.md` (safety invariants), and
+`docs/adr/0026-private-thread-video-and-sota-image-compression.md` (codec choices + video design).
 
 ---
 
@@ -13,8 +14,9 @@ See also: `docs/HOSTING_EU.md` (where to run it) and `docs/SAFETY.md` (safety in
 
 ```
 upload ─▶ size/format/bomb checks ─▶ safety scan (original bytes, fail-closed)
-       ─▶ EXIF/GPS strip + orientation bake ─▶ SMART COMPRESS (transcode → WebP @ quality)
-       ─▶ StorageBackend.save(key, bytes, content_type)   [private object]
+       ─▶ EXIF/GPS strip + orientation bake ─▶ SMART COMPRESS (transcode → AVIF @ quality)
+       ─▶ + one small card/stream rendition (thumbs/…)
+       ─▶ StorageBackend.save(key, bytes, content_type)   [private objects]
                                    │
 row in Postgres (Photo / media.Attachment): storage_key, content_type, byte_size, sha256, w/h, …
                                    │
@@ -51,15 +53,23 @@ steps; PDFs skip image processing (stored as-is, only ever served as a download)
    first (`ImageOps.exif_transpose`) so a portrait phone photo doesn't end up sideways once the tag
    is gone.
 4. **Smart compression** — the cleaned image is downscaled to `MEDIA_MAX_DIMENSION` (longest side)
-   and transcoded to `MEDIA_IMAGE_OUTPUT_FORMAT` at `MEDIA_IMAGE_QUALITY`. **WebP is the default** —
-   for a typical phone photo it is far smaller than the source PNG/JPEG, which is the whole point:
-   cheaper EU object storage + less egress. Alpha is preserved for WebP/PNG; flattened onto white
-   for JPEG. **One upload still equals one stored object** — there is no separate thumbnail to track
-   (kept deliberately simple; a display/thumbnail variant is a possible future optimisation, see §7).
-  An animated image (animated WebP/GIF-like input) is flattened to its first frame — there is no
-  animation/short-video surface, consistent with the text-first invariant. Images larger than a
-  codec's hard per-side limit (WebP 16383 px) are downscaled to fit, never rejected.
-5. **Store** — `get_storage().save(key, clean_bytes, content_type=…)`. The DB row records the
+   and transcoded to `MEDIA_IMAGE_OUTPUT_FORMAT` at `MEDIA_IMAGE_QUALITY`. **AVIF is the default**
+   (ADR-0026): ~15–30 % smaller than WebP at matched perceptual quality, decodable by every
+   evergreen browser and Safari/iOS ≥ 16.4; set `WEBP` to roll back with one env var (pre-existing
+   objects are never re-encoded either way). `MEDIA_IMAGE_QUALITY=0` (default) auto-picks the
+   matched-quality value per codec (AVIF 64 ≈ WebP 80). Alpha is preserved for AVIF/WebP/PNG;
+   flattened onto white for JPEG. An animated image (animated WebP/GIF-like input) is flattened to
+   its first frame — the *image* pipeline has no animation surface (video is its own gated
+   pipeline, §9). Images larger than a codec's hard per-side limit (WebP 16383 px / AVIF 65535 px)
+   are downscaled to fit, never rejected.
+5. **Rendition** — one extra small object (`MEDIA_THUMB_DIMENSION`, default 800 px) is generated
+   eagerly from the clean bytes and served on card/stream surfaces (discovery cards, thread
+   streams, photo grids, avatars) — with signed URLs straight off object storage there is no CDN
+   to negotiate formats or resize on the fly, so the rendition must exist as its own object.
+   Sources already that small get none (serving falls back to the full object, which is also the
+   behaviour for every pre-rendition row — no backfill needed). Renditions are never used for
+   hashing, dedup, or scanning.
+6. **Store** — `get_storage().save(key, clean_bytes, content_type=…)`. The DB row records the
    *post-compression* `byte_size` + `sha256`, so dedup/quotas reflect the stored object.
 
 > Profile pictures additionally enforce same-cohort uniqueness (exact `sha256` + a perceptual hash)
@@ -114,15 +124,20 @@ Recommended EU-resident, S3-compatible providers:
 
 ## 6. Compression strategy & cost
 
-- **Why WebP** — lossy WebP at a moderate quality is typically 25–35 % smaller than equivalent JPEG
-  and *much* smaller than a PNG photo, with no visible loss at chat display sizes. A 4 MB phone
-  photo commonly lands well under ~300 KB after downscale-to-2048 + WebP@80.
-- **What it buys** — storage and egress scale with *stored bytes*. Cutting the average blob ~5–10×
-  cuts both the monthly storage bill and per-view egress by the same factor — the cheapest lever,
-  with no architecture change.
-- **Tuning** — raise `MEDIA_IMAGE_QUALITY` (e.g. 85) for crisper images, lower it (e.g. 72) to save
-  more; lower `MEDIA_MAX_DIMENSION` (e.g. 1600) for an even smaller footprint. Set
-  `MEDIA_IMAGE_OUTPUT_FORMAT=""` to preserve the source format (no transcode) if ever needed.
+- **Why AVIF** (ADR-0026) — at matched perceptual quality AVIF is ~15–30 % smaller than WebP
+  (which is itself far smaller than the source PNG/JPEG). A 4 MB phone photo commonly lands
+  around ~200 KB after downscale-to-2048 + AVIF@64, plus a ~30–60 KB card rendition. Encode cost
+  is sub-second per photo at our sizes (paid once, at upload).
+- **Renditions** — most media views are cards and thread streams; serving the 800 px rendition
+  there instead of the 2048 px object cuts per-view egress ~4–8× on the hottest surfaces. This is
+  the "transcode once, serve size-appropriate copies forever" pattern every large platform uses,
+  minus the ladder we don't need at this scale.
+- **What it buys** — storage and egress scale with *stored bytes*. Cutting the average blob and
+  serving small where small is displayed cuts both the monthly storage bill and per-view egress —
+  the cheapest levers, with no architecture change.
+- **Tuning** — set `MEDIA_IMAGE_QUALITY` explicitly for crisper/smaller output (0 = per-codec
+  auto); lower `MEDIA_MAX_DIMENSION` (e.g. 1600) for an even smaller footprint;
+  `MEDIA_IMAGE_OUTPUT_FORMAT=WEBP` to roll back the codec; `""` preserves the source format.
 
 ## 7. Settings reference
 
@@ -138,12 +153,22 @@ AWS_ACCESS_KEY_ID=<key>                                     # boto3 default cred
 AWS_SECRET_ACCESS_KEY=<secret>
 
 # --- smart compression (photos AND attachments) ---
-MEDIA_IMAGE_OUTPUT_FORMAT=WEBP        # transcode codec ("" = preserve source format)
-MEDIA_IMAGE_QUALITY=80                # lossy quality 1–100
+MEDIA_IMAGE_OUTPUT_FORMAT=AVIF        # transcode codec (WEBP = rollback; "" = preserve source)
+MEDIA_IMAGE_QUALITY=0                 # 0 = auto per codec (AVIF 64 / WebP 80); else 1-100
+MEDIA_THUMB_DIMENSION=800             # card/stream rendition longest side (0 disables)
 MEDIA_MAX_DIMENSION=2048              # longest-side downscale cap
 MEDIA_MAX_IMAGE_PIXELS=30000000       # decompression-bomb ceiling (header-declared)
 MEDIA_MAX_UPLOAD_BYTES=5242880        # profile/photo size cap
 MEDIA_ATTACHMENT_MAX_BYTES=7340032    # thread-attachment size cap
+
+# --- video attachments (ADR-0026; DEFAULT OFF) ---
+MEDIA_VIDEO_ENABLED=false             # flipping on requires ffmpeg/ffprobe (boot-checked in prod)
+MEDIA_VIDEO_COHORTS=adult             # adults-only at launch (the PDF precedent)
+MEDIA_VIDEO_MAX_UPLOAD_BYTES=83886080 # 80 MiB source cap
+MEDIA_VIDEO_MAX_DURATION_SECONDS=90
+MEDIA_VIDEO_TARGET_MAX_SIDE=1280      # one 720p-class progressive MP4 (never upscaled)
+MEDIA_VIDEO_CRF=23                    # x264 quality (lower = better/bigger)
+MEDIA_VIDEO_PRESET=medium
 
 # --- serving ---
 MEDIA_SIGNED_URL_TTL=300              # signed-token lifetime (seconds)
@@ -166,7 +191,44 @@ MEDIA_SIGNED_URL_TTL=300              # signed-token lifetime (seconds)
   block / moderation-hide / consent revocation / ephemeral expiry is not yet enforced (the streaming
   path re-authorizes per byte; the redirect does not) — hence the short, *decoupled* TTL. Default
   OFF keeps the secure streaming model. Front it with a CDN for further egress savings.
-- **Thumbnails** — a separate small display variant would cut per-view bytes further, at the cost of
-  a second stored object per image. Deferred to keep the one-upload-one-object design.
+- **Thumbnails — IMPLEMENTED (ADR-0026).** One eager card/stream rendition per image (§2 step 5),
+  tracked by `thumb_storage_key`; card and stream surfaces serve it, detail/click-through serves
+  the full object. Pre-existing rows simply fall back to the full object; a backfill command is a
+  possible follow-up if serving data shows it is worth it.
 - **Lifecycle rules** — ephemeral ("disappearing") pictures already expire + purge in-app; you can
   add a provider lifecycle rule as defence-in-depth.
+
+## 9. Video attachments (ADR-0026 — default OFF)
+
+Short clips in private, cohort-gated activity threads only (adults-only at launch), behind
+`MEDIA_VIDEO_ENABLED` (off by default; prod refuses to boot video-enabled without ffmpeg).
+Never on discovery/cover surfaces, never in DMs, no autoplay/loops/view counts.
+
+```
+upload ─▶ size cap ─▶ magic sniff ─▶ cohort + membership gates
+       ─▶ fail-closed scanner gate + streamed SHA-256 of the ORIGINAL vs blocklist/service
+       ─▶ original stored to video-src/ (quarantine) ─▶ Attachment row status=pending (WITHHELD)
+
+transcode_videos (systemd timer / post-upload kick; claim = select_for_update skip_locked):
+  ffprobe validation (container/codec/pixel-format whitelists, 1 video + ≤1 audio stream,
+                      duration + dimension caps — decode-bomb classes rejected up front)
+  ─▶ ffmpeg transcode: ONE progressive MP4 — x264 High@4.1, CRF 23, ≤1280px, yuv420p, AAC,
+      -map_metadata -1 -map_chapters -1 (the re-encode IS the GPS/metadata strip),
+      autorotate baked, +faststart  [sandboxed: -nostdin, protocol whitelist=file, wall-clock
+      timeout + process-group kill, RLIMIT_CPU/AS, thread cap]
+  ─▶ poster frame from the OUTPUT through the ordinary image pipeline (AVIF/WebP)
+  ─▶ FRAME SCAN: sampled frames (1 per 5s, capped) through the configured image scanner —
+      the perceptual dHash blocklist catches known-bad imagery inside the video (fail-closed;
+      a match ⇒ status=blocked, never served, source retained as moderation evidence)
+  ─▶ store MP4 + poster ─▶ status=ready, quarantined original DELETED (it still carried the
+      source metadata) ─▶ audit
+
+serve ─▶ same per-viewer signed tokens; the streaming view supports HTTP Range (206) so the
+        player can seek; posters serve via the image path. Non-ready rows render as a calm
+        placeholder. MEDIA_REDIRECT_TO_PRESIGNED offloads Range serving to the object store.
+```
+
+Failure honesty: transient errors retry with an attempt cap; a crashed worker's `processing`
+row is reclaimed after `MEDIA_VIDEO_STALE_PROCESSING_SECONDS`; terminal failures show a
+"couldn't be processed" placeholder and reclaim every blob. Ephemeral expiry + purge + the
+Art. 17 blob-cleanup signals cover all four keys (main / poster / thumb / quarantined source).

@@ -271,6 +271,108 @@
       });
   });
 
+  // ---------------------------------------------------------------- attachments (ADR-0026)
+  // Payload comes from OUR consumer (per-viewer gated + signed URLs minted server-side).
+  // Everything is still built via createElement/textContent; URLs are same-origin path
+  // strings assigned to src/href properties — never innerHTML.
+  function noteEl(icon, text, extraClass) {
+    var p = document.createElement("p");
+    p.className = "muted post-attachment-note" + (extraClass ? " " + extraClass : "");
+    p.textContent = icon + " " + text;
+    return p;
+  }
+  function fmtUntil(iso) {
+    // Mirror the server's {{ ...|timeuntil }} disclosure at chat precision.
+    var s = Math.round((Date.parse(iso) - Date.now()) / 1000);
+    if (isNaN(s) || s <= 0) return null;
+    if (s < 3600) return Math.max(1, Math.round(s / 60)) + "m";
+    if (s < 86400) return Math.round(s / 3600) + "h";
+    return Math.round(s / 86400) + "d";
+  }
+  function expiryNote(a) {
+    if (!a.expires_at) return null;
+    var when = fmtUntil(a.expires_at);
+    if (!when) return null;
+    var p = document.createElement("p");
+    p.className = "muted post-attachment-expiry";
+    p.textContent = "🕓 " + (I.attachmentDisappears || "disappears in %(when)s").replace("%(when)s", when);
+    return p;
+  }
+  function renderAttachments(atts) {
+    var wrap = document.createElement("div");
+    wrap.className = "post-media";
+    (atts || []).forEach(function (a) {
+      if (a.blocked) {
+        // Staff-only rows (members never receive one): honest moderation state.
+        wrap.appendChild(noteEl("🛑", I.attachmentBlocked || "Blocked by safety screening."));
+        return;
+      }
+      if (a.processing) {
+        wrap.appendChild(noteEl("🎬", I.videoProcessing || "Video is being prepared…"));
+      } else if (a.failed) {
+        wrap.appendChild(noteEl("🎬", I.videoFailed || "This video couldn't be processed."));
+      } else if (a.expired) {
+        wrap.appendChild(noteEl("🕓", I.attachmentExpired || "This temporary picture has disappeared."));
+      } else if (a.kind === "image" && a.url) {
+        var link = document.createElement("a");
+        link.href = a.url;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        var img = document.createElement("img");
+        img.className = "post-attachment-img";
+        img.src = a.thumb_url || a.url;
+        img.alt = I.sharedImage || "shared image";
+        img.loading = "lazy";
+        link.appendChild(img);
+        wrap.appendChild(link);
+      } else if (a.kind === "video" && a.url) {
+        // Calm player only: no autoplay, no loop, metadata-only preload (matches _post.html).
+        var vid = document.createElement("video");
+        vid.className = "post-attachment-video";
+        vid.controls = true;
+        vid.preload = "metadata";
+        vid.setAttribute("playsinline", "");
+        if (a.poster_url) vid.poster = a.poster_url;
+        vid.src = a.url;
+        wrap.appendChild(vid);
+      } else if (a.url) {
+        var p = document.createElement("p");
+        p.className = "post-pdf";
+        p.textContent = "📎 ";
+        var fl = document.createElement("a");
+        fl.href = a.url;
+        fl.textContent = a.filename || "document.pdf";
+        var lbl = document.createElement("span");
+        lbl.className = "muted small-copy";
+        lbl.textContent = " " + (I.pdfDownloads || "(PDF — downloads)");
+        p.appendChild(fl);
+        p.appendChild(lbl);
+        wrap.appendChild(p);
+      }
+      // Ephemeral disclosure parity with the server render: a temporary picture/video says
+      // so in the live stream too.
+      if (!a.processing && !a.failed && !a.expired && a.url) {
+        var note = expiryNote(a);
+        if (note) wrap.appendChild(note);
+      }
+    });
+    return wrap;
+  }
+  function applyAttachments(d) {
+    // Replace the post's media block in place (video finished/failed processing). Works for
+    // both server-rendered posts (the .post-media wrapper) and live-rendered ones.
+    var art = document.getElementById("post-" + d.post_id);
+    if (!art) return;
+    var fresh = renderAttachments(d.attachments || []);
+    var existing = art.querySelector(".post-media");
+    if (existing) {
+      existing.replaceWith(fresh);
+    } else {
+      var rx = art.querySelector(".rx");
+      art.insertBefore(fresh, rx || null);
+    }
+  }
+
   // ---------------------------------------------------------------- live post rendering
   var seen = new Set();
   list.querySelectorAll('[id^="post-"]').forEach(function (el) {
@@ -349,6 +451,8 @@
       sc.appendChild(st);
       art.appendChild(sc);
     }
+
+    if (d.attachments && d.attachments.length) art.appendChild(renderAttachments(d.attachments));
 
     if (!d.is_announcement) {
       art.appendChild(reactionRow(d.id, [], mineByPost[d.id] || []));
@@ -467,6 +571,8 @@
         if (d.is_announcement && status) status.textContent = I.newAnnouncement || "";
       } else if (d.type === "reaction") {
         applyReaction(d);
+      } else if (d.type === "attachments") {
+        applyAttachments(d);
       } else if (d.type === "typing") {
         onTyping(d);
       }

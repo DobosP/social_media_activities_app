@@ -32,6 +32,31 @@ class StorageBackend(ABC):
         — not abstract — so existing backends keep working without change."""
         return None
 
+    def save_fileobj(self, key: str, fileobj, *, content_type: str | None = None) -> None:
+        """Store from a readable binary file object WITHOUT buffering the whole payload in
+        memory where the backend can avoid it (ADR-0026: video uploads are tens of MB).
+        Concrete fallback reads the object fully — correct for any backend, overridden where
+        streaming is possible."""
+        fileobj.seek(0)
+        self.save(key, fileobj.read(), content_type=content_type)
+
+    def download_to(self, key: str, path: str) -> None:
+        """Fetch a stored object to a local file path (the transcode worker's scratch copy).
+        Concrete fallback goes through bytes; overridden where the backend can stream."""
+        with open(path, "wb") as fh:
+            fh.write(self.open(key))
+
+    def size(self, key: str) -> int:
+        """Stored object size in bytes WITHOUT reading the body where the backend can avoid
+        it (ADR-0026: HTTP Range serving of tens-of-MB videos must not load the whole clip
+        per seek). Concrete fallback reads; both shipped backends override."""
+        return len(self.open(key))
+
+    def open_range(self, key: str, start: int, end: int) -> bytes:
+        """Read bytes [start, end] inclusive. Concrete fallback slices a full read; both
+        shipped backends fetch only the requested window."""
+        return self.open(key)[start : end + 1]
+
 
 class LocalStorageBackend(StorageBackend):
     """Filesystem-backed storage under MEDIA_ROOT/uploads. Not for production scale,
@@ -65,6 +90,28 @@ class LocalStorageBackend(StorageBackend):
         path = self._path(key)
         if path.exists():
             path.unlink()
+
+    def save_fileobj(self, key: str, fileobj, *, content_type: str | None = None) -> None:
+        import shutil
+
+        path = self._path(key)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        fileobj.seek(0)
+        with open(path, "wb") as fh:
+            shutil.copyfileobj(fileobj, fh)
+
+    def download_to(self, key: str, path: str) -> None:
+        import shutil
+
+        shutil.copyfile(self._path(key), path)
+
+    def size(self, key: str) -> int:
+        return self._path(key).stat().st_size
+
+    def open_range(self, key: str, start: int, end: int) -> bytes:
+        with open(self._path(key), "rb") as fh:
+            fh.seek(start)
+            return fh.read(end - start + 1)
 
 
 class S3StorageBackend(StorageBackend):
@@ -119,6 +166,27 @@ class S3StorageBackend(StorageBackend):
 
     def delete(self, key: str) -> None:
         self._client.delete_object(Bucket=self.bucket, Key=key)
+
+    def save_fileobj(self, key: str, fileobj, *, content_type: str | None = None) -> None:
+        extra = {}
+        if content_type:
+            extra["ContentType"] = content_type
+        sse = getattr(settings, "MEDIA_S3_SSE", "")
+        if sse:
+            extra["ServerSideEncryption"] = sse
+        fileobj.seek(0)
+        # Multipart streaming upload — the object is never fully buffered in the app process.
+        self._client.upload_fileobj(fileobj, self.bucket, key, ExtraArgs=extra or None)
+
+    def download_to(self, key: str, path: str) -> None:
+        self._client.download_file(self.bucket, key, path)
+
+    def size(self, key: str) -> int:
+        return self._client.head_object(Bucket=self.bucket, Key=key)["ContentLength"]
+
+    def open_range(self, key: str, start: int, end: int) -> bytes:
+        obj = self._client.get_object(Bucket=self.bucket, Key=key, Range=f"bytes={start}-{end}")
+        return obj["Body"].read()
 
     def presigned_get_url(
         self, key: str, *, expires_in: int, content_type=None, content_disposition=None

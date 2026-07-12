@@ -170,17 +170,33 @@ invariants in [`CLAUDE.md`](../CLAUDE.md).
   `can_connect` (pinned by a test). Generic across all activity types (sports is just the launch slice). New Activity
   indexes `(cohort, activity_type)` / `(cohort, place)` keep the predicate + generator index-scan. Read surfaces are
   members-only (`IsAuthenticated`, web + DRF `CommunityViewSet`); deactivate-not-delete self-heals a dry spell.
-- **Group-thread media (images + PDF, no video)** — `media.Attachment` (FK to `social.Post`) puts media IN the unified
+- **Group-thread media (images + PDF + gated video)** — `media.Attachment` (FK to `social.Post`) puts media IN the unified
   conversation, members-only. `attach_to_post` reuses the Photo pipeline: image **EXIF-strip + re-encode**
-  (`validate_and_strip`, PNG/JPEG/WEBP only), **fail-closed** hash-blocklist scan on the original bytes (reject unless the
+  (`validate_and_strip`, PNG/JPEG/WEBP/AVIF), **fail-closed** hash-blocklist scan on the original bytes (reject unless the
   scanner is effective when `MEDIA_REQUIRE_SCANNER`), the storage backend, and **signed, expiring, per-viewer,
   membership-scoped URLs** (`attachment_signed_url`/`resolve_attachment_token` → `AttachmentFileView`). **PDF is the only
   FILE type, ADULTS-ONLY** (`MEDIA_FILE_COHORTS`, never minors — images are allowed in any cohort thread) and is **always
   served as a forced download** (`Content-Disposition: attachment` + `nosniff`) so it can't execute inline. **Never in 1:1
   DMs** (E2EE = unscannable). `post_to_thread(..., allow_empty=True)` permits an attachment-only message; the web
   `activity_post` creates Post + Attachment in **one transaction** (a rejected scan rolls back the post). `can_view_attachment`
-  re-checks `can_read_thread` + `post.is_hidden` + block-vs-uploader; only the author/staff can delete. No video — deferred
-  pending a real video-CSAM-scanning decision.
+  re-checks `can_read_thread` + `post.is_hidden` + block-vs-uploader; only the author/staff can delete.
+- **Private-thread video attachments (ADR-0026, 2026-07 — DEFAULT OFF)** — `Attachment.Kind.VIDEO` behind
+  `MEDIA_VIDEO_ENABLED=False`, **adults-only** (`MEDIA_VIDEO_COHORTS`, the PDF precedent; minor-cohort video stays off
+  pending a lawful video-CSAM matcher). Admission is fail-closed (streamed sha256 of the ORIGINAL vs blocklist/managed
+  scanner) and the row is created **withheld** (`status=pending`, unservable); an off-request worker
+  (`transcode_videos` timer + post-upload kick; `select_for_update(skip_locked=True)` claims, work outside any DB txn)
+  runs sandboxed ffprobe validation (container/codec/pixel-format whitelists, duration/dimension caps) → ONE progressive
+  x264 High@4.1 CRF-23 ≤720p MP4 (+faststart; the re-encode strips ALL metadata incl. GPS, autorotate baked) → AVIF
+  poster via the image pipeline → **perceptual frame scan** (sampled frames vs the dHash blocklist; a match ⇒
+  `status=blocked`, never served, source retained as bucket-level evidence — not servable in-app) → `status=ready` + quarantined original deleted.
+  Serving adds HTTP-Range (206) to `AttachmentFileView` for seeking; `<video controls preload="metadata">` only — no
+  autoplay/loops/counts; never discovery/DMs. Ephemeral TTL/purge/Art.-17 cleanup cover all blobs (main/poster/source).
+- **Image renditions + AVIF canonical format (ADR-0026, 2026-07)** — every image upload (photo/attachment/cover) now
+  also stores one eager `MEDIA_THUMB_DIMENSION` (800px) rendition (`thumb_storage_key`) served on cards, thread
+  streams, grids, and avatars via a `variant` flag in the signed token (full object one click away; pre-rendition rows
+  fall back). Canonical codec flipped WebP→**AVIF** (~15–30% smaller at matched quality; `MEDIA_IMAGE_QUALITY=0` =
+  per-codec auto, AVIF 64 ≈ WebP 80; rollback = `MEDIA_IMAGE_OUTPUT_FORMAT=WEBP`; prod boots-checks the encoder).
+  Renditions are never used for hashing/dedup/scanning.
 - **One real person = one account (EUDI holder binding)** — `accounts.IdentityBinding` records a **keyed HMAC** of the EUDI
   wallet holder subject (never the raw subject — data-minimal) so the same credential can't assure two accounts.
   `bind_identity` (atomic, row-locked) is wired into `EUDIVerifyView` (**409** on a duplicate wallet) and web `register`; the
