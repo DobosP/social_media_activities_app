@@ -43,6 +43,11 @@ PgBouncer, CDN) is in `docs/HOSTING_EU.md` §6 and `docs/PRODUCTION_READINESS.md
 | `systemd/*.service`, `*.timer` | The app, the daily jobs, and the daily backup units. |
 | `backup.sh` | `pg_dump | gzip` → `s3://<bucket>/backups/db/`. |
 
+An optional `systemd/agentapi.service` unit runs the Go `services/agentapi` sidecar (a cached,
+rate-limited public read API for AI agents over the `export_agent_snapshot` output). It is not
+installed by `cloud-init.yaml.tftpl` automatically — build/install steps and the `/agent/*` Caddy
+routing live in [`docs/HOSTING_EU.md`](../docs/HOSTING_EU.md).
+
 ## Prerequisites
 
 1. A Hetzner Cloud project + API token; an SSH key.

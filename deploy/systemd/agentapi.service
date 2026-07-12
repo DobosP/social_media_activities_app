@@ -1,0 +1,36 @@
+[Unit]
+Description=Agent API sidecar (stdlib Go: public read-only API for AI agents over the agent snapshot)
+After=network.target socialapp.service
+# Soft dependency only: the snapshot dir may briefly be empty/stale after a fresh boot; the
+# sidecar itself has no DB/Redis dependency and serves stale-but-valid JSON until the next
+# run_due_jobs export.
+
+[Service]
+User=app
+Group=app
+WorkingDirectory=/home/app/agentapi
+Environment=AGENT_API_ADDR=127.0.0.1:8090
+Environment=AGENT_SNAPSHOT_DIR=/home/app/social_media_activities_app/var/agent_snapshot
+# Caddy fronts this service (see deploy/cloud-init.yaml.tftpl's /agent/* handle block), so the
+# sidecar can trust X-Forwarded-For for its own rate limiting.
+Environment=AGENT_API_TRUST_PROXY=1
+ExecStart=/home/app/agentapi/agentapi
+Restart=always
+RestartSec=3
+# Hardening: a static binary that only needs read access to the snapshot dir — stricter than
+# socialapp.service (no DB/Redis, no writes anywhere).
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadOnlyPaths=/home/app/social_media_activities_app/var/agent_snapshot
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target

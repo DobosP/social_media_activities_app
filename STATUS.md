@@ -15,6 +15,28 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
 
 ## Current state
 
+- **AI-agent & search-engine access surface LANDED on `main` (ADR-0025, 2026-07-12; owner
+  approved the `EventViewSet` `IsAuthenticated→AllowAny` auth change and the landing):**
+  events JSON API is anonymous behind the
+  existing public gates and agent-queryable (place/activity/city/from/to/q/near filters; the
+  public ADULT-card activities endpoint gains from/to alongside activity+proximity); `export_agent_snapshot` (opt-in via `AGENT_SNAPSHOT_DIR`, in
+  `DUE_JOBS`) writes gate-filtered public JSON snapshots (activities ONLY via
+  `public_activities()` ADULT+opt-in card subset); stdlib-only Go sidecar `services/agentapi/`
+  serves the snapshot at `/agent/v1/*` (ETag/304, CORS `*`, per-IP rate limit, no DB, no
+  cookies, optional deploy via templated Caddy `handle` + systemd unit); `/open-data/` page
+  with schema.org `Dataset` JSON-LD + whitelist-only snapshot downloads; `llms.txt` v2
+  (machine-readable API docs); `robots.txt` Allow carve-outs for `/api/v1/events`,
+  `/api/v1/places`, `/api/schema/`. Activity remains absent from every crawler surface
+  (pinned). The RO-EDU price/availability JSON-LD enrichment (offers) is deliberately NOT in
+  this branch — those Event fields live in the in-flight `v_2` scraper/data-server lane and
+  the enrichment lands only after that schema reaches `main`. Verified: full suite green on
+  this base, Go suite green; 4-dimension adversarial review of the original build
+  (child-safety CLEAN, zero leak paths) found 1 MED + 5 LOW, all remediated (OpenAPI type
+  parity, no-404 download advertising, taxonomy count, gzip q-values, schema-faithful Go
+  fixtures). Known pre-existing order-dependent
+  flakes, unrelated (each failed once in a full run, passes in isolation and on full
+  re-run): `test_place_corrections_web.py::test_detail_shows_pending_count_not_identity`,
+  and 5 `apps/web/tests/test_wave5.py` recommendation-reason tests.
 - **Resource-bounded runtime baseline implemented (ADR-0022, 2026-07-11):** React-compatible
   source now builds through `preact/compat`; all non-home screens are lazy route chunks; and the
   build recursively measures initial static JS+CSS against a 40 KiB gzip hard budget (36.71 KiB in

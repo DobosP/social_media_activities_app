@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Open data" %}{% endblock %}
+{% block meta_description %}{% trans "Public venues, events and activity taxonomy for Cluj-Napoca as open data: what it is, how it updates, licensing, and machine-readable access (feeds, JSON API, OpenAPI schema)." %}{% endblock %}
+{% block og_title %}{% trans "Open data" %}{% endblock %}
+{% block og_description %}{% trans "Public venues, events and activity taxonomy for Cluj-Napoca as open data, with machine-readable access." %}{% endblock %}
+{% block structured_data %}{% if structured_data %}<script nonce="{{ request.csp_nonce }}" type="application/ld+json">{{ structured_data }}</script>{% endif %}{% endblock %}
+{% block content %}
+<h1>{% trans "Open data" %}</h1>
+<p class="muted">{% trans "The venues, events and activity taxonomy behind this site are open data &mdash; free to read, cite and build on. This page lists what's here, how it updates, the licence, and the machine-readable ways to access it." %}</p>
+
+<div class="card">
+  <h2 class="u-mt-0">{% trans "What's in the dataset" %}</h2>
+  <ul class="members">
+    <li>{% trans "Public venues in Cluj-Napoca (parks, libraries, sports venues), seeded from open data." %}</li>
+    <li>{% trans "Events: what's happening at those venues, soonest first." %}</li>
+    <li>{% trans "Activity taxonomy: the categories and activity types used to tag venues and events." %}</li>
+    <li>{% trans "Public adult opt-in activity cards &mdash; meetups their organizers chose to list for anonymous discovery. Child and teen meetups are never included: they require a verified, cohort-isolated account and are intentionally kept out of this dataset." %}</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h2 class="u-mt-0">{% trans "How it updates" %}</h2>
+  <p class="muted">{% trans "Venues and events are refreshed periodically from their sources (OpenStreetMap, Overture Maps, RO-EDU, venue calendars, and staff/community edits). There is no live push feed &mdash; poll the feeds or JSON API on a reasonable schedule (see the rate limit below)." %}</p>
+</div>
+
+<div class="card" id="licensing">
+  <h2 class="u-mt-0">{% trans "Licensing & attribution" %}</h2>
+  <p class="muted">{% trans "Venue and event records carry their own source attribution and licence where known &mdash; for example, OpenStreetMap contributors under the Open Database Licence (ODbL), the Overture Maps Foundation, or RO-EDU. Each place or event page, and the corresponding JSON API record, shows that record's specific attribution: check the record, not this page, for the authoritative credit. Where no source licence applies, content is offered on the same open terms as the rest of this nonprofit's public pages &mdash; free to read, cite and reuse with attribution." %}</p>
+</div>
+
+<div class="card">
+  <h2 class="u-mt-0">{% trans "Machine access" %}</h2>
+  <ul class="members">
+    <li><a href="{% url 'events_feed' %}">{% trans "Events feed (RSS)" %}</a></li>
+    <li><a href="{% url 'events_feed_atom' %}">{% trans "Events feed (Atom)" %}</a></li>
+    <li><a href="/api/v1/events/">{% trans "Public events JSON API" %}</a> &mdash; {% trans "filter with ?place=, ?activity=, ?city=, ?from=/?to=, ?q=, ?near_lon=&near_lat=&radius_m=, ?include_past=" %}</li>
+    <li><a href="/api/v1/places/">{% trans "Public places JSON API" %}</a> &mdash; {% trans "filter with ?activity=, ?city=, ?near_lon=&near_lat=&radius_m=" %}</li>
+    <li><a href="/api/v1/discovery/near-me/">{% trans "Places near a point" %}</a> &mdash; {% trans "anonymous discovery" %}</li>
+    <li><a href="/api/v1/discovery/happening/">{% trans "What's happening near a point" %}</a> &mdash; {% trans "anonymous discovery" %}</li>
+    <li><a href="/api/v1/discovery/public/activities/">{% trans "Public adult activities looking for people" %}</a></li>
+    <li><a href="/api/v1/discovery/public/groups/">{% trans "Public adult standing groups looking for people" %}</a></li>
+    <li><a href="/api/schema/">{% trans "OpenAPI schema" %}</a></li>
+    <li>{% trans "High-volume agent API (where deployed): /agent/v1/ &mdash; a cached, read-only mirror of the public data, with its own OpenAPI schema at /agent/v1/openapi.json." %}</li>
+    <li><a href="/llms.txt">llms.txt</a></li>
+    <li><a href="/sitemap.xml">{% trans "Sitemap" %}</a></li>
+  </ul>
+  <p class="muted">{% trans "Anonymous requests are rate-limited (60 requests/minute) &mdash; please cache responses and poll politely." %}</p>
+</div>
+
+{% if snapshot_available %}
+<div class="card">
+  <h2 class="u-mt-0">{% trans "Bulk snapshot downloads" %}</h2>
+  <p class="muted">{% trans "For a bulk pull instead of paging the API, download the periodically-generated snapshot files:" %}</p>
+  <ul class="members">
+    <li><a href="{% url 'open_data_snapshot' 'manifest.json' %}">manifest.json</a> &mdash; {% trans "what's in the snapshot, and when it was generated" %}</li>
+    <li><a href="{% url 'open_data_snapshot' 'events.json' %}">events.json</a></li>
+    <li><a href="{% url 'open_data_snapshot' 'places.json' %}">places.json</a></li>
+    <li><a href="{% url 'open_data_snapshot' 'activities.json' %}">activities.json</a></li>
+    <li><a href="{% url 'open_data_snapshot' 'taxonomy.json' %}">taxonomy.json</a></li>
+  </ul>
+</div>
+{% endif %}
+{% endblock %}

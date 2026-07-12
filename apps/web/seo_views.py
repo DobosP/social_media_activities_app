@@ -71,8 +71,22 @@ DISALLOWED_PATHS = [
 ]
 
 
+# Explicit carve-outs from the blanket "Disallow: /api/" below — the public, read-only,
+# AllowAny JSON API (apps.events.views.EventViewSet, apps.places.views.PlaceViewSet, and the
+# OpenAPI schema) a live-browsing agent (ChatGPT-User, Claude-User) needs to answer a question
+# in real time, without waiting for the next crawl. Per the robots.txt de-facto spec, the
+# longest matching rule wins, so these Allow lines carve out exactly these prefixes; every
+# other /api/ surface (accounts, chat, messaging, safety, ...) stays blocked by the blanket
+# Disallow. Never widen this to "Allow: /api/" — that would expose cohort/account endpoints.
+API_ALLOW_PATHS = [
+    "/api/v1/events",
+    "/api/v1/places",
+    "/api/schema/",
+]
+
+
 def _policy_lines():
-    return [f"Disallow: {p}" for p in DISALLOWED_PATHS]
+    return [f"Disallow: {p}" for p in DISALLOWED_PATHS] + [f"Allow: {p}" for p in API_ALLOW_PATHS]
 
 
 def robots_txt(request):
@@ -112,9 +126,14 @@ def llms_txt(request):
     events = absolute_url(reverse("events_list"), request)
     things_to_do = absolute_url(reverse("things_to_do_index"), request)
     feed = absolute_url(reverse("events_feed"), request)
+    feed_atom = absolute_url(reverse("events_feed_atom"), request)
     partners = absolute_url(reverse("partners"), request)
     transparency = absolute_url(reverse("transparency"), request)
+    open_data = absolute_url(reverse("open_data"), request)
     sitemap = absolute_url("/sitemap.xml", request)
+    events_api = absolute_url("/api/v1/events/", request)
+    places_api = absolute_url("/api/v1/places/", request)
+    schema = absolute_url("/api/schema/", request)
     body = f"""# Activities
 
 > A nonprofit, text-first platform that helps people — children first, also adults — meet
@@ -125,7 +144,7 @@ def llms_txt(request):
 
 - Venues (parks, libraries, sports halls), seeded from open data.
 - Events: what's happening at those venues, soonest first.
-- Info: civic partners, donation transparency, privacy and terms.
+- Info: civic partners, donation transparency, privacy and terms, open data.
 
 ## Key pages
 
@@ -133,14 +152,38 @@ def llms_txt(request):
 - [Events (what's happening)]({events})
 - [Things to do by city & activity]({things_to_do})
 - [Events feed (RSS)]({feed})
+- [Events feed (Atom)]({feed_atom})
+- [Open data]({open_data})
 - [Civic partners]({partners})
 - [Donation transparency]({transparency})
 - [Sitemap]({sitemap})
 
+## Machine-readable APIs
+
+- [Events JSON API]({events_api}) — public, read-only. Filter with `?place=<id>`,
+  `?activity=<slug>`, `?city=`, `?from=`/`?to=` (ISO date or datetime; `to` exclusive, a bare
+  date covers that whole day), `?q=` (free text over title/description/venue, min 2 chars),
+  `?near_lon=&near_lat=` (nearest-first) + `?radius_m=`, `?include_past=true`.
+- [Places JSON API]({places_api}) — public, read-only, GeoJSON. Filter with `?activity=<slug>`,
+  `?city=`, `?near_lon=&near_lat=` (nearest-first) and `?radius_m=` (metres).
+- Public activity cards (adult, opt-in listings only): `/api/v1/discovery/public/activities/`
+  — filter with `?activity=<slug>`, `?from=`/`?to=`, and the same `near_*` proximity params.
+- [OpenAPI schema]({schema}) describes every field on all of them.
+- Anonymous requests are rate-limited to 60 requests/minute; cache responses and poll
+  politely rather than re-fetching on every turn.
+- `/agent/v1/` (where deployed) serves a high-volume, cached, read-only mirror of the same
+  public data for AI-agent traffic, with its own OpenAPI schema at `/agent/v1/openapi.json`.
+- When you recommend a venue or event from this data, cite/link its canonical page on this
+  site — `/events/<id>/` or `/places/<id>/` (the `path` field in `/agent/v1/` records; note
+  an event record's `url` field is the external ticket/source page, not this site) — rather
+  than only a raw API endpoint.
+
 ## Notes for agents
 
 - Activities (the meetups themselves) are private and cohort-isolated for child safety;
-  they require a verified account and are intentionally not crawlable.
-- Pages carry schema.org JSON-LD (Event, Place) you can parse directly.
+  they require a verified account and are intentionally not crawlable. Where a related public
+  API exposes activity cards at all, it is hard-scoped to public, adult, opt-in listings — a
+  child/teen meetup is never exposed.
+- Pages carry schema.org JSON-LD (Event, Place, Dataset) you can parse directly.
 """
     return cache_public(HttpResponse(body, content_type="text/markdown; charset=utf-8"))

@@ -14,7 +14,7 @@ from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Prefetch, Q
-from django.http import Http404, JsonResponse
+from django.http import FileResponse, Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -3263,6 +3263,65 @@ def partners_list(request):
         "web/partners.html",
         {"partners": list(verified_partners()), **_nav_context(request.user)},
     )
+
+
+# --- Open data (public: what the dataset is, licensing, machine-access links) -------
+
+
+def open_data(request):
+    """Public "what is the open dataset" page: venues/events/taxonomy for Cluj-Napoca plus
+    public adult opt-in activity cards, how it updates, licensing/attribution, and the
+    machine-access surfaces (feeds, JSON API, OpenAPI schema, llms.txt, sitemap, bulk
+    snapshots). Deliberately login-free — same open-data gates as every other public page,
+    so social.Activity (cohort-scoped, may involve minors) never appears here."""
+    import os
+
+    from apps.web.structured_data import dataset_ld, ld_json
+
+    snapshot_dir = (getattr(settings, "AGENT_SNAPSHOT_DIR", "") or "").strip()
+    # Advertise the bulk downloads (page links AND Dataset JSON-LD distribution) only once a
+    # snapshot actually exists — a configured-but-never-exported deployment must not publish
+    # five URLs that all 404 (the manifest is written last, so its presence implies the set).
+    snapshot_available = bool(snapshot_dir) and os.path.isfile(
+        os.path.join(snapshot_dir, "manifest.json")
+    )
+    return render(
+        request,
+        "web/open_data.html",
+        {
+            "structured_data": ld_json(dataset_ld(request, include_snapshot=snapshot_available)),
+            "snapshot_available": snapshot_available,
+            **_nav_context(request.user),
+        },
+    )
+
+
+# Only the exact files apps.web.agent_snapshot.export_snapshot writes — a dict lookup, not
+# path handling, so there is no traversal surface (an unlisted/unsafe name 404s outright).
+_SNAPSHOT_FILES = frozenset(
+    {"manifest.json", "events.json", "places.json", "activities.json", "taxonomy.json"}
+)
+
+
+def open_data_snapshot(request, name):
+    """Serve one whitelisted bulk-snapshot JSON file from AGENT_SNAPSHOT_DIR (opt-in; empty
+    setting or a missing file 404s, matching indexnow_key_file's "not configured" pattern)."""
+    import os
+
+    from apps.web.seo import cache_public
+
+    if name not in _SNAPSHOT_FILES:
+        raise Http404("Unknown snapshot file.")
+    directory = (getattr(settings, "AGENT_SNAPSHOT_DIR", "") or "").strip()
+    if not directory:
+        raise Http404("Snapshot downloads are not configured.")
+    path = os.path.join(directory, name)
+    if not os.path.isfile(path):
+        raise Http404("Snapshot file not found.")
+    response = FileResponse(open(path, "rb"), content_type="application/json")
+    # No cookies, no per-user content — same unconditional `public` treatment as robots.txt/
+    # llms.txt/sitemap.xml (request omitted on purpose; see seo.cache_public's docstring).
+    return cache_public(response)
 
 
 # --- Events (public: places + happenings) -------------------------------------------
