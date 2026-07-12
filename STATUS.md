@@ -15,6 +15,19 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
 
 ## Current state
 
+- **Avatar styles + uniqueness registry built (ADR-0027, 2026-07-13; branch
+  `feat/signature-avatars`):** owner-approved reshape of a "profile picture as NFT" ask —
+  versioned avatar generations (Gen 1 Constellation unchanged; Gen 2 **Orbits**, owner-picked
+  from three rendered candidates) with a plain self-only style picker on the profile page (+ SPA
+  parity + `GET/POST /api/accounts/me/avatar-style/`). Every pick is provably unique: canonical
+  fixed-namespace render fingerprint, DB UNIQUE + salt retry (`accounts/signature.py`);
+  `set_interests` is now atomic and re-fingerprints picks (strict no-op for non-picked users, so
+  seeding stays side-effect-free). Adversarial 2-lens Opus design review drove the hard rules
+  now pinned in ADR-0027 + tests: no collectible framing anywhere, fingerprint never leaves the
+  DB (never audited — Art.17), generations never gated by participation, legacy users render
+  byte-identical. Verified in an isolated container: changed-app suites green incl. new
+  `test_signature_avatar.py` (28 tests: contract, collision/salt, concurrency, N+1, no-leak
+  HTTP checks); full-suite result + owner merge decision pending.
 - **AI-agent & search-engine access surface LANDED on `main` (ADR-0025, 2026-07-12; owner
   approved the `EventViewSet` `IsAuthenticated→AllowAny` auth change and the landing):**
   events JSON API is anonymous behind the

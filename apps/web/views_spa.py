@@ -832,6 +832,7 @@ def profile_spa(
     pending_in,
     progression,
     journey_avatar,
+    avatar_styles=(),
 ):
     user = request.user
     prov = None
@@ -862,6 +863,16 @@ def profile_spa(
         "canParticipate": bool(can_participate),
         "avatarUrl": avatar_url or "",
         "journeyAvatar": journey_avatar or "",
+        # ADR-0027: self-only style previews for the avatar-style picker (no fingerprints).
+        "avatarStyles": [
+            {
+                "generation": s["generation"],
+                "name": s["name"],
+                "previewUri": s["uri"],
+                "current": bool(s["current"]),
+            }
+            for s in avatar_styles
+        ],
         "progression": {
             "count": progression.get("count", 0),
             "level": progression.get("level", 0),
@@ -878,6 +889,7 @@ def profile_spa(
         "tabs": you_tabs(nav),
         "actions": {
             "avatarUpload": reverse("avatar_upload"),
+            "avatarStyle": reverse("avatar_style"),
             "connectionMessage": reverse("connection_message"),
             "unblock": "/users/{pk}/unblock/",
             "verifyAge": reverse("verify_age"),
@@ -887,6 +899,8 @@ def profile_spa(
         "ui": {
             "title": _("Profile"),
             "updatePhoto": _("Update photo"),
+            "avatarStyle": _("Your avatar style"),
+            "useStyle": _("Use this style"),
             "journey": _("Your journey"),
             "interests": _("Interests"),
             "edit": _("edit"),

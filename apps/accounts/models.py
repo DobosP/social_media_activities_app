@@ -398,3 +398,29 @@ class GuardianLinkInvite(models.Model):
 
     def __str__(self):
         return f"invite({self.guardian} -> {self.ward}, {self.status})"
+
+
+class SignatureAvatar(models.Model):
+    """The user's chosen avatar *generation* plus its internal uniqueness record (ADR-0027).
+
+    Absent row = legacy default: Generation 1 rendered from the bare username seed, byte-identical
+    to pre-registry behaviour. A row exists only once the user picks a style; ``fingerprint`` is
+    the sha256 of the canonical base render (fixed size/id-namespace, intensity 0) and its UNIQUE
+    constraint is the hard "no two people share a picture" guarantee — ``salt`` is bumped and the
+    layout re-rolled on a genuine collision (realistically only the zero-interest identicon space).
+
+    Privacy posture: the fingerprint is INTERNAL — never serialized to any surface, never audited
+    (the audit log is permanent + hash-chained; a username-derived hash there would survive Art.17
+    erasure as a re-identifier). The row CASCADEs away with the account. Non-transferable by
+    construction: no code path writes another user's row.
+    """
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="signature_avatar")
+    generation = models.PositiveSmallIntegerField()
+    salt = models.PositiveSmallIntegerField(default=0)
+    fingerprint = models.CharField(max_length=64, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"signature-avatar({self.user_id}, g{self.generation})"

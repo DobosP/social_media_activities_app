@@ -187,6 +187,7 @@ urlpatterns = [
     path("access/", views.access_preferences, name="access_preferences"),
     path("profile/", views.profile, name="profile"),
     path("profile/avatar/", views.avatar_upload, name="avatar_upload"),
+    path("profile/avatar-style/", views.avatar_style, name="avatar_style"),
     path("verify-age/", views.verify_age, name="verify_age"),
     path("wards/", views.wards, name="wards"),
     path("wards/invite/", views.guardian_invite_create, name="guardian_invite_create"),

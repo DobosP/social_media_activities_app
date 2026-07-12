@@ -7,7 +7,7 @@ system handle anyway; interests render as abstract colour-coded nodes, never rea
 SAME inputs always yield the SAME image, so a person looks consistent across chat, connections, and
 their profile without storing anything.
 
-Two generators live here, both pure (no DB):
+Three generators live here, all pure (no DB):
 
 * ``identicon_svg`` — the mirrored 5x5 grid. The universal *default* when there is nothing to draw a
   constellation from (a user with zero declared interests, or a bare seed string).
@@ -15,6 +15,14 @@ Two generators live here, both pure (no DB):
   colour-coded star (the "light on each node"), related interests joined by luminous colour-threads
   whose colour fades between the two stars. Caller supplies the already-resolved nodes + edges (see
   ``apps.recommendations.services.interest_graph``), so this module stays a leaf with no app deps.
+* ``orbits_svg`` — Generation 2 (ADR-0027): a personal solar system. An identity-coloured sun, one
+  tilted orbit ring per interest *category*, one planet per interest riding its category's ring —
+  so shared interests read as the same visual family while every person's picture stays their own.
+
+Avatar *generations* (the versioned algorithm registry, ADR-0027) live in ``GENERATIONS`` below:
+users may pick which generation renders their picture; every generation is always available to
+everyone and NEVER unlocked by participation/progression (the choice is publicly visible through
+the render, so gating would leak activity — inv #2/#3).
 
 An uploaded profile picture (one max, see ``media``) overrides the generated avatar on the profile
 page only.
@@ -119,7 +127,9 @@ def _constellation_layout(rnd, n, size):
     return pts
 
 
-def constellation_svg(seed: str, nodes, edges, *, px: int = 80, intensity: float = 0.0) -> str:
+def constellation_svg(
+    seed: str, nodes, edges, *, px: int = 80, intensity: float = 0.0, _uid_override: str = ""
+) -> str:
     """A constellation SVG for ``seed`` over ``nodes`` (each a dict with at least ``color``) and
     ``edges`` (``(i, j[, kind])`` index pairs). Falls back to a bare night sky for zero nodes.
     Malformed / out-of-range edge indices are skipped rather than raising.
@@ -128,10 +138,16 @@ def constellation_svg(seed: str, nodes, edges, *, px: int = 80, intensity: float
     ``0.0`` the output is byte-identical to a base avatar; above 0 it appends a faint expanding aura
     and a few extra twinkles, generated from a SEPARATE prng so nothing already drawn changes. It
     reflects the *viewer's own* confirmed real meetups and is only ever rendered on a self-surface —
-    never a number, never another user's avatar."""
+    never a number, never another user's avatar.
+
+    ``_uid_override`` replaces the seed-derived SVG id namespace. Only the canonical
+    uniqueness-fingerprint render (see ``accounts.signature``) passes a fixed value here, so
+    byte-identical *visuals* hash identically across users — otherwise the seed-derived uid
+    would make every fingerprint trivially distinct and the uniqueness registry meaningless.
+    The default ("" -> seed-derived) keeps every existing render byte-identical."""
     rnd = _prng(seed)
     n = len(nodes)
-    uid = hashlib.sha256(f"{seed}|{px}|{n}".encode()).hexdigest()[:8]
+    uid = _uid_override or hashlib.sha256(f"{seed}|{px}|{n}".encode()).hexdigest()[:8]
     sky_id, star_blur, edge_blur = f"{uid}_sky", f"{uid}_sblur", f"{uid}_eblur"
     S = float(px)
 
@@ -296,6 +312,214 @@ def constellation_data_uri(seed: str, nodes, edges, *, px: int = 80) -> str:
 # surface), exactly like the avatars. Same seed -> same banner. The output SVG contains ONLY
 # numbers + hsl() colours + a per-seed id namespace — no part of the seed string is ever emitted
 # into the markup, so it is safe to inline as trusted HTML.
+
+
+# --- Orbits: Generation 2 — a personal solar system ----------------------------------------------
+#
+# An identity-coloured sun (hue from the seed hash, so even two people with identical interests get
+# visibly different pictures), one tilted orbit ring per interest CATEGORY, and one planet per
+# interest riding its category's ring — belonging is structural: same category, same ring. The
+# starfield and ring geometry are drawn for EVERY node count from the seeded prng, so a salt bump
+# changes the picture even with zero or one interest (the uniqueness registry relies on this).
+
+
+def _category_groups(nodes):
+    """Ordered unique categories with their node indices (first-appearance order; node order is
+    already deterministic by slug upstream). Category-less nodes each form their own group."""
+    order, by_cat = [], {}
+    for i, nd in enumerate(nodes):
+        cat = nd.get("category") or f"_solo{i}"
+        if cat not in by_cat:
+            by_cat[cat] = []
+            order.append(cat)
+        by_cat[cat].append(i)
+    return order, by_cat
+
+
+def orbits_svg(
+    seed: str, nodes, edges=None, *, px: int = 80, intensity: float = 0.0, _uid_override: str = ""
+) -> str:
+    """The Generation-2 avatar for ``seed`` over ``nodes`` (``edges`` accepted for contract parity
+    with ``constellation_svg`` but unused — grouping is by category). Same guarantees as
+    Generation 1: deterministic; ``intensity==0`` byte-identical to the base render (the Phase-4
+    flourish is appended last from a SEPARATE prng); ids namespaced per render; no part of the
+    seed string is emitted into the markup; abstract shapes only, never readable labels."""
+    rnd = _prng(seed)
+    digest = hashlib.sha256((seed or "?").encode("utf-8")).digest()
+    n = len(nodes)
+    uid = _uid_override or hashlib.sha256(f"orb|{seed}|{px}|{n}".encode()).hexdigest()[:8]
+    S = float(px)
+    cx = cy = S / 2.0
+    cats, by_cat = _category_groups(nodes)
+    sun_hue = ((digest[2] << 8) | digest[3]) % 360
+
+    parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{px}" height="{px}" '
+        f'viewBox="0 0 {px} {px}" role="img" aria-hidden="true">',
+        "<defs>",
+        f'<radialGradient id="{uid}_bg" cx="50%" cy="50%" r="72%">'
+        f'<stop offset="0%" stop-color="#101528"/>'
+        f'<stop offset="100%" stop-color="#03040a"/></radialGradient>',
+        f'<radialGradient id="{uid}_sun" cx="50%" cy="50%" r="50%">'
+        f'<stop offset="0%" stop-color="#ffffff"/>'
+        f'<stop offset="38%" stop-color="hsl({sun_hue}, 85%, 72%)"/>'
+        f'<stop offset="100%" stop-color="hsl({sun_hue}, 70%, 52%)" stop-opacity="0"/>'
+        f"</radialGradient>",
+        f'<filter id="{uid}_blur" x="-60%" y="-60%" width="220%" height="220%">'
+        f'<feGaussianBlur stdDeviation="{S * 0.018:.3f}"/></filter>',
+        "</defs>",
+        f'<rect width="{px}" height="{px}" fill="url(#{uid}_bg)"/>',
+    ]
+
+    # Starfield: always drawn, so the salt is visually effective at any node count.
+    stars = []
+    for _ in range(20):
+        sx, sy = rnd() * S, rnd() * S
+        sr = max((0.3 + 0.6 * rnd()) * (S / 240.0) * 1.5, 0.3)
+        stars.append(
+            f'<circle cx="{sx:.2f}" cy="{sy:.2f}" r="{sr:.2f}" '
+            f'fill="#cdd9ff" opacity="{0.12 + 0.26 * rnd():.2f}"/>'
+        )
+    parts.append(f"<g>{''.join(stars)}</g>")
+
+    # Orbit rings: one per category, radius stepped outward; tilt + rotation seeded.
+    ring_geom = []
+    nc = len(cats)
+    for k in range(nc):
+        rx = S * (0.20 + 0.24 * (k + 0.6 * rnd()) / max(nc, 1) + 0.06)
+        ry = rx * (0.34 + 0.18 * rnd())
+        rot = rnd() * 180.0
+        ring_geom.append((rx, ry, rot))
+        parts.append(
+            f'<ellipse cx="{cx:.2f}" cy="{cy:.2f}" rx="{rx:.2f}" ry="{ry:.2f}" '
+            f'transform="rotate({rot:.1f} {cx:.2f} {cy:.2f})" fill="none" '
+            f'stroke="#aebde0" stroke-width="{max(S * 0.004, 0.5):.2f}" opacity="0.30"/>'
+        )
+    if not nc:  # zero interests: a faint dashed dust ring so the sun is never alone
+        rx, ry, rot = S * 0.30, S * 0.12, rnd() * 180.0
+        parts.append(
+            f'<ellipse cx="{cx:.2f}" cy="{cy:.2f}" rx="{rx:.2f}" ry="{ry:.2f}" '
+            f'transform="rotate({rot:.1f} {cx:.2f} {cy:.2f})" fill="none" '
+            f'stroke="#aebde0" stroke-width="{max(S * 0.004, 0.5):.2f}" '
+            f'stroke-dasharray="{S * 0.012:.2f} {S * 0.02:.2f}" opacity="0.35"/>'
+        )
+
+    # The sun: the person's own identity colour, independent of interests.
+    sun_r = S * 0.085
+    parts.append(
+        f'<circle cx="{cx:.2f}" cy="{cy:.2f}" r="{sun_r * 2.6:.2f}" '
+        f'fill="url(#{uid}_sun)" filter="url(#{uid}_blur)"/>'
+    )
+    parts.append(
+        f'<circle cx="{cx:.2f}" cy="{cy:.2f}" r="{sun_r:.2f}" fill="hsl({sun_hue}, 80%, 68%)"/>'
+    )
+    parts.append(f'<circle cx="{cx:.2f}" cy="{cy:.2f}" r="{sun_r * 0.55:.2f}" fill="#ffffff"/>')
+
+    # Planets: one per interest, parked on its category's ring at a seeded angle.
+    planet_r = max(S * 0.028, 1.6)
+    for k, cat in enumerate(cats):
+        rx, ry, rot = ring_geom[k]
+        rot_rad = math.radians(rot)
+        for i in by_cat[cat]:
+            c = _esc(nodes[i].get("color") or _FALLBACK_STAR)
+            th = rnd() * math.tau
+            ex, ey = rx * math.cos(th), ry * math.sin(th)
+            pxx = cx + ex * math.cos(rot_rad) - ey * math.sin(rot_rad)
+            pyy = cy + ex * math.sin(rot_rad) + ey * math.cos(rot_rad)
+            parts.append(
+                f'<g transform="translate({pxx:.2f} {pyy:.2f})">'
+                f'<circle r="{planet_r * 2.1:.2f}" fill="{c}" opacity="0.30" '
+                f'filter="url(#{uid}_blur)"/>'
+                f'<circle r="{planet_r:.2f}" fill="{c}"/>'
+                f'<circle cx="{-planet_r * 0.3:.2f}" cy="{-planet_r * 0.3:.2f}" '
+                f'r="{planet_r * 0.32:.2f}" fill="#ffffff" opacity="0.85"/></g>'
+            )
+
+    # Phase-4 self-progression flourish — same contract as constellation_svg: appended last,
+    # SEPARATE prng, so intensity==0.0 leaves the base render byte-identical.
+    if intensity and intensity > 0:
+        amt = max(0.0, min(1.0, float(intensity)))
+        glow = _prng(f"{seed}|glow")
+        aura_r = S * (0.30 + 0.16 * amt)
+        parts.append(
+            f'<radialGradient id="{uid}_aura" cx="50%" cy="50%" r="50%">'
+            f'<stop offset="0%" stop-color="#ffffff" stop-opacity="0"/>'
+            f'<stop offset="72%" stop-color="#cfe0ff" stop-opacity="0"/>'
+            f'<stop offset="100%" stop-color="#cfe0ff" stop-opacity="{0.10 + 0.30 * amt:.3f}"/>'
+            f"</radialGradient>"
+        )
+        parts.append(
+            f'<circle cx="{cx:.2f}" cy="{cy:.2f}" r="{aura_r:.2f}" '
+            f'fill="url(#{uid}_aura)" filter="url(#{uid}_blur)"/>'
+        )
+        twinkles = []
+        for _ in range(round(amt * 10)):
+            tx, ty = glow() * S, glow() * S
+            tr = max((0.5 + 0.9 * glow()) * (S / 240.0) * 1.8, 0.5)
+            twinkles.append(
+                f'<circle cx="{tx:.2f}" cy="{ty:.2f}" r="{tr:.2f}" '
+                f'fill="#ffffff" opacity="{0.30 + 0.45 * glow():.2f}"/>'
+            )
+        if twinkles:
+            parts.append(f"<g>{''.join(twinkles)}</g>")
+
+    parts.append("</svg>")
+    return "".join(parts)
+
+
+# --- Avatar generations (ADR-0027) ----------------------------------------------------------------
+#
+# The versioned generator registry. A user with no SignatureAvatar row renders exactly as before
+# this registry existed (Generation 1, seed = username): byte-stable legacy behaviour. A user who
+# picked a style renders through ``render_generation`` with a salted seed. Names are plain strings
+# (this module stays Django-free); surfaces translate as needed.
+
+DEFAULT_GENERATION = 1
+# Fixed id-namespace + size for the canonical uniqueness-fingerprint render (see the
+# ``_uid_override`` docstring on constellation_svg for why the namespace must be pinned).
+FINGERPRINT_UID = "fp"
+CANONICAL_PX = 240
+
+GENERATIONS = {
+    1: {"name": "Constellation", "render": constellation_svg},
+    2: {"name": "Orbits", "render": orbits_svg},
+}
+
+
+def signature_seed(base_seed: str, generation: int, salt: int) -> str:
+    """The render seed for a picked style. Distinct per (person, generation, salt) so a salt bump
+    re-rolls the whole seeded layout on a genuine fingerprint collision — EXCEPT Generation 1 at
+    salt 0, which is deliberately the bare legacy seed: picking the style already labelled
+    "current" must be a true visual no-op for the row-less majority (review MED), and the
+    registry then fingerprints the user's actual default look."""
+    if generation == DEFAULT_GENERATION and not salt:
+        return base_seed
+    return f"{base_seed}|g{generation}|s{salt}"
+
+
+def render_generation(
+    generation: int,
+    seed: str,
+    nodes,
+    edges,
+    *,
+    px: int = 80,
+    intensity: float = 0.0,
+    _uid_override: str = "",
+) -> str:
+    """Render ``seed`` through a specific generation's renderer. Generation 1 keeps its historic
+    identicon fallback at zero interests (the identicon emits no id namespace, so the canonical
+    fingerprint needs no uid override on that path). An unknown generation (a deprecated pick
+    still sitting in a DB row) degrades to the default look instead of crashing every surface
+    that renders the user."""
+    if generation not in GENERATIONS:
+        generation = DEFAULT_GENERATION
+    if generation == DEFAULT_GENERATION and not nodes:
+        return identicon_svg(seed, px=px)
+    entry = GENERATIONS[generation]
+    return entry["render"](
+        seed, nodes, edges, px=px, intensity=intensity, _uid_override=_uid_override
+    )
 
 
 def activity_accent_svg(seed: str, *, width: int = 320, height: int = 120) -> str:

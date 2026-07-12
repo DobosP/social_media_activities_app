@@ -304,6 +304,9 @@ def _privacy_settings(user) -> dict:
     from apps.places.models import AccessPreference
 
     pref = AccessPreference.objects.filter(user=user).first()
+    from apps.accounts.signature import avatar_style_info
+
+    style = avatar_style_info(user)
     return {
         "muted_notification_kinds": sorted(get_muted_kinds(user)),
         "access_preferences": {
@@ -314,6 +317,12 @@ def _privacy_settings(user) -> dict:
         }
         if pref is not None
         else None,
+        # ADR-0027: the chosen avatar generation is user preference data the UI shows, so it is
+        # portable (Art. 15/20) — the generation only, never the internal fingerprint/salt/dates.
+        "avatar_style": {
+            "generation": style["generation"],
+            "name": style["generation_name"],
+        },
     }
 
 

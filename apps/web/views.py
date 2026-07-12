@@ -2917,6 +2917,9 @@ def profile(request):
         .values_list("activity_type__name", flat=True)
     )
     blocked = [b.blocked for b in Block.objects.filter(blocker=user).select_related("blocked")]
+    from apps.recommendations.services import avatar_style_previews
+
+    style_previews = avatar_style_previews(user)
     if views_spa.spa_enabled():
         return views_spa.profile_spa(
             request,
@@ -2932,6 +2935,7 @@ def profile(request):
             ),
             progression=social.progression_summary(user),
             journey_avatar=_journey_avatar(user),
+            avatar_styles=style_previews,
         )
     return render(
         request,
@@ -2951,6 +2955,8 @@ def profile(request):
             # journey" card never shows another person's count (no other-user profile path sees it).
             "progression": social.progression_summary(user),
             "journey_avatar": _journey_avatar(user),
+            # ADR-0027: self-only per-generation previews for the style picker.
+            "avatar_styles": style_previews,
             **_nav_context(user),
         },
     )
@@ -2983,6 +2989,29 @@ def avatar_upload(request):
         except (ValueError, MediaError) as exc:
             # MediaError covers a duplicate image (DuplicateProfileImage) and a failed scan.
             messages.error(request, _msg(exc))
+    return redirect("profile")
+
+
+@login_required
+@require_POST
+def avatar_style(request):
+    """ADR-0027: pick which avatar generation renders the user's picture. Same service as
+    the API endpoint (MeAvatarStyleView); no fingerprint/serial ever reaches the template."""
+    from apps.accounts.signature import AvatarStyleError, set_avatar_style
+
+    if not safety.allow_action(
+        request.user,
+        "avatar_style",
+        limit=getattr(settings, "AVATAR_STYLE_RATE_LIMIT", 30),
+        window_seconds=getattr(settings, "AVATAR_STYLE_RATE_WINDOW_SECONDS", 3600),
+    ):
+        messages.error(request, "Too many style changes; please try again later.")
+        return redirect("profile")
+    try:
+        set_avatar_style(request.user, request.POST.get("generation"))
+        messages.success(request, "Avatar style updated.")
+    except AvatarStyleError as exc:
+        messages.error(request, str(exc))
     return redirect("profile")
 
 

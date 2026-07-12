@@ -14,6 +14,17 @@ Last verified: 2026-07-11 — contracts match `apps/*/services.py` + the 2,365-t
 Built on the social core; see services/tests for exact behaviour. All uphold the six hard
 invariants in [`CLAUDE.md`](../CLAUDE.md).
 
+- **Avatar styles + uniqueness registry** (ADR-0027) — versioned avatar generations
+  (`accounts/avatars.py::GENERATIONS`: 1 Constellation, 2 Orbits) with a self-only style picker
+  (web profile card + SPA parity + `GET/POST /api/accounts/me/avatar-style/`); each pick is
+  fingerprint-unique via `accounts/signature.py` (canonical `_uid_override` render, DB UNIQUE +
+  salt retry; `set_interests` re-fingerprints, strict no-op for non-picked users). Gates: no
+  collectible framing ("minted"/serials/dates banned on every surface); the fingerprint never
+  leaves the DB (not in audit payloads — Art.17); every generation always available to everyone,
+  NEVER unlocked by participation (the pick is publicly visible through the render); users
+  without a pick render byte-identical to the legacy pipeline; `intensity==0` byte-identity
+  holds per generation (public renders never leak progression); list surfaces stay non-N+1
+  (two-query `attach_interest_nodes` batch).
 - **AI-agent & search-engine access surface** (ADR-0025) — anonymous read-only events API
   (public gates unchanged); `export_agent_snapshot` job (opt-in `AGENT_SNAPSHOT_DIR`) writes
   gate-filtered public JSON (activities strictly the `public_activities()` ADULT+opt-in card
