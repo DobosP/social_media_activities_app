@@ -138,11 +138,28 @@ def test_to_bare_date_includes_that_whole_day():
     assert "Evening session" in _titles(APIClient().get(f"/api/v1/events/?to={to}"))
 
 
-def test_invalid_date_bound_is_a_clear_400():
-    # A typo'd date must not silently widen the requested window to everything.
-    resp = APIClient().get("/api/v1/events/?from=next-friday")
+@pytest.mark.parametrize(
+    "raw",
+    [
+        "next-friday",  # not ISO at all
+        "2026-13-01",  # month 13: parse_date RAISES ValueError (never returns None)
+        "2026-02-30",  # Feb 30
+        "2026-07-16T25:00",  # hour 25: parse_datetime raises too
+        "2026-07-16T12:60",  # minute 60
+    ],
+)
+def test_invalid_date_bound_is_a_clear_400(raw):
+    # A typo'd or out-of-range date must not silently widen the requested window — and
+    # must be a 400 with the param named, never a 500 (Django 5's fromisoformat parsers
+    # raise ValueError on out-of-range components instead of returning None).
+    resp = APIClient().get(f"/api/v1/events/?from={raw}")
     assert resp.status_code == 400
     assert "from" in resp.json()
+
+
+def test_invalid_date_bound_is_a_clear_400_on_public_activities_too():
+    resp = APIClient().get("/api/v1/discovery/public/activities/?to=2026-13-01")
+    assert resp.status_code == 400
 
 
 def test_q_matches_title_description_and_venue_name():
@@ -176,8 +193,11 @@ def test_near_orders_nearest_first_and_radius_filters():
     assert _titles(APIClient().get(f"{base}&radius_m=2000")) == ["Near event"]
 
 
-def test_bad_near_coordinates_return_empty():
+def test_bad_near_coordinates_and_radius_are_clear_400s():
+    # Malformed geo params must not silently return an empty page (bad near) or a
+    # silently-unbounded radius (bad radius_m) — agents need the explicit error.
     _upcoming(title="Somewhere", place=_osm_place())
-    resp = APIClient().get("/api/v1/events/?near_lat=abc&near_lon=23.6")
-    assert resp.status_code == 200
-    assert resp.json()["results"] == []
+    assert APIClient().get("/api/v1/events/?near_lat=abc&near_lon=23.6").status_code == 400
+    resp = APIClient().get("/api/v1/events/?near_lat=46.77&near_lon=23.6&radius_m=abc")
+    assert resp.status_code == 400
+    assert "radius_m" in resp.json()

@@ -16,18 +16,26 @@ from .services import events_with_public_places
 
 def _is_bare_date(raw):
     # parse_date rejects anything with a time part; parse_datetime (fromisoformat since
-    # Django 5) would accept a bare date too, so date-ness must be checked FIRST.
-    return parse_date(raw) is not None
+    # Django 5) would accept a bare date too, so date-ness must be checked FIRST. Both
+    # parsers RAISE ValueError (not None) on well-shaped but out-of-range input (month 13,
+    # Feb 30) — treat that as "not a date" so it reaches the one 400 below.
+    try:
+        return parse_date(raw) is not None
+    except ValueError:
+        return False
 
 
 def _parse_bound(raw, param):
     """``?from=``/``?to=`` accept an ISO datetime or a bare YYYY-MM-DD date. Returns an
     aware datetime (dates anchor to local midnight), or raises a clear 400 — a typo'd
-    date must not silently widen an agent's requested window."""
+    date must not silently widen an agent's requested window (nor 500 on hour 25)."""
     if _is_bare_date(raw):
         value = datetime.combine(parse_date(raw), time.min)
     else:
-        value = parse_datetime(raw)
+        try:
+            value = parse_datetime(raw)
+        except ValueError:
+            value = None
         if value is None:
             raise ValidationError({param: "Use ISO 8601: YYYY-MM-DD or a full datetime."})
     if timezone.is_naive(value):
@@ -100,17 +108,22 @@ class EventViewSet(viewsets.ReadOnlyModelViewSet):
         ordering = "starts_at"
         near_lon, near_lat = params.get("near_lon"), params.get("near_lat")
         if near_lon is not None and near_lat is not None:
-            # Same request-only proximity contract as PlaceViewSet (never stored).
+            # Same request-only proximity contract as PlaceViewSet (never stored) — but on
+            # this agent-facing surface malformed values are a clear 400, never a silent
+            # empty page or a silently-unbounded radius.
             try:
                 point = Point(float(near_lon), float(near_lat), srid=4326)
             except (TypeError, ValueError):
-                return qs.none()
+                raise ValidationError(
+                    {"near": "Use decimal degrees: ?near_lat=<lat>&near_lon=<lon>."}
+                ) from None
             qs = qs.annotate(distance=Distance("place__location", point))
             ordering = "distance"
             radius_m = params.get("radius_m")
             if radius_m:
                 try:
-                    qs = qs.filter(place__location__distance_lte=(point, D(m=float(radius_m))))
+                    radius = float(radius_m)
                 except (TypeError, ValueError):
-                    pass
+                    raise ValidationError({"radius_m": "Use a number of metres."}) from None
+                qs = qs.filter(place__location__distance_lte=(point, D(m=radius)))
         return qs.order_by(ordering, "starts_at" if ordering != "starts_at" else "id")
