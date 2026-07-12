@@ -3,6 +3,7 @@
 Guidance for working in this repo. Read this first, then `STATUS.md` (current truth) and `README.md`.
 
 Docs discipline: see AGENTS.md — STATUS.md + ADR update is part of definition of done.
+Fleet context + parallel-agent protocol (ADR-0025): top stanzas of `AGENTS.md`; map: `~/work/AGENTS.md`.
 
 ## What this is
 

@@ -3,6 +3,18 @@
 ## Project summary
 `social_media_activities_app` is a Django/social-activity app in the RO-EDU fleet. Child-safety, GDPR/privacy, moderation, and deferred/off-request work are sensitive.
 
+## Fleet context
+- Role: TakesTime — Django/PostGIS children-first in-person activity matching (nonprofit).
+- Upstream: `ro_data_server` (venues/events/news/connections), `roedu-ui` · Downstream: none.
+- Fleet map + parallel-agent protocol: `~/work/AGENTS.md` (agent-ops ADR-0025).
+
+## Parallel work (mandatory)
+- This shared checkout stays on `main`, clean — never switch branches or commit task work here.
+- One task = one branch (`<type>/<slug>`) = one worktree under `~/work/_worktrees/social_media_activities_app/`:
+  `python3 ~/work/agent-ops/scripts/create_task_worktree.py --repo ~/work/social_media_activities_app --branch <type>/<slug> --task "..." --write`
+- Never create worktrees under `/tmp`. Workers never push; the orchestrating session lands green
+  work on `main` (ADR-0014) and backs up unlanded branches to origin. Deletion is human-confirmed only.
+
 ## Read first
 1. `CLAUDE.md` if present.
 2. `STATUS.md` for durable status.
