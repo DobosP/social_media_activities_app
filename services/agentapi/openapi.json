@@ -273,18 +273,32 @@
           "source": { "type": "string" },
           "source_category": { "type": "string" },
           "lifecycle_status": { "type": "string" },
-          "source_confidence": { "type": "string" },
+          "source_confidence": { "type": ["number", "null"] },
           "source_recurrence": { "type": "string" },
           "source_timezone": { "type": "string" },
-          "source_price_min": { "type": ["number", "null"] },
-          "source_price_max": { "type": ["number", "null"] },
+          "source_price_min": {
+            "type": ["string", "null"],
+            "description": "Decimal rendered as a string (DRF convention), e.g. \"10.00\"."
+          },
+          "source_price_max": {
+            "type": ["string", "null"],
+            "description": "Decimal rendered as a string (DRF convention), e.g. \"25.50\"."
+          },
           "source_currency": { "type": ["string", "null"] },
           "source_is_free": { "type": ["boolean", "null"] },
           "source_availability": { "type": ["string", "null"] },
           "attribution": { "type": "string" },
           "license_name": { "type": "string" },
           "provenance_url": { "type": "string" },
-          "attribution_credit": { "type": "string" },
+          "attribution_credit": {
+            "type": ["object", "null"],
+            "description": "Structured source credit, or null when the record carries none.",
+            "properties": {
+              "attribution": { "type": "string" },
+              "license_name": { "type": "string" },
+              "provenance_url": { "type": "string" }
+            }
+          },
           "place_id": { "type": ["integer", "null"] },
           "path": { "type": "string" },
           "place_summary": {

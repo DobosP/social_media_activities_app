@@ -26,8 +26,13 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
   JSON-LD + whitelist-only snapshot downloads; `event_ld` offers/price enrichment; `llms.txt`
   v2 (machine-readable API docs); `robots.txt` Allow carve-outs for `/api/v1/events`,
   `/api/v1/places`, `/api/schema/`. Activity remains absent from every crawler surface
-  (pinned). Verified: full backend suite green post-change, Go suite 63 tests green,
-  end-to-end smoke (real dev-DB snapshot → sidecar → filtered/cached responses) passed.
+  (pinned). Verified: full backend suite green post-change (2,437), Go suite green,
+  end-to-end smoke (real dev-DB snapshot → sidecar → filtered/cached responses) passed;
+  4-dimension adversarial review (child-safety CLEAN, zero leak paths) found 1 MED + 5 LOW,
+  all remediated (OpenAPI type parity, no-404 download advertising, taxonomy count, gzip
+  q-values, schema-faithful Go fixtures). Known pre-existing flake, unrelated:
+  `test_place_corrections_web.py::test_detail_shows_pending_count_not_identity` failed once
+  in a full run, passes in isolation/app-scope/full re-run.
 - **Canonical RO-EDU social app-pack consumption is implemented on `v_2` (ADR-0024,
   2026-07-12):** the only accepted product is
   `roedu:social_media_activities_app:events_places:v1`. Every page must carry schema v1,

@@ -6,6 +6,7 @@
     {
       "id": 100,
       "title": "Chess Meetup - Session 1",
+      "cohort": "adult",
       "starts_at": "2026-07-01T10:00:00Z",
       "status": "scheduled",
       "activity_type": "chess",
@@ -14,6 +15,7 @@
     {
       "id": 101,
       "title": "Football Practice - Week 1",
+      "cohort": "adult",
       "starts_at": "2026-07-02T18:00:00Z",
       "status": "scheduled",
       "activity_type": "football",

@@ -7,6 +7,7 @@ import (
 	"math"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -202,7 +203,50 @@ func shouldGzip(r *http.Request, bodyLen int) bool {
 	if bodyLen < 1024 {
 		return false
 	}
-	return strings.Contains(r.Header.Get("Accept-Encoding"), "gzip")
+	return acceptsGzip(r.Header.Get("Accept-Encoding"))
+}
+
+// acceptsGzip implements RFC 9110 §12.5.3 content-negotiation for the gzip
+// coding only: it parses each comma-separated Accept-Encoding member,
+// matches the coding name (case-insensitive, "gzip" or "x-gzip") ignoring
+// any parameters other than q, and returns true only if a matching coding's
+// q-value is greater than zero. An absent or empty header means no
+// preference was expressed, so gzip is not applied (matches prior
+// behavior). A q=0 entry is an explicit refusal for that coding per the RFC.
+func acceptsGzip(acceptEncoding string) bool {
+	if acceptEncoding == "" {
+		return false
+	}
+	// Track the q-value seen for each relevant coding independently so a
+	// refusal of one (e.g. "gzip;q=0") never masks an accept of the other
+	// (e.g. "x-gzip;q=0.5") when both appear in the same header.
+	q := map[string]float64{"gzip": -1, "x-gzip": -1}
+	for _, member := range strings.Split(acceptEncoding, ",") {
+		member = strings.TrimSpace(member)
+		if member == "" {
+			continue
+		}
+		coding := member
+		qValue := 1.0
+		if semi := strings.Index(member, ";"); semi >= 0 {
+			coding = strings.TrimSpace(member[:semi])
+			for _, param := range strings.Split(member[semi+1:], ";") {
+				param = strings.TrimSpace(param)
+				name, value, ok := strings.Cut(param, "=")
+				if !ok || strings.TrimSpace(name) != "q" {
+					continue
+				}
+				if parsed, err := strconv.ParseFloat(strings.TrimSpace(value), 64); err == nil {
+					qValue = parsed
+				}
+			}
+		}
+		coding = strings.ToLower(coding)
+		if _, relevant := q[coding]; relevant {
+			q[coding] = qValue
+		}
+	}
+	return q["gzip"] > 0 || q["x-gzip"] > 0
 }
 
 // writeBody writes status, headers (Cache-Control, ETag, CORS, Vary) and the

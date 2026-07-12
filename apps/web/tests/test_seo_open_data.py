@@ -87,12 +87,24 @@ def test_open_data_page_has_no_snapshot_links_when_unconfigured(settings):
     assert not any(u.endswith("/open-data/snapshot/manifest.json") for u in urls)
 
 
-def test_dataset_ld_advertises_snapshot_when_configured(tmp_path, settings):
+def test_dataset_ld_advertises_snapshot_when_exported(tmp_path, settings):
+    (tmp_path / "manifest.json").write_text("{}")
     settings.AGENT_SNAPSHOT_DIR = str(tmp_path)
     html = Client().get("/open-data/").content.decode()
     datasets = [b for b in _ld_blocks(html) if b.get("@type") == "Dataset"]
     urls = {d.get("contentUrl", "") for d in datasets[0]["distribution"]}
     assert any(u.endswith("/open-data/snapshot/manifest.json") for u in urls)
+
+
+def test_no_snapshot_links_when_configured_but_never_exported(tmp_path, settings):
+    # Configured dir, but the export job has never succeeded (no manifest.json): neither
+    # the page links nor the Dataset JSON-LD may advertise downloads that would 404.
+    settings.AGENT_SNAPSHOT_DIR = str(tmp_path)
+    html = Client().get("/open-data/").content.decode()
+    assert '<a href="/open-data/snapshot/manifest.json"' not in html
+    datasets = [b for b in _ld_blocks(html) if b.get("@type") == "Dataset"]
+    urls = {d.get("contentUrl", "") for d in datasets[0]["distribution"]}
+    assert not any(u.endswith("/open-data/snapshot/manifest.json") for u in urls)
 
 
 def test_open_data_page_links_snapshots_when_configured(tmp_path, settings):

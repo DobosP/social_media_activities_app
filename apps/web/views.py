@@ -3272,15 +3272,23 @@ def open_data(request):
     machine-access surfaces (feeds, JSON API, OpenAPI schema, llms.txt, sitemap, bulk
     snapshots). Deliberately login-free — same open-data gates as every other public page,
     so social.Activity (cohort-scoped, may involve minors) never appears here."""
+    import os
+
     from apps.web.structured_data import dataset_ld, ld_json
 
     snapshot_dir = (getattr(settings, "AGENT_SNAPSHOT_DIR", "") or "").strip()
+    # Advertise the bulk downloads (page links AND Dataset JSON-LD distribution) only once a
+    # snapshot actually exists — a configured-but-never-exported deployment must not publish
+    # five URLs that all 404 (the manifest is written last, so its presence implies the set).
+    snapshot_available = bool(snapshot_dir) and os.path.isfile(
+        os.path.join(snapshot_dir, "manifest.json")
+    )
     return render(
         request,
         "web/open_data.html",
         {
-            "structured_data": ld_json(dataset_ld(request, include_snapshot=bool(snapshot_dir))),
-            "snapshot_available": bool(snapshot_dir),
+            "structured_data": ld_json(dataset_ld(request, include_snapshot=snapshot_available)),
+            "snapshot_available": snapshot_available,
             **_nav_context(request.user),
         },
     )

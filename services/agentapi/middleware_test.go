@@ -126,3 +126,27 @@ func TestShouldGzip(t *testing.T) {
 		t.Error("expected no gzip without an Accept-Encoding header")
 	}
 }
+
+func TestShouldGzip_QValues(t *testing.T) {
+	cases := []struct {
+		name           string
+		acceptEncoding string
+		want           bool
+	}{
+		{"explicit refusal", "gzip;q=0", false},
+		{"identity plus explicit refusal", "identity, gzip;q=0", false},
+		{"low but nonzero q", "gzip;q=0.5", true},
+		{"x-gzip coding", "x-gzip", true},
+		{"unrelated coding only", "br", false},
+		{"plain gzip still gzipped", "gzip", true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			r := httptest.NewRequest(http.MethodGet, "/agent/v1/events", nil)
+			r.Header.Set("Accept-Encoding", tc.acceptEncoding)
+			if got := shouldGzip(r, 2048); got != tc.want {
+				t.Errorf("shouldGzip with Accept-Encoding=%q = %v, want %v", tc.acceptEncoding, got, tc.want)
+			}
+		})
+	}
+}

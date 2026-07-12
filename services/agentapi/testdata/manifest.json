@@ -6,7 +6,7 @@
     "events": { "file": "events.json", "count": 4 },
     "places": { "file": "places.json", "count": 3 },
     "activities": { "file": "activities.json", "count": 2 },
-    "taxonomy": { "file": "taxonomy.json", "count": 1 }
+    "taxonomy": { "file": "taxonomy.json", "count": 8 }
   },
   "licenses": [
     { "license_name": "CC-BY-4.0", "attribution": "Example Attribution" }

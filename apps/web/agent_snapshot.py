@@ -318,7 +318,12 @@ def export_snapshot(directory) -> dict:
             "events": {"file": EVENTS_FILE, "count": len(event_records)},
             "places": {"file": PLACES_FILE, "count": len(place_records)},
             "activities": {"file": ACTIVITIES_FILE, "count": len(activity_records)},
-            "taxonomy": {"file": TAXONOMY_FILE, "count": len(activity_types)},
+            # Total entities in the file (categories + activity types), so the manifest
+            # count matches the file contents like every other dataset's count does.
+            "taxonomy": {
+                "file": TAXONOMY_FILE,
+                "count": len(categories) + len(activity_types),
+            },
         },
         "licenses": licenses,
         "truncated": truncated,

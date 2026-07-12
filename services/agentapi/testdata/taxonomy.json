@@ -2,9 +2,43 @@
   "schema_version": 1,
   "generated_at": "2026-07-12T10:00:00Z",
   "categories": [
-    { "slug": "chess", "label": "Chess" },
-    { "slug": "football", "label": "Football" },
-    { "slug": "boardgames", "label": "Board games" },
-    { "slug": "reading", "label": "Reading" }
+    { "slug": "chess", "name": "Chess", "parent": null },
+    { "slug": "football", "name": "Football", "parent": null },
+    { "slug": "boardgames", "name": "Board games", "parent": null },
+    { "slug": "reading", "name": "Reading", "parent": null }
+  ],
+  "activity_types": [
+    {
+      "slug": "chess",
+      "name": "Chess",
+      "category": "chess",
+      "parent": null,
+      "family_friendly": true,
+      "wellness": false
+    },
+    {
+      "slug": "football",
+      "name": "Football",
+      "category": "football",
+      "parent": null,
+      "family_friendly": true,
+      "wellness": true
+    },
+    {
+      "slug": "boardgames",
+      "name": "Board games",
+      "category": "boardgames",
+      "parent": null,
+      "family_friendly": true,
+      "wellness": false
+    },
+    {
+      "slug": "reading",
+      "name": "Reading",
+      "category": "reading",
+      "parent": null,
+      "family_friendly": true,
+      "wellness": false
+    }
   ]
 }

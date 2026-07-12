@@ -245,6 +245,11 @@ def test_manifest_counts_match_and_no_tmp_files_remain(tmp_path):
     ):
         assert manifest["datasets"][key]["count"] == _load(tmp_path, fname)["count"]
 
+    # taxonomy.json has no "records" wrapper; its manifest count is total entities.
+    tax = _load(tmp_path, "taxonomy.json")
+    expected = len(tax["categories"]) + len(tax["activity_types"])
+    assert manifest["datasets"]["taxonomy"]["count"] == expected
+
     # Atomic write leaves no *.tmp behind.
     assert not list(tmp_path.glob("*.tmp"))
     assert manifest["truncated"] is False
