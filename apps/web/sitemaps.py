@@ -47,6 +47,7 @@ class StaticViewSitemap(_BaseSitemap):
             "events_list",
             "things_to_do_index",
             "partners",
+            "open_data",
             "transparency",
             "privacy",
             "terms",

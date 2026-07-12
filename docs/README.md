@@ -29,7 +29,7 @@ Design, operations and decision docs for the Social Activities App.
 
 | Doc | What it covers |
 |---|---|
-| [HOSTING_EU.md](HOSTING_EU.md) | **Deploy source of truth**: single Hetzner EU box + Hetzner Object Storage (ADR-0001); `render.yaml` = demo only. Provider procurement not yet final. |
+| [HOSTING_EU.md](HOSTING_EU.md) | **Deploy source of truth**: single Hetzner EU box + Hetzner Object Storage (ADR-0001); `render.yaml` = demo only. Provider procurement not yet final. Incl. the optional Go `agentapi` sidecar for AI-agent read traffic. |
 | [RUNBOOK.md](RUNBOOK.md) | Operating the deployed app: envs, backups, incident response, sanction durations. |
 | [SCALING.md](SCALING.md) | Scale-out levers in order (presigned media, PgBouncer, replicas, partitioning). |
 | [RELEASE_READINESS.md](RELEASE_READINESS.md) | The "safe enough to launch" gate mapped to code. |

@@ -48,3 +48,6 @@ docker-compose.local.yml
 # Local design/exploration scratch (avatar concept gallery, montages — not for the repo)
 scratch/
 .hermes/
+
+# Agent-snapshot export dir (written by export_agent_snapshot, served by services/agentapi)
+var/agent_snapshot/

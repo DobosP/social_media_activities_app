@@ -15,6 +15,19 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
 
 ## Current state
 
+- **AI-agent & search-engine access surface implemented on `feat/agent-access` (ADR-0025,
+  2026-07-12; NOT yet merged — the `EventViewSet` `IsAuthenticated→AllowAny` flip is an auth
+  change awaiting Paul's review):** events JSON API is anonymous behind the existing public
+  gates; `export_agent_snapshot` (opt-in via `AGENT_SNAPSHOT_DIR`, in `DUE_JOBS`) writes
+  gate-filtered public JSON snapshots (activities ONLY via `public_activities()` ADULT+opt-in
+  card subset); stdlib-only Go sidecar `services/agentapi/` serves the snapshot at
+  `/agent/v1/*` (ETag/304, CORS `*`, per-IP rate limit, no DB, no cookies, optional deploy via
+  templated Caddy `handle` + systemd unit); `/open-data/` page with schema.org `Dataset`
+  JSON-LD + whitelist-only snapshot downloads; `event_ld` offers/price enrichment; `llms.txt`
+  v2 (machine-readable API docs); `robots.txt` Allow carve-outs for `/api/v1/events`,
+  `/api/v1/places`, `/api/schema/`. Activity remains absent from every crawler surface
+  (pinned). Verified: full backend suite green post-change, Go suite 63 tests green,
+  end-to-end smoke (real dev-DB snapshot → sidecar → filtered/cached responses) passed.
 - **Canonical RO-EDU social app-pack consumption is implemented on `v_2` (ADR-0024,
   2026-07-12):** the only accepted product is
   `roedu:social_media_activities_app:events_places:v1`. Every page must carry schema v1,

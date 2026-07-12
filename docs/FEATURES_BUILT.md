@@ -14,6 +14,13 @@ Last verified: 2026-07-11 — contracts match `apps/*/services.py` + the 2,365-t
 Built on the social core; see services/tests for exact behaviour. All uphold the six hard
 invariants in [`CLAUDE.md`](../CLAUDE.md).
 
+- **AI-agent & search-engine access surface** (ADR-0025) — anonymous read-only events API
+  (public gates unchanged); `export_agent_snapshot` job (opt-in `AGENT_SNAPSHOT_DIR`) writes
+  gate-filtered public JSON (activities strictly the `public_activities()` ADULT+opt-in card
+  subset); stdlib-only Go sidecar `services/agentapi/` serves it at `/agent/v1/*` (cached,
+  rate-limited, DB-free); `/open-data/` page + `Dataset` JSON-LD + snapshot downloads;
+  `event_ld` offers; `llms.txt` v2; `robots.txt` public-API Allow carve-outs. Gate:
+  `social.Activity` never on a crawler surface; snapshot key-sets pinned by exact-key tests.
 - **Activity lifecycle** — `cancel_activity` / `complete_activity` (`social/services.py`) +
   `auto_complete_activities` command; cancel notifies members and blocks joins.
 - **Edit before start** — `update_activity` (whitelisted `ACTIVITY_EDITABLE_FIELDS`; place/type/

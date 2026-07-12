@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-12T10:00:00Z",
+  "count": 3,
+  "records": [
+    {
+      "id": 10,
+      "name": "Central Park",
+      "city": "Cluj-Napoca",
+      "lat": 46.7712,
+      "lon": 23.6236,
+      "activity_types": ["chess", "boardgames"],
+      "source": "osm",
+      "attribution": "Example Attribution",
+      "license_name": "CC-BY-4.0"
+    },
+    {
+      "id": 11,
+      "name": "Sports Field",
+      "city": "Cluj-Napoca",
+      "lat": 46.7810881,
+      "lon": 23.6236,
+      "activity_types": ["football"],
+      "source": "osm",
+      "attribution": "Example Attribution",
+      "license_name": "CC-BY-4.0"
+    },
+    {
+      "id": 12,
+      "name": "City Library",
+      "city": "Bucharest",
+      "lat": 44.4268,
+      "lon": 26.1025,
+      "activity_types": ["reading"],
+      "source": "osm",
+      "attribution": "Example Attribution",
+      "license_name": "CC-BY-4.0"
+    }
+  ]
+}
