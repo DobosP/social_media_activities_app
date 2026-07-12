@@ -33,9 +33,10 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
   this base, Go suite green; 4-dimension adversarial review of the original build
   (child-safety CLEAN, zero leak paths) found 1 MED + 5 LOW, all remediated (OpenAPI type
   parity, no-404 download advertising, taxonomy count, gzip q-values, schema-faithful Go
-  fixtures). Known pre-existing flake, unrelated:
-  `test_place_corrections_web.py::test_detail_shows_pending_count_not_identity` failed once
-  in a full run, passes in isolation/app-scope/full re-run.
+  fixtures). Known pre-existing order-dependent
+  flakes, unrelated (each failed once in a full run, passes in isolation and on full
+  re-run): `test_place_corrections_web.py::test_detail_shows_pending_count_not_identity`,
+  and 5 `apps/web/tests/test_wave5.py` recommendation-reason tests.
 - **Resource-bounded runtime baseline implemented (ADR-0022, 2026-07-11):** React-compatible
   source now builds through `preact/compat`; all non-home screens are lazy route chunks; and the
   build recursively measures initial static JS+CSS against a 40 KiB gzip hard budget (36.71 KiB in
