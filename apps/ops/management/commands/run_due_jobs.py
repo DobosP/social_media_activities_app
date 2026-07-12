@@ -52,6 +52,7 @@ DUE_JOBS = (
     ("sync_roedu", {}),  # ADR-0019 §7: roedu venues + event facts + Commons covers (opt-in)
     ("expire_api_tokens", {}),
     ("indexnow_batch_submit", {}),  # ping Bing/Yandex with recently-changed public URLs (opt-in)
+    ("export_agent_snapshot", {}),  # write gate-filtered public JSON for the agent sidecar (opt-in)
     # Drain the durable off-request task queue LAST, so any task an earlier job enqueued this tick
     # is picked up the same tick (apps.ops.tasks; no-op until the first handler is registered).
     ("process_deferred_tasks", {}),

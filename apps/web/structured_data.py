@@ -105,6 +105,9 @@ def place_ld(place, request=None, events=None) -> dict:
     return node
 
 
+# NOTE: schema.org ``offers``/``isAccessibleForFree`` enrichment from source price facts is
+# deliberately absent on this branch — the Event price/availability fields live in the
+# in-flight v_2 scraper/data-server lane and the enrichment lands once that schema is on main.
 def event_ld(event, request=None) -> dict:
     """Top-level JSON-LD Event for an event detail page (offline, in-person)."""
     node = {
@@ -180,18 +183,15 @@ def place_entries(places):
     return [{"name": p.display_name, "url": place_path(p)} for p in places]
 
 
-def site_ld(request=None) -> dict:
-    """Organization + WebSite (with a search action) for the home/landing page.
-
-    Helps an answer engine name the site and learn its event/place search entry point.
-    """
+def _organization_node(request=None) -> dict:
+    """The Organization node shared by ``site_ld`` (the home page's ``@graph``) and
+    ``dataset_ld`` (the open-data page's ``creator``) — one shape, two call sites."""
     from django.conf import settings
 
-    home = absolute_url("/", request)
     org = {
         "@type": ["Organization", "NGO"],
         "name": "Activities",
-        "url": home,
+        "url": absolute_url("/", request),
         "description": (
             "A nonprofit, text-first platform that helps people meet in person for "
             "real group activities at real places — sport, outdoors, games, reading "
@@ -208,10 +208,19 @@ def site_ld(request=None) -> dict:
     email = getattr(settings, "SITE_CONTACT_EMAIL", "")
     if email:
         org["email"] = email
+    return org
+
+
+def site_ld(request=None) -> dict:
+    """Organization + WebSite (with a search action) for the home/landing page.
+
+    Helps an answer engine name the site and learn its event/place search entry point.
+    """
+    home = absolute_url("/", request)
     return {
         "@context": "https://schema.org",
         "@graph": [
-            org,
+            _organization_node(request),
             {
                 "@type": "WebSite",
                 "name": "Activities",
@@ -227,3 +236,64 @@ def site_ld(request=None) -> dict:
             },
         ],
     }
+
+
+def dataset_ld(request=None, *, include_snapshot=True) -> dict:
+    """schema.org Dataset for /open-data/: the public venues/events/taxonomy dataset for
+    Cluj-Napoca plus public adult opt-in activity cards, and its machine-access points.
+
+    ``creator`` reuses the exact same Organization node ``site_ld`` puts on the home page.
+    ``distribution`` links the RSS/Atom feeds, the public events JSON API, and — only when
+    the operator has configured AGENT_SNAPSHOT_DIR (``include_snapshot``) — the snapshot
+    manifest, so the markup never advertises a download that would 404. All are
+    already-public, gate-filtered surfaces (see apps/web/agent_snapshot.py and
+    apps.events.views.EventViewSet's AllowAny docstring)."""
+    from django.urls import reverse
+
+    node = {
+        "@context": "https://schema.org",
+        "@type": "Dataset",
+        "name": "Activities open dataset — Cluj-Napoca venues & events",
+        "description": (
+            "Public venues (parks, libraries, sports venues) and events for Cluj-Napoca, "
+            "Romania, plus public adult opt-in activity cards — open data, updated "
+            "periodically from open sources (OSM, Overture, RO-EDU) and venue calendars."
+        ),
+        "url": absolute_url("/open-data/", request),
+        "isAccessibleForFree": True,
+        "license": absolute_url("/open-data/#licensing", request),
+        "creator": _organization_node(request),
+        "spatialCoverage": {"@type": "Place", "name": "Cluj-Napoca, Romania"},
+        "distribution": [
+            {
+                "@type": "DataDownload",
+                "name": "Events feed (RSS)",
+                "encodingFormat": "application/rss+xml",
+                "contentUrl": absolute_url(reverse("events_feed"), request),
+            },
+            {
+                "@type": "DataDownload",
+                "name": "Events feed (Atom)",
+                "encodingFormat": "application/atom+xml",
+                "contentUrl": absolute_url(reverse("events_feed_atom"), request),
+            },
+            {
+                "@type": "DataDownload",
+                "name": "Events JSON API",
+                "encodingFormat": "application/json",
+                "contentUrl": absolute_url("/api/v1/events/", request),
+            },
+        ],
+    }
+    if include_snapshot:
+        node["distribution"].append(
+            {
+                "@type": "DataDownload",
+                "name": "Snapshot manifest",
+                "encodingFormat": "application/json",
+                "contentUrl": absolute_url(
+                    reverse("open_data_snapshot", args=["manifest.json"]), request
+                ),
+            }
+        )
+    return node

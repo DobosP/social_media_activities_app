@@ -253,6 +253,9 @@ urlpatterns = [
     path("my-donations/", views.my_donations, name="my_donations"),
     path("campaigns/", views.campaigns, name="campaigns"),
     path("partners/", views.partners_list, name="partners"),
+    # Open data: what the dataset is + machine-access links, plus whitelisted bulk snapshots.
+    path("open-data/", views.open_data, name="open_data"),
+    path("open-data/snapshot/<str:name>", views.open_data_snapshot, name="open_data_snapshot"),
     # Public (logged-out) discovery of adult activities & groups
     path("discover/", views.discover, name="discover"),
     path(

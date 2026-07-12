@@ -29,6 +29,9 @@ services:
       DJANGO_SETTINGS_MODULE: config.settings.dev
       DATABASE_URL: postgis://app:app@db:5432/app
       DJANGO_SECRET_KEY: dev-insecure-change-me
+      # Where export_agent_snapshot (fanned out by run_due_jobs) writes the public JSON
+      # snapshot that the optional agentapi sidecar below reads.
+      AGENT_SNAPSHOT_DIR: /app/var/agent_snapshot
     volumes:
       - ./:/app
     ports:
@@ -36,6 +39,22 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+  # Optional stdlib-only Go sidecar serving GET /agent/v1/* over the snapshot web writes above.
+  # Not started by a plain `docker compose up` — opt in with `--profile agent`.
+  agentapi:
+    profiles: ["agent"]
+    build: services/agentapi
+    environment:
+      AGENT_SNAPSHOT_DIR: /data/agent_snapshot
+      AGENT_API_ADDR: ":8090"
+    volumes:
+      # Read-only: agentapi only ever reads the snapshot web's export job writes into ./var/.
+      - ./var/agent_snapshot:/data/agent_snapshot:ro
+    ports:
+      - "8090:8090"
+    depends_on:
+      - web
 
 volumes:
   pgdata: {}
