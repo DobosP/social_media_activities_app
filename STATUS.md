@@ -15,9 +15,9 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
 
 ## Current state
 
-- **AI-agent & search-engine access surface implemented on `feat/agent-access` (ADR-0025,
-  2026-07-12; based on `main`, NOT merged — the `EventViewSet` `IsAuthenticated→AllowAny`
-  flip is an auth change awaiting Paul's review):** events JSON API is anonymous behind the
+- **AI-agent & search-engine access surface LANDED on `main` (ADR-0025, 2026-07-12; owner
+  approved the `EventViewSet` `IsAuthenticated→AllowAny` auth change and the landing):**
+  events JSON API is anonymous behind the
   existing public gates and agent-queryable (place/activity/city/from/to/q/near filters; the
   public ADULT-card activities endpoint gains from/to alongside activity+proximity); `export_agent_snapshot` (opt-in via `AGENT_SNAPSHOT_DIR`, in
   `DUE_JOBS`) writes gate-filtered public JSON snapshots (activities ONLY via
