@@ -93,7 +93,29 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         if not await self._still_authorized():
             await self.close(code=4403)
             return
-        await self.send_json({"type": "message", **event["message"]})
+        message = dict(event["message"])
+        # ADR-0026: the group payload carries attachment IDs only (signed media URLs are
+        # per-viewer). Resolve them HERE, through the full media gate, for THIS member.
+        attachment_ids = message.pop("attachment_ids", None) or []
+        message["attachments"] = (
+            await self._attachment_payload(message.get("id")) if attachment_ids else []
+        )
+        await self.send_json({"type": "message", **message})
+
+    async def chat_attachments(self, event):
+        # A post's attachments changed state (a video finished/failed processing). Same
+        # per-delivery re-auth; per-viewer URL resolution, never trust the group payload.
+        if not await self._still_authorized():
+            await self.close(code=4403)
+            return
+        post_id = event["message"].get("post_id")
+        await self.send_json(
+            {
+                "type": "attachments",
+                "post_id": post_id,
+                "attachments": await self._attachment_payload(post_id),
+            }
+        )
 
     async def chat_reaction(self, event):
         # A post's distinct reaction set changed (anonymous, COUNTLESS — no count, no who). Same
@@ -162,3 +184,39 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         return post_to_thread_realtime(
             self.user, self.thread.owner_object, body, reply_to_id=reply_to_id
         )
+
+    @database_sync_to_async
+    def _attachment_payload(self, post_id):
+        """Per-VIEWER attachment dicts for one post, through the exact same gate + URL logic
+        the server-rendered page uses (media.attachments_for_posts): fresh user, membership
+        re-check, per-viewer signed URLs, processing/failed/expired placeholders. Anything
+        this member may not see is silently absent."""
+        from django.contrib.auth import get_user_model
+
+        from apps.media.services import attachments_for_posts
+        from apps.social.models import Post
+
+        uid = getattr(self.user, "pk", None)
+        user = get_user_model().objects.filter(pk=uid).first() if uid else None
+        if user is None or post_id is None:
+            return []
+        post = Post.objects.filter(pk=post_id, thread_id=self.thread_id).first()
+        if post is None:
+            return []
+        items = attachments_for_posts([post], user).get(post.id, [])
+        return [
+            {
+                "id": att.id,
+                "kind": att.kind,
+                "url": att.url,
+                "thumb_url": getattr(att, "thumb_url", ""),
+                "poster_url": getattr(att, "poster_url", ""),
+                "processing": getattr(att, "processing", False),
+                "failed": getattr(att, "failed", False),
+                "blocked": getattr(att, "blocked", False),  # staff-only rows
+                "expired": att.expired,
+                "filename": att.original_filename or "",
+                "expires_at": att.expires_at.isoformat() if att.expires_at else None,
+            }
+            for att in items
+        ]

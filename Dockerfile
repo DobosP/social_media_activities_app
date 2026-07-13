@@ -17,9 +17,12 @@ ENV PYTHONUNBUFFERED=1 \
 
 # GeoDjango needs the shared GDAL/GEOS/PROJ libraries at runtime, not their headers or command-line
 # tools. Keeping the development packages out of this final stage removes hundreds of MB while
-# retaining the libraries Django loads through ctypes.
+# retaining the libraries Django loads through ctypes. ffmpeg (+ffprobe) powers the ADR-0026
+# private-thread video pipeline (validate/transcode/poster/frame-scan); --no-install-recommends
+# keeps its footprint to the libraries it actually links.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         binutils \
+        ffmpeg \
         libgdal32 \
         libgeos-c1v5 \
         libproj25 \

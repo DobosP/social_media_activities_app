@@ -531,11 +531,17 @@ MEDIA_MAX_UPLOAD_BYTES = env.int("MEDIA_MAX_UPLOAD_BYTES", default=5 * 1024 * 10
 MEDIA_MAX_DIMENSION = env.int("MEDIA_MAX_DIMENSION", default=2048)
 # Smart compression: transcode every uploaded image (photos AND thread attachments) to this codec
 # at MEDIA_IMAGE_QUALITY, so private blobs stay small (cheaper EU object storage + less egress).
-# WEBP is the recommended default (far smaller than the source PNG/JPEG for a phone photo); set to
-# an empty string to preserve the source format. Metadata is stripped + EXIF orientation baked in
-# regardless. One upload still = one stored object (no separate thumbnail to manage).
-MEDIA_IMAGE_OUTPUT_FORMAT = env("MEDIA_IMAGE_OUTPUT_FORMAT", default="WEBP")
-MEDIA_IMAGE_QUALITY = env.int("MEDIA_IMAGE_QUALITY", default=80)
+# AVIF is the default (ADR-0026: ~15-30% smaller than WebP at matched quality, ~93%+ browser
+# support; rollback = set WEBP). Set to an empty string to preserve the source format. Metadata is
+# stripped + EXIF orientation baked in regardless. Pre-existing objects are NOT re-encoded.
+MEDIA_IMAGE_OUTPUT_FORMAT = env("MEDIA_IMAGE_OUTPUT_FORMAT", default="AVIF")
+# 0 = auto per codec (AVIF 64, WebP/JPEG 80 — the matched-perceptual-quality equivalents);
+# any explicit value applies to whichever codec is selected.
+MEDIA_IMAGE_QUALITY = env.int("MEDIA_IMAGE_QUALITY", default=0)
+# ADR-0026 renditions: one extra eager rendition per image (longest side) served on card/stream
+# surfaces — the biggest egress lever without a CDN. 800px covers a ~400px card at 2x DPR.
+# Sources already at or under this size get no extra object (serving falls back to the full one).
+MEDIA_THUMB_DIMENSION = env.int("MEDIA_THUMB_DIMENSION", default=800)
 # Decompression-bomb ceiling: reject images whose header-declared pixel count exceeds
 # this before any pixels are decoded (≈30 MP default — above real photos, below a bomb).
 MEDIA_MAX_IMAGE_PIXELS = env.int("MEDIA_MAX_IMAGE_PIXELS", default=30_000_000)
@@ -608,6 +614,49 @@ MEDIA_EPHEMERAL_MIN_TTL_SECONDS = env.int("MEDIA_EPHEMERAL_MIN_TTL_SECONDS", def
 MEDIA_EPHEMERAL_MIN_TTL_MINORS_SECONDS = env.int(
     "MEDIA_EPHEMERAL_MIN_TTL_MINORS_SECONDS", default=86400
 )
+
+# --- ADR-0026: private-thread video attachments -------------------------------------------
+# Default ON (owner decision 2026-07-13; set MEDIA_VIDEO_ENABLED=false to disable). Prod
+# refuses to boot video-enabled without ffmpeg/ffprobe installed (the Docker image and
+# cloud-init both ship them). Video is admitted WITHHELD after a fail-closed sha256 scan of
+# the original bytes, transcoded off-request to ONE progressive H.264/AAC MP4 (+faststart;
+# the re-encode strips all metadata incl. GPS), frame-scanned against the perceptual
+# blocklist, and only then served — rendered ONLY inside the cohort-gated activity/group
+# thread it was posted to, never DMs or any public/discovery/feed surface, no
+# autoplay/loops/view counts.
+MEDIA_VIDEO_ENABLED = env.bool("MEDIA_VIDEO_ENABLED", default=True)
+# A NEW media type → adults only at launch (the PDF precedent). Minor-cohort video stays
+# structurally off until a lawful video-CSAM matcher is adopted via its own decision.
+MEDIA_VIDEO_COHORTS = env.list("MEDIA_VIDEO_COHORTS", default=["adult"])
+# Upload cap. The request-size middleware exempts ONLY the thread-post endpoint (the one
+# surface that accepts video) up to this + multipart overhead, and only while video is
+# enabled — the global MAX_REQUEST_BODY_BYTES cap is unchanged for every other request.
+MEDIA_VIDEO_MAX_UPLOAD_BYTES = env.int("MEDIA_VIDEO_MAX_UPLOAD_BYTES", default=80 * 1024 * 1024)
+MEDIA_VIDEO_MAX_DURATION_SECONDS = env.int("MEDIA_VIDEO_MAX_DURATION_SECONDS", default=90)
+# Source sanity cap (decode-bomb guard); 4K input is accepted and downscaled.
+MEDIA_VIDEO_MAX_SOURCE_SIDE = env.int("MEDIA_VIDEO_MAX_SOURCE_SIDE", default=3840)
+# Delivery: one 720p-class progressive MP4 (never upscaled) — universal playback, HTTP-Range
+# seekable, no HLS packaging (short clips don't repay an ABR ladder).
+MEDIA_VIDEO_TARGET_MAX_SIDE = env.int("MEDIA_VIDEO_TARGET_MAX_SIDE", default=1280)
+MEDIA_VIDEO_CRF = env.int("MEDIA_VIDEO_CRF", default=23)
+MEDIA_VIDEO_PRESET = env("MEDIA_VIDEO_PRESET", default="medium")
+MEDIA_VIDEO_AUDIO_BITRATE = env("MEDIA_VIDEO_AUDIO_BITRATE", default="96k")
+# Keep one transcode from starving the small launch box (3 vCPU).
+MEDIA_VIDEO_THREADS = env.int("MEDIA_VIDEO_THREADS", default=2)
+MEDIA_VIDEO_FFMPEG_TIMEOUT = env.int("MEDIA_VIDEO_FFMPEG_TIMEOUT", default=600)
+MEDIA_VIDEO_PROBE_TIMEOUT = env.int("MEDIA_VIDEO_PROBE_TIMEOUT", default=60)
+MEDIA_VIDEO_MAX_ATTEMPTS = env.int("MEDIA_VIDEO_MAX_ATTEMPTS", default=3)
+# A PROCESSING row older than this is presumed orphaned (worker crash) and reclaimed.
+MEDIA_VIDEO_STALE_PROCESSING_SECONDS = env.int("MEDIA_VIDEO_STALE_PROCESSING_SECONDS", default=1800)
+# Frame-scan sampling: one frame per interval, capped (25 frames covers 90s at 1/5s + margin).
+MEDIA_VIDEO_FRAME_SCAN_INTERVAL_SECONDS = env.int(
+    "MEDIA_VIDEO_FRAME_SCAN_INTERVAL_SECONDS", default=5
+)
+MEDIA_VIDEO_FRAME_SCAN_MAX_FRAMES = env.int("MEDIA_VIDEO_FRAME_SCAN_MAX_FRAMES", default=25)
+# Near-real-time processing without new infrastructure: a daemon thread drains a few pending
+# videos right after the upload commits (crash-safe — the transcode_videos systemd timer is
+# the durable fallback). Tests set False and drive the processor synchronously.
+MEDIA_VIDEO_INLINE_PROCESSING = env.bool("MEDIA_VIDEO_INLINE_PROCESSING", default=True)
 
 # D7 — richer place data.
 # Overture places parquet path/glob (local extract or the public S3 release, e.g.

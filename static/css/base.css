@@ -1019,6 +1019,7 @@ textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--accent)
 .edited-mark { font-size: .75rem; }
 .post-attachment-note { margin: .3rem 0 0; font-size: .8rem; }
 .post-attachment-img { max-width: 280px; max-height: 280px; border-radius: 8px; margin-top: .3rem; }
+.post-attachment-video { max-width: 100%; width: 360px; max-height: 280px; border-radius: 8px; margin-top: .3rem; background: #000; }
 .post-attachment-expiry { font-size: .72rem; margin: .1rem 0 0; }
 .post-pdf { margin: .3rem 0 0; }
 .rx { margin-top: .25rem; }

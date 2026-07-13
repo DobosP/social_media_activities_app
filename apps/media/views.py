@@ -1,3 +1,5 @@
+import re
+
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseRedirect
 from rest_framework import status
@@ -41,6 +43,54 @@ def _temporary_redirect(url: str) -> HttpResponseRedirect:
     response = HttpResponseRedirect(url)
     response.status_code = 307
     return response
+
+
+# Digit runs are bounded so a crafted mile-long number can never trip CPython's int-parse
+# limit into a 500 — an over-long (nonsensical) Range simply doesn't match and gets a 200.
+_RANGE_RE = re.compile(r"^bytes=(\d{0,18})-(\d{0,18})$")
+
+
+def _media_response(request, key: str, *, content_type: str, private: bool = True):
+    """A media byte response served straight from the storage key. Sets nosniff + a short
+    private Cache-Control (tokens are per-viewer, so shared caches must never store them),
+    and honours a single HTTP Range (RFC 9110) so <video> seeking works against the streaming
+    path — reading ONLY the requested window from storage (a scrubbing player must not make
+    the app load a whole clip per seek). Multi-range requests get the full body (a valid
+    server choice) — players only ever send single ranges."""
+    storage = get_storage()
+    range_header = request.headers.get("Range", "")
+    match = _RANGE_RE.match(range_header.strip()) if range_header else None
+    status_code = 200
+    content_range = None
+    if match:
+        total = storage.size(key)
+        start_s, end_s = match.groups()
+        if total == 0 or (start_s == "" and end_s == ""):
+            data = storage.open(key)
+        else:
+            if start_s == "":  # suffix form: last N bytes
+                length = min(int(end_s), total)
+                start, end = total - length, total - 1
+            else:
+                start = int(start_s)
+                end = min(int(end_s), total - 1) if end_s else total - 1
+            if start >= total or start > end:
+                resp = HttpResponse(status=416)
+                resp["Content-Range"] = f"bytes */{total}"
+                return resp
+            data = storage.open_range(key, start, end)
+            status_code = 206
+            content_range = f"bytes {start}-{end}/{total}"
+    else:
+        data = storage.open(key)
+    resp = HttpResponse(data, content_type=content_type, status=status_code)
+    resp["X-Content-Type-Options"] = "nosniff"
+    resp["Accept-Ranges"] = "bytes"
+    if content_range:
+        resp["Content-Range"] = content_range
+    ttl = getattr(settings, "MEDIA_SIGNED_URL_TTL", 300)
+    resp["Cache-Control"] = f"private, max-age={ttl}" if private else f"public, max-age={ttl}"
+    return resp
 
 
 class PhotoUploadView(APIView):
@@ -193,17 +243,17 @@ class MediaFileView(APIView):
 
     def get(self, request, token):
         try:
-            photo = resolve_signed_token(token, request.user)
+            photo, variant = resolve_signed_token(token, request.user)
         except NotAuthorized as exc:
             raise PermissionDenied(str(exc)) from exc
+        key = photo.storage_key
+        if variant == "thumb" and photo.thumb_storage_key:
+            key = photo.thumb_storage_key
         # Scale (opt-in): after the access check, offload the bytes to the object store directly.
-        presigned = maybe_presigned_url(photo.storage_key, content_type=photo.content_type)
+        presigned = maybe_presigned_url(key, content_type=photo.content_type)
         if presigned:
             return _temporary_redirect(presigned)
-        data = get_storage().open(photo.storage_key)
-        resp = HttpResponse(data, content_type=photo.content_type)
-        resp["X-Content-Type-Options"] = "nosniff"
-        return resp
+        return _media_response(request, key, content_type=photo.content_type)
 
 
 class AttachmentFileView(APIView):
@@ -215,22 +265,26 @@ class AttachmentFileView(APIView):
 
     def get(self, request, token):
         try:
-            att = resolve_attachment_token(token, request.user)
+            att, variant = resolve_attachment_token(token, request.user)
         except NotAuthorized as exc:
             raise PermissionDenied(str(exc)) from exc
+        if variant == "poster":
+            key = att.poster_storage_key
+            content_type = att.poster_content_type or "image/webp"
+        elif variant == "thumb" and att.thumb_storage_key:
+            key, content_type = att.thumb_storage_key, att.content_type
+        else:
+            key, content_type = att.storage_key, att.content_type
         is_pdf = att.kind == att.Kind.FILE
         download_name = (att.original_filename or "document.pdf") if is_pdf else None
         # Scale (opt-in): redirect an authorized viewer to a presigned object-store URL. The PDF
         # forced-download + content-type are preserved via the presign response overrides, so the
-        # inline-execution guard still holds on the direct fetch.
-        presigned = maybe_presigned_url(
-            att.storage_key, content_type=att.content_type, download_name=download_name
-        )
+        # inline-execution guard still holds on the direct fetch. (For video the object store
+        # also serves HTTP Range natively — the recommended prod setup once S3 is configured.)
+        presigned = maybe_presigned_url(key, content_type=content_type, download_name=download_name)
         if presigned:
             return _temporary_redirect(presigned)
-        data = get_storage().open(att.storage_key)
-        resp = HttpResponse(data, content_type=att.content_type)
-        resp["X-Content-Type-Options"] = "nosniff"
+        resp = _media_response(request, key, content_type=content_type)
         if is_pdf:
             resp["Content-Disposition"] = f'attachment; filename="{download_name}"'
         return resp
@@ -244,16 +298,16 @@ class ActivityCoverFileView(APIView):
     def get(self, request, token):
         viewer = request.user if request.user.is_authenticated else None
         try:
-            cover = resolve_activity_cover_token(token, viewer)
+            cover, variant = resolve_activity_cover_token(token, viewer)
         except NotAuthorized as exc:
             raise PermissionDenied(str(exc)) from exc
-        presigned = maybe_presigned_url(cover.storage_key, content_type=cover.content_type)
+        key = cover.storage_key
+        if variant == "thumb" and cover.thumb_storage_key:
+            key = cover.thumb_storage_key
+        presigned = maybe_presigned_url(key, content_type=cover.content_type)
         if presigned:
             return _temporary_redirect(presigned)
-        data = get_storage().open(cover.storage_key)
-        resp = HttpResponse(data, content_type=cover.content_type)
-        resp["X-Content-Type-Options"] = "nosniff"
-        return resp
+        return _media_response(request, key, content_type=cover.content_type)
 
 
 class PlaceCoverFileView(APIView):
@@ -269,7 +323,7 @@ class PlaceCoverFileView(APIView):
         presigned = maybe_presigned_url(cover.storage_key, content_type=cover.content_type)
         if presigned:
             return _temporary_redirect(presigned)
-        data = get_storage().open(cover.storage_key)
-        resp = HttpResponse(data, content_type=cover.content_type)
-        resp["X-Content-Type-Options"] = "nosniff"
-        return resp
+        # Venue covers are public content — a shared cache may keep them for the token TTL.
+        return _media_response(
+            request, cover.storage_key, content_type=cover.content_type, private=False
+        )

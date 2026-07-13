@@ -11,8 +11,13 @@ from io import BytesIO
 
 from PIL import Image, ImageOps, UnidentifiedImageError
 
-ALLOWED_FORMATS = {"PNG", "JPEG", "WEBP"}
-_EXT = {"PNG": "png", "JPEG": "jpg", "WEBP": "webp"}
+ALLOWED_FORMATS = {"PNG", "JPEG", "WEBP", "AVIF"}
+_EXT = {"PNG": "png", "JPEG": "jpg", "WEBP": "webp", "AVIF": "avif"}
+
+# AVIF encode knobs (ADR-0026). speed 6 is Pillow's default — good bytes/CPU balance for a
+# one-shot upload; the thread cap keeps one encode from oversubscribing the small launch box.
+_AVIF_SPEED = 6
+_AVIF_MAX_THREADS = 2
 
 # Decompression-bomb ceiling: a small file can declare enormous dimensions that explode
 # into gigabytes of raw pixels when decoded. We reject on the header-declared pixel count
@@ -116,8 +121,8 @@ def _prepare(img, target):
 
 # Hard per-side encoder limits. Larger uploads are downscaled to fit (above), so a valid photo
 # encodes instead of raising; the try/except in _encode is the belt-and-suspenders net for anything
-# else the encoder rejects.
-_CODEC_MAX_SIDE = {"WEBP": 16383, "JPEG": 65500}
+# else the encoder rejects. AVIF = the AV1 spec frame-side limit (libaom verified OK at 65536).
+_CODEC_MAX_SIDE = {"WEBP": 16383, "JPEG": 65500, "AVIF": 65535}
 
 
 def _effective_max(max_dimension, codec_cap):
@@ -136,6 +141,14 @@ def _encode(img, out, target, quality):
         if target == "WEBP":
             # method=6 = slowest/best compression (fine for a one-shot upload).
             img.save(out, format="WEBP", quality=quality, method=6)
+        elif target == "AVIF":
+            img.save(
+                out,
+                format="AVIF",
+                quality=quality,
+                speed=_AVIF_SPEED,
+                max_threads=_AVIF_MAX_THREADS,
+            )
         elif target == "JPEG":
             img.save(out, format="JPEG", quality=quality, optimize=True, progressive=True)
         else:  # PNG is lossless — quality is irrelevant; optimise the deflate stream.
@@ -146,3 +159,33 @@ def _encode(img, out, target, quality):
 
 def extension_for(fmt: str) -> str:
     return _EXT.get(fmt, "bin")
+
+
+def make_thumbnail(clean_bytes: bytes, *, max_dimension: int, quality: int):
+    """Derive one smaller rendition from ALREADY-CLEAN bytes (the output of validate_and_strip —
+    metadata-free, format-validated), re-encoded in the SAME codec (ADR-0026: cards/streams serve
+    this instead of the full object; no CDN, so the rendition must exist as its own stored object).
+
+    Returns ``(thumb_bytes, (w, h))`` or ``None`` when the source already fits within
+    ``max_dimension`` (storing a same-size copy would only cost storage — serving falls back to
+    the full object). Never used for hashing/dedup/scanning — those stay on the full bytes."""
+    if not max_dimension:
+        return None
+    try:
+        with Image.open(BytesIO(clean_bytes)) as img:
+            fmt = img.format
+            if fmt not in ALLOWED_FORMATS:
+                return None
+            img.load()
+            if max(img.size) <= max_dimension:
+                return None
+            base, mode = _prepare(img, fmt)
+            base.thumbnail((max_dimension, max_dimension))
+            clean = Image.frombytes(mode, base.size, base.tobytes())
+            out = BytesIO()
+            _encode(clean, out, fmt, quality)
+            return out.getvalue(), clean.size
+    except (ImageError, UnidentifiedImageError, OSError, ValueError):
+        # A thumbnail is an optimisation, never a gate: any failure just means the full
+        # object serves everywhere (same as a pre-rendition row).
+        return None

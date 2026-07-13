@@ -22,6 +22,7 @@ packages:
   - libproj-dev
   - git
   - curl
+  - ffmpeg
   - gnupg
   - awscli
   - unattended-upgrades
@@ -76,6 +77,12 @@ write_files:
     content: |
       ${domain} {
           encode zstd gzip
+          # Edge request-body cap (ADR-0026): just above the in-app video upload cap
+          # (MEDIA_VIDEO_MAX_UPLOAD_BYTES 80MiB + multipart overhead). The app middleware
+          # enforces the precise per-path/per-cohort limits; this bounds everything else.
+          request_body {
+              max_size 90MB
+          }
           # /agent/* is the optional Go agent-API sidecar (agentapi.service); it 502s
           # harmlessly if not deployed.
           handle /agent/* {
@@ -126,8 +133,10 @@ runcmd:
   - install -m 644 /home/app/social_media_activities_app/deploy/systemd/socialapp-jobs.timer /etc/systemd/system/socialapp-jobs.timer
   - install -m 644 /home/app/social_media_activities_app/deploy/systemd/socialapp-backup.service /etc/systemd/system/socialapp-backup.service
   - install -m 644 /home/app/social_media_activities_app/deploy/systemd/socialapp-backup.timer /etc/systemd/system/socialapp-backup.timer
+  - install -m 644 /home/app/social_media_activities_app/deploy/systemd/socialapp-media.service /etc/systemd/system/socialapp-media.service
+  - install -m 644 /home/app/social_media_activities_app/deploy/systemd/socialapp-media.timer /etc/systemd/system/socialapp-media.timer
   - systemctl daemon-reload
-  - systemctl enable --now socialapp socialapp-jobs.timer socialapp-backup.timer
+  - systemctl enable --now socialapp socialapp-jobs.timer socialapp-backup.timer socialapp-media.timer
   - systemctl restart caddy
   - systemctl restart ssh
   # Automatic security updates + SSH brute-force protection.

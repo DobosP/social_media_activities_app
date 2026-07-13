@@ -42,7 +42,11 @@ Art. 7 (voluntary own-initiative) + GDPR legitimate interest.
   effective scanner is configured; scan happens on the ORIGINAL bytes inside the upload
   transaction (a rejected scan rolls the post back, no orphans).
 - PDFs: adults-only (`MEDIA_FILE_COHORTS`), size-capped, **always served as a forced
-  download** with `nosniff` — never executes inline. No video at all.
+  download** with `nosniff` — never executes inline. Video (ADR-0026, default-off,
+  adults-only): admitted withheld after a fail-closed sha256 screen of the original,
+  full re-encode strips all metadata, and **sampled frames run through this same
+  scanner stack** (the perceptual layer matches known-bad imagery inside a clip;
+  a match blocks the clip and retains the source as evidence).
 - **No media in E2EE DMs** (unscannable by design) — stricter than WhatsApp.
 - Signed, expiring, per-viewer, membership-scoped URLs; private storage; rate limits;
   evidence-preserving purge (reported/hidden content survives ephemeral expiry).
@@ -70,7 +74,9 @@ Art. 7 (voluntary own-initiative) + GDPR legitimate interest.
      require NCMEC reporting, so also register as a foreign ESP with the CyberTipline.
    - **Google Child Safety toolkit** — the only free novel-content classifier a small org
      can get; relevant once volume justifies a triage queue. (CSAI Match is video-only —
-     irrelevant while "no video" stands, which is itself the right call.)
+     now RELEVANT: ADR-0026 ships adult-only private-thread video behind a default-off
+     flag with frame-sampling scans as the interim layer; adopting a dedicated video
+     matcher like CSAI Match is the gate for ever extending video beyond adult cohorts.)
 2. **Run clamd** alongside web (one small container) and flip
    `MEDIA_DOCUMENT_SCANNER=apps.media.docscan.ClamdScanner` +
    `MEDIA_REQUIRE_DOCUMENT_SCANNER=True`.
@@ -80,7 +86,8 @@ Art. 7 (voluntary own-initiative) + GDPR legitimate interest.
 4. **Reporting channels**: NCMEC CyberTipline (registered foreign ESP), esc_ABUZ /
    Salvați Copiii (the Romanian INHOPE hotline), Romanian Police/Europol per DSA Art. 18.
    Preserve evidence 12 months. Basis: GDPR Art. 6(1)(f) + DSA Art. 7, documented.
-5. **Don't build**: our own classifier, client-side scanning of E2EE, video support.
+5. **Don't build**: our own classifier, client-side scanning of E2EE. (Video support got
+   its own decision — ADR-0026: private threads, adults-only, fail-closed, default-off.)
 
 ## At scale
 

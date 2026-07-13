@@ -1,20 +1,34 @@
 """Media domain logic: the upload pipeline (validate → strip metadata → scan → store),
-membership/cohort-scoped visibility, and signed, expiring URLs."""
+membership/cohort-scoped visibility, signed, expiring URLs, and the asynchronous
+video-processing status machine (ADR-0026)."""
 
 import hashlib
 import logging
+import os
 import re
+import shutil
+import tempfile
+import threading
 import uuid
+from datetime import timedelta
 
 from django.conf import settings
 from django.core import signing
-from django.db import transaction
+from django.db import close_old_connections, transaction
+from django.db.models import Q
 
 from apps.safety.services import is_blocked, record_audit
 from apps.social.services import current_members
 
+from . import video
 from .models import ActivityCover, Attachment, Photo
-from .processing import DEFAULT_MAX_PIXELS, extension_for, validate_and_strip
+from .processing import (
+    DEFAULT_MAX_PIXELS,
+    ImageError,
+    extension_for,
+    make_thumbnail,
+    validate_and_strip,
+)
 from .scanning import get_scanner
 from .storage import get_storage
 
@@ -23,6 +37,40 @@ _ATTACH_SIGNING_SALT = "media.attachment_url"
 _COVER_SIGNING_SALT = "media.activity_cover_url"
 PDF_MAGIC = b"%PDF-"
 logger = logging.getLogger(__name__)
+
+# Matched-quality defaults per codec (ADR-0026): JPEG80 ≈ WebP80-82 ≈ AVIF64. Used when
+# MEDIA_IMAGE_QUALITY is 0/unset ("auto"); an explicit setting wins for every codec.
+_DEFAULT_IMAGE_QUALITY = {"AVIF": 64, "WEBP": 80, "JPEG": 80}
+
+
+def _image_encode_params():
+    """Resolve (output_format_or_None, quality) from settings, with per-codec auto quality."""
+    fmt = (getattr(settings, "MEDIA_IMAGE_OUTPUT_FORMAT", "") or "").upper() or None
+    quality = getattr(settings, "MEDIA_IMAGE_QUALITY", 0) or 0
+    if not quality:
+        quality = _DEFAULT_IMAGE_QUALITY.get(fmt or "", 80)
+    return fmt, quality
+
+
+def _store_thumbnail(clean_bytes: bytes, *, ext: str, content_type: str, quality: int) -> str:
+    """Generate + store the one eager card/stream rendition (ADR-0026). Returns the storage
+    key, or "" when the source is already small or the rendition fails (serving falls back to
+    the full object — a thumbnail is an optimisation, never a gate)."""
+    result = make_thumbnail(
+        clean_bytes,
+        max_dimension=getattr(settings, "MEDIA_THUMB_DIMENSION", 800),
+        quality=quality,
+    )
+    if not result:
+        return ""
+    thumb_bytes, _size = result
+    key = f"thumbs/{uuid.uuid4().hex}.{ext}"
+    try:
+        get_storage().save(key, thumb_bytes, content_type=content_type)
+    except Exception:
+        logger.exception("Could not store thumbnail rendition %s", key)
+        return ""
+    return key
 
 
 class MediaError(Exception):
@@ -97,13 +145,14 @@ def upload_photo(uploader, kind, data: bytes, *, thread=None) -> Photo:
     else:
         raise MediaError("Unknown photo kind.")
 
+    output_format, quality = _image_encode_params()
     clean_bytes, fmt, (width, height) = validate_and_strip(
         data,
         max_bytes=settings.MEDIA_MAX_UPLOAD_BYTES,
         max_dimension=getattr(settings, "MEDIA_MAX_DIMENSION", None),
         max_pixels=getattr(settings, "MEDIA_MAX_IMAGE_PIXELS", DEFAULT_MAX_PIXELS),
-        quality=getattr(settings, "MEDIA_IMAGE_QUALITY", 82),
-        output_format=getattr(settings, "MEDIA_IMAGE_OUTPUT_FORMAT", "") or None,
+        quality=quality,
+        output_format=output_format,
     )
     scanner = get_scanner()
     # Fail closed on a children's platform: if no effective content scanner is configured
@@ -147,6 +196,9 @@ def upload_photo(uploader, kind, data: bytes, *, thread=None) -> Photo:
     content_type = f"image/{extension_for(fmt)}"
     storage_key = f"{uuid.uuid4().hex}.{extension_for(fmt)}"
     get_storage().save(storage_key, clean_bytes, content_type=content_type)
+    thumb_key = _store_thumbnail(
+        clean_bytes, ext=extension_for(fmt), content_type=content_type, quality=quality
+    )
 
     if kind == Photo.Kind.PROFILE:
         _replace_existing_profile(uploader)
@@ -162,6 +214,7 @@ def upload_photo(uploader, kind, data: bytes, *, thread=None) -> Photo:
         phash=fingerprint,
         width=width,
         height=height,
+        thumb_storage_key=thumb_key,
         scan_status=Photo.ScanStatus.CLEAN,
         exif_stripped=True,
     )
@@ -223,13 +276,14 @@ def upload_activity_cover(uploader, activity, data: bytes, *, alt_text="") -> Ac
     if not _activity_accepts_cover_upload(activity):
         raise MediaRejected("Covers can only be changed before an open, visible activity starts.")
 
+    output_format, quality = _image_encode_params()
     clean_bytes, fmt, (width, height) = validate_and_strip(
         data,
         max_bytes=settings.MEDIA_MAX_UPLOAD_BYTES,
         max_dimension=getattr(settings, "MEDIA_MAX_DIMENSION", None),
         max_pixels=getattr(settings, "MEDIA_MAX_IMAGE_PIXELS", DEFAULT_MAX_PIXELS),
-        quality=getattr(settings, "MEDIA_IMAGE_QUALITY", 82),
-        output_format=getattr(settings, "MEDIA_IMAGE_OUTPUT_FORMAT", "") or None,
+        quality=quality,
+        output_format=output_format,
     )
     scanner = get_scanner()
     if getattr(settings, "MEDIA_REQUIRE_SCANNER", True) and not scanner.is_effective():
@@ -248,6 +302,7 @@ def upload_activity_cover(uploader, activity, data: bytes, *, alt_text="") -> Ac
     storage_key = f"activity-covers/{uuid.uuid4().hex}.{ext}"
     storage = get_storage()
     storage.save(storage_key, clean_bytes, content_type=content_type)
+    thumb_key = _store_thumbnail(clean_bytes, ext=ext, content_type=content_type, quality=quality)
     try:
         existing = ActivityCover.objects.select_for_update().filter(activity=activity).first()
         if existing is None:
@@ -260,11 +315,13 @@ def upload_activity_cover(uploader, activity, data: bytes, *, alt_text="") -> Ac
                 sha256=hashlib.sha256(clean_bytes).hexdigest(),
                 width=width,
                 height=height,
+                thumb_storage_key=thumb_key,
                 exif_stripped=True,
                 alt_text=(alt_text or "").strip()[:140],
             )
         else:
             old_key = existing.storage_key
+            old_thumb = existing.thumb_storage_key
             existing.uploader = uploader
             existing.storage_key = storage_key
             existing.content_type = content_type
@@ -272,6 +329,7 @@ def upload_activity_cover(uploader, activity, data: bytes, *, alt_text="") -> Ac
             existing.sha256 = hashlib.sha256(clean_bytes).hexdigest()
             existing.width = width
             existing.height = height
+            existing.thumb_storage_key = thumb_key
             existing.exif_stripped = True
             existing.alt_text = (alt_text or "").strip()[:140]
             existing.save(
@@ -283,6 +341,7 @@ def upload_activity_cover(uploader, activity, data: bytes, *, alt_text="") -> Ac
                     "sha256",
                     "width",
                     "height",
+                    "thumb_storage_key",
                     "exif_stripped",
                     "alt_text",
                     "updated_at",
@@ -291,17 +350,20 @@ def upload_activity_cover(uploader, activity, data: bytes, *, alt_text="") -> Ac
             cover = existing
             if old_key and old_key != storage_key:
                 _delete_storage_key_after_commit(old_key, model_name="ActivityCover")
+            if old_thumb and old_thumb != thumb_key:
+                _delete_storage_key_after_commit(old_thumb, model_name="ActivityCover")
         record_audit(
             "media.activity_cover_uploaded", actor=uploader, target=activity, cover_id=cover.id
         )
         return cover
     except Exception:
-        try:
-            storage.delete(storage_key)
-        except Exception:
-            logger.exception(
-                "Failed to clean up activity cover blob after DB error: %s", storage_key
-            )
+        for key in (storage_key, thumb_key):
+            if not key:
+                continue
+            try:
+                storage.delete(key)
+            except Exception:
+                logger.exception("Failed to clean up activity cover blob after DB error: %s", key)
         raise
 
 
@@ -341,13 +403,14 @@ def upload_place_cover(uploader, place, data: bytes, *, alt_text=""):
     if not public_places().filter(pk=place.pk).exists():
         raise MediaRejected("Only a public venue can carry an official image.")
 
+    output_format, quality = _image_encode_params()
     clean_bytes, fmt, (width, height) = validate_and_strip(
         data,
         max_bytes=settings.MEDIA_MAX_UPLOAD_BYTES,
         max_dimension=getattr(settings, "MEDIA_MAX_DIMENSION", None),
         max_pixels=getattr(settings, "MEDIA_MAX_IMAGE_PIXELS", DEFAULT_MAX_PIXELS),
-        quality=getattr(settings, "MEDIA_IMAGE_QUALITY", 82),
-        output_format=getattr(settings, "MEDIA_IMAGE_OUTPUT_FORMAT", "") or None,
+        quality=quality,
+        output_format=output_format,
     )
     scanner = get_scanner()
     if getattr(settings, "MEDIA_REQUIRE_SCANNER", True) and not scanner.is_effective():
@@ -442,7 +505,7 @@ def can_view_activity_cover(viewer, cover) -> bool:
     return visible_activities(viewer).filter(pk=cover.activity_id).exists()
 
 
-def activity_cover_signed_url(cover, viewer=None) -> str:
+def activity_cover_signed_url(cover, viewer=None, *, variant: str = "full") -> str:
     if not can_view_activity_cover(viewer, cover):
         raise NotAuthorized("Not allowed to view this activity cover.")
     viewer_id = _viewer_id(viewer)
@@ -451,17 +514,21 @@ def activity_cover_signed_url(cover, viewer=None) -> str:
         payload["public"] = True
     else:
         payload["viewer_id"] = viewer_id
+    if variant == "thumb":
+        payload["v"] = "t"
     token = signing.dumps(payload, salt=_COVER_SIGNING_SALT)
     return f"/api/media/activity-cover-file/{token}/"
 
 
 def resolve_activity_cover_token(token: str, viewer=None):
+    """Returns ``(cover, variant)`` where variant is "full" or "thumb"."""
     try:
         payload = signing.loads(
             token, salt=_COVER_SIGNING_SALT, max_age=settings.MEDIA_SIGNED_URL_TTL
         )
     except signing.BadSignature as exc:
         raise NotAuthorized("Invalid or expired activity cover link.") from exc
+    variant = "thumb" if payload.get("v") == "t" else "full"
     cover = (
         ActivityCover.objects.filter(id=payload.get("cover_id"))
         .select_related("activity", "activity__owner", "uploader")
@@ -472,16 +539,19 @@ def resolve_activity_cover_token(token: str, viewer=None):
     if payload.get("public") is True:
         if not _public_can_view_cover(cover):
             raise NotAuthorized("Not allowed to view this activity cover.")
-        return cover
+        return cover, variant
     viewer_id = _viewer_id(viewer)
     if viewer_id is None or payload.get("viewer_id") != viewer_id:
         raise NotAuthorized("This activity cover link was issued to a different user.")
     if not can_view_activity_cover(viewer, cover):
         raise NotAuthorized("Not allowed to view this activity cover.")
-    return cover
+    return cover, variant
 
 
 def activity_visual(activity, viewer=None) -> dict:
+    """The card/list visual. Serves the thumb rendition (ADR-0026) — cards are the hottest
+    media surface and ~800px covers a card at 2× DPR; rows without a rendition fall back to
+    the full object at serve time."""
     try:
         cover = activity.cover
     except ActivityCover.DoesNotExist:
@@ -489,7 +559,7 @@ def activity_visual(activity, viewer=None) -> dict:
     if cover is not None and can_view_activity_cover(viewer, cover):
         return {
             "kind": "activity_cover_photo",
-            "url": activity_cover_signed_url(cover, viewer),
+            "url": activity_cover_signed_url(cover, viewer, variant="thumb"),
             "alt": cover.alt_text or activity.title,
         }
     return {"kind": "generated_accent"}
@@ -524,15 +594,21 @@ def can_view_photo(viewer, photo: Photo) -> bool:
     return viewer.cohort == photo.uploader.cohort
 
 
-def signed_url(photo: Photo, viewer) -> str:
+def signed_url(photo: Photo, viewer, *, variant: str = "full") -> str:
+    """``variant="thumb"`` links the card/stream rendition (falls back to the full object at
+    serve time when a row predates renditions or the source was already small)."""
     if not can_view_photo(viewer, photo):
         raise NotAuthorized("Not allowed to view this photo.")
-    token = signing.dumps({"photo_id": photo.id, "viewer_id": viewer.id}, salt=_SIGNING_SALT)
+    payload = {"photo_id": photo.id, "viewer_id": viewer.id}
+    if variant == "thumb":
+        payload["v"] = "t"
+    token = signing.dumps(payload, salt=_SIGNING_SALT)
     return f"/api/media/file/{token}/"
 
 
 def resolve_signed_token(token: str, viewer):
-    """Validate an unexpired token and re-check the viewer can still see the photo."""
+    """Validate an unexpired token and re-check the viewer can still see the photo.
+    Returns ``(photo, variant)`` where variant is "full" or "thumb"."""
     try:
         payload = signing.loads(token, salt=_SIGNING_SALT, max_age=settings.MEDIA_SIGNED_URL_TTL)
     except signing.BadSignature as exc:
@@ -542,7 +618,7 @@ def resolve_signed_token(token: str, viewer):
     photo = Photo.objects.filter(id=payload["photo_id"]).first()
     if photo is None or not can_view_photo(viewer, photo):
         raise NotAuthorized("Not allowed to view this photo.")
-    return photo
+    return photo, ("thumb" if payload.get("v") == "t" else "full")
 
 
 def maybe_presigned_url(storage_key, *, content_type, download_name=None) -> str | None:
@@ -565,13 +641,15 @@ def maybe_presigned_url(storage_key, *, content_type, download_name=None) -> str
     )
 
 
-# --- Thread attachments (images + PDF in the activity conversation) -----------------------
+# --- Thread attachments (images + PDF + video in the activity conversation) ----------------
 #
 # Media lives IN the unified Post stream (apps/social), attached to the author's own message.
-# Same fail-closed scan + EXIF-strip pipeline as Photos; PDFs (the only FILE type at launch)
-# are stored as-is and served ONLY as a forced download so they can never execute in the page.
-# No video. Images are allowed in any cohort's thread (members only); FILE (PDF) is gated to
-# MEDIA_FILE_COHORTS (adults only at launch — "none for minors").
+# Same fail-closed scan + EXIF-strip pipeline as Photos; PDFs are stored as-is and served ONLY
+# as a forced download so they can never execute in the page. Images are allowed in any
+# cohort's thread (members only); FILE (PDF) is gated to MEDIA_FILE_COHORTS and VIDEO
+# (ADR-0026, default-off) to MEDIA_VIDEO_COHORTS (both adults-only at launch — "none for
+# minors"). Video is admitted withheld (status=pending) and only becomes servable after the
+# asynchronous transcode + frame scan succeeds.
 
 
 def _attachments_enabled() -> bool:
@@ -588,6 +666,18 @@ def _attachment_max_bytes() -> int:
         "MEDIA_ATTACHMENT_MAX_BYTES",
         getattr(settings, "MEDIA_MAX_UPLOAD_BYTES", 5_000_000),
     )
+
+
+def _video_enabled() -> bool:
+    return getattr(settings, "MEDIA_VIDEO_ENABLED", False)
+
+
+def _video_cohorts() -> set:
+    return set(getattr(settings, "MEDIA_VIDEO_COHORTS", ["adult"]))
+
+
+def _video_max_bytes() -> int:
+    return getattr(settings, "MEDIA_VIDEO_MAX_UPLOAD_BYTES", 80 * 1024 * 1024)
 
 
 def _sanitize_filename(name: str) -> str:
@@ -631,10 +721,17 @@ def _resolve_expiry(activity, ttl_seconds):
     return timezone.now() + timezone.timedelta(seconds=ttl)
 
 
-def attach_to_post(uploader, post, *, filename: str, data: bytes, ttl_seconds=None) -> Attachment:
-    """Attach a scanned image or PDF to the uploader's OWN thread Post. Fail-closed: if the
-    scanner is ineffective or the content matches the blocklist, nothing is stored and the
-    caller's transaction should roll back the Post too (so there is no post without its file).
+def attach_to_post(
+    uploader, post, *, filename: str, data: bytes | None = None, fileobj=None, ttl_seconds=None
+) -> Attachment:
+    """Attach a scanned image, PDF, or (ADR-0026) video to the uploader's OWN thread Post.
+    Fail-closed: if the scanner is ineffective or the content matches the blocklist, nothing is
+    stored and the caller's transaction should roll back the Post too (so there is no post
+    without its file).
+
+    ``fileobj`` (an uploaded file object) is preferred for large payloads: a video is sniffed
+    from its head and streamed to storage without ever buffering the whole file in memory;
+    anything else is read into ``data`` and follows the classic image/PDF path.
 
     ``ttl_seconds`` makes it a "temporary picture": the blob stops serving at expiry and a purge
     job later reclaims it (hidden/reported content is exempt — evidence is kept). The TTL is
@@ -652,6 +749,18 @@ def attach_to_post(uploader, post, *, filename: str, data: bytes, ttl_seconds=No
     # a future DRF/socket caller can't let a cohort-drifted/consent-lapsed/blocked member attach.
     if not can_read_thread(uploader, activity):
         raise NotAuthorized("Only current members can share files in this thread.")
+
+    if fileobj is not None and data is None:
+        head = fileobj.read(16)
+        fileobj.seek(0)
+        if video.looks_like_video(head):
+            return _attach_video_to_post(
+                uploader, post, activity, fileobj=fileobj, ttl_seconds=ttl_seconds
+            )
+        data = fileobj.read()
+
+    if data is None:
+        raise MediaError("attach_to_post needs data or fileobj.")
     if len(data) > _attachment_max_bytes():
         raise MediaRejected("File exceeds the size limit.")
 
@@ -694,17 +803,17 @@ def attach_to_post(uploader, post, *, filename: str, data: bytes, ttl_seconds=No
             )
             raise MediaRejected("File failed safety screening and was not stored.")
 
+    thumb_key = ""
     if kind == Attachment.Kind.IMAGE:
-        from .processing import ImageError
-
+        output_format, quality = _image_encode_params()
         try:
             clean_bytes, fmt, (width, height) = validate_and_strip(
                 data,
                 max_bytes=_attachment_max_bytes(),
                 max_dimension=getattr(settings, "MEDIA_MAX_DIMENSION", None),
                 max_pixels=getattr(settings, "MEDIA_MAX_IMAGE_PIXELS", DEFAULT_MAX_PIXELS),
-                quality=getattr(settings, "MEDIA_IMAGE_QUALITY", 82),
-                output_format=getattr(settings, "MEDIA_IMAGE_OUTPUT_FORMAT", "") or None,
+                quality=quality,
+                output_format=output_format,
             )
         except ImageError as exc:
             # A non-image / non-PDF (or an unreadable/oversized image) — clean rejection, not a 500.
@@ -725,6 +834,10 @@ def attach_to_post(uploader, post, *, filename: str, data: bytes, ttl_seconds=No
     expires_at = _resolve_expiry(activity, ttl_seconds)
     storage_key = f"{uuid.uuid4().hex}.{ext}"
     get_storage().save(storage_key, clean_bytes, content_type=content_type)
+    if kind == Attachment.Kind.IMAGE:
+        thumb_key = _store_thumbnail(
+            clean_bytes, ext=ext, content_type=content_type, quality=quality
+        )
     att = Attachment.objects.create(
         post=post,
         uploader=uploader,
@@ -736,6 +849,7 @@ def attach_to_post(uploader, post, *, filename: str, data: bytes, ttl_seconds=No
         original_filename=display_name,
         width=width_h[0],
         height=width_h[1],
+        thumb_storage_key=thumb_key,
         exif_stripped=exif,
         expires_at=expires_at,
     )
@@ -749,12 +863,406 @@ def attach_to_post(uploader, post, *, filename: str, data: bytes, ttl_seconds=No
     return att
 
 
+# --- Video attachments: withheld admission + asynchronous processing (ADR-0026) ------------
+#
+# Admission is synchronous and fail-closed (cohort gate, size cap, streamed-SHA-256 scan of the
+# ORIGINAL bytes) but the row is created WITHHELD (status=pending, no storage_key) — per
+# docs/ASYNC_TASKS.md, deferral only moves work that is already authorised, never a safety
+# gate, so an unprocessed video is structurally unservable. The row's own status machine is
+# the work queue: `transcode_videos` (management command / inline kick) claims pending rows
+# with select_for_update(skip_locked=True) in a SHORT transaction, then runs ffprobe/ffmpeg on
+# scratch disk OUTSIDE any transaction (the DeferredTask queue holds its claim transaction
+# open across handlers — unusable for multi-minute CPU work on a 4-connection pool), then
+# finalises in a second short transaction. A crashed worker leaves a stale `processing` row
+# that a later run reclaims; attempts are capped.
+
+
+def _attach_video_to_post(uploader, post, activity, *, fileobj, ttl_seconds=None) -> Attachment:
+    if not _video_enabled():
+        raise MediaRejected("Only images (PNG/JPEG/WEBP) and PDF files can be shared.")
+    if activity.cohort not in _video_cohorts():
+        raise NotAuthorized("Video sharing isn't available in this thread.")
+    if not video.ffmpeg_available():
+        record_audit("media.attach_blocked", actor=uploader, reason="no_ffmpeg", kind="video")
+        raise MediaRejected("Video sharing is temporarily unavailable.")
+
+    fileobj.seek(0, os.SEEK_END)
+    size = fileobj.tell()
+    fileobj.seek(0)
+    if size > _video_max_bytes():
+        raise MediaRejected("Video exceeds the size limit.")
+
+    scanner = get_scanner()
+    if getattr(settings, "MEDIA_REQUIRE_SCANNER", True) and not scanner.is_effective():
+        record_audit("media.attach_blocked", actor=uploader, reason="no_scanner", kind="video")
+        raise MediaRejected(
+            "File sharing is unavailable until a content safety scanner is configured."
+        )
+    # Streamed SHA-256 of the ORIGINAL bytes (what a hash set matches) — the file is never
+    # fully buffered in memory. The perceptual layer runs later, against sampled frames.
+    hasher = hashlib.sha256()
+    for chunk in iter(lambda: fileobj.read(1024 * 1024), b""):
+        hasher.update(chunk)
+    fileobj.seek(0)
+    orig_digest = hasher.hexdigest()
+    if not scanner.scan_digest(orig_digest).clean:
+        record_audit("media.blocked", actor=uploader, reason="scan_match", sha256=orig_digest)
+        raise MediaRejected("File failed safety screening and was not stored.")
+
+    head = fileobj.read(16)
+    fileobj.seek(0)
+    source_ext = "webm" if head[:4] == b"\x1a\x45\xdf\xa3" else "mp4"
+    source_key = f"video-src/{uuid.uuid4().hex}.{source_ext}"
+    get_storage().save_fileobj(source_key, fileobj, content_type="application/octet-stream")
+
+    expires_at = _resolve_expiry(activity, ttl_seconds)
+    att = Attachment.objects.create(
+        post=post,
+        uploader=uploader,
+        kind=Attachment.Kind.VIDEO,
+        status=Attachment.Status.PENDING,
+        storage_key="",  # withheld until the transcode + frame scan succeeds
+        content_type="video/mp4",  # the (only) delivery format
+        byte_size=size,
+        sha256=orig_digest,
+        source_storage_key=source_key,
+        exif_stripped=False,  # becomes True when the metadata-stripping re-encode lands
+        expires_at=expires_at,
+    )
+    record_audit(
+        "media.attachment_uploaded",
+        actor=uploader,
+        kind="video",
+        attachment_id=att.id,
+        expires_at=expires_at.isoformat() if expires_at else None,
+    )
+    transaction.on_commit(_kick_video_processing)
+    return att
+
+
+# Single-flight guard for the inline kick (review HIGH): each upload's on_commit would
+# otherwise spawn its OWN transcode thread inside the one ASGI process — a handful of quick
+# uploads could hold every pooled DB connection (DB_POOL_MAX_SIZE=4 in prod) and stack ffmpeg
+# processes on the 3-vCPU box. One kick thread at a time per process; everything it doesn't
+# drain is picked up by the next kick or the transcode_videos timer.
+_INLINE_KICK_RUNNING = threading.Lock()
+
+
+def _kick_video_processing() -> None:
+    """Best-effort near-real-time processing without new infrastructure: ONE daemon thread
+    drains a few pending videos right after an upload commits. Crash-safe by design — if
+    this thread (or the whole process) dies, the `transcode_videos` timer picks the row up."""
+    if not getattr(settings, "MEDIA_VIDEO_INLINE_PROCESSING", True):
+        return
+    if not _INLINE_KICK_RUNNING.acquire(blocking=False):
+        return  # a kick is already draining; the queue is shared, nothing is lost
+
+    def _run():
+        try:
+            process_pending_videos(limit=3)
+        except Exception:
+            logger.exception("Inline video processing kick failed (timer will retry).")
+        finally:
+            _INLINE_KICK_RUNNING.release()
+            close_old_connections()
+
+    threading.Thread(target=_run, name="video-transcode-kick", daemon=True).start()
+
+
+def process_pending_videos(limit: int | None = None) -> int:
+    """Drain the withheld-video queue: claim → process on scratch disk → finalise. Returns
+    the number of rows brought to a terminal-or-ready state this run. Never raises for a
+    single bad item (it is finalised FAILED and the loop continues)."""
+    from django.utils import timezone
+
+    scanner = get_scanner()
+    if getattr(settings, "MEDIA_REQUIRE_SCANNER", True) and not scanner.is_effective():
+        # Fail closed and DON'T claim/burn attempts: rows stay pending until an effective
+        # scanner is configured (the frame scan below is a safety gate, not an optimisation).
+        logger.warning("process_pending_videos: no effective scanner; leaving videos pending.")
+        return 0
+    if not video.ffmpeg_available():
+        logger.warning("process_pending_videos: ffmpeg/ffprobe not available on this host.")
+        return 0
+
+    processed = 0
+    while limit is None or processed < limit:
+        now = timezone.now()
+        att = _claim_next_video(now)
+        if att is None:
+            break
+        _process_one_video(att)
+        processed += 1
+    return processed
+
+
+# A claimed-but-already-finalised marker so the drain loop keeps going without processing.
+_sentinel_claimed = object()
+
+
+def _claim_next_video(now):
+    """Short-transaction claim: flip one due row to PROCESSING and commit. Also finalises
+    rows whose attempts are exhausted (FAILED) so nothing sits in the queue forever."""
+    stale_cutoff = now - timedelta(
+        seconds=getattr(settings, "MEDIA_VIDEO_STALE_PROCESSING_SECONDS", 1800)
+    )
+    max_attempts = getattr(settings, "MEDIA_VIDEO_MAX_ATTEMPTS", 3)
+    due = Q(status=Attachment.Status.PENDING) | Q(
+        status=Attachment.Status.PROCESSING, processing_started_at__lt=stale_cutoff
+    )
+    with transaction.atomic():
+        att = (
+            Attachment.objects.select_for_update(skip_locked=True)
+            .filter(kind=Attachment.Kind.VIDEO, purged_at__isnull=True)
+            .filter(due)
+            .order_by("created_at")
+            .first()
+        )
+        if att is None:
+            return None
+        if att.processing_attempts >= max_attempts:
+            _finalize_video_failed_locked(att, reason="attempts_exhausted")
+            return _sentinel_claimed
+        att.status = Attachment.Status.PROCESSING
+        att.processing_started_at = now
+        att.processing_attempts += 1
+        att.save(update_fields=["status", "processing_started_at", "processing_attempts"])
+        return att
+
+
+def _process_one_video(att) -> None:
+    if att is _sentinel_claimed:
+        return
+    # The claim transaction is committed; the minutes of ffmpeg work ahead must not pin a
+    # pooled DB connection (prod pool is 4). Finalisers reopen one for their short commit.
+    # Guarded: under test the whole call runs inside the test's transaction on the test's
+    # connection — closing it there would wreck the harness, and there is no pool to protect.
+    from django.db import connection
+
+    if not connection.in_atomic_block:
+        close_old_connections()
+    scratch = tempfile.mkdtemp(prefix="video-transcode-")
+    try:
+        try:
+            result = _transcode_and_scan(att, scratch)
+        except (video.VideoError, ImageError) as exc:
+            # Deterministic rejection (invalid/oversized/unsupported/corrupt content, or a
+            # transcode this input will always fail) — no retry.
+            _finalize_video_failed(att, reason=str(exc)[:200])
+            return
+        except Exception:
+            # Transient (storage hiccup, OOM-kill of ffmpeg, ...): leave the row PROCESSING —
+            # the stale-cutoff re-admits it on a LATER run, so a momentary condition can't
+            # burn every attempt back-to-back within one drain loop (review finding).
+            logger.exception("Video processing failed transiently for attachment %s", att.id)
+            return
+        if result == "blocked":
+            return
+    finally:
+        shutil.rmtree(scratch, ignore_errors=True)
+
+
+def _transcode_and_scan(att, scratch: str) -> str:
+    """The off-transaction work: validate → transcode → poster → frame scan → store →
+    finalise READY (or BLOCKED). Returns "ready"/"blocked". Raises for failures."""
+    storage = get_storage()
+    src = os.path.join(scratch, "src.bin")
+    out = os.path.join(scratch, "out.mp4")
+    storage.download_to(att.source_storage_key, src)
+
+    probe_timeout = getattr(settings, "MEDIA_VIDEO_PROBE_TIMEOUT", 60)
+    info = video.probe(src, timeout=probe_timeout)
+    video.validate_probe(
+        info,
+        max_duration=getattr(settings, "MEDIA_VIDEO_MAX_DURATION_SECONDS", 90),
+        max_side=getattr(settings, "MEDIA_VIDEO_MAX_SOURCE_SIDE", 3840),
+    )
+
+    video.transcode(
+        src,
+        out,
+        max_side=getattr(settings, "MEDIA_VIDEO_TARGET_MAX_SIDE", 1280),
+        max_duration=getattr(settings, "MEDIA_VIDEO_MAX_DURATION_SECONDS", 90),
+        crf=getattr(settings, "MEDIA_VIDEO_CRF", 23),
+        preset=getattr(settings, "MEDIA_VIDEO_PRESET", "medium"),
+        audio_bitrate=getattr(settings, "MEDIA_VIDEO_AUDIO_BITRATE", "96k"),
+        threads=getattr(settings, "MEDIA_VIDEO_THREADS", 2),
+        timeout=getattr(settings, "MEDIA_VIDEO_FFMPEG_TIMEOUT", 600),
+    )
+
+    # Ground truth from the OUTPUT (dimensions may have been downscaled, duration -t capped).
+    out_info = video.probe(out, timeout=probe_timeout)
+    out_probe = video.validate_probe(
+        out_info,
+        max_duration=getattr(settings, "MEDIA_VIDEO_MAX_DURATION_SECONDS", 90) + 5,
+        max_side=getattr(settings, "MEDIA_VIDEO_TARGET_MAX_SIDE", 1280),
+    )
+
+    # Poster from the transcoded output (inherits the strip + baked rotation), through the
+    # ordinary image pipeline for the canonical re-encode.
+    output_format, quality = _image_encode_params()
+    poster_jpeg = video.extract_poster(out, duration=out_probe.duration, timeout=probe_timeout)
+    poster_bytes, poster_fmt, _size = validate_and_strip(
+        poster_jpeg,
+        max_bytes=getattr(settings, "MEDIA_MAX_UPLOAD_BYTES", 5 * 1024 * 1024),
+        max_dimension=getattr(settings, "MEDIA_THUMB_DIMENSION", 800),
+        quality=quality,
+        output_format=output_format or "WEBP",
+    )
+
+    # Fail-closed frame scan BEFORE anything is stored: the perceptual blocklist matches
+    # known-bad imagery appearing inside the video (hash-blocklist-first — ADR-0004/0026).
+    frames = video.sample_frames(
+        out,
+        scratch,
+        interval_seconds=getattr(settings, "MEDIA_VIDEO_FRAME_SCAN_INTERVAL_SECONDS", 5),
+        max_frames=getattr(settings, "MEDIA_VIDEO_FRAME_SCAN_MAX_FRAMES", 25),
+    )
+    scanner = get_scanner()
+    for frame in (poster_jpeg, *frames):
+        if not scanner.scan(frame).clean:
+            _finalize_video_blocked(att)
+            return "blocked"
+
+    # DETERMINISTIC per-attachment keys (review finding): a worker crash between these stores
+    # and the finalise commit means the next attempt re-stores to the SAME keys — an orphaned
+    # partial output can never accumulate per retry.
+    poster_ext = extension_for(poster_fmt)
+    poster_key = f"video-posters/{att.pk}-{att.sha256[:16]}.{poster_ext}"
+    poster_content_type = f"image/{poster_ext}"
+    out_key = f"videos/{att.pk}-{att.sha256[:16]}.mp4"
+    storage = get_storage()
+    with open(out, "rb") as fh:
+        storage.save_fileobj(out_key, fh, content_type="video/mp4")
+    storage.save(poster_key, poster_bytes, content_type=poster_content_type)
+
+    _finalize_video_ready(
+        att,
+        out_key=out_key,
+        out_size=os.path.getsize(out),
+        poster_key=poster_key,
+        poster_content_type=poster_content_type,
+        width=out_probe.width,
+        height=out_probe.height,
+        duration=out_probe.duration,
+    )
+    return "ready"
+
+
+def _broadcast_attachment_update_after_commit(att) -> None:
+    """Tell connected thread members this post's attachments changed state (video became
+    ready/failed/blocked) so the placeholder swaps live. After commit, so a rolled-back
+    finalise broadcasts nothing; per-viewer URL resolution happens in each member's consumer."""
+
+    def _send():
+        try:
+            from apps.social.services import broadcast_attachment_update
+
+            broadcast_attachment_update(att.post)
+        except Exception:
+            logger.exception("Live attachment-update broadcast failed (reload still works).")
+
+    transaction.on_commit(_send)
+
+
+def _finalize_video_ready(
+    att, *, out_key, out_size, poster_key, poster_content_type, width, height, duration
+):
+    with transaction.atomic():
+        fresh = (
+            Attachment.objects.select_for_update()
+            .filter(pk=att.pk, kind=Attachment.Kind.VIDEO)
+            .first()
+        )
+        if fresh is None:
+            # Row vanished mid-transcode (post/account deleted): reclaim the fresh blobs.
+            for key in (out_key, poster_key):
+                _delete_storage_key_after_commit(key, model_name="Attachment")
+            return
+        source_key = fresh.source_storage_key
+        fresh.storage_key = out_key
+        fresh.byte_size = out_size
+        fresh.poster_storage_key = poster_key
+        fresh.poster_content_type = poster_content_type
+        fresh.width = width
+        fresh.height = height
+        fresh.duration_seconds = int(round(duration))
+        fresh.source_storage_key = ""
+        fresh.exif_stripped = True  # the re-encode dropped every metadata atom
+        fresh.status = Attachment.Status.READY
+        fresh.save(
+            update_fields=[
+                "storage_key",
+                "byte_size",
+                "poster_storage_key",
+                "poster_content_type",
+                "width",
+                "height",
+                "duration_seconds",
+                "source_storage_key",
+                "exif_stripped",
+                "status",
+            ]
+        )
+        record_audit("media.video_ready", actor=None, target=fresh, attachment_id=fresh.id)
+        if source_key:
+            # The quarantined original still carries the source's metadata — delete on commit.
+            _delete_storage_key_after_commit(source_key, model_name="Attachment")
+        _broadcast_attachment_update_after_commit(fresh)
+
+
+def _finalize_video_blocked(att) -> None:
+    """Frame scan matched: never serve, retain the SOURCE bytes as moderation evidence
+    (mirrors the expired-but-reported evidence posture), audit."""
+    with transaction.atomic():
+        fresh = Attachment.objects.select_for_update().filter(pk=att.pk).first()
+        if fresh is None:
+            return
+        fresh.status = Attachment.Status.BLOCKED
+        fresh.storage_key = ""
+        fresh.save(update_fields=["status", "storage_key"])
+        record_audit(
+            "media.blocked",
+            actor=None,
+            target=fresh,
+            reason="video_frame_scan",
+            sha256=fresh.sha256,
+        )
+        _broadcast_attachment_update_after_commit(fresh)
+
+
+def _finalize_video_failed(att, *, reason: str) -> None:
+    with transaction.atomic():
+        fresh = Attachment.objects.select_for_update().filter(pk=att.pk).first()
+        if fresh is None:
+            return
+        _finalize_video_failed_locked(fresh, reason=reason)
+
+
+def _finalize_video_failed_locked(fresh, *, reason: str) -> None:
+    """Terminal failure (already under a row lock): reclaim every blob, keep the row as an
+    honest 'couldn't be processed' placeholder."""
+    source_key = fresh.source_storage_key
+    fresh.status = Attachment.Status.FAILED
+    fresh.storage_key = ""
+    fresh.source_storage_key = ""
+    fresh.save(update_fields=["status", "storage_key", "source_storage_key"])
+    record_audit("media.video_failed", actor=None, target=fresh, reason=reason[:200])
+    if source_key:
+        _delete_storage_key_after_commit(source_key, model_name="Attachment")
+    _broadcast_attachment_update_after_commit(fresh)
+
+
 def can_view_attachment(viewer, attachment) -> bool:
     """Members of the post's activity thread may view its attachments. A hidden (removed/self-
-    deleted) post's attachments are hidden to everyone but staff; blocked-vs-uploader hides."""
+    deleted) post's attachments are hidden to everyone but staff; blocked-vs-uploader hides.
+    A safety-BLOCKED video is staff-only (moderation evidence) — members never even see a
+    placeholder for it."""
     from apps.social.services import can_read_thread
 
     if attachment.post.is_hidden and not getattr(viewer, "is_staff", False):
+        return False
+    if attachment.status == Attachment.Status.BLOCKED and not getattr(viewer, "is_staff", False):
         return False
     if viewer.id != attachment.uploader_id and is_blocked(viewer, attachment.uploader):
         return False
@@ -777,7 +1285,12 @@ def _blob_retrievable(attachment, viewer) -> bool:
     )
 
 
-def attachment_signed_url(attachment, viewer) -> str:
+_ATTACHMENT_VARIANTS = {"m": "main", "t": "thumb", "p": "poster"}
+
+
+def attachment_signed_url(attachment, viewer, *, variant: str = "main") -> str:
+    """``variant``: "main" (the object), "thumb" (image rendition, falls back to main), or
+    "poster" (a READY video's poster frame)."""
     if not can_view_attachment(viewer, attachment):
         raise NotAuthorized("Not allowed to view this file.")
     if not _blob_retrievable(attachment, viewer):
@@ -785,13 +1298,17 @@ def attachment_signed_url(attachment, viewer) -> str:
         # the caller still holds a freshly-minted token — expiry is the upper bound, not the TTL.
         # (Staff retain access to a not-yet-purged blob so moderation can still pull the evidence.)
         raise NotAuthorized("This file is no longer available.")
-    token = signing.dumps(
-        {"attachment_id": attachment.id, "viewer_id": viewer.id}, salt=_ATTACH_SIGNING_SALT
-    )
+    if variant == "poster" and not attachment.poster_storage_key:
+        raise NotAuthorized("This file has no poster.")
+    payload = {"attachment_id": attachment.id, "viewer_id": viewer.id}
+    if variant != "main":
+        payload["v"] = variant[0]
+    token = signing.dumps(payload, salt=_ATTACH_SIGNING_SALT)
     return f"/api/media/attachment/{token}/"
 
 
 def resolve_attachment_token(token: str, viewer):
+    """Returns ``(attachment, variant)`` — variant is "main", "thumb", or "poster"."""
     try:
         payload = signing.loads(
             token, salt=_ATTACH_SIGNING_SALT, max_age=settings.MEDIA_SIGNED_URL_TTL
@@ -809,7 +1326,10 @@ def resolve_attachment_token(token: str, viewer):
         raise NotAuthorized("Not allowed to view this file.")
     if not _blob_retrievable(att, viewer):
         raise NotAuthorized("This file is no longer available.")
-    return att
+    variant = _ATTACHMENT_VARIANTS.get(payload.get("v", "m"), "main")
+    if variant == "poster" and not att.poster_storage_key:
+        raise NotAuthorized("This file has no poster.")
+    return att, variant
 
 
 @transaction.atomic
@@ -885,6 +1405,8 @@ def purge_expired_attachments(now=None) -> int:
     purged = 0
     for att in candidates:
         activity = att.post.thread.activity
+        if att.status == Attachment.Status.BLOCKED:
+            continue  # safety-blocked video: the retained source IS the evidence — never purge
         if (
             att.post.is_hidden
             or activity.is_hidden
@@ -919,14 +1441,49 @@ def purge_expired_attachments(now=None) -> int:
                     or fresh_u
                 ):
                     continue
-                key = att.storage_key
-                att.purged_at = now
-                att.storage_key = ""  # so it is never re-served or re-deleted
-                att.save(update_fields=["purged_at", "storage_key"])
-                record_audit("media.attachment_purged", actor=None, target=att, reason="expired")
+                # ALSO lock + re-read the Attachment itself (review finding): the video
+                # finalisers lock this row — never the snapshot — so purging from the stale
+                # snapshot could destroy a just-BLOCKED row's retained evidence or clobber a
+                # just-READY row's fresh keys. Under the row lock the finalisers are
+                # serialised out; re-derive everything from fresh state.
+                fresh_att = Attachment.objects.select_for_update().filter(pk=att.pk).first()
+                if fresh_att is None or fresh_att.purged_at is not None:
+                    continue
+                if fresh_att.status == Attachment.Status.BLOCKED:
+                    continue  # evidence — never purge
+                if fresh_att.status == Attachment.Status.PROCESSING:
+                    continue  # a worker is mid-flight; reconsidered next tick
+                keys = [
+                    k
+                    for k in (
+                        fresh_att.storage_key,
+                        fresh_att.thumb_storage_key,
+                        fresh_att.poster_storage_key,
+                        fresh_att.source_storage_key,
+                    )
+                    if k
+                ]
+                fresh_att.purged_at = now
+                # Clear every key so nothing is ever re-served or re-deleted.
+                fresh_att.storage_key = ""
+                fresh_att.thumb_storage_key = ""
+                fresh_att.poster_storage_key = ""
+                fresh_att.source_storage_key = ""
+                fresh_att.save(
+                    update_fields=[
+                        "purged_at",
+                        "storage_key",
+                        "thumb_storage_key",
+                        "poster_storage_key",
+                        "source_storage_key",
+                    ]
+                )
+                record_audit(
+                    "media.attachment_purged", actor=None, target=fresh_att, reason="expired"
+                )
                 # Delete the bytes LAST: if it throws, the atomic rolls back the row changes too, so
                 # we never end up "row says purged, blob still present" or vice-versa.
-                if key:
+                for key in keys:
                     storage.delete(key)
             purged += 1
         except Exception:
@@ -953,10 +1510,34 @@ def attachments_for_posts(posts, viewer):
     for att in qs:
         if not can_view_attachment(viewer, att):
             continue
-        if _blob_retrievable(att, viewer):
+        # Only staff ever reach a BLOCKED row (can_view_attachment gates it) — render an
+        # honest moderation placeholder, not the misleading "temporary picture" note. The
+        # retained source is bucket-level evidence, deliberately not servable in-app.
+        att.blocked = att.status == Attachment.Status.BLOCKED
+        att.processing = att.kind == Attachment.Kind.VIDEO and att.status in (
+            Attachment.Status.PENDING,
+            Attachment.Status.PROCESSING,
+        )
+        att.failed = att.status == Attachment.Status.FAILED
+        att.thumb_url = ""
+        att.poster_url = ""
+        if att.blocked:
+            att.url = ""
+            att.expired = False
+        elif att.processing or att.failed:
+            # An honest in-stream state, never bytes: the withheld/broken video renders as a
+            # calm placeholder (ADR-0026 — unprocessed media is structurally unservable).
+            att.url = ""
+            att.expired = False
+        elif _blob_retrievable(att, viewer):
             # Live for a member; for STAFF this also covers an expired-not-purged blob (evidence).
             att.url = attachment_signed_url(att, viewer)
             att.expired = False
+            if att.kind == Attachment.Kind.IMAGE:
+                # Streams render the rendition; the full object stays one click away.
+                att.thumb_url = attachment_signed_url(att, viewer, variant="thumb")
+            elif att.kind == Attachment.Kind.VIDEO and att.poster_storage_key:
+                att.poster_url = attachment_signed_url(att, viewer, variant="poster")
         else:
             # Keep an honest placeholder in the stream (a temporary picture that has disappeared)
             # rather than a broken image — no URL is issued for a gone blob.

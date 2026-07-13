@@ -46,8 +46,13 @@ D5, and D6 too. See [ROADMAP](ROADMAP.md) and [COMPLIANCE](COMPLIANCE.md).
    cohort, progression, counts, attendance, history, last-seen.
 5. **Consent-based joining.** New members are admitted only via the **two-thirds vote** (D3), so a
    group controls who joins its activity.
-6. **Scoped image surfaces.** Images are limited to one profile picture, private in-thread photos,
-   and one contextual activity cover photo on discovery cards — all safety-screened (D6).
+6. **Scoped media surfaces.** Images are limited to one profile picture, private in-thread photos,
+   and one contextual activity cover photo on discovery cards — all safety-screened (D6). Video
+   (ADR-0026) exists ONLY as a member's own-post attachment in a private, cohort-gated
+   activity/group thread — adults-only at launch, withheld until its fail-closed processing
+   succeeds, rendered solely inside the owning thread, never on discovery/public/feed
+   surfaces, never in DMs, no autoplay/loops or engagement mechanics. Kill switch:
+   `MEDIA_VIDEO_ENABLED=false`.
 
 ## Controls by deliverable
 
@@ -72,6 +77,13 @@ D5, and D6 too. See [ROADMAP](ROADMAP.md) and [COMPLIANCE](COMPLIANCE.md).
   Since W8 the built-in blocklist also matches a **perceptual (dHash) layer** (a casual
   re-encode/resize no longer evades it; honest limits in `apps/media/perceptual.py`), and
   PDFs pass a swappable **document/AV scanner seam** (clamd; fail-closed when required).
+  Video attachments (ADR-0026, adults-only) extend the same posture: the
+  ORIGINAL bytes' sha256 is screened fail-closed at upload, the clip is **withheld** until an
+  off-request transcode strips all metadata (full re-encode) and **sampled frames pass the
+  perceptual blocklist**; a frame match blocks the clip permanently and retains the source for
+  moderation at the storage level (never servable in-app; staff see an explicit blocked
+  placeholder). Minor-cohort video stays structurally off pending a lawful video-CSAM
+  matcher decision (e.g. CSAI Match).
   The external-scanner integration plan (Arachnid Shield, PhotoDNA Cloud, NCMEC/esc_ABUZ
   reporting) lives in [MEDIA_FILTERING](MEDIA_FILTERING.md).
 - **D10 (secure messaging):** username-addressable **direct & group** chat that is **end-to-end

@@ -33,6 +33,12 @@ class ImageScanner(ABC):
     @abstractmethod
     def scan(self, data: bytes) -> ScanResult: ...
 
+    def scan_digest(self, digest: str) -> ScanResult:
+        """Screen an already-computed SHA-256 (ADR-0026: video originals are hashed as a
+        stream — tens of MB are never buffered just to hash them). Fail-closed default: a
+        custom scanner that hasn't implemented digest screening never silently clears one."""
+        return ScanResult(clean=False, matched="digest_scan_unsupported")
+
     def is_effective(self) -> bool:
         """Whether this scanner can actually screen content. The fail-closed upload gate
         (MEDIA_REQUIRE_SCANNER) refuses uploads when this is False, so a children's
@@ -81,6 +87,13 @@ class HashBlocklistScanner(ImageScanner):
                 logger.exception("Could not read MEDIA_PERCEPTUAL_BLOCKLIST_FILE=%s", path)
         return {e for e in entries if len(e) == 16}
 
+    def scan_digest(self, digest: str) -> ScanResult:
+        # Exact-hash screening only: the perceptual layer needs pixels, and for video that
+        # runs separately against the sampled frames (services.process_pending_videos).
+        if digest.lower() in self._blocklist():
+            return ScanResult(clean=False, matched=digest)
+        return ScanResult(clean=True)
+
     def scan(self, data: bytes) -> ScanResult:
         digest = hashlib.sha256(data).hexdigest()
         if digest in self._blocklist():
@@ -125,13 +138,15 @@ class ManagedScanner(ImageScanner):
         return bool(self._endpoint())
 
     def scan(self, data: bytes) -> ScanResult:
+        return self.scan_digest(hashlib.sha256(data).hexdigest())
+
+    def scan_digest(self, digest: str) -> ScanResult:
         from apps.safety.net import safe_get
 
         endpoint = self._endpoint()
         if not endpoint:
             return ScanResult(clean=False, matched="scanner_unconfigured")
         api_key = getattr(settings, "MEDIA_SCANNER_API_KEY", "")
-        digest = hashlib.sha256(data).hexdigest()
         headers = {"Accept": "application/json"}
         if api_key:
             headers["Authorization"] = f"Bearer {api_key}"

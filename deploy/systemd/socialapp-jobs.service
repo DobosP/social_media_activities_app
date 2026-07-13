@@ -9,6 +9,9 @@ Group=app
 WorkingDirectory=/home/app/social_media_activities_app
 EnvironmentFile=/home/app/social_media_activities_app/.env
 ExecStart=/home/app/social_media_activities_app/.venv/bin/python manage.py run_due_jobs
+# The default oneshot timeout (~90s) would kill a long maintenance tick (e.g. the ADR-0026
+# transcode safety-net entry, or a large purge batch). One hour is generous, not unbounded.
+TimeoutStartSec=3600
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=read-only
