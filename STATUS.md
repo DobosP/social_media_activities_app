@@ -15,13 +15,15 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
 
 ## Current state
 
-- **Media compression layer v2 + gated private-thread video (ADR-0026, 2026-07-13, branch
-  `feat/media-video-compression` — NOT merged; owner sign-off needed, incl. the CLAUDE.md
-  invariant-#1 rewording to "no public/discovery short-video"):** canonical image codec
+- **Media compression layer v2 + private-thread video LANDED on `main` (ADR-0026,
+  2026-07-13; owner approved the merge, the CLAUDE.md invariant-#1 rewording to "no
+  public/discovery short-video", and video ENABLED BY DEFAULT — kill switch
+  `MEDIA_VIDEO_ENABLED=false`; rendering stays confined to the owning cohort-gated
+  activity/group thread, never feeds/discovery):** canonical image codec
   WebP→**AVIF** (per-codec auto quality, prod boot-checks the encoder, one-env-var rollback) +
   one eager 800px rendition per image (`thumb_storage_key` on Photo/Attachment/ActivityCover)
   served on cards/streams/grids/avatars via a signed-token `variant`; **video attachments**
-  land behind `MEDIA_VIDEO_ENABLED=False` — adults-only private threads, withheld
+  — adults-only private threads (`MEDIA_VIDEO_COHORTS`), withheld
   `status=pending` rows, fail-closed streamed-sha256 admission + perceptual frame scan,
   sandboxed ffmpeg (x264 720p CRF23 progressive MP4 +faststart, full metadata strip, AVIF
   poster), own skip-locked claim queue (`transcode_videos` mgmt cmd + 1-min systemd timer +

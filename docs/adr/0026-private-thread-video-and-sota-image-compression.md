@@ -1,7 +1,8 @@
 # ADR-0026 — Private-thread video attachments + state-of-the-art image compression
 
 - **Status:** Accepted (owner request 2026-07-12: "robust, cheap and fast photos/videos sharing…
-  add a state of the art compressing layer"; video capability ships **default-off** — see §5)
+  add a state of the art compressing layer"; owner decision 2026-07-13: video ships
+  **enabled by default** — see §5)
 - **Date:** 2026-07-13
 - **Supersedes:** the "no video" decision line of ADR-0004 (`0004-media-screening-hash-blocklist-first.md`),
   which itself said video "needs its own ADR". This is that ADR. Everything else in ADR-0004
@@ -66,7 +67,7 @@ levers were still on the table, and video did not exist at all:
 ### 3. Video attachments — private group threads only
 
 A new `Attachment.Kind.VIDEO`, allowed **only** as a member's own-post attachment in a
-cohort-gated activity thread. Explicitly still forbidden everywhere else: no discovery/cover
+cohort-gated activity/group thread. Explicitly still forbidden everywhere else: no discovery/cover
 video, no public surface, no DMs (ADR-0006 unchanged), no autoplay, no loops, no view counts —
 the player is a plain `<video controls preload="metadata">` with a poster.
 
@@ -150,11 +151,19 @@ messaging) remain media-free — ADR-0006's "no media where scanning is impossib
   photo. The invariant wording in CLAUDE.md is updated alongside this ADR — **owner sign-off on
   that wording is part of landing this change.**
 
-### 5. Default-off
+### 5. Enablement + visibility scope (owner decision 2026-07-13)
 
-`MEDIA_VIDEO_ENABLED` defaults to **False** (on in local dev settings). Merging this ADR
-changes no running deployment: enabling video in prod is a deliberate operator/owner act, and
-the prod guardrail refuses to boot video-enabled without ffmpeg/ffprobe present.
+`MEDIA_VIDEO_ENABLED` defaults to **True** (owner decision at landing; originally built
+default-off — set `MEDIA_VIDEO_ENABLED=false` to disable). The prod guardrail still refuses
+to boot video-enabled without ffmpeg/ffprobe present (the Docker image and cloud-init both
+install them), so a mis-provisioned box fails loudly at boot rather than stranding uploads.
+The adults-only cohort gate (`MEDIA_VIDEO_COHORTS`) is independent of this flag and unchanged.
+
+**Visibility stays surface-scoped (owner-affirmed):** a video renders ONLY inside the
+cohort-gated activity/group thread it was posted to — the member-only conversation surfaces
+of specific interest groups and activities. It never appears on discovery cards, feeds,
+public pages, agent/search surfaces, or DMs; nothing in this ADR creates a browsable video
+surface, and any future widening would need its own decision.
 
 ## Cost model (why this is the cheap-and-scalable shape)
 

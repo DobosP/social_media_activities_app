@@ -180,8 +180,8 @@ invariants in [`CLAUDE.md`](../CLAUDE.md).
   DMs** (E2EE = unscannable). `post_to_thread(..., allow_empty=True)` permits an attachment-only message; the web
   `activity_post` creates Post + Attachment in **one transaction** (a rejected scan rolls back the post). `can_view_attachment`
   re-checks `can_read_thread` + `post.is_hidden` + block-vs-uploader; only the author/staff can delete.
-- **Private-thread video attachments (ADR-0026, 2026-07 — DEFAULT OFF)** — `Attachment.Kind.VIDEO` behind
-  `MEDIA_VIDEO_ENABLED=False`, **adults-only** (`MEDIA_VIDEO_COHORTS`, the PDF precedent; minor-cohort video stays off
+- **Private-thread video attachments (ADR-0026, 2026-07)** — `Attachment.Kind.VIDEO`, enabled by default
+  (owner decision 2026-07-13; kill switch `MEDIA_VIDEO_ENABLED=false`), **adults-only** (`MEDIA_VIDEO_COHORTS`, the PDF precedent; minor-cohort video stays off
   pending a lawful video-CSAM matcher). Admission is fail-closed (streamed sha256 of the ORIGINAL vs blocklist/managed
   scanner) and the row is created **withheld** (`status=pending`, unservable); an off-request worker
   (`transcode_videos` timer + post-upload kick; `select_for_update(skip_locked=True)` claims, work outside any DB txn)

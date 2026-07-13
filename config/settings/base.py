@@ -616,13 +616,15 @@ MEDIA_EPHEMERAL_MIN_TTL_MINORS_SECONDS = env.int(
 )
 
 # --- ADR-0026: private-thread video attachments -------------------------------------------
-# DEFAULT OFF: enabling video in prod is a deliberate operator/owner act (prod settings refuse
-# to boot video-enabled without ffmpeg/ffprobe installed). Video is admitted WITHHELD after a
-# fail-closed sha256 scan of the original bytes, transcoded off-request to ONE progressive
-# H.264/AAC MP4 (+faststart; the re-encode strips all metadata incl. GPS), frame-scanned
-# against the perceptual blocklist, and only then served — private group threads only, never
-# DMs or any public/discovery surface, no autoplay/loops/view counts.
-MEDIA_VIDEO_ENABLED = env.bool("MEDIA_VIDEO_ENABLED", default=False)
+# Default ON (owner decision 2026-07-13; set MEDIA_VIDEO_ENABLED=false to disable). Prod
+# refuses to boot video-enabled without ffmpeg/ffprobe installed (the Docker image and
+# cloud-init both ship them). Video is admitted WITHHELD after a fail-closed sha256 scan of
+# the original bytes, transcoded off-request to ONE progressive H.264/AAC MP4 (+faststart;
+# the re-encode strips all metadata incl. GPS), frame-scanned against the perceptual
+# blocklist, and only then served — rendered ONLY inside the cohort-gated activity/group
+# thread it was posted to, never DMs or any public/discovery/feed surface, no
+# autoplay/loops/view counts.
+MEDIA_VIDEO_ENABLED = env.bool("MEDIA_VIDEO_ENABLED", default=True)
 # A NEW media type → adults only at launch (the PDF precedent). Minor-cohort video stays
 # structurally off until a lawful video-CSAM matcher is adopted via its own decision.
 MEDIA_VIDEO_COHORTS = env.list("MEDIA_VIDEO_COHORTS", default=["adult"])

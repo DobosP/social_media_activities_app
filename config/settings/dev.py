@@ -10,9 +10,5 @@ REQUEST_LOGGING_ENABLED = env.bool("REQUEST_LOGGING_ENABLED", default=False)
 # Local dev convenience: don't block uploads on a configured content scanner.
 MEDIA_REQUIRE_SCANNER = False
 
-# ADR-0026: video attachments on by default in local dev (prod default is OFF; enabling there
-# is a deliberate operator act). Requires ffmpeg/ffprobe on the host/container.
-MEDIA_VIDEO_ENABLED = env.bool("MEDIA_VIDEO_ENABLED", default=True)
-
 # ADR-0016: React screens on by default in local dev (kill switch stays available).
 SOCIAL_REACT_UI = env.bool("SOCIAL_REACT_UI", default=True)

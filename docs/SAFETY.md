@@ -39,10 +39,11 @@ D5, and D6 too. See [ROADMAP](ROADMAP.md) and [COMPLIANCE](COMPLIANCE.md).
    group controls who joins its activity.
 6. **Scoped media surfaces.** Images are limited to one profile picture, private in-thread photos,
    and one contextual activity cover photo on discovery cards — all safety-screened (D6). Video
-   (ADR-0026, **default-off**) exists ONLY as a member's own-post attachment in a private,
-   cohort-gated activity thread — adults-only at launch, withheld until its fail-closed
-   processing succeeds, never on discovery/public surfaces, never in DMs, no autoplay/loops or
-   engagement mechanics.
+   (ADR-0026) exists ONLY as a member's own-post attachment in a private, cohort-gated
+   activity/group thread — adults-only at launch, withheld until its fail-closed processing
+   succeeds, rendered solely inside the owning thread, never on discovery/public/feed
+   surfaces, never in DMs, no autoplay/loops or engagement mechanics. Kill switch:
+   `MEDIA_VIDEO_ENABLED=false`.
 
 ## Controls by deliverable
 
@@ -67,7 +68,7 @@ D5, and D6 too. See [ROADMAP](ROADMAP.md) and [COMPLIANCE](COMPLIANCE.md).
   Since W8 the built-in blocklist also matches a **perceptual (dHash) layer** (a casual
   re-encode/resize no longer evades it; honest limits in `apps/media/perceptual.py`), and
   PDFs pass a swappable **document/AV scanner seam** (clamd; fail-closed when required).
-  Video attachments (ADR-0026, default-off, adults-only) extend the same posture: the
+  Video attachments (ADR-0026, adults-only) extend the same posture: the
   ORIGINAL bytes' sha256 is screened fail-closed at upload, the clip is **withheld** until an
   off-request transcode strips all metadata (full re-encode) and **sampled frames pass the
   perceptual blocklist**; a frame match blocks the clip permanently and retains the source for

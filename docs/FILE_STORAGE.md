@@ -1,7 +1,7 @@
 # File storage — secure, EU-resident, cheap, smart-compressed
 
-How private blobs (profile pictures, in-thread photos, PDF attachments, and — ADR-0026,
-default-off — short in-thread videos) are stored, served, and kept small. Design goals, in
+How private blobs (profile pictures, in-thread photos, PDF attachments, and — ADR-0026 —
+short in-thread videos) are stored, served, and kept small. Design goals, in
 priority order: **child-safe + secure → EU data residency → cheap**. PostgreSQL stays the single
 primary datastore (relational + geo + graph + pgvector); only *bytes* live in object storage.
 
@@ -161,8 +161,8 @@ MEDIA_MAX_IMAGE_PIXELS=30000000       # decompression-bomb ceiling (header-decla
 MEDIA_MAX_UPLOAD_BYTES=5242880        # profile/photo size cap
 MEDIA_ATTACHMENT_MAX_BYTES=7340032    # thread-attachment size cap
 
-# --- video attachments (ADR-0026; DEFAULT OFF) ---
-MEDIA_VIDEO_ENABLED=false             # flipping on requires ffmpeg/ffprobe (boot-checked in prod)
+# --- video attachments (ADR-0026; default ON since 2026-07-13) ---
+MEDIA_VIDEO_ENABLED=true              # requires ffmpeg/ffprobe (boot-checked in prod); false = kill switch
 MEDIA_VIDEO_COHORTS=adult             # adults-only at launch (the PDF precedent)
 MEDIA_VIDEO_MAX_UPLOAD_BYTES=83886080 # 80 MiB source cap
 MEDIA_VIDEO_MAX_DURATION_SECONDS=90
@@ -198,11 +198,12 @@ MEDIA_SIGNED_URL_TTL=300              # signed-token lifetime (seconds)
 - **Lifecycle rules** — ephemeral ("disappearing") pictures already expire + purge in-app; you can
   add a provider lifecycle rule as defence-in-depth.
 
-## 9. Video attachments (ADR-0026 — default OFF)
+## 9. Video attachments (ADR-0026)
 
-Short clips in private, cohort-gated activity threads only (adults-only at launch), behind
-`MEDIA_VIDEO_ENABLED` (off by default; prod refuses to boot video-enabled without ffmpeg).
-Never on discovery/cover surfaces, never in DMs, no autoplay/loops/view counts.
+Short clips in private, cohort-gated activity/group threads only (adults-only at launch).
+Enabled by default since 2026-07-13 (`MEDIA_VIDEO_ENABLED=false` is the kill switch; prod
+refuses to boot video-enabled without ffmpeg). Rendered solely inside the owning thread —
+never on discovery/cover/feed surfaces, never in DMs, no autoplay/loops/view counts.
 
 ```
 upload ─▶ size cap ─▶ magic sniff ─▶ cohort + membership gates

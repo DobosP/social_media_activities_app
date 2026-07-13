@@ -29,8 +29,11 @@ MEDIA_REQUIRE_SCANNER = False
 # ADR-0026: keep the image pipeline on WebP under test — fast encodes, and the pipeline is
 # codec-agnostic (AVIF-specific behaviour is exercised explicitly in the media tests).
 MEDIA_IMAGE_OUTPUT_FORMAT = "WEBP"
-# Video tests enable the flag explicitly and drive the processor synchronously — never via
-# the inline background thread (racy against the per-test transaction).
+# Video is default-ON in base (owner decision 2026-07-13) but pinned OFF under test so the
+# suite is deterministic — video tests enable the flag explicitly (override_settings) and
+# drive the processor synchronously, never via the inline background thread (racy against
+# the per-test transaction).
+MEDIA_VIDEO_ENABLED = False
 MEDIA_VIDEO_INLINE_PROCESSING = False
 
 # The F9 child-public-venue gate is OFF by default in tests (the existing suite creates child
