@@ -376,6 +376,16 @@ def current_members(activity):
     return activity.memberships.filter(state=Membership.State.MEMBER)
 
 
+def visible_roster(viewer, activity):
+    """The member list AS DISPLAYED to ``viewer``: current members minus anyone in a mutual
+    block with the viewer — mutual invisibility, matching the group_roster precedent
+    (ADR-0028). Display-only: membership checks, admission votes, and notification fan-outs
+    keep using ``current_members`` (a block never hides a member from the machinery)."""
+    from apps.safety.services import blocked_user_ids
+
+    return current_members(activity).exclude(user_id__in=blocked_user_ids(viewer))
+
+
 def voting_members(activity):
     """Members who vote on join requests — peers only; guardians are supervisory and
     do not vote."""

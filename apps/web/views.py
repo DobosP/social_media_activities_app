@@ -14,7 +14,7 @@ from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Prefetch, Q
-from django.http import FileResponse, Http404, JsonResponse
+from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -372,6 +372,17 @@ def group_detail(request, pk):
             and social.can_read_thread(user, group)
         )
     post_form = PostForm() if can_post else None
+    # ADR-0028: avatars are a MUST on roster rows and thread authors — batch the inputs.
+    from apps.recommendations.services import attach_interest_nodes
+
+    attach_interest_nodes(
+        list(roster or [])
+        + [
+            p.author
+            for p in [*announcements, *posts, *(r for p in posts for r in p.replies.all())]
+            if p.author_id
+        ]
+    )
     return render(
         request,
         "web/group_detail.html",
@@ -1708,7 +1719,9 @@ def activity_list(request):
 def activity_detail(request, pk):
     user = request.user
     activity = _visible_activity_or_404(user, pk)
-    members = social.current_members(activity).select_related("user")
+    # ADR-0028: the DISPLAYED roster is mutually block-filtered (group_roster precedent);
+    # membership checks / votes / fan-outs elsewhere keep using current_members.
+    members = list(social.visible_roster(user, activity).select_related("user"))
     my_membership = activity.memberships.filter(user=user).first()
     is_member = my_membership is not None and my_membership.state == Membership.State.MEMBER
 
@@ -1785,6 +1798,17 @@ def activity_detail(request, pk):
             ward=user, status=GuardianRelationship.Status.ACTIVE
         ).select_related("guardian")
     ]
+
+    # ADR-0028: the image is a MUST on every person reference — batch-load avatar inputs for
+    # roster rows, pending requesters, and thread authors in two constant queries (no N+1).
+    from apps.recommendations.services import attach_interest_nodes
+
+    _thread_authors = [
+        p.author
+        for p in [*announcements, *posts, *(r for p in posts for r in p.replies.all())]
+        if p.author_id
+    ]
+    attach_interest_nodes([m.user for m in members] + [m.user for m in pending] + _thread_authors)
 
     is_owner = activity.owner_id == user.id
     # F22: a co-organiser shares the operational tools (edit/cancel/announce) via is_organizer;
@@ -3013,6 +3037,66 @@ def avatar_style(request):
     except AvatarStyleError as exc:
         messages.error(request, str(exc))
     return redirect("profile")
+
+
+def profile_card_allowed(user) -> bool:
+    """ONE anti-scrape budget shared by every surface that serves a person card — the web
+    page, the hover partial, and the connections API (review MED: a brake on only one of
+    three equivalent routes is no brake). 240/h is far beyond human browsing."""
+    return safety.allow_action(
+        user,
+        "profile_card",
+        limit=getattr(settings, "PROFILE_CARD_RATE_LIMIT", 240),
+        window_seconds=getattr(settings, "PROFILE_CARD_RATE_WINDOW_SECONDS", 3600),
+    )
+
+
+def _person_or_404(viewer, public_id):
+    """Resolve a person card or raise 404. A veto (blocked, cross-cohort, unassigned,
+    inactive) is indistinguishable from a nonexistent account — same 404 either way."""
+    from apps.connections.profiles import profile_card
+
+    target = User.objects.filter(public_id=public_id).first()
+    card = profile_card(viewer, target) if target is not None else None
+    if card is None:
+        raise Http404
+    return target, card
+
+
+@login_required
+def person(request, public_id):
+    """ADR-0028: another user's tier-gated profile page. Self redirects to the own profile
+    (which carries the richer self-only surfaces)."""
+    if str(request.user.public_id) == str(public_id):
+        return redirect("profile")
+    if not profile_card_allowed(request.user):
+        return HttpResponse(status=429)
+    target, card = _person_or_404(request.user, public_id)
+    # The uploaded photo stays a profile-PAGE-only surface: CONNECTED adults only (card
+    # gate), and the media layer re-checks can_view_photo when signing (defence in depth).
+    photo_url = _avatar_url(request.user, target) if card.get("show_photo") else None
+    return render(
+        request,
+        "web/person.html",
+        {
+            "card": card,
+            "person_user": target,
+            "photo_url": photo_url,
+            **_nav_context(request.user),
+        },
+    )
+
+
+@login_required
+def person_card(request, public_id):
+    """The hover-overview partial: the SAME tier-gated card, as an HTML fragment fetched on
+    hover/focus. Shares the profile_card anti-scrape budget with the page + API."""
+    if not profile_card_allowed(request.user):
+        return HttpResponse(status=429)
+    if str(request.user.public_id) == str(public_id):
+        raise Http404  # no hover card for yourself
+    _target, card = _person_or_404(request.user, public_id)
+    return render(request, "web/_person_card.html", {"card": card})
 
 
 # --- Notifications ------------------------------------------------------------------

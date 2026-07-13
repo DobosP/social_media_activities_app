@@ -35,6 +35,15 @@ D5, and D6 too. See [ROADMAP](ROADMAP.md) and [COMPLIANCE](COMPLIANCE.md).
    (D6). Discovery cards may show one contextual cover photo only when the activity itself is
    visible; anonymous public cover cards remain adult-only through `public_activities()`. No public
    user photo feeds or public profiles beyond a minimal display name + avatar.
+   Person visibility is TIERED (ADR-0028, `connections/profiles.py` is the sole resolver):
+   vetoes first and 404-indistinguishable (blocked either way, cross-cohort, unassigned,
+   inactive); a same-cohort stranger gets exactly the minimal cap above (display name +
+   generated avatar); a live shared context (peer co-membership of an activity/group, or a
+   pending join request with its organizer) adds the username handle, an age-verified boolean,
+   and the shared context itself; a mutual connection adds messaging and — adults only —
+   declared interests + the uploaded photo (profile page only, `can_view_photo` re-checked).
+   Minor-cohort pairs stay clamped at the shared shape. Never shown at any tier: age band,
+   cohort, progression, counts, attendance, history, last-seen.
 5. **Consent-based joining.** New members are admitted only via the **two-thirds vote** (D3), so a
    group controls who joins its activity.
 6. **Scoped image surfaces.** Images are limited to one profile picture, private in-thread photos,

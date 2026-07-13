@@ -20,7 +20,7 @@
   {% if results %}
     <ul class="members">
       {% for u in results %}
-        <li><img class="mini-avatar" src="{{ u|avatar_uri }}" alt="">{{ u.display_name|default:u.username }}
+        <li><img class="mini-avatar" src="{{ u|avatar_uri }}" alt=""><a href="{% url 'person' u.public_id %}" data-hovercard-user="{{ u.public_id }}">{{ u.display_name|default:u.username }}</a>
           <form method="post" action="{% url 'connection_request' %}" class="inline">{% csrf_token %}
             <input type="hidden" name="public_id" value="{{ u.public_id }}">
             <button class="btn btn-sm" type="submit">{% trans "Connect" %}</button>
@@ -77,7 +77,7 @@
 {% if connections %}
   <ul class="members">
     {% for u in connections %}
-      <li><img class="mini-avatar" src="{{ u|avatar_uri }}" alt="">{{ u.display_name|default:u.username }}
+      <li><img class="mini-avatar" src="{{ u|avatar_uri }}" alt=""><a href="{% url 'person' u.public_id %}" data-hovercard-user="{{ u.public_id }}">{{ u.display_name|default:u.username }}</a>
         <form method="post" action="{% url 'connection_message' %}" class="inline">{% csrf_token %}
           <input type="hidden" name="public_id" value="{{ u.public_id }}">
           <button class="btn btn-sm" type="submit">{% trans "Message" %}</button>

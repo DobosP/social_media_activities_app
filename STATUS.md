@@ -15,6 +15,19 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
 
 ## Current state
 
+- **Tiered profile visibility + person hover cards built (ADR-0028, 2026-07-13; branch
+  `feat/signature-avatars`, stacked on ADR-0027):** first other-user profile surface —
+  `/people/<public_id>/` + hover partial + `GET /api/connections/people/<public_id>/`, all
+  through one live-derived tier resolver (`connections/profiles.py`): vetoes are
+  404-indistinguishable (blocks/cross-cohort/unassigned/inactive); stranger = the SAFETY.md
+  minimal card (name + generated avatar); shared activity/group or pending join-request ↔
+  organizer = + handle, verified badge, shared-context titles, Connect; connected = + Message
+  and (adults only) interests + uploaded photo on the page; minor pairs stay clamped. The
+  image is a MUST everywhere a person appears: rosters, pending requests, thread authors, and
+  group rosters now carry avatars + `data-hovercard-user` (batched, query-pinned); new
+  `static/js/hovercard.js` (delegated, keyboard-accessible, CSP-clean) + `visible_roster`
+  block-filters the displayed activity roster (group_roster precedent). SAFETY.md §4 updated.
+  15 new tests green; full-suite + review pending; SPA person screen deferred (SSR primary).
 - **Avatar styles + uniqueness registry built (ADR-0027, 2026-07-13; branch
   `feat/signature-avatars`):** owner-approved reshape of a "profile picture as NFT" ask —
   versioned avatar generations (Gen 1 Constellation unchanged; Gen 2 **Orbits**, owner-picked

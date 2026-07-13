@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from apps.accounts.models import User
 
@@ -96,3 +97,30 @@ class ConnectionViewSet(viewsets.ViewSet):
         except services.InvalidState as exc:
             raise ValidationError(str(exc)) from exc
         return Response(ConnectionSerializer(conn).data)
+
+
+class PersonProfileView(APIView):
+    """ADR-0028: another user's tier-gated profile card (API twin of the web person page +
+    hover partial — all three call connections.profiles.profile_card). A veto (blocked,
+    cross-cohort, unassigned, inactive, self) is a plain 404, indistinguishable from a
+    nonexistent public id."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, public_id):
+        from apps.web.views import profile_card_allowed
+
+        from .profiles import profile_card
+
+        # Review MED: one anti-scrape budget shared with the web page + hover partial.
+        if not profile_card_allowed(request.user):
+            return Response(
+                {"detail": "Too many profile lookups; please try again later."}, status=429
+            )
+        target = User.objects.filter(public_id=public_id).first()
+        if target is None or target.pk == request.user.pk:
+            raise NotFound
+        card = profile_card(request.user, target)
+        if card is None:
+            raise NotFound
+        return Response(card)

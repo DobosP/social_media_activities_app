@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load avatars i18n %}
 {% block title %}{{ group.title }}{% endblock %}
 {% block content %}
 <p class="muted"><a href="{% url 'groups' %}">&larr; {% trans "Groups" %}</a></p>
@@ -44,7 +44,7 @@
    anywhere. The number below is the incidental length of the list already on screen.{% endcomment %}
 {% if roster is not None %}
   <h2>{% blocktrans with count_n=roster|length %}Members ({{ count_n }}){% endblocktrans %}</h2>
-  <ul>{% for m in roster %}<li>{{ m.display_name|default:m.username }}</li>{% endfor %}</ul>
+  <ul class="members">{% for m in roster %}<li><img class="avatar avatar-xs" src="{{ m|avatar_uri }}" width="24" height="24" alt="">{% if m.id != user.id %}<a href="{% url 'person' m.public_id %}" data-hovercard-user="{{ m.public_id }}">{{ m.display_name|default:m.username }}</a>{% else %}{{ m.display_name|default:m.username }}{% endif %}</li>{% endfor %}</ul>
 {% endif %}
 
 {% if can_announce %}
@@ -66,7 +66,7 @@
   {% endfor %}
   {% for p in posts %}
     <article id="post-{{ p.pk }}" class="post">
-      <div class="meta">{{ p.author.display_name|default:p.author.username }} &middot;
+      <div class="meta"><img class="avatar avatar-xs" src="{{ p.author|avatar_uri }}" width="20" height="20" alt="">{% if p.author_id and p.author_id != user.id %}<a href="{% url 'person' p.author.public_id %}" data-hovercard-user="{{ p.author.public_id }}">{{ p.author.display_name|default:p.author.username }}</a>{% else %}{{ p.author.display_name|default:p.author.username }}{% endif %} &middot;
         <a href="#post-{{ p.pk }}" class="muted">{{ p.created_at|date:'j M H:i' }}</a>
         {% if p.author_id != user.id %}&middot; <a class="muted u-text-xs" href="{% url 'report' %}?type=post&amp;id={{ p.pk }}">{% trans "report" %}</a>{% endif %}</div>
       <div>{{ p.body_html }}</div>

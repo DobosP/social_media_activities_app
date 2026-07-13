@@ -1153,3 +1153,19 @@ textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--accent)
 .breadcrumbs li + li::before { content: "›"; opacity: 0.6; }
 .breadcrumbs a { color: inherit; }
 .breadcrumbs [aria-current="page"] { color: var(--color-text, inherit); font-weight: 500; }
+
+/* =============================================================================
+   Person hover-overview cards (ADR-0028) — styling only via classes (CSP: no
+   style nonce, so inline styles are never an option).
+   ============================================================================= */
+.avatar-xs { vertical-align: middle; margin-right: .35rem; }
+.hovercard {
+  position: absolute; z-index: 60; max-width: 20rem; min-width: 14rem;
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--r);
+  padding: .8rem .9rem; box-shadow: var(--shadow-sm);
+}
+.person-card-head { display: flex; gap: .7rem; align-items: center; }
+.person-card-name { margin: 0; }
+.person-card-sub { margin: .15rem 0 0; font-size: .85rem; }
+.person-card-body { margin-top: .5rem; }
+.person-card-body p { margin: .2rem 0; }

@@ -188,6 +188,9 @@ urlpatterns = [
     path("profile/", views.profile, name="profile"),
     path("profile/avatar/", views.avatar_upload, name="avatar_upload"),
     path("profile/avatar-style/", views.avatar_style, name="avatar_style"),
+    # ADR-0028: another user's tier-gated profile page + the hover-overview partial.
+    path("people/<uuid:public_id>/", views.person, name="person"),
+    path("people/<uuid:public_id>/card/", views.person_card, name="person_card"),
     path("verify-age/", views.verify_age, name="verify_age"),
     path("wards/", views.wards, name="wards"),
     path("wards/invite/", views.guardian_invite_create, name="guardian_invite_create"),

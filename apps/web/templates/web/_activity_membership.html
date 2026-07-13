@@ -1,4 +1,4 @@
-{% load i18n %}
+{% load avatars i18n %}
 {% if is_member %}
   <div class="card">
     <strong>{% trans "You're a member" %}{% if is_owner %} {% trans "(owner)" %}{% elif is_organizer %} {% trans "(co-organiser)" %}{% endif %}.</strong>
@@ -109,7 +109,9 @@
     <h3>{% trans "Pending join requests" %}</h3>
     {% for m in pending %}
       <div class="row u-space-between">
-        <div>{{ m.user.display_name|default:m.user.username }}
+        {# ADR-0028: requester overview — avatar + hover card so members can judge the request. #}
+        <div><img class="avatar avatar-xs" src="{{ m.user|avatar_uri }}" width="24" height="24" alt="">
+          <a href="{% url 'person' m.user.public_id %}" data-hovercard-user="{{ m.user.public_id }}">{{ m.user.display_name|default:m.user.username }}</a>
           <span class="muted">&mdash; {% blocktrans with approvals=m.approvals needed=m.needed %}{{ approvals }}/{{ needed }} approvals{% endblocktrans %}</span></div>
         <div class="vote-row">
           {% if m.my_vote is not None %}<span class="muted">{% blocktrans with vote=m.my_vote|yesno:_("approve,deny") %}you voted {{ vote }}{% endblocktrans %}</span>{% endif %}
@@ -186,7 +188,7 @@
 
 <h2>{% trans "Members" %}</h2>
 <ul class="members">
-  {% for m in members %}<li>{{ m.user.display_name|default:m.user.username }}{% if m.role == "owner" %} &middot; {% trans "owner" %}{% elif m.role == "co_organizer" %} &middot; {% trans "co-organiser" %}{% elif m.role == "guardian" %} &middot; {% trans "guardian" %}{% endif %}{% if m.user.id != user.id %}
+  {% for m in members %}<li><img class="avatar avatar-xs" src="{{ m.user|avatar_uri }}" width="24" height="24" alt="">{% if m.user.id != user.id %}<a href="{% url 'person' m.user.public_id %}" data-hovercard-user="{{ m.user.public_id }}">{{ m.user.display_name|default:m.user.username }}</a>{% else %}{{ m.user.display_name|default:m.user.username }}{% endif %}{% if m.role == "owner" %} &middot; {% trans "owner" %}{% elif m.role == "co_organizer" %} &middot; {% trans "co-organiser" %}{% elif m.role == "guardian" %} &middot; {% trans "guardian" %}{% endif %}{% if m.user.id != user.id %}
     &middot; <a class="member-action-link" href="{% url 'report' %}?type=user&id={{ m.user.id }}">{% trans "report" %}</a>
     {% if conn_enabled and m.role != "guardian" and m.user.id not in conn_related_ids %}
     <form method="post" action="{% url 'connection_request' %}" class="inline">{% csrf_token %}

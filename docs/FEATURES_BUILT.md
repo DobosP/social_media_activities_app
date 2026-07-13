@@ -14,6 +14,17 @@ Last verified: 2026-07-11 — contracts match `apps/*/services.py` + the 2,365-t
 Built on the social core; see services/tests for exact behaviour. All uphold the six hard
 invariants in [`CLAUDE.md`](../CLAUDE.md).
 
+- **Tiered profile visibility + person hover cards** (ADR-0028) — the sole other-user
+  profile surface: `/people/<public_id>/` page + hover partial + API twin, one live resolver
+  (`connections/profiles.py`; no stored relationship labels). Gates: vetoes (blocked either
+  way, cross-cohort, unassigned, inactive, self) are 404-indistinguishable; stranger =
+  minimal card (name + generated avatar, the SAFETY.md §4 cap); shared activity/group or
+  join-request↔organizer = handle + verified boolean + shared-context titles + Connect;
+  connected = Message + (adults only) interests + uploaded photo (page only, can_view_photo
+  re-checked); minor pairs clamped at the shared shape; never age band/cohort/progression/
+  history at any tier. Avatars mandatory + hover triggers on rosters/requests/thread authors
+  (`attach_interest_nodes` batches, query-pinned); displayed activity roster is now
+  block-filtered (`visible_roster`); hover endpoint braked (`profile_card` 240/h).
 - **Avatar styles + uniqueness registry** (ADR-0027) — versioned avatar generations
   (`accounts/avatars.py::GENERATIONS`: 1 Constellation, 2 Orbits) with a self-only style picker
   (web profile card + SPA parity + `GET/POST /api/accounts/me/avatar-style/`); each pick is
