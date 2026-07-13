@@ -292,6 +292,13 @@ WantedBy=timers.target
 sudo systemctl enable --now socialapp-jobs.timer
 ```
 
+ADR-0026 video attachments add two host requirements (cloud-init installs both): the `ffmpeg`
+package (prod refuses to boot with `MEDIA_VIDEO_ENABLED=True` without it) and the frequent
+`socialapp-media.timer` (`deploy/systemd/socialapp-media.{service,timer}` — a minutely, `--limit 2`
+drain of pending transcodes; a no-op when the queue is empty). Budget roughly one CPU core while a
+clip transcodes (`MEDIA_VIDEO_THREADS=2` caps it); the in-app single-flight guard keeps uploads
+from stacking concurrent encodes on the box.
+
 > Equivalent plain crontab line if you prefer: `0 3 * * * cd /home/app/social_media_activities_app && set -a && . ./.env && .venv/bin/python manage.py run_due_jobs`.
 > Set `MESSAGING_RETENTION_DAYS` (in `.env`, read by the job) to the period your DPO defines — `0`
 > disables that purge. Running `run_due_jobs` is **required**: without it, retention never runs and

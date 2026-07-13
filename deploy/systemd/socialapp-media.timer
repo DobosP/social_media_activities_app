@@ -1,0 +1,12 @@
+# ADR-0026: check for pending videos every minute (no-op when the queue is empty — the
+# claim query hits a partial index over only the transient non-ready rows).
+[Unit]
+Description=Run the pending-video transcode drain every minute
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1min
+Persistent=false
+
+[Install]
+WantedBy=timers.target

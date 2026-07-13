@@ -33,6 +33,9 @@ from django.core.management.base import BaseCommand, CommandError
 DUE_JOBS = (
     ("purge_messaging", {}),
     ("purge_expired_attachments", {}),
+    # ADR-0026 daily safety net (bounded so it can never monopolise the sequential tick
+    # ahead of the later safety jobs; the frequent socialapp-media timer is the main drain).
+    ("transcode_videos", {"limit": 2}),
     ("purge_read_notifications", {}),  # P1 storage hygiene (read, non-DSA notices past retention)
     ("lift_suspensions", {}),
     ("purge_guardian_invites", {}),  # W3-F16 delete expired guardian invites (minor-PII hygiene)

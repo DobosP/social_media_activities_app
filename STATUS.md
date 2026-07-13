@@ -4,7 +4,7 @@
 `docs/archive/COMPLETENESS_GAPS_2026-06.md`). On any doc conflict: this file > newest-dated ADR in
 `docs/adr/` > everything else.
 
-Last verified: 2026-07-11
+Last verified: 2026-07-13
 
 ## What this is
 
@@ -15,6 +15,32 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
 
 ## Current state
 
+- **Media compression layer v2 + private-thread video LANDED on `main` (ADR-0026,
+  2026-07-13; owner approved the merge, the CLAUDE.md invariant-#1 rewording to "no
+  public/discovery short-video", and video ENABLED BY DEFAULT — kill switch
+  `MEDIA_VIDEO_ENABLED=false`; rendering stays confined to the owning cohort-gated
+  activity/group thread, never feeds/discovery):** canonical image codec
+  WebP→**AVIF** (per-codec auto quality, prod boot-checks the encoder, one-env-var rollback) +
+  one eager 800px rendition per image (`thumb_storage_key` on Photo/Attachment/ActivityCover)
+  served on cards/streams/grids/avatars via a signed-token `variant`; **video attachments**
+  — adults-only private threads (`MEDIA_VIDEO_COHORTS`), withheld
+  `status=pending` rows, fail-closed streamed-sha256 admission + perceptual frame scan,
+  sandboxed ffmpeg (x264 720p CRF23 progressive MP4 +faststart, full metadata strip, AVIF
+  poster), own skip-locked claim queue (`transcode_videos` mgmt cmd + 1-min systemd timer +
+  post-upload kick; DeferredTask rejected — it holds its claim txn across handlers), HTTP-Range
+  serving, ephemeral/purge/Art.-17 coverage for all blobs, ffmpeg added to the Docker image.
+  Live thread chat has full media parity (ID-only group payloads; per-viewer URL minting in
+  the consumer; live ready/failed swap); E2EE DMs stay media-free (ADR-0006 untouched).
+  Docs updated in lockstep (FILE_STORAGE §9, SAFETY rule 6 + D6, FEATURES_BUILT,
+  MEDIA_FILTERING, HOSTING_EU, deploy/README, ADR-0004 superseded-by pointer). Verified
+  2026-07-13 in the worktree container (deps synced to pins, ffmpeg 7.1.5): FULL SUITE
+  2,494 passed / 0 failed; ruff check + format clean; makemigrations --check clean;
+  git diff --check clean. 5-dimension adversarial review (child-safety, security,
+  concurrency, correctness, ops): 1 HIGH (inline-transcode DB-pool exhaustion) + 4 MED
+  (purge-vs-finalizer evidence race, whole-object Range reads, ffmpeg missing from CI and
+  cloud-init) + 10 LOW — ALL remediated on the branch; every safety gate independently
+  confirmed sound. Plus 3 builder-caught bugs fixed pre-review (ffmpeg thread-cap vs
+  RLIMIT_AS, middleware trailing-slash, zero-frame sampling on sub-3s clips).
 - **AI-agent & search-engine access surface LANDED on `main` (ADR-0025, 2026-07-12; owner
   approved the `EventViewSet` `IsAuthenticated→AllowAny` auth change and the landing):**
   events JSON API is anonymous behind the

@@ -155,7 +155,7 @@ def test_signed_url_roundtrip_and_scope():
     photo = upload_photo(owner, Photo.Kind.PROFILE, _png())
     url = signed_url(photo, owner)
     token = url.rsplit("/", 2)[1]
-    assert resolve_signed_token(token, owner).id == photo.id
+    assert resolve_signed_token(token, owner)[0].id == photo.id
 
     # A token is bound to its viewer; a different cohort user can't reuse it.
     other = _user("p7", band=AgeBand.UNDER_16)

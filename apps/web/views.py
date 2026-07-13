@@ -727,7 +727,9 @@ def _avatar_url(viewer, target_user):
     if photo is None:
         return None
     try:
-        return signed_url(photo, viewer)
+        # Avatars render small everywhere — the thumb rendition is plenty (falls back to
+        # the full object for pre-rendition rows).
+        return signed_url(photo, viewer, variant="thumb")
     except NotAuthorized:
         return None
 
@@ -1775,6 +1777,8 @@ def activity_detail(request, pk):
             photos = []
         for photo in photos:
             photo.url = signed_url(photo, user)
+            # The grid shows the rendition; the full object stays one click away.
+            photo.thumb_url = signed_url(photo, user, variant="thumb")
 
     # Safe-exit context (F5): the viewer's own already-linked guardians, named so a child
     # who feels unsafe knows who they can turn to. No contact details, no new link — just
@@ -1916,6 +1920,13 @@ def activity_detail(request, pk):
             "typingTwo": gettext("%(a)s and %(b)s are typing…"),
             "typingMany": gettext("Several people are typing…"),
             "justNow": gettext("just now"),
+            "sharedImage": gettext("shared image"),
+            "videoProcessing": gettext("Video is being prepared — it will appear here shortly."),
+            "videoFailed": gettext("This video couldn't be processed."),
+            "attachmentExpired": gettext("This temporary picture has disappeared."),
+            "attachmentDisappears": gettext("disappears in %(when)s"),
+            "attachmentBlocked": gettext("Blocked by safety screening."),
+            "pdfDownloads": gettext("(PDF — downloads)"),
         },
     }
     return render(
@@ -1961,6 +1972,12 @@ def activity_detail(request, pk):
                 if activity.cohort == Cohort.ADULT
                 else [("86400", "1 day"), ("604800", "1 week")]
             ),
+            # ADR-0026: whether THIS thread's composer accepts a short video (flag + cohort).
+            "video_enabled": (
+                getattr(settings, "MEDIA_VIDEO_ENABLED", False)
+                and activity.cohort in set(getattr(settings, "MEDIA_VIDEO_COHORTS", ["adult"]))
+            ),
+            "video_max_seconds": getattr(settings, "MEDIA_VIDEO_MAX_DURATION_SECONDS", 90),
             "my_guardians": my_guardians,
             "my_arrival": my_arrival,
             "my_transit": my_transit,
@@ -2527,12 +2544,17 @@ def activity_post(request, pk):
     if not (body or "").strip() and upload is None:
         messages.error(request, "Type a message or attach a file.")
         return redirect("activity_detail", pk=pk)
-    data = None
     if upload is not None:
-        if upload.size > media._attachment_max_bytes():
+        # Friendly pre-check only (the service re-enforces): a video (sniffed by magic) gets
+        # the ADR-0026 video cap, everything else the classic attachment cap.
+        from apps.media.video import looks_like_video
+
+        head = upload.read(16)
+        upload.seek(0)
+        cap = media._video_max_bytes() if looks_like_video(head) else media._attachment_max_bytes()
+        if upload.size > cap:
             messages.error(request, "That file is too large.")
             return redirect("activity_detail", pk=pk)
-        data = upload.read()
     try:
         # Post + attachment are ONE transaction: if the scan rejects the file, the post is
         # rolled back too (no message without its file), and the on_commit live broadcast fires
@@ -2543,16 +2565,16 @@ def activity_post(request, pk):
                 activity,
                 body,
                 reply_to=form.cleaned_data.get("reply_to"),
-                allow_empty=data is not None,
+                allow_empty=upload is not None,
                 ping=form.cleaned_data.get("ping", False),
             )
-            if data is not None:
+            if upload is not None:
                 ttl = form.cleaned_data.get("disappear") or None
                 media.attach_to_post(
                     request.user,
                     post,
                     filename=upload.name,
-                    data=data,
+                    fileobj=upload,
                     ttl_seconds=int(ttl) if ttl else None,
                 )
     except (social.SocialError, media.MediaError) as exc:
