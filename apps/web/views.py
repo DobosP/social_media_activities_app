@@ -351,6 +351,7 @@ def group_detail(request, pk):
     # adult staff CURATOR of a minor group can't pass the cohort wall (can_read_thread), so they get
     # the same staff read-bypass as activity_detail — they need to see their own announcements.
     announcements, posts, can_post = [], [], False
+    reply_target = None
     show_thread = (is_member and social.can_read_thread(user, group)) or user.is_staff
     if show_thread:
         announcements = list(
@@ -360,10 +361,24 @@ def group_detail(request, pk):
         )
         posts, _has_older, _cursor = social.thread_page(group)
         group_links = social.thread_allows_links(group)  # adult cohort only
-        for p in posts:
+        # ADR-0029 round-3 F3: groups now carry the FULL post surface through the same _post.html
+        # partial as activities — attach the same per-post context (viewer's own reaction toggles,
+        # the batched countless sentiment footer, the viewer's own dissent/concern state, and any
+        # inline attachments) in constant queries over the whole rendered window.
+        from apps.media.services import attachments_for_posts
+
+        all_rendered = [*posts, *(r for p in posts for r in p.replies.all())]
+        by_post = attachments_for_posts(all_rendered, user)
+        rx = social.reactions_for_posts(all_rendered, user)
+        footers = social.sentiment_footers_for(all_rendered, user)
+        mine_dc = social.dissent_concern_mine(all_rendered, user)
+        for p in all_rendered:
             p.body_html = social.highlight_mentions(p.body, {}, allow_links=group_links)
-            for r in p.replies.all():
-                r.body_html = social.highlight_mentions(r.body, {}, allow_links=group_links)
+            p.attachment_list = by_post.get(p.id, [])
+            p.reaction_mine = rx.get(p.id, {"mine": set()})["mine"]
+            p.sentiment_lines = footers.get(p.id, [])
+            p.dissent_mine = mine_dc.get(p.id, {"dissent": False})["dissent"]
+            p.concern_mine = mine_dc.get(p.id, {"concern": False})["concern"]
         # Peer posting: a current member of a non-minor group who passes the read gate. Minor group
         # threads are announcement-only (the gate lives in post_to_thread); a staff non-member or
         # the minor-group curator posts nothing here — the curator broadcasts via the announce form.
@@ -372,7 +387,13 @@ def group_detail(request, pk):
             and group.cohort not in (Cohort.CHILD, Cohort.TEEN)
             and social.can_read_thread(user, group)
         )
-    post_form = PostForm() if can_post else None
+        # No-JS quote-reply: a "Reply" link is ?reply_to=<id>#compose; pre-target the compose form.
+        rt = request.GET.get("reply_to")
+        if rt and rt.isdigit() and can_post:
+            reply_target = Post.objects.filter(
+                pk=int(rt), thread=group.thread, is_hidden=False, is_announcement=False
+            ).first()
+    post_form = PostForm(initial={"reply_to": reply_target.id} if reply_target else None)
     # ADR-0028: avatars are a MUST on roster rows and thread authors — batch the inputs.
     from apps.recommendations.services import attach_interest_nodes
 
@@ -384,6 +405,57 @@ def group_detail(request, pk):
             if p.author_id
         ]
     )
+    # ADR-0029 round-3 F3: the shared _post.html partial + live client config for the group thread.
+    # reaction_facets, the live thread_chat_config (group react URL template), the F33 presend hint,
+    # and the per-post action URL names are built EXACTLY as activity_detail does — the same picker,
+    # the same countless footer, and the same one-open/one-tap Respond menu now render on a group.
+    from django.utils.translation import gettext
+
+    from apps.chat.presend import client_ruleset
+
+    reaction_facets = [
+        {
+            "slug": slug,
+            "emoji": social.REACTION_FACETS[slug][0],
+            "label": social.REACTION_FACETS[slug][1],
+        }
+        for slug in social.allowed_reactions()
+    ]
+    thread_chat_config = {
+        "threadId": group.thread.id,
+        "meId": user.id,
+        "reactUrlTemplate": reverse("group_post_react", args=[group.pk, 987654321]),
+        "reactionFacets": reaction_facets,
+        "i18n": {
+            "reply": gettext("Reply"),
+            "react": gettext("react"),
+            "edited": gettext("(edited)"),
+            "replyingTo": gettext("Replying to"),
+            "messageSent": gettext("Message sent."),
+            "newAnnouncement": gettext("New announcement posted."),
+            "newMessages": gettext("New messages"),
+            "livePaused": gettext("Live updates paused — reload to catch up."),
+            "typingOne": gettext("%(name)s is typing…"),
+            "typingTwo": gettext("%(a)s and %(b)s are typing…"),
+            "typingMany": gettext("Several people are typing…"),
+            "justNow": gettext("just now"),
+            "sharedImage": gettext("shared image"),
+            "videoProcessing": gettext("Video is being prepared — it will appear here shortly."),
+            "videoFailed": gettext("This video couldn't be processed."),
+            "attachmentExpired": gettext("This temporary picture has disappeared."),
+            "attachmentDisappears": gettext("disappears in %(when)s"),
+            "attachmentBlocked": gettext("Blocked by safety screening."),
+            "pdfDownloads": gettext("(PDF — downloads)"),
+        },
+    }
+    presend_nudge = {
+        "rules": client_ruleset(),
+        "message": gettext(
+            "This looks like it might share contact details or a plan to meet one-to-one. "
+            "To keep everyone safe — especially younger members — try to keep coordination "
+            "inside the group. Post it anyway?"
+        ),
+    }
     return render(
         request,
         "web/group_detail.html",
@@ -398,6 +470,21 @@ def group_detail(request, pk):
             "show_thread": show_thread,
             "can_post": can_post,
             "post_form": post_form,
+            "reply_target": reply_target,
+            # ADR-0029: picker options + the cohort-gated secondary Respond affordances. Dissent/
+            # concern require BOTH the viewer and the group to be non-CHILD (decided server-side,
+            # never CSS-hidden); a CHILD group renders no footer and no dissent/concern rows.
+            "reaction_emojis": reaction_facets,
+            "show_dissent_concern": user.cohort != Cohort.CHILD and group.cohort != Cohort.CHILD,
+            "thread_chat_config": thread_chat_config,
+            "presend_nudge": presend_nudge,
+            # _post.html reverses its per-post action URLs from these (see activity_detail).
+            "post_owner_pk": group.pk,
+            "post_react_url_name": "group_post_react",
+            "post_dissent_url_name": "group_post_dissent",
+            "post_concern_url_name": "group_post_concern",
+            "post_edit_url_name": "group_post_edit",
+            "post_delete_url_name": "group_post_delete",
             # The owner (for an adult group, a peer; for a minor group, the staff curator) is the
             # only one who may broadcast — independent of the cohort-walled thread read.
             "can_announce": is_owner,
@@ -449,6 +536,111 @@ def group_post(request, pk):
     except social.SocialError as exc:
         messages.error(request, _msg(exc))
     return redirect("group_detail", pk=pk)
+
+
+def _visible_group_or_404(user, pk):
+    """The group RETRIEVE chokepoint for the per-post group actions — a cross-cohort/hidden/archived
+    id is a clean 404 (never a content leak), mirroring _visible_activity_or_404. group_by_id
+    already carries the staff curator bypass + cohort wall."""
+    group = social.group_by_id(pk, user)
+    if group is None:
+        raise Http404("No such group.")
+    return group
+
+
+@login_required
+@require_POST
+def group_post_edit(request, pk, post_id):
+    """Author edits their own group-thread message in place (parity with activity_post_edit)."""
+    group = _visible_group_or_404(request.user, pk)
+    post = get_object_or_404(Post, pk=post_id, thread=group.thread)
+    body = (request.POST.get("body") or "").strip()
+    if not body:
+        messages.error(request, "A message can't be empty.")
+        return redirect("group_detail", pk=pk)
+    try:
+        social.edit_post(request.user, post, body)
+    except social.SocialError as exc:
+        messages.error(request, _msg(exc))
+    return redirect("group_detail", pk=pk)
+
+
+@login_required
+@require_POST
+def group_post_delete(request, pk, post_id):
+    """Author soft-deletes their own group-thread message (parity with activity_post_delete)."""
+    group = _visible_group_or_404(request.user, pk)
+    post = get_object_or_404(Post, pk=post_id, thread=group.thread)
+    try:
+        social.delete_own_post(request.user, post)
+    except social.SocialError as exc:
+        messages.error(request, _msg(exc))
+    return redirect("group_detail", pk=pk)
+
+
+@login_required
+@require_POST
+def group_post_react(request, pk, post_id):
+    """Toggle the viewer's own facet reaction on a GROUP-thread post — the exact gate/service/JSON-
+    redirect contract as activity_post_react (ADR-0029; groups are now the primary home of the
+    feature). Anonymous, countless; no per-reaction broadcast (the aggregate lives only in the
+    batched sentiment footer)."""
+    group = _visible_group_or_404(request.user, pk)
+    post = get_object_or_404(Post, pk=post_id, thread=group.thread)
+    wants_json = request.headers.get("X-Requested-With") == "fetch"
+    try:
+        social.toggle_reaction(request.user, post, request.POST.get("emoji", ""))
+    except social.SocialError as exc:
+        if wants_json:
+            return JsonResponse({"ok": False, "detail": _msg(exc)}, status=400)
+        messages.error(request, _msg(exc))
+        return redirect(f"{reverse('group_detail', args=[pk])}#post-{post_id}")
+    if wants_json:
+        slot = social.reactions_for_posts([post], request.user).get(post.id, {"mine": set()})
+        return JsonResponse({"ok": True, "mine": sorted(slot["mine"])})
+    return redirect(f"{reverse('group_detail', args=[pk])}#post-{post_id}")
+
+
+@login_required
+@require_POST
+def group_post_dissent(request, pk, post_id):
+    """Toggle the viewer's own anonymous "I see this differently" tally on a GROUP-thread post
+    (ADR-0029 rung 1). Same gate/JSON-redirect contract as activity_post_dissent; the service
+    rejects a CHILD flagger, so the CHILD-group wall holds end-to-end."""
+    group = _visible_group_or_404(request.user, pk)
+    post = get_object_or_404(Post, pk=post_id, thread=group.thread)
+    wants_json = request.headers.get("X-Requested-With") == "fetch"
+    try:
+        now_dissenting = social.toggle_dissent(request.user, post)
+    except social.SocialError as exc:
+        if wants_json:
+            return JsonResponse({"ok": False, "detail": _msg(exc)}, status=400)
+        messages.error(request, _msg(exc))
+        return redirect(f"{reverse('group_detail', args=[pk])}#post-{post_id}")
+    if wants_json:
+        return JsonResponse({"ok": True, "mine": now_dissenting})
+    return redirect(f"{reverse('group_detail', args=[pk])}#post-{post_id}")
+
+
+@login_required
+@require_POST
+def group_post_concern(request, pk, post_id):
+    """Toggle the viewer's own anonymous "this doesn't seem to fit here" conduct-concern row on a
+    GROUP-thread post (ADR-0029 rung 2). Same gate/JSON-redirect contract as activity_post_concern;
+    NEVER public, any cohort; the CHILD-group wall holds (the service rejects a CHILD flagger)."""
+    group = _visible_group_or_404(request.user, pk)
+    post = get_object_or_404(Post, pk=post_id, thread=group.thread)
+    wants_json = request.headers.get("X-Requested-With") == "fetch"
+    try:
+        now_concerned = social.record_concern(request.user, post)
+    except social.SocialError as exc:
+        if wants_json:
+            return JsonResponse({"ok": False, "detail": _msg(exc)}, status=400)
+        messages.error(request, _msg(exc))
+        return redirect(f"{reverse('group_detail', args=[pk])}#post-{post_id}")
+    if wants_json:
+        return JsonResponse({"ok": True, "mine": now_concerned})
+    return redirect(f"{reverse('group_detail', args=[pk])}#post-{post_id}")
 
 
 @login_required
@@ -1768,6 +1960,10 @@ def activity_detail(request, pk):
         # ADR-0029: the batched, COUNTLESS sentiment footer (appreciation + adult-only dissent
         # line), one query for the whole rendered window (mirrors reactions_for_posts).
         footers = social.sentiment_footers_for(all_rendered, user)
+        # ADR-0029 (round-3 F2): the viewer's OWN dissent/concern toggle state (their personal data
+        # only — never another member's row, never a count) so the Respond menu renders the toggled
+        # "Noted quietly — tap to withdraw" label server-side on a no-JS reload.
+        mine_dc = social.dissent_concern_mine(all_rendered, user)
         # @mention roster computed ONCE (not per post) so highlighting the stream stays one query.
         roster = social.mention_roster(activity)
         allow_links = social.thread_allows_links(activity)  # adult cohort only
@@ -1776,6 +1972,8 @@ def activity_detail(request, pk):
             # ADR-0029: only the viewer's OWN facet toggles (no public "present" set).
             p.reaction_mine = rx.get(p.id, {"mine": set()})["mine"]
             p.sentiment_lines = footers.get(p.id, [])
+            p.dissent_mine = mine_dc.get(p.id, {"dissent": False})["dissent"]
+            p.concern_mine = mine_dc.get(p.id, {"concern": False})["concern"]
             # @mentions + safe markdown (escaped first; only real peers highlight; minors never
             # get autolinked URLs).
             p.body_html = social.highlight_mentions(p.body, roster, allow_links=allow_links)
@@ -2001,6 +2199,15 @@ def activity_detail(request, pk):
             "older_cursor": older_cursor,
             # ADR-0029: facet dicts (slug/emoji/label), fixed catalog order — the picker options.
             "reaction_emojis": reaction_facets,
+            # _post.html is the SINGLE post partial for both activity and group threads: it reverses
+            # its per-post action URLs from these context-provided names + owner pk. The activity
+            # surface supplies activity_post_* names here; group_detail supplies group_post_*.
+            "post_owner_pk": activity.pk,
+            "post_react_url_name": "activity_post_react",
+            "post_dissent_url_name": "activity_post_dissent",
+            "post_concern_url_name": "activity_post_concern",
+            "post_edit_url_name": "activity_post_edit",
+            "post_delete_url_name": "activity_post_delete",
             # Rung 1/2 secondary affordances (dissent tally, concern) are adult/teen-only: omitted
             # for a CHILD viewer OR a CHILD-cohort thread — decided server-side, never CSS-hidden.
             "show_dissent_concern": user.cohort != Cohort.CHILD and activity.cohort != Cohort.CHILD,

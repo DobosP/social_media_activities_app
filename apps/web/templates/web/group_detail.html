@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load avatars i18n %}
+{% load avatars csp_helpers i18n static %}
 {% block title %}{{ group.title }}{% endblock %}
 {% block content %}
 <p class="muted"><a href="{% url 'groups' %}">&larr; {% trans "Groups" %}</a></p>
@@ -64,19 +64,34 @@
       <div>{{ a.body|linebreaksbr }}</div>
     </article>
   {% endfor %}
-  {% for p in posts %}
-    <article id="post-{{ p.pk }}" class="post">
-      <div class="meta"><img class="avatar avatar-xs" src="{{ p.author|avatar_uri }}" width="20" height="20" alt="">{% if p.author_id and p.author_id != user.id %}<a href="{% url 'person' p.author.public_id %}" data-hovercard-user="{{ p.author.public_id }}">{{ p.author.display_name|default:p.author.username }}</a>{% else %}{{ p.author.display_name|default:p.author.username }}{% endif %} &middot;
-        <a href="#post-{{ p.pk }}" class="muted">{{ p.created_at|date:'j M H:i' }}</a>
-        {% if p.author_id != user.id %}&middot; <a class="muted u-text-xs" href="{% url 'report' %}?type=post&amp;id={{ p.pk }}">{% trans "report" %}</a>{% endif %}</div>
-      <div>{{ p.body_html }}</div>
-    </article>
-  {% empty %}
-    {% if not announcements %}<p class="muted">{% trans "No messages yet." %}</p>{% endif %}
-  {% endfor %}
+  {# ADR-0029 round-3 F3: the group thread renders through the SAME _post.html partial as an
+     activity — the reaction picker, the countless sentiment footer, and the one-open/one-tap
+     Respond menu (dissent/concern gated server-side by show_dissent_concern), plus reply/edit/
+     delete parity. The per-post action URL names come from the view (group_post_* here). #}
+  <div id="thread-list" class="thread">
+    {% for p in posts %}
+      {% include "web/_post.html" %}
+      <div class="replies" data-parent="{{ p.pk }}">
+        {% for r in p.replies.all %}{% include "web/_post.html" with p=r %}{% endfor %}
+      </div>
+    {% empty %}
+      {% if not announcements %}<p class="muted" id="no-messages">{% trans "No messages yet." %}</p>{% endif %}
+    {% endfor %}
+  </div>
+  {# Appears only when a live message lands while you're scrolled up (JS-only; no read-tracking). #}
+  <button type="button" id="thread-jump" class="thread-jump" hidden>&darr; {% trans "New messages" %}</button>
+
   {% if can_post %}
-    <form method="post" action="{% url 'group_post' group.pk %}">{% csrf_token %}
-      <textarea name="body" rows="3" placeholder="{% trans 'Write a message...' %}"></textarea>
+    <div id="typing-indicator" class="typing-indicator" aria-hidden="true"></div>
+    <form method="post" id="compose" action="{% url 'group_post' group.pk %}" class="stack compose-form">{% csrf_token %}
+      {% if reply_target %}
+        <p class="muted compose-reply-note">{% blocktrans with reply_author=reply_target.author.display_name|default:reply_target.author.username %}Replying to
+          {{ reply_author }}{% endblocktrans %}
+          &middot; <a href="{% url 'group_detail' group.pk %}#compose">{% trans "cancel" %}</a></p>
+      {% endif %}
+      {{ post_form.reply_to }}
+      <label class="visually-hidden" for="{{ post_form.body.id_for_label }}">{% trans "Write a message" %}</label>
+      {{ post_form.body }}
       <button class="btn btn-sm" type="submit">{% trans "Post" %}</button>
     </form>
   {% else %}
@@ -109,4 +124,17 @@
   <p class="muted">{% trans "No upcoming activities here right now." %}
     <a class="btn btn-sm" href="{% url 'activity_create' %}">{% trans "Organise one" %}</a></p>
 {% endfor %}
+{% endblock %}
+
+{% block scripts %}
+{% if show_thread %}
+{% comment %}ADR-0029 round-3 F3: the group thread is now live, exactly like an activity thread —
+   the same progressive-enhancement client (fully functional with JS off: the compose form POSTs,
+   reactions/dissent/concern are form POSTs). Loaded AFTER presend-nudge.js so the F33 safety nudge
+   registers its submit listener FIRST and can gate both the WebSocket send and the no-JS POST.{% endcomment %}
+{% nonced_json_script presend_nudge "presend-nudge" %}
+<script src="{% static 'js/presend-nudge.js' %}"></script>
+{% nonced_json_script thread_chat_config "thread-chat-config" %}
+<script src="{% static 'js/thread-chat.js' %}"></script>
+{% endif %}
 {% endblock %}

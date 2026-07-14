@@ -56,6 +56,34 @@ def test_concern_toggle_adds_then_removes(place, activity_type):
     assert not PostConcern.objects.filter(post=post, user=member).exists()
 
 
+# --- own-state echo (round-3 F2): dissent_concern_mine returns ONLY the viewer's own rows --------
+
+
+@pytest.mark.django_db
+def test_dissent_concern_mine_returns_only_viewers_own_rows(place, activity_type):
+    # F2: the Respond menu renders "Noted quietly — tap to withdraw" server-side on a no-JS reload
+    # from the viewer's OWN rows. dissent_concern_mine must be scoped to the viewer — never leak
+    # another member's dissent/concern (which are the FLAGGER's personal data, not the author's).
+    owner, member, activity = _setup(place, activity_type)
+    other = make_user("dc_other")
+    Membership.objects.create(
+        activity=activity, user=other, role=Membership.Role.MEMBER, state=Membership.State.MEMBER
+    )
+    post = social.post_to_thread(owner, activity, "hi")
+    social.toggle_dissent(member, post)  # member dissents
+    social.record_concern(other, post)  # a DIFFERENT member concerns
+
+    mine = social.dissent_concern_mine([post], member)
+    assert mine[post.id] == {"dissent": True, "concern": False}  # never sees `other`'s concern
+    theirs = social.dissent_concern_mine([post], other)
+    assert theirs[post.id] == {"dissent": False, "concern": True}  # never sees member's dissent
+    # A member who did neither gets a clean all-False echo (no leak of who else acted).
+    assert social.dissent_concern_mine([post], owner)[post.id] == {
+        "dissent": False,
+        "concern": False,
+    }
+
+
 @pytest.mark.django_db
 def test_dissent_and_concern_rows_never_public_no_read_helper():
     # Neither model exposes a public/serialized read path in this module — the ONLY read surface

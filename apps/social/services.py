@@ -2623,9 +2623,10 @@ def toggle_dissent(user, post) -> bool:
 
     from .models import PostDissent
 
-    _thread_write_gate(user, post)
-    if getattr(user, "cohort", None) == Cohort.CHILD:
-        # Reuse the guardian error type: a child has no silent-disapproval affordance here.
+    owner_obj = _thread_write_gate(user, post)
+    if getattr(user, "cohort", None) == Cohort.CHILD or owner_obj.cohort == Cohort.CHILD:
+        # Reuse the guardian error type: a child has no silent-disapproval affordance here, and a
+        # CHILD thread accepts none from anyone (incl. an adult staff member) — inv.3.
         raise NotEligible(_("Guardians accompany activities as read-only supervisors."))
     existing = PostDissent.objects.filter(post=post, user=user).first()
     if existing is not None:
@@ -2649,8 +2650,9 @@ def record_concern(user, post) -> bool:
 
     from .models import PostConcern
 
-    _thread_write_gate(user, post)
-    if getattr(user, "cohort", None) == Cohort.CHILD:
+    owner_obj = _thread_write_gate(user, post)
+    if getattr(user, "cohort", None) == Cohort.CHILD or owner_obj.cohort == Cohort.CHILD:
+        # CHILD threads accept no concern rows from anyone (incl. an adult staff member) — inv.3.
         raise NotEligible(_("Guardians accompany activities as read-only supervisors."))
     existing = PostConcern.objects.filter(post=post, user=user).first()
     if existing is not None:
@@ -2919,6 +2921,31 @@ def reactions_for_posts(posts, viewer) -> dict:
         "post_id", "emoji"
     ):
         out[r["post_id"]]["mine"].add(r["emoji"])
+    return out
+
+
+def dissent_concern_mine(posts, viewer) -> dict:
+    """Batch (no N+1): post_id -> {"dissent": bool, "concern": bool} for the VIEWER'S OWN rows only
+    (mirrors reactions_for_posts). Two bulk queries scoped to ``user_id=viewer.id`` — this is the
+    viewer's own personal data (a record of their own action), zero leak: never another member's
+    rows, never a count, never a who-list. Used to re-render the viewer's own toggle state ("Noted
+    quietly — tap to withdraw") server-side after a no-JS POST/redirect, so the Respond menu is
+    honest on reload without JS. The dissent/concern read surfaces stay otherwise closed (the only
+    aggregate is the batched, adult-only footer line)."""
+    from .models import PostConcern, PostDissent
+
+    ids = [p.id for p in posts]
+    out = {pid: {"dissent": False, "concern": False} for pid in ids}
+    if not ids:
+        return out
+    for pid in PostDissent.objects.filter(post_id__in=ids, user_id=viewer.id).values_list(
+        "post_id", flat=True
+    ):
+        out[pid]["dissent"] = True
+    for pid in PostConcern.objects.filter(post_id__in=ids, user_id=viewer.id).values_list(
+        "post_id", flat=True
+    ):
+        out[pid]["concern"] = True
     return out
 
 

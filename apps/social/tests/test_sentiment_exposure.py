@@ -176,8 +176,9 @@ def test_child_thread_renders_no_footer_no_dissent_concern_but_keeps_react_picke
     html = c.get(f"/activities/{activity.id}/").content.decode()
 
     assert 'class="sentiment-line"' not in html  # no footer, ever, for a CHILD thread
-    assert "See it differently" not in html  # dissent sheet omitted
-    assert "doesn't seem to fit here" not in html  # concern interstitial omitted
+    assert "I see this differently" not in html  # dissent row omitted (flattened Respond menu)
+    assert "doesn't seem to fit here" not in html  # concern row omitted
+    assert "concern-intro" not in html  # the first-use education never renders on a CHILD thread
     assert 'class="rx-pick"' in html  # the (countless) appreciation picker is still there
     assert social.allowed_reactions()[0] in html
 

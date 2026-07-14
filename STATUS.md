@@ -30,10 +30,17 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
   `/moderation/` interface (moderator-gated dashboard + per-item review/dismiss/escalate/
   teen-note-send, each audited) behind new `MODERATION_MODE` (`automated`/`automated+human`,
   default `automated+human`; the no-automated-minor-delivery floor is not configurable in
-  either mode). Web: `_post.html` picker now shows facet emoji+label with a Respond menu
-  (dissent sheet, concern interstitial, Report), fed by `sentiment_footers_for`/`reaction_mine`
-  context; live per-reaction WS broadcast removed (`broadcast_reaction` and the chat consumer's
-  `chat_reaction` handler deleted — the footer is batched, not live). `docs/FEATURES_BUILT.md`
+  either mode). Web: `_post.html` picker now shows facet emoji+label with a **flattened
+  one-open/one-tap Respond menu** (round-3 friction rebalance, owner 2026-07-15: dissent row with a
+  primary "Reply with your view" + one-tap quiet tally and an after-the-act reply nudge, a one-tap
+  conduct-concern toggle whose educational interstitial is paid ONCE per device via a localStorage
+  key — no server flag, no new PII, and the intro persists for no-JS users — and the Report link
+  below a divider), fed by `sentiment_footers_for`/`reaction_mine`/`dissent_concern_mine` context;
+  live per-reaction WS broadcast removed (`broadcast_reaction` and the chat consumer's
+  `chat_reaction` handler deleted — the footer is batched, not live). **Round 3 also wired the full
+  surface to GROUP threads** (their primary home): `group_detail` renders the SAME generalized
+  `_post.html` partial + live client, with `group_post_react`/`dissent`/`concern`/`edit`/`delete`
+  endpoints mirroring the activity trio under the same gate (no service/model/migration change). `docs/FEATURES_BUILT.md`
   and `docs/SAFETY.md` updated in lockstep (minor-protection rules, stale "reactions: OUT" line
   corrected). Verified in the `reactv2-web` container: the reactions/sentiment-jobs/moderation-UI/
   chat-consumer suites are green in isolation (50 passed); a full-suite run showed 32 failed /
@@ -42,10 +49,9 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
   files in isolation is fully green, matching the known concurrent-pytest-DB-race artifact (see
   memory's durable-lessons note), not a regression from this branch; re-run the full suite
   in isolation before landing to confirm. **Known gaps, tracked for follow-up, not blocking
-  this slice:** (1) Group-thread reaction/dissent/concern UI/URL/view was never built (pre-
-  existing — `group_detail.html` doesn't include the post partial; the service layer handles a
-  `Group` owner object fine, nothing calls it there yet) — needs its own URL/view/template design
-  as a separate task; (2) the E2EE-DM reaction picker (`messages_page`, client-side, explicitly
+  this slice:** (1) ~~Group-thread reaction/dissent/concern UI/URL/view was never built~~ **CLOSED
+  in round 3** — `group_detail` now renders the shared `_post.html` partial with the full surface
+  and the five `group_post_*` endpoints (see the round-3 note above); (2) the E2EE-DM reaction picker (`messages_page`, client-side, explicitly
   out of ADR-0029 scope) still reads `social.allowed_reactions()`, which now returns facet
   slugs instead of emoji glyphs — a cosmetic-only regression on that separate who+what system;
   (3) `docs/adr/0029` has no "Implementation deltas" section — no build-forced deviation from

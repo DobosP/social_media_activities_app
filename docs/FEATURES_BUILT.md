@@ -179,15 +179,20 @@ invariants in [`CLAUDE.md`](../CLAUDE.md).
   cascades honestly) and promote to `appreciation_permanent` after `REACTION_ROW_RETENTION_DAYS`
   so they outlive the row purge. Footer: fixed catalog order, max two appreciation lines, author
   parity is byte-identical to any viewer's (`social.sentiment_footer_for`/`sentiment_footers_for`).
-  **Rung 1 (dissent — "I see this differently"):** lives in a low-prominence Respond menu, no
-  emoji glyph; primary action reuses the existing reply/quote composer (dissent-as-speech);
-  secondary `toggle_dissent` records one anonymous, withdrawable tally row (CHILD cohort has no
-  tally, only the reply). An adult-only public line ("Some see this differently.", always last)
+  **Rung 1 (dissent — "I see this differently"):** lives in a low-prominence **flattened**
+  Respond menu (round-3 friction rebalance, owner 2026-07-15 — one open + one tap, no nested
+  sheets), no emoji glyph; primary action ("Reply with your view") reuses the existing reply/quote
+  composer (dissent-as-speech); secondary `toggle_dissent` records one anonymous, withdrawable
+  one-tap tally row (CHILD cohort has no tally, only the reply) with the reply nudge moved to AFTER
+  the act instead of gating it. An adult-only public line ("Some see this differently.", always last)
   latches only after **2 consecutive weekly windows** at ≥6 distinct dissenters AND audience ≥12,
   and lapses the same way (no permanent mark); `is_announcement` posts are exempt; TEEN/CHILD
   never render it. **Rung 2 (conduct concern — "This doesn't seem to fit here"):** never public,
-  any cohort; a friction interstitial routes disagreement/harm elsewhere. `record_concern`
-  records a tally row (CHILD flaggers rejected at the service gate). The daily
+  any cohort; a one-tap toggle whose **first-use educational interstitial is paid ONCE per device**
+  (localStorage `concernIntroSeen`, set on first toggle OR first Respond-menu expansion — no
+  server-side flag, no new PII; the intro renders server-side so no-JS users always see it) routes
+  disagreement/harm elsewhere. `record_concern` records a tally row (CHILD flaggers rejected at the
+  service gate). The daily
   `evaluate_concerns` job runs a capped ladder per ADULT author (k1=2 distinct + audience≥8 →
   exactly one private restorative `FORMATIVE_NOTE` notification via `notify()`, ≤1/author/14d,
   ≤1/post lifetime, an edit clears accrual and permanently bars a repeat auto-note; k2=4 distinct
@@ -213,10 +218,14 @@ invariants in [`CLAUDE.md`](../CLAUDE.md).
   remains the sole DSA Art-16 channel (unconditional-of-cohort report link on every post, styled
   distinctly, below a divider). No reaction/dissent/concern data is ever serialized on any read
   API, the agent snapshot, or `services/agentapi/` (ADR-0025's `social.*` exclusion holds).
-  **Known gap:** this pass covers the ACTIVITY thread surface only — Group threads have no
-  reaction/dissent/concern UI, URL, or view at all (pre-existing; `group_detail.html` never
-  included the post partial), so `eligible_audience_count`/`_thread_write_gate` handle a `Group`
-  owner object at the service layer but nothing calls it there yet. The E2EE-DM reaction picker
+  **GROUP threads carry the full surface (round 3, their primary home):** `group_detail` renders
+  the SAME generalized `_post.html` partial (picker + countless footer + flattened Respond menu)
+  and is now live (`thread-chat.js` + F33 presend nudge with group URL templates); five endpoints
+  `group_post_react`/`dissent`/`concern`/`edit`/`delete` at `groups/<pk>/posts/<post_id>/<action>/`
+  mirror the activity trio + edit/delete under the same shared write gate and JSON/redirect duality
+  — no service/model/job/migration change (services were already `Group`-owner-generic; the daily
+  batch latches group-thread footers; the CHILD-group wall holds end-to-end). The E2EE-DM reaction
+  picker
   (`messages_page`, client-side, explicitly out of ADR-0029 scope) still reads
   `social.allowed_reactions()` for its button labels, which now returns facet slugs instead of
   emoji glyphs — a cosmetic-only regression on that separate who+what system, not fixed here.

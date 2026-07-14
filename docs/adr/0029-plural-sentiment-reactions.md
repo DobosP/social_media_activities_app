@@ -203,13 +203,12 @@ rows anonymize at 90 days.
 
 ## Implementation deltas
 
-- **Group-thread UI deferred.** The service layer (`_thread_write_gate`, `toggle_reaction`,
-  `toggle_dissent`, `record_concern`, `eligible_audience_count`) handles both `Activity` and
-  `Group` owner objects, per the spec. No Group-thread web surface (URL/view/template) ever
-  called these for posts — that gap pre-dates this ADR (`group_detail.html` does not render the
-  shared post partial at all) and is out of this slice's scope; the reaction/dissent/concern
-  ladder is therefore live on ACTIVITY threads only today. Tracked as follow-up work, not a
-  change to the accepted design.
+- **Group-thread UI deferred → now CLOSED (see delta (g)).** The service layer
+  (`_thread_write_gate`, `toggle_reaction`, `toggle_dissent`, `record_concern`,
+  `eligible_audience_count`) always handled both `Activity` and `Group` owner objects, but at first
+  no Group-thread web surface called them for posts (`group_detail.html` rendered a hand-rolled
+  post loop, not the shared partial). Round 3 (owner decision 2026-07-15) wires the full surface to
+  group threads — see delta (g). The ladder is now live on both ACTIVITY and GROUP threads.
 - **E2EE-DM reaction picker labels.** `apps/messaging`'s client-side, who+what DM reaction
   picker (explicitly out of this ADR's scope — it never touches `PostReaction`) reads
   `social.allowed_reactions()` purely for its button set. Since that function now returns facet
@@ -249,3 +248,35 @@ rows anonymize at 90 days.
   `REACTION_ROW_RETENTION_DAYS` graduates to `appreciation_permanent` even when its supporting
   rows fall below `k` (they have aged into the purge window; the sentence is now a non-personal
   aggregate). An erasure BEFORE 90 days still unlatches honestly.
+- **(f) Friction rebalance (owner decision 2026-07-15).** The Respond menu was too effortful ("I
+  see this differently" and the concern flow each cost multiple opens/taps). Owner directive: UI
+  friction was NEVER the primary protection — the thresholds, audience floors, daily batching,
+  caps, and the coordination sensors are (all unchanged and remain the primary safeguard). Friction
+  drops to **one open + one tap**: the flattened menu (`_post.html`) shows three rows immediately on
+  open — a dissent row (primary "Reply with your view" + a one-tap quiet "I see this differently"
+  tally, with the reply nudge moved to AFTER the act instead of gating it), a one-tap conduct-concern
+  toggle, and the Report link below a divider. No nested `<details>`, no sheets. The concern
+  educational interstitial is now **paid ONCE per device** (localStorage key `concernIntroSeen`, set
+  on first concern toggle OR first Respond-menu expansion) — there is **no server-side per-user flag
+  and no new personal data**. Education **persists for no-JS users** (the intro `<div>` renders
+  server-side and is only hidden by JS — progressive enhancement). The viewer's own toggle state is
+  echoed server-side on a no-JS reload via `social.dissent_concern_mine` (the viewer's OWN rows
+  only — never another member's, never a count), so "Noted quietly — tap to withdraw" is honest
+  without JS. All systemic protections, thresholds, and the CHILD/TEEN cohort walls are unchanged.
+- **(g) Group threads carry the full surface (round 3).** Group threads are the **primary home** of
+  the feature per the owner. `group_detail` now renders posts through the SAME `_post.html` partial
+  as activities (single source of truth for the cohort-gated markup) with the full context contract:
+  the appreciation picker, the countless `p.sentiment_lines` footer, `p.reaction_mine`,
+  `p.dissent_mine`/`p.concern_mine`, and `show_dissent_concern = (viewer.cohort != CHILD and
+  group.cohort != CHILD)`. Five endpoints mirror the activity ones under the same shared write gate
+  and JSON/redirect duality — `group_post_react` / `group_post_dissent` / `group_post_concern` /
+  `group_post_edit` / `group_post_delete` at `groups/<pk>/posts/<post_id>/<action>/`. The partial was
+  **generalized, not forked**: it reverses its per-post URLs from context-provided URL-name vars
+  (`post_react_url_name` … `post_delete_url_name`) + `post_owner_pk`, so activities and groups share
+  ONE partial. No service/model/job/migration change was needed (the services were already owner-
+  generic; `GroupMembership` has no GUARDIAN role, so guardian exclusion is a safe Activity-only
+  no-op; `eligible_audience_count` and the batch jobs already handle Group owners). The daily batch
+  latches the countless footer for TEEN/ADULT group threads; the CHILD-group wall holds end-to-end
+  (no footer, no dissent/concern UI, and the endpoints reject a CHILD flagger). The group thread is
+  also now **live** (the config-driven `thread-chat.js` + F33 presend nudge, with group URL
+  templates), matching the activity thread.

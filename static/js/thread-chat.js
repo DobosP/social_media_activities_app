@@ -221,9 +221,52 @@
     wrap.appendChild(details);
     return wrap;
   }
+  // ---------------------------------------------------------------- Respond menu (ADR-0029 F1)
+  // Friction rebalance (owner 2026-07-15): ONE open + ONE tap. The dissent label swaps to a
+  // withdraw affordance after a quiet note and a reply nudge appears AFTER the act; the concern
+  // first-use interstitial is paid ONCE per device (localStorage "concernIntroSeen", no server
+  // flag, no personal data) — no-JS users always see it (progressive enhancement).
+  var CONCERN_INTRO_SEEN = "concernIntroSeen";
+  function applyDissentToggle(art, mine) {
+    var btn = art.querySelector(".dissent-toggle");
+    if (btn) btn.textContent = mine ? btn.dataset.labelOn : btn.dataset.labelOff;
+    var hint = art.querySelector(".dissent-after-hint");
+    if (hint) hint.hidden = !mine; // the reply nudge follows the act, never gates it
+  }
+  function collapseConcernIntro(root) {
+    // Hide the (already-seen) education and drop the button to its one-tap label. A concerned
+    // button keeps its withdraw label; only a not-yet-concerned button collapses to the tap label.
+    (root || list).querySelectorAll(".concern-intro").forEach(function (el) {
+      el.hidden = true;
+    });
+    (root || list).querySelectorAll(".concern-toggle").forEach(function (b) {
+      if (b.dataset.concerned !== "1") b.textContent = b.dataset.labelCollapsed;
+    });
+  }
+  function applyConcernToggle(art, mine) {
+    lsSet(CONCERN_INTRO_SEEN, "1"); // a successful toggle counts as first use
+    var intro = art.querySelector(".concern-intro");
+    if (intro) intro.hidden = true;
+    var b = art.querySelector(".concern-toggle");
+    if (b) {
+      b.dataset.concerned = mine ? "1" : "";
+      b.textContent = mine ? b.dataset.labelWithdraw : b.dataset.labelCollapsed;
+    }
+  }
+  if (lsGet(CONCERN_INTRO_SEEN)) collapseConcernIntro();
+  // First EXPANSION of a Respond menu also counts as seeing the intro: set the key so the next
+  // open (or reload) collapses it, but leave THIS first view intact (the education is shown once).
+  list.querySelectorAll("details.respond-menu").forEach(function (menu) {
+    menu.addEventListener("toggle", function () {
+      if (!menu.open) return;
+      if (lsGet(CONCERN_INTRO_SEEN)) collapseConcernIntro(menu);
+      else lsSet(CONCERN_INTRO_SEEN, "1");
+    });
+  });
+
   // Intercept a reaction/dissent/concern form submit -> fetch (no reload). These are the viewer's
   // OWN anonymous toggles only — no broadcast to other members (ADR-0029); a reaction's own picker
-  // highlight updates from the response, dissent/concern have no client-visible state to sync.
+  // highlight updates from the response, dissent/concern update their own Respond-menu affordances.
   list.addEventListener("submit", function (ev) {
     var f = ev.target;
     if (!f || f.tagName !== "FORM") return;
@@ -250,10 +293,16 @@
         return r.ok ? r.json() : null;
       })
       .then(function (j) {
-        if (!j || !j.ok || !isReact || !postId || !art) return;
-        mineByPost[postId] = j.mine || [];
-        var wrap = art.querySelector(".rx");
-        if (wrap) syncPicker(wrap, j.mine || []);
+        if (!j || !j.ok || !postId || !art) return;
+        if (isReact) {
+          mineByPost[postId] = j.mine || [];
+          var wrap = art.querySelector(".rx");
+          if (wrap) syncPicker(wrap, j.mine || []);
+        } else if (isDissent) {
+          applyDissentToggle(art, !!j.mine);
+        } else if (isConcern) {
+          applyConcernToggle(art, !!j.mine);
+        }
       })
       .catch(function () {
         /* network hiccup — the no-JS POST path still works on the next reload */

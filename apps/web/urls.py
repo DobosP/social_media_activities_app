@@ -243,6 +243,34 @@ urlpatterns = [
     path("groups/<int:pk>/join/", views.group_join, name="group_join"),
     path("groups/<int:pk>/leave/", views.group_leave, name="group_leave"),
     path("groups/<int:pk>/post/", views.group_post, name="group_post"),
+    # ADR-0029 round-3: per-post group-thread actions mirroring the activity trio + edit/delete —
+    # same gate shape, same JSON/redirect duality, same generic services. Groups are the primary
+    # home of the reaction/dissent/concern surface.
+    path(
+        "groups/<int:pk>/posts/<int:post_id>/edit/",
+        views.group_post_edit,
+        name="group_post_edit",
+    ),
+    path(
+        "groups/<int:pk>/posts/<int:post_id>/delete/",
+        views.group_post_delete,
+        name="group_post_delete",
+    ),
+    path(
+        "groups/<int:pk>/posts/<int:post_id>/react/",
+        views.group_post_react,
+        name="group_post_react",
+    ),
+    path(
+        "groups/<int:pk>/posts/<int:post_id>/dissent/",
+        views.group_post_dissent,
+        name="group_post_dissent",
+    ),
+    path(
+        "groups/<int:pk>/posts/<int:post_id>/concern/",
+        views.group_post_concern,
+        name="group_post_concern",
+    ),
     path("groups/<int:pk>/announce/", views.group_announce, name="group_announce"),
     path("groups/<int:pk>/ask/", views.group_ask, name="group_ask"),
     path("groups/<int:pk>/archive/", views.group_archive, name="group_archive"),
