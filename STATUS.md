@@ -15,8 +15,8 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
 
 ## Current state
 
-- **Plural sentiment reactions built, NOT YET LANDED (ADR-0029, 2026-07-14; branch
-  `feat/reactions-v2-feeling`, worktree only — awaiting review/merge):** replaces the anonymous
+- **Plural sentiment reactions LANDED on main (ADR-0029, 2026-07-15; owner-approved merge —
+  feature commits `74378b4` + `cf146b1`, suite 2649 green on the landed tree):** replaces the anonymous
   distinct-emoji-chip reaction surface (`9b5701e`) with a severity ladder — appreciation
   (5 fixed facet slugs, thresholded public sentences, author-parity, daily-batched, never a
   count), dissent ("I see this differently" — reply-first, an adult-only 2-window-latched public
