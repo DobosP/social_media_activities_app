@@ -20,6 +20,14 @@
 3. `docs/agent-map.md` and `docs/agent-testing.md`.
 4. Task-specific app and matching tests.
 
+## Key docs (authoritative — pointers only, do not restate content here)
+- Product overview + stack: `README.md`. Vision/principles: `docs/ROADMAP.md`.
+- Hard safety invariants (do not weaken): `docs/SAFETY.md`.
+- Architecture conventions — 5 gating rules (services layer, atomic+audit, `notify()`
+  chokepoint, `DUE_JOBS`, cohort gates): `docs/ARCHITECTURE.md`.
+- Built features (check before building "new"): `docs/FEATURES_BUILT.md`.
+- Full doc index: `docs/README.md`.
+
 ## Token discipline
 - Start with the specific Django app named in the task.
 - Do not paste large media/test payloads into chat.
