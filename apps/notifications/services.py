@@ -40,6 +40,38 @@ def notify(recipient, kind, title, *, body="", url="") -> Notification | None:
     )
 
 
+def notify_moderators(kind, title, *, body="", url="") -> int:
+    """Fan a moderator-facing notice (ADR-0029 concern queue / safety sensors) out to every active
+    moderator or admin. Best-effort: a per-recipient failure never aborts the loop. Returns the
+    number of notifications actually created.
+
+    Skipped ENTIRELY when ``MODERATION_MODE == "automated"`` — in that mode alerts are muted and the
+    ConcernReview queue simply accumulates and fails safe (nothing is delivered or restricted); the
+    moderation interface surfaces the unattended backlog instead."""
+    from django.conf import settings
+    from django.contrib.auth import get_user_model
+    from django.db.models import Q
+
+    from apps.accounts.models import Role
+
+    if getattr(settings, "MODERATION_MODE", "automated+human") == "automated":
+        return 0
+    User = get_user_model()
+    mods = (
+        User.objects.filter(is_active=True)
+        .filter(Q(role__in=[Role.MODERATOR, Role.ADMIN]) | Q(is_staff=True))
+        .distinct()
+    )
+    sent = 0
+    for mod in mods:
+        try:
+            if notify(mod, kind, title, body=body, url=url) is not None:
+                sent += 1
+        except Exception:  # noqa: BLE001 — best-effort fan-out; one bad recipient never aborts it
+            pass
+    return sent
+
+
 def get_muted_kinds(user) -> set[str]:
     prefs = NotificationPreference.objects.filter(user=user).first()
     return set(prefs.muted_kinds) if prefs else set()

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Concern review" %}{% endblock %}
+{% block content %}
+<p><a href="{% url 'moderation_dashboard' %}">&larr; {% trans "Back to the queue" %}</a></p>
+<h1>{{ kind_label }}</h1>
+<p class="muted">
+  {% trans "Status" %}: {{ status_label }} &middot; {{ review.created_at|date:"j M Y, H:i" }}
+</p>
+<p class="muted">{% blocktrans with subject=subject %}Subject: {{ subject }}{% endblocktrans %}</p>
+
+<div class="card">
+  <h2>{% trans "Post" %}</h2>
+  {% if post %}
+    <p>{{ post_body|linebreaksbr }}</p>
+  {% else %}
+    <p class="muted">{% trans "The post is no longer available (removed or erased)." %}</p>
+  {% endif %}
+</div>
+
+{% if payload_items %}
+  <div class="card">
+    <h2>{% trans "Details" %}</h2>
+    <dl>
+      {% for key, value in payload_items %}
+        <dt>{{ key }}</dt><dd>{{ value }}</dd>
+      {% endfor %}
+    </dl>
+  </div>
+{% endif %}
+
+{% if is_open %}
+  <div class="card">
+    <h2>{% trans "Actions" %}</h2>
+    <p class="muted">{% blocktrans %}These are formative signals, not allegations. No action is
+      required — you can simply mark the item reviewed.{% endblocktrans %}</p>
+
+    <form method="post">{% csrf_token %}
+      <input type="hidden" name="action" value="review">
+      <button class="btn" type="submit">{% trans "Mark reviewed" %}</button>
+    </form>
+
+    <form method="post">{% csrf_token %}
+      <input type="hidden" name="action" value="dismiss">
+      <button class="btn" type="submit">{% trans "Dismiss" %}</button>
+    </form>
+
+    {% if is_escalatable %}
+      <form method="post">{% csrf_token %}
+        <input type="hidden" name="action" value="escalate">
+        <button class="btn btn-danger" type="submit">{% trans "Escalate to a report" %}</button>
+      </form>
+      <p class="muted">{% blocktrans %}Escalating opens a formal Report (with statement of reasons and
+        contest rights) in the existing moderation tooling.{% endblocktrans %}</p>
+    {% else %}
+      <p class="muted">{% blocktrans %}This is an informational safety signal for you to review — not
+        an allegation against anyone — so it can't be escalated into a report.{% endblocktrans %}</p>
+    {% endif %}
+
+    {% if is_teen %}
+      <h3>{% trans "Send a gentle note" %}</h3>
+      <p class="muted">{% blocktrans %}Teens are never sent automated corrective notes. If you'd
+        like, you can relay a human-authored, restorative note to the author. Edit the text
+        first.{% endblocktrans %}</p>
+      <form method="post">{% csrf_token %}
+        <input type="hidden" name="action" value="send_note">
+        <p><textarea name="note" rows="4">{{ teen_template }}</textarea></p>
+        <button class="btn" type="submit">{% trans "Send gentle note" %}</button>
+      </form>
+    {% endif %}
+  </div>
+{% else %}
+  <p class="muted">{% blocktrans with status=status_label %}This item has been handled ({{ status }}).{% endblocktrans %}</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,5 @@
+{% comment %}ADR-0029: the plural, COUNTLESS sentiment footer — at most two batched appreciation
+   sentences then, last, the adult-only dissent line. Author-parity: byte-identical for the author
+   and any other viewer. No icons, no numbers, no "+more"; below threshold it is simply absent
+   (silence, never a "0"/"be the first"). Context: p.sentiment_lines (list[str]).{% endcomment %}
+{% for line in p.sentiment_lines %}<p class="sentiment-line">{{ line }}</p>{% endfor %}

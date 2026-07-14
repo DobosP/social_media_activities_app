@@ -73,18 +73,49 @@
     {% endif %}
   {% endfor %}
   </div>
-  {# Reactions: anonymous + COUNTLESS — only which emojis are present, never how many or who. #}
+  {# ADR-0029: the batched, COUNTLESS sentiment footer (appreciation + adult-only dissent line) —
+     no icons, no numbers, author-identical. Replaces the old live "distinct emojis present" chips
+     (that surfaced at n=1 — a small-roster identity leak). #}
+  {% include "web/_post_sentiment.html" %}
   <div class="rx">
-    {% for e in p.reaction_present %}<span class="rx-chip{% if e in p.reaction_mine %} rx-mine{% endif %}">{{ e }}</span>{% endfor %}
     {% if is_member %}
       <details class="rx-pick">
         <summary class="muted">{% trans "react" %}</summary>
-        {% for e in reaction_emojis %}
+        {% for f in reaction_emojis %}
           <form method="post" action="{% url 'activity_post_react' activity.pk p.pk %}" class="inline">{% csrf_token %}
-            <input type="hidden" name="emoji" value="{{ e }}">
-            <button class="rx-btn{% if e in p.reaction_mine %} rx-mine{% endif %}" type="submit" aria-label="{% blocktrans with emoji=e %}react {{ emoji }}{% endblocktrans %}">{{ e }}</button>
+            <input type="hidden" name="emoji" value="{{ f.slug }}">
+            <button class="rx-btn{% if f.slug in p.reaction_mine %} rx-mine{% endif %}" type="submit" data-slug="{{ f.slug }}"
+                    aria-label="{% blocktrans with label=f.label %}react: {{ label }}{% endblocktrans %}">{{ f.emoji }} {{ f.label }}</button>
           </form>
         {% endfor %}
+      </details>
+      {# Respond menu (ADR-0029 rungs 1-3): low-prominence by design — friction is protective.
+         Dissent/concern are decided server-side per viewer+thread cohort (show_dissent_concern),
+         never CSS-hidden; Report (the sole DSA Art-16 channel) always shows, any cohort. #}
+      <details class="respond-menu">
+        <summary class="muted">{% trans "Respond" %}</summary>
+        {% if show_dissent_concern %}
+          <div class="dissent-sheet">
+            <p>{% trans "See it differently? The best thing is usually to say so." %}</p>
+            <a class="btn btn-sm" href="?reply_to={{ p.pk }}#compose">{% trans "Add your view" %}</a>
+            <form method="post" action="{% url 'activity_post_dissent' activity.pk p.pk %}" class="inline">{% csrf_token %}
+              <button class="linkbtn" type="submit">{% trans "Just note that I see it differently" %}</button>
+            </form>
+          </div>
+          <details class="concern-item">
+            <summary class="muted">{% trans "This doesn't seem to fit here" %}</summary>
+            <p class="muted">{% blocktrans %}'Doesn't fit here' is for a post that seems off-topic or out of step with this group — not for an opinion you disagree with (use 'I see this differently') and not for anything harmful or unsafe (use Report). No names and no numbers are ever attached, and a person only hears about it if a few others feel the same.{% endblocktrans %}</p>
+            <form method="post" action="{% url 'activity_post_concern' activity.pk p.pk %}" class="row concern-form">{% csrf_token %}
+              <a class="btn btn-sm btn-secondary" href="#post-{{ p.pk }}">{% trans "Not now" %}</a>
+              <button class="btn btn-sm" type="submit">{% trans "Send" %}</button>
+            </form>
+          </details>
+        {% endif %}
+        <div class="respond-divider">
+          {% if p.author_id != user.id %}
+            <a class="muted u-text-xs report-link" href="{% url 'report' %}?type=post&amp;id={{ p.pk }}">{% trans "Report" %}</a>
+          {% endif %}
+        </div>
       </details>
     {% endif %}
   </div>

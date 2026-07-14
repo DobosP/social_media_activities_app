@@ -53,6 +53,7 @@ from apps.media.services import (
     thread_photos,
     upload_photo,
 )
+from apps.messaging import services as messaging_services
 from apps.notifications import services as notifications
 from apps.notifications.models import Notification
 from apps.places.filters import PlaceFilter
@@ -1761,16 +1762,20 @@ def activity_detail(request, pk):
 
         all_rendered = [*posts, *(r for p in posts for r in p.replies.all())]
         by_post = attachments_for_posts(all_rendered, user)
-        # Reactions: anonymous, COUNTLESS — only the distinct emojis present + the viewer's own.
+        # Reactions: anonymous, COUNTLESS — only the viewer's OWN facet toggles (ADR-0029 removed
+        # the public distinct-facet "present" set; the aggregate now lives in the footer below).
         rx = social.reactions_for_posts(all_rendered, user)
+        # ADR-0029: the batched, COUNTLESS sentiment footer (appreciation + adult-only dissent
+        # line), one query for the whole rendered window (mirrors reactions_for_posts).
+        footers = social.sentiment_footers_for(all_rendered, user)
         # @mention roster computed ONCE (not per post) so highlighting the stream stays one query.
         roster = social.mention_roster(activity)
         allow_links = social.thread_allows_links(activity)  # adult cohort only
         for p in all_rendered:
             p.attachment_list = by_post.get(p.id, [])
-            slot = rx.get(p.id, {"present": [], "mine": set()})
-            p.reaction_present = slot["present"]
-            p.reaction_mine = slot["mine"]
+            # ADR-0029: only the viewer's OWN facet toggles (no public "present" set).
+            p.reaction_mine = rx.get(p.id, {"mine": set()})["mine"]
+            p.sentiment_lines = footers.get(p.id, [])
             # @mentions + safe markdown (escaped first; only real peers highlight; minors never
             # get autolinked URLs).
             p.body_html = social.highlight_mentions(p.body, roster, allow_links=allow_links)
@@ -1926,11 +1931,21 @@ def activity_detail(request, pk):
     # Config for the live thread client (static/js/thread-chat.js), passed via json_script so it is
     # XSS-safe. reactUrlTemplate carries a numeric sentinel the client swaps for a real post id (a
     # live post has no server-reversed URL of its own). All UI copy is translated server-side here.
+    # ADR-0029: the fixed appreciation-facet catalog (slug + emoji + label) for both the
+    # server-rendered picker and the live client's reactionRow builder for freshly-arrived posts.
+    reaction_facets = [
+        {
+            "slug": slug,
+            "emoji": social.REACTION_FACETS[slug][0],
+            "label": social.REACTION_FACETS[slug][1],
+        }
+        for slug in social.allowed_reactions()
+    ]
     thread_chat_config = {
         "threadId": activity.thread.id,
         "meId": user.id,
         "reactUrlTemplate": reverse("activity_post_react", args=[activity.pk, 987654321]),
-        "emojis": social.allowed_reactions(),
+        "reactionFacets": reaction_facets,
         "i18n": {
             "reply": gettext("Reply"),
             "react": gettext("react"),
@@ -1984,7 +1999,11 @@ def activity_detail(request, pk):
             "posts": posts,
             "has_older": has_older,
             "older_cursor": older_cursor,
-            "reaction_emojis": social.allowed_reactions(),
+            # ADR-0029: facet dicts (slug/emoji/label), fixed catalog order — the picker options.
+            "reaction_emojis": reaction_facets,
+            # Rung 1/2 secondary affordances (dissent tally, concern) are adult/teen-only: omitted
+            # for a CHILD viewer OR a CHILD-cohort thread — decided server-side, never CSS-hidden.
+            "show_dissent_concern": user.cohort != Cohort.CHILD and activity.cohort != Cohort.CHILD,
             "thread_chat_config": thread_chat_config,
             "reply_target": reply_target,
             "photos": photos,
@@ -2639,9 +2658,10 @@ def activity_post_delete(request, pk, post_id):
 @login_required
 @require_POST
 def activity_post_react(request, pk, post_id):
-    """Toggle the viewer's own emoji reaction on a thread post (anonymous, no count). Returns JSON
-    for the live (fetch) client so it can update chips without a reload; redirects for the no-JS
-    form POST. The live update for OTHER members rides the toggle's on-commit reaction broadcast."""
+    """Toggle the viewer's own facet reaction on a thread post (anonymous, no count). Returns JSON
+    for the live (fetch) client so it can update the viewer's OWN picker highlight without a reload;
+    redirects for the no-JS form POST. ADR-0029 removed the per-reaction broadcast to other members
+    (the aggregate now lives only in the batched sentiment footer)."""
     activity = _visible_activity_or_404(request.user, pk)
     post = get_object_or_404(Post, pk=post_id, thread=activity.thread)
     wants_json = request.headers.get("X-Requested-With") == "fetch"
@@ -2653,13 +2673,56 @@ def activity_post_react(request, pk, post_id):
         messages.error(request, _msg(exc))
         return redirect(f"{reverse('activity_detail', args=[pk])}#post-{post_id}")
     if wants_json:
-        # Echo back THIS viewer's resulting state (present = anonymous distinct emojis; mine = the
-        # viewer's own toggles) so the reactor's own chips update immediately, before/without the
-        # broadcast. Never a count, never a who-list.
-        slot = social.reactions_for_posts([post], request.user).get(
-            post.id, {"present": [], "mine": set()}
-        )
-        return JsonResponse({"ok": True, "present": slot["present"], "mine": sorted(slot["mine"])})
+        # Echo back only THIS viewer's own facet toggles (ADR-0029 removed the public "present"
+        # set) so the reactor's own picker highlight updates immediately. Never a count/who-list.
+        slot = social.reactions_for_posts([post], request.user).get(post.id, {"mine": set()})
+        return JsonResponse({"ok": True, "mine": sorted(slot["mine"])})
+    return redirect(f"{reverse('activity_detail', args=[pk])}#post-{post_id}")
+
+
+@login_required
+@require_POST
+def activity_post_dissent(request, pk, post_id):
+    """Toggle the viewer's own anonymous "I see this differently" tally on a thread post (ADR-0029
+    rung 1, the quiet SECONDARY action in the Respond menu). The PRIMARY dissent action is a normal
+    attributed reply — dissent-as-speech — which reuses the existing ?reply_to= composer target,
+    not this endpoint. No count/who-list is ever returned; the only aggregate read surface is
+    the batched, adult-only sentiment footer line. Same JSON/redirect contract as react."""
+    activity = _visible_activity_or_404(request.user, pk)
+    post = get_object_or_404(Post, pk=post_id, thread=activity.thread)
+    wants_json = request.headers.get("X-Requested-With") == "fetch"
+    try:
+        now_dissenting = social.toggle_dissent(request.user, post)
+    except social.SocialError as exc:
+        if wants_json:
+            return JsonResponse({"ok": False, "detail": _msg(exc)}, status=400)
+        messages.error(request, _msg(exc))
+        return redirect(f"{reverse('activity_detail', args=[pk])}#post-{post_id}")
+    if wants_json:
+        return JsonResponse({"ok": True, "mine": now_dissenting})
+    return redirect(f"{reverse('activity_detail', args=[pk])}#post-{post_id}")
+
+
+@login_required
+@require_POST
+def activity_post_concern(request, pk, post_id):
+    """Toggle the viewer's own anonymous "this doesn't seem to fit here" conduct-concern row on a
+    thread post (ADR-0029 rung 2, reached through the Respond menu's friction interstitial). NEVER
+    public, any cohort; the only author-facing effect is the capped, restorative batch ladder — this
+    endpoint itself never notifies, never reveals a count/who-list. Same JSON/redirect contract as
+    activity_post_react."""
+    activity = _visible_activity_or_404(request.user, pk)
+    post = get_object_or_404(Post, pk=post_id, thread=activity.thread)
+    wants_json = request.headers.get("X-Requested-With") == "fetch"
+    try:
+        now_concerned = social.record_concern(request.user, post)
+    except social.SocialError as exc:
+        if wants_json:
+            return JsonResponse({"ok": False, "detail": _msg(exc)}, status=400)
+        messages.error(request, _msg(exc))
+        return redirect(f"{reverse('activity_detail', args=[pk])}#post-{post_id}")
+    if wants_json:
+        return JsonResponse({"ok": True, "mine": now_concerned})
     return redirect(f"{reverse('activity_detail', args=[pk])}#post-{post_id}")
 
 
@@ -3204,9 +3267,10 @@ def messages_page(request):
             "avatar": interest_avatar_data_uri(request.user),
         },
         "connections": conns,
-        # The fixed reaction set (same as the thread). In E2EE chat a reaction is an encrypted
-        # message the client renders as who+what — the server never sees the emoji.
-        "reaction_emojis": social.allowed_reactions(),
+        # The fixed DM emoji set. In E2EE chat a reaction is an encrypted message the
+        # client renders as who+what — the server never sees the emoji. Distinct from
+        # the thread-post facet vocabulary (ADR-0029), which is anonymous/countless.
+        "reaction_emojis": messaging_services.DM_REACTION_EMOJIS,
     }
     return render(
         request,

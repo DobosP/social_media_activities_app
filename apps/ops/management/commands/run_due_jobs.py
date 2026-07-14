@@ -19,6 +19,9 @@ It fans out to the existing per-app commands rather than re-implementing their l
   * ``match_saved_searches``   — alert savers when a new activity matches a saved search.
   * ``sync_event_feeds``       — pull registered external calendars (EventFeed) into Events.
   * ``expire_api_tokens``      — delete stale API tokens (forced re-login; no forever-credentials).
+  * ``recompute_post_sentiment``— re-derive appreciation footers (daily) + dissent windows (weekly).
+  * ``evaluate_concerns``      — restorative concern ladder + anti-bully sensors (ADR-0029).
+  * ``purge_stale_reaction_rows``— 90-day hard delete of reaction/dissent/concern rows.
   * ``process_deferred_tasks``— drain the durable off-request task queue (apps.ops.tasks).
 
 Each job is isolated: a failure in one is reported but does not abort the rest, so a
@@ -56,6 +59,11 @@ DUE_JOBS = (
     ("expire_api_tokens", {}),
     ("indexnow_batch_submit", {}),  # ping Bing/Yandex with recently-changed public URLs (opt-in)
     ("export_agent_snapshot", {}),  # write gate-filtered public JSON for the agent sidecar (opt-in)
+    # ADR-0029 plural sentiment: all three self-gate on JobMarkers (daily/weekly), so they are safe
+    # to list on the constant tick — they do real work only when due.
+    ("recompute_post_sentiment", {}),  # re-derive appreciation footers (daily) + dissent (weekly)
+    ("evaluate_concerns", {}),  # restorative concern ladder + anti-bully sensors (daily)
+    ("purge_stale_reaction_rows", {}),  # 90-day hard delete of reaction/dissent/concern rows
     # Drain the durable off-request task queue LAST, so any task an earlier job enqueued this tick
     # is picked up the same tick (apps.ops.tasks; no-op until the first handler is registered).
     ("process_deferred_tasks", {}),

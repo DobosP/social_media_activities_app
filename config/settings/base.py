@@ -4,6 +4,7 @@ from pathlib import Path
 
 import environ
 from csp.constants import NONCE
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -722,6 +723,41 @@ THREAD_REACT_RATE_WINDOW_SECONDS = env.int("THREAD_REACT_RATE_WINDOW_SECONDS", d
 SOCIAL_THREAD_POST_LIMIT = env.int("SOCIAL_THREAD_POST_LIMIT", default=100)
 # NOTE: thread messages are now permanent + audited (no time-based purge) — the child-safety-
 # correct retention posture. The former CHAT_RETENTION_DAYS / purge_chat job were removed.
+
+# --- ADR-0029: plural sentiment reactions (appreciation / dissent / conduct-concern) ---
+# The whole surface is COUNTLESS + anonymous + BATCHED (never live). These thresholds only gate
+# when a DERIVED footer sentence latches — never anything user-visible per row. k = the distinct-
+# reactor floor per cohort; the eligible-audience floor is 2*k (COMPUTED, not a setting) so a thin
+# roster never surfaces an aggregate. CHILD threads never get a footer at all.
+SENTIMENT_K_ADULT = env.int("SENTIMENT_K_ADULT", default=5)
+SENTIMENT_K_TEEN = env.int("SENTIMENT_K_TEEN", default=8)
+# Adult-only public dissent line ("Some see this differently.") — hardened latching: a distinct-
+# dissenter floor + an audience floor + sustained/decayed over consecutive WEEKLY windows, so a
+# one-day blitz latches nothing and nothing is permanent.
+DISSENT_K = env.int("DISSENT_K", default=6)
+DISSENT_AUDIENCE_FLOOR = env.int("DISSENT_AUDIENCE_FLOOR", default=12)
+DISSENT_WINDOWS_TO_LATCH = env.int("DISSENT_WINDOWS_TO_LATCH", default=2)
+DISSENT_WINDOWS_TO_LAPSE = env.int("DISSENT_WINDOWS_TO_LAPSE", default=2)
+# Conduct-concern ladder (rung 2, NEVER public): k1 = one capped restorative note to an ADULT
+# author; k2 = moderator queue; TEEN k routes straight to a human relay (never auto-delivered).
+CONCERN_K1 = env.int("CONCERN_K1", default=2)
+CONCERN_K2 = env.int("CONCERN_K2", default=4)
+CONCERN_TEEN_K = env.int("CONCERN_TEEN_K", default=3)
+CONCERN_AUDIENCE_FLOOR = env.int("CONCERN_AUDIENCE_FLOOR", default=8)
+# At most one auto formative note per author per this rolling window (across all their posts).
+FORMATIVE_NOTE_COOLDOWN_DAYS = env.int("FORMATIVE_NOTE_COOLDOWN_DAYS", default=14)
+# Raw reaction/dissent/concern rows are HARD-DELETED after this window (delete beats anonymize,
+# ADR-0029; footers keep any graduated permanent appreciation slugs). Sensors window on this too.
+REACTION_ROW_RETENTION_DAYS = env.int("REACTION_ROW_RETENTION_DAYS", default=90)
+# Trust-and-safety operating mode. "automated+human" (default) works the ConcernReview queue;
+# "automated" mutes moderator alerts and lets the queue accumulate (fail-safe: nothing delivered
+# or restricted). Validated at boot — no other value is legal.
+MODERATION_MODE = env.str("MODERATION_MODE", default="automated+human")
+if MODERATION_MODE not in {"automated", "automated+human"}:
+    raise ImproperlyConfigured(
+        "MODERATION_MODE must be one of {'automated', 'automated+human'}, "
+        f"got {MODERATION_MODE!r}."
+    )
 
 # --- Connections (find + reconnect with people you've shared real activities with) ---
 # Cohorts allowed to use connections, each WITHIN its own cohort. Cross-age connection is

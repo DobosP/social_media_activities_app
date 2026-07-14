@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Moderation queue" %}{% endblock %}
+{% block content %}
+<h1>{% trans "Moderation queue" %}</h1>
+<p class="muted">{% blocktrans %}Soft, formative concern signals raised by the community and the
+  safety sensors. Nothing here is an allegation and nothing is hidden automatically — you can let
+  an item rest, relay a gentle note, or escalate it into the Report queue (which carries the
+  statement of reasons and contest rights).{% endblocktrans %}</p>
+
+{% if automated %}
+  <p class="card" role="status">
+    <strong>{% trans "Automated mode — alerts muted, queue accumulates." %}</strong><br>
+    {% blocktrans %}The system is running in automated mode: corrective notes and moderator
+    alerts are not being sent, and items below fail safe (nothing is delivered or restricted).
+    They accumulate here until a human works them.{% endblocktrans %}
+  </p>
+{% endif %}
+
+<h2>{% trans "Open items" %} <span class="tag">{{ open_total }}</span></h2>
+
+<p class="muted">
+  {% for kind, n in open_kind_counts.items %}
+    {{ kind }}: {{ n }}{% if not forloop.last %} &middot; {% endif %}
+  {% empty %}
+    {% trans "Nothing open right now." %}
+  {% endfor %}
+</p>
+
+<div class="grid">
+  {% for row in rows %}
+    <div class="card">
+      <strong>{{ row.kind_label }}</strong>
+      <p class="muted">{% blocktrans with subject=row.subject %}Subject: {{ subject }}{% endblocktrans %}</p>
+      {% if row.snippet %}<p>{{ row.snippet }}</p>{% endif %}
+      <p class="muted">{{ row.review.created_at|date:"j M Y, H:i" }}</p>
+      <a class="btn" href="{% url 'moderation_concern' pk=row.review.pk %}">{% trans "Open" %}</a>
+    </div>
+  {% empty %}
+    <p class="muted">{% trans "The queue is empty." %}</p>
+  {% endfor %}
+</div>
+
+<h2>{% trans "All items by status" %}</h2>
+<p class="muted">
+  {% for status, n in status_counts.items %}
+    {{ status }}: {{ n }}{% if not forloop.last %} &middot; {% endif %}
+  {% empty %}
+    {% trans "No concern items yet." %}
+  {% endfor %}
+</p>
+
+<h2>{% trans "Reports" %}</h2>
+<p class="muted">{% blocktrans %}Harmful or unsafe content is reported through the existing Report
+  tooling, which is the sole DSA Art-16 channel.{% endblocktrans %}</p>
+<p><a href="{% url 'admin:safety_report_changelist' %}">{% trans "Open the Report queue (admin)" %}</a></p>
+{% endblock %}

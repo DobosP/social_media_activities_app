@@ -71,3 +71,17 @@ class DeferredTask(models.Model):
 
     def __str__(self) -> str:
         return f"DeferredTask(id={self.pk}, kind={self.kind!r}, status={self.status})"
+
+
+class JobMarker(models.Model):
+    """A tiny cadence gate for batch jobs. ``run_due_jobs`` ticks EVERY cron pass with no per-job
+    cadence, so daily/weekly jobs (e.g. the ADR-0029 sentiment/concern recompute) self-gate by
+    reading + updating their marker row (``select_for_update`` + a >= interval check on
+    ``last_run_at``) instead of doing real work on every tick. A null ``last_run_at`` means the
+    job has never run and is due immediately."""
+
+    name = models.CharField(max_length=64, unique=True)
+    last_run_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self) -> str:
+        return f"JobMarker({self.name!r} @ {self.last_run_at})"

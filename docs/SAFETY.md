@@ -125,6 +125,44 @@ clear reporting from the activity screen. Track as safety backlog.
   adult → other-people's-minors read-window). GUARDIANs remain excluded from posting, voting,
   reactions and the mention roster.
 
+## Minor protection in the plural-sentiment reaction ladder (ADR-0029)
+
+The reaction/dissent/concern surface (`social.toggle_reaction`/`toggle_dissent`/`record_concern`,
+batched by `social.sentiment`) adds a severity ladder above the countless appreciation reactions,
+with its own minor-protection floor:
+
+- **No automated corrective delivery to a minor, ever, in either `MODERATION_MODE`.** A TEEN
+  author never receives an automated `FORMATIVE_NOTE`; a TEEN-authored post crossing the concern
+  threshold (`CONCERN_TEEN_K`) only ever reaches the moderator queue (`ConcernReview`,
+  `Kind.TEEN_CONCERN`) with a suggested human-relay template — a human moderator must read and
+  choose to send it (`views_moderation.moderation_concern`'s "Send gentle note" action). This
+  floor is NOT configurable by `MODERATION_MODE`.
+- **CHILD cohort has no dissent-tally or concern affordance at all** — `toggle_dissent` and
+  `record_concern` both reject a CHILD-cohort caller at the service gate (same error class the
+  gate uses for a barred guardian), and the CHILD-cohort/CHILD-thread web template renders
+  neither control (server-side cohort check, never CSS-only). A CHILD may still appreciation-
+  react and reply (dissent-as-speech), and always has Report.
+- **CHILD threads never render a sentiment footer** — `sentiment_footer_for` returns `[]` when
+  the viewer or the thread's cohort is CHILD, so no appreciation line, dissent line, or any
+  other aggregate ever reaches a child screen.
+- **Guardians remain barred from every write on this surface** (react, dissent, concern) —
+  the same `_thread_write_gate` used by posting; a supervisory guardian stays read-only.
+- **Report remains the sole DSA Art-16 channel.** The dissent/concern rungs allege no illegality,
+  trigger no automatic restriction, and carry no statement of reasons — they are explicitly not
+  Art-16 notices (soft, formative, human-mediated only). The Report link is present on every
+  post regardless of cohort (only hidden for the author's own post) and is styled distinctly,
+  below a divider, from the dissent/concern controls.
+- **Sensors (coordinated-flagging and pile-on detection) are moderator-only trust-and-safety
+  measures**, never user-visible, never a per-user reliability history (invariant 2): they
+  reason over a rolling incident-scoped window (`ConcernReview.payload` holds only that
+  incident's facts — post ids, window, flagger-set size), rows purge/anonymize like the
+  underlying reaction rows, and no automated action follows a sensor hit — only a moderator
+  alert (`notify_moderators`, itself muted in `automated` `MODERATION_MODE`).
+- **`MODERATION_MODE`** (`automated` / `automated+human`, default `automated+human`) only
+  gates whether moderators are actively pinged (`notify_moderators`); in `automated` mode the
+  queue still accumulates and fails safe (nothing is delivered or restricted automatically) —
+  the `/moderation/` dashboard surfaces the unattended backlog prominently either way.
+
 ## Privacy stance (reinforces safety)
 
 - **No behavioural tracking, no ads, no profiling** (also DSA Art. 28). Observability is aggregate

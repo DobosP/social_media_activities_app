@@ -56,7 +56,8 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             # cohort-changed/erased sender, so the gate is enforced. The emit itself is pure
             # best-effort transport — a transient channel-layer/DB hiccup on a keystroke-frequency
             # 'typing' frame must be a silent no-op, never tear down an otherwise-healthy socket
-            # (mirrors broadcast_post / broadcast_reaction, which are likewise wrapped).
+            # (mirrors broadcast_post, likewise wrapped; ADR-0029 removed the per-reaction
+            # broadcast entirely — the aggregate is now batched, never live).
             try:
                 info = await self._typing_identity()
                 if info is not None:
@@ -116,14 +117,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                 "attachments": await self._attachment_payload(post_id),
             }
         )
-
-    async def chat_reaction(self, event):
-        # A post's distinct reaction set changed (anonymous, COUNTLESS — no count, no who). Same
-        # per-delivery re-auth as chat_message so a revoked member stops receiving updates.
-        if not await self._still_authorized():
-            await self.close(code=4403)
-            return
-        await self.send_json({"type": "reaction", **event["message"]})
 
     async def chat_typing(self, event):
         # Never echo a typer their own signal. Re-auth every delivery, so a member whose access was

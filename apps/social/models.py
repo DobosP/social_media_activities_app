@@ -654,19 +654,26 @@ class Post(models.Model):
 
 
 class PostReaction(models.Model):
-    """An emoji acknowledgement of a thread Post. Deliberately ANONYMOUS + COUNTLESS at the
-    read surface: the thread renders only the DISTINCT set of emojis present on a post (never how
-    many, never who). The rows exist so a user can toggle their OWN reaction and so a moderator
-    can inspect, but `post_reaction_emojis` exposes neither a count nor a who-list — that keeps a
-    reaction a neutral ack, not a per-user popularity/affinity signal among minors (inv.2). The
-    encrypted-DM surface, by contrast, shows who-reacted-with-what, but that lives entirely
-    client-side inside the ciphertext the server relays — there is no PostReaction there."""
+    """A member's own appreciation-facet acknowledgement of a thread Post (ADR-0029 rung 0).
+
+    ``emoji`` is a facet SLUG from the fixed, non-extensible catalog (``REACTION_FACETS`` — e.g.
+    ``helped_me``), widened from the legacy emoji glyph and data-migrated. The rows do ONLY two
+    things: drive the viewer's OWN toggle state (add/remove), and feed the daily batch that derives
+    the denormalized, COUNTLESS ``PostSentimentFooter``. There is NO public per-post emoji display
+    any more — the old distinct-emoji-set surface (and its ``post_reaction_emojis`` reader) was
+    removed because it rendered at n=1, a small-roster identity leak. The read surface is the
+    batched, thresholded footer, which never exposes a count, a who-list, or a per-user
+    popularity/affinity signal — not even to the author (inv.1/2). The encrypted-DM surface shows
+    who-reacted-with-what, but that lives entirely client-side inside the ciphertext the server
+    relays — there is no PostReaction there."""
 
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="reactions")
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="post_reactions"
     )
-    emoji = models.CharField(max_length=8)  # one of a fixed, non-extensible set (no custom emoji)
+    # A facet slug from the fixed, non-extensible catalog (REACTION_FACETS) — e.g. "helped_me".
+    # Widened from the legacy emoji glyph (ADR-0029); existing rows are data-migrated to slugs.
+    emoji = models.CharField(max_length=32)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -677,6 +684,113 @@ class PostReaction(models.Model):
 
     def __str__(self):
         return f"reaction({self.emoji} on {self.post_id})"
+
+
+class PostDissent(models.Model):
+    """An anonymous "I see this differently" tally row on a thread Post (ADR-0029 rung 1).
+
+    Records ONLY that a user quietly dissented from a post — never why, never public per-row. The
+    read surface is the batched, adult-only "Some see this differently." footer sentence, which
+    latches solely from thresholds sustained across recompute windows; a single row (or a one-day
+    blitz) surfaces nothing. Kept anonymous + countless like PostReaction (inv.1/2): no count, no
+    who-list, not even to the author. CHILD cohort has no dissent affordance at all (inv.3) — the
+    service rejects child flaggers; guardians are barred from all reacting/flagging. ``created_at``
+    is indexed for the daily coordinated-flagging sensor + the 90-day purge scan (mirrors
+    PostConcern) — moderator-facing T&S, never a per-user reliability history."""
+
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="dissents")
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="post_dissents"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(fields=["post", "user"], name="uq_post_dissent"),
+        ]
+        indexes = [
+            models.Index(fields=["post"]),
+            models.Index(fields=["created_at"]),
+        ]
+
+    def __str__(self):
+        return f"dissent(user {self.user_id} on {self.post_id})"
+
+
+class PostConcern(models.Model):
+    """An anonymous "this doesn't seem to fit here" conduct-concern row on a Post (ADR-0029 rung 2).
+
+    NEVER public, any cohort, ever: raw rows are moderator-only and audited, and the only
+    author-facing effect is a single batched, capped, restorative private note delivered by the
+    daily ladder — never per-row, never a count, never a who-list (inv.2). Off-topic/placement
+    only; harm goes to Report. CHILD cohort has no concern affordance (inv.3): the service rejects
+    child flaggers and guardians are barred. ``created_at`` is indexed for the rolling-window
+    sensors (flagger down-weighting, coordinated-flagging, pile-on) — moderator-facing T&S
+    measures, NOT a per-user reliability history."""
+
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="concerns")
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="post_concerns"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(fields=["post", "user"], name="uq_post_concern"),
+        ]
+        indexes = [
+            models.Index(fields=["post"]),
+            models.Index(fields=["created_at"]),
+        ]
+
+    def __str__(self):
+        return f"concern(user {self.user_id} on {self.post_id})"
+
+
+class PostSentimentFooter(models.Model):
+    """The DERIVED, non-personal sentiment footer for a Post (ADR-0029 rung 0/1).
+
+    Denormalized cache re-derived by the daily/weekly batch (``recompute_post_sentiment``) from the
+    SURVIVING PostReaction/PostDissent rows — never live, so GDPR erasure cascades honestly and no
+    timing/diffing/toggle-probe attack can deanonymize a small roster. Holds no user FK and no
+    counts: only the ordered LATCHED facet slugs and the boolean dissent state.
+    ``appreciation_slugs`` stores ``[slug, latched-since ISO date]`` pairs so a slug held
+    continuously past the retention window graduates into ``appreciation_permanent`` (kept even
+    after the underlying rows purge — delete-beats-anonymize, ADR-0029). The render
+    (``sentiment_footer_for``) is byte-identical for the author and any viewer (inv.2
+    author-parity) and yields nothing for CHILD threads/viewers."""
+
+    post = models.OneToOneField(Post, on_delete=models.CASCADE, related_name="sentiment_footer")
+    # Ordered [slug, "YYYY-MM-DD"] pairs: currently-latched appreciation facets + when each latched.
+    appreciation_slugs = models.JSONField(default=list, blank=True)
+    # Facet slugs held continuously >= REACTION_ROW_RETENTION_DAYS: kept even after rows purge.
+    appreciation_permanent = models.JSONField(default=list, blank=True)
+    dissent_active = models.BooleanField(default=False)
+    dissent_consecutive_hits = models.PositiveSmallIntegerField(default=0)
+    dissent_consecutive_misses = models.PositiveSmallIntegerField(default=0)
+    # Last evaluated ISO week for the weekly dissent step, e.g. "2026-W29".
+    dissent_window_key = models.CharField(max_length=16, blank=True)
+    computed_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"footer(post {self.post_id})"
+
+
+class PostConcernState(models.Model):
+    """Per-POST concern-ladder state (ADR-0029 rung 2) — explicitly NOT per-user history.
+
+    Tracks only where a single post sits on the restorative ladder: whether its one-lifetime
+    formative note has been sent (``note_sent_at``) and whether an edit has permanently barred a
+    repeat auto-note (``note_barred`` — a re-cross after edit routes to the moderator queue, not
+    the author). Holds no flagger identity and no counts (inv.2); nothing here ranks or profiles a
+    user."""
+
+    post = models.OneToOneField(Post, on_delete=models.CASCADE, related_name="concern_state")
+    note_sent_at = models.DateTimeField(null=True, blank=True)
+    note_barred = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"concern_state(post {self.post_id})"
 
 
 class UserPlaceProposal(models.Model):

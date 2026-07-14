@@ -251,3 +251,68 @@ class AuditLog(models.Model):
 
     def __str__(self):
         return f"audit#{self.pk}:{self.event}"
+
+
+class ConcernReview(models.Model):
+    """A soft, formative moderator-queue item raised by the ADR-0029 concern ladder / sensors.
+
+    Explicitly NOT a DSA Art-16 notice and NEVER a trigger for automated action: it alleges no
+    illegality, hides nothing, and only a human acting through the existing Report/moderation
+    tooling can restrict content. ``payload`` carries incident-scoped facts only (counts, window,
+    post ids) — it NEVER accretes a per-user history (inv.2); the sensors that raise it are
+    moderator-facing T&S measures, not a reliability record. In ``automated`` MODERATION_MODE these
+    accumulate unattended and fail safe (nothing delivered or restricted; the interface surfaces
+    the backlog)."""
+
+    class Kind(models.TextChoices):
+        CONCERN_ESCALATED = "concern_escalated", "Concern escalated (k2, adult)"
+        TEEN_CONCERN = "teen_concern", "Teen concern (human relay)"
+        SENSOR_COORDINATED = "sensor_coordinated", "Sensor: coordinated flagging"
+        SENSOR_PILEON = "sensor_pileon", "Sensor: pile-on protection"
+
+    class Status(models.TextChoices):
+        OPEN = "open", "Open"
+        REVIEWED = "reviewed", "Reviewed"
+        DISMISSED = "dismissed", "Dismissed"
+        ESCALATED = "escalated", "Escalated to Report"
+
+    kind = models.CharField(max_length=24, choices=Kind.choices)
+    # SET_NULL: erasing/removing the post never destroys the incident record. SENSOR_* items may
+    # span several posts (ids live in payload) and leave this null.
+    post = models.ForeignKey(
+        "social.Post",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="concern_reviews",
+    )
+    # The post author (or, for pile-on, the protective-review target). SET_NULL survives erasure.
+    subject_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="concern_reviews",
+    )
+    # Incident-scoped facts only (counts, window, post ids) — NEVER an accreting per-user history.
+    payload = models.JSONField(default=dict, blank=True)
+    status = models.CharField(max_length=16, choices=Status.choices, default=Status.OPEN)
+    handled_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="concern_reviews_handled",
+    )
+    handled_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            # Fair queue: the moderation interface lists OPEN items oldest-first (mirrors the
+            # ModerationAppeal status/created_at index).
+            models.Index(fields=["status", "created_at"], name="safety_concern_status_idx"),
+        ]
+
+    def __str__(self):
+        return f"concern_review({self.kind}, {self.status})"

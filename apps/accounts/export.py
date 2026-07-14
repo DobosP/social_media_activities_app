@@ -13,7 +13,7 @@ user's (or, via the guardian variant, their ward's) own data, never other member
 from django.utils import timezone
 
 # Export schema version, so consumers can detect format changes over time.
-EXPORT_SCHEMA_VERSION = 3  # W4-F22: + safety_record, blocks, privacy_settings (own DSA + settings)
+EXPORT_SCHEMA_VERSION = 4  # ADR-0029: + own_sentiment_actions (own reaction/dissent/concern rows)
 
 
 def build_user_export(user) -> dict:
@@ -41,6 +41,12 @@ def build_user_export(user) -> dict:
         "safety_record": _safety_record(user),
         "blocks": _blocks(user),
         "privacy_settings": _privacy_settings(user),
+        # ADR-0029: the user's OWN plural-sentiment rows. SAR posture: a dissent/concern row is the
+        # FLAGGER's personal data (a record of their own action), not the post author's — Art.15(4)
+        # rights-of-others redaction means an AUTHOR's export never gets this data about someone
+        # else's flag. This section is scoped to `user` throughout (never another member's rows,
+        # never a count/aggregate — just the plain list of the user's own toggles).
+        "own_sentiment_actions": _own_sentiment_actions(user),
     }
 
 
@@ -254,6 +260,30 @@ def _donations_summary(user) -> dict:
                 "completed_at": _iso(d.completed_at),
             }
             for d in donations
+        ],
+    }
+
+
+def _own_sentiment_actions(user) -> dict:
+    """ADR-0029: the user's OWN appreciation-facet reactions, "I see this differently" dissent
+    tallies, and "doesn't seem to fit here" concern flags — never another member's, never a count
+    (this is the flat list of their own rows, not a derived aggregate). ``post_id`` lets the export
+    line up with ``thread_posts``/other own-authored data; there is no post body here (a reaction
+    row carries no content of its own)."""
+    from apps.social.models import PostConcern, PostDissent, PostReaction
+
+    return {
+        "reactions": [
+            {"post_id": r.post_id, "facet": r.emoji, "created_at": _iso(r.created_at)}
+            for r in PostReaction.objects.filter(user=user).order_by("created_at")
+        ],
+        "dissents": [
+            {"post_id": d.post_id, "created_at": _iso(d.created_at)}
+            for d in PostDissent.objects.filter(user=user).order_by("created_at")
+        ],
+        "concerns": [
+            {"post_id": c.post_id, "created_at": _iso(c.created_at)}
+            for c in PostConcern.objects.filter(user=user).order_by("created_at")
         ],
     }
 

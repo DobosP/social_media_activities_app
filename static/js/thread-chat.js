@@ -168,34 +168,25 @@
   }
 
   // ---------------------------------------------------------------- reactions (anonymous, countless)
-  var mineByPost = {}; // postId(string) -> [emoji] the viewer reacted with (seeded from server DOM)
+  // ADR-0029: the live per-reaction broadcast is REMOVED (the old distinct-facet "present" chips
+  // surfaced at n=1 — a small-roster identity leak; the aggregate now lives only in the batched,
+  // server-rendered sentiment footer). A reactor still sees their OWN toggle state update in place.
+  var mineByPost = {}; // postId(string) -> [facet slug] the viewer reacted with (seeded from server DOM)
   list.querySelectorAll('article.post[id^="post-"]').forEach(function (art) {
     var id = art.id.slice(5);
     var mine = [];
-    art.querySelectorAll(".rx .rx-chip.rx-mine").forEach(function (c) {
-      mine.push(c.textContent.trim());
+    art.querySelectorAll(".rx-pick .rx-btn.rx-mine").forEach(function (b) {
+      if (b.dataset.slug) mine.push(b.dataset.slug);
     });
     if (mine.length) mineByPost[id] = mine;
   });
 
-  function renderChips(wrap, present, mine) {
-    wrap.querySelectorAll(".rx-chip").forEach(function (c) {
-      c.remove();
-    });
-    var pick = wrap.querySelector(".rx-pick");
-    present.forEach(function (e) {
-      var s = document.createElement("span");
-      s.className = "rx-chip" + (mine.indexOf(e) >= 0 ? " rx-mine" : "");
-      s.textContent = e;
-      wrap.insertBefore(s, pick || null);
-    });
-  }
   function syncPicker(wrap, mine) {
     wrap.querySelectorAll(".rx-pick .rx-btn").forEach(function (b) {
-      b.classList.toggle("rx-mine", mine.indexOf(b.textContent.trim()) >= 0);
+      b.classList.toggle("rx-mine", mine.indexOf(b.dataset.slug) >= 0);
     });
   }
-  function reactionRow(postId, present, mine) {
+  function reactionRow(postId, mine) {
     var wrap = document.createElement("div");
     wrap.className = "rx";
     var details = document.createElement("details");
@@ -204,7 +195,7 @@
     summary.className = "muted";
     summary.textContent = I.react || "react";
     details.appendChild(summary);
-    (CFG.emojis || []).forEach(function (e) {
+    (CFG.reactionFacets || []).forEach(function (facet) {
       var f = document.createElement("form");
       f.className = "inline rx-form";
       f.method = "post";
@@ -216,55 +207,53 @@
       var em = document.createElement("input");
       em.type = "hidden";
       em.name = "emoji";
-      em.value = e;
+      em.value = facet.slug;
       var b = document.createElement("button");
       b.type = "submit";
-      b.className = "rx-btn" + ((mine || []).indexOf(e) >= 0 ? " rx-mine" : "");
-      b.textContent = e;
+      b.dataset.slug = facet.slug;
+      b.className = "rx-btn" + ((mine || []).indexOf(facet.slug) >= 0 ? " rx-mine" : "");
+      b.textContent = facet.emoji + " " + facet.label;
       f.appendChild(tok);
       f.appendChild(em);
       f.appendChild(b);
       details.appendChild(f);
     });
     wrap.appendChild(details);
-    renderChips(wrap, present || [], mine || []);
     return wrap;
   }
-  function applyReaction(d) {
-    var art = document.getElementById("post-" + d.post_id);
-    if (!art) return;
-    var wrap = art.querySelector(".rx");
-    if (!wrap) return;
-    renderChips(wrap, d.present || [], mineByPost[d.post_id] || []);
-  }
-  // Intercept a reaction form submit -> fetch (no reload); other members update via the broadcast.
+  // Intercept a reaction/dissent/concern form submit -> fetch (no reload). These are the viewer's
+  // OWN anonymous toggles only — no broadcast to other members (ADR-0029); a reaction's own picker
+  // highlight updates from the response, dissent/concern have no client-visible state to sync.
   list.addEventListener("submit", function (ev) {
     var f = ev.target;
     if (!f || f.tagName !== "FORM") return;
     var action = f.getAttribute("action") || "";
-    if (!/\/react\/?($|\?)/.test(action)) return; // only reaction forms — never edit/delete
+    var isReact = /\/react\/?($|\?)/.test(action);
+    var isDissent = /\/dissent\/?($|\?)/.test(action);
+    var isConcern = /\/concern\/?($|\?)/.test(action);
+    if (!isReact && !isDissent && !isConcern) return; // never edit/delete/post
     ev.preventDefault();
-    var emojiInput = f.querySelector('input[name="emoji"]');
-    var emoji = emojiInput ? emojiInput.value : "";
     var art = f.closest("article.post");
     var postId = art ? art.id.slice(5) : null;
+    var body = new URLSearchParams();
+    if (isReact) {
+      var emojiInput = f.querySelector('input[name="emoji"]');
+      body.set("emoji", emojiInput ? emojiInput.value : "");
+    }
     fetch(f.action, {
       method: "POST",
       headers: { "X-Requested-With": "fetch", "X-CSRFToken": cookie("csrftoken") },
-      body: new URLSearchParams({ emoji: emoji }),
+      body: body,
       credentials: "same-origin",
     })
       .then(function (r) {
         return r.ok ? r.json() : null;
       })
       .then(function (j) {
-        if (!j || !j.ok || !postId || !art) return;
+        if (!j || !j.ok || !isReact || !postId || !art) return;
         mineByPost[postId] = j.mine || [];
         var wrap = art.querySelector(".rx");
-        if (wrap) {
-          renderChips(wrap, j.present || [], j.mine || []);
-          syncPicker(wrap, j.mine || []);
-        }
+        if (wrap) syncPicker(wrap, j.mine || []);
       })
       .catch(function () {
         /* network hiccup — the no-JS POST path still works on the next reload */
@@ -455,7 +444,7 @@
     if (d.attachments && d.attachments.length) art.appendChild(renderAttachments(d.attachments));
 
     if (!d.is_announcement) {
-      art.appendChild(reactionRow(d.id, [], mineByPost[d.id] || []));
+      art.appendChild(reactionRow(d.id, mineByPost[d.id] || []));
       var pa = document.createElement("div");
       pa.className = "post-actions";
       var rl = document.createElement("a");
@@ -569,8 +558,6 @@
       if (d.type === "message") {
         render(d);
         if (d.is_announcement && status) status.textContent = I.newAnnouncement || "";
-      } else if (d.type === "reaction") {
-        applyReaction(d);
       } else if (d.type === "attachments") {
         applyAttachments(d);
       } else if (d.type === "typing") {

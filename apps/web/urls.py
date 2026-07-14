@@ -5,7 +5,7 @@ from django.views.decorators.cache import cache_control
 
 from apps.events.feeds import UpcomingEventsAtomFeed, UpcomingEventsFeed
 
-from . import views
+from . import views, views_moderation
 from .seo import PUBLIC_CACHE_SECONDS
 
 # Anonymous open-data syndication feeds — publicly cacheable for crawl-budget/CDN friendliness.
@@ -166,6 +166,18 @@ urlpatterns = [
         views.activity_post_react,
         name="activity_post_react",
     ),
+    # ADR-0029 rung 1/2: quiet secondary Respond-menu actions (dissent tally, conduct concern) —
+    # same gate/rate-budget/JSON contract as .../react/, next to it by convention.
+    path(
+        "activities/<int:pk>/post/<int:post_id>/dissent/",
+        views.activity_post_dissent,
+        name="activity_post_dissent",
+    ),
+    path(
+        "activities/<int:pk>/post/<int:post_id>/concern/",
+        views.activity_post_concern,
+        name="activity_post_concern",
+    ),
     path("activities/<int:pk>/photo/", views.activity_photo, name="activity_photo"),
     path(
         "activities/<int:pk>/members/<int:membership_id>/vote/",
@@ -283,6 +295,17 @@ urlpatterns = [
     path("account/export/", views.account_export, name="account_export"),
     path("account/calendar.ics", views.my_calendar, name="my_calendar"),  # W3-F18 self-only .ics
     path("account/delete/", views.account_delete, name="account_delete"),
+]
+
+# ADR-0029 (B5) — moderator-gated concern queue (soft/formative ConcernReview items). Views gate
+# on request.user.is_moderator (403 otherwise); links to, not duplicates, the admin Report queue.
+urlpatterns += [
+    path("moderation/", views_moderation.moderation_dashboard, name="moderation_dashboard"),
+    path(
+        "moderation/concern/<int:pk>/",
+        views_moderation.moderation_concern,
+        name="moderation_concern",
+    ),
 ]
 
 # DEBUG-only: Phase-1 React/Vite pipeline proof (Aurora design preview). Real SPA

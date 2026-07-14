@@ -159,7 +159,67 @@ invariants in [`CLAUDE.md`](../CLAUDE.md).
   no-op without a channel layer — **needs `REDIS_URL`** cross-process). `post_announcement` now excludes blocked pairs
   from the fan-out. Thread Posts are **permanent + audited** (the `purge_chat`/`CHAT_RETENTION_DAYS` retention was
   dropped). The `aria-live` region announces only the viewer's own send + announcements — **never** every peer message.
-  Explicitly OUT (each needs its own review): reactions, acks, @mentions, markdown, typing, unread dividers.
+  Anonymous countless reactions shipped in `9b5701e` (2026-05-31) and were superseded by the
+  plural-sentiment reactions below (ADR-0029, 2026-07-14). Explicitly still OUT (each needs its
+  own review): acks, @mentions, markdown, typing, unread dividers.
+- **Plural sentiment reactions — appreciation, dissent, and conduct-concern (ADR-0029,
+  2026-07-14)** — replaces the anonymous distinct-emoji-chip reaction surface from `9b5701e`
+  with a severity ladder that keeps every rung countless and unattributed. **Rung 0
+  (appreciation):** `PostReaction.emoji` now stores one of 5 fixed facet slugs
+  (`social.REACTION_FACETS`: `helped_me`🙏, `felt_welcome`🤝, `made_me_smile`🙂, `want_to_come`✨,
+  `got_me_thinking`💡; operator-overridable subset via `THREAD_REACTION_FACETS`); old emoji rows
+  were data-migrated best-effort (👍/🙏→helped_me, ❤️→felt_welcome, 🎉/👏→made_me_smile,
+  colliding duplicates merged on the unique constraint). `toggle_reaction` keeps its gate and
+  signature (audited `post.reaction_toggled`, no live broadcast — `broadcast_reaction` and the
+  `chat_reaction` WS handler were deleted, since a live per-reaction frame fired at n=1 and was a
+  small-roster identity leak). A facet **latches one fixed public sentence** — never a count —
+  only in the **daily batch** (`social.sentiment.recompute_post_sentiment`, DUE_JOB) when ≥k
+  distinct surviving reactor rows AND eligible audience ≥2k (ADULT k=5, TEEN k=8; CHILD threads
+  get no footer, ever); latched slugs re-derive from surviving rows each run (GDPR erasure
+  cascades honestly) and promote to `appreciation_permanent` after `REACTION_ROW_RETENTION_DAYS`
+  so they outlive the row purge. Footer: fixed catalog order, max two appreciation lines, author
+  parity is byte-identical to any viewer's (`social.sentiment_footer_for`/`sentiment_footers_for`).
+  **Rung 1 (dissent — "I see this differently"):** lives in a low-prominence Respond menu, no
+  emoji glyph; primary action reuses the existing reply/quote composer (dissent-as-speech);
+  secondary `toggle_dissent` records one anonymous, withdrawable tally row (CHILD cohort has no
+  tally, only the reply). An adult-only public line ("Some see this differently.", always last)
+  latches only after **2 consecutive weekly windows** at ≥6 distinct dissenters AND audience ≥12,
+  and lapses the same way (no permanent mark); `is_announcement` posts are exempt; TEEN/CHILD
+  never render it. **Rung 2 (conduct concern — "This doesn't seem to fit here"):** never public,
+  any cohort; a friction interstitial routes disagreement/harm elsewhere. `record_concern`
+  records a tally row (CHILD flaggers rejected at the service gate). The daily
+  `evaluate_concerns` job runs a capped ladder per ADULT author (k1=2 distinct + audience≥8 →
+  exactly one private restorative `FORMATIVE_NOTE` notification via `notify()`, ≤1/author/14d,
+  ≤1/post lifetime, an edit clears accrual and permanently bars a repeat auto-note; k2=4 distinct
+  → `ConcernReview` moderator queue, deduped against an existing OPEN row) and never auto-notifies
+  TEEN authors (k=3 → moderator queue with a suggested human-relay template) or CHILD authors (no
+  concern affordance exists for CHILD threads at all). Two **sensors** run in the same job:
+  coordinated-flagging (an overlapping ≥2-flagger set hitting one author across ≥3 posts in 14
+  days → moderator alert about the flaggers) and pile-on protection (one author drawing concerns
+  on ≥3 distinct posts within 7 days → suppress further notes, flag the author for protective
+  review) — both moderator-only, incident-scoped (`ConcernReview.payload` never accretes a
+  per-user history), never user-visible or ranking. **Retention:** `purge_stale_reaction_rows`
+  hard-deletes `PostReaction`/`PostDissent`/`PostConcern` rows after `REACTION_ROW_RETENTION_DAYS`
+  (footers keep only the already-promoted `appreciation_permanent` slugs). **Moderation
+  interface + mode:** operator setting `MODERATION_MODE ∈ {"automated", "automated+human"}`
+  (default `automated+human`; validated at boot) gates only the human-alerting path
+  (`notify_moderators` no-ops entirely in `automated` mode) — the hard floor (no automated
+  corrective delivery to a minor, no automated content restriction from any soft channel) is
+  NOT configurable in either mode. `/moderation/` (`apps/web/views_moderation.py`,
+  moderator-gated) lists OPEN `ConcernReview` items oldest-first with mark-reviewed/dismiss/
+  escalate (files a `safety.Report` via the existing report-creation path, carrying DSA
+  statement-of-reasons)/teen-note-send actions, each `record_audit`-ed inside its own
+  transaction; it links to (never duplicates) the existing Django-admin Report queue. Report
+  remains the sole DSA Art-16 channel (unconditional-of-cohort report link on every post, styled
+  distinctly, below a divider). No reaction/dissent/concern data is ever serialized on any read
+  API, the agent snapshot, or `services/agentapi/` (ADR-0025's `social.*` exclusion holds).
+  **Known gap:** this pass covers the ACTIVITY thread surface only — Group threads have no
+  reaction/dissent/concern UI, URL, or view at all (pre-existing; `group_detail.html` never
+  included the post partial), so `eligible_audience_count`/`_thread_write_gate` handle a `Group`
+  owner object at the service layer but nothing calls it there yet. The E2EE-DM reaction picker
+  (`messages_page`, client-side, explicitly out of ADR-0029 scope) still reads
+  `social.allowed_reactions()` for its button labels, which now returns facet slugs instead of
+  emoji glyphs — a cosmetic-only regression on that separate who+what system, not fixed here.
 - **Connections** — find/reconnect with people you've shared a real activity with; the discovery layer in front of the
   existing E2EE `messaging`. `connections.can_connect` is the gate: same cohort + both `can_participate` + not blocked +
   **a shared PEER activity** (`shares_activity` excludes supervisory guardians, mirroring `voting_members`) + cohort

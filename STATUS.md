@@ -15,6 +15,41 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
 
 ## Current state
 
+- **Plural sentiment reactions built, NOT YET LANDED (ADR-0029, 2026-07-14; branch
+  `feat/reactions-v2-feeling`, worktree only — awaiting review/merge):** replaces the anonymous
+  distinct-emoji-chip reaction surface (`9b5701e`) with a severity ladder — appreciation
+  (5 fixed facet slugs, thresholded public sentences, author-parity, daily-batched, never a
+  count), dissent ("I see this differently" — reply-first, an adult-only 2-window-latched public
+  line, TEEN/CHILD never), and conduct concern ("This doesn't seem to fit here" — never public,
+  a capped private restorative-note ladder for ADULT authors, moderator queue only for
+  TEEN/escalated ADULT, no affordance at all for CHILD) plus two moderator-only anti-bully
+  sensors (coordinated-flagging, pile-on protection). New models (`PostDissent`, `PostConcern`,
+  `PostSentimentFooter`, `ConcernReview`) + widened `PostReaction.emoji` (slug, data-migrated);
+  `social.sentiment` batch module (`recompute_post_sentiment`, `evaluate_concerns`,
+  `purge_stale_reaction_rows`) self-gated via new `ops.JobMarker`, registered in `DUE_JOBS`; new
+  `/moderation/` interface (moderator-gated dashboard + per-item review/dismiss/escalate/
+  teen-note-send, each audited) behind new `MODERATION_MODE` (`automated`/`automated+human`,
+  default `automated+human`; the no-automated-minor-delivery floor is not configurable in
+  either mode). Web: `_post.html` picker now shows facet emoji+label with a Respond menu
+  (dissent sheet, concern interstitial, Report), fed by `sentiment_footers_for`/`reaction_mine`
+  context; live per-reaction WS broadcast removed (`broadcast_reaction` and the chat consumer's
+  `chat_reaction` handler deleted — the footer is batched, not live). `docs/FEATURES_BUILT.md`
+  and `docs/SAFETY.md` updated in lockstep (minor-protection rules, stale "reactions: OUT" line
+  corrected). Verified in the `reactv2-web` container: the reactions/sentiment-jobs/moderation-UI/
+  chat-consumer suites are green in isolation (50 passed); a full-suite run showed 32 failed /
+  121 errors scattered across unrelated pre-existing files (guardian moderation notice, wave1
+  hardening, account-restricted, unsafe-button, wave4, group take-action) — re-running the same
+  files in isolation is fully green, matching the known concurrent-pytest-DB-race artifact (see
+  memory's durable-lessons note), not a regression from this branch; re-run the full suite
+  in isolation before landing to confirm. **Known gaps, tracked for follow-up, not blocking
+  this slice:** (1) Group-thread reaction/dissent/concern UI/URL/view was never built (pre-
+  existing — `group_detail.html` doesn't include the post partial; the service layer handles a
+  `Group` owner object fine, nothing calls it there yet) — needs its own URL/view/template design
+  as a separate task; (2) the E2EE-DM reaction picker (`messages_page`, client-side, explicitly
+  out of ADR-0029 scope) still reads `social.allowed_reactions()`, which now returns facet
+  slugs instead of emoji glyphs — a cosmetic-only regression on that separate who+what system;
+  (3) `docs/adr/0029` has no "Implementation deltas" section — no build-forced deviation from
+  the accepted design was found during this docs pass.
 - **Tiered profile visibility + person hover cards built (ADR-0028, 2026-07-13; branch
   `feat/signature-avatars`, stacked on ADR-0027):** first other-user profile surface —
   `/people/<public_id>/` + hover partial + `GET /api/connections/people/<public_id>/`, all
