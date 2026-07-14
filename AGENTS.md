@@ -4,10 +4,8 @@
 `social_media_activities_app` is a Django/social-activity app in the RO-EDU fleet. Child-safety, GDPR/privacy, moderation, and deferred/off-request work are sensitive.
 
 ## Fleet context
-- Role: TakesTime — Django/PostGIS children-first in-person activity matching (nonprofit).
-- Upstream: `ro_data_server` (venues/events/news/connections), `roedu-ui` · Downstream: none.
+- Canonical role/status/next for this repo: the vault note `dobo-brain/paul-brain/projects/social-media-activities-app.md` (fleet view: the vault's `projects/index.md` + `NOW.md`; agent-ops ADR-0032, vault adr-0001).
 - Fleet map + parallel-agent protocol: `~/work/AGENTS.md` (agent-ops ADR-0025).
-- Secrets: registry `agent-ops/secrets/secrets.manifest.yaml`; the app's ROEDU key deploys via `agent-ops/secrets/deploy-secrets.sh` (ADR-0027); never commit values.
 
 ## Parallel work (mandatory)
 - This shared checkout stays on `main`, clean — never switch branches or commit task work here.
