@@ -4,11 +4,11 @@ This app consumes the **RO-EDU data platform** (`romania_scraper.dataapi`) as on
 more ingestion source. Scope: **Cluj-Napoca first** (matches `INGEST_DEFAULT_CITY`),
 national later. Full design: `../roedu/docs/ROEDU_INTEGRATION_DESIGN.md` (§4, §11).
 
-The original product integration is on `main`; the canonical promoted-snapshot contract described
-below is implemented locally on `v_2` and remains intentionally unmerged while the wider RO-EDU
-Phase 0 gate is open. This doc describes that current branch state.
+The original product integration and the canonical promoted-snapshot contract described below are
+integrated on `main`. The wider RO-EDU Phase 0 release/promotion and operational gates remain open;
+landing the consumer does not enable ingestion or authorize child-facing use.
 
-## What's wired on `v_2`
+## What's wired
 
 Places:
 - `apps/ingestion/sources/roedu_client.py` — vendored stdlib HTTP client for the

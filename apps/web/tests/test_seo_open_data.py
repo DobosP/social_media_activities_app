@@ -10,6 +10,7 @@ and the blanket ``Disallow: /activities/`` in robots.txt is untouched.
 import json
 import re
 from datetime import timedelta
+from decimal import Decimal
 
 import pytest
 from django.contrib.gis.geos import Point
@@ -160,16 +161,74 @@ def test_snapshot_200_with_cache_control(tmp_path, settings):
     assert not resp.cookies
 
 
-# NOTE: event_ld offers/isAccessibleForFree enrichment tests live with the v_2 scraper-lane
-# schema (source price/availability fields) and return once that schema lands on main.
-
-
-def test_event_ld_has_no_offers_without_price_schema():
+def test_event_ld_omits_commerce_when_source_facts_are_unknown():
     place = _public_place()
     event = _event(place=place)
     node = event_ld(event)
     assert "offers" not in node
     assert "isAccessibleForFree" not in node
+
+
+def test_event_ld_marks_explicitly_free_available_event():
+    event = _event(
+        place=_public_place(),
+        url="https://tickets.example/free-event",
+        source_is_free=True,
+        source_currency="RON",
+        source_availability="available",
+    )
+
+    node = event_ld(event)
+
+    assert node["isAccessibleForFree"] is True
+    assert node["offers"] == {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "RON",
+        "availability": "https://schema.org/InStock",
+        "url": "https://tickets.example/free-event",
+    }
+
+
+def test_event_ld_marks_paid_event_with_lowest_price_and_sold_out_state():
+    event = _event(
+        place=_public_place(),
+        url="https://tickets.example/paid-event",
+        source_price_min=Decimal("20.00"),
+        source_price_max=Decimal("50.00"),
+        source_currency="RON",
+        source_is_free=False,
+        source_availability="sold_out",
+    )
+
+    node = event_ld(event)
+
+    assert node["isAccessibleForFree"] is False
+    assert node["offers"] == {
+        "@type": "Offer",
+        "price": "20.00",
+        "priceCurrency": "RON",
+        "availability": "https://schema.org/SoldOut",
+        "url": "https://tickets.example/paid-event",
+    }
+
+
+def test_event_ld_maps_limited_availability_without_guessing_unknown():
+    limited = _event(
+        title="Limited",
+        place=_public_place(),
+        source_is_free=False,
+        source_availability="limited",
+    )
+    unknown = _event(
+        title="Unknown",
+        place=_public_place(),
+        source_is_free=False,
+        source_availability="unknown",
+    )
+
+    assert event_ld(limited)["offers"]["availability"] == ("https://schema.org/LimitedAvailability")
+    assert "availability" not in event_ld(unknown).get("offers", {})
 
 
 # --- llms.txt --------------------------------------------------------------------------------

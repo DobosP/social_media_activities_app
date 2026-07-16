@@ -5,6 +5,7 @@ unpublished place, no PII, ever.
 
 import json
 from datetime import datetime, timedelta
+from decimal import Decimal
 
 import pytest
 from django.contrib.gis.geos import Point
@@ -150,8 +151,6 @@ def test_event_at_unpublished_place_absent_and_place_absent(tmp_path):
 
 def test_past_events_absent(tmp_path):
     # The exporter routes through upcoming_events(); past events never enter the snapshot.
-    # (Lifecycle/tombstone/held gating tests live with the v_2 scraper-lane schema and
-    # return when that lands on main.)
     place = _place()
     _event(place=place, title="Good event")
     _event(place=place, title="Already happened", starts_at=timezone.now() - timedelta(days=1))
@@ -161,6 +160,28 @@ def test_past_events_absent(tmp_path):
 
     titles = {r["title"] for r in events["records"]}
     assert titles == {"Good event"}
+
+
+@pytest.mark.parametrize(
+    "hidden_fields",
+    [
+        {"lifecycle_status": Event.LifecycleStatus.CANCELLED},
+        {"lifecycle_status": Event.LifecycleStatus.POSTPONED},
+        {"lifecycle_status": Event.LifecycleStatus.REMOVED},
+        {"lifecycle_status": Event.LifecycleStatus.MOVED_ONLINE},
+        {"is_tombstone": True},
+        {"is_import_held": True},
+    ],
+)
+def test_non_discoverable_source_events_never_exported(tmp_path, hidden_fields):
+    place = _place()
+    _event(place=place, title="Visible scheduled event")
+    _event(place=place, title="Hidden source event", **hidden_fields)
+
+    _export(tmp_path)
+
+    titles = {r["title"] for r in _load(tmp_path, "events.json")["records"]}
+    assert titles == {"Visible scheduled event"}
 
 
 def test_event_record_carries_activity_slug(tmp_path):
@@ -173,6 +194,55 @@ def test_event_record_carries_activity_slug(tmp_path):
     records = {r["title"]: r for r in _load(tmp_path, "events.json")["records"]}
     assert records["Typed event"]["activity"] == "snap-basketball"
     assert records["Untyped event"]["activity"] is None
+
+
+def test_event_record_carries_public_roedu_source_facts(tmp_path):
+    place = _place()
+    _event(
+        place=place,
+        title="Priced source event",
+        source=Event.Source.SCRAPER,
+        source_category="concert",
+        lifecycle_status=Event.LifecycleStatus.RESCHEDULED,
+        source_confidence=0.98,
+        source_recurrence="FREQ=WEEKLY",
+        source_timezone="Europe/Bucharest",
+        source_price_min=Decimal("20.00"),
+        source_price_max=Decimal("50.00"),
+        source_currency="RON",
+        source_is_free=False,
+        source_availability="limited",
+    )
+
+    _export(tmp_path)
+
+    record = _load(tmp_path, "events.json")["records"][0]
+    assert {
+        key: record[key]
+        for key in (
+            "source_category",
+            "lifecycle_status",
+            "source_confidence",
+            "source_recurrence",
+            "source_timezone",
+            "source_price_min",
+            "source_price_max",
+            "source_currency",
+            "source_is_free",
+            "source_availability",
+        )
+    } == {
+        "source_category": "concert",
+        "lifecycle_status": Event.LifecycleStatus.RESCHEDULED,
+        "source_confidence": 0.98,
+        "source_recurrence": "FREQ=WEEKLY",
+        "source_timezone": "Europe/Bucharest",
+        "source_price_min": "20.00",
+        "source_price_max": "50.00",
+        "source_currency": "RON",
+        "source_is_free": False,
+        "source_availability": "limited",
+    }
 
 
 def test_place_record_excludes_raw_tags_and_has_display_fields(tmp_path):
