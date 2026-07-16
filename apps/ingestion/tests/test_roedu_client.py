@@ -9,11 +9,22 @@ from __future__ import annotations
 
 import io
 import json
+from copy import deepcopy
 
 from django.test import SimpleTestCase
 
 from apps.ingestion.sources import roedu_client as rc
-from apps.ingestion.sources.roedu_client import RoeduClient
+from apps.ingestion.sources.roedu_client import (
+    SOCIAL_APP_PACK_ID,
+    RoeduClient,
+    is_canonical_social_app_pack_item,
+)
+from apps.ingestion.tests.roedu_fixtures import (
+    event_item,
+    pack_page,
+    tombstone_item,
+    venue_item,
+)
 
 
 class _FakeResponse(io.BytesIO):
@@ -85,6 +96,75 @@ class RoeduClientConfigTests(SimpleTestCase):
                         os.environ[k] = v
 
         return _cm()
+
+
+class CanonicalSocialItemTests(SimpleTestCase):
+    def test_current_venue_event_and_tombstone_are_valid(self):
+        self.assertTrue(is_canonical_social_app_pack_item(venue_item()))
+        self.assertTrue(is_canonical_social_app_pack_item(event_item()))
+        self.assertTrue(is_canonical_social_app_pack_item(tombstone_item()))
+
+    def test_policy_shape_and_consumer_bound_mutations_fail_closed(self):
+        cases = []
+
+        stale_policy = event_item()
+        stale_policy["policy_attestation"]["ruleset_version"] = 5
+        cases.append(stale_policy)
+
+        lane_mismatch = event_item()
+        lane_mismatch["acquisition_lane"] = "web_http"
+        cases.append(lane_mismatch)
+
+        prose = event_item(description="copyrighted prose")
+        cases.append(prose)
+
+        bad_id = event_item(id="x" * 129)
+        cases.append(bad_id)
+
+        bad_location = venue_item(location={"lat": float("inf"), "lon": 23.5})
+        cases.append(bad_location)
+
+        bad_address = venue_item()
+        bad_address["address"]["street"] = "x" * 256
+        cases.append(bad_address)
+
+        huge_number = event_item(price_min=10**400)
+        cases.append(huge_number)
+
+        unhashable_obligation = event_item()
+        unhashable_obligation["policy_attestation"]["obligations"] = [{}]
+        cases.append(unhashable_obligation)
+
+        whitespace_url = event_item(ticket_url="https://tickets.example.test/a b")
+        cases.append(whitespace_url)
+
+        missing_venue = event_item()
+        missing_venue.pop("venue_id")
+        missing_venue.pop("place_id")
+        missing_venue["facets"].update({"venue_id": None, "place_id": None})
+        cases.append(missing_venue)
+
+        for field, value in (
+            ("access_type", {}),
+            ("acquisition_lane", []),
+            ("availability", {}),
+        ):
+            malformed_json_type = event_item()
+            malformed_json_type[field] = value
+            cases.append(malformed_json_type)
+
+        malformed_status = event_item(status={})
+        malformed_status["lifecycle_status"] = {}
+        malformed_status["facets"].update({"status": {}, "lifecycle_status": {}})
+        malformed_status["tags"] = ["event:concert", "lifecycle:{}"]
+        cases.append(malformed_status)
+
+        stale_tombstone = tombstone_item(timezone="Europe/Bucharest")
+        cases.append(stale_tombstone)
+
+        for item in cases:
+            with self.subTest(item=deepcopy(item)):
+                self.assertFalse(is_canonical_social_app_pack_item(item))
 
 
 class RoeduClientRequestTests(SimpleTestCase):
@@ -185,108 +265,210 @@ class RoeduClientRequestTests(SimpleTestCase):
         self.assertEqual(len(fake.calls), 1)
 
     def test_app_pack_page_uses_expected_public_path_and_filters(self):
-        page = {
-            "pack_id": "roedu:social_media_activities_app:events_places:v1",
-            "app": "social_media_activities_app",
-            "layer": "redistributable",
-            "schema_version": 1,
-            "items": [],
-            "pagination": {"next_cursor": None},
-            "withheld": 0,
-            "errors": [],
-        }
-        fake = _canned_urlopen({"/v1/app-packs/social_media_activities_app/events_places": page})
+        page = pack_page()
+        expected_path = f"/v1/app-packs/social_media_activities_app/{SOCIAL_APP_PACK_ID}"
+        fake = _canned_urlopen({expected_path: page})
         with self._patched(fake):
             client = RoeduClient("http://h:8077", api_key="k")
-            client.app_pack_page("events_places", city="Cluj-Napoca", kind="venue")
+            client.app_pack_page(SOCIAL_APP_PACK_ID, city="Cluj-Napoca", kind="venue")
         url = fake.calls[0]["url"]
-        self.assertTrue(
-            url.startswith("http://h:8077/v1/app-packs/social_media_activities_app/events_places?")
-        )
+        self.assertTrue(url.startswith(f"http://h:8077{expected_path}?"))
         self.assertIn("layer=redistributable", url)
         self.assertIn("city=Cluj-Napoca", url)
         self.assertIn("kind=venue", url)
 
-    def test_iter_app_pack_filters_unknown_or_internal_legal_metadata_fail_closed(self):
-        page = {
-            "pack_id": "roedu:social_media_activities_app:events_places:v1",
-            "app": "social_media_activities_app",
-            "layer": "redistributable",
-            "schema_version": 1,
-            "items": [
-                {
-                    "id": "event-ok",
-                    "kind": "event",
-                    "title": "Concert",
-                    "tags": ["category:music"],
-                    "facets": {"city": "Cluj-Napoca", "category": "music"},
-                    "source": "fixture",
-                    "provenance": {},
-                    "license": "CC BY 4.0",
-                    "access_type": "open_license",
-                    "legal_basis": "fixture license",
-                    "gdpr_relevant": False,
-                    "redistributable": True,
-                    "confidence": 1.0,
-                },
-                {
-                    "id": "tdm-only",
-                    "kind": "event",
-                    "title": "Internal",
-                    "tags": [],
-                    "facets": {},
-                    "source": "fixture",
-                    "license": "TDM only",
-                    "access_type": "tdm_exception",
-                    "legal_basis": "internal text/data mining",
-                    "gdpr_relevant": False,
-                    "redistributable": False,
-                    "confidence": 0.6,
-                },
-                {
-                    "id": "missing-legal",
-                    "kind": "venue",
-                    "title": "Unknown",
-                    "tags": [],
-                    "facets": {},
-                    "source": "fixture",
-                    "license": "Unknown",
-                    "access_type": "open_license",
-                    "gdpr_relevant": False,
-                    "redistributable": True,
-                    "confidence": 1.0,
-                },
-                {
-                    "id": "gdpr",
-                    "kind": "venue",
-                    "title": "Personal Data",
-                    "tags": [],
-                    "facets": {},
-                    "source": "fixture",
-                    "license": "CC BY 4.0",
-                    "access_type": "open_license",
-                    "legal_basis": "fixture license",
-                    "gdpr_relevant": True,
-                    "redistributable": True,
-                    "confidence": 1.0,
-                },
-            ],
-            "pagination": {"next_cursor": None},
-            "withheld": 3,
-            "errors": [],
-        }
-        fake = _canned_urlopen({"/v1/app-packs/social_media_activities_app/events_places": page})
+    def test_iter_app_pack_withholds_invalid_policy_item_fail_closed(self):
+        invalid = event_item(id="invalid")
+        invalid["policy_attestation"]["ruleset_version"] = 5
+        page = pack_page([venue_item(), event_item(), invalid])
+        fake = _canned_urlopen({"/v1/app-packs/": page})
         with self._patched(fake):
             client = RoeduClient("http://h:8077", api_key="k")
-            out = list(client.iter_app_pack("events_places"))
-        self.assertEqual([item["id"] for item in out], ["event-ok"])
+            out = list(client.iter_app_pack(SOCIAL_APP_PACK_ID))
+        self.assertEqual([item["id"] for item in out], ["venue-1", "event-1"])
 
     def test_iter_app_pack_rejects_non_redistributable_layer(self):
         fake = _canned_urlopen({})
         with self._patched(fake):
             client = RoeduClient("http://h:8077", api_key="k")
-            out = list(client.iter_app_pack("events_places", layer="internal"))
+            out = list(client.iter_app_pack(SOCIAL_APP_PACK_ID, layer="internal"))
         self.assertEqual(out, [])
+        self.assertEqual(fake.calls, [])
+
+    def test_read_app_pack_retains_one_consistent_complete_snapshot_identity(self):
+        responses = [
+            pack_page([venue_item()], cursor="snapshot-bound-c1"),
+            pack_page([event_item()]),
+        ]
+
+        def fake_urlopen(req, timeout=None):
+            return _FakeResponse(json.dumps(responses.pop(0)).encode("utf-8"))
+
+        with self._patched(fake_urlopen):
+            result = RoeduClient("http://h:8077", api_key="k").read_app_pack(SOCIAL_APP_PACK_ID)
+        self.assertEqual([item["id"] for item in result.items], ["venue-1", "event-1"])
+        self.assertEqual(result.snapshot_id, "sha256-" + "7" * 64)
+        self.assertTrue(result.snapshot_complete)
+
+    def test_event_may_precede_its_venue_on_a_later_page(self):
+        responses = [
+            pack_page([event_item()], cursor="snapshot-bound-c1"),
+            pack_page([venue_item()]),
+        ]
+
+        def fake_urlopen(req, timeout=None):
+            return _FakeResponse(json.dumps(responses.pop(0)).encode("utf-8"))
+
+        with self._patched(fake_urlopen):
+            result = RoeduClient("http://h:8077", api_key="k").read_app_pack(SOCIAL_APP_PACK_ID)
+        self.assertEqual({item["id"] for item in result.items}, {"event-1", "venue-1"})
+        self.assertTrue(result.snapshot_complete)
+
+    def test_duplicate_or_dangling_items_make_read_incomplete(self):
+        cases = (
+            ([venue_item(), venue_item()], ["venue-1"]),
+            ([event_item()], []),
+        )
+        for items, expected_ids in cases:
+            with self.subTest(expected_ids=expected_ids):
+                fake = _canned_urlopen({"/v1/app-packs/": pack_page(items)})
+                with self._patched(fake):
+                    result = RoeduClient("http://h:8077", api_key="k").read_app_pack(
+                        SOCIAL_APP_PACK_ID
+                    )
+                self.assertEqual([item["id"] for item in result.items], expected_ids)
+                self.assertFalse(result.snapshot_complete)
+
+    def test_read_app_pack_rejects_snapshot_identity_drift_between_pages(self):
+        responses = [
+            pack_page(
+                cursor="c1",
+                snapshot_id="sha256-" + "1" * 64,
+                release_id="sha256-" + "1" * 64,
+            ),
+            pack_page(
+                snapshot_id="sha256-" + "2" * 64,
+                release_id="sha256-" + "2" * 64,
+            ),
+        ]
+
+        def fake_urlopen(req, timeout=None):
+            return _FakeResponse(json.dumps(responses.pop(0)).encode("utf-8"))
+
+        with self._patched(fake_urlopen), self.assertRaises(rc.RoeduContractError):
+            RoeduClient("http://h:8077", api_key="k").read_app_pack(SOCIAL_APP_PACK_ID)
+
+    def test_read_app_pack_rejects_page_that_omits_identity(self):
+        responses = [
+            pack_page(cursor="c1"),
+            pack_page(release_id=""),
+        ]
+
+        def fake_urlopen(req, timeout=None):
+            return _FakeResponse(json.dumps(responses.pop(0)).encode("utf-8"))
+
+        with self._patched(fake_urlopen), self.assertRaises(rc.RoeduContractError):
+            RoeduClient("http://h:8077", api_key="k").read_app_pack(SOCIAL_APP_PACK_ID)
+
+    def test_read_app_pack_rejects_non_promoted_or_mismatched_release_identity(self):
+        for snapshot_id, release_id in (
+            ("snapshot", "snapshot"),
+            ("sha256-" + "1" * 64, "sha256-" + "2" * 64),
+        ):
+            with self.subTest(snapshot_id=snapshot_id, release_id=release_id):
+                page = pack_page(snapshot_id=snapshot_id, release_id=release_id)
+                fake = _canned_urlopen({"/v1/app-packs/": page})
+                with self._patched(fake), self.assertRaises(rc.RoeduContractError):
+                    RoeduClient("http://h:8077", api_key="k").read_app_pack(SOCIAL_APP_PACK_ID)
+
+    def test_read_app_pack_rejects_unknown_page_envelope_field(self):
+        page = pack_page(unreviewed=True)
+        fake = _canned_urlopen({"/v1/app-packs/": page})
+        with self._patched(fake), self.assertRaises(rc.RoeduContractError):
+            RoeduClient("http://h:8077", api_key="k").read_app_pack(SOCIAL_APP_PACK_ID)
+
+    def test_read_app_pack_never_completes_after_filter_mismatch(self):
+        wrong_city = venue_item()
+        wrong_city["facets"]["city"] = "București"
+        wrong_city["address"]["city"] = "București"
+        page = pack_page([wrong_city])
+        fake = _canned_urlopen({"/v1/app-packs/": page})
+        with self._patched(fake):
+            result = RoeduClient("http://h:8077", api_key="k").read_app_pack(
+                SOCIAL_APP_PACK_ID,
+                city="Cluj-Napoca",
+            )
+        self.assertEqual(result.items, ())
+        self.assertFalse(result.snapshot_complete)
+
+        missing_city = venue_item()
+        missing_city["facets"]["city"] = None
+        missing_city["address"]["city"] = ""
+        fake = _canned_urlopen({"/v1/app-packs/": pack_page([missing_city])})
+        with self._patched(fake):
+            result = RoeduClient("http://h:8077", api_key="k").read_app_pack(
+                SOCIAL_APP_PACK_ID,
+                city="Cluj-Napoca",
+            )
+        self.assertEqual(result.items, ())
+        self.assertFalse(result.snapshot_complete)
+
+    def test_read_app_pack_rejects_noncanonical_page_datetime_and_bool_schema(self):
+        for update in (
+            {"snapshot_generated_at": "2026-07-12 08:00:00+00:00"},
+            {"schema_version": True},
+            {"snapshot_mode": {}},
+        ):
+            with self.subTest(update=update):
+                fake = _canned_urlopen({"/v1/app-packs/": pack_page(**update)})
+                with self._patched(fake), self.assertRaises(rc.RoeduContractError):
+                    RoeduClient("http://h:8077", api_key="k").read_app_pack(SOCIAL_APP_PACK_ID)
+
+    def test_read_app_pack_rejects_missing_items_before_absence_can_be_inferred(self):
+        page = pack_page()
+        page.pop("items")
+        fake = _canned_urlopen({"/v1/app-packs/": page})
+
+        with self._patched(fake), self.assertRaises(rc.RoeduContractError):
+            RoeduClient("http://h:8077", api_key="k").read_app_pack(SOCIAL_APP_PACK_ID)
+
+    def test_read_app_pack_rejects_falsy_non_null_next_cursor(self):
+        for cursor in ("", False, 0, [], {}):
+            with self.subTest(cursor=cursor):
+                page = pack_page()
+                page["pagination"]["next_cursor"] = cursor
+                fake = _canned_urlopen({"/v1/app-packs/": page})
+                with self._patched(fake), self.assertRaises(rc.RoeduContractError):
+                    RoeduClient("http://h:8077", api_key="k").read_app_pack(SOCIAL_APP_PACK_ID)
+
+    def test_read_app_pack_never_reconciles_after_client_withholds_invalid_item(self):
+        invalid = event_item()
+        invalid["acquisition_lane"] = "invented"
+        page = pack_page([venue_item(), invalid])
+        fake = _canned_urlopen({"/v1/app-packs/": page})
+        with self._patched(fake):
+            result = RoeduClient("http://h:8077", api_key="k").read_app_pack(SOCIAL_APP_PACK_ID)
+        self.assertEqual([item["id"] for item in result.items], ["venue-1"])
+        self.assertFalse(result.snapshot_complete)
+
+    def test_read_app_pack_preserves_partial_withheld_state_without_dropping_valid_items(self):
+        page = pack_page(
+            [venue_item(), event_item()],
+            mode="partial",
+            complete=False,
+            withheld=1,
+            errors=["producer declared partial snapshot"],
+        )
+        fake = _canned_urlopen({"/v1/app-packs/": page})
+        with self._patched(fake):
+            result = RoeduClient("http://h:8077", api_key="k").read_app_pack(SOCIAL_APP_PACK_ID)
+        self.assertEqual(len(result.items), 2)
+        self.assertFalse(result.snapshot_complete)
+
+    def test_short_pack_alias_is_rejected_before_network(self):
+        fake = _canned_urlopen({})
+        with self._patched(fake), self.assertRaises(rc.RoeduContractError):
+            RoeduClient("http://h:8077", api_key="k").read_app_pack("events_places")
         self.assertEqual(fake.calls, [])
 
     # --- helper: patch the client's single HTTP boundary ---

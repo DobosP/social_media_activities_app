@@ -26,6 +26,12 @@ _JSON_LD_ESCAPES = {
     chr(0x2029): "\\u2029",  # PARAGRAPH SEPARATOR
 }
 
+_EVENT_AVAILABILITY_URLS = {
+    "available": "https://schema.org/InStock",
+    "limited": "https://schema.org/LimitedAvailability",
+    "sold_out": "https://schema.org/SoldOut",
+}
+
 
 def ld_json(obj) -> str:
     """Serialize ``obj`` to a string safe to drop inside a ``<script>`` JSON-LD block."""
@@ -105,11 +111,14 @@ def place_ld(place, request=None, events=None) -> dict:
     return node
 
 
-# NOTE: schema.org ``offers``/``isAccessibleForFree`` enrichment from source price facts is
-# deliberately absent on this branch — the Event price/availability fields live in the
-# in-flight v_2 scraper/data-server lane and the enrichment lands once that schema is on main.
 def event_ld(event, request=None) -> dict:
     """Top-level JSON-LD Event for an event detail page (offline, in-person)."""
+    lifecycle_urls = {
+        "cancelled": "https://schema.org/EventCancelled",
+        "postponed": "https://schema.org/EventPostponed",
+        "rescheduled": "https://schema.org/EventRescheduled",
+        "moved_online": "https://schema.org/EventMovedOnline",
+    }
     node = {
         "@context": "https://schema.org",
         "@type": "Event",
@@ -117,7 +126,9 @@ def event_ld(event, request=None) -> dict:
         "startDate": event.starts_at.isoformat(),
         "url": absolute_url(event_path(event), request),
         "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
-        "eventStatus": "https://schema.org/EventScheduled",
+        "eventStatus": lifecycle_urls.get(
+            event.lifecycle_status, "https://schema.org/EventScheduled"
+        ),
     }
     if event.description:
         node["description"] = event.description
@@ -127,6 +138,35 @@ def event_ld(event, request=None) -> dict:
         node["location"] = place_node(event.place, request)
     if event.url:
         node["sameAs"] = event.url
+
+    # These are source-owned commerce facts from the canonical RO-EDU app pack. Unknown values
+    # stay absent rather than being guessed. Event rich-result guidance defines Offer.price as the
+    # LOWEST ticket price, so source_price_max remains available through the public API/snapshot
+    # but is not mislabeled here as an offer price.
+    if event.source_is_free is not None:
+        node["isAccessibleForFree"] = event.source_is_free
+
+    availability = _EVENT_AVAILABILITY_URLS.get(event.source_availability)
+    commerce_known = (
+        event.source_is_free is not None
+        or event.source_price_min is not None
+        or event.source_price_max is not None
+        or bool(event.source_availability)
+    )
+    if commerce_known:
+        offer = {"@type": "Offer"}
+        if event.source_is_free is True:
+            offer["price"] = "0"
+        elif event.source_price_min is not None:
+            offer["price"] = format(event.source_price_min, "f")
+        if "price" in offer and event.source_currency:
+            offer["priceCurrency"] = event.source_currency
+        if availability:
+            offer["availability"] = availability
+        if event.url:
+            offer["url"] = event.url
+        if len(offer) > 1:
+            node["offers"] = offer
     return node
 
 

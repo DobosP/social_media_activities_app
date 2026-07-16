@@ -1464,11 +1464,9 @@ def place_detail(request, pk, slug=None):
             .prefetch_related("place__corrections", "secondary_types")
             .order_by("starts_at")
         )
-    events = (
-        Event.objects.filter(place=place, starts_at__gte=timezone.now())
-        .select_related("activity_type")
-        .order_by("starts_at")
-    )
+    from apps.events.services import upcoming_events
+
+    events = upcoming_events().filter(place=place).order_by("starts_at")
     # F15: honest accessibility facts derived from OSM tags, plus a soft match badge when the
     # viewer has set an access preference (get_access_preference returns None for anonymous).
     pref = get_access_preference(request.user)
@@ -3940,7 +3938,7 @@ def event_detail(request, pk, slug=None):
             raise Http404("No event matches the given query.")
     # F21: read-time accuracy flag from crowd reports + the member report affordance. The report
     # form shows only on a PUBLIC event (mirrors the event_report gate — no form that would 404).
-    from apps.events.services import event_attribution, event_reliability
+    from apps.events.services import event_attribution, event_is_discoverable, event_reliability
     from apps.web.seo import absolute_url, event_path
 
     # SEO: canonical points at the keyword-rich slugged path (bare/decorative-slug URLs all 200);
@@ -3948,6 +3946,7 @@ def event_detail(request, pk, slug=None):
     canonical_override = absolute_url(
         event_path(event) if is_public_event else request.path, request
     )
+    event_discoverable = event_is_discoverable(event)
     # schema.org Event JSON-LD — only on a public event (a pending-place event is proposer/
     # staff-only and must not be advertised to crawlers).
     structured_data = None
@@ -3982,14 +3981,19 @@ def event_detail(request, pk, slug=None):
             "related_landing": related_landing,
             "canonical_url": canonical_override,
             "event_reliability": event_reliability(event),
+            "event_discoverable": event_discoverable,
             "attribution_credit": event_attribution(event),
             "can_report_event": (
-                is_public_event and request.user.is_authenticated and can_participate(request.user)
+                is_public_event
+                and event_discoverable
+                and request.user.is_authenticated
+                and can_participate(request.user)
             ),
             # W4-F12: offer "convene a gauge around this" only on a PUBLIC event (whose place can
             # seed a gauge) to a user who can actually create one.
             "can_convene": (
                 is_public_event
+                and event_discoverable
                 and request.user.is_authenticated
                 and can_participate(request.user)
                 and event.place_id is not None
@@ -5069,9 +5073,9 @@ def gauge_create(request):
         initial = {}
         event_id = request.GET.get("event", "")
         if event_id.isdigit():
-            from apps.events.services import events_with_public_places
+            from apps.events.services import upcoming_events
 
-            event = events_with_public_places().filter(pk=event_id).first()
+            event = upcoming_events().filter(pk=event_id).first()
             if event is not None:
                 if event.place_id:
                     initial["place"] = event.place_id

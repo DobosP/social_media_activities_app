@@ -87,3 +87,15 @@ def test_convene_does_not_seed_a_pending_place():
     resp = _client(user).get(f"/gauges/new/?event={event.id}")
     assert resp.status_code == 200
     assert resp.context["form"].initial.get("place") is None
+
+
+def test_convene_does_not_seed_or_link_a_source_cancelled_event():
+    user = _user("f12d")
+    event = _event(_place(), _type())
+    event.lifecycle_status = Event.LifecycleStatus.CANCELLED
+    event.save(update_fields=["lifecycle_status"])
+
+    form = _client(user).get(f"/gauges/new/?event={event.id}")
+    assert form.context["form"].initial.get("place") is None
+    detail = _client(user).get(f"/events/{event.id}/").content.decode()
+    assert "gauge interest" not in detail

@@ -5,7 +5,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.events.models import Event
+from apps.events.services import DISCOVERABLE_LIFECYCLE_STATUSES, upcoming_events
 from apps.ops.pagination import cursor_response, is_versioned_api_request
 from apps.places.models import Place
 
@@ -58,7 +58,12 @@ class NearMeView(APIView):
         if _truthy(p, "family_friendly"):
             qs = qs.filter(place_activities__activity__family_friendly=True)
         if _truthy(p, "has_events"):
-            qs = qs.filter(events__starts_at__gte=timezone.now())
+            qs = qs.filter(
+                events__starts_at__gte=timezone.now(),
+                events__is_tombstone=False,
+                events__is_import_held=False,
+                events__lifecycle_status__in=DISCOVERABLE_LIFECYCLE_STATUSES,
+            )
 
         qs = qs.distinct()
         qs, point = apply_proximity(qs, p)
@@ -95,13 +100,9 @@ class HappeningView(APIView):
         from django.conf import settings
         from django.db.models import Count, Q
 
-        from apps.places.services import public_places
-
         p = request.query_params
         now = timezone.now()
-        qs = Event.objects.select_related("place", "activity_type").filter(starts_at__gte=now)
-        # F25: an event pinned to a still-pending user place must not leak that place.
-        qs = qs.filter(Q(place__isnull=True) | Q(place_id__in=public_places().values("id")))
+        qs = upcoming_events()
         # F21: drop events the crowd flagged as changed (cancelled/moved/wrong time) from the
         # Happening feed — counted within the decay window so a re-listed event self-heals.
         threshold = getattr(settings, "EVENT_REPORT_THRESHOLD", 3)

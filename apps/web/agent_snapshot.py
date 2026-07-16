@@ -24,11 +24,10 @@ Contract (the sidecar is built against exactly this — do not deviate):
     simplest shape, documented here and NOT wrapped in a ``records`` list.
   * All datetimes are UTC ISO-8601 with a literal ``Z`` suffix (the sidecar parses RFC3339 and
     sorts lexicographically, which both require the ``Z`` normalisation).
-  * Event records mirror the public ``EventSerializer`` field set on THIS branch (main). The
-    RO-EDU source facts (price range, currency, free flag, availability, lifecycle, recurrence,
-    timezone, category, confidence) live in the in-flight v_2 scraper lane — they are ADDED
-    here, additively, once that schema lands on main (the sidecar passes unknown record fields
-    through verbatim, so this is a no-op for the Go side).
+  * Event records include the reviewed public ``EventSerializer`` source facts plus the path and
+    compact place block the sidecar needs. Price range, currency, free flag, availability,
+    lifecycle, recurrence, timezone, category, and confidence are additive fields; the sidecar
+    passes them through verbatim and needs no matching Go schema change.
   * Files are written ``<name>.tmp`` then ``os.replace``d (atomic); ``manifest.json`` is written
     LAST, because the sidecar reloads keyed on the manifest changing.
 """
@@ -127,6 +126,22 @@ def _event_record(event):
         "attribution_credit": event_attribution(event),
         # Slug parity with EventSerializer.activity — the sidecar's ?activity= filter keys on it.
         "activity": event.activity_type.slug if event.activity_type_id else None,
+        # Public, facts-only RO-EDU fields exposed by EventSerializer. Decimal values stay exact
+        # and JSON-safe as strings, matching DRF's DecimalField representation.
+        "source_category": event.source_category,
+        "lifecycle_status": event.lifecycle_status,
+        "source_confidence": event.source_confidence,
+        "source_recurrence": event.source_recurrence,
+        "source_timezone": event.source_timezone,
+        "source_price_min": (
+            format(event.source_price_min, "f") if event.source_price_min is not None else None
+        ),
+        "source_price_max": (
+            format(event.source_price_max, "f") if event.source_price_max is not None else None
+        ),
+        "source_currency": event.source_currency,
+        "source_is_free": event.source_is_free,
+        "source_availability": event.source_availability,
         "place_id": event.place_id,
         "path": event_path(event),
         "place_summary": _place_summary(event.place),

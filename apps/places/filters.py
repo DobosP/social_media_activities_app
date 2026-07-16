@@ -18,6 +18,7 @@ def _activity_statuses_for_upcoming():
 def annotate_has_upcoming(qs, user=None):
     """Annotate places with public/viewer-visible upcoming activity or event presence."""
     from apps.events.models import Event
+    from apps.events.services import DISCOVERABLE_LIFECYCLE_STATUSES
     from apps.social import services as social
 
     now = timezone.now()
@@ -31,7 +32,13 @@ def annotate_has_upcoming(qs, user=None):
         status__in=_activity_statuses_for_upcoming(),
         starts_at__gte=now,
     ).order_by()
-    event_qs = Event.objects.filter(place_id=OuterRef("pk"), starts_at__gte=now).order_by()
+    event_qs = Event.objects.filter(
+        place_id=OuterRef("pk"),
+        starts_at__gte=now,
+        is_tombstone=False,
+        is_import_held=False,
+        lifecycle_status__in=DISCOVERABLE_LIFECYCLE_STATUSES,
+    ).order_by()
     return qs.annotate(
         has_upcoming_activity=Exists(activity_qs),
         has_upcoming_event=Exists(event_qs),

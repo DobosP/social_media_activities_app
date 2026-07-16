@@ -2121,6 +2121,7 @@ def _validate_share(author, share_activity, share_place, share_event) -> dict:
     if len(chosen) > 1:
         raise InvalidState(_("Share one thing at a time."))
     from apps.events.models import Event
+    from apps.events.services import event_is_discoverable, events_with_public_places
     from apps.places.models import Place
     from apps.places.services import public_places
 
@@ -2147,13 +2148,8 @@ def _validate_share(author, share_activity, share_place, share_event) -> dict:
             raise InvalidState(_("You can't share that."))
         return {"shared_place": target}
     pk = share_event.pk if isinstance(share_event, Event) else _safe_pk(share_event)
-    target = (
-        Event.objects.select_related("place")
-        .filter(pk=pk)
-        .filter(Q(place__isnull=True) | Q(place_id__in=public_places().values("id")))
-        .first()
-    )
-    if target is None:
+    target = events_with_public_places().filter(pk=pk).first()
+    if target is None or not event_is_discoverable(target):
         raise InvalidState(_("You can't share that."))
     return {"shared_event": target}
 
@@ -2210,8 +2206,14 @@ def _derive_share_card(post, public_place_ids: set):
             return {"kind": "gone"}
         return {"kind": "place", "obj": post.shared_place}
     if post.shared_event_id:
+        from apps.events.services import event_is_discoverable
+
         e = post.shared_event
-        if e is None or (e.place_id and e.place_id not in public_place_ids):
+        if (
+            e is None
+            or not event_is_discoverable(e)
+            or (e.place_id and e.place_id not in public_place_ids)
+        ):
             return {"kind": "gone"}
         return {"kind": "event", "obj": e}
     return None

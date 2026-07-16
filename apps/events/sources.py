@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 
 from django.utils import timezone as dj_timezone
 
@@ -38,6 +39,27 @@ class RawEvent:
     attribution: str = ""
     license_name: str = ""
     provenance_url: str = ""
+    source_category: str = ""
+    source_confidence: float | None = None
+    is_import_held: bool = False
+    lifecycle_status: str = ""
+    is_tombstone: bool | None = None
+    source_venue_id: str = ""
+    source_city: str = ""
+    source_pack_id: str = ""
+    source_snapshot_id: str = ""
+    source_release_id: str = ""
+    source_snapshot_generated_at: datetime | None = None
+    source_first_seen_at: datetime | None = None
+    source_last_seen_at: datetime | None = None
+    source_updated_at: datetime | None = None
+    source_recurrence: str = ""
+    source_timezone: str = ""
+    source_price_min: Decimal | None = None
+    source_price_max: Decimal | None = None
+    source_currency: str = ""
+    source_is_free: bool | None = None
+    source_availability: str = ""
 
 
 class EventSource(ABC):

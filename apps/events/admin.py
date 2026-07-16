@@ -1,12 +1,27 @@
 from django.contrib import admin
 
-from .models import Event, EventFeed, EventReport
+from .models import Event, EventFeed, EventReport, RoeduEventSyncState
 
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
-    list_display = ("title", "starts_at", "ends_at", "place", "activity_type", "source")
-    list_filter = ("source", "activity_type")
+    list_display = (
+        "title",
+        "starts_at",
+        "place",
+        "activity_type",
+        "source",
+        "lifecycle_status",
+        "is_import_held",
+        "is_tombstone",
+    )
+    list_filter = (
+        "source",
+        "activity_type",
+        "lifecycle_status",
+        "is_import_held",
+        "is_tombstone",
+    )
     search_fields = ("title", "description", "place__name")
     autocomplete_fields = ("place", "activity_type")
     date_hierarchy = "starts_at"
@@ -32,3 +47,28 @@ class EventReportAdmin(admin.ModelAdmin):
     list_filter = ("kind",)
     search_fields = ("event__title", "reporter__username")
     readonly_fields = ("event", "reporter", "kind", "created_at")
+
+
+@admin.register(RoeduEventSyncState)
+class RoeduEventSyncStateAdmin(admin.ModelAdmin):
+    list_display = (
+        "pack_id",
+        "city",
+        "snapshot_id",
+        "snapshot_generated_at",
+        "completed_at",
+    )
+    readonly_fields = (
+        "pack_id",
+        "city",
+        "snapshot_id",
+        "release_id",
+        "snapshot_generated_at",
+        "completed_at",
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False

@@ -16,11 +16,20 @@ import os
 
 from django.conf import settings
 from django.core.management import call_command
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
+
+from apps.ingestion.sources.roedu_client import (
+    SOCIAL_APP_PACK_ID,
+    RoeduContractError,
+    require_canonical_social_pack,
+)
 
 
 class Command(BaseCommand):
-    help = "Daily RO-EDU sync: roedu venues + event facts + Commons covers (ADR-0019 §7)."
+    help = (
+        "Daily RO-EDU sync: roedu venues + event facts + Commons covers; "
+        f"canonical pack {SOCIAL_APP_PACK_ID}."
+    )
 
     def add_arguments(self, parser):
         parser.add_argument("--city", default=None, help="default: ROEDU_SYNC_CITY setting")
@@ -33,8 +42,19 @@ class Command(BaseCommand):
             self.stdout.write("sync_roedu: skipped (no ROEDU_API_KEY in the environment).")
             return
         city = opts["city"] or getattr(settings, "ROEDU_SYNC_CITY", "Cluj-Napoca")
+        app_pack = (os.environ.get("ROEDU_APP_PACK") or "").strip()
+        if app_pack:
+            try:
+                app_pack = require_canonical_social_pack(app_pack)
+            except RoeduContractError as exc:
+                # Validate before venue ingestion: a near-miss/legacy product
+                # must never leave a half-applied mixed-mode run.
+                raise CommandError(str(exc)) from exc
         call_command("ingest_places", "--source", "roedu", "--city", city)
-        call_command("sync_roedu_events", "--city", city)
+        event_args = ["--city", city]
+        if app_pack:
+            event_args.extend(["--app-pack", app_pack])
+        call_command("sync_roedu_events", *event_args)
         # New venues may carry Commons/Wikidata refs — resolve a bounded batch per tick.
         call_command("resolve_place_covers", "--city", city, "--limit", "100")
         self.stdout.write(self.style.SUCCESS(f"sync_roedu: completed for {city}."))

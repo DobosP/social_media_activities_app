@@ -1,4 +1,5 @@
 from datetime import timedelta
+from decimal import Decimal
 
 import pytest
 from django.contrib.gis.geos import Point
@@ -78,8 +79,41 @@ def test_anonymous_list_hides_event_at_unpublished_user_place():
     assert "At pending place" not in titles
 
 
-# NOTE: lifecycle/tombstone gating tests (cancelled events hidden, retracted events out of
-# include_past) live with the v_2 scraper-lane schema and return when it lands on main.
+@pytest.mark.parametrize(
+    "lifecycle_status",
+    [
+        Event.LifecycleStatus.CANCELLED,
+        Event.LifecycleStatus.POSTPONED,
+        Event.LifecycleStatus.REMOVED,
+        Event.LifecycleStatus.MOVED_ONLINE,
+        Event.LifecycleStatus.EXPIRED,
+        Event.LifecycleStatus.UNKNOWN,
+    ],
+)
+def test_anonymous_default_hides_non_discoverable_source_lifecycle(lifecycle_status):
+    _upcoming(place=_osm_place(), lifecycle_status=lifecycle_status)
+
+    assert APIClient().get("/api/v1/events/").json()["count"] == 0
+
+
+def test_anonymous_history_retains_cancelled_source_truth():
+    _upcoming(
+        title="Cancelled source event",
+        place=_osm_place(),
+        lifecycle_status=Event.LifecycleStatus.CANCELLED,
+    )
+
+    history = APIClient().get("/api/v1/events/?include_past=true").json()
+
+    assert history["count"] == 1
+    assert history["results"][0]["lifecycle_status"] == Event.LifecycleStatus.CANCELLED
+
+
+@pytest.mark.parametrize("hidden_flag", ["is_tombstone", "is_import_held"])
+def test_anonymous_history_never_exposes_retracted_or_held_event(hidden_flag):
+    _upcoming(place=_osm_place(), **{hidden_flag: True})
+
+    assert APIClient().get("/api/v1/events/?include_past=true").json()["count"] == 0
 
 
 def test_anonymous_include_past_returns_past_events():
@@ -106,6 +140,37 @@ def test_anonymous_response_exposes_no_user_or_pii_fields():
     # reporter, proposer, or other PII/relational field can leak through the anon surface.
     allowed = set(EventSerializer().fields.keys())
     assert set(item.keys()) <= allowed
+
+
+def test_anonymous_response_exposes_public_roedu_source_facts():
+    _upcoming(
+        title="Public RO-EDU facts",
+        place=_osm_place(),
+        source=Event.Source.SCRAPER,
+        source_category="concert",
+        lifecycle_status=Event.LifecycleStatus.RESCHEDULED,
+        source_confidence=0.98,
+        source_recurrence="FREQ=WEEKLY",
+        source_timezone="Europe/Bucharest",
+        source_price_min=Decimal("20.00"),
+        source_price_max=Decimal("50.00"),
+        source_currency="RON",
+        source_is_free=False,
+        source_availability="limited",
+    )
+
+    item = APIClient().get("/api/v1/events/").json()["results"][0]
+
+    assert item["source_category"] == "concert"
+    assert item["lifecycle_status"] == Event.LifecycleStatus.RESCHEDULED
+    assert item["source_confidence"] == 0.98
+    assert item["source_recurrence"] == "FREQ=WEEKLY"
+    assert item["source_timezone"] == "Europe/Bucharest"
+    assert item["source_price_min"] == "20.00"
+    assert item["source_price_max"] == "50.00"
+    assert item["source_currency"] == "RON"
+    assert item["source_is_free"] is False
+    assert item["source_availability"] == "limited"
 
 
 # --- agent queryability: from/to, q, city, near --------------------------------------------
