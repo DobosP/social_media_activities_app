@@ -23,6 +23,11 @@ bounded `source_*` columns for the remaining facts; expose those columns through
 event API. Continue discarding scraped descriptions, organizers/performers, generic source URLs,
 full policy/evidence/clearance/rights/acquisition payloads, internal paths, and checksums.
 
+This schema also closes the follow-up deferred in ADR-0025: the reviewed public source facts are
+exported additively in the gate-filtered agent snapshot, and explicit price/free/availability facts
+may enrich event JSON-LD. Unknown commerce facts remain absent rather than being inferred, and the
+Go sidecar continues to pass the additive snapshot fields through without interpreting them.
+
 ## Context / why
 
 The former additive client accepted a caller-selected pack name and only repeated four generic
