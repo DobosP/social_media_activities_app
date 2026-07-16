@@ -95,7 +95,7 @@ def test_upload_activity_cover_strips_metadata_and_signs_url():
     assert dict(reopened.getexif()) == {}
     url = media.activity_cover_signed_url(cover, owner)
     token = url.rsplit("/", 2)[1]
-    assert media.resolve_activity_cover_token(token, owner).id == cover.id
+    assert media.resolve_activity_cover_token(token, owner)[0].id == cover.id
 
 
 def test_only_owner_or_staff_can_upload_replace_delete_cover():
@@ -192,4 +192,4 @@ def test_cover_visibility_follows_activity_visibility_and_public_gate():
     assert media.can_view_activity_cover(None, cover) is True
     public_url = media.activity_cover_signed_url(cover, None)
     public_token = public_url.rsplit("/", 2)[1]
-    assert media.resolve_activity_cover_token(public_token, None).id == cover.id
+    assert media.resolve_activity_cover_token(public_token, None)[0].id == cover.id

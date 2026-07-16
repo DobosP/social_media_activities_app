@@ -265,7 +265,9 @@ def test_v1_message_history_query_count_is_constant(
             adult_a, conv, ciphertext=f"Y2lwaGVyq{i}", iv="aXY=", recipient_keys=keys
         )
 
-    with django_assert_max_num_queries(6):
+    # 7 = the historic 6 + the constant avatar-style batch query attach_interest_nodes now
+    # issues (ADR-0027) — still independent of message/participant count (the point pinned here).
+    with django_assert_max_num_queries(7):
         resp = client_for(adult_b).get(
             f"/api/v1/messaging/conversations/{conv.id}/messages/",
             {"limit": 10},

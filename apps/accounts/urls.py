@@ -6,6 +6,7 @@ from .views import (
     GuardianLinkAcceptView,
     GuardianLinkDeclineView,
     GuardianLinkView,
+    MeAvatarStyleView,
     MeExportView,
     MeSettingsView,
     MeView,
@@ -21,6 +22,8 @@ urlpatterns = [
     path("me/export/", MeExportView.as_view(), name="me-export"),
     # W10: self-scoped preferences (notification mutes + access needs) for API clients.
     path("me/settings/", MeSettingsView.as_view(), name="me-settings"),
+    # ADR-0027: which avatar generation renders the user's picture (self-only).
+    path("me/avatar-style/", MeAvatarStyleView.as_view(), name="me-avatar-style"),
     path("wards/", WardListView.as_view(), name="wards"),
     path("wards/<uuid:public_id>/", WardDetailView.as_view(), name="ward-detail"),
     path("wards/<uuid:public_id>/export/", WardExportView.as_view(), name="ward-export"),

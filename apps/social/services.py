@@ -376,6 +376,16 @@ def current_members(activity):
     return activity.memberships.filter(state=Membership.State.MEMBER)
 
 
+def visible_roster(viewer, activity):
+    """The member list AS DISPLAYED to ``viewer``: current members minus anyone in a mutual
+    block with the viewer — mutual invisibility, matching the group_roster precedent
+    (ADR-0028). Display-only: membership checks, admission votes, and notification fan-outs
+    keep using ``current_members`` (a block never hides a member from the machinery)."""
+    from apps.safety.services import blocked_user_ids
+
+    return current_members(activity).exclude(user_id__in=blocked_user_ids(viewer))
+
+
 def voting_members(activity):
     """Members who vote on join requests — peers only; guardians are supervisory and
     do not vote."""
@@ -2444,6 +2454,10 @@ def broadcast_post(post, *, edited=False) -> None:
             "edited": edited
             or (post.updated_at and post.created_at and post.updated_at > post.created_at),
             "created_at": post.created_at.isoformat() if post.created_at else None,
+            # IDs only (ADR-0026): signed media URLs are PER-VIEWER, so the group payload can
+            # never carry one — each member's consumer resolves these through the full media
+            # gate (can_view_attachment + variants) at delivery time.
+            "attachment_ids": list(post.attachments.values_list("id", flat=True)),
         }
         async_to_sync(layer.group_send)(
             f"chat_{post.thread_id}", {"type": "chat.message", "message": payload}
@@ -2452,11 +2466,11 @@ def broadcast_post(post, *, edited=False) -> None:
         pass
 
 
-def broadcast_reaction(post) -> None:
-    """Fan a post's CURRENT reaction set (distinct emojis only — never a count, never who) out to
-    the thread's live group so connected members see a reaction appear/disappear without a reload.
-    Best-effort like broadcast_post: a graceful no-op without a working channel layer, never raises
-    into the toggle. Delivery is re-authorised per-recipient in the consumer (chat_reaction)."""
+def broadcast_attachment_update(post) -> None:
+    """Fan out 'this post's attachments changed state' (ADR-0026: a video finished/failed its
+    off-request processing) so connected members swap the 'being prepared' placeholder for the
+    player without a reload. IDs only — every member's consumer re-resolves per-viewer URLs
+    through the media gate. Best-effort like broadcast_post."""
     try:
         from asgiref.sync import async_to_sync
         from channels.layers import get_channel_layer
@@ -2464,14 +2478,14 @@ def broadcast_reaction(post) -> None:
         layer = get_channel_layer()
         if layer is None:
             return
+        payload = {
+            "post_id": post.id,
+            "attachment_ids": list(post.attachments.values_list("id", flat=True)),
+        }
         async_to_sync(layer.group_send)(
-            f"chat_{post.thread_id}",
-            {
-                "type": "chat.reaction",
-                "message": {"post_id": post.id, "present": post_reaction_emojis(post)},
-            },
+            f"chat_{post.thread_id}", {"type": "chat.attachments", "message": payload}
         )
-    except Exception:  # noqa: BLE001 — live delivery is best-effort; never break the write
+    except Exception:  # noqa: BLE001 — live delivery is best-effort; never break the update
         pass
 
 
@@ -2499,53 +2513,92 @@ def typing_identity(user, activity) -> dict | None:
     return {"author_id": user.id, "author": user.display_name or user.username}
 
 
-# --- thread reactions (anonymous, COUNTLESS, no who-list) -----------------------------------
+# --- thread sentiment: appreciation / dissent / concern (anonymous, COUNTLESS) ---------------
 
-# A fixed, NON-extensible ack set — never user-supplied custom emoji (a custom-emoji economy is
-# an engagement/vanity surface). Overridable via settings only by an operator.
-DEFAULT_REACTION_EMOJIS = ["👍", "❤️", "🎉", "👏", "🙏"]
+# A fixed, NON-extensible appreciation vocabulary (ADR-0029 rung 0): positive-effect-on-me only —
+# never a valence/dislike axis (that would be a rankable grade). slug -> (emoji, picker label,
+# latched footer sentence). The dict order IS the fixed catalog/display order (never
+# popularity-sorted). An operator may override the ACTIVE set via THREAD_REACTION_FACETS (a list of
+# slugs, a subset/reorder of these keys); allowed_reactions drops any slug not in this catalog, so
+# the override can never introduce a custom-emoji/vanity facet.
+REACTION_FACETS = {
+    "helped_me": ("🙏", "Helped me", "People found this helpful."),
+    "felt_welcome": ("🤝", "Made me feel welcome", "People felt welcome here."),
+    "made_me_smile": ("🙂", "Made me smile", "This made people smile."),
+    "want_to_come": ("✨", "Makes me want to come", "This makes people want to come."),
+    "got_me_thinking": ("💡", "Got me thinking", "This got people thinking."),
+}
+
+# The adult-only dissent footer sentence (ADR-0029 rung 1) — rendered LAST, never with a count.
+DISSENT_SENTENCE = "Some see this differently."
 
 
 def allowed_reactions() -> list:
-    return list(getattr(settings, "THREAD_REACTION_EMOJIS", DEFAULT_REACTION_EMOJIS))
+    """The ordered facet slugs a member may toggle. Operator-overridable via THREAD_REACTION_FACETS
+    (a list of slugs); any slug not in the fixed REACTION_FACETS catalog is dropped so an override
+    can never introduce a non-catalog (custom-emoji/vanity) facet."""
+    override = getattr(settings, "THREAD_REACTION_FACETS", None)
+    if override:
+        return [s for s in override if s in REACTION_FACETS]
+    return list(REACTION_FACETS)
 
 
-@transaction.atomic
-def toggle_reaction(user, post, emoji) -> bool:
-    """Add or remove the user's OWN emoji reaction on a thread post. Enforces the SAME write
-    gate as post_to_thread (membership, not-a-guardian, consent, not-blocked-vs-owner, activity
-    not hidden/cancelled) plus a fixed-emoji-set and not-a-hidden-post check, so the reaction
-    surface can never become a weaker side door than posting. Returns True if now reacted, False
-    if removed. Never exposes a count or a who-list anywhere."""
+def _thread_write_gate(user, post):
+    """The SHARED write gate for every per-post member action (react / dissent / concern). It
+    enforces EXACTLY the conditions post_to_thread does, so none of these surfaces can become a
+    weaker side door than posting. The order is load-bearing and identical to the legacy
+    toggle_reaction gate: hidden post -> hidden/cancelled owner -> current membership -> not a
+    supervisory guardian -> consented participation -> thread not frozen -> not blocked-vs-owner ->
+    rate limit. Raises the same exceptions as before and returns the thread's ``owner_object`` (an
+    Activity or a Group) so the caller can branch on cohort. Handles BOTH owner types via
+    thread_members / is_thread_frozen; a Group has no GUARDIAN role, so that check is a safe no-op
+    there. The rate limit shares the "thread_react" budget across all three actions (simpler, and a
+    shared budget is strictly more conservative)."""
     from apps.safety.services import allow_action, is_blocked
 
-    from .models import PostReaction
-
-    if emoji not in allowed_reactions():
-        raise InvalidState(_("That reaction isn't available."))
     if post.is_hidden:
         raise InvalidState(_("You can't react to that message."))
-    activity = post.thread.owner_object
-    if getattr(activity, "is_hidden", False):
+    owner_obj = post.thread.owner_object
+    if getattr(owner_obj, "is_hidden", False):
         raise InvalidState(_("This activity is no longer available."))
-    membership = thread_members(activity).filter(user=user).first()
+    membership = thread_members(owner_obj).filter(user=user).first()
     if membership is None:
         raise NotAMember(_("Only current members can react."))
-    if membership.role == Membership.Role.GUARDIAN:
-        # Guardians are read-only supervisors (like post_to_thread) — reacting is a write.
+    if getattr(membership, "role", None) == Membership.Role.GUARDIAN:
+        # Guardians are read-only supervisors (like post_to_thread) — reacting/flagging is a write.
         raise NotEligible(_("Guardians accompany activities as read-only supervisors."))
     if not can_participate(user):
         raise NotEligible(_("Reacting requires verified, consented participation."))
-    if is_thread_frozen(activity):
+    if is_thread_frozen(owner_obj):
         raise InvalidState(_("This conversation is closed."))
-    if user.id != activity.owner_id and is_blocked(user, activity.owner):
+    if user.id != getattr(owner_obj, "owner_id", None) and is_blocked(user, owner_obj.owner):
         # Mirror post_to_thread (a block leaves Membership intact, so it must be re-checked here);
-        # otherwise a blocked-vs-owner member's emoji would surface on the owner's own posts.
+        # otherwise a blocked-vs-owner member's sentiment would surface on the owner's own posts.
         raise InvalidState(_("This activity is no longer available."))
     limit = getattr(settings, "THREAD_REACT_RATE_LIMIT", 60)
     window = getattr(settings, "THREAD_REACT_RATE_WINDOW_SECONDS", 60)
     if not allow_action(user, "thread_react", limit=limit, window_seconds=window):
         raise InvalidState(_("You are reacting too quickly; slow down."))
+    return owner_obj
+
+
+@transaction.atomic
+def toggle_reaction(user, post, emoji) -> bool:
+    """Add or remove the user's OWN appreciation facet on a thread post. Enforces the shared
+    thread-write gate (membership, not-a-guardian, consent, not-blocked-vs-owner, post/owner not
+    hidden, thread not frozen, rate limit) plus a fixed-facet-set check, so the reaction surface can
+    never become a weaker side door than posting. ``emoji`` is now a facet SLUG (ADR-0029) validated
+    against allowed_reactions(). Returns True if now reacted, False if removed. Audited (parity with
+    delete_own_post); NEVER exposes a count or a who-list, and NEVER broadcasts per-reaction (the
+    footer is a batched, non-personal derivation — a live per-reaction flip is a small-roster
+    timing leak)."""
+    from apps.safety.services import record_audit
+
+    from .models import PostReaction
+
+    if emoji not in allowed_reactions():
+        raise InvalidState(_("That reaction isn't available."))
+    _thread_write_gate(user, post)
     existing = PostReaction.objects.filter(post=post, user=user, emoji=emoji).first()
     if existing is not None:
         existing.delete()
@@ -2556,15 +2609,176 @@ def toggle_reaction(user, post, emoji) -> bool:
         # IntegrityError 500. (Don't bind the throwaway to ``_`` — that's the gettext alias.)
         _obj, created = PostReaction.objects.get_or_create(post=post, user=user, emoji=emoji)
         result = created
-    # Live-update connected members' chips on commit (a rolled-back toggle broadcasts nothing).
-    transaction.on_commit(lambda: broadcast_reaction(post))
+    record_audit("post.reaction_toggled", actor=user, target=post, facet=emoji, added=result)
     return result
 
 
-def post_reaction_emojis(post) -> list:
-    """The DISTINCT emojis present on a post, in the fixed display order — NO count, NO who."""
-    present = set(post.reactions.values_list("emoji", flat=True))
-    return [e for e in allowed_reactions() if e in present]
+@transaction.atomic
+def toggle_dissent(user, post) -> bool:
+    """Toggle the user's anonymous "I see this differently" tally row on a post (ADR-0029 rung 1).
+    Same shared write gate as posting; additionally REJECTS a CHILD-cohort flagger — a child replies
+    or backs out, never silently disapproves a peer (inv.3). Produces NO author-directed effect at
+    any level (no note, no ping) and never a count/who-list; the only read surface is the batched,
+    adult-only footer line. Audited; never notifies, never broadcasts. Returns True if now
+    dissenting, False if withdrawn."""
+    from apps.safety.services import record_audit
+
+    from .models import PostDissent
+
+    owner_obj = _thread_write_gate(user, post)
+    if getattr(user, "cohort", None) == Cohort.CHILD or owner_obj.cohort == Cohort.CHILD:
+        # Reuse the guardian error type: a child has no silent-disapproval affordance here, and a
+        # CHILD thread accepts none from anyone (incl. an adult staff member) — inv.3.
+        raise NotEligible(_("Guardians accompany activities as read-only supervisors."))
+    existing = PostDissent.objects.filter(post=post, user=user).first()
+    if existing is not None:
+        existing.delete()
+        result = False
+    else:
+        _obj, created = PostDissent.objects.get_or_create(post=post, user=user)
+        result = created
+    record_audit("post.dissent_toggled", actor=user, target=post, added=result)
+    return result
+
+
+@transaction.atomic
+def record_concern(user, post) -> bool:
+    """Toggle the user's anonymous "this doesn't seem to fit here" conduct-concern row (ADR-0029
+    rung 2). Same shared write gate as posting; REJECTS a CHILD-cohort flagger (children have no
+    concern affordance — inv.3). NEVER public, any cohort; the only author-facing effect is the
+    batched, capped, restorative ladder (never per-row, never a count/who-list). Audited; never
+    notifies, never broadcasts. Returns True if now concerned, False if withdrawn."""
+    from apps.safety.services import record_audit
+
+    from .models import PostConcern
+
+    owner_obj = _thread_write_gate(user, post)
+    if getattr(user, "cohort", None) == Cohort.CHILD or owner_obj.cohort == Cohort.CHILD:
+        # CHILD threads accept no concern rows from anyone (incl. an adult staff member) — inv.3.
+        raise NotEligible(_("Guardians accompany activities as read-only supervisors."))
+    existing = PostConcern.objects.filter(post=post, user=user).first()
+    if existing is not None:
+        existing.delete()
+        result = False
+    else:
+        _obj, created = PostConcern.objects.get_or_create(post=post, user=user)
+        result = created
+    record_audit("post.concern_toggled", actor=user, target=post, added=result)
+    return result
+
+
+def eligible_audience_count(owner_obj) -> int:
+    """The threshold-input audience for a thread's sentiment aggregates (ADR-0029): current thread
+    members who could ACTUALLY react — minus supervisory guardians AND minus anyone in a block
+    against the thread owner. NEVER stored and NEVER a display value — it only feeds the ``>= 2k`` /
+    floor checks in the batch jobs.
+
+    This is an anonymity denominator, so it must count only members who could genuinely react: the
+    shared ``_thread_write_gate`` refuses a member who is blocked-vs-owner (``is_blocked(member,
+    owner_obj.owner)``), so their sentiment can never land on the owner's posts and they must not
+    pad the floor. We exclude that set here with the SAME both-directions semantics as
+    ``is_blocked`` (via ``blocked_user_ids(owner)``) in a single Block query — no per-member loop.
+    The owner can't block themselves (``block_not_self``), so the owner is never excluded. Handles
+    both owner types: a Group thread is peer-only (GroupMembership has no GUARDIAN role), so only
+    an Activity thread can have guardians to exclude."""
+    from apps.safety.services import blocked_user_ids
+
+    members = thread_members(owner_obj)
+    if isinstance(owner_obj, Activity):
+        members = members.exclude(role=Membership.Role.GUARDIAN)
+    blocked = blocked_user_ids(owner_obj.owner)
+    if blocked:
+        members = members.exclude(user_id__in=blocked)
+    return members.count()
+
+
+def _footer_lines(footer, *, thread_cohort, viewer_cohort, is_announcement) -> list:
+    """Pure sentence assembly shared by sentiment_footer_for + sentiment_footers_for. Applies the
+    cohort wall (a CHILD viewer OR a CHILD thread -> silence, never a footer) and the adult-only,
+    announcement-exempt dissent rule. No DB access — caller supplies the footer row + cohorts."""
+    if thread_cohort == Cohort.CHILD or viewer_cohort == Cohort.CHILD:
+        return []
+    # Union of currently-latched + permanently-graduated facet slugs, in fixed catalog order, MAX
+    # TWO appreciation lines. appreciation_slugs holds [slug, "YYYY-MM-DD"] pairs; permanent is a
+    # flat slug list.
+    latched = {pair[0] for pair in (footer.appreciation_slugs or []) if pair}
+    slugs = latched | set(footer.appreciation_permanent or [])
+    lines = []
+    for slug in REACTION_FACETS:  # fixed catalog order — never popularity-sorted
+        if slug in slugs:
+            lines.append(REACTION_FACETS[slug][2])
+        if len(lines) == 2:
+            break
+    # Dissent line ALWAYS last, adult thread only, never on an announcement.
+    if footer.dissent_active and thread_cohort == Cohort.ADULT and not is_announcement:
+        lines.append(DISSENT_SENTENCE)
+    return lines
+
+
+def sentiment_footer_for(post, viewer) -> list:
+    """The plural, COUNTLESS sentiment footer sentences for ``post`` as shown to ``viewer``
+    (ADR-0029 rung 0/1). BYTE-IDENTICAL for the author and any other viewer (inv.2 author-parity:
+    the author gets no extra insight). Returns [] — silence, never a "0"/"be the first" — no
+    derived footer row, the post or its owner is hidden, or EITHER the viewer or the thread is a
+    minor CHILD cohort (CHILD gets no footer, ever; TEEN gets appreciation only). At most two
+    appreciation lines (union of latched + permanently-graduated slugs, fixed catalog order) then,
+    LAST and adult-thread-only, the dissent line when it has latched — never on an announcement."""
+    if post.is_hidden:
+        return []
+    owner_obj = post.thread.owner_object
+    if getattr(owner_obj, "is_hidden", False):
+        return []
+    footer = getattr(post, "sentiment_footer", None)
+    if footer is None:
+        return []
+    return _footer_lines(
+        footer,
+        thread_cohort=getattr(owner_obj, "cohort", None),
+        viewer_cohort=getattr(viewer, "cohort", None),
+        is_announcement=post.is_announcement,
+    )
+
+
+def sentiment_footers_for(posts, viewer) -> dict:
+    """Batch variant of sentiment_footer_for (mirror reactions_for_posts): post_id -> [sentences].
+
+    Query bound (render path — it counts NO audiences, aggregates are pre-derived in the footer
+    rows): ONE query for the footer rows + AT MOST ONE query for the distinct thread owners (an
+    Activity/Group, ``select_related`` in a single fetch), regardless of how many posts/replies the
+    stream carries. Owner objects are resolved once per DISTINCT thread_id via a local cache — the
+    previous ``p.thread.owner_object`` per post was an N+1 across a paginated thread. Identical
+    cohort wall + adult-only dissent rule per post."""
+    from .models import PostSentimentFooter, Thread
+
+    ids = [p.id for p in posts]
+    out = {pid: [] for pid in ids}
+    if not ids:
+        return out
+    footers = {f.post_id: f for f in PostSentimentFooter.objects.filter(post_id__in=ids)}
+    viewer_cohort = getattr(viewer, "cohort", None)
+    # Resolve each DISTINCT thread's owner object once. A post's ``thread`` is usually already
+    # loaded (the view select_relates it); for any missing ones, fetch the threads with their
+    # owner in a single select_related query so the loop below never fires a per-post thread read.
+    owner_by_thread: dict = {}
+    thread_ids = {p.thread_id for p in posts if getattr(p, "thread_id", None) is not None}
+    missing = {tid for tid in thread_ids if tid not in owner_by_thread}
+    if missing:
+        for t in Thread.objects.filter(id__in=missing).select_related("activity", "group"):
+            owner_by_thread[t.id] = t.owner_object
+    for p in posts:
+        footer = footers.get(p.id)
+        if footer is None or p.is_hidden:
+            continue
+        owner_obj = owner_by_thread.get(p.thread_id)
+        if owner_obj is None or getattr(owner_obj, "is_hidden", False):
+            continue
+        out[p.id] = _footer_lines(
+            footer,
+            thread_cohort=getattr(owner_obj, "cohort", None),
+            viewer_cohort=viewer_cohort,
+            is_announcement=p.is_announcement,
+        )
+    return out
 
 
 # --- @mentions (tag-not-ping by default; an explicit ping is a calm opt-in) -----------------
@@ -2695,27 +2909,46 @@ def highlight_mentions(body, roster, *, allow_links=False):
 
 
 def reactions_for_posts(posts, viewer) -> dict:
-    """Batch (no N+1): post_id -> {"present": [distinct emojis, no count], "mine": {viewer's own}}.
-    Used by the thread view to render reaction chips + highlight the viewer's own toggles."""
+    """Batch (no N+1): post_id -> {"mine": {viewer's own facet slugs}}. ADR-0029 removed the public
+    distinct-facet "present" set (it surfaced at n=1 — a small-roster identity leak; the aggregate
+    now lives only in the batched sentiment footer). The viewer's OWN toggles are still returned so
+    their picker highlights their own reaction."""
     from .models import PostReaction
 
     ids = [p.id for p in posts]
-    out = {pid: {"present": set(), "mine": set()} for pid in ids}
+    out = {pid: {"mine": set()} for pid in ids}
     if not ids:
         return out
-    for r in PostReaction.objects.filter(post_id__in=ids).values("post_id", "user_id", "emoji"):
-        slot = out[r["post_id"]]
-        slot["present"].add(r["emoji"])
-        if r["user_id"] == viewer.id:
-            slot["mine"].add(r["emoji"])
-    order = allowed_reactions()
-    return {
-        pid: {
-            "present": [e for e in order if e in v["present"]],  # ordered distinct, no count
-            "mine": v["mine"],
-        }
-        for pid, v in out.items()
-    }
+    for r in PostReaction.objects.filter(post_id__in=ids, user_id=viewer.id).values(
+        "post_id", "emoji"
+    ):
+        out[r["post_id"]]["mine"].add(r["emoji"])
+    return out
+
+
+def dissent_concern_mine(posts, viewer) -> dict:
+    """Batch (no N+1): post_id -> {"dissent": bool, "concern": bool} for the VIEWER'S OWN rows only
+    (mirrors reactions_for_posts). Two bulk queries scoped to ``user_id=viewer.id`` — this is the
+    viewer's own personal data (a record of their own action), zero leak: never another member's
+    rows, never a count, never a who-list. Used to re-render the viewer's own toggle state ("Noted
+    quietly — tap to withdraw") server-side after a no-JS POST/redirect, so the Respond menu is
+    honest on reload without JS. The dissent/concern read surfaces stay otherwise closed (the only
+    aggregate is the batched, adult-only footer line)."""
+    from .models import PostConcern, PostDissent
+
+    ids = [p.id for p in posts]
+    out = {pid: {"dissent": False, "concern": False} for pid in ids}
+    if not ids:
+        return out
+    for pid in PostDissent.objects.filter(post_id__in=ids, user_id=viewer.id).values_list(
+        "post_id", flat=True
+    ):
+        out[pid]["dissent"] = True
+    for pid in PostConcern.objects.filter(post_id__in=ids, user_id=viewer.id).values_list(
+        "post_id", flat=True
+    ):
+        out[pid]["concern"] = True
+    return out
 
 
 @transaction.atomic

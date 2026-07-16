@@ -56,6 +56,39 @@ def _member(activity, user):
     )
 
 
+def test_activity_detail_footers_no_n_plus_one(settings, django_assert_max_num_queries):
+    # R4: sentiment_footers_for must resolve each thread owner ONCE (not per post), so the detail
+    # stream renders in a bounded number of queries no matter how many posts/replies carry a footer.
+    # Adding more posts below must NOT raise the query count (that's what a footer N+1 would do).
+    from apps.social import sentiment
+    from apps.social.models import PostReaction
+
+    settings.SENTIMENT_K_ADULT = 2  # latch on 2 reactors + audience >= 4
+    owner = _user("qf_owner")
+    activity = _activity(owner)
+    members = [_user(f"qf_m{i}") for i in range(4)]  # audience = owner + 4 = 5
+    for m in members:
+        _member(activity, m)
+    # Several top-level posts, each with a reply, each reacted enough to latch an appreciation line.
+    for i in range(4):
+        parent = social.post_to_thread(owner, activity, f"parent {i}")
+        reply = social.post_to_thread(members[0], activity, f"reply {i}", reply_to=parent)
+        for p in (parent, reply):
+            for m in members[:2]:
+                PostReaction.objects.create(post=p, user=m, emoji="helped_me")
+    sentiment.recompute_post_sentiment(now=timezone.now())  # materialise the footer rows
+
+    c = _client(owner)
+    # Headroom bound: the detail view runs many unrelated queries (membership, votes, attachments,
+    # reactions, mentions...). The point of this test is only that it does NOT scale with the number
+    # of footer-bearing posts — so we pin a generous ceiling and rely on the "add more posts" note
+    # above; a per-post owner_object read would blow well past this on 8 rendered posts.
+    with django_assert_max_num_queries(60):
+        resp = c.get(f"/activities/{activity.id}/")
+    assert resp.status_code == 200
+    assert "People found this helpful." in resp.content.decode()
+
+
 def test_member_posts_and_replies_via_web():
     owner = _user("tu_owner")
     member = _user("tu_member")

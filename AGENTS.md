@@ -3,11 +3,30 @@
 ## Project summary
 `social_media_activities_app` is a Django/social-activity app in the RO-EDU fleet. Child-safety, GDPR/privacy, moderation, and deferred/off-request work are sensitive.
 
+## Fleet context
+- Canonical role/status/next for this repo: the vault note `dobo-brain/paul-brain/projects/social-media-activities-app.md` (fleet view: the vault's `projects/index.md` + `NOW.md`; agent-ops ADR-0032, vault adr-0001).
+- Fleet map + parallel-agent protocol: `~/work/AGENTS.md` (agent-ops ADR-0025).
+
+## Parallel work (mandatory)
+- This shared checkout stays on `main`, clean — never switch branches or commit task work here.
+- One task = one branch (`<type>/<slug>`) = one worktree under `~/work/_worktrees/social_media_activities_app/`:
+  `python3 ~/work/agent-ops/scripts/create_task_worktree.py --repo ~/work/social_media_activities_app --branch <type>/<slug> --task "..." --write`
+- Never create worktrees under `/tmp`. Workers never push; the orchestrating session lands green
+  work on `main` (ADR-0014) and backs up unlanded branches to origin. Deletion is human-confirmed only.
+
 ## Read first
 1. `CLAUDE.md` if present.
 2. `STATUS.md` for durable status.
 3. `docs/agent-map.md` and `docs/agent-testing.md`.
 4. Task-specific app and matching tests.
+
+## Key docs (authoritative — pointers only, do not restate content here)
+- Product overview + stack: `README.md`. Vision/principles: `docs/ROADMAP.md`.
+- Hard safety invariants (do not weaken): `docs/SAFETY.md`.
+- Architecture conventions — 5 gating rules (services layer, atomic+audit, `notify()`
+  chokepoint, `DUE_JOBS`, cohort gates): `docs/ARCHITECTURE.md`.
+- Built features (check before building "new"): `docs/FEATURES_BUILT.md`.
+- Full doc index: `docs/README.md`.
 
 ## Token discipline
 - Start with the specific Django app named in the task.

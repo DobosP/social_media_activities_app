@@ -32,6 +32,13 @@ class Notification(models.Model):
         # W3-F7 (mutable, at-most-once per (guardian, activity)) — to a CHILD organiser's ACTIVE
         # guardians when their child's supervised meetup is stuck for lack of a seated supervisor.
         SUPERVISOR_NEEDED = "supervisor_needed", "Supervisor needed"
+        # ADR-0029 (mutable): a single, capped, restorative private note to an ADULT post author
+        # (or a human-relayed teen note through the moderation interface). Never per-reaction,
+        # never a count, never delivered automatically to a minor.
+        FORMATIVE_NOTE = "formative_note", "Formative note"
+        # ADR-0029 (mutable): tells a MODERATOR the concern queue / safety sensors need a human
+        # look. Muted entirely when MODERATION_MODE == "automated".
+        MOD_ALERT = "mod_alert", "Moderator alert"
         MODERATION = "moderation", "Moderation notice"
         SYSTEM = "system", "System"
 
@@ -123,6 +130,13 @@ WHY_REASONS = {
     Notification.Kind.SUPERVISOR_NEEDED: (
         "A child you look after is organising a meetup that needs an adult to supervise "
         "(you can turn these off)."
+    ),
+    Notification.Kind.FORMATIVE_NOTE: (
+        "A few members quietly flagged one of your posts as not quite fitting; we tell you "
+        "gently, once, with no names or numbers."
+    ),
+    Notification.Kind.MOD_ALERT: (
+        "You are a moderator: the safety sensors or the concern queue need a human look."
     ),
     Notification.Kind.MODERATION: (
         "A moderation decision affected your content or account (you cannot turn these off)."

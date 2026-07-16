@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-12T10:00:00Z",
+  "count": 3,
+  "records": [
+    {
+      "id": 10,
+      "name": "Central Park",
+      "lat": 46.7712,
+      "lon": 23.6236,
+      "address": "Some Address 10",
+      "city": "Cluj-Napoca",
+      "postcode": "400000",
+      "country": "RO",
+      "website": "https://example.org/places/10",
+      "phone": "",
+      "opening_hours_text": "Mon-Sun 06:00-22:00",
+      "activity_types": ["chess", "boardgames"],
+      "attribution": "Example Attribution",
+      "license_name": "CC-BY-4.0",
+      "provenance_url": "https://example.org/source/place-10",
+      "path": "/places/10/"
+    },
+    {
+      "id": 11,
+      "name": "Sports Field",
+      "lat": 46.7810881,
+      "lon": 23.6236,
+      "address": "",
+      "city": "Cluj-Napoca",
+      "postcode": "",
+      "country": "RO",
+      "website": "",
+      "phone": "",
+      "opening_hours_text": "",
+      "activity_types": ["football"],
+      "attribution": "Example Attribution",
+      "license_name": "CC-BY-4.0",
+      "provenance_url": "https://example.org/source/place-11",
+      "path": "/places/11/"
+    },
+    {
+      "id": 12,
+      "name": "City Library",
+      "lat": 44.4268,
+      "lon": 26.1025,
+      "address": "",
+      "city": "Bucharest",
+      "postcode": "",
+      "country": "RO",
+      "website": "",
+      "phone": "",
+      "opening_hours_text": "",
+      "activity_types": ["reading"],
+      "attribution": "Example Attribution",
+      "license_name": "CC-BY-4.0",
+      "provenance_url": "https://example.org/source/place-12",
+      "path": "/places/12/"
+    }
+  ]
+}

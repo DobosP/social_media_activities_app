@@ -11,7 +11,12 @@ from django.db.models import prefetch_related_objects
 from django.utils import timezone
 from pgvector.django import CosineDistance
 
-from apps.accounts.avatars import constellation_svg, identicon_svg
+from apps.accounts.avatars import (
+    constellation_svg,
+    identicon_svg,
+    render_generation,
+    signature_seed,
+)
 from apps.places.services import (
     accessibility_facts,
     get_access_preference,
@@ -53,11 +58,23 @@ def _rec_score(cosine_distance, metres, access_match):
     return similarity * _distance_decay(metres) + (ACCESS_BOOST if access_match else 0.0)
 
 
+@transaction.atomic
 def set_interests(user, slugs) -> list[ActivityType]:
-    """Replace the user's declared interests with the given active activity-type slugs."""
+    """Replace the user's declared interests with the given active activity-type slugs.
+
+    Atomic so (a) the delete->bulk_create swap is never observable half-done (a concurrent
+    avatar-style pick could otherwise fingerprint a transiently-empty interest set), and
+    (b) the avatar re-fingerprint below shares the transaction. The refresh is a strict
+    no-op for users who never picked a style (seeding/imports stay side-effect-free)."""
     types = list(ActivityType.objects.filter(slug__in=list(slugs), is_active=True))
     UserInterest.objects.filter(user=user).delete()
     UserInterest.objects.bulk_create([UserInterest(user=user, activity_type=t) for t in types])
+    from apps.accounts.signature import refresh_avatar_fingerprint
+
+    # A stale prefetched-nodes cache would re-fingerprint the OLD interests.
+    if hasattr(user, "_interest_nodes"):
+        del user._interest_nodes
+    refresh_avatar_fingerprint(user)
     return types
 
 
@@ -221,8 +238,9 @@ def interest_graph(user):
 
 def attach_interest_nodes(users):
     """Bulk-load interest nodes for many users in ONE query and cache them on each user as
-    ``_interest_nodes``, so rendering a list of constellation avatars doesn't N+1. Returns the
-    same list for convenience."""
+    ``_interest_nodes``, so rendering a list of constellation avatars doesn't N+1. Also
+    bulk-loads each user's avatar-style pick (``_sig_style``, ADR-0027) in one more query so
+    generation-aware rendering stays non-N+1 on list surfaces. Returns the same list."""
     users = list(users)
     if not users:
         return users
@@ -235,8 +253,16 @@ def attach_interest_nodes(users):
     for r in rows:
         if r.user_id in by_id:
             by_id[r.user_id].append(_avatar_node(r.activity_type))
+    from apps.accounts.models import SignatureAvatar
+
+    styles = dict.fromkeys(by_id)
+    for user_id, generation, salt in SignatureAvatar.objects.filter(user__in=users).values_list(
+        "user_id", "generation", "salt"
+    ):
+        styles[user_id] = (generation, salt)
     for u in users:
         u._interest_nodes = by_id[u.id]
+        u._sig_style = styles[u.id]
     return users
 
 
@@ -244,12 +270,48 @@ def _avatar_seed(user):
     return getattr(user, "username", None) or str(getattr(user, "pk", "") or "?")
 
 
+def _signature_style(user):
+    """The user's avatar-style pick as ``(generation, salt)``, or None for the legacy default.
+    Reads the ``attach_interest_nodes`` batch cache when present; otherwise one OneToOne query
+    (single-user surfaces only — list surfaces all go through the batch loader)."""
+    cached = getattr(user, "_sig_style", False)
+    if cached is not False:
+        return cached
+    from apps.accounts.models import SignatureAvatar
+
+    row = (
+        SignatureAvatar.objects.filter(user=user).values_list("generation", "salt").first()
+        if getattr(user, "pk", None) is not None
+        else None
+    )
+    user._sig_style = row
+    return row
+
+
 def _avatar_svg(user, *, px, intensity):
     nodes, edges = interest_graph(user)
     seed = _avatar_seed(user)
-    if nodes:
-        return constellation_svg(seed, nodes, edges, px=px, intensity=intensity)
-    return identicon_svg(seed, px=px)
+    style = _signature_style(user)
+    if style is None:
+        # Legacy default (no style picked): byte-identical to pre-ADR-0027 behaviour.
+        if nodes:
+            return constellation_svg(seed, nodes, edges, px=px, intensity=intensity)
+        return identicon_svg(seed, px=px)
+    generation, salt = style
+    from apps.accounts.avatars import DEFAULT_GENERATION, GENERATIONS
+
+    if generation not in GENERATIONS:
+        # A deprecated pick still in the DB degrades to the default look (seed included),
+        # rather than 500ing every surface that renders this user.
+        generation = DEFAULT_GENERATION
+    return render_generation(
+        generation,
+        signature_seed(seed, generation, salt),
+        nodes,
+        edges,
+        px=px,
+        intensity=intensity,
+    )
 
 
 def interest_avatar_svg(user, *, px=80):
@@ -287,6 +349,35 @@ def evolving_avatar_data_uri(user, *, px=80):
     """``evolving_avatar_svg`` as a base64 ``data:`` URI."""
     b64 = base64.b64encode(evolving_avatar_svg(user, px=px).encode("utf-8")).decode("ascii")
     return f"data:image/svg+xml;base64,{b64}"
+
+
+def avatar_style_previews(user, *, px=96):
+    """What the user's picture WOULD look like for each pickable generation (ADR-0027).
+    SELF-ONLY and transient (nothing stored). Mirrors the real post-pick render exactly —
+    same seed derivation as ``_avatar_svg`` (current generation keeps its real salt; a
+    not-yet-picked generation previews at salt 0, the outcome of any non-colliding pick) —
+    so the preview never lies about the result."""
+    from apps.accounts.avatars import DEFAULT_GENERATION, GENERATIONS
+
+    style = _signature_style(user)
+    # No row = the legacy default: the user is effectively on Generation 1.
+    current_gen = style[0] if style else DEFAULT_GENERATION
+    nodes, edges = interest_graph(user)
+    seed = _avatar_seed(user)
+    previews = []
+    for g, entry in GENERATIONS.items():
+        salt = style[1] if style and g == style[0] else 0
+        svg = render_generation(g, signature_seed(seed, g, salt), nodes, edges, px=px)
+        previews.append(
+            {
+                "generation": g,
+                "name": str(entry["name"]),
+                "uri": "data:image/svg+xml;base64,"
+                + base64.b64encode(svg.encode("utf-8")).decode("ascii"),
+                "current": g == current_gen,
+            }
+        )
+    return previews
 
 
 def recompute_activity_embedding(activity) -> None:

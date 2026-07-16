@@ -4,7 +4,11 @@
 `docs/archive/COMPLETENESS_GAPS_2026-06.md`). On any doc conflict: this file > newest-dated ADR in
 `docs/adr/` > everything else.
 
+<<<<<<< HEAD
 Last verified: 2026-07-12
+=======
+Last verified: 2026-07-13
+>>>>>>> origin/main
 
 ## What this is
 
@@ -15,6 +19,7 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
 
 ## Current state
 
+<<<<<<< HEAD
 - **Canonical RO-EDU social app-pack consumption is implemented on `v_2` (ADR-0024,
   2026-07-12):** the only accepted product is
   `roedu:social_media_activities_app:events_places:v1`. Every page must carry schema v1,
@@ -43,6 +48,124 @@ hard invariants (full conventions: `docs/ARCHITECTURE.md`; built-feature contrac
   snapshots require explicit rollback authorization. The daily wrapper uses one consistent
   app-pack-or-legacy mode for both place and event stages. Facts-only prose withholding and the
   existing child-venue fail-closed policy are unchanged.
+=======
+- **Plural sentiment reactions LANDED on main (ADR-0029, 2026-07-15; owner-approved merge —
+  feature commits `74378b4` + `cf146b1`, suite 2649 green on the landed tree):** replaces the anonymous
+  distinct-emoji-chip reaction surface (`9b5701e`) with a severity ladder — appreciation
+  (5 fixed facet slugs, thresholded public sentences, author-parity, daily-batched, never a
+  count), dissent ("I see this differently" — reply-first, an adult-only 2-window-latched public
+  line, TEEN/CHILD never), and conduct concern ("This doesn't seem to fit here" — never public,
+  a capped private restorative-note ladder for ADULT authors, moderator queue only for
+  TEEN/escalated ADULT, no affordance at all for CHILD) plus two moderator-only anti-bully
+  sensors (coordinated-flagging, pile-on protection). New models (`PostDissent`, `PostConcern`,
+  `PostSentimentFooter`, `ConcernReview`) + widened `PostReaction.emoji` (slug, data-migrated);
+  `social.sentiment` batch module (`recompute_post_sentiment`, `evaluate_concerns`,
+  `purge_stale_reaction_rows`) self-gated via new `ops.JobMarker`, registered in `DUE_JOBS`; new
+  `/moderation/` interface (moderator-gated dashboard + per-item review/dismiss/escalate/
+  teen-note-send, each audited) behind new `MODERATION_MODE` (`automated`/`automated+human`,
+  default `automated+human`; the no-automated-minor-delivery floor is not configurable in
+  either mode). Web: `_post.html` picker now shows facet emoji+label with a **flattened
+  one-open/one-tap Respond menu** (round-3 friction rebalance, owner 2026-07-15: dissent row with a
+  primary "Reply with your view" + one-tap quiet tally and an after-the-act reply nudge, a one-tap
+  conduct-concern toggle whose educational interstitial is paid ONCE per device via a localStorage
+  key — no server flag, no new PII, and the intro persists for no-JS users — and the Report link
+  below a divider), fed by `sentiment_footers_for`/`reaction_mine`/`dissent_concern_mine` context;
+  live per-reaction WS broadcast removed (`broadcast_reaction` and the chat consumer's
+  `chat_reaction` handler deleted — the footer is batched, not live). **Round 3 also wired the full
+  surface to GROUP threads** (their primary home): `group_detail` renders the SAME generalized
+  `_post.html` partial + live client, with `group_post_react`/`dissent`/`concern`/`edit`/`delete`
+  endpoints mirroring the activity trio under the same gate (no service/model/migration change). `docs/FEATURES_BUILT.md`
+  and `docs/SAFETY.md` updated in lockstep (minor-protection rules, stale "reactions: OUT" line
+  corrected). Verified in the `reactv2-web` container: the reactions/sentiment-jobs/moderation-UI/
+  chat-consumer suites are green in isolation (50 passed); a full-suite run showed 32 failed /
+  121 errors scattered across unrelated pre-existing files (guardian moderation notice, wave1
+  hardening, account-restricted, unsafe-button, wave4, group take-action) — re-running the same
+  files in isolation is fully green, matching the known concurrent-pytest-DB-race artifact (see
+  memory's durable-lessons note), not a regression from this branch; re-run the full suite
+  in isolation before landing to confirm. **Known gaps, tracked for follow-up, not blocking
+  this slice:** (1) ~~Group-thread reaction/dissent/concern UI/URL/view was never built~~ **CLOSED
+  in round 3** — `group_detail` now renders the shared `_post.html` partial with the full surface
+  and the five `group_post_*` endpoints (see the round-3 note above); (2) the E2EE-DM reaction picker (`messages_page`, client-side, explicitly
+  out of ADR-0029 scope) still reads `social.allowed_reactions()`, which now returns facet
+  slugs instead of emoji glyphs — a cosmetic-only regression on that separate who+what system;
+  (3) `docs/adr/0029` has no "Implementation deltas" section — no build-forced deviation from
+  the accepted design was found during this docs pass.
+- **Tiered profile visibility + person hover cards built (ADR-0028, 2026-07-13; branch
+  `feat/signature-avatars`, stacked on ADR-0027):** first other-user profile surface —
+  `/people/<public_id>/` + hover partial + `GET /api/connections/people/<public_id>/`, all
+  through one live-derived tier resolver (`connections/profiles.py`): vetoes are
+  404-indistinguishable (blocks/cross-cohort/unassigned/inactive); stranger = the SAFETY.md
+  minimal card (name + generated avatar); shared activity/group or pending join-request ↔
+  organizer = + handle, verified badge, shared-context titles, Connect; connected = + Message
+  and (adults only) interests + uploaded photo on the page; minor pairs stay clamped. The
+  image is a MUST everywhere a person appears: rosters, pending requests, thread authors, and
+  group rosters now carry avatars + `data-hovercard-user` (batched, query-pinned); new
+  `static/js/hovercard.js` (delegated, keyboard-accessible, CSP-clean) + `visible_roster`
+  block-filters the displayed activity roster (group_roster precedent). SAFETY.md §4 updated.
+  18 tier/surface tests green; 2-lens Opus review integrated (one shared anti-scrape budget across page/partial/API; stranger cards never fall back to the username handle); LANDED on `main` (owner-approved merge 2026-07-13). SPA person screen deferred (SSR primary).
+- **Avatar styles + uniqueness registry built (ADR-0027, 2026-07-13; branch
+  `feat/signature-avatars`):** owner-approved reshape of a "profile picture as NFT" ask —
+  versioned avatar generations (Gen 1 Constellation unchanged; Gen 2 **Orbits**, owner-picked
+  from three rendered candidates) with a plain self-only style picker on the profile page (+ SPA
+  parity + `GET/POST /api/accounts/me/avatar-style/`). Every pick is provably unique: canonical
+  fixed-namespace render fingerprint, DB UNIQUE + salt retry (`accounts/signature.py`);
+  `set_interests` is now atomic and re-fingerprints picks (strict no-op for non-picked users, so
+  seeding stays side-effect-free). Adversarial 2-lens Opus design review drove the hard rules
+  now pinned in ADR-0027 + tests: no collectible framing anywhere, fingerprint never leaves the
+  DB (never audited — Art.17), generations never gated by participation, legacy users render
+  byte-identical. Verified in an isolated container: changed-app suites green incl. new
+  `test_signature_avatar.py` (34 tests: contract, collision/salt, concurrency, N+1, no-leak
+  HTTP checks); LANDED on `main` (owner-approved merge 2026-07-13). ADR renumbered 0026→0027
+  after the parallel media branch claimed 0026.
+- **Media compression layer v2 + private-thread video LANDED on `main` (ADR-0026,
+  2026-07-13; owner approved the merge, the CLAUDE.md invariant-#1 rewording to "no
+  public/discovery short-video", and video ENABLED BY DEFAULT — kill switch
+  `MEDIA_VIDEO_ENABLED=false`; rendering stays confined to the owning cohort-gated
+  activity/group thread, never feeds/discovery):** canonical image codec
+  WebP→**AVIF** (per-codec auto quality, prod boot-checks the encoder, one-env-var rollback) +
+  one eager 800px rendition per image (`thumb_storage_key` on Photo/Attachment/ActivityCover)
+  served on cards/streams/grids/avatars via a signed-token `variant`; **video attachments**
+  — adults-only private threads (`MEDIA_VIDEO_COHORTS`), withheld
+  `status=pending` rows, fail-closed streamed-sha256 admission + perceptual frame scan,
+  sandboxed ffmpeg (x264 720p CRF23 progressive MP4 +faststart, full metadata strip, AVIF
+  poster), own skip-locked claim queue (`transcode_videos` mgmt cmd + 1-min systemd timer +
+  post-upload kick; DeferredTask rejected — it holds its claim txn across handlers), HTTP-Range
+  serving, ephemeral/purge/Art.-17 coverage for all blobs, ffmpeg added to the Docker image.
+  Live thread chat has full media parity (ID-only group payloads; per-viewer URL minting in
+  the consumer; live ready/failed swap); E2EE DMs stay media-free (ADR-0006 untouched).
+  Docs updated in lockstep (FILE_STORAGE §9, SAFETY rule 6 + D6, FEATURES_BUILT,
+  MEDIA_FILTERING, HOSTING_EU, deploy/README, ADR-0004 superseded-by pointer). Verified
+  2026-07-13 in the worktree container (deps synced to pins, ffmpeg 7.1.5): FULL SUITE
+  2,494 passed / 0 failed; ruff check + format clean; makemigrations --check clean;
+  git diff --check clean. 5-dimension adversarial review (child-safety, security,
+  concurrency, correctness, ops): 1 HIGH (inline-transcode DB-pool exhaustion) + 4 MED
+  (purge-vs-finalizer evidence race, whole-object Range reads, ffmpeg missing from CI and
+  cloud-init) + 10 LOW — ALL remediated on the branch; every safety gate independently
+  confirmed sound. Plus 3 builder-caught bugs fixed pre-review (ffmpeg thread-cap vs
+  RLIMIT_AS, middleware trailing-slash, zero-frame sampling on sub-3s clips).
+- **AI-agent & search-engine access surface LANDED on `main` (ADR-0025, 2026-07-12; owner
+  approved the `EventViewSet` `IsAuthenticated→AllowAny` auth change and the landing):**
+  events JSON API is anonymous behind the
+  existing public gates and agent-queryable (place/activity/city/from/to/q/near filters; the
+  public ADULT-card activities endpoint gains from/to alongside activity+proximity); `export_agent_snapshot` (opt-in via `AGENT_SNAPSHOT_DIR`, in
+  `DUE_JOBS`) writes gate-filtered public JSON snapshots (activities ONLY via
+  `public_activities()` ADULT+opt-in card subset); stdlib-only Go sidecar `services/agentapi/`
+  serves the snapshot at `/agent/v1/*` (ETag/304, CORS `*`, per-IP rate limit, no DB, no
+  cookies, optional deploy via templated Caddy `handle` + systemd unit); `/open-data/` page
+  with schema.org `Dataset` JSON-LD + whitelist-only snapshot downloads; `llms.txt` v2
+  (machine-readable API docs); `robots.txt` Allow carve-outs for `/api/v1/events`,
+  `/api/v1/places`, `/api/schema/`. Activity remains absent from every crawler surface
+  (pinned). The RO-EDU price/availability JSON-LD enrichment (offers) is deliberately NOT in
+  this branch — those Event fields live in the in-flight `v_2` scraper/data-server lane and
+  the enrichment lands only after that schema reaches `main`. Verified: full suite green on
+  this base, Go suite green; 4-dimension adversarial review of the original build
+  (child-safety CLEAN, zero leak paths) found 1 MED + 5 LOW, all remediated (OpenAPI type
+  parity, no-404 download advertising, taxonomy count, gzip q-values, schema-faithful Go
+  fixtures). Known pre-existing order-dependent
+  flakes, unrelated (each failed once in a full run, passes in isolation and on full
+  re-run): `test_place_corrections_web.py::test_detail_shows_pending_count_not_identity`,
+  and 5 `apps/web/tests/test_wave5.py` recommendation-reason tests.
+>>>>>>> origin/main
 - **Resource-bounded runtime baseline implemented (ADR-0022, 2026-07-11):** React-compatible
   source now builds through `preact/compat`; all non-home screens are lazy route chunks; and the
   build recursively measures initial static JS+CSS against a 40 KiB gzip hard budget (36.71 KiB in

@@ -35,10 +35,24 @@ D5, and D6 too. See [ROADMAP](ROADMAP.md) and [COMPLIANCE](COMPLIANCE.md).
    (D6). Discovery cards may show one contextual cover photo only when the activity itself is
    visible; anonymous public cover cards remain adult-only through `public_activities()`. No public
    user photo feeds or public profiles beyond a minimal display name + avatar.
+   Person visibility is TIERED (ADR-0028, `connections/profiles.py` is the sole resolver):
+   vetoes first and 404-indistinguishable (blocked either way, cross-cohort, unassigned,
+   inactive); a same-cohort stranger gets exactly the minimal cap above (display name +
+   generated avatar); a live shared context (peer co-membership of an activity/group, or a
+   pending join request with its organizer) adds the username handle, an age-verified boolean,
+   and the shared context itself; a mutual connection adds messaging and — adults only —
+   declared interests + the uploaded photo (profile page only, `can_view_photo` re-checked).
+   Minor-cohort pairs stay clamped at the shared shape. Never shown at any tier: age band,
+   cohort, progression, counts, attendance, history, last-seen.
 5. **Consent-based joining.** New members are admitted only via the **two-thirds vote** (D3), so a
    group controls who joins its activity.
-6. **Scoped image surfaces.** Images are limited to one profile picture, private in-thread photos,
-   and one contextual activity cover photo on discovery cards — all safety-screened (D6).
+6. **Scoped media surfaces.** Images are limited to one profile picture, private in-thread photos,
+   and one contextual activity cover photo on discovery cards — all safety-screened (D6). Video
+   (ADR-0026) exists ONLY as a member's own-post attachment in a private, cohort-gated
+   activity/group thread — adults-only at launch, withheld until its fail-closed processing
+   succeeds, rendered solely inside the owning thread, never on discovery/public/feed
+   surfaces, never in DMs, no autoplay/loops or engagement mechanics. Kill switch:
+   `MEDIA_VIDEO_ENABLED=false`.
 
 ## Controls by deliverable
 
@@ -63,6 +77,13 @@ D5, and D6 too. See [ROADMAP](ROADMAP.md) and [COMPLIANCE](COMPLIANCE.md).
   Since W8 the built-in blocklist also matches a **perceptual (dHash) layer** (a casual
   re-encode/resize no longer evades it; honest limits in `apps/media/perceptual.py`), and
   PDFs pass a swappable **document/AV scanner seam** (clamd; fail-closed when required).
+  Video attachments (ADR-0026, adults-only) extend the same posture: the
+  ORIGINAL bytes' sha256 is screened fail-closed at upload, the clip is **withheld** until an
+  off-request transcode strips all metadata (full re-encode) and **sampled frames pass the
+  perceptual blocklist**; a frame match blocks the clip permanently and retains the source for
+  moderation at the storage level (never servable in-app; staff see an explicit blocked
+  placeholder). Minor-cohort video stays structurally off pending a lawful video-CSAM
+  matcher decision (e.g. CSAI Match).
   The external-scanner integration plan (Arachnid Shield, PhotoDNA Cloud, NCMEC/esc_ABUZ
   reporting) lives in [MEDIA_FILTERING](MEDIA_FILTERING.md).
 - **D10 (secure messaging):** username-addressable **direct & group** chat that is **end-to-end
@@ -103,6 +124,44 @@ clear reporting from the activity screen. Track as safety backlog.
   `add_guardian` is **NOT** loosened to "guardian of any participant" (that would open an
   adult → other-people's-minors read-window). GUARDIANs remain excluded from posting, voting,
   reactions and the mention roster.
+
+## Minor protection in the plural-sentiment reaction ladder (ADR-0029)
+
+The reaction/dissent/concern surface (`social.toggle_reaction`/`toggle_dissent`/`record_concern`,
+batched by `social.sentiment`) adds a severity ladder above the countless appreciation reactions,
+with its own minor-protection floor:
+
+- **No automated corrective delivery to a minor, ever, in either `MODERATION_MODE`.** A TEEN
+  author never receives an automated `FORMATIVE_NOTE`; a TEEN-authored post crossing the concern
+  threshold (`CONCERN_TEEN_K`) only ever reaches the moderator queue (`ConcernReview`,
+  `Kind.TEEN_CONCERN`) with a suggested human-relay template — a human moderator must read and
+  choose to send it (`views_moderation.moderation_concern`'s "Send gentle note" action). This
+  floor is NOT configurable by `MODERATION_MODE`.
+- **CHILD cohort has no dissent-tally or concern affordance at all** — `toggle_dissent` and
+  `record_concern` both reject a CHILD-cohort caller at the service gate (same error class the
+  gate uses for a barred guardian), and the CHILD-cohort/CHILD-thread web template renders
+  neither control (server-side cohort check, never CSS-only). A CHILD may still appreciation-
+  react and reply (dissent-as-speech), and always has Report.
+- **CHILD threads never render a sentiment footer** — `sentiment_footer_for` returns `[]` when
+  the viewer or the thread's cohort is CHILD, so no appreciation line, dissent line, or any
+  other aggregate ever reaches a child screen.
+- **Guardians remain barred from every write on this surface** (react, dissent, concern) —
+  the same `_thread_write_gate` used by posting; a supervisory guardian stays read-only.
+- **Report remains the sole DSA Art-16 channel.** The dissent/concern rungs allege no illegality,
+  trigger no automatic restriction, and carry no statement of reasons — they are explicitly not
+  Art-16 notices (soft, formative, human-mediated only). The Report link is present on every
+  post regardless of cohort (only hidden for the author's own post) and is styled distinctly,
+  below a divider, from the dissent/concern controls.
+- **Sensors (coordinated-flagging and pile-on detection) are moderator-only trust-and-safety
+  measures**, never user-visible, never a per-user reliability history (invariant 2): they
+  reason over a rolling incident-scoped window (`ConcernReview.payload` holds only that
+  incident's facts — post ids, window, flagger-set size), rows purge/anonymize like the
+  underlying reaction rows, and no automated action follows a sensor hit — only a moderator
+  alert (`notify_moderators`, itself muted in `automated` `MODERATION_MODE`).
+- **`MODERATION_MODE`** (`automated` / `automated+human`, default `automated+human`) only
+  gates whether moderators are actively pinged (`notify_moderators`); in `automated` mode the
+  queue still accumulates and fails safe (nothing is delivered or restricted automatically) —
+  the `/moderation/` dashboard surfaces the unattended backlog prominently either way.
 
 ## Privacy stance (reinforces safety)
 

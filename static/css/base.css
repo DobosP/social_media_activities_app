@@ -1019,6 +1019,7 @@ textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--accent)
 .edited-mark { font-size: .75rem; }
 .post-attachment-note { margin: .3rem 0 0; font-size: .8rem; }
 .post-attachment-img { max-width: 280px; max-height: 280px; border-radius: 8px; margin-top: .3rem; }
+.post-attachment-video { max-width: 100%; width: 360px; max-height: 280px; border-radius: 8px; margin-top: .3rem; background: #000; }
 .post-attachment-expiry { font-size: .72rem; margin: .1rem 0 0; }
 .post-pdf { margin: .3rem 0 0; }
 .rx { margin-top: .25rem; }
@@ -1153,3 +1154,19 @@ textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--accent)
 .breadcrumbs li + li::before { content: "›"; opacity: 0.6; }
 .breadcrumbs a { color: inherit; }
 .breadcrumbs [aria-current="page"] { color: var(--color-text, inherit); font-weight: 500; }
+
+/* =============================================================================
+   Person hover-overview cards (ADR-0028) — styling only via classes (CSP: no
+   style nonce, so inline styles are never an option).
+   ============================================================================= */
+.avatar-xs { vertical-align: middle; margin-right: .35rem; }
+.hovercard {
+  position: absolute; z-index: 60; max-width: 20rem; min-width: 14rem;
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--r);
+  padding: .8rem .9rem; box-shadow: var(--shadow-sm);
+}
+.person-card-head { display: flex; gap: .7rem; align-items: center; }
+.person-card-name { margin: 0; }
+.person-card-sub { margin: .15rem 0 0; font-size: .85rem; }
+.person-card-body { margin-top: .5rem; }
+.person-card-body p { margin: .2rem 0; }

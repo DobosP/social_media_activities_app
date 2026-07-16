@@ -27,6 +27,7 @@ Hetzner CPX22 (Ubuntu 24.04, EU)
 ├─ daphne (ASGI app)            systemd: socialapp.service        127.0.0.1:8000
 ├─ Caddy (auto Let's Encrypt TLS + reverse proxy, incl. WebSockets)   :80/:443
 ├─ run_due_jobs                 systemd timer: socialapp-jobs.timer    daily 03:00 UTC
+├─ transcode_videos (ADR-0026)  systemd timer: socialapp-media.timer   every minute (no-op when idle)
 └─ pg_dump → EU object storage  systemd timer: socialapp-backup.timer  daily 02:00 UTC
 ```
 
@@ -40,8 +41,13 @@ PgBouncer, CDN) is in `docs/HOSTING_EU.md` §6 and `docs/PRODUCTION_READINESS.md
 | --- | --- |
 | `terraform/` | Hetzner server + firewall + SSH key; renders `cloud-init.yaml.tftpl` with your secrets. |
 | `cloud-init.yaml.tftpl` | First-boot bootstrap (packages, DB, venv, `.env`, systemd units, Caddy, SSH hardening). |
-| `systemd/*.service`, `*.timer` | The app, the daily jobs, and the daily backup units. |
+| `systemd/*.service`, `*.timer` | The app, the daily jobs, the pending-video drain (ADR-0026; needs `ffmpeg` on the box), and the daily backup units. |
 | `backup.sh` | `pg_dump | gzip` → `s3://<bucket>/backups/db/`. |
+
+An optional `systemd/agentapi.service` unit runs the Go `services/agentapi` sidecar (a cached,
+rate-limited public read API for AI agents over the `export_agent_snapshot` output). It is not
+installed by `cloud-init.yaml.tftpl` automatically — build/install steps and the `/agent/*` Caddy
+routing live in [`docs/HOSTING_EU.md`](../docs/HOSTING_EU.md).
 
 ## Prerequisites
 

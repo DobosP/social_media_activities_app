@@ -209,18 +209,23 @@ class PublicActivitiesView(APIView):
     """Anonymous (logged-out) discovery of ADULT activities looking for people. A separate,
     viewer-less path from the cohort-walled ActivitiesFeedView — sources from
     social.public_activities(), which hard-codes cohort=ADULT so a minor meetup can never be
-    exposed. Optional ?activity=<slug> + request-only proximity. The card serializer carries no
-    owner/PII."""
+    exposed. Optional ?activity=<slug>, ?from=/?to= starts_at window (ISO date or datetime,
+    ``to`` exclusive) + request-only proximity. The card serializer carries no owner/PII."""
 
     permission_classes = [AllowAny]
 
     def get(self, request):
+        from apps.events.views import _parse_bound, _to_exclusive
         from apps.social.services import public_activities
 
         p = request.query_params
         qs = public_activities()
         if activity := p.get("activity"):
             qs = qs.filter(activity_type__slug=activity)
+        if raw_from := p.get("from"):
+            qs = qs.filter(starts_at__gte=_parse_bound(raw_from, "from"))
+        if raw_to := p.get("to"):
+            qs = qs.filter(starts_at__lt=_to_exclusive(raw_to))
         qs, point = apply_proximity(qs, p, field="place__location")
         if point is None:
             qs = qs.order_by("starts_at")

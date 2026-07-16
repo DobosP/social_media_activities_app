@@ -14,6 +14,36 @@ Last verified: 2026-07-11 — contracts match `apps/*/services.py` + the 2,365-t
 Built on the social core; see services/tests for exact behaviour. All uphold the six hard
 invariants in [`CLAUDE.md`](../CLAUDE.md).
 
+- **Tiered profile visibility + person hover cards** (ADR-0028) — the sole other-user
+  profile surface: `/people/<public_id>/` page + hover partial + API twin, one live resolver
+  (`connections/profiles.py`; no stored relationship labels). Gates: vetoes (blocked either
+  way, cross-cohort, unassigned, inactive, self) are 404-indistinguishable; stranger =
+  minimal card (name + generated avatar, the SAFETY.md §4 cap); shared activity/group or
+  join-request↔organizer = handle + verified boolean + shared-context titles + Connect;
+  connected = Message + (adults only) interests + uploaded photo (page only, can_view_photo
+  re-checked); minor pairs clamped at the shared shape; never age band/cohort/progression/
+  history at any tier. Avatars mandatory + hover triggers on rosters/requests/thread authors
+  (`attach_interest_nodes` batches, query-pinned); displayed activity roster is now
+  block-filtered (`visible_roster`); hover endpoint braked (`profile_card` 240/h).
+- **Avatar styles + uniqueness registry** (ADR-0027) — versioned avatar generations
+  (`accounts/avatars.py::GENERATIONS`: 1 Constellation, 2 Orbits) with a self-only style picker
+  (web profile card + SPA parity + `GET/POST /api/accounts/me/avatar-style/`); each pick is
+  fingerprint-unique via `accounts/signature.py` (canonical `_uid_override` render, DB UNIQUE +
+  salt retry; `set_interests` re-fingerprints, strict no-op for non-picked users). Gates: no
+  collectible framing ("minted"/serials/dates banned on every surface); the fingerprint never
+  leaves the DB (not in audit payloads — Art.17); every generation always available to everyone,
+  NEVER unlocked by participation (the pick is publicly visible through the render); users
+  without a pick render byte-identical to the legacy pipeline; `intensity==0` byte-identity
+  holds per generation (public renders never leak progression); list surfaces stay non-N+1
+  (two-query `attach_interest_nodes` batch).
+- **AI-agent & search-engine access surface** (ADR-0025) — anonymous read-only events API
+  (public gates unchanged); `export_agent_snapshot` job (opt-in `AGENT_SNAPSHOT_DIR`) writes
+  gate-filtered public JSON (activities strictly the `public_activities()` ADULT+opt-in card
+  subset); stdlib-only Go sidecar `services/agentapi/` serves it at `/agent/v1/*` (cached,
+  rate-limited, DB-free); `/open-data/` page + `Dataset` JSON-LD + snapshot downloads;
+  agent-grade API filters (events: place/activity/city/from/to/q/near; public activity
+  cards: from/to + proximity); `llms.txt` v2; `robots.txt` public-API Allow carve-outs. Gate:
+  `social.Activity` never on a crawler surface; snapshot key-sets pinned by exact-key tests.
 - **Activity lifecycle** — `cancel_activity` / `complete_activity` (`social/services.py`) +
   `auto_complete_activities` command; cancel notifies members and blocks joins.
 - **Edit before start** — `update_activity` (whitelisted `ACTIVITY_EDITABLE_FIELDS`; place/type/
@@ -129,7 +159,76 @@ invariants in [`CLAUDE.md`](../CLAUDE.md).
   no-op without a channel layer — **needs `REDIS_URL`** cross-process). `post_announcement` now excludes blocked pairs
   from the fan-out. Thread Posts are **permanent + audited** (the `purge_chat`/`CHAT_RETENTION_DAYS` retention was
   dropped). The `aria-live` region announces only the viewer's own send + announcements — **never** every peer message.
-  Explicitly OUT (each needs its own review): reactions, acks, @mentions, markdown, typing, unread dividers.
+  Anonymous countless reactions shipped in `9b5701e` (2026-05-31) and were superseded by the
+  plural-sentiment reactions below (ADR-0029, 2026-07-14). Explicitly still OUT (each needs its
+  own review): acks, @mentions, markdown, typing, unread dividers.
+- **Plural sentiment reactions — appreciation, dissent, and conduct-concern (ADR-0029,
+  2026-07-14)** — replaces the anonymous distinct-emoji-chip reaction surface from `9b5701e`
+  with a severity ladder that keeps every rung countless and unattributed. **Rung 0
+  (appreciation):** `PostReaction.emoji` now stores one of 5 fixed facet slugs
+  (`social.REACTION_FACETS`: `helped_me`🙏, `felt_welcome`🤝, `made_me_smile`🙂, `want_to_come`✨,
+  `got_me_thinking`💡; operator-overridable subset via `THREAD_REACTION_FACETS`); old emoji rows
+  were data-migrated best-effort (👍/🙏→helped_me, ❤️→felt_welcome, 🎉/👏→made_me_smile,
+  colliding duplicates merged on the unique constraint). `toggle_reaction` keeps its gate and
+  signature (audited `post.reaction_toggled`, no live broadcast — `broadcast_reaction` and the
+  `chat_reaction` WS handler were deleted, since a live per-reaction frame fired at n=1 and was a
+  small-roster identity leak). A facet **latches one fixed public sentence** — never a count —
+  only in the **daily batch** (`social.sentiment.recompute_post_sentiment`, DUE_JOB) when ≥k
+  distinct surviving reactor rows AND eligible audience ≥2k (ADULT k=5, TEEN k=8; CHILD threads
+  get no footer, ever); latched slugs re-derive from surviving rows each run (GDPR erasure
+  cascades honestly) and promote to `appreciation_permanent` after `REACTION_ROW_RETENTION_DAYS`
+  so they outlive the row purge. Footer: fixed catalog order, max two appreciation lines, author
+  parity is byte-identical to any viewer's (`social.sentiment_footer_for`/`sentiment_footers_for`).
+  **Rung 1 (dissent — "I see this differently"):** lives in a low-prominence **flattened**
+  Respond menu (round-3 friction rebalance, owner 2026-07-15 — one open + one tap, no nested
+  sheets), no emoji glyph; primary action ("Reply with your view") reuses the existing reply/quote
+  composer (dissent-as-speech); secondary `toggle_dissent` records one anonymous, withdrawable
+  one-tap tally row (CHILD cohort has no tally, only the reply) with the reply nudge moved to AFTER
+  the act instead of gating it. An adult-only public line ("Some see this differently.", always last)
+  latches only after **2 consecutive weekly windows** at ≥6 distinct dissenters AND audience ≥12,
+  and lapses the same way (no permanent mark); `is_announcement` posts are exempt; TEEN/CHILD
+  never render it. **Rung 2 (conduct concern — "This doesn't seem to fit here"):** never public,
+  any cohort; a one-tap toggle whose **first-use educational interstitial is paid ONCE per device**
+  (localStorage `concernIntroSeen`, set on first toggle OR first Respond-menu expansion — no
+  server-side flag, no new PII; the intro renders server-side so no-JS users always see it) routes
+  disagreement/harm elsewhere. `record_concern` records a tally row (CHILD flaggers rejected at the
+  service gate). The daily
+  `evaluate_concerns` job runs a capped ladder per ADULT author (k1=2 distinct + audience≥8 →
+  exactly one private restorative `FORMATIVE_NOTE` notification via `notify()`, ≤1/author/14d,
+  ≤1/post lifetime, an edit clears accrual and permanently bars a repeat auto-note; k2=4 distinct
+  → `ConcernReview` moderator queue, deduped against an existing OPEN row) and never auto-notifies
+  TEEN authors (k=3 → moderator queue with a suggested human-relay template) or CHILD authors (no
+  concern affordance exists for CHILD threads at all). Two **sensors** run in the same job:
+  coordinated-flagging (an overlapping ≥2-flagger set hitting one author across ≥3 posts in 14
+  days → moderator alert about the flaggers) and pile-on protection (one author drawing concerns
+  on ≥3 distinct posts within 7 days → suppress further notes, flag the author for protective
+  review) — both moderator-only, incident-scoped (`ConcernReview.payload` never accretes a
+  per-user history), never user-visible or ranking. **Retention:** `purge_stale_reaction_rows`
+  hard-deletes `PostReaction`/`PostDissent`/`PostConcern` rows after `REACTION_ROW_RETENTION_DAYS`
+  (footers keep only the already-promoted `appreciation_permanent` slugs). **Moderation
+  interface + mode:** operator setting `MODERATION_MODE ∈ {"automated", "automated+human"}`
+  (default `automated+human`; validated at boot) gates only the human-alerting path
+  (`notify_moderators` no-ops entirely in `automated` mode) — the hard floor (no automated
+  corrective delivery to a minor, no automated content restriction from any soft channel) is
+  NOT configurable in either mode. `/moderation/` (`apps/web/views_moderation.py`,
+  moderator-gated) lists OPEN `ConcernReview` items oldest-first with mark-reviewed/dismiss/
+  escalate (files a `safety.Report` via the existing report-creation path, carrying DSA
+  statement-of-reasons)/teen-note-send actions, each `record_audit`-ed inside its own
+  transaction; it links to (never duplicates) the existing Django-admin Report queue. Report
+  remains the sole DSA Art-16 channel (unconditional-of-cohort report link on every post, styled
+  distinctly, below a divider). No reaction/dissent/concern data is ever serialized on any read
+  API, the agent snapshot, or `services/agentapi/` (ADR-0025's `social.*` exclusion holds).
+  **GROUP threads carry the full surface (round 3, their primary home):** `group_detail` renders
+  the SAME generalized `_post.html` partial (picker + countless footer + flattened Respond menu)
+  and is now live (`thread-chat.js` + F33 presend nudge with group URL templates); five endpoints
+  `group_post_react`/`dissent`/`concern`/`edit`/`delete` at `groups/<pk>/posts/<post_id>/<action>/`
+  mirror the activity trio + edit/delete under the same shared write gate and JSON/redirect duality
+  — no service/model/job/migration change (services were already `Group`-owner-generic; the daily
+  batch latches group-thread footers; the CHILD-group wall holds end-to-end). The E2EE-DM reaction
+  picker
+  (`messages_page`, client-side, explicitly out of ADR-0029 scope) still reads
+  `social.allowed_reactions()` for its button labels, which now returns facet slugs instead of
+  emoji glyphs — a cosmetic-only regression on that separate who+what system, not fixed here.
 - **Connections** — find/reconnect with people you've shared a real activity with; the discovery layer in front of the
   existing E2EE `messaging`. `connections.can_connect` is the gate: same cohort + both `can_participate` + not blocked +
   **a shared PEER activity** (`shares_activity` excludes supervisory guardians, mirroring `voting_members`) + cohort
@@ -162,17 +261,33 @@ invariants in [`CLAUDE.md`](../CLAUDE.md).
   `can_connect` (pinned by a test). Generic across all activity types (sports is just the launch slice). New Activity
   indexes `(cohort, activity_type)` / `(cohort, place)` keep the predicate + generator index-scan. Read surfaces are
   members-only (`IsAuthenticated`, web + DRF `CommunityViewSet`); deactivate-not-delete self-heals a dry spell.
-- **Group-thread media (images + PDF, no video)** — `media.Attachment` (FK to `social.Post`) puts media IN the unified
+- **Group-thread media (images + PDF + gated video)** — `media.Attachment` (FK to `social.Post`) puts media IN the unified
   conversation, members-only. `attach_to_post` reuses the Photo pipeline: image **EXIF-strip + re-encode**
-  (`validate_and_strip`, PNG/JPEG/WEBP only), **fail-closed** hash-blocklist scan on the original bytes (reject unless the
+  (`validate_and_strip`, PNG/JPEG/WEBP/AVIF), **fail-closed** hash-blocklist scan on the original bytes (reject unless the
   scanner is effective when `MEDIA_REQUIRE_SCANNER`), the storage backend, and **signed, expiring, per-viewer,
   membership-scoped URLs** (`attachment_signed_url`/`resolve_attachment_token` → `AttachmentFileView`). **PDF is the only
   FILE type, ADULTS-ONLY** (`MEDIA_FILE_COHORTS`, never minors — images are allowed in any cohort thread) and is **always
   served as a forced download** (`Content-Disposition: attachment` + `nosniff`) so it can't execute inline. **Never in 1:1
   DMs** (E2EE = unscannable). `post_to_thread(..., allow_empty=True)` permits an attachment-only message; the web
   `activity_post` creates Post + Attachment in **one transaction** (a rejected scan rolls back the post). `can_view_attachment`
-  re-checks `can_read_thread` + `post.is_hidden` + block-vs-uploader; only the author/staff can delete. No video — deferred
-  pending a real video-CSAM-scanning decision.
+  re-checks `can_read_thread` + `post.is_hidden` + block-vs-uploader; only the author/staff can delete.
+- **Private-thread video attachments (ADR-0026, 2026-07)** — `Attachment.Kind.VIDEO`, enabled by default
+  (owner decision 2026-07-13; kill switch `MEDIA_VIDEO_ENABLED=false`), **adults-only** (`MEDIA_VIDEO_COHORTS`, the PDF precedent; minor-cohort video stays off
+  pending a lawful video-CSAM matcher). Admission is fail-closed (streamed sha256 of the ORIGINAL vs blocklist/managed
+  scanner) and the row is created **withheld** (`status=pending`, unservable); an off-request worker
+  (`transcode_videos` timer + post-upload kick; `select_for_update(skip_locked=True)` claims, work outside any DB txn)
+  runs sandboxed ffprobe validation (container/codec/pixel-format whitelists, duration/dimension caps) → ONE progressive
+  x264 High@4.1 CRF-23 ≤720p MP4 (+faststart; the re-encode strips ALL metadata incl. GPS, autorotate baked) → AVIF
+  poster via the image pipeline → **perceptual frame scan** (sampled frames vs the dHash blocklist; a match ⇒
+  `status=blocked`, never served, source retained as bucket-level evidence — not servable in-app) → `status=ready` + quarantined original deleted.
+  Serving adds HTTP-Range (206) to `AttachmentFileView` for seeking; `<video controls preload="metadata">` only — no
+  autoplay/loops/counts; never discovery/DMs. Ephemeral TTL/purge/Art.-17 cleanup cover all blobs (main/poster/source).
+- **Image renditions + AVIF canonical format (ADR-0026, 2026-07)** — every image upload (photo/attachment/cover) now
+  also stores one eager `MEDIA_THUMB_DIMENSION` (800px) rendition (`thumb_storage_key`) served on cards, thread
+  streams, grids, and avatars via a `variant` flag in the signed token (full object one click away; pre-rendition rows
+  fall back). Canonical codec flipped WebP→**AVIF** (~15–30% smaller at matched quality; `MEDIA_IMAGE_QUALITY=0` =
+  per-codec auto, AVIF 64 ≈ WebP 80; rollback = `MEDIA_IMAGE_OUTPUT_FORMAT=WEBP`; prod boots-checks the encoder).
+  Renditions are never used for hashing/dedup/scanning.
 - **One real person = one account (EUDI holder binding)** — `accounts.IdentityBinding` records a **keyed HMAC** of the EUDI
   wallet holder subject (never the raw subject — data-minimal) so the same credential can't assure two accounts.
   `bind_identity` (atomic, row-locked) is wired into `EUDIVerifyView` (**409** on a duplicate wallet) and web `register`; the

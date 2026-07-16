@@ -1,0 +1,34 @@
+{% load i18n %}
+{% comment %}ADR-0028: the tier-gated person overview. Context: card (connections.profiles.profile_card
+   dict). Used BOTH as the hover-card fragment response and inline on the person page. Field
+   discipline lives in the service — this template renders only what the card carries.{% endcomment %}
+<div class="person-card" role="group" aria-label="{% blocktrans with name=card.display %}About {{ name }}{% endblocktrans %}">
+  <div class="person-card-head">
+    {# The image is a MUST: every user has a generated avatar (their picked style). The person
+       PAGE hides this copy — it already shows the large avatar/photo beside the card. #}
+    {% if not hide_avatar %}<img class="avatar" src="{{ card.avatar }}" width="56" height="56" alt="">{% endif %}
+    <div>
+      <p class="person-card-name"><strong>{{ card.display }}</strong>
+        {% if card.verified %}<span class="tag" title="{% trans 'age band verified' %}">{% trans "verified" %}</span>{% endif %}</p>
+      {% if card.username and card.username != card.display %}<p class="muted person-card-sub">{{ card.username }}</p>{% endif %}
+    </div>
+  </div>
+  {% if card.tier != "stranger" %}
+    <div class="person-card-body">
+      {% if card.connected %}<p class="tag tag-muted">{% trans "Connected with you" %}</p>{% endif %}
+      {% if card.shared.join_request %}<p class="muted">{% trans "Pending join request between you" %}</p>{% endif %}
+      {% if card.shared.activities %}
+        <p class="muted person-card-sub">{% trans "With you in:" %}
+          {{ card.shared.activities|join:", " }}{% if card.shared.activity_overflow %} (+{{ card.shared.activity_overflow }}){% endif %}</p>
+      {% endif %}
+      {% if card.shared.groups %}
+        <p class="muted person-card-sub">{% trans "Groups with you:" %}
+          {{ card.shared.groups|join:", " }}{% if card.shared.group_overflow %} (+{{ card.shared.group_overflow }}){% endif %}</p>
+      {% endif %}
+      {% if card.interests %}
+        <p class="person-card-sub">{% for i in card.interests %}<span class="tag">{{ i }}</span>{% endfor %}</p>
+      {% endif %}
+    </div>
+  {% endif %}
+  <p class="person-card-sub"><a href="{% url 'person' card.public_id %}">{% trans "View profile" %}</a></p>
+</div>

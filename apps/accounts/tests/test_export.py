@@ -56,8 +56,10 @@ def test_build_user_export_has_expected_sections():
         "safety_record",  # W4-F22
         "blocks",  # W4-F22
         "privacy_settings",  # W4-F22
+        "own_sentiment_actions",  # ADR-0029
     }
-    assert export["schema_version"] == 3  # W4-F22 bumped 2 -> 3
+    assert export["schema_version"] == 4  # ADR-0029 bumped 3 -> 4
+    assert export["own_sentiment_actions"] == {"reactions": [], "dissents": [], "concerns": []}
     # W10 disclosure: token METADATA only — the export must never contain a key.
     assert export["api_access"] == {"api_token_issued": False, "issued_at": None}
     assert export["profile"]["username"] == "exp1"
@@ -219,7 +221,7 @@ def test_own_hidden_post_exports_as_neutral_removed_marker():
 def test_thread_posts_empty_for_a_user_who_never_posted():
     user = _user("tp_silent")
     assert build_user_export(user)["thread_posts"] == []
-    assert build_user_export(user)["schema_version"] == 3
+    assert build_user_export(user)["schema_version"] == 4
 
 
 def test_thread_posts_covers_group_threads_with_name_fallback():

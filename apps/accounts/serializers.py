@@ -12,6 +12,9 @@ class MeSerializer(serializers.ModelSerializer):
     # never exposes another user's number — no other-user serializer carries an equivalent field.
     progression = serializers.SerializerMethodField()
     avatar = serializers.SerializerMethodField()
+    # ADR-0027: the picked avatar generation + available styles. SELF-ONLY, like everything here;
+    # deliberately carries no fingerprint/serial/date (no collectible framing).
+    avatar_style = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -28,6 +31,7 @@ class MeSerializer(serializers.ModelSerializer):
             "can_participate",
             "progression",
             "avatar",
+            "avatar_style",
         ]
 
     def get_can_participate(self, obj) -> bool:
@@ -42,6 +46,11 @@ class MeSerializer(serializers.ModelSerializer):
         from apps.recommendations.services import evolving_avatar_data_uri
 
         return evolving_avatar_data_uri(obj)
+
+    def get_avatar_style(self, obj) -> dict:
+        from .signature import avatar_style_info
+
+        return avatar_style_info(obj)
 
 
 class GuardianLinkInviteSerializer(serializers.ModelSerializer):

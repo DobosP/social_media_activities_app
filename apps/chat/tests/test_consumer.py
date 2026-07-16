@@ -226,9 +226,10 @@ async def test_guardian_typing_is_suppressed(thread, owner, member):
 
 
 @pytest.mark.django_db(transaction=True)
-async def test_reaction_toggle_broadcasts_present_set(thread, owner, member):
-    """Toggling a reaction live-updates connected members: a 'reaction' frame carries only the
-    distinct emoji set (anonymous, COUNTLESS — no count, no who)."""
+async def test_reaction_toggle_emits_no_websocket_frame(thread, owner, member):
+    """ADR-0029 removed the live per-reaction broadcast (the distinct-facet set surfaced at n=1 — a
+    small-roster timing leak; the aggregate now lives only in the batched sentiment footer). A
+    reaction toggle must therefore emit NO websocket frame to connected members."""
     from apps.social import services as social
     from apps.social.models import Post
 
@@ -242,15 +243,16 @@ async def test_reaction_toggle_broadcasts_present_set(thread, owner, member):
     await member_conn.receive_json_from()
     post_id = echoed["id"]
 
+    facet = social.allowed_reactions()[0]
+
     @database_sync_to_async
     def react():
-        return social.toggle_reaction(member, Post.objects.get(pk=post_id), "👍")
+        return social.toggle_reaction(member, Post.objects.get(pk=post_id), facet)
 
     assert await react() is True
-    frame = await owner_conn.receive_json_from()
-    assert frame["type"] == "reaction" and frame["post_id"] == post_id
-    assert "👍" in frame["present"]
-    assert "count" not in frame and "users" not in frame  # never a count, never a who-list
+    # No 'reaction' frame (or any frame) reaches either connected member.
+    assert await owner_conn.receive_nothing()
+    assert await member_conn.receive_nothing()
 
     await owner_conn.disconnect()
     await member_conn.disconnect()

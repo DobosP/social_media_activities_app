@@ -31,6 +31,12 @@ from .models import Conversation, KeyVerification, Message, MessageKey, Particip
 
 User = get_user_model()
 
+# Fixed emoji set for E2EE chat reactions. DM reactions are Signal-style who+what,
+# rendered client-side from ciphertext (the server never sees the emoji) — they are
+# deliberately NOT the thread-post facet vocabulary (ADR-0029), which is a countless
+# anonymous aggregate. Glyphs only; never user-supplied.
+DM_REACTION_EMOJIS = ["👍", "❤️", "🎉", "👏", "🙏"]
+
 
 class MessagingError(Exception):
     """A messaging access, safety, or content rule was violated."""

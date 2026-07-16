@@ -63,6 +63,48 @@ class MeView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+class MeAvatarStyleView(APIView):
+    """ADR-0027: the user's avatar style — which generation of the generator renders their
+    picture. GET returns the pick + available styles + self-only previews; POST picks one.
+    Strictly self-scoped; the response never carries fingerprints/serials/dates."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from apps.accounts.signature import avatar_style_info
+        from apps.recommendations.services import avatar_style_previews
+
+        info = avatar_style_info(request.user)
+        info["previews"] = avatar_style_previews(request.user)
+        return Response(info)
+
+    def post(self, request):
+        from apps.accounts.signature import (
+            AvatarStyleError,
+            avatar_style_info,
+            set_avatar_style,
+        )
+        from apps.safety.services import allow_action
+
+        # Same brake family as avatar_upload: style picks are cheap but write the uniqueness
+        # registry; don't let the endpoint be spammed.
+        if not allow_action(
+            request.user,
+            "avatar_style",
+            limit=getattr(settings, "AVATAR_STYLE_RATE_LIMIT", 30),
+            window_seconds=getattr(settings, "AVATAR_STYLE_RATE_WINDOW_SECONDS", 3600),
+        ):
+            return Response(
+                {"detail": "Too many style changes; please try again later."},
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
+            )
+        try:
+            set_avatar_style(request.user, request.data.get("generation"))
+        except AvatarStyleError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(avatar_style_info(request.user))
+
+
 class MeExportView(APIView):
     """GDPR Art. 20 data portability: the authenticated user's own data as JSON.
 

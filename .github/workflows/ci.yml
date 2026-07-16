@@ -72,7 +72,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            binutils gdal-bin libgdal-dev libgeos-dev libproj-dev
+            binutils gdal-bin libgdal-dev libgeos-dev libproj-dev ffmpeg
       - name: Install pgvector into the Postgres service
         # The postgis/postgis image ships PostGIS but not pgvector; the recommendations app's
         # migration runs CREATE EXTENSION vector. Install the PGDG pgvector package into the

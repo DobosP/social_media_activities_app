@@ -29,9 +29,29 @@
         <input type="file" name="image" accept="image/*" required style="max-width:16rem">
         <button class="btn btn-sm" type="submit">{% trans "Update photo" %}</button>
       </form>
-      <div class="helptext">{% trans "One profile picture. Location metadata is stripped automatically." %}</div>
+      <div class="helptext">{% trans "One profile picture. Location metadata is stripped automatically. Your photo shows on this page only — everywhere else people see your generated picture." %}</div>
     </div>
   </div>
+</div>
+
+<div class="card">
+  <h3>{% trans "Your avatar style" %}</h3>
+  <p class="muted u-mt-0">{% trans "Pick the art style for your generated picture. It's drawn from the interests you declare and is unique to you — no two people share the same picture. New styles arrive over time; earlier ones always stay available." %}</p>
+  <form method="post" action="{% url 'avatar_style' %}">{% csrf_token %}
+    <div class="row" style="flex-wrap:wrap;gap:1rem;align-items:flex-start">
+      {% for s in avatar_styles %}
+        <label style="text-align:center;cursor:pointer">
+          <img class="avatar" src="{{ s.uri }}" width="96" height="96"
+               alt="{% blocktrans with name=s.name %}{{ name }} style preview{% endblocktrans %}">
+          <div style="margin-top:.3rem">
+            <input type="radio" name="generation" value="{{ s.generation }}" {% if s.current %}checked{% endif %}>
+            {{ s.name }}{% if s.current %} <span class="muted">({% trans "current" %})</span>{% endif %}
+          </div>
+        </label>
+      {% endfor %}
+    </div>
+    <button class="btn btn-sm" type="submit" style="margin-top:.5rem">{% trans "Use this style" %}</button>
+  </form>
 </div>
 
 <div class="card">

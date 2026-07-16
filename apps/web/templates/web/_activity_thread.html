@@ -95,9 +95,9 @@
       <label class="visually-hidden" for="{{ post_form.body.id_for_label }}">{% trans "Write a message" %}</label>
       {{ post_form.body }}
       <div class="row compose-row">
-        <label class="visually-hidden" for="{{ post_form.attachment.id_for_label }}">{% trans "Attach a photo or PDF" %}</label>
+        <label class="visually-hidden" for="{{ post_form.attachment.id_for_label }}">{% if video_enabled %}{% trans "Attach a photo, PDF, or short video" %}{% else %}{% trans "Attach a photo or PDF" %}{% endif %}</label>
         <input type="file" name="attachment" id="{{ post_form.attachment.id_for_label }}"
-               accept="image/png,image/jpeg,image/webp,application/pdf">
+               accept="image/png,image/jpeg,image/webp,application/pdf{% if video_enabled %},video/mp4,video/quicktime,video/webm{% endif %}">
         <label class="muted compose-select-label">
           🕓 <span class="visually-hidden">{% trans "Make this picture temporary" %}</span>
           <select name="disappear">
@@ -110,8 +110,14 @@
         <input type="checkbox" name="ping" value="on">
         {% blocktrans %}Notify the people I&nbsp;<span class="mention">@mention</span>{% endblocktrans %}
         <span class="muted">{% trans "(off = they just see the tag)" %}</span></label>
-      <p class="muted compose-upload-note">{% blocktrans %}Photos &amp; PDFs are private to
-        members and safety-screened on upload. No video.{% endblocktrans %}</p>
+      {% if video_enabled %}
+        <p class="muted compose-upload-note">{% blocktrans with secs=video_max_seconds %}Photos, PDFs &amp; short videos
+          (up to {{ secs }}s) are private to members and safety-screened on upload. A video takes a
+          moment to appear while it is prepared.{% endblocktrans %}</p>
+      {% else %}
+        <p class="muted compose-upload-note">{% blocktrans %}Photos &amp; PDFs are private to
+          members and safety-screened on upload. No video.{% endblocktrans %}</p>
+      {% endif %}
     </form>
     {% comment %}Live region: announces ONLY the viewer's own send + new announcements (never every
        inbound peer message), so a busy thread is not a screen-reader replay or a nudge.{% endcomment %}
@@ -127,7 +133,7 @@
     </form>
   {% endif %}
   <div class="photos">
-    {% for ph in photos %}<img src="{{ ph.url }}" alt="{% trans 'thread photo' %}">{% empty %}
+    {% for ph in photos %}<a href="{{ ph.url }}" target="_blank" rel="noopener noreferrer"><img src="{{ ph.thumb_url|default:ph.url }}" alt="{% trans 'thread photo' %}" loading="lazy"></a>{% empty %}
     <p class="muted">{% trans "No photos yet." %}</p>{% endfor %}
   </div>
 

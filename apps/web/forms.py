@@ -457,8 +457,9 @@ class PostForm(forms.Form):
     # Optional one-level quote-reply target (a Post id in the same thread). Re-validated in the
     # service (same thread, not hidden, re-parented to the top-level ancestor).
     reply_to = forms.IntegerField(required=False, widget=forms.HiddenInput)
-    # Optional photo or PDF shared in the thread (members only; scanned fail-closed). PDFs are
-    # adults-only and always served as a download. No video.
+    # Optional photo, PDF, or (ADR-0026, when enabled) short video shared in the thread
+    # (members only; scanned fail-closed). PDFs are adults-only and always served as a
+    # download; video is adults-only, withheld until its transcode + frame scan succeeds.
     attachment = forms.FileField(required=False)
     # @mentions are always a calm highlight (tag-not-ping). Ticking this opt-in escalates them to
     # a notification to the mentioned peers (still mutable by each recipient). Default off.

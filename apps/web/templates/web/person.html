@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{{ card.display }}{% endblock %}
+{% block content %}
+<h1>{{ card.display }}</h1>
+
+<div class="card">
+  <div class="row" style="align-items:flex-start;gap:1rem">
+    {% if photo_url %}
+      {# CONNECTED adults only (card gate) + media can_view_photo re-check at signing. #}
+      <img class="avatar" src="{{ photo_url }}" width="96" height="96" alt="{% trans 'profile picture' %}">
+    {% else %}
+      <img class="avatar" src="{{ card.avatar }}" width="96" height="96" alt="{% trans 'generated avatar' %}">
+    {% endif %}
+    <div class="u-flex-1">
+      {% include "web/_person_card.html" with hide_avatar=True %}
+      <p class="row" style="margin-top:.6rem">
+        {% if card.can_connect and not card.request_pending %}
+          <form method="post" action="{% url 'connection_request' %}" class="inline">{% csrf_token %}
+            <input type="hidden" name="public_id" value="{{ card.public_id }}">
+            <input type="hidden" name="next" value="{% url 'person' card.public_id %}">
+            <button class="btn btn-sm" type="submit">{% trans "Connect" %}</button></form>
+        {% elif card.request_pending %}
+          <span class="muted">{% trans "Connection request pending" %}</span>
+        {% endif %}
+        {% if card.can_message %}
+          <form method="post" action="{% url 'connection_message' %}" class="inline">{% csrf_token %}
+            <input type="hidden" name="public_id" value="{{ card.public_id }}">
+            <button class="btn btn-sm" type="submit">{% trans "Message" %}</button></form>
+        {% endif %}
+        <a class="btn btn-secondary btn-sm" href="{% url 'report' %}?type=user&id={{ person_user.id }}">{% trans "Report" %}</a>
+        <form method="post" action="{% url 'block_user' person_user.id %}" class="inline">{% csrf_token %}
+          <input type="hidden" name="next" value="{% url 'home' %}">
+          <button class="linkbtn" type="submit">{% trans "Block" %}</button></form>
+      </p>
+    </div>
+  </div>
+</div>
+
+<p class="helptext">{% trans "You can see this profile because you share an activity, group, connection, or a pending join request — or it is the minimal public card (name and picture only). Age, history, and attendance are never shown." %}</p>
+{% endblock %}

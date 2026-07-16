@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-12T10:00:00Z",
+  "site": "https://example.org",
+  "datasets": {
+    "events": { "file": "events.json", "count": 4 },
+    "places": { "file": "places.json", "count": 3 },
+    "activities": { "file": "activities.json", "count": 2 },
+    "taxonomy": { "file": "taxonomy.json", "count": 8 }
+  },
+  "licenses": [
+    { "license_name": "CC-BY-4.0", "attribution": "Example Attribution" }
+  ],
+  "truncated": false
+}

@@ -4,6 +4,7 @@ from pathlib import Path
 
 import environ
 from csp.constants import NONCE
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -31,6 +32,12 @@ SITE_NAME = env("SITE_NAME", default="Activities")
 # is also served verbatim at /indexnow.txt for the keyLocation handshake.
 INDEXNOW_ENABLED = env.bool("INDEXNOW_ENABLED", default=False)
 INDEXNOW_KEY = env("INDEXNOW_KEY", default="")
+
+# Agent snapshot exporter — fully opt-in. Directory the export_agent_snapshot job writes the
+# gate-filtered PUBLIC JSON files to (events/places/activities/taxonomy + manifest), which a Go
+# sidecar serves to answer engines / agents. Empty (default) disables the feature (no-op), so
+# dev/CI write nothing unless a path is configured.
+AGENT_SNAPSHOT_DIR = env("AGENT_SNAPSHOT_DIR", default="")
 
 # Search-engine ownership verification tokens (rendered as <meta> only when set) — let an
 # operator verify Google Search Console / Bing Webmaster Tools without DNS or a file upload.
@@ -525,11 +532,17 @@ MEDIA_MAX_UPLOAD_BYTES = env.int("MEDIA_MAX_UPLOAD_BYTES", default=5 * 1024 * 10
 MEDIA_MAX_DIMENSION = env.int("MEDIA_MAX_DIMENSION", default=2048)
 # Smart compression: transcode every uploaded image (photos AND thread attachments) to this codec
 # at MEDIA_IMAGE_QUALITY, so private blobs stay small (cheaper EU object storage + less egress).
-# WEBP is the recommended default (far smaller than the source PNG/JPEG for a phone photo); set to
-# an empty string to preserve the source format. Metadata is stripped + EXIF orientation baked in
-# regardless. One upload still = one stored object (no separate thumbnail to manage).
-MEDIA_IMAGE_OUTPUT_FORMAT = env("MEDIA_IMAGE_OUTPUT_FORMAT", default="WEBP")
-MEDIA_IMAGE_QUALITY = env.int("MEDIA_IMAGE_QUALITY", default=80)
+# AVIF is the default (ADR-0026: ~15-30% smaller than WebP at matched quality, ~93%+ browser
+# support; rollback = set WEBP). Set to an empty string to preserve the source format. Metadata is
+# stripped + EXIF orientation baked in regardless. Pre-existing objects are NOT re-encoded.
+MEDIA_IMAGE_OUTPUT_FORMAT = env("MEDIA_IMAGE_OUTPUT_FORMAT", default="AVIF")
+# 0 = auto per codec (AVIF 64, WebP/JPEG 80 — the matched-perceptual-quality equivalents);
+# any explicit value applies to whichever codec is selected.
+MEDIA_IMAGE_QUALITY = env.int("MEDIA_IMAGE_QUALITY", default=0)
+# ADR-0026 renditions: one extra eager rendition per image (longest side) served on card/stream
+# surfaces — the biggest egress lever without a CDN. 800px covers a ~400px card at 2x DPR.
+# Sources already at or under this size get no extra object (serving falls back to the full one).
+MEDIA_THUMB_DIMENSION = env.int("MEDIA_THUMB_DIMENSION", default=800)
 # Decompression-bomb ceiling: reject images whose header-declared pixel count exceeds
 # this before any pixels are decoded (≈30 MP default — above real photos, below a bomb).
 MEDIA_MAX_IMAGE_PIXELS = env.int("MEDIA_MAX_IMAGE_PIXELS", default=30_000_000)
@@ -603,6 +616,49 @@ MEDIA_EPHEMERAL_MIN_TTL_MINORS_SECONDS = env.int(
     "MEDIA_EPHEMERAL_MIN_TTL_MINORS_SECONDS", default=86400
 )
 
+# --- ADR-0026: private-thread video attachments -------------------------------------------
+# Default ON (owner decision 2026-07-13; set MEDIA_VIDEO_ENABLED=false to disable). Prod
+# refuses to boot video-enabled without ffmpeg/ffprobe installed (the Docker image and
+# cloud-init both ship them). Video is admitted WITHHELD after a fail-closed sha256 scan of
+# the original bytes, transcoded off-request to ONE progressive H.264/AAC MP4 (+faststart;
+# the re-encode strips all metadata incl. GPS), frame-scanned against the perceptual
+# blocklist, and only then served — rendered ONLY inside the cohort-gated activity/group
+# thread it was posted to, never DMs or any public/discovery/feed surface, no
+# autoplay/loops/view counts.
+MEDIA_VIDEO_ENABLED = env.bool("MEDIA_VIDEO_ENABLED", default=True)
+# A NEW media type → adults only at launch (the PDF precedent). Minor-cohort video stays
+# structurally off until a lawful video-CSAM matcher is adopted via its own decision.
+MEDIA_VIDEO_COHORTS = env.list("MEDIA_VIDEO_COHORTS", default=["adult"])
+# Upload cap. The request-size middleware exempts ONLY the thread-post endpoint (the one
+# surface that accepts video) up to this + multipart overhead, and only while video is
+# enabled — the global MAX_REQUEST_BODY_BYTES cap is unchanged for every other request.
+MEDIA_VIDEO_MAX_UPLOAD_BYTES = env.int("MEDIA_VIDEO_MAX_UPLOAD_BYTES", default=80 * 1024 * 1024)
+MEDIA_VIDEO_MAX_DURATION_SECONDS = env.int("MEDIA_VIDEO_MAX_DURATION_SECONDS", default=90)
+# Source sanity cap (decode-bomb guard); 4K input is accepted and downscaled.
+MEDIA_VIDEO_MAX_SOURCE_SIDE = env.int("MEDIA_VIDEO_MAX_SOURCE_SIDE", default=3840)
+# Delivery: one 720p-class progressive MP4 (never upscaled) — universal playback, HTTP-Range
+# seekable, no HLS packaging (short clips don't repay an ABR ladder).
+MEDIA_VIDEO_TARGET_MAX_SIDE = env.int("MEDIA_VIDEO_TARGET_MAX_SIDE", default=1280)
+MEDIA_VIDEO_CRF = env.int("MEDIA_VIDEO_CRF", default=23)
+MEDIA_VIDEO_PRESET = env("MEDIA_VIDEO_PRESET", default="medium")
+MEDIA_VIDEO_AUDIO_BITRATE = env("MEDIA_VIDEO_AUDIO_BITRATE", default="96k")
+# Keep one transcode from starving the small launch box (3 vCPU).
+MEDIA_VIDEO_THREADS = env.int("MEDIA_VIDEO_THREADS", default=2)
+MEDIA_VIDEO_FFMPEG_TIMEOUT = env.int("MEDIA_VIDEO_FFMPEG_TIMEOUT", default=600)
+MEDIA_VIDEO_PROBE_TIMEOUT = env.int("MEDIA_VIDEO_PROBE_TIMEOUT", default=60)
+MEDIA_VIDEO_MAX_ATTEMPTS = env.int("MEDIA_VIDEO_MAX_ATTEMPTS", default=3)
+# A PROCESSING row older than this is presumed orphaned (worker crash) and reclaimed.
+MEDIA_VIDEO_STALE_PROCESSING_SECONDS = env.int("MEDIA_VIDEO_STALE_PROCESSING_SECONDS", default=1800)
+# Frame-scan sampling: one frame per interval, capped (25 frames covers 90s at 1/5s + margin).
+MEDIA_VIDEO_FRAME_SCAN_INTERVAL_SECONDS = env.int(
+    "MEDIA_VIDEO_FRAME_SCAN_INTERVAL_SECONDS", default=5
+)
+MEDIA_VIDEO_FRAME_SCAN_MAX_FRAMES = env.int("MEDIA_VIDEO_FRAME_SCAN_MAX_FRAMES", default=25)
+# Near-real-time processing without new infrastructure: a daemon thread drains a few pending
+# videos right after the upload commits (crash-safe — the transcode_videos systemd timer is
+# the durable fallback). Tests set False and drive the processor synchronously.
+MEDIA_VIDEO_INLINE_PROCESSING = env.bool("MEDIA_VIDEO_INLINE_PROCESSING", default=True)
+
 # D7 — richer place data.
 # Overture places parquet path/glob (local extract or the public S3 release, e.g.
 # "s3://overturemaps-us-west-2/release/<rel>/theme=places/type=place/*").
@@ -667,6 +723,41 @@ THREAD_REACT_RATE_WINDOW_SECONDS = env.int("THREAD_REACT_RATE_WINDOW_SECONDS", d
 SOCIAL_THREAD_POST_LIMIT = env.int("SOCIAL_THREAD_POST_LIMIT", default=100)
 # NOTE: thread messages are now permanent + audited (no time-based purge) — the child-safety-
 # correct retention posture. The former CHAT_RETENTION_DAYS / purge_chat job were removed.
+
+# --- ADR-0029: plural sentiment reactions (appreciation / dissent / conduct-concern) ---
+# The whole surface is COUNTLESS + anonymous + BATCHED (never live). These thresholds only gate
+# when a DERIVED footer sentence latches — never anything user-visible per row. k = the distinct-
+# reactor floor per cohort; the eligible-audience floor is 2*k (COMPUTED, not a setting) so a thin
+# roster never surfaces an aggregate. CHILD threads never get a footer at all.
+SENTIMENT_K_ADULT = env.int("SENTIMENT_K_ADULT", default=5)
+SENTIMENT_K_TEEN = env.int("SENTIMENT_K_TEEN", default=8)
+# Adult-only public dissent line ("Some see this differently.") — hardened latching: a distinct-
+# dissenter floor + an audience floor + sustained/decayed over consecutive WEEKLY windows, so a
+# one-day blitz latches nothing and nothing is permanent.
+DISSENT_K = env.int("DISSENT_K", default=6)
+DISSENT_AUDIENCE_FLOOR = env.int("DISSENT_AUDIENCE_FLOOR", default=12)
+DISSENT_WINDOWS_TO_LATCH = env.int("DISSENT_WINDOWS_TO_LATCH", default=2)
+DISSENT_WINDOWS_TO_LAPSE = env.int("DISSENT_WINDOWS_TO_LAPSE", default=2)
+# Conduct-concern ladder (rung 2, NEVER public): k1 = one capped restorative note to an ADULT
+# author; k2 = moderator queue; TEEN k routes straight to a human relay (never auto-delivered).
+CONCERN_K1 = env.int("CONCERN_K1", default=2)
+CONCERN_K2 = env.int("CONCERN_K2", default=4)
+CONCERN_TEEN_K = env.int("CONCERN_TEEN_K", default=3)
+CONCERN_AUDIENCE_FLOOR = env.int("CONCERN_AUDIENCE_FLOOR", default=8)
+# At most one auto formative note per author per this rolling window (across all their posts).
+FORMATIVE_NOTE_COOLDOWN_DAYS = env.int("FORMATIVE_NOTE_COOLDOWN_DAYS", default=14)
+# Raw reaction/dissent/concern rows are HARD-DELETED after this window (delete beats anonymize,
+# ADR-0029; footers keep any graduated permanent appreciation slugs). Sensors window on this too.
+REACTION_ROW_RETENTION_DAYS = env.int("REACTION_ROW_RETENTION_DAYS", default=90)
+# Trust-and-safety operating mode. "automated+human" (default) works the ConcernReview queue;
+# "automated" mutes moderator alerts and lets the queue accumulate (fail-safe: nothing delivered
+# or restricted). Validated at boot — no other value is legal.
+MODERATION_MODE = env.str("MODERATION_MODE", default="automated+human")
+if MODERATION_MODE not in {"automated", "automated+human"}:
+    raise ImproperlyConfigured(
+        "MODERATION_MODE must be one of {'automated', 'automated+human'}, "
+        f"got {MODERATION_MODE!r}."
+    )
 
 # --- Connections (find + reconnect with people you've shared real activities with) ---
 # Cohorts allowed to use connections, each WITHIN its own cohort. Cross-age connection is

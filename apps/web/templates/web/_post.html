@@ -1,6 +1,8 @@
-{% load i18n %}
-{% comment %}One thread message. Context: p (Post, with .snippet/.is_edited attached by thread_page),
-   activity, user, is_member. Replies render the same partial one level deep.{% endcomment %}
+{% load avatars i18n %}
+{% comment %}One thread message — owner-generic (activity AND group threads). Context: p (Post, with
+   .snippet/.is_edited/.reaction_mine/.sentiment_lines/.dissent_mine/.concern_mine attached),
+   user, is_member, post_owner_pk, post_react/dissent/concern/edit/delete_url_name,
+   reaction_emojis, show_dissent_concern. Replies render the same partial one level deep.{% endcomment %}
 <article id="post-{{ p.pk }}" data-author="{{ p.author_id }}"
          class="post{% if p.author_id == user.id %} post--mine{% endif %}"
          aria-label="{% blocktrans with author=p.author.display_name|default:p.author.username at=p.created_at|date:'j M H:i' %}Message from {{ author }} at {{ at }}{% endblocktrans %}">
@@ -9,7 +11,7 @@
       <a href="#post-{{ p.snippet.pk }}">{% blocktrans with author=p.snippet.author %}Replying to {{ author }}{% endblocktrans %}</a>: {{ p.snippet.text }}
     </div>
   {% endif %}
-  <div class="meta"><span class="author">{{ p.author.display_name|default:p.author.username }}</span> &middot;
+  <div class="meta"><img class="avatar avatar-xs" src="{{ p.author|avatar_uri }}" width="20" height="20" alt=""><span class="author">{% if p.author_id and p.author_id != user.id %}<a href="{% url 'person' p.author.public_id %}" data-hovercard-user="{{ p.author.public_id }}">{{ p.author.display_name|default:p.author.username }}</a>{% else %}{{ p.author.display_name|default:p.author.username }}{% endif %}</span> &middot;
     {# <time datetime> lets the live client rewrite this to a relative "5m ago" with the exact time
        on hover, with JS off it stays the absolute time and the permalink is untouched. #}
     <a href="#post-{{ p.pk }}" class="muted" title="{% trans 'Link to this message' %}"><time datetime="{{ p.created_at|date:'c' }}">{{ p.created_at|date:"j M H:i" }}</time></a>
@@ -41,12 +43,29 @@
       <p class="share-card share-card--gone muted">{% trans "This shared item is no longer available." %}</p>
     {% endif %}
   {% endif %}
+  {# .post-media is the live-update anchor: the chat client replaces this block in place
+     when an attachment changes state (video ready/failed) — keep the wrapper. #}
+  <div class="post-media">
   {% for att in p.attachment_list %}
-    {% if att.expired %}
+    {% if att.blocked %}
+      {# Staff-only (members never receive a blocked row): honest moderation state. #}
+      <p class="muted post-attachment-note">🛑 {% trans "Blocked by safety screening — evidence retained for moderation." %}</p>
+    {% elif att.processing %}
+      <p class="muted post-attachment-note">🎬 {% trans "Video is being prepared — it will appear here shortly." %}</p>
+    {% elif att.failed %}
+      <p class="muted post-attachment-note">🎬 {% trans "This video couldn't be processed." %}</p>
+    {% elif att.expired %}
       <p class="muted post-attachment-note">🕓 {% trans "This temporary picture has disappeared." %}</p>
     {% elif att.kind == "image" %}
+      {# The stream shows the small rendition; the full image is one click away. #}
       <a href="{{ att.url }}" target="_blank" rel="noopener noreferrer">
-        <img class="post-attachment-img" src="{{ att.url }}" alt="{% trans 'shared image' %}" loading="lazy"></a>
+        <img class="post-attachment-img" src="{{ att.thumb_url|default:att.url }}" alt="{% trans 'shared image' %}" loading="lazy"></a>
+      {% if att.expires_at %}<p class="muted post-attachment-expiry">🕓 {% blocktrans with when=att.expires_at|timeuntil %}disappears {{ when }}{% endblocktrans %}</p>{% endif %}
+    {% elif att.kind == "video" %}
+      {# Calm player only (ADR-0026): no autoplay, no loop, metadata-only preload. #}
+      <video class="post-attachment-video" controls preload="metadata" playsinline
+             {% if att.poster_url %}poster="{{ att.poster_url }}"{% endif %}
+             src="{{ att.url }}"></video>
       {% if att.expires_at %}<p class="muted post-attachment-expiry">🕓 {% blocktrans with when=att.expires_at|timeuntil %}disappears {{ when }}{% endblocktrans %}</p>{% endif %}
     {% else %}
       <p class="post-pdf">&#128206;
@@ -55,18 +74,69 @@
         {% if att.expires_at %}<span class="muted tiny-copy">&middot; 🕓 {% blocktrans with when=att.expires_at|timeuntil %}disappears {{ when }}{% endblocktrans %}</span>{% endif %}</p>
     {% endif %}
   {% endfor %}
-  {# Reactions: anonymous + COUNTLESS — only which emojis are present, never how many or who. #}
+  </div>
+  {# ADR-0029: the batched, COUNTLESS sentiment footer (appreciation + adult-only dissent line) —
+     no icons, no numbers, author-identical. Replaces the old live "distinct emojis present" chips
+     (that surfaced at n=1 — a small-roster identity leak). #}
+  {% include "web/_post_sentiment.html" %}
   <div class="rx">
-    {% for e in p.reaction_present %}<span class="rx-chip{% if e in p.reaction_mine %} rx-mine{% endif %}">{{ e }}</span>{% endfor %}
     {% if is_member %}
       <details class="rx-pick">
         <summary class="muted">{% trans "react" %}</summary>
-        {% for e in reaction_emojis %}
-          <form method="post" action="{% url 'activity_post_react' activity.pk p.pk %}" class="inline">{% csrf_token %}
-            <input type="hidden" name="emoji" value="{{ e }}">
-            <button class="rx-btn{% if e in p.reaction_mine %} rx-mine{% endif %}" type="submit" aria-label="{% blocktrans with emoji=e %}react {{ emoji }}{% endblocktrans %}">{{ e }}</button>
+        {% for f in reaction_emojis %}
+          <form method="post" action="{% url post_react_url_name post_owner_pk p.pk %}" class="inline">{% csrf_token %}
+            <input type="hidden" name="emoji" value="{{ f.slug }}">
+            <button class="rx-btn{% if f.slug in p.reaction_mine %} rx-mine{% endif %}" type="submit" data-slug="{{ f.slug }}"
+                    aria-label="{% blocktrans with label=f.label %}react: {{ label }}{% endblocktrans %}">{{ f.emoji }} {{ f.label }}</button>
           </form>
         {% endfor %}
+      </details>
+      {# Respond menu (ADR-0029 rungs 1-3, friction rebalance owner-decision 2026-07-15): ONE open +
+         ONE tap. No nested details, no sheets — the three rows are all visible on open. UI friction
+         was never the primary protection (thresholds, audience floors, batching, caps, and the
+         sensors are — all unchanged); it drops to a single tap and the concern education is paid
+         ONCE per device (localStorage, no server flag). Dissent/concern are decided server-side per
+         viewer+thread cohort (show_dissent_concern), never CSS-hidden; Report (the sole DSA Art-16
+         channel) always shows, any cohort. #}
+      <details class="respond-menu">
+        <summary class="muted">{% trans "Respond" %}</summary>
+        {% if show_dissent_concern %}
+          {# Row 1 — dissent. PRIMARY (reply with your view) sits next to the quiet ONE-TAP tally.
+             The reply nudge moves AFTER the quiet note (it no longer gates it): friction as
+             encouragement, not a wall. #}
+          <div class="dissent-row">
+            <div class="row respond-row-actions">
+              <a class="btn btn-sm" href="?reply_to={{ p.pk }}#compose">{% trans "Reply with your view" %}</a>
+              <form method="post" action="{% url post_dissent_url_name post_owner_pk p.pk %}" class="inline">{% csrf_token %}
+                <button class="btn btn-sm btn-secondary dissent-toggle" type="submit"
+                        data-label-on="{% trans 'Noted quietly — tap to withdraw' %}"
+                        data-label-off='{% trans 'Quietly note "I see this differently"' %}'>{% if p.dissent_mine %}{% trans "Noted quietly — tap to withdraw" %}{% else %}{% trans 'Quietly note "I see this differently"' %}{% endif %}</button>
+              </form>
+            </div>
+            <p class="muted dissent-after-hint"{% if not p.dissent_mine %} hidden{% endif %}>{% trans "Want to say why? Reply." %}</p>
+            <p class="muted small-print dissent-privacy">{% trans "A quiet note is never shown with names or numbers — not even to the writer." %}</p>
+          </div>
+          {# Row 2 — conduct concern. ONE-TAP toggle. The FULL first-use interstitial renders inside
+             the row and is visible by default (no-JS users always see it — acceptable); the JS
+             hides it once "concernIntroSeen" is set (first toggle OR first expansion). Button reads
+             "Send" while the intro shows, "This doesn't seem to fit here" once collapsed. #}
+          <div class="concern-row">
+            <div class="concern-intro muted">{% blocktrans %}'Doesn't fit here' is for a post that seems off-topic or out of step with this group — not for an opinion you disagree with (use 'I see this differently') and not for anything harmful or unsafe (use Report). No names and no numbers are ever attached, and a person only hears about it if a few others feel the same.{% endblocktrans %}</div>
+            <form method="post" action="{% url post_concern_url_name post_owner_pk p.pk %}" class="inline concern-form">{% csrf_token %}
+              <button class="btn btn-sm concern-toggle" type="submit"{% if p.concern_mine %} data-concerned="1"{% endif %}
+                      data-label-send="{% trans 'Send' %}"
+                      data-label-collapsed="{% trans "This doesn't seem to fit here" %}"
+                      data-label-withdraw="{% trans 'Marked — tap to withdraw' %}">{% if p.concern_mine %}{% trans "Marked — tap to withdraw" %}{% else %}{% trans "Send" %}{% endif %}</button>
+            </form>
+            <p class="muted small-print concern-subtitle">{% trans "For off-topic posts — never public; the writer only hears about it if a few others feel the same. Disagree instead? Use 'I see this differently'." %}</p>
+          </div>
+        {% endif %}
+        {# Row 3 — Report: unchanged link, below a divider, distinct styling. #}
+        <div class="respond-divider">
+          {% if p.author_id != user.id %}
+            <a class="muted u-text-xs report-link" href="{% url 'report' %}?type=post&amp;id={{ p.pk }}">{% trans "Report" %}</a>
+          {% endif %}
+        </div>
       </details>
     {% endif %}
   </div>
@@ -76,12 +146,12 @@
       {% if p.author_id == user.id %}
         &middot; <a href="#edit-{{ p.pk }}">{% trans "Edit" %}</a>
         &middot;
-	        <form method="post" action="{% url 'activity_post_delete' activity.pk p.pk %}" class="inline"
+	        <form method="post" action="{% url post_delete_url_name post_owner_pk p.pk %}" class="inline"
 	              data-confirm="{% trans "Delete your message? This can't be undone." %}">{% csrf_token %}
           <button class="linkbtn" type="submit">{% trans "Delete" %}</button>
         </form>
         {# No-JS in-place edit: a target-revealed form, classic POST/redirect. #}
-        <form method="post" id="edit-{{ p.pk }}" class="post-edit" action="{% url 'activity_post_edit' activity.pk p.pk %}"
+        <form method="post" id="edit-{{ p.pk }}" class="post-edit" action="{% url post_edit_url_name post_owner_pk p.pk %}"
               >{% csrf_token %}
           <textarea name="body" rows="2" maxlength="4000" required aria-label="{% trans 'Edit your message' %}">{{ p.body }}</textarea>
           <button class="btn btn-sm" type="submit">{% trans "Save edit" %}</button>

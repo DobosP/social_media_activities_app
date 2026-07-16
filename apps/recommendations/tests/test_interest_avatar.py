@@ -98,8 +98,9 @@ def test_attach_interest_nodes_batches_then_renders_without_queries(django_asser
     users = [_user(f"av-batch{i}") for i in range(4)]
     for u in users:
         services.set_interests(u, ["av-bball", "av-foot"])
-    # One query loads every user's interests; rendering then touches no DB (no N+1 on a list).
-    with django_assert_num_queries(1):
+    # Two fixed queries load every user's interests + avatar-style picks (ADR-0027) — constant
+    # regardless of batch size; rendering then touches no DB (no N+1 on a list).
+    with django_assert_num_queries(2):
         attach_interest_nodes(users)
     with django_assert_num_queries(0):
         uris = [interest_avatar_data_uri(u) for u in users]

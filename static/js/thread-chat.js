@@ -168,34 +168,25 @@
   }
 
   // ---------------------------------------------------------------- reactions (anonymous, countless)
-  var mineByPost = {}; // postId(string) -> [emoji] the viewer reacted with (seeded from server DOM)
+  // ADR-0029: the live per-reaction broadcast is REMOVED (the old distinct-facet "present" chips
+  // surfaced at n=1 — a small-roster identity leak; the aggregate now lives only in the batched,
+  // server-rendered sentiment footer). A reactor still sees their OWN toggle state update in place.
+  var mineByPost = {}; // postId(string) -> [facet slug] the viewer reacted with (seeded from server DOM)
   list.querySelectorAll('article.post[id^="post-"]').forEach(function (art) {
     var id = art.id.slice(5);
     var mine = [];
-    art.querySelectorAll(".rx .rx-chip.rx-mine").forEach(function (c) {
-      mine.push(c.textContent.trim());
+    art.querySelectorAll(".rx-pick .rx-btn.rx-mine").forEach(function (b) {
+      if (b.dataset.slug) mine.push(b.dataset.slug);
     });
     if (mine.length) mineByPost[id] = mine;
   });
 
-  function renderChips(wrap, present, mine) {
-    wrap.querySelectorAll(".rx-chip").forEach(function (c) {
-      c.remove();
-    });
-    var pick = wrap.querySelector(".rx-pick");
-    present.forEach(function (e) {
-      var s = document.createElement("span");
-      s.className = "rx-chip" + (mine.indexOf(e) >= 0 ? " rx-mine" : "");
-      s.textContent = e;
-      wrap.insertBefore(s, pick || null);
-    });
-  }
   function syncPicker(wrap, mine) {
     wrap.querySelectorAll(".rx-pick .rx-btn").forEach(function (b) {
-      b.classList.toggle("rx-mine", mine.indexOf(b.textContent.trim()) >= 0);
+      b.classList.toggle("rx-mine", mine.indexOf(b.dataset.slug) >= 0);
     });
   }
-  function reactionRow(postId, present, mine) {
+  function reactionRow(postId, mine) {
     var wrap = document.createElement("div");
     wrap.className = "rx";
     var details = document.createElement("details");
@@ -204,7 +195,7 @@
     summary.className = "muted";
     summary.textContent = I.react || "react";
     details.appendChild(summary);
-    (CFG.emojis || []).forEach(function (e) {
+    (CFG.reactionFacets || []).forEach(function (facet) {
       var f = document.createElement("form");
       f.className = "inline rx-form";
       f.method = "post";
@@ -216,42 +207,86 @@
       var em = document.createElement("input");
       em.type = "hidden";
       em.name = "emoji";
-      em.value = e;
+      em.value = facet.slug;
       var b = document.createElement("button");
       b.type = "submit";
-      b.className = "rx-btn" + ((mine || []).indexOf(e) >= 0 ? " rx-mine" : "");
-      b.textContent = e;
+      b.dataset.slug = facet.slug;
+      b.className = "rx-btn" + ((mine || []).indexOf(facet.slug) >= 0 ? " rx-mine" : "");
+      b.textContent = facet.emoji + " " + facet.label;
       f.appendChild(tok);
       f.appendChild(em);
       f.appendChild(b);
       details.appendChild(f);
     });
     wrap.appendChild(details);
-    renderChips(wrap, present || [], mine || []);
     return wrap;
   }
-  function applyReaction(d) {
-    var art = document.getElementById("post-" + d.post_id);
-    if (!art) return;
-    var wrap = art.querySelector(".rx");
-    if (!wrap) return;
-    renderChips(wrap, d.present || [], mineByPost[d.post_id] || []);
+  // ---------------------------------------------------------------- Respond menu (ADR-0029 F1)
+  // Friction rebalance (owner 2026-07-15): ONE open + ONE tap. The dissent label swaps to a
+  // withdraw affordance after a quiet note and a reply nudge appears AFTER the act; the concern
+  // first-use interstitial is paid ONCE per device (localStorage "concernIntroSeen", no server
+  // flag, no personal data) — no-JS users always see it (progressive enhancement).
+  var CONCERN_INTRO_SEEN = "concernIntroSeen";
+  function applyDissentToggle(art, mine) {
+    var btn = art.querySelector(".dissent-toggle");
+    if (btn) btn.textContent = mine ? btn.dataset.labelOn : btn.dataset.labelOff;
+    var hint = art.querySelector(".dissent-after-hint");
+    if (hint) hint.hidden = !mine; // the reply nudge follows the act, never gates it
   }
-  // Intercept a reaction form submit -> fetch (no reload); other members update via the broadcast.
+  function collapseConcernIntro(root) {
+    // Hide the (already-seen) education and drop the button to its one-tap label. A concerned
+    // button keeps its withdraw label; only a not-yet-concerned button collapses to the tap label.
+    (root || list).querySelectorAll(".concern-intro").forEach(function (el) {
+      el.hidden = true;
+    });
+    (root || list).querySelectorAll(".concern-toggle").forEach(function (b) {
+      if (b.dataset.concerned !== "1") b.textContent = b.dataset.labelCollapsed;
+    });
+  }
+  function applyConcernToggle(art, mine) {
+    lsSet(CONCERN_INTRO_SEEN, "1"); // a successful toggle counts as first use
+    var intro = art.querySelector(".concern-intro");
+    if (intro) intro.hidden = true;
+    var b = art.querySelector(".concern-toggle");
+    if (b) {
+      b.dataset.concerned = mine ? "1" : "";
+      b.textContent = mine ? b.dataset.labelWithdraw : b.dataset.labelCollapsed;
+    }
+  }
+  if (lsGet(CONCERN_INTRO_SEEN)) collapseConcernIntro();
+  // First EXPANSION of a Respond menu also counts as seeing the intro: set the key so the next
+  // open (or reload) collapses it, but leave THIS first view intact (the education is shown once).
+  list.querySelectorAll("details.respond-menu").forEach(function (menu) {
+    menu.addEventListener("toggle", function () {
+      if (!menu.open) return;
+      if (lsGet(CONCERN_INTRO_SEEN)) collapseConcernIntro(menu);
+      else lsSet(CONCERN_INTRO_SEEN, "1");
+    });
+  });
+
+  // Intercept a reaction/dissent/concern form submit -> fetch (no reload). These are the viewer's
+  // OWN anonymous toggles only — no broadcast to other members (ADR-0029); a reaction's own picker
+  // highlight updates from the response, dissent/concern update their own Respond-menu affordances.
   list.addEventListener("submit", function (ev) {
     var f = ev.target;
     if (!f || f.tagName !== "FORM") return;
     var action = f.getAttribute("action") || "";
-    if (!/\/react\/?($|\?)/.test(action)) return; // only reaction forms — never edit/delete
+    var isReact = /\/react\/?($|\?)/.test(action);
+    var isDissent = /\/dissent\/?($|\?)/.test(action);
+    var isConcern = /\/concern\/?($|\?)/.test(action);
+    if (!isReact && !isDissent && !isConcern) return; // never edit/delete/post
     ev.preventDefault();
-    var emojiInput = f.querySelector('input[name="emoji"]');
-    var emoji = emojiInput ? emojiInput.value : "";
     var art = f.closest("article.post");
     var postId = art ? art.id.slice(5) : null;
+    var body = new URLSearchParams();
+    if (isReact) {
+      var emojiInput = f.querySelector('input[name="emoji"]');
+      body.set("emoji", emojiInput ? emojiInput.value : "");
+    }
     fetch(f.action, {
       method: "POST",
       headers: { "X-Requested-With": "fetch", "X-CSRFToken": cookie("csrftoken") },
-      body: new URLSearchParams({ emoji: emoji }),
+      body: body,
       credentials: "same-origin",
     })
       .then(function (r) {
@@ -259,17 +294,122 @@
       })
       .then(function (j) {
         if (!j || !j.ok || !postId || !art) return;
-        mineByPost[postId] = j.mine || [];
-        var wrap = art.querySelector(".rx");
-        if (wrap) {
-          renderChips(wrap, j.present || [], j.mine || []);
-          syncPicker(wrap, j.mine || []);
+        if (isReact) {
+          mineByPost[postId] = j.mine || [];
+          var wrap = art.querySelector(".rx");
+          if (wrap) syncPicker(wrap, j.mine || []);
+        } else if (isDissent) {
+          applyDissentToggle(art, !!j.mine);
+        } else if (isConcern) {
+          applyConcernToggle(art, !!j.mine);
         }
       })
       .catch(function () {
         /* network hiccup — the no-JS POST path still works on the next reload */
       });
   });
+
+  // ---------------------------------------------------------------- attachments (ADR-0026)
+  // Payload comes from OUR consumer (per-viewer gated + signed URLs minted server-side).
+  // Everything is still built via createElement/textContent; URLs are same-origin path
+  // strings assigned to src/href properties — never innerHTML.
+  function noteEl(icon, text, extraClass) {
+    var p = document.createElement("p");
+    p.className = "muted post-attachment-note" + (extraClass ? " " + extraClass : "");
+    p.textContent = icon + " " + text;
+    return p;
+  }
+  function fmtUntil(iso) {
+    // Mirror the server's {{ ...|timeuntil }} disclosure at chat precision.
+    var s = Math.round((Date.parse(iso) - Date.now()) / 1000);
+    if (isNaN(s) || s <= 0) return null;
+    if (s < 3600) return Math.max(1, Math.round(s / 60)) + "m";
+    if (s < 86400) return Math.round(s / 3600) + "h";
+    return Math.round(s / 86400) + "d";
+  }
+  function expiryNote(a) {
+    if (!a.expires_at) return null;
+    var when = fmtUntil(a.expires_at);
+    if (!when) return null;
+    var p = document.createElement("p");
+    p.className = "muted post-attachment-expiry";
+    p.textContent = "🕓 " + (I.attachmentDisappears || "disappears in %(when)s").replace("%(when)s", when);
+    return p;
+  }
+  function renderAttachments(atts) {
+    var wrap = document.createElement("div");
+    wrap.className = "post-media";
+    (atts || []).forEach(function (a) {
+      if (a.blocked) {
+        // Staff-only rows (members never receive one): honest moderation state.
+        wrap.appendChild(noteEl("🛑", I.attachmentBlocked || "Blocked by safety screening."));
+        return;
+      }
+      if (a.processing) {
+        wrap.appendChild(noteEl("🎬", I.videoProcessing || "Video is being prepared…"));
+      } else if (a.failed) {
+        wrap.appendChild(noteEl("🎬", I.videoFailed || "This video couldn't be processed."));
+      } else if (a.expired) {
+        wrap.appendChild(noteEl("🕓", I.attachmentExpired || "This temporary picture has disappeared."));
+      } else if (a.kind === "image" && a.url) {
+        var link = document.createElement("a");
+        link.href = a.url;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        var img = document.createElement("img");
+        img.className = "post-attachment-img";
+        img.src = a.thumb_url || a.url;
+        img.alt = I.sharedImage || "shared image";
+        img.loading = "lazy";
+        link.appendChild(img);
+        wrap.appendChild(link);
+      } else if (a.kind === "video" && a.url) {
+        // Calm player only: no autoplay, no loop, metadata-only preload (matches _post.html).
+        var vid = document.createElement("video");
+        vid.className = "post-attachment-video";
+        vid.controls = true;
+        vid.preload = "metadata";
+        vid.setAttribute("playsinline", "");
+        if (a.poster_url) vid.poster = a.poster_url;
+        vid.src = a.url;
+        wrap.appendChild(vid);
+      } else if (a.url) {
+        var p = document.createElement("p");
+        p.className = "post-pdf";
+        p.textContent = "📎 ";
+        var fl = document.createElement("a");
+        fl.href = a.url;
+        fl.textContent = a.filename || "document.pdf";
+        var lbl = document.createElement("span");
+        lbl.className = "muted small-copy";
+        lbl.textContent = " " + (I.pdfDownloads || "(PDF — downloads)");
+        p.appendChild(fl);
+        p.appendChild(lbl);
+        wrap.appendChild(p);
+      }
+      // Ephemeral disclosure parity with the server render: a temporary picture/video says
+      // so in the live stream too.
+      if (!a.processing && !a.failed && !a.expired && a.url) {
+        var note = expiryNote(a);
+        if (note) wrap.appendChild(note);
+      }
+    });
+    return wrap;
+  }
+  function applyAttachments(d) {
+    // Replace the post's media block in place (video finished/failed processing). Works for
+    // both server-rendered posts (the .post-media wrapper) and live-rendered ones.
+    var art = document.getElementById("post-" + d.post_id);
+    if (!art) return;
+    var fresh = renderAttachments(d.attachments || []);
+    var existing = art.querySelector(".post-media");
+    if (existing) {
+      existing.replaceWith(fresh);
+    } else {
+      var rx = art.querySelector(".rx");
+      art.insertBefore(fresh, rx || null);
+    }
+  }
 
   // ---------------------------------------------------------------- live post rendering
   var seen = new Set();
@@ -350,8 +490,10 @@
       art.appendChild(sc);
     }
 
+    if (d.attachments && d.attachments.length) art.appendChild(renderAttachments(d.attachments));
+
     if (!d.is_announcement) {
-      art.appendChild(reactionRow(d.id, [], mineByPost[d.id] || []));
+      art.appendChild(reactionRow(d.id, mineByPost[d.id] || []));
       var pa = document.createElement("div");
       pa.className = "post-actions";
       var rl = document.createElement("a");
@@ -465,8 +607,8 @@
       if (d.type === "message") {
         render(d);
         if (d.is_announcement && status) status.textContent = I.newAnnouncement || "";
-      } else if (d.type === "reaction") {
-        applyReaction(d);
+      } else if (d.type === "attachments") {
+        applyAttachments(d);
       } else if (d.type === "typing") {
         onTyping(d);
       }

@@ -5,7 +5,7 @@ from django.views.decorators.cache import cache_control
 
 from apps.events.feeds import UpcomingEventsAtomFeed, UpcomingEventsFeed
 
-from . import views
+from . import views, views_moderation
 from .seo import PUBLIC_CACHE_SECONDS
 
 # Anonymous open-data syndication feeds — publicly cacheable for crawl-budget/CDN friendliness.
@@ -166,6 +166,18 @@ urlpatterns = [
         views.activity_post_react,
         name="activity_post_react",
     ),
+    # ADR-0029 rung 1/2: quiet secondary Respond-menu actions (dissent tally, conduct concern) —
+    # same gate/rate-budget/JSON contract as .../react/, next to it by convention.
+    path(
+        "activities/<int:pk>/post/<int:post_id>/dissent/",
+        views.activity_post_dissent,
+        name="activity_post_dissent",
+    ),
+    path(
+        "activities/<int:pk>/post/<int:post_id>/concern/",
+        views.activity_post_concern,
+        name="activity_post_concern",
+    ),
     path("activities/<int:pk>/photo/", views.activity_photo, name="activity_photo"),
     path(
         "activities/<int:pk>/members/<int:membership_id>/vote/",
@@ -187,6 +199,10 @@ urlpatterns = [
     path("access/", views.access_preferences, name="access_preferences"),
     path("profile/", views.profile, name="profile"),
     path("profile/avatar/", views.avatar_upload, name="avatar_upload"),
+    path("profile/avatar-style/", views.avatar_style, name="avatar_style"),
+    # ADR-0028: another user's tier-gated profile page + the hover-overview partial.
+    path("people/<uuid:public_id>/", views.person, name="person"),
+    path("people/<uuid:public_id>/card/", views.person_card, name="person_card"),
     path("verify-age/", views.verify_age, name="verify_age"),
     path("wards/", views.wards, name="wards"),
     path("wards/invite/", views.guardian_invite_create, name="guardian_invite_create"),
@@ -227,6 +243,34 @@ urlpatterns = [
     path("groups/<int:pk>/join/", views.group_join, name="group_join"),
     path("groups/<int:pk>/leave/", views.group_leave, name="group_leave"),
     path("groups/<int:pk>/post/", views.group_post, name="group_post"),
+    # ADR-0029 round-3: per-post group-thread actions mirroring the activity trio + edit/delete —
+    # same gate shape, same JSON/redirect duality, same generic services. Groups are the primary
+    # home of the reaction/dissent/concern surface.
+    path(
+        "groups/<int:pk>/posts/<int:post_id>/edit/",
+        views.group_post_edit,
+        name="group_post_edit",
+    ),
+    path(
+        "groups/<int:pk>/posts/<int:post_id>/delete/",
+        views.group_post_delete,
+        name="group_post_delete",
+    ),
+    path(
+        "groups/<int:pk>/posts/<int:post_id>/react/",
+        views.group_post_react,
+        name="group_post_react",
+    ),
+    path(
+        "groups/<int:pk>/posts/<int:post_id>/dissent/",
+        views.group_post_dissent,
+        name="group_post_dissent",
+    ),
+    path(
+        "groups/<int:pk>/posts/<int:post_id>/concern/",
+        views.group_post_concern,
+        name="group_post_concern",
+    ),
     path("groups/<int:pk>/announce/", views.group_announce, name="group_announce"),
     path("groups/<int:pk>/ask/", views.group_ask, name="group_ask"),
     path("groups/<int:pk>/archive/", views.group_archive, name="group_archive"),
@@ -253,6 +297,9 @@ urlpatterns = [
     path("my-donations/", views.my_donations, name="my_donations"),
     path("campaigns/", views.campaigns, name="campaigns"),
     path("partners/", views.partners_list, name="partners"),
+    # Open data: what the dataset is + machine-access links, plus whitelisted bulk snapshots.
+    path("open-data/", views.open_data, name="open_data"),
+    path("open-data/snapshot/<str:name>", views.open_data_snapshot, name="open_data_snapshot"),
     # Public (logged-out) discovery of adult activities & groups
     path("discover/", views.discover, name="discover"),
     path(
@@ -276,6 +323,17 @@ urlpatterns = [
     path("account/export/", views.account_export, name="account_export"),
     path("account/calendar.ics", views.my_calendar, name="my_calendar"),  # W3-F18 self-only .ics
     path("account/delete/", views.account_delete, name="account_delete"),
+]
+
+# ADR-0029 (B5) — moderator-gated concern queue (soft/formative ConcernReview items). Views gate
+# on request.user.is_moderator (403 otherwise); links to, not duplicates, the admin Report queue.
+urlpatterns += [
+    path("moderation/", views_moderation.moderation_dashboard, name="moderation_dashboard"),
+    path(
+        "moderation/concern/<int:pk>/",
+        views_moderation.moderation_concern,
+        name="moderation_concern",
+    ),
 ]
 
 # DEBUG-only: Phase-1 React/Vite pipeline proof (Aurora design preview). Real SPA

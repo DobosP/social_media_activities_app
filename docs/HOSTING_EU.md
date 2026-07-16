@@ -292,13 +292,72 @@ WantedBy=timers.target
 sudo systemctl enable --now socialapp-jobs.timer
 ```
 
+ADR-0026 video attachments add two host requirements (cloud-init installs both): the `ffmpeg`
+package (prod refuses to boot with `MEDIA_VIDEO_ENABLED=True` without it) and the frequent
+`socialapp-media.timer` (`deploy/systemd/socialapp-media.{service,timer}` — a minutely, `--limit 2`
+drain of pending transcodes; a no-op when the queue is empty). Budget roughly one CPU core while a
+clip transcodes (`MEDIA_VIDEO_THREADS=2` caps it); the in-app single-flight guard keeps uploads
+from stacking concurrent encodes on the box.
+
 > Equivalent plain crontab line if you prefer: `0 3 * * * cd /home/app/social_media_activities_app && set -a && . ./.env && .venv/bin/python manage.py run_due_jobs`.
 > Set `MESSAGING_RETENTION_DAYS` (in `.env`, read by the job) to the period your DPO defines — `0`
 > disables that purge. Running `run_due_jobs` is **required**: without it, retention never runs and
 > suspensions never auto-lift (GDPR Art.5(1)(e) storage limitation + DSA proportionality). (Thread
 > Posts are permanent + audited — there is no chat purge to configure.)
 
-### 3.8 Optional: docker-compose variant
+### 3.8 Agent API sidecar (optional)
+
+A separate stdlib-only Go binary (`services/agentapi/`) can front high-volume AI-agent read
+traffic instead of routing it through Django/daphne. It serves `GET /agent/v1/*` from the same
+public-data JSON snapshot that `python manage.py export_agent_snapshot` writes (fanned out daily
+by `run_due_jobs`, § 3.7) — it never opens a database connection itself, which matters because
+`DB_POOL_MAX_SIZE=4` leaves very little Postgres connection headroom on this box for a second
+consumer. Deploy it once agent traffic becomes material (crawl volume that would otherwise
+compete with real users for daphne's threads/DB pool); skip it at launch — the sidecar is
+optional and the Caddy route 502s harmlessly if it isn't running.
+
+**Build** (no Go toolchain needed on the host — build in a throwaway container and copy the
+static binary out):
+
+```bash
+docker run --rm -v "$PWD":/src -w /src/services/agentapi golang:1.23 \
+  go build -o /src/services/agentapi/agentapi .
+# or, using the service's own Dockerfile:
+docker build -t agentapi-build services/agentapi
+docker create --name agentapi-extract agentapi-build
+docker cp agentapi-extract:/agentapi ./services/agentapi/agentapi
+docker rm agentapi-extract
+```
+
+**Install on the box:**
+
+```bash
+sudo -u app mkdir -p /home/app/agentapi
+scp services/agentapi/agentapi app@<ip>:/home/app/agentapi/agentapi
+ssh app@<ip> chmod +x /home/app/agentapi/agentapi
+sudo install -m 644 /home/app/social_media_activities_app/deploy/systemd/agentapi.service /etc/systemd/system/agentapi.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now agentapi
+```
+
+**Routing:** `deploy/cloud-init.yaml.tftpl`'s Caddyfile already `handle`s `/agent/*` to
+`127.0.0.1:8090` and falls through everything else to daphne on `127.0.0.1:8000` — no separate
+Caddy config is needed once the systemd unit above is running.
+
+**Env vars** (set in `deploy/systemd/agentapi.service`, not the Django `.env`):
+
+| Var | Default | Meaning |
+|---|---|---|
+| `AGENT_API_ADDR` | `:8090` | Listen address; the unit binds `127.0.0.1:8090` (loopback only, Caddy fronts it). |
+| `AGENT_SNAPSHOT_DIR` | `/data/agent_snapshot` | Where it reads the exported JSON snapshot; the unit points this at `/home/app/social_media_activities_app/var/agent_snapshot`. |
+| `AGENT_API_TRUST_PROXY` | unset | Set to `1` behind Caddy so the sidecar's own rate limiter reads `X-Forwarded-For` correctly. |
+
+**Django side:** `AGENT_SNAPSHOT_DIR` must also be set in the app's `.env` (it already is —
+`deploy/cloud-init.yaml.tftpl` renders it) so `run_due_jobs` actually populates the snapshot
+directory the sidecar reads. An empty/unset `AGENT_SNAPSHOT_DIR` in the Django `.env` disables
+the export job (no snapshot is written), which leaves the sidecar serving nothing.
+
+### 3.9 Optional: docker-compose variant
 
 If you'd rather run the app in a container against host Postgres/Redis, a minimal
 `docker-compose.prod.yml` (the systemd path above is simpler to operate — pick one):

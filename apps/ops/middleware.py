@@ -16,16 +16,55 @@ class MaxBodySizeMiddleware:
     """Reject requests whose declared Content-Length exceeds MAX_REQUEST_BODY_BYTES, before
     the body is read. Django's DATA_UPLOAD_MAX_MEMORY_SIZE does not cover DRF's JSON parser
     (which reads request.body directly), so without this an unbounded JSON POST could
-    exhaust the single ASGI worker's memory (a cheap DoS). 413 = Payload Too Large."""
+    exhaust the single ASGI worker's memory (a cheap DoS). 413 = Payload Too Large.
+
+    ADR-0026: when video attachments are enabled, multipart POSTs to the thread-post endpoint
+    (the only surface that accepts a video) of an activity whose cohort may carry video get a
+    larger cap — MEDIA_VIDEO_MAX_UPLOAD_BYTES plus multipart overhead. The cohort lookup (one
+    indexed pk query) keeps the global cap on minor-cohort threads, so the larger pre-auth
+    disk-spool window exists only where a video upload is actually possible (review finding).
+    The global cap is unchanged for every other request; Django spools big multipart parts to
+    a temp file, so the larger cap never means a big in-memory body."""
+
+    # The registered route carries a trailing slash (apps/web/urls.py) and APPEND_SLASH never
+    # redirects a POST, so real traffic always arrives WITH the slash; the bare form is kept
+    # for defence against a proxy normalising it away.
+    _VIDEO_UPLOAD_PATH = re.compile(r"^/activities/(\d+)/post/?$")
+    _MULTIPART_OVERHEAD = 2 * 1024 * 1024
 
     def __init__(self, get_response):
         self.get_response = get_response
         self.max_bytes = getattr(settings, "MAX_REQUEST_BODY_BYTES", 8 * 1024 * 1024)
 
+    def _limit_for(self, request) -> int:
+        match = None
+        if (
+            request.method == "POST"
+            and getattr(settings, "MEDIA_VIDEO_ENABLED", False)
+            and request.content_type == "multipart/form-data"
+        ):
+            match = self._VIDEO_UPLOAD_PATH.match(request.path)
+        if match and self._cohort_accepts_video(match.group(1)):
+            video_cap = (
+                getattr(settings, "MEDIA_VIDEO_MAX_UPLOAD_BYTES", 80 * 1024 * 1024)
+                + self._MULTIPART_OVERHEAD
+            )
+            return max(self.max_bytes, video_cap)
+        return self.max_bytes
+
+    @staticmethod
+    def _cohort_accepts_video(activity_pk: str) -> bool:
+        from apps.social.models import Activity
+
+        cohort = (
+            Activity.objects.filter(pk=int(activity_pk)).values_list("cohort", flat=True).first()
+        )
+        return cohort in set(getattr(settings, "MEDIA_VIDEO_COHORTS", ["adult"]))
+
     def __call__(self, request):
         length = request.META.get("CONTENT_LENGTH") or 0
         try:
-            if int(length) > self.max_bytes:
+            if int(length) > self._limit_for(request):
                 return JsonResponse({"detail": "Request body too large."}, status=413)
         except (TypeError, ValueError):
             pass
