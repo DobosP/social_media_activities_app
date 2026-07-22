@@ -153,7 +153,7 @@ rpds-py==2026.6.3
     #   referencing
 s3transfer==0.19.1
     # via boto3
-sentry-sdk[django]==2.64.0
+sentry-sdk[django]==2.66.0
     # via -r requirements.in
 service-identity==26.1.0
     # via twisted
