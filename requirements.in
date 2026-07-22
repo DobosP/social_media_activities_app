@@ -27,7 +27,7 @@ Pillow>=11.0
 # D2: EUDI age-attestation verification — JWS (ES256) signature checks.
 PyJWT[crypto]>=2.9
 # D6/prod: S3-compatible object storage backend for media blobs (R2/MinIO/AWS).
-boto3>=1.43.36
+boto3>=1.43.53
 # P3: pgvector-backed interest similarity for recommendations.
 pgvector>=0.5,<0.6
 # Production-only (activated by env): a shared Redis backs the cache (global rate limits)
