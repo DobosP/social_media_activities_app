@@ -50,6 +50,23 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   bounded ASGI/database/cache behavior, EU-hosting templates, and deferred jobs
   are present. The production Terraform has never been applied.
 
+- **Canonical `/v1` client adopted (2026-07-26, romania_scraper ADR-0069), and it
+  fixed a real defect.** This app's private `iter()` followed `next_cursor` until it
+  was falsy with **no repeated-cursor guard**, and `max_records` defaults to `None`
+  — so there was no bound of any kind. A server or bug echoing one cursor made it
+  re-yield the same page forever. `iter_app_pack()` always had that guard; the
+  product walk did not. Transport and pagination now come from the generated,
+  stamped `apps/ingestion/sources/_roedu_client_core.py`, so product iteration fails
+  closed with `RoeduContractError` on a repeated cursor. The app also **gains
+  `pages()`**, which the private copy lacked entirely, making page-level
+  snapshot/release metadata reachable. What stays local is this app's publication
+  gate — redistributability, policy-attestation currency, venue/commerce/event shape
+  validation, canonical pack naming, `iter_app_pack`/`read_app_pack` — because
+  deciding what may be published is this app's decision, not `/v1` transport.
+  `RoeduContractError` is imported from the core so the domain layer and shared
+  paging raise one class. Hand-edits are caught by the `VENDORED_SHA256` stamp
+  (`apps/ingestion/tests/test_roedu_client_vendored.py`, 10 tests).
+
 ## Safety and operating gates
 
 - A RO-EDU venue remains child-venue **UNKNOWN** until staff approve that exact
