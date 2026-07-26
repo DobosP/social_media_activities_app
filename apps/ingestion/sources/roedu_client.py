@@ -1,20 +1,33 @@
-"""roedu_client — tiny, dependency-free client for the RO-EDU data platform.
+"""roedu_client — the RO-EDU data-platform client for this app.
 
-Stdlib only (urllib), so it vendors cleanly into any consuming app (Django, etc.)
-without adding a dependency. Talks to romania_scraper.dataapi over HTTP, handles
-cursor pagination, and re-exposes the platform's license gate as the server
-already enforces it (the client trusts but the server is fail-closed).
+Since 2026-07-26 the transport and pagination come from the **canonical** client,
+which the producer owns because it defines the `/v1` contract (romania_scraper
+ADR-0069). The generated, stamped copy is `_roedu_client_core.py`; this module
+keeps the historical import path stable and holds what is genuinely this app's:
 
-    from roedu_client import RoeduClient
+    from .roedu_client import RoeduClient
     c = RoeduClient("http://localhost:8077", api_key="social-app-dev")
-    for venue in c.iter("venues", city="Cluj-Napoca"):
-        ...
-    for chunk in c.iter("education_chunks", document_type="curriculum", language="ro"):
+    for item in c.iter_app_pack("venues:public"):
         ...
 
-Config via env when vendored into an app:
-    ROEDU_API_URL   (default http://localhost:8077)
-    ROEDU_API_KEY
+**Adoption fixed a real defect.** This app's private `iter()` followed
+`next_cursor` until it was falsy, with no repeated-cursor guard — and
+`max_records` defaults to `None`, so there was no bound of any kind. A server or
+bug echoing one cursor made it re-yield the same page forever. The app-pack walk
+(`iter_app_pack`) always had that guard; the product walk did not. Product
+iteration now fails closed with `RoeduContractError` on a repeated cursor, from
+the shared core.
+
+What stays local and why: everything that decides whether an app-pack item is
+*redistributable* for this app — policy-attestation currency, venue/commerce/event
+shape validation, canonical pack naming, requested-filter matching — plus
+`iter_app_pack`, which additionally pins one immutable product view per pack. That
+is this app's publication gate, not part of the `/v1` transport contract, so
+ADR-0069 keeps it here.
+
+To change transport/pagination behaviour, edit the canonical file in
+romania_scraper and re-run `scripts/sync_roedu_client.py --write`; never edit
+`_roedu_client_core.py` here.
 """
 
 from __future__ import annotations
@@ -170,9 +183,10 @@ _APP_PACK_PAGE_FIELDS = frozenset(
     }
 )
 
-
-class RoeduContractError(ValueError):
-    """The serving response changed identity while it was being paged."""
+# RoeduContractError comes from the shared core so an `except` in this app's
+# domain layer and one raised by shared paging are the same class.
+from ._roedu_client_core import RoeduClient as _CanonicalClient
+from ._roedu_client_core import RoeduContractError
 
 
 @dataclass(frozen=True)
@@ -576,38 +590,8 @@ def _item_matches_requested_filters(item: dict, filters: dict) -> bool:
     )
 
 
-class RoeduClient:
-    def __init__(
-        self,
-        base_url: str | None = None,
-        api_key: str | None = None,
-        *,
-        timeout: float = 30.0,
-    ) -> None:
-        default_url = os.environ.get("ROEDU_API_URL", "http://localhost:8077")
-        self.base_url = (base_url or default_url).rstrip("/")
-        self.api_key = api_key or os.environ.get("ROEDU_API_KEY", "")
-        self.timeout = timeout
-
-    def _get(self, path: str, params: dict | None = None) -> dict:
-        url = f"{self.base_url}{path}"
-        if params:
-            clean = {k: v for k, v in params.items() if v is not None}
-            url += "?" + urllib.parse.urlencode(clean)
-        headers = {"X-API-Key": self.api_key, "Accept": "application/json"}
-        req = urllib.request.Request(url, headers=headers)
-        with urllib.request.urlopen(req, timeout=self.timeout) as resp:  # noqa: S310
-            return json.loads(resp.read().decode("utf-8"))
-
-    def health(self) -> dict:
-        return self._get("/v1/health")
-
-    def products(self) -> list[dict]:
-        return self._get("/v1/products")
-
-    def page(self, product: str, *, cursor: str | None = None, limit: int = 200, **filters) -> dict:
-        params = {"cursor": cursor, "limit": limit, **filters}
-        return self._get(f"/v1/products/{product}", params)
+class RoeduClient(_CanonicalClient):
+    """Canonical `/v1` transport and pagination plus this app's app-pack layer."""
 
     def app_pack_page(
         self,
@@ -628,25 +612,6 @@ class RoeduClient:
             raise RoeduContractError("social app-pack filters are unsupported or invalid")
         params = {"layer": layer, "cursor": cursor, "limit": limit, **filters}
         return self._get(f"/v1/app-packs/{app}/{pack}", params)
-
-    def iter(
-        self, product: str, *, limit: int = 200, max_records: int | None = None, **filters
-    ) -> Iterator[dict]:
-        """Yield every record of a product, following cursors. Stops at max_records."""
-        cursor = None
-        seen = 0
-        while True:
-            page = self.page(product, cursor=cursor, limit=limit, **filters)
-            if not page.get("available", False):
-                return
-            for rec in page.get("records", []):
-                yield rec
-                seen += 1
-                if max_records and seen >= max_records:
-                    return
-            cursor = page.get("next_cursor")
-            if not cursor:
-                return
 
     def iter_app_pack(
         self,
