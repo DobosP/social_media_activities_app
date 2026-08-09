@@ -907,7 +907,9 @@ def _reverse_action(action) -> bool:
     """Reverse a granted-appeal action, mirroring lift_expired_suspensions. Returns True iff an
     account was reactivated. An account sanction reactivates the target user IF no OTHER un-lifted
     active sanction applies; a REMOVE un-hides the content IF no other un-lifted REMOVE keeps it
-    hidden; a WARN has no material effect to undo (the OVERTURNED status is the record). The
+    hidden AND the author did not also delete it themselves (``is_author_deleted`` — the author's
+    own withdrawal is not a moderation outcome and is never undone here); a WARN has no material
+    effect to undo (the OVERTURNED status is the record). The
     overturned action is marked ``lifted_at`` so it no longer counts as active anywhere."""
     from django.contrib.auth import get_user_model
 
@@ -948,6 +950,13 @@ def _reverse_action(action) -> bool:
 
             release_identity_ban(target)
     elif action.action == ModerationAction.Action.REMOVE and hasattr(target, "is_hidden"):
+        # Lock the content row for this read-modify-write, mirroring the account branch above.
+        # Without it, an author self-delete committing between our read of ``is_author_deleted``
+        # and our write of ``is_hidden`` is lost (the self-delete writes only the provenance
+        # column via update_fields) and the post is republished — the exact outcome the
+        # provenance check exists to prevent, reached by race instead of by ordering.
+        # ``delete_own_post`` takes the same lock, so the two serialise.
+        target = type(target)._default_manager.select_for_update().get(pk=target.pk)
         other_remove = (
             ModerationAction.objects.filter(
                 target_type=action.target_type,
@@ -961,9 +970,23 @@ def _reverse_action(action) -> bool:
         if action.lifted_at is None:
             action.lifted_at = now
             action.save(update_fields=["lifted_at"])
+        # An author's own deletion is not a moderation outcome and no reversal may undo it:
+        # self-delete and REMOVE share ``is_hidden``, so without this provenance check
+        # overturning a REMOVE would republish content the author had withdrawn. The action
+        # is still lifted above (the moderation record is reversed, and the sanction/appeal
+        # status the user sees is accurate) — only the un-hide is declined.
         if not other_remove and target.is_hidden:
-            target.is_hidden = False
-            target.save(update_fields=["is_hidden"])
+            if getattr(target, "is_author_deleted", False):
+                record_audit(
+                    "moderation.reversal_left_hidden",
+                    actor=None,
+                    target=target,
+                    action_id=action.pk,
+                    reason="author_deleted",
+                )
+            else:
+                target.is_hidden = False
+                target.save(update_fields=["is_hidden"])
     return reactivated
 
 
@@ -1150,23 +1173,52 @@ def safety_record_for(user, *, limit: int = 50) -> dict:
     user_ct = ContentType.objects.get_for_model(get_user_model())
     activity_ct = ContentType.objects.get_for_model(Activity)
     post_ct = ContentType.objects.get_for_model(Post)
-    # Intentional caps so the "own content" id sets can't blow up the IN clause.
-    own_activity_ids = list(Activity.objects.filter(owner=user).values_list("id", flat=True)[:500])
-    own_post_ids = list(Post.objects.filter(author=user).values_list("id", flat=True)[:1000])
+    # Own content matches by SUBQUERY, never a materialised id list. This used to be
+    # ``[:500]`` / ``[:1000]`` python-side slices, which silently truncated the record for a
+    # heavy user — and because ``Post.Meta.ordering`` is ``["created_at"]`` the post slice kept
+    # the OLDEST rows and dropped the NEWEST, i.e. exactly the posts most likely to carry a live
+    # decision (``Activity`` declares no ordering, so its slice truncated arbitrarily instead).
+    # A dropped action is not merely missing from this page: ``action_id`` is what the DSA Art.17
+    # contest form posts, so a truncated row was also uncontestable from here.
+    #
+    # The three scopes are queried SEPARATELY and merged, rather than OR-ed into one filter.
+    # PostgreSQL can only BitmapOr when EVERY arm is an index qual, and a SubPlan never is — so
+    # the single-filter form seq-scans ModerationAction for every reader (measured on 500k rows:
+    # 1.3ms index-driven vs 38ms seq scan) and, worse, its hashed SubPlan cannot spill: past
+    # roughly hash_mem/20 own rows the planner demotes to a per-outer-row SubPlan and the query
+    # effectively stops returning. At top level each ``target_id__in`` is pulled up into an
+    # indexable semijoin over (target_type, target_id) instead.
+    #
+    # Each branch takes its own ``[:limit]`` before the merge: the global newest ``limit`` rows
+    # can never contain more than ``limit`` from any single branch, so this cannot under-report.
+    own_activity_ids = Activity.objects.filter(owner=user).values("id")
+    own_post_ids = Post.objects.filter(author=user).values("id")
     now = timezone.now()
 
-    action_q = (
-        Q(target_type=user_ct, target_id=user.id)
-        | Q(target_type=activity_ct, target_id__in=own_activity_ids)
-        | Q(target_type=post_ct, target_id__in=own_post_ids)
-    )
-    actions = list(
-        ModerationAction.objects.filter(action_q)
-        .only(
-            "action", "reason", "target_type", "target_id", "expires_at", "lifted_at", "created_at"
+    def _recent(**scope):
+        return (
+            ModerationAction.objects.filter(**scope)
+            .only(
+                "action",
+                "reason",
+                "target_type",
+                "target_id",
+                "expires_at",
+                "lifted_at",
+                "created_at",
+            )
+            .order_by("-created_at")[:limit]
         )
-        .order_by("-created_at")[:limit]
-    )
+
+    actions = sorted(
+        [
+            *_recent(target_type=user_ct, target_id=user.id),
+            *_recent(target_type=activity_ct, target_id__in=own_activity_ids),
+            *_recent(target_type=post_ct, target_id__in=own_post_ids),
+        ],
+        key=lambda a: a.created_at,
+        reverse=True,
+    )[:limit]
     # One query for the appeal status of every shown decision (no N+1); a decision with no row is
     # contestable, one with a row shows its status and can't be appealed again (one per action).
     appeal_by_action = {

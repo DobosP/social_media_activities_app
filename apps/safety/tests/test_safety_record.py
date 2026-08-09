@@ -1,5 +1,7 @@
 """F19: a user's own DSA Art.16/17 record — self-scoped, no leak of others' data."""
 
+import datetime as dt
+
 import pytest
 from django.contrib.gis.geos import Point
 from django.utils import timezone
@@ -76,6 +78,58 @@ def test_no_moderator_identity_leak():
     # The suspension row is present and flagged active (not expired / not lifted).
     assert record["decisions"][0]["is_sanction"] is True
     assert record["decisions"][0]["is_active"] is True
+
+
+def test_shows_decision_on_newest_post_of_a_high_volume_author():
+    # Regression: the own-content prefilter used to be a python-side ``[:1000]`` slice, and
+    # because Post.Meta.ordering is ["created_at"] it kept the OLDEST posts — so a decision on
+    # a prolific member's NEWEST post silently vanished from their DSA Art.16/17 record, and
+    # with it the action_id the contest form needs. The bound must be the newest-first action
+    # query, not the id set.
+    from apps.social.models import Post
+
+    user, mod = _user("sr_vol"), _user("sr_volmod")
+    activity = _activity(user)
+    Post.objects.bulk_create(
+        [Post(thread=activity.thread, author=user, body=f"filler {i}") for i in range(1000)]
+    )
+    # auto_now_add gives the fillers "now"; age them so the target below is unambiguously the
+    # newest and the old slice would have consumed its entire budget on the fillers.
+    Post.objects.filter(author=user).update(created_at=timezone.now() - dt.timedelta(days=1))
+    newest = Post.objects.create(thread=activity.thread, author=user, body="the reported one")
+
+    take_action(mod, newest, ModerationAction.Action.REMOVE, ReasonCode.OTHER)
+    record = safety_record_for(user)
+    assert [d["scope"] for d in record["decisions"]] == ["one of your posts"]
+    assert record["decisions"][0]["can_appeal"] is True
+
+
+def test_shows_decision_on_activity_beyond_the_old_500_cap():
+    # The Activity branch had the same truncation, and worse: Activity declares no Meta.ordering,
+    # so the old [:500] slice dropped an ARBITRARY, planner-dependent 500 — two page loads could
+    # disagree about which of your own decisions exist.
+    from apps.social.models import Activity
+
+    user, mod = _user("sr_act"), _user("sr_actmod")
+    seed = _activity(user)
+    Activity.objects.bulk_create(
+        [
+            Activity(
+                owner=user,
+                place=seed.place,
+                activity_type=seed.activity_type,
+                title=f"filler {i}",
+                starts_at=seed.starts_at,
+                cohort=seed.cohort,
+            )
+            for i in range(500)
+        ]
+    )
+    target = Activity.objects.filter(owner=user).order_by("-id").first()
+
+    take_action(mod, target, ModerationAction.Action.REMOVE, ReasonCode.OTHER)
+    record = safety_record_for(user)
+    assert [d["scope"] for d in record["decisions"]] == ["one of your activities"]
 
 
 def test_query_is_bounded(django_assert_max_num_queries):

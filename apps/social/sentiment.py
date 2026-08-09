@@ -129,9 +129,11 @@ def _candidate_posts():
     """Posts that could carry a footer this run: any with a reaction/dissent row OR an existing
     footer (so a lapsed aggregate can be re-derived down to silence). Owner objects are prefetched
     so the per-post cohort/audience reads don't re-query the thread owner. Hidden posts are
-    EXCLUDED — a moderator REMOVE sets ``is_hidden`` without bumping ``updated_at``, so a hidden
-    post would otherwise keep accruing/latching a footer even though the render already refuses to
-    show it (ADR-0029): don't do the work, and don't latch, on a hidden post."""
+    EXCLUDED — a moderator REMOVE *and* an author self-delete both set ``is_hidden`` without
+    bumping ``updated_at``, so a hidden post would otherwise keep accruing/latching a footer even
+    though the render already refuses to show it (ADR-0029): don't do the work, and don't latch, on
+    a hidden post. Provenance (``is_author_deleted``) is deliberately NOT consulted here — both
+    causes mean "not rendered", which is the only thing this pass cares about."""
     ids = set(PostReaction.objects.values_list("post_id", flat=True))
     ids |= set(PostDissent.objects.values_list("post_id", flat=True))
     ids |= set(PostSentimentFooter.objects.values_list("post_id", flat=True))
@@ -404,9 +406,9 @@ def evaluate_concerns(now=None) -> dict:
         # Per-post isolation: one bad post must not abort the whole ladder pass.
         try:
             if post.is_hidden:
-                # A moderator REMOVE (is_hidden, no updated_at bump) must not let the ladder keep
-                # accruing/delivering a note on a hidden post; the sensors above already saw its
-                # rows. Skip the LADDER only.
+                # A moderator REMOVE or an author self-delete (both set is_hidden, neither bumps
+                # updated_at) must not let the ladder keep accruing/delivering a note on a hidden
+                # post; the sensors above already saw its rows. Skip the LADDER only.
                 continue
             owner_obj = post.thread.owner_object
             if owner_obj is None or getattr(owner_obj, "is_hidden", False):

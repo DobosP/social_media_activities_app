@@ -2393,10 +2393,28 @@ def delete_own_post(author, post) -> Post:
 
     if post.author_id != author.id:
         raise NotEligible(_("You can only delete your own messages."))
+    # Re-read under a row lock before deciding: the caller's instance was fetched outside any
+    # transaction, and a concurrent appeal reversal (safety.services::_reverse_action, which
+    # takes the SAME lock) reads is_author_deleted and writes is_hidden. Without this the two
+    # interleave into is_hidden=False + is_author_deleted=True — the post republished despite
+    # the author deleting it, which is the outcome the provenance flag exists to prevent.
+    # Refreshed IN PLACE (not rebound) so callers holding this instance — several views and
+    # the reply/react gates that read ``post.is_hidden`` right after — see the new state.
+    post.refresh_from_db(from_queryset=Post.objects.select_for_update())
     if post.is_hidden:
-        return post  # idempotent; never un-hides a moderation action
+        # Idempotent, and never un-hides a moderation action — but DO record the author's
+        # own deletion of an already moderator-hidden post, so a later overturn of that
+        # REMOVE cannot republish content the author had also withdrawn.
+        if not post.is_author_deleted:
+            # Provenance only — deliberately NOT bumping updated_at: the row is already
+            # hidden and its content did not change, and updated_at means "content edited".
+            post.is_author_deleted = True
+            post.save(update_fields=["is_author_deleted"])
+            record_audit("post.self_deleted", actor=author, target=post)
+        return post
     post.is_hidden = True
-    post.save(update_fields=["is_hidden", "updated_at"])
+    post.is_author_deleted = True
+    post.save(update_fields=["is_hidden", "is_author_deleted", "updated_at"])
     record_audit("post.self_deleted", actor=author, target=post)
     return post
 

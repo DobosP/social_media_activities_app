@@ -67,6 +67,25 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   paging raise one class. Hand-edits are caught by the `VENDORED_SHA256` stamp
   (`apps/ingestion/tests/test_roedu_client_vendored.py`, 10 tests).
 
+- **DSA Art.17 redress correctness (2026-08-09).** Two defects on the statutory
+  redress path are fixed. (1) An author self-delete and a moderator REMOVE both set
+  `Post.is_hidden`, so granting an appeal republished content the author had
+  withdrawn; `Post.is_author_deleted` now records provenance, `_reverse_action`
+  declines the un-hide (auditing `moderation.reversal_left_hidden`) while still
+  lifting the action, and migration `social/0039` backfills historical self-deletes
+  from the `post.self_deleted` audit rows so the fix is retroactive. (2)
+  `safety_record_for` prefiltered own content with `[:500]`/`[:1000]` id slices;
+  because `Post.Meta.ordering` is `["created_at"]` those kept the OLDEST rows and
+  dropped the NEWEST, hiding recent decisions from the Art.16/17 record and from the
+  GDPR Art.20 export, and making them uncontestable from that surface (the contest
+  form posts `action_id`). The activity slice was worse still — `Activity` declares
+  no ordering, so its 500 were arbitrary and could differ between page loads. The
+  three scopes are now queried separately (each `[:limit]`, merged newest-first)
+  rather than OR-ed: PostgreSQL cannot BitmapOr across a SubPlan arm, so the
+  single-filter form seq-scans the whole action table and its hashed SubPlan cannot
+  spill. Content rows are locked with `select_for_update` on both the reversal and
+  the self-delete path, so the two cannot interleave into a republish.
+
 ## Safety and operating gates
 
 - A RO-EDU venue remains child-venue **UNKNOWN** until staff approve that exact
@@ -86,9 +105,10 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   the serving repo's producer dependency must be intentionally bumped first.
 - Complete held-event review UX, curated cultural child-venue policy, localized
   taxonomy/cinema mapping, and production alerting/shared-state operations.
-- The separate E2EE-DM reaction picker still needs cosmetic adaptation to the
-  sentiment facet slugs. Operational gaps remain in
-  `docs/PRODUCTION_READINESS.md`.
+- Operational gaps remain in `docs/PRODUCTION_READINESS.md`. Treat an unticked box
+  in `docs/archive/COMPLETENESS_GAPS_2026-06.md` as a hypothesis to verify against
+  HEAD, not a specification — two backlog surveys turned already-shipped entries
+  back into planned work.
 
 ## Verification
 

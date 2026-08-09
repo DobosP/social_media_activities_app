@@ -1,6 +1,12 @@
 > **SUPERSEDED (2026-07-02):** as the session entry point — new sessions start at the repo-root
 > `STATUS.md`, never here. The open **P0/P1/P2 items below remain the live gap tracker** for the
 > audited 2026-06 feature waves (STATUS.md points here for them).
+>
+> **⚠️ RE-CHECK THE CODE BEFORE TREATING AN UNTICKED BOX AS WORK (2026-08-09).** This tracker was
+> written in 2026-06 and several feature waves have landed since without their boxes being ticked
+> here. Two consecutive backlog surveys (2026-07-24, 2026-08-09) turned stale entries into planned
+> work that was in fact already shipped — the 2026-08-09 pass killed four such items, ticked below.
+> An unticked box is a hypothesis to verify against HEAD, never a specification.
 
 # Completeness & gap tracker — last-2-sessions features (2026-06-21)
 
@@ -94,9 +100,9 @@ asks — see `AGENTS.md`.
   all three ADULT-only walls hold (no minor can ever be listed), no creation path missed, migration safe.
 - [ ] **(LOW, optional) Anonymous public card exposes exact start time + named venue** of an adult
   meetup — consider a coarser display. Copy/privacy review. `apps/web/templates/web/discover.html`.
-- [ ] **(LOW) No DRF endpoint for the public-listing opt-IN toggle** — API-first organisers can't make
-  an activity/group discoverable (web-only). Add a cohort-gated `set_public_listing` action to the
-  activity/group DRF viewset. `apps/discovery/` or `apps/social/` viewset.
+- [x] **(LOW) No DRF endpoint for the public-listing opt-IN toggle** — DONE (verified 2026-08-09):
+  `set_public_listing` ships as a DRF action on BOTH viewsets, `apps/social/views.py:190`
+  (activities) and `:501` (groups).
 - [ ] **Progression "Level N of 5" copy is borderline gamification (inv. 2).** Product call: keep the
   self-only level, or revert to a plain meetup count. Keep `PROGRESSION_AVATAR_PUBLIC` off and assert
   it can never combine with minor cohorts. `apps/accounts/avatars.py`, `apps/recommendations/services.py`.
@@ -156,9 +162,12 @@ asks — see `AGENTS.md`.
 - [ ] No automated orphan-blob reconciliation/observability (purge failures only logged).
 
 ### P1 hardening
-- [ ] `render.yaml` `healthCheckPath` still points to `/healthz`, not the richer `/readyz` (which is
-  shipped but unused by the reference deploy).
-- [ ] `render.yaml` never provisions `METRICS_TOKEN` → `/metrics` 403s by default (no observability).
+- [x] `render.yaml` `healthCheckPath` — DONE (verified 2026-08-09): `render.yaml:26` is
+  `healthCheckPath: /readyz`.
+- [x] `render.yaml` never provisions `METRICS_TOKEN` — DONE (verified 2026-08-09): declared at
+  `render.yaml:62-63` as `sync: false`, i.e. an operator-supplied secret slot (a value cannot live
+  in a committed blueprint). Note the original symptom survives an apply where the operator leaves
+  the field blank — `apps/ops/views.py:106-110` still 403s on an empty token.
 - [ ] "Covering indexes" is overstated — only one plain composite `AddIndexConcurrently`
   (`notifications/0017`); no INCLUDE/covering indexes, none added to `Post`/`AuditLog`.
 - [ ] N+1 work was a single fix (`messaging.participant_keys`), not a systematic feed/thread/
@@ -193,7 +202,11 @@ asks — see `AGENTS.md`.
 - [x] Fix stale `301`-redirect docstrings/comments — DONE (`feat/seo-cleanup`): corrected `seo.py`
   `place_path`, `sitemaps.py`, `seo_tags.py`, and the `test_seo_discoverability.py` comment to the real
   behaviour (200 + canonical `<link>`, never a redirect). Docs/comments only — no behaviour change.
-- [ ] Thin observability on the IndexNow job; consider surfacing submit success/failure to the heartbeat.
+- [x] Thin observability on the IndexNow job — DONE (verified 2026-08-09). The code lives in
+  `apps/web/indexnow.py`, NOT `apps/web/seo.py` as this tracker said: `_report_summary()`
+  (`indexnow.py:55-66`) posts `{"status", "submitted", "failed"}` via `ping_heartbeat` whenever
+  `OPS_HEARTBEAT_URL` is set, and is called on both the success and the exception path (`:46-52`).
+  A 2026-07 survey grepped the wrong file and re-listed this as work.
 - [x] e2e test that a private/internal URL is rejected through the IndexNow submit — DONE
   (`feat/seo-cleanup`): `test_submit_urls_blocks_a_private_endpoint_before_any_network` points the
   endpoint at a link-local IP and asserts `safe_get` rejects it (UnsafeURLError) BEFORE any
@@ -239,7 +252,8 @@ Ordered by size + dependency. Each item is ready to build unless marked "decisio
 
 ### Small builds (< half-day each)
 
-**1. render.yaml health + metrics wiring**
+**1. render.yaml health + metrics wiring — SHIPPED (verified 2026-08-09)**
+`render.yaml:26` `healthCheckPath: /readyz`; `render.yaml:62` provisions `METRICS_TOKEN`.
 Two config-only lines in `render.yaml`.
 - Change `healthCheckPath: /healthz` → `/healthz` is fine for liveness but `/readyz` is the richer
   shipped endpoint. Change to `healthCheckPath: /readyz` (checks DB + cache connectivity).
@@ -252,14 +266,17 @@ Add `test_profile_does_not_leak_progression_to_others`: log in as user B, GET `/
 assert neither `progression_level` nor `intensity` appears in the response (base avatar only).
 Verifies the "guaranteed by view structure" claim with an explicit regression guard.
 
-**3. DRF opt-in toggle for public listing**
+**3. DRF opt-in toggle for public listing — SHIPPED (verified 2026-08-09)**
+`apps/social/views.py:190` (activities) and `:501` (groups).
 `apps/social/views.py` — add a `@action(detail=True, methods=["post"])` named `set_public_listing`
 to `ActivityViewSet` (and `GroupViewSet`). Call `social.services.set_public_listing(activity, value)`.
 Gate: `request.user == activity.organizer` + `cohort == ADULT` (service already enforces the
 ADULT-only wall; the action just exposes it). Return 200 + the updated serialized object.
 Existing service already has the full guard; this is a thin DRF plumbing task.
 
-**4. IndexNow heartbeat observability**
+**4. IndexNow heartbeat observability — SHIPPED (verified 2026-08-09)**
+Landed in `apps/web/indexnow.py:46-66` (`_report_summary`), not in `apps/web/seo.py` where this
+spec pointed. Grep the symbol, not the file named here.
 `apps/web/seo.py:submit_urls()` — after the `safe_get` call, count successes/failures, log a
 structured summary line, and (if `settings.OPS_HEARTBEAT_URL` is set) POST
 `{"status": "ok", "submitted": n, "failed": m}` via `apps.ops.heartbeat.ping_heartbeat()`.
@@ -267,7 +284,13 @@ structured summary line, and (if `settings.OPS_HEARTBEAT_URL` is set) POST
 
 ### Medium builds (half-day to 1 day)
 
-**5. Post provenance field (DSA Art.17 follow-up)**
+**5. Post provenance field (DSA Art.17 follow-up) — SHIPPED (2026-08-09,
+`fix/dsa-art17-provenance-and-scope`)**
+Built as specced, with two deviations worth recording: the migration DOES carry a data migration
+(`social/0039` backfills from the `post.self_deleted` audit rows, or the fix is not retroactive for
+posts deleted before the field existed), and `delete_own_post` also stamps provenance on a post
+that was ALREADY moderator-hidden — the delete views fetch by pk without an `is_hidden` filter, so
+"REMOVE first, then the author deletes" is reachable and was the same bug in the other order.
 Prevent a mod-remove overturn from resurrecting an author-self-deleted post.
 - `apps/social/models.py` `Post`: add `is_author_deleted = models.BooleanField(default=False)`.
 - `apps/social/services.py` `delete_own_post`: set `post.is_author_deleted = True` (alongside
@@ -277,7 +300,12 @@ Prevent a mod-remove overturn from resurrecting an author-self-deleted post.
 - Migration: `social/0NNN_post_author_deleted.py` (boolean default=False, no data migration).
 - Test: `test_overturn_remove_does_not_resurrect_author_deleted_post`.
 
-**6. F19 safety record: remove cap on contesting beyond [:500]**
+**6. F19 safety record: remove cap on contesting beyond [:500] — SHIPPED (2026-08-09,
+`fix/dsa-art17-provenance-and-scope`)**
+Note the severity was worse than specced below: `Post.Meta.ordering` is `["created_at"]`, so the
+slice kept the OLDEST rows and dropped the NEWEST — the posts most likely to carry a live decision.
+Fixed with plain subqueries (no `Subquery()` wrapper needed); the outer newest-first `[:limit]` is
+the real bound, and the `limit` default of 50 is unchanged.
 `apps/safety/services.py:safety_record_for()` — the current `[:500]`/`[:1000]` id-set caps mean
 a user with many posts/activities can't contest a decision on content beyond the cap from the
 pre-auth `/account/restricted/` surface.

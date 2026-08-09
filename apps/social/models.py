@@ -598,6 +598,13 @@ class Post(models.Model):
     # Set by a moderator REMOVE action (or an author self-delete); hidden posts are excluded
     # from thread reads but retained for audit/appeal.
     is_hidden = models.BooleanField(default=False)
+    # PROVENANCE for is_hidden, not a second visibility flag: True once the AUTHOR deleted
+    # the post themselves. Both a self-delete and a moderator REMOVE set is_hidden, so
+    # without this the two are indistinguishable and overturning a REMOVE on a post the
+    # author had ALSO deleted would republish content its author withdrew (DSA Art.17
+    # reversal, apps/safety/services.py::_reverse_action). Never cleared: an author delete
+    # is the author's own decision and no moderation outcome may undo it.
+    is_author_deleted = models.BooleanField(default=False)
     # WhatsApp-style one-level quote-reply. SET_NULL (not CASCADE) so moderator-hiding or
     # GDPR-erasing a parent never destroys a child's coordination text — an orphaned reply
     # renders as a plain top-level post. Depth is capped at ONE LEVEL IN THE SERVICE

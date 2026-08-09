@@ -176,6 +176,89 @@ def test_overturn_unhides_removed_content():
     assert activity.is_hidden is False
 
 
+def test_overturn_does_not_republish_a_post_the_author_deleted():
+    # Regression: a self-delete and a moderator REMOVE both set Post.is_hidden, so without
+    # is_author_deleted provenance a granted appeal republished content the AUTHOR withdrew.
+    # The action must still lift (the moderation record is genuinely reversed) — only the
+    # un-hide is declined.
+    from apps.social.services import delete_own_post, post_to_thread
+
+    mod, owner = _user("adp_mod", staff=True), _user("adp_owner")
+    activity = _activity(owner)
+    post = post_to_thread(owner, activity, "my own words")
+    delete_own_post(owner, post)
+    post.refresh_from_db()
+    assert (post.is_hidden, post.is_author_deleted) == (True, True)
+
+    action = take_action(mod, post, ModerationAction.Action.REMOVE, ReasonCode.OTHER)
+    appeal = file_appeal(owner, action, "the removal was wrong")
+    resolve_appeal(mod, appeal, grant=True)
+
+    post.refresh_from_db()
+    action.refresh_from_db()
+    assert post.is_hidden is True  # the author's own deletion survives the reversal
+    assert action.lifted_at is not None  # but the moderation decision IS reversed
+
+
+def test_overturn_does_not_republish_when_author_deleted_after_the_removal():
+    # The other order: moderator REMOVEs first, then the author deletes it themselves (reachable
+    # — the delete views fetch the post without an is_hidden filter). The self-delete must still
+    # register provenance on the already-hidden row, or the appeal republishes it.
+    from apps.social.services import delete_own_post, post_to_thread
+
+    mod, owner = _user("adp2_mod", staff=True), _user("adp2_owner")
+    activity = _activity(owner)
+    post = post_to_thread(owner, activity, "my own words")
+    action = take_action(mod, post, ModerationAction.Action.REMOVE, ReasonCode.OTHER)
+    delete_own_post(owner, post)
+    post.refresh_from_db()
+    assert post.is_author_deleted is True
+
+    appeal = file_appeal(owner, action, "the removal was wrong")
+    resolve_appeal(mod, appeal, grant=True)
+    post.refresh_from_db()
+    assert post.is_hidden is True
+
+
+def test_self_delete_decides_on_locked_db_state_not_the_caller_s_stale_instance():
+    # Race guard (deterministic stand-in for the interleaving): the delete views hand
+    # delete_own_post an instance fetched outside any transaction, so a concurrent appeal
+    # reversal can un-hide the row underneath it. If the branch decision were made on the stale
+    # in-memory is_hidden=True, the call would take the "already hidden" path and only stamp
+    # provenance — leaving the post PUBLICLY VISIBLE with is_author_deleted=True, the exact state
+    # the provenance flag exists to prevent. Re-reading under select_for_update fixes the
+    # decision to committed state.
+    from apps.social.models import Post
+    from apps.social.services import delete_own_post, post_to_thread
+
+    owner = _user("stale_owner")
+    activity = _activity(owner)
+    post = post_to_thread(owner, activity, "my own words")
+    delete_own_post(owner, post)
+    assert post.is_hidden is True  # the caller's instance now says hidden
+
+    # Someone else un-hides the row (what a granted appeal used to do) — the instance is stale.
+    Post.objects.filter(pk=post.pk).update(is_hidden=False, is_author_deleted=False)
+
+    delete_own_post(owner, post)
+    post.refresh_from_db()
+    assert (post.is_hidden, post.is_author_deleted) == (True, True)
+
+
+def test_overturn_still_unhides_a_post_the_author_never_deleted():
+    # The provenance guard must not break the ordinary REMOVE reversal for posts.
+    from apps.social.services import post_to_thread
+
+    mod, owner = _user("adp3_mod", staff=True), _user("adp3_owner")
+    activity = _activity(owner)
+    post = post_to_thread(owner, activity, "perfectly fine")
+    action = take_action(mod, post, ModerationAction.Action.REMOVE, ReasonCode.OTHER)
+    appeal = file_appeal(owner, action, "this was fine")
+    resolve_appeal(mod, appeal, grant=True)
+    post.refresh_from_db()
+    assert post.is_hidden is False
+
+
 def test_resolve_is_idempotent():
     mod, user = _user("re_mod4", staff=True), _user("re_user4")
     action = take_action(mod, user, ModerationAction.Action.SUSPEND, ReasonCode.SPAM)
