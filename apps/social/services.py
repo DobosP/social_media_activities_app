@@ -7,6 +7,7 @@ import calendar
 import logging
 import re
 from datetime import timedelta
+from typing import NamedTuple
 
 from django.conf import settings
 from django.db import transaction
@@ -2382,13 +2383,32 @@ def edit_post(author, post, body: str) -> Post:
     return post
 
 
+class DeleteOwnPostResult(NamedTuple):
+    """What ``delete_own_post`` actually did: ``post`` is the same instance the caller passed
+    (refreshed in place), and ``was_moderation_hidden`` is True only when a standing —
+    un-lifted — REMOVE (per ``safety.targets_with_unlifted_remove``) held the post and this
+    call recorded the author's own deletion on top — the views surface that case, because the
+    author never saw their delete visibly change anything AND there is an actual decision in
+    their safety record to point at. A hide with NO ModerationAction row (admin manual hide,
+    backfilled chat row) still gets the stamp but reports False: no decision exists, so no
+    flash may claim one."""
+
+    post: Post
+    was_moderation_hidden: bool
+
+
 @transaction.atomic
-def delete_own_post(author, post) -> Post:
+def delete_own_post(author, post) -> DeleteOwnPostResult:
     """Author soft-delete: flag the post hidden so it drops from member reads but the row is
-    RETAINED for audit/appeal (like a moderator REMOVE). Refuses a post already moderator-
-    hidden (no clobbering a moderation record). Because snippets are render-derived, a
-    self-deleted parent's quote drops from its replies on next read automatically. GDPR
-    erasure (apps/ops) stays the only hard-delete path."""
+    RETAINED for audit/appeal (like a moderator REMOVE). Three-way behavior, decided under the
+    row lock: a visible post is hidden and stamped ``is_author_deleted``; a post ALREADY
+    hidden by the platform — moderator REMOVE, admin manual hide, or a backfilled row — gets
+    ONLY the provenance stamp (never clobbering the hide that stands — and when the hide IS a
+    standing REMOVE, the stamp is refused outright while the author's own PENDING contest of
+    it is undecided, so a stale click can't silently forfeit the restore half of a remedy
+    they're actively pursuing); a repeat self-delete is a silent idempotent no-op. Because
+    snippets are render-derived, a self-deleted parent's quote drops from its replies on next
+    read automatically. GDPR erasure (apps/ops) stays the only hard-delete path."""
     from apps.safety.services import record_audit
 
     if post.author_id != author.id:
@@ -2402,21 +2422,61 @@ def delete_own_post(author, post) -> Post:
     # the reply/react gates that read ``post.is_hidden`` right after — see the new state.
     post.refresh_from_db(from_queryset=Post.objects.select_for_update())
     if post.is_hidden:
-        # Idempotent, and never un-hides a moderation action — but DO record the author's
-        # own deletion of an already moderator-hidden post, so a later overturn of that
-        # REMOVE cannot republish content the author had also withdrawn.
-        if not post.is_author_deleted:
-            # Provenance only — deliberately NOT bumping updated_at: the row is already
-            # hidden and its content did not change, and updated_at means "content edited".
-            post.is_author_deleted = True
-            post.save(update_fields=["is_author_deleted"])
-            record_audit("post.self_deleted", actor=author, target=post)
-        return post
+        if post.is_author_deleted:
+            # Idempotent repeat — silent, or every double-click would flash moderation copy.
+            return DeleteOwnPostResult(post, False)
+        # Everything that CLAIMS a moderation decision keys on an actual standing — un-lifted
+        # — REMOVE, never on bare is_hidden: an admin manual hide or a backfilled chat row
+        # has NO ModerationAction, so the author's safety record is empty and the views'
+        # "hidden by a moderation decision" flash would point them at nothing. Decided under
+        # the row lock we already hold. The provenance stamp below is NOT gated — it records
+        # the author's act whatever hid the row.
+        from apps.safety.services import targets_with_unlifted_remove
+
+        was_moderation_hidden = bool(targets_with_unlifted_remove(Post, [post.pk]))
+        # The author is actively CONTESTING the standing REMOVE that hid this post: two
+        # contradictory intents, and the irreversible one (the permanent provenance stamp)
+        # must not win from a stale click. Refusing is self-healing — a granted contest makes
+        # the post visible again so a normal delete works, and after an uphold the next delete
+        # takes the stamp path below. The appeal filter repeats the helper's REMOVE +
+        # lifted_at__isnull=True shape because it additionally joins through ModerationAppeal;
+        # it is skipped when the helper found no standing REMOVE (the join requires one).
+        from django.contrib.contenttypes.models import ContentType
+
+        from apps.safety.models import ModerationAction, ModerationAppeal
+
+        if (
+            was_moderation_hidden
+            and ModerationAppeal.objects.filter(
+                status=ModerationAppeal.Status.PENDING,
+                action__action=ModerationAction.Action.REMOVE,
+                action__lifted_at__isnull=True,
+                action__target_type=ContentType.objects.get_for_model(Post),
+                action__target_id=post.pk,
+            ).exists()
+        ):
+            raise NotEligible(
+                _(
+                    "You're contesting the moderation decision that hid this message, so it "
+                    "wasn't deleted. If your contest succeeds and nothing else is holding "
+                    "the message, it will come back — you can delete it then if you still "
+                    "want to."
+                )
+            )
+        # Never un-hides — but DO record the author's own deletion of an already-hidden
+        # post, so a later overturn of a REMOVE cannot republish content the author had
+        # also withdrawn.
+        # Provenance only — deliberately NOT bumping updated_at: the row is already hidden
+        # and its content did not change, and updated_at means "content edited".
+        post.is_author_deleted = True
+        post.save(update_fields=["is_author_deleted"])
+        record_audit("post.self_deleted", actor=author, target=post)
+        return DeleteOwnPostResult(post, was_moderation_hidden)
     post.is_hidden = True
     post.is_author_deleted = True
     post.save(update_fields=["is_hidden", "is_author_deleted", "updated_at"])
     record_audit("post.self_deleted", actor=author, target=post)
-    return post
+    return DeleteOwnPostResult(post, False)
 
 
 def broadcast_post(post, *, edited=False) -> None:

@@ -170,7 +170,9 @@ class WardExportView(APIView):
         ward = get_object_or_404(User, public_id=public_id)
         if not is_guardian_of(request.user, ward):
             raise PermissionDenied("You are not this user's guardian.")
-        return Response(build_user_export(ward))
+        # for_self=False — the READER here is the guardian, not the data subject: the ward's
+        # own self-deleted post bodies stay "[removed]" (see accounts.export._thread_posts).
+        return Response(build_user_export(ward, for_self=False))
 
 
 class WardConsentView(APIView):

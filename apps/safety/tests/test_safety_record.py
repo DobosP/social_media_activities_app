@@ -132,13 +132,141 @@ def test_shows_decision_on_activity_beyond_the_old_500_cap():
     assert [d["scope"] for d in record["decisions"]] == ["one of your activities"]
 
 
+def test_safety_record_marks_author_deleted_removed_post():
+    # "content_author_deleted" answers "will reversing THIS decision restore the content?" —
+    # True ONLY for a REMOVE-on-Post whose post the author also deleted themselves AND which
+    # is still hidden.
+    from django.contrib.contenttypes.models import ContentType
+
+    from apps.social.models import Post
+    from apps.social.services import delete_own_post, post_to_thread
+
+    # Explicit far-out pk: the collision post below must have id == user.id, and a sequence-
+    # assigned user id could someday coincide with a sequence-assigned post id (flaky). A pk
+    # no sequence reaches in a test session makes the collision deterministic and safe.
+    user = User.objects.create_user(id=9_876_543, username="sr_ad", password="pw")
+    apply_assurance(user, AssuranceResult(age_band=AgeBand.ADULT, provider="dev"))
+    mod = _user("sr_admod")
+    activity = _activity(user)
+    deleted = post_to_thread(user, activity, "my own words")
+    delete_own_post(user, deleted)
+    removed_deleted = take_action(mod, deleted, ModerationAction.Action.REMOVE, ReasonCode.OTHER)
+    kept = post_to_thread(user, activity, "perfectly fine")
+    removed_kept = take_action(mod, kept, ModerationAction.Action.REMOVE, ReasonCode.SPAM)
+    warned_deleted = take_action(mod, deleted, ModerationAction.Action.WARN, ReasonCode.SPAM)
+    # Author-deleted but LIVE: an operator un-hide in PostAdmin (or a migration-0039
+    # republished row) clears is_hidden while is_author_deleted stays — the page must not
+    # claim "the message stays deleted" about a live post (agrees with _reverse_action,
+    # which only declines the un-hide while the post IS hidden). Posted BEFORE the activity-
+    # level REMOVE below: a hidden activity refuses new posts.
+    unhidden = post_to_thread(user, activity, "deleted then operator-unhidden")
+    delete_own_post(user, unhidden)
+    removed_unhidden = take_action(mod, unhidden, ModerationAction.Action.REMOVE, ReasonCode.OTHER)
+    Post.objects.filter(pk=unhidden.pk).update(is_hidden=False)
+    on_activity = take_action(mod, activity, ModerationAction.Action.REMOVE, ReasonCode.OTHER)
+    on_account = take_action(mod, user, ModerationAction.Action.WARN, ReasonCode.SPAM)
+    # False-positive guard: a USER-targeted action whose target_id collides with an
+    # author-deleted post id must never inherit the flag (a user-typed target_id is a user id).
+    collision_post = Post.objects.create(
+        id=user.id,
+        thread=activity.thread,
+        author=user,
+        body="id collides with the account",
+        is_hidden=True,
+        is_author_deleted=True,
+    )
+    # The collision post carries its own post-typed REMOVE, so user.id IS in the author-deleted
+    # id set — which makes the colliding user-typed row below stay False ONLY because of the
+    # projection's target-type check (delete that check and this matrix fails). Without this
+    # row the guard is inert: the id set never contains user.id in the first place.
+    removed_collision_post = take_action(
+        mod, collision_post, ModerationAction.Action.REMOVE, ReasonCode.OTHER
+    )
+    colliding = ModerationAction.objects.create(
+        moderator=mod,
+        target_type=ContentType.objects.get_for_model(User),
+        target_id=user.id,
+        action=ModerationAction.Action.REMOVE,
+        reason=ReasonCode.SPAM,
+    )
+    flags = {
+        d["action_id"]: d["content_author_deleted"] for d in safety_record_for(user)["decisions"]
+    }
+    assert flags == {
+        removed_deleted.id: True,  # REMOVE on a self-deleted post — flagged
+        removed_kept.id: False,  # ordinary REMOVE-on-post
+        warned_deleted.id: False,  # a WARN reversal restores nothing, so no flag
+        on_activity.id: False,  # activity scope
+        on_account.id: False,  # account scope
+        removed_unhidden.id: False,  # author-deleted but LIVE — nothing "stays deleted"
+        removed_collision_post.id: True,  # genuinely author-deleted + hidden post
+        colliding.id: False,  # the id-collision guard (user-typed row, same target_id)
+    }
+
+
+def test_safety_record_reports_totals_and_truncation():
+    # Honest truncation: the record (and the Art.20 export built from it) must say when the
+    # shown lists are capped, with exact totals.
+    user, mod = _user("sr_tt"), _user("sr_ttm")
+    activity = _activity(user)
+    take_action(mod, user, ModerationAction.Action.WARN, ReasonCode.SPAM)
+    take_action(mod, user, ModerationAction.Action.SUSPEND, ReasonCode.SPAM)
+    take_action(mod, activity, ModerationAction.Action.REMOVE, ReasonCode.OTHER)
+    for _ in range(3):
+        file_report(user, mod, ReasonCode.SPAM)
+    rec = safety_record_for(user, limit=2)
+    assert len(rec["decisions"]) == 2
+    assert rec["decisions_total"] == 3
+    assert rec["decisions_truncated"] is True
+    assert len(rec["reports"]) == 2
+    assert rec["reports_total"] == 3
+    assert rec["reports_truncated"] is True
+    full = safety_record_for(user)
+    assert full["decisions_total"] == 3
+    assert full["decisions_truncated"] is False
+    assert full["reports_total"] == 3
+    assert full["reports_truncated"] is False
+
+
+def test_author_deleted_marking_and_totals_query_cost_is_flat():
+    # The flag costs ONE query however many decisions are shown, and the totals a fixed four
+    # (3 per-scope decision counts + 1 report count) — never an OR-ed count (seq-scan/SubPlan
+    # lesson, see safety_record_for). "Flat" is asserted directly: the SAME query count at two
+    # different decision counts — a pinned exact N would flake under randomized suite order
+    # (warm-cache drift) without proving flatness.
+    from django.db import connection
+    from django.test.utils import CaptureQueriesContext
+
+    from apps.social.services import delete_own_post, post_to_thread
+
+    user, mod = _user("sr_qc"), _user("sr_qcm")
+    activity = _activity(user)
+
+    def _add_removed_deleted_posts(tags):
+        for tag in tags:
+            post = post_to_thread(user, activity, f"p{tag}")
+            delete_own_post(user, post)
+            take_action(mod, post, ModerationAction.Action.REMOVE, ReasonCode.OTHER)
+
+    _add_removed_deleted_posts("ab")
+    safety_record_for(user)  # warm the ContentType cache so both counts see the same caches
+    with CaptureQueriesContext(connection) as small:
+        safety_record_for(user)
+    _add_removed_deleted_posts("cde")
+    with CaptureQueriesContext(connection) as large:
+        assert len(safety_record_for(user)["decisions"]) == 5
+    assert len(small) == len(large)
+
+
 def test_query_is_bounded(django_assert_max_num_queries):
     user, mod = _user("sr_nq"), _user("sr_nqm")
     activity = _activity(user)
     take_action(mod, user, ModerationAction.Action.WARN, ReasonCode.SPAM)
     take_action(mod, activity, ModerationAction.Action.REMOVE, ReasonCode.OTHER)
     file_report(user, mod, ReasonCode.SPAM)
-    # A small constant number of queries regardless of row counts (no per-row N+1).
-    with django_assert_max_num_queries(8):
+    # A small constant number of queries regardless of row counts (no per-row N+1). Headroom
+    # covers the honest-truncation totals (3 per-scope decision counts + 1 report count) and
+    # the author-deleted marking query on top of the original 8.
+    with django_assert_max_num_queries(13):
         rec = safety_record_for(user)
         _ = (len(rec["decisions"]), len(rec["reports"]))

@@ -86,6 +86,30 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   spill. Content rows are locked with `select_for_update` on both the reversal and
   the self-delete path, so the two cannot interleave into a republish.
 
+- **Art.17 provenance follow-ups (2026-08-10).** Five surfaces that read the same
+  provenance question now agree, via one helper —
+  `safety.targets_with_unlifted_remove` — which is THE single implementation of "the
+  platform's removal is still in force". Two independent reasons keep content hidden:
+  the AUTHOR's own act (`is_author_deleted`, permanent, never cleared) and a standing
+  REMOVE (the platform's act, liftable). (1) A granted appeal whose un-hide is
+  declined no longer tells the user "any restriction has been removed" — the
+  notification says the message stays deleted because they deleted it, and the F19
+  record carries the same line BEFORE they decide whether to contest. (2) The
+  self-delete path refuses while a contest of the REMOVE is pending, and its flash
+  only claims a moderation decision exists when one actually does. (3) The GDPR
+  export returns the author's OWN withdrawn words to the author — but NOT to a
+  guardian on the ward path (`build_user_export(..., for_self=False)` keeps
+  `[removed]`), because the guardian is a read-only observer and a child's
+  affirmative withdrawal gets the most protective reading. **Owner decision: ratify
+  or overturn that ward-export posture.** (4) The export's own-post slice is
+  newest-first with an explicit truncation marker. (5) An expired attachment whose
+  post is hidden ONLY by the author's own deletion, with no standing REMOVE, is now
+  reclaimed rather than exempted forever — it is nobody's evidence, and permanent
+  exemption fails GDPR storage limitation (Art. 5(1)(e)). The REMOVE-then-self-delete
+  order stays exempt. An admin manual hide is byte-identical in data to a plain
+  self-delete once the author also deletes, so an admin hold that must survive the
+  author's deletion needs a real REMOVE action.
+
 ## Safety and operating gates
 
 - A RO-EDU venue remains child-venue **UNKNOWN** until staff approve that exact

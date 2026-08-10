@@ -169,6 +169,110 @@ def test_malformed_before_cursor_does_not_500():
     assert "hi" in resp.content.decode()
 
 
+def test_delete_of_moderator_hidden_post_shows_info_message():
+    # A Delete click on an already-moderator-hidden post records the author's own deletion but
+    # visibly changes nothing — without a notice the click is a silent no-op that quietly
+    # forecloses republication on a later overturn. Both delete endpoints must say what happened.
+    from apps.communities.models import Area
+    from apps.safety.models import ModerationAction, ReasonCode
+    from apps.safety.services import take_action
+
+    mod = _user("fh_mod")
+    # Activity thread endpoint.
+    owner = _user("fh_owner")
+    member = _user("fh_member")
+    activity = _activity(owner)
+    _member(activity, member)
+    post = social.post_to_thread(member, activity, "mine")
+    take_action(mod, post, ModerationAction.Action.REMOVE, ReasonCode.OTHER)
+    resp = _client(member).post(f"/activities/{activity.id}/post/{post.id}/delete/", follow=True)
+    body = resp.content.decode()
+    assert "This message had already been hidden by a moderation decision." in body
+    assert "review the decision in your safety record" in body
+    post.refresh_from_db()
+    assert post.is_author_deleted is True
+
+    # Group thread endpoint (same copy — parity).
+    gowner = _user("fh_gowner")
+    gowner.is_staff = True  # ADULT groups are staff-curated by default
+    gowner.save(update_fields=["is_staff"])
+    area = Area.objects.create(city="Cluj-Napoca", slug="fh-area", name="Cluj-Napoca")
+    cat, _ = ActivityCategory.objects.get_or_create(slug="tu-sport", defaults={"name": "Sport"})
+    atype, _ = ActivityType.objects.get_or_create(
+        slug="tu-bball", defaults={"name": "Basketball", "category": cat}
+    )
+    group = social.create_group(gowner, area=area, title="Cluj Basketball", activity_type=atype)
+    gmember = _user("fh_gmember")
+    social.join_group(gmember, group.id)
+    gpost = social.post_to_thread(gmember, group, "mine in the group")
+    take_action(mod, gpost, ModerationAction.Action.REMOVE, ReasonCode.OTHER)
+    gresp = _client(gmember).post(f"/groups/{group.id}/posts/{gpost.id}/delete/", follow=True)
+    gbody = gresp.content.decode()
+    assert "This message had already been hidden by a moderation decision." in gbody
+    gpost.refresh_from_db()
+    assert gpost.is_author_deleted is True
+
+
+def test_delete_of_admin_hidden_post_shows_no_moderation_claim():
+    # An admin manual hide (PostAdmin) sets is_hidden with NO ModerationAction, so the author's
+    # safety record shows nothing — the delete must stamp provenance silently, never flash
+    # "hidden by a moderation decision… review the decision in your safety record" (a claim
+    # about a decision that does not exist).
+    from apps.social.models import Post
+
+    owner = _user("ah_owner")
+    member = _user("ah_member")
+    activity = _activity(owner)
+    _member(activity, member)
+    post = social.post_to_thread(member, activity, "mine")
+    Post.objects.filter(pk=post.pk).update(is_hidden=True)  # as PostAdmin would
+    resp = _client(member).post(f"/activities/{activity.id}/post/{post.id}/delete/", follow=True)
+    assert "hidden by a moderation decision" not in resp.content.decode()
+    post.refresh_from_db()
+    assert post.is_author_deleted is True
+
+
+def test_repeat_self_delete_shows_no_message():
+    # An idempotent second delete of an ordinarily self-deleted post must stay silent — the
+    # moderation notice on a double-click would be alarming nonsense.
+    owner = _user("rs_owner")
+    member = _user("rs_member")
+    activity = _activity(owner)
+    _member(activity, member)
+    post = social.post_to_thread(member, activity, "mine")
+    c = _client(member)
+    c.post(f"/activities/{activity.id}/post/{post.id}/delete/")
+    resp = c.post(f"/activities/{activity.id}/post/{post.id}/delete/", follow=True)
+    assert "already been hidden by a moderation decision" not in resp.content.decode()
+
+
+def test_delete_while_contesting_shows_refusal_and_keeps_the_remedy():
+    # F2 refusal end-to-end: with the author's own contest of the hiding REMOVE still PENDING,
+    # the delete is refused (rendered via the normal SocialError flash), nothing is stamped,
+    # and the appeal is untouched.
+    from apps.safety.models import ModerationAction, ModerationAppeal, ReasonCode
+    from apps.safety.services import file_appeal, take_action
+
+    mod = _user("wc_mod")
+    owner = _user("wc_owner")
+    member = _user("wc_member")
+    activity = _activity(owner)
+    _member(activity, member)
+    post = social.post_to_thread(member, activity, "mine")
+    action = take_action(mod, post, ModerationAction.Action.REMOVE, ReasonCode.OTHER)
+    appeal = file_appeal(member, action, "the removal was wrong")
+    resp = _client(member).post(f"/activities/{activity.id}/post/{post.id}/delete/", follow=True)
+    body = resp.content.decode()
+    assert "contesting the moderation decision that hid this message" in body
+    # The promise is conditional — a SECOND standing REMOVE could also be holding the post,
+    # so the copy must not assert the message "will come back" unqualified.
+    assert "nothing else is holding the message" in body
+    post.refresh_from_db()
+    appeal.refresh_from_db()
+    assert post.is_author_deleted is False
+    assert appeal.status == ModerationAppeal.Status.PENDING
+
+
 def test_non_member_cannot_read_thread_via_cursor_or_permalink():
     owner = _user("tu_o6")
     activity = _activity(owner)

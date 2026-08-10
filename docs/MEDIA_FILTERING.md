@@ -49,7 +49,12 @@ Art. 7 (voluntary own-initiative) + GDPR legitimate interest.
   a match blocks the clip and retains the source as evidence).
 - **No media in E2EE DMs** (unscannable by design) — stricter than WhatsApp.
 - Signed, expiring, per-viewer, membership-scoped URLs; private storage; rate limits;
-  evidence-preserving purge (reported/hidden content survives ephemeral expiry).
+  evidence-preserving purge (reported/moderator-hidden content survives ephemeral expiry;
+  a post hidden only by its author's own deletion — no standing REMOVE — is reclaimed,
+  per GDPR storage limitation; an admin manual hide writes no ModerationAction row, so
+  once the author ALSO deletes it is indistinguishable in data from a plain self-delete
+  and is reclaimed too — an admin hold that must survive the author's deletion needs a
+  real REMOVE action).
 
 ## What W8 added
 
