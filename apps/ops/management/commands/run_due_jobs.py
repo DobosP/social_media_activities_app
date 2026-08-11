@@ -4,7 +4,8 @@
 It fans out to the existing per-app commands rather than re-implementing their logic:
 
   * ``purge_messaging``        — delete expired E2EE messages (retention / disappearing).
-  * ``purge_expired_attachments``— reclaim expired temporary-picture blobs (hidden/reported exempt).
+  * ``purge_expired_attachments``— reclaim expired temporary-picture blobs (hidden/reported exempt,
+    except author-self-deleted with no standing REMOVE — see the service docstring).
   * ``purge_read_notifications``— delete old read, non-DSA notifications (storage hygiene at scale).
   * ``lift_suspensions``       — reactivate accounts whose suspension or timed ban elapsed.
   * ``auto_complete_activities``— move past OPEN activities to COMPLETED.
@@ -35,7 +36,9 @@ from django.core.management.base import BaseCommand, CommandError
 # The jobs to run, in order, as (command_name, kwargs-for-call_command).
 DUE_JOBS = (
     ("purge_messaging", {}),
-    ("purge_expired_attachments", {}),
+    # Bounded like transcode_videos below (a huge expiry backlog can never monopolise the
+    # sequential tick ahead of the later safety jobs; the remainder drains on subsequent ticks).
+    ("purge_expired_attachments", {"limit": 500}),
     # ADR-0026 daily safety net (bounded so it can never monopolise the sequential tick
     # ahead of the later safety jobs; the frequent socialapp-media timer is the main drain).
     ("transcode_videos", {"limit": 2}),

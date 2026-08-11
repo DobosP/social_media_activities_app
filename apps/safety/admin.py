@@ -66,8 +66,19 @@ class ModerationAppealAdmin(admin.ModelAdmin):
     overturn reactivates the account / un-hides content and notifies the user + a CHILD's guardian.
     """
 
-    list_display = ("id", "action", "status", "appellant", "created_at", "decided_at")
+    list_display = (
+        "id",
+        "action",
+        "status",
+        "appellant",
+        "content_note",
+        "created_at",
+        "decided_at",
+    )
     list_filter = ("status",)
+    # content_note reads the appeal's action; without this the DSA queue issues one extra query
+    # per row just to render the column.
+    list_select_related = ("action", "appellant")
     readonly_fields = (
         "action",
         "appellant",
@@ -75,6 +86,7 @@ class ModerationAppealAdmin(admin.ModelAdmin):
         "created_at",
         "decided_by",
         "decided_at",
+        "content_note",
     )
     actions = ("uphold", "overturn")
 
@@ -84,6 +96,21 @@ class ModerationAppealAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+    @admin.display(description="Content note")
+    def content_note(self, obj):
+        # Pre-decision context: overturning a REMOVE never republishes content its author also
+        # deleted themselves (the un-hide is declined — apps/safety/services.py::_reverse_action),
+        # so the reviewer should know that BEFORE deciding. The action-type check runs first so
+        # only REMOVE rows pay the generic-FK resolve (a bounded, staff-only per-row read). The
+        # is_hidden gate mirrors _reverse_action: an operator-un-hidden (live) post has nothing
+        # left to republish, so the note must not claim otherwise.
+        if obj.action.action != ModerationAction.Action.REMOVE:
+            return ""
+        target = obj.action.target
+        if getattr(target, "is_author_deleted", False) and getattr(target, "is_hidden", False):
+            return "Author deleted this content themselves — overturning will not republish it."
+        return ""
 
     @admin.action(description="Uphold (decision stands)")
     def uphold(self, request, queryset):
@@ -105,10 +132,22 @@ class ModerationAppealAdmin(admin.ModelAdmin):
         done = 0
         for appeal in queryset:
             try:
-                resolve_appeal(request.user, appeal, grant=True)
+                # Capture the RETURNED instance: resolve_appeal re-reads the appeal under lock,
+                # and the transient ``reversal_outcome`` exists only on what it returns — never
+                # on this queryset's element.
+                resolved = resolve_appeal(request.user, appeal, grant=True)
                 done += 1
             except AppealError as exc:
                 self.message_user(request, f"Appeal #{appeal.pk}: {exc}", level="warning")
+                continue
+            outcome = getattr(resolved, "reversal_outcome", None)
+            if outcome and outcome.left_hidden_author_deleted:
+                self.message_user(
+                    request,
+                    f"Appeal #{appeal.pk}: overturned; the author had deleted this content "
+                    "themselves, so it stays hidden.",
+                    level="info",
+                )
         self.message_user(request, f"Overturned {done} appeal(s).")
 
 

@@ -17,7 +17,7 @@ from django.core import signing
 from django.db import close_old_connections, transaction
 from django.db.models import Q
 
-from apps.safety.services import is_blocked, record_audit
+from apps.safety.services import is_blocked, record_audit, targets_with_unlifted_remove
 from apps.social.services import current_members
 
 from . import video
@@ -1373,15 +1373,29 @@ def _under_moderation(*, post_ids, activity_ids, uploader_ids):
     )
 
 
-def purge_expired_attachments(now=None) -> int:
+def purge_expired_attachments(now=None, limit: int | None = None) -> int:
     """Reclaim the blobs of expired temporary pictures. EXEMPT (never purged) — evidence is
     preserved for moderation/appeal/DSA/law: a hidden post, a hidden activity, OR any attachment
-    whose post / containing activity / uploader is under an unresolved report. Each item is purged
-    in its OWN transaction with a fresh row-locked re-check (so a report or hide that lands after
-    the candidate snapshot still wins the race) and its own try/except (one bad blob is logged and
-    skipped, retried next tick — it never starves the rest). Idempotent (skips already-purged
-    rows). The row is RETAINED (only the bytes go) so the audit trail + sha256 survive. Returns the
-    number of blobs reclaimed."""
+    whose post / containing activity / uploader is under an unresolved report. ONE narrowing of
+    the hidden-post arm: a post hidden by its author's own deletion (``is_author_deleted``) with
+    no standing — un-lifted — REMOVE (per ``safety.targets_with_unlifted_remove``) is nobody's
+    evidence, so its blob IS reclaimed — exempting author-withdrawn bytes on every run forever
+    fails GDPR storage limitation (Art. 5(1)(e)). The REMOVE-then-self-delete order stays exempt
+    (the platform's hold is still in force). An admin manual hide (no ModerationAction row) stays
+    exempt only while the author has NOT also deleted: once ``is_author_deleted`` is set,
+    admin-hide-then-self-delete is byte-identical in data to a plain self-delete (is_hidden +
+    is_author_deleted + no action row), so the blob is reclaimed — an admin hold that must
+    survive the author's deletion needs a real REMOVE action.
+    Each item is purged in its OWN transaction with a fresh row-locked re-check (best-effort:
+    anything COMMITTED by re-check time is honoured, but a writer blocked on our row lock —
+    e.g. a take_action whose is_hidden UPDATE is waiting — has its ModerationAction row still
+    uncommitted and thus invisible under READ COMMITTED; the standing-REMOVE re-check shares
+    that visibility limit with the ``_under_moderation`` re-check) and its own try/except (one
+    bad blob is logged and skipped, retried next tick — it never starves the rest). Idempotent
+    (skips already-purged rows). The row is RETAINED (only the bytes go) so the audit trail +
+    sha256 survive. ``limit`` caps the number of blobs reclaimed this run (exempt/skipped rows
+    don't count) so a huge expiry backlog can't monopolise a shared cron tick — the remainder
+    drains on subsequent runs. Returns the number of blobs reclaimed."""
     from django.utils import timezone
 
     from apps.social.models import Post
@@ -1401,6 +1415,12 @@ def purge_expired_attachments(now=None) -> int:
         activity_ids={a.post.thread.activity_id for a in candidates},
         uploader_ids={a.uploader_id for a in candidates},
     )
+    # An author-deleted post is released from the hidden-post arm UNLESS a standing REMOVE also
+    # holds it (the REMOVE-then-self-delete order). ONE batched query over the (bounded)
+    # author-deleted candidates; the flags come free off the select_related snapshot.
+    removed_pids = targets_with_unlifted_remove(
+        Post, {a.post_id for a in candidates if a.post.is_hidden and a.post.is_author_deleted}
+    )
     storage = get_storage()
     purged = 0
     for att in candidates:
@@ -1408,17 +1428,23 @@ def purge_expired_attachments(now=None) -> int:
         if att.status == Attachment.Status.BLOCKED:
             continue  # safety-blocked video: the retained source IS the evidence — never purge
         if (
-            att.post.is_hidden
-            or activity.is_hidden
+            (att.post.is_hidden and (not att.post.is_author_deleted or att.post_id in removed_pids))
+            # Thread.activity is NULLABLE (a group thread) — guard the dereference so one such
+            # row can never abort the whole run (this check sits OUTSIDE the per-item try).
+            or (activity is not None and (activity.is_hidden or activity.id in reported_acts))
             or att.post_id in reported_posts
-            or activity.id in reported_acts
             or att.uploader_id in reported_users
         ):
             continue  # preserve evidence — reconsidered on the next run
         try:
             with transaction.atomic():
-                # Re-check under a row lock against FRESH state: a report filed or a hide applied
-                # since the snapshot must be honoured (evidence preservation can't lose the race).
+                # Re-check under a row lock against FRESH state: a report, hide, or REMOVE
+                # COMMITTED since the snapshot is honoured here. Best-effort, not airtight:
+                # take_action inserts its ModerationAction BEFORE its is_hidden UPDATE blocks
+                # on this row lock, so under READ COMMITTED that still-uncommitted row is
+                # invisible to the re-check — the same visibility limit the _under_moderation
+                # re-check has always had. The fresh standing-REMOVE query fires ONLY for a row
+                # the author-deleted release is about to reclaim.
                 # Lock ONLY the Post row (of=("self",)): Thread.activity is nullable (group threads
                 # have no activity), so select_related makes that join a LEFT OUTER JOIN, and an
                 # unscoped FOR UPDATE can't lock the nullable side. We only re-READ the activity's
@@ -1434,8 +1460,14 @@ def purge_expired_attachments(now=None) -> int:
                     uploader_ids=[att.uploader_id],
                 )
                 if (
-                    locked.is_hidden
-                    or locked.thread.activity.is_hidden
+                    (
+                        locked.is_hidden
+                        and (
+                            not locked.is_author_deleted
+                            or bool(targets_with_unlifted_remove(Post, [locked.id]))
+                        )
+                    )
+                    or (locked.thread.activity is not None and locked.thread.activity.is_hidden)
                     or fresh_p
                     or fresh_a
                     or fresh_u
@@ -1486,6 +1518,8 @@ def purge_expired_attachments(now=None) -> int:
                 for key in keys:
                     storage.delete(key)
             purged += 1
+            if limit is not None and purged >= limit:
+                break  # batch cap reached; the remainder drains on the next run
         except Exception:
             # One unreclaimable blob (storage hiccup) must not abort the whole sweep; it stays
             # not-purged and is retried on the next tick.

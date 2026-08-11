@@ -572,9 +572,23 @@ def group_post_delete(request, pk, post_id):
     group = _visible_group_or_404(request.user, pk)
     post = get_object_or_404(Post, pk=post_id, thread=group.thread)
     try:
-        social.delete_own_post(request.user, post)
+        result = social.delete_own_post(request.user, post)
     except social.SocialError as exc:
         messages.error(request, _msg(exc))
+    else:
+        if result.was_moderation_hidden:
+            # A standing REMOVE already hid the post, so the author's deletion changed nothing
+            # they can see — say what WAS recorded and what it forecloses (the overturn of that
+            # decision can no longer republish this message). Names no reason or moderator;
+            # points at the safety record, the allowlisted surface — the flag is True only
+            # when an actual ModerationAction stands, so the record really shows a decision
+            # (an admin manual hide or backfilled row stamps silently instead).
+            messages.info(
+                request,
+                "This message had already been hidden by a moderation decision. Your deletion "
+                "is recorded — the message will stay deleted even if that decision is later "
+                "reversed. You can review the decision in your safety record.",
+            )
     return redirect("group_detail", pk=pk)
 
 
@@ -2854,9 +2868,18 @@ def activity_post_delete(request, pk, post_id):
     activity = _visible_activity_or_404(request.user, pk)
     post = get_object_or_404(Post, pk=post_id, thread=activity.thread)
     try:
-        social.delete_own_post(request.user, post)
+        result = social.delete_own_post(request.user, post)
     except social.SocialError as exc:
         messages.error(request, _msg(exc))
+    else:
+        if result.was_moderation_hidden:
+            # See group_post_delete: same copy for the same standing-REMOVE case.
+            messages.info(
+                request,
+                "This message had already been hidden by a moderation decision. Your deletion "
+                "is recorded — the message will stay deleted even if that decision is later "
+                "reversed. You can review the decision in your safety record.",
+            )
     return redirect("activity_detail", pk=pk)
 
 

@@ -102,3 +102,20 @@ def test_safety_record_shows_own_records_only():
 def test_safety_record_is_login_gated():
     resp = Client().get("/my-safety-record/")
     assert resp.status_code in (302, 301)  # redirect to login
+
+
+def test_safety_record_notes_author_deleted_removed_post():
+    # A REMOVE on a post the author ALSO deleted themselves carries the "reversing this won't
+    # bring it back" line — and ONLY that row does, so the user learns the restoration limit
+    # BEFORE deciding whether to contest.
+    from apps.social.services import delete_own_post, post_to_thread
+
+    user, mod = _user("f19ad"), _user("f19admod")
+    activity = _activity(user)
+    deleted = post_to_thread(user, activity, "my own words")
+    delete_own_post(user, deleted)
+    take_action(mod, deleted, ModerationAction.Action.REMOVE, ReasonCode.OTHER)
+    kept = post_to_thread(user, activity, "perfectly fine")
+    take_action(mod, kept, ModerationAction.Action.REMOVE, ReasonCode.SPAM)
+    body = _client(user).get("/my-safety-record/").content.decode()
+    assert body.count("You also deleted this message yourself.") == 1

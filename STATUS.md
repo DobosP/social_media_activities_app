@@ -67,6 +67,55 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   paging raise one class. Hand-edits are caught by the `VENDORED_SHA256` stamp
   (`apps/ingestion/tests/test_roedu_client_vendored.py`, 10 tests).
 
+- **DSA Art.17 redress correctness (2026-08-09).** Two defects on the statutory
+  redress path are fixed. (1) An author self-delete and a moderator REMOVE both set
+  `Post.is_hidden`, so granting an appeal republished content the author had
+  withdrawn; `Post.is_author_deleted` now records provenance, `_reverse_action`
+  declines the un-hide (auditing `moderation.reversal_left_hidden`) while still
+  lifting the action, and migration `social/0039` backfills historical self-deletes
+  from the `post.self_deleted` audit rows so the fix is retroactive. (2)
+  `safety_record_for` prefiltered own content with `[:500]`/`[:1000]` id slices;
+  because `Post.Meta.ordering` is `["created_at"]` those kept the OLDEST rows and
+  dropped the NEWEST, hiding recent decisions from the Art.16/17 record and from the
+  GDPR Art.20 export, and making them uncontestable from that surface (the contest
+  form posts `action_id`). The activity slice was worse still — `Activity` declares
+  no ordering, so its 500 were arbitrary and could differ between page loads. The
+  three scopes are now queried separately (each `[:limit]`, merged newest-first)
+  rather than OR-ed: PostgreSQL cannot BitmapOr across a SubPlan arm, so the
+  single-filter form seq-scans the whole action table and its hashed SubPlan cannot
+  spill. Content rows are locked with `select_for_update` on both the reversal and
+  the self-delete path, so the two cannot interleave into a republish.
+
+- **Art.17 provenance follow-ups (2026-08-10).** Five surfaces that read the same
+  provenance question now agree, via one helper —
+  `safety.targets_with_unlifted_remove` — which is THE single implementation of "the
+  platform's removal is still in force". Two independent reasons keep content hidden:
+  the AUTHOR's own act (`is_author_deleted`, permanent, never cleared) and a standing
+  REMOVE (the platform's act, liftable). (1) A granted appeal whose un-hide is
+  declined no longer tells the user "any restriction has been removed" — the
+  notification says the message stays deleted because they deleted it, and the F19
+  record carries the same line BEFORE they decide whether to contest. (2) The
+  self-delete path refuses while a contest of the REMOVE is pending, and its flash
+  only claims a moderation decision exists when one actually does. (3) The GDPR
+  export returns the author's OWN withdrawn words to the author — but NOT to a
+  guardian on the ward path (`build_user_export(..., for_self=False)` keeps
+  `[removed]`), because the guardian is a read-only observer and a child's
+  affirmative withdrawal gets the most protective reading. **Owner-ratified
+  2026-08-12**, together with two related calls: the self-delete refusal while a
+  contest of the REMOVE is pending stands (accepting that no appeal-withdraw path
+  exists, so it holds until a moderator decides), and `PostAdmin`'s editable
+  `is_hidden` stays an operator escape hatch — with the consequence recorded at
+  `apps/social/admin.py`, that an admin hide carries no provenance and so becomes
+  indistinguishable from a self-delete once the author also deletes. (4) The
+  export's own-post slice is
+  newest-first with an explicit truncation marker. (5) An expired attachment whose
+  post is hidden ONLY by the author's own deletion, with no standing REMOVE, is now
+  reclaimed rather than exempted forever — it is nobody's evidence, and permanent
+  exemption fails GDPR storage limitation (Art. 5(1)(e)). The REMOVE-then-self-delete
+  order stays exempt. An admin manual hide is byte-identical in data to a plain
+  self-delete once the author also deletes, so an admin hold that must survive the
+  author's deletion needs a real REMOVE action.
+
 ## Safety and operating gates
 
 - A RO-EDU venue remains child-venue **UNKNOWN** until staff approve that exact
@@ -86,9 +135,10 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   the serving repo's producer dependency must be intentionally bumped first.
 - Complete held-event review UX, curated cultural child-venue policy, localized
   taxonomy/cinema mapping, and production alerting/shared-state operations.
-- The separate E2EE-DM reaction picker still needs cosmetic adaptation to the
-  sentiment facet slugs. Operational gaps remain in
-  `docs/PRODUCTION_READINESS.md`.
+- Operational gaps remain in `docs/PRODUCTION_READINESS.md`. Treat an unticked box
+  in `docs/archive/COMPLETENESS_GAPS_2026-06.md` as a hypothesis to verify against
+  HEAD, not a specification — two backlog surveys turned already-shipped entries
+  back into planned work.
 
 ## Verification
 

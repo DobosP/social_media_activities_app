@@ -42,8 +42,23 @@ class JoinVoteAdmin(admin.ModelAdmin):
 
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
-    list_display = ("thread", "author", "created_at")
+    # is_hidden/is_author_deleted are surfaced so an operator can answer "why is this post
+    # hidden?" from the changelist — the question the provenance field exists to answer.
+    list_display = ("thread", "author", "created_at", "is_hidden", "is_author_deleted")
     search_fields = ("author__username", "body")
+    # is_author_deleted records the AUTHOR's own decision, so nothing may clear it — not a
+    # granted appeal (apps/safety/services.py::_reverse_action) and not an admin edit either.
+    # Without this the model's "never cleared" invariant is only a convention, and clearing it
+    # here would re-arm the republish path with no audit row. is_hidden stays editable: it is a
+    # moderation state with a legitimate operator escape hatch (owner-ratified 2026-08-12).
+    #
+    # KNOW THIS BEFORE HIDING A POST HERE: an admin hide writes no ModerationAction, so it has no
+    # provenance. Once the author ALSO deletes the post, the row (is_hidden + is_author_deleted +
+    # no action row) is byte-identical to a plain self-delete — indistinguishable in data — and
+    # its expired media blob is therefore reclaimed by the purge rather than preserved as
+    # evidence (apps/media/services.py::purge_expired_attachments). An administrative hold that
+    # must survive the author's own deletion needs a real REMOVE action, not this checkbox.
+    readonly_fields = ("is_author_deleted",)
 
 
 @admin.register(UserPlaceProposal)

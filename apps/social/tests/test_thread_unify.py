@@ -211,6 +211,46 @@ def test_cannot_delete_others_post(setup):
         social.delete_own_post(member, post)
 
 
+@pytest.mark.django_db
+def test_delete_own_post_returns_branch_flag(setup):
+    # DeleteOwnPostResult.was_moderation_hidden across the branches: normal delete False,
+    # idempotent repeat False (and silent), stamp-on-REMOVE-hidden True — the views key the
+    # informational flash off it, so the branches must be reported truthfully.
+    from apps.safety.models import ModerationAction, ReasonCode
+    from apps.safety.services import take_action
+
+    owner, member, activity = setup
+    post = social.post_to_thread(member, activity, "mine")
+    first = social.delete_own_post(member, post)
+    assert (first.post, first.was_moderation_hidden) == (post, False)
+    repeat = social.delete_own_post(member, post)
+    assert repeat.was_moderation_hidden is False
+
+    mod = make_user("tu_mod1")
+    hidden = social.post_to_thread(member, activity, "modded")
+    take_action(mod, hidden, ModerationAction.Action.REMOVE, ReasonCode.OTHER)
+    result = social.delete_own_post(member, hidden)
+    assert result.was_moderation_hidden is True
+    hidden.refresh_from_db()
+    assert (hidden.is_hidden, hidden.is_author_deleted) == (True, True)
+
+
+@pytest.mark.django_db
+def test_delete_of_hidden_post_without_action_row_reports_no_decision(setup):
+    # An admin manual hide (PostAdmin) and a backfilled chat row set is_hidden with NO
+    # ModerationAction — there is no decision in the author's safety record, so the flag the
+    # views turn into "hidden by a moderation decision… see your safety record" must stay
+    # False. The provenance stamp itself is NOT gated: it records the author's act whatever
+    # hid the row.
+    owner, member, activity = setup
+    post = social.post_to_thread(member, activity, "admin-hidden")
+    social.Post.objects.filter(pk=post.pk).update(is_hidden=True)  # as PostAdmin would
+    result = social.delete_own_post(member, post)
+    assert result.was_moderation_hidden is False
+    post.refresh_from_db()
+    assert (post.is_hidden, post.is_author_deleted) == (True, True)
+
+
 # --- bounded keyset pagination -------------------------------------------------------------
 
 

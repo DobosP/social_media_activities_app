@@ -145,8 +145,14 @@ it's a **provisioning** gap (the shipped `render.yaml` is a free-tier *demo*).
   yet, so automated zero-downtime migration linting remains open.
 
 ### Reliability
-- **Retries / circuit-breakers** for Stripe + booking (the Overpass/scanner pattern, applied
-  consistently) so a transient 5xx isn't a 500 that pins a worker for 15s.
+- **Retries / circuit-breakers for Stripe + booking — DONE (verified 2026-08-09)**:
+  `apps/ops/resilience.py` implements bounded retries with backoff, a per-provider
+  CLOSED/OPEN/HALF_OPEN breaker, and a clean `ProviderUnavailable`. Wired at
+  `apps/donations/providers.py:82-90` (`breaker_key="stripe"`, with the donation reference as
+  Stripe's Idempotency-Key so a retried POST cannot double-charge) and
+  `apps/booking/providers/demo_rest.py:39-68` (`breaker_key="booking"`; the POST correctly sets
+  `retry_on_status=()` / `retry_timeouts=False` because a booking may have landed server-side).
+  Residual: breaker state is in-process — shared-state operation is the scale-tier item below.
 - **`/readyz` — DONE (2026-07-04)**: `/healthz` is pure liveness; `/readyz` checks DB plus
   Redis/storage only when configured and returns degraded booleans without backend details.
   SIGTERM/SIGINT and the ops test seam mark the process as draining, making `/readyz` return 503
@@ -166,9 +172,22 @@ it's a **provisioning** gap (the shipped `render.yaml` is a free-tier *demo*).
   `SECURE_CONTENT_TYPE_NOSNIFF=True`, `SECURE_REFERRER_POLICY="same-origin"`,
   `SECURE_CROSS_ORIGIN_OPENER_POLICY="same-origin"`, and a conservative `Permissions-Policy` that
   disables camera/microphone while scoping geolocation to self (ADR-0015).
-- **SAST + container scanning** in CI — CodeQL/Semgrep (Django ruleset) + Bandit + Trivy/Grype on the
-  built image (fail on HIGH/CRITICAL).
-- **Container non-root** (matters on the self-hosted Hetzner path) + read-only rootfs.
+- **SAST + container scanning in CI — MOSTLY DONE (verified 2026-08-09)**: Bandit runs as BLOCKING
+  Python SAST (`.github/workflows/ci.yml:156-161`, no `continue-on-error`), pip-audit enforces on
+  push-to-main and on the daily schedule (`:146-155`), and Trivy scans the built image (`:129-137`).
+  Two residuals only: Trivy is deliberately report-only (`--exit-code 0`, with the documented intent
+  to flip once the base image is on a clean cadence — an owner call on CVE-triage cadence, since
+  flipping means an untriaged base-image CVE blocks unrelated PRs), and there is no CodeQL/Semgrep
+  Django ruleset on top of Bandit.
+- **Container non-root — DONE**: `Dockerfile:57` `USER appuser`. **Read-only rootfs — PARTIAL on the
+  self-hosted path**: `socialapp.service`, `socialapp-jobs.service`, `socialapp-media.service` and
+  `agentapi.service` set `NoNewPrivileges=true` + `ProtectSystem=strict` + `ProtectHome=read-only` +
+  `PrivateTmp=true`. **`deploy/systemd/socialapp-backup.service:12-13` sets only `NoNewPrivileges` +
+  `PrivateTmp`** — no `ProtectSystem`, no `ProtectHome` — and it is the unit that runs `pg_dump` and
+  sources S3 credentials from `.env`, i.e. where `ProtectHome=read-only` earns the most. Two
+  residuals, then: that unit, and the container path (no `read_only:` in docker-compose). Note
+  `readOnlyRootFilesystem` is a Kubernetes podSpec field and this repo ships no Kubernetes
+  manifests — do not grep for it.
 - **PDF/ClamAV** scanner wired before scaling adult PDF sharing.
 - **Independent pen test** before public beta (close the cheap items above first).
 

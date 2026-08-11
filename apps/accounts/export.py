@@ -13,15 +13,33 @@ user's (or, via the guardian variant, their ward's) own data, never other member
 from django.utils import timezone
 
 # Export schema version, so consumers can detect format changes over time.
-EXPORT_SCHEMA_VERSION = 4  # ADR-0029: + own_sentiment_actions (own reaction/dissent/concern rows)
+# v5 (DSA Art.17 provenance/scope fix): thread_posts is now {"items", "total", "truncated"} instead
+# of a bare list (F4 — the old ascending order_by()[:cap] silently kept the OLDEST 5000 posts and
+# dropped the newest for a prolific author); an author-self-deleted post's own body is released to
+# ITS OWNER (the data subject on the self path only — the guardian ward-export keeps "[removed]",
+# see ``for_self``) instead of "[removed]" unless a standing platform REMOVE also holds it, and each
+# row gains a "status" token of visible|deleted_by_you|removed (F3); safety_record gains additive
+# decisions_total/decisions_truncated/reports_total/reports_truncated keys (the safety-record half
+# of F4, added in apps/safety/services.py).
+#
+# Two truncation idioms coexist in v5 BY DESIGN: thread_posts is reshaped in this version anyway,
+# so it uses the self-describing {"items", "total", "truncated"} envelope; safety_record's lists
+# predate v5 and stay flat, with truncation arriving as ADDITIVE sibling keys (*_total/*_truncated)
+# so existing v4 consumers of those lists keep parsing. New list sections should use the envelope.
+EXPORT_SCHEMA_VERSION = 5
 
 
-def build_user_export(user) -> dict:
+def build_user_export(user, *, for_self: bool = True) -> dict:
     """Return a JSON-serialisable dict of all personal data held for ``user``.
 
     Self-contained and side-effect free: callers (the export views) decide how to deliver
     it. The shape is intentionally explicit (not a blind model dump) so we never leak a
-    field we did not mean to disclose."""
+    field we did not mean to disclose.
+
+    ``for_self`` says who READS the document: the data subject themselves (MeExportView, the
+    web download — the default) or their guardian (WardExportView passes False). Exactly one
+    section differs: thread_posts releases the author's own self-deleted bodies only on the
+    self path — see ``_thread_posts`` for the rationale."""
     return {
         "schema_version": EXPORT_SCHEMA_VERSION,
         "generated_at": timezone.now().isoformat(),
@@ -33,7 +51,7 @@ def build_user_export(user) -> dict:
         "owned_activities": _owned_activities(user),
         "owned_groups": _owned_groups(user),
         "group_memberships": _group_memberships(user),
-        "thread_posts": _thread_posts(user),
+        "thread_posts": _thread_posts(user, for_self=for_self),
         "donations": _donations_summary(user),
         "api_access": _api_access(user),
         # W4-F22: the user's OWN DSA Art.16/17 record + block list + notification/access settings —
@@ -194,44 +212,97 @@ def _group_memberships(user) -> list[dict]:
     ]
 
 
-def _thread_posts(user) -> list[dict]:
+# F4: bounded so a runaway export can't blow memory/timeout; monkeypatchable for tests.
+_THREAD_POSTS_CAP = 5000
+
+
+def _thread_posts(user, *, for_self: bool) -> dict:
     """W2-F32: the user's OWN authored thread posts + announcements, so their actual words travel
     with them (GDPR Art.20), not just metadata. STRICT allowlist — only fields the user authored
     or that describe their own post:
 
-    * body — their own text (an own post a moderator hid is exported as a neutral '[removed]'
-      marker, never the moderator's identity or reason);
+    * body — their own text. Provenance-aware (DSA Art.17 fix, see canonical model in
+      apps.safety.services.targets_with_unlifted_remove): a post the AUTHOR deleted themselves
+      is their own withdrawn personal data, still on disk, and is released here as
+      "deleted_by_you" UNLESS a standing (un-lifted) platform REMOVE also holds it. While that
+      REMOVE stands the body stays "[removed]" — not for moderator anonymity (no moderator data
+      is in this projection on any path) but as fail-closed evidence-integrity precedence: the
+      platform still holds the content as the record of a live decision, the same precedence F5
+      applies to media retention. A hidden post WITHOUT author-delete provenance (a REMOVE the
+      author never followed with their own delete, or the PostAdmin manual hide) is likewise
+      "[removed]". An admin manual hide FOLLOWED by the author's own delete is byte-identical in
+      data to a plain self-delete (is_hidden + is_author_deleted, zero ModerationAction rows),
+      so it necessarily releases as "deleted_by_you" — no code could tell the two apart; a test
+      pins that;
+    * status — one of "visible" | "deleted_by_you" | "removed", so a consumer can tell a live
+      post from the two ways it can be hidden without inferring it from the body text;
     * created_at, edited (derived live from updated_at > created_at — there is no stored flag),
       is_announcement, had_attachment (boolean only — never attachment bytes);
     * the parent thread's title + id (via the activity-XOR-group bridge).
 
     HARD EXCLUSIONS (another member's data / not the user's words): never the reply_to parent's
     body or the derived reply snippet, never a shared activity/place/event target's content.
-    Bounded; attachments are prefetched so the had_attachment flag costs no extra query."""
+
+    ``for_self`` — the released-body rule above applies ONLY when the reader is the data
+    subject. On the guardian path (WardExportView passes False) every hidden body stays
+    "[removed]": the guardian is an explicit read-only observer (docs/SAFETY.md) and the
+    Art.17 statement of reasons already deliberately excludes guardians, so a ward's
+    affirmative withdrawal of their own words gets the most protective reading. The status
+    token (named from the data subject's perspective) still flows, so the guardian learns a
+    post existed and was withdrawn — never the withdrawn text. The owner may later widen
+    this; the point is the policy is explicit and tested, not silent.
+
+    F4: keeps the NEWEST ``_THREAD_POSTS_CAP`` posts, not the oldest — ``Post.Meta.ordering`` is
+    ``["created_at"]``, so a naive ascending head-slice silently dropped a prolific author's most
+    recent words from their own portability export. Fetched descending (with ``-id`` as a
+    deterministic tiebreak) and reversed back to chronological order in Python, so the on-screen
+    shape is unchanged. Returns ``{"items", "total", "truncated"}`` so a truncated export is
+    signalled rather than silently claiming completeness. Attachments are prefetched so the
+    had_attachment flag costs no extra query."""
+    from apps.safety.services import targets_with_unlifted_remove
     from apps.social.models import Post
 
-    rows = []
-    posts = (
+    total = Post.objects.filter(author=user).count()
+    posts = list(
         Post.objects.filter(author=user)
         .select_related("thread__activity", "thread__group")
         .prefetch_related("attachments")
-        .order_by("created_at")[:5000]
+        .order_by("-created_at", "-id")[:_THREAD_POSTS_CAP]
     )
+    posts.reverse()  # back to chronological (oldest-first) order for display
+
+    # One bounded query: which of THIS user's own author-deleted posts still sit under a standing
+    # platform REMOVE (so the moderator's decision, not the author's own act, is what's blocking
+    # disclosure)? Empty in the common case (no author-deleted posts among the fetched page).
+    removed_ids = targets_with_unlifted_remove(
+        Post, [p.id for p in posts if p.is_hidden and p.is_author_deleted]
+    )
+
+    rows = []
     for p in posts:
         owner = p.thread.owner_object  # an Activity XOR a Group
+        if not p.is_hidden:
+            status, body = "visible", p.body
+        elif p.is_author_deleted and p.id not in removed_ids:
+            # Withdrawn words go to their author alone; a guardian still gets the status token
+            # (a post existed and was withdrawn), never the withdrawn text.
+            status, body = "deleted_by_you", (p.body if for_self else "[removed]")
+        else:
+            status, body = "removed", "[removed]"
         rows.append(
             {
                 "thread_kind": "group" if p.thread.group_id else "activity",
                 "thread_id": getattr(owner, "id", None),
                 "thread_title": getattr(owner, "title", None) or getattr(owner, "name", None),
-                "body": "[removed]" if p.is_hidden else p.body,
+                "body": body,
+                "status": status,
                 "is_announcement": p.is_announcement,
                 "edited": p.updated_at > p.created_at,
                 "had_attachment": bool(p.attachments.all()),
                 "created_at": _iso(p.created_at),
             }
         )
-    return rows
+    return {"items": rows, "total": total, "truncated": total > len(rows)}
 
 
 def _donations_summary(user) -> dict:

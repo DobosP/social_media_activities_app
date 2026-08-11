@@ -6,6 +6,7 @@ import json
 from collections import namedtuple
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import NamedTuple
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
@@ -903,19 +904,35 @@ def file_appeal(user, action, statement: str) -> ModerationAppeal:
     return appeal
 
 
-def _reverse_action(action) -> bool:
-    """Reverse a granted-appeal action, mirroring lift_expired_suspensions. Returns True iff an
-    account was reactivated. An account sanction reactivates the target user IF no OTHER un-lifted
+class ReversalOutcome(NamedTuple):
+    """What a granted-appeal reversal materially did — so callers can tell the appellant the
+    truth about what the overturn restored. ``reactivated``: an account sanction's target user
+    was reactivated. ``left_hidden_author_deleted``: a REMOVE-on-content was lifted but the
+    un-hide was DECLINED because the author had also deleted it themselves (their own withdrawal
+    is permanent and no reversal undoes it). Note: a NamedTuple is always truthy — test the
+    fields, never the tuple."""
+
+    reactivated: bool
+    left_hidden_author_deleted: bool
+
+
+def _reverse_action(action) -> ReversalOutcome:
+    """Reverse a granted-appeal action, mirroring lift_expired_suspensions. Returns a
+    ``ReversalOutcome`` describing what materially changed. An account sanction reactivates the
+    target user IF no OTHER un-lifted
     active sanction applies; a REMOVE un-hides the content IF no other un-lifted REMOVE keeps it
-    hidden; a WARN has no material effect to undo (the OVERTURNED status is the record). The
+    hidden AND the author did not also delete it themselves (``is_author_deleted`` — the author's
+    own withdrawal is not a moderation outcome and is never undone here); a WARN has no material
+    effect to undo (the OVERTURNED status is the record). The
     overturned action is marked ``lifted_at`` so it no longer counts as active anywhere."""
     from django.contrib.auth import get_user_model
 
     now = timezone.now()
     target = action.target
     if target is None:
-        return False
+        return ReversalOutcome(reactivated=False, left_hidden_author_deleted=False)
     reactivated = False
+    left_hidden_author_deleted = False
     if action.action in _ACCOUNT_SANCTIONS and isinstance(target, get_user_model()):
         # Lock the account row so this reversal's is_active flip is serialised against a
         # concurrent lift_expired_suspensions (or another reversal) on the same account — the
@@ -948,6 +965,13 @@ def _reverse_action(action) -> bool:
 
             release_identity_ban(target)
     elif action.action == ModerationAction.Action.REMOVE and hasattr(target, "is_hidden"):
+        # Lock the content row for this read-modify-write, mirroring the account branch above.
+        # Without it, an author self-delete committing between our read of ``is_author_deleted``
+        # and our write of ``is_hidden`` is lost (the self-delete writes only the provenance
+        # column via update_fields) and the post is republished — the exact outcome the
+        # provenance check exists to prevent, reached by race instead of by ordering.
+        # ``delete_own_post`` takes the same lock, so the two serialise.
+        target = type(target)._default_manager.select_for_update().get(pk=target.pk)
         other_remove = (
             ModerationAction.objects.filter(
                 target_type=action.target_type,
@@ -961,17 +985,40 @@ def _reverse_action(action) -> bool:
         if action.lifted_at is None:
             action.lifted_at = now
             action.save(update_fields=["lifted_at"])
+        # An author's own deletion is not a moderation outcome and no reversal may undo it:
+        # self-delete and REMOVE share ``is_hidden``, so without this provenance check
+        # overturning a REMOVE would republish content the author had withdrawn. The action
+        # is still lifted above (the moderation record is reversed, and the sanction/appeal
+        # status the user sees is accurate) — only the un-hide is declined.
         if not other_remove and target.is_hidden:
-            target.is_hidden = False
-            target.save(update_fields=["is_hidden"])
-    return reactivated
+            if getattr(target, "is_author_deleted", False):
+                record_audit(
+                    "moderation.reversal_left_hidden",
+                    actor=None,
+                    target=target,
+                    action_id=action.pk,
+                    reason="author_deleted",
+                )
+                # Flagged ONLY here — not when another un-lifted REMOVE keeps the content
+                # hidden (that other decision has its own record row and its own appeal).
+                left_hidden_author_deleted = True
+            else:
+                target.is_hidden = False
+                target.save(update_fields=["is_hidden"])
+    return ReversalOutcome(
+        reactivated=reactivated, left_hidden_author_deleted=left_hidden_author_deleted
+    )
 
 
-def _notify_appeal_outcome(action, *, granted: bool):
+def _notify_appeal_outcome(action, *, granted: bool, left_hidden_author_deleted: bool = False):
     """Close the DSA Art.17 loop: tell the affected user how their appeal was decided. Best-effort,
     savepoint-isolated so a notify failure never rolls back the resolution. MODERATION is
     non-mutable; if the account was reactivated the user can read it in-app, and if the decision
-    stands the pre-auth restricted surface shows the updated appeal status."""
+    stands the pre-auth restricted surface shows the updated appeal status.
+
+    ``left_hidden_author_deleted`` (from the ReversalOutcome) picks the truthful grant body for
+    the one case where the win restores nothing: the reversal declined the un-hide because the
+    appellant had deleted the content themselves. The title must not soften — they DID win."""
     try:
         from apps.notifications.models import Notification
         from apps.notifications.services import notify
@@ -981,10 +1028,17 @@ def _notify_appeal_outcome(action, *, granted: bool):
             return
         if granted:
             title = "Your appeal succeeded"
-            body = (
-                "We reviewed your contest of a moderation decision and reversed it. Any "
-                "restriction from that decision has been removed."
-            )
+            if left_hidden_author_deleted:
+                body = (
+                    "We reviewed your contest of a moderation decision and reversed it. "
+                    "Because you had deleted that message yourself, the message stays "
+                    "deleted — reversing our decision doesn't undo your own deletion."
+                )
+            else:
+                body = (
+                    "We reviewed your contest of a moderation decision and reversed it. Any "
+                    "restriction from that decision has been removed."
+                )
         else:
             title = "Your appeal was reviewed"
             body = (
@@ -1002,7 +1056,12 @@ def resolve_appeal(moderator, appeal, *, grant: bool, notes: str = "") -> Modera
     """Moderator decides an appeal. UPHOLD leaves the decision in place; GRANT (overturn) reverses
     it via ``_reverse_action`` (reactivate account / un-hide content). Idempotent: a non-PENDING
     appeal is refused (AppealError). Audited; the affected user gets a non-mutable MODERATION
-    outcome notice and, for a CHILD, the active guardian(s) are pinged via the symmetric loop."""
+    outcome notice and, for a CHILD, the active guardian(s) are pinged via the symmetric loop.
+
+    The RETURNED instance carries a TRANSIENT ``reversal_outcome`` attribute (the grant's
+    ReversalOutcome; None on an uphold) so callers can report what the overturn materially did.
+    It exists ONLY on the returned instance — this function re-reads the appeal under lock below,
+    so a caller's pre-call instance never sees it — and is never persisted."""
     # Re-read under a row lock so two concurrent resolutions can't both pass the PENDING guard and
     # double-reverse (reactivate twice / duplicate the audit + notify + guardian fan-out).
     appeal = ModerationAppeal.objects.select_for_update().get(pk=appeal.pk)
@@ -1014,13 +1073,17 @@ def resolve_appeal(moderator, appeal, *, grant: bool, notes: str = "") -> Modera
     appeal.decided_at = timezone.now()
     appeal.decision_notes = notes
     appeal.save(update_fields=["status", "decided_by", "decided_at", "decision_notes"])
-    if grant:
-        _reverse_action(action)
+    outcome = _reverse_action(action) if grant else None
     record_audit("moderation.appeal_resolved", actor=moderator, target=action, granted=grant)
-    _notify_appeal_outcome(action, granted=grant)
+    _notify_appeal_outcome(
+        action,
+        granted=grant,
+        left_hidden_author_deleted=bool(outcome and outcome.left_hidden_author_deleted),
+    )
     # An appeal outcome is a moderation outcome about the (possibly CHILD) affected user — reuse
     # the W4-F3 symmetric guardian loop (pure /wards/ pointer, ACTIVE GuardianRelationship only).
     _alert_guardians_of_moderation(_affected_user(action.target))
+    appeal.reversal_outcome = outcome
     return appeal
 
 
@@ -1130,6 +1193,44 @@ def allow_action(user, action: str, *, limit: int, window_seconds: int) -> bool:
     return count <= limit
 
 
+def targets_with_unlifted_remove(model, target_ids) -> set[int]:
+    """The subset of ``target_ids`` (rows of ``model``) that a standing — un-lifted — REMOVE
+    still holds. THE single implementation of "the platform's removal is still in force"; the
+    GDPR export, the media retention purge and the self-delete flash all consume it, so the
+    three never diverge.
+
+    Canonical provenance model: content stays hidden for up to two INDEPENDENT reasons.
+    Reason A, ``is_author_deleted`` — the AUTHOR's own act, permanent, never cleared, written
+    only by ``delete_own_post``. Reason B, a standing REMOVE — the PLATFORM's act, liftable,
+    and this helper is its only reading. Surfaces answering "will reversing THIS decision
+    restore the content?" key on Reason A plus the live ``is_hidden`` state — the author's act
+    blocks restoration regardless of Reason B, and already-live (operator-un-hidden) content
+    has nothing left to restore — never on Reason B; surfaces answering "does the platform
+    still hold this content / must we retain-redact?" key on Reason B. Two questions off one
+    fact model — do not unify them.
+
+    NEVER a substitute for ``is_hidden``: an admin manual hide has no ModerationAction row, so
+    a fail-closed caller layers this ON the hidden flags rather than replacing them.
+
+    ``target_ids`` is materialised immediately — pass a bounded list of ids, never a queryset
+    (an IN-subquery arm here would reintroduce the seq-scan / non-spilling-SubPlan shape the
+    merged queries in ``safety_record_for`` exist to avoid; a materialised list becomes an
+    ``= ANY(ARRAY[...])`` index qual on (target_type, target_id)). Returns bare ids only —
+    no ORM rows and no moderator data escape."""
+    ids = list(target_ids)
+    if not ids:
+        return set()
+    ct = ContentType.objects.get_for_model(model)
+    return set(
+        ModerationAction.objects.filter(
+            target_type=ct,
+            target_id__in=ids,
+            action=ModerationAction.Action.REMOVE,
+            lifted_at__isnull=True,
+        ).values_list("target_id", flat=True)
+    )
+
+
 def safety_record_for(user, *, limit: int = 50) -> dict:
     """Read-only DSA Art.16/17 record for ONE user (F19): the moderation decisions that
     affected their own account/activities/posts, and the status of the reports they filed.
@@ -1150,29 +1251,79 @@ def safety_record_for(user, *, limit: int = 50) -> dict:
     user_ct = ContentType.objects.get_for_model(get_user_model())
     activity_ct = ContentType.objects.get_for_model(Activity)
     post_ct = ContentType.objects.get_for_model(Post)
-    # Intentional caps so the "own content" id sets can't blow up the IN clause.
-    own_activity_ids = list(Activity.objects.filter(owner=user).values_list("id", flat=True)[:500])
-    own_post_ids = list(Post.objects.filter(author=user).values_list("id", flat=True)[:1000])
+    # Own content matches by SUBQUERY, never a materialised id list. This used to be
+    # ``[:500]`` / ``[:1000]`` python-side slices, which silently truncated the record for a
+    # heavy user — and because ``Post.Meta.ordering`` is ``["created_at"]`` the post slice kept
+    # the OLDEST rows and dropped the NEWEST, i.e. exactly the posts most likely to carry a live
+    # decision (``Activity`` declares no ordering, so its slice truncated arbitrarily instead).
+    # A dropped action is not merely missing from this page: ``action_id`` is what the DSA Art.17
+    # contest form posts, so a truncated row was also uncontestable from here.
+    #
+    # The three scopes are queried SEPARATELY and merged, rather than OR-ed into one filter.
+    # PostgreSQL can only BitmapOr when EVERY arm is an index qual, and a SubPlan never is — so
+    # the single-filter form seq-scans ModerationAction for every reader (measured on 500k rows:
+    # 1.3ms index-driven vs 38ms seq scan) and, worse, its hashed SubPlan cannot spill: past
+    # roughly hash_mem/20 own rows the planner demotes to a per-outer-row SubPlan and the query
+    # effectively stops returning. At top level each ``target_id__in`` is pulled up into an
+    # indexable semijoin over (target_type, target_id) instead.
+    #
+    # Each branch takes its own ``[:limit]`` before the merge: the global newest ``limit`` rows
+    # can never contain more than ``limit`` from any single branch, so this cannot under-report.
+    own_activity_ids = Activity.objects.filter(owner=user).values("id")
+    own_post_ids = Post.objects.filter(author=user).values("id")
     now = timezone.now()
 
-    action_q = (
-        Q(target_type=user_ct, target_id=user.id)
-        | Q(target_type=activity_ct, target_id__in=own_activity_ids)
-        | Q(target_type=post_ct, target_id__in=own_post_ids)
-    )
-    actions = list(
-        ModerationAction.objects.filter(action_q)
-        .only(
-            "action", "reason", "target_type", "target_id", "expires_at", "lifted_at", "created_at"
+    def _recent(**scope):
+        return (
+            ModerationAction.objects.filter(**scope)
+            .only(
+                "action",
+                "reason",
+                "target_type",
+                "target_id",
+                "expires_at",
+                "lifted_at",
+                "created_at",
+            )
+            .order_by("-created_at")[:limit]
         )
-        .order_by("-created_at")[:limit]
-    )
+
+    actions = sorted(
+        [
+            *_recent(target_type=user_ct, target_id=user.id),
+            *_recent(target_type=activity_ct, target_id__in=own_activity_ids),
+            *_recent(target_type=post_ct, target_id__in=own_post_ids),
+        ],
+        key=lambda a: a.created_at,
+        reverse=True,
+    )[:limit]
     # One query for the appeal status of every shown decision (no N+1); a decision with no row is
     # contestable, one with a row shows its status and can't be appealed again (one per action).
     appeal_by_action = {
         ap.action_id: ap
         for ap in ModerationAppeal.objects.filter(action_id__in=[a.id for a in actions])
     }
+    # One bounded query (<= ``limit`` ids): which shown REMOVE-on-Post rows sit on a post the
+    # author ALSO deleted themselves AND that is still hidden? This surface answers "will
+    # reversing THIS decision restore the content?" — the author's own act blocks restoration
+    # regardless of any other standing REMOVE, but the ``is_hidden=True`` gate is load-bearing
+    # too: an operator un-hide (PostAdmin) or a migration-0039 republished row leaves
+    # ``is_author_deleted`` on a LIVE post, and claiming "the message stays deleted" about live
+    # content would be false. Gating on both matches ``_reverse_action``, which only declines
+    # the un-hide while ``target.is_hidden``. The id list is narrowed to post-typed REMOVE rows
+    # (a user-typed action's target_id is a USER id and doesn't belong in a Post pk filter);
+    # the projection's own target-type check below is the output-side false-positive guard.
+    author_deleted_ids = set(
+        Post.objects.filter(
+            id__in=[
+                a.target_id
+                for a in actions
+                if a.target_type_id == post_ct.id and a.action == ModerationAction.Action.REMOVE
+            ],
+            is_author_deleted=True,
+            is_hidden=True,
+        ).values_list("id", flat=True)
+    )
     decisions = []
     for a in actions:
         try:
@@ -1213,6 +1364,12 @@ def safety_record_for(user, *, limit: int = 50) -> dict:
                 # DSA Art.17 contest: contestable until appealed once; then show its status.
                 "can_appeal": appeal is None,
                 "appeal_status_label": appeal.get_status_display() if appeal else None,
+                # True only for a REMOVE-on-Post whose post the author also deleted themselves
+                # AND which is still hidden: the user should learn BEFORE contesting that a win
+                # won't restore the content.
+                "content_author_deleted": a.target_type_id == post_ct.id
+                and a.action == ModerationAction.Action.REMOVE
+                and a.target_id in author_deleted_ids,
             }
         )
 
@@ -1237,7 +1394,28 @@ def safety_record_for(user, *, limit: int = 50) -> dict:
             }
         )
 
-    return {"decisions": decisions, "reports": reports}
+    # Honest truncation signals for both lists (this dict also feeds the GDPR Art.20 export via
+    # accounts.export._safety_record — a silent cap there implies completeness). decisions_total
+    # is THREE separate per-scope counts summed, never one OR-ed count: the OR-of-subqueries
+    # form seq-scans with a non-spilling SubPlan (see the merge note above), while each of these
+    # is the same indexable semijoin shape as its _recent branch. An action targets exactly one
+    # content type, so the sum never double-counts.
+    decisions_total = (
+        ModerationAction.objects.filter(target_type=user_ct, target_id=user.id).count()
+        + ModerationAction.objects.filter(
+            target_type=activity_ct, target_id__in=own_activity_ids
+        ).count()
+        + ModerationAction.objects.filter(target_type=post_ct, target_id__in=own_post_ids).count()
+    )
+    reports_total = Report.objects.filter(reporter=user).count()
+    return {
+        "decisions": decisions,
+        "reports": reports,
+        "decisions_total": decisions_total,
+        "decisions_truncated": decisions_total > len(decisions),
+        "reports_total": reports_total,
+        "reports_truncated": reports_total > len(reports),
+    }
 
 
 # F34: the FIXED allowlist of audit events that represent a DELIBERATE lifecycle action the user

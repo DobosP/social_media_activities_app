@@ -127,7 +127,10 @@ class Attachment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     # Ephemeral ("temporary picture") support. NULL = permanent (the default). When set, the blob
     # stops being served at expiry and a purge job later reclaims it — UNLESS the post is hidden or
-    # under an unresolved report, in which case the evidence is preserved (purge exempts it). A
+    # under an unresolved report, in which case the evidence is preserved (purge exempts it). ONE
+    # narrowing: a post hidden ONLY by its author's own deletion, with no standing REMOVE, is
+    # nobody's evidence and IS reclaimed (GDPR storage limitation) — see
+    # ``media.services.purge_expired_attachments`` for the exact rule. A
     # per-cohort minimum TTL (24h for minors) is enforced in the service so disappearing media can
     # never be weaponised for "look quick, it's gone" pressure or to outrun a guardian/report.
     expires_at = models.DateTimeField(null=True, blank=True)
