@@ -100,8 +100,14 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   export returns the author's OWN withdrawn words to the author — but NOT to a
   guardian on the ward path (`build_user_export(..., for_self=False)` keeps
   `[removed]`), because the guardian is a read-only observer and a child's
-  affirmative withdrawal gets the most protective reading. **Owner decision: ratify
-  or overturn that ward-export posture.** (4) The export's own-post slice is
+  affirmative withdrawal gets the most protective reading. **Owner-ratified
+  2026-08-12**, together with two related calls: the self-delete refusal while a
+  contest of the REMOVE is pending stands (accepting that no appeal-withdraw path
+  exists, so it holds until a moderator decides), and `PostAdmin`'s editable
+  `is_hidden` stays an operator escape hatch — with the consequence recorded at
+  `apps/social/admin.py`, that an admin hide carries no provenance and so becomes
+  indistinguishable from a self-delete once the author also deletes. (4) The
+  export's own-post slice is
   newest-first with an explicit truncation marker. (5) An expired attachment whose
   post is hidden ONLY by the author's own deletion, with no standing REMOVE, is now
   reclaimed rather than exempted forever — it is nobody's evidence, and permanent

@@ -50,7 +50,14 @@ class PostAdmin(admin.ModelAdmin):
     # granted appeal (apps/safety/services.py::_reverse_action) and not an admin edit either.
     # Without this the model's "never cleared" invariant is only a convention, and clearing it
     # here would re-arm the republish path with no audit row. is_hidden stays editable: it is a
-    # moderation state with a legitimate operator escape hatch.
+    # moderation state with a legitimate operator escape hatch (owner-ratified 2026-08-12).
+    #
+    # KNOW THIS BEFORE HIDING A POST HERE: an admin hide writes no ModerationAction, so it has no
+    # provenance. Once the author ALSO deletes the post, the row (is_hidden + is_author_deleted +
+    # no action row) is byte-identical to a plain self-delete — indistinguishable in data — and
+    # its expired media blob is therefore reclaimed by the purge rather than preserved as
+    # evidence (apps/media/services.py::purge_expired_attachments). An administrative hold that
+    # must survive the author's own deletion needs a real REMOVE action, not this checkbox.
     readonly_fields = ("is_author_deleted",)
 
 
