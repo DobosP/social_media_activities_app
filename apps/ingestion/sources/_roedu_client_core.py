@@ -33,17 +33,48 @@ Why this exists: the five transport methods below were byte-identical in all thr
 consumers, while `iter` had drifted into three variants — and only ro_teacher's
 guarded against a server repeating a pagination cursor. The other two could loop
 forever on a broken or hostile server. One contract deserves one client.
+
+Page identity (ADR-0117 §2): every page's `snapshot_id`, when present, is one
+of two disjoint grammars — `"sha256-" + <64 hex>` is a verified, re-resolvable,
+pinnable release id (a promoted `ro_data_server`); `"live-" + <64 hex>` is an
+observed generation on unpinned live data, proving only that the stores a page
+read did not change between two observations on that host. A `live-` value is
+never a pin and is never re-resolvable; `release_id` is `null` alongside it.
+`pages()` refuses (`RoeduContractError`) a `snapshot_id` matching neither
+grammar, and refuses a torn read (`available=false` with the
+`"snapshot changed during read"` note) instead of ending iteration as if it
+were a clean end of corpus — the two outcomes were indistinguishable before
+ADR-0117.
 """
 
 from __future__ import annotations
 
 import json
 import os
+import re
 import urllib.parse
 import urllib.request
 from collections.abc import Iterator
 
 __all__ = ["RoeduClient", "RoeduContractError"]
+
+# ADR-0117 §2: every page's `snapshot_id` is one of two disjoint grammars.
+# `sha256-` means verified content-addressed identity (a promoted, pinnable
+# release); `live-` means an observed generation on unpinned live data
+# (tear-detection only, never re-resolvable, never a pin). A value matching
+# neither is a contract violation this client refuses rather than forwards.
+# Matched with `fullmatch`, NOT `match` + `$`: Python's `$` also matches just before a
+# trailing newline, so `"sha256-" + 64hex + "\n"` slipped through this refusal and reached
+# consumers as a pinnable release id. JSON strings carry `\n` freely, so it was reachable by
+# exactly the case this check exists for — a server answering outside the contract.
+_SNAPSHOT_ID_RE = re.compile(r"(?:sha256|live)-[0-9a-f]{64}")
+
+# ADR-0117 §1: the exact `note` a page carries when its covered stores changed
+# between the first and the last observation of one page's read (a torn read,
+# refused rather than served). Duplicated here rather than imported: this file
+# is vendored stdlib-only into four consumer repos (ADR-0069) and must not
+# depend on the producer package.
+_SNAPSHOT_CHANGED_NOTE = "snapshot changed during read"
 
 
 class RoeduContractError(ValueError):
@@ -100,14 +131,35 @@ class RoeduClient:
         A repeated cursor **fails closed** rather than looping forever on a broken
         or hostile server. This guard previously existed in only one of the three
         consumer copies; it is the main reason this file is shared.
+
+        Two more fail-closed checks, both ADR-0117: an available page's
+        ``snapshot_id`` must match the ``sha256-``/``live-`` grammar (§2) —
+        anything else is a server that answered outside the contract; and an
+        unavailable page whose ``note`` is the torn-read marker ends the walk
+        with an error rather than silently, so a caller cannot mistake a torn
+        read for a clean end of corpus (previously indistinguishable).
         """
 
         cursor = None
         seen_cursors: set[str] = set()
         while True:
             page = self.page(product, cursor=cursor, limit=limit, **filters)
+            available = page.get("available", False)
+            snapshot_id = page.get("snapshot_id")
+            if (
+                available
+                and snapshot_id is not None
+                and not _SNAPSHOT_ID_RE.fullmatch(str(snapshot_id))
+            ):
+                raise RoeduContractError(
+                    f"RO-EDU API returned an unrecognised snapshot_id grammar: {snapshot_id!r}"
+                )
             yield page
-            if not page.get("available", False):
+            if not available:
+                if page.get("note") == _SNAPSHOT_CHANGED_NOTE:
+                    raise RoeduContractError(
+                        "RO-EDU API torn read: " + _SNAPSHOT_CHANGED_NOTE
+                    )
                 return
             next_cursor = page.get("next_cursor")
             if not next_cursor:
@@ -137,4 +189,4 @@ class RoeduClient:
                     return
 # --- END VENDORED ---
 
-VENDORED_SHA256 = "23c5ca0245758ffb8cb21d23aa5dea50ba8f2583ae332d3c0c3c79c4ebdbc369"
+VENDORED_SHA256 = "c781c790dc4630be7836214e7777426dabf51b3c6e6b965e5f748575abb63679"
