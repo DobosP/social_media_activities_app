@@ -21,7 +21,7 @@ whitenoise>=6.7
 duckdb>=1.5.4
 # D5: real-time chat over WebSockets via Channels (ASGI); daphne serves the ASGI app.
 channels>=4.2
-daphne>=4.1
+daphne>=4.2.3
 # D6: image processing — EXIF/GPS stripping and re-encoding for uploaded photos.
 Pillow>=11.0
 # D2: EUDI age-attestation verification — JWS (ES256) signature checks.
