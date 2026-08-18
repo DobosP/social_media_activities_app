@@ -32,15 +32,15 @@ so changing `iter` upstream will NOT change what the sync commands do.
 
 To change transport/pagination behaviour, edit the canonical file in
 romania_scraper and re-run `scripts/sync_roedu_client.py --write`; never edit
-`_roedu_client_core.py` here.
+`_roedu_client_core.py` here — including with a formatter. That is why it is excluded
+from `ruff format` in pyproject.toml (the formatter would rewrite it and fail the stamp
+test); `ruff check` still lints it.
 """
 
 from __future__ import annotations
 
 import ipaddress
-import json
 import math
-import os
 import re
 import urllib.parse
 import urllib.request
@@ -48,6 +48,11 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import datetime
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+# RoeduContractError comes from the shared core so an `except` in this app's
+# domain layer and one raised by shared paging are the same class.
+from ._roedu_client_core import _SNAPSHOT_CHANGED_NOTE, RoeduContractError
+from ._roedu_client_core import RoeduClient as _CanonicalClient
 
 REDISTRIBUTABLE_ACCESS_TYPES = frozenset({"public_document", "open_license", "public_domain"})
 SOCIAL_APP_NAME = "social_media_activities_app"
@@ -187,11 +192,6 @@ _APP_PACK_PAGE_FIELDS = frozenset(
         "errors",
     }
 )
-
-# RoeduContractError comes from the shared core so an `except` in this app's
-# domain layer and one raised by shared paging are the same class.
-from ._roedu_client_core import _SNAPSHOT_CHANGED_NOTE, RoeduContractError
-from ._roedu_client_core import RoeduClient as _CanonicalClient
 
 
 class RoeduProductUnavailable(RoeduContractError):

@@ -19,9 +19,8 @@ from pathlib import Path
 from django.test import SimpleTestCase
 
 from apps.ingestion.sources import roedu_client as rc
-from apps.ingestion.sources._roedu_client_core import VENDORED_SHA256
+from apps.ingestion.sources._roedu_client_core import VENDORED_SHA256, RoeduContractError
 from apps.ingestion.sources._roedu_client_core import RoeduClient as CanonicalClient
-from apps.ingestion.sources._roedu_client_core import RoeduContractError
 
 CORE = Path(__file__).resolve().parents[1] / "sources/_roedu_client_core.py"
 
@@ -122,14 +121,10 @@ class RepeatedCursorDefectTests(SimpleTestCase):
             list(client.iter("venues"))
 
     def test_normal_paging_and_max_records_still_work(self):
-        client = _FakeClient(
-            [_page([{"id": "v1"}], next_cursor="a"), _page([{"id": "v2"}])]
-        )
+        client = _FakeClient([_page([{"id": "v1"}], next_cursor="a"), _page([{"id": "v2"}])])
         self.assertEqual([r["id"] for r in client.iter("venues")], ["v1", "v2"])
 
-        capped = _FakeClient(
-            [_page([{"id": "a"}, {"id": "b"}, {"id": "c"}], next_cursor="a")]
-        )
+        capped = _FakeClient([_page([{"id": "a"}, {"id": "b"}, {"id": "c"}], next_cursor="a")])
         self.assertEqual(len(list(capped.iter("venues", max_records=2))), 2)
 
     def test_unavailable_page_is_fail_closed(self):
