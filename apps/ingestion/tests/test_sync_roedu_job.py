@@ -7,7 +7,10 @@ import pytest
 from django.core.management import call_command
 from django.core.management.base import CommandError
 
-from apps.ingestion.sources.roedu_client import SOCIAL_APP_PACK_ID
+from apps.ingestion.sources.roedu_client import (
+    SOCIAL_APP_PACK_ID,
+    RoeduProductUnavailable,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -80,3 +83,60 @@ def test_registered_in_due_jobs():
     from apps.ops.management.commands.run_due_jobs import DUE_JOBS
 
     assert "sync_roedu" in {name for name, _ in DUE_JOBS}
+
+
+@pytest.mark.django_db
+def test_a_refused_source_is_loud_but_does_not_red_line_the_shared_tick(monkeypatch, settings):
+    """RO-EDU is opt-in and external; the tick it shares carries the GDPR/DSA duties.
+
+    `run_due_jobs` pings its heartbeat only when EVERY job succeeded, so failing here
+    would withhold the compliance heartbeat nightly for a server-side condition outside
+    this app's control — and `resolve_place_covers` is city-scoped, so it must keep
+    running for OSM-sourced places.
+    """
+    settings.ROEDU_SYNC_ENABLED = True
+    monkeypatch.setenv("ROEDU_API_KEY", "social-app-dev")
+    monkeypatch.delenv("ROEDU_APP_PACK", raising=False)
+    calls = []
+
+    def fake_call_command(name, *args, **kwargs):
+        calls.append(name)
+        if name == "ingest_places":
+            refusal = RoeduProductUnavailable("venues", note="schema not ready")
+            raise CommandError(str(refusal)) from refusal
+
+    monkeypatch.setattr(
+        "apps.ingestion.management.commands.sync_roedu.call_command", fake_call_command
+    )
+    err, out = StringIO(), StringIO()
+    call_command("sync_roedu", stderr=err, stdout=out)
+
+    assert "resolve_place_covers" in calls, "covers must still run after an RO-EDU refusal"
+    assert "RO-EDU source failed" in err.getvalue()
+    assert "schema not ready" in err.getvalue()
+    assert "NOT refreshed" in out.getvalue()
+
+
+@pytest.mark.django_db
+def test_a_failure_that_is_not_a_refusal_still_fails_the_job(monkeypatch, settings):
+    """The isolation is for the SOURCE refusing — not for this app's own breakage.
+
+    Without this, `except CommandError` would swallow a missing seed, a stale-snapshot
+    guard or a contract breach behind a green tick: the silent zero, one level up.
+    """
+    settings.ROEDU_SYNC_ENABLED = True
+    monkeypatch.setenv("ROEDU_API_KEY", "social-app-dev")
+    monkeypatch.delenv("ROEDU_APP_PACK", raising=False)
+    calls = []
+
+    def fake_call_command(name, *args, **kwargs):
+        calls.append(name)
+        if name == "ingest_places":
+            raise CommandError("No ActivityType rows found. Run migrations (seed) first.")
+
+    monkeypatch.setattr(
+        "apps.ingestion.management.commands.sync_roedu.call_command", fake_call_command
+    )
+    with pytest.raises(CommandError, match="No ActivityType rows"):
+        call_command("sync_roedu")
+    assert "resolve_place_covers" not in calls

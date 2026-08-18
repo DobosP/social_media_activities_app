@@ -292,11 +292,20 @@ class Command(BaseCommand):
                 if (venue := _app_pack_venue_for_resolution(item)) is not None
             }
         else:
-            venues = {v["id"]: v for v in client.iter("venues", city=opts["city"])}
             filters = {"city": opts["city"]}
             if opts["updated_since"]:
                 filters["updated_since"] = opts["updated_since"]
-            records = tuple(client.iter("events", max_records=opts["limit"], **filters))
+            # `iter_required`, not `iter`: a refused product must not be reported as
+            # "applied 0 events". The server explains the refusal in the page note
+            # (a policy-gate denial, a store that is not built, a schema that is not
+            # ready) and that reason is the whole answer an operator needs.
+            try:
+                venues = {v["id"]: v for v in client.iter_required("venues", city=opts["city"])}
+                records = tuple(
+                    client.iter_required("events", max_records=opts["limit"], **filters)
+                )
+            except RoeduContractError as exc:
+                raise CommandError(str(exc)) from exc
 
         can_reconcile = bool(
             app_pack

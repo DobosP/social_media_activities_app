@@ -14,6 +14,10 @@ Places:
 - `apps/ingestion/sources/roedu_client.py` — vendored stdlib HTTP client for the
   data API (`urllib` only, no new dependency). Cursor pagination; **fail-closed** on
   the platform's license gate (a page with `available != true` yields nothing).
+  In legacy-products mode the sync commands walk with `iter_required`, which raises
+  `RoeduProductUnavailable` carrying the server's `note` instead of ending the walk
+  silently; in app-pack mode `read_app_pack` raises when the producer emptied the pack.
+  A refused product must not be reported as an empty city (see *Safety model*).
   Its promoted app-pack reader accepts exactly
   `roedu:social_media_activities_app:events_places:v1` at the redistributable
   `/v1/app-packs/social_media_activities_app/<pack>` endpoint. Short aliases and other app names
@@ -87,7 +91,8 @@ cases cover persistence, lifecycle reconciliation, API rendering, and child-venu
 behavior:
 - `apps/ingestion/tests/test_roedu_client.py` — config/env defaults, header +
   URL/param building (drops `None`), cursor following, `available=false` fail-closed,
-  `max_records`.
+  `max_records`, and `iter_required` raising on a refusal (first page and mid-walk)
+  while plain `iter` keeps the core's silent-stop semantics.
 - `apps/ingestion/tests/test_roedu_adapter.py` — the full `_tags_for` heuristic and
   `fetch()` (`RawPlace` field mapping, RO country, coord coercion, skip-no-coords,
   optional attribution/license/provenance mapping).
@@ -156,6 +161,36 @@ sync both use that app pack; when absent, both use legacy products. One run neve
 The platform enforces the license/GDPR gate **server-side** (the `social-app-dev`
 key is redistributable-only, no `tdm_exception`). Treat that as defence-in-depth —
 the client also fails closed (`available != true` ⇒ no records).
+
+**A refusal is not an empty result.** `available != true` covers a policy-gate denial, a
+store that is not built, and a schema that is not ready; the page `note` usually says
+which, and the client prints "the server gave no reason" when the field is absent.
+`ingest_places --source=roedu` and `sync_roedu_events` exit non-zero with that note rather
+than reporting `created=0` / `applied 0 events`. The app-pack lane refuses the same way:
+`read_app_pack` raises when a pack comes back with zero items **because the producer
+withheld them or reported errors**.
+
+The scheduled `sync_roedu` job is deliberately different: it catches that failure, logs it
+with a stack, reports it to Sentry (when `SENTRY_DSN` is configured) and writes it to
+stderr, then **still runs `resolve_place_covers` and completes the tick**. Two reasons, both
+load-bearing. `run_due_jobs` pings its heartbeat only when every job succeeded
+(`apps/ops/management/commands/run_due_jobs.py:104-122`), and the tick it shares carries
+`purge_messaging`, `lift_suspensions`, `consent_renewal_sweep` and the other GDPR/DSA
+duties — an opt-in external source must not withhold that heartbeat nightly for a
+server-side condition outside this app's control. And cover resolution is city-scoped, so
+an RO-EDU outage must not freeze Commons covers for OSM-sourced places. Same convention as
+`sync_event_feeds`, which isolates one bad feed by design.
+
+Quiet by design: the configuration skips (`ROEDU_SYNC_ENABLED` off, or no `ROEDU_API_KEY`),
+a genuinely empty product/pack, and items dropped by this app's OWN canonical checks —
+those make the read incomplete so absence is never reconciled, which is a separate,
+already-tested contract this change deliberately leaves alone. Also deliberate: in legacy
+mode a refused `venues` product fails the whole run rather than syncing events against
+stale place links.
+
+Measured 2026-08-18 against a live server: every product page came back `available: false`
+("schema not ready: … missing required policy column(s) …"), and before this the commands
+reported a clean zero.
 For app packs, the client rejects any item missing current legal/privacy, policy, capture, and
 acquisition attestation or violating its exact facts-only schema. This social app does not request the
 internal/all layer over HTTP because no internal/admin/ops scope is proven here.

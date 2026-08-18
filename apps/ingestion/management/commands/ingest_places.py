@@ -12,6 +12,7 @@ from apps.ingestion.mapping import match_element
 from apps.ingestion.sources.base import RawPlace, SourceAdapter
 from apps.ingestion.sources.overpass import OverpassAdapter
 from apps.ingestion.sources.overture import OvertureAdapter, match_overture
+from apps.ingestion.sources.roedu_client import RoeduContractError
 from apps.places.enrichment.dedup import find_duplicate
 from apps.places.enrichment.opening_hours import parse_opening_hours
 from apps.places.models import Place, PlaceActivity
@@ -88,6 +89,12 @@ class Command(BaseCommand):
                 return import_string(extra[source])()
             except ImportError as exc:
                 raise CommandError(f"Could not import adapter for '{source}': {exc}") from exc
+            except RoeduContractError as exc:
+                # e.g. a typo in ROEDU_APP_PACK — same command, same operator, same
+                # failure class as the refusal below; it should read the same way.
+                raise CommandError(
+                    f"Adapter for '{source}' refused its configuration: {exc}"
+                ) from exc
         raise CommandError(f"Unknown source: {source}")
 
     def _resolve_area(self, source, opts) -> tuple[str | None, tuple | None]:
@@ -102,6 +109,19 @@ class Command(BaseCommand):
         if source == "overture":
             raise CommandError("Overture requires --bbox (it has no admin-area index).")
         return opts["city"] or settings.INGEST_DEFAULT_CITY, None
+
+    @staticmethod
+    def _stream(adapter: SourceAdapter, **kwargs):
+        """Stream the adapter's places, but let a source refusal stop the run.
+
+        A refused product is not an empty one. Without this the command reports
+        `places: created=0` and exits 0, which reads exactly like a city that has
+        no venues.
+        """
+        try:
+            yield from adapter.fetch(**kwargs)
+        except RoeduContractError as exc:
+            raise CommandError(str(exc)) from exc
 
     @staticmethod
     def _match(raw: RawPlace) -> list[tuple[str, str, float]]:
@@ -126,23 +146,27 @@ class Command(BaseCommand):
         counts: Counter = Counter()
         unmapped: Counter = Counter()
 
-        for raw in adapter.fetch(city=city, bbox=bbox, limit=limit):
-            if with_website and not raw.website:
-                counts["skipped_no_website"] += 1
-                continue
-            matches = [m for m in self._match(raw) if m[2] >= min_conf]
-            if not matches:
-                unmapped[self._unmapped_signature(raw)] += 1
+        try:
+            for raw in self._stream(adapter, city=city, bbox=bbox, limit=limit):
+                if with_website and not raw.website:
+                    counts["skipped_no_website"] += 1
+                    continue
+                matches = [m for m in self._match(raw) if m[2] >= min_conf]
+                if not matches:
+                    unmapped[self._unmapped_signature(raw)] += 1
 
-            if dry_run:
-                counts["seen"] += 1
-                if matches:
-                    counts["would_map"] += 1
-                continue
+                if dry_run:
+                    counts["seen"] += 1
+                    if matches:
+                        counts["would_map"] += 1
+                    continue
 
-            self._upsert(raw, matches, types, counts, dedup=dedup)
-
-        self._report(dry_run, counts, unmapped)
+                self._upsert(raw, matches, types, counts, dedup=dedup)
+        finally:
+            # `_upsert` commits per row, so a mid-walk refusal leaves real rows behind.
+            # Report what landed before the error unwinds — otherwise the operator gets
+            # the refusal and no idea what the run already wrote.
+            self._report(dry_run, counts, unmapped)
         if opts["aggregate"] and source in {"osm", "overture"}:
             aggregate_opts = {"source": source, "dry_run": dry_run}
             if opts["bbox"]:

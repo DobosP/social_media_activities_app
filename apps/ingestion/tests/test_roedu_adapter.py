@@ -29,6 +29,12 @@ class FakeRoeduClient:
         self.calls.append({"product": product, "max_records": max_records, "filters": filters})
         yield from self._records
 
+    def iter_required(self, product, *, limit=200, max_records=None, **filters):
+        # Delegates rather than aliasing `iter`: a class-body alias binds the base
+        # function forever, so a subclass overriding `iter` would be silently ignored
+        # (and a reordered class body would bind the builtin).
+        yield from self.iter(product, limit=limit, max_records=max_records, **filters)
+
     def iter_app_pack(self, pack, *, max_records=None, **filters):
         self.calls.append({"pack": pack, "max_records": max_records, "filters": filters})
         yield from self._records

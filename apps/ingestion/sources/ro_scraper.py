@@ -150,7 +150,7 @@ class RomaniaScraperAdapter(SourceAdapter):
                 if raw is not None:
                     yield raw
             return
-        for v in self._client.iter("venues", max_records=limit, **filters):
+        for v in self._client.iter_required("venues", max_records=limit, **filters):
             lat, lon = v.get("lat"), v.get("lon")
             if lat is None or lon is None:
                 continue  # a Place needs a point to be proximity-discoverable

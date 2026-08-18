@@ -9,7 +9,11 @@ from django.core.management.base import CommandError
 
 from apps.events.models import Event
 from apps.events.services import StaleRoeduSnapshot, reconcile_roedu_snapshot, upcoming_events
-from apps.ingestion.sources.roedu_client import SOCIAL_APP_PACK_ID, AppPackRead
+from apps.ingestion.sources.roedu_client import (
+    SOCIAL_APP_PACK_ID,
+    AppPackRead,
+    RoeduProductUnavailable,
+)
 from apps.ingestion.tests.roedu_fixtures import event_item, tombstone_item, venue_item
 from apps.places.models import Place
 
@@ -48,6 +52,10 @@ class FakeRoeduClient:
                 }
             ]
         )
+
+    def iter_required(self, product, *, limit=200, max_records=None, **filters):
+        # Delegates to `iter` so a subclass overriding it (DeltaClient) is honoured.
+        return self.iter(product, max_records=max_records, **filters)
 
     def iter_app_pack(self, pack, *, max_records=None, **filters):
         return iter([venue_item(), event_item()])
@@ -362,3 +370,64 @@ def test_legacy_delta_applies_bodyless_tombstone_without_inferring_absence():
         "city": "Cluj-Napoca",
         "updated_since": "change-token-42",
     }
+
+
+def test_a_refused_product_fails_the_sync_instead_of_reporting_zero_events():
+    """`applied 0 events` must never stand in for `the server refused everything`.
+
+    Measured on the live store on 2026-08-18: every product page came back
+    `available: false` with a note naming the missing policy columns, and this
+    command still printed a clean zero — indistinguishable from a city with no
+    events. The note is the answer; it has to reach the operator.
+    """
+
+    class RefusingClient(FakeRoeduClient):
+        def iter_required(self, product, *, limit=200, max_records=None, **filters):
+            raise RoeduProductUnavailable(product, note="policy gate refused every record")
+
+    with mock.patch(
+        "apps.events.management.commands.sync_roedu_events.RoeduClient", RefusingClient
+    ):
+        with pytest.raises(CommandError) as caught:
+            call_command("sync_roedu_events", "--city", "Cluj-Napoca")
+
+    assert "policy gate refused every record" in str(caught.value)
+    assert Event.objects.count() == 0
+
+
+def test_a_refused_venue_product_stops_the_run_before_any_event_is_applied():
+    """Venues are walked first; refusing them must not fall through to events."""
+
+    class RefusingVenues(FakeRoeduClient):
+        def iter_required(self, product, *, limit=200, max_records=None, **filters):
+            if product == "venues":
+                raise RoeduProductUnavailable(product, note="venues store not built")
+            raise AssertionError("events must not be walked after a venue refusal")
+
+    with mock.patch(
+        "apps.events.management.commands.sync_roedu_events.RoeduClient", RefusingVenues
+    ):
+        with pytest.raises(CommandError) as caught:
+            call_command("sync_roedu_events", "--city", "Cluj-Napoca")
+
+    assert "venues store not built" in str(caught.value)
+    assert Event.objects.count() == 0
+
+
+def test_an_app_pack_the_producer_emptied_fails_the_sync():
+    """The promoted lane gets the same treatment as the legacy one."""
+
+    class WithheldPackClient(FakeRoeduClient):
+        def read_app_pack(self, pack, *, max_records=None, **filters):
+            raise RoeduProductUnavailable(pack, note="the producer withheld 12 item(s)")
+
+    with mock.patch(
+        "apps.events.management.commands.sync_roedu_events.RoeduClient", WithheldPackClient
+    ):
+        with pytest.raises(CommandError) as caught:
+            call_command(
+                "sync_roedu_events", "--city", "Cluj-Napoca", "--app-pack", SOCIAL_APP_PACK_ID
+            )
+
+    assert "withheld 12 item(s)" in str(caught.value)
+    assert Event.objects.count() == 0

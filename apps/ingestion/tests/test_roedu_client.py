@@ -10,6 +10,7 @@ from __future__ import annotations
 import io
 import json
 from copy import deepcopy
+from unittest import mock
 
 from django.test import SimpleTestCase
 
@@ -17,6 +18,7 @@ from apps.ingestion.sources import roedu_client as rc
 from apps.ingestion.sources.roedu_client import (
     SOCIAL_APP_PACK_ID,
     RoeduClient,
+    RoeduProductUnavailable,
     is_canonical_social_app_pack_item,
 )
 from apps.ingestion.tests.roedu_fixtures import (
@@ -482,3 +484,215 @@ class RoeduClientRequestTests(SimpleTestCase):
                 yield
 
         return _cm()
+
+
+class IterRequiredTests(SimpleTestCase):
+    """A refused product must not read like an empty one.
+
+    The shared core ends its walk on ``available: false`` without a word, so a
+    policy-gate refusal and a city with no events produce the identical result:
+    zero records and a clean exit. The server always says which one it was in the
+    page ``note``; ``iter_required`` is the walk that carries it.
+    """
+
+    REFUSAL = {
+        "available": False,
+        "records": [],
+        "next_cursor": None,
+        "note": (
+            "schema not ready: events missing required policy column(s): "
+            "capture_id, privacy_classification"
+        ),
+    }
+
+    @staticmethod
+    def _client(pages_by_url):
+        return _canned_urlopen(pages_by_url), RoeduClient("http://roedu.test", api_key="k")
+
+    def test_refused_product_raises_carrying_the_servers_note(self):
+        fake, client = self._client({"/v1/products/events": deepcopy(self.REFUSAL)})
+        with mock.patch("urllib.request.urlopen", fake):
+            with self.assertRaises(RoeduProductUnavailable) as caught:
+                list(client.iter_required("events", city="Cluj-Napoca"))
+        self.assertEqual(caught.exception.product, "events")
+        self.assertEqual(caught.exception.records, 0)
+        self.assertIn("capture_id", str(caught.exception))
+        self.assertIn("served no events", str(caught.exception))
+
+    def test_plain_iter_still_swallows_that_refusal(self):
+        """Pins WHY the strict walk exists — and that `iter` keeps core semantics."""
+        fake, client = self._client({"/v1/products/events": deepcopy(self.REFUSAL)})
+        with mock.patch("urllib.request.urlopen", fake):
+            self.assertEqual(list(client.iter("events", city="Cluj-Napoca")), [])
+
+    def test_refusal_on_a_later_page_names_the_records_already_taken(self):
+        """The worse half: a mid-walk refusal truncates a plausible-looking result."""
+        first = {
+            "available": True,
+            "records": [{"id": "event-1"}, {"id": "event-2"}],
+            "next_cursor": "page-2",
+            "snapshot_id": None,
+        }
+        refusal = deepcopy(self.REFUSAL)
+
+        # Dispatch on the cursor explicitly: `_canned_urlopen` matches the FIRST
+        # registered key contained in the URL, so a dict-order edit could otherwise
+        # serve the refusal to page one and break this for an unrelated reason.
+        def fake_urlopen(req, timeout=None):
+            page = refusal if "cursor=page-2" in req.full_url else first
+            return _FakeResponse(json.dumps(page).encode("utf-8"))
+
+        client = RoeduClient("http://roedu.test", api_key="k")
+        with mock.patch("urllib.request.urlopen", fake_urlopen):
+            with self.assertRaises(RoeduProductUnavailable) as caught:
+                list(client.iter_required("events", city="Cluj-Napoca"))
+        self.assertEqual(caught.exception.records, 2)
+        self.assertIn("served only 2 record(s) from events before refusing", str(caught.exception))
+
+    def test_a_torn_read_stays_a_torn_read(self):
+        """ADR-0117's transient marker must not be relabelled as a product refusal.
+
+        A snapshot that moved mid-read is retryable; sending an operator to hunt a
+        policy gate for it would waste exactly the time this change is meant to save.
+        """
+        torn = {
+            "available": False,
+            "records": [],
+            "next_cursor": None,
+            "note": rc._SNAPSHOT_CHANGED_NOTE,
+        }
+        fake, client = self._client({"/v1/products/events": torn})
+        with mock.patch("urllib.request.urlopen", fake):
+            with self.assertRaises(rc.RoeduContractError) as caught:
+                list(client.iter_required("events", city="Cluj-Napoca"))
+        self.assertNotIsInstance(caught.exception, RoeduProductUnavailable)
+        self.assertIn("torn read", str(caught.exception))
+
+    def test_a_non_list_records_envelope_is_a_clean_contract_error(self):
+        """A misbehaving server must still produce a legible message, not a TypeError."""
+        page = {"available": True, "records": None, "next_cursor": None, "snapshot_id": None}
+        fake, client = self._client({"/v1/products/events": page})
+        with mock.patch("urllib.request.urlopen", fake):
+            with self.assertRaises(rc.RoeduContractError) as caught:
+                list(client.iter_required("events", city="Cluj-Napoca"))
+        self.assertIn("non-list records envelope", str(caught.exception))
+
+    def test_the_strict_walk_follows_cursors_exactly_like_iter(self):
+        """Pins the two walks equivalent across pages, not just on one happy page.
+
+        `iter_required` re-implements the core's record loop, which is the drift
+        ADR-0069's vendoring exists to prevent; this is the pin that catches it.
+        """
+        pages = {
+            None: {
+                "available": True,
+                "records": [{"id": "v1"}, {"id": "v2"}],
+                "next_cursor": "c2",
+                "snapshot_id": None,
+            },
+            "c2": {
+                "available": True,
+                "records": [{"id": "v3"}],
+                "next_cursor": None,
+                "snapshot_id": None,
+            },
+        }
+
+        def fake_urlopen(req, timeout=None):
+            page = pages["c2"] if "cursor=c2" in req.full_url else pages[None]
+            return _FakeResponse(json.dumps(page).encode("utf-8"))
+
+        client = RoeduClient("http://roedu.test", api_key="k")
+        with mock.patch("urllib.request.urlopen", fake_urlopen):
+            strict = [r["id"] for r in client.iter_required("venues")]
+            lenient = [r["id"] for r in client.iter("venues")]
+            bounded = [r["id"] for r in client.iter_required("venues", max_records=2)]
+        self.assertEqual(strict, ["v1", "v2", "v3"])
+        self.assertEqual(strict, lenient)
+        self.assertEqual(bounded, ["v1", "v2"])
+
+    def test_available_pages_walk_exactly_like_iter(self):
+        page = {
+            "available": True,
+            "records": [{"id": "venue-1"}, {"id": "venue-2"}],
+            "next_cursor": None,
+            "snapshot_id": None,
+        }
+        fake, client = self._client({"/v1/products/venues": page})
+        with mock.patch("urllib.request.urlopen", fake):
+            strict = list(client.iter_required("venues", city="Cluj-Napoca"))
+            lenient = list(client.iter("venues", city="Cluj-Napoca"))
+        self.assertEqual(strict, lenient)
+        self.assertEqual([r["id"] for r in strict], ["venue-1", "venue-2"])
+
+    def test_a_genuinely_empty_product_stays_quiet(self):
+        """The other half of the distinction: available-and-empty is not an error.
+
+        Raising here would turn "Cluj has no venues this week" into a failed sync,
+        which is the mirror-image bug of the one this walk exists to fix.
+        """
+        page = {"available": True, "records": [], "next_cursor": None, "snapshot_id": None}
+        fake, client = self._client({"/v1/products/venues": page})
+        with mock.patch("urllib.request.urlopen", fake):
+            self.assertEqual(list(client.iter_required("venues", city="Cluj-Napoca")), [])
+
+    def test_max_records_still_bounds_the_strict_walk(self):
+        page = {
+            "available": True,
+            "records": [{"id": "venue-1"}, {"id": "venue-2"}, {"id": "venue-3"}],
+            "next_cursor": None,
+            "snapshot_id": None,
+        }
+        fake, client = self._client({"/v1/products/venues": page})
+        with mock.patch("urllib.request.urlopen", fake):
+            self.assertEqual(
+                [r["id"] for r in client.iter_required("venues", max_records=2)],
+                ["venue-1", "venue-2"],
+            )
+
+
+class AppPackRefusalTests(SimpleTestCase):
+    """The promoted lane must not keep the silent zero the legacy lane just lost.
+
+    `read_app_pack` folds `withheld`/`errors` into one `snapshot_complete` boolean,
+    which correctly disables absence reconciliation but says nothing to the operator.
+    A pack that came back with every item withheld therefore looked exactly like a
+    city with no venues — and this is the lane a promoted release uses.
+    """
+
+    @staticmethod
+    def _client(page):
+        fake = _canned_urlopen({"/v1/app-packs/": page})
+        return fake, RoeduClient("http://roedu.test", api_key="k")
+
+    def test_a_pack_with_every_item_withheld_raises(self):
+        fake, client = self._client(pack_page([], withheld=12))
+        with mock.patch("urllib.request.urlopen", fake):
+            with self.assertRaises(rc.RoeduProductUnavailable) as caught:
+                client.read_app_pack(SOCIAL_APP_PACK_ID, city="Cluj-Napoca")
+        self.assertIn("withheld 12 item(s)", str(caught.exception))
+
+    def test_producer_errors_reach_the_operator(self):
+        fake, client = self._client(pack_page([], errors=["policy ruleset drifted"]))
+        with mock.patch("urllib.request.urlopen", fake):
+            with self.assertRaises(rc.RoeduProductUnavailable) as caught:
+                client.read_app_pack(SOCIAL_APP_PACK_ID, city="Cluj-Napoca")
+        self.assertIn("policy ruleset drifted", str(caught.exception))
+
+    def test_locally_dropped_items_stay_incomplete_rather_than_raising(self):
+        """Pins the existing contract this change deliberately does NOT touch."""
+        broken = venue_item()
+        broken.pop("policy_attestation", None)
+        fake, client = self._client(pack_page([broken]))
+        with mock.patch("urllib.request.urlopen", fake):
+            result = client.read_app_pack(SOCIAL_APP_PACK_ID, city="Cluj-Napoca")
+        self.assertEqual(result.items, ())
+        self.assertFalse(result.snapshot_complete)
+
+    def test_a_genuinely_empty_pack_is_still_a_clean_read(self):
+        """The mirror-image bug: a quiet week must not become a failed sync."""
+        fake, client = self._client(pack_page([]))
+        with mock.patch("urllib.request.urlopen", fake):
+            result = client.read_app_pack(SOCIAL_APP_PACK_ID, city="Cluj-Napoca")
+        self.assertEqual(result.items, ())
+        self.assertEqual(result.pack_id, SOCIAL_APP_PACK_ID)
