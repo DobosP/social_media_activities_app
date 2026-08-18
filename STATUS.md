@@ -65,7 +65,10 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   deciding what may be published is this app's decision, not `/v1` transport.
   `RoeduContractError` is imported from the core so the domain layer and shared
   paging raise one class. Hand-edits are caught by the `VENDORED_SHA256` stamp
-  (`apps/ingestion/tests/test_roedu_client_vendored.py`, 10 tests).
+  (`apps/ingestion/tests/test_roedu_client_vendored.py`, 10 tests). Because that stamp
+  forbids local edits, the generated file is excluded from `ruff format` (and only from
+  the formatter — `ruff check` still lints it); the canonical file is not format-clean
+  under the producer's own ruff either, so a resync cannot settle it.
 
 - **A refused RO-EDU product no longer reads as an empty city (ADR-0030, 2026-08-18).** The
   shared core ends its walk on `available: false` silently, so a policy-gate refusal
