@@ -1,6 +1,6 @@
 # Status — social_media_activities_app
 
-Last verified: 2026-07-16
+Last verified: 2026-08-18
 
 This is the repo's single source of current truth. On conflict:
 `STATUS.md` > newest ADR in `docs/adr/` > other docs. Detailed build history
@@ -66,6 +66,29 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   `RoeduContractError` is imported from the core so the domain layer and shared
   paging raise one class. Hand-edits are caught by the `VENDORED_SHA256` stamp
   (`apps/ingestion/tests/test_roedu_client_vendored.py`, 10 tests).
+
+- **A refused RO-EDU product no longer reads as an empty city (ADR-0030, 2026-08-18).** The
+  shared core ends its walk on `available: false` silently, so a policy-gate refusal
+  and a city with no events produced the identical output: `places: created=0` /
+  `applied 0 events`, exit 0 — while the page `note` naming the actual reason was
+  dropped. Verified against a live server on 2026-08-18: every products page came back
+  `available: false` ("schema not ready: … missing required policy column(s) …") and
+  both commands reported a clean zero. `RoeduClient.iter_required` (this app's layer,
+  not the stamped core) now raises `RoeduProductUnavailable` carrying that note, on the
+  first page and mid-walk alike — the mid-walk case had been truncating a
+  plausible-looking result set with no signal at all. `ingest_places --source=roedu`
+  and `sync_roedu_events` exit non-zero with the note; the scheduled `sync_roedu` job
+  catches it, logs it with a stack, reports it to Sentry when configured, writes it to
+  stderr, and then still runs `resolve_place_covers` and completes the tick — the shared
+  tick carries the GDPR/DSA duties and pings its heartbeat only on a fully clean run, so an
+  opt-in external source must not red-line it, and cover resolution is city-scoped rather
+  than RO-EDU-scoped. The
+  app-pack lane refuses the same way (`read_app_pack` raises when a pack is empty because
+  the producer withheld items or reported errors) — that is the lane a promoted release
+  uses, so leaving it silent would have kept the defect where it matters most. Still quiet
+  by design: the configuration skips, a genuinely empty product/pack, and items dropped by
+  this app's own canonical checks (they make the read incomplete instead, so absence is
+  never reconciled). Plain `iter` keeps the core's semantics.
 
 - **DSA Art.17 redress correctness (2026-08-09).** Two defects on the statutory
   redress path are fixed. (1) An author self-delete and a moderator REMOVE both set

@@ -25,6 +25,11 @@ shape validation, canonical pack naming, requested-filter matching — plus
 is this app's publication gate, not part of the `/v1` transport contract, so
 ADR-0069 keeps it here.
 
+`iter_required` is also local: it is the core's page walk plus this app's rule that a
+refused product must not be reported as an empty one (`RoeduProductUnavailable` carries
+the server's note). The core's `iter` is untouched and still ends such a walk silently,
+so changing `iter` upstream will NOT change what the sync commands do.
+
 To change transport/pagination behaviour, edit the canonical file in
 romania_scraper and re-run `scripts/sync_roedu_client.py --write`; never edit
 `_roedu_client_core.py` here.
@@ -185,8 +190,41 @@ _APP_PACK_PAGE_FIELDS = frozenset(
 
 # RoeduContractError comes from the shared core so an `except` in this app's
 # domain layer and one raised by shared paging are the same class.
+from ._roedu_client_core import _SNAPSHOT_CHANGED_NOTE, RoeduContractError
 from ._roedu_client_core import RoeduClient as _CanonicalClient
-from ._roedu_client_core import RoeduContractError
+
+
+class RoeduProductUnavailable(RoeduContractError):
+    """The API refused a product, so the walk carries no (or only partial) records.
+
+    ``available: false`` is a legitimate fail-closed answer — a policy-gate refusal,
+    a store that is not built, a schema that is not ready — and the shared core ends
+    the walk on it. It ends it *silently*, though, which makes "the server refused
+    every record" indistinguishable from "this city has nothing", and the ``note``
+    saying which one it was is dropped on the floor. An operator then reads
+    ``applied 0 events`` and concludes the source is empty.
+
+    So this app's own walk raises instead, carrying the server's note. It is a
+    ``RoeduContractError`` subclass because callers that already fail closed on a
+    contract breach must fail closed on a refusal too.
+    """
+
+    def __init__(self, product: str, *, note: object = None, records: int = 0) -> None:
+        # The note is server-supplied text that lands in cron logs and Sentry, so it is
+        # collapsed to one line and bounded: a newline in it would otherwise split a
+        # monitored log line, leaving the tail unprefixed and fully producer-controlled.
+        detail = " ".join(str(note).split()) if note else ""
+        if len(detail) > 500:
+            detail = detail[:497] + "..."
+        served = (
+            f"served only {records} record(s) from {product} before refusing"
+            if records
+            else f"served no {product}"
+        )
+        super().__init__(f"RO-EDU API {served}: " + (detail or "the server gave no reason"))
+        self.product = product
+        self.note = note
+        self.records = records
 
 
 @dataclass(frozen=True)
@@ -613,6 +651,46 @@ class RoeduClient(_CanonicalClient):
         params = {"layer": layer, "cursor": cursor, "limit": limit, **filters}
         return self._get(f"/v1/app-packs/{app}/{pack}", params)
 
+    def iter_required(
+        self,
+        product: str,
+        *,
+        limit: int = 200,
+        max_records: int | None = None,
+        **filters,
+    ) -> Iterator[dict]:
+        """Yield a legacy product's records, refusing to mistake a refusal for empty.
+
+        Same walk as the inherited :meth:`iter`, with one difference: a page whose
+        ``available`` is false raises :class:`RoeduProductUnavailable` instead of
+        quietly ending the iteration. That covers the mid-walk case too — a refusal
+        on page three used to truncate the result set with no signal at all, which
+        is worse than the empty first page because the caller sees a plausible
+        number of records.
+
+        ``iter`` stays as the core defines it; consumers that genuinely want
+        best-effort records keep it.
+        """
+        seen = 0
+        for page in self.pages(product, limit=limit, **filters):
+            if not page.get("available", False):
+                if page.get("note") == _SNAPSHOT_CHANGED_NOTE:
+                    # ADR-0117 torn read: transient and retryable, and the core raises
+                    # its own error for it on the next resume. Labelling it a product
+                    # refusal would send an operator hunting a policy gate that is fine.
+                    continue
+                raise RoeduProductUnavailable(product, note=page.get("note"), records=seen)
+            records = page.get("records", [])
+            if not isinstance(records, list):
+                raise RoeduContractError(
+                    f"RO-EDU API returned a non-list records envelope for {product}"
+                )
+            for record in records:
+                yield record
+                seen += 1
+                if max_records and seen >= max_records:
+                    return
+
     def iter_app_pack(
         self,
         pack: str,
@@ -678,6 +756,11 @@ class RoeduClient(_CanonicalClient):
         locally_complete = False
         producer_clean = True
         truncated = False
+        # Kept alongside `producer_clean` because "the producer refused everything"
+        # and "this city genuinely has nothing" both end with zero items, and only
+        # these counters tell them apart.
+        withheld_total = 0
+        producer_errors: list[str] = []
         while True:
             page = self.app_pack_page(
                 pack,
@@ -737,6 +820,8 @@ class RoeduClient(_CanonicalClient):
             ):
                 raise RoeduContractError("app-pack page has an invalid result envelope")
             producer_clean = producer_clean and withheld == 0 and not errors
+            withheld_total += withheld
+            producer_errors.extend(errors)
             page_items = page.get("items")
             if not isinstance(page_items, list):
                 raise RoeduContractError("app-pack page items must be a list")
@@ -782,6 +867,20 @@ class RoeduClient(_CanonicalClient):
                 items_valid = False
                 continue
             related_items.append(item)
+        if not related_items:
+            # An empty pack is a normal answer; one the PRODUCER emptied is not.
+            # Without this the app-pack lane keeps the exact silent zero
+            # `iter_required` removes from the legacy lane — and this is the lane a
+            # promoted release uses. Items dropped by THIS app's own canonical checks
+            # are deliberately not fatal: they make the read incomplete so absence is
+            # never reconciled (`test_duplicate_or_dangling_items_make_read_incomplete`,
+            # `test_read_app_pack_never_completes_after_filter_mismatch`), and changing
+            # that is a separate decision from surfacing a refusal.
+            if withheld_total or producer_errors:
+                detail = f"the producer withheld {withheld_total} item(s)"
+                if producer_errors:
+                    detail += " and reported: " + "; ".join(sorted(set(producer_errors)))
+                raise RoeduProductUnavailable(pack, note=detail)
         return AppPackRead(
             tuple(related_items),
             pack_id,
