@@ -126,7 +126,9 @@ class RomaniaScraperAdapter(SourceAdapter):
     def __init__(self, client: RoeduClient | None = None, *, app_pack: str | None = None) -> None:
         self._client = client or RoeduClient(
             base_url=os.environ.get("ROEDU_API_URL"),
-            api_key=os.environ.get("ROEDU_API_KEY", "social-app-dev"),
+            # No "social-app-dev" fallback: a missing credential must fail at
+            # the call, not silently authenticate as dev against production.
+            api_key=os.environ.get("ROEDU_API_KEY"),
         )
         configured_pack = app_pack or os.environ.get("ROEDU_APP_PACK") or None
         self.app_pack = require_canonical_social_pack(configured_pack) if configured_pack else None

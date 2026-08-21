@@ -71,7 +71,11 @@ class Command(BaseCommand):
         refusal = None
         try:
             call_command("ingest_places", "--source", "roedu", "--city", city)
-            event_args = ["--city", city]
+            # Forward the SAME credential the venues lane just used. Without
+            # this the events lane fell back to its own hard-coded default,
+            # so one nightly job spoke to the producer as two different
+            # clients. The guard above already proved the variable is set.
+            event_args = ["--city", city, "--api-key", os.environ["ROEDU_API_KEY"]]
             if app_pack:
                 event_args.extend(["--app-pack", app_pack])
             call_command("sync_roedu_events", *event_args)
