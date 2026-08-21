@@ -1,6 +1,7 @@
 """ADR-0019 §7 — the daily sync_roedu due-job: opt-in guard + sub-command fan-out."""
 
 from io import StringIO
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -58,10 +59,17 @@ def test_app_pack_mode_is_forwarded_to_event_sync_for_one_mode_per_run(settings,
     with patch("apps.ingestion.management.commands.sync_roedu.call_command") as sub:
         _run()
     event_call = sub.call_args_list[1]
+    # The credential is forwarded explicitly. This assertion previously pinned
+    # the argv WITHOUT --api-key, which is what let the events lane fall back to
+    # its own hard-coded "social-app-dev" default while the venues lane of the
+    # same nightly job sent the real ROEDU_API_KEY: one job, two clients, and a
+    # green test over the top of it.
     assert event_call.args == (
         "sync_roedu_events",
         "--city",
         "Cluj-Napoca",
+        "--api-key",
+        "test-key",
         "--app-pack",
         SOCIAL_APP_PACK_ID,
     )
@@ -140,3 +148,45 @@ def test_a_failure_that_is_not_a_refusal_still_fails_the_job(monkeypatch, settin
     with pytest.raises(CommandError, match="No ActivityType rows"):
         call_command("sync_roedu")
     assert "resolve_place_covers" not in calls
+
+
+def test_both_lanes_use_the_same_credential(settings, monkeypatch):
+    """One nightly job must speak to the producer as ONE client.
+
+    The venues lane reads ROEDU_API_KEY from the environment; the events lane
+    is a separate management command with its own --api-key. Before the fix it
+    had a "social-app-dev" default and sync_roedu never passed the flag, so the
+    two halves authenticated differently and nothing reported it.
+    """
+
+    settings.ROEDU_SYNC_ENABLED = True
+    settings.ROEDU_SYNC_CITY = "Cluj-Napoca"
+    monkeypatch.setenv("ROEDU_API_KEY", "PROD-SECRET")
+    monkeypatch.delenv("ROEDU_APP_PACK", raising=False)
+    with patch("apps.ingestion.management.commands.sync_roedu.call_command") as sub:
+        _run()
+    event_call = sub.call_args_list[1]
+    assert "--api-key" in event_call.args
+    forwarded = event_call.args[event_call.args.index("--api-key") + 1]
+    assert forwarded == "PROD-SECRET"
+    assert "social-app-dev" not in event_call.args
+
+
+def test_the_events_lane_has_no_dev_credential_fallback():
+    """A missing credential must fail, not silently authenticate as dev."""
+
+    from apps.events.management.commands import sync_roedu_events
+
+    source = Path(sync_roedu_events.__file__).read_text(encoding="utf-8")
+    # The FALLBACK must be gone, not every mention: the comments explaining why
+    # deliberately name the old default.
+    assert 'default="social-app-dev"' not in source
+    assert "default=None" in source
+
+
+def test_the_ingestion_adapter_has_no_dev_credential_fallback():
+    from apps.ingestion.sources import ro_scraper
+
+    source = Path(ro_scraper.__file__).read_text(encoding="utf-8")
+    assert '"ROEDU_API_KEY", "social-app-dev"' not in source
+    assert 'os.environ.get("ROEDU_API_KEY")' in source

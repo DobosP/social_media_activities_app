@@ -20,6 +20,21 @@ from apps.places.models import Place
 pytestmark = pytest.mark.django_db
 
 
+@pytest.fixture(autouse=True)
+def _roedu_credential(monkeypatch):
+    """Supply the credential these tests never cared about.
+
+    Every test here patches `RoeduClient`, so the key never reaches the wire and
+    none of their assertions depend on its value. They previously ran on the
+    command's hard-coded "social-app-dev" default; that default is gone, because
+    it let the nightly job's events lane authenticate as dev while its venues
+    lane used the real key. The command now requires a credential, so give it
+    one explicitly rather than reinstating a fallback nothing should rely on.
+    """
+
+    monkeypatch.setenv("ROEDU_API_KEY", "test-key")
+
+
 class FakeRoeduClient:
     def __init__(self, *args, **kwargs):
         pass

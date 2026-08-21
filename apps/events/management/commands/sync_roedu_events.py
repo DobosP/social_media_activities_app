@@ -9,6 +9,7 @@ infer absence. Explicit cancellation/deletion records are applied in either mode
 
 from __future__ import annotations
 
+import os
 from contextlib import nullcontext
 from decimal import Decimal
 
@@ -235,7 +236,12 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("--city", default="Cluj-Napoca")
         parser.add_argument("--api-url", default=None, help="ROEDU_API_URL override")
-        parser.add_argument("--api-key", default="social-app-dev")
+        # No default. A hard-coded fallback meant this lane authenticated as
+        # "social-app-dev" while the venues lane of the SAME nightly job sent
+        # the real ROEDU_API_KEY — two credentials, one job, and nothing said
+        # so. Resolved from the environment below and failing loudly when it
+        # is absent is the only way a wrong credential is visible.
+        parser.add_argument("--api-key", default=None)
         parser.add_argument(
             "--app-pack",
             default=None,
@@ -268,7 +274,10 @@ class Command(BaseCommand):
                 opts["app_pack"] = require_canonical_social_pack(opts["app_pack"])
             except RoeduContractError as exc:
                 raise CommandError(str(exc)) from exc
-        client = RoeduClient(base_url=opts["api_url"], api_key=opts["api_key"])
+        api_key = opts["api_key"] or os.environ.get("ROEDU_API_KEY")
+        if not api_key:
+            raise CommandError("no RO-EDU credential: pass --api-key or set ROEDU_API_KEY")
+        client = RoeduClient(base_url=opts["api_url"], api_key=api_key)
         app_pack = None
         snapshot_generated_at = None
         if opts["app_pack"]:
