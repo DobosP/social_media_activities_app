@@ -11,8 +11,8 @@ Last verified: 2026-07-11 — contracts match `apps/*/services.py` + the 2,365-t
 
 ## The catalog
 
-Built on the social core; see services/tests for exact behaviour. All uphold the six hard
-invariants in [`CLAUDE.md`](../CLAUDE.md).
+Built on the social core; see services/tests for exact behaviour. All uphold the product principles in
+[`ROADMAP.md`](ROADMAP.md) §Vision & principles and the child-safety invariants in [`SAFETY.md`](SAFETY.md) §Core rules.
 
 - **Tiered profile visibility + person hover cards** (ADR-0028) — the sole other-user
   profile surface: `/people/<public_id>/` page + hover partial + API twin, one live resolver

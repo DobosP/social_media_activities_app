@@ -44,6 +44,9 @@ htmlcov/
 # Local agent worktrees / state
 .claude/
 docker-compose.local.yml
+TASK_BRIEF.md
+TASK_RESULT.md
+SWARM_RESULT.md
 
 # Local design/exploration scratch (avatar concept gallery, montages — not for the repo)
 scratch/

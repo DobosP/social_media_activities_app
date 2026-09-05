@@ -16,7 +16,7 @@ but are required to glue the product together safely.
 
 See also: [ARCHITECTURE](ARCHITECTURE.md) · [COMPLIANCE](COMPLIANCE.md) ·
 [SAFETY](SAFETY.md) · [SECURITY](SECURITY.md) · [DATA_AND_INTEGRATIONS](DATA_AND_INTEGRATIONS.md) ·
-[MULTI_AGENT_BUILD](MULTI_AGENT_BUILD.md) (how to build this in parallel)
+[MULTI_AGENT_BUILD](MULTI_AGENT_BUILD.md) (superseded; parallel work is governed by ../AGENTS.md)
 
 ## Vision & principles
 

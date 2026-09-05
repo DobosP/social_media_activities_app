@@ -1,5 +1,33 @@
 # Public Groups — design spec (for next-run implementation)
 
+Read this when: you are about to build, review or change persistent public groups — this is the locked spec, including the per-cohort roster/count rule and the child-safety must-fixes.
+
+## Contents
+
+- [Candidate ranking (design workflow)](#candidate-ranking-design-workflow)
+- [Recommended design](#recommended-design)
+- [0. Synthesis decisions (what I took, grafted, and fixed)](#0-synthesis-decisions-what-i-took-grafted-and-fixed)
+- [1. Final data model](#1-final-data-model)
+- [2. Single read + single write chokepoints (exact gate order)](#2-single-read--single-write-chokepoints-exact-gate-order)
+- [3. Roster / count visibility rule (per cohort) — THE rule, in ONE service](#3-roster--count-visibility-rule-per-cohort--the-rule-in-one-service)
+- [4. Count-toggle (folds into the roster rule)](#4-count-toggle-folds-into-the-roster-rule)
+- [5. Creation / curation model (conservative default — inv.3)](#5-creation--curation-model-conservative-default--inv3)
+- [6. Guardian oversight (SIMPLIFIED — Fix 1)](#6-guardian-oversight-simplified--fix-1)
+- [7. Safety integrations (all reuse existing seams — no new safety primitives)](#7-safety-integrations-all-reuse-existing-seams--no-new-safety-primitives)
+- [8. Relation to Communities (Groups sit ABOVE Communities — decoupled)](#8-relation-to-communities-groups-sit-above-communities--decoupled)
+- [9. Migration plan](#9-migration-plan)
+- [10. Phased build order (smallest safe vertical slice first)](#10-phased-build-order-smallest-safe-vertical-slice-first)
+- [11. Product decisions needed (flagged)](#11-product-decisions-needed-flagged)
+- [Adversarial child-safety critique (must-fix list before/within build)](#adversarial-child-safety-critique-must-fix-list-beforewithin-build)
+- [(a) Ways a minor can see a roster / count / who-is-here](#a-ways-a-minor-can-see-a-roster--count--who-is-here)
+- [(b) Adult↔minor contact / cross-cohort leakage](#b-adultminor-contact--cross-cohort-leakage)
+- [(c) Predator creates / uses a group to target minors](#c-predator-creates--uses-a-group-to-target-minors)
+- [(d) Reintroduced vanity metric / engagement-maxxing](#d-reintroduced-vanity-metric--engagement-maxxing)
+- [(e) Loss of the hardened `post_to_thread` / `can_read_thread` gates](#e-loss-of-the-hardened-post_to_thread--can_read_thread-gates)
+- [(f) Migration / under-gated read path](#f-migration--under-gated-read-path)
+- [Cross-cutting confirmations (things the design got RIGHT — verified against code)](#cross-cutting-confirmations-things-the-design-got-right--verified-against-code)
+- [FINAL VERDICT: **GO-WITH-CHANGES**](#final-verdict-go-with-changes)
+
 > Produced by a multi-agent design workflow on 2026-05-31 (independent architecture
 > proposals → judged → synthesized → adversarial child-safety critique). This is the
 > ready-to-build spec. Build it on a branch following the standard per-feature cycle

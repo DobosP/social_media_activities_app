@@ -1,22 +1,41 @@
 # Agent Testing Guide — social_media_activities_app
 
+Last verified: 2026-09-05
+
 ## Environment
 - Runtime: Django/Python in Docker Compose local environment.
-- Verified local compose project name: `socialfix`.
+- Verified local compose project name: `socialfix` (its `docker-compose.local.yml` is untracked/gitignored).
 - Use `python -m pytest` in the container; bare `pytest` may not be on PATH.
+- `-p socialfix` targets that dev host's compose project; omit it if you created the project with a plain
+  `docker compose -f docker-compose.local.yml up` (Compose then names it after the directory).
+- CI matrix: `.github/workflows/ci.yml` (jobs: `frontend`, `lint-test`, `docker-build`, `audit`).
 
 ## Commands
-| Scope | Command | Expected success |
+| Scope | Command | Expected |
 |---|---|---|
-| Deferred task tests | `docker compose -p socialfix -f docker-compose.local.yml exec -T web sh -lc 'python -m pytest apps/ops/tests/test_deferred_tasks.py -q'` | `22 passed` on current setup |
+| Targeted deferred-task tests | `docker compose -p socialfix -f docker-compose.local.yml exec -T web sh -lc 'python -m pytest apps/ops/tests/test_deferred_tasks.py -q'` | `N passed`, no failures. Do not hard-code `N` — the file grows. |
+| Full suite (container) | `docker compose -p socialfix -f docker-compose.local.yml exec -T web sh -lc 'python -m pytest -q'` | all pass except the known-failing rows below |
+| Full suite (CI-equivalent env) | `docker compose -f docker-compose.local.yml exec -T -e DJANGO_SETTINGS_MODULE=config.settings.test -e DJANGO_SECRET_KEY=ci-secret-not-for-prod -e DATABASE_URL=postgis://app:app@db:5432/app web pytest -q` | same (see `README.md` §Local variant) |
+| Lint | `ruff check . && ruff format --check .` | `All checks passed!` / `N files already formatted` |
+| Migration drift | `python manage.py makemigrations --check --dry-run` | `No changes detected`; needs the app deps (container or a venv with `requirements*.txt`) — a bare host raises `ModuleNotFoundError: environ` |
+| Frontend | `cd frontend && npm ci && npm test && npm run build` | tests green; build within the initial-bundle budget (40 KiB gzip) |
+| Dependency audit | `pip-audit -r requirements.txt -r requirements-dev.txt` | `No known vulnerabilities found` (report-only on PRs, enforcing on main) |
+| Python SAST | `bandit -r apps config -q --severity-level high --confidence-level high` | no findings |
+| Doc gate (any doc change) | `python3 ~/work/agent-ops/scripts/check_docs.py .` | `dead_links=0 stale_terms=0 retired_verbs=0 orphans=0` (only `files=` varies); exit 0 |
 | Whitespace | `git diff --check` | no output |
 
 ## Before commit
 1. Run `git diff --check`.
 2. Run the targeted container test for touched ops/deferred-task code.
 3. For privacy/moderation changes, document manual review needs.
-4. Record exact command output in worker result files.
+4. Record exact command output in the worker result (`TASK_RESULT.md`, gitignored — never committed) and, on landing, in `STATUS.md` §Verification record.
+5. Docs touched? Run the doc gate above and paste its `files=…` line into `STATUS.md` §Verification record.
 
-## Known blockers
-- If containers are down, report `docker compose ... ps` / startup blocker instead of inventing test output.
+## Known failing / blocked
+- `apps/chat/tests/test_consumer.py` and `apps/messaging/tests/test_consumer.py`: 15 websocket-consumer
+  failures reported 2026-08-22, identical on pristine main in isolation. Treat as pre-existing until fixed;
+  never "fix" them by weakening a gate.
+- If containers are down, report `docker compose ... ps` / the startup blocker instead of inventing test output.
 - Do not expose secrets from settings or env files.
+- `python manage.py check --deploy` needs the CI env block in `.github/workflows/ci.yml` (prod settings +
+  dummy EUDI trust anchor) — CI-only unless you replicate that environment.

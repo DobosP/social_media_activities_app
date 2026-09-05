@@ -1,11 +1,25 @@
 # EU hosting design — cheapest credible, data-resident, child-safety-first
 
+Read this when: you are provisioning, sizing, or changing where this app runs — the EU-residency, cost and single-box deploy decisions live here (`render.yaml` is demo only).
+
+## Contents
+
+- [1. TL;DR recommendation](#1-tldr-recommendation)
+- [2. Why this over a PaaS](#2-why-this-over-a-paas)
+- [3. Concrete single-box recipe (Hetzner)](#3-concrete-single-box-recipe-hetzner)
+- [4. Object storage detail](#4-object-storage-detail)
+- [5. Claude / AI posture](#5-claude--ai-posture)
+- [6. Scaling path (when one box is outgrown)](#6-scaling-path-when-one-box-is-outgrown)
+- [7. GDPR / DSA / EU-residency checklist](#7-gdpr--dsa--eu-residency-checklist)
+- [Cost tables](#cost-tables)
+- [References](#references)
+
 > Scope: where and how to run this nonprofit, open-source, text-first platform for its
 > first launch city, **Cluj-Napoca, Romania (EU)**. Every recommendation here is grounded
 > in the repo's actual config (`render.yaml`, `Dockerfile`, `config/settings/*.py`,
 > `apps/media/storage.py`, `.env.example`, `requirements.txt`).
 >
-> Hard constraints this doc must satisfy (from `CLAUDE.md` / `docs/SAFETY.md`):
+> Hard constraints this doc must satisfy (from `docs/ROADMAP.md` §Vision & principles and `docs/SAFETY.md`):
 > child data and media **never leave the EU**; **privacy by default**; **no per-user
 > cloud-AI spend**; **cheap + open-source** (donations-funded). The stack is
 > Django 5.2 + DRF + GeoDjango/PostGIS + `pgvector` (one Postgres primary), ASGI/daphne
@@ -462,12 +476,12 @@ do not copy them to a non-EU location.
 
 ## 5. Claude / AI posture
 
-**Invariant #6: avoid per-user cloud-AI spend.** The product engine is intentionally
+**Invariant: avoid per-user cloud-AI spend** (this doc's header constraints; `docs/ROADMAP.md` §Vision & principles "Cheap, scalable, open source" and "Nonprofit"). The product engine is intentionally
 **deterministic / no-ML** — `social.thread_digest` (extractive, no ML), `social.draft_activity_text`
 (template-only), and `communities` (predicate at read time) are all rule-based. There is **no LLM
 in any user request path, and there must not be one.**
 
-**Rule: NO Claude (or any LLM) in a per-user code path. Ever.** It would break invariant #6 (cost
+**Rule: NO Claude (or any LLM) in a per-user code path. Ever.** It would break that invariant (cost
 scales with users), undercut the text-first / no-engagement-maxxing promise, and create a stream of
 user content leaving the EU.
 
@@ -476,9 +490,9 @@ user content leaving the EU.
 - Examples: moderator **triage assist** (summarize a report queue for a human moderator), or
   one-off **seed-copy generation** (place blurbs, onboarding copy). All run **off the request
   path**, by staff, in bounded batches.
-- Cost-bound it: prefer the **Batch API (50% off)** with **Claude Haiku** (cheapest model). A few
+- Cost-bound it: prefer the **Batch API (50% off)** on the `fast` rung of the ladder in `fleet-tiers.sh` (Haiku 4.5 as of 2026-09). A few
   hundred small admin calls/month is well under **€1/mo** and is **unrelated to user count** — it
-  never scales with traffic. (See `docs`/the `claude-api` skill for current model ids + pricing.)
+  never scales with traffic. (Model ids: only the ladder in `fleet-tiers.sh`; pricing: Anthropic's published rates at time of use — never hard-code an id or a price here.)
 
 **EU data residency for any text sent to Claude:**
 

@@ -18,7 +18,7 @@ already exist. See [ROADMAP](ROADMAP.md) for sequencing.
 - **Modular monolith.** One Django project, many focused apps under `apps/`. Cheap to run and
   deploy; split out services only if/when a real bottleneck appears. This modularity is also what
   lets **multiple agents build in parallel** without colliding — see
-  [MULTI_AGENT_BUILD](MULTI_AGENT_BUILD.md).
+  [MULTI_AGENT_BUILD](MULTI_AGENT_BUILD.md) (superseded; parallel work is governed by ../AGENTS.md).
 - **Source-agnostic ingestion.** Place data arrives through `SourceAdapter`s, normalized to a
   `RawPlace`, so adding Overture/Google later doesn't touch the command logic.
 - **Provenance & confidence are first-class.** Every place and every place↔activity edge records
@@ -116,8 +116,8 @@ user-confirmed/manual edges are never overwritten by re-ingestion.
 
 ## Working conventions (current, post-D10)
 
-Moved here from `CLAUDE.md` on 2026-07-02 (CLAUDE.md keeps the five-line essence; this is the
-full statement — do not weaken):
+Moved here from `CLAUDE.md` on 2026-07-02; `AGENTS.md` §Read first names the five rules, this is the
+full statement — do not weaken:
 
 - **Domain logic lives in `apps/<app>/services.py`.** Both the DRF views (`apps/<app>/views.py`)
   and the web views (`apps/web/views.py`) call the *same* service functions, so the safety gates

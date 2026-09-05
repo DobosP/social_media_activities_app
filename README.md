@@ -57,7 +57,8 @@ docker compose -f docker-compose.local.yml exec -T \
 
 The compose volume-mounts `./:/app`, so the running container always uses current code (no rebuild
 needed). The production image installs `requirements.txt` only (no pytest) — install dev deps as
-above. CI gates are listed in `CLAUDE.md`; targeted test commands in `docs/agent-testing.md`.
+above. The CI matrix is `.github/workflows/ci.yml`; gate commands with expected output are in
+`docs/agent-testing.md`; agent operating rules are in `AGENTS.md`.
 
 ## Quick start (local, no Docker)
 
@@ -112,10 +113,18 @@ users — open `http://localhost:8000/`:
 ## Project layout
 
 ```
-config/          # settings (base/dev/prod/test), urls, wsgi/asgi
-apps/taxonomy/   # ActivityCategory, ActivityType, ActivityRelation (+ seed migration)
-apps/places/     # Place (PostGIS) + PlaceActivity edge + geo API
-apps/ingestion/  # source adapters (overpass, overture-stub), mapping, ingest_places command
+config/             # settings (base/dev/prod/test), urls, wsgi/asgi
+apps/               # 20 Django apps: accounts (identity/EUDI), taxonomy, places (PostGIS), ingestion
+                    #   (source adapters + RO-EDU client, ingest_places/sync_roedu), events, social,
+                    #   connections (tiered profiles), communities, chat + messaging (E2EE, consumers),
+                    #   media, safety (moderation, Art.16/17, SSRF net), ops (DeferredTask/run_due_jobs),
+                    #   notifications, recommendations, discovery, saved_searches, booking, donations, web (SSR UI)
+frontend/           # Preact/Vite SPA → static/frontend/ (ADR-0016, ADR-0022)
+services/agentapi/  # optional no-DB Go sidecar for AI-agent/crawler reads (:8090, compose profile `agent`; ADR-0025)
+deploy/             # Terraform + cloud-init + systemd for the Hetzner EU box (never applied) — deploy/README.md
+db/                 # seed data — db/README.md
+tests/              # cross-app API schema/security/prod-hardening tests; per-app tests live in apps/<app>/tests/
+docs/               # design, ops, compliance, ADRs — index at docs/README.md
 ```
 
 ## Tests & lint
@@ -129,27 +138,15 @@ pip-audit         # dependency vulnerability scan (release gate)
 Dependencies are fully pinned (compiled from `requirements*.in`) and tracked for security — see
 [`docs/SECURITY.md`](docs/SECURITY.md). Django is on the **5.2 LTS** line.
 
-## Roadmap
+## Docs
 
-**Full roadmap & design docs live in [`docs/`](docs/README.md)** — the phased plan (D1–D9) with a
+**Full roadmap & design docs live in [`docs/`](docs/README.md)** — the phased plan (D1–D10) with a
 dependency graph and feature traceability is in [`docs/ROADMAP.md`](docs/ROADMAP.md); see also
 [ARCHITECTURE](docs/ARCHITECTURE.md), [COMPLIANCE](docs/COMPLIANCE.md), [SAFETY](docs/SAFETY.md),
 [SECURITY](docs/SECURITY.md), and [DATA_AND_INTEGRATIONS](docs/DATA_AND_INTEGRATIONS.md).
 Decisions are recorded in [`docs/adr/`](docs/adr/); dated audits/plans are archived in
 [`docs/archive/`](docs/archive/).
 
-The items below were "later deliverables" when this README was written at D1; **they have
-since been built** (D2–D10). The list is kept for historical context — see
-[STATUS.md](STATUS.md) and [docs/PRODUCTION_READINESS.md](docs/PRODUCTION_READINESS.md) for
-current, verified status:
-
-- **Accounts & identity** — pluggable provider integrating the EU **EUDI Wallet** + the EU
-  privacy-preserving **age-verification** app (age-band proof) plus parental consent;
-  age-cohort matching so children interact only with similar-age peers.
-- **Social core** — threads/posts tied to a `Place`; join-by-vote (configurable approval
-  threshold of participants); private per-thread photos only.
-- **Chat** — real-time over the ASGI seam; safety-by-design moderation (encryption/scanning
-  kept swappable pending EU CSAR).
-- **Data** — Overture adapter, optional paid Google Places enrichment, cross-source dedup,
-  `opening_hours` parsing.
-- **Booking** — per-provider adapters behind a common interface (deep-links first).
+Component READMEs: [deploy/README.md](deploy/README.md) · [db/README.md](db/README.md) ·
+[services/agentapi/README.md](services/agentapi/README.md) (public landing text:
+[services/agentapi/landing.md](services/agentapi/landing.md)). Dated history: [WORKLOG.md](WORKLOG.md).
