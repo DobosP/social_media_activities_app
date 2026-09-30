@@ -80,7 +80,7 @@ djangorestframework==3.17.1
     #   -r requirements.in
     #   djangorestframework-gis
     #   drf-spectacular
-djangorestframework-gis==1.2.1
+djangorestframework-gis==1.3.0
     # via -r requirements.in
 drf-spectacular==0.30.0
     # via -r requirements.in
