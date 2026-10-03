@@ -5,10 +5,10 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"hash/fnv"
 	"net/http"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -96,21 +96,18 @@ func (a *App) currentOrUnavailable(w http.ResponseWriter, r *http.Request) (*Sna
 	return snap, true
 }
 
-// computeETag builds the strong ETag for a data endpoint response: it is a
-// function of the loaded snapshot's version (derived from manifest
-// generated_at + dataset counts) and the request path+query, so it changes
+// computeETag builds a representation-independent weak ETag: identity and
+// gzip response bytes differ, while their public data is equivalent. It is a
+// function of the loaded snapshot's content version and the request
+// path+query, so it changes
 // exactly when the snapshot changes or the query changes.
 func computeETag(version string, r *http.Request) string {
-	h := fnv.New32a()
-	_, _ = h.Write([]byte(r.URL.Path))
-	_, _ = h.Write([]byte{'?'})
-	_, _ = h.Write([]byte(r.URL.RawQuery))
-	return fmt.Sprintf("%q", fmt.Sprintf("%s-%x", version, h.Sum32()))
+	return "W/" + fmt.Sprintf("%q", sha256Sum([]byte(version+"\x00"+r.URL.Path+"?"+r.URL.RawQuery)))
 }
 
 func computeStaticETag(content []byte) string {
 	sum := sha256Sum(content)
-	return fmt.Sprintf("%q", sum[:16])
+	return "W/" + fmt.Sprintf("%q", sum)
 }
 
 // writeAPIErr renders an *apiError (or any error, defensively) as a 400
@@ -173,11 +170,18 @@ func (a *App) handleHealthz(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	age := int64(time.Since(snap.LoadedAt).Seconds())
+	generatedAt, err := time.Parse(time.RFC3339, snap.GeneratedAt)
+	if err != nil || generatedAt.After(time.Now().UTC().Add(5*time.Minute)) {
+		writeJSON(w, r, http.StatusServiceUnavailable, noStoreCache, "", map[string]string{
+			"status": "invalid_snapshot_generation",
+		})
+		return
+	}
 	writeJSON(w, r, http.StatusOK, noStoreCache, "", map[string]any{
-		"status":                "ok",
-		"snapshot_generated_at": snap.GeneratedAt,
-		"snapshot_age_seconds":  age,
+		"status":                      "ok",
+		"snapshot_generated_at":       snap.GeneratedAt,
+		"snapshot_age_seconds":        max(int64(0), int64(time.Since(generatedAt).Seconds())),
+		"snapshot_loaded_age_seconds": int64(time.Since(snap.LoadedAt).Seconds()),
 	})
 }
 
@@ -231,16 +235,19 @@ func (a *App) handleEventsList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	etag := computeETag(snap.version, r)
-	if ifNoneMatchHit(r, etag) {
-		write304(w, r, dataCacheControl, etag)
-		return
-	}
-
 	q := r.URL.Query()
 	filter := eventFilter{
 		Activity: q.Get("activity"),
-		City:     q.Get("city"),
-		Q:        q.Get("q"),
+		City:     strings.TrimSpace(q.Get("city")),
+		Q:        strings.TrimSpace(q.Get("q")),
+	}
+	if v := q.Get("place"); v != "" {
+		id, err := strconv.ParseInt(v, 10, 64)
+		if err != nil {
+			writeAPIErr(w, r, invalidParam("place must be an integer id"))
+			return
+		}
+		filter.HasPlaceID, filter.PlaceID = true, id
 	}
 	if v := q.Get("from"); v != "" {
 		t, err := parseDateBound(v, false)
@@ -258,12 +265,12 @@ func (a *App) handleEventsList(w http.ResponseWriter, r *http.Request) {
 		}
 		filter.To = &t
 	}
-	if v := q.Get("near"); v != "" {
-		lat, lon, err := parseNear(v)
-		if err != nil {
-			writeAPIErr(w, r, err)
-			return
-		}
+	hasNear, lat, lon, err := parseNearQuery(q)
+	if err != nil {
+		writeAPIErr(w, r, err)
+		return
+	}
+	if hasNear {
 		radius, err := parseRadius(q.Get("radius_m"), 5000, 100000)
 		if err != nil {
 			writeAPIErr(w, r, err)
@@ -284,25 +291,40 @@ func (a *App) handleEventsList(w http.ResponseWriter, r *http.Request) {
 		writeAPIErr(w, r, err)
 		return
 	}
+	if ifNoneMatchHit(r, etag) {
+		write304(w, r, dataCacheControl, etag)
+		return
+	}
 
-	matched := make([]*EventRecord, 0, len(snap.Events))
+	type eventMatch struct {
+		record   *EventRecord
+		distance float64
+	}
+	matched := make([]eventMatch, 0, len(snap.Events))
 	for i := range snap.Events {
 		if filter.matches(&snap.Events[i]) {
-			matched = append(matched, &snap.Events[i])
+			match := eventMatch{record: &snap.Events[i]}
+			if filter.HasNear {
+				match.distance = haversineMeters(filter.Lat, filter.Lon, match.record.PlaceLat, match.record.PlaceLon)
+			}
+			matched = append(matched, match)
 		}
 	}
 	sort.Slice(matched, func(i, j int) bool {
-		if !matched[i].StartsAt.Equal(matched[j].StartsAt) {
-			return matched[i].StartsAt.Before(matched[j].StartsAt)
+		if filter.HasNear && matched[i].distance != matched[j].distance {
+			return matched[i].distance < matched[j].distance
 		}
-		return matched[i].ID < matched[j].ID
+		if !matched[i].record.StartsAt.Equal(matched[j].record.StartsAt) {
+			return matched[i].record.StartsAt.Before(matched[j].record.StartsAt)
+		}
+		return matched[i].record.ID < matched[j].record.ID
 	})
 
 	total := len(matched)
 	page := pageSlice(matched, paging.Offset, paging.Limit)
 	data := make([]json.RawMessage, len(page))
 	for i, e := range page {
-		data[i] = e.Raw
+		data[i] = e.record.Raw
 	}
 
 	env := listEnvelope{
@@ -325,10 +347,6 @@ func (a *App) handleEventDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	etag := computeETag(snap.version, r)
-	if ifNoneMatchHit(r, etag) {
-		write304(w, r, dataCacheControl, etag)
-		return
-	}
 	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
 	if err != nil {
 		writeError(w, r, http.StatusNotFound, "not_found", "event not found")
@@ -336,6 +354,10 @@ func (a *App) handleEventDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	for i := range snap.Events {
 		if snap.Events[i].ID == id {
+			if ifNoneMatchHit(r, etag) {
+				write304(w, r, dataCacheControl, etag)
+				return
+			}
 			env := detailEnvelope{
 				APIVersion:  apiVersion,
 				GeneratedAt: snap.GeneratedAt,
@@ -358,10 +380,6 @@ func (a *App) handlePlacesList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	etag := computeETag(snap.version, r)
-	if ifNoneMatchHit(r, etag) {
-		write304(w, r, dataCacheControl, etag)
-		return
-	}
 
 	q := r.URL.Query()
 	filter := placeFilter{
@@ -393,6 +411,10 @@ func (a *App) handlePlacesList(w http.ResponseWriter, r *http.Request) {
 	paging, err := parsePaging(q.Get("limit"), q.Get("offset"), 50, a.cfg.MaxLimit)
 	if err != nil {
 		writeAPIErr(w, r, err)
+		return
+	}
+	if ifNoneMatchHit(r, etag) {
+		write304(w, r, dataCacheControl, etag)
 		return
 	}
 
@@ -436,10 +458,6 @@ func (a *App) handlePlaceDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	etag := computeETag(snap.version, r)
-	if ifNoneMatchHit(r, etag) {
-		write304(w, r, dataCacheControl, etag)
-		return
-	}
 	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
 	if err != nil {
 		writeError(w, r, http.StatusNotFound, "not_found", "place not found")
@@ -447,6 +465,10 @@ func (a *App) handlePlaceDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	for i := range snap.Places {
 		if snap.Places[i].ID == id {
+			if ifNoneMatchHit(r, etag) {
+				write304(w, r, dataCacheControl, etag)
+				return
+			}
 			env := detailEnvelope{
 				APIVersion:  apiVersion,
 				GeneratedAt: snap.GeneratedAt,
@@ -469,10 +491,6 @@ func (a *App) handleActivitiesList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	etag := computeETag(snap.version, r)
-	if ifNoneMatchHit(r, etag) {
-		write304(w, r, dataCacheControl, etag)
-		return
-	}
 
 	q := r.URL.Query()
 	filter := activityFilter{Activity: q.Get("activity")}
@@ -505,6 +523,10 @@ func (a *App) handleActivitiesList(w http.ResponseWriter, r *http.Request) {
 	paging, err := parsePaging(q.Get("limit"), q.Get("offset"), 50, a.cfg.MaxLimit)
 	if err != nil {
 		writeAPIErr(w, r, err)
+		return
+	}
+	if ifNoneMatchHit(r, etag) {
+		write304(w, r, dataCacheControl, etag)
 		return
 	}
 

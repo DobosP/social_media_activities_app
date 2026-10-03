@@ -1,6 +1,6 @@
 # Status — social_media_activities_app
 
-Last verified: 2026-09-05
+Last verified: 2026-10-04
 
 This is the repo's single source of current truth. On conflict: `STATUS.md` > newest ADR in
 `docs/adr/` > other docs. History: `WORKLOG.md` (dated, append-only), `docs/adr/`, git.
@@ -54,10 +54,10 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   "removal still in force"; the Art.16/17 record and the GDPR Art.20 export query each scope separately,
   newest-first; `PostAdmin.is_hidden` stays an operator escape hatch without provenance
   (`apps/social/admin.py`). Detail: `WORKLOG.md` §2026-08-09, §2026-08-10.
-- **Canonical `/v1` client (2026-07-26, romania_scraper ADR-0069).** Transport and pagination come from
-  the generated, stamped `apps/ingestion/sources/_roedu_client_core.py` (repeated-cursor guard, `pages()`);
-  the publication gate stays local. The file is excluded from `ruff format` only — `ruff check` still lints
-  it — and hand-edits fail `apps/ingestion/tests/test_roedu_client_vendored.py`. Detail: `WORKLOG.md` §2026-07-26.
+- **Go migration review (ADR-0031):** `feat/go-server-foundation` adds the hardened public Go
+  serving slice: schema-2 checksum/coherence/field gates, expanded event queries, bounded HTTP/limiter,
+  private logs and a qualified static nonroot container. Django still owns auth/domain/media/export;
+  no `/api/v1` replacement or deployment. This branch awaits the required human privacy/safety review.
 
 ## Safety and operating gates
 
@@ -74,6 +74,8 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Open work
 
+- Go rollout needs reviewed freshness/revocation/erasure and full live API parity (ADR-0031).
+  Media review found malformed `ManagedScanner` verdicts accepted as clean; separate safety fix pending.
 - Build/promote a fresh immutable producer/server V2 release before real sync;
   the serving repo's producer dependency must be intentionally bumped first.
 - Complete held-event review UX, curated cultural child-venue policy, localized
@@ -87,15 +89,13 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
-- 2026-09-05 (docs refresh): `python3 ~/work/agent-ops/scripts/check_docs.py .` → `files=37 dead_links=0 stale_terms=0 retired_verbs=0 orphans=0` (exit 0);
-  `python3 ~/work/agent-ops/scripts/check_project_contexts.py --repo "$PWD"` → CLAUDE pointer yes, agent-ops ADR-0025 stanza yes, AGENTS/CLAUDE 80/3 lines,
-  status doc 120 lines, notes ok; `git diff --check` clean. Container tests not run (the `socialfix` compose project is not up on this host): no pass count claimed.
+- 2026-10-04 (Go review branch): complete Go race/vet passed; isolated PostGIS exporter → native Go
+  and public visibility/listing suite **38 passed**, no skipped native contract. Go package/binary
+  vulnerability scans found none. Static nonroot image passed read-only/no-capability health checks.
+  Doc/lint/container-scan receipts: `WORKLOG.md` §2026-10-04. No live data or infrastructure changed.
 - 2026-08-22 (credential fix, recorded in its merge): 142 passed across the touched lanes; full suite 2773
   passed, 15 failed — all in the chat and messaging `test_consumer.py` websocket tests, failing identically
   on pristine main in isolation; both ruff commands and `makemigrations --check` clean.
-- 2026-07-16: Ruff 0.15.21 check/format and migration drift passed; focused RO-EDU suite 178 tests
-  + 27 subtests; full isolated PostGIS suite 2,672 passed / 30 skipped; producer→server→clients
-  loopback 84 tests; no real network ingestion, deploy, or child-facing data mutation in any gate.
 
 ## Standard verification
 

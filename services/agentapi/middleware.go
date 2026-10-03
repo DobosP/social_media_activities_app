@@ -7,10 +7,13 @@ import (
 	"math"
 	"net"
 	"net/http"
+	"net/netip"
+	"net/url"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+	"unicode/utf8"
 )
 
 // --- CORS -------------------------------------------------------------
@@ -29,6 +32,12 @@ func setCORSHeaders(w http.ResponseWriter) {
 func methodAndCORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		setCORSHeaders(w)
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("Referrer-Policy", "no-referrer")
+		w.Header().Set("X-Frame-Options", "DENY")
+		w.Header().Set("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'; base-uri 'none'")
+		w.Header().Set("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+		w.Header().Set("Cache-Control", "no-store")
 		switch r.Method {
 		case http.MethodOptions:
 			w.WriteHeader(http.StatusNoContent)
@@ -39,6 +48,38 @@ func methodAndCORS(next http.Handler) http.Handler {
 			writeError(w, r, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
 		}
 	})
+}
+
+// requestBoundsMiddleware rejects ambiguous or excessive inputs before
+// parsing filters. This API accepts no request bodies and has no write routes.
+// Limits are fixed protocol budgets rather than deployment-tunable switches.
+func requestBoundsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.ContentLength != 0 || len(r.TransferEncoding) != 0 {
+			writeError(w, r, http.StatusBadRequest, "invalid_request", "request bodies are not supported")
+			return
+		}
+		if len(r.URL.EscapedPath()) > 512 || len(r.URL.RawQuery) > 2048 {
+			writeError(w, r, http.StatusRequestURITooLong, "request_too_large", "request URI exceeds the API limit")
+			return
+		}
+		query, err := url.ParseQuery(r.URL.RawQuery)
+		if err != nil || len(query) > 16 {
+			writeError(w, r, http.StatusBadRequest, "invalid_parameter", "invalid query parameters")
+			return
+		}
+		for key, values := range query {
+			if len(key) > 64 || !safeQueryText(key) || len(values) != 1 || len(values[0]) > 512 || !safeQueryText(values[0]) {
+				writeError(w, r, http.StatusBadRequest, "invalid_parameter", "invalid query parameters")
+				return
+			}
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+func safeQueryText(s string) bool {
+	return utf8.ValidString(s) && strings.IndexFunc(s, func(r rune) bool { return r < 32 || r == 127 }) < 0
 }
 
 // --- logging ------------------------------------------------------------
@@ -65,9 +106,11 @@ func (sw *statusWriter) Write(b []byte) (int, error) {
 	return sw.ResponseWriter.Write(b)
 }
 
-// loggingMiddleware logs method, path, status, duration and a truncated
-// query string only. It never logs client identity (IP/UA/headers), per the
-// platform's privacy invariants.
+func (sw *statusWriter) Unwrap() http.ResponseWriter { return sw.ResponseWriter }
+
+// loggingMiddleware logs only fixed method/route classes, status and duration.
+// Search terms, record identifiers, unknown paths, IPs and headers never reach
+// logs, including for rejected or malformed requests.
 func loggingMiddleware(logger *log.Logger, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
@@ -75,17 +118,49 @@ func loggingMiddleware(logger *log.Logger, next http.Handler) http.Handler {
 		next.ServeHTTP(sw, r)
 		dur := time.Since(start)
 
-		q := r.URL.RawQuery
-		const maxQueryLog = 200
-		if len(q) > maxQueryLog {
-			q = q[:maxQueryLog] + "...(truncated)"
+		method := "other"
+		switch r.Method {
+		case http.MethodGet, http.MethodHead, http.MethodOptions:
+			method = r.Method
 		}
-		logger.Printf("method=%s path=%s status=%d duration_ms=%d query=%q",
-			r.Method, r.URL.Path, sw.status, dur.Milliseconds(), q)
+		logger.Printf("method=%s route=%s status=%d duration_ms=%d",
+			method, routeClass(r.URL.Path), sw.status, dur.Milliseconds())
 	})
 }
 
+func routeClass(path string) string {
+	switch path {
+	case "/agent/v1/":
+		return "landing"
+	case "/agent/v1/openapi.json":
+		return "openapi"
+	case "/agent/v1/manifest":
+		return "manifest"
+	case "/agent/v1/events":
+		return "events"
+	case "/agent/v1/places":
+		return "places"
+	case "/agent/v1/activities":
+		return "activities"
+	case "/agent/v1/taxonomy":
+		return "taxonomy"
+	case "/agent/v1/healthz":
+		return "health"
+	}
+	for _, detail := range []struct{ prefix, label string }{
+		{"/agent/v1/events/", "event_detail"},
+		{"/agent/v1/places/", "place_detail"},
+	} {
+		if suffix, ok := strings.CutPrefix(path, detail.prefix); ok && suffix != "" && !strings.Contains(suffix, "/") {
+			return detail.label
+		}
+	}
+	return "unknown"
+}
+
 // --- rate limiting --------------------------------------------------------
+
+const maxLimiterClients = 10000
 
 type tokenBucket struct {
 	tokens float64
@@ -93,7 +168,8 @@ type tokenBucket struct {
 }
 
 // RateLimiter is a per-client token bucket limiter. Buckets are created
-// lazily and swept periodically to bound memory use.
+// lazily and swept periodically. A hard client cap bounds memory even under
+// a flood of different IPs; at capacity, unfamiliar clients fail closed.
 type RateLimiter struct {
 	mu         sync.Mutex
 	buckets    map[string]*tokenBucket
@@ -120,9 +196,16 @@ func (rl *RateLimiter) Allow(key string) bool {
 	now := rl.now()
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
+	if len(key) > 128 || key == "" {
+		return false
+	}
+	rl.sweepLocked(now)
 
 	b, ok := rl.buckets[key]
 	if !ok {
+		if len(rl.buckets) >= maxLimiterClients {
+			return false
+		}
 		b = &tokenBucket{tokens: rl.burst, last: now}
 		rl.buckets[key] = b
 	} else {
@@ -132,8 +215,6 @@ func (rl *RateLimiter) Allow(key string) bool {
 			b.last = now
 		}
 	}
-
-	rl.sweepLocked(now)
 
 	if b.tokens >= 1 {
 		b.tokens -= 1
@@ -158,24 +239,30 @@ func (rl *RateLimiter) sweepLocked(now time.Time) {
 
 // clientKey derives a per-client identity for rate limiting only (never
 // logged). When trustProxy is set, the last hop of X-Forwarded-For is used
-// (the hop closest to this server, i.e. the one Caddy appended); otherwise
-// the TCP peer address is used.
+// (the hop closest to this server, i.e. the one Caddy appended). Proxy mode
+// requires proxy-only ingress; the boolean is not a trusted-peer allowlist.
+// Ambiguous/malformed headers fall back to the canonical TCP peer address.
 func clientKey(r *http.Request, trustProxy bool) string {
 	if trustProxy {
-		xff := r.Header.Get("X-Forwarded-For")
-		if xff != "" {
-			parts := strings.Split(xff, ",")
-			last := strings.TrimSpace(parts[len(parts)-1])
-			if last != "" {
-				return last
+		forwarded := r.Header.Values("X-Forwarded-For")
+		if len(forwarded) == 1 {
+			last := forwarded[0]
+			if comma := strings.LastIndexByte(last, ','); comma >= 0 {
+				last = last[comma+1:]
+			}
+			if ip, err := netip.ParseAddr(strings.TrimSpace(last)); err == nil && ip.Zone() == "" {
+				return ip.Unmap().String()
 			}
 		}
 	}
 	host, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
-		return r.RemoteAddr
+		host = r.RemoteAddr
 	}
-	return host
+	if ip, err := netip.ParseAddr(host); err == nil && ip.Zone() == "" {
+		return ip.Unmap().String()
+	}
+	return "unknown"
 }
 
 // rateLimitMiddleware rejects requests once a client exhausts its token
@@ -236,8 +323,10 @@ func acceptsGzip(acceptEncoding string) bool {
 				if !ok || strings.TrimSpace(name) != "q" {
 					continue
 				}
-				if parsed, err := strconv.ParseFloat(strings.TrimSpace(value), 64); err == nil {
+				if parsed, err := strconv.ParseFloat(strings.TrimSpace(value), 64); err == nil && parsed >= 0 && parsed <= 1 {
 					qValue = parsed
+				} else {
+					qValue = 0
 				}
 			}
 		}
@@ -261,14 +350,17 @@ func writeBody(w http.ResponseWriter, r *http.Request, status int, contentType, 
 	}
 	h.Set("Vary", "Accept-Encoding")
 	setCORSHeaders(w)
+	compressed := shouldGzip(r, len(body))
+	if compressed {
+		h.Set("Content-Encoding", "gzip")
+	}
 
 	if r.Method == http.MethodHead {
 		w.WriteHeader(status)
 		return
 	}
 
-	if shouldGzip(r, len(body)) {
-		h.Set("Content-Encoding", "gzip")
+	if compressed {
 		w.WriteHeader(status)
 		gz := gzip.NewWriter(w)
 		_, _ = gz.Write(body)
@@ -305,17 +397,19 @@ func write304(w http.ResponseWriter, r *http.Request, cacheControl, etag string)
 }
 
 // ifNoneMatchHit reports whether the request's If-None-Match header matches
-// etag (simple strong comparison; also accepts "*").
+// etag using the weak comparison required for GET/HEAD (also accepts "*").
+// Data validators are weak because gzip and identity have different bytes.
 func ifNoneMatchHit(r *http.Request, etag string) bool {
 	inm := r.Header.Get("If-None-Match")
 	if inm == "" {
 		return false
 	}
-	if inm == "*" {
+	if strings.TrimSpace(inm) == "*" {
 		return true
 	}
+	etag = strings.TrimPrefix(etag, "W/")
 	for _, candidate := range strings.Split(inm, ",") {
-		if strings.TrimSpace(candidate) == etag {
+		if strings.TrimPrefix(strings.TrimSpace(candidate), "W/") == etag {
 			return true
 		}
 	}
@@ -336,6 +430,7 @@ type errorDetail struct {
 func writeError(w http.ResponseWriter, r *http.Request, status int, code, message string) {
 	body, _ := json.Marshal(errorEnvelope{Error: errorDetail{Code: code, Message: message}})
 	setCORSHeaders(w)
+	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	if r != nil && r.Method == http.MethodHead {
 		w.WriteHeader(status)

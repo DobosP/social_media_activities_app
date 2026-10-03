@@ -14,6 +14,9 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   frontend:
     if: github.event_name != 'schedule'
@@ -61,6 +64,15 @@ jobs:
       DATABASE_URL: postgis://app:app@localhost:5432/app
     steps:
       - uses: actions/checkout@v7
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: services/agentapi/go.mod
+          cache: false
+      - name: Build native Go producer-contract executable
+        working-directory: services/agentapi
+        env:
+          CGO_ENABLED: "0"
+        run: go build -trimpath -o agentapi-test .
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"

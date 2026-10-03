@@ -111,6 +111,28 @@ func TestIfNoneMatchHit(t *testing.T) {
 	}
 }
 
+func TestIfNoneMatchUsesWeakGETComparison(t *testing.T) {
+	r := httptest.NewRequest(http.MethodGet, "/agent/v1/events", nil)
+	r.Header.Set("If-None-Match", `"other", W/"abc-123"`)
+	if !ifNoneMatchHit(r, `"abc-123"`) || !ifNoneMatchHit(r, `W/"abc-123"`) {
+		t.Fatal("GET conditional validators must compare weakly")
+	}
+	r.Header.Set("If-None-Match", `"abc-123"`)
+	if !ifNoneMatchHit(r, `W/"abc-123"`) {
+		t.Fatal("strong request validator must match weak equivalent")
+	}
+}
+
+func TestHEADNegotiatesEncodingWithoutBody(t *testing.T) {
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest(http.MethodHead, "/agent/v1/events", nil)
+	r.Header.Set("Accept-Encoding", "gzip")
+	writeBody(w, r, http.StatusOK, "application/json", "public, max-age=300", `W/"release"`, make([]byte, 2048))
+	if w.Header().Get("Content-Encoding") != "gzip" || w.Header().Get("ETag") != `W/"release"` || w.Body.Len() != 0 {
+		t.Fatal("HEAD must negotiate the GET representation with no body")
+	}
+}
+
 func TestShouldGzip(t *testing.T) {
 	r := httptest.NewRequest(http.MethodGet, "/agent/v1/events", nil)
 	r.Header.Set("Accept-Encoding", "gzip, deflate")
@@ -139,6 +161,9 @@ func TestShouldGzip_QValues(t *testing.T) {
 		{"x-gzip coding", "x-gzip", true},
 		{"unrelated coding only", "br", false},
 		{"plain gzip still gzipped", "gzip", true},
+		{"malformed quality", "gzip;q=invalid", false},
+		{"quality outside range", "gzip;q=2", false},
+		{"infinite quality", "gzip;q=Inf", false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

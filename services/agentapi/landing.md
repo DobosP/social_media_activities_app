@@ -28,12 +28,15 @@ All endpoints are rooted at `/agent/v1`.
 
 ## Query parameters
 
-- `events`: `activity` (slug equality), `city` (case-insensitive equality),
+- `events`: `activity` (slug equality), `place` (venue id), `city` (case-insensitive equality),
   `from` / `to` (RFC3339 or `YYYY-MM-DD`; `to` is an exclusive upper bound —
-  a date-only `to` covers the whole day), `near=lat,lon` + `radius_m`
+  a date-only `to` covers the whole UTC day), `near=lat,lon` + `radius_m`
   (haversine, default 5000m, max 100000m), `q` (case-insensitive substring
-  on title), `limit` (default 50, max see `/manifest` / this deployment's
+  on title, description and approved venue name), `limit` (default 50, max see `/manifest` / this deployment's
   configured cap), `offset`.
+  The split `near_lat` + `near_lon` pair is an alternative to `near`; partial,
+  duplicate or competing centers return `400`. A center orders nearest first,
+  then start time and id; other event queries order by start time and id.
 - `places`: `activity` (membership in the place's activity types), `city`,
   `near` / `radius_m`, `q` (substring on name), `limit`, `offset`.
 - `activities`: `activity` (activity_type equality), `place` (place id),
@@ -44,6 +47,12 @@ Every list response is an envelope:
 Detail responses drop the paging fields. Errors are
 `{"error":{"code","message"}}` with an appropriate HTTP status.
 
+These endpoints serve the upstream-approved snapshot. They do not replace the
+live Django `/api/v1/` contracts: past events are absent, and place records use
+the open-data fields rather than the live GeoJSON serializer. Bounds using
+`YYYY-MM-DD` use UTC here. `/healthz` reports age since generation separately
+from age since process load; reloading old data cannot disguise its age.
+
 ## Rate limits
 
 Requests are rate-limited per client using a token bucket (refill rate and
@@ -53,7 +62,8 @@ include `Retry-After: 60`). `/agent/v1/healthz` is exempt.
 ## Caching
 
 List/detail/manifest/taxonomy responses carry `Cache-Control: public,
-max-age=300` and a strong `ETag`; send `If-None-Match` to get `304 Not
+max-age=300` and a weak `ETag` shared by equivalent identity/gzip responses;
+send `If-None-Match` to get `304 Not
 Modified` cheaply. This document and the OpenAPI description use
 `max-age=3600`.
 

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -33,6 +34,9 @@ func haversineMeters(lat1, lon1, lat2, lon2 float64) float64 {
 
 	a := math.Sin(dPhi/2)*math.Sin(dPhi/2) +
 		math.Cos(phi1)*math.Cos(phi2)*math.Sin(dLambda/2)*math.Sin(dLambda/2)
+	// Floating-point rounding at antipodes can put a just above one. A NaN
+	// distance would incorrectly survive the radius comparison.
+	a = min(1.0, max(0.0, a))
 	c := 2 * math.Asin(math.Sqrt(a))
 	return earthRadiusM * c
 }
@@ -51,7 +55,34 @@ func parseNear(s string) (lat, lon float64, err error) {
 	if lat < -90 || lat > 90 || lon < -180 || lon > 180 {
 		return 0, 0, invalidParam("near coordinates out of range")
 	}
+	if math.IsNaN(lat) || math.IsInf(lat, 0) || math.IsNaN(lon) || math.IsInf(lon, 0) {
+		return 0, 0, invalidParam("near coordinates must be finite")
+	}
 	return lat, lon, nil
+}
+
+// parseNearQuery accepts the original compact coordinate pair and the
+// main app's split coordinate spelling. Reject partial or competing centers;
+// an ignored coordinate must never widen a requested geographic window.
+func parseNearQuery(q url.Values) (hasNear bool, lat, lon float64, err error) {
+	compact, hasCompact := q["near"]
+	latValues, hasLat := q["near_lat"]
+	lonValues, hasLon := q["near_lon"]
+	if hasCompact {
+		if hasLat || hasLon || len(compact) != 1 || compact[0] == "" {
+			return false, 0, 0, invalidParam("use either near=lat,lon or one near_lat and near_lon pair")
+		}
+		lat, lon, err = parseNear(compact[0])
+		return err == nil, lat, lon, err
+	}
+	if hasLat || hasLon {
+		if !hasLat || !hasLon || len(latValues) != 1 || len(lonValues) != 1 || latValues[0] == "" || lonValues[0] == "" {
+			return false, 0, 0, invalidParam("near_lat and near_lon must be supplied together once")
+		}
+		lat, lon, err = parseNear(latValues[0] + "," + lonValues[0])
+		return err == nil, lat, lon, err
+	}
+	return false, 0, 0, nil
 }
 
 // parseDateBound parses an RFC3339 timestamp or a YYYY-MM-DD date. When
@@ -81,6 +112,9 @@ type paging struct {
 // limit to maxLimit and defaulting to defaultLimit/0.
 func parsePaging(rawLimit, rawOffset string, defaultLimit, maxLimit int) (paging, error) {
 	p := paging{Limit: defaultLimit, Offset: 0}
+	if p.Limit > maxLimit {
+		p.Limit = maxLimit
+	}
 	if rawLimit != "" {
 		n, err := strconv.Atoi(rawLimit)
 		if err != nil {
@@ -124,18 +158,23 @@ func parseRadius(raw string, def, max int) (int, error) {
 
 // eventFilter holds the validated filter parameters for /agent/v1/events.
 type eventFilter struct {
-	Activity string
-	City     string
-	From     *time.Time
-	To       *time.Time
-	HasNear  bool
-	Lat, Lon float64
-	RadiusM  float64
-	Q        string
+	Activity   string
+	HasPlaceID bool
+	PlaceID    int64
+	City       string
+	From       *time.Time
+	To         *time.Time
+	HasNear    bool
+	Lat, Lon   float64
+	RadiusM    float64
+	Q          string
 }
 
 func (f *eventFilter) matches(e *EventRecord) bool {
 	if f.Activity != "" && e.Activity != f.Activity {
+		return false
+	}
+	if f.HasPlaceID && (!e.HasPlaceID || e.PlaceID != f.PlaceID) {
 		return false
 	}
 	if f.City != "" && !strings.EqualFold(e.PlaceCity, f.City) {
@@ -155,8 +194,13 @@ func (f *eventFilter) matches(e *EventRecord) bool {
 			return false
 		}
 	}
-	if f.Q != "" && !strings.Contains(strings.ToLower(e.Title), strings.ToLower(f.Q)) {
-		return false
+	if f.Q != "" {
+		q := strings.ToLower(f.Q)
+		if !strings.Contains(strings.ToLower(e.Title), q) &&
+			!strings.Contains(strings.ToLower(e.Description), q) &&
+			!strings.Contains(strings.ToLower(e.PlaceName), q) {
+			return false
+		}
 	}
 	return true
 }

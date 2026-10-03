@@ -193,7 +193,7 @@ Measured 2026-08-18 against a live server: every product page came back `availab
 reported a clean zero.
 For app packs, the client rejects any item missing current legal/privacy, policy, capture, and
 acquisition attestation or violating its exact facts-only schema. This social app does not request the
-internal/all layer over HTTP because no internal/admin/ops scope is proven here.
+internal/all layer over HTTP because no internal/admin/operations authorization is proven here.
 Redistributable app-pack examples and client-visible payloads must not include
 internal artifact paths, internal checksums, internal `llms.txt` entries, internal
 source URLs, or TDM-only item bodies.

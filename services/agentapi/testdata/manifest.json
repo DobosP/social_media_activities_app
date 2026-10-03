@@ -1,15 +1,34 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "generated_at": "2026-07-12T10:00:00Z",
   "site": "https://example.org",
   "datasets": {
-    "events": { "file": "events.json", "count": 4 },
-    "places": { "file": "places.json", "count": 3 },
-    "activities": { "file": "activities.json", "count": 2 },
-    "taxonomy": { "file": "taxonomy.json", "count": 8 }
+    "events": {
+      "file": "events.json",
+      "count": 4,
+      "sha256": "ebed474c9c6035b4664ee1d16a98d8612dd6da2affa87dd3e75b7169b6b9fa6c"
+    },
+    "places": {
+      "file": "places.json",
+      "count": 3,
+      "sha256": "2e126e01f82b968ea7b786697b97d186aac0f51bd39c2678662eb928250a1b57"
+    },
+    "activities": {
+      "file": "activities.json",
+      "count": 2,
+      "sha256": "2e6dbef305b8bd49caac86b17247f60ca3f47a02c99a8de4925d3f9dfc39a484"
+    },
+    "taxonomy": {
+      "file": "taxonomy.json",
+      "count": 8,
+      "sha256": "cfc824ed2303849e026b973ceb151d8084be732fb120f87f494a2933bbcacdb9"
+    }
   },
   "licenses": [
-    { "license_name": "CC-BY-4.0", "attribution": "Example Attribution" }
+    {
+      "license_name": "CC-BY-4.0",
+      "attribution": "Example Attribution"
+    }
   ],
   "truncated": false
 }

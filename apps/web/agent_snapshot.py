@@ -17,7 +17,7 @@ already-sanctioned public gates:
 
 Contract (the sidecar is built against exactly this — do not deviate):
 
-  * Each data file: ``{"schema_version": 1, "generated_at": <UTC Z>, "count": N, "records": [...]}``
+  * Each data file: ``{"schema_version": 2, "generated_at": <UTC Z>, "count": N, "records": [...]}``
     (``generated_at`` is UTC ISO-8601 with a ``Z`` suffix; see below).
   * ``taxonomy.json`` deviates by design (there is no single record list): it uses TOP-LEVEL
     ``categories`` + ``activity_types`` keys alongside ``schema_version``/``generated_at`` — the
@@ -29,9 +29,11 @@ Contract (the sidecar is built against exactly this — do not deviate):
     lifecycle, recurrence, timezone, category, and confidence are additive fields; the sidecar
     passes them through verbatim and needs no matching Go schema change.
   * Files are written ``<name>.tmp`` then ``os.replace``d (atomic); ``manifest.json`` is written
-    LAST, because the sidecar reloads keyed on the manifest changing.
+    LAST, because the sidecar reloads keyed on the manifest changing. Each manifest dataset has
+    a SHA-256 of its exact UTF-8 JSON bytes; consumers reject mixed or altered generations.
 """
 
+import hashlib
 import json
 import logging
 import os
@@ -41,7 +43,7 @@ from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 # Hard caps so a runaway dataset can never silently truncate: we slice to the cap AND flag it.
 EVENTS_CAP = 10000
@@ -231,12 +233,22 @@ def _taxonomy_payload():
 
 
 def _write_json(directory, name, payload):
-    """Write ``payload`` as JSON to ``<directory>/<name>`` atomically (tmp then os.replace)."""
+    """Atomically write UTF-8 JSON and return the SHA-256 of the exact published bytes.
+
+    Encoding and hashing each chunk avoids retaining another full copy of a capped dataset.
+    The digest belongs to the file bytes, including non-ASCII names and JSON whitespace.
+    """
     tmp = os.path.join(directory, name + ".tmp")
     final = os.path.join(directory, name)
-    with open(tmp, "w", encoding="utf-8") as fh:
-        json.dump(payload, fh, ensure_ascii=False, separators=(",", ":"))
+    digest = hashlib.sha256()
+    encoder = json.JSONEncoder(ensure_ascii=False, separators=(",", ":"))
+    with open(tmp, "wb") as fh:
+        for chunk in encoder.iterencode(payload):
+            encoded = chunk.encode("utf-8")
+            fh.write(encoded)
+            digest.update(encoded)
     os.replace(tmp, final)
+    return digest.hexdigest()
 
 
 def _dataset_payload(records, generated_at):
@@ -282,10 +294,16 @@ def export_snapshot(directory) -> dict:
     categories, activity_types = _taxonomy_payload()
     truncated = events_trunc or places_trunc or acts_trunc
 
-    _write_json(directory, EVENTS_FILE, _dataset_payload(event_records, generated_at))
-    _write_json(directory, PLACES_FILE, _dataset_payload(place_records, generated_at))
-    _write_json(directory, ACTIVITIES_FILE, _dataset_payload(activity_records, generated_at))
-    _write_json(
+    events_digest = _write_json(
+        directory, EVENTS_FILE, _dataset_payload(event_records, generated_at)
+    )
+    places_digest = _write_json(
+        directory, PLACES_FILE, _dataset_payload(place_records, generated_at)
+    )
+    activities_digest = _write_json(
+        directory, ACTIVITIES_FILE, _dataset_payload(activity_records, generated_at)
+    )
+    taxonomy_digest = _write_json(
         directory,
         TAXONOMY_FILE,
         {
@@ -316,14 +334,19 @@ def export_snapshot(directory) -> dict:
         "generated_at": generated_at,
         "site": site_base_url(None) or "",
         "datasets": {
-            "events": {"file": EVENTS_FILE, "count": len(event_records)},
-            "places": {"file": PLACES_FILE, "count": len(place_records)},
-            "activities": {"file": ACTIVITIES_FILE, "count": len(activity_records)},
+            "events": {"file": EVENTS_FILE, "count": len(event_records), "sha256": events_digest},
+            "places": {"file": PLACES_FILE, "count": len(place_records), "sha256": places_digest},
+            "activities": {
+                "file": ACTIVITIES_FILE,
+                "count": len(activity_records),
+                "sha256": activities_digest,
+            },
             # Total entities in the file (categories + activity types), so the manifest
             # count matches the file contents like every other dataset's count does.
             "taxonomy": {
                 "file": TAXONOMY_FILE,
                 "count": len(categories) + len(activity_types),
+                "sha256": taxonomy_digest,
             },
         },
         "licenses": licenses,

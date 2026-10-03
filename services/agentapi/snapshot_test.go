@@ -202,17 +202,37 @@ func writeManifestWithSite(t *testing.T, dir, site string) {
 func writeManifestWithCounts(t *testing.T, dir, generatedAt, site string, eventsCount int) {
 	t.Helper()
 	m := map[string]any{
-		"schema_version": 1,
+		"schema_version": 2,
 		"generated_at":   generatedAt,
 		"site":           site,
 		"datasets": map[string]any{
 			"events":     map[string]any{"file": "events.json", "count": eventsCount},
 			"places":     map[string]any{"file": "places.json", "count": 3},
 			"activities": map[string]any{"file": "activities.json", "count": 2},
-			"taxonomy":   map[string]any{"file": "taxonomy.json", "count": 1},
+			"taxonomy":   map[string]any{"file": "taxonomy.json", "count": 8},
 		},
 		"licenses":  []map[string]any{{"license_name": "CC-BY-4.0", "attribution": "Example Attribution"}},
 		"truncated": false,
+	}
+	for _, name := range []string{"events", "places", "activities", "taxonomy"} {
+		p := filepath.Join(dir, name+".json")
+		raw, err := os.ReadFile(p)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var data map[string]any
+		if json.Unmarshal(raw, &data) == nil {
+			data["schema_version"] = 2
+			data["generated_at"] = generatedAt
+			raw, err = json.Marshal(data)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(p, raw, 0o644); err != nil {
+				t.Fatal(err)
+			}
+		}
+		m["datasets"].(map[string]any)[name].(map[string]any)["sha256"] = sha256Sum(raw)
 	}
 	raw, err := json.Marshal(m)
 	if err != nil {

@@ -3,6 +3,31 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-04 — Go public serving foundation (review branch)
+
+Valid until: this branch is reviewed/landed or superseded — then treat as history.
+
+- Owner selected Go after the Romanian Go rollout. `feat/go-server-foundation`
+  implements ADR-0031's first serving slice; source is not landed/deployed here.
+- Checked company-ops and canonical deployment/media policy read-only; no org
+  source, governance, storage, provider or visibility changes. Shared private
+  workflow sources returned unavailable, so local Go checks were added.
+- Complete Go race/vet and native static build passed. Isolated PostGIS tests:
+  exporter/native contract plus public discovery/listing **38 passed** (3.61s).
+  All data is generated test data; native query contract ran, not skipped.
+- Official govulncheck 1.1.4 source SSA panicked on Go 1.27 syntax. Conservative
+  package and compiled-binary scans both passed: no vulnerabilities found.
+- Static scratch OCI image builds with a verified Go builder digest; UID65534,
+  read-only/no capabilities/no-new-privileges, 512MiB/1CPU/64PIDs and no-network
+  local qualification passed native health. Tiny fixture idle memory ~1.9MiB is
+  not a production sizing or total-bill estimate. Final Trivy0.75.0 scan: zero
+  fixable HIGH/CRITICAL findings. Ruff621files, YAML/Compose, docs37files, budgets
+  and whitespace pass. Receipt: `docs/reviews/go-foundation/verification.json`.
+- Remaining review: human privacy/safety sign-off before landing, explicit
+  withdrawal/erasure and staleness budget before rollout, then live API parity.
+  Separate ManagedScanner malformed-verdict gap is recorded in ADR-0031; no
+  scanner or media behavior was changed by this branch.
+
 ## 2026-08-22 — one nightly job, one RO-EDU credential
 
 - `sync_roedu` runs the venues lane and the events lane back to back, but only the venues lane ever

@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "generated_at": "2026-07-12T10:00:00Z",
   "count": 3,
   "records": [
@@ -15,7 +15,10 @@
       "website": "https://example.org/places/10",
       "phone": "",
       "opening_hours_text": "Mon-Sun 06:00-22:00",
-      "activity_types": ["chess", "boardgames"],
+      "activity_types": [
+        "chess",
+        "boardgames"
+      ],
       "attribution": "Example Attribution",
       "license_name": "CC-BY-4.0",
       "provenance_url": "https://example.org/source/place-10",
@@ -33,7 +36,9 @@
       "website": "",
       "phone": "",
       "opening_hours_text": "",
-      "activity_types": ["football"],
+      "activity_types": [
+        "football"
+      ],
       "attribution": "Example Attribution",
       "license_name": "CC-BY-4.0",
       "provenance_url": "https://example.org/source/place-11",
@@ -51,7 +56,9 @@
       "website": "",
       "phone": "",
       "opening_hours_text": "",
-      "activity_types": ["reading"],
+      "activity_types": [
+        "reading"
+      ],
       "attribution": "Example Attribution",
       "license_name": "CC-BY-4.0",
       "provenance_url": "https://example.org/source/place-12",

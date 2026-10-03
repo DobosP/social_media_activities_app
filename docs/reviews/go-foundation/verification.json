@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "verified_on": "2026-10-04",
+  "branch": "feat/go-server-foundation",
+  "base_commit": "477d43a1d812f3c1ff15f9bc384349943c9ab8bc",
+  "scope": "Go public snapshot serving foundation; Django remains domain/publisher",
+  "go": {
+    "version": "1.27.1",
+    "third_party_runtime_modules": 0,
+    "format": "passed",
+    "vet": "passed",
+    "race": "passed"
+  },
+  "python": {
+    "targeted_tests_passed": 38,
+    "native_contract_skipped": false,
+    "ruff": "passed",
+    "formatted_files": 621,
+    "full_suite": "not run for this slice"
+  },
+  "container": {
+    "id": "sha256:90c318b33b990cb99ed451ad4b369034c24714ed6694042ebb2bff4fec89e3e7",
+    "size_bytes": 7426208,
+    "user": "65534",
+    "readonly_rootfs": true,
+    "cap_drop": [
+      "ALL"
+    ],
+    "no_new_privileges": true,
+    "network": "none",
+    "memory_limit_bytes": 536870912,
+    "cpus": 1,
+    "pids_limit": 64,
+    "healthcheck": "passed",
+    "restart_count": 0
+  },
+  "vulnerability_checks": {
+    "govulncheck": "1.1.4",
+    "package_scan": "no vulnerabilities found",
+    "binary_scan": "no vulnerabilities found",
+    "source_call_graph": "unavailable: tagged analyser SSA incompatible with Go 1.27 syntax",
+    "trivy": "0.75.0",
+    "trivy_severities": [
+      "HIGH",
+      "CRITICAL"
+    ],
+    "ignore_unfixed": true,
+    "trivy_findings": 0
+  },
+  "gates": {
+    "yaml_parse": "passed",
+    "compose_config": "passed",
+    "doc_links": "passed",
+    "doc_budgets": "passed",
+    "whitespace": "passed",
+    "human_privacy_safety_review": "pending",
+    "deploy": "not performed",
+    "live_ingestion": "not performed"
+  }
+}

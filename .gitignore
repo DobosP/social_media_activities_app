@@ -54,3 +54,6 @@ scratch/
 
 # Agent-snapshot export dir (written by export_agent_snapshot, served by services/agentapi)
 var/agent_snapshot/
+
+# Test-only native executable for real Django-exporter -> Go contract tests.
+services/agentapi/agentapi-test

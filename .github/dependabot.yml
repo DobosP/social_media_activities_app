@@ -13,3 +13,13 @@ updates:
     schedule:
       interval: weekly
     labels: ["ci"]
+  - package-ecosystem: gomod
+    directory: "/services/agentapi"
+    schedule:
+      interval: weekly
+    labels: ["dependencies"]
+  - package-ecosystem: docker
+    directory: "/services/agentapi"
+    schedule:
+      interval: weekly
+    labels: ["dependencies"]

@@ -18,6 +18,7 @@ Index regenerated 2026-09-05.
 
 | Doc | What it covers |
 |---|---|
+| [reviews/go-foundation/README.md](reviews/go-foundation/README.md) | First Go serving-slice qualification and remaining rollout gates (ADR-0031). |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | D1-era system shape + the seams everything plugs into (see its do-not-rebuild note). |
 | [ASYNC_TASKS.md](ASYNC_TASKS.md) | The Postgres `DeferredTask` queue contract + what may never be deferred (ADR-0003). |
 | [DATABASE.md](DATABASE.md) | Postgres/PostGIS usage strategy (see its 2026-07-02 as-of note). |

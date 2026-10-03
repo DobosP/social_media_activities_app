@@ -3,6 +3,7 @@ gate-filtered public data reaches the JSON files a Go sidecar serves: no minor a
 unpublished place, no PII, ever.
 """
 
+import hashlib
 import json
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -291,12 +292,22 @@ def test_all_datetimes_are_rfc3339_utc_z(tmp_path):
 
 
 def test_manifest_counts_match_and_no_tmp_files_remain(tmp_path):
-    owner, place, at = _user(), _place(), _type()
+    owner, place, at = _user(), _place("Bibliotecă românească"), _type()
     _activity(owner, place, at, listed=True)
     _event(place=place)
     _export(tmp_path)
 
     manifest = _load(tmp_path, "manifest.json")
+    assert manifest["schema_version"] == 2
+    for key, dataset in manifest["datasets"].items():
+        assert set(dataset) == {"file", "count", "sha256"}
+        raw = (tmp_path / dataset["file"]).read_bytes()
+        payload = json.loads(raw)
+        assert payload["schema_version"] == manifest["schema_version"]
+        assert payload["generated_at"] == manifest["generated_at"]
+        assert dataset["sha256"] == hashlib.sha256(raw).hexdigest(), key
+    # Hash the actual UTF-8 bytes, without replacing diacritics with JSON escapes.
+    assert "Bibliotecă românească".encode() in (tmp_path / "places.json").read_bytes()
     for key, fname in (
         ("events", "events.json"),
         ("places", "places.json"),
@@ -312,6 +323,49 @@ def test_manifest_counts_match_and_no_tmp_files_remain(tmp_path):
     # Atomic write leaves no *.tmp behind.
     assert not list(tmp_path.glob("*.tmp"))
     assert manifest["truncated"] is False
+
+
+def test_write_json_hashes_the_bytes_replaced_atomically(tmp_path, monkeypatch):
+    final = tmp_path / "places.json"
+    final.write_bytes(b"previous generation")
+    payload = {"name": "Bibliotecă", "line": "a\nb", "count": 1}
+    expected = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    replace = agent_snapshot.os.replace
+    replaced = []
+
+    def checked_replace(source, target):
+        assert final.read_bytes() == b"previous generation"
+        assert (tmp_path / "places.json.tmp").read_bytes() == expected
+        replaced.append((source, target))
+        replace(source, target)
+
+    monkeypatch.setattr(agent_snapshot.os, "replace", checked_replace)
+    digest = agent_snapshot._write_json(str(tmp_path), "places.json", payload)
+    assert digest == hashlib.sha256(expected).hexdigest()
+    assert final.read_bytes() == expected
+    assert len(replaced) == 1
+    assert not (tmp_path / "places.json.tmp").exists()
+
+
+def test_export_publishes_manifest_after_all_hashed_datasets(tmp_path, monkeypatch):
+    _place("Bibliotecă")
+    write_json = agent_snapshot._write_json
+    published = []
+
+    def checked_write(directory, name, payload):
+        if name == agent_snapshot.MANIFEST_FILE:
+            assert published == ["events.json", "places.json", "activities.json", "taxonomy.json"]
+            for dataset in payload["datasets"].values():
+                raw = (tmp_path / dataset["file"]).read_bytes()
+                assert dataset["sha256"] == hashlib.sha256(raw).hexdigest()
+                assert json.loads(raw)["generated_at"] == payload["generated_at"]
+        result = write_json(directory, name, payload)
+        published.append(name)
+        return result
+
+    monkeypatch.setattr(agent_snapshot, "_write_json", checked_write)
+    _export(tmp_path)
+    assert published[-1] == "manifest.json"
 
 
 def test_manifest_licenses_populated_from_licensed_place(tmp_path):

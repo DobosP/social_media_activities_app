@@ -83,6 +83,14 @@
             "description": "Activity slug equality filter."
           },
           {
+            "name": "place",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Exact place_id filter within the approved public snapshot."
+          },
+          {
             "name": "city",
             "in": "query",
             "schema": {
@@ -112,7 +120,27 @@
             "schema": {
               "type": "string"
             },
-            "description": "lat,lon center point for a radius filter."
+            "description": "lat,lon center for radius filtering and nearest-first ordering. Use either near or the near_lat/near_lon pair."
+          },
+          {
+            "name": "near_lat",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "minimum": -90,
+              "maximum": 90
+            },
+            "description": "Latitude in decimal degrees; requires near_lon and cannot be combined with near."
+          },
+          {
+            "name": "near_lon",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "minimum": -180,
+              "maximum": 180
+            },
+            "description": "Longitude in decimal degrees; requires near_lat and cannot be combined with near."
           },
           {
             "name": "radius_m",
@@ -130,7 +158,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Case-insensitive substring match on title."
+            "description": "Case-insensitive substring across the approved public title, description and place name."
           },
           {
             "$ref": "#/components/parameters/Limit"
@@ -156,7 +184,8 @@
           "503": {
             "$ref": "#/components/responses/SnapshotUnavailable"
           }
-        }
+        },
+        "description": "Serves the upstream-approved upcoming-event snapshot, not the live Django /api/v1/events/ contract. Date-only bounds are UTC. With a center, order is distance, starts_at, id; otherwise starts_at, id. Historical events are absent."
       }
     },
     "/events/{id}": {
@@ -388,7 +417,7 @@
       "get": {
         "summary": "Liveness and snapshot freshness",
         "operationId": "getHealthz",
-        "description": "Not subject to rate limiting.",
+        "description": "Not subject to rate limiting. Snapshot age measures time since generation, not time since process reload. This endpoint has no application freshness SLA.",
         "responses": {
           "200": {
             "description": "A snapshot is loaded.",
@@ -408,20 +437,26 @@
                       "format": "date-time"
                     },
                     "snapshot_age_seconds": {
-                      "type": "integer"
+                      "type": "integer",
+                      "description": "Seconds since snapshot generation; clamped to zero within the five-minute clock skew allowance. Restarting cannot hide old data."
+                    },
+                    "snapshot_loaded_age_seconds": {
+                      "type": "integer",
+                      "description": "Seconds since this process loaded the current generation."
                     }
                   },
                   "required": [
                     "status",
                     "snapshot_generated_at",
-                    "snapshot_age_seconds"
+                    "snapshot_age_seconds",
+                    "snapshot_loaded_age_seconds"
                   ]
                 }
               }
             }
           },
           "503": {
-            "description": "No snapshot has ever loaded.",
+            "description": "No snapshot loaded, or the snapshot generation timestamp is invalid or more than five minutes in the future.",
             "content": {
               "application/json": {
                 "schema": {
@@ -430,7 +465,8 @@
                     "status": {
                       "type": "string",
                       "enum": [
-                        "no_snapshot"
+                        "no_snapshot",
+                        "invalid_snapshot_generation"
                       ]
                     }
                   },

@@ -1,0 +1,75 @@
+name: Go public API
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "20 6 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: go-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/agentapi
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: services/agentapi/go.mod
+          cache: false
+      - name: Format, vet, race and native build
+        run: |
+          test -z "$(gofmt -l .)"
+          go vet ./...
+          go test -race ./... -count=1
+          CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o agentapi-test .
+      - name: Build nonroot serving image
+        run: docker build -t social-agentapi:ci .
+      - name: Scan serving image
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: v0.75.0
+          image-ref: social-agentapi:ci
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+      - name: Qualify read-only native container
+        run: |
+          set -euo pipefail
+          docker run -d --name agentapi-ci --read-only --cap-drop=ALL \
+            --security-opt=no-new-privileges --pids-limit=64 --memory=512m --cpus=1 \
+            -v "$PWD/testdata:/data/agent_snapshot:ro" social-agentapi:ci
+          trap 'docker rm -f agentapi-ci >/dev/null' EXIT
+          docker exec agentapi-ci /agentapi --healthcheck
+          test "$(docker inspect -f '{{.Config.User}}' agentapi-ci)" = 65534
+          test "$(docker inspect -f '{{.HostConfig.ReadonlyRootfs}}' agentapi-ci)" = true
+
+  vulnerability-audit:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/agentapi
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: services/agentapi/go.mod
+          cache: false
+      - name: Package and compiled-binary Go vulnerability scans
+        # The current tagged analyser's source SSA predates Go 1.27 syntax.
+        # Package analysis conservatively scans all imports; binary analysis
+        # scans linked symbols without building an unsupported source call graph.
+        run: |
+          go run golang.org/x/vuln/cmd/govulncheck@v1.1.4 -scan=package ./...
+          CGO_ENABLED=0 go build -trimpath -o agentapi-test .
+          go run golang.org/x/vuln/cmd/govulncheck@v1.1.4 -mode=binary agentapi-test

@@ -45,6 +45,12 @@ services:
   agentapi:
     profiles: ["agent"]
     build: services/agentapi
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 64
+    mem_limit: 512m
+    cpus: 1.0
     environment:
       AGENT_SNAPSHOT_DIR: /data/agent_snapshot
       AGENT_API_ADDR: ":8090"
@@ -52,7 +58,7 @@ services:
       # Read-only: agentapi only ever reads the snapshot web's export job writes into ./var/.
       - ./var/agent_snapshot:/data/agent_snapshot:ro
     ports:
-      - "8090:8090"
+      - "127.0.0.1:8090:8090"
     depends_on:
       - web
 

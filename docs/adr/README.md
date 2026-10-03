@@ -1,7 +1,7 @@
 # ADR ledger — claimed numbers
 
 Claim the next free number **here, in the same commit as the ADR file**, so two parallel worktrees
-never mint the same number. Next free number: **0031**. Template: [`0000-template.md`](0000-template.md).
+never mint the same number. Next free number: **0032**. Template: [`0000-template.md`](0000-template.md).
 ADRs are append-only: a reversal is a new ADR that flips the old one's `Status:` to `superseded-by ADR-NNNN`.
 On conflict: `STATUS.md` > newest-dated ADR > every other doc.
 
@@ -38,6 +38,7 @@ On conflict: `STATUS.md` > newest-dated ADR > every other doc.
 | 0028 | [tiered-profile-visibility](0028-tiered-profile-visibility.md) | accepted (owner-approved tier matrix) | 2026-07-13 |
 | 0029 | [plural-sentiment-reactions](0029-plural-sentiment-reactions.md) | accepted (owner decisions) | 2026-07-14 |
 | 0030 | [refusal-visibility-and-tick-isolation](0030-refusal-visibility-and-tick-isolation.md) | accepted; one owner decision open (§4 refused-`venues` narrowing) | 2026-08-18 |
+| 0031 | [go-public-serving-foundation](0031-go-public-serving-foundation.md) | accepted direction; implementation awaiting review | 2026-10-04 |
 
 ⚠ **0009 is claimed twice** — this ledger exists so it does not happen again. Both files stay:
 `0009-csp-enforcement-prep.md` (superseded by ADR-0010) and

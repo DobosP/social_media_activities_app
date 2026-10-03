@@ -367,7 +367,7 @@ func TestManifest(t *testing.T) {
 	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
-	if body.SchemaVersion != 1 || body.Site != "https://example.org" {
+	if body.SchemaVersion != snapshotSchema || body.Site != "https://example.org" {
 		t.Errorf("body = %+v", body)
 	}
 	if body.SnapshotLoadedAt == "" {

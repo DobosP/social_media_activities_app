@@ -1,6 +1,6 @@
 # Agent Testing Guide — social_media_activities_app
 
-Last verified: 2026-09-05
+Last verified: 2026-10-04
 
 ## Environment
 - Runtime: Django/Python in Docker Compose local environment.
@@ -22,6 +22,8 @@ Last verified: 2026-09-05
 | Dependency audit | `pip-audit -r requirements.txt -r requirements-dev.txt` | `No known vulnerabilities found` (report-only on PRs, enforcing on main) |
 | Python SAST | `bandit -r apps config -q --severity-level high --confidence-level high` | no findings |
 | Doc gate (any doc change) | `python3 ~/work/agent-ops/scripts/check_docs.py .` | `dead_links=0 stale_terms=0 retired_verbs=0 orphans=0` (only `files=` varies); exit 0 |
+| Go public service | `cd services/agentapi && go vet ./... && go test -race ./... -count=1` | all pass; loopback sockets required for healthcheck tests |
+| Native exporter contract | build `services/agentapi/agentapi-test`, then isolated PostGIS pytest `apps/web/tests/test_agent_snapshot.py apps/web/tests/test_agent_go_contract.py` | schema/bytes/gates match; native test must not skip in CI |
 | Whitespace | `git diff --check` | no output |
 
 ## Before commit
@@ -39,3 +41,5 @@ Last verified: 2026-09-05
 - Do not expose secrets from settings or env files.
 - `python manage.py check --deploy` needs the CI env block in `.github/workflows/ci.yml` (prod settings +
   dummy EUDI trust anchor) — CI-only unless you replicate that environment.
+
+Go slice and uploaded-image/OCI boundaries: [ADR-0031](adr/0031-go-public-serving-foundation.md).

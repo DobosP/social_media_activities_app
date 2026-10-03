@@ -6,26 +6,28 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 	"sync"
 	"sync/atomic"
 	"time"
 )
 
 // EventRecord is the typed view of a single event used for filtering and
-// sorting. Raw holds the original bytes exactly as read from events.json so
-// that unknown/extra fields flow through to API responses untouched.
+// sorting. Raw preserves reviewed fields after schema and field validation.
 type EventRecord struct {
-	Raw       json.RawMessage
-	ID        int64
-	Title     string
-	StartsAt  time.Time
-	HasStarts bool
-	Activity  string
-	PlaceCity string
-	PlaceLat  float64
-	PlaceLon  float64
-	HasCoords bool
+	Raw         json.RawMessage
+	ID          int64
+	Title       string
+	Description string
+	StartsAt    time.Time
+	HasStarts   bool
+	Activity    string
+	PlaceID     int64
+	HasPlaceID  bool
+	PlaceName   string
+	PlaceCity   string
+	PlaceLat    float64
+	PlaceLon    float64
+	HasCoords   bool
 }
 
 // PlaceRecord is the typed view of a single place.
@@ -69,13 +71,12 @@ type Snapshot struct {
 	RecordCounts map[string]int
 
 	// version is a short, stable, content-derived tag used to build ETags.
-	// It changes iff the manifest's generated_at or dataset counts change.
+	// It covers the manifest and exact dataset content digests.
 	version string
 }
 
-// manifestDoc mirrors the on-disk manifest.json shape closely enough to
-// extract the fields the server needs; unknown fields are preserved via
-// Raw for verbatim pass-through on /agent/v1/manifest.
+// manifestDoc describes the reviewed, checksum-bound schema 2 publication.
+// Unknown fields are rejected before any raw payload becomes public.
 type manifestDoc struct {
 	SchemaVersion int                    `json:"schema_version"`
 	GeneratedAt   string                 `json:"generated_at"`
@@ -86,8 +87,9 @@ type manifestDoc struct {
 }
 
 type datasetInfo struct {
-	File  string `json:"file"`
-	Count int    `json:"count"`
+	File   string `json:"file"`
+	Count  int    `json:"count"`
+	SHA256 string `json:"sha256"`
 }
 
 // datasetFile mirrors the shared {schema_version, generated_at, count,
@@ -102,10 +104,13 @@ type datasetFile struct {
 type eventFields struct {
 	ID           int64  `json:"id"`
 	Title        string `json:"title"`
+	Description  string `json:"description"`
 	StartsAt     string `json:"starts_at"`
 	Activity     string `json:"activity"`
 	ActivityType string `json:"activity_type"`
+	PlaceID      *int64 `json:"place_id"`
 	PlaceSummary *struct {
+		Name string   `json:"name"`
 		City string   `json:"city"`
 		Lat  *float64 `json:"lat"`
 		Lon  *float64 `json:"lon"`
@@ -138,10 +143,9 @@ type Loader struct {
 	logger  *log.Logger
 	current atomic.Pointer[Snapshot]
 
-	mu          sync.Mutex // guards the fields below; serializes reload attempts
-	lastMTime   time.Time
-	lastSize    int64
-	everAttempt bool
+	mu                 sync.Mutex // guards the fields below; serializes reload attempts
+	lastManifestDigest string
+	everAttempt        bool
 }
 
 // NewLoader creates a Loader for the given snapshot directory. Call
@@ -156,8 +160,8 @@ func (l *Loader) Current() *Snapshot {
 	return l.current.Load()
 }
 
-// CheckReload stats manifest.json in the snapshot directory and, if its
-// mtime or size changed since the last successful check, attempts to load a
+// CheckReload hashes the bounded manifest and, if its content changed,
+// attempts to load a
 // full new Snapshot. It returns whether a new Snapshot was swapped in, and
 // any error encountered (which is also logged). On error the previous
 // Snapshot, if any, continues to be served.
@@ -165,29 +169,18 @@ func (l *Loader) CheckReload() (bool, error) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
-	manifestPath := filepath.Join(l.dir, "manifest.json")
-	info, err := os.Stat(manifestPath)
+	snap, err := l.load()
 	if err != nil {
-		if !l.everAttempt {
-			l.logger.Printf("snapshot: no manifest at %s yet: %v", manifestPath, err)
+		if !l.everAttempt || l.current.Load() != nil {
+			l.logger.Printf("snapshot: reload rejected; previous validated snapshot retained")
 		}
 		l.everAttempt = true
 		return false, err
 	}
-
-	if l.everAttempt && info.ModTime().Equal(l.lastMTime) && info.Size() == l.lastSize {
+	if snap.version == l.lastManifestDigest {
 		return false, nil
 	}
-
-	snap, err := l.load()
-	if err != nil {
-		l.logger.Printf("snapshot: reload failed, keeping previous snapshot: %v", err)
-		l.everAttempt = true
-		return false, err
-	}
-
-	l.lastMTime = info.ModTime()
-	l.lastSize = info.Size()
+	l.lastManifestDigest = snap.version
 	l.everAttempt = true
 	l.current.Store(snap)
 	l.logger.Printf("snapshot: loaded generated_at=%s events=%d places=%d activities=%d",
@@ -213,82 +206,79 @@ func (l *Loader) StartAutoReload(interval time.Duration, stop <-chan struct{}) {
 }
 
 func (l *Loader) load() (*Snapshot, error) {
-	manifestPath := filepath.Join(l.dir, "manifest.json")
-	manifestRaw, err := os.ReadFile(manifestPath)
+	root, err := os.OpenRoot(l.dir)
 	if err != nil {
-		return nil, fmt.Errorf("read manifest: %w", err)
+		return nil, fmt.Errorf("snapshot directory unavailable")
 	}
-	var m manifestDoc
-	if err := json.Unmarshal(manifestRaw, &m); err != nil {
-		return nil, fmt.Errorf("parse manifest: %w", err)
-	}
-
-	snap := &Snapshot{
-		ManifestRaw:  json.RawMessage(append([]byte(nil), manifestRaw...)),
-		Site:         m.Site,
-		Licenses:     m.Licenses,
-		GeneratedAt:  m.GeneratedAt,
-		LoadedAt:     time.Now().UTC(),
-		RecordCounts: map[string]int{},
-	}
-
-	if events, ok := m.Datasets["events"]; ok {
-		recs, err := l.loadEvents(events.File)
-		if err != nil {
-			return nil, fmt.Errorf("load events: %w", err)
-		}
-		snap.Events = recs
-		snap.RecordCounts["events"] = len(recs)
-	}
-	if places, ok := m.Datasets["places"]; ok {
-		recs, err := l.loadPlaces(places.File)
-		if err != nil {
-			return nil, fmt.Errorf("load places: %w", err)
-		}
-		snap.Places = recs
-		snap.RecordCounts["places"] = len(recs)
-	}
-	if activities, ok := m.Datasets["activities"]; ok {
-		recs, err := l.loadActivities(activities.File)
-		if err != nil {
-			return nil, fmt.Errorf("load activities: %w", err)
-		}
-		snap.Activities = recs
-		snap.RecordCounts["activities"] = len(recs)
-	}
-	if taxonomy, ok := m.Datasets["taxonomy"]; ok && taxonomy.File != "" {
-		raw, err := os.ReadFile(filepath.Join(l.dir, taxonomy.File))
-		if err != nil {
-			return nil, fmt.Errorf("load taxonomy: %w", err)
-		}
-		if !json.Valid(raw) {
-			return nil, fmt.Errorf("load taxonomy: invalid JSON in %s", taxonomy.File)
-		}
-		snap.TaxonomyRaw = json.RawMessage(raw)
-	}
-
-	snap.version = computeVersion(snap.GeneratedAt, snap.RecordCounts)
-
-	return snap, nil
-}
-
-func (l *Loader) readDataset(file string) (datasetFile, error) {
-	var df datasetFile
-	raw, err := os.ReadFile(filepath.Join(l.dir, file))
-	if err != nil {
-		return df, err
-	}
-	if err := json.Unmarshal(raw, &df); err != nil {
-		return df, err
-	}
-	return df, nil
-}
-
-func (l *Loader) loadEvents(file string) ([]EventRecord, error) {
-	df, err := l.readDataset(file)
+	defer root.Close()
+	manifestRaw, err := readSnapshotFile(root, "manifest.json", 1<<20)
 	if err != nil {
 		return nil, err
 	}
+	var m manifestDoc
+	if err := strictJSON(manifestRaw, &m); err != nil {
+		return nil, err
+	}
+	if err := validateManifest(m); err != nil {
+		return nil, err
+	}
+	if sha256Sum(manifestRaw) == l.lastManifestDigest {
+		return l.current.Load(), nil
+	}
+	snap := &Snapshot{
+		ManifestRaw: manifestRaw, Site: m.Site, Licenses: m.Licenses,
+		GeneratedAt: m.GeneratedAt, LoadedAt: time.Now().UTC(), RecordCounts: map[string]int{},
+	}
+	for _, name := range []string{"events", "places", "activities", "taxonomy"} {
+		info := m.Datasets[name]
+		raw, err := readSnapshotFile(root, info.File, snapshotByteCaps[name])
+		if err != nil {
+			return nil, err
+		}
+		if sha256Sum(raw) != info.SHA256 {
+			return nil, fmt.Errorf("snapshot checksum mismatch")
+		}
+		if name == "taxonomy" {
+			if err := validateTaxonomy(raw, m.GeneratedAt, info.Count); err != nil {
+				return nil, err
+			}
+			snap.TaxonomyRaw = raw
+			continue
+		}
+		var df datasetFile
+		if err := strictJSON(raw, &df); err != nil {
+			return nil, err
+		}
+		if df.SchemaVersion != snapshotSchema || df.GeneratedAt != m.GeneratedAt || df.Count != info.Count || len(df.Records) != info.Count {
+			return nil, fmt.Errorf("incoherent snapshot dataset")
+		}
+		if err := validateRecords(name, df.Records); err != nil {
+			return nil, err
+		}
+		switch name {
+		case "events":
+			snap.Events, err = parseEvents(df)
+		case "places":
+			snap.Places, err = parsePlaces(df)
+		case "activities":
+			snap.Activities, err = parseActivities(df)
+		}
+		if err != nil {
+			return nil, fmt.Errorf("invalid snapshot record")
+		}
+		snap.RecordCounts[name] = len(df.Records)
+	}
+	// A concurrent publisher cannot make a mixed release look coherent: all files
+	// must match the committed manifest, which must still be identical here.
+	finalManifest, err := readSnapshotFile(root, "manifest.json", 1<<20)
+	if err != nil || sha256Sum(finalManifest) != sha256Sum(manifestRaw) {
+		return nil, fmt.Errorf("snapshot changed during load")
+	}
+	snap.version = sha256Sum(manifestRaw)
+	return snap, nil
+}
+
+func parseEvents(df datasetFile) ([]EventRecord, error) {
 	out := make([]EventRecord, 0, len(df.Records))
 	for _, raw := range df.Records {
 		var f eventFields
@@ -296,19 +286,25 @@ func (l *Loader) loadEvents(file string) ([]EventRecord, error) {
 			return nil, fmt.Errorf("parse event record: %w", err)
 		}
 		rec := EventRecord{
-			Raw:      raw,
-			ID:       f.ID,
-			Title:    f.Title,
-			Activity: f.Activity,
+			Raw:         raw,
+			ID:          f.ID,
+			Title:       f.Title,
+			Description: f.Description,
+			Activity:    f.Activity,
 		}
 		if rec.Activity == "" {
 			rec.Activity = f.ActivityType
+		}
+		if f.PlaceID != nil {
+			rec.PlaceID = *f.PlaceID
+			rec.HasPlaceID = true
 		}
 		if t, err := parseRFC3339(f.StartsAt); err == nil {
 			rec.StartsAt = t
 			rec.HasStarts = true
 		}
 		if f.PlaceSummary != nil {
+			rec.PlaceName = f.PlaceSummary.Name
 			rec.PlaceCity = f.PlaceSummary.City
 			if f.PlaceSummary.Lat != nil && f.PlaceSummary.Lon != nil {
 				rec.PlaceLat = *f.PlaceSummary.Lat
@@ -321,11 +317,7 @@ func (l *Loader) loadEvents(file string) ([]EventRecord, error) {
 	return out, nil
 }
 
-func (l *Loader) loadPlaces(file string) ([]PlaceRecord, error) {
-	df, err := l.readDataset(file)
-	if err != nil {
-		return nil, err
-	}
+func parsePlaces(df datasetFile) ([]PlaceRecord, error) {
 	out := make([]PlaceRecord, 0, len(df.Records))
 	for _, raw := range df.Records {
 		var f placeFields
@@ -349,11 +341,7 @@ func (l *Loader) loadPlaces(file string) ([]PlaceRecord, error) {
 	return out, nil
 }
 
-func (l *Loader) loadActivities(file string) ([]ActivityRecord, error) {
-	df, err := l.readDataset(file)
-	if err != nil {
-		return nil, err
-	}
+func parseActivities(df datasetFile) ([]ActivityRecord, error) {
 	out := make([]ActivityRecord, 0, len(df.Records))
 	for _, raw := range df.Records {
 		var f activityFields
@@ -391,15 +379,4 @@ func parseRFC3339(s string) (time.Time, error) {
 func sha256Sum(content []byte) string {
 	sum := sha256.Sum256(content)
 	return fmt.Sprintf("%x", sum)
-}
-
-// computeVersion derives a short, stable tag from the manifest's
-// generated_at timestamp plus the actually-loaded record counts. It changes
-// iff the snapshot content changes, which is exactly what ETags need.
-func computeVersion(generatedAt string, counts map[string]int) string {
-	h := sha256.New()
-	fmt.Fprintf(h, "%s|events=%d|places=%d|activities=%d",
-		generatedAt, counts["events"], counts["places"], counts["activities"])
-	sum := h.Sum(nil)
-	return fmt.Sprintf("%x", sum)[:16]
 }
