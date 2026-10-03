@@ -92,7 +92,8 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 - 2026-10-04 (Go review branch): complete Go race/vet passed; isolated PostGIS exporter → native Go
   and public visibility/listing suite **38 passed**, no skipped native contract. Go package/binary
   vulnerability scans found none. Static nonroot image passed read-only/no-capability health checks.
-  Doc/lint/container-scan receipts: `WORKLOG.md` §2026-10-04. No live data or infrastructure changed.
+  GitHub Go CI passed; Django CI initially blocked on archived PGDG sources (CI-only repair).
+  Receipts: `WORKLOG.md` §2026-10-04. No live data or infrastructure changed.
 - 2026-08-22 (credential fix, recorded in its merge): 142 passed across the touched lanes; full suite 2773
   passed, 15 failed — all in the chat and messaging `test_consumer.py` websocket tests, failing identically
   on pristine main in isolation; both ruff commands and `makemigrations --check` clean.
@@ -104,7 +105,6 @@ docker compose -p socialfix -f docker-compose.local.yml exec -T web \
   sh -lc 'python -m pytest -q'
 git diff --check
 ```
-
 Full CI matrix: `.github/workflows/ci.yml` (frontend, lint-test incl. `check --deploy`, docker-build +
 Trivy, audit = pip-audit + bandit). Gate commands with expected output: `docs/agent-testing.md`. Operator
 contract: `docs/ROEDU_INTEGRATION.md`.

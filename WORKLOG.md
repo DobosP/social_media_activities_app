@@ -23,6 +23,12 @@ Valid until: this branch is reviewed/landed or superseded — then treat as hist
   not a production sizing or total-bill estimate. Final Trivy0.75.0 scan: zero
   fixable HIGH/CRITICAL findings. Ruff621files, YAML/Compose, docs37files, budgets
   and whitespace pass. Receipt: `docs/reviews/go-foundation/verification.json`.
+- GitHub Go quality/container/security run37156292496 passed; frontend,
+  dependency audit and Django image job passed. Initial full Django CI stopped
+  at archived Bullseye PGDG apt sources before tests. The pinned CI-only database
+  now uses the signed official PGDG archive, retaining server hold and signature
+  verification ([PGDG notice](https://wiki.postgresql.org/wiki/Apt)). Runtime
+  database images and live databases were not changed.
 - Remaining review: human privacy/safety sign-off before landing, explicit
   withdrawal/erasure and staleness budget before rollout, then live API parity.
   Separate ManagedScanner malformed-verdict gap is recorded in ADR-0031; no

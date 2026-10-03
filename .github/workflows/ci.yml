@@ -96,9 +96,19 @@ jobs:
           set -euo pipefail
           CID=$(docker ps --format '{{.ID}} {{.Image}}' | awk '/postgis/{print $1; exit}')
           echo "Postgres service container: $CID"
-          docker exec "$CID" bash -lc "apt-get update \
-            && apt-mark hold postgresql-16 \
-            && apt-get install -y --no-install-recommends postgresql-16-pgvector"
+          docker exec -i "$CID" bash -se <<'PGVECTOR'
+          # The digest-pinned test image is Bullseye. PGDG archived that suite
+          # on 2026-08-31; use its signed official archive without weakening APT
+          # signature checks or upgrading the running PostgreSQL server.
+          # https://wiki.postgresql.org/wiki/Apt
+          . /etc/os-release
+          if [ "$VERSION_CODENAME" = bullseye ]; then
+            sed -i -E 's#https?://apt.postgresql.org/pub/repos/apt/?#https://apt-archive.postgresql.org/pub/repos/apt/#g' /etc/apt/sources.list.d/pgdg.list
+          fi
+          apt-get update
+          apt-mark hold postgresql-16
+          apt-get install -y --no-install-recommends postgresql-16-pgvector
+          PGVECTOR
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
