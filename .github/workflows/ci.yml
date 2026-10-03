@@ -149,14 +149,16 @@ jobs:
       - name: Build production image
         run: docker build -t social-activities-app:ci .
       - name: Trivy image scan (report-only)
-        # Surfaces OS/library CVEs in the built image. Installed via the official script (no
-        # third-party action pin to drift) and report-only (--exit-code 0) so a base-image CVE
-        # doesn't block the build before it's triaged; flip --exit-code to 1 to enforce once the
-        # base image is on a clean cadence. --ignore-unfixed hides CVEs with no available fix.
-        run: |
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
-            | sh -s -- -b /usr/local/bin
-          trivy image --ignore-unfixed --severity CRITICAL,HIGH --exit-code 0 social-activities-app:ci
+        # Preserve the existing report-only CVE policy while pinning the action
+        # and scanner version; an unversioned install script failed to resolve
+        # its release during the Go qualification run.
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: v0.75.0
+          image-ref: social-activities-app:ci
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "0"
 
   audit:
     runs-on: ubuntu-latest

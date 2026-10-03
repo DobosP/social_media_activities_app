@@ -28,7 +28,12 @@ Valid until: this branch is reviewed/landed or superseded — then treat as hist
   at archived Bullseye PGDG apt sources before tests. The pinned CI-only database
   now uses the signed official PGDG archive, retaining server hold and signature
   verification ([PGDG notice](https://wiki.postgresql.org/wiki/Apt)). Runtime
-  database images and live databases were not changed.
+  database images and live databases were not changed. The existing unpinned
+  Trivy installer also failed release discovery; the same verified action/tool
+  pins as the Go job now replace it, preserving its report-only CVE policy.
+  Full Django lint/test job111301416554 passed: **2791 tests +38subtests**,
+  migration drift and deploy checks passed (existing warnings remain).
+  The previously documented websocket failures did not recur in this CI run.
 - Remaining review: human privacy/safety sign-off before landing, explicit
   withdrawal/erasure and staleness budget before rollout, then live API parity.
   Separate ManagedScanner malformed-verdict gap is recorded in ADR-0031; no

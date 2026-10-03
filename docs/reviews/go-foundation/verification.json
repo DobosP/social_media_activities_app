@@ -56,5 +56,18 @@
     "human_privacy_safety_review": "pending",
     "deploy": "not performed",
     "live_ingestion": "not performed"
+  },
+  "github_checks": {
+    "go_run_id": 37156689758,
+    "go_quality": "passed",
+    "go_vulnerability_audit": "passed",
+    "django_lint_test_job_id": 111301416554,
+    "django_tests_passed": 2791,
+    "django_subtests_passed": 38,
+    "migration_drift": "passed",
+    "deploy_checks": "passed with existing warnings",
+    "frontend": "passed",
+    "dependency_audit": "passed",
+    "ci_container_scan": "rerun after pinned installer repair"
   }
 }

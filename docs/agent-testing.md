@@ -14,8 +14,8 @@ Last verified: 2026-10-04
 | Scope | Command | Expected |
 |---|---|---|
 | Targeted deferred-task tests | `docker compose -p socialfix -f docker-compose.local.yml exec -T web sh -lc 'python -m pytest apps/ops/tests/test_deferred_tasks.py -q'` | `N passed`, no failures. Do not hard-code `N` — the file grows. |
-| Full suite (container) | `docker compose -p socialfix -f docker-compose.local.yml exec -T web sh -lc 'python -m pytest -q'` | all pass except the known-failing rows below |
-| Full suite (CI-equivalent env) | `docker compose -f docker-compose.local.yml exec -T -e DJANGO_SETTINGS_MODULE=config.settings.test -e DJANGO_SECRET_KEY=ci-secret-not-for-prod -e DATABASE_URL=postgis://app:app@db:5432/app web pytest -q` | same (see `README.md` §Local variant) |
+| Full suite (container) | `docker compose -p socialfix -f docker-compose.local.yml exec -T web sh -lc 'python -m pytest -q'` | all pass; historical failures below did not recur in 2026-10-04 CI |
+| Full suite (CI-equivalent env) | `docker compose -f docker-compose.local.yml exec -T -e DJANGO_SETTINGS_MODULE=config.settings.test -e DJANGO_SECRET_KEY=ci-secret-not-for-prod -e DATABASE_URL=postgis://app:app@db:5432/app web pytest -q` | all pass (see `README.md` §Local variant) |
 | Lint | `ruff check . && ruff format --check .` | `All checks passed!` / `N files already formatted` |
 | Migration drift | `python manage.py makemigrations --check --dry-run` | `No changes detected`; needs the app deps (container or a venv with `requirements*.txt`) — a bare host raises `ModuleNotFoundError: environ` |
 | Frontend | `cd frontend && npm ci && npm test && npm run build` | tests green; build within the initial-bundle budget (40 KiB gzip) |
@@ -34,9 +34,8 @@ Last verified: 2026-10-04
 5. Docs touched? Run the doc gate above and paste its `files=…` line into `STATUS.md` §Verification record.
 
 ## Known failing / blocked
-- `apps/chat/tests/test_consumer.py` and `apps/messaging/tests/test_consumer.py`: 15 websocket-consumer
-  failures reported 2026-08-22, identical on pristine main in isolation. Treat as pre-existing until fixed;
-  never "fix" them by weakening a gate.
+- Historical 2026-08-22 chat/messaging websocket failures did not recur in full 2026-10-04 CI:
+  2791 tests + 38 subtests passed (job111301416554). Expect a green suite; never weaken a gate.
 - If containers are down, report `docker compose ... ps` / the startup blocker instead of inventing test output.
 - Do not expose secrets from settings or env files.
 - `python manage.py check --deploy` needs the CI env block in `.github/workflows/ci.yml` (prod settings +

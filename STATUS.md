@@ -92,7 +92,7 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 - 2026-10-04 (Go review branch): complete Go race/vet passed; isolated PostGIS exporter → native Go
   and public visibility/listing suite **38 passed**, no skipped native contract. Go package/binary
   vulnerability scans found none. Static nonroot image passed read-only/no-capability health checks.
-  GitHub Go CI passed; Django CI initially blocked on archived PGDG sources (CI-only repair).
+  GitHub Go CI passed; full Django **2791 tests +38 subtests** passed after CI setup repairs.
   Receipts: `WORKLOG.md` §2026-10-04. No live data or infrastructure changed.
 - 2026-08-22 (credential fix, recorded in its merge): 142 passed across the touched lanes; full suite 2773
   passed, 15 failed — all in the chat and messaging `test_consumer.py` websocket tests, failing identically

@@ -18,8 +18,10 @@ current tagged source-call-graph analyser cannot parse Go 1.27 SSA; that result
 is unavailable. Trivy 0.75.0 found zero fixable HIGH/CRITICAL findings in the exact
 local image. Vulnerability databases and future builds can change these results.
 
-GitHub CI execution is separate from these local receipts. Full Django and
-frontend suites were not rerun locally for this slice. No app was deployed, no
+GitHub Go/frontend/dependency checks passed. Full Django CI passed 2791 tests
+and 38 subtests, migration drift and deploy checks; existing deploy warnings
+remain. Full Django/frontend suites were not rerun locally for this slice. The
+legacy container scanner was repaired to use pinned action/tool versions. No app was deployed, no
 real ingestion/media processing ran, and no user or child-facing data changed.
 Human privacy/safety review remains required before landing; live rollout also
 needs approved freshness/revocation/erasure behavior and remaining API parity.
