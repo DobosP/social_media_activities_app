@@ -3,7 +3,7 @@
 Design, operations and decision docs for the Social Activities App.
 **Start at the repo root: [`STATUS.md`](../STATUS.md)** (single source of current truth) and
 [`AGENTS.md`](../AGENTS.md) (operating contract; hard invariants live in [SAFETY.md](SAFETY.md)).
-Index regenerated 2026-09-05.
+Native runtime index verified 2026-10-04.
 
 ## Current state & priorities
 
@@ -18,8 +18,10 @@ Index regenerated 2026-09-05.
 
 | Doc | What it covers |
 |---|---|
-| [reviews/go-foundation/README.md](reviews/go-foundation/README.md) | First Go serving-slice qualification and remaining rollout gates (ADR-0031). |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | D1-era system shape + the seams everything plugs into (see its do-not-rebuild note). |
+| [NATIVE_SERVER.md](NATIVE_SERVER.md) | Canonical Go runtime, migration/adoption, commands and explicit configuration limits. |
+| [reviews/native-go/README.md](reviews/native-go/README.md) | Complete native release, real-codec/DB/HTTPS and resource/image proof. |
+| [reviews/go-foundation/README.md](reviews/go-foundation/README.md) | Historical public-only serving slice (superseded scope, ADR-0031). |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Native Go service boundaries and preserved product contracts (ADR-0032). |
 | [ASYNC_TASKS.md](ASYNC_TASKS.md) | The Postgres `DeferredTask` queue contract + what may never be deferred (ADR-0003). |
 | [DATABASE.md](DATABASE.md) | Postgres/PostGIS usage strategy (see its 2026-07-02 as-of note). |
 | [MESSAGING.md](MESSAGING.md) | E2EE direct/group messaging — honest reference incl. guardian oversight (ADR-0006). |
@@ -31,7 +33,7 @@ Index regenerated 2026-09-05.
 
 | Doc | What it covers |
 |---|---|
-| [HOSTING_EU.md](HOSTING_EU.md) | **Deploy source of truth**: single Hetzner EU box + Hetzner Object Storage (ADR-0001); `render.yaml` = demo only. Provider procurement not yet final. Incl. the optional Go `agentapi` sidecar for AI-agent read traffic. |
+| [HOSTING_EU.md](HOSTING_EU.md) | Native artifact/TLS/private EU hosting guide; provider/procurement and product launch are gated. |
 | [RUNBOOK.md](RUNBOOK.md) | Operating the deployed app: envs, backups, incident response, sanction durations. |
 | [SCALING.md](SCALING.md) | Scale-out levers in order (presigned media, PgBouncer, replicas, partitioning). |
 | [RELEASE_READINESS.md](RELEASE_READINESS.md) | The "safe enough to launch" gate mapped to code. |

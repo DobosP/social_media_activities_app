@@ -19,7 +19,7 @@ contract oracles; the default Docker image contains no Python runtime.
 
 ## Stack
 
-- **Go 1.27.1** native backend review candidate; selection and limits: [ADR-0032](docs/adr/0032-complete-native-go-backend.md)
+- **Go 1.27.1** native serving backend; selection and limits: [ADR-0032](docs/adr/0032-complete-native-go-backend.md)
 - **PostgreSQL + PostGIS** via **pgx** — the single primary datastore (relational +
   geospatial + graph + `pgvector`; no separate graph/vector DB)
 - **Go WebSockets + PostgreSQL notifications** for live delivery; private EU-native S3 storage for blobs
@@ -82,35 +82,36 @@ users — open `http://localhost:8000/`:
   - `?near_lon=&near_lat=` orders nearest-first and adds `distance_m`; add `?radius_m=` to
     also filter within a radius (metres)
 - `GET /api/docs/` — Swagger UI (`/api/schema/` for raw OpenAPI)
-- `/admin/` — Django admin with an interactive map widget on places
+- `/admin/` — guarded native operator pages with audited curated edits and governed domain actions
 
 ## Project layout
 
 ```
-config/             # settings (base/dev/prod/test), urls, wsgi/asgi
-apps/               # 20 Django apps: accounts (identity/EUDI), taxonomy, places (PostGIS), ingestion
-                    #   (source adapters + RO-EDU client, ingest_places/sync_roedu), events, social,
-                    #   connections (tiered profiles), communities, chat + messaging (E2EE, consumers),
-                    #   media, safety (moderation, Art.16/17, SSRF net), ops (DeferredTask/run_due_jobs),
-                    #   notifications, recommendations, discovery, saved_searches, booking, donations, web (SSR UI)
-frontend/           # Preact/Vite SPA → static/frontend/ (ADR-0016, ADR-0022)
-services/agentapi/  # optional no-DB Go sidecar for AI-agent/crawler reads (:8090, compose profile `agent`; ADR-0025)
-deploy/             # Terraform + cloud-init + systemd for the Hetzner EU box (never applied) — deploy/README.md
-db/                 # seed data — db/README.md
-tests/              # cross-app API schema/security/prod-hardening tests; per-app tests live in apps/<app>/tests/
-docs/               # design, ops, compliance, ADRs — index at docs/README.md
+services/server/    # native HTTP/auth/domain/safety/media/HTML/live/job assembly (Go)
+services/authcore/  # reviewed portable shared identity module + SOURCE.json hashes
+services/agentapi/  # optional independent no-DB Go public snapshot reader (:8090)
+frontend/           # Preact/Vite TypeScript client → static/frontend/
+templates/, locale/ # native Go document/SEO rendering uses the existing presentation assets
+apps/, config/      # offline Django contract/migration oracle; apps/web/templates are shared data
+deploy/             # native artifact/systemd/cloud-init templates; Terraform never applied
+db/                 # explicit local/demo seed data (db/README.md)
+tests/              # offline Python reference tests; native tests live under services/server
+docs/              # native guides, safety contracts, ADRs and verification receipts
 ```
 
 ## Tests & lint
 
 ```bash
-pytest            # unit (mapping) + DB/API + ingestion (recorded Overpass fixture, no network)
-ruff check . && ruff format --check .
-pip-audit         # dependency vulnerability scan (release gate)
+go -C services/server test -race ./...
+go -C services/server vet ./...
+go -C services/server run ./cmd/check-authcore
 ```
 
-Dependencies are fully pinned (compiled from `requirements*.in`) and tracked for security — see
-[`docs/SECURITY.md`](docs/SECURITY.md). Django is on the **5.2 LTS** line.
+Database-required cases need the explicit disposable fixture gate in
+[agent-testing](docs/agent-testing.md); skipped database cases do not qualify a release.
+Frontend and source/package/image audits are enforcing native CI gates. Python `pytest`,
+Ruff, migration drift and pip audits remain the offline compatibility-oracle checks.
+Dependency boundaries and security commands: [SECURITY](docs/SECURITY.md).
 
 ## Docs
 

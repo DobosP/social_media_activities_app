@@ -4,8 +4,8 @@ A small, self-contained, **stdlib-only** Go HTTP service that serves this
 platform's public open-data snapshot (events, places, activities,
 taxonomy) to AI agents at high volume.
 
-It is deliberately **database-free**: a Django management command
-(`apps/web/agent_snapshot.py`, owned by the main app) writes a
+It is deliberately **database-free**: the native `export_agent_snapshot` job
+(`services/server/internal/jobs/snapshot.go`, owned by the main app) writes a
 gate-filtered, public, PII-free JSON snapshot to a directory on disk.
 `agentapi` loads that directory into memory at startup and on a periodic
 interval, and serves read-only queries against it. It never touches
@@ -100,7 +100,7 @@ A rejected reload retains the previous validated snapshot. Missing startup data
 returns `503 snapshot_unavailable`; static documentation remains available.
 No maximum publication age is currently enforced. Export cadence, revocation,
 withdrawal/erasure timing and a freshness budget need review before rollout.
-This snapshot API cannot replace live Django `/api/v1/` routes: its historical
+This snapshot API cannot replace the live native Go `/api/v1/` routes: its historical
 and GeoJSON contracts differ. Date-only filters here use UTC.
 
 ## Resource and ingress budgets

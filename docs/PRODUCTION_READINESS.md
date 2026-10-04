@@ -8,11 +8,24 @@ CACHES/CHANNEL_LAYERS all confirmed present; §2b updated — the task-queue fou
 (archived 2026-07-02) — most of those engineering blockers are fixed in code (verified).
 Build on this + `SCALING.md` + `HOSTING_EU.md`. Feeds the repo-root `STATUS.md`.
 
-> **Headline:** the product engine (D1–D10 + 4 feature waves) is built and tested (2,365-green
-> suite), and the HTTP path is genuinely **stateless + load-balancer-ready** (DB sessions, opaque
-> API tokens, `SECURE_PROXY_SSL_HEADER` + `NUM_PROXIES`, a shared-state boot guard). What's missing
-> is the **operational substrate** to run it live and at scale, plus **legal sign-off**. Almost none
-> of it is feature work.
+## Native implementation status (2026-10-04)
+
+The owner approved the Go conversion for main under [ADR-0032](adr/0032-complete-native-go-backend.md).
+All default serving/media/live/job launch paths are native Go. Current operating commands,
+limits and migration requirements are [NATIVE_SERVER](NATIVE_SERVER.md); old apps/ and
+prod.py references below describe the preserved Python contract history.
+
+Native CI/reference/public/image gates pass, including173 real PostgreSQL/codec contracts
+with zero skips. Auth flow/state/tokens, queue and ID-only live delivery are database-backed;
+API/social/catalog rate histories remain bounded per process. Redis-required/Sentry profiles
+and unsupported nondefault overrides refuse startup. This is not a blanket claim that
+multi-replica admission budgets are ready. Resolve those limits before such a deployment.
+
+Code landing does not procure or deploy Social, activate sources/providers/minors or satisfy
+the existing product GDPR/DPIA/parental-authority/operations gates. Rehearse database and
+artifact rollback, scanner/storage/provider integration, backups/restore and alerting before
+launch. The historical backlog below must be checked against native code rather than used
+to reintroduce a Django/Redis runtime. STATUS remains the current truth.
 
 ## 0. Already built — do NOT rebuild
 
@@ -53,8 +66,8 @@ it's a **provisioning** gap (the shipped `render.yaml` is a free-tier *demo*).
 ## 2. P0 — before a real launch
 
 ### 2a. Infrastructure / availability (the SPOF cluster)
-- **≥2 app instances, no SPOF** — one daphne process on one box = 100% downtime on any crash; free
-  Render web also sleeps after 15 min. Run `numInstances: 2` (paid) or 2 systemd daphne units.
+- **≥2 app instances, no SPOF** — one native app process on one box = 100% downtime on any crash; free
+  Render web also sleeps after 15 min. Run `numInstances: 2` (paid) or 2 qualified native systemd app units after shared-budget verification.
 - **Managed / HA Postgres** — single primary for relational+geo+vector+graph; ephemeral on free tier
   and co-located with the app on the Hetzner box. Use managed EU Postgres with PITR + a hot standby.
 - **Backups + a tested RESTORE drill** — backups are documented, not provisioned. Commit + schedule
@@ -124,7 +137,7 @@ it's a **provisioning** gap (the shipped `render.yaml` is a free-tier *demo*).
 - **Media egress off the app process — DONE (2026-07-04)**: `StorageBackend.presigned_get_url()`
   lets the S3 backend mint short-lived private GET URLs when `MEDIA_REDIRECT_TO_PRESIGNED=True`.
   Media file views re-check the signed token and current viewer authorization before a 307 redirect;
-  local/dev/test filesystem storage returns no presign URL and keeps streaming through Django.
+  local/dev/test filesystem storage returns no presign URL and keeps streaming through native authenticated handlers.
 - **PgBouncer** (transaction pooling) before scaling past one process; set `CONN_MAX_AGE=0` +
   disable server-side cursors when pooling.
 

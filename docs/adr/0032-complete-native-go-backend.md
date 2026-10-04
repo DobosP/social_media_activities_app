@@ -1,7 +1,7 @@
 # ADR-0032 — Complete native Go backend
 
 Date: 2026-10-04
-Status: accepted owner direction; implementation awaiting required human review
+Status: accepted; owner approved main landing on 2026-10-04
 Supersedes: ADR-0031's public-only implementation scope; preserves its public contract.
 
 ## Decision
@@ -44,8 +44,8 @@ scheduler or real ingestion is automatically activated by the migration.
 
 ## Landing and release gates
 
-Auth/privacy/safety requires human review under AGENTS.md before landing. Product launch
-still requires the GDPR/DPIA/parental-authority and operations gates. Providers, paid
+The owner approved the reviewed auth/privacy/safety conversion and main landing on
+2026-10-04, satisfying the implementation review gate. Product launch still requires the GDPR/DPIA/parental-authority and operations gates. Providers, paid
 infrastructure, live ingestion and minors are not activated by code publication.
 
 Native gates include portable module builds, race/vet, explicit disposable PostgreSQL with

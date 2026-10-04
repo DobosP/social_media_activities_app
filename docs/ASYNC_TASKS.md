@@ -1,139 +1,100 @@
-# Off-request work — the durable deferred-task foundation
+# Native deferred work and explicit jobs
 
-**Code-grounded as of 2026-07-04.** Ships the Postgres-backed queue
-(`apps/ops/tasks.py`, `apps/ops/models.py:DeferredTask`, the `process_deferred_tasks` command) plus
-the first production task kinds in `apps/ops/handlers.py`: `erasure.blob_cleanup`,
-`notify.activity_fanout`, `cron.run_command`, and the fail-closed `media.scan.dispatch` placeholder.
-**Updated 2026-07-04:** `notifications.retention_purge` is also registered for bounded notification
-table hygiene.
+Verified against native Go on 2026-10-04. The queue implementation is
+[internal/ops/tasks.go](../services/server/internal/ops/tasks.go); registered handlers and
+periodic work are in [internal/jobs](../services/server/internal/jobs/).
+[ADR-0032](adr/0032-complete-native-go-backend.md) records the runtime boundary and
+[STATUS](../STATUS.md) records activation gates.
 
-## Why this exists
+## Safety contract
 
-Some work is too heavy or too latency-sensitive to do inside the web request:
+Deferral moves work whose outcome is already authorized. Cohort, consent, membership,
+blocking, privacy and moderation checks remain on the operation's domain path. Media
+must remain unviewable until every required effective scan and processing gate succeeds.
+Moving scan execution to a worker never permits admit-first/scan-later behavior.
 
-- **GDPR erasure** deletes a whole account graph and signals object-store blob cleanup — slow, and
-  an S3 hiccup should never roll back a lawful erasure.
-- **Media scanning** of a freshly-uploaded image/PDF can be slow (an external scanner round-trip).
-- **Notification fan-out** to every member of a large activity/group is O(members) inserts on the
-  request thread.
-- **Notification retention** can delete many old inbox convenience rows; it must stay bounded and
-  must never delete unread or safety/DSA notices.
+Suitable deferred work includes physical byte deletion after authorized row erasure,
+bounded notification retention and fan-out that rechecks current recipients. A task's
+existence is not proof of permission, successful external reporting, or media cleanliness.
+Safety/DSA notices that must be immediate remain synchronous.
 
-The product invariants constrain the solution: **Postgres is the single datastore** (inv.6) and we
-**avoid heavy deps and per-user cloud spend**. So this is a *Postgres-backed* work queue drained by
-the existing `run_due_jobs` cron — **no Celery/RQ, no Redis-as-broker, no new process required.**
-When volume genuinely outgrows a cron tick, the *same* `enqueue`/handler API can be pointed at a
-dedicated worker loop or a real broker without touching call sites — that is the point of the seam.
+## Queue mechanics
 
-## The contract
+`ops.NewQueue` binds a PostgreSQL pool. `Queue.Register` installs a concrete
+`TaskHandler(context.Context, pgx.Tx, map[string]json.RawMessage)`; unknown kinds and nil
+handlers are refused. `Queue.Enqueue` inserts in the caller's transaction, so rollback
+leaves no task. Payloads are JSON objects capped at 64 KiB; dedup keys are bounded.
+An advisory transaction lock and pending-row uniqueness protect `(kind, dedup_key)`.
 
-```python
-from apps.ops.tasks import register, enqueue
+`Queue.RunPending(ctx, limit)` claims due rows with `FOR UPDATE SKIP LOCKED`. There is
+one drainer per queue instance to protect the small connection pool; independent
+processes can claim different rows. Handler writes use a savepoint. On failure they
+roll back, while the task attempt/retry or terminal failure record commits. Failure
+summaries retain the error type and a generic diagnostic, not raw payload/error content.
 
-@register("erasure.blob_cleanup")          # bind a handler to a string kind (in apps/ops/handlers.py)
-def _cleanup(payload: dict) -> None:
-    ...                                     # IDEMPOTENT unit of work; takes IDs, not objects
+Delivery is at least once. A process interruption or an external side effect before a
+failed commit can cause a repeat; every handler must be idempotent. Attempts default to
+five, with exponential backoff starting at 30 seconds and capped at one hour. Runtime
+configuration can adjust the supported backoff settings; unsupported policy overrides
+fail startup by name. Exhausted tasks stay `FAILED` for operator review. Sentry is not a
+native reporting path; `SENTRY_DSN` refuses unsupported configuration.
 
-enqueue("erasure.blob_cleanup", {"user_id": 42}, dedup_key="user:42")
+## Payloads and current handlers
+
+Use IDs and minimal bounded scalars. No credentials, tokens, uploaded bytes, ciphertext
+or private conversation bodies belong in a queue payload. A handler reloads referenced
+state and tolerates changed/deleted rows. Opaque storage keys are confined to private
+cleanup tasks; bounded notification presentation fields are not a private-chat channel.
+
+| Registered kind | Current behavior |
+|---|---|
+| `erasure.blob_cleanup` | Idempotent deletion of private object keys; bounded chunks enqueue their complete remainder and audit completion |
+| `notify.activity_fanout` | Re-derives current visible activity membership, excludes the actor/blocked pairs, dedups and calls `platform.Notify`; current pass caps recipients at 500 |
+| `notifications.retention_purge` | Deletes a bounded batch of old read mutable notices; unread and safety/DSA kinds remain protected |
+| `cron.run_command` | Runs only allowlisted due jobs, excluding recursive `process_deferred_tasks`; never arbitrary shell/Python commands |
+| `media.scan.dispatch` | Audits a blocked dispatch and changes no cleanliness/visibility; this is not an asynchronous image/PDF scanner |
+
+The last kind deliberately grants nothing. Images/PDFs still require effective clean
+admission synchronously. A future asynchronous image/PDF implementation needs a reviewed
+withheld-state lifecycle, current authorization and clean-only finalization before it can
+replace that gate. Pending video processing is a separate implemented lifecycle.
+
+## Erasure and media continuation
+
+Account erasure removes the authorized relational graph, keys/ciphertext and access
+synchronously. Media delete triggers capture main, thumbnail, poster and quarantined
+source references in a durable deletion outbox. The outbox and `erasure.blob_cleanup`
+retain physical cleanup through a storage outage; a failed object deletion does not
+restore erased rows or discard the obligation. Partial/ambiguous remote stores and an
+abandoned prepared attachment also retain cleanup rather than silently orphaning bytes.
+
+Video admission retains a private pending source. After a successful upload/post commit,
+`MEDIA_VIDEO_INLINE_PROCESSING=true` can trigger one application-lifetime, single-flight
+pass of at most two queued videos. Startup and migration trigger no such pass; false
+disables the upload kick. The bounded `transcode_videos` job/timer retries interrupted or
+stale work. Required frame scans and current domain checks precede a ready attachment.
+See [FILE_STORAGE](FILE_STORAGE.md) for failure/evidence and serving behavior.
+
+## Operator commands
+
+```sh
+social-server --due
+social-server --job process_deferred_tasks
+social-server --job process_deferred_tasks --job-options -
+social-server --job transcode_videos --job-options -
 ```
 
-- **Transactional enqueue.** `enqueue()` writes one `PENDING` row **in the caller's transaction**.
-  A rolled-back request enqueues nothing; a committed one is guaranteed to have its task durably
-  recorded. Call it *inside* the `@transaction.atomic` service that triggers the work.
-- **At-least-once, never exactly-once.** A handler may run more than once (a retry after a transient
-  error, or a worker killed mid-run leaving the row `PENDING`). **Every handler MUST be idempotent.**
-- **Bounded retries.** A handler that raises is retried with exponential backoff
-  (`DEFERRED_TASKS_BACKOFF_BASE`, capped at `DEFERRED_TASKS_MAX_BACKOFF`) up to `max_attempts`
-  (default `DEFERRED_TASKS_MAX_ATTEMPTS`), then marked `FAILED` and reported to Sentry. A handler's
-  own DB writes roll back on failure (savepoint); the task's failure record still commits.
-- **Idempotent enqueue.** `dedup_key` enforces *at most one PENDING task* per `(kind, dedup_key)` —
-  both in `enqueue()` and as a partial unique constraint (the race backstop). "Schedule cleanup for
-  user X" can be fired repeatedly without piling up duplicates.
-- **Concurrency-safe.** Claims use `SELECT ... FOR UPDATE SKIP LOCKED`, so two drainers never run
-  the same task.
-- **`kind` must be registered** before `enqueue` (fail-fast on typos). Handlers live in
-  `apps/ops/handlers.py`, imported at startup by `OpsConfig.ready`.
+A reviewed options object can set `limit` for those individual jobs; CLI input limits,
+unknown-key rejection and exact command options are in the
+[CLI reference](../services/server/cmd/social-server/README.md). `--due` runs the 27 concrete
+`jobs.DueNames` entries once, with `process_deferred_tasks` last, then exits. No command
+installs or activates a recurring scheduler. The checked-in systemd job/video timers
+remain unapplied until authorized; one-shot jobs do not reserve the HTTP live listener.
 
-## ⚠️ Safety rule — what you may and may NOT defer
+Monitor aggregate queue age, claimed/done/retried/failed counts, outbox backlog and video
+processing age. Reconcile terminal failures through audited operator procedures; do not
+clear the queue/outbox to hide a backlog. Scheduling real source-sync/provider work,
+paid infrastructure, minors and deployment retain their separate gates.
 
-> **Deferral only moves work that is *already authorised*. A gate that must hold BEFORE an action
-> takes effect can never be moved behind a deferred task.**
-
-This is the load-bearing rule for child-safety/privacy (inv.3, inv.4). Concretely:
-
-- ✅ Safe to defer: work that happens **after** the user-visible outcome is already correct and
-  gated — orphan-blob cleanup after the rows are deleted, fan-out of a notification whose per-
-  recipient mute/block gate is re-checked at send time, scanning of media that stays **unviewable
-  until the scan passes**.
-- ❌ Never defer: the **fail-closed scan gate itself**. `apps/media/services.py` rejects media
-  unless the scan is *effective and clean* (`MEDIA_REQUIRE_SCANNER`) before the `Attachment` is
-  readable. You may move the *scan execution* off-request only if the attachment is **withheld**
-  (not `can_view_attachment`-visible) until the deferred scan completes and flips it. Admitting
-  media first and scanning later is a child-safety regression — do not do it.
-- ❌ Never defer a **cohort/consent/block check** to "later". Those decide whether an action is
-  allowed at all; they belong on the request path.
-
-## What goes in a payload
-
-JSON-serialisable **IDs and minimal scalars only.** Rows are stored in the clear in Postgres, so:
-
-- No bulk PII, message bodies, photos, tokens, or secrets in a payload — pass a `user_id` /
-  `post_id`, and have the handler re-load (and re-authorise) from the DB.
-- A handler must tolerate the referenced row having changed or vanished between enqueue and run
-  (re-check, no-op gracefully) — that falls out of the idempotency requirement.
-
-## Operating it
-
-- **Drained by cron.** `process_deferred_tasks` is the last job in `run_due_jobs` `DUE_JOBS`, so the
-  existing scheduler drains the queue every tick. Run it standalone for dev:
-  `python manage.py process_deferred_tasks [--limit N]`.
-- **Settings** (`config/settings/base.py`): `DEFERRED_TASKS_BATCH` (per-pass cap),
-  `DEFERRED_TASKS_MAX_ATTEMPTS`, `DEFERRED_TASKS_BACKOFF_BASE`, `DEFERRED_TASKS_MAX_BACKOFF`.
-- **Observability.** Each failed attempt logs a warning with the run-correlation `request_id`
-  (the cron stamps one); an exhausted task is captured to Sentry tagged `deferred_task_kind`.
-  `DeferredTask.last_error` keeps a bounded last-failure summary for triage.
-- **Latency.** Cron-tick latency is fine for cleanup/fan-out. If a future kind needs near-real-time
-  draining, add a dedicated `process_deferred_tasks` worker loop (the API is unchanged).
-
-## Concrete migration plan for the first callers
-
-Pick **one** as the first real handler; each is a small, reviewable change.
-
-### 1. GDPR-erasure blob cleanup *(implemented)*
-- **Today:** `apps.accounts.services.erase_user` deletes the account graph synchronously; photo,
-  attachment, and activity-cover row deletes enqueue `erasure.blob_cleanup` inside the delete
-  transaction. The privacy guarantee (rows gone) is synchronous and stays synchronous.
-- **Handler:** `erasure.blob_cleanup` accepts a bounded `blob_keys` list, deletes each object-store
-  key idempotently, and writes an audit row with the blob count. A storage outage now retries
-  instead of failing the user's erasure.
-- **Safety:** no gate moves — the user's data is already unreachable the instant the rows commit.
-
-### 2. Media scanning *(fail-closed placeholder only)*
-- **Today:** `apps.media.services.attach_to_post` scans **fail-closed before** the attachment is
-  viewable. Keep that gate.
-- **Current deferred kind:** `media.scan.dispatch` records an audited no-op and does not mark
-  anything clean or visible, because there is no withheld media state yet. Synchronous scan remains
-  the admission gate.
-- **Future change (only if needed for latency):** persist the attachment in a **withheld** state,
-  then enqueue a real scanner task. The handler may flip the attachment to viewable **only on a
-  clean result**; a non-clean/ineffective result keeps it withheld. **`can_view_attachment` must
-  treat un-scanned as not-viewable.** Never admit-then-scan.
-
-### 3. Notification fan-out *(first kind implemented)*
-- **Today:** `apps.social.services.post_announcement` and member notifications loop
-  `notifications.notify` per recipient on the request path; `notify` applies the per-recipient
-  mute/DSA gate and blocked-pair exclusion at send time.
-- **Current kind:** `notify.activity_fanout` re-derives current activity members, excludes the
-  actor and blocked pairs, dedups by `(recipient, kind, url, title)`, and calls the
-  `notifications.notify()` chokepoint so mutable preferences and DSA non-mutable carve-outs stay
-  live. DSA-mandated MODERATION/SYSTEM notices that must be immediate should stay synchronous.
-- **Safety:** the mute/block/DSA gate stays inside `notify` and is re-evaluated at send time, so
-  deferral changes only *when*, never *who*.
-
-### 4. Notification retention *(implemented)*
-- **Today:** `purge_read_notifications` schedules `notifications.retention_purge`; the existing
-  `run_due_jobs` tick drains it through `process_deferred_tasks`.
-- **Handler:** deletes one settings-capped batch (`NOTIFICATION_RETENTION_BATCH`, default 1000) of
-  notifications older than `NOTIFICATION_RETENTION_DAYS`.
-- **Safety:** only read mutable notices are eligible. Unread notices are kept, and MODERATION/SYSTEM
-  notices are permanently excluded because they carry DSA/safety obligations.
+See [RUNBOOK](RUNBOOK.md) and [SCALING](SCALING.md). The complete earlier queue guide is
+retained as [historical reference](archive/async-tasks-native-go-reference.md).

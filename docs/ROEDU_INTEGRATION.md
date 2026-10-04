@@ -99,43 +99,31 @@ behavior:
 - DB-backed regression tests cover RO-EDU event credit mapping, API credit rendering,
   web credit rendering, and `source="roedu"` child-venue fail-closed behavior.
 
-## Running a demo (order matters)
+## Native commands and fixture order
 
-The adapter is **pluggable, not built in**: `ingest_places` only knows about a
-`roedu` source if you register the adapter via `settings.INGESTION_EXTRA_ADAPTERS`.
-This is the #1 footgun — without it you get `CommandError: Unknown source: roedu`.
+[ADR-0032](adr/0032-complete-native-go-backend.md) selects the native Go source boundary.
+`internal/jobs` validates canonical promoted packs; `internal/commands` exposes explicit
+owner-invoked ingestion. Python adapters remain offline references and are never imported
+by the serving process. Producer internals are never imported by the consumer.
 
-1. Set env (see `.env.example`):
-   ```bash
-   ROEDU_API_URL=http://<scraper-host>:8077
-   ROEDU_API_KEY=social-app-dev
-   INGESTION_EXTRA_ADAPTERS={"roedu": "apps.ingestion.sources.ro_scraper.RomaniaScraperAdapter"}
-   ```
-   (`INGESTION_EXTRA_ADAPTERS` is read as JSON: `config/settings/base.py` does
-   `env.json("INGESTION_EXTRA_ADAPTERS", default={})`.)
+Configure `ROEDU_API_URL` as the approved HTTPS serving endpoint and deliver the scoped
+`ROEDU_API_KEY` through SOPS. HTTP loopback URLs are for synthetic fixtures only. The
+native alias `INGESTION_EXTRA_ADAPTERS={"roedu":"roedu"}` can preserve source registration;
+the previous recognized Python dotted path is a compatibility name, not an import.
 
-2. **Ingest venues first** — events need their Places to already exist so they can be
-   matched:
-   ```bash
-   python manage.py ingest_places --source=roedu --city="Cluj-Napoca"
-   ```
+For an authorized fixture/preview, run `social-server --job ingest_places --job-options -`
+with `source`, `city`, `dry_run`, bounded `limit` or `bbox` options. Venues must precede
+standalone event imports. The native `sync_roedu_events` command accepts `city`, `limit`,
+canonical `app_pack`, `min_confidence`, `dry_run`, explicit rollback opt-in and optional
+`updated_since`. Full/delta completeness and publication gates remain unchanged; a
+partial read never reconciles source absence. Supply options in bounded JSON, not
+Python management-command switches; see the [manual registry](../services/server/internal/commands/README.md).
 
-3. **Then ingest events** (resolves each event to a venue Place; facts only):
-   ```bash
-   python manage.py sync_roedu_events --city="Cluj-Napoca"
-   # --dry-run to preview; --min-confidence 0 to include held NER events.
-   ```
-
-App-pack fixture/serving-layer path, once the serving endpoint exists:
-
-```bash
-ROEDU_API_URL=http://<server-host>:8077
-ROEDU_API_KEY=<set-in-environment>
-ROEDU_APP_PACK=roedu:social_media_activities_app:events_places:v1
-python manage.py ingest_places --source=roedu --city="Cluj-Napoca"
-python manage.py sync_roedu_events --city="Cluj-Napoca" \
-  --app-pack roedu:social_media_activities_app:events_places:v1
-```
+The complete validated sync tick is `social-server --job sync_roedu`, or its opt-in
+entry in `--due`; plain serving starts no ingestion. `docker-compose.roedu.yml` is an
+explicit native environment override and does not schedule sync. A host gateway cannot
+reach a loopback-only data server; do not widen that producer bind address to make a
+container demo work. Use synthetic fixtures or an approved accessible serving endpoint.
 
 The expected HTTP request is:
 

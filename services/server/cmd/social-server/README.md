@@ -1,6 +1,6 @@
 # Native Social runtime and operator entry points
 
-This is the configuration reference for the complete Go review candidate. Deployment
+This is the configuration reference for the native Go serving backend. Deployment
 and activation status remain in [STATUS.md](../../../../STATUS.md); safety invariants
 remain in [SAFETY.md](../../../../docs/SAFETY.md) and decisions in
 [docs/adr](../../../../docs/adr/). No command below activates a recurring scheduler.
@@ -12,7 +12,7 @@ social-server --due --reminder-within-hours 48
 social-server --job transcode_videos --job-options /private/video-options.json
 social-server --job ingest_places --job-options -
 social-server --job createsuperuser --job-options -
-social-server --dev --site-root /app --static-dir /app/staticfiles \
+social-server --dev --site-root /app --static-dir /app/static \
   --media-dir /private/media --media-scratch /private/media-work
 social-server --dev --dev-container --listen 0.0.0.0:8000 --site-root /app
 ```

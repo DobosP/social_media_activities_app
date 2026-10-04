@@ -37,7 +37,7 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   source facts, event price/availability JSON-LD, the no-DB Go sidecar, and crawler contracts are
   implemented. Public activity export remains the hard-coded ADULT + explicit-listing subset.
 - **Core product/runtime:** D1–D10 and the audited feature waves, phased React/Preact UI behind kill
-  switches, API/CSP/header/readiness hardening, bounded ASGI/database/cache behavior, EU-hosting templates,
+  switches, API/CSP/header/readiness hardening, bounded native HTTP/database behavior, EU-hosting templates,
   and deferred jobs are present. The production Terraform has never been applied.
 - **One nightly job, one RO-EDU credential (2026-08-22).** `sync_roedu` forwards `ROEDU_API_KEY` from the
   environment to the events lane (`apps/ingestion/management/commands/sync_roedu.py:78`);
@@ -53,13 +53,13 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   "removal still in force"; the Art.16/17 record and the GDPR Art.20 export query each scope separately,
   newest-first; `PostAdmin.is_hidden` stays an operator escape hatch without provenance
   (`apps/social/admin.py`). Detail: `WORKLOG.md` §2026-08-09, §2026-08-10.
-- **Complete Go review candidate (ADR-0032):** `services/server` now owns account/password/OAuth,
+- **Native Go serving backend (ADR-0032):** `services/server` now owns account/password/OAuth,
   EUDI/guardian/cohort gates, domain APIs, voting, moderation, media, encrypted live transport,
   HTML/SPA hydration, booking/donations, notifications/discovery, native schema adoption and jobs.
   The default Docker/Compose/systemd/Render/cloud-init launch paths invoke Go. Shared authentication
   is a hash-verified portable copy; Django remains offline contract/reference tooling.
-- The candidate replaces the public-only scope and remains unmerged/undeployed; required human
-  auth/privacy/safety review and separate product/provider launch gates still apply.
+- The owner approved landing both Go conversions on 2026-10-04; the qualified native backend
+  replaces the public-only scope. Social deployment/provider/minor launch gates remain separate.
 
 ## Safety and operating gates
 
@@ -76,9 +76,8 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Open work
 
-- Complete the required human review of the native auth/privacy/safety candidate (ADR-0032).
-  Review scope includes guarded administration and explicit source configuration restrictions;
-  unrestricted raw Django admin editing/deletion is intentionally unavailable.
+- Owner-approved native administration keeps the documented governed transitions; unrestricted
+  raw identity/consent/media/payment edits are unavailable. Production launch remains unperformed.
 - Build/promote a fresh immutable producer/server V2 release before real sync;
   the serving repo's producer dependency must be intentionally bumped first.
 - Complete held-event review UX, curated cultural child-venue policy, localized
@@ -95,11 +94,11 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
-- 2026-10-04 complete candidate: native race/vet and portable auth hashes pass. Fresh Go-only
+- 2026-10-04 owner-approved conversion: native race/vet and portable auth hashes pass. Fresh Go-only
   bootstrap + **173 PostgreSQL/codec tests** passed with no skips; final affected app/media/account
   checks also pass. Source/package vulnerability scans pass after compress1.18.7; unimported
   openpgp module advisory and stripped-binary analyzer limits are recorded in WORKLOG.
-  Exact-head native/reference/public CI is green (37208738237/213/229); image gate has zero
+  Exact-head native/reference/public CI is green (37211779358/395/372); image gate has zero
   fixable HIGH/CRITICAL findings. All173 contracts pass on canonicalPG16.15 Bookworm too.
 
 ## Standard verification

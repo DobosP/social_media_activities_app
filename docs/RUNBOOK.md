@@ -1,99 +1,134 @@
-# Ops & incident-response runbook (D9)
+# Operations and incident-response runbook
 
-Operational guide for running the service in production. Pairs with
-[RELEASE_READINESS](RELEASE_READINESS.md), [SECURITY](SECURITY.md), [SAFETY](SAFETY.md).
+Verified against native Go on 2026-10-04. Pair with [RELEASE_READINESS](RELEASE_READINESS.md),
+[SECURITY](SECURITY.md), [SAFETY](SAFETY.md) and [COMPLIANCE](COMPLIANCE.md).
+[ADR-0032](adr/0032-complete-native-go-backend.md) records approved implementation landing;
+[STATUS](../STATUS.md) remains the authority for deployment and product launch gates.
 
-## Deployment
+## Release and configuration
 
-- **Topology (beta, one city):** single EU VPS → managed EU Postgres (PostGIS) as load
-  grows; object storage (Hetzner Object Storage, EU — see [HOSTING_EU](HOSTING_EU.md);
-  minors' media never goes to R2, MinIO is banned org-wide) for media blobs; CDN for
-  static assets.
-- **App server:** ASGI via `daphne config.asgi:application` (the `Dockerfile` default) so
-  WebSocket chat works. Behind TLS-terminating reverse proxy; `SECURE_PROXY_SSL_HEADER`
-  is set in `config/settings/prod.py`.
-- **Channels layer:** set `CHANNEL_LAYER_BACKEND` to a Redis layer (channels-redis) for
-  multi-process/multi-node deploys; the in-memory default is single-process only.
-- **Required env:** `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS`, `DATABASE_URL`,
-  `IDENTITY_PROVIDER` (+ provider creds), `MEDIA_STORAGE_BACKEND` (+ bucket creds),
-  `DONATIONS_PROVIDER` (+ `DONATIONS_CHECKOUT_BASE_URL`).
-- **Migrate on deploy:** `python manage.py migrate` (custom user model → fresh DBs need it).
+Use the reviewed native release artifact: executable, precompiled static assets,
+templates, locale and required reference data. Verify its exact digest and native CI
+qualification before installation. The [deployment templates](../deploy/README.md) are
+unapplied examples, not evidence of a live deployment or a purchased provider.
 
-## Health & monitoring
+The serving executable reads explicit environment settings, not `.env` automatically.
+Systemd may supply its protected `EnvironmentFile`; values come only through the approved
+secrets workflow. Required names and supported policies are documented in the
+[CLI reference](../services/server/cmd/social-server/README.md). Configuration errors report
+names, never values. Do not inspect real env/auth stores or paste credentials into logs.
 
-- **Liveness/readiness:** `GET /healthz` (checks DB). Wire to the load balancer + uptime check.
-- **Aggregate metrics:** `GET /api/ops/stats` (staff-only, aggregate-only — no PII, no
-  behavioural tracking, per IS-6). Do **not** add per-user analytics.
+Before an authorized rollout, retain the old artifact and verified database recovery path,
+then run `social-server --migrate-only` against the explicitly selected database. Native
+bootstrap/adoption retains existing domain rows and preinstalled extension schemas;
+legacy sessions are retired and users sign in again. Test rollback on a recovered fixture
+before a real migration. Do not reset/drop a database to make bootstrap succeed.
 
-## Backups & restore
+The executable serves HTTP/WebSockets behind the reviewed TLS proxy. Set the exact
+canonical origin, allowed hosts and trusted immediate-proxy CIDRs. Forwarded identity and
+HTTPS headers are accepted only across that trust boundary. PostgreSQL live notifications
+carry IDs and trigger fresh permission checks. Redis is not a native runtime dependency
+or a solution for shared API/domain rates; required Redis/shared-state and Sentry profiles
+refuse startup. See [SCALING](SCALING.md).
 
-- **Postgres:** nightly automated dumps (managed-DB snapshots preferred); retain ≥30 days;
-  **test restore quarterly**. Restore: provision DB, `pg_restore`, run `migrate`, smoke-test
-  `/healthz` and a login.
-- **Object storage:** enable versioning + lifecycle on the media bucket.
+Production private media needs approved EU/private-bucket verification, effective scanner
+configuration and native codecs. Local storage is loopback development only. Initial
+administrator creation is the explicit private-stdin `createsuperuser` command; it creates
+a fresh unverified/unassigned administrator and grants no age or parental assurance.
+Provider activation, ingestion, paid infrastructure and minor onboarding retain separate
+owner/product gates.
 
-## Safety / incident response
+## Health and monitoring
 
-1. **Detect** — report queue (`apps/safety` admin), CI/security alerts, abuse signals.
-2. **Triage** — severity. **CSAM / child-safety = highest:** preserve evidence, do not
-   download/redistribute; the upload pipeline already blocks known hashes and audit-logs.
-3. **Contain** — `take_action` (suspend/ban) deactivates accounts; remove content; the
-   hash-chained `AuditLog` records every safety action (`verify_audit_chain()` proves
-   integrity).
-4. **Escalate** — legal/LEA reporting where required (CSAM, credible threats); notify DPO
-   for personal-data incidents (GDPR 72-hour breach clock).
-5. **Recover & review** — restore service, post-incident write-up, fix root cause.
+- `GET /healthz` is process liveness; it does not check the database. Only direct loopback
+  liveness has the narrow HTTP-redirect exception, still subject to allowed-host checks.
+- `GET /readyz` checks PostgreSQL, configured dependency checks and draining state. It can
+  return 503 while liveness remains 200. Readiness does not prove every provider is usable.
+- `GET /api/ops/stats/` is staff-only, aggregate-only operational state.
+- `GET /metrics` requires the configured metrics bearer credential and exposes aggregate
+  request/error/duration counters. Do not publish its credential or add per-user analytics.
+- Native request logs contain method, static route pattern, status and duration with safe
+  correlation IDs; private paths, query values, IP/user identities, headers and bodies stay
+  out. Queue failure diagnostics omit payload/error content.
 
-### Account sanctions — durations a moderator must understand
+On shutdown, mark draining, allow the bounded HTTP drain, then cancel/wait for background
+media and release live/storage/database resources. Investigate unexpected readiness loss,
+failed task batches and video processing age with aggregate diagnostics and audited staff
+views, without retrieving private message/media content.
 
-`take_action` (and the DRF `…/moderation/reports/<id>/resolve/` endpoint) offers three
-account-deactivating sanctions. The **duration semantics are not interchangeable**:
+## Backups and restore
 
-| Sanction | Duration | Auto-lifts? | On the identity ban-ledger? |
+Preserve the established nightly PostgreSQL backup, at-least-30-day retention and quarterly
+restore-test targets. Store backups in approved EU infrastructure with restricted access.
+Keep encryption/key recovery and media deletion policy aligned with the privacy procedure;
+bucket versioning/lifecycle must not defeat lawful erasure or evidence holds.
+
+Restore into an explicitly isolated recovery database, verify the backup and extensions,
+run native migration/adoption, then exercise readiness and synthetic sign-in/CSRF/domain
+checks. Reconcile private media/object references and cleanup continuation. A successful
+SQL restore alone is not a recovery drill; never smoke-test with real users' credentials.
+
+## Safety and incident response
+
+1. Detect through the native staff moderation/report queue, security alerts and aggregate
+   abuse signals. Preserve the audited record of who accessed or acted on a case.
+2. Triage child-safety/CSAM at highest priority. Preserve evidence through governed holds;
+   do not download or redistribute suspect media. A blocked quarantined source has no
+   in-app byte URL, including for staff.
+3. Contain through native governed moderation: deactivate/sanction accounts, remove
+   content and revoke access. Actions commit with the hash-chained audit; the native
+   `safety.Service.VerifyAuditChain` verifies integrity. Do not raw-edit safety/identity rows.
+4. Follow the existing compliance process for required legal/LEA reporting, credible threats
+   and DPO escalation, including its personal-data breach clock. Recording a referral
+   inside the application does not send a report to any authority.
+5. Recover access only through reviewed transitions, preserve lawful holds, and document
+   the incident and corrective verification without raw personal content or credentials.
+
+### Sanction durations
+
+| Sanction | Duration | Lift behavior | Identity ban ledger |
 |---|---|---|---|
-| `SUSPEND` **with** days | until `expires_at` | **Yes**, by the nightly `lift_suspensions` job | No |
-| `SUSPEND` **without** days | indefinite (`expires_at = NULL`) | **No — never** | No |
-| `TIMED_BAN` (days **required**) | until `expires_at` | **Yes** | No |
-| `BAN` | lifetime | No | **Yes** (`BannedIdentity`, survives GDPR erasure, blocks wallet re-registration) |
+| `SUSPEND` with days | Until expiry | Eligible for `lift_suspensions` | No |
+| `SUSPEND` without days | Indefinite | Never auto-lifts | No |
+| `TIMED_BAN` | Days required | Eligible for `lift_suspensions` | No |
+| `BAN` | Lifetime | No automatic lift | Yes; survives account erasure |
 
-- A **`TIMED_BAN` always requires a duration** — the API rejects one without `suspend_days`
-  (400) so it can never silently become a never-lifting deactivation.
-- A **`SUSPEND` with no duration is a *permanent* deactivation** that the auto-lift job will
-  **never** touch (there is no expiry to elapse). It is reversible only by a manual lift or an
-  overturned appeal, and it is **not** recorded on the `BannedIdentity` ledger — so a banned
-  wallet could still re-register a new account. **If you intend a permanent, ban-evasion-proof
-  removal, use `BAN`, not an open-ended `SUSPEND`.**
+`TIMED_BAN` without `suspend_days` is rejected. An indefinite suspension is reversible by
+an authorized manual lift or successful appeal, but does not create the lifetime identity
+ban that prevents wallet re-registration. Scheduled lifting occurs only when the explicit
+`lift_suspensions` job is actually run; no startup scheduler is implied.
 
-### Authority referrals — the ledger is internal; the report-out is on you
+### Authority referrals
 
-`create_authority_referral` / `AuthorityReferral` is an **internal, tamper-evident ledger
-only**. It records *that* a referral was decided and pins it to the hash-chained `AuditLog`
-(`referral_proof_pack` produces the lawful-request bundle, and reading it is itself audited).
-**It does not transmit anything to any external authority.** The actual out-of-band report is a
-manual duty:
+The native referral and audited proof endpoint maintain an internal tamper-evident ledger
+and lawful-request proof bundle. They do not transmit to a hotline, law enforcement or
+another authority. The on-call moderator owns the existing out-of-band reporting duty,
+including the applicable national hotline/INHOPE or law-enforcement route, and recording
+the external case/reference alongside the referral through supported audited operations.
+A referral with no external report completed remains an open compliance task.
 
-- **CSAM** → report to the national hotline / **INHOPE** member and, where mandatory, law
-  enforcement **without delay** (treat as the highest priority; preserve evidence, never
-  download/redistribute). Romania: **IGPR** (Poliția Română) and the relevant hotline.
-- **Credible threats / grooming** → law enforcement per local obligation.
-- Record the external case/reference number back into the referral's `reference` field so the
-  internal ledger and the real-world report line up.
-- The subject is **deliberately not notified** (tipping off a suspect can defeat an
-  investigation); any account sanction applied alongside still carries its own DSA Art.17 notice.
+The subject is not notified of the referral, to preserve investigations; an associated
+account sanction still has its own safety/DSA notice. Do not treat the absence of a
+transmission integration as completion of the external duty.
 
-> Operational SLA: a referral row with no external report filed is an open compliance task.
-> Until an external transmission integration exists, the on-call moderator owns sending the
-> out-of-band report within the legally-required window and recording its reference.
+## Explicit maintenance
 
-## Routine maintenance
+`social-server --due` runs the 27 registered due jobs once, including retention, expiry,
+suspension lifting, reminders and deferred cleanup, then exits. Authorized systemd timers
+may schedule that command; templates do not activate themselves. Use
+`social-server --job transcode_videos` for a bounded video pass, or
+`social-server --job process_deferred_tasks` for a queue pass. Options and limits are in
+[ASYNC_TASKS](ASYNC_TASKS.md) and the CLI reference.
 
-- **Chat retention:** `python manage.py purge_chat` (honours `CHAT_RETENTION_DAYS`); schedule
-  if a retention window is set.
-- **Dependency hygiene:** Dependabot + weekly `pip-audit` (CI); bump deliberately per
-  [SECURITY](SECURITY.md).
-- **Donations reconciliation:** provider webhook → `donations.services.complete_donation`.
+E2EE messaging retention uses `purge_messaging` when configured. Activity/group thread
+posts are governed domain records; the retired `purge_chat` command is not a native
+maintenance path. Erasure removes relational/key/ciphertext access synchronously and
+retains durable retries for physical object deletion. Inspect failed deletion tasks and
+outbox backlog rather than deleting their evidence of pending work.
 
-## Cost controls
+Audit native source/package/binary dependencies and the release image with the checked-in
+CI gates; review advisory reachability and resolved versions. Python audits qualify the
+offline oracle only. Donation reconciliation stays inside the configured native provider
+and audited ledger transitions; a job cannot authorize a real payment provider.
 
-- Single VPS + managed Postgres to start; object storage is pay-per-use; CDN caches static.
-- No ad/tracking infrastructure to run. Scale Postgres/Redis only as metrics justify.
+The complete earlier runbook is retained as [historical reference](archive/runbook-native-go-reference.md).

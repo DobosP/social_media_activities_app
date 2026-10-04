@@ -1,149 +1,109 @@
 # Architecture
 
-How the system is shaped today (D1) and how every future deliverable plugs into seams that
-already exist. See [ROADMAP](ROADMAP.md) for sequencing.
-
-> **Note (2026-07-02):** the seams below have long since been filled — the full engine
-> (D1–D10 + four feature waves) is built on them. Before building *anything*, read
-> [PRODUCTION_READINESS](PRODUCTION_READINESS.md) **§0 "Already built — do NOT rebuild"**;
-> a generic checklist (or this D1-era map read alone) wrongly flags features that already
-> exist. Deploy target detail: [HOSTING_EU](HOSTING_EU.md) + `adr/0001`.
+Verified against the native implementation on 2026-10-04. Runtime selection is recorded
+in [ADR-0032](adr/0032-complete-native-go-backend.md); current activation and launch gates
+remain in [STATUS](../STATUS.md). Read [FEATURES_BUILT](FEATURES_BUILT.md) before adding
+an existing capability again.
 
 ## Principles
 
-- **Postgres is the primary datastore.** Relational data, the activity **graph**, and
-  **geospatial** data all live in PostgreSQL + PostGIS. No separate graph database. Blobs
-  (the few images) are the only thing that leave Postgres — they go to S3-compatible object
-  storage (D6).
-- **Modular monolith.** One Django project, many focused apps under `apps/`. Cheap to run and
-  deploy; split out services only if/when a real bottleneck appears. This modularity is also what
-  lets **multiple agents build in parallel** without colliding — see
-  [MULTI_AGENT_BUILD](MULTI_AGENT_BUILD.md) (superseded; parallel work is governed by ../AGENTS.md).
-- **Source-agnostic ingestion.** Place data arrives through `SourceAdapter`s, normalized to a
-  `RawPlace`, so adding Overture/Google later doesn't touch the command logic.
-- **Provenance & confidence are first-class.** Every place and every place↔activity edge records
-  where it came from and how confident we are — this is what lets open-data inference, user
-  contributions, and moderation coexist.
-- **Safety & privacy by design.** Minimize identity data (age *bands*, not birthdates), isolate
-  cohorts, default to private.
+- PostgreSQL is the primary datastore: relational state, the activity graph, PostGIS
+  geography and pgvector similarity share one authoritative database. Private object
+  storage holds media bytes; database rows decide access.
+- Domain services share safety, consent, cohort and blocking rules across API, HTML and
+  live transport. Identity assurance minimizes stored data to necessary verification
+  results and age bands; signing in does not verify age.
+- License, provenance, confidence and source credits survive ingestion, deduplication,
+  enrichment and media transformations. Confirmed/manual contributions are protected.
+- Producer, serving layer and consumers communicate through reviewed HTTP/data
+  contracts. A consumer does not import a producer's implementation.
+- Third-party identity, booking, donations, scanners and data sources have typed native
+  boundaries. A configured provider is not permission to activate it or ingest data.
 
-## Current shape (D1)
+## Serving implementation
 
-```
-config/                 project settings (base/dev/prod/test), urls, wsgi, asgi
-apps/
-  taxonomy/             ActivityCategory, ActivityType (is-a tree), ActivityRelation (typed edges)
-  places/               Place (PostGIS geography point) + PlaceActivity edge; GeoJSON API; admin map
-  ingestion/            SourceAdapter seam (Overpass built, Overture stub), OSM->activity mapping,
-                        ingest_places management command
-```
+[services/server](../services/server/) is a modular Go executable. Its `internal/app`
+constructor connects the domain services and registers API, HTML, staff, operations and
+WebSocket routes. The frontend remains the Preact/Vite TypeScript client; release assets,
+templates, locale and reviewed reference data accompany the executable.
 
-### The knowledge graph, in plain Postgres
-
-- **Hierarchy (is-a):** `ActivityCategory.parent` and `ActivityType.parent` self-references give a
-  cheap tree (e.g. *basketball* → *team sport* → *sport*).
-- **Lateral links:** `ActivityRelation` is a typed edge (`related` / `synonym` / `variant` /
-  `requires`) for what a tree can't express (e.g. *table tennis* ↔ *ping pong*).
-- **Activity ↔ place:** `PlaceActivity` is the edge connecting a `Place` to the `ActivityType`s it
-  supports, carrying `origin` (inferred/confirmed/manual), `confidence`, and `mapping_rule`.
-
-This is the structure the whole product hangs off: discovery, recommendations (D7), and activity
-creation (D3) all traverse it.
-
-### Geospatial
-
-`Place.location` is a PostGIS **geography** point (SRID 4326), so distance queries return true
-**metres**. A GiST index is auto-created. Proximity is exposed via the places API
-(`?near_lon=&near_lat=`, optional `?radius_m=`, plus `?in_bbox=`).
-
-## Seams for future deliverables
-
-These already exist so later work is additive, not invasive:
-
-| Future need | Seam it plugs into |
+| Native package | Responsibility |
 |---|---|
-| Users / identity / age (D2) | `accounts.User` becomes `AUTH_USER_MODEL` (**do first**); `Place.created_by`, `PlaceActivity.confirmed_by` `# FUTURE:` FKs |
-| Threads, activities, join-by-vote (D3) | New `apps/social/`; references `Place` + `ActivityType`; uses D2 cohorts |
-| Safety & moderation (D4) | `PlaceActivity.origin` (protect confirmed/manual), audit logging, Django-admin queues |
-| Chat (D5) | `config/asgi.py` (swap `get_asgi_application()` for a `ProtocolTypeRouter`) |
-| Media (D6) | Object-storage backend; image fields on profile + thread posts |
-| More place data (D7) | New `SourceAdapter` (Overture stub already present); cross-source dedup keyed off `source` + `raw_tags` |
-| Booking (D8) | New `BookingProvider` adapter interface, analogous to `SourceAdapter` |
+| `accounts`, shared `services/authcore` | Authentication, sessions/CSRF, age assurance, guardians, consent and erasure |
+| `catalog` | Taxonomy, places, events, provenance and contribution/review workflows |
+| `social` | Activities, groups, threads, memberships, connections and communities |
+| `safety`, `platform` | Reports, blocking, governed moderation, hash-chained audit and notification gates |
+| `media` | Fail-closed admission, bounded codecs, private serving and durable byte cleanup |
+| `messaging`, `chat` | E2EE direct/group state and live transport over authorized domain state |
+| `booking`, `donations` | Typed provider transitions and audited ledger state |
+| `discovery`, `recommendations`, `notifications` | Gated discovery, similarity and inbox surfaces |
+| `jobs`, `commands`, `ops` | Bounded explicit jobs, operator commands, deferred queue, health and aggregate metrics |
+| `web`, `admin` | Native HTML/SPA context and curated audited staff operations |
 
-### Identity provider abstraction (D2)
+The shared authentication implementation is canonical in Cat's `shared-go/authcore`.
+Social's portable copy has hash-pinned provenance; production does not depend on a
+sibling repository checkout. Native administration permits curated edits and governed
+transitions, with raw age/consent/cohort, membership, ciphertext, scanner and payment
+state outside generic CRUD. See [NATIVE_SERVER](NATIVE_SERVER.md) for qualification and
+intentional restrictions.
 
-Define an `IdentityProvider` interface returning an **assurance result** (verified age band +
-parental-consent status), not raw identity. Concrete implementations: EUDI Wallet / EU
-age-verification app. The rest of the app depends only on the interface — see
-[COMPLIANCE](COMPLIANCE.md).
+`apps/`, `config/` and the reference image preserve Django contracts for offline tests.
+They are not serving, proxy or worker dependencies of the native release.
 
-## Data flow: ingestion (today)
+## Graph and geography
 
-```
-Overpass API ──> OverpassAdapter.fetch() ──> RawPlace ──> ingest_places
-                                                              │
-                          match_element(tags)  ◄─────────────┘  (mapping.py)
-                                                              │
-                 update_or_create(Place)  +  PlaceActivity edges (idempotent)
-```
+Category/type parent references express the activity hierarchy. Typed activity relations
+express lateral `related`, `synonym`, `variant` and `requires` edges. Place-to-activity
+edges carry inferred/confirmed/manual origin, confidence and mapping provenance. Native
+catalog, discovery, recommendations and activity creation traverse these relational
+contracts rather than a separate graph database.
 
-Idempotency comes from partial-unique constraints (`uq_place_osm`) + `update_or_create`;
-user-confirmed/manual edges are never overwritten by re-ingestion.
+Place geography uses SRID 4326 and GiST indexing; geography distance is measured in
+metres. The places API retains bounded nearby/radius/bounding-box queries. Native source
+adapters normalize reviewed OSM/Overture/RO-EDU and enrichment inputs before idempotent
+catalog updates; source keys, credits and protected manual edges survive each update.
+Real network ingestion remains an explicit operator action.
 
-## Deployment (target)
+## Runtime and lifetime
 
-- **Now → small:** single EU VPS (e.g. Hetzner) running Docker Compose (PostGIS + app). EU data
-  residency from day one (GDPR + children's data).
-- **Bounded launch runtime (ADR-0022):** one ASGI process starts with four worker threads and a
-  process-local psycopg pool capped at four connections; Django persistent connections stay off.
-  The browser loads a Preact compatibility runtime plus only the requested screen chunk, under a
-  40 KiB gzip initial JS+CSS budget.
-- **Growing:** managed EU Postgres; app horizontally scalable (stateless web + ASGI workers for
-  chat); object storage for blobs; CDN for static; caching as needed.
-- **Cost discipline:** free open-data sources first; paid APIs (Google) only where they earn
-  their keep; donation-funded, so the footprint stays lean.
+The executable serves HTTP and WebSockets directly, with a process-local `pgxpool`:
+minimum zero and maximum four connections by default. The configured maximum is bounded
+to two through four; SQL statement timeout is 5 seconds by default. The live broker
+reserves one connection while listening for PostgreSQL ID-only notifications. It reloads
+authoritative state before delivery; NOTIFY does not carry messages or permission.
 
-## Tech choices & rationale (quick reference)
+API/social/catalog rate histories are process-local. Authentication budgets/state and
+selected domain budgets are database-backed; PostgreSQL live fan-out does not make every
+rate global. Redis-required mode, Sentry and unsupported policy overrides refuse startup.
+See [SCALING](SCALING.md) before selecting a multi-process deployment.
 
-- **Django + DRF** — batteries-included (admin = moderation tooling), mature GeoDjango, fast for a
-  small/nonprofit team.
-- **React-compatible TypeScript + Preact runtime** — keeps `@roedu/ui`/React Router source
-  contracts while code-splitting screens and minimizing parse/transfer cost on lower-end devices.
-- **PostGIS / GeoDjango** — geo in the same DB as everything else.
-- **Relational graph (no graph DB)** — simpler ops, one datastore, fine at this scale; `pgvector`
-  later for similarity (D7).
-- **Adapter patterns** (sources, identity, booking) — isolate third parties behind interfaces.
+Schema bootstrap/adoption runs through `social-server --migrate-only`, retaining existing
+rows and preinstalled extension schemas. Legacy sessions retire on migration. HTTP startup
+checks required codecs but starts no recurring scheduler or ingestion. A committed private
+video upload may trigger one bounded single-flight pass of at most two queued videos;
+explicit jobs/timers provide recovery. Shutdown drains HTTP, cancels/waits for background
+media, and releases live/storage/database resources in order.
 
-## Working conventions (current, post-D10)
+## Working conventions
 
-Moved here from `CLAUDE.md` on 2026-07-02; `AGENTS.md` §Read first names the five rules, this is the
-full statement — do not weaken:
+These five rules apply to every native surface:
 
-- **Domain logic lives in `apps/<app>/services.py`.** Both the DRF views (`apps/<app>/views.py`)
-  and the web views (`apps/web/views.py`) call the *same* service functions, so the safety gates
-  (cohort isolation, consent, blocking) hold identically on both surfaces. Don't put business
-  logic in a view or template — add/extend a service.
-- All state-changing services are `@transaction.atomic`. Audit via the hash-chained log:
-  `from apps.safety.services import record_audit` (it takes a row lock, so call it *inside* the
-  transaction).
-- In-app notifications only: `apps.notifications.services.notify(recipient, kind, title, ...)`.
-  Adding a `Notification.Kind` needs a (no-op) `makemigrations notifications` to keep CI green.
-- Periodic jobs are management commands fanned out by `apps/ops/.../run_due_jobs.py` (`DUE_JOBS`).
-- Cohort isolation: `social.services.visible_activities`/`can_see_activity` gate by the viewer's
-  cohort; `blocked_user_ids(user)` excludes blocked pairs from feeds and notification fan-outs.
+1. Put domain logic in `services/server/internal/<domain>`. API, HTML, staff and live
+   adapters call the same governed service; views/templates do not bypass authorization.
+2. Commit each state-changing domain operation, its audit and related row changes in a
+   `pgx.Tx`. Record audit through `platform.RecordAudit` inside that transaction. Private
+   prepared artifacts publish with their owning row transaction and retain durable
+   cleanup when that transaction fails.
+3. Route in-app notification creation through `platform.Notify`. Preserve current
+   mute/block checks and the non-mutable safety/DSA carve-outs; deferred fan-out rechecks
+   current recipients when it runs.
+4. Register periodic work in `internal/jobs`; `jobs.DueNames` is the 27-job fan-out
+   formerly named `DUE_JOBS`. `social-server --due` runs one bounded pass and exits.
+   Scheduling and live-source activation require their own explicit authorization.
+5. Recheck cohort, age/consent, membership, blocking, privacy and moderation at the domain
+   boundary and before private delivery. Cached IDs, processed bytes, tokens and live
+   subscriptions never replace current authoritative permission.
 
-### Apps (current)
-
-`taxonomy` (activity graph) · `places` (PostGIS + geo API) · `ingestion` (OSM/Overture adapters)
-· `accounts` (custom User, cohorts, EUDI age assurance, guardian links) · `social` (activities,
-threads, join-by-vote, memberships) · `safety` (reporting, blocking, moderation, audit) · `chat`
-(WebSocket *transport* over the `social.Post` stream — no message store of its own) ·
-`messaging` (E2EE direct/group) · `media` (profile + private photos + thread image/PDF attachments) ·
-`events` (iCal feeds) · `booking` · `discovery` + `recommendations` (feeds, pgvector) ·
-`notifications` · `donations` · `connections` (find/reconnect with people you've shared an
-activity with — the discovery layer in front of `messaging`) · `communities` (derived per-cohort
-geo×type discovery labels, e.g. "Cluj-Napoca Football") ·
-`ops` (`/healthz`, jobs, GDPR erasure) · `web` (server-rendered UI).
-
-Behavioral contracts for every shipped feature (and the invariant gates each one carries):
-[FEATURES_BUILT](FEATURES_BUILT.md).
+Deployment instructions: [HOSTING_EU](HOSTING_EU.md), [RUNBOOK](RUNBOOK.md),
+[FILE_STORAGE](FILE_STORAGE.md), [ASYNC_TASKS](ASYNC_TASKS.md). The complete earlier
+Django architecture is retained as [historical reference](archive/architecture-native-go-reference.md).

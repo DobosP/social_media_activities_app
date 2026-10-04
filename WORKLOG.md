@@ -274,3 +274,22 @@ CI workflows green: Native37208738237, reference37208738213, publicGo37208738229
 Human review requested against PR101 under AGENTS61; no approval recorded, so no Social
 landing or deployment. Cat codeabe9337 landed/deployed anonymous with151 public checks;
 this does not activate Social providers/minors or alter the launch gates.
+
+## 2026-10-04 — Owner-approved Go main landing and native documentation
+
+Valid until: the runtime/launch profile changes — then reverify.
+
+The owner explicitly authorized both conversions to origin/main and requested canonical
+Go documentation. This satisfies Social's human auth/privacy/safety landing review; it
+neither enables provider/minor/product launch nor authorizes infrastructure procurement.
+Go/native/ref/public CI on e6742a1 all pass (37211779358/395/372), including actual native
+bootstrap/codecs/DB; the 17-package fixture is 173 top-level tests, not 193. The count was
+independently recomputed from individual PASS logs. Runtime and account/adoption/scanning/
+erasure configuration boundaries remain recorded in ADR-0032 and the native CLI guide.
+
+Canonical README/agent/runtime/architecture/hosting/database/security/deferred-work
+instructions now name the Go executable and packages; historical Django/reference checks
+are explicitly separated. Python is retained as offline contract/content tooling, and
+client-side TypeScript stays unchanged. No application code or live data changed in this
+landing-doc slice. Product launch and the current process-local domain rate limits remain
+explicit; unsupported profiles still fail by name.

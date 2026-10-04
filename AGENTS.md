@@ -4,7 +4,7 @@
 - Nonprofit, open-source, children-first platform for organizing **in-person** local activities: Cluj-Napoca
   first, EU residency required, donations only, no ads and no engagement ML. Not launched. Child-safety,
   GDPR/DSA, moderation and deferred/off-request work are the sensitive surfaces.
-- Go review runtime: `services/server` owns HTTP/auth/domain/media/jobs/HTML/live delivery on PostgreSQL/
+- Runtime: native Go (`services/server`) owns HTTP/auth/domain/media/jobs/HTML/live delivery on PostgreSQL/
   PostGIS + pgvector; Preact/Vite stays in `frontend/`. `services/authcore` is a hash-pinned shared copy.
   Django is an offline oracle (`Dockerfile.reference`); deployment status and gates are in `STATUS.md`.
 - Current truth: `STATUS.md`.
@@ -35,7 +35,7 @@
 4. `docs/ARCHITECTURE.md` §Working conventions — the 5 gating rules (services layer, atomic+audit, `notify()`
    chokepoint, `DUE_JOBS`, cohort gates).
 5. `docs/FEATURES_BUILT.md` before building anything "new".
-6. The Django app named in the task (`apps/<app>/`) plus its tests.
+6. The native `services/server/internal/<domain>` service plus its tests; use `apps/<app>` only as an offline oracle.
 
 Product overview: `README.md` · full doc index: `docs/README.md` · phasing map (not status): `docs/ROADMAP.md`.
 
@@ -43,14 +43,14 @@ Product overview: `README.md` · full doc index: `docs/README.md` · phasing map
 | Purpose | Command |
 |---|---|
 | Native local stack (http://127.0.0.1:8000) | `docker compose up --build` |
-| Dev machine whose host already runs Postgres on 5432 (`docker-compose.local.yml` is untracked/gitignored; one-time setup in `README.md` §Local variant) | `docker compose -p socialfix -f docker-compose.local.yml up -d` |
+| Native schema bootstrap/adoption | `social-server --migrate-only` with explicit configured PostgreSQL |
 | Native checks (Go 1.27.1) | `go -C services/server test -race ./... && go -C services/server vet ./...` |
 | Native PostgreSQL + codecs | `scripts/qualify-native.sh` with explicit isolated fixture arguments (docs/agent-testing.md) |
-| Lint | `ruff check . && ruff format --check .` |
-| Migration drift (container or a venv with `requirements*.txt` installed) | `python manage.py makemigrations --check --dry-run` |
+| Native format | `test -z "$(gofmt -l services/server services/authcore)"` |
+| Offline oracle migration drift | `python manage.py makemigrations --check --dry-run` in the reference environment |
 | Frontend (Node 24) | `cd frontend && npm ci && npm test && npm run build` |
-| Dependency audit | `pip-audit -r requirements.txt -r requirements-dev.txt` |
-| Python SAST | `bandit -r apps config -q --severity-level high --confidence-level high` |
+| Native dependency/image audits | `.github/workflows/native.yml` (source/package/binary + Trivy) |
+| Offline oracle checks | Python pytest/Ruff/pip/Bandit in `.github/workflows/ci.yml` |
 | Whitespace | `git diff --check` |
 
 Expected outputs and known-failing tests: `docs/agent-testing.md`. Full CI matrix: `.github/workflows/ci.yml`.

@@ -1,8 +1,8 @@
 # Native Go server
 
 Current status: [STATUS](../STATUS.md). Selection and boundaries:
-[ADR-0032](adr/0032-complete-native-go-backend.md). This is the complete native review
-candidate; publication does not satisfy the required privacy/safety or product launch review.
+[ADR-0032](adr/0032-complete-native-go-backend.md). The owner approved the complete native implementation for main on 2026-10-04.
+Code landing does not activate product/provider/minor launch.
 
 ## Serving and data
 

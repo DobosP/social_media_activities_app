@@ -1,51 +1,45 @@
 # Agent Map — social_media_activities_app
 
-## What this repo owns
-- Social/activity workflows for the RO-EDU ecosystem.
-- Privacy/GDPR operations, media/moderation concerns, and deferred task foundations.
+## Ownership
+- Native Go activity/social workflows, safety/privacy, private media and deferred work.
+- PostgreSQL/PostGIS/vector is primary; TypeScript/PReact remains the client.
+- Python under apps/config/tests is an offline contract/migration oracle.
 
 ## Entry points
-| Area | Path | Notes |
+| Area | Native path | Notes |
 |---|---|---|
-| Moderation & safety | `apps/safety/` | Sanctions, DSA Art.16/17 record, SSRF guard (`net.py`). |
-| RO-EDU ingestion | `apps/ingestion/` | Source adapters, `sources/roedu_client.py` (app layer) + generated `sources/_roedu_client_core.py` (stamped, never hand-edit); commands `ingest_places`, `sync_roedu`. |
-| Events | `apps/events/` | `sync_roedu_events`, `ingest_events`, `sync_event_feeds`. |
-| Deferred work | `apps/ops/` | `DeferredTask` (`models.py:18`), `run_due_jobs`, `process_deferred_tasks`, `load_roedu_seed` (local/demo only). |
-| Messaging & chat | `apps/messaging/`, `apps/chat/` | E2EE DMs / activity chat; websocket consumers exercised in each app's `tests/test_consumer.py`. |
-| Profile visibility | `apps/connections/profiles.py` | The sole resolver (`docs/SAFETY.md` §Core rules 4). |
-| Identity | `apps/accounts/identity/providers/eudi.py` | EUDI wallet provider. |
-| Server-rendered UI | `apps/web/` | Session-auth web surface over the same services. |
-| Settings | `config/settings/` | base/dev/prod/test — never read secret values. |
-| Frontend | `frontend/` | Preact/Vite SPA. |
-| Sidecar / infra | `services/agentapi/` (:8090), `deploy/` (never applied), `db/` (seed data) | See their READMEs. |
-| Cross-app tests | `tests/` | API schema, security, prod-hardening. |
-| Local services | `docker-compose.yml`, `docker-compose.local.yml` | The `.local` file is untracked/gitignored (dev machines only). |
-| Native server | `services/server/cmd/social-server`, `internal/app` | Main HTTP/domain/media/live/job assembly; docs/NATIVE_SERVER.md. |
-| Shared auth | `services/authcore` | Canonical hash-pinned copy; `cmd/check-authcore` verifies. |
-| Status | `STATUS.md` | Current truth. |
+| Assembly/config | `services/server/internal/app`, `cmd/social-server` | HTTP, providers, lifetime, settings and commands. |
+| Identity | `internal/accounts`, `services/authcore` | Password/OAuth, signed EUDI, guardian/consent, erasure; snapshot hashes. |
+| Social/voting | `internal/social` | Activities, memberships, groups, series, threads and guarded mutations. |
+| Safety | `internal/safety`, `internal/admin` | Sanctions/appeals/audit, governed operator actions; raw sensitive CRUD refused. |
+| Catalog/ingestion | `internal/catalog`, `internal/commands`, `internal/jobs` | Facts-only producer boundary, native adapters and one-shot sync. |
+| Private media | `internal/media` | Real codecs, effective scanning, licensed covers, private serving and durable cleanup. |
+| E2EE/live | `internal/messaging`, `internal/chat` | Client ciphertext and ID-only PG notifications; fresh authority on delivery. |
+| Discovery | `internal/discovery`, `internal/recommendations` | Deterministic composition and current read gates. |
+| Finance/notices | `internal/booking`, `internal/donations`, `internal/notifications` | Provider transactions and native notification chokepoint. |
+| HTML/SPA | `internal/web`, `templates`, `apps/web/templates`, `locale` | Native rendering over shared presentation data. |
+| Jobs/ops | `internal/jobs`, `internal/ops` | PostgreSQL queue,27 due jobs, readiness/metrics/private logs. |
+| Client | `frontend` | Preact/Vite TypeScript, encrypted client transport. |
+| Optional sidecar | `services/agentapi` | Independent read-only public snapshot service; native exporter owns input. |
+| Deploy/DB | `deploy`, `Dockerfile`, `docker-compose.yml`, `db` | Native artifact templates; no Social production deployment. |
+| Current truth | `STATUS.md`, `docs/NATIVE_SERVER.md` | Status, operating guide; history in WORKLOG/ADRs. |
 
-## Common task routes
-| Task type | Start here | Verify with |
-|---|---|---|
-| Deferred/off-request work | `apps/ops/` | containerized ops pytest |
-| Privacy/GDPR behavior | relevant service/model/tests | targeted privacy tests + human review |
-| Settings/deploy | `config/settings/`, compose files | targeted tests; never expose secrets |
-| Docs/status | `STATUS.md`, `docs/` | `git diff --check` |
-| RO-EDU ingestion/sync | `apps/ingestion/`, `apps/events/`, `docs/ROEDU_INTEGRATION.md` | `apps/ingestion/tests/`, `apps/events/tests/test_roedu_sync.py` |
-| Moderation / DSA redress | `apps/safety/`, `apps/social/` | `apps/safety/tests/` + human review |
-| Frontend | `frontend/` | `npm test && npm run build` (initial-bundle budget) |
+Paths beginning internal/ above are under `services/server`. Domain READMEs/tests sit beside code.
 
-## Do not load by default
-- `.env` and secret settings
-- Uploaded media or generated assets (`static/frontend/` build output, `var/agent_snapshot/`)
-- Large container logs
+## Task routing and gates
+- Start with the native package named by the task, its tests and the relevant safety contract.
+- Use corresponding apps/<app>/tests only for offline differential or migration evidence.
+- Run targeted native race/vet; supply an explicit disposable PostgreSQL DSN and actual codecs
+  for database/media changes. Default skipped integration cases cannot qualify a release.
+- Frontend changes run Node24 contracts/build/bundle budget. Docs run the fleet doc/link gate.
+- Deployment/configuration uses native CLI docs and typed defaults; never inspect actual env values.
+- Source privacy/safety behavior requires human review before landing; owner approval for the
+  complete conversion does not authorize later regressions or production activation.
 
-## Known pitfalls
-- Privacy/child-safety gates must not be weakened to make tests pass.
-- Container may not expose bare `pytest`; use `python -m pytest`.
-- `docker-compose.local.yml` exists only on dev machines (gitignored) — on a fresh clone use `docker-compose.yml`.
-- The stamped `_roedu_client_core.py` is excluded from `ruff format` but not from `ruff check` (`STATUS.md`).
-- `sync_roedu`/`sync_roedu_events` require `ROEDU_API_KEY`: absence is a skip in the scheduled job and a
-  `CommandError` in the command, never a dev fallback.
-- The chat/messaging `test_consumer.py` websocket tests were failing identically on pristine main as of
-  2026-08-22 — see `docs/agent-testing.md` before "fixing" them.
+## Pitfalls
+- Do not defer safety, cohort, consent, block or scan admission until after an action is visible.
+- General API/social/catalog rates are process-local; Redis-required/Sentry profiles are refused.
+- LISTEN needs a session connection if adding PgBouncer; one-shot jobs reserve none.
+- Secrets/auth stores, uploaded media, local databases and raw transcripts are not fleet docs.
+- Original Python launch commands are reference-only; default Docker/Compose executes Go.
+- Root/worker/worktree rules remain in AGENTS.md; shared main stays clean.

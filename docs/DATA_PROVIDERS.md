@@ -2,8 +2,8 @@
 
 A living registry of sources to extend the place/event dataset. Goal: **free** data
 (open bulk downloads or free-key APIs), Romania/Cluj-relevant, fitting our existing
-seams (`ingestion.sources.SourceAdapter` for places, `events.sources.EventSource` for
-events, the enrichment path for live data). All place/event data is non-personal and
+native seams (`services/server/internal/commands` for place/event adapters and
+`cmd/social-server` for bounded provider callbacks). Original apps/ adapters are offline references. All place/event data is non-personal and
 each source's **attribution/licence** is respected (recorded via `Place.source` /
 `raw_tags`). No behavioural/personal scraping — consistent with [SAFETY](SAFETY.md).
 
@@ -13,9 +13,9 @@ Legend: 🟢 free, no key · 🔑 free with a key/token · 💳 paid.
 
 | Provider | Gives | Licence | Pass | Status / fit |
 |---|---|---|---|---|
-| OpenStreetMap / Overpass | parks, libraries, archives, pitches, halls, venues + website/phone | ODbL | 🟢 | **integrated** (`OverpassAdapter`) |
+| OpenStreetMap / Overpass | parks, libraries, archives, pitches, halls, venues + website/phone | ODbL | 🟢 | **native integrated** (bounded Overpass callback) |
 | OSM bulk — Geofabrik (Romania) | whole-country OSM in one file | ODbL | 🟢 | **planned P2** (`GeofabrikAdapter`) |
-| Overture Maps — Places | ~60M POIs + categories/websites | CDLA-Permissive (some ODbL) | 🟢 | **integrated** (`OvertureAdapter`) |
+| Overture Maps — Places | ~60M POIs + categories/websites | CDLA-Permissive (some ODbL) | 🟢 | **native integrated** (bounded Parquet/source reader) |
 | Foursquare OS Places | 100M+ POIs, monthly | Apache-2.0 | 🔑 `FSQ_PLACES_TOKEN` | **planned P2** (parquet/DuckDB) |
 | Wikidata (SPARQL) | institutions/parks/venues + official website | CC0 | 🟢 | ✅ **built** (`enrichment/wikidata.py`; `enrich_places --wikidata`) |
 | data.gov.ro | RO public datasets (sport clubs, etc.) | OGL-RO | 🟢 | per-dataset adapter |

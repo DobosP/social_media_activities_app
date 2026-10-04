@@ -1,235 +1,145 @@
-# File storage — secure, EU-resident, cheap, smart-compressed
+# Native private file storage
 
-How private blobs (profile pictures, in-thread photos, PDF attachments, and — ADR-0026 —
-short in-thread videos) are stored, served, and kept small. Design goals, in
-priority order: **child-safe + secure → EU data residency → cheap**. PostgreSQL stays the single
-primary datastore (relational + geo + graph + pgvector); only *bytes* live in object storage.
+Verified against native Go on 2026-10-04. [ADR-0032](adr/0032-complete-native-go-backend.md)
+records the native runtime; [ADR-0026](adr/0026-private-thread-video-and-sota-image-compression.md)
+records the image/video policy. Safety, privacy, EU residency and source/license credits
+remain mandatory. [STATUS](../STATUS.md) records launch and provider activation gates.
 
-See also: `docs/HOSTING_EU.md` (where to run it), `docs/SAFETY.md` (safety invariants), and
-`docs/adr/0026-private-thread-video-and-sota-image-compression.md` (codec choices + video design).
+## Byte and authorization boundaries
 
----
+[internal/media](../services/server/internal/media/) owns quarantined admission, bounded
+native codecs, private storage and serving. `Store` provides `Put`, `OpenRange`, `Size`,
+`Delete` and `PresignGet`; it controls bytes only. PostgreSQL photo/attachment rows hold
+private references, scanner/processing metadata and expiry. A processed manifest or
+object key never grants access.
 
-## 1. Architecture at a glance
+`LocalStore` uses rooted filesystem operations and private directories for loopback
+development/tests. Production requires native S3-compatible storage with HTTPS and
+explicit `MEDIA_EU_RESIDENCY_VERIFIED` and `MEDIA_PRIVATE_BUCKET_VERIFIED` attestations.
+R2 and MinIO endpoints are refused. The service creates no bucket or provider. Operator
+verification must cover EU residency, bucket access policy, key scope, encryption and
+lifecycle; endpoint/region spelling alone proves none of those facts.
 
-```
-upload ─▶ size/format/bomb checks ─▶ safety scan (original bytes, fail-closed)
-       ─▶ EXIF/GPS strip + orientation bake ─▶ SMART COMPRESS (transcode → AVIF @ quality)
-       ─▶ + one small card/stream rendition (thumbs/…)
-       ─▶ StorageBackend.save(key, bytes, content_type)   [private objects]
-                                   │
-row in Postgres (Photo / media.Attachment): storage_key, content_type, byte_size, sha256, w/h, …
-                                   │
-serve ─▶ signed, per-viewer, membership-scoped token ─▶ view re-checks access ─▶ streams bytes
-         or 307-redirects to a short presigned object-store URL when explicitly enabled
-         (images inline + nosniff; PDF forced-download + nosniff; never a public bucket URL)
-```
+S3 uses the native signature implementation, bounded range reads and redirects disabled
+for storage HTTP calls. Supported addressing is `auto`, `path` or `virtual`; encryption
+configuration accepts empty, `AES256`, `aws:kms` or `aws:kms:dsse`. With empty SSE, the app
+makes no claim that provider-side encryption is enabled: verify the chosen storage policy.
+No boto3/Pillow or Python worker is a serving dependency.
 
-- **Pluggable backend** — `apps/media/storage.py` defines a tiny `StorageBackend` ABC
-  (`save`/`open`/`exists`/`delete`). Two implementations:
-  - `LocalStorageBackend` — filesystem under `MEDIA_ROOT/uploads` (dev/tests; *not* for prod scale).
-  - `S3StorageBackend` — any S3-compatible service (Hetzner Object Storage / Cloudflare R2 / MinIO /
-    AWS S3) via boto3, selected by `MEDIA_STORAGE_BACKEND`. Adding a new provider is one class; the
-    rest of the app is unchanged.
-- **The blob is never the source of truth for access.** A row in Postgres
-  (`media.Photo` / `media.Attachment`) holds `storage_key` + metadata; access is decided at *serve*
-  time by the membership gate, not by who holds a URL.
+## Image and PDF admission
 
-## 2. The upload pipeline (photos **and** attachments share it)
+1. Recheck the actor, owning domain, cohort/consent/membership/block rules and upload
+   budget. Stage bytes in service-owned private scratch. Images accept PNG, JPEG, WebP
+   and AVIF; unsupported/malformed input fails rather than trusting the filename.
+2. Parse image headers before decoding. Current hard ceilings are 5 MiB and 30 million
+   pixels. A small pixel-bomb file does not bypass the dimension budget.
+3. Scan the original digest through an effective content scanner. Derived fingerprints
+   use the same fail-closed seam. Missing/invalid/ineffective or non-clean results refuse
+   publication; a no-op scanner cannot produce a clean admission.
+4. Decode/rebuild through bounded native tools, bake orientation into pixels and strip
+   metadata including EXIF/GPS. Produce one still image at up to 2048 pixels on the long
+   side; AVIF is the current configured default, WebP the supported alternative. Alpha
+   is retained in these outputs. An eager rendition is capped at 800 pixels when needed.
+5. Hash the encoded stored artifact. Store bytes privately and publish the owning row,
+   media reference, audit and related notifications through the governed transaction.
+   Profile uniqueness checks use exact digest and the bounded difference fingerprint;
+   the fingerprint remains a duplicate heuristic, not a safety classifier.
 
-Both `media.upload_photo` and `media.attach_to_post` (in `apps/media/services.py`) run the same
-steps; PDFs skip image processing (stored as-is, only ever served as a download):
+PDF attachments are adult-only, capped at 7 MiB, checked for PDF magic, and require an
+effective clean document scan. The native ClamAV INSTREAM adapter is bounded and fails
+closed. PDFs are retained as documents and always served as downloads, never inline code.
 
-1. **Size / format / decompression-bomb checks** — `processing.validate_and_strip` rejects
-   oversized files and images whose *header-declared* pixel count exceeds `MEDIA_MAX_IMAGE_PIXELS`
-   **before** decoding any pixels (a small file can declare gigapixels), with Pillow's own bomb
-   guard armed as a second line.
-2. **Safety scan on the ORIGINAL bytes** — fail-closed. With `MEDIA_REQUIRE_SCANNER=True` (prod
-   default) an upload is refused unless an *effective* scanner is configured (hash blocklist or a
-   managed CSAM service); the original bytes are what a CSAM hash set matches. PDFs additionally
-   pass the document/AV seam (`MEDIA_REQUIRE_DOCUMENT_SCANNER`).
-3. **EXIF/GPS strip + orientation bake** — the image is rebuilt from raw pixels, so **all metadata
-   (EXIF, GPS, maker notes) is dropped** — a hard privacy requirement. EXIF *orientation* is applied
-   first (`ImageOps.exif_transpose`) so a portrait phone photo doesn't end up sideways once the tag
-   is gone.
-4. **Smart compression** — the cleaned image is downscaled to `MEDIA_MAX_DIMENSION` (longest side)
-   and transcoded to `MEDIA_IMAGE_OUTPUT_FORMAT` at `MEDIA_IMAGE_QUALITY`. **AVIF is the default**
-   (ADR-0026): ~15–30 % smaller than WebP at matched perceptual quality, decodable by every
-   evergreen browser and Safari/iOS ≥ 16.4; set `WEBP` to roll back with one env var (pre-existing
-   objects are never re-encoded either way). `MEDIA_IMAGE_QUALITY=0` (default) auto-picks the
-   matched-quality value per codec (AVIF 64 ≈ WebP 80). Alpha is preserved for AVIF/WebP/PNG;
-   flattened onto white for JPEG. An animated image (animated WebP/GIF-like input) is flattened to
-   its first frame — the *image* pipeline has no animation surface (video is its own gated
-   pipeline, §9). Images larger than a codec's hard per-side limit (WebP 16383 px / AVIF 65535 px)
-   are downscaled to fit, never rejected.
-5. **Rendition** — one extra small object (`MEDIA_THUMB_DIMENSION`, default 800 px) is generated
-   eagerly from the clean bytes and served on card/stream surfaces (discovery cards, thread
-   streams, photo grids, avatars) — with signed URLs straight off object storage there is no CDN
-   to negotiate formats or resize on the fly, so the rendition must exist as its own object.
-   Sources already that small get none (serving falls back to the full object, which is also the
-   behaviour for every pre-rendition row — no backfill needed). Renditions are never used for
-   hashing, dedup, or scanning.
-6. **Store** — `get_storage().save(key, clean_bytes, content_type=…)`. The DB row records the
-   *post-compression* `byte_size` + `sha256`, so dedup/quotas reflect the stored object.
+`ffmpeg` and `prlimit` are required; AVIF additionally requires `avifenc`. Native processing
+uses file-only protocols, thread/address-space/CPU/wall-time ceilings and process-group
+cancellation. The actual codec runtime must pass qualification; absent tools or skipped
+tests do not establish codec readiness. See the [native media contract](../services/server/internal/media/README.md).
 
-> Profile pictures additionally enforce same-cohort uniqueness (exact `sha256` + a perceptual hash)
-> before storing, with a generic rejection message so it can't be used as a presence oracle.
+## Atomic attachment and licensed-cover workflows
 
-## 3. Serving — private by construction
+Prepared attachment artifacts are private before a post is created. `PreparedAttachment`
+publishes inside the owning `pgx.Tx`, rechecks current permission, and can be used only
+once. `Finish` records the commit outcome and cleans abandoned artifacts. An invalid/no-op
+publisher cannot create a text-only post that claims an attachment. Failed/ambiguous
+remote writes and cleanup failures retain durable object-deletion continuation.
 
-Blobs are **never** exposed via a public bucket URL. A viewer gets a short-lived signed token
-(`MEDIA_SIGNED_URL_TTL`, default 300 s) that resolves through `MediaFileView` /
-`AttachmentFileView`, which **re-checks access at request time** (membership + cohort + consent +
-not-blocked + not-hidden, via `can_read_thread` / the photo gate) and then streams the bytes with:
+Place covers require current governed place-management authority. An approved business
+claim must still belong to an active verified partner for that exact place. The bounded
+Commons import accepts reviewed licensed source data, preserves license/attribution/wiki
+provenance and an existing cover, and uses the same scanner/codec/private-storage gates.
+Its separate public-source download ceiling is 8 MiB; it does not enlarge ordinary
+request or private-image admission budgets. Public serving still rechecks place/activity
+visibility and withdrawal/moderation state.
 
-- `X-Content-Type-Options: nosniff` on every response;
-- images served inline (`Content-Type` from the row, e.g. `image/webp`);
-- **PDF forced to download** (`Content-Disposition: attachment`) so a PDF can never execute inline.
+## Private serving
 
-Because the app streams bytes through the gate, a leaked token still can't outlive its TTL or cross
-the membership wall, and the object's own ACL is irrelevant — it stays private.
+Signed references bind model/row, viewer, variant and expiry with a purpose-specific MAC.
+The configured token lifetime is 300 seconds. Each serving request reloads current
+account status, ownership/membership, cohort/consent, blocks, moderation, scanner/ready
+state and expiry. Anonymous references apply only to currently public venue/adult-activity
+covers. A leaked token cannot replace current permission.
 
-## 4. Security properties
+Streaming returns `private, no-store`, `nosniff` and a restrictive media CSP. PDFs have
+attachment disposition; videos support a single bounded byte range. Authorization is
+checked at request admission, not on every byte. Expiring media also binds the streaming
+context deadline; the next request must pass current gates again.
 
-| Property | How |
-| --- | --- |
-| **Private at rest** | No public ACL is set on `put_object`; objects are reachable only via the signed, per-viewer, membership-scoped serving view. |
-| **Encrypted at rest** | Optional **server-side encryption** — set `MEDIA_S3_SSE=AES256` (SSE-S3) where the provider supports it; otherwise rely on the provider's default-at-rest encryption. |
-| **Encrypted in transit** | The S3 endpoint is HTTPS; the app is served over TLS. |
-| **No location/metadata leak** | EXIF/GPS stripped on every image upload (re-encode from raw pixels). |
-| **No inline code execution** | `nosniff` everywhere; PDFs forced-download; only PNG/JPEG/WebP images are decoded. |
-| **Fail-closed safety** | Uploads refused unless an effective content scanner is configured (prod). |
-| **EU data residency** | Enforced at boot — see §5. |
+`MEDIA_REDIRECT_TO_PRESIGNED=true` is opt-in for S3. After the same application access
+check it returns a short private object URL, at most 60 seconds and no longer than the
+media's remaining lifetime. PDF download/content-type overrides remain. A copied presign
+can survive a subsequent block, moderation hide or consent revocation until it expires;
+this is the explicit revocation trade-off. Do not make the bucket public or place private
+media behind a public CDN.
 
-## 5. EU data residency (GDPR Ch. V — minors' data)
+## Private thread videos
 
-`config/settings/prod.py` **hard-fails at boot** if the S3 backend is selected without an EU region
-or an explicit (EU) endpoint:
+Videos are confined to adult private activity/group threads with current membership and
+consent. They do not appear in discovery/covers or DMs, and add no autoplay/loop/view-count
+surface. Enabled video requires `ffprobe` as well as the native processing tools.
 
-```python
-if MEDIA_STORAGE_BACKEND.endswith("S3StorageBackend") and not (
-    MEDIA_S3_REGION.lower().startswith("eu") or MEDIA_S3_ENDPOINT_URL
-):
-    raise ImproperlyConfigured("Media object storage must be in an EU region …")
-```
+Admission scans the original digest and commits a withheld pending row with a private
+quarantined source. Current ceilings are 80 MiB, 90 seconds, source side 3840 and output
+side 1280. The worker checks approved MP4/WebM codec/container inputs, produces one
+progressive H.264/AAC MP4 plus AVIF/WebP poster, and scans bounded sampled frames including
+frame zero. Short claim/finalization transactions surround codec work; a ready row also
+requires fresh domain authorization.
 
-Recommended EU-resident, S3-compatible providers:
+With `MEDIA_VIDEO_INLINE_PROCESSING=true` (current default), a committed authorized upload
+may kick one application-lifetime, single-flight pass of at most two queued videos.
+Startup performs no video pass. False disables the kick; the explicit `transcode_videos`
+job/timer remains the retry path. Stale processing is reclaimable after 30 minutes and
+three attempts exhaust processing. Terminal processing failure deletes quarantined source
+bytes through durable cleanup; safety-blocked source remains private evidence with no
+in-app byte URL, including for staff. Pending/failed/blocked rows have no ready byte URL.
 
-| Provider | Residency | Egress | Notes |
-| --- | --- | --- | --- |
-| **Hetzner Object Storage** | EU-owned (DE/FI) | ~€1/TB after 1 TB included | Recommended default; EU-owned, cheapest, already the `docs/HOSTING_EU.md` stack. |
-| **Cloudflare R2** (EU jurisdiction) | EU jurisdiction flag | **zero egress** | US processor (DPA/SCCs); great if media bandwidth grows. |
-| **Backblaze B2** (EU) | EU region (Amsterdam) | free up to 3× stored | US processor; CDN-frontable. |
-| **MinIO** (self-hosted, EU box) | wherever you run it | n/a | Full control; you operate it. |
+Only designated media multipart routes permit the bounded larger video body. Ordinary
+API/HTML bodies remain capped at 8 MiB; a group post's multipart video path uses the same
+native media budget and atomic attachment contract.
 
-## 6. Compression strategy & cost
+## Supported settings and cleanup
 
-- **Why AVIF** (ADR-0026) — at matched perceptual quality AVIF is ~15–30 % smaller than WebP
-  (which is itself far smaller than the source PNG/JPEG). A 4 MB phone photo commonly lands
-  around ~200 KB after downscale-to-2048 + AVIF@64, plus a ~30–60 KB card rendition. Encode cost
-  is sub-second per photo at our sizes (paid once, at upload).
-- **Renditions** — most media views are cards and thread streams; serving the 800 px rendition
-  there instead of the 2048 px object cuts per-view egress ~4–8× on the hottest surfaces. This is
-  the "transcode once, serve size-appropriate copies forever" pattern every large platform uses,
-  minus the ladder we don't need at this scale.
-- **What it buys** — storage and egress scale with *stored bytes*. Cutting the average blob and
-  serving small where small is displayed cuts both the monthly storage bill and per-view egress —
-  the cheapest levers, with no architecture change.
-- **Tuning** — set `MEDIA_IMAGE_QUALITY` explicitly for crisper/smaller output (0 = per-codec
-  auto); lower `MEDIA_MAX_DIMENSION` (e.g. 1600) for an even smaller footprint;
-  `MEDIA_IMAGE_OUTPUT_FORMAT=WEBP` to roll back the codec; `""` preserves the source format.
+| Setting names | Current default / bound |
+|---|---|
+| `MEDIA_IMAGE_OUTPUT_FORMAT` | `AVIF`; `WEBP` supported, empty/preserve-source rejected |
+| `MEDIA_MAX_UPLOAD_BYTES`, `MEDIA_MAX_IMAGE_PIXELS` | 5 MiB, 30 million; may tighten |
+| `MEDIA_MAX_DIMENSION`, `MEDIA_THUMB_DIMENSION` | 2048, 800; positive values may tighten, zero does not disable renditions |
+| `MEDIA_IMAGE_QUALITY` | Fixed codec policy (`0`); arbitrary quality overrides refused |
+| `MEDIA_ATTACHMENT_MAX_BYTES` | Fixed 7 MiB PDF ceiling |
+| `MEDIA_VIDEO_ENABLED`, `MEDIA_VIDEO_INLINE_PROCESSING` | True; false is supported |
+| `MEDIA_VIDEO_MAX_UPLOAD_BYTES`, `MEDIA_VIDEO_MAX_DURATION_SECONDS` | 80 MiB, 90; may tighten |
+| `MEDIA_VIDEO_MAX_SOURCE_SIDE`, `MEDIA_VIDEO_TARGET_MAX_SIDE` | 3840, 1280; may tighten within validated bounds |
+| `MEDIA_SIGNED_URL_TTL`, `MEDIA_PRESIGNED_TTL` | Fixed 300 seconds, at most 60 seconds |
 
-## 7. Settings reference
+The [CLI reference](../services/server/cmd/social-server/README.md) owns the exact complete
+setting inventory and unsupported overrides. Values come only from the approved secrets
+workflow; configuration names and examples do not authorize provider activation.
 
-```bash
-# --- storage backend ---
-MEDIA_STORAGE_BACKEND=apps.media.storage.S3StorageBackend   # default: LocalStorageBackend (dev)
-MEDIA_S3_BUCKET=socialapp-media
-MEDIA_S3_ENDPOINT_URL=https://fsn1.your-objectstorage.com   # Hetzner Object Storage endpoint (EU)
-MEDIA_S3_REGION=eu-central                                  # any eu* OR rely on the endpoint
-MEDIA_S3_ADDRESSING_STYLE=virtual                           # "path" for MinIO
-MEDIA_S3_SSE=AES256                                         # optional server-side encryption (SSE-S3)
-AWS_ACCESS_KEY_ID=<key>                                     # boto3 default credential chain
-AWS_SECRET_ACCESS_KEY=<secret>
+Ephemeral image attachments retain the one-hour adult and 24-hour minor TTL floors.
+Expiry is gated independently from physical deletion. Delete triggers and the private
+outbox capture main/rendition/poster/source keys across direct row/domain/account deletion;
+bounded drains retry storage failures. Pending safety reports, removal holds and blocked/
+processing evidence are not blindly purged. Preserve the governed erasure/evidence policy
+when configuring bucket lifecycle/versioning, and never clear an outbox to hide failures.
 
-# --- smart compression (photos AND attachments) ---
-MEDIA_IMAGE_OUTPUT_FORMAT=AVIF        # transcode codec (WEBP = rollback; "" = preserve source)
-MEDIA_IMAGE_QUALITY=0                 # 0 = auto per codec (AVIF 64 / WebP 80); else 1-100
-MEDIA_THUMB_DIMENSION=800             # card/stream rendition longest side (0 disables)
-MEDIA_MAX_DIMENSION=2048              # longest-side downscale cap
-MEDIA_MAX_IMAGE_PIXELS=30000000       # decompression-bomb ceiling (header-declared)
-MEDIA_MAX_UPLOAD_BYTES=5242880        # profile/photo size cap
-MEDIA_ATTACHMENT_MAX_BYTES=7340032    # thread-attachment size cap
-
-# --- video attachments (ADR-0026; default ON since 2026-07-13) ---
-MEDIA_VIDEO_ENABLED=true              # requires ffmpeg/ffprobe (boot-checked in prod); false = kill switch
-MEDIA_VIDEO_COHORTS=adult             # adults-only at launch (the PDF precedent)
-MEDIA_VIDEO_MAX_UPLOAD_BYTES=83886080 # 80 MiB source cap
-MEDIA_VIDEO_MAX_DURATION_SECONDS=90
-MEDIA_VIDEO_TARGET_MAX_SIDE=1280      # one 720p-class progressive MP4 (never upscaled)
-MEDIA_VIDEO_CRF=23                    # x264 quality (lower = better/bigger)
-MEDIA_VIDEO_PRESET=medium
-
-# --- serving ---
-MEDIA_SIGNED_URL_TTL=300              # signed-token lifetime (seconds)
-```
-
-### Wiring Hetzner Object Storage (example)
-
-1. Create a private bucket + an S3 access key in the Hetzner console (EU location, e.g. `fsn1`).
-2. Set the env above (`MEDIA_STORAGE_BACKEND`, `MEDIA_S3_*`, `AWS_*`). Keep the bucket **private** —
-   the app never needs public read.
-3. Deploy. The prod boot guardrail confirms EU residency; uploads now land in Hetzner, compressed.
-
-## 8. Scaling & future options
-
-- **Direct GETs (presigned redirect) — IMPLEMENTED, opt-in.** Set `MEDIA_REDIRECT_TO_PRESIGNED=True`
-  (S3 backend only): after the per-viewer access check, the serving view 307-redirects to a
-  short-lived (`MEDIA_PRESIGNED_TTL`, default 60s) presigned object-store URL so the bytes never
-  transit the app process — the biggest single-process saturation fix. PDFs keep forced-download +
-  content-type via the presign response overrides. **Trade-off:** while a presigned URL is live a
-  block / moderation-hide / consent revocation / ephemeral expiry is not yet enforced (the streaming
-  path re-authorizes per byte; the redirect does not) — hence the short, *decoupled* TTL. Default
-  OFF keeps the secure streaming model. Front it with a CDN for further egress savings.
-- **Thumbnails — IMPLEMENTED (ADR-0026).** One eager card/stream rendition per image (§2 step 5),
-  tracked by `thumb_storage_key`; card and stream surfaces serve it, detail/click-through serves
-  the full object. Pre-existing rows simply fall back to the full object; a backfill command is a
-  possible follow-up if serving data shows it is worth it.
-- **Lifecycle rules** — ephemeral ("disappearing") pictures already expire + purge in-app; you can
-  add a provider lifecycle rule as defence-in-depth.
-
-## 9. Video attachments (ADR-0026)
-
-Short clips in private, cohort-gated activity/group threads only (adults-only at launch).
-Enabled by default since 2026-07-13 (`MEDIA_VIDEO_ENABLED=false` is the kill switch; prod
-refuses to boot video-enabled without ffmpeg). Rendered solely inside the owning thread —
-never on discovery/cover/feed surfaces, never in DMs, no autoplay/loops/view counts.
-
-```
-upload ─▶ size cap ─▶ magic sniff ─▶ cohort + membership gates
-       ─▶ fail-closed scanner gate + streamed SHA-256 of the ORIGINAL vs blocklist/service
-       ─▶ original stored to video-src/ (quarantine) ─▶ Attachment row status=pending (WITHHELD)
-
-transcode_videos (systemd timer / post-upload kick; claim = select_for_update skip_locked):
-  ffprobe validation (container/codec/pixel-format whitelists, 1 video + ≤1 audio stream,
-                      duration + dimension caps — decode-bomb classes rejected up front)
-  ─▶ ffmpeg transcode: ONE progressive MP4 — x264 High@4.1, CRF 23, ≤1280px, yuv420p, AAC,
-      -map_metadata -1 -map_chapters -1 (the re-encode IS the GPS/metadata strip),
-      autorotate baked, +faststart  [sandboxed: -nostdin, protocol whitelist=file, wall-clock
-      timeout + process-group kill, RLIMIT_CPU/AS, thread cap]
-  ─▶ poster frame from the OUTPUT through the ordinary image pipeline (AVIF/WebP)
-  ─▶ FRAME SCAN: sampled frames (1 per 5s, capped) through the configured image scanner —
-      the perceptual dHash blocklist catches known-bad imagery inside the video (fail-closed;
-      a match ⇒ status=blocked, never served, source retained as moderation evidence)
-  ─▶ store MP4 + poster ─▶ status=ready, quarantined original DELETED (it still carried the
-      source metadata) ─▶ audit
-
-serve ─▶ same per-viewer signed tokens; the streaming view supports HTTP Range (206) so the
-        player can seek; posters serve via the image path. Non-ready rows render as a calm
-        placeholder. MEDIA_REDIRECT_TO_PRESIGNED offloads Range serving to the object store.
-```
-
-Failure honesty: transient errors retry with an attempt cap; a crashed worker's `processing`
-row is reclaimed after `MEDIA_VIDEO_STALE_PROCESSING_SECONDS`; terminal failures show a
-"couldn't be processed" placeholder and reclaim every blob. Ephemeral expiry + purge + the
-Art. 17 blob-cleanup signals cover all four keys (main / poster / thumb / quarantined source).
+See [ASYNC_TASKS](ASYNC_TASKS.md), [HOSTING_EU](HOSTING_EU.md) and [RUNBOOK](RUNBOOK.md).
+The complete earlier storage guide is retained as
+[historical reference](archive/file-storage-native-go-reference.md).
