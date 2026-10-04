@@ -260,3 +260,8 @@ Aggregate release/HTTPS/resource receipts promoted to docs/reviews/native-go; no
 transcripts, credentials or database contents were promoted. The tiny warm public-read
 sample measured26,316KiB Go PID1 RSS vs157,700KiB exact-source Django; it cannot predict
 capacity or hosting bills. No unapproved network expansion was performed.
+
+Official checksum-verified Trivy0.75 image scan found CVE-2026-103111(HIGH) in existing
+Debian libpcre2-8-0, fixed10.42-1+deb12u2. Runtime explicitly refreshes that package;
+source https://security-tracker.debian.org/tracker/CVE-2026-103111. No Go behavior or
+frontend assets changed. The rebuilt image is re-scanned before any release approval.
