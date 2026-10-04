@@ -1,4 +1,4 @@
-# ADR-0033 — PostgreSQL shared rate budgets
+# ADR-0037 — PostgreSQL shared rate budgets
 
 Date: 2026-10-04
 Status: proposed for integration review

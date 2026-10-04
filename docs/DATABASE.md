@@ -17,7 +17,7 @@ The live notification channel carries room/message identifiers, with fresh authe
 and membership checks before delivery. PgBouncer transaction pooling cannot own LISTEN;
 retain a separate session connection if introducing it. Shared API/domain/catalog admission
 uses PostgreSQL histories, per-identity locks, constant-time capacity accounting and bounded
-expiry sweeps (ADR-0033). Account/safety/message budgets remain shared native contracts.
+expiry sweeps (ADR-0037). Account/safety/message budgets remain shared native contracts.
 Admission never falls back to a process-local quota when the database is unavailable.
 
 ## Schema bootstrap and adoption

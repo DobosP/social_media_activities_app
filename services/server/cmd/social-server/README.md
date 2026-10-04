@@ -164,7 +164,7 @@ unchanged.
 | `IDENTITY_ALLOW_DEV_PROVIDER`, `EUDI_SANDBOX`, `EUDI_SANDBOX_ISSUER_KEY_PEM` | false / false / empty; synthetic identity proof cannot grant production assurance |
 | `THREAD_REACTION_FACETS` | empty/unset; reviewed plural-sentiment vocabulary remains fixed |
 | `CHAT_MESSAGE_POLICY` | `apps.chat.policy.NudgeMessagePolicy`; custom Python policy imports need a reviewed native adapter |
-| `REDIS_URL` | empty/unset; native shared state uses PostgreSQL (ADR-0033); an unused Redis dependency is refused |
+| `REDIS_URL` | empty/unset; native shared state uses PostgreSQL (ADR-0037); an unused Redis dependency is refused |
 | `CHANNEL_LAYER_BACKEND` | `postgres` or the legacy source-default alias `channels.layers.InMemoryChannelLayer`; the Redis/custom Python classes are refused |
 | `DB_POOL_ENABLED`, `DB_POOLED` | true / false; native session-aware pgx pooling, no Python pool or unqualified transaction-pool mode |
 | `ASGI_THREADS`, `DJANGO_SETTINGS_MODULE` | unset only; retired Python worker/profile settings; native profile uses `--dev` / `DJANGO_DEBUG` and explicit security settings |

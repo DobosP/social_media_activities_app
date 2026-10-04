@@ -61,7 +61,7 @@ OAuth state/attempts, tokens, API/social/catalog/saved-search/CSP admission, acc
 message budgets, job queues and ID-only live fanout use PostgreSQL. Shared sliding admission
 uses per-identity locks and constant-time capacity counters, with bounded expiry cleanup;
 anonymous peer keys are keyed hashes and account-linked rows cascade on erasure. Missing
-schema or unavailable admission refuses work. [ADR-0033](adr/0033-postgresql-shared-rate-budgets.md)
+schema or unavailable admission refuses work. [ADR-0037](adr/0037-postgresql-shared-rate-budgets.md)
 records the storage and retry contract; LISTEN still needs a session connection with PgBouncer.
 No measured heap or fixture latency is a hosting-price/capacity guarantee.
 

@@ -73,7 +73,7 @@ reserves one connection while listening for PostgreSQL ID-only notifications. It
 authoritative state before delivery; NOTIFY does not carry messages or permission.
 
 API/social/catalog/saved-search/CSP admission uses shared PostgreSQL histories and capacity
-counters (ADR-0033); authentication/account/safety/message budgets remain database-backed.
+counters (ADR-0037); authentication/account/safety/message budgets remain database-backed.
 Reviewed policy overrides and bounded privacy-safe Sentry are native (ADR-0034); unsafe
 floors, retired Python runtime controls and unused Redis settings are refused. Guarded
 permissions/private schemas and fresh participation are ADR-0035/0036 review extensions.

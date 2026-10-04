@@ -70,7 +70,7 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   the serving repo's producer dependency must be intentionally bumped first.
 - Complete held-event review UX, curated cultural child-venue policy, localized
   taxonomy/cinema mapping, and production alerting/shared-state operations.
-- Native shared-state/action limits use PostgreSQL (ADR-0033); typed policy overrides and private,
+- Native shared-state/action limits use PostgreSQL (ADR-0037); typed policy overrides and private,
   optional Sentry reporting are implemented (ADR-0034). Redis/Python worker flags remain refused;
   external delivery, source landing and production activation still require their own verification.
 - Operational gaps remain in `docs/PRODUCTION_READINESS.md`. Treat an unticked box

@@ -39,7 +39,7 @@ readers stream files to private scratch and enforce an aggregate budget for non-
 fields as well as their smaller field caps. Native semantics are documented directly;
 this is a hard data cap, not a claim of Django's buffering implementation parity.
 
-PostgreSQL shared-rate hooks from ADR-0033 consume the decoded per-action caps/windows.
+PostgreSQL shared-rate hooks from ADR-0037 consume the decoded per-action caps/windows.
 Required-shared mode additionally asserts coherent PostgreSQL pool/store wiring across
 configurable admission services, while REDIS_URL and Python Redis
 Channels classes are refused. The retired Python DB_POOL_TIMEOUT is rejected even

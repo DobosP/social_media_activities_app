@@ -38,7 +38,7 @@ Paths beginning internal/ above are under `services/server`. Domain READMEs/test
 
 ## Pitfalls
 - Do not defer safety, cohort, consent, block or scan admission until after an action is visible.
-- PostgreSQL owns API/domain admission (ADR-0033); missing rate schema fails closed. CLI policy wiring
+- PostgreSQL owns API/domain admission (ADR-0037); missing rate schema fails closed. CLI policy wiring
   is separately qualified; DB-free optional agentapi retains its documented local resource ceilings.
 - LISTEN needs a session connection if adding PgBouncer; one-shot jobs reserve none.
 - Secrets/auth stores, uploaded media, local databases and raw transcripts are not fleet docs.

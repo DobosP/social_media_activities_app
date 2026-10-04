@@ -17,7 +17,7 @@ qualification receipt, not production deployment, provider acceptance or product
 - Complete registered API field contracts; public schema/guide routes are reachable. The emitted
   OpenAPI has380 operations,318 paths and166 schemas including its own typed protocol model.
 
-Decisions: ADR-0033/0034/0035/0036. Human auth/privacy/safety review remains required before landing.
+Decisions: ADR-0037/0034/0035/0036. Human auth/privacy/safety review remains required before landing.
 
 ## Native qualification
 

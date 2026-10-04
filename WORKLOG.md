@@ -559,3 +559,13 @@ review remain beforelanding; no production/provider/source/minor activation occu
 agent-ops registered SENTRY_ENVIRONMENT as non-secret deploy-host metadata without values
 or SOPS/repo_env delivery, commit a7062e70bf4a4f3cfb2be47f7862a9b5e32b1f64 verified onorigin/main.
 Cat runtime/authcore needed no change. The anonymous Go game replica-affinity contract remains.
+
+
+## 2026-10-04 — reconcile parallel governance landing
+
+Valid until: completion PR landing — then treat as history.
+
+Main advanced to cd006e3 with accepted owner-directed on-demand Actions policy ADR-0033.
+The proposed shared-budget decision is renumbered toADR-0037 beforelanding; config/admin/
+authority decisions retain0034/0035/0036. This prevents duplicate canonical ADR numbers
+without changing runtime behavior. All completion code remains under sensitive-code review.

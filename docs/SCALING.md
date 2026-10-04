@@ -27,7 +27,7 @@ keyset pagination help bounded work, but do not establish an unmeasured user cap
 ## Shared-state boundary
 
 API/social/catalog/saved-search/CSP admission is shared through PostgreSQL under
-[ADR-0033](adr/0033-postgresql-shared-rate-budgets.md). Auth/account/safety/message budgets,
+[ADR-0037](adr/0037-postgresql-shared-rate-budgets.md). Auth/account/safety/message budgets,
 tokens, deferred work and ID-only live fan-out are database-backed too. Default API rates
 remain anonymous60/minute, user240/minute and token obtain10/minute; minute-rate strings
 and domain cap/window overrides are bounded and validated by the CLI.
@@ -47,7 +47,7 @@ Local WebSocket/buffer/codec concurrency limits protect each process; they are r
 ceilings rather than a replacement for shared abuse quotas. Optional DB-free agentapi
 retains its distinct local contract and must not be mistaken for the authoritative server.
 
-The fixture cardinality measurement and memory bounds are in ADR-0033/WORKLOG. They do
+The fixture cardinality measurement and memory bounds are in ADR-0037/WORKLOG. They do
 not establish production throughput or a hosting price. Qualify a real multi-replica deployment,
 pool recovery and operational ingress before expanding it; review/launch gates remain in STATUS.
 
