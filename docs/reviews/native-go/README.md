@@ -15,6 +15,7 @@ credential-free GET-only fixed-target proxy retained the internal fixture networ
 
 Source/imported-package and symbol-retained same-source binary vulnerability audits pass.
 The stripped-binary analyser falls back to module metadata; the unused openpgp module
-advisory is explicitly preserved. OS-image scanning is a separate CI gate.
+advisory is explicitly preserved. The [final image gate](image-security.json) passes on the PCRE2-fixed images with zero
+fixable HIGH/CRITICAL findings; original footprint measurements keep their measured IDs.
 
 Current implementation/activation status remains in STATUS.md, decisions in ADR-0032.

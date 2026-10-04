@@ -1,0 +1,42 @@
+{
+  "date": "2026-10-04",
+  "tool": "checksum-verified official Trivy0.75.0",
+  "archive_sha256": "c6e65abddb348e25f10549df887045629cf28cc72453cd1c63acb717316b3f3f",
+  "db": "fresh official public Trivy DB downloaded2026-10-04; identicalDB for old/new comparison",
+  "flags": [
+    "--image-src docker",
+    "--scanners vuln",
+    "--severity HIGH,CRITICAL",
+    "--ignore-unfixed",
+    "--exit-code 1",
+    "--skip-db-update"
+  ],
+  "scope": "read-only exactlocalimage IDs; no secret/config scanner, source/network/runtime/credential changes",
+  "scans": [
+    {
+      "image": "cat",
+      "image_id": "sha256:73be231008d3067610f9e1cfe8fc24180845bfaae846b3903bc4d7c31ccac170",
+      "exit_code": 0,
+      "fixable_high_critical": 0,
+      "runtime_user": "10001:10001",
+      "resolved_package": {
+        "name": "libpcre2-8-0",
+        "version": "10.42-1+deb12u2"
+      },
+      "report": "cat-native-trivy-final.json"
+    },
+    {
+      "image": "social",
+      "image_id": "sha256:b54fa1b3c7083040fd990be81feb66fc0fbd47f9e5b38b32a2ae3f0d3185a456",
+      "exit_code": 0,
+      "fixable_high_critical": 0,
+      "runtime_user": "10001:10001",
+      "resolved_package": {
+        "name": "libpcre2-8-0",
+        "version": "10.42-1+deb12u2"
+      },
+      "report": "social-native-trivy-final.json"
+    }
+  ],
+  "limits": "Only requested fixable HIGH/CRITICAL OS/library gate. No claim that all severities or unfixed vulnerabilities are absent. Existing identical-code frozenbinary/runtime qualification retained separately."
+}

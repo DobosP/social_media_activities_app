@@ -99,10 +99,10 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   bootstrap + **173 PostgreSQL/codec tests** passed with no skips; final affected app/media/account
   checks also pass. Source/package vulnerability scans pass after compress1.18.7; unimported
   openpgp module advisory and stripped-binary analyzer limits are recorded in WORKLOG.
-  Prior reference CI: Django **2791 +38 subtests** green. No live data/infrastructure changed.
+  Exact-head native/reference/public CI is green (37208738237/213/229); image gate has zero
+  fixable HIGH/CRITICAL findings. All173 contracts pass on canonicalPG16.15 Bookworm too.
 
 ## Standard verification
-
 Native race/vet + shared-source hash verification; every database/codec contract runs with an
 explicit disposable fixture through `scripts/qualify-native.sh`. Commands: `docs/agent-testing.md`.
 Python/DRF tests continue to qualify the offline compatibility oracle. `git diff --check` is required.

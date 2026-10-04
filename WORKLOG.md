@@ -265,3 +265,12 @@ Official checksum-verified Trivy0.75 image scan found CVE-2026-103111(HIGH) in e
 Debian libpcre2-8-0, fixed10.42-1+deb12u2. Runtime explicitly refreshes that package;
 source https://security-tracker.debian.org/tracker/CVE-2026-103111. No Go behavior or
 frontend assets changed. The rebuilt image is re-scanned before any release approval.
+
+Final runtime images pass official checksum-verified Trivy0.75 with zero fixable HIGH/
+CRITICAL findings: Socialb54fa1b3/Cat73be2310, PCRE12u2. Aggregate immutable scan receipt
+is docs/reviews/native-go/image-security.json. CanonicalPG16.15 Bookworm freshfixture
+runs all173 contracts/17packages with nofailures/skips. Exact Socialhead810492a has all
+CI workflows green: Native37208738237, reference37208738213, publicGo37208738229.
+Human review requested against PR101 under AGENTS61; no approval recorded, so no Social
+landing or deployment. Cat codeabe9337 landed/deployed anonymous with151 public checks;
+this does not activate Social providers/minors or alter the launch gates.
