@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/DobosP/social_media_activities_app/services/server/internal/accounts"
+	"github.com/DobosP/social_media_activities_app/services/server/internal/budgets"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -22,6 +23,7 @@ type Service struct {
 	ConversationLimit int
 	MessagePageLimit  int
 	RetentionDays     int
+	RatePolicies      map[string]budgets.Policy
 }
 
 func New(db *pgxpool.Pool, cursor platform.CursorCodec) *Service {

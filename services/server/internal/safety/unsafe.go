@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/DobosP/social_media_activities_app/services/server/internal/budgets"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
 	"github.com/jackc/pgx/v5"
 	"time"
@@ -21,6 +22,10 @@ type UnsafeResult struct {
 // never becomes an adult contact channel, and repeated taps do not storm alerts.
 func (s *Service) UnsafeReport(ctx context.Context, a platform.Actor, activityID int64) (UnsafeResult, error) {
 	var result UnsafeResult
+	policy, policyErr := budgets.Resolve(s.RatePolicies, "unsafe_report", budgets.Policy{Limit: 12, Window: time.Hour})
+	if policyErr != nil {
+		return result, policyErr
+	}
 	if s.Config.CanSeeActivity == nil {
 		return result, platform.ErrNotFound
 	}
@@ -53,10 +58,13 @@ func (s *Service) UnsafeReport(ctx context.Context, a platform.Actor, activityID
 		if _, err = tx.Exec(ctx, `DELETE FROM safety_go_actionbudget WHERE until<=$1`, s.Config.Now()); err != nil {
 			return err
 		}
-		if err = tx.QueryRow(ctx, `INSERT INTO safety_go_actionbudget(user_id,action,count,until) VALUES($1,'unsafe_report',1,$2) ON CONFLICT(user_id,action) DO UPDATE SET count=safety_go_actionbudget.count+1 RETURNING count`, a.ID, s.Config.Now().Add(time.Hour)).Scan(&attempts); err != nil {
+		if err = tx.QueryRow(ctx, `INSERT INTO safety_go_actionbudget(user_id,action,count,until) VALUES($1,'unsafe_report',1,$2) ON CONFLICT(user_id,action) DO UPDATE SET count=safety_go_actionbudget.count+1 WHERE safety_go_actionbudget.count<$3 RETURNING count`, a.ID, s.Config.Now().Add(policy.Window), policy.Limit).Scan(&attempts); err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return ErrRate
+			}
 			return err
 		}
-		if attempts > 12 {
+		if attempts > policy.Limit {
 			return ErrRate
 		}
 		result.ReportID, err = s.fileReport(ctx, tx, a, target, "off_platform", UnsafeSentinel)

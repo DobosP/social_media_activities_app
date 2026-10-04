@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
+	nativeschema "github.com/DobosP/social_media_activities_app/services/server/internal/schema"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -112,6 +113,11 @@ func New(t testing.TB, dsn string, seed Seed) *pgxpool.Pool {
 	cfg.MaxConns = 4
 	db, err = pgxpool.NewWithConfig(ctx, cfg)
 	if err != nil {
+		t.Fatal(err)
+	}
+	// LIKE copies tables/FKs, but not functions or statement-level triggers.
+	// Apply native additive migrations inside each isolated fixture schema too.
+	if err := nativeschema.Migrate(ctx, db); err != nil {
 		t.Fatal(err)
 	}
 	if seed != nil {

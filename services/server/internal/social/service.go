@@ -11,10 +11,10 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 	"unicode/utf8"
 
+	"github.com/DobosP/social_media_activities_app/services/server/internal/budgets"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -44,50 +44,34 @@ type Service struct {
 	ConnectionCohorts      map[string]bool
 	Sentiment              SentimentConfig
 	CommunityPolicy        CommunityConfig
-	mu                     sync.Mutex
-	budgets                map[budgetKey]budget
+	Budgets                *budgets.Store
+	RatePolicies           map[string]budgets.Policy
 	Now                    func() time.Time
 }
 
 func New(db *pgxpool.Pool, audit AuditFunc) *Service {
-	return &Service{DB: db, Audit: audit, Notify: platform.Notify, budgets: make(map[budgetKey]budget), Now: time.Now, ConnectionCohorts: map[string]bool{"adult": true, "teen": true, "child": true}, Sentiment: DefaultSentimentConfig(), CommunityPolicy: DefaultCommunityConfig()}
+	return &Service{DB: db, Audit: audit, Notify: platform.Notify, Budgets: budgets.New(db), Now: time.Now, ConnectionCohorts: map[string]bool{"adult": true, "teen": true, "child": true}, Sentiment: DefaultSentimentConfig(), CommunityPolicy: DefaultCommunityConfig()}
 }
 
-type budgetKey struct {
-	actor  int64
-	action string
+func (s *Service) admission(ctx context.Context, actor int64, action string, limit int, window time.Duration) (budgets.Decision, error) {
+	policy, err := budgets.Resolve(s.RatePolicies, action, budgets.Policy{Limit: limit, Window: window})
+	if err != nil {
+		return budgets.Decision{}, err
+	}
+	return s.Budgets.Actor(ctx, actor, "social."+action, policy)
 }
-type budget struct {
-	start  time.Time
-	n      int
-	window time.Duration
+func (s *Service) allow(ctx context.Context, actor int64, action string, limit int, window time.Duration) bool {
+	result, err := s.admission(ctx, actor, action, limit, window)
+	return err == nil && result.Allowed
 }
-
-func (s *Service) allow(actor int64, action string, limit int, window time.Duration) bool {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	now := s.Now()
-	key := budgetKey{actor, action}
-	b, ok := s.budgets[key]
-	if !ok && len(s.budgets) >= 10000 {
-		for k, v := range s.budgets {
-			if now.Sub(v.start) >= v.window {
-				delete(s.budgets, k)
-			}
-		}
-		if len(s.budgets) >= 10000 {
-			return false
-		}
+func (s *Service) rateTransaction(ctx context.Context, a Actor, action string, limit int, window time.Duration, f func(pgx.Tx, func() error) error) error {
+	err := budgets.Reserve(func(reserve func() error) error {
+		return s.transaction(ctx, a, func(tx pgx.Tx) error { return f(tx, reserve) })
+	}, func() (budgets.Decision, error) { return s.admission(ctx, a.ID, action, limit, window) })
+	if errors.Is(err, budgets.ErrDenied) {
+		return platform.ErrForbidden
 	}
-	if !ok || now.Sub(b.start) >= window {
-		b = budget{start: now, window: window}
-	}
-	if b.n >= limit {
-		return false
-	}
-	b.n++
-	s.budgets[key] = b
-	return true
+	return err
 }
 
 func (s *Service) transaction(ctx context.Context, a Actor, f func(pgx.Tx) error) error {

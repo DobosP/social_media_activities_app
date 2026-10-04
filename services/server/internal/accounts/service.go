@@ -9,6 +9,7 @@ import (
 
 	"github.com/DobosP/cat_de_roman_esti/shared-go/authcore"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/avatars"
+	"github.com/DobosP/social_media_activities_app/services/server/internal/budgets"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -27,11 +28,12 @@ type Config struct {
 	Now                        func() time.Time
 }
 type Service struct {
-	DB     *pgxpool.Pool
-	Auth   *authcore.Service
-	Store  *Store
-	Secret []byte
-	Config Config
+	DB           *pgxpool.Pool
+	Auth         *authcore.Service
+	Store        *Store
+	Secret       []byte
+	Config       Config
+	RatePolicies map[string]budgets.Policy
 }
 
 func New(db *pgxpool.Pool, auth *authcore.Service, identityBindingSecret string, config Config) *Service {
@@ -59,14 +61,23 @@ func (s *Service) Migrate(ctx context.Context) error {
 }
 
 func (s *Service) allowAction(ctx context.Context, user int64, action string, limit int, window time.Duration) (bool, error) {
-	var count int
-	err := platform.Transaction(ctx, s.DB, func(tx pgx.Tx) error {
-		if _, err := tx.Exec(ctx, `DELETE FROM accounts_go_action_budget WHERE until<=$1`, s.Config.Now()); err != nil {
+	policy, err := budgets.Resolve(s.RatePolicies, action, budgets.Policy{Limit: limit, Window: window})
+	if err != nil {
+		return false, err
+	}
+	now := s.Config.Now()
+	var allowed bool
+	err = platform.Transaction(ctx, s.DB, func(tx pgx.Tx) error {
+		if _, err := tx.Exec(ctx, `DELETE FROM accounts_go_action_budget WHERE until<=$1`, now); err != nil {
 			return err
 		}
-		return tx.QueryRow(ctx, `INSERT INTO accounts_go_action_budget(user_id,action,count,until) VALUES($1,$2,1,$3) ON CONFLICT(user_id,action) DO UPDATE SET count=accounts_go_action_budget.count+1 RETURNING count`, user, action, s.Config.Now().Add(window)).Scan(&count)
+		err := tx.QueryRow(ctx, `INSERT INTO accounts_go_action_budget(user_id,action,count,until) VALUES($1,$2,1,$3) ON CONFLICT(user_id,action) DO UPDATE SET count=accounts_go_action_budget.count+1 WHERE accounts_go_action_budget.count<$4 RETURNING true`, user, action, now.Add(policy.Window), policy.Limit).Scan(&allowed)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil
+		}
+		return err
 	})
-	return count <= limit, err
+	return allowed && err == nil, err
 }
 
 func (s *Service) actor(ctx context.Context, q platform.Querier, id int64) (platform.Actor, error) {

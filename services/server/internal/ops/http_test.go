@@ -55,7 +55,11 @@ func TestCSPPrivacyBudgetAndAlways204(t *testing.T) {
 		}
 	}
 	rows := s.RecentCSP()
-	if len(rows) != 1 || rows[0].Document != "https://site.example/account/" || rows[0].Blocked != "https://asset.example/file.js" || rows[0].Directive != "script-src" {
-		t.Fatal("CSP secrets retained", rows)
+	if len(rows) != 0 {
+		t.Fatal("CSP admission failed open without database", rows)
+	}
+	rows, err := ParseCSP([]byte(`{"csp-report":{"effective-directive":"script-src self","document-uri":"https://site.example/account/?token=generated#private","blocked-uri":"https://asset.example/file.js?secret=generated"}}`))
+	if err != nil || len(rows) != 1 || rows[0].Document != "https://site.example/account/" || rows[0].Blocked != "https://asset.example/file.js" || rows[0].Directive != "script-src" {
+		t.Fatal("CSP secrets retained", rows, err)
 	}
 }

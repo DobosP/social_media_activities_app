@@ -18,6 +18,7 @@ import (
 	"github.com/DobosP/social_media_activities_app/services/server/internal/accounts"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/admin"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/booking"
+	"github.com/DobosP/social_media_activities_app/services/server/internal/budgets"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/catalog"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/chat"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/discovery"
@@ -135,6 +136,9 @@ func New(ctx context.Context, db *pgxpool.Pool, config Config, migrate bool) (*A
 			return nil, errors.New("native reference-data migration failed")
 		}
 	}
+	if err := budgets.New(db).Check(ctx); err != nil {
+		return nil, errors.New("native shared admission schema unavailable")
+	}
 	store := accounts.NewStore(db)
 	if migrate {
 		if err := store.Migrate(ctx); err != nil {
@@ -186,7 +190,7 @@ func New(ctx context.Context, db *pgxpool.Pool, config Config, migrate bool) (*A
 			return nil, errors.New("native messaging migration failed")
 		}
 	}
-	a := &App{DB: db, Config: config, Auth: auth, Accounts: accountService, Social: socialService, Media: mediaService, Store: store, Mux: http.NewServeMux()}
+	a := &App{rates: requestRates{store: budgets.New(db), secret: []byte(config.Secret)}, DB: db, Config: config, Auth: auth, Accounts: accountService, Social: socialService, Media: mediaService, Store: store, Mux: http.NewServeMux()}
 	if config.ProxyHops < 0 || config.ProxyHops > 32 {
 		return nil, errors.New("NUM_PROXIES must be between zero and 32")
 	}

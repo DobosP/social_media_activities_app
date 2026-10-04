@@ -2,10 +2,12 @@ package catalog
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
+	"github.com/DobosP/social_media_activities_app/services/server/internal/budgets"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
 	"github.com/jackc/pgx/v5"
 )
@@ -111,17 +113,17 @@ func (s *Service) StaffCorrection(ctx context.Context, a platform.Actor, id int6
 	})
 }
 func (s *Service) ReportVenue(ctx context.Context, a platform.Actor, place int64, closure bool) (bool, error) {
+	kind, table := "open_now_report", "places_opennowreport"
+	if closure {
+		kind, table = "place_closure_report", "places_placeclosurereport"
+	}
 	created := false
-	err := platform.Transaction(ctx, s.DB, func(tx pgx.Tx) error {
+	err := s.rateTransaction(ctx, a, kind, 10, time.Hour, func(tx pgx.Tx, reserve func() error) error {
 		if err := platform.Participate(ctx, tx, a); err != nil {
 			return err
 		}
-		kind, table := "open_now_report", "places_opennowreport"
-		if closure {
-			kind, table = "place_closure_report", "places_placeclosurereport"
-		}
-		if !s.allow(a, kind, 10, time.Hour) {
-			return nil
+		if err := reserve(); err != nil {
+			return err
 		}
 		if _, err := tx.Exec(ctx, `SELECT id FROM places_place WHERE id=$1 FOR UPDATE`, place); err != nil {
 			return err
@@ -139,6 +141,9 @@ func (s *Service) ReportVenue(ctx context.Context, a platform.Actor, place int64
 		created = true
 		return platform.RecordAudit(ctx, tx, a, "place."+kind, fmt.Sprintf("places.place:%d", place), nil)
 	})
+	if errors.Is(err, budgets.ErrDenied) {
+		return false, nil
+	}
 	return created, err
 }
 func (s *Service) ClearVenueReports(ctx context.Context, a platform.Actor, place int64, closure bool) (int64, error) {

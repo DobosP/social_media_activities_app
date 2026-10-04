@@ -16,13 +16,14 @@ native_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 mkdir -p "$native_scratch/tests" "$native_scratch/test-tmp"
 chmod 700 "$native_scratch/test-tmp"
 export GOWORK=off
-for native_package in accounts admin app booking catalog commands discovery donations export jobs media messaging notifications recommendations safety social web; do
+for native_package in accounts admin app booking budgets catalog commands discovery donations export jobs media messaging notifications recommendations safety social web; do
   native_flags=()
   case $native_package in
     accounts) native_flags=(-accounts-test-dsn "$native_dsn");;
     admin) native_flags=(-admin-test-dsn "$native_dsn");;
     app) native_flags=(-app-test-dsn "$native_dsn");;
     booking|donations|notifications) native_flags=(-domain-test-dsn "$native_dsn");;
+    budgets) native_flags=(-budgets-test-dsn "$native_dsn");;
     catalog) native_flags=(-catalog-test-dsn "$native_dsn");;
     commands) native_flags=(-commands-test-dsn "$native_dsn");;
     discovery) native_flags=(-discovery-test-dsn "$native_dsn");;

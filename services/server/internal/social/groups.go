@@ -117,7 +117,7 @@ func (s *Service) CreateGroup(ctx context.Context, a Actor, in GroupInput) (int6
 	if !a.IsStaff && !s.AllowUserGroups {
 		return 0, platform.ErrForbidden
 	}
-	if !s.allow(a.ID, "group_create", 5, time.Hour) {
+	if !s.allow(ctx, a.ID, "group_create", 5, time.Hour) {
 		return 0, platform.ErrForbidden
 	}
 	var id int64
@@ -159,7 +159,7 @@ func (s *Service) CreateGroup(ctx context.Context, a Actor, in GroupInput) (int6
 	return id, err
 }
 func (s *Service) JoinGroup(ctx context.Context, a Actor, id int64) error {
-	return s.transaction(ctx, a, func(tx pgx.Tx) error {
+	return s.rateTransaction(ctx, a, "group_join", 20, time.Hour, func(tx pgx.Tx, reserve func() error) error {
 		if _, err := group(ctx, tx, a, id, true, false); err != nil {
 			return err
 		}
@@ -170,8 +170,8 @@ func (s *Service) JoinGroup(ctx context.Context, a Actor, id int64) error {
 		if existing {
 			return nil
 		}
-		if !s.allow(a.ID, "group_join", 20, time.Hour) {
-			return platform.ErrForbidden
+		if err := reserve(); err != nil {
+			return err
 		}
 		if _, err := tx.Exec(ctx, `INSERT INTO social_groupmembership(group_id,user_id,role,state,joined_at) VALUES($1,$2,'member','member',now()) ON CONFLICT(group_id,user_id) DO UPDATE SET state='member'`, id, a.ID); err != nil {
 			return err
