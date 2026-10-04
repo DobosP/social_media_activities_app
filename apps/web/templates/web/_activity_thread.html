@@ -95,28 +95,44 @@
       <label class="visually-hidden" for="{{ post_form.body.id_for_label }}">{% trans "Write a message" %}</label>
       {{ post_form.body }}
       <div class="row compose-row">
-        <label class="visually-hidden" for="{{ post_form.attachment.id_for_label }}">{% if video_enabled %}{% trans "Attach a photo, PDF, or short video" %}{% else %}{% trans "Attach a photo or PDF" %}{% endif %}</label>
+        {# The offline reference supplies legacy fields; native callers always set the marker. #}
+        {% if not media_capabilities_supplied or attachments_enabled %}
+        <label class="visually-hidden" for="{{ post_form.attachment.id_for_label }}">{% if video_enabled %}{% if not media_capabilities_supplied or file_enabled %}{% trans "Attach a photo, PDF, or short video" %}{% else %}{% trans "Attach a photo or short video" %}{% endif %}{% else %}{% if not media_capabilities_supplied or file_enabled %}{% trans "Attach a photo or PDF" %}{% else %}{% trans "Attach a photo" %}{% endif %}{% endif %}</label>
         <input type="file" name="attachment" id="{{ post_form.attachment.id_for_label }}"
-               accept="image/png,image/jpeg,image/webp,application/pdf{% if video_enabled %},video/mp4,video/quicktime,video/webm{% endif %}">
+               accept="{% if media_capabilities_supplied %}{{ attachment_accept }}{% else %}image/png,image/jpeg,image/webp,application/pdf{% if video_enabled %},video/mp4,video/quicktime,video/webm{% endif %}{% endif %}">
         <label class="muted compose-select-label">
           🕓 <span class="visually-hidden">{% trans "Make this picture temporary" %}</span>
           <select name="disappear">
             <option value="">{% trans "Keep" %}</option>
             {% for secs, label in ephemeral_options %}<option value="{{ secs }}">{% blocktrans %}Disappear after {{ label }}{% endblocktrans %}</option>{% endfor %}
           </select></label>
+        {% endif %}
         <button class="btn btn-sm" type="submit">{% trans "Post" %}</button>
       </div>
       <label class="compose-ping-label">
         <input type="checkbox" name="ping" value="on">
         {% blocktrans %}Notify the people I&nbsp;<span class="mention">@mention</span>{% endblocktrans %}
         <span class="muted">{% trans "(off = they just see the tag)" %}</span></label>
+      {% if not media_capabilities_supplied or attachments_enabled %}
       {% if video_enabled %}
+        {% if not media_capabilities_supplied or file_enabled %}
         <p class="muted compose-upload-note">{% blocktrans with secs=video_max_seconds %}Photos, PDFs &amp; short videos
           (up to {{ secs }}s) are private to members and safety-screened on upload. A video takes a
           moment to appear while it is prepared.{% endblocktrans %}</p>
+        {% else %}
+        <p class="muted compose-upload-note">{% blocktrans with secs=video_max_seconds %}Photos &amp; short videos
+          (up to {{ secs }}s) are private to members and safety-screened on upload. A video takes a
+          moment to appear while it is prepared.{% endblocktrans %}</p>
+        {% endif %}
       {% else %}
+        {% if not media_capabilities_supplied or file_enabled %}
         <p class="muted compose-upload-note">{% blocktrans %}Photos &amp; PDFs are private to
           members and safety-screened on upload. No video.{% endblocktrans %}</p>
+        {% else %}
+        <p class="muted compose-upload-note">{% blocktrans %}Photos are private to members and
+          safety-screened on upload. No video.{% endblocktrans %}</p>
+        {% endif %}
+      {% endif %}
       {% endif %}
     </form>
     {% comment %}Live region: announces ONLY the viewer's own send + new announcements (never every

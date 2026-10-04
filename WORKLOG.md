@@ -3,6 +3,48 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-04 — Review media policy controls
+
+Valid until: the review fixes are integrated/requalified or superseded — then treat as history.
+
+Fixed both confirmed P2 native projection gaps under ADR-0034. Thread disappearance choices apply
+the service's current adult/minor floor, deduplicate collapsed choices and label the effective
+seconds. The HTML submit path accepts those effective choices and the source baseline values;
+actual media publication retains its existing clamp. Zero/blank Keep retain no expiry.
+
+Composer image/PDF/video flags and the accepted MIME set use the same cohort/attachment/file/video
+policy as upload admission. Attachment-disabled/missing-media views hide attachment/timer/help
+controls while retaining text posting. Minor viewers see images only. Video still requires the
+processor's runtime video switch. Private scan, membership/cohort, storage and serving gates are
+unchanged; no source admission gate or codec implementation was relaxed.
+
+Preact intentionally excludes thread detail/composition and group composition remains text-only.
+The existing native HTML context/template is the required projection; no new SPA thread feature
+or frontend bundle change was made. An explicit native-context marker preserves the shared template's
+offline reference baseline only when the marker is absent. Native explicit false/missing media
+never falls back. No Python runtime or authcore source is changed in this lane.
+
+Go1.27.1 with task-owned caches, GOWORK=off/GOMAXPROCS=2/GOFLAGS=-p=2:
+- Race-enabled media binary: `TestComposerCapabilitiesFollowCohortPolicyAndCodecSwitch`,
+  `TestDisappearanceChoicesUseEffectiveFloorAndPreserveKeep`, existing policy/token TTL regression,
+  nondefault image/attachment-cap codec regression and nondefault video/denser-scan codec regression:
+  five top-level tests pass, zero skips, real codecs in the already qualified Go-only image.
+- Race-enabled web binary with explicit disposable `-web-domain-test-dsn`: three new composer cases
+  pass, covering 14 actual rendered policy/cohort modes plus 7200/legacy3600/0/blank multipart,
+  persisted two-hour or nil expiry, member PDF download, signed viewer binding, nonmember privacy,
+  scanner rejection with no orphan post/attachment, and old marker-absent template controls.
+  Four existing activity-thread/private-read,
+  adult PDF, minor/guardian and scanner-rollback regressions pass. Seven web tests total, zero skips.
+- `go -C services/server vet ./internal/media ./internal/web`, gofmt and `git diff --check` pass.
+- Doc gate passes: files=52 dead_links=0 stale_terms=0 retired_verbs=0 orphans=0.
+
+All DB records, scanner verdicts and uploads were synthetic on internal network go-review-media-net
+with private go-review-media-db, source read-only and no published ports. Test containers use the
+scratch-owning UID; an initial default-image UID couldn't create TempDir and was corrected before
+qualification. No full suite was rerun; root owns combined-source requalification/image rebuild.
+No push, deployment, real provider/ingestion/scheduler/minor activation; original retained budget
+worktree/stash/scratch are untouched. Logs remain in `_temp/go-review-media/tests/`.
+
 ## 2026-10-04 — Shared-budget fixture qualification
 
 Valid until: combined integration/landing verification — then treat as history.
