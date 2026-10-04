@@ -58,8 +58,8 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   HTML/SPA hydration, booking/donations, notifications/discovery, native schema adoption and jobs.
   The default Docker/Compose/systemd/Render/cloud-init launch paths invoke Go. Shared authentication
   is a hash-verified portable copy; Django remains offline contract/reference tooling.
-- The owner approved landing both Go conversions on 2026-10-04; the qualified native backend
-  replaces the public-only scope. Social deployment/provider/minor launch gates remain separate.
+- The owner-approved Go conversion is merged and pushed to `origin/main` on 2026-10-04.
+  Social deployment/provider/minor launch gates remain separate from source landing.
 
 ## Safety and operating gates
 
