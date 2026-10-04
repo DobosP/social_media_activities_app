@@ -120,6 +120,19 @@ func (s *Service) Gate(ctx context.Context, a platform.Actor) error {
 	}
 	return nil
 }
+
+// gateTx orders owned operator writes against permission revocation. The actor
+// row remains locked until both the domain mutation and audit have committed.
+func (s *Service) gateTx(ctx context.Context, tx pgx.Tx, a platform.Actor) error {
+	var active, staff bool
+	if err := tx.QueryRow(ctx, `SELECT is_active,is_staff FROM accounts_user WHERE id=$1 FOR UPDATE`, a.ID).Scan(&active, &staff); err != nil {
+		return err
+	}
+	if !active || !staff {
+		return platform.ErrForbidden
+	}
+	return nil
+}
 func (s *Service) Models(ctx context.Context, a platform.Actor) ([]Model, error) {
 	if err := s.Gate(ctx, a); err != nil {
 		return nil, err
@@ -243,12 +256,8 @@ func (s *Service) executeOne(ctx context.Context, a platform.Actor, model, actio
 		}
 	}
 	return platform.Transaction(ctx, s.DB, func(tx pgx.Tx) error {
-		var active, staff bool
-		if err := tx.QueryRow(ctx, `SELECT is_active,is_staff FROM accounts_user WHERE id=$1`, a.ID).Scan(&active, &staff); err != nil {
+		if err := s.gateTx(ctx, tx, a); err != nil {
 			return err
-		}
-		if !active || !staff {
-			return platform.ErrForbidden
 		}
 		target := fmt.Sprintf("%s:%d", model, id)
 		event := "admin." + action

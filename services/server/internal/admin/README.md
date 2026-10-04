@@ -33,9 +33,50 @@ The safety console remains the native `/moderation/` service for reports, appeal
 formative concerns and human teen notes. Raw Django admin edits to account age/cohort,
 consent, memberships, payment settlement, scanner verdicts and E2EE ciphertext are
 intentionally rejected here; the corresponding native verification, guardian, voting,
-payment, scanning and messaging services own those transitions. Account permission
-management and source-style unrestricted model deletion need explicit reviewed policy
-operations before those conveniences can be advertised as equivalent operator features.
+payment, scanning and messaging services own those transitions. Unrestricted model
+deletion remains outside this interface.
+
+## Reviewed account permissions
+
+[ADR-0035](../../../../docs/adr/0035-guarded-permissions-private-schema.md) records the
+guarded native permission policy. In `/admin/accounts/user/` (also
+`/admin/accounts.user/`), a current active staff superuser with `role=admin` receives
+the permission form. An operator sees account summaries without this form; a role-only
+moderator uses `/moderation/` and receives no access to the model console.
+
+Select one account record ID and a complete permission level, enter a required review
+reason (at most 2000 characters), then submit the same-origin CSRF-protected form:
+
+| Level | Native role | Staff console | Superuser / permission management |
+|---|---|---|---|
+| User | `user` | no | no |
+| Moderator | `moderator` | no | no |
+| Operator | `user` | yes | no |
+| Administrator | `admin` | yes | yes |
+
+`ChangePermissions` reloads actor and target in its transaction. Adult managers and
+newly privileged targets need the latest actual adult assurance to remain current,
+matching verified adult age/cohort flags. A dedicated unverified/unassigned administrator
+can manage permissions only with its native administrator-bootstrap audit provenance;
+this grants no product participation. Grants to minors, inactive, pending or expired
+accounts fail. Reductions can repair unsafe legacy permissions. Self-escalation fails.
+Legacy Django groups and individual permissions are not native capability inputs.
+
+Permission changes serialize and lock the involved accounts; removing an administrator
+requires another currently eligible manager. Safety sanctions and GDPR erasure retain
+their independent authority to restrict/delete any account, including the final admin.
+Every effective change records only before/after permission fields and the review reason
+in the governed audit, then revokes all target native sessions and API tokens in the same
+transaction. Audit failure rolls everything back. Exact no-ops preserve credentials and
+create no change audit. Targets must sign in again after a change; existing OAuth identity
+links do not cache administrative capabilities. Permission fields grant neither private
+thread membership nor cross-cohort messaging/parental authority.
+
+Owned curated saves, event review and local operator actions lock/recheck current staff
+authority in their transaction. Existing delegated domain services retain their own gates;
+requests already authorized before a revocation may finish. Subsequent HTTP requests and
+live deliveries reload credentials and current authority. Human auth/privacy review still
+precedes landing this change.
 
 Qualification uses the explicit `-admin-test-dsn` flag and synthetic isolated schemas.
 Tests exercise every source summary query, fresh staff revocation, unknown-field and

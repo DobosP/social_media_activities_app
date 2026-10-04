@@ -1,7 +1,7 @@
 # ADR ledger — claimed numbers
 
 Claim the next free number **here, in the same commit as the ADR file**, so two parallel worktrees
-never mint the same number. Next free number: **0037** (0034–0035 are reserved completion lanes). Template: [`0000-template.md`](0000-template.md).
+never mint the same number. Next free number: **0037** (0034 is reserved for the configuration lane). Template: [`0000-template.md`](0000-template.md).
 ADRs are append-only: a reversal is a new ADR that flips the old one's `Status:` to `superseded-by ADR-NNNN`.
 On conflict: `STATUS.md` > newest-dated ADR > every other doc.
 
@@ -41,6 +41,7 @@ On conflict: `STATUS.md` > newest-dated ADR > every other doc.
 | 0031 | [go-public-serving-foundation](0031-go-public-serving-foundation.md) | scope superseded by 0032 | 2026-10-04 |
 | 0032 | [complete-native-go-backend](0032-complete-native-go-backend.md) | accepted; owner-approved main landing | 2026-10-04 |
 | 0033 | [postgresql-shared-rate-budgets](0033-postgresql-shared-rate-budgets.md) | proposed for integration review | 2026-10-04 |
+| 0035 | [guarded-permissions-private-schema](0035-guarded-permissions-private-schema.md) | proposed; human auth/privacy review before landing | 2026-10-04 |
 | 0036 | [fresh-participation-authority](0036-fresh-participation-authority.md) | proposed; locally qualified, human review pending | 2026-10-04 |
 
 ⚠ **0009 is claimed twice** — this ledger exists so it does not happen again. Both files stay:

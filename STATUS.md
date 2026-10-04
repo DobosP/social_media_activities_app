@@ -60,11 +60,12 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Open work
 
-- Three isolated completion lanes are implementing shared budgets, configuration/error reporting and guarded
+- ADR-0035 review candidate adds guarded administrator permissions and complete private API field
+  contracts (378 operations/316 paths/145 schemas); human auth/privacy review precedes landing.
+
+- Three isolated completion lanes cover shared budgets, configuration/error reporting and guarded
   permissions/private API schemas. Candidate qualification/review is pending; origin/main remains the base conversion.
 
-- Owner-approved native administration keeps the documented governed transitions; unrestricted
-  raw identity/consent/media/payment edits are unavailable. Production launch remains unperformed.
 - Build/promote a fresh immutable producer/server V2 release before real sync;
   the serving repo's producer dependency must be intentionally bumped first.
 - Complete held-event review UX, curated cultural child-venue policy, localized
@@ -80,6 +81,13 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   owner note 2026-07-02): reconcile by ADR before procurement. Never `terraform apply` without owner go-ahead.
 
 ## Verification record (newest first)
+
+- 2026-10-04 ADR-0035 candidate: native race/vet and auth hashes pass; isolated admin 18,
+  accounts 14 and web 30 race tests pass, no skips. Schema source/wire coverage passes. Doc gate:
+  files=52 dead_links=0 stale_terms=0 retired_verbs=0 orphans=0. No production verification.
+- Earlier owner-approved conversion: 173 PostgreSQL/codec tests passed on PG16.15 Bookworm,
+  native/reference/public CI green (37211779358/395/372); no fixable HIGH/CRITICAL image findings.
+  Source/package scans pass after compress1.18.7; module/analyzer limits remain in WORKLOG.
 
 - 2026-10-04 readiness guide now describes native rollout/recovery and product gates; historical Python
   planning is archived. Fresh-authority baseline (ADR-0036):175 PG/codec race contracts pass, zero skips; combined review pending.
