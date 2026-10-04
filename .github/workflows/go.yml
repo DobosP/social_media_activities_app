@@ -1,11 +1,13 @@
 name: Go public API
 
+# Run from Actions > Run workflow only when requested or needed for a specific change.
 on:
-  push:
-    branches: [main]
-  pull_request:
-  schedule:
-    - cron: "20 6 * * *"
+  workflow_dispatch:
+    inputs:
+      audit_only:
+        description: Run dependency vulnerability audits without the full test/build jobs
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -16,7 +18,7 @@ concurrency:
 
 jobs:
   quality:
-    if: github.event_name != 'schedule'
+    if: ${{ !inputs.audit_only }}
     runs-on: ubuntu-latest
     defaults:
       run:
