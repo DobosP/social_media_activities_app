@@ -18,6 +18,9 @@ func (s *Service) ReviewEvent(ctx context.Context, a platform.Actor, id int64, r
 		return platform.ErrInvalid
 	}
 	return platform.Transaction(ctx, s.DB, func(tx pgx.Tx) error {
+		if err := s.gateTx(ctx, tx, a); err != nil {
+			return err
+		}
 		var source, status, pack, license, provenance string
 		var tombstone bool
 		var confidence *float64

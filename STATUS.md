@@ -76,8 +76,8 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Open work
 
-- Owner-approved native administration keeps the documented governed transitions; unrestricted
-  raw identity/consent/media/payment edits are unavailable. Production launch remains unperformed.
+- ADR-0035 review candidate adds guarded administrator permissions and complete private API field
+  contracts (378 operations/316 paths/145 schemas); human auth/privacy review precedes landing.
 - Build/promote a fresh immutable producer/server V2 release before real sync;
   the serving repo's producer dependency must be intentionally bumped first.
 - Complete held-event review UX, curated cultural child-venue policy, localized
@@ -94,12 +94,12 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
-- 2026-10-04 owner-approved conversion: native race/vet and portable auth hashes pass. Fresh Go-only
-  bootstrap + **173 PostgreSQL/codec tests** passed with no skips; final affected app/media/account
-  checks also pass. Source/package vulnerability scans pass after compress1.18.7; unimported
-  openpgp module advisory and stripped-binary analyzer limits are recorded in WORKLOG.
-  Exact-head native/reference/public CI is green (37211779358/395/372); image gate has zero
-  fixable HIGH/CRITICAL findings. All173 contracts pass on canonicalPG16.15 Bookworm too.
+- 2026-10-04 ADR-0035 candidate: native race/vet and auth hashes pass; isolated admin 18,
+  accounts 14 and web 30 race tests pass, no skips. Schema source/wire coverage passes. Doc gate:
+  files=52 dead_links=0 stale_terms=0 retired_verbs=0 orphans=0. No production verification.
+- Earlier owner-approved conversion: 173 PostgreSQL/codec tests passed on PG16.15 Bookworm,
+  native/reference/public CI green (37211779358/395/372); no fixable HIGH/CRITICAL image findings.
+  Source/package scans pass after compress1.18.7; module/analyzer limits remain in WORKLOG.
 
 ## Standard verification
 Native race/vet + shared-source hash verification; every database/codec contract runs with an

@@ -25,8 +25,12 @@ func (s *Server) publicSchema() map[string]any {
 	for _, key := range []string{"categories", "category_labels"} {
 		place[key] = map[string]any{"type": "array", "items": scalar("string")}
 	}
-	place["open_now"] = map[string]any{"nullable": true, "oneOf": []any{scalar("boolean"), map[string]any{"type": "string", "enum": []string{"unverified"}}}}
-	place["opening_hours"] = map[string]any{"type": "object", "nullable": true}
+	place["open_now"] = map[string]any{"oneOf": []any{scalar("boolean"), map[string]any{"type": "string", "enum": []string{"unverified"}}, map[string]any{"type": "object", "nullable": true, "enum": []any{nil}}}}
+	schedule := map[string]any{}
+	for _, day := range []string{"mo", "tu", "we", "th", "fr", "sa", "su"} {
+		schedule[day] = map[string]any{"type": "array", "items": map[string]any{"type": "array", "items": scalar("integer"), "minItems": 2, "maxItems": 2}}
+	}
+	place["opening_hours"] = map[string]any{"type": "object", "nullable": true, "properties": schedule, "additionalProperties": false}
 	place["activities"] = map[string]any{"type": "array", "items": map[string]any{"type": "object", "properties": map[string]any{"slug": scalar("string"), "name": scalar("string"), "confidence": scalar("number"), "origin": scalar("string"), "source": scalar("string"), "mapping_rule": scalar("string")}}}
 	schemas := map[string]any{"Event": map[string]any{"type": "object", "properties": event}, "PlaceFeature": map[string]any{"type": "object", "properties": map[string]any{"id": scalar("integer"), "type": map[string]any{"type": "string", "enum": []string{"Feature"}}, "geometry": map[string]any{"type": "object", "properties": map[string]any{"type": map[string]any{"type": "string", "enum": []string{"Point"}}, "coordinates": map[string]any{"type": "array", "items": scalar("number"), "minItems": 2, "maxItems": 2}}}, "properties": map[string]any{"type": "object", "properties": place}}}}
 	paths := map[string]any{}
@@ -64,5 +68,5 @@ func (s *Server) publicSchema() map[string]any {
 	}
 	s.publicCatalogSchema(paths, schemas)
 	operationCount := s.publicInventorySchema(paths, schemas)
-	return map[string]any{"openapi": "3.0.3", "info": map[string]any{"title": "Activities native public API", "version": "1.0.0", "description": "Public venues and events retain license and access metadata. Private account/social APIs require authenticated cohort authorization; mutations additionally require same-origin CSRF. Minor meetups and identities are never published."}, "paths": paths, "x-native-api-operation-count": operationCount, "components": map[string]any{"schemas": schemas, "securitySchemes": map[string]any{"cookieAuth": map[string]any{"type": "apiKey", "in": "cookie", "name": "sessionid"}, "tokenAuth": map[string]any{"type": "apiKey", "in": "header", "name": "Authorization", "description": "Use Token followed by a space and the 40-character hexadecimal API token; Bearer is not accepted."}}}}
+	return map[string]any{"openapi": "3.0.3", "info": map[string]any{"title": "Activities native API", "version": "1.0.0", "description": "Public venues and events retain license and access metadata. Private account/social APIs require authenticated cohort authorization; session-cookie mutations require same-origin CSRF, and login/signup/logout always require CSRF. Minor meetups and identities are never published."}, "paths": paths, "x-native-api-operation-count": operationCount, "components": map[string]any{"schemas": schemas, "securitySchemes": map[string]any{"stripeSignature": map[string]any{"type": "apiKey", "in": "header", "name": "Stripe-Signature", "description": "Stripe signature validation over the raw event body."}, "webhookSecret": map[string]any{"type": "apiKey", "in": "header", "name": "X-Webhook-Secret", "description": "Native payment provider webhook authentication."}, "cookieAuth": map[string]any{"type": "apiKey", "in": "cookie", "name": "sessionid"}, "tokenAuth": map[string]any{"type": "apiKey", "in": "header", "name": "Authorization", "description": "Use Token followed by a space and the 40-character hexadecimal API token; Bearer is not accepted."}}}}
 }

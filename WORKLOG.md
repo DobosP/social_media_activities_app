@@ -301,3 +301,69 @@ also passes (native37219661498/reference37219661457/public37219661432). Native s
 auth/domain/media/live/jobs and deployment entry points execute Go; client TypeScript and
 offline Python oracles remain explicit. Both repository main landing pads are clean.
 No Social production deployment or provider/minor/source activation occurred.
+
+
+## 2026-10-04 — Guarded permissions and private API field contracts (ADR-0035)
+
+Valid until: this review candidate is landed or superseded — then treat as history.
+
+Only the feat/go-admin-api-parity worktree was mutated. The shared main landing pad,
+accounts/app/main source, schema migrations and canonical shared auth were untouched.
+ADR-0035 is proposed pending human auth/privacy review. Root coordinates source integration,
+publishing, combined regression and landing; no push, deployment, real ingestion, scheduler,
+provider/minor activation, production-data read or production verification occurred here.
+
+Native account permissions are complete presets: user, role-only moderator, staff operator
+and staff superuser administrator. A current active staff superuser with role admin and
+current actual adult assurance (or audit-provenance-backed native bootstrap exception)
+is the only permission manager. Actor/target reload and row locking, serialized concurrent
+changes, current eligible remaining-manager checks and anti-self escalation protect the
+transition. Grants require current adult proof; reductions can repair unsafe legacy state.
+Only role/staff/superuser fields change. Existing sessions and API tokens are revoked on
+both grants and reductions; audit failure rolls back permissions and credentials together.
+Django group/individual grants do not enter native actor authority. Owned curated/event/
+local action writes additionally lock/recheck current staff authority inside their transaction.
+Safety sanctions and GDPR erasure can still restrict/delete any administrator. Existing
+already-authorized delegated domain operations retain their transaction semantics.
+
+The existing native admin account page exposes a CSRF-protected strict permission form
+only to fresh eligible managers. Synthetic tests cover presets, stale/forged authority,
+expired/missing/latest/mismatched proof, bootstrap provenance, last-admin self/mutual
+concurrent demotion, credential revocation on grants/reductions, stable OAuth subject links
+with fresh capabilities, audit rollback, legacy Django joins, private membership/contact
+walls, unchanged child consent, no-ops and raw/duplicate form rejection. An added external
+identity test initially used an unsupported provider name; its fixture was corrected to a
+supported provider with a synthetic subject, with no external network call. Final suite passes.
+
+Private OpenAPI describes all 378 native API operations, 316 registered paths and 145 component
+schemas, correcting the earlier 330-path claim. Actual named DTOs supply reflected field
+contracts; anonymous request structs and map/SQL/export projections have reviewed field
+contracts. Coverage tests walk actual source registrations, match 19 anonymous request DTOs,
+17 SQL projections plus 10 export sections, and validate 11 synthetic wire fixtures plus
+nullability/JWK/recovery/negative listings/auth/media/status/security/privacy cases. Schema
+construction supports nullable referenced values and nil slices, base64 JSON byte strings,
+custom decimal inputs and explicitly domain-extensible JSON. No live person examples or
+credentials are embedded. The schema contract tests caught and fixed nil-slice nullability.
+
+Exact gates on the final source use Go 1.27.1 from
+/mnt/data/decision-lab-runtime/kev-native/toolchain/go/bin/go with GOWORK=off,
+GOMAXPROCS=2,GOFLAGS=-p=2,GOPROXY=off and GOCACHE/GOMODCACHE/TMPDIR entirely under
+/home/dobo/work/_temp/go-admin-api-parity. Public pinned modules were downloaded there;
+no system caches were written. `go -C services/server test -race ./...` and
+`go -C services/server vet ./...` pass; the race suite needs approved loopback test sockets
+(the default sandbox denied existing httptest listeners). Shared auth hash verification
+`go -C services/server run ./cmd/check-authcore` passes. Targeted schema race tests also pass.
+
+Task-owned go-admin-api-parity-test Docker network and go-admin-api-parity-db contain only
+synthetic fixture rows, no published ports. The approved social-native-db:go-complete-20261004
+was bootstrapped with the approved social-native:go-complete-20261004 native migrate-only
+command. Race binaries compiled with `go test -race -c` for internal/admin,accounts,web ran
+read-only/no-new-privileges/cap-drop=ALL as UID/GID1000 against that explicit disposable DSN,
+with source read-only and TMPDIR under task scratch. All 62 top-level package tests pass:
+admin 18, accounts 14, web 30; zero skips/failures. AVIF/WebP/FFmpeg codec image is Go-only.
+Logs and test binaries remain in task scratch for coordinator review/cleanup after landing.
+
+`python3 /home/dobo/work/agent-ops/scripts/check_docs.py .` passes:
+files=52 dead_links=0 stale_terms=0 retired_verbs=0 orphans=0.
+`git diff --check` and native gofmt checks pass. This local qualification is not production
+verification and does not substitute for the human sensitive-code review/combined landing gates.

@@ -19,7 +19,7 @@ type HTTP struct {
 	Auth    CSRF
 }
 
-var page = template.Must(template.New("admin").Parse(`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Operations</title><main><h1>Operations</h1><p><a href="/admin/">Model index</a> · <a href="/moderation/">Moderation queue</a></p>{{if .Message}}<p role="status">{{.Message}}</p>{{end}}{{if .Models}}<ul>{{range .Models}}<li><a href="/admin/{{.Name}}/">{{.Name}}</a>{{if .Editable}} — curated fields{{end}}</li>{{end}}</ul>{{else}}<h2>{{.Model}}</h2><pre>{{.Rows}}</pre>{{if .Actions}}<form method="post"><input type="hidden" name="csrfmiddlewaretoken" value="{{.CSRF}}"><label>Action<select name="action">{{range .Actions}}<option value="{{.}}">{{.}}</option>{{end}}</select></label><label>Selected record IDs<input name="ids" required placeholder="1,2"></label><label>Review notes<textarea name="reason" maxlength="2000"></textarea></label><button>Apply reviewed action</button></form>{{end}}{{if .Editable}}<h3>Curated data</h3><p>Allowed fields and types:</p><pre>{{.Fields}}</pre><form method="post"><input type="hidden" name="csrfmiddlewaretoken" value="{{.CSRF}}"><input type="hidden" name="operation" value="save"><label>Record ID (0 creates a record)<input type="number" name="id" value="0" min="0" required></label><label>Fields (JSON object)<textarea name="fields" rows="12" cols="72" required></textarea></label><button>Save curated data</button></form>{{end}}{{end}}</main></html>`))
+var page = template.Must(template.New("admin").Parse(`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Operations</title><main><h1>Operations</h1><p><a href="/admin/">Model index</a> · <a href="/moderation/">Moderation queue</a></p>{{if .Message}}<p role="status">{{.Message}}</p>{{end}}{{if .Models}}<ul>{{range .Models}}<li><a href="/admin/{{.Name}}/">{{.Name}}</a>{{if .Editable}} — curated fields{{end}}</li>{{end}}</ul>{{else}}<h2>{{.Model}}</h2><pre>{{.Rows}}</pre>{{if .Actions}}<form method="post"><input type="hidden" name="csrfmiddlewaretoken" value="{{.CSRF}}"><label>Action<select name="action">{{range .Actions}}<option value="{{.}}">{{.}}</option>{{end}}</select></label><label>Selected record IDs<input name="ids" required placeholder="1,2"></label><label>Review notes<textarea name="reason" maxlength="2000"></textarea></label><button>Apply reviewed action</button></form>{{end}}{{if .Permissions}}<h3>Platform permissions</h3><p>Grants require a verified adult. Changes revoke existing sessions and API tokens. A permission change cannot remove the last administrator.</p><form method="post"><input type="hidden" name="csrfmiddlewaretoken" value="{{.CSRF}}"><input type="hidden" name="operation" value="permissions"><label>Account record ID<input type="number" name="id" min="1" required></label><label>Permission level<select name="level"><option value="user">User — ordinary account</option><option value="moderator">Moderator — moderation console</option><option value="operator">Operator — curated administration and moderation</option><option value="administrator">Administrator — operator and permission management</option></select></label><label>Review reason<textarea name="reason" maxlength="2000" required></textarea></label><button>Apply reviewed permission change</button></form>{{end}}{{if .Editable}}<h3>Curated data</h3><p>Allowed fields and types:</p><pre>{{.Fields}}</pre><form method="post"><input type="hidden" name="csrfmiddlewaretoken" value="{{.CSRF}}"><input type="hidden" name="operation" value="save"><label>Record ID (0 creates a record)<input type="number" name="id" value="0" min="0" required></label><label>Fields (JSON object)<textarea name="fields" rows="12" cols="72" required></textarea></label><button>Save curated data</button></form>{{end}}{{end}}</main></html>`))
 
 func (h HTTP) Register(mux *http.ServeMux) {
 	mux.HandleFunc("GET /admin/{$}", h.ServeHTTP)
@@ -60,7 +60,27 @@ func (h HTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			platform.Error(w, 403, "CSRF verification failed.")
 			return
 		}
-		if r.PostForm.Get("operation") == "save" {
+		if r.PostForm.Get("operation") == "permissions" {
+			for key, values := range r.PostForm {
+				if len(values) != 1 || (key != "operation" && key != "id" && key != "level" && key != "reason" && key != "csrfmiddlewaretoken") {
+					platform.Fail(w, platform.ErrInvalid)
+					return
+				}
+			}
+			id, err := strconv.ParseInt(r.PostForm.Get("id"), 10, 64)
+			if model != "accounts.user" || err != nil {
+				platform.Fail(w, platform.ErrInvalid)
+				return
+			}
+			if err = h.Service.ChangePermissions(r.Context(), a, id, PermissionLevel(r.PostForm.Get("level")), r.PostForm.Get("reason")); err != nil {
+				platform.Fail(w, err)
+				return
+			}
+			// Self-revocation also revokes this request's credential. A fresh GET
+			// must reload authority rather than render another model projection.
+			http.Redirect(w, r, "/admin/", http.StatusSeeOther)
+			return
+		} else if r.PostForm.Get("operation") == "save" {
 			id, err := strconv.ParseInt(r.PostForm.Get("id"), 10, 64)
 			fields := map[string]json.RawMessage{}
 			if err != nil || json.Unmarshal([]byte(r.PostForm.Get("fields")), &fields) != nil {
@@ -118,6 +138,7 @@ func (h HTTP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		data["Rows"], data["Actions"], data["Editable"] = string(raw), m.Actions, m.Editable
 		fields, _ := json.MarshalIndent(EditableFields(model), "", "  ")
 		data["Fields"] = string(fields)
+		data["Permissions"] = model == "accounts.user" && h.Service.PermissionGate(r.Context(), a) == nil
 	}
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")

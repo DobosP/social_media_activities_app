@@ -191,6 +191,9 @@ func (s *Service) Save(ctx context.Context, a platform.Actor, model string, id i
 	}
 	sort.Strings(keys)
 	err := platform.Transaction(ctx, s.DB, func(tx pgx.Tx) error {
+		if err := s.gateTx(ctx, tx, a); err != nil {
+			return err
+		}
 		if model == "events.event" && id > 0 {
 			var source string
 			if err := tx.QueryRow(ctx, `SELECT source FROM events_event WHERE id=$1 FOR UPDATE`, id).Scan(&source); err != nil {
