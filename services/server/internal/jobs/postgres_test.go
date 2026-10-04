@@ -12,6 +12,7 @@ import (
 	"github.com/DobosP/social_media_activities_app/services/server/internal/ops"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/safety"
+	nativeschema "github.com/DobosP/social_media_activities_app/services/server/internal/schema"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/social"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -82,6 +83,10 @@ func jobFixture(t *testing.T) *Runner {
 		_, _ = admin.Exec(context.Background(), "DROP SCHEMA "+quoted+" CASCADE")
 		admin.Close()
 	})
+	// LIKE fixtures also need the native functions, capacity seed and triggers.
+	if err = nativeschema.Migrate(ctx, db); err != nil {
+		t.Fatal(err)
+	}
 	store := accounts.NewStore(db)
 	if err = store.Migrate(ctx); err != nil {
 		t.Fatal(err)

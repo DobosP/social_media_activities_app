@@ -16,6 +16,7 @@ import (
 
 	"github.com/DobosP/social_media_activities_app/services/server/internal/chat"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
+	nativeschema "github.com/DobosP/social_media_activities_app/services/server/internal/schema"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/social"
 	"github.com/coder/websocket"
 	"github.com/jackc/pgx/v5"
@@ -79,6 +80,10 @@ func fixture(t *testing.T) *Service {
 		}
 		admin.Close()
 	})
+	// LIKE fixtures also need the native functions, capacity seed and triggers.
+	if e = nativeschema.Migrate(ctx, db); e != nil {
+		t.Fatal(e)
+	}
 	if e = EnsureSchema(ctx, db); e != nil {
 		t.Fatal(e)
 	}

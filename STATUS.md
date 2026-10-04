@@ -93,9 +93,9 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
-- 2026-10-04 shared budgets worker: native race/vet passes; nine race-enabled budget tests pass on an
-  isolated synthetic PG fixture, including concurrency/capacity/expiry/erasure/low-pool replay. Full domain
-  fixture qualification and CLI wiring pending; doc gate files=52, all findings=0; no production verification.
+- 2026-10-04 shared budgets worker: **194 native fixture tests across 18 packages** pass, zero skips,
+  including shared limits, replay, expiry, privacy/erasure and actual policy overrides. Race/vet/auth hashes
+  pass; doc gate files=52/all findings=0. Combined CLI and production verification remain coordinator gates.
 
 - 2026-10-04 owner-approved conversion: native race/vet and portable auth hashes pass. Fresh Go-only
   bootstrap + **173 PostgreSQL/codec tests** passed with no skips; final affected app/media/account
