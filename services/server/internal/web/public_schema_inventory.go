@@ -68,7 +68,11 @@ func (s *Server) publicInventorySchema(paths, schemas map[string]any) int {
 		}
 		response := map[string]any{"description": "Gate-filtered native domain result"}
 		if contract.response != nil {
-			response["content"] = map[string]any{"application/json": map[string]any{"schema": contract.response}}
+			kind := contract.responseType
+			if kind == "" {
+				kind = "application/json"
+			}
+			response["content"] = map[string]any{kind: map[string]any{"schema": contract.response}}
 		}
 		responses[strconv.Itoa(contract.status)] = response
 		description := "Current authentication, cohort, consent, membership, blocking and publication gates apply before access. Cookie mutations require same-origin CSRF; API tokens remain subject to current actor authorization."

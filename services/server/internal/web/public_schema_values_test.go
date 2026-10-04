@@ -227,6 +227,10 @@ func validateSchemaValue(shape map[string]any, value any, schemas map[string]any
 				}
 			} else if shape["additionalProperties"] == false {
 				return fmt.Errorf("unexpected field %s", name)
+			} else if child, ok := shape["additionalProperties"].(map[string]any); ok {
+				if err := validateSchemaValue(child, value, schemas); err != nil {
+					return fmt.Errorf("%s: %w", name, err)
+				}
 			}
 		}
 	case "array":
