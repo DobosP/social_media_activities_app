@@ -1,0 +1,50 @@
+{
+  "date": "2026-10-04",
+  "candidate_image": "social-native:go-complete-20261004",
+  "candidate_id": "sha256:5be6ef11891d47a64a895922ca43645ce84aafcaaf3f3ee84fe3d0fd30807098",
+  "candidate_image_bytes": 576164007,
+  "reference_image": "social-native-reference:go-complete-20261004",
+  "reference_id": "sha256:af596fcae0584103aff20dd12dfe1c63193690ffa103948f000dfd3e78a99472",
+  "reference_image_bytes": 978640184,
+  "qualification": {
+    "runtime_user": "10001:10001",
+    "read_only": true,
+    "cap_drop": "ALL",
+    "no_new_privileges": true,
+    "python_interpreter_present": false,
+    "required_codecs_present": ["ffmpeg", "ffprobe", "avifenc", "prlimit"],
+    "explicit_dev_container_flag_present": true,
+    "dev_container_health": "healthy",
+    "production_style_health": "healthy",
+    "actual_host_loopback_health_ready": "passed through credential-free GET-only127.0.0.1:18284 proxy to fixedinternal172.31.0.3:8000",
+    "container_direct_port_publication": "internal network suppresses NAT; no ordinary bridge attachment performed",
+    "production_https_caddy_health_ready_taxonomy": "passed over internal-CA TLS8443, fixedinternalupstream172.31.0.5:8000",
+    "plain_http_production_readiness": 301,
+    "https_security_headers": ["Strict-Transport-Security: max-age=31536000; includeSubDomains; preload", "Permissions-Policy: geolocation=(self), camera=(), microphone=(), payment=(), usb=(), interest-cohort=()", "Cross-Origin-Opener-Policy: same-origin", "X-Content-Type-Options: nosniff", "X-Frame-Options: DENY", "Referrer-Policy: same-origin", "X-Social-Runtime: go"]
+  },
+  "binary_audit": {
+    "tool": "official govulncheck1.8.0",
+    "compression_module": "github.com/klauspost/compress@v1.18.7",
+    "exact_image_binary_sha256": "88893235d84d5483519fcbb2f86808045c7c2d0624d73a0ddf6b93008ad8d852",
+    "stripped_image_result": "GO-2026-5932 module-level wildcard alert; extract contains no pkgSymbols",
+    "symbol_retained_same_source_same_modules_cgo0_trimpath_buildvcsfalse": "0called,0imported-package; one unusedxcrypto/openpgp module advisory",
+    "openpgp_import_graph": "absent from go list -deps ./cmd/social-server",
+    "cat_latest_binary": "0called,0imported-package; one unusedmodule advisory",
+    "trivy": "not available as host CLI or cached image; image OS vulnerability scan not qualified"
+  },
+  "bounded_sample": {
+    "fixture": "existing isolated task PostGIS; public-read-only HTTP; no ingestion/provider/auth/media writes",
+    "request_profile": "two endpoints;3warmup+20measured sequential requests each; reusedHTTPconnection;5s timeout;8MiB responsecap",
+    "resource_limits": "both containers1GiB/2CPU/pids128; single server process",
+    "native_prod_rss_kib_after": 26316,
+    "django_prod_rss_kib_after": 157700,
+    "clock_ticks_per_second": 100,
+    "native_prod_user_system_cpu_ticks": {"before": [9,3], "after": [11,5]},
+    "django_prod_user_system_cpu_ticks": {"before": [204,18], "after": [324,27]},
+    "taxonomy": {"native_median_ms": 1.4465385, "native_p95_ms": 1.924338, "django_median_ms": 17.6973205, "django_p95_ms": 23.030283, "measured_responses_each": 20, "status_each": 200},
+    "empty_places_limit20": {"native_median_ms": 3.951284, "native_p95_ms": 5.297971, "django_median_ms": 1216.6464015, "django_p95_ms": 1301.131626, "measured_responses_each": 20, "status_each": 200},
+    "limits": "Small warm prelaunch synthetic sample. No capacity, realdata, latencySLA, media, WebSocket, auth-write, cold-start, scale, price or cost claim. Emptyplaceendpoint especially must not be generalized. Source formats differ by normal JSON whitespace/newline. Native production profile used trusted fixed forwarding headers; realCaddyHTTPS was separately qualified."
+  },
+  "approval_review": "ordinary bridge attachment rejected and not retried; container network isolation retained. Separate credential-free allowlisted read-only host-loopback proxy was subsequently approved as a safer alternative.",
+  "activation": "no production deployment, live credentials/data, ETL, recurring jobs or infrastructure activation"
+}

@@ -1,0 +1,20 @@
+# Native Go candidate qualification
+
+Valid until: candidate code, dependencies, packaging or deployment profile changes — then requalify.
+
+The [packaging receipt](packaging-qualification.json) contains aggregate synthetic-fixture
+measurements/proofs for the native release and an exact-source Django reference. It is
+not production capacity, billing or a live-provider acceptance test. All databases and
+containers used the task-owned internal network, with no real users/data/provider calls.
+
+Native173 PostgreSQL/codec tests passed with zero skips, plus race/vet and independent
+payload/markup/cursor projections. Public HTTPS through the actual trusted Caddy fixture,
+nonroot/read-only/codec/Python-absence probes and loopback-only public HTTP proxy checks
+pass. A previously rejected ordinary-network attachment was not performed; the safer
+credential-free GET-only fixed-target proxy retained the internal fixture network.
+
+Source/imported-package and symbol-retained same-source binary vulnerability audits pass.
+The stripped-binary analyser falls back to module metadata; the unused openpgp module
+advisory is explicitly preserved. OS-image scanning is a separate CI gate.
+
+Current implementation/activation status remains in STATUS.md, decisions in ADR-0032.

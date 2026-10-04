@@ -53,3 +53,8 @@ real foreign keys, actual AVIF/WebP/FFmpeg codecs, independent Django payload/ma
 goldens, fresh/adopted/preextended bootstrap, live session revocation, erasure continuation,
 image/runtime scans and a Python-free nonroot read-only release image. Exact completed
 results belong in STATUS.md and WORKLOG.md.
+
+The canonical local/CI PostgreSQL16 image uses supported Debian Bookworm packages for
+PostGIS/vector. The previous postgis16-3.5 Bullseye base had unavailable archived security
+packages. The PostgreSQL major/volume contract stays16; migration and actual-FK fixtures
+qualify the revised build. This does not upgrade any real deployment or existing volume.

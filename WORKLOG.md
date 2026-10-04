@@ -249,3 +249,14 @@ safety12/social18/web25. All native race/vet and source/package scans pass. The 
 binary keeps symbols (same source/static build); its linked-symbol scan passes with no
 called/imported findings. Production artifact may strip symbols after that audit.
 Portable auth snapshot pins canonical Cat commitaf85e7f and verifies all file hashes.
+
+Native CI's initial database-image build exposed obsolete Bullseye repository URLs.
+The local canonical database image now builds on official PostgreSQL16 Bookworm with
+PostGIS/vector (PG16.15), preserving the major/volume contract. Native bootstrap of a
+fresh private fixture passes; full contracts are being requalified on that actual image.
+Official packaging sources: https://www.postgresql.org/download/linux/debian/ and
+https://github.com/postgis/docker-postgis (the old16-3.5 tag documents Bullseye).
+Aggregate release/HTTPS/resource receipts promoted to docs/reviews/native-go; no raw
+transcripts, credentials or database contents were promoted. The tiny warm public-read
+sample measured26,316KiB Go PID1 RSS vs157,700KiB exact-source Django; it cannot predict
+capacity or hosting bills. No unapproved network expansion was performed.
