@@ -31,6 +31,9 @@ func NewProcessor(c Config, scanner Scanner, documents DocumentScanner) (*Proces
 	if c.ScratchDir == "" || c.ImageMaxBytes < 1 || c.ImageMaxBytes > 5<<20 || c.ImageMaxPixels < 1 || c.ImageMaxPixels > 30_000_000 || c.ImageMaxSide < 1 || c.ImageMaxSide > 2048 || c.ThumbnailSide < 1 || c.ThumbnailSide > 800 || c.VideoMaxBytes < 1 || c.VideoMaxBytes > 80<<20 || c.VideoMaxSeconds <= 0 || c.VideoMaxSeconds > 90 || c.VideoSourceSide < 1 || c.VideoSourceSide > 3840 || c.VideoTargetSide < 2 || c.VideoTargetSide > 1280 || c.Threads < 1 || c.Threads > 2 || c.ConcurrentJobs < 1 || c.ConcurrentJobs > 4 || c.MemoryBytes < 64<<20 || c.MemoryBytes > 2<<30 || c.CommandTimeout <= 0 || c.CommandTimeout > 600*time.Second || c.ProbeTimeout <= 0 || c.ProbeTimeout > 60*time.Second {
 		return nil, ErrRejected
 	}
+	if err := c.ValidateEncodingPolicy(); err != nil {
+		return nil, err
+	}
 	if c.ImageFormat != "AVIF" && c.ImageFormat != "WEBP" {
 		return nil, ErrRejected
 	}
@@ -332,12 +335,12 @@ func (p *Processor) encode(ctx context.Context, dir, source, name string, w, h i
 	if ext == "avif" {
 		// libaom's documented quality64 maps to ((100-64)*63+50)/100=23.
 		// Quantizer flags support both libavif0.11 and current1.x; alpha is lossless.
-		if _, err := p.command(ctx, p.cfg.ProbeTimeout, p.cfg.Avifenc, "--codec", "aom", "--yuv", "420", "--min", "23", "--max", "23", "--minalpha", "0", "--maxalpha", "0", "--speed", "6", "--jobs", strconv.Itoa(p.cfg.Threads), "--ignore-exif", "--ignore-xmp", source, path); err != nil {
+		if _, err := p.command(ctx, p.cfg.ProbeTimeout, p.cfg.Avifenc, "--codec", "aom", "--yuv", "420", "--min", strconv.Itoa(p.avifQuantizer()), "--max", strconv.Itoa(p.avifQuantizer()), "--minalpha", "0", "--maxalpha", "0", "--speed", "6", "--jobs", strconv.Itoa(p.cfg.Threads), "--ignore-exif", "--ignore-xmp", source, path); err != nil {
 			return Artifact{}, err
 		}
 	} else {
 		args := p.ffmpegBase(source)
-		args = append(args, "-c:v", "libwebp", "-quality", "80", "-compression_level", "6", "-threads", strconv.Itoa(p.cfg.Threads), path)
+		args = append(args, "-c:v", "libwebp", "-quality", strconv.Itoa(p.webpQuality()), "-compression_level", "6", "-threads", strconv.Itoa(p.cfg.Threads), path)
 		if _, err := p.command(ctx, p.cfg.ProbeTimeout, p.cfg.FFmpeg, args...); err != nil {
 			return Artifact{}, err
 		}
@@ -471,7 +474,7 @@ func (p *Processor) ProcessVideo(ctx context.Context, path string) (m Manifest, 
 	}
 	output := filepath.Join(dir, "main.mp4")
 	scale := fmt.Sprintf("scale=min(%d\\,iw):min(%d\\,ih):force_original_aspect_ratio=decrease:force_divisible_by=2,format=yuv420p", p.cfg.VideoTargetSide, p.cfg.VideoTargetSide)
-	args := []string{"-v", "error", "-y", "-nostdin", "-max_alloc", "134217728", "-protocol_whitelist", "file", "-format_whitelist", "mov,matroska,webm", "-codec_whitelist", "h264,hevc,vp8,vp9,av1,libdav1d,mpeg4,aac,mp3,mp3float,opus,libopus,vorbis,libvorbis,mjpeg", "-max_pixels", "14745600", "-threads", "2", "-filter_threads", "1", "-i", source, "-map", "0:V:0", "-map", "0:a:0?", "-map_metadata", "-1", "-map_chapters", "-1", "-vf", scale, "-c:v", "libx264", "-profile:v", "high", "-level", "4.1", "-preset", "medium", "-crf", "23", "-c:a", "aac", "-b:a", "96k", "-ac", "2", "-metadata:s:v:0", "rotate=0", "-t", strconv.FormatFloat(p.cfg.VideoMaxSeconds, 'f', -1, 64), "-threads", strconv.Itoa(p.cfg.Threads), "-movflags", "+faststart", "-f", "mp4", output}
+	args := []string{"-v", "error", "-y", "-nostdin", "-max_alloc", "134217728", "-protocol_whitelist", "file", "-format_whitelist", "mov,matroska,webm", "-codec_whitelist", "h264,hevc,vp8,vp9,av1,libdav1d,mpeg4,aac,mp3,mp3float,opus,libopus,vorbis,libvorbis,mjpeg", "-max_pixels", "14745600", "-threads", "2", "-filter_threads", "1", "-i", source, "-map", "0:V:0", "-map", "0:a:0?", "-map_metadata", "-1", "-map_chapters", "-1", "-vf", scale, "-c:v", "libx264", "-profile:v", "high", "-level", "4.1", "-preset", p.cfg.VideoPreset, "-crf", strconv.Itoa(p.cfg.VideoCRF), "-c:a", "aac", "-b:a", p.cfg.VideoAudioBitrate, "-ac", "2", "-metadata:s:v:0", "rotate=0", "-t", strconv.FormatFloat(p.cfg.VideoMaxSeconds, 'f', -1, 64), "-threads", strconv.Itoa(p.cfg.Threads), "-movflags", "+faststart", "-f", "mp4", output}
 	if _, err = p.command(ctx, p.cfg.CommandTimeout, p.cfg.FFmpeg, args...); err != nil {
 		return m, err
 	}
@@ -481,12 +484,12 @@ func (p *Processor) ProcessVideo(ctx context.Context, path string) (m Manifest, 
 	}
 	// Frame zero is unconditional, so even a sub-interval clip gets screened.
 	pattern := filepath.Join(dir, "scan_%04d.png")
-	args = []string{"-v", "error", "-y", "-nostdin", "-protocol_whitelist", "file", "-threads", "1", "-filter_threads", "1", "-i", output, "-vf", "select=isnan(prev_selected_t)+gte(t-prev_selected_t\\,5)", "-fps_mode", "vfr", "-frames:v", "25", "-c:v", "png", "-threads", "1", pattern}
+	args = []string{"-v", "error", "-y", "-nostdin", "-protocol_whitelist", "file", "-threads", "1", "-filter_threads", "1", "-i", output, "-vf", "select=isnan(prev_selected_t)+gte(t-prev_selected_t\\," + strconv.FormatFloat(p.cfg.VideoFrameScanInterval.Seconds(), 'f', -1, 64) + ")", "-fps_mode", "vfr", "-frames:v", strconv.Itoa(p.cfg.VideoFrameScanMaxFrames), "-c:v", "png", "-threads", "1", pattern}
 	if _, err = p.command(ctx, p.cfg.CommandTimeout, p.cfg.FFmpeg, args...); err != nil {
 		return m, err
 	}
 	frames, err := filepath.Glob(filepath.Join(dir, "scan_*.png"))
-	if err != nil || len(frames) == 0 || len(frames) > 25 {
+	if err != nil || len(frames) == 0 || len(frames) > p.cfg.VideoFrameScanMaxFrames {
 		return m, ErrProcessing
 	}
 	for _, frame := range frames {
@@ -544,7 +547,7 @@ func (p *Processor) ProcessPDF(ctx context.Context, path string) (m Manifest, er
 		return m, err
 	}
 	defer p.release()
-	dir, source, digest, size, err := p.stage(path, 7<<20)
+	dir, source, digest, size, err := p.stage(path, p.cfg.AttachmentMaxBytes)
 	if err != nil {
 		return m, err
 	}
@@ -576,7 +579,7 @@ func (p *Processor) ProcessPDF(ctx context.Context, path string) (m Manifest, er
 	if !v.Clean {
 		return m, &BlockedError{SourceSHA256: digest}
 	}
-	m.Main, err = artifact(source, "application/pdf", 0, 0, 7<<20)
+	m.Main, err = artifact(source, "application/pdf", 0, 0, p.cfg.AttachmentMaxBytes)
 	if err != nil {
 		return m, err
 	}

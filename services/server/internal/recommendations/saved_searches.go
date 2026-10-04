@@ -88,7 +88,7 @@ func (s *Service) CreateSavedSearch(ctx context.Context, a platform.Actor, in Sa
 			if err := tx.QueryRow(ctx, `SELECT count(*) FROM saved_searches_savedsearch WHERE user_id=$1`, a.ID).Scan(&count); err != nil {
 				return err
 			}
-			if count >= 20 {
+			if count >= s.savedSearchCap() {
 				return platform.ErrInvalid
 			}
 			var area *int64

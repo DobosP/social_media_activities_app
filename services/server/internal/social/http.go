@@ -423,7 +423,7 @@ func (s *Service) mine(w http.ResponseWriter, r *http.Request, a Actor) {
 		platform.Fail(w, err)
 		return
 	}
-	value, err := s.cursorRows(r, 100, func(ctx context.Context, limit, offset int) ([]json.RawMessage, error) {
+	value, err := s.cursorRows(r, s.Policy.MembershipListLimit, func(ctx context.Context, limit, offset int) ([]json.RawMessage, error) {
 		return objects(ctx, s.DB, `SELECT `+membershipColumns+` FROM social_membership m JOIN accounts_user u ON u.id=m.user_id WHERE m.user_id=$1 AND m.state<>'removed' ORDER BY m.created_at DESC,m.id DESC LIMIT $2 OFFSET $3`, a.ID, limit, offset)
 	})
 	response(w, value, err, 200)
@@ -445,7 +445,7 @@ func (s *Service) postsList(w http.ResponseWriter, r *http.Request, a Actor) {
 		platform.Fail(w, err)
 		return
 	}
-	limit, _ := page(r, 100)
+	limit, _ := page(r, s.Policy.ThreadPostLimit)
 	before, _ := strconv.ParseInt(r.URL.Query().Get("cursor"), 10, 64)
 	rows, cursor, err := s.Posts(r.Context(), a, postKind(r), id, before, limit)
 	if strings.HasPrefix(r.URL.Path, "/api/v1/") {
@@ -505,7 +505,7 @@ func (s *Service) postAction(w http.ResponseWriter, r *http.Request, a Actor) {
 		return
 	}
 	if r.Method == "PATCH" {
-		bodyValue, err := text(body["body"], 4000, true)
+		bodyValue, err := text(body["body"], s.Policy.ChatMaxLength, true)
 		if err == nil {
 			err = s.EditPost(r.Context(), a, id, bodyValue)
 		}

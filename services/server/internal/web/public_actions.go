@@ -165,7 +165,7 @@ func (s *Server) PublicAction(w http.ResponseWriter, r *http.Request, a platform
 		_, err = s.Catalog.FileClaim(ctx, a, place, in)
 	case "place_official_image":
 		var allowed bool
-		err = s.DB.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM places_place p WHERE p.id=$1 AND `+catalog.PublicPlaceSQL+` AND ($2 OR EXISTS(SELECT 1 FROM places_placeclaim c JOIN places_partner partner ON partner.id=c.partner_id WHERE c.place_id=p.id AND c.claimant_id=$3 AND c.status='approved' AND c.kind='business' AND partner.is_verified AND partner.is_active AND partner.kind='business' AND partner.place_id=c.place_id)))`, place, a.IsStaff, a.ID).Scan(&allowed)
+		err = s.DB.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM places_place p WHERE p.id=$1 AND `+catalog.PolicyFromContext(r.Context()).PlaceSQL()+` AND ($2 OR EXISTS(SELECT 1 FROM places_placeclaim c JOIN places_partner partner ON partner.id=c.partner_id WHERE c.place_id=p.id AND c.claimant_id=$3 AND c.status='approved' AND c.kind='business' AND partner.is_verified AND partner.is_active AND partner.kind='business' AND partner.place_id=c.place_id)))`, place, a.IsStaff, a.ID).Scan(&allowed)
 		if err == nil && !allowed {
 			err = platform.ErrNotFound
 		}

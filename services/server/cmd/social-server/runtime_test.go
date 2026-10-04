@@ -88,8 +88,8 @@ func TestRuntimeRejectsMalformedAndUnsupportedOverridesByName(t *testing.T) {
 		{"MEDIA_VIDEO_ENABLED", "invalid-bool-value"}, {"ALLOW_MINOR_ONBOARDING", "truthy-value"}, {"CHILD_PUBLIC_VENUES_ONLY", "false"}, {"MEDIA_REQUIRE_SCANNER", "false"},
 		{"MEDIA_MAX_IMAGE_PIXELS", "30000001"}, {"MEDIA_VIDEO_THREADS", "3"}, {"MEDIA_VIDEO_MAX_DURATION_SECONDS", "91"}, {"CONSENT_VALIDITY_DAYS", "0"}, {"API_TOKEN_MAX_AGE_DAYS", "-1"},
 		{"SENTIMENT_K_TEEN", "7"}, {"MODERATION_MODE", "unsupported-policy-value"}, {"CONNECTIONS_ALLOWED_COHORTS", "adult,,teen"}, {"GROUPS_USER_CREATION_COHORTS", "teen"},
-		{"CLOSURE_REPORT_THRESHOLD", "1"}, {"FACT_QUORUM", "1"}, {"CORRECTION_QUORUM", "1"}, {"EDGE_QUORUM", "1"}, {"EVENT_REPORT_DECAY_SECONDS", "600"}, {"THREAD_POST_RATE_LIMIT", "999"},
-		{"MEDIA_S3_SSE", "unsupported-encryption-value"}, {"MEDIA_S3_ADDRESSING_STYLE", "invalid-style-value"}, {"MEDIA_VIDEO_CRF", "18"}, {"MEDIA_VIDEO_PRESET", "fast"},
+		{"CLOSURE_REPORT_THRESHOLD", "4"}, {"FACT_QUORUM", "1"}, {"CORRECTION_QUORUM", "1"}, {"EDGE_QUORUM", "1"}, {"EVENT_REPORT_DECAY_SECONDS", "600"}, {"THREAD_POST_RATE_LIMIT", "10001"},
+		{"MEDIA_S3_SSE", "unsupported-encryption-value"}, {"MEDIA_S3_ADDRESSING_STYLE", "invalid-style-value"}, {"MEDIA_VIDEO_CRF", "41"}, {"MEDIA_VIDEO_PRESET", "slow"},
 		{"IDENTITY_PROVIDER", "custom.python.IdentityProvider"}, {"DONATIONS_PROVIDER", "custom.python.PaymentProvider"}, {"BOOKING_PROVIDERS", `{"vendor":"custom.python.BookingProvider"}`}, {"INGESTION_EXTRA_ADAPTERS", `{"custom":"custom.python.Places"}`}, {"CHAT_MESSAGE_POLICY", "custom.python.MessagePolicy"},
 		{"EUDI_TRUSTED_ISSUERS", `{"issuer":"one","issuer":"two"}`}, {"TRUSTED_PROXY_CIDRS", "untrusted-bad-cidr-value"}, {"NUM_PROXIES", "17"}, {"DJANGO_ALLOWED_HOSTS", "*"}, {"DRF_THROTTLE_ANON", "60/hour"},
 		{"DJANGO_SECRET_KEY", "secret-placeholder-invalid-value"}, {"IDENTITY_BINDING_SECRET", "binding-placeholder-invalid-value"}, {"SITE_BASE_URL", "http://public.fixture.test"},
@@ -276,7 +276,7 @@ func TestExplicitEmptySettingsDoNotRestoreIncompatibleDefaults(t *testing.T) {
 	if err != nil || len(config.Connections) != 0 {
 		t.Fatal("empty cohort policy did not disable connections")
 	}
-	for _, name := range []string{"MEDIA_FILE_COHORTS", "MEDIA_REQUIRE_SCANNER", "MEDIA_VIDEO_THREADS", "EUDI_TRUSTED_ISSUERS", "MEDIA_IMAGE_OUTPUT_FORMAT", "CHAT_MESSAGE_POLICY", "DRF_THROTTLE_USER"} {
+	for _, name := range []string{"MEDIA_REQUIRE_SCANNER", "MEDIA_VIDEO_THREADS", "EUDI_TRUSTED_ISSUERS", "MEDIA_IMAGE_OUTPUT_FORMAT", "CHAT_MESSAGE_POLICY", "DRF_THROTTLE_USER"} {
 		present := environmentPresence(func(key string) bool { return key == name })
 		if _, err := configuration(fixtureEnv(map[string]string{name: ""}), fixtureOptions(), present); err == nil || !strings.Contains(err.Error(), name) {
 			t.Fatalf("explicit empty %s restored incompatible defaults", name)
@@ -303,7 +303,7 @@ func TestRuntimeSourceSecurityLoggingAndMetadataSettings(t *testing.T) {
 	if dev.App.SecureSSLRedirect || dev.App.HSTSSeconds != 0 || dev.App.RequestLoggingEnabled || dev.App.LogFormat != "plain" || !dev.App.Accounts.DemoEnabled {
 		t.Fatal("development defaults not mapped")
 	}
-	for _, tc := range []struct{ name, value string }{{"REDIS_URL", "redis://unsupported-fixture"}, {"DJANGO_REQUIRE_SHARED_STATE", "true"}, {"SENTRY_DSN", "unsupported-fixture-dsn"}, {"LOG_FORMAT", "unsupported-format"}, {"LOG_LEVEL", "DEBUG"}, {"PERMISSIONS_POLICY", "camera=(self)"}, {"DJANGO_HSTS_SECONDS", "-1"}} {
+	for _, tc := range []struct{ name, value string }{{"REDIS_URL", "redis://unsupported-fixture"}, {"SENTRY_DSN", "unsupported-fixture-dsn"}, {"LOG_FORMAT", "unsupported-format"}, {"LOG_LEVEL", "TRACE"}, {"PERMISSIONS_POLICY", "camera=(self)"}, {"DJANGO_HSTS_SECONDS", "-1"}} {
 		_, err := configuration(fixtureEnv(map[string]string{tc.name: tc.value}), fixtureOptions())
 		if err == nil || !strings.Contains(err.Error(), tc.name) || strings.Contains(err.Error(), tc.value) {
 			t.Fatalf("%s not rejected safely", tc.name)

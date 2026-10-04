@@ -81,9 +81,9 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   the serving repo's producer dependency must be intentionally bumped first.
 - Complete held-event review UX, curated cultural child-venue policy, localized
   taxonomy/cinema mapping, and production alerting/shared-state operations.
-- API/social/catalog/saved-search/CSP admission is PostgreSQL-backed (ADR-0033); account/safety/message
-  budgets expose typed policies. CLI shared-state/nondefault policy wiring is a separate integration gate.
-  `REDIS_URL`, Sentry and custom Python providers remain startup refusals at this branch base.
+- Native shared-state/action limits use PostgreSQL (ADR-0033); typed policy overrides and private,
+  optional Sentry reporting are implemented (ADR-0034). Redis/Python worker flags remain refused;
+  external delivery, source landing and production activation still require their own verification.
 - Operational gaps remain in `docs/PRODUCTION_READINESS.md`. Treat an unticked box
   in `docs/archive/COMPLETENESS_GAPS_2026-06.md` as a hypothesis to verify against
   HEAD, not a specification — two backlog surveys turned already-shipped entries
@@ -93,10 +93,9 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
-- 2026-10-04 shared budgets worker: native race/vet passes; nine race-enabled budget tests pass on an
-  isolated synthetic PG fixture, including concurrency/capacity/expiry/erasure/low-pool replay. Full domain
-  fixture qualification and CLI wiring pending; doc gate files=52, all findings=0; no production verification.
-
+- 2026-10-04 config/reporting task: native race/vet, auth hashes, CLI 33 and 109 additional package
+  fixture checks pass; full PG qualification stops at 2 unmigrated custom media-fixture failures (rates
+  integration owns repair). Doc gate files=52/all 0; no production reporting. Details: WORKLOG/ADR-0034.
 - 2026-10-04 owner-approved conversion: native race/vet and portable auth hashes pass. Fresh Go-only
   bootstrap + **173 PostgreSQL/codec tests** passed with no skips; final affected app/media/account
   checks also pass. Source/package vulnerability scans pass after compress1.18.7; unimported

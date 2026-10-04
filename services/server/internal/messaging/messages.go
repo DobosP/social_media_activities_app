@@ -73,7 +73,10 @@ func publicJWK(jwk map[string]any) bool {
 	return true
 }
 func validateInput(in *MessageInput, maxMembers int) error {
-	if in.Ciphertext == "" || len(in.Ciphertext) > 65536 || in.IV == "" || len(in.IV) > 64 || len(in.RecipientKeys) > maxMembers || len(in.Algorithm) > 32 {
+	return validateInputBounded(in, maxMembers, 65536)
+}
+func validateInputBounded(in *MessageInput, maxMembers, maxCiphertext int) error {
+	if in.Ciphertext == "" || len(in.Ciphertext) > maxCiphertext || in.IV == "" || len(in.IV) > 64 || len(in.RecipientKeys) > maxMembers || len(in.Algorithm) > 32 {
 		return platform.ErrInvalid
 	}
 	if in.Algorithm == "" {
@@ -82,7 +85,7 @@ func validateInput(in *MessageInput, maxMembers int) error {
 	return nil
 }
 func (s *Service) Post(ctx context.Context, a platform.Actor, conversation int64, input MessageInput) (result int64, err error) {
-	if err = validateInput(&input, s.maxMembers()); err != nil {
+	if err = validateInputBounded(&input, s.maxMembers(), s.maxCiphertext()); err != nil {
 		return 0, err
 	}
 	// Admission commits independently so malformed recipient sets still consume

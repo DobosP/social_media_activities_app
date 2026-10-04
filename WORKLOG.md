@@ -321,3 +321,71 @@ also passes (native37219661498/reference37219661457/public37219661432). Native s
 auth/domain/media/live/jobs and deployment entry points execute Go; client TypeScript and
 offline Python oracles remain explicit. Both repository main landing pads are clean.
 No Social production deployment or provider/minor/source activation occurred.
+
+## 2026-10-04 — Native configuration and private error reporting worker
+
+Valid until: integration/landing of feat/go-config-observability — then treat as history.
+
+Implemented ADR-0034 policy/configuration and observability in the task worktree,
+with rate foundation e0d937b cherry-picked as dependency c32d77f. The CLI now loads
+validated policy controls into catalog/social/media/messaging/jobs and shared rate
+maps. Required-shared mode asserts a coherent PostgreSQL service/store graph;
+Redis and retired Python queue/worker/profile settings fail by setting name. Source
+browser/API defaults, mandatory scanning/adult-only media, child venue gates,
+consensus/report-retention floors and bounded presence privacy remain. Mutable
+cohort/rate maps are copied before concurrent use. Catalog policy is request/job
+context data, with no process-global mutation; HTML/forms/discovery/exports/media
+and social shares receive the same typed visibility policy.
+
+Optional sentry-go 0.49.0 error reporting uses one bounded producer worker and the
+SDK's bounded asynchronous transport, with a two-second CLI shutdown budget.
+The fixed event allowlist excludes request/body/identity/header/cookie/token/IP/query,
+raw panic/error text, stack/attachments/breadcrumbs/contexts and telemetry integrations.
+Recovered panics, generic 5xx and returned startup/one-shot failures are captured;
+normal responses and disabled reporting remain inert. DSNs reject legacy secret
+passwords and query/fragment data; environment labels are a fixed three-value enum.
+SENTRY_ENVIRONMENT is the only newly implemented name absent from the fleet registry;
+root registered deploy-host nonsecret metadata in agent-ops a7062e7. No values were
+read or delivered. No actual Sentry outbound was used.
+
+Native request/memory caps now bound ordinary non-file data and aggregate multipart
+field bytes; file data streams under separate media caps. This documents native hard
+cap semantics without claiming the Python buffering implementation. Existing token
+maintenance also invokes shared Store.Prune(1000), preserving token-result shape and
+starting no new job/scheduler. A synthetic test proves 1001 expired keys drain in two
+bounded passes while a live key remains. Native qualification now includes the CLI
+configuration binary with an explicit disposable DSN.
+
+Verification uses Go 1.27.1 with GOWORK=off, GOMAXPROCS=2, GOFLAGS=-p=2 and task-only
+GOMODCACHE/GOCACHE/GOTMPDIR/TMPDIR under _temp/go-config-observability. Native race/vet
+and portable authentication hashes pass. Mock-only reporter/app/startup tests cover
+privacy, default disablement, full queue drop, caller shutdown deadline, committed
+response abort, and fail-closed API admission. Final configuration binary passes 33
+synthetic/race-enabled tests, zero skips; actual VoteFact admits one configured vote,
+refuses the second without mutation, and custom closure visibility stays isolated
+from the default policy.
+
+The full scripts/qualify-native.sh pass reached these zero-skip fixtures before a
+known custom-clone blocker: configuration 32, accounts 16, admin 5, app 22, booking 7, budgets 9,
+catalog 10, commands 9, discovery 2, donations 5, export 2, jobs 22 (141 tests; replacing the CLI
+with its final 33-test receipt totals 142 completed tests). Media passed 27 tests but
+its two old social-post fixtures fail closed because their bespoke LIKE clone lacks
+schema.Migrate's local shared-rate functions/tables. Rate integration owns that fixture
+repair; no permission/rate bypass was added, and complete final-head PG qualification
+is not claimed. Earlier isolated non-rate policy suites passed 20 social / 29 media / 21 jobs
+plus 19 catalog/messaging before rate integration. Root will qualify the complete merge.
+
+Final read-only inventory review found browser/command readers still using source
+constants. Those now use configured open-now/closure decay and thresholds, private
+fact quorum, interest readiness, group/support cohort maps, presence windows and
+thread-root pagination. Browser post models use bounded 1000-item query batches with
+finite 1950 total input/order/deduplication. Targeted race fixtures prove two-page
+configured-root cursors, 1000 roots plus an announcement, existing private read walls,
+and custom report/fact/gauge/cohort/window projections. Their new tests pass with zero
+skips. Demo venue selection uses the same context policy. Final targeted native race
+checks pass for CLI/app/web/ops/jobs/commands; app recheck passes after restricting the
+large request exemption to actual multipart uploads. Final full vet passes.
+
+Docs: check_docs files=52, dead_links=0, stale_terms=0, retired_verbs=0, orphans=0. Source
+format/whitespace checks pass. No production data, ingestion, scheduler, provider,
+minor activation, deployment, shared authentication source, push or main merge occurred.

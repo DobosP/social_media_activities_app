@@ -180,7 +180,7 @@ func (s *Service) SpawnDueSeries(ctx context.Context, now time.Time) (SpawnSumma
 	if err != nil {
 		return summary, err
 	}
-	rows, err := s.DB.Query(ctx, `SELECT id FROM social_activityseries WHERE status='active' AND next_starts_at<=$1 ORDER BY id LIMIT 500`, now.AddDate(0, 0, 14))
+	rows, err := s.DB.Query(ctx, `SELECT id FROM social_activityseries WHERE status='active' AND next_starts_at<=$1 ORDER BY id LIMIT $2`, now.AddDate(0, 0, s.Policy.SeriesSpawnLeadDays), s.Policy.SeriesSpawnBatch)
 	if err != nil {
 		return summary, err
 	}
@@ -246,7 +246,7 @@ func (s *Service) SpawnDueSeries(ctx context.Context, now time.Time) (SpawnSumma
 					return err
 				}
 			}
-			if in.StartsAt.Before(now) || in.StartsAt.After(now.AddDate(0, 0, 14)) {
+			if in.StartsAt.Before(now) || in.StartsAt.After(now.AddDate(0, 0, s.Policy.SeriesSpawnLeadDays)) {
 				_, err = tx.Exec(ctx, `UPDATE social_activityseries SET next_starts_at=$2,updated_at=now() WHERE id=$1`, id, in.StartsAt)
 				return err
 			}

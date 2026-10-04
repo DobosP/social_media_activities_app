@@ -6,6 +6,7 @@ require (
 	github.com/DobosP/cat_de_roman_esti/shared-go/authcore v0.0.0
 	github.com/coder/websocket v1.8.15
 	github.com/flosch/pongo2/v6 v6.1.0
+	github.com/getsentry/sentry-go v0.49.0
 	github.com/jackc/pgx/v5 v5.11.0
 	github.com/parquet-go/parquet-go v0.32.0
 	golang.org/x/text v0.42.0

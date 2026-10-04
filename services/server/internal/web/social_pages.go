@@ -395,15 +395,16 @@ func (s *Server) socialGaugeRows(r *http.Request, a platform.Actor, pk int64) ([
 	if !a.IsActive || a.Cohort == "" || a.Cohort == "unassigned" {
 		return []map[string]any{}, nil
 	}
-	return socialRows(r.Context(), s.DB, `SELECT jsonb_build_object('id',g.id,'cohort',g.cohort,'coarse_window',g.coarse_window,'expires_at',g.expires_at,'is_proposer',g.proposer_id=$1,'viewer_interested',EXISTS(SELECT 1 FROM social_activityinterest_interested_users mine WHERE mine.activityinterest_id=g.id AND mine.user_id=$1),'ready',(SELECT COUNT(*) FROM social_activityinterest_interested_users x WHERE x.activityinterest_id=g.id)>=3,'remaining',GREATEST(0,3-(SELECT COUNT(*) FROM social_activityinterest_interested_users x WHERE x.activityinterest_id=g.id)),'activity_type',jsonb_build_object('id',t.id,'name',t.name,'slug',t.slug),'place',jsonb_build_object('id',p.id,'name',p.name,'display_name',`+catalog.PlaceDisplayNameSQL()+`,'address_city',p.address_city)) FROM social_activityinterest g JOIN taxonomy_activitytype t ON t.id=g.activity_type_id JOIN places_place p ON p.id=g.place_id WHERE g.cohort=$2 AND g.converted_activity_id IS NULL AND g.expires_at>now() AND ($3::bigint=0 OR g.id=$3) AND NOT EXISTS(SELECT 1 FROM safety_block b WHERE (b.blocker_id=$1 AND b.blocked_id=g.proposer_id) OR (b.blocker_id=g.proposer_id AND b.blocked_id=$1)) ORDER BY g.expires_at,g.id LIMIT 200`, a.ID, a.Cohort, pk)
+	return socialRows(r.Context(), s.DB, `SELECT jsonb_build_object('id',g.id,'cohort',g.cohort,'coarse_window',g.coarse_window,'expires_at',g.expires_at,'is_proposer',g.proposer_id=$1,'viewer_interested',EXISTS(SELECT 1 FROM social_activityinterest_interested_users mine WHERE mine.activityinterest_id=g.id AND mine.user_id=$1),'ready',(SELECT COUNT(*) FROM social_activityinterest_interested_users x WHERE x.activityinterest_id=g.id)>=$4,'remaining',GREATEST(0,$4-(SELECT COUNT(*) FROM social_activityinterest_interested_users x WHERE x.activityinterest_id=g.id)),'activity_type',jsonb_build_object('id',t.id,'name',t.name,'slug',t.slug),'place',jsonb_build_object('id',p.id,'name',p.name,'display_name',`+catalog.PlaceDisplayNameSQL()+`,'address_city',p.address_city)) FROM social_activityinterest g JOIN taxonomy_activitytype t ON t.id=g.activity_type_id JOIN places_place p ON p.id=g.place_id WHERE g.cohort=$2 AND g.converted_activity_id IS NULL AND g.expires_at>now() AND ($3::bigint=0 OR g.id=$3) AND NOT EXISTS(SELECT 1 FROM safety_block b WHERE (b.blocker_id=$1 AND b.blocked_id=g.proposer_id) OR (b.blocker_id=g.proposer_id AND b.blocked_id=$1)) ORDER BY g.expires_at,g.id LIMIT 200`, a.ID, a.Cohort, pk, s.Social.Policy.InterestThreshold)
 }
 
 func (s *Server) socialVenueFlags(ctx context.Context, pk int64) ([]string, error) {
+	policy := catalog.PolicyFromContext(ctx)
 	var closed, pending bool
 	var reports int
 	var raw []byte
 	var correction string
-	err := s.DB.QueryRow(ctx, `SELECT (SELECT COUNT(*) FROM places_placeclosurereport report WHERE report.place_id=p.id AND report.created_at>=now()-interval '14 days')>=3,(SELECT COUNT(*) FROM places_opennowreport report WHERE report.place_id=p.id AND report.created_at>=now()-interval '14 days'),EXISTS(SELECT 1 FROM places_placecorrection c WHERE c.place_id=p.id AND c.status='pending'),p.opening_hours,coalesce((SELECT proposed_value FROM places_placecorrection c WHERE c.place_id=p.id AND c.field='hours' AND c.status='published' ORDER BY coalesce(c.published_at,c.created_at) DESC,c.id DESC LIMIT 1),'') FROM places_place p WHERE p.id=$1`, pk).Scan(&closed, &reports, &pending, &raw, &correction)
+	err := s.DB.QueryRow(ctx, `SELECT (SELECT COUNT(*) FROM places_placeclosurereport report WHERE report.place_id=p.id AND report.created_at>=now()-$2::double precision*interval '1 second')>=$3,(SELECT COUNT(*) FROM places_opennowreport report WHERE report.place_id=p.id AND report.created_at>=now()-$4::double precision*interval '1 second'),EXISTS(SELECT 1 FROM places_placecorrection c WHERE c.place_id=p.id AND c.status='pending'),p.opening_hours,coalesce((SELECT proposed_value FROM places_placecorrection c WHERE c.place_id=p.id AND c.field='hours' AND c.status='published' ORDER BY coalesce(c.published_at,c.created_at) DESC,c.id DESC LIMIT 1),'') FROM places_place p WHERE p.id=$1`, pk, policy.ClosureReportDecay.Seconds(), policy.ClosureReportThreshold, policy.OpenNowReportDecay.Seconds()).Scan(&closed, &reports, &pending, &raw, &correction)
 	if err != nil {
 		return nil, err
 	}
@@ -415,7 +416,7 @@ func (s *Server) socialVenueFlags(ctx context.Context, pk int64) ([]string, erro
 		_ = json.Unmarshal(raw, &schedule)
 	}
 	zone, _ := time.LoadLocation("Europe/Bucharest")
-	unverified := reports >= 3 && catalog.OpenAt(schedule, s.Social.Now().In(zone)) != nil
+	unverified := reports >= policy.OpenNowReportThreshold && catalog.OpenAt(schedule, s.Social.Now().In(zone)) != nil
 	if closed {
 		flags = append(flags, "closed")
 	} else if unverified {
@@ -512,7 +513,7 @@ func (s *Server) socialActivityDetail(r *http.Request, a platform.Actor) (pongo2
 		}
 	}
 	data["conn_related_ids"] = related
-	data["can_create_group"] = peer && (a.IsStaff || a.Cohort == "adult" && s.Social.AllowUserGroups)
+	data["can_create_group"] = peer && (a.IsStaff || a.Cohort == "adult" && s.Social.AllowUserGroups && s.Social.Policy.UserGroupCohorts[a.Cohort])
 	data["my_guardians"], err = s.socialGuardians(ctx, a.ID)
 	if err != nil {
 		return nil, err
@@ -555,9 +556,9 @@ func (s *Server) socialActivityDetail(r *http.Request, a platform.Actor) (pongo2
 	}
 	now := s.Social.Now()
 	open := activity["status"] == "open"
-	data["arrival_window_open"] = peer && read && open && !now.Before(start.Add(-2*time.Hour)) && !now.After(start.Add(3*time.Hour))
-	data["can_mark_departing"] = peer && read && a.Cohort == "child" && membership["departing_at"] == nil && open && !now.Before(start) && !now.After(end.Add(3*time.Hour))
-	data["can_set_support"] = peer && read && a.Cohort == "adult"
+	data["arrival_window_open"] = peer && read && open && !now.Before(start.Add(-time.Duration(s.Social.Policy.ArrivalWindowBeforeHours)*time.Hour)) && !now.After(start.Add(time.Duration(s.Social.Policy.ArrivalWindowAfterHours)*time.Hour))
+	data["can_mark_departing"] = peer && read && a.Cohort == "child" && membership["departing_at"] == nil && open && !now.Before(start) && !now.After(end.Add(time.Duration(s.Social.Policy.DepartureWindowAfterHours)*time.Hour))
+	data["can_set_support"] = peer && read && a.Cohort == "adult" && s.Social.Policy.SupportCompanionCohorts[a.Cohort]
 	transit := spaText(membership["transit_status"])
 	data["can_say_on_my_way"] = peer && read && transit == "none"
 	data["can_say_running_late"] = peer && read && (transit == "none" || transit == "on_my_way")

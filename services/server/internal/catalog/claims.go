@@ -39,7 +39,7 @@ func (s *Service) FileClaim(ctx context.Context, a platform.Actor, placeID int64
 		if err := platform.Participate(ctx, tx, a); err != nil {
 			return err
 		}
-		if err := publicVenue(ctx, tx, placeID); err != nil {
+		if err := s.publicVenue(ctx, tx, placeID); err != nil {
 			return err
 		}
 		err := tx.QueryRow(ctx, `INSERT INTO places_placeclaim(place_id,claimant_id,org_name,kind,official_website,contact_email,cui,evidence,status,decided_at,created_at,decided_by_id,partner_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,'pending',NULL,now(),NULL,NULL) RETURNING id`, placeID, a.ID, in.OrgName, in.Kind, in.OfficialWebsite, in.ContactEmail, strings.TrimSpace(in.CUI), strings.TrimSpace(in.Evidence)).Scan(&id)

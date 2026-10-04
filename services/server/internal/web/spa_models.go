@@ -358,7 +358,7 @@ func (s *Server) spaEventRows(ctx context.Context, r *http.Request, value any) (
 		for _, item := range items {
 			ids = append(ids, spaID(item))
 		}
-		rows, err := s.DB.Query(ctx, `SELECT `+catalog.PublicEventProjectionSQL()+` || jsonb_build_object('activity_type_obj',jsonb_build_object('name',t.name),'place_obj',CASE WHEN p.id IS NULL THEN NULL ELSE jsonb_build_object('id',p.id,'name',p.name,'display_name',`+catalog.PlaceDisplayNameSQL()+`) END) FROM events_event e LEFT JOIN places_place p ON p.id=e.place_id LEFT JOIN taxonomy_activitytype t ON t.id=e.activity_type_id WHERE `+catalog.PublicEventsSQL()+` AND e.id=ANY($1)`, ids)
+		rows, err := s.DB.Query(ctx, `SELECT `+catalog.PublicEventProjectionSQL()+` || jsonb_build_object('activity_type_obj',jsonb_build_object('name',t.name),'place_obj',CASE WHEN p.id IS NULL THEN NULL ELSE jsonb_build_object('id',p.id,'name',p.name,'display_name',`+catalog.PlaceDisplayNameSQL()+`) END) FROM events_event e LEFT JOIN places_place p ON p.id=e.place_id LEFT JOIN taxonomy_activitytype t ON t.id=e.activity_type_id WHERE `+catalog.PolicyFromContext(r.Context()).EventSQL()+` AND e.id=ANY($1)`, ids)
 		if err != nil {
 			return nil, err
 		}

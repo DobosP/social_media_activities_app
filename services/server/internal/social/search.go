@@ -33,7 +33,7 @@ func (s *Service) SearchThread(ctx context.Context, a Actor, kind string, id int
 	if err := threadGate(ctx, s.DB, a, v, false); err != nil {
 		return nil, err
 	}
-	return objects(ctx, s.DB, `SELECT `+postProjection+postJoin+` WHERE po.thread_id=$1 AND NOT po.is_hidden AND UPPER(po.body) LIKE '%'||UPPER($3)||'%' ORDER BY po.created_at DESC,po.id DESC LIMIT 50`, v.ThreadID, a.Cohort, escapeLike(query))
+	return objects(ctx, s.DB, `SELECT `+postProjection(ctx)+postJoin+` WHERE po.thread_id=$1 AND NOT po.is_hidden AND UPPER(po.body) LIKE '%'||UPPER($3)||'%' ORDER BY po.created_at DESC,po.id DESC LIMIT 50`, v.ThreadID, a.Cohort, escapeLike(query))
 }
 func (s *Service) DidYouMean(ctx context.Context, a Actor, query string) (*string, error) {
 	if utf8.RuneCountInString(strings.TrimSpace(query)) < 2 {

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/accounts"
+	"github.com/DobosP/social_media_activities_app/services/server/internal/budgets"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/media"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/ops"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
@@ -21,6 +22,9 @@ var DueNames = []string{"purge_messaging", "purge_expired_attachments", "transco
 
 type Handler func(context.Context, map[string]json.RawMessage) (any, error)
 type Config struct {
+	SavedSearchNotifyLimit                                                                                                                                         int
+	SavedSearchNotifyWindow                                                                                                                                        time.Duration
+	SavedSearchMatchBatch, DeferredBatch                                                                                                                           int
 	Social                                                                                                                                                         *social.Service
 	Media                                                                                                                                                          *media.Service
 	Safety                                                                                                                                                         *safety.Service
@@ -47,7 +51,7 @@ type Config struct {
 }
 
 func DefaultConfig() Config {
-	return Config{MessagingRetentionDays: 0, NotificationRetentionDays: 180, NotificationBatch: 1000, APITokenMaxAgeDays: 90, ReminderHours: 24, ReverifyReminderDays: 14, ConsentReminderDays: 14, SweepBatch: 1000, BlobBatch: 200, RoeduCity: "Cluj-Napoca", JobTimeout: 5 * time.Minute}
+	return Config{SavedSearchMatchBatch: 1000, DeferredBatch: 100, SavedSearchNotifyLimit: 50, SavedSearchNotifyWindow: 24 * time.Hour, MessagingRetentionDays: 0, NotificationRetentionDays: 180, NotificationBatch: 1000, APITokenMaxAgeDays: 90, ReminderHours: 24, ReverifyReminderDays: 14, ConsentReminderDays: 14, SweepBatch: 1000, BlobBatch: 200, RoeduCity: "Cluj-Napoca", JobTimeout: 5 * time.Minute}
 }
 
 type Runner struct {
@@ -58,6 +62,18 @@ type Runner struct {
 }
 
 func New(db *pgxpool.Pool, config Config) *Runner {
+	if config.SavedSearchNotifyLimit == 0 {
+		config.SavedSearchNotifyLimit = 50
+	}
+	if config.SavedSearchNotifyWindow == 0 {
+		config.SavedSearchNotifyWindow = 24 * time.Hour
+	}
+	if config.SavedSearchMatchBatch == 0 {
+		config.SavedSearchMatchBatch = 1000
+	}
+	if config.DeferredBatch == 0 {
+		config.DeferredBatch = 100
+	}
 	if config.Now == nil {
 		config.Now = time.Now
 	}
@@ -204,7 +220,7 @@ func (r *Runner) install() {
 		if r.Config.Social == nil {
 			return nil, missing()
 		}
-		return r.Config.Social.ExpirePresence(ctx, r.Config.Now(), 6*time.Hour)
+		return r.Config.Social.ExpirePresence(ctx, r.Config.Now(), r.Config.Social.PresenceRetention())
 	}
 	r.handlers["expire_interest"] = func(ctx context.Context, _ map[string]json.RawMessage) (any, error) {
 		if r.Config.Social == nil {
@@ -260,6 +276,12 @@ func (r *Runner) install() {
 	r.handlers["sync_roedu"] = func(ctx context.Context, _ map[string]json.RawMessage) (any, error) { return r.SyncRoedu(ctx) }
 	r.handlers["expire_api_tokens"] = func(ctx context.Context, _ map[string]json.RawMessage) (any, error) {
 		tag, err := r.DB.Exec(ctx, `DELETE FROM authtoken_token WHERE created<$1`, r.Config.Now().Add(-time.Duration(r.Config.APITokenMaxAgeDays)*24*time.Hour))
+		if err != nil {
+			return tag.RowsAffected(), err
+		}
+		// The existing explicit maintenance pass also erases expired shared rate
+		// histories; this adds no scheduler and preserves the API-token result.
+		_, err = budgets.New(r.DB).Prune(ctx, 1000)
 		return tag.RowsAffected(), err
 	}
 	r.handlers["indexnow_batch_submit"] = func(ctx context.Context, _ map[string]json.RawMessage) (any, error) { return r.IndexNow(ctx) }
@@ -288,7 +310,7 @@ func (r *Runner) install() {
 		return r.Config.Social.PurgeSentimentRows(ctx, r.Config.Now())
 	}
 	r.handlers["process_deferred_tasks"] = func(ctx context.Context, _ map[string]json.RawMessage) (any, error) {
-		return r.Queue.RunPending(ctx, 100)
+		return r.Queue.RunPending(ctx, r.Config.DeferredBatch)
 	}
 	r.installDeferred()
 }

@@ -52,7 +52,7 @@ func (s *Service) ImportLicensedPlaceCover(ctx context.Context, placeID int64, p
 	}()
 	err = platform.Transaction(ctx, s.db, func(tx pgx.Tx) error {
 		var locked int64
-		if err := tx.QueryRow(ctx, `SELECT p.id FROM places_place p WHERE p.id=$1 AND `+catalog.PublicPlaceSQL+` FOR UPDATE`, placeID).Scan(&locked); err != nil {
+		if err := tx.QueryRow(ctx, `SELECT p.id FROM places_place p WHERE p.id=$1 AND `+catalog.PolicyFromContext(ctx).PlaceSQL()+` FOR UPDATE`, placeID).Scan(&locked); err != nil {
 			return err
 		}
 		var existing int64
@@ -88,7 +88,7 @@ func (s *Service) PlaceVisuals(ctx context.Context, q platform.Querier, places [
 	if len(places) > 1000 {
 		return nil, platform.ErrInvalid
 	}
-	rows, err := q.Query(ctx, `SELECT c.place_id,c.id,c.alt_text,c.attribution,c.license_name,c.source_page_url,c.source FROM places_placecover c JOIN places_place p ON p.id=c.place_id WHERE c.place_id=ANY($1) AND c.storage_key<>'' AND `+catalog.PublicPlaceSQL, places)
+	rows, err := q.Query(ctx, `SELECT c.place_id,c.id,c.alt_text,c.attribution,c.license_name,c.source_page_url,c.source FROM places_placecover c JOIN places_place p ON p.id=c.place_id WHERE c.place_id=ANY($1) AND c.storage_key<>'' AND `+catalog.PolicyFromContext(ctx).PlaceSQL(), places)
 	if err != nil {
 		return nil, err
 	}

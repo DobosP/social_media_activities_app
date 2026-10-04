@@ -47,7 +47,7 @@ func (s *Service) UnsafeReport(ctx context.Context, a platform.Actor, activityID
 		var status string
 		var created time.Time
 		err := tx.QueryRow(ctx, `SELECT id,status,created_at FROM safety_report WHERE reporter_id=$1 AND target_type_id=$2 AND target_id=$3 AND reason='off_platform' AND detail=$4 ORDER BY created_at DESC,id DESC LIMIT 1`, a.ID, target.ContentType, target.ID, UnsafeSentinel).Scan(&result.ReportID, &status, &created)
-		if err == nil && (status == "open" || status == "reviewing" || created.After(s.Config.Now().Add(-5*time.Minute))) {
+		if err == nil && (status == "open" || status == "reviewing" || created.After(s.Config.Now().Add(-s.Config.UnsafeReportCooldown))) {
 			result.Repeat = true
 			return nil
 		}

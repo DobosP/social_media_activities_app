@@ -16,9 +16,12 @@ native_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 mkdir -p "$native_scratch/tests" "$native_scratch/test-tmp"
 chmod 700 "$native_scratch/test-tmp"
 export GOWORK=off
-for native_package in accounts admin app booking budgets catalog commands discovery donations export jobs media messaging notifications recommendations safety social web; do
+for native_package in configuration accounts admin app booking budgets catalog commands discovery donations export jobs media messaging notifications recommendations safety social web; do
   native_flags=()
+  native_source="./internal/$native_package"
+  native_workdir="/src/services/server/internal/$native_package"
   case $native_package in
+    configuration) native_source=./cmd/social-server; native_workdir=/src/services/server/cmd/social-server; native_flags=(-configuration-test-dsn "$native_dsn");;
     accounts) native_flags=(-accounts-test-dsn "$native_dsn");;
     admin) native_flags=(-admin-test-dsn "$native_dsn");;
     app) native_flags=(-app-test-dsn "$native_dsn");;
@@ -37,13 +40,13 @@ for native_package in accounts admin app booking budgets catalog commands discov
     web) native_flags=(-web-domain-test-dsn "$native_dsn");;
   esac
   "$native_go" -C "$native_root/services/server" test -race -c \
-    -o "$native_scratch/tests/$native_package.test" "./internal/$native_package"
+    -o "$native_scratch/tests/$native_package.test" "$native_source"
   native_log="$native_scratch/tests/$native_package.log"
   if ! docker run --rm --read-only --cap-drop=ALL --security-opt=no-new-privileges \
     --user "$(id -u):$(id -g)" --network "$native_network" \
     -e TMPDIR=/scratch/test-tmp \
     -v "$native_root:/src:ro" -v "$native_scratch:/scratch" \
-    -w "/src/services/server/internal/$native_package" "$native_image" \
+    -w "$native_workdir" "$native_image" \
     "/scratch/tests/$native_package.test" -test.v -test.timeout=10m "${native_flags[@]}" >"$native_log" 2>&1; then
     cat "$native_log" >&2
     exit 1

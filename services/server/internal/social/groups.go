@@ -114,7 +114,7 @@ func (s *Service) CreateGroup(ctx context.Context, a Actor, in GroupInput) (int6
 	if in.Title == "" || utf8.RuneCountInString(in.Title) > 200 || utf8.RuneCountInString(in.Description) > 2000 || in.ActivityType == nil || *in.ActivityType <= 0 {
 		return 0, platform.ErrInvalid
 	}
-	if !a.IsStaff && !s.AllowUserGroups {
+	if !a.IsStaff && (!s.AllowUserGroups || a.Cohort != "adult" || !s.Policy.UserGroupCohorts[a.Cohort]) {
 		return 0, platform.ErrForbidden
 	}
 	if !s.allow(ctx, a.ID, "group_create", 5, time.Hour) {
