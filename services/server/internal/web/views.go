@@ -66,7 +66,7 @@ func (s *Server) view(r *http.Request, a platform.Actor, name string) (pongo2.Co
 		groups, err := s.get(r, "/api/social/groups/")
 		data["page"] = results(value)
 		data["groups_page"] = results(groups)
-		data["can_create"] = a.IsStaff || a.Cohort == "adult" && s.Social.AllowUserGroups
+		data["can_create"] = s.Social.AllowsGroupCreation(a)
 		return data, template, err
 	case "community_graph":
 		value, err := s.Social.CommunityGraph(r.Context(), a)

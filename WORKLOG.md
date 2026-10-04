@@ -582,3 +582,21 @@ Actions visibly reports manually disabled; no hosted run/result is claimed and n
 workflow or spending controls changed. Local race/vet/PG/codecs/audits/image/HTTP
 qualification is complete. Human auth/privacy/safety review under AGENTS.md remains
 before source landing. Worktrees/branches/scratch are retained because work is unlanded.
+
+
+## 2026-10-04 — reuse existing sessions for independent review
+
+Valid until: review fixes are integrated and qualified — then treat as history.
+
+The owner requested inspection/reuse of existing sessions before creating more. The
+three completed Social workers were reused for rotated independent review; Teacher and
+raw-data-server sessions were already active on their separate projects and received
+interface-coordination notes. No duplicate chat was created. Review confirmed a stale
+profile-viewer disclosure path, media TTL/control policy mismatches, group creation UI
+policy mismatch, and an inherited fixed-window budget/erasure deadlock. Scoped fixes
+are underway in separate task worktrees using those same worker chats.
+
+Coordinator group-creation policy now has one shared helper used by domain admission
+and both web context paths. A real PostgreSQL/browser/SPA regression proves ordinary
+adult creation is hidden and rejected when configured cohorts are empty, and is shown
+and accepted when enabled. The targeted race fixture passed; no gate was relaxed.

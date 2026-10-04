@@ -217,7 +217,7 @@ const socialGroupVisibility = `g.cohort=$2 AND NOT g.is_hidden AND g.status='act
 
 func (s *Server) socialCommunities(r *http.Request, a platform.Actor, name string) (pongo2.Context, error) {
 	ctx := r.Context()
-	data := pongo2.Context{"can_create": a.IsStaff || a.Cohort == "adult" && s.Social.AllowUserGroups}
+	data := pongo2.Context{"can_create": s.Social.AllowsGroupCreation(a)}
 	cohort := a.Cohort
 	if !a.IsActive || a.Cohort == "unassigned" {
 		cohort = ""

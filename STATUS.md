@@ -67,6 +67,9 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Open work
 
+- Reused sessions are resolving cross-review findings in profile authority, media/group controls and
+  inherited fixed-window budget/erasure lock ordering; affected qualification is in progress.
+
 - ADR-0035 review candidate adds guarded administrator permissions and complete private API field
   contracts (380 operations/318 paths/166 schemas); human auth/privacy review precedes landing.
 
