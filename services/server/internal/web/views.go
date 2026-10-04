@@ -136,6 +136,9 @@ func (s *Server) view(r *http.Request, a platform.Actor, name string) (pongo2.Co
 	case "person", "person_card":
 		value, err := s.Social.Profile(r.Context(), a, r.PathValue("public_id"))
 		data["person"] = value
+		if err == nil {
+			err = s.populatePersonContext(r, value, data, name == "person")
+		}
 		if name == "person_card" {
 			template = "web/_person_card.html"
 		}

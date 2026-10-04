@@ -643,3 +643,56 @@ No shared sliding SQL, canonical authentication source, environment names, provi
 minor activation, real data/ingestion, scheduling, deployment, push or main merge changed.
 Previous retained worktree/stash/scratch remain untouched. Fixture container is stopped
 and retained after checks; root owns combined candidate qualification and human review.
+
+## 2026-10-04 — Fresh profile authority after admission review fix
+
+Valid until: fix/go-review-profile is integrated/reviewed/landed or superseded — then treat as history.
+
+The independent review of PR108/f2424bed reproduced an inactive and changed-cohort viewer
+receiving connected adult fields from a captured actor. This fix owns only the new profile
+worktree and its _temp/go-review-profile scratch; original admin worktree/scratch remain
+intact. Social.Profile now loads the full viewer row after the independently committed
+shared profile-card debit and replaces captured flags before pair/tier/private projections.
+No nested pool acquisition or new profile participation gate is introduced. Current target,
+self, inactive/unassigned/cohort and mutual-block vetoes retain indistinguishable404s.
+
+ADR-0028 distinguishes visibility and participation: withdrawn identity or expired/revoked
+child consent retains minimal or liveSHARED same-cohort cards, while current canConnect
+refuses connecting. Current minor pairs never receive adult interests/uploaded-photo
+permission. Role/identity/cohort fields from the supplied actor cannot restore authority.
+Credential revocation applies to later requests/live delivery; already authenticated reads
+are not claimed to be retroactively canceled at every subsequent concurrent change.
+
+Generic person templates had been given person instead of card/person_user. The new
+populatePersonContext helper supplies aliases and the authorized active target ID for
+report/block forms; only connected-adult full pages query a clean photo and use the EXISTING
+native media metadata route, its current viewer/target/block/scanner gate and signer.
+Hover/minor/stranger profiles keep generated avatars. A block introduced before signing
+collapses the helper to404. The coordinator owns views.go and will apply the exact narrow
+caller preserving person for SPA. Worker physical views.go is untouched; scratch
+profile-views-overlay.json / profile_views_caller.go qualify that approved caller with
+this implementation. This dependency is explicit, not a claimed standalone caller change.
+
+Go1.27.1 targeted race binaries run in the qualified Python-free native codec image,
+read-only source/cap-drop=ALL/no-new-privileges/UID1000, explicit task-only PostgreSQL16
+PostGIS/vector fixture with actual foreign keys and shared admission migrations. Five
+social tests and three web tests pass with zero skips/failures. Social tests use a real
+profile-card admission trigger to change viewer state before fresh loading, cover forged
+captured privileges/current minor clamps and identity/consent visibility, and compare
+self/missing/inactive/blocked vetoes. Web tests exercise actual API/v1API/page/hover routes,
+require positive rendered display/avatar/handle/context/interests (not empty200), and
+check current minimal/shared consent/identity fields plus page-only photo authorization.
+
+Exact commands use GOWORK=off,GOMAXPROCS=2,GOFLAGS=-p=2,GOPROXY=off and task-local
+GOCACHE/GOMODCACHE/TMPDIR; SDK /mnt/data/decision-lab-runtime/kev-native/toolchain/go/bin/go:
+`go -C services/server test -race -c -o SCRATCH/social.test ./internal/social`, then
+`social.test -test.v -test.run '^TestPostgresProfile' -social-test-dsn SYNTHETIC_DSN`;
+`go -C services/server test -race -overlay SCRATCH/profile-views-overlay.json -c
+-o SCRATCH/web.test ./internal/web`, then
+`web.test -test.v -test.run '^TestProfile' -web-domain-test-dsn SYNTHETIC_DSN`.
+The schema/native release bootstrap uses the task-only go-review-profile-db on private
+network go-review-profile-test; no host ports or real data are used. Targeted overlay
+vet, native gofmt, whitespace and the52-file fleet doc/link gate pass. No whole280-test
+rerun, hostedCI refresh, production verification, pushes/main merges, deployment,
+real ingestion, scheduling, providers or minors were activated. ADR-0036 qualification
+is appended; human auth/privacy/safety review and coordinator combined checks remain.

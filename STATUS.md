@@ -69,6 +69,8 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 - Reused sessions are resolving cross-review findings in profile authority, media/group controls and
   inherited fixed-window budget/erasure lock ordering; affected qualification is in progress.
+- Profile review fix reloads the viewer after rate admission; source consent/minimal-card policy
+  stays intact. Local fix/go-review-profile qualification precedes coordinator caller/integration review.
 
 - ADR-0035 review candidate adds guarded administrator permissions and complete private API field
   contracts (380 operations/318 paths/166 schemas); human auth/privacy review precedes landing.
@@ -92,16 +94,12 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
-- 2026-10-04 review fix: inherited fixed-window expiry/erasure deadlock fixed (ADR-0037).
-  Accounts 19/safety 20 race-enabled fixture tests pass with zero skips; actual-Erase regression
-  fails with 40P01 on old-source overlay and passes after fix. Race/vet/auth/doc checks pass.
-
-- 2026-10-04 completion: native race/vet/auth hashes and280 tests across19 CLI/PG/codec lanes pass,
-  zero skips. Final image453f7048 has no Python, UID10001, zero fixable HIGH/CRITICAL findings.
-  Source/package/linked audits pass; unimported openpgp advisory is recorded separately.
-  Real release schema/guide/readiness return200; schema380/318/166; graceful shutdown exits0.
-  Exact receipt: `docs/reviews/native-go/completion-qualification.md`; hosted Actions disabled; human review pending.
-- Earlier conversion173 contracts and native/reference/public CI passed; full history is in WORKLOG.
+- Cross-review fixes: coordinator account20/safety20 fixtures pass; inherited erasure deadlock
+  reproduces40P01 under old overlay, passes after fix. Profile social5/web3 targeted race tests pass;
+  group HTML/SPA/domain cohort-policy regression passes. Combined follow-up qualification pending.
+- Prior completion iteration passed280 native tests/19 lanes, zero skips, plus race/vet/auth/audits.
+  Its Go-only image453f7048 and HTTP/schema380/318/166 receipt is historical after these fixes.
+  Exact receipts: `docs/reviews/native-go/completion-qualification.md` and WORKLOG.
 
 ## Standard verification
 Native race/vet + shared-source hashes; database/codec contracts require explicit disposable fixtures
