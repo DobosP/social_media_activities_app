@@ -1,6 +1,7 @@
 package web
 
 import (
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -47,25 +48,10 @@ func TestNativeOpenAPISQLProjectionFields(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			values := map[string]ast.Expr{}
-			for _, decl := range file.Decls {
-				if g, ok := decl.(*ast.GenDecl); ok {
-					for _, spec := range g.Specs {
-						if v, ok := spec.(*ast.ValueSpec); ok {
-							for i, name := range v.Names {
-								if i < len(v.Values) {
-									values[name.Name] = v.Values[i]
-								}
-							}
-						}
-					}
-				}
+			query, err := sourceProjectionText(file, binding.symbol)
+			if err != nil {
+				t.Fatal(err)
 			}
-			expr := values[binding.symbol]
-			if expr == nil {
-				t.Fatal("projection source not found")
-			}
-			query := sqlProjectionText(expr, values, 0)
 			expected := outerJSONKeys(t, query)
 			shape := full[binding.schema].(map[string]any)
 			props := schemaProperties(t, shape, full)
@@ -125,6 +111,171 @@ func TestNativeOpenAPISQLProjectionFields(t *testing.T) {
 	}
 }
 
+// Resolve the bound symbol itself, whether it is a static value or a policy-aware
+// builder. Each builder must have one direct return; branches cannot silently
+// replace an independently checked projection with a union of field names.
+func sourceProjectionText(file *ast.File, symbol string) (string, error) {
+	values := map[string]ast.Expr{}
+	functions := map[string]*ast.FuncDecl{}
+	bind := func(decl *ast.GenDecl) {
+		for _, spec := range decl.Specs {
+			if v, ok := spec.(*ast.ValueSpec); ok {
+				for i, name := range v.Names {
+					if i < len(v.Values) {
+						values[name.Name] = v.Values[i]
+					}
+				}
+			}
+		}
+	}
+	for _, decl := range file.Decls {
+		switch d := decl.(type) {
+		case *ast.GenDecl:
+			bind(d)
+		case *ast.FuncDecl:
+			if functions[d.Name.Name] != nil {
+				return "", fmt.Errorf("ambiguous projection builder %s", d.Name.Name)
+			}
+			functions[d.Name.Name] = d
+		}
+	}
+	expr := values[symbol]
+	if expr == nil {
+		builder := functions[symbol]
+		if builder == nil || builder.Body == nil {
+			return "", fmt.Errorf("projection source not found: %s", symbol)
+		}
+		returns := 0
+		ast.Inspect(builder.Body, func(node ast.Node) bool {
+			if _, literal := node.(*ast.FuncLit); literal {
+				return false
+			}
+			if _, ok := node.(*ast.ReturnStmt); ok {
+				returns++
+			}
+			return true
+		})
+		if returns != 1 {
+			return "", fmt.Errorf("projection builder %s must have one return", symbol)
+		}
+		for _, statement := range builder.Body.List {
+			switch stmt := statement.(type) {
+			case *ast.AssignStmt:
+				if len(stmt.Lhs) != len(stmt.Rhs) {
+					return "", fmt.Errorf("unsupported projection assignment in %s", symbol)
+				}
+				for i, left := range stmt.Lhs {
+					if name, ok := left.(*ast.Ident); ok {
+						values[name.Name] = stmt.Rhs[i]
+					}
+				}
+			case *ast.DeclStmt:
+				if decl, ok := stmt.Decl.(*ast.GenDecl); ok {
+					bind(decl)
+				}
+			case *ast.ReturnStmt:
+				if len(stmt.Results) == 1 {
+					expr = stmt.Results[0]
+				}
+			default:
+				return "", fmt.Errorf("unsupported projection builder statement in %s", symbol)
+			}
+		}
+		if expr == nil {
+			return "", fmt.Errorf("projection builder %s needs a direct SQL return", symbol)
+		}
+	}
+	query := sqlProjectionText(expr, values, 0)
+	if !strings.Contains(query, "jsonb_build_object(") {
+		return "", fmt.Errorf("projection %s is not a supported SQL expression", symbol)
+	}
+	return query, nil
+}
+
+// Numeric policy substitutions affect SQL values, not field names. Restrict
+// formatting to %d outside SQL quoted strings and preserve literal %% exactly;
+// unsupported/dynamic key formatting must fail the source projection check.
+func numericProjectionTemplate(template string, argumentCount int) (string, bool) {
+	var out strings.Builder
+	quoted, substitutions := false, 0
+	for i := 0; i < len(template); i++ {
+		ch := template[i]
+		if ch == '\'' {
+			if quoted && i+1 < len(template) && template[i+1] == '\'' {
+				out.WriteString("''")
+				i++
+				continue
+			}
+			quoted = !quoted
+		}
+		if ch == '%' {
+			if i+1 >= len(template) {
+				return "", false
+			}
+			i++
+			switch template[i] {
+			case '%':
+				out.WriteByte('%')
+			case 'd':
+				if quoted {
+					return "", false
+				}
+				substitutions++
+				out.WriteByte('0')
+			default:
+				return "", false
+			}
+			continue
+		}
+		out.WriteByte(ch)
+	}
+	return out.String(), substitutions == argumentCount && !quoted
+}
+
+func TestNativeOpenAPIProjectionBuilders(t *testing.T) {
+	for _, fixture := range []struct {
+		name, source string
+		keys         []string
+	}{
+		{"constant", "const projection = `jsonb_build_object('id',p.id,'title',p.title)`", []string{"id", "title"}},
+		{"numeric-policy-template", "const template = `jsonb_build_object('id',g.id,'ready',COUNT(*)>=%d,'remaining',GREATEST(0,%d-COUNT(*)))`; func (s *Service) projection() string { return fmt.Sprintf(template,s.Policy.Threshold,s.Policy.Threshold) }", []string{"id", "ready", "remaining"}},
+		{"local-policy-and-nested-share", "const shared = `wrong`; func projection(ctx Context) string { predicate := policy(ctx).PlaceSQL(); shared := `CASE WHEN (` + predicate + `) THEN jsonb_build_object('kind','place','label','Reader''s venue') ELSE NULL END`; return `jsonb_build_object('id',p.id,'share',` + shared + `,'body',p.body)` }", []string{"id", "share", "body"}},
+		{"local-declaration", "func projection() string { const prefix = `jsonb_build_object('id',p.id`; return (prefix + `,'name',p.name)`) }", []string{"id", "name"}},
+		{"literal-percent", "func projection() string { return fmt.Sprintf(`jsonb_build_object('value','100%%','ready',n>=%d)`,threshold) }", []string{"value", "ready"}},
+	} {
+		t.Run(fixture.name, func(t *testing.T) {
+			file, err := parser.ParseFile(token.NewFileSet(), "fixture.go", "package fixture\n"+fixture.source, 0)
+			if err != nil {
+				t.Fatal(err)
+			}
+			query, err := sourceProjectionText(file, "projection")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got := outerJSONKeys(t, query); !reflect.DeepEqual(got, fixture.keys) {
+				t.Fatalf("returned projection keys=%v want=%v", got, fixture.keys)
+			}
+		})
+	}
+	for _, source := range []string{
+		"func missing() string { return `jsonb_build_object('id',p.id)` }",
+		"func projection() string { if condition { return `jsonb_build_object('id',p.id)` }; return `jsonb_build_object('private',p.secret)` }",
+		"func projection() string { return unsupportedBuilder() }",
+		"func projection() string { return fmt.Sprintf(`jsonb_build_object('%s',p.id)`,key) }",
+		"func projection() string { return fmt.Sprintf(`jsonb_build_object('key_%d',p.id)`,threshold) }",
+		"func projection() string { return fmt.Sprintf(`jsonb_build_object('id',p.id,'ready',n>=%d)`) }",
+		"func projection() string { return fmt.Sprintf(`jsonb_build_object('id',p.id,'ready',n>=%s)`,threshold) }",
+	} {
+		file, err := parser.ParseFile(token.NewFileSet(), "fixture.go", "package fixture\n"+source, 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := sourceProjectionText(file, "projection"); err == nil {
+			t.Fatal("unsupported/dynamic projection silently accepted", source)
+		}
+	}
+}
+
 func sqlProjectionText(expr ast.Expr, values map[string]ast.Expr, depth int) string {
 	if depth > 30 {
 		return "NULL"
@@ -138,6 +289,16 @@ func sqlProjectionText(expr ast.Expr, values map[string]ast.Expr, depth int) str
 	case *ast.BinaryExpr:
 		if x.Op == token.ADD {
 			return sqlProjectionText(x.X, values, depth+1) + sqlProjectionText(x.Y, values, depth+1)
+		}
+	case *ast.ParenExpr:
+		return sqlProjectionText(x.X, values, depth+1)
+	case *ast.CallExpr:
+		if selector, ok := x.Fun.(*ast.SelectorExpr); ok && selector.Sel.Name == "Sprintf" && len(x.Args) > 0 {
+			if pkg, ok := selector.X.(*ast.Ident); ok && pkg.Name == "fmt" {
+				if query, valid := numericProjectionTemplate(sqlProjectionText(x.Args[0], values, depth+1), len(x.Args)-1); valid {
+					return query
+				}
+			}
 		}
 	case *ast.Ident:
 		if child := values[x.Name]; child != nil {
