@@ -72,3 +72,12 @@ reachable/imported findings, not suppressed. Trivyv0.75.0 scans the final image 
 Documentation/link/whitespace gates pass; current status and any hosted-CI/review limits are
 in STATUS.md. Template YAML parses and contains no retired Python runtime assignments.
 Actual production storage/scanner/provider/backup/restore/ingress acceptance remains a launch gate.
+
+## Publication and hosted validation
+
+Completion is published for human review in PR108. Parallel main commit cd006e3 introduced
+accepted ADR-0033 on-demand Actions and is incorporated in the candidate. The proposed
+shared-budget decision is ADR-0037; config/admin/authority remain0034/0035/0036.
+The native Actions page visibly reports that the workflow is manually disabled; no remote
+run was queued or a passing hosted result claimed. Full local qualification above passes.
+No workflow was re-enabled, and the manual-only trigger policy is preserved.

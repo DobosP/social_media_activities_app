@@ -71,7 +71,7 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   contracts (380 operations/318 paths/166 schemas); human auth/privacy review precedes landing.
 
 - All three completion lanes are integrated and locally qualified on `feat/go-migration-finish`.
-  Hosted CI and human auth/privacy/safety review precede landing; origin/main remains the base conversion.
+  Human auth/privacy/safety review precedes landing; native hosted Actions is manually disabled.
 
 - Build/promote a fresh immutable producer/server V2 release before real sync;
   the serving repo's producer dependency must be intentionally bumped first.
@@ -93,7 +93,7 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   zero skips. Final image453f7048 has no Python, UID10001, zero fixable HIGH/CRITICAL findings.
   Source/package/linked audits pass; unimported openpgp advisory is recorded separately.
   Real release schema/guide/readiness return200; schema380/318/166; graceful shutdown exits0.
-  Exact receipt: `docs/reviews/native-go/completion-qualification.md`; hosted CI/review pending.
+  Exact receipt: `docs/reviews/native-go/completion-qualification.md`; hosted Actions disabled; human review pending.
 - Earlier conversion173 contracts and native/reference/public CI passed; full history is in WORKLOG.
 
 ## Standard verification

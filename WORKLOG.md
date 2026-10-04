@@ -569,3 +569,16 @@ Main advanced to cd006e3 with accepted owner-directed on-demand Actions policy A
 The proposed shared-budget decision is renumbered toADR-0037 beforelanding; config/admin/
 authority decisions retain0034/0035/0036. This prevents duplicate canonical ADR numbers
 without changing runtime behavior. All completion code remains under sensitive-code review.
+
+
+## 2026-10-04 — completion published for sensitive-code review
+
+Valid until: PR108 is reviewed and landed — then treat as history.
+
+PR108 contains the combined280-test qualified Go completion. Parallel accepted main
+cd006e3 is integrated and ADR numbering is unique (0033manualActions;0034config;
+0035permissions/schema;0036freshauthority;0037sharedbudgets; next0038). GitHub native
+Actions visibly reports manually disabled; no hosted run/result is claimed and no
+workflow or spending controls changed. Local race/vet/PG/codecs/audits/image/HTTP
+qualification is complete. Human auth/privacy/safety review under AGENTS.md remains
+before source landing. Worktrees/branches/scratch are retained because work is unlanded.
