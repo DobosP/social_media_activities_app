@@ -26,6 +26,9 @@ func (s *Service) UnsafeReport(ctx context.Context, a platform.Actor, activityID
 	if policyErr != nil {
 		return result, policyErr
 	}
+	if s.DB == nil || a.ID < 1 {
+		return result, errors.New("safety budget actor unavailable")
+	}
 	if s.Config.CanSeeActivity == nil {
 		return result, platform.ErrNotFound
 	}
@@ -40,7 +43,14 @@ func (s *Service) UnsafeReport(ctx context.Context, a platform.Actor, activityID
 	if err != nil {
 		return result, err
 	}
+	if err := s.pruneExpiredActionBudgets(ctx, s.Config.Now()); err != nil {
+		return result, err
+	}
 	err = platform.Transaction(ctx, s.DB, func(tx pgx.Tx) error {
+		var reporter int64
+		if err := tx.QueryRow(ctx, `SELECT id FROM accounts_user WHERE id=$1 FOR KEY SHARE`, a.ID).Scan(&reporter); err != nil {
+			return err
+		}
 		if _, err := tx.Exec(ctx, `SELECT id FROM social_activity WHERE id=$1 FOR UPDATE`, activityID); err != nil {
 			return err
 		}
@@ -55,10 +65,13 @@ func (s *Service) UnsafeReport(ctx context.Context, a platform.Actor, activityID
 			return err
 		}
 		var attempts int
-		if _, err = tx.Exec(ctx, `DELETE FROM safety_go_actionbudget WHERE until<=$1`, s.Config.Now()); err != nil {
-			return err
-		}
-		if err = tx.QueryRow(ctx, `INSERT INTO safety_go_actionbudget(user_id,action,count,until) VALUES($1,'unsafe_report',1,$2) ON CONFLICT(user_id,action) DO UPDATE SET count=safety_go_actionbudget.count+1 WHERE safety_go_actionbudget.count<$3 RETURNING count`, a.ID, s.Config.Now().Add(policy.Window), policy.Limit).Scan(&attempts); err != nil {
+		now := s.Config.Now()
+		if err = tx.QueryRow(ctx, `INSERT INTO safety_go_actionbudget(user_id,action,count,until)
+			VALUES($1,'unsafe_report',1,$2) ON CONFLICT(user_id,action) DO UPDATE SET
+			count=CASE WHEN safety_go_actionbudget.until<=$4 THEN 1 ELSE safety_go_actionbudget.count+1 END,
+			until=CASE WHEN safety_go_actionbudget.until<=$4 THEN $2 ELSE safety_go_actionbudget.until END
+			WHERE safety_go_actionbudget.until<=$4 OR safety_go_actionbudget.count<$3 RETURNING count`,
+			a.ID, now.Add(policy.Window), policy.Limit, now).Scan(&attempts); err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
 				return ErrRate
 			}

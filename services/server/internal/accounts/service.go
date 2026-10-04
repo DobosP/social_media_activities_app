@@ -60,18 +60,48 @@ func (s *Service) Migrate(ctx context.Context) error {
 	return err
 }
 
+// pruneExpiredActionBudgets releases all expiry row locks before admission
+// acquires its account FK lock. A locked victim is skipped rather than waiting
+// behind account erasure; no user lock is acquired while holding unrelated rows.
+func (s *Service) pruneExpiredActionBudgets(ctx context.Context, now time.Time) error {
+	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
+	defer cancel()
+	return platform.Transaction(ctx, s.DB, func(tx pgx.Tx) error {
+		_, err := tx.Exec(ctx, `WITH expired AS MATERIALIZED (
+   SELECT ctid FROM accounts_go_action_budget WHERE until<=$1
+   ORDER BY until,user_id,action LIMIT 256 FOR UPDATE SKIP LOCKED
+  ) DELETE FROM accounts_go_action_budget b USING expired e WHERE b.ctid=e.ctid`, now)
+		return err
+	})
+}
+
 func (s *Service) allowAction(ctx context.Context, user int64, action string, limit int, window time.Duration) (bool, error) {
 	policy, err := budgets.Resolve(s.RatePolicies, action, budgets.Policy{Limit: limit, Window: window})
 	if err != nil {
 		return false, err
 	}
+	if s.DB == nil || user < 1 {
+		return false, errors.New("account budget actor unavailable")
+	}
 	now := s.Config.Now()
+	if err = s.pruneExpiredActionBudgets(ctx, now); err != nil {
+		return false, err
+	}
 	var allowed bool
 	err = platform.Transaction(ctx, s.DB, func(tx pgx.Tx) error {
-		if _, err := tx.Exec(ctx, `DELETE FROM accounts_go_action_budget WHERE until<=$1`, now); err != nil {
+		var locked int64
+		if err := tx.QueryRow(ctx, `SELECT id FROM accounts_user WHERE id=$1 FOR KEY SHARE`, user).Scan(&locked); err != nil {
 			return err
 		}
-		err := tx.QueryRow(ctx, `INSERT INTO accounts_go_action_budget(user_id,action,count,until) VALUES($1,$2,1,$3) ON CONFLICT(user_id,action) DO UPDATE SET count=accounts_go_action_budget.count+1 WHERE accounts_go_action_budget.count<$4 RETURNING true`, user, action, now.Add(policy.Window), policy.Limit).Scan(&allowed)
+		// A bounded sweep may leave this subject's expired bucket behind. Reset it
+		// atomically under the user-before-budget lock order rather than pruning
+		// other users while holding this actor's account lock.
+		err := tx.QueryRow(ctx, `INSERT INTO accounts_go_action_budget(user_id,action,count,until)
+   VALUES($1,$2,1,$3) ON CONFLICT(user_id,action) DO UPDATE SET
+   count=CASE WHEN accounts_go_action_budget.until<=$5 THEN 1 ELSE accounts_go_action_budget.count+1 END,
+   until=CASE WHEN accounts_go_action_budget.until<=$5 THEN EXCLUDED.until ELSE accounts_go_action_budget.until END
+   WHERE accounts_go_action_budget.until<=$5 OR accounts_go_action_budget.count<$4 RETURNING true`,
+			user, action, now.Add(policy.Window), policy.Limit, now).Scan(&allowed)
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil
 		}
