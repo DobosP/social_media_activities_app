@@ -317,3 +317,16 @@ private-storage/scanner, recovery, operations and product/legal gates. The compl
 plan is preserved in docs/archive/production-readiness-native-go-reference.md. This documentation
 change does not claim qualification of the in-progress code. Doc gate: files=52 dead_links=0
 stale_terms=0 retired_verbs=0 orphans=0; git diff --check passes.
+
+
+## 2026-10-04 — fresh authority after rate preflight
+
+Valid until: the combined completion candidate is qualified and reviewed — then treat as history.
+
+ADR-0036 adds an authoritative account equality gate to platform.Participate. A captured
+actor cannot retain active/identity/cohort/age/role/staff/superuser permission after those
+fields change between separately committed transactions. Existing assurance/parental-consent
+and privacy-withdrawal behavior is retained. Two isolated PostgreSQL race regressions
+passed, including seven independently changed fields, expired assurance and withdrawn
+child consent; no skips. Source is pending combined qualification and human safety review.
+Doc gate files=52 dead_links=0 stale_terms=0 retired_verbs=0 orphans=0; whitespace passes.

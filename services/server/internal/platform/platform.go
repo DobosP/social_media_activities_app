@@ -93,7 +93,17 @@ func Participate(ctx context.Context, q Querier, a Actor) error {
 		return ErrForbidden
 	}
 	var current bool
-	err := q.QueryRow(ctx, `SELECT COALESCE((SELECT expires_at IS NULL OR expires_at>now() FROM accounts_ageassurance WHERE user_id=$1 ORDER BY verified_at DESC,id DESC LIMIT 1),true)`, a.ID).Scan(&current)
+	// A request actor is a snapshot, including across a separately committed
+	// rate reservation. Refuse stale authority instead of moving the operation
+	// into a different cohort or retaining privileges withdrawn meanwhile.
+	err := q.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM accounts_user u
+		WHERE u.id=$1 AND u.is_active AND u.is_identity_verified
+		AND u.age_band=$2 AND u.cohort=$3 AND u.role=$4
+		AND u.is_staff=$5 AND u.is_superuser=$6
+		AND COALESCE((SELECT expires_at IS NULL OR expires_at>now()
+			FROM accounts_ageassurance WHERE user_id=u.id
+			ORDER BY verified_at DESC,id DESC LIMIT 1),true))`,
+		a.ID, a.AgeBand, a.Cohort, a.Role, a.IsStaff, a.IsSuperuser).Scan(&current)
 	if err != nil {
 		return err
 	}

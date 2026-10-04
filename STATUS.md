@@ -57,7 +57,6 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   is a hash-verified portable copy; Django remains offline contract/reference tooling.
 - The owner-approved Go conversion is merged and pushed to `origin/main` on 2026-10-04.
   Social deployment/provider/minor launch gates remain separate from source landing.
-
 ## Safety and operating gates
 
 - A RO-EDU venue remains child-venue **UNKNOWN** until staff approve that exact
@@ -95,7 +94,8 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 ## Verification record (newest first)
 
 - 2026-10-04 readiness guide now describes native rollout/recovery and product gates; historical Python
-  planning is archived. Doc gate: files=52 dead_links=0 stale_terms=0 retired_verbs=0 orphans=0.
+  planning is archived. Fresh-authority gate (ADR-0036) passed two PG race tests; combined review is pending.
+  Doc gate: files=52 dead_links=0 stale_terms=0 retired_verbs=0 orphans=0.
 
 - 2026-10-04 owner-approved conversion: native race/vet and portable auth hashes pass. Fresh Go-only
   bootstrap + **173 PostgreSQL/codec tests** passed with no skips; final affected app/media/account
