@@ -30,12 +30,17 @@ import (
 )
 
 type cliOptions struct {
-	Listen, MediaDir, Scratch, StaticDir, SiteRoot string
-	Job, JobOptions                                string
-	Migrate, MigrateOnly, Due, Dev                 bool
-	DevContainer                                   bool
-	MediaDirExplicit                               bool
-	ReminderWithinHours                            int
+	Listen, MediaDir, Scratch, StaticDir, SiteRoot      string
+	Job, JobOptions                                     string
+	Migrate, MigrateOnly, Due, Dev                      bool
+	DevContainer                                        bool
+	MediaDirExplicit                                    bool
+	ReminderWithinHours                                 int
+	CSPDigest, BackupProbe                              bool
+	OperatorInput, OutputFormat                         string
+	BackupUpload, BackupDownload, BackupFile, BackupKey string
+	BackupMaxBytes                                      int64
+	BackupTimeout                                       time.Duration
 }
 
 func parseCLI(args []string, output io.Writer) (cliOptions, error) {
@@ -55,6 +60,16 @@ func parseCLI(args []string, output io.Writer) (cliOptions, error) {
 	f.BoolVar(&o.Due, "due", false, "run the native due-job registry once and exit")
 	f.IntVar(&o.ReminderWithinHours, "reminder-within-hours", 0, "override activity-reminder lookahead for --due (1..8760 hours)")
 	f.StringVar(&o.JobOptions, "job-options", "", "bounded JSON options object from a regular file, or - for stdin")
+	f.BoolVar(&o.CSPDigest, "csp-digest", false, "summarize sanitized CSP JSON/JSONL reports without database startup")
+	f.StringVar(&o.OperatorInput, "input", "-", "CSP digest regular input file, or - for stdin")
+	f.StringVar(&o.OutputFormat, "format", "text", "CSP digest output: text or json")
+	f.StringVar(&o.BackupUpload, "backup-upload", "", "upload one private gzip PostgreSQL dump file; explicit EU/private/SSE storage required")
+	f.StringVar(&o.BackupKey, "backup-key", "", "reviewed backups/db timestamp key for upload (default: current UTC timestamp)")
+	f.StringVar(&o.BackupDownload, "backup-download", "", "download one reviewed backup key to a new private file for manual restore")
+	f.StringVar(&o.BackupFile, "backup-file", "", "new private destination file for --backup-download")
+	f.BoolVar(&o.BackupProbe, "backup-probe", false, "roundtrip synthetic bytes and delete only its random backup probe object")
+	f.Int64Var(&o.BackupMaxBytes, "backup-max-bytes", 1<<30, "backup byte bound (1..4294967296)")
+	f.DurationVar(&o.BackupTimeout, "backup-timeout", 15*time.Minute, "explicit backup operation timeout (1s..1h)")
 	if err := f.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			return o, flag.ErrHelp
@@ -66,6 +81,9 @@ func parseCLI(args []string, output io.Writer) (cliOptions, error) {
 	}
 	if o.DevContainer && !o.Dev {
 		return o, errors.New("--dev-container requires --dev")
+	}
+	if err := validateOperatorFlags(o); err != nil {
+		return o, err
 	}
 	var validationErr error
 	f.Visit(func(value *flag.Flag) {
@@ -101,6 +119,9 @@ func runWithReporter(ctx context.Context, args []string, get environment, stdin 
 		return nil
 	}
 	if err != nil {
+		return err
+	}
+	if handled, err := runOperator(ctx, o, get, stdin, stdout, presence...); handled {
 		return err
 	}
 	if _, err = jobInvocation(o.Job, nil); err != nil {

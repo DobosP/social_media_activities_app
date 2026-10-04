@@ -396,6 +396,9 @@ func (s *Service) ProcessPendingVideos(ctx context.Context, limit int) (int, err
 	if limit < 1 || limit > 50 {
 		return 0, platform.ErrInvalid
 	}
+	if !s.processor.scannerEffective() {
+		return 0, nil
+	}
 	completed := 0
 	for n := 0; n < limit; n++ {
 		var att Attachment
@@ -411,6 +414,13 @@ func (s *Service) ProcessPendingVideos(ctx context.Context, limit int) (int, err
 				return e
 			}
 			if fresh.attempts >= s.policy.VideoMaxAttempts {
+				// A stale lease has no committed failure outcome. In particular,
+				// a failed audit transaction may have rolled back scanner deferral.
+				// Preserve its evidence for operator recovery instead of inferring
+				// a terminal content failure from the last claim's debit.
+				if fresh.Status == "processing" {
+					return ErrProcessing
+				}
 				terminal = true
 				if e = queueDelete(ctx, tx, fresh.key, fresh.thumb, fresh.poster, fresh.sourceKey); e != nil {
 					return e
@@ -441,6 +451,12 @@ func (s *Service) ProcessPendingVideos(ctx context.Context, limit int) (int, err
 		if err = s.processClaim(ctx, att); err != nil {
 			if ctx.Err() != nil {
 				return completed, ctx.Err()
+			}
+			if errors.Is(err, errClaimFinalization) {
+				return completed, ErrProcessing
+			}
+			if errors.Is(err, ErrScanner) {
+				return completed, nil
 			}
 			continue
 		}
@@ -482,30 +498,25 @@ func (s *Service) processClaim(ctx context.Context, att Attachment) (err error) 
 	defer cancel()
 	path, err := s.download(ctx, att.sourceKey, att.ByteSize)
 	if err != nil {
-		s.failClaim(ctx, att, err)
-		return err
+		return s.failClaim(ctx, att, err)
 	}
 	defer os.Remove(path)
 	m, err := s.processor.ProcessVideo(ctx, path)
 	if err != nil {
-		s.failClaim(ctx, att, err)
-		return err
+		return s.failClaim(ctx, att, err)
 	}
 	defer m.Cleanup()
 	if m.SourceSHA256 != att.digest {
-		s.failClaim(ctx, att, ErrRejected)
-		return ErrRejected
+		return s.failClaim(ctx, att, ErrRejected)
 	}
 	key, err := s.storeArtifact(ctx, "attachments", m.Main)
 	if err != nil {
-		s.failClaim(ctx, att, err)
-		return err
+		return s.failClaim(ctx, att, err)
 	}
 	poster, err := s.storeArtifact(ctx, "attachments", *m.Poster)
 	if err != nil {
 		s.discard(ctx, key)
-		s.failClaim(ctx, att, err)
-		return err
+		return s.failClaim(ctx, att, err)
 	}
 	published := false
 	defer func() {
@@ -548,23 +559,34 @@ func (s *Service) processClaim(ctx context.Context, att Attachment) (err error) 
 		return chat.Publish(ctx, tx, chat.Event{Kind: "chat", Event: "attachments", RoomID: att.thread, MessageID: att.PostID})
 	})
 	if err != nil {
-		s.failClaim(ctx, att, err)
-		return err
+		return s.failClaim(ctx, att, err)
 	}
 	published = true
 	return nil
 }
-func (s *Service) failClaim(ctx context.Context, att Attachment, cause error) {
+
+var errClaimFinalization = errors.New("video claim finalization failed")
+
+func (s *Service) failClaim(ctx context.Context, att Attachment, cause error) error {
 	cleanup, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
 	defer cancel()
 	blocked := errors.Is(cause, ErrBlocked)
-	_ = platform.Transaction(cleanup, s.db, func(tx pgx.Tx) error {
+	err := platform.Transaction(cleanup, s.db, func(tx pgx.Tx) error {
 		fresh, e := s.attachment(cleanup, tx, att.ID, true)
 		if e != nil {
 			return e
 		}
 		if fresh.Status != "processing" || fresh.started == nil || att.started == nil || !fresh.started.Equal(*att.started) {
 			return nil
+		}
+		if errors.Is(cause, ErrScanner) {
+			// Scanner availability is an admission prerequisite, not a content
+			// failure. Restore this claim's debit and preserve quarantined bytes
+			// so a provider outage cannot exhaust attempts or erase evidence.
+			if _, e = tx.Exec(cleanup, `UPDATE media_attachment SET status='pending',processing_attempts=GREATEST(0,processing_attempts-1),processing_started_at=NULL WHERE id=$1`, att.ID); e != nil {
+				return e
+			}
+			return platform.RecordAudit(cleanup, tx, platform.Actor{}, "media.video_deferred", fmt.Sprintf("media.attachment:%d", att.ID), map[string]string{"reason": "scanner_unavailable"})
 		}
 		status := "processing"
 		if blocked {
@@ -591,4 +613,8 @@ func (s *Service) failClaim(ctx context.Context, att Attachment, cause error) {
 		}
 		return nil
 	})
+	if err != nil {
+		return errors.Join(errClaimFinalization, ErrProcessing)
+	}
+	return cause
 }

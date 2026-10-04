@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "source_head": "ce3d0e3ee9f180ce2e95140300b12582db9895d6",
+  "entries": [
+    {
+      "legacy_id": "apps/ops/tests/test_observability.py::test_csp_report_digest_groups_violations_and_counts_malformed_payloads",
+      "legacy_file": "apps/ops/tests/test_observability.py",
+      "line": 368,
+      "source_sha256": "8ac1dc735517d0802a1b0e8bac2acc69d128249ad55129e470efa61314579479",
+      "classification": "native_semantic_coverage",
+      "native_evidence": [
+        {
+          "go_file": "services/server/cmd/social-server/operator_test.go",
+          "test": "TestCSPDigestCLIFileStdinAndGoldenFormatsWithoutDatabase",
+          "scenario": "Sanitized native JSON/JSONL grouping and stable count ranking",
+          "assertions": [
+            "Three valid violations and one malformed report; two canonical groups",
+            "Directive normalization, URI query/fragment and userinfo removal",
+            "Legacy/Reporting API envelopes produce exact text and semantic JSON goldens"
+          ]
+        }
+      ],
+      "rationale": "Native implementation and explicit independently asserted fixtures replace Python execution; reference source stays frozen data.",
+      "gaps": [],
+      "runtime_verification": "passed"
+    },
+    {
+      "legacy_id": "apps/ops/tests/test_observability.py::test_digest_csp_reports_command_reads_jsonl_and_reuses_sanitizer",
+      "legacy_file": "apps/ops/tests/test_observability.py",
+      "line": 402,
+      "source_sha256": "8ac1dc735517d0802a1b0e8bac2acc69d128249ad55129e470efa61314579479",
+      "classification": "native_semantic_coverage",
+      "native_evidence": [
+        {
+          "go_file": "services/server/cmd/social-server/operator_test.go",
+          "test": "TestCSPDigestCLIFileStdinAndGoldenFormatsWithoutDatabase",
+          "scenario": "DB-free native operator file-or-stdin execution",
+          "assertions": [
+            "Both regular file and stdin paths execute before environment/database configuration",
+            "Text and JSON output preserve counts and sanitized triples"
+          ]
+        },
+        {
+          "go_file": "services/server/cmd/social-server/operator_test.go",
+          "test": "TestCSPDigestCLIEmptyMalformedInvalidAndBoundedInputs",
+          "scenario": "Actual operator error handling and resource/privacy bounds",
+          "assertions": [
+            "Invalid output format and incompatible flags fail before environment or database lookup",
+            "Empty and malformed reports preserve total/malformed counters",
+            "Missing/symlink/directory/oversized input is refused"
+          ]
+        }
+      ],
+      "rationale": "Native implementation and explicit independently asserted fixtures replace Python execution; reference source stays frozen data.",
+      "gaps": [],
+      "runtime_verification": "passed"
+    },
+    {
+      "legacy_id": "apps/web/tests/test_agent_go_contract.py::test_native_go_queries_match_exported_public_records",
+      "legacy_file": "apps/web/tests/test_agent_go_contract.py",
+      "line": 94,
+      "source_sha256": "e8fdf61afd26a8cf97f0d27c4384657b92a127beeed6f04ea4e2e579453915bb",
+      "classification": "native_semantic_coverage",
+      "native_evidence": [
+        {
+          "go_file": "services/server/internal/export/agentapi_process_test.go",
+          "test": "TestPostgresNativeExporterToAgentAPIExecutableContract",
+          "scenario": "Actual native PostgreSQL exporter to actual native Go sidecar executable",
+          "assertions": [
+            "Native catalog query ID/order parity across all original filters",
+            "Exact exported public record bytes preserved by native sidecar",
+            "Private pending venues, minor/private activity cards, cancelled/held/tombstone/past events withheld",
+            "Prices, source/licensing, generations, public cache/session headers, paging, ETags/gzip and no private API alias",
+            "Actual executable path/filter/raw-byte preservation for bigint PK/FK values above2^53"
+          ]
+        }
+      ],
+      "rationale": "Native implementation and explicit independently asserted fixtures replace Python execution; reference source stays frozen data.",
+      "gaps": [],
+      "runtime_verification": "passed"
+    }
+  ]
+}

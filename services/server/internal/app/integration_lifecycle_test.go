@@ -31,7 +31,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func integrationConfig(t *testing.T) Config {
+func integrationConfig(t testing.TB) Config {
 	t.Helper()
 	root, err := filepath.Abs("../../../../")
 	if err != nil {

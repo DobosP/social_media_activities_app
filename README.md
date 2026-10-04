@@ -102,15 +102,15 @@ docs/              # native guides, safety contracts, ADRs and verification rece
 ## Tests & lint
 
 ```bash
-go -C services/server test -race ./...
-go -C services/server vet ./...
-go -C services/server run ./cmd/check-authcore
+scripts/check-native.sh /absolute/path/to/go
 ```
 
 Database-required cases need the explicit disposable fixture gate in
 [agent-testing](docs/agent-testing.md); skipped database cases do not qualify a release.
-Frontend and source/package/image audits are enforcing native CI gates. Python `pytest`,
-Ruff, migration drift and pip audits remain the offline compatibility-oracle checks.
+Frontend and source/package/image audits are enforcing native CI gates in `ci.yml`.
+Optional historical Python checks remain in the explicitly manual `reference.yml`.
+[ADR-0038](docs/adr/0038-native-verification-toolchain.md) records the native tooling
+boundary and the case-by-case evidence gate that blocks unresolved reference retirement.
 Dependency boundaries and security commands: [SECURITY](docs/SECURITY.md).
 
 ## Docs

@@ -26,6 +26,10 @@ type Blocklist struct {
 	distance   int
 }
 
+func (b *Blocklist) Effective() bool {
+	return b != nil && len(b.hashes)+len(b.perceptual) > 0
+}
+
 func NewBlocklist(hashes, perceptual []string, distance int) (*Blocklist, error) {
 	if len(hashes)+len(perceptual) == 0 || distance < 0 || distance > 8 {
 		return nil, ErrScanner

@@ -361,25 +361,33 @@ func (a *App) serveHTTP(w http.ResponseWriter, r *http.Request) {
 		platform.Error(w, 414, "Request too large.")
 		return
 	}
+	limit := a.Config.MaxRequestBodyBytes
+	if limit == 0 {
+		limit = 8 << 20
+	}
+	memory := a.Config.DataUploadMemoryBytes
+	if memory == 0 {
+		memory = 8 << 20
+	}
+	limit = min(limit, memory)
+	contentType, _, _ := mime.ParseMediaType(r.Header.Get("Content-Type"))
+	mutation := r.Method != http.MethodGet && r.Method != http.MethodHead && r.Method != http.MethodOptions
+	if mutation && contentType == "multipart/form-data" && (strings.Contains(r.URL.Path, "/media/") || strings.HasSuffix(r.URL.Path, "/attach/") || classicThreadUpload(r)) {
+		limit = 82 << 20
+	}
+	// Declared oversize is rejected before authentication, decoding or disk
+	// spooling, including GET bodies. Streaming unknown-length input still uses
+	// the existing reader/field limits at its owning adapter.
+	if r.ContentLength > limit {
+		platform.Error(w, http.StatusRequestEntityTooLarge, "Request body too large.")
+		return
+	}
 	if strings.HasPrefix(r.URL.Path, "/static/") && a.Static != nil {
 		a.Static.ServeHTTP(w, r)
 		return
 	}
 	r = a.forwardedPeer(r)
-	if r.Method != http.MethodGet && r.Method != http.MethodHead && r.Method != http.MethodOptions {
-		limit := a.Config.MaxRequestBodyBytes
-		if limit == 0 {
-			limit = 8 << 20
-		}
-		memory := a.Config.DataUploadMemoryBytes
-		if memory == 0 {
-			memory = 8 << 20
-		}
-		limit = min(limit, memory)
-		contentType, _, _ := mime.ParseMediaType(r.Header.Get("Content-Type"))
-		if contentType == "multipart/form-data" && (strings.Contains(r.URL.Path, "/media/") || strings.HasSuffix(r.URL.Path, "/attach/") || classicThreadUpload(r)) {
-			limit = 82 << 20
-		}
+	if mutation {
 		r.Body = http.MaxBytesReader(w, r.Body, limit)
 	}
 	var tokenAuthenticated bool

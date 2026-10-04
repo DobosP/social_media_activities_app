@@ -1,0 +1,180 @@
+name: Offline Python reference (optional)
+
+# Run from Actions > Run workflow only when requested or needed for a specific change.
+on:
+  workflow_dispatch:
+    inputs:
+      audit_only:
+        description: Run dependency vulnerability audits without the full test/build jobs
+        type: boolean
+        default: false
+
+concurrency:
+  group: reference-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    if: ${{ !inputs.audit_only }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install frontend dependencies
+        run: npm ci
+      - name: Frontend contracts
+        run: npm test
+      - name: Typecheck, build, and initial-bundle budget
+        run: npm run build
+
+  lint-test:
+    if: ${{ !inputs.audit_only }}
+    runs-on: ubuntu-latest
+    services:
+      db:
+        # Digest-pinned so a future rebuild of the rolling 16-3.5 tag can't change the server
+        # minor under us (the 16-3.4 tag did exactly that and broke pg_trgm.so). Refresh the
+        # digest deliberately when bumping PostGIS. sha256 = postgis/postgis:16-3.5.
+        image: postgis/postgis:16-3.5@sha256:8b33190b6486ab9905dea999171817c1ac461733a7078dd4c836091c6e6b5d40
+        env:
+          POSTGRES_DB: app
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U app"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings.test
+      DJANGO_SECRET_KEY: ci-secret-not-for-prod
+      DATABASE_URL: postgis://app:app@localhost:5432/app
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: services/agentapi/go.mod
+          cache: false
+      - name: Build native Go producer-contract executable
+        working-directory: services/agentapi
+        env:
+          CGO_ENABLED: "0"
+        run: go build -trimpath -o agentapi-test .
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+      - name: Install GeoDjango native libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            binutils gdal-bin libgdal-dev libgeos-dev libproj-dev ffmpeg
+      - name: Install pgvector into the Postgres service
+        # The postgis/postgis image ships PostGIS but not pgvector; the recommendations app's
+        # migration runs CREATE EXTENSION vector. Install the PGDG pgvector package into the
+        # running service container. HOLD postgresql-16 first so the install can NEVER upgrade the
+        # server package (and its pg_trgm.so) out from under the already-running server — that
+        # exact mismatch broke every DB test before. The container is matched by image substring so
+        # the digest-pinned reference still resolves it.
+        run: |
+          set -euo pipefail
+          CID=$(docker ps --format '{{.ID}} {{.Image}}' | awk '/postgis/{print $1; exit}')
+          echo "Postgres service container: $CID"
+          docker exec -i "$CID" bash -se <<'PGVECTOR'
+          # The digest-pinned test image is Bullseye. PGDG archived that suite
+          # on 2026-08-31; use its signed official archive without weakening APT
+          # signature checks or upgrading the running PostgreSQL server.
+          # https://wiki.postgresql.org/wiki/Apt
+          . /etc/os-release
+          if [ "$VERSION_CODENAME" = bullseye ]; then
+            sed -i -E 's#https?://apt.postgresql.org/pub/repos/apt/?#https://apt-archive.postgresql.org/pub/repos/apt/#g' /etc/apt/sources.list.d/pgdg.list
+          fi
+          apt-get update
+          apt-mark hold postgresql-16
+          apt-get install -y --no-install-recommends postgresql-16-pgvector
+          PGVECTOR
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r requirements-dev.txt
+      - name: Ruff lint
+        run: ruff check .
+      - name: Ruff format check
+        run: ruff format --check .
+      - name: Missing-migrations check
+        run: python manage.py makemigrations --check --dry-run
+      - name: Tests
+        run: pytest -q
+      - name: Django deploy checks (prod settings)
+        # Boots the production settings module so the fail-closed prod assertions
+        # (shared cache + channel layer, real identity provider, EUDI sandbox off) and
+        # Django's --deploy security checks are exercised in CI. Uses a dummy REDIS_URL
+        # (no connection is made at check time) and the real EUDI provider path.
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.prod
+          DJANGO_SECRET_KEY: ci-deploy-check-not-a-real-secret-please-rotate-0001
+          DJANGO_ALLOWED_HOSTS: example.com
+          DATABASE_URL: postgis://app:app@localhost:5432/app
+          REDIS_URL: redis://localhost:6379/0
+          IDENTITY_PROVIDER: apps.accounts.identity.providers.eudi.EUDIWalletProvider
+          EUDI_SANDBOX: "False"
+          # A non-empty (dummy) trust anchor so the prod EUDI fail-closed guard passes and the
+          # deploy checks can run; check --deploy never verifies a credential, so no real key.
+          EUDI_TRUSTED_ISSUERS: '{"https://issuer.example/ci": "ci-deploy-check-dummy-not-a-real-key"}'
+        run: |
+          pip install channels-redis
+          python manage.py check --deploy
+
+  docker-build:
+    if: ${{ !inputs.audit_only }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build production image
+        run: docker build -t social-activities-app:ci .
+      - name: Trivy image scan (report-only)
+        # Preserve the existing report-only CVE policy while pinning the action
+        # and scanner version; an unversioned install script failed to resolve
+        # its release during the Go qualification run.
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: v0.75.0
+          image-ref: social-activities-app:ci
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "0"
+
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: pip-audit (dependency vulnerabilities)
+        # Manual dependency audits fail on findings. Remediate with a reviewed
+        # dependency pin bump; existing image-scan policies remain unchanged.
+        run: |
+          python -m pip install --upgrade pip pip-audit
+          pip-audit -r requirements.txt -r requirements-dev.txt
+      - name: Bandit (Python SAST)
+        # Static security analysis of our own code. Tuned to high severity + high confidence so it
+        # is signal, not noise (the codebase is clean at this level today); blocks on a real finding.
+        run: |
+          python -m pip install bandit
+          bandit -r apps config -q --severity-level high --confidence-level high

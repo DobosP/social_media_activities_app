@@ -47,7 +47,8 @@ func (a *App) secureRequest(r *http.Request) bool {
 
 type observedResponse struct {
 	http.ResponseWriter
-	status int
+	status      int
+	bodyBearing bool
 }
 
 func (w *observedResponse) Unwrap() http.ResponseWriter { return w.ResponseWriter }
@@ -58,6 +59,12 @@ func (w *observedResponse) WriteHeader(status int) {
 	}
 	if w.status != 0 {
 		return
+	}
+	// net/http otherwise drains a small unread body before flushing a refusal.
+	// Close rejected body-bearing HTTP/1 requests so authentication, role and
+	// declared-size gates respond without requiring the denied upload to arrive.
+	if status >= 400 && w.bodyBearing {
+		w.Header().Set("Connection", "close")
 	}
 	w.status = status
 	w.ResponseWriter.WriteHeader(status)
@@ -108,7 +115,7 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Permissions-Policy", permissions)
 	w.Header().Set("Cache-Control", "no-store")
-	response := &observedResponse{ResponseWriter: w}
+	response := &observedResponse{ResponseWriter: w, bodyBearing: r.ContentLength != 0 || len(r.TransferEncoding) > 0}
 	defer func() {
 		failure := recover()
 		status := response.status

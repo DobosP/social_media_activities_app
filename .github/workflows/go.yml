@@ -2,6 +2,11 @@ name: Go public API
 
 # Run from Actions > Run workflow only when requested or needed for a specific change.
 on:
+  workflow_call:
+    inputs:
+      audit_only:
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       audit_only:
@@ -67,11 +72,9 @@ jobs:
         with:
           go-version-file: services/agentapi/go.mod
           cache: false
-      - name: Package and compiled-binary Go vulnerability scans
-        # The current tagged analyser's source SSA predates Go 1.27 syntax.
-        # Package analysis conservatively scans all imports; binary analysis
-        # scans linked symbols without building an unsupported source call graph.
+      - name: Source, package and compiled-binary Go vulnerability scans
         run: |
-          go run golang.org/x/vuln/cmd/govulncheck@v1.1.4 -scan=package ./...
+          go run golang.org/x/vuln/cmd/govulncheck@v1.8.0 ./...
+          go run golang.org/x/vuln/cmd/govulncheck@v1.8.0 -scan=package ./...
           CGO_ENABLED=0 go build -trimpath -o agentapi-test .
-          go run golang.org/x/vuln/cmd/govulncheck@v1.1.4 -mode=binary agentapi-test
+          go run golang.org/x/vuln/cmd/govulncheck@v1.8.0 -mode=binary agentapi-test

@@ -20,6 +20,8 @@ import (
 
 type denyScanner struct{}
 
+func (denyScanner) Effective() bool { return false }
+
 func (denyScanner) Scan(context.Context, media.ScanInput) (media.Verdict, error) {
 	return media.Verdict{}, media.ErrScanner
 }

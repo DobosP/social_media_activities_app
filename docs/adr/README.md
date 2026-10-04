@@ -1,7 +1,7 @@
 # ADR ledger — claimed numbers
 
 Claim the next free number **here, in the same commit as the ADR file**, so two parallel worktrees
-never mint the same number. Next free number: **0038**. Template: [`0000-template.md`](0000-template.md).
+never mint the same number. Next free number: **0039**. Template: [`0000-template.md`](0000-template.md).
 ADRs are append-only: a reversal is a new ADR that flips the old one's `Status:` to `superseded-by ADR-NNNN`.
 On conflict: `STATUS.md` > newest-dated ADR > every other doc.
 
@@ -45,6 +45,7 @@ On conflict: `STATUS.md` > newest-dated ADR > every other doc.
 | 0035 | [guarded-permissions-private-schema](0035-guarded-permissions-private-schema.md) | proposed; human auth/privacy review before landing | 2026-10-04 |
 | 0036 | [fresh-participation-authority](0036-fresh-participation-authority.md) | proposed; locally qualified, human review pending | 2026-10-04 |
 | 0037 | [postgresql-shared-rate-budgets](0037-postgresql-shared-rate-budgets.md) | proposed for integration review | 2026-10-04 |
+| 0038 | [native-verification-toolchain](0038-native-verification-toolchain.md) | proposed; native qualified, reference retirement blocked | 2026-10-05 |
 
 ⚠ **0009 is claimed twice** — this ledger exists so it does not happen again. Both files stay:
 `0009-csp-enforcement-prep.md` (superseded by ADR-0010) and

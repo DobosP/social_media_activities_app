@@ -44,16 +44,16 @@ Product overview: `README.md` · full doc index: `docs/README.md` · phasing map
 |---|---|
 | Native local stack (http://127.0.0.1:8000) | `docker compose up --build` |
 | Native schema bootstrap/adoption | `social-server --migrate-only` with explicit configured PostgreSQL |
-| Native checks (Go 1.27.1) | `go -C services/server test -race ./... && go -C services/server vet ./...` |
+| Native checks (Go 1.27.1) | `scripts/check-native.sh /absolute/path/to/go` |
 | Native PostgreSQL + codecs | `scripts/qualify-native.sh` with explicit isolated fixture arguments (docs/agent-testing.md) |
 | Native format | `test -z "$(gofmt -l services/server services/authcore)"` |
 | Offline oracle migration drift | `python manage.py makemigrations --check --dry-run` in the reference environment |
 | Frontend (Node 24) | `cd frontend && npm ci && npm test && npm run build` |
 | Native dependency/image audits | `.github/workflows/native.yml` (source/package/binary + Trivy) |
-| Offline oracle checks | Python pytest/Ruff/pip/Bandit in `.github/workflows/ci.yml` |
+| Optional offline oracle checks | Python pytest/Ruff/pip/Bandit in `.github/workflows/reference.yml` |
 | Whitespace | `git diff --check` |
 
-Expected outputs and known-failing tests: `docs/agent-testing.md`. Full CI matrix: `.github/workflows/ci.yml`.
+Expected outputs, fixture and case-retirement gates: `docs/agent-testing.md`. Native Go/Node CI: `.github/workflows/ci.yml`.
 
 ## Safety
 - Never read or print secrets from `.env`, settings, cookies, tokens, or auth stores. Env var NAMES live in

@@ -1,59 +1,61 @@
-# Agent Testing Guide — social_media_activities_app
+# Native Agent Testing Guide — social_media_activities_app
 
-Last verified: 2026-10-04
+Last verified: 2026-10-05
 
-## Environment
-- Review runtime: Go 1.27.1 + native codecs/PostgreSQL, `docs/NATIVE_SERVER.md`.
-- Python/Django Compose commands below are offline compatibility-oracle gates.
-- Verified local compose project name: `socialfix` (its `docker-compose.local.yml` is untracked/gitignored).
-- Use `python -m pytest` in the container; bare `pytest` may not be on PATH.
-- `-p socialfix` targets that dev host's compose project; omit it if you created the project with a plain
-  `docker compose -f docker-compose.local.yml up` (Compose then names it after the directory).
-- CI matrix: `.github/workflows/ci.yml` (jobs: `frontend`, `lint-test`, `docker-build`, `audit`).
+## Environment and boundaries
+
+- Go1.27.1 serves and qualifies the backend; Node24/TypeScript qualify the frontend.
+- Default Docker/Compose runs Go. Never run pytest/manage.py inside that image.
+- Explicit disposable PostgreSQL16/PostGIS/vector and native AVIF/WebP/FFmpeg codecs
+  qualify database, media, erasure, admission, CLI and actual sidecar-process contracts.
+- Python reference sources remain optional offline evidence while case ports are unresolved;
+  they are not ordinary build/test/operator dependencies. [ADR-0038](adr/0038-native-verification-toolchain.md).
+- CI is manual-only. Native Actions may be disabled remotely; source/local checks do not
+  assert hosted success or authorize enabling workflows.
 
 ## Commands
-| Scope | Command | Expected |
+
+| Scope | Command | Required result |
 |---|---|---|
-| Targeted deferred-task tests | `docker compose -p socialfix -f docker-compose.local.yml exec -T web sh -lc 'python -m pytest apps/ops/tests/test_deferred_tasks.py -q'` | `N passed`, no failures. Do not hard-code `N` — the file grows. |
-| Full suite (container) | `docker compose -p socialfix -f docker-compose.local.yml exec -T web sh -lc 'python -m pytest -q'` | all pass; historical failures below did not recur in 2026-10-04 CI |
-| Full suite (CI-equivalent env) | `docker compose -f docker-compose.local.yml exec -T -e DJANGO_SETTINGS_MODULE=config.settings.test -e DJANGO_SECRET_KEY=ci-secret-not-for-prod -e DATABASE_URL=postgis://app:app@db:5432/app web pytest -q` | all pass (see `README.md` §Local variant) |
-| Lint | `ruff check . && ruff format --check .` | `All checks passed!` / `N files already formatted` |
-| Migration drift | `python manage.py makemigrations --check --dry-run` | `No changes detected`; needs the app deps (container or a venv with `requirements*.txt`) — a bare host raises `ModuleNotFoundError: environ` |
-| Frontend | `cd frontend && npm ci && npm test && npm run build` | tests green; build within the initial-bundle budget (40 KiB gzip) |
-| Dependency audit | `pip-audit -r requirements.txt -r requirements-dev.txt` | `No known vulnerabilities found` (report-only on PRs, enforcing on main) |
-| Python SAST | `bandit -r apps config -q --severity-level high --confidence-level high` | no findings |
-| Doc gate (any doc change) | `python3 ~/work/agent-ops/scripts/check_docs.py .` | `dead_links=0 stale_terms=0 retired_verbs=0 orphans=0` (only `files=` varies); exit 0 |
-| Go public service | `cd services/agentapi && go vet ./... && go test -race ./... -count=1` | all pass; loopback sockets required for healthcheck tests |
-| Native exporter contract | build `services/agentapi/agentapi-test`, then isolated PostGIS pytest `apps/web/tests/test_agent_snapshot.py apps/web/tests/test_agent_go_contract.py` | schema/bytes/gates match; native test must not skip in CI |
+| Native source/hashes/hermetic tests | `scripts/check-native.sh /absolute/path/to/go` | format, portable auth hashes, vet, race and whitespace pass |
+| Backend only | `GOWORK=off go -C services/server test -race ./... && go -C services/server vet ./...` | pass; DB tests skipped without explicit DSN do not qualify a release |
+| Shared auth | `GOWORK=off go -C services/authcore test -race ./... && go -C services/authcore vet ./...` | pass |
+| Public service | `GOWORK=off go -C services/agentapi test -race ./... && go -C services/agentapi vet ./...` | pass; loopback test sockets permitted |
+| Explicit native fixture | `scripts/qualify-native.sh GO IMAGE PRIVATE_NETWORK SYNTHETIC_DSN SCRATCH` | every package passes with zero skips; actual FK/codec/export-to-sidecar checks |
+| Case retirement gate | `go -C services/server run ./cmd/check-contracts -root "$PWD" -summary` | no unresolved or invalid source-case evidence before deleting legacy behavior |
+| Browser build | `cd frontend && npm ci && npm test && npm run build` | contracts/typecheck/build and initial bundle budget pass |
+| Fleet docs | `python3 ~/work/agent-ops/scripts/check_docs.py .` | files varies; dead_links/stale_terms/retired_verbs/orphans all0 (scoped generic fleet tool exception) |
 | Whitespace | `git diff --check` | no output |
 
-## Before commit
-1. Run `git diff --check`.
-2. Run the targeted container test for touched ops/deferred-task code.
-3. For privacy/moderation changes, document manual review needs.
-4. Record exact command output in the worker result (`TASK_RESULT.md`, gitignored — never committed) and, on landing, in `STATUS.md` §Verification record.
-5. Docs touched? Run the doc gate above and paste its `files=…` line into `STATUS.md` §Verification record.
+Supply GOWORK=off, GOMAXPROCS=2, GOFLAGS=-p=2 and task-owned GOCACHE/GOMODCACHE/TMPDIR
+when reviewing concurrently. Scratch stays under `~/work/_temp/<task-slug>`; no production
+DSN/environment discovery. The fixture harness builds the independent Go sidecar and passes
+its explicit binary path to export qualification. Schema bootstrap is native `--migrate-only`.
 
-## Known failing / blocked
-- Historical 2026-08-22 chat/messaging websocket failures did not recur in full 2026-10-04 CI:
-  2791 tests + 38 subtests passed (job111301416554). Expect a green suite; never weaken a gate.
-- If containers are down, report `docker compose ... ps` / the startup blocker instead of inventing test output.
-- Do not expose secrets from settings or env files.
-- `python manage.py check --deploy` needs the CI env block in `.github/workflows/ci.yml` (prod settings +
-  dummy EUDI trust anchor) — CI-only unless you replicate that environment.
+## Evidence requirements
 
-## Complete native Go candidate
+- Count top-level tests separately from parameter/matrix cases.303 baseline native contracts
+  are not2671 source test declaration equivalents (legacy expanded count2791 plus38 subtests).
+- Source-case inventory, source hashes, named native tests/scenarios and assertion rationale
+  live under `internal/contracts/testdata`. Missing/partial/unrun mappings block retirement.
+- Qualify new behavior with positive and adversarial synthetic cases, actual FK/schema adoption,
+  current authority/consent/cohort/block gates, erasure and bounded query growth as applicable.
+- Benchmark only the fixture/machine explicitly tested. Use the bounded synthetic app command
+  `app.test -test.run '^$' -test.bench BenchmarkNativeAnonymousContractPaths -test.benchtime=20x`
+  with the explicit fixture flag. Record allocations/timings; do not infer production costs.
+- Source/imported-package/linked-binary vulnerability gates use pinned govulncheck; final
+  image gate uses pinned Trivy. Required but unimported advisories are recorded separately.
 
-- `GOWORK=off go -C services/server run ./cmd/check-authcore` verifies the portable shared copy.
-- `go -C services/authcore test -race ./... && go -C services/authcore vet ./...`.
-- `go -C services/server test -race ./... && go -C services/server vet ./...` checks hermetic contracts;
-  database-required tests skip here and do not qualify a release.
-- Build the release (`docker build -t social-native:test .`), bootstrap a disposable PostGIS/vector
-  database with `social-server --migrate-only`, then run `scripts/qualify-native.sh GO IMAGE NETWORK DSN SCRATCH`.
-  DSN is explicit synthetic fixture only; private Docker network, no published DB ports, no real data.
-  Scratch is task-owned under `~/work/_temp/<slug>`, sources read-only, real codecs, `-race`, zero skips.
-  The harness includes all19 CLI/domain lanes, including configured policy and shared-budget contracts.
-- Source/binary audits: `govulncheck@v1.8.0 ./...` and `-mode=binary` on the release executable;
-  module-only unimported advisories are described separately from reachable/imported findings.
-- `.github/workflows/native.yml` runs native bootstrap and all required database/codec lanes.
-- Auth/privacy/safety human review still precedes landing: [ADR-0032](adr/0032-complete-native-go-backend.md).
+## Before commit and landing
+
+1. Run affected native fixtures with explicit flags; no skipped integration qualification.
+2. Run native format/vet/race, auth hashes, whitespace and relevant frontend gates.
+3. Record exact commands/results/remaining gaps in TASK_RESULT.md (ignored) and WORKLOG;
+   current truth goes in STATUS.md. Source changes require matching fresh-source evidence.
+4. Run fleet doc/link gate for docs. Root coordinates all local commits, publication and landing.
+5. Human auth/privacy/safety review remains required before landing; test success does not
+   activate minors, providers, ingestion, schedules, paid infrastructure or deployment.
+
+Optional historical Python verification is isolated in `reference.yml`, manually dispatched
+only when that offline comparison is explicitly requested. Its schema/lint/security gates
+remain intact; it cannot substitute for native qualification or hide unresolved case ports.

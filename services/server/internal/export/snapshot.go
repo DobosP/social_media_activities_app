@@ -2,6 +2,7 @@
 package export
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -11,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -71,7 +73,9 @@ func records(ctx context.Context, q platform.Querier, sql string, args ...any) (
 			return nil, err
 		}
 		var record map[string]any
-		if err := json.Unmarshal(data, &record); err != nil {
+		decoder := json.NewDecoder(bytes.NewReader(data))
+		decoder.UseNumber()
+		if err := decoder.Decode(&record); err != nil {
 			return nil, err
 		}
 		out = append(out, record)
@@ -95,8 +99,24 @@ func isoZ(value any) any {
 	}
 	return date.UTC().Format("2006-01-02T15:04:05.000000Z")
 }
-func path(kind string, r map[string]any) {
-	r["path"] = fmt.Sprintf("/%s/%d/%s/", kind, int64(r["id"].(float64)), Slug(r["name"].(string), "place"))
+func recordID(r map[string]any) (int64, error) {
+	number, ok := r["id"].(json.Number)
+	if !ok {
+		return 0, platform.ErrInvalid
+	}
+	id, err := strconv.ParseInt(number.String(), 10, 64)
+	if err != nil || id < 1 {
+		return 0, platform.ErrInvalid
+	}
+	return id, nil
+}
+func path(kind string, r map[string]any) error {
+	id, err := recordID(r)
+	if err != nil {
+		return err
+	}
+	r["path"] = fmt.Sprintf("/%s/%d/%s/", kind, id, Slug(r["name"].(string), "place"))
+	return nil
 }
 func writeJSON(directory, name string, payload any) (string, error) {
 	tmp, err := os.CreateTemp(directory, "."+name+"-*.tmp")
@@ -162,7 +182,11 @@ func (s *Service) Snapshot(ctx context.Context, directory string) (Summary, erro
 	for _, e := range events {
 		e["starts_at"] = isoZ(e["starts_at"])
 		e["ends_at"] = isoZ(e["ends_at"])
-		e["path"] = fmt.Sprintf("/events/%d/%s/", int64(e["id"].(float64)), Slug(e["title"].(string), "event"))
+		id, err := recordID(e)
+		if err != nil {
+			return out, err
+		}
+		e["path"] = fmt.Sprintf("/events/%d/%s/", id, Slug(e["title"].(string), "event"))
 		delete(e, "place")
 		delete(e, "place_name")
 	}
@@ -175,7 +199,9 @@ func (s *Service) Snapshot(ctx context.Context, directory string) (Summary, erro
 		places = places[:PlacesCap]
 	}
 	for _, p := range places {
-		path("places", p)
+		if err := path("places", p); err != nil {
+			return out, err
+		}
 	}
 	activities, err := records(ctx, tx, `SELECT jsonb_build_object('id',a.id,'title',a.title,'cohort',a.cohort,'starts_at',a.starts_at,'status',a.status,'activity_type',t.slug,'place_id',a.place_id) FROM social_activity a JOIN accounts_user u ON u.id=a.owner_id LEFT JOIN taxonomy_activitytype t ON t.id=a.activity_type_id WHERE a.cohort='adult' AND a.is_publicly_listed AND a.status='open' AND NOT a.is_hidden AND a.starts_at>=now() AND u.is_active ORDER BY a.starts_at,a.id LIMIT $1`, ActivitiesCap+1)
 	if err != nil {

@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Opt-in native hook: git config core.hooksPath .githooks
+set -euo pipefail
+native_root=$(git rev-parse --show-toplevel)
+"$native_root/scripts/check-native.sh"

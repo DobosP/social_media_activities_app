@@ -16,7 +16,9 @@ native_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 mkdir -p "$native_scratch/tests" "$native_scratch/test-tmp"
 chmod 700 "$native_scratch/test-tmp"
 export GOWORK=off
-for native_package in configuration accounts admin app booking budgets catalog commands discovery donations export jobs media messaging notifications recommendations safety social web; do
+# Verify exporter contracts through an actual independently running Go sidecar.
+CGO_ENABLED=0 "$native_go" -C "$native_root/services/agentapi" build -trimpath -o "$native_scratch/tests/agentapi" .
+for native_package in configuration accounts admin app backup booking budgets catalog commands contracts discovery donations export jobs media messaging notifications recommendations safety social web; do
   native_flags=()
   native_source="./internal/$native_package"
   native_workdir="/src/services/server/internal/$native_package"
@@ -30,7 +32,7 @@ for native_package in configuration accounts admin app booking budgets catalog c
     catalog) native_flags=(-catalog-test-dsn "$native_dsn");;
     commands) native_flags=(-commands-test-dsn "$native_dsn");;
     discovery) native_flags=(-discovery-test-dsn "$native_dsn");;
-    export) native_flags=(-export-test-dsn "$native_dsn");;
+    export) native_flags=(-export-test-dsn "$native_dsn" -agentapi-test-binary /scratch/tests/agentapi);;
     jobs) native_flags=(-jobs-test-dsn "$native_dsn");;
     media) native_flags=(-media-test-dsn "$native_dsn");;
     messaging) native_flags=(-messaging-test-dsn "$native_dsn");;
@@ -44,7 +46,7 @@ for native_package in configuration accounts admin app booking budgets catalog c
   native_log="$native_scratch/tests/$native_package.log"
   if ! docker run --rm --read-only --cap-drop=ALL --security-opt=no-new-privileges \
     --user "$(id -u):$(id -g)" --network "$native_network" \
-    -e TMPDIR=/scratch/test-tmp \
+    -e TMPDIR=/scratch/test-tmp -e GOMAXPROCS="${GOMAXPROCS:-2}" \
     -v "$native_root:/src:ro" -v "$native_scratch:/scratch" \
     -w "$native_workdir" "$native_image" \
     "/scratch/tests/$native_package.test" -test.v -test.timeout=10m "${native_flags[@]}" >"$native_log" 2>&1; then

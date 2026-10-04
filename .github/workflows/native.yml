@@ -1,6 +1,11 @@
 name: Native Go application
 # Run from Actions > Run workflow only when requested or needed for a specific change.
 on:
+  workflow_call:
+    inputs:
+      audit_only:
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       audit_only:

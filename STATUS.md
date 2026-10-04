@@ -2,11 +2,10 @@
 
 Last verified: 2026-10-05
 
-- **GitHub Actions (Last verified: 2026-10-04):** owner-requested on-demand policy,
-  [ADR-0033](docs/adr/0033-manual-github-actions.md). Workflows use `workflow_dispatch`; automatic
-  push/PR/label/schedule runs are removed. Existing jobs, inputs, and safety gates
-  remain. Workflow YAML, manual inputs, job dependencies, and permission preservation
-  were checked; this configuration edit does not refresh application test results.
+- **GitHub Actions (Last verified: 2026-10-05):** owner-requested on-demand policy,
+  [ADR-0033](docs/adr/0033-manual-github-actions.md). Ordinary `ci.yml` calls Go/Node workflows;
+  original Python gates remain in optional manual `reference.yml` (ADR-0038). YAML/input/job/
+  read-only permission checks pass. Native Actions remains manually disabled; no hosted run claimed.
 
 Current truth: STATUS > newest ADR > other docs. History: WORKLOG, ADRs and git.
 
@@ -77,6 +76,10 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 - All three completion lanes are integrated and locally qualified on `feat/go-migration-finish`.
   Human auth/privacy/safety review precedes landing; native hosted Actions is manually disabled.
+- Expanded native-toolchain candidate (ADR-0038) adds bounded CSP/private-EU backup operators,
+  shell hooks, real exporter-to-sidecar qualification and adversarial native matrices. Native qualification
+  passes. Frozen2671 reference declarations retain explicit evidence/gaps; unresolved cases
+  block Python retirement. Existing Python reference source/tests are preserved.
 
 - Build/promote a fresh immutable producer/server V2 release before real sync;
   the serving repo's producer dependency must be intentionally bumped first.
@@ -94,16 +97,16 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
-- Reviewed completion:303 passing native contracts/19 lanes; all166 affected app/account/media/
-  safety/social/web tests rerun together, zero skips. Broad race/vet/auth hashes and source/linked
-  audits pass; final Go-only image4a660c95 has zero fixable HIGH/CRITICAL findings. HTTP/schema/
-  readiness200; schema380/318/166; shutdown0. Exact receipt and prior iteration: WORKLOG and
-  `docs/reviews/native-go/completion-qualification.md`. Hosted workflow stays manually disabled.
+- Native-toolchain candidate:369 passing native contracts/21 lanes, zero skips; final media/audit-failure
+  and corrected venue-search cases requalified. Race/vet/auth hashes and source/package/linked audits
+  pass. Final Go-only image4e480d95 has zero fixable HIGH/CRITICAL findings; CSP/backup refusal smoke
+  passes. Case gate:283 verified/2388 unresolved/0 invalid; retirement is blocked. Fixture benchmarks
+  and exact receipts: WORKLOG. Prior303-test completion receipt remains in `docs/reviews/native-go/`.
 
 ## Standard verification
 Native race/vet + shared-source hashes; database/codec contracts require explicit disposable fixtures
 through `scripts/qualify-native.sh` (`docs/agent-testing.md`). Whitespace/doc gates are required.
-Native CI: `.github/workflows/native.yml`; offline reference/frontend: `ci.yml`; operator: `docs/ROEDU_INTEGRATION.md`.
+Native Go/Node CI: `ci.yml`/`native.yml`/`go.yml`; optional offline reference: `reference.yml`; operators: CLI guide/ROEDU integration.
 
 ## Doc map
 

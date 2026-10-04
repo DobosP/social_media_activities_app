@@ -100,7 +100,7 @@ func eventWhere(v EventQuery) (string, []any, string) {
 	return DefaultPolicy().eventWhere(v)
 }
 func (policy Policy) eventWhere(v EventQuery) (string, []any, string) {
-	where := policy.EventSQL() + ` AND ($1::text='' OR t.slug=$1) AND ($2::bigint IS NULL OR e.place_id=$2) AND ($3::timestamptz IS NULL OR e.starts_at>=$3) AND ($4::timestamptz IS NULL OR e.starts_at<$4) AND ($5 OR (e.starts_at>=now() AND e.lifecycle_status IN('scheduled','rescheduled','sold_out'))) AND ($6::text='' OR UPPER(e.title) LIKE '%'||UPPER($6)||'%' OR UPPER(e.description) LIKE '%'||UPPER($6)||'%') AND ($7::text='' OR lower(p.address_city)=lower($7)) AND ($8::double precision IS NULL OR $9::double precision IS NULL OR $10::double precision IS NULL OR ST_DWithin(p.location,ST_SetSRID(ST_MakePoint($8,$9),4326)::geography,$10))`
+	where := policy.EventSQL() + ` AND ($1::text='' OR t.slug=$1) AND ($2::bigint IS NULL OR e.place_id=$2) AND ($3::timestamptz IS NULL OR e.starts_at>=$3) AND ($4::timestamptz IS NULL OR e.starts_at<$4) AND ($5 OR (e.starts_at>=now() AND e.lifecycle_status IN('scheduled','rescheduled','sold_out'))) AND ($6::text='' OR UPPER(e.title) LIKE '%'||UPPER($6)||'%' OR UPPER(e.description) LIKE '%'||UPPER($6)||'%' OR UPPER(p.name) LIKE '%'||UPPER($6)||'%') AND ($7::text='' OR lower(p.address_city)=lower($7)) AND ($8::double precision IS NULL OR $9::double precision IS NULL OR $10::double precision IS NULL OR ST_DWithin(p.location,ST_SetSRID(ST_MakePoint($8,$9),4326)::geography,$10))`
 	args := []any{v.Activity, v.Place, v.From, v.To, v.IncludePast, escapeLike(v.Search), v.City, v.Lon, v.Lat, v.Radius}
 	order := "e.starts_at,e.id"
 	if v.Lon != nil && v.Lat != nil {

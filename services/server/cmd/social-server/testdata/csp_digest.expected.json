@@ -1,0 +1,1 @@
+{"total":3,"malformed":1,"groups":[{"count":2,"directive":"style-src-attr","blocked":"inline","document":"https://meet.test/activities/1/"},{"count":1,"directive":"script-src","blocked":"data:","document":"https://meet.test/activities/2/"}]}

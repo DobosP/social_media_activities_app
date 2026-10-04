@@ -466,6 +466,9 @@ func (s *Service) ChangeOrganizer(ctx context.Context, a Actor, id, target int64
 		if err = tx.QueryRow(ctx, `SELECT id,role FROM social_membership WHERE activity_id=$1 AND user_id=$2 AND state='member' AND role<>'guardian' FOR UPDATE`, id, target).Scan(&mid, &role); err != nil {
 			return err
 		}
+		if action == "grant_organizer" && role == "co_organizer" {
+			return nil
+		}
 		next := "co_organizer"
 		event := "activity.co_organizer_granted"
 		if action == "revoke_organizer" {

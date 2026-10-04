@@ -82,3 +82,8 @@ checks compare against native registrations and representative wire values.
 [ADR-0036](adr/0036-fresh-participation-authority.md) records fresh participation authority.
 Qualification commands: [agent-testing](agent-testing.md); [completion receipt](reviews/native-go/completion-qualification.md); current review gates:
 STATUS/WORKLOG. Completion extensions remain a review candidate until human approval.
+
+Ordinary Go/Node CI and shell hooks, bounded native CSP/S3 operators, real exporter-to-sidecar
+qualification and reference-case retirement evidence follow
+[ADR-0038](adr/0038-native-verification-toolchain.md). The optional Python reference workflow
+remains manual; unresolved original cases retain their source and block retirement.

@@ -75,6 +75,16 @@ func (p *Processor) acquire(ctx context.Context) error {
 }
 func (p *Processor) release() { <-p.jobs }
 
+func (p *Processor) scannerEffective() bool {
+	if p == nil || p.scanner == nil {
+		return false
+	}
+	if scanner, ok := p.scanner.(interface{ Effective() bool }); ok {
+		return scanner.Effective()
+	}
+	return true
+}
+
 func (p *Processor) stage(path string, max int64) (dir, source, digest string, size int64, err error) {
 	f, e := os.OpenFile(path, os.O_RDONLY|syscall.O_NOFOLLOW, 0)
 	if e != nil {

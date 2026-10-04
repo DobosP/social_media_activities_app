@@ -1,0 +1,4 @@
+{"csp-report":{"effective-directive":"style-src-attr","blocked-uri":"inline","document-uri":"https://meet.test/activities/1/?discard=private"}}
+{"csp-report":{"violated-directive":"style-src-attr 'self'","blocked-uri":"inline","document-uri":"https://meet.test/activities/1/#fragment"}}
+not json
+[{"body":{"effective-directive":"script-src","blockedURL":"data:text/js,fixture","documentURL":"https://userinfo:discard@meet.test/activities/2/?discard=private#fragment"}}]

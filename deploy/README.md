@@ -26,6 +26,14 @@ pass on that exact source candidate before it becomes a deployment artifact. Art
 and database rollback drills precede a real migration; the old database/runtime remain
 available for reviewed rollback. Backup units and EU storage policy still apply.
 
+The backup unit keeps `pg_dump | gzip` and uses the native binary for a private,
+conditional S3 upload with confirmed size/hash/SSE metadata. Scratch is0700 and the
+temporary dump 0600; the dump is bounded to 1GiB and pg_dump to 15minutes. Bucket lifecycle
+retains nightly backups for at least 30days. Quarterly restore rehearsal remains required.
+The [native operator guide](../services/server/cmd/social-server/README.md) covers bounded
+upload/download and synthetic probe commands. Fixture tests do not qualify real storage
+or recovery, and these unapplied templates activate neither.
+
 Native HSTS/HTTPS/logging and reviewed domain policies are mapped. PostgreSQL owns
 shared admission/live state; required-shared mode checks its migrated contract. Optional
 privacy-safe Sentry is bounded and disabled by default. Retired Python runtime names

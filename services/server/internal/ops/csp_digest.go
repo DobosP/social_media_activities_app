@@ -58,9 +58,19 @@ func ReadCSPDigest(reader io.Reader) (CSPDigest, error) {
 	}
 	payloads := [][]byte{}
 	if json.Valid(raw) {
-		var entries []json.RawMessage
-		if len(bytes.TrimSpace(raw)) > 0 && bytes.TrimSpace(raw)[0] == '[' && json.Unmarshal(raw, &entries) == nil {
-			for _, entry := range entries {
+		if bytes.TrimSpace(raw)[0] == '[' {
+			decoder := json.NewDecoder(bytes.NewReader(raw))
+			if _, err = decoder.Token(); err != nil {
+				return CSPDigest{}, errors.New("CSP digest input invalid")
+			}
+			for decoder.More() {
+				if len(payloads) >= 100000 {
+					return CSPDigest{}, errors.New("CSP digest report bound exceeded")
+				}
+				var entry json.RawMessage
+				if decoder.Decode(&entry) != nil {
+					return CSPDigest{}, errors.New("CSP digest input invalid")
+				}
 				payloads = append(payloads, entry)
 			}
 		} else {

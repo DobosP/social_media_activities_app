@@ -9,12 +9,14 @@ COPY frontend ./
 RUN npm run build
 
 FROM golang:1.27.1-bookworm AS backend
+ARG GOMAXPROCS=2
+ARG GOFLAGS=-p=2
 WORKDIR /build/services/server
 COPY services/authcore/ ../authcore/
 COPY services/server/go.mod services/server/go.sum ./
 RUN go mod download
 COPY services/server/ ./
-RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/social-server ./cmd/social-server
+RUN GOMAXPROCS="$GOMAXPROCS" GOFLAGS="$GOFLAGS" CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/social-server ./cmd/social-server
 
 FROM debian:bookworm-slim AS runtime
 # Codecs run under prlimit. No Python interpreter or framework is installed.

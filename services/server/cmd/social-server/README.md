@@ -41,6 +41,33 @@ commit atomically. Output contains only the new numeric ID and status. This does
 grant activity participation or minor onboarding and never runs at startup or via demo
 mode. Native audited staff policies remain the administrative write boundary.
 
+## Standalone operators
+
+These paths do not initialize the database, media processors or serving application:
+
+```sh
+social-server --csp-digest --input /private/sanitized-csp.jsonl --format json
+social-server --csp-digest --input -
+social-server --backup-upload /private/socialapp.sql.gz
+social-server --backup-download backups/db/socialapp-db-20261005T120000Z.sql.gz \
+  --backup-file /private/restore/socialapp.sql.gz
+social-server --backup-probe
+```
+
+CSP input accepts sanitized JSON/JSONL reports, capped at 16MiB/100000 reports and 30seconds.
+Output is aggregate text or JSON. Regular input files cannot be symlinks. Backup operations
+require explicit verified EU/private S3 configuration and named supported SSE; credentials
+come from the approved environment delivery. They return only the object key, size, SHA-256
+and verification status. Uploads use private regular gzip files and conditional creation.
+Downloads create a new 0600 file in a private directory and verify stored hash/encryption.
+The probe roundtrips synthetic bytes and deletes only its own random probe object.
+
+Backup defaults are 1GiB and 15minutes; explicit bounds cannot exceed 4GiB/1hour. Redirects
+and application/status retries are refused. `--backup-key` permits only the reviewed UTC timestamp
+dump pattern. Database restoration is a separate reviewed `pg_restore`/`psql` operation;
+these commands do not restore or change PostgreSQL. [ADR-0038](../../../../docs/adr/0038-native-verification-toolchain.md)
+records the operator and verification boundary.
+
 ## Configuration boundaries
 
 The executable reads explicit environment variables; it does not load `.env`, import

@@ -3,6 +3,84 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-05 — Native verification and operator toolchain candidate
+
+Valid until: the candidate is integrated/requalified or superseded — then treat as history.
+
+ADR-0038 extends the native port into ordinary tests/tools/operators/CI. `ci.yml` runs native
+Go and Node; the original Python job gates remain unchanged in optional manual `reference.yml`,
+with a distinct concurrency group. All workflows remain manual-only/read-only, with no hosted
+enable/dispatch claim. The Python hook harness is replaced by opt-in native shell hooks. Docker
+backend compilation defaults to GOMAXPROCS2/GOFLAGS=-p=2. Generic fleet governance helpers and
+the producer acquisition/ML exception remain scoped; no generated RO-EDU Python copy was edited.
+
+New database-free CSP CLI supports bounded file/stdin JSON/JSONL input and text/JSON aggregates.
+Native private-EU S3 backup upload/download/probe reuse the reviewed SigV4/endpoint/SSE policy,
+stream bounded private files, use conditional creation and verify persisted size/hash/encryption.
+The backup pipeline keeps native pg_dump/gzip with private scratch/time/size bounds; cloud-init
+no longer installs awscli. Synthetic TLS/files prove the adapter; no real upload/restore occurred.
+
+Independent native matrices cover avatar/holder proof/guardian guardrails, organizer/profile/
+sentiment/series, appeals/overlapping bans/group lifecycle, scanner/probe/evidence retention,
+RO-EDU envelopes/HTTP/ICS/mapping, taxonomy/FK adoption, public snapshots, saved searches/notices,
+and populated4-to28-row query growth. Organizer/thread/discovery/corrections/export, messaging/
+guardian history, profile interests/inbox and moderation triage remain query-bounded. Actual
+export.Service.Snapshot feeds an independently running Go agentapi binary; Unicode venue search,
+publication/license/privacy, headers/gzip/ETag/cursors and IDs above2^53 are checked end to end.
+
+Contract discoveries repaired with regressions: repeated organizer grant now has no duplicate
+notice/audit; scanner absence/outage preserves pending attempts/source bytes; snapshot IDs and
+foreign keys retain exact int64 values; venue search uses the original raw-name semantics while
+public display retains approved corrections. Eight actual TCP header-only cases prove401/403/413
+before sending upload bytes. Declared oversize rejects before auth; body-bearing refusals close
+instead of waiting for net/http's unread-body drain. Authcore and Unicode decoder are unchanged.
+
+The deterministic scanner-outage/audit-failure combination revealed rollback could leave an
+exhausted processing lease later inferred as terminal. Failed finalization now returns an error;
+an exhausted stale lease without a committed outcome holds source evidence for operator recovery.
+Pending exhausted cleanup remains. This conservative hold is recorded as a policy difference,
+not false reference parity, and requires human sensitive-code review before landing.
+
+Go1.27.1, GOWORK=off/GOMAXPROCS=2/GOFLAGS=-p=2, task-owned caches/tmp, internal network
+go-native-toolchain-test, disposable go-native-toolchain-db and native codecs:
+
+- Final21 native lanes:369 top-level tests pass, zero skips. The first complete harness run
+  passed368; final catalog17 and media37 reruns qualify the raw-name/corrected-display and
+  compound audit-failure additions. `qualification-final.json` binds each package's exact test
+  names and log SHA-256; configuration37/accounts28/admin18/app26/backup5/booking7/budgets9/
+  catalog17/commands9/contracts3/discovery2/donations5/export4/jobs31/media37/messaging15/
+  notifications4/recommendations8/safety24/social35/web45. No legacy test count equivalence.
+- Native shell check passes: format, authcore hashes, three-module vet/race and whitespace.
+  Contracts/media/catalog affected checks were refreshed after the final repairs.
+- govulncheckv1.8.0 source/imported-package/linked-binary checks pass for server and sidecar;
+  final server receipts refreshed after source changes. Trivyv0.75.0, public database refreshed
+  2026-10-04, reports0 fixable HIGH/CRITICAL findings in Debian and the native Go executable.
+- Final image social-native:go-native-toolchain-20261005 is
+  `sha256:4e480d9592540c1341c9987f3217d39d01e14a79c25c4e0349d422a97f688770`.
+  Image tools contain no Python/pip/awscli; CSP command runs without DB/env bootstrap and backup
+  probe rejects missing verified storage by setting name before any network/DB startup.
+- YAML validation passes manual triggers/read permissions and exact preservation of original
+  reference job gates. Bash syntax, gofmt, whitespace and fleet doc/link gate pass:
+  files=52 dead_links=0 stale_terms=0 retired_verbs=0 orphans=0.
+- Bounded race-enabled app benchmark,20 iterations/GOMAXPROCS2, synthetic PostgreSQL fixture:
+  health94.2us/9493B/61allocs; ready360.9us/10458B/75; events5.48ms/31656B/167;
+  places7.80ms/53058B/188; schema114.01ms/11244482B/59705. These are fixture observations,
+  not production latency, capacity or hosting-price guarantees.
+
+The Go-only frozen inventory retains2671 original declarations with exact file/line/SHA provenance
+against ce3d0e3ee9f180ce2e95140300b12582db9895d6. The reviewed ledger currently verifies283,
+leaves2388 unresolved and has0 invalid entries. The retirement checker deliberately exits1;
+this blocks retirement rather than claiming a completed full port. All original Python source/
+tests remain. Named Go evidence and recorded runtime statuses require reviewer confirmation of
+semantics/receipts; static linkage cannot prove equivalence. Next priorities are retained web/
+venue/ingestion/operator/privacy source cases, not deleting the coverage gap.
+
+Only social_media_activities_app's assigned feat/go-native-toolchain worktree was mutated.
+Native sources and qualification containers were read-only during fixtures; no host DB ports,
+actual env/auth stores, real ingestion/providers/minors, scheduler activation, paid infrastructure,
+deployment, workflow enable/dispatch, push or main landing. Scratch/logs remain in
+`_temp/go-native-toolchain`; unlanded prior branches/worktrees/stashes/scratch remain intact.
+
 ## 2026-10-04 — Review media policy controls
 
 Valid until: the review fixes are integrated/requalified or superseded — then treat as history.
