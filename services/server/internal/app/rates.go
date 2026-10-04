@@ -4,6 +4,7 @@ import (
 	"math"
 	"net"
 	"net/http"
+	"net/netip"
 	"strconv"
 	"strings"
 	"time"
@@ -29,6 +30,9 @@ func (a *App) admitAPI(w http.ResponseWriter, r *http.Request) bool {
 	peer, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
 		peer = r.RemoteAddr
+	}
+	if address, parseErr := netip.ParseAddr(peer); parseErr == nil {
+		peer = address.Unmap().String()
 	}
 	scope, limit := "api.anonymous", a.Config.ThrottleAnonymous
 	var actorID int64

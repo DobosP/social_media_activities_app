@@ -107,3 +107,14 @@ The short singleton counter update remains a possible high-throughput contention
 only with actual load evidence. No production database, deployment, real ingestion, provider,
 scheduler or minor activation was used. Combined CLI/source qualification and human safety review
 remain coordinator gates before landing.
+
+## Worker qualification receipt
+
+All 18 native fixture lanes pass: 194 tests, zero skips, including actual custom-policy domain
+flows and legacy media/web fixtures. Legacy LIKE helpers apply migration locally so functions,
+capacity census and triggers cannot fall through to the public namespace; the fixture public
+budget rows/counters stay zero. The final synthetic cardinality means under concurrent host work
+were 6.15/6.32/6.31 ms at 1/1,000/9,000 buckets (p95 9.35/9.83/10.24 ms); 2,000 additional peers
+retained 9,992 bytes after GC. Race/vet, portable-auth hashes, formatting and docs pass.
+Exact combined CLI/source qualification, maintenance binding and human review remain coordinator
+gates. Detailed commands and fixture-only setup corrections are in WORKLOG.

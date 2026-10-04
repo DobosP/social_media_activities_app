@@ -82,6 +82,10 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
+- 2026-10-04 shared budgets worker: **194 native fixture tests across 18 packages** pass, zero skips,
+  including shared limits, replay, expiry, privacy/erasure and actual policy overrides. Race/vet/auth hashes
+  pass; doc gate files=52/all findings=0. Combined CLI and production verification remain coordinator gates.
+
 - 2026-10-04 ADR-0035 candidate: native race/vet and auth hashes pass; isolated admin 18,
   accounts 14 and web 30 race tests pass, no skips. Schema source/wire coverage passes. Doc gate:
   files=52 dead_links=0 stale_terms=0 retired_verbs=0 orphans=0. No production verification.
@@ -92,10 +96,6 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 - 2026-10-04 readiness guide now describes native rollout/recovery and product gates; historical Python
   planning is archived. Fresh-authority baseline (ADR-0036):175 PG/codec race contracts pass, zero skips; combined review pending.
   Doc gate: files=52 dead_links=0 stale_terms=0 retired_verbs=0 orphans=0.
-
-- 2026-10-04 shared budgets worker: native race/vet passes; nine race-enabled budget tests pass on an
-  isolated synthetic PG fixture, including concurrency/capacity/expiry/erasure/low-pool replay. Full domain
-  fixture qualification and CLI wiring pending; doc gate files=52, all findings=0; no production verification.
 
 - 2026-10-04 owner-approved conversion: native race/vet and portable auth hashes pass. Fresh Go-only
   bootstrap + **173 PostgreSQL/codec tests** passed with no skips; final affected app/media/account
