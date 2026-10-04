@@ -38,7 +38,8 @@ Paths beginning internal/ above are under `services/server`. Domain READMEs/test
 
 ## Pitfalls
 - Do not defer safety, cohort, consent, block or scan admission until after an action is visible.
-- General API/social/catalog rates are process-local; Redis-required/Sentry profiles are refused.
+- PostgreSQL owns API/domain admission (ADR-0033); missing rate schema fails closed. CLI policy wiring
+  is separately qualified; DB-free optional agentapi retains its documented local resource ceilings.
 - LISTEN needs a session connection if adding PgBouncer; one-shot jobs reserve none.
 - Secrets/auth stores, uploaded media, local databases and raw transcripts are not fleet docs.
 - Original Python launch commands are reference-only; default Docker/Compose executes Go.

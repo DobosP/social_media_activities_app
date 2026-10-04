@@ -10,6 +10,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/DobosP/social_media_activities_app/services/server/internal/accounts"
+	"github.com/DobosP/social_media_activities_app/services/server/internal/budgets"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -19,9 +20,13 @@ func EnsureSchema(ctx context.Context, db *pgxpool.Pool) error {
 	_, e := db.Exec(ctx, `CREATE TABLE IF NOT EXISTS messaging_go_ratebudget(user_id bigint NOT NULL REFERENCES accounts_user(id) ON DELETE CASCADE,action varchar(24) NOT NULL,window_start timestamptz NOT NULL,count integer NOT NULL CHECK(count>0),PRIMARY KEY(user_id,action))`)
 	return e
 }
-func budget(ctx context.Context, tx pgx.Tx, user int64, action string, limit int) error {
+func (s *Service) budget(ctx context.Context, tx pgx.Tx, user int64, action string, limit int) error {
+	policy, err := budgets.Resolve(s.RatePolicies, action, budgets.Policy{Limit: limit, Window: time.Minute})
+	if err != nil {
+		return err
+	}
 	var allowed bool
-	e := tx.QueryRow(ctx, `INSERT INTO messaging_go_ratebudget(user_id,action,window_start,count) VALUES($1,$2,now(),1) ON CONFLICT(user_id,action) DO UPDATE SET window_start=CASE WHEN messaging_go_ratebudget.window_start<=now()-interval '1 minute' THEN now() ELSE messaging_go_ratebudget.window_start END,count=CASE WHEN messaging_go_ratebudget.window_start<=now()-interval '1 minute' THEN 1 ELSE messaging_go_ratebudget.count+1 END WHERE messaging_go_ratebudget.window_start<=now()-interval '1 minute' OR messaging_go_ratebudget.count<$3 RETURNING true`, user, action, limit).Scan(&allowed)
+	e := tx.QueryRow(ctx, `INSERT INTO messaging_go_ratebudget(user_id,action,window_start,count) VALUES($1,$2,now(),1) ON CONFLICT(user_id,action) DO UPDATE SET window_start=CASE WHEN messaging_go_ratebudget.window_start<=now()-$4::double precision*interval '1 second' THEN now() ELSE messaging_go_ratebudget.window_start END,count=CASE WHEN messaging_go_ratebudget.window_start<=now()-$4::double precision*interval '1 second' THEN 1 ELSE messaging_go_ratebudget.count+1 END WHERE messaging_go_ratebudget.window_start<=now()-$4::double precision*interval '1 second' OR messaging_go_ratebudget.count<$3 RETURNING true`, user, action, policy.Limit, policy.Window.Seconds()).Scan(&allowed)
 	if errors.Is(e, pgx.ErrNoRows) {
 		return platform.ErrForbidden
 	}
@@ -79,7 +84,7 @@ func (s *Service) Start(ctx context.Context, a platform.Actor, kind string, name
 			}
 			title = ""
 		}
-		if e = budget(ctx, tx, a.ID, "messaging_start", 20); e != nil {
+		if e = s.budget(ctx, tx, a.ID, "messaging_start", 20); e != nil {
 			return e
 		}
 		if e = tx.QueryRow(ctx, `INSERT INTO messaging_conversation(kind,title,cohort,disappearing_seconds,creator_id,created_at,updated_at) VALUES($1,$2,$3,0,$4,now(),now()) RETURNING id`, kind, title, a.Cohort, a.ID).Scan(&result); e != nil {

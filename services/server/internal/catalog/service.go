@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
+	"github.com/DobosP/social_media_activities_app/services/server/internal/budgets"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -19,12 +19,12 @@ type Service struct {
 	PlaceVisuals func(context.Context, platform.Querier, []int64) (map[int64]any, error)
 	Cursor       platform.CursorCodec
 	Now          func() time.Time
-	mu           sync.Mutex
-	budgets      map[budgetKey]budget
+	Budgets      *budgets.Store
+	RatePolicies map[string]budgets.Policy
 }
 
 func New(db *pgxpool.Pool) *Service {
-	return &Service{DB: db, Now: time.Now, budgets: map[budgetKey]budget{}}
+	return &Service{DB: db, Now: time.Now, Budgets: budgets.New(db)}
 }
 func (s *Service) Register(mux *http.ServeMux) {
 	for _, base := range []string{"/api", "/api/v1"} {

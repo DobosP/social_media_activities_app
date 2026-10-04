@@ -1,7 +1,9 @@
 # Status — social_media_activities_app
 
 Last verified: 2026-10-04
-Current truth: STATUS > newest ADR > other docs. History: WORKLOG, ADRs and git.## What this is
+Current truth: STATUS > newest ADR > other docs. History: WORKLOG, ADRs and git.
+
+## What this is
 
 A children-first, in-person local-activities social app: no ads, deterministic
 discovery rather than engagement ML, Cluj-Napoca first, EU residency required,
@@ -36,26 +38,12 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 - **Core product/runtime:** D1–D10 and the audited feature waves, phased React/Preact UI behind kill
   switches, API/CSP/header/readiness hardening, bounded native HTTP/database behavior, EU-hosting templates,
   and deferred jobs are present. The production Terraform has never been applied.
-- **One nightly job, one RO-EDU credential (2026-08-22).** `sync_roedu` forwards `ROEDU_API_KEY` from the
-  environment to the events lane (`apps/ingestion/management/commands/sync_roedu.py:78`);
-  `sync_roedu_events` resolves `--api-key` or `ROEDU_API_KEY` and raises `CommandError` when neither is set
-  (`apps/events/management/commands/sync_roedu_events.py:277-279`);
-  `apps/ingestion/sources/ro_scraper.py:131` has no dev-key fallback. Detail: `WORKLOG.md` §2026-08-22.
-- **A refused RO-EDU product is loud (ADR-0030, 2026-08-18).** `RoeduClient.iter_required` raises
-  `RoeduProductUnavailable` with the page note; `ingest_places --source=roedu` and `sync_roedu_events`
-  exit non-zero; the scheduled `sync_roedu` job logs/reports it and still runs `resolve_place_covers`
-  so the shared compliance tick completes. Plain `iter` keeps core semantics. Detail: `WORKLOG.md` §2026-08-18.
-- **DSA Art.17 redress + provenance (2026-08-09/10, owner-ratified 2026-08-12).** `Post.is_author_deleted`
-  records the author's own withdrawal; `safety.targets_with_unlifted_remove` is the single implementation of
-  "removal still in force"; the Art.16/17 record and the GDPR Art.20 export query each scope separately,
-  newest-first; `PostAdmin.is_hidden` stays an operator escape hatch without provenance
-  (`apps/social/admin.py`). Detail: `WORKLOG.md` §2026-08-09, §2026-08-10.
 - **Native Go serving backend (ADR-0032):** `services/server` now owns account/password/OAuth,
   EUDI/guardian/cohort gates, domain APIs, voting, moderation, media, encrypted live transport,
   HTML/SPA hydration, booking/donations, notifications/discovery, native schema adoption and jobs.
   The default Docker/Compose/systemd/Render/cloud-init launch paths invoke Go. Shared authentication
   is a hash-verified portable copy; Django remains offline contract/reference tooling.
-- The owner-approved Go conversion is merged and pushed to `origin/main` on 2026-10-04.
+- The owner-approved Go conversion is merged and pushed to `origin/main` on 2026-10-04 (base conversion; completion candidate under review).
   Social deployment/provider/minor launch gates remain separate from source landing.
 ## Safety and operating gates
 
@@ -73,7 +61,7 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 ## Open work
 
 - Three isolated completion lanes are implementing shared budgets, configuration/error reporting and guarded
-  permissions/private API schemas. Their new code is under qualification/review; main retains the limits below.
+  permissions/private API schemas. Candidate qualification/review is pending; origin/main remains the base conversion.
 
 - Owner-approved native administration keeps the documented governed transitions; unrestricted
   raw identity/consent/media/payment edits are unavailable. Production launch remains unperformed.
@@ -81,9 +69,9 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   the serving repo's producer dependency must be intentionally bumped first.
 - Complete held-event review UX, curated cultural child-venue policy, localized
   taxonomy/cinema mapping, and production alerting/shared-state operations.
-- API/social/catalog rate histories are process-local; login state and live transport are database-backed.
-  `REDIS_URL`, required shared-state mode, Sentry, custom Python providers and unsupported nondefault
-  policy values stop native startup by setting name. Detailed inventory: native CLI guide.
+- API/social/catalog/saved-search/CSP admission is PostgreSQL-backed (ADR-0033); account/safety/message
+  budgets expose typed policies. CLI shared-state/nondefault policy wiring is a separate integration gate.
+  `REDIS_URL`, Sentry and custom Python providers remain startup refusals at this branch base.
 - Operational gaps remain in `docs/PRODUCTION_READINESS.md`. Treat an unticked box
   in `docs/archive/COMPLETENESS_GAPS_2026-06.md` as a hypothesis to verify against
   HEAD, not a specification — two backlog surveys turned already-shipped entries
@@ -97,6 +85,10 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   planning is archived. Fresh-authority baseline (ADR-0036):175 PG/codec race contracts pass, zero skips; combined review pending.
   Doc gate: files=52 dead_links=0 stale_terms=0 retired_verbs=0 orphans=0.
 
+- 2026-10-04 shared budgets worker: native race/vet passes; nine race-enabled budget tests pass on an
+  isolated synthetic PG fixture, including concurrency/capacity/expiry/erasure/low-pool replay. Full domain
+  fixture qualification and CLI wiring pending; doc gate files=52, all findings=0; no production verification.
+
 - 2026-10-04 owner-approved conversion: native race/vet and portable auth hashes pass. Fresh Go-only
   bootstrap + **173 PostgreSQL/codec tests** passed with no skips; final affected app/media/account
   checks also pass. Source/package vulnerability scans pass after compress1.18.7; unimported
@@ -104,13 +96,12 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   Exact-head native/reference/public CI is green (37211779358/395/372); image gate has zero
   fixable HIGH/CRITICAL findings. All173 contracts pass on canonicalPG16.15 Bookworm too.
 ## Standard verification
-Native race/vet + shared-source hash verification; every database/codec contract runs with an
-explicit disposable fixture through `scripts/qualify-native.sh`. Commands: `docs/agent-testing.md`.
-Python/DRF tests continue to qualify the offline compatibility oracle. `git diff --check` is required.
-Native CI: `.github/workflows/native.yml`; frontend/reference CI remains in `ci.yml`.
-Operator contract: `docs/ROEDU_INTEGRATION.md`.
+Native race/vet + shared-source hashes; database/codec contracts require explicit disposable fixtures
+through `scripts/qualify-native.sh` (`docs/agent-testing.md`). Whitespace/doc gates are required.
+Native CI: `.github/workflows/native.yml`; offline reference/frontend: `ci.yml`; operator: `docs/ROEDU_INTEGRATION.md`.
 
 ## Doc map
+
 | Doc | Job |
 |---|---|
 | `AGENTS.md` | Operating contract: read first, commands, safety, docs discipline. |

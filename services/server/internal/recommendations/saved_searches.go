@@ -3,12 +3,14 @@ package recommendations
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 	"time"
 	"unicode/utf8"
 
+	"github.com/DobosP/social_media_activities_app/services/server/internal/budgets"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/catalog"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/social"
@@ -48,92 +50,77 @@ func (s *Service) SavedSearch(ctx context.Context, a platform.Actor, id int64) (
 	err := s.DB.QueryRow(ctx, `SELECT `+savedProjection+savedJoin+` WHERE ss.user_id=$1 AND ss.id=$2`, a.ID, id).Scan(&raw)
 	return raw, err
 }
-func (s *Service) allowSave(user int64, now time.Time) bool {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	for id, entries := range s.createBudgets {
-		kept := entries[:0]
-		for _, entry := range entries {
-			if entry.After(now.Add(-time.Hour)) {
-				kept = append(kept, entry)
-			}
-		}
-		if len(kept) == 0 {
-			delete(s.createBudgets, id)
-		} else {
-			s.createBudgets[id] = kept
-		}
-	}
-	entries := s.createBudgets[user]
-	if len(entries) >= 20 {
-		return false
-	}
-	if len(s.createBudgets) >= 10000 && entries == nil {
-		return false
-	}
-	s.createBudgets[user] = append(entries, now)
-	return true
-}
 func (s *Service) CreateSavedSearch(ctx context.Context, a platform.Actor, in SavedSearchInput) (int64, error) {
 	in.City = strings.TrimSpace(in.City)
 	if (in.ActivityType == nil) == (in.Category == nil) || utf8.RuneCountInString(in.City) > 128 || !map[string]bool{"": true, "unspecified": true, "free": true, "low": true, "paid": true}[in.CostBand] || !map[string]bool{"": true, "weekday_daytime": true, "weekday_evening": true, "weekend_daytime": true, "weekend_evening": true}[in.CoarseWindow] {
 		return 0, platform.ErrInvalid
 	}
 	var id int64
-	err := platform.Transaction(ctx, s.DB, func(tx pgx.Tx) error {
-		if err := platform.Participate(ctx, tx, a); err != nil {
-			return err
-		}
-		if a.Cohort == "" || a.Cohort == "unassigned" {
-			return platform.ErrForbidden
-		}
-		var locked int64
-		if err := tx.QueryRow(ctx, `SELECT id FROM accounts_user WHERE id=$1 FOR UPDATE`, a.ID).Scan(&locked); err != nil {
-			return err
-		}
-		var valid bool
-		if in.ActivityType != nil {
-			if err := tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM taxonomy_activitytype WHERE id=$1 AND is_active)`, *in.ActivityType).Scan(&valid); err != nil {
+	err := budgets.Reserve(func(reserve func() error) error {
+		return platform.Transaction(ctx, s.DB, func(tx pgx.Tx) error {
+			if err := platform.Participate(ctx, tx, a); err != nil {
 				return err
 			}
-		} else {
-			if err := tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM taxonomy_activitycategory WHERE id=$1)`, *in.Category).Scan(&valid); err != nil {
+			if a.Cohort == "" || a.Cohort == "unassigned" {
+				return platform.ErrForbidden
+			}
+			var locked int64
+			if err := tx.QueryRow(ctx, `SELECT id FROM accounts_user WHERE id=$1 FOR UPDATE`, a.ID).Scan(&locked); err != nil {
 				return err
 			}
-		}
-		if !valid {
-			return platform.ErrInvalid
-		}
-		if !s.allowSave(a.ID, time.Now()) {
-			return platform.ErrForbidden
-		}
-		var count int
-		if err := tx.QueryRow(ctx, `SELECT count(*) FROM saved_searches_savedsearch WHERE user_id=$1`, a.ID).Scan(&count); err != nil {
-			return err
-		}
-		if count >= 20 {
-			return platform.ErrInvalid
-		}
-		var area *int64
-		if in.City != "" {
-			value, err := social.EnsureCityArea(ctx, tx, in.City)
-			if err != nil {
+			var valid bool
+			if in.ActivityType != nil {
+				if err := tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM taxonomy_activitytype WHERE id=$1 AND is_active)`, *in.ActivityType).Scan(&valid); err != nil {
+					return err
+				}
+			} else {
+				if err := tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM taxonomy_activitycategory WHERE id=$1)`, *in.Category).Scan(&valid); err != nil {
+					return err
+				}
+			}
+			if !valid {
+				return platform.ErrInvalid
+			}
+			if err := reserve(); err != nil {
 				return err
 			}
-			area = &value
+			var count int
+			if err := tx.QueryRow(ctx, `SELECT count(*) FROM saved_searches_savedsearch WHERE user_id=$1`, a.ID).Scan(&count); err != nil {
+				return err
+			}
+			if count >= 20 {
+				return platform.ErrInvalid
+			}
+			var area *int64
+			if in.City != "" {
+				value, err := social.EnsureCityArea(ctx, tx, in.City)
+				if err != nil {
+					return err
+				}
+				area = &value
+			}
+			var duplicate bool
+			if err := tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM saved_searches_savedsearch WHERE user_id=$1 AND activity_type_id IS NOT DISTINCT FROM $2::bigint AND category_id IS NOT DISTINCT FROM $3::bigint AND area_id IS NOT DISTINCT FROM $4::bigint AND beginners=$5 AND cost_band=$6 AND coarse_window=$7)`, a.ID, in.ActivityType, in.Category, area, in.Beginners, in.CostBand, in.CoarseWindow).Scan(&duplicate); err != nil {
+				return err
+			}
+			if duplicate {
+				return platform.ErrInvalid
+			}
+			if err := tx.QueryRow(ctx, `INSERT INTO saved_searches_savedsearch(user_id,cohort,activity_type_id,category_id,area_id,beginners,cost_band,coarse_window,created_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,now()) RETURNING id`, a.ID, a.Cohort, in.ActivityType, in.Category, area, in.Beginners, in.CostBand, in.CoarseWindow).Scan(&id); err != nil {
+				return err
+			}
+			return platform.RecordAudit(ctx, tx, a, "saved_search.created", fmt.Sprintf("saved_searches.savedsearch:%d", id), map[string]any{})
+		})
+	}, func() (budgets.Decision, error) {
+		policy, err := budgets.Resolve(s.RatePolicies, "saved_search_create", budgets.Policy{Limit: 20, Window: time.Hour})
+		if err != nil {
+			return budgets.Decision{}, err
 		}
-		var duplicate bool
-		if err := tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM saved_searches_savedsearch WHERE user_id=$1 AND activity_type_id IS NOT DISTINCT FROM $2::bigint AND category_id IS NOT DISTINCT FROM $3::bigint AND area_id IS NOT DISTINCT FROM $4::bigint AND beginners=$5 AND cost_band=$6 AND coarse_window=$7)`, a.ID, in.ActivityType, in.Category, area, in.Beginners, in.CostBand, in.CoarseWindow).Scan(&duplicate); err != nil {
-			return err
-		}
-		if duplicate {
-			return platform.ErrInvalid
-		}
-		if err := tx.QueryRow(ctx, `INSERT INTO saved_searches_savedsearch(user_id,cohort,activity_type_id,category_id,area_id,beginners,cost_band,coarse_window,created_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,now()) RETURNING id`, a.ID, a.Cohort, in.ActivityType, in.Category, area, in.Beginners, in.CostBand, in.CoarseWindow).Scan(&id); err != nil {
-			return err
-		}
-		return platform.RecordAudit(ctx, tx, a, "saved_search.created", fmt.Sprintf("saved_searches.savedsearch:%d", id), map[string]any{})
+		return s.Budgets.Actor(ctx, a.ID, "recommendations.saved_search_create", policy)
 	})
+	if errors.Is(err, budgets.ErrDenied) {
+		err = platform.ErrForbidden
+	}
 	return id, err
 }
 func (s *Service) DeleteSavedSearch(ctx context.Context, a platform.Actor, id int64) error {

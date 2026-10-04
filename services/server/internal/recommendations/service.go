@@ -8,10 +8,9 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"sync"
-	"time"
 
 	"github.com/DobosP/social_media_activities_app/services/server/internal/accounts"
+	"github.com/DobosP/social_media_activities_app/services/server/internal/budgets"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/catalog"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/social"
@@ -20,16 +19,16 @@ import (
 )
 
 type Service struct {
-	DB            *pgxpool.Pool
-	Catalog       *catalog.Service
-	Social        *social.Service
-	Cursor        platform.CursorCodec
-	mu            sync.Mutex
-	createBudgets map[int64][]time.Time
+	DB           *pgxpool.Pool
+	Catalog      *catalog.Service
+	Social       *social.Service
+	Cursor       platform.CursorCodec
+	Budgets      *budgets.Store
+	RatePolicies map[string]budgets.Policy
 }
 
 func New(db *pgxpool.Pool, cat *catalog.Service, soc *social.Service) *Service {
-	return &Service{DB: db, Catalog: cat, Social: soc, createBudgets: map[int64][]time.Time{}}
+	return &Service{DB: db, Catalog: cat, Social: soc, Budgets: budgets.New(db)}
 }
 func auth(fn func(http.ResponseWriter, *http.Request, platform.Actor)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

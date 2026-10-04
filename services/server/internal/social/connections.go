@@ -67,7 +67,7 @@ func pairLock(ctx context.Context, tx pgx.Tx, a, b int64) error {
 }
 func (s *Service) RequestConnection(ctx context.Context, a Actor, publicID string) (int64, error) {
 	var id int64
-	err := s.transaction(ctx, a, func(tx pgx.Tx) error {
+	err := s.rateTransaction(ctx, a, "connection_request", 20, time.Hour, func(tx pgx.Tx, reserve func() error) error {
 		b, err := targetByPublicID(ctx, tx, publicID)
 		if err != nil {
 			return err
@@ -104,8 +104,8 @@ func (s *Service) RequestConnection(ctx context.Context, a Actor, publicID strin
 		if err != pgx.ErrNoRows {
 			return err
 		}
-		if !s.allow(a.ID, "connection_request", 20, time.Hour) {
-			return platform.ErrForbidden
+		if err := reserve(); err != nil {
+			return err
 		}
 		err = tx.QueryRow(ctx, `INSERT INTO connections_connection(requester_id,addressee_id,status,created_at,decided_at) VALUES($1,$2,'pending',now(),NULL) ON CONFLICT(requester_id,addressee_id) DO UPDATE SET status='pending',decided_at=NULL RETURNING id`, a.ID, b.ID).Scan(&id)
 		if err != nil {
@@ -212,7 +212,7 @@ func (s *Service) SearchConnections(ctx context.Context, a Actor, query string) 
 }
 
 func (s *Service) Profile(ctx context.Context, a Actor, publicID string) (map[string]any, error) {
-	if !s.allow(a.ID, "profile_card", 240, time.Hour) {
+	if !s.allow(ctx, a.ID, "profile_card", 240, time.Hour) {
 		return nil, platform.ErrForbidden
 	}
 	b, err := targetByPublicID(ctx, s.DB, publicID)
