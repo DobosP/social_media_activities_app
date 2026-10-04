@@ -1,6 +1,6 @@
 # Status — social_media_activities_app
 
-Last verified: 2026-10-04
+Last verified: 2026-10-05
 
 - **GitHub Actions (Last verified: 2026-10-04):** owner-requested on-demand policy,
   [ADR-0033](docs/adr/0033-manual-github-actions.md). Workflows use `workflow_dispatch`; automatic
@@ -67,8 +67,8 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Open work
 
-- Reused sessions are resolving cross-review findings in profile authority, media/group controls and
-  inherited fixed-window budget/erasure lock ordering; affected qualification is in progress.
+- Reused sessions completed cross-review fixes for current profile authority, media/group controls and
+  inherited fixed-window budget/erasure ordering. Qualification passes; human sensitive-code review remains.
 - Profile review fix reloads the viewer after rate admission; source consent/minimal-card policy
   stays intact. Local fix/go-review-profile qualification precedes coordinator caller/integration review.
 
@@ -94,13 +94,11 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
-- Media composer policy/codec/render/multipart regressions:12 targeted tests pass, zero skips.
-- Cross-review fixes: coordinator account20/safety20 fixtures pass; inherited erasure deadlock
-  reproduces40P01 under old overlay, passes after fix. Profile social5/web3 targeted race tests pass;
-  group HTML/SPA/domain cohort-policy regression passes. Combined follow-up qualification pending.
-- Prior completion iteration passed280 native tests/19 lanes, zero skips, plus race/vet/auth/audits.
-  Its Go-only image453f7048 and HTTP/schema380/318/166 receipt is historical after these fixes.
-  Exact receipts: `docs/reviews/native-go/completion-qualification.md` and WORKLOG.
+- Reviewed completion:303 passing native contracts/19 lanes; all166 affected app/account/media/
+  safety/social/web tests rerun together, zero skips. Broad race/vet/auth hashes and source/linked
+  audits pass; final Go-only image4a660c95 has zero fixable HIGH/CRITICAL findings. HTTP/schema/
+  readiness200; schema380/318/166; shutdown0. Exact receipt and prior iteration: WORKLOG and
+  `docs/reviews/native-go/completion-qualification.md`. Hosted workflow stays manually disabled.
 
 ## Standard verification
 Native race/vet + shared-source hashes; database/codec contracts require explicit disposable fixtures
