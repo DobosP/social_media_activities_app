@@ -156,12 +156,14 @@ type nativeAPIContract struct {
 	request, response map[string]any
 	status            int
 	requestType       string
+	responseType      string
 	optionalBody      bool
 	public            bool
 	description       string
 }
 
 func privateSchemas(schemas map[string]any) {
+	publicDocumentationSchemas(schemas)
 	definitions := map[string]string{
 		"APIError":                "detail:str",
 		"AccessPreferences":       "needs_step_free:bool needs_accessible_toilet:bool needs_hearing_loop:bool prefers_quiet:bool",
@@ -291,6 +293,15 @@ func privateContract(method, path string) (nativeAPIContract, bool) {
 	read := func(model string) { c.response = ref(model) }
 	create := func(input, model string) { c.request, c.response, c.status = ref(input), ref(model), 201 }
 	switch path {
+	case "/api/schema/":
+		c.public = true
+		read("OpenAPIDocument")
+		c.description = "Public OpenAPI 3.0.3 contract metadata; contains no live records or credential values."
+	case "/api/docs/":
+		c.public = true
+		c.response = schemaKind("str")
+		c.responseType = "text/html"
+		c.description = "Public native API documentation page linking the machine-readable schema."
 	case "/api/auth/csrf":
 		c.public = true
 		c.response = schemaFields("csrf_token:str")

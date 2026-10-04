@@ -176,7 +176,8 @@ func validateDocumentedShape(t *testing.T, label string, value any, schemas map[
 		}
 		if node["type"] == "object" && node["x-native-flexible-json"] != true {
 			props, present := node["properties"].(map[string]any)
-			if !present && !(node["nullable"] == true && node["enum"] != nil) {
+			_, dictionary := node["additionalProperties"].(map[string]any)
+			if !present && !dictionary && !(node["nullable"] == true && node["enum"] != nil) {
 				t.Errorf("untyped object schema: %s", label)
 			}
 			if names, ok := node["required"].([]string); ok {

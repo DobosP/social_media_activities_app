@@ -325,6 +325,11 @@
     "Source": "internal/discovery/service.go"
   },
   {
+    "Method": "GET",
+    "Path": "/api/docs/",
+    "Source": "internal/web/server.go"
+  },
+  {
     "Method": "POST",
     "Path": "/api/donations/",
     "Source": "internal/donations/service.go"
@@ -673,6 +678,11 @@
     "Method": "GET",
     "Path": "/api/saved-searches/saved-searches/{id}/",
     "Source": "internal/recommendations/saved_searches.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/schema/",
+    "Source": "internal/web/server.go"
   },
   {
     "Method": "GET",

@@ -75,6 +75,8 @@ func pattern(path string) string {
 	return "/" + path
 }
 func (s *Server) Register(mux *http.ServeMux) {
+	mux.HandleFunc("GET /api/schema/{$}", s.OpenAPIDocument)
+	mux.HandleFunc("GET /api/docs/{$}", s.APIDocumentation)
 	// Django's typed int/uuid paths overlap in ways ServeMux's untyped wildcards
 	// cannot express. Native API paths keep ServeMux; this typed router owns HTML.
 	mux.HandleFunc("GET /", s.legacyHTTP)
