@@ -92,6 +92,10 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
+- 2026-10-04 review fix: inherited fixed-window expiry/erasure deadlock fixed (ADR-0037).
+  Accounts 19/safety 20 race-enabled fixture tests pass with zero skips; actual-Erase regression
+  fails with 40P01 on old-source overlay and passes after fix. Race/vet/auth/doc checks pass.
+
 - 2026-10-04 completion: native race/vet/auth hashes and280 tests across19 CLI/PG/codec lanes pass,
   zero skips. Final image453f7048 has no Python, UID10001, zero fixable HIGH/CRITICAL findings.
   Source/package/linked audits pass; unimported openpgp advisory is recorded separately.

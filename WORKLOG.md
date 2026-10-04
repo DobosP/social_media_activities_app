@@ -600,3 +600,46 @@ Coordinator group-creation policy now has one shared helper used by domain admis
 and both web context paths. A real PostgreSQL/browser/SPA regression proves ordinary
 adult creation is hidden and rejected when configured cohorts are empty, and is shown
 and accepted when enabled. The targeted race fixture passed; no gate was relaxed.
+
+## 2026-10-04 — Review fix for inherited fixed-window erasure deadlock
+
+Valid until: integration/landing of fix/go-review-budgets — then treat as history.
+
+The independent bounded review at f2424bed confirmed inherited accounts/safety
+fixed-window expiry deletion held child budget locks before requesting the account
+FK lock, opposing accounts.Erase's account-before-child order. A synthetic SQL-only
+check returned erasure SQLSTATE 40P01, and a deterministic test calling the actual
+Erase service also fails with 40P01 under a scratch-only old-source go-overlay.
+This was not a defect introduced by the new shared sliding budget implementation.
+
+Changed only accounts/service.go, safety/service.go and the matching inline unsafe
+report path. Expiry sweeps commit independently, lock/skip at most 256 expired rows
+under a 2 second budget, and release them before admission. Admission takes account
+FOR KEY SHARE before its own budget row. Conditional UPSERT resets count and until
+only for an expired actor row that may remain beyond the bounded sweep; live caps,
+fixed expiry, independent account/safety debits and original clock behavior remain.
+Unsafe repeats stay free and its report/budget/audit/guardian notices remain atomic
+inside the original outer transaction. No standalone admission or nested pool acquire
+is added there. Missing database/actor returns an error without admitting work.
+
+Qualification uses Go 1.27.1 with GOWORK=off, GOMAXPROCS=2, GOFLAGS=-p=2 and all scratch/
+Go caches under _temp/go-review-budgets. Full account fixture binary: 19 top-level
+race tests pass; full safety fixture: 20 pass; zero skips/failures. The extra account
+unavailable-state unit passes in the final affected-package race run. Focused tests
+cover actual Erase with full foreign keys and two connections, bounded expiry with
+locked-row skipping, expired saturated own-row reset, concurrent quotas/live expiry
+and unsafe free repeats. The same actual-Erase test fails on exact old service source
+from f2424bed via a scratch-only go-overlay, with safely logged SQLSTATE 40P01. The
+repository source never switched back for that negative control.
+
+Exact source checks: go -C services/server test -race ./internal/accounts ./internal/safety
+-count=1; go -C services/server vet ./internal/accounts ./internal/safety; go -C services/server
+run ./cmd/check-authcore (snapshot hashes verified); gofmt and git diff --check empty.
+Fixture race binaries run only on isolated go-review-budgets-net/db using the existing
+Python-free native codec image, read-only source/dropcaps/nnp/user 1000, explicit synthetic
+DSN and task scratch. Doc gate files=52, dead_links=0, stale_terms=0, retired_verbs=0, orphans=0.
+
+No shared sliding SQL, canonical authentication source, environment names, provider,
+minor activation, real data/ingestion, scheduling, deployment, push or main merge changed.
+Previous retained worktree/stash/scratch remain untouched. Fixture container is stopped
+and retained after checks; root owns combined candidate qualification and human review.

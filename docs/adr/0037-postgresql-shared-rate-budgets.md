@@ -118,3 +118,37 @@ were 6.15/6.32/6.31 ms at 1/1,000/9,000 buckets (p95 9.35/9.83/10.24 ms); 2,000 
 retained 9,992 bytes after GC. Race/vet, portable-auth hashes, formatting and docs pass.
 Exact combined CLI/source qualification, maintenance binding and human review remain coordinator
 gates. Detailed commands and fixture-only setup corrections are in WORKLOG.
+
+## Review follow-up — fixed-window expiry and erasure lock order
+
+The independent review reproduced an inherited accounts/safety fixed-window limiter
+race. Global expiry DELETE retained budget-row locks while its later INSERT requested
+an account FK lock; account erasure held the account first and cascaded to the same
+budget rows. A synthetic two-transaction reproduction produced PostgreSQL 40P01,
+and the actual-Erase regression also fails with the old source via a scratch-only
+overlay. This was not introduced by the shared sliding store.
+
+Fixed-window expiry now runs in a separately committed, two-second sweep of at most
+256 rows, ordered by until/user/action and using FOR UPDATE SKIP LOCKED. Admission
+then takes account FOR KEY SHARE before budget-row mutation. Expired actor buckets
+that remain beyond the bounded sweep reset count and until atomically in UPSERT;
+live increments/denials retain their original expiry and configured cap. Existing
+Config.Now fixed-window clock behavior remains. Missing database/actor fails closed.
+
+The inline unsafe-report path performs the same independent sweep, locks its reporter
+account before domain/budget rows and resets only its expired bucket. Repeated taps
+remain free, and report/budget/audit/guardian notifications retain the original atomic
+outer transaction. It never calls independently committing admission from inside that
+transaction. No new scheduler, provider or identity authority is introduced.
+
+Focused race fixtures cover actual account erasure and admission with a two-connection
+pool, bounded expiry and skipped locked rows, leftover expired actor reset, integer
+saturation and concurrent quota admission. Commands/results are recorded in WORKLOG;
+combined candidate qualification and required human review remain separate gates.
+
+The targeted review-fix receipt has 19 account and 20 safety fixture tests passing
+under race instrumentation, zero skips/failures. The additional account unavailable-
+state unit check passes in the final affected-package race run. The old-source overlay
+fails the same real-Erase regression with SQLSTATE 40P01; new source succeeds without
+swallowing errors. Vet, portable auth hashes, gofmt/whitespace and doc gates pass.
+No production or provider verification is claimed, and sliding admission SQL is unchanged.

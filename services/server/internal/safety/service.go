@@ -83,18 +83,45 @@ func (s *Service) Migrate(ctx context.Context) error {
 	_, err = s.DB.Exec(ctx, restrictedSchema)
 	return err
 }
+
+// Expiry maintenance commits independently, so it cannot retain a budget-row
+// lock while admission subsequently waits for an account FK/erasure lock.
+func (s *Service) pruneExpiredActionBudgets(ctx context.Context, now time.Time) error {
+	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
+	defer cancel()
+	return platform.Transaction(ctx, s.DB, func(tx pgx.Tx) error {
+		_, err := tx.Exec(ctx, `WITH expired AS MATERIALIZED (
+			SELECT ctid FROM safety_go_actionbudget WHERE until<=$1
+			ORDER BY until,user_id,action LIMIT 256 FOR UPDATE SKIP LOCKED
+		) DELETE FROM safety_go_actionbudget b USING expired e WHERE b.ctid=e.ctid`, now)
+		return err
+	})
+}
+
 func (s *Service) allow(ctx context.Context, a platform.Actor, action string, limit int, window time.Duration) (bool, error) {
 	policy, err := budgets.Resolve(s.RatePolicies, action, budgets.Policy{Limit: limit, Window: window})
 	if err != nil {
 		return false, err
 	}
+	if s.DB == nil || a.ID < 1 {
+		return false, errors.New("safety budget actor unavailable")
+	}
 	now := s.Config.Now()
+	if err := s.pruneExpiredActionBudgets(ctx, now); err != nil {
+		return false, err
+	}
 	var allowed bool
 	err = platform.Transaction(ctx, s.DB, func(tx pgx.Tx) error {
-		if _, err := tx.Exec(ctx, `DELETE FROM safety_go_actionbudget WHERE until<=$1`, now); err != nil {
+		var current int64
+		if err := tx.QueryRow(ctx, `SELECT id FROM accounts_user WHERE id=$1 FOR KEY SHARE`, a.ID).Scan(&current); err != nil {
 			return err
 		}
-		err := tx.QueryRow(ctx, `INSERT INTO safety_go_actionbudget(user_id,action,count,until) VALUES($1,$2,1,$3) ON CONFLICT(user_id,action) DO UPDATE SET count=safety_go_actionbudget.count+1 WHERE safety_go_actionbudget.count<$4 RETURNING true`, a.ID, action, now.Add(policy.Window), policy.Limit).Scan(&allowed)
+		err := tx.QueryRow(ctx, `INSERT INTO safety_go_actionbudget(user_id,action,count,until)
+			VALUES($1,$2,1,$3) ON CONFLICT(user_id,action) DO UPDATE SET
+			count=CASE WHEN safety_go_actionbudget.until<=$5 THEN 1 ELSE safety_go_actionbudget.count+1 END,
+			until=CASE WHEN safety_go_actionbudget.until<=$5 THEN $3 ELSE safety_go_actionbudget.until END
+			WHERE safety_go_actionbudget.until<=$5 OR safety_go_actionbudget.count<$4 RETURNING true`,
+			a.ID, action, now.Add(policy.Window), policy.Limit, now).Scan(&allowed)
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil
 		}
