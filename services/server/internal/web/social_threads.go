@@ -252,7 +252,7 @@ func (s *Server) socialShares(ctx context.Context, a platform.Actor, posts []map
 		}
 	}
 	if len(places) > 0 {
-		rows, err := socialRows(ctx, s.DB, `SELECT jsonb_build_object('id',p.id,'name',`+catalog.PlaceDisplayNameSQL()+`,'address_city',p.address_city) FROM places_place p WHERE p.id=ANY($1) AND `+catalog.PublicPlaceSQL, places)
+		rows, err := socialRows(ctx, s.DB, `SELECT jsonb_build_object('id',p.id,'name',`+catalog.PlaceDisplayNameSQL()+`,'address_city',p.address_city) FROM places_place p WHERE p.id=ANY($1) AND `+catalog.PolicyFromContext(ctx).PlaceSQL(), places)
 		if err != nil {
 			return err
 		}
@@ -261,7 +261,7 @@ func (s *Server) socialShares(ctx context.Context, a platform.Actor, posts []map
 		}
 	}
 	if len(events) > 0 {
-		rows, err := socialRows(ctx, s.DB, `SELECT jsonb_build_object('id',e.id,'title',e.title,'starts_at',e.starts_at,'place',CASE WHEN p.id IS NULL THEN NULL ELSE jsonb_build_object('id',p.id,'name',`+catalog.PlaceDisplayNameSQL()+`) END) FROM events_event e LEFT JOIN places_place p ON p.id=e.place_id WHERE e.id=ANY($1) AND `+catalog.PublicEventsSQL(), events)
+		rows, err := socialRows(ctx, s.DB, `SELECT jsonb_build_object('id',e.id,'title',e.title,'starts_at',e.starts_at,'place',CASE WHEN p.id IS NULL THEN NULL ELSE jsonb_build_object('id',p.id,'name',`+catalog.PlaceDisplayNameSQL()+`) END) FROM events_event e LEFT JOIN places_place p ON p.id=e.place_id WHERE e.id=ANY($1) AND `+catalog.PolicyFromContext(ctx).EventSQL(), events)
 		if err != nil {
 			return err
 		}

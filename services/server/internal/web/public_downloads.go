@@ -160,7 +160,7 @@ func (s *Server) publicSitemap(r *http.Request) ([]byte, error) {
 	for _, path := range []string{"/", "/places/list/", "/events/", "/things-to-do/", "/partners/", "/open-data/", "/transparency/", "/privacy/", "/terms/"} {
 		entries = append(entries, publicXMLEntry{Location: s.publicAbsolute(r, path), Changefreq: "weekly", Priority: "0.6"})
 	}
-	places, err := socialRows(r.Context(), s.DB, `SELECT `+catalog.PlaceExportProjectionSQL()+` || jsonb_build_object('_display_name',`+publicDisplayNameSQL+`,'last_seen_at',p.last_seen_at) FROM places_place p WHERE `+catalog.PublicPlaceSQL+` ORDER BY p.id LIMIT 50000`)
+	places, err := socialRows(r.Context(), s.DB, `SELECT `+catalog.PlaceExportProjectionSQL()+` || jsonb_build_object('_display_name',`+publicDisplayNameSQL+`,'last_seen_at',p.last_seen_at) FROM places_place p WHERE `+catalog.PolicyFromContext(r.Context()).PlaceSQL()+` ORDER BY p.id LIMIT 50000`)
 	if err != nil {
 		return nil, err
 	}

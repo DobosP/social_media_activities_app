@@ -87,7 +87,7 @@ func (s *Server) socialFormPage(r *http.Request, a platform.Actor, name string) 
 		}
 		if name == "gauge_create" {
 			if event, err := strconv.ParseInt(r.URL.Query().Get("event"), 10, 64); err == nil && event > 0 {
-				rows, err := socialRows(ctx, s.DB, `SELECT jsonb_build_object('place',e.place_id,'activity_type',e.activity_type_id) FROM events_event e LEFT JOIN places_place p ON p.id=e.place_id WHERE e.id=$1 AND e.starts_at>=now() AND `+catalog.PublicEventsSQL(), event)
+				rows, err := socialRows(ctx, s.DB, `SELECT jsonb_build_object('place',e.place_id,'activity_type',e.activity_type_id) FROM events_event e LEFT JOIN places_place p ON p.id=e.place_id WHERE e.id=$1 AND e.starts_at>=now() AND `+catalog.PolicyFromContext(r.Context()).EventSQL(), event)
 				if err != nil {
 					return nil, "", err
 				}
@@ -139,7 +139,7 @@ func (s *Server) socialDraft(r *http.Request, a platform.Actor, initial map[stri
 			var exists bool
 			query := `SELECT EXISTS(SELECT 1 FROM taxonomy_activitytype WHERE id=$1 AND is_active)`
 			if key == "place" {
-				query = `SELECT EXISTS(SELECT 1 FROM places_place p WHERE p.id=$1 AND ` + catalog.PublicPlaceSQL + `)`
+				query = `SELECT EXISTS(SELECT 1 FROM places_place p WHERE p.id=$1 AND ` + catalog.PolicyFromContext(r.Context()).PlaceSQL() + `)`
 			}
 			if e = s.DB.QueryRow(ctx, query, n).Scan(&exists); e != nil {
 				return e
@@ -182,7 +182,7 @@ func (s *Server) socialDraft(r *http.Request, a platform.Actor, initial map[stri
 		}
 		place := ""
 		if initial["place"] != nil {
-			_ = s.DB.QueryRow(ctx, `SELECT name FROM places_place p WHERE id=$1 AND `+catalog.PublicPlaceSQL, initial["place"]).Scan(&place)
+			_ = s.DB.QueryRow(ctx, `SELECT name FROM places_place p WHERE id=$1 AND `+catalog.PolicyFromContext(r.Context()).PlaceSQL(), initial["place"]).Scan(&place)
 		}
 		title := typ
 		if place != "" {

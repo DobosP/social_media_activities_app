@@ -30,7 +30,7 @@ func (s *Service) MetConfirmed(ctx context.Context, a Actor, id int64, confirmed
 }
 func (s *Service) SupportCompanion(ctx context.Context, a Actor, id int64, brings bool) error {
 	return s.transaction(ctx, a, func(tx pgx.Tx) error {
-		if a.Cohort != "adult" {
+		if a.Cohort != "adult" || !s.Policy.SupportCompanionCohorts[a.Cohort] {
 			return platform.ErrForbidden
 		}
 		if _, err := activity(ctx, tx, a, id, true); err != nil {

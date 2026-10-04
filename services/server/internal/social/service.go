@@ -44,13 +44,14 @@ type Service struct {
 	ConnectionCohorts      map[string]bool
 	Sentiment              SentimentConfig
 	CommunityPolicy        CommunityConfig
+	Policy                 PolicyConfig
 	mu                     sync.Mutex
 	budgets                map[budgetKey]budget
 	Now                    func() time.Time
 }
 
 func New(db *pgxpool.Pool, audit AuditFunc) *Service {
-	return &Service{DB: db, Audit: audit, Notify: platform.Notify, budgets: make(map[budgetKey]budget), Now: time.Now, ConnectionCohorts: map[string]bool{"adult": true, "teen": true, "child": true}, Sentiment: DefaultSentimentConfig(), CommunityPolicy: DefaultCommunityConfig()}
+	return &Service{DB: db, Audit: audit, Notify: platform.Notify, budgets: make(map[budgetKey]budget), Now: time.Now, ConnectionCohorts: map[string]bool{"adult": true, "teen": true, "child": true}, Sentiment: DefaultSentimentConfig(), CommunityPolicy: DefaultCommunityConfig(), Policy: DefaultPolicyConfig()}
 }
 
 type budgetKey struct {

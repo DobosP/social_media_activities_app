@@ -35,9 +35,12 @@ func sqlText(s string) string { return "'" + strings.ReplaceAll(s, "'", "''") + 
 var placeBaseProperties = `jsonb_build_object('name',` + placeNameSQL + `,'display_address',` + placeAddressSQL + `,'address_street',p.address_street,'address_housenumber',p.address_housenumber,'address_city',p.address_city,'address_postcode',p.address_postcode,'address_country',p.address_country,'opening_hours_raw',p.opening_hours_raw,'opening_hours',p.opening_hours,'open_now',NULL,'categories',coalesce((SELECT jsonb_agg(cat.slug ORDER BY cat.first_edge) FROM (SELECT coalesce(parent.slug,c.slug) slug,min(pa.id) first_edge FROM places_placeactivity pa JOIN taxonomy_activitytype t ON t.id=pa.activity_id JOIN taxonomy_activitycategory c ON c.id=t.category_id LEFT JOIN taxonomy_activitycategory parent ON parent.id=c.parent_id WHERE pa.place_id=p.id AND NOT pa.is_disputed GROUP BY coalesce(parent.slug,c.slug)) cat),'[]'::jsonb),'category_labels',coalesce((SELECT jsonb_agg(cat.name ORDER BY cat.first_edge) FROM (SELECT coalesce(parent.name,c.name) name,min(pa.id) first_edge FROM places_placeactivity pa JOIN taxonomy_activitytype t ON t.id=pa.activity_id JOIN taxonomy_activitycategory c ON c.id=t.category_id LEFT JOIN taxonomy_activitycategory parent ON parent.id=c.parent_id WHERE pa.place_id=p.id AND NOT pa.is_disputed GROUP BY coalesce(parent.name,c.name)) cat),'[]'::jsonb),'has_upcoming',HASUPCOMING,'image_thumb',NULL,'website',p.website,'phone',p.phone,'is_bookable',p.website<>'','source',p.source,'osm_type',p.osm_type,'osm_id',p.osm_id,'attribution',p.attribution,'license_name',p.license_name,'provenance_url',p.provenance_url,'attribution_credit',` + creditSQL("p") + `,'activities',coalesce((SELECT jsonb_agg(jsonb_build_object('slug',t.slug,'name',t.name,'confidence',pa.confidence,'origin',pa.origin,'source',pa.source,'mapping_rule',pa.mapping_rule) ORDER BY pa.id) FROM places_placeactivity pa JOIN taxonomy_activitytype t ON t.id=pa.activity_id WHERE pa.place_id=p.id AND NOT pa.is_disputed),'[]'::jsonb),'distance_m',DISTANCE)`
 
 func placeProjection(viewer platform.Actor, distance string) string {
+	return DefaultPolicy().placeProjection(viewer, distance)
+}
+func (policy Policy) placeProjection(viewer platform.Actor, distance string) string {
 	properties := strings.ReplaceAll(placeBaseProperties, "HASUPCOMING", "("+hasUpcomingSQL(viewer)+")")
 	properties = strings.ReplaceAll(properties, "DISTANCE", distance)
-	return `jsonb_build_object('id',p.id,'type','Feature','geometry',ST_AsGeoJSON(p.location::geometry)::jsonb,'properties',` + properties + `,'_corrected_hours',` + correctionHoursSQL + `,'_reports',(SELECT COUNT(*) FROM places_opennowreport WHERE place_id=p.id AND created_at>=now()-interval '14 days'))`
+	return `jsonb_build_object('id',p.id,'type','Feature','geometry',ST_AsGeoJSON(p.location::geometry)::jsonb,'properties',` + properties + `,'_corrected_hours',` + correctionHoursSQL + `,'_reports',(SELECT COUNT(*) FROM places_opennowreport WHERE place_id=p.id AND created_at>=now()-` + intervalSQL(policy.WithDefaults().OpenNowReportDecay) + `))`
 }
 
 type Near struct{ Lon, Lat, Radius *float64 }
@@ -112,7 +115,7 @@ func (s *Service) finalizePlaces(ctx context.Context, data []json.RawMessage) ([
 		}
 		open := OpenAt(schedule, s.Now().In(location))
 		props["open_now"] = open
-		if open != nil && obj["_reports"].(float64) >= 3 {
+		if open != nil && obj["_reports"].(float64) >= float64(s.policy().OpenNowReportThreshold) {
 			props["open_now"] = "unverified"
 		}
 		delete(obj, "_corrected_hours")
@@ -180,7 +183,10 @@ func placeQuery(q url.Values) (PlaceQuery, error) {
 	return v, nil
 }
 func placeWhere(v PlaceQuery, a platform.Actor) (string, []any) {
-	where := PublicPlaceSQL + ` AND ($1::text='' OR lower(p.address_city)=lower($1)) AND ($2::text='' OR lower(p.source)=lower($2)) AND ($3::text='' OR EXISTS(SELECT 1 FROM places_placeactivity pa JOIN taxonomy_activitytype t ON t.id=pa.activity_id WHERE pa.place_id=p.id AND lower(t.slug)=lower($3) AND NOT pa.is_disputed AND ($4::double precision IS NULL OR pa.confidence>=$4))) AND ($5::text='' OR EXISTS(SELECT 1 FROM places_placeactivity pa JOIN taxonomy_activitytype t ON t.id=pa.activity_id JOIN taxonomy_activitycategory c ON c.id=t.category_id LEFT JOIN taxonomy_activitycategory parent ON parent.id=c.parent_id WHERE pa.place_id=p.id AND NOT pa.is_disputed AND (lower(c.slug)=lower($5) OR lower(parent.slug)=lower($5)) AND ($4::double precision IS NULL OR pa.confidence>=$4))) AND ($4::double precision IS NULL OR EXISTS(SELECT 1 FROM places_placeactivity pa WHERE pa.place_id=p.id AND pa.confidence>=$4)) AND ($6::boolean IS NULL OR (` + hasUpcomingSQL(a) + `)=$6) AND ($7::double precision IS NULL OR $8::double precision IS NULL OR $9::double precision IS NULL OR ST_DWithin(p.location,ST_SetSRID(ST_MakePoint($7,$8),4326)::geography,$9))`
+	return DefaultPolicy().placeWhere(v, a)
+}
+func (policy Policy) placeWhere(v PlaceQuery, a platform.Actor) (string, []any) {
+	where := policy.PlaceSQL() + ` AND ($1::text='' OR lower(p.address_city)=lower($1)) AND ($2::text='' OR lower(p.source)=lower($2)) AND ($3::text='' OR EXISTS(SELECT 1 FROM places_placeactivity pa JOIN taxonomy_activitytype t ON t.id=pa.activity_id WHERE pa.place_id=p.id AND lower(t.slug)=lower($3) AND NOT pa.is_disputed AND ($4::double precision IS NULL OR pa.confidence>=$4))) AND ($5::text='' OR EXISTS(SELECT 1 FROM places_placeactivity pa JOIN taxonomy_activitytype t ON t.id=pa.activity_id JOIN taxonomy_activitycategory c ON c.id=t.category_id LEFT JOIN taxonomy_activitycategory parent ON parent.id=c.parent_id WHERE pa.place_id=p.id AND NOT pa.is_disputed AND (lower(c.slug)=lower($5) OR lower(parent.slug)=lower($5)) AND ($4::double precision IS NULL OR pa.confidence>=$4))) AND ($4::double precision IS NULL OR EXISTS(SELECT 1 FROM places_placeactivity pa WHERE pa.place_id=p.id AND pa.confidence>=$4)) AND ($6::boolean IS NULL OR (` + hasUpcomingSQL(a) + `)=$6) AND ($7::double precision IS NULL OR $8::double precision IS NULL OR $9::double precision IS NULL OR ST_DWithin(p.location,ST_SetSRID(ST_MakePoint($7,$8),4326)::geography,$9))`
 	args := []any{v.City, v.Source, v.Activity, v.MinConfidence, v.Category, v.HasUpcoming, v.Near.Lon, v.Near.Lat, v.Near.Radius}
 	if len(v.BBox) == 4 {
 		where += ` AND p.location::geometry && ST_MakeEnvelope($10,$11,$12,$13,4326)`
@@ -191,7 +197,7 @@ func placeWhere(v PlaceQuery, a platform.Actor) (string, []any) {
 	return where, args
 }
 func (s *Service) Places(ctx context.Context, a platform.Actor, q PlaceQuery, limit, offset int) ([]json.RawMessage, int64, error) {
-	where, args := placeWhere(q, a)
+	where, args := s.policy().placeWhere(q, a)
 	var count int64
 	if err := s.DB.QueryRow(ctx, `SELECT COUNT(*) FROM places_place p WHERE `+where, args...).Scan(&count); err != nil {
 		return nil, 0, err
@@ -203,7 +209,7 @@ func (s *Service) Places(ctx context.Context, a platform.Actor, q PlaceQuery, li
 		order = `ST_Distance(p.location,ST_SetSRID(ST_MakePoint($7,$8),4326)::geography),p.id`
 	}
 	next := len(args) + 1
-	sql := `SELECT ` + placeProjection(a, distance) + ` FROM places_place p WHERE ` + where + ` ORDER BY ` + order + ` LIMIT $` + strconv.Itoa(next) + ` OFFSET $` + strconv.Itoa(next+1)
+	sql := `SELECT ` + s.policy().placeProjection(a, distance) + ` FROM places_place p WHERE ` + where + ` ORDER BY ` + order + ` LIMIT $` + strconv.Itoa(next) + ` OFFSET $` + strconv.Itoa(next+1)
 	data, err := rows(ctx, s.DB, sql, append(args, limit, offset)...)
 	if err != nil {
 		return nil, 0, err
@@ -212,7 +218,7 @@ func (s *Service) Places(ctx context.Context, a platform.Actor, q PlaceQuery, li
 	return data, count, err
 }
 func (s *Service) Place(ctx context.Context, a platform.Actor, id int64) (json.RawMessage, error) {
-	raw, err := object(ctx, s.DB, `SELECT `+placeProjection(a, "NULL")+` FROM places_place p WHERE p.id=$1 AND `+PublicPlaceSQL, id)
+	raw, err := object(ctx, s.DB, `SELECT `+s.policy().placeProjection(a, "NULL")+` FROM places_place p WHERE p.id=$1 AND `+s.policy().PlaceSQL(), id)
 	if err != nil {
 		return nil, err
 	}

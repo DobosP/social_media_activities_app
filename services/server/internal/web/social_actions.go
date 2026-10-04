@@ -571,6 +571,7 @@ func (s *Server) socialReadUpload(w http.ResponseWriter, r *http.Request, field 
 		return "", "", cleanup, platform.ErrInvalid
 	}
 	values := url.Values{}
+	formBudget := platform.NewUploadBudget(r.Context())
 	defer func() {
 		if err != nil {
 			cleanup()
@@ -615,7 +616,7 @@ func (s *Server) socialReadUpload(w http.ResponseWriter, r *http.Request, field 
 				part.Close()
 				return path, filename, cleanup, platform.ErrInvalid
 			}
-			raw, e := io.ReadAll(io.LimitReader(part, 16385))
+			raw, e := formBudget.ReadField(part, 16384)
 			part.Close()
 			if e != nil || len(raw) > 16384 {
 				return path, filename, cleanup, platform.ErrInvalid

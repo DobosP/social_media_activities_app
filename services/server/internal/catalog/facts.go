@@ -47,9 +47,9 @@ func (s *Service) allow(a platform.Actor, action string, n int, window time.Dura
 	s.budgets[key] = b
 	return true
 }
-func publicVenue(ctx context.Context, q platform.Querier, id int64) error {
+func (s *Service) publicVenue(ctx context.Context, q platform.Querier, id int64) error {
 	var current int64
-	return q.QueryRow(ctx, `SELECT p.id FROM places_place p WHERE p.id=$1 AND `+PublicPlaceSQL, id).Scan(&current)
+	return q.QueryRow(ctx, `SELECT p.id FROM places_place p WHERE p.id=$1 AND `+s.policy().PlaceSQL(), id).Scan(&current)
 }
 func safeExternal(value string) string {
 	value = strings.TrimSpace(value)
@@ -164,7 +164,7 @@ func osmFact(tags map[string]any, key string) string {
 	return "unknown"
 }
 func (s *Service) VenueFacts(ctx context.Context, a platform.Actor, id int64, detail bool) ([]map[string]any, error) {
-	if err := publicVenue(ctx, s.DB, id); err != nil {
+	if err := s.publicVenue(ctx, s.DB, id); err != nil {
 		return nil, err
 	}
 	var raw []byte
@@ -205,7 +205,7 @@ func (s *Service) VenueFacts(ctx context.Context, a platform.Actor, id int64, de
 		v := tallies[key]
 		state := osmFact(tags, key)
 		sourced := state != "unknown"
-		if !sourced && max(v.Yes, v.No) >= 3 && v.Yes != v.No {
+		if !sourced && max(v.Yes, v.No) >= s.policy().FactQuorum && v.Yes != v.No {
 			state = "false"
 			if v.Yes > v.No {
 				state = "true"
@@ -215,7 +215,7 @@ func (s *Service) VenueFacts(ctx context.Context, a platform.Actor, id int64, de
 		if detail {
 			row["yes"] = v.Yes
 			row["no"] = v.No
-			row["required"] = 3
+			row["required"] = s.policy().FactQuorum
 			row["my_vote"] = v.Mine
 			row["osm_sourced"] = sourced
 		}
@@ -231,7 +231,7 @@ func (s *Service) VoteFact(ctx context.Context, a platform.Actor, id int64, key 
 		if err := platform.Participate(ctx, tx, a); err != nil {
 			return err
 		}
-		if err := publicVenue(ctx, tx, id); err != nil {
+		if err := s.publicVenue(ctx, tx, id); err != nil {
 			return err
 		}
 		if !s.allow(a, "place_fact_vote", 40, time.Hour) {
@@ -257,7 +257,7 @@ func (s *Service) VoteEdge(ctx context.Context, a platform.Actor, id int64, vote
 		if err := tx.QueryRow(ctx, `SELECT place_id,origin,is_disputed FROM places_placeactivity WHERE id=$1 FOR UPDATE`, id).Scan(&place, &origin, &disputed); err != nil {
 			return err
 		}
-		if err := publicVenue(ctx, tx, place); err != nil {
+		if err := s.publicVenue(ctx, tx, place); err != nil {
 			return err
 		}
 		if _, err := tx.Exec(ctx, `INSERT INTO places_activityedgevote(edge_id,user_id,vote,created_at) VALUES($1,$2,$3,now()) ON CONFLICT(edge_id,user_id) DO UPDATE SET vote=EXCLUDED.vote`, id, a.ID, vote); err != nil {
@@ -268,11 +268,11 @@ func (s *Service) VoteEdge(ctx context.Context, a platform.Actor, id int64, vote
 			return err
 		}
 		if origin == "inferred" {
-			if disputes >= 3 && !disputed {
+			if disputes >= s.policy().EdgeQuorum && !disputed {
 				if _, err := tx.Exec(ctx, `UPDATE places_placeactivity SET is_disputed=true,updated_at=now() WHERE id=$1`, id); err != nil {
 					return err
 				}
-			} else if confirms >= 3 {
+			} else if confirms >= s.policy().EdgeQuorum {
 				if _, err := tx.Exec(ctx, `UPDATE places_placeactivity SET origin='confirmed',is_disputed=false,updated_at=now() WHERE id=$1`, id); err != nil {
 					return err
 				}

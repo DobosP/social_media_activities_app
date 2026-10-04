@@ -19,12 +19,13 @@ type Service struct {
 	PlaceVisuals func(context.Context, platform.Querier, []int64) (map[int64]any, error)
 	Cursor       platform.CursorCodec
 	Now          func() time.Time
+	Policy       Policy
 	mu           sync.Mutex
 	budgets      map[budgetKey]budget
 }
 
 func New(db *pgxpool.Pool) *Service {
-	return &Service{DB: db, Now: time.Now, budgets: map[budgetKey]budget{}}
+	return &Service{DB: db, Now: time.Now, Policy: DefaultPolicy(), budgets: map[budgetKey]budget{}}
 }
 func (s *Service) Register(mux *http.ServeMux) {
 	for _, base := range []string{"/api", "/api/v1"} {

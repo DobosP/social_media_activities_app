@@ -20,12 +20,13 @@ import (
 )
 
 type Service struct {
-	DB            *pgxpool.Pool
-	Catalog       *catalog.Service
-	Social        *social.Service
-	Cursor        platform.CursorCodec
-	mu            sync.Mutex
-	createBudgets map[int64][]time.Time
+	DB               *pgxpool.Pool
+	MaxSavedSearches int
+	Catalog          *catalog.Service
+	Social           *social.Service
+	Cursor           platform.CursorCodec
+	mu               sync.Mutex
+	createBudgets    map[int64][]time.Time
 }
 
 func New(db *pgxpool.Pool, cat *catalog.Service, soc *social.Service) *Service {

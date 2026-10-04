@@ -22,6 +22,7 @@ import (
 	"github.com/DobosP/social_media_activities_app/services/server/internal/jobs"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/media"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/messaging"
+	"github.com/DobosP/social_media_activities_app/services/server/internal/ops"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/safety"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/schema"
@@ -88,6 +89,12 @@ func main() {
 }
 
 func run(ctx context.Context, args []string, get environment, stdin io.Reader, stdout, stderr io.Writer, presence ...environmentPresence) error {
+	return runWithReporter(ctx, args, get, stdin, stdout, stderr, ops.NewErrorReporter, presence...)
+}
+
+// The factory is an isolated qualification seam; main always supplies the native
+// reporter. Tests inject a mock transport and never contact an external service.
+func runWithReporter(ctx context.Context, args []string, get environment, stdin io.Reader, stdout, stderr io.Writer, newReporter func(ops.ErrorReporterConfig) (*ops.ErrorReporter, error), presence ...environmentPresence) (resultErr error) {
 	o, err := parseCLI(args, io.Discard)
 	if errors.Is(err, flag.ErrHelp) {
 		_, _ = parseCLI([]string{"-help"}, stdout)
@@ -120,6 +127,27 @@ func run(ctx context.Context, args []string, get environment, stdin io.Reader, s
 		if err != nil {
 			return err
 		}
+	}
+	var reporter *ops.ErrorReporter
+	if !o.MigrateOnly {
+		reporter, err = newReporter(runtime.ErrorReporting)
+		if err != nil {
+			return errors.New("SENTRY_DSN is invalid")
+		}
+		runtime.App.ErrorReporter = reporter
+		defer func() {
+			if resultErr != nil {
+				class := ops.Startup
+				if o.Job != "" || o.Due {
+					class = ops.JobFailure
+				}
+				reporter.Capture(class, "", "")
+			}
+			flush, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			defer cancel()
+			_ = reporter.Shutdown(flush)
+		}()
+		ctx = catalog.WithPolicy(ctx, runtime.CatalogPolicy)
 	}
 	db, err := pgxpool.NewWithConfig(ctx, poolCfg)
 	if err != nil {
@@ -162,7 +190,9 @@ func run(ctx context.Context, args []string, get environment, stdin io.Reader, s
 	if err != nil {
 		return err
 	}
-	runtime.apply(handler)
+	if err = runtime.apply(handler); err != nil {
+		return err
+	}
 	jobConfig := runtime.Jobs
 	if o.ReminderWithinHours > 0 {
 		jobConfig.ReminderHours = o.ReminderWithinHours
@@ -171,6 +201,7 @@ func run(ctx context.Context, args []string, get environment, stdin io.Reader, s
 	jobConfig.DeleteBlob = store.Delete
 	runner := jobs.New(db, jobConfig)
 	runner.Queue.BackoffBase, runner.Queue.BackoffMax = runtime.BackoffBase, runtime.BackoffMax
+	runner.Queue.MaxAttempts = runtime.DeferredMaxAttempts
 	operatorConfig := runtime.Commands
 	operatorConfig.Recommendations, operatorConfig.Storage = handler.Recommendations, store
 	operatorConfig.DecodeProfileHash = handler.Media.ProfileHash

@@ -66,7 +66,7 @@ func (s *Service) NudgeOrganizers(ctx context.Context, now time.Time) (int, erro
 	return sent, nil
 }
 func (s *Service) NudgeRSVP(ctx context.Context, now time.Time) (int, error) {
-	rows, err := nudgeRows(ctx, s.DB, `SELECT m.user_id,a.id,a.title FROM social_activity a JOIN social_membership m ON m.activity_id=a.id AND m.state='member' AND m.role<>'guardian' AND m.attendance_intent='unknown' WHERE a.status='open' AND NOT a.is_hidden AND a.starts_at BETWEEN $1::timestamptz-interval '3 hours' AND $1::timestamptz+interval '2 hours' ORDER BY a.id,m.user_id`, now)
+	rows, err := nudgeRows(ctx, s.DB, `SELECT m.user_id,a.id,a.title FROM social_activity a JOIN social_membership m ON m.activity_id=a.id AND m.state='member' AND m.role<>'guardian' AND m.attendance_intent='unknown' WHERE a.status='open' AND NOT a.is_hidden AND a.starts_at BETWEEN $1::timestamptz-$2*interval '1 hour' AND $1::timestamptz+$3*interval '1 hour' ORDER BY a.id,m.user_id`, now, s.Policy.ArrivalWindowAfterHours, s.Policy.ArrivalWindowBeforeHours)
 	if err != nil {
 		return 0, err
 	}

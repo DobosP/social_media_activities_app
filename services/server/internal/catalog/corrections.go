@@ -26,13 +26,13 @@ func (s *Service) ProposeCorrection(ctx context.Context, a platform.Actor, place
 		if err := platform.Participate(ctx, tx, a); err != nil {
 			return err
 		}
-		if err := publicVenue(ctx, tx, placeID); err != nil {
+		if err := s.publicVenue(ctx, tx, placeID); err != nil {
 			return err
 		}
 		if _, err := tx.Exec(ctx, `SELECT id FROM places_place WHERE id=$1 FOR UPDATE`, placeID); err != nil {
 			return err
 		}
-		err := tx.QueryRow(ctx, `INSERT INTO places_placecorrection(place_id,proposer_id,field,proposed_value,required_confirmations,status,created_at,published_at) VALUES($1,$2,$3,$4,3,'pending',now(),NULL) RETURNING id`, placeID, a.ID, field, value).Scan(&id)
+		err := tx.QueryRow(ctx, `INSERT INTO places_placecorrection(place_id,proposer_id,field,proposed_value,required_confirmations,status,created_at,published_at) VALUES($1,$2,$3,$4,$5,'pending',now(),NULL) RETURNING id`, placeID, a.ID, field, value, s.policy().CorrectionQuorum).Scan(&id)
 		if err != nil {
 			return err
 		}
@@ -117,8 +117,10 @@ func (s *Service) ReportVenue(ctx context.Context, a platform.Actor, place int64
 			return err
 		}
 		kind, table := "open_now_report", "places_opennowreport"
+		decay := s.policy().OpenNowReportDecay
 		if closure {
 			kind, table = "place_closure_report", "places_placeclosurereport"
+			decay = s.policy().ClosureReportDecay
 		}
 		if !s.allow(a, kind, 10, time.Hour) {
 			return nil
@@ -127,7 +129,7 @@ func (s *Service) ReportVenue(ctx context.Context, a platform.Actor, place int64
 			return err
 		}
 		var exists bool
-		if err := tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM `+table+` WHERE place_id=$1 AND reporter_id=$2 AND created_at>=now()-interval '14 days')`, place, a.ID).Scan(&exists); err != nil {
+		if err := tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM `+table+` WHERE place_id=$1 AND reporter_id=$2 AND created_at>=now()-$3*interval '1 second')`, place, a.ID, int64(decay/time.Second)).Scan(&exists); err != nil {
 			return err
 		}
 		if exists {

@@ -86,10 +86,13 @@ func sentimentGate(ctx context.Context, q platform.Querier, a Actor, v threadSta
 	return nil
 }
 
-const safePlace = catalog.PublicPlaceSQL
+func postProjection(ctx context.Context) string {
+	safePlace := catalog.PolicyFromContext(ctx).PlaceSQL()
 
-var postShare = `CASE WHEN po.shared_activity_id IS NOT NULL THEN CASE WHEN sa.id IS NOT NULL AND NOT sa.is_hidden AND sa.status<>'cancelled' AND sa.cohort=$2 THEN jsonb_build_object('kind','activity','id',sa.id,'title',sa.title) ELSE jsonb_build_object('kind','gone') END WHEN po.shared_place_id IS NOT NULL THEN CASE WHEN sp.id IS NOT NULL AND (` + regexp.MustCompile(`\bp\.`).ReplaceAllString(safePlace, "sp.") + `) THEN jsonb_build_object('kind','place','id',sp.id,'title',sp.name) ELSE jsonb_build_object('kind','gone') END WHEN po.shared_event_id IS NOT NULL THEN CASE WHEN se.id IS NOT NULL AND NOT se.is_tombstone AND NOT se.is_import_held AND se.lifecycle_status IN ('scheduled','rescheduled','sold_out') AND (se.place_id IS NULL OR EXISTS(SELECT 1 FROM places_place p WHERE p.id=se.place_id AND ` + safePlace + `)) THEN jsonb_build_object('kind','event','id',se.id,'title',se.title) ELSE jsonb_build_object('kind','gone') END ELSE NULL END`
-var postProjection = `jsonb_build_object('id',po.id,'author',u.display_name,'body',po.body,'is_announcement',po.is_announcement,'reply_to',po.reply_to_id,'share',` + postShare + `,'created_at',po.created_at)`
+	postShare := `CASE WHEN po.shared_activity_id IS NOT NULL THEN CASE WHEN sa.id IS NOT NULL AND NOT sa.is_hidden AND sa.status<>'cancelled' AND sa.cohort=$2 THEN jsonb_build_object('kind','activity','id',sa.id,'title',sa.title) ELSE jsonb_build_object('kind','gone') END WHEN po.shared_place_id IS NOT NULL THEN CASE WHEN sp.id IS NOT NULL AND (` + regexp.MustCompile(`\bp\.`).ReplaceAllString(safePlace, "sp.") + `) THEN jsonb_build_object('kind','place','id',sp.id,'title',sp.name) ELSE jsonb_build_object('kind','gone') END WHEN po.shared_event_id IS NOT NULL THEN CASE WHEN se.id IS NOT NULL AND NOT se.is_tombstone AND NOT se.is_import_held AND se.lifecycle_status IN ('scheduled','rescheduled','sold_out') AND (se.place_id IS NULL OR EXISTS(SELECT 1 FROM places_place p WHERE p.id=se.place_id AND ` + safePlace + `)) THEN jsonb_build_object('kind','event','id',se.id,'title',se.title) ELSE jsonb_build_object('kind','gone') END ELSE NULL END`
+	return `jsonb_build_object('id',po.id,'author',u.display_name,'body',po.body,'is_announcement',po.is_announcement,'reply_to',po.reply_to_id,'share',` + postShare + `,'created_at',po.created_at)`
+
+}
 
 const postJoin = ` FROM social_post po JOIN accounts_user u ON u.id=po.author_id LEFT JOIN social_activity sa ON sa.id=po.shared_activity_id LEFT JOIN places_place sp ON sp.id=po.shared_place_id LEFT JOIN events_event se ON se.id=po.shared_event_id `
 
@@ -102,12 +105,12 @@ func (s *Service) Posts(ctx context.Context, a Actor, kind string, id, before in
 		return nil, "", err
 	}
 	if limit < 1 {
-		limit = 100
+		limit = s.Policy.ThreadPostLimit
 	}
-	if limit > 100 {
-		limit = 100
+	if limit > s.Policy.ThreadPostLimit {
+		limit = s.Policy.ThreadPostLimit
 	}
-	query := `SELECT ` + postProjection + postJoin + ` WHERE po.thread_id=$1 AND NOT po.is_hidden AND ($3::bigint<=0 OR NOT EXISTS(SELECT 1 FROM social_post anchor WHERE anchor.id=$3 AND anchor.thread_id=$1) OR (po.created_at,po.id)<(SELECT anchor.created_at,anchor.id FROM social_post anchor WHERE anchor.id=$3 AND anchor.thread_id=$1)) ORDER BY po.created_at DESC,po.id DESC LIMIT $4`
+	query := `SELECT ` + postProjection(ctx) + postJoin + ` WHERE po.thread_id=$1 AND NOT po.is_hidden AND ($3::bigint<=0 OR NOT EXISTS(SELECT 1 FROM social_post anchor WHERE anchor.id=$3 AND anchor.thread_id=$1) OR (po.created_at,po.id)<(SELECT anchor.created_at,anchor.id FROM social_post anchor WHERE anchor.id=$3 AND anchor.thread_id=$1)) ORDER BY po.created_at DESC,po.id DESC LIMIT $4`
 	rows, err := objects(ctx, s.DB, query, v.ThreadID, a.Cohort, before, limit+1)
 	if err != nil {
 		return nil, "", err
@@ -160,7 +163,7 @@ func (s *Service) Post(ctx context.Context, a Actor, id int64) (json.RawMessage,
 			return nil, err
 		}
 	}
-	return object(ctx, s.DB, `SELECT `+postProjection+postJoin+` WHERE po.id=$1 AND NOT po.is_hidden`, id, a.Cohort)
+	return object(ctx, s.DB, `SELECT `+postProjection(ctx)+postJoin+` WHERE po.id=$1 AND NOT po.is_hidden`, id, a.Cohort)
 }
 
 type PostInput struct {
@@ -209,7 +212,7 @@ func validateShare(ctx context.Context, q platform.Querier, a Actor, p PostInput
 		}
 	}
 	if p.ShareEvent != nil {
-		ok, err := scalar(ctx, q, `SELECT EXISTS(SELECT 1 FROM events_event e WHERE e.id=$1 AND NOT e.is_tombstone AND NOT e.is_import_held AND e.lifecycle_status IN ('scheduled','rescheduled','sold_out') AND (e.place_id IS NULL OR EXISTS(SELECT 1 FROM places_place p WHERE p.id=e.place_id AND `+safePlace+`)))`, *p.ShareEvent)
+		ok, err := scalar(ctx, q, `SELECT EXISTS(SELECT 1 FROM events_event e WHERE e.id=$1 AND NOT e.is_tombstone AND NOT e.is_import_held AND e.lifecycle_status IN ('scheduled','rescheduled','sold_out') AND (e.place_id IS NULL OR EXISTS(SELECT 1 FROM places_place p WHERE p.id=e.place_id AND `+catalog.PolicyFromContext(ctx).PlaceSQL()+`)))`, *p.ShareEvent)
 		if err := errorIfFalse(ok, err); err != nil {
 			return err
 		}
@@ -234,6 +237,9 @@ func (s *Service) WritePostAttached(ctx context.Context, a Actor, kind string, i
 func (s *Service) writePost(ctx context.Context, a Actor, kind string, id int64, in PostInput, announcement bool, attach AttachPostFunc) (int64, error) {
 	if err := in.validateAttachment(attach != nil); err != nil {
 		return 0, err
+	}
+	if utf8.RuneCountInString(in.Body) > s.Policy.ChatMaxLength {
+		return 0, platform.ErrInvalid
 	}
 	if !s.allow(a.ID, "thread_post", 30, time.Minute) {
 		return 0, platform.ErrForbidden
@@ -290,7 +296,7 @@ func (s *Service) writePost(ctx context.Context, a Actor, kind string, id int64,
 			if e != nil {
 				return e
 			}
-			if utf8.RuneCountInString(processed) > 4000 {
+			if utf8.RuneCountInString(processed) > s.Policy.ChatMaxLength {
 				return platform.ErrInvalid
 			}
 			in.Body = processed
@@ -433,7 +439,7 @@ func (s *Service) postOwner(ctx context.Context, tx pgx.Tx, a Actor, id int64) (
 }
 func (s *Service) EditPost(ctx context.Context, a Actor, id int64, body string) error {
 	body = strings.TrimSpace(body)
-	if body == "" || utf8.RuneCountInString(body) > 4000 {
+	if body == "" || utf8.RuneCountInString(body) > s.Policy.ChatMaxLength {
 		return platform.ErrInvalid
 	}
 	return s.transaction(ctx, a, func(tx pgx.Tx) error {
@@ -460,7 +466,7 @@ func (s *Service) EditPost(ctx context.Context, a Actor, id int64, body string) 
 			if e != nil {
 				return e
 			}
-			if strings.TrimSpace(processed) == "" || utf8.RuneCountInString(processed) > 4000 {
+			if strings.TrimSpace(processed) == "" || utf8.RuneCountInString(processed) > s.Policy.ChatMaxLength {
 				return platform.ErrInvalid
 			}
 			body = processed

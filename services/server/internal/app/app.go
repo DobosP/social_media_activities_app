@@ -66,6 +66,11 @@ type Config struct {
 	RequestLoggingEnabled              bool
 	LogFormat                          string
 	LogWriter                          io.Writer
+	ErrorReporter                      *ops.ErrorReporter
+	LogLevel                           string
+	PermissionsPolicy                  string
+	MaxRequestBodyBytes                int64
+	DataUploadMemoryBytes              int64
 }
 type App struct {
 	DB              *pgxpool.Pool
@@ -97,6 +102,9 @@ type App struct {
 func New(ctx context.Context, db *pgxpool.Pool, config Config, migrate bool) (*App, error) {
 	if db == nil || len(config.Secret) < 32 || strings.Contains(config.Secret, "change-me") {
 		return nil, errors.New("DATABASE_URL and a strong DJANGO_SECRET_KEY are required")
+	}
+	if err := normalizeHTTPPolicy(&config); err != nil {
+		return nil, err
 	}
 	cleanHosts := []string{}
 	for _, host := range config.AllowedHosts {
@@ -355,7 +363,15 @@ func (a *App) serveHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	r = a.forwardedPeer(r)
 	if r.Method != http.MethodGet && r.Method != http.MethodHead && r.Method != http.MethodOptions {
-		limit := int64(8 << 20)
+		limit := a.Config.MaxRequestBodyBytes
+		if limit == 0 {
+			limit = 8 << 20
+		}
+		memory := a.Config.DataUploadMemoryBytes
+		if memory == 0 {
+			memory = 8 << 20
+		}
+		limit = min(limit, memory)
 		if strings.Contains(r.URL.Path, "/media/") || strings.HasSuffix(r.URL.Path, "/attach/") || classicThreadUpload(r) {
 			limit = 82 << 20
 		}

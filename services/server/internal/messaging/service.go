@@ -15,17 +15,18 @@ import (
 )
 
 type Service struct {
-	DB                *pgxpool.Pool
-	Cursor            platform.CursorCodec
-	Now               func() time.Time
-	MaxGroupMembers   int
-	ConversationLimit int
-	MessagePageLimit  int
-	RetentionDays     int
+	DB                 *pgxpool.Pool
+	Cursor             platform.CursorCodec
+	Now                func() time.Time
+	MaxGroupMembers    int
+	MaxCiphertextBytes int
+	ConversationLimit  int
+	MessagePageLimit   int
+	RetentionDays      int
 }
 
 func New(db *pgxpool.Pool, cursor platform.CursorCodec) *Service {
-	return &Service{DB: db, Cursor: cursor, Now: time.Now, MaxGroupMembers: 256, ConversationLimit: 100, MessagePageLimit: 50}
+	return &Service{DB: db, Cursor: cursor, Now: time.Now, MaxGroupMembers: 256, MaxCiphertextBytes: 65536, ConversationLimit: 100, MessagePageLimit: 50}
 }
 func (s *Service) maxMembers() int {
 	if s.MaxGroupMembers < 2 || s.MaxGroupMembers > 256 {

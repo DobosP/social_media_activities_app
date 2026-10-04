@@ -283,7 +283,7 @@ func (r *Runner) IndexNow(ctx context.Context) (map[string]any, error) {
 	if err != nil || parsed.Scheme != "https" || parsed.Hostname() == "" || parsed.User != nil || parsed.RawQuery != "" || parsed.Fragment != "" || (parsed.Path != "" && parsed.Path != "/") {
 		return nil, errors.New("invalid public site URL")
 	}
-	rows, err := r.DB.Query(ctx, `SELECT p.id,COALESCE((SELECT NULLIF(c.proposed_value,'') FROM places_placecorrection c WHERE c.place_id=p.id AND c.field='name' AND c.status='published' ORDER BY COALESCE(c.published_at,c.created_at) DESC,c.id DESC LIMIT 1),NULLIF(p.name,''),'Unnamed place') FROM places_place p WHERE p.last_seen_at>=$1 AND `+catalog.PublicPlaceSQL+` ORDER BY p.last_seen_at DESC,p.id LIMIT $2`, r.Config.Now().Add(-time.Duration(window)*time.Hour), cap)
+	rows, err := r.DB.Query(ctx, `SELECT p.id,COALESCE((SELECT NULLIF(c.proposed_value,'') FROM places_placecorrection c WHERE c.place_id=p.id AND c.field='name' AND c.status='published' ORDER BY COALESCE(c.published_at,c.created_at) DESC,c.id DESC LIMIT 1),NULLIF(p.name,''),'Unnamed place') FROM places_place p WHERE p.last_seen_at>=$1 AND `+catalog.PolicyFromContext(ctx).PlaceSQL()+` ORDER BY p.last_seen_at DESC,p.id LIMIT $2`, r.Config.Now().Add(-time.Duration(window)*time.Hour), cap)
 	if err != nil {
 		return nil, err
 	}
@@ -302,7 +302,7 @@ func (r *Runner) IndexNow(ctx context.Context) (map[string]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	rows, err = r.DB.Query(ctx, `SELECT e.id,e.title FROM events_event e LEFT JOIN places_place p ON p.id=e.place_id WHERE e.updated_at>=$1 AND e.starts_at>=$2 AND NOT e.is_import_held AND NOT e.is_tombstone AND e.lifecycle_status IN ('scheduled','rescheduled','sold_out') AND (p.id IS NULL OR (`+catalog.PublicPlaceSQL+`)) ORDER BY e.updated_at DESC,e.id LIMIT $3`, r.Config.Now().Add(-time.Duration(window)*time.Hour), r.Config.Now(), cap)
+	rows, err = r.DB.Query(ctx, `SELECT e.id,e.title FROM events_event e LEFT JOIN places_place p ON p.id=e.place_id WHERE e.updated_at>=$1 AND e.starts_at>=$2 AND NOT e.is_import_held AND NOT e.is_tombstone AND e.lifecycle_status IN ('scheduled','rescheduled','sold_out') AND (p.id IS NULL OR (`+catalog.PolicyFromContext(ctx).PlaceSQL()+`)) ORDER BY e.updated_at DESC,e.id LIMIT $3`, r.Config.Now().Add(-time.Duration(window)*time.Hour), r.Config.Now(), cap)
 	if err != nil {
 		return nil, err
 	}

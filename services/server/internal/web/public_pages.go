@@ -31,7 +31,7 @@ func (s *Server) PublicView(r *http.Request, a platform.Actor, name string) (pon
 	fail := func(err error) (pongo2.Context, string, bool, error) { return nil, "", true, err }
 	switch name {
 	case "places_map":
-		categories, err := socialRows(ctx, s.DB, `SELECT jsonb_build_object('slug',coalesce(parent.slug,c.slug),'name',coalesce(parent.name,c.name)) FROM places_placeactivity pa JOIN places_place p ON p.id=pa.place_id JOIN taxonomy_activitytype t ON t.id=pa.activity_id JOIN taxonomy_activitycategory c ON c.id=t.category_id LEFT JOIN taxonomy_activitycategory parent ON parent.id=c.parent_id WHERE NOT pa.is_disputed AND `+catalog.PublicPlaceSQL+` AND ($1::text='' OR lower(p.address_city)=lower($1)) GROUP BY coalesce(parent.slug,c.slug),coalesce(parent.name,c.name) ORDER BY lower(coalesce(parent.name,c.name))`, r.URL.Query().Get("city"))
+		categories, err := socialRows(ctx, s.DB, `SELECT jsonb_build_object('slug',coalesce(parent.slug,c.slug),'name',coalesce(parent.name,c.name)) FROM places_placeactivity pa JOIN places_place p ON p.id=pa.place_id JOIN taxonomy_activitytype t ON t.id=pa.activity_id JOIN taxonomy_activitycategory c ON c.id=t.category_id LEFT JOIN taxonomy_activitycategory parent ON parent.id=c.parent_id WHERE NOT pa.is_disputed AND `+catalog.PolicyFromContext(r.Context()).PlaceSQL()+` AND ($1::text='' OR lower(p.address_city)=lower($1)) GROUP BY coalesce(parent.slug,c.slug),coalesce(parent.name,c.name) ORDER BY lower(coalesce(parent.name,c.name))`, r.URL.Query().Get("city"))
 		if err != nil {
 			return fail(err)
 		}
@@ -195,7 +195,7 @@ func (s *Server) publicPlaces(r *http.Request, a platform.Actor, city, activity 
 		}
 		confidence = &f
 	}
-	where := catalog.PublicPlaceSQL + ` AND ($1::text='' OR lower(p.address_city)=lower($1)) AND ($2::text='' OR lower(p.source)=lower($2)) AND ($3::text='' OR EXISTS(SELECT 1 FROM places_placeactivity pa JOIN taxonomy_activitytype t ON t.id=pa.activity_id WHERE pa.place_id=p.id AND NOT pa.is_disputed AND lower(t.slug)=lower($3) AND ($4::float8 IS NULL OR pa.confidence>=$4))) AND ($4::float8 IS NULL OR EXISTS(SELECT 1 FROM places_placeactivity pa WHERE pa.place_id=p.id AND pa.confidence>=$4)) AND ($5::float8 IS NULL OR $6::float8 IS NULL OR $7::float8 IS NULL OR ST_DWithin(p.location,ST_SetSRID(ST_MakePoint($5,$6),4326)::geography,$7))`
+	where := catalog.PolicyFromContext(r.Context()).PlaceSQL() + ` AND ($1::text='' OR lower(p.address_city)=lower($1)) AND ($2::text='' OR lower(p.source)=lower($2)) AND ($3::text='' OR EXISTS(SELECT 1 FROM places_placeactivity pa JOIN taxonomy_activitytype t ON t.id=pa.activity_id WHERE pa.place_id=p.id AND NOT pa.is_disputed AND lower(t.slug)=lower($3) AND ($4::float8 IS NULL OR pa.confidence>=$4))) AND ($4::float8 IS NULL OR EXISTS(SELECT 1 FROM places_placeactivity pa WHERE pa.place_id=p.id AND pa.confidence>=$4)) AND ($5::float8 IS NULL OR $6::float8 IS NULL OR $7::float8 IS NULL OR ST_DWithin(p.location,ST_SetSRID(ST_MakePoint($5,$6),4326)::geography,$7))`
 	where += ` AND ($9::text='' OR EXISTS(SELECT 1 FROM places_placeactivity pa JOIN taxonomy_activitytype t ON t.id=pa.activity_id JOIN taxonomy_activitycategory c ON c.id=t.category_id LEFT JOIN taxonomy_activitycategory parent ON parent.id=c.parent_id WHERE pa.place_id=p.id AND NOT pa.is_disputed AND (lower(c.slug)=lower($9) OR lower(parent.slug)=lower($9)) AND ($4::float8 IS NULL OR pa.confidence>=$4)))`
 	var upcoming *bool
 	if raw := strings.ToLower(q.Get("has_upcoming")); raw == "true" || raw == "false" {
@@ -286,15 +286,15 @@ func (s *Server) publicDecoratePlaces(ctx context.Context, places []map[string]a
 	return nil
 }
 func (s *Server) publicPlace(r *http.Request, a platform.Actor, place int64, carveout bool) (map[string]any, bool, error) {
-	where := `p.id=$1 AND (` + catalog.PublicPlaceSQL + `)`
+	where := `p.id=$1 AND (` + catalog.PolicyFromContext(r.Context()).PlaceSQL() + `)`
 	if carveout {
-		where = `p.id=$1 AND ((` + catalog.PublicPlaceSQL + `) OR $2 OR EXISTS(SELECT 1 FROM social_userplaceproposal pp WHERE pp.place_id=p.id AND pp.proposer_id=$3))`
+		where = `p.id=$1 AND ((` + catalog.PolicyFromContext(r.Context()).PlaceSQL() + `) OR $2 OR EXISTS(SELECT 1 FROM social_userplaceproposal pp WHERE pp.place_id=p.id AND pp.proposer_id=$3))`
 	}
 	args := []any{place}
 	if carveout {
 		args = append(args, a.IsActive && a.IsStaff, a.ID)
 	}
-	rows, err := socialRows(r.Context(), s.DB, `SELECT `+catalog.PlaceExportProjectionSQL()+publicPlaceFields+` || jsonb_build_object('_public',(`+catalog.PublicPlaceSQL+`)) FROM places_place p WHERE `+where, args...)
+	rows, err := socialRows(r.Context(), s.DB, `SELECT `+catalog.PlaceExportProjectionSQL()+publicPlaceFields+` || jsonb_build_object('_public',(`+catalog.PolicyFromContext(r.Context()).PlaceSQL()+`)) FROM places_place p WHERE `+where, args...)
 	if err != nil {
 		return nil, false, err
 	}

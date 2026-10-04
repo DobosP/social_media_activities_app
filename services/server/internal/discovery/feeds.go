@@ -13,12 +13,16 @@ import (
 )
 
 const eventJoins = ` FROM events_event e LEFT JOIN places_place p ON p.id=e.place_id LEFT JOIN taxonomy_activitytype t ON t.id=e.activity_type_id `
-const upcoming = `NOT e.is_tombstone AND NOT e.is_import_held AND e.starts_at>=now() AND e.lifecycle_status IN('scheduled','rescheduled','sold_out') AND (e.place_id IS NULL OR (` + catalog.PublicPlaceSQL + `))`
+
+func upcoming(ctx context.Context) string {
+	return `NOT e.is_tombstone AND NOT e.is_import_held AND e.starts_at>=now() AND e.lifecycle_status IN('scheduled','rescheduled','sold_out') AND (e.place_id IS NULL OR (` + catalog.PolicyFromContext(ctx).PlaceSQL() + `))`
+}
+
 const eventCard = `jsonb_build_object('id',e.id,'title',e.title,'starts_at',e.starts_at,'ends_at',e.ends_at,'url',e.url,'activity_type',t.slug,'place_id',e.place_id,'place_name',p.name,'distance_m',DISTANCE)`
 
 func (s *Service) NearMe(ctx context.Context, a platform.Actor, near catalog.Near, activity string, bookable, wellness, family, events bool, cap int) ([]map[string]any, error) {
 	distance := `CASE WHEN $7::double precision IS NULL OR $8::double precision IS NULL THEN NULL ELSE round(ST_Distance(p.location,ST_SetSRID(ST_MakePoint($7,$8),4326)::geography)::numeric,1) END`
-	where := catalog.PublicPlaceSQL + ` AND ($1::text='' OR EXISTS(SELECT 1 FROM places_placeactivity pa JOIN taxonomy_activitytype t ON t.id=pa.activity_id WHERE pa.place_id=p.id AND NOT pa.is_disputed AND t.slug=$1)) AND (NOT $2 OR p.website<>'') AND (NOT $3 OR EXISTS(SELECT 1 FROM places_placeactivity pa JOIN taxonomy_activitytype t ON t.id=pa.activity_id WHERE pa.place_id=p.id AND t.wellness)) AND (NOT $4 OR EXISTS(SELECT 1 FROM places_placeactivity pa JOIN taxonomy_activitytype t ON t.id=pa.activity_id WHERE pa.place_id=p.id AND t.family_friendly)) AND (NOT $5 OR EXISTS(SELECT 1 FROM events_event e WHERE e.place_id=p.id AND NOT e.is_tombstone AND NOT e.is_import_held AND e.starts_at>=now() AND e.lifecycle_status IN('scheduled','rescheduled','sold_out'))) AND ($7::double precision IS NULL OR $8::double precision IS NULL OR (p.location IS NOT NULL AND ($9::double precision IS NULL OR ST_DWithin(p.location,ST_SetSRID(ST_MakePoint($7,$8),4326)::geography,$9)))) AND $6::bigint>=0`
+	where := catalog.PolicyFromContext(ctx).PlaceSQL() + ` AND ($1::text='' OR EXISTS(SELECT 1 FROM places_placeactivity pa JOIN taxonomy_activitytype t ON t.id=pa.activity_id WHERE pa.place_id=p.id AND NOT pa.is_disputed AND t.slug=$1)) AND (NOT $2 OR p.website<>'') AND (NOT $3 OR EXISTS(SELECT 1 FROM places_placeactivity pa JOIN taxonomy_activitytype t ON t.id=pa.activity_id WHERE pa.place_id=p.id AND t.wellness)) AND (NOT $4 OR EXISTS(SELECT 1 FROM places_placeactivity pa JOIN taxonomy_activitytype t ON t.id=pa.activity_id WHERE pa.place_id=p.id AND t.family_friendly)) AND (NOT $5 OR EXISTS(SELECT 1 FROM events_event e WHERE e.place_id=p.id AND NOT e.is_tombstone AND NOT e.is_import_held AND e.starts_at>=now() AND e.lifecycle_status IN('scheduled','rescheduled','sold_out'))) AND ($7::double precision IS NULL OR $8::double precision IS NULL OR (p.location IS NOT NULL AND ($9::double precision IS NULL OR ST_DWithin(p.location,ST_SetSRID(ST_MakePoint($7,$8),4326)::geography,$9)))) AND $6::bigint>=0`
 	order := `p.id`
 	if near.Lon != nil && near.Lat != nil {
 		order = distance + `,p.id`
@@ -66,7 +70,7 @@ func (s *Service) Happening(ctx context.Context, near catalog.Near, activity, se
 		until = &v
 	}
 	distance := `CASE WHEN $4::double precision IS NULL OR $5::double precision IS NULL THEN NULL ELSE round(ST_Distance(p.location,ST_SetSRID(ST_MakePoint($4,$5),4326)::geography)::numeric,1) END`
-	where := upcoming + ` AND (SELECT count(*) FROM events_eventreport er WHERE er.event_id=e.id AND er.created_at>=now()-interval '14 days')<3 AND ($1::text='' OR t.slug=$1) AND ($2::text='' OR e.title ILIKE '%'||$2||'%' OR e.description ILIKE '%'||$2||'%' OR p.name ILIKE '%'||$2||'%') AND ($3::timestamptz IS NULL OR e.starts_at<=$3) AND ($4::double precision IS NULL OR $5::double precision IS NULL OR (p.location IS NOT NULL AND ($6::double precision IS NULL OR ST_DWithin(p.location,ST_SetSRID(ST_MakePoint($4,$5),4326)::geography,$6))))`
+	where := upcoming(ctx) + ` AND (SELECT count(*) FROM events_eventreport er WHERE er.event_id=e.id AND er.created_at>=now()-interval '` + strconv.FormatInt(int64(catalog.PolicyFromContext(ctx).EventReportDecay/time.Second), 10) + ` seconds')<` + strconv.Itoa(catalog.PolicyFromContext(ctx).EventReportThreshold) + ` AND ($1::text='' OR t.slug=$1) AND ($2::text='' OR e.title ILIKE '%'||$2||'%' OR e.description ILIKE '%'||$2||'%' OR p.name ILIKE '%'||$2||'%') AND ($3::timestamptz IS NULL OR e.starts_at<=$3) AND ($4::double precision IS NULL OR $5::double precision IS NULL OR (p.location IS NOT NULL AND ($6::double precision IS NULL OR ST_DWithin(p.location,ST_SetSRID(ST_MakePoint($4,$5),4326)::geography,$6))))`
 	return query(ctx, s.DB, `SELECT `+strings.ReplaceAll(eventCard, "DISTANCE", distance)+eventJoins+` WHERE `+where+` ORDER BY e.starts_at,e.id LIMIT $7 OFFSET $8`, activity, escapeLike(search), until, near.Lon, near.Lat, near.Radius, limit, offset)
 }
 func escapeLike(value string) string {
@@ -117,7 +121,7 @@ func (s *Service) HomeFeed(ctx context.Context, a platform.Actor, near catalog.N
 			break
 		}
 	}
-	events, err := query(ctx, s.DB, `SELECT `+strings.ReplaceAll(eventCard, "DISTANCE", "NULL")+` || jsonb_build_object('reason',CASE WHEN i.id IS NULL THEN '' ELSE 'matches your interest in '||t.name END)`+eventJoins+` LEFT JOIN recommendations_userinterest i ON i.activity_type_id=t.id AND i.user_id=$1 WHERE `+upcoming+` ORDER BY (i.id IS NOT NULL) DESC,e.starts_at,e.id LIMIT 6`, a.ID)
+	events, err := query(ctx, s.DB, `SELECT `+strings.ReplaceAll(eventCard, "DISTANCE", "NULL")+` || jsonb_build_object('reason',CASE WHEN i.id IS NULL THEN '' ELSE 'matches your interest in '||t.name END)`+eventJoins+` LEFT JOIN recommendations_userinterest i ON i.activity_type_id=t.id AND i.user_id=$1 WHERE `+upcoming(ctx)+` ORDER BY (i.id IS NOT NULL) DESC,e.starts_at,e.id LIMIT 6`, a.ID)
 	if err != nil {
 		return nil, err
 	}
