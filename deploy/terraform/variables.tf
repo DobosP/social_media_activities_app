@@ -32,9 +32,31 @@ variable "domain" {
   type        = string
 }
 
-variable "app_repo_url" {
-  description = "Git clone URL for this repo. For a PRIVATE repo embed a read-only deploy token."
-  type        = string
+variable "app_release_url" {
+  description = "HTTPS URL of the immutable reviewed native artifact (Dockerfile release target, green CI). Never embed credentials."
+  type = string
+  validation {
+    condition = can(regex("^https://[A-Za-z0-9.-]+/[A-Za-z0-9._~/-]+$", var.app_release_url))
+    error_message = "Use an HTTPS artifact URL without credentials, query or fragment."
+  }
+}
+variable "app_release_sha256" {
+  description = "SHA-256 of the exact native release archive; verified before extraction."
+  type = string
+  validation {
+    condition = can(regex("^[a-f0-9]{64}$", var.app_release_sha256))
+    error_message = "Provide the lowercase 64-character artifact SHA-256."
+  }
+}
+variable "media_eu_residency_verified" {
+  description = "Owner-verified EU object storage residency; false prevents serving startup."
+  type = bool
+  default = false
+}
+variable "media_private_bucket_verified" {
+  description = "Owner-verified private bucket access; false prevents serving startup."
+  type = bool
+  default = false
 }
 
 # --- app secrets (rendered into the box's .env; Terraform STATE will contain these — store it
@@ -51,12 +73,16 @@ variable "db_password" {
 }
 
 variable "django_secret_key" {
-  description = "DJANGO_SECRET_KEY (e.g. `openssl rand -hex 48`). prod.py fails to boot on the default."
+  description = "Native signing secret (e.g. openssl rand -hex 48); delivered through the secret bundle."
   type        = string
   sensitive   = true
+  validation {
+    condition = can(regex("^[A-Za-z0-9_+=/-]{32,}$", var.django_secret_key))
+    error_message = "Provide a strong EnvironmentFile-safe native signing secret."
+  }
 }
 
-# --- EU object storage (Hetzner Object Storage / R2 / MinIO) ---
+# --- Private EU object storage (provider subject to the company residency policy) ---
 variable "media_s3_bucket" {
   description = "Private bucket for media blobs."
   type        = string
@@ -68,7 +94,7 @@ variable "media_s3_endpoint_url" {
 }
 
 variable "media_s3_region" {
-  description = "Region; prod.py requires it to start 'eu' OR a non-empty endpoint (minors' residency)."
+  description = "Region; explicit native residency/privacy attestations are also required."
   type        = string
   default     = "eu-central"
 }
@@ -80,7 +106,7 @@ variable "media_s3_sse" {
 }
 
 variable "aws_access_key_id" {
-  description = "S3 access key for the bucket (boto3 default credential chain)."
+  description = "S3 access key for the bucket (native SigV4 adapter)."
   type        = string
   sensitive   = true
 }
@@ -95,13 +121,6 @@ variable "aws_secret_access_key" {
 variable "eudi_trusted_issuers" {
   description = "JSON map of EUDI issuer URL -> public key. prod.py HARD-fails if empty with the EUDI provider."
   type        = string
-  sensitive   = true
-}
-
-variable "sentry_dsn" {
-  description = "Sentry DSN for error tracking (\"\" disables)."
-  type        = string
-  default     = ""
   sensitive   = true
 }
 

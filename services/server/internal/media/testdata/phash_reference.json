@@ -1,0 +1,110 @@
+[
+  {
+    "width": 9,
+    "height": 8,
+    "seed": 2,
+    "hash": ""
+  },
+  {
+    "width": 9,
+    "height": 8,
+    "seed": 17,
+    "hash": ""
+  },
+  {
+    "width": 9,
+    "height": 8,
+    "seed": 93,
+    "hash": "0000022000000000"
+  },
+  {
+    "width": 12,
+    "height": 8,
+    "seed": 2,
+    "hash": ""
+  },
+  {
+    "width": 12,
+    "height": 8,
+    "seed": 17,
+    "hash": ""
+  },
+  {
+    "width": 12,
+    "height": 8,
+    "seed": 93,
+    "hash": "03030f6306060606"
+  },
+  {
+    "width": 100,
+    "height": 80,
+    "seed": 2,
+    "hash": "73cda29088a41067"
+  },
+  {
+    "width": 100,
+    "height": 80,
+    "seed": 17,
+    "hash": "6788a2a288c639ce"
+  },
+  {
+    "width": 100,
+    "height": 80,
+    "seed": 93,
+    "hash": "98e6b05445614d33"
+  },
+  {
+    "width": 512,
+    "height": 257,
+    "seed": 2,
+    "hash": "1041089554228944"
+  },
+  {
+    "width": 512,
+    "height": 257,
+    "seed": 17,
+    "hash": "219148880842850a"
+  },
+  {
+    "width": 512,
+    "height": 257,
+    "seed": 93,
+    "hash": "a14a122108914412"
+  },
+  {
+    "width": 13,
+    "height": 777,
+    "seed": 2,
+    "hash": "0350225152224170"
+  },
+  {
+    "width": 13,
+    "height": 777,
+    "seed": 17,
+    "hash": "478082d1a2d202a0"
+  },
+  {
+    "width": 13,
+    "height": 777,
+    "seed": 93,
+    "hash": "7c502049142a4802"
+  },
+  {
+    "width": 1024,
+    "height": 600,
+    "seed": 2,
+    "hash": "4400405400005454"
+  },
+  {
+    "width": 1024,
+    "height": 600,
+    "seed": 17,
+    "hash": "95082901102a2852"
+  },
+  {
+    "width": 1024,
+    "height": 600,
+    "seed": 93,
+    "hash": "5500005400005454"
+  }
+]

@@ -3,7 +3,8 @@
 Last verified: 2026-10-04
 
 ## Environment
-- Runtime: Django/Python in Docker Compose local environment.
+- Review runtime: Go 1.27.1 + native codecs/PostgreSQL, `docs/NATIVE_SERVER.md`.
+- Python/Django Compose commands below are offline compatibility-oracle gates.
 - Verified local compose project name: `socialfix` (its `docker-compose.local.yml` is untracked/gitignored).
 - Use `python -m pytest` in the container; bare `pytest` may not be on PATH.
 - `-p socialfix` targets that dev host's compose project; omit it if you created the project with a plain
@@ -41,4 +42,17 @@ Last verified: 2026-10-04
 - `python manage.py check --deploy` needs the CI env block in `.github/workflows/ci.yml` (prod settings +
   dummy EUDI trust anchor) — CI-only unless you replicate that environment.
 
-Go slice and uploaded-image/OCI boundaries: [ADR-0031](adr/0031-go-public-serving-foundation.md).
+## Complete native Go candidate
+
+- `GOWORK=off go -C services/server run ./cmd/check-authcore` verifies the portable shared copy.
+- `go -C services/authcore test -race ./... && go -C services/authcore vet ./...`.
+- `go -C services/server test -race ./... && go -C services/server vet ./...` checks hermetic contracts;
+  database-required tests skip here and do not qualify a release.
+- Build the release (`docker build -t social-native:test .`), bootstrap a disposable PostGIS/vector
+  database with `social-server --migrate-only`, then run `scripts/qualify-native.sh GO IMAGE NETWORK DSN SCRATCH`.
+  DSN is explicit synthetic fixture only; private Docker network, no published DB ports, no real data.
+  Scratch is task-owned under `~/work/_temp/<slug>`, sources read-only, real codecs, `-race`, zero skips.
+- Source/binary audits: `govulncheck@v1.8.0 ./...` and `-mode=binary` on the release executable;
+  module-only unimported advisories are described separately from reachable/imported findings.
+- `.github/workflows/native.yml` runs native bootstrap and all required database/codec lanes.
+- Auth/privacy/safety human review still precedes landing: [ADR-0032](adr/0032-complete-native-go-backend.md).

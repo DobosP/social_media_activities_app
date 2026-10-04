@@ -1,7 +1,7 @@
 # ADR-0031: Start Go conversion at the public serving boundary
 
 Date: 2026-10-04
-Status: accepted direction; implementation awaiting human review
+Status: implementation scope superseded by ADR-0032; public contract retained
 
 ## Decision
 

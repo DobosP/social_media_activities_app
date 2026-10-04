@@ -1,0 +1,19 @@
+{
+  "canonical_module": "github.com/DobosP/cat_de_roman_esti/shared-go/authcore",
+  "canonical_path": "shared-go/authcore",
+  "files_sha256": {
+    "LICENSE": "72e0441774022a96b8082f9fa3244fd3a8e421a5fb9bc6207659a210f135c749",
+    "README.md": "61a2880887d019e9cfe1d458cc2c3c5d4075a87d181326443e1abf67c4a4922e",
+    "go.mod": "124899dbc57503d4a8884e5579435f7775421bfe0544bff1dee6e76ec895fa4c",
+    "go.sum": "b2516a139953d6c42702bff40fad4da1ff04fa5cde523c089f07c6c1ea148109",
+    "legacy_password.go": "66b7de1b7a183bee4417d0786ecdfa27a8d709203757af6309339f847e9efebb",
+    "legacy_password_test.go": "63c9dbe745a39939f3beb89b32872410fbf7b36cef839c0f87e19a638ef29213",
+    "oauth.go": "cc16d5f8f2197132df3934e0f9b7382c03abd8b2887c70c9cb6234a58332d393",
+    "oauth_test.go": "cc8ac39c8a03c6123e379795eab7fdf72877c2ff2e219c47efb7753529cb474f",
+    "password.go": "21c783448e393787e50c3d140ecb69185bd5ba236d06c812417498361b399c0b",
+    "service.go": "efa1dd5a8e261395f8cb2d45ffb8319947e38e1a8f128d3e214695dc91157df7",
+    "service_test.go": "9d7912df7af32aa78fcc3be6540092e7125a03ba85812ebc802cba761d44ac37",
+    "ui.go": "375f16ca4183e63d37e4c886f5b3a047e5a103e1fb3632c33abdcbd9bba7d4b9"
+  },
+  "canonical_commit": "af85e7ffd3a760c3d5ccac9257189c66ade02b6d"
+}

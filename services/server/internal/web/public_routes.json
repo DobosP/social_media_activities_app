@@ -1,0 +1,1997 @@
+[
+  {
+    "Method": "GET",
+    "Path": "/",
+    "Source": "internal/web/server.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/",
+    "Source": "internal/web/server.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/account/restricted/",
+    "Source": "internal/safety/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/account/restricted/",
+    "Source": "internal/safety/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/",
+    "Source": "internal/admin/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/{app}/{model}/",
+    "Source": "internal/admin/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/admin/{app}/{model}/",
+    "Source": "internal/admin/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/{model}/",
+    "Source": "internal/admin/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/admin/{model}/",
+    "Source": "internal/admin/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/accounts/guardian-links/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/accounts/guardian-links/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/accounts/guardian-links/{token}/accept/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/accounts/guardian-links/{token}/decline/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "DELETE",
+    "Path": "/api/accounts/me/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/accounts/me/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/accounts/me/avatar-style/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/accounts/me/avatar-style/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/accounts/me/export/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/accounts/me/settings/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "PUT",
+    "Path": "/api/accounts/me/settings/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/accounts/verify-age/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/accounts/verify-age/start/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/accounts/wards/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "DELETE",
+    "Path": "/api/accounts/wards/{public_id}/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/accounts/wards/{public_id}/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "PATCH",
+    "Path": "/api/accounts/wards/{public_id}/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "DELETE",
+    "Path": "/api/accounts/wards/{public_id}/consent/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/accounts/wards/{public_id}/consent/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/accounts/wards/{public_id}/export/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/auth/csrf",
+    "Source": "../authcore/service.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/auth/login",
+    "Source": "../authcore/service.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/auth/logout",
+    "Source": "../authcore/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/auth/me",
+    "Source": "../authcore/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/auth/oauth/{provider}/callback",
+    "Source": "../authcore/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/auth/oauth/{provider}/start",
+    "Source": "../authcore/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/auth/providers",
+    "Source": "../authcore/service.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/auth/signup",
+    "Source": "../authcore/service.go"
+  },
+  {
+    "Method": "DELETE",
+    "Path": "/api/auth/token/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/auth/token/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/booking/bookings/",
+    "Source": "internal/booking/service.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/booking/bookings/",
+    "Source": "internal/booking/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/booking/bookings/{id}/",
+    "Source": "internal/booking/service.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/booking/bookings/{id}/cancel/",
+    "Source": "internal/booking/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/booking/options/",
+    "Source": "internal/booking/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/booking/providers/",
+    "Source": "internal/booking/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/communities/communities/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/communities/communities/graph/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/communities/communities/{slug}/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/communities/communities/{slug}/activities/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/connections/connections/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/connections/connections/pending/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/connections/connections/remove/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/connections/connections/request_to/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/connections/connections/search/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/connections/connections/{id}/accept/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/connections/connections/{id}/decline/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/connections/connections/{id}/withdraw/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/connections/people/{public_id}/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/discovery/activities/",
+    "Source": "internal/discovery/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/discovery/activity-deck/",
+    "Source": "internal/discovery/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/discovery/feed/",
+    "Source": "internal/discovery/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/discovery/happening/",
+    "Source": "internal/discovery/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/discovery/near-me/",
+    "Source": "internal/discovery/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/discovery/public/activities/",
+    "Source": "internal/discovery/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/discovery/public/groups/",
+    "Source": "internal/discovery/service.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/donations/",
+    "Source": "internal/donations/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/donations/mine/",
+    "Source": "internal/donations/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/donations/total/",
+    "Source": "internal/donations/service.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/donations/webhook/",
+    "Source": "internal/donations/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/events/",
+    "Source": "internal/catalog/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/events/{id}/",
+    "Source": "internal/catalog/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/health",
+    "Source": "internal/ops/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/health/",
+    "Source": "internal/ops/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/media/activity-cover-file/{token}/",
+    "Source": "internal/media/http.go"
+  },
+  {
+    "Method": "DELETE",
+    "Path": "/api/media/activity-covers/{activity}/",
+    "Source": "internal/media/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/media/activity-covers/{activity}/",
+    "Source": "internal/media/http.go"
+  },
+  {
+    "Method": "PUT",
+    "Path": "/api/media/activity-covers/{activity}/",
+    "Source": "internal/media/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/media/attachment/{token}/",
+    "Source": "internal/media/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/media/file/{token}/",
+    "Source": "internal/media/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/media/photos/",
+    "Source": "internal/media/http.go"
+  },
+  {
+    "Method": "DELETE",
+    "Path": "/api/media/photos/{id}/",
+    "Source": "internal/media/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/media/photos/{id}/",
+    "Source": "internal/media/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/media/place-cover-file/{token}/",
+    "Source": "internal/media/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/media/threads/{thread}/photos/",
+    "Source": "internal/media/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/messaging/conversations/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/messaging/conversations/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/messaging/conversations/{id}/accept/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/messaging/conversations/{id}/decline/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/messaging/conversations/{id}/disappearing/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/messaging/conversations/{id}/guardian/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/messaging/conversations/{id}/keys/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/messaging/conversations/{id}/leave/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/messaging/conversations/{id}/messages/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/messaging/conversations/{id}/messages/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/messaging/conversations/{id}/messages/{message_id}/report/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "DELETE",
+    "Path": "/api/messaging/conversations/{id}/participants/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/messaging/conversations/{id}/participants/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/messaging/guardian/conversations/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/messaging/keys/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/messaging/keys/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/messaging/keys/{username}/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/messaging/verify/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/notifications/",
+    "Source": "internal/notifications/service.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/notifications/read-all/",
+    "Source": "internal/notifications/service.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/notifications/{id}/read/",
+    "Source": "internal/notifications/service.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/ops/csp-report/",
+    "Source": "internal/ops/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/ops/stats/",
+    "Source": "internal/ops/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/places/",
+    "Source": "internal/catalog/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/places/{id}/",
+    "Source": "internal/catalog/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/ready",
+    "Source": "internal/ops/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/ready/",
+    "Source": "internal/ops/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/recommendations/activities/",
+    "Source": "internal/recommendations/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/recommendations/interests/",
+    "Source": "internal/recommendations/service.go"
+  },
+  {
+    "Method": "PUT",
+    "Path": "/api/recommendations/interests/",
+    "Source": "internal/recommendations/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/recommendations/interests/options/",
+    "Source": "internal/recommendations/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/recommendations/topics/",
+    "Source": "internal/recommendations/service.go"
+  },
+  {
+    "Method": "PUT",
+    "Path": "/api/recommendations/topics/",
+    "Source": "internal/recommendations/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/safety/appeals/",
+    "Source": "internal/safety/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/safety/appeals/",
+    "Source": "internal/safety/http.go"
+  },
+  {
+    "Method": "DELETE",
+    "Path": "/api/safety/blocks/",
+    "Source": "internal/safety/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/safety/blocks/",
+    "Source": "internal/safety/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/safety/me/record/",
+    "Source": "internal/safety/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/safety/moderation/appeals/",
+    "Source": "internal/safety/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/safety/moderation/appeals/{id}/resolve/",
+    "Source": "internal/safety/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/safety/moderation/concerns/",
+    "Source": "internal/safety/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/safety/moderation/concerns/{id}/resolve/",
+    "Source": "internal/safety/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/safety/moderation/referrals/",
+    "Source": "internal/safety/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/safety/moderation/referrals/{id}/proof/",
+    "Source": "internal/safety/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/safety/moderation/reports/",
+    "Source": "internal/safety/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/safety/moderation/reports/{id}/resolve/",
+    "Source": "internal/safety/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/safety/reports/",
+    "Source": "internal/safety/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/saved-searches/saved-searches/",
+    "Source": "internal/recommendations/saved_searches.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/saved-searches/saved-searches/",
+    "Source": "internal/recommendations/saved_searches.go"
+  },
+  {
+    "Method": "DELETE",
+    "Path": "/api/saved-searches/saved-searches/{id}/",
+    "Source": "internal/recommendations/saved_searches.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/saved-searches/saved-searches/{id}/",
+    "Source": "internal/recommendations/saved_searches.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/social/activities/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/activities/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/social/activities/mine/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/social/activities/{id}/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "PATCH",
+    "Path": "/api/social/activities/{id}/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/activities/{id}/announce/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/activities/{id}/arrived/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/activities/{id}/cancel/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/activities/{id}/departing/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/activities/{id}/grant_organizer/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/activities/{id}/guardians/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/activities/{id}/join/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/activities/{id}/leave/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/activities/{id}/met_confirmed/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/activities/{id}/move/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/social/activities/{id}/posts/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/activities/{id}/posts/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/activities/{id}/revoke_organizer/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/activities/{id}/rsvp/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/activities/{id}/set_public_listing/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/activities/{id}/supervision/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/activities/{id}/support_companion/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/activities/{id}/transfer/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/activities/{id}/transit/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/social/gauges/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/gauges/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/social/gauges/{id}/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/gauges/{id}/convert/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/gauges/{id}/interested/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/gauges/{id}/uninterested/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/social/groups/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/groups/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/social/groups/{id}/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/social/groups/{id}/activities/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/groups/{id}/announce/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/groups/{id}/archive/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/groups/{id}/ask/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/groups/{id}/join/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/groups/{id}/leave/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/social/groups/{id}/posts/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/groups/{id}/posts/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/social/groups/{id}/roster/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/groups/{id}/set_public_listing/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/social/memberships/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/social/memberships/{id}/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/memberships/{id}/admit/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/memberships/{id}/vote/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/social/organizer-console/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/social/place-proposals/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/place-proposals/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/place-proposals/{id}/confirm/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "DELETE",
+    "Path": "/api/social/posts/{id}/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "PATCH",
+    "Path": "/api/social/posts/{id}/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/posts/{id}/concern/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/posts/{id}/dissent/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/posts/{id}/reaction/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/social/series/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/series/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/social/series/{id}/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/series/{id}/end/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/series/{id}/next_note/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/series/{id}/pause/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/social/series/{id}/resume/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/taxonomy/activities/",
+    "Source": "internal/catalog/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/taxonomy/activities/{slug}/",
+    "Source": "internal/catalog/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/taxonomy/categories/",
+    "Source": "internal/catalog/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/taxonomy/categories/{slug}/",
+    "Source": "internal/catalog/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/accounts/guardian-links/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/accounts/guardian-links/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/accounts/guardian-links/{token}/accept/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/accounts/guardian-links/{token}/decline/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "DELETE",
+    "Path": "/api/v1/accounts/me/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/accounts/me/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/accounts/me/avatar-style/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/accounts/me/avatar-style/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/accounts/me/export/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/accounts/me/settings/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "PUT",
+    "Path": "/api/v1/accounts/me/settings/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/accounts/verify-age/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/accounts/verify-age/start/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/accounts/wards/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "DELETE",
+    "Path": "/api/v1/accounts/wards/{public_id}/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/accounts/wards/{public_id}/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "PATCH",
+    "Path": "/api/v1/accounts/wards/{public_id}/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "DELETE",
+    "Path": "/api/v1/accounts/wards/{public_id}/consent/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/accounts/wards/{public_id}/consent/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/accounts/wards/{public_id}/export/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "DELETE",
+    "Path": "/api/v1/auth/token/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/auth/token/",
+    "Source": "internal/accounts/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/booking/bookings/",
+    "Source": "internal/booking/service.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/booking/bookings/",
+    "Source": "internal/booking/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/booking/bookings/{id}/",
+    "Source": "internal/booking/service.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/booking/bookings/{id}/cancel/",
+    "Source": "internal/booking/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/booking/options/",
+    "Source": "internal/booking/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/booking/providers/",
+    "Source": "internal/booking/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/communities/communities/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/communities/communities/graph/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/communities/communities/{slug}/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/communities/communities/{slug}/activities/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/connections/connections/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/connections/connections/pending/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/connections/connections/remove/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/connections/connections/request_to/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/connections/connections/search/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/connections/connections/{id}/accept/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/connections/connections/{id}/decline/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/connections/connections/{id}/withdraw/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/connections/people/{public_id}/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/discovery/activities/",
+    "Source": "internal/discovery/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/discovery/activity-deck/",
+    "Source": "internal/discovery/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/discovery/feed/",
+    "Source": "internal/discovery/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/discovery/happening/",
+    "Source": "internal/discovery/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/discovery/near-me/",
+    "Source": "internal/discovery/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/discovery/public/activities/",
+    "Source": "internal/discovery/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/discovery/public/groups/",
+    "Source": "internal/discovery/service.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/donations/",
+    "Source": "internal/donations/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/donations/mine/",
+    "Source": "internal/donations/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/donations/total/",
+    "Source": "internal/donations/service.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/donations/webhook/",
+    "Source": "internal/donations/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/events/",
+    "Source": "internal/catalog/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/events/{id}/",
+    "Source": "internal/catalog/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/health",
+    "Source": "internal/ops/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/health/",
+    "Source": "internal/ops/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/media/activity-cover-file/{token}/",
+    "Source": "internal/media/http.go"
+  },
+  {
+    "Method": "DELETE",
+    "Path": "/api/v1/media/activity-covers/{activity}/",
+    "Source": "internal/media/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/media/activity-covers/{activity}/",
+    "Source": "internal/media/http.go"
+  },
+  {
+    "Method": "PUT",
+    "Path": "/api/v1/media/activity-covers/{activity}/",
+    "Source": "internal/media/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/media/attachment/{token}/",
+    "Source": "internal/media/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/media/file/{token}/",
+    "Source": "internal/media/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/media/photos/",
+    "Source": "internal/media/http.go"
+  },
+  {
+    "Method": "DELETE",
+    "Path": "/api/v1/media/photos/{id}/",
+    "Source": "internal/media/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/media/photos/{id}/",
+    "Source": "internal/media/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/media/place-cover-file/{token}/",
+    "Source": "internal/media/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/media/threads/{thread}/photos/",
+    "Source": "internal/media/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/messaging/conversations/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/messaging/conversations/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/messaging/conversations/{id}/accept/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/messaging/conversations/{id}/decline/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/messaging/conversations/{id}/disappearing/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/messaging/conversations/{id}/guardian/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/messaging/conversations/{id}/keys/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/messaging/conversations/{id}/leave/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/messaging/conversations/{id}/messages/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/messaging/conversations/{id}/messages/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/messaging/conversations/{id}/messages/{message_id}/report/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "DELETE",
+    "Path": "/api/v1/messaging/conversations/{id}/participants/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/messaging/conversations/{id}/participants/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/messaging/guardian/conversations/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/messaging/keys/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/messaging/keys/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/messaging/keys/{username}/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/messaging/verify/",
+    "Source": "internal/messaging/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/notifications/",
+    "Source": "internal/notifications/service.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/notifications/read-all/",
+    "Source": "internal/notifications/service.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/notifications/{id}/read/",
+    "Source": "internal/notifications/service.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/ops/csp-report/",
+    "Source": "internal/ops/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/ops/stats/",
+    "Source": "internal/ops/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/places/",
+    "Source": "internal/catalog/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/places/{id}/",
+    "Source": "internal/catalog/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/ready",
+    "Source": "internal/ops/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/ready/",
+    "Source": "internal/ops/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/recommendations/activities/",
+    "Source": "internal/recommendations/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/recommendations/interests/",
+    "Source": "internal/recommendations/service.go"
+  },
+  {
+    "Method": "PUT",
+    "Path": "/api/v1/recommendations/interests/",
+    "Source": "internal/recommendations/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/recommendations/interests/options/",
+    "Source": "internal/recommendations/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/recommendations/topics/",
+    "Source": "internal/recommendations/service.go"
+  },
+  {
+    "Method": "PUT",
+    "Path": "/api/v1/recommendations/topics/",
+    "Source": "internal/recommendations/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/safety/appeals/",
+    "Source": "internal/safety/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/safety/appeals/",
+    "Source": "internal/safety/http.go"
+  },
+  {
+    "Method": "DELETE",
+    "Path": "/api/v1/safety/blocks/",
+    "Source": "internal/safety/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/safety/blocks/",
+    "Source": "internal/safety/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/safety/me/record/",
+    "Source": "internal/safety/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/safety/moderation/appeals/",
+    "Source": "internal/safety/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/safety/moderation/appeals/{id}/resolve/",
+    "Source": "internal/safety/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/safety/moderation/concerns/",
+    "Source": "internal/safety/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/safety/moderation/concerns/{id}/resolve/",
+    "Source": "internal/safety/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/safety/moderation/referrals/",
+    "Source": "internal/safety/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/safety/moderation/referrals/{id}/proof/",
+    "Source": "internal/safety/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/safety/moderation/reports/",
+    "Source": "internal/safety/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/safety/moderation/reports/{id}/resolve/",
+    "Source": "internal/safety/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/safety/reports/",
+    "Source": "internal/safety/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/saved-searches/saved-searches/",
+    "Source": "internal/recommendations/saved_searches.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/saved-searches/saved-searches/",
+    "Source": "internal/recommendations/saved_searches.go"
+  },
+  {
+    "Method": "DELETE",
+    "Path": "/api/v1/saved-searches/saved-searches/{id}/",
+    "Source": "internal/recommendations/saved_searches.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/saved-searches/saved-searches/{id}/",
+    "Source": "internal/recommendations/saved_searches.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/social/activities/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/activities/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/social/activities/mine/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/social/activities/{id}/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "PATCH",
+    "Path": "/api/v1/social/activities/{id}/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/activities/{id}/announce/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/activities/{id}/arrived/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/activities/{id}/cancel/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/activities/{id}/departing/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/activities/{id}/grant_organizer/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/activities/{id}/guardians/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/activities/{id}/join/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/activities/{id}/leave/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/activities/{id}/met_confirmed/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/activities/{id}/move/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/social/activities/{id}/posts/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/activities/{id}/posts/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/activities/{id}/revoke_organizer/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/activities/{id}/rsvp/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/activities/{id}/set_public_listing/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/activities/{id}/supervision/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/activities/{id}/support_companion/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/activities/{id}/transfer/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/activities/{id}/transit/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/social/gauges/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/gauges/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/social/gauges/{id}/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/gauges/{id}/convert/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/gauges/{id}/interested/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/gauges/{id}/uninterested/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/social/groups/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/groups/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/social/groups/{id}/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/social/groups/{id}/activities/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/groups/{id}/announce/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/groups/{id}/archive/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/groups/{id}/ask/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/groups/{id}/join/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/groups/{id}/leave/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/social/groups/{id}/posts/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/groups/{id}/posts/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/social/groups/{id}/roster/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/groups/{id}/set_public_listing/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/social/memberships/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/social/memberships/{id}/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/memberships/{id}/admit/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/memberships/{id}/vote/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/social/organizer-console/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/social/place-proposals/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/place-proposals/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/place-proposals/{id}/confirm/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "DELETE",
+    "Path": "/api/v1/social/posts/{id}/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "PATCH",
+    "Path": "/api/v1/social/posts/{id}/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/posts/{id}/concern/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/posts/{id}/dissent/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/posts/{id}/reaction/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/social/series/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/series/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/social/series/{id}/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/series/{id}/end/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/series/{id}/next_note/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/series/{id}/pause/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/api/v1/social/series/{id}/resume/",
+    "Source": "internal/social/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/taxonomy/activities/",
+    "Source": "internal/catalog/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/taxonomy/activities/{slug}/",
+    "Source": "internal/catalog/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/taxonomy/categories/",
+    "Source": "internal/catalog/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/taxonomy/categories/{slug}/",
+    "Source": "internal/catalog/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/healthz",
+    "Source": "internal/app/app.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/login/",
+    "Source": "internal/app/app.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/login/",
+    "Source": "internal/web/server.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/logout/",
+    "Source": "internal/web/server.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/metrics",
+    "Source": "internal/ops/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/moderation/",
+    "Source": "internal/safety/http.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/moderation/",
+    "Source": "internal/safety/http.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/readyz",
+    "Source": "internal/app/app.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/register/",
+    "Source": "internal/app/app.go"
+  },
+  {
+    "Method": "POST",
+    "Path": "/register/",
+    "Source": "internal/web/server.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/ws/chat/{room}/",
+    "Source": "internal/chat/server.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/ws/messaging/{room}/",
+    "Source": "internal/chat/server.go"
+  }
+]

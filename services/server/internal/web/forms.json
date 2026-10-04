@@ -1,0 +1,654 @@
+{
+  "NextInstanceNoteForm": {
+    "next_instance_note": {
+      "kind": "CharField",
+      "required": false,
+      "max_length": 500,
+      "label": "Heads-up for the next meetup",
+      "help_text": "Added to the next scheduled meetup's organiser note, then cleared.",
+      "order": 1,
+      "textarea": true
+    }
+  },
+  "RegisterForm": {
+    "username": {
+      "kind": "CharField",
+      "required": true,
+      "max_length": 150,
+      "order": 1
+    },
+    "display_name": {
+      "kind": "CharField",
+      "required": false,
+      "max_length": 120,
+      "order": 2
+    },
+    "password": {
+      "kind": "CharField",
+      "required": true,
+      "min_length": 8,
+      "order": 3
+    },
+    "age_band": {
+      "kind": "ChoiceField",
+      "required": true,
+      "label": "Age (demo age assurance)",
+      "help_text": "Stands in for the EU age-verification flow in this demo.",
+      "order": 4
+    }
+  },
+  "ActivityForm": {
+    "place": {
+      "kind": "ModelChoiceField",
+      "required": true,
+      "order": 1
+    },
+    "activity_type": {
+      "kind": "ModelChoiceField",
+      "required": true,
+      "order": 2
+    },
+    "secondary_types": {
+      "kind": "ModelMultipleChoiceField",
+      "required": false,
+      "label": "Also counts as",
+      "help_text": "Optional — up to 2 more types, so more people find it.",
+      "order": 3
+    },
+    "title": {
+      "kind": "CharField",
+      "required": true,
+      "max_length": 200,
+      "order": 4
+    },
+    "description": {
+      "kind": "CharField",
+      "required": false,
+      "order": 5,
+      "textarea": true
+    },
+    "starts_at": {
+      "kind": "_dt_field",
+      "required": true,
+      "order": 6
+    },
+    "ends_at": {
+      "kind": "_dt_field",
+      "required": false,
+      "order": 7
+    },
+    "capacity": {
+      "kind": "IntegerField",
+      "required": false,
+      "min_value": 1,
+      "help_text": "Blank = unlimited.",
+      "order": 8
+    },
+    "min_to_go": {
+      "kind": "IntegerField",
+      "required": false,
+      "min_value": 1,
+      "label": "Minimum to happen",
+      "help_text": "Runs only if at least this many say they're going. Blank = no minimum.",
+      "order": 9
+    },
+    "meeting_point": {
+      "kind": "_logistics_field",
+      "required": false,
+      "order": 10,
+      "max_length": 500,
+      "textarea": true
+    },
+    "what_to_bring": {
+      "kind": "_logistics_field",
+      "required": false,
+      "order": 11,
+      "max_length": 500,
+      "textarea": true
+    },
+    "organizer_note": {
+      "kind": "_logistics_field",
+      "required": false,
+      "order": 12,
+      "max_length": 500,
+      "textarea": true
+    },
+    "cost_band": {
+      "kind": "ChoiceField",
+      "required": false,
+      "help_text": "Roughly what it costs to take part.",
+      "order": 13
+    },
+    "cost_amount": {
+      "kind": "_cost_amount_field",
+      "required": false,
+      "order": 14,
+      "label": "About how much (RON)",
+      "help_text": "Per person, roughly. Leave blank if free or unknown."
+    },
+    "cost_note": {
+      "kind": "CharField",
+      "required": false,
+      "max_length": 120,
+      "label": "What the cost covers",
+      "help_text": "e.g. court rental, materials, entry ticket.",
+      "order": 15
+    },
+    "difficulty": {
+      "kind": "ChoiceField",
+      "required": false,
+      "help_text": "How physically demanding it is.",
+      "order": 16
+    },
+    "accessibility_notes": {
+      "kind": "_logistics_field",
+      "required": false,
+      "order": 17,
+      "max_length": 500,
+      "textarea": true
+    },
+    "first_time_note": {
+      "kind": "_logistics_field",
+      "required": false,
+      "order": 18,
+      "max_length": 500,
+      "textarea": true
+    },
+    "beginners_welcome": {
+      "kind": "BooleanField",
+      "required": false,
+      "label": "Beginners welcome",
+      "help_text": "Tick if first-timers are explicitly welcome.",
+      "order": 19
+    },
+    "supervised": {
+      "kind": "BooleanField",
+      "required": false,
+      "label": "Require a supervising guardian",
+      "help_text": "Your parent/guardian must join as a read-only supervisor before anyone is admitted.",
+      "order": 20
+    }
+  },
+  "SeriesForm": {
+    "place": {
+      "kind": "ModelChoiceField",
+      "required": true,
+      "order": 1
+    },
+    "activity_type": {
+      "kind": "ModelChoiceField",
+      "required": true,
+      "order": 2
+    },
+    "title": {
+      "kind": "CharField",
+      "required": true,
+      "max_length": 200,
+      "order": 3
+    },
+    "description": {
+      "kind": "CharField",
+      "required": false,
+      "order": 4,
+      "textarea": true
+    },
+    "cadence": {
+      "kind": "ChoiceField",
+      "required": true,
+      "help_text": "How often the meetup repeats.",
+      "order": 5
+    },
+    "first_starts_at": {
+      "kind": "_dt_field",
+      "required": true,
+      "order": 6
+    },
+    "ends_at": {
+      "kind": "_dt_field",
+      "required": false,
+      "order": 7
+    },
+    "capacity": {
+      "kind": "IntegerField",
+      "required": false,
+      "min_value": 1,
+      "help_text": "Blank = unlimited.",
+      "order": 8
+    },
+    "min_to_go": {
+      "kind": "IntegerField",
+      "required": false,
+      "min_value": 1,
+      "label": "Minimum to happen",
+      "help_text": "Runs only if at least this many say they're going. Blank = no minimum.",
+      "order": 9
+    },
+    "meeting_point": {
+      "kind": "_logistics_field",
+      "required": false,
+      "order": 10,
+      "max_length": 500,
+      "textarea": true
+    },
+    "what_to_bring": {
+      "kind": "_logistics_field",
+      "required": false,
+      "order": 11,
+      "max_length": 500,
+      "textarea": true
+    },
+    "organizer_note": {
+      "kind": "_logistics_field",
+      "required": false,
+      "order": 12,
+      "max_length": 500,
+      "textarea": true
+    },
+    "cost_band": {
+      "kind": "ChoiceField",
+      "required": false,
+      "help_text": "Roughly what it costs to take part.",
+      "order": 13
+    },
+    "cost_amount": {
+      "kind": "_cost_amount_field",
+      "required": false,
+      "order": 14,
+      "label": "About how much (RON)",
+      "help_text": "Per person, roughly. Leave blank if free or unknown."
+    },
+    "cost_note": {
+      "kind": "CharField",
+      "required": false,
+      "max_length": 120,
+      "label": "What the cost covers",
+      "help_text": "e.g. court rental, materials, entry ticket.",
+      "order": 15
+    },
+    "difficulty": {
+      "kind": "ChoiceField",
+      "required": false,
+      "help_text": "How physically demanding it is.",
+      "order": 16
+    },
+    "accessibility_notes": {
+      "kind": "_logistics_field",
+      "required": false,
+      "order": 17,
+      "max_length": 500,
+      "textarea": true
+    },
+    "beginners_welcome": {
+      "kind": "BooleanField",
+      "required": false,
+      "label": "Beginners welcome",
+      "help_text": "Tick if first-timers are explicitly welcome.",
+      "order": 18
+    },
+    "supervised": {
+      "kind": "BooleanField",
+      "required": false,
+      "label": "Require a supervising guardian",
+      "help_text": "Each meetup needs your parent/guardian to join as a read-only supervisor.",
+      "order": 19
+    }
+  },
+  "ActivityEditForm": {
+    "place": {
+      "kind": "ModelChoiceField",
+      "required": true,
+      "order": 1
+    },
+    "activity_type": {
+      "kind": "ModelChoiceField",
+      "required": false,
+      "label": "Activity type",
+      "help_text": "The primary type is fixed after the activity is created.",
+      "order": 2
+    },
+    "secondary_types": {
+      "kind": "ModelMultipleChoiceField",
+      "required": false,
+      "label": "Also counts as",
+      "help_text": "Optional — up to 2 more types, so more people find it.",
+      "order": 3
+    },
+    "title": {
+      "kind": "CharField",
+      "required": true,
+      "max_length": 200,
+      "order": 4
+    },
+    "description": {
+      "kind": "CharField",
+      "required": false,
+      "order": 5,
+      "textarea": true
+    },
+    "starts_at": {
+      "kind": "_dt_field",
+      "required": true,
+      "order": 6
+    },
+    "ends_at": {
+      "kind": "_dt_field",
+      "required": false,
+      "order": 7
+    },
+    "capacity": {
+      "kind": "IntegerField",
+      "required": false,
+      "min_value": 1,
+      "help_text": "Blank = unlimited.",
+      "order": 8
+    },
+    "min_to_go": {
+      "kind": "IntegerField",
+      "required": false,
+      "min_value": 1,
+      "label": "Minimum to happen",
+      "help_text": "Runs only if at least this many say they're going. Blank = no minimum.",
+      "order": 9
+    },
+    "meeting_point": {
+      "kind": "_logistics_field",
+      "required": false,
+      "order": 10,
+      "max_length": 500,
+      "textarea": true
+    },
+    "what_to_bring": {
+      "kind": "_logistics_field",
+      "required": false,
+      "order": 11,
+      "max_length": 500,
+      "textarea": true
+    },
+    "organizer_note": {
+      "kind": "_logistics_field",
+      "required": false,
+      "order": 12,
+      "max_length": 500,
+      "textarea": true
+    },
+    "cost_band": {
+      "kind": "ChoiceField",
+      "required": false,
+      "help_text": "Roughly what it costs to take part.",
+      "order": 13
+    },
+    "cost_amount": {
+      "kind": "_cost_amount_field",
+      "required": false,
+      "order": 14,
+      "label": "About how much (RON)",
+      "help_text": "Per person, roughly. Leave blank if free or unknown."
+    },
+    "cost_note": {
+      "kind": "CharField",
+      "required": false,
+      "max_length": 120,
+      "label": "What the cost covers",
+      "help_text": "e.g. court rental, materials, entry ticket.",
+      "order": 15
+    },
+    "difficulty": {
+      "kind": "ChoiceField",
+      "required": false,
+      "help_text": "How physically demanding it is.",
+      "order": 16
+    },
+    "accessibility_notes": {
+      "kind": "_logistics_field",
+      "required": false,
+      "order": 17,
+      "max_length": 500,
+      "textarea": true
+    },
+    "first_time_note": {
+      "kind": "_logistics_field",
+      "required": false,
+      "order": 18,
+      "max_length": 500,
+      "textarea": true
+    },
+    "beginners_welcome": {
+      "kind": "BooleanField",
+      "required": false,
+      "label": "Beginners welcome",
+      "help_text": "Tick if first-timers are explicitly welcome.",
+      "order": 19
+    }
+  },
+  "PlaceProposeForm": {
+    "name": {
+      "kind": "CharField",
+      "required": true,
+      "max_length": 255,
+      "label": "Place name",
+      "order": 1
+    },
+    "lat": {
+      "kind": "FloatField",
+      "required": true,
+      "label": "Latitude",
+      "order": 2
+    },
+    "lon": {
+      "kind": "FloatField",
+      "required": true,
+      "label": "Longitude",
+      "order": 3
+    },
+    "activity_type": {
+      "kind": "ModelChoiceField",
+      "required": true,
+      "label": "Main activity here",
+      "order": 4
+    },
+    "allow_nearby": {
+      "kind": "BooleanField",
+      "required": false,
+      "label": "Add anyway (a different place may already exist very close)",
+      "order": 5
+    }
+  },
+  "PostForm": {
+    "body": {
+      "kind": "CharField",
+      "required": false,
+      "label": "",
+      "order": 1,
+      "textarea": true
+    },
+    "reply_to": {
+      "kind": "IntegerField",
+      "required": false,
+      "order": 2
+    },
+    "attachment": {
+      "kind": "FileField",
+      "required": false,
+      "order": 3
+    },
+    "ping": {
+      "kind": "BooleanField",
+      "required": false,
+      "order": 4
+    },
+    "disappear": {
+      "kind": "ChoiceField",
+      "required": false,
+      "order": 5
+    }
+  },
+  "DonateForm": {
+    "amount": {
+      "kind": "DecimalField",
+      "required": true,
+      "min_value": 1,
+      "label": "Amount (EUR)",
+      "order": 1
+    },
+    "campaign": {
+      "kind": "ModelChoiceField",
+      "required": false,
+      "label": "Direct your gift to",
+      "order": 2
+    }
+  },
+  "ReportForm": {
+    "reason": {
+      "kind": "ChoiceField",
+      "required": true,
+      "label": "Reason",
+      "order": 1
+    },
+    "detail": {
+      "kind": "CharField",
+      "required": false,
+      "label": "Details (optional)",
+      "order": 2,
+      "textarea": true
+    }
+  },
+  "GroupCreateForm": {
+    "city": {
+      "kind": "CharField",
+      "required": true,
+      "max_length": 128,
+      "order": 1
+    },
+    "activity_type": {
+      "kind": "ModelChoiceField",
+      "required": true,
+      "order": 2
+    },
+    "title": {
+      "kind": "CharField",
+      "required": true,
+      "max_length": 200,
+      "order": 3
+    },
+    "description": {
+      "kind": "CharField",
+      "required": false,
+      "order": 4,
+      "textarea": true
+    },
+    "cohort": {
+      "kind": "ChoiceField",
+      "required": false,
+      "order": 5
+    }
+  },
+  "GaugeForm": {
+    "place": {
+      "kind": "ModelChoiceField",
+      "required": true,
+      "order": 1
+    },
+    "activity_type": {
+      "kind": "ModelChoiceField",
+      "required": true,
+      "order": 2
+    },
+    "coarse_window": {
+      "kind": "ChoiceField",
+      "required": true,
+      "help_text": "Roughly when — kept coarse on purpose (no exact time, no location).",
+      "order": 3
+    }
+  },
+  "GaugeConvertForm": {
+    "title": {
+      "kind": "CharField",
+      "required": true,
+      "max_length": 200,
+      "order": 1
+    },
+    "starts_at": {
+      "kind": "_dt_field",
+      "required": true,
+      "order": 2
+    },
+    "ends_at": {
+      "kind": "_dt_field",
+      "required": false,
+      "order": 3
+    },
+    "description": {
+      "kind": "CharField",
+      "required": false,
+      "order": 4,
+      "textarea": true
+    }
+  },
+  "PlaceClaimForm": {
+    "org_name": {
+      "kind": "CharField",
+      "required": true,
+      "max_length": 255,
+      "label": "Organisation / business name",
+      "order": 1
+    },
+    "kind": {
+      "kind": "ChoiceField",
+      "required": true,
+      "label": "What kind of organisation is it?",
+      "order": 2
+    },
+    "official_website": {
+      "kind": "URLField",
+      "required": false,
+      "max_length": 500,
+      "label": "Official website",
+      "order": 3
+    },
+    "contact_email": {
+      "kind": "EmailField",
+      "required": false,
+      "label": "Contact email",
+      "help_text": "Ideally on the organisation's own domain — it speeds up verification.",
+      "order": 4
+    },
+    "cui": {
+      "kind": "CharField",
+      "required": false,
+      "max_length": 16,
+      "label": "CUI (company registry id)",
+      "help_text": "Optional, but the fastest way for us to verify a business.",
+      "order": 5
+    },
+    "evidence": {
+      "kind": "CharField",
+      "required": false,
+      "max_length": 500,
+      "label": "How can we verify you run this venue?",
+      "order": 6,
+      "textarea": true
+    }
+  },
+  "PlaceOfficialImageForm": {
+    "image": {
+      "kind": "FileField",
+      "required": true,
+      "label": "Venue image",
+      "order": 1
+    },
+    "alt_text": {
+      "kind": "CharField",
+      "required": false,
+      "max_length": 140,
+      "label": "Describe the image",
+      "help_text": "Short alt text for screen readers (e.g. “the main hall set up for games”).",
+      "order": 2
+    },
+    "rights_confirmed": {
+      "kind": "BooleanField",
+      "required": true,
+      "label": "We hold the rights to this image and licence its display here.",
+      "order": 3
+    }
+  }
+}

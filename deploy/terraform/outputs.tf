@@ -9,5 +9,5 @@ output "server_ipv6" {
 }
 
 output "next_steps" {
-  value = "1) point ${var.domain} (A/AAAA) at the IP above; 2) cloud-init installs Postgres+PostGIS+pgvector+Redis+daphne+Caddy and starts the app; 3) watch with: ssh root@<ip> 'cloud-init status --wait && journalctl -u socialapp -f'."
+  value = "1) point ${var.domain} (A/AAAA) at the IP above; 2) cloud-init installs Postgres+PostGIS+pgvector+native Go+Caddy and starts the app; 3) watch with: ssh root@<ip> 'cloud-init status --wait && journalctl -u socialapp -f'."
 }

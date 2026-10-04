@@ -39,7 +39,8 @@ resource "hcloud_server" "app" {
 
   user_data = templatefile("${path.module}/../cloud-init.yaml.tftpl", {
     domain                   = var.domain
-    app_repo_url             = var.app_repo_url
+    app_release_url          = var.app_release_url
+    app_release_sha256       = var.app_release_sha256
     db_password              = var.db_password
     django_secret_key        = var.django_secret_key
     media_s3_bucket          = var.media_s3_bucket
@@ -49,7 +50,8 @@ resource "hcloud_server" "app" {
     aws_access_key_id        = var.aws_access_key_id
     aws_secret_access_key    = var.aws_secret_access_key
     eudi_trusted_issuers     = var.eudi_trusted_issuers
-    sentry_dsn               = var.sentry_dsn
+    media_eu_residency_verified = var.media_eu_residency_verified
+    media_private_bucket_verified = var.media_private_bucket_verified
     metrics_token            = var.metrics_token
     messaging_retention_days = var.messaging_retention_days
     ops_heartbeat_url        = var.ops_heartbeat_url

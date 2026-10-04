@@ -75,3 +75,5 @@ Index regenerated 2026-09-05.
   banner; immutable — do not update.
 
 Status legend used across docs: ✅ done/in place · ▶️ recommended next · ⏳ later/scale · 🧊 backlog
+
+Native review implementation and deployment boundaries: [NATIVE_SERVER](NATIVE_SERVER.md), [ADR-0032](adr/0032-complete-native-go-backend.md).

@@ -1,0 +1,581 @@
+[
+  {
+    "rule_id": "bball_pitch",
+    "match": {
+      "leisure": "pitch",
+      "sport": "basketball"
+    },
+    "slug": "basketball",
+    "confidence": 0.9
+  },
+  {
+    "rule_id": "bball_sport",
+    "match": {
+      "sport": "basketball"
+    },
+    "slug": "basketball",
+    "confidence": 0.7
+  },
+  {
+    "rule_id": "football_pitch",
+    "match": {
+      "leisure": "pitch",
+      "sport": "soccer"
+    },
+    "slug": "football",
+    "confidence": 0.9
+  },
+  {
+    "rule_id": "football_sport",
+    "match": {
+      "sport": "soccer"
+    },
+    "slug": "football",
+    "confidence": 0.7
+  },
+  {
+    "rule_id": "futsal_pitch",
+    "match": {
+      "leisure": "pitch",
+      "sport": "futsal"
+    },
+    "slug": "football",
+    "confidence": 0.85
+  },
+  {
+    "rule_id": "tt_pitch",
+    "match": {
+      "leisure": "pitch",
+      "sport": "table_tennis"
+    },
+    "slug": "table_tennis",
+    "confidence": 0.9
+  },
+  {
+    "rule_id": "tt_sport",
+    "match": {
+      "sport": "table_tennis"
+    },
+    "slug": "table_tennis",
+    "confidence": 0.8
+  },
+  {
+    "rule_id": "tt_table",
+    "match": {
+      "amenity": "table_tennis_table"
+    },
+    "slug": "table_tennis",
+    "confidence": 0.9
+  },
+  {
+    "rule_id": "tennis_pitch",
+    "match": {
+      "leisure": "pitch",
+      "sport": "tennis"
+    },
+    "slug": "tennis",
+    "confidence": 0.9
+  },
+  {
+    "rule_id": "library",
+    "match": {
+      "amenity": "library"
+    },
+    "slug": "reading",
+    "confidence": 0.95
+  },
+  {
+    "rule_id": "books_shop",
+    "match": {
+      "shop": "books"
+    },
+    "slug": "reading",
+    "confidence": 0.6
+  },
+  {
+    "rule_id": "public_bookcase",
+    "match": {
+      "amenity": "public_bookcase"
+    },
+    "slug": "reading",
+    "confidence": 0.4
+  },
+  {
+    "rule_id": "archive",
+    "match": {
+      "amenity": "archive"
+    },
+    "slug": "archive",
+    "confidence": 0.95
+  },
+  {
+    "rule_id": "antiquarian_books",
+    "match": {
+      "shop": "books",
+      "books": "antiquarian"
+    },
+    "slug": "used_bookshop",
+    "confidence": 0.9
+  },
+  {
+    "rule_id": "secondhand_books_only",
+    "match": {
+      "shop": "books",
+      "second_hand": "only"
+    },
+    "slug": "used_bookshop",
+    "confidence": 0.9
+  },
+  {
+    "rule_id": "secondhand_books",
+    "match": {
+      "shop": "books",
+      "second_hand": "yes"
+    },
+    "slug": "used_bookshop",
+    "confidence": 0.75
+  },
+  {
+    "rule_id": "games_shop",
+    "match": {
+      "shop": "games"
+    },
+    "slug": "board_games",
+    "confidence": 0.7
+  },
+  {
+    "rule_id": "boardgames_shop",
+    "match": {
+      "shop": "boardgames"
+    },
+    "slug": "board_games",
+    "confidence": 0.85
+  },
+  {
+    "rule_id": "cafe_boardgames",
+    "match": {
+      "amenity": "cafe",
+      "board_games": "yes"
+    },
+    "slug": "board_games",
+    "confidence": 0.8
+  },
+  {
+    "rule_id": "arcade",
+    "match": {
+      "leisure": "amusement_arcade"
+    },
+    "slug": "video_games",
+    "confidence": 0.8
+  },
+  {
+    "rule_id": "video_shop",
+    "match": {
+      "shop": "video_games"
+    },
+    "slug": "video_games",
+    "confidence": 0.7
+  },
+  {
+    "rule_id": "internet_cafe",
+    "match": {
+      "amenity": "internet_cafe"
+    },
+    "slug": "video_games",
+    "confidence": 0.5
+  },
+  {
+    "rule_id": "running_track",
+    "match": {
+      "leisure": "track"
+    },
+    "slug": "running",
+    "confidence": 0.7
+  },
+  {
+    "rule_id": "athletics",
+    "match": {
+      "sport": "athletics"
+    },
+    "slug": "running",
+    "confidence": 0.7
+  },
+  {
+    "rule_id": "running_sport",
+    "match": {
+      "sport": "running"
+    },
+    "slug": "running",
+    "confidence": 0.8
+  },
+  {
+    "rule_id": "cycling_sport",
+    "match": {
+      "sport": "cycling"
+    },
+    "slug": "cycling",
+    "confidence": 0.7
+  },
+  {
+    "rule_id": "mtb_sport",
+    "match": {
+      "sport": "mtb"
+    },
+    "slug": "mountain_biking",
+    "confidence": 0.8
+  },
+  {
+    "rule_id": "hiking_route",
+    "match": {
+      "route": "hiking"
+    },
+    "slug": "hiking",
+    "confidence": 0.8
+  },
+  {
+    "rule_id": "hiking_sport",
+    "match": {
+      "sport": "hiking"
+    },
+    "slug": "hiking",
+    "confidence": 0.7
+  },
+  {
+    "rule_id": "swimming_pool",
+    "match": {
+      "leisure": "swimming_pool"
+    },
+    "slug": "swimming",
+    "confidence": 0.7
+  },
+  {
+    "rule_id": "swimming_sport",
+    "match": {
+      "sport": "swimming"
+    },
+    "slug": "swimming",
+    "confidence": 0.8
+  },
+  {
+    "rule_id": "climbing_sport",
+    "match": {
+      "sport": "climbing"
+    },
+    "slug": "climbing",
+    "confidence": 0.85
+  },
+  {
+    "rule_id": "volleyball_pitch",
+    "match": {
+      "leisure": "pitch",
+      "sport": "volleyball"
+    },
+    "slug": "volleyball",
+    "confidence": 0.9
+  },
+  {
+    "rule_id": "volleyball_sport",
+    "match": {
+      "sport": "volleyball"
+    },
+    "slug": "volleyball",
+    "confidence": 0.7
+  },
+  {
+    "rule_id": "handball_pitch",
+    "match": {
+      "leisure": "pitch",
+      "sport": "handball"
+    },
+    "slug": "handball",
+    "confidence": 0.9
+  },
+  {
+    "rule_id": "handball_sport",
+    "match": {
+      "sport": "handball"
+    },
+    "slug": "handball",
+    "confidence": 0.7
+  },
+  {
+    "rule_id": "badminton_sport",
+    "match": {
+      "sport": "badminton"
+    },
+    "slug": "badminton",
+    "confidence": 0.8
+  },
+  {
+    "rule_id": "fitness_centre",
+    "match": {
+      "leisure": "fitness_centre"
+    },
+    "slug": "group_fitness",
+    "confidence": 0.6
+  },
+  {
+    "rule_id": "fitness_sport",
+    "match": {
+      "sport": "fitness"
+    },
+    "slug": "group_fitness",
+    "confidence": 0.6
+  },
+  {
+    "rule_id": "yoga_sport",
+    "match": {
+      "sport": "yoga"
+    },
+    "slug": "yoga",
+    "confidence": 0.7
+  },
+  {
+    "rule_id": "museum",
+    "match": {
+      "tourism": "museum"
+    },
+    "slug": "museum_visit",
+    "confidence": 0.8
+  },
+  {
+    "rule_id": "theatre",
+    "match": {
+      "amenity": "theatre"
+    },
+    "slug": "theatre_show",
+    "confidence": 0.8
+  },
+  {
+    "rule_id": "gallery",
+    "match": {
+      "tourism": "gallery"
+    },
+    "slug": "museum_visit",
+    "confidence": 0.7
+  },
+  {
+    "rule_id": "cinema",
+    "match": {
+      "amenity": "cinema"
+    },
+    "slug": "open_air_cinema",
+    "confidence": 0.5
+  },
+  {
+    "rule_id": "sports_centre",
+    "match": {
+      "leisure": "sports_centre"
+    },
+    "slug": "basketball",
+    "confidence": 0.3
+  },
+  {
+    "rule_id": "sports_centre",
+    "match": {
+      "leisure": "sports_centre"
+    },
+    "slug": "football",
+    "confidence": 0.3
+  },
+  {
+    "rule_id": "sports_centre",
+    "match": {
+      "leisure": "sports_centre"
+    },
+    "slug": "table_tennis",
+    "confidence": 0.3
+  },
+  {
+    "rule_id": "sports_centre",
+    "match": {
+      "leisure": "sports_centre"
+    },
+    "slug": "tennis",
+    "confidence": 0.3
+  },
+  {
+    "rule_id": "community_centre",
+    "match": {
+      "amenity": "community_centre"
+    },
+    "slug": "board_games",
+    "confidence": 0.3
+  },
+  {
+    "rule_id": "community_centre",
+    "match": {
+      "amenity": "community_centre"
+    },
+    "slug": "reading",
+    "confidence": 0.3
+  },
+  {
+    "rule_id": "playground",
+    "match": {
+      "leisure": "playground"
+    },
+    "slug": "football",
+    "confidence": 0.2
+  },
+  {
+    "rule_id": "playground",
+    "match": {
+      "leisure": "playground"
+    },
+    "slug": "basketball",
+    "confidence": 0.2
+  },
+  {
+    "rule_id": "park",
+    "match": {
+      "leisure": "park"
+    },
+    "slug": "football",
+    "confidence": 0.2
+  },
+  {
+    "rule_id": "park",
+    "match": {
+      "leisure": "park"
+    },
+    "slug": "basketball",
+    "confidence": 0.2
+  },
+  {
+    "rule_id": "park",
+    "match": {
+      "leisure": "park"
+    },
+    "slug": "chess",
+    "confidence": 0.2
+  },
+  {
+    "rule_id": "park",
+    "match": {
+      "leisure": "park"
+    },
+    "slug": "running",
+    "confidence": 0.2
+  },
+  {
+    "rule_id": "park",
+    "match": {
+      "leisure": "park"
+    },
+    "slug": "cycling",
+    "confidence": 0.2
+  },
+  {
+    "rule_id": "nature_reserve",
+    "match": {
+      "leisure": "nature_reserve"
+    },
+    "slug": "hiking",
+    "confidence": 0.3
+  },
+  {
+    "rule_id": "nature_reserve",
+    "match": {
+      "leisure": "nature_reserve"
+    },
+    "slug": "running",
+    "confidence": 0.3
+  },
+  {
+    "rule_id": "arts_centre",
+    "match": {
+      "amenity": "arts_centre"
+    },
+    "slug": "workshop",
+    "confidence": 0.25
+  },
+  {
+    "rule_id": "arts_centre",
+    "match": {
+      "amenity": "arts_centre"
+    },
+    "slug": "dance_social",
+    "confidence": 0.25
+  },
+  {
+    "rule_id": "arts_centre",
+    "match": {
+      "amenity": "arts_centre"
+    },
+    "slug": "board_games",
+    "confidence": 0.25
+  },
+  {
+    "rule_id": "school",
+    "match": {
+      "amenity": "school"
+    },
+    "slug": "football",
+    "confidence": 0.2
+  },
+  {
+    "rule_id": "school",
+    "match": {
+      "amenity": "school"
+    },
+    "slug": "basketball",
+    "confidence": 0.2
+  },
+  {
+    "rule_id": "school",
+    "match": {
+      "amenity": "school"
+    },
+    "slug": "volleyball",
+    "confidence": 0.2
+  },
+  {
+    "rule_id": "school",
+    "match": {
+      "amenity": "school"
+    },
+    "slug": "table_tennis",
+    "confidence": 0.2
+  },
+  {
+    "rule_id": "school",
+    "match": {
+      "amenity": "school"
+    },
+    "slug": "running",
+    "confidence": 0.2
+  },
+  {
+    "rule_id": "school",
+    "match": {
+      "amenity": "school"
+    },
+    "slug": "reading",
+    "confidence": 0.2
+  },
+  {
+    "rule_id": "college",
+    "match": {
+      "amenity": "college"
+    },
+    "slug": "football",
+    "confidence": 0.2
+  },
+  {
+    "rule_id": "college",
+    "match": {
+      "amenity": "college"
+    },
+    "slug": "basketball",
+    "confidence": 0.2
+  },
+  {
+    "rule_id": "college",
+    "match": {
+      "amenity": "college"
+    },
+    "slug": "running",
+    "confidence": 0.2
+  }
+]

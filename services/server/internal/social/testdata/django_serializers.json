@@ -1,0 +1,137 @@
+{
+  "activity": {
+    "accessibility_notes": "",
+    "activity_type": "basketball",
+    "beginners_welcome": false,
+    "capacity": 5,
+    "cohort": "adult",
+    "cost_band": "unspecified",
+    "created_at": "2026-10-04T15:00:00+03:00",
+    "description": "A descriptive note.",
+    "difficulty": "unspecified",
+    "ends_at": null,
+    "guardian_accompanied": false,
+    "id": 1,
+    "is_publicly_listed": false,
+    "join_threshold": 0.6666666666666666,
+    "meeting_point": "",
+    "min_to_go": 2,
+    "open_positions": 2,
+    "organizer_note": "",
+    "owner": "Native Owner",
+    "owner_can_override": true,
+    "place": 4,
+    "starts_at": "2026-10-04T15:00:00+03:00",
+    "status": "open",
+    "supervised": false,
+    "title": "Native meetup",
+    "what_to_bring": ""
+  },
+  "connection": {
+    "addressee": {
+      "display_name": "Native Member",
+      "public_id": "bbbbbbbb-bbbb-4bbb-bbbb-bbbbbbbbbbbb"
+    },
+    "created_at": "2026-10-04T15:00:00+03:00",
+    "id": 1,
+    "requester": {
+      "display_name": "Native Owner",
+      "public_id": "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa"
+    },
+    "status": "pending"
+  },
+  "dedup": [
+    {
+      "a": "Café Central",
+      "b": "cafe central.",
+      "ratio": 1.0
+    },
+    {
+      "a": "Biblioteca Științei",
+      "b": "biblioteca stiintei",
+      "ratio": 1.0
+    },
+    {
+      "a": "Central Park",
+      "b": "Central Parking",
+      "ratio": 0.8888888888888888
+    },
+    {
+      "a": "Sports Field",
+      "b": "Town Library",
+      "ratio": 0.16666666666666666
+    },
+    {
+      "a": "",
+      "b": "Named venue",
+      "ratio": 0.0
+    },
+    {
+      "a": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabc",
+      "b": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaacd",
+      "ratio": 0.9952830188679245
+    }
+  ],
+  "group": {
+    "activity_type": "Basketball",
+    "area": "Cluj-Napoca",
+    "category": "Sport",
+    "cohort": "adult",
+    "created_at": "2026-10-04T15:00:00+03:00",
+    "description": "A standing group.",
+    "id": 1,
+    "is_publicly_listed": false,
+    "is_staff_curated": false,
+    "owner": "Native Owner",
+    "status": "active",
+    "tier": "type",
+    "title": "Native group"
+  },
+  "membership": {
+    "activity": 1,
+    "arrived_at": null,
+    "attendance_intent": "unknown",
+    "created_at": "2026-10-04T15:00:00+03:00",
+    "decided_at": "2026-10-04T15:00:00+03:00",
+    "departing_at": null,
+    "id": 1,
+    "role": "member",
+    "state": "member",
+    "transit_status": "none",
+    "user": "Native Member"
+  },
+  "post": {
+    "author": "Native Member",
+    "body": "Message",
+    "created_at": "2026-10-04T15:00:00+03:00",
+    "id": 1,
+    "is_announcement": false,
+    "reply_to": null,
+    "share": null
+  },
+  "series": {
+    "accessibility_notes": "",
+    "activity_type": "basketball",
+    "beginners_welcome": false,
+    "cadence": "weekly",
+    "capacity": 5,
+    "cohort": "adult",
+    "cost_band": "unspecified",
+    "created_at": "2026-10-04T15:00:00+03:00",
+    "description": "",
+    "difficulty": "unspecified",
+    "guardian_accompanied": false,
+    "id": 1,
+    "join_threshold": 0.6666666666666666,
+    "meeting_point": "",
+    "min_to_go": null,
+    "next_starts_at": "2026-10-04T15:00:00+03:00",
+    "organizer_note": "",
+    "owner": "Native Owner",
+    "place": 4,
+    "status": "active",
+    "supervised": false,
+    "title": "Native series",
+    "what_to_bring": ""
+  }
+}

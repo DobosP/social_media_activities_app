@@ -4,9 +4,9 @@
 - Nonprofit, open-source, children-first platform for organizing **in-person** local activities: Cluj-Napoca
   first, EU residency required, donations only, no ads and no engagement ML. Not launched. Child-safety,
   GDPR/DSA, moderation and deferred/off-request work are the sensitive surfaces.
-- Runtime: Django 5.2 LTS + DRF on PostgreSQL/PostGIS, ASGI/Channels, a Preact/Vite SPA in `frontend/`, an
-  optional Go `agentapi` sidecar in `services/agentapi/` (profile `agent`, :8090), and Terraform/cloud-init in
-  `deploy/` that has never been applied.
+- Go review runtime: `services/server` owns HTTP/auth/domain/media/jobs/HTML/live delivery on PostgreSQL/
+  PostGIS + pgvector; Preact/Vite stays in `frontend/`. `services/authcore` is a hash-pinned shared copy.
+  Django is an offline oracle (`Dockerfile.reference`); deployment status and gates are in `STATUS.md`.
 - Current truth: `STATUS.md`.
 
 ## Fleet context
@@ -42,10 +42,10 @@ Product overview: `README.md` · full doc index: `docs/README.md` · phasing map
 ## Commands
 | Purpose | Command |
 |---|---|
-| Local stack (http://localhost:8000; add `--profile agent` for the sidecar on :8090) | `docker compose up --build` |
+| Native local stack (http://127.0.0.1:8000) | `docker compose up --build` |
 | Dev machine whose host already runs Postgres on 5432 (`docker-compose.local.yml` is untracked/gitignored; one-time setup in `README.md` §Local variant) | `docker compose -p socialfix -f docker-compose.local.yml up -d` |
-| Targeted test (container) | `docker compose -p socialfix -f docker-compose.local.yml exec -T web sh -lc 'python -m pytest apps/ops/tests/test_deferred_tasks.py -q'` |
-| Full test (container) | `docker compose -p socialfix -f docker-compose.local.yml exec -T web sh -lc 'python -m pytest -q'` |
+| Native checks (Go 1.27.1) | `go -C services/server test -race ./... && go -C services/server vet ./...` |
+| Native PostgreSQL + codecs | `scripts/qualify-native.sh` with explicit isolated fixture arguments (docs/agent-testing.md) |
 | Lint | `ruff check . && ruff format --check .` |
 | Migration drift (container or a venv with `requirements*.txt` installed) | `python manage.py makemigrations --check --dry-run` |
 | Frontend (Node 24) | `cd frontend && npm ci && npm test && npm run build` |

@@ -20,6 +20,8 @@
 | Sidecar / infra | `services/agentapi/` (:8090), `deploy/` (never applied), `db/` (seed data) | See their READMEs. |
 | Cross-app tests | `tests/` | API schema, security, prod-hardening. |
 | Local services | `docker-compose.yml`, `docker-compose.local.yml` | The `.local` file is untracked/gitignored (dev machines only). |
+| Native server | `services/server/cmd/social-server`, `internal/app` | Main HTTP/domain/media/live/job assembly; docs/NATIVE_SERVER.md. |
+| Shared auth | `services/authcore` | Canonical hash-pinned copy; `cmd/check-authcore` verifies. |
 | Status | `STATUS.md` | Current truth. |
 
 ## Common task routes

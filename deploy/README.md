@@ -1,107 +1,31 @@
-# Deploy — reproducible single-box EU stack (Terraform + cloud-init)
+# Native deployment templates
 
-> **STATUS (2026-07-02):** the org-level provider decision is **RECOMMENDED, NOT CONFIRMED** — no
-> provider is procured. This IaC has **never been applied**; **no infrastructure exists**. Launch is
-> **HARD-BLOCKED** on the GDPR stack (DPIA + DPO + verifiable parental consent — see the org
-> `unified-deployment-architecture/docs/00-master-plan.md`). Do **NOT** run `terraform apply` (it
-> provisions paid resources) without Paul's explicit go-ahead. The hosting provider is
-> **intentionally not yet decided** (owner note, 2026-07-02): Hetzner and the box sizes named here
-> (CPX22) and in the org plan (CX23) are **candidate sizings, not commitments** — the final
-> provider + size are chosen at procurement time (see `unified-deployment-architecture/docs/adr/`
-> ADR-0002 recommendation + ADR-0004 provider-neutral rule).
->
-> **FRONTEND RELEASE GATE (2026-07-11, ADR-0022):** this direct cloud-init path clones the source
-> and installs Python dependencies, but does not compile `static/frontend`. Keep
-> `SOCIAL_REACT_UI=False` here. The Docker image does compile the frontend; this path must consume a
-> green-CI versioned release artifact containing Vite + collected static assets before the switch
-> can be enabled.
+The templates now invoke Go; deployment remains **unapplied and launch-blocked** until
+human auth/privacy/safety review, owner procurement and the product GDPR/DPIA/parental
+assurance gates. [ADR-0032](../docs/adr/0032-complete-native-go-backend.md) records selection;
+[NATIVE_SERVER](../docs/NATIVE_SERVER.md) records artifact, codec, proxy and scaling requirements.
 
-Infrastructure-as-code for the recommended cheap, EU-resident launch box in
-[`docs/HOSTING_EU.md`](../docs/HOSTING_EU.md) §3. One `terraform apply` provisions a Hetzner Cloud
-server + firewall, and cloud-init bootstraps the whole stack:
+The provider/box examples are candidates, not procurement decisions. Do not run Terraform
+apply or activate real ingestion/providers/minors from an implementation task.
 
-```
-Hetzner CPX22 (Ubuntu 24.04, EU)
-├─ PostgreSQL 16 + PostGIS + pgvector   (localhost only)
-├─ Redis                                 (localhost only — Channels + cache + rate limits)
-├─ daphne (ASGI app)            systemd: socialapp.service        127.0.0.1:8000
-├─ Caddy (auto Let's Encrypt TLS + reverse proxy, incl. WebSockets)   :80/:443
-├─ run_due_jobs                 systemd timer: socialapp-jobs.timer    daily 03:00 UTC
-├─ transcode_videos (ADR-0026)  systemd timer: socialapp-media.timer   every minute (no-op when idle)
-└─ pg_dump → EU object storage  systemd timer: socialapp-backup.timer  daily 02:00 UTC
-```
+Cloud-init takes `app_release_url` and its exact `app_release_sha256`, verifies before
+extracting, then installs the native binary and precompiled static/template/locale data.
+It does not clone application source, install Python application dependencies, or compile
+Node/Go on the VPS. Systemd starts native `--migrate-only`, HTTP, `--due` and bounded
+`--job transcode_videos` operations. PostgreSQL/PostGIS/vector stay local; Caddy terminates
+TLS and forwards only from the explicitly trusted loopback network.
 
-This replaces the prose runbook with version-controlled, repeatable infra. It is a **single box**
-(a deliberate cheap-launch SPOF) — the HA/scale-out path (managed Postgres, ≥2 app instances,
-PgBouncer, CDN) is in `docs/HOSTING_EU.md` §6 and `docs/PRODUCTION_READINESS.md`.
+Private media requires explicit verified EU residency and bucket privacy, plus the native
+scanner/identity trust configuration. Source examples have these attestations false and
+minor onboarding disabled; setting names/values must come through the approved secrets
+workflow. Initial administrator bootstrap is an explicit private-stdin native command.
 
-## Files
+Export the Docker `release` target into task scratch, archive it, and record the exact
+SHA-256 for `terraform.tfvars` (gitignored). Native module/container tests and scans must
+pass on that exact source candidate before it becomes a deployment artifact. Artifact
+and database rollback drills precede a real migration; the old database/runtime remain
+available for reviewed rollback. Backup units and EU storage policy still apply.
 
-| Path | What |
-| --- | --- |
-| `terraform/` | Hetzner server + firewall + SSH key; renders `cloud-init.yaml.tftpl` with your secrets. |
-| `cloud-init.yaml.tftpl` | First-boot bootstrap (packages, DB, venv, `.env`, systemd units, Caddy, SSH hardening). |
-| `systemd/*.service`, `*.timer` | The app, the daily jobs, the pending-video drain (ADR-0026; needs `ffmpeg` on the box), and the daily backup units. |
-| `backup.sh` | `pg_dump | gzip` → `s3://<bucket>/backups/db/`. |
-
-An optional `systemd/agentapi.service` unit runs the Go `services/agentapi` sidecar (a cached,
-rate-limited public read API for AI agents over the `export_agent_snapshot` output). It is not
-installed by `cloud-init.yaml.tftpl` automatically — build/install steps and the `/agent/*` Caddy
-routing live in [`docs/HOSTING_EU.md`](../docs/HOSTING_EU.md).
-
-## Prerequisites
-
-1. A Hetzner Cloud project + API token; an SSH key.
-2. A **Hetzner Object Storage** bucket in the same EU region, with an S3 access key/secret.
-   - Add a **lifecycle rule** to expire `backups/db/*` after e.g. 30 days (backup retention).
-   - Keep the bucket **private** (the app serves blobs only via signed/presigned URLs).
-3. A DNS zone for your domain (you'll add an A/AAAA record after `apply`).
-4. The launch-blocking app config: a real `EUDI_TRUSTED_ISSUERS` trust anchor (prod refuses to boot
-   without it) and a strong `DJANGO_SECRET_KEY` / `db_password`.
-
-## Use
-
-```bash
-cd deploy/terraform
-cp terraform.tfvars.example terraform.tfvars   # fill in (token, ssh key, domain, secrets)
-terraform init
-terraform apply                                 # prints the server IP
-# → create an A (and AAAA) record for your domain pointing at that IP
-ssh root@<ip> 'cloud-init status --wait && systemctl status socialapp --no-pager'
-```
-
-Caddy provisions TLS automatically once DNS resolves to the box. Visit `https://<domain>/healthz`.
-
-## Security notes (verify these)
-
-- **Secrets live in Terraform state.** `terraform.tfvars` and `*.tfstate` are git-ignored; use an
-  **encrypted remote state backend** for a real deploy, and rotate the API/S3 tokens if state leaks.
-- SSH is firewalled to `admin_ip` only and password auth is disabled (key-only). Postgres + Redis
-  are never opened (localhost only). The app runs as the unprivileged `app` user under a hardened
-  systemd unit (`NoNewPrivileges`, `ProtectSystem=strict`). `unattended-upgrades` + `fail2ban` are on.
-- The rendered `.env` is mode `600`, owned by `app`; the staging copy is `shred`-deleted.
-- `prod.py` boot guards still apply (EU media residency, real identity provider, shared-state).
-
-## Restore drill (do this before you rely on backups)
-
-```bash
-# On the box (or any host with the bucket creds + Postgres client):
-aws --endpoint-url "$MEDIA_S3_ENDPOINT_URL" s3 cp s3://<bucket>/backups/db/<file>.sql.gz /tmp/
-gunzip -c /tmp/<file>.sql.gz | psql "postgresql://app:<pw>@localhost:5432/app_restore_test"
-# verify, then point /healthz + a login smoke-test at it. Document your RTO/RPO.
-```
-
-## Updating the app
-
-```bash
-ssh into the box; sudo -u app git -C /home/app/social_media_activities_app pull
-sudo systemctl restart socialapp   # ExecStartPre runs migrate + collectstatic
-```
-
-This source-pull procedure updates the legacy/server-rendered path only; it does not build the
-React-compatible frontend. Do not enable `SOCIAL_REACT_UI` through it. The tracked follow-up is a
-versioned release artifact built once in CI, rather than installing Node or compiling on the small
-production host.
-
-> A green-CI-gated deploy hook (so only passing commits ship) is a `docs/PRODUCTION_READINESS.md`
-> P1 follow-up; today this is a manual pull+restart.
+Native HSTS/HTTPS/logging settings are mapped. Redis-required mode, Sentry and listed
+unsupported nondefault policies refuse startup; resolve them before choosing a deployment
+that requires those behaviors. The template has never been applied or tested on a real VPS.

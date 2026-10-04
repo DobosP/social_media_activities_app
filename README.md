@@ -13,14 +13,18 @@ booking, donations/ops, a server-rendered web UI, notifications and recommendati
 **not yet launched** — current state lives in **[STATUS.md](STATUS.md)**; the remaining
 operational/legal gaps are in **[docs/PRODUCTION_READINESS.md](docs/PRODUCTION_READINESS.md)**.
 
+For native build, configuration, migration/adoption and operator commands see
+[the Go server guide](docs/NATIVE_SERVER.md). Python sources and tests remain offline
+contract oracles; the default Docker image contains no Python runtime.
+
 ## Stack
 
-- **Django 5.2 LTS + Django REST Framework** (+ `djangorestframework-gis`, `django-filter`)
-- **PostgreSQL + PostGIS** via **GeoDjango** — the single primary datastore (relational +
+- **Go 1.27.1** native backend review candidate; selection and limits: [ADR-0032](docs/adr/0032-complete-native-go-backend.md)
+- **PostgreSQL + PostGIS** via **pgx** — the single primary datastore (relational +
   geospatial + graph + `pgvector`; no separate graph/vector DB)
-- **ASGI/Channels** for real-time thread delivery; S3-compatible object storage for blobs
+- **Go WebSockets + PostgreSQL notifications** for live delivery; private EU-native S3 storage for blobs
 - **React-compatible TypeScript 7 compiled with Preact 10/Vite 8** for interactive screens;
-  Django keeps the document/SEO shell and the initial JS+CSS build is capped at 40 KiB gzip
+  Native Go renders the document/SEO shell and the initial JS+CSS build is capped at 40 KiB gzip
 - **OpenStreetMap / Overpass** as the first (free) place-data source, plus Overture, the
   RO-EDU data platform, and events feeds — see [docs/DATA_PROVIDERS.md](docs/DATA_PROVIDERS.md)
 - **Deploy:** the launch target is a **single Hetzner EU box + Hetzner Object Storage** via
@@ -28,64 +32,34 @@ operational/legal gaps are in **[docs/PRODUCTION_READINESS.md](docs/PRODUCTION_R
   `docs/adr/0001`. `render.yaml` is a **free-tier demo only**. The org-level hosting-provider
   procurement is intentionally **not yet finalized**; the IaC has never been applied.
 
-## Quick start (Docker)
+## Quick start (native Docker)
 
 ```bash
 docker compose up --build
-# web runs migrations, loads the local RO-EDU data seed once, then serves http://localhost:8000
-docker compose exec web python manage.py createsuperuser   # for /admin
+# Go schema bootstrap runs once; web serves http://127.0.0.1:8000.
+# An explicit development seed is optional, with no network ingestion:
+docker compose --profile demo run --rm seed
 ```
 
-The image build also compiles the React-compatible Preact frontend (`frontend/`, Vite →
-`static/frontend/`; see ADR-0016 and ADR-0022). For frontend work outside Docker: `cd frontend &&
-npm ci && npm test && npm run build` (Node 24; the lock currently uses TypeScript 7.0.2, Preact
-10.29.7, React Router 6.30.4, and Vite 8.1.4; `npm run dev` serves the SPA on :5173 proxying to
-runserver).
+Create an initial administrator through the native operator command, sending the
+username/password JSON through private stdin (never command arguments or logs):
+`docker compose run --rm -T web social-server --job createsuperuser --job-options -`.
+Bootstrap creates a fresh unverified/unassigned identity; age and parental assurance
+still use their governed verification flows. See [native configuration](services/server/cmd/social-server/README.md).
 
-### Local variant: host already runs Postgres on 5432 (dev machines)
-
-Use the untracked `docker-compose.local.yml` (its db exposes no host port):
-
-```bash
-docker compose -f docker-compose.local.yml up -d          # NOTE: no --build (see below)
-# pgvector once: exec -T db bash -lc "apt-get update && apt-get install -y postgresql-16-pgvector"
-docker compose -f docker-compose.local.yml exec -T web pip install -r requirements-dev.txt
-docker compose -f docker-compose.local.yml exec -T \
-  -e DJANGO_SETTINGS_MODULE=config.settings.test -e DJANGO_SECRET_KEY=ci-secret-not-for-prod \
-  -e DATABASE_URL=postgis://app:app@db:5432/app web pytest -q
-```
-
-The compose volume-mounts `./:/app`, so the running container always uses current code (no rebuild
-needed). The production image installs `requirements.txt` only (no pytest) — install dev deps as
-above. The CI matrix is `.github/workflows/ci.yml`; gate commands with expected output are in
-`docs/agent-testing.md`; agent operating rules are in `AGENTS.md`.
-
-## Quick start (local, no Docker)
-
-Requires Postgres 16 + PostGIS and the GeoDjango native libs
-(`gdal-bin libgdal-dev libgeos-dev libproj-dev binutils`).
-
-```bash
-python -m venv .venv && . .venv/bin/activate
-pip install -r requirements.txt -r requirements-dev.txt   # prod installs requirements.txt only
-cp .env.example .env          # then edit DATABASE_URL
-python manage.py migrate
-python manage.py runserver
-```
+The image compiles the Preact frontend into hashed `static/frontend` assets with
+Node 24. Local frontend checks: `npm --prefix frontend ci`, `npm --prefix frontend test`,
+`npm --prefix frontend run build`. The Go server guide covers native host requirements
+and explicit PostgreSQL/codec regression. Older untracked Django Compose variants
+are reference environments; build them with `Dockerfile.reference` when needed.
 
 ## Ingesting places
 
-Scoped to one administrative area (a city) at a time:
-
-```bash
-python manage.py ingest_places --source osm --city "Cluj-Napoca" --dry-run   # preview
-python manage.py ingest_places --source osm --city "Cluj-Napoca"             # write
-# Alternatives: --bbox minlon,minlat,maxlon,maxlat | --limit N | --min-confidence 0.5
-```
-
-Re-runs are **idempotent** (upsert keyed on `osm_type`+`osm_id`); user-confirmed/manual
-activity links are never overwritten. The OSM-tag → activity mapping lives in
-`apps/ingestion/mapping.py`.
+Native operator commands accept one bounded JSON options object through `--job-options`.
+For an owner-authorized preview, invoke `social-server --job ingest_places --job-options -`
+with `source`, `city`, `dry_run` and bounded `limit`/`bbox` options. Writes are explicit;
+startup runs no ingestion. Source mapping and provenance are preserved by the native
+[command registry](services/server/internal/commands/README.md).
 
 ## Web UI
 
@@ -93,7 +67,7 @@ A server-rendered web interface (`apps/web/`, session auth) sits on top of the A
 users — open `http://localhost:8000/`:
 
 - Sign up / log in, profile + avatar, declare interests, and **verify your age** via the EU
-  Digital Identity wallet (OpenID4VP; a sandbox demo wallet stands in until the live one ships).
+  Digital Identity wallet (OpenID4VP; signed issuer/holder proofs and configured trust anchors are required).
 - Discover: interactive **places map** (Leaflet), a recommended-for-you feed, upcoming activities,
   and **"what's happening"** events (with place detail showing nearby events).
 - Organise an activity; on its page: **join-by-vote**, text thread, private member photos, and

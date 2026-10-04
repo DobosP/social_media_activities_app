@@ -1,0 +1,476 @@
+{
+  "home": [
+    "GET"
+  ],
+  "my_meetups": [
+    "GET"
+  ],
+  "my_venues": [
+    "GET"
+  ],
+  "service_worker": [
+    "GET"
+  ],
+  "organize": [
+    "GET"
+  ],
+  "register": [
+    "GET",
+    "POST"
+  ],
+  "account_restricted": [
+    "GET",
+    "POST"
+  ],
+  "places_map": [
+    "GET"
+  ],
+  "places_list": [
+    "GET"
+  ],
+  "place_propose": [
+    "GET",
+    "POST"
+  ],
+  "place_claim": [
+    "GET",
+    "POST"
+  ],
+  "place_official_image": [
+    "GET",
+    "POST"
+  ],
+  "places_pending": [
+    "GET"
+  ],
+  "place_confirm": [
+    "POST"
+  ],
+  "place_detail": [
+    "GET"
+  ],
+  "edge_vote": [
+    "POST"
+  ],
+  "fact_vote": [
+    "POST"
+  ],
+  "place_correction_propose": [
+    "POST"
+  ],
+  "place_correction_confirm": [
+    "POST"
+  ],
+  "place_open_now_report": [
+    "POST"
+  ],
+  "place_open_now_reset": [
+    "POST"
+  ],
+  "place_closure_report": [
+    "POST"
+  ],
+  "place_closure_reset": [
+    "POST"
+  ],
+  "place_detail_slug": [
+    "GET"
+  ],
+  "events_list": [
+    "GET"
+  ],
+  "event_detail": [
+    "GET"
+  ],
+  "event_report": [
+    "POST"
+  ],
+  "event_report_reset": [
+    "POST"
+  ],
+  "event_detail_slug": [
+    "GET"
+  ],
+  "things_to_do_index": [
+    "GET"
+  ],
+  "things_to_do_city": [
+    "GET"
+  ],
+  "things_to_do": [
+    "GET"
+  ],
+  "activity_list": [
+    "GET"
+  ],
+  "activity_create": [
+    "GET",
+    "POST"
+  ],
+  "series_list": [
+    "GET"
+  ],
+  "series_create": [
+    "GET",
+    "POST"
+  ],
+  "series_detail": [
+    "GET"
+  ],
+  "series_pause": [
+    "POST"
+  ],
+  "series_resume": [
+    "POST"
+  ],
+  "series_set_next_note": [
+    "POST"
+  ],
+  "series_end": [
+    "POST"
+  ],
+  "activity_detail": [
+    "GET"
+  ],
+  "activity_edit": [
+    "GET",
+    "POST"
+  ],
+  "activity_cancel": [
+    "POST"
+  ],
+  "activity_announce": [
+    "POST"
+  ],
+  "activity_add_supervisor": [
+    "POST"
+  ],
+  "activity_set_supervision": [
+    "POST"
+  ],
+  "activity_grant_coorg": [
+    "POST"
+  ],
+  "activity_revoke_coorg": [
+    "POST"
+  ],
+  "activity_transfer_owner": [
+    "POST"
+  ],
+  "activity_rsvp": [
+    "POST"
+  ],
+  "activity_support_companion": [
+    "POST"
+  ],
+  "activity_arrived": [
+    "POST"
+  ],
+  "activity_transit": [
+    "POST"
+  ],
+  "activity_departing": [
+    "POST"
+  ],
+  "activity_met": [
+    "POST"
+  ],
+  "activity_join": [
+    "POST"
+  ],
+  "activity_leave": [
+    "POST"
+  ],
+  "activity_unsafe": [
+    "POST"
+  ],
+  "activity_post": [
+    "POST"
+  ],
+  "share_to_thread": [
+    "POST"
+  ],
+  "activity_post_edit": [
+    "POST"
+  ],
+  "activity_post_delete": [
+    "POST"
+  ],
+  "activity_post_react": [
+    "POST"
+  ],
+  "activity_post_dissent": [
+    "POST"
+  ],
+  "activity_post_concern": [
+    "POST"
+  ],
+  "activity_photo": [
+    "POST"
+  ],
+  "membership_vote": [
+    "POST"
+  ],
+  "saved_searches": [
+    "GET"
+  ],
+  "saved_search_create": [
+    "POST"
+  ],
+  "saved_search_delete": [
+    "POST"
+  ],
+  "you": [
+    "GET"
+  ],
+  "settings": [
+    "GET"
+  ],
+  "api_token_revoke": [
+    "POST"
+  ],
+  "inbox": [
+    "GET"
+  ],
+  "interests": [
+    "GET",
+    "POST"
+  ],
+  "topic_preferences": [
+    "GET",
+    "POST"
+  ],
+  "access_preferences": [
+    "GET",
+    "POST"
+  ],
+  "profile": [
+    "GET"
+  ],
+  "avatar_upload": [
+    "POST"
+  ],
+  "avatar_style": [
+    "POST"
+  ],
+  "person": [
+    "GET"
+  ],
+  "person_card": [
+    "GET"
+  ],
+  "verify_age": [
+    "GET",
+    "POST"
+  ],
+  "wards": [
+    "GET"
+  ],
+  "guardian_invite_create": [
+    "POST"
+  ],
+  "guardian_revoke": [
+    "POST"
+  ],
+  "guardian_guardrail_set": [
+    "POST"
+  ],
+  "ward_topics_set": [
+    "POST"
+  ],
+  "my_guardians": [
+    "GET"
+  ],
+  "guardian_invite_accept": [
+    "POST"
+  ],
+  "guardian_invite_decline": [
+    "POST"
+  ],
+  "notifications": [
+    "GET"
+  ],
+  "notifications_read_all": [
+    "POST"
+  ],
+  "notification_preferences": [
+    "GET",
+    "POST"
+  ],
+  "messages": [
+    "GET"
+  ],
+  "groups": [
+    "GET"
+  ],
+  "group_create": [
+    "GET",
+    "POST"
+  ],
+  "group_detail": [
+    "GET"
+  ],
+  "group_join": [
+    "POST"
+  ],
+  "group_leave": [
+    "POST"
+  ],
+  "group_post": [
+    "POST"
+  ],
+  "group_post_edit": [
+    "POST"
+  ],
+  "group_post_delete": [
+    "POST"
+  ],
+  "group_post_react": [
+    "POST"
+  ],
+  "group_post_dissent": [
+    "POST"
+  ],
+  "group_post_concern": [
+    "POST"
+  ],
+  "group_announce": [
+    "POST"
+  ],
+  "group_ask": [
+    "POST"
+  ],
+  "group_archive": [
+    "POST"
+  ],
+  "gauges": [
+    "GET"
+  ],
+  "gauge_create": [
+    "GET",
+    "POST"
+  ],
+  "gauge_detail": [
+    "GET"
+  ],
+  "gauge_interested": [
+    "POST"
+  ],
+  "gauge_uninterested": [
+    "POST"
+  ],
+  "gauge_convert": [
+    "GET",
+    "POST"
+  ],
+  "communities": [
+    "GET"
+  ],
+  "community_graph": [
+    "GET"
+  ],
+  "community_detail": [
+    "GET"
+  ],
+  "connections": [
+    "GET"
+  ],
+  "connection_request": [
+    "POST"
+  ],
+  "connection_respond": [
+    "POST"
+  ],
+  "connection_withdraw": [
+    "POST"
+  ],
+  "connection_remove": [
+    "POST"
+  ],
+  "connection_message": [
+    "POST"
+  ],
+  "donate": [
+    "GET",
+    "POST"
+  ],
+  "transparency": [
+    "GET"
+  ],
+  "my_donations": [
+    "GET"
+  ],
+  "campaigns": [
+    "GET"
+  ],
+  "partners": [
+    "GET"
+  ],
+  "open_data": [
+    "GET"
+  ],
+  "open_data_snapshot": [
+    "GET"
+  ],
+  "discover": [
+    "GET"
+  ],
+  "activity_listing_toggle": [
+    "POST"
+  ],
+  "group_listing_toggle": [
+    "POST"
+  ],
+  "report": [
+    "GET",
+    "POST"
+  ],
+  "block_user": [
+    "POST"
+  ],
+  "unblock_user": [
+    "POST"
+  ],
+  "display_preferences": [
+    "GET",
+    "POST"
+  ],
+  "privacy": [
+    "GET"
+  ],
+  "terms": [
+    "GET"
+  ],
+  "my_privacy": [
+    "GET"
+  ],
+  "activity_log": [
+    "GET"
+  ],
+  "safety_record": [
+    "GET"
+  ],
+  "safety_record_appeal": [
+    "POST"
+  ],
+  "account_export": [
+    "GET"
+  ],
+  "my_calendar": [
+    "GET"
+  ],
+  "account_delete": [
+    "GET",
+    "POST"
+  ],
+  "moderation_dashboard": [
+    "GET"
+  ],
+  "moderation_concern": [
+    "GET",
+    "POST"
+  ],
+  "spa_preview": [
+    "GET"
+  ]
+}

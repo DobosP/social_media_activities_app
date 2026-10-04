@@ -1,6 +1,6 @@
 [Unit]
 Description=run_due_jobs (retention purges, suspension lifts, reminders — DUE_JOBS fan-out)
-After=postgresql.service redis-server.service socialapp.service
+After=postgresql.service socialapp.service
 
 [Service]
 Type=oneshot
@@ -8,12 +8,12 @@ User=app
 Group=app
 WorkingDirectory=/home/app/social_media_activities_app
 EnvironmentFile=/home/app/social_media_activities_app/.env
-ExecStart=/home/app/social_media_activities_app/.venv/bin/python manage.py run_due_jobs
+ExecStart=/usr/local/bin/social-server --due --site-root /home/app/social_media_activities_app --media-scratch /home/app/social_media_activities_app/var/media-work
 # The default oneshot timeout (~90s) would kill a long maintenance tick (e.g. the ADR-0026
 # transcode safety-net entry, or a large purge batch). One hour is generous, not unbounded.
 TimeoutStartSec=3600
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=read-only
-ReadWritePaths=/home/app/social_media_activities_app
+ReadWritePaths=/home/app/social_media_activities_app/var
 PrivateTmp=true

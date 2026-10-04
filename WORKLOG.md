@@ -180,3 +180,72 @@ Valid until: this branch is reviewed/landed or superseded — then treat as hist
   27 subtests; the producer→server→both-real-clients loopback passed 84 tests.
 - No real network ingestion, deploy, or child-facing data mutation is part of
   these gates; consumer fixtures and the loopback serving projection are used.
+
+## 2026-10-04 — Complete native Go backend candidate
+
+Valid until: this native candidate, dependency or deployment contract changes — then requalify.
+
+Owner scope is both Cat and Social, with Go as the serving language. This branch builds
+on public foundation36cff2f, replaces the remaining serving paths with services/server,
+and keeps Django as an offline contract/migration oracle. No live ingestion, provider
+activation, real minors, Terraform, deployment or production data is involved.
+
+The native assembly owns password/Google/Facebook identity, current session/token state,
+signed EUDI/guardian/cohort verification, authoritative activity/voting/series/group/
+connection/thread/sentiment/moderation transitions, E2EE transport, media, booking,
+donations, notifications/discovery/recommendations, public catalog/SEO/feed/snapshots,
+original HTML/locale/form rendering and twenty SPA hydration contracts. The27 due jobs
+and17 manual handlers (plus one administrator alias) execute native services. Native
+bootstrap adopts existing relational data; fresh empty and preinstalled spatial schemas
+are qualified without resetting extension-owned rows. A secret-stdin administrator
+bootstrap creates only fresh unknown/unassigned/unverified staff, with atomic audit and
+no existing identity/consent overwrite.
+
+Private media tests use actual AVIF/WebP/FFmpeg, real foreign keys and isolated PostgreSQL.
+Prepared attachments are one-shot/atomic, failed or ambiguous blob writes first reach
+durable cleanup, claimant permissions reload, and terminal video notifications contain
+IDs only. Upload-triggered video work is single-flight/max2, follows commit, survives a
+canceled request under application lifetime and stops before storage/database close.
+Deferred erasure retains all excess blob keys across bounded batches (seven keys/batch2
+regression). Open sockets recheck captured session/token authority and membership.
+
+First full release-image fixture qualification:167 top-level tests across17 database/
+codec packages, zero skips, `-race`, read-only sources and Python-free native image:
+accounts11, admin5, app10, booking7, catalog6, commands8, discovery2, donations5,
+export2, jobs18, media25, messaging6, notifications2, recommendations5, safety12,
+social18, web25. Later affected app12, administrator bootstrap and command tests passed
+with additional fixture assertions. Independent fixtures include42 markup goldens,
+three timestamp/compressed-cursor vectors and20 Django SPA projections plus populated
+card/privacy examples. No test count implies exhaustive automatic equivalence of all
+source paths; native route inventory documents378 API operations, with public field
+schemas complete and private DTO field documentation still incomplete.
+
+Source and imported-package govulncheck1.8 scans pass both candidates after updating
+Parquet's compress dependency1.17.9→1.18.7 (GO-2026-5841). x/crypto's unmaintained
+openpgp module advisoryGO-2026-5932 has no fix and is neither imported nor called.
+Stripped Go1.27 binary extraction reports module-wide wildcard symbols conservatively;
+a same-source symbol-retaining static audit twin passes binary symbol analysis with
+zero called/imported findings. The unused module advisory remains reported separately.
+
+Default Docker/Compose/systemd/Render/cloud-init paths now invoke Go, with immutable
+frontend/templates/locales, UID10001 and bounded codec tools. Native artifact export
+requires exact SHA-256; compilation stays off the small host. TLS headers/logs preserve
+source policy, forwarded identities/protocols require configured ingress CIDRs, local
+liveness remains narrow and private readiness never bypasses HTTPS. Bounded structured
+logs omit private raw paths, queries, IPs, identities, headers, cookies and bodies.
+
+Policy boundaries are explicit: raw age/consent/cohort/membership/ciphertext/scanner/
+payment CRUD and unrestricted generic deletion are unavailable; governed services own
+those transitions. Domain/API/catalog rate histories remain process-local; source Redis-
+required/Sentry profiles and unsupported nondefault policy settings fail by NAME, not
+silently. Shared auth state/budgets, job queues and live fanout are PostgreSQL-backed.
+These restrictions and privacy/auth/safety changes require human review before landing;
+product/provider/legal launch gates remain. This record does not claim deployment.
+
+Final frozen release-image fixture run:173 top-level tests across17 PostgreSQL/codec
+packages, zero skips. Counts: accounts14/admin5/app12/booking7/catalog6/commands9/
+discovery2/donations5/export2/jobs18/media25/messaging6/notifications2/recommendations5/
+safety12/social18/web25. All native race/vet and source/package scans pass. The audit
+binary keeps symbols (same source/static build); its linked-symbol scan passes with no
+called/imported findings. Production artifact may strip symbols after that audit.
+Portable auth snapshot pins canonical Cat commitaf85e7f and verifies all file hashes.

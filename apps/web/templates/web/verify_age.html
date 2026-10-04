@@ -1,11 +1,33 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n csp_helpers %}
 {% block title %}{% trans "Verify your age" %}{% endblock %}
 {% block content %}
 <h1>{% trans "Verify your age" %}</h1>
 {% if verified %}<div class="banner">{% trans "Your age is verified and you can participate." %}</div>{% endif %}
 <p class="muted">{% trans "Prove your age band with the EU Digital Identity wallet (OpenID4VP). The app receives only an over-16 / over-18 proof &mdash; never your birthdate &mdash; and verifies its signature cryptographically." %}</p>
-{% if sandbox %}
+{% if native_available %}
+{% if native_challenge %}
+<div class="card">
+  <p>{% trans "Use this request with your trusted EU wallet. Only the age-band claims are requested." %}</p>
+  {% nonced_json_script native_challenge "age-verification-request" %}
+  <details><summary>{% trans "Wallet request" %}</summary><pre>{{ native_request_json }}</pre></details>
+</div>
+<form method="post" class="card">{% csrf_token %}
+  <input type="hidden" name="action" value="verify">
+  <input type="hidden" name="state" value="{{ native_challenge.state }}">
+  <label for="wallet-presentation">{% trans "Signed wallet presentation" %}</label>
+  <textarea id="wallet-presentation" name="vp_token" maxlength="32768" rows="4" autocomplete="off" required></textarea>
+  <label for="wallet-holder-proof">{% trans "Holder binding proof" %}</label>
+  <textarea id="wallet-holder-proof" name="holder_binding_proof" maxlength="32768" rows="4" autocomplete="off" required></textarea>
+  <button class="btn u-mt-md" type="submit">{% trans "Verify wallet proof" %}</button>
+</form>
+{% else %}
+<form method="post" class="card">{% csrf_token %}
+  <input type="hidden" name="action" value="start">
+  <button class="btn" type="submit">{% trans "Create a wallet verification request" %}</button>
+</form>
+{% endif %}
+{% elif sandbox %}
 <form method="post" class="card">{% csrf_token %}
   <p><strong>{% trans "Demo wallet" %}</strong> {% trans "&mdash; present an age proof:" %}</p>
   <label><input type="radio" name="age" value="adult" checked> {% trans "18 or over (adult)" %}</label>

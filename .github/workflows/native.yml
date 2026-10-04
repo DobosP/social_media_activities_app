@@ -1,0 +1,87 @@
+name: Native Go application
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "40 6 * * *"
+permissions:
+  contents: read
+concurrency:
+  group: native-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  native:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: services/server/go.mod
+          cache: false
+      - name: Portable authentication snapshot, format, vet and hermetic race tests
+        env:
+          GOWORK: "off"
+          TMPDIR: ${{ runner.temp }}
+        run: |
+          test -z "$(gofmt -l services/server services/authcore)"
+          go -C services/server run ./cmd/check-authcore
+          go -C services/authcore vet ./...
+          go -C services/authcore test -race ./...
+          go -C services/server vet ./...
+          go -C services/server test -race ./...
+      - name: Build the Python-free release and disposable database images
+        run: |
+          docker build -t social-native:ci .
+          docker build -f Dockerfile.db -t social-native-db:ci .
+      - name: Native bootstrap and full PostgreSQL/codec regression (no skipped contracts)
+        env:
+          GOWORK: "off"
+          TMPDIR: ${{ runner.temp }}
+        run: |
+          set -euo pipefail
+          docker network create --internal social-native-ci
+          trap 'docker rm -f social-native-db-ci >/dev/null 2>&1 || true; docker network rm social-native-ci >/dev/null 2>&1 || true' EXIT
+          docker run -d --name social-native-db-ci --network social-native-ci --network-alias db \
+            -e POSTGRES_USER=app -e POSTGRES_PASSWORD=app -e POSTGRES_DB=app social-native-db:ci
+          for attempt in $(seq 1 60); do
+            if docker exec social-native-db-ci pg_isready -U app >/dev/null; then break; fi
+            sleep 1
+          done
+          docker exec social-native-db-ci pg_isready -U app
+          docker run --rm --read-only --cap-drop=ALL --security-opt=no-new-privileges \
+            --network social-native-ci -e DATABASE_URL='postgres://app:app@db:5432/app?sslmode=disable' \
+            social-native:ci social-server --migrate-only
+          scripts/qualify-native.sh "$(command -v go)" social-native:ci social-native-ci \
+            'postgres://app:app@db:5432/app?sslmode=disable' "$RUNNER_TEMP/native-qualification"
+          test "$(docker image inspect -f '{{.Config.User}}' social-native:ci)" = '10001:10001'
+          docker run --rm --network none social-native:ci sh -ec \
+            '! command -v python; ! command -v python3; ! command -v pip; command -v ffmpeg; command -v ffprobe; command -v avifenc; command -v prlimit; social-server --help >/dev/null'
+      - name: Scan native release image
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: v0.75.0
+          image-ref: social-native:ci
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+  vulnerability-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: services/server/go.mod
+          cache: false
+      - name: Source-call and linked-binary vulnerability audits
+        env:
+          GOWORK: "off"
+        working-directory: services/server
+        run: |
+          go run golang.org/x/vuln/cmd/govulncheck@v1.8.0 ./...
+          go run golang.org/x/vuln/cmd/govulncheck@v1.8.0 -scan=package ./...
+          # Retain symbols in this same-source audit twin; release strips them.
+          # Without symbols the analyser falls back to whole-module advisories.
+          CGO_ENABLED=0 go build -trimpath -o "$RUNNER_TEMP/social-server" ./cmd/social-server
+          go run golang.org/x/vuln/cmd/govulncheck@v1.8.0 -mode=binary "$RUNNER_TEMP/social-server"

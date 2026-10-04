@@ -2,9 +2,8 @@
 #
 # The base postgis image lacks the `vector` (pgvector) extension the app's
 # migrations require; we add the package here. This image must not load schema or
-# data through `/docker-entrypoint-initdb.d/`: Django migrations are the only
-# schema authority, and RO-EDU demo data loads from the web container after
-# `manage.py migrate`.
+# data through `/docker-entrypoint-initdb.d/`: The Go --migrate-only command owns bootstrap/adoption;
+# local/demo seed is an explicit --job load_roedu_seed operation.
 FROM postgis/postgis:16-3.5
 
 # The upstream 16-3.5 tag can lag OS and PostgreSQL security updates. Refresh

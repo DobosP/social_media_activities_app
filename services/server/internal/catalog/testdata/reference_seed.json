@@ -1,0 +1,1246 @@
+{
+  "categories": [
+    {
+      "description": "",
+      "id": 1,
+      "name": "Sport",
+      "parent_id": null,
+      "slug": "sport"
+    },
+    {
+      "description": "",
+      "id": 2,
+      "name": "Team Sport",
+      "parent_id": 1,
+      "slug": "team_sport"
+    },
+    {
+      "description": "",
+      "id": 3,
+      "name": "Racquet Sport",
+      "parent_id": 1,
+      "slug": "racquet_sport"
+    },
+    {
+      "description": "",
+      "id": 4,
+      "name": "Tabletop Games",
+      "parent_id": null,
+      "slug": "tabletop"
+    },
+    {
+      "description": "",
+      "id": 5,
+      "name": "Reading",
+      "parent_id": null,
+      "slug": "reading"
+    },
+    {
+      "description": "",
+      "id": 6,
+      "name": "Video Games",
+      "parent_id": null,
+      "slug": "video_games"
+    },
+    {
+      "description": "",
+      "id": 7,
+      "name": "Social",
+      "parent_id": null,
+      "slug": "social"
+    },
+    {
+      "description": "",
+      "id": 8,
+      "name": "Outdoor & Endurance",
+      "parent_id": null,
+      "slug": "outdoor"
+    },
+    {
+      "description": "",
+      "id": 9,
+      "name": "Fitness & Wellness",
+      "parent_id": null,
+      "slug": "fitness"
+    },
+    {
+      "description": "",
+      "id": 10,
+      "name": "Culture & Community",
+      "parent_id": null,
+      "slug": "culture"
+    }
+  ],
+  "child_venues": [
+    {
+      "id": 1,
+      "is_active": true,
+      "key": "library",
+      "label": "Library",
+      "osm_match": {
+        "amenity": "library"
+      },
+      "overture_categories": [
+        "library"
+      ]
+    },
+    {
+      "id": 2,
+      "is_active": true,
+      "key": "park",
+      "label": "Park",
+      "osm_match": {
+        "leisure": "park"
+      },
+      "overture_categories": [
+        "park",
+        "national_park"
+      ]
+    },
+    {
+      "id": 3,
+      "is_active": true,
+      "key": "sports_centre",
+      "label": "Sports centre",
+      "osm_match": {
+        "leisure": "sports_centre"
+      },
+      "overture_categories": [
+        "sports_centre",
+        "stadium_arena",
+        "recreation_center"
+      ]
+    },
+    {
+      "id": 4,
+      "is_active": true,
+      "key": "school",
+      "label": "School",
+      "osm_match": {
+        "amenity": "school"
+      },
+      "overture_categories": [
+        "school",
+        "primary_school",
+        "secondary_school"
+      ]
+    },
+    {
+      "id": 5,
+      "is_active": true,
+      "key": "community_centre",
+      "label": "Community centre",
+      "osm_match": {
+        "amenity": "community_centre"
+      },
+      "overture_categories": [
+        "community_center",
+        "community_centre"
+      ]
+    },
+    {
+      "id": 6,
+      "is_active": true,
+      "key": "playground",
+      "label": "Playground",
+      "osm_match": {
+        "leisure": "playground"
+      },
+      "overture_categories": [
+        "playground"
+      ]
+    },
+    {
+      "id": 7,
+      "is_active": true,
+      "key": "nature_reserve",
+      "label": "Nature reserve",
+      "osm_match": {
+        "leisure": "nature_reserve"
+      },
+      "overture_categories": [
+        "nature_reserve"
+      ]
+    },
+    {
+      "id": 8,
+      "is_active": true,
+      "key": "college",
+      "label": "College / university",
+      "osm_match": {
+        "amenity": "college"
+      },
+      "overture_categories": [
+        "college_university",
+        "college"
+      ]
+    }
+  ],
+  "content_types": [
+    {
+      "app_label": "admin",
+      "id": 1,
+      "model": "logentry"
+    },
+    {
+      "app_label": "auth",
+      "id": 2,
+      "model": "permission"
+    },
+    {
+      "app_label": "auth",
+      "id": 3,
+      "model": "group"
+    },
+    {
+      "app_label": "contenttypes",
+      "id": 4,
+      "model": "contenttype"
+    },
+    {
+      "app_label": "sessions",
+      "id": 5,
+      "model": "session"
+    },
+    {
+      "app_label": "authtoken",
+      "id": 6,
+      "model": "token"
+    },
+    {
+      "app_label": "authtoken",
+      "id": 7,
+      "model": "tokenproxy"
+    },
+    {
+      "app_label": "accounts",
+      "id": 8,
+      "model": "user"
+    },
+    {
+      "app_label": "accounts",
+      "id": 9,
+      "model": "ageassurance"
+    },
+    {
+      "app_label": "accounts",
+      "id": 10,
+      "model": "parentalconsent"
+    },
+    {
+      "app_label": "accounts",
+      "id": 11,
+      "model": "guardianrelationship"
+    },
+    {
+      "app_label": "accounts",
+      "id": 12,
+      "model": "guardianlinkinvite"
+    },
+    {
+      "app_label": "accounts",
+      "id": 13,
+      "model": "consumedagenonce"
+    },
+    {
+      "app_label": "accounts",
+      "id": 14,
+      "model": "guardianguardrail"
+    },
+    {
+      "app_label": "accounts",
+      "id": 15,
+      "model": "identitybinding"
+    },
+    {
+      "app_label": "accounts",
+      "id": 16,
+      "model": "bannedidentity"
+    },
+    {
+      "app_label": "accounts",
+      "id": 17,
+      "model": "signatureavatar"
+    },
+    {
+      "app_label": "taxonomy",
+      "id": 18,
+      "model": "activitycategory"
+    },
+    {
+      "app_label": "taxonomy",
+      "id": 19,
+      "model": "activitytype"
+    },
+    {
+      "app_label": "taxonomy",
+      "id": 20,
+      "model": "activityrelation"
+    },
+    {
+      "app_label": "places",
+      "id": 21,
+      "model": "place"
+    },
+    {
+      "app_label": "places",
+      "id": 22,
+      "model": "placeactivity"
+    },
+    {
+      "app_label": "places",
+      "id": 23,
+      "model": "accesspreference"
+    },
+    {
+      "app_label": "places",
+      "id": 24,
+      "model": "partner"
+    },
+    {
+      "app_label": "places",
+      "id": 25,
+      "model": "activityedgevote"
+    },
+    {
+      "app_label": "places",
+      "id": 26,
+      "model": "opennowreport"
+    },
+    {
+      "app_label": "places",
+      "id": 27,
+      "model": "childvenueclass"
+    },
+    {
+      "app_label": "places",
+      "id": 28,
+      "model": "approvedchildvenue"
+    },
+    {
+      "app_label": "places",
+      "id": 29,
+      "model": "placefactvote"
+    },
+    {
+      "app_label": "places",
+      "id": 30,
+      "model": "placecorrection"
+    },
+    {
+      "app_label": "places",
+      "id": 31,
+      "model": "placecorrectionconfirmation"
+    },
+    {
+      "app_label": "places",
+      "id": 32,
+      "model": "placeclosurereport"
+    },
+    {
+      "app_label": "places",
+      "id": 33,
+      "model": "placecover"
+    },
+    {
+      "app_label": "places",
+      "id": 34,
+      "model": "placeclaim"
+    },
+    {
+      "app_label": "social",
+      "id": 35,
+      "model": "activity"
+    },
+    {
+      "app_label": "social",
+      "id": 36,
+      "model": "membership"
+    },
+    {
+      "app_label": "social",
+      "id": 37,
+      "model": "joinvote"
+    },
+    {
+      "app_label": "social",
+      "id": 38,
+      "model": "thread"
+    },
+    {
+      "app_label": "social",
+      "id": 39,
+      "model": "post"
+    },
+    {
+      "app_label": "social",
+      "id": 40,
+      "model": "userplaceproposal"
+    },
+    {
+      "app_label": "social",
+      "id": 41,
+      "model": "placeconfirmation"
+    },
+    {
+      "app_label": "social",
+      "id": 42,
+      "model": "postreaction"
+    },
+    {
+      "app_label": "social",
+      "id": 43,
+      "model": "groupmembership"
+    },
+    {
+      "app_label": "social",
+      "id": 44,
+      "model": "group"
+    },
+    {
+      "app_label": "social",
+      "id": 45,
+      "model": "activityseries"
+    },
+    {
+      "app_label": "social",
+      "id": 46,
+      "model": "activityinterest"
+    },
+    {
+      "app_label": "social",
+      "id": 47,
+      "model": "postconcernstate"
+    },
+    {
+      "app_label": "social",
+      "id": 48,
+      "model": "postsentimentfooter"
+    },
+    {
+      "app_label": "social",
+      "id": 49,
+      "model": "postconcern"
+    },
+    {
+      "app_label": "social",
+      "id": 50,
+      "model": "postdissent"
+    },
+    {
+      "app_label": "safety",
+      "id": 51,
+      "model": "auditlog"
+    },
+    {
+      "app_label": "safety",
+      "id": 52,
+      "model": "report"
+    },
+    {
+      "app_label": "safety",
+      "id": 53,
+      "model": "moderationaction"
+    },
+    {
+      "app_label": "safety",
+      "id": 54,
+      "model": "block"
+    },
+    {
+      "app_label": "safety",
+      "id": 55,
+      "model": "authorityreferral"
+    },
+    {
+      "app_label": "safety",
+      "id": 56,
+      "model": "moderationappeal"
+    },
+    {
+      "app_label": "safety",
+      "id": 57,
+      "model": "concernreview"
+    },
+    {
+      "app_label": "messaging",
+      "id": 58,
+      "model": "conversation"
+    },
+    {
+      "app_label": "messaging",
+      "id": 59,
+      "model": "message"
+    },
+    {
+      "app_label": "messaging",
+      "id": 60,
+      "model": "messagekey"
+    },
+    {
+      "app_label": "messaging",
+      "id": 61,
+      "model": "participant"
+    },
+    {
+      "app_label": "messaging",
+      "id": 62,
+      "model": "publickey"
+    },
+    {
+      "app_label": "messaging",
+      "id": 63,
+      "model": "keyverification"
+    },
+    {
+      "app_label": "booking",
+      "id": 64,
+      "model": "placebookinginfo"
+    },
+    {
+      "app_label": "booking",
+      "id": 65,
+      "model": "booking"
+    },
+    {
+      "app_label": "media",
+      "id": 66,
+      "model": "photo"
+    },
+    {
+      "app_label": "media",
+      "id": 67,
+      "model": "attachment"
+    },
+    {
+      "app_label": "media",
+      "id": 68,
+      "model": "activitycover"
+    },
+    {
+      "app_label": "donations",
+      "id": 69,
+      "model": "donation"
+    },
+    {
+      "app_label": "donations",
+      "id": 70,
+      "model": "spendentry"
+    },
+    {
+      "app_label": "donations",
+      "id": 71,
+      "model": "campaign"
+    },
+    {
+      "app_label": "donations",
+      "id": 72,
+      "model": "costanchor"
+    },
+    {
+      "app_label": "donations",
+      "id": 73,
+      "model": "inkindcontribution"
+    },
+    {
+      "app_label": "donations",
+      "id": 74,
+      "model": "civicoutcome"
+    },
+    {
+      "app_label": "ops",
+      "id": 75,
+      "model": "deferredtask"
+    },
+    {
+      "app_label": "ops",
+      "id": 76,
+      "model": "jobmarker"
+    },
+    {
+      "app_label": "events",
+      "id": 77,
+      "model": "event"
+    },
+    {
+      "app_label": "events",
+      "id": 78,
+      "model": "eventfeed"
+    },
+    {
+      "app_label": "events",
+      "id": 79,
+      "model": "eventreport"
+    },
+    {
+      "app_label": "events",
+      "id": 80,
+      "model": "roedueventsyncstate"
+    },
+    {
+      "app_label": "notifications",
+      "id": 81,
+      "model": "notification"
+    },
+    {
+      "app_label": "notifications",
+      "id": 82,
+      "model": "notificationpreference"
+    },
+    {
+      "app_label": "recommendations",
+      "id": 83,
+      "model": "activityembedding"
+    },
+    {
+      "app_label": "recommendations",
+      "id": 84,
+      "model": "userinterest"
+    },
+    {
+      "app_label": "recommendations",
+      "id": 85,
+      "model": "topicpreference"
+    },
+    {
+      "app_label": "connections",
+      "id": 86,
+      "model": "connection"
+    },
+    {
+      "app_label": "communities",
+      "id": 87,
+      "model": "area"
+    },
+    {
+      "app_label": "communities",
+      "id": 88,
+      "model": "community"
+    },
+    {
+      "app_label": "saved_searches",
+      "id": 89,
+      "model": "savedsearch"
+    },
+    {
+      "app_label": "saved_searches",
+      "id": 90,
+      "model": "savedsearchmatch"
+    },
+    {
+      "app_label": "saved_searches",
+      "id": 91,
+      "model": "savedsearchgaugematch"
+    }
+  ],
+  "relations": [
+    {
+      "id": 1,
+      "kind": "related",
+      "note": "",
+      "source_id": 6,
+      "symmetric": true,
+      "target_id": 5
+    },
+    {
+      "id": 2,
+      "kind": "variant",
+      "note": "",
+      "source_id": 10,
+      "symmetric": true,
+      "target_id": 9
+    },
+    {
+      "id": 3,
+      "kind": "variant",
+      "note": "",
+      "source_id": 11,
+      "symmetric": true,
+      "target_id": 9
+    },
+    {
+      "id": 4,
+      "kind": "variant",
+      "note": "",
+      "source_id": 14,
+      "symmetric": true,
+      "target_id": 13
+    },
+    {
+      "id": 5,
+      "kind": "variant",
+      "note": "",
+      "source_id": 19,
+      "symmetric": true,
+      "target_id": 18
+    },
+    {
+      "id": 6,
+      "kind": "related",
+      "note": "",
+      "source_id": 35,
+      "symmetric": true,
+      "target_id": 7
+    },
+    {
+      "id": 7,
+      "kind": "related",
+      "note": "",
+      "source_id": 27,
+      "symmetric": true,
+      "target_id": 26
+    },
+    {
+      "id": 8,
+      "kind": "related",
+      "note": "",
+      "source_id": 37,
+      "symmetric": true,
+      "target_id": 7
+    },
+    {
+      "id": 9,
+      "kind": "related",
+      "note": "",
+      "source_id": 38,
+      "symmetric": true,
+      "target_id": 7
+    }
+  ],
+  "types": [
+    {
+      "aliases": [
+        "streetball",
+        "baschet"
+      ],
+      "category_id": 2,
+      "family_friendly": true,
+      "id": 1,
+      "is_active": true,
+      "name": "Basketball",
+      "parent_id": null,
+      "slug": "basketball",
+      "wellness": true
+    },
+    {
+      "aliases": [
+        "soccer",
+        "futsal",
+        "fotbal"
+      ],
+      "category_id": 2,
+      "family_friendly": true,
+      "id": 2,
+      "is_active": true,
+      "name": "Football",
+      "parent_id": null,
+      "slug": "football",
+      "wellness": true
+    },
+    {
+      "aliases": [
+        "ping pong",
+        "ping-pong",
+        "whiff-whaff"
+      ],
+      "category_id": 3,
+      "family_friendly": true,
+      "id": 3,
+      "is_active": true,
+      "name": "Table Tennis",
+      "parent_id": null,
+      "slug": "table_tennis",
+      "wellness": true
+    },
+    {
+      "aliases": [
+        "tenis"
+      ],
+      "category_id": 3,
+      "family_friendly": true,
+      "id": 4,
+      "is_active": true,
+      "name": "Tennis",
+      "parent_id": null,
+      "slug": "tennis",
+      "wellness": true
+    },
+    {
+      "aliases": [
+        "boardgames",
+        "tabletop"
+      ],
+      "category_id": 4,
+      "family_friendly": true,
+      "id": 5,
+      "is_active": true,
+      "name": "Board Games",
+      "parent_id": null,
+      "slug": "board_games",
+      "wellness": false
+    },
+    {
+      "aliases": [
+        "sah",
+        "șah"
+      ],
+      "category_id": 4,
+      "family_friendly": true,
+      "id": 6,
+      "is_active": true,
+      "name": "Chess",
+      "parent_id": null,
+      "slug": "chess",
+      "wellness": false
+    },
+    {
+      "aliases": [
+        "books",
+        "library"
+      ],
+      "category_id": 5,
+      "family_friendly": true,
+      "id": 7,
+      "is_active": true,
+      "name": "Reading",
+      "parent_id": null,
+      "slug": "reading",
+      "wellness": false
+    },
+    {
+      "aliases": [
+        "gaming",
+        "esports",
+        "arcade"
+      ],
+      "category_id": 6,
+      "family_friendly": true,
+      "id": 8,
+      "is_active": true,
+      "name": "Video Games",
+      "parent_id": null,
+      "slug": "video_games",
+      "wellness": false
+    },
+    {
+      "aliases": [
+        "jogging",
+        "run",
+        "alergare"
+      ],
+      "category_id": 8,
+      "family_friendly": false,
+      "id": 9,
+      "is_active": true,
+      "name": "Running",
+      "parent_id": null,
+      "slug": "running",
+      "wellness": true
+    },
+    {
+      "aliases": [
+        "half marathon",
+        "race",
+        "maraton"
+      ],
+      "category_id": 8,
+      "family_friendly": false,
+      "id": 10,
+      "is_active": true,
+      "name": "Marathon",
+      "parent_id": null,
+      "slug": "marathon",
+      "wellness": true
+    },
+    {
+      "aliases": [
+        "trail"
+      ],
+      "category_id": 8,
+      "family_friendly": false,
+      "id": 11,
+      "is_active": true,
+      "name": "Trail Running",
+      "parent_id": null,
+      "slug": "trail_running",
+      "wellness": true
+    },
+    {
+      "aliases": [
+        "trekking",
+        "drumetie",
+        "walking"
+      ],
+      "category_id": 8,
+      "family_friendly": true,
+      "id": 12,
+      "is_active": true,
+      "name": "Hiking",
+      "parent_id": null,
+      "slug": "hiking",
+      "wellness": true
+    },
+    {
+      "aliases": [
+        "biking",
+        "bike",
+        "ciclism",
+        "bicicleta",
+        "bicicletă"
+      ],
+      "category_id": 8,
+      "family_friendly": true,
+      "id": 13,
+      "is_active": true,
+      "name": "Cycling",
+      "parent_id": null,
+      "slug": "cycling",
+      "wellness": true
+    },
+    {
+      "aliases": [
+        "mtb"
+      ],
+      "category_id": 8,
+      "family_friendly": false,
+      "id": 14,
+      "is_active": true,
+      "name": "Mountain Biking",
+      "parent_id": null,
+      "slug": "mountain_biking",
+      "wellness": true
+    },
+    {
+      "aliases": [
+        "orientare"
+      ],
+      "category_id": 8,
+      "family_friendly": true,
+      "id": 15,
+      "is_active": true,
+      "name": "Orienteering",
+      "parent_id": null,
+      "slug": "orienteering",
+      "wellness": true
+    },
+    {
+      "aliases": [
+        "rollerblading",
+        "inline",
+        "role"
+      ],
+      "category_id": 8,
+      "family_friendly": true,
+      "id": 16,
+      "is_active": true,
+      "name": "Skating",
+      "parent_id": null,
+      "slug": "skating",
+      "wellness": true
+    },
+    {
+      "aliases": [
+        "inot",
+        "swim",
+        "înot"
+      ],
+      "category_id": 9,
+      "family_friendly": true,
+      "id": 17,
+      "is_active": true,
+      "name": "Swimming",
+      "parent_id": null,
+      "slug": "swimming",
+      "wellness": true
+    },
+    {
+      "aliases": [
+        "escalada",
+        "rock climbing"
+      ],
+      "category_id": 9,
+      "family_friendly": false,
+      "id": 18,
+      "is_active": true,
+      "name": "Climbing",
+      "parent_id": null,
+      "slug": "climbing",
+      "wellness": true
+    },
+    {
+      "aliases": [],
+      "category_id": 9,
+      "family_friendly": false,
+      "id": 19,
+      "is_active": true,
+      "name": "Bouldering",
+      "parent_id": null,
+      "slug": "bouldering",
+      "wellness": true
+    },
+    {
+      "aliases": [],
+      "category_id": 9,
+      "family_friendly": false,
+      "id": 20,
+      "is_active": true,
+      "name": "Yoga",
+      "parent_id": null,
+      "slug": "yoga",
+      "wellness": true
+    },
+    {
+      "aliases": [
+        "aerobics",
+        "zumba",
+        "bootcamp"
+      ],
+      "category_id": 9,
+      "family_friendly": false,
+      "id": 21,
+      "is_active": true,
+      "name": "Group Fitness",
+      "parent_id": null,
+      "slug": "group_fitness",
+      "wellness": true
+    },
+    {
+      "aliases": [],
+      "category_id": 9,
+      "family_friendly": false,
+      "id": 22,
+      "is_active": true,
+      "name": "Pilates",
+      "parent_id": null,
+      "slug": "pilates",
+      "wellness": true
+    },
+    {
+      "aliases": [
+        "beach volleyball",
+        "volei"
+      ],
+      "category_id": 2,
+      "family_friendly": true,
+      "id": 23,
+      "is_active": true,
+      "name": "Volleyball",
+      "parent_id": null,
+      "slug": "volleyball",
+      "wellness": true
+    },
+    {
+      "aliases": [
+        "handbal"
+      ],
+      "category_id": 2,
+      "family_friendly": false,
+      "id": 24,
+      "is_active": true,
+      "name": "Handball",
+      "parent_id": null,
+      "slug": "handball",
+      "wellness": true
+    },
+    {
+      "aliases": [],
+      "category_id": 3,
+      "family_friendly": true,
+      "id": 25,
+      "is_active": true,
+      "name": "Badminton",
+      "parent_id": null,
+      "slug": "badminton",
+      "wellness": true
+    },
+    {
+      "aliases": [
+        "festival"
+      ],
+      "category_id": 10,
+      "family_friendly": true,
+      "id": 26,
+      "is_active": true,
+      "name": "Festival",
+      "parent_id": null,
+      "slug": "festival",
+      "wellness": false
+    },
+    {
+      "aliases": [
+        "zilele orasului",
+        "city day"
+      ],
+      "category_id": 10,
+      "family_friendly": true,
+      "id": 27,
+      "is_active": true,
+      "name": "City Days",
+      "parent_id": null,
+      "slug": "city_day",
+      "wellness": false
+    },
+    {
+      "aliases": [
+        "targ",
+        "fair",
+        "market"
+      ],
+      "category_id": 10,
+      "family_friendly": true,
+      "id": 28,
+      "is_active": true,
+      "name": "Street Fair",
+      "parent_id": null,
+      "slug": "street_fair",
+      "wellness": false
+    },
+    {
+      "aliases": [
+        "outdoor cinema",
+        "cinema"
+      ],
+      "category_id": 10,
+      "family_friendly": true,
+      "id": 29,
+      "is_active": true,
+      "name": "Open-air Cinema",
+      "parent_id": null,
+      "slug": "open_air_cinema",
+      "wellness": false
+    },
+    {
+      "aliases": [
+        "gig",
+        "live music",
+        "concert"
+      ],
+      "category_id": 10,
+      "family_friendly": true,
+      "id": 30,
+      "is_active": true,
+      "name": "Concert",
+      "parent_id": null,
+      "slug": "concert",
+      "wellness": false
+    },
+    {
+      "aliases": [
+        "museum",
+        "muzeu",
+        "exhibition"
+      ],
+      "category_id": 10,
+      "family_friendly": true,
+      "id": 31,
+      "is_active": true,
+      "name": "Museum Visit",
+      "parent_id": null,
+      "slug": "museum_visit",
+      "wellness": false
+    },
+    {
+      "aliases": [
+        "theatre",
+        "teatru",
+        "play"
+      ],
+      "category_id": 10,
+      "family_friendly": true,
+      "id": 32,
+      "is_active": true,
+      "name": "Theatre",
+      "parent_id": null,
+      "slug": "theatre_show",
+      "wellness": false
+    },
+    {
+      "aliases": [
+        "atelier",
+        "class"
+      ],
+      "category_id": 10,
+      "family_friendly": true,
+      "id": 33,
+      "is_active": true,
+      "name": "Workshop",
+      "parent_id": null,
+      "slug": "workshop",
+      "wellness": false
+    },
+    {
+      "aliases": [
+        "salsa",
+        "bachata",
+        "dance"
+      ],
+      "category_id": 10,
+      "family_friendly": false,
+      "id": 34,
+      "is_active": true,
+      "name": "Social Dancing",
+      "parent_id": null,
+      "slug": "dance_social",
+      "wellness": true
+    },
+    {
+      "aliases": [
+        "reading club"
+      ],
+      "category_id": 10,
+      "family_friendly": true,
+      "id": 35,
+      "is_active": true,
+      "name": "Book Club",
+      "parent_id": null,
+      "slug": "book_club",
+      "wellness": false
+    },
+    {
+      "aliases": [
+        "meetup",
+        "gathering"
+      ],
+      "category_id": 10,
+      "family_friendly": true,
+      "id": 36,
+      "is_active": true,
+      "name": "Community Event",
+      "parent_id": null,
+      "slug": "community_event",
+      "wellness": false
+    },
+    {
+      "aliases": [
+        "archives",
+        "records office",
+        "national archives"
+      ],
+      "category_id": 5,
+      "family_friendly": true,
+      "id": 37,
+      "is_active": true,
+      "name": "Archive",
+      "parent_id": null,
+      "slug": "archive",
+      "wellness": false
+    },
+    {
+      "aliases": [
+        "antiquarian",
+        "second-hand books",
+        "old books",
+        "rare books",
+        "used books"
+      ],
+      "category_id": 5,
+      "family_friendly": true,
+      "id": 38,
+      "is_active": true,
+      "name": "Antiquarian & Used Books",
+      "parent_id": null,
+      "slug": "used_bookshop",
+      "wellness": false
+    }
+  ]
+}

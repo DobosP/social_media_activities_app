@@ -7,7 +7,8 @@ admin_ip       = "203.0.113.4/32" # your IP/CIDR allowed to SSH
 location       = "fsn1"           # fsn1/nbg1 (DE) or hel1 (FI) — EU
 server_type    = "cpx22"
 domain         = "app.example.eu"
-app_repo_url   = "https://github.com/DobosP/social_media_activities_app.git" # private: embed a deploy token
+app_release_url = "https://release.example.eu/social-native-REVIEWED-COMMIT.tar.gz"
+app_release_sha256 = "REPLACE_exact_64_character_lowercase_sha256"
 
 # secrets (rendered into the box .env). db_password MUST be URL/SQL-safe ([A-Za-z0-9._~-], enforced
 # by a variable validation) since it goes into the DSN + CREATE ROLE — generate with rand -hex.
@@ -19,6 +20,8 @@ media_s3_bucket       = "socialapp-media"
 media_s3_endpoint_url = "https://fsn1.your-objectstorage.com"
 media_s3_region       = "eu-central"
 media_s3_sse          = "AES256"
+media_eu_residency_verified = false # verify the chosen EU provider before setting true
+media_private_bucket_verified = false # verify the bucket is private
 aws_access_key_id     = "REPLACE_s3_access_key"
 aws_secret_access_key = "REPLACE_s3_secret_key"
 
@@ -26,7 +29,6 @@ aws_secret_access_key = "REPLACE_s3_secret_key"
 eudi_trusted_issuers = "{\"https://issuer.example.eu\":\"-----BEGIN PUBLIC KEY-----\\n...\\n-----END PUBLIC KEY-----\"}"
 
 # observability / retention (optional)
-sentry_dsn               = ""
 metrics_token            = "" # set + scrape /metrics with Authorization: Bearer <token>
 messaging_retention_days = 365
 ops_heartbeat_url        = "" # e.g. a healthchecks.io ping URL; alerts if the nightly job misses

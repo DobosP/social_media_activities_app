@@ -1,64 +1,53 @@
-# --- Frontend build stage: the React-compatible Preact/Vite SPA compiles to hashed
-# static assets + a manifest that collectstatic below bakes into the image.
-# @roedu/ui comes from the committed tarball in frontend/vendor/ (no registry auth).
+# syntax=docker/dockerfile:1
+# Native release. Django sources remain offline contract oracles (Dockerfile.reference).
 FROM node:24-bookworm-slim AS frontend
-
-WORKDIR /fe/frontend
+WORKDIR /build/frontend
 COPY frontend/package.json frontend/package-lock.json ./
 COPY frontend/vendor ./vendor
 RUN npm ci
 COPY frontend ./
 RUN npm run build
 
-FROM python:3.12-slim-bookworm AS base
+FROM golang:1.27.1-bookworm AS backend
+WORKDIR /build/services/server
+COPY services/authcore/ ../authcore/
+COPY services/server/go.mod services/server/go.sum ./
+RUN go mod download
+COPY services/server/ ./
+RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/social-server ./cmd/social-server
 
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
-
-# GeoDjango needs the shared GDAL/GEOS/PROJ libraries at runtime, not their headers or command-line
-# tools. Keeping the development packages out of this final stage removes hundreds of MB while
-# retaining the libraries Django loads through ctypes. ffmpeg (+ffprobe) powers the ADR-0026
-# private-thread video pipeline (validate/transcode/poster/frame-scan); --no-install-recommends
-# keeps its footprint to the libraries it actually links.
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        binutils \
-        ffmpeg \
-        libgdal32 \
-        libgeos-c1v5 \
-        libproj25 \
-    && rm -rf /var/lib/apt/lists/*
-
+FROM debian:bookworm-slim AS runtime
+# Codecs run under prlimit. No Python interpreter or framework is installed.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates curl ffmpeg libavif-bin util-linux \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --gid 10001 app \
+    && useradd --uid 10001 --gid 10001 --no-create-home --shell /usr/sbin/nologin app
 WORKDIR /app
-
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY . .
-
-# Built SPA assets from the frontend stage (vite outDir is ../static/frontend,
-# i.e. /fe/static/frontend there) land where STATICFILES_DIRS expects them.
-COPY --from=frontend /fe/static/frontend /app/static/frontend
-
-# Bake static assets into the image so WhiteNoise can serve them at runtime.
-# collectstatic needs no database connection. Prod settings now require DJANGO_SECRET_KEY
-# (fail-closed; see config/settings/prod.py), so pass a throwaway value for this build-only
-# step — it never reaches runtime, where a real key must be provided via the environment.
-# IDENTITY_ALLOW_DEV_PROVIDER lets this static-only step past the prod fail-closed identity
-# check (collectstatic needs no identity provider); the real provider is still required at
-# runtime via the environment.
-RUN DJANGO_SECRET_KEY=build-time-only-not-used-at-runtime \
-    IDENTITY_ALLOW_DEV_PROVIDER=True \
-    DJANGO_SETTINGS_MODULE=config.settings.prod python manage.py collectstatic --noinput
-
-# P1 hardening: drop to an unprivileged user so a container escape / RCE doesn't land as root.
-# Done AFTER collectstatic (which writes staticfiles/) and the apt/pip layers (which need root).
-RUN useradd --system --create-home --uid 10001 appuser \
-    && chown -R appuser:appuser /app
-USER appuser
-
+COPY --from=backend /out/social-server /usr/local/bin/social-server
+COPY services/authcore/LICENSE /usr/share/doc/social-server-authcore/LICENSE
+COPY templates/ ./templates/
+COPY apps/web/templates/ ./apps/web/templates/
+COPY locale/ ./locale/
+COPY static/ ./static/
+COPY --from=frontend /build/static/frontend/ ./static/frontend/
+COPY db/seed-data.sql ./db/seed-data.sql
+RUN mkdir -p var/media var/media-work var/agent_snapshot \
+    && chown -R 10001:10001 var && chmod 700 var var/media var/media-work var/agent_snapshot
+ENV PORT=8000
+USER 10001:10001
 EXPOSE 8000
+STOPSIGNAL SIGTERM
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD probe_host="${SITE_BASE_URL#*://}"; probe_host="${probe_host%%/*}"; curl --fail --silent --show-error --output /dev/null --max-time 3 --header "Host: ${probe_host:-127.0.0.1}" "http://127.0.0.1:${PORT:-8000}/healthz"
+CMD ["sh", "-c", "exec social-server --listen \"0.0.0.0:${PORT:-8000}\" --site-root /app --static-dir /app/static --media-scratch /app/var/media-work"]
 
-# ASGI (daphne) so the REST API and real-time chat WebSockets (D5) are served from
-# one process. Dev compose overrides this with `runserver`; on Render, $PORT is
-# injected (see render.yaml).
-CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "config.asgi:application"]
+# Export with --target release --output type=local,dest=<task scratch>.
+FROM scratch AS release
+COPY --from=runtime /usr/local/bin/social-server /social-server
+COPY --from=runtime /app/ /
+COPY --from=runtime /usr/share/doc/social-server-authcore/ /licenses/authcore/
+COPY deploy/systemd/ /deploy/systemd/
+COPY deploy/backup.sh /deploy/backup.sh
+
+FROM runtime AS production

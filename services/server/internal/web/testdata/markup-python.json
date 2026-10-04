@@ -1,0 +1,464 @@
+[
+  {
+    "body": "a **bold** and *italic* and `code` here",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": false,
+    "html": "a <strong>bold</strong> and <em>italic</em> and <code>code</code> here"
+  },
+  {
+    "body": "a **bold** and *italic* and `code` here",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": true,
+    "html": "a <strong>bold</strong> and <em>italic</em> and <code>code</code> here"
+  },
+  {
+    "body": "an _emph_ word",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": false,
+    "html": "an <em>emph</em> word"
+  },
+  {
+    "body": "an _emph_ word",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": true,
+    "html": "an <em>emph</em> word"
+  },
+  {
+    "body": "snake_case_name and 2*3*4",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": false,
+    "html": "snake_case_name and 2*3*4"
+  },
+  {
+    "body": "snake_case_name and 2*3*4",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": true,
+    "html": "snake_case_name and 2*3*4"
+  },
+  {
+    "body": "**<script>x</script>** plain <b>y</b>",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": false,
+    "html": "<strong>&lt;script&gt;x&lt;/script&gt;</strong> plain &lt;b&gt;y&lt;/b&gt;"
+  },
+  {
+    "body": "**<script>x</script>** plain <b>y</b>",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": true,
+    "html": "<strong>&lt;script&gt;x&lt;/script&gt;</strong> plain &lt;b&gt;y&lt;/b&gt;"
+  },
+  {
+    "body": "see http://example.com/a?b=1&x=\"hi\" now",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": false,
+    "html": "see http://example.com/a?b=1&amp;x=&quot;hi&quot; now"
+  },
+  {
+    "body": "see http://example.com/a?b=1&x=\"hi\" now",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": true,
+    "html": "see <a href=\"http://example.com/a?b=1&amp;x=&quot;hi&quot;\" rel=\"noopener noreferrer nofollow\" target=\"_blank\">http://example.com/a?b=1&amp;x=&quot;hi&quot;</a> now"
+  },
+  {
+    "body": "go https://example.com. done",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": false,
+    "html": "go https://example.com. done"
+  },
+  {
+    "body": "go https://example.com. done",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": true,
+    "html": "go <a href=\"https://example.com\" rel=\"noopener noreferrer nofollow\" target=\"_blank\">https://example.com</a>. done"
+  },
+  {
+    "body": "hi @BOB @ghost <svg onload=x>",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": false,
+    "html": "hi <span class=\"mention\">@BOB</span> @ghost &lt;svg onload=x&gt;"
+  },
+  {
+    "body": "hi @BOB @ghost <svg onload=x>",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": true,
+    "html": "hi <span class=\"mention\">@BOB</span> @ghost &lt;svg onload=x&gt;"
+  },
+  {
+    "body": "first\r\nsecond\rlast\n",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": false,
+    "html": "first<br>second<br>last<br>"
+  },
+  {
+    "body": "first\r\nsecond\rlast\n",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": true,
+    "html": "first<br>second<br>last<br>"
+  },
+  {
+    "body": "*url https://x.test*",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": false,
+    "html": "<em>url https://x.test</em>"
+  },
+  {
+    "body": "*url https://x.test*",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": true,
+    "html": "<em>url https://x.test</em>"
+  },
+  {
+    "body": "mail a@bob.com and @@bob",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": false,
+    "html": "mail a@bob.com and @@bob"
+  },
+  {
+    "body": "mail a@bob.com and @@bob",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": true,
+    "html": "mail a@bob.com and @@bob"
+  },
+  {
+    "body": "α_italic_б α*word*б",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": false,
+    "html": "α_italic_б α*word*б"
+  },
+  {
+    "body": "α_italic_б α*word*б",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": true,
+    "html": "α_italic_б α*word*б"
+  },
+  {
+    "body": "** bold ** **x**",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": false,
+    "html": "<em>* bold *</em> <strong>x</strong>"
+  },
+  {
+    "body": "** bold ** **x**",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": true,
+    "html": "<em>* bold *</em> <strong>x</strong>"
+  },
+  {
+    "body": "`@bob` **@bob** _@bob_",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": false,
+    "html": "<code>@bob</code> <strong>@bob</strong> <em>@bob</em>"
+  },
+  {
+    "body": "`@bob` **@bob** _@bob_",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": true,
+    "html": "<code>@bob</code> <strong>@bob</strong> <em>@bob</em>"
+  },
+  {
+    "body": "<script>javascript:alert(1)</script>",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": false,
+    "html": "&lt;script&gt;javascript:alert(1)&lt;/script&gt;"
+  },
+  {
+    "body": "<script>javascript:alert(1)</script>",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": true,
+    "html": "&lt;script&gt;javascript:alert(1)&lt;/script&gt;"
+  },
+  {
+    "body": "\" ' & *italic*",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": false,
+    "html": "&quot; &#x27; &amp; <em>italic</em>"
+  },
+  {
+    "body": "\" ' & *italic*",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": true,
+    "html": "&quot; &#x27; &amp; <em>italic</em>"
+  },
+  {
+    "body": "**a *b* c**",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": false,
+    "html": "<strong>a *b* c</strong>"
+  },
+  {
+    "body": "**a *b* c**",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": true,
+    "html": "<strong>a *b* c</strong>"
+  },
+  {
+    "body": "@ăna @a.b @test-name",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": false,
+    "html": "<span class=\"mention\">@ăna</span> <span class=\"mention\">@a.b</span> <span class=\"mention\">@test-name</span>"
+  },
+  {
+    "body": "@ăna @a.b @test-name",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": true,
+    "html": "<span class=\"mention\">@ăna</span> <span class=\"mention\">@a.b</span> <span class=\"mention\">@test-name</span>"
+  },
+  {
+    "body": "__x__ ***triple***",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": false,
+    "html": "<em>_x_</em> <strong>*triple</strong>*"
+  },
+  {
+    "body": "__x__ ***triple***",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": true,
+    "html": "<em>_x_</em> <strong>*triple</strong>*"
+  },
+  {
+    "body": "https://example.org/a(b).,;:!?",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": false,
+    "html": "https://example.org/a(b).,;:!?"
+  },
+  {
+    "body": "https://example.org/a(b).,;:!?",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": true,
+    "html": "<a href=\"https://example.org/a(b)\" rel=\"noopener noreferrer nofollow\" target=\"_blank\">https://example.org/a(b)</a>.,;:!?"
+  },
+  {
+    "body": "x*https://example.org* y",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": false,
+    "html": "x*https://example.org* y"
+  },
+  {
+    "body": "x*https://example.org* y",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": true,
+    "html": "x*<a href=\"https://example.org*\" rel=\"noopener noreferrer nofollow\" target=\"_blank\">https://example.org*</a> y"
+  },
+  {
+    "body": "`x` **y** _z_ *w*",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": false,
+    "html": "<code>x</code> <strong>y</strong> <em>z</em> <em>w</em>"
+  },
+  {
+    "body": "`x` **y** _z_ *w*",
+    "roster": {
+      "bob": true,
+      "ăna": true,
+      "a.b": true,
+      "test-name": true
+    },
+    "allow_links": true,
+    "html": "<code>x</code> <strong>y</strong> <em>z</em> <em>w</em>"
+  }
+]

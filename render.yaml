@@ -24,11 +24,11 @@ services:
     region: frankfurt
     dockerfilePath: ./Dockerfile
     healthCheckPath: /readyz
-    # daphne (ASGI) serves the REST API AND the chat WebSockets from one process.
-    dockerCommand: daphne -b 0.0.0.0 -p $PORT config.asgi:application
-    # Runs once per deploy before traffic shifts; GeoDjango auto-enables the PostGIS
+    # Native Go serves REST, HTML and chat WebSockets from one process.
+    dockerCommand: sh -c 'exec social-server --listen "0.0.0.0:$PORT" --site-root /app --static-dir /app/static --media-scratch /app/var/media-work'
+    # Runs once per deploy before traffic shifts; Native bootstrap adopts or enables the PostGIS
     # extension during migrate.
-    preDeployCommand: python manage.py migrate --noinput
+    preDeployCommand: social-server --migrate-only
     envVars:
       - key: DJANGO_SETTINGS_MODULE
         value: config.settings.prod
@@ -38,8 +38,6 @@ services:
         fromDatabase:
           name: socialapp-db
           property: connectionString
-      - key: PYTHONUNBUFFERED
-        value: "1"
       - key: ASGI_THREADS
         value: "4"
       - key: DB_POOL_ENABLED
@@ -67,7 +65,7 @@ services:
   # Scheduled retention/maintenance jobs (GDPR Art.5(1)(e) storage limitation + DSA
   # proportionality): purge expired E2EE messages & chat, lift elapsed suspensions, send
   # activity reminders. Without this, retention never runs and suspensions never auto-lift.
-  # NOTE: Render `cron` requires a paid plan — on free tier, run `manage.py run_due_jobs`
+  # NOTE: Render `cron` requires a paid plan — on free tier, run `social-server --due`
   # from an external scheduler (e.g. a GitHub Actions cron hitting a one-off job). Set the
   # *_RETENTION_DAYS env to the periods your DPO defines (0 = disabled).
   - type: cron
@@ -77,7 +75,7 @@ services:
     region: frankfurt
     schedule: "0 3 * * *" # daily 03:00 UTC
     dockerfilePath: ./Dockerfile
-    dockerCommand: python manage.py run_due_jobs
+    dockerCommand: social-server --due --site-root /app --media-scratch /app/var/media-work
     envVars:
       - key: DJANGO_SETTINGS_MODULE
         value: config.settings.prod
@@ -94,5 +92,3 @@ services:
         value: "365" # DPO to confirm; 0 disables
       - key: CHAT_RETENTION_DAYS
         value: "365" # DPO to confirm; 0 disables
-      - key: PYTHONUNBUFFERED
-        value: "1"

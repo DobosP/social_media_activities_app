@@ -1,0 +1,26 @@
+[
+  {
+    "payload": {
+      "seed": "2026-10-04:adult",
+      "offset": 0
+    },
+    "token": "eyJzZWVkIjoiMjAyNi0xMC0wNDphZHVsdCIsIm9mZnNldCI6MH0:1v6mOm:HzLgdFIosyzqeXr2ehAvbn_VBRwYO60u5hl0mJ5NPNo",
+    "compressed": "eyJzZWVkIjoiMjAyNi0xMC0wNDphZHVsdCIsIm9mZnNldCI6MH0:1v6mOm:HzLgdFIosyzqeXr2ehAvbn_VBRwYO60u5hl0mJ5NPNo"
+  },
+  {
+    "payload": {
+      "seed": "ă😊&<>",
+      "offset": 3
+    },
+    "token": "eyJzZWVkIjoiXHUwMTAzXHVkODNkXHVkZTBhJjw-Iiwib2Zmc2V0IjozfQ:1v6mOm:27JiXFJnHglFVHmdUbP_HeouTvSRO_PfF_fOye5eSlI",
+    "compressed": "eyJzZWVkIjoiXHUwMTAzXHVkODNkXHVkZTBhJjw-Iiwib2Zmc2V0IjozfQ:1v6mOm:27JiXFJnHglFVHmdUbP_HeouTvSRO_PfF_fOye5eSlI"
+  },
+  {
+    "payload": {
+      "seed": "\\\"quote",
+      "offset": 999999
+    },
+    "token": "eyJzZWVkIjoiXFxcInF1b3RlIiwib2Zmc2V0Ijo5OTk5OTl9:1v6mOm:pFLMxey-ftxFTCn2OZdv_k9n8gu2duMocHWZVIpzE78",
+    "compressed": "eyJzZWVkIjoiXFxcInF1b3RlIiwib2Zmc2V0Ijo5OTk5OTl9:1v6mOm:pFLMxey-ftxFTCn2OZdv_k9n8gu2duMocHWZVIpzE78"
+  }
+]

@@ -1,0 +1,57 @@
+[
+  {
+    "a": "Café Central",
+    "b": "cafe central.",
+    "ratio": 1.0
+  },
+  {
+    "a": "Sala Mare",
+    "b": "Sala Mică",
+    "ratio": 0.7777777777777778
+  },
+  {
+    "a": "Teatrul Național",
+    "b": "Teatru National",
+    "ratio": 0.967741935483871
+  },
+  {
+    "a": "",
+    "b": "",
+    "ratio": 0.0
+  },
+  {
+    "a": "Biblioteca Centrală",
+    "b": "Biblioteca Centrala",
+    "ratio": 1.0
+  },
+  {
+    "a": "aaaxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "b": "aaayyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+    "ratio": 0.013452914798206279
+  },
+  {
+    "a": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab",
+    "b": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac",
+    "ratio": 0.995475113122172
+  },
+  {
+    "a": "CENTRAL_1",
+    "b": "Central_1",
+    "ratio": 1.0
+  },
+  {
+    "a": "مكتبة المدينة",
+    "b": "مكتبة المدينة",
+    "ratio": 1.0
+  },
+  {
+    "a": "Cinema 1",
+    "b": "Cinema 2",
+    "ratio": 0.875
+  },
+  {
+    "a": "Șură",
+    "b": "Sura",
+    "ratio": 1.0
+  }
+]

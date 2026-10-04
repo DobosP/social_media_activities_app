@@ -2,8 +2,7 @@
 
 Last verified: 2026-10-04
 
-This is the repo's single source of current truth. On conflict: `STATUS.md` > newest ADR in
-`docs/adr/` > other docs. History: `WORKLOG.md` (dated, append-only), `docs/adr/`, git.
+Current truth: STATUS > newest ADR > other docs. History: WORKLOG, ADRs and git.
 
 ## What this is
 
@@ -11,7 +10,7 @@ A children-first, in-person local-activities social app: no ads, deterministic
 discovery rather than engagement ML, Cluj-Napoca first, EU residency required,
 and donations only. `docs/SAFETY.md` owns the safety invariants.
 
-## Current main
+## Product contract
 
 - **RO-EDU canonical places/events (ADR-0023/0024):** the only canonical product accepted is
   `roedu:social_media_activities_app:events_places:v1`, schema 1. Pages require one immutable promoted
@@ -54,10 +53,13 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   "removal still in force"; the Art.16/17 record and the GDPR Art.20 export query each scope separately,
   newest-first; `PostAdmin.is_hidden` stays an operator escape hatch without provenance
   (`apps/social/admin.py`). Detail: `WORKLOG.md` §2026-08-09, §2026-08-10.
-- **Go migration review (ADR-0031):** `feat/go-server-foundation` adds the hardened public Go
-  serving slice: schema-2 checksum/coherence/field gates, expanded event queries, bounded HTTP/limiter,
-  private logs and a qualified static nonroot container. Django still owns auth/domain/media/export;
-  no `/api/v1` replacement or deployment. This branch awaits the required human privacy/safety review.
+- **Complete Go review candidate (ADR-0032):** `services/server` now owns account/password/OAuth,
+  EUDI/guardian/cohort gates, domain APIs, voting, moderation, media, encrypted live transport,
+  HTML/SPA hydration, booking/donations, notifications/discovery, native schema adoption and jobs.
+  The default Docker/Compose/systemd/Render/cloud-init launch paths invoke Go. Shared authentication
+  is a hash-verified portable copy; Django remains offline contract/reference tooling.
+- The candidate replaces the public-only scope and remains unmerged/undeployed; required human
+  auth/privacy/safety review and separate product/provider launch gates still apply.
 
 ## Safety and operating gates
 
@@ -74,12 +76,16 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Open work
 
-- Go rollout needs reviewed freshness/revocation/erasure and full live API parity (ADR-0031).
-  Media review found malformed `ManagedScanner` verdicts accepted as clean; separate safety fix pending.
+- Complete the required human review of the native auth/privacy/safety candidate (ADR-0032).
+  Review scope includes guarded administration and explicit source configuration restrictions;
+  unrestricted raw Django admin editing/deletion is intentionally unavailable.
 - Build/promote a fresh immutable producer/server V2 release before real sync;
   the serving repo's producer dependency must be intentionally bumped first.
 - Complete held-event review UX, curated cultural child-venue policy, localized
   taxonomy/cinema mapping, and production alerting/shared-state operations.
+- API/social/catalog rate histories are process-local; login state and live transport are database-backed.
+  `REDIS_URL`, required shared-state mode, Sentry, custom Python providers and unsupported nondefault
+  policy values stop native startup by setting name. Detailed inventory: native CLI guide.
 - Operational gaps remain in `docs/PRODUCTION_READINESS.md`. Treat an unticked box
   in `docs/archive/COMPLETENESS_GAPS_2026-06.md` as a hypothesis to verify against
   HEAD, not a specification — two backlog surveys turned already-shipped entries
@@ -89,25 +95,19 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
-- 2026-10-04 (Go review branch): complete Go race/vet passed; isolated PostGIS exporter → native Go
-  and public visibility/listing suite **38 passed**, no skipped native contract. Go package/binary
-  vulnerability scans found none. Static nonroot image passed read-only/no-capability health checks.
-  GitHub Go CI passed; full Django **2791 tests +38 subtests** passed after CI setup repairs.
-  Receipts: `WORKLOG.md` §2026-10-04. No live data or infrastructure changed.
-- 2026-08-22 (credential fix, recorded in its merge): 142 passed across the touched lanes; full suite 2773
-  passed, 15 failed — all in the chat and messaging `test_consumer.py` websocket tests, failing identically
-  on pristine main in isolation; both ruff commands and `makemigrations --check` clean.
+- 2026-10-04 complete candidate: native race/vet and portable auth hashes pass. Fresh Go-only
+  bootstrap + **173 PostgreSQL/codec tests** passed with no skips; final affected app/media/account
+  checks also pass. Source/package vulnerability scans pass after compress1.18.7; unimported
+  openpgp module advisory and stripped-binary analyzer limits are recorded in WORKLOG.
+  Prior reference CI: Django **2791 +38 subtests** green. No live data/infrastructure changed.
 
 ## Standard verification
 
-```bash
-docker compose -p socialfix -f docker-compose.local.yml exec -T web \
-  sh -lc 'python -m pytest -q'
-git diff --check
-```
-Full CI matrix: `.github/workflows/ci.yml` (frontend, lint-test incl. `check --deploy`, docker-build +
-Trivy, audit = pip-audit + bandit). Gate commands with expected output: `docs/agent-testing.md`. Operator
-contract: `docs/ROEDU_INTEGRATION.md`.
+Native race/vet + shared-source hash verification; every database/codec contract runs with an
+explicit disposable fixture through `scripts/qualify-native.sh`. Commands: `docs/agent-testing.md`.
+Python/DRF tests continue to qualify the offline compatibility oracle. `git diff --check` is required.
+Native CI: `.github/workflows/native.yml`; frontend/reference CI remains in `ci.yml`.
+Operator contract: `docs/ROEDU_INTEGRATION.md`.
 
 ## Doc map
 
