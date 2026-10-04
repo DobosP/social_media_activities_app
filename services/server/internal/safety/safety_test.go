@@ -8,6 +8,7 @@ import (
 	"github.com/DobosP/cat_de_roman_esti/shared-go/authcore"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/accounts"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
+	nativeschema "github.com/DobosP/social_media_activities_app/services/server/internal/schema"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"net/http"
@@ -72,6 +73,10 @@ func safetyFixture(t *testing.T) *Service {
 		_, _ = admin.Exec(context.Background(), "DROP SCHEMA "+quoted+" CASCADE")
 		admin.Close()
 	})
+	// LIKE fixtures also need the native functions, capacity seed and triggers.
+	if err = nativeschema.Migrate(ctx, db); err != nil {
+		t.Fatal(err)
+	}
 	store := accounts.NewStore(db)
 	if err = store.Migrate(ctx); err != nil {
 		t.Fatal(err)

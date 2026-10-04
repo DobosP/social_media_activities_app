@@ -19,6 +19,7 @@ import (
 
 	"github.com/DobosP/social_media_activities_app/services/server/internal/media"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
+	nativeschema "github.com/DobosP/social_media_activities_app/services/server/internal/schema"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/social"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -97,6 +98,10 @@ func mediaStore(t *testing.T) (*media.Service, *social.Service, *pgxpool.Pool, *
 		}
 		admin.Close()
 	})
+	// LIKE fixtures also need the native functions, capacity seed and triggers.
+	if e = nativeschema.Migrate(ctx, db); e != nil {
+		t.Fatal(e)
+	}
 	if e = media.EnsureSchema(ctx, db); e != nil {
 		t.Fatal("native schema", e)
 	}

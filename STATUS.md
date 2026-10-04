@@ -94,8 +94,8 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 ## Verification record (newest first)
 
 - 2026-10-04 config/reporting task: native race/vet, auth hashes, CLI 33 and 109 additional package
-  fixture checks pass; full PG qualification stops at 2 unmigrated custom media-fixture failures (rates
-  integration owns repair). Doc gate files=52/all 0; no production reporting. Details: WORKLOG/ADR-0034.
+  fixture checks pass; rate followup repairs the custom media fixtures. Final combined PG qualification
+  is pending. Doc gate files=52/all 0; no production reporting. Details: WORKLOG/ADR-0034.
 - 2026-10-04 owner-approved conversion: native race/vet and portable auth hashes pass. Fresh Go-only
   bootstrap + **173 PostgreSQL/codec tests** passed with no skips; final affected app/media/account
   checks also pass. Source/package vulnerability scans pass after compress1.18.7; unimported

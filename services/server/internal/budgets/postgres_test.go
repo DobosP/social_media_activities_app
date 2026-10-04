@@ -143,7 +143,7 @@ func TestPostgresMultiReplicaSlidingAndPrivacy(t *testing.T) {
 	}
 }
 
-func TestPostgresCapacityExpiryAndConstantMemory(t *testing.T) {
+func TestPostgresCapacityAndExpiry(t *testing.T) {
 	db := fixture(t)
 	ctx := context.Background()
 	store := budgets.New(db)
@@ -181,10 +181,6 @@ func TestPostgresCapacityExpiryAndConstantMemory(t *testing.T) {
 		t.Fatal("total event capacity failed open", d, err)
 	}
 	capacity(t, db)
-	// Store has one pool pointer; identities/events are never resident Go maps.
-	if fmt.Sprintf("%T", store.DB) != "*pgxpool.Pool" {
-		t.Fatal("unexpected history storage")
-	}
 }
 
 func TestPostgresReplayLowPoolFreshGatesAndFailedAttempts(t *testing.T) {

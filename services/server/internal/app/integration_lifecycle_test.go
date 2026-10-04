@@ -276,6 +276,9 @@ func TestSharedAPIThrottleAcrossReplicas(t *testing.T) {
 			r.URL.Path = "/api/places/"
 		}
 		r.RemoteAddr = "192.0.2.4:3000"
+		if i == 1 {
+			r.RemoteAddr = "[::ffff:192.0.2.4]:3000"
+		}
 		r.Header.Set("X-Forwarded-For", fmt.Sprintf("203.0.113.%d", i))
 		w := httptest.NewRecorder()
 		if allowed := replicas[i%2].admitAPI(w, replicas[i%2].forwardedPeer(r)); allowed != (i < 2) || i == 2 && (w.Code != 429 || w.Header().Get("Retry-After") == "") {

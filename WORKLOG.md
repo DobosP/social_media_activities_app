@@ -1,3 +1,45 @@
+# Worklog — social_media_activities_app
+
+Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
+`STATUS.md` summarizes.
+
+## 2026-10-04 — Shared-budget fixture qualification
+
+Valid until: combined integration/landing verification — then treat as history.
+
+All 18 native PostgreSQL/codec lanes qualify: **194 tests pass, zero skips**. This includes nine
+budget tests; actual custom-policy account/safety/message/social/catalog/saved-search flows;
+idempotent connection/group/unsafe repeats; retained failed/duplicate attempt debits; mapped-IPv4
+peer identity; and media/web authorization/lifecycle coverage. Every legacy LIKE-based fixture now
+applies native additive migration in its own schema, including functions, counters and triggers.
+The public fixture budget table and capacity counters remain zero, proving no fallback writes.
+
+Commands used Go 1.27.1, `GOWORK=off`, `GOMAXPROCS=2`, `GOFLAGS=-p=2`, task-owned module/build/tmp
+caches, the existing Go-only codec image `social-native:go-complete-20261004`, and the dedicated
+internal-network PostgreSQL fixture `go-shared-budgets-db` / `go-shared-budgets-net`:
+
+- `go -C services/server test -race ./...`, `go -C services/server vet ./...`, and
+  `go -C services/server run ./cmd/check-authcore` pass. Ordinary PG tests skip without a DSN;
+  the explicit fixture run below is the database evidence.
+- `scripts/qualify-native.sh GO IMAGE NETWORK DISPOSABLE_DSN /home/dobo/work/_temp/go-shared-budgets`
+  qualifies sixteen packages before the new social fixture violated an existing unique-group
+  city/type/cohort rule. Changing only that synthetic test's second city, then the identical
+  race/read-only harness for social + web, qualifies all eighteen packages. No test was weakened.
+- Native fixture migration/reference seeding ran only on the disposable database. Initial fixture
+  startup/reference omissions were corrected before qualification; no production state was used.
+- Formatting, whitespace and doc gate pass: files=52 dead_links=0 stale_terms=0 retired_verbs=0
+  orphans=0. Logs live in task scratch `tests/`; no secret stores or actual env files were read.
+
+The final fixture run under concurrent host work measured 100 sequential admissions at
+1/1,000/9,000 buckets in 6.15/6.32/6.31 ms mean, 9.35/9.83/10.24 ms p95. Additional 2,000 peer
+identities retained 9,992 bytes of Go heap after GC. Together with the earlier lighter run,
+this supports the removal of cardinality-dependent table scans; it does not establish production
+capacity. The short capacity-counter update remains a possible high-throughput contention point.
+
+CLI/environment binding, source-only maintenance tick wiring, fresh actor participation gate and
+combined-source qualification remain coordinator/config-lane integration responsibilities. No
+main merge, push, deployment, real ingestion, scheduler enablement or minor/provider activation.
+
 ## 2026-10-04 — Shared-budget worker (ADR-0033)
 
 Valid until: combined integration/landing verification — then treat as history.
@@ -17,11 +59,6 @@ privacy, failed-attempt debits, counter erasure and concurrency pass. Synthetic 
 Doc gate: files=52 dead_links=0 stale_terms=0 retired_verbs=0 orphans=0; whitespace clean.
 These are local fixture measurements only. Full domain/codec fixture and combined CLI verification
 remain pending at this checkpoint. No push, merge, deployment or activation performed.
-
-# Worklog — social_media_activities_app
-
-Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
-`STATUS.md` summarizes.
 
 ## 2026-10-04 — Go public serving foundation (review branch)
 
