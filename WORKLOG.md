@@ -301,3 +301,19 @@ also passes (native37219661498/reference37219661457/public37219661432). Native s
 auth/domain/media/live/jobs and deployment entry points execute Go; client TypeScript and
 offline Python oracles remain explicit. Both repository main landing pads are clean.
 No Social production deployment or provider/minor/source activation occurred.
+
+
+## 2026-10-04 — native completion coordination and readiness guide
+
+Valid until: the three completion lanes are integrated and qualified — then treat this coordination note as history.
+
+The owner requested three separate sessions managed by the original chat. Separate task
+worktrees cover shared PostgreSQL budgets, runtime configuration/error reporting, and guarded
+permissions/private API schemas. Main remains clean at3ad5c3338b1ececcd770c47f63a990fd505d8ee1;
+workers commit locally and the coordinator owns review/integration. No production activity was enabled.
+
+The production-readiness guide now lists native release, data-adoption/rollback, ingress, provider,
+private-storage/scanner, recovery, operations and product/legal gates. The complete earlier Python-era
+plan is preserved in docs/archive/production-readiness-native-go-reference.md. This documentation
+change does not claim qualification of the in-progress code. Doc gate: files=52 dead_links=0
+stale_terms=0 retired_verbs=0 orphans=0; git diff --check passes.

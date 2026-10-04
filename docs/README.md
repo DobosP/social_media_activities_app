@@ -9,7 +9,7 @@ Native runtime index verified 2026-10-04.
 
 | Doc | What it covers |
 |---|---|
-| [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md) | **The live gap list.** §0 "Already built — do NOT rebuild", then P0/P1 operational + legal work. Feeds `STATUS.md`. |
+| [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md) | Native runtime qualification, rollout/recovery, provider and legal launch gates. Feeds `STATUS.md`. |
 | [FEATURES_BUILT.md](FEATURES_BUILT.md) | **Built features + their invariant gates** — the behavioral-contract catalog (moved out of `CLAUDE.md` 2026-07-02). Check before building anything "new". |
 | [ROADMAP.md](ROADMAP.md) | The original phased plan (D1–D10) + feature traceability. All deliverables shipped; kept for the map, not for status. |
 | [archive/COMPLETENESS_GAPS_2026-06.md](archive/COMPLETENESS_GAPS_2026-06.md) | Gap tracker for the audited 2026-06 waves — immutable; treat an unticked box as a hypothesis to verify against HEAD, not a specification (see [STATUS.md](../STATUS.md) §Open work). |
@@ -72,6 +72,7 @@ Native runtime index verified 2026-10-04.
 ## Decisions & history
 
 - [adr/](adr/) — **Architecture Decision Records**; the number ledger (slug · status · date · next free number, and the duplicated `0009`) is [adr/README.md](adr/README.md). On conflict: `STATUS.md` > newest ADR > other docs.
+- [archive/production-readiness-native-go-reference.md](archive/production-readiness-native-go-reference.md) — earlier Python-era production plan; current launch gates are in PRODUCTION_READINESS.
 - [archive/](archive/) — dated, superseded/completed records (2026-05 audits, hardening plan,
   Phase-2 plan, workboard, feature catalogs, 2026-06 changelog, gap tracker). Each carries a
   banner; immutable — do not update.

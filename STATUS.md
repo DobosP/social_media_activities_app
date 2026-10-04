@@ -1,10 +1,7 @@
 # Status — social_media_activities_app
 
 Last verified: 2026-10-04
-
-Current truth: STATUS > newest ADR > other docs. History: WORKLOG, ADRs and git.
-
-## What this is
+Current truth: STATUS > newest ADR > other docs. History: WORKLOG, ADRs and git.## What this is
 
 A children-first, in-person local-activities social app: no ads, deterministic
 discovery rather than engagement ML, Cluj-Napoca first, EU residency required,
@@ -76,6 +73,9 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Open work
 
+- Three isolated completion lanes are implementing shared budgets, configuration/error reporting and guarded
+  permissions/private API schemas. Their new code is under qualification/review; main retains the limits below.
+
 - Owner-approved native administration keeps the documented governed transitions; unrestricted
   raw identity/consent/media/payment edits are unavailable. Production launch remains unperformed.
 - Build/promote a fresh immutable producer/server V2 release before real sync;
@@ -94,13 +94,15 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
+- 2026-10-04 readiness guide now describes native rollout/recovery and product gates; historical Python
+  planning is archived. Doc gate: files=52 dead_links=0 stale_terms=0 retired_verbs=0 orphans=0.
+
 - 2026-10-04 owner-approved conversion: native race/vet and portable auth hashes pass. Fresh Go-only
   bootstrap + **173 PostgreSQL/codec tests** passed with no skips; final affected app/media/account
   checks also pass. Source/package vulnerability scans pass after compress1.18.7; unimported
   openpgp module advisory and stripped-binary analyzer limits are recorded in WORKLOG.
   Exact-head native/reference/public CI is green (37211779358/395/372); image gate has zero
   fixable HIGH/CRITICAL findings. All173 contracts pass on canonicalPG16.15 Bookworm too.
-
 ## Standard verification
 Native race/vet + shared-source hash verification; every database/codec contract runs with an
 explicit disposable fixture through `scripts/qualify-native.sh`. Commands: `docs/agent-testing.md`.
@@ -109,7 +111,6 @@ Native CI: `.github/workflows/native.yml`; frontend/reference CI remains in `ci.
 Operator contract: `docs/ROEDU_INTEGRATION.md`.
 
 ## Doc map
-
 | Doc | Job |
 |---|---|
 | `AGENTS.md` | Operating contract: read first, commands, safety, docs discipline. |

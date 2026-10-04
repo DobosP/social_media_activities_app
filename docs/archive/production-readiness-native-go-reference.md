@@ -1,0 +1,240 @@
+Valid until: the 2026-10-04 native Go readiness review — then treat as history.
+
+This preserves the earlier Django-era planning record. Current operating gates are
+[PRODUCTION_READINESS](../PRODUCTION_READINESS.md) and [STATUS](../../STATUS.md).
+Do not provision Redis or Python workers from this historical plan.
+
+# Production-readiness & scalability roadmap
+
+**Code-grounded as of 2026-06-19; §0 spot-re-verified 2026-07-11** (SSRF `apps/safety/net.py`,
+HNSW migration `recommendations/0002`, prod `CONN_MAX_AGE`/`statement_timeout`, Redis-flip
+CACHES/CHANNEL_LAYERS all confirmed present; §2b updated — the task-queue foundation shipped
+2026-06-23). Supersedes the engineering registers in `archive/AUDIT_2026-05.md`,
+`archive/AUDIT_STRESS_2026-05-29.md`, and `archive/PRODUCTION_HARDENING_PLAN_2026-05.md`
+(archived 2026-07-02) — most of those engineering blockers are fixed in code (verified).
+Build on this + `SCALING.md` + `HOSTING_EU.md`. Feeds the repo-root `STATUS.md`.
+
+## Native implementation status (2026-10-04)
+
+The owner approved the Go conversion for main under [ADR-0032](../adr/0032-complete-native-go-backend.md).
+All default serving/media/live/job launch paths are native Go. Current operating commands,
+limits and migration requirements are [NATIVE_SERVER](../NATIVE_SERVER.md); old apps/ and
+prod.py references below describe the preserved Python contract history.
+
+Native CI/reference/public/image gates pass, including173 real PostgreSQL/codec contracts
+with zero skips. Auth flow/state/tokens, queue and ID-only live delivery are database-backed;
+API/social/catalog rate histories remain bounded per process. Redis-required/Sentry profiles
+and unsupported nondefault overrides refuse startup. This is not a blanket claim that
+multi-replica admission budgets are ready. Resolve those limits before such a deployment.
+
+Code landing does not procure or deploy Social, activate sources/providers/minors or satisfy
+the existing product GDPR/DPIA/parental-authority/operations gates. Rehearse database and
+artifact rollback, scanner/storage/provider integration, backups/restore and alerting before
+launch. The historical backlog below must be checked against native code rather than used
+to reintroduce a Django/Redis runtime. STATUS remains the current truth.
+
+## 0. Already built — do NOT rebuild
+
+Verified present in code (a generic checklist would wrongly flag these):
+Redis-backed `CACHES` + `CHANNEL_LAYERS` (flip on `REDIS_URL`, `base.py:621`) · opaque
+`TokenAuthentication` + hardened/throttled token-obtain (mobile/3rd-party ready) · deny-by-default
+DRF permissions · drf-spectacular + Swagger · DRF throttle scopes with XFF/`NUM_PROXIES` handling ·
+request-body-size middleware · per-delivery WebSocket re-auth (4403) · SSRF safe-fetch
+(`apps/safety/net.py`) · GDPR `erase_user` + export endpoints · brute-force login lockout · HNSW
+pgvector ANN index · SSL-redirect + 1-yr HSTS + secure cookies · prod boot assertions (no dev IdP,
+EU media residency, shared-state) · opt-in Sentry (privacy-safe) · authorized presigned media
+redirect seam with local streaming fallback · `run_due_jobs` retention scheduler · RO/EN
+localization · CI gates (ruff, migrations, `check --deploy`, pytest, docker build, weekly
+pip-audit) · well-indexed hot read paths + `statement_timeout`.
+
+Feature-level behavioral contracts (what each shipped feature guarantees and the invariant gates
+it carries) live in [FEATURES_BUILT.md](../FEATURES_BUILT.md) — check it before building any
+"missing" feature.
+
+---
+
+## 1. The single biggest lever — provision shared state + the real stack
+
+One change closes ~8 findings across scaling/security/API at once. The code is **already written**;
+it's a **provisioning** gap (the shipped `render.yaml` is a free-tier *demo*).
+
+- **Provision managed EU Redis** and set `REDIS_URL` + `DJANGO_REQUIRE_SHARED_STATE=True`. This makes
+  the Channels layer cross-process (chat fan-out stops silently splitting across instances), and
+  makes DRF throttles + the child-safety `allow_action` rate-limiter + the brute-force lockout
+  **global and durable** instead of per-process and reset-on-restart.
+- **Provision EU object storage** (`MEDIA_S3_*` — Hetzner Object Storage per `HOSTING_EU.md`). Today
+  the default deploy stores blobs on the container's ephemeral disk (lost on redeploy).
+- **Move off the demo `render.yaml`** to the `HOSTING_EU.md` stack (≥2 app instances, managed/HA
+  Postgres, backups, Redis, object storage). Set `SENTRY_DSN` and `EUDI_TRUSTED_ISSUERS`.
+
+---
+
+## 2. P0 — before a real launch
+
+### 2a. Infrastructure / availability (the SPOF cluster)
+- **≥2 app instances, no SPOF** — one native app process on one box = 100% downtime on any crash; free
+  Render web also sleeps after 15 min. Run `numInstances: 2` (paid) or 2 qualified native systemd app units after shared-budget verification.
+- **Managed / HA Postgres** — single primary for relational+geo+vector+graph; ephemeral on free tier
+  and co-located with the app on the Hetzner box. Use managed EU Postgres with PITR + a hot standby.
+- **Backups + a tested RESTORE drill** — backups are documented, not provisioned. Commit + schedule
+  the `pg_dump`→EU-bucket script (or managed snapshots) and run one real `pg_restore` + smoke test;
+  document RTO/RPO; enable bucket versioning for media.
+
+### 2b. Async work substrate
+- ~~No task queue exists~~ **DONE (2026-06-23): the foundation shipped** — a Postgres-backed
+  `DeferredTask` queue (`apps/ops/tasks.py`, transactional `enqueue`, `SKIP LOCKED` claims,
+  bounded retries) drained by the existing `run_due_jobs` cron. No Celery/Redis-broker by
+  design — see `ASYNC_TASKS.md` + `adr/0003`. **Updated 2026-07-04:** production kinds are now
+  registered for blob cleanup, activity notification fan-out, bounded notification retention,
+  allowlisted cron-command splitting, and a fail-closed media-scan placeholder.
+- Remaining async moves: a real withheld-state media scanner (strict timeout/circuit breaker),
+  full GDPR export/erasure orchestration beyond blob cleanup, broadcast group_send, and converting
+  the serial daily cron call sites to enqueue `cron.run_command` tasks where useful.
+
+### 2c. Observability (operate-it-live basics)
+- **Structured logging + request/correlation IDs — DONE (2026-07-04)**: `X-Request-ID` is minted or
+  safely propagated, echoed on responses, added to log records, tagged on the Sentry scope, and
+  emitted in PII-safe request logs when `REQUEST_LOGGING_ENABLED` is on. `LOG_FORMAT=json` switches
+  to JSON lines; production defaults to JSON while dev/test stay quiet/readable.
+- **Wire Sentry at deploy** (`SENTRY_DSN` on web *and* cron) + capture **periodic-job failures**
+  (a silently failing `consent_renewal_sweep`/`purge_messaging` is a GDPR/safety miss) + a cron
+  check-in monitor for missed nightly ticks. Add the Channels integration for WS exceptions.
+- **Alerting + uptime/SLO** — external uptime monitor on `/healthz` + Sentry alert rules; write a
+  one-line SLO.
+
+### 2d. Edge security
+- **Edge protection (WAF / DDoS / edge rate-limit)** — all abuse mitigation is inside the single
+  process today. Put **Cloudflare** (free, EU options) or the provider WAF in front: blanket edge
+  rate-limit on `/api/auth/token/` + login, managed OWASP ruleset, bot/DDoS mitigation. Biggest
+  single infra-security gap for a public launch.
+- **Durable rate-limit / lockout** — same fix as §1 (Redis), called out because without it
+  brute-force/credential-stuffing protection is effectively weak on a multi-process or
+  cold-starting deploy. The in-app safety limiter now uses NX-style cache initialization plus
+  backend `incr`; provisioning shared Redis remains open.
+
+### 2e. Legal / external (not code — gating the *child-first* mission)
+- **DPIA / ROPA / breach runbook exist as drafts** — need DPO appointment, RO-counsel sign-off, and
+  signed processor DPAs (Render/Hetzner/object-storage/Sentry).
+- **Live EUDI / national trust anchor** — minors stay structurally OFF (`ALLOW_MINOR_ONBOARDING`
+  False) until a real RO wallet issuer exists (~Dec 2026) + the DPIA is signed. **Plan an
+  adults-only launch**; the guardian link is still a mutual-click, not verified parental authority.
+- **Lawful CSAM scanner** — the fail-closed default keeps photo uploads OFF (correct). Before any
+  minor-cohort photos: wire a lawful perceptual matcher (PhotoDNA-class) via the `ManagedScanner`
+  seam + a reporting obligation, with legal authorisation captured in the DPIA.
+
+---
+
+## 3. P1 — to scale (and harden)
+
+### API / DRF contract
+- **API versioning — DONE (2026-07-04)**: canonical `/api/v1/`, transitional `/api/` alias, DRF
+  `URLPathVersioning`, and OpenAPI filtering that documents only the versioned API paths.
+- **Pagination bounds — DONE (2026-07-04 for app APIViews)**: global bounded limit/offset plus
+  cursor/limit envelopes on `/api/v1/` discovery feeds, activity thread reads, social list actions,
+  messaging conversation/history reads, and notification lists. The `/api/` alias keeps legacy
+  response shapes while still retaining existing hard caps.
+- **N+1 CI guard — PARTIAL (2026-07-04)**: existing `participant_keys()` guard remains; added
+  query-count guards for v1 thread reads, notification list reads, messaging conversation/history
+  reads, and social membership list reads. Broader prod-sized `EXPLAIN`/index work remains
+  deferred until there is representative traffic.
+
+### Horizontal scaling (after Redis)
+- **Multiple workers behind the LB** (uvicorn-workers/multi-replica to use all cores).
+- **Media egress off the app process — DONE (2026-07-04)**: `StorageBackend.presigned_get_url()`
+  lets the S3 backend mint short-lived private GET URLs when `MEDIA_REDIRECT_TO_PRESIGNED=True`.
+  Media file views re-check the signed token and current viewer authorization before a 307 redirect;
+  local/dev/test filesystem storage returns no presign URL and keeps streaming through native authenticated handlers.
+- **PgBouncer** (transaction pooling) before scaling past one process; set `CONN_MAX_AGE=0` +
+  disable server-side cursors when pooling.
+
+### Database over time
+- **Notification covering index — DONE (2026-07-04)**: `notifications/0017` adds
+  `(recipient, -created_at)` with `AddIndexConcurrently` / `atomic=False` for inbox reads.
+- **Notification retention — DONE (2026-07-04)**: `notifications.retention_purge` deletes one
+  bounded batch of old read mutable notices; unread and MODERATION/SYSTEM safety/DSA notices are
+  excluded.
+- **Audit chain verification — DONE (2026-07-04)**: `verify_audit_chain()` streams with
+  `.iterator()` and `verified_audit_checkpoint()` returns a verified high-water mark for incremental
+  extension checks. Periodic full verification remains the way to re-check old history.
+- **High-growth tables** (Post, AuditLog) — plan declarative monthly RANGE partitioning before tens
+  of millions of rows.
+- **Read-replica routing** (env-gated `REPLICA_DATABASE_URL` + a router for public read-only GETs).
+- **Zero-downtime migration discipline — PARTIAL**: hot-table index builds now have a concrete
+  `AddIndexConcurrently`/`atomic=False` example; no migration-linter dependency or CI seam exists
+  yet, so automated zero-downtime migration linting remains open.
+
+### Reliability
+- **Retries / circuit-breakers for Stripe + booking — DONE (verified 2026-08-09)**:
+  `apps/ops/resilience.py` implements bounded retries with backoff, a per-provider
+  CLOSED/OPEN/HALF_OPEN breaker, and a clean `ProviderUnavailable`. Wired at
+  `apps/donations/providers.py:82-90` (`breaker_key="stripe"`, with the donation reference as
+  Stripe's Idempotency-Key so a retried POST cannot double-charge) and
+  `apps/booking/providers/demo_rest.py:39-68` (`breaker_key="booking"`; the POST correctly sets
+  `retry_on_status=()` / `retry_timeouts=False` because a booking may have landed server-side).
+  Residual: breaker state is in-process — shared-state operation is the scale-tier item below.
+- **`/readyz` — DONE (2026-07-04)**: `/healthz` is pure liveness; `/readyz` checks DB plus
+  Redis/storage only when configured and returns degraded booleans without backend details.
+  SIGTERM/SIGINT and the ops test seam mark the process as draining, making `/readyz` return 503
+  with only a safe `draining` boolean while `/healthz` remains liveness.
+- **Operational metrics** — django-prometheus `/metrics` (request latency/status, DB timing, live WS
+  gauge) scraped by a free Grafana/Prometheus.
+
+### Security hardening
+- **CSP enforcement switch — HARDENED (2026-07-04)**: django-csp uses one shared policy in
+  report-only by default; key SSR pages have executable inline scripts/event handlers and practical
+  inline style attributes/blocks extracted to static CSS/JS, JSON script islands are nonced, the
+  shared policy no longer includes `style-src 'unsafe-inline'`, and `DJANGO_CSP_ENFORCE=True` flips
+  the same policy to `Content-Security-Policy` after production violation reports are reviewed.
+  Operators can group exported report-only payloads with `digest_csp_reports`; remaining review is
+  to fix any deployed violations from pages outside the CSP smoke set before enforcing.
+- **Explicit security headers — DONE (2026-07-04)**: shared settings pin
+  `SECURE_CONTENT_TYPE_NOSNIFF=True`, `SECURE_REFERRER_POLICY="same-origin"`,
+  `SECURE_CROSS_ORIGIN_OPENER_POLICY="same-origin"`, and a conservative `Permissions-Policy` that
+  disables camera/microphone while scoping geolocation to self (ADR-0015).
+- **SAST + container scanning in CI — MOSTLY DONE (verified 2026-08-09)**: Bandit runs as BLOCKING
+  Python SAST (`.github/workflows/ci.yml:156-161`, no `continue-on-error`), pip-audit enforces on
+  push-to-main and on the daily schedule (`:146-155`), and Trivy scans the built image (`:129-137`).
+  Two residuals only: Trivy is deliberately report-only (`--exit-code 0`, with the documented intent
+  to flip once the base image is on a clean cadence — an owner call on CVE-triage cadence, since
+  flipping means an untriaged base-image CVE blocks unrelated PRs), and there is no CodeQL/Semgrep
+  Django ruleset on top of Bandit.
+- **Container non-root — DONE**: `Dockerfile:57` `USER appuser`. **Read-only rootfs — PARTIAL on the
+  self-hosted path**: `socialapp.service`, `socialapp-jobs.service`, `socialapp-media.service` and
+  `agentapi.service` set `NoNewPrivileges=true` + `ProtectSystem=strict` + `ProtectHome=read-only` +
+  `PrivateTmp=true`. **`deploy/systemd/socialapp-backup.service:12-13` sets only `NoNewPrivileges` +
+  `PrivateTmp`** — no `ProtectSystem`, no `ProtectHome` — and it is the unit that runs `pg_dump` and
+  sources S3 credentials from `.env`, i.e. where `ProtectHome=read-only` earns the most. Two
+  residuals, then: that unit, and the container path (no `read_only:` in docker-compose). Note
+  `readOnlyRootFilesystem` is a Kubernetes podSpec field and this repo ships no Kubernetes
+  manifests — do not grep for it.
+- **PDF/ClamAV** scanner wired before scaling adult PDF sharing.
+- **Independent pen test** before public beta (close the cheap items above first).
+
+### Deploy / CI-CD
+- **Gate deploys on green CI** — Render autoDeploys on git push regardless of CI status; disable
+  autoDeploy + trigger via a deploy hook from a passing CI job (or an SSH/rsync deploy workflow on
+  Hetzner).
+- **Staging environment** — there is exactly one env (prod); migrations + the fail-closed boot
+  guards are first exercised in production.
+- **IaC (Terraform + cloud-init/Ansible)** for the recommended Hetzner box so a rebuild is one
+  command, not a prose runbook.
+- **CDN for static + media**; **harden the cron's own SPOF** with a dead-man's-switch heartbeat
+  (missed nightly run = GDPR/DSA compliance miss).
+
+---
+
+## 4. Recommended sequence
+
+1. **Provision shared state + real stack** (§1) — Redis, object storage, ≥2 instances, managed
+   Postgres + backups/restore drill, Sentry DSN. *Unlocks the most, all config not code.*
+2. **Edge: Cloudflare WAF/rate-limit** in front (§2d).
+3. **Add the task queue** (§2b) + move scanning/erasure/fan-out/broadcast off-request.
+4. **Observability**: structured logging + request IDs, Sentry on jobs, uptime/alerts, `/readyz` (§2c).
+5. **API v1 + pagination bounds + N+1 CI guard** (§3) before any native client.
+6. **Scale levers as traffic grows**: media presigned-redirect, PgBouncer, replica routing,
+   partitioning/retention, metrics.
+7. **Security hardening + pen test** (§3) before public beta.
+8. **Legal sign-off + (later) live EUDI anchor** for the minor-onboarding mission (§2e).
+
+> **Adults-only beta** is reachable with §1–§4 + legal sign-off. The **child-first** mission is
+> gated on external dependencies (EUDI anchor + DPIA), not on code.
