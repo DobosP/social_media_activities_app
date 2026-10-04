@@ -43,3 +43,32 @@ The broader baseline passed175 PostgreSQL/codec race contracts with zero skips.
 Saved-search jobs and guardian capability reads now load the actor capability fields
 needed by the equality check. The catalog fixture also returns the same role it inserts.
 The combined shared-budget/configuration/admin candidate still requires qualification.
+
+
+## Profile disclosure follow-up (2026-10-04 review candidate)
+
+Profile-card rate admission commits separately from its read projection. The profile
+service now reloads the entire viewer row immediately after admission and replaces
+captured request flags before cohort/tier resolution or private field selection. Current
+inactive/unassigned/cross-cohort/self/mutual-block vetoes remain indistinguishable404s;
+current target state and minor interest/photo clamps retain ADR-0028's field matrix.
+
+Profile visibility remains separate from participation: a current assigned same-cohort
+viewer with withdrawn verification or expired/revoked consent can retain a minimal card
+or live shared context, while connecting is independently refused by current participation.
+This does not authorize messaging, create memberships, or grant identity/parental consent.
+The corresponding HTTP and HTML regressions exercise a real shared-admission trigger,
+not a replacement rate helper; no nested pool acquisition is introduced.
+
+The presentation helper supplies authorized card aliases and target IDs for report/block
+forms. A connected-adult full-page photo uses the existing native media metadata endpoint,
+which checks current viewer/target/block/scanner authority and signs a viewer-scoped URL.
+Hover cards and minor/stranger cards retain generated avatars only. The coordinator owns
+the narrow generic-person view caller; its exact caller is separately qualified in a
+scratch Go overlay before integration.
+
+Credential revocation rejects subsequent authenticated requests and live delivery.
+This profile service receives an already authenticated actor, not the raw credential;
+reloading current visibility does not claim to retroactively cancel every admitted read
+or every concurrent change after its authority query. Human auth/privacy/safety review
+still precedes landing. Exact fixture results are recorded in WORKLOG/STATUS.

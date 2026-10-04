@@ -215,6 +215,18 @@ func (s *Service) Profile(ctx context.Context, a Actor, publicID string) (map[st
 	if !s.allow(ctx, a.ID, "profile_card", 240, time.Hour) {
 		return nil, platform.ErrForbidden
 	}
+	// Admission commits independently. Reload the viewer before resolving any
+	// cohort, tier or private field; authentication's captured flags are not
+	// current profile authority. Profile visibility remains separate from
+	// participation, so expired consent does not erase a same-cohort minimal card.
+	fresh, err := actorByID(ctx, s.DB, a.ID)
+	if err == pgx.ErrNoRows {
+		return nil, platform.ErrNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	a = fresh
 	b, err := targetByPublicID(ctx, s.DB, publicID)
 	if err != nil {
 		return nil, err

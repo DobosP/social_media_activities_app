@@ -67,6 +67,9 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Open work
 
+- Profile review fix reloads the viewer after rate admission; source consent/minimal-card policy
+  stays intact. Local fix/go-review-profile qualification precedes coordinator caller/integration review.
+
 - ADR-0035 review candidate adds guarded administrator permissions and complete private API field
   contracts (380 operations/318 paths/166 schemas); human auth/privacy review precedes landing.
 
@@ -89,6 +92,9 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
+- 2026-10-04 profile candidate: targeted social 5/web 3 PostgreSQL race tests pass, no skips;
+  HTML/photo checks use the exact coordinator view-caller overlay. Vet/format/whitespace pass;
+  doc gate files=52 dead_links=0 stale_terms=0 retired_verbs=0 orphans=0. Combined review pending.
 - 2026-10-04 completion: native race/vet/auth hashes and280 tests across19 CLI/PG/codec lanes pass,
   zero skips. Final image453f7048 has no Python, UID10001, zero fixable HIGH/CRITICAL findings.
   Source/package/linked audits pass; unimported openpgp advisory is recorded separately.
