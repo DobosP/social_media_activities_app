@@ -235,7 +235,7 @@ func (s *Service) writePost(ctx context.Context, a Actor, kind string, id int64,
 	if err := in.validateAttachment(attach != nil); err != nil {
 		return 0, err
 	}
-	if !s.allow(a.ID, "thread_post", 30, time.Minute) {
+	if !s.allow(ctx, a.ID, "thread_post", 30, time.Minute) {
 		return 0, platform.ErrForbidden
 	}
 	var postID int64
@@ -529,7 +529,7 @@ func (s *Service) ToggleSentiment(ctx context.Context, a Actor, id int64, kind, 
 	if kind != "reaction" && kind != "dissent" && kind != "concern" {
 		return false, platform.ErrInvalid
 	}
-	if !s.allow(a.ID, "thread_react", 60, time.Minute) {
+	if !s.allow(ctx, a.ID, "thread_react", 60, time.Minute) {
 		return false, platform.ErrForbidden
 	}
 	var added bool

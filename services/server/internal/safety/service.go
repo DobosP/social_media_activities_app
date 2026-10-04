@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/accounts"
+	"github.com/DobosP/social_media_activities_app/services/server/internal/budgets"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -21,15 +22,16 @@ type Config struct {
 	Now            func() time.Time
 }
 type Service struct {
-	DB     *pgxpool.Pool
-	Config Config
+	DB           *pgxpool.Pool
+	Config       Config
+	RatePolicies map[string]budgets.Policy
 }
 
 func New(db *pgxpool.Pool, config Config) *Service {
 	if config.Now == nil {
 		config.Now = time.Now
 	}
-	return &Service{db, config}
+	return &Service{DB: db, Config: config}
 }
 
 type Target struct {
@@ -78,14 +80,23 @@ func (s *Service) Migrate(ctx context.Context) error {
 	return err
 }
 func (s *Service) allow(ctx context.Context, a platform.Actor, action string, limit int, window time.Duration) (bool, error) {
-	var count int
-	err := platform.Transaction(ctx, s.DB, func(tx pgx.Tx) error {
-		if _, err := tx.Exec(ctx, `DELETE FROM safety_go_actionbudget WHERE until<=$1`, s.Config.Now()); err != nil {
+	policy, err := budgets.Resolve(s.RatePolicies, action, budgets.Policy{Limit: limit, Window: window})
+	if err != nil {
+		return false, err
+	}
+	now := s.Config.Now()
+	var allowed bool
+	err = platform.Transaction(ctx, s.DB, func(tx pgx.Tx) error {
+		if _, err := tx.Exec(ctx, `DELETE FROM safety_go_actionbudget WHERE until<=$1`, now); err != nil {
 			return err
 		}
-		return tx.QueryRow(ctx, `INSERT INTO safety_go_actionbudget(user_id,action,count,until) VALUES($1,$2,1,$3) ON CONFLICT(user_id,action) DO UPDATE SET count=safety_go_actionbudget.count+1 RETURNING count`, a.ID, action, s.Config.Now().Add(window)).Scan(&count)
+		err := tx.QueryRow(ctx, `INSERT INTO safety_go_actionbudget(user_id,action,count,until) VALUES($1,$2,1,$3) ON CONFLICT(user_id,action) DO UPDATE SET count=safety_go_actionbudget.count+1 WHERE safety_go_actionbudget.count<$4 RETURNING true`, a.ID, action, now.Add(policy.Window), policy.Limit).Scan(&allowed)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil
+		}
+		return err
 	})
-	return count <= limit, err
+	return allowed && err == nil, err
 }
 
 func (s *Service) ResolveTarget(ctx context.Context, q platform.Querier, app, model string, id int64) (Target, error) {

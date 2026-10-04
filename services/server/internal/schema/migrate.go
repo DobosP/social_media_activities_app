@@ -11,6 +11,9 @@ import (
 //go:embed baseline.sql
 var baseline string
 
+//go:embed budgets.sql
+var rateBudgets string
+
 // Migrate bootstraps the original relational contract without a Python runtime.
 // Existing databases are adopted; no table or user data is dropped or reset.
 func Migrate(ctx context.Context, db *pgxpool.Pool) error {
@@ -54,6 +57,12 @@ func Migrate(ctx context.Context, db *pgxpool.Pool) error {
 		}
 	}
 	if _, err = tx.Exec(ctx, `CREATE TABLE IF NOT EXISTS go_backend_migrations(version text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now()); INSERT INTO go_backend_migrations(version) VALUES('django-477d43a-contract-v1') ON CONFLICT DO NOTHING`, pgx.QueryExecModeSimpleProtocol); err != nil {
+		return err
+	}
+	if _, err = tx.Exec(ctx, rateBudgets, pgx.QueryExecModeSimpleProtocol); err != nil {
+		return err
+	}
+	if _, err = tx.Exec(ctx, `INSERT INTO go_backend_migrations(version) VALUES('go-shared-rate-budgets-v1') ON CONFLICT DO NOTHING`); err != nil {
 		return err
 	}
 	return tx.Commit(ctx)

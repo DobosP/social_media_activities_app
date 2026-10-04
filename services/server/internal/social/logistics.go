@@ -91,7 +91,7 @@ func (s *Service) AskGroup(ctx context.Context, a Actor, id int64, prompt string
 		return false, platform.ErrInvalid
 	}
 	var sent bool
-	err := s.transaction(ctx, a, func(tx pgx.Tx) error {
+	err := s.rateTransaction(ctx, a, "group_question", 6, time.Hour, func(tx pgx.Tx, reserve func() error) error {
 		v, err := group(ctx, tx, a, id, true, false)
 		if err != nil {
 			return err
@@ -110,8 +110,11 @@ func (s *Service) AskGroup(ctx context.Context, a Actor, id int64, prompt string
 		if err := tx.QueryRow(ctx, `SELECT g.is_staff_curated,u.is_staff FROM social_group g JOIN accounts_user u ON u.id=g.owner_id WHERE g.id=$1`, id).Scan(&curated, &staff); err != nil {
 			return err
 		}
-		if !curated || !staff || !s.allow(a.ID, "group_question", 6, time.Hour) {
+		if !curated || !staff {
 			return platform.ErrForbidden
+		}
+		if err := reserve(); err != nil {
+			return err
 		}
 		if err := s.audit(ctx, tx, a, "group.question_asked", "group", id, map[string]string{"prompt": prompt}); err != nil {
 			return err

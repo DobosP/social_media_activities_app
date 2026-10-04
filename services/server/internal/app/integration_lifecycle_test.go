@@ -20,8 +20,10 @@ import (
 
 	"github.com/DobosP/cat_de_roman_esti/shared-go/authcore"
 
+	"github.com/DobosP/social_media_activities_app/services/server/internal/budgets"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/media"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
+	"github.com/DobosP/social_media_activities_app/services/server/internal/schema"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/social"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/testdb"
 	"github.com/coder/websocket"
@@ -262,6 +264,12 @@ func TestTrustedProxyThrottleIdentityAndBoundedSlidingWindow(t *testing.T) {
 			t.Fatal("proxy trust", got, c.want)
 		}
 	}
+}
+func TestSharedAPIThrottleAcrossReplicas(t *testing.T) {
+	db := testdb.New(t, *appDSN, func(ctx context.Context, db *pgxpool.Pool) error { return schema.Migrate(ctx, db) })
+	actor := testdb.Actor(t, db, "generated-api-rate-actor", "adult")
+	config := Config{ThrottleAnonymous: 2, ThrottleUser: 3, ThrottleToken: 1}
+	replicas := []*App{{Config: config, rates: requestRates{store: budgets.New(db), secret: []byte("generated-rate-secret-at-least-32-bytes")}}, {Config: config, rates: requestRates{store: budgets.New(db), secret: []byte("generated-rate-secret-at-least-32-bytes")}}}
 	for i := 0; i < 3; i++ {
 		r := httptest.NewRequest("GET", "/api/v1/places/", nil)
 		if i%2 == 0 {
@@ -270,39 +278,35 @@ func TestTrustedProxyThrottleIdentityAndBoundedSlidingWindow(t *testing.T) {
 		r.RemoteAddr = "192.0.2.4:3000"
 		r.Header.Set("X-Forwarded-For", fmt.Sprintf("203.0.113.%d", i))
 		w := httptest.NewRecorder()
-		if allowed := a.admitAPI(w, a.forwardedPeer(r)); allowed != (i < 2) || i == 2 && (w.Code != 429 || w.Header().Get("Retry-After") == "") {
+		if allowed := replicas[i%2].admitAPI(w, replicas[i%2].forwardedPeer(r)); allowed != (i < 2) || i == 2 && (w.Code != 429 || w.Header().Get("Retry-After") == "") {
 			t.Fatal("spoofed anonymous quota", i, w.Code)
 		}
 	}
-	r := platform.WithActor(httptest.NewRequest("GET", "/api/places/", nil), platform.Actor{ID: 7, IsActive: true})
+	r := platform.WithActor(httptest.NewRequest("GET", "/api/places/", nil), actor)
 	for i := 0; i < 4; i++ {
 		r.RemoteAddr = fmt.Sprintf("192.0.2.%d:1", i)
-		if a.admitAPI(httptest.NewRecorder(), r) != (i < 3) {
+		if replicas[i%2].admitAPI(httptest.NewRecorder(), r) != (i < 3) {
 			t.Fatal("user quota changed with IP", i)
 		}
 	}
-	for _, path := range []string{"/api/health", "/api/v1/ready/", "/api/ops/csp-report/"} {
-		r := httptest.NewRequest("GET", path, nil)
-		r.RemoteAddr = "192.0.2.4:3000"
-		if !a.admitAPI(httptest.NewRecorder(), r) {
-			t.Fatal("probe/report throttled", path)
-		}
-	}
-	var rates requestRates
-	now := time.Now()
 	for i := 0; i < 2; i++ {
-		if rates.allow("same", 2, now) != 0 {
-			t.Fatal("initial quota")
+		r := httptest.NewRequest("POST", "/api/auth/token/", nil)
+		r.RemoteAddr = "192.0.2.4:3000"
+		if replicas[i].admitAPI(httptest.NewRecorder(), r) != (i == 0) {
+			t.Fatal("token scope not shared or separated")
 		}
 	}
-	if rates.allow("same", 2, now.Add(30*time.Second)) != 30*time.Second || rates.allow("same", 2, now.Add(time.Minute)) != 0 {
-		t.Fatal("sliding expiry")
+}
+func TestAPIAdmissionFailsClosedAndProbesRemainLive(t *testing.T) {
+	a := &App{}
+	w := httptest.NewRecorder()
+	if a.admitAPI(w, httptest.NewRequest("GET", "/api/places/", nil)) || w.Code != 503 {
+		t.Fatal("missing shared state admitted API", w.Code)
 	}
-	for i := 0; i < 10001; i++ {
-		rates.allow(fmt.Sprintf("bounded:%d", i), 1, now.Add(2*time.Minute))
-	}
-	if len(rates.history) > 10000 || rates.entries > 1000000 {
-		t.Fatal("unbounded throttle memory")
+	for _, path := range []string{"/api/health", "/api/v1/ready/", "/api/ops/csp-report/", "/home/"} {
+		if !a.admitAPI(httptest.NewRecorder(), httptest.NewRequest("GET", path, nil)) {
+			t.Fatal("probe throttled", path)
+		}
 	}
 }
 

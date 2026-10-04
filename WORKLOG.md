@@ -1,3 +1,23 @@
+## 2026-10-04 — Shared-budget worker (ADR-0033)
+
+Valid until: combined integration/landing verification — then treat as history.
+
+Replaced API/social/catalog/saved-search/CSP local admission with PostgreSQL sliding histories,
+keyed anonymous peer digests, user-FK erasure and exact statement-trigger capacity totals. Domain
+preflight/reservation/replay retains failed-attempt debits without nested pool/FK deadlocks. Added
+typed caps/windows to existing account/safety/message PG budgets, preserving their fixed windows
+and idempotent fast paths; denied counters cannot overflow. Config parsing and combined wiring
+belong to the config lane. Cat affinity and optional DB-free agentapi remain documented contracts.
+
+Go 1.27.1 native `test -race ./...` and `vet ./...` pass (ordinary PG tests skip without fixture).
+Nine race-enabled budget tests pass against the dedicated internal-network synthetic PG16 fixture;
+no skips, no real data. Low-pool tests use two connections. Storage bounds10kkeys/1mevents, expiry,
+privacy, failed-attempt debits, counter erasure and concurrency pass. Synthetic cardinality means
+2.97/2.10/1.91ms at1/1000/9000buckets; p957.73/4.21/3.53ms; +2000peers retainedGoheap+26488bytes.
+Doc gate: files=52 dead_links=0 stale_terms=0 retired_verbs=0 orphans=0; whitespace clean.
+These are local fixture measurements only. Full domain/codec fixture and combined CLI verification
+remain pending at this checkpoint. No push, merge, deployment or activation performed.
+
 # Worklog — social_media_activities_app
 
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail

@@ -91,7 +91,7 @@ func (s *Service) Post(ctx context.Context, a platform.Actor, conversation int64
 		if e := s.canWrite(ctx, tx, a, conversation); e != nil {
 			return e
 		}
-		return budget(ctx, tx, a.ID, "messaging_send", 60)
+		return s.budget(ctx, tx, a.ID, "messaging_send", 60)
 	}); err != nil {
 		return 0, err
 	}

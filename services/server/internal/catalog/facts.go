@@ -3,50 +3,28 @@ package catalog
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
+	"github.com/DobosP/social_media_activities_app/services/server/internal/budgets"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
 	"github.com/jackc/pgx/v5"
 )
 
-type budgetKey struct {
-	Actor  int64
-	Action string
-}
-type budget struct {
-	Since  time.Time
-	Window time.Duration
-	Count  int
+func (s *Service) rateTransaction(ctx context.Context, a platform.Actor, action string, limit int, window time.Duration, f func(pgx.Tx, func() error) error) error {
+	return budgets.Reserve(func(reserve func() error) error {
+		return platform.Transaction(ctx, s.DB, func(tx pgx.Tx) error { return f(tx, reserve) })
+	}, func() (budgets.Decision, error) {
+		policy, err := budgets.Resolve(s.RatePolicies, action, budgets.Policy{Limit: limit, Window: window})
+		if err != nil {
+			return budgets.Decision{}, err
+		}
+		return s.Budgets.Actor(ctx, a.ID, "catalog."+action, policy)
+	})
 }
 
-func (s *Service) allow(a platform.Actor, action string, n int, window time.Duration) bool {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	now := s.Now()
-	key := budgetKey{a.ID, action}
-	b, exists := s.budgets[key]
-	if !exists && len(s.budgets) >= 10000 {
-		for k, value := range s.budgets {
-			if now.Sub(value.Since) >= value.Window {
-				delete(s.budgets, k)
-			}
-		}
-		if len(s.budgets) >= 10000 {
-			return false
-		}
-	}
-	if !exists || now.Sub(b.Since) >= window {
-		b = budget{Since: now, Window: window}
-	}
-	if b.Count >= n {
-		return false
-	}
-	b.Count++
-	s.budgets[key] = b
-	return true
-}
 func publicVenue(ctx context.Context, q platform.Querier, id int64) error {
 	var current int64
 	return q.QueryRow(ctx, `SELECT p.id FROM places_place p WHERE p.id=$1 AND `+PublicPlaceSQL, id).Scan(&current)
@@ -227,22 +205,27 @@ func (s *Service) VoteFact(ctx context.Context, a platform.Actor, id int64, key 
 	if !validFact(key) {
 		return platform.ErrInvalid
 	}
-	return platform.Transaction(ctx, s.DB, func(tx pgx.Tx) error {
+	err := s.rateTransaction(ctx, a, "place_fact_vote", 40, time.Hour, func(tx pgx.Tx, reserve func() error) error {
 		if err := platform.Participate(ctx, tx, a); err != nil {
 			return err
 		}
 		if err := publicVenue(ctx, tx, id); err != nil {
 			return err
 		}
-		if !s.allow(a, "place_fact_vote", 40, time.Hour) {
-			return platform.ErrInvalid
+		if err := reserve(); err != nil {
+			return err
 		}
 		if _, err := tx.Exec(ctx, `INSERT INTO places_placefactvote(place_id,user_id,fact_key,value,created_at,updated_at) VALUES($1,$2,$3,$4,now(),now()) ON CONFLICT(place_id,user_id,fact_key) DO UPDATE SET value=EXCLUDED.value,updated_at=now()`, id, a.ID, key, value); err != nil {
 			return err
 		}
 		return platform.RecordAudit(ctx, tx, a, "place.fact_voted", fmt.Sprintf("places.place:%d", id), map[string]any{"fact": key, "value": value})
 	})
+	if errors.Is(err, budgets.ErrDenied) {
+		return platform.ErrInvalid
+	}
+	return err
 }
+
 func (s *Service) VoteEdge(ctx context.Context, a platform.Actor, id int64, vote string) error {
 	if vote != "confirm" && vote != "dispute" {
 		return platform.ErrInvalid

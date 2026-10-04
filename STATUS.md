@@ -3,7 +3,6 @@
 Last verified: 2026-10-04
 
 Current truth: STATUS > newest ADR > other docs. History: WORKLOG, ADRs and git.
-
 ## What this is
 
 A children-first, in-person local-activities social app: no ads, deterministic
@@ -82,9 +81,9 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   the serving repo's producer dependency must be intentionally bumped first.
 - Complete held-event review UX, curated cultural child-venue policy, localized
   taxonomy/cinema mapping, and production alerting/shared-state operations.
-- API/social/catalog rate histories are process-local; login state and live transport are database-backed.
-  `REDIS_URL`, required shared-state mode, Sentry, custom Python providers and unsupported nondefault
-  policy values stop native startup by setting name. Detailed inventory: native CLI guide.
+- API/social/catalog/saved-search/CSP admission is PostgreSQL-backed (ADR-0033); account/safety/message
+  budgets expose typed policies. CLI shared-state/nondefault policy wiring is a separate integration gate.
+  `REDIS_URL`, Sentry and custom Python providers remain startup refusals at this branch base.
 - Operational gaps remain in `docs/PRODUCTION_READINESS.md`. Treat an unticked box
   in `docs/archive/COMPLETENESS_GAPS_2026-06.md` as a hypothesis to verify against
   HEAD, not a specification — two backlog surveys turned already-shipped entries
@@ -94,6 +93,10 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
+- 2026-10-04 shared budgets worker: native race/vet passes; nine race-enabled budget tests pass on an
+  isolated synthetic PG fixture, including concurrency/capacity/expiry/erasure/low-pool replay. Full domain
+  fixture qualification and CLI wiring pending; doc gate files=52, all findings=0; no production verification.
+
 - 2026-10-04 owner-approved conversion: native race/vet and portable auth hashes pass. Fresh Go-only
   bootstrap + **173 PostgreSQL/codec tests** passed with no skips; final affected app/media/account
   checks also pass. Source/package vulnerability scans pass after compress1.18.7; unimported
@@ -102,11 +105,9 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   fixable HIGH/CRITICAL findings. All173 contracts pass on canonicalPG16.15 Bookworm too.
 
 ## Standard verification
-Native race/vet + shared-source hash verification; every database/codec contract runs with an
-explicit disposable fixture through `scripts/qualify-native.sh`. Commands: `docs/agent-testing.md`.
-Python/DRF tests continue to qualify the offline compatibility oracle. `git diff --check` is required.
-Native CI: `.github/workflows/native.yml`; frontend/reference CI remains in `ci.yml`.
-Operator contract: `docs/ROEDU_INTEGRATION.md`.
+Native race/vet + shared-source hashes; database/codec contracts require explicit disposable fixtures
+through `scripts/qualify-native.sh` (`docs/agent-testing.md`). Whitespace/doc gates are required.
+Native CI: `.github/workflows/native.yml`; offline reference/frontend: `ci.yml`; operator: `docs/ROEDU_INTEGRATION.md`.
 
 ## Doc map
 
