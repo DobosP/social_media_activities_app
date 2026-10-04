@@ -1,6 +1,13 @@
 # Status — social_media_activities_app
 
 Last verified: 2026-10-04
+
+- **GitHub Actions (Last verified: 2026-10-04):** owner-requested on-demand policy,
+  [ADR-0033](docs/adr/0033-manual-github-actions.md). Workflows use `workflow_dispatch`; automatic
+  push/PR/label/schedule runs are removed. Existing jobs, inputs, and safety gates
+  remain. Workflow YAML, manual inputs, job dependencies, and permission preservation
+  were checked; this configuration edit does not refresh application test results.
+
 Current truth: STATUS > newest ADR > other docs. History: WORKLOG, ADRs and git.
 
 ## What this is

@@ -1,10 +1,13 @@
 name: Native Go application
+# Run from Actions > Run workflow only when requested or needed for a specific change.
 on:
-  push:
-    branches: [main]
-  pull_request:
-  schedule:
-    - cron: "40 6 * * *"
+  workflow_dispatch:
+    inputs:
+      audit_only:
+        description: Run dependency vulnerability audits without the full test/build jobs
+        type: boolean
+        default: false
+
 permissions:
   contents: read
 concurrency:
@@ -12,7 +15,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   native:
-    if: github.event_name != 'schedule'
+    if: ${{ !inputs.audit_only }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
