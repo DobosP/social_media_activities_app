@@ -393,7 +393,7 @@ func (s *Server) SocialAction(w http.ResponseWriter, r *http.Request, a platform
 				var ttl *int64
 				if raw := r.PostForm.Get("disappear"); raw != "" {
 					n, e := strconv.ParseInt(raw, 10, 64)
-					if e != nil || n != 3600 && n != 86400 && n != 604800 {
+					if e != nil || !s.Media.ValidDisappearanceOption(a.Cohort, n) {
 						err = platform.ErrInvalid
 					} else {
 						ttl = &n

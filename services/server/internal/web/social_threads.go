@@ -11,6 +11,7 @@ import (
 	"unicode"
 
 	"github.com/DobosP/social_media_activities_app/services/server/internal/catalog"
+	"github.com/DobosP/social_media_activities_app/services/server/internal/media"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/social"
 	"github.com/flosch/pongo2/v6"
@@ -418,11 +419,24 @@ func (s *Server) socialThreadContext(r *http.Request, a platform.Actor, kind str
 	for _, suffix := range []string{"react", "dissent", "concern", "edit", "delete"} {
 		data["post_"+suffix+"_url_name"] = kind + "_post_" + suffix
 	}
-	data["ephemeral_options"] = []any{[]string{"86400", "1 day"}, []string{"604800", "1 week"}}
-	if a.Cohort == "adult" {
-		data["ephemeral_options"] = []any{[]string{"3600", "1 hour"}, []string{"86400", "1 day"}, []string{"604800", "1 week"}}
+	capabilities := s.Media.ComposerCapabilities(a.Cohort)
+	if !write {
+		capabilities = media.AttachmentCapabilities{}
 	}
-	data["video_enabled"] = a.Cohort == "adult" && s.Media != nil && s.Media.VideoEnabled()
+	data["media_capabilities_supplied"] = true
+	data["attachments_enabled"], data["file_enabled"], data["video_enabled"] = capabilities.Images, capabilities.Files, capabilities.Videos
+	data["attachment_accept"] = capabilities.Accept
+	data["ephemeral_options"] = []any{}
+	if capabilities.Images {
+		for _, seconds := range s.Media.DisappearanceOptions(a.Cohort) {
+			label := durationText(int(seconds))
+			if seconds == 604800 {
+				label = "1 week"
+			}
+			label = s.Renderer.catalog.translate(language(r), label, 1)
+			data["ephemeral_options"] = append(data["ephemeral_options"].([]any), []string{strconv.FormatInt(seconds, 10), label})
+		}
+	}
 	data["video_max_seconds"] = 90
 	if s.Media != nil && s.Media.VideoMaxSeconds() > 0 {
 		data["video_max_seconds"] = int(s.Media.VideoMaxSeconds())

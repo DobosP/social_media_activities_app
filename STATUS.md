@@ -94,6 +94,7 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
+- Media composer policy/codec/render/multipart regressions:12 targeted tests pass, zero skips.
 - Cross-review fixes: coordinator account20/safety20 fixtures pass; inherited erasure deadlock
   reproduces40P01 under old overlay, passes after fix. Profile social5/web3 targeted race tests pass;
   group HTML/SPA/domain cohort-policy regression passes. Combined follow-up qualification pending.
