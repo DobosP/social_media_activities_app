@@ -1,4 +1,4 @@
-# DEMO/FALLBACK ONLY — the real launch is deploy/ (Hetzner single box), see docs/HOSTING_EU.md + docs/adr/0001.
+# UNAPPLIED DEMO/FALLBACK — provider selection is unconfirmed; see docs/HOSTING_EU.md and docs/adr/0001.
 # Render Blueprint: one platform for both the app server and the PostGIS database.
 # Connect this repo in the Render dashboard ("New +" -> "Blueprint") and Render reads
 # this file, provisions the database, builds the Docker image, runs migrations, and
@@ -30,24 +30,18 @@ services:
     # extension during migrate.
     preDeployCommand: social-server --migrate-only
     envVars:
-      - key: DJANGO_SETTINGS_MODULE
-        value: config.settings.prod
       - key: DJANGO_SECRET_KEY
         generateValue: true
       - key: DATABASE_URL
         fromDatabase:
           name: socialapp-db
           property: connectionString
-      - key: ASGI_THREADS
-        value: "4"
       - key: DB_POOL_ENABLED
         value: "True"
       - key: DB_POOL_MIN_SIZE
         value: "0"
       - key: DB_POOL_MAX_SIZE
         value: "4"
-      - key: DB_POOL_TIMEOUT
-        value: "10"
       # REQUIRED for prod to boot (fail-closed assertions): a real identity provider + EU
       # trust anchor — the dev self-declaration stub and EUDI sandbox are rejected in prod.
       # Set these in the Render dashboard (secrets); sync:false keeps them out of the blueprint.
@@ -59,8 +53,9 @@ services:
         sync: false
       - key: METRICS_TOKEN # bearer token for /metrics scrapes
         sync: false
-      # Optional: set REDIS_URL + DJANGO_REQUIRE_SHARED_STATE=True when scaling beyond one
-      # process; ALLOW_MINOR_ONBOARDING stays False until a verifiable trust anchor + DPIA.
+      # Native shared admission/live state uses PostgreSQL; Redis is not required.
+      # DJANGO_REQUIRE_SHARED_STATE=True verifies that native contract at startup.
+      # ALLOW_MINOR_ONBOARDING stays False until a verifiable trust anchor + DPIA.
 
   # Scheduled retention/maintenance jobs (GDPR Art.5(1)(e) storage limitation + DSA
   # proportionality): purge expired E2EE messages & chat, lift elapsed suspensions, send
@@ -77,8 +72,6 @@ services:
     dockerfilePath: ./Dockerfile
     dockerCommand: social-server --due --site-root /app --media-scratch /app/var/media-work
     envVars:
-      - key: DJANGO_SETTINGS_MODULE
-        value: config.settings.prod
       - key: DJANGO_SECRET_KEY
         fromService:
           name: socialapp

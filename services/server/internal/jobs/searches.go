@@ -51,7 +51,7 @@ func (r *Runner) MatchSavedSearches(ctx context.Context) (MatchSummary, error) {
 		beforeScanned, beforeNotified := summary.Scanned, summary.Notified
 		err = platform.Transaction(ctx, r.DB, func(tx pgx.Tx) error {
 			var a platform.Actor
-			err := tx.QueryRow(ctx, `SELECT id,cohort,age_band,is_identity_verified,is_active FROM accounts_user WHERE id=$1`, search.User).Scan(&a.ID, &a.Cohort, &a.AgeBand, &a.IdentityVerified, &a.IsActive)
+			err := tx.QueryRow(ctx, `SELECT id,cohort,age_band,is_identity_verified,is_active,role,is_staff,is_superuser FROM accounts_user WHERE id=$1`, search.User).Scan(&a.ID, &a.Cohort, &a.AgeBand, &a.IdentityVerified, &a.IsActive, &a.Role, &a.IsStaff, &a.IsSuperuser)
 			if err != nil {
 				return err
 			}

@@ -330,3 +330,21 @@ and privacy-withdrawal behavior is retained. Two isolated PostgreSQL race regres
 passed, including seven independently changed fields, expired assurance and withdrawn
 child consent; no skips. Source is pending combined qualification and human safety review.
 Doc gate files=52 dead_links=0 stale_terms=0 retired_verbs=0 orphans=0; whitespace passes.
+
+
+## 2026-10-04 — baseline authority regression and native template cleanup
+
+Valid until: combined completion qualification supersedes this baseline receipt — then treat as history.
+
+All175 existing-plus-authority PostgreSQL/native-codec top-level tests pass with the
+race detector and zero skips in the task-owned internal fixture. The first run exposed
+a catalog fixture actor missing its database role, and the saved-search job exposed an
+incomplete production actor projection. The catalog fixture, saved-search loader and
+guardian capabilities loader now include actual current permission fields; no gate was
+relaxed. Existing saved-search notice and guardian/browser contracts pass.
+
+Native Render/cloud-init templates no longer assign retired DB_POOL_TIMEOUT,
+ASGI_THREADS or DJANGO_SETTINGS_MODULE; the offline oracle templates stay separate.
+Render YAML parses and name absence checks pass. The public API guide now distinguishes
+session-cookie/auth CSRF from opaque-token authorization. This is source/template work,
+with no deployed configuration or credential changes. Combined completion remains pending.

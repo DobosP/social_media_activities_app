@@ -36,3 +36,10 @@ that an already-admitted operation is canceled after every subsequent concurrent
 the owning domain still controls transaction locks and final delivery authorization.
 Repository AGENTS.md requires human review of the concrete authentication/privacy/safety
 changes before source landing. No production or product activation is implied.
+
+## Baseline regression receipt
+
+The broader baseline passed175 PostgreSQL/codec race contracts with zero skips.
+Saved-search jobs and guardian capability reads now load the actor capability fields
+needed by the equality check. The catalog fixture also returns the same role it inserts.
+The combined shared-budget/configuration/admin candidate still requires qualification.

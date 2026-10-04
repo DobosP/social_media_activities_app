@@ -35,6 +35,7 @@ func user(t *testing.T, s *Service, name, cohort string) platform.Actor {
 	a.AgeBand = "adult"
 	a.IsActive = true
 	a.IdentityVerified = true
+	a.Role = "user"
 	err := s.DB.QueryRow(context.Background(), `INSERT INTO accounts_user(password,last_login,is_superuser,public_id,username,display_name,age_band,cohort,is_identity_verified,identity_verified_at,role,is_active,is_staff,date_joined) VALUES('!',NULL,false,gen_random_uuid(),$1,$1,'adult',$2,true,now(),'user',true,false,now()) RETURNING id,public_id::text`, name, cohort).Scan(&a.ID, &a.PublicID)
 	if err != nil {
 		t.Fatal(err)

@@ -429,7 +429,7 @@ func (s *Server) accountCapabilities(ctx context.Context, guardianID, wardID int
 		return nil, platform.ErrNotFound
 	}
 	var actor platform.Actor
-	err = s.DB.QueryRow(ctx, `SELECT id,cohort,age_band,is_identity_verified,is_active FROM accounts_user WHERE id=$1`, guardianID).Scan(&actor.ID, &actor.Cohort, &actor.AgeBand, &actor.IdentityVerified, &actor.IsActive)
+	err = s.DB.QueryRow(ctx, `SELECT id,cohort,age_band,is_identity_verified,is_active,role,is_staff,is_superuser FROM accounts_user WHERE id=$1`, guardianID).Scan(&actor.ID, &actor.Cohort, &actor.AgeBand, &actor.IdentityVerified, &actor.IsActive, &actor.Role, &actor.IsStaff, &actor.IsSuperuser)
 	if err != nil {
 		return nil, err
 	}

@@ -128,7 +128,7 @@ func (s *Server) PublicDownload(w http.ResponseWriter, r *http.Request, a platfo
 		}
 		publicDownload(w, "application/json", body)
 	case "docs", "api_docs":
-		publicDownload(w, "text/html; charset=utf-8", []byte(`<!doctype html><html lang="en"><meta charset="utf-8"><title>Activities API</title><h1>Activities API</h1><p>Native Go service. Public venue and event reads preserve source licensing and publication gates. Private endpoints require authentication and cohort authorization. Mutations require same-origin CSRF.</p><p><a href="/api/schema/">OpenAPI schema</a></p><ul><li><a href="/api/v1/places/">Places GeoJSON</a></li><li><a href="/api/v1/events/">Upcoming events</a></li><li><a href="/open-data/">Licensing and bulk snapshots</a></li></ul></html>`))
+		publicDownload(w, "text/html; charset=utf-8", []byte(`<!doctype html><html lang="en"><meta charset="utf-8"><title>Activities API</title><h1>Activities API</h1><p>Native Go service. Public venue and event reads preserve source licensing and publication gates. Private endpoints require authentication and cohort authorization. Session-cookie mutations require same-origin CSRF; login, signup and logout require CSRF even before sign-in. API tokens retain current account and domain authorization.</p><p><a href="/api/schema/">OpenAPI schema</a></p><ul><li><a href="/api/v1/places/">Places GeoJSON</a></li><li><a href="/api/v1/events/">Upcoming events</a></li><li><a href="/open-data/">Licensing and bulk snapshots</a></li></ul></html>`))
 	default:
 		return false
 	}
