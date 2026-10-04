@@ -83,7 +83,7 @@ func (s *Server) form(r *http.Request, a platform.Actor, name string, initial ma
 	}
 	if _, yes := fields["place"]; yes {
 		ownPending := name == "ActivityForm" || name == "ActivityEditForm" || name == "SeriesForm"
-		rows, err := s.DB.Query(r.Context(), `SELECT p.id::text,p.name||CASE WHEN p.address_city<>'' THEN ' — '||p.address_city ELSE '' END FROM places_place p WHERE (`+catalog.PublicPlaceSQL+` OR ($1 AND $2='adult' AND EXISTS(SELECT 1 FROM social_userplaceproposal proposal WHERE proposal.place_id=p.id AND proposal.status='pending' AND proposal.proposer_id=$3))) ORDER BY p.name,p.id LIMIT 1000`, ownPending, a.Cohort, a.ID)
+		rows, err := s.DB.Query(r.Context(), `SELECT p.id::text,p.name||CASE WHEN p.address_city<>'' THEN ' — '||p.address_city ELSE '' END FROM places_place p WHERE (`+catalog.PolicyFromContext(r.Context()).PlaceSQL()+` OR ($1 AND $2='adult' AND EXISTS(SELECT 1 FROM social_userplaceproposal proposal WHERE proposal.place_id=p.id AND proposal.status='pending' AND proposal.proposer_id=$3))) ORDER BY p.name,p.id LIMIT 1000`, ownPending, a.Cohort, a.ID)
 		if err != nil {
 			return nil, err
 		}

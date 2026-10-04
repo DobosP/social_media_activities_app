@@ -37,7 +37,7 @@ func (s *Service) PrepareThreadAttachment(ctx context.Context, a platform.Actor,
 	if err != nil {
 		return nil, err
 	}
-	if kind != "image" && cohort != "adult" || kind == "video" && !s.processor.cfg.VideoEnabled {
+	if !s.attachmentModeAllowed(kind, cohort) {
 		return nil, platform.ErrForbidden
 	}
 	p := &PreparedAttachment{service: s, actor: a, thread: thread, kind: kind, filename: filename, ttl: ttl}
@@ -94,7 +94,7 @@ func (p *PreparedAttachment) Publish(ctx context.Context, tx pgx.Tx, post int64)
 	if err != nil {
 		return err
 	}
-	if thread != p.thread || p.kind != "image" && cohort != "adult" {
+	if thread != p.thread || !p.service.attachmentModeAllowed(p.kind, cohort) {
 		return platform.ErrForbidden
 	}
 	mainKey, sourceKey, status, mime := p.key, "", "ready", p.manifest.Main.ContentType
@@ -107,7 +107,7 @@ func (p *PreparedAttachment) Publish(ctx context.Context, tx pgx.Tx, post int64)
 	}
 	m := p.manifest
 	var id int64
-	if err = tx.QueryRow(ctx, `INSERT INTO media_attachment(post_id,uploader_id,kind,status,storage_key,thumb_storage_key,poster_storage_key,poster_content_type,source_storage_key,content_type,byte_size,sha256,original_filename,width,height,exif_stripped,duration_seconds,processing_attempts,processing_started_at,expires_at,purged_at,created_at) VALUES($1,$2,$3,$4,$5,$6,'','',$7,$8,$9,$10,$11,$12,$13,$14,0,0,NULL,$15,NULL,now()) RETURNING id`, post, p.actor.ID, p.kind, status, mainKey, p.thumb, sourceKey, mime, m.Main.ByteSize, m.Main.SHA256, display, m.Main.Width, m.Main.Height, m.MetadataStripped, expiry(cohort, p.ttl)).Scan(&id); err != nil {
+	if err = tx.QueryRow(ctx, `INSERT INTO media_attachment(post_id,uploader_id,kind,status,storage_key,thumb_storage_key,poster_storage_key,poster_content_type,source_storage_key,content_type,byte_size,sha256,original_filename,width,height,exif_stripped,duration_seconds,processing_attempts,processing_started_at,expires_at,purged_at,created_at) VALUES($1,$2,$3,$4,$5,$6,'','',$7,$8,$9,$10,$11,$12,$13,$14,0,0,NULL,$15,NULL,now()) RETURNING id`, post, p.actor.ID, p.kind, status, mainKey, p.thumb, sourceKey, mime, m.Main.ByteSize, m.Main.SHA256, display, m.Main.Width, m.Main.Height, m.MetadataStripped, p.service.attachmentExpiry(cohort, p.ttl)).Scan(&id); err != nil {
 		return err
 	}
 	if err = saveManifest(ctx, tx, "attachment", id, m); err != nil {

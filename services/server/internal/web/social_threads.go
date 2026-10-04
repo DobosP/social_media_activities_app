@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"unicode"
@@ -107,6 +108,38 @@ func socialFacets() []map[string]any {
 func (s *Server) socialPostModels(ctx context.Context, a platform.Actor, tid int64, items []map[string]any) ([]map[string]any, error) {
 	if len(items) == 0 {
 		return []map[string]any{}, nil
+	}
+	// The largest permitted thread page has 1000 roots, 900 replies and 50
+	// announcements. Keep each model/footer/media query within its 1000-ID cap.
+	if len(items) > 1950 {
+		return nil, platform.ErrInvalid
+	}
+	if len(items) > 1000 {
+		models := []map[string]any{}
+		seen := map[int64]bool{}
+		for start := 0; start < len(items); start += 1000 {
+			batch, err := s.socialPostModels(ctx, a, tid, items[start:min(start+1000, len(items))])
+			if err != nil {
+				return nil, err
+			}
+			for _, model := range batch {
+				id := spaID(model)
+				if !seen[id] {
+					models = append(models, model)
+					seen[id] = true
+				}
+			}
+		}
+		// Match the unchunked SQL's created_at/id order and ANY's deduplication.
+		sort.Slice(models, func(i, j int) bool {
+			left, _ := spaDateValue(models[i]["created_at"])
+			right, _ := spaDateValue(models[j]["created_at"])
+			if left.Equal(right) {
+				return spaID(models[i]) < spaID(models[j])
+			}
+			return left.Before(right)
+		})
+		return models, nil
 	}
 	ids := []int64{}
 	for _, p := range items {
@@ -252,7 +285,7 @@ func (s *Server) socialShares(ctx context.Context, a platform.Actor, posts []map
 		}
 	}
 	if len(places) > 0 {
-		rows, err := socialRows(ctx, s.DB, `SELECT jsonb_build_object('id',p.id,'name',`+catalog.PlaceDisplayNameSQL()+`,'address_city',p.address_city) FROM places_place p WHERE p.id=ANY($1) AND `+catalog.PublicPlaceSQL, places)
+		rows, err := socialRows(ctx, s.DB, `SELECT jsonb_build_object('id',p.id,'name',`+catalog.PlaceDisplayNameSQL()+`,'address_city',p.address_city) FROM places_place p WHERE p.id=ANY($1) AND `+catalog.PolicyFromContext(ctx).PlaceSQL(), places)
 		if err != nil {
 			return err
 		}
@@ -261,7 +294,7 @@ func (s *Server) socialShares(ctx context.Context, a platform.Actor, posts []map
 		}
 	}
 	if len(events) > 0 {
-		rows, err := socialRows(ctx, s.DB, `SELECT jsonb_build_object('id',e.id,'title',e.title,'starts_at',e.starts_at,'place',CASE WHEN p.id IS NULL THEN NULL ELSE jsonb_build_object('id',p.id,'name',`+catalog.PlaceDisplayNameSQL()+`) END) FROM events_event e LEFT JOIN places_place p ON p.id=e.place_id WHERE e.id=ANY($1) AND `+catalog.PublicEventsSQL(), events)
+		rows, err := socialRows(ctx, s.DB, `SELECT jsonb_build_object('id',e.id,'title',e.title,'starts_at',e.starts_at,'place',CASE WHEN p.id IS NULL THEN NULL ELSE jsonb_build_object('id',p.id,'name',`+catalog.PlaceDisplayNameSQL()+`) END) FROM events_event e LEFT JOIN places_place p ON p.id=e.place_id WHERE e.id=ANY($1) AND `+catalog.PolicyFromContext(ctx).EventSQL(), events)
 		if err != nil {
 			return err
 		}
@@ -285,14 +318,15 @@ func (s *Server) socialShares(ctx context.Context, a platform.Actor, posts []map
 
 func (s *Server) socialThreadContext(r *http.Request, a platform.Actor, kind string, pk, tid int64, data pongo2.Context) error {
 	ctx := r.Context()
+	limit := s.Social.Policy.ThreadPostLimit
 	before, _ := strconv.ParseInt(r.URL.Query().Get("before"), 10, 64)
-	roots, err := socialRows(ctx, s.DB, `SELECT jsonb_build_object('id',p.id,'created_at',p.created_at) FROM social_post p WHERE p.thread_id=$1 AND NOT p.is_hidden AND NOT p.is_announcement AND p.reply_to_id IS NULL AND ($2::bigint<=0 OR NOT EXISTS(SELECT 1 FROM social_post anchor WHERE anchor.id=$2 AND anchor.thread_id=$1) OR (p.created_at,p.id)<(SELECT anchor.created_at,anchor.id FROM social_post anchor WHERE anchor.id=$2 AND anchor.thread_id=$1)) ORDER BY p.created_at DESC,p.id DESC LIMIT 101`, tid, before)
+	roots, err := socialRows(ctx, s.DB, `SELECT jsonb_build_object('id',p.id,'created_at',p.created_at) FROM social_post p WHERE p.thread_id=$1 AND NOT p.is_hidden AND NOT p.is_announcement AND p.reply_to_id IS NULL AND ($2::bigint<=0 OR NOT EXISTS(SELECT 1 FROM social_post anchor WHERE anchor.id=$2 AND anchor.thread_id=$1) OR (p.created_at,p.id)<(SELECT anchor.created_at,anchor.id FROM social_post anchor WHERE anchor.id=$2 AND anchor.thread_id=$1)) ORDER BY p.created_at DESC,p.id DESC LIMIT $3`, tid, before, limit+1)
 	if err != nil {
 		return err
 	}
-	data["has_older"] = len(roots) > 100
-	if len(roots) > 100 {
-		roots = roots[:100]
+	data["has_older"] = len(roots) > limit
+	if len(roots) > limit {
+		roots = roots[:limit]
 		data["older_cursor"] = spaID(roots[len(roots)-1])
 	}
 	for i, j := 0, len(roots)-1; i < j; i, j = i+1, j-1 {

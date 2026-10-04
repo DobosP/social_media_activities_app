@@ -45,7 +45,7 @@ func (r *Runner) MatchSavedSearches(ctx context.Context) (MatchSummary, error) {
 		return summary, err
 	}
 	for _, search := range searches {
-		if summary.Scanned >= 1000 {
+		if summary.Scanned >= r.Config.SavedSearchMatchBatch {
 			break
 		}
 		beforeScanned, beforeNotified := summary.Scanned, summary.Notified
@@ -63,7 +63,7 @@ func (r *Runner) MatchSavedSearches(ctx context.Context) (MatchSummary, error) {
 			} else if err != nil {
 				return err
 			}
-			rows, err := tx.Query(ctx, `SELECT a.id,a.title,t.name,a.starts_at FROM social_activity a JOIN taxonomy_activitytype t ON t.id=a.activity_type_id JOIN places_place p ON p.id=a.place_id WHERE a.cohort=$1 AND NOT a.is_hidden AND a.status='open' AND a.starts_at>=$2 AND a.owner_id<>$3 AND `+searchArea+` AND (($5::bigint IS NOT NULL AND (a.activity_type_id=$5 OR EXISTS(SELECT 1 FROM social_activity_secondary_types st WHERE st.activity_id=a.id AND st.activitytype_id=$5))) OR ($6::bigint IS NOT NULL AND (t.category_id=$6 OR EXISTS(SELECT 1 FROM social_activity_secondary_types st JOIN taxonomy_activitytype t2 ON t2.id=st.activitytype_id WHERE st.activity_id=a.id AND t2.category_id=$6)))) AND (NOT $7::boolean OR a.beginners_welcome) AND ($8='' OR a.cost_band=$8) AND NOT EXISTS(SELECT 1 FROM safety_block b WHERE (b.blocker_id=$3 AND b.blocked_id=a.owner_id) OR (b.blocker_id=a.owner_id AND b.blocked_id=$3)) AND NOT EXISTS(SELECT 1 FROM saved_searches_savedsearchmatch m WHERE m.user_id=$3 AND m.activity_id=a.id) ORDER BY a.starts_at,a.id LIMIT 1000`, search.Cohort, r.Config.Now(), a.ID, search.Area, search.Type, search.Category, search.Beginners, search.Cost)
+			rows, err := tx.Query(ctx, `SELECT a.id,a.title,t.name,a.starts_at FROM social_activity a JOIN taxonomy_activitytype t ON t.id=a.activity_type_id JOIN places_place p ON p.id=a.place_id WHERE a.cohort=$1 AND NOT a.is_hidden AND a.status='open' AND a.starts_at>=$2 AND a.owner_id<>$3 AND `+searchArea+` AND (($5::bigint IS NOT NULL AND (a.activity_type_id=$5 OR EXISTS(SELECT 1 FROM social_activity_secondary_types st WHERE st.activity_id=a.id AND st.activitytype_id=$5))) OR ($6::bigint IS NOT NULL AND (t.category_id=$6 OR EXISTS(SELECT 1 FROM social_activity_secondary_types st JOIN taxonomy_activitytype t2 ON t2.id=st.activitytype_id WHERE st.activity_id=a.id AND t2.category_id=$6)))) AND (NOT $7::boolean OR a.beginners_welcome) AND ($8='' OR a.cost_band=$8) AND NOT EXISTS(SELECT 1 FROM safety_block b WHERE (b.blocker_id=$3 AND b.blocked_id=a.owner_id) OR (b.blocker_id=a.owner_id AND b.blocked_id=$3)) AND NOT EXISTS(SELECT 1 FROM saved_searches_savedsearchmatch m WHERE m.user_id=$3 AND m.activity_id=a.id) ORDER BY a.starts_at,a.id LIMIT $9`, search.Cohort, r.Config.Now(), a.ID, search.Area, search.Type, search.Category, search.Beginners, search.Cost, r.Config.SavedSearchMatchBatch-summary.Scanned)
 			if err != nil {
 				return err
 			}
@@ -90,7 +90,7 @@ func (r *Runner) MatchSavedSearches(ctx context.Context) (MatchSummary, error) {
 				if !scheduleFits(m.start.In(loc), search.Window) {
 					continue
 				}
-				if summary.Scanned >= 1000 {
+				if summary.Scanned >= r.Config.SavedSearchMatchBatch {
 					break
 				}
 				allowed, err := r.searchBudget(ctx, tx, a.ID)
@@ -119,7 +119,7 @@ func (r *Runner) MatchSavedSearches(ctx context.Context) (MatchSummary, error) {
 			if search.Beginners || search.Cost != "" {
 				return nil
 			}
-			rows, err = tx.Query(ctx, `SELECT g.id,t.name,p.name,g.coarse_window FROM social_activityinterest g JOIN taxonomy_activitytype t ON t.id=g.activity_type_id JOIN places_place p ON p.id=g.place_id WHERE g.cohort=$1 AND g.converted_activity_id IS NULL AND g.expires_at>$2 AND g.proposer_id<>$3 AND `+searchArea+` AND (($5::bigint IS NOT NULL AND g.activity_type_id=$5) OR ($6::bigint IS NOT NULL AND t.category_id=$6)) AND ($7='' OR g.coarse_window=$7) AND NOT EXISTS(SELECT 1 FROM social_activityinterest_interested_users i WHERE i.activityinterest_id=g.id AND i.user_id=$3) AND NOT EXISTS(SELECT 1 FROM safety_block b WHERE (b.blocker_id=$3 AND b.blocked_id=g.proposer_id) OR (b.blocker_id=g.proposer_id AND b.blocked_id=$3)) AND NOT EXISTS(SELECT 1 FROM saved_searches_savedsearchgaugematch m WHERE m.user_id=$3 AND m.interest_id=g.id) ORDER BY g.expires_at,g.id LIMIT 1000`, search.Cohort, r.Config.Now(), a.ID, search.Area, search.Type, search.Category, search.Window)
+			rows, err = tx.Query(ctx, `SELECT g.id,t.name,p.name,g.coarse_window FROM social_activityinterest g JOIN taxonomy_activitytype t ON t.id=g.activity_type_id JOIN places_place p ON p.id=g.place_id WHERE g.cohort=$1 AND g.converted_activity_id IS NULL AND g.expires_at>$2 AND g.proposer_id<>$3 AND `+searchArea+` AND (($5::bigint IS NOT NULL AND g.activity_type_id=$5) OR ($6::bigint IS NOT NULL AND t.category_id=$6)) AND ($7='' OR g.coarse_window=$7) AND NOT EXISTS(SELECT 1 FROM social_activityinterest_interested_users i WHERE i.activityinterest_id=g.id AND i.user_id=$3) AND NOT EXISTS(SELECT 1 FROM safety_block b WHERE (b.blocker_id=$3 AND b.blocked_id=g.proposer_id) OR (b.blocker_id=g.proposer_id AND b.blocked_id=$3)) AND NOT EXISTS(SELECT 1 FROM saved_searches_savedsearchgaugematch m WHERE m.user_id=$3 AND m.interest_id=g.id) ORDER BY g.expires_at,g.id LIMIT $8`, search.Cohort, r.Config.Now(), a.ID, search.Area, search.Type, search.Category, search.Window, r.Config.SavedSearchMatchBatch-summary.Scanned)
 			if err != nil {
 				return err
 			}
@@ -142,7 +142,7 @@ func (r *Runner) MatchSavedSearches(ctx context.Context) (MatchSummary, error) {
 				return err
 			}
 			for _, g := range gauges {
-				if summary.Scanned >= 1000 {
+				if summary.Scanned >= r.Config.SavedSearchMatchBatch {
 					break
 				}
 				allowed, err := r.searchBudget(ctx, tx, a.ID)
@@ -207,6 +207,6 @@ func (r *Runner) searchBudget(ctx context.Context, tx pgx.Tx, user int64) (bool,
 		return false, err
 	}
 	var count int
-	err := tx.QueryRow(ctx, `INSERT INTO accounts_go_action_budget(user_id,action,count,until) VALUES($1,'saved_search_match',1,$2) ON CONFLICT(user_id,action) DO UPDATE SET count=accounts_go_action_budget.count+1 RETURNING count`, user, r.Config.Now().Add(24*time.Hour)).Scan(&count)
-	return count <= 50, err
+	err := tx.QueryRow(ctx, `INSERT INTO accounts_go_action_budget(user_id,action,count,until) VALUES($1,'saved_search_match',1,$2) ON CONFLICT(user_id,action) DO UPDATE SET count=accounts_go_action_budget.count+1 RETURNING count`, user, r.Config.Now().Add(r.Config.SavedSearchNotifyWindow)).Scan(&count)
+	return count <= r.Config.SavedSearchNotifyLimit, err
 }

@@ -16,10 +16,11 @@ import (
 
 type Visibility func(context.Context, platform.Querier, platform.Actor, int64) (bool, error)
 type Config struct {
-	Accounts       *accounts.Service
-	CanSeeActivity Visibility
-	CanReadThread  Visibility
-	Now            func() time.Time
+	Accounts             *accounts.Service
+	CanSeeActivity       Visibility
+	CanReadThread        Visibility
+	Now                  func() time.Time
+	UnsafeReportCooldown time.Duration
 }
 type Service struct {
 	DB           *pgxpool.Pool
@@ -30,6 +31,9 @@ type Service struct {
 func New(db *pgxpool.Pool, config Config) *Service {
 	if config.Now == nil {
 		config.Now = time.Now
+	}
+	if config.UnsafeReportCooldown == 0 {
+		config.UnsafeReportCooldown = 5 * time.Minute
 	}
 	return &Service{DB: db, Config: config}
 }

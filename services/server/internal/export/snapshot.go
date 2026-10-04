@@ -148,7 +148,7 @@ func (s *Service) Snapshot(ctx context.Context, directory string) (Summary, erro
 	if _, err := tx.Exec(ctx, `SET LOCAL statement_timeout='30s'`); err != nil {
 		return out, err
 	}
-	eventWhere := catalog.PublicEventsSQL() + ` AND e.starts_at>=now() AND e.lifecycle_status IN('scheduled','rescheduled','sold_out')`
+	eventWhere := catalog.PolicyFromContext(ctx).EventSQL() + ` AND e.starts_at>=now() AND e.lifecycle_status IN('scheduled','rescheduled','sold_out')`
 	eventJoin := ` FROM events_event e LEFT JOIN places_place p ON p.id=e.place_id LEFT JOIN taxonomy_activitytype t ON t.id=e.activity_type_id `
 	eventProjection := catalog.PublicEventProjectionSQL() + ` || jsonb_build_object('place_id',e.place_id,'place_summary',CASE WHEN p.id IS NULL THEN NULL ELSE jsonb_build_object('id',p.id,'name',` + catalog.PlaceDisplayNameSQL() + `,'city',p.address_city,'lat',ST_Y(p.location::geometry),'lon',ST_X(p.location::geometry)) END)`
 	events, err := records(ctx, tx, `SELECT `+eventProjection+eventJoin+` WHERE `+eventWhere+` ORDER BY e.starts_at,e.id LIMIT $1`, EventsCap+1)
@@ -166,7 +166,7 @@ func (s *Service) Snapshot(ctx context.Context, directory string) (Summary, erro
 		delete(e, "place")
 		delete(e, "place_name")
 	}
-	places, err := records(ctx, tx, `SELECT `+catalog.PlaceExportProjectionSQL()+` FROM places_place p WHERE `+catalog.PublicPlaceSQL+` ORDER BY p.id LIMIT $1`, PlacesCap+1)
+	places, err := records(ctx, tx, `SELECT `+catalog.PlaceExportProjectionSQL()+` FROM places_place p WHERE `+catalog.PolicyFromContext(ctx).PlaceSQL()+` ORDER BY p.id LIMIT $1`, PlacesCap+1)
 	if err != nil {
 		return out, err
 	}

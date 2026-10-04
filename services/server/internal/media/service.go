@@ -30,6 +30,7 @@ type Authorizer interface {
 type Service struct {
 	db               *pgxpool.Pool
 	processor        *Processor
+	policy           PolicyConfig
 	storage          Store
 	tokens           TokenCodec
 	auth             Authorizer
@@ -44,7 +45,7 @@ type Service struct {
 }
 
 func NewService(db *pgxpool.Pool, p *Processor, storage Store, tokens TokenCodec, a Authorizer) *Service {
-	return &Service{db: db, processor: p, storage: storage, tokens: tokens, auth: a, ClosureThreshold: 3, ClosureDecay: 14 * 24 * time.Hour}
+	return &Service{db: db, processor: p, storage: storage, tokens: tokens, auth: a, policy: DefaultPolicyConfig(), ClosureThreshold: 3, ClosureDecay: 14 * 24 * time.Hour}
 }
 func EnsureSchema(ctx context.Context, db *pgxpool.Pool) error {
 	_, e := db.Exec(ctx, `
@@ -228,6 +229,7 @@ func (s *Service) ReadUpload(w http.ResponseWriter, r *http.Request, maxBytes in
 		return "", "", nil, platform.ErrInvalid
 	}
 	fields = map[string]string{}
+	formBudget := platform.NewUploadBudget(r.Context())
 	var file *os.File
 	defer func() {
 		if file != nil {
@@ -274,7 +276,7 @@ func (s *Service) ReadUpload(w http.ResponseWriter, r *http.Request, maxBytes in
 				part.Close()
 				return path, filename, fields, platform.ErrInvalid
 			}
-			b, e := io.ReadAll(io.LimitReader(part, 2049))
+			b, e := formBudget.ReadField(part, 2048)
 			part.Close()
 			if e != nil || len(b) > 2048 {
 				return path, filename, fields, platform.ErrInvalid
@@ -349,7 +351,7 @@ func (s *Service) photoAllowed(ctx context.Context, q platform.Querier, a platfo
 }
 func (s *Service) url(kind string, id int64, a platform.Actor, variant string, expires *time.Time) (string, error) {
 	now := time.Now()
-	deadline := now.Add(5 * time.Minute)
+	deadline := now.Add(s.policy.SignedURLTTL)
 	if expires != nil && expires.Before(deadline) {
 		deadline = *expires
 	}
@@ -416,13 +418,13 @@ func (s *Service) UploadPhoto(ctx context.Context, a platform.Actor, kind string
 				return e
 			}
 			var changes int
-			if e := tx.QueryRow(ctx, `SELECT count(*) FROM safety_auditlog WHERE actor_id=$1 AND event='media.uploaded' AND data->>'kind'='profile' AND created_at>now()-interval '1 hour'`, a.ID).Scan(&changes); e != nil {
+			if e := tx.QueryRow(ctx, `SELECT count(*) FROM safety_auditlog WHERE actor_id=$1 AND event='media.uploaded' AND data->>'kind'='profile' AND created_at>now()-$2*interval '1 second'`, a.ID, s.policy.AvatarUploadWindow.Seconds()).Scan(&changes); e != nil {
 				return e
 			}
-			if changes >= 20 {
+			if changes >= s.policy.AvatarUploadLimit {
 				return ErrThrottled
 			}
-			rows, e := tx.Query(ctx, `SELECT sha256,phash FROM media_photo WHERE kind='profile' AND uploader_id!=$1 ORDER BY created_at DESC LIMIT 10000`, a.ID)
+			rows, e := tx.Query(ctx, `SELECT sha256,phash FROM media_photo WHERE kind='profile' AND uploader_id!=$1 ORDER BY created_at DESC LIMIT $2`, a.ID, s.policy.PerceptualProfileScanCap)
 			if e != nil {
 				return e
 			}
@@ -489,13 +491,13 @@ func (s *Service) avatarAttempt(ctx context.Context, a platform.Actor) error {
 			return e
 		}
 		var n int
-		if e := tx.QueryRow(ctx, `SELECT count(*) FROM media_go_avatarattempt WHERE user_id=$1 AND created_at>now()-interval '1 hour'`, a.ID).Scan(&n); e != nil {
+		if e := tx.QueryRow(ctx, `SELECT count(*) FROM media_go_avatarattempt WHERE user_id=$1 AND created_at>now()-$2*interval '1 second'`, a.ID, s.policy.AvatarUploadWindow.Seconds()).Scan(&n); e != nil {
 			return e
 		}
-		if n >= 20 {
+		if n >= s.policy.AvatarUploadLimit {
 			return ErrThrottled
 		}
-		if _, e := tx.Exec(ctx, `DELETE FROM media_go_avatarattempt WHERE user_id=$1 AND created_at<=now()-interval '1 hour'`, a.ID); e != nil {
+		if _, e := tx.Exec(ctx, `DELETE FROM media_go_avatarattempt WHERE user_id=$1 AND created_at<=now()-$2*interval '1 second'`, a.ID, s.policy.AvatarUploadWindow.Seconds()); e != nil {
 			return e
 		}
 		_, e := tx.Exec(ctx, `INSERT INTO media_go_avatarattempt(user_id) VALUES($1)`, a.ID)

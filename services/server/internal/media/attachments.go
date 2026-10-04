@@ -113,12 +113,15 @@ func filepathBase(s string) string {
 	return s
 }
 func expiry(cohort string, ttl *int64) *time.Time {
+	return expiryWithPolicy(DefaultPolicyConfig(), cohort, ttl)
+}
+func expiryWithPolicy(policy PolicyConfig, cohort string, ttl *int64) *time.Time {
 	if ttl == nil || *ttl <= 0 {
 		return nil
 	}
-	floor := int64(3600)
+	floor := int64(policy.EphemeralMinTTL / time.Second)
 	if cohort == "child" || cohort == "teen" {
-		floor = 86400
+		floor = int64(policy.EphemeralMinTTLMinors / time.Second)
 	}
 	value := max(floor, *ttl)
 	if value > 10*365*86400 {
@@ -174,7 +177,7 @@ func (s *Service) AttachToPost(ctx context.Context, a platform.Actor, postID int
 	if err != nil {
 		return att, err
 	}
-	if kind != "image" && cohort != "adult" {
+	if !s.attachmentModeAllowed(kind, cohort) {
 		return att, platform.ErrForbidden
 	}
 	if kind == "video" && !s.processor.cfg.VideoEnabled {
@@ -235,7 +238,7 @@ func (s *Service) AttachToPost(ctx context.Context, a platform.Actor, postID int
 		if kind != "image" && freshCohort != "adult" {
 			return platform.ErrForbidden
 		}
-		exp := expiry(freshCohort, ttl)
+		exp := s.attachmentExpiry(freshCohort, ttl)
 		mainKey, sourceKey, status, mime := key, "", "ready", m.Main.ContentType
 		if kind == "video" {
 			mainKey, sourceKey, status, mime = "", key, "pending", "video/mp4"
@@ -399,7 +402,7 @@ func (s *Service) ProcessPendingVideos(ctx context.Context, limit int) (int, err
 		terminal := false
 		err := platform.Transaction(ctx, s.db, func(tx pgx.Tx) error {
 			var id int64
-			e := tx.QueryRow(ctx, `SELECT id FROM media_attachment WHERE kind='video' AND purged_at IS NULL AND source_storage_key!='' AND (status='pending' OR (status='processing' AND processing_started_at<now()-interval '30 minutes')) ORDER BY created_at,id LIMIT 1 FOR UPDATE SKIP LOCKED`).Scan(&id)
+			e := tx.QueryRow(ctx, `SELECT id FROM media_attachment WHERE kind='video' AND purged_at IS NULL AND source_storage_key!='' AND (status='pending' OR (status='processing' AND processing_started_at<now()-$1*interval '1 second')) ORDER BY created_at,id LIMIT 1 FOR UPDATE SKIP LOCKED`, s.policy.VideoStaleProcessing.Seconds()).Scan(&id)
 			if e != nil {
 				return e
 			}
@@ -407,7 +410,7 @@ func (s *Service) ProcessPendingVideos(ctx context.Context, limit int) (int, err
 			if e != nil {
 				return e
 			}
-			if fresh.attempts >= 3 {
+			if fresh.attempts >= s.policy.VideoMaxAttempts {
 				terminal = true
 				if e = queueDelete(ctx, tx, fresh.key, fresh.thumb, fresh.poster, fresh.sourceKey); e != nil {
 					return e
@@ -474,6 +477,9 @@ func (s *Service) download(ctx context.Context, key string, size int64) (path st
 	return path, file.Close()
 }
 func (s *Service) processClaim(ctx context.Context, att Attachment) (err error) {
+	// A live worker must finish before another worker may reclaim its stale row.
+	ctx, cancel := context.WithTimeout(ctx, s.policy.VideoStaleProcessing-time.Second)
+	defer cancel()
 	path, err := s.download(ctx, att.sourceKey, att.ByteSize)
 	if err != nil {
 		s.failClaim(ctx, att, err)
@@ -563,7 +569,7 @@ func (s *Service) failClaim(ctx context.Context, att Attachment, cause error) {
 		status := "processing"
 		if blocked {
 			status = "blocked"
-		} else if fresh.attempts >= 3 || errors.Is(cause, ErrRejected) || errors.Is(cause, platform.ErrForbidden) {
+		} else if fresh.attempts >= s.policy.VideoMaxAttempts || errors.Is(cause, ErrRejected) || errors.Is(cause, platform.ErrForbidden) {
 			status = "failed"
 		}
 		if status == "failed" {

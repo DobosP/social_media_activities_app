@@ -21,10 +21,11 @@ type Service struct {
 	Now          func() time.Time
 	Budgets      *budgets.Store
 	RatePolicies map[string]budgets.Policy
+	Policy       Policy
 }
 
 func New(db *pgxpool.Pool) *Service {
-	return &Service{DB: db, Now: time.Now, Budgets: budgets.New(db)}
+	return &Service{DB: db, Now: time.Now, Budgets: budgets.New(db), Policy: DefaultPolicy()}
 }
 func (s *Service) Register(mux *http.ServeMux) {
 	for _, base := range []string{"/api", "/api/v1"} {

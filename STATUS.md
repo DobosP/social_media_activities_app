@@ -70,9 +70,9 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   the serving repo's producer dependency must be intentionally bumped first.
 - Complete held-event review UX, curated cultural child-venue policy, localized
   taxonomy/cinema mapping, and production alerting/shared-state operations.
-- API/social/catalog/saved-search/CSP admission is PostgreSQL-backed (ADR-0033); account/safety/message
-  budgets expose typed policies. CLI shared-state/nondefault policy wiring is a separate integration gate.
-  `REDIS_URL`, Sentry and custom Python providers remain startup refusals at this branch base.
+- Native shared-state/action limits use PostgreSQL (ADR-0033); typed policy overrides and private,
+  optional Sentry reporting are implemented (ADR-0034). Redis/Python worker flags remain refused;
+  external delivery, source landing and production activation still require their own verification.
 - Operational gaps remain in `docs/PRODUCTION_READINESS.md`. Treat an unticked box
   in `docs/archive/COMPLETENESS_GAPS_2026-06.md` as a hypothesis to verify against
   HEAD, not a specification — two backlog surveys turned already-shipped entries
@@ -82,27 +82,13 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
-- 2026-10-04 shared budgets worker: **194 native fixture tests across 18 packages** pass, zero skips,
-  including shared limits, replay, expiry, privacy/erasure and actual policy overrides. Race/vet/auth hashes
-  pass; doc gate files=52/all findings=0. Combined CLI and production verification remain coordinator gates.
+- 2026-10-04 completion candidate combines all three lanes and fresh participation authority.
+  Per-lane receipts: shared budgets194 PG/codec tests, admin/account/web62, CLI configuration33;
+  race/vet/auth hashes and doc gate pass in the lanes. Exact combined-source qualification is pending.
+  Worker fixture repairs are integrated; no production/provider/minor verification is claimed.
+- Fresh-authority baseline175 PG/codec race contracts passed, zero skips; earlier conversion173
+  contracts and native/reference/public CI were green. Historical exact receipts are in WORKLOG.
 
-- 2026-10-04 ADR-0035 candidate: native race/vet and auth hashes pass; isolated admin 18,
-  accounts 14 and web 30 race tests pass, no skips. Schema source/wire coverage passes. Doc gate:
-  files=52 dead_links=0 stale_terms=0 retired_verbs=0 orphans=0. No production verification.
-- Earlier owner-approved conversion: 173 PostgreSQL/codec tests passed on PG16.15 Bookworm,
-  native/reference/public CI green (37211779358/395/372); no fixable HIGH/CRITICAL image findings.
-  Source/package scans pass after compress1.18.7; module/analyzer limits remain in WORKLOG.
-
-- 2026-10-04 readiness guide now describes native rollout/recovery and product gates; historical Python
-  planning is archived. Fresh-authority baseline (ADR-0036):175 PG/codec race contracts pass, zero skips; combined review pending.
-  Doc gate: files=52 dead_links=0 stale_terms=0 retired_verbs=0 orphans=0.
-
-- 2026-10-04 owner-approved conversion: native race/vet and portable auth hashes pass. Fresh Go-only
-  bootstrap + **173 PostgreSQL/codec tests** passed with no skips; final affected app/media/account
-  checks also pass. Source/package vulnerability scans pass after compress1.18.7; unimported
-  openpgp module advisory and stripped-binary analyzer limits are recorded in WORKLOG.
-  Exact-head native/reference/public CI is green (37211779358/395/372); image gate has zero
-  fixable HIGH/CRITICAL findings. All173 contracts pass on canonicalPG16.15 Bookworm too.
 ## Standard verification
 Native race/vet + shared-source hashes; database/codec contracts require explicit disposable fixtures
 through `scripts/qualify-native.sh` (`docs/agent-testing.md`). Whitespace/doc gates are required.

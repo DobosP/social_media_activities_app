@@ -44,7 +44,7 @@ func (s *Service) coordinateActivities(ctx context.Context, a Actor, city string
 	if !assigned(a) {
 		return []json.RawMessage{}, nil
 	}
-	rows, err := objects(ctx, s.DB, `SELECT jsonb_build_object('id',a.id,'title',a.title,'cohort',a.cohort,'starts_at',a.starts_at,'status',a.status,'activity_type',t.slug,'place_id',a.place_id,'distance_m',NULL)`+activityJoin+` JOIN places_place p ON p.id=a.place_id WHERE a.cohort=$2 AND NOT a.is_hidden AND a.status='open' AND a.starts_at>=now() AND `+blockOwner+` AND lower(p.address_city)=lower($3) AND (($4::bigint IS NOT NULL AND a.activity_type_id=$4) OR ($4::bigint IS NULL AND t.category_id=$5)) ORDER BY a.starts_at,a.id LIMIT 100`, a.ID, a.Cohort, city, typeID, categoryID)
+	rows, err := objects(ctx, s.DB, `SELECT jsonb_build_object('id',a.id,'title',a.title,'cohort',a.cohort,'starts_at',a.starts_at,'status',a.status,'activity_type',t.slug,'place_id',a.place_id,'distance_m',NULL)`+activityJoin+` JOIN places_place p ON p.id=a.place_id WHERE a.cohort=$2 AND NOT a.is_hidden AND a.status='open' AND a.starts_at>=now() AND `+blockOwner+` AND lower(p.address_city)=lower($3) AND (($4::bigint IS NOT NULL AND a.activity_type_id=$4) OR ($4::bigint IS NULL AND t.category_id=$5)) ORDER BY a.starts_at,a.id LIMIT $6`, a.ID, a.Cohort, city, typeID, categoryID, s.Policy.CommunityActivitiesPageSize)
 	if err != nil {
 		return nil, err
 	}

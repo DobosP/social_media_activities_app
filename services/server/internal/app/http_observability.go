@@ -16,6 +16,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/DobosP/social_media_activities_app/services/server/internal/catalog"
+	"github.com/DobosP/social_media_activities_app/services/server/internal/ops"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
 )
 
@@ -81,6 +83,14 @@ func (w *observedResponse) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 }
 
 func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if a.Catalog != nil {
+		r = r.WithContext(catalog.WithPolicy(r.Context(), a.Catalog.Policy))
+	}
+	memory := a.Config.DataUploadMemoryBytes
+	if memory == 0 {
+		memory = 8 << 20
+	}
+	r = r.WithContext(platform.WithDataUploadLimit(r.Context(), memory))
 	started := time.Now()
 	id := strings.TrimSpace(r.Header.Get("X-Request-ID"))
 	if !requestIDPattern.MatchString(id) {
@@ -92,7 +102,11 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("X-Frame-Options", "DENY")
 	w.Header().Set("Referrer-Policy", "same-origin")
 	w.Header().Set("Cross-Origin-Opener-Policy", "same-origin")
-	w.Header().Set("Permissions-Policy", "geolocation=(self), camera=(), microphone=(), payment=(), usb=(), interest-cohort=()")
+	permissions := a.Config.PermissionsPolicy
+	if permissions == "" {
+		permissions = DefaultPermissionsPolicy
+	}
+	w.Header().Set("Permissions-Policy", permissions)
 	w.Header().Set("Cache-Control", "no-store")
 	response := &observedResponse{ResponseWriter: w}
 	defer func() {
@@ -110,13 +124,6 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if a.Ops != nil {
 			a.Ops.Observe(status, elapsed)
 		}
-		if !a.Config.RequestLoggingEnabled {
-			if failure != nil && response.status != http.StatusInternalServerError {
-				panic(http.ErrAbortHandler)
-			}
-			return
-		}
-		// The registered pattern carries placeholders rather than private ids.
 		route := "unmatched"
 		if a.Mux != nil {
 			_, pattern := a.Mux.Handler(r)
@@ -126,6 +133,19 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		if strings.HasPrefix(r.URL.Path, "/static/") {
 			route = "/static/*"
+		}
+		if a.Config.ErrorReporter != nil {
+			if failure != nil {
+				a.Config.ErrorReporter.Capture(ops.Panic, r.Method, route)
+			} else if status >= 500 {
+				a.Config.ErrorReporter.Capture(ops.HTTP5xx, r.Method, route)
+			}
+		}
+		if !a.Config.RequestLoggingEnabled || !requestLogEnabled(a.Config.LogLevel, status, failure != nil) {
+			if failure != nil && response.status != http.StatusInternalServerError {
+				panic(http.ErrAbortHandler)
+			}
+			return
 		}
 		writer := a.Config.LogWriter
 		if writer == nil {

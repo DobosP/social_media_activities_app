@@ -177,7 +177,7 @@ func (s *Server) publicEvents(r *http.Request, city string, place int64, cap int
 		search = ""
 	}
 	search = strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`).Replace(search)
-	rows, err := socialRows(r.Context(), s.DB, `SELECT `+catalog.PublicEventProjectionSQL()+publicEventModel+publicEventsJoin+` WHERE `+catalog.PublicEventsSQL()+` AND `+publicUpcomingSQL+` AND ($1::text='' OR t.slug=$1) AND ($2::bigint=0 OR e.place_id=$2) AND ($3::text='' OR lower(p.address_city)=lower($3)) AND ($4::text='' OR upper(e.title) LIKE '%'||upper($4)||'%' OR upper(e.description) LIKE '%'||upper($4)||'%' OR upper(p.name) LIKE '%'||upper($4)||'%') AND (NOT EXISTS(SELECT 1 FROM communities_area ar WHERE ar.slug=$5) OR EXISTS(SELECT 1 FROM communities_area ar WHERE ar.slug=$5 AND ((ar.derive_method='city' AND lower(p.address_city)=lower(ar.city))))) ORDER BY e.starts_at,e.id LIMIT $6`, activity, place, city, search, q.Get("area"), cap)
+	rows, err := socialRows(r.Context(), s.DB, `SELECT `+catalog.PublicEventProjectionSQL()+publicEventModel+publicEventsJoin+` WHERE `+catalog.PolicyFromContext(r.Context()).EventSQL()+` AND `+publicUpcomingSQL+` AND ($1::text='' OR t.slug=$1) AND ($2::bigint=0 OR e.place_id=$2) AND ($3::text='' OR lower(p.address_city)=lower($3)) AND ($4::text='' OR upper(e.title) LIKE '%'||upper($4)||'%' OR upper(e.description) LIKE '%'||upper($4)||'%' OR upper(p.name) LIKE '%'||upper($4)||'%') AND (NOT EXISTS(SELECT 1 FROM communities_area ar WHERE ar.slug=$5) OR EXISTS(SELECT 1 FROM communities_area ar WHERE ar.slug=$5 AND ((ar.derive_method='city' AND lower(p.address_city)=lower(ar.city))))) ORDER BY e.starts_at,e.id LIMIT $6`, activity, place, city, search, q.Get("area"), cap)
 	if err != nil {
 		return nil, err
 	}
@@ -191,7 +191,7 @@ func (s *Server) publicEvents(r *http.Request, city string, place int64, cap int
 	return rows, nil
 }
 func (s *Server) publicEventDetail(r *http.Request, a platform.Actor) (pongo2.Context, error) {
-	rows, err := socialRows(r.Context(), s.DB, `SELECT `+catalog.PublicEventProjectionSQL()+publicEventModel+` || jsonb_build_object('_public',(`+catalog.PublicEventsSQL()+`),'_discoverable',(`+publicUpcomingSQL+`))`+publicEventsJoin+` WHERE e.id=$1 AND ((`+catalog.PublicEventsSQL()+`) OR $2 OR EXISTS(SELECT 1 FROM social_userplaceproposal pp WHERE pp.place_id=p.id AND pp.proposer_id=$3))`, id(r, "pk"), a.IsStaff && a.IsActive, a.ID)
+	rows, err := socialRows(r.Context(), s.DB, `SELECT `+catalog.PublicEventProjectionSQL()+publicEventModel+` || jsonb_build_object('_public',(`+catalog.PolicyFromContext(r.Context()).EventSQL()+`),'_discoverable',(`+publicUpcomingSQL+`))`+publicEventsJoin+` WHERE e.id=$1 AND ((`+catalog.PolicyFromContext(r.Context()).EventSQL()+`) OR $2 OR EXISTS(SELECT 1 FROM social_userplaceproposal pp WHERE pp.place_id=p.id AND pp.proposer_id=$3))`, id(r, "pk"), a.IsStaff && a.IsActive, a.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -245,6 +245,7 @@ func (s *Server) publicVenueFacts(r *http.Request, a platform.Actor, p map[strin
 	if isPublic {
 		return s.Catalog.VenueFacts(r.Context(), a, spaID(p), true)
 	}
+	quorum := s.Catalog.Policy.WithDefaults().FactQuorum
 	rows, err := socialRows(r.Context(), s.DB, `SELECT jsonb_build_object('key',fact_key,'yes',count(*) FILTER(WHERE value),'no',count(*) FILTER(WHERE NOT value),'my_vote',bool_or(value) FILTER(WHERE user_id=$2)) FROM places_placefactvote WHERE place_id=$1 GROUP BY fact_key`, spaID(p), a.ID)
 	if err != nil {
 		return nil, err
@@ -274,13 +275,13 @@ func (s *Server) publicVenueFacts(r *http.Request, a platform.Actor, p map[strin
 		}
 		sourced := state != "unknown"
 		yes, no := spaInt(v["yes"]), spaInt(v["no"])
-		if !sourced && max(yes, no) >= 3 && yes != no {
+		if !sourced && max(yes, no) >= quorum && yes != no {
 			state = "false"
 			if yes > no {
 				state = "true"
 			}
 		}
-		out = append(out, map[string]any{"key": key, "label": labels[key], "state": state, "yes": yes, "no": no, "required": 3, "my_vote": v["my_vote"], "osm_sourced": sourced})
+		out = append(out, map[string]any{"key": key, "label": labels[key], "state": state, "yes": yes, "no": no, "required": quorum, "my_vote": v["my_vote"], "osm_sourced": sourced})
 	}
 	return out, nil
 }

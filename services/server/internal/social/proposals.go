@@ -132,7 +132,7 @@ func (s *Service) ProposePlace(ctx context.Context, a Actor, in PlaceProposalInp
 		if _, err := tx.Exec(ctx, `SELECT pg_advisory_xact_lock(683475951215)`); err != nil {
 			return err
 		}
-		rows, err := tx.Query(ctx, `SELECT id,name,ST_Distance(location,ST_SetSRID(ST_MakePoint($1,$2),4326)::geography) FROM places_place WHERE ST_DWithin(location,ST_SetSRID(ST_MakePoint($1,$2),4326)::geography,60) ORDER BY ST_Distance(location,ST_SetSRID(ST_MakePoint($1,$2),4326)::geography) LIMIT 50`, in.Lon, in.Lat)
+		rows, err := tx.Query(ctx, `SELECT id,name,ST_Distance(location,ST_SetSRID(ST_MakePoint($1,$2),4326)::geography) FROM places_place WHERE ST_DWithin(location,ST_SetSRID(ST_MakePoint($1,$2),4326)::geography,$3) ORDER BY ST_Distance(location,ST_SetSRID(ST_MakePoint($1,$2),4326)::geography) LIMIT 50`, in.Lon, in.Lat, s.Policy.PlaceProposalDedupRadiusM)
 		if err != nil {
 			return err
 		}

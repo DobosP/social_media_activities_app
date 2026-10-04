@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/DobosP/social_media_activities_app/services/server/internal/catalog"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/social"
 	"github.com/jackc/pgx/v5"
@@ -144,7 +145,7 @@ func (s *Service) seedDemoUsers(ctx context.Context, input map[string]json.RawMe
 	if !exists {
 		var place, typ int64
 		var typName string
-		err := s.Runner.DB.QueryRow(ctx, `SELECT p.id FROM places_place p WHERE `+publicPlacesPolicy+` AND EXISTS(SELECT 1 FROM places_placeactivity pa WHERE pa.place_id=p.id) ORDER BY p.id LIMIT 1`).Scan(&place)
+		err := s.Runner.DB.QueryRow(ctx, `SELECT p.id FROM places_place p WHERE `+catalog.PolicyFromContext(ctx).PlaceSQL()+` AND EXISTS(SELECT 1 FROM places_placeactivity pa WHERE pa.place_id=p.id) ORDER BY p.id LIMIT 1`).Scan(&place)
 		if err != nil && err != pgx.ErrNoRows {
 			return nil, err
 		}
@@ -169,8 +170,6 @@ func (s *Service) seedDemoUsers(ctx context.Context, input map[string]json.RawMe
 func demoHour(t time.Time, hour int) time.Time {
 	return time.Date(t.Year(), t.Month(), t.Day(), hour, 0, 0, 0, t.Location())
 }
-
-const publicPlacesPolicy = `(p.source<>'user' OR EXISTS(SELECT 1 FROM social_userplaceproposal pp WHERE pp.place_id=p.id AND pp.status='published')) AND NOT EXISTS(SELECT 1 FROM places_placeclosurereport cr WHERE cr.place_id=p.id AND cr.created_at>=now()-interval '14 days' GROUP BY cr.place_id HAVING count(*)>=3)`
 
 func (s *Service) seedBrowse(ctx context.Context, input map[string]json.RawMessage) (any, error) {
 	if err := s.demoGate(); err != nil {
@@ -374,7 +373,7 @@ func (s *Service) generateDemoEvents(ctx context.Context, input map[string]json.
 		return rows.Err()
 	}
 	if in.Synthesize > 0 {
-		if err = load(`SELECT p.id,p.name FROM places_place p WHERE `+publicPlacesPolicy+` ORDER BY p.id LIMIT 25`, &places); err != nil {
+		if err = load(`SELECT p.id,p.name FROM places_place p WHERE `+catalog.PolicyFromContext(ctx).PlaceSQL()+` ORDER BY p.id LIMIT 25`, &places); err != nil {
 			return nil, err
 		}
 		if len(places) == 0 {

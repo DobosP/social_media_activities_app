@@ -93,68 +93,110 @@ and AVIF output requires `avifenc`. Missing tools abort serving/job startup. Mig
 execution is independent of those tools. Scanner failures withhold uploads; no effective
 hash list or document scanner never produces a clean verdict.
 
-## Exact unsupported override inventory
+## Policy override inventory
 
-The following names currently require the listed source value because their native
-policy has no configurable seam. An incompatible value aborts startup; it is not ignored.
+[ADR-0034](../../../../docs/adr/0034-native-config-error-observability.md) records
+native configuration and error reporting. Explicit malformed/empty numeric values
+fail by setting name. The following formerly fixed controls have typed native
+hooks; changes take effect at the shared domain boundary and retain safety gates.
 
-| Setting names | Accepted value |
+| Setting names | Native bounds / source defaults |
 |---|---|
-| `CLOSURE_REPORT_THRESHOLD`, `OPEN_NOW_REPORT_THRESHOLD`, `FACT_QUORUM`, `CORRECTION_QUORUM`, `EDGE_QUORUM`, `EVENT_REPORT_THRESHOLD`, `INTEREST_THRESHOLD` | `3` |
-| `CLOSURE_REPORT_DECAY_SECONDS`, `OPEN_NOW_REPORT_DECAY_SECONDS`, `EVENT_REPORT_DECAY_SECONDS` | `1209600` |
-| `CLOSURE_REPORT_RATE_LIMIT`, `OPEN_NOW_REPORT_RATE_LIMIT`, `EVENT_REPORT_RATE_LIMIT` | `10` |
-| `CLOSURE_REPORT_RATE_WINDOW_SECONDS`, `OPEN_NOW_REPORT_RATE_WINDOW_SECONDS`, `FACT_VOTE_RATE_WINDOW_SECONDS`, `EVENT_REPORT_RATE_WINDOW_SECONDS`, `SAVED_SEARCH_RATE_WINDOW_SECONDS`, `GUARDIAN_INVITE_RATE_WINDOW_SECONDS`, `GUARDIAN_GUARDRAIL_RATE_WINDOW_SECONDS`, `CONNECTIONS_REQUEST_RATE_WINDOW_SECONDS`, `GROUP_CREATE_RATE_WINDOW_SECONDS`, `GROUP_JOIN_RATE_WINDOW_SECONDS`, `GROUP_QUESTION_RATE_WINDOW_SECONDS`, `AVATAR_UPLOAD_RATE_WINDOW_SECONDS` | `3600` |
-| `FACT_VOTE_RATE_LIMIT` | `40` |
-| `SERIES_SPAWN_LEAD_DAYS`, `INTEREST_LIFETIME_DAYS` | `14` |
-| `SERIES_SPAWN_BATCH` | `500` |
-| `SAVED_SEARCH_RATE_LIMIT`, `SAVED_SEARCH_MAX_PER_USER`, `GUARDIAN_INVITE_RATE_LIMIT`, `CONNECTIONS_REQUEST_RATE_LIMIT`, `GROUP_JOIN_RATE_LIMIT`, `MESSAGING_START_RATE_LIMIT`, `AVATAR_UPLOAD_RATE_LIMIT` | `20` |
-| `SAVED_SEARCH_MATCH_BATCH` | `1000` |
-| `SAVED_SEARCH_NOTIFY_RATE_LIMIT` | `50` |
-| `SAVED_SEARCH_NOTIFY_WINDOW_SECONDS`, `MEDIA_EPHEMERAL_MIN_TTL_MINORS_SECONDS` | `86400` |
-| `GUARDIAN_GUARDRAIL_RATE_LIMIT`, `THREAD_POST_RATE_LIMIT` | `30` |
-| `THREAD_POST_RATE_WINDOW_SECONDS`, `THREAD_REACT_RATE_WINDOW_SECONDS`, `MESSAGING_RATE_WINDOW_SECONDS` | `60` |
-| `THREAD_REACT_RATE_LIMIT`, `MESSAGING_SEND_RATE_LIMIT`, `PLACE_PROPOSAL_DEDUP_RADIUS_M`, `MEDIA_PRESIGNED_TTL` | `60` |
-| `SOCIAL_THREAD_POST_LIMIT`, `SOCIAL_MEMBERSHIP_LIST_LIMIT`, `COMMUNITY_ACTIVITIES_PAGE_SIZE`, `DEFERRED_TASKS_BATCH` | `100` |
-| `UNSAFE_REPORT_RATE_LIMIT` | `12` |
-| `UNSAFE_REPORT_RATE_WINDOW_SECONDS` | `3600` |
-| `UNSAFE_REPORT_COOLDOWN_SECONDS`, `MEDIA_SIGNED_URL_TTL` | `300` |
-| `GROUP_CREATE_RATE_LIMIT`, `MEDIA_VIDEO_FRAME_SCAN_INTERVAL_SECONDS`, `DEFERRED_TASKS_MAX_ATTEMPTS` | `5` |
-| `GROUP_QUESTION_RATE_LIMIT`, `ARRIVAL_RETENTION_HOURS` | `6` |
-| `MESSAGING_MAX_CIPHERTEXT_BYTES` | `65536` |
-| `MESSAGING_MAX_GROUP_MEMBERS` | `256` |
-| `ARRIVAL_WINDOW_BEFORE_HOURS` | `2` |
-| `ARRIVAL_WINDOW_AFTER_HOURS`, `DEPARTURE_WINDOW_AFTER_HOURS`, `MEDIA_VIDEO_MAX_ATTEMPTS` | `3` |
-| `MAX_REQUEST_BODY_BYTES`, `DATA_UPLOAD_MAX_MEMORY_SIZE` | `8388608` |
-| `CHAT_MAX_LENGTH` | `4000` |
-| `MEDIA_IMAGE_QUALITY` | `0` |
-| `MEDIA_ATTACHMENT_MAX_BYTES` | `7340032` |
-| `MEDIA_EPHEMERAL_MIN_TTL_SECONDS` | `3600` |
-| `MEDIA_VIDEO_CRF` | `23` |
-| `MEDIA_VIDEO_STALE_PROCESSING_SECONDS` | `1800` |
-| `MEDIA_VIDEO_FRAME_SCAN_MAX_FRAMES` | `25` |
-| `MEDIA_PERCEPTUAL_PROFILE_SCAN_CAP` | `10000` |
-| `CHILD_PUBLIC_VENUES_ONLY`, `MEDIA_REQUIRE_SCANNER`, `MEDIA_ATTACHMENTS_ENABLED`, `DB_POOL_ENABLED` | `true` |
-| `PROGRESSION_AVATAR_PUBLIC`, `IDENTITY_ALLOW_DEV_PROVIDER`, `EUDI_SANDBOX`, `DB_POOLED`, `DJANGO_REQUIRE_SHARED_STATE` | `false` |
-| `GROUPS_USER_CREATION_COHORTS`, `SUPPORT_COMPANION_COHORTS`, `MEDIA_FILE_COHORTS`, `MEDIA_VIDEO_COHORTS` | `adult` |
-| `CHAT_MESSAGE_POLICY` | `apps.chat.policy.NudgeMessagePolicy` |
-| `THREAD_REACTION_FACETS`, `EUDI_SANDBOX_ISSUER_KEY_PEM`, `REDIS_URL`, `SENTRY_DSN` | empty/unset |
-| `MEDIA_VIDEO_PRESET`, `MEDIA_VIDEO_AUDIO_BITRATE`, `LOG_LEVEL` | `medium`, `96k`, `INFO`, respectively |
-| `PERMISSIONS_POLICY` | `geolocation=(self), camera=(), microphone=(), payment=(), usb=(), interest-cohort=()` |
-| `ROEDU_APP_PACK` | `roedu:social_media_activities_app:events_places:v1` |
-| `DB_POOL_TIMEOUT`, `SENTRY_TRACES_SAMPLE_RATE` | `10`, `0`, respectively |
+| `CLOSURE_REPORT_THRESHOLD`, `OPEN_NOW_REPORT_THRESHOLD`, `EVENT_REPORT_THRESHOLD` | 1..3; source 3; only tighter withholding/warnings |
+| `CLOSURE_REPORT_DECAY_SECONDS`, `OPEN_NOW_REPORT_DECAY_SECONDS`, `EVENT_REPORT_DECAY_SECONDS` | 1209600..31536000; source 1209600 |
+| `FACT_QUORUM`, `CORRECTION_QUORUM`, `EDGE_QUORUM` | 3..100; source 3 |
+| `CHAT_MAX_LENGTH` | 1..4000; source 4000 |
+| `SOCIAL_THREAD_POST_LIMIT`, `SOCIAL_MEMBERSHIP_LIST_LIMIT`, `COMMUNITY_ACTIVITIES_PAGE_SIZE` | 1..1000; source 100 |
+| `SERIES_SPAWN_LEAD_DAYS`, `INTEREST_LIFETIME_DAYS` | 1..90; source 14 |
+| `SERIES_SPAWN_BATCH` | 1..1000; source 500 |
+| `INTEREST_THRESHOLD` | 3..1000; source 3 |
+| `PLACE_PROPOSAL_DEDUP_RADIUS_M` | 1..1000; source 60 |
+| `SAVED_SEARCH_MAX_PER_USER` | 1..100; source 20 |
+| `SAVED_SEARCH_MATCH_BATCH` | 1..10000; source 1000 |
+| `DEFERRED_TASKS_BATCH`, `DEFERRED_TASKS_MAX_ATTEMPTS` | 1..1000 / 1..100; source 100 / 5; new task defaults only |
+| `ARRIVAL_WINDOW_BEFORE_HOURS` | 0..24; source 2 |
+| `ARRIVAL_WINDOW_AFTER_HOURS`, `DEPARTURE_WINDOW_AFTER_HOURS`, `ARRIVAL_RETENTION_HOURS` | 0..6 / 0..6 / 1..6; source 3 / 3 / 6; retention must cover after/departure windows |
+| `UNSAFE_REPORT_COOLDOWN_SECONDS` | 1..300; source 300; existing open report deduplication remains |
+| `MESSAGING_MAX_CIPHERTEXT_BYTES`, `MESSAGING_MAX_GROUP_MEMBERS` | 1..65536 / 2..256; source 65536 / 256 |
+| `MAX_REQUEST_BODY_BYTES`, `DATA_UPLOAD_MAX_MEMORY_SIZE` | 1..8388608; source 8388608; native data caps described below |
+| `MEDIA_IMAGE_QUALITY` | 0..100; source 0 selects source codec quality (AVIF64/WebP80) |
+| `MEDIA_SIGNED_URL_TTL`, `MEDIA_PRESIGNED_TTL` | 1..300 / 1..60 seconds; source 300 / 60 |
+| `MEDIA_ATTACHMENT_MAX_BYTES` | 1..7340032; source 7340032 |
+| `MEDIA_EPHEMERAL_MIN_TTL_SECONDS`, `MEDIA_EPHEMERAL_MIN_TTL_MINORS_SECONDS` | 3600..86400 / 86400..604800; source 3600 / 86400 |
+| `MEDIA_VIDEO_CRF`, `MEDIA_VIDEO_PRESET`, `MEDIA_VIDEO_AUDIO_BITRATE` | 18..40; `ultrafast`, `superfast`, `veryfast`, `faster`, `fast`, `medium`; `32k`, `48k`, `64k`, `96k`, `128k`; source 23 / `medium` / `96k` |
+| `MEDIA_VIDEO_MAX_ATTEMPTS`, `MEDIA_VIDEO_STALE_PROCESSING_SECONDS` | 1..10 / 1..1800; source 3 / 1800; stale deadline must exceed every codec command/probe timeout; the whole processing pass expires before reclaim |
+| `MEDIA_VIDEO_FRAME_SCAN_INTERVAL_SECONDS`, `MEDIA_VIDEO_FRAME_SCAN_MAX_FRAMES` | 1..5 / 25..100; source 5 / 25; capacity must cover ceil(duration/interval) |
+| `MEDIA_PERCEPTUAL_PROFILE_SCAN_CAP` | 10000..100000; source 10000; cannot reduce safety coverage |
+| `MEDIA_ATTACHMENTS_ENABLED` | boolean; source true; false disables new attachment admission |
+| `GROUPS_USER_CREATION_COHORTS`, `SUPPORT_COMPANION_COHORTS`, `MEDIA_FILE_COHORTS`, `MEDIA_VIDEO_COHORTS` | `adult` or explicit empty (disabled); minors cannot be added |
+| `LOG_LEVEL` | `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`; source `INFO`; requests filter at status400/500/panic respectively; debug retains the same privacy-safe fields |
+| `PERMISSIONS_POLICY` | reviewed source header, or replace `geolocation=(self)` with `geolocation=()`; other browser permissions stay denied |
 
-`REVERIFY_SWEEP_BATCH` and `CONSENT_SWEEP_BATCH` must agree because the shared native
-runner currently exposes one sweep batch. Media caps accept tightening within the
-native processor's hard limits. Supported sentiment/privacy floors cannot be lowered
-below the reviewed source defaults. API throttle strings support positive minute rates
-only. Database pools are bounded to two through four connections. These are explicit
-configuration constraints, not evidence of production readiness.
+Action rate limits accept 1..10000; windows accept 1..86400 seconds. Their settings
+and source defaults are:
 
-API, authentication and several domain abuse budgets remain process-local. PostgreSQL
-provides shared live fanout and the durable deferred queue, but does not make those
-budgets global. Consequently nonempty `REDIS_URL`, enabled
-`DJANGO_REQUIRE_SHARED_STATE` and configured Sentry are refused. Production scale/shared
-abuse controls and native external error tracking still require qualified native seams.
+| Limit / window names | Limit / window source default |
+|---|---|
+| `CLOSURE_REPORT_RATE_LIMIT` / `CLOSURE_REPORT_RATE_WINDOW_SECONDS`, `OPEN_NOW_REPORT_RATE_LIMIT` / `OPEN_NOW_REPORT_RATE_WINDOW_SECONDS`, `EVENT_REPORT_RATE_LIMIT` / `EVENT_REPORT_RATE_WINDOW_SECONDS` | 10 / 3600 |
+| `FACT_VOTE_RATE_LIMIT` / `FACT_VOTE_RATE_WINDOW_SECONDS` | 40 / 3600 |
+| `SAVED_SEARCH_RATE_LIMIT` / `SAVED_SEARCH_RATE_WINDOW_SECONDS`, `GUARDIAN_INVITE_RATE_LIMIT` / `GUARDIAN_INVITE_RATE_WINDOW_SECONDS`, `CONNECTIONS_REQUEST_RATE_LIMIT` / `CONNECTIONS_REQUEST_RATE_WINDOW_SECONDS`, `GROUP_JOIN_RATE_LIMIT` / `GROUP_JOIN_RATE_WINDOW_SECONDS`, `AVATAR_UPLOAD_RATE_LIMIT` / `AVATAR_UPLOAD_RATE_WINDOW_SECONDS` | 20 / 3600 |
+| `GUARDIAN_GUARDRAIL_RATE_LIMIT` / `GUARDIAN_GUARDRAIL_RATE_WINDOW_SECONDS` | 30 / 3600 |
+| `THREAD_POST_RATE_LIMIT` / `THREAD_POST_RATE_WINDOW_SECONDS`, `THREAD_REACT_RATE_LIMIT` / `THREAD_REACT_RATE_WINDOW_SECONDS` | 30 / 60; 60 / 60 |
+| `UNSAFE_REPORT_RATE_LIMIT` / `UNSAFE_REPORT_RATE_WINDOW_SECONDS` | 12 / 3600 |
+| `GROUP_CREATE_RATE_LIMIT` / `GROUP_CREATE_RATE_WINDOW_SECONDS`, `GROUP_QUESTION_RATE_LIMIT` / `GROUP_QUESTION_RATE_WINDOW_SECONDS` | 5 / 3600; 6 / 3600 |
+| `MESSAGING_START_RATE_LIMIT`, `MESSAGING_SEND_RATE_LIMIT` / shared `MESSAGING_RATE_WINDOW_SECONDS` | 20, 60 / 60 |
+| `SAVED_SEARCH_NOTIFY_RATE_LIMIT` / `SAVED_SEARCH_NOTIFY_WINDOW_SECONDS` | 50 / 86400 |
+
+Ordinary JSON/form bodies use the smaller of `MAX_REQUEST_BODY_BYTES` and
+`DATA_UPLOAD_MAX_MEMORY_SIZE`. Multipart adapters enforce the latter against
+aggregate non-file field bytes, alongside their smaller per-field caps; uploaded
+file bytes stream into private scratch under separate media caps. This native cap
+is distinct from Django's buffering/exception implementation. Media-route request
+exceptions retain the existing bounded upload envelope. Browser/API defaults are
+unchanged.
+
+### Intentionally fixed or retired controls
+
+| Setting names | Accepted source value / reason |
+|---|---|
+| `CHILD_PUBLIC_VENUES_ONLY`, `MEDIA_REQUIRE_SCANNER` | true; mandatory child venue/scanner gates |
+| `PROGRESSION_AVATAR_PUBLIC` | false; private progression never becomes public |
+| `IDENTITY_ALLOW_DEV_PROVIDER`, `EUDI_SANDBOX`, `EUDI_SANDBOX_ISSUER_KEY_PEM` | false / false / empty; synthetic identity proof cannot grant production assurance |
+| `THREAD_REACTION_FACETS` | empty/unset; reviewed plural-sentiment vocabulary remains fixed |
+| `CHAT_MESSAGE_POLICY` | `apps.chat.policy.NudgeMessagePolicy`; custom Python policy imports need a reviewed native adapter |
+| `REDIS_URL` | empty/unset; native shared state uses PostgreSQL (ADR-0033); an unused Redis dependency is refused |
+| `CHANNEL_LAYER_BACKEND` | `postgres` or the legacy source-default alias `channels.layers.InMemoryChannelLayer`; the Redis/custom Python classes are refused |
+| `DB_POOL_ENABLED`, `DB_POOLED` | true / false; native session-aware pgx pooling, no Python pool or unqualified transaction-pool mode |
+| `ASGI_THREADS`, `DJANGO_SETTINGS_MODULE` | unset only; retired Python worker/profile settings; native profile uses `--dev` / `DJANGO_DEBUG` and explicit security settings |
+| `DB_POOL_TIMEOUT` | unset only; retired Python queue timeout cannot be mapped to pgx caller deadlines; explicit values are refused |
+| `ROEDU_APP_PACK` | `roedu:social_media_activities_app:events_places:v1`; immutable reviewed data contract |
+| `SENTRY_TRACES_SAMPLE_RATE` | finite zero only; profiling, traces, session/request telemetry remain off |
+
+`DJANGO_REQUIRE_SHARED_STATE=true` asserts the PostgreSQL-backed native rate/state
+contract and rejects a service graph with missing/mismatched admission pools; PostgreSQL is required in both modes. `REVERIFY_SWEEP_BATCH` and
+`CONSENT_SWEEP_BATCH` must agree because the native runner has one sweep batch.
+Media caps accept tightening within reviewed hard limits. Sentiment/privacy
+floors cannot be lowered. API throttle strings support positive minute rates only.
+Database pools remain bounded to two through four connections. External Python
+provider/source/storage/scanner classes require their documented native aliases.
+
+### Optional error reporting
+
+A nonempty valid HTTPS `SENTRY_DSN` enables the isolated sentry-go v0.49.0 reporter;
+unset/empty leaves it disabled even if an SDK global/environment fallback exists.
+`SENTRY_ENVIRONMENT` accepts `production`, `staging`, or `development` (source
+`production`). Legacy password-bearing DSNs, query/fragment data and malformed
+values fail by name. No raw errors or panic text are supplied to the reporter.
+
+Recovered panics, 5xx responses, startup failures and failed one-shot jobs emit
+only fixed error categories, allowlisted HTTP methods and coarse route families.
+The event is reconstructed before sending: no request, body, identity, cookies,
+headers, tokens, IPs, query, stack trace, attachments, breadcrumbs or arbitrary
+contexts survive. SDK tracing/profiling/log/session integrations are disabled.
+The queues are bounded; capture drops when full and never waits for network I/O.
+Shutdown drains/flushes for at most two seconds in the CLI; timeout/drop is best
+effort and does not claim delivery. All qualification uses synthetic mock transports;
+production Sentry delivery has not been performed.
 
 ## Source clients and qualification
 

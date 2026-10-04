@@ -13,8 +13,8 @@ import (
 
 func (s *Service) EventReliability(ctx context.Context, id int64) (any, error) {
 	var count int
-	err := s.DB.QueryRow(ctx, `SELECT count(*) FROM events_eventreport WHERE event_id=$1 AND created_at>=now()-interval '14 days'`, id).Scan(&count)
-	if count >= 3 {
+	err := s.DB.QueryRow(ctx, `SELECT count(*) FROM events_eventreport WHERE event_id=$1 AND created_at>=now()-$2*interval '1 second'`, id, int64(s.policy().EventReportDecay/time.Second)).Scan(&count)
+	if count >= s.policy().EventReportThreshold {
 		return "unverified", err
 	}
 	return nil, err
@@ -29,14 +29,14 @@ func (s *Service) ReportEvent(ctx context.Context, a platform.Actor, id int64, k
 			return err
 		}
 		var event int64
-		if err := tx.QueryRow(ctx, `SELECT e.id FROM events_event e LEFT JOIN places_place p ON p.id=e.place_id WHERE e.id=$1 AND `+publicEventSQL+` AND e.starts_at>=now() AND e.lifecycle_status IN('scheduled','rescheduled','sold_out') FOR UPDATE OF e`, id).Scan(&event); err != nil {
+		if err := tx.QueryRow(ctx, `SELECT e.id FROM events_event e LEFT JOIN places_place p ON p.id=e.place_id WHERE e.id=$1 AND `+s.policy().EventSQL()+` AND e.starts_at>=now() AND e.lifecycle_status IN('scheduled','rescheduled','sold_out') FOR UPDATE OF e`, id).Scan(&event); err != nil {
 			return err
 		}
 		if err := reserve(); err != nil {
 			return err
 		}
 		var exists bool
-		if err := tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM events_eventreport WHERE event_id=$1 AND reporter_id=$2 AND created_at>=now()-interval '14 days')`, id, a.ID).Scan(&exists); err != nil {
+		if err := tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM events_eventreport WHERE event_id=$1 AND reporter_id=$2 AND created_at>=now()-$3*interval '1 second')`, id, a.ID, int64(s.policy().EventReportDecay/time.Second)).Scan(&exists); err != nil {
 			return err
 		}
 		if exists {

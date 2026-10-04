@@ -13,7 +13,12 @@ import (
 
 var windows = map[string]string{"weekday_daytime": "Weekday daytime", "weekday_evening": "Weekday evening", "weekend_daytime": "Weekend daytime", "weekend_evening": "Weekend evening"}
 
-const gaugeColumns = `jsonb_build_object('id',g.id,'proposer',u.display_name,'place',p.name,'activity_type',t.slug,'cohort',g.cohort,'coarse_window',CASE g.coarse_window WHEN 'weekday_daytime' THEN 'Weekday daytime' WHEN 'weekday_evening' THEN 'Weekday evening' WHEN 'weekend_daytime' THEN 'Weekend daytime' WHEN 'weekend_evening' THEN 'Weekend evening' END,'ready',(SELECT COUNT(*) FROM social_activityinterest_interested_users i WHERE i.activityinterest_id=g.id)>=3,'remaining',GREATEST(0,3-(SELECT COUNT(*) FROM social_activityinterest_interested_users i WHERE i.activityinterest_id=g.id)),'expires_at',g.expires_at,'created_at',g.created_at)`
+const gaugeColumnsTemplate = `jsonb_build_object('id',g.id,'proposer',u.display_name,'place',p.name,'activity_type',t.slug,'cohort',g.cohort,'coarse_window',CASE g.coarse_window WHEN 'weekday_daytime' THEN 'Weekday daytime' WHEN 'weekday_evening' THEN 'Weekday evening' WHEN 'weekend_daytime' THEN 'Weekend daytime' WHEN 'weekend_evening' THEN 'Weekend evening' END,'ready',(SELECT COUNT(*) FROM social_activityinterest_interested_users i WHERE i.activityinterest_id=g.id)>=%d,'remaining',GREATEST(0,%d-(SELECT COUNT(*) FROM social_activityinterest_interested_users i WHERE i.activityinterest_id=g.id)),'expires_at',g.expires_at,'created_at',g.created_at)`
+
+func (s *Service) gaugeColumns() string {
+	return fmt.Sprintf(gaugeColumnsTemplate, s.Policy.InterestThreshold, s.Policy.InterestThreshold)
+}
+
 const gaugeJoin = ` FROM social_activityinterest g JOIN accounts_user u ON u.id=g.proposer_id JOIN places_place p ON p.id=g.place_id JOIN taxonomy_activitytype t ON t.id=g.activity_type_id `
 const gaugeVisible = `g.cohort=$2 AND g.converted_activity_id IS NULL AND g.expires_at>now() AND NOT EXISTS(SELECT 1 FROM safety_block b WHERE (b.blocker_id=$1 AND b.blocked_id=g.proposer_id) OR (b.blocker_id=g.proposer_id AND b.blocked_id=$1))`
 
@@ -21,13 +26,13 @@ func (s *Service) Gauge(ctx context.Context, a Actor, id int64) (json.RawMessage
 	if !assigned(a) {
 		return nil, platform.ErrNotFound
 	}
-	return object(ctx, s.DB, `SELECT `+gaugeColumns+gaugeJoin+` WHERE g.id=$3 AND `+gaugeVisible, a.ID, a.Cohort, id)
+	return object(ctx, s.DB, `SELECT `+s.gaugeColumns()+gaugeJoin+` WHERE g.id=$3 AND `+gaugeVisible, a.ID, a.Cohort, id)
 }
 func (s *Service) listGauges(ctx context.Context, a Actor, limit, offset int) ([]json.RawMessage, error) {
 	if !assigned(a) {
 		return []json.RawMessage{}, nil
 	}
-	return objects(ctx, s.DB, `SELECT `+gaugeColumns+gaugeJoin+` WHERE `+gaugeVisible+` ORDER BY g.expires_at,g.id LIMIT $3 OFFSET $4`, a.ID, a.Cohort, limit, offset)
+	return objects(ctx, s.DB, `SELECT `+s.gaugeColumns()+gaugeJoin+` WHERE `+gaugeVisible+` ORDER BY g.expires_at,g.id LIMIT $3 OFFSET $4`, a.ID, a.Cohort, limit, offset)
 }
 
 type GaugeInput struct {
@@ -52,7 +57,7 @@ func (s *Service) ProposeGauge(ctx context.Context, a Actor, in GaugeInput) (int
 		if err := errorIfFalse(yes, err); err != nil {
 			return err
 		}
-		err = tx.QueryRow(ctx, `INSERT INTO social_activityinterest(proposer_id,place_id,activity_type_id,cohort,coarse_window,converted_activity_id,expires_at,created_at,updated_at) VALUES($1,$2,$3,$4,$5,NULL,now()+interval '14 days',now(),now()) RETURNING id`, a.ID, in.Place, in.ActivityType, a.Cohort, in.CoarseWindow).Scan(&id)
+		err = tx.QueryRow(ctx, `INSERT INTO social_activityinterest(proposer_id,place_id,activity_type_id,cohort,coarse_window,converted_activity_id,expires_at,created_at,updated_at) VALUES($1,$2,$3,$4,$5,NULL,now()+$6*interval '1 day',now(),now()) RETURNING id`, a.ID, in.Place, in.ActivityType, a.Cohort, in.CoarseWindow, s.Policy.InterestLifetimeDays).Scan(&id)
 		if err != nil {
 			return err
 		}

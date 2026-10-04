@@ -46,11 +46,12 @@ type Service struct {
 	CommunityPolicy        CommunityConfig
 	Budgets                *budgets.Store
 	RatePolicies           map[string]budgets.Policy
+	Policy                 PolicyConfig
 	Now                    func() time.Time
 }
 
 func New(db *pgxpool.Pool, audit AuditFunc) *Service {
-	return &Service{DB: db, Audit: audit, Notify: platform.Notify, Budgets: budgets.New(db), Now: time.Now, ConnectionCohorts: map[string]bool{"adult": true, "teen": true, "child": true}, Sentiment: DefaultSentimentConfig(), CommunityPolicy: DefaultCommunityConfig()}
+	return &Service{DB: db, Audit: audit, Notify: platform.Notify, Budgets: budgets.New(db), Now: time.Now, ConnectionCohorts: map[string]bool{"adult": true, "teen": true, "child": true}, Sentiment: DefaultSentimentConfig(), CommunityPolicy: DefaultCommunityConfig(), Policy: DefaultPolicyConfig()}
 }
 
 func (s *Service) admission(ctx context.Context, actor int64, action string, limit int, window time.Duration) (budgets.Decision, error) {

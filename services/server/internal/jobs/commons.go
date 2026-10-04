@@ -256,7 +256,7 @@ func (r *Runner) ResolveCoversWithOptions(ctx context.Context, options CoverReso
 	if client == nil {
 		client = &CommonsClient{}
 	}
-	rows, err := r.DB.Query(ctx, `SELECT p.id,p.name,p.raw_tags FROM places_place p WHERE `+catalog.PublicPlaceSQL+` AND ($1::text='' OR lower(p.address_city)=lower($1)) AND NOT EXISTS(SELECT 1 FROM places_placecover c WHERE c.place_id=p.id AND c.storage_key<>'') ORDER BY p.id`, options.City)
+	rows, err := r.DB.Query(ctx, `SELECT p.id,p.name,p.raw_tags FROM places_place p WHERE `+catalog.PolicyFromContext(ctx).PlaceSQL()+` AND ($1::text='' OR lower(p.address_city)=lower($1)) AND NOT EXISTS(SELECT 1 FROM places_placecover c WHERE c.place_id=p.id AND c.storage_key<>'') ORDER BY p.id`, options.City)
 	if err != nil {
 		return nil, err
 	}

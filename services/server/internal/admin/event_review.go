@@ -37,7 +37,7 @@ func (s *Service) ReviewEvent(ctx context.Context, a platform.Actor, id int64, r
 			}
 			if place != nil {
 				var public bool
-				if err := tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM places_place p WHERE p.id=$1 AND `+catalog.PublicPlaceSQL+`)`, *place).Scan(&public); err != nil {
+				if err := tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM places_place p WHERE p.id=$1 AND `+catalog.PolicyFromContext(ctx).PlaceSQL()+`)`, *place).Scan(&public); err != nil {
 					return err
 				}
 				if !public {

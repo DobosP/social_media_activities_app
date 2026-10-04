@@ -22,10 +22,11 @@ type Queue struct {
 	worker                  chan struct{}
 	Now                     func() time.Time
 	BackoffBase, BackoffMax time.Duration
+	MaxAttempts             int
 }
 
 func NewQueue(db *pgxpool.Pool) *Queue {
-	return &Queue{DB: db, handlers: map[string]TaskHandler{}, worker: make(chan struct{}, 1), Now: time.Now, BackoffBase: 30 * time.Second, BackoffMax: time.Hour}
+	return &Queue{DB: db, handlers: map[string]TaskHandler{}, worker: make(chan struct{}, 1), Now: time.Now, BackoffBase: 30 * time.Second, BackoffMax: time.Hour, MaxAttempts: 5}
 }
 
 var kindPattern = regexp.MustCompile(`^[a-z][a-z0-9_.]{0,63}$`)
@@ -71,7 +72,10 @@ func (q *Queue) Enqueue(ctx context.Context, tx pgx.Tx, kind string, payload map
 		return 0, errors.New("invalid deferred dedup key")
 	}
 	if o.MaxAttempts == 0 {
-		o.MaxAttempts = 5
+		o.MaxAttempts = q.MaxAttempts
+		if o.MaxAttempts == 0 {
+			o.MaxAttempts = 5
+		}
 	}
 	if o.MaxAttempts < 1 || o.MaxAttempts > 100 {
 		return 0, errors.New("invalid deferred attempt budget")

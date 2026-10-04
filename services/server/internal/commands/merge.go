@@ -187,7 +187,7 @@ func (s *Service) aggregate(ctx context.Context, input map[string]json.RawMessag
 			continue
 		}
 		var parent int64
-		err = s.Runner.DB.QueryRow(ctx, `SELECT p.id FROM places_place p JOIN places_place child ON child.id=$1 WHERE p.id<>child.id AND p.name<>'' AND `+catalog.PublicPlaceSQL+` AND ST_DWithin(p.location,child.location,150) AND (p.raw_tags->>'leisure' IN('sports_centre','stadium','park','recreation_ground') OR p.raw_tags->>'amenity'='school') ORDER BY CASE WHEN p.raw_tags->>'leisure' IN('sports_centre','stadium') THEN 0 WHEN p.raw_tags->>'leisure' IN('park','recreation_ground') THEN 1 ELSE 2 END,ST_Distance(p.location,child.location),p.id LIMIT 1`, child.ID).Scan(&parent)
+		err = s.Runner.DB.QueryRow(ctx, `SELECT p.id FROM places_place p JOIN places_place child ON child.id=$1 WHERE p.id<>child.id AND p.name<>'' AND `+catalog.PolicyFromContext(ctx).PlaceSQL()+` AND ST_DWithin(p.location,child.location,150) AND (p.raw_tags->>'leisure' IN('sports_centre','stadium','park','recreation_ground') OR p.raw_tags->>'amenity'='school') ORDER BY CASE WHEN p.raw_tags->>'leisure' IN('sports_centre','stadium') THEN 0 WHEN p.raw_tags->>'leisure' IN('park','recreation_ground') THEN 1 ELSE 2 END,ST_Distance(p.location,child.location),p.id LIMIT 1`, child.ID).Scan(&parent)
 		if err == pgx.ErrNoRows {
 			counts["skipped_no_parent"]++
 			continue

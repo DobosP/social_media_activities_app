@@ -21,30 +21,36 @@ var (
 const PolicyVersion = "social-media-go-v1"
 
 type Config struct {
-	ScratchDir      string
-	ImageMaxBytes   int64
-	ImageMaxPixels  int64
-	ImageMaxSide    int
-	ThumbnailSide   int
-	ImageFormat     string // AVIF or WEBP; native encoders are required, no silent fallback.
-	VideoMaxBytes   int64
-	VideoMaxSeconds float64
-	VideoSourceSide int
-	VideoTargetSide int
-	VideoEnabled    bool
-	CommandTimeout  time.Duration
-	ProbeTimeout    time.Duration
-	MemoryBytes     uint64
-	Threads         int
-	ConcurrentJobs  int
-	FFmpeg          string
-	FFprobe         string
-	Avifenc         string
-	Prlimit         string
+	ScratchDir                     string
+	ImageMaxBytes                  int64
+	ImageMaxPixels                 int64
+	ImageMaxSide                   int
+	ThumbnailSide                  int
+	ImageQuality                   int // 0 selects source default (AVIF64/WebP80), otherwise 1..100.
+	AttachmentMaxBytes             int64
+	VideoCRF                       int
+	VideoPreset, VideoAudioBitrate string
+	VideoFrameScanInterval         time.Duration
+	VideoFrameScanMaxFrames        int
+	ImageFormat                    string // AVIF or WEBP; native encoders are required, no silent fallback.
+	VideoMaxBytes                  int64
+	VideoMaxSeconds                float64
+	VideoSourceSide                int
+	VideoTargetSide                int
+	VideoEnabled                   bool
+	CommandTimeout                 time.Duration
+	ProbeTimeout                   time.Duration
+	MemoryBytes                    uint64
+	Threads                        int
+	ConcurrentJobs                 int
+	FFmpeg                         string
+	FFprobe                        string
+	Avifenc                        string
+	Prlimit                        string
 }
 
 func DefaultConfig(scratch string) Config {
-	return Config{ScratchDir: scratch, ImageMaxBytes: 5 << 20, ImageMaxPixels: 30_000_000,
+	return Config{ImageQuality: 0, AttachmentMaxBytes: 7 << 20, VideoCRF: 23, VideoPreset: "medium", VideoAudioBitrate: "96k", VideoFrameScanInterval: 5 * time.Second, VideoFrameScanMaxFrames: 25, ScratchDir: scratch, ImageMaxBytes: 5 << 20, ImageMaxPixels: 30_000_000,
 		ImageMaxSide: 2048, ThumbnailSide: 800, ImageFormat: "AVIF", VideoMaxBytes: 80 << 20,
 		VideoMaxSeconds: 90, VideoSourceSide: 3840, VideoTargetSide: 1280, VideoEnabled: true,
 		CommandTimeout: 600 * time.Second, ProbeTimeout: 60 * time.Second, MemoryBytes: 2 << 30,

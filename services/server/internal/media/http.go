@@ -32,7 +32,7 @@ func (s *Service) uploadPhotoHTTP(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	path, _, fields, e := s.ReadUpload(w, r, 5<<20)
+	path, _, fields, e := s.ReadUpload(w, r, s.processor.cfg.ImageMaxBytes)
 	if e != nil {
 		mediaFail(w, e)
 		return
@@ -193,7 +193,7 @@ func (s *Service) putCoverHTTP(w http.ResponseWriter, r *http.Request) {
 		mediaFail(w, e)
 		return
 	}
-	path, _, fields, e := s.ReadUpload(w, r, 5<<20)
+	path, _, fields, e := s.ReadUpload(w, r, s.processor.cfg.ImageMaxBytes)
 	if e != nil {
 		mediaFail(w, e)
 		return
@@ -358,7 +358,7 @@ func (s *Service) serveHTTP(route string) http.HandlerFunc {
 			mediaFail(w, platform.ErrForbidden)
 			return
 		}
-		ttl := 60 * time.Second
+		ttl := s.policy.PresignedTTL
 		if expires != nil {
 			remaining := time.Until(*expires)
 			if remaining < ttl {

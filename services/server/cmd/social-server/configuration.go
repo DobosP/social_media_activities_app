@@ -25,10 +25,12 @@ import (
 	"github.com/DobosP/social_media_activities_app/services/server/internal/accounts"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/app"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/booking"
+	"github.com/DobosP/social_media_activities_app/services/server/internal/catalog"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/commands"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/donations"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/jobs"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/media"
+	"github.com/DobosP/social_media_activities_app/services/server/internal/messaging"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/ops"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/social"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/web"
@@ -188,23 +190,57 @@ func (d *decoder) minuteRate(name string, fallback int) int {
 }
 
 type runtimeConfig struct {
-	App                     app.Config
-	Jobs                    jobs.Config
-	Development             bool
-	MediaDirectory          string
-	Sentiment               social.SentimentConfig
-	Community               social.CommunityConfig
-	Connections             map[string]bool
-	Presign                 bool
-	BackoffBase, BackoffMax time.Duration
-	Web                     web.Config
-	Commands                commands.Config
+	App                                 app.Config
+	Jobs                                jobs.Config
+	Development                         bool
+	MediaDirectory                      string
+	Sentiment                           social.SentimentConfig
+	Community                           social.CommunityConfig
+	Connections                         map[string]bool
+	Presign                             bool
+	BackoffBase, BackoffMax             time.Duration
+	Web                                 web.Config
+	Commands                            commands.Config
+	CatalogPolicy                       catalog.Policy
+	SocialPolicy                        social.PolicyConfig
+	MediaPolicy                         media.PolicyConfig
+	MessagingPolicy                     messaging.Policy
+	SavedSearchMax, DeferredMaxAttempts int
+	UnsafeReportCooldown                time.Duration
+	ErrorReporting                      ops.ErrorReporterConfig
+	RequireSharedState                  bool
+	Rates                               map[string]configuredRate
 }
 
-func (c runtimeConfig) apply(a *app.App) {
+func (c runtimeConfig) apply(a *app.App) error {
+	if err := c.applyRates(a); err != nil {
+		return err
+	}
+	if err := c.SocialPolicy.Validate(); err != nil {
+		return err
+	}
+	if err := c.CatalogPolicy.Validate(); err != nil {
+		return err
+	}
+	if err := a.Social.ConfigurePolicy(c.SocialPolicy); err != nil {
+		return err
+	}
+	if err := a.Media.ConfigurePolicy(c.MediaPolicy); err != nil {
+		return err
+	}
+	if err := a.Messaging.ConfigurePolicy(c.MessagingPolicy); err != nil {
+		return err
+	}
+	a.Catalog.Policy = c.CatalogPolicy
+	a.Recommendations.MaxSavedSearches = c.SavedSearchMax
+	a.Safety.Config.UnsafeReportCooldown = c.UnsafeReportCooldown
+	a.Media.ClosureThreshold, a.Media.ClosureDecay = c.CatalogPolicy.ClosureReportThreshold, c.CatalogPolicy.ClosureReportDecay
 	a.Social.Sentiment = c.Sentiment
 	a.Social.CommunityPolicy = c.Community
-	a.Social.ConnectionCohorts = c.Connections
+	a.Social.ConnectionCohorts = map[string]bool{}
+	for cohort, enabled := range c.Connections {
+		a.Social.ConnectionCohorts[cohort] = enabled
+	}
 	a.Media.Presign = c.Presign
 	a.Web.Config.IndexNowKey = c.Web.IndexNowKey
 	a.Web.Config.SnapshotDir = c.Web.SnapshotDir
@@ -214,6 +250,7 @@ func (c runtimeConfig) apply(a *app.App) {
 	a.Web.Config.SiteName = c.Web.SiteName
 	a.Web.Config.SiteGoogleVerification = c.Web.SiteGoogleVerification
 	a.Web.Config.SiteBingVerification = c.Web.SiteBingVerification
+	return nil
 }
 
 func configuration(get environment, o cliOptions, presence ...environmentPresence) (runtimeConfig, error) {
@@ -547,6 +584,7 @@ func configuration(get environment, o cliOptions, presence ...environmentPresenc
 	if len(out.Web.SiteAreaServed) > 160 || strings.ContainsAny(out.Web.SiteAreaServed, "\x00\r\n") {
 		d.invalid("SITE_AREA_SERVED")
 	}
+	configurePolicies(&d, &out)
 	validateFixedPolicies(&d)
 	if d.err != nil {
 		return runtimeConfig{}, d.err
@@ -678,11 +716,10 @@ func databaseConfig(get environment, presence ...environmentPresence) (*pgxpool.
 	d := newDecoder(get, presence...)
 	d.fixedBool("DB_POOL_ENABLED", true)
 	d.fixedBool("DB_POOLED", false)
-	if raw := get("DB_POOL_TIMEOUT"); raw != "" {
-		seconds, err := strconv.ParseFloat(raw, 64)
-		if err != nil || seconds != 10 {
-			d.invalid("DB_POOL_TIMEOUT")
-		}
+	// pgx acquires using the caller's deadline; the retired Python pool's
+	// separate queue timeout cannot be mapped faithfully to this pool.
+	if d.isSet("DB_POOL_TIMEOUT") {
+		d.invalid("DB_POOL_TIMEOUT")
 	}
 	c.MaxConns = int32(d.integer("DB_POOL_MAX_SIZE", 4, 2, 4))
 	c.MinConns = int32(d.integer("DB_POOL_MIN_SIZE", 0, 0, int(c.MaxConns)))

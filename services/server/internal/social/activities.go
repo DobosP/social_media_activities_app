@@ -15,7 +15,7 @@ import (
 )
 
 func publicPlace(ctx context.Context, q platform.Querier, a Actor, id int64, ownPending bool) error {
-	ok, err := scalar(ctx, q, `SELECT EXISTS(SELECT 1 FROM places_place p WHERE p.id=$1 AND (`+catalog.PublicPlaceSQL+` OR ($2 AND EXISTS(SELECT 1 FROM social_userplaceproposal pp WHERE pp.place_id=p.id AND pp.status='pending' AND pp.proposer_id=$3))))`, id, ownPending && a.Cohort == "adult", a.ID)
+	ok, err := scalar(ctx, q, `SELECT EXISTS(SELECT 1 FROM places_place p WHERE p.id=$1 AND (`+catalog.PolicyFromContext(ctx).PlaceSQL()+` OR ($2 AND EXISTS(SELECT 1 FROM social_userplaceproposal pp WHERE pp.place_id=p.id AND pp.status='pending' AND pp.proposer_id=$3))))`, id, ownPending && a.Cohort == "adult", a.ID)
 	return errorIfFalse(ok, err)
 }
 func (s *Service) CreateActivity(ctx context.Context, a Actor, in ActivityInput) (int64, error) {
@@ -565,17 +565,10 @@ func (s *Service) Presence(ctx context.Context, a Actor, id int64, kind, value s
 		if v.Status != "open" {
 			return platform.ErrInvalid
 		}
-		if kind == "departing" {
-			end := v.StartsAt.Add(3 * time.Hour)
-			if v.EndsAt != nil {
-				end = *v.EndsAt
-			}
-			if a.Cohort != "child" || now.Before(v.StartsAt) || now.After(end.Add(3*time.Hour)) {
-				return platform.ErrInvalid
-			}
-		} else if now.Before(v.StartsAt.Add(-2*time.Hour)) || now.After(v.StartsAt.Add(3*time.Hour)) {
+		if kind == "departing" && a.Cohort != "child" || !s.presenceWindow(v, now, kind == "departing") {
 			return platform.ErrInvalid
 		}
+
 		var role, transit string
 		var arrived, departed *time.Time
 		if err := tx.QueryRow(ctx, `SELECT id,role,arrived_at,departing_at,transit_status FROM social_membership WHERE activity_id=$1 AND user_id=$2 AND state='member' FOR UPDATE`, id, a.ID).Scan(&mid, &role, &arrived, &departed, &transit); err != nil {
