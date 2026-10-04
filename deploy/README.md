@@ -26,6 +26,9 @@ pass on that exact source candidate before it becomes a deployment artifact. Art
 and database rollback drills precede a real migration; the old database/runtime remain
 available for reviewed rollback. Backup units and EU storage policy still apply.
 
-Native HSTS/HTTPS/logging settings are mapped. Redis-required mode, Sentry and listed
-unsupported nondefault policies refuse startup; resolve them before choosing a deployment
-that requires those behaviors. The template has never been applied or tested on a real VPS.
+Native HSTS/HTTPS/logging and reviewed domain policies are mapped. PostgreSQL owns
+shared admission/live state; required-shared mode checks its migrated contract. Optional
+privacy-safe Sentry is bounded and disabled by default. Retired Python runtime names
+(DB_POOL_TIMEOUT, ASGI_THREADS, DJANGO_SETTINGS_MODULE), unused Redis and unsafe policy
+overrides refuse startup. Remove those obsolete assignments when adopting an old env profile,
+without printing its values. The templates have never been applied or tested on a real VPS.

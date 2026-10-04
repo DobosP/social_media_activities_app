@@ -57,14 +57,28 @@ Request logs contain bounded route patterns/status/duration/request ID, without 
 paths, queries, IPs, identities, credentials or bodies.
 
 A small PostgreSQL pool (default4; one live LISTEN connection) bounds database work.
-OAuth flow/attempt state, tokens, account/safety budgets, job queues and ID-only live fanout
-are database-backed. API/social/catalog rate histories remain bounded process-local state;
-Redis-required and Sentry modes fail startup. Resolve global domain budgets before a
-multi-replica deployment that requires them. LISTEN needs a session connection when using
-PgBouncer. No measured heap reduction is a hosting-price guarantee; PostgreSQL, codecs,
-blob storage and real workload still determine box size.
+OAuth state/attempts, tokens, API/social/catalog/saved-search/CSP admission, account/safety/
+message budgets, job queues and ID-only live fanout use PostgreSQL. Shared sliding admission
+uses per-identity locks and constant-time capacity counters, with bounded expiry cleanup;
+anonymous peer keys are keyed hashes and account-linked rows cascade on erasure. Missing
+schema or unavailable admission refuses work. [ADR-0033](adr/0033-postgresql-shared-rate-budgets.md)
+records the storage and retry contract; LISTEN still needs a session connection with PgBouncer.
+No measured heap or fixture latency is a hosting-price/capacity guarantee.
 
-Native API schema inventories all registered operations and fully describes public
-catalog fields; private field-level DTO schemas remain incomplete documentation. Browser
-and database tests exercise current payloads directly. Qualification commands:
-[agent-testing](agent-testing.md); exact receipts: STATUS/WORKLOG.
+The CLI maps reviewed typed overrides to their domain policies; unsafe floors, obsolete
+Python runtime knobs and unused Redis configuration are refused by name. Required-shared
+mode uses the native PostgreSQL contract. Optional Sentry sends bounded fixed error classes
+and coarse route labels, with no raw errors/requests/identities or tracing. Configuration,
+privacy and shutdown boundaries: [ADR-0034](adr/0034-native-config-error-observability.md).
+Production reporting/provider acceptance remains an explicit operations gate.
+
+[Guarded permission management](../services/server/internal/admin/README.md) uses fixed
+presets, fresh eligible manager/target authority, atomic audit and credential revocation;
+it cannot grant age/cohort/consent or bypass domain services. Private OpenAPI now describes
+all380 registered API operations over318 paths with166 field schemas, including actual
+DTOs, SQL projections, binary media, status/security and query/body contracts. Coverage
+checks compare against native registrations and representative wire values.
+[ADR-0035](adr/0035-guarded-permissions-private-schema.md) records those boundaries;
+[ADR-0036](adr/0036-fresh-participation-authority.md) records fresh participation authority.
+Qualification commands: [agent-testing](agent-testing.md); [completion receipt](reviews/native-go/completion-qualification.md); current review gates:
+STATUS/WORKLOG. Completion extensions remain a review candidate until human approval.

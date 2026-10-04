@@ -26,17 +26,30 @@ keyset pagination help bounded work, but do not establish an unmeasured user cap
 
 ## Shared-state boundary
 
-General API, social and catalog throttle histories are process-local. Authentication
-budgets/state and selected domain budgets use PostgreSQL. Default API admission rates
-are anonymous 60/minute, user 240/minute and token obtain 10/minute; configured rates
-support positive minute units only. Splitting requests across replicas can multiply a
-process-local allowance. PostgreSQL ID-only NOTIFY provides live fan-out, not a shared
-cache or a global throttle service.
+API/social/catalog/saved-search/CSP admission is shared through PostgreSQL under
+[ADR-0033](adr/0033-postgresql-shared-rate-budgets.md). Auth/account/safety/message budgets,
+tokens, deferred work and ID-only live fan-out are database-backed too. Default API rates
+remain anonymous60/minute, user240/minute and token obtain10/minute; minute-rate strings
+and domain cap/window overrides are bounded and validated by the CLI.
 
-`REDIS_URL`, required shared-state mode and `SENTRY_DSN` currently reject unsupported
-configuration. Adding Redis to a deployment does not implement these native contracts.
-A deployment requiring global domain budgets needs a reviewed shared-budget implementation
-and qualification before extra serving replicas are enabled.
+Shared sliding histories retain at most10000 scope/subject buckets and1000000 admitted timestamps;
+per-identity locks serialize a bucket, statement-level deltas maintain capacity in constant
+time, and indexed bounded sweeps expire idle rows. Peer hashes require the same configured
+secret across replicas. Live-window policy mismatches refuse admission rather than resetting
+a budget. User-linked rows cascade on erasure. Domain preflight releases its transaction
+before reservation, then reruns current gates without nested pool acquisition. Missing schema,
+database failure and capacity saturation fail closed.
+
+`DJANGO_REQUIRE_SHARED_STATE` verifies this native contract. `REDIS_URL` remains refused;
+no Redis service is needed to make these budgets global. Optional Sentry is qualified at the
+native boundary described in [ADR-0034](adr/0034-native-config-error-observability.md).
+Local WebSocket/buffer/codec concurrency limits protect each process; they are resource
+ceilings rather than a replacement for shared abuse quotas. Optional DB-free agentapi
+retains its distinct local contract and must not be mistaken for the authoritative server.
+
+The fixture cardinality measurement and memory bounds are in ADR-0033/WORKLOG. They do
+not establish production throughput or a hosting price. Qualify a real multi-replica deployment,
+pool recovery and operational ingress before expanding it; review/launch gates remain in STATUS.
 
 ## Measure before expanding
 

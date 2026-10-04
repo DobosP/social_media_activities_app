@@ -72,9 +72,11 @@ to two through four; SQL statement timeout is 5 seconds by default. The live bro
 reserves one connection while listening for PostgreSQL ID-only notifications. It reloads
 authoritative state before delivery; NOTIFY does not carry messages or permission.
 
-API/social/catalog rate histories are process-local. Authentication budgets/state and
-selected domain budgets are database-backed; PostgreSQL live fan-out does not make every
-rate global. Redis-required mode, Sentry and unsupported policy overrides refuse startup.
+API/social/catalog/saved-search/CSP admission uses shared PostgreSQL histories and capacity
+counters (ADR-0033); authentication/account/safety/message budgets remain database-backed.
+Reviewed policy overrides and bounded privacy-safe Sentry are native (ADR-0034); unsafe
+floors, retired Python runtime controls and unused Redis settings are refused. Guarded
+permissions/private schemas and fresh participation are ADR-0035/0036 review extensions.
 See [SCALING](SCALING.md) before selecting a multi-process deployment.
 
 Schema bootstrap/adoption runs through `social-server --migrate-only`, retaining existing

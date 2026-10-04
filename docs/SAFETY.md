@@ -9,7 +9,7 @@ D5, and D6 too. See [ROADMAP](ROADMAP.md) and [COMPLIANCE](COMPLIANCE.md).
 > minors** ([archive/AUDIT_STRESS_2026-05-29.md](archive/AUDIT_STRESS_2026-05-29.md) §1) remains
 > the policy baseline — minors stay structurally OFF until DPIA + DPO + verifiable parental
 > consent + a real EUDI trust anchor exist, regardless of engineering progress since
-> ([PRODUCTION_READINESS](PRODUCTION_READINESS.md) §2e).
+> ([PRODUCTION_READINESS](PRODUCTION_READINESS.md) §Product and legal launch gates).
 
 ## Threat model (who we protect against)
 
@@ -62,7 +62,7 @@ D5, and D6 too. See [ROADMAP](ROADMAP.md) and [COMPLIANCE](COMPLIANCE.md).
   defaults (private, opt-in).
 - **D4 (safety & moderation):**
   - **Reporting & blocking** on users, activities, posts.
-  - **Moderation review queue** (built on Django admin) with actions (warn, remove, suspend, ban)
+  - **Moderation review queue** (native moderator console and guarded administration) with actions (warn, remove, suspend, ban)
     and reason codes.
   - **Audit logging** of safety-relevant events; tamper-evident where feasible.
   - **Rate limiting / anti-abuse**; ban-evasion signals; new-account friction.

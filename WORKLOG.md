@@ -538,3 +538,24 @@ large request exemption to actual multipart uploads. Final full vet passes.
 Docs: check_docs files=52, dead_links=0, stale_terms=0, retired_verbs=0, orphans=0. Source
 format/whitespace checks pass. No production data, ingestion, scheduler, provider,
 minor activation, deployment, shared authentication source, push or main merge occurred.
+
+
+## 2026-10-04 — combined native completion qualification
+
+Valid until: the runtime/policy/authorization contract changes — then treat as history.
+
+The coordinator integrated all three lanes plus fresh authority/projection corrections.
+All280 top-level tests across19 explicit native CLI/PG/codec lanes pass under-race with
+zero skips; final broad race/vet/auth hashes/format pass. Release smoke exposed missing
+schema/guide registration; explicit routes, protocol contracts and assembledApp regressions
+now pass. Actual release emits380operations/318paths/166schemas, and schema/guide/readiness
+all return200. Final image453f7048c53d1b9b65ea5fc498cf389d32b0a457ce37413467507e4ae57820d9
+is Python-free, UID10001; graceful shutdown exits0 withoutOOM. Source/package/linked audits
+and image fixableHIGH/CRITICAL gates pass. Unimported openpgp GO-2026-5932 is recorded
+separately; nothing was suppressed. Exact aggregated evidence is
+docs/reviews/native-go/completion-qualification.md. Hosted CI and human sensitive-code
+review remain beforelanding; no production/provider/source/minor activation occurred.
+
+agent-ops registered SENTRY_ENVIRONMENT as non-secret deploy-host metadata without values
+or SOPS/repo_env delivery, commit a7062e70bf4a4f3cfb2be47f7862a9b5e32b1f64 verified onorigin/main.
+Cat runtime/authcore needed no change. The anonymous Go game replica-affinity contract remains.

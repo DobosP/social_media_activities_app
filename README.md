@@ -81,7 +81,7 @@ users — open `http://localhost:8000/`:
   - `?activity=<slug>` `?city=` `?source=` `?min_confidence=` `?in_bbox=minx,miny,maxx,maxy`
   - `?near_lon=&near_lat=` orders nearest-first and adds `distance_m`; add `?radius_m=` to
     also filter within a radius (metres)
-- `GET /api/docs/` — Swagger UI (`/api/schema/` for raw OpenAPI)
+- `GET /api/docs/` — native API guide (`/api/schema/` for field-level OpenAPI)
 - `/admin/` — guarded native operator pages with audited curated edits and governed domain actions
 
 ## Project layout

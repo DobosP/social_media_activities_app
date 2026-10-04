@@ -106,11 +106,11 @@ Preserve the established EU backup/retention and quarterly restore-drill targets
 extensions, auth/CSRF, media references and deletion continuation. Media versioning and
 lifecycle must respect erasure and safety/evidence holds.
 
-API/social/catalog budgets remain process-local; the PostgreSQL broker only shares live
-notifications. Redis-required mode, Sentry and unsupported nondefault settings refuse
-startup. A deployment requiring global domain budgets needs a new reviewed seam before
-extra serving replicas. See [SCALING](SCALING.md); there is no verified user-capacity,
-monthly-cost or procurement promise here.
+API/social/catalog/saved-search/CSP budgets now share PostgreSQL admission/capacity state;
+required-shared mode checks the native contract. No Redis service is required. Reviewed
+policy overrides and bounded privacy-safe Sentry have native boundaries. Run the additive
+migration and qualify actual replicas, pool behavior, revocation and ingress before scaling.
+See [SCALING](SCALING.md); there is no verified user-capacity, monthly-cost or procurement promise here.
 
 The implementation is approved for landing. Production still needs owner procurement,
 exact release/image qualification, rollback/restore evidence, scanner/storage/identity

@@ -2,12 +2,42 @@ package app
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/testdb"
 )
+
+func TestNativeDocumentationRoutesAreReachableThroughApplication(t *testing.T) {
+	db := testdb.New(t, *appDSN, nil)
+	a, err := New(context.Background(), db, integrationConfig(t), true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, path := range []string{"/api/schema/", "/api/docs/"} {
+		w := httptest.NewRecorder()
+		a.ServeHTTP(w, httptest.NewRequest("GET", "https://app.example"+path, nil))
+		if w.Code != 200 || w.Header().Get("X-Social-Runtime") != "go" || w.Header().Get("Set-Cookie") != "" {
+			t.Fatal("anonymous native documentation unavailable", path, w.Code)
+		}
+		if path == "/api/schema/" {
+			var schema struct {
+				OpenAPI    string                     `json:"openapi"`
+				Operations int                        `json:"x-native-api-operation-count"`
+				Paths      map[string]json.RawMessage `json:"paths"`
+			}
+			if json.Unmarshal(w.Body.Bytes(), &schema) != nil || schema.OpenAPI != "3.0.3" || schema.Operations != 380 || len(schema.Paths) != 318 {
+				t.Fatal("assembled documentation inventory differs")
+			}
+		} else if !strings.Contains(w.Header().Get("Content-Type"), "text/html") || !strings.Contains(w.Body.String(), "/api/schema/") {
+			t.Fatal("native guide is not reachable HTML")
+		}
+	}
+}
 
 // The actor may have been loaded before a separately committed rate reservation.
 // Every identity or capability withdrawal must invalidate that captured actor.

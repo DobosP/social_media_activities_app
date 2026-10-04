@@ -52,6 +52,7 @@ Last verified: 2026-10-04
   database with `social-server --migrate-only`, then run `scripts/qualify-native.sh GO IMAGE NETWORK DSN SCRATCH`.
   DSN is explicit synthetic fixture only; private Docker network, no published DB ports, no real data.
   Scratch is task-owned under `~/work/_temp/<slug>`, sources read-only, real codecs, `-race`, zero skips.
+  The harness includes all19 CLI/domain lanes, including configured policy and shared-budget contracts.
 - Source/binary audits: `govulncheck@v1.8.0 ./...` and `-mode=binary` on the release executable;
   module-only unimported advisories are described separately from reachable/imported findings.
 - `.github/workflows/native.yml` runs native bootstrap and all required database/codec lanes.

@@ -27,14 +27,20 @@ before a real migration. Do not reset/drop a database to make bootstrap succeed.
 The executable serves HTTP/WebSockets behind the reviewed TLS proxy. Set the exact
 canonical origin, allowed hosts and trusted immediate-proxy CIDRs. Forwarded identity and
 HTTPS headers are accepted only across that trust boundary. PostgreSQL live notifications
-carry IDs and trigger fresh permission checks. Redis is not a native runtime dependency
-or a solution for shared API/domain rates; required Redis/shared-state and Sentry profiles
-refuse startup. See [SCALING](SCALING.md).
+carry IDs and trigger fresh permission checks. Shared API/domain admission uses PostgreSQL;
+run the additive native migration before serving the completion release. Missing rate schema
+stops startup, and admission errors refuse work. Required-shared mode verifies that contract;
+Redis remains unused/refused. Optional Sentry emits only fixed error classes/coarse routes
+with bounded queues and shutdown. Configure its approved destination and alerts separately.
+See [SCALING](SCALING.md) and the CLI guide for policy/retired-setting validation.
 
 Production private media needs approved EU/private-bucket verification, effective scanner
 configuration and native codecs. Local storage is loopback development only. Initial
 administrator creation is the explicit private-stdin `createsuperuser` command; it creates
 a fresh unverified/unassigned administrator and grants no age or parental assurance.
+The guarded account permission form requires current eligible manager authority; effective
+capability changes revoke sessions/API tokens and commit with audit. Use its complete preset
+workflow, never raw identity/cohort/consent edits.
 Provider activation, ingestion, paid infrastructure and minor onboarding retain separate
 owner/product gates.
 

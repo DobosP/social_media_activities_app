@@ -61,10 +61,10 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 ## Open work
 
 - ADR-0035 review candidate adds guarded administrator permissions and complete private API field
-  contracts (378 operations/316 paths/145 schemas); human auth/privacy review precedes landing.
+  contracts (380 operations/318 paths/166 schemas); human auth/privacy review precedes landing.
 
-- Three isolated completion lanes cover shared budgets, configuration/error reporting and guarded
-  permissions/private API schemas. Candidate qualification/review is pending; origin/main remains the base conversion.
+- All three completion lanes are integrated and locally qualified on `feat/go-migration-finish`.
+  Hosted CI and human auth/privacy/safety review precede landing; origin/main remains the base conversion.
 
 - Build/promote a fresh immutable producer/server V2 release before real sync;
   the serving repo's producer dependency must be intentionally bumped first.
@@ -82,12 +82,12 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
-- 2026-10-04 completion candidate combines all three lanes and fresh participation authority.
-  Per-lane receipts: shared budgets194 PG/codec tests, admin/account/web62, CLI configuration33;
-  race/vet/auth hashes and doc gate pass in the lanes. Exact combined-source qualification is pending.
-  Worker fixture repairs are integrated; no production/provider/minor verification is claimed.
-- Fresh-authority baseline175 PG/codec race contracts passed, zero skips; earlier conversion173
-  contracts and native/reference/public CI were green. Historical exact receipts are in WORKLOG.
+- 2026-10-04 completion: native race/vet/auth hashes and280 tests across19 CLI/PG/codec lanes pass,
+  zero skips. Final image453f7048 has no Python, UID10001, zero fixable HIGH/CRITICAL findings.
+  Source/package/linked audits pass; unimported openpgp advisory is recorded separately.
+  Real release schema/guide/readiness return200; schema380/318/166; graceful shutdown exits0.
+  Exact receipt: `docs/reviews/native-go/completion-qualification.md`; hosted CI/review pending.
+- Earlier conversion173 contracts and native/reference/public CI passed; full history is in WORKLOG.
 
 ## Standard verification
 Native race/vet + shared-source hashes; database/codec contracts require explicit disposable fixtures

@@ -15,9 +15,10 @@ unsupported source overrides are listed in the [CLI guide](../services/server/cm
 
 The live notification channel carries room/message identifiers, with fresh authentication
 and membership checks before delivery. PgBouncer transaction pooling cannot own LISTEN;
-retain a separate session connection if introducing it. Default domain/API/catalog rate
-histories are process-local. Database-backed auth/identity/safety budgets and deferred
-queues do not imply that all admission limits are globally shared.
+retain a separate session connection if introducing it. Shared API/domain/catalog admission
+uses PostgreSQL histories, per-identity locks, constant-time capacity accounting and bounded
+expiry sweeps (ADR-0033). Account/safety/message budgets remain shared native contracts.
+Admission never falls back to a process-local quota when the database is unavailable.
 
 ## Schema bootstrap and adoption
 
