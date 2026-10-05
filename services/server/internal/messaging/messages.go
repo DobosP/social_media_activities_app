@@ -412,7 +412,11 @@ func (s *Service) Report(ctx context.Context, a platform.Actor, conversation, id
 	detail = strings.TrimSpace(detail)
 	var report int64
 	e := platform.Transaction(ctx, s.DB, func(tx pgx.Tx) error {
-		ok, e := s.CanView(ctx, tx, a, conversation)
+		// Reporting is not reading: an active seat on an active account is the
+		// whole gate (source is_active_participant). A block with any peer, lapsed
+		// participation or guardian eligibility never removes the evidence path.
+		var ok bool
+		e := tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM messaging_participant p JOIN accounts_user u ON u.id=p.user_id AND u.is_active WHERE p.conversation_id=$1 AND p.user_id=$2 AND p.state='active')`, conversation, a.ID).Scan(&ok)
 		if e != nil {
 			return e
 		}

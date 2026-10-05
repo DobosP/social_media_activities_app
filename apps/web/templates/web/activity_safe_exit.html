@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{{ activity.title }}{% endblock %}
+{% block content %}
+{% comment %}A current member who is blocked with the organiser (either way) loses the activity
+   page — thread, roster, place, organiser and logistics — but never the safe exit: only the title
+   and the shared safe-exit card render here.{% endcomment %}
+<h1>{{ activity.title }}</h1>
+{% include "web/_activity_safe_exit.html" %}
+{% endblock %}

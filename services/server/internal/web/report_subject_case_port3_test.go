@@ -51,16 +51,19 @@ func TestWebCasePort3ReportSubjectGatesAndLegacyFields(t *testing.T) {
 			}
 		}
 	})
-	t.Run("current_block_and_hidden_activity_refuse_get_and_post", func(t *testing.T) {
+	t.Run("owner_block_and_hidden_activity_stay_reportable", func(t *testing.T) {
+		// Reporting is the DSA Art-16 channel, not a read: an organiser who
+		// blocks the member first cannot pre-empt it, and hiding keeps it open.
 		if _, err := s.DB.Exec(ctx, `INSERT INTO safety_block(blocker_id,blocked_id,created_at) VALUES($1,$2,now())`, owner.ID, peer.ID); err != nil {
 			t.Fatal(err)
 		}
-		if w := webCasePortRead(mux, peer, activityForm); w.Code != 404 {
-			t.Fatal("current block report GET wall", w.Code)
-		}
+		webCasePortContains(t, webCasePortHTML(t, mux, peer, activityForm), "Case port3 reportable activity")
+		body := webCasePortHTML(t, mux, peer, postForm)
+		webCasePortContains(t, body, owner.DisplayName)
+		webCasePortAbsent(t, body, "private report-target body sentinel")
 		w := webCasePort2Post(t, mux, peer, "/profile/", "/report/", url.Values{"type": {"activity"}, "id": {fmt.Sprint(activity)}, "reason": {"spam"}})
-		if w.Code != 404 {
-			t.Fatal("current block report POST wall", w.Code)
+		if w.Code != 302 {
+			t.Fatal("current block refused the report POST", w.Code)
 		}
 		if _, err := s.DB.Exec(ctx, `DELETE FROM safety_block WHERE blocker_id=$1 AND blocked_id=$2`, owner.ID, peer.ID); err != nil {
 			t.Fatal(err)
@@ -68,9 +71,7 @@ func TestWebCasePort3ReportSubjectGatesAndLegacyFields(t *testing.T) {
 		if _, err := s.DB.Exec(ctx, `UPDATE social_activity SET is_hidden=true WHERE id=$1`, activity); err != nil {
 			t.Fatal(err)
 		}
-		if w := webCasePortRead(mux, peer, activityForm); w.Code != 404 {
-			t.Fatal("current hidden report GET wall", w.Code)
-		}
+		webCasePortContains(t, webCasePortHTML(t, mux, peer, activityForm), "Case port3 reportable activity")
 		if _, err := s.DB.Exec(ctx, `UPDATE social_activity SET is_hidden=false WHERE id=$1`, activity); err != nil {
 			t.Fatal(err)
 		}
@@ -91,7 +92,8 @@ func TestWebCasePort3ReportSubjectGatesAndLegacyFields(t *testing.T) {
 			t.Fatal("invalid report reason did not preserve safe form", w.Code)
 		}
 		var count int
-		if err := s.DB.QueryRow(ctx, `SELECT count(*) FROM safety_report WHERE reporter_id=$1`, peer.ID).Scan(&count); err != nil || count != 1 {
+		// The block subtest's report plus the legacy-field report above.
+		if err := s.DB.QueryRow(ctx, `SELECT count(*) FROM safety_report WHERE reporter_id=$1`, peer.ID).Scan(&count); err != nil || count != 2 {
 			t.Fatal("invalid reason produced report", err, count)
 		}
 	})

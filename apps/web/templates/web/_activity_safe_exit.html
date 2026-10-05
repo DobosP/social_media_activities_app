@@ -1,0 +1,25 @@
+{% load i18n %}
+{% comment %}The safe-exit card, shared by the activity page and the blocked-member fallback page
+   (web/activity_safe_exit.html). A member blocked with the organiser keeps exactly this card.{% endcomment %}
+{% if is_member and not is_owner %}
+  <div class="card card-danger">
+    <strong>{% trans "Feeling unsafe or uncomfortable?" %}</strong>
+    <p class="muted compact-copy">{% blocktrans %}You can leave any time &mdash; nothing is shared about you for
+      doing so. If something doesn't feel right, tell a moderator, or talk to a grown-up you trust.{% endblocktrans %}</p>
+    {% if my_guardians %}
+      <p class="muted">{% trans "People you can talk to:" %}
+        {% for g in my_guardians %}<strong>{{ g.display_name|default:g.username }}</strong>{% if not forloop.last %}, {% endif %}{% endfor %}.</p>
+    {% endif %}
+    {% comment %}F8: one-tap "I feel unsafe" — the fast path for a scared member. A single press files
+    a real moderation report and (if you're a child) tells the grown-ups who look after you — no form
+    to fill in. The detailed reason-code report stays available below as the slow path.{% endcomment %}
+    <form method="post" action="{% url 'activity_unsafe' activity.pk %}" class="inline activity-inline-form">{% csrf_token %}
+      <button class="btn btn-danger" type="submit">&#9888;&#65039; {% trans "I feel unsafe &mdash; tell someone now" %}</button>
+    </form>
+    <div class="row u-row-gap">
+      <a class="btn btn-sm btn-secondary" href="{% url 'report' %}?type=activity&id={{ activity.pk }}">{% trans "Report with details" %}</a>
+      <form method="post" action="{% url 'activity_leave' activity.pk %}" class="inline">{% csrf_token %}
+        <button class="btn btn-sm btn-secondary" type="submit">{% trans "Leave this activity" %}</button></form>
+    </div>
+  </div>
+{% endif %}

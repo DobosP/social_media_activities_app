@@ -27,7 +27,7 @@ func privacy5Fixture(t *testing.T) (*Service, *social.Service) {
 		t.Fatal(err)
 	}
 	soc := social.New(db, platform.RecordAudit)
-	s := New(db, Config{Accounts: acc, CanSeeActivity: soc.CanSeeActivity, CanReadThread: soc.CanReadThread})
+	s := New(db, Config{Accounts: acc, CanSeeUser: soc.CanSeeUser})
 	if err := s.Migrate(ctx); err != nil {
 		t.Fatal(err)
 	}

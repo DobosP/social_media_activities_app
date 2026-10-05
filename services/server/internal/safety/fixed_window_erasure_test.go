@@ -238,14 +238,18 @@ func TestPostgresUnsafeFixedWindowLeftoverExpiryAndFreeRepeat(t *testing.T) {
 	now := time.Now().UTC().Truncate(time.Microsecond)
 	s.Config.Now = func() time.Time { return now }
 	soc := social.New(s.DB, platform.RecordAudit)
-	s.Config.CanSeeActivity = soc.CanSeeActivity
 	place := testdb.Place(t, s.DB, "Synthetic unsafe fixture venue", "osm")
 	var typ int64
 	if err := s.DB.QueryRow(ctx, `SELECT id FROM taxonomy_activitytype WHERE slug='basketball'`).Scan(&typ); err != nil {
 		t.Fatal(err)
 	}
-	aid, err := soc.CreateActivity(ctx, a, social.ActivityInput{Place: place, ActivityType: typ, Title: "Synthetic unsafe budget activity", StartsAt: now.Add(time.Hour)})
+	// The safe exit belongs to a current non-owner member, never the organiser.
+	organiser := testdb.Actor(t, s.DB, "fixed-window-unsafe-organiser", "adult")
+	aid, err := soc.CreateActivity(ctx, organiser, social.ActivityInput{Place: place, ActivityType: typ, Title: "Synthetic unsafe budget activity", StartsAt: now.Add(time.Hour)})
 	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.DB.Exec(ctx, `INSERT INTO social_membership(activity_id,user_id,role,state,attendance_intent,transit_status,brings_support_person,created_at,updated_at,decided_at) VALUES($1,$2,'member','member','unknown','none',false,now(),now(),now())`, aid, a.ID); err != nil {
 		t.Fatal(err)
 	}
 	s.RatePolicies = map[string]budgets.Policy{"unsafe_report": {Limit: 1, Window: 90 * time.Second}}

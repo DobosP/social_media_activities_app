@@ -20,6 +20,9 @@ type UnsafeResult struct {
 
 // UnsafeReport sends server-composed guardian copy only. A child's report text
 // never becomes an adult contact channel, and repeated taps do not storm alerts.
+// The safe exit is the member's own channel: it never consults a block with the
+// owner, but the service itself requires a current non-guardian, non-owner seat
+// on a visible same-cohort activity before any budget debit.
 func (s *Service) UnsafeReport(ctx context.Context, a platform.Actor, activityID int64) (UnsafeResult, error) {
 	var result UnsafeResult
 	policy, policyErr := budgets.Resolve(s.RatePolicies, "unsafe_report", budgets.Policy{Limit: 12, Window: time.Hour})
@@ -29,34 +32,34 @@ func (s *Service) UnsafeReport(ctx context.Context, a platform.Actor, activityID
 	if s.DB == nil || a.ID < 1 {
 		return result, errors.New("safety budget actor unavailable")
 	}
-	if s.Config.CanSeeActivity == nil {
-		return result, platform.ErrNotFound
-	}
-	visible, err := s.Config.CanSeeActivity(ctx, s.DB, a, activityID)
-	if err != nil {
-		return result, err
-	}
-	if !visible {
-		return result, platform.ErrNotFound
-	}
-	target, err := s.ResolveTarget(ctx, s.DB, "social", "activity", activityID)
-	if err != nil {
-		return result, err
-	}
 	if err := s.pruneExpiredActionBudgets(ctx, s.Config.Now()); err != nil {
 		return result, err
 	}
-	err = platform.Transaction(ctx, s.DB, func(tx pgx.Tx) error {
+	err := platform.Transaction(ctx, s.DB, func(tx pgx.Tx) error {
 		var reporter int64
-		if err := tx.QueryRow(ctx, `SELECT id FROM accounts_user WHERE id=$1 FOR KEY SHARE`, a.ID).Scan(&reporter); err != nil {
+		var active bool
+		var cohort string
+		if err := tx.QueryRow(ctx, `SELECT id,is_active,cohort FROM accounts_user WHERE id=$1 FOR KEY SHARE`, a.ID).Scan(&reporter, &active, &cohort); err != nil {
 			return err
 		}
-		if _, err := tx.Exec(ctx, `SELECT id FROM social_activity WHERE id=$1 FOR UPDATE`, activityID); err != nil {
+		if !active || cohort == "" || cohort == "unassigned" {
+			return platform.ErrNotFound
+		}
+		var locked int64
+		err := tx.QueryRow(ctx, `SELECT a.id FROM social_activity a JOIN social_membership m ON m.activity_id=a.id AND m.user_id=$1 AND m.state='member' AND m.role<>'guardian' WHERE a.id=$2 AND a.cohort=$3 AND NOT a.is_hidden AND a.owner_id<>$1 FOR UPDATE OF a`, a.ID, activityID, cohort).Scan(&locked)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return platform.ErrNotFound
+		}
+		if err != nil {
+			return err
+		}
+		target, err := s.ResolveTarget(ctx, tx, "social", "activity", activityID)
+		if err != nil {
 			return err
 		}
 		var status string
 		var created time.Time
-		err := tx.QueryRow(ctx, `SELECT id,status,created_at FROM safety_report WHERE reporter_id=$1 AND target_type_id=$2 AND target_id=$3 AND reason='off_platform' AND detail=$4 ORDER BY created_at DESC,id DESC LIMIT 1`, a.ID, target.ContentType, target.ID, UnsafeSentinel).Scan(&result.ReportID, &status, &created)
+		err = tx.QueryRow(ctx, `SELECT id,status,created_at FROM safety_report WHERE reporter_id=$1 AND target_type_id=$2 AND target_id=$3 AND reason='off_platform' AND detail=$4 ORDER BY created_at DESC,id DESC LIMIT 1`, a.ID, target.ContentType, target.ID, UnsafeSentinel).Scan(&result.ReportID, &status, &created)
 		if err == nil && (status == "open" || status == "reviewing" || created.After(s.Config.Now().Add(-s.Config.UnsafeReportCooldown))) {
 			result.Repeat = true
 			return nil
@@ -84,7 +87,7 @@ func (s *Service) UnsafeReport(ctx context.Context, a platform.Actor, activityID
 		if err != nil {
 			return err
 		}
-		if a.Cohort != "child" {
+		if cohort != "child" {
 			return nil
 		}
 		rows, err := tx.Query(ctx, `SELECT DISTINCT g.guardian_id FROM accounts_guardianrelationship g WHERE g.ward_id=$1 AND g.status='active' AND NOT EXISTS(SELECT 1 FROM safety_block b WHERE (b.blocker_id=g.guardian_id AND b.blocked_id=$1) OR (b.blocker_id=$1 AND b.blocked_id=g.guardian_id))`, a.ID)

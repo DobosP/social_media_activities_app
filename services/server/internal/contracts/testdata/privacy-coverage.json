@@ -12525,12 +12525,20 @@
       "legacy_file": "apps/safety/tests/test_safety.py",
       "line": 219,
       "source_sha256": "c657af45907e66b28b9e44ab2cbdc0e5126a6216903ad1c49473d293c7c25bc4",
-      "classification": "unresolved",
-      "native_evidence": [],
-      "rationale": "Preserve the legacy declaration until its behavioral assertions have independent native evidence; a larger native suite or registered route is insufficient.",
-      "gaps": [
-        "Remaining source assertion/transport/edge-case obligations require an explicit native port or reviewed replacement."
+      "classification": "native_semantic_coverage",
+      "native_evidence": [
+        {
+          "go_file": "services/server/internal/safety/report_eligibility_test.go",
+          "test": "TestReportEligibilityUserTargetsKeepProfileVetoes",
+          "scenario": "same-cohort adult reports another adult user through POST /api/safety/reports/",
+          "assertions": [
+            "authenticated user-target report API returns 201",
+            "exactly one persisted report, filed by that reporter"
+          ]
+        }
       ],
+      "rationale": "fix/go-report-eligibility (slice 5a) ports the source user-target API flow on the real-FK synthetic PostgreSQL fixture, alongside the new Profile-veto refusals. Written on a host without Go/PostgreSQL; the named test has not yet run, so this stays unverified until a qualification receipt records it.",
+      "gaps": [],
       "runtime_verification": "not_run"
     },
     {
@@ -13259,12 +13267,22 @@
       "legacy_file": "apps/safety/tests/test_unsafe_button.py",
       "line": 57,
       "source_sha256": "8ae0639e9ce36211f0163bdefb78eedcde1cb73a4369e45ab0c5f6bf15731e20",
-      "classification": "unresolved",
-      "native_evidence": [],
-      "rationale": "Preserve the legacy declaration until its behavioral assertions have independent native evidence; a larger native suite or registered route is insufficient.",
-      "gaps": [
-        "Remaining source assertion/transport/edge-case obligations require an explicit native port or reviewed replacement."
+      "classification": "native_semantic_coverage",
+      "native_evidence": [
+        {
+          "go_file": "services/server/internal/safety/safety_test.go",
+          "test": "TestNativeUnsafeIdempotencyAndBlockedGuardianTruth",
+          "scenario": "child member of another child's activity taps unsafe, with one active and one blocked guardian and an organiser block",
+          "assertions": [
+            "report filed with reason off_platform against exactly that social.activity",
+            "detail is the fixed server sentinel, never child free text",
+            "first tap is not a repeat and alerts exactly one guardian",
+            "the active guardian holds exactly one SYSTEM notification"
+          ]
+        }
       ],
+      "rationale": "fix/go-report-eligibility (slice 5a) reworks the native unsafe test onto a real member seat (no visibility stub) and adds the source report-shape and guardian-notice assertions. Precondition differs from the source service test: the native service now also requires a current member seat. Written on a host without Go/PostgreSQL; the named test has not yet run, so this stays unverified until a qualification receipt records it.",
+      "gaps": [],
       "runtime_verification": "not_run"
     },
     {

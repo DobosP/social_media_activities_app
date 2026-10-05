@@ -41,12 +41,8 @@ func (s *Server) reportPage(r *http.Request, a platform.Actor) (pongo2.Context, 
 		}
 		return nil, err
 	}
+	// ReportTarget owns the label: never a username for a non-staff reporter.
 	label := target.Label
-	if model == "post" {
-		if err := s.DB.QueryRow(r.Context(), `SELECT COALESCE(NULLIF(u.display_name,''),u.username) FROM social_post p JOIN accounts_user u ON u.id=p.author_id WHERE p.id=$1`, id).Scan(&label); err != nil {
-			return nil, err
-		}
-	}
 	form, err := s.form(r, a, "ReportForm", nil)
 	if err != nil {
 		return nil, err

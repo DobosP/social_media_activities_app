@@ -425,6 +425,17 @@ func TestPostgresMessagingContractsAndPrivacy(t *testing.T) {
 	if _, e = s.Post(ctx, a, direct, packet(a, b)); !errors.Is(e, platform.ErrForbidden) {
 		t.Fatal("blocked sender", e)
 	}
+	// A block revokes reading, never the reporter-decrypted evidence path:
+	// both while blocked by the sender and after blocking the sender back.
+	if report, e = s.Report(ctx, b, direct, message, "harassment", "", "Evidence after block"); e != nil || report <= 0 {
+		t.Fatal("block removed the message report path", e)
+	}
+	if _, e = s.DB.Exec(ctx, `INSERT INTO safety_block(blocker_id,blocked_id,created_at) VALUES($1,$2,now())`, b.ID, a.ID); e != nil {
+		t.Fatal(e)
+	}
+	if report, e = s.Report(ctx, b, direct, message, "harassment", "", "Evidence after blocking the sender"); e != nil || report <= 0 {
+		t.Fatal("reporter's own block removed the message report path", e)
+	}
 	if _, e = s.DB.Exec(ctx, `DELETE FROM safety_block`); e != nil {
 		t.Fatal(e)
 	}

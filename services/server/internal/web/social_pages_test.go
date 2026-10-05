@@ -60,7 +60,7 @@ func socialLegacyFixture(t *testing.T) (*Server, platform.Actor, int64, int64) {
 	if err := messaging.EnsureSchema(context.Background(), db); err != nil {
 		t.Fatal(err)
 	}
-	s.Safety = safety.New(db, safety.Config{CanSeeActivity: soc.CanSeeActivity, CanReadThread: soc.CanReadThread})
+	s.Safety = safety.New(db, safety.Config{CanSeeUser: soc.CanSeeUser})
 	if err := s.Safety.Migrate(context.Background()); err != nil {
 		t.Fatal(err)
 	}
@@ -690,6 +690,70 @@ func TestLegacyMinorGroupQuestionsSupervisionAndReadOnlyGuardians(t *testing.T) 
 	var n int
 	if err = s.DB.QueryRow(ctx, `SELECT COUNT(*) FROM notifications_notification WHERE recipient_id=$1 AND kind='group_question'`, staff.ID).Scan(&n); err != nil || n != 1 {
 		t.Fatal("fixed question notification", n, err)
+	}
+}
+
+// An organiser who blocks a member hides the activity page from them, but never
+// the safe exit: the fallback page keeps the unsafe tap, the detailed report
+// and leave, and discloses no thread, roster, place or logistics.
+func TestLegacySafeExitSurvivesOwnerBlock(t *testing.T) {
+	s, owner, place, typ := socialLegacyFixture(t)
+	ctx := context.Background()
+	pk := socialLegacyActivity(t, s, owner, place, typ, "Blocked organiser meetup")
+	member := testdb.Actor(t, s.DB, "legacy-safe-exit-member", "adult")
+	stranger := testdb.Actor(t, s.DB, "legacy-safe-exit-stranger", "adult")
+	mid, err := s.Social.Join(ctx, member, pk)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = s.Social.Vote(ctx, owner, mid, true, false); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.Social.WritePost(ctx, owner, "activity", pk, social.PostInput{Body: "Private organiser thread body"}, false); err != nil {
+		t.Fatal(err)
+	}
+	for _, blocked := range []platform.Actor{member, stranger} {
+		if _, err = s.DB.Exec(ctx, `INSERT INTO safety_block(blocker_id,blocked_id,created_at) VALUES($1,$2,now())`, owner.ID, blocked.ID); err != nil {
+			t.Fatal(err)
+		}
+	}
+	html, data := socialLegacyHTML(t, s, member, "activity_detail", pk, "")
+	for _, want := range []string{"Blocked organiser meetup", "I feel unsafe", "Report with details", fmt.Sprintf("/activities/%d/unsafe/", pk), fmt.Sprintf("/activities/%d/leave/", pk), fmt.Sprintf("/report/?type=activity&id=%d", pk)} {
+		if !strings.Contains(html, want) {
+			t.Fatal("safe exit unreachable under owner block", want)
+		}
+	}
+	for _, absent := range []string{"Private organiser thread body", "Member-only", "Library &amp; Hall", "Library & Hall", owner.Username} {
+		if strings.Contains(html, absent) {
+			t.Fatal("blocked safe exit disclosed activity detail", absent)
+		}
+	}
+	if data["safe_exit_only"] != true || data["members"] != nil || data["thread"] != nil {
+		t.Fatal("blocked safe exit widened its context")
+	}
+	r := socialLegacyRequest("GET", fmt.Sprintf("/activities/%d/", pk), stranger, pk, nil)
+	if _, _, _, err = s.SocialView(r, stranger, "activity_detail"); err == nil {
+		t.Fatal("blocked non-member reached the safe exit")
+	}
+	w := socialLegacyAction(t, s, member, "activity_unsafe", pk, nil)
+	if w.Code != 200 || !strings.Contains(w.Body.String(), "A moderator has been alerted") || !strings.Contains(w.Body.String(), "I feel unsafe") || strings.Contains(w.Body.String(), "Private organiser thread body") {
+		t.Fatal("unsafe tap under owner block", w.Code, w.Body.String())
+	}
+	var reports int
+	if err = s.DB.QueryRow(ctx, `SELECT count(*) FROM safety_report WHERE reporter_id=$1 AND reason='off_platform'`, member.ID).Scan(&reports); err != nil || reports != 1 {
+		t.Fatal("unsafe tap under owner block filed no report", reports, err)
+	}
+	w = socialLegacyAction(t, s, member, "activity_leave", pk, nil)
+	if w.Code != 302 || w.Header().Get("Location") != "/my-meetups/" {
+		t.Fatal("leave under owner block", w.Code, w.Header().Get("Location"), w.Body.String())
+	}
+	var state string
+	if err = s.DB.QueryRow(ctx, `SELECT state FROM social_membership WHERE id=$1`, mid).Scan(&state); err != nil || state != "removed" {
+		t.Fatal("leave under owner block did not persist", state, err)
+	}
+	r = socialLegacyRequest("GET", fmt.Sprintf("/activities/%d/", pk), member, pk, nil)
+	if _, _, _, err = s.SocialView(r, member, "activity_detail"); err == nil {
+		t.Fatal("safe exit outlived the membership")
 	}
 }
 

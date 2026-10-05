@@ -209,7 +209,7 @@ func New(ctx context.Context, db *pgxpool.Pool, config Config, migrate bool) (*A
 		}
 		a.proxyNetworks = append(a.proxyNetworks, prefix.Masked())
 	}
-	a.Safety = safety.New(db, safety.Config{Accounts: accountService, CanSeeActivity: socialService.CanSeeActivity, CanReadThread: socialService.CanReadThread})
+	a.Safety = safety.New(db, safety.Config{Accounts: accountService, CanSeeUser: socialService.CanSeeUser})
 	if migrate {
 		if err := a.Safety.Migrate(ctx); err != nil {
 			return nil, errors.New("native safety schema migration failed")

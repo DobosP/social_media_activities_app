@@ -95,6 +95,12 @@ func (s *Service) ReportHTTP(w http.ResponseWriter, r *http.Request) {
 		fail(w, platform.ErrInvalid)
 		return
 	}
+	// Eligibility precedes the debit, so refused probes never spend the budget.
+	target, err := s.ReportTarget(r.Context(), a, body.Type, body.ID)
+	if err != nil {
+		fail(w, platform.ErrNotFound)
+		return
+	}
 	allowed, err := s.allow(r.Context(), a, "report", 20, time.Hour)
 	if err != nil {
 		fail(w, err)
@@ -102,11 +108,6 @@ func (s *Service) ReportHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if !allowed {
 		fail(w, ErrRate)
-		return
-	}
-	target, err := s.ReportTarget(r.Context(), a, body.Type, body.ID)
-	if err != nil {
-		fail(w, platform.ErrNotFound)
 		return
 	}
 	id, err := s.FileReport(r.Context(), a, target, body.Reason, body.Detail)

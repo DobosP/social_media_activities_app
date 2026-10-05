@@ -59,6 +59,28 @@ func (s *Service) CanSeeActivity(ctx context.Context, q platform.Querier, a Acto
 func (s *Service) ActivityCoverVisibilitySQL() string {
 	return `v.is_active AND v.cohort<>'' AND v.cohort<>'unassigned' AND a.cohort=v.cohort AND NOT a.is_hidden AND NOT EXISTS(SELECT 1 FROM safety_block b WHERE (b.blocker_id=v.id AND b.blocked_id=a.owner_id) OR (b.blocker_id=a.owner_id AND b.blocked_id=v.id))`
 }
+
+// CanSeeUser is the user-report target gate: Profile's indistinguishable vetoes
+// (inactive or unassigned either side, cross-cohort, self, blocked either way)
+// for a freshly reloaded viewer. It admits nothing beyond the minimal card.
+func (s *Service) CanSeeUser(ctx context.Context, q platform.Querier, a Actor, id int64) (bool, error) {
+	if a.ID < 1 {
+		return false, nil
+	}
+	fresh, err := actorByID(ctx, q, a.ID)
+	if err != nil {
+		return authorizedResult(err)
+	}
+	b, err := actorByID(ctx, q, id)
+	if err != nil {
+		return authorizedResult(err)
+	}
+	if !pairVisible(fresh, b) {
+		return false, nil
+	}
+	blocked, err := platform.Blocked(ctx, q, fresh.ID, b.ID)
+	return !blocked && err == nil, err
+}
 func (s *Service) CanViewProfilePhoto(ctx context.Context, q platform.Querier, a Actor, ownerID int64) (bool, error) {
 	if a.ID == ownerID && a.IsActive {
 		return true, nil

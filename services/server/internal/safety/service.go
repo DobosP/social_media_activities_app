@@ -15,10 +15,13 @@ import (
 )
 
 type Visibility func(context.Context, platform.Querier, platform.Actor, int64) (bool, error)
+
+// Config.CanSeeUser is the person-visibility veto (Profile's 404 tier) for a
+// non-staff user report target; nil refuses every non-staff user target.
+// Reporting never borrows a read gate, so activity/post eligibility is local.
 type Config struct {
 	Accounts             *accounts.Service
-	CanSeeActivity       Visibility
-	CanReadThread        Visibility
+	CanSeeUser           Visibility
 	Now                  func() time.Time
 	UnsafeReportCooldown time.Duration
 }
@@ -162,8 +165,17 @@ func (s *Service) ResolveTarget(ctx context.Context, q platform.Querier, app, mo
 	return t, err
 }
 
-// ReportTarget applies the report endpoint's current visibility gates before
-// returning a target. HTML adapters use this same gate as the native API.
+// A post is reportable within its thread owner's cohort by anyone who holds or
+// held a seat that saw the thread: the owner, an activity member or removed
+// (left) member, or any group membership row. A pending request never saw it.
+// Blocks, hidden state, consent and current membership are deliberately absent.
+const reportablePost = `SELECT EXISTS(SELECT 1 FROM social_post p JOIN social_thread t ON t.id=p.thread_id LEFT JOIN social_activity a ON a.id=t.activity_id LEFT JOIN social_group g ON g.id=t.group_id WHERE p.id=$1 AND COALESCE(a.cohort,g.cohort)=$2 AND ((a.id IS NOT NULL AND (a.owner_id=$3 OR EXISTS(SELECT 1 FROM social_membership m WHERE m.activity_id=a.id AND m.user_id=$3 AND m.state IN ('member','removed')))) OR (g.id IS NOT NULL AND (g.owner_id=$3 OR EXISTS(SELECT 1 FROM social_groupmembership gm WHERE gm.group_id=g.id AND gm.user_id=$3)))))`
+
+// ReportTarget applies reporting's own eligibility, never a read gate: the sole
+// DSA Art-16 channel must survive a block either way with the owner, leaving,
+// lapsed consent and a hidden activity. Cohort walls remain, labels never widen
+// Profile's card, and every non-staff refusal is indistinguishable not-found.
+// HTML adapters use this same gate as the native API.
 func (s *Service) ReportTarget(ctx context.Context, a platform.Actor, model string, id int64) (Target, error) {
 	app := "social"
 	if model == "user" {
@@ -179,28 +191,39 @@ func (s *Service) ReportTarget(ctx context.Context, a platform.Actor, model stri
 	if a.IsStaff {
 		return t, nil
 	}
+	var active bool
+	var cohort string
+	err = s.DB.QueryRow(ctx, `SELECT is_active,cohort FROM accounts_user WHERE id=$1`, a.ID).Scan(&active, &cohort)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Target{}, platform.ErrNotFound
+	}
+	if err != nil {
+		return Target{}, err
+	}
+	if !active || cohort == "" || cohort == "unassigned" {
+		return Target{}, platform.ErrNotFound
+	}
+	yes := false
 	switch model {
 	case "activity":
-		if s.Config.CanSeeActivity == nil {
-			return t, platform.ErrNotFound
-		}
-		yes, err := s.Config.CanSeeActivity(ctx, s.DB, a, id)
-		if err != nil {
-			return t, err
-		}
-		if !yes {
-			return t, platform.ErrNotFound
-		}
+		err = s.DB.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM social_activity WHERE id=$1 AND cohort=$2)`, id, cohort).Scan(&yes)
 	case "post":
-		if s.Config.CanReadThread == nil {
-			return t, platform.ErrNotFound
+		err = s.DB.QueryRow(ctx, reportablePost, id, cohort, a.ID).Scan(&yes)
+	case "user":
+		if s.Config.CanSeeUser != nil {
+			yes, err = s.Config.CanSeeUser(ctx, s.DB, a, id)
 		}
-		yes, err := s.Config.CanReadThread(ctx, s.DB, a, t.ThreadID)
-		if err != nil {
-			return t, err
-		}
-		if !yes {
-			return t, platform.ErrNotFound
+	}
+	if err != nil {
+		return Target{}, err
+	}
+	if !yes {
+		return Target{}, platform.ErrNotFound
+	}
+	if model != "activity" {
+		// Profile hides usernames from strangers; a report label never shows one.
+		if err = s.DB.QueryRow(ctx, `SELECT COALESCE(NULLIF(display_name,''),'A member') FROM accounts_user WHERE id=$1`, t.Affected).Scan(&t.Label); err != nil {
+			return Target{}, err
 		}
 	}
 	return t, nil
