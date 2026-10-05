@@ -98,7 +98,7 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 - G2 source `b0abd92`: native checks and537 tests/11 lanes,0skips/failures;13 intended fail-before failures;
   independent critic APPROVE. Final metadata contracts5; frozen2671 inventory:999 manifest claims/1672 unresolved/0invalid.
 - G3 source `0e3e85b`: native checks and520 tests/10 lanes,0skips/failures;790 forced-sweep executions; critic APPROVE.
-- G1 count/image guards reviewed: harness17/17 and forbidden-runtime proof pass. Combined G1 Step5 remains owed.
+- Combined `f19a34e`:705/21 lanes,0skips; native/Node/govulncheck pass. Trivy blocked inherited perl-base; image fix/requalification pending.
 - Python retirement exits1; manifests are claims, not exhaustive runtime equivalence. Prior overlay/reused receipts
   do not qualify this head; historical detail is in WORKLOG and the Windows TODO.
 

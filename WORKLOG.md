@@ -3,6 +3,22 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-05 — Combined fixture green; inherited Perl image advisory fixed
+
+Valid until: the runtime image or source changes — then requalify.
+
+First combined source `f19a34ef9c4833f8d903f6e9b5b1e72b1dc2894e` built a canonical no-cache image
+`e4b1a96dfa216575aa25b59a8722075e63681145f0c797d1044ce1c402035bc6`. Fresh migration,
+check-native and17/17 gate harness passed. All21 fixture lanes passed705 top-level tests,
+zero skips/failures; Node24.18.0 frontend gate and govulncheck1.8.0 source/package scans for all
+three modules plus the symbol-retaining binary passed. Trivy0.75.0 blocked that image:
+inherited Debian12.15 perl-base5.36.0-7+deb12u3 has fixable findings (three CRITICAL, four HIGH),
+fixed in5.36.0-7+deb12u4. Runtime apt installation now explicitly includes perl-base, updating
+that inherited package from the signed Debian repository. The image remains unqualified until
+fresh canonical build/Trivy and all combined gates rerun; smoke/contracts were not reached.
+No deployment or source landing occurred. Record source/package/binary audit success separately
+from the failed image gate; no old completed-run receipt is produced for the interrupted pipeline.
+
 ## 2026-10-05 — Both audit stacks final and reconciled for G1 qualification
 
 Valid until: this combined candidate is qualified and landed — then treat as history.

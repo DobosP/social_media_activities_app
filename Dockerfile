@@ -21,7 +21,7 @@ RUN GOMAXPROCS="$GOMAXPROCS" GOFLAGS="$GOFLAGS" CGO_ENABLED=0 go build -trimpath
 FROM debian:bookworm-slim AS runtime
 # Codecs run under prlimit. No Python interpreter or framework is installed.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates curl libpcre2-8-0 ffmpeg libavif-bin util-linux \
+    && apt-get install -y --no-install-recommends ca-certificates curl libpcre2-8-0 ffmpeg libavif-bin util-linux perl-base \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --gid 10001 app \
     && useradd --uid 10001 --gid 10001 --no-create-home --shell /usr/sbin/nologin app
