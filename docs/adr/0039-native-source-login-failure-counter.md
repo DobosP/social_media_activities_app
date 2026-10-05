@@ -1,7 +1,7 @@
 # ADR-0039 — Native source login failure counter
 
 Date: 2026-10-05
-Status: proposed; source-contract restoration locally qualified, human auth/privacy review before landing
+Status: proposed; source restoration qualified, landing per ADR-0040; human auth/privacy review gates first deployment
 Extends: [ADR-0038](0038-native-verification-toolchain.md).
 
 ## Decision

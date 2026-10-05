@@ -83,7 +83,8 @@ checks compare against native registrations and representative wire values.
 [ADR-0035](adr/0035-guarded-permissions-private-schema.md) records those boundaries;
 [ADR-0036](adr/0036-fresh-participation-authority.md) records fresh participation authority.
 Qualification commands: [agent-testing](agent-testing.md); [completion receipt](reviews/native-go/completion-qualification.md); current review gates:
-STATUS/WORKLOG. Completion extensions remain a review candidate until human approval.
+STATUS/WORKLOG. Completion extensions: landing per [ADR-0040](adr/0040-landing-and-deployment-review-gates.md);
+human code review gates first deployment.
 
 Ordinary Go/Node CI and shell hooks, bounded native CSP/S3 operators, real exporter-to-sidecar
 qualification and reference-case retirement evidence follow

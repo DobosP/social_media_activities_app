@@ -75,8 +75,9 @@ thread membership nor cross-cohort messaging/parental authority.
 Owned curated saves, event review and local operator actions lock/recheck current staff
 authority in their transaction. Existing delegated domain services retain their own gates;
 requests already authorized before a revocation may finish. Subsequent HTTP requests and
-live deliveries reload credentials and current authority. Human auth/privacy review still
-precedes landing this change.
+live deliveries reload credentials and current authority. Review gates for this change:
+[ADR-0040](../../../../docs/adr/0040-landing-and-deployment-review-gates.md) (independent review before landing;
+human review before first deployment).
 
 Qualification uses the explicit `-admin-test-dsn` flag and synthetic isolated schemas.
 Tests exercise every source summary query, fresh staff revocation, unknown-field and

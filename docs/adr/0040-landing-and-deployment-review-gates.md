@@ -11,11 +11,18 @@ While Social is undeployed, green and independently reviewed work may land on `m
 (agent-ops ADR-0014, direct landing in development). Green means, on the exact head landed:
 
 1. `scripts/check-native.sh /absolute/path/to/go` passes.
-2. `scripts/qualify-native.sh` passes every lane the change affects — all 21 lanes for an
-   integration-branch landing — each lane with zero skips and PASS > 0.
-3. `cd frontend && npm ci && npm test && npm run build` passes when frontend or embedded assets change.
-4. `git diff --check` is empty; the fleet doc gate reports dead_links/stale_terms/retired_verbs/orphans 0.
-5. Exact commands, head and counts are recorded in STATUS.md and WORKLOG.md. Tests the host
+2. A landing on `main` runs the full `scripts/qualify-native.sh` (all 21 lanes, each with zero
+   skips and PASS > 0). A fix branch fast-forwarded into the integration branch may qualify only
+   its affected packages with one-lane runs using the same flags and image, because the
+   integration landing re-runs all 21.
+3. Image gate — for a landing of the integration branch on `main`, and for any Dockerfile, Go/npm
+   dependency or runtime-image change: the image `qualify-native.sh` uses is a canonical
+   `docker build --no-cache` of that head, and a Trivy v0.75.0 scan of that build
+   (`--severity HIGH,CRITICAL --ignore-unfixed --exit-code 1`) passes; govulncheck v1.8.0
+   source/package/binary audits pass. A hand-overlay image is never a substitute.
+4. `cd frontend && npm ci && npm test && npm run build` passes when frontend or embedded assets change.
+5. `git diff --check` is empty; the fleet doc gate reports dead_links/stale_terms/retired_verbs/orphans 0.
+6. Exact commands, head and counts are recorded in STATUS.md and WORKLOG.md. Tests the host
    cannot run are listed as not run, never as passed.
 
 An independent reviewer (not the implementer) approves the final diff and confirms that new

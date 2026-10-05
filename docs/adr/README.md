@@ -45,7 +45,7 @@ On conflict: `STATUS.md` > newest-dated ADR > every other doc.
 | 0035 | [guarded-permissions-private-schema](0035-guarded-permissions-private-schema.md) | proposed; landing per ADR-0040; human auth/privacy review gates first deployment | 2026-10-04 |
 | 0036 | [fresh-participation-authority](0036-fresh-participation-authority.md) | proposed; locally qualified, landing per ADR-0040; human review gates first deployment | 2026-10-04 |
 | 0037 | [postgresql-shared-rate-budgets](0037-postgresql-shared-rate-budgets.md) | proposed for integration review | 2026-10-04 |
-| 0038 | [native-verification-toolchain](0038-native-verification-toolchain.md) | proposed; native qualified, reference retirement blocked | 2026-10-05 |
+| 0038 | [native-verification-toolchain](0038-native-verification-toolchain.md) | proposed; native qualified, reference retirement blocked; landing per ADR-0040; human review gates first deployment | 2026-10-05 |
 | 0039 | [native-source-login-failure-counter](0039-native-source-login-failure-counter.md) | proposed; source restoration qualified, landing per ADR-0040; human auth/privacy review gates first deployment | 2026-10-05 |
 | 0040 | [landing-and-deployment-review-gates](0040-landing-and-deployment-review-gates.md) | accepted; owner decision 2026-10-05 | 2026-10-05 |
 

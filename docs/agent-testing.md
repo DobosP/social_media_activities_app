@@ -51,15 +51,19 @@ its explicit binary path to export qualification. Schema bootstrap is native `--
 
 Landing rule: [ADR-0040](adr/0040-landing-and-deployment-review-gates.md). On the exact head landed:
 
-1. `scripts/check-native.sh` passes; `scripts/qualify-native.sh` passes every affected lane (all 21
-   for an integration-branch landing), each with zero skips and PASS>0.
-2. Relevant frontend gates (frontend/embedded asset changes), `git diff --check` and the fleet doc gate pass.
-3. Record exact commands/head/counts in WORKLOG (detail may go in ignored TASK_RESULT.md) and current
+1. `scripts/check-native.sh` passes. A landing on `main` runs the full `scripts/qualify-native.sh`
+   (all 21 lanes, zero skips, PASS>0); a fix branch fast-forwarded into the integration branch may run
+   one-lane qualifications of its affected packages with the same flags/image (the landing re-runs all 21).
+2. Integration-branch landings and Dockerfile/Go/npm dependency/runtime-image changes: qualify against a
+   canonical `docker build --no-cache` of that head; Trivy v0.75.0 on that build (`--severity HIGH,CRITICAL
+   --ignore-unfixed --exit-code 1`) and govulncheck v1.8.0 source/package/binary audits pass. Never a hand-overlay image.
+3. Relevant frontend gates (frontend/embedded asset changes), `git diff --check` and the fleet doc gate pass.
+4. Record exact commands/head/counts in WORKLOG (detail may go in ignored TASK_RESULT.md) and current
    truth in STATUS.md. Tests the host cannot run are listed as not run, never as passed.
-4. An independent reviewer (not the implementer) approves the final diff and confirms new tests fail
+5. An independent reviewer (not the implementer) approves the final diff and confirms new tests fail
    without the fix. A dispatched hosted run is optional evidence, never claimed unless run on that head.
    Root coordinates all local commits, publication and landing.
-5. Human auth/erasure/privacy/safety code review gates first deployment, not landing. Landing does not
+6. Human auth/erasure/privacy/safety code review gates first deployment, not landing. Landing does not
    activate minors, providers, ingestion, schedules, paid infrastructure or deployment.
 
 Optional historical Python verification is isolated in `reference.yml`, manually dispatched

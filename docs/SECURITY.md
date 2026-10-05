@@ -61,7 +61,13 @@ pip/Ruff/pytest/migration gates. Keep the two runtime boundaries clear.
 ## Release review
 
 Landing follows [ADR-0040](adr/0040-landing-and-deployment-review-gates.md): local native gates
-green on the exact head plus an independent reviewer; a dispatched hosted run is optional evidence.
+green on the exact head (a `main` landing runs all 21 `qualify-native.sh` lanes; fix branches into
+the integration branch may run affected one-lane qualifications) plus an independent reviewer; a
+dispatched hosted run is optional evidence. Integration-branch landings and Dockerfile, Go/npm
+dependency or runtime-image changes also need a canonical `docker build --no-cache` image for
+qualification, a passing Trivy v0.75.0 scan of that build (`--severity HIGH,CRITICAL
+--ignore-unfixed --exit-code 1`) and govulncheck v1.8.0 source/package/binary audits; a
+hand-overlay image is never a substitute.
 Release additionally requires dependency/image scans, disposable real-FK PostgreSQL and actual
 codec tests, backup/restore rehearsal and production configuration review. The owner authorized
 the Go main landing on2026-10-04 only; human auth/erasure/privacy/safety code review is pending

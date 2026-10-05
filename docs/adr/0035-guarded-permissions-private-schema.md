@@ -1,7 +1,7 @@
 # ADR-0035 — Guarded administrator permissions and private API schemas
 
 Date: 2026-10-04
-Status: proposed; implemented review candidate, human auth/privacy review before landing
+Status: proposed; landing per ADR-0040; human auth/privacy review gates first deployment
 Extends: [ADR-0032](0032-complete-native-go-backend.md)'s governed administration boundary.
 
 ## Decision

@@ -1,7 +1,7 @@
 # ADR-0036 — fresh participation authority
 
 Date: 2026-10-04
-Status: proposed; locally qualified, awaiting human review before landing
+Status: proposed; locally qualified, landing per ADR-0040; human review gates first deployment
 
 ## Context
 

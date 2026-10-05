@@ -1,7 +1,7 @@
 # ADR-0038 — Native verification and operator toolchain
 
 Date: 2026-10-05
-Status: proposed; native tooling locally qualified, reference retirement blocked; human review before landing
+Status: proposed; native qualified, reference retirement blocked; landing per ADR-0040; human review gates first deployment
 Extends: [ADR-0032](0032-complete-native-go-backend.md).
 
 ## Decision

@@ -1,7 +1,7 @@
 # ADR-0034 — Native configuration and private error reporting
 
 Date: 2026-10-04
-Status: implemented in task branch; coordinator/human review and landing pending
+Status: implemented; landing per ADR-0040; human review gates first deployment
 Extends: ADR-0032 configuration boundaries
 
 ## Context

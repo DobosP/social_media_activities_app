@@ -10,7 +10,8 @@ The earlier Python-era checklist is preserved as [historical reference](archive/
 
 The native executable owns accounts, domain APIs, guarded administration, private media,
 encrypted live delivery, schema adoption, HTML/SPA context and explicit jobs. Default
-Docker, Compose, systemd, Render and cloud-init paths invoke Go. PostgreSQL/PostGIS/vector
+Docker, Compose, systemd, Render and cloud-init paths invoke Go; Render and fresh cloud-init cannot
+boot yet. PostgreSQL/PostGIS/vector
 and native codecs are dependencies; Django is an offline compatibility oracle.
 [NATIVE_SERVER](NATIVE_SERVER.md), [SCALING](SCALING.md) and the
 [CLI reference](../services/server/cmd/social-server/README.md) describe supported modes
@@ -18,10 +19,13 @@ and remaining implementation limits. Do not infer support from an old Python set
 
 ## Before an authorized production rollout
 
+Open audit blockers: [RELEASE_READINESS](RELEASE_READINESS.md) §Before first deployment.
+
 - **Release qualification:** format/vet/race tests, every PostgreSQL/codec contract with
   zero skips, portable-auth hash checks, frontend/reference CI and native dependency/image
-  scans must pass on the exact candidate. Review authentication, privacy and safety changes
-  before landing. Preserve evidence; an unallocated CI runner is not a passed test.
+  scans must pass on the exact candidate. Independent review before landing; human
+  auth/erasure/privacy/safety code review before first deployment
+  ([ADR-0040](adr/0040-landing-and-deployment-review-gates.md)). Preserve evidence; an unallocated CI runner is not a passed test.
 - **Data adoption and rollback:** back up the selected database, restore it into an isolated
   recovery environment, run native migration/adoption and test rollback. Verify PostGIS/vector,
   retained identities/passwords/provider IDs, retired legacy sessions, private-media references

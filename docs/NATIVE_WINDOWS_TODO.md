@@ -63,9 +63,10 @@ Current truth remains [STATUS](../STATUS.md). This checklist does not authorize 
 
 Run on a Linux host or WSL2 Ubuntu with the worktree on its ext4 filesystem (never `/mnt/c`): `-race` needs cgo and
 qualify builds Linux test binaries run in the Linux image. Go1.27.1 linux-amd64 from go.dev, sha256-verified, with
-`GOTOOLCHAIN=local`, `GOFLAGS=-mod=readonly`. The owner authorized that download, the Docker base images and module
-downloads on 2026-10-05: once per module, `go mod download` + `go mod verify` with the default GOPROXY/GOSUMDB, then
-`GOPROXY=off` for every build/test run. `internal/jobs/operator_case_port6_linux_test.go` is Linux-only. Node24.
+`GOTOOLCHAIN=local`, `GOFLAGS=-mod=readonly`. For the WSL2 Ubuntu ext4 environment on the owner's Windows PC the
+owner authorized that download, the Docker base images and module downloads on 2026-10-05: once per module,
+`go mod download` + `go mod verify` with the default GOPROXY/GOSUMDB, then `GOPROXY=off` for every build/test run.
+`internal/jobs/operator_case_port6_linux_test.go` is Linux-only. Node24.
 
 ```bash
 export GOWORK=off GOMAXPROCS=2 GOTOOLCHAIN=local GOFLAGS='-mod=readonly -p=2'
