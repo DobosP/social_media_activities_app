@@ -69,7 +69,13 @@ jobs:
             'postgres://app:app@db:5432/app?sslmode=disable' "$RUNNER_TEMP/native-qualification"
           test "$(docker image inspect -f '{{.Config.User}}' social-native:ci)" = '10001:10001'
           docker run --rm --network none social-native:ci sh -ec \
-            '! command -v python; ! command -v python3; ! command -v pip; command -v ffmpeg; command -v ffprobe; command -v avifenc; command -v prlimit; social-server --help >/dev/null'
+            'for forbidden in python python3 pip; do
+              if command -v "$forbidden" >/dev/null 2>&1; then
+                echo "Forbidden runtime: $forbidden" >&2; exit 1
+              fi
+            done
+            for required in ffmpeg ffprobe avifenc prlimit; do command -v "$required"; done
+            social-server --help >/dev/null'
       - name: Scan native release image
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:

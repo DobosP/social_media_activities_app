@@ -94,7 +94,7 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
-- 2026-10-05 G1 count-error guard: native gate harness17/17; independent critic approved. Final combined gates owed.
+- 2026-10-05 G1 count guard: harness17/17; forbidden-runtime check repaired. Final combined gates/review owed.
 - Restart checkpoint:993 claimed-verified (manifest `runtime_verification`, not checked against a test run)/1678 unresolved/0invalid of2671; retirement gate exits1.
   Source-frozen586 affected tests/14 lanes pass without skips; 40 more: package directory unchanged;
   transitive dependencies changed after the receipt — not qualified on this head.

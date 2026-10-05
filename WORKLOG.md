@@ -3,6 +3,25 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-05 — Forbidden runtime checks fail closed (G1 preflight follow-up)
+
+Valid until: native image qualification changes — then requalify.
+
+The independent preflight reviewer reproduced an image-check shell trap: `sh -ec` does
+not stop on a failing inverted command, so `! command -v python` could permit Python
+when a later codec check succeeded. The dispatch-only native workflow now explicitly
+refuses each forbidden interpreter and then requires every codec. The task-owned final
+smoke uses the same explicit checks and bounded curl/subprocess waits. Forbidden-present
+proof (substitute the known host `sh`): old inverted check exits0, fixed check exits1;
+workflow YAML parses. The reviewer independently reproduced Python3-present refusal.
+No hosted workflow run is claimed. Final source/image/full-fixture gates remain owed.
+
+The task-owned evidence runner also uses a unique run directory and a completion manifest
+binding clean source head, source-object hash, actual tool versions, canonical image/binary,
+actual gate statuses and artifact hashes. The collector rejects missing/incomplete runs,
+stale artifacts and mismatched source/image/report identities; these are receipt controls,
+not a source-retirement claim. Final evidence is recorded only after the required runs.
+
 ## 2026-10-05 — Passing-test count errors fail closed (G1 critic follow-up)
 
 Valid until: the qualification gate changes — then requalify.
