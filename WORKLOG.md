@@ -3,6 +3,82 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-05 — G2 Linux qualification complete (source b0abd92)
+
+Valid until: `fix/go-guardian-authority-policy` is integrated or superseded — then treat as history.
+
+Supersedes the owed G2 qualification notes below. Qualified source:
+`b0abd920ec7b1076ce46491b1f15508c1ddba4f3` (85012b8 stack plus reviewed API safe-exit correction and
+two gofmt blank lines). Toolchain: Go 1.27.1, Node 24.18.0. Native hash/format/vet/race and the four
+offline service-worker tests pass. Canonical normal build, with no overlay:
+`docker build --progress=plain -t social-go-g2-20261005:b0abd92 .`; image
+`sha256:5c9b228b74865c85be7f0486266bfe37807e2f1597d50a59b8b9b196e5d1c2da`.
+Fresh synthetic `social_g2` on private network `social-source-20261005`, PostgreSQL 16.15,
+PostGIS 3.6.4/vector 0.8.6, no published ports; native migration passes with that image.
+
+Race binaries compiled with `GOWORK=off GOTOOLCHAIN=local GOMAXPROCS=2 GOFLAGS='-mod=readonly -p=2'`
+and executed with the same image/flags/mounts as `scripts/qualify-native.sh`, each explicit fixture
+flag, `-test.v -test.timeout=10m`, under the fleet heavy-test lock. All 537 top-level tests pass;
+zero skips/failures in every lane:
+
+| Lane | Pass |
+|---|---:|
+| media | 46 |
+| contracts | 5 |
+| jobs | 64 |
+| messaging | 60 |
+| social | 44 |
+| safety | 55 |
+| web | 94 |
+| app | 28 |
+| admin | 19 |
+| configuration (`cmd/social-server`) | 59 |
+| accounts | 63 |
+
+Messaging's actual logged bounds: `post queries 3 -> 256 members: 26 -> 26 (ceiling 28)`;
+V1 conversation list `actualqueries=5, sourceceiling=5`; V1 history `actualqueries=7, sourceceiling=7`.
+The new HTTP safe-exit test passes all four API-version/block-direction cases. All three guardian
+authority tests and the report/unsafe tests pass on the stacked source.
+
+Fail-before uses task-owned `git archive` snapshots, exact production-file reversions and fixture flags
+from the prior G2 continuation. Report d82dd54 with f3ae677 production: safety 6, messaging 1, web 2
+top-level expected failures. Guardian 85012b8 with e9c3843 production: accounts 2, messaging 1 expected
+failures. 85012b8 plus the new API leave regression: 1 top-level failure, all four subcases, committed
+removal followed by 404. All 13 fail at the intended assertions, zero skips; the independent critic
+inspected the negative logs. Critic APPROVE: exact report/group ranges, guardian follow-up and API
+safe-exit implementation; independently confirmed all eleven positive logs, negative assertions,
+four coverage records, final metadata contracts and the retained combined-head gates.
+
+The two pending 5a coverage entries now say `passed`; all three entries citing
+`TestNativeUnsafeIdempotencyAndBlockedGuardianTruth` carry the actual source/image receipt.
+`check-contracts -root "$PWD" -summary`: 999 manifest-claimed verified, 1672 unresolved, 0 invalid of
+2671; exit1 deliberately keeps reference retirement blocked. Coverage does not claim all source cases
+ran or authorize production/provider/minor activation. Contracts is re-qualified after the metadata update.
+
+Source closure: all 464 tracked Go production/test files remain byte-identical to qualified b0abd92;
+their path/content aggregate SHA-256 is `6bf585251c8f072ac8cf34a28bbf12477cecb9b243c9534752048f6d65e33500`.
+Qualified `services` tree: `859e5aee12d5d869beb3b446351fc200c88da7cc`; receipt metadata tree:
+`9ff926c3a84ab26f4befb1c66015339da410508e`. The only changed services input is privacy-coverage.json,
+SHA-256 `b01a45ccb28f626c2b45b648727e8b0a50ce3152bca86b0847ea23ab26d1fcac` before, now
+`034814ef04aa90b1f72da2a903855c02a657a8d97e49e1c4fc2546b7605e3ac3`. Pure contracts on those final
+bytes pass five tests, zero skips/failures (log SHA-256 `c2da44d051a2dcc5f7c0f0055fc112562a3a358f1390c2459967ef7e4a4b0cba`);
+final check-contracts keeps the 999/1672/0 counts and retirement exit1. The combined root run qualifies
+the final manifests anew; the 537-test receipt remains explicitly tied to b0abd92.
+
+Reproduction (explicit synthetic `$DSN`, never a discovered environment):
+`scripts/check-native.sh "$(command -v go)"` with loopback test sockets permitted;
+`python3 ~/work/_temp/fix__go-guardian-authority-policy/run-g2-fixtures.py fail-before GO IMAGE NETWORK "$DSN"`;
+the same runner with `lanes GO IMAGE NETWORK "$DSN"` for the eleven rows above. Logs, full command
+wrapper and SHA-256 receipts live in task-owned scratch and ignored `TASK_RESULT.md` until landing.
+The sandbox native attempt failed because local test sockets were denied, not because of source behavior.
+The first temporary contracts invocation wrongly sent a nonexistent DSN flag; it ran no tests. Its
+corrected pure-package run passes five tests; the successful media receipt was retained.
+
+Remaining: merge/reconcile G2 with G3, then G1's fresh combined-head canonical `--no-cache` image,
+all 21 lanes, pinned vulnerability audits, container smoke, Node/contracts and independent final review.
+Human auth/erasure/privacy/safety review and GO-RT-07 still gate first deployment; no deployment,
+provider/minor activation, ingestion or schedule enablement occurred here.
+
 ## 2026-10-05 — G2 Linux API safe-exit response follow-up
 
 Valid until: `fix/go-guardian-authority-policy` is integrated or superseded — then treat as history.

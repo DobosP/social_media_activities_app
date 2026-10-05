@@ -70,7 +70,7 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   operations. Never apply paid infrastructure without owner authorization.
 - Audit 2026-10-05 privacy/safety fixes (G2, WORKLOG): report eligibility (ADR-0041), direct-only block veto
   and sanction chat eviction (ADR-0043), avatar/fingerprint minimisation (ADR-0044), guardian authority
-  (ADR-0045), co-member logistics (ADR-0046), typing throttle, v1 history/query ceilings and safe-exit API responses.
+  (ADR-0045), co-member logistics (ADR-0046), typing throttle, group mentions, v1 history/query ceilings and safe-exit API responses.
 - Audit 2026-10-05 auth/media/runtime fixes (G3, WORKLOG): unreachable web action cases are removed (IDP-6).
   Open: two agent-snapshot producers emit different values and only `jobs/snapshot.go` runs (GO-EXPORT-01).
 
@@ -95,11 +95,12 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
-- G2 Linux source qualification is in progress on `fix/go-guardian-authority-policy` (WORKLOG).
-  The stacked critic approved report/group/guardian rules and the API safe-exit response correction.
-  Initial native check stopped on two formatting gaps, now corrected; fresh source checks, fail-before
-  demonstrations and all11 affected fixture lanes remain pending. Existing manifest claims are historical.
-  G2/G3 integration and G1 final21-lane/image/vulnerability qualification remain owed before source landing.
+- G2 code `b0abd92` passes native hashes/format/vet/race, Node24 worker and all 11 affected fixture lanes:
+  537 top-level tests, zero skips/failures, canonical image `5c9b228b` (full receipt in WORKLOG).
+  All 13 fail-before tests fail at their intended assertions; independent critic APPROVE.
+  Two 5a mappings now have actual runtime evidence; the three unsafe-linked entries are re-qualified.
+  Frozen inventory: 999 manifest-claimed verified/1672 unresolved/0 invalid of 2671; retirement exits1.
+  G1 combined 21-lane/no-cache-image/vulnerability qualification remains owed before source landing.
 
 ## Standard verification
 Native race/vet + shared-source hashes; database/codec contracts require explicit disposable fixtures

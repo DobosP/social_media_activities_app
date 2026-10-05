@@ -12537,9 +12537,9 @@
           ]
         }
       ],
-      "rationale": "fix/go-report-eligibility (slice 5a) ports the source user-target API flow on the real-FK synthetic PostgreSQL fixture, alongside the new Profile-veto refusals. Written on a host without Go/PostgreSQL; the named test has not yet run, so this stays unverified until a qualification receipt records it.",
+      "rationale": "fix/go-report-eligibility (slice 5a) ports the source user-target API flow on the real-FK synthetic PostgreSQL fixture, alongside the new Profile-veto refusals. Runtime re-qualified on 2026-10-05: the named test passed with Go 1.27.1 race instrumentation on the isolated synthetic PostgreSQL 16.15 fixture, code b0abd920ec7b1076ce46491b1f15508c1ddba4f3 and canonical image sha256:5c9b228b74865c85be7f0486266bfe37807e2f1597d50a59b8b9b196e5d1c2da. The safety lane passed all 55 top-level tests with zero skips/failures. This is source-contract evidence, not production/provider/minor activation evidence; source-equivalence review remains required before retirement.",
       "gaps": [],
-      "runtime_verification": "not_run"
+      "runtime_verification": "passed"
     },
     {
       "legacy_id": "apps/safety/tests/test_safety.py::test_report_on_post_target",
@@ -13258,7 +13258,7 @@
           ]
         }
       ],
-      "rationale": "The named native test and its explicit assertion scenario passed in the task-owned synthetic PostgreSQL/codec race qualification. This is source-contract evidence, not production/provider/minor activation evidence.",
+      "rationale": "Runtime re-qualified on 2026-10-05: the named test passed with Go 1.27.1 race instrumentation on the isolated synthetic PostgreSQL 16.15 fixture, code b0abd920ec7b1076ce46491b1f15508c1ddba4f3 and canonical image sha256:5c9b228b74865c85be7f0486266bfe37807e2f1597d50a59b8b9b196e5d1c2da. The safety lane passed all 55 top-level tests with zero skips/failures. This is source-contract evidence, not production/provider/minor activation evidence; source-equivalence review remains required before retirement.",
       "gaps": [],
       "runtime_verification": "passed"
     },
@@ -13281,9 +13281,9 @@
           ]
         }
       ],
-      "rationale": "fix/go-report-eligibility (slice 5a) reworks the native unsafe test onto a real member seat (no visibility stub) and adds the source report-shape and guardian-notice assertions. Precondition differs from the source service test: the native service now also requires a current member seat. Written on a host without Go/PostgreSQL; the named test has not yet run, so this stays unverified until a qualification receipt records it.",
+      "rationale": "fix/go-report-eligibility (slice 5a) reworks the native unsafe test onto a real member seat (no visibility stub) and adds the source report-shape and guardian-notice assertions. Precondition differs from the source service test: the native service now also requires a current member seat. Runtime re-qualified on 2026-10-05: the named test passed with Go 1.27.1 race instrumentation on the isolated synthetic PostgreSQL 16.15 fixture, code b0abd920ec7b1076ce46491b1f15508c1ddba4f3 and canonical image sha256:5c9b228b74865c85be7f0486266bfe37807e2f1597d50a59b8b9b196e5d1c2da. The safety lane passed all 55 top-level tests with zero skips/failures. This is source-contract evidence, not production/provider/minor activation evidence; source-equivalence review remains required before retirement.",
       "gaps": [],
-      "runtime_verification": "not_run"
+      "runtime_verification": "passed"
     },
     {
       "legacy_id": "apps/safety/tests/test_unsafe_button.py::test_idempotent_retap_does_not_burn_rate_budget",
@@ -13315,7 +13315,7 @@
           ]
         }
       ],
-      "rationale": "The named native test and its explicit assertion scenario passed in the task-owned synthetic PostgreSQL/codec race qualification. This is source-contract evidence, not production/provider/minor activation evidence.",
+      "rationale": "Runtime re-qualified on 2026-10-05: the named test passed with Go 1.27.1 race instrumentation on the isolated synthetic PostgreSQL 16.15 fixture, code b0abd920ec7b1076ce46491b1f15508c1ddba4f3 and canonical image sha256:5c9b228b74865c85be7f0486266bfe37807e2f1597d50a59b8b9b196e5d1c2da. The safety lane passed all 55 top-level tests with zero skips/failures. This is source-contract evidence, not production/provider/minor activation evidence; source-equivalence review remains required before retirement.",
       "gaps": [],
       "runtime_verification": "passed"
     },
