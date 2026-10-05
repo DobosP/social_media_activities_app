@@ -119,6 +119,19 @@ func path(kind string, r map[string]any) error {
 	return nil
 }
 func writeJSON(directory, name string, payload any) (string, error) {
+	return writeJSONWithReplace(directory, name, payload, os.Rename)
+}
+
+// The replace argument is the internal qualification seam for the atomic
+// publication boundary. Serving code always uses os.Rename through writeJSON.
+func writeJSONWithReplace(directory, name string, payload any, replace func(string, string) error) (string, error) {
+	var encoded bytes.Buffer
+	enc := json.NewEncoder(&encoded)
+	enc.SetEscapeHTML(false)
+	if err := enc.Encode(payload); err != nil {
+		return "", err
+	}
+	raw := bytes.TrimSuffix(encoded.Bytes(), []byte{'\n'})
 	tmp, err := os.CreateTemp(directory, "."+name+"-*.tmp")
 	if err != nil {
 		return "", err
@@ -126,9 +139,7 @@ func writeJSON(directory, name string, payload any) (string, error) {
 	temp := tmp.Name()
 	defer os.Remove(temp)
 	digest := sha256.New()
-	enc := json.NewEncoder(io.MultiWriter(tmp, digest))
-	enc.SetEscapeHTML(false)
-	if err := enc.Encode(payload); err != nil {
+	if _, err := io.MultiWriter(tmp, digest).Write(raw); err != nil {
 		tmp.Close()
 		return "", err
 	}
@@ -142,7 +153,7 @@ func writeJSON(directory, name string, payload any) (string, error) {
 	if err := os.Chmod(temp, 0644); err != nil {
 		return "", err
 	}
-	if err := os.Rename(temp, filepath.Join(directory, name)); err != nil {
+	if err := replace(temp, filepath.Join(directory, name)); err != nil {
 		return "", err
 	}
 	return hex.EncodeToString(digest.Sum(nil)), nil

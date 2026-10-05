@@ -90,8 +90,11 @@ func TestNativeManualOSMIdempotenceProtectedDisputesAndDryRun(t *testing.T) {
 	if _, err = r.Run(ctx, "ingest_places", args(map[string]any{"source": "overture", "bbox": "23,46,24,47", "overture_path": "fixture.parquet"})); err == nil {
 		t.Fatal("missing native provider silently accepted")
 	}
-	if _, err = s.enrichPlaces(ctx, args(map[string]any{"google": true})); err == nil {
-		t.Fatal("missing provider silently accepted")
+	if out, err = s.enrichPlaces(ctx, args(map[string]any{"google": true})); err != nil || out.(map[string]int)["google_disabled"] != 1 || out.(map[string]int)["hours_parsed"] != 1 {
+		t.Fatal("disabled Google did not skip with exact count and continue hours", out, err)
+	}
+	if err = r.DB.QueryRow(ctx, `SELECT count(*) FROM places_place WHERE raw_tags?'google'`).Scan(&count); err != nil || count != 0 {
+		t.Fatal("disabled Google changed provider metadata", count, err)
 	}
 	if _, err = r.Run(ctx, "ingest_places", args(map[string]any{"password": "injected"})); err == nil {
 		t.Fatal("unknown option ignored")

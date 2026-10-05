@@ -58,11 +58,17 @@ func queryMaps(ctx context.Context, r *Runner, sql string, args ...any) ([]map[s
 	return out, rows.Err()
 }
 func atomicJSON(dir, name string, payload any) (string, error) {
-	raw, err := json.Marshal(payload)
-	if err != nil {
+	return atomicJSONWithReplace(dir, name, payload, os.Rename)
+}
+
+func atomicJSONWithReplace(dir, name string, payload any, replace func(string, string) error) (string, error) {
+	var encoded bytes.Buffer
+	enc := json.NewEncoder(&encoded)
+	enc.SetEscapeHTML(false)
+	if err := enc.Encode(payload); err != nil {
 		return "", err
 	}
-	raw = append(raw, '\n')
+	raw := bytes.TrimSuffix(encoded.Bytes(), []byte{'\n'})
 	temp, err := os.CreateTemp(dir, "."+name+"-*")
 	if err != nil {
 		return "", err
@@ -82,7 +88,7 @@ func atomicJSON(dir, name string, payload any) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if err = os.Rename(path, filepath.Join(dir, name)); err != nil {
+	if err = replace(path, filepath.Join(dir, name)); err != nil {
 		return "", err
 	}
 	sum := sha256.Sum256(raw)
@@ -141,7 +147,7 @@ func (r *Runner) ExportAgentSnapshot(ctx context.Context, _ map[string]json.RawM
 	for _, data := range []struct {
 		Name string
 		Rows []map[string]any
-	}{{"places", places}, {"events", events}, {"activities", activities}} {
+	}{{"events", events}, {"places", places}, {"activities", activities}} {
 		file := data.Name + ".json"
 		digest, err := atomicJSON(dir, file, map[string]any{"schema_version": 2, "generated_at": generated, "count": len(data.Rows), "records": data.Rows})
 		if err != nil {

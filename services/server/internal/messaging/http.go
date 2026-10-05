@@ -143,6 +143,9 @@ func (s *Service) conversations(w http.ResponseWriter, r *http.Request) {
 		var id int64
 		if e == nil {
 			id, e = s.Start(r.Context(), a, body.Kind, names, body.Title)
+			if errors.Is(e, pgx.ErrNoRows) {
+				e = platform.ErrInvalid
+			}
 		}
 		if e != nil {
 			fail(w, e, 400)

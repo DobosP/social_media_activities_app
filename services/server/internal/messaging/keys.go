@@ -201,9 +201,29 @@ func (s *Service) VerifyKey(ctx context.Context, a platform.Actor, username, fin
 	return status, e
 }
 func (s *Service) ParticipantKeys(ctx context.Context, a platform.Actor, id int64) ([]any, error) {
-	ok, e := s.CanView(ctx, s.DB, a, id)
+	// Read current viewer authority together with the participant/cohort row.
+	// Combining these predicates preserves the ordinary CanView gates without
+	// turning a bounded key roster into per-participant permission queries.
+	var role, kind string
+	var ok bool
+	e := s.DB.QueryRow(ctx, `SELECT mine.role,c.kind,u.is_active AND mine.state='active' AND (
+mine.role='guardian' OR (
+u.is_identity_verified AND u.cohort<>'' AND u.cohort<>'unassigned' AND u.cohort=c.cohort
+AND COALESCE((SELECT expires_at IS NULL OR expires_at>now() FROM accounts_ageassurance WHERE user_id=u.id ORDER BY verified_at DESC,id DESC LIMIT 1),true)
+AND (u.age_band<>'under_16' OR EXISTS(SELECT 1 FROM accounts_parentalconsent WHERE minor_id=u.id AND status='active' AND (expires_at IS NULL OR expires_at>now())))
+AND NOT EXISTS(SELECT 1 FROM messaging_participant p JOIN safety_block b ON (b.blocker_id=u.id AND b.blocked_id=p.user_id) OR (b.blocker_id=p.user_id AND b.blocked_id=u.id) WHERE p.conversation_id=c.id AND p.state='active' AND p.role<>'guardian')
+)) FROM accounts_user u JOIN messaging_participant mine ON mine.user_id=u.id JOIN messaging_conversation c ON c.id=mine.conversation_id WHERE u.id=$1 AND c.id=$2`, a.ID, id).Scan(&role, &kind, &ok)
+	if errors.Is(e, pgx.ErrNoRows) {
+		return nil, platform.ErrForbidden
+	}
 	if e != nil {
 		return nil, e
+	}
+	if ok && role == "guardian" {
+		ok, e = s.CanView(ctx, s.DB, a, id)
+		if e != nil {
+			return nil, e
+		}
 	}
 	if !ok {
 		return nil, platform.ErrForbidden
@@ -236,7 +256,11 @@ func (s *Service) ParticipantKeys(ctx context.Context, a platform.Actor, id int6
 	if e = rows.Err(); e != nil {
 		return nil, e
 	}
-	if len(result) > s.maxMembers() {
+	cap := s.maxMembers()
+	if kind == "direct" {
+		cap = max(cap, 2)
+	}
+	if len(result) > cap {
 		return nil, platform.ErrInvalid
 	}
 	return result, nil

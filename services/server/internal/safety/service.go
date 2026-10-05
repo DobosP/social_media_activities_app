@@ -162,7 +162,9 @@ func (s *Service) ResolveTarget(ctx context.Context, q platform.Querier, app, mo
 	return t, err
 }
 
-func (s *Service) reportTarget(ctx context.Context, a platform.Actor, model string, id int64) (Target, error) {
+// ReportTarget applies the report endpoint's current visibility gates before
+// returning a target. HTML adapters use this same gate as the native API.
+func (s *Service) ReportTarget(ctx context.Context, a platform.Actor, model string, id int64) (Target, error) {
 	app := "social"
 	if model == "user" {
 		app = "accounts"
@@ -264,7 +266,11 @@ func (s *Service) FileReport(ctx context.Context, a platform.Actor, target Targe
 }
 func (s *Service) fileReport(ctx context.Context, tx pgx.Tx, a platform.Actor, target Target, reason, detail string) (int64, error) {
 	var id int64
-	err := tx.QueryRow(ctx, `INSERT INTO safety_report(target_type_id,target_id,reason,detail,status,handled_at,resolution,created_at,handled_by_id,reporter_id) VALUES($1,$2,$3,$4,'open',NULL,'',now(),NULL,$5) RETURNING id`, target.ContentType, target.ID, reason, detail, a.ID).Scan(&id)
+	var reporter any
+	if a.ID > 0 {
+		reporter = a.ID
+	}
+	err := tx.QueryRow(ctx, `INSERT INTO safety_report(target_type_id,target_id,reason,detail,status,handled_at,resolution,created_at,handled_by_id,reporter_id) VALUES($1,$2,$3,$4,'open',NULL,'',now(),NULL,$5) RETURNING id`, target.ContentType, target.ID, reason, detail, reporter).Scan(&id)
 	if err != nil {
 		return 0, err
 	}

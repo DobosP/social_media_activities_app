@@ -110,9 +110,10 @@ func (s *Server) socialPostModels(ctx context.Context, a platform.Actor, tid int
 	if len(items) == 0 {
 		return []map[string]any{}, nil
 	}
-	// The largest permitted thread page has 1000 roots, 900 replies and 50
-	// announcements. Keep each model/footer/media query within its 1000-ID cap.
-	if len(items) > 1950 {
+	// The largest permitted thread page has1000 roots,900 replies,50
+	// announcements and up to60 additional digest IDs. Keep every canonical
+	// model/footer/media read bounded by its existing1000-ID query cap.
+	if len(items) > 2010 {
 		return nil, platform.ErrInvalid
 	}
 	if len(items) > 1000 {
@@ -351,7 +352,30 @@ func (s *Server) socialThreadContext(r *http.Request, a platform.Actor, kind str
 	if err != nil {
 		return err
 	}
-	all := append(append(append([]map[string]any{}, roots...), replies...), announcements...)
+	// Collect the current digest selection before canonical hydration. A
+	// normal page overlaps almost entirely with it; separate hydration would
+	// repeat the same roster, footer, media and fresh permission queries.
+	scanned := []map[string]any{}
+	if kind == "activity" {
+		scanned, err = socialRows(ctx, s.DB, `SELECT jsonb_build_object('id',id) FROM social_post WHERE thread_id=$1 AND NOT is_hidden AND NOT is_announcement ORDER BY created_at DESC,id DESC LIMIT 60`, tid)
+		if err != nil {
+			return err
+		}
+	}
+	all := []map[string]any{}
+	seen := map[int64]bool{}
+	for _, selection := range [][]map[string]any{roots, replies, announcements, scanned} {
+		for _, item := range selection {
+			id := spaID(item)
+			if !seen[id] {
+				seen[id] = true
+				all = append(all, item)
+			}
+		}
+	}
+	if len(all) > 2010 {
+		return platform.ErrInvalid
+	}
 	models, err := s.socialPostModels(ctx, a, tid, all)
 	if err != nil {
 		return err
@@ -452,13 +476,11 @@ func (s *Server) socialThreadContext(r *http.Request, a platform.Actor, kind str
 	}
 	data["presend_nudge"] = map[string]any{"rules": socialPresendRules, "message": s.Renderer.catalog.translate(language(r), "This looks like it might share contact details or a plan to meet one-to-one. To keep everyone safe — especially younger members — try to keep coordination inside the "+where+". Post it anyway?", 1)}
 	if kind == "activity" {
-		scanned, err := socialRows(ctx, s.DB, `SELECT jsonb_build_object('id',id) FROM social_post WHERE thread_id=$1 AND NOT is_hidden AND NOT is_announcement ORDER BY created_at DESC,id DESC LIMIT 60`, tid)
-		if err != nil {
-			return err
-		}
-		recentModels, err := s.socialPostModels(ctx, a, tid, scanned)
-		if err != nil {
-			return err
+		recentModels := []map[string]any{}
+		for _, item := range scanned {
+			if model, ok := byID[spaID(item)]; ok {
+				recentModels = append(recentModels, model)
+			}
 		}
 		recent := recentModels[:min(3, len(recentModels))]
 		logistical := []map[string]any{}

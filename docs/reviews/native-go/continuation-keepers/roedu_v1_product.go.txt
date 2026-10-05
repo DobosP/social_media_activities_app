@@ -1,0 +1,387 @@
+package jobs
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"net"
+	"net/http"
+	"net/url"
+	"regexp"
+	"strconv"
+	"strings"
+	"time"
+)
+
+const (
+	v1BodyCap     int64 = 8 << 20
+	v1WalkByteCap int64 = 64 << 20
+	v1PageCap           = 10000
+	v1RecordCap         = 100000
+)
+
+var ErrV1Contract = errors.New("RO-EDU V1 contract error")
+var ErrV1ProductUnavailable = fmt.Errorf("%w: product unavailable", ErrV1Contract)
+
+type V1ProductRefusal struct {
+	product   string
+	records   int
+	condition string
+}
+
+func (e *V1ProductRefusal) Unwrap() error   { return ErrV1ProductUnavailable }
+func (e *V1ProductRefusal) Product() string { return e.product }
+func (e *V1ProductRefusal) Records() int    { return e.records }
+func (e *V1ProductRefusal) Error() string {
+	product := "product"
+	if e.product == "venues" || e.product == "events" {
+		product = e.product
+	}
+	if e.records == 0 {
+		return "RO-EDU served no " + product + ": " + e.condition
+	}
+	return "RO-EDU served only " + strconv.Itoa(e.records) + " record(s) from " + product + " before refusing: " + e.condition
+}
+
+// V1ProductClient is an explicit, read-only interoperability seam. It is not
+// wired to canonical Read, runtime configuration or any ingestion/publication.
+type V1ProductClient struct {
+	base, key string
+	http      *http.Client
+}
+type V1ProductOptions struct {
+	Limit, MaxRecords int
+	Cursor            string
+	Filters           map[string]*string
+}
+
+func NewV1ProductClient(base, key string, injected *http.Client) (*V1ProductClient, error) {
+	u, err := url.Parse(base)
+	if err != nil || u.User != nil || u.Hostname() == "" || u.RawQuery != "" || u.Fragment != "" || len(base) > 2048 || strings.TrimSpace(base) != base || len(key) > 4096 || strings.ContainsAny(key, "\r\n\x00") {
+		return nil, fmt.Errorf("%w: invalid explicit client configuration", ErrV1Contract)
+	}
+	loopback := u.Hostname() == "localhost"
+	if ip := net.ParseIP(u.Hostname()); ip != nil {
+		loopback = ip.IsLoopback()
+	}
+	if u.Scheme != "https" && !(u.Scheme == "http" && loopback) {
+		return nil, fmt.Errorf("%w: invalid explicit client origin", ErrV1Contract)
+	}
+	var client http.Client
+	if injected != nil {
+		client = *injected
+	} else {
+		transport := http.DefaultTransport.(*http.Transport).Clone()
+		transport.Proxy = nil
+		// For an explicit HTTPS producer, reject private DNS results and pin one
+		// checked address per dial. Loopback HTTP is an explicit local fixture.
+		transport.DialContext = func(ctx context.Context, network, address string) (net.Conn, error) {
+			host, port, e := net.SplitHostPort(address)
+			if e != nil {
+				return nil, errors.New("invalid V1 dial")
+			}
+			addresses, e := net.DefaultResolver.LookupIPAddr(ctx, host)
+			if e != nil || len(addresses) == 0 {
+				return nil, errors.New("V1 DNS unavailable")
+			}
+			for _, a := range addresses {
+				if !loopback && !publicIP(a.IP) {
+					return nil, errors.New("V1 address unavailable")
+				}
+			}
+			return (&net.Dialer{Timeout: 10 * time.Second}).DialContext(ctx, network, net.JoinHostPort(addresses[0].IP.String(), port))
+		}
+		client.Transport = transport
+	}
+	client.Timeout = 30 * time.Second
+	client.CheckRedirect = func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
+	return &V1ProductClient{base: strings.TrimRight(base, "/"), key: key, http: &client}, nil
+}
+
+var v1Name = regexp.MustCompile(`^[a-z][a-z0-9_]{0,63}$`)
+var v1Snapshot = regexp.MustCompile(`^(?:sha256|live)-[0-9a-f]{64}$`)
+
+func v1Options(o V1ProductOptions) (V1ProductOptions, error) {
+	if o.Limit == 0 {
+		o.Limit = 200
+	}
+	if o.Limit < 1 || o.Limit > 10000 || o.MaxRecords < 0 || o.MaxRecords > v1RecordCap || len(o.Cursor) > 4096 || strings.ContainsAny(o.Cursor, "\x00\r\n") || len(o.Filters) > 32 {
+		return o, fmt.Errorf("%w: invalid bounded read options", ErrV1Contract)
+	}
+	for key, value := range o.Filters {
+		if !v1Name.MatchString(key) || key == "cursor" || key == "limit" || value != nil && (len(*value) > 512 || strings.ContainsAny(*value, "\x00\r\n")) {
+			return o, fmt.Errorf("%w: invalid bounded filter", ErrV1Contract)
+		}
+	}
+	return o, nil
+}
+
+func fixedV1Note(value any) string {
+	switch value {
+	case "snapshot changed during read":
+		return "snapshot changed during read"
+	case "schema not ready":
+		return "schema not ready"
+	case "policy ruleset drifted":
+		return "policy ruleset drifted"
+	case "schema not ready: events missing required policy column(s): capture_id, privacy_classification":
+		return "schema not ready: events missing required policy column(s): capture_id, privacy_classification"
+	default:
+		return "producer reported unavailable"
+	}
+}
+
+// Validate JSON structure before decoding values. Duplicate keys cannot hide a
+// refused availability flag or substitute a cursor/identity at the boundary.
+func v1JSONStructure(decoder *json.Decoder, depth int) error {
+	if depth > 64 {
+		return errors.New("depth bound")
+	}
+	token, err := decoder.Token()
+	if err != nil {
+		return err
+	}
+	delimiter, container := token.(json.Delim)
+	if !container {
+		return nil
+	}
+	switch delimiter {
+	case '{':
+		seen := map[string]bool{}
+		for decoder.More() {
+			key, err := decoder.Token()
+			if err != nil {
+				return err
+			}
+			name, ok := key.(string)
+			if !ok || seen[name] || len(seen) >= 10000 {
+				return errors.New("duplicate/key bound")
+			}
+			seen[name] = true
+			if err := v1JSONStructure(decoder, depth+1); err != nil {
+				return err
+			}
+		}
+	case '[':
+		count := 0
+		for decoder.More() {
+			count++
+			if count > 100001 {
+				return errors.New("array bound")
+			}
+			if err := v1JSONStructure(decoder, depth+1); err != nil {
+				return err
+			}
+		}
+	default:
+		return errors.New("unexpected delimiter")
+	}
+	_, err = decoder.Token()
+	return err
+}
+
+func (c *V1ProductClient) get(ctx context.Context, path string, q url.Values) (map[string]any, int64, error) {
+	if c == nil || c.http == nil {
+		return nil, 0, fmt.Errorf("%w: explicit client configuration required", ErrV1Contract)
+	}
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+	u, err := url.Parse(c.base + path)
+	if err != nil {
+		return nil, 0, fmt.Errorf("%w: invalid request", ErrV1Contract)
+	}
+	u.RawQuery = q.Encode()
+	req, err := http.NewRequestWithContext(ctx, "GET", u.String(), nil)
+	if err != nil {
+		return nil, 0, fmt.Errorf("%w: invalid request", ErrV1Contract)
+	}
+	req.Header.Set("X-API-Key", c.key)
+	req.Header.Set("Accept", "application/json")
+	response, err := c.http.Do(req)
+	if err != nil {
+		return nil, 0, fmt.Errorf("%w: producer unavailable", ErrV1Contract)
+	}
+	defer response.Body.Close()
+	if response.StatusCode != 200 {
+		return nil, 0, fmt.Errorf("%w: producer unavailable", ErrV1Contract)
+	}
+	raw, err := io.ReadAll(io.LimitReader(response.Body, v1BodyCap+1))
+	if err != nil || int64(len(raw)) > v1BodyCap {
+		return nil, int64(len(raw)), fmt.Errorf("%w: body bound exceeded", ErrV1Contract)
+	}
+	structure := json.NewDecoder(bytes.NewReader(raw))
+	structure.UseNumber()
+	if v1JSONStructure(structure, 0) != nil {
+		return nil, int64(len(raw)), fmt.Errorf("%w: duplicate, deeply nested or malformed response", ErrV1Contract)
+	}
+	decoder := json.NewDecoder(bytes.NewReader(raw))
+	decoder.UseNumber()
+	var page map[string]any
+	if decoder.Decode(&page) != nil || page == nil || decoder.Decode(new(any)) != io.EOF {
+		return nil, int64(len(raw)), fmt.Errorf("%w: non-object or malformed response", ErrV1Contract)
+	}
+	if note, present := page["note"]; present {
+		page["note"] = fixedV1Note(note)
+	}
+	return page, int64(len(raw)), nil
+}
+
+func (c *V1ProductClient) Health(ctx context.Context) (map[string]any, error) {
+	p, _, err := c.get(ctx, "/v1/health", nil)
+	return p, err
+}
+func (c *V1ProductClient) Page(ctx context.Context, product string, o V1ProductOptions) (map[string]any, error) {
+	p, _, err := c.page(ctx, product, o)
+	return p, err
+}
+func (c *V1ProductClient) page(ctx context.Context, product string, o V1ProductOptions) (map[string]any, int64, error) {
+	if !v1Name.MatchString(product) {
+		return nil, 0, fmt.Errorf("%w: invalid product", ErrV1Contract)
+	}
+	var err error
+	o, err = v1Options(o)
+	if err != nil {
+		return nil, 0, err
+	}
+	q := url.Values{"limit": {strconv.Itoa(o.Limit)}}
+	if o.Cursor != "" {
+		q.Set("cursor", o.Cursor)
+	}
+	for key, value := range o.Filters {
+		if value != nil {
+			q.Set(key, *value)
+		}
+	}
+	return c.get(ctx, "/v1/products/"+product, q)
+}
+
+func v1Available(page map[string]any) bool { value, ok := page["available"].(bool); return ok && value }
+func v1Next(page map[string]any) (string, error) {
+	value := page["next_cursor"]
+	if value == nil || value == false || value == "" {
+		return "", nil
+	}
+	var next string
+	switch v := value.(type) {
+	case string:
+		next = v
+	case json.Number:
+		if v == "0" {
+			return "", nil
+		}
+		next = v.String()
+	default:
+		return "", fmt.Errorf("%w: invalid cursor shape", ErrV1Contract)
+	}
+	if len(next) > 4096 || strings.ContainsAny(next, "\x00\r\n") {
+		return "", fmt.Errorf("%w: cursor bound exceeded", ErrV1Contract)
+	}
+	return next, nil
+}
+
+// walk retains no corpus. Callback errors terminate immediately; record caps
+// terminate at the exact requested cardinality without fetching the next page.
+func (c *V1ProductClient) walk(ctx context.Context, product string, o V1ProductOptions, strict bool, pageFn func(map[string]any) error, recordFn func(map[string]any) error) (int, error) {
+	var err error
+	o, err = v1Options(o)
+	if err != nil {
+		return 0, err
+	}
+	if o.Cursor != "" {
+		return 0, fmt.Errorf("%w: walk must start without cursor", ErrV1Contract)
+	}
+	maximum := o.MaxRecords
+	if maximum == 0 {
+		maximum = v1RecordCap
+	}
+	seen := map[string]bool{}
+	taken := 0
+	var bytesTaken int64
+	for pageIndex := 0; pageIndex < v1PageCap; pageIndex++ {
+		page, n, err := c.page(ctx, product, o)
+		if err != nil {
+			return taken, err
+		}
+		bytesTaken += n
+		if bytesTaken > v1WalkByteCap {
+			return taken, fmt.Errorf("%w: aggregate body bound exceeded", ErrV1Contract)
+		}
+		available := v1Available(page)
+		if available && page["snapshot_id"] != nil {
+			id, ok := page["snapshot_id"].(string)
+			if !ok || !v1Snapshot.MatchString(id) {
+				return taken, fmt.Errorf("%w: unrecognised snapshot_id grammar", ErrV1Contract)
+			}
+		}
+		if pageFn != nil {
+			if err := pageFn(page); err != nil {
+				return taken, err
+			}
+		}
+		if !available {
+			if page["note"] == "snapshot changed during read" {
+				return taken, fmt.Errorf("%w: torn read", ErrV1Contract)
+			}
+			if strict {
+				return taken, &V1ProductRefusal{product: product, records: taken, condition: fixedV1Note(page["note"])}
+			}
+			return taken, nil
+		}
+		records, ok := page["records"].([]any)
+		if !ok {
+			return taken, fmt.Errorf("%w: non-list records envelope", ErrV1Contract)
+		}
+		for index, item := range records {
+			record, ok := item.(map[string]any)
+			if !ok {
+				return taken, fmt.Errorf("%w: non-object record", ErrV1Contract)
+			}
+			if recordFn != nil {
+				if err := recordFn(record); err != nil {
+					return taken, err
+				}
+			}
+			taken++
+			if taken >= maximum {
+				if o.MaxRecords > 0 {
+					return taken, nil
+				}
+				next, e := v1Next(page)
+				if e != nil {
+					return taken, e
+				}
+				if index+1 < len(records) || next != "" {
+					return taken, fmt.Errorf("%w: record bound exceeded", ErrV1Contract)
+				}
+				return taken, nil
+			}
+		}
+		next, err := v1Next(page)
+		if err != nil {
+			return taken, err
+		}
+		if next == "" {
+			return taken, nil
+		}
+		if seen[next] {
+			return taken, fmt.Errorf("%w: repeated pagination cursor", ErrV1Contract)
+		}
+		seen[next] = true
+		o.Cursor = next
+	}
+	return taken, fmt.Errorf("%w: page bound exceeded", ErrV1Contract)
+}
+
+func (c *V1ProductClient) Pages(ctx context.Context, product string, o V1ProductOptions, visit func(map[string]any) error) error {
+	_, err := c.walk(ctx, product, o, false, visit, nil)
+	return err
+}
+func (c *V1ProductClient) Iter(ctx context.Context, product string, o V1ProductOptions, visit func(map[string]any) error) (int, error) {
+	return c.walk(ctx, product, o, false, nil, visit)
+}
+func (c *V1ProductClient) IterRequired(ctx context.Context, product string, o V1ProductOptions, visit func(map[string]any) error) (int, error) {
+	return c.walk(ctx, product, o, true, nil, visit)
+}

@@ -140,6 +140,7 @@ type Result struct {
 }
 
 func (r *Runner) RunDue(ctx context.Context) ([]Result, error) {
+	ctx = ops.WithDueRunID(ctx)
 	out := []Result{}
 	failures := 0
 	for _, name := range DueNames {

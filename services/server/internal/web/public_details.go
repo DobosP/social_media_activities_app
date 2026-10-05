@@ -43,17 +43,7 @@ func (s *Server) publicPlaceDetail(r *http.Request, a platform.Actor) (pongo2.Co
 	data["venue_facts"] = venue
 	recorded = []map[string]any{}
 	kid := false
-	brief := [][]any{{"Place", p["name"]}}
-	if address := spaText(p["address"]); address != "" {
-		brief = append(brief, []any{"Where", "It is at " + address + "."})
-	}
-	for _, row := range append(append([]map[string]any{}, access...), venue...) {
-		sentence := map[string]string{"true": "yes", "false": "no", "limited": "limited"}[spaText(row["state"])]
-		if sentence == "" {
-			sentence = "not recorded"
-		}
-		brief = append(brief, []any{row["label"], sentence})
-	}
+	brief := catalog.PlainPlaceBrief(spaText(p["name"]), spaText(p["address"]), spaMap(p["_tags"]), venue)
 	for _, row := range venue {
 		if row["state"] != "unknown" {
 			recorded = append(recorded, row)

@@ -1,0 +1,311 @@
+package jobs
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"reflect"
+	"strings"
+	"testing"
+)
+
+func case6V1Server(t *testing.T, pages map[string]string) (*V1ProductClient, *[]string) {
+	t.Helper()
+	calls := []string{}
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("X-API-Key") != "synthetic-case6-key" || r.Header.Get("Accept") != "application/json" {
+			t.Error("exact source auth/content-negotiation headers changed")
+		}
+		cursor := r.URL.Query().Get("cursor")
+		calls = append(calls, cursor)
+		body, ok := pages[cursor]
+		if !ok {
+			t.Errorf("unexpected cursor request %q", cursor)
+			w.WriteHeader(500)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(body))
+	}))
+	t.Cleanup(server.Close)
+	client, err := NewV1ProductClient(server.URL+"/", "synthetic-case6-key", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return client, &calls
+}
+
+func TestOperatorCase6V1ActualHealthAndPageRequestWire(t *testing.T) {
+	paths := []string{}
+	queries := []string{}
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		paths = append(paths, r.URL.Path)
+		queries = append(queries, r.URL.RawQuery)
+		if r.Header.Get("X-API-Key") != "synthetic-case6-key" || r.Header.Get("Accept") != "application/json" {
+			t.Error("source headers changed")
+		}
+		if r.URL.Path == "/v1/health" {
+			_, _ = w.Write([]byte(`{"status":"ok"}`))
+		} else {
+			_, _ = w.Write([]byte(`{"available":true,"records":[]}`))
+		}
+	}))
+	defer server.Close()
+	c, err := NewV1ProductClient(server.URL+"/", "synthetic-case6-key", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if health, err := c.Health(context.Background()); err != nil || health["status"] != "ok" {
+		t.Fatal("exact health result changed", err)
+	}
+	city := "Cluj-Napoca"
+	if _, err := c.Page(context.Background(), "venues", V1ProductOptions{Limit: 50, Filters: map[string]*string{"city": &city, "county": nil}}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := c.Page(context.Background(), "venues", V1ProductOptions{Limit: 200, Cursor: "abc123"}); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(paths, []string{"/v1/health", "/v1/products/venues", "/v1/products/venues"}) || strings.Contains(queries[1], "cursor") || strings.Contains(queries[1], "county") || !strings.Contains(queries[1], "limit=50") || !strings.Contains(queries[1], "city=Cluj-Napoca") || !strings.Contains(queries[2], "cursor=abc123") {
+		t.Fatal("source URL/nullable-filter/cursor contract changed", paths, queries)
+	}
+}
+
+func TestOperatorCase6V1StrictAndLenientCursorWalkAndExactLimit(t *testing.T) {
+	pages := map[string]string{"": `{"available":true,"records":[{"id":"v1"},{"id":"v2"}],"next_cursor":"c2","snapshot_id":null}`, "c2": `{"available":true,"records":[{"id":"v3"}],"next_cursor":null,"snapshot_id":null}`}
+	for _, strict := range []bool{false, true} {
+		for _, maximum := range []int{0, 2} {
+			t.Run(fmt.Sprintf("strict%v_max%d", strict, maximum), func(t *testing.T) {
+				c, calls := case6V1Server(t, pages)
+				ids := []string{}
+				visit := func(r map[string]any) error { ids = append(ids, r["id"].(string)); return nil }
+				var count int
+				var err error
+				if strict {
+					count, err = c.IterRequired(context.Background(), "venues", V1ProductOptions{MaxRecords: maximum}, visit)
+				} else {
+					count, err = c.Iter(context.Background(), "venues", V1ProductOptions{MaxRecords: maximum}, visit)
+				}
+				want := []string{"v1", "v2", "v3"}
+				wantCalls := []string{"", "c2"}
+				if maximum == 2 {
+					want = want[:2]
+					wantCalls = wantCalls[:1]
+				}
+				if err != nil || count != len(want) || !reflect.DeepEqual(ids, want) || !reflect.DeepEqual(*calls, wantCalls) {
+					t.Fatal("source strict/lenient exact cursor/cardinality changed", count, ids, *calls, err)
+				}
+			})
+		}
+	}
+}
+
+func TestOperatorCase6V1FrozenNumericCursorAndMaxRecordsVectors(t *testing.T) {
+	c, calls := case6V1Server(t, map[string]string{"": `{"available":true,"records":[{"id":1},{"id":2}],"next_cursor":"c1"}`, "c1": `{"available":true,"records":[{"id":3}],"next_cursor":"c2"}`, "c2": `{"available":true,"records":[{"id":4}],"next_cursor":null}`})
+	ids := []json.Number{}
+	count, err := c.Iter(context.Background(), "venues", V1ProductOptions{Limit: 2}, func(r map[string]any) error { ids = append(ids, r["id"].(json.Number)); return nil })
+	if err != nil || count != 4 || !reflect.DeepEqual(ids, []json.Number{"1", "2", "3", "4"}) || !reflect.DeepEqual(*calls, []string{"", "c1", "c2"}) {
+		t.Fatal("exact frozen numeric three-page vector changed", ids, *calls, err)
+	}
+	c, calls = case6V1Server(t, map[string]string{"": `{"available":true,"records":[{"id":0},{"id":1},{"id":2},{"id":3},{"id":4}],"next_cursor":"unused"}`})
+	ids = nil
+	count, err = c.Iter(context.Background(), "venues", V1ProductOptions{Limit: 5, MaxRecords: 3}, func(r map[string]any) error { ids = append(ids, r["id"].(json.Number)); return nil })
+	if err != nil || count != 3 || !reflect.DeepEqual(ids, []json.Number{"0", "1", "2"}) || len(*calls) != 1 {
+		t.Fatal("exact frozen max3 range changed", ids, *calls, err)
+	}
+	for _, strict := range []bool{false, true} {
+		c, calls = case6V1Server(t, map[string]string{"": `{"available":true,"records":[{"id":"venue-1"},{"id":"venue-2"},{"id":"venue-3"}],"next_cursor":null,"snapshot_id":null}`})
+		got := []string{}
+		visit := func(r map[string]any) error { got = append(got, r["id"].(string)); return nil }
+		if strict {
+			count, err = c.IterRequired(context.Background(), "venues", V1ProductOptions{MaxRecords: 2}, visit)
+		} else {
+			count, err = c.Iter(context.Background(), "venues", V1ProductOptions{MaxRecords: 2}, visit)
+		}
+		if err != nil || count != 2 || !reflect.DeepEqual(got, []string{"venue-1", "venue-2"}) || len(*calls) != 1 {
+			t.Fatal("exact strict/lenient frozen venue range changed")
+		}
+	}
+}
+
+func TestOperatorCase6V1RefusalTakenCountsTornReadAndUnknownNotePrivacy(t *testing.T) {
+	known := "schema not ready: events missing required policy column(s): capture_id, privacy_classification"
+	for _, name := range []string{"first", "later", "unknown", "torn", "non_list", "empty"} {
+		t.Run(name, func(t *testing.T) {
+			page := map[string]any{"available": false, "records": []any{}, "next_cursor": nil, "note": known}
+			if name == "unknown" {
+				page["note"] = "synthetic-secret-marker token=private"
+			}
+			if name == "torn" {
+				page["note"] = "snapshot changed during read"
+			}
+			if name == "non_list" {
+				page["available"] = true
+				page["records"] = nil
+				page["snapshot_id"] = nil
+			}
+			if name == "empty" {
+				page["available"] = true
+				page["snapshot_id"] = nil
+				delete(page, "note")
+			}
+			raw, _ := json.Marshal(page)
+			pages := map[string]string{"": string(raw)}
+			want := 0
+			if name == "later" {
+				pages["next"] = string(raw)
+				pages[""] = `{"available":true,"records":[{"id":"event-1"},{"id":"event-2"}],"next_cursor":"next","snapshot_id":null}`
+				want = 2
+			}
+			c, _ := case6V1Server(t, pages)
+			count, err := c.IterRequired(context.Background(), "events", V1ProductOptions{}, func(map[string]any) error { return nil })
+			if count != want {
+				t.Fatal("source progress/taken count changed", count, want)
+			}
+			if name == "empty" {
+				if err != nil {
+					t.Fatal("available empty product refused", err)
+				}
+				return
+			}
+			if name == "torn" || name == "non_list" {
+				if !errors.Is(err, ErrV1Contract) || errors.Is(err, ErrV1ProductUnavailable) {
+					t.Fatal("torn/shape error mislabeled product refusal", err)
+				}
+				if name == "torn" && !strings.Contains(err.Error(), "torn read") || name == "non_list" && !strings.Contains(err.Error(), "non-list records envelope") {
+					t.Fatal("fixed source contract diagnostic missing")
+				}
+				return
+			}
+			var refused *V1ProductRefusal
+			if !errors.Is(err, ErrV1ProductUnavailable) || !errors.As(err, &refused) || refused.Product() != "events" || refused.Records() != want {
+				t.Fatal("source refusal product/progress identity lost", err)
+			}
+			if name == "first" && !strings.Contains(err.Error(), "served no events") || name == "later" && !strings.Contains(err.Error(), "served only 2 record(s) from events before refusing") {
+				t.Fatal("source fixed taken-count diagnostic missing")
+			}
+			if name != "unknown" && !strings.Contains(err.Error(), "capture_id") {
+				t.Fatal("fixed source-supported schema condition missing")
+			}
+			if strings.Contains(err.Error(), "synthetic-secret-marker") || strings.Contains(err.Error(), "token=private") {
+				t.Fatal("arbitrary producer note escaped error")
+			}
+		})
+	}
+}
+
+func TestOperatorCase6V1LenientUnavailableMissingAvailabilityAndRepeatedCursors(t *testing.T) {
+	for _, page := range []string{`{"available":false,"records":[{"id":1}],"next_cursor":"stuck"}`, `{"records":[{"id":1}]}`} {
+		c, calls := case6V1Server(t, map[string]string{"": page})
+		count, err := c.Iter(context.Background(), "venues", V1ProductOptions{}, func(map[string]any) error { t.Fatal("unavailable page emitted records"); return nil })
+		if err != nil || count != 0 || len(*calls) != 1 {
+			t.Fatal("lenient fail-closed availability/cursor termination changed", err)
+		}
+	}
+	for _, pages := range []map[string]string{{"": `{"available":true,"records":[{"id":"v1"}],"next_cursor":"stuck"}`, "stuck": `{"available":true,"records":[{"id":"v1"}],"next_cursor":"stuck"}`}, {"": `{"available":true,"records":[{"id":"v1"}],"next_cursor":"a"}`, "a": `{"available":true,"records":[{"id":"v2"}],"next_cursor":"b"}`, "b": `{"available":true,"records":[{"id":"v3"}],"next_cursor":"a"}`}} {
+		c, calls := case6V1Server(t, pages)
+		_, err := c.Iter(context.Background(), "venues", V1ProductOptions{}, func(map[string]any) error { return nil })
+		if !errors.Is(err, ErrV1Contract) || len(*calls) > 3 {
+			t.Fatal("repeated cursor did not bound actual requests", err, *calls)
+		}
+	}
+}
+
+func TestOperatorCase6V1ExplicitRangesHeadersRedirectAndSnapshotGrammar(t *testing.T) {
+	calls := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		http.Redirect(w, r, "/elsewhere", http.StatusFound)
+	}))
+	defer server.Close()
+	c, err := NewV1ProductClient(server.URL, "synthetic-case6-key", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, o := range []V1ProductOptions{{Limit: -1}, {Limit: 10001}, {MaxRecords: -1}, {MaxRecords: 100001}, {Cursor: strings.Repeat("x", 4097)}, {Filters: map[string]*string{"limit": nil}}, {Filters: map[string]*string{"private/key": nil}}} {
+		if _, err := c.Page(context.Background(), "venues", o); err == nil {
+			t.Fatal("out-of-range/reserved/invalid options reached transport")
+		}
+	}
+	if calls != 0 {
+		t.Fatal("invalid options made requests")
+	}
+	if _, err := c.Health(context.Background()); err == nil || calls != 1 {
+		t.Fatal("redirect was followed or accepted")
+	}
+	for _, id := range []any{"sha256-" + strings.Repeat("a", 64), "live-" + strings.Repeat("b", 64), "sha256-" + strings.Repeat("a", 64) + "\n", "mutable-latest", true} {
+		page, _ := json.Marshal(map[string]any{"available": true, "records": []any{}, "snapshot_id": id, "next_cursor": nil})
+		client, _ := case6V1Server(t, map[string]string{"": string(page)})
+		_, err := client.IterRequired(context.Background(), "venues", V1ProductOptions{}, nil)
+		valid := id == "sha256-"+strings.Repeat("a", 64) || id == "live-"+strings.Repeat("b", 64)
+		if (err == nil) != valid {
+			t.Fatal("source disjoint/full-match snapshot grammar changed", id, err)
+		}
+	}
+}
+
+func TestOperatorCase6V1ActualBodyAggregatePageAndRecordCeilings(t *testing.T) {
+	for _, name := range []string{"body", "aggregate", "pages", "records"} {
+		t.Run(name, func(t *testing.T) {
+			calls := 0
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				calls++
+				switch name {
+				case "body":
+					_, _ = w.Write([]byte(strings.Repeat(" ", int(v1BodyCap)+1)))
+				case "aggregate":
+					body := fmt.Sprintf(`{"available":true,"records":[],"next_cursor":"%d"}`, calls)
+					_, _ = w.Write([]byte(body + strings.Repeat(" ", (1<<20)-len(body))))
+				case "pages":
+					_, _ = fmt.Fprintf(w, `{"available":true,"records":[],"next_cursor":"%d"}`, calls)
+				case "records":
+					_, _ = w.Write([]byte(`{"available":true,"records":[` + strings.Repeat(`{},`, v1RecordCap) + `{}],"next_cursor":null}`))
+				}
+			}))
+			defer server.Close()
+			c, err := NewV1ProductClient(server.URL, "synthetic-case6-key", nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			_, err = c.IterRequired(context.Background(), "venues", V1ProductOptions{}, nil)
+			if !errors.Is(err, ErrV1Contract) || errors.Is(err, ErrV1ProductUnavailable) {
+				t.Fatal("added resource cap did not fail as fixed contract error", name, err)
+			}
+			if name == "body" && calls != 1 || name == "aggregate" && calls != 65 || name == "pages" && calls != v1PageCap || name == "records" && calls != 1 {
+				t.Fatal("resource ceiling made unexpected extra requests", name, calls)
+			}
+		})
+	}
+}
+
+func TestOperatorCase6V1StreamingCallbackStopsWithoutNextRequestAndPreservesBigIDs(t *testing.T) {
+	c, calls := case6V1Server(t, map[string]string{"": `{"available":true,"records":[{"id":9007199254740993},{"id":2}],"next_cursor":"unused"}`})
+	stop := errors.New("synthetic callback stop")
+	count, err := c.IterRequired(context.Background(), "venues", V1ProductOptions{}, func(r map[string]any) error {
+		if r["id"] != json.Number("9007199254740993") {
+			t.Fatal("raw record integer lost precision")
+		}
+		return stop
+	})
+	if !errors.Is(err, stop) || count != 0 || len(*calls) != 1 {
+		t.Fatal("callback failure fetched/emitted additional source data", count, *calls, err)
+	}
+}
+
+func TestOperatorCase6V1MalformedDuplicateShapeAndUnknownNotesFailClosed(t *testing.T) {
+	for _, body := range []string{`{"available":false,"available":true,"records":[{"id":"private"}]}`, `{"available":true,"records":[]}{}`, `null`, `[]`, `{"available":true,"records":null}`, `{"available":true,"records":[1]}`, strings.Repeat("[", 66) + "0" + strings.Repeat("]", 66), `{"available":true,"records":[],"next_cursor":{}}`} {
+		c, calls := case6V1Server(t, map[string]string{"": body})
+		emitted := 0
+		_, err := c.IterRequired(context.Background(), "venues", V1ProductOptions{}, func(map[string]any) error { emitted++; return nil })
+		if !errors.Is(err, ErrV1Contract) || emitted != 0 || len(*calls) != 1 {
+			t.Fatal("malformed/duplicate response emitted data or retried", err, emitted)
+		}
+	}
+	c, _ := case6V1Server(t, map[string]string{"": `{"available":false,"records":[],"note":"synthetic-secret-marker token=private"}`})
+	page, err := c.Page(context.Background(), "events", V1ProductOptions{})
+	if err != nil || page["note"] != "producer reported unavailable" {
+		t.Fatal("raw arbitrary note escaped page projection")
+	}
+}

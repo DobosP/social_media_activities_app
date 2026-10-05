@@ -39,6 +39,8 @@ func (s *Server) publicSnapshotAvailable() bool {
 }
 func (s *Server) PublicDownload(w http.ResponseWriter, r *http.Request, a platform.Actor, name string) bool {
 	switch name {
+	case "service_worker":
+		serveMeetupsWorker(w)
 	case "robots_txt", "robots":
 		var out strings.Builder
 		out.WriteString("# Welcome, crawlers and AI agents. Public pages (venues, events, info) are open;\n# everything below is account- or cohort-scoped and must not be crawled.\n\n")

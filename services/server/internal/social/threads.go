@@ -20,6 +20,11 @@ type threadState struct {
 	Kind, Cohort, Status, Title string
 }
 
+// ErrPendingPostAppeal identifies the own-author restoration refusal only
+// after the post is locked and its current author and pending REMOVE are checked.
+// API callers retain the ordinary forbidden status without disclosure detail.
+var ErrPendingPostAppeal = fmt.Errorf("%w: pending post appeal", platform.ErrForbidden)
+
 func threadOwner(ctx context.Context, q platform.Querier, a Actor, kind string, id int64, lock bool) (threadState, error) {
 	if kind == "activity" {
 		v, err := activity(ctx, q, a, id, lock)
@@ -503,7 +508,7 @@ func (s *Service) DeletePost(ctx context.Context, a Actor, id int64) (bool, erro
 			return err
 		}
 		if hidden && moderationHidden && pending {
-			return platform.ErrForbidden
+			return ErrPendingPostAppeal
 		}
 		if hidden {
 			_, err = tx.Exec(ctx, `UPDATE social_post SET is_author_deleted=true WHERE id=$1`, id)

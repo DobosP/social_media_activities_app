@@ -110,6 +110,14 @@ func (s *Server) action(w http.ResponseWriter, r *http.Request, name string) {
 		s.topicAction(w, r, actor)
 		return
 	}
+	if name == "report" {
+		s.reportAction(w, r, actor)
+		return
+	}
+	if name == "saved_search_create" || name == "saved_search_delete" {
+		s.savedSearchAction(w, r, actor, name)
+		return
+	}
 	if name == "donate" {
 		s.donateAction(w, r, actor)
 		return
@@ -203,6 +211,14 @@ func (s *Server) action(w http.ResponseWriter, r *http.Request, name string) {
 		}
 		result["ok"] = true
 		platform.JSON(w, 200, result)
+		return
+	}
+	if name == "block_user" || name == "unblock_user" {
+		fallback := "/"
+		if name == "unblock_user" {
+			fallback = "/profile/"
+		}
+		http.Redirect(w, r, socialSafeNext(r, fallback), http.StatusFound)
 		return
 	}
 	if name == "donate" {

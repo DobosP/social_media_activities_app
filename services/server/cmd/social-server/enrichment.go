@@ -163,8 +163,14 @@ func googleEnricher(apiKey string, injected *http.Client) func(context.Context, 
 		if len(phone) > 50 || strings.ContainsAny(phone, "\r\n\x00") {
 			return result, errors.New("Google phone metadata is invalid")
 		}
-		// Live openNow and provider weekdayDescriptions never enter durable overlays.
-		return commands.EnrichResult{Resolved: true, Tags: map[string]any{"google": metadata}, Website: website, Phone: phone}, nil
+		// Keep literal live status available to the caller, outside durable tags.
+		var openNow *bool
+		if current, ok := details["currentOpeningHours"].(map[string]any); ok {
+			if value, ok := current["openNow"].(bool); ok {
+				openNow = &value
+			}
+		}
+		return commands.EnrichResult{Resolved: true, Tags: map[string]any{"google": metadata}, Website: website, Phone: phone, OpenNow: openNow}, nil
 	}
 }
 

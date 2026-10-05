@@ -9,7 +9,7 @@ cover the source management-command inventory:
 | Command | Options | Native behavior |
 | --- | --- | --- |
 | `ingest_places` | `source`, `city`, `bbox`, `overpass_url`, `overture_path`, `limit`, `dry_run`, `no_dedup`/`dedup`, `min_confidence`, `with_website`, `aggregate` | OSM query/conversion and source adapters; per-place atomic upserts, protected manual/confirmed edges and standing disputes preserved |
-| `ingest_events` | `ics_url`, `ics_file`, `place` | Bounded ICS read, native recurrence parsing, exact declared-taxonomy classification, source identity upsert |
+| `ingest_events` | `ics_url`, `ics_file`, `place`, `activity_type` | Bounded ICS read, ongoing/future filtering, native recurrence parsing, optional explicit taxonomy type, source identity upsert |
 | `enrich_places` | `city`, `source`, `limit`, `dry_run`, `google`, `wikidata` | Native hours parsing plus optional native provider callbacks; empty-only contact backfill and namespaced overlays |
 | `dedup_places` | `city`, `apply`, `max_distance_m`, `min_name_ratio` | Report by default; conservative source-priority merge, names normalized like the source, license/provenance retained |
 | `aggregate_unnamed_places` | `source`, `city`, `bbox`, `dry_run` | Closest public named sports-complex/park/school selection and dependency-safe edge aggregation |

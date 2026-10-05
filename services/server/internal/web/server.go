@@ -210,6 +210,11 @@ func (s *Server) page(w http.ResponseWriter, r *http.Request, name string) {
 		http.Redirect(w, r, target, 302)
 		return
 	}
+	if logged {
+		if notice := s.consumePostNotice(w, r, actor); len(notice) > 0 {
+			data["messages"] = notice
+		}
+	}
 	data["csrf"] = ""
 	if !(s.Config.SPA && r.URL.Query().Get("_data") == "1" && publicPages[name] && name != "home") {
 		data["csrf"] = s.Auth.EnsureCSRF(w, r)
@@ -224,7 +229,7 @@ func (s *Server) page(w http.ResponseWriter, r *http.Request, name string) {
 	data["google_site_verification"] = s.Config.SiteGoogleVerification
 	data["bing_site_verification"] = s.Config.SiteBingVerification
 	data["activity_svg"] = activitySVG
-	if s.Config.SPA {
+	if s.Config.SPA && !(name == "home" && !logged) {
 		data["csrf_token"] = data["csrf"]
 		payload, title, public, seo, buildErr := s.BuildSPA(r.Context(), r, actor, name, data)
 		if buildErr == nil {
@@ -251,10 +256,14 @@ func (s *Server) page(w http.ResponseWriter, r *http.Request, name string) {
 		}
 	}
 	if logged {
-		avatar, err := accounts.Avatar(r.Context(), s.DB, actor.ID)
-		if err != nil {
-			platform.Fail(w, err)
-			return
+		avatar, _ := data["avatar_uri"].(string)
+		if avatar == "" {
+			var err error
+			avatar, err = accounts.Avatar(r.Context(), s.DB, actor.ID)
+			if err != nil {
+				platform.Fail(w, err)
+				return
+			}
 		}
 		data["avatar_uri"] = avatar
 	}

@@ -42,7 +42,7 @@ func TestPolicyRejectsUnsafeCapsWithoutMutatingService(t *testing.T) {
 	if err := d.Validate(); err != nil || (Policy{}).WithDefaults() != d {
 		t.Fatal("source defaults drifted", err)
 	}
-	for _, p := range []Policy{{0, 256}, {-1, 256}, {65537, 256}, {65536, 1}, {65536, 257}} {
+	for _, p := range []Policy{{0, 256}, {-1, 256}, {65537, 256}, {65536, 0}, {65536, 257}} {
 		if s.ConfigurePolicy(p) == nil {
 			t.Fatal("unsafe cap accepted", p)
 		}

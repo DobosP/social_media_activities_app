@@ -40,7 +40,13 @@ func (r *Runner) SyncRoedu(ctx context.Context) (map[string]any, error) {
 		}); auditErr != nil {
 			return nil, auditErr
 		}
-		return map[string]any{"refused": true, "refreshed": false}, coverErr
+		result := map[string]any{"refused": true, "refreshed": false}
+		var refusal *ProductRefusalError
+		if errors.As(err, &refusal) {
+			result["withheld"] = refusal.Withheld()
+			result["diagnostic"] = refusal.Error()
+		}
+		return result, coverErr
 	}
 	summary, err := r.ApplyRoedu(ctx, pack, city)
 	if err != nil {

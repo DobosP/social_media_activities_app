@@ -4,6 +4,7 @@ package web
 // domain results into their small, explicit presentation models. Authorization
 // happens before a private thread, person or upload is loaded.
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -36,12 +37,41 @@ func socialRows(ctx context.Context, db platform.Querier, query string, args ...
 			return nil, err
 		}
 		var row map[string]any
-		if err = json.Unmarshal(raw, &row); err != nil {
+		decoder := json.NewDecoder(bytes.NewReader(raw))
+		decoder.UseNumber()
+		if err = decoder.Decode(&row); err != nil {
 			return nil, err
 		}
+		row = socialNumbers(row).(map[string]any)
 		out = append(out, socialModel(row))
 	}
 	return out, rows.Err()
+}
+
+// Keep exact database integer identities, including nested collections, while
+// retaining the integer/decimal types expected by the release templates.
+func socialNumbers(value any) any {
+	switch v := value.(type) {
+	case json.Number:
+		if n, err := v.Int64(); err == nil {
+			if int64(int(n)) == n {
+				return int(n)
+			}
+			return n
+		}
+		if n, err := v.Float64(); err == nil {
+			return n
+		}
+	case map[string]any:
+		for key, child := range v {
+			v[key] = socialNumbers(child)
+		}
+	case []any:
+		for i, child := range v {
+			v[i] = socialNumbers(child)
+		}
+	}
+	return value
 }
 
 func socialModel(row map[string]any) map[string]any {
@@ -316,9 +346,13 @@ func (s *Server) SocialView(r *http.Request, a platform.Actor, name string) (pon
 	}
 	if data != nil {
 		data["user"] = socialActor(a)
-		avatar, avatarErr := accounts.Avatar(r.Context(), s.DB, a.ID)
-		if avatarErr != nil {
-			return nil, "", true, avatarErr
+		avatar, _ := data["avatar_uri"].(string)
+		if avatar == "" {
+			var avatarErr error
+			avatar, avatarErr = accounts.Avatar(r.Context(), s.DB, a.ID)
+			if avatarErr != nil {
+				return nil, "", true, avatarErr
+			}
 		}
 		data["avatar_uri"] = avatar
 		data["user"].(map[string]any)["avatar_uri"] = avatar
@@ -487,6 +521,17 @@ func (s *Server) socialActivityDetail(r *http.Request, a platform.Actor) (pongo2
 		}
 		if err = s.socialAvatars(ctx, people); err != nil {
 			return nil, err
+		}
+		// Reuse only the actual viewer's base avatar from this fresh,
+		// authorized roster projection. This is presentation data, not a
+		// cached permission result or another person's profile/card avatar.
+		for _, person := range people {
+			if spaID(person) == a.ID {
+				if uri, ok := person["avatar_uri"].(string); ok && uri != "" {
+					data["avatar_uri"] = uri
+					break
+				}
+			}
 		}
 	}
 	data["members"] = members

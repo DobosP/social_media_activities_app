@@ -33,9 +33,6 @@ func (s *Service) enrichPlaces(ctx context.Context, input map[string]json.RawMes
 		return nil, err
 	}
 	if !in.DryRun {
-		if in.Google && s.Config.GoogleEnrich == nil {
-			return nil, missingDependency("Google enricher")
-		}
 		if in.Wikidata && s.Config.WikidataEnrich == nil {
 			return nil, missingDependency("Wikidata enricher")
 		}
@@ -68,6 +65,10 @@ func (s *Service) enrichPlaces(ctx context.Context, input map[string]json.RawMes
 		return nil, err
 	}
 	counts := map[string]int{"hours_parsed": 0, "hours_unparsed": 0, "hours_updated": 0}
+	google := in.Google && s.Config.GoogleEnrich != nil
+	if in.Google && !google {
+		counts["google_disabled"] = 1
+	}
 	for _, p := range places {
 		if p.raw == "" {
 			continue
@@ -91,12 +92,12 @@ func (s *Service) enrichPlaces(ctx context.Context, input map[string]json.RawMes
 			counts["hours_updated"]++
 		}
 	}
-	if !in.DryRun && (in.Google || in.Wikidata) {
+	if !in.DryRun && (google || in.Wikidata) {
 		ids := []int64{}
 		for _, p := range places {
 			ids = append(ids, p.id)
 		}
-		if err = s.enrichExternal(ctx, ids, in.Google, in.Wikidata, counts); err != nil {
+		if err = s.enrichExternal(ctx, ids, google, in.Wikidata, counts); err != nil {
 			return counts, err
 		}
 	}
@@ -125,9 +126,10 @@ func (s *Service) seedBooking(ctx context.Context, input map[string]json.RawMess
 }
 func (s *Service) ingestEvents(ctx context.Context, input map[string]json.RawMessage) (any, error) {
 	var in struct {
-		ICSURL  string `json:"ics_url"`
-		ICSFile string `json:"ics_file"`
-		Place   *int64
+		ICSURL       string `json:"ics_url"`
+		ICSFile      string `json:"ics_file"`
+		Place        *int64
+		ActivityType *int64 `json:"activity_type"`
 	}
 	if err := options(input, &in); err != nil {
 		return nil, err
@@ -141,6 +143,16 @@ func (s *Service) ingestEvents(ctx context.Context, input map[string]json.RawMes
 			return nil, err
 		}
 	}
+	if in.ActivityType != nil {
+		if *in.ActivityType < 1 {
+			return nil, platform.ErrInvalid
+		}
+		var id int64
+		if err := s.Runner.DB.QueryRow(ctx, `SELECT id FROM taxonomy_activitytype WHERE id=$1`, *in.ActivityType).Scan(&id); err != nil {
+			return nil, err
+		}
+	}
+	now := s.Runner.Config.Now()
 	var raw []byte
 	var err error
 	if in.ICSFile != "" {
@@ -161,13 +173,20 @@ func (s *Service) ingestEvents(ctx context.Context, input map[string]json.RawMes
 	if err != nil {
 		return nil, err
 	}
-	events, err := jobs.ParseICS(string(raw), s.Runner.Config.Now())
+	events, err := jobs.ParseICS(string(raw), now)
 	if err != nil {
 		return nil, err
 	}
 	count := 0
 	for _, event := range events {
-		err = platform.Transaction(ctx, s.Runner.DB, func(tx pgx.Tx) error { return importEvent(ctx, tx, event, in.Place) })
+		effective := event.Starts
+		if event.Ends != nil {
+			effective = *event.Ends
+		}
+		if effective.Before(now) {
+			continue
+		}
+		err = platform.Transaction(ctx, s.Runner.DB, func(tx pgx.Tx) error { return importEventWithType(ctx, tx, event, in.Place, in.ActivityType) })
 		if err != nil {
 			return map[string]int{"imported": count}, err
 		}
@@ -176,6 +195,10 @@ func (s *Service) ingestEvents(ctx context.Context, input map[string]json.RawMes
 	return map[string]int{"imported": count}, nil
 }
 func importEvent(ctx context.Context, tx pgx.Tx, event jobs.RawEvent, place *int64) error {
+	return importEventWithType(ctx, tx, event, place, nil)
+}
+
+func importEventWithType(ctx context.Context, tx pgx.Tx, event jobs.RawEvent, place, explicitType *int64) error {
 	identity := "ical:" + event.ExternalID
 	if event.ExternalID == "" {
 		identity = fmt.Sprintf("ical:%v:%s:%s", place, event.Title, event.Starts.Format("2006-01-02T15:04:05Z07:00"))
@@ -188,9 +211,13 @@ func importEvent(ctx context.Context, tx pgx.Tx, event jobs.RawEvent, place *int
 	if err != nil && err != pgx.ErrNoRows {
 		return err
 	}
-	typ, classifyErr := jobs.ClassifyActivity(ctx, tx, event.Title+" "+event.Description)
-	if classifyErr != nil {
-		return classifyErr
+	typ := explicitType
+	if typ == nil {
+		var classifyErr error
+		typ, classifyErr = jobs.ClassifyActivity(ctx, tx, event.Title+" "+event.Description)
+		if classifyErr != nil {
+			return classifyErr
+		}
 	}
 	if err == nil {
 		_, err = tx.Exec(ctx, `UPDATE events_event SET place_id=$2,activity_type_id=$3,title=$4,description=$5,starts_at=$6,ends_at=$7,url=$8,attribution=$9,license_name=$10,provenance_url=$11,updated_at=now() WHERE id=$1`, id, place, typ, event.Title, event.Description, event.Starts, event.Ends, external(event.URL), event.Attribution, event.License, external(event.Provenance))

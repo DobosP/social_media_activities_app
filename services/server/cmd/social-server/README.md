@@ -144,7 +144,7 @@ hooks; changes take effect at the shared domain boundary and retain safety gates
 | `ARRIVAL_WINDOW_BEFORE_HOURS` | 0..24; source 2 |
 | `ARRIVAL_WINDOW_AFTER_HOURS`, `DEPARTURE_WINDOW_AFTER_HOURS`, `ARRIVAL_RETENTION_HOURS` | 0..6 / 0..6 / 1..6; source 3 / 3 / 6; retention must cover after/departure windows |
 | `UNSAFE_REPORT_COOLDOWN_SECONDS` | 1..300; source 300; existing open report deduplication remains |
-| `MESSAGING_MAX_CIPHERTEXT_BYTES`, `MESSAGING_MAX_GROUP_MEMBERS` | 1..65536 / 2..256; source 65536 / 256 |
+| `MESSAGING_MAX_CIPHERTEXT_BYTES`, `MESSAGING_MAX_GROUP_MEMBERS` | 1..65536 / 1..256; source 65536 / 256 |
 | `MAX_REQUEST_BODY_BYTES`, `DATA_UPLOAD_MAX_MEMORY_SIZE` | 1..8388608; source 8388608; native data caps described below |
 | `MEDIA_IMAGE_QUALITY` | 0..100; source 0 selects source codec quality (AVIF64/WebP80) |
 | `MEDIA_SIGNED_URL_TTL`, `MEDIA_PRESIGNED_TTL` | 1..300 / 1..60 seconds; source 300 / 60 |

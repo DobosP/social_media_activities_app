@@ -31,7 +31,7 @@ func New(db *pgxpool.Pool, cursor platform.CursorCodec) *Service {
 	return &Service{DB: db, Cursor: cursor, Now: time.Now, MaxGroupMembers: 256, MaxCiphertextBytes: 65536, ConversationLimit: 100, MessagePageLimit: 50}
 }
 func (s *Service) maxMembers() int {
-	if s.MaxGroupMembers < 2 || s.MaxGroupMembers > 256 {
+	if s.MaxGroupMembers < 1 || s.MaxGroupMembers > 256 {
 		return 256
 	}
 	return s.MaxGroupMembers

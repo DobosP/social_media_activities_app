@@ -2,6 +2,7 @@ package catalog
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"net/http"
@@ -65,25 +66,34 @@ func parseEventQuery(q url.Values) (EventQuery, error) {
 	var err error
 	v.From, err = Bound(q.Get("from"), false)
 	if err != nil {
-		return v, err
+		if !errors.Is(err, platform.ErrInvalid) {
+			return v, err
+		}
+		return v, queryError("from")
 	}
 	v.To, err = Bound(q.Get("to"), true)
 	if err != nil {
-		return v, err
+		if !errors.Is(err, platform.ErrInvalid) {
+			return v, err
+		}
+		return v, queryError("to")
 	}
 	_, hasLon := q["near_lon"]
 	_, hasLat := q["near_lat"]
 	if hasLon && hasLat {
 		lon, e1 := strconv.ParseFloat(q.Get("near_lon"), 64)
 		lat, e2 := strconv.ParseFloat(q.Get("near_lat"), 64)
-		if e1 != nil || e2 != nil || math.IsNaN(lon) || math.IsNaN(lat) || math.IsInf(lon, 0) || math.IsInf(lat, 0) || math.Abs(lon) > 180 || math.Abs(lat) > 90 {
-			return v, platform.ErrInvalid
+		if e1 != nil || math.IsNaN(lon) || math.IsInf(lon, 0) || math.Abs(lon) > 180 {
+			return v, queryError("near_lon")
+		}
+		if e2 != nil || math.IsNaN(lat) || math.IsInf(lat, 0) || math.Abs(lat) > 90 {
+			return v, queryError("near_lat")
 		}
 		v.Lon, v.Lat = &lon, &lat
 		if raw := q.Get("radius_m"); raw != "" {
 			radius, err := strconv.ParseFloat(raw, 64)
 			if err != nil || math.IsNaN(radius) || math.IsInf(radius, 0) {
-				return v, platform.ErrInvalid
+				return v, queryError("radius_m")
 			}
 			v.Radius = &radius
 		}
@@ -116,7 +126,7 @@ func (s *Service) Event(ctx context.Context, id int64, q EventQuery) (any, error
 func (s *Service) events(w http.ResponseWriter, r *http.Request) {
 	q, err := parseEventQuery(r.URL.Query())
 	if err != nil {
-		platform.Fail(w, err)
+		failEventQuery(w, err)
 		return
 	}
 	where, args, order := s.policy().eventWhere(q)
@@ -141,7 +151,7 @@ func (s *Service) event(w http.ResponseWriter, r *http.Request) {
 	}
 	q, err := parseEventQuery(r.URL.Query())
 	if err != nil {
-		platform.Fail(w, err)
+		failEventQuery(w, err)
 		return
 	}
 	data, err := s.Event(r.Context(), id, q)
@@ -158,7 +168,20 @@ func PositiveID(raw string) (int64, error) {
 	}
 	return id, nil
 }
-func queryError(name string) error { return fmt.Errorf("%w: %s", platform.ErrInvalid, name) }
+
+type eventQueryError struct{ field string }
+
+func (e *eventQueryError) Error() string { return fmt.Sprintf("%s: %s", platform.ErrInvalid, e.field) }
+func (e *eventQueryError) Unwrap() error { return platform.ErrInvalid }
+func queryError(name string) error       { return &eventQueryError{field: name} }
+func failEventQuery(w http.ResponseWriter, err error) {
+	var queryErr *eventQueryError
+	if errors.As(err, &queryErr) {
+		platform.JSON(w, http.StatusBadRequest, map[string][]string{queryErr.field: {"Invalid query value."}})
+		return
+	}
+	platform.Fail(w, err)
+}
 
 func validateQuery(raw string) error {
 	query, err := url.ParseQuery(raw)

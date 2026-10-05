@@ -79,7 +79,7 @@ func configurePolicies(d *decoder, c *runtimeConfig) {
 	c.Jobs.SavedSearchNotifyWindow = d.seconds("SAVED_SEARCH_NOTIFY_WINDOW_SECONDS", 86400, 1, 86400)
 	c.MessagingPolicy = messaging.Policy{
 		MaxCiphertextBytes: d.integer("MESSAGING_MAX_CIPHERTEXT_BYTES", 65536, 1, 65536),
-		MaxGroupMembers:    d.integer("MESSAGING_MAX_GROUP_MEMBERS", 256, 2, 256),
+		MaxGroupMembers:    d.integer("MESSAGING_MAX_GROUP_MEMBERS", 256, 1, 256),
 	}
 	c.MediaPolicy = media.DefaultPolicyConfig()
 	m := &c.MediaPolicy

@@ -10,6 +10,7 @@ Native runtime index verified 2026-10-04.
 | Doc | What it covers |
 |---|---|
 | [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md) | Native runtime qualification, rollout/recovery, provider and legal launch gates. Feeds `STATUS.md`. |
+| [NATIVE_WINDOWS_TODO.md](NATIVE_WINDOWS_TODO.md) | Requested restart checkpoint, preserved evidence, remaining source cases and Windows resume steps. |
 | [FEATURES_BUILT.md](FEATURES_BUILT.md) | **Built features + their invariant gates** — the behavioral-contract catalog (moved out of `CLAUDE.md` 2026-07-02). Check before building anything "new". |
 | [ROADMAP.md](ROADMAP.md) | The original phased plan (D1–D10) + feature traceability. All deliverables shipped; kept for the map, not for status. |
 | [archive/COMPLETENESS_GAPS_2026-06.md](archive/COMPLETENESS_GAPS_2026-06.md) | Gap tracker for the audited 2026-06 waves — immutable; treat an unticked box as a hypothesis to verify against HEAD, not a specification (see [STATUS.md](../STATUS.md) §Open work). |

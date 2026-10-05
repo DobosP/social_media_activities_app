@@ -42,6 +42,12 @@ func (s *Server) view(r *http.Request, a platform.Actor, name string) (pongo2.Co
 	case "topic_preferences":
 		data, err := s.topicPage(r, a)
 		return data, "web/topic_preferences.html", err
+	case "report":
+		data, err := s.reportPage(r, a)
+		return data, "web/report.html", err
+	case "saved_searches":
+		data, err := s.savedSearchPage(r, a)
+		return data, "web/saved_searches.html", err
 	case "groups":
 		httpRedirect := pongo2.Context{"redirect": "/communities/"}
 		return httpRedirect, "web/communities.html", nil

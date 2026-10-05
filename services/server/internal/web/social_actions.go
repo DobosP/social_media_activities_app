@@ -437,7 +437,16 @@ func (s *Server) SocialAction(w http.ResponseWriter, r *http.Request, a platform
 	case "activity_post_edit", "group_post_edit":
 		err = s.Social.EditPost(ctx, a, id(r, "post_id"), r.PostForm.Get("body"))
 	case "activity_post_delete", "group_post_delete":
-		_, err = s.Social.DeletePost(ctx, a, id(r, "post_id"))
+		var moderationHidden bool
+		moderationHidden, err = s.Social.DeletePost(ctx, a, id(r, "post_id"))
+		if errors.Is(err, social.ErrPendingPostAppeal) {
+			s.redirectPostNotice(w, r, a, target, "p")
+			return true
+		}
+		if err == nil && moderationHidden {
+			s.redirectPostNotice(w, r, a, target, "d")
+			return true
+		}
 	case "activity_post_react", "group_post_react", "activity_post_dissent", "group_post_dissent", "activity_post_concern", "group_post_concern":
 		suffix := name[strings.LastIndex(name, "_")+1:]
 		if suffix == "react" {

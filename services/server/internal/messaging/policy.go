@@ -26,8 +26,8 @@ func (p Policy) Validate() error {
 	if p.MaxCiphertextBytes < 1 || p.MaxCiphertextBytes > 65536 {
 		return fmt.Errorf("MESSAGING_MAX_CIPHERTEXT_BYTES must be between 1 and 65536")
 	}
-	if p.MaxGroupMembers < 2 || p.MaxGroupMembers > 256 {
-		return fmt.Errorf("MESSAGING_MAX_GROUP_MEMBERS must be between 2 and 256")
+	if p.MaxGroupMembers < 1 || p.MaxGroupMembers > 256 {
+		return fmt.Errorf("MESSAGING_MAX_GROUP_MEMBERS must be between 1 and 256")
 	}
 	return nil
 }

@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "keepers": [
+    {
+      "source_name": "roedu_v1_product.go",
+      "archived_name": "roedu_v1_product.go.txt",
+      "sha256": "223d69080990dba5d09e97f3fc8cc8c8ead16cc5cc606d92af49de9c15231a3a",
+      "status": "scratch-only prototype; no runtime wiring; synthetic HTTP/race overlay only; original-case mappings pending"
+    },
+    {
+      "source_name": "roedu_v1_product_test.go",
+      "archived_name": "roedu_v1_product_test.go.txt",
+      "sha256": "37621efcc883e291f342688c94f60915ff99130bca3e74abbadcf45f0a40d382",
+      "status": "scratch-only prototype; no runtime wiring; synthetic HTTP/race overlay only; original-case mappings pending"
+    }
+  ],
+  "reason": "Unique unfinished bounded V1 prototype preserved as inert text for requested Windows continuation; not shipping Go source."
+}

@@ -20,8 +20,10 @@ func (s *Service) ImportLicensedPlaceCover(ctx context.Context, placeID int64, p
 	if parseErr != nil || source.Scheme != "https" || source.Hostname() != "commons.wikimedia.org" || source.User != nil || strings.TrimSpace(license) == "" || utf8.RuneCountInString(license) > 120 || utf8.RuneCountInString(attribution) > 255 || utf8.RuneCountInString(sourcePageURL) > 500 || utf8.RuneCountInString(alt) > 140 {
 		return 0, ErrRejected
 	}
-	var exists bool
-	if err = s.db.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM places_placecover WHERE place_id=$1)`, placeID).Scan(&exists); err != nil || exists {
+	var existingID int64
+	if err = s.db.QueryRow(ctx, `SELECT id FROM places_placecover WHERE place_id=$1`, placeID).Scan(&existingID); err == nil {
+		return existingID, nil
+	} else if !errors.Is(err, pgx.ErrNoRows) {
 		return 0, err
 	}
 	allowed, err := s.publicPlace(ctx, s.db, placeID)
@@ -50,6 +52,7 @@ func (s *Service) ImportLicensedPlaceCover(ctx context.Context, placeID int64, p
 			s.discard(ctx, key)
 		}
 	}()
+	created := false
 	err = platform.Transaction(ctx, s.db, func(tx pgx.Tx) error {
 		var locked int64
 		if err := tx.QueryRow(ctx, `SELECT p.id FROM places_place p WHERE p.id=$1 AND `+catalog.PolicyFromContext(ctx).PlaceSQL()+` FOR UPDATE`, placeID).Scan(&locked); err != nil {
@@ -58,6 +61,7 @@ func (s *Service) ImportLicensedPlaceCover(ctx context.Context, placeID int64, p
 		var existing int64
 		err := tx.QueryRow(ctx, `SELECT id FROM places_placecover WHERE place_id=$1`, placeID).Scan(&existing)
 		if err == nil {
+			id = existing
 			return nil
 		}
 		if !errors.Is(err, pgx.ErrNoRows) {
@@ -66,12 +70,13 @@ func (s *Service) ImportLicensedPlaceCover(ctx context.Context, placeID int64, p
 		if err = tx.QueryRow(ctx, `INSERT INTO places_placecover(place_id,source,uploaded_by_id,storage_key,content_type,byte_size,sha256,width,height,exif_stripped,attribution,license_name,source_page_url,alt_text,created_at,updated_at) VALUES($1,'wikimedia',NULL,$2,$3,$4,$5,$6,$7,true,$8,$9,$10,$11,now(),now()) RETURNING id`, placeID, key, manifest.Main.ContentType, manifest.Main.ByteSize, manifest.Main.SHA256, manifest.Main.Width, manifest.Main.Height, attribution, license, sourcePageURL, alt).Scan(&id); err != nil {
 			return err
 		}
+		created = true
 		if err = saveManifest(ctx, tx, "place-cover", id, manifest); err != nil {
 			return err
 		}
 		return platform.RecordAudit(ctx, tx, platform.Actor{}, "place.cover_resolved", fmt.Sprintf("places.place:%d", placeID), map[string]any{"source": "wikimedia", "license": license, "source_sha256": manifest.SourceSHA256})
 	})
-	if err == nil && id > 0 {
+	if err == nil && created {
 		published = true
 	}
 	return id, err

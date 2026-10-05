@@ -68,7 +68,7 @@ func (s *Service) Start(ctx context.Context, a platform.Actor, kind string, name
 			}
 			targets = append(targets, b)
 		}
-		if len(targets) == 0 || len(targets)+1 > s.maxMembers() || kind == "direct" && len(targets) != 1 {
+		if len(targets) == 0 || kind == "group" && len(targets)+1 > s.maxMembers() || kind == "direct" && len(targets) != 1 {
 			return platform.ErrInvalid
 		}
 		if kind == "direct" {
@@ -190,7 +190,11 @@ func (s *Service) serializeConversations(ctx context.Context, q platform.Querier
 			return nil, e
 		}
 		counts[p.conversation]++
-		if counts[p.conversation] > s.maxMembers() {
+		cap := s.maxMembers()
+		if out[p.conversation]["kind"] == "direct" {
+			cap = max(cap, 2)
+		}
+		if counts[p.conversation] > cap {
 			rows.Close()
 			return nil, platform.ErrInvalid
 		}
@@ -246,7 +250,14 @@ func (s *Service) conversation(ctx context.Context, q platform.Querier, a platfo
 func (s *Service) Conversation(ctx context.Context, a platform.Actor, id int64) (map[string]any, error) {
 	return s.conversation(ctx, s.DB, a, id)
 }
-func (s *Service) Conversations(ctx context.Context, a platform.Actor, query string, limit, offset int, guardian bool) ([]map[string]any, bool, error) {
+func (s *Service) Conversations(ctx context.Context, a platform.Actor, query string, limit, offset int, guardian bool, includePending ...bool) ([]map[string]any, bool, error) {
+	if len(includePending) > 1 {
+		return nil, false, platform.ErrInvalid
+	}
+	pending := true
+	if len(includePending) == 1 {
+		pending = includePending[0]
+	}
 	a, e := actor(ctx, s.DB, a.ID)
 	if e != nil {
 		return nil, false, e
@@ -265,6 +276,9 @@ func (s *Service) Conversations(ctx context.Context, a platform.Actor, query str
 	}
 	query = strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(query, "\\", "\\\\"), "%", "\\%"), "_", "\\_")
 	filter := `EXISTS(SELECT 1 FROM messaging_participant mine WHERE mine.conversation_id=c.id AND mine.user_id=$1 AND mine.state IN('active','invited'))`
+	if !pending {
+		filter = `EXISTS(SELECT 1 FROM messaging_participant mine WHERE mine.conversation_id=c.id AND mine.user_id=$1 AND mine.state='active')`
+	}
 	if guardian {
 		if a.Cohort != "adult" {
 			return nil, false, platform.ErrForbidden

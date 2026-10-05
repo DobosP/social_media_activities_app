@@ -19,3 +19,8 @@ advisory is explicitly preserved. The [final image gate](image-security.json) pa
 fixable HIGH/CRITICAL findings; original footprint measurements keep their measured IDs.
 
 Current implementation/activation status remains in STATUS.md, decisions in ADR-0032.
+
+The requested restart checkpoint has a separate [aggregate receipt](restart-checkpoint.json)
+and [Windows TODO](../../NATIVE_WINDOWS_TODO.md). Its source retirement remains incomplete;
+the fresh offline image audit is unverified. Unique unfinished client prototypes are preserved
+as [inert continuation keepers](continuation-keepers/manifest.json), not shipping source.

@@ -17,6 +17,8 @@ type EnrichResult struct {
 	Resolved       bool
 	Tags           map[string]any
 	Website, Phone string
+	// OpenNow is a transient provider result, never a durable overlay field.
+	OpenNow *bool `json:"-"`
 }
 
 func (s *Service) enrichExternal(ctx context.Context, ids []int64, google, wikidata bool, counts map[string]int) error {

@@ -104,7 +104,7 @@ func (s *Service) ReportHTTP(w http.ResponseWriter, r *http.Request) {
 		fail(w, ErrRate)
 		return
 	}
-	target, err := s.reportTarget(r.Context(), a, body.Type, body.ID)
+	target, err := s.ReportTarget(r.Context(), a, body.Type, body.ID)
 	if err != nil {
 		fail(w, platform.ErrNotFound)
 		return

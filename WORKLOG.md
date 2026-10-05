@@ -3,6 +3,41 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-05 — Requested restart checkpoint
+
+Valid until: Windows resumes this branch and supersedes the checkpoint — then treat as history.
+
+Human restart direction ended the active campaign. The current branch preserves993 verified original cases,
+1678 unresolved and0invalid of2671; strict retirement exits1 and every Python reference is retained.
+The broader frozen source batch restores exact web/report/saved-search/offline/deletion feedback, int64 HTML,
+venue/claim/access/brief/API, typed event query errors, operator/ICS/cover/export, privacy records/reports and
+messaging recipient/cap/current-key contracts. Materialized footer content is actual60→60 queries8→24,
+with exact article/footer/avatar positives; no query ceiling was raised. Guardian oversight block behavior
+and remaining list/history query ceilings are explicitly unclaimed. Independent05febd5 credential review is green.
+
+Fourteen affected race lanes pass586 top-level tests without skips: configuration59/accounts61/admin19/app28/
+catalog47/commands27/contracts5/export5/jobs64/media42/messaging47/safety49/social41/web92. Forty unchanged
+tests retain previous receipts (626/21 lanes). Source/hashes/three-module vet/race and source/package/linked
+audits pass; one unused required-module advisory remains. Source549 hashes were frozen and rechecked.
+`docs/reviews/native-go/restart-checkpoint.json` preserves aggregate exact named tests/log hashes and artifact route.
+
+Canonical Dockerfile fresh build failed because cached install layers were unavailable without network. The
+offline current Go1.27.1 CGO0/buildvcsfalse/trimpath/s-w executable was overlaid on exact retained runtime5ea84fca.
+Fresh imagec44143fdc56f7cde24460124e1c037b33ead934ed72a75b03b6283e17164e44a contains only one added server
+layer; runtime configuration/nonroot/profile/codecs/licenses/external frontend/templates payload remain.
+Real packaged health/ready/worker/schema200 and cleanSIGTERM0/noOOM pass on synthetic private PG/no host ports.
+The new image scan is unverified: three scanner setup attempts failed on temp/cache permissions before scan.
+No vulnerability-clean claim is made for this executable; the old clean image audit remains history.
+
+Remote main cd006e3abe028acb2ccf5be4552bc94aebc1d234 was fetched/verified, shared main remains clean.
+The existing worker branch receives a local reviewable checkpoint only; coordinator owns publication/main review.
+`docs/NATIVE_WINDOWS_TODO.md` carries exact queues/gaps/commands/Windows resume steps. Unique unpublished V1
+prototype source/tests are preserved as exact-byte inert keepers, never wired into runtime. No session IDs/raw
+transcripts/secrets/corpus/voice evidence enter Git. Owned smoke is stopped/exited0, synthetic DB/network retained
+for explicit task stop; no unmerged work/shared-cache cleanup. Human auth/privacy/safety and retirement gates remain.
+Final fleet doc gate: files53/dead_links0/stale_terms0/retired_verbs0/orphans0; budgets80/120/46/61 and
+whitespace pass. Owned synthetic DB is stopped and retained; no application/qualifier/auditor job remains running.
+
 ## 2026-10-05 — Independent auth admission binding repair
 
 Valid until: this repair is independently reviewed/requalified or superseded — then history.

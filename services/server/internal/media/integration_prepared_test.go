@@ -203,7 +203,7 @@ func TestNativeLicensedCoverPreservesCreditsExistingCoverAndWithdrawal(t *testin
 		t.Fatal("license provenance changed", err)
 	}
 	n := len(blobs.keys)
-	if other, err := m.ImportLicensedPlaceCover(ctx, place, sourceImage(t), "Other", "CC0", page, "Other"); err != nil || other != 0 || len(blobs.keys) != n {
+	if other, err := m.ImportLicensedPlaceCover(ctx, place, sourceImage(t), "Other", "CC0", page, "Other"); err != nil || other != id || len(blobs.keys) != n {
 		t.Fatal("existing cover changed", other, err)
 	}
 	visuals, err := m.PlaceVisuals(ctx, db, []int64{place})

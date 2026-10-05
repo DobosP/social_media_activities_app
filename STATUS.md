@@ -97,12 +97,12 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
-- Auth binding correction (ADR-0039): exact JSON parsing/canonical delegation and shared username
-  cleaning pass pinned-library, actual PG/replica/session and assembled-proxy proofs; hashes unchanged.
-  Fresh matching image remains pending. a693291 retains419 affected+65 unchanged tests/21 lanes,
-  zero skips and image5ea84fca/audit receipts. Its case gate640/2031/0 blocks retirement; ongoing
-  batches retain original source/tests. Exact receipts/corrections/unused advisory: WORKLOG.
-  Human auth/privacy/safety review and full source-case qualification still precede landing.
+- Restart checkpoint:993 verified/1678 unresolved/0invalid of2671; retirement gate exits1.
+  Source-frozen586 affected tests/14 lanes pass without skips;40 unchanged prior tests retain receipts.
+  Native source/hash/vet/race and source/package/linked audits pass. Offline imagec44143fd preserves
+  runtime5ea84fca, passes HTTP/lifecycle; its image scan is unverified after scanner setup failures.
+  Credential05febd5 independently closes admission binding; human auth/privacy review remains.
+  Existing branch is preserved for publication/resume; [Windows TODO](docs/NATIVE_WINDOWS_TODO.md).
 
 ## Standard verification
 Native race/vet + shared-source hashes; database/codec contracts require explicit disposable fixtures

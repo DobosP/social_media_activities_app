@@ -50,7 +50,7 @@ func TestRetirementSnapshotAtomicUTF8DigestAndFailurePreservesPrevious(t *testin
 		t.Fatal(err)
 	}
 	sum := sha256.Sum256(raw)
-	if digest != hex.EncodeToString(sum[:]) || !strings.Contains(string(raw), "Bibliotecă românească") || !strings.HasSuffix(string(raw), "\n") {
+	if digest != hex.EncodeToString(sum[:]) || !strings.Contains(string(raw), "Bibliotecă românească") || strings.HasSuffix(string(raw), "\n") {
 		t.Fatal("digest did not bind exact UTF8 published bytes")
 	}
 	var got map[string]any

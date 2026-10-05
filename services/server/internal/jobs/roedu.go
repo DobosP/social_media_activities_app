@@ -382,7 +382,8 @@ func (c *RoeduClient) Read(ctx context.Context, city string) (PackRead, error) {
 	seenCursor := map[string]bool{}
 	seenItem := map[string]bool{}
 	clean := true
-	withheldTotal := 0
+	withheldTotal := int64(0)
+	refusalConditions := uint8(0)
 	producerDirty := false
 	finishedPaging := false
 	for pageIndex := 0; pageIndex < 10000; pageIndex++ {
@@ -456,9 +457,10 @@ func (c *RoeduClient) Read(ctx context.Context, city string) (PackRead, error) {
 			if !text(problem, 4096, false) {
 				return result, errors.New("invalid producer error")
 			}
+			refusalConditions |= publicRefusalCondition(problem.(string))
 		}
 		producerDirty = producerDirty || len(producerErrors) > 0
-		withheldTotal += withheld
+		withheldTotal += withheldInt
 		clean = clean && withheld == 0 && len(producerErrors) == 0
 		items, ok := page["items"].([]any)
 		if !ok {
@@ -521,7 +523,7 @@ func (c *RoeduClient) Read(ctx context.Context, city string) (PackRead, error) {
 	}
 	result.Items = related
 	if len(related) == 0 && (withheldTotal > 0 || producerDirty) {
-		return result, ErrProductRefused
+		return result, productRefusal(withheldTotal, refusalConditions)
 	}
 	return result, nil
 }

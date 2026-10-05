@@ -45,6 +45,19 @@ func addMonths(start time.Time, n int) time.Time {
 	return time.Date(base.Year(), base.Month(), min(start.Day(), last), start.Hour(), start.Minute(), start.Second(), start.Nanosecond(), start.Location())
 }
 func ExpandRule(start time.Time, rule string, now time.Time) []time.Time {
+	return expandRule(start, rule, now, 90)
+}
+
+// ExpandRuleWithHorizon retains the bounded occurrence/count/iteration rules
+// while allowing an explicit finite operator horizon.
+func ExpandRuleWithHorizon(start time.Time, rule string, now time.Time, days int) ([]time.Time, error) {
+	if days < 1 || days > 4000 {
+		return nil, platform.ErrInvalid
+	}
+	return expandRule(start, rule, now, days), nil
+}
+
+func expandRule(start time.Time, rule string, now time.Time, days int) []time.Time {
 	parts := map[string]string{}
 	for _, token := range strings.Split(rule, ";") {
 		kv := strings.SplitN(token, "=", 2)
@@ -59,7 +72,7 @@ func ExpandRule(start time.Time, rule string, now time.Time) []time.Time {
 	interval := min(positive(parts["INTERVAL"], 1), 100000)
 	count := positive(parts["COUNT"], 0)
 	until, _ := icalDate(parts["UNTIL"])
-	floor, horizon := now.Add(-24*time.Hour), now.Add(90*24*time.Hour)
+	floor, horizon := now.Add(-24*time.Hour), now.Add(time.Duration(days)*24*time.Hour)
 	out := []time.Time{}
 	seen := 0
 	record := func(value time.Time) bool {
