@@ -71,7 +71,7 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 - Audit 2026-10-05 privacy fixes (G2, WORKLOG): group-thread @mentions never resolve (reference
   parity); v1 `after=` message history keeps the oldest unseen message; avatar uniqueness stays inside
   the cohort and only avatars keep a perceptual fingerprint (ADR-0044); live chat frames are metered per
-  socket and typing never evicts a socket.
+  socket and typing never evicts a socket; membership rows and logistics are co-member scoped (ADR-0046).
 - Audit 2026-10-05 auth/media/runtime fixes (G3, WORKLOG): unreachable web action cases are removed (IDP-6).
   Open: two agent-snapshot producers emit different values and only `jobs/snapshot.go` runs (GO-EXPORT-01).
 

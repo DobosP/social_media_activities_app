@@ -3,6 +3,20 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-05 — Membership rows and logistics co-member scoped (GO-PRIV-07)
+
+Valid until: `fix/go-membership-logistics-scope` is integrated or superseded — then treat as history.
+
+[ADR-0046](docs/adr/0046-membership-logistics-scope.md) (owner decisions 2026-10-05). `social.Membership()`
+and `membershipsList` (rows and count) add `membershipAudience`: the row's own user, or the activity owner
+or a current non-guardian member (co-organizers included) with no block either way with the row's member.
+Every other caller of these reads was checked (join/leave/presence return own rows; vote/admit voters are
+members or organizers). The reference `MembershipViewSet` stays cohort-wide (recorded as a defect).
+New TestPostgresMembershipReadsAreCoMemberScoped fails with the fix reverted (membership_scope_test.go:85,
+a non-member listed another activity's row). WSL Go 1.27.1, social_g2, code caf0602 on 778470d: lane social
+42 top-level pass, 0 skip, 0 fail; the blocked-pair rule (added after review on owner decision) is
+qualified with the stacked run below. Reviewer: APPROVE.
+
 ## 2026-10-05 — Live chat frames metered; typing never evicts a socket (GO-PRIV-04)
 
 Valid until: `fix/go-chat-typing-throttle` is integrated or superseded — then treat as history.
