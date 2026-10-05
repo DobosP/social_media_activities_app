@@ -295,8 +295,9 @@ const membershipColumns = `jsonb_build_object('id',m.id,'activity',m.activity_id
 
 // Membership rows (with live presence) are co-member scoped, not cohort-wide:
 // the row's own user, the activity owner, or a current non-guardian member
-// (which includes co-organizers). Owner decision 2026-10-05.
-const membershipAudience = `(m.user_id=$1 OR a.owner_id=$1 OR EXISTS(SELECT 1 FROM social_membership cm WHERE cm.activity_id=m.activity_id AND cm.user_id=$1 AND cm.state='member' AND cm.role<>'guardian'))`
+// (which includes co-organizers), never across a block either way, as the web
+// roster already hides blocked users. Owner decisions 2026-10-05 (ADR-0046).
+const membershipAudience = `(m.user_id=$1 OR ((a.owner_id=$1 OR EXISTS(SELECT 1 FROM social_membership cm WHERE cm.activity_id=m.activity_id AND cm.user_id=$1 AND cm.state='member' AND cm.role<>'guardian')) AND NOT EXISTS(SELECT 1 FROM safety_block mb WHERE (mb.blocker_id=$1 AND mb.blocked_id=m.user_id) OR (mb.blocker_id=m.user_id AND mb.blocked_id=$1))))`
 
 func (s *Service) Activity(ctx context.Context, a Actor, id int64) (json.RawMessage, error) {
 	if !assigned(a) {

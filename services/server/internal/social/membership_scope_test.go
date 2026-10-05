@@ -132,6 +132,24 @@ func TestPostgresMembershipReadsAreCoMemberScoped(t *testing.T) {
 		t.Fatalf("co-member vote status=%d body=%v", code, body)
 	}
 
+	// Co-members never see each other's rows across a block, either way; their
+	// own rows stay visible (owner decision 2026-10-05).
+	if _, err := s.DB.Exec(ctx, `INSERT INTO safety_block(blocker_id,blocked_id,created_at) VALUES($1,$2,now())`, member.ID, requester.ID); err != nil {
+		t.Fatal(err)
+	}
+	if rows := listed(member); rows[rid] != nil || rows[mid] == nil {
+		t.Fatalf("blocker saw the blocked co-member's row: %v", rows)
+	}
+	if rows := listed(requester); rows[mid] != nil || rows[rid] == nil {
+		t.Fatalf("blocked co-member saw the blocker's row: %v", rows)
+	}
+	if code, _ := detail(requester, mid); code != 404 {
+		t.Fatalf("blocked co-member read the blocker's presence status=%d", code)
+	}
+	if _, err := s.DB.Exec(ctx, `DELETE FROM safety_block WHERE blocker_id=$1 AND blocked_id=$2`, member.ID, requester.ID); err != nil {
+		t.Fatal(err)
+	}
+
 	// Cross-cohort stays invisible.
 	if rows := listed(child); len(rows) != 0 {
 		t.Fatalf("cross-cohort rows=%v", rows)
