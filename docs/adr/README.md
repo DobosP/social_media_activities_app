@@ -51,6 +51,7 @@ On conflict: `STATUS.md` > newest-dated ADR > every other doc.
 | 0041 | [report-eligibility-predicate](0041-report-eligibility-predicate.md) | accepted; owner decisions 2026-10-05; human safety review gates first deployment | 2026-10-05 |
 | 0043 | [direct-only-block-veto](0043-direct-only-block-veto.md) | accepted; owner decision 2026-10-05 (narrows SAFETY rule 2 to direct chats); human safety review gates first deployment | 2026-10-05 |
 | 0044 | [media-fingerprint-minimisation](0044-media-fingerprint-minimisation.md) | accepted; reference parity (audit GO-MEDIA-01/02); human privacy review gates first deployment | 2026-10-05 |
+| 0045 | [guardian-authority](0045-guardian-authority.md) | accepted; owner decisions 2026-10-05; human safety review gates first deployment | 2026-10-05 |
 | 0046 | [membership-logistics-scope](0046-membership-logistics-scope.md) | accepted; owner decisions 2026-10-05; human privacy review gates first deployment | 2026-10-05 |
 
 ⚠ **0009 is claimed twice** — this ledger exists so it does not happen again. Both files stay:

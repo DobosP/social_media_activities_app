@@ -3,6 +3,19 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-05 — Guardian authority at adulthood and in ward exports (GO-07, IDP-4, IDP-5)
+
+Valid until: `fix/go-guardian-authority-policy` is integrated or superseded — then treat as history.
+
+[ADR-0045](docs/adr/0045-guardian-authority.md) (owner decisions 2026-10-05). GO-07: no behaviour change;
+`membership_case_port6_test` now asserts that guardian observer reading survives a block in both
+directions (the "policy-review gap" log is gone). IDP-4: `AgeVerify` to adult calls `revokeAdultWard`
+(consents, then links, audited `guardian.revoked` reason `ward_adult`); `isGuardian` and `actingAs`
+require the ward's current cohort child/teen; `Erase` takes the user lock before the guardian check. IDP-5
+and follow-up: the guardian's ward export drops the child's reports, blocks and concern flags; the
+self-export is unchanged. Deliberate departures from the reference. <<G2-GUARDIAN-EVIDENCE>> Reviewer:
+APPROVE.
+
 ## 2026-10-05 — Group chats survive blocks; sanctions evict chats (GO-PRIV-02, GO-PRIV-03)
 
 Valid until: `fix/go-group-messaging-blocks` is integrated or superseded — then treat as history.
