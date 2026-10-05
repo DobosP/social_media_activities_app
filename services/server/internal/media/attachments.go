@@ -164,9 +164,12 @@ func sniffFile(path string) (string, error) {
 	return "image", nil
 }
 
-// AttachToPost is shared by REST and the web thread handler. It authorizes twice:
-// before codec/storage work and in the publishing transaction. Video admission
-// stores only quarantined source bytes and a pending row, then a worker finalizes.
+// AttachToPost attaches a file to an already-published post. Production code does
+// not call it: the web thread handler uses PrepareThreadAttachment and publishes
+// inside the post-creating transaction. Tests use it as a direct attachment path.
+// It authorizes twice: before codec/storage work and in the publishing transaction.
+// Video admission stores only quarantined source bytes and a pending row, then a
+// worker finalizes.
 func (s *Service) AttachToPost(ctx context.Context, a platform.Actor, postID int64, path, filename string, ttl *int64) (att Attachment, err error) {
 	defer func() { s.recordFailure(ctx, a, "attachment", err) }()
 	_, cohort, err := s.postUploadGate(ctx, s.db, a, postID)

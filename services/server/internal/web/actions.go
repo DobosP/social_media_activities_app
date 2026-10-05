@@ -154,33 +154,11 @@ func (s *Server) action(w http.ResponseWriter, r *http.Request, name string) {
 			return
 		}
 	}
+	// Account, public and social names have returned above through their own
+	// handlers; only the remaining API-backed actions shape a body here.
 	switch name {
 	case "block_user", "unblock_user":
 		body = map[string]any{"user_id": id(r, "pk")}
-	case "activity_support_companion":
-		body["brings"] = r.PostForm.Get("brings") == "on"
-	case "activity_set_supervision":
-		body["supervised"] = r.PostForm.Get("supervised") == "on"
-	case "activity_listing_toggle", "group_listing_toggle":
-		body = map[string]any{"listed": r.PostForm.Get("listed") == "on"}
-	case "group_ask":
-		body = map[string]any{"prompt": r.PostForm.Get("prompt")}
-	case "guardian_invite_create":
-		body = map[string]any{"username": r.PostForm.Get("ward_username"), "relationship": r.PostForm.Get("relationship")}
-	case "notification_preferences":
-		body = map[string]any{"muted_kinds": r.PostForm["muted"]}
-	case "access_preferences":
-		access := map[string]bool{}
-		for _, key := range []string{"needs_step_free", "needs_accessible_toilet", "needs_hearing_loop", "prefers_quiet"} {
-			access[key] = r.PostForm.Get(key) == "on"
-		}
-		body = map[string]any{"access": access}
-	case "account_delete":
-		if r.PostForm.Get("confirm") != "DELETE" && r.PostForm.Get("confirm") != "on" {
-			platform.Error(w, 400, "Confirm account deletion.")
-			return
-		}
-		body = map[string]any{}
 	}
 	_ = actor
 	value, response, err := s.call(r, spec.Method, substitute(spec.Path, r), body)

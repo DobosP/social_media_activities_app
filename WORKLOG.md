@@ -3,6 +3,24 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-05 — Unreachable web action cases removed; two descriptions corrected (IDP-6, GO-MEDIA-05, GO-EXPORT-01)
+
+Valid until: `fix/go-low-dead-code` is integrated or superseded — then treat as history.
+
+IDP-6: `web.action`'s generic switch held nine cases for names that `AccountAction` or `SocialAction` always
+answer first, including an account-deletion confirm gate the live erasure path never had; they are removed and
+the `actions` map entries stay (POST routing depends on them). Erasure is unchanged and matches the reference
+(GET preview, POST erases, no confirm field); new TestNativeAccountDeleteFormErasesWithoutConfirmField pins it
+(it passes before and after: a pin, not a regression test). GO-MEDIA-05: `AttachToPost` is called only by
+tests; its comment says so; it is not rewritten because its gates differ from the live prepare/publish path
+(pre-codec ownership check, kind gate, post row lock, post-commit URL signing). GO-EXPORT-01: the
+`export_agent_snapshot` job runs `jobs/snapshot.go`; the reviewed `export.Service` producer is unwired; the
+privacy gates are equivalent but emitted values differ (name fallback, timestamp fraction, slug length, credit
+trimming, one repeatable-read generation); `internal/export/README.md` now says so, and choosing one producer
+is open. Independent reviewer: APPROVE. WSL Go 1.27.1, fixture social_g3, code tree 6ea32d3 on base 82a2625:
+`scripts/check-native.sh` exit 0; lanes web 93 and media 42 top-level pass, 0 skip, 0 fail; `git diff --check`
+clean. Not run: other lanes (unaffected packages).
+
 ## 2026-10-05 — Group mentions and forward message history (GO-PRIV-05, GO-PRIV-08)
 
 Valid until: `fix/go-privacy-low` is integrated or superseded — then treat as history.

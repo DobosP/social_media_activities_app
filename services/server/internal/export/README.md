@@ -9,6 +9,9 @@ Files publish atomically and manifest.json publishes last. Manifest entries pin 
 UTF-8 bytes with SHA-256. Source caps remain 10,000 events, 50,000 venues and 2,000 activities;
 truncation is explicit. Taxonomy count is categories plus active types. All dates normalize to UTC Z.
 
-The host schedules and configures this producer; the standalone agentapi consumer continues to
-serve only the checked file contract. Synthetic tests verify privacy allowlists, exact hashes,
+This producer is not wired into the server: the `export_agent_snapshot` job runs
+`internal/jobs/snapshot.go`, which applies the same publication gates but differs in several
+emitted values (name fallback, timestamp fraction, slug length, credit trimming) and reads
+without one repeatable-read generation. Choosing one producer is open work (review item
+GO-EXPORT-01). The standalone agentapi consumer serves only the checked file contract. Synthetic tests verify privacy allowlists, exact hashes,
 generation consistency and taxonomy counts with actual baseline foreign keys.

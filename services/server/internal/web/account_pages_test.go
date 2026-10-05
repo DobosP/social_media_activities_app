@@ -16,6 +16,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -111,6 +112,32 @@ func TestNativeAccountPagesUseCompletePrivateContexts(t *testing.T) {
 	r := platform.WithActor(httptest.NewRequest("GET", "/account/export/?user_id=999999", nil), a)
 	if !s.AccountDownload(w, r, a, "account_export") || w.Code != 200 || !strings.Contains(w.Header().Get("Content-Disposition"), a.PublicID) || strings.Contains(w.Body.String(), "synthetic-not-a-real-token") {
 		t.Fatal("private export download boundary")
+	}
+}
+
+// The source delete page posts only its CSRF token after the GET preview;
+// erasure through the registered form route must not require a confirm field.
+func TestNativeAccountDeleteFormErasesWithoutConfirmField(t *testing.T) {
+	s, actor, _, _, mux := webCasePortFixture(t)
+	page := webCasePortHTML(t, mux, actor, "/account/delete/")
+	webCasePortContains(t, page, "Permanently delete my account")
+	webCasePortAbsent(t, page, `name="confirm"`)
+	w := webCasePort2Post(t, mux, actor, "/account/delete/", "/account/delete/", url.Values{})
+	if w.Code != 302 || w.Header().Get("Location") != "/" {
+		t.Fatalf("account erasure redirect: status %d location=%q body=%s", w.Code, w.Header().Get("Location"), w.Body.String())
+	}
+	cleared := map[string]bool{}
+	for _, cookie := range w.Result().Cookies() {
+		if cookie.MaxAge < 0 {
+			cleared[cookie.Name] = true
+		}
+	}
+	if !cleared["sessionid"] || !cleared["csrftoken"] {
+		t.Fatal("erasure kept session cookies", w.Result().Cookies())
+	}
+	var exists bool
+	if err := s.DB.QueryRow(context.Background(), `SELECT EXISTS(SELECT 1 FROM accounts_user WHERE id=$1)`, actor.ID).Scan(&exists); err != nil || exists {
+		t.Fatal("account not erased", exists, err)
 	}
 }
 func TestNativeDisplayPreferencesAnonymousAndFakeAgeCannotGrant(t *testing.T) {
