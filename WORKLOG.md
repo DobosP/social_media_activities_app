@@ -3,6 +3,66 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-06 — Bounded REST ledger triage after source qualification
+
+Valid until: serving/source declarations or accepted policies change — then re-triage.
+
+Read-only workers inspected qualifiedc27a99f: all26 social test_api declarations remain unmapped
+although routes exist; generic description/body error keys and transit400/403 differ from the
+frozen expectations. Booking has18 declarations (2covered/16unresolved), with existing routes and
+missing exact assertions/replacement mappings. Account export activity/membership/donations is an
+existing qualified exact match awaiting metadata review. Strict helper query equality, exact linked
+spend category and partner is_verified re-gating remain. Complete public finance currently flows
+through Ledger/paymentView without a full REST projection. Exact IDs/obligations and bounded order:
+`docs/reviews/native-go/rest-contract-plan.md`. No code/ledger edits or new test campaign were run.
+999/1672 remains frozen assertion coverage, not missing endpoint count or proof of REST completion.
+
+## 2026-10-05 — G1 combined canonical source qualified
+
+Valid until: serving source, dependencies, qualification scripts or runtime image changes — then requalify.
+
+Clean source `c27a99fd71051cfe4575e3db9faa008111c12f12`, run `9615f07cc770`, completed all22
+required gates. Canonical no-cache image: `sha256:34c1c2281d9fc96cf486dda8e88497ef5061e21a412c712d8ef61ca14b07031b`.
+The aggregate `docs/reviews/native-go/restart-checkpoint.json` replaces the old overlay/reused receipt:
+all21 fresh race/real-codec lanes705PASS/0SKIP/0FAIL, exact source/image/binary/tools and51 artifact hashes.
+Independent critic source/evidence APPROVE after independently counting every log and validating the completion.
+
+Pinned local Go1.27.1 archive SHA matches the handover; all3modules downloaded/verified once, then
+GOPROXY=off. Executed Node24.18.0, govulncheck1.8.0 and Trivy0.75.0. Each run used a fresh synthetic
+database on internal PostgreSQL16.15 Bookworm/PostGIS3.6.4/vector0.8.6;2GiB/2CPU, no published ports.
+All broad builds/runs held the fleet heavy-test.lock; memory floors held. Only task-owned disposable
+failed-run derivative binaries were reclaimed; their hashes and every initial receipt/log remain.
+Recovery keepers, backups, other owners' caches and unique unmerged work were not cleanup targets.
+
+Actual commands/results (the aggregate records all22 exit statuses and named log hashes):
+- `docker build --no-cache -t IMAGE .` and image migrate-only: pass. Explicit perl-base update installs
+ 5.36.0-7+deb12u4; Trivy0.75.0 `--severity HIGH,CRITICAL --ignore-unfixed --exit-code 1` passes with0fixable findings.
+- `scripts/check-native.sh GO`: hashes/format/three-module vet/race and4worker tests pass;
+ `scripts/test-native-gates.sh`:17/17 pass. `scripts/qualify-native.sh GO IMAGE NET SYNTHETIC_DSN SCRATCH`:
+ all21 lanes705 fresh top-level passes, zero skips/failures, actual AVIF/WebP/FFmpeg and read-only sources.
+- Node24 `npm ci && npm test && npm run build`: pass; initial JS+CSS36.71/40KiB gzip.
+- govulncheck1.8.0 source and package mode for server/authcore/agentapi, plus binary mode on the
+ CGO_ENABLED=0 trimpath symbol-retaining same-source twin: all7 exit0. Unimported required-module
+ GO-2026-5932 openpgp advisory remains separate from imported/reachable/linked findings.
+- Hardened exact-image private smoke14/14: user/uid10001, Python/Python3/pip absent, required codecs/prlimit;
+ read-only/CapEff0/no-new-privileges/no host ports;5HTTP endpoints200; SIGTERM0/noOOM. Fresh smoke DB migrated.
+- `check-contracts -summary`: expected exit1,2671 declarations/999 manifest claims/1672 unresolved/0invalid.
+ Claims are frozen assertion coverage, not1672 missing endpoints or complete runtime equivalence. Python stays.
+- `check_docs.py`: files53/all4defect counts0; whitespace clean. No hosted CI run claimed.
+
+The completed-run collector was independently checked: valid control accepted,18invalid cases rejected;
+optimized Python is refused; unique run/head/source/image identities, required artifacts/hashes and coarse
+filesystem timestamp boundaries are validated. The initial f19 image failure has no false completed receipt.
+
+Latest owner REST/API-only direction preserves this qualified Go serving/toolchain candidate separately
+from full Python reference retirement. Receipt-only docs do not change the qualified source objects;
+final landing review validates that closure and exact revision. Completed gates are not blindly restarted
+without new source/failure. A bounded read-only REST ledger triage prepares concrete assertion-port batches;
+no blanket1672-case rewrite, HTML parity campaign, generic archived V1 producer wiring or producer-pin change.
+No deployment/provider/account enablement/real ingestion/public data. Human first-deployment review and
+GO-RT-07/F1/other readiness gates remain. Unique preservation/manualActions branches, PR108 and owner
+Dependabot PRs remain held for explicit cleanup. Source handovers and failed scan evidence remain intact.
+
 ## 2026-10-05 — Combined fixture green; inherited Perl image advisory fixed
 
 Valid until: the runtime image or source changes — then requalify.

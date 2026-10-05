@@ -1,31 +1,54 @@
 {
-  "schema_version": 1,
-  "prior_commit": "05febd5003b3640ad57b5c335f356a57d7bba916",
+  "schema_version": 2,
+  "qualification_date": "2026-10-05",
+  "qualified_source_commit": "c27a99fd71051cfe4575e3db9faa008111c12f12",
+  "run_id": "9615f07cc770",
+  "source_objects_sha256": "3893401ea3528f035be43dd9eb74a61acf315d4fdadba7996c00b98ae77f8c69",
+  "source_paths": [
+    "services/server",
+    "services/authcore",
+    "services/agentapi",
+    "frontend",
+    "scripts",
+    "templates",
+    "apps/web/templates",
+    "locale",
+    "static",
+    "db",
+    "Dockerfile",
+    "Dockerfile.db",
+    ".dockerignore",
+    ".github/workflows"
+  ],
   "remote_main_verified": "cd006e3abe028acb2ccf5be4552bc94aebc1d234",
-  "source_base": "ce3d0e3ee9f180ce2e95140300b12582db9895d6",
   "source_gate": {
-    "total": 2671,
-    "verified": 993,
-    "unresolved": 1678,
-    "invalid": 0,
-    "exit_code": 1
+    "invalid_evidence": 0,
+    "total_source_cases": 2671,
+    "unresolved_cases": 1672,
+    "verified_source_cases": 999,
+    "exit_code": 1,
+    "claims_only": true,
+    "python_retirement_blocked": true
   },
   "qualification": {
-    "affected_tests": 586,
-    "affected_lanes": 14,
-    "zero_skips": true,
-    "unchanged_prior_tests": 40,
-    "total_with_reused": 626,
     "lanes": 21,
+    "passed": 705,
+    "skips": 0,
+    "failures": 0,
+    "all_fresh": true,
     "refreshed": [
       {
         "package": "configuration",
+        "passed": 62,
         "tests": [
           "TestNativeBackupDeploymentPipelineUsesPrivateScratchAndNativeUpload",
           "TestGoogleNativeEnrichmentStoresOnlyDurableSourceFields",
           "TestGoogleNativeProviderRejectsMalformedAndPrivateMetadata",
           "TestWikidataNativeProviderBatchesDeduplicatesAndBackfillsMissingWebsite",
           "TestConfiguredEnrichmentRemainsOptIn",
+          "TestHTTPServerKeepsShortServerWideTimeouts",
+          "TestExtendedDeadlineCarriesSlowUploadPastServerReadTimeout",
+          "TestTranscodeJobTimeoutScalesWithItsLimit",
           "TestCLIReportsStartupAndJobFailuresThroughMockAndCloses",
           "TestSentryConfigurationValidatesWithoutInitializingSDK",
           "TestOperatorCase2OvertureRawParquetInvalidRowsBBoxAndLimit",
@@ -81,10 +104,13 @@
           "TestAdministratorBootstrapAcceptsOnlySecretStdinBeforeEnvironment",
           "TestExplicitContainerDevelopmentListenerException"
         ],
-        "log_sha256": "8985cba8254114852519b141a73d87853179801c36b4ddbd9ce8036e84955198"
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "cba7f0e3b74417c9d23c1c08b826205ab92dab8b522801ce0ed609b4718b24d0"
       },
       {
         "package": "accounts",
+        "passed": 75,
         "tests": [
           "TestNativeEUDICryptographyAndDataMinimization",
           "TestNativePendingAccountSelfExportSettingsAndStyles",
@@ -119,6 +145,8 @@
           "TestPrivacyCasePort4GuardianOwnFlagWardListPatchAndStrangerVeto",
           "TestPrivacyCasePort4ConsentCurrentExpiredRevokedAndIdentityParticipation",
           "TestPrivacyCasePort4SelfGuardianInviteCannotCreateAuthority",
+          "TestGuardianAuthorityPolicyAdultWardRowRefusesLeftoverLink",
+          "TestGuardianAuthorityPolicyWardExportOmitsChildsOwnReports",
           "TestCasePortGuardianInviteCreationAndAcceptanceAuthority",
           "TestCasePortMutualGuardianLinkConsentAndDisabledOnboarding",
           "TestCasePortLatestAssuranceExpiryAndLegacyFallback",
@@ -126,6 +154,15 @@
           "TestRetirementGuardianGuardrailAuthorityValidationAndCanonicalStorage",
           "TestRetirementEUDIActualAgeBandAndConsentMatrix",
           "TestRetirementEUDIHolderProofAdversarialMatrix",
+          "TestLoginFailureTableFullNeverDeniesFreshPair",
+          "TestLoginPeerCapThrottlesSprayerNotOtherPeer",
+          "TestLoginPOSTOversizePasswordCreatesNoRows",
+          "TestLoginPOSTSuccessLeavesNoFailureRow",
+          "TestAuthAttemptTableFullStillAdmitsFreshPeer",
+          "TestAuthAttemptScopesIPv6PrefixAndLogoutExempt",
+          "TestOAuthFlowsCappedPerPrefixNotGlobally",
+          "TestRequirePeerMarkerRefusesUnmarkedAttemptsAndFlows",
+          "TestSweepAuthStateRemovesOnlyExpiredAndUnreserved",
           "TestLoginCredentialParserRejectsAliasesDuplicatesAndDelegatesSamePair",
           "TestLoginPOSTPaddingReplicasAndAliasBodiesCannotEscapeLockedPair",
           "TestLoginFailuresFixedFirstFailureWindowPairNormalizationAndReplicaReset",
@@ -142,18 +179,25 @@
           "TestRetirementPostgresProfileInterestNodeQueryGrowth",
           "TestAccountRatePolicyInvalidRefusesBeforeDatabase",
           "TestPostgresAccountRatePoliciesSharedBoundedAndFixedExpiry",
+          "TestObtainTokenSharesFailedLoginCounter",
+          "TestObtainTokenSuccessClearsFailuresAndOversizeCreatesNoRows",
+          "TestObtainTokenRefusesCrossSiteBrowserRequestsBeforeAnyRow",
           "TestCoverageCorrectionActualInterestSetterRefreshesChosenAndPreservesNoMintAndSalt",
           "TestCoverageCorrectionSelfErasureUUIDOnlyAuditAndValidChain",
           "TestCoverageCorrectionExportOwnReplyAnnouncementAndStrictProjection",
           "TestCoverageCorrectionExportNewestCapPreservesChronologicalBodyOrder",
           "TestCoverageCorrectionWardExportNeverReleasesWithdrawnWordsToGuardian"
         ],
-        "log_sha256": "2f4e3462e7702cc99efac3aed63b9d9c5f813908f8c528cbaffc8255dee8a79c"
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "ba5ef527255c85a84baad38385006c89e04a56ba044699e84d0e368a7f358989"
       },
       {
         "package": "admin",
+        "passed": 20,
         "tests": [
           "TestNativeOperatorAllSourceModelSummariesAndFreshStaffGate",
+          "TestNativeConsoleRequiresAdministrator",
           "TestNativeOperatorCuratedDataAndPublicationForeignKeys",
           "TestNativeOperatorReviewedCatalogActionsAndImmutableIdentityLedgers",
           "TestNativeOperatorProposalPublishRejectAreAudited",
@@ -173,14 +217,21 @@
           "TestNativePermissionsReductionPreservesConsentAndPrivateBoundaries",
           "TestNativePermissionsHTMLManagerVisibilityCSRFAndStrictForm"
         ],
-        "log_sha256": "923165cd70b5f8733900ab217b3e75d488cac61ef38bc24cf9449a1855c957a1"
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "6892572e6452b244ac77a2ace59f6b0b562ae6b2beabd985939b8b275fbccfd1"
       },
       {
         "package": "app",
+        "passed": 35,
         "tests": [
           "TestMultipartCSRFPeekPreservesStreamingBytes",
           "TestAllowedHostBoundary",
           "TestNativeApplicationMuxAndAccountLifecycle",
+          "TestNativeLogoutNeverThrottledAndSignupCapIsPerPrefix",
+          "TestNativeCredentialSubtreeVariantsReachNoVerdict",
+          "TestNativeAuthMarkerCoversEveryPinnedAttemptRoute",
+          "TestNativeUploadDeadlinesReachConnectionOnlyForAdmittedUploads",
           "TestPostgresNativeAppTCPRefusesBodyWithoutUpload",
           "TestAssembledAppReporterCapturesRecoveredPanicWithoutPrivateFields",
           "TestAssembledAppReporterCaptures5xxWhenRequestLoggingIsDisabled",
@@ -205,14 +256,76 @@
           "TestNativeClassicHTMLThreadVideoAboveEightMiB",
           "TestNativeRealHTTPProxyTransportRequiresConfiguredPeer",
           "TestSourceLoginAssembledReplicasBindCanonicalCredentialAndFailurePair",
-          "TestSourceLoginAssembledAppNormalizesTrustedPeerAndSharesFailures"
+          "TestSourceLoginAssembledAppNormalizesTrustedPeerAndSharesFailures",
+          "TestThrottledPeerIsAnsweredFromPrefilterWithoutDatabase",
+          "TestUploadDeadlineClassesFollowBodyCap",
+          "TestObservedResponseCarriesExtendedUploadDeadline"
         ],
-        "log_sha256": "554d6420b84e604d649a0d4337cf2743ca2e86dc04113027e3acbea4dc506dba"
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "800a9c90196ce2bceab2bd533726144de89ca8ce92f501f91dd68ef282a2f4e7"
+      },
+      {
+        "package": "backup",
+        "passed": 5,
+        "tests": [
+          "TestNativeBackupSignedUploadDownloadAndScopedProbe",
+          "TestNativeBackupNeverOverwritesExistingDumpOrDownload",
+          "TestNativeBackupRejectsFilesKeysAndConfigurationWithoutIO",
+          "TestNativeBackupCorruptionAndEncryptionFailureRemovePartialRecovery",
+          "TestNativeBackupTimeoutCancellationRedirectAndNoRetries"
+        ],
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "f1c0f885174b5aa0ccffe4ceb5572e169dc9dce4767647f97e7e90f8d1dd0cb7"
+      },
+      {
+        "package": "booking",
+        "passed": 7,
+        "tests": [
+          "TestNativeBookingPaginationFreshEligibilityAndConcurrentCancel",
+          "TestRESTProviderPreservesOpaqueNumericReferenceAndDoesNotRedirect",
+          "TestNativeGuardianBookingRequiresCurrentSupervisoryBasis",
+          "TestBookingRequestSerializerDefaultsAndLocalTimes",
+          "TestRESTProviderDoesNotReplayAmbiguousBooking",
+          "TestRESTProviderShapeAndBoundaries",
+          "TestNativeBookingOwnershipAndEligibility"
+        ],
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "95dd38a9e3d571e0e09347b9eb7eb3a92248f801e3a3da20c1cc4f1376c98c4c"
+      },
+      {
+        "package": "budgets",
+        "passed": 16,
+        "tests": [
+          "TestPrefilterServesDenialUntilExpiry",
+          "TestPrefilterCollisionOverwritesWithoutRefusing",
+          "TestPrefilterConcurrentUse",
+          "TestPolicyAndMissingStateFailClosed",
+          "TestReservationIsBoundedAndPreservesFailure",
+          "TestPostgresBootstrapAndAdoption",
+          "TestPostgresMultiReplicaSlidingAndPrivacy",
+          "TestPostgresCapacityAndExpiry",
+          "TestPostgresReplayLowPoolFreshGatesAndFailedAttempts",
+          "TestPostgresCSPReplicaIngressKeepsReportsNondurable",
+          "TestPostgresCardinalityCostEvidence",
+          "TestPostgresMemoryBoundAndConcurrentExpiryErasure",
+          "TestAnonymousSaturationCannotStarveActorOrNewKeys",
+          "TestEvictionOnlyWithinFamilyAndCountersStayExact",
+          "TestTruncateResetsFamilyCounters",
+          "TestAdmissionDoesNotPruneOnRequestPath"
+        ],
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "20cf695a9545df6f021140fc3e5e7505f69079b88ed174185ea5a4ff8b1a0c6d"
       },
       {
         "package": "catalog",
+        "passed": 48,
         "tests": [
           "TestCasePortPlainPlaceBriefStatesAddressAndCountFreeList",
+          "TestPostgresFullActorFamilyStillAdmitsNewUsersEventReport",
           "TestOpeningHoursCommonGrammarAndUnknown",
           "TestEventBoundsUseLocalCalendarDays",
           "TestPostgresNativeReferenceSeedIsIdempotent",
@@ -260,10 +373,13 @@
           "TestEventSourceCaseReportOverlaySurvivesActualSyntheticReingest",
           "TestEventSourceCaseAuthenticatedLegacyAPIVisibilityCreditAndFacts"
         ],
-        "log_sha256": "2095888d01de5d2cbe8f1f39c524bdb8408140b7b8576be9c2fa57453d3888dd"
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "23cf02eff013040341d4c8cfcc266430d8abaf28459b521806345f30344e5c7a"
       },
       {
         "package": "commands",
+        "passed": 27,
         "tests": [
           "TestNativeBootstrapStrictCredentialInputAndPrivateOutput",
           "TestNativeManualSourceConversionAndQuerySafety",
@@ -293,10 +409,13 @@
           "TestPostgresOperatorCase5ICSOngoingBoundaryAndInvalidExplicitType",
           "TestPostgresOperatorCase5DisabledGoogleSkipsAndContinuesHours"
         ],
-        "log_sha256": "9c0f26a6f90a02882479a245a428709ee6d93aba60864f14fd26e3fc65d434d1"
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "4cfbaaa17e2d1e253a44cb4c637db3ad3bf13c3741aa46840c3e4784e5a7f5cc"
       },
       {
         "package": "contracts",
+        "passed": 5,
         "tests": [
           "TestInventoryDoesNotExecuteOrCollectQuotedReferenceSource",
           "TestCoverageGateDoesNotTurnCountsOrDeclaredMappingsIntoVerification",
@@ -304,10 +423,38 @@
           "TestOperatorCase6FrozenGeneratedClientBodyMatchesEmbeddedStamp",
           "TestOperatorCase6ExportAndIndependentSidecarSourceExcludePrivateModelTypes"
         ],
-        "log_sha256": "60b2fe21bdb6645a067f94ea46e2ad66f79f2b2ccf0cb8080d36ad702a3181d4"
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "c2da44d051a2dcc5f7c0f0055fc112562a3a358f1390c2459967ef7e4a4b0cba"
+      },
+      {
+        "package": "discovery",
+        "passed": 2,
+        "tests": [
+          "TestDeterministicDeckShuffle",
+          "TestPostgresDiscoveryPrivacyCursorDeckAndFeed"
+        ],
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "e22a94d7b135cf085a78138c3812aa1f186b6db7a31e2c0fcdc557c67fc860a5"
+      },
+      {
+        "package": "donations",
+        "passed": 5,
+        "tests": [
+          "TestNativeStripeCheckoutProtocolAndSafeRetry",
+          "TestNativeFinancialLedgerSemanticsAndOwnReceipts",
+          "TestNativeStripePaidCompletionAndReplay",
+          "TestStripeSignatureProofAndReplayWindow",
+          "TestNativeDonationWebhookAndPublicLedger"
+        ],
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "06abb4ad8fa4a40987c495768024c3091e11baa78bbf0afdd12ce29ff7955808"
       },
       {
         "package": "export",
+        "passed": 5,
         "tests": [
           "TestPostgresNativeExporterToAgentAPIExecutableContract",
           "TestOperatorCase6ExportAtomicExactCompactBytesAndFailedReplace",
@@ -315,10 +462,13 @@
           "TestSlugAndUTCSourceContract",
           "TestPostgresSnapshotProducerPrivacyAndIntegrity"
         ],
-        "log_sha256": "eb0aae0c0a7e40784993c7b92e4fc81965100522263b9359d5da9413ffed3c17"
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "28b8605aeb6181818c6608db80ab6dc277f405f8b57b7e24e51f66970f6fa364"
       },
       {
         "package": "jobs",
+        "passed": 67,
         "tests": [
           "TestDeferredErasureNeverDropsKeysAfterChunk",
           "TestPythonROEDUPrivacyValidatorGolden",
@@ -329,6 +479,8 @@
           "TestICSRecurringMonthReanchorAndBoundedExpansion",
           "TestDueJobsHaveNativeHandlersAndDisabledSources",
           "TestDueJobTimeoutDoesNotStarveLaterDuties",
+          "TestFeedExternalIDFitsColumnAndStaysStable",
+          "TestPostgresFeedOverlongUIDReplaysWithoutFailingFeed",
           "TestIndexNowRejectsInvalidJobBoundsBeforeDatabaseOrHTTP",
           "TestNativeROEDUManualOptionsDryRunThresholdAndExplicitRollback",
           "TestNativeCommonsManualDryRunAndRecheckOptions",
@@ -383,13 +535,21 @@
           "TestRetirementROEDUHTTPResponseBounds",
           "TestRetirementSnapshotDisabledDoesNotWrite",
           "TestRetirementSnapshotAtomicUTF8DigestAndFailurePreservesPrevious",
-          "TestRetirementPostgresAgentSnapshotPublicWorld"
+          "TestRetirementPostgresAgentSnapshotPublicWorld",
+          "TestManualVideoDrainDeadlineCoversItsLeaseBudget"
         ],
-        "log_sha256": "78a41a6837deff83a41e9c6e9a478120fa68225853b0c7023299a11a68bfbbfd"
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "43f4425ee8d5f8bf3208f53800ee372c7e1db5afbd1ca21989a12e09ff6cdc6f"
       },
       {
         "package": "media",
+        "passed": 54,
         "tests": [
+          "TestPostgresBusyAvatarUploadSpendsNoAttempt",
+          "TestVideoSlotsNeverBlockImageOrPDFWork",
+          "TestFullImageQueueIsBoundedBusyRefusal",
+          "TestBusyCodecQueueIsRetryable503",
           "TestNativeProfileHashPNGWebPAVIFAndBounds",
           "TestHeaderDimensionsAndEXIF",
           "TestHeaderWebPAndAVIF",
@@ -415,6 +575,8 @@
           "TestRetirementManagedScannerActualHTTPVerdictMatrix",
           "TestNativeBackupSignerScopesAndAuthenticatedEncryptionMetadata",
           "TestPrivateS3EncryptionIsSignedAndVirtualAddressingPreservesKeys",
+          "TestPostgresVideoDrainTakesNoClaimItsDeadlineCannotFinish",
+          "TestExhaustedStaleVideoLeaseHeldWithoutBlockingQueue",
           "TestRetirementVideoProbeMatrix",
           "TestRetirementEphemeralPermanentAndFloorCases",
           "TestRetirementExpiredMediaEvidencePreservationMatrix",
@@ -429,14 +591,23 @@
           "TestPostgresOperatorCase5ExistingCoverRaceReturnsIDAndDiscardsStaging",
           "TestPostgresMediaAuthorizationAndLifecycle",
           "TestPostgresVideoWithheldReadyAndEvidence",
+          "TestNativeProfileUniquenessAllowsSameImageAcrossCohorts",
+          "TestNativeProfileNearDuplicateRejectedWithinCohortOnly",
+          "TestNativeNonProfileMediaStoresNoFingerprint",
+          "TestNativeMediaSchemaScrubsStoredNonProfileFingerprints",
+          "TestPostgresPurgePagesPastHeldExpiredEvidence",
           "TestRootAuditCorrectionDuplicateProfileRejectsAndRollsBackUploader",
           "TestRootAuditCorrectionDistinctMemberVideoPendingThenReady",
-          "TestRootAuditCorrectionSameUploaderReportActionedThenDismissedReleasesBlob"
+          "TestRootAuditCorrectionSameUploaderReportActionedThenDismissedReleasesBlob",
+          "TestPostgresStreamSizesWriteDeadlineToServedBytes"
         ],
-        "log_sha256": "b26bfe7572e04f15c0d438248168784cb2e27af5eade15e848ba1d4c9dd56a83"
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "d61ef3225b969fd639cf0ba5d785067dc2acda9598199c2a9a9a976faf422929"
       },
       {
         "package": "messaging",
+        "passed": 60,
         "tests": [
           "TestCasePort3CiphertextByteCapsAndExactRecipientBoundaryPersistOnlyValid",
           "TestCasePort3MissingWrappedKeyRefusesRealWriteWithoutRows",
@@ -452,9 +623,18 @@
           "TestCasePortMessagingStaleCohortCannotAcceptOrSend",
           "TestCasePortGuardianRevocationPrunesActualObserver",
           "TestCasePortCiphertextAndExactRecipientStorage",
+          "TestPostgresGroupBlockLeavesGroupWorking",
+          "TestPostgresDirectBlockVetoesOnlyWhileBlockerIsActive",
+          "TestPostgresAdminRemovesMemberRegardlessOfBlocks",
+          "TestPostgresModerationSuspensionEvictsConversations",
+          "TestPostgresDirectReinviteAfterLiftedSuspension",
+          "TestPostgresLapsedPeerConsentDoesNotStopGroupSend",
+          "TestPostgresExpiredGuardianAssuranceDoesNotStopChildren",
+          "TestGuardianAuthorityPolicyAdultReverificationRevokesGuardianship",
           "TestCasePort3GuardianEnrollmentAuthorityNegativeMatrix",
           "TestCasePort3GuardianTransparentReadonlyKeysAndActualAPI",
           "TestCasePort3MessagingFreshReadVetoesAndDisappearingAuthority",
+          "TestPostgresV1AfterHistoryKeepsOldestPendingMessage",
           "TestRetirementGroupInvitationDeclineAndAdministratorWalls",
           "TestRetirementVerificationRefusesWrongMissingAndCrossCohortKeys",
           "TestRetirementUntimedCiphertextRetentionBackstopAndWrappedKeyCleanup",
@@ -476,20 +656,57 @@
           "TestPolicyTightensCiphertextAndRecipientAdmission",
           "TestPolicyRejectsUnsafeCapsWithoutMutatingService",
           "TestPostgresPolicyGroupAndCiphertextCaps",
+          "TestPostgresPostQueriesAreMembershipIndependent",
           "TestCoverageCorrectionActualMessageReadsUseRecipientSpecificKeys",
           "TestCoverageCorrectionReportPersistsHarassmentExcerptWithoutAuditContent",
+          "TestMessagingSourceCaseV1ConversationListQueryCeilingFive",
+          "TestMessagingSourceCaseV1MessageHistoryQueryCeilingSeven",
           "TestRetirementPostgresMessagingHistoryAndGuardianQueryGrowth",
           "TestMessagingRatePolicyInvalidRefusesBeforeDatabase",
           "TestPostgresMessagingRatePoliciesPreserveReuseAndFailedAttempts",
           "TestPrivacyCasePort6KeyFingerprintCanonicalOrderingAndChangedKey",
           "TestPrivacyCasePort6ActualVerificationAPIReflectsAndRejectsBadFingerprint",
           "TestPrivacyCasePort6MessagingUserRefSharesCanonicalInterestAndEmptyAvatar",
-          "TestPrivacyCasePort6ActualWebsocketRelayEchoAndExactRecipientSet"
+          "TestPrivacyCasePort6ActualWebsocketRelayEchoAndExactRecipientSet",
+          "TestPostgresPlainThreadTypingFloodStaysBounded"
         ],
-        "log_sha256": "e40a13bb04646bb9a174c4912ad9ab6f09da96c1799877880b6c6e9189ca6d36"
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "012b540f9cd1b8179be4789768ed16e4ae9ccf9f7572e74c5b140f774f964793"
+      },
+      {
+        "package": "notifications",
+        "passed": 4,
+        "tests": [
+          "TestNativeNotificationMuteChokepointAndProtectedRetention",
+          "TestRetirementPostgresOrganizerPrepNudgeMatrix",
+          "TestRetirementPostgresNotificationInboxQueryGrowth",
+          "TestNativeNotificationOwnershipAndCursor"
+        ],
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "5161412bc09842cb4658222165b9810d58fba6afd0a5a011d523f4f79feaf7cc"
+      },
+      {
+        "package": "recommendations",
+        "passed": 8,
+        "tests": [
+          "TestRetirementPostgresSavedSearchValidationAndDuplicateDimensions",
+          "TestRetirementPostgresSavedSearchActivityFilterMatrix",
+          "TestPostgresSavedSearchRatePoliciesRetainDuplicateAndFailedAdmissions",
+          "TestHashEmbeddingNormalizedAndDeterministic",
+          "TestDistanceAndAccessAreSoftOnly",
+          "TestPostgresPreferencesColdStartAndRankedSafety",
+          "TestPostgresSavedSearchOwnershipAndOnceOnlyMatching",
+          "TestPostgresGuardianTopicSteeringIsLinkedChildOnly"
+        ],
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "cd57d6acdee431f7879f9b6274f642cbc849466d6fdc610e52acc5e3c04a4715"
       },
       {
         "package": "safety",
+        "passed": 56,
         "tests": [
           "TestRetirementAppealInputOwnershipAndDecidedReplay",
           "TestRetirementSanctionCommitsWhenSubjectNotificationFails",
@@ -504,6 +721,7 @@
           "TestRetirementPostgresModerationTriageQueryGrowth",
           "TestSafetyRatePolicyInvalidRefusesBeforeDatabase",
           "TestPostgresSafetyRatePoliciesFixedWindowAndOverflowBound",
+          "TestPostgresBlockBudgetSharedAndBeforeTargetLookup",
           "TestPostgresUnsafeRatePolicyKeepsRepeatFreeAndShared",
           "TestPrivacyCasePort5SafetyRecordScopeOwnContentReportsAndPrivateProjection",
           "TestPrivacyCasePort5SafetyRecordNewestPostBeyond1000AndActivityBeyond500",
@@ -522,6 +740,12 @@
           "TestPrivacyCasePort5ModeratorRoleQueueWallsAndExact100Cap",
           "TestPrivacyCasePort5TriagePrivacyDerivedOrderingDuplicatesAndAudit",
           "TestPrivacyCasePort5Triage24MixedTargetsWithinExactQueryCeiling",
+          "TestReportEligibilityActivityIgnoresOwnerBlocksAndHiddenButKeepsCohort",
+          "TestReportEligibilityPostNeedsAThreadSeatNotReadAccess",
+          "TestReportEligibilityUserTargetsKeepProfileVetoes",
+          "TestReportEligibilityRefusalSpendsNoReportBudget",
+          "TestUnsafeReportServiceOwnsTheSeatGateAndIgnoresOwnerBlocks",
+          "TestRestrictedProofSurvivesFullFailureTableAndThrottlesPeer",
           "TestCasePort2RestrictedCredentialHTMLStatesNoSessionAndOwnedAppeal",
           "TestCasePort2RestrictedAdmissionNormalizesPortsSharesNamespaceAndPinsWindow",
           "TestCasePort2RestrictedLargeActionBindingAndStatementPublication",
@@ -541,15 +765,21 @@
           "TestPrivacyCasePort5StatementsNotifyExactAffectedSubject",
           "TestPrivacyCasePort5RestrictionStatementSelfScopeDatesAndNoDecision"
         ],
-        "log_sha256": "49d61ae028e68f1703dcfe4fc9e2822653a488784e52e29e5348951265e76599"
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "7c1b74162f4158493150638d52a4ba907bb181c9d5521f4fd68e33530ec79725"
       },
       {
         "package": "social",
+        "passed": 44,
         "tests": [
           "TestCasePortChildVenueSourceAllowlistAndRationale",
           "TestCasePort2ConnectionsSharedPeerAndCohortWalls",
           "TestCasePort2ConnectionRequestAcceptAndSeverLifecycle",
           "TestCasePort2ConnectionSearchOnlyAndGuardianSeatExclusion",
+          "TestPostgresActivityLeaveAPISurvivesOwnerBlocks",
+          "TestPostgresMembershipReadsAreCoMemberScoped",
+          "TestPostgresGroupThreadPingResolvesNoMentions",
           "TestRetirementOrganizerGrantReplayTransferAndOwnershipWalls",
           "TestRetirementQuorumWobbleDoesNotReplayNotice",
           "TestPolicyPresenceBoundsAndImmutableCohorts",
@@ -588,12 +818,17 @@
           "TestPostgresAttachedPostAtomicityAndEmptyBodyGate",
           "TestPostgresGuardianPreviewMatchesJoinGates"
         ],
-        "log_sha256": "04a3f04e49f086c2a0504c7ab93e6d7cc6af8b189e00edd5a9120d163feaac5d"
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "fd1fa7ac7dfdc001a99355bd4c89675b7a05423ed7c11b08fcae6cb4b154e8b6"
       },
       {
         "package": "web",
+        "passed": 100,
         "tests": [
           "TestNativeAccountPagesUseCompletePrivateContexts",
+          "TestPostgresAccountErrorRendersPrivateProfile",
+          "TestNativeAccountDeleteFormErasesWithoutConfirmField",
           "TestNativeDisplayPreferencesAnonymousAndFakeAgeCannotGrant",
           "TestNativeGuardianControlsDoNotEnumerateAndPruneExpiredSupervision",
           "TestCasePortWebPlaceIdentityKeepsBigintInPageAndClaimLinks",
@@ -610,6 +845,11 @@
           "TestPrivacyCasePort4GuardrailChildTeenCapabilitiesAndDurableAudit",
           "TestWebCasePortInterestPickerGroupsSelectionAndStarter",
           "TestThreadMarkupPythonParity",
+          "TestBusyPageIsRetryable503UnlessStatusIsExplicit",
+          "TestPostgresBusyThreadAttachmentRerendersFormOrAnswersFetch",
+          "TestPostgresBusyPlaceCoverRerendersFormOrAnswersFetch",
+          "TestPostgresBusyAvatarRerendersFormOrAnswersFetch",
+          "TestOpenDataSnapshotSizesWriteDeadlineToFile",
           "TestPostgresMediaComposerUsesEffectivePolicyCapabilitiesAndTTL",
           "TestPostgresMediaComposerLegacyContextPreservesReferenceControls",
           "TestPostgresMediaComposerCustomTTLPublishesPrivateScannedPDF",
@@ -661,6 +901,7 @@
           "TestLegacyAdultAttachmentOnlyFormPublishesPrivateScannedPDF",
           "TestLegacyPrivateBrowseHomeAndCommunityComposition",
           "TestLegacyMinorGroupQuestionsSupervisionAndReadOnlyGuardians",
+          "TestLegacySafeExitSurvivesOwnerBlock",
           "TestLegacyConnectionsRequireAcceptanceBeforeOpeningMessages",
           "TestLegacyAttachmentScannerFailureLeavesNoPostAndClearsScratch",
           "TestDjangoTwentySPAContractGoldens",
@@ -686,138 +927,269 @@
           "TestWebCasePortPublicVenuePages",
           "TestWebCasePortProfilesAndMessengerConnections"
         ],
-        "log_sha256": "02e4844ec86a1ec9ed1b1f1cc3b84af156aace909ad38fb524f22162d0a4e9e4"
-      }
-    ],
-    "reused": [
-      {
-        "package": "backup",
-        "tests": [
-          "TestNativeBackupSignedUploadDownloadAndScopedProbe",
-          "TestNativeBackupNeverOverwritesExistingDumpOrDownload",
-          "TestNativeBackupRejectsFilesKeysAndConfigurationWithoutIO",
-          "TestNativeBackupCorruptionAndEncryptionFailureRemovePartialRecovery",
-          "TestNativeBackupTimeoutCancellationRedirectAndNoRetries"
-        ],
-        "log_sha256": "58209ab293d229f815e840b83bb158403d0bb78d0e1ba68dc3bf27d0f139041d",
-        "receipt_origin": "b8453f7f10cf5c6e3060e0979b86db2b3505e063; package directory unchanged; transitive dependencies changed after the receipt — not qualified on this head"
-      },
-      {
-        "package": "booking",
-        "tests": [
-          "TestNativeBookingPaginationFreshEligibilityAndConcurrentCancel",
-          "TestRESTProviderPreservesOpaqueNumericReferenceAndDoesNotRedirect",
-          "TestNativeGuardianBookingRequiresCurrentSupervisoryBasis",
-          "TestBookingRequestSerializerDefaultsAndLocalTimes",
-          "TestRESTProviderDoesNotReplayAmbiguousBooking",
-          "TestRESTProviderShapeAndBoundaries",
-          "TestNativeBookingOwnershipAndEligibility"
-        ],
-        "log_sha256": "812c4a505003a16efb8906b0ff54770b4ea9cbdd50ae76557193168f9d40aa1d",
-        "receipt_origin": "b8453f7f10cf5c6e3060e0979b86db2b3505e063; package directory unchanged; transitive dependencies changed after the receipt — not qualified on this head"
-      },
-      {
-        "package": "budgets",
-        "tests": [
-          "TestPolicyAndMissingStateFailClosed",
-          "TestReservationIsBoundedAndPreservesFailure",
-          "TestPostgresBootstrapAndAdoption",
-          "TestPostgresMultiReplicaSlidingAndPrivacy",
-          "TestPostgresCapacityAndExpiry",
-          "TestPostgresReplayLowPoolFreshGatesAndFailedAttempts",
-          "TestPostgresCSPReplicaIngressKeepsReportsNondurable",
-          "TestPostgresCardinalityCostEvidence",
-          "TestPostgresMemoryBoundAndConcurrentExpiryErasure"
-        ],
-        "log_sha256": "43458ab25391532bebc41889f9a808a17f4e83d988aa3ee8b0197d13ebde7378",
-        "receipt_origin": "b8453f7f10cf5c6e3060e0979b86db2b3505e063; package directory unchanged; transitive dependencies changed after the receipt — not qualified on this head"
-      },
-      {
-        "package": "discovery",
-        "tests": [
-          "TestDeterministicDeckShuffle",
-          "TestPostgresDiscoveryPrivacyCursorDeckAndFeed"
-        ],
-        "log_sha256": "11f124dc60d85a48e5684e5213d57a8bd041a4bd61dd7f3b9d33da9269889e0b",
-        "receipt_origin": "b8453f7f10cf5c6e3060e0979b86db2b3505e063; package directory unchanged; transitive dependencies changed after the receipt — not qualified on this head"
-      },
-      {
-        "package": "donations",
-        "tests": [
-          "TestNativeStripeCheckoutProtocolAndSafeRetry",
-          "TestNativeFinancialLedgerSemanticsAndOwnReceipts",
-          "TestNativeStripePaidCompletionAndReplay",
-          "TestStripeSignatureProofAndReplayWindow",
-          "TestNativeDonationWebhookAndPublicLedger"
-        ],
-        "log_sha256": "224a38cc325b3c52c18b80f91f8a0d1566846731e67b37041ea9998f5870d351",
-        "receipt_origin": "b8453f7f10cf5c6e3060e0979b86db2b3505e063; package directory unchanged; transitive dependencies changed after the receipt — not qualified on this head"
-      },
-      {
-        "package": "notifications",
-        "tests": [
-          "TestNativeNotificationMuteChokepointAndProtectedRetention",
-          "TestRetirementPostgresOrganizerPrepNudgeMatrix",
-          "TestRetirementPostgresNotificationInboxQueryGrowth",
-          "TestNativeNotificationOwnershipAndCursor"
-        ],
-        "log_sha256": "ab5760249ae44836f9c10aa746cea4c1ae9754f92de38315fd76cddb76858aa4",
-        "receipt_origin": "b8453f7f10cf5c6e3060e0979b86db2b3505e063; package directory unchanged; transitive dependencies changed after the receipt — not qualified on this head"
-      },
-      {
-        "package": "recommendations",
-        "tests": [
-          "TestRetirementPostgresSavedSearchValidationAndDuplicateDimensions",
-          "TestRetirementPostgresSavedSearchActivityFilterMatrix",
-          "TestPostgresSavedSearchRatePoliciesRetainDuplicateAndFailedAdmissions",
-          "TestHashEmbeddingNormalizedAndDeterministic",
-          "TestDistanceAndAccessAreSoftOnly",
-          "TestPostgresPreferencesColdStartAndRankedSafety",
-          "TestPostgresSavedSearchOwnershipAndOnceOnlyMatching",
-          "TestPostgresGuardianTopicSteeringIsLinkedChildOnly"
-        ],
-        "log_sha256": "fca01faae6d321bff113d27edb11ae6df24b37a87754f6a326004e400412d664",
-        "receipt_origin": "b8453f7f10cf5c6e3060e0979b86db2b3505e063; package directory unchanged; transitive dependencies changed after the receipt — not qualified on this head"
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "1610c2d61a19779e684e30ffeb8345ff8838843df6a2d52a75096c5ff9847a6c"
       }
     ]
   },
   "artifact": {
-    "base": "sha256:5ea84fca75b13acdbc7d13a71e01a52954f3733e358efe29b1e4ba07b771ce5d",
-    "image": "sha256:c44143fdc56f7cde24460124e1c037b33ead934ed72a75b03b6283e17164e44a",
-    "user": "10001:10001",
-    "cmd": [
-      "sh",
-      "-c",
-      "exec social-server --listen \"0.0.0.0:${PORT:-8000}\" --site-root /app --static-dir /app/static --media-scratch /app/var/media-work"
-    ],
-    "working_dir": "/app",
-    "unchanged_runtime_layers": 12,
-    "added_layers": 1,
-    "server_sha256": "5ae16c13a2b7d105b9408174398bd88c9bd630fcf4fd580d8f13d1ae552e24a8",
-    "source_snapshot": "/home/dobo/work/_temp/go-native-toolchain/bundle-source-hashes.json",
-    "route": "Offline Go1.27.1 CGO0/buildvcsfalse/trimpath/s-w executable over exact retained qualified runtime; canonical Dockerfile fresh build failed uncached network dependencies"
+    "image_tag": "social-native:source-final-c27a99fd7105-9615f07cc770",
+    "image_id": "sha256:34c1c2281d9fc96cf486dda8e88497ef5061e21a412c712d8ef61ca14b07031b",
+    "server_sha256": "416c2c0c34941a354d62f2df8960a1463bfc9afbc68db93c3d623b6100b04300",
+    "build": "canonical Dockerfile --no-cache",
+    "overlay": false
   },
-  "external_runtime_source_closure": "No tracked Dockerfile/authcore/frontend/templates/apps-web-templates/locale/static/db changes since a693291; retained exact base layers. Embedded worker shipped in fresh server. Runtime hashes kept in task scratch.",
+  "toolchain": {
+    "go": {
+      "path": "/home/dobo/work/_temp/feat__go-native-toolchain/tools/go/bin/go",
+      "version": "go version go1.27.1 linux/amd64"
+    },
+    "node": {
+      "path": "/home/dobo/work/_temp/feat__go-native-toolchain/tools/node24/bin/node",
+      "version": "v24.18.0"
+    },
+    "npm": {
+      "path": "/home/dobo/work/_temp/feat__go-native-toolchain/tools/node24/bin/npm",
+      "version": "11.16.0"
+    },
+    "govulncheck": {
+      "path": "/mnt/data/social-go/tools/govulncheck",
+      "version": "Go: go1.27.1\nScanner: govulncheck@v1.8.0\nDB: https://vuln.go.dev\nDB updated: 2026-10-01 20:24:15 +0000 UTC"
+    },
+    "trivy": {
+      "path": "/mnt/data/social-go/tools/trivy",
+      "version": "Version: 0.75.0"
+    },
+    "go_archive_sha256": "63d339f0da5ab53635a56f2490a7984dfe12dfcff22ad749f63edaf590168445"
+  },
   "audits": {
-    "source": "passed",
-    "imported_packages": "passed",
-    "linked_same_source_binary": "passed",
-    "unused_required_module_advisory": 1,
-    "image": "UNVERIFIED: three scanner setup attempts failed read-only-temp/task-UID/cache permissions before vulnerability scan; prior5ea84fca gate passed, does not qualify changedc441 executable"
+    "source": "passed all three modules",
+    "package": "passed all three modules",
+    "same_source_symbol_retaining_binary": "passed",
+    "fixable_high_critical": 0,
+    "unused_required_module_advisory": {
+      "id": "GO-2026-5932",
+      "module": "unimported openpgp dependency",
+      "scope": "module-only; source/package/linked scans passed"
+    }
+  },
+  "native_source_gate": {
+    "check_native": "passed",
+    "gate_harness": "17/17 passed"
+  },
+  "frontend": {
+    "npm_ci": "passed",
+    "tests": "passed",
+    "build_and_budget": "passed"
   },
   "http": {
-    "health": 200,
-    "ready": 200,
-    "service_worker": 200,
-    "schema": 200,
+    "run_id": "9615f07cc770",
+    "image_tag": "social-native:source-final-c27a99fd7105-9615f07cc770",
+    "image_id": "sha256:34c1c2281d9fc96cf486dda8e88497ef5061e21a412c712d8ef61ca14b07031b",
+    "image_user": "10001:10001",
+    "python_absent_codecs_present": true,
+    "/healthz": 200,
+    "/readyz": 200,
+    "/sw.js": 200,
+    "/api/schema/": 200,
+    "/api/docs/": 200,
     "uid": 10001,
-    "read_only": true,
-    "cap_drop": [
-      "ALL"
-    ],
-    "host_ports": false,
+    "cap_eff": "0000000000000000",
+    "no_new_privileges": true,
+    "readonly": true,
+    "published_ports": 0,
     "sigterm_exit": 0,
-    "oom": false
+    "oom_killed": false
   },
-  "manual_review": "Human auth/privacy/safety review before landing; full source retirement remains blocked. Credential P1/P2 independently closed on05febd5 only."
+  "gate_exit_statuses": [
+    {
+      "gate": "build",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log": "logs/build.log"
+    },
+    {
+      "gate": "trivy",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log": "logs/trivy.log"
+    },
+    {
+      "gate": "database-create",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log": "logs/database-create.log"
+    },
+    {
+      "gate": "migrate",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log": "logs/migrate.log"
+    },
+    {
+      "gate": "check-native",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log": "logs/check-native.log"
+    },
+    {
+      "gate": "gate-harness",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log": "logs/gate-harness.log"
+    },
+    {
+      "gate": "qualify",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log": "logs/qualify.log"
+    },
+    {
+      "gate": "frontend",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log": "logs/frontend.log"
+    },
+    {
+      "gate": "vuln-server-source",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log": "logs/vuln-server-source.log"
+    },
+    {
+      "gate": "vuln-server-package",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log": "logs/vuln-server-package.log"
+    },
+    {
+      "gate": "vuln-authcore-source",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log": "logs/vuln-authcore-source.log"
+    },
+    {
+      "gate": "vuln-authcore-package",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log": "logs/vuln-authcore-package.log"
+    },
+    {
+      "gate": "vuln-agentapi-source",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log": "logs/vuln-agentapi-source.log"
+    },
+    {
+      "gate": "vuln-agentapi-package",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log": "logs/vuln-agentapi-package.log"
+    },
+    {
+      "gate": "audit-twin-build",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log": "logs/audit-twin-build.log"
+    },
+    {
+      "gate": "vuln-binary",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log": "logs/vuln-binary.log"
+    },
+    {
+      "gate": "smoke-database-create",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log": "logs/smoke-database-create.log"
+    },
+    {
+      "gate": "smoke-migrate",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log": "logs/smoke-migrate.log"
+    },
+    {
+      "gate": "smoke",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log": "logs/smoke.log"
+    },
+    {
+      "gate": "contracts",
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "log": "logs/contracts.log"
+    },
+    {
+      "gate": "docs",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log": "logs/docs.log"
+    },
+    {
+      "gate": "whitespace",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log": "logs/whitespace.log"
+    }
+  ],
+  "artifact_sha256": {
+    "contracts.json": "7c6dc1a6620fef52b6bce62526149e2b236643f73aa2e537a1bfd587eaa0c256",
+    "gate-status.json": "39a69a86bb3f492d48408c9be0beaeffdc91c88be388c3066c578bc485bb4837",
+    "image-id": "8f1d6ab789309b8f62256856efa8f535c0ceac70342294b5450a74f1f9707132",
+    "image-tag": "1d84a1481405632e0b387034d2c2363d402e8d09439d74893495de3a91637451",
+    "logs/audit-twin-build.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "logs/build.log": "a9f08073fe355b01df18e902f8ef4369ae30db5faf890ce19855e01cad541f7c",
+    "logs/check-native.log": "557fe668d019faba5bec18ec7ad74e3533274a5d5550a4153d79f96c6ac30cab",
+    "logs/contracts.log": "9c9607e16165ce0eab2df37ee099bfbac677ae2eee3fb38338b55b95ca740e49",
+    "logs/database-create.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "logs/docs.log": "ff605cec4491c440897fd8e7a45f7e046426d20fc1af3bf8c8fe1cadb485e92d",
+    "logs/frontend.log": "94e42d134d35d3173c9717b8165c0ffbb2158ed4f33594c6961839d7c37f61c3",
+    "logs/gate-harness.log": "a1180332d1925bad73aa540d43d6ae6a24c7a5b9d9cde802f933f49d44cc8879",
+    "logs/migrate.log": "5b2d46f349e9e364c57767d324dec52dfaa9b8e3bf31082d9c8dcc76e00a64ab",
+    "logs/qualify.log": "536ef0e3f5e5339cee45bd4d50bcd5c9c3dc18eed4e91763d4ce5c9cc8e90b48",
+    "logs/smoke-database-create.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "logs/smoke-migrate.log": "5b2d46f349e9e364c57767d324dec52dfaa9b8e3bf31082d9c8dcc76e00a64ab",
+    "logs/smoke.log": "55eebaf186668e4f7a712ab6dee3541d1a6301c4f4e5fcab83aea756f5df6d4c",
+    "logs/trivy.log": "e6a536ae5c2afe286258949bbcbdb36d205a548c76d0b74f9f01353cc9be0abc",
+    "logs/vuln-agentapi-package.log": "3016e51e4eac0d421674d2128bbbdefb2924b4646e0c14a1ab034977ad73fae5",
+    "logs/vuln-agentapi-source.log": "3016e51e4eac0d421674d2128bbbdefb2924b4646e0c14a1ab034977ad73fae5",
+    "logs/vuln-authcore-package.log": "d1cff3665cba0d4709c2be90cd3c31a6977166a8dfc49b4e9e903e87ff8a1ca7",
+    "logs/vuln-authcore-source.log": "b5ae54ddcfa4cb39e85f84ad2d9e43556bd817c480eaab2a71bab63bfc29353b",
+    "logs/vuln-binary.log": "b5ae54ddcfa4cb39e85f84ad2d9e43556bd817c480eaab2a71bab63bfc29353b",
+    "logs/vuln-server-package.log": "d1cff3665cba0d4709c2be90cd3c31a6977166a8dfc49b4e9e903e87ff8a1ca7",
+    "logs/vuln-server-source.log": "b5ae54ddcfa4cb39e85f84ad2d9e43556bd817c480eaab2a71bab63bfc29353b",
+    "logs/whitespace.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "smoke.json": "2175faa440fe39a32a33ea9892ccc677511823e35f60a1eef31dd64af53bbcd1",
+    "social-server-audit": "b9cf74087f695547f5f40903fc6d9f5ccb25b5f2562bd1ca3226ce390a550afd",
+    "source-head": "8f39d822112907dad00813961608474304cb4ba69a81697b71f459af7c45d9e5",
+    "tests/accounts.log": "ba5ef527255c85a84baad38385006c89e04a56ba044699e84d0e368a7f358989",
+    "tests/admin.log": "6892572e6452b244ac77a2ace59f6b0b562ae6b2beabd985939b8b275fbccfd1",
+    "tests/app.log": "800a9c90196ce2bceab2bd533726144de89ca8ce92f501f91dd68ef282a2f4e7",
+    "tests/backup.log": "f1c0f885174b5aa0ccffe4ceb5572e169dc9dce4767647f97e7e90f8d1dd0cb7",
+    "tests/booking.log": "95dd38a9e3d571e0e09347b9eb7eb3a92248f801e3a3da20c1cc4f1376c98c4c",
+    "tests/budgets.log": "20cf695a9545df6f021140fc3e5e7505f69079b88ed174185ea5a4ff8b1a0c6d",
+    "tests/catalog.log": "23cf02eff013040341d4c8cfcc266430d8abaf28459b521806345f30344e5c7a",
+    "tests/commands.log": "4cfbaaa17e2d1e253a44cb4c637db3ad3bf13c3741aa46840c3e4784e5a7f5cc",
+    "tests/configuration.log": "cba7f0e3b74417c9d23c1c08b826205ab92dab8b522801ce0ed609b4718b24d0",
+    "tests/contracts.log": "c2da44d051a2dcc5f7c0f0055fc112562a3a358f1390c2459967ef7e4a4b0cba",
+    "tests/discovery.log": "e22a94d7b135cf085a78138c3812aa1f186b6db7a31e2c0fcdc557c67fc860a5",
+    "tests/donations.log": "06abb4ad8fa4a40987c495768024c3091e11baa78bbf0afdd12ce29ff7955808",
+    "tests/export.log": "28b8605aeb6181818c6608db80ab6dc277f405f8b57b7e24e51f66970f6fa364",
+    "tests/jobs.log": "43f4425ee8d5f8bf3208f53800ee372c7e1db5afbd1ca21989a12e09ff6cdc6f",
+    "tests/media.log": "d61ef3225b969fd639cf0ba5d785067dc2acda9598199c2a9a9a976faf422929",
+    "tests/messaging.log": "012b540f9cd1b8179be4789768ed16e4ae9ccf9f7572e74c5b140f774f964793",
+    "tests/notifications.log": "5161412bc09842cb4658222165b9810d58fba6afd0a5a011d523f4f79feaf7cc",
+    "tests/recommendations.log": "cd57d6acdee431f7879f9b6274f642cbc849466d6fdc610e52acc5e3c04a4715",
+    "tests/safety.log": "7c1b74162f4158493150638d52a4ba907bb181c9d5521f4fd68e33530ec79725",
+    "tests/social.log": "fd1fa7ac7dfdc001a99355bd4c89675b7a05423ed7c11b08fcae6cb4b154e8b6",
+    "tests/web.log": "1610c2d61a19779e684e30ffeb8345ff8838843df6a2d52a75096c5ff9847a6c",
+    "trivy.json": "ae6d27d490f04856a694e2e2ae41a73a95f0220b089f91bbbb8e9296b0a59ee3"
+  },
+  "completed_manifest_sha256": "7aa0133af70b18d56faf1f22194320457a2949db2b17e490a01ae23e6233b026",
+  "manual_review": "Independent final source review required before landing. Human auth/erasure/privacy/safety review and RELEASE_READINESS before-first-deployment list remain open; source qualification activates nothing.",
+  "receipt_scope": "This receipt names the tested source commit. Receipt-only docs commits preserve source_objects_sha256; the final landed revision and fresh final run are reported in the landing chat."
 }

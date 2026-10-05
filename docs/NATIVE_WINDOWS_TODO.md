@@ -1,6 +1,8 @@
-# Native migration Windows TODO
+# Historical native migration Windows checkpoint
 
-Last verified: 2026-10-05. Continuation moved to Linux: WORKLOG 2026-10-05 "Linux continuation of the Go integration".
+Valid until: Linux qualification of combined G1/G2/G3 source — satisfied2026-10-05; this checklist is history.
+Current qualification: [aggregate receipt](reviews/native-go/restart-checkpoint.json), STATUS and WORKLOG;705fresh tests/all21 lanes.
+The older counts/image/checklist below describe the preserved checkpoint, not current qualification.
 Current truth remains [STATUS](../STATUS.md). This checklist does not authorize main landing or production activation.
 
 ## Preserved source and qualification

@@ -20,7 +20,10 @@ fixable HIGH/CRITICAL findings; original footprint measurements keep their measu
 
 Current implementation/activation status remains in STATUS.md, decisions in ADR-0032.
 
-The requested restart checkpoint has a separate [aggregate receipt](restart-checkpoint.json)
-and [Windows TODO](../../NATIVE_WINDOWS_TODO.md). Its source retirement remains incomplete;
-the fresh offline image audit is unverified. Unique unfinished client prototypes are preserved
+The [combined aggregate receipt](restart-checkpoint.json) has705fresh native passes/all21 lanes, zero skips/failures,
+canonical no-cache packaging, source/package/binary/image audits and hardened smoke.
+The [Windows checkpoint](../../NATIVE_WINDOWS_TODO.md) is history. Python retirement remains blocked
+on1672 unresolved frozen declarations;999 mappings are manifest claims rather than exhaustive equivalence. Unique unfinished client prototypes are preserved
 as [inert continuation keepers](continuation-keepers/manifest.json), not shipping source.
+
+Remaining REST-facing assertions/transport gaps: [bounded contract plan](rest-contract-plan.md).

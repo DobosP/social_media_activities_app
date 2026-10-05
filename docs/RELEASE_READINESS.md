@@ -95,12 +95,12 @@ Paths under `internal/` and `cmd/` are in `services/server`.
 
 ## Verdict
 
-The **core child-safety invariants** (cohort isolation, consent-gated participation incl.
-messaging, guardian read-only, blocking, fail-closed media) are implemented, integrated,
-and covered by regression tests. **However, the engineering gate is not yet fully met:**
-the 2026-05 audit ([AUDIT_2026-05](archive/AUDIT_2026-05.md), archived) found launch-blockers that remain
-open (Wave 1) — no shared cache so rate-limits/channel-layer are per-process; no
-brute-force protection on login; retention/suspension purges are not scheduled in the
-deploy; and no GDPR erasure path. Those plus **deployment provisioning** and
-**legal/compliance sign-off** (a real CSAM scanner, DPIA, DSA Art. 28, EUDI prod
-credentials, pen test) must be closed before a public beta in the first city.
+The native Go runtime implements cohort/consent, reporting/moderation, private media,
+login/shared-rate budgets and erasure; current source qualification is in [STATUS](../STATUS.md).
+First deployment remains blocked by the checklist above: human auth/erasure/privacy/safety review,
+Render configuration, non-superuser bootstrap, actual Django-data adoption, artifact pinning,
+upload buffering/timeouts, readiness pre-stop delay, authentication sweep operations and rollback drill.
+
+Public beta also requires deployment provisioning and legal/compliance sign-off: DPIA/DSA review,
+production identity/age-consent providers, a real fail-closed scanner, independent security review and
+incident-response rehearsal. Source landing does not clear those gates.

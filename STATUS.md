@@ -1,6 +1,6 @@
 # Status — social_media_activities_app
 
-Last verified: 2026-10-05
+Last verified: 2026-10-06
 
 - **GitHub Actions (Last verified: 2026-10-05):** owner-requested on-demand policy,
   [ADR-0033](docs/adr/0033-manual-github-actions.md). Ordinary `ci.yml` calls Go/Node workflows;
@@ -76,9 +76,10 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Open work
 
-- Completion lanes, review fixes and the native toolchain (ADR-0035/0038) are integrated on
-  `feat/go-native-toolchain`; landing per ADR-0040; human code review gates first deployment.
-  Unresolved frozen2671 reference declarations block Python retirement; Python reference source/tests stay.
+- REST assertion closure remains separate:26 social API declarations, booking assertions, export query equality and
+  public-finance REST projection; [bounded plan](docs/reviews/native-go/rest-contract-plan.md). Endpoints and ledger rows are distinct.
+- Native completion/toolchain/audit stacks (ADR-0035/0038) are source-qualified per ADR-0040; human code review
+  gates first deployment. The1672 unresolved frozen declarations keep Python source/tests and block retirement.
 - Build/promote a fresh immutable producer/server V2 release before real sync;
   the serving repo's producer dependency must be intentionally bumped first.
 - Complete held-event review UX, curated cultural child-venue policy, localized
@@ -95,12 +96,11 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
-- G2 source `b0abd92`: native checks and537 tests/11 lanes,0skips/failures;13 intended fail-before failures;
-  independent critic APPROVE. Final metadata contracts5; frozen2671 inventory:999 manifest claims/1672 unresolved/0invalid.
-- G3 source `0e3e85b`: native checks and520 tests/10 lanes,0skips/failures;790 forced-sweep executions; critic APPROVE.
-- Combined `f19a34e`:705/21 lanes,0skips; native/Node/govulncheck pass. Trivy blocked inherited perl-base; image fix/requalification pending.
-- Python retirement exits1; manifests are claims, not exhaustive runtime equivalence. Prior overlay/reused receipts
-  do not qualify this head; historical detail is in WORKLOG and the Windows TODO.
+- Combined `c27a99f` (2026-10-05): canonical no-cache image;705/all21 fresh lanes,0skips/failures; native/hash/vet/race pass.
+- govulncheck1.8.0 source/package/all3modules + symbol-retaining binary pass; unused module advisory remains separate (WORKLOG).
+- Trivy0.75.0:0fixable HIGH/CRITICAL. Node24.18.0 npm ci/test/build pass; bundle36.71/40KiB; harness17/17; hardened smoke14/14.
+- Inventory999 manifest claims/1672 unresolved/0invalid of2671; retirement exits1. Docs53/all defects0; whitespace clean.
+- Independent critic approved [source/image/fresh evidence](docs/reviews/native-go/restart-checkpoint.json). Receipt-only landing revision preserves qualified source objects and receives final review before main push.
 
 ## Standard verification
 Native race/vet + shared-source hashes; database/codec contracts require explicit disposable fixtures
