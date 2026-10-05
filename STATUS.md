@@ -68,15 +68,9 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   `docs/RELEASE_READINESS.md` §Before first deployment (audit 2026-10-05).
 - Launch is blocked on the GDPR/DPIA/DPO/parental-consent stack and production
   operations. Never apply paid infrastructure without owner authorization.
-- Audit 2026-10-05 privacy fixes (G2, WORKLOG): group-thread @mentions never resolve (reference
-  parity); v1 `after=` message history keeps the oldest unseen message; avatar uniqueness stays inside
-  the cohort and only avatars keep a perceptual fingerprint (ADR-0044); live chat frames are metered per
-  socket and typing never evicts a socket; membership rows and logistics are co-member scoped (ADR-0046);
-  v1 conversation list/history stay within the reference's 5/7-query ceilings; reporting has its own
-  eligibility, survives blocks either way and keeps the safe-exit button reachable (ADR-0041); blocks
-  veto direct chats only and sanctions remove an account from its chats (ADR-0043); guardian authority
-  ends when a ward re-verifies as adult and the guardian's ward export omits reports, blocks and concerns
-  (ADR-0045).
+- Audit 2026-10-05 privacy/safety fixes (G2, WORKLOG): report eligibility (ADR-0041), direct-only block veto
+  and sanction chat eviction (ADR-0043), avatar/fingerprint minimisation (ADR-0044), guardian authority
+  (ADR-0045), co-member logistics (ADR-0046), typing throttle, group mentions, v1 history and query ceilings.
 - Audit 2026-10-05 auth/media/runtime fixes (G3, WORKLOG): unreachable web action cases are removed (IDP-6).
   Open: two agent-snapshot producers emit different values and only `jobs/snapshot.go` runs (GO-EXPORT-01).
 
