@@ -132,6 +132,18 @@ func TestRESTSourceTransitInvalidStatusForbiddenNoMutation(t *testing.T) {
 			if valid.Code != http.StatusOK {
 				t.Fatal("valid transit control failed", valid.Code)
 			}
+			// Complete frozen test_transit_action_sets_status (test_api.py:392),
+			// checking the actual response and committed row independently.
+			if err := s.DB.QueryRow(ctx, `SELECT transit_status FROM social_membership WHERE activity_id=$1 AND user_id=$2`, activity, owner.ID).Scan(&state); err != nil || state != "on_my_way" {
+				t.Errorf("successful REST transit was not persisted: state=%q err=%v", state, err)
+			}
+			var response map[string]any
+			if err := json.Unmarshal(valid.Body.Bytes(), &response); err != nil {
+				t.Fatal(err)
+			}
+			if response["transit_status"] != "on_my_way" {
+				t.Errorf("successful REST transit response lost its status: %v", response["transit_status"])
+			}
 		})
 	}
 }

@@ -137,7 +137,9 @@ func TestAllSocialRoutesRequireAuthentication(t *testing.T) {
 	s := New(nil, nil)
 	mux := http.NewServeMux()
 	s.Register(mux)
-	for _, path := range []string{"/api/v1/social/activities/", "/api/social/groups/", "/api/v1/social/activities/1/posts/", "/api/v1/social/memberships/1/vote/", "/api/connections/connections/search/", "/api/v1/connections/people/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa/", "/api/v1/communities/communities/graph/"} {
+	// Frozen source test_activities_require_auth (test_api.py:30) names this
+	// literal legacy GET; the existing loop also covers the v1 refusal.
+	for _, path := range []string{"/api/social/activities/", "/api/v1/social/activities/", "/api/social/groups/", "/api/v1/social/activities/1/posts/", "/api/v1/social/memberships/1/vote/", "/api/connections/connections/search/", "/api/v1/connections/people/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa/", "/api/v1/communities/communities/graph/"} {
 		method := "GET"
 		if strings.HasSuffix(path, "/vote/") {
 			method = "POST"

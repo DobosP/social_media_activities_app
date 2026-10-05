@@ -3,6 +3,52 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-06 — Two finite REST auth/transit assertion mappings
+
+Valid until: `test/rest-contract-auth-transit-20261006` lands or is superseded — then treat as history.
+
+Owner-authorized assertion-only batch on clean mainc7a8aaf. It extends two existing test functions,
+with no production/schema/frontend/dependency change and no new top-level tests. Source
+`apps/social/tests/test_api.py::test_activities_require_auth` (line30) now has the literal anonymous
+legacy GET in `TestAllSocialRoutesRequireAuthentication`; actual401 is within the frozen401/403 set.
+`::test_transit_action_sets_status` (line392) maps to the existing
+`TestRESTSourceTransitInvalidStatusForbiddenNoMutation` positive control, which now separately asserts
+actual JSON and committed membership `transit_status=on_my_way` afterHTTP200 in both prefixes.
+The original file/hash `fc35dea7bf6fc36444cb7aa4fcb52a274677bc0c78c328882dcd6ebdb759842f`, source IDs,
+lines and app-pack provenance remain; accepted guardian/co-member/coorganizer/safety policies are untouched.
+
+Correct unchanged production passes the affected social race lane:47 top-level tests,0skips/failures,
+log SHA `6f74afac2958dd68606becda43111b5d8171e3314169f90d3147e14c032deb00`.
+This is not a fail-before repair. Separately labelled controlled Go overlays demonstrate assertion sensitivity:
+- `controlled-anonymous-200`: bypasses only legacy activities authentication; the new literal GET catches200.
+  One expected top-level failure,0skips; log SHA `19e7154bd9a946be19c10a8bdaf329e7e05e3b131bdc8a78c5ecb4544f957686`.
+- `controlled-wrong-response`: correct SQL persists but response is `controlled_wrong`; only wire assertions fail.
+  One expected top-level failure/both prefixes,0skips; SHA `2ed260447dfaa963a73f0ba1910d2a312ddd6785c2c78f3b32cc8fb7e9a907a5`.
+- `controlled-missing-persistence`: transit SQL is a no-op while wire is masked `on_my_way`; independent DB assertions fail.
+  One expected top-level failure/both prefixes,0skips; SHA `faf0c781a046e5ac26552c1582e1bfe712c99675529610410185ca399434ebaa`.
+Overlays live only in owned scratch, never changed original production, and are not described as source bugs.
+
+Own pinned tooling: Go1.27.1 archive SHA `63d339f0da5ab53635a56f2490a7984dfe12dfcff22ad749f63edaf590168445`
+checked; Node24.18.0 binary from official cached node24 image, SHA
+`41a74efb34cbde5c7632cdac0cf8bd1a14d0b8d73dc1e82755014d9a9ce70f5c`; all3 modules downloaded/verified
+in task caches once, then GOPROXY=off. Fresh PG16.15/PostGIS/vector on internal/noports network
+`social-rest-auth-transit-20261006`, container `social-rest-auth-transit-20261006-db`, synthetic
+`social_rest_auth_transit` database,2GiB/2CPU. Canonical c27 image supplies codecs only, not deployment
+image qualification. Source binaries use race, GOWORK=off/GOTOOLCHAIN=local/GOMAXPROCS=2/readonly-p2;
+qualify-native.sh's read-only/cap-drop/no-new-privileges/user/mount flags and explicit fixture DSN.
+Own scratch/env/runner: `_temp/test__rest-contract-auth-transit-20261006/{env.sh,run-social.py}`;
+commands `python3 SCRATCH/run-social.py qualify`, then `controls`, serialized by the global heavy lock.
+Actual setup headroom:32GiB disk/~76GiB available memory, above12GiBtest/16GiBcommit floors. No actual
+resource refusal occurred; unknown-owner buffers/caches/backups and absolute keepers were untouched.
+
+Independent critic APPROVE confirms the original positive47 lane, three separately controlled negative
+logs and exactly two metadata mappings. Worker pure contracts pass; check-contracts reports1005
+manifest claims/1666 unresolved/0invalid of2671, retirement exit1; docs53/all defects0 and whitespace clean. Original pass/control logs remain
+separate and immutable. Root owns exact final native/all21/harness/contracts/docs qualification under
+ADR-0040; unchanged top-level count does not create a test-only exception. Prior709/21 receipts are
+historical, not this new source's result. No optional whole-suite/build campaign, push, merge, producer-
+pin/provider/minor activation, HTML work, deployment or broader mapping/retirement campaign occurred.
+
 ## 2026-10-06 — Finite REST source qualification completed
 
 Valid until: serving source, dependencies, native scripts or codec environment changes — then requalify.

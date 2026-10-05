@@ -76,10 +76,10 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Open work
 
-- REST assertion closure remains separate:23 social API declarations, booking assertions, export query equality and
+- REST assertion closure remains separate:21 social API declarations, booking assertions, export query equality and
   public-finance REST projection; [bounded plan](docs/reviews/native-go/rest-contract-plan.md). Endpoints and ledger rows are distinct.
 - Native completion/toolchain/audit stacks (ADR-0035/0038) are source-qualified per ADR-0040; human code review
-  gates first deployment. The1668 unresolved frozen declarations keep Python source/tests and block retirement.
+  gates first deployment. The1666 unresolved frozen declarations keep Python source/tests and block retirement.
 - Build/promote a fresh immutable producer/server V2 release before real sync;
   the serving repo's producer dependency must be intentionally bumped first.
 - Complete held-event review UX, curated cultural child-venue policy, localized
@@ -96,9 +96,9 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
-- Finite REST `67e07b9` (2026-10-06):709/all21 fresh native/race tests,0skips/failures; native/hash/vet/race + harness17 pass.
-- Four exact mappings:1003 manifest claims/1668 unresolved/0invalid of2671; retirement exits1. Docs53/all defects0; whitespace clean.
-- [Fresh source receipt](docs/reviews/native-go/rest-transport-checkpoint.json): c27 image is reused only for codecs; no new deployment-image/audit/frontend qualification claimed.
+- Assertion-only worker:2 existing tests extended, social47/0skip/fail;3 controlled sensitivities fail as intended; root final21 pending.
+- Six exact mappings:1005 manifest claims/1666 unresolved/0invalid of2671; retirement exits1. Docs53/all defects0; whitespace clean.
+- Prior `67e07b9`709/all21/native/harness17 [source receipt](docs/reviews/native-go/rest-transport-checkpoint.json): c27 image reused only for codecs; no new deployment-image/audit/frontend qualification.
 - Original `c27a99f`:705/all21, canonical image, govulncheck1.8.0 all3modules/binary, Trivy0.75.0 and Node24.18.0 gates pass; unused openpgp advisory remains separate.
 - Prior source/image/smoke14/14/bundle36.71KiB evidence remains in [the original receipt](docs/reviews/native-go/restart-checkpoint.json).
 - Independent source/fail-before review approved; final receipt/docs closure receives review before main push. Human deployment review remains open.

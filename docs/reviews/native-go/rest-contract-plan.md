@@ -8,18 +8,20 @@ Baseline qualification is [the aggregate](restart-checkpoint.json):705 fresh nat
 The finite transport batch maps one existing export case and closes three social wire cases.
 [Fresh source qualification](rest-transport-checkpoint.json) on `67e07b9`, run `62b59f66e423`:709/all21,0skips/failures; social47 and web101.
 The prior c27 image supplies codecs only; its audit receipt does not qualify a deployment image for the changed serving code.
-The ledger's1003 claimed/1668 unresolved entries count frozen assertions, not missing endpoints.
+An assertion-only two-mapping batch extends existing authentication/transit tests; correct production
+passes worker social47/0skip/fail, with three separately labelled sensitivity overlays. Root final21 is pending.
+The ledger's1005 claimed/1666 unresolved entries count frozen assertions, not missing endpoints.
 Go already serves the ordinary HTTP/toolchain paths; full Python reference retirement remains separate.
 
 ## Social REST:26 declarations
 
-All26 IDs below have prefix `apps/social/tests/test_api.py::`; three are now mapped and23 remain. The frozen file hash matches the
-inventory. Routes exist in `services/server/internal/social/http.go`. The remaining23 require complete
+All26 IDs below have prefix `apps/social/tests/test_api.py::`; five are now mapped and21 remain. The frozen file hash matches the
+inventory. Routes exist in `services/server/internal/social/http.go`. The remaining21 require complete
 REST assertion mappings; existing qualified service/HTML foundations alone do not establish them.
 
 | Frozen declaration | Remaining exact REST obligation |
 |---|---|
-| test_activities_require_auth | Literal legacy GET refusal; qualified v1 authentication coverage is narrower. |
+| test_activities_require_auth | Mapped: literal anonymous legacy GET refused in the registered mux; existing v1 coverage retained. |
 | test_activity_description_too_long_rejected | Mapped: current REST400 description string-array key, no write; both API prefixes. |
 | test_arrived_action_marks_membership | HTTP200 plus persisted non-null arrival. |
 | test_arrived_ignores_on_behalf_of | Guardian404 and unchanged ward arrival. |
@@ -38,7 +40,7 @@ REST assertion mappings; existing qualified service/HTML foundations alone do no
 | test_rsvp_returns_live_count | REST200, going1/total2/minimum-null. |
 | test_thread_posts_get_requires_membership | Populated-thread outsider403, owner200. |
 | test_thread_posts_list_is_bounded | Legacy200, cap5, newest-N/oldest-first order. |
-| test_transit_action_sets_status | POST200, response/persisted on_my_way. |
+| test_transit_action_sets_status | Mapped: both-prefix POST200 plus independent actual response/persisted on_my_way checks. |
 | test_transit_ignores_on_behalf_of | Guardian404, ward transit unchanged. |
 | test_transit_invalid_status_is_forbidden | Mapped: unknown value HTTP403 after current visibility/member/window checks; state unchanged. |
 | test_v1_mine_membership_list_is_cursor_paginated | Seven rows, limit2/results2/nonempty cursor. |
@@ -104,7 +106,7 @@ cannot establish complete REST projection parity.
 ## Order and scope
 
 1. Retain the exact export mapping and its source IDs/provenance and qualified c27 receipt.
-2. Retain the qualified three response contracts;23 social assertion sets remain for separate bounded batches.
+2. Complete root exact-source qualification for the assertion-only extensions;21 social assertion sets remain.
 3. Close booking REST assertions and reviewed adapter replacements.
 4. Specify/qualify public-finance REST projection and exact export-helper query equality.
 5. Triage relevant REST media/account-safety rows against existing code/tests similarly.

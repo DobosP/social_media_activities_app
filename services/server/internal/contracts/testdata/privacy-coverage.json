@@ -13791,13 +13791,21 @@
       "legacy_file": "apps/social/tests/test_api.py",
       "line": 30,
       "source_sha256": "fc35dea7bf6fc36444cb7aa4fcb52a274677bc0c78c328882dcd6ebdb759842f",
-      "classification": "unresolved",
-      "native_evidence": [],
-      "rationale": "Preserve the legacy declaration until its behavioral assertions have independent native evidence; a larger native suite or registered route is insufficient.",
-      "gaps": [
-        "Remaining source assertion/transport/edge-case obligations require an explicit native port or reviewed replacement."
+      "classification": "native_semantic_coverage",
+      "native_evidence": [
+        {
+          "go_file": "services/server/internal/social/social_test.go",
+          "test": "TestAllSocialRoutesRequireAuthentication",
+          "scenario": "anonymous GET to literal /api/social/activities/ in the registered native mux, retaining existing v1 and other route checks",
+          "assertions": [
+            "literal legacy activities GET is refused without an actor",
+            "actual HTTP401 is within the frozen source accepted401/403 refusal set"
+          ]
+        }
       ],
-      "runtime_verification": "not_run"
+      "rationale": "Finite assertion-only mapping. The exact legacy URL was added to the existing registered-handler authentication test; the correct unchanged production code passes the affected social race lane (47 top-level tests, zero skips/failures). Source allows401/403; the actual native401 refusal satisfies that set, without inferring a different frozen requirement. Frozen ID/line/file hash and app-pack provenance remain. Controlled overlays are assertion-sensitivity evidence, not failures of original production. Final root exact-source/native/all21 qualification remains required before main landing.",
+      "gaps": [],
+      "runtime_verification": "passed"
     },
     {
       "legacy_id": "apps/social/tests/test_api.py::test_activity_description_too_long_rejected",
@@ -14055,13 +14063,23 @@
       "legacy_file": "apps/social/tests/test_api.py",
       "line": 392,
       "source_sha256": "fc35dea7bf6fc36444cb7aa4fcb52a274677bc0c78c328882dcd6ebdb759842f",
-      "classification": "unresolved",
-      "native_evidence": [],
-      "rationale": "Preserve the legacy declaration until its behavioral assertions have independent native evidence; a larger native suite or registered route is insufficient.",
-      "gaps": [
-        "Remaining source assertion/transport/edge-case obligations require an explicit native port or reviewed replacement."
+      "classification": "native_semantic_coverage",
+      "native_evidence": [
+        {
+          "go_file": "services/server/internal/social/rest_transport_case_test.go",
+          "test": "TestRESTSourceTransitInvalidStatusForbiddenNoMutation",
+          "scenario": "current owner in a valid presence window POSTs status=on_my_way through both legacy and v1 registered handlers",
+          "assertions": [
+            "HTTP200 success",
+            "actual JSON response transit_status equals on_my_way",
+            "committed owner membership transit_status equals on_my_way",
+            "response and persistence assertions run independently"
+          ]
+        }
       ],
-      "runtime_verification": "not_run"
+      "rationale": "Finite assertion-only mapping completes the existing test positive control with direct wire JSON and post-request PostgreSQL assertions in both API prefixes. Correct unchanged production code passes47 top-level social race tests with zero skips/failures. Source ID/line/file hash and accepted guardian/co-member/coorganizer/safety policy/app-pack provenance are retained. Controlled response and no-write overlays test assertion sensitivity only; they are not source fail-before bugs. Final root exact-source/native/all21 qualification remains separate before main landing; broader REST/reference retirement and deployment are not authorized.",
+      "gaps": [],
+      "runtime_verification": "passed"
     },
     {
       "legacy_id": "apps/social/tests/test_api.py::test_transit_ignores_on_behalf_of",
