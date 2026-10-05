@@ -200,7 +200,7 @@ func (s *Server) page(w http.ResponseWriter, r *http.Request, name string) {
 	}
 	data, template, err := s.view(r, actor, name)
 	if err != nil {
-		platform.Fail(w, err)
+		failPage(w, err)
 		return
 	}
 	if data == nil {
@@ -299,3 +299,13 @@ func date(raw string) string {
 
 var publicPages = map[string]bool{"display_preferences": true, "home": true, "places_map": true, "places_list": true, "place_detail": true, "place_detail_slug": true, "events_list": true, "event_detail": true, "event_detail_slug": true, "events_feed": true, "events_feed_atom": true, "things_to_do_index": true, "things_to_do_city": true, "things_to_do": true, "donate": true, "transparency": true, "campaigns": true, "partners": true, "open_data": true, "open_data_snapshot": true, "discover": true, "privacy": true, "terms": true, "service_worker": true}
 var actionOnly = map[string]bool{"logout": true}
+
+// failPage maps a page's domain error to its status; an exhausted safety budget
+// (for example report-page lookups) is a 429, never a 503.
+func failPage(w http.ResponseWriter, err error) {
+	if errors.Is(err, safety.ErrRate) {
+		platform.Error(w, 429, "Too many requests; try again later.")
+		return
+	}
+	platform.Fail(w, err)
+}

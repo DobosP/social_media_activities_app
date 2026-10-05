@@ -138,6 +138,15 @@ func TestReportEligibilityPostNeedsAThreadSeatNotReadAccess(t *testing.T) {
 	if err != nil || target.Label != owner.DisplayName {
 		t.Fatal("post report label", target.Label, err)
 	}
+	// Eligibility is wider than read access; labels are not.
+	eligibilityBlock(t, s, owner.ID, member.ID)
+	if target, err = s.ReportTarget(ctx, member, "post", post); err != nil || target.Label != "A member" {
+		t.Fatal("post report label named the author across a block", target.Label, err)
+	}
+	if target, err = s.ReportTarget(ctx, member, "activity", activity); err != nil || target.Label != "this activity" {
+		t.Fatal("activity report label showed a title the read gate hides", target.Label, err)
+	}
+	eligibilityUnblock(t, s)
 	if _, err = s.DB.Exec(ctx, `UPDATE accounts_user SET display_name='' WHERE id=$1`, owner.ID); err != nil {
 		t.Fatal(err)
 	}

@@ -220,13 +220,32 @@ func (s *Service) ReportTarget(ctx context.Context, a platform.Actor, model stri
 	if !yes {
 		return Target{}, platform.ErrNotFound
 	}
-	if model != "activity" {
-		// Profile hides usernames from strangers; a report label never shows one.
-		if err = s.DB.QueryRow(ctx, `SELECT COALESCE(NULLIF(display_name,''),'A member') FROM accounts_user WHERE id=$1`, t.Affected).Scan(&t.Label); err != nil {
-			return Target{}, err
-		}
+	// Eligibility is wider than read access, so labels never are: a title the
+	// read gate would hide (owner block either way, moderation hidden) and a name
+	// across a block become generic. Profile hides usernames; labels never show one.
+	if model == "activity" {
+		err = s.DB.QueryRow(ctx, `SELECT CASE WHEN NOT a.is_hidden AND NOT EXISTS(SELECT 1 FROM safety_block b WHERE (b.blocker_id=$2 AND b.blocked_id=a.owner_id) OR (b.blocker_id=a.owner_id AND b.blocked_id=$2)) THEN a.title ELSE 'this activity' END FROM social_activity a WHERE a.id=$1`, id, a.ID).Scan(&t.Label)
+	} else {
+		err = s.DB.QueryRow(ctx, `SELECT CASE WHEN EXISTS(SELECT 1 FROM safety_block b WHERE (b.blocker_id=$2 AND b.blocked_id=u.id) OR (b.blocker_id=u.id AND b.blocked_id=$2)) THEN 'A member' ELSE COALESCE(NULLIF(u.display_name,''),'A member') END FROM accounts_user u WHERE u.id=$1`, t.Affected, a.ID).Scan(&t.Label)
+	}
+	if err != nil {
+		return Target{}, err
 	}
 	return t, nil
+}
+
+// AllowReportLookup meters the report page's user-target lookups like profile
+// cards (owner decision 2026-10-05, ADR-0041), so the page cannot enumerate
+// same-cohort names by sequential id. Refused lookups are charged too.
+func (s *Service) AllowReportLookup(ctx context.Context, a platform.Actor) error {
+	allowed, err := s.allow(ctx, a, "report_lookup", 240, time.Hour)
+	if err != nil {
+		return err
+	}
+	if !allowed {
+		return ErrRate
+	}
+	return nil
 }
 
 // Delivery is best-effort and savepoint-isolated. A notification failure must
