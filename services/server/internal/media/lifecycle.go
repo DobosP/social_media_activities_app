@@ -14,9 +14,9 @@ import (
 // PurgeExpiredAttachments preserves moderation evidence, including unresolved
 // reports on posts/activities/groups/uploaders and unlifted REMOVE actions.
 // An author's own deletion releases the hide hold only without a standing REMOVE.
-// Held rows stay unmarked, so the candidate query excludes them by the same
-// hold rule and keyset-pages; held evidence can never fill the window. The
-// locked per-row re-check stays authoritative.
+// Held rows stay unmarked, so candidates are keyset-paged and each page reports
+// the same hold rule in SQL: a held row is skipped without a transaction and can
+// no longer fill the window. The locked per-row re-check stays authoritative.
 func (s *Service) PurgeExpiredAttachments(ctx context.Context, limit int) (int, error) {
 	if limit < 1 || limit > 1000 {
 		return 0, platform.ErrInvalid
@@ -25,17 +25,20 @@ func (s *Service) PurgeExpiredAttachments(ctx context.Context, limit int) (int, 
 	var afterAt time.Time
 	var afterID int64
 	for purged < limit && scanned < limit*purgeScanFactor {
-		ids, lastAt, e := s.expiredAttachmentPage(ctx, afterAt, afterID, min(limit*4, limit*purgeScanFactor-scanned))
+		page, e := s.expiredAttachmentPage(ctx, afterAt, afterID, min(limit*4, limit*purgeScanFactor-scanned))
 		if e != nil {
 			return purged, e
 		}
-		if len(ids) == 0 {
+		if len(page) == 0 {
 			break
 		}
-		scanned += len(ids)
-		afterAt, afterID = lastAt, ids[len(ids)-1]
-		for _, id := range ids {
-			changed := false
+		scanned += len(page)
+		afterAt, afterID = page[len(page)-1].expires, page[len(page)-1].id
+		for _, candidate := range page {
+			if candidate.held {
+				continue
+			}
+			id, changed := candidate.id, false
 			e = platform.Transaction(ctx, s.db, func(tx pgx.Tx) error {
 				att, e := s.attachment(ctx, tx, id, true)
 				if errors.Is(e, pgx.ErrNoRows) {
@@ -83,31 +86,41 @@ func (s *Service) PurgeExpiredAttachments(ctx context.Context, limit int) (int, 
 	return purged, nil
 }
 
-// purgeScanFactor bounds one call to limit*20 examined candidates (10,000 at
-// the scheduled 500). Held rows never become candidates, so only rows that lose
-// the locked re-check to a concurrent change spend this budget.
-const purgeScanFactor = 20
+// purgeScanFactor bounds one call to limit*200 examined rows (100,000 at the
+// scheduled 500), in pages of limit*4. A held row costs only its share of one
+// bounded page statement, so the budget reaches far past held evidence; rows
+// that are purged, lose the locked re-check or fail their transaction spend it too.
+const purgeScanFactor = 200
 
-func (s *Service) expiredAttachmentPage(ctx context.Context, afterAt time.Time, afterID int64, n int) (ids []int64, last time.Time, err error) {
-	query := `SELECT a.id,a.expires_at FROM media_attachment a JOIN social_post sp ON sp.id=a.post_id JOIN social_thread t ON t.id=sp.thread_id WHERE a.expires_at<=now() AND a.purged_at IS NULL AND a.status NOT IN('blocked','processing') AND NOT ` + attachmentHoldSQL("a.post_id", "COALESCE(t.activity_id,0)", "COALESCE(t.group_id,0)", "a.uploader_id")
+type purgeCandidate struct {
+	id      int64
+	expires time.Time
+	held    bool
+}
+
+// expiredAttachmentPage evaluates the hold rule for exactly one keyset page, so
+// no statement's cost grows with the number of held rows behind the cursor.
+func (s *Service) expiredAttachmentPage(ctx context.Context, afterAt time.Time, afterID int64, n int) ([]purgeCandidate, error) {
+	query := `SELECT x.id,x.expires_at,` + attachmentHoldSQL("x.post_id", "x.activity_id", "x.group_id", "x.uploader_id") + ` FROM (SELECT a.id,a.expires_at,a.post_id,a.uploader_id,COALESCE(t.activity_id,0) AS activity_id,COALESCE(t.group_id,0) AS group_id FROM media_attachment a JOIN social_post sp ON sp.id=a.post_id JOIN social_thread t ON t.id=sp.thread_id WHERE a.expires_at<=now() AND a.purged_at IS NULL AND a.status NOT IN('blocked','processing')`
 	args := []any{n}
 	if afterID > 0 {
 		query += ` AND (a.expires_at,a.id)>($2,$3)`
 		args = append(args, afterAt, afterID)
 	}
-	rows, err := s.db.Query(ctx, query+` ORDER BY a.expires_at,a.id LIMIT $1`, args...)
+	rows, err := s.db.Query(ctx, query+` ORDER BY a.expires_at,a.id LIMIT $1) x ORDER BY x.expires_at,x.id`, args...)
 	if err != nil {
-		return nil, last, err
+		return nil, err
 	}
 	defer rows.Close()
+	var page []purgeCandidate
 	for rows.Next() {
-		var id int64
-		if err = rows.Scan(&id, &last); err != nil {
-			return nil, last, err
+		var c purgeCandidate
+		if err = rows.Scan(&c.id, &c.expires, &c.held); err != nil {
+			return nil, err
 		}
-		ids = append(ids, id)
+		page = append(page, c)
 	}
-	return ids, last, rows.Err()
+	return page, rows.Err()
 }
 
 // attachmentHoldSQL is the one hold rule, over SQL expressions for an

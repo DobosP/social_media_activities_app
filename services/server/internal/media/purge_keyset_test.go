@@ -36,9 +36,9 @@ func TestPostgresPurgePagesPastHeldExpiredEvidence(t *testing.T) {
 		return id
 	}
 	const limit = 2
-	// limit*20+1 held rows own the oldest expiries: more than the old limit*4
-	// window and more than one call's whole scan budget, so the purgeable row is
-	// reached only because held evidence never enters the candidate window.
+	// limit*20+1 held rows own the oldest expiries: five full pages of the old
+	// limit*4 window, so the purgeable row is reached only by paging past held
+	// evidence that is skipped without spending a transaction each.
 	var held []int64
 	for i := 0; i < 20*limit+1; i++ {
 		held = append(held, seed(heldPost, fmt.Sprintf("purge-held-%d", i), 100-i))
