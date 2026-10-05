@@ -220,8 +220,10 @@ func (s *Server) AccountAction(w http.ResponseWriter, r *http.Request, a platfor
 		}
 		if errors.Is(err, pgx.ErrNoRows) || errors.Is(err, platform.ErrNotFound) {
 			platform.Fail(w, platform.ErrNotFound)
-		} else if errors.Is(err, platform.ErrBusy) {
+		} else if errors.Is(err, platform.ErrBusy) && r.Header.Get("X-Requested-With") == "fetch" {
 			platform.Fail(w, err)
+		} else if errors.Is(err, platform.ErrBusy) {
+			s.accountRender(busyPage(w), r, a, view, mediaBusyMessage, nil)
 		} else {
 			s.accountRender(w, r, a, view, socialActionError(err), nil)
 		}

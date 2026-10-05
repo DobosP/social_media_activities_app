@@ -206,8 +206,10 @@ func (s *Server) PublicAction(w http.ResponseWriter, r *http.Request, a platform
 		}
 	}
 	if err != nil {
-		if errors.Is(err, platform.ErrNotFound) || errors.Is(err, platform.ErrBusy) {
+		if errors.Is(err, platform.ErrNotFound) || errors.Is(err, platform.ErrBusy) && r.Header.Get("X-Requested-With") == "fetch" {
 			platform.Fail(w, err)
+		} else if errors.Is(err, platform.ErrBusy) {
+			s.publicRenderError(busyPage(w), r, a, view, mediaBusyMessage)
 		} else {
 			s.publicRenderError(w, r, a, view, err.Error())
 		}
