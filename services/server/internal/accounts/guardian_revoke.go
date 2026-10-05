@@ -94,6 +94,11 @@ func revokeAdultWard(ctx context.Context, tx pgx.Tx, ward platform.Actor) error 
 	if _, err := tx.Exec(ctx, `SELECT id FROM accounts_user WHERE id=$1 FOR NO KEY UPDATE`, ward.ID); err != nil {
 		return err
 	}
+	// Consents before relationships, the order a guardian's own Erase uses, so a
+	// concurrent erase and re-verification cannot deadlock on the pair's rows.
+	if _, err := tx.Exec(ctx, `UPDATE accounts_parentalconsent SET status='revoked',revoked_at=now(),updated_at=now() WHERE minor_id=$1 AND status='active'`, ward.ID); err != nil {
+		return err
+	}
 	rows, err := tx.Query(ctx, `UPDATE accounts_guardianrelationship SET status='revoked',updated_at=now() WHERE ward_id=$1 AND status='active' RETURNING guardian_id`, ward.ID)
 	if err != nil {
 		return err
@@ -110,9 +115,6 @@ func revokeAdultWard(ctx context.Context, tx pgx.Tx, ward platform.Actor) error 
 	err = rows.Err()
 	rows.Close()
 	if err != nil {
-		return err
-	}
-	if _, err = tx.Exec(ctx, `UPDATE accounts_parentalconsent SET status='revoked',revoked_at=now(),updated_at=now() WHERE minor_id=$1 AND status='active'`, ward.ID); err != nil {
 		return err
 	}
 	for _, id := range guardians {

@@ -15,7 +15,8 @@ func (s *Service) actingAs(ctx context.Context, caller Actor, publicID string) (
 	if err != nil {
 		return Actor{}, platform.ErrInvalid
 	}
-	yes, err := scalar(ctx, s.DB, `SELECT EXISTS(SELECT 1 FROM accounts_guardianrelationship WHERE guardian_id=$1 AND ward_id=$2 AND status='active')`, caller.ID, target.ID)
+	// A guardian acts only for a current minor ward (ADR-0045).
+	yes, err := scalar(ctx, s.DB, `SELECT EXISTS(SELECT 1 FROM accounts_guardianrelationship g JOIN accounts_user w ON w.id=g.ward_id WHERE g.guardian_id=$1 AND g.ward_id=$2 AND g.status='active' AND w.cohort IN ('child','teen'))`, caller.ID, target.ID)
 	if err := errorIfFalse(yes, err); err != nil {
 		return Actor{}, err
 	}
