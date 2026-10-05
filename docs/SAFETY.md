@@ -28,7 +28,9 @@ D5, and D6 too. See [ROADMAP](ROADMAP.md) and [COMPLIANCE](COMPLIANCE.md).
    minors. Username-addressable direct & group messaging (D10) is **cohort-isolated** — you can
    only message users in your *own* age cohort — so an adult can never reach a child. First contact
    also requires the recipient to **accept** (no unsolicited messaging), and blocking is honoured
-   both ways. Per-activity chat (D5) remains membership- + cohort-scoped. See [MESSAGING](MESSAGING.md).
+   both ways in direct chats and when adding a group member; an existing group chat keeps working
+   for its other members under a block (owner decision, [ADR-0043](adr/0043-direct-only-block-veto.md)).
+   Per-activity chat (D5) remains membership- + cohort-scoped. See [MESSAGING](MESSAGING.md).
 3. **Verified age + parental consent before participation** for under-16 (D2). No consent → no
    access (age-gating).
 4. **Private by default.** Threads and their photos are visible only to that activity's members
