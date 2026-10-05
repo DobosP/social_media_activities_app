@@ -127,7 +127,9 @@ func Transaction(ctx context.Context, db *pgxpool.Pool, f func(pgx.Tx) error) er
 		return err
 	}
 	defer tx.Rollback(ctx)
-	if _, err = tx.Exec(ctx, `SET LOCAL statement_timeout='5s'`); err != nil {
+	// The pool's configured statement_timeout (DB_STATEMENT_TIMEOUT_MS) governs the
+	// transaction. Only a session without one receives this bounded default.
+	if _, err = tx.Exec(ctx, `SELECT set_config('statement_timeout','5s',true) WHERE current_setting('statement_timeout')='0'`); err != nil {
 		return err
 	}
 	if err = f(tx); err != nil {

@@ -95,6 +95,18 @@ func TestNativeFreshDatabaseBootstrapAdoptionAndSessionSettings(t *testing.T) {
 	if err = db.QueryRow(ctx, `SELECT current_setting('statement_timeout'),current_setting('lock_timeout'),current_setting('search_path')`).Scan(&statement, &lock, &path); err != nil || statement != "7s" || lock != "2s" || path != "public" {
 		t.Fatal("migration leaked pooled session settings", statement, lock, path, err)
 	}
+	// A configured session timeout governs transactions too; the transaction
+	// helper supplies its bounded default only when the session has none.
+	if err = platform.Transaction(ctx, db, func(tx pgx.Tx) error {
+		return tx.QueryRow(ctx, `SELECT current_setting('statement_timeout')`).Scan(&statement)
+	}); err != nil || statement != "7s" {
+		t.Fatal("transaction overrode the configured statement timeout", statement, err)
+	}
+	if err = platform.Transaction(ctx, admin, func(tx pgx.Tx) error {
+		return tx.QueryRow(ctx, `SELECT current_setting('statement_timeout')`).Scan(&statement)
+	}); err != nil || statement != "5s" {
+		t.Fatal("transaction lost its bounded default statement timeout", statement, err)
+	}
 	w := httptest.NewRecorder()
 	a.ServeHTTP(w, httptest.NewRequest("GET", "https://app.example/api/places/", nil))
 	if w.Code != 200 {

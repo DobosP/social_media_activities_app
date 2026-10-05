@@ -3,6 +3,8 @@ package jobs
 import (
 	"bufio"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
@@ -15,6 +17,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 )
 
 type RawEvent struct {
@@ -368,7 +371,7 @@ func (r *Runner) SyncFeeds(ctx context.Context) (map[string]int, error) {
 						continue
 					}
 					if event.ExternalID != "" {
-						event.ExternalID = fmt.Sprintf("feed%d:%s", feed.id, event.ExternalID)
+						event.ExternalID = feedExternalID(feed.id, event.ExternalID)
 					}
 					kind := feed.kind
 					if kind == nil {
@@ -394,6 +397,17 @@ func (r *Runner) SyncFeeds(ctx context.Context) (map[string]int, error) {
 		}
 	}
 	return map[string]int{"events": count, "failed_feeds": failed}, nil
+}
+// feedExternalID namespaces a feed UID within events_event.external_id (200
+// characters). An overlong result is replaced by a digest of the UID, so the
+// lock, lookup and insert always share one value and a replay finds its row.
+func feedExternalID(feed int64, uid string) string {
+	value := fmt.Sprintf("feed%d:%s", feed, uid)
+	if utf8.RuneCountInString(value) <= 200 {
+		return value
+	}
+	digest := sha256.Sum256([]byte(uid))
+	return fmt.Sprintf("feed%d:sha256:%s", feed, hex.EncodeToString(digest[:]))
 }
 func upsertICS(ctx context.Context, tx pgx.Tx, event RawEvent, place, kind *int64) error {
 	identity := "ical:" + event.ExternalID
@@ -421,6 +435,6 @@ func upsertICS(ctx context.Context, tx pgx.Tx, event RawEvent, place, kind *int6
 		_, err = tx.Exec(ctx, `UPDATE events_event SET place_id=$2,activity_type_id=COALESCE($3,activity_type_id),title=$4,description=$5,starts_at=$6,ends_at=$7,url=$8,attribution=$9,license_name=$10,provenance_url=$11,is_import_held=false,updated_at=now() WHERE id=$1`, id, place, kind, event.Title, event.Description, event.Starts, event.Ends, safeURL(event.URL), event.Attribution, event.License, safeURL(event.Provenance))
 		return err
 	}
-	_, err = tx.Exec(ctx, `INSERT INTO events_event(title,description,starts_at,ends_at,url,source,external_id,created_at,updated_at,activity_type_id,place_id,attribution,license_name,provenance_url,is_import_held,is_tombstone,lifecycle_status,source_category,source_city,source_confidence,source_first_seen_at,source_last_seen_at,source_pack_id,source_release_id,source_snapshot_generated_at,source_snapshot_id,source_updated_at,source_venue_id,source_availability,source_currency,source_is_free,source_price_max,source_price_min,source_recurrence,source_timezone) VALUES($1,$2,$3,$4,$5,'ical',$6,now(),now(),$7,$8,$9,$10,$11,false,false,'scheduled','','',NULL,NULL,NULL,'','',NULL,'',NULL,'','','',NULL,NULL,NULL,'','')`, event.Title, event.Description, event.Starts, event.Ends, safeURL(event.URL), clampText(event.ExternalID, 200), kind, place, event.Attribution, event.License, safeURL(event.Provenance))
+	_, err = tx.Exec(ctx, `INSERT INTO events_event(title,description,starts_at,ends_at,url,source,external_id,created_at,updated_at,activity_type_id,place_id,attribution,license_name,provenance_url,is_import_held,is_tombstone,lifecycle_status,source_category,source_city,source_confidence,source_first_seen_at,source_last_seen_at,source_pack_id,source_release_id,source_snapshot_generated_at,source_snapshot_id,source_updated_at,source_venue_id,source_availability,source_currency,source_is_free,source_price_max,source_price_min,source_recurrence,source_timezone) VALUES($1,$2,$3,$4,$5,'ical',$6,now(),now(),$7,$8,$9,$10,$11,false,false,'scheduled','','',NULL,NULL,NULL,'','',NULL,'',NULL,'','','',NULL,NULL,NULL,'','')`, event.Title, event.Description, event.Starts, event.Ends, safeURL(event.URL), event.ExternalID, kind, place, event.Attribution, event.License, safeURL(event.Provenance))
 	return err
 }
