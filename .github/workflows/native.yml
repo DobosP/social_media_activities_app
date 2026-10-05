@@ -33,7 +33,9 @@ jobs:
           GOWORK: "off"
           TMPDIR: ${{ runner.temp }}
         run: |
-          test -z "$(gofmt -l services/server services/authcore)"
+          # Bare assignment: a missing or failing gofmt is fatal, never an empty result.
+          native_unformatted=$(gofmt -l services/server services/authcore)
+          if [ -n "$native_unformatted" ]; then printf '%s\n' "$native_unformatted" >&2; exit 1; fi
           go -C services/server run ./cmd/check-authcore
           go -C services/authcore vet ./...
           go -C services/authcore test -race ./...

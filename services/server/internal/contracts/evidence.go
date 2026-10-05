@@ -94,6 +94,9 @@ func testFunctions(root, filename string) (map[string]bool, error) {
 // A real named test plus assertions/rationale and a reviewed successful runtime
 // status are required; route-name matches or a larger Go test count are not
 // semantic coverage. Reviewers must confirm receipts and evidence equivalence.
+// The runtime_verification status is a manifest claim: Check reads it as
+// written and never compares it against any test run, so the verified count it
+// reports is manifest-claimed, not run-checked.
 func Check(root string, inventory Inventory, manifests []Manifest) Report {
 	report := Report{Total: len(inventory.Cases), Unresolved: []string{}, Invalid: []string{}}
 	if inventory.Version != 1 || inventory.SourceHead == "" || len(inventory.Cases) == 0 {

@@ -17,12 +17,13 @@ Last verified: 2026-10-05
 
 | Scope | Command | Required result |
 |---|---|---|
-| Native source/hashes/hermetic tests | `scripts/check-native.sh /absolute/path/to/go` | format, portable auth hashes, vet, race and whitespace pass |
+| Native source/hashes/hermetic tests | `scripts/check-native.sh /absolute/path/to/go` | GOROOT gofmt (missing/failing gofmt fails), portable auth hashes, vet, race, `node --test` offline service worker and whitespace pass; needs node |
 | Backend only | `GOWORK=off go -C services/server test -race ./... && go -C services/server vet ./...` | pass; DB tests skipped without explicit DSN do not qualify a release |
 | Shared auth | `GOWORK=off go -C services/authcore test -race ./... && go -C services/authcore vet ./...` | pass |
 | Public service | `GOWORK=off go -C services/agentapi test -race ./... && go -C services/agentapi vet ./...` | pass; loopback test sockets permitted |
-| Explicit native fixture | `scripts/qualify-native.sh GO IMAGE PRIVATE_NETWORK SYNTHETIC_DSN SCRATCH` | every package passes with zero skips; actual FK/codec/export-to-sidecar checks |
-| Case retirement gate | `go -C services/server run ./cmd/check-contracts -root "$PWD" -summary` | no unresolved or invalid source-case evidence before deleting legacy behavior |
+| Explicit native fixture | `scripts/qualify-native.sh GO IMAGE PRIVATE_NETWORK SYNTHETIC_DSN SCRATCH` | Linux host only; fails closed (grep, no rg dependency): every package has PASS>0 and zero skips; actual FK/codec/export-to-sidecar checks |
+| Native gate harness | `bash scripts/test-native-gates.sh` | `native gate harness: N/N passed`; stubbed go/docker/gofmt/node, no rg, docker, network or database |
+| Case retirement gate | `go -C services/server run ./cmd/check-contracts -root "$PWD" -summary` | no unresolved or invalid source-case evidence before deleting legacy behavior; its verified count is manifest-claimed (`runtime_verification`), not checked against a test run |
 | Browser build | `cd frontend && npm ci && npm test && npm run build` | contracts/typecheck/build and initial bundle budget pass |
 | Fleet docs | `python3 ~/work/agent-ops/scripts/check_docs.py .` | files varies; dead_links/stale_terms/retired_verbs/orphans all0 (scoped generic fleet tool exception) |
 | Whitespace | `git diff --check` | no output |

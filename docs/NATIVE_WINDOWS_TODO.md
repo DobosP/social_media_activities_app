@@ -23,7 +23,7 @@ Current truth remains [STATUS](../STATUS.md). This checklist does not authorize 
   `chore/go-config-stash-preserve` at `0ac4faf2d8a3940a313231c0d485bdeac4678a15`; third parent
   `4e96f498e8c941d007ea284611d947d9ff509080` preserves untracked originals. Archive only, **not for merge**:
   do not apply/pop/drop it or assume all its source is superseded.
-- Strict gate: **2671 original declarations;993 verified,1678 unresolved,0invalid; exit1**. All original Python
+- Strict gate: **2671 original declarations;993 claimed-verified (manifest `runtime_verification`, not checked against a test run),1678 unresolved,0invalid; exit1**. All original Python
   source/tests remain. Test counts or named Go links do not establish equivalence. No reference retirement is complete.
 - Frozen bundle:586 affected top-level race tests/14 lanes pass with zero skips;40 unchanged prior qualified
   tests retain their receipts (626/21 lanes). Source/hashes/three-module vet/race pass; source/package/linked

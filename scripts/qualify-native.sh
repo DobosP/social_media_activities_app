@@ -2,6 +2,11 @@
 # Compile native regression binaries and run them with release codecs on an
 # explicitly supplied disposable database. Does not discover local credentials.
 set -euo pipefail
+# Linux test binaries are built here and executed inside the Linux release image.
+if [[ $(uname -s) != Linux ]]; then
+  echo 'qualify-native.sh must run on a Linux host' >&2
+  exit 2
+fi
 if [[ $# != 5 ]]; then
   echo 'Usage: qualify-native.sh GO_EXECUTABLE RELEASE_IMAGE PRIVATE_NETWORK DISPOSABLE_DSN ABSOLUTE_SCRATCH' >&2
   exit 2
@@ -53,10 +58,23 @@ for native_package in configuration accounts admin app backup booking budgets ca
     cat "$native_log" >&2
     exit 1
   fi
-  if rg -q -- '--- SKIP:' "$native_log"; then
-    cat "$native_log" >&2
-    echo "Unqualified skipped native test in $native_package" >&2
+  # Fail closed: grep exit 0 is a skip, 1 is none, anything else is an error.
+  native_status=0
+  grep -q -e '--- SKIP:' -- "$native_log" || native_status=$?
+  case $native_status in
+    0)
+      cat "$native_log" >&2
+      echo "Unqualified skipped native test in $native_package" >&2
+      exit 1;;
+    1) ;;
+    *)
+      echo "Could not scan $native_log for skipped tests (grep exit $native_status)" >&2
+      exit "$native_status";;
+  esac
+  native_passed=$(grep -c -e '^--- PASS:' -- "$native_log") || true
+  if ! [[ $native_passed =~ ^[0-9]+$ ]] || ((native_passed == 0)); then
+    echo "no native tests ran in $native_package" >&2
     exit 1
   fi
-  echo "$native_package: $(rg -c '^--- PASS:' "$native_log") native tests passed; no skips"
+  echo "$native_package: $native_passed native tests passed; no skips"
 done

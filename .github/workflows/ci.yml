@@ -32,6 +32,8 @@ jobs:
       - run: npm ci
       - name: Browser contracts, typecheck, build and bundle budget
         run: npm test && npm run build
+      - name: Embedded offline service-worker contracts
+        run: node --test ../services/server/internal/web/assets/meetups-worker.test.mjs
 
   native:
     uses: ./.github/workflows/native.yml

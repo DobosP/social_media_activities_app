@@ -97,7 +97,7 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
-- Restart checkpoint:993 verified/1678 unresolved/0invalid of2671; retirement gate exits1.
+- Restart checkpoint:993 claimed-verified (manifest `runtime_verification`, not checked against a test run)/1678 unresolved/0invalid of2671; retirement gate exits1.
   Source-frozen586 affected tests/14 lanes pass without skips;40 unchanged prior tests retain receipts.
   Native source/hash/vet/race and source/package/linked audits pass. Offline imagec44143fd preserves
   runtime5ea84fca, passes HTTP/lifecycle; its image scan is unverified after scanner setup failures.
@@ -106,7 +106,7 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Standard verification
 Native race/vet + shared-source hashes; database/codec contracts require explicit disposable fixtures
-through `scripts/qualify-native.sh` (`docs/agent-testing.md`). Whitespace/doc gates are required.
+through `scripts/qualify-native.sh` (`docs/agent-testing.md`); its fail-closed gates are regression-tested by `scripts/test-native-gates.sh`. Whitespace/doc gates are required.
 Native Go/Node CI: `ci.yml`/`native.yml`/`go.yml`; optional offline reference: `reference.yml`; operators: CLI guide/ROEDU integration.
 
 ## Doc map
