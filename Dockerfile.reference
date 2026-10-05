@@ -1,7 +1,7 @@
 # --- Frontend build stage: the React-compatible Preact/Vite SPA compiles to hashed
 # static assets + a manifest that collectstatic below bakes into the image.
 # @roedu/ui comes from the committed tarball in frontend/vendor/ (no registry auth).
-FROM node:24-bookworm-slim AS frontend
+FROM node:26-bookworm-slim AS frontend
 
 WORKDIR /fe/frontend
 COPY frontend/package.json frontend/package-lock.json ./
