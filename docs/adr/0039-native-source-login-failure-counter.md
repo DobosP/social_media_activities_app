@@ -102,7 +102,12 @@ visible response the pinned verifier gave. At the cap, browser login shows a net
 message, JSON login returns 429 with `Retry-After`, and the restricted proof shows its existing
 "too many attempts" text.
 
-No admission is refused because of table size. Storage is bounded by the caps times the
+No admission is refused because the login-failure, attempt or OAuth-flow table is full. The
+`/api/auth/*` routes, the token endpoint included, still pass the generic API throttle first,
+and that shared budget keeps ADR-0037's capacity rule until its own amendment lands. A cap
+applies per prefix: a source with many prefixes multiplies every cap, and no throttle spans
+prefixes for one account. A fixed window admits up to twice its limit across a boundary. The
+signup cap counts attempts, rejected ones included. Storage is bounded by the caps times the
 prefixes active in each window, plus in-flight reservations. A failure row is still created at
 reservation, now only after the cheap checks and per-peer admission; completion deletes it when
 it holds no failures and no other live reservation, so successes, infrastructure errors and
