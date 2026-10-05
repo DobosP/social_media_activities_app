@@ -49,6 +49,7 @@ On conflict: `STATUS.md` > newest-dated ADR > every other doc.
 | 0039 | [native-source-login-failure-counter](0039-native-source-login-failure-counter.md) | proposed; source restoration qualified, landing per ADR-0040; human auth/privacy review gates first deployment | 2026-10-05 |
 | 0040 | [landing-and-deployment-review-gates](0040-landing-and-deployment-review-gates.md) | accepted; owner decision 2026-10-05 | 2026-10-05 |
 | 0041 | [report-eligibility-predicate](0041-report-eligibility-predicate.md) | accepted; owner decisions 2026-10-05; human safety review gates first deployment | 2026-10-05 |
+| 0043 | [direct-only-block-veto](0043-direct-only-block-veto.md) | accepted; owner decision 2026-10-05 (narrows SAFETY rule 2 to direct chats); human safety review gates first deployment | 2026-10-05 |
 | 0044 | [media-fingerprint-minimisation](0044-media-fingerprint-minimisation.md) | accepted; reference parity (audit GO-MEDIA-01/02); human privacy review gates first deployment | 2026-10-05 |
 | 0046 | [membership-logistics-scope](0046-membership-logistics-scope.md) | accepted; owner decisions 2026-10-05; human privacy review gates first deployment | 2026-10-05 |
 

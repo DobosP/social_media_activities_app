@@ -3,6 +3,23 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-05 — Group chats survive blocks; sanctions evict chats (GO-PRIV-02, GO-PRIV-03)
+
+Valid until: `fix/go-group-messaging-blocks` is integrated or superseded — then treat as history.
+
+[ADR-0043](docs/adr/0043-direct-only-block-veto.md) (owner decisions 2026-10-05; design by the G2 critic).
+`CanView` and the `/keys/` roster veto only direct chats on a block with an active peer; `canAdminister`
+lets an active admin remove any member regardless of blocks (adding still uses `pair()`); `Post` validates
+only the sender, and its exact recipient set is active participants with active accounts (the roster's
+predicate), with a batched key insert; `TakeAction` suspend/timed ban/ban calls `RemoveUser` in the same
+transaction (fails closed if messaging is not wired); `BlockHTTP` has a shared 30/h `block` budget;
+`Start` re-invites a direct peer who left or was removed (a removed starter re-enters only while the peer is
+inactive too). SAFETY rule 2, MESSAGING and the messaging README say so. The cohort-change sub-case of
+GO-PRIV-03 was refuted and is unchanged. With the messaging fix reverted the 9 new messaging tests fail as
+intended (query bound n3=38 → n256=1303 before; ≤28 and membership-independent after) and the block-budget
+test fails (404 instead of 429). WSL Go 1.27.1, social_g2, code 65f20ba on 778470d: lanes messaging 55,
+safety 50, admin 19, jobs 64, web 92 top-level pass, 0 skip, 0 fail. <<G2-5D-EVIDENCE>> Reviewer: APPROVE.
+
 ## 2026-10-05 — Report eligibility independent of read gates (GO-PRIV-01, F4)
 
 Valid until: `fix/go-report-eligibility` is integrated or superseded — then treat as history.

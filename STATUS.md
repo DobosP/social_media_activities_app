@@ -73,7 +73,8 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   the cohort and only avatars keep a perceptual fingerprint (ADR-0044); live chat frames are metered per
   socket and typing never evicts a socket; membership rows and logistics are co-member scoped (ADR-0046);
   v1 conversation list/history stay within the reference's 5/7-query ceilings; reporting has its own
-  eligibility, survives blocks either way and keeps the safe-exit button reachable (ADR-0041).
+  eligibility, survives blocks either way and keeps the safe-exit button reachable (ADR-0041); blocks
+  veto direct chats only and sanctions remove an account from its chats (ADR-0043).
 - Audit 2026-10-05 auth/media/runtime fixes (G3, WORKLOG): unreachable web action cases are removed (IDP-6).
   Open: two agent-snapshot producers emit different values and only `jobs/snapshot.go` runs (GO-EXPORT-01).
 
