@@ -440,6 +440,10 @@ func (a *App) serveHTTP(w http.ResponseWriter, r *http.Request) {
 	if !a.admitAPI(w, r) {
 		return
 	}
+	if r.Method == http.MethodPost && (r.URL.Path == "/login/" || r.URL.Path == "/api/auth/login") {
+		a.Accounts.LoginPOST(w, r, r.URL.Path == "/login/")
+		return
+	}
 	a.Mux.ServeHTTP(w, r)
 }
 

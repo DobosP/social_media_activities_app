@@ -25,6 +25,8 @@ type Config struct {
 	ConsentValidity            time.Duration
 	APITokenTTL                time.Duration
 	ExportPostCap              int
+	LoginFailureLimit          int
+	LoginFailureWindow         time.Duration
 	Now                        func() time.Time
 }
 type Service struct {
@@ -52,12 +54,21 @@ func New(db *pgxpool.Pool, auth *authcore.Service, identityBindingSecret string,
 	if config.ExportPostCap <= 0 || config.ExportPostCap > 5000 {
 		config.ExportPostCap = 5000
 	}
+	if config.LoginFailureLimit == 0 {
+		config.LoginFailureLimit = 10
+	}
+	if config.LoginFailureWindow == 0 {
+		config.LoginFailureWindow = 15 * time.Minute
+	}
 	return &Service{DB: db, Auth: auth, Store: NewStore(db), Secret: []byte(identityBindingSecret), Config: config}
 }
 
 func (s *Service) Migrate(ctx context.Context) error {
 	_, err := s.DB.Exec(ctx, `CREATE TABLE IF NOT EXISTS accounts_go_age_state(state_hash char(64) PRIMARY KEY,user_id bigint NOT NULL REFERENCES accounts_user(id) ON DELETE CASCADE,nonce text NOT NULL,expires_at timestamptz NOT NULL);CREATE INDEX IF NOT EXISTS accounts_go_age_expiry ON accounts_go_age_state(expires_at);CREATE TABLE IF NOT EXISTS accounts_go_action_budget(user_id bigint NOT NULL REFERENCES accounts_user(id) ON DELETE CASCADE,action text NOT NULL,count integer NOT NULL,until timestamptz NOT NULL,PRIMARY KEY(user_id,action));CREATE INDEX IF NOT EXISTS accounts_go_action_expiry ON accounts_go_action_budget(until)`)
-	return err
+	if err != nil {
+		return err
+	}
+	return s.MigrateLoginFailures(ctx)
 }
 
 // pruneExpiredActionBudgets releases all expiry row locks before admission

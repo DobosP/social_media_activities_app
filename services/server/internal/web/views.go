@@ -36,6 +36,12 @@ func (s *Server) view(r *http.Request, a platform.Actor, name string) (pongo2.Co
 			return data, "web/landing.html", nil
 		}
 		return s.home(r, a)
+	case "interests":
+		data, err := s.interestPage(r, a)
+		return data, "web/interests.html", err
+	case "topic_preferences":
+		data, err := s.topicPage(r, a)
+		return data, "web/topic_preferences.html", err
 	case "groups":
 		httpRedirect := pongo2.Context{"redirect": "/communities/"}
 		return httpRedirect, "web/communities.html", nil
@@ -115,9 +121,8 @@ func (s *Server) view(r *http.Request, a platform.Actor, name string) (pongo2.Co
 		}
 		return data, template, nil
 	case "notifications":
-		value, err := s.get(r, "/api/notifications/")
-		data["items"] = results(value)
-		return data, template, err
+		data, err := s.notificationPage(r)
+		return data, "web/notifications.html", err
 	case "access_preferences", "notification_preferences":
 		value, err := s.get(r, "/api/accounts/me/settings/")
 		data["pref"] = object(value)["access"]

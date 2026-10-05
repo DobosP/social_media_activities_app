@@ -3,6 +3,7 @@ package app
 import (
 	"bufio"
 	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -101,7 +102,9 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	started := time.Now()
 	id := strings.TrimSpace(r.Header.Get("X-Request-ID"))
 	if !requestIDPattern.MatchString(id) {
-		id = rand.Text()
+		var fresh [16]byte
+		_, _ = rand.Read(fresh[:])
+		id = hex.EncodeToString(fresh[:])
 	}
 	w.Header().Set("X-Request-ID", id)
 	w.Header().Set("X-Social-Runtime", "go")

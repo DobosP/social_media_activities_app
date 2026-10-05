@@ -211,6 +211,13 @@ func (s *Server) AccountAction(w http.ResponseWriter, r *http.Request, a platfor
 		}
 	}
 	if err != nil {
+		// These source controls always return to the guardian's own panel on an
+		// eligibility refusal. A missing relationship is not a disclosure surface.
+		wardControl := name == "guardian_guardrail_set" || name == "guardian_revoke" || name == "ward_topics_set"
+		if wardControl && (errors.Is(err, pgx.ErrNoRows) || errors.Is(err, platform.ErrNotFound) || errors.Is(err, platform.ErrForbidden)) {
+			http.Redirect(w, r, "/wards/", http.StatusFound)
+			return true
+		}
 		if errors.Is(err, pgx.ErrNoRows) || errors.Is(err, platform.ErrNotFound) {
 			platform.Fail(w, platform.ErrNotFound)
 		} else {

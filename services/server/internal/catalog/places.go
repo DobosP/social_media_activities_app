@@ -1,6 +1,7 @@
 package catalog
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"math"
@@ -73,7 +74,9 @@ func (s *Service) finalizePlaces(ctx context.Context, data []json.RawMessage) ([
 	decoded := make([]map[string]any, len(data))
 	for i, raw := range data {
 		var obj map[string]any
-		if err := json.Unmarshal(raw, &obj); err != nil {
+		decoder := json.NewDecoder(bytes.NewReader(raw))
+		decoder.UseNumber()
+		if err := decoder.Decode(&obj); err != nil {
 			return nil, err
 		}
 		var id struct {
@@ -115,7 +118,15 @@ func (s *Service) finalizePlaces(ctx context.Context, data []json.RawMessage) ([
 		}
 		open := OpenAt(schedule, s.Now().In(location))
 		props["open_now"] = open
-		if open != nil && obj["_reports"].(float64) >= float64(s.policy().OpenNowReportThreshold) {
+		reports, ok := obj["_reports"].(json.Number)
+		if !ok {
+			return nil, platform.ErrInvalid
+		}
+		reportCount, err := reports.Int64()
+		if err != nil || reportCount < 0 {
+			return nil, platform.ErrInvalid
+		}
+		if open != nil && reportCount >= int64(s.policy().OpenNowReportThreshold) {
 			props["open_now"] = "unverified"
 		}
 		delete(obj, "_corrected_hours")

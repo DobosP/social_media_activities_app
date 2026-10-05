@@ -102,6 +102,14 @@ func (s *Server) action(w http.ResponseWriter, r *http.Request, name string) {
 		platform.Error(w, 403, "CSRF verification failed.")
 		return
 	}
+	if name == "interests" {
+		s.interestAction(w, r, actor)
+		return
+	}
+	if name == "topic_preferences" {
+		s.topicAction(w, r, actor)
+		return
+	}
 	if name == "donate" {
 		s.donateAction(w, r, actor)
 		return

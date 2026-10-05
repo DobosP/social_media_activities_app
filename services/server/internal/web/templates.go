@@ -106,7 +106,7 @@ func transformTemplate(s string) string {
 		return transformed
 	})
 	s = transAssign.ReplaceAllString(s, "{% set $2 = translate($1) %}")
-	s = transTag.ReplaceAllString(s, "{{ translate($1) }}")
+	s = transTag.ReplaceAllString(s, "{% native_static_translate $1 %}")
 	s = langTag.ReplaceAllString(s, "{% set $1 = language %}")
 	s = staticTag.ReplaceAllString(s, "{{ static($1) }}")
 	s = urlTag.ReplaceAllStringFunc(s, func(tag string) string {
@@ -174,6 +174,11 @@ func transformTemplate(s string) string {
 	})
 	s = strings.ReplaceAll(s, "forloop.", "forloop.")
 	s = regexp.MustCompile(`(?s)\{%.*?%\}|\{\{.*?\}\}`).ReplaceAllStringFunc(s, func(tag string) string {
+		// This parser consumes a quoted literal, not a Django expression. Words
+		// such as "is", "None" or "not in" inside the source copy are content.
+		if strings.HasPrefix(strings.TrimSpace(tag), "{% native_static_translate ") {
+			return tag
+		}
 		tag = regexp.MustCompile(`([^\s{}]+) not in ([^\s%}]+)`).ReplaceAllString(tag, "not ($1 in $2)")
 		tag = strings.ReplaceAll(tag, " is not ", " != ")
 		tag = strings.ReplaceAll(tag, " is ", " == ")
@@ -184,6 +189,36 @@ func transformTemplate(s string) string {
 	})
 	s = regexp.MustCompile(`(\{%\s*for\s+[^%]+\s+in\s+)(page|groups_page)(\s*%\})`).ReplaceAllString(s, "$1$2.object_list$3")
 	return tupleLoops(s)
+}
+
+// Only repository template literals reach this tag. Dynamic translate() and
+// interpolated variables retain the renderer's ordinary automatic escaping.
+type staticTranslationNode struct {
+	position *pongo2.Token
+	message  string
+}
+
+func (node *staticTranslationNode) Execute(ctx *pongo2.ExecutionContext, writer pongo2.TemplateWriter) *pongo2.Error {
+	translate, ok := ctx.Public["translate"].(func(string) string)
+	if !ok {
+		return ctx.Error("Static translation service unavailable.", node.position)
+	}
+	_, _ = writer.WriteString(translate(node.message))
+	return nil
+}
+
+func staticTranslationParser(doc *pongo2.Parser, start *pongo2.Token, arguments *pongo2.Parser) (pongo2.INodeTag, *pongo2.Error) {
+	literal := arguments.MatchType(pongo2.TokenString)
+	if literal == nil || arguments.Remaining() != 0 {
+		return nil, arguments.Error("Static translations require exactly one quoted repository literal.", start)
+	}
+	return &staticTranslationNode{position: start, message: literal.Val}, nil
+}
+
+func init() {
+	if err := pongo2.RegisterTag("native_static_translate", staticTranslationParser); err != nil {
+		panic(err)
+	}
 }
 func translateBlock(message string, values ...any) *pongo2.Value {
 	// The trusted release template supplies markup; every interpolated value is

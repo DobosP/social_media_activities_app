@@ -202,6 +202,9 @@ func (s *Store) ConsumeOAuthFlow(ctx context.Context, hash string, now time.Time
 	return result, err
 }
 func (s *Store) AllowAuthAttempt(ctx context.Context, key string, now time.Time) (bool, error) {
+	if allowed, reserved, err := s.reservedLoginAllowed(ctx, key); reserved {
+		return allowed, err
+	}
 	var count int
 	err := platform.Transaction(ctx, s.DB, func(tx pgx.Tx) error {
 		if _, err := tx.Exec(ctx, `SELECT pg_advisory_xact_lock(683475951212)`); err != nil {

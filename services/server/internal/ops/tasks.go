@@ -172,8 +172,10 @@ func (q *Queue) runOne(ctx context.Context) (string, bool, error) {
 	q.mu.RUnlock()
 	var payload map[string]json.RawMessage
 	handlerErr := json.Unmarshal(raw, &payload)
+	missingHandler := false
 	if handlerErr == nil {
 		if handler == nil {
+			missingHandler = true
 			handlerErr = errors.New("missing deferred handler")
 		} else {
 			handlerErr = handler(ctx, tx, payload)
@@ -198,6 +200,9 @@ func (q *Queue) runOne(ctx context.Context) (string, bool, error) {
 			outcome = "retried"
 		}
 		diagnostic := fmt.Sprintf("%T: deferred handler failed", handlerErr)
+		if missingHandler {
+			diagnostic = "no handler for deferred task"
+		}
 		_, err = tx.Exec(ctx, `UPDATE ops_deferredtask SET status=$2,attempts=$3,started_at=COALESCE(started_at,$4),finished_at=$5,available_at=$6,last_error=$7 WHERE id=$1`, id, status, attempts, q.Now(), finish, q.Now().Add(delay), diagnostic)
 	} else {
 		_, err = tx.Exec(ctx, `UPDATE ops_deferredtask SET status='DONE',attempts=$2,started_at=COALESCE(started_at,$3),finished_at=$3,last_error='' WHERE id=$1`, id, attempts, q.Now())

@@ -117,7 +117,7 @@ func (s *Service) Metrics(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "text/plain; version=0.0.4")
 	w.Header().Set("Cache-Control", "no-store")
-	fmt.Fprintf(w, "# TYPE social_http_requests_total counter\nsocial_http_requests_total %d\n# TYPE social_http_server_errors_total counter\nsocial_http_server_errors_total %d\n# TYPE social_http_duration_seconds_sum counter\nsocial_http_duration_seconds_sum %.9f\n", s.requests.Load(), s.errors.Load(), float64(s.latencyNS.Load())/1e9)
+	fmt.Fprintf(w, "# HELP social_http_requests_total Total observed HTTP requests.\n# TYPE social_http_requests_total counter\nsocial_http_requests_total %d\n# HELP social_http_server_errors_total Total observed HTTP responses with status 500 or greater.\n# TYPE social_http_server_errors_total counter\nsocial_http_server_errors_total %d\n# HELP social_http_duration_seconds_sum Total observed HTTP request duration in seconds.\n# TYPE social_http_duration_seconds_sum counter\nsocial_http_duration_seconds_sum %.9f\n", s.requests.Load(), s.errors.Load(), float64(s.latencyNS.Load())/1e9)
 }
 
 type CSPViolation struct {

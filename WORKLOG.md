@@ -3,6 +3,64 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-05 — Source-case contracts and failed-only login checkpoint
+
+Valid until: the candidate is integrated/requalified or superseded — then treat as history.
+
+The frozen2671-case source ledger now verifies640 and retains2031 unresolved cases, with0
+structurally invalid evidence. The Go retirement checker exits1 as required; all original
+Python source/tests remain. Privacy, product/web/venue and ordinary operator/ingestion cases
+are being ported in bounded parallel queues. Neither grouped native test counts nor matching
+test names establish source equivalence. A semantic audit found17 earlier claims needing
+stronger assertions; these were first downgraded, then qualified with independent exact
+erasure/export/guardian/profile/holder-proof/media/interest assertions before being restored.
+
+Actual contract gaps repaired: GeoJSON IDs above2^53 retain int64 precision; interest/topics
+GET/POST pages restore source selection/save/redirect behavior; notification unread markers,
+ward refusal redirects and the four source soft kid-needs facts are restored. A narrow
+trusted static-translation tag preserves source literal text while dynamic/interpolated
+data stays escaped. Deferred missing-handler diagnostics, immediate failed-sync return,
+metrics HELP declarations and32hex request IDs now match their source contracts. Generated
+RO-EDU client/pin and the producer acquisition/ML exception are unchanged.
+
+ADR-0039 records shared failed-only login semantics: lowercase username plus normalized
+trusted client IP, ten failures in a fixed fifteen-minute window starting at first failure,
+success clearing, durable cross-replica reservations and bounded fail-closed completion.
+Raw identity/IP values are not stored/logged. The unchanged hash-pinned auth library still
+verifies credentials/current active state and issues sessions; only a private one-use DB-
+validated reservation context bypasses its unrelated all-attempt limiter. Browser invalid/
+lockoutHTML200 and success302 are restored. Restricted proof reuses the same counter without
+creating a session and retains owned action-bound one-shot thirty-minute appeal capabilities,
+exact bigint IDs and correctable statement errors. This introduces no environment variable
+names. Human auth/privacy/safety review is required before landing.
+
+Go1.27.1/GOWORK=off/GOMAXPROCS=2/GOFLAGS=-p=2 and task-owned caches/tmp; actual private fixture
+network go-native-toolchain-test/database go-native-toolchain-db, read-only source, dropped
+caps/no-new-privileges/UID1000 and explicit synthetic DSN/native codecs:
+
+- Eleven affected race lanes pass419 top-level tests with zero skips/failures:
+  configuration53/accounts55/app27/catalog27/commands14/jobs44/media40/messaging34/safety29/
+  social40/web56. The65 unchanged qualified tests retain the prior checkpoint receipts:
+  484 total across21 lanes. `qualification-caseports.json` binds exact names/logSHA256 and
+  distinguishes refreshed from reused receipts. Fixture repairs and compile-only iterations
+  were corrected before qualification; failed iterations were not counted as passes.
+- `scripts/check-native.sh` passes three-module format/auth hashes/vet/race/whitespace.
+  Authcore source hashes are unchanged. Source-case structural provenance remains strict.
+- govulncheckv1.8 source/imported-package/same-source linked binary gates pass. One unused
+  required-module advisory remains separately reported; imported packages/linked calls have0.
+- Matching Go-only image social-native:go-source-caseports-20261005 is
+  `sha256:5ea84fca75b13acdbc7d13a71e01a52954f3733e358efe29b1e4ba07b771ce5d`.
+  Trivyv0.75/publicDB2026-10-04 reports0 findings at the required image severity gate in
+  Debian and the native executable. Source changes were frozen before the image build.
+- Fleet doc/link gate passes: files52/dead_links0/stale_terms0/retired_verbs0/orphans0;
+  documentation budgets80/120/46/61 and whitespace pass.
+
+Only the assigned Social worktree was mutated. Shared main remains clean/read-only. No
+main merge/push/deploy, hosted workflow enable/dispatch, real ingestion/provider/minor/
+scheduler activation, paid infrastructure, actual secrets/env/auth-store reads or retained
+work deletion occurred. The fixture and all unlanded branches/worktrees/scratch remain.
+Remaining source cases continue; this checkpoint does not claim full migration completion.
+
 ## 2026-10-05 — Native verification and operator toolchain candidate
 
 Valid until: the candidate is integrated/requalified or superseded — then treat as history.

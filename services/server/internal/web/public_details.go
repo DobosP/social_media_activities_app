@@ -58,7 +58,7 @@ func (s *Server) publicPlaceDetail(r *http.Request, a platform.Actor) (pongo2.Co
 		if row["state"] != "unknown" {
 			recorded = append(recorded, row)
 		}
-		if row["state"] == "true" && (row["key"] == "fenced" || row["key"] == "baby_changing" || row["key"] == "playground") {
+		if row["state"] == "true" && (row["key"] == "toilets" || row["key"] == "fenced" || row["key"] == "playground" || row["key"] == "drinking_water") {
 			kid = true
 		}
 	}

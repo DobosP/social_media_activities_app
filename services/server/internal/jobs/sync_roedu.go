@@ -28,21 +28,24 @@ func (r *Runner) SyncRoedu(ctx context.Context) (map[string]any, error) {
 	}
 	pack, err := r.Config.Roedu.Read(ctx, city)
 	if err != nil {
+		if !errors.Is(err, ErrProductRefused) {
+			return nil, err
+		}
 		var coverErr error
 		if r.Config.ResolvePlaceCovers != nil {
 			_, coverErr = r.Config.ResolvePlaceCovers(ctx, nil)
 		}
-		if errors.Is(err, ErrProductRefused) {
-			if auditErr := platform.Transaction(ctx, r.DB, func(tx pgx.Tx) error {
-				return platform.RecordAudit(ctx, tx, platform.Actor{}, "ingestion.roedu_refused", "", map[string]any{"pack": SocialPack, "city": city})
-			}); auditErr != nil {
-				return nil, auditErr
-			}
-			return map[string]any{"refused": true, "refreshed": false}, coverErr
+		if auditErr := platform.Transaction(ctx, r.DB, func(tx pgx.Tx) error {
+			return platform.RecordAudit(ctx, tx, platform.Actor{}, "ingestion.roedu_refused", "", map[string]any{"pack": SocialPack, "city": city})
+		}); auditErr != nil {
+			return nil, auditErr
 		}
-		return nil, err
+		return map[string]any{"refused": true, "refreshed": false}, coverErr
 	}
 	summary, err := r.ApplyRoedu(ctx, pack, city)
+	if err != nil {
+		return summary, err
+	}
 	if r.Config.ResolvePlaceCovers != nil {
 		_, coverErr := r.Config.ResolvePlaceCovers(ctx, nil)
 		if err == nil {

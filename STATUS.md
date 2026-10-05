@@ -97,11 +97,12 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
-- Native-toolchain candidate:369 passing native contracts/21 lanes, zero skips; final media/audit-failure
-  and corrected venue-search cases requalified. Race/vet/auth hashes and source/package/linked audits
-  pass. Final Go-only image4e480d95 has zero fixable HIGH/CRITICAL findings; CSP/backup refusal smoke
-  passes. Case gate:283 verified/2388 unresolved/0 invalid; retirement is blocked. Fixture benchmarks
-  and exact receipts: WORKLOG. Prior303-test completion receipt remains in `docs/reviews/native-go/`.
+- Source-case candidate:419 affected tests/11 lanes pass with zero skips;65 unchanged qualified tests
+  retain prior receipts (484 total/21 lanes). ADR-0039 restores shared failed-only login lockout;
+  browser/topic/interest/notice/ward contracts, exact place IDs and source diagnostics are repaired.
+  Race/vet/auth hashes and source/package/linked audits pass; Go-only image5ea84fca has zero findings
+  at the required image gate. Case gate:640 verified/2031 unresolved/0 invalid; retirement is blocked.
+  Exact receipts, semantic corrections and unused-module advisory: WORKLOG. Human review remains.
 
 ## Standard verification
 Native race/vet + shared-source hashes; database/codec contracts require explicit disposable fixtures
