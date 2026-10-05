@@ -71,7 +71,17 @@ for native_package in configuration accounts admin app backup booking budgets ca
       echo "Could not scan $native_log for skipped tests (grep exit $native_status)" >&2
       exit "$native_status";;
   esac
-  native_passed=$(grep -c -e '^--- PASS:' -- "$native_log") || true
+  native_status=0
+  native_passed=$(grep -c -e '^--- PASS:' -- "$native_log") || native_status=$?
+  case $native_status in
+    0) ;;
+    1)
+      echo "no native tests ran in $native_package" >&2
+      exit 1;;
+    *)
+      echo "Could not count $native_log passing tests (grep exit $native_status)" >&2
+      exit "$native_status";;
+  esac
   if ! [[ $native_passed =~ ^[0-9]+$ ]] || ((native_passed == 0)); then
     echo "no native tests ran in $native_package" >&2
     exit 1

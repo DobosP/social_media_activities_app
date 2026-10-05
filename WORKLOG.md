@@ -3,6 +3,19 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-05 — Passing-test count errors fail closed (G1 critic follow-up)
+
+Valid until: the qualification gate changes — then requalify.
+
+The independent Linux critic found that `grep -c` could emit a positive count and then exit2;
+`qualify-native.sh` ignored that operational error and reported every lane green. The count
+now captures and checks grep's status before accepting its output (exit1 means no tests;
+exit2+ aborts). Harness case q reproduces the positive-count/error combination; case k now
+expects the explicit count-error diagnostic. Task-local Bash harness:17/17 passed. With only
+the production scripts restored to9fff08b,15/17 passed: q incorrectly exits0 and k has the
+old diagnostic. The critic independently reran17/17 and approved the final two-script diff.
+No fixture/full final-head qualification is claimed here; G2/G3 and G1 final gates remain owed.
+
 ## 2026-10-05 — Linux continuation of the Go integration (G1 handoff)
 
 Valid until: `feat/go-native-toolchain` lands on `main` — then treat as history.

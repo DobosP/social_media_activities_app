@@ -73,7 +73,9 @@ printf '%s\n' '=== RUN   TestA' '--- PASS: TestA (0.00s)' '=== RUN   TestB' \
   '--- PASS: TestB (0.01s)' 'PASS' >"$gates_tmp/pass.log"
 
 # A grep that errors (exit 2) in one mode (-q or -c) and is real grep otherwise.
-stub "$gates_tmp/grep-fail" grep "for a; do [[ \$a == -\$NATIVE_GATES_GREP_FAIL ]] && { echo 'grep-stub: forced error' >&2; exit 2; }; done
+stub "$gates_tmp/grep-fail" grep "mode=\$NATIVE_GATES_GREP_FAIL
+[[ \$mode != c-positive ]] || mode=c
+for a; do [[ \$a == -\$mode ]] && { [[ \$NATIVE_GATES_GREP_FAIL != c-positive ]] || echo 1; echo 'grep-stub: forced error' >&2; exit 2; }; done
 exec $(printf '%q' "$(command -v grep)") \"\$@\""
 
 # run_qualify CASE LOG UNAME [GREP_FAIL_MODE]
@@ -97,7 +99,9 @@ expect 'i qualify: non-Linux host is refused' nonzero "$gates_status" "$gates_tm
 gates_status=0; run_qualify j pass.log Linux q || gates_status=$?
 expect 'j qualify: grep -q erroring fails the lane' nonzero "$gates_status" "$gates_tmp/j.err" 'Could not scan'
 gates_status=0; run_qualify k pass.log Linux c || gates_status=$?
-expect 'k qualify: grep -c erroring fails the lane' nonzero "$gates_status" "$gates_tmp/k.err" 'no native tests ran in configuration'
+expect 'k qualify: grep -c erroring fails the lane' nonzero "$gates_status" "$gates_tmp/k.err" 'Could not count'
+gates_status=0; run_qualify q pass.log Linux c-positive || gates_status=$?
+expect 'q qualify: positive count plus grep error fails the lane' nonzero "$gates_status" "$gates_tmp/q.err" 'Could not count'
 
 # --- check-native.sh: stub go reports a temp GOROOT whose bin/ holds gofmt (or not);
 # stub node prints a TAP summary with NATIVE_GATES_NODE_PASS passing tests.
