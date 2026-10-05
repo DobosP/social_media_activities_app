@@ -159,8 +159,10 @@ func TestPostgresPlainThreadTypingFloodStaysBounded(t *testing.T) {
 	}
 	// The per-connection typing interval and the (room, actor) coalescing window
 	// both allow one publish per window, so the flood yields at most one plus one
-	// per elapsed window. Before the limits every frame published.
-	window := chat.DefaultConfig().TypingInterval
+	// per elapsed window. Before the limits every frame published. The literal
+	// matches chat.DefaultConfig().TypingInterval and keeps this test compiling
+	// against the unthrottled package for fail-before evidence.
+	window := 2 * time.Second
 	bound := 1 + int(elapsed/window)
 	if publishes < 1 || publishes > bound {
 		t.Fatal("typing publishes not bounded by the per-connection and coalescing limits", publishes, bound)
