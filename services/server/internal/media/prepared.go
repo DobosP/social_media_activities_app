@@ -110,10 +110,10 @@ func (p *PreparedAttachment) Publish(ctx context.Context, tx pgx.Tx, post int64)
 	if err = tx.QueryRow(ctx, `INSERT INTO media_attachment(post_id,uploader_id,kind,status,storage_key,thumb_storage_key,poster_storage_key,poster_content_type,source_storage_key,content_type,byte_size,sha256,original_filename,width,height,exif_stripped,duration_seconds,processing_attempts,processing_started_at,expires_at,purged_at,created_at) VALUES($1,$2,$3,$4,$5,$6,'','',$7,$8,$9,$10,$11,$12,$13,$14,0,0,NULL,$15,NULL,now()) RETURNING id`, post, p.actor.ID, p.kind, status, mainKey, p.thumb, sourceKey, mime, m.Main.ByteSize, m.Main.SHA256, display, m.Main.Width, m.Main.Height, m.MetadataStripped, p.service.attachmentExpiry(cohort, p.ttl)).Scan(&id); err != nil {
 		return err
 	}
-	if err = saveManifest(ctx, tx, "attachment", id, m); err != nil {
+	if err = saveManifest(ctx, tx, "attachment", id, minimisedManifest(m, p.kind == "video")); err != nil {
 		return err
 	}
-	if err := platform.RecordAudit(ctx, tx, p.actor, "media.attached", fmt.Sprintf("media.attachment:%d", id), map[string]any{"kind": p.kind, "source_sha256": m.SourceSHA256}); err != nil {
+	if err := platform.RecordAudit(ctx, tx, p.actor, "media.attached", fmt.Sprintf("media.attachment:%d", id), map[string]any{"kind": p.kind}); err != nil {
 		return err
 	}
 	p.published = true

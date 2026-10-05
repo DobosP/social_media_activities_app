@@ -3,6 +3,25 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-05 — Avatar uniqueness in-cohort; fingerprints only for avatars (GO-MEDIA-01, GO-MEDIA-02)
+
+Valid until: `fix/go-avatar-cohort-media-minimisation` is integrated or superseded — then treat as history.
+
+[ADR-0044](docs/adr/0044-media-fingerprint-minimisation.md). The profile duplicate scan joins
+`accounts_user` and compares only with avatars of the uploader's committed cohort (fresh actor inside the
+upload transaction; unassigned compares with unassigned, as the reference). `media_photo.phash` is stored
+for profile photos only; non-profile manifests drop `perceptual_hash`, and `source_sha256` except video and
+Wikimedia place covers (licensing provenance read by the operator proof). Success audits (`media.uploaded`,
+`media.attached`, cover uploads, `media.video_ready`, `place.cover_resolved`) no longer carry the digest;
+blocked-scan audits keep it. `EnsureSchema` scrubs stored non-profile fingerprints idempotently; the
+hash-chained `safety_auditlog` keeps historical digests by design. Two reference cases are ported
+(`test_same_image_allowed_across_cohorts`, `test_profile_near_duplicate_rejected_within_cohort_only`;
+privacy-coverage entries now native evidence). Four new PostgreSQL tests fail with the production files
+reverted (cross-cohort refusal ×2, thread fingerprint stored, scrub absent). WSL Go 1.27.1, social_g2,
+code head 0cb93cd on base 778470d: gofmt/vet/-race media+contracts ok; lanes media 46, contracts and jobs
+(see below) top-level pass with 0 skip, 0 fail. Open (not this slice): an avatar attempt is counted before
+image processing, so a busy refusal still spends it (noted by G3).
+
 ## 2026-10-05 — Unreachable web action cases removed; two descriptions corrected (IDP-6, GO-MEDIA-05, GO-EXPORT-01)
 
 Valid until: `fix/go-low-dead-code` is integrated or superseded — then treat as history.

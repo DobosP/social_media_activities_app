@@ -259,10 +259,11 @@ func (s *Service) AttachToPost(ctx context.Context, a platform.Actor, postID int
 		if e != nil {
 			return e
 		}
-		if e = saveManifest(ctx, tx, "attachment", id, m); e != nil {
+		// Video keeps its admitted original digest for the processing worker.
+		if e = saveManifest(ctx, tx, "attachment", id, minimisedManifest(m, kind == "video")); e != nil {
 			return e
 		}
-		return platform.RecordAudit(ctx, tx, a, "media.attached", fmt.Sprintf("media.attachment:%d", id), map[string]any{"kind": kind, "source_sha256": m.SourceSHA256})
+		return platform.RecordAudit(ctx, tx, a, "media.attached", fmt.Sprintf("media.attachment:%d", id), map[string]any{"kind": kind})
 	})
 	if err != nil {
 		return att, err
@@ -553,10 +554,10 @@ func (s *Service) processClaim(ctx context.Context, att Attachment) (err error) 
 		if e = queueDelete(ctx, tx, att.sourceKey); e != nil {
 			return e
 		}
-		if e = saveManifest(ctx, tx, "attachment", att.ID, m); e != nil {
+		if e = saveManifest(ctx, tx, "attachment", att.ID, minimisedManifest(m, true)); e != nil {
 			return e
 		}
-		if e := platform.RecordAudit(ctx, tx, platform.Actor{}, "media.video_ready", fmt.Sprintf("media.attachment:%d", att.ID), map[string]any{"source_sha256": m.SourceSHA256}); e != nil {
+		if e := platform.RecordAudit(ctx, tx, platform.Actor{}, "media.video_ready", fmt.Sprintf("media.attachment:%d", att.ID), map[string]any{"attachment_id": att.ID}); e != nil {
 			return e
 		}
 		return chat.Publish(ctx, tx, chat.Event{Kind: "chat", Event: "attachments", RoomID: att.thread, MessageID: att.PostID})

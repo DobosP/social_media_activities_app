@@ -83,7 +83,7 @@ type Artifact struct {
 }
 type Manifest struct {
 	PolicyVersion    string    `json:"policy_version"`
-	SourceSHA256     string    `json:"source_sha256"`
+	SourceSHA256     string    `json:"source_sha256,omitempty"`
 	SourceByteSize   int64     `json:"source_byte_size"`
 	Kind             string    `json:"kind"`
 	Status           string    `json:"status"` // ready only after all required scans.

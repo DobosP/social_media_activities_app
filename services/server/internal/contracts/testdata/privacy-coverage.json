@@ -6844,13 +6844,22 @@
       "legacy_file": "apps/media/tests/test_perceptual.py",
       "line": 69,
       "source_sha256": "dc587122c577643e354e1bb89041c68c960d09a12c06b5ac6c3e292c7efcc5fb",
-      "classification": "unresolved",
-      "native_evidence": [],
-      "rationale": "Preserve the legacy declaration until its behavioral assertions have independent native evidence; a larger native suite or registered route is insufficient.",
-      "gaps": [
-        "Remaining source assertion/transport/edge-case obligations require an explicit native port or reviewed replacement."
+      "classification": "native_semantic_coverage",
+      "native_evidence": [
+        {
+          "go_file": "services/server/internal/media/privacy_minimisation_test.go",
+          "test": "TestNativeProfileNearDuplicateRejectedWithinCohortOnly",
+          "scenario": "structured avatar then lossy JPEG re-encode within and across the cohort wall",
+          "assertions": [
+            "same-cohort adult re-encoded near-duplicate is refused with ErrInvalid and stores no row",
+            "other-cohort child original is admitted and its stored phash is a 16-hex fingerprint",
+            "other-cohort teen re-encoded near-duplicate is admitted"
+          ]
+        }
       ],
-      "runtime_verification": "not_run"
+      "rationale": "The native profile scan is scoped to the uploader's committed cohort inside the publishing transaction. The fixture is a deterministic stripe grid rather than the legacy wrapped gradient so the stored AVIF dHash stays non-empty and stable through the native canonical encoder. Passed in the task-owned synthetic PostgreSQL/codec race qualification (media lane, 2026-10-05), and fails with the production fix reverted. This is source-contract evidence, not production/minor activation evidence.",
+      "gaps": [],
+      "runtime_verification": "passed"
     },
     {
       "legacy_id": "apps/media/tests/test_presigned.py::test_authorized_media_file_redirects_to_presigned_url",
@@ -7048,13 +7057,23 @@
       "legacy_file": "apps/media/tests/test_profile_unique.py",
       "line": 68,
       "source_sha256": "f0fa42a9b82d4eae7948e1294fd3af594c06e539726477b378ce729dd317b450",
-      "classification": "unresolved",
-      "native_evidence": [],
-      "rationale": "Preserve the legacy declaration until its behavioral assertions have independent native evidence; a larger native suite or registered route is insufficient.",
-      "gaps": [
-        "Remaining source assertion/transport/edge-case obligations require an explicit native port or reviewed replacement."
+      "classification": "native_semantic_coverage",
+      "native_evidence": [
+        {
+          "go_file": "services/server/internal/media/privacy_minimisation_test.go",
+          "test": "TestNativeProfileUniquenessAllowsSameImageAcrossCohorts",
+          "scenario": "identical avatar uploaded by adult, child and teen",
+          "assertions": [
+            "child upload of the adult's exact image succeeds with kind profile",
+            "teen upload of the same image succeeds",
+            "three profile rows exist, one per cohort",
+            "an actor whose committed cohort became unassigned is refused with ErrForbidden despite a stale adult snapshot"
+          ]
+        }
       ],
-      "runtime_verification": "not_run"
+      "rationale": "The native profile scan is scoped to the uploader's committed cohort inside the publishing transaction, so the duplicate result never crosses the cohort wall. Passed in the task-owned synthetic PostgreSQL/codec race qualification (media lane, 2026-10-05), and fails with the production fix reverted. This is source-contract evidence, not production/minor activation evidence.",
+      "gaps": [],
+      "runtime_verification": "passed"
     },
     {
       "legacy_id": "apps/media/tests/test_renditions.py::test_activity_cover_large_source_gets_a_thumb",

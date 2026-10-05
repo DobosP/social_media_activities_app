@@ -72,7 +72,14 @@ CREATE TRIGGER media_go_blob_cleanup BEFORE DELETE ON media_attachment FOR EACH 
 DROP TRIGGER IF EXISTS media_go_blob_cleanup ON media_activitycover;
 CREATE TRIGGER media_go_blob_cleanup BEFORE DELETE ON media_activitycover FOR EACH ROW EXECUTE FUNCTION media_go_queue_deleted_blobs();
 DROP TRIGGER IF EXISTS media_go_blob_cleanup ON places_placecover;
-CREATE TRIGGER media_go_blob_cleanup BEFORE DELETE ON places_placecover FOR EACH ROW EXECUTE FUNCTION media_go_queue_deleted_blobs();`)
+CREATE TRIGGER media_go_blob_cleanup BEFORE DELETE ON places_placecover FOR EACH ROW EXECUTE FUNCTION media_go_queue_deleted_blobs();
+-- W8-0 data minimisation, idempotent on every start: only avatars keep a
+-- perceptual fingerprint; the original-upload digest stays only where a reader
+-- needs it (video worker, Wikimedia acquisition provenance). Historical
+-- safety_auditlog rows keep their digest by design: that log is hash-chained.
+UPDATE media_photo SET phash='' WHERE kind<>'profile' AND phash<>'';
+UPDATE media_go_manifest m SET payload=m.payload-'perceptual_hash' WHERE (m.payload ? 'perceptual_hash') AND NOT (m.kind='photo' AND EXISTS(SELECT 1 FROM media_photo p WHERE p.id=m.row_id AND p.kind='profile'));
+UPDATE media_go_manifest m SET payload=m.payload-'source_sha256' WHERE (m.payload ? 'source_sha256') AND NOT (m.kind='photo' AND EXISTS(SELECT 1 FROM media_photo p WHERE p.id=m.row_id AND p.kind='profile')) AND NOT (m.kind='attachment' AND m.payload->>'kind'='video') AND NOT (m.kind='place-cover' AND EXISTS(SELECT 1 FROM places_placecover c WHERE c.id=m.row_id AND c.source='wikimedia'));`)
 	return e
 }
 func queueDelete(ctx context.Context, tx pgx.Tx, keys ...string) error {
@@ -95,6 +102,17 @@ func saveManifest(ctx context.Context, tx pgx.Tx, kind string, id int64, m Manif
 	}
 	_, e = tx.Exec(ctx, `INSERT INTO media_go_manifest(kind,row_id,payload) VALUES($1,$2,$3) ON CONFLICT(kind,row_id) DO UPDATE SET payload=excluded.payload,created_at=now()`, kind, id, b)
 	return e
+}
+
+// minimisedManifest is the persisted form of a non-profile manifest (W8-0): the
+// perceptual fingerprint exists only for avatar uniqueness, and the original
+// digest is kept only for a caller that reads it back.
+func minimisedManifest(m Manifest, keepSource bool) Manifest {
+	m.PerceptualHash = ""
+	if !keepSource {
+		m.SourceSHA256 = ""
+	}
+	return m
 }
 func randomKey(prefix, mime string) (string, error) {
 	var b [16]byte
@@ -417,6 +435,14 @@ func (s *Service) UploadPhoto(ctx context.Context, a platform.Actor, kind string
 			if _, e := tx.Exec(ctx, `SELECT pg_advisory_xact_lock(683475951211)`); e != nil {
 				return e
 			}
+			// The duplicate answer never crosses the cohort wall: an adult must not
+			// probe whether an image is a child's avatar. Scope by the committed
+			// cohort value (unassigned included, as the reference does), never by
+			// the request snapshot.
+			fresh, e := currentMediaActor(ctx, tx, a)
+			if e != nil {
+				return e
+			}
 			var changes int
 			if e := tx.QueryRow(ctx, `SELECT count(*) FROM safety_auditlog WHERE actor_id=$1 AND event='media.uploaded' AND data->>'kind'='profile' AND created_at>now()-$2*interval '1 second'`, a.ID, s.policy.AvatarUploadWindow.Seconds()).Scan(&changes); e != nil {
 				return e
@@ -424,7 +450,7 @@ func (s *Service) UploadPhoto(ctx context.Context, a platform.Actor, kind string
 			if changes >= s.policy.AvatarUploadLimit {
 				return ErrThrottled
 			}
-			rows, e := tx.Query(ctx, `SELECT sha256,phash FROM media_photo WHERE kind='profile' AND uploader_id!=$1 ORDER BY created_at DESC LIMIT $2`, a.ID, s.policy.PerceptualProfileScanCap)
+			rows, e := tx.Query(ctx, `SELECT p.sha256,p.phash FROM media_photo p JOIN accounts_user u ON u.id=p.uploader_id WHERE p.kind='profile' AND p.uploader_id<>$1 AND u.cohort=$2 ORDER BY p.created_at DESC LIMIT $3`, fresh.ID, fresh.Cohort, s.policy.PerceptualProfileScanCap)
 			if e != nil {
 				return e
 			}
@@ -471,13 +497,18 @@ func (s *Service) UploadPhoto(ctx context.Context, a platform.Actor, kind string
 		if kind == "thread" {
 			thread = threadID
 		}
-		if e := tx.QueryRow(ctx, `INSERT INTO media_photo(kind,thread_id,uploader_id,storage_key,thumb_storage_key,content_type,byte_size,sha256,phash,width,height,scan_status,exif_stripped,created_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'clean',true,now()) RETURNING `+photoColumns, kind, thread, a.ID, key, thumb, m.Main.ContentType, m.Main.ByteSize, m.Main.SHA256, m.PerceptualHash, m.Main.Width, m.Main.Height).Scan(&p.ID, &p.Kind, &p.Thread, &p.ContentType, &p.ByteSize, &p.Width, &p.Height, &p.ScanStatus, &p.CreatedAt, &p.owner, &p.key, &p.thumb); e != nil {
+		// A private thread photo never stores a fingerprint (W8-0).
+		fingerprint, manifest := "", minimisedManifest(m, false)
+		if kind == "profile" {
+			fingerprint, manifest = m.PerceptualHash, m
+		}
+		if e := tx.QueryRow(ctx, `INSERT INTO media_photo(kind,thread_id,uploader_id,storage_key,thumb_storage_key,content_type,byte_size,sha256,phash,width,height,scan_status,exif_stripped,created_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'clean',true,now()) RETURNING `+photoColumns, kind, thread, a.ID, key, thumb, m.Main.ContentType, m.Main.ByteSize, m.Main.SHA256, fingerprint, m.Main.Width, m.Main.Height).Scan(&p.ID, &p.Kind, &p.Thread, &p.ContentType, &p.ByteSize, &p.Width, &p.Height, &p.ScanStatus, &p.CreatedAt, &p.owner, &p.key, &p.thumb); e != nil {
 			return e
 		}
-		if e := saveManifest(ctx, tx, "photo", p.ID, m); e != nil {
+		if e := saveManifest(ctx, tx, "photo", p.ID, manifest); e != nil {
 			return e
 		}
-		return platform.RecordAudit(ctx, tx, a, "media.uploaded", fmt.Sprintf("media.photo:%d", p.ID), map[string]any{"kind": kind, "source_sha256": m.SourceSHA256})
+		return platform.RecordAudit(ctx, tx, a, "media.uploaded", fmt.Sprintf("media.photo:%d", p.ID), map[string]any{"kind": kind})
 	})
 	if err == nil {
 		published = true
@@ -594,10 +625,10 @@ func (s *Service) UploadActivityCover(ctx context.Context, a platform.Actor, act
 		if e = queueDelete(ctx, tx, old, oldThumb); e != nil {
 			return e
 		}
-		if e = saveManifest(ctx, tx, "activity-cover", c.ID, m); e != nil {
+		if e = saveManifest(ctx, tx, "activity-cover", c.ID, minimisedManifest(m, false)); e != nil {
 			return e
 		}
-		return platform.RecordAudit(ctx, tx, a, "media.activity_cover_uploaded", fmt.Sprintf("social.activity:%d", activityID), map[string]any{"cover_id": c.ID, "source_sha256": m.SourceSHA256})
+		return platform.RecordAudit(ctx, tx, a, "media.activity_cover_uploaded", fmt.Sprintf("social.activity:%d", activityID), map[string]any{"cover_id": c.ID})
 	})
 	if err == nil {
 		published = true

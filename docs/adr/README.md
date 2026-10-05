@@ -48,6 +48,7 @@ On conflict: `STATUS.md` > newest-dated ADR > every other doc.
 | 0038 | [native-verification-toolchain](0038-native-verification-toolchain.md) | proposed; native qualified, reference retirement blocked; landing per ADR-0040; human review gates first deployment | 2026-10-05 |
 | 0039 | [native-source-login-failure-counter](0039-native-source-login-failure-counter.md) | proposed; source restoration qualified, landing per ADR-0040; human auth/privacy review gates first deployment | 2026-10-05 |
 | 0040 | [landing-and-deployment-review-gates](0040-landing-and-deployment-review-gates.md) | accepted; owner decision 2026-10-05 | 2026-10-05 |
+| 0044 | [media-fingerprint-minimisation](0044-media-fingerprint-minimisation.md) | accepted; reference parity (audit GO-MEDIA-01/02); human privacy review gates first deployment | 2026-10-05 |
 
 ⚠ **0009 is claimed twice** — this ledger exists so it does not happen again. Both files stay:
 `0009-csp-enforcement-prep.md` (superseded by ADR-0010) and
