@@ -80,7 +80,7 @@ func init() {
 	add("safety.authorityreferral", "safety_authorityreferral", "authority,reason,subject_ref,referred_by_id,created_at,reference,report_id,audit_anchor_hash,notes")
 	add("safety.auditlog", "safety_auditlog", "event,actor_id,target_ref,created_at,data,prev_hash,hash")
 	add("media.photo", "media_photo", "kind,uploader_id,thread_id,scan_status,byte_size,created_at")
-	add("media.attachment", "media_attachment", "kind,uploader_id,post_id,content_type,byte_size,created_at")
+	add("media.attachment", "media_attachment", "kind,status,processing_attempts,processing_started_at,uploader_id,post_id,content_type,byte_size,created_at")
 	add("media.activitycover", "media_activitycover", "activity_id,uploader_id,content_type,byte_size,created_at")
 	add("donations.donation", "donations_donation", "amount_cents,currency,provider,status,donor_id,campaign_id,created_at,completed_at")
 	add("donations.campaign", "donations_campaign", "title,slug,goal_cents,currency,is_active,partner_id,closed_at,created,outcome")

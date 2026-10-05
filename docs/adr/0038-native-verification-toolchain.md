@@ -61,3 +61,21 @@ Current gaps and exact receipts belong in STATUS/WORKLOG and the case manifests.
 reference retirement remains blocked until its independent native coverage is qualified.
 Source privacy/auth/safety changes need human review before landing. There is no production
 verification, ingestion, scheduler/provider/minor activation, procurement or deployment here.
+
+## 2026-10-05 — Exhausted video lease no longer blocks the queue
+
+The oldest-first video claim selected an exhausted stale lease on every drain, so one held row
+blocked every later video. The claim now fences stale processing rows at or above the attempt
+budget. Such a row stays held with its evidence: status, source key, attempt count and source
+bytes are unchanged, nothing is queued for deletion and no terminal audit is written. Later
+videos keep processing, and a drain that finds only held rows completes without error. The
+in-transaction exhaustion re-check stays as a defensive guard; pending exhausted attachments
+keep their normal terminal cleanup.
+
+A held row no longer makes every drain fail, so nothing signals it by itself. The
+administrator console's attachment summary now shows status, attempt count and claim time,
+which identifies a held row (processing, attempts at the budget, an old claim time); there is
+no held-row count or filter. The expiry purge skips processing rows, so a held source also
+outlives its attachment's time-to-live until an operator acts; owner deletion and account
+erasure still remove it. Releasing or finalizing a held row stays a manual operator action
+until a reviewed tool exists. These are known gaps.

@@ -136,8 +136,10 @@ func TestRetirementPendingVideoScannerOutagePreservesBytesAndAttemptBudget(t *te
 		if _, err := db.Exec(ctx, `UPDATE media_attachment SET processing_started_at=now()-interval '1 hour' WHERE id=$1`, attachment); err != nil {
 			t.Fatal(err)
 		}
-		if processed, err := service.ProcessPendingVideos(ctx, 2); processed != 0 || !errors.Is(err, ErrProcessing) {
-			t.Fatal("exhausted unconfirmed lease was destructively finalized", err)
+		// The exhausted stale lease is fenced out of the claim: it is neither
+		// reclaimed nor finalized, and draining an otherwise empty queue is clean.
+		if processed, err := service.ProcessPendingVideos(ctx, 2); processed != 0 || err != nil {
+			t.Fatal("exhausted unconfirmed lease was claimed instead of held", processed, err)
 		}
 		assertHeld()
 	})
