@@ -356,7 +356,13 @@ func (s *Service) activityAction(w http.ResponseWriter, r *http.Request, a Actor
 		return
 	}
 	if mid > 0 && action != "transfer" {
-		v, e := s.Membership(r.Context(), a, mid)
+		var v json.RawMessage
+		var e error
+		if action == "leave" {
+			v, e = s.membershipAfterLeave(r.Context(), a, mid)
+		} else {
+			v, e = s.Membership(r.Context(), a, mid)
+		}
 		status := 200
 		if action == "join" || action == "guardians" {
 			status = 201

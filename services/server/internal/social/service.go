@@ -311,6 +311,17 @@ func (s *Service) Membership(ctx context.Context, a Actor, id int64) (json.RawMe
 	}
 	return object(ctx, s.DB, `SELECT `+membershipColumns+` FROM social_membership m JOIN accounts_user u ON u.id=m.user_id JOIN social_activity a ON a.id=m.activity_id WHERE m.id=$3 AND a.cohort=$2 AND NOT a.is_hidden AND `+blockOwner+` AND `+membershipAudience, a.ID, a.Cohort, id)
 }
+
+// A successful safe exit returns only the actor's own removed row. Reusing the
+// ordinary block-aware read gate would report failure after committing Leave.
+// This projection preserves that response without opening any other read path.
+func (s *Service) membershipAfterLeave(ctx context.Context, a Actor, id int64) (json.RawMessage, error) {
+	if !assigned(a) {
+		return nil, platform.ErrNotFound
+	}
+	return object(ctx, s.DB, `SELECT `+membershipColumns+` FROM social_membership m JOIN accounts_user u ON u.id=m.user_id WHERE m.id=$2 AND m.user_id=$1 AND m.state='removed'`, a.ID, id)
+}
+
 func (s *Service) listActivities(ctx context.Context, a Actor, query string, limit, offset int) ([]json.RawMessage, error) {
 	if !assigned(a) {
 		return []json.RawMessage{}, nil

@@ -64,6 +64,7 @@ func (b *Broker) unsubscribe(s *subscription) {
 	b.mu.Unlock()
 	s.close()
 }
+
 // dispatch never invalidates a socket for a transient typing event: typing is
 // dropped for a subscriber whose queue is at least half full, which keeps the
 // other half for durable events. Only a durable event that cannot be queued

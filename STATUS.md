@@ -70,7 +70,7 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   operations. Never apply paid infrastructure without owner authorization.
 - Audit 2026-10-05 privacy/safety fixes (G2, WORKLOG): report eligibility (ADR-0041), direct-only block veto
   and sanction chat eviction (ADR-0043), avatar/fingerprint minimisation (ADR-0044), guardian authority
-  (ADR-0045), co-member logistics (ADR-0046), typing throttle, group mentions, v1 history and query ceilings.
+  (ADR-0045), co-member logistics (ADR-0046), typing throttle, v1 history/query ceilings and safe-exit API responses.
 - Audit 2026-10-05 auth/media/runtime fixes (G3, WORKLOG): unreachable web action cases are removed (IDP-6).
   Open: two agent-snapshot producers emit different values and only `jobs/snapshot.go` runs (GO-EXPORT-01).
 
@@ -95,13 +95,11 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
-- Restart checkpoint:993 claimed-verified (manifest `runtime_verification`, not checked against a test run)/1678 unresolved/0invalid of2671; retirement gate exits1.
-  Source-frozen586 affected tests/14 lanes pass without skips; 40 more: package directory unchanged;
-  transitive dependencies changed after the receipt — not qualified on this head.
-  Native source/hash/vet/race and source/package/linked audits pass. Offline imagec44143fd preserves
-  runtime5ea84fca, passes HTTP/lifecycle; its image scan is unverified after scanner setup failures.
-  Credential05febd5 independently closes admission binding; human code review gates first deployment.
-  Existing branch is preserved for publication/resume; [Windows TODO](docs/NATIVE_WINDOWS_TODO.md).
+- G2 Linux source qualification is in progress on `fix/go-guardian-authority-policy` (WORKLOG).
+  The stacked critic approved report/group/guardian rules and the API safe-exit response correction.
+  Initial native check stopped on two formatting gaps, now corrected; fresh source checks, fail-before
+  demonstrations and all11 affected fixture lanes remain pending. Existing manifest claims are historical.
+  G2/G3 integration and G1 final21-lane/image/vulnerability qualification remain owed before source landing.
 
 ## Standard verification
 Native race/vet + shared-source hashes; database/codec contracts require explicit disposable fixtures

@@ -3,6 +3,27 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-05 — G2 Linux API safe-exit response follow-up
+
+Valid until: `fix/go-guardian-authority-policy` is integrated or superseded — then treat as history.
+
+The independent stacked critic found that a successful block-exempt `Leave` was followed by the
+ordinary block-aware `Membership` read in both HTTP adapters: the removal committed, but the API
+answered 404 under an owner/member block. The leave adapter now returns the same eleven-field
+projection of only its actor's own removed membership. Ordinary membership/activity reads keep
+their gates. New `TestPostgresActivityLeaveAPISurvivesOwnerBlocks` covers both API versions and
+block directions, committed removal, cleared presence, outsider refusal and unchanged blocked GETs.
+This completes ADR-0041's existing safe-exit behavior; no policy is widened. Independent critic:
+APPROVE source and regression (no runtime run claimed).
+
+Initial Linux `scripts/check-native.sh` stopped on missing gofmt blank lines in `accounts/service.go`
+and `chat/broker.go`; both are corrected. Pinned Go1.27.1 and Node24.18.0 are available. The
+85012b8 canonical stack image was built (`sha256:73f8210a71743d5947b6e599c2233eefaf389563b1973c266e342b4fb48b8504`)
+and bootstrapped fresh `social_g2` on the private synthetic PostgreSQL16.15/PostGIS3.6.4/vector0.8.6 fixture.
+Task-owned snapshots retain exact 5a/guardian production reversions and 85012b8 plus the new HTTP
+regression for fail-before. Actual fail-before, rebuilt final-source image, check-native and eleven
+affected fixture lanes are still pending under the fleet heavy-test lock. Coverage is not yet flipped.
+
 ## 2026-10-05 — G2 continuation for Linux (privacy/safety audit fixes; not integrated)
 
 Valid until: every branch below is integrated into `feat/go-native-toolchain` or dropped — then treat as history.
