@@ -3,18 +3,19 @@
 Valid until: the referenced serving code, accepted policies or frozen declarations change — then re-triage.
 
 Read-only triage on qualified source `c27a99fd71051cfe4575e3db9faa008111c12f12`, 2026-10-06.
-No new tests, serving edits, producer-pin changes or HTML parity campaign were run for this plan.
+The initial triage added no tests or serving edits. The finite transport batch below was subsequently qualified; producer pins and HTML remain outside this batch.
 Baseline qualification is [the aggregate](restart-checkpoint.json):705 fresh native tests/all21 lanes.
-The finite transport batch maps one existing export case and closes three social wire cases; worker
-social47/0skip and focused schema proofs pass, with root final21 qualification pending.
+The finite transport batch maps one existing export case and closes three social wire cases.
+[Fresh source qualification](rest-transport-checkpoint.json) on `67e07b9`, run `62b59f66e423`:709/all21,0skips/failures; social47 and web101.
+The prior c27 image supplies codecs only; its audit receipt does not qualify a deployment image for the changed serving code.
 The ledger's1003 claimed/1668 unresolved entries count frozen assertions, not missing endpoints.
 Go already serves the ordinary HTTP/toolchain paths; full Python reference retirement remains separate.
 
 ## Social REST:26 declarations
 
 All26 IDs below have prefix `apps/social/tests/test_api.py::`; three are now mapped and23 remain. The frozen file hash matches the
-inventory. Routes exist in `services/server/internal/social/http.go`. No complete mapping of
-these legacy REST assertion sets was confirmed from the existing qualified service/HTML tests.
+inventory. Routes exist in `services/server/internal/social/http.go`. The remaining23 require complete
+REST assertion mappings; existing qualified service/HTML foundations alone do not establish them.
 
 | Frozen declaration | Remaining exact REST obligation |
 |---|---|
@@ -103,7 +104,7 @@ cannot establish complete REST projection parity.
 ## Order and scope
 
 1. Retain the exact export mapping and its source IDs/provenance and qualified c27 receipt.
-2. Complete root source qualification for the three repaired response contracts;23 social assertion sets remain.
+2. Retain the qualified three response contracts;23 social assertion sets remain for separate bounded batches.
 3. Close booking REST assertions and reviewed adapter replacements.
 4. Specify/qualify public-finance REST projection and exact export-helper query equality.
 5. Triage relevant REST media/account-safety rows against existing code/tests similarly.

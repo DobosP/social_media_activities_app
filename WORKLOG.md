@@ -3,6 +3,45 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-06 — Finite REST source qualification completed
+
+Valid until: serving source, dependencies, native scripts or codec environment changes — then requalify.
+
+Clean committed source `67e07b908329dde63fd57f2044e049c8acf8b3ef`, root run `62b59f66e423`,
+completed all eight direct-source-fix gates. All21 fresh PostgreSQL/codec race lanes passed709
+with0skips/failures, including accounts75, social47 and web101. Native GOROOT format/shared-source
+hashes/vet/race across all3modules and Node's4 service-worker tests passed; harness17/17 passed.
+Current refined schema and all three wire tests are included in this exact committed-source run.
+The expected retirement inventory remains1003 manifest claims/1668 unresolved/0invalid of2671,
+exit1; all four frozen IDs/lines/hashes remain. Docs53/all defects0 and whitespace pass.
+
+The source-object SHA is `17fc2529529ef25a2b3e37c6f6406f3689f9266a44462c1011979a695aea8763`.
+Completion-manifest SHA is `50831c22d8ac1e936d66d14777de1ce63b2265239afc8009e8022e7af27a20dc`.
+The receipt `docs/reviews/native-go/rest-transport-checkpoint.json` retains all8 actual gate statuses
+and29 report/log hashes, all21 named test lists and the worker's meaningful wire/schema negatives.
+Evidence remains under `_temp/fix__rest-contract-transport-20261006/root-final/67e07b908329-62b59f66e423/`.
+Clean head/source objects were checked before the lock, after acquiring it, and after the completed gate batch.
+Fresh synthetic database `social_rest_final_62b59f66e423` used the task's internal/no-host-port PG fixture.
+
+This direct source-only fix changed no Dockerfile, dependency, schema bootstrap, frontend/embedded
+assets or native scripts. Per ADR-0040's direct-fix scope, it reused immutable c27 codec image
+`sha256:34c1c2281d9fc96cf486dda8e88497ef5061e21a412c712d8ef61ca14b07031b` for execution of
+CURRENT source-compiled test binaries and the independently built CURRENT sidecar. That old image,
+its build/smoke/vulnerability/frontend audits qualify c27; they are not evidence of a deployment
+image for changed67 serving code. No fresh image, frontend or vulnerability audit is claimed here.
+The original705/c27 qualification and initial/failed logs remain intact. No optional build/test
+campaign was added. Source landing remains separate from human deployment/launch review.
+
+Exact root command: source the task-owned `env.sh`, set `GOPROXY=off` and the explicit synthetic
+fixture container, then run `_temp/fix__rest-contract-transport-20261006/root-qualify.py` on67e07b9.
+That retained helper records the current head/source objects and invokes native `createdb`,
+`social-server --migrate-only` for the unchanged bootstrap, `scripts/check-native.sh GO`,
+`scripts/test-native-gates.sh`, full `scripts/qualify-native.sh GO IMMUTABLE_CODEC_IMAGE PRIVATE_NETWORK
+SYNTHETIC_DSN UNIQUE_SCRATCH`, `go -C services/server run ./cmd/check-contracts -root REPO -summary`,
+fleet `check_docs.py REPO`, and `git diff --check`. All broad work serialized on the global heavy lock;
+available memory stayed above16GiB. Receipt-only docs closure and independent final review follow.
+No deployment, ingestion, schedules, provider/minor activation or producer-pin change occurred.
+
 ## 2026-10-06 — Finite REST field-error/transit transport batch
 
 Valid until: `fix/rest-contract-transport-20261006` is landed or superseded — then treat as history.
