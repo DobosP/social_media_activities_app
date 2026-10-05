@@ -491,6 +491,13 @@ func TestNativeClassicHTMLThreadVideoAboveEightMiB(t *testing.T) {
 	if _, err = db.Exec(ctx, `UPDATE accounts_user SET is_staff=true WHERE id=$1`, owner.ID); err != nil {
 		t.Fatal(err)
 	}
+	// The console is administrator-only (ADR-0035, 2026-10-05).
+	if adminRequest(true).Code != 404 {
+		t.Fatal("admin enumerated for a staff-only operator")
+	}
+	if _, err = db.Exec(ctx, `UPDATE accounts_user SET is_superuser=true WHERE id=$1`, owner.ID); err != nil {
+		t.Fatal(err)
+	}
 	if w := adminRequest(true); w.Code != 200 || !strings.Contains(w.Body.String(), "Model index") || !strings.Contains(w.Body.String(), "places.place") {
 		t.Fatal("native admin service unreachable", w.Code)
 	}

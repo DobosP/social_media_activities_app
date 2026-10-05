@@ -62,3 +62,23 @@ No unrestricted deletes, identity/consent/cohort CRUD, legacy permission-table e
 deployment, scheduled jobs, real ingestion, provider/minor activation or production
 verification are introduced. This sensitive source change needs human review before
 landing. Exact tests and implementation evidence belong in STATUS.md and WORKLOG.md.
+
+## 2026-10-05 — Console requires an administrator (owner decision, IDP-3)
+
+Review finding IDP-3 showed that the operator preset (`user,true,false`) reached the whole
+native model console: every model summary and row list, named actions including ban lifting,
+identity-binding release and report-driven bans, curated saves and event hold/release. The
+reference administrator gives a non-superuser staff account nothing without per-model
+view/change permissions. The owner decided that the `/admin/` console is for administrators.
+
+The operator preset no longer grants the model console. The whole console — model inventory,
+row lists, named actions, curated saves and event review — requires an active staff
+superuser. The incoming actor must carry all three flags, the account row is re-read and
+must still hold them, and owned console mutations re-check them under the actor row lock
+inside the mutation transaction. Service calls refuse anyone else as forbidden; the HTTP
+front door answers them with the same 404 as an anonymous visitor. For any non-superuser
+account this is at least as strict as the reference per-model permissions. Operators keep
+their in-app staff powers outside the console; those checks are unchanged.
+
+Legacy Django group/individual permission rows remain non-inputs: they neither grant nor
+narrow console access. A finer operator tier inside the console needs its own reviewed ADR.

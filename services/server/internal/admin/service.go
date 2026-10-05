@@ -107,28 +107,31 @@ func init() {
 	m.Editable = true
 	models["events.event"] = m
 }
+
+// Gate admits only an active staff superuser (ADR-0035, 2026-10-05). Incoming
+// flags are never proof; all three are re-read from the account row.
 func (s *Service) Gate(ctx context.Context, a platform.Actor) error {
-	if a.ID < 1 || !a.IsActive || !a.IsStaff {
+	if a.ID < 1 || !a.IsActive || !a.IsStaff || !a.IsSuperuser {
 		return platform.ErrForbidden
 	}
-	var active, staff bool
-	if err := s.DB.QueryRow(ctx, `SELECT is_active,is_staff FROM accounts_user WHERE id=$1`, a.ID).Scan(&active, &staff); err != nil {
+	var active, staff, superuser bool
+	if err := s.DB.QueryRow(ctx, `SELECT is_active,is_staff,is_superuser FROM accounts_user WHERE id=$1`, a.ID).Scan(&active, &staff, &superuser); err != nil {
 		return err
 	}
-	if !active || !staff {
+	if !active || !staff || !superuser {
 		return platform.ErrForbidden
 	}
 	return nil
 }
 
-// gateTx orders owned operator writes against permission revocation. The actor
+// gateTx orders owned console writes against permission revocation. The actor
 // row remains locked until both the domain mutation and audit have committed.
 func (s *Service) gateTx(ctx context.Context, tx pgx.Tx, a platform.Actor) error {
-	var active, staff bool
-	if err := tx.QueryRow(ctx, `SELECT is_active,is_staff FROM accounts_user WHERE id=$1 FOR UPDATE`, a.ID).Scan(&active, &staff); err != nil {
+	var active, staff, superuser bool
+	if err := tx.QueryRow(ctx, `SELECT is_active,is_staff,is_superuser FROM accounts_user WHERE id=$1 FOR UPDATE`, a.ID).Scan(&active, &staff, &superuser); err != nil {
 		return err
 	}
-	if !active || !staff {
+	if !active || !staff || !superuser {
 		return platform.ErrForbidden
 	}
 	return nil
