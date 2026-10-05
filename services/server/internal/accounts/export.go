@@ -130,6 +130,12 @@ func (s *Service) Export(ctx context.Context, a platform.Actor, self bool) (map[
 		sentiment[item.Key] = value
 	}
 	out["own_sentiment_actions"] = sentiment
+	if !self {
+		// Whom the child blocked and the concerns they raised can stand in for a
+		// report, so the guardian's copy omits them too (owner decision, ADR-0045).
+		delete(out, "blocks")
+		delete(sentiment, "concerns")
+	}
 	return out, nil
 }
 

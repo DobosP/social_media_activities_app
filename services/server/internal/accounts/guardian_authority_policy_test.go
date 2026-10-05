@@ -76,6 +76,9 @@ func TestGuardianAuthorityPolicyWardExportOmitsChildsOwnReports(t *testing.T) {
 	if _, err := s.DB.Exec(ctx, `INSERT INTO safety_moderationaction(target_id,action,reason,notes,expires_at,created_at,moderator_id,target_type_id,report_id,lifted_at) VALUES($1,'warn','spam','Private moderator notes',NULL,now(),$2,(SELECT id FROM django_content_type WHERE app_label='accounts' AND model='user'),NULL,NULL)`, w.ID, mod.ID); err != nil {
 		t.Fatal(err)
 	}
+	if _, err := s.DB.Exec(ctx, `INSERT INTO safety_block(blocker_id,blocked_id,created_at) VALUES($1,$2,now())`, w.ID, peer.ID); err != nil {
+		t.Fatal(err)
+	}
 	for _, scenario := range []struct {
 		name, path  string
 		actor       platform.Actor
@@ -98,6 +101,11 @@ func TestGuardianAuthorityPolicyWardExportOmitsChildsOwnReports(t *testing.T) {
 				t.Fatal("decisions about the ward's own account were not kept", record["decisions_total"])
 			}
 			body := out.Body.String()
+			_, blocks := payload["blocks"]
+			_, concerns := payload["own_sentiment_actions"].(map[string]any)["concerns"]
+			if scenario.wantReports != blocks || scenario.wantReports != concerns {
+				t.Fatal("blocks/concerns must be omitted from the guardian copy only", blocks, concerns)
+			}
 			if !scenario.wantReports {
 				for _, key := range []string{"reports", "reports_total", "reports_truncated"} {
 					if _, present := record[key]; present {
