@@ -3,6 +3,8 @@ package social
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -78,6 +80,18 @@ func bodyMap(w http.ResponseWriter, r *http.Request) (map[string]json.RawMessage
 	}
 	return body, err
 }
+
+func failInput(w http.ResponseWriter, err error) {
+	var field *inputFieldError
+	if errors.As(err, &field) {
+		platform.JSON(w, http.StatusBadRequest, map[string][]string{
+			field.field: {fmt.Sprintf("Ensure this field has no more than %d characters.", field.limit)},
+		})
+		return
+	}
+	platform.Fail(w, err)
+}
+
 func page(r *http.Request, maxLimit int) (int, int) {
 	limit := 50
 	offset := 0
@@ -207,7 +221,7 @@ func (s *Service) activityCreate(w http.ResponseWriter, r *http.Request, a Actor
 	}
 	id, err := s.CreateActivity(r.Context(), a, in)
 	if err != nil {
-		platform.Fail(w, err)
+		failInput(w, err)
 		return
 	}
 	v, err := s.Activity(r.Context(), a, id)
@@ -308,6 +322,9 @@ func (s *Service) activityAction(w http.ResponseWriter, r *http.Request, a Actor
 		}
 		if err == nil {
 			mid, err = s.Presence(r.Context(), a, id, action, value)
+			if action == "transit" && errors.Is(err, errInvalidTransitStatus) {
+				err = platform.ErrForbidden
+			}
 		}
 	case "guardians":
 		var target int64
@@ -488,7 +505,7 @@ func (s *Service) postsCreate(w http.ResponseWriter, r *http.Request, a Actor) {
 	} // A message remains the authenticated author's own utterance.
 	pid, err := s.WritePost(r.Context(), a, postKind(r), id, in, actionOf(r) == "announce")
 	if err != nil {
-		platform.Fail(w, err)
+		failInput(w, err)
 		return
 	}
 	v, err := s.Post(r.Context(), a, pid)

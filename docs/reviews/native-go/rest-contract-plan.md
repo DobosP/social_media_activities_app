@@ -4,20 +4,22 @@ Valid until: the referenced serving code, accepted policies or frozen declaratio
 
 Read-only triage on qualified source `c27a99fd71051cfe4575e3db9faa008111c12f12`, 2026-10-06.
 No new tests, serving edits, producer-pin changes or HTML parity campaign were run for this plan.
-Current qualification is [the aggregate](restart-checkpoint.json):705 fresh native tests/all21 lanes.
-The ledger's999 claimed/1672 unresolved entries count frozen assertions, not missing endpoints.
+Baseline qualification is [the aggregate](restart-checkpoint.json):705 fresh native tests/all21 lanes.
+The finite transport batch maps one existing export case and closes three social wire cases; worker
+social47/0skip and focused schema proofs pass, with root final21 qualification pending.
+The ledger's1003 claimed/1668 unresolved entries count frozen assertions, not missing endpoints.
 Go already serves the ordinary HTTP/toolchain paths; full Python reference retirement remains separate.
 
 ## Social REST:26 declarations
 
-All26 IDs below have prefix `apps/social/tests/test_api.py::`; the frozen file hash matches the
+All26 IDs below have prefix `apps/social/tests/test_api.py::`; three are now mapped and23 remain. The frozen file hash matches the
 inventory. Routes exist in `services/server/internal/social/http.go`. No complete mapping of
 these legacy REST assertion sets was confirmed from the existing qualified service/HTML tests.
 
 | Frozen declaration | Remaining exact REST obligation |
 |---|---|
 | test_activities_require_auth | Literal legacy GET refusal; qualified v1 authentication coverage is narrower. |
-| test_activity_description_too_long_rejected | Mismatch: generic error omits required description key. |
+| test_activity_description_too_long_rejected | Mapped: current REST400 description string-array key, no write; both API prefixes. |
 | test_arrived_action_marks_membership | HTTP200 plus persisted non-null arrival. |
 | test_arrived_ignores_on_behalf_of | Guardian404 and unchanged ward arrival. |
 | test_create_and_list_activity | POST201/cohort, GET exactly one result. |
@@ -27,7 +29,7 @@ these legacy REST assertion sets was confirmed from the existing qualified servi
 | test_non_owner_cannot_patch_activity | Nonmember PATCH403, title unchanged. |
 | test_owner_can_cancel_via_api | POST200 and persisted cancelled. |
 | test_owner_can_edit_activity_via_patch | PATCH200 and persisted new title. |
-| test_post_body_too_long_rejected | Mismatch: generic error omits body; zero-write and exact4000 acceptance. |
+| test_post_body_too_long_rejected | Mapped: current REST400 body string-array key, zero-write and exact4000 HTTP201 acceptance. |
 | test_post_requires_membership | Outsider POST403, owner POST201. |
 | test_posts_cannot_be_ghostwritten_on_behalf_of | Guardian403 and zero ghostwritten rows. |
 | test_rsvp_invalid_intent_is_400 | Exact REST400. |
@@ -37,15 +39,16 @@ these legacy REST assertion sets was confirmed from the existing qualified servi
 | test_thread_posts_list_is_bounded | Legacy200, cap5, newest-N/oldest-first order. |
 | test_transit_action_sets_status | POST200, response/persisted on_my_way. |
 | test_transit_ignores_on_behalf_of | Guardian404, ward transit unchanged. |
-| test_transit_invalid_status_is_forbidden | Mismatch: Go400 vs source403; unchanged-state assertion. |
+| test_transit_invalid_status_is_forbidden | Mapped: unknown value HTTP403 after current visibility/member/window checks; state unchanged. |
 | test_v1_mine_membership_list_is_cursor_paginated | Seven rows, limit2/results2/nonempty cursor. |
 | test_v1_mine_membership_list_query_count_is_constant | Actual API trace≤4, ten results. |
 | test_v1_thread_posts_are_cursor_paginated | Exact envelope, page bodies9–11/6–8. |
 | test_v1_thread_posts_query_count_is_constant | Actual API trace≤8, ten results. |
 
-Generic error origin: `internal/platform/platform.go` Error; transit invalid-value origin:
-`internal/social/activities.go` SetTransit. Resolve/document the three transport differences first,
-then lifecycle/admission, identity/presence/RSVP, and pagination/query-ceiling assertions.
+Generic error origin remains `internal/platform/platform.go` Error. The finite batch preserves
+field errors only for activity/post create and maps the service's unknown-transit-value marker only
+in that REST action. Its400 schema alternatives are narrowly operation-scoped. Remaining groups:
+lifecycle/admission, identity/presence/RSVP, and pagination/query-ceiling assertions.
 Reuse qualified activities/vote/thread/safety, serializer, co-member and policy tests where their
 actual assertions match. Preserve accepted co-organizer, co-member, guardian and safety replacements.
 
@@ -79,7 +82,7 @@ these booking rows; add only missing assertions or explicit accepted replacement
 
 ## Export and public finance
 
-- Existing exact match awaiting metadata review: `apps/accounts/tests/test_export.py::test_build_user_export_includes_activity_membership_and_donations`
+- Existing exact match now mapped after independent metadata review: `apps/accounts/tests/test_export.py::test_build_user_export_includes_activity_membership_and_donations`
   matches every frozen assertion in qualified `TestCasePort2ExportActivityDonationsAndSharedTargetBoundary`
   (`internal/accounts/export_erasure_case_port2_test.go`). No new endpoint/test is required for that row.
 - `apps/accounts/tests/test_export.py::test_thread_posts_helper_query_count_is_flat`: existing whole-export
@@ -99,8 +102,8 @@ cannot establish complete REST projection parity.
 
 ## Order and scope
 
-1. Review the exact export metadata gap without deleting source IDs/provenance.
-2. Resolve the three social response differences, then the26 assertion sets in bounded groups.
+1. Retain the exact export mapping and its source IDs/provenance and qualified c27 receipt.
+2. Complete root source qualification for the three repaired response contracts;23 social assertion sets remain.
 3. Close booking REST assertions and reviewed adapter replacements.
 4. Specify/qualify public-finance REST projection and exact export-helper query equality.
 5. Triage relevant REST media/account-safety rows against existing code/tests similarly.

@@ -193,7 +193,10 @@ func (p *PostInput) validateAttachment(hasAttachment bool) error {
 			n++
 		}
 	}
-	if n > 1 || utf8.RuneCountInString(p.Body) > 4000 || p.Body == "" && n == 0 && !hasAttachment {
+	if utf8.RuneCountInString(p.Body) > 4000 {
+		return &inputFieldError{field: "body", limit: 4000}
+	}
+	if n > 1 || p.Body == "" && n == 0 && !hasAttachment {
 		return platform.ErrInvalid
 	}
 	if p.ReplyTo != nil && *p.ReplyTo <= 0 {

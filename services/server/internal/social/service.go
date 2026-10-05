@@ -241,7 +241,10 @@ type ActivityInput struct {
 func (v *ActivityInput) validate() error {
 	v.Title = strings.TrimSpace(v.Title)
 	v.Description = strings.TrimSpace(v.Description)
-	if v.Title == "" || utf8.RuneCountInString(v.Title) > 200 || utf8.RuneCountInString(v.Description) > 2000 || v.Place < 1 || v.ActivityType < 1 || v.StartsAt.IsZero() {
+	if utf8.RuneCountInString(v.Description) > 2000 {
+		return &inputFieldError{field: "description", limit: 2000}
+	}
+	if v.Title == "" || utf8.RuneCountInString(v.Title) > 200 || v.Place < 1 || v.ActivityType < 1 || v.StartsAt.IsZero() {
 		return platform.ErrInvalid
 	}
 	for _, t := range []string{v.MeetingPoint, v.WhatToBring, v.OrganizerNote, v.FirstTimeNote, v.AccessibilityNotes} {

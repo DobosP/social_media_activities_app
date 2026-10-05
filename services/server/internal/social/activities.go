@@ -593,7 +593,7 @@ func (s *Service) Presence(ctx context.Context, a Actor, id int64, kind, value s
 			_, err = tx.Exec(ctx, `UPDATE social_membership SET arrived_at=now(),updated_at=now() WHERE id=$1`, mid)
 		case "transit":
 			if value != "on_my_way" && value != "running_late" {
-				return platform.ErrInvalid
+				return errInvalidTransitStatus
 			}
 			if transit == "running_late" || transit == value {
 				return nil

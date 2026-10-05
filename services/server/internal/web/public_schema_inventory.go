@@ -64,6 +64,19 @@ func (s *Server) publicInventorySchema(paths, schemas map[string]any) int {
 			if record.Source == "../authcore/service.go" {
 				shape = map[string]any{"oneOf": []any{schemaKind("AuthError"), schemaKind("APIError")}}
 			}
+			if code == "400" && record.Method == "POST" && record.Source == "internal/social/http.go" {
+				path := strings.TrimPrefix(strings.TrimPrefix(record.Path, "/api"), "/v1")
+				field := ""
+				switch path {
+				case "/social/activities/":
+					field = "description"
+				case "/social/activities/{id}/posts/", "/social/activities/{id}/announce/", "/social/groups/{id}/posts/", "/social/groups/{id}/announce/":
+					field = "body"
+				}
+				if field != "" {
+					shape = map[string]any{"oneOf": []any{schemaKind("APIError"), schemaFields(field + ":[]str")}}
+				}
+			}
 			responses[code] = map[string]any{"description": description, "content": map[string]any{"application/json": map[string]any{"schema": shape}}}
 		}
 		response := map[string]any{"description": "Gate-filtered native domain result"}

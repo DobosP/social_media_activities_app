@@ -1346,13 +1346,25 @@
       "legacy_file": "apps/accounts/tests/test_export.py",
       "line": 73,
       "source_sha256": "38734c96185100651ef176766f767877cc28f4140ea605033dcf2d56c90e8811",
-      "classification": "unresolved",
-      "native_evidence": [],
-      "rationale": "Preserve the legacy declaration until its behavioral assertions have independent native evidence; a larger native suite or registered route is insufficient.",
-      "gaps": [
-        "Remaining source assertion/transport/edge-case obligations require an explicit native port or reviewed replacement."
+      "classification": "native_semantic_coverage",
+      "native_evidence": [
+        {
+          "go_file": "services/server/internal/accounts/export_erasure_case_port2_test.go",
+          "test": "TestCasePort2ExportActivityDonationsAndSharedTargetBoundary",
+          "scenario": "adult self-export with one owned Game activity, owner membership and one completed 500-cent Stripe donation",
+          "assertions": [
+            "owned_activities contains exactly one activity",
+            "the owned activity title is Game",
+            "memberships includes the owner role",
+            "donations.completed_count equals 1",
+            "donations.completed_total_cents equals 500",
+            "the serialized donations section contains no case-insensitive card substring"
+          ]
+        }
       ],
-      "runtime_verification": "not_run"
+      "rationale": "Independent assertion review confirms every frozen assertion is covered by the existing named native test. The test passed in qualified source c27a99fd71051cfe4575e3db9faa008111c12f12, run 9615f07cc770, accounts lane 75 PASS/0 SKIP/0 FAIL, log SHA-256 ba5ef527255c85a84baad38385006c89e04a56ba044699e84d0e368a7f358989. The frozen source and native test files remain byte-identical to that qualified revision. Original identifiers, line and source hash are preserved. This adds the missing mapping without a new endpoint/test and does not authorize reference retirement or deployment.",
+      "gaps": [],
+      "runtime_verification": "passed"
     },
     {
       "classification": "native_semantic_coverage",
@@ -13792,13 +13804,21 @@
       "legacy_file": "apps/social/tests/test_api.py",
       "line": 126,
       "source_sha256": "fc35dea7bf6fc36444cb7aa4fcb52a274677bc0c78c328882dcd6ebdb759842f",
-      "classification": "unresolved",
-      "native_evidence": [],
-      "rationale": "Preserve the legacy declaration until its behavioral assertions have independent native evidence; a larger native suite or registered route is insufficient.",
-      "gaps": [
-        "Remaining source assertion/transport/edge-case obligations require an explicit native port or reviewed replacement."
+      "classification": "native_semantic_coverage",
+      "native_evidence": [
+        {
+          "go_file": "services/server/internal/social/rest_transport_case_test.go",
+          "test": "TestRESTSourceActivityDescriptionFieldError",
+          "scenario": "valid current adult POSTs2001-character description through each registered API prefix",
+          "assertions": [
+            "HTTP400 with nonempty description string-array field",
+            "rejected description creates no activity"
+          ]
+        }
       ],
-      "runtime_verification": "not_run"
+      "rationale": "Finite REST transport batch restores the complete frozen wire assertions through actual registered legacy and v1 handlers on isolated synthetic PostgreSQL16/PostGIS/vector with race instrumentation. The final affected social lane passes47 top-level tests, zero skips/failures. Every new source case failed at its intended wire assertion with production unchanged; source IDs, lines and hashes are retained. Accepted co-member/coorganizer/guardian/safety policies and other error semantics are preserved. The root final source/native/all21 qualification and review remain separate before main landing; reference retirement and deployment are not authorized.",
+      "gaps": [],
+      "runtime_verification": "passed"
     },
     {
       "legacy_id": "apps/social/tests/test_api.py::test_arrived_action_marks_membership",
@@ -13922,13 +13942,22 @@
       "legacy_file": "apps/social/tests/test_api.py",
       "line": 103,
       "source_sha256": "fc35dea7bf6fc36444cb7aa4fcb52a274677bc0c78c328882dcd6ebdb759842f",
-      "classification": "unresolved",
-      "native_evidence": [],
-      "rationale": "Preserve the legacy declaration until its behavioral assertions have independent native evidence; a larger native suite or registered route is insufficient.",
-      "gaps": [
-        "Remaining source assertion/transport/edge-case obligations require an explicit native port or reviewed replacement."
+      "classification": "native_semantic_coverage",
+      "native_evidence": [
+        {
+          "go_file": "services/server/internal/social/rest_transport_case_test.go",
+          "test": "TestRESTSourcePostBodyFieldErrorAndExactBoundary",
+          "scenario": "current owner POSTs4001- and exactly4000-character bodies through both registered API prefixes",
+          "assertions": [
+            "overlong body HTTP400 with nonempty body string-array field",
+            "overlong body persists no post",
+            "exact4000-character body HTTP201 and stored intact"
+          ]
+        }
       ],
-      "runtime_verification": "not_run"
+      "rationale": "Finite REST transport batch restores the complete frozen wire assertions through actual registered legacy and v1 handlers on isolated synthetic PostgreSQL16/PostGIS/vector with race instrumentation. The final affected social lane passes47 top-level tests, zero skips/failures. Every new source case failed at its intended wire assertion with production unchanged; source IDs, lines and hashes are retained. Accepted co-member/coorganizer/guardian/safety policies and other error semantics are preserved. The root final source/native/all21 qualification and review remain separate before main landing; reference retirement and deployment are not authorized.",
+      "gaps": [],
+      "runtime_verification": "passed"
     },
     {
       "legacy_id": "apps/social/tests/test_api.py::test_post_requires_membership",
@@ -14052,13 +14081,22 @@
       "legacy_file": "apps/social/tests/test_api.py",
       "line": 406,
       "source_sha256": "fc35dea7bf6fc36444cb7aa4fcb52a274677bc0c78c328882dcd6ebdb759842f",
-      "classification": "unresolved",
-      "native_evidence": [],
-      "rationale": "Preserve the legacy declaration until its behavioral assertions have independent native evidence; a larger native suite or registered route is insufficient.",
-      "gaps": [
-        "Remaining source assertion/transport/edge-case obligations require an explicit native port or reviewed replacement."
+      "classification": "native_semantic_coverage",
+      "native_evidence": [
+        {
+          "go_file": "services/server/internal/social/rest_transport_case_test.go",
+          "test": "TestRESTSourceTransitInvalidStatusForbiddenNoMutation",
+          "scenario": "current owner in a valid presence window submits teleporting via each REST prefix",
+          "assertions": [
+            "HTTP403 for unknown transit value",
+            "persisted transit_status remains none",
+            "valid on_my_way control still succeeds"
+          ]
+        }
       ],
-      "runtime_verification": "not_run"
+      "rationale": "Finite REST transport batch restores the complete frozen wire assertions through actual registered legacy and v1 handlers on isolated synthetic PostgreSQL16/PostGIS/vector with race instrumentation. The final affected social lane passes47 top-level tests, zero skips/failures. Every new source case failed at its intended wire assertion with production unchanged; source IDs, lines and hashes are retained. Accepted co-member/coorganizer/guardian/safety policies and other error semantics are preserved. The root final source/native/all21 qualification and review remain separate before main landing; reference retirement and deployment are not authorized.",
+      "gaps": [],
+      "runtime_verification": "passed"
     },
     {
       "legacy_id": "apps/social/tests/test_api.py::test_v1_mine_membership_list_is_cursor_paginated",

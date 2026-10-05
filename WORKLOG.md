@@ -3,6 +3,63 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-06 — Finite REST field-error/transit transport batch
+
+Valid until: `fix/rest-contract-transport-20261006` is landed or superseded — then treat as history.
+
+Owner-authorized finite batch on main9aeaebe. No accepted ADR replaces these wire obligations;
+ADR-0008's legacy API compatibility and ADR-0040's source/deployment gates apply. The existing
+export case `apps/accounts/tests/test_export.py::test_build_user_export_includes_activity_membership_and_donations`
+now maps to `TestCasePort2ExportActivityDonationsAndSharedTargetBoundary` without a new endpoint/test.
+An independent reviewer compared all six assertions and checked retained c27a99f/run9615f07cc770
+accounts75/0skip/0fail evidence, log SHA `ba5ef527255c85a84baad38385006c89e04a56ba044699e84d0e368a7f358989`,
+completed-manifest SHA `7aa0133af70b18d56faf1f22194320457a2949db2b17e490a01ae23e6233b026`.
+Frozen source IDs/line/hash and all app-pack provenance remain; accepted guardian, co-member,
+co-organizer, participation and safety policies are unchanged.
+
+For the three social cases, service length errors still unwrap to `platform.ErrInvalid`, while
+activity/post create REST adapters retain `description`/`body` string-array400 fields. A specific
+unknown-transit marker emerges only after current visibility/member/window gates; that adapter
+maps it to403. Generic errors and other action adapters remain unchanged. REST OpenAPI400 schemas
+permit only APIError or the exact field shape on activity create and activity/group post/announce,
+both API prefixes; other operations/statuses retain their schemas. No HTML or generic-client work.
+
+Actual worker checks, all against task-local Go1.27.1/Node24.18.0 and own verified module caches:
+- Three actual wire tests, both API prefixes, failed with production unchanged at missing field keys
+  and transit400:3 top-level failures/all6 subcases,0skips. Negative log SHA
+  `175471738ebb384c1a58240895a78ed8262b4f2cf2e7b422335809829f745e29`.
+- Final affected social race lane:47 top-level passes,0skips/failures. It asserts actual nonempty
+  string-array errors, rejected writes absent, exact4000 body HTTP201/stored intact, invalid transit
+  unchanged and valid control succeeds. Final log SHA `19f4f7370b1fc9b4d84625a41ec8a3f9f198bb1405b2f767dd2d50f3a051fca3`.
+- Narrow schema regression fails on the prior schema in all10 operations (log SHA
+  `c240be0350701929d897b1b7e129c5f849663900174919b4a8626e778b3ca612`), then passes alongside
+  `TestNativeOpenAPIRoutesAndFieldCoverage` and `TestNativeOpenAPIWireValues`, race/count1.
+  Positive schema log SHA `ddcf99f7c42122cb67884e8481da572f7304e099eb79ccf03fb1e3e6b9435411`.
+- Native hash/format/vet/race/Node source check passed before the final schema/test refinement;
+  final exact-source native/all21 root qualification remains pending. No pending root run is claimed passed.
+- Pure contracts and check-contracts are re-run after the four mappings; expected inventory1003
+  manifest claims/1668 unresolved/0invalid of2671, retirement exit1. Full REST/reference closure remains held.
+
+Tool/fresh-fixture receipt: own scratch `_temp/fix__rest-contract-transport-20261006`; official Go archive
+SHA `63d339f0da5ab53635a56f2490a7984dfe12dfcff22ad749f63edaf590168445` checked; Node binary extracted
+from official cached node24 image2f35c3d18013, SHA `41a74efb34cbde5c7632cdac0cf8bd1a14d0b8d73dc1e82755014d9a9ce70f5c`.
+Go/Node/cache/tmp paths are in the task's env.sh; modules downloaded/verified once, then GOPROXY=off.
+Fresh PG16.15/PostGIS3.6.4/vector0.8.6: container `social-rest-transport-20261006-db`, internal network
+`social-rest-transport-20261006`, no published ports,2GiB/2CPU, synthetic database `social_rest_transport`.
+Native schema bootstrap passed. Race test binaries run with qualify-native.sh's read-only/cap-drop/
+no-new-privileges/user/mount flags in canonical c27 runtime image
+`sha256:34c1c2281d9fc96cf486dda8e88497ef5061e21a412c712d8ef61ca14b07031b`; no runtime overlay.
+All broad runs serialize on `_temp/adhoc-managed-fleet-20261005/heavy-test.lock`; memory12/16GiB floors
+held (77GiB available), disk35GiB at setup. Fixture/tools remain for root main qualification.
+
+Exact worker commands: `bash SCRATCH/run-social.sh fail-before`, then `qualify`; source
+`scripts/check-native.sh GO`; `go -C services/server test -race ./internal/web -run
+'^(TestSocialRESTFieldErrorsHaveScoped400Schemas|TestNativeOpenAPIRoutesAndFieldCoverage|TestNativeOpenAPIWireValues)$' -count=1`;
+`go -C services/server test -race ./internal/contracts -count=1`; `check-contracts -root "$PWD" -summary`;
+`git diff --check` and fleet check_docs. Full wrappers/logs are task-owned scratch; receipt in ignored TASK_RESULT.md.
+Root owns final qualification/review/main landing. No push, merge, deployment, provider/minor activation,
+producer pin, ingestion or schedule enablement occurred in this worker.
+
 ## 2026-10-06 — Bounded REST ledger triage after source qualification
 
 Valid until: serving/source declarations or accepted policies change — then re-triage.
