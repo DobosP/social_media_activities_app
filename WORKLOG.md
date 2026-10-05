@@ -3,6 +3,23 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-05 — Live chat frames metered; typing never evicts a socket (GO-PRIV-04)
+
+Valid until: `fix/go-chat-typing-throttle` is integrated or superseded — then treat as history.
+
+`internal/chat`: each socket meters inbound frames before any authorization or database work (5 frames/s,
+burst 10; typing at most once per 2 s; excess typing is dropped silently and spends no token; an ordinary
+frame on an empty bucket closes with 1008). Typing is coalesced per (room, actor) process-wide (2 s,
+bounded 4096 entries, evicts expired then oldest, never refuses a new typer). `Broker.dispatch` drops
+typing for a subscriber whose queue is at least half full and never closes on a typing overflow; durable
+events keep the close-and-reload rule. One typing dispatch resolves the typer's identity once per local
+fan-out (an unexported, never-marshalled field); each recipient's own read authorization still runs per
+delivery, and NOTIFY payloads are unchanged. Not done (not required): a per-(actor, room) socket cap,
+cross-replica coalescing. New TestPostgresPlainThreadTypingFloodStaysBounded fails with the chat package
+reverted; the chat unit tests need the new types. WSL Go 1.27.1, social_g2, code 2428cce on 778470d:
+hermetic gofmt/vet/-race chat+messaging ok; lane messaging 48 top-level pass, 0 skip, 0 fail. Reviewer:
+APPROVE.
+
 ## 2026-10-05 — Avatar uniqueness in-cohort; fingerprints only for avatars (GO-MEDIA-01, GO-MEDIA-02)
 
 Valid until: `fix/go-avatar-cohort-media-minimisation` is integrated or superseded — then treat as history.
