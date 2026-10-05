@@ -7067,7 +7067,7 @@
             "child upload of the adult's exact image succeeds with kind profile",
             "teen upload of the same image succeeds",
             "three profile rows exist, one per cohort",
-            "an actor whose committed cohort became unassigned is refused with ErrForbidden despite a stale adult snapshot"
+            "an actor whose committed cohort is now unassigned is compared only with unassigned avatars and admitted despite a stale adult snapshot (fourth profile row)"
           ]
         }
       ],

@@ -249,7 +249,7 @@ func TestNativeMediaSchemaScrubsStoredNonProfileFingerprints(t *testing.T) {
 	if perceptual, source := manifestKeys(t, db, "activity-cover", 900000001); perceptual || source {
 		t.Fatal("cover manifest kept a fingerprint or original digest", perceptual, source)
 	}
-	if perceptual, source := manifestKeys(t, db, "attachment", 900000002); perceptual || !source {
-		t.Fatal("video manifest must keep only its worker digest", perceptual, source)
+	if perceptual, source := manifestKeys(t, db, "attachment", 900000002); perceptual || source {
+		t.Fatal("video manifest kept a fingerprint or original digest", perceptual, source)
 	}
 }

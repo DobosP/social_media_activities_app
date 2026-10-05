@@ -74,12 +74,12 @@ CREATE TRIGGER media_go_blob_cleanup BEFORE DELETE ON media_activitycover FOR EA
 DROP TRIGGER IF EXISTS media_go_blob_cleanup ON places_placecover;
 CREATE TRIGGER media_go_blob_cleanup BEFORE DELETE ON places_placecover FOR EACH ROW EXECUTE FUNCTION media_go_queue_deleted_blobs();
 -- W8-0 data minimisation, idempotent on every start: only avatars keep a
--- perceptual fingerprint; the original-upload digest stays only where a reader
--- needs it (video worker, Wikimedia acquisition provenance). Historical
+-- perceptual fingerprint; the original-upload digest stays only for public
+-- Wikimedia acquisition provenance, which the operator proof reads. Historical
 -- safety_auditlog rows keep their digest by design: that log is hash-chained.
 UPDATE media_photo SET phash='' WHERE kind<>'profile' AND phash<>'';
 UPDATE media_go_manifest m SET payload=m.payload-'perceptual_hash' WHERE (m.payload ? 'perceptual_hash') AND NOT (m.kind='photo' AND EXISTS(SELECT 1 FROM media_photo p WHERE p.id=m.row_id AND p.kind='profile'));
-UPDATE media_go_manifest m SET payload=m.payload-'source_sha256' WHERE (m.payload ? 'source_sha256') AND NOT (m.kind='photo' AND EXISTS(SELECT 1 FROM media_photo p WHERE p.id=m.row_id AND p.kind='profile')) AND NOT (m.kind='attachment' AND m.payload->>'kind'='video') AND NOT (m.kind='place-cover' AND EXISTS(SELECT 1 FROM places_placecover c WHERE c.id=m.row_id AND c.source='wikimedia'));`)
+UPDATE media_go_manifest m SET payload=m.payload-'source_sha256' WHERE (m.payload ? 'source_sha256') AND NOT (m.kind='photo' AND EXISTS(SELECT 1 FROM media_photo p WHERE p.id=m.row_id AND p.kind='profile')) AND NOT (m.kind='place-cover' AND EXISTS(SELECT 1 FROM places_placecover c WHERE c.id=m.row_id AND c.source='wikimedia'));`)
 	return e
 }
 func queueDelete(ctx context.Context, tx pgx.Tx, keys ...string) error {

@@ -259,8 +259,7 @@ func (s *Service) AttachToPost(ctx context.Context, a platform.Actor, postID int
 		if e != nil {
 			return e
 		}
-		// Video keeps its admitted original digest for the processing worker.
-		if e = saveManifest(ctx, tx, "attachment", id, minimisedManifest(m, kind == "video")); e != nil {
+		if e = saveManifest(ctx, tx, "attachment", id, minimisedManifest(m, false)); e != nil {
 			return e
 		}
 		return platform.RecordAudit(ctx, tx, a, "media.attached", fmt.Sprintf("media.attachment:%d", id), map[string]any{"kind": kind})
@@ -554,7 +553,7 @@ func (s *Service) processClaim(ctx context.Context, att Attachment) (err error) 
 		if e = queueDelete(ctx, tx, att.sourceKey); e != nil {
 			return e
 		}
-		if e = saveManifest(ctx, tx, "attachment", att.ID, minimisedManifest(m, true)); e != nil {
+		if e = saveManifest(ctx, tx, "attachment", att.ID, minimisedManifest(m, false)); e != nil {
 			return e
 		}
 		if e := platform.RecordAudit(ctx, tx, platform.Actor{}, "media.video_ready", fmt.Sprintf("media.attachment:%d", att.ID), map[string]any{"attachment_id": att.ID}); e != nil {
