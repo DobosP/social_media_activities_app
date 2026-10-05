@@ -3,6 +3,65 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-05 — G2 continuation for Linux (privacy/safety audit fixes; not integrated)
+
+Valid until: every branch below is integrated into `feat/go-native-toolchain` or dropped — then treat as history.
+
+Session G2 (audit 2026-10-05) stopped for the move to Linux; Windows commit headroom stayed below the test
+floor. Integrated earlier: `fix/go-privacy-low` → 82a2625 (GO-PRIV-05, GO-PRIV-08; GO-PRIV-06 does not
+reproduce, G3 covers budget capacity). Everything else is one stack on d9ede52, published unmerged, each
+branch containing the ones before it: `fix/go-avatar-cohort-media-minimisation` (GO-MEDIA-01/02,
+ADR-0044) → `fix/go-chat-typing-throttle` (GO-PRIV-04) → `fix/go-membership-logistics-scope`
+(GO-PRIV-07, ADR-0046) → `fix/go-messaging-query-ceilings` (preserved Codex candidate) →
+`fix/go-report-eligibility` (GO-PRIV-01, F4, ADR-0041) → `fix/go-group-messaging-blocks` (GO-PRIV-02/03,
+ADR-0043) → `fix/go-guardian-authority-policy` (GO-07, IDP-4, IDP-5, ADR-0045; top, carries this entry).
+
+Verified before the rebase onto d9ede52 (WSL Go 1.27.1, PostgreSQL 16 fixture, base 778470d; each new
+test also failed with its fix reverted, assertions in the branch entries below): media 46 / contracts 5 /
+jobs (0cb93cd); messaging 48 (2428cce); social 42 (caf0602); messaging 49 (f9d7f68); messaging 55, safety
+50, admin 19, jobs 64, web 92 (65f20ba); all 0 skip, 0 fail. Reviewers (independent, code-read): APPROVE
+for all seven; 5a after its R1 fix (generic labels) and the report-page budget; 5b after the video-digest
+fix; guardian after the lock-order fix.
+
+Changed after those runs and never run: 5b video-digest drop; membership blocked-pair filter; 5a in full
+(labels, budget); 5d after its rebase onto 5a; guardian in full (incl. blocks/concerns export omission).
+
+Owed on Linux, at the top SHA of this stack, in order:
+1. `scripts/check-native.sh "$(command -v go)"` (format, auth hashes, vet, race; needs node).
+2. Fail-before for 5a at the `fix/go-report-eligibility` head with its production reverted to its parent
+   (`fix/go-messaging-query-ceilings` head): `git checkout <parent> -- services/server/internal/{safety/service.go,safety/http.go,safety/unsafe.go,messaging/messages.go,social/activities.go,social/authorization.go,web/report_pages.go,web/social_actions.go,web/social_pages.go,web/server.go,app/app.go} apps/web/templates/web/_activity_membership.html`,
+   move aside the two new `apps/web/templates/web/*safe_exit.html`, and in
+   `safety/statement_case_port5_test.go`, `web/social_pages_test.go`, `web/query_growth_retirement_test.go`
+   replace `CanSeeUser: X.CanSeeUser` with `CanSeeActivity: X.CanSeeActivity, CanReadThread: X.CanReadThread`;
+   then the safety tests `^(TestReportEligibility.*|TestUnsafeReportServiceOwnsTheSeatGateAndIgnoresOwnerBlocks|TestNativeUnsafeIdempotencyAndBlockedGuardianTruth)$`,
+   messaging `^TestPostgresMessagingContractsAndPrivacy$`, web
+   `^(TestLegacySafeExitSurvivesOwnerBlock|TestWebCasePort3ReportSubjectGatesAndLegacyFields)$` must FAIL.
+3. Fail-before for the guardian slice at the top with
+   `services/server/internal/{accounts/erase.go,accounts/eudi.go,accounts/export.go,accounts/guardian_revoke.go,accounts/service.go,social/proxy.go}`
+   reverted to the `fix/go-group-messaging-blocks` head: accounts
+   `^TestGuardianAuthorityPolicy(AdultWardRowRefusesLeftoverLink|WardExportOmitsChildsOwnReports)$` and
+   messaging `^TestGuardianAuthorityPolicyAdultReverificationRevokesGuardianship$` must FAIL.
+4. Lanes with zero skips (`scripts/qualify-native.sh` per docs/agent-testing.md, or per package
+   `go -C services/server test -race ./internal/<pkg>/ -<pkg>-test-dsn "$DSN"`): media, contracts, jobs,
+   messaging, social, safety, web, app, admin, configuration (cmd/social-server), accounts. Record the
+   logged query-bound line (`post queries 3 -> 256`, ceiling 28) and the ceiling lines (≤5, ≤7).
+5. Flip privacy-coverage `runtime_verification` to `passed` for the 5a entries (`not_run` now) and
+   re-qualify the entries citing `TestNativeUnsafeIdempotencyAndBlockedGuardianTruth`.
+6. Critic end review of 5a and 5d on the stacked diffs (`fix/go-messaging-query-ceilings..fix/go-report-eligibility`,
+   `fix/go-report-eligibility..fix/go-group-messaging-blocks`); it was started on Windows and may not have reported.
+7. If green and reviewed: fast-forward the top into `feat/go-native-toolchain` (ADR-0040), replace these
+   owed notes with the receipts, then delete the merged branches and worktrees (ADR-0037).
+
+Owner decisions 2026-10-05 (all recorded in the ADRs): integration rule for G2 stands; C: test floor 12 GiB
+(commit floor 16 GiB stands); GO-07 keep oversight across blocks; IDP-4 revoke at adulthood; IDP-5 omit the
+child's reports; GO-PRIV-07 co-members only; direct-chat re-invite added (removed party cannot reactivate
+itself while the peer is active); ward export also omits blocks and concerns; report page user lookups
+budgeted 240/h; a busy avatar refusal does not spend an attempt (implemented by G3 on
+`fix/go-media-queue-timeouts`); membership API hides rows across a block. Open: none from G2.
+Residuals recorded in ADR-0041/0043/0045: N1 removed-seat author name, N3 block-vs-hidden distinction, N4
+lapsed-consent member sees no unsafe button, API user-report 201/404 eligibility oracle (no name), sole
+admin suspended leaves a group adminless, `SetWardTopics` relationship-then-user lock order (follow-up).
+
 ## 2026-10-05 — Guardian authority at adulthood and in ward exports (GO-07, IDP-4, IDP-5)
 
 Valid until: `fix/go-guardian-authority-policy` is integrated or superseded — then treat as history.
@@ -13,7 +72,7 @@ directions (the "policy-review gap" log is gone). IDP-4: `AgeVerify` to adult ca
 (consents, then links, audited `guardian.revoked` reason `ward_adult`); `isGuardian` and `actingAs`
 require the ward's current cohort child/teen; `Erase` takes the user lock before the guardian check. IDP-5
 and follow-up: the guardian's ward export drops the child's reports, blocks and concern flags; the
-self-export is unchanged. Deliberate departures from the reference. <<G2-GUARDIAN-EVIDENCE>> Reviewer:
+self-export is unchanged. Deliberate departures from the reference. Fail-before and lanes are owed on Linux (see continuation entry). Reviewer:
 APPROVE.
 
 ## 2026-10-05 — Group chats survive blocks; sanctions evict chats (GO-PRIV-02, GO-PRIV-03)
@@ -31,7 +90,7 @@ inactive too). SAFETY rule 2, MESSAGING and the messaging README say so. The coh
 GO-PRIV-03 was refuted and is unchanged. With the messaging fix reverted the 9 new messaging tests fail as
 intended (query bound n3=38 → n256=1303 before; ≤28 and membership-independent after) and the block-budget
 test fails (404 instead of 429). WSL Go 1.27.1, social_g2, code 65f20ba on 778470d: lanes messaging 55,
-safety 50, admin 19, jobs 64, web 92 top-level pass, 0 skip, 0 fail. <<G2-5D-EVIDENCE>> Reviewer: APPROVE.
+safety 50, admin 19, jobs 64, web 92 top-level pass, 0 skip, 0 fail. Owed after the rebase onto 5a: configuration and app lanes, the stacked lanes and the critic end review (see continuation entry). Reviewer: APPROVE.
 
 ## 2026-10-05 — Report eligibility independent of read gates (GO-PRIV-01, F4)
 
@@ -46,7 +105,7 @@ labels are generic where the read gate would hide a title or name; every non-sta
 Messaging `Report` needs only an active participant. `Social.Leave` and the web unsafe/leave actions no longer
 use the block-aware read gate; a member blocked with the owner gets a safe-exit page
 (`web/activity_safe_exit.html`, shared `_activity_safe_exit.html`). The reference's user-label leak is a
-recorded reference bug. <<G2-5A-EVIDENCE>>
+recorded reference bug. Fail-before and lanes are owed on Linux (see continuation entry); reviewer APPROVE after the R1 label fix; critic end review owed.
 
 ## 2026-10-05 — Messaging list/history query ceilings (preserved Codex candidate)
 
@@ -110,7 +169,7 @@ hash-chained `safety_auditlog` keeps historical digests by design. Two reference
 privacy-coverage entries now native evidence). Four new PostgreSQL tests fail with the production files
 reverted (cross-cohort refusal ×2, thread fingerprint stored, scrub absent). WSL Go 1.27.1, social_g2:
 fail-before and lanes media 46/contracts/jobs at 0cb93cd on 778470d; after review dropped the video digest,
-<<G2-5B-COUNTS>>. Open (not this slice): an avatar attempt is counted before
+re-run of media and contracts at the final SHA is owed (see continuation entry). Open (not this slice): an avatar attempt is counted before
 image processing, so a busy refusal still spends it (noted by G3).
 
 ## 2026-10-05 — Unreachable web action cases removed; two descriptions corrected (IDP-6, GO-MEDIA-05, GO-EXPORT-01)
