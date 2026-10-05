@@ -139,6 +139,13 @@ row and verifies inside the same failed-login counter as browser and JSON login 
 username+peer pair, shared lockout, success clears, infrastructure errors do not count). Its
 per-prefix cap remains the `api.token` budget of ten per minute per peer; its former duplicate
 charge, an unkeyed SHA-256 of the IP, is removed.
+The owner decided on 2026-10-05 that this shared lockout applies, so a device retrying a stale
+password can lock browser login for that username on that network for the window. The route
+has no CSRF token, so it refuses a browser request another origin initiated (`Sec-Fetch-Site`
+other than `same-origin`/`none`, or an `Origin` that is not the request host) before any
+failure accounting; native clients send neither header. A browser that sends neither header on a
+cross-site form post is not covered, and a future WebView client that sends its own `Origin`
+would need an explicit allow-list.
 
 Known limits: signup at its cap returns the pinned library's fixed `Retry-After: 60`, which
 understates a one-hour window, and the OAuth flow cap surfaces as its 503 "identity provider

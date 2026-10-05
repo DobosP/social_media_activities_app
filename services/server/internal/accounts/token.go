@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -36,7 +37,28 @@ func (s *Service) AuthenticateToken(r *http.Request) (platform.Actor, error) {
 	return s.actor(r.Context(), s.DB, id)
 }
 
+// crossSiteBrowserRequest reports a request that a page on another origin made
+// a browser send. Native clients send neither header. This route has no CSRF
+// token, so without the check any page could spend a named user's failed-login
+// budget on the visitor's own network.
+func crossSiteBrowserRequest(r *http.Request) bool {
+	if site := r.Header.Get("Sec-Fetch-Site"); site != "" && site != "same-origin" && site != "none" {
+		return true
+	}
+	if origin := r.Header.Get("Origin"); origin != "" {
+		u, err := url.Parse(origin)
+		if err != nil || u.Host == "" || !strings.EqualFold(u.Host, r.Host) {
+			return true
+		}
+	}
+	return false
+}
+
 func (s *Service) ObtainToken(w http.ResponseWriter, r *http.Request) {
+	if crossSiteBrowserRequest(r) {
+		platform.Error(w, 403, "Invalid request origin.")
+		return
+	}
 	var body struct {
 		Username string `json:"username"`
 		Password string `json:"password"`

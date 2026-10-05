@@ -77,3 +77,54 @@ func TestObtainTokenSuccessClearsFailuresAndOversizeCreatesNoRows(t *testing.T) 
 		t.Fatal("successful token login did not clear the shared failure pair", failures, pending)
 	}
 }
+
+// The token route has no CSRF token. A page on another origin must not be able
+// to make a visitor's browser spend a named user's failed-login budget.
+func TestObtainTokenRefusesCrossSiteBrowserRequestsBeforeAnyRow(t *testing.T) {
+	s, _ := loginCounterFixture(t, 10)
+	loginHTTPFixture(t, s)
+	send := func(headers map[string]string) *httptest.ResponseRecorder {
+		body, _ := json.Marshal(map[string]string{"username": "source-http-login", "password": "wrong-synthetic"})
+		r := httptest.NewRequest("POST", "https://app.example/api/auth/token/", bytes.NewReader(body))
+		r.RemoteAddr = "192.0.2.140:1"
+		for name, value := range headers {
+			r.Header.Set(name, value)
+		}
+		w := httptest.NewRecorder()
+		s.ObtainToken(w, r)
+		return w
+	}
+	rows := func() int {
+		t.Helper()
+		var n int
+		if err := s.DB.QueryRow(context.Background(), `SELECT (SELECT count(*) FROM accounts_go_login_failure)+(SELECT count(*) FROM accounts_go_login_reservation)`).Scan(&n); err != nil {
+			t.Fatal(err)
+		}
+		return n
+	}
+	for _, headers := range []map[string]string{
+		{"Origin": "https://evil.example"},
+		{"Origin": "null"},
+		{"Sec-Fetch-Site": "cross-site"},
+		{"Sec-Fetch-Site": "same-site", "Origin": "https://app.example"},
+	} {
+		if out := send(headers); out.Code != 403 {
+			t.Fatal("cross-site token request was not refused", headers, out.Code)
+		}
+	}
+	if n := rows(); n != 0 {
+		t.Fatal("cross-site token requests reached the failure counter", n)
+	}
+	for _, headers := range []map[string]string{
+		nil,
+		{"Origin": "https://app.example", "Sec-Fetch-Site": "same-origin"},
+		{"Sec-Fetch-Site": "none"},
+	} {
+		if out := send(headers); out.Code != 400 || !strings.Contains(out.Body.String(), "Invalid credentials.") {
+			t.Fatal("native or same-origin token request did not reach the credential check", headers, out.Code)
+		}
+	}
+	if n := rows(); n != 1 {
+		t.Fatal("same-origin wrong passwords were not counted on one pair", n)
+	}
+}
