@@ -18,6 +18,48 @@ const LoginTooManyFailures = "Too many failed login attempts. Please wait a few 
 
 var errLoginOtherResponse = errors.New("login completed without credential verdict")
 
+type loginCredentials struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+// Decode the exact credential keys once. encoding/json's struct decoder accepts
+// case aliases and repeated keys, so forwarding original bytes could verify a
+// different username from the one whose failure reservation was admitted.
+func parseLoginCredentials(raw []byte) (loginCredentials, error) {
+	decoder := json.NewDecoder(bytes.NewReader(raw))
+	start, err := decoder.Token()
+	if err != nil || start != json.Delim('{') {
+		return loginCredentials{}, platform.ErrInvalid
+	}
+	fields := map[string]string{}
+	for decoder.More() {
+		token, err := decoder.Token()
+		key, ok := token.(string)
+		if err != nil || !ok || (key != "username" && key != "password" && key != "email" && key != "name") {
+			return loginCredentials{}, platform.ErrInvalid
+		}
+		if _, duplicate := fields[key]; duplicate {
+			return loginCredentials{}, platform.ErrInvalid
+		}
+		var value string
+		if decoder.Decode(&value) != nil {
+			return loginCredentials{}, platform.ErrInvalid
+		}
+		fields[key] = value
+	}
+	if end, err := decoder.Token(); err != nil || end != json.Delim('}') {
+		return loginCredentials{}, platform.ErrInvalid
+	}
+	if decoder.Decode(&struct{}{}) != io.EOF {
+		return loginCredentials{}, platform.ErrInvalid
+	}
+	// The pinned login handler ignores email/name. Validate their input types,
+	// then omit them so JSON escaping cannot expand ignored metadata beyond its
+	// bounded credential body and change an otherwise valid login outcome.
+	return loginCredentials{Username: NormalizeLoginUsername(fields["username"]), Password: fields["password"]}, nil
+}
+
 type loginCapture struct {
 	header   http.Header
 	status   int
@@ -101,11 +143,11 @@ func (s *Service) LoginPOST(w http.ResponseWriter, r *http.Request, browser bool
 			platform.Error(w, http.StatusBadRequest, "invalid login details")
 			return
 		}
-		username = r.PostForm.Get("username")
+		username = NormalizeLoginUsername(r.PostForm.Get("username"))
 		next = r.PostForm.Get("next")
 		r.Header.Set("X-CSRFToken", r.PostForm.Get("csrfmiddlewaretoken"))
 		var err error
-		raw, err = json.Marshal(map[string]string{"username": strings.TrimSpace(username), "password": r.PostForm.Get("password")})
+		raw, err = json.Marshal(loginCredentials{Username: username, Password: r.PostForm.Get("password")})
 		if err != nil {
 			platform.Error(w, http.StatusBadRequest, "invalid login details")
 			return
@@ -117,12 +159,14 @@ func (s *Service) LoginPOST(w http.ResponseWriter, r *http.Request, browser bool
 			platform.Error(w, http.StatusBadRequest, "invalid login details")
 			return
 		}
-		var fields map[string]json.RawMessage
-		if json.Unmarshal(raw, &fields) != nil {
+		credentials, err := parseLoginCredentials(raw)
+		if err != nil {
 			platform.Error(w, http.StatusBadRequest, "invalid login details")
 			return
 		}
-		if field, exists := fields["username"]; exists && json.Unmarshal(field, &username) != nil {
+		username = credentials.Username
+		raw, err = json.Marshal(credentials)
+		if err != nil {
 			platform.Error(w, http.StatusBadRequest, "invalid login details")
 			return
 		}

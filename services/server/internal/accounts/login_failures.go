@@ -67,7 +67,12 @@ func loginCorePeerHash(address string) string {
 	return hex.EncodeToString(digest[:])
 }
 
+// NormalizeLoginUsername preserves credential case while matching the source
+// form's whitespace cleaning. Admission and verification must use this value.
+func NormalizeLoginUsername(username string) string { return strings.TrimSpace(username) }
+
 func (s *Service) loginFailureKey(username, peer string) (string, error) {
+	username = NormalizeLoginUsername(username)
 	if len(s.Secret) < 32 || len(username) > 150 || len(peer) > 256 {
 		return "", platform.ErrInvalid
 	}

@@ -3,6 +3,39 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-05 — Independent auth admission binding repair
+
+Valid until: this repair is independently reviewed/requalified or superseded — then history.
+
+Independent review on a693291 reproduced API username case-alias/duplicate-key admission
+mismatch and browser whitespace variants reserving separate failure buckets for the same
+trimmed credential. The wrapper now parses exact allowed JSON keys once, rejects ambiguous
+or repeated keys and delegates canonical credential JSON from the admitted cleaned username.
+Password and credential case remain intact. Validated unused email/name metadata cannot
+expand the delegated credential body. Failure-key and restricted-proof seams share cleaning.
+The hash-pinned authentication library remains unchanged.
+
+Targeted Go1.27.1/race receipts in _temp/go-native-toolchain/tests: accounts-login-binding.log
+has10 passing top-level login tests/no skips, including real PG replica/padding/alias refusal,
+no sessions on lockout, fixed expiry and repeated successful session/reset behavior. The
+actual pinned-library/in-memory recording store verifies the canonical admitted username.
+app-login-binding.log has2 assembled application/proxy/replica tests passing/no skips;
+safety-source-current-root.log qualifies actual restricted-proof/capability cases with the
+same normalization. Final small canonical-metadata unit and targeted PG refresh are recorded
+separately before this checkpoint. Auth snapshot hash checks and targeted vet pass.
+
+The initial independent API overlay intentionally reconstructs the old map parser and
+passes original ambiguous JSON straight to the unchanged library. It cannot test this
+wrapper repair without invoking the production parser/canonical delegation; it is preserved
+as the discovery negative control. The independent browser-padding overlay passes unchanged.
+No original login source IDs are newly declared complete from this checkpoint alone.
+
+Other bounded venue/web/operator/privacy queues continue. The working source gate currently
+has693 verified/1978 unresolved/0invalid; the preceding committed640-case ledger is preserved
+in a693291. This isolated repair does not include the unrelated uncommitted source-case batch,
+and no fresh matching application image is claimed yet. All unlanded work and reference
+source/tests remain. No push/main merge/provider/minor/ingestion/scheduler/deploy activation.
+
 ## 2026-10-05 — Source-case contracts and failed-only login checkpoint
 
 Valid until: the candidate is integrated/requalified or superseded — then treat as history.

@@ -122,6 +122,7 @@ func (s *Service) Restricted(w http.ResponseWriter, r *http.Request) {
 // RestrictionAccess validates credentials even for a disabled account, then
 // grants only a short-lived, one-decision appeal capability, never a session.
 func (s *Service) RestrictionAccess(ctx context.Context, username, password, address string) (map[string]any, string, error) {
+	username = accounts.NormalizeLoginUsername(username)
 	if len(username) > 150 || len(password) > 1024 {
 		return nil, "", platform.ErrInvalid
 	}

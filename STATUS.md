@@ -97,12 +97,12 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
-- Source-case candidate:419 affected tests/11 lanes pass with zero skips;65 unchanged qualified tests
-  retain prior receipts (484 total/21 lanes). ADR-0039 restores shared failed-only login lockout;
-  browser/topic/interest/notice/ward contracts, exact place IDs and source diagnostics are repaired.
-  Race/vet/auth hashes and source/package/linked audits pass; Go-only image5ea84fca has zero findings
-  at the required image gate. Case gate:640 verified/2031 unresolved/0 invalid; retirement is blocked.
-  Exact receipts, semantic corrections and unused-module advisory: WORKLOG. Human review remains.
+- Auth binding correction (ADR-0039): exact JSON parsing/canonical delegation and shared username
+  cleaning pass pinned-library, actual PG/replica/session and assembled-proxy proofs; hashes unchanged.
+  Fresh matching image remains pending. a693291 retains419 affected+65 unchanged tests/21 lanes,
+  zero skips and image5ea84fca/audit receipts. Its case gate640/2031/0 blocks retirement; ongoing
+  batches retain original source/tests. Exact receipts/corrections/unused advisory: WORKLOG.
+  Human auth/privacy/safety review and full source-case qualification still precede landing.
 
 ## Standard verification
 Native race/vet + shared-source hashes; database/codec contracts require explicit disposable fixtures

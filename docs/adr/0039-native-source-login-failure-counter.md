@@ -48,3 +48,21 @@ private context scope, expired/failing finalization, repeated real sessions, ass
 proxy routing and the actual restricted remedy. Qualification does not activate authentication
 providers/minors or production delivery. Current receipts and incomplete source-case coverage
 remain in STATUS/WORKLOG; the complete migration is not claimed until retirement evidence passes.
+
+## 2026-10-05 — Credential binding correction
+
+Independent review found that the wrapper admitted a case-sensitive JSON map key while the
+pinned verifier accepted struct-field case aliases. It also admitted an untrimmed browser
+username while the verifier received its trimmed value. Both could split the failed-only
+pair from the account actually checked. The API now decodes exact allowed keys once,
+rejects repeated or case-aliased keys, and delegates canonical credential JSON from the same
+normalized username used for admission. Ignored pinned email/name input fields are validated
+but omitted from that credential body; password and username case remain unchanged.
+Normal login, the failure-key helper and restricted proof share source whitespace cleaning.
+
+Actual pinned-library/in-memory lookup proof, PostgreSQL counter/replica/session tests and
+assembled trusted-proxy application tests qualify the correction. The original independent
+API discovery overlay hardcodes the former parser and forwards raw JSON directly to the
+unchanged library; it remains a negative control, not a test of the repaired wrapper.
+The unchanged browser-padding overlay passes. Pinned authentication source hashes remain
+verified. Human review and complete source-case retirement gates still precede landing.
