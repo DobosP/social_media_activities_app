@@ -205,13 +205,15 @@ func TestOAuthFlowsCappedPerPrefixNotGlobally(t *testing.T) {
 		marked := s.WithPeerAdmission(r, AuthScopeOAuthStart)
 		return s.Store.CreateOAuthFlow(marked.Context(), hashState(fmt.Sprintf("synthetic-flow-%s-%d", address, n)), authcore.OAuthFlow{Provider: "facebook", ExpiresAt: time.Now().Add(5 * time.Minute)})
 	}
-	for i := 0; i < 10; i++ {
+	// The live-flow cap is the prefix's OAuth start limit: a class of thirty
+	// starting together all get a flow; the thirty-first live flow is refused.
+	for i := 0; i < authOAuthStartPolicy.Limit; i++ {
 		if err := flow("198.51.100.60:1", i); err != nil {
-			t.Fatal("full flow table refused a fresh prefix", i, err)
+			t.Fatal("live flow inside the OAuth start limit refused", i, err)
 		}
 	}
-	if err := flow("198.51.100.60:2", 10); !errors.Is(err, authcore.ErrConflict) {
-		t.Fatal("eleventh live flow for one prefix admitted", err)
+	if err := flow("198.51.100.60:2", 1000); !errors.Is(err, authcore.ErrConflict) {
+		t.Fatal("live flow beyond the OAuth start limit admitted", err)
 	}
 	if err := flow("198.51.100.61:1", 0); err != nil {
 		t.Fatal("one prefix's pending flows refused another prefix", err)
@@ -219,8 +221,67 @@ func TestOAuthFlowsCappedPerPrefixNotGlobally(t *testing.T) {
 	if _, err := s.DB.Exec(ctx, `UPDATE accounts_go_oauth_flow SET expires_at=now()-interval '1 second' WHERE peer_hash=$1`, s.Store.peerKey(authScopeOAuthFlow, "198.51.100.60")); err != nil {
 		t.Fatal(err)
 	}
-	if err := flow("198.51.100.60:3", 11); err != nil {
+	if err := flow("198.51.100.60:3", 1001); err != nil {
 		t.Fatal("expired flows still counted against their prefix", err)
+	}
+	// An override of the start limit moves the flow cap with it.
+	s.RatePolicies = map[string]budgets.Policy{AuthScopeOAuthStart: {Limit: 2, Window: 15 * time.Minute}}
+	for i := 0; i < 2; i++ {
+		if err := flow("198.51.100.62:1", i); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := flow("198.51.100.62:1", 2); !errors.Is(err, authcore.ErrConflict) {
+		t.Fatal("flow cap ignored the resolved OAuth start limit", err)
+	}
+}
+
+func TestRequirePeerMarkerRefusesUnmarkedAttemptsAndFlows(t *testing.T) {
+	s, _ := loginCounterFixture(t, 10)
+	s.Store.RequirePeerMarker = true
+	ctx := context.Background()
+	now := s.Config.Now()
+	if allowed, err := s.Store.AllowAuthAttempt(ctx, hashState("198.51.100.5"), now); err != nil || allowed {
+		t.Fatal("unmarked attempt admitted despite the marker requirement", err)
+	}
+	if rows := admissionRowCount(t, s, "accounts_go_auth_attempt"); rows != 0 {
+		t.Fatal("refused unmarked attempt wrote a row", rows)
+	}
+	flow := authcore.OAuthFlow{Provider: "facebook", ExpiresAt: time.Now().Add(5 * time.Minute)}
+	if err := s.Store.CreateOAuthFlow(ctx, hashState("synthetic-unmarked-flow"), flow); !errors.Is(err, authcore.ErrConflict) {
+		t.Fatal("unmarked OAuth flow admitted despite the marker requirement", err)
+	}
+	if rows := admissionRowCount(t, s, "accounts_go_oauth_flow"); rows != 0 {
+		t.Fatal("refused unmarked OAuth flow wrote a row", rows)
+	}
+	r := httptest.NewRequest("POST", "https://app.example/api/auth/signup", nil)
+	r.RemoteAddr = "198.51.100.5:1"
+	if allowed, err := s.Store.AllowAuthAttempt(s.WithPeerAdmission(r, AuthScopeSignup).Context(), hashState("198.51.100.5"), now); err != nil || !allowed {
+		t.Fatal("marked attempt refused", err)
+	}
+	if rows := admissionRowCount(t, s, "accounts_go_auth_attempt"); rows != 1 {
+		t.Fatal("marked attempt did not charge its prefix", rows)
+	}
+	if allowed, err := s.Store.AllowAuthAttempt(s.WithPeerAdmissionExempt(r).Context(), hashState("198.51.100.5"), now); err != nil || !allowed {
+		t.Fatal("exempt attempt refused", err)
+	}
+	reservation, err := s.reserveLogin(ctx, "reserved-marker", "198.51.100.5:1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if allowed, err := s.Store.AllowAuthAttempt(context.WithValue(ctx, reservedLoginContext{}, reservation), reservation.corePeer, now); err != nil || !allowed {
+		t.Fatal("private login reservation refused", err)
+	}
+	if err := s.finishLogin(ctx, reservation, false, false); err != nil {
+		t.Fatal(err)
+	}
+	if rows := admissionRowCount(t, s, "accounts_go_auth_attempt"); rows != 1 {
+		t.Fatal("exempt or reserved attempt wrote a row", rows)
+	}
+	start := httptest.NewRequest("GET", "https://app.example/api/auth/oauth/facebook/start", nil)
+	start.RemoteAddr = "198.51.100.5:2"
+	if err := s.Store.CreateOAuthFlow(s.WithPeerAdmission(start, AuthScopeOAuthStart).Context(), hashState("synthetic-marked-flow"), flow); err != nil {
+		t.Fatal("marked OAuth flow refused", err)
 	}
 }
 

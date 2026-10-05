@@ -114,18 +114,36 @@ Correctness never depends on the sweep: expired windows reset inline.
 
 The pinned library's attempt store receives only a digest of the raw host, so the application
 marks the request context with the normalized prefix and scope (memory only) for signup, OAuth
-start and API logout. API logout is exempt and never throttled; HTML logout was already
-unthrottled. A call without the marker keeps the library's previous ten attempts per minute per
-host digest, without any table-wide refusal. Pending OAuth flows are capped at ten live flows
-per prefix through a new nullable `peer_hash` column on the flow table (rows live five minutes),
-replacing the global cap. The token endpoint's duplicate charge, an unkeyed SHA-256 of the IP,
-is removed; its `api.token` budget of ten per minute per peer is unchanged.
+start and API logout. API logout is exempt from the per-prefix attempt store; like every
+`/api/` route it still passes the generic API throttle
+([ADR-0037](0037-postgresql-shared-rate-budgets.md)). HTML logout is unthrottled. Pending OAuth
+flows are capped per prefix at the prefix's resolved `auth.oauth_start` limit (thirty by
+default; every live flow needed an admitted start) through a new nullable `peer_hash` column on
+the flow table (rows live five minutes), replacing the global cap.
+
+The HTML login and signup wrappers are registered on exact paths only, so no subtree variant
+(`/login/x`, `/register/x/y`) reaches the pinned credential handlers outside the application's
+login intercept and marker table. The assembled application also fails closed on routing
+drift: its stores require the marker, so an unmarked, unexempted and unreserved call to the
+attempt store is refused (429) without a row and an unmarked OAuth flow is refused. Only a
+store used without the application (fixtures, direct library use) keeps the library's previous
+ten attempts per minute per host digest, without any table-wide refusal.
+
+The mobile token endpoint is a password login: it now rejects oversize credentials before any
+row and verifies inside the same failed-login counter as browser and JSON login (same
+username+peer pair, shared lockout, success clears, infrastructure errors do not count). Its
+per-prefix cap remains the `api.token` budget of ten per minute per peer; its former duplicate
+charge, an unkeyed SHA-256 of the IP, is removed.
 
 Known limits: signup at its cap returns the pinned library's fixed `Retry-After: 60`, which
 understates a one-hour window, and the OAuth flow cap surfaces as its 503 "identity provider
 unavailable"; neither can change without editing the hash-pinned library. Users behind one
-CGNAT or school address share one bucket per scope. A misconfigured `TRUSTED_PROXY_CIDRS`
-collapses every client into the proxy's bucket. PostgreSQL fixture tests cover full-table
-admission, per-prefix and IPv6 /64 caps, scope separation, the logout exemption, row lifecycle,
-the sweep and the pinned-route marker coverage. Review gates:
+CGNAT or school address share one bucket per scope, and an IPv6 /64 neighbour can lock a
+victim's username+network pair exactly as a client behind the same IPv4 NAT can. A
+misconfigured `TRUSTED_PROXY_CIDRS` collapses every client into the proxy's bucket, and the
+existing forwarded-header parser falls back to the proxy address when any `X-Forwarded-For`
+entry fails to parse, so such clients share the proxy's bucket. PostgreSQL fixture tests cover
+full-table admission, per-prefix and IPv6 /64 caps, scope separation, the logout exemption, row
+lifecycle, the sweep, the fail-closed marker requirement, subtree variants, the shared token
+lockout and the pinned-route and wrapper marker coverage. Review gates:
 [ADR-0040](0040-landing-and-deployment-review-gates.md).

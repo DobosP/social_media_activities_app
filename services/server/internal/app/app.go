@@ -169,7 +169,11 @@ func New(ctx context.Context, db *pgxpool.Pool, config Config, migrate bool) (*A
 	// The pinned library's store and the account service key per-prefix
 	// admission rows with the same secret.
 	store.PeerSecret = []byte(binding)
+	// serveHTTP marks, exempts or reserves every pinned attempt-store call
+	// (authAdmission, LoginPOST); anything unmarked is routing drift and fails closed.
+	store.RequirePeerMarker = true
 	accountService := accounts.New(db, auth, binding, config.Accounts)
+	accountService.Store.RequirePeerMarker = true
 	if migrate {
 		if err := accountService.Migrate(ctx); err != nil {
 			return nil, errors.New("native age-state migration failed")

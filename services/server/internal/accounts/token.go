@@ -45,22 +45,39 @@ func (s *Service) ObtainToken(w http.ResponseWriter, r *http.Request) {
 		platform.Fail(w, platform.ErrInvalid)
 		return
 	}
-	// Per-peer admission is the app's api.token budget on this exact route.
-	user, hash, err := s.Store.FindByUsername(r.Context(), body.Username)
-	if err != nil && !errors.Is(err, authcore.ErrNotFound) {
-		platform.Fail(w, err)
+	// Hash-free rejections come before any failure row exists.
+	if len(body.Username) > 150 || len(body.Password) > 1024 {
+		platform.Error(w, 400, "Invalid credentials.")
 		return
 	}
-	exists := err == nil
-	if !exists {
-		hash = "pbkdf2_sha256$1000000$dummy$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+	// The per-prefix cap is the app's api.token budget on this exact route; the
+	// failed-login counter is the same username+peer pair as browser/JSON login.
+	var user authcore.User
+	valid, err := s.LoginFailures(r.Context(), body.Username, r.RemoteAddr, func(ctx context.Context) (bool, error) {
+		found, hash, err := s.Store.FindByUsername(ctx, body.Username)
+		if err != nil && !errors.Is(err, authcore.ErrNotFound) {
+			return false, err
+		}
+		exists := err == nil
+		if !exists {
+			hash = "pbkdf2_sha256$1000000$dummy$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+		}
+		verified, err := authcore.VerifyPassword(ctx, body.Password, hash)
+		if err != nil {
+			return false, err
+		}
+		user = found
+		return exists && verified, nil
+	})
+	if errors.Is(err, ErrLoginFailureLimit) {
+		platform.Error(w, 429, "Try again later.")
+		return
 	}
-	valid, err := authcore.VerifyPassword(r.Context(), body.Password, hash)
 	if err != nil {
 		platform.Fail(w, err)
 		return
 	}
-	if !exists || !valid {
+	if !valid {
 		platform.Error(w, 400, "Invalid credentials.")
 		return
 	}

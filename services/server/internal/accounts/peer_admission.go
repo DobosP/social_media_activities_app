@@ -40,9 +40,6 @@ var (
 	authLegacyPolicy     = budgets.Policy{Limit: 10, Window: time.Minute}
 )
 
-// oauthFlowsPerPeer bounds live pending identity flows per network prefix.
-const oauthFlowsPerPeer = 10
-
 const opportunisticSweepBatch = 256
 
 type peerAdmissionContext struct{}
@@ -149,8 +146,9 @@ func (s *Store) admitPeer(ctx context.Context, scope, peer string, p budgets.Pol
 	if err != nil {
 		return false, 0, err
 	}
-	s.maybeSweep(now)
 	if count <= p.Limit {
+		// Only admitted attempts may trigger hygiene, so a throttled flood cannot.
+		s.maybeSweep(now)
 		return true, 0, nil
 	}
 	return false, max(time.Second, expires.Sub(now)), nil

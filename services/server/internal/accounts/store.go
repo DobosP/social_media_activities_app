@@ -22,7 +22,12 @@ type Store struct {
 	// PeerSecret keys per-prefix admission rows (HMAC); every replica and both
 	// application stores share the deployment's identity binding secret.
 	PeerSecret []byte
-	sweepDue   func() bool
+	// RequirePeerMarker fails closed on routing drift: the assembled application
+	// marks, exempts or reserves every request that reaches the pinned library's
+	// attempt and OAuth-flow stores, so an unmarked call is refused (no row)
+	// instead of using the legacy per-host key. Bare fixtures leave it false.
+	RequirePeerMarker bool
+	sweepDue          func() bool
 }
 
 func NewStore(db *pgxpool.Pool) *Store { return &Store{DB: db} }
@@ -183,21 +188,29 @@ func (s *Store) CreateOAuthFlow(ctx context.Context, hash string, flow authcore.
 	}
 	marker, ok := ctx.Value(peerAdmissionContext{}).(*peerAdmission)
 	if !ok || marker.peer == "" {
+		if s.RequirePeerMarker {
+			return authcore.ErrConflict
+		}
 		// Direct library callers keep the legacy per-hash attempt cap as bound.
 		_, err = s.DB.Exec(ctx, `INSERT INTO accounts_go_oauth_flow(state_hash,data,expires_at) VALUES($1,$2,$3)`, hash, data, flow.ExpiresAt)
 		return err
 	}
-	// Pending flows are capped per network prefix, never globally.
+	// Pending flows are capped per network prefix, never globally, at the
+	// prefix's resolved OAuth start limit: every live flow needed an admitted start.
+	limit := marker.policy.Limit
+	if marker.err != nil || limit < 1 {
+		return authcore.ErrConflict
+	}
 	peerHash := s.peerKey(authScopeOAuthFlow, marker.peer)
 	return platform.Transaction(ctx, s.DB, func(tx pgx.Tx) error {
 		if _, err := tx.Exec(ctx, `SELECT pg_advisory_xact_lock(hashtextextended($1,683475951211))`, peerHash); err != nil {
 			return err
 		}
 		var live int
-		if err := tx.QueryRow(ctx, `SELECT count(*) FROM (SELECT 1 FROM accounts_go_oauth_flow WHERE peer_hash=$1 AND expires_at>now() LIMIT $2) f`, peerHash, oauthFlowsPerPeer).Scan(&live); err != nil {
+		if err := tx.QueryRow(ctx, `SELECT count(*) FROM (SELECT 1 FROM accounts_go_oauth_flow WHERE peer_hash=$1 AND expires_at>now() LIMIT $2) f`, peerHash, limit).Scan(&live); err != nil {
 			return err
 		}
-		if live >= oauthFlowsPerPeer {
+		if live >= limit {
 			return authcore.ErrConflict
 		}
 		_, err := tx.Exec(ctx, `INSERT INTO accounts_go_oauth_flow(state_hash,data,expires_at,peer_hash) VALUES($1,$2,$3,$4)`, hash, data, flow.ExpiresAt, peerHash)
@@ -227,6 +240,10 @@ func (s *Store) AllowAuthAttempt(ctx context.Context, key string, now time.Time)
 		}
 		allowed, _, err := s.admitPeer(ctx, marker.scope, marker.peer, marker.policy, now)
 		return allowed, err
+	}
+	if s.RequirePeerMarker {
+		// The assembled application never calls here unmarked; refuse drift.
+		return false, nil
 	}
 	// No marker: direct library callers keep ten attempts per minute per the
 	// library's own host digest, now without any table-wide refusal.
