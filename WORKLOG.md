@@ -12,7 +12,8 @@ GO-02/GOV-7: `scripts/qualify-native.sh` used `rg` for its zero-skip gate, so a 
 errors fail) and requires a positive `--- PASS:` count per lane (`no native tests ran in <pkg>` otherwise).
 `scripts/check-native.sh` resolves Go, takes gofmt from `GOROOT/bin` (missing ⇒ exit2) and captures `gofmt -l`
 by bare assignment so a failing gofmt is fatal; `native.yml` captures its gofmt output the same way (agentapi
-stays format-checked in `go.yml`). GO-06: the embedded offline service-worker `node:test` suite now runs in
+stays format-checked in `go.yml`). `go.yml` agentapi format step now also captures `gofmt -l .` by bare
+assignment and fails on a non-empty list (same fail-open `test -z "$(...)"` pattern). GO-06: the embedded offline service-worker `node:test` suite now runs in
 `check-native.sh` (node required) and the `ci.yml` frontend job. F5: `runtime_verification` is relabelled as a
 manifest claim in `contracts.Check`, STATUS, the Windows TODO and agent-testing; no gate behaviour changed.
 New `scripts/test-native-gates.sh` drives both real scripts with stub go/docker/gofmt/node/uname on a restricted

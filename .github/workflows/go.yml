@@ -36,7 +36,9 @@ jobs:
           cache: false
       - name: Format, vet, race and native build
         run: |
-          test -z "$(gofmt -l .)"
+          # Bare assignment: a missing or failing gofmt is fatal, never an empty result.
+          agentapi_unformatted=$(gofmt -l .)
+          if [ -n "$agentapi_unformatted" ]; then printf '%s\n' "$agentapi_unformatted" >&2; exit 1; fi
           go vet ./...
           go test -race ./... -count=1
           CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o agentapi-test .
