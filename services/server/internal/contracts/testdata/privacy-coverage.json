@@ -8995,26 +8995,42 @@
       "legacy_file": "apps/messaging/tests/test_api.py",
       "line": 195,
       "source_sha256": "262aec1e28054306e78980422d459ce828594f302effee7d8f33dba4ca50310a",
-      "classification": "unresolved",
-      "native_evidence": [],
-      "rationale": "Preserve the legacy declaration until its behavioral assertions have independent native evidence; a larger native suite or registered route is insufficient.",
-      "gaps": [
-        "Remaining source assertion/transport/edge-case obligations require an explicit native port or reviewed replacement."
+      "classification": "native_semantic_coverage",
+      "native_evidence": [
+        {
+          "go_file": "services/server/internal/messaging/query_ceiling_case_port_test.go",
+          "test": "TestMessagingSourceCaseV1ConversationListQueryCeilingFive",
+          "scenario": "8 direct conversations, v1 list limit 6",
+          "assertions": [
+            "v1 conversation list issues at most 5 queries (7 before the fold)",
+            "200 with 6 results"
+          ]
+        }
       ],
-      "runtime_verification": "not_run"
+      "rationale": "The named native test and its explicit assertion scenario passed in the task-owned synthetic PostgreSQL race qualification and fails with the identity fold reverted. This is source-contract evidence, not production activation evidence.",
+      "gaps": [],
+      "runtime_verification": "passed"
     },
     {
       "legacy_id": "apps/messaging/tests/test_api.py::test_v1_message_history_query_count_is_constant",
       "legacy_file": "apps/messaging/tests/test_api.py",
       "line": 257,
       "source_sha256": "262aec1e28054306e78980422d459ce828594f302effee7d8f33dba4ca50310a",
-      "classification": "unresolved",
-      "native_evidence": [],
-      "rationale": "Preserve the legacy declaration until its behavioral assertions have independent native evidence; a larger native suite or registered route is insufficient.",
-      "gaps": [
-        "Remaining source assertion/transport/edge-case obligations require an explicit native port or reviewed replacement."
+      "classification": "native_semantic_coverage",
+      "native_evidence": [
+        {
+          "go_file": "services/server/internal/messaging/query_ceiling_case_port_test.go",
+          "test": "TestMessagingSourceCaseV1MessageHistoryQueryCeilingSeven",
+          "scenario": "12 complete packets, v1 history limit 10",
+          "assertions": [
+            "v1 message history issues at most 7 queries (9 before the fold)",
+            "200 with 10 results"
+          ]
+        }
       ],
-      "runtime_verification": "not_run"
+      "rationale": "The named native test and its explicit assertion scenario passed in the task-owned synthetic PostgreSQL race qualification and fails with the identity fold reverted. This is source-contract evidence, not production activation evidence.",
+      "gaps": [],
+      "runtime_verification": "passed"
     },
     {
       "classification": "native_semantic_coverage",

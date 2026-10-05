@@ -3,6 +3,20 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-05 — Messaging list/history query ceilings (preserved Codex candidate)
+
+Valid until: `fix/go-messaging-query-ceilings` is integrated or superseded — then treat as history.
+
+Applied the Go files of the preserved candidate `_temp/go-native-toolchain/messaging-query-ceilings`
+(patch sha256 `6cf918f0…`, equal to its manifest; Codex's STATUS/WORKLOG copies were not applied).
+Conversation-list and message-history identity reads now join their owning queries
+(`scanConversations`/`populateConversationParticipants`, `messageReadProjection`/`serializeMessageRows`);
+serialized fields, filters and ordering are unchanged (independent reviewer traced each). Ports
+`test_v1_conversation_list_query_count_is_constant` (≤5) and `test_v1_message_history_query_count_is_constant`
+(≤7); with the fold reverted they measure 7>5 and 9>7. privacy-coverage entries now native evidence.
+WSL Go 1.27.1, social_g2, code f9d7f68 on 778470d: lane messaging 49 top-level pass, 0 skip, 0 fail.
+Reviewer: APPROVE.
+
 ## 2026-10-05 — Membership rows and logistics co-member scoped (GO-PRIV-07)
 
 Valid until: `fix/go-membership-logistics-scope` is integrated or superseded — then treat as history.
