@@ -102,8 +102,9 @@ expect 'k qualify: grep -c erroring fails the lane' nonzero "$gates_status" "$ga
 # --- check-native.sh: stub go reports a temp GOROOT whose bin/ holds gofmt (or not);
 # stub node prints a TAP summary with NATIVE_GATES_NODE_PASS passing tests.
 stub "$gates_tmp/node-bin" node 'echo "node-stub $*"
+if [[ $NATIVE_GATES_NODE_PASS == fail ]]; then printf "%s\n" "1..1" "not ok 1 - boom" "# pass 0" "# fail 1"; exit 1; fi
 printf "%s\n" "1..$NATIVE_GATES_NODE_PASS" "# tests $NATIVE_GATES_NODE_PASS" "# pass $NATIVE_GATES_NODE_PASS" "# fail 0"'
-# run_check CASE GOFMT_BODY|- NODE(pass|zero|none) GO_ENV(ok|fail|empty) [GO_ARG]
+# run_check CASE GOFMT_BODY|- NODE(pass|zero|fail|none) GO_ENV(ok|fail|empty) [GO_ARG]
 run_check() {
   local status=0 goroot=$gates_tmp/goroot-$1 path=$gates_bin node_pass=4
   stub "$goroot/bin" go "if [[ \${1:-} == -C && \${3:-} == env && \${4:-} == GOROOT ]]; then
@@ -121,6 +122,7 @@ exit 2"
   path=$path:$goroot/bin
   [[ $3 == none ]] || path=$path:$gates_tmp/node-bin
   [[ $3 != zero ]] || node_pass=0
+  [[ $3 != fail ]] || node_pass=fail
   PATH=$path NATIVE_GATES_GO_ENV=$4 NATIVE_GATES_NODE_PASS=$node_pass \
     "$gates_bash" "$gates_dir/check-native.sh" "${5:-go}" \
     >"$gates_tmp/$1.out" 2>"$gates_tmp/$1.err" || status=$?
@@ -144,6 +146,8 @@ gates_status=0; run_check n 'exit 0' pass ok nosuchgo || gates_status=$?
 expect 'n check: unknown Go executable fails' nonzero "$gates_status"
 gates_status=0; run_check o 'exit 0' zero ok || gates_status=$?
 expect 'o check: worker test with zero passes fails' nonzero "$gates_status" "$gates_tmp/o.err" 'no passing tests'
+gates_status=0; run_check p 'exit 0' fail ok || gates_status=$?
+expect 'p check: failing worker test fails and shows its TAP' nonzero "$gates_status" "$gates_tmp/p.err" 'not ok 1 - boom'
 
 echo "native gate harness: $gates_passed/$gates_total passed"
 ((gates_passed == gates_total))

@@ -33,7 +33,11 @@ for native_module in services/server services/authcore services/agentapi; do
   "$native_go" -C "$native_root/$native_module" test -race ./...
 done
 # TAP output is stable across Node releases; a run with zero passing tests fails.
-native_worker=$(node --test --test-reporter=tap "$native_root/services/server/internal/web/assets/meetups-worker.test.mjs")
+native_worker=$(node --test --test-reporter=tap "$native_root/services/server/internal/web/assets/meetups-worker.test.mjs") || {
+  native_status=$?
+  printf '%s\n' "$native_worker" >&2
+  exit "$native_status"
+}
 printf '%s\n' "$native_worker"
 native_worker_passed=
 while IFS= read -r native_line; do
