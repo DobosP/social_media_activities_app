@@ -2,6 +2,7 @@ package safety
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -60,6 +61,34 @@ func TestPostgresSafetyRatePoliciesFixedWindowAndOverflowBound(t *testing.T) {
 	}
 	if allowed, err := replica.allow(ctx, a, "appeal", 5, 24*time.Hour); allowed || err != nil {
 		t.Fatalf("report expiry reopened appeal too early: allowed=%v err=%v", allowed, err)
+	}
+}
+
+func TestPostgresBlockBudgetSharedAndBeforeTargetLookup(t *testing.T) {
+	s := safetyFixture(t)
+	ctx := context.Background()
+	a := user(t, s, "block-budget-actor", false)
+	b := user(t, s, "block-budget-target", false)
+	body := fmt.Sprintf(`{"user_id":%d}`, b.ID)
+	for i := range 30 {
+		method := "POST"
+		if i%2 == 1 {
+			method = "DELETE"
+		}
+		if out := request(s, a, method, "/api/safety/blocks/", body); out.Code != 204 {
+			t.Fatalf("block budget refused early: attempt=%d code=%d", i, out.Code)
+		}
+	}
+	// One counter covers block and unblock, and it is charged before the target
+	// lookup: an unknown account ID gets 429, not an existence answer.
+	for _, method := range []string{"POST", "DELETE"} {
+		if out := request(s, a, method, "/api/safety/blocks/", `{"user_id":999999999}`); out.Code != 429 {
+			t.Fatalf("block budget not enforced: method=%s code=%d", method, out.Code)
+		}
+	}
+	var count int
+	if err := s.DB.QueryRow(ctx, `SELECT count FROM safety_go_actionbudget WHERE user_id=$1 AND action='block'`, a.ID).Scan(&count); err != nil || count != 30 {
+		t.Fatalf("block budget count=%d err=%v", count, err)
 	}
 }
 

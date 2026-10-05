@@ -134,6 +134,17 @@ func (s *Service) BlockHTTP(w http.ResponseWriter, r *http.Request) {
 		fail(w, platform.ErrInvalid)
 		return
 	}
+	// Block and unblock share one budget, charged before the target lookup so
+	// the endpoint cannot be used as a cheap account-ID existence oracle.
+	allowed, err := s.allow(r.Context(), a, "block", 30, time.Hour)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	if !allowed {
+		fail(w, ErrRate)
+		return
+	}
 	target, err := s.ResolveTarget(r.Context(), s.DB, "accounts", "user", body.UserID)
 	if err != nil {
 		fail(w, err)

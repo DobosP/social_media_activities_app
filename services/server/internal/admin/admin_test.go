@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/DobosP/social_media_activities_app/services/server/internal/catalog"
+	"github.com/DobosP/social_media_activities_app/services/server/internal/messaging"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/safety"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/social"
@@ -27,7 +28,7 @@ func fixture(t *testing.T) (*Service, platform.Actor) {
 		t.Fatal(err)
 	}
 	soc := social.New(db, platform.RecordAudit)
-	safe := safety.New(db, safety.Config{})
+	safe := safety.New(db, safety.Config{Messaging: messaging.New(db, platform.CursorCodec{})})
 	return New(db, catalog.New(db), soc, safe, nil), a
 }
 func rawFields(input map[string]any) map[string]json.RawMessage {

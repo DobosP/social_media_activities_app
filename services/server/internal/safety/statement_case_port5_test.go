@@ -10,6 +10,7 @@ import (
 
 	"github.com/DobosP/social_media_activities_app/services/server/internal/accounts"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/catalog"
+	"github.com/DobosP/social_media_activities_app/services/server/internal/messaging"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/social"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/testdb"
@@ -27,7 +28,7 @@ func privacy5Fixture(t *testing.T) (*Service, *social.Service) {
 		t.Fatal(err)
 	}
 	soc := social.New(db, platform.RecordAudit)
-	s := New(db, Config{Accounts: acc, CanSeeUser: soc.CanSeeUser})
+	s := New(db, Config{Accounts: acc, CanSeeUser: soc.CanSeeUser, Messaging: messaging.New(db, platform.CursorCodec{})})
 	if err := s.Migrate(ctx); err != nil {
 		t.Fatal(err)
 	}

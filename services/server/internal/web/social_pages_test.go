@@ -60,7 +60,7 @@ func socialLegacyFixture(t *testing.T) (*Server, platform.Actor, int64, int64) {
 	if err := messaging.EnsureSchema(context.Background(), db); err != nil {
 		t.Fatal(err)
 	}
-	s.Safety = safety.New(db, safety.Config{CanSeeUser: soc.CanSeeUser})
+	s.Safety = safety.New(db, safety.Config{CanSeeUser: soc.CanSeeUser, Messaging: s.Messaging})
 	if err := s.Safety.Migrate(context.Background()); err != nil {
 		t.Fatal(err)
 	}

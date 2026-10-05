@@ -30,7 +30,8 @@ func TestPostgresCLIConfigChangesDomainAdmissionAndVisibility(t *testing.T) {
 	}
 	soc := social.New(db, nil)
 	cat := catalog.New(db)
-	a := &app.App{DB: db, Social: soc, Catalog: cat, Media: &media.Service{}, Messaging: &messaging.Service{DB: db}, Accounts: &accounts.Service{DB: db}, Safety: safety.New(db, safety.Config{}), Recommendations: recommendations.New(db, cat, soc), Web: &web.Server{}}
+	msg := &messaging.Service{DB: db}
+	a := &app.App{DB: db, Social: soc, Catalog: cat, Media: &media.Service{}, Messaging: msg, Accounts: &accounts.Service{DB: db}, Safety: safety.New(db, safety.Config{Messaging: msg}), Recommendations: recommendations.New(db, cat, soc), Web: &web.Server{}}
 	if err = c.apply(a); err != nil {
 		t.Fatal(err)
 	}

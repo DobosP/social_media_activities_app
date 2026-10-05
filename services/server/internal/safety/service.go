@@ -22,6 +22,7 @@ type Visibility func(context.Context, platform.Querier, platform.Actor, int64) (
 type Config struct {
 	Accounts             *accounts.Service
 	CanSeeUser           Visibility
+	Messaging            accounts.GuardianMessaging
 	Now                  func() time.Time
 	UnsafeReportCooldown time.Duration
 }
@@ -359,6 +360,15 @@ func (s *Service) TakeAction(ctx context.Context, a platform.Actor, target Targe
 		}
 		if target.App == "accounts" && target.Model == "user" && (input.Decision == "suspend" || input.Decision == "timed_ban" || input.Decision == "ban") {
 			if _, err := tx.Exec(ctx, `UPDATE accounts_user SET is_active=false WHERE id=$1`, target.ID); err != nil {
+				return err
+			}
+			// A sanctioned account leaves every conversation (and orphaned
+			// guardian observers are pruned) in this same transaction, so its
+			// stale rows can never stall a group. Without messaging, fail closed.
+			if s.Config.Messaging == nil {
+				return errors.New("messaging revocation unavailable")
+			}
+			if err := s.Config.Messaging.RemoveUser(ctx, tx, target.ID, "moderation_"+input.Decision); err != nil {
 				return err
 			}
 			if input.Decision == "ban" {

@@ -16,6 +16,7 @@ import (
 	"github.com/DobosP/cat_de_roman_esti/shared-go/authcore"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/accounts"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/catalog"
+	"github.com/DobosP/social_media_activities_app/services/server/internal/messaging"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/testdb"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -36,7 +37,7 @@ func restrictedCaseFixture(t *testing.T) (*Service, platform.Actor, int64, *http
 	if err := acc.Migrate(ctx); err != nil {
 		t.Fatal(err)
 	}
-	s := New(db, Config{Accounts: acc})
+	s := New(db, Config{Accounts: acc, Messaging: messaging.New(db, platform.CursorCodec{})})
 	if err := s.Migrate(ctx); err != nil {
 		t.Fatal(err)
 	}

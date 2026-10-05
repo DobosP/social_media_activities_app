@@ -37,7 +37,7 @@ func TestRetirementPostgresWebQueryGrowth(t *testing.T) {
 	s.Recommendations = recommendations.New(db, s.Catalog, s.Social)
 	s.Social.AfterActivitySave = s.Recommendations.RecomputeEmbeddingTx
 	s.Discovery = discovery.New(db, s.Catalog, s.Social, s.Recommendations)
-	s.Safety = safety.New(db, safety.Config{CanSeeUser: s.Social.CanSeeUser})
+	s.Safety = safety.New(db, safety.Config{CanSeeUser: s.Social.CanSeeUser, Messaging: s.Messaging})
 	s.Accounts = accounts.New(db, nil, "synthetic-query-growth-binding", accounts.Config{})
 	viewer := testdb.Actor(t, db, "query-growth-viewer", "adult")
 	threadActivity := socialLegacyActivity(t, s, owner, place, typ, "Query growth thread")

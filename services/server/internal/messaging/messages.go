@@ -110,18 +110,21 @@ func (s *Service) Post(ctx context.Context, a platform.Actor, conversation int64
 		if e = s.canWrite(ctx, tx, a, conversation); e != nil {
 			return e
 		}
-		rows, e := tx.Query(ctx, `SELECT u.id,u.public_id::text,p.role FROM messaging_participant p JOIN accounts_user u ON u.id=p.user_id WHERE p.conversation_id=$1 AND p.state='active' ORDER BY p.id LIMIT 257`, conversation)
+		// Only the sender is validated, as in the reference. The recipient set
+		// shares the participant-key roster predicate, so a deactivated member
+		// drops out of both and never blocks the rest of the conversation.
+		rows, e := tx.Query(ctx, `SELECT u.id,u.public_id::text FROM messaging_participant p JOIN accounts_user u ON u.id=p.user_id WHERE p.conversation_id=$1 AND p.state='active' AND u.is_active ORDER BY p.id LIMIT 257`, conversation)
 		if e != nil {
 			return e
 		}
 		type member struct {
-			id        int64
-			pub, role string
+			id  int64
+			pub string
 		}
 		var members []member
 		for rows.Next() {
 			var m member
-			if e = rows.Scan(&m.id, &m.pub, &m.role); e != nil {
+			if e = rows.Scan(&m.id, &m.pub); e != nil {
 				rows.Close()
 				return e
 			}
@@ -137,27 +140,6 @@ func (s *Service) Post(ctx context.Context, a platform.Actor, conversation int64
 		}
 		active := map[string]int64{}
 		for _, m := range members {
-			if m.role == "guardian" {
-				guardian, e := actor(ctx, tx, m.id)
-				if e != nil {
-					return e
-				}
-				eligible, e := s.guardianEligible(ctx, tx, guardian, conversation)
-				if e != nil {
-					return e
-				}
-				if !eligible {
-					return platform.ErrForbidden
-				}
-			} else if m.id != a.ID {
-				peer, e := actor(ctx, tx, m.id)
-				if e != nil {
-					return e
-				}
-				if e = pair(ctx, tx, a, peer); e != nil {
-					return e
-				}
-			}
 			active[m.pub] = m.id
 		}
 		seen := map[string]bool{}
@@ -173,14 +155,22 @@ func (s *Service) Post(ctx context.Context, a platform.Actor, conversation int64
 		if e = tx.QueryRow(ctx, `INSERT INTO messaging_message(conversation_id,sender_id,algorithm,ciphertext,iv,created_at) VALUES($1,$2,$3,$4,$5,now()) RETURNING id`, conversation, a.ID, input.Algorithm, input.Ciphertext, input.IV).Scan(&result); e != nil {
 			return e
 		}
+		recipients := make([]int64, 0, len(input.RecipientKeys))
+		jwks := make([]string, 0, len(input.RecipientKeys))
+		wrapped := make([]string, 0, len(input.RecipientKeys))
+		ivs := make([]string, 0, len(input.RecipientKeys))
 		for _, key := range input.RecipientKeys {
 			raw, e := json.Marshal(key.EphemeralPublicJWK)
 			if e != nil {
 				return e
 			}
-			if _, e = tx.Exec(ctx, `INSERT INTO messaging_messagekey(message_id,recipient_id,ephemeral_public_jwk,wrapped_key,wrap_iv,created_at) VALUES($1,$2,$3,$4,$5,now())`, result, active[key.RecipientPublicID], raw, key.WrappedKey, key.WrapIV); e != nil {
-				return e
-			}
+			recipients = append(recipients, active[key.RecipientPublicID])
+			jwks = append(jwks, string(raw))
+			wrapped = append(wrapped, key.WrappedKey)
+			ivs = append(ivs, key.WrapIV)
+		}
+		if _, e = tx.Exec(ctx, `INSERT INTO messaging_messagekey(message_id,recipient_id,ephemeral_public_jwk,wrapped_key,wrap_iv,created_at) SELECT $1::bigint,t.r,t.j::jsonb,t.w,t.i,now() FROM unnest($2::bigint[],$3::text[],$4::text[],$5::text[]) AS t(r,j,w,i)`, result, recipients, jwks, wrapped, ivs); e != nil {
+			return e
 		}
 		if _, e = tx.Exec(ctx, `UPDATE messaging_conversation SET updated_at=now() WHERE id=$1`, conversation); e != nil {
 			return e

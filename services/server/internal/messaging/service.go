@@ -76,8 +76,8 @@ func (s *Service) CanView(ctx context.Context, q platform.Querier, a platform.Ac
 		return false, nil
 	}
 	a = fresh
-	var state, role, cohort string
-	err = q.QueryRow(ctx, `SELECT p.state,p.role,c.cohort FROM messaging_participant p JOIN messaging_conversation c ON c.id=p.conversation_id WHERE p.user_id=$1 AND c.id=$2`, a.ID, conversation).Scan(&state, &role, &cohort)
+	var state, role, cohort, kind string
+	err = q.QueryRow(ctx, `SELECT p.state,p.role,c.cohort,c.kind FROM messaging_participant p JOIN messaging_conversation c ON c.id=p.conversation_id WHERE p.user_id=$1 AND c.id=$2`, a.ID, conversation).Scan(&state, &role, &cohort, &kind)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return false, nil
 	}
@@ -100,9 +100,44 @@ func (s *Service) CanView(ctx context.Context, q platform.Querier, a platform.Ac
 	if err != nil {
 		return false, err
 	}
+	// As in the reference, a block vetoes only a direct chat. A group keeps
+	// working for every member, and a deactivated peer's block does not count.
+	if kind != "direct" {
+		return true, nil
+	}
 	var blocked bool
-	err = q.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM messaging_participant p JOIN safety_block b ON (b.blocker_id=$2 AND b.blocked_id=p.user_id) OR (b.blocker_id=p.user_id AND b.blocked_id=$2) WHERE p.conversation_id=$1 AND p.state='active' AND p.role!='guardian')`, conversation, a.ID).Scan(&blocked)
+	err = q.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM messaging_participant p JOIN accounts_user u ON u.id=p.user_id AND u.is_active JOIN safety_block b ON (b.blocker_id=$2 AND b.blocked_id=p.user_id) OR (b.blocker_id=p.user_id AND b.blocked_id=$2) WHERE p.conversation_id=$1 AND p.state='active' AND p.role<>'guardian' AND p.user_id<>$2)`, conversation, a.ID).Scan(&blocked)
 	return !blocked, err
+}
+
+// canAdminister is the block-exempt administrator gate: removing a member never
+// depends on anyone's blocks, while adding one still re-checks pair().
+func (s *Service) canAdminister(ctx context.Context, q platform.Querier, a platform.Actor, id int64) (kind, cohort string, err error) {
+	fresh, err := actor(ctx, q, a.ID)
+	if err != nil {
+		return "", "", err
+	}
+	if !fresh.IsActive {
+		return "", "", platform.ErrForbidden
+	}
+	var state, role string
+	err = q.QueryRow(ctx, `SELECT p.state,p.role,c.kind,c.cohort FROM messaging_participant p JOIN messaging_conversation c ON c.id=p.conversation_id WHERE p.user_id=$1 AND c.id=$2 FOR UPDATE OF c`, fresh.ID, id).Scan(&state, &role, &kind, &cohort)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", "", platform.ErrForbidden
+	}
+	if err != nil {
+		return "", "", err
+	}
+	if state != "active" || role == "guardian" || fresh.Cohort != cohort {
+		return "", "", platform.ErrForbidden
+	}
+	if err = platform.Participate(ctx, q, fresh); err != nil {
+		return "", "", err
+	}
+	if role != "admin" {
+		return "", "", platform.ErrInvalid
+	}
+	return kind, cohort, nil
 }
 func (s *Service) canWrite(ctx context.Context, q platform.Querier, a platform.Actor, id int64) error {
 	ok, err := s.CanView(ctx, q, a, id)

@@ -12,6 +12,7 @@ import (
 	"github.com/DobosP/social_media_activities_app/services/server/internal/accounts"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/budgets"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/catalog"
+	"github.com/DobosP/social_media_activities_app/services/server/internal/messaging"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/social"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/testdb"
@@ -51,7 +52,7 @@ func fixedWindowErasureFixture(t *testing.T) (*Service, *accounts.Service, platf
 	if err = acc.Migrate(context.Background()); err != nil {
 		t.Fatal(err)
 	}
-	s := New(pool, Config{Accounts: acc})
+	s := New(pool, Config{Accounts: acc, Messaging: messaging.New(pool, platform.CursorCodec{})})
 	if err = s.Migrate(context.Background()); err != nil {
 		t.Fatal(err)
 	}

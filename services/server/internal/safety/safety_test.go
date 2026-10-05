@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/DobosP/cat_de_roman_esti/shared-go/authcore"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/accounts"
+	"github.com/DobosP/social_media_activities_app/services/server/internal/messaging"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
 	nativeschema "github.com/DobosP/social_media_activities_app/services/server/internal/schema"
 	"github.com/jackc/pgx/v5"
@@ -89,7 +90,7 @@ func safetyFixture(t *testing.T) *Service {
 	if err = acc.Migrate(ctx); err != nil {
 		t.Fatal(err)
 	}
-	s := New(db, Config{Accounts: acc})
+	s := New(db, Config{Accounts: acc, Messaging: messaging.New(db, platform.CursorCodec{})})
 	if err = s.Migrate(ctx); err != nil {
 		t.Fatal(err)
 	}

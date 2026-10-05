@@ -9,24 +9,47 @@ group administrators, participant keys, disappearing timers and transparent
 read-only CHILD guardian observers retain their domain behavior.
 
 `Post` is a ciphertext relay. It has no decryptor, clear private key, passphrase
-or message-content scanner. The provided key set must equal every active
-participant, including the sender and any eligible guardian. Audit/notification
-metadata never includes ciphertext, wrapped keys or reporter-disclosed content.
-Report evidence is stored only in the established private safety report surface.
+or message-content scanner. Only the sender is validated (fresh active account,
+conversation cohort, participation, not a guardian), as in the reference. The
+provided key set must equal every active participant whose account is active,
+including the sender and any guardian observer; `ParticipantKeys` serves the same
+roster, and both are bounded without per-member queries. A peer whose consent or
+assurance lapsed is neither validated nor excluded, so one stale member never stops
+the others from sending. Audit/notification metadata never includes ciphertext,
+wrapped keys or reporter-disclosed content. Report evidence is stored only in the
+established private safety report surface.
 
 The native port closes stale-access gaps with fresh account, cohort, consent,
-assurance, peer-block and guardian-basis checks. A block between active peers
-denies access to their shared conversation until it is resolved. Public JWKs reject
-private or unexpected fields; opaque backups reject clear private-key/passphrase
-fields. Guardian discovery and read access require a currently eligible adult
-and an active eligible CHILD ward. Review gates for these stricter checks:
-[ADR-0040](../../../../docs/adr/0040-landing-and-deployment-review-gates.md) (independent review before landing; human review before first deployment).
+assurance and guardian-basis checks for the viewer. Blocks follow the reference:
+a block in either direction between the viewer and an active, non-guardian peer
+denies a DIRECT chat until it is resolved. Group chats ignore blocks for reading,
+sending and live access; clients may hide a blocked sender's messages. Adding a
+group member still requires the admin/target pair to be unblocked and eligible,
+but an active admin can always remove a member regardless of blocks. Guardian
+observer reading is unchanged by ward/guardian blocks. Public JWKs reject private
+or unexpected fields; opaque backups reject clear private-key/passphrase fields.
+Guardian discovery and read access require a currently eligible adult and an
+active eligible CHILD ward. Decision: [ADR-0043](../../../../docs/adr/0043-direct-only-block-veto.md);
+review gates: [ADR-0040](../../../../docs/adr/0040-landing-and-deployment-review-gates.md)
+(independent review before landing; human review before first deployment).
+
+A moderation suspend, timed ban or ban calls `RemoveUser` (which prunes orphaned
+guardian observers) in the same transaction as the sanction, so the account leaves
+every conversation; safety refuses the sanction if messaging is not wired. Lifting
+the sanction never restores rows. Instead, `Start` on an existing direct pair
+re-invites a peer who left or was removed (the peer becomes invited and must
+accept), only after `pair()` re-checks cohort, participation and blocks. A starter
+who left or was removed re-enters only when the peer is not active either; while the
+peer is active, the peer decides. Group members return only by an admin invitation.
+Rows that change are charged to the start budget and audited as
+`messaging.direct_reinvited`.
 
 `EnsureSchema` installs two per-user rate counters. Send admission commits before
 recipient work, so malformed recipient attempts still consume the existing
-60-per-minute budget. Start admission uses 20 per minute, with direct reuse before
-the budget. Conversation pages cap at 100 and message windows at 50. Serialization
-uses batched users/avatars, avoiding a query for every participant or sender.
+60-per-minute budget. Start admission uses 20 per minute; plain direct reuse comes
+before the budget and is free, a direct re-invite is charged. Conversation pages
+cap at 100 and message windows at 50. Serialization uses batched users/avatars,
+avoiding a query for every participant or sender.
 Native request and socket envelopes are bounded to 2 MiB; ciphertext is 64 KiB,
 wrappers 4 KiB, JWKs 8 KiB and active recipients at most 256.
 
@@ -51,5 +74,7 @@ set expected by the existing browser client.
 Tests use an explicit disposable `-messaging-test-dsn`, clone only their own
 `messaging_native_test_*` schema and never read environment credentials. The
 integration suite exercises registry/backup/rotation, direct reuse, group shape,
-invite acceptance, exact key sets, history cursors, blocks, report evidence,
-retention, guardian withdrawal and real cross-replica WebSocket revocation.
+invite acceptance, exact key sets, history cursors, direct-only blocks, group
+blocks, admin removal under a block, moderation eviction and direct re-invite,
+membership-independent send query counts, report evidence, retention, guardian
+withdrawal and real cross-replica WebSocket revocation.

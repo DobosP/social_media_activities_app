@@ -77,7 +77,22 @@ func (s *Service) Start(ctx context.Context, a platform.Actor, kind string, name
 			}
 			e = tx.QueryRow(ctx, `SELECT c.id FROM messaging_conversation c JOIN messaging_participant a ON a.conversation_id=c.id JOIN messaging_participant b ON b.conversation_id=c.id WHERE c.kind='direct' AND a.user_id=$1 AND b.user_id=$2 ORDER BY c.updated_at DESC,c.id DESC LIMIT 1`, a.ID, targets[0].ID).Scan(&result)
 			if e == nil {
-				return nil
+				// Re-invite a reused direct chat whose peer left or was removed
+				// (for example by moderation). pair() above re-checked cohort,
+				// participation and blocks; the peer must accept again. A
+				// starter who left or was removed never re-enters on their own
+				// while the peer is still active: the peer re-invites them.
+				tag, e := tx.Exec(ctx, `UPDATE messaging_participant p SET state=CASE WHEN p.user_id=$2 THEN 'active' ELSE 'invited' END,invited_by_id=CASE WHEN p.user_id=$2 THEN p.invited_by_id ELSE $2 END WHERE p.conversation_id=$1 AND p.user_id IN($2,$3) AND p.state IN('left','removed') AND (p.user_id=$3 OR NOT EXISTS(SELECT 1 FROM messaging_participant o WHERE o.conversation_id=$1 AND o.user_id=$3 AND o.state='active'))`, result, a.ID, targets[0].ID)
+				if e != nil {
+					return e
+				}
+				if tag.RowsAffected() == 0 {
+					return nil
+				}
+				if e = s.budget(ctx, tx, a.ID, "messaging_start", 20); e != nil {
+					return e
+				}
+				return platform.RecordAudit(ctx, tx, a, "messaging.direct_reinvited", fmt.Sprintf("messaging.conversation:%d", result), map[string]any{"reinvited": tag.RowsAffected()})
 			}
 			if !errors.Is(e, pgx.ErrNoRows) {
 				return e
