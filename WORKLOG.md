@@ -3,6 +3,83 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-05 — Linux continuation of the Go integration (G1 handoff)
+
+Valid until: `feat/go-native-toolchain` lands on `main` — then treat as history.
+
+**State.** On top of 07bdf5a this branch carries the fail-closed gates 7553435..088f3d5 (GO-02/GOV-7, GO-06, F5;
+independently reviewed), the governance docs 75eb81c..778470d (ADR-0040; reviewed), then G2's 82a2625 and G3's
+d9ede52 (their own reviews). `origin/main` is cd006e3. G2 and G3 have more fix branches published unmerged; each
+branch's own WORKLOG note says what it still owes. Owner decision 2026-10-05 ~18:00: finish on the Linux boot.
+
+**Start rule for the final gates.** Begin only when G2 and G3 are finished: each has fast-forwarded its reviewed
+branches here and declared itself final (on Windows: `FINAL` at the top of its DONE note), or Paul says so directly
+in the landing session's own chat.
+
+**Environment** (what the Windows WSL2 run used; keep the shape, adapt paths):
+- Go 1.27.1 linux-amd64 from go.dev, sha256 `63d339f0da5ab53635a56f2490a7984dfe12dfcff22ad749f63edaf590168445`,
+  unpacked under the task `_temp`, not system-wide. Env `GOTOOLCHAIN=local GOWORK=off GOMAXPROCS=2
+  GOFLAGS="-mod=readonly -p=2"`, task-owned `GOMODCACHE`/`GOCACHE`/`TMPDIR`. Once per module (server, authcore,
+  agentapi): `go mod download && go mod verify` with the default proxy/sumdb; then `GOPROXY=off`.
+- Fixture DB: `docker build -f Dockerfile.db -t social-native-db:local .`; `docker network create --internal NET`;
+  `docker run -d --name DB --network NET --network-alias db --user "$(id -u):$(id -g)" -v PGDATA:/var/lib/postgresql/data
+  --memory 2g --cpus 2 --env-file PWFILE -e POSTGRES_USER=app -e POSTGRES_DB=FIRSTDB social-native-db:local` (PWFILE
+  holds `POSTGRES_PASSWORD=<random>`); no published ports; one database per concurrent session
+  (`docker exec DB createdb -U app NAME`), each bootstrapped with `docker run --rm --read-only --cap-drop=ALL
+  --security-opt=no-new-privileges --network NET -e DATABASE_URL=postgres://app:PW@db:5432/NAME?sslmode=disable
+  IMAGE social-server --migrate-only`. Never print the password or unredacted `ps` output (DSNs sit on test command lines).
+- Lane runtime image: canonical `docker build -t social-native:SHA .`. Serialize Go test/build runs with `flock LOCKFILE`.
+- One lane (fix branches into this branch, ADR-0040): `go -C services/server test -race -c -o SCRATCH/tests/PKG.test
+  ./internal/PKG` (`configuration`: `./cmd/social-server`), then the lane loop's `docker run` from
+  `scripts/qualify-native.sh` with that package's DSN flag; require exit 0, no `--- SKIP:`, PASS > 0.
+- Full: `scripts/check-native.sh GO`, `scripts/qualify-native.sh GO IMAGE NET DSN ABS_SCRATCH`, `scripts/test-native-gates.sh`.
+
+**Verified on WSL2 Ubuntu 26.04 (none of it is a final-head receipt).** 07bdf5a: check-native exit 0 (125 s);
+qualify 21 lanes, 626 top-level PASS, 0 SKIP, 0 FAIL (1,522 s), counted by an independent grep because the 07bdf5a
+rg gate printed empty counts on a host without rg (GO-02 reproduced). 088f3d5: harness 16/16 (2/16 on the 07bdf5a
+scripts); real check-native exit 0 (worker test `# pass 4`); qualify with an empty DSN exits 1 ("Unqualified skipped
+native test in configuration"). 778470d early audits: check-contracts 2671 / 993 claimed-verified / 1678 unresolved
+/ 0 invalid, exit 1; govulncheck v1.8.0 source and package for three modules plus the symbol-retaining binary: no
+vulnerabilities; Trivy v0.75.0 HIGH/CRITICAL `--ignore-unfixed` on the canonical 07bdf5a image: exit 0; Node 24.21.0
+`npm ci && npm test && npm run build`: pass, initial bundle 36.71/40 KiB gzip; container smoke on that image 14/14.
+
+**Final gates on the final head** (ADR-0040; all required):
+1. `docker build --no-cache -t social-native:SHA .` (never the overlay c44143fd); `--migrate-only` on a fresh database.
+2. `scripts/check-native.sh GO` exit 0 and `scripts/test-native-gates.sh` pass.
+3. `scripts/qualify-native.sh`: all 21 lanes, zero skips, PASS > 0, fresh receipts only; replace
+   `docs/reviews/native-go/restart-checkpoint.json` without `reused` entries.
+4. govulncheck v1.8.0 (`./...` and `-scan=package ./...` per module; `-mode=binary` on a `CGO_ENABLED=0 go build
+   -trimpath` twin); Trivy v0.75.0 `image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1` on that build.
+5. Smoke on that image on the private network: image user 10001:10001; no python/python3/pip; ffmpeg, ffprobe,
+   avifenc, prlimit present; run `--read-only --cap-drop=ALL --security-opt=no-new-privileges`, tmpfs on
+   `/app/var/{media,media-work,agent_snapshot}` (uid 10001), the `docker-compose.yml` dev environment and command;
+   `/healthz`, `/readyz`, `/sw.js`, `/api/schema/`, `/api/docs/` return 200 from inside; uid 10001, CapEff 0;
+   SIGTERM exits 0, not OOM-killed.
+6. Node 24 frontend gate; `go -C services/server run ./cmd/check-contracts -root "$PWD" -summary` with verified
+   ≥ 993 and invalid 0 (exit 1 is expected: it blocks Python retirement, not landing).
+7. STATUS (≤ 120 lines, receipts) and WORKLOG; fleet doc gate 0 findings; `git diff --check`; an independent
+   reviewer approves the final diff.
+8. Land: fetch; if `origin/main` is still cd006e3, `git merge --ff-only` and push; otherwise merge and re-run 2–3.
+   ADR numbers taken by this audit: 0040 (G1), 0041 and 0043–0046 (G2), 0042 and 0047–0049 (G3).
+
+**Branch cleanup after landing** (ADR-0037, verified-merged gate). Ancestors: `feat/go-migration-finish`,
+`feat/go-shared-budgets`, `fix/go-review-{budgets,profile,media}`. `codex/manual-github-actions-20261004` is
+patch-identical to main (GOV-6): ask Paul. Range-diff against this branch at d9ede52: `feat/go-admin-api-parity`
+61c74d3 — both commits patch-equivalent; `feat/go-config-observability` dff287f — c32d77f equivalent, 76a880d and
+dff287f are pre-conflict versions of 85d4fc5 and 781b996 (STATUS/WORKLOG wording and one LIKE-fixture
+`schema.Migrate` block that the later fixture repair replaced); `chore/go-config-stash-preserve` 0ac4faf (a pushed
+stash) — of 24 untracked originals 15 are identical here and 9 present in later versions, none missing; of 63 tracked
+changes 22 identical, 41 evolved since. Paul's OK to delete these three after a verified landing was relayed on
+2026-10-05 15:00 by the audit session, not given first-hand: confirm it with Paul directly before deleting. Paul closes
+PR 108 and the Dependabot PRs postgres-18, node-26 and django-6.0.8 (none merged; `gh` is unauthenticated on Windows).
+
+**Left on the Windows PC's WSL:** Go under `~/work/_temp/social-go`; images social-native:07bdf5a,
+social-native-db:local, golang:1.27.1-bookworm, node:24-bookworm-slim, postgres:16-bookworm; the stopped container
+`social-go-db` and network `social-go-net`; on `/mnt/data/social-go`: Trivy 0.75.0 and govulncheck v1.8.0 (`tools/`),
+GOCACHE, the synthetic fixture pgdata and scratch. If the Linux boot mounts the same `/mnt/data`, `tools/` is
+reusable; the rest is disposable. GO-RT-07 (G3: readiness drain set immediately before shutdown) joins the
+before-first-deployment list in `docs/RELEASE_READINESS.md`.
+
 ## 2026-10-05 — Unreachable web action cases removed; two descriptions corrected (IDP-6, GO-MEDIA-05, GO-EXPORT-01)
 
 Valid until: `fix/go-low-dead-code` is integrated or superseded — then treat as history.

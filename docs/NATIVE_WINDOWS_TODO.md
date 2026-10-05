@@ -1,6 +1,6 @@
 # Native migration Windows TODO
 
-Last verified: 2026-10-05. Requested bounded restart handoff; resume only on the human's Windows instruction.
+Last verified: 2026-10-05. Continuation moved to Linux: WORKLOG 2026-10-05 "Linux continuation of the Go integration".
 Current truth remains [STATUS](../STATUS.md). This checklist does not authorize main landing or production activation.
 
 ## Preserved source and qualification

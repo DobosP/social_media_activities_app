@@ -82,6 +82,9 @@ Not fixed yet; each blocks the first deployment of the Go runtime
 - [ ] GO-MEDIA-06 — 30 s server ReadTimeout (`cmd/social-server/main.go`) vs the 80 MB upload cap without a
       buffering proxy. Done when a test uploads the cap over a slow link within the configured
       timeouts, or the deployment template adds a buffering proxy with that limit.
+- [ ] GO-RT-07 — readiness drain is marked immediately before `server.Shutdown` (`cmd/social-server/main.go`), so no
+      probe sees `/readyz` 503 before connections close. Done when a pre-stop delay sized to the deployment's
+      probe-driven balancer exists, with a test that `/readyz` reports 503 for that window.
 - [ ] GOV-9 — no rollback runbook for the Go landing (revert range, Django fallback, DB restore drill).
       Done when [RUNBOOK](RUNBOOK.md) carries that procedure and the restore drill has been rehearsed once.
 

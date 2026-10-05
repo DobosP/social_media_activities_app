@@ -94,6 +94,7 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
+- WSL2 2026-10-05, not final-head: 07bdf5a 626 PASS/0 skips; 088f3d5 gates pass; Linux continuation in WORKLOG.
 - Restart checkpoint:993 claimed-verified (manifest `runtime_verification`, not checked against a test run)/1678 unresolved/0invalid of2671; retirement gate exits1.
   Source-frozen586 affected tests/14 lanes pass without skips; 40 more: package directory unchanged;
   transitive dependencies changed after the receipt — not qualified on this head.
