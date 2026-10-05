@@ -3,6 +3,74 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-05 — G3 continuation notes for the move to Linux (auth, media, runtime audit fixes)
+
+Valid until: the G3 stack below is qualified and integrated — then replace this entry with one entry per branch and treat it as history.
+
+Written at wrap-up on Windows (owner decision ~18:00: Windows memory headroom stayed under the test floor, so the owed
+runs move to Linux). **Nothing in this stack is integrated yet.** Already integrated from G3: `d9ede52` (IDP-6 dead web
+action cases, GO-MEDIA-05 comment, GO-EXPORT-01 README; check-native exit 0, web 93 and media 42 pass, 0 skip; reviewer
+APPROVE). STATUS.md is not updated for the stack; add the facts when each branch is integrated.
+
+**Stack (linear, each branch contains the ones before it), on `d9ede52`:**
+
+| # | Branch | Findings | Review | Evidence so far | Owed |
+|---|---|---|---|---|---|
+| 1 | `fix/go-admin-permissions` | IDP-3: `/admin/` console needs an active staff superuser (owner decision; ADR-0035 amended) | APPROVE | pre-stack tree: check-native 0; admin 20, app 28, 0 skip; fail-before proven (gate reverted: `TestNativeConsoleRequiresAdministrator` and the HTML permissions test fail) | lanes admin, app on the stacked head |
+| 2 | `fix/go-video-queue-hold` | F3: exhausted stale video lease fenced out of the claim (ADR-0038 amended) | APPROVE | pre-stack tree: check 0; media 43, jobs 64, admin 19; fail-before proven (`attachments.go` reverted: both video tests fail) | lanes media, jobs, admin |
+| 3 | `fix/go-low-runtime` | GO-JOBS-01, GO-RT-06, GO-RT-05 (ADR-0026 amended: a drain takes no claim its deadline cannot finish) | APPROVE | before the claim-guard commit: check 0; jobs 67, app 28, configuration 60, media 42; fail-before proven for the statement-timeout, feed-id and job-timeout tests | lanes jobs, app, configuration, media; the claim-guard commit and `TestPostgresVideoDrainTakesNoClaimItsDeadlineCannotFinish` have never run |
+| 4 | `fix/go-media-queue-timeouts` | GO-MEDIA-03, GO-MEDIA-04, GO-RT-02; busy-refused avatar upload returns its attempt (owner decision) | APPROVE for all but the last commit | pre-stack tree `0e54a37`: check 0; media 47, app 31, configuration 61 pass; **web 96 pass, 1 FAIL**; fail-before proven for the purge test and the three deadline-wiring tests | see "5e failure" below; lanes media, app, web, configuration; review of the avatar-refund commit |
+| 5 | `fix/go-admission-caps` | F1 = GO-01, IDP-1 (ADR-0039 amended; IDP-2 was already fixed, guards kept) | reviewer APPROVE (whole branch); critic: ship with named fixes | first commit only: check 0; accounts 69, safety 50, app 30, jobs 64, web 92, configuration 59 on a database bootstrapped by the branch | everything after the first commit has never been compiled: see "6a owed" below |
+| 6 | `fix/go-budget-families` | rest of F2, GO-CATALOG-01 (covers G2's GO-PRIV-06; ADR-0037 amended) | APPROVE | the reviewer ran the SQL on PostgreSQL 16 (17 budgets tests pass, v1 upgrade exact, pgbench stress without deadlocks); never run through the project gates | check-native; lanes budgets, app, catalog, jobs, web on a fresh database (schema changes) |
+
+**How to qualify on Linux (ADR-0040; one lane per affected package, zero skips, PASS > 0):** for each branch head, in stack
+order, `scripts/check-native.sh /abs/path/to/go`, then the lanes above through `scripts/qualify-native.sh` (or its
+single-lane equivalent with the same flags and release image) against a disposable PostgreSQL 16 + PostGIS + pgvector
+database. Branches 5 and 6 change schema bootstrap (`accounts_go_oauth_flow.peer_hash`; `go_rate_budget_family_capacity`
+and the budgets functions): recreate the database and run that branch's own `social-server --migrate-only` first. Then add
+STATUS.md and a per-branch WORKLOG entry with the counts and fast-forward (`git push origin <head>:feat/go-native-toolchain`,
+never forced). Fail-before means: restore only the fix file(s) to the parent commit, keep the tests, and see the named
+tests fail.
+
+**5e failure:** `TestPostgresBusyAvatarRerendersFormOrAnswersFetch` (`internal/web/media_busy_test.go`): the plain form
+case gets 500 `{"detail":"Page unavailable."}` instead of a re-rendered 503. That body is `accountRender`'s swallowed
+`Renderer.Render` error for the `profile` view (`web/account_actions.go`). `TestNativeAccountPagesUseCompletePrivateContexts`
+renders `profile` in the same fixture through `AccountView` + `Render` without `messages`, so the difference is the
+`accountRender` path (messages, CSRF) or the multipart POST request. No existing test renders `profile` through
+`accountRender` with an error, so this may be a pre-existing fault of every avatar-upload error page, not only of the
+busy path: print the render error first. The thread-attachment and place-cover variants of the same test pass.
+
+**6a owed (critic's three fixes plus runs):** (1) compile and run the head: lanes accounts, safety, app, jobs, web,
+configuration on a fresh database, and fail-before for `TestNativeCredentialSubtreeVariantsReachNoVerdict`,
+`TestObtainTokenSharesFailedLoginCounter`, `TestObtainTokenRefusesCrossSiteBrowserRequestsBeforeAnyRow` and
+`TestRequirePeerMarkerRefusesUnmarkedAttemptsAndFlows`; (2) ADR-0039's table-size claim is already scoped in the amended
+text (done); (3) prove the opportunistic sweep is invisible: one run of accounts, safety and app with `Store.sweepDue`
+forced to always fire (scratch patch, not committed) plus `-test.count=5`. Before first deployment (not before
+integration): single-flight the sweep and move it off the request goroutine; no old/new replica overlap; clocks synced;
+the real client address must reach the app or every user shares one bucket.
+
+**Budget families:** the two ADR-0037 sentences the reviewer asked for are in the amended text (the live sweeper is a
+deliberate exception to the periodic-work rule; never run a pre-v2 migration against a v2 database).
+
+**Owner decisions taken on 2026-10-05 (all recorded in the ADRs named above):** admin console is administrators only;
+per-prefix caps 100 logins / 15 min, 30 restricted proofs / 15 min, 30 signups / hour, 30 OAuth starts / 15 min (IPv6 per
+/64); the mobile token endpoint shares the failed-login lockout; a full budget family evicts its longest-idle keys, the
+account family included; a busy-refused avatar upload spends no attempt; GO-EXPORT-01 (two snapshot producers, only
+`jobs/snapshot.go` runs) stays as is and is decided before first deployment.
+
+**Not fixed, with reason:** GO-RT-07 (draining flag is set right before `server.Shutdown`; the fix is a pre-stop delay
+whose length depends on the deployment's probe model: add to "before first deployment"); GO-MEDIA-05 (`AttachToPost` is
+test-only and its gates differ from the live path; comment corrected only); GO-RT-06's second half (handlers without a
+request deadline queue on the pool). Confirmed present and tested on the integration branch by reading: F6, F7, F8 (F8
+needs branch 2).
+
+**Open for the owner / deployment review:** operators lose console-only tools (venue-claim decisions, correction and
+proposal publishing, edge reversal), and the console gate does not also require role `admin` or a verified adult; held
+videos are silent and outlive their time-to-live; anonymous snapshot downloads can hold a connection up to 30 minutes;
+the purge can still starve past limit x 200 held rows; image and video codecs can run together on a small host;
+`app/proxy.go` falls back to the proxy address when any `X-Forwarded-For` entry fails to parse; the signup cap counts
+attempts, rejected ones included; `web.action` has three more dead blocks.
+
 ## 2026-10-05 — Unreachable web action cases removed; two descriptions corrected (IDP-6, GO-MEDIA-05, GO-EXPORT-01)
 
 Valid until: `fix/go-low-dead-code` is integrated or superseded — then treat as history.
