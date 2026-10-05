@@ -3,6 +3,21 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-05 — Report eligibility independent of read gates (GO-PRIV-01, F4)
+
+Valid until: `fix/go-report-eligibility` is integrated or superseded — then treat as history.
+
+[ADR-0041](docs/adr/0041-report-eligibility-predicate.md); design by the G2 critic, owner decisions
+2026-10-05. `safety.ReportTarget` gets its own predicate (activity same cohort ignoring blocks/hidden; post
+by thread-owner cohort plus a seat; user via the new `Config.CanSeeUser` = active, pair-visible, unblocked);
+labels are generic where the read gate would hide a title or name; every non-staff refusal is not-found;
+`ReportHTTP` checks eligibility before the 20/h budget; report-page user lookups spend a 240/h
+`report_lookup` budget (429 when spent). `UnsafeReport` checks the member seat inside its transaction.
+Messaging `Report` needs only an active participant. `Social.Leave` and the web unsafe/leave actions no longer
+use the block-aware read gate; a member blocked with the owner gets a safe-exit page
+(`web/activity_safe_exit.html`, shared `_activity_safe_exit.html`). The reference's user-label leak is a
+recorded reference bug. <<G2-5A-EVIDENCE>>
+
 ## 2026-10-05 — Messaging list/history query ceilings (preserved Codex candidate)
 
 Valid until: `fix/go-messaging-query-ceilings` is integrated or superseded — then treat as history.
