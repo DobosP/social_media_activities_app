@@ -250,7 +250,7 @@ func runWithReporter(ctx context.Context, args []string, get environment, stdin 
 		return nil
 	}
 	if o.Job != "" {
-		jobCtx, cancel := context.WithTimeout(ctx, jobConfig.JobTimeout)
+		jobCtx, cancel := context.WithTimeout(ctx, call.timeout(runner))
 		defer cancel()
 		result, runErr := call.run(jobCtx, runner)
 		if runErr != nil || jobCtx.Err() != nil {

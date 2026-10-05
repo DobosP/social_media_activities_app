@@ -144,7 +144,7 @@ func (r *Runner) RunDue(ctx context.Context) ([]Result, error) {
 	out := []Result{}
 	failures := 0
 	for _, name := range DueNames {
-		jobCtx, cancel := context.WithTimeout(ctx, r.Config.JobTimeout)
+		jobCtx, cancel := context.WithTimeout(ctx, r.JobTimeout(name, DueVideoBatch))
 		value, err := r.Run(jobCtx, name, nil)
 		if err == nil && jobCtx.Err() != nil {
 			err = jobCtx.Err()
@@ -170,6 +170,20 @@ func (r *Runner) RunDue(ctx context.Context) ([]Result, error) {
 	return out, nil
 }
 func missing() error { return errors.New("native job dependency unavailable") }
+
+// DueVideoBatch is the number of video claims one scheduled drain takes.
+const DueVideoBatch = 2
+
+// JobTimeout is the common per-duty ceiling, except that a video drain keeps
+// its own bounded lease budget: cutting a transcode short spends one of the
+// attachment's attempts and eventually erases a valid upload.
+func (r *Runner) JobTimeout(name string, videoBatch int) time.Duration {
+	timeout := r.Config.JobTimeout
+	if name == "transcode_videos" && r.Config.Media != nil {
+		timeout = max(timeout, r.Config.Media.VideoBatchTimeout(videoBatch))
+	}
+	return timeout
+}
 func (r *Runner) install() {
 	r.handlers["purge_messaging"] = func(ctx context.Context, _ map[string]json.RawMessage) (any, error) { return r.purgeMessages(ctx) }
 	r.handlers["purge_expired_attachments"] = func(ctx context.Context, _ map[string]json.RawMessage) (any, error) {
@@ -187,7 +201,7 @@ func (r *Runner) install() {
 		if r.Config.Media == nil {
 			return nil, missing()
 		}
-		return r.Config.Media.ProcessPendingVideos(ctx, 2)
+		return r.Config.Media.ProcessPendingVideos(ctx, DueVideoBatch)
 	}
 	r.handlers["purge_read_notifications"] = func(ctx context.Context, _ map[string]json.RawMessage) (any, error) {
 		if r.Config.NotificationRetentionDays <= 0 {
