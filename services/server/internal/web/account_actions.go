@@ -29,7 +29,7 @@ func (s *Server) accountRender(w http.ResponseWriter, r *http.Request, a platfor
 		platform.Fail(w, err)
 		return
 	}
-	data["messages"] = []string{message}
+	data["messages"] = []socialMessage{{"message": message, "tags": "error"}}
 	for key, value := range extra {
 		data[key] = value
 	}

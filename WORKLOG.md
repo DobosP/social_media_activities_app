@@ -3,6 +3,25 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-05 — G3 avatar form source correction prepared on Linux
+
+Valid until: this candidate is qualified and integrated or superseded — then treat as history.
+
+The G3 form500 failure is `accountRender` passing `[]string` into the shared base template, which reads
+`m.tags`. A temporary isolated renderer diagnostic reproduced `base.html` line121: "can't access a
+field by name on type string (variable m.tags)". The diagnostic was removed; production errors remain
+generic. Account messages now use the existing escaped `socialMessage` contract with `tags=error`.
+`TestPostgresAccountErrorRendersPrivateProfile` pins the actual private profile error page and escaped
+script marker; the existing avatar busy form/fetch503 regression remains. Independent source review:
+APPROVE; actual fixture and fail-before receipts are still pending. The source is committed before
+the canonical stack image and fixture binaries are built, and frozen during those runs.
+
+Go1.27.1/Node24.18.0 confirmed. Native gate harness16/16, fleet docs files53/all defect counts0,
+and whitespace pass. `check-contracts -summary` exits1 with993 manifest-claimed verified,1678 unresolved,
+0invalid of2671; coverage is not increased. Shared `main` and unrelated work remain untouched.
+Readiness now retains GO-RT-07 and the auth sweep/replica/clock/client-address followups as first-deployment
+gates. No deployment, public ingress, providers, real data or accounts were activated.
+
 ## 2026-10-05 — G3 continuation notes for the move to Linux (auth, media, runtime audit fixes)
 
 Valid until: the G3 stack below is qualified and integrated — then replace this entry with one entry per branch and treat it as history.

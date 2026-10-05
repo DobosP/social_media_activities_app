@@ -115,6 +115,17 @@ func TestNativeAccountPagesUseCompletePrivateContexts(t *testing.T) {
 	}
 }
 
+func TestPostgresAccountErrorRendersPrivateProfile(t *testing.T) {
+	s, a := accountWebFixture(t)
+	r := platform.WithActor(httptest.NewRequest("POST", "/profile/avatar/", nil), a)
+	w := httptest.NewRecorder()
+	s.accountRender(w, r, a, "profile", "Upload refused: <script>private marker</script>", nil)
+	body := w.Body.String()
+	if w.Code != http.StatusOK || !strings.HasPrefix(w.Header().Get("Content-Type"), "text/html") || !strings.Contains(body, `class="msg error"`) || !strings.Contains(body, "Your avatar style") || !strings.Contains(body, "&lt;script&gt;private marker&lt;/script&gt;") || strings.Contains(body, "<script>private marker</script>") {
+		t.Fatal("account error did not render its private profile and escaped message", w.Code)
+	}
+}
+
 // The source delete page posts only its CSRF token after the GET preview;
 // erasure through the registered form route must not require a confirm field.
 func TestNativeAccountDeleteFormErasesWithoutConfirmField(t *testing.T) {
