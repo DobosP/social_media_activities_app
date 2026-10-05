@@ -44,6 +44,9 @@ var ErrForbidden = errors.New("permission denied")
 var ErrNotFound = errors.New("not found")
 var ErrInvalid = errors.New("invalid request")
 
+// ErrBusy is bounded admission refusing to queue; clients retry after a pause.
+var ErrBusy = errors.New("temporarily busy")
+
 func JSON(w http.ResponseWriter, status int, body any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-store")
@@ -63,6 +66,9 @@ func Fail(w http.ResponseWriter, err error) {
 		Error(w, 404, "Not found.")
 	case errors.Is(err, ErrInvalid):
 		Error(w, 400, "Invalid request.")
+	case errors.Is(err, ErrBusy):
+		w.Header().Set("Retry-After", "5")
+		Error(w, 503, "Busy; please retry shortly.")
 	default:
 		Error(w, 503, "Service unavailable.")
 	}

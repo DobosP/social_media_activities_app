@@ -206,7 +206,7 @@ func (s *Server) PublicAction(w http.ResponseWriter, r *http.Request, a platform
 		}
 	}
 	if err != nil {
-		if errors.Is(err, platform.ErrNotFound) {
+		if errors.Is(err, platform.ErrNotFound) || errors.Is(err, platform.ErrBusy) {
 			platform.Fail(w, err)
 		} else {
 			s.publicRenderError(w, r, a, view, err.Error())

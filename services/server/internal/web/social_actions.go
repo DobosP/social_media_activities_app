@@ -520,6 +520,11 @@ func (s *Server) SocialAction(w http.ResponseWriter, r *http.Request, a platform
 			platform.Fail(w, platform.ErrNotFound)
 			return true
 		}
+		// A full codec queue is retryable: 503 + Retry-After, not a form error.
+		if errors.Is(err, platform.ErrBusy) {
+			platform.Fail(w, err)
+			return true
+		}
 		if r.Header.Get("X-Requested-With") == "fetch" && strings.Contains(name, "_post_") {
 			platform.JSON(w, 400, map[string]any{"ok": false, "detail": socialActionError(err)})
 			return true

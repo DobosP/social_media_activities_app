@@ -427,6 +427,8 @@ func (s *Service) stream(w http.ResponseWriter, r *http.Request, key, mime, down
 	if r.Method == "HEAD" {
 		return
 	}
+	// Proxied media outlives the short server WriteTimeout, sized to its length.
+	platform.ExtendDeadlines(w, 0, platform.TransferWriteTimeout(end-start+1))
 	for start <= end {
 		last := min(end, start+(1<<20)-1)
 		b, e := s.storage.OpenRange(r.Context(), key, start, last)

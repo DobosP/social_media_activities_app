@@ -87,6 +87,8 @@ func (s *Server) PublicDownload(w http.ResponseWriter, r *http.Request, a platfo
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Cache-Control", "public, max-age=3600")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
+		// Open-data snapshots can exceed what the short server WriteTimeout carries.
+		platform.ExtendDeadlines(w, 0, platform.TransferWriteTimeout(stat.Size()))
 		http.ServeContent(w, r, file, stat.ModTime(), f)
 	case "events_feed", "events_feed_atom":
 		// Feeds ignore q and all non-source filters, retaining only area/activity.

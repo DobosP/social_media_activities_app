@@ -14,83 +14,115 @@ import (
 // PurgeExpiredAttachments preserves moderation evidence, including unresolved
 // reports on posts/activities/groups/uploaders and unlifted REMOVE actions.
 // An author's own deletion releases the hide hold only without a standing REMOVE.
+// Held rows stay unmarked, so the candidate query excludes them by the same
+// hold rule and keyset-pages; held evidence can never fill the window. The
+// locked per-row re-check stays authoritative.
 func (s *Service) PurgeExpiredAttachments(ctx context.Context, limit int) (int, error) {
 	if limit < 1 || limit > 1000 {
 		return 0, platform.ErrInvalid
 	}
-	rows, e := s.db.Query(ctx, `SELECT id FROM media_attachment WHERE expires_at<=now() AND purged_at IS NULL AND status NOT IN('blocked','processing') ORDER BY expires_at,id LIMIT $1`, limit*4)
-	if e != nil {
-		return 0, e
-	}
-	var ids []int64
-	for rows.Next() {
-		var id int64
-		if e = rows.Scan(&id); e != nil {
-			rows.Close()
-			return 0, e
-		}
-		ids = append(ids, id)
-	}
-	e = rows.Err()
-	rows.Close()
-	if e != nil {
-		return 0, e
-	}
-	purged := 0
-	for _, id := range ids {
-		changed := false
-		e = platform.Transaction(ctx, s.db, func(tx pgx.Tx) error {
-			att, e := s.attachment(ctx, tx, id, true)
-			if errors.Is(e, pgx.ErrNoRows) {
-				return nil
-			}
-			if e != nil {
-				return e
-			}
-			if att.PurgedAt != nil || att.ExpiresAt == nil || att.ExpiresAt.After(time.Now()) || att.Status == "blocked" || att.Status == "processing" {
-				return nil
-			}
-			held, e := attachmentHeld(ctx, tx, att)
-			if e != nil {
-				return e
-			}
-			if held {
-				return nil
-			}
-			if e = queueDelete(ctx, tx, att.key, att.thumb, att.poster, att.sourceKey); e != nil {
-				return e
-			}
-			if _, e = tx.Exec(ctx, `UPDATE media_attachment SET purged_at=now(),storage_key='',thumb_storage_key='',poster_storage_key='',source_storage_key='' WHERE id=$1`, id); e != nil {
-				return e
-			}
-			if e = platform.RecordAudit(ctx, tx, platform.Actor{}, "media.attachment_purged", fmt.Sprintf("media.attachment:%d", id), map[string]any{"reason": "expired"}); e != nil {
-				return e
-			}
-			changed = true
-			return nil
-		})
+	purged, scanned := 0, 0
+	var afterAt time.Time
+	var afterID int64
+	for purged < limit && scanned < limit*purgeScanFactor {
+		ids, lastAt, e := s.expiredAttachmentPage(ctx, afterAt, afterID, min(limit*4, limit*purgeScanFactor-scanned))
 		if e != nil {
-			if ctx.Err() != nil {
-				return purged, ctx.Err()
-			}
-			continue
+			return purged, e
 		}
-		if changed {
-			purged++
-		}
-		if purged >= limit {
+		if len(ids) == 0 {
 			break
+		}
+		scanned += len(ids)
+		afterAt, afterID = lastAt, ids[len(ids)-1]
+		for _, id := range ids {
+			changed := false
+			e = platform.Transaction(ctx, s.db, func(tx pgx.Tx) error {
+				att, e := s.attachment(ctx, tx, id, true)
+				if errors.Is(e, pgx.ErrNoRows) {
+					return nil
+				}
+				if e != nil {
+					return e
+				}
+				if att.PurgedAt != nil || att.ExpiresAt == nil || att.ExpiresAt.After(time.Now()) || att.Status == "blocked" || att.Status == "processing" {
+					return nil
+				}
+				held, e := attachmentHeld(ctx, tx, att)
+				if e != nil {
+					return e
+				}
+				if held {
+					return nil
+				}
+				if e = queueDelete(ctx, tx, att.key, att.thumb, att.poster, att.sourceKey); e != nil {
+					return e
+				}
+				if _, e = tx.Exec(ctx, `UPDATE media_attachment SET purged_at=now(),storage_key='',thumb_storage_key='',poster_storage_key='',source_storage_key='' WHERE id=$1`, id); e != nil {
+					return e
+				}
+				if e = platform.RecordAudit(ctx, tx, platform.Actor{}, "media.attachment_purged", fmt.Sprintf("media.attachment:%d", id), map[string]any{"reason": "expired"}); e != nil {
+					return e
+				}
+				changed = true
+				return nil
+			})
+			if e != nil {
+				if ctx.Err() != nil {
+					return purged, ctx.Err()
+				}
+				continue
+			}
+			if changed {
+				purged++
+			}
+			if purged >= limit {
+				break
+			}
 		}
 	}
 	return purged, nil
 }
+
+// purgeScanFactor bounds one call to limit*20 examined candidates (10,000 at
+// the scheduled 500). Held rows never become candidates, so only rows that lose
+// the locked re-check to a concurrent change spend this budget.
+const purgeScanFactor = 20
+
+func (s *Service) expiredAttachmentPage(ctx context.Context, afterAt time.Time, afterID int64, n int) (ids []int64, last time.Time, err error) {
+	query := `SELECT a.id,a.expires_at FROM media_attachment a JOIN social_post sp ON sp.id=a.post_id JOIN social_thread t ON t.id=sp.thread_id WHERE a.expires_at<=now() AND a.purged_at IS NULL AND a.status NOT IN('blocked','processing') AND NOT ` + attachmentHoldSQL("a.post_id", "COALESCE(t.activity_id,0)", "COALESCE(t.group_id,0)", "a.uploader_id")
+	args := []any{n}
+	if afterID > 0 {
+		query += ` AND (a.expires_at,a.id)>($2,$3)`
+		args = append(args, afterAt, afterID)
+	}
+	rows, err := s.db.Query(ctx, query+` ORDER BY a.expires_at,a.id LIMIT $1`, args...)
+	if err != nil {
+		return nil, last, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id int64
+		if err = rows.Scan(&id, &last); err != nil {
+			return nil, last, err
+		}
+		ids = append(ids, id)
+	}
+	return ids, last, rows.Err()
+}
+
+// attachmentHoldSQL is the one hold rule, over SQL expressions for an
+// attachment's post, activity, group and uploader. The purge candidate query
+// and the locked per-row re-check share it so they cannot diverge. Outer
+// queries must not alias a table as p, m, c or r.
+func attachmentHoldSQL(post, activity, group, owner string) string {
+	return `(EXISTS(SELECT 1 FROM social_post p WHERE p.id=` + post + ` AND p.is_hidden AND (NOT p.is_author_deleted OR EXISTS(SELECT 1 FROM safety_moderationaction m JOIN django_content_type c ON c.id=m.target_type_id WHERE c.app_label='social' AND c.model='post' AND m.target_id=p.id AND m.action='remove' AND m.lifted_at IS NULL)))
+OR EXISTS(SELECT 1 FROM social_activity WHERE id=` + activity + ` AND is_hidden)
+OR EXISTS(SELECT 1 FROM social_group WHERE id=` + group + ` AND is_hidden)
+OR EXISTS(SELECT 1 FROM safety_report r JOIN django_content_type c ON c.id=r.target_type_id WHERE r.status!='dismissed' AND ((c.app_label='social' AND c.model='post' AND r.target_id=` + post + `) OR (c.app_label='social' AND c.model='activity' AND r.target_id=` + activity + `) OR (c.app_label='social' AND c.model='group' AND r.target_id=` + group + `) OR (c.app_label='accounts' AND c.model='user' AND r.target_id=` + owner + `))))`
+}
 func attachmentHeld(ctx context.Context, q platform.Querier, att Attachment) (bool, error) {
 	var held bool
-	e := q.QueryRow(ctx, `SELECT
-EXISTS(SELECT 1 FROM social_post p WHERE p.id=$1 AND p.is_hidden AND (NOT p.is_author_deleted OR EXISTS(SELECT 1 FROM safety_moderationaction m JOIN django_content_type c ON c.id=m.target_type_id WHERE c.app_label='social' AND c.model='post' AND m.target_id=p.id AND m.action='remove' AND m.lifted_at IS NULL)))
-OR EXISTS(SELECT 1 FROM social_activity WHERE id=$2 AND is_hidden)
-OR EXISTS(SELECT 1 FROM social_group WHERE id=$3 AND is_hidden)
-OR EXISTS(SELECT 1 FROM safety_report r JOIN django_content_type c ON c.id=r.target_type_id WHERE r.status!='dismissed' AND ((c.app_label='social' AND c.model='post' AND r.target_id=$1) OR (c.app_label='social' AND c.model='activity' AND r.target_id=$2) OR (c.app_label='social' AND c.model='group' AND r.target_id=$3) OR (c.app_label='accounts' AND c.model='user' AND r.target_id=$4)))`, att.PostID, att.activity, att.group, att.owner).Scan(&held)
+	e := q.QueryRow(ctx, `SELECT `+attachmentHoldSQL("$1", "$2", "$3", "$4"), att.PostID, att.activity, att.group, att.owner).Scan(&held)
 	return held, e
 }
 

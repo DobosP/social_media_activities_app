@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/DobosP/cat_de_roman_esti/shared-go/authcore"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/accounts"
@@ -370,9 +371,9 @@ func (a *App) serveHTTP(w http.ResponseWriter, r *http.Request) {
 		memory = 8 << 20
 	}
 	limit = min(limit, memory)
-	contentType, _, _ := mime.ParseMediaType(r.Header.Get("Content-Type"))
 	mutation := r.Method != http.MethodGet && r.Method != http.MethodHead && r.Method != http.MethodOptions
-	if mutation && contentType == "multipart/form-data" && (strings.Contains(r.URL.Path, "/media/") || strings.HasSuffix(r.URL.Path, "/attach/") || classicThreadUpload(r)) {
+	uploadRead, uploadWrite, largeUpload := uploadDeadlines(r)
+	if largeUpload {
 		limit = 82 << 20
 	}
 	// Declared oversize is rejected before authentication, decoding or disk
@@ -440,11 +441,37 @@ func (a *App) serveHTTP(w http.ResponseWriter, r *http.Request) {
 	if !a.admitAPI(w, r) {
 		return
 	}
+	// Only an admitted actor's upload outlives the server-wide timeouts; refused
+	// and anonymous bodies keep them. Nothing above reads past the CSRF prefix.
+	if _, ok := platform.ActorFrom(r); ok && uploadRead > 0 {
+		platform.ExtendDeadlines(w, uploadRead, uploadWrite)
+	}
 	if r.Method == http.MethodPost && (r.URL.Path == "/login/" || r.URL.Path == "/api/auth/login") {
 		a.Accounts.LoginPOST(w, r, r.URL.Path == "/login/")
 		return
 	}
 	a.Mux.ServeHTTP(w, r)
+}
+
+// Upload deadlines cover the body cap on a slow uplink: 10 min carries 82 MiB at
+// ~1.15 Mbit/s, 3 min an 8 MiB image form at ~373 kbit/s. Writes add codec, scan
+// and storage time before the response.
+const (
+	largeUploadRead, largeUploadWrite = 10 * time.Minute, 12 * time.Minute
+	smallUploadRead, smallUploadWrite = 3 * time.Minute, 4 * time.Minute
+)
+
+// uploadDeadlines classifies multipart mutations; large is the 82 MiB media,
+// attachment and classic thread upload class, every other form is small.
+func uploadDeadlines(r *http.Request) (read, write time.Duration, large bool) {
+	contentType, _, _ := mime.ParseMediaType(r.Header.Get("Content-Type"))
+	if r.Method == http.MethodGet || r.Method == http.MethodHead || r.Method == http.MethodOptions || contentType != "multipart/form-data" {
+		return 0, 0, false
+	}
+	if strings.Contains(r.URL.Path, "/media/") || strings.HasSuffix(r.URL.Path, "/attach/") || classicThreadUpload(r) {
+		return largeUploadRead, largeUploadWrite, true
+	}
+	return smallUploadRead, smallUploadWrite, false
 }
 
 func classicThreadUpload(r *http.Request) bool {
