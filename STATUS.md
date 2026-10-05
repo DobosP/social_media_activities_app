@@ -94,7 +94,7 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
-- G3 source candidate: account error messages now render through the shared safe message type; source review approved, final fixture qualification pending (WORKLOG 2026-10-05).
+- G3 source `0e3e85b`: check-native and ten affected fixture lanes pass 520/0 skips; six negative overlays killed; forced sweep 790 passes; independent critic APPROVE. Receipt: WORKLOG; combined G1 Step5 and first-deployment gates remain.
 - Restart checkpoint:993 claimed-verified (manifest `runtime_verification`, not checked against a test run)/1678 unresolved/0invalid of2671; retirement gate exits1.
   Source-frozen586 affected tests/14 lanes pass without skips; 40 more: package directory unchanged;
   transitive dependencies changed after the receipt — not qualified on this head.

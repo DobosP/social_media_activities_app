@@ -3,6 +3,123 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-05 — G3 stack qualified on Linux; source-only integration receipt
+
+Valid until: the qualified runtime or its policy/authorization contracts change — then treat as history.
+
+Frozen clean runtime source: `0e3e85b856d7ca0c85937af4763e892247efb1a6` on `d9ede52`; the following receipt commit
+changes documentation only. The six historical stack heads were not separately rerun: all inherited
+changes were qualified together on this G3 head. Branch ancestry and prior evidence remain below.
+Independent agent source critic: APPROVE for `d9ede52..0e3e85b`; actual baseline, negative and forced-sweep
+logs were independently checked. This does not supply the human first-deployment review (ADR-0040).
+
+Pinned local Go1.27.1, `GOTOOLCHAIN=local`, `GOWORK=off`, `GOFLAGS=-mod=readonly -p=2`, Node24.18.0.
+Canonical Dockerfile `--target production` build from the committed clean source succeeds (normal cache;
+final combined `--no-cache` build remains G1 Step5). Image: `sha256:f635865a95126398ba504b0bd746939443a2476f34afd517cc1cf28930ddc381`.
+Its own `social-server --migrate-only` bootstrapped fresh synthetic `social_g3` on PostgreSQL16.15
+Bookworm/PostGIS3.6.4/vector0.8.6; 2GiB/2CPU database, private internal network, no published ports.
+`scripts/check-native.sh GO` passes portable auth hashes, three-module vet/race, native formatting,
+four service-worker tests and whitespace. Ten affected lanes used the single-lane equivalent of
+`scripts/qualify-native.sh`: `-race -c`, canonical codec image, read-only source, explicit disposable DSN,
+zero skips and a positive top-level PASS count. All 520 pass, zero skips/failures:
+
+| Lane | Top-level pass |
+|---|---:|
+| admin | 20 |
+| accounts | 73 |
+| app | 35 |
+| budgets | 16 |
+| catalog | 48 |
+| configuration | 62 |
+| jobs | 67 |
+| media | 50 |
+| safety | 50 |
+| web | 99 |
+
+Forced-sweep critic requirement: a qualification-only Go overlay made `Store.maybeSweep` call cleanup
+unconditionally, ignoring random/nil/injected-false due checks. Full accounts 73 × 5 = 365, safety 50 × 5 = 250,
+app 35 × 5 = 175 pass (790 executions), zero skips/failures. Every baseline test name appears exactly five
+times in its lane. The repeated batch timeout was 50m (five times the canonical 10m package wall budget);
+no application/request/statement/codec timeout changed. Production source stayed frozen throughout.
+
+Six negative overlays produce seven expected failures, zero skips: old account string messages fail
+both `TestPostgresAccountErrorRendersPrivateProfile` and
+`TestPostgresBusyAvatarRerendersFormOrAnswersFetch`; `web/server.go` from `6188a31` fails
+`TestNativeCredentialSubtreeVariantsReachNoVerdict`; `token.go` from `6188a31` fails
+`TestObtainTokenSharesFailedLoginCounter`; `token.go` from `a10fa08` fails
+`TestObtainTokenRefusesCrossSiteBrowserRequestsBeforeAnyRow`; removing the marker guards fails
+`TestRequirePeerMarkerRefusesUnmarkedAttemptsAndFlows`, and removing only the OAuth-flow guard fails
+it separately. Marker overlays retain the current struct field so current tests/app compile; only the
+refusal guards are removed. No mutant source is committed. A scratch matrix delimiter error was
+corrected before the completed negative run; it is not counted as a killed source mutant.
+
+Receipt with log/test-name/source-overlay hashes:
+[G3 qualification JSON](docs/reviews/native-go/g3-source-qualification.json).
+`check-contracts -summary` remains exit 1: 993 manifest-claimed verified / 1,678 unresolved / zero invalid of 2,671;
+no new case coverage or Python retirement is claimed. Fleet docs files 53 / all defect counts zero and
+native gate harness 16/16 pass. Broad runs honored the shared fleet lock and 12GiB memory floor;
+the lock was released for the narrow mutants, then reacquired for forced-sweep runs.
+
+Not run here: final combined 21-lane qualification, canonical no-cache final image, govulncheck/Trivy,
+final container smoke and full Node contracts; integration coordinator owns G1 Step5/main landing.
+GO-RT-07 and sweep single-flight/off-request, replica overlap, synchronized clock and real client-address
+followups remain first-deployment gates in RELEASE_READINESS. No push, merge, deployment, providers,
+account enablement, real ingestion, public data or unmerged-work deletion occurred.
+
+## 2026-10-05 — G3 `fix/go-budget-families` inherited change qualified
+
+Valid until: the qualified G3 runtime changes — then treat as history.
+
+Historical branch head `8aa9603`; F2/GO-CATALOG-01 budget-family capacities, eviction, denial prefilter and off-path cleanup. Qualified on frozen combined G3 source `0e3e85b`,
+not independently at the historical head: budgets16/app35/catalog48/jobs67/web99, zero skips/failures; check-native passes.
+Independent stack source critic APPROVE; common fixture, commands, hashes and remaining integration/deployment
+gates are in the G3 stack receipt above. No source activation or main landing occurred in this worker.
+
+## 2026-10-05 — G3 `fix/go-admission-caps` inherited change qualified
+
+Valid until: the qualified G3 runtime changes — then treat as history.
+
+Historical branch head `8542c09`; F1/GO-01/IDP-1 per-prefix admission, shared token failure counter and fail-closed credential markers. Qualified on frozen combined G3 source `0e3e85b`,
+not independently at the historical head: accounts73/safety50/app35/jobs67/web99/configuration62; named fail-before and full forced-sweep five-repeat requirement pass, zero skips/failures; check-native passes.
+Independent stack source critic APPROVE; common fixture, commands, hashes and remaining integration/deployment
+gates are in the G3 stack receipt above. No source activation or main landing occurred in this worker.
+
+## 2026-10-05 — G3 `fix/go-media-queue-timeouts` inherited change qualified
+
+Valid until: the qualified G3 runtime changes — then treat as history.
+
+Historical branch head `b45beb3`; GO-MEDIA-03/04/GO-RT-02 purge paging, codec slots, transfer deadlines and busy-avatar attempt refund. Qualified on frozen combined G3 source `0e3e85b`,
+not independently at the historical head: media50/app35/web99/configuration62; avatar form500 corrected and its old message contract fails both regressions, zero skips/failures; check-native passes.
+Independent stack source critic APPROVE; common fixture, commands, hashes and remaining integration/deployment
+gates are in the G3 stack receipt above. No source activation or main landing occurred in this worker.
+
+## 2026-10-05 — G3 `fix/go-low-runtime` inherited change qualified
+
+Valid until: the qualified G3 runtime changes — then treat as history.
+
+Historical branch head `9a008bf`; GO-JOBS-01/GO-RT-05/06 feed UID, statement timeout and video drain claim/deadline guards. Qualified on frozen combined G3 source `0e3e85b`,
+not independently at the historical head: jobs67/app35/configuration62/media50; previously unrun video claim guard passes, zero skips/failures; check-native passes.
+Independent stack source critic APPROVE; common fixture, commands, hashes and remaining integration/deployment
+gates are in the G3 stack receipt above. No source activation or main landing occurred in this worker.
+
+## 2026-10-05 — G3 `fix/go-video-queue-hold` inherited change qualified
+
+Valid until: the qualified G3 runtime changes — then treat as history.
+
+Historical branch head `1af09f8`; F3 exhausted stale video lease fenced out of claims. Qualified on frozen combined G3 source `0e3e85b`,
+not independently at the historical head: media50/jobs67/admin20, zero skips/failures; check-native passes.
+Independent stack source critic APPROVE; common fixture, commands, hashes and remaining integration/deployment
+gates are in the G3 stack receipt above. No source activation or main landing occurred in this worker.
+
+## 2026-10-05 — G3 `fix/go-admin-permissions` inherited change qualified
+
+Valid until: the qualified G3 runtime changes — then treat as history.
+
+Historical branch head `fd9d586`; IDP-3 active staff superuser required throughout the native admin console. Qualified on frozen combined G3 source `0e3e85b`,
+not independently at the historical head: admin20/app35, zero skips/failures; check-native passes.
+Independent stack source critic APPROVE; common fixture, commands, hashes and remaining integration/deployment
+gates are in the G3 stack receipt above. No source activation or main landing occurred in this worker.
+
 ## 2026-10-05 — G3 avatar form source correction prepared on Linux
 
 Valid until: this candidate is qualified and integrated or superseded — then treat as history.
