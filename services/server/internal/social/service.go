@@ -293,6 +293,11 @@ func ActivityVisibilitySQL() string { return `a.cohort=$2 AND NOT a.is_hidden AN
 
 const membershipColumns = `jsonb_build_object('id',m.id,'activity',m.activity_id,'user',u.display_name,'role',m.role,'state',m.state,'attendance_intent',m.attendance_intent,'arrived_at',m.arrived_at,'transit_status',m.transit_status,'departing_at',m.departing_at,'created_at',m.created_at,'decided_at',m.decided_at)`
 
+// Membership rows (with live presence) are co-member scoped, not cohort-wide:
+// the row's own user, the activity owner, or a current non-guardian member
+// (which includes co-organizers). Owner decision 2026-10-05.
+const membershipAudience = `(m.user_id=$1 OR a.owner_id=$1 OR EXISTS(SELECT 1 FROM social_membership cm WHERE cm.activity_id=m.activity_id AND cm.user_id=$1 AND cm.state='member' AND cm.role<>'guardian'))`
+
 func (s *Service) Activity(ctx context.Context, a Actor, id int64) (json.RawMessage, error) {
 	if !assigned(a) {
 		return nil, platform.ErrNotFound
@@ -303,7 +308,7 @@ func (s *Service) Membership(ctx context.Context, a Actor, id int64) (json.RawMe
 	if !assigned(a) {
 		return nil, platform.ErrNotFound
 	}
-	return object(ctx, s.DB, `SELECT `+membershipColumns+` FROM social_membership m JOIN accounts_user u ON u.id=m.user_id JOIN social_activity a ON a.id=m.activity_id WHERE m.id=$3 AND a.cohort=$2 AND NOT a.is_hidden AND `+blockOwner, a.ID, a.Cohort, id)
+	return object(ctx, s.DB, `SELECT `+membershipColumns+` FROM social_membership m JOIN accounts_user u ON u.id=m.user_id JOIN social_activity a ON a.id=m.activity_id WHERE m.id=$3 AND a.cohort=$2 AND NOT a.is_hidden AND `+blockOwner+` AND `+membershipAudience, a.ID, a.Cohort, id)
 }
 func (s *Service) listActivities(ctx context.Context, a Actor, query string, limit, offset int) ([]json.RawMessage, error) {
 	if !assigned(a) {

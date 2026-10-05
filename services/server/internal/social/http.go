@@ -369,13 +369,13 @@ func (s *Service) activityAction(w http.ResponseWriter, r *http.Request, a Actor
 }
 func (s *Service) membershipsList(w http.ResponseWriter, r *http.Request, a Actor) {
 	limit, offset := page(r, 200)
-	rows, err := objects(r.Context(), s.DB, `SELECT `+membershipColumns+` FROM social_membership m JOIN accounts_user u ON u.id=m.user_id JOIN social_activity a ON a.id=m.activity_id WHERE a.cohort=$2 AND NOT a.is_hidden AND `+blockOwner+` ORDER BY m.id LIMIT $3 OFFSET $4`, a.ID, a.Cohort, limit, offset)
+	rows, err := objects(r.Context(), s.DB, `SELECT `+membershipColumns+` FROM social_membership m JOIN accounts_user u ON u.id=m.user_id JOIN social_activity a ON a.id=m.activity_id WHERE a.cohort=$2 AND NOT a.is_hidden AND `+blockOwner+` AND `+membershipAudience+` ORDER BY m.id LIMIT $3 OFFSET $4`, a.ID, a.Cohort, limit, offset)
 	if err != nil {
 		platform.Fail(w, err)
 		return
 	}
 	var count int64
-	if err := s.DB.QueryRow(r.Context(), `SELECT COUNT(*) FROM social_membership m JOIN social_activity a ON a.id=m.activity_id WHERE a.cohort=$2 AND NOT a.is_hidden AND `+blockOwner, a.ID, a.Cohort).Scan(&count); err != nil {
+	if err := s.DB.QueryRow(r.Context(), `SELECT COUNT(*) FROM social_membership m JOIN social_activity a ON a.id=m.activity_id WHERE a.cohort=$2 AND NOT a.is_hidden AND `+blockOwner+` AND `+membershipAudience, a.ID, a.Cohort).Scan(&count); err != nil {
 		platform.Fail(w, err)
 		return
 	}
