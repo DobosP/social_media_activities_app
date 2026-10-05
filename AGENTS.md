@@ -46,21 +46,21 @@ Product overview: `README.md` · full doc index: `docs/README.md` · phasing map
 | Native schema bootstrap/adoption | `social-server --migrate-only` with explicit configured PostgreSQL |
 | Native checks (Go 1.27.1) | `scripts/check-native.sh /absolute/path/to/go` |
 | Native PostgreSQL + codecs | `scripts/qualify-native.sh` with explicit isolated fixture arguments (docs/agent-testing.md) |
-| Native format | `test -z "$(gofmt -l services/server services/authcore)"` |
+| Native format | `scripts/check-native.sh /absolute/path/to/go` (fail-closed GOROOT gofmt) |
 | Offline oracle migration drift | `python manage.py makemigrations --check --dry-run` in the reference environment |
 | Frontend (Node 24) | `cd frontend && npm ci && npm test && npm run build` |
 | Native dependency/image audits | `.github/workflows/native.yml` (source/package/binary + Trivy) |
 | Optional offline oracle checks | Python pytest/Ruff/pip/Bandit in `.github/workflows/reference.yml` |
 | Whitespace | `git diff --check` |
 
-Expected outputs, fixture and case-retirement gates: `docs/agent-testing.md`. Native Go/Node CI: `.github/workflows/ci.yml`.
+Expected outputs, fixture and case-retirement gates: `docs/agent-testing.md`. CI is dispatch-only (ADR-0033); landing rule: ADR-0040.
 
 ## Safety
 - Never read or print secrets from `.env`, settings, cookies, tokens, or auth stores. Env var NAMES live in
   `.env.example`; values deploy from the agent-ops SOPS store (agent-ops ADR-0027).
-- Do not weaken child-safety, privacy, moderation, or GDPR erasure paths; those and auth changes require human review before landing.
-- Landing green work directly on `main` is allowed in the development phase (agent-ops ADR-0014; owner
-  decision 2026-07-07). Never land a red suite.
+- Do not weaken child-safety, privacy, moderation, or GDPR erasure paths; those and auth changes need an independent reviewer
+  before landing and a human review before first deployment. Landing green work directly on `main` is allowed while
+  undeployed (agent-ops ADR-0014; owner decisions 2026-07-07/2026-10-05). Never land a red suite; ADR-0040 defines green.
 - Never run real network ingestion, enable scheduled sync, deploy, apply Terraform, or authorize minors from a task; paid infrastructure needs owner authorization.
 - `apps/ingestion/sources/_roedu_client_core.py` is generated and stamped (`VENDORED_SHA256`) — never hand-edit it.
 - Dispatch: one privacy/safety/deferred-work slice per branch/worktree; worker briefs carry privacy/safety

@@ -1,7 +1,7 @@
 # ADR-0032 — Complete native Go backend
 
 Date: 2026-10-04
-Status: accepted; owner approved main landing on 2026-10-04
+Status: accepted; landing authorized 2026-10-04, code review pending (ADR-0040)
 Supersedes: ADR-0031's public-only implementation scope; preserves its public contract.
 
 ## Decision
@@ -58,3 +58,14 @@ The canonical local/CI PostgreSQL16 image uses supported Debian Bookworm package
 PostGIS/vector. The previous postgis16-3.5 Bullseye base had unavailable archived security
 packages. The PostgreSQL major/volume contract stays16; migration and actual-FK fixtures
 qualify the revised build. This does not upgrade any real deployment or existing volume.
+
+## Amendment 2026-10-05 — landing authorized; code review pending
+
+The owner authorized the 2026-10-04 main landing but did not read or review the code. The
+sentence above ("approved the reviewed auth/privacy/safety conversion ... satisfying the
+implementation review gate") is withdrawn. Human auth/erasure/privacy/safety code review is
+pending and gates first deployment per [ADR-0040](0040-landing-and-deployment-review-gates.md).
+
+"fresh/adopted/preextended bootstrap" above overstates adoption: no test adopts a
+Django-migrated database (GOV-3). It is tracked in
+[RELEASE_READINESS](../RELEASE_READINESS.md) §Before first deployment.

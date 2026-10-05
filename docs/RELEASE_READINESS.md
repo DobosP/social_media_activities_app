@@ -51,6 +51,31 @@ tracked here, not code:
 - [ ] Independent security review / pen test passed.
 - [ ] Incident-response runbook rehearsed (see [RUNBOOK](RUNBOOK.md)).
 
+## Before first deployment (audit 2026-10-05)
+
+Valid until: every item below is fixed or retired by ADR — then treat as history.
+Not fixed yet; each blocks the first deployment of the Go runtime
+([ADR-0040](adr/0040-landing-and-deployment-review-gates.md)). Landing on `main` does not clear them.
+
+- [ ] GOV-4 — human review of auth/erasure/privacy/safety code: `services/authcore`, `internal/accounts`
+      (login, erasure, bootstrap), `internal/safety`, media erasure, messaging authority, admin permissions,
+      budgets; record reviewer name and reviewed revision. Not done yet.
+- [ ] GOV-1 / GO-RT-03 — `render.yaml` launches Go without `MEDIA_STORAGE_BACKEND`, `SITE_BASE_URL`,
+      `DJANGO_ALLOWED_HOSTS`, `TRUSTED_PROXY_CIDRS`; web and `--due` cron exit at startup (storage check,
+      `cmd/social-server/runtime.go`) and the blueprint auto-deploys on push. Keep-and-fix or retire Render.
+- [ ] GO-RT-01 — `internal/schema/baseline.sql` needs superuser/extension-owner rights (COMMENT ON EXTENSION
+      postgis/vector; untrusted postgis_tiger_geocoder/postgis_topology): fresh `deploy/cloud-init.yaml.tftpl`
+      bootstrap as the non-superuser `app` role fails.
+- [ ] GOV-3 / GO-RT-04 — `--migrate-only` (`internal/schema/migrate.go`) adopts any DB with `accounts_user`
+      without checking `django_migrations`; legacy `django_session` rows are never deleted; no test adopts a
+      Django-migrated database.
+- [ ] GO-RT-08 — `Dockerfile` and `Dockerfile.db` base images float (no digest); apt packages are unpinned.
+- [ ] GO-MEDIA-06 — 30 s server ReadTimeout (`cmd/social-server/main.go`) vs the 80 MB upload cap without a
+      buffering proxy.
+- [ ] GOV-9 — no rollback runbook for the Go landing (revert range, Django fallback, DB restore drill).
+
+Paths under `internal/` and `cmd/` are in `services/server`.
+
 ## Verdict
 
 The **core child-safety invariants** (cohort isolation, consent-gated participation incl.

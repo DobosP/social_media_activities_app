@@ -700,7 +700,7 @@
           "TestNativeBackupTimeoutCancellationRedirectAndNoRetries"
         ],
         "log_sha256": "58209ab293d229f815e840b83bb158403d0bb78d0e1ba68dc3bf27d0f139041d",
-        "receipt_origin": "b8453f7f10cf5c6e3060e0979b86db2b3505e063; unchanged source"
+        "receipt_origin": "b8453f7f10cf5c6e3060e0979b86db2b3505e063; package directory unchanged; transitive dependencies changed after the receipt — not qualified on this head"
       },
       {
         "package": "booking",
@@ -714,7 +714,7 @@
           "TestNativeBookingOwnershipAndEligibility"
         ],
         "log_sha256": "812c4a505003a16efb8906b0ff54770b4ea9cbdd50ae76557193168f9d40aa1d",
-        "receipt_origin": "b8453f7f10cf5c6e3060e0979b86db2b3505e063; unchanged source"
+        "receipt_origin": "b8453f7f10cf5c6e3060e0979b86db2b3505e063; package directory unchanged; transitive dependencies changed after the receipt — not qualified on this head"
       },
       {
         "package": "budgets",
@@ -730,7 +730,7 @@
           "TestPostgresMemoryBoundAndConcurrentExpiryErasure"
         ],
         "log_sha256": "43458ab25391532bebc41889f9a808a17f4e83d988aa3ee8b0197d13ebde7378",
-        "receipt_origin": "b8453f7f10cf5c6e3060e0979b86db2b3505e063; unchanged source"
+        "receipt_origin": "b8453f7f10cf5c6e3060e0979b86db2b3505e063; package directory unchanged; transitive dependencies changed after the receipt — not qualified on this head"
       },
       {
         "package": "discovery",
@@ -739,7 +739,7 @@
           "TestPostgresDiscoveryPrivacyCursorDeckAndFeed"
         ],
         "log_sha256": "11f124dc60d85a48e5684e5213d57a8bd041a4bd61dd7f3b9d33da9269889e0b",
-        "receipt_origin": "b8453f7f10cf5c6e3060e0979b86db2b3505e063; unchanged source"
+        "receipt_origin": "b8453f7f10cf5c6e3060e0979b86db2b3505e063; package directory unchanged; transitive dependencies changed after the receipt — not qualified on this head"
       },
       {
         "package": "donations",
@@ -751,7 +751,7 @@
           "TestNativeDonationWebhookAndPublicLedger"
         ],
         "log_sha256": "224a38cc325b3c52c18b80f91f8a0d1566846731e67b37041ea9998f5870d351",
-        "receipt_origin": "b8453f7f10cf5c6e3060e0979b86db2b3505e063; unchanged source"
+        "receipt_origin": "b8453f7f10cf5c6e3060e0979b86db2b3505e063; package directory unchanged; transitive dependencies changed after the receipt — not qualified on this head"
       },
       {
         "package": "notifications",
@@ -762,7 +762,7 @@
           "TestNativeNotificationOwnershipAndCursor"
         ],
         "log_sha256": "ab5760249ae44836f9c10aa746cea4c1ae9754f92de38315fd76cddb76858aa4",
-        "receipt_origin": "b8453f7f10cf5c6e3060e0979b86db2b3505e063; unchanged source"
+        "receipt_origin": "b8453f7f10cf5c6e3060e0979b86db2b3505e063; package directory unchanged; transitive dependencies changed after the receipt — not qualified on this head"
       },
       {
         "package": "recommendations",
@@ -777,7 +777,7 @@
           "TestPostgresGuardianTopicSteeringIsLinkedChildOnly"
         ],
         "log_sha256": "fca01faae6d321bff113d27edb11ae6df24b37a87754f6a326004e400412d664",
-        "receipt_origin": "b8453f7f10cf5c6e3060e0979b86db2b3505e063; unchanged source"
+        "receipt_origin": "b8453f7f10cf5c6e3060e0979b86db2b3505e063; package directory unchanged; transitive dependencies changed after the receipt — not qualified on this head"
       }
     ]
   },

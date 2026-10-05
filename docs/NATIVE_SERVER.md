@@ -1,7 +1,8 @@
 # Native Go server
 
 Current status: [STATUS](../STATUS.md). Selection and boundaries:
-[ADR-0032](adr/0032-complete-native-go-backend.md). The owner approved the complete native implementation for main on 2026-10-04.
+[ADR-0032](adr/0032-complete-native-go-backend.md). The owner authorized the main landing on 2026-10-04;
+human code review is pending and gates first deployment ([ADR-0040](adr/0040-landing-and-deployment-review-gates.md)).
 Code landing does not activate product/provider/minor launch.
 
 ## Serving and data
@@ -42,7 +43,8 @@ jobs/real ingestion/providers/minors are not automatically enabled by the port.
 ## Deployment and scaling
 
 The Docker image is Go-only, UID10001, with immutable compiled frontend/templates/locales.
-Compose, Render and systemd entry points invoke the same native binary. The unapplied
+Compose, Render and systemd entry points invoke the same native binary; Render and fresh cloud-init
+cannot boot yet ([RELEASE_READINESS](RELEASE_READINESS.md) §Before first deployment). The unapplied
 cloud-init template installs an immutable artifact with an exact SHA-256; it builds no
 application code on the small host. Export with `docker build --target release --output
  type=local,dest=<task-scratch>/release .`, archive that directory and record its SHA-256.

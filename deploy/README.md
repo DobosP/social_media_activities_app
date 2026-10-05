@@ -1,8 +1,8 @@
 # Native deployment templates
 
-The owner approved the Go implementation for main; deployment remains **unapplied and launch-blocked** until
-owner procurement and the product GDPR/DPIA/parental
-assurance gates. [ADR-0032](../docs/adr/0032-complete-native-go-backend.md) records selection;
+The owner authorized the Go landing on main (no code review yet); deployment remains **unapplied and launch-blocked**
+until human code review, the [before-first-deployment list](../docs/RELEASE_READINESS.md), owner procurement and the
+product GDPR/DPIA/parental assurance gates. [ADR-0032](../docs/adr/0032-complete-native-go-backend.md) records selection;
 [NATIVE_SERVER](../docs/NATIVE_SERVER.md) records artifact, codec, proxy and scaling requirements.
 
 The provider/box examples are candidates, not procurement decisions. Do not run Terraform

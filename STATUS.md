@@ -47,10 +47,13 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 - **Native Go serving backend (ADR-0032):** `services/server` now owns account/password/OAuth,
   EUDI/guardian/cohort gates, domain APIs, voting, moderation, media, encrypted live transport,
   HTML/SPA hydration, booking/donations, notifications/discovery, native schema adoption and jobs.
-  The default Docker/Compose/systemd/Render/cloud-init launch paths invoke Go. Shared authentication
-  is a hash-verified portable copy; Django remains offline contract/reference tooling.
-- The owner-approved Go conversion is merged and pushed to `origin/main` on 2026-10-04 (base conversion; completion candidate under review).
+  Docker/Compose/systemd/Render/cloud-init launch paths invoke Go, but Render and fresh cloud-init cannot
+  boot yet (RELEASE_READINESS §Before first deployment). Shared authentication is a hash-verified
+  portable copy; Django remains offline contract/reference tooling.
+- Go conversion on `origin/main` (2026-10-04): landing authorized by the owner 2026-10-04; human
+  auth/erasure/privacy/safety code review pending — gates first deployment (ADR-0040).
   Social deployment/provider/minor launch gates remain separate from source landing.
+
 ## Safety and operating gates
 
 - A RO-EDU venue remains child-venue **UNKNOWN** until staff approve that exact
@@ -59,28 +62,18 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   evidence, internal paths, or raw provenance. License/access metadata survives.
 - Cohort, guardianship, block, minor-contact, moderation, consent, and
   private-thread visibility gates are unchanged by the V2 integration.
-- Landing source does not run ingestion, enable scheduled sync, deploy, apply
-  Terraform, or authorize minors. API keys and opt-in settings remain required.
+- Landing needs green local gates on the exact head plus an independent reviewer (ADR-0040); it does not
+  run ingestion, enable scheduled sync, deploy, apply Terraform, or authorize minors.
+- First deployment is gated by human auth/erasure/privacy/safety code review and the list in
+  `docs/RELEASE_READINESS.md` §Before first deployment (audit 2026-10-05).
 - Launch is blocked on the GDPR/DPIA/DPO/parental-consent stack and production
   operations. Never apply paid infrastructure without owner authorization.
 
 ## Open work
 
-- Reused sessions completed cross-review fixes for current profile authority, media/group controls and
-  inherited fixed-window budget/erasure ordering. Qualification passes; human sensitive-code review remains.
-- Profile review fix reloads the viewer after rate admission; source consent/minimal-card policy
-  stays intact. Local fix/go-review-profile qualification precedes coordinator caller/integration review.
-
-- ADR-0035 review candidate adds guarded administrator permissions and complete private API field
-  contracts (380 operations/318 paths/166 schemas); human auth/privacy review precedes landing.
-
-- All three completion lanes are integrated and locally qualified on `feat/go-migration-finish`.
-  Human auth/privacy/safety review precedes landing; native hosted Actions is manually disabled.
-- Expanded native-toolchain candidate (ADR-0038) adds bounded CSP/private-EU backup operators,
-  shell hooks, real exporter-to-sidecar qualification and adversarial native matrices. Native qualification
-  passes. Frozen2671 reference declarations retain explicit evidence/gaps; unresolved cases
-  block Python retirement. Existing Python reference source/tests are preserved.
-
+- Completion lanes, review fixes and the native toolchain (ADR-0035/0038) are integrated on
+  `feat/go-native-toolchain`; landing per ADR-0040; human code review gates first deployment.
+  Unresolved frozen2671 reference declarations block Python retirement; Python reference source/tests stay.
 - Build/promote a fresh immutable producer/server V2 release before real sync;
   the serving repo's producer dependency must be intentionally bumped first.
 - Complete held-event review UX, curated cultural child-venue policy, localized
@@ -98,16 +91,17 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 ## Verification record (newest first)
 
 - Restart checkpoint:993 claimed-verified (manifest `runtime_verification`, not checked against a test run)/1678 unresolved/0invalid of2671; retirement gate exits1.
-  Source-frozen586 affected tests/14 lanes pass without skips;40 unchanged prior tests retain receipts.
+  Source-frozen586 affected tests/14 lanes pass without skips; 40 more: package directory unchanged;
+  transitive dependencies changed after the receipt — not qualified on this head.
   Native source/hash/vet/race and source/package/linked audits pass. Offline imagec44143fd preserves
   runtime5ea84fca, passes HTTP/lifecycle; its image scan is unverified after scanner setup failures.
-  Credential05febd5 independently closes admission binding; human auth/privacy review remains.
+  Credential05febd5 independently closes admission binding; human code review gates first deployment.
   Existing branch is preserved for publication/resume; [Windows TODO](docs/NATIVE_WINDOWS_TODO.md).
 
 ## Standard verification
 Native race/vet + shared-source hashes; database/codec contracts require explicit disposable fixtures
 through `scripts/qualify-native.sh` (`docs/agent-testing.md`); its fail-closed gates are regression-tested by `scripts/test-native-gates.sh`. Whitespace/doc gates are required.
-Native Go/Node CI: `ci.yml`/`native.yml`/`go.yml`; optional offline reference: `reference.yml`; operators: CLI guide/ROEDU integration.
+Dispatch-only (ADR-0033) Go/Node CI: `ci.yml`/`native.yml`/`go.yml`; optional offline reference: `reference.yml`; operators: CLI guide/ROEDU integration.
 
 ## Doc map
 
@@ -115,6 +109,7 @@ Native Go/Node CI: `ci.yml`/`native.yml`/`go.yml`; optional offline reference: `
 |---|---|
 | `AGENTS.md` | Operating contract: read first, commands, safety, docs discipline. |
 | `docs/README.md` · `docs/agent-map.md` · `docs/agent-testing.md` | Full index · entry points and routes · gates. |
-| `docs/PRODUCTION_READINESS.md` · `docs/ROEDU_INTEGRATION.md` · `docs/SAFETY.md` | Live gap list · RO-EDU operator contract · child-safety invariants. |
+| `docs/PRODUCTION_READINESS.md` · `docs/RELEASE_READINESS.md` | Live gap list · launch gate and before-first-deployment list. |
+| `docs/ROEDU_INTEGRATION.md` · `docs/SAFETY.md` | RO-EDU operator contract · child-safety invariants. |
 | `docs/adr/` · `WORKLOG.md` | Decisions · dated history. |
 | vault `projects/social-media-activities-app.md` | Fleet role, status, next. |

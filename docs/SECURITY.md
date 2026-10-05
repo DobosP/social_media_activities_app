@@ -11,10 +11,15 @@ MIT provenance and per-file hashes in `SOURCE.json`; `cmd/check-authcore` checks
 Node builds the hashed client once; compilers, Node, Python and test tooling stay outside
 the native production image. Python requirement locks qualify only the offline oracle.
 
-Dependabot opens review PRs for Go, image and action updates. There is no automatic
-merge. Native CI enforces format/vet/race, actual isolated database/codec contracts,
-image construction, source/imported-package govulncheck and linked-symbol analysis on a
-same-source symbol-retaining audit binary. Stripping release symbols can make the analyser
+Dependabot opens review PRs for Go, image and action updates. There is no automatic merge,
+and since [ADR-0033](adr/0033-manual-github-actions.md) those PRs get no automatic checks:
+dispatch `native.yml`/`ci.yml` on the PR head (or run the local gates) before merging one.
+The open Social Dependabot PRs stay unmerged (WORKLOG 2026-10-05, GOV-6): postgres-18 moves
+`Dockerfile.db` off PostgreSQL16, node-26 leaves Node24 and django-6.0.8 shifts the pinned
+oracle; closing them is the owner's action. `native.yml`, when dispatched, enforces
+format/vet/race, actual isolated database/codec contracts, image construction,
+source/imported-package govulncheck and linked-symbol analysis on a same-source
+symbol-retaining audit binary. Stripping release symbols can make the analyser
 fall back to conservative whole-module metadata; that output is recorded separately.
 
 The fresh Trivy image gate checks fixable HIGH/CRITICAL findings (`ignore-unfixed`).
@@ -55,9 +60,12 @@ pip/Ruff/pytest/migration gates. Keep the two runtime boundaries clear.
 
 ## Release review
 
-Require current native CI, dependency/image scans, disposable real-FK PostgreSQL and actual
-codec tests, backup/restore rehearsal and production configuration review. The owner approved
-Go main landing on2026-10-04; that does not activate providers/minors, ingest real data,
-procure infrastructure or satisfy the product GDPR/DPIA/parental-authority launch gates.
+Landing follows [ADR-0040](adr/0040-landing-and-deployment-review-gates.md): local native gates
+green on the exact head plus an independent reviewer; a dispatched hosted run is optional evidence.
+Release additionally requires dependency/image scans, disposable real-FK PostgreSQL and actual
+codec tests, backup/restore rehearsal and production configuration review. The owner authorized
+the Go main landing on2026-10-04 only; human auth/erasure/privacy/safety code review is pending
+and gates first deployment ([RELEASE_READINESS](RELEASE_READINESS.md)). Landing does not
+activate providers/minors, ingest real data, procure infrastructure or satisfy the product GDPR/DPIA/parental-authority launch gates.
 Exact commands and operational restrictions: [agent-testing](agent-testing.md),
 [native CLI](../services/server/cmd/social-server/README.md) and [NATIVE_SERVER](NATIVE_SERVER.md).

@@ -3,6 +3,38 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-05 — Go landing governance record corrected (ADR-0040)
+
+Valid until: `docs/go-governance-record` lands or is superseded — then treat as history.
+
+Owner decisions asked 2026-10-05, recorded as [ADR-0040](docs/adr/0040-landing-and-deployment-review-gates.md):
+the 2026-10-04 landing of cbf8cdc was authorized, not code-reviewed; while undeployed, landing needs local
+gates green on the exact head plus an independent reviewer; human auth/erasure/privacy/safety review gates
+first deployment. GOV-4: ADR-0032 gains a 2026-10-05 amendment withdrawing "satisfying the implementation
+review gate" (and noting GOV-3: no test adopts a Django-migrated DB); its Status/README row, STATUS, SECURITY,
+agent-map, NATIVE_SERVER, deploy/README and the 2026-10-04 entry below carry the correction. GOV-2: AGENTS
+Safety/Commands, agent-testing "Before commit and landing" and SECURITY point "green" at ADR-0040; CI is
+dispatch-only (ADR-0033); the fail-open `test -z "$(gofmt -l ...)"` row now names `check-native.sh`;
+Dependabot PRs get no automatic checks. Before-first-deployment list (GOV-1/GO-RT-03 Render env, GO-RT-01
+superuser baseline, GOV-3/GO-RT-04 adoption, GO-RT-08 floating images, GO-MEDIA-06 upload timeout, GOV-9
+rollback, GOV-4 review) is in `docs/RELEASE_READINESS.md`; STATUS no longer lists Render/fresh cloud-init as
+working. GOV-5: no live doc carried exact-head CI claims; the WORKLOG 810492a/e6742a1/3439a3b run IDs got a
+bracketed note that they predate landed main cd006e3, which has no hosted run. GOV-8: STATUS is 115 lines,
+cites no Django command files; agent-testing has no pytest-in-web-container step or dead anchors. GO-08: the
+superseded STATUS open-work bullets collapse to one line, all integrated on `feat/go-native-toolchain`:
+profile authority/media-group/fixed-window budget-erasure review fixes (profile viewer reloaded after rate
+admission), the ADR-0035 guarded permissions/private API contracts (380 operations/318 paths/166 schemas),
+the three completion lanes first integrated on `feat/go-migration-finish`, and the ADR-0038 toolchain (CSP/
+private-EU backup operators, shell hooks, exporter-to-sidecar qualification, adversarial native matrices). GO-03: the 40 "reused" receipts in `restart-checkpoint.json` (numbers unchanged),
+the TODO frozen bundle and STATUS now read "package directory unchanged; transitive dependencies changed after
+the receipt — not qualified on this head". GO-04/GO-05 (docs): NATIVE_WINDOWS_TODO checks run on Linux or
+WSL2 ext4 with sha256-verified go.dev Go1.27.1, `GOTOOLCHAIN=local`, `-mod=readonly` (owner-authorized download
+and Docker base images 2026-10-05); a canonical `docker build --no-cache` plus Trivy scan is mandatory before
+landing/release. GOV-6: no Social Dependabot PR is merged; closing postgres-18/node-26/django-6.0.8 is the
+owner's action. Docs only; no code, script, workflow or Dockerfile changed.
+Windows Git Bash: fleet docs files53/dead_links0/stale_terms0/retired_verbs0/orphans0, `git diff --check`
+clean, budgets AGENTS80/STATUS115/agent-testing67/agent-map47/CLAUDE3. Not run (docs only): Go, qualify, frontend.
+
 ## 2026-10-05 — Native gates fail closed (GO-02/GOV-7, GO-06, F5)
 
 Valid until: `fix/go-qualify-fail-closed` lands or is superseded — then treat as history.
@@ -606,6 +638,8 @@ Valid until: the runtime/launch profile changes — then reverify.
 The owner explicitly authorized both conversions to origin/main and requested canonical
 Go documentation. This satisfies Social's human auth/privacy/safety landing review; it
 neither enables provider/minor/product launch nor authorizes infrastructure procurement.
+[Corrected 2026-10-05: the owner authorized the landing only; no human code review happened.
+Review pending, gates first deployment — ADR-0040.]
 Go/native/ref/public CI on e6742a1 all pass (37211779358/395/372), including actual native
 bootstrap/codecs/DB; the 17-package fixture is 173 top-level tests, not 193. The count was
 independently recomputed from individual PASS logs. Runtime and account/adoption/scanning/
@@ -621,7 +655,9 @@ explicit; unsupported profiles still fail by name.
 The orchestrator fast-forwarded and pushed the qualified native implementation plus final
 canonical documentation to Social origin/main3439a3b on2026-10-04. PR101 is merged; the
 older public-only foundation is included by ancestry. Exact final documentation-head CI
-also passes (native37219661498/reference37219661457/public37219661432). Native startup,
+also passes (native37219661498/reference37219661457/public37219661432). [Corrected 2026-10-05
+(GOV-5): these and the 810492a/e6742a1 runs predate landed main cd006e3 (workflow/ADR-0033
+change), which has no hosted run; they are not exact-head evidence for main.] Native startup,
 auth/domain/media/live/jobs and deployment entry points execute Go; client TypeScript and
 offline Python oracles remain explicit. Both repository main landing pads are clean.
 No Social production deployment or provider/minor/source activation occurred.

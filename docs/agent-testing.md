@@ -49,12 +49,17 @@ its explicit binary path to export qualification. Schema bootstrap is native `--
 
 ## Before commit and landing
 
-1. Run affected native fixtures with explicit flags; no skipped integration qualification.
-2. Run native format/vet/race, auth hashes, whitespace and relevant frontend gates.
-3. Record exact commands/results/remaining gaps in TASK_RESULT.md (ignored) and WORKLOG;
-   current truth goes in STATUS.md. Source changes require matching fresh-source evidence.
-4. Run fleet doc/link gate for docs. Root coordinates all local commits, publication and landing.
-5. Human auth/privacy/safety review remains required before landing; test success does not
+Landing rule: [ADR-0040](adr/0040-landing-and-deployment-review-gates.md). On the exact head landed:
+
+1. `scripts/check-native.sh` passes; `scripts/qualify-native.sh` passes every affected lane (all 21
+   for an integration-branch landing), each with zero skips and PASS>0.
+2. Relevant frontend gates (frontend/embedded asset changes), `git diff --check` and the fleet doc gate pass.
+3. Record exact commands/head/counts in WORKLOG (detail may go in ignored TASK_RESULT.md) and current
+   truth in STATUS.md. Tests the host cannot run are listed as not run, never as passed.
+4. An independent reviewer (not the implementer) approves the final diff and confirms new tests fail
+   without the fix. A dispatched hosted run is optional evidence, never claimed unless run on that head.
+   Root coordinates all local commits, publication and landing.
+5. Human auth/erasure/privacy/safety code review gates first deployment, not landing. Landing does not
    activate minors, providers, ingestion, schedules, paid infrastructure or deployment.
 
 Optional historical Python verification is isolated in `reference.yml`, manually dispatched

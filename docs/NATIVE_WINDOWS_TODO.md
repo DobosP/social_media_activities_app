@@ -25,9 +25,9 @@ Current truth remains [STATUS](../STATUS.md). This checklist does not authorize 
   do not apply/pop/drop it or assume all its source is superseded.
 - Strict gate: **2671 original declarations;993 claimed-verified (manifest `runtime_verification`, not checked against a test run),1678 unresolved,0invalid; exit1**. All original Python
   source/tests remain. Test counts or named Go links do not establish equivalence. No reference retirement is complete.
-- Frozen bundle:586 affected top-level race tests/14 lanes pass with zero skips;40 unchanged prior qualified
-  tests retain their receipts (626/21 lanes). Source/hashes/three-module vet/race pass; source/package/linked
-  vulnerability gates pass, with one unused required-module advisory. Aggregate named-test/log hashes are in the receipt.
+- Frozen bundle:586 affected top-level race tests/14 lanes pass with zero skips. 40 more (626/21 lanes): package
+  directory unchanged; transitive dependencies changed after the receipt — not qualified on this head. Three-module
+  vet/race and source/package/linked vulnerability gates pass (one unused module advisory); log hashes in the receipt.
 - Image: `sha256:c44143fdc56f7cde24460124e1c037b33ead934ed72a75b03b6283e17164e44a`.
   Server: `5ae16c13a2b7d105b9408174398bd88c9bd630fcf4fd580d8f13d1ae552e24a8`.
   Offline Go1.27.1/CGO0/buildvcsfalse/trimpath/s-w server overlays exact qualified runtime
@@ -43,9 +43,9 @@ Current truth remains [STATUS](../STATUS.md). This checklist does not authorize 
 
 1. Verify the coordinator's branch publication completed and the Windows checkout SHA/dirty state. Reuse this
    branch in a task worktree; never switch the shared landing checkout away from main. Read this TODO/STATUS first.
-2. Complete the pending image gate with a fresh task-owned writable scanner cache/temp and the retained public
-   database, or rebuild the canonical image when permitted. Recheck source/server/runtime closure for any new artifact.
-   Do not download another SDK/model or claim the failed Docker/scanner attempts as passes.
+2. Mandatory before landing/release: canonical `docker build --no-cache` plus a Trivy scan of that build. Scanning
+   the hand-overlay image c44143fd is not an alternative. Recheck source/server/runtime closure for the new artifact;
+   never claim the failed Docker/scanner attempts as passes.
 3. Continue the1678 unresolved exact source cases in bounded queues, preserving original IDs/file/line/hash and
    every original assertion. Current coverage manifests under `services/server/internal/contracts/testdata` are authoritative.
    Remaining queues include messaging list/history query ceilings (actual7>5 and9>7), generic V1 product client
@@ -55,21 +55,21 @@ Current truth remains [STATUS](../STATUS.md). This checklist does not authorize 
    legacy cases and review additional bounds before publishing as source. Keep canonical app-pack/pins/gates separate.
 5. Keep the inherited guardian observer block behavior as an explicit policy-review question. Current transparent
    oversight is preserved; no guardian block veto is implemented or claimed. Do not silently change parental authority.
-6. Independently review source-case semantics and scoped policy replacements. Human auth/privacy/safety review
-   precedes landing; PR108 and full reference retirement remain gated. Producer target registry/pin reconciliation
-   is coordinator-owned; never hand-edit the generated `_roedu_client_core.py` or bump producer policy implicitly.
+6. Independently review source-case semantics/policy replacements; landing per ADR-0040, human code review gates
+   first deployment; PR108/full reference retirement stay gated. Producer registry/pin reconciliation is
+   coordinator-owned; never hand-edit the generated `_roedu_client_core.py` or bump producer policy implicitly.
 
 ## Reproducible checks
 
-Use the available Go1.27.1 runtime and Node24. On Windows adapt paths to the task worktree and put all caches/tmp
-under its workspace `_temp` slug. The following Linux paths identify the preserved recipe, not a required Windows host.
+Run on a Linux host or WSL2 Ubuntu with the worktree on its ext4 filesystem (never `/mnt/c`): `-race` needs cgo and
+qualify builds Linux test binaries run in the Linux image. Go1.27.1 linux-amd64 from go.dev, sha256-verified, with
+`GOTOOLCHAIN=local` and `GOFLAGS=-mod=readonly`; the owner authorized that download plus the Docker base images on
+2026-10-05. `internal/jobs/operator_case_port6_linux_test.go` runs only on Linux. Node24; caches/tmp in task `_temp`.
 
 ```bash
-export GOWORK=off GOMAXPROCS=2 GOFLAGS=-p=2 GOPROXY=off
-export GOMODCACHE=/home/dobo/work/_temp/go-native-toolchain/go-mod-cache
-export GOCACHE=/home/dobo/work/_temp/go-native-toolchain/go-cache
-export TMPDIR=/home/dobo/work/_temp/go-native-toolchain/test-tmp
-scripts/check-native.sh /mnt/data/decision-lab-runtime/kev-native/toolchain/go/bin/go
+export GOWORK=off GOMAXPROCS=2 GOTOOLCHAIN=local GOFLAGS='-mod=readonly -p=2' GOPROXY=off
+export GOMODCACHE=~/work/_temp/<slug>/go-mod-cache GOCACHE=~/work/_temp/<slug>/go-cache TMPDIR=~/work/_temp/<slug>/tmp
+scripts/check-native.sh /absolute/path/to/go1.27.1/bin/go
 go -C services/server run ./cmd/check-contracts -root "$PWD" -summary
 scripts/qualify-native.sh GO IMAGE PRIVATE_NETWORK SYNTHETIC_DSN ABSOLUTE_TASK_SCRATCH
 python3 ~/work/agent-ops/scripts/check_docs.py .

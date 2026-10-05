@@ -33,8 +33,9 @@ Paths beginning internal/ above are under `services/server`. Domain READMEs/test
   for database/media changes. Default skipped integration cases cannot qualify a release.
 - Frontend changes run Node24 contracts/build/bundle budget. Docs run the fleet doc/link gate.
 - Deployment/configuration uses native CLI docs and typed defaults; never inspect actual env values.
-- Source privacy/safety behavior requires human review before landing; owner approval for the
-  complete conversion does not authorize later regressions or production activation.
+- Auth/erasure/privacy/safety changes land with an independent reviewer; human code review gates first
+  deployment ([ADR-0040](adr/0040-landing-and-deployment-review-gates.md)). The owner authorized the
+  2026-10-04 conversion landing only (no code review); that never authorizes regressions or activation.
 
 ## Pitfalls
 - Do not defer safety, cohort, consent, block or scan admission until after an action is visible.
