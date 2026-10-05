@@ -298,6 +298,11 @@ func (r *Runner) install() {
 		// The existing explicit maintenance pass also erases expired shared rate
 		// histories; this adds no scheduler and preserves the API-token result.
 		_, err = budgets.New(r.DB).Prune(ctx, 1000)
+		if err == nil && r.Config.Accounts != nil {
+			// Authentication admission rows expire on the same pass; correctness
+			// never depends on it, so no job name is added.
+			err = r.Config.Accounts.SweepAuthState(ctx, 1000)
+		}
 		return tag.RowsAffected(), err
 	}
 	r.handlers["indexnow_batch_submit"] = func(ctx context.Context, _ map[string]json.RawMessage) (any, error) { return r.IndexNow(ctx) }

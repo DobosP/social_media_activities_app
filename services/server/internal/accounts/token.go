@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
-	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -46,19 +45,7 @@ func (s *Service) ObtainToken(w http.ResponseWriter, r *http.Request) {
 		platform.Fail(w, platform.ErrInvalid)
 		return
 	}
-	address, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err != nil {
-		address = r.RemoteAddr
-	}
-	allowed, err := s.Store.AllowAuthAttempt(r.Context(), hashState("mobile:"+address), s.Config.Now())
-	if err != nil {
-		platform.Fail(w, err)
-		return
-	}
-	if !allowed {
-		platform.Error(w, 429, "Try again later.")
-		return
-	}
+	// Per-peer admission is the app's api.token budget on this exact route.
 	user, hash, err := s.Store.FindByUsername(r.Context(), body.Username)
 	if err != nil && !errors.Is(err, authcore.ErrNotFound) {
 		platform.Fail(w, err)

@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/DobosP/cat_de_roman_esti/shared-go/authcore"
+	"github.com/jackc/pgx/v5"
 )
 
 type loginTestClock struct{ nanos atomic.Int64 }
@@ -41,7 +42,12 @@ func loginSnapshot(t *testing.T, s *Service, name, peer string) (int, int, *time
 	var failures, pending int
 	var expiry *time.Time
 	var epoch string
-	if err := s.DB.QueryRow(context.Background(), `SELECT failures,failure_until,epoch,(SELECT count(*) FROM accounts_go_login_reservation r WHERE r.key_hash=b.key_hash AND r.expires_at>$2) FROM accounts_go_login_failure b WHERE key_hash=$1`, key, s.Config.Now()).Scan(&failures, &expiry, &epoch, &pending); err != nil {
+	err = s.DB.QueryRow(context.Background(), `SELECT failures,failure_until,epoch,(SELECT count(*) FROM accounts_go_login_reservation r WHERE r.key_hash=b.key_hash AND r.expires_at>$2) FROM accounts_go_login_failure b WHERE key_hash=$1`, key, s.Config.Now()).Scan(&failures, &expiry, &epoch, &pending)
+	if errors.Is(err, pgx.ErrNoRows) {
+		// Successful, aborted and infrastructure-failed attempts leave no row.
+		return 0, 0, nil, ""
+	}
+	if err != nil {
 		t.Fatal(err)
 	}
 	return failures, pending, expiry, epoch
@@ -386,8 +392,10 @@ func TestLoginPOSTSuccessfulSessionsResetFailuresAndAvoidAllAttemptLimit(t *test
 	if failed != 0 || pending != 0 || expiry != nil {
 		t.Fatal("successful login did not clear source failure counter")
 	}
-	var legacy int
-	if err := s.DB.QueryRow(context.Background(), `SELECT count(*) FROM accounts_go_auth_attempt`).Scan(&legacy); err != nil || legacy != 0 {
-		t.Fatal("wrapped logins reached unrelated all-attempt limiter", err)
+	// Only the per-prefix auth.login total remains: two failures and thirteen
+	// successes, never the pinned library's legacy per-host key.
+	var keys, attempts int
+	if err := s.DB.QueryRow(context.Background(), `SELECT count(*),coalesce(sum(count) FILTER(WHERE key_hash=$1),0) FROM accounts_go_auth_attempt`, s.Store.peerKey(AuthScopeLogin, "192.0.2.66")).Scan(&keys, &attempts); err != nil || keys != 1 || attempts != 15 {
+		t.Fatal("wrapped logins charged other than the per-prefix login total", keys, attempts, err)
 	}
 }

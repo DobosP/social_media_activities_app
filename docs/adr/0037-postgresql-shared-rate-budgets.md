@@ -152,3 +152,6 @@ state unit check passes in the final affected-package race run. The old-source o
 fails the same real-Erase regression with SQLSTATE 40P01; new source succeeds without
 swallowing errors. Vet, portable auth hashes, gofmt/whitespace and doc gates pass.
 No production or provider verification is claimed, and sliding admission SQL is unchanged.
+
+2026-10-05: anonymous API budget keys are per IPv4 address or IPv6 /64 (`platform.PeerKey`;
+[ADR-0039](0039-native-source-login-failure-counter.md) per-peer admission).

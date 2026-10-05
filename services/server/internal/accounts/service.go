@@ -60,7 +60,9 @@ func New(db *pgxpool.Pool, auth *authcore.Service, identityBindingSecret string,
 	if config.LoginFailureWindow == 0 {
 		config.LoginFailureWindow = 15 * time.Minute
 	}
-	return &Service{DB: db, Auth: auth, Store: NewStore(db), Secret: []byte(identityBindingSecret), Config: config}
+	s := &Service{DB: db, Auth: auth, Store: NewStore(db), Secret: []byte(identityBindingSecret), Config: config}
+	s.Store.PeerSecret = s.Secret
+	return s
 }
 
 func (s *Service) Migrate(ctx context.Context) error {

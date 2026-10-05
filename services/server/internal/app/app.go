@@ -166,6 +166,9 @@ func New(ctx context.Context, db *pgxpool.Pool, config Config, migrate bool) (*A
 	if binding == "" {
 		binding = config.Secret
 	}
+	// The pinned library's store and the account service key per-prefix
+	// admission rows with the same secret.
+	store.PeerSecret = []byte(binding)
 	accountService := accounts.New(db, auth, binding, config.Accounts)
 	if migrate {
 		if err := accountService.Migrate(ctx); err != nil {
@@ -388,6 +391,7 @@ func (a *App) serveHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	r = a.forwardedPeer(r)
+	r = a.authAdmission(r)
 	if mutation {
 		r.Body = http.MaxBytesReader(w, r.Body, limit)
 	}
@@ -446,7 +450,7 @@ func (a *App) serveHTTP(w http.ResponseWriter, r *http.Request) {
 	if _, ok := platform.ActorFrom(r); ok && uploadRead > 0 {
 		platform.ExtendDeadlines(w, uploadRead, uploadWrite)
 	}
-	if r.Method == http.MethodPost && (r.URL.Path == "/login/" || r.URL.Path == "/api/auth/login") {
+	if loginIntercept(r.Method, r.URL.Path) {
 		a.Accounts.LoginPOST(w, r, r.URL.Path == "/login/")
 		return
 	}
@@ -472,6 +476,43 @@ func uploadDeadlines(r *http.Request) (read, write time.Duration, large bool) {
 		return largeUploadRead, largeUploadWrite, true
 	}
 	return smallUploadRead, smallUploadWrite, false
+}
+
+// Password login never reaches the pinned library's attempt store directly:
+// LoginPOST applies per-prefix admission and the failure counter first.
+func loginIntercept(method, path string) bool {
+	return method == http.MethodPost && (path == "/login/" || path == "/api/auth/login")
+}
+
+// authAttemptScope maps every other pinned-library route that charges its
+// attempt store to a per-prefix scope; API logout is exempt.
+func authAttemptScope(method, path string) (scope string, exempt, ok bool) {
+	switch {
+	case method == http.MethodPost && (path == "/api/auth/signup" || path == "/register/"):
+		return accounts.AuthScopeSignup, false, true
+	case method == http.MethodPost && path == "/api/auth/logout":
+		return "", true, true
+	case method == http.MethodGet && strings.HasPrefix(path, "/api/auth/oauth/") && strings.HasSuffix(path, "/start"):
+		provider := strings.TrimSuffix(strings.TrimPrefix(path, "/api/auth/oauth/"), "/start")
+		if provider != "" && !strings.Contains(provider, "/") {
+			return accounts.AuthScopeOAuthStart, false, true
+		}
+	}
+	return "", false, false
+}
+
+// authAdmission carries the trusted peer prefix to the pinned library's
+// attempt and OAuth-flow stores in request memory only.
+func (a *App) authAdmission(r *http.Request) *http.Request {
+	scope, exempt, ok := authAttemptScope(r.Method, r.URL.Path)
+	switch {
+	case !ok || a.Accounts == nil:
+		return r
+	case exempt:
+		return a.Accounts.WithPeerAdmissionExempt(r)
+	default:
+		return a.Accounts.WithPeerAdmission(r, scope)
+	}
 }
 
 func classicThreadUpload(r *http.Request) bool {

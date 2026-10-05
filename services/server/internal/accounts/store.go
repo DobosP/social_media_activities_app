@@ -17,7 +17,13 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type Store struct{ DB *pgxpool.Pool }
+type Store struct {
+	DB *pgxpool.Pool
+	// PeerSecret keys per-prefix admission rows (HMAC); every replica and both
+	// application stores share the deployment's identity binding secret.
+	PeerSecret []byte
+	sweepDue   func() bool
+}
 
 func NewStore(db *pgxpool.Pool) *Store { return &Store{DB: db} }
 
@@ -33,6 +39,8 @@ CREATE TABLE IF NOT EXISTS accounts_go_oauth_flow (state_hash text PRIMARY KEY C
 CREATE INDEX IF NOT EXISTS accounts_go_oauth_expiry ON accounts_go_oauth_flow(expires_at);
 CREATE TABLE IF NOT EXISTS accounts_go_auth_attempt (key_hash text PRIMARY KEY CHECK(length(key_hash)=64), count integer NOT NULL, expires_at timestamptz NOT NULL);
 CREATE INDEX IF NOT EXISTS accounts_go_attempt_expiry ON accounts_go_auth_attempt(expires_at);
+ALTER TABLE accounts_go_oauth_flow ADD COLUMN IF NOT EXISTS peer_hash char(64);
+CREATE INDEX IF NOT EXISTS accounts_go_oauth_peer ON accounts_go_oauth_flow(peer_hash,expires_at);
 `
 
 func (s *Store) Migrate(ctx context.Context) error {
@@ -173,21 +181,26 @@ func (s *Store) CreateOAuthFlow(ctx context.Context, hash string, flow authcore.
 	if err != nil {
 		return err
 	}
+	marker, ok := ctx.Value(peerAdmissionContext{}).(*peerAdmission)
+	if !ok || marker.peer == "" {
+		// Direct library callers keep the legacy per-hash attempt cap as bound.
+		_, err = s.DB.Exec(ctx, `INSERT INTO accounts_go_oauth_flow(state_hash,data,expires_at) VALUES($1,$2,$3)`, hash, data, flow.ExpiresAt)
+		return err
+	}
+	// Pending flows are capped per network prefix, never globally.
+	peerHash := s.peerKey(authScopeOAuthFlow, marker.peer)
 	return platform.Transaction(ctx, s.DB, func(tx pgx.Tx) error {
-		if _, err := tx.Exec(ctx, `SELECT pg_advisory_xact_lock(683475951211)`); err != nil {
+		if _, err := tx.Exec(ctx, `SELECT pg_advisory_xact_lock(hashtextextended($1,683475951211))`, peerHash); err != nil {
 			return err
 		}
-		if _, err := tx.Exec(ctx, `DELETE FROM accounts_go_oauth_flow WHERE expires_at<=now()`); err != nil {
+		var live int
+		if err := tx.QueryRow(ctx, `SELECT count(*) FROM (SELECT 1 FROM accounts_go_oauth_flow WHERE peer_hash=$1 AND expires_at>now() LIMIT $2) f`, peerHash, oauthFlowsPerPeer).Scan(&live); err != nil {
 			return err
 		}
-		var count int
-		if err := tx.QueryRow(ctx, `SELECT count(*) FROM accounts_go_oauth_flow`).Scan(&count); err != nil {
-			return err
-		}
-		if count >= 10000 {
+		if live >= oauthFlowsPerPeer {
 			return authcore.ErrConflict
 		}
-		_, err := tx.Exec(ctx, `INSERT INTO accounts_go_oauth_flow(state_hash,data,expires_at) VALUES($1,$2,$3)`, hash, data, flow.ExpiresAt)
+		_, err := tx.Exec(ctx, `INSERT INTO accounts_go_oauth_flow(state_hash,data,expires_at,peer_hash) VALUES($1,$2,$3,$4)`, hash, data, flow.ExpiresAt, peerHash)
 		return err
 	})
 }
@@ -205,30 +218,20 @@ func (s *Store) AllowAuthAttempt(ctx context.Context, key string, now time.Time)
 	if allowed, reserved, err := s.reservedLoginAllowed(ctx, key); reserved {
 		return allowed, err
 	}
-	var count int
-	err := platform.Transaction(ctx, s.DB, func(tx pgx.Tx) error {
-		if _, err := tx.Exec(ctx, `SELECT pg_advisory_xact_lock(683475951212)`); err != nil {
-			return err
+	if marker, ok := ctx.Value(peerAdmissionContext{}).(*peerAdmission); ok {
+		if marker.exempt {
+			return true, nil
 		}
-		if _, err := tx.Exec(ctx, `DELETE FROM accounts_go_auth_attempt WHERE expires_at<=$1`, now); err != nil {
-			return err
+		if marker.err != nil {
+			return false, marker.err
 		}
-		var keys int
-		if err := tx.QueryRow(ctx, `SELECT count(*) FROM accounts_go_auth_attempt`).Scan(&keys); err != nil {
-			return err
-		}
-		if keys >= 10000 {
-			var exists bool
-			if err := tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM accounts_go_auth_attempt WHERE key_hash=$1)`, key).Scan(&exists); err != nil {
-				return err
-			}
-			if !exists {
-				return authcore.ErrConflict
-			}
-		}
-		return tx.QueryRow(ctx, `INSERT INTO accounts_go_auth_attempt(key_hash,count,expires_at) VALUES($1,1,$2) ON CONFLICT(key_hash) DO UPDATE SET count=accounts_go_auth_attempt.count+1 RETURNING count`, key, now.Add(time.Minute)).Scan(&count)
-	})
-	return count <= 10, err
+		allowed, _, err := s.admitPeer(ctx, marker.scope, marker.peer, marker.policy, now)
+		return allowed, err
+	}
+	// No marker: direct library callers keep ten attempts per minute per the
+	// library's own host digest, now without any table-wide refusal.
+	allowed, _, err := s.admitPeer(ctx, authScopeLegacy, key, authLegacyPolicy, now)
+	return allowed, err
 }
 
 func (s *Store) Actor(ctx context.Context, userID string) (platform.Actor, error) {

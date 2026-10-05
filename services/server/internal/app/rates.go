@@ -2,9 +2,7 @@ package app
 
 import (
 	"math"
-	"net"
 	"net/http"
-	"net/netip"
 	"strconv"
 	"strings"
 	"time"
@@ -27,13 +25,8 @@ func (a *App) admitAPI(w http.ResponseWriter, r *http.Request) bool {
 	if path == "health" || path == "health/" || path == "ready" || path == "ready/" || path == "ops/csp-report/" {
 		return true
 	}
-	peer, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err != nil {
-		peer = r.RemoteAddr
-	}
-	if address, parseErr := netip.ParseAddr(peer); parseErr == nil {
-		peer = address.Unmap().String()
-	}
+	// Anonymous keys are per IPv4 address or IPv6 /64 (ADR-0037).
+	peer := platform.PeerKey(r.RemoteAddr)
 	scope, limit := "api.anonymous", a.Config.ThrottleAnonymous
 	var actorID int64
 	if r.Method == http.MethodPost && path == "auth/token/" {
@@ -52,6 +45,7 @@ func (a *App) admitAPI(w http.ResponseWriter, r *http.Request) bool {
 	}
 	policy := budgets.Policy{Limit: limit, Window: time.Minute}
 	var decision budgets.Decision
+	var err error
 	if actorID > 0 {
 		decision, err = a.rates.store.Actor(r.Context(), actorID, scope, policy)
 	} else {

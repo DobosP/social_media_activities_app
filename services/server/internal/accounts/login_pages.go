@@ -7,14 +7,17 @@ import (
 	"errors"
 	"html/template"
 	"io"
+	"math"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
 )
 
 const LoginTooManyFailures = "Too many failed login attempts. Please wait a few minutes and try again."
+const LoginTooManyFromPeer = "Too many login attempts from this network. Please wait a few minutes and try again."
 
 var errLoginOtherResponse = errors.New("login completed without credential verdict")
 
@@ -136,7 +139,7 @@ func (s *Service) LoginPOST(w http.ResponseWriter, r *http.Request, browser bool
 		return
 	}
 	var raw []byte
-	var username, next string
+	var username, password, next string
 	if browser {
 		r.Body = http.MaxBytesReader(w, r.Body, 16<<10)
 		if r.ParseForm() != nil {
@@ -144,10 +147,11 @@ func (s *Service) LoginPOST(w http.ResponseWriter, r *http.Request, browser bool
 			return
 		}
 		username = NormalizeLoginUsername(r.PostForm.Get("username"))
+		password = r.PostForm.Get("password")
 		next = r.PostForm.Get("next")
 		r.Header.Set("X-CSRFToken", r.PostForm.Get("csrfmiddlewaretoken"))
 		var err error
-		raw, err = json.Marshal(loginCredentials{Username: username, Password: r.PostForm.Get("password")})
+		raw, err = json.Marshal(loginCredentials{Username: username, Password: password})
 		if err != nil {
 			platform.Error(w, http.StatusBadRequest, "invalid login details")
 			return
@@ -164,7 +168,7 @@ func (s *Service) LoginPOST(w http.ResponseWriter, r *http.Request, browser bool
 			platform.Error(w, http.StatusBadRequest, "invalid login details")
 			return
 		}
-		username = credentials.Username
+		username, password = credentials.Username, credentials.Password
 		raw, err = json.Marshal(credentials)
 		if err != nil {
 			platform.Error(w, http.StatusBadRequest, "invalid login details")
@@ -183,6 +187,32 @@ func (s *Service) LoginPOST(w http.ResponseWriter, r *http.Request, browser bool
 		} else {
 			platform.Error(w, http.StatusBadRequest, "invalid login details")
 		}
+		return
+	}
+	// The pinned verifier rejects this bound without hashing; reject it before
+	// any admission row exists, with the same visible response it produces.
+	if len(password) > 1024 {
+		if browser {
+			s.loginHTML(w, r, username, next, "Please enter a correct username and password. Note that both fields may be case-sensitive.")
+		} else {
+			platform.Error(w, http.StatusBadRequest, "invalid login details")
+		}
+		return
+	}
+	// Total attempts per trusted network prefix, successes included, before the
+	// per-pair failure reservation and any password work.
+	retry, err := s.admitLoginPeer(r.Context(), AuthScopeLogin, r.RemoteAddr)
+	if errors.Is(err, ErrLoginPeerLimit) {
+		if browser {
+			s.loginHTML(w, r, username, next, LoginTooManyFromPeer)
+		} else {
+			w.Header().Set("Retry-After", strconv.Itoa(int(math.Ceil(retry.Seconds()))))
+			platform.Error(w, http.StatusTooManyRequests, "try again later")
+		}
+		return
+	}
+	if err != nil {
+		platform.Error(w, http.StatusServiceUnavailable, "authentication unavailable")
 		return
 	}
 	reservation, err := s.reserveLogin(r.Context(), username, r.RemoteAddr)

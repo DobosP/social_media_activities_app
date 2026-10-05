@@ -66,3 +66,66 @@ API discovery overlay hardcodes the former parser and forwards raw JSON directly
 unchanged library; it remains a negative control, not a test of the repaired wrapper.
 The unchanged browser-padding overlay passes. Pinned authentication source hashes remain
 verified. Human review and complete source-case retirement gates still precede landing.
+
+## 2026-10-05 — Per-peer admission and removal of table-size refusal
+
+Independent review (findings F1/GO-01, IDP-1, IDP-2) found that the reserved-login context
+left browser login, JSON login and the restricted proof without any per-IP limit, while a
+10,000-row global cap on the failure table, the shared attempt table and the OAuth flow table
+refused every new client once one source filled it. Owner decision (Paul, 2026-10-05), verbatim:
+*Django's rule (failed logins only, per username + IP, 15 minutes, cleared on success) plus a
+per-IP cap on total attempts. Never refuse new users because a table is full.*
+
+Peer identity is one normalizer, `platform.PeerKey`: an IPv4 address (/32) or an IPv6 /64;
+ports, IPv4-mapped spelling and zones are ignored; unparsable input shares one bucket. The
+failure-counter pair key, the new per-peer caps and anonymous API budgets all use it. Per-peer
+rows are keyed by HMAC-SHA256 under the identity binding secret (purpose- and scope-separated;
+plain SHA-256 only in fixtures without a secret). No raw IP or username is stored or logged.
+
+Each scope is a fixed window per prefix that counts every attempt, successes included; the
+failed-only username+IP counter above is unchanged and remains the per-account brake. Defaults,
+confirmed by the owner on 2026-10-05 and overridable only through the existing programmatic
+rate-policy hook (no new environment variable):
+
+| Scope | Default | Applies to |
+|---|---|---|
+| `auth.login` | 100 / 15 min | `POST /login/` and `POST /api/auth/login`, shared |
+| `auth.restricted` | 30 / 15 min | restricted-account credential proof, its own scope |
+| `auth.signup` | 30 / hour | `POST /api/auth/signup` and `POST /register/` |
+| `auth.oauth_start` | 30 / 15 min | `GET /api/auth/oauth/{provider}/start` |
+| `auth.legacy` | 10 / min | pinned library used without an application marker |
+
+This goes beyond Django parity: Django had no per-IP cap on browser login or signup. Login and
+the restricted proof are admitted per prefix before the failure reservation and any password
+work; an oversize password (over 1024 bytes) is rejected before any row exists, with the same
+visible response the pinned verifier gave. At the cap, browser login shows a network-specific
+message, JSON login returns 429 with `Retry-After`, and the restricted proof shows its existing
+"too many attempts" text.
+
+No admission is refused because of table size. Storage is bounded by the caps times the
+prefixes active in each window, plus in-flight reservations. A failure row is still created at
+reservation, now only after the cheap checks and per-peer admission; completion deletes it when
+it holds no failures and no other live reservation, so successes, infrastructure errors and
+aborted attempts leave no row. Reservation and completion serialize on a per-pair advisory lock
+instead of one global lock and touch only their own pair. Cross-key expiry runs outside those
+transactions in bounded, separately committed `SKIP LOCKED` sweeps, from the existing
+`expire_api_tokens` job (no new job name) and opportunistically after one in sixteen admissions.
+Correctness never depends on the sweep: expired windows reset inline.
+
+The pinned library's attempt store receives only a digest of the raw host, so the application
+marks the request context with the normalized prefix and scope (memory only) for signup, OAuth
+start and API logout. API logout is exempt and never throttled; HTML logout was already
+unthrottled. A call without the marker keeps the library's previous ten attempts per minute per
+host digest, without any table-wide refusal. Pending OAuth flows are capped at ten live flows
+per prefix through a new nullable `peer_hash` column on the flow table (rows live five minutes),
+replacing the global cap. The token endpoint's duplicate charge, an unkeyed SHA-256 of the IP,
+is removed; its `api.token` budget of ten per minute per peer is unchanged.
+
+Known limits: signup at its cap returns the pinned library's fixed `Retry-After: 60`, which
+understates a one-hour window, and the OAuth flow cap surfaces as its 503 "identity provider
+unavailable"; neither can change without editing the hash-pinned library. Users behind one
+CGNAT or school address share one bucket per scope. A misconfigured `TRUSTED_PROXY_CIDRS`
+collapses every client into the proxy's bucket. PostgreSQL fixture tests cover full-table
+admission, per-prefix and IPv6 /64 caps, scope separation, the logout exemption, row lifecycle,
+the sweep and the pinned-route marker coverage. Review gates:
+[ADR-0040](0040-landing-and-deployment-review-gates.md).
