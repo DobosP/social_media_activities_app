@@ -206,7 +206,7 @@ func New(ctx context.Context, db *pgxpool.Pool, config Config, migrate bool) (*A
 			return nil, errors.New("native messaging migration failed")
 		}
 	}
-	a := &App{rates: requestRates{store: budgets.New(db), secret: []byte(config.Secret)}, DB: db, Config: config, Auth: auth, Accounts: accountService, Social: socialService, Media: mediaService, Store: store, Mux: http.NewServeMux()}
+	a := &App{rates: requestRates{store: budgets.New(db), secret: []byte(config.Secret), prefilter: budgets.NewPrefilter()}, DB: db, Config: config, Auth: auth, Accounts: accountService, Social: socialService, Media: mediaService, Store: store, Mux: http.NewServeMux()}
 	if config.ProxyHops < 0 || config.ProxyHops > 32 {
 		return nil, errors.New("NUM_PROXIES must be between zero and 32")
 	}
@@ -331,6 +331,9 @@ func (a *App) StartLive(ctx context.Context) {
 	}
 	a.Media.SetInlineVideoProcessing(ctx, enabled)
 	go a.Broker.Run(ctx)
+	// Expired rate histories are swept here and by expire_api_tokens, never on
+	// the request path; admission already reads an expired row as empty.
+	go a.rates.store.RunSweeper(ctx, time.Minute, 1000)
 }
 
 func (a *App) StopBackground(ctx context.Context) error {

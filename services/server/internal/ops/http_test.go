@@ -54,12 +54,37 @@ func TestCSPPrivacyBudgetAndAlways204(t *testing.T) {
 			t.Fatal("browser report rejected")
 		}
 	}
+	// The ceiling is per process, so a missing database never drops reports.
 	rows := s.RecentCSP()
-	if len(rows) != 0 {
-		t.Fatal("CSP admission failed open without database", rows)
+	if len(rows) != 1 || rows[0].Document != "https://site.example/account/" || rows[0].Blocked != "https://asset.example/file.js" || rows[0].Directive != "script-src" {
+		t.Fatal("CSP secrets retained", rows)
 	}
 	rows, err := ParseCSP([]byte(`{"csp-report":{"effective-directive":"script-src self","document-uri":"https://site.example/account/?token=generated#private","blocked-uri":"https://asset.example/file.js?secret=generated"}}`))
 	if err != nil || len(rows) != 1 || rows[0].Document != "https://site.example/account/" || rows[0].Blocked != "https://asset.example/file.js" || rows[0].Directive != "script-src" {
 		t.Fatal("CSP secrets retained", rows, err)
+	}
+}
+
+// A nil pool proves the ceiling never consults the database: any admission
+// through it would fail and drop every report.
+func TestCSPIngressCeilingIsPerProcessWithoutDatabase(t *testing.T) {
+	s := NewService(nil, HTTPConfig{})
+	report := `{"csp-report":{"effective-directive":"img-src","document-uri":"https://site.example/","blocked-uri":"https://asset.example/a.png"}}`
+	for i := 0; i < 121; i++ {
+		out := httptest.NewRecorder()
+		s.CSPReport(out, httptest.NewRequest(http.MethodPost, "/api/ops/csp-report/", strings.NewReader(report)))
+		if out.Code != 204 {
+			t.Fatal("browser report rejected", i, out.Code)
+		}
+	}
+	if got := len(s.RecentCSP()); got != 120 {
+		t.Fatal("per-process CSP ceiling", got)
+	}
+	s.mu.Lock()
+	s.budgetUntil = time.Now().Add(-time.Second)
+	s.mu.Unlock()
+	s.CSPReport(httptest.NewRecorder(), httptest.NewRequest(http.MethodPost, "/api/ops/csp-report/", strings.NewReader(report)))
+	if got := len(s.RecentCSP()); got != 121 {
+		t.Fatal("CSP window did not reset", got)
 	}
 }

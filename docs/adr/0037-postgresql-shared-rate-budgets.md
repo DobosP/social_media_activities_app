@@ -155,3 +155,36 @@ No production or provider verification is claimed, and sliding admission SQL is 
 
 2026-10-05: anonymous API budget keys are per IPv4 address or IPv6 /64 (`platform.PeerKey`;
 [ADR-0039](0039-native-source-login-failure-counter.md) per-peer admission).
+
+## 2026-10-05 — Capacity families, eviction, pre-filter and off-path sweep
+
+Owner rule (Paul, 2026-10-05): "never refuse new users because a table is full." The single
+10,000-key/1,000,000-event capacity let minted anonymous keys refuse every new key in every scope,
+including logged-in users' domain actions and new users' first reports (GO-CATALOG-01).
+
+Capacity is now per scope family (`go_rate_budget_family`, schema version
+`go-shared-rate-budgets-v2`): rows with an account are `actor` (50,000 keys / 1,000,000 events);
+`api.anonymous` and `api.token` peers are `anonymous` (10,000 / 200,000); `ops.*` is `ops`
+(100 / 10,000); anything else is `other` (1,000 / 100,000). Statement-level transition-table
+triggers keep the per-family counters exact, locking rows before counters and counters in family
+order. A `TRUNCATE` zeroes every family counter. Each migration locks the histories, re-applies the
+reviewed limits and rebuilds the counters by census; a family found above its limit when adopting
+v1 keeps its latest-expiring keys. The v1 singleton row is kept but no longer maintained.
+
+"Saturation refuses more work" is replaced by eviction: when a key's family is full, admission
+deletes up to 64 of that family's soonest-expiring keys (expired first, never another family's,
+never its own) and retries once. It refuses only when nothing is evictable because concurrent
+admissions hold every other key. An evicted bucket loses its history: a bounded fail-open on the
+oldest keys of the full family only. Changed-policy refusal (above) is unchanged.
+
+A per-process, denial-only pre-filter (65,536 direct-mapped slots, 64 shards) answers a throttled
+anonymous or token peer from memory until its Retry-After passes. Keys are hashed in memory with
+a per-process seed and never stored or logged; collisions overwrite. Allowed requests always reach
+PostgreSQL, which stays the authority: a replica can only repeat a denial the database made.
+
+CSP ingress is a per-process 120/min fixed window again, so an unauthenticated report flood never
+touches the database pool. The inventory's "Ops `csp_report`" shared-sliding row no longer applies;
+the 8 KiB body and 200 sanitized rows remain local bounds. Expiry sweeping is periodic, not per
+admission: the existing `expire_api_tokens` pass plus one live-process sweeper (one 1,000-row batch
+per minute, stopped with the server context; one-shot jobs start none). Admission makes one
+database round trip and never depends on the sweep, since an expired row reads as empty.

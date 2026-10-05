@@ -62,7 +62,7 @@ func Migrate(ctx context.Context, db *pgxpool.Pool) error {
 	if _, err = tx.Exec(ctx, rateBudgets, pgx.QueryExecModeSimpleProtocol); err != nil {
 		return err
 	}
-	if _, err = tx.Exec(ctx, `INSERT INTO go_backend_migrations(version) VALUES('go-shared-rate-budgets-v1') ON CONFLICT DO NOTHING`); err != nil {
+	if _, err = tx.Exec(ctx, `INSERT INTO go_backend_migrations(version) VALUES('go-shared-rate-budgets-v1'),('go-shared-rate-budgets-v2') ON CONFLICT DO NOTHING`); err != nil {
 		return err
 	}
 	return tx.Commit(ctx)
