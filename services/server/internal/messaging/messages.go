@@ -201,46 +201,59 @@ type messageRow struct {
 	key                       any
 }
 
+const messageReadProjection = `SELECT m.id,m.conversation_id,m.sender_id,m.algorithm,m.ciphertext,m.iv,m.created_at,k.ephemeral_public_jwk,k.wrapped_key,k.wrap_iv,u.public_id::text,u.username,u.display_name FROM messaging_message m JOIN messaging_conversation c ON c.id=m.conversation_id JOIN messaging_messagekey k ON k.message_id=m.id AND k.recipient_id=$2 LEFT JOIN accounts_user u ON u.id=m.sender_id`
+
 func (s *Service) messageRows(ctx context.Context, q platform.Querier, a platform.Actor, ids []int64, broadcast bool) (map[int64]map[string]any, error) {
-	out := map[int64]map[string]any{}
 	if len(ids) == 0 {
-		return out, nil
+		return map[int64]map[string]any{}, nil
 	}
 	if len(ids) > 51 {
 		return nil, platform.ErrInvalid
 	}
-	rows, e := q.Query(ctx, `SELECT m.id,m.conversation_id,m.sender_id,m.algorithm,m.ciphertext,m.iv,m.created_at,k.ephemeral_public_jwk,k.wrapped_key,k.wrap_iv FROM messaging_message m JOIN messaging_conversation c ON c.id=m.conversation_id JOIN messaging_messagekey k ON k.message_id=m.id AND k.recipient_id=$2 WHERE m.id=ANY($1) AND (c.disappearing_seconds=0 OR m.created_at>now()-c.disappearing_seconds*interval '1 second') ORDER BY m.created_at,m.id`, ids, a.ID)
-	if e != nil {
-		return nil, e
+	rows, err := q.Query(ctx, messageReadProjection+` WHERE m.id=ANY($1) AND (c.disappearing_seconds=0 OR m.created_at>now()-c.disappearing_seconds*interval '1 second') ORDER BY m.created_at,m.id`, ids, a.ID)
+	if err != nil {
+		return nil, err
 	}
+	_, out, err := s.serializeMessageRows(ctx, q, rows, broadcast)
+	return out, err
+}
+
+func (s *Service) serializeMessageRows(ctx context.Context, q platform.Querier, rows pgx.Rows, broadcast bool) ([]int64, map[int64]map[string]any, error) {
+	out := map[int64]map[string]any{}
+	ids := []int64{}
 	var messages []messageRow
 	senderIDs := map[int64]bool{}
+	refs := map[int64]any{}
 	for rows.Next() {
 		var m messageRow
 		var jwk json.RawMessage
 		var wrapped, iv string
-		if e = rows.Scan(&m.id, &m.conversation, &m.sender, &m.algorithm, &m.ciphertext, &m.iv, &m.created, &jwk, &wrapped, &iv); e != nil {
+		var publicID, username, display *string
+		if err := rows.Scan(&m.id, &m.conversation, &m.sender, &m.algorithm, &m.ciphertext, &m.iv, &m.created, &jwk, &wrapped, &iv, &publicID, &username, &display); err != nil {
 			rows.Close()
-			return nil, e
+			return nil, nil, err
 		}
 		m.key = map[string]any{"ephemeral_public_jwk": jwk, "wrapped_key": wrapped, "wrap_iv": iv}
 		messages = append(messages, m)
+		ids = append(ids, m.id)
 		if m.sender != nil {
 			senderIDs[*m.sender] = true
+			if publicID != nil && username != nil && display != nil {
+				refs[*m.sender] = map[string]any{"public_id": *publicID, "username": *username, "display_name": *display}
+			}
 		}
 	}
-	e = rows.Err()
+	err := rows.Err()
 	rows.Close()
-	if e != nil {
-		return nil, e
+	if err != nil {
+		return nil, nil, err
 	}
 	senders := make([]int64, 0, len(senderIDs))
 	for id := range senderIDs {
 		senders = append(senders, id)
 	}
-	refs, e := userRefs(ctx, q, senders)
-	if e != nil {
-		return nil, e
+	if err = addUserAvatars(ctx, q, senders, refs); err != nil {
+		return nil, nil, err
 	}
 	for _, m := range messages {
 		var sender any
@@ -253,18 +266,18 @@ func (s *Service) messageRows(ctx context.Context, q platform.Querier, a platfor
 		}
 		out[m.id] = item
 	}
-	if broadcast {
-		rows, e = q.Query(ctx, `SELECT k.message_id,u.public_id::text,k.ephemeral_public_jwk,k.wrapped_key,k.wrap_iv FROM messaging_messagekey k JOIN accounts_user u ON u.id=k.recipient_id WHERE k.message_id=ANY($1) ORDER BY k.id`, ids)
-		if e != nil {
-			return nil, e
+	if broadcast && len(ids) > 0 {
+		rows, err = q.Query(ctx, `SELECT k.message_id,u.public_id::text,k.ephemeral_public_jwk,k.wrapped_key,k.wrap_iv FROM messaging_messagekey k JOIN accounts_user u ON u.id=k.recipient_id WHERE k.message_id=ANY($1) ORDER BY k.id`, ids)
+		if err != nil {
+			return nil, nil, err
 		}
 		for rows.Next() {
 			var id int64
 			var publicID, wrapped, iv string
 			var jwk json.RawMessage
-			if e = rows.Scan(&id, &publicID, &jwk, &wrapped, &iv); e != nil {
+			if err = rows.Scan(&id, &publicID, &jwk, &wrapped, &iv); err != nil {
 				rows.Close()
-				return nil, e
+				return nil, nil, err
 			}
 			item := out[id]
 			if item != nil {
@@ -275,13 +288,13 @@ func (s *Service) messageRows(ctx context.Context, q platform.Querier, a platfor
 				item["keys"] = append(keys, map[string]any{"recipient_public_id": publicID, "ephemeral_public_jwk": jwk, "wrapped_key": wrapped, "wrap_iv": iv})
 			}
 		}
-		e = rows.Err()
+		err = rows.Err()
 		rows.Close()
-		if e != nil {
-			return nil, e
+		if err != nil {
+			return nil, nil, err
 		}
 	}
-	return out, nil
+	return ids, out, nil
 }
 func (s *Service) Message(ctx context.Context, a platform.Actor, id int64, broadcast bool) (map[string]any, error) {
 	var conversation int64
@@ -328,21 +341,11 @@ func (s *Service) Messages(ctx context.Context, a platform.Actor, conversation i
 		order = "ASC"
 		before = after
 	}
-	rows, e := s.DB.Query(ctx, `SELECT m.id FROM messaging_message m JOIN messaging_messagekey k ON k.message_id=m.id AND k.recipient_id=$2 JOIN messaging_conversation c ON c.id=m.conversation_id WHERE m.conversation_id=$1 AND `+condition+` AND (c.disappearing_seconds=0 OR m.created_at>now()-c.disappearing_seconds*interval '1 second') ORDER BY m.created_at `+order+`,m.id `+order+` LIMIT $4`, conversation, a.ID, before, limit)
+	rows, e := s.DB.Query(ctx, messageReadProjection+` WHERE m.conversation_id=$1 AND `+condition+` AND (c.disappearing_seconds=0 OR m.created_at>now()-c.disappearing_seconds*interval '1 second') ORDER BY m.created_at `+order+`,m.id `+order+` LIMIT $4`, conversation, a.ID, before, limit)
 	if e != nil {
 		return nil, e
 	}
-	var ids []int64
-	for rows.Next() {
-		var id int64
-		if e = rows.Scan(&id); e != nil {
-			rows.Close()
-			return nil, e
-		}
-		ids = append(ids, id)
-	}
-	e = rows.Err()
-	rows.Close()
+	ids, items, e := s.serializeMessageRows(ctx, s.DB, rows, false)
 	if e != nil {
 		return nil, e
 	}
@@ -350,10 +353,6 @@ func (s *Service) Messages(ctx context.Context, a platform.Actor, conversation i
 		for i, j := 0, len(ids)-1; i < j; i, j = i+1, j-1 {
 			ids[i], ids[j] = ids[j], ids[i]
 		}
-	}
-	items, e := s.messageRows(ctx, s.DB, a, ids, false)
-	if e != nil {
-		return nil, e
 	}
 	result := []any{}
 	for _, id := range ids {
