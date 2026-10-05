@@ -68,6 +68,8 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   `docs/RELEASE_READINESS.md` §Before first deployment (audit 2026-10-05).
 - Launch is blocked on the GDPR/DPIA/DPO/parental-consent stack and production
   operations. Never apply paid infrastructure without owner authorization.
+- Audit 2026-10-05 privacy fixes (G2, WORKLOG): group-thread @mentions never resolve (reference
+  parity); v1 `after=` message history keeps the oldest unseen message.
 
 ## Open work
 

@@ -385,7 +385,12 @@ func preview(v string, n int) string {
 
 var mentionPattern = regexp.MustCompile(`(?:^|[^\p{L}\p{N}_@])@([\p{L}\p{N}_.-]{1,150})`)
 
+// Mentions are an activity-thread affordance only, as in the reference: a
+// standing group never resolves names, so its member set is not enumerable.
 func (s *Service) mentions(ctx context.Context, tx pgx.Tx, a Actor, v threadState, body string) error {
+	if v.Kind != "activity" {
+		return nil
+	}
 	seen := map[string]bool{}
 	names := []string{}
 	for _, m := range mentionPattern.FindAllStringSubmatch(body, -1) {
@@ -398,11 +403,7 @@ func (s *Service) mentions(ctx context.Context, tx pgx.Tx, a Actor, v threadStat
 	if len(names) == 0 {
 		return nil
 	}
-	table, key := "social_membership", "activity_id"
-	if v.Kind == "group" {
-		table, key = "social_groupmembership", "group_id"
-	}
-	rows, err := tx.Query(ctx, `SELECT u.id FROM `+table+` m JOIN accounts_user u ON u.id=m.user_id WHERE m.`+key+`=$1 AND m.state='member' AND m.role<>'guardian' AND u.id<>$2 AND u.cohort=$3 AND u.is_active AND lower(u.username)=ANY($4) AND NOT EXISTS(SELECT 1 FROM safety_block b WHERE (b.blocker_id=$2 AND b.blocked_id=u.id) OR (b.blocker_id=u.id AND b.blocked_id=$2))`, v.ID, a.ID, v.Cohort, names)
+	rows, err := tx.Query(ctx, `SELECT u.id FROM social_membership m JOIN accounts_user u ON u.id=m.user_id WHERE m.activity_id=$1 AND m.state='member' AND m.role<>'guardian' AND u.id<>$2 AND u.cohort=$3 AND u.is_active AND lower(u.username)=ANY($4) AND NOT EXISTS(SELECT 1 FROM safety_block b WHERE (b.blocker_id=$2 AND b.blocked_id=u.id) OR (b.blocker_id=u.id AND b.blocked_id=$2))`, v.ID, a.ID, v.Cohort, names)
 	if err != nil {
 		return err
 	}
@@ -421,9 +422,6 @@ func (s *Service) mentions(ctx context.Context, tx pgx.Tx, a Actor, v threadStat
 		return err
 	}
 	url := fmt.Sprintf("/activities/%d/", v.ID)
-	if v.Kind == "group" {
-		url = fmt.Sprintf("/groups/%d/", v.ID)
-	}
 	for _, id := range ids {
 		if err := s.notify(ctx, tx, id, "mention", "Someone mentioned you", v.Title, url); err != nil {
 			return err

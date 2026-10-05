@@ -257,7 +257,11 @@ func (s *Service) messagesHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if versioned {
 		cursor := ""
-		if len(data) > limit {
+		if len(data) > limit && before <= 0 && after > 0 {
+			// Forward pages ascend: keep the oldest unseen messages. The client
+			// continues with after=<last id>, so nothing pending is skipped.
+			data = data[:limit]
+		} else if len(data) > limit {
 			data = data[1:]
 			if len(data) > 0 {
 				cursor = strconv.FormatInt(data[0].(map[string]any)["id"].(int64), 10)

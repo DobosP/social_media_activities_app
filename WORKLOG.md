@@ -3,6 +3,22 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-05 — Group mentions and forward message history (GO-PRIV-05, GO-PRIV-08)
+
+Valid until: `fix/go-privacy-low` is integrated or superseded — then treat as history.
+
+GO-PRIV-05: `social.mentions` returns early for group threads, as the reference `_ping_mentioned` does, so
+a standing group never turns names into pings; activity threads are unchanged. GO-PRIV-08: a v1
+`?after=X` history page with more than `limit` unseen messages dropped the oldest one; forward pages now
+keep the oldest `limit` rows and the client continues with `after=<last id>` (`next_cursor` stays empty in
+forward mode). The reference has the same `msgs[1:]` trim (apps/messaging/views.py:342): recorded as a
+reference bug, not changed there. GO-PRIV-06 does not reproduce on `feat/go-native-toolchain` (the
+in-memory limiter became PostgreSQL budgets, ADR-0037); budget capacity is G3's `fix/go-budget-families`.
+New PostgreSQL tests TestPostgresGroupThreadPingResolvesNoMentions and
+TestPostgresV1AfterHistoryKeepsOldestPendingMessage fail with the fix reverted. WSL Go 1.27.1, fixture
+social_g2, code head 3d8add6 on base 778470d: gofmt/vet/-race (hermetic) social+messaging ok; lanes social 42 and messaging 48
+top-level pass, 0 skip, 0 fail; `git diff --check` clean. Not run: other lanes (unaffected packages).
+
 ## 2026-10-05 — Go landing governance record corrected (ADR-0040)
 
 Valid until: `docs/go-governance-record` lands or is superseded — then treat as history.
