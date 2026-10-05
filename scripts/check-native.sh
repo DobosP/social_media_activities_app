@@ -10,7 +10,8 @@ if ! native_go=$(command -v "$native_go"); then
   echo "check-native.sh: Go executable not found: ${1:-go}" >&2
   exit 2
 fi
-native_goroot=$("$native_go" env GOROOT)
+# Ask the module's own toolchain, which may differ from the first go on PATH.
+native_goroot=$("$native_go" -C "$native_root/services/server" env GOROOT)
 native_gofmt=$native_goroot/bin/gofmt
 if [[ -z $native_goroot || ! -x $native_gofmt ]]; then
   echo "check-native.sh: gofmt not found at GOROOT/bin/gofmt ($native_gofmt)" >&2
@@ -31,5 +32,16 @@ for native_module in services/server services/authcore services/agentapi; do
   "$native_go" -C "$native_root/$native_module" vet ./...
   "$native_go" -C "$native_root/$native_module" test -race ./...
 done
-node --test "$native_root/services/server/internal/web/assets/meetups-worker.test.mjs"
+# TAP output is stable across Node releases; a run with zero passing tests fails.
+native_worker=$(node --test --test-reporter=tap "$native_root/services/server/internal/web/assets/meetups-worker.test.mjs")
+printf '%s\n' "$native_worker"
+native_worker_passed=
+while IFS= read -r native_line; do
+  native_line=${native_line%$'\r'}
+  if [[ $native_line =~ ^#\ pass\ ([0-9]+)$ ]]; then native_worker_passed=${BASH_REMATCH[1]}; fi
+done <<<"$native_worker"
+if [[ -z $native_worker_passed ]] || ((10#$native_worker_passed == 0)); then
+  echo 'check-native.sh: offline service-worker test reported no passing tests' >&2
+  exit 1
+fi
 git -C "$native_root" diff --check

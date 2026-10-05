@@ -17,7 +17,7 @@ Last verified: 2026-10-05
 
 | Scope | Command | Required result |
 |---|---|---|
-| Native source/hashes/hermetic tests | `scripts/check-native.sh /absolute/path/to/go` | GOROOT gofmt (missing/failing gofmt fails), portable auth hashes, vet, race, `node --test` offline service worker and whitespace pass; needs node |
+| Native source/hashes/hermetic tests | `scripts/check-native.sh /absolute/path/to/go` | GOROOT gofmt (missing/failing gofmt fails), portable auth hashes, vet, race, `node --test` offline service worker (TAP `# pass` > 0) and whitespace pass; needs node |
 | Backend only | `GOWORK=off go -C services/server test -race ./... && go -C services/server vet ./...` | pass; DB tests skipped without explicit DSN do not qualify a release |
 | Shared auth | `GOWORK=off go -C services/authcore test -race ./... && go -C services/authcore vet ./...` | pass |
 | Public service | `GOWORK=off go -C services/agentapi test -race ./... && go -C services/agentapi vet ./...` | pass; loopback test sockets permitted |

@@ -72,10 +72,15 @@ printf '%s\n' 'testing: warning: no tests to run' 'PASS' >"$gates_tmp/none.log"
 printf '%s\n' '=== RUN   TestA' '--- PASS: TestA (0.00s)' '=== RUN   TestB' \
   '--- PASS: TestB (0.01s)' 'PASS' >"$gates_tmp/pass.log"
 
-# run_qualify CASE LOG UNAME
+# A grep that errors (exit 2) in one mode (-q or -c) and is real grep otherwise.
+stub "$gates_tmp/grep-fail" grep "for a; do [[ \$a == -\$NATIVE_GATES_GREP_FAIL ]] && { echo 'grep-stub: forced error' >&2; exit 2; }; done
+exec $(printf '%q' "$(command -v grep)") \"\$@\""
+
+# run_qualify CASE LOG UNAME [GREP_FAIL_MODE]
 run_qualify() {
-  local status=0
-  PATH=$gates_bin:$qualify_bin NATIVE_GATES_DOCKER_LOG=$gates_tmp/$2 NATIVE_GATES_UNAME=$3 \
+  local status=0 path=$gates_bin:$qualify_bin
+  [[ -z ${4:-} ]] || path=$gates_tmp/grep-fail:$path
+  PATH=$path NATIVE_GATES_DOCKER_LOG=$gates_tmp/$2 NATIVE_GATES_UNAME=$3 NATIVE_GATES_GREP_FAIL=${4:-} \
     "$gates_bash" "$gates_dir/qualify-native.sh" "$qualify_bin/go" social-native:fixture fixture-net \
     'postgres://fixture:fixture@db.invalid:5432/fixture' "$gates_tmp/scratch-$1" \
     >"$gates_tmp/$1.out" 2>"$gates_tmp/$1.err" || status=$?
@@ -89,35 +94,56 @@ gates_status=0; run_qualify c pass.log Linux || gates_status=$?
 expect 'c qualify: only --- PASS lines pass' zero "$gates_status" "$gates_tmp/c.out" 'configuration: 2 native tests passed; no skips'
 gates_status=0; run_qualify i pass.log Darwin || gates_status=$?
 expect 'i qualify: non-Linux host is refused' nonzero "$gates_status" "$gates_tmp/i.err" 'must run on a Linux host'
+gates_status=0; run_qualify j pass.log Linux q || gates_status=$?
+expect 'j qualify: grep -q erroring fails the lane' nonzero "$gates_status" "$gates_tmp/j.err" 'Could not scan'
+gates_status=0; run_qualify k pass.log Linux c || gates_status=$?
+expect 'k qualify: grep -c erroring fails the lane' nonzero "$gates_status" "$gates_tmp/k.err" 'no native tests ran in configuration'
 
-# --- check-native.sh: stub go reports a temp GOROOT whose bin/ holds gofmt (or not).
-stub "$gates_tmp/node-bin" node 'echo "node-stub $*"'
-# run_check CASE GOFMT_BODY|- NODE(yes|no)
+# --- check-native.sh: stub go reports a temp GOROOT whose bin/ holds gofmt (or not);
+# stub node prints a TAP summary with NATIVE_GATES_NODE_PASS passing tests.
+stub "$gates_tmp/node-bin" node 'echo "node-stub $*"
+printf "%s\n" "1..$NATIVE_GATES_NODE_PASS" "# tests $NATIVE_GATES_NODE_PASS" "# pass $NATIVE_GATES_NODE_PASS" "# fail 0"'
+# run_check CASE GOFMT_BODY|- NODE(pass|zero|none) GO_ENV(ok|fail|empty) [GO_ARG]
 run_check() {
-  local status=0 goroot=$gates_tmp/goroot-$1 path=$gates_bin
-  stub "$goroot/bin" go "case \${1:-} in
-  env) [[ \${2:-} == GOROOT ]] && { printf '%s\\n' $(printf '%q' "$goroot"); exit 0; };;
-  -C) case \${3:-} in run|vet|test) exit 0;; esac;;
-esac
+  local status=0 goroot=$gates_tmp/goroot-$1 path=$gates_bin node_pass=4
+  stub "$goroot/bin" go "if [[ \${1:-} == -C && \${3:-} == env && \${4:-} == GOROOT ]]; then
+  case \$NATIVE_GATES_GO_ENV in
+    ok) printf '%s\\n' $(printf '%q' "$goroot");;
+    empty) echo;;
+    *) echo 'go-stub: env failed' >&2; exit 1;;
+  esac
+  exit 0
+fi
+if [[ \${1:-} == -C ]]; then case \${3:-} in run|vet|test) exit 0;; esac; fi
 echo \"go-stub: unexpected \$*\" >&2
 exit 2"
   [[ $2 == - ]] || stub "$goroot/bin" gofmt "$2"
   path=$path:$goroot/bin
-  [[ $3 == no ]] || path=$path:$gates_tmp/node-bin
-  PATH=$path "$gates_bash" "$gates_dir/check-native.sh" go \
+  [[ $3 == none ]] || path=$path:$gates_tmp/node-bin
+  [[ $3 != zero ]] || node_pass=0
+  PATH=$path NATIVE_GATES_GO_ENV=$4 NATIVE_GATES_NODE_PASS=$node_pass \
+    "$gates_bash" "$gates_dir/check-native.sh" "${5:-go}" \
     >"$gates_tmp/$1.out" 2>"$gates_tmp/$1.err" || status=$?
   return "$status"
 }
-gates_status=0; run_check d - yes || gates_status=$?
+gates_status=0; run_check d - pass ok || gates_status=$?
 expect 'd check: GOROOT without bin/gofmt fails' nonzero "$gates_status" "$gates_tmp/d.err" 'gofmt not found'
-gates_status=0; run_check e 'echo services/server/internal/fixture/unformatted.go' yes || gates_status=$?
+gates_status=0; run_check e 'echo services/server/internal/fixture/unformatted.go' pass ok || gates_status=$?
 expect 'e check: gofmt listing a file fails' nonzero "$gates_status"
-gates_status=0; run_check f 'exit 2' yes || gates_status=$?
+gates_status=0; run_check f 'exit 2' pass ok || gates_status=$?
 expect 'f check: gofmt erroring silently fails' nonzero "$gates_status"
-gates_status=0; run_check g 'exit 0' no || gates_status=$?
+gates_status=0; run_check g 'exit 0' none ok || gates_status=$?
 expect 'g check: node absent fails' nonzero "$gates_status" "$gates_tmp/g.err" 'node is required'
-gates_status=0; run_check h 'exit 0' yes || gates_status=$?
+gates_status=0; run_check h 'exit 0' pass ok || gates_status=$?
 expect 'h check: clean gofmt plus node runs the worker test' zero "$gates_status" "$gates_tmp/h.out" 'meetups-worker.test.mjs'
+gates_status=0; run_check l 'exit 0' pass fail || gates_status=$?
+expect 'l check: go env failing fails' nonzero "$gates_status"
+gates_status=0; run_check m 'exit 0' pass empty || gates_status=$?
+expect 'm check: empty GOROOT fails' nonzero "$gates_status" "$gates_tmp/m.err" 'gofmt not found'
+gates_status=0; run_check n 'exit 0' pass ok nosuchgo || gates_status=$?
+expect 'n check: unknown Go executable fails' nonzero "$gates_status"
+gates_status=0; run_check o 'exit 0' zero ok || gates_status=$?
+expect 'o check: worker test with zero passes fails' nonzero "$gates_status" "$gates_tmp/o.err" 'no passing tests'
 
 echo "native gate harness: $gates_passed/$gates_total passed"
 ((gates_passed == gates_total))

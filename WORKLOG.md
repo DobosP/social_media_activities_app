@@ -13,11 +13,14 @@ errors fail) and requires a positive `--- PASS:` count per lane (`no native test
 `scripts/check-native.sh` resolves Go, takes gofmt from `GOROOT/bin` (missing ⇒ exit2) and captures `gofmt -l`
 by bare assignment so a failing gofmt is fatal; `native.yml` captures its gofmt output the same way (agentapi
 stays format-checked in `go.yml`). `go.yml` agentapi format step now also captures `gofmt -l .` by bare
-assignment and fails on a non-empty list (same fail-open `test -z "$(...)"` pattern). GO-06: the embedded offline service-worker `node:test` suite now runs in
-`check-native.sh` (node required) and the `ci.yml` frontend job. F5: `runtime_verification` is relabelled as a
-manifest claim in `contracts.Check`, STATUS, the Windows TODO and agent-testing; no gate behaviour changed.
-New `scripts/test-native-gates.sh` drives both real scripts with stub go/docker/gofmt/node/uname on a restricted
-PATH without rg: 9/9 pass. Against the 07bdf5a scripts 8/9 fail (all but "gofmt listing a file fails").
+assignment and fails on a non-empty list (same fail-open `test -z "$(...)"` pattern). GO-06: the embedded
+offline service-worker `node:test` suite now runs in `check-native.sh` (node required) and the `ci.yml`
+frontend job. F5: `runtime_verification` is relabelled as a manifest claim in `contracts.Check`, STATUS, the
+Windows TODO and agent-testing; no gate behaviour changed. New `scripts/test-native-gates.sh` drives both real
+scripts with stub go/docker/gofmt/node/uname on a restricted PATH without rg. Review hardening: GOROOT comes from
+`go -C services/server env GOROOT`, the worker lane uses `--test-reporter=tap` and needs `# pass N` with N>0,
+`native.yml` runs the harness, and new cases cover grep -q/-c errors, failing `go env`, empty GOROOT, unknown Go
+and a zero-pass worker run: 15/15 pass; against the 07bdf5a scripts 13/15 fail (all but e and n).
 Windows Git Bash: `bash -n` on the three scripts, `node --test` worker suite 4/4, `git diff --check` and fleet docs
 files53/dead_links0/stale_terms0/retired_verbs0/orphans0 pass. Not run here: Go, shellcheck, docker, Linux hosts.
 
