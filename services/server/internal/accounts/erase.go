@@ -11,6 +11,12 @@ import (
 
 func (s *Service) Erase(ctx context.Context, actor, target platform.Actor) error {
 	return platform.Transaction(ctx, s.DB, func(tx pgx.Tx) error {
+		// Lock the account before changing guardianships, memberships or sessions.
+		// The guardian check follows the lock so a concurrent adult re-verification
+		// (which revokes the link under the same row lock) cannot be raced.
+		if _, err := tx.Exec(ctx, `SELECT id FROM accounts_user WHERE id=$1 FOR UPDATE`, target.ID); err != nil {
+			return err
+		}
 		if actor.ID != target.ID {
 			yes, err := s.isGuardian(ctx, tx, actor.ID, target.ID)
 			if err != nil {
@@ -19,10 +25,6 @@ func (s *Service) Erase(ctx context.Context, actor, target platform.Actor) error
 			if !yes {
 				return platform.ErrForbidden
 			}
-		}
-		// Lock the account before changing guardianships, memberships or sessions.
-		if _, err := tx.Exec(ctx, `SELECT id FROM accounts_user WHERE id=$1 FOR UPDATE`, target.ID); err != nil {
-			return err
 		}
 		rows, err := tx.Query(ctx, `SELECT ward_id FROM accounts_guardianrelationship WHERE guardian_id=$1 AND status='active'`, target.ID)
 		if err != nil {

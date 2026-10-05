@@ -252,13 +252,15 @@ func TestPrivacyCasePort6ParticipantKeyFreshAuthorityMatrixAndTwoQueryGrowth(t *
 		exec(`UPDATE accounts_guardianrelationship SET status='revoked' WHERE guardian_id=$1 AND ward_id=$2`, g.ID, a.ID)
 		denied(t, g)
 		exec(`UPDATE accounts_guardianrelationship SET status='active' WHERE guardian_id=$1 AND ward_id=$2`, g.ID, a.ID)
-		exec(`INSERT INTO safety_block(blocker_id,blocked_id,created_at) VALUES($1,$2,now())`, g.ID, a.ID)
-		// The inherited source guardian ceremony preserves transparent oversight
-		// across a ward block. Whether that block should revoke parental reading
-		// is an explicit policy-review question, not an implemented block veto.
-		read(t, g, 13)
-		t.Log("policy-review gap: ward/guardian block retains inherited transparent observer reading")
-		exec(`DELETE FROM safety_block WHERE blocker_id=$1 AND blocked_id=$2`, g.ID, a.ID)
+		// Owner decision (ADR-0045): transparent guardian oversight survives a
+		// block in either direction. Only guardian/consent revocation or
+		// moderation ends the observer reading; block-driven guardian alert
+		// suppression is a separate, unchanged safety rule.
+		for _, pair := range [][2]int64{{g.ID, a.ID}, {a.ID, g.ID}} {
+			exec(`INSERT INTO safety_block(blocker_id,blocked_id,created_at) VALUES($1,$2,now())`, pair[0], pair[1])
+			read(t, g, 13)
+			exec(`DELETE FROM safety_block WHERE blocker_id=$1 AND blocked_id=$2`, pair[0], pair[1])
+		}
 		exec(`UPDATE accounts_user SET is_active=false WHERE id=$1`, g.ID)
 		denied(t, g)
 		exec(`UPDATE accounts_user SET is_active=true WHERE id=$1`, g.ID)

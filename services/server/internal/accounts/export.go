@@ -113,6 +113,13 @@ func (s *Service) Export(ctx context.Context, a platform.Actor, self bool) (map[
 	if err != nil {
 		return nil, err
 	}
+	if !self {
+		// A guardian never reads what the child reported, nor whether they did
+		// (ADR-0045). Decisions about the ward's own account/content remain.
+		delete(safety, "reports")
+		delete(safety, "reports_total")
+		delete(safety, "reports_truncated")
+	}
 	out["safety_record"] = safety
 	sentiment := map[string]any{}
 	for _, item := range []struct{ Key, Table, Extra string }{{"reactions", "social_postreaction", ",'facet',emoji"}, {"dissents", "social_postdissent", ""}, {"concerns", "social_postconcern", ""}} {

@@ -82,3 +82,43 @@ func (s *Service) RevokeGuardian(ctx context.Context, a platform.Actor, wardID i
 		return platform.RecordAudit(ctx, tx, fresh, "guardian.revoked", "accounts.user:"+strconv.FormatInt(wardID, 10), nil)
 	})
 }
+
+// revokeAdultWard ends every guardian link and parental consent held over a user
+// whose age re-verification placed them in the adult cohort (ADR-0045). Each link
+// is audited with the ward as actor. Observer seats are pruned by the cohort-change
+// eviction that follows in the same AgeVerify transaction.
+func revokeAdultWard(ctx context.Context, tx pgx.Tx, ward platform.Actor) error {
+	// Same user-before-relationship lock order as RevokeGuardian and Erase. NO KEY
+	// UPDATE is the lock the cohort UPDATE takes anyway and still serializes with
+	// their FOR UPDATE, without blocking unrelated FK inserts on this account.
+	if _, err := tx.Exec(ctx, `SELECT id FROM accounts_user WHERE id=$1 FOR NO KEY UPDATE`, ward.ID); err != nil {
+		return err
+	}
+	rows, err := tx.Query(ctx, `UPDATE accounts_guardianrelationship SET status='revoked',updated_at=now() WHERE ward_id=$1 AND status='active' RETURNING guardian_id`, ward.ID)
+	if err != nil {
+		return err
+	}
+	guardians := []int64{}
+	for rows.Next() {
+		var id int64
+		if err = rows.Scan(&id); err != nil {
+			rows.Close()
+			return err
+		}
+		guardians = append(guardians, id)
+	}
+	err = rows.Err()
+	rows.Close()
+	if err != nil {
+		return err
+	}
+	if _, err = tx.Exec(ctx, `UPDATE accounts_parentalconsent SET status='revoked',revoked_at=now(),updated_at=now() WHERE minor_id=$1 AND status='active'`, ward.ID); err != nil {
+		return err
+	}
+	for _, id := range guardians {
+		if err = platform.RecordAudit(ctx, tx, ward, "guardian.revoked", "accounts.user:"+strconv.FormatInt(id, 10), map[string]string{"reason": "ward_adult"}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
