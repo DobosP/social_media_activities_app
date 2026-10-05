@@ -23,14 +23,20 @@ type Adapter struct {
 	Receive   func(context.Context, platform.Actor, int64, json.RawMessage, string) error
 	Payload   func(context.Context, platform.Actor, Event) (map[string]any, error)
 }
+
+// Config bounds each socket. Inbound frames spend one token from a bucket that
+// refills once per FrameInterval up to FrameBurst, and typing is accepted at
+// most once per TypingInterval; see frameLimiter.
 type Config struct {
 	OriginPatterns                             []string
 	ReadLimit                                  int64
 	WriteTimeout, IdleTimeout, RecheckInterval time.Duration
+	FrameInterval, TypingInterval              time.Duration
+	FrameBurst                                 int
 }
 
 func DefaultConfig() Config {
-	return Config{ReadLimit: 2 << 20, WriteTimeout: 10 * time.Second, IdleTimeout: 30 * time.Minute, RecheckInterval: 30 * time.Second}
+	return Config{ReadLimit: 2 << 20, WriteTimeout: 10 * time.Second, IdleTimeout: 30 * time.Minute, RecheckInterval: 30 * time.Second, FrameInterval: 200 * time.Millisecond, FrameBurst: 10, TypingInterval: typingWindow}
 }
 
 type Server struct {
@@ -38,10 +44,11 @@ type Server struct {
 	authority Authority
 	adapters  map[string]Adapter
 	cfg       Config
+	Now       func() time.Time
 }
 
 func NewServer(b *Broker, a Authority, adapters map[string]Adapter, c Config) (*Server, error) {
-	if b == nil || a == nil || c.ReadLimit <= 0 || c.ReadLimit > 2<<20 || c.WriteTimeout <= 0 || c.WriteTimeout > 30*time.Second || c.IdleTimeout <= 0 || c.IdleTimeout > time.Hour || c.RecheckInterval < time.Second || c.RecheckInterval > time.Minute {
+	if b == nil || a == nil || c.ReadLimit <= 0 || c.ReadLimit > 2<<20 || c.WriteTimeout <= 0 || c.WriteTimeout > 30*time.Second || c.IdleTimeout <= 0 || c.IdleTimeout > time.Hour || c.RecheckInterval < time.Second || c.RecheckInterval > time.Minute || c.FrameInterval <= 0 || c.FrameInterval > time.Minute || c.FrameBurst < 1 || c.FrameBurst > 1024 || c.TypingInterval <= 0 || c.TypingInterval > time.Minute {
 		return nil, ErrUnavailable
 	}
 	for _, pattern := range c.OriginPatterns {
@@ -55,7 +62,7 @@ func NewServer(b *Broker, a Authority, adapters map[string]Adapter, c Config) (*
 			return nil, ErrUnavailable
 		}
 	}
-	return &Server{broker: b, authority: a, adapters: adapters, cfg: c}, nil
+	return &Server{broker: b, authority: a, adapters: adapters, cfg: c, Now: time.Now}, nil
 }
 func (s *Server) Register(mux *http.ServeMux) {
 	for _, kind := range []string{"chat", "messaging"} {
@@ -127,6 +134,7 @@ func (s *Server) handler(kind string) http.HandlerFunc {
 			return conn.Write(sendCtx, websocket.MessageText, raw)
 		}
 		closePermission := func() { _ = conn.Close(websocket.StatusCode(4403), "Permission revoked."); cancel() }
+		limiter := newFrameLimiter(s.cfg, s.Now)
 		readDone := make(chan struct{})
 		go func() {
 			defer close(readDone)
@@ -140,6 +148,16 @@ func (s *Server) handler(kind string) http.HandlerFunc {
 				}
 				if typ != websocket.MessageText {
 					_ = conn.Close(websocket.StatusUnsupportedData, "JSON text required.")
+					cancel()
+					return
+				}
+				// Metering precedes authorization: a dropped frame costs no
+				// database work, and excess typing never closes the socket.
+				switch limiter.allow(typingFrame(body)) {
+				case frameDrop:
+					continue
+				case frameAbuse:
+					_ = conn.Close(websocket.StatusPolicyViolation, "Too many messages.")
 					cancel()
 					return
 				}
@@ -180,7 +198,7 @@ func (s *Server) handler(kind string) http.HandlerFunc {
 					return
 				}
 			case event := <-sub.events:
-				if event.Event == "typing" && event.Sender == sender {
+				if transient(event) && event.Sender == sender {
 					continue
 				}
 				actor, e := s.authorized(ctx, r, kind, id)
