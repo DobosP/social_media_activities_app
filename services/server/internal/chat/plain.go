@@ -38,6 +38,11 @@ func PlainAdapter(b *Broker, c PlainCallbacks) (Adapter, error) {
 				return platform.ErrInvalid
 			}
 			if body.Type == "typing" {
+				// Coalesced per (room, actor) before the identity lookup; a
+				// suppressed typing signal is a silent transport no-op.
+				if !b.typing.allow(id, a.ID) {
+					return nil
+				}
 				info, e := c.Typing(ctx, a, id)
 				if e != nil || info == nil {
 					return nil
@@ -68,7 +73,9 @@ func PlainAdapter(b *Broker, c PlainCallbacks) (Adapter, error) {
 				return nil, platform.ErrInvalid
 			}
 			if event.Event == "typing" {
-				info, e := c.Typing(ctx, platform.Actor{ID: event.ActorID}, event.RoomID)
+				info, e := event.typingIdentity(func() (map[string]any, error) {
+					return c.Typing(ctx, platform.Actor{ID: event.ActorID}, event.RoomID)
+				})
 				if e != nil || info == nil {
 					return nil, e
 				}

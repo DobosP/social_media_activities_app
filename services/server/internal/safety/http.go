@@ -95,6 +95,12 @@ func (s *Service) ReportHTTP(w http.ResponseWriter, r *http.Request) {
 		fail(w, platform.ErrInvalid)
 		return
 	}
+	// Eligibility precedes the debit, so refused probes never spend the budget.
+	target, err := s.ReportTarget(r.Context(), a, body.Type, body.ID)
+	if err != nil {
+		fail(w, platform.ErrNotFound)
+		return
+	}
 	allowed, err := s.allow(r.Context(), a, "report", 20, time.Hour)
 	if err != nil {
 		fail(w, err)
@@ -102,11 +108,6 @@ func (s *Service) ReportHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if !allowed {
 		fail(w, ErrRate)
-		return
-	}
-	target, err := s.ReportTarget(r.Context(), a, body.Type, body.ID)
-	if err != nil {
-		fail(w, platform.ErrNotFound)
 		return
 	}
 	id, err := s.FileReport(r.Context(), a, target, body.Reason, body.Detail)
@@ -131,6 +132,17 @@ func (s *Service) BlockHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if platform.Decode(w, r, &body) != nil || body.UserID < 1 || body.UserID == a.ID {
 		fail(w, platform.ErrInvalid)
+		return
+	}
+	// Block and unblock share one budget, charged before the target lookup so
+	// the endpoint cannot be used as a cheap account-ID existence oracle.
+	allowed, err := s.allow(r.Context(), a, "block", 30, time.Hour)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	if !allowed {
+		fail(w, ErrRate)
 		return
 	}
 	target, err := s.ResolveTarget(r.Context(), s.DB, "accounts", "user", body.UserID)

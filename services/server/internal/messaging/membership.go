@@ -115,15 +115,9 @@ func (s *Service) changeParticipant(ctx context.Context, a platform.Actor, id in
 			return e
 		}
 		a = fresh
-		if e = s.canWrite(ctx, tx, a, id); e != nil {
+		kind, cohort, e := s.canAdminister(ctx, tx, a, id)
+		if e != nil {
 			return e
-		}
-		var kind, cohort, role string
-		if e = tx.QueryRow(ctx, `SELECT c.kind,c.cohort,p.role FROM messaging_conversation c JOIN messaging_participant p ON p.conversation_id=c.id WHERE c.id=$1 AND p.user_id=$2 AND p.state='active' FOR UPDATE OF c`, id, a.ID).Scan(&kind, &cohort, &role); e != nil {
-			return e
-		}
-		if role != "admin" {
-			return platform.ErrInvalid
 		}
 		b, e := target(ctx, tx, username)
 		if e != nil {

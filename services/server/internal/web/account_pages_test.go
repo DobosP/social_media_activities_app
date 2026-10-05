@@ -51,7 +51,7 @@ func accountWebFixture(t *testing.T) (*Server, platform.Actor) {
 	soc := social.New(db, platform.RecordAudit)
 	soc.Avatar = accounts.Avatar
 	cat := catalog.New(db)
-	safe := safety.New(db, safety.Config{Accounts: acc})
+	safe := safety.New(db, safety.Config{Accounts: acc, Messaging: messaging.New(db, platform.CursorCodec{})})
 	if err = safe.Migrate(ctx); err != nil {
 		t.Fatal(err)
 	}

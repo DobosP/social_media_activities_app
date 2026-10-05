@@ -34,6 +34,11 @@ func (s *Server) reportPage(r *http.Request, a platform.Actor) (pongo2.Context, 
 	if err != nil {
 		return nil, err
 	}
+	if model == "user" && !a.IsStaff {
+		if err := s.Safety.AllowReportLookup(r.Context(), a); err != nil {
+			return nil, err
+		}
+	}
 	target, err := s.Safety.ReportTarget(r.Context(), a, model, id)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) || errors.Is(err, platform.ErrInvalid) {
@@ -41,12 +46,8 @@ func (s *Server) reportPage(r *http.Request, a platform.Actor) (pongo2.Context, 
 		}
 		return nil, err
 	}
+	// ReportTarget owns the label: never a username for a non-staff reporter.
 	label := target.Label
-	if model == "post" {
-		if err := s.DB.QueryRow(r.Context(), `SELECT COALESCE(NULLIF(u.display_name,''),u.username) FROM social_post p JOIN accounts_user u ON u.id=p.author_id WHERE p.id=$1`, id).Scan(&label); err != nil {
-			return nil, err
-		}
-	}
 	form, err := s.form(r, a, "ReportForm", nil)
 	if err != nil {
 		return nil, err
@@ -80,7 +81,7 @@ func (s *Server) reportPage(r *http.Request, a platform.Actor) (pongo2.Context, 
 func (s *Server) reportAction(w http.ResponseWriter, r *http.Request, a platform.Actor) {
 	data, err := s.reportPage(r, a)
 	if err != nil {
-		platform.Fail(w, err)
+		failPage(w, err)
 		return
 	}
 	_, response, err := s.call(r, "POST", "/api/safety/reports/", map[string]any{"target_type": data["target_type"], "target_id": data["target_id"], "reason": r.PostForm.Get("reason"), "detail": strings.TrimSpace(r.PostForm.Get("detail"))})

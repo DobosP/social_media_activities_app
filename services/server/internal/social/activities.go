@@ -337,7 +337,14 @@ func (s *Service) Join(ctx context.Context, a Actor, id int64) (int64, error) {
 func (s *Service) Leave(ctx context.Context, a Actor, id int64) (int64, error) {
 	var mid int64
 	err := s.privacyTransaction(ctx, a, func(tx pgx.Tx) error {
-		if _, err := activity(ctx, tx, a, id, true); err != nil {
+		// Leaving is a safe exit, so it mirrors the source web leave gate (same
+		// cohort, not hidden) rather than the block-aware read gate: a member
+		// blocked with the owner, either way, must always be able to go.
+		if !assigned(a) {
+			return platform.ErrNotFound
+		}
+		var activityID int64
+		if err := tx.QueryRow(ctx, `SELECT id FROM social_activity WHERE id=$1 AND cohort=$2 AND NOT is_hidden FOR UPDATE`, id, a.Cohort).Scan(&activityID); err != nil {
 			return err
 		}
 		var role, state string

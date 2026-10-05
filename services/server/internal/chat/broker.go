@@ -32,10 +32,11 @@ type Broker struct {
 	subscribers              map[*subscription]struct{}
 	ready                    atomic.Bool
 	maxTotal, maxRoom, queue int
+	typing                   *typingCoalescer
 }
 
 func NewBroker(db *pgxpool.Pool) *Broker {
-	return &Broker{db: db, subscribers: map[*subscription]struct{}{}, maxTotal: 1024, maxRoom: 256, queue: 32}
+	return &Broker{db: db, subscribers: map[*subscription]struct{}{}, maxTotal: 1024, maxRoom: 256, queue: 32, typing: newTypingCoalescer(typingWindow, 4096)}
 }
 func (b *Broker) Ready() bool { return b.ready.Load() }
 func (b *Broker) subscribe(kind string, id int64) (*subscription, error) {
@@ -63,9 +64,18 @@ func (b *Broker) unsubscribe(s *subscription) {
 	b.mu.Unlock()
 	s.close()
 }
+
+// dispatch never invalidates a socket for a transient typing event: typing is
+// dropped for a subscriber whose queue is at least half full, which keeps the
+// other half for durable events. Only a durable event that cannot be queued
+// closes the subscriber so its client reloads durable history.
 func (b *Broker) dispatch(event Event) {
 	if !ValidEvent(event) {
 		return
+	}
+	droppable := transient(event)
+	if droppable {
+		event.shared = &typingResolution{}
 	}
 	b.mu.Lock()
 	defer b.mu.Unlock()
@@ -73,13 +83,18 @@ func (b *Broker) dispatch(event Event) {
 		if s.kind != event.Kind || s.room != event.RoomID {
 			continue
 		}
+		if droppable && 2*len(s.events) >= cap(s.events) {
+			continue
+		}
 		select {
 		case <-s.done:
 			delete(b.subscribers, s)
 		case s.events <- event:
 		default:
-			s.close()
-			delete(b.subscribers, s)
+			if !droppable {
+				s.close()
+				delete(b.subscribers, s)
+			}
 		}
 	}
 }

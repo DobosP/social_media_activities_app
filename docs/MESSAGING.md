@@ -33,7 +33,10 @@ Concretely:
    - **Cohort isolation:** `can_message(a, b)` requires `a.cohort == b.cohort` and rejects the
      `unassigned` cohort, so unverified users and cross-cohort pairs can never connect.
    - **Invite-accept:** recipients opt in before any content reaches them.
-   - **Blocking:** honoured in both directions.
+   - **Blocking:** honoured in both directions for direct chats and when adding a group member; an
+     existing group chat keeps working for its other members, and admins can always remove a
+     member ([ADR-0043](adr/0043-direct-only-block-veto.md)). Moderation suspensions and bans
+     remove the account from its chats.
    - **Rate limits:** anti-spam / anti-abuse on starting conversations and sending.
    - The **key registry itself is cohort-isolated** — fetching another user's public key 404s
      unless you're allowed to contact them, so you can't even *address* someone in another cohort.

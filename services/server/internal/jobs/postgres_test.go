@@ -9,6 +9,7 @@ import (
 	"github.com/DobosP/cat_de_roman_esti/shared-go/authcore"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/accounts"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/media"
+	"github.com/DobosP/social_media_activities_app/services/server/internal/messaging"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/ops"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/safety"
@@ -99,7 +100,7 @@ func jobFixture(t *testing.T) *Runner {
 	if err = acc.Migrate(ctx); err != nil {
 		t.Fatal(err)
 	}
-	safe := safety.New(db, safety.Config{Accounts: acc})
+	safe := safety.New(db, safety.Config{Accounts: acc, Messaging: messaging.New(db, platform.CursorCodec{})})
 	if err = safe.Migrate(ctx); err != nil {
 		t.Fatal(err)
 	}

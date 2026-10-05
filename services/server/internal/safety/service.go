@@ -15,10 +15,14 @@ import (
 )
 
 type Visibility func(context.Context, platform.Querier, platform.Actor, int64) (bool, error)
+
+// Config.CanSeeUser is the person-visibility veto (Profile's 404 tier) for a
+// non-staff user report target; nil refuses every non-staff user target.
+// Reporting never borrows a read gate, so activity/post eligibility is local.
 type Config struct {
 	Accounts             *accounts.Service
-	CanSeeActivity       Visibility
-	CanReadThread        Visibility
+	CanSeeUser           Visibility
+	Messaging            accounts.GuardianMessaging
 	Now                  func() time.Time
 	UnsafeReportCooldown time.Duration
 }
@@ -162,8 +166,17 @@ func (s *Service) ResolveTarget(ctx context.Context, q platform.Querier, app, mo
 	return t, err
 }
 
-// ReportTarget applies the report endpoint's current visibility gates before
-// returning a target. HTML adapters use this same gate as the native API.
+// A post is reportable within its thread owner's cohort by anyone who holds or
+// held a seat that saw the thread: the owner, an activity member or removed
+// (left) member, or any group membership row. A pending request never saw it.
+// Blocks, hidden state, consent and current membership are deliberately absent.
+const reportablePost = `SELECT EXISTS(SELECT 1 FROM social_post p JOIN social_thread t ON t.id=p.thread_id LEFT JOIN social_activity a ON a.id=t.activity_id LEFT JOIN social_group g ON g.id=t.group_id WHERE p.id=$1 AND COALESCE(a.cohort,g.cohort)=$2 AND ((a.id IS NOT NULL AND (a.owner_id=$3 OR EXISTS(SELECT 1 FROM social_membership m WHERE m.activity_id=a.id AND m.user_id=$3 AND m.state IN ('member','removed')))) OR (g.id IS NOT NULL AND (g.owner_id=$3 OR EXISTS(SELECT 1 FROM social_groupmembership gm WHERE gm.group_id=g.id AND gm.user_id=$3)))))`
+
+// ReportTarget applies reporting's own eligibility, never a read gate: the sole
+// DSA Art-16 channel must survive a block either way with the owner, leaving,
+// lapsed consent and a hidden activity. Cohort walls remain, labels never widen
+// Profile's card, and every non-staff refusal is indistinguishable not-found.
+// HTML adapters use this same gate as the native API.
 func (s *Service) ReportTarget(ctx context.Context, a platform.Actor, model string, id int64) (Target, error) {
 	app := "social"
 	if model == "user" {
@@ -179,31 +192,61 @@ func (s *Service) ReportTarget(ctx context.Context, a platform.Actor, model stri
 	if a.IsStaff {
 		return t, nil
 	}
+	var active bool
+	var cohort string
+	err = s.DB.QueryRow(ctx, `SELECT is_active,cohort FROM accounts_user WHERE id=$1`, a.ID).Scan(&active, &cohort)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Target{}, platform.ErrNotFound
+	}
+	if err != nil {
+		return Target{}, err
+	}
+	if !active || cohort == "" || cohort == "unassigned" {
+		return Target{}, platform.ErrNotFound
+	}
+	yes := false
 	switch model {
 	case "activity":
-		if s.Config.CanSeeActivity == nil {
-			return t, platform.ErrNotFound
-		}
-		yes, err := s.Config.CanSeeActivity(ctx, s.DB, a, id)
-		if err != nil {
-			return t, err
-		}
-		if !yes {
-			return t, platform.ErrNotFound
-		}
+		err = s.DB.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM social_activity WHERE id=$1 AND cohort=$2)`, id, cohort).Scan(&yes)
 	case "post":
-		if s.Config.CanReadThread == nil {
-			return t, platform.ErrNotFound
-		}
-		yes, err := s.Config.CanReadThread(ctx, s.DB, a, t.ThreadID)
-		if err != nil {
-			return t, err
-		}
-		if !yes {
-			return t, platform.ErrNotFound
+		err = s.DB.QueryRow(ctx, reportablePost, id, cohort, a.ID).Scan(&yes)
+	case "user":
+		if s.Config.CanSeeUser != nil {
+			yes, err = s.Config.CanSeeUser(ctx, s.DB, a, id)
 		}
 	}
+	if err != nil {
+		return Target{}, err
+	}
+	if !yes {
+		return Target{}, platform.ErrNotFound
+	}
+	// Eligibility is wider than read access, so labels never are: a title the
+	// read gate would hide (owner block either way, moderation hidden) and a name
+	// across a block become generic. Profile hides usernames; labels never show one.
+	if model == "activity" {
+		err = s.DB.QueryRow(ctx, `SELECT CASE WHEN NOT a.is_hidden AND NOT EXISTS(SELECT 1 FROM safety_block b WHERE (b.blocker_id=$2 AND b.blocked_id=a.owner_id) OR (b.blocker_id=a.owner_id AND b.blocked_id=$2)) THEN a.title ELSE 'this activity' END FROM social_activity a WHERE a.id=$1`, id, a.ID).Scan(&t.Label)
+	} else {
+		err = s.DB.QueryRow(ctx, `SELECT CASE WHEN EXISTS(SELECT 1 FROM safety_block b WHERE (b.blocker_id=$2 AND b.blocked_id=u.id) OR (b.blocker_id=u.id AND b.blocked_id=$2)) THEN 'A member' ELSE COALESCE(NULLIF(u.display_name,''),'A member') END FROM accounts_user u WHERE u.id=$1`, t.Affected, a.ID).Scan(&t.Label)
+	}
+	if err != nil {
+		return Target{}, err
+	}
 	return t, nil
+}
+
+// AllowReportLookup meters the report page's user-target lookups like profile
+// cards (owner decision 2026-10-05, ADR-0041), so the page cannot enumerate
+// same-cohort names by sequential id. Refused lookups are charged too.
+func (s *Service) AllowReportLookup(ctx context.Context, a platform.Actor) error {
+	allowed, err := s.allow(ctx, a, "report_lookup", 240, time.Hour)
+	if err != nil {
+		return err
+	}
+	if !allowed {
+		return ErrRate
+	}
+	return nil
 }
 
 // Delivery is best-effort and savepoint-isolated. A notification failure must
@@ -317,6 +360,15 @@ func (s *Service) TakeAction(ctx context.Context, a platform.Actor, target Targe
 		}
 		if target.App == "accounts" && target.Model == "user" && (input.Decision == "suspend" || input.Decision == "timed_ban" || input.Decision == "ban") {
 			if _, err := tx.Exec(ctx, `UPDATE accounts_user SET is_active=false WHERE id=$1`, target.ID); err != nil {
+				return err
+			}
+			// A sanctioned account leaves every conversation (and orphaned
+			// guardian observers are pruned) in this same transaction, so its
+			// stale rows can never stall a group. Without messaging, fail closed.
+			if s.Config.Messaging == nil {
+				return errors.New("messaging revocation unavailable")
+			}
+			if err := s.Config.Messaging.RemoveUser(ctx, tx, target.ID, "moderation_"+input.Decision); err != nil {
 				return err
 			}
 			if input.Decision == "ban" {

@@ -71,10 +71,12 @@ func (s *Service) ImportLicensedPlaceCover(ctx context.Context, placeID int64, p
 			return err
 		}
 		created = true
-		if err = saveManifest(ctx, tx, "place-cover", id, manifest); err != nil {
+		// The acquired-byte digest is licensed-provenance evidence for a public
+		// Commons file, so this manifest keeps it; the audit row does not.
+		if err = saveManifest(ctx, tx, "place-cover", id, minimisedManifest(manifest, true)); err != nil {
 			return err
 		}
-		return platform.RecordAudit(ctx, tx, platform.Actor{}, "place.cover_resolved", fmt.Sprintf("places.place:%d", placeID), map[string]any{"source": "wikimedia", "license": license, "source_sha256": manifest.SourceSHA256})
+		return platform.RecordAudit(ctx, tx, platform.Actor{}, "place.cover_resolved", fmt.Sprintf("places.place:%d", placeID), map[string]any{"source": "wikimedia", "license": license})
 	})
 	if err == nil && created {
 		published = true

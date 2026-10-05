@@ -217,8 +217,12 @@ func (s *Server) SocialAction(w http.ResponseWriter, r *http.Request, a platform
 		return true
 	}
 	// Parent visibility is established before all identifier-addressed actions.
+	// The safe exit is the exception: a member blocked with the owner loses the
+	// block-aware page but keeps the unsafe tap and leave, whose services own
+	// their membership/cohort gates.
 	var parent map[string]any
-	if strings.HasPrefix(name, "activity_") || name == "membership_vote" {
+	safeExit := name == "activity_unsafe" || name == "activity_leave"
+	if strings.HasPrefix(name, "activity_") && !safeExit || name == "membership_vote" {
 		var err error
 		parent, err = s.socialActivity(ctx, a, pk)
 		if err != nil {
@@ -303,6 +307,12 @@ func (s *Server) SocialAction(w http.ResponseWriter, r *http.Request, a platform
 		_, err = s.Social.Join(ctx, a, pk)
 	case "activity_leave":
 		_, err = s.Social.Leave(ctx, a, pk)
+		if err == nil {
+			// After leaving under an owner block the page is gone too.
+			if _, e := s.Social.Activity(ctx, a, pk); e != nil {
+				target = routeURL("my_meetups")
+			}
+		}
 	case "activity_cancel":
 		err = s.Social.CancelActivity(ctx, a, pk, r.PostForm.Get("reason"))
 	case "activity_set_supervision":

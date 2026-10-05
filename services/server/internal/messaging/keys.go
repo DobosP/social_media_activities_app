@@ -204,6 +204,7 @@ func (s *Service) ParticipantKeys(ctx context.Context, a platform.Actor, id int6
 	// Read current viewer authority together with the participant/cohort row.
 	// Combining these predicates preserves the ordinary CanView gates without
 	// turning a bounded key roster into per-participant permission queries.
+	// The block clause mirrors CanView: direct chats only, active peers only.
 	var role, kind string
 	var ok bool
 	e := s.DB.QueryRow(ctx, `SELECT mine.role,c.kind,u.is_active AND mine.state='active' AND (
@@ -211,7 +212,7 @@ mine.role='guardian' OR (
 u.is_identity_verified AND u.cohort<>'' AND u.cohort<>'unassigned' AND u.cohort=c.cohort
 AND COALESCE((SELECT expires_at IS NULL OR expires_at>now() FROM accounts_ageassurance WHERE user_id=u.id ORDER BY verified_at DESC,id DESC LIMIT 1),true)
 AND (u.age_band<>'under_16' OR EXISTS(SELECT 1 FROM accounts_parentalconsent WHERE minor_id=u.id AND status='active' AND (expires_at IS NULL OR expires_at>now())))
-AND NOT EXISTS(SELECT 1 FROM messaging_participant p JOIN safety_block b ON (b.blocker_id=u.id AND b.blocked_id=p.user_id) OR (b.blocker_id=p.user_id AND b.blocked_id=u.id) WHERE p.conversation_id=c.id AND p.state='active' AND p.role<>'guardian')
+AND (c.kind<>'direct' OR NOT EXISTS(SELECT 1 FROM messaging_participant p JOIN accounts_user pu ON pu.id=p.user_id AND pu.is_active JOIN safety_block b ON (b.blocker_id=u.id AND b.blocked_id=p.user_id) OR (b.blocker_id=p.user_id AND b.blocked_id=u.id) WHERE p.conversation_id=c.id AND p.state='active' AND p.role<>'guardian' AND p.user_id<>u.id))
 )) FROM accounts_user u JOIN messaging_participant mine ON mine.user_id=u.id JOIN messaging_conversation c ON c.id=mine.conversation_id WHERE u.id=$1 AND c.id=$2`, a.ID, id).Scan(&role, &kind, &ok)
 	if errors.Is(e, pgx.ErrNoRows) {
 		return nil, platform.ErrForbidden
@@ -228,7 +229,7 @@ AND NOT EXISTS(SELECT 1 FROM messaging_participant p JOIN safety_block b ON (b.b
 	if !ok {
 		return nil, platform.ErrForbidden
 	}
-	rows, e := s.DB.Query(ctx, `SELECT u.public_id::text,u.username,u.display_name,p.role,k.public_jwk FROM messaging_participant p JOIN accounts_user u ON u.id=p.user_id JOIN messaging_publickey k ON k.user_id=u.id AND k.active WHERE p.conversation_id=$1 AND p.state='active' ORDER BY p.id LIMIT 257`, id)
+	rows, e := s.DB.Query(ctx, `SELECT u.public_id::text,u.username,u.display_name,p.role,k.public_jwk FROM messaging_participant p JOIN accounts_user u ON u.id=p.user_id JOIN messaging_publickey k ON k.user_id=u.id AND k.active WHERE p.conversation_id=$1 AND p.state='active' AND u.is_active ORDER BY p.id LIMIT 257`, id)
 	if e != nil {
 		return nil, e
 	}

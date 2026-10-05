@@ -2,6 +2,7 @@ package safety
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -63,19 +64,52 @@ func TestPostgresSafetyRatePoliciesFixedWindowAndOverflowBound(t *testing.T) {
 	}
 }
 
+func TestPostgresBlockBudgetSharedAndBeforeTargetLookup(t *testing.T) {
+	s := safetyFixture(t)
+	ctx := context.Background()
+	a := user(t, s, "block-budget-actor", false)
+	b := user(t, s, "block-budget-target", false)
+	body := fmt.Sprintf(`{"user_id":%d}`, b.ID)
+	for i := range 30 {
+		method := "POST"
+		if i%2 == 1 {
+			method = "DELETE"
+		}
+		if out := request(s, a, method, "/api/safety/blocks/", body); out.Code != 204 {
+			t.Fatalf("block budget refused early: attempt=%d code=%d", i, out.Code)
+		}
+	}
+	// One counter covers block and unblock, and it is charged before the target
+	// lookup: an unknown account ID gets 429, not an existence answer.
+	for _, method := range []string{"POST", "DELETE"} {
+		if out := request(s, a, method, "/api/safety/blocks/", `{"user_id":999999999}`); out.Code != 429 {
+			t.Fatalf("block budget not enforced: method=%s code=%d", method, out.Code)
+		}
+	}
+	var count int
+	if err := s.DB.QueryRow(ctx, `SELECT count FROM safety_go_actionbudget WHERE user_id=$1 AND action='block'`, a.ID).Scan(&count); err != nil || count != 30 {
+		t.Fatalf("block budget count=%d err=%v", count, err)
+	}
+}
+
 func TestPostgresUnsafeRatePolicyKeepsRepeatFreeAndShared(t *testing.T) {
 	s := safetyFixture(t)
 	a := user(t, s, "synthetic-unsafe-rate-owner", false)
 	ctx := context.Background()
 	now := time.Now().UTC().Truncate(time.Microsecond)
 	s.Config.Now = func() time.Time { return now }
-	s.Config.CanSeeActivity = func(context.Context, platform.Querier, platform.Actor, int64) (bool, error) { return true, nil }
 	s.RatePolicies = map[string]budgets.Policy{"unsafe_report": {Limit: 1, Window: 2 * time.Minute}}
 	replica := New(s.DB, s.Config)
 	replica.RatePolicies = s.RatePolicies
+	// The service owns the safe-exit seat gate: a is a current member of
+	// activities organised by someone else.
+	organiser := user(t, s, "synthetic-unsafe-rate-organiser", false)
 	ids := make([]int64, 2)
 	for i := range ids {
-		if err := s.DB.QueryRow(ctx, `INSERT INTO social_activity(title,description,starts_at,ends_at,cohort,join_threshold,owner_can_override,capacity,status,created_at,updated_at,activity_type_id,owner_id,place_id,guardian_accompanied,is_hidden,meeting_point,organizer_note,what_to_bring,accessibility_notes,beginners_welcome,cost_band,difficulty,go_confirmed_at,min_to_go,series_id,supervised,first_time_note,is_publicly_listed,cost_amount,cost_note) VALUES('Synthetic unsafe rate meetup','',now()+interval '1 day',NULL,'adult',0.666666,false,NULL,'open',now(),now(),1,$1,1,false,false,'','','','',false,'unspecified','unspecified',NULL,NULL,NULL,false,'',false,NULL,'') RETURNING id`, a.ID).Scan(&ids[i]); err != nil {
+		if err := s.DB.QueryRow(ctx, `INSERT INTO social_activity(title,description,starts_at,ends_at,cohort,join_threshold,owner_can_override,capacity,status,created_at,updated_at,activity_type_id,owner_id,place_id,guardian_accompanied,is_hidden,meeting_point,organizer_note,what_to_bring,accessibility_notes,beginners_welcome,cost_band,difficulty,go_confirmed_at,min_to_go,series_id,supervised,first_time_note,is_publicly_listed,cost_amount,cost_note) VALUES('Synthetic unsafe rate meetup','',now()+interval '1 day',NULL,'adult',0.666666,false,NULL,'open',now(),now(),1,$1,1,false,false,'','','','',false,'unspecified','unspecified',NULL,NULL,NULL,false,'',false,NULL,'') RETURNING id`, organiser.ID).Scan(&ids[i]); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := s.DB.Exec(ctx, `INSERT INTO social_membership(activity_id,user_id,role,state,attendance_intent,transit_status,brings_support_person,created_at,updated_at,decided_at) VALUES($1,$2,'member','member','unknown','none',false,now(),now(),now())`, ids[i], a.ID); err != nil {
 			t.Fatal(err)
 		}
 	}

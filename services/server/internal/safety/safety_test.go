@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/DobosP/cat_de_roman_esti/shared-go/authcore"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/accounts"
+	"github.com/DobosP/social_media_activities_app/services/server/internal/messaging"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
 	nativeschema "github.com/DobosP/social_media_activities_app/services/server/internal/schema"
 	"github.com/jackc/pgx/v5"
@@ -89,7 +90,7 @@ func safetyFixture(t *testing.T) *Service {
 	if err = acc.Migrate(ctx); err != nil {
 		t.Fatal(err)
 	}
-	s := New(db, Config{Accounts: acc})
+	s := New(db, Config{Accounts: acc, Messaging: messaging.New(db, platform.CursorCodec{})})
 	if err = s.Migrate(ctx); err != nil {
 		t.Fatal(err)
 	}
@@ -530,9 +531,17 @@ func TestNativeUnsafeIdempotencyAndBlockedGuardianTruth(t *testing.T) {
 	}
 	guardian := user(t, s, "helpful-guardian", false)
 	blocked := user(t, s, "blocked-guardian", false)
+	// Another child organises; the reporter holds an ordinary member seat.
+	organiser := user(t, s, "generated-child-organiser", false)
+	if _, err := s.DB.Exec(ctx, `UPDATE accounts_user SET cohort='child',age_band='under_16' WHERE id=$1`, organiser.ID); err != nil {
+		t.Fatal(err)
+	}
 	var activity int64
-	err := s.DB.QueryRow(ctx, `INSERT INTO social_activity(title,description,starts_at,ends_at,cohort,join_threshold,owner_can_override,capacity,status,created_at,updated_at,activity_type_id,owner_id,place_id,guardian_accompanied,is_hidden,meeting_point,organizer_note,what_to_bring,accessibility_notes,beginners_welcome,cost_band,difficulty,go_confirmed_at,min_to_go,series_id,supervised,first_time_note,is_publicly_listed,cost_amount,cost_note) VALUES('Generated child meetup','',now()+interval '1 day',NULL,'child',0.666666,false,NULL,'open',now(),now(),1,$1,1,false,false,'','','','',false,'unspecified','unspecified',NULL,NULL,NULL,false,'',false,NULL,'') RETURNING id`, child.ID).Scan(&activity)
+	err := s.DB.QueryRow(ctx, `INSERT INTO social_activity(title,description,starts_at,ends_at,cohort,join_threshold,owner_can_override,capacity,status,created_at,updated_at,activity_type_id,owner_id,place_id,guardian_accompanied,is_hidden,meeting_point,organizer_note,what_to_bring,accessibility_notes,beginners_welcome,cost_band,difficulty,go_confirmed_at,min_to_go,series_id,supervised,first_time_note,is_publicly_listed,cost_amount,cost_note) VALUES('Generated child meetup','',now()+interval '1 day',NULL,'child',0.666666,false,NULL,'open',now(),now(),1,$1,1,false,false,'','','','',false,'unspecified','unspecified',NULL,NULL,NULL,false,'',false,NULL,'') RETURNING id`, organiser.ID).Scan(&activity)
 	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.DB.Exec(ctx, `INSERT INTO social_membership(activity_id,user_id,role,state,attendance_intent,transit_status,brings_support_person,created_at,updated_at,decided_at) VALUES($1,$2,'member','member','unknown','none',false,now(),now(),now())`, activity, child.ID); err != nil {
 		t.Fatal(err)
 	}
 	for _, g := range []platform.Actor{guardian, blocked} {
@@ -543,7 +552,10 @@ func TestNativeUnsafeIdempotencyAndBlockedGuardianTruth(t *testing.T) {
 	if _, err = s.DB.Exec(ctx, `INSERT INTO safety_block(blocker_id,blocked_id,created_at) VALUES($1,$2,now())`, child.ID, blocked.ID); err != nil {
 		t.Fatal(err)
 	}
-	s.Config.CanSeeActivity = func(context.Context, platform.Querier, platform.Actor, int64) (bool, error) { return true, nil }
+	// An organiser who blocks the child first cannot pre-empt the safe exit.
+	if _, err = s.DB.Exec(ctx, `INSERT INTO safety_block(blocker_id,blocked_id,created_at) VALUES($1,$2,now())`, organiser.ID, child.ID); err != nil {
+		t.Fatal(err)
+	}
 	result, err := s.UnsafeReport(ctx, child, activity)
 	if err != nil || result.GuardiansAlerted != 1 || result.Repeat {
 		t.Fatal("unsafe guardian truth mismatch", result, err)
@@ -557,10 +569,17 @@ func TestNativeUnsafeIdempotencyAndBlockedGuardianTruth(t *testing.T) {
 	if notices != 0 {
 		t.Fatal("blocked guardian notified")
 	}
-	var detail string
-	_ = s.DB.QueryRow(ctx, `SELECT detail FROM safety_report WHERE id=$1`, result.ReportID).Scan(&detail)
+	if err = s.DB.QueryRow(ctx, `SELECT count(*) FROM notifications_notification WHERE recipient_id=$1 AND kind='system'`, guardian.ID).Scan(&notices); err != nil || notices != 1 {
+		t.Fatal("active guardian system alert", notices, err)
+	}
+	var detail, reason, app, model string
+	var target int64
+	_ = s.DB.QueryRow(ctx, `SELECT r.detail,r.reason,c.app_label,c.model,r.target_id FROM safety_report r JOIN django_content_type c ON c.id=r.target_type_id WHERE r.id=$1`, result.ReportID).Scan(&detail, &reason, &app, &model, &target)
 	if detail != UnsafeSentinel {
 		t.Fatal("panic path introduced child free text")
+	}
+	if reason != "off_platform" || app != "social" || model != "activity" || target != activity {
+		t.Fatal("unsafe report target/reason", reason, app, model, target)
 	}
 }
 

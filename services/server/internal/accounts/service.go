@@ -139,9 +139,12 @@ func (s *Service) byPublicID(ctx context.Context, q platform.Querier, public str
 func (s *Service) require(w http.ResponseWriter, r *http.Request) (platform.Actor, bool) {
 	return platform.RequireActor(w, r)
 }
+
+// isGuardian also requires the ward's CURRENT cohort to be a minor one, so a link
+// that outlived the ward's adulthood never grants erase/export/edit (ADR-0045).
 func (s *Service) isGuardian(ctx context.Context, q platform.Querier, guardian, ward int64) (bool, error) {
 	var yes bool
-	err := q.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM accounts_guardianrelationship WHERE guardian_id=$1 AND ward_id=$2 AND status='active')`, guardian, ward).Scan(&yes)
+	err := q.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM accounts_guardianrelationship g JOIN accounts_user w ON w.id=g.ward_id WHERE g.guardian_id=$1 AND g.ward_id=$2 AND g.status='active' AND w.cohort IN ('child','teen'))`, guardian, ward).Scan(&yes)
 	return yes, err
 }
 func (s *Service) ward(ctx context.Context, q platform.Querier, a platform.Actor, public string) (platform.Actor, error) {

@@ -267,6 +267,12 @@ func (s *Service) AgeVerify(w http.ResponseWriter, r *http.Request) {
 		} else if *claims.Over16 {
 			band, cohort = "16_17", "teen"
 		}
+		// Adulthood ends guardian authority in the same transaction (ADR-0045).
+		if cohort == "adult" {
+			if err := revokeAdultWard(r.Context(), tx, a); err != nil {
+				return err
+			}
+		}
 		if a.Cohort != cohort && a.Cohort != "unassigned" {
 			if err := evictParticipation(r.Context(), tx, a, "cohort_changed"); err != nil {
 				return err

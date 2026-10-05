@@ -19,6 +19,7 @@ import (
 	"github.com/DobosP/social_media_activities_app/services/server/internal/catalog"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
 	"github.com/flosch/pongo2/v6"
+	"github.com/jackc/pgx/v5"
 )
 
 const socialBlockUser = `NOT EXISTS(SELECT 1 FROM safety_block b WHERE (b.blocker_id=$1 AND b.blocked_id=u.id) OR (b.blocker_id=u.id AND b.blocked_id=$1))`
@@ -228,6 +229,9 @@ func (s *Server) SocialView(r *http.Request, a platform.Actor, name string) (pon
 		}
 	case "activity_detail":
 		data, err = s.socialActivityDetail(r, a)
+		if err == nil && data["safe_exit_only"] == true {
+			template = "web/activity_safe_exit.html"
+		}
 	case "group_detail":
 		data, err = s.socialGroupDetail(r, a)
 	case "activity_create", "activity_edit", "group_create", "series_create", "gauge_create", "gauge_convert":
@@ -464,9 +468,36 @@ func (s *Server) socialVenueFlags(ctx context.Context, pk int64) ([]string, erro
 
 var socialLogistical = regexp.MustCompile(`(?i)\b(meet|meeting|change|changed|move|moved|moving|bring|bringing|cancel|cancelled|canceled|cancelling|reschedul\w*|postpon\w*|location|venue)\b`)
 
+// socialActivitySafeExit is the only page left to a current non-guardian member
+// who is blocked with the owner, either way: the title and the safe-exit card
+// (unsafe tap, detailed report, leave). No thread, roster, place, owner or
+// logistics. Anything else keeps the original not-found.
+func (s *Server) socialActivitySafeExit(ctx context.Context, a platform.Actor, pk int64, notFound error) (pongo2.Context, error) {
+	if !a.IsActive || a.Cohort == "" || a.Cohort == "unassigned" {
+		return nil, notFound
+	}
+	var activityID int64
+	var title string
+	err := s.DB.QueryRow(ctx, `SELECT a.id,a.title FROM social_activity a JOIN social_membership m ON m.activity_id=a.id AND m.user_id=$1 AND m.state='member' AND m.role<>'guardian' WHERE a.id=$2 AND a.cohort=$3 AND NOT a.is_hidden AND a.owner_id<>$1 AND EXISTS(SELECT 1 FROM safety_block b WHERE (b.blocker_id=$1 AND b.blocked_id=a.owner_id) OR (b.blocker_id=a.owner_id AND b.blocked_id=$1))`, a.ID, pk, a.Cohort).Scan(&activityID, &title)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, notFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	guardians, err := s.socialGuardians(ctx, a.ID)
+	if err != nil {
+		return nil, err
+	}
+	return pongo2.Context{"activity": map[string]any{"id": activityID, "pk": activityID, "title": title}, "user": socialActor(a), "is_member": true, "is_owner": false, "my_guardians": guardians, "safe_exit_only": true}, nil
+}
+
 func (s *Server) socialActivityDetail(r *http.Request, a platform.Actor) (pongo2.Context, error) {
 	ctx := r.Context()
 	activity, err := s.socialActivity(ctx, a, id(r, "pk"))
+	if errors.Is(err, pgx.ErrNoRows) || errors.Is(err, platform.ErrNotFound) {
+		return s.socialActivitySafeExit(ctx, a, id(r, "pk"), err)
+	}
 	if err != nil {
 		return nil, err
 	}

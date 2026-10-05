@@ -77,7 +77,22 @@ func (s *Service) Start(ctx context.Context, a platform.Actor, kind string, name
 			}
 			e = tx.QueryRow(ctx, `SELECT c.id FROM messaging_conversation c JOIN messaging_participant a ON a.conversation_id=c.id JOIN messaging_participant b ON b.conversation_id=c.id WHERE c.kind='direct' AND a.user_id=$1 AND b.user_id=$2 ORDER BY c.updated_at DESC,c.id DESC LIMIT 1`, a.ID, targets[0].ID).Scan(&result)
 			if e == nil {
-				return nil
+				// Re-invite a reused direct chat whose peer left or was removed
+				// (for example by moderation). pair() above re-checked cohort,
+				// participation and blocks; the peer must accept again. A
+				// starter who left or was removed never re-enters on their own
+				// while the peer is still active: the peer re-invites them.
+				tag, e := tx.Exec(ctx, `UPDATE messaging_participant p SET state=CASE WHEN p.user_id=$2 THEN 'active' ELSE 'invited' END,invited_by_id=CASE WHEN p.user_id=$2 THEN p.invited_by_id ELSE $2 END WHERE p.conversation_id=$1 AND p.user_id IN($2,$3) AND p.state IN('left','removed') AND (p.user_id=$3 OR NOT EXISTS(SELECT 1 FROM messaging_participant o WHERE o.conversation_id=$1 AND o.user_id=$3 AND o.state='active'))`, result, a.ID, targets[0].ID)
+				if e != nil {
+					return e
+				}
+				if tag.RowsAffected() == 0 {
+					return nil
+				}
+				if e = s.budget(ctx, tx, a.ID, "messaging_start", 20); e != nil {
+					return e
+				}
+				return platform.RecordAudit(ctx, tx, a, "messaging.direct_reinvited", fmt.Sprintf("messaging.conversation:%d", result), map[string]any{"reinvited": tag.RowsAffected()})
 			}
 			if !errors.Is(e, pgx.ErrNoRows) {
 				return e
@@ -110,70 +125,45 @@ func trim(s string, n int) string {
 	return string(r)
 }
 
-func userRefs(ctx context.Context, q platform.Querier, ids []int64) (map[int64]any, error) {
-	out := map[int64]any{}
-	if len(ids) == 0 {
-		return out, nil
+// addUserAvatars keeps the shared bounded avatar projection after roster/sender
+// identities have been read with their owning rows. Rows must already be closed.
+func addUserAvatars(ctx context.Context, q platform.Querier, ids []int64, refs map[int64]any) error {
+	avatars, err := accounts.Avatars(ctx, q, ids)
+	if err != nil {
+		return err
 	}
-	rows, e := q.Query(ctx, `SELECT id,public_id::text,username,display_name FROM accounts_user WHERE id=ANY($1)`, ids)
-	if e != nil {
-		return nil, e
-	}
-	for rows.Next() {
-		var id int64
-		var publicID, username, display string
-		if e = rows.Scan(&id, &publicID, &username, &display); e != nil {
-			rows.Close()
-			return nil, e
-		}
-		out[id] = map[string]any{"public_id": publicID, "username": username, "display_name": display}
-	}
-	e = rows.Err()
-	rows.Close()
-	if e != nil {
-		return nil, e
-	}
-	avatars, e := accounts.Avatars(ctx, q, ids)
-	if e != nil {
-		return nil, e
-	}
-	for id, ref := range out {
+	for id, ref := range refs {
 		ref.(map[string]any)["avatar"] = avatars[id]
 	}
-	return out, nil
+	return nil
 }
-func (s *Service) serializeConversations(ctx context.Context, q platform.Querier, a platform.Actor, ids []int64) (map[int64]map[string]any, error) {
+
+func scanConversations(rows pgx.Rows) ([]int64, map[int64]map[string]any, error) {
+	defer rows.Close()
+	ids := []int64{}
 	out := map[int64]map[string]any{}
-	if len(ids) == 0 {
-		return out, nil
-	}
-	if len(ids) > 100 {
-		return nil, platform.ErrInvalid
-	}
-	rows, e := q.Query(ctx, `SELECT c.id,c.kind,c.title,c.cohort,c.disappearing_seconds,c.created_at,c.updated_at,p.state,p.role FROM messaging_conversation c LEFT JOIN messaging_participant p ON p.conversation_id=c.id AND p.user_id=$2 WHERE c.id=ANY($1)`, ids, a.ID)
-	if e != nil {
-		return nil, e
-	}
 	for rows.Next() {
 		var id int64
 		var kind, title, cohort string
 		var myState, myRole *string
 		var disappearing int
 		var created, updated time.Time
-		if e = rows.Scan(&id, &kind, &title, &cohort, &disappearing, &created, &updated, &myState, &myRole); e != nil {
-			rows.Close()
-			return nil, e
+		if err := rows.Scan(&id, &kind, &title, &cohort, &disappearing, &created, &updated, &myState, &myRole); err != nil {
+			return nil, nil, err
 		}
+		ids = append(ids, id)
 		out[id] = map[string]any{"id": id, "kind": kind, "title": title, "cohort": cohort, "disappearing_seconds": disappearing, "created_at": created, "updated_at": updated, "my_state": myState, "my_role": myRole, "participants": []any{}}
 	}
-	e = rows.Err()
-	rows.Close()
-	if e != nil {
-		return nil, e
+	return ids, out, rows.Err()
+}
+
+func (s *Service) populateConversationParticipants(ctx context.Context, q platform.Querier, ids []int64, out map[int64]map[string]any) error {
+	if len(ids) == 0 {
+		return nil
 	}
-	rows, e = q.Query(ctx, `SELECT conversation_id,user_id,state,role,joined_at FROM messaging_participant WHERE conversation_id=ANY($1) AND state IN('active','invited') ORDER BY id`, ids)
-	if e != nil {
-		return nil, e
+	rows, err := q.Query(ctx, `SELECT p.conversation_id,p.user_id,p.state,p.role,p.joined_at,u.public_id::text,u.username,u.display_name FROM messaging_participant p LEFT JOIN accounts_user u ON u.id=p.user_id WHERE p.conversation_id=ANY($1) AND p.state IN('active','invited') ORDER BY p.id`, ids)
+	if err != nil {
+		return err
 	}
 	type part struct {
 		conversation, user int64
@@ -182,47 +172,76 @@ func (s *Service) serializeConversations(ctx context.Context, q platform.Querier
 	}
 	var parts []part
 	users := map[int64]bool{}
+	refs := map[int64]any{}
 	counts := map[int64]int{}
 	for rows.Next() {
 		var p part
-		if e = rows.Scan(&p.conversation, &p.user, &p.state, &p.role, &p.joined); e != nil {
+		var publicID, username, display *string
+		if err = rows.Scan(&p.conversation, &p.user, &p.state, &p.role, &p.joined, &publicID, &username, &display); err != nil {
 			rows.Close()
-			return nil, e
+			return err
+		}
+		conv := out[p.conversation]
+		if conv == nil {
+			rows.Close()
+			return platform.ErrInvalid
 		}
 		counts[p.conversation]++
 		cap := s.maxMembers()
-		if out[p.conversation]["kind"] == "direct" {
+		if conv["kind"] == "direct" {
 			cap = max(cap, 2)
 		}
 		if counts[p.conversation] > cap {
 			rows.Close()
-			return nil, platform.ErrInvalid
+			return platform.ErrInvalid
 		}
 		parts = append(parts, p)
 		users[p.user] = true
+		if publicID != nil && username != nil && display != nil {
+			refs[p.user] = map[string]any{"public_id": *publicID, "username": *username, "display_name": *display}
+		}
 	}
-	e = rows.Err()
+	err = rows.Err()
 	rows.Close()
-	if e != nil {
-		return nil, e
+	if err != nil {
+		return err
 	}
 	userIDs := make([]int64, 0, len(users))
 	for id := range users {
 		userIDs = append(userIDs, id)
 	}
-	refs, e := userRefs(ctx, q, userIDs)
-	if e != nil {
-		return nil, e
+	if err = addUserAvatars(ctx, q, userIDs, refs); err != nil {
+		return err
 	}
 	for _, p := range parts {
 		conv := out[p.conversation]
-		if conv == nil {
-			return nil, platform.ErrInvalid
-		}
 		conv["participants"] = append(conv["participants"].([]any), map[string]any{"user": refs[p.user], "state": p.state, "role": p.role, "joined_at": p.joined})
+	}
+	return nil
+}
+
+func (s *Service) serializeConversations(ctx context.Context, q platform.Querier, a platform.Actor, ids []int64) (map[int64]map[string]any, error) {
+	out := map[int64]map[string]any{}
+	if len(ids) == 0 {
+		return out, nil
+	}
+	if len(ids) > 100 {
+		return nil, platform.ErrInvalid
+	}
+	rows, err := q.Query(ctx, `SELECT c.id,c.kind,c.title,c.cohort,c.disappearing_seconds,c.created_at,c.updated_at,p.state,p.role FROM messaging_conversation c LEFT JOIN messaging_participant p ON p.conversation_id=c.id AND p.user_id=$2 WHERE c.id=ANY($1)`, ids, a.ID)
+	if err != nil {
+		return nil, err
+	}
+	_, out, err = scanConversations(rows)
+	if err != nil {
+		return nil, err
+	}
+	if err = s.populateConversationParticipants(ctx, q, ids, out); err != nil {
+		return nil, err
 	}
 	return out, nil
 }
+
 func (s *Service) conversation(ctx context.Context, q platform.Querier, a platform.Actor, id int64) (map[string]any, error) {
 	var owned bool
 	e := q.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM messaging_participant WHERE conversation_id=$1 AND user_id=$2)`, id, a.ID).Scan(&owned)
@@ -288,30 +307,20 @@ func (s *Service) Conversations(ctx context.Context, a platform.Actor, query str
 		}
 		filter = `EXISTS(SELECT 1 FROM messaging_participant p JOIN accounts_guardianrelationship g ON g.ward_id=p.user_id JOIN accounts_user u ON u.id=p.user_id WHERE p.conversation_id=c.id AND p.state='active' AND u.cohort='child' AND u.is_active AND g.guardian_id=$1 AND g.status='active')`
 	}
-	rows, e := s.DB.Query(ctx, `SELECT c.id FROM messaging_conversation c WHERE `+filter+` AND ($2='' OR c.title ILIKE '%'||$2||'%' OR EXISTS(SELECT 1 FROM messaging_participant p JOIN accounts_user u ON u.id=p.user_id WHERE p.conversation_id=c.id AND p.state IN('active','invited') AND (u.username ILIKE '%'||$2||'%' OR u.display_name ILIKE '%'||$2||'%'))) ORDER BY c.updated_at DESC,c.id DESC LIMIT $3 OFFSET $4`, a.ID, query, limit+1, offset)
+	rows, e := s.DB.Query(ctx, `SELECT c.id,c.kind,c.title,c.cohort,c.disappearing_seconds,c.created_at,c.updated_at,mine.state,mine.role FROM messaging_conversation c LEFT JOIN messaging_participant mine ON mine.conversation_id=c.id AND mine.user_id=$1 WHERE `+filter+` AND ($2='' OR c.title ILIKE '%'||$2||'%' OR EXISTS(SELECT 1 FROM messaging_participant p JOIN accounts_user u ON u.id=p.user_id WHERE p.conversation_id=c.id AND p.state IN('active','invited') AND (u.username ILIKE '%'||$2||'%' OR u.display_name ILIKE '%'||$2||'%'))) ORDER BY c.updated_at DESC,c.id DESC LIMIT $3 OFFSET $4`, a.ID, query, limit+1, offset)
 	if e != nil {
 		return nil, false, e
 	}
-	var ids []int64
-	for rows.Next() {
-		var id int64
-		if e = rows.Scan(&id); e != nil {
-			rows.Close()
-			return nil, false, e
-		}
-		ids = append(ids, id)
-	}
-	e = rows.Err()
-	rows.Close()
+	ids, serialized, e := scanConversations(rows)
 	if e != nil {
 		return nil, false, e
 	}
 	next := len(ids) > limit
 	if next {
+		delete(serialized, ids[limit])
 		ids = ids[:limit]
 	}
-	serialized, e := s.serializeConversations(ctx, s.DB, a, ids)
-	if e != nil {
+	if e = s.populateConversationParticipants(ctx, s.DB, ids, serialized); e != nil {
 		return nil, false, e
 	}
 	result := []map[string]any{}

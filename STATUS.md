@@ -68,8 +68,9 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   `docs/RELEASE_READINESS.md` §Before first deployment (audit 2026-10-05).
 - Launch is blocked on the GDPR/DPIA/DPO/parental-consent stack and production
   operations. Never apply paid infrastructure without owner authorization.
-- Audit 2026-10-05 privacy fixes (G2, WORKLOG): group-thread @mentions never resolve (reference
-  parity); v1 `after=` message history keeps the oldest unseen message.
+- Audit 2026-10-05 G2: report eligibility (ADR-0041), direct-only blocks/sanction chat eviction (ADR-0043),
+  avatar/fingerprint minimisation (ADR-0044), guardian authority (ADR-0045), co-member logistics (ADR-0046),
+  typing throttle, group mentions, message history/query ceilings and safe-exit API responses (WORKLOG).
 - Audit 2026-10-05 G3: administrator-only console; failed-login/IP admission, bounded media/runtime and budget families;
   busy avatars return503 without spending an attempt. Two snapshot producers still differ (WORKLOG, GO-EXPORT-01).
 
@@ -94,10 +95,12 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
-- 2026-10-05 G1 count guard: harness17/17; forbidden-runtime check repaired. Final combined gates/review owed.
-- G3 source `0e3e85b`: check-native and ten affected fixture lanes pass 520/0 skips; six negative overlays killed; forced sweep 790 passes; independent critic APPROVE. Receipt: WORKLOG; combined G1 Step5 and first-deployment gates remain.
-- Historical restart checkpoint:993 manifest-claimed/1678 unresolved/0invalid of2671; retirement exits1.
-  Prior overlay/reused receipts are unqualified on this combined head; detail is in WORKLOG and the Windows TODO.
+- G2 source `b0abd92`: native checks and537 tests/11 lanes,0skips/failures;13 intended fail-before failures;
+  independent critic APPROVE. Final metadata contracts5; frozen2671 inventory:999 manifest claims/1672 unresolved/0invalid.
+- G3 source `0e3e85b`: native checks and520 tests/10 lanes,0skips/failures;790 forced-sweep executions; critic APPROVE.
+- G1 count/image guards reviewed: harness17/17 and forbidden-runtime proof pass. Combined G1 Step5 remains owed.
+- Python retirement exits1; manifests are claims, not exhaustive runtime equivalence. Prior overlay/reused receipts
+  do not qualify this head; historical detail is in WORKLOG and the Windows TODO.
 
 ## Standard verification
 Native race/vet + shared-source hashes; database/codec contracts require explicit disposable fixtures

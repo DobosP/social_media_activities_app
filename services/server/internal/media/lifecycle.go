@@ -263,10 +263,10 @@ func (s *Service) UploadPlaceCover(ctx context.Context, a platform.Actor, placeI
 		if e = queueDelete(ctx, tx, old); e != nil {
 			return e
 		}
-		if e = saveManifest(ctx, tx, "place-cover", id, m); e != nil {
+		if e = saveManifest(ctx, tx, "place-cover", id, minimisedManifest(m, false)); e != nil {
 			return e
 		}
-		return platform.RecordAudit(ctx, tx, a, "media.place_cover_uploaded", fmt.Sprintf("places.place:%d", placeID), map[string]any{"cover_id": id, "source_sha256": m.SourceSHA256})
+		return platform.RecordAudit(ctx, tx, a, "media.place_cover_uploaded", fmt.Sprintf("places.place:%d", placeID), map[string]any{"cover_id": id})
 	})
 	if err == nil {
 		published = true
