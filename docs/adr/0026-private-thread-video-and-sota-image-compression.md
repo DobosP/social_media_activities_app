@@ -201,3 +201,20 @@ surface, and any future widening would need its own decision.
   **Deferred:** minor-cohort video (needs a video-CSAM matcher decision), AV1 delivery
   (revisit when decode support is universal or CPU is free), HLS/ABR (only if clips ever grow
   past the short-clip shape), PlaceCover thumbs, thumbnail backfill for pre-existing images.
+
+## 2026-10-05 — A drain never takes a claim its deadline cannot finish (review item GO-RT-05)
+
+The native job runner gave every duty a five-minute deadline, below one transcode's ten-minute
+command budget, in the scheduled pass and in the dedicated `transcode_videos` job alike. A drain
+cut there left its claim to go stale and spent one of the attachment's attempts; the third cut
+marked a valid upload failed and erased its source. That contradicted "systemd can never kill a
+clip mid-encode" above.
+
+The drain now takes a claim only while a full stale-lease window remains before its caller's
+deadline. An explicitly invoked `transcode_videos` job gets its batch size times that window
+(two windows by default, never less than the common ceiling), and the media unit's timeout
+sits above it. The scheduled
+daily pass keeps the common five-minute ceiling for every duty, so with the default window it
+claims no video and cannot delay the duties after it; the frequent media timer and the inline
+post-upload kick remain the drains. The daily entry transcodes again whenever an operator's
+configured window fits inside the duty ceiling.

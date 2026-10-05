@@ -10,22 +10,23 @@ import (
 )
 
 // The common five-minute duty ceiling is shorter than one transcode's command
-// budget. A drain cut short there spends an attempt of a valid upload.
-func TestVideoDrainDeadlineCoversItsLeaseBudget(t *testing.T) {
+// budget. An explicit video drain gets its lease budget; the scheduled pass
+// keeps the common ceiling for every duty so one drain cannot starve the rest.
+func TestManualVideoDrainDeadlineCoversItsLeaseBudget(t *testing.T) {
 	config := DefaultConfig()
 	config.Media = media.NewService(nil, nil, nil, media.TokenCodec{}, nil)
 	r := New(nil, config)
 	lease := media.DefaultPolicyConfig().VideoStaleProcessing
-	if got := r.JobTimeout("transcode_videos", DueVideoBatch); got != DueVideoBatch*lease {
+	if got := r.ManualJobTimeout("transcode_videos", DueVideoBatch); got != DueVideoBatch*lease {
 		t.Fatal("video drain timeout does not cover its claims", got)
 	}
-	if got := r.JobTimeout("transcode_videos", 0); got != lease {
+	if got := r.ManualJobTimeout("transcode_videos", 0); got != lease {
 		t.Fatal("video drain timeout lost its single-claim floor", got)
 	}
-	if got := r.JobTimeout("sync_event_feeds", DueVideoBatch); got != config.JobTimeout {
+	if got := r.ManualJobTimeout("sync_event_feeds", DueVideoBatch); got != config.JobTimeout {
 		t.Fatal("ordinary duty lost the common ceiling", got)
 	}
-	if got := New(nil, DefaultConfig()).JobTimeout("transcode_videos", DueVideoBatch); got != config.JobTimeout {
+	if got := New(nil, DefaultConfig()).ManualJobTimeout("transcode_videos", DueVideoBatch); got != config.JobTimeout {
 		t.Fatal("runner without media changed the common ceiling", got)
 	}
 	remaining := map[string]time.Duration{}
@@ -41,8 +42,9 @@ func TestVideoDrainDeadlineCoversItsLeaseBudget(t *testing.T) {
 	if _, err := r.RunDue(context.Background()); err != nil {
 		t.Fatal(err)
 	}
-	command := media.DefaultConfig(t.TempDir()).CommandTimeout
-	if remaining["transcode_videos"] <= command || remaining["purge_messaging"] <= 0 || remaining["purge_messaging"] > config.JobTimeout {
-		t.Fatal("scheduled deadlines", remaining["transcode_videos"], remaining["purge_messaging"])
+	for _, name := range []string{"transcode_videos", "purge_messaging"} {
+		if remaining[name] <= 0 || remaining[name] > config.JobTimeout {
+			t.Fatal("scheduled duty left the common ceiling", name, remaining[name])
+		}
 	}
 }

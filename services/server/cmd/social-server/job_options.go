@@ -149,7 +149,7 @@ func (call invocation) timeout(r *jobs.Runner) time.Duration {
 	if call.Limit != nil {
 		batch = *call.Limit
 	}
-	return r.JobTimeout(call.Name, batch)
+	return r.ManualJobTimeout(call.Name, batch)
 }
 
 func (call invocation) run(ctx context.Context, r *jobs.Runner) (any, error) {

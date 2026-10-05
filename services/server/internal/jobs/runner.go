@@ -144,7 +144,7 @@ func (r *Runner) RunDue(ctx context.Context) ([]Result, error) {
 	out := []Result{}
 	failures := 0
 	for _, name := range DueNames {
-		jobCtx, cancel := context.WithTimeout(ctx, r.JobTimeout(name, DueVideoBatch))
+		jobCtx, cancel := context.WithTimeout(ctx, r.Config.JobTimeout)
 		value, err := r.Run(jobCtx, name, nil)
 		if err == nil && jobCtx.Err() != nil {
 			err = jobCtx.Err()
@@ -171,13 +171,14 @@ func (r *Runner) RunDue(ctx context.Context) ([]Result, error) {
 }
 func missing() error { return errors.New("native job dependency unavailable") }
 
-// DueVideoBatch is the number of video claims one scheduled drain takes.
+// DueVideoBatch is the default number of video claims one drain may take.
 const DueVideoBatch = 2
 
-// JobTimeout is the common per-duty ceiling, except that a video drain keeps
-// its own bounded lease budget: cutting a transcode short spends one of the
-// attachment's attempts and eventually erases a valid upload.
-func (r *Runner) JobTimeout(name string, videoBatch int) time.Duration {
+// ManualJobTimeout is the deadline of one explicitly invoked job: the common
+// per-duty ceiling, except that a video drain gets its bounded lease budget so
+// every claim it takes can finish. The scheduled pass keeps the common ceiling
+// for every duty; there the drain claims nothing its remaining time cannot cover.
+func (r *Runner) ManualJobTimeout(name string, videoBatch int) time.Duration {
 	timeout := r.Config.JobTimeout
 	if name == "transcode_videos" && r.Config.Media != nil {
 		timeout = max(timeout, r.Config.Media.VideoBatchTimeout(videoBatch))

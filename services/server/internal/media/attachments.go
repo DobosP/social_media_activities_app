@@ -404,6 +404,11 @@ func (s *Service) ProcessPendingVideos(ctx context.Context, limit int) (int, err
 	}
 	completed := 0
 	for n := 0; n < limit; n++ {
+		// Never claim a video the caller's deadline cannot finish: a cut encode
+		// spends one of its attempts and the last one erases a valid upload.
+		if deadline, ok := ctx.Deadline(); ok && time.Until(deadline) < s.policy.VideoStaleProcessing {
+			break
+		}
 		var att Attachment
 		terminal := false
 		err := platform.Transaction(ctx, s.db, func(tx pgx.Tx) error {
