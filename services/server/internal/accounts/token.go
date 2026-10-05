@@ -5,8 +5,8 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
-	"net"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -37,7 +37,28 @@ func (s *Service) AuthenticateToken(r *http.Request) (platform.Actor, error) {
 	return s.actor(r.Context(), s.DB, id)
 }
 
+// crossSiteBrowserRequest reports a request that a page on another origin made
+// a browser send. Native clients send neither header. This route has no CSRF
+// token, so without the check any page could spend a named user's failed-login
+// budget on the visitor's own network.
+func crossSiteBrowserRequest(r *http.Request) bool {
+	if site := r.Header.Get("Sec-Fetch-Site"); site != "" && site != "same-origin" && site != "none" {
+		return true
+	}
+	if origin := r.Header.Get("Origin"); origin != "" {
+		u, err := url.Parse(origin)
+		if err != nil || u.Host == "" || !strings.EqualFold(u.Host, r.Host) {
+			return true
+		}
+	}
+	return false
+}
+
 func (s *Service) ObtainToken(w http.ResponseWriter, r *http.Request) {
+	if crossSiteBrowserRequest(r) {
+		platform.Error(w, 403, "Invalid request origin.")
+		return
+	}
 	var body struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
@@ -46,34 +67,39 @@ func (s *Service) ObtainToken(w http.ResponseWriter, r *http.Request) {
 		platform.Fail(w, platform.ErrInvalid)
 		return
 	}
-	address, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err != nil {
-		address = r.RemoteAddr
-	}
-	allowed, err := s.Store.AllowAuthAttempt(r.Context(), hashState("mobile:"+address), s.Config.Now())
-	if err != nil {
-		platform.Fail(w, err)
+	// Hash-free rejections come before any failure row exists.
+	if len(body.Username) > 150 || len(body.Password) > 1024 {
+		platform.Error(w, 400, "Invalid credentials.")
 		return
 	}
-	if !allowed {
+	// The per-prefix cap is the app's api.token budget on this exact route; the
+	// failed-login counter is the same username+peer pair as browser/JSON login.
+	var user authcore.User
+	valid, err := s.LoginFailures(r.Context(), body.Username, r.RemoteAddr, func(ctx context.Context) (bool, error) {
+		found, hash, err := s.Store.FindByUsername(ctx, body.Username)
+		if err != nil && !errors.Is(err, authcore.ErrNotFound) {
+			return false, err
+		}
+		exists := err == nil
+		if !exists {
+			hash = "pbkdf2_sha256$1000000$dummy$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+		}
+		verified, err := authcore.VerifyPassword(ctx, body.Password, hash)
+		if err != nil {
+			return false, err
+		}
+		user = found
+		return exists && verified, nil
+	})
+	if errors.Is(err, ErrLoginFailureLimit) {
 		platform.Error(w, 429, "Try again later.")
 		return
 	}
-	user, hash, err := s.Store.FindByUsername(r.Context(), body.Username)
-	if err != nil && !errors.Is(err, authcore.ErrNotFound) {
-		platform.Fail(w, err)
-		return
-	}
-	exists := err == nil
-	if !exists {
-		hash = "pbkdf2_sha256$1000000$dummy$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
-	}
-	valid, err := authcore.VerifyPassword(r.Context(), body.Password, hash)
 	if err != nil {
 		platform.Fail(w, err)
 		return
 	}
-	if !exists || !valid {
+	if !valid {
 		platform.Error(w, 400, "Invalid credentials.")
 		return
 	}

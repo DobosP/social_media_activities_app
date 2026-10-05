@@ -103,7 +103,9 @@ func TestPostgresExistingTokenMaintenancePrunesExpiredSharedBudgetsBoundedly(t *
 	if _, err := r.DB.Exec(ctx, `INSERT INTO authtoken_token(key,user_id,created) VALUES('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',$1,now()-interval '100 days')`, uid); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := r.DB.Exec(ctx, `INSERT INTO go_rate_budget(scope,subject,user_id,policy_limit,window_us,events,expires_at) SELECT 'maintenance.expired',decode(lpad(to_hex(i),64,'0'),'hex'),NULL,1,1000000,ARRAY[now()-interval '2 seconds'],now()-interval '1 second' FROM generate_series(1,1001) i`); err != nil {
+	// Account-owned rows (actor family, 50,000 keys): 1,001 keys exceed the
+	// 1,000-key 'other' family (ADR-0037 capacity families).
+	if _, err := r.DB.Exec(ctx, `INSERT INTO go_rate_budget(scope,subject,user_id,policy_limit,window_us,events,expires_at) SELECT 'maintenance.expired',decode(lpad(to_hex(i),64,'0'),'hex'),$1::bigint,1,1000000,ARRAY[now()-interval '2 seconds'],now()-interval '1 second' FROM generate_series(1,1001) i`, uid); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := r.DB.Exec(ctx, `INSERT INTO go_rate_budget(scope,subject,user_id,policy_limit,window_us,events,expires_at) VALUES('maintenance.live',decode(repeat('f',64),'hex'),NULL,1,3600000000,ARRAY[now()],now()+interval '1 hour')`); err != nil {

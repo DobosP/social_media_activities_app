@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/DobosP/cat_de_roman_esti/shared-go/authcore"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/accounts"
@@ -165,7 +166,14 @@ func New(ctx context.Context, db *pgxpool.Pool, config Config, migrate bool) (*A
 	if binding == "" {
 		binding = config.Secret
 	}
+	// The pinned library's store and the account service key per-prefix
+	// admission rows with the same secret.
+	store.PeerSecret = []byte(binding)
+	// serveHTTP marks, exempts or reserves every pinned attempt-store call
+	// (authAdmission, LoginPOST); anything unmarked is routing drift and fails closed.
+	store.RequirePeerMarker = true
 	accountService := accounts.New(db, auth, binding, config.Accounts)
+	accountService.Store.RequirePeerMarker = true
 	if migrate {
 		if err := accountService.Migrate(ctx); err != nil {
 			return nil, errors.New("native age-state migration failed")
@@ -198,7 +206,7 @@ func New(ctx context.Context, db *pgxpool.Pool, config Config, migrate bool) (*A
 			return nil, errors.New("native messaging migration failed")
 		}
 	}
-	a := &App{rates: requestRates{store: budgets.New(db), secret: []byte(config.Secret)}, DB: db, Config: config, Auth: auth, Accounts: accountService, Social: socialService, Media: mediaService, Store: store, Mux: http.NewServeMux()}
+	a := &App{rates: requestRates{store: budgets.New(db), secret: []byte(config.Secret), prefilter: budgets.NewPrefilter()}, DB: db, Config: config, Auth: auth, Accounts: accountService, Social: socialService, Media: mediaService, Store: store, Mux: http.NewServeMux()}
 	if config.ProxyHops < 0 || config.ProxyHops > 32 {
 		return nil, errors.New("NUM_PROXIES must be between zero and 32")
 	}
@@ -323,6 +331,9 @@ func (a *App) StartLive(ctx context.Context) {
 	}
 	a.Media.SetInlineVideoProcessing(ctx, enabled)
 	go a.Broker.Run(ctx)
+	// Expired rate histories are swept here and by expire_api_tokens, never on
+	// the request path; admission already reads an expired row as empty.
+	go a.rates.store.RunSweeper(ctx, time.Minute, 1000)
 }
 
 func (a *App) StopBackground(ctx context.Context) error {
@@ -370,9 +381,9 @@ func (a *App) serveHTTP(w http.ResponseWriter, r *http.Request) {
 		memory = 8 << 20
 	}
 	limit = min(limit, memory)
-	contentType, _, _ := mime.ParseMediaType(r.Header.Get("Content-Type"))
 	mutation := r.Method != http.MethodGet && r.Method != http.MethodHead && r.Method != http.MethodOptions
-	if mutation && contentType == "multipart/form-data" && (strings.Contains(r.URL.Path, "/media/") || strings.HasSuffix(r.URL.Path, "/attach/") || classicThreadUpload(r)) {
+	uploadRead, uploadWrite, largeUpload := uploadDeadlines(r)
+	if largeUpload {
 		limit = 82 << 20
 	}
 	// Declared oversize is rejected before authentication, decoding or disk
@@ -387,6 +398,7 @@ func (a *App) serveHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	r = a.forwardedPeer(r)
+	r = a.authAdmission(r)
 	if mutation {
 		r.Body = http.MaxBytesReader(w, r.Body, limit)
 	}
@@ -440,11 +452,74 @@ func (a *App) serveHTTP(w http.ResponseWriter, r *http.Request) {
 	if !a.admitAPI(w, r) {
 		return
 	}
-	if r.Method == http.MethodPost && (r.URL.Path == "/login/" || r.URL.Path == "/api/auth/login") {
+	// Only an admitted actor's upload outlives the server-wide timeouts; refused
+	// and anonymous bodies keep them. Nothing above reads past the CSRF prefix.
+	if _, ok := platform.ActorFrom(r); ok && uploadRead > 0 {
+		platform.ExtendDeadlines(w, uploadRead, uploadWrite)
+	}
+	if loginIntercept(r.Method, r.URL.Path) {
 		a.Accounts.LoginPOST(w, r, r.URL.Path == "/login/")
 		return
 	}
 	a.Mux.ServeHTTP(w, r)
+}
+
+// Upload deadlines cover the body cap on a slow uplink: 10 min carries 82 MiB at
+// ~1.15 Mbit/s, 3 min an 8 MiB image form at ~373 kbit/s. Writes add codec, scan
+// and storage time before the response.
+const (
+	largeUploadRead, largeUploadWrite = 10 * time.Minute, 12 * time.Minute
+	smallUploadRead, smallUploadWrite = 3 * time.Minute, 4 * time.Minute
+)
+
+// uploadDeadlines classifies multipart mutations; large is the 82 MiB media,
+// attachment and classic thread upload class, every other form is small.
+func uploadDeadlines(r *http.Request) (read, write time.Duration, large bool) {
+	contentType, _, _ := mime.ParseMediaType(r.Header.Get("Content-Type"))
+	if r.Method == http.MethodGet || r.Method == http.MethodHead || r.Method == http.MethodOptions || contentType != "multipart/form-data" {
+		return 0, 0, false
+	}
+	if strings.Contains(r.URL.Path, "/media/") || strings.HasSuffix(r.URL.Path, "/attach/") || classicThreadUpload(r) {
+		return largeUploadRead, largeUploadWrite, true
+	}
+	return smallUploadRead, smallUploadWrite, false
+}
+
+// Password login never reaches the pinned library's attempt store directly:
+// LoginPOST applies per-prefix admission and the failure counter first.
+func loginIntercept(method, path string) bool {
+	return method == http.MethodPost && (path == "/login/" || path == "/api/auth/login")
+}
+
+// authAttemptScope maps every other pinned-library route that charges its
+// attempt store to a per-prefix scope; API logout is exempt.
+func authAttemptScope(method, path string) (scope string, exempt, ok bool) {
+	switch {
+	case method == http.MethodPost && (path == "/api/auth/signup" || path == "/register/"):
+		return accounts.AuthScopeSignup, false, true
+	case method == http.MethodPost && path == "/api/auth/logout":
+		return "", true, true
+	case method == http.MethodGet && strings.HasPrefix(path, "/api/auth/oauth/") && strings.HasSuffix(path, "/start"):
+		provider := strings.TrimSuffix(strings.TrimPrefix(path, "/api/auth/oauth/"), "/start")
+		if provider != "" && !strings.Contains(provider, "/") {
+			return accounts.AuthScopeOAuthStart, false, true
+		}
+	}
+	return "", false, false
+}
+
+// authAdmission carries the trusted peer prefix to the pinned library's
+// attempt and OAuth-flow stores in request memory only.
+func (a *App) authAdmission(r *http.Request) *http.Request {
+	scope, exempt, ok := authAttemptScope(r.Method, r.URL.Path)
+	switch {
+	case !ok || a.Accounts == nil:
+		return r
+	case exempt:
+		return a.Accounts.WithPeerAdmissionExempt(r)
+	default:
+		return a.Accounts.WithPeerAdmission(r, scope)
+	}
 }
 
 func classicThreadUpload(r *http.Request) bool {

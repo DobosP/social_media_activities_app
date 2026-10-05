@@ -142,6 +142,16 @@ func jobInvocation(name string, options map[string]json.RawMessage) (invocation,
 	return call, nil
 }
 
+// timeout is the invocation's deadline; an explicit video limit scales its
+// lease budget.
+func (call invocation) timeout(r *jobs.Runner) time.Duration {
+	batch := jobs.DueVideoBatch
+	if call.Limit != nil {
+		batch = *call.Limit
+	}
+	return r.ManualJobTimeout(call.Name, batch)
+}
+
 func (call invocation) run(ctx context.Context, r *jobs.Runner) (any, error) {
 	switch call.Name {
 	case "purge_expired_attachments":

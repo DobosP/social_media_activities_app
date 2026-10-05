@@ -1,10 +1,9 @@
 package app
 
 import (
+	"context"
 	"math"
-	"net"
 	"net/http"
-	"net/netip"
 	"strconv"
 	"strings"
 	"time"
@@ -16,6 +15,18 @@ import (
 type requestRates struct {
 	store  *budgets.Store
 	secret []byte
+
+	// prefilter repeats database denials for anonymous/token peers; nil disables it.
+	prefilter *budgets.Prefilter
+	// admitPeer replaces the shared store only in tests that count admissions.
+	admitPeer func(ctx context.Context, peer, scope string, policy budgets.Policy) (budgets.Decision, error)
+}
+
+func (rates requestRates) peer(ctx context.Context, peer, scope string, policy budgets.Policy) (budgets.Decision, error) {
+	if rates.admitPeer != nil {
+		return rates.admitPeer(ctx, peer, scope, policy)
+	}
+	return rates.store.Peer(ctx, rates.secret, peer, scope, policy)
 }
 
 func (a *App) admitAPI(w http.ResponseWriter, r *http.Request) bool {
@@ -27,13 +38,8 @@ func (a *App) admitAPI(w http.ResponseWriter, r *http.Request) bool {
 	if path == "health" || path == "health/" || path == "ready" || path == "ready/" || path == "ops/csp-report/" {
 		return true
 	}
-	peer, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err != nil {
-		peer = r.RemoteAddr
-	}
-	if address, parseErr := netip.ParseAddr(peer); parseErr == nil {
-		peer = address.Unmap().String()
-	}
+	// Anonymous keys are per IPv4 address or IPv6 /64 (ADR-0037).
+	peer := platform.PeerKey(r.RemoteAddr)
 	scope, limit := "api.anonymous", a.Config.ThrottleAnonymous
 	var actorID int64
 	if r.Method == http.MethodPost && path == "auth/token/" {
@@ -52,10 +58,17 @@ func (a *App) admitAPI(w http.ResponseWriter, r *http.Request) bool {
 	}
 	policy := budgets.Policy{Limit: limit, Window: time.Minute}
 	var decision budgets.Decision
+	var err error
 	if actorID > 0 {
 		decision, err = a.rates.store.Actor(r.Context(), actorID, scope, policy)
+	} else if wait, denied := a.rates.prefilter.Denied(scope, peer, time.Now()); denied {
+		// A denial the database already made; allowed requests always reach it.
+		decision = budgets.Decision{RetryAfter: wait}
 	} else {
-		decision, err = a.rates.store.Peer(r.Context(), a.rates.secret, peer, scope, policy)
+		decision, err = a.rates.peer(r.Context(), peer, scope, policy)
+		if err == nil && !decision.Allowed {
+			a.rates.prefilter.Deny(scope, peer, time.Now(), decision.RetryAfter)
+		}
 	}
 	if err != nil {
 		platform.Error(w, http.StatusServiceUnavailable, "Request admission unavailable.")

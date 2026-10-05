@@ -9,8 +9,9 @@ Group=app
 WorkingDirectory=/home/app/social_media_activities_app
 EnvironmentFile=/home/app/social_media_activities_app/.env
 ExecStart=/usr/local/bin/social-server --due --site-root /home/app/social_media_activities_app --media-scratch /home/app/social_media_activities_app/var/media-work
-# The default oneshot timeout (~90s) would kill a long maintenance tick (e.g. the ADR-0026
-# transcode safety-net entry, or a large purge batch). One hour is generous, not unbounded.
+# The default oneshot timeout (~90s) would kill a long maintenance tick (e.g. a large purge
+# batch or a feed sync; each duty has its own five-minute ceiling). One hour is generous,
+# not unbounded. The ADR-0026 video entry claims nothing its remaining time cannot finish.
 TimeoutStartSec=3600
 NoNewPrivileges=true
 ProtectSystem=strict

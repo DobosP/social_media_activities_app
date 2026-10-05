@@ -70,8 +70,8 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   operations. Never apply paid infrastructure without owner authorization.
 - Audit 2026-10-05 privacy fixes (G2, WORKLOG): group-thread @mentions never resolve (reference
   parity); v1 `after=` message history keeps the oldest unseen message.
-- Audit 2026-10-05 auth/media/runtime fixes (G3, WORKLOG): unreachable web action cases are removed (IDP-6).
-  Open: two agent-snapshot producers emit different values and only `jobs/snapshot.go` runs (GO-EXPORT-01).
+- Audit 2026-10-05 G3: administrator-only console; failed-login/IP admission, bounded media/runtime and budget families;
+  busy avatars return503 without spending an attempt. Two snapshot producers still differ (WORKLOG, GO-EXPORT-01).
 
 ## Open work
 
@@ -95,13 +95,9 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 ## Verification record (newest first)
 
 - 2026-10-05 G1 count guard: harness17/17; forbidden-runtime check repaired. Final combined gates/review owed.
-- Restart checkpoint:993 claimed-verified (manifest `runtime_verification`, not checked against a test run)/1678 unresolved/0invalid of2671; retirement gate exits1.
-  Source-frozen586 affected tests/14 lanes pass without skips; 40 more: package directory unchanged;
-  transitive dependencies changed after the receipt — not qualified on this head.
-  Native source/hash/vet/race and source/package/linked audits pass. Offline imagec44143fd preserves
-  runtime5ea84fca, passes HTTP/lifecycle; its image scan is unverified after scanner setup failures.
-  Credential05febd5 independently closes admission binding; human code review gates first deployment.
-  Existing branch is preserved for publication/resume; [Windows TODO](docs/NATIVE_WINDOWS_TODO.md).
+- G3 source `0e3e85b`: check-native and ten affected fixture lanes pass 520/0 skips; six negative overlays killed; forced sweep 790 passes; independent critic APPROVE. Receipt: WORKLOG; combined G1 Step5 and first-deployment gates remain.
+- Historical restart checkpoint:993 manifest-claimed/1678 unresolved/0invalid of2671; retirement exits1.
+  Prior overlay/reused receipts are unqualified on this combined head; detail is in WORKLOG and the Windows TODO.
 
 ## Standard verification
 Native race/vet + shared-source hashes; database/codec contracts require explicit disposable fixtures

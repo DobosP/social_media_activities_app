@@ -404,11 +404,18 @@ func (s *Service) ProcessPendingVideos(ctx context.Context, limit int) (int, err
 	}
 	completed := 0
 	for n := 0; n < limit; n++ {
+		// Never claim a video the caller's deadline cannot finish: a cut encode
+		// spends one of its attempts and the last one erases a valid upload.
+		if deadline, ok := ctx.Deadline(); ok && time.Until(deadline) < s.policy.VideoStaleProcessing {
+			break
+		}
 		var att Attachment
 		terminal := false
 		err := platform.Transaction(ctx, s.db, func(tx pgx.Tx) error {
 			var id int64
-			e := tx.QueryRow(ctx, `SELECT id FROM media_attachment WHERE kind='video' AND purged_at IS NULL AND source_storage_key!='' AND (status='pending' OR (status='processing' AND processing_started_at<now()-$1*interval '1 second')) ORDER BY created_at,id LIMIT 1 FOR UPDATE SKIP LOCKED`, s.policy.VideoStaleProcessing.Seconds()).Scan(&id)
+			// An exhausted stale lease stays held for operator recovery; fence it
+			// out of the claim so the oldest held row cannot block later videos.
+			e := tx.QueryRow(ctx, `SELECT id FROM media_attachment WHERE kind='video' AND purged_at IS NULL AND source_storage_key!='' AND (status='pending' OR (status='processing' AND processing_started_at<now()-$1*interval '1 second' AND processing_attempts<$2)) ORDER BY created_at,id LIMIT 1 FOR UPDATE SKIP LOCKED`, s.policy.VideoStaleProcessing.Seconds(), s.policy.VideoMaxAttempts).Scan(&id)
 			if e != nil {
 				return e
 			}
@@ -420,7 +427,8 @@ func (s *Service) ProcessPendingVideos(ctx context.Context, limit int) (int, err
 				// A stale lease has no committed failure outcome. In particular,
 				// a failed audit transaction may have rolled back scanner deferral.
 				// Preserve its evidence for operator recovery instead of inferring
-				// a terminal content failure from the last claim's debit.
+				// a terminal content failure from the last claim's debit. The
+				// claim already fences these rows; this re-check stays defensive.
 				if fresh.Status == "processing" {
 					return ErrProcessing
 				}

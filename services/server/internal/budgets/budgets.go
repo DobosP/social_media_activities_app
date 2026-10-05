@@ -51,15 +51,15 @@ func (s *Store) Check(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 	var ready bool
-	err := s.DB.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM go_rate_budget_capacity WHERE singleton) AND to_regprocedure('go_admit_rate_budget(text,bytea,bigint,integer,bigint)') IS NOT NULL AND to_regprocedure('go_prune_rate_budgets(integer)') IS NOT NULL`).Scan(&ready)
+	err := s.DB.QueryRow(ctx, `SELECT (SELECT count(*) FROM go_rate_budget_family_capacity WHERE family IN ('actor','anonymous','ops','other'))=4 AND to_regprocedure('go_rate_budget_family(text,bigint)') IS NOT NULL AND to_regprocedure('go_admit_rate_budget(text,bytea,bigint,integer,bigint)') IS NOT NULL AND to_regprocedure('go_prune_rate_budgets(integer)') IS NOT NULL`).Scan(&ready)
 	if err != nil || !ready {
 		return errors.New("shared budget schema unavailable")
 	}
 	return nil
 }
 
-// Prune supports explicit, off-request privacy maintenance without starting a
-// scheduler. It also runs in a separate transaction before each admission.
+// Prune is bounded, off-request privacy maintenance (the expire_api_tokens job
+// and RunSweeper). Admission never depends on it: an expired row reads as empty.
 func (s *Store) Prune(ctx context.Context, batch int) (int64, error) {
 	if s == nil || s.DB == nil || batch < 1 || batch > 1000 {
 		return 0, errors.New("invalid shared budget maintenance")
@@ -71,6 +71,24 @@ func (s *Store) Prune(ctx context.Context, batch int) (int64, error) {
 		return 0, errors.New("shared budget maintenance unavailable")
 	}
 	return removed, nil
+}
+
+// RunSweeper prunes one bounded batch per tick until ctx ends. It is storage
+// hygiene only, so a failed pass is simply retried on the next tick.
+func (s *Store) RunSweeper(ctx context.Context, every time.Duration, batch int) {
+	if s == nil || s.DB == nil || every <= 0 {
+		return
+	}
+	ticker := time.NewTicker(every)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			_, _ = s.Prune(ctx, batch)
+		}
+	}
 }
 
 func (s *Store) Actor(ctx context.Context, actor int64, scope string, policy Policy) (Decision, error) {
@@ -92,7 +110,8 @@ func (s *Store) Peer(ctx context.Context, secret []byte, peer, scope string, pol
 	return s.admit(ctx, nil, scope, h.Sum(nil), policy)
 }
 
-// Global is for a shared ingress ceiling with no personal identity (CSP reports).
+// Global is for a shared ceiling with no personal identity. CSP ingress no
+// longer uses it: that ceiling is per process (ADR-0037).
 func (s *Store) Global(ctx context.Context, scope string, policy Policy) (Decision, error) {
 	key := sha256.Sum256([]byte("global:" + scope))
 	return s.admit(ctx, nil, scope, key[:], policy)
@@ -112,10 +131,7 @@ func (s *Store) admit(ctx context.Context, actor any, scope string, key []byte, 
 	}
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
-	// Independent bounded expiry sweep: no request history grows in Go memory.
-	if _, err := s.Prune(ctx, 256); err != nil {
-		return Decision{}, errors.New("shared budget unavailable")
-	}
+	// One round trip; expiry sweeping is off the request path (RunSweeper).
 	var result Decision
 	var retryUS int64
 	err := s.DB.QueryRow(ctx, `SELECT allowed,retry_us FROM go_admit_rate_budget($1,$2,$3,$4,$5)`, scope, key, actor, policy.Limit, policy.Window.Microseconds()).Scan(&result.Allowed, &retryUS)

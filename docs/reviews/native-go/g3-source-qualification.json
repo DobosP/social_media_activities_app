@@ -1,0 +1,310 @@
+{
+  "verified": "2026-10-05",
+  "branch": "fix/go-budget-families",
+  "runtime_source_head": "0e3e85b856d7ca0c85937af4763e892247efb1a6",
+  "canonical_stack_image": "sha256:f635865a95126398ba504b0bd746939443a2476f34afd517cc1cf28930ddc381",
+  "canonical_no_cache_final_combined_build": "owed to integration coordinator",
+  "toolchains": {
+    "Go": "1.27.1",
+    "Node": "24.18.0",
+    "GOTOOLCHAIN": "local",
+    "GOFLAGS": "-mod=readonly -p=2"
+  },
+  "fixture": {
+    "database": "social_g3",
+    "PostgreSQL": "16.15 Bookworm",
+    "PostGIS": "3.6.4",
+    "pgvector": "0.8.6",
+    "real_data": false,
+    "published_ports": false
+  },
+  "baseline_lanes": {
+    "admin": {
+      "passed": 20,
+      "failed": 0,
+      "skipped": 0,
+      "top_level_test_names_sha256": "fdfac1dc4cb1c4a7d7f08df76cbc82db8dc01714c1cb3abbde616f8432178a9c",
+      "log_sha256": "90d66ca9c8edf91c11a11a1be1ac6c56e86583fd31a171a5eb91a091e086003d"
+    },
+    "accounts": {
+      "passed": 73,
+      "failed": 0,
+      "skipped": 0,
+      "top_level_test_names_sha256": "f7418bbdfdd1c40bf36aeb198b928e7c0a561d10738f9293adb0ca5f63fe5551",
+      "log_sha256": "f180882f232e1e2cfa6cff375ca37b121e314f61d7fea28f223798587195103b"
+    },
+    "app": {
+      "passed": 35,
+      "failed": 0,
+      "skipped": 0,
+      "top_level_test_names_sha256": "449190d1e61db163cabb645423ff947846fa987886ce7d147e1e2c9229cc6d69",
+      "log_sha256": "bb024a06160923d364b4a91128a0d407605a5a69bef69de0422dfc9d63b708af"
+    },
+    "budgets": {
+      "passed": 16,
+      "failed": 0,
+      "skipped": 0,
+      "top_level_test_names_sha256": "4032535c5533e12fbdae0a1f0dea0f04c73a098a739745629c18733d15bae89d",
+      "log_sha256": "3d0951a208a4294d847e731df2ed3d3312555927f53b8e758592c3fff5dbe6ef"
+    },
+    "catalog": {
+      "passed": 48,
+      "failed": 0,
+      "skipped": 0,
+      "top_level_test_names_sha256": "c5bc6edeb997968785985c9e815fa60f8b5096529647963acf3d3867f6e0836f",
+      "log_sha256": "a365b6217d192c3ae94afe1ecae8b31a239aebe52166437bbd859fe2428f4d1d"
+    },
+    "configuration": {
+      "passed": 62,
+      "failed": 0,
+      "skipped": 0,
+      "top_level_test_names_sha256": "66d740f0e16f0af29f774541d9eec2e10e42e74e31a01e079da3263ddbd19374",
+      "log_sha256": "86c2690827f5a243797f1e150b14d3f49f1863376ff7180828dd79c615cd2c37"
+    },
+    "jobs": {
+      "passed": 67,
+      "failed": 0,
+      "skipped": 0,
+      "top_level_test_names_sha256": "36bbe9504b2862cae306df5780e6ddfeb37531057d1ddf21151352e21362fd6a",
+      "log_sha256": "a3baa176656ab3981c63b9550c7f6f18ba3ca9f8650cfe445b618d8f13d1c676"
+    },
+    "media": {
+      "passed": 50,
+      "failed": 0,
+      "skipped": 0,
+      "top_level_test_names_sha256": "bcf8d9c466438fd4f5d2127648ab5fc1f23c5d50d24ea360ae383db93f39210e",
+      "log_sha256": "8b4388673a6dd5e48a4adbf2cda37cba35a670187d767aa13f00236ea48dd091"
+    },
+    "safety": {
+      "passed": 50,
+      "failed": 0,
+      "skipped": 0,
+      "top_level_test_names_sha256": "d5d2b22f063f8eba1ea5ce5ace3ea5dbfdec8be48e706a5069d7ad9d9ece291a",
+      "log_sha256": "8f42f3152f8cf59acfa80482b9bac3dd6d7436b3f0c5cebe7822bf9673fd1f52"
+    },
+    "web": {
+      "passed": 99,
+      "failed": 0,
+      "skipped": 0,
+      "top_level_test_names_sha256": "2640970f4e20be54b038902b982a4ae4500b8e21bd6d0001126fb4f16e31770e",
+      "log_sha256": "09c6a2b6aeb34e6a7c573fdda6f550e4d4926454cd9cfb4ad73a0a63e0ec9507"
+    }
+  },
+  "total_baseline_passed": 520,
+  "baseline_command": "check-native.sh GO; qualify-native single-lane equivalent (-race -c, canonical codec image, read-only source, explicit disposable DSN, zero skips, positive PASS)",
+  "check_native": {
+    "passed": true,
+    "log_sha256": "971329febc4cc3844d298fd8d82a2f5471305d5f973139fd0e7ad15d5c14687e"
+  },
+  "fail_before": {
+    "avatar-messages": {
+      "passed": 0,
+      "failed": 2,
+      "skipped": 0,
+      "top_level_test_names_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_sha256": "bf56f0e0871092d12bcbcda24dd9e6aa07f4a253f31017db61146cb9fad96e3b",
+      "failed_test_names": [
+        "TestPostgresAccountErrorRendersPrivateProfile",
+        "TestPostgresBusyAvatarRerendersFormOrAnswersFetch"
+      ],
+      "overlay_sha256": "6c79340a913f78b601e8fb2b58749285469f54bd90258e7c6c01e9a3d3163d3b",
+      "source_overlays_sha256": {
+        "services/server/internal/web/account_actions.go": "a9fa49228db8fef446f2217b3d3de0f4b80f355d7aa141a701ec3a0740e6d804"
+      }
+    },
+    "credential-subtree": {
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "top_level_test_names_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_sha256": "01eb7067df8513643a51b470b344683cfd8d6fb59bf83950277d66c28810fbe6",
+      "failed_test_names": [
+        "TestNativeCredentialSubtreeVariantsReachNoVerdict"
+      ],
+      "overlay_sha256": "3abdd07c5337995b583c9c18ba752ea72cca4fdc078d3958a5dd64b5f5f90ade",
+      "source_overlays_sha256": {
+        "services/server/internal/web/server.go": "4d2ad1038dde9801042aa85bc1d6caa6fb0887304457e0ccf0395bcf9fc2cfd8"
+      }
+    },
+    "token-failure-counter": {
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "top_level_test_names_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_sha256": "5387f5a085dbb22ba018e35369bc4b4d6b1b3c36557c18d41de2f38dbf16a5f1",
+      "failed_test_names": [
+        "TestObtainTokenSharesFailedLoginCounter"
+      ],
+      "overlay_sha256": "633f12a34fc99aaa528e1f1b49d19c5651a8c2d38f663a55c89e2b016a02d0d5",
+      "source_overlays_sha256": {
+        "services/server/internal/accounts/token.go": "97388e104b06c083eb8b59146b630a5e326fc32a6e3db12a63879e1062326278"
+      }
+    },
+    "token-cross-site": {
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "top_level_test_names_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_sha256": "1006447f304a40d92bd3345decc14513d73a8749b6c25778e1ee395a4fc1e6d1",
+      "failed_test_names": [
+        "TestObtainTokenRefusesCrossSiteBrowserRequestsBeforeAnyRow"
+      ],
+      "overlay_sha256": "12987d73db720090bf3c5ea38836a3bdb7285cc2b7194644a84df2542eb08001",
+      "source_overlays_sha256": {
+        "services/server/internal/accounts/token.go": "f99f5a7704b21a16b15db3d2cbccb9d714fac954bdd29363e3a7e86ebb59106c"
+      }
+    },
+    "peer-marker-guards": {
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "top_level_test_names_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_sha256": "220a0aa1b99ba4ff20c40443c1bbe9791feab2e9e131552c89003f73ab7a7b44",
+      "failed_test_names": [
+        "TestRequirePeerMarkerRefusesUnmarkedAttemptsAndFlows"
+      ],
+      "overlay_sha256": "f58af5879f8a67494c8e69ba56ed18b84bac888eaf39c0f4084fc1cc0d45d603",
+      "source_overlays_sha256": {
+        "services/server/internal/accounts/store.go": "f999f7339212dedd26e06d73ac305dec6cc7859dd190e39938c2b0b30cfd29c6"
+      }
+    },
+    "peer-marker-flow-guard": {
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "top_level_test_names_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_sha256": "3495b302b86b943daacbb2d270fc4bcd05a71635a58e309bc11ff4de0f9263e3",
+      "failed_test_names": [
+        "TestRequirePeerMarkerRefusesUnmarkedAttemptsAndFlows"
+      ],
+      "overlay_sha256": "7028c013a328ffe2d7d68b9b81c1d5b2ac5c47adcd282f4d2c9031d9f68d4e11",
+      "source_overlays_sha256": {
+        "services/server/internal/accounts/store.go": "8387157b5358cff476209e7b03224b10501fe5d44e7c7bcf77149e2bf6781b3a"
+      }
+    }
+  },
+  "forced_sweep": {
+    "patch": "maybeSweep calls sweepAuthState unconditionally, ignoring nil/random/injected false due checks; qualification-only Go overlay",
+    "repeat_count": 5,
+    "package_wall_timeout": "50m (5 x canonical 10m)",
+    "lane_results": {
+      "accounts": {
+        "passed": 365,
+        "failed": 0,
+        "skipped": 0,
+        "top_level_test_names_sha256": "0252c2def066841d926a83c4a09d3c8271bb3bc9a17012fe4f29513c08435365",
+        "log_sha256": "442411aa2c7808252500bbac6680294d66a8dd66235f5a488140a69cc8dc557d"
+      },
+      "safety": {
+        "passed": 250,
+        "failed": 0,
+        "skipped": 0,
+        "top_level_test_names_sha256": "161b8d0c56d9665812632878785bc133e2378dc8ac46888044b99329a6339675",
+        "log_sha256": "e8777af36f345e97a5a2a6b2a6156e14aaab5ff1a3cea66bff4a30c2f63f0a8b"
+      },
+      "app": {
+        "passed": 175,
+        "failed": 0,
+        "skipped": 0,
+        "top_level_test_names_sha256": "5875f70883ce0332820cca9a2d0a777d1cc49e48bf305512151d407d8e05a373",
+        "log_sha256": "d2f0a55ba807a48dc26160ce682acb9b8ed063e31fe4e1164f0f557f8eed52ab"
+      }
+    },
+    "total_passed": 790,
+    "overlay_source_sha256": "657b0a65f51f844395ad5c22a06cf03e566dcb795f5b2bfb74d1b78c5a17b9a1"
+  },
+  "reference_cases": {
+    "total_source_cases": 2671,
+    "verified_source_cases_manifest_claim": 993,
+    "unresolved_cases": 1678,
+    "invalid_evidence": 0,
+    "check_contracts_exit_code": 1,
+    "coverage_increase_claimed": false
+  },
+  "independent_source_critic": {
+    "decision": "APPROVE",
+    "reviewed_runtime_head": "0e3e85b856d7ca0c85937af4763e892247efb1a6",
+    "baseline_and_negative_logs_independently_read": true,
+    "runtime_receipt_decision": "APPROVE",
+    "forced_sweep_logs_independently_read": true,
+    "unconditional_overlay_independently_verified": true
+  },
+  "scope_limits": [
+    "G3 stack only; ten affected lanes; historic individual branch heads not rerun",
+    "final combined G1/G2/G3 qualification, release audits and main landing owned by integration coordinator",
+    "human auth/erasure/privacy/safety review and RELEASE_READINESS gates before first deployment",
+    "no deployment, provider/account enablement, real ingestion or public data"
+  ],
+  "runtime_source_files_sha256": {
+    "services/server/cmd/social-server/http_server_test.go": "c75343f6648daf636c633486213db13066cb05550f4e7a738493355375e31cc3",
+    "services/server/cmd/social-server/job_options.go": "d5f1a020b28a4d20fdcd25eb1075e8f0cebdf27d66917e96a9ea5e33b256e33e",
+    "services/server/cmd/social-server/job_timeout_test.go": "49585f8fe2cc4157633858be3b83f959b7df7f642896561ab71db3deca3bca27",
+    "services/server/cmd/social-server/main.go": "659a9b51051d2972123a4dba36dfa3510a76b53f9b1960bb412c9ae72feef9d9",
+    "services/server/internal/accounts/login_admission_test.go": "c5b0cae098eb8d5be42a6a98c19a49930f49e0f9159267c6093eca73f2899bdf",
+    "services/server/internal/accounts/login_failures.go": "8186e82f25e9cef4dcf56392fd2bce7905c6053721ef51bf5b8de719ccddf734",
+    "services/server/internal/accounts/login_failures_test.go": "a36f52891b52a41ccd2ba817be7f92b9c06e8f01383358dd8d93fd36a46d263a",
+    "services/server/internal/accounts/login_pages.go": "56d99e6c10cc9d8347b52418ae6f97621565b1a003236006beee7a0cda2a9cea",
+    "services/server/internal/accounts/peer_admission.go": "4b62637d3c36b3f367a08cd34882b4ce209020a691012a89e3e124d1d87af500",
+    "services/server/internal/accounts/service.go": "fc76601a236631a559ba3f11b4774b5266d29221a441ea498a5ef46d1a0b0bba",
+    "services/server/internal/accounts/store.go": "5f961c85053497754e9a9c831194bc3b3fd413ee67847a9bb4fb3e2a0278c490",
+    "services/server/internal/accounts/token.go": "952d5f9e83a585fbe1e0db83cfcb60d68e479c1fa45229b23c31842b592c1b7e",
+    "services/server/internal/accounts/token_failures_test.go": "3316acf8e777007f0366db9a151dbbd998db02605b5c7e810f9738c997293a88",
+    "services/server/internal/admin/README.md": "2fe5c8d9d52befee0e764b59c8191881190daf1ec45836352ff5f09b28c76744",
+    "services/server/internal/admin/admin_test.go": "427636d3827d9300cd2bf7bdcc48d053391c6b117990e4341de70ebff8586c1f",
+    "services/server/internal/admin/http.go": "4a3431de6167106f09b186b619ae1fb4e8dd396307c51cee3bda00a39f4278a3",
+    "services/server/internal/admin/permissions_test.go": "4be8ec2c2f078d1a4f31667b2eac1625352f9140c6bfce6dc62a0ced5ba10442",
+    "services/server/internal/admin/service.go": "7d8201c02b50de7d773fcedbbaf4b9d1563d4bf5c1cb564f725780fb8817a1b7",
+    "services/server/internal/app/app.go": "508cf797db508778f0f029db5dc9e9ddaa6638512b7f22adb15b21c6228477b8",
+    "services/server/internal/app/auth_admission_test.go": "3fb9bb2004617b4b01f9a21c28b070632bbae2892880ae0e090ccba5cf1e2521",
+    "services/server/internal/app/deadline_wiring_test.go": "6c433e288eece14a3fd02e4395d7b1cc4680c231bb20b7ba2277a23b5b6832ca",
+    "services/server/internal/app/integration_lifecycle_test.go": "5bec9e042ac11cf5da9a4fb3cbc26e2ac87f1b7fae35995dfd54230577d1902f",
+    "services/server/internal/app/rates.go": "b70e61cec34813fadc3b2af7c88272bff6fbf87ebed63b2523734cec6116a456",
+    "services/server/internal/app/rates_prefilter_test.go": "90842c031138e15aa64dd718462d2ef20cc55c697fa76727aae73cd58add3f94",
+    "services/server/internal/app/upload_deadlines_test.go": "45c998209e6ac7983ced82a99c59ca3e2686fbb3c7620d6b144dc0635fbcc55a",
+    "services/server/internal/budgets/budgets.go": "7739573b46dc2c48fd67b06b913f901d784a497c36a29d56c063f11fc9ff5148",
+    "services/server/internal/budgets/postgres_test.go": "e35f92a457c3b23af10968cee4d4fe9577bfeccf4fe5c8d4454675b466709d93",
+    "services/server/internal/budgets/prefilter.go": "a8d6f12811aadd920b25ff754b2e2e933ab35d4efaca5e84d4aad18f137d4569",
+    "services/server/internal/budgets/prefilter_test.go": "9551045c3bb13b7a3f0919e5f1434e4ddef89cccf1d168bdb46848c35dff6663",
+    "services/server/internal/catalog/capacity_family_test.go": "cf3540343eab836dcedbb4faa79e20fb57f363c86df61e328fa045de0879055a",
+    "services/server/internal/jobs/feed_overlong_uid_test.go": "cebc46d741f5e43c05c9c5ff850dde0d4b9f25e169081db80e48228062d43991",
+    "services/server/internal/jobs/feeds.go": "76297b594054f88f15355b47e02579499f0d4c39af20d0cab642022b100db080",
+    "services/server/internal/jobs/policy_test.go": "d21408eeaa915965c1a130b0d4fc65be73695d7da8f945d298105734d183c01f",
+    "services/server/internal/jobs/runner.go": "ec0e8244ebca5ed50e34a8d1cbd02ebd6ae022c9e3da2f5c0544eba76c172b22",
+    "services/server/internal/jobs/video_timeout_test.go": "275611eddd8413bd4fbe47ee0c486dae78879b85ecb8a6bfd7c4f079ec22410d",
+    "services/server/internal/media/README.md": "f26dc29c711d728c1287ad1dc99191b2f3706ac98e7b5b8de7ba20503d0657fa",
+    "services/server/internal/media/attachments.go": "4f356792faa30ab4d60cd622bec1b013a34d0926c0c262b987b9f94222f4f583",
+    "services/server/internal/media/avatar_busy_refund_test.go": "c3407b5aefe0ac77c078a4b88193c542e936414cd43f005adfd5eaf887cd93d8",
+    "services/server/internal/media/codec_slots_test.go": "80ae6f5cbaae6ffed17a8b57f9a54c9adc8013564d1697569110214e1aab266c",
+    "services/server/internal/media/http.go": "0dafab7b79960d0d7e9c156d92304b0f321fb42a89653e9297fac8ac7dd89ce7",
+    "services/server/internal/media/lifecycle.go": "031dbf9b4553c0d41d107e6ddbf0f20464db43b70b74f7727b2e5188e413afd7",
+    "services/server/internal/media/process.go": "f31ca851cba949278150c202a4ffd8bc8a9c23818cddd1513d97b9da151e2106",
+    "services/server/internal/media/purge_keyset_test.go": "d8647a9708c84254e350601e60f47e522fc7350d431086e1943d9dedf32e8484",
+    "services/server/internal/media/scanner_outage_retirement_test.go": "0d4384d846ebc3b58075364fd2ba6739596942dce38e0e6de0d3abfe5bf9b91f",
+    "services/server/internal/media/service.go": "be2c3c2f620ce6ee25981070e95527a1dcff39714d5a22782c659b99f7bb2b0b",
+    "services/server/internal/media/stream_deadline_test.go": "7ff529c618b90ed5f6ae55a28bc4de8512eff6244c9e45d1c0d30e6c3a1f956a",
+    "services/server/internal/media/types.go": "41ec7a5e03f0c43cbb966d2154f5388e8efd8b09cff413b07f9ce8cb53311fb1",
+    "services/server/internal/media/video_budget.go": "3781fff6ac74dde86dac8b2bfd704c2d891226d247aaffb43fe04f03e7934942",
+    "services/server/internal/media/video_deadline_guard_test.go": "8c6e642aa1133eb267a4b444680e5916ca1c4f4f3db1ff47a51bd46f4fb3ed83",
+    "services/server/internal/media/video_queue_hold_test.go": "23d69f7d94bbbcecaf2b156f42ef458c520d37b307d2c4a3743bcc6cfa4852d9",
+    "services/server/internal/ops/http.go": "574b7922d758c3bbceefd68e3832818d8c010faf7422e4d330090c7030d96d70",
+    "services/server/internal/ops/http_test.go": "2abffd90739a06fac377e416f5c732ab3a146e9d3358356fac175ce315692d44",
+    "services/server/internal/platform/deadlines.go": "c4151d396c0255fbf9c0e047769ffa533efdd434c8a301966120816edf8a00ef",
+    "services/server/internal/platform/deadlines_test.go": "1ea00f6314016f0363f57df9d0439244e842c126269f32ed557b4af6912479e8",
+    "services/server/internal/platform/peer.go": "706facdff6fbe473c2df13d93f81d9cd0a61b8b7aca3dfa856c44ec349b6880a",
+    "services/server/internal/platform/peer_test.go": "34e0add8c266bf0e87f9ca8541a885eb573dea90d5db1573f15cb9cf1fde29fa",
+    "services/server/internal/platform/platform.go": "15a341cbbabef4b9333c5a84d3b53a121e67c5c8ac3cb05bdbfd846fb0ac77e1",
+    "services/server/internal/safety/restricted.go": "8c3a8e4d2f7932b291a41e3f1ff877cd866d4aae62554dffcbfde928333b8924",
+    "services/server/internal/safety/restricted_admission_test.go": "bf22d0a187a6e98b6bf5419dd60a145744071c14fb0e4dd65de9794027003a76",
+    "services/server/internal/schema/budgets.sql": "5d2b6007a647d1aeede91bcf49508a95e9952cff13d8803877636c8b395ca785",
+    "services/server/internal/schema/migrate.go": "f5f109580096f6cb9c61883b77fd0fa74fd0f08c2adf1babfdb5b378158e90cc",
+    "services/server/internal/web/account_actions.go": "fc4c1d764985fee8adcc620fbca6e3bfd67338c6612502c075eb61fafc18497c",
+    "services/server/internal/web/account_pages_test.go": "c6a07eba78aa763f0be30e0d9721222b168c12c44a3022d18aaaaf250094b24d",
+    "services/server/internal/web/media_busy.go": "43a64b50b5f893d1140ecd04cf014736388c431ae9aab543028b4fd576424989",
+    "services/server/internal/web/media_busy_test.go": "e62a9a536780ebf83ac8317816211202533b4f72d49571836ed6a81fc8ccb512",
+    "services/server/internal/web/public_actions.go": "851d49315dc73db6a39e6419b757c8b4fa0be4cc2b3db9436e164770bc6baded",
+    "services/server/internal/web/public_downloads.go": "e19db748f4390bd0595083bc8e49a2da4f35031a961e52fdb607482bd926d4fd",
+    "services/server/internal/web/server.go": "c1872cb9de8ae7edeecde4933c859dba88d01781a3b3583aa1f8637f34b4f39c",
+    "services/server/internal/web/social_actions.go": "69e7cb534b9ea9561d4ce382197427fc7316082a90e06b029807a7e6766be655"
+  },
+  "runtime_services_tree_object": "476e75ea731db8b73d0a7b680f2a63623dcc94d2"
+}

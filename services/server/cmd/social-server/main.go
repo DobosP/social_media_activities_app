@@ -250,7 +250,7 @@ func runWithReporter(ctx context.Context, args []string, get environment, stdin 
 		return nil
 	}
 	if o.Job != "" {
-		jobCtx, cancel := context.WithTimeout(ctx, jobConfig.JobTimeout)
+		jobCtx, cancel := context.WithTimeout(ctx, call.timeout(runner))
 		defer cancel()
 		result, runErr := call.run(jobCtx, runner)
 		if runErr != nil || jobCtx.Err() != nil {
@@ -270,7 +270,7 @@ func runWithReporter(ctx context.Context, args []string, get environment, stdin 
 		defer cancel()
 		_ = handler.StopBackground(stopCtx)
 	}()
-	server := &http.Server{Addr: o.Listen, Handler: handler, BaseContext: func(net.Listener) context.Context { return serverCtx }, ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 30 * time.Second, WriteTimeout: 30 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 32 << 10}
+	server := newHTTPServer(o.Listen, handler, func(net.Listener) context.Context { return serverCtx })
 	finished := make(chan struct{})
 	defer close(finished)
 	shutdownDone := make(chan struct{})
@@ -294,6 +294,19 @@ func runWithReporter(ctx context.Context, args []string, get environment, stdin 
 		<-shutdownDone
 	}
 	return nil
+}
+
+// Server-wide timeouts stay short against slow clients. Upload and streaming
+// handlers extend only their own connection through platform.ExtendDeadlines.
+type httpTimeouts struct{ header, read, write, idle time.Duration }
+
+var defaultHTTPTimeouts = httpTimeouts{header: 5 * time.Second, read: 30 * time.Second, write: 30 * time.Second, idle: 60 * time.Second}
+
+func newHTTPServer(addr string, handler http.Handler, base func(net.Listener) context.Context) *http.Server {
+	return newHTTPServerWithTimeouts(addr, handler, base, defaultHTTPTimeouts)
+}
+func newHTTPServerWithTimeouts(addr string, handler http.Handler, base func(net.Listener) context.Context, t httpTimeouts) *http.Server {
+	return &http.Server{Addr: addr, Handler: handler, BaseContext: base, ReadHeaderTimeout: t.header, ReadTimeout: t.read, WriteTimeout: t.write, IdleTimeout: t.idle, MaxHeaderBytes: 32 << 10}
 }
 
 // Schema installation is independent of the serving/codec runtime, allowing a

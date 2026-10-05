@@ -24,11 +24,12 @@ type Processor struct {
 	cfg       Config
 	scanner   Scanner
 	documents DocumentScanner
-	jobs      chan struct{}
+	jobs      chan struct{} // image/PDF/profile-hash slots, bounded wait.
+	videoJobs chan struct{} // minutes-long transcodes never hold a request-path slot.
 }
 
 func NewProcessor(c Config, scanner Scanner, documents DocumentScanner) (*Processor, error) {
-	if c.ScratchDir == "" || c.ImageMaxBytes < 1 || c.ImageMaxBytes > 5<<20 || c.ImageMaxPixels < 1 || c.ImageMaxPixels > 30_000_000 || c.ImageMaxSide < 1 || c.ImageMaxSide > 2048 || c.ThumbnailSide < 1 || c.ThumbnailSide > 800 || c.VideoMaxBytes < 1 || c.VideoMaxBytes > 80<<20 || c.VideoMaxSeconds <= 0 || c.VideoMaxSeconds > 90 || c.VideoSourceSide < 1 || c.VideoSourceSide > 3840 || c.VideoTargetSide < 2 || c.VideoTargetSide > 1280 || c.Threads < 1 || c.Threads > 2 || c.ConcurrentJobs < 1 || c.ConcurrentJobs > 4 || c.MemoryBytes < 64<<20 || c.MemoryBytes > 2<<30 || c.CommandTimeout <= 0 || c.CommandTimeout > 600*time.Second || c.ProbeTimeout <= 0 || c.ProbeTimeout > 60*time.Second {
+	if c.ScratchDir == "" || c.ImageMaxBytes < 1 || c.ImageMaxBytes > 5<<20 || c.ImageMaxPixels < 1 || c.ImageMaxPixels > 30_000_000 || c.ImageMaxSide < 1 || c.ImageMaxSide > 2048 || c.ThumbnailSide < 1 || c.ThumbnailSide > 800 || c.VideoMaxBytes < 1 || c.VideoMaxBytes > 80<<20 || c.VideoMaxSeconds <= 0 || c.VideoMaxSeconds > 90 || c.VideoSourceSide < 1 || c.VideoSourceSide > 3840 || c.VideoTargetSide < 2 || c.VideoTargetSide > 1280 || c.Threads < 1 || c.Threads > 2 || c.ConcurrentJobs < 1 || c.ConcurrentJobs > 4 || c.ConcurrentVideoJobs < 1 || c.ConcurrentVideoJobs > 4 || c.ImageQueueWait <= 0 || c.ImageQueueWait > 60*time.Second || c.MemoryBytes < 64<<20 || c.MemoryBytes > 2<<30 || c.CommandTimeout <= 0 || c.CommandTimeout > 600*time.Second || c.ProbeTimeout <= 0 || c.ProbeTimeout > 60*time.Second {
 		return nil, ErrRejected
 	}
 	if err := c.ValidateEncodingPolicy(); err != nil {
@@ -40,7 +41,7 @@ func NewProcessor(c Config, scanner Scanner, documents DocumentScanner) (*Proces
 	if err := os.MkdirAll(c.ScratchDir, 0700); err != nil {
 		return nil, ErrProcessing
 	}
-	return &Processor{cfg: c, scanner: scanner, documents: documents, jobs: make(chan struct{}, c.ConcurrentJobs)}, nil
+	return &Processor{cfg: c, scanner: scanner, documents: documents, jobs: make(chan struct{}, c.ConcurrentJobs), videoJobs: make(chan struct{}, c.ConcurrentVideoJobs)}, nil
 }
 
 // CheckRuntime belongs to application startup when uploads/video are enabled.
@@ -65,15 +66,33 @@ func cleanupDir(dir string) error {
 	}
 	return os.RemoveAll(dir)
 }
+
+// acquire admits request-path image/PDF work. A full queue is a retryable
+// ErrBusy after ImageQueueWait, never an unbounded wait holding an upload.
 func (p *Processor) acquire(ctx context.Context) error {
+	wait := time.NewTimer(p.cfg.ImageQueueWait)
+	defer wait.Stop()
 	select {
 	case p.jobs <- struct{}{}:
 		return nil
 	case <-ctx.Done():
 		return ctx.Err()
+	case <-wait.C:
+		return ErrBusy
 	}
 }
 func (p *Processor) release() { <-p.jobs }
+
+// acquireVideo is off-request: it waits on its own slots for the caller's context.
+func (p *Processor) acquireVideo(ctx context.Context) error {
+	select {
+	case p.videoJobs <- struct{}{}:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+}
+func (p *Processor) releaseVideo() { <-p.videoJobs }
 
 func (p *Processor) scannerEffective() bool {
 	if p == nil || p.scanner == nil {
@@ -462,10 +481,10 @@ func (p *Processor) ProcessVideo(ctx context.Context, path string) (m Manifest, 
 	if !p.cfg.VideoEnabled {
 		return m, ErrRejected
 	}
-	if err = p.acquire(ctx); err != nil {
+	if err = p.acquireVideo(ctx); err != nil {
 		return m, err
 	}
-	defer p.release()
+	defer p.releaseVideo()
 	dir, source, digest, size, err := p.stage(path, p.cfg.VideoMaxBytes)
 	if err != nil {
 		return m, err

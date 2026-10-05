@@ -6,7 +6,10 @@ package media
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
+
+	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
 )
 
 var (
@@ -17,6 +20,9 @@ var (
 	ErrProcessing = errors.New("media processing unavailable or failed")
 	ErrObject     = errors.New("invalid private media object")
 )
+
+// ErrBusy is a full image/PDF codec queue: retryable, never a safety verdict.
+var ErrBusy = fmt.Errorf("media codec queue full: %w", platform.ErrBusy)
 
 const PolicyVersion = "social-media-go-v1"
 
@@ -42,7 +48,9 @@ type Config struct {
 	ProbeTimeout                   time.Duration
 	MemoryBytes                    uint64
 	Threads                        int
-	ConcurrentJobs                 int
+	ConcurrentJobs                 int           // image/PDF/profile-hash codec slots.
+	ConcurrentVideoJobs            int           // separate slots; a transcode never holds an image slot.
+	ImageQueueWait                 time.Duration // bounded image/PDF slot wait before ErrBusy.
 	FFmpeg                         string
 	FFprobe                        string
 	Avifenc                        string
@@ -54,7 +62,7 @@ func DefaultConfig(scratch string) Config {
 		ImageMaxSide: 2048, ThumbnailSide: 800, ImageFormat: "AVIF", VideoMaxBytes: 80 << 20,
 		VideoMaxSeconds: 90, VideoSourceSide: 3840, VideoTargetSide: 1280, VideoEnabled: true,
 		CommandTimeout: 600 * time.Second, ProbeTimeout: 60 * time.Second, MemoryBytes: 2 << 30,
-		Threads: 2, ConcurrentJobs: 1, FFmpeg: "ffmpeg", FFprobe: "ffprobe", Avifenc: "avifenc", Prlimit: "prlimit"}
+		Threads: 2, ConcurrentJobs: 1, ConcurrentVideoJobs: 1, ImageQueueWait: 10 * time.Second, FFmpeg: "ffmpeg", FFprobe: "ffprobe", Avifenc: "avifenc", Prlimit: "prlimit"}
 }
 
 type ScanInput struct {

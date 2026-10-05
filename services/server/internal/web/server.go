@@ -81,8 +81,10 @@ func (s *Server) Register(mux *http.ServeMux) {
 	// cannot express. Native API paths keep ServeMux; this typed router owns HTML.
 	mux.HandleFunc("GET /", s.legacyHTTP)
 	mux.HandleFunc("POST /", s.legacyHTTP)
-	mux.HandleFunc("POST /login/", func(w http.ResponseWriter, r *http.Request) { s.credentials(w, r, false) })
-	mux.HandleFunc("POST /register/", func(w http.ResponseWriter, r *http.Request) { s.credentials(w, r, true) })
+	// Exact paths only: a subtree would reach the pinned credential handlers on
+	// paths the application's admission marker and login intercept never see.
+	mux.HandleFunc("POST /login/{$}", func(w http.ResponseWriter, r *http.Request) { s.credentials(w, r, false) })
+	mux.HandleFunc("POST /register/{$}", func(w http.ResponseWriter, r *http.Request) { s.credentials(w, r, true) })
 	mux.HandleFunc("POST /logout/", func(w http.ResponseWriter, r *http.Request) {
 		if s.Auth.CheckCSRF(formCSRF(r)) != nil {
 			platform.Error(w, 403, "CSRF verification failed.")

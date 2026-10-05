@@ -23,7 +23,9 @@ bounded frame-zero-inclusive screening. `prlimit` bounds child address space and
 CPU; cancellation kills its entire process group. A transient failure waits for
 the stale claim window; three attempts exhaust the job. Terminal failures erase
 source bytes; safety-blocked sources remain private evidence and never have an
-in-app byte URL, including for staff.
+in-app byte URL, including for staff. Video holds its own codec slots
+(`ConcurrentVideoJobs`); image/PDF work waits at most `ImageQueueWait` for one of
+`ConcurrentJobs`, then returns retryable `ErrBusy` (HTTP 503 with `Retry-After`).
 
 `Service` implements the existing media APIs and shared attachment/place-cover
 operations. Authorization comes from the owning social domain, is reloaded after

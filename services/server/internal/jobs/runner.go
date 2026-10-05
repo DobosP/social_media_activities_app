@@ -170,6 +170,21 @@ func (r *Runner) RunDue(ctx context.Context) ([]Result, error) {
 	return out, nil
 }
 func missing() error { return errors.New("native job dependency unavailable") }
+
+// DueVideoBatch is the default number of video claims one drain may take.
+const DueVideoBatch = 2
+
+// ManualJobTimeout is the deadline of one explicitly invoked job: the common
+// per-duty ceiling, except that a video drain gets its bounded lease budget so
+// every claim it takes can finish. The scheduled pass keeps the common ceiling
+// for every duty; there the drain claims nothing its remaining time cannot cover.
+func (r *Runner) ManualJobTimeout(name string, videoBatch int) time.Duration {
+	timeout := r.Config.JobTimeout
+	if name == "transcode_videos" && r.Config.Media != nil {
+		timeout = max(timeout, r.Config.Media.VideoBatchTimeout(videoBatch))
+	}
+	return timeout
+}
 func (r *Runner) install() {
 	r.handlers["purge_messaging"] = func(ctx context.Context, _ map[string]json.RawMessage) (any, error) { return r.purgeMessages(ctx) }
 	r.handlers["purge_expired_attachments"] = func(ctx context.Context, _ map[string]json.RawMessage) (any, error) {
@@ -187,7 +202,7 @@ func (r *Runner) install() {
 		if r.Config.Media == nil {
 			return nil, missing()
 		}
-		return r.Config.Media.ProcessPendingVideos(ctx, 2)
+		return r.Config.Media.ProcessPendingVideos(ctx, DueVideoBatch)
 	}
 	r.handlers["purge_read_notifications"] = func(ctx context.Context, _ map[string]json.RawMessage) (any, error) {
 		if r.Config.NotificationRetentionDays <= 0 {
@@ -283,6 +298,11 @@ func (r *Runner) install() {
 		// The existing explicit maintenance pass also erases expired shared rate
 		// histories; this adds no scheduler and preserves the API-token result.
 		_, err = budgets.New(r.DB).Prune(ctx, 1000)
+		if err == nil && r.Config.Accounts != nil {
+			// Authentication admission rows expire on the same pass; correctness
+			// never depends on it, so no job name is added.
+			err = r.Config.Accounts.SweepAuthState(ctx, 1000)
+		}
 		return tag.RowsAffected(), err
 	}
 	r.handlers["indexnow_batch_submit"] = func(ctx context.Context, _ map[string]json.RawMessage) (any, error) { return r.IndexNow(ctx) }

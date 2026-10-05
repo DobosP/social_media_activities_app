@@ -3,6 +3,222 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-05 — G3 integrated into the Linux source lane
+
+Valid until: G2/G3 combined source is qualified and landed — then treat as history.
+
+Merged G3 FINAL `3e025d6e455e181ee1b848092bdf27965684a796` into the preserved G1 integration.
+Runtime source `0e3e85b` passed check-native,520 tests/10 lanes,790 forced-sweep executions and six
+negative overlays (seven expected failures), independently reviewed. Its receipt-only final commit
+preserves the exact services tree. Source auto-merged; STATUS and WORKLOG prefixes were reconciled
+without dropping either handover. The duplicate GO-RT-07 readiness entry is reduced to one precise
+pre-stop gate; F1 sweep/replica/clock/client-address deployment gates remain. G2 is still qualifying;
+no combined G1 Step5 qualification, main landing or deployment is claimed by this merge.
+
+## 2026-10-05 — G3 stack qualified on Linux; source-only integration receipt
+
+Valid until: the qualified runtime or its policy/authorization contracts change — then treat as history.
+
+Frozen clean runtime source: `0e3e85b856d7ca0c85937af4763e892247efb1a6` on `d9ede52`; the following receipt commit
+changes documentation only. The six historical stack heads were not separately rerun: all inherited
+changes were qualified together on this G3 head. Branch ancestry and prior evidence remain below.
+Independent agent source critic: APPROVE for `d9ede52..0e3e85b`; actual baseline, negative and forced-sweep
+logs were independently checked. This does not supply the human first-deployment review (ADR-0040).
+
+Pinned local Go1.27.1, `GOTOOLCHAIN=local`, `GOWORK=off`, `GOFLAGS=-mod=readonly -p=2`, Node24.18.0.
+Canonical Dockerfile `--target production` build from the committed clean source succeeds (normal cache;
+final combined `--no-cache` build remains G1 Step5). Image: `sha256:f635865a95126398ba504b0bd746939443a2476f34afd517cc1cf28930ddc381`.
+Its own `social-server --migrate-only` bootstrapped fresh synthetic `social_g3` on PostgreSQL16.15
+Bookworm/PostGIS3.6.4/vector0.8.6; 2GiB/2CPU database, private internal network, no published ports.
+`scripts/check-native.sh GO` passes portable auth hashes, three-module vet/race, native formatting,
+four service-worker tests and whitespace. Ten affected lanes used the single-lane equivalent of
+`scripts/qualify-native.sh`: `-race -c`, canonical codec image, read-only source, explicit disposable DSN,
+zero skips and a positive top-level PASS count. All 520 pass, zero skips/failures:
+
+| Lane | Top-level pass |
+|---|---:|
+| admin | 20 |
+| accounts | 73 |
+| app | 35 |
+| budgets | 16 |
+| catalog | 48 |
+| configuration | 62 |
+| jobs | 67 |
+| media | 50 |
+| safety | 50 |
+| web | 99 |
+
+Forced-sweep critic requirement: a qualification-only Go overlay made `Store.maybeSweep` call cleanup
+unconditionally, ignoring random/nil/injected-false due checks. Full accounts 73 × 5 = 365, safety 50 × 5 = 250,
+app 35 × 5 = 175 pass (790 executions), zero skips/failures. Every baseline test name appears exactly five
+times in its lane. The repeated batch timeout was 50m (five times the canonical 10m package wall budget);
+no application/request/statement/codec timeout changed. Production source stayed frozen throughout.
+
+Six negative overlays produce seven expected failures, zero skips: old account string messages fail
+both `TestPostgresAccountErrorRendersPrivateProfile` and
+`TestPostgresBusyAvatarRerendersFormOrAnswersFetch`; `web/server.go` from `6188a31` fails
+`TestNativeCredentialSubtreeVariantsReachNoVerdict`; `token.go` from `6188a31` fails
+`TestObtainTokenSharesFailedLoginCounter`; `token.go` from `a10fa08` fails
+`TestObtainTokenRefusesCrossSiteBrowserRequestsBeforeAnyRow`; removing the marker guards fails
+`TestRequirePeerMarkerRefusesUnmarkedAttemptsAndFlows`, and removing only the OAuth-flow guard fails
+it separately. Marker overlays retain the current struct field so current tests/app compile; only the
+refusal guards are removed. No mutant source is committed. A scratch matrix delimiter error was
+corrected before the completed negative run; it is not counted as a killed source mutant.
+
+Receipt with log/test-name/source-overlay hashes:
+[G3 qualification JSON](docs/reviews/native-go/g3-source-qualification.json).
+`check-contracts -summary` remains exit 1: 993 manifest-claimed verified / 1,678 unresolved / zero invalid of 2,671;
+no new case coverage or Python retirement is claimed. Fleet docs files 53 / all defect counts zero and
+native gate harness 16/16 pass. Broad runs honored the shared fleet lock and 12GiB memory floor;
+the lock was released for the narrow mutants, then reacquired for forced-sweep runs.
+
+Not run here: final combined 21-lane qualification, canonical no-cache final image, govulncheck/Trivy,
+final container smoke and full Node contracts; integration coordinator owns G1 Step5/main landing.
+GO-RT-07 and sweep single-flight/off-request, replica overlap, synchronized clock and real client-address
+followups remain first-deployment gates in RELEASE_READINESS. No push, merge, deployment, providers,
+account enablement, real ingestion, public data or unmerged-work deletion occurred.
+
+## 2026-10-05 — G3 `fix/go-budget-families` inherited change qualified
+
+Valid until: the qualified G3 runtime changes — then treat as history.
+
+Historical branch head `8aa9603`; F2/GO-CATALOG-01 budget-family capacities, eviction, denial prefilter and off-path cleanup. Qualified on frozen combined G3 source `0e3e85b`,
+not independently at the historical head: budgets16/app35/catalog48/jobs67/web99, zero skips/failures; check-native passes.
+Independent stack source critic APPROVE; common fixture, commands, hashes and remaining integration/deployment
+gates are in the G3 stack receipt above. No source activation or main landing occurred in this worker.
+
+## 2026-10-05 — G3 `fix/go-admission-caps` inherited change qualified
+
+Valid until: the qualified G3 runtime changes — then treat as history.
+
+Historical branch head `8542c09`; F1/GO-01/IDP-1 per-prefix admission, shared token failure counter and fail-closed credential markers. Qualified on frozen combined G3 source `0e3e85b`,
+not independently at the historical head: accounts73/safety50/app35/jobs67/web99/configuration62; named fail-before and full forced-sweep five-repeat requirement pass, zero skips/failures; check-native passes.
+Independent stack source critic APPROVE; common fixture, commands, hashes and remaining integration/deployment
+gates are in the G3 stack receipt above. No source activation or main landing occurred in this worker.
+
+## 2026-10-05 — G3 `fix/go-media-queue-timeouts` inherited change qualified
+
+Valid until: the qualified G3 runtime changes — then treat as history.
+
+Historical branch head `b45beb3`; GO-MEDIA-03/04/GO-RT-02 purge paging, codec slots, transfer deadlines and busy-avatar attempt refund. Qualified on frozen combined G3 source `0e3e85b`,
+not independently at the historical head: media50/app35/web99/configuration62; avatar form500 corrected and its old message contract fails both regressions, zero skips/failures; check-native passes.
+Independent stack source critic APPROVE; common fixture, commands, hashes and remaining integration/deployment
+gates are in the G3 stack receipt above. No source activation or main landing occurred in this worker.
+
+## 2026-10-05 — G3 `fix/go-low-runtime` inherited change qualified
+
+Valid until: the qualified G3 runtime changes — then treat as history.
+
+Historical branch head `9a008bf`; GO-JOBS-01/GO-RT-05/06 feed UID, statement timeout and video drain claim/deadline guards. Qualified on frozen combined G3 source `0e3e85b`,
+not independently at the historical head: jobs67/app35/configuration62/media50; previously unrun video claim guard passes, zero skips/failures; check-native passes.
+Independent stack source critic APPROVE; common fixture, commands, hashes and remaining integration/deployment
+gates are in the G3 stack receipt above. No source activation or main landing occurred in this worker.
+
+## 2026-10-05 — G3 `fix/go-video-queue-hold` inherited change qualified
+
+Valid until: the qualified G3 runtime changes — then treat as history.
+
+Historical branch head `1af09f8`; F3 exhausted stale video lease fenced out of claims. Qualified on frozen combined G3 source `0e3e85b`,
+not independently at the historical head: media50/jobs67/admin20, zero skips/failures; check-native passes.
+Independent stack source critic APPROVE; common fixture, commands, hashes and remaining integration/deployment
+gates are in the G3 stack receipt above. No source activation or main landing occurred in this worker.
+
+## 2026-10-05 — G3 `fix/go-admin-permissions` inherited change qualified
+
+Valid until: the qualified G3 runtime changes — then treat as history.
+
+Historical branch head `fd9d586`; IDP-3 active staff superuser required throughout the native admin console. Qualified on frozen combined G3 source `0e3e85b`,
+not independently at the historical head: admin20/app35, zero skips/failures; check-native passes.
+Independent stack source critic APPROVE; common fixture, commands, hashes and remaining integration/deployment
+gates are in the G3 stack receipt above. No source activation or main landing occurred in this worker.
+
+## 2026-10-05 — G3 avatar form source correction prepared on Linux
+
+Valid until: this candidate is qualified and integrated or superseded — then treat as history.
+
+The G3 form500 failure is `accountRender` passing `[]string` into the shared base template, which reads
+`m.tags`. A temporary isolated renderer diagnostic reproduced `base.html` line121: "can't access a
+field by name on type string (variable m.tags)". The diagnostic was removed; production errors remain
+generic. Account messages now use the existing escaped `socialMessage` contract with `tags=error`.
+`TestPostgresAccountErrorRendersPrivateProfile` pins the actual private profile error page and escaped
+script marker; the existing avatar busy form/fetch503 regression remains. Independent source review:
+APPROVE; actual fixture and fail-before receipts are still pending. The source is committed before
+the canonical stack image and fixture binaries are built, and frozen during those runs.
+
+Go1.27.1/Node24.18.0 confirmed. Native gate harness16/16, fleet docs files53/all defect counts0,
+and whitespace pass. `check-contracts -summary` exits1 with993 manifest-claimed verified,1678 unresolved,
+0invalid of2671; coverage is not increased. Shared `main` and unrelated work remain untouched.
+Readiness now retains GO-RT-07 and the auth sweep/replica/clock/client-address followups as first-deployment
+gates. No deployment, public ingress, providers, real data or accounts were activated.
+
+## 2026-10-05 — G3 continuation notes for the move to Linux (auth, media, runtime audit fixes)
+
+Valid until: the G3 stack below is qualified and integrated — then replace this entry with one entry per branch and treat it as history.
+
+Written at wrap-up on Windows (owner decision ~18:00: Windows memory headroom stayed under the test floor, so the owed
+runs move to Linux). **Nothing in this stack is integrated yet.** Already integrated from G3: `d9ede52` (IDP-6 dead web
+action cases, GO-MEDIA-05 comment, GO-EXPORT-01 README; check-native exit 0, web 93 and media 42 pass, 0 skip; reviewer
+APPROVE). STATUS.md is not updated for the stack; add the facts when each branch is integrated.
+
+**Stack (linear, each branch contains the ones before it), on `d9ede52`:**
+
+| # | Branch | Findings | Review | Evidence so far | Owed |
+|---|---|---|---|---|---|
+| 1 | `fix/go-admin-permissions` | IDP-3: `/admin/` console needs an active staff superuser (owner decision; ADR-0035 amended) | APPROVE | pre-stack tree: check-native 0; admin 20, app 28, 0 skip; fail-before proven (gate reverted: `TestNativeConsoleRequiresAdministrator` and the HTML permissions test fail) | lanes admin, app on the stacked head |
+| 2 | `fix/go-video-queue-hold` | F3: exhausted stale video lease fenced out of the claim (ADR-0038 amended) | APPROVE | pre-stack tree: check 0; media 43, jobs 64, admin 19; fail-before proven (`attachments.go` reverted: both video tests fail) | lanes media, jobs, admin |
+| 3 | `fix/go-low-runtime` | GO-JOBS-01, GO-RT-06, GO-RT-05 (ADR-0026 amended: a drain takes no claim its deadline cannot finish) | APPROVE | before the claim-guard commit: check 0; jobs 67, app 28, configuration 60, media 42; fail-before proven for the statement-timeout, feed-id and job-timeout tests | lanes jobs, app, configuration, media; the claim-guard commit and `TestPostgresVideoDrainTakesNoClaimItsDeadlineCannotFinish` have never run |
+| 4 | `fix/go-media-queue-timeouts` | GO-MEDIA-03, GO-MEDIA-04, GO-RT-02; busy-refused avatar upload returns its attempt (owner decision) | APPROVE for all but the last commit | pre-stack tree `0e54a37`: check 0; media 47, app 31, configuration 61 pass; **web 96 pass, 1 FAIL**; fail-before proven for the purge test and the three deadline-wiring tests | see "5e failure" below; lanes media, app, web, configuration; review of the avatar-refund commit |
+| 5 | `fix/go-admission-caps` | F1 = GO-01, IDP-1 (ADR-0039 amended; IDP-2 was already fixed, guards kept) | reviewer APPROVE (whole branch); critic: ship with named fixes | first commit only: check 0; accounts 69, safety 50, app 30, jobs 64, web 92, configuration 59 on a database bootstrapped by the branch | everything after the first commit has never been compiled: see "6a owed" below |
+| 6 | `fix/go-budget-families` | rest of F2, GO-CATALOG-01 (covers G2's GO-PRIV-06; ADR-0037 amended) | APPROVE | the reviewer ran the SQL on PostgreSQL 16 (17 budgets tests pass, v1 upgrade exact, pgbench stress without deadlocks); never run through the project gates | check-native; lanes budgets, app, catalog, jobs, web on a fresh database (schema changes) |
+
+**How to qualify on Linux (ADR-0040; one lane per affected package, zero skips, PASS > 0):** for each branch head, in stack
+order, `scripts/check-native.sh /abs/path/to/go`, then the lanes above through `scripts/qualify-native.sh` (or its
+single-lane equivalent with the same flags and release image) against a disposable PostgreSQL 16 + PostGIS + pgvector
+database. Branches 5 and 6 change schema bootstrap (`accounts_go_oauth_flow.peer_hash`; `go_rate_budget_family_capacity`
+and the budgets functions): recreate the database and run that branch's own `social-server --migrate-only` first. Then add
+STATUS.md and a per-branch WORKLOG entry with the counts and fast-forward (`git push origin <head>:feat/go-native-toolchain`,
+never forced). Fail-before means: restore only the fix file(s) to the parent commit, keep the tests, and see the named
+tests fail.
+
+**5e failure:** `TestPostgresBusyAvatarRerendersFormOrAnswersFetch` (`internal/web/media_busy_test.go`): the plain form
+case gets 500 `{"detail":"Page unavailable."}` instead of a re-rendered 503. That body is `accountRender`'s swallowed
+`Renderer.Render` error for the `profile` view (`web/account_actions.go`). `TestNativeAccountPagesUseCompletePrivateContexts`
+renders `profile` in the same fixture through `AccountView` + `Render` without `messages`, so the difference is the
+`accountRender` path (messages, CSRF) or the multipart POST request. No existing test renders `profile` through
+`accountRender` with an error, so this may be a pre-existing fault of every avatar-upload error page, not only of the
+busy path: print the render error first. The thread-attachment and place-cover variants of the same test pass.
+
+**6a owed (critic's three fixes plus runs):** (1) compile and run the head: lanes accounts, safety, app, jobs, web,
+configuration on a fresh database, and fail-before for `TestNativeCredentialSubtreeVariantsReachNoVerdict`,
+`TestObtainTokenSharesFailedLoginCounter`, `TestObtainTokenRefusesCrossSiteBrowserRequestsBeforeAnyRow` and
+`TestRequirePeerMarkerRefusesUnmarkedAttemptsAndFlows`; (2) ADR-0039's table-size claim is already scoped in the amended
+text (done); (3) prove the opportunistic sweep is invisible: one run of accounts, safety and app with `Store.sweepDue`
+forced to always fire (scratch patch, not committed) plus `-test.count=5`. Before first deployment (not before
+integration): single-flight the sweep and move it off the request goroutine; no old/new replica overlap; clocks synced;
+the real client address must reach the app or every user shares one bucket.
+
+**Budget families:** the two ADR-0037 sentences the reviewer asked for are in the amended text (the live sweeper is a
+deliberate exception to the periodic-work rule; never run a pre-v2 migration against a v2 database).
+
+**Owner decisions taken on 2026-10-05 (all recorded in the ADRs named above):** admin console is administrators only;
+per-prefix caps 100 logins / 15 min, 30 restricted proofs / 15 min, 30 signups / hour, 30 OAuth starts / 15 min (IPv6 per
+/64); the mobile token endpoint shares the failed-login lockout; a full budget family evicts its longest-idle keys, the
+account family included; a busy-refused avatar upload spends no attempt; GO-EXPORT-01 (two snapshot producers, only
+`jobs/snapshot.go` runs) stays as is and is decided before first deployment.
+
+**Not fixed, with reason:** GO-RT-07 (draining flag is set right before `server.Shutdown`; the fix is a pre-stop delay
+whose length depends on the deployment's probe model: add to "before first deployment"); GO-MEDIA-05 (`AttachToPost` is
+test-only and its gates differ from the live path; comment corrected only); GO-RT-06's second half (handlers without a
+request deadline queue on the pool). Confirmed present and tested on the integration branch by reading: F6, F7, F8 (F8
+needs branch 2).
+
+**Open for the owner / deployment review:** operators lose console-only tools (venue-claim decisions, correction and
+proposal publishing, edge reversal), and the console gate does not also require role `admin` or a verified adult; held
+videos are silent and outlive their time-to-live; anonymous snapshot downloads can hold a connection up to 30 minutes;
+the purge can still starve past limit x 200 held rows; image and video codecs can run together on a small host;
+`app/proxy.go` falls back to the proxy address when any `X-Forwarded-For` entry fails to parse; the signup cap counts
+attempts, rejected ones included; `web.action` has three more dead blocks.
+
 ## 2026-10-05 — Forbidden runtime checks fail closed (G1 preflight follow-up)
 
 Valid until: native image qualification changes — then requalify.

@@ -129,6 +129,14 @@ func (s *Service) RestrictionAccess(ctx context.Context, username, password, add
 	if s.Config.Accounts == nil {
 		return nil, "", platform.ErrForbidden
 	}
+	// Its own per-prefix scope: a login spray cannot block this DSA remedy, and
+	// it still caps total proofs per network before any password work.
+	if err := s.Config.Accounts.AdmitLoginPeer(ctx, accounts.AuthScopeRestricted, address); err != nil {
+		if errors.Is(err, accounts.ErrLoginPeerLimit) {
+			return nil, "", ErrRate
+		}
+		return nil, "", err
+	}
 	var id int64
 	var active bool
 	valid, err := s.Config.Accounts.LoginFailures(ctx, username, address, func(attempt context.Context) (bool, error) {

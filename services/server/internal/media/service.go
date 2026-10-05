@@ -380,9 +380,17 @@ func (s *Service) UploadPhoto(ctx context.Context, a platform.Actor, kind string
 		return p, ErrProcessing
 	}
 	if kind == "profile" {
-		if err = s.avatarAttempt(ctx, a); err != nil {
-			return p, err
+		attempted, e := s.avatarAttempt(ctx, a)
+		if e != nil {
+			return p, e
 		}
+		// A full codec queue refuses before any image work. That refusal is not
+		// an upload attempt, so its debit is returned; real rejections still count.
+		defer func() {
+			if errors.Is(err, ErrBusy) {
+				s.refundAvatarAttempt(ctx, a, attempted)
+			}
+		}()
 	}
 	m, err := s.processor.ProcessImage(ctx, path)
 	if err != nil {
@@ -485,8 +493,8 @@ func (s *Service) UploadPhoto(ctx context.Context, a platform.Actor, kind string
 	}
 	return p, err
 }
-func (s *Service) avatarAttempt(ctx context.Context, a platform.Actor) error {
-	return platform.Transaction(ctx, s.db, func(tx pgx.Tx) error {
+func (s *Service) avatarAttempt(ctx context.Context, a platform.Actor) (attempted time.Time, err error) {
+	err = platform.Transaction(ctx, s.db, func(tx pgx.Tx) error {
 		if _, e := tx.Exec(ctx, `SELECT pg_advisory_xact_lock(hashtextextended('media-avatar:'||$1::bigint::text,0))`, a.ID); e != nil {
 			return e
 		}
@@ -500,9 +508,17 @@ func (s *Service) avatarAttempt(ctx context.Context, a platform.Actor) error {
 		if _, e := tx.Exec(ctx, `DELETE FROM media_go_avatarattempt WHERE user_id=$1 AND created_at<=now()-$2*interval '1 second'`, a.ID, s.policy.AvatarUploadWindow.Seconds()); e != nil {
 			return e
 		}
-		_, e := tx.Exec(ctx, `INSERT INTO media_go_avatarattempt(user_id) VALUES($1)`, a.ID)
-		return e
+		return tx.QueryRow(ctx, `INSERT INTO media_go_avatarattempt(user_id) VALUES($1) RETURNING created_at`, a.ID).Scan(&attempted)
 	})
+	return attempted, err
+}
+
+// refundAvatarAttempt removes exactly the one debit a busy refusal recorded.
+// Cancellation of the refused request cannot keep the debit.
+func (s *Service) refundAvatarAttempt(ctx context.Context, a platform.Actor, attempted time.Time) {
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 3*time.Second)
+	defer cancel()
+	_, _ = s.db.Exec(ctx, `DELETE FROM media_go_avatarattempt WHERE ctid IN(SELECT ctid FROM media_go_avatarattempt WHERE user_id=$1 AND created_at=$2 LIMIT 1)`, a.ID, attempted)
 }
 
 type Cover struct {

@@ -80,7 +80,7 @@ func init() {
 	add("safety.authorityreferral", "safety_authorityreferral", "authority,reason,subject_ref,referred_by_id,created_at,reference,report_id,audit_anchor_hash,notes")
 	add("safety.auditlog", "safety_auditlog", "event,actor_id,target_ref,created_at,data,prev_hash,hash")
 	add("media.photo", "media_photo", "kind,uploader_id,thread_id,scan_status,byte_size,created_at")
-	add("media.attachment", "media_attachment", "kind,uploader_id,post_id,content_type,byte_size,created_at")
+	add("media.attachment", "media_attachment", "kind,status,processing_attempts,processing_started_at,uploader_id,post_id,content_type,byte_size,created_at")
 	add("media.activitycover", "media_activitycover", "activity_id,uploader_id,content_type,byte_size,created_at")
 	add("donations.donation", "donations_donation", "amount_cents,currency,provider,status,donor_id,campaign_id,created_at,completed_at")
 	add("donations.campaign", "donations_campaign", "title,slug,goal_cents,currency,is_active,partner_id,closed_at,created,outcome")
@@ -107,28 +107,31 @@ func init() {
 	m.Editable = true
 	models["events.event"] = m
 }
+
+// Gate admits only an active staff superuser (ADR-0035, 2026-10-05). Incoming
+// flags are never proof; all three are re-read from the account row.
 func (s *Service) Gate(ctx context.Context, a platform.Actor) error {
-	if a.ID < 1 || !a.IsActive || !a.IsStaff {
+	if a.ID < 1 || !a.IsActive || !a.IsStaff || !a.IsSuperuser {
 		return platform.ErrForbidden
 	}
-	var active, staff bool
-	if err := s.DB.QueryRow(ctx, `SELECT is_active,is_staff FROM accounts_user WHERE id=$1`, a.ID).Scan(&active, &staff); err != nil {
+	var active, staff, superuser bool
+	if err := s.DB.QueryRow(ctx, `SELECT is_active,is_staff,is_superuser FROM accounts_user WHERE id=$1`, a.ID).Scan(&active, &staff, &superuser); err != nil {
 		return err
 	}
-	if !active || !staff {
+	if !active || !staff || !superuser {
 		return platform.ErrForbidden
 	}
 	return nil
 }
 
-// gateTx orders owned operator writes against permission revocation. The actor
+// gateTx orders owned console writes against permission revocation. The actor
 // row remains locked until both the domain mutation and audit have committed.
 func (s *Service) gateTx(ctx context.Context, tx pgx.Tx, a platform.Actor) error {
-	var active, staff bool
-	if err := tx.QueryRow(ctx, `SELECT is_active,is_staff FROM accounts_user WHERE id=$1 FOR UPDATE`, a.ID).Scan(&active, &staff); err != nil {
+	var active, staff, superuser bool
+	if err := tx.QueryRow(ctx, `SELECT is_active,is_staff,is_superuser FROM accounts_user WHERE id=$1 FOR UPDATE`, a.ID).Scan(&active, &staff, &superuser); err != nil {
 		return err
 	}
-	if !active || !staff {
+	if !active || !staff || !superuser {
 		return platform.ErrForbidden
 	}
 	return nil

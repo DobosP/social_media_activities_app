@@ -79,6 +79,9 @@ Not fixed yet; each blocks the first deployment of the Go runtime
       state, legacy sessions are deleted, and a qualification test adopts a Django-migrated fixture.
 - [ ] GO-RT-08 — `Dockerfile` and `Dockerfile.db` base images float (no digest); apt packages are unpinned.
       Done when base images are digest-pinned and package versions pinned or snapshot-sourced.
+- [ ] F1 / GO-01 — authentication hygiene still runs on the request goroutine. Before deployment,
+      single-flight the sweep and move it off that goroutine; prevent old/new replica overlap, synchronize
+      clocks and verify that the trusted proxy delivers the real client address (ADR-0039).
 - [ ] GO-MEDIA-06 — 30 s server ReadTimeout (`cmd/social-server/main.go`) vs the 80 MB upload cap without a
       buffering proxy. Done when a test uploads the cap over a slow link within the configured
       timeouts, or the deployment template adds a buffering proxy with that limit.

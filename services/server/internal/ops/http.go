@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/DobosP/social_media_activities_app/services/server/internal/budgets"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"io"
@@ -31,14 +30,15 @@ type Service struct {
 	requests, errors, latencyNS atomic.Uint64
 	mu                          sync.Mutex
 	csp                         []CSPViolation
-	Budgets                     *budgets.Store
+	budget                      int
+	budgetUntil                 time.Time
 }
 
 func NewService(db *pgxpool.Pool, config HTTPConfig) *Service {
 	if config.Version == "" {
 		config.Version = "unknown"
 	}
-	return &Service{DB: db, Config: config, Budgets: budgets.New(db)}
+	return &Service{DB: db, Config: config}
 }
 func (s *Service) Register(mux *http.ServeMux) {
 	for _, prefix := range []string{"/api", "/api/v1"} {
@@ -226,10 +226,20 @@ func ParseCSP(raw []byte) ([]CSPViolation, error) {
 }
 func (s *Service) CSPReport(w http.ResponseWriter, r *http.Request) {
 	defer func() { w.WriteHeader(204) }()
-	decision, err := s.Budgets.Global(r.Context(), "ops.csp_report", budgets.Policy{Limit: 120, Window: time.Minute})
-	if err != nil || !decision.Allowed {
+	// Per-process 120/min ceiling (ADR-0037): an unauthenticated report flood
+	// never reaches the database pool or the body reader.
+	s.mu.Lock()
+	now := time.Now()
+	if !s.budgetUntil.After(now) {
+		s.budget = 0
+		s.budgetUntil = now.Add(time.Minute)
+	}
+	if s.budget >= 120 {
+		s.mu.Unlock()
 		return
 	}
+	s.budget++
+	s.mu.Unlock()
 	raw, err := io.ReadAll(io.LimitReader(r.Body, (8<<10)+1))
 	if err != nil {
 		return

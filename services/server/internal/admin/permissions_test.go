@@ -562,17 +562,41 @@ func TestNativePermissionsHTMLManagerVisibilityCSRFAndStrictForm(t *testing.T) {
 		mux.ServeHTTP(out, r)
 		return out
 	}
-	for _, viewer := range []struct {
-		actor platform.Actor
-		form  bool
-	}{{manager, true}, {operator, false}} {
-		out := request(viewer.actor, http.MethodGet, "/admin/accounts/user/", nil, true, "")
-		if out.Code != http.StatusOK || strings.Contains(out.Body.String(), `name="operation" value="permissions"`) != viewer.form || out.Header().Get("Cache-Control") != "no-store" {
-			t.Fatal("permission form did not respect fresh manager visibility/no-store", out.Code)
-		}
+	if out := request(manager, http.MethodGet, "/admin/accounts/user/", nil, true, ""); out.Code != http.StatusOK || !strings.Contains(out.Body.String(), `name="operation" value="permissions"`) || out.Header().Get("Cache-Control") != "no-store" {
+		t.Fatal("permission form did not respect fresh manager visibility/no-store", out.Code)
 	}
 	if out := request(platform.Actor{}, http.MethodGet, "/admin/accounts/user/", nil, false, ""); out.Code != http.StatusNotFound {
 		t.Fatal("anonymous visitor enumerated operator permission form", out.Code)
+	}
+	// The console is administrator-only (ADR-0035, 2026-10-05): the operator
+	// preset receives the anonymous 404 on every console route and action.
+	for _, path := range []string{"/admin/", "/admin/accounts/user/", "/admin/accounts.bannedidentity/", "/admin/accounts/bannedidentity/", "/admin/safety/auditlog/"} {
+		if out := request(operator, http.MethodGet, path, nil, true, ""); out.Code != http.StatusNotFound || strings.Contains(out.Body.String(), "Model index") {
+			t.Fatal("operator reached the administrator console", path, out.Code)
+		}
+	}
+	var ban int64
+	if err := s.DB.QueryRow(ctx, `INSERT INTO accounts_bannedidentity(holder_hash,created_at) VALUES('synthetic-html-ban',now()) RETURNING id`).Scan(&ban); err != nil {
+		t.Fatal(err)
+	}
+	lift := url.Values{"csrfmiddlewaretoken": {csrf}, "action": {"lift_bans"}, "ids": {strconv.FormatInt(ban, 10)}, "reason": {"Synthetic reviewed lift"}}
+	save := url.Values{"csrfmiddlewaretoken": {csrf}, "operation": {"save"}, "id": {"0"}, "fields": {`{"name":"Operator HTML category","slug":"operator-html-category"}`}}
+	if out := request(operator, http.MethodPost, "/admin/accounts/bannedidentity/", lift, true, "https://app.example"); out.Code != http.StatusNotFound {
+		t.Fatal("operator applied a console action", out.Code)
+	}
+	if out := request(operator, http.MethodPost, "/admin/taxonomy/activitycategory/", save, true, "https://app.example"); out.Code != http.StatusNotFound {
+		t.Fatal("operator saved curated data", out.Code)
+	}
+	var banned bool
+	var categories int
+	if err := s.DB.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM accounts_bannedidentity WHERE id=$1),(SELECT count(*) FROM taxonomy_activitycategory WHERE slug='operator-html-category')`, ban).Scan(&banned, &categories); err != nil || !banned || categories != 0 {
+		t.Fatal("refused operator request changed console state", banned, categories, err)
+	}
+	if out := request(manager, http.MethodPost, "/admin/accounts/bannedidentity/", lift, true, "https://app.example"); out.Code != http.StatusOK {
+		t.Fatal("administrator could not apply the same console action", out.Code)
+	}
+	if err := s.DB.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM accounts_bannedidentity WHERE id=$1)`, ban).Scan(&banned); err != nil || banned {
+		t.Fatal("administrator console action was not applied", err)
 	}
 	form := func() url.Values {
 		return url.Values{"csrfmiddlewaretoken": {csrf}, "operation": {"permissions"}, "id": {strconv.FormatInt(target.ID, 10)}, "level": {"moderator"}, "reason": {"Synthetic reviewed HTML grant"}}
@@ -588,7 +612,7 @@ func TestNativePermissionsHTMLManagerVisibilityCSRFAndStrictForm(t *testing.T) {
 		{"no-CSRF-cookie", manager, false, "https://app.example", nil, http.StatusForbidden},
 		{"bad-origin", manager, true, "https://other.example", nil, http.StatusForbidden},
 		{"bad-CSRF-token", manager, true, "https://app.example", func(v url.Values) { v.Set("csrfmiddlewaretoken", "invalid") }, http.StatusForbidden},
-		{"operator", operator, true, "https://app.example", nil, http.StatusForbidden},
+		{"operator", operator, true, "https://app.example", nil, http.StatusNotFound},
 		{"raw-cohort-field", manager, true, "https://app.example", func(v url.Values) { v.Set("cohort", "child") }, http.StatusBadRequest},
 		{"raw-superuser-field", manager, true, "https://app.example", func(v url.Values) { v.Set("is_superuser", "true") }, http.StatusBadRequest},
 		{"duplicate-level", manager, true, "https://app.example", func(v url.Values) { v.Add("level", "administrator") }, http.StatusBadRequest},
@@ -614,7 +638,7 @@ func TestNativePermissionsHTMLManagerVisibilityCSRFAndStrictForm(t *testing.T) {
 	if _, err := s.DB.Exec(ctx, `UPDATE accounts_user SET is_superuser=false WHERE id=$1`, manager.ID); err != nil {
 		t.Fatal(err)
 	}
-	if out := request(manager, http.MethodGet, "/admin/accounts/user/", nil, true, ""); out.Code != http.StatusOK || strings.Contains(out.Body.String(), `name="operation" value="permissions"`) {
-		t.Fatal("stale manager retained permission form visibility")
+	if out := request(manager, http.MethodGet, "/admin/accounts/user/", nil, true, ""); out.Code != http.StatusNotFound || strings.Contains(out.Body.String(), `name="operation" value="permissions"`) {
+		t.Fatal("stale manager retained console or permission form visibility", out.Code)
 	}
 }

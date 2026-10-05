@@ -3,7 +3,11 @@
 `admin.New(db, catalog, social, safety, media)` binds the existing native domain services.
 `admin.HTTP{Service: service, Auth: auth}.Register(mux)` mounts `/admin/` and the
 Django-style `/admin/<app>/<model>/` model pages. The shorter `/admin/<app>.<model>/`
-form is also accepted. Every read rechecks current database staff/active flags. HTML,
+form is also accepted. Every entry point (model inventory, row lists, named actions,
+curated saves, event review) admits only an active staff superuser and rechecks those
+flags in the database; owned writes recheck them again under the actor row lock
+([ADR-0035](../../../../docs/adr/0035-guarded-permissions-private-schema.md)). Anyone
+else, including an operator or moderator, receives the anonymous 404. HTML,
 JSON metadata and result messages are private and `no-store`; credentials, blob keys
 and encrypted-message bodies never appear in model summaries.
 
@@ -25,7 +29,7 @@ cycles. Unknown fields fail. Server timestamps and staff approval identity are d
 never posted. Every successful save records the edited field names in the hash chain.
 
 Imported event facts retain source ownership. Holding/releasing an imported event uses
-`ReviewEvent`, an explicit audited staff decision, with a nonempty review reason,
+`ReviewEvent`, an explicit audited administrator decision, with a nonempty review reason,
 public venue, live source lifecycle and coherent canonical RO-EDU pack/confidence/license
 metadata. Raw source identity/commerce/provenance cannot be changed through `Save`.
 
@@ -41,18 +45,18 @@ deletion remains outside this interface.
 [ADR-0035](../../../../docs/adr/0035-guarded-permissions-private-schema.md) records the
 guarded native permission policy. In `/admin/accounts/user/` (also
 `/admin/accounts.user/`), a current active staff superuser with `role=admin` receives
-the permission form. An operator sees account summaries without this form; a role-only
-moderator uses `/moderation/` and receives no access to the model console.
+the permission form. An operator and a role-only moderator receive no access to the model
+console; moderators use `/moderation/`, operators keep their in-app staff tools.
 
 Select one account record ID and a complete permission level, enter a required review
 reason (at most 2000 characters), then submit the same-origin CSRF-protected form:
 
-| Level | Native role | Staff console | Superuser / permission management |
-|---|---|---|---|
-| User | `user` | no | no |
-| Moderator | `moderator` | no | no |
-| Operator | `user` | yes | no |
-| Administrator | `admin` | yes | yes |
+| Level | Native role | In-app staff tools | `/admin/` console | Superuser / permission management |
+|---|---|---|---|---|
+| User | `user` | no | no | no |
+| Moderator | `moderator` | no | no | no |
+| Operator | `user` | yes | no | no |
+| Administrator | `admin` | yes | yes | yes |
 
 `ChangePermissions` reloads actor and target in its transaction. Adult managers and
 newly privileged targets need the latest actual adult assurance to remain current,
@@ -72,14 +76,15 @@ create no change audit. Targets must sign in again after a change; existing OAut
 links do not cache administrative capabilities. Permission fields grant neither private
 thread membership nor cross-cohort messaging/parental authority.
 
-Owned curated saves, event review and local operator actions lock/recheck current staff
-authority in their transaction. Existing delegated domain services retain their own gates;
-requests already authorized before a revocation may finish. Subsequent HTTP requests and
-live deliveries reload credentials and current authority. Review gates for this change:
+Owned curated saves, event review and local console actions lock/recheck current staff
+superuser authority in their transaction. Existing delegated domain services retain their
+own gates; requests already authorized before a revocation may finish. Subsequent HTTP
+requests and live deliveries reload credentials and current authority. Review gates for this change:
 [ADR-0040](../../../../docs/adr/0040-landing-and-deployment-review-gates.md) (independent review before landing;
 human review before first deployment).
 
 Qualification uses the explicit `-admin-test-dsn` flag and synthetic isolated schemas.
-Tests exercise every source summary query, fresh staff revocation, unknown-field and
+Tests exercise every source summary query, fresh staff/superuser revocation, operator,
+moderator, forged-actor and legacy-grant console refusal, unknown-field and
 identity/payment/scanner rejection, partner-public gates, taxonomy cycles, audited
 identity release and native proposal/correction workflows. No live operator data is read.

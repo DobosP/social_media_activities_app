@@ -1,9 +1,11 @@
 # ADR-0026: drain the withheld-video queue (transcode + poster + frame scan). Frequent by
 # design — the inline post-upload kick usually wins; this timer is the durable fallback that
-# also reclaims work orphaned by a crash. --limit 2 bounds one run well under the unit
-# timeout so systemd can never SIGKILL a clip mid-encode and waste a retry attempt; the
-# next minute's fire continues the drain. (systemd never starts a oneshot that is still
-# running, and skip_locked claims make overlap harmless anyway.)
+# also reclaims work orphaned by a crash. One run takes up to two claims and its own deadline is
+# two stale-lease windows (2 x 1800 s by default); a claim is only taken while a full
+# window remains, so a clip is never cut mid-encode and a retry attempt is never wasted.
+# The unit timeout sits above that deadline; the next minute's fire continues the drain.
+# (systemd never starts a oneshot that is still running, and skip_locked claims make
+# overlap harmless anyway.)
 [Unit]
 Description=transcode_videos (ADR-0026 pending-video drain)
 After=postgresql.service socialapp.service
@@ -15,7 +17,7 @@ Group=app
 WorkingDirectory=/home/app/social_media_activities_app
 EnvironmentFile=/home/app/social_media_activities_app/.env
 ExecStart=/usr/local/bin/social-server --job transcode_videos --site-root /home/app/social_media_activities_app --media-scratch /home/app/social_media_activities_app/var/media-work
-TimeoutStartSec=3600
+TimeoutStartSec=3900
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=read-only
