@@ -398,6 +398,7 @@ func (r *Runner) SyncFeeds(ctx context.Context) (map[string]int, error) {
 	}
 	return map[string]int{"events": count, "failed_feeds": failed}, nil
 }
+
 // feedExternalID namespaces a feed UID within events_event.external_id (200
 // characters). An overlong result is replaced by a digest of the UID, so the
 // lock, lookup and insert always share one value and a replay finds its row.
