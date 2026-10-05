@@ -34,9 +34,12 @@ implemented and verified. Status reflects code on `main`.
 | Privacy-respecting (aggregate-only) observability | `GET /api/ops/stats` staff-only; no per-user analytics (IS-6) | ✅ |
 | Donation funding (no ads, no tracking) | `apps/donations` (pluggable provider, no card data stored; deep-link default + **Stripe Checkout** provider) | ✅ |
 | Media blobs in object storage (prod scale) | `apps/media/storage.S3StorageBackend` (S3-compatible; Hetzner Object Storage per [HOSTING_EU](HOSTING_EU.md)); set `MEDIA_STORAGE_BACKEND` + `MEDIA_S3_BUCKET` | ✅ available |
-| Real-time chat served in prod (ASGI) | `Dockerfile` runs `daphne config.asgi` | ✅ |
-| CI gate (ruff, format, migrations, tests, pip-audit, docker build) | `.github/workflows` | ✅ |
+| Real-time chat served in prod (ASGI) | ~~`Dockerfile` runs `daphne config.asgi`~~ — superseded: the native Go server owns live transport ([ADR-0032](adr/0032-complete-native-go-backend.md)) | superseded |
+| CI / landing gate | `.github/workflows` are dispatch-only ([ADR-0033](adr/0033-manual-github-actions.md)); landing needs local `scripts/check-native.sh` + `scripts/qualify-native.sh` (zero skips) and an independent reviewer ([ADR-0040](adr/0040-landing-and-deployment-review-gates.md)) | local gates; no automatic CI |
 | Backups / restore, cost controls, CDN | see [RUNBOOK](RUNBOOK.md) | 📋 documented (provisioning is a deploy-time task) |
+
+`apps/...` paths above are the Django-era implementation, now an offline oracle; the native equivalents live
+under `services/server/internal/` ([ADR-0032](adr/0032-complete-native-go-backend.md)).
 
 ## Compliance / process (owner: project + DPO, pre-public-launch)
 

@@ -19,8 +19,8 @@ assurance, peer-block and guardian-basis checks. A block between active peers
 denies access to their shared conversation until it is resolved. Public JWKs reject
 private or unexpected fields; opaque backups reject clear private-key/passphrase
 fields. Guardian discovery and read access require a currently eligible adult
-and an active eligible CHILD ward. These stricter checks require the repository's
-human privacy/safety review before landing or activation.
+and an active eligible CHILD ward. Review gates for these stricter checks:
+[ADR-0040](../../../../docs/adr/0040-landing-and-deployment-review-gates.md) (independent review before landing; human review before first deployment).
 
 `EnsureSchema` installs two per-user rate counters. Send admission commits before
 recipient work, so malformed recipient attempts still consume the existing

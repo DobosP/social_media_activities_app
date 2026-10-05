@@ -63,12 +63,15 @@ Current truth remains [STATUS](../STATUS.md). This checklist does not authorize 
 
 Run on a Linux host or WSL2 Ubuntu with the worktree on its ext4 filesystem (never `/mnt/c`): `-race` needs cgo and
 qualify builds Linux test binaries run in the Linux image. Go1.27.1 linux-amd64 from go.dev, sha256-verified, with
-`GOTOOLCHAIN=local` and `GOFLAGS=-mod=readonly`; the owner authorized that download plus the Docker base images on
-2026-10-05. `internal/jobs/operator_case_port6_linux_test.go` runs only on Linux. Node24; caches/tmp in task `_temp`.
+`GOTOOLCHAIN=local`, `GOFLAGS=-mod=readonly`. The owner authorized that download, the Docker base images and module
+downloads on 2026-10-05: once per module, `go mod download` + `go mod verify` with the default GOPROXY/GOSUMDB, then
+`GOPROXY=off` for every build/test run. `internal/jobs/operator_case_port6_linux_test.go` is Linux-only. Node24.
 
 ```bash
-export GOWORK=off GOMAXPROCS=2 GOTOOLCHAIN=local GOFLAGS='-mod=readonly -p=2' GOPROXY=off
+export GOWORK=off GOMAXPROCS=2 GOTOOLCHAIN=local GOFLAGS='-mod=readonly -p=2'
 export GOMODCACHE=~/work/_temp/<slug>/go-mod-cache GOCACHE=~/work/_temp/<slug>/go-cache TMPDIR=~/work/_temp/<slug>/tmp
+for m in server authcore agentapi; do go -C services/$m mod download && go -C services/$m mod verify; done
+export GOPROXY=off
 scripts/check-native.sh /absolute/path/to/go1.27.1/bin/go
 go -C services/server run ./cmd/check-contracts -root "$PWD" -summary
 scripts/qualify-native.sh GO IMAGE PRIVATE_NETWORK SYNTHETIC_DSN ABSOLUTE_TASK_SCRATCH

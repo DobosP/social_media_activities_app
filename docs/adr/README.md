@@ -41,12 +41,12 @@ On conflict: `STATUS.md` > newest-dated ADR > every other doc.
 | 0031 | [go-public-serving-foundation](0031-go-public-serving-foundation.md) | scope superseded by 0032 | 2026-10-04 |
 | 0032 | [complete-native-go-backend](0032-complete-native-go-backend.md) | accepted; landing authorized 2026-10-04, code review pending (ADR-0040) | 2026-10-04 |
 | 0033 | [manual-github-actions](0033-manual-github-actions.md) | accepted; explicit owner request | 2026-10-04 |
-| 0034 | [native-config-error-observability](0034-native-config-error-observability.md) | implemented; coordinator/human review pending | 2026-10-04 |
-| 0035 | [guarded-permissions-private-schema](0035-guarded-permissions-private-schema.md) | proposed; human auth/privacy review before landing | 2026-10-04 |
-| 0036 | [fresh-participation-authority](0036-fresh-participation-authority.md) | proposed; locally qualified, human review pending | 2026-10-04 |
+| 0034 | [native-config-error-observability](0034-native-config-error-observability.md) | implemented; landing per ADR-0040; human review gates first deployment | 2026-10-04 |
+| 0035 | [guarded-permissions-private-schema](0035-guarded-permissions-private-schema.md) | proposed; landing per ADR-0040; human auth/privacy review gates first deployment | 2026-10-04 |
+| 0036 | [fresh-participation-authority](0036-fresh-participation-authority.md) | proposed; locally qualified, landing per ADR-0040; human review gates first deployment | 2026-10-04 |
 | 0037 | [postgresql-shared-rate-budgets](0037-postgresql-shared-rate-budgets.md) | proposed for integration review | 2026-10-04 |
 | 0038 | [native-verification-toolchain](0038-native-verification-toolchain.md) | proposed; native qualified, reference retirement blocked | 2026-10-05 |
-| 0039 | [native-source-login-failure-counter](0039-native-source-login-failure-counter.md) | proposed; source restoration qualified, human auth/privacy review pending | 2026-10-05 |
+| 0039 | [native-source-login-failure-counter](0039-native-source-login-failure-counter.md) | proposed; source restoration qualified, landing per ADR-0040; human auth/privacy review gates first deployment | 2026-10-05 |
 | 0040 | [landing-and-deployment-review-gates](0040-landing-and-deployment-review-gates.md) | accepted; owner decision 2026-10-05 | 2026-10-05 |
 
 ⚠ **0009 is claimed twice** — this ledger exists so it does not happen again. Both files stay:

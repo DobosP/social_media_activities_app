@@ -9,8 +9,8 @@ Creation reloads account eligibility within its transaction. An activity booking
 requires current membership and its cohort wall; the existing CHILD supervisory
 guardian exception also requires a current adult guardian, active relationship,
 eligible CHILD ward membership, assurance and unexpired parental consent. A stale
-guardian seat alone grants no access. These auth/privacy gates require human
-review before landing or activation under the repository operating contract.
+guardian seat alone grants no access. Review gates for these auth/privacy rules:
+[ADR-0040](../../../../docs/adr/0040-landing-and-deployment-review-gates.md) (independent review before landing; human review before first deployment).
 
 Cancellation locks the owned receipt before provider work, so concurrent repeated
 requests cannot cancel externally twice. A provider failure persists a failed
