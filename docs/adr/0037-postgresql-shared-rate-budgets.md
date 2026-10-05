@@ -188,3 +188,12 @@ the 8 KiB body and 200 sanitized rows remain local bounds. Expiry sweeping is pe
 admission: the existing `expire_api_tokens` pass plus one live-process sweeper (one 1,000-row batch
 per minute, stopped with the server context; one-shot jobs start none). Admission makes one
 database round trip and never depends on the sweep, since an expired row reads as empty.
+
+The live-process sweeper is a deliberate exception to the rule that periodic work is registered in
+`internal/jobs`: it is storage hygiene inside the serving process, not a scheduler, and the
+registered pass keeps pruning as well. Never run a pre-v2 migration against a database that v2 has
+used: v1's counting triggers would return over the unmaintained singleton row, and pruning and the
+account-erasure cascade would then fail on its capacity check. A downgrade runs the old binary
+without `--migrate`, or truncates `go_rate_budget` first. Eviction can reset another key's history
+in the same full family, in the account family too (which holds the social action scopes); its
+victims are the keys admitted longest ago, and filling that family takes thousands of accounts.
