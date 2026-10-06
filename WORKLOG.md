@@ -3,6 +3,18 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-06 — Portable Windows unfinished checkpoint
+
+Valid until: task branch changes, is requalified or lands — then treat as history.
+
+Assertion source `953d19e5478d038fca8721979b201d44ea682316` is UNLANDED. Actual affected social53/all6/0skip/fail and four
+controls are retained; coverage remains unchanged/unresolved, current1020/1651/social6.
+Final715/all21/native checks, passing completion manifest, final main review and landing are NOT RUN.
+Main remains clean at aa106459 with prior714/all21. The deadline grants no gate waiver.
+[Windows handover](docs/reviews/native-go/windows-handover.md) records exact branch/source and
+Linux-only evidence plus Windows/WSL pickup commands. Publish only this unfinished task branch
+through authorized ops publish; preserve worktree/history/results/keepers and no cleanup75 consent.
+
 ## 2026-10-06 — UNLANDED lifecycle checkpoint, final qualification NOT RUN
 
 Valid until: `test/rest-contract-activity-lifecycle-20261006` lands or is superseded — then treat as history.

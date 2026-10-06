@@ -96,7 +96,7 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
-- Thread access `874b437` (2026-10-06):714/all21 fresh tests,0skips/failures; native/hash/vet/race + Node4 + harness17 pass; [receipt](docs/reviews/native-go/rest-thread-access-checkpoint.json).
+- Thread access `874b437` (2026-10-06):714/all21 fresh tests,0skips/failures; native/hash/vet/race + Node4 + harness17 pass; [receipt](docs/reviews/native-go/rest-thread-access-checkpoint.json). Portable [Windows handover](docs/reviews/native-go/windows-handover.md).
 - UNLANDED lifecycle checkpoint: affected social53/all6/0skip/fail;4 labelled controls only. Final native/all21 NOT RUN; all3 proposed mappings remain unresolved/not_run.
 - Twenty-one exact mappings:1020 manifest claims/1651 unresolved/0invalid of2671; retirement exits1. Docs/all defects0; whitespace clean. Production/schema/dependencies/frontend unchanged.
 - Prior [thread-pages713](docs/reviews/native-go/rest-thread-pagination-checkpoint.json), [own-list712](docs/reviews/native-go/rest-own-memberships-checkpoint.json), [RSVP711](docs/reviews/native-go/rest-rsvp-checkpoint.json), [Presence710](docs/reviews/native-go/rest-presence-checkpoint.json), [auth/transit709](docs/reviews/native-go/rest-auth-transit-checkpoint.json) and [transport709](docs/reviews/native-go/rest-transport-checkpoint.json) receipts remain; c27 image supplies codecs only.
