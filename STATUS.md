@@ -76,10 +76,10 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Open work
 
-- REST assertion closure remains separate:18 social API declarations, booking assertions, export query equality and
+- REST assertion closure remains separate:15 social API declarations, booking assertions, export query equality and
   existing donation REST assertions; [bounded plan](docs/reviews/native-go/rest-contract-plan.md). Finance service/HTML gaps remain separate.
 - Native completion/toolchain/audit stacks (ADR-0035/0038) are source-qualified per ADR-0040; human code review
-  gates first deployment. The1663 unresolved frozen declarations keep Python source/tests and block retirement.
+  gates first deployment. The1660 unresolved frozen declarations keep Python source/tests and block retirement.
 - Build/promote a fresh immutable producer/server V2 release before real sync;
   the serving repo's producer dependency must be intentionally bumped first.
 - Complete held-event review UX, curated cultural child-venue policy, localized
@@ -97,8 +97,8 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 ## Verification record (newest first)
 
 - Presence `b09e841` (2026-10-06):710/all21 fresh tests,0skips/failures; native/hash/vet/race + Node4 + harness17 pass; [receipt](docs/reviews/native-go/rest-presence-checkpoint.json).
-- Three mappings/new6-case test: guardian404 + unchanged ward state, valid ward-own200 controls, arrival200 + persisted timestamp;3 sensitivity controls fail intentionally.
-- Nine exact mappings:1008 manifest claims/1663 unresolved/0invalid of2671; retirement exits1. Docs53/all defects0; whitespace clean. Production/schema/dependencies/frontend unchanged.
+- RSVP worker49/0skip/fail, all6 prefix/scenario cases;4 labelled sensitivity controls fail intentionally. Root current native/all21 remains pending.
+- Twelve exact mappings:1011 manifest claims/1660 unresolved/0invalid of2671; retirement remains blocked. RSVP production/schema/dependencies/frontend unchanged; prior Presence docs53/all defects0.
 - Prior709 [auth/transit](docs/reviews/native-go/rest-auth-transit-checkpoint.json) and [transport](docs/reviews/native-go/rest-transport-checkpoint.json) receipts remain intact; c27 image supplies codecs only.
 - Original `c27a99f`705 [source/image/audits](docs/reviews/native-go/restart-checkpoint.json) remain; no new deployment-image/audit/frontend qualification. Unused openpgp advisory stays separate.
 - Independent source/sensitivity review approved; final receipt/docs closure receives review before main push. Human deployment review remains open.

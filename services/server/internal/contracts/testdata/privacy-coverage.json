@@ -14016,39 +14016,66 @@
       "legacy_file": "apps/social/tests/test_api.py",
       "line": 349,
       "source_sha256": "fc35dea7bf6fc36444cb7aa4fcb52a274677bc0c78c328882dcd6ebdb759842f",
-      "classification": "unresolved",
-      "native_evidence": [],
-      "rationale": "Preserve the legacy declaration until its behavioral assertions have independent native evidence; a larger native suite or registered route is insufficient.",
-      "gaps": [
-        "Remaining source assertion/transport/edge-case obligations require an explicit native port or reviewed replacement."
+      "classification": "native_semantic_coverage",
+      "native_evidence": [
+        {
+          "go_file": "services/server/internal/social/rest_rsvp_case_test.go",
+          "test": "TestRESTSourceRSVPResponseAndRefusalMatrix",
+          "scenario": "owner RSVP literal maybe?",
+          "assertions": [
+            "both registered API prefixes return exact HTTP400",
+            "invalid enum refusal preserves owner attendance and membership count"
+          ]
+        }
       ],
-      "runtime_verification": "not_run"
+      "rationale": "Finite assertion-only RSVP batch completes the frozen registered-handler assertions for both legacy and v1 prefixes. Correct unchanged production passes the actual synthetic PostgreSQL16/PostGIS/vector social race lane:49 top-level PASS, zero skips/failures, all six new cases; immutable log SHA45e04c252cc1a8574b72436c7f0d65b014826e7a14369efbc95c9a3a91a78402. Four separately labelled controlled overlays of correct code fail only their intended count, missing-minimum-key, outsider-status or invalid-enum-status assertions; these are sensitivity controls, not real source fail-before bugs. IDs, lines and frozen hash remain intact, with no endpoint/schema/dependency/policy change. Root fresh current-source native/all21 qualification and final review are required before main landing; Python retirement and deployment remain separate.",
+      "gaps": [],
+      "runtime_verification": "passed"
     },
     {
       "legacy_id": "apps/social/tests/test_api.py::test_rsvp_non_member_forbidden",
       "legacy_file": "apps/social/tests/test_api.py",
       "line": 338,
       "source_sha256": "fc35dea7bf6fc36444cb7aa4fcb52a274677bc0c78c328882dcd6ebdb759842f",
-      "classification": "unresolved",
-      "native_evidence": [],
-      "rationale": "Preserve the legacy declaration until its behavioral assertions have independent native evidence; a larger native suite or registered route is insufficient.",
-      "gaps": [
-        "Remaining source assertion/transport/edge-case obligations require an explicit native port or reviewed replacement."
+      "classification": "native_semantic_coverage",
+      "native_evidence": [
+        {
+          "go_file": "services/server/internal/social/rest_rsvp_case_test.go",
+          "test": "TestRESTSourceRSVPResponseAndRefusalMatrix",
+          "scenario": "visible same-cohort adult outsider RSVP going",
+          "assertions": [
+            "both registered API prefixes return exact HTTP403",
+            "outsider sees the eligible adult activity but has no seat",
+            "refusal preserves owner attendance and membership count"
+          ]
+        }
       ],
-      "runtime_verification": "not_run"
+      "rationale": "Finite assertion-only RSVP batch completes the frozen registered-handler assertions for both legacy and v1 prefixes. Correct unchanged production passes the actual synthetic PostgreSQL16/PostGIS/vector social race lane:49 top-level PASS, zero skips/failures, all six new cases; immutable log SHA45e04c252cc1a8574b72436c7f0d65b014826e7a14369efbc95c9a3a91a78402. Four separately labelled controlled overlays of correct code fail only their intended count, missing-minimum-key, outsider-status or invalid-enum-status assertions; these are sensitivity controls, not real source fail-before bugs. IDs, lines and frozen hash remain intact, with no endpoint/schema/dependency/policy change. Root fresh current-source native/all21 qualification and final review are required before main landing; Python retirement and deployment remain separate.",
+      "gaps": [],
+      "runtime_verification": "passed"
     },
     {
       "legacy_id": "apps/social/tests/test_api.py::test_rsvp_returns_live_count",
       "legacy_file": "apps/social/tests/test_api.py",
       "line": 322,
       "source_sha256": "fc35dea7bf6fc36444cb7aa4fcb52a274677bc0c78c328882dcd6ebdb759842f",
-      "classification": "unresolved",
-      "native_evidence": [],
-      "rationale": "Preserve the legacy declaration until its behavioral assertions have independent native evidence; a larger native suite or registered route is insufficient.",
-      "gaps": [
-        "Remaining source assertion/transport/edge-case obligations require an explicit native port or reviewed replacement."
+      "classification": "native_semantic_coverage",
+      "native_evidence": [
+        {
+          "go_file": "services/server/internal/social/rest_rsvp_case_test.go",
+          "test": "TestRESTSourceRSVPResponseAndRefusalMatrix",
+          "scenario": "added adult member RSVP going against current-start Run, with owner plus member and no quorum threshold",
+          "assertions": [
+            "both registered API prefixes return HTTP200 for added-member intent going",
+            "actual JSON going=1 and total=2",
+            "min_to_go key is present separately from its null value",
+            "requesting member persists going while owner remains unknown"
+          ]
+        }
       ],
-      "runtime_verification": "not_run"
+      "rationale": "Finite assertion-only RSVP batch completes the frozen registered-handler assertions for both legacy and v1 prefixes. Correct unchanged production passes the actual synthetic PostgreSQL16/PostGIS/vector social race lane:49 top-level PASS, zero skips/failures, all six new cases; immutable log SHA45e04c252cc1a8574b72436c7f0d65b014826e7a14369efbc95c9a3a91a78402. Four separately labelled controlled overlays of correct code fail only their intended count, missing-minimum-key, outsider-status or invalid-enum-status assertions; these are sensitivity controls, not real source fail-before bugs. IDs, lines and frozen hash remain intact, with no endpoint/schema/dependency/policy change. Root fresh current-source native/all21 qualification and final review are required before main landing; Python retirement and deployment remain separate.",
+      "gaps": [],
+      "runtime_verification": "passed"
     },
     {
       "legacy_id": "apps/social/tests/test_api.py::test_thread_posts_get_requires_membership",

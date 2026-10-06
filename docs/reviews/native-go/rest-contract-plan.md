@@ -14,13 +14,15 @@ Production/schema remain unchanged; the correct source passes, and three separat
 A finite three-presence assertion batch adds one named registered-handler fixture covering both
 prefixes; correct source passes worker social48/0skip/fail and three labelled controls prove sensitivity.
 [Fresh Presence qualification](rest-presence-checkpoint.json) on `b09e841`, run `39ecad97926a`:710/all21,0skips/failures; prior receipts remain historical.
-The ledger's1008 claimed/1663 unresolved entries count frozen assertions, not missing endpoints.
+A finite three-RSVP assertion batch adds one named six-case registered-handler matrix; correct
+source passes worker social49/0skip/fail. Four labelled overlays isolate count/key/status sensitivity;
+root current native/all21 qualification remains pending. The ledger's1011 claimed/1660 unresolved entries count frozen assertions, not missing endpoints.
 Go already serves the ordinary HTTP/toolchain paths; full Python reference retirement remains separate.
 
 ## Social REST:26 declarations
 
-All26 IDs below have prefix `apps/social/tests/test_api.py::`; eight are now mapped and18 remain. The frozen file hash matches the
-inventory. Routes exist in `services/server/internal/social/http.go`. The remaining18 require complete
+All26 IDs below have prefix `apps/social/tests/test_api.py::`; eleven are now mapped and15 remain. The frozen file hash matches the
+inventory. Routes exist in `services/server/internal/social/http.go`. The remaining15 require complete
 REST assertion mappings; existing qualified service/HTML foundations alone do not establish them.
 
 | Frozen declaration | Remaining exact REST obligation |
@@ -39,9 +41,9 @@ REST assertion mappings; existing qualified service/HTML foundations alone do no
 | test_post_body_too_long_rejected | Mapped: current REST400 body string-array key, zero-write and exact4000 HTTP201 acceptance. |
 | test_post_requires_membership | Outsider POST403, owner POST201. |
 | test_posts_cannot_be_ghostwritten_on_behalf_of | Guardian403 and zero ghostwritten rows. |
-| test_rsvp_invalid_intent_is_400 | Exact REST400. |
-| test_rsvp_non_member_forbidden | Same-cohort nonmember403. |
-| test_rsvp_returns_live_count | REST200, going1/total2/minimum-null. |
+| test_rsvp_invalid_intent_is_400 | Mapped: both-prefix owner literal maybe? HTTP400 and unchanged state. |
+| test_rsvp_non_member_forbidden | Mapped: both-prefix visible same-cohort outsider HTTP403 and unchanged state. |
+| test_rsvp_returns_live_count | Mapped: added-member HTTP200, going1/total2, present-null min_to_go; both prefixes. |
 | test_thread_posts_get_requires_membership | Populated-thread outsider403, owner200. |
 | test_thread_posts_list_is_bounded | Legacy200, cap5, newest-N/oldest-first order. |
 | test_transit_action_sets_status | Mapped: both-prefix POST200 plus independent actual response/persisted on_my_way checks. |
@@ -55,7 +57,7 @@ REST assertion mappings; existing qualified service/HTML foundations alone do no
 Generic error origin remains `internal/platform/platform.go` Error. The finite batch preserves
 field errors only for activity/post create and maps the service's unknown-transit-value marker only
 in that REST action. Its400 schema alternatives are narrowly operation-scoped. Remaining groups:
-lifecycle/admission, identity/presence/RSVP, and pagination/query-ceiling assertions.
+lifecycle/admission, identity and pagination/query-ceiling assertions.
 Reuse qualified activities/vote/thread/safety, serializer, co-member and policy tests where their
 actual assertions match. Preserve accepted co-organizer, co-member, guardian and safety replacements.
 
@@ -113,7 +115,7 @@ Current REST scope retains existing donation endpoints and exact export-helper q
 ## Order and scope
 
 1. Retain the exact export mapping and its source IDs/provenance and qualified c27 receipt.
-2. Retain the qualified Presence assertions;18 social assertion sets remain for explicit bounded batches.
+2. Retain the qualified Presence/RSVP assertions;15 social assertion sets remain for explicit bounded batches.
 3. Close booking REST assertions and reviewed adapter replacements.
 4. Qualify existing donation REST assertions and exact export-helper query equality; retain separate finance service/HTML evidence gaps.
 5. Triage relevant REST media/account-safety rows against existing code/tests similarly.

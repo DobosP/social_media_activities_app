@@ -3,6 +3,63 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-06 — Three finite REST RSVP assertions
+
+Valid until: `test/rest-contract-rsvp-20261006` lands or is superseded — then treat as history.
+
+Owner-authorized assertion-only batch on clean main `39d7d89932ff2c94aa7b23bafa4ccbc06685fbb6`.
+One new registered-handler test, `TestRESTSourceRSVPResponseAndRefusalMatrix`, covers three
+scenarios across both `/api/social` and `/api/v1/social` prefixes. Exactly three frozen IDs in
+`apps/social/tests/test_api.py` are mapped: `test_rsvp_returns_live_count`:322,
+`test_rsvp_non_member_forbidden`:338 and `test_rsvp_invalid_intent_is_400`:349. Source SHA
+`fc35dea7bf6fc36444cb7aa4fcb52a274677bc0c78c328882dcd6ebdb759842f`, IDs, lines, app-pack,
+accepted guardian/co-member/coorganizer/safe-exit/block/group-DM/safety policies and all other
+inventory/coverage entries remain intact. Production, endpoints, schema, dependencies and frontend
+are unchanged; no actual source discrepancy was exposed.
+
+The current-start Run fixture has an adult owner and added adult member as the live-count requester.
+Actual POST going returns200, JSON going1/total2, and a separately asserted present-null min_to_go
+key. Independent committed-state checks preserve owner unknown and requesting member going.
+A visible same-cohort nonmember POST going returns exact403; owner literal maybe? returns exact400.
+Both denials preserve the membership count and attendance state.
+
+Correct-source PostgreSQL/race social lane passes49 top-level tests, zero skips/failures, including
+all six new cases. Immutable log `_temp/test__rest-contract-rsvp-20261006/qualify/qualified/social.log`
+SHA `45e04c252cc1a8574b72436c7f0d65b014826e7a14369efbc95c9a3a91a78402`.
+Four separately labelled controlled Go overlays each fail one top-level test with zero skips and
+only their intended two-prefix subcases. These prove assertion sensitivity of correct production;
+they are not original-source fail-before bugs:
+- Wrong going count, with200/total2/null minimum unchanged; SHA
+  `ecc7e4b3b7d76776054963fa246a51f2ce422a193d31b6996917186863cdc333`.
+- Omit only min_to_go, leaving200/going1/total2 intact; the key-presence check fails, SHA
+  `c5afeecd27089477671ba38abc3d2331654d5704119ec8915091b12e0a275d09`.
+- RSVP-only outsider403 remapped to200 without write; only refusal status fails, SHA
+  `d8c97b1f08fb61399711648d8f58be4954bfe1acf51132dc961738b6198e9b01`.
+- Literal maybe? RSVP400 remapped to403 without write; only enum refusal status fails, SHA
+  `ce352337542ca45b7e8fec1623fd252cb916f1b0ad3caab1b98232e00745d0ae`.
+Raw controls remain under task `controls/<label>/social.log`; summaries and overlays are retained.
+Independent critic source/positive/control review APPROVE; exact mapping/final metadata review follows.
+
+Root provisioned task-owned Go1.27.1 from pinned Docker image
+`sha256:b390522f07c58e679098bb25225b197a7524e5e8f72a9748dd1b76aa96699b91`.
+Node24.18.0 binary SHA `41a74efb34cbde5c7632cdac0cf8bd1a14d0b8d73dc1e82755014d9a9ce70f5c` checked;
+all three modules downloaded/verified into owned caches, then GOPROXY=off. Fresh fixture container
+`social-rest-rsvp-20261006-db`, internal network `social-rest-rsvp-20261006`, synthetic database
+`social_rest_rsvp`,2GiB/2CPU/noports, PG16/PostGIS/vector and native bootstrap pass. Immutable c27
+image `sha256:34c1c2281d9fc96cf486dda8e88497ef5061e21a412c712d8ef61ca14b07031b` supplies codecs
+only for current-source race binaries, not a new deployment-image qualification. Runtime uses the
+canonical restricted-user/read-only/cap-drop/no-new-privileges/mount flags.
+
+Exact worker commands: source task `env.sh`, then global-lock `python3 SCRATCH/run-social.py modules`,
+`qualify` and `controls`; no full native/all21 or optional image/frontend/security build was run by
+this worker. Before each heavy step, recorded fresh memory held above12GiB and the conservative
+8GiB incremental task disk estimate fit; no actual resource/network refusal occurred. Other owners'
+caches, old unknown buffers, backups and keepers were untouched. Tools/fixture remain for root.
+Current ledger1011 claims/1660 unresolved/0invalid of2671,15 social declarations remain unresolved.
+Root current-source native/all21 qualification, final receipt/docs review and main landing remain
+pending; prior Presence710/all21 and original c27 receipts are preserved. No retirement/deployment/
+provider/minor/ingestion/schedule or further mapping campaign follows from this finite batch.
+
 ## 2026-10-06 — Presence source qualification completed
 
 Valid until: serving/test inputs, dependencies, native scripts or codec environment changes — then requalify.
