@@ -25,13 +25,16 @@ A finite three-thread-pagination assertion batch adds one named registered-handl
 source passes worker social51/0skip/fail, first actual v1 GET trace5 within ceiling8. Four scoped
 overlays isolate display order/exact envelope/returned-cursor/query sensitivity.
 [Fresh thread pagination qualification](rest-thread-pagination-checkpoint.json) on `f388641`, run `2423ca3e43ab`:713/all21,0skips/failures.
-The ledger's1017 claimed/1654 unresolved entries count frozen assertions, not missing endpoints.
+A finite three-private-thread-access assertion batch adds one named six-case registered-handler
+matrix; correct source passes worker social52/0skip/fail. Four scoped overlays retain403/201 while
+isolating forbidden writes, private-body disclosure, guardian ghostwriting and stored author.
+Root current native/all21 remains pending. The ledger's1020 claimed/1651 unresolved entries count frozen assertions, not missing endpoints.
 Go already serves the ordinary HTTP/toolchain paths; full Python reference retirement remains separate.
 
 ## Social REST:26 declarations
 
-All26 IDs below have prefix `apps/social/tests/test_api.py::`; seventeen are now mapped and9 remain. The frozen file hash matches the
-inventory. Routes exist in `services/server/internal/social/http.go`. The remaining9 require complete
+All26 IDs below have prefix `apps/social/tests/test_api.py::`; twenty are now mapped and6 remain. The frozen file hash matches the
+inventory. Routes exist in `services/server/internal/social/http.go`. The remaining6 require complete
 REST assertion mappings; existing qualified service/HTML foundations alone do not establish them.
 
 | Frozen declaration | Remaining exact REST obligation |
@@ -48,12 +51,12 @@ REST assertion mappings; existing qualified service/HTML foundations alone do no
 | test_owner_can_cancel_via_api | POST200 and persisted cancelled. |
 | test_owner_can_edit_activity_via_patch | PATCH200 and persisted new title. |
 | test_post_body_too_long_rejected | Mapped: current REST400 body string-array key, zero-write and exact4000 HTTP201 acceptance. |
-| test_post_requires_membership | Outsider POST403, owner POST201. |
-| test_posts_cannot_be_ghostwritten_on_behalf_of | Guardian403 and zero ghostwritten rows. |
+| test_post_requires_membership | Mapped: both-prefix visible nonmember POST403/zero writes; owner201 with actual stored author/body. |
+| test_posts_cannot_be_ghostwritten_on_behalf_of | Mapped: eligible active linked guardian403/zero writes, ward-own201 with actual ward author/body; both prefixes. |
 | test_rsvp_invalid_intent_is_400 | Mapped: both-prefix owner literal maybe? HTTP400 and unchanged state. |
 | test_rsvp_non_member_forbidden | Mapped: both-prefix visible same-cohort outsider HTTP403 and unchanged state. |
 | test_rsvp_returns_live_count | Mapped: added-member HTTP200, going1/total2, present-null min_to_go; both prefixes. |
-| test_thread_posts_get_requires_membership | Populated-thread outsider403, owner200. |
+| test_thread_posts_get_requires_membership | Mapped: both-prefix populated private-thread outsider403/body exclusion and owner200/actual private post. |
 | test_thread_posts_list_is_bounded | Mapped: twelve owner posts/cap5, legacy GET200 raw5, newest-N oldest-first post7–11. |
 | test_transit_action_sets_status | Mapped: both-prefix POST200 plus independent actual response/persisted on_my_way checks. |
 | test_transit_ignores_on_behalf_of | Mapped: eligible active linked guardian404, ward transit none; ward own positive control. |
@@ -124,7 +127,7 @@ Current REST scope retains existing donation endpoints and exact export-helper q
 ## Order and scope
 
 1. Retain the exact export mapping and its source IDs/provenance and qualified c27 receipt.
-2. Retain the qualified Presence/RSVP/own-membership/thread assertions;9 social assertion sets remain for explicit bounded batches.
+2. Retain the qualified Presence/RSVP/own-membership/thread assertions;6 social assertion sets remain for explicit bounded batches.
 3. Close booking REST assertions and reviewed adapter replacements.
 4. Qualify existing donation REST assertions and exact export-helper query equality; retain separate finance service/HTML evidence gaps.
 5. Triage relevant REST media/account-safety rows against existing code/tests similarly.

@@ -3,6 +3,66 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-06 — Three finite REST thread access assertions
+
+Valid until: `test/rest-contract-thread-access-20261006` lands or is superseded — then treat as history.
+
+Owner-authorized assertion-only batch on clean main `b362a14ea8c50ac7a34cf54713be1e3b041d0c96`.
+One named matrix, `TestRESTSourceThreadMembershipPrivacyAndGuardianAuthorship`, covers three
+scenarios across both API prefixes and exactly three frozen IDs in `apps/social/tests/test_api.py`:
+`test_post_requires_membership`:86, `test_thread_posts_get_requires_membership`:197 and
+`test_posts_cannot_be_ghostwritten_on_behalf_of`:211. Source SHA
+`fc35dea7bf6fc36444cb7aa4fcb52a274677bc0c78c328882dcd6ebdb759842f`, IDs, lines, app-pack and
+privacy/authorship/moderation/guardian/co-member policies remain intact, with every other
+coverage/inventory record and production/endpoints/schema/dependencies/frontend unchanged.
+No real production discrepancy was exposed. Final test SHA
+`6246db713df985128a4dbb003ad7db5ff237fb897b411a48cfcd2a2b22c8c74d`.
+
+A visible same-cohort nonmember POST hi returns403 and independently writes zero posts; owner
+POST Meet at 6 returns201 and stores the actual owner author/body. A populated private thread
+contains secret coordination; nonmember GET403 excludes that body after semantic JSON decoding,
+while owner GET200 reads the actual private post. The child fixture has verified active child/adult
+cohorts, live consent with matching guardian identifier/consent_id/active relationship, exact venue
+approval, genuine Kids game CreateActivity/current start, ward participation/effective ward resolution
+and nonmember guardian. Guardian ghostwritten/on_behalf_of POST403 leaves zero ghostwritten rows
+with any author and zero total posts. Ward-own POST201 stores ward author/body as an eligibility
+control. Status, database writes, author and private-content assertions are independent.
+
+Correct PostgreSQL/race social lane passes52 top-level tests, zero skips/failures, all six new cases.
+Immutable `_temp/test__rest-contract-thread-access-20261006/qualify/qualified/social.log` SHA
+`769ffd692a62f8c052346ccaa6cc4788d86668733b0feae0d36911992c5eda9e`.
+Four separately labelled activity-posts-only overlays each fail one top-level test with zero skips
+and only the intended two-prefix cases. These are sensitivity controls of correct source, not bugs:
+- Outsider SQL write hidden behind correct403 fails only independent zero-write checks; SHA
+  `d59beaab1a8f997c2389799264607d6d41660f413ffb2ddd8893aae8d9dccc92`.
+- Actual eligible ward WritePost ghostwriting hidden behind403 fails only zero-write checks; SHA
+  `a72987ee2e8612c6abe34b51dfe88212989e75bb5641256d8bd5658da2bd50eb`.
+- Actual owner WritePost then stored-author corruption retains201/body and fails author assertion; SHA
+  `55e3766f8ea04d18d4b858660e469f13b5a4d6d20d824cb8d525675d423a2f1d`.
+- Actual private database body included in403 JSON fails only content exclusion; SHA
+  `3f2da442daa24db780a382ef5a193f92cffcbb2b88bed4fca254c38d02308ea7`.
+Raw controls remain under task `controls/<label>/social.log`; test/source assertions are unchanged.
+Independent critic source/runtime/control review APPROVE; exact mapping/docs review follows.
+
+Root provisioned task-owned Go1.27.1 from verified image
+`sha256:b390522f07c58e679098bb25225b197a7524e5e8f72a9748dd1b76aa96699b91` and Node24.18.0 binary
+SHA `41a74efb34cbde5c7632cdac0cf8bd1a14d0b8d73dc1e82755014d9a9ce70f5c`; all three modules
+downloaded/verified in owned caches, then GOPROXY=off. Fresh PG16/PostGIS/vector fixture container
+`social-rest-thread-access-20261006-db`, internal network `social-rest-thread-access-20261006`,
+synthetic database `social_rest_thread_access`,2GiB/2CPU/noports; native bootstrap passed.
+Immutable c27 image `sha256:34c1c2281d9fc96cf486dda8e88497ef5061e21a412c712d8ef61ca14b07031b`
+supplies codecs only for current-source race binaries, not deployment-image qualification. Runtime
+uses canonical restricted-user/read-only/cap-drop/no-new-privileges/mount flags.
+
+Exact commands: source task `env.sh`; global-lock `python3 SCRATCH/run-social.py modules`, set
+GOPROXY=off, then `qualify` and `controls`. Fresh memory exceeded12GiB and the conservative8GiB
+incremental task disk estimate fit before every heavy step; no actual resource/network refusal.
+Other owners' caches, unknown buffers, backups and keepers were untouched; tools/fixture remain.
+Current ledger1020 claims/1651 unresolved/0invalid of2671;6 social declarations remain unresolved.
+Root current native/all21 qualification and final receipt/docs review remain pending; no worker
+wholecheck/full21, commit or push. Prior thread-pagination713/own-list712/RSVP711/c27 receipts remain.
+No retirement/deployment/provider/minor/ingestion/schedule or additional source-case campaign follows.
+
 ## 2026-10-06 — Thread pagination source qualification completed
 
 Valid until: serving/test inputs, dependencies, native scripts or codec environment change — then requalify.
