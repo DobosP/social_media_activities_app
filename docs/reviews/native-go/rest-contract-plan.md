@@ -29,6 +29,9 @@ A finite three-private-thread-access assertion batch adds one named six-case reg
 matrix; correct source passes worker social52/0skip/fail. Four scoped overlays retain403/201 while
 isolating forbidden writes, private-body disclosure, guardian ghostwriting and stored author.
 [Fresh thread access qualification](rest-thread-access-checkpoint.json) on `874b437`, run `cba78ec5232b`:714/all21,0skips/failures.
+UNLANDED lifecycle checkpoint adds six registered owner-edit/nonmember-refusal/cancel cases.
+Affected social53/all6/0skip/fail and four controlled proofs are complete; final native/all21 NOT RUN.
+Frozen274/290/307 remain unresolved/not_run; proposed mappings await fresh final qualification/review.
 The ledger's1020 claimed/1651 unresolved entries count frozen assertions, not missing endpoints.
 Go already serves the ordinary HTTP/toolchain paths; full Python reference retirement remains separate.
 

@@ -3,6 +3,45 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-06 — UNLANDED lifecycle checkpoint, final qualification NOT RUN
+
+Valid until: `test/rest-contract-activity-lifecycle-20261006` lands or is superseded — then treat as history.
+
+Base/main `aa10645922ad708db66c9ca0ce982e9f70e4a190` remains qualified714/all21. This unfinished
+branch adds one six-case registered-handler matrix, `TestRESTSourceActivityOwnerEditsNonmemberRefusalAndCancellation`,
+for frozen owner edit274, same-cohort nonmember refusal290 and owner cancel307, both API prefixes.
+Future Old PATCH New name200 and independent persisted title; visible genuine nonmember Keep/hijack
+PATCH403 with full-row/audit zero-write; current Run/weather POST200 and persisted cancelled. Wire
+and committed state are independent. Owner-positive/nonmember-negative assertions preserve accepted
+co-organizer permissions; production/endpoints/schema/dependencies/policies/app-pack remain unchanged.
+Test SHA `39de2e0a93cd2e1d3386f85481b88a9f3dbf32abf53d7ae330366524e2a3ae34`.
+
+Actual affected PostgreSQL/race social53/all6/0SKIP/0FAIL, terminalPASS; log
+`_temp/test__rest-contract-activity-lifecycle-20261006/qualify/qualified/social.log`, SHA
+`93fe38d6e5693042acf946e7339ff7fec3359322edc1828ecdce4e1b32076b1c`. Four separate controlled overlays each1topFAIL/0skip,
+only their intended two-prefix cases, preserving outward200/403. No real source defect was observed.
+Controls independently expose skipped edit with correct-looking wire, correct edit with wrong wire,
+nonmember hijack masked403, and skipped cancellation with correct-looking wire:
+- controlled-owner-edit-no-write-correct200: SHA `bce68e99ef7ee1ccb0f5b225343e9277101feafc7c291c220fbb6448ed9dad10`.
+- controlled-owner-edit-wrong-wire-title: SHA `e039bc60c3ba064a3fffe3f3d1f6674ba422a259ddaedb1a5ea827e5be89effc`.
+- controlled-nonmember-hijack-masked403: SHA `f9a97007c440e1f6c83913ecc9c435272aada0b3ac7cf0eee2b7dec3d1f2f2c3`.
+- controlled-owner-cancel-no-write-correct200: SHA `012cb4b6bd64458f4d612a6dc7a4c3667f275f2865a15aef542e984edcd8274f`.
+
+The Linux wrap deadline defers FINAL native715/all21, check-native, harness and fresh contract/source
+closure: NOT RUN. This branch is UNLANDED; no main/source-completion715 claim. ALL3 privacy-coverage
+rows274/290/307 remain byte-identical unresolved/not_run, frozen SHA fc35 and inventory unchanged;
+current counts stay1020/1651/0 of2671 with6 social unresolved. Private proposed mappings/evidence are
+PENDING in task scratch; publication/handover and subsequent Windows final qualification belong to root.
+
+Root-owned pinned Go1.27.1 image b390522f and Node24.18.0 binary SHA41a74efb remain verified;
+all3 modules download/verify passed then GOPROXY=off. Fresh synthetic PG16/PostGIS/vector container
+`social-rest-activity-lifecycle-20261006-db`, internal network `social-rest-activity-lifecycle-20261006`,
+database `social_rest_activity_lifecycle`,2GiB/2CPU/noports, native bootstrap passed. Codec image34c1c228
+supplies codecs ONLY; no new deployment-image qualification. Commands: source task env.sh; global
+heavy-lock `python3 SCRATCH/run-social.py modules`, GOPROXY=off, then `qualify` and `controls`.
+Fresh12GiB test RAM floor and conservative8GiB task disk estimate held; no actual refusal. No native
+whole/full21/optional campaign/worker commit/push/cleanup; other owners/unknown buffers/keepers untouched.
+
 ## 2026-10-06 — Thread access source qualification completed
 
 Valid until: serving/test inputs, dependencies, native scripts or codec environment change — then requalify.
