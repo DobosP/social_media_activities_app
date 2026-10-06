@@ -3,6 +3,25 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-06 — GUI capture preparation preserved
+
+Valid until: source `aa10645` or the approved capture/gate contract changes — then recheck applicability.
+
+[Unsigned keeper](docs/reviews/gui-capture-preparation/README.md) preserves the reviewed source-only
+84 port and 7 frozen files, 91 source hashes, native/inline versus historical capture ownership,
+89 synthetic case drafts and 17 proposed mutation controls in a deterministic archive.
+G0/G5 counts, historical login, unreachable oracles, G2p branch/erasure action semantics,
+Report/guardian/minor-count questions and retirement at 1651 unresolved stay explicit and unsigned.
+No source/domain/frontend/config/ADR change, safety acceptance, owner signature, capture,
+Live/browser/DB/native-suite result or new retirement pass is claimed.
+
+Keeper validation passed: stdlib archive determinism, 13 member hashes, 91 source hashes,
+4 license references and applicability invariants. The docs command
+`python3 ~/work/agent-ops/scripts/check_docs.py .` reported 53 files and all defect counts 0;
+`git diff --cached --check` was empty. Independent preservation integrity review had no findings;
+it supplied no safety acceptance or runtime qualification. Exact manifest records archive/member
+hashes and licensing/provenance. Documentation-only preservation; parent reviews and lands.
+
 ## 2026-10-06 — Thread access source qualification completed
 
 Valid until: serving/test inputs, dependencies, native scripts or codec environment change — then requalify.

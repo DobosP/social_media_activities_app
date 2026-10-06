@@ -79,7 +79,7 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 - REST assertion closure remains separate:6 social API declarations, booking assertions, export query equality and
   existing donation REST assertions; [bounded plan](docs/reviews/native-go/rest-contract-plan.md). Finance service/HTML gaps remain separate.
 - Native completion/toolchain/audit stacks (ADR-0035/0038) are source-qualified per ADR-0040; human code review
-  gates first deployment. The1651 unresolved frozen declarations keep Python source/tests and block retirement.
+  gates first deployment. The1651 unresolved frozen declarations keep Python source/tests and block retirement; [GUI capture prep](docs/reviews/gui-capture-preparation/README.md) remains unsigned/unrun.
 - Build/promote a fresh immutable producer/server V2 release before real sync;
   the serving repo's producer dependency must be intentionally bumped first.
 - Complete held-event review UX, curated cultural child-venue policy, localized

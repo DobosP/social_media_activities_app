@@ -1,0 +1,215 @@
+{
+  "schema_version": 1,
+  "artifact_kind": "unsigned_gui_capture_preparation_keeper",
+  "source_snapshot": {
+    "repository": "social_media_activities_app",
+    "commit": "aa10645922ad708db66c9ca0ce982e9f70e4a190",
+    "loader_template_count": 91,
+    "source_path_hash_inventory_in": "capture-ownership.json:files",
+    "sorted_source_path_sha256_digest": "1d168e3f0428faeb6c9c1bd14905d2e28b567fe61593bd2aae488d94cd8bec26"
+  },
+  "external_program": {
+    "repository": "roedu-ui",
+    "commit": "954088c9179412206ba97cd0e026c25737ccee85",
+    "path": "docs/plans/2026-10-06-gui-migration/pack/PROGRAM.md",
+    "sha256": "23524f863f4eaefe02343dc0bb6a70fa91cc18eb46fa68aa129b41bd80845388"
+  },
+  "archive": {
+    "path": "capture-preparation.tar.gz",
+    "bytes": 214642,
+    "sha256": "0f86ae2101fd6dd91261d51833e5e83d8f04766efaeb80e1edabfc3668314415",
+    "format": "USTAR + gzip",
+    "determinism": {
+      "member_order": "lexicographic",
+      "tar_mtime": 0,
+      "tar_uid": 0,
+      "tar_gid": 0,
+      "tar_uname": "",
+      "tar_gname": "",
+      "tar_mode": "0644",
+      "gzip_mtime": 0,
+      "gzip_filename": "",
+      "gzip_level": 9
+    },
+    "member_count": 13
+  },
+  "members": [
+    {
+      "name": "branch-catalogue.json",
+      "original_bytes": 293739,
+      "original_sha256": "871c552a60f14b6d1b63eb5f6886b481205e16b9da63bf8f8661d11712fcf100",
+      "preserved_bytes": 289735,
+      "preserved_sha256": "e7e9ccaa4d7eec9b518a581a3a80098a9df0f3fca99142c573a380330b7924c3",
+      "transformation": "machine-local source/evidence paths normalized; draft statements, source hashes, cases, counts and applicability holds retained"
+    },
+    {
+      "name": "capture-ownership.json",
+      "original_bytes": 1904807,
+      "original_sha256": "9b92d58d35787ea9381dab4e8a0c76a4ff7cb8fa470925caa495cccde98f04ee",
+      "preserved_bytes": 1736869,
+      "preserved_sha256": "8ee362392a910684423da2437c22a84128ea7e495598f3074621ebdd71615fdf",
+      "transformation": "machine-local source/evidence paths normalized; draft statements, source hashes, cases, counts and applicability holds retained"
+    },
+    {
+      "name": "fixture-class-draft.json",
+      "original_bytes": 25188,
+      "original_sha256": "33fa002ac6762eb403fb876d15e52d02689bfbefe9436b1df07c9f471b4255d4",
+      "preserved_bytes": 25188,
+      "preserved_sha256": "33fa002ac6762eb403fb876d15e52d02689bfbefe9436b1df07c9f471b4255d4",
+      "transformation": "machine-local source/evidence paths normalized; draft statements, source hashes, cases, counts and applicability holds retained"
+    },
+    {
+      "name": "golden-matrix-draft.md",
+      "original_bytes": 80338,
+      "original_sha256": "fb308e405116a6e046488d4c2026021030b46e2b3a5ee1a051b1266ea6cb43ff",
+      "preserved_bytes": 69715,
+      "preserved_sha256": "24fded85817ffc7543cd0c865568fb02cca183e4f16971dd0938d31bd5e32d4f",
+      "transformation": "machine-local source/evidence paths normalized; draft statements, source hashes, cases, counts and applicability holds retained"
+    },
+    {
+      "name": "native-render-map.json",
+      "original_bytes": 923741,
+      "original_sha256": "6d149eb418af438bef495c45bf9494a22d5ec26b114f5f2e2cc15200086c75b6",
+      "preserved_bytes": 803271,
+      "preserved_sha256": "0f98c02937b2dce5de9fbfa0913132e347718b054dde3e699cdac302e725baa3",
+      "transformation": "machine-local source/evidence paths normalized; draft statements, source hashes, cases, counts and applicability holds retained"
+    },
+    {
+      "name": "native-render-map.md",
+      "original_bytes": 49693,
+      "original_sha256": "d5a355237fbded5458b71cd0b1fd072e593fe82190ea64acfd8d48223f04036f",
+      "preserved_bytes": 49693,
+      "preserved_sha256": "d5a355237fbded5458b71cd0b1fd072e593fe82190ea64acfd8d48223f04036f",
+      "transformation": "machine-local source/evidence paths normalized; draft statements, source hashes, cases, counts and applicability holds retained"
+    },
+    {
+      "name": "owner-questions.json",
+      "original_bytes": 4692,
+      "original_sha256": "0d59be793336d0a6e63dba6d0b02673a6311bd99be19cf2357c46dc9fac490b5",
+      "preserved_bytes": 3994,
+      "preserved_sha256": "2869a17e314e678306230bc492ab2a7adf317acc3b16421902fd9c87d4363ec3",
+      "transformation": "machine-local source/evidence paths normalized; draft statements, source hashes, cases, counts and applicability holds retained"
+    },
+    {
+      "name": "partition-draft.json",
+      "original_bytes": 74075,
+      "original_sha256": "d55ed8d41732c630ba827cdc9fb22967f8eea7a8c84d0ba0f6e4fb8e64e7457c",
+      "preserved_bytes": 70029,
+      "preserved_sha256": "207e9a87496cb828105601fb6bf333efbcf4614f41e638d6e2ffd82d64e988b1",
+      "transformation": "machine-local source/evidence paths normalized; draft statements, source hashes, cases, counts and applicability holds retained"
+    },
+    {
+      "name": "retirement-classification.json",
+      "original_bytes": 23888,
+      "original_sha256": "f4bcc2c0b5e638b310fe6d059f056b878c1cce17cf0c82a12044d301c9d89a2f",
+      "preserved_bytes": 21980,
+      "preserved_sha256": "908db761cbc5ac728c6f95bfaa15a4bf45a6a9f3c445f99e4a59975b37078fb8",
+      "transformation": "machine-local source/evidence paths normalized; draft statements, source hashes, cases, counts and applicability holds retained"
+    },
+    {
+      "name": "retirement-classification.md",
+      "original_bytes": 10476,
+      "original_sha256": "59a3a4490ae3f276c75fc0b77d2655496f27e323581b9d8ada1349d10396f5e8",
+      "preserved_bytes": 9748,
+      "preserved_sha256": "01442f5c6ff35f01c02eabf627edb616e9725f21e2eda0cf4d4306712d8ce104",
+      "transformation": "machine-local source/evidence paths normalized; draft statements, source hashes, cases, counts and applicability holds retained"
+    },
+    {
+      "name": "safety-case-draft.json",
+      "original_bytes": 267452,
+      "original_sha256": "95d6e737af0167be36f14ddd2465d807ecf9a9a7b108619f0a5edc28cdc54733",
+      "preserved_bytes": 250227,
+      "preserved_sha256": "fe75765a2e708604508a52c01c3a853966a892778150173120ad67d92e17e253",
+      "transformation": "machine-local source/evidence paths normalized; draft statements, source hashes, cases, counts and applicability holds retained"
+    },
+    {
+      "name": "safety-case-draft.md",
+      "original_bytes": 15705,
+      "original_sha256": "eab6ed791b75fa323c3950f4ecb40d692865480ee2f132c6587fdb75f07e0ac5",
+      "preserved_bytes": 15646,
+      "preserved_sha256": "6fc6967ac6e174c129655aebba1ac2d468102ac3c7b97e911e8ded6698fd841e",
+      "transformation": "machine-local source/evidence paths normalized; draft statements, source hashes, cases, counts and applicability holds retained"
+    },
+    {
+      "name": "validation.json",
+      "original_bytes": 2061,
+      "original_sha256": "341c77f868e77bf60adcf665e69774379e05540a43be5e4b9f457bbc00bfb5ea",
+      "preserved_bytes": 2061,
+      "preserved_sha256": "341c77f868e77bf60adcf665e69774379e05540a43be5e4b9f457bbc00bfb5ea",
+      "transformation": "machine-local source/evidence paths normalized; draft statements, source hashes, cases, counts and applicability holds retained"
+    }
+  ],
+  "normalization": {
+    "source_paths": "repository-relative; archived Markdown source links are relative to docs/reviews/gui-capture-preparation with line anchors",
+    "prepared_artifact_paths": "archive-member:<name> in JSON; local member names in Markdown",
+    "external_program_paths": "immutable git:roedu-ui@commit:path locators",
+    "historical_scratch_paths": "historical-scratch: locators; no machine-specific paths retained",
+    "semantic_changes": false,
+    "source_bytes_changed": false,
+    "original_preparation_validation_note": "validation.json describes original scratch artifact integrity. Its artifact hashes are pre-normalization originals; this manifest records original and preserved hashes separately."
+  },
+  "applicability": {
+    "draft_only": true,
+    "owner_approval": null,
+    "implementation_dispatched": false,
+    "core_tag_received": null,
+    "port_files": 84,
+    "frozen_files": 7,
+    "hold_login_group": "HOLD_BOLD_OWNER",
+    "source_backed_native_port_files": 78,
+    "source_backed_native_frozen_files": 6,
+    "historical_or_unreachable_holds": 7,
+    "safety_case_drafts": 89,
+    "mutation_proposals": 17,
+    "runtime_captures": 0,
+    "owner_signatures": 0,
+    "G2p_branch_erasure_holds": "consent display mapping, native sandbox=false arm and erasure POST redirect/action semantics stay unresolved; no fictional confirmed-page golden",
+    "Report_guardian_minor_policy": "UI versus direct eligibility, guardian peer-thread versus observer and >3minor shared context remain unsigned",
+    "retirement_raw_expected_exit": 1,
+    "retirement_unresolved": 1651,
+    "retirement_gate_executed_for_keeper": false,
+    "mandatory_hook_aggregate": "fail if existing unit/full requires retirement CLI; classification proposal needs parent/core approval"
+  },
+  "exclusions": [
+    "environment/auth/credential stores",
+    "live user/database/media data",
+    "raw transcripts and native chat IDs",
+    "app implementation/configuration/helper changes"
+  ],
+  "licensing_provenance": {
+    "repository_license_override": null,
+    "root_license_file_present_at_snapshot": false,
+    "statement": "Preservation introduces no license override. Existing source license/provenance records remain authoritative; archive contains prepared source references/observations, not a new vendored source copy.",
+    "retained_source_license_references": [
+      {
+        "path": "services/authcore/LICENSE",
+        "bytes": 1067,
+        "sha256": "72e0441774022a96b8082f9fa3244fd3a8e421a5fb9bc6207659a210f135c749",
+        "source_commit": "aa10645922ad708db66c9ca0ce982e9f70e4a190",
+        "content_not_changed_or_relicensed": true
+      },
+      {
+        "path": "static/fonts/LICENSE-bricolage-grotesque.txt",
+        "bytes": 4401,
+        "sha256": "923f4ddf0fd39f9b7794ab0df7332f3d95dc43e8ad7ec2289d6d9e8491177f51",
+        "source_commit": "aa10645922ad708db66c9ca0ce982e9f70e4a190",
+        "content_not_changed_or_relicensed": true
+      },
+      {
+        "path": "static/vendor/leaflet/LICENSE.txt",
+        "bytes": 1369,
+        "sha256": "bbc959aaef7488b38942e7f05cfd1244351f8bce54261951ea17dd7cf60f894b",
+        "source_commit": "aa10645922ad708db66c9ca0ce982e9f70e4a190",
+        "content_not_changed_or_relicensed": true
+      },
+      {
+        "path": "static/vendor/maplibre/LICENSE.txt",
+        "bytes": 5984,
+        "sha256": "ee5fc05a0677eaf69601d2c7db0d9ecd6cc27c3abc1d0733bc9ed34707cf8ef2",
+        "source_commit": "aa10645922ad708db66c9ca0ce982e9f70e4a190",
+        "content_not_changed_or_relicensed": true
+      }
+    ]
+  },
+  "verification_scope": "archive/member hashes, source hashes, unsigned/unrun invariant checks, docs/whitespace only; no Live/browser/DB/native suite rerun"
+}
