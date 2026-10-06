@@ -13,7 +13,7 @@ An assertion-only two-mapping batch extends existing authentication/transit test
 Production/schema remain unchanged; the correct source passes, and three separately labelled controlled overlays prove assertion sensitivity.
 A finite three-presence assertion batch adds one named registered-handler fixture covering both
 prefixes; correct source passes worker social48/0skip/fail and three labelled controls prove sensitivity.
-Current root710/all21 qualification is pending; prior run counts do not qualify new test inputs.
+[Fresh Presence qualification](rest-presence-checkpoint.json) on `b09e841`, run `39ecad97926a`:710/all21,0skips/failures; prior receipts remain historical.
 The ledger's1008 claimed/1663 unresolved entries count frozen assertions, not missing endpoints.
 Go already serves the ordinary HTTP/toolchain paths; full Python reference retirement remains separate.
 
@@ -113,7 +113,7 @@ Current REST scope retains existing donation endpoints and exact export-helper q
 ## Order and scope
 
 1. Retain the exact export mapping and its source IDs/provenance and qualified c27 receipt.
-2. Complete root exact-source qualification for the presence assertions;18 social assertion sets remain.
+2. Retain the qualified Presence assertions;18 social assertion sets remain for explicit bounded batches.
 3. Close booking REST assertions and reviewed adapter replacements.
 4. Qualify existing donation REST assertions and exact export-helper query equality; retain separate finance service/HTML evidence gaps.
 5. Triage relevant REST media/account-safety rows against existing code/tests similarly.

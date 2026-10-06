@@ -3,6 +3,44 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-06 — Presence source qualification completed
+
+Valid until: serving/test inputs, dependencies, native scripts or codec environment changes — then requalify.
+
+Clean source `b09e8413a26de62ed93ef760d9f3f18d1e78c1b6`, run `39ecad97926a`, completed all8 direct-source gates.
+All21 fresh PostgreSQL/codec race lanes710PASS/0SKIP/0FAIL, including social48/web101; current native
+format/shared-source hashes/vet/race across3modules, Node4 and harness17/17 pass. Inventory1008
+manifest claims/1663 unresolved/0invalid of2671, expected retirement exit1; docs53/all defects0 and whitespace pass.
+Source-object SHA `f617421d19c048d452da0241d5d867824c86441e7ba5050b2b86c5291bab19d3`; completion SHA `2f3ac037f19863a433ad6c28b17c9e96c0af3ab15a124e375c3292a249ce074b`.
+`docs/reviews/native-go/rest-presence-checkpoint.json` retains all8 actual statuses/all30 artifact hashes,
+all21 named test lists and exact original/control log paths/hashes. Logs remain under
+`_temp/test__rest-contract-presence-20261006/root-final/b09e8413a26d-39ecad97926a/`.
+
+One new test has6 prefix/action subcases: own arrival200/non-null committed timestamp; linked eligible
+guardian404 with ward arrivalNULL/transitnone; valid ward-owned same-action200/persistence controls.
+Correct production passes. Three deliberate overlays separately expose no arrival write, guardian
+delegation, and a ward update hidden behind404. These are sensitivity controls, not source bug failures.
+Exactly3 frozen IDs/lines362/371/419/hashfc35 remain; all other rows/inventory/Python and245 production
+Go/SQL files are unchanged. Current production/schema/dependencies/frontend/scripts stay identical to764.
+
+Finance prose is corrected: original donation REST has only start/mine/total/webhook, matching Go.
+Campaign/spend/closeout/in-kind/civic/anchor/partner surfaces were domain/HTML. No new REST DTO/route
+is a migration obligation. F26category/F24verified service andF42HTMLcredit/href gaps, all frozen IDs/
+hashes and reference-retirement obligations remain. This documentation correction triggered no extra suite.
+
+Per ADR-0040, changed test inputs required current710/all21; conditional image/audit/frontend gates
+were absent. Immutable c27 image34c1c228 is ONLY the codec environment for current-source compiled
+race binaries and independently built sidecar, not deployment qualification for later serving code.
+No optional image/build/HTML/blanket-retirement campaign, new finance endpoint or producer-pin change.
+Exact command: source task-owned env.sh, GOPROXY=off and explicit synthetic fixture, then retained
+`_temp/test__rest-contract-presence-20261006/root-qualify.py` onb09e841; it runs fresh createdb/native
+migrate, check-native, harness, full qualify-native710/21, check-contracts(expected1), fleet docs and whitespace.
+Fresh synthetic database `social_rest_final_39ecad97926a` stayed on internal/noports task network.
+Clean head/source objects were checked before/after lock and completed gates; memory16GiB floor held,
+no actual resource refusal. No additional heavy step is planned; only final docs/source closure/review,
+verified main publication and owned disposable cleanup follow. Stopafter3 mappings:18social remain.
+Deployment/providers/minors/ingestion/schedules and all recovery/backup/unmerged keepers remain held.
+
 ## 2026-10-06 — Three finite REST presence assertions and finance scope correction
 
 Valid until: `test/rest-contract-presence-20261006` lands or is superseded — then treat as history.

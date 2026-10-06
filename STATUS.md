@@ -96,12 +96,12 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
-- Presence worker:48 social race passes,0skips/failures;3 deliberate sensitivity controls fail; exact root current710/all21/native pending.
-- Three presence mappings preserve guardian nondelegation; production/schema/dependencies/frontend unchanged. Prior `e825a76`709/all21 [receipt](docs/reviews/native-go/rest-auth-transit-checkpoint.json) remains intact.
-- Nine exact mappings:1008 manifest claims/1663 unresolved/0invalid of2671; retirement exits1. Docs53/all defects0; whitespace clean.
-- Prior `67e07b9`709/all21 [source receipt](docs/reviews/native-go/rest-transport-checkpoint.json) and original `c27a99f`705 [source/image/audits](docs/reviews/native-go/restart-checkpoint.json) remain intact; c27 image supplies codecs only.
-- Original govulncheck1.8.0 all3modules/binary, Trivy0.75.0, Node24.18.0, smoke14/14 and bundle36.71KiB pass for c27; unused openpgp advisory remains separate.
-- Independent assertion/sensitivity review approved; final receipt/docs closure receives review before main push. Human deployment review remains open.
+- Presence `b09e841` (2026-10-06):710/all21 fresh tests,0skips/failures; native/hash/vet/race + Node4 + harness17 pass; [receipt](docs/reviews/native-go/rest-presence-checkpoint.json).
+- Three mappings/new6-case test: guardian404 + unchanged ward state, valid ward-own200 controls, arrival200 + persisted timestamp;3 sensitivity controls fail intentionally.
+- Nine exact mappings:1008 manifest claims/1663 unresolved/0invalid of2671; retirement exits1. Docs53/all defects0; whitespace clean. Production/schema/dependencies/frontend unchanged.
+- Prior709 [auth/transit](docs/reviews/native-go/rest-auth-transit-checkpoint.json) and [transport](docs/reviews/native-go/rest-transport-checkpoint.json) receipts remain intact; c27 image supplies codecs only.
+- Original `c27a99f`705 [source/image/audits](docs/reviews/native-go/restart-checkpoint.json) remain; no new deployment-image/audit/frontend qualification. Unused openpgp advisory stays separate.
+- Independent source/sensitivity review approved; final receipt/docs closure receives review before main push. Human deployment review remains open.
 
 ## Standard verification
 Native race/vet + shared-source hashes; database/codec contracts require explicit disposable fixtures
