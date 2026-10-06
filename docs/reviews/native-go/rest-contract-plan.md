@@ -28,7 +28,8 @@ overlays isolate display order/exact envelope/returned-cursor/query sensitivity.
 A finite three-private-thread-access assertion batch adds one named six-case registered-handler
 matrix; correct source passes worker social52/0skip/fail. Four scoped overlays retain403/201 while
 isolating forbidden writes, private-body disclosure, guardian ghostwriting and stored author.
-Root current native/all21 remains pending. The ledger's1020 claimed/1651 unresolved entries count frozen assertions, not missing endpoints.
+[Fresh thread access qualification](rest-thread-access-checkpoint.json) on `874b437`, run `cba78ec5232b`:714/all21,0skips/failures.
+The ledger's1020 claimed/1651 unresolved entries count frozen assertions, not missing endpoints.
 Go already serves the ordinary HTTP/toolchain paths; full Python reference retirement remains separate.
 
 ## Social REST:26 declarations
