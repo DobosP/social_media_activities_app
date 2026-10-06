@@ -3,6 +3,67 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-06 — Three finite REST own-membership listing assertions
+
+Valid until: `test/rest-contract-own-memberships-20261006` lands or is superseded — then treat as history.
+
+Owner-authorized assertion-only batch on clean main `e150274af121635a33eb761876ce46cf7e496a20`.
+One new registered-handler test, `TestRESTSourceOwnMembershipListBoundsCursorAndQueryCeiling`,
+covers exactly three frozen IDs in `apps/social/tests/test_api.py`: `test_mine_membership_list_is_bounded`:229,
+`test_v1_mine_membership_list_is_cursor_paginated`:242 and `test_v1_mine_membership_list_query_count_is_constant`:256.
+Source SHA `fc35dea7bf6fc36444cb7aa4fcb52a274677bc0c78c328882dcd6ebdb759842f`, IDs, lines, app-pack,
+accepted guardian/co-member/coorganizer/safe-exit/block/group-DM/safety policies and all other
+inventory/coverage entries remain intact. Production/endpoints/schema/dependencies/frontend are
+unchanged; no actual production discrepancy was exposed.
+
+Real CreateActivity fixtures share the source's place/type/current start and titles, and explicitly
+count seven/seven/twelve owner-member rows. Effective caps3/4/20 are configured before registering
+the mux. Literal legacy GET returns200 and a raw array of length3. V1 limit2 returns200, limit2,
+results2 and a nonempty cursor. V1 limit10 returns200/results10 from twelve rows; count-only
+TracedPool instrumentation measures the first actual registered ServeHTTP request and records
+one query within the unchanged ceiling4. Seed/schema/poolPing/reset are outside the counted GET.
+No endpoint warm call precedes the final measured request; trace zero would also fail.
+
+An initial warmed-endpoint test passed50/0skip/fail but was superseded for first-request source
+fidelity after independent review. Its raw log/test copy remain explicitly historical under
+`qualify/initial-warmed-request/` and `initial-warmed-proof.json`; it is excluded from final evidence.
+Final test SHA `ff70a37df87923530bd9ba2cd4ca2ce1225a774f08390208570aed907980ed36`.
+Correct final PostgreSQL/race social lane passes50 top-level tests, zero skips/failures, all three
+new scenarios; immutable `_temp/test__rest-contract-own-memberships-20261006/qualify/qualified/social.log`
+SHA `77b4b56f1402636861e1e291614dfe2ba55d27c6891225dbd642f19c255e2dee`.
+Four separately labelled mine-only Go overlays each fail one top-level test with zero skips and
+only their intended subcase. These prove sensitivity of correct source, not real fail-before bugs:
+- Legacy cap+1 loads array4 instead of3; SHA
+  `54b7bc40f1837c409fb272a3251386474ff85b8b27bd7502e868e755fe5518c5`.
+- V1 reports limit3 with results2/cursor intact; SHA
+  `f04dc5db37a5227f4c656a0071cd869881b41c7835cc02ada22f520c858fe801`.
+- V1 empties only the cursor with limit2/results2 intact; SHA
+  `d304b0aee019b0e14afaa8abaa355e8041c7fc311c821a7a91a96220bb86b481`.
+- Four actual SELECT1 round trips inside the traced limit10 handler produce count5, while status/body
+  remain correct; SHA `d6172705fd66afe7418dc1329cd775ca2ae2dd75156a5838c28d618855e62a15`.
+Raw controls stay under task `controls/<label>/social.log`; no SQL/arguments are captured by the tracer.
+Independent critic corrected-source/positive/control review APPROVE; exact mapping/docs review follows.
+
+Root provisioned task-owned Go1.27.1 from verified image
+`sha256:b390522f07c58e679098bb25225b197a7524e5e8f72a9748dd1b76aa96699b91` and Node24.18.0 binary
+SHA `41a74efb34cbde5c7632cdac0cf8bd1a14d0b8d73dc1e82755014d9a9ce70f5c`; all three modules
+downloaded/verified in owned caches before GOPROXY=off. Fresh PG16/PostGIS/vector fixture container
+`social-rest-own-memberships-20261006-db`, internal network `social-rest-own-memberships-20261006`,
+synthetic database `social_rest_own_memberships`,2GiB/2CPU/noports; native bootstrap passed.
+Immutable c27 image `sha256:34c1c2281d9fc96cf486dda8e88497ef5061e21a412c712d8ef61ca14b07031b`
+supplies codecs only for current-source race binaries, not deployment-image qualification. Runtime
+uses canonical restricted-user/read-only/cap-drop/no-new-privileges/mount flags.
+
+Exact commands: source task `env.sh`; global-lock `python3 SCRATCH/run-social.py modules`, set
+GOPROXY=off, then `qualify` and `controls`. The initial warmed proof was retained before the final
+test correction/rebuild and second `qualify`. Before every heavy step, fresh memory exceeded12GiB
+and the conservative8GiB incremental task disk estimate fit; no actual resource/network refusal.
+Other owners' caches, unknown buffers, backups and keepers were untouched; tools/fixture remain.
+Current ledger1014 claims/1657 unresolved/0invalid of2671;12 social declarations remain unresolved.
+Root current native/all21 qualification and final receipt/docs review are pending; no worker whole
+check/full21, commit or push. Prior RSVP711/Presence710/c27 receipts remain intact. No retirement,
+deployment/provider/minor/ingestion/schedule or further mapping campaign follows from this batch.
+
 ## 2026-10-06 — RSVP source qualification completed
 
 Valid until: serving/test inputs, dependencies, native scripts or codec environment change — then requalify.

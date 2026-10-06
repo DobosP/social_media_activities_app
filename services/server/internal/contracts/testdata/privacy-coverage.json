@@ -13916,13 +13916,22 @@
       "legacy_file": "apps/social/tests/test_api.py",
       "line": 229,
       "source_sha256": "fc35dea7bf6fc36444cb7aa4fcb52a274677bc0c78c328882dcd6ebdb759842f",
-      "classification": "unresolved",
-      "native_evidence": [],
-      "rationale": "Preserve the legacy declaration until its behavioral assertions have independent native evidence; a larger native suite or registered route is insufficient.",
-      "gaps": [
-        "Remaining source assertion/transport/edge-case obligations require an explicit native port or reviewed replacement."
+      "classification": "native_semantic_coverage",
+      "native_evidence": [
+        {
+          "go_file": "services/server/internal/social/rest_own_memberships_case_test.go",
+          "test": "TestRESTSourceOwnMembershipListBoundsCursorAndQueryCeiling",
+          "scenario": "seven real adult owner-member rows, cap3, literal legacy own-membership GET",
+          "assertions": [
+            "registered GET /api/social/activities/mine/ returns HTTP200",
+            "actual response is a raw JSON array of exactly3 rows",
+            "seed has exactly7 persisted owner-member rows with configured cap3"
+          ]
+        }
       ],
-      "runtime_verification": "not_run"
+      "rationale": "Finite assertion-only own-membership listing batch completes the frozen registered-handler assertions with exact seven/twelve owner-row fixtures and effective caps3/4/20. Correct unchanged production passes the actual synthetic PostgreSQL16/PostGIS/vector social race lane:50 top-level PASS, zero skips/failures, all three new cases; immutable log SHA77b4b56f1402636861e1e291614dfe2ba55d27c6891225dbd642f19c255e2dee. The final query case measures the first actual registered GET after poolPing/reset and records one query within the unchanged ceiling4. Four separately labelled mine-only overlays of correct code fail only intended cap, reported-limit, cursor or genuine query-ceiling assertions; these are sensitivity controls, not real source fail-before bugs. The initial warmed-endpoint pass is retained as historical evidence and excluded from the final proof. IDs, lines and frozen hash remain intact; production/endpoints/schema/dependencies/policies are unchanged. Root fresh current-source native/all21 qualification and final review are required before main landing; reference retirement and deployment remain separate.",
+      "gaps": [],
+      "runtime_verification": "passed"
     },
     {
       "legacy_id": "apps/social/tests/test_api.py::test_non_owner_cannot_patch_activity",
@@ -14176,26 +14185,46 @@
       "legacy_file": "apps/social/tests/test_api.py",
       "line": 242,
       "source_sha256": "fc35dea7bf6fc36444cb7aa4fcb52a274677bc0c78c328882dcd6ebdb759842f",
-      "classification": "unresolved",
-      "native_evidence": [],
-      "rationale": "Preserve the legacy declaration until its behavioral assertions have independent native evidence; a larger native suite or registered route is insufficient.",
-      "gaps": [
-        "Remaining source assertion/transport/edge-case obligations require an explicit native port or reviewed replacement."
+      "classification": "native_semantic_coverage",
+      "native_evidence": [
+        {
+          "go_file": "services/server/internal/social/rest_own_memberships_case_test.go",
+          "test": "TestRESTSourceOwnMembershipListBoundsCursorAndQueryCeiling",
+          "scenario": "seven real adult owner-member rows, cap4, v1 own-membership GET limit2",
+          "assertions": [
+            "registered GET /api/v1/social/activities/mine/?limit=2 returns HTTP200",
+            "actual response limit=2 and results length=2",
+            "actual next_cursor is a nonempty string",
+            "seed has exactly7 persisted owner-member rows with configured cap4"
+          ]
+        }
       ],
-      "runtime_verification": "not_run"
+      "rationale": "Finite assertion-only own-membership listing batch completes the frozen registered-handler assertions with exact seven/twelve owner-row fixtures and effective caps3/4/20. Correct unchanged production passes the actual synthetic PostgreSQL16/PostGIS/vector social race lane:50 top-level PASS, zero skips/failures, all three new cases; immutable log SHA77b4b56f1402636861e1e291614dfe2ba55d27c6891225dbd642f19c255e2dee. The final query case measures the first actual registered GET after poolPing/reset and records one query within the unchanged ceiling4. Four separately labelled mine-only overlays of correct code fail only intended cap, reported-limit, cursor or genuine query-ceiling assertions; these are sensitivity controls, not real source fail-before bugs. The initial warmed-endpoint pass is retained as historical evidence and excluded from the final proof. IDs, lines and frozen hash remain intact; production/endpoints/schema/dependencies/policies are unchanged. Root fresh current-source native/all21 qualification and final review are required before main landing; reference retirement and deployment remain separate.",
+      "gaps": [],
+      "runtime_verification": "passed"
     },
     {
       "legacy_id": "apps/social/tests/test_api.py::test_v1_mine_membership_list_query_count_is_constant",
       "legacy_file": "apps/social/tests/test_api.py",
       "line": 256,
       "source_sha256": "fc35dea7bf6fc36444cb7aa4fcb52a274677bc0c78c328882dcd6ebdb759842f",
-      "classification": "unresolved",
-      "native_evidence": [],
-      "rationale": "Preserve the legacy declaration until its behavioral assertions have independent native evidence; a larger native suite or registered route is insufficient.",
-      "gaps": [
-        "Remaining source assertion/transport/edge-case obligations require an explicit native port or reviewed replacement."
+      "classification": "native_semantic_coverage",
+      "native_evidence": [
+        {
+          "go_file": "services/server/internal/social/rest_own_memberships_case_test.go",
+          "test": "TestRESTSourceOwnMembershipListBoundsCursorAndQueryCeiling",
+          "scenario": "twelve real adult owner-member rows, cap20, first registered v1 own-membership GET limit10",
+          "assertions": [
+            "registered GET /api/v1/social/activities/mine/?limit=10 returns HTTP200",
+            "actual results length=10 from12 persisted owner-member rows with configured cap20",
+            "count-only PostgreSQL tracer measures the first registered ServeHTTP request after fixture setup and poolPing/reset",
+            "actual traced query count1 is nonzero and <=4; no endpoint warm request precedes it"
+          ]
+        }
       ],
-      "runtime_verification": "not_run"
+      "rationale": "Finite assertion-only own-membership listing batch completes the frozen registered-handler assertions with exact seven/twelve owner-row fixtures and effective caps3/4/20. Correct unchanged production passes the actual synthetic PostgreSQL16/PostGIS/vector social race lane:50 top-level PASS, zero skips/failures, all three new cases; immutable log SHA77b4b56f1402636861e1e291614dfe2ba55d27c6891225dbd642f19c255e2dee. The final query case measures the first actual registered GET after poolPing/reset and records one query within the unchanged ceiling4. Four separately labelled mine-only overlays of correct code fail only intended cap, reported-limit, cursor or genuine query-ceiling assertions; these are sensitivity controls, not real source fail-before bugs. The initial warmed-endpoint pass is retained as historical evidence and excluded from the final proof. IDs, lines and frozen hash remain intact; production/endpoints/schema/dependencies/policies are unchanged. Root fresh current-source native/all21 qualification and final review are required before main landing; reference retirement and deployment remain separate.",
+      "gaps": [],
+      "runtime_verification": "passed"
     },
     {
       "legacy_id": "apps/social/tests/test_api.py::test_v1_thread_posts_are_cursor_paginated",

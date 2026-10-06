@@ -17,13 +17,16 @@ prefixes; correct source passes worker social48/0skip/fail and three labelled co
 A finite three-RSVP assertion batch adds one named six-case registered-handler matrix; correct
 source passes worker social49/0skip/fail. Four labelled overlays isolate count/key/status sensitivity;
 [Fresh RSVP qualification](rest-rsvp-checkpoint.json) on `0d31881`, run `d4f1fb59c133`:711/all21,0skips/failures.
-The ledger's1011 claimed/1660 unresolved entries count frozen assertions, not missing endpoints.
+A finite three-own-membership listing batch adds one named registered-handler matrix; correct
+source passes worker social50/0skip/fail, first actual v1 GET trace1 within ceiling4. Four mine-only
+overlays isolate cap/envelope/cursor/query sensitivity; the initial warmed-endpoint proof is historical.
+Root current native/all21 remains pending. The ledger's1014 claimed/1657 unresolved entries count frozen assertions, not missing endpoints.
 Go already serves the ordinary HTTP/toolchain paths; full Python reference retirement remains separate.
 
 ## Social REST:26 declarations
 
-All26 IDs below have prefix `apps/social/tests/test_api.py::`; eleven are now mapped and15 remain. The frozen file hash matches the
-inventory. Routes exist in `services/server/internal/social/http.go`. The remaining15 require complete
+All26 IDs below have prefix `apps/social/tests/test_api.py::`; fourteen are now mapped and12 remain. The frozen file hash matches the
+inventory. Routes exist in `services/server/internal/social/http.go`. The remaining12 require complete
 REST assertion mappings; existing qualified service/HTML foundations alone do not establish them.
 
 | Frozen declaration | Remaining exact REST obligation |
@@ -35,7 +38,7 @@ REST assertion mappings; existing qualified service/HTML foundations alone do no
 | test_create_and_list_activity | POST201/cohort, GET exactly one result. |
 | test_join_and_vote_flow | Join201/id and full legacy flow; existing HTTP votes are partial. |
 | test_list_is_cohort_scoped | Child REST list results=[], not only service detail refusal. |
-| test_mine_membership_list_is_bounded | Seven persisted owner rows, configured cap3. |
+| test_mine_membership_list_is_bounded | Mapped: seven owner-member rows/cap3, literal legacy GET200 raw array length3. |
 | test_non_owner_cannot_patch_activity | Nonmember PATCH403, title unchanged. |
 | test_owner_can_cancel_via_api | POST200 and persisted cancelled. |
 | test_owner_can_edit_activity_via_patch | PATCH200 and persisted new title. |
@@ -50,8 +53,8 @@ REST assertion mappings; existing qualified service/HTML foundations alone do no
 | test_transit_action_sets_status | Mapped: both-prefix POST200 plus independent actual response/persisted on_my_way checks. |
 | test_transit_ignores_on_behalf_of | Mapped: eligible active linked guardian404, ward transit none; ward own positive control. |
 | test_transit_invalid_status_is_forbidden | Mapped: unknown value HTTP403 after current visibility/member/window checks; state unchanged. |
-| test_v1_mine_membership_list_is_cursor_paginated | Seven rows, limit2/results2/nonempty cursor. |
-| test_v1_mine_membership_list_query_count_is_constant | Actual API trace≤4, ten results. |
+| test_v1_mine_membership_list_is_cursor_paginated | Mapped: seven owner-member rows/cap4, v1 GET200 limit2/results2/nonempty cursor. |
+| test_v1_mine_membership_list_query_count_is_constant | Mapped: twelve owner-member rows/cap20, first actual v1 GET200 results10, trace1 within ceiling4. |
 | test_v1_thread_posts_are_cursor_paginated | Exact envelope, page bodies9–11/6–8. |
 | test_v1_thread_posts_query_count_is_constant | Actual API trace≤8, ten results. |
 
@@ -116,7 +119,7 @@ Current REST scope retains existing donation endpoints and exact export-helper q
 ## Order and scope
 
 1. Retain the exact export mapping and its source IDs/provenance and qualified c27 receipt.
-2. Retain the qualified Presence/RSVP assertions;15 social assertion sets remain for explicit bounded batches.
+2. Retain the qualified Presence/RSVP/own-membership assertions;12 social assertion sets remain for explicit bounded batches.
 3. Close booking REST assertions and reviewed adapter replacements.
 4. Qualify existing donation REST assertions and exact export-helper query equality; retain separate finance service/HTML evidence gaps.
 5. Triage relevant REST media/account-safety rows against existing code/tests similarly.
