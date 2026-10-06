@@ -16,7 +16,8 @@ prefixes; correct source passes worker social48/0skip/fail and three labelled co
 [Fresh Presence qualification](rest-presence-checkpoint.json) on `b09e841`, run `39ecad97926a`:710/all21,0skips/failures; prior receipts remain historical.
 A finite three-RSVP assertion batch adds one named six-case registered-handler matrix; correct
 source passes worker social49/0skip/fail. Four labelled overlays isolate count/key/status sensitivity;
-root current native/all21 qualification remains pending. The ledger's1011 claimed/1660 unresolved entries count frozen assertions, not missing endpoints.
+[Fresh RSVP qualification](rest-rsvp-checkpoint.json) on `0d31881`, run `d4f1fb59c133`:711/all21,0skips/failures.
+The ledger's1011 claimed/1660 unresolved entries count frozen assertions, not missing endpoints.
 Go already serves the ordinary HTTP/toolchain paths; full Python reference retirement remains separate.
 
 ## Social REST:26 declarations

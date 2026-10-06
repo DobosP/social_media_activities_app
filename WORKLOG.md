@@ -3,6 +3,34 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-06 — RSVP source qualification completed
+
+Valid until: serving/test inputs, dependencies, native scripts or codec environment change — then requalify.
+
+Root qualified source `0d31881b2faddc9cafffc8631b43555e99c749ca`, run `d4f1fb59c133`, after the reviewed three-row worker batch.
+Actual current-source native format/shared hashes/vet/race, Node4 offline tests, harness17/17,
+fresh native database bootstrap, full21 PostgreSQL/codec race lanes, contracts, docs and whitespace
+passed. Fresh711 top-level tests, zero skips/failures: configuration62, accounts75, admin20, app35, backup5, booking7, budgets16, catalog48, commands27, contracts5, discovery2, donations5, export5, jobs67, media54, messaging60, notifications4, recommendations8, safety56, social49, web101.
+Case retirement still exits1:1011 manifest claims/1660 unresolved/0invalid of2671; native counts
+do not establish full source-declaration equivalence. Exactly three RSVP mappings close;15 social
+declarations remain. All frozen IDs/lines/hash and accepted policies/app-pack remain unchanged.
+
+Protected source-object SHA `0849446c565fb674cbcd78f6b32ce4e97ff45c73ca63de9e9909ca4ba9ba48b9`; completion-manifest SHA
+`ef92bcc1d38f671325eddeba92a5c2cdca888c41ed0322a8484308fbc74c2f40`. All30 qualification artifact hashes and8 worker
+positive/control/docs/format log hashes are verified and retained under
+`_temp/test__rest-contract-rsvp-20261006`; controls are deliberate counterexamples, not source bugs.
+The immutable c27 image supplies codecs only; current race binaries and independent sidecar were
+compiled from this source. No image/frontend/security campaign, endpoint or production change,
+reference retirement or deployment/provider/minor/ingestion/schedule activation is claimed.
+
+Exact root command: source task `env.sh`, `export GOPROXY=off`, then
+`python3 /home/dobo/work/_temp/test__rest-contract-rsvp-20261006/root-qualify.py` under the shared
+global lock with fresh16GiB MemAvailable and recorded phase-specific disk estimates. Memory floors
+refer to RAM; root disk is separately budgeted, with no invented21.2GiB floor or resource waiver.
+Final receipt/status/plan are documentation only; source-object equality and final docs/whitespace
+plus independent exact closure review are required before push. Prior receipts and all private
+positive/negative evidence, held work, unknown buffers, backups and keepers remain preserved.
+
 ## 2026-10-06 — Three finite REST RSVP assertions
 
 Valid until: `test/rest-contract-rsvp-20261006` lands or is superseded — then treat as history.
