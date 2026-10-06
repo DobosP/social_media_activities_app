@@ -206,5 +206,34 @@
     "path": "C:\\Users\\Paul Work\\personal_repos\\_temp\\test__social-source-consolidation-20261006\\seven-input-independent-reviews.json",
     "sha256": "3aa7b18dfae5fe8b026d5817ac13874d9b15e8cc41a608de32acb15a93806268",
     "runtime_verification": "not_run"
+  },
+  "linux_transport_handover": {
+    "date": "2026-10-06",
+    "state": "UNQUALIFIED_TRANSPORT_PREPARATION",
+    "owner_instruction": "Stop Windows loops and continue on Linux; explicitly publish existing unfinished source branch to origin. No main merge, force push, deletion or new worktree.",
+    "source_checkpoint": "7337c61b93cd47849d82d65ca68b8626e326e288",
+    "source_checkpoint_tree": "22c84300e36d5326529a44d93abce908ca90278c",
+    "transport_artifacts": [
+      {
+        "path": "docs/reviews/native-go/social-source-consolidation-proposals.pending.json",
+        "sha256": "21f5fc4f06d5ccb19404d3c4d6c87d13260c80e56bd1cc81d8583efde8fb6e50",
+        "bytes": 75923,
+        "runtime_verification": "not_run",
+        "copy_policy": "exact unchanged source-checkpoint scratch bytes"
+      },
+      {
+        "path": "docs/reviews/native-go/social-source-consolidation-qualification-plan.json",
+        "sha256": "001b1c9be2adea5a4ab758a25d0818e50437e5266a702e23e03822e124e952fd",
+        "bytes": 24850,
+        "runtime_verification": "not_run",
+        "copy_policy": "exact unchanged source-checkpoint scratch bytes"
+      }
+    ],
+    "handover_path": "docs/reviews/native-go/social-source-consolidation-preparation.md",
+    "source_bytes_unchanged": true,
+    "coverage_ledgers_unchanged": true,
+    "protected_inputs_hash_scope": "Historical exact protected bytes at source checkpoint7337c61; STATUS.md and WORKLOG.md receive branch-only Linux handover facts in its documentation successor. Shared main and all coverage/inventory/REST-plan inputs remain unchanged.",
+    "windows_scratch_paths": "Provenance only; unavailable through Git. Resolve Linux paths from the actual preserved checkout. No credentials/fixtures/caches/runners/binaries are transferred.",
+    "publication": "Pending until push and independent origin ref verification; final transport commit identity is recorded separately."
   }
 }

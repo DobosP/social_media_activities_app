@@ -1,0 +1,544 @@
+{
+  "schema_version": 1,
+  "state": "HOLD_NOT_EXECUTED",
+  "base_main": "aa10645922ad708db66c9ca0ce982e9f70e4a190",
+  "combined_source_bundle_sha256": "759d22e87378e3f63be07727f5fc6cf5d1fa0d8a290ee97ed51157d276d33d21",
+  "source_binding": "Use only the exact final combined commit/tree and these seven LF file hashes; do not reuse original worker source paths or historical passes.",
+  "current_authority": "Source/proposal/qualification-plan preparation only. No Go/build/test/vet/gofmt/native runtime/WSL/Docker/PG/image/install/full21 invocation is permitted.",
+  "admission_before_any_native_invocation": [
+    "Coordinator explicitly admits one package/control phase; Claude runtime owner agrees to the resource window. Latest source task grant does not grant runtime.",
+    "Honor QUIET_WINDOW and live-fleet ownership; do not remove markers, stop foreign processes, start Docker Desktop or probe WSL resources during hold.",
+    "Fresh Windows physical/commit and WSL MemAvailable evidence after resource-window agreement;12GiB affected-test RAM/16GiB commit-final RAM floors and at least16GiB Windows commit headroom. RAM is not disk.",
+    "Estimate current per-phase source/cache/race-binary/fixture disk needs separately and refuse inadequate capacity; no invented disk floor or resource waiver.",
+    "Verify and acquire existing global heavy lock for entire native phase; stop if unavailable. Never create a substitute lock to bypass it.",
+    "Use pinned Go1.27.1 and relevant Node24, exact reviewed immutable codec image. Missing historical34c1c228 image cannot be silently replaced; no pulls/builds/installs authorized by this plan.",
+    "Use explicit current task-owned isolated PostgreSQL16/PostGIS/vector fixture/internal network and baseline native schema bootstrap. Synthetic credential values remain private; do not discover environments or restart old foreign fixture.",
+    "Adapt all preparers/runners to COMBINED_ROOT/task-owned Linux scratch; regenerate overlays on Linux. Preserved export runner hardcodes old worktree and lacks admission/pin/lock gates, so cannot run unchanged.",
+    "Task-owned GOCACHE/GOMODCACHE/TMPDIR; GOWORK=off GOTOOLCHAIN=local GOMAXPROCS=2 GOFLAGS=-mod=readonly -p=2; offline module resolution after approved cache proof."
+  ],
+  "affected_phases": [
+    {
+      "package": "social",
+      "test_flag": "social-test-dsn",
+      "top_level_count_static_forecast_not_pass": 53,
+      "required_named_tests": [
+        "TestRESTSourceActivityOwnerEditsNonmemberRefusalAndCancellation"
+      ],
+      "commands_after_admission": [
+        [
+          "GO",
+          "-C",
+          "COMBINED_ROOT/services/server",
+          "test",
+          "-race",
+          "-c",
+          "-o",
+          "TASK_SCRATCH/tests/social.test",
+          "./internal/social"
+        ],
+        [
+          "docker",
+          "run",
+          "--rm",
+          "--read-only",
+          "--cap-drop=ALL",
+          "--security-opt=no-new-privileges",
+          "--user",
+          "EXPLICIT_UID:GID",
+          "--network",
+          "EXPLICIT_PRIVATE_NETWORK",
+          "-e",
+          "TMPDIR=/scratch/test-tmp",
+          "-e",
+          "GOMAXPROCS=2",
+          "-v",
+          "COMBINED_ROOT:/src:ro",
+          "-v",
+          "TASK_SCRATCH:/scratch",
+          "-w",
+          "/src/services/server/internal/social",
+          "IMMUTABLE_CODEC_IMAGE",
+          "/scratch/tests/social.test",
+          "-test.v",
+          "-test.timeout=10m",
+          "-social-test-dsn",
+          "PRIVATE_SYNTHETIC_DSN"
+        ]
+      ],
+      "baseline_acceptance": "Require actual exit0, terminal PASS, PASS>0, zero skips/failures and all named tests/subcases observed. Forecast counts are not evidence.",
+      "controls": [
+        {
+          "name": "owner-edit-no-write-correct200",
+          "expect": "intended owner_patch committed-title assertion FAIL only"
+        },
+        {
+          "name": "owner-edit-wrong-wire-title",
+          "expect": "intended owner_patch wire-title assertion FAIL only"
+        },
+        {
+          "name": "nonmember-hijack-masked403",
+          "expect": "intended nonmember_patch independent activity-row assertion FAIL only"
+        },
+        {
+          "name": "owner-cancel-no-write-correct200",
+          "expect": "intended owner_cancel committed-status assertion FAIL only"
+        }
+      ]
+    },
+    {
+      "package": "booking",
+      "test_flag": "domain-test-dsn",
+      "top_level_count_static_forecast_not_pass": 20,
+      "required_named_tests": [
+        "TestBookingRESTAssertionAuthenticationAndProviders",
+        "TestBookingRESTAssertionDeeplinkOptions",
+        "TestBookingRESTAssertionDeeplinkCreateListAndCancel",
+        "TestBookingRESTAssertionFreshUnverifiedDenied",
+        "TestBookingRESTAssertionActivityMembership",
+        "TestBookingAdapterAssertionDemoCreateAndCancel",
+        "TestBookingAdapterAssertionConnectionFailureFixedError",
+        "TestBookingAdapterAssertionUnconfiguredBeforeTransport",
+        "TestBookingAdapterAssertionBuiltinRegistryCapabilities",
+        "TestBookingAdapterAssertionConnectionFailureHTTP",
+        "TestBookingAdapterAssertionUnknownRegistryRefusal",
+        "TestBookingAdapterAssertionNonRealtimeSkipsCreate",
+        "TestBookingAdapterAssertionConfiguredRealtimeTuple"
+      ],
+      "commands_after_admission": [
+        [
+          "GO",
+          "-C",
+          "COMBINED_ROOT/services/server",
+          "test",
+          "-race",
+          "-c",
+          "-o",
+          "TASK_SCRATCH/tests/booking.test",
+          "./internal/booking"
+        ],
+        [
+          "docker",
+          "run",
+          "--rm",
+          "--read-only",
+          "--cap-drop=ALL",
+          "--security-opt=no-new-privileges",
+          "--user",
+          "EXPLICIT_UID:GID",
+          "--network",
+          "EXPLICIT_PRIVATE_NETWORK",
+          "-e",
+          "TMPDIR=/scratch/test-tmp",
+          "-e",
+          "GOMAXPROCS=2",
+          "-v",
+          "COMBINED_ROOT:/src:ro",
+          "-v",
+          "TASK_SCRATCH:/scratch",
+          "-w",
+          "/src/services/server/internal/booking",
+          "IMMUTABLE_CODEC_IMAGE",
+          "/scratch/tests/booking.test",
+          "-test.v",
+          "-test.timeout=10m",
+          "-domain-test-dsn",
+          "PRIVATE_SYNTHETIC_DSN"
+        ]
+      ],
+      "baseline_acceptance": "Require actual exit0, terminal PASS, PASS>0, zero skips/failures and all named tests/subcases observed. Forecast counts are not evidence.",
+      "controls": [
+        {
+          "name": "options-wrong-provider-200",
+          "expect": "deep-link options provider/capability FAIL"
+        },
+        {
+          "name": "stored-link-cleared-wire-201",
+          "expect": "stored pending deep-link booking FAIL"
+        },
+        {
+          "name": "list-omits-created-id-200",
+          "expect": "created ID missing from own list FAIL"
+        },
+        {
+          "name": "fresh-denial-writes-row-403",
+          "expect": "denied fresh account wrote FAIL"
+        },
+        {
+          "name": "activity-membership-bypassed",
+          "expect": "assured same-cohort outsider FAIL"
+        },
+        {
+          "name": "cancel-path-changed",
+          "file": "rest.go",
+          "old": "\"/bookings/\"+url.PathEscape(reference)+\"/cancel\"",
+          "new": "\"/bookings/\"+url.PathEscape(reference)+\"/stop\"",
+          "test": "TestBookingAdapterAssertionDemoCreateAndCancel",
+          "expected_failure": "cancel wire must be exact POST path and empty object",
+          "purpose": "Successful mock cancellation still responds200, but the actual encoded path differs from the frozen path.",
+          "runtime_verification": "not_run",
+          "source_commit": "4096e47c2c70dcd46d6ef104ab29bf1ed0ca57de",
+          "target_path": "services/server/internal/booking/rest.go",
+          "anchor_occurrences_static": 1,
+          "expect": "cancel wire must be exact POST path and empty object FAIL"
+        },
+        {
+          "name": "cancel-body-not-empty",
+          "file": "rest.go",
+          "old": "return p.request(ctx, \"POST\", \"/bookings/\"+url.PathEscape(reference)+\"/cancel\", nil, map[string]any{}, nil)",
+          "new": "return p.request(ctx, \"POST\", \"/bookings/\"+url.PathEscape(reference)+\"/cancel\", nil, map[string]any{\"fixture_unexpected\": true}, nil)",
+          "test": "TestBookingAdapterAssertionDemoCreateAndCancel",
+          "expected_failure": "cancel wire must be exact POST path and empty object",
+          "purpose": "Preserve method/path/success while changing the exact cancellation JSON object.",
+          "runtime_verification": "not_run",
+          "source_commit": "4096e47c2c70dcd46d6ef104ab29bf1ed0ca57de",
+          "target_path": "services/server/internal/booking/rest.go",
+          "anchor_occurrences_static": 1,
+          "expect": "cancel wire must be exact POST path and empty object FAIL"
+        },
+        {
+          "name": "transport-error-not-fixed-sentinel",
+          "file": "rest.go",
+          "old": "if err != nil {\n\t\treturn errProvider\n\t}\n\tdefer resp.Body.Close()",
+          "new": "if err != nil {\n\t\treturn err\n\t}\n\tdefer resp.Body.Close()",
+          "test": "TestBookingAdapterAssertionConnectionFailureFixedError",
+          "expected_failure": "connection failure must be fixed and one-shot",
+          "purpose": "Keep the selected ambiguous read failure one-shot but propagate the wrong domain error identity.",
+          "runtime_verification": "not_run",
+          "source_commit": "4096e47c2c70dcd46d6ef104ab29bf1ed0ca57de",
+          "target_path": "services/server/internal/booking/rest.go",
+          "anchor_occurrences_static": 1,
+          "expect": "connection failure must be fixed and one-shot FAIL"
+        },
+        {
+          "name": "empty-url-reaches-transport",
+          "file": "rest.go",
+          "old": "base, err := url.Parse(p.BaseURL)",
+          "new": "baseURL := p.BaseURL\n\tif baseURL == \"\" {\n\t\tbaseURL = \"https://fixture-provider.invalid\"\n\t}\n\tbase, err := url.Parse(baseURL)",
+          "test": "TestBookingAdapterAssertionUnconfiguredBeforeTransport",
+          "expected_failure": "empty base URL must refuse before transport",
+          "purpose": "Route an empty configuration into the installed mock transport; no real request can occur.",
+          "runtime_verification": "not_run",
+          "source_commit": "4096e47c2c70dcd46d6ef104ab29bf1ed0ca57de",
+          "target_path": "services/server/internal/booking/rest.go",
+          "anchor_occurrences_static": 1,
+          "expect": "empty base URL must refuse before transport FAIL"
+        },
+        {
+          "name": "registry-demo-capability-false",
+          "file": "service.go",
+          "old": "map[string]any{\"slug\": slug, \"supports_realtime\": realtime(s.Providers[slug])}",
+          "new": "map[string]any{\"slug\": slug, \"supports_realtime\": false}",
+          "test": "TestBookingAdapterAssertionBuiltinRegistryCapabilities",
+          "expected_failure": "builtin endpoint capabilities missing or changed",
+          "purpose": "Preserve native adapter map, both slugs and HTTP200 while corrupting the advertised demo capability.",
+          "runtime_verification": "not_run",
+          "source_commit": "4096e47c2c70dcd46d6ef104ab29bf1ed0ca57de",
+          "target_path": "services/server/internal/booking/service.go",
+          "anchor_occurrences_static": 1,
+          "expect": "builtin endpoint capabilities missing or changed FAIL"
+        },
+        {
+          "name": "unknown-refusal-commits-row-502",
+          "file": "service.go",
+          "old": "adapter := s.Providers[provider]\n\t\tif provider != \"deeplink\" && adapter == nil {\n\t\t\treturn errProvider\n\t\t}\n\t\tresult := Result{}",
+          "new": "adapter := s.Providers[provider]\n\t\tif provider != \"deeplink\" && adapter == nil {\n\t\t\tif _, writeErr := s.DB.Exec(r.Context(), `INSERT INTO booking_booking(user_id,place_id,activity_id,provider,external_ref,status,starts_at,ends_at,party_size,deep_link,created_at,updated_at) VALUES($1,$2,NULL,$3,'','pending',$4,NULL,1,'',now(),now())`, a.ID, input.Place, provider, input.StartsAt); writeErr != nil {\n\t\t\t\treturn writeErr\n\t\t\t}\n\t\t\treturn errProvider\n\t\t}\n\t\tresult := Result{}",
+          "test": "TestBookingAdapterAssertionUnknownRegistryRefusal",
+          "expected_failure": "unknown registry refusal wrote a receipt or contacted provider",
+          "purpose": "Keep the clean fixed502 while committing a forbidden row outside the rolled-back mutation transaction.",
+          "runtime_verification": "not_run",
+          "source_commit": "4096e47c2c70dcd46d6ef104ab29bf1ed0ca57de",
+          "target_path": "services/server/internal/booking/service.go",
+          "anchor_occurrences_static": 1,
+          "expect": "unknown registry refusal wrote a receipt or contacted provider FAIL"
+        },
+        {
+          "name": "nonrealtime-create-called",
+          "file": "service.go",
+          "old": "if realtime(adapter) {",
+          "new": "if adapter != nil {",
+          "test": "TestBookingAdapterAssertionNonRealtimeSkipsCreate",
+          "expected_failure": "non-realtime adapter Create called",
+          "purpose": "Keep the options capabilityfalse while improperly invoking the injected non-realtime probe.",
+          "runtime_verification": "not_run",
+          "source_commit": "4096e47c2c70dcd46d6ef104ab29bf1ed0ca57de",
+          "target_path": "services/server/internal/booking/service.go",
+          "anchor_occurrences_static": 1,
+          "expect": "non-realtime adapter Create called FAIL"
+        },
+        {
+          "name": "realtime-wire-reference-corrupted",
+          "file": "service.go",
+          "old": "'external_ref',external_ref",
+          "new": "'external_ref','fixture-wrong'",
+          "test": "TestBookingAdapterAssertionConfiguredRealtimeTuple",
+          "expected_failure": "configured realtime HTTP tuple",
+          "purpose": "Keep the correct stored confirmation and201 but corrupt the independent projected wire reference.",
+          "runtime_verification": "not_run",
+          "source_commit": "4096e47c2c70dcd46d6ef104ab29bf1ed0ca57de",
+          "target_path": "services/server/internal/booking/service.go",
+          "anchor_occurrences_static": 1,
+          "expect": "configured realtime HTTP tuple FAIL"
+        },
+        {
+          "name": "realtime-stored-reference-corrupted-wire-201",
+          "file": "service.go",
+          "old": "platform.JSON(w, 201, data)",
+          "new": "if _, err := s.DB.Exec(r.Context(), `UPDATE booking_booking SET external_ref='fixture-wrong' WHERE user_id=$1 AND provider='demo_rest'`, a.ID); err != nil {\n\t\tplatform.Fail(w, err)\n\t\treturn\n\t}\n\tplatform.JSON(w, 201, data)",
+          "test": "TestBookingAdapterAssertionConfiguredRealtimeTuple",
+          "expected_failure": "stored configured realtime tuple",
+          "purpose": "Preserve the captured confirmed/demo_rest/bk-9 wire receipt and201 while corrupting committed state before its independent SELECT.",
+          "runtime_verification": "not_run",
+          "source_commit": "4096e47c2c70dcd46d6ef104ab29bf1ed0ca57de",
+          "target_path": "services/server/internal/booking/service.go",
+          "anchor_occurrences_static": 1,
+          "expect": "stored configured realtime tuple FAIL"
+        },
+        {
+          "name": "outward-error-detail-not-fixed",
+          "file": "service.go",
+          "old": "if err != nil {\n\t\tif err == errProvider {\n\t\t\tplatform.Error(w, 502, \"Booking provider unavailable.\")\n\t\t\treturn\n\t\t}\n\t\tplatform.Fail(w, err)\n\t\treturn\n\t}\n\tplatform.JSON(w, 201, data)",
+          "new": "if err != nil {\n\t\tif err == errProvider {\n\t\t\tplatform.Error(w, 502, \"synthetic private provider failure\")\n\t\t\treturn\n\t\t}\n\t\tplatform.Fail(w, err)\n\t\treturn\n\t}\n\tplatform.JSON(w, 201, data)",
+          "test": "TestBookingAdapterAssertionConnectionFailureHTTP",
+          "expected_failure": "provider refusal must contain only the fixed detail",
+          "purpose": "Preserve outward502 and zero writes while exposing the wrong provider error detail.",
+          "runtime_verification": "not_run",
+          "source_commit": "4096e47c2c70dcd46d6ef104ab29bf1ed0ca57de",
+          "target_path": "services/server/internal/booking/service.go",
+          "anchor_occurrences_static": 1,
+          "expect": "provider refusal must contain only the fixed detail FAIL"
+        }
+      ]
+    },
+    {
+      "package": "accounts",
+      "test_flag": "accounts-test-dsn",
+      "top_level_count_static_forecast_not_pass": 76,
+      "required_named_tests": [
+        "TestExportPostsHelperQueryCountEquality"
+      ],
+      "commands_after_admission": [
+        [
+          "GO",
+          "-C",
+          "COMBINED_ROOT/services/server",
+          "test",
+          "-race",
+          "-c",
+          "-o",
+          "TASK_SCRATCH/tests/accounts.test",
+          "./internal/accounts"
+        ],
+        [
+          "docker",
+          "run",
+          "--rm",
+          "--read-only",
+          "--cap-drop=ALL",
+          "--security-opt=no-new-privileges",
+          "--user",
+          "EXPLICIT_UID:GID",
+          "--network",
+          "EXPLICIT_PRIVATE_NETWORK",
+          "-e",
+          "TMPDIR=/scratch/test-tmp",
+          "-e",
+          "GOMAXPROCS=2",
+          "-v",
+          "COMBINED_ROOT:/src:ro",
+          "-v",
+          "TASK_SCRATCH:/scratch",
+          "-w",
+          "/src/services/server/internal/accounts",
+          "IMMUTABLE_CODEC_IMAGE",
+          "/scratch/tests/accounts.test",
+          "-test.v",
+          "-test.timeout=10m",
+          "-accounts-test-dsn",
+          "PRIVATE_SYNTHETIC_DSN"
+        ]
+      ],
+      "baseline_acceptance": "Require actual exit0, terminal PASS, PASS>0, zero skips/failures and all named tests/subcases observed. Forecast counts are not evidence.",
+      "controls": [
+        {
+          "name": "extra-query-at-larger-size",
+          "expect": "size4 exact query equality FAIL"
+        },
+        {
+          "name": "query-per-deleted-post",
+          "expect": "size4 exact query equality FAIL"
+        },
+        {
+          "name": "empty-post-items",
+          "expect": "size1 payload completeness FAIL"
+        },
+        {
+          "name": "uniform-extra-query",
+          "expect": "all three sizes PASS; positive control excluding fixed magic total"
+        }
+      ]
+    },
+    {
+      "package": "donations",
+      "test_flag": "domain-test-dsn",
+      "top_level_count_static_forecast_not_pass": 5,
+      "required_named_tests": [
+        "TestNativeFinancialLedgerSemanticsAndOwnReceipts"
+      ],
+      "commands_after_admission": [
+        [
+          "GO",
+          "-C",
+          "COMBINED_ROOT/services/server",
+          "test",
+          "-race",
+          "-c",
+          "-o",
+          "TASK_SCRATCH/tests/donations.test",
+          "./internal/donations"
+        ],
+        [
+          "docker",
+          "run",
+          "--rm",
+          "--read-only",
+          "--cap-drop=ALL",
+          "--security-opt=no-new-privileges",
+          "--user",
+          "EXPLICIT_UID:GID",
+          "--network",
+          "EXPLICIT_PRIVATE_NETWORK",
+          "-e",
+          "TMPDIR=/scratch/test-tmp",
+          "-e",
+          "GOMAXPROCS=2",
+          "-v",
+          "COMBINED_ROOT:/src:ro",
+          "-v",
+          "TASK_SCRATCH:/scratch",
+          "-w",
+          "/src/services/server/internal/donations",
+          "IMMUTABLE_CODEC_IMAGE",
+          "/scratch/tests/donations.test",
+          "-test.v",
+          "-test.timeout=10m",
+          "-domain-test-dsn",
+          "PRIVATE_SYNTHETIC_DSN"
+        ]
+      ],
+      "baseline_acceptance": "Require actual exit0, terminal PASS, PASS>0, zero skips/failures and all named tests/subcases observed. Forecast counts are not evidence.",
+      "controls": [
+        {
+          "name": "f26_wrong_category",
+          "expect": "closeout linked spend category/untagged exclusion FAIL"
+        },
+        {
+          "name": "f24_initial_credit_missing",
+          "expect": "public civic partner acknowledgement lost FAIL"
+        },
+        {
+          "name": "f24_unverified_credit",
+          "expect": "unverified civic partner credit at read time FAIL"
+        }
+      ]
+    },
+    {
+      "package": "web",
+      "test_flag": "web-domain-test-dsn",
+      "top_level_count_static_forecast_not_pass": 105,
+      "required_named_tests": [
+        "TestCasePortF42MaliciousPartnerWebsiteNeverLiveLink",
+        "TestCasePortF42NonPublicPartnerNeverCredited",
+        "TestCasePortF42CampaignPartnerCreditExcludesDonorPII",
+        "TestCasePortF42CampaignPartnerWebsiteSanitizedLink"
+      ],
+      "commands_after_admission": [
+        [
+          "GO",
+          "-C",
+          "COMBINED_ROOT/services/server",
+          "test",
+          "-race",
+          "-c",
+          "-o",
+          "TASK_SCRATCH/tests/web.test",
+          "./internal/web"
+        ],
+        [
+          "docker",
+          "run",
+          "--rm",
+          "--read-only",
+          "--cap-drop=ALL",
+          "--security-opt=no-new-privileges",
+          "--user",
+          "EXPLICIT_UID:GID",
+          "--network",
+          "EXPLICIT_PRIVATE_NETWORK",
+          "-e",
+          "TMPDIR=/scratch/test-tmp",
+          "-e",
+          "GOMAXPROCS=2",
+          "-v",
+          "COMBINED_ROOT:/src:ro",
+          "-v",
+          "TASK_SCRATCH:/scratch",
+          "-w",
+          "/src/services/server/internal/web",
+          "IMMUTABLE_CODEC_IMAGE",
+          "/scratch/tests/web.test",
+          "-test.v",
+          "-test.timeout=10m",
+          "-web-domain-test-dsn",
+          "PRIVATE_SYNTHETIC_DSN"
+        ]
+      ],
+      "baseline_acceptance": "Require actual exit0, terminal PASS, PASS>0, zero skips/failures and all named tests/subcases observed. Forecast counts are not evidence.",
+      "controls": [
+        {
+          "name": "unsafe_href_passthrough",
+          "expect": "unexpected original HTML assertion javascript: FAIL"
+        },
+        {
+          "name": "unsafe_partner_credit_suppressed",
+          "expect": "missing original HTML assertion In partnership with FAIL"
+        },
+        {
+          "name": "campaign_verification_gate_removed",
+          "expect": "unverified_active nonpublic partner credit survived read-time gate FAIL"
+        },
+        {
+          "name": "campaign_active_gate_removed",
+          "expect": "verified_inactive nonpublic partner credit survived read-time gate FAIL"
+        },
+        {
+          "name": "campaign_donor_username_leaked",
+          "expect": "unexpected original HTML assertion secretdonor FAIL"
+        },
+        {
+          "name": "campaign_donor_display_name_leaked",
+          "expect": "unexpected original HTML assertion Donor X FAIL"
+        },
+        {
+          "name": "funded_campaign_partner_credit_suppressed",
+          "expect": "missing original HTML assertion In partnership with FAIL"
+        },
+        {
+          "name": "valid_partner_website_filtered_out",
+          "expect": "missing original HTML assertion href=\"https://example.org\" FAIL"
+        }
+      ]
+    }
+  ],
+  "control_total": 34,
+  "expected_deliberate_failures": 33,
+  "expected_positive_controls": 1,
+  "control_acceptance": "Each counterexample must reach the intended test assertion, with exactly intended failure scope and zero skips. Compile/infra failures do not count. Record code delta, exact assertion marker, source/binary/log hashes and named cases. Positive uniform-query control must actually pass.",
+  "final_all21": "NOT RUN; separately scheduled by coordinator after affected phases and source/control review. Static total forecast733=historical714+19 top-level declarations, never a passing count. Requalify actual final protected inputs after any allowed metadata update per ADR-0040.",
+  "mapping_closure": "No ledger changes now. Coordinator may apply each exact pending row only after fresh current-source qualification/control logs and independent evidence review; final all21/native/hash/vet/race/Node/harness/contracts/docs/whitespace and exact-source closure precede landing.",
+  "out_of_scope": [
+    "Any additional worker input beyond these seven explicitly transferred files",
+    "Production code/schema/dependencies/templates/frontend",
+    "Push/main merge/branch/worktree removal/deployment/provider/minor/ingestion/schedule activation"
+  ],
+  "seventh_input_retry_precision": "Selected ambiguous net.OpError Op=read POST failures are one-shot; existing safe dial retry behavior is unchanged. No runtime retry qualification has been run for this checkpoint."
+}

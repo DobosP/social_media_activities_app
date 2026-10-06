@@ -1,0 +1,1228 @@
+{
+  "schema_version": 1,
+  "state": "PENDING_DO_NOT_APPLY",
+  "base_main": "aa10645922ad708db66c9ca0ce982e9f70e4a190",
+  "combined_source_bundle_sha256": "759d22e87378e3f63be07727f5fc6cf5d1fa0d8a290ee97ed51157d276d33d21",
+  "staged_source_tree_before_report": "988eb80f75ffd5b995e8dca5c4a7b6a66c12f53b",
+  "runtime_verification": "not_run",
+  "ledger_counts_unchanged": {
+    "historical_claimed": 1020,
+    "historical_unresolved": 1651,
+    "source_declarations": 2671
+  },
+  "original_proposal_inputs": [
+    {
+      "slice": "lifecycle",
+      "path": "C:\\Users\\Paul Work\\personal_repos\\_temp\\test__rest-contract-activity-lifecycle-windows-20261006\\proposed-mappings.pending.json",
+      "sha256": "456654281d33ac575e6b7fcd9060e896ef505977032d12629083a396400c281d"
+    },
+    {
+      "slice": "booking",
+      "path": "C:\\Users\\Paul Work\\personal_repos\\_temp\\test__booking-rest-assertions\\mapping-proposals.json",
+      "sha256": "c82acd86e730201d667ff8ffa72e55460819f0b80d2c183b4a2972e27f0a592e"
+    },
+    {
+      "slice": "export",
+      "path": "C:\\Users\\Paul Work\\personal_repos\\_temp\\export-query-equality\\proposed-mapping.json",
+      "sha256": "3342a7c640efa31750a2f100d8b7c09a7843f04e41375f8dae58d33c72f9f9a8"
+    },
+    {
+      "slice": "finance",
+      "path": "C:\\Users\\Paul Work\\personal_repos\\_temp\\f26-f24-finance-evidence\\evidence-proposal.json",
+      "sha256": "e42a24678750ea42177cbb07ef698ac08e0b4739211db92b20143de3dd6315e3"
+    },
+    {
+      "slice": "f42_html",
+      "path": "C:\\Users\\Paul Work\\personal_repos\\_temp\\test__f42-partner-finance-html\\proposed-mappings.json",
+      "sha256": "ffae5df2a3fdefb5dfc6700001716a78806aa1aef5820ffc77d7142e42159a3b"
+    },
+    {
+      "slice": "f42_credit_link",
+      "path": "C:\\Users\\Paul Work\\personal_repos\\_temp\\test__f42-partner-finance-html\\credit-link-privacy\\proposed-mappings.json",
+      "sha256": "0a0c9e3445b671327e4994dd62f1867ffa8a249ca4345ac722cfbac2a05c2014"
+    },
+    {
+      "slice": "booking_adapters",
+      "path": "C:\\Users\\Paul Work\\personal_repos\\_temp\\test__booking-rest-assertions\\remaining-seven\\mapping-proposals.json",
+      "sha256": "579c84cf016188d04dd8fde741d2273db7535215d3aa580d072d1738cc7dbb2c"
+    }
+  ],
+  "frozen_raw_source_hashes": {
+    "apps/social/tests/test_api.py": "fc35dea7bf6fc36444cb7aa4fcb52a274677bc0c78c328882dcd6ebdb759842f",
+    "apps/booking/tests/test_api.py": "c4be4a663843078c2a5acc0f0d444c66f81b23f47ff437668693c3b74d339a1b",
+    "apps/booking/tests/test_services.py": "a14bd7dd98572448257dae6d6473d2ddef315d4dce2521e8beecacd97b1a5b32",
+    "apps/accounts/tests/test_export.py": "38734c96185100651ef176766f767877cc28f4140ea605033dcf2d56c90e8811",
+    "apps/donations/tests/test_f26_campaign_closeout.py": "fa9ae2a12e7b4faa40f1e3bebbb3bb993253f680d0575db87de3f44a52af4af2",
+    "apps/donations/tests/test_w4_f24_civic_outcomes.py": "515054236bde92ae3b8f1ffbb78b69f2457d3f1e9aeedf3bd5e7fe4641cee7e3",
+    "apps/donations/tests/test_f42_partner_campaign.py": "348ff0d302672aff39054b35857e95751d65f3c4d6fe33274c5ce6da315b9323",
+    "apps/booking/tests/test_providers.py": "02d7279b677bba5f28fb86d07644c1c61633b08629ff33cad5b80f41ce364599"
+  },
+  "proposal_count": 26,
+  "proposals": [
+    {
+      "slice": "lifecycle",
+      "ledger_file": "services/server/internal/contracts/testdata/privacy-coverage.json",
+      "unchanged_current_row": {
+        "legacy_id": "apps/social/tests/test_api.py::test_owner_can_edit_activity_via_patch",
+        "legacy_file": "apps/social/tests/test_api.py",
+        "line": 274,
+        "source_sha256": "fc35dea7bf6fc36444cb7aa4fcb52a274677bc0c78c328882dcd6ebdb759842f",
+        "classification": "unresolved",
+        "native_evidence": [],
+        "rationale": "Preserve the legacy declaration until its behavioral assertions have independent native evidence; a larger native suite or registered route is insufficient.",
+        "gaps": [
+          "Remaining source assertion/transport/edge-case obligations require an explicit native port or reviewed replacement."
+        ],
+        "runtime_verification": "not_run"
+      },
+      "pending_proposed_row_do_not_apply": {
+        "legacy_id": "apps/social/tests/test_api.py::test_owner_can_edit_activity_via_patch",
+        "legacy_file": "apps/social/tests/test_api.py",
+        "line": 274,
+        "source_sha256": "fc35dea7bf6fc36444cb7aa4fcb52a274677bc0c78c328882dcd6ebdb759842f",
+        "classification": "native_semantic_coverage",
+        "native_evidence": [
+          {
+            "go_file": "services/server/internal/social/rest_activity_lifecycle_case_test.go",
+            "test": "TestRESTSourceActivityOwnerEditsNonmemberRefusalAndCancellation",
+            "scenario": "owner_patch: future Old activity, PATCH New name through both registered API prefixes",
+            "assertions": [
+              "registered legacy and v1 PATCH returns exact HTTP200",
+              "independent committed SQL title=New name and status=open",
+              "separate decoded response title=New name and status=open"
+            ]
+          }
+        ],
+        "rationale": "The named registered-handler matrix preserves the frozen inputs and assertions across legacy and v1 API prefixes. Positive cases compare committed SQL state independently of response projection. The negative actor is a visible same-cohort genuine nonmember; refusal requires unchanged complete activity row and audit count. These owner-positive/nonmember-negative cases preserve genuine co-organizer permissions. Production, schema, dependencies, accepted policies and frozen provenance are unchanged. Fresh runtime qualification, actual positive/control receipt hashes and coordinator final closure are pending.",
+        "gaps": [
+          "Remaining source assertion/transport/edge-case obligations require an explicit native port or reviewed replacement.",
+          "Combined source has not been natively qualified: affected lane, sensitivity controls, final all21 and independent runtime/evidence review remain pending. Do not apply this proposal."
+        ],
+        "runtime_verification": "not_run"
+      }
+    },
+    {
+      "slice": "lifecycle",
+      "ledger_file": "services/server/internal/contracts/testdata/privacy-coverage.json",
+      "unchanged_current_row": {
+        "legacy_id": "apps/social/tests/test_api.py::test_non_owner_cannot_patch_activity",
+        "legacy_file": "apps/social/tests/test_api.py",
+        "line": 290,
+        "source_sha256": "fc35dea7bf6fc36444cb7aa4fcb52a274677bc0c78c328882dcd6ebdb759842f",
+        "classification": "unresolved",
+        "native_evidence": [],
+        "rationale": "Preserve the legacy declaration until its behavioral assertions have independent native evidence; a larger native suite or registered route is insufficient.",
+        "gaps": [
+          "Remaining source assertion/transport/edge-case obligations require an explicit native port or reviewed replacement."
+        ],
+        "runtime_verification": "not_run"
+      },
+      "pending_proposed_row_do_not_apply": {
+        "legacy_id": "apps/social/tests/test_api.py::test_non_owner_cannot_patch_activity",
+        "legacy_file": "apps/social/tests/test_api.py",
+        "line": 290,
+        "source_sha256": "fc35dea7bf6fc36444cb7aa4fcb52a274677bc0c78c328882dcd6ebdb759842f",
+        "classification": "native_semantic_coverage",
+        "native_evidence": [
+          {
+            "go_file": "services/server/internal/social/rest_activity_lifecycle_case_test.go",
+            "test": "TestRESTSourceActivityOwnerEditsNonmemberRefusalAndCancellation",
+            "scenario": "nonmember_patch: visible same-cohort genuine nonmember PATCHes Keep to hijack through both registered API prefixes",
+            "assertions": [
+              "actor shares owner cohort, can read activity, and has no membership row",
+              "registered legacy and v1 PATCH returns exact HTTP403",
+              "independent committed title=Keep and status=open",
+              "complete activity JSONB row and audit count remain unchanged"
+            ]
+          }
+        ],
+        "rationale": "The named registered-handler matrix preserves the frozen inputs and assertions across legacy and v1 API prefixes. Positive cases compare committed SQL state independently of response projection. The negative actor is a visible same-cohort genuine nonmember; refusal requires unchanged complete activity row and audit count. These owner-positive/nonmember-negative cases preserve genuine co-organizer permissions. Production, schema, dependencies, accepted policies and frozen provenance are unchanged. Fresh runtime qualification, actual positive/control receipt hashes and coordinator final closure are pending.",
+        "gaps": [
+          "Remaining source assertion/transport/edge-case obligations require an explicit native port or reviewed replacement.",
+          "Combined source has not been natively qualified: affected lane, sensitivity controls, final all21 and independent runtime/evidence review remain pending. Do not apply this proposal."
+        ],
+        "runtime_verification": "not_run"
+      }
+    },
+    {
+      "slice": "lifecycle",
+      "ledger_file": "services/server/internal/contracts/testdata/privacy-coverage.json",
+      "unchanged_current_row": {
+        "legacy_id": "apps/social/tests/test_api.py::test_owner_can_cancel_via_api",
+        "legacy_file": "apps/social/tests/test_api.py",
+        "line": 307,
+        "source_sha256": "fc35dea7bf6fc36444cb7aa4fcb52a274677bc0c78c328882dcd6ebdb759842f",
+        "classification": "unresolved",
+        "native_evidence": [],
+        "rationale": "Preserve the legacy declaration until its behavioral assertions have independent native evidence; a larger native suite or registered route is insufficient.",
+        "gaps": [
+          "Remaining source assertion/transport/edge-case obligations require an explicit native port or reviewed replacement."
+        ],
+        "runtime_verification": "not_run"
+      },
+      "pending_proposed_row_do_not_apply": {
+        "legacy_id": "apps/social/tests/test_api.py::test_owner_can_cancel_via_api",
+        "legacy_file": "apps/social/tests/test_api.py",
+        "line": 307,
+        "source_sha256": "fc35dea7bf6fc36444cb7aa4fcb52a274677bc0c78c328882dcd6ebdb759842f",
+        "classification": "native_semantic_coverage",
+        "native_evidence": [
+          {
+            "go_file": "services/server/internal/social/rest_activity_lifecycle_case_test.go",
+            "test": "TestRESTSourceActivityOwnerEditsNonmemberRefusalAndCancellation",
+            "scenario": "owner_cancel: current Run activity, POST reason weather through both registered API prefixes",
+            "assertions": [
+              "registered legacy and v1 cancel POST returns exact HTTP200",
+              "independent committed SQL title=Run and status=cancelled",
+              "separate decoded response title=Run and status=cancelled"
+            ]
+          }
+        ],
+        "rationale": "The named registered-handler matrix preserves the frozen inputs and assertions across legacy and v1 API prefixes. Positive cases compare committed SQL state independently of response projection. The negative actor is a visible same-cohort genuine nonmember; refusal requires unchanged complete activity row and audit count. These owner-positive/nonmember-negative cases preserve genuine co-organizer permissions. Production, schema, dependencies, accepted policies and frozen provenance are unchanged. Fresh runtime qualification, actual positive/control receipt hashes and coordinator final closure are pending.",
+        "gaps": [
+          "Remaining source assertion/transport/edge-case obligations require an explicit native port or reviewed replacement.",
+          "Combined source has not been natively qualified: affected lane, sensitivity controls, final all21 and independent runtime/evidence review remain pending. Do not apply this proposal."
+        ],
+        "runtime_verification": "not_run"
+      }
+    },
+    {
+      "slice": "booking",
+      "ledger_file": "services/server/internal/contracts/testdata/product-coverage.json",
+      "unchanged_current_row": {
+        "legacy_id": "apps/booking/tests/test_api.py::test_create_and_list_and_cancel",
+        "legacy_file": "apps/booking/tests/test_api.py",
+        "line": 28,
+        "source_sha256": "c4be4a663843078c2a5acc0f0d444c66f81b23f47ff437668693c3b74d339a1b",
+        "classification": "unresolved",
+        "native_evidence": [],
+        "rationale": "No reviewed assertion-level native equivalence has been assigned yet. Retain this source case until a concrete native scenario has been implemented and qualified.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required."
+        ],
+        "runtime_verification": "not_run"
+      },
+      "pending_proposed_row_do_not_apply": {
+        "legacy_id": "apps/booking/tests/test_api.py::test_create_and_list_and_cancel",
+        "legacy_file": "apps/booking/tests/test_api.py",
+        "line": 28,
+        "source_sha256": "c4be4a663843078c2a5acc0f0d444c66f81b23f47ff437668693c3b74d339a1b",
+        "classification": "native_semantic_coverage",
+        "native_evidence": [
+          {
+            "go_file": "services/server/internal/booking/rest_assertion_completion_test.go",
+            "test": "TestBookingRESTAssertionDeeplinkCreateListAndCancel",
+            "scenario": "both_prefix_create_list_cancel",
+            "assertions": [
+              "Create returns201 with a positive ID and pending status.",
+              "GET returns200 with the exact created ID in the sole own result.",
+              "Cancel returns200 and cancelled for that ID; independent SQL confirms cancelled state."
+            ]
+          }
+        ],
+        "rationale": "The existing governed native booking handler exercises the frozen fixture contract with parsed wire assertions and independent persisted-state checks where applicable. Frozen source identity is retained; no Python registry or provider exception replacement is claimed.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required.",
+          "Combined source has not been natively qualified: affected lane, sensitivity controls, final all21 and independent runtime/evidence review remain pending. Do not apply this proposal."
+        ],
+        "runtime_verification": "not_run"
+      }
+    },
+    {
+      "slice": "booking",
+      "ledger_file": "services/server/internal/contracts/testdata/product-coverage.json",
+      "unchanged_current_row": {
+        "legacy_id": "apps/booking/tests/test_api.py::test_options_endpoint",
+        "legacy_file": "apps/booking/tests/test_api.py",
+        "line": 13,
+        "source_sha256": "c4be4a663843078c2a5acc0f0d444c66f81b23f47ff437668693c3b74d339a1b",
+        "classification": "unresolved",
+        "native_evidence": [],
+        "rationale": "No reviewed assertion-level native equivalence has been assigned yet. Retain this source case until a concrete native scenario has been implemented and qualified.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required."
+        ],
+        "runtime_verification": "not_run"
+      },
+      "pending_proposed_row_do_not_apply": {
+        "legacy_id": "apps/booking/tests/test_api.py::test_options_endpoint",
+        "legacy_file": "apps/booking/tests/test_api.py",
+        "line": 13,
+        "source_sha256": "c4be4a663843078c2a5acc0f0d444c66f81b23f47ff437668693c3b74d339a1b",
+        "classification": "native_semantic_coverage",
+        "native_evidence": [
+          {
+            "go_file": "services/server/internal/booking/rest_assertion_completion_test.go",
+            "test": "TestBookingRESTAssertionDeeplinkOptions",
+            "scenario": "default_options",
+            "assertions": [
+              "Both registered API prefixes return200 and provider deeplink for a place without booking info."
+            ]
+          }
+        ],
+        "rationale": "The existing governed native booking handler exercises the frozen fixture contract with parsed wire assertions and independent persisted-state checks where applicable. Frozen source identity is retained; no Python registry or provider exception replacement is claimed.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required.",
+          "Combined source has not been natively qualified: affected lane, sensitivity controls, final all21 and independent runtime/evidence review remain pending. Do not apply this proposal."
+        ],
+        "runtime_verification": "not_run"
+      }
+    },
+    {
+      "slice": "booking",
+      "ledger_file": "services/server/internal/contracts/testdata/product-coverage.json",
+      "unchanged_current_row": {
+        "legacy_id": "apps/booking/tests/test_api.py::test_providers_endpoint",
+        "legacy_file": "apps/booking/tests/test_api.py",
+        "line": 20,
+        "source_sha256": "c4be4a663843078c2a5acc0f0d444c66f81b23f47ff437668693c3b74d339a1b",
+        "classification": "unresolved",
+        "native_evidence": [],
+        "rationale": "No reviewed assertion-level native equivalence has been assigned yet. Retain this source case until a concrete native scenario has been implemented and qualified.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required."
+        ],
+        "runtime_verification": "not_run"
+      },
+      "pending_proposed_row_do_not_apply": {
+        "legacy_id": "apps/booking/tests/test_api.py::test_providers_endpoint",
+        "legacy_file": "apps/booking/tests/test_api.py",
+        "line": 20,
+        "source_sha256": "c4be4a663843078c2a5acc0f0d444c66f81b23f47ff437668693c3b74d339a1b",
+        "classification": "native_semantic_coverage",
+        "native_evidence": [
+          {
+            "go_file": "services/server/internal/booking/rest_assertion_completion_test.go",
+            "test": "TestBookingRESTAssertionAuthenticationAndProviders",
+            "scenario": "builtin_providers",
+            "assertions": [
+              "Both registered providers endpoints return200; parsed slugs include deeplink and demo_rest."
+            ]
+          }
+        ],
+        "rationale": "The existing governed native booking handler exercises the frozen fixture contract with parsed wire assertions and independent persisted-state checks where applicable. Frozen source identity is retained; no Python registry or provider exception replacement is claimed.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required.",
+          "Combined source has not been natively qualified: affected lane, sensitivity controls, final all21 and independent runtime/evidence review remain pending. Do not apply this proposal."
+        ],
+        "runtime_verification": "not_run"
+      }
+    },
+    {
+      "slice": "booking",
+      "ledger_file": "services/server/internal/contracts/testdata/product-coverage.json",
+      "unchanged_current_row": {
+        "legacy_id": "apps/booking/tests/test_api.py::test_requires_auth",
+        "legacy_file": "apps/booking/tests/test_api.py",
+        "line": 48,
+        "source_sha256": "c4be4a663843078c2a5acc0f0d444c66f81b23f47ff437668693c3b74d339a1b",
+        "classification": "unresolved",
+        "native_evidence": [],
+        "rationale": "No reviewed assertion-level native equivalence has been assigned yet. Retain this source case until a concrete native scenario has been implemented and qualified.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required."
+        ],
+        "runtime_verification": "not_run"
+      },
+      "pending_proposed_row_do_not_apply": {
+        "legacy_id": "apps/booking/tests/test_api.py::test_requires_auth",
+        "legacy_file": "apps/booking/tests/test_api.py",
+        "line": 48,
+        "source_sha256": "c4be4a663843078c2a5acc0f0d444c66f81b23f47ff437668693c3b74d339a1b",
+        "classification": "native_semantic_coverage",
+        "native_evidence": [
+          {
+            "go_file": "services/server/internal/booking/rest_assertion_completion_test.go",
+            "test": "TestBookingRESTAssertionAuthenticationAndProviders",
+            "scenario": "anonymous_options",
+            "assertions": [
+              "Literal anonymous options GET returns401 before any database access, within the frozen401/403 allowance; both prefixes."
+            ]
+          }
+        ],
+        "rationale": "The existing governed native booking handler exercises the frozen fixture contract with parsed wire assertions and independent persisted-state checks where applicable. Frozen source identity is retained; no Python registry or provider exception replacement is claimed.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required.",
+          "Combined source has not been natively qualified: affected lane, sensitivity controls, final all21 and independent runtime/evidence review remain pending. Do not apply this proposal."
+        ],
+        "runtime_verification": "not_run"
+      }
+    },
+    {
+      "slice": "booking",
+      "ledger_file": "services/server/internal/contracts/testdata/product-coverage.json",
+      "unchanged_current_row": {
+        "legacy_id": "apps/booking/tests/test_services.py::test_booking_for_activity_requires_membership",
+        "legacy_file": "apps/booking/tests/test_services.py",
+        "line": 61,
+        "source_sha256": "a14bd7dd98572448257dae6d6473d2ddef315d4dce2521e8beecacd97b1a5b32",
+        "classification": "unresolved",
+        "native_evidence": [],
+        "rationale": "No reviewed assertion-level native equivalence has been assigned yet. Retain this source case until a concrete native scenario has been implemented and qualified.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required."
+        ],
+        "runtime_verification": "not_run"
+      },
+      "pending_proposed_row_do_not_apply": {
+        "legacy_id": "apps/booking/tests/test_services.py::test_booking_for_activity_requires_membership",
+        "legacy_file": "apps/booking/tests/test_services.py",
+        "line": 61,
+        "source_sha256": "a14bd7dd98572448257dae6d6473d2ddef315d4dce2521e8beecacd97b1a5b32",
+        "classification": "native_semantic_coverage",
+        "native_evidence": [
+          {
+            "go_file": "services/server/internal/booking/rest_assertion_completion_test.go",
+            "test": "TestBookingRESTAssertionActivityMembership",
+            "scenario": "both_prefix_owner_member_and_assured_outsider",
+            "assertions": [
+              "Current adult owner membership returns201 with the requested activity; independent SQL confirms stored owner/activity.",
+              "A separately verified same-cohort outsider gets403 and zero own booking rows from both handlers."
+            ]
+          }
+        ],
+        "rationale": "The existing governed native booking handler exercises the frozen fixture contract with parsed wire assertions and independent persisted-state checks where applicable. Frozen source identity is retained; no Python registry or provider exception replacement is claimed.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required.",
+          "Combined source has not been natively qualified: affected lane, sensitivity controls, final all21 and independent runtime/evidence review remain pending. Do not apply this proposal."
+        ],
+        "runtime_verification": "not_run"
+      }
+    },
+    {
+      "slice": "booking",
+      "ledger_file": "services/server/internal/contracts/testdata/product-coverage.json",
+      "unchanged_current_row": {
+        "legacy_id": "apps/booking/tests/test_services.py::test_booking_options_default_deeplink",
+        "legacy_file": "apps/booking/tests/test_services.py",
+        "line": 11,
+        "source_sha256": "a14bd7dd98572448257dae6d6473d2ddef315d4dce2521e8beecacd97b1a5b32",
+        "classification": "unresolved",
+        "native_evidence": [],
+        "rationale": "No reviewed assertion-level native equivalence has been assigned yet. Retain this source case until a concrete native scenario has been implemented and qualified.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required."
+        ],
+        "runtime_verification": "not_run"
+      },
+      "pending_proposed_row_do_not_apply": {
+        "legacy_id": "apps/booking/tests/test_services.py::test_booking_options_default_deeplink",
+        "legacy_file": "apps/booking/tests/test_services.py",
+        "line": 11,
+        "source_sha256": "a14bd7dd98572448257dae6d6473d2ddef315d4dce2521e8beecacd97b1a5b32",
+        "classification": "native_semantic_coverage",
+        "native_evidence": [
+          {
+            "go_file": "services/server/internal/booking/rest_assertion_completion_test.go",
+            "test": "TestBookingRESTAssertionDeeplinkOptions",
+            "scenario": "default_options",
+            "assertions": [
+              "Options preserve provider deeplink and an explicitly present bookable_in_app=false; both prefixes."
+            ]
+          }
+        ],
+        "rationale": "The existing governed native booking handler exercises the frozen fixture contract with parsed wire assertions and independent persisted-state checks where applicable. Frozen source identity is retained; no Python registry or provider exception replacement is claimed.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required.",
+          "Combined source has not been natively qualified: affected lane, sensitivity controls, final all21 and independent runtime/evidence review remain pending. Do not apply this proposal."
+        ],
+        "runtime_verification": "not_run"
+      }
+    },
+    {
+      "slice": "booking",
+      "ledger_file": "services/server/internal/contracts/testdata/product-coverage.json",
+      "unchanged_current_row": {
+        "legacy_id": "apps/booking/tests/test_services.py::test_booking_options_with_info",
+        "legacy_file": "apps/booking/tests/test_services.py",
+        "line": 18,
+        "source_sha256": "a14bd7dd98572448257dae6d6473d2ddef315d4dce2521e8beecacd97b1a5b32",
+        "classification": "unresolved",
+        "native_evidence": [],
+        "rationale": "No reviewed assertion-level native equivalence has been assigned yet. Retain this source case until a concrete native scenario has been implemented and qualified.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required."
+        ],
+        "runtime_verification": "not_run"
+      },
+      "pending_proposed_row_do_not_apply": {
+        "legacy_id": "apps/booking/tests/test_services.py::test_booking_options_with_info",
+        "legacy_file": "apps/booking/tests/test_services.py",
+        "line": 18,
+        "source_sha256": "a14bd7dd98572448257dae6d6473d2ddef315d4dce2521e8beecacd97b1a5b32",
+        "classification": "native_semantic_coverage",
+        "native_evidence": [
+          {
+            "go_file": "services/server/internal/booking/rest_assertion_completion_test.go",
+            "test": "TestBookingRESTAssertionDeeplinkOptions",
+            "scenario": "configured_options",
+            "assertions": [
+              "Fixture options preserve exact https://book.example/hall and Call ahead values through both registered handlers."
+            ]
+          }
+        ],
+        "rationale": "The existing governed native booking handler exercises the frozen fixture contract with parsed wire assertions and independent persisted-state checks where applicable. Frozen source identity is retained; no Python registry or provider exception replacement is claimed.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required.",
+          "Combined source has not been natively qualified: affected lane, sensitivity controls, final all21 and independent runtime/evidence review remain pending. Do not apply this proposal."
+        ],
+        "runtime_verification": "not_run"
+      }
+    },
+    {
+      "slice": "booking",
+      "ledger_file": "services/server/internal/contracts/testdata/product-coverage.json",
+      "unchanged_current_row": {
+        "legacy_id": "apps/booking/tests/test_services.py::test_create_deeplink_booking_is_pending",
+        "legacy_file": "apps/booking/tests/test_services.py",
+        "line": 31,
+        "source_sha256": "a14bd7dd98572448257dae6d6473d2ddef315d4dce2521e8beecacd97b1a5b32",
+        "classification": "unresolved",
+        "native_evidence": [],
+        "rationale": "No reviewed assertion-level native equivalence has been assigned yet. Retain this source case until a concrete native scenario has been implemented and qualified.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required."
+        ],
+        "runtime_verification": "not_run"
+      },
+      "pending_proposed_row_do_not_apply": {
+        "legacy_id": "apps/booking/tests/test_services.py::test_create_deeplink_booking_is_pending",
+        "legacy_file": "apps/booking/tests/test_services.py",
+        "line": 31,
+        "source_sha256": "a14bd7dd98572448257dae6d6473d2ddef315d4dce2521e8beecacd97b1a5b32",
+        "classification": "native_semantic_coverage",
+        "native_evidence": [
+          {
+            "go_file": "services/server/internal/booking/rest_assertion_completion_test.go",
+            "test": "TestBookingRESTAssertionDeeplinkCreateListAndCancel",
+            "scenario": "both_prefix_pending_nonempty_link",
+            "assertions": [
+              "Configured https://book.example/x is returned in a pending201 receipt.",
+              "Independent SQL confirms fixture owner/place, provider deeplink, pending status, exact nonempty link and empty external reference."
+            ]
+          }
+        ],
+        "rationale": "The existing governed native booking handler exercises the frozen fixture contract with parsed wire assertions and independent persisted-state checks where applicable. Frozen source identity is retained; no Python registry or provider exception replacement is claimed.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required.",
+          "Combined source has not been natively qualified: affected lane, sensitivity controls, final all21 and independent runtime/evidence review remain pending. Do not apply this proposal."
+        ],
+        "runtime_verification": "not_run"
+      }
+    },
+    {
+      "slice": "booking",
+      "ledger_file": "services/server/internal/contracts/testdata/product-coverage.json",
+      "unchanged_current_row": {
+        "legacy_id": "apps/booking/tests/test_services.py::test_non_participant_denied",
+        "legacy_file": "apps/booking/tests/test_services.py",
+        "line": 54,
+        "source_sha256": "a14bd7dd98572448257dae6d6473d2ddef315d4dce2521e8beecacd97b1a5b32",
+        "classification": "unresolved",
+        "native_evidence": [],
+        "rationale": "No reviewed assertion-level native equivalence has been assigned yet. Retain this source case until a concrete native scenario has been implemented and qualified.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required."
+        ],
+        "runtime_verification": "not_run"
+      },
+      "pending_proposed_row_do_not_apply": {
+        "legacy_id": "apps/booking/tests/test_services.py::test_non_participant_denied",
+        "legacy_file": "apps/booking/tests/test_services.py",
+        "line": 54,
+        "source_sha256": "a14bd7dd98572448257dae6d6473d2ddef315d4dce2521e8beecacd97b1a5b32",
+        "classification": "native_semantic_coverage",
+        "native_evidence": [
+          {
+            "go_file": "services/server/internal/booking/rest_assertion_completion_test.go",
+            "test": "TestBookingRESTAssertionFreshUnverifiedDenied",
+            "scenario": "both_prefix_fresh_unverified_no_write",
+            "assertions": [
+              "Persist a fresh active user with unknown age, unassigned cohort, no assurance or identity verification.",
+              "Both POST handlers return403 and zero bookings for that user.",
+              "An eligible actor succeeds with the same omitted-party-size payload, validating the admission comparison."
+            ]
+          }
+        ],
+        "rationale": "The existing governed native booking handler exercises the frozen fixture contract with parsed wire assertions and independent persisted-state checks where applicable. Frozen source identity is retained; no Python registry or provider exception replacement is claimed.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required.",
+          "Combined source has not been natively qualified: affected lane, sensitivity controls, final all21 and independent runtime/evidence review remain pending. Do not apply this proposal."
+        ],
+        "runtime_verification": "not_run"
+      }
+    },
+    {
+      "slice": "export",
+      "ledger_file": "services/server/internal/contracts/testdata/privacy-coverage.json",
+      "unchanged_current_row": {
+        "legacy_id": "apps/accounts/tests/test_export.py::test_thread_posts_helper_query_count_is_flat",
+        "legacy_file": "apps/accounts/tests/test_export.py",
+        "line": 386,
+        "source_sha256": "38734c96185100651ef176766f767877cc28f4140ea605033dcf2d56c90e8811",
+        "classification": "unresolved",
+        "native_evidence": [
+          {
+            "go_file": "services/server/internal/web/query_growth_retirement_test.go",
+            "test": "TestRetirementPostgresWebQueryGrowth",
+            "scenario": "portability_export",
+            "assertions": [
+              "growing own posts4to28 and distinct peers does not make native export query count grow linearly"
+            ]
+          }
+        ],
+        "rationale": "Partial native evidence exercises4to28 own posts and distinct peer activity, but does not certify every exact original query-growth assertion. Retain this case unresolved.",
+        "gaps": [
+          "The broader native export growth test permits +2 queries; the original thread-post helper requires exact constant query count. Transport-wide independent measurement and exact helper bound still need port."
+        ],
+        "runtime_verification": "passed"
+      },
+      "pending_proposed_row_do_not_apply": {
+        "legacy_id": "apps/accounts/tests/test_export.py::test_thread_posts_helper_query_count_is_flat",
+        "legacy_file": "apps/accounts/tests/test_export.py",
+        "line": 386,
+        "source_sha256": "38734c96185100651ef176766f767877cc28f4140ea605033dcf2d56c90e8811",
+        "classification": "native_semantic_coverage",
+        "native_evidence": [
+          {
+            "go_file": "services/server/internal/web/query_growth_retirement_test.go",
+            "test": "TestRetirementPostgresWebQueryGrowth",
+            "scenario": "portability_export",
+            "assertions": [
+              "growing own posts4to28 and distinct peers does not make native export query count grow linearly"
+            ]
+          },
+          {
+            "go_file": "services/server/internal/accounts/export_query_equality_case_test.go",
+            "test": "TestExportPostsHelperQueryCountEquality",
+            "scenario": "author_deleted_posts_1, author_deleted_posts_4, author_deleted_posts_16",
+            "assertions": [
+              "measure only exportPosts(ctx, owner.ID, true) via an independent all-connection traced pool; fixture work and JSON decoding excluded",
+              "positive query baseline at one author-deleted post is exactly equal after three more posts and at sixteen total posts; zero growth allowance; no magic query total",
+              "every checkpoint returns total=N, items=N and truncated=false under cap32",
+              "all unique expected own withdrawn bodies retain deleted_by_you and the exact activity kind/id/title; peer sentinel is excluded"
+            ]
+          }
+        ],
+        "rationale": "Exact helper-only 1-to-4 equality plus finite16 checkpoint, positive traced baseline, complete own withdrawn-body and thread projections; prior broad whole-export evidence remains supplemental. Runtime and controls are pending.",
+        "gaps": [
+          "The broader native export growth test permits +2 queries; the original thread-post helper requires exact constant query count. Transport-wide independent measurement and exact helper bound still need port.",
+          "Combined source has not been natively qualified: affected lane, sensitivity controls, final all21 and independent runtime/evidence review remain pending. Do not apply this proposal."
+        ],
+        "runtime_verification": "not_run"
+      }
+    },
+    {
+      "slice": "finance",
+      "ledger_file": "services/server/internal/contracts/testdata/product-coverage.json",
+      "unchanged_current_row": {
+        "legacy_id": "apps/donations/tests/test_f26_campaign_closeout.py::test_linked_spend_rows_attach_untagged_excluded",
+        "legacy_file": "apps/donations/tests/test_f26_campaign_closeout.py",
+        "line": 59,
+        "source_sha256": "fa9ae2a12e7b4faa40f1e3bebbb3bb993253f680d0575db87de3f44a52af4af2",
+        "classification": "unresolved",
+        "native_evidence": [
+          {
+            "go_file": "services/server/internal/donations/parity_test.go",
+            "test": "TestNativeFinancialLedgerSemanticsAndOwnReceipts",
+            "scenario": "completed_campaigns",
+            "assertions": [
+              "Completed campaign has exactly one linked spend entry beside untagged general spend."
+            ]
+          }
+        ],
+        "rationale": "The listed native assertions qualify only a subset of the original case. Preserve the legacy case until its remaining concrete assertions are ported and qualified.",
+        "gaps": [
+          "Original case asserts the exact category value; existing native test only checks the number of linked spend entries."
+        ],
+        "runtime_verification": "passed"
+      },
+      "pending_proposed_row_do_not_apply": {
+        "legacy_id": "apps/donations/tests/test_f26_campaign_closeout.py::test_linked_spend_rows_attach_untagged_excluded",
+        "legacy_file": "apps/donations/tests/test_f26_campaign_closeout.py",
+        "line": 59,
+        "source_sha256": "fa9ae2a12e7b4faa40f1e3bebbb3bb993253f680d0575db87de3f44a52af4af2",
+        "classification": "native_semantic_coverage",
+        "native_evidence": [
+          {
+            "go_file": "services/server/internal/donations/parity_test.go",
+            "test": "TestNativeFinancialLedgerSemanticsAndOwnReceipts",
+            "scenario": "completed_campaigns",
+            "assertions": [
+              "Completed campaign has exactly one linked spend entry beside untagged general spend."
+            ]
+          },
+          {
+            "go_file": "services/server/internal/donations/parity_test.go",
+            "test": "TestNativeFinancialLedgerSemanticsAndOwnReceipts",
+            "scenario": "completed_campaigns",
+            "assertions": [
+              "Existing fixture has linked Books and untagged General spend; completed campaign retains exactly one attached row.",
+              "That row has the exact category Books, establishing the corresponding singleton category set and exclusion of untagged spend."
+            ]
+          }
+        ],
+        "rationale": "Corresponding finite F26 singleton linked-category/untagged exclusion and F24 public-credit then verified-withdrawal/null-key assertions. Original literals, IDs, lines and frozen hashes remain unchanged. Runtime and controls are pending.",
+        "gaps": [
+          "Original case asserts the exact category value; existing native test only checks the number of linked spend entries.",
+          "Combined source has not been natively qualified: affected lane, sensitivity controls, final all21 and independent runtime/evidence review remain pending. Do not apply this proposal."
+        ],
+        "runtime_verification": "not_run"
+      }
+    },
+    {
+      "slice": "finance",
+      "ledger_file": "services/server/internal/contracts/testdata/product-coverage.json",
+      "unchanged_current_row": {
+        "legacy_id": "apps/donations/tests/test_w4_f24_civic_outcomes.py::test_partner_name_regated_to_public_at_read_time",
+        "legacy_file": "apps/donations/tests/test_w4_f24_civic_outcomes.py",
+        "line": 55,
+        "source_sha256": "515054236bde92ae3b8f1ffbb78b69f2457d3f1e9aeedf3bd5e7fe4641cee7e3",
+        "classification": "unresolved",
+        "native_evidence": [
+          {
+            "go_file": "services/server/internal/donations/parity_test.go",
+            "test": "TestNativeFinancialLedgerSemanticsAndOwnReceipts",
+            "scenario": "partner withdrawal",
+            "assertions": [
+              "Civic partner credit becomes null after partner is_active=false."
+            ]
+          }
+        ],
+        "rationale": "The listed native assertions qualify only a subset of the original case. Preserve the legacy case until its remaining concrete assertions are ported and qualified.",
+        "gaps": [
+          "Original scenario withdraws is_verified specifically and asserts the initial credited name; both independent public partner gates still need explicit native case assertions."
+        ],
+        "runtime_verification": "passed"
+      },
+      "pending_proposed_row_do_not_apply": {
+        "legacy_id": "apps/donations/tests/test_w4_f24_civic_outcomes.py::test_partner_name_regated_to_public_at_read_time",
+        "legacy_file": "apps/donations/tests/test_w4_f24_civic_outcomes.py",
+        "line": 55,
+        "source_sha256": "515054236bde92ae3b8f1ffbb78b69f2457d3f1e9aeedf3bd5e7fe4641cee7e3",
+        "classification": "native_semantic_coverage",
+        "native_evidence": [
+          {
+            "go_file": "services/server/internal/donations/parity_test.go",
+            "test": "TestNativeFinancialLedgerSemanticsAndOwnReceipts",
+            "scenario": "partner withdrawal",
+            "assertions": [
+              "Civic partner credit becomes null after partner is_active=false."
+            ]
+          },
+          {
+            "go_file": "services/server/internal/donations/parity_test.go",
+            "test": "TestNativeFinancialLedgerSemanticsAndOwnReceipts",
+            "scenario": "partner verification withdrawal at read time",
+            "assertions": [
+              "Initial civic partner_name equals Fixture library.",
+              "Withdraw only is_verified while is_active stays true, call Ledger afresh, retain the civic row/headline and require a present-null partner_name.",
+              "Restore is_verified before the existing independent is_active=false fixture, preserving that gate evidence."
+            ]
+          }
+        ],
+        "rationale": "Corresponding finite F26 singleton linked-category/untagged exclusion and F24 public-credit then verified-withdrawal/null-key assertions. Original literals, IDs, lines and frozen hashes remain unchanged. Runtime and controls are pending.",
+        "gaps": [
+          "Original scenario withdraws is_verified specifically and asserts the initial credited name; both independent public partner gates still need explicit native case assertions.",
+          "Combined source has not been natively qualified: affected lane, sensitivity controls, final all21 and independent runtime/evidence review remain pending. Do not apply this proposal."
+        ],
+        "runtime_verification": "not_run"
+      }
+    },
+    {
+      "slice": "f42_html",
+      "ledger_file": "services/server/internal/contracts/testdata/product-coverage.json",
+      "unchanged_current_row": {
+        "legacy_id": "apps/donations/tests/test_f42_partner_campaign.py::test_malicious_partner_website_is_never_a_live_link",
+        "legacy_file": "apps/donations/tests/test_f42_partner_campaign.py",
+        "line": 82,
+        "source_sha256": "348ff0d302672aff39054b35857e95751d65f3c4d6fe33274c5ce6da315b9323",
+        "classification": "unresolved",
+        "native_evidence": [],
+        "rationale": "No reviewed assertion-level native equivalence has been assigned yet. Retain this source case until a concrete native scenario has been implemented and qualified.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required."
+        ],
+        "runtime_verification": "not_run"
+      },
+      "pending_proposed_row_do_not_apply": {
+        "legacy_id": "apps/donations/tests/test_f42_partner_campaign.py::test_malicious_partner_website_is_never_a_live_link",
+        "legacy_file": "apps/donations/tests/test_f42_partner_campaign.py",
+        "line": 82,
+        "source_sha256": "348ff0d302672aff39054b35857e95751d65f3c4d6fe33274c5ce6da315b9323",
+        "classification": "native_semantic_coverage",
+        "native_evidence": [
+          {
+            "go_file": "services/server/internal/web/partner_finance_html_case_test.go",
+            "test": "TestCasePortF42MaliciousPartnerWebsiteNeverLiveLink",
+            "scenario": "forced_unsafe_website_actual_HTML",
+            "assertions": [
+              "Anonymous registered /campaigns/ GET returns actual HTML; forced stored javascript URL reaches real paymentView and renderer, scheme/href absent, credit/name and stored FK retained. No JSON substitute."
+            ]
+          }
+        ],
+        "rationale": "Anonymous registered /campaigns/ GET returns actual HTML; forced stored javascript URL reaches real paymentView and renderer, scheme/href absent, credit/name and stored FK retained. No JSON substitute. Runtime and controls are pending.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required.",
+          "Combined source has not been natively qualified: affected lane, sensitivity controls, final all21 and independent runtime/evidence review remain pending. Do not apply this proposal."
+        ],
+        "runtime_verification": "not_run"
+      }
+    },
+    {
+      "slice": "f42_html",
+      "ledger_file": "services/server/internal/contracts/testdata/product-coverage.json",
+      "unchanged_current_row": {
+        "legacy_id": "apps/donations/tests/test_f42_partner_campaign.py::test_non_public_partner_is_not_credited",
+        "legacy_file": "apps/donations/tests/test_f42_partner_campaign.py",
+        "line": 61,
+        "source_sha256": "348ff0d302672aff39054b35857e95751d65f3c4d6fe33274c5ce6da315b9323",
+        "classification": "unresolved",
+        "native_evidence": [],
+        "rationale": "No reviewed assertion-level native equivalence has been assigned yet. Retain this source case until a concrete native scenario has been implemented and qualified.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required."
+        ],
+        "runtime_verification": "not_run"
+      },
+      "pending_proposed_row_do_not_apply": {
+        "legacy_id": "apps/donations/tests/test_f42_partner_campaign.py::test_non_public_partner_is_not_credited",
+        "legacy_file": "apps/donations/tests/test_f42_partner_campaign.py",
+        "line": 61,
+        "source_sha256": "348ff0d302672aff39054b35857e95751d65f3c4d6fe33274c5ce6da315b9323",
+        "classification": "native_semantic_coverage",
+        "native_evidence": [
+          {
+            "go_file": "services/server/internal/web/partner_finance_html_case_test.go",
+            "test": "TestCasePortF42NonPublicPartnerNeverCredited",
+            "scenario": "unverified_active,verified_inactive,unverified_inactive",
+            "assertions": [
+              "All original three flag combinations, after positive public baseline: exact service partner_name empty and actual registered HTML credit absent. Campaign remains listed and linked; blurb/website also absent."
+            ]
+          }
+        ],
+        "rationale": "All original three flag combinations, after positive public baseline: exact service partner_name empty and actual registered HTML credit absent. Campaign remains listed and linked; blurb/website also absent. Runtime and controls are pending.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required.",
+          "Combined source has not been natively qualified: affected lane, sensitivity controls, final all21 and independent runtime/evidence review remain pending. Do not apply this proposal."
+        ],
+        "runtime_verification": "not_run"
+      }
+    },
+    {
+      "slice": "f42_credit_link",
+      "ledger_file": "services/server/internal/contracts/testdata/product-coverage.json",
+      "unchanged_current_row": {
+        "legacy_id": "apps/donations/tests/test_f42_partner_campaign.py::test_credit_does_not_expose_donor_pii",
+        "legacy_file": "apps/donations/tests/test_f42_partner_campaign.py",
+        "line": 156,
+        "source_sha256": "348ff0d302672aff39054b35857e95751d65f3c4d6fe33274c5ce6da315b9323",
+        "classification": "unresolved",
+        "native_evidence": [
+          {
+            "go_file": "services/server/internal/donations/parity_test.go",
+            "test": "TestNativeFinancialLedgerSemanticsAndOwnReceipts",
+            "scenario": "public ledger privacy",
+            "assertions": [
+              "Public ledger omits donor_id and payment references; own receipts retain subject references."
+            ]
+          }
+        ],
+        "rationale": "The listed native assertions qualify only a subset of the original case. Preserve the legacy case until its remaining concrete assertions are ported and qualified.",
+        "gaps": [
+          "Original case asserts rendered campaign partner credit and absence of donor username/display_name; JSON ledger assertions do not qualify that HTML branch."
+        ],
+        "runtime_verification": "passed"
+      },
+      "pending_proposed_row_do_not_apply": {
+        "legacy_id": "apps/donations/tests/test_f42_partner_campaign.py::test_credit_does_not_expose_donor_pii",
+        "legacy_file": "apps/donations/tests/test_f42_partner_campaign.py",
+        "line": 156,
+        "source_sha256": "348ff0d302672aff39054b35857e95751d65f3c4d6fe33274c5ce6da315b9323",
+        "classification": "native_semantic_coverage",
+        "native_evidence": [
+          {
+            "go_file": "services/server/internal/donations/parity_test.go",
+            "test": "TestNativeFinancialLedgerSemanticsAndOwnReceipts",
+            "scenario": "public ledger privacy",
+            "assertions": [
+              "Public ledger omits donor_id and payment references; own receipts retain subject references."
+            ]
+          },
+          {
+            "go_file": "services/server/internal/web/partner_credit_link_privacy_html_case_test.go",
+            "test": "TestCasePortF42CampaignPartnerCreditExcludesDonorPII",
+            "scenario": "anonymous campaign credit with linked completed synthetic donor gift",
+            "assertions": [
+              "Persisted original donor username secretdonor and display_name Donor X exist on the linked completed 5000-cent dev gift.",
+              "The actual registered anonymous campaigns HTML includes the partner credit and funded amount.",
+              "Both original donor identity strings are excluded from the actual HTML response."
+            ]
+          }
+        ],
+        "rationale": "Closes the specific original rendered credit/username/display-name obligations only after runtime qualification; JSON-only ledger evidence does not substitute. New HTML runtime qualification and controls are pending.",
+        "gaps": [
+          "Original case asserts rendered campaign partner credit and absence of donor username/display_name; JSON ledger assertions do not qualify that HTML branch.",
+          "Combined source has not been natively qualified: affected lane, sensitivity controls, final all21 and independent runtime/evidence review remain pending. Do not apply this proposal."
+        ],
+        "runtime_verification": "not_run"
+      }
+    },
+    {
+      "slice": "f42_credit_link",
+      "ledger_file": "services/server/internal/contracts/testdata/product-coverage.json",
+      "unchanged_current_row": {
+        "legacy_id": "apps/donations/tests/test_f42_partner_campaign.py::test_partner_website_renders_as_a_sanitised_link",
+        "legacy_file": "apps/donations/tests/test_f42_partner_campaign.py",
+        "line": 76,
+        "source_sha256": "348ff0d302672aff39054b35857e95751d65f3c4d6fe33274c5ce6da315b9323",
+        "classification": "unresolved",
+        "native_evidence": [],
+        "rationale": "No reviewed assertion-level native equivalence has been assigned yet. Retain this source case until a concrete native scenario has been implemented and qualified.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required."
+        ],
+        "runtime_verification": "not_run"
+      },
+      "pending_proposed_row_do_not_apply": {
+        "legacy_id": "apps/donations/tests/test_f42_partner_campaign.py::test_partner_website_renders_as_a_sanitised_link",
+        "legacy_file": "apps/donations/tests/test_f42_partner_campaign.py",
+        "line": 76,
+        "source_sha256": "348ff0d302672aff39054b35857e95751d65f3c4d6fe33274c5ce6da315b9323",
+        "classification": "native_semantic_coverage",
+        "native_evidence": [
+          {
+            "go_file": "services/server/internal/web/partner_credit_link_privacy_html_case_test.go",
+            "test": "TestCasePortF42CampaignPartnerWebsiteSanitizedLink",
+            "scenario": "valid https partner URL survives actual native campaigns renderer",
+            "assertions": [
+              "Service partner_website equals the exact original https://example.org.",
+              "Actual registered anonymous campaigns HTML contains href=\"https://example.org\".",
+              "The partner name is the link text and its anchor retains noopener noreferrer and _blank attributes."
+            ]
+          }
+        ],
+        "rationale": "Preserves the original service URL equality and actual HTML href obligation through unchanged safe_href; extra anchor checks prevent unrelated href occurrences from satisfying the credit link. New HTML runtime qualification and controls are pending.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required.",
+          "Combined source has not been natively qualified: affected lane, sensitivity controls, final all21 and independent runtime/evidence review remain pending. Do not apply this proposal."
+        ],
+        "runtime_verification": "not_run"
+      }
+    },
+    {
+      "slice": "booking_adapters",
+      "ledger_file": "services/server/internal/contracts/testdata/product-coverage.json",
+      "unchanged_current_row": {
+        "legacy_id": "apps/booking/tests/test_providers.py::test_deeplink_cannot_create",
+        "legacy_file": "apps/booking/tests/test_providers.py",
+        "line": 37,
+        "source_sha256": "02d7279b677bba5f28fb86d07644c1c61633b08629ff33cad5b80f41ce364599",
+        "classification": "unresolved",
+        "native_evidence": [],
+        "rationale": "No reviewed assertion-level native equivalence has been assigned yet. Retain this source case until a concrete native scenario has been implemented and qualified.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required."
+        ],
+        "runtime_verification": "not_run"
+      },
+      "pending_proposed_row_do_not_apply": {
+        "legacy_id": "apps/booking/tests/test_providers.py::test_deeplink_cannot_create",
+        "legacy_file": "apps/booking/tests/test_providers.py",
+        "line": 37,
+        "source_sha256": "02d7279b677bba5f28fb86d07644c1c61633b08629ff33cad5b80f41ce364599",
+        "classification": "native_policy_replacement",
+        "native_evidence": [
+          {
+            "go_file": "services/server/internal/booking/adapter_assertion_completion_test.go",
+            "test": "TestBookingAdapterAssertionNonRealtimeSkipsCreate",
+            "scenario": "both_prefix_nonrealtime_probe_skipped_pending_local_record",
+            "assertions": [
+              "Injected deeplink probe advertises SupportsRealtime=false and options contain explicitly false bookable_in_app.",
+              "Default and explicit deeplink selection return201 with pending/deeplink, configured link and present-empty external reference; probe Create count stays zero.",
+              "Independent SQL reads confirm the owning actor and exact pending/deeplink/link/empty-reference tuple."
+            ]
+          }
+        ],
+        "rationale": "Reviewed capability replacement: the Python direct adapter unsupported exception is replaced by a native capability gate that prevents remote reservation creation. Original domain behavior is preserved by a pending local receipt containing its configured deep link and no external confirmation. The injected probe would return fabricated confirmation if called, making the zero-call assertion meaningful.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required.",
+          "Source preparation only. Go formatting/syntax/type checks, affected booking qualification and targeted sensitivity executions are NOT RUN under the current coordinator hold.",
+          "Combined source is unqualified: affected booking lane, each targeted sensitivity, final all21 and independent evidence review remain pending. Do not apply this proposal."
+        ],
+        "runtime_verification": "not_run"
+      }
+    },
+    {
+      "slice": "booking_adapters",
+      "ledger_file": "services/server/internal/contracts/testdata/product-coverage.json",
+      "unchanged_current_row": {
+        "legacy_id": "apps/booking/tests/test_providers.py::test_demo_rest_create_and_cancel",
+        "legacy_file": "apps/booking/tests/test_providers.py",
+        "line": 44,
+        "source_sha256": "02d7279b677bba5f28fb86d07644c1c61633b08629ff33cad5b80f41ce364599",
+        "classification": "unresolved",
+        "native_evidence": [],
+        "rationale": "No reviewed assertion-level native equivalence has been assigned yet. Retain this source case until a concrete native scenario has been implemented and qualified.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required."
+        ],
+        "runtime_verification": "not_run"
+      },
+      "pending_proposed_row_do_not_apply": {
+        "legacy_id": "apps/booking/tests/test_providers.py::test_demo_rest_create_and_cancel",
+        "legacy_file": "apps/booking/tests/test_providers.py",
+        "line": 44,
+        "source_sha256": "02d7279b677bba5f28fb86d07644c1c61633b08629ff33cad5b80f41ce364599",
+        "classification": "native_semantic_coverage",
+        "native_evidence": [
+          {
+            "go_file": "services/server/internal/booking/adapter_assertion_completion_test.go",
+            "test": "TestBookingAdapterAssertionDemoCreateAndCancel",
+            "scenario": "demo_adapter_create_and_cancel_wire",
+            "assertions": [
+              "Real RESTProvider.Create encodes POST/bookings with fixture venue-9/user-uuid/start/end/party4 and returns exact reference bk-1 with Confirmed=true.",
+              "Real Cancel sends exactly POST/bookings/bk-1/cancel with a single empty JSON object and succeeds; total calls are exactly one create plus one cancel."
+            ]
+          }
+        ],
+        "rationale": "The native REST adapter preserves the frozen successful booking reference and confirmation result, and executes the exact cancellation path with an empty JSON object through its real request encoder. Every request is handled by an injected in-process transport; no network call occurs.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required.",
+          "Source preparation only. Go formatting/syntax/type checks, affected booking qualification and targeted sensitivity executions are NOT RUN under the current coordinator hold.",
+          "Combined source is unqualified: affected booking lane, each targeted sensitivity, final all21 and independent evidence review remain pending. Do not apply this proposal."
+        ],
+        "runtime_verification": "not_run"
+      }
+    },
+    {
+      "slice": "booking_adapters",
+      "ledger_file": "services/server/internal/contracts/testdata/product-coverage.json",
+      "unchanged_current_row": {
+        "legacy_id": "apps/booking/tests/test_providers.py::test_demo_rest_provider_failure_maps_to_booking_error",
+        "legacy_file": "apps/booking/tests/test_providers.py",
+        "line": 15,
+        "source_sha256": "02d7279b677bba5f28fb86d07644c1c61633b08629ff33cad5b80f41ce364599",
+        "classification": "unresolved",
+        "native_evidence": [],
+        "rationale": "No reviewed assertion-level native equivalence has been assigned yet. Retain this source case until a concrete native scenario has been implemented and qualified.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required."
+        ],
+        "runtime_verification": "not_run"
+      },
+      "pending_proposed_row_do_not_apply": {
+        "legacy_id": "apps/booking/tests/test_providers.py::test_demo_rest_provider_failure_maps_to_booking_error",
+        "legacy_file": "apps/booking/tests/test_providers.py",
+        "line": 15,
+        "source_sha256": "02d7279b677bba5f28fb86d07644c1c61633b08629ff33cad5b80f41ce364599",
+        "classification": "native_semantic_coverage",
+        "native_evidence": [
+          {
+            "go_file": "services/server/internal/booking/adapter_assertion_completion_test.go",
+            "test": "TestBookingAdapterAssertionConnectionFailureFixedError",
+            "scenario": "ambiguous_read_failure_fixed_error_one_attempt",
+            "assertions": [
+              "Selected synthetic net.OpError Op=read returns exactly errProvider, fixed booking provider unavailable message and exactly one transport attempt for Create and Cancel.",
+              "Failed Create returns an empty Result; no fabricated reference or confirmation."
+            ]
+          },
+          {
+            "go_file": "services/server/internal/booking/adapter_assertion_completion_test.go",
+            "test": "TestBookingAdapterAssertionConnectionFailureHTTP",
+            "scenario": "both_prefix_failed_create_clean_502_zero_write",
+            "assertions": [
+              "Both existing registered creation endpoints map the selected real adapter failure to502 containing only the fixed Booking provider unavailable. detail.",
+              "Each create makes one in-process transport attempt and independently read booking count remains zero."
+            ]
+          }
+        ],
+        "rationale": "The frozen provider/network failure obligation is preserved by a synthetic connection loss while reading the response. It becomes the fixed native provider-domain error and the existing create route maps it to a clean502 without writing a booking. This selected ambiguous non-idempotent POST failure is one-shot; safe dial failures may retry under existing policy. Existing qualified503/non-replay evidence is retained unchanged.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required.",
+          "Source preparation only. Go formatting/syntax/type checks, affected booking qualification and targeted sensitivity executions are NOT RUN under the current coordinator hold.",
+          "Combined source is unqualified: affected booking lane, each targeted sensitivity, final all21 and independent evidence review remain pending. Do not apply this proposal."
+        ],
+        "runtime_verification": "not_run"
+      }
+    },
+    {
+      "slice": "booking_adapters",
+      "ledger_file": "services/server/internal/contracts/testdata/product-coverage.json",
+      "unchanged_current_row": {
+        "legacy_id": "apps/booking/tests/test_providers.py::test_demo_rest_unconfigured_raises",
+        "legacy_file": "apps/booking/tests/test_providers.py",
+        "line": 66,
+        "source_sha256": "02d7279b677bba5f28fb86d07644c1c61633b08629ff33cad5b80f41ce364599",
+        "classification": "unresolved",
+        "native_evidence": [],
+        "rationale": "No reviewed assertion-level native equivalence has been assigned yet. Retain this source case until a concrete native scenario has been implemented and qualified.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required."
+        ],
+        "runtime_verification": "not_run"
+      },
+      "pending_proposed_row_do_not_apply": {
+        "legacy_id": "apps/booking/tests/test_providers.py::test_demo_rest_unconfigured_raises",
+        "legacy_file": "apps/booking/tests/test_providers.py",
+        "line": 66,
+        "source_sha256": "02d7279b677bba5f28fb86d07644c1c61633b08629ff33cad5b80f41ce364599",
+        "classification": "native_semantic_coverage",
+        "native_evidence": [
+          {
+            "go_file": "services/server/internal/booking/adapter_assertion_completion_test.go",
+            "test": "TestBookingAdapterAssertionUnconfiguredBeforeTransport",
+            "scenario": "exact_empty_base_url_pretransport_refusal",
+            "assertions": [
+              "RESTProvider BaseURL is exactly empty; Create returns exactly errProvider and an empty Result.",
+              "Counting injected transport is never invoked, including the additional cancellation refusal control."
+            ]
+          }
+        ],
+        "rationale": "The exact empty demo base URL is refused before transport with the native provider-domain error, preserving the frozen unconfigured-provider failure obligation. Nonempty insecure URL evidence is not substituted for this exact fixture.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required.",
+          "Source preparation only. Go formatting/syntax/type checks, affected booking qualification and targeted sensitivity executions are NOT RUN under the current coordinator hold.",
+          "Combined source is unqualified: affected booking lane, each targeted sensitivity, final all21 and independent evidence review remain pending. Do not apply this proposal."
+        ],
+        "runtime_verification": "not_run"
+      }
+    },
+    {
+      "slice": "booking_adapters",
+      "ledger_file": "services/server/internal/contracts/testdata/product-coverage.json",
+      "unchanged_current_row": {
+        "legacy_id": "apps/booking/tests/test_providers.py::test_registry_returns_builtins",
+        "legacy_file": "apps/booking/tests/test_providers.py",
+        "line": 26,
+        "source_sha256": "02d7279b677bba5f28fb86d07644c1c61633b08629ff33cad5b80f41ce364599",
+        "classification": "unresolved",
+        "native_evidence": [],
+        "rationale": "No reviewed assertion-level native equivalence has been assigned yet. Retain this source case until a concrete native scenario has been implemented and qualified.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required."
+        ],
+        "runtime_verification": "not_run"
+      },
+      "pending_proposed_row_do_not_apply": {
+        "legacy_id": "apps/booking/tests/test_providers.py::test_registry_returns_builtins",
+        "legacy_file": "apps/booking/tests/test_providers.py",
+        "line": 26,
+        "source_sha256": "02d7279b677bba5f28fb86d07644c1c61633b08629ff33cad5b80f41ce364599",
+        "classification": "native_policy_replacement",
+        "native_evidence": [
+          {
+            "go_file": "services/server/internal/booking/adapter_assertion_completion_test.go",
+            "test": "TestBookingAdapterAssertionBuiltinRegistryCapabilities",
+            "scenario": "default_and_configured_native_map_and_capability_endpoints",
+            "assertions": [
+              "Default and configured registries resolve demo_rest to a concrete RESTProvider with the expected configured base/client and realtime capability.",
+              "Implicit deeplink resolves to the native non-realtime capability. Both actual provider endpoints expose explicitly present false/true capability booleans for deeplink/demo_rest without contacting transport."
+            ]
+          },
+          {
+            "go_file": "services/server/internal/booking/rest_assertion_completion_test.go",
+            "test": "TestBookingRESTAssertionDeeplinkOptions",
+            "scenario": "default_options",
+            "assertions": [
+              "The unchanged earlier batch verifies omitted provider selection returns deeplink and explicitly false bookable_in_app through both registered option handlers."
+            ]
+          }
+        ],
+        "rationale": "Reviewed representation replacement: Python adapter-class instance checks are replaced by the native configured adapter map, implicit default deep-link capability and actual provider descriptors. The demo adapter remains realtime; the default deep-link provider remains non-realtime and discoverable under its original slug. The prior default-selection assertion is retained. No concrete deeplink map entry or Python class identity is invented.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required.",
+          "Source preparation only. Go formatting/syntax/type checks, affected booking qualification and targeted sensitivity executions are NOT RUN under the current coordinator hold.",
+          "Combined source is unqualified: affected booking lane, each targeted sensitivity, final all21 and independent evidence review remain pending. Do not apply this proposal."
+        ],
+        "runtime_verification": "not_run"
+      }
+    },
+    {
+      "slice": "booking_adapters",
+      "ledger_file": "services/server/internal/contracts/testdata/product-coverage.json",
+      "unchanged_current_row": {
+        "legacy_id": "apps/booking/tests/test_providers.py::test_registry_unknown_raises",
+        "legacy_file": "apps/booking/tests/test_providers.py",
+        "line": 32,
+        "source_sha256": "02d7279b677bba5f28fb86d07644c1c61633b08629ff33cad5b80f41ce364599",
+        "classification": "unresolved",
+        "native_evidence": [],
+        "rationale": "No reviewed assertion-level native equivalence has been assigned yet. Retain this source case until a concrete native scenario has been implemented and qualified.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required."
+        ],
+        "runtime_verification": "not_run"
+      },
+      "pending_proposed_row_do_not_apply": {
+        "legacy_id": "apps/booking/tests/test_providers.py::test_registry_unknown_raises",
+        "legacy_file": "apps/booking/tests/test_providers.py",
+        "line": 32,
+        "source_sha256": "02d7279b677bba5f28fb86d07644c1c61633b08629ff33cad5b80f41ce364599",
+        "classification": "native_policy_replacement",
+        "native_evidence": [
+          {
+            "go_file": "services/server/internal/booking/adapter_assertion_completion_test.go",
+            "test": "TestBookingAdapterAssertionUnknownRegistryRefusal",
+            "scenario": "both_prefix_unknown_configured_and_explicit_provider_no_write",
+            "assertions": [
+              "Exact unknown slug nope has no native adapter; configured unknown options return fixed502 through both prefixes.",
+              "An eligible actor with valid request gets fixed502 for configured unknown selection and explicit unknown override; no transport call and unchanged independently read booking count.",
+              "Known default-provider positive control creates201 with one additional stored receipt using the same eligible actor."
+            ]
+          }
+        ],
+        "rationale": "Reviewed failure replacement: Python KeyError is replaced by the native fixed provider-domain refusal and governed502 response. Unknown configured or explicit provider selection cannot call an adapter or create a local receipt, while the corresponding known-provider request succeeds. The frozen source identifier and no-unknown-provider obligation are retained.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required.",
+          "Source preparation only. Go formatting/syntax/type checks, affected booking qualification and targeted sensitivity executions are NOT RUN under the current coordinator hold.",
+          "Combined source is unqualified: affected booking lane, each targeted sensitivity, final all21 and independent evidence review remain pending. Do not apply this proposal."
+        ],
+        "runtime_verification": "not_run"
+      }
+    },
+    {
+      "slice": "booking_adapters",
+      "ledger_file": "services/server/internal/contracts/testdata/product-coverage.json",
+      "unchanged_current_row": {
+        "legacy_id": "apps/booking/tests/test_services.py::test_create_realtime_booking_confirms",
+        "legacy_file": "apps/booking/tests/test_services.py",
+        "line": 41,
+        "source_sha256": "a14bd7dd98572448257dae6d6473d2ddef315d4dce2521e8beecacd97b1a5b32",
+        "classification": "unresolved",
+        "native_evidence": [],
+        "rationale": "No reviewed assertion-level native equivalence has been assigned yet. Retain this source case until a concrete native scenario has been implemented and qualified.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required."
+        ],
+        "runtime_verification": "not_run"
+      },
+      "pending_proposed_row_do_not_apply": {
+        "legacy_id": "apps/booking/tests/test_services.py::test_create_realtime_booking_confirms",
+        "legacy_file": "apps/booking/tests/test_services.py",
+        "line": 41,
+        "source_sha256": "a14bd7dd98572448257dae6d6473d2ddef315d4dce2521e8beecacd97b1a5b32",
+        "classification": "native_semantic_coverage",
+        "native_evidence": [
+          {
+            "go_file": "services/server/internal/booking/adapter_assertion_completion_test.go",
+            "test": "TestBookingAdapterAssertionConfiguredRealtimeTuple",
+            "scenario": "both_prefix_configured_demo_realtime_wire_and_stored_tuple",
+            "assertions": [
+              "Configured real RESTProvider receives fixture venue-9 and the actor opaque public ID through an injected transport returning bk-9/confirmed.",
+              "Both registered creation handlers return201 with exact confirmed/demo_rest/bk-9 and present-empty deep link, one adapter request per creation.",
+              "Independent SQL reads confirm the owner/place and exact confirmed/demo_rest/bk-9/empty-link tuple."
+            ]
+          }
+        ],
+        "rationale": "A configured real native demo adapter receives the fixture venue and opaque customer reference, and its fixed confirmed response becomes the exact confirmed/demo_rest/bk-9 receipt tuple in both HTTP output and independently read persisted state. Transport remains entirely in-process and synthetic.",
+        "gaps": [
+          "Native assertion-level port and qualification remain required.",
+          "Source preparation only. Go formatting/syntax/type checks, affected booking qualification and targeted sensitivity executions are NOT RUN under the current coordinator hold.",
+          "Combined source is unqualified: affected booking lane, each targeted sensitivity, final all21 and independent evidence review remain pending. Do not apply this proposal."
+        ],
+        "runtime_verification": "not_run"
+      }
+    }
+  ]
+}

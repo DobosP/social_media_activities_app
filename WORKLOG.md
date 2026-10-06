@@ -3,6 +3,29 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-06 — Unqualified seven-input Linux transport preparation
+
+Valid until: source/proposal/plan bytes or qualification state change — then treat as history.
+
+Owner explicitly authorized publishing the existing unfinished `test/social-source-consolidation-20261006`
+branch to origin for Linux continuation and stopped Windows loops/native execution. Source checkpoint
+`7337c61b93cd47849d82d65ca68b8626e326e288`, tree `22c84300e36d5326529a44d93abce908ca90278c`, and seven-file
+bundle `759d22e87378e3f63be07727f5fc6cf5d1fa0d8a290ee97ed51157d276d33d21` remain unchanged by this
+bounded documentation successor. Publication is pending separate push/ref verification, not claimed here.
+
+[Existing dated preparation report](docs/reviews/native-go/social-source-consolidation-preparation.md)
+now carries Linux pickup steps, exact input commits/F42 patch hashes and links to unchanged tracked copies
+of26 pending proposals and the34-control plan. Every proposal/control/native gate remains NOT RUN;
+33 intended failing controls plus1 positive control are planned only. First19 proposal objects and four
+inherited partial passed ledger markers are preserved; manifest1020 claimed/1651 unresolved of2671 stays
+unchanged.733 and affected53/20/76/5/105 remain forecasts, not runtime observations. Independent static
+source reviews approved7337c61; transport docs receive separate light checks/review before publication.
+
+No behavior, architecture or policy decision is introduced, so no ADR is created for this one-time owner
+transport instruction. ADR-0040 still gates main landing; human safety/auth/erasure/privacy review gates
+first deployment. Original refs/worktrees/scratch/receipts are retained; coordinator publishes siblings.
+No Windows native/Go/PG/WSL/Docker campaign, push of main, force, deletion, new worktree or deployment.
+
 ## 2026-10-06 — Thread access source qualification completed
 
 Valid until: serving/test inputs, dependencies, native scripts or codec environment change — then requalify.

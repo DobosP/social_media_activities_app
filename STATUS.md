@@ -76,8 +76,8 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Open work
 
-- REST assertion closure remains separate:6 social API declarations, booking assertions, export query equality and
-  existing donation REST assertions; [bounded plan](docs/reviews/native-go/rest-contract-plan.md). Finance service/HTML gaps remain separate.
+- REST assertion closure remains open:6 social API declarations plus booking/export/donation assertions; [bounded plan](docs/reviews/native-go/rest-contract-plan.md). Finance/HTML gaps remain separate.
+- [Linux handover](docs/reviews/native-go/social-source-consolidation-preparation.md) (2026-10-06): unqualified seven-input transport;26 pending mappings/34 controls NOT RUN, inherited markers and1020/1651 unchanged.
 - Native completion/toolchain/audit stacks (ADR-0035/0038) are source-qualified per ADR-0040; human code review
   gates first deployment. The1651 unresolved frozen declarations keep Python source/tests and block retirement.
 - Build/promote a fresh immutable producer/server V2 release before real sync;
