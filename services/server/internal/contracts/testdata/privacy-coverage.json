@@ -14104,13 +14104,22 @@
       "legacy_file": "apps/social/tests/test_api.py",
       "line": 143,
       "source_sha256": "fc35dea7bf6fc36444cb7aa4fcb52a274677bc0c78c328882dcd6ebdb759842f",
-      "classification": "unresolved",
-      "native_evidence": [],
-      "rationale": "Preserve the legacy declaration until its behavioral assertions have independent native evidence; a larger native suite or registered route is insufficient.",
-      "gaps": [
-        "Remaining source assertion/transport/edge-case obligations require an explicit native port or reviewed replacement."
+      "classification": "native_semantic_coverage",
+      "native_evidence": [
+        {
+          "go_file": "services/server/internal/social/rest_thread_pagination_case_test.go",
+          "test": "TestRESTSourceThreadPostBoundsCursorAndQueryCeiling",
+          "scenario": "twelve visible owner-authored posts, cap5, literal legacy activity thread GET",
+          "assertions": [
+            "registered legacy GET returns HTTP200 and a raw JSON array of exactly5 posts",
+            "latest five posts are displayed oldest-first as post7,post8,post9,post10,post11",
+            "last body is literal post 11 from twelve persisted visible owner-authored posts"
+          ]
+        }
       ],
-      "runtime_verification": "not_run"
+      "rationale": "Finite assertion-only thread-pagination batch completes the frozen registered-handler assertions with real owner-authored visible post fixtures and effective caps5/5/20. Correct unchanged production passes the actual synthetic PostgreSQL16/PostGIS/vector social race lane:51 top-level PASS, zero skips/failures, all three new scenarios; immutable log SHAafaa1a0a01ee6418e03b7e64865da60cc06dd29fe6c00073e33f00201fce8d25. The first actual registered query-case GET records five queries within unchanged ceiling8; seed/schema/poolPing/reset remain outside that request and no endpoint is warmed. Four separately labelled activity-posts-only overlays of correct code fail only intended display-order, exact-envelope, returned-cursor or genuine query-ceiling assertions; these are sensitivity controls, not real source fail-before bugs. IDs/lines/frozen hash and thread privacy/authorship/moderation/guardian/co-member/app-pack policies remain intact; production/endpoints/schema/dependencies are unchanged. Root fresh current-source native/all21 qualification and final review are required before main landing; reference retirement and deployment remain separate.",
+      "gaps": [],
+      "runtime_verification": "passed"
     },
     {
       "legacy_id": "apps/social/tests/test_api.py::test_transit_action_sets_status",
@@ -14231,26 +14240,44 @@
       "legacy_file": "apps/social/tests/test_api.py",
       "line": 158,
       "source_sha256": "fc35dea7bf6fc36444cb7aa4fcb52a274677bc0c78c328882dcd6ebdb759842f",
-      "classification": "unresolved",
-      "native_evidence": [],
-      "rationale": "Preserve the legacy declaration until its behavioral assertions have independent native evidence; a larger native suite or registered route is insufficient.",
-      "gaps": [
-        "Remaining source assertion/transport/edge-case obligations require an explicit native port or reviewed replacement."
+      "classification": "native_semantic_coverage",
+      "native_evidence": [
+        {
+          "go_file": "services/server/internal/social/rest_thread_pagination_case_test.go",
+          "test": "TestRESTSourceThreadPostBoundsCursorAndQueryCeiling",
+          "scenario": "twelve visible owner-authored posts, cap5, v1 limit3 and returned-cursor continuation",
+          "assertions": [
+            "registered v1 GET limit3 returns HTTP200 and exactly next_cursor/limit/results keys",
+            "actual limit=3, first body sequence post9/post10/post11 and nonempty next_cursor",
+            "GET using that actual returned cursor yields body sequence post6/post7/post8"
+          ]
+        }
       ],
-      "runtime_verification": "not_run"
+      "rationale": "Finite assertion-only thread-pagination batch completes the frozen registered-handler assertions with real owner-authored visible post fixtures and effective caps5/5/20. Correct unchanged production passes the actual synthetic PostgreSQL16/PostGIS/vector social race lane:51 top-level PASS, zero skips/failures, all three new scenarios; immutable log SHAafaa1a0a01ee6418e03b7e64865da60cc06dd29fe6c00073e33f00201fce8d25. The first actual registered query-case GET records five queries within unchanged ceiling8; seed/schema/poolPing/reset remain outside that request and no endpoint is warmed. Four separately labelled activity-posts-only overlays of correct code fail only intended display-order, exact-envelope, returned-cursor or genuine query-ceiling assertions; these are sensitivity controls, not real source fail-before bugs. IDs/lines/frozen hash and thread privacy/authorship/moderation/guardian/co-member/app-pack policies remain intact; production/endpoints/schema/dependencies are unchanged. Root fresh current-source native/all21 qualification and final review are required before main landing; reference retirement and deployment remain separate.",
+      "gaps": [],
+      "runtime_verification": "passed"
     },
     {
       "legacy_id": "apps/social/tests/test_api.py::test_v1_thread_posts_query_count_is_constant",
       "legacy_file": "apps/social/tests/test_api.py",
       "line": 181,
       "source_sha256": "fc35dea7bf6fc36444cb7aa4fcb52a274677bc0c78c328882dcd6ebdb759842f",
-      "classification": "unresolved",
-      "native_evidence": [],
-      "rationale": "Preserve the legacy declaration until its behavioral assertions have independent native evidence; a larger native suite or registered route is insufficient.",
-      "gaps": [
-        "Remaining source assertion/transport/edge-case obligations require an explicit native port or reviewed replacement."
+      "classification": "native_semantic_coverage",
+      "native_evidence": [
+        {
+          "go_file": "services/server/internal/social/rest_thread_pagination_case_test.go",
+          "test": "TestRESTSourceThreadPostBoundsCursorAndQueryCeiling",
+          "scenario": "fifteen visible owner-authored posts, cap20, first registered v1 activity thread GET limit10",
+          "assertions": [
+            "registered v1 GET limit10 returns HTTP200 and exactly10 results from15 persisted posts",
+            "count-only PostgreSQL tracer measures the first actual registered ServeHTTP after poolPing/reset, with no endpoint warm request",
+            "actual traced query count5 is nonzero and <=8; query-control performs real read-only calls without counter or ceiling changes"
+          ]
+        }
       ],
-      "runtime_verification": "not_run"
+      "rationale": "Finite assertion-only thread-pagination batch completes the frozen registered-handler assertions with real owner-authored visible post fixtures and effective caps5/5/20. Correct unchanged production passes the actual synthetic PostgreSQL16/PostGIS/vector social race lane:51 top-level PASS, zero skips/failures, all three new scenarios; immutable log SHAafaa1a0a01ee6418e03b7e64865da60cc06dd29fe6c00073e33f00201fce8d25. The first actual registered query-case GET records five queries within unchanged ceiling8; seed/schema/poolPing/reset remain outside that request and no endpoint is warmed. Four separately labelled activity-posts-only overlays of correct code fail only intended display-order, exact-envelope, returned-cursor or genuine query-ceiling assertions; these are sensitivity controls, not real source fail-before bugs. IDs/lines/frozen hash and thread privacy/authorship/moderation/guardian/co-member/app-pack policies remain intact; production/endpoints/schema/dependencies are unchanged. Root fresh current-source native/all21 qualification and final review are required before main landing; reference retirement and deployment remain separate.",
+      "gaps": [],
+      "runtime_verification": "passed"
     },
     {
       "legacy_id": "apps/social/tests/test_author_deleted_backfill.py::test_backfill_ignores_audit_rows_targeting_other_models",

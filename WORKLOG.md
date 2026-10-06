@@ -3,6 +3,64 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-06 — Three finite REST thread pagination assertions
+
+Valid until: `test/rest-contract-thread-pagination-20261006` lands or is superseded — then treat as history.
+
+Owner-authorized assertion-only batch on clean main `9a89adaf26409fa8c91629e2863af9fd71ba4919`.
+One registered-handler matrix, `TestRESTSourceThreadPostBoundsCursorAndQueryCeiling`, maps exactly
+three frozen IDs in `apps/social/tests/test_api.py`: `test_thread_posts_list_is_bounded`:143,
+`test_v1_thread_posts_are_cursor_paginated`:158 and `test_v1_thread_posts_query_count_is_constant`:181.
+Source SHA `fc35dea7bf6fc36444cb7aa4fcb52a274677bc0c78c328882dcd6ebdb759842f`, IDs, lines, app-pack,
+thread privacy/authorship/moderation/guardian/co-member policies and all other coverage/inventory
+records remain intact. Production/endpoints/schema/dependencies/frontend are unchanged; no real
+production discrepancy was exposed. Final test SHA
+`e47bddc8e77c9eb494775f5ca2582c422efe374fe6ae4c20cfdb9309baf8ca37`.
+
+Real WritePost seeds twelve/twelve/fifteen visible owner-authored posts in a current-start Hike;
+source bodies are literal post0..N and effective caps5/5/20 are configured before the mux.
+Legacy GET200 returns a raw array of the newest five in oldest-first order, post7..11 ending post11.
+V1 limit3 returns200 and exactly next_cursor/limit/results, limit3, bodies post9..11 and nonempty
+cursor. A GET forwarding that actual returned cursor yields post6..8. V1 limit10 returns200/results10
+after fifteen posts; count-only TracedPool records five queries within the unchanged ceiling8.
+Seed/schema/poolPing/reset are outside the first actual registered ServeHTTP; no endpoint warmup,
+SQL/argument capture, fake counter or changed ceiling is used.
+
+Correct PostgreSQL/race social lane passes51 top-level tests, zero skips/failures, all three scenarios.
+Immutable `_temp/test__rest-contract-thread-pagination-20261006/qualify/qualified/social.log` SHA
+`afaa1a0a01ee6418e03b7e64865da60cc06dd29fe6c00073e33f00201fce8d25`.
+Four separately labelled activity-posts-only overlays each fail one top-level test with zero skips
+and only their intended subcase. These prove sensitivity of correct production, not source bugs:
+- Descending legacy display retains latest-five set/count200 but violates source order/end11; SHA
+  `908d41f0c19b433b4a1237e127804b093316077542d8e976b0064f111a7784f6`.
+- Extra first-page v1 envelope key leaves limit/results/cursor unchanged and fails exact-key set; SHA
+  `c6f1ab4717c89ec529e78b49cf4c252c9ef81cc6e0321c58ce40a223fa05f663`.
+- Ignored supplied cursor leaves first page correct but continuation returns post9..11; SHA
+  `51fd28ec369a6b646461a8b8946c08fe4978d4a4c8a1abf141aa1db43237c34f`.
+- Four actual read-only SELECT1 calls produce count9 with status/results/gates unchanged; SHA
+  `77adfc2b855087f4519eb0a40dc32b67ac4382872f85a40eb71c37f218a36c17`.
+Raw controls stay under task `controls/<label>/social.log`; query-control calibration records5+4=9.
+Independent critic source/runtime/control review APPROVE; exact mapping/docs review follows.
+
+Root provisioned task-owned Go1.27.1 from verified image
+`sha256:b390522f07c58e679098bb25225b197a7524e5e8f72a9748dd1b76aa96699b91` and Node24.18.0 binary
+SHA `41a74efb34cbde5c7632cdac0cf8bd1a14d0b8d73dc1e82755014d9a9ce70f5c`; all three modules
+downloaded/verified in owned caches, then GOPROXY=off. Fresh PG16/PostGIS/vector fixture container
+`social-rest-thread-pagination-20261006-db`, internal network `social-rest-thread-pagination-20261006`,
+synthetic database `social_rest_thread_pagination`,2GiB/2CPU/noports; native bootstrap passed.
+Immutable c27 image `sha256:34c1c2281d9fc96cf486dda8e88497ef5061e21a412c712d8ef61ca14b07031b`
+supplies codecs only for current-source race binaries, not deployment-image qualification. Runtime
+uses canonical restricted-user/read-only/cap-drop/no-new-privileges/mount flags.
+
+Exact commands: source task `env.sh`; global-lock `python3 SCRATCH/run-social.py modules`, set
+GOPROXY=off, then `qualify` and `controls`. Before every heavy step, fresh memory exceeded12GiB and
+the conservative8GiB incremental task disk estimate fit; no actual resource/network refusal.
+Other owners' caches, unknown buffers, backups and keepers were untouched; tools/fixture remain.
+Current ledger1017 claims/1654 unresolved/0invalid of2671;9 social declarations remain unresolved.
+Root current native/all21 qualification and final receipt/docs review remain pending; no worker
+wholecheck/full21, commit or push. Prior own-memberships712/RSVP711/Presence710/c27 receipts remain.
+No retirement/deployment/provider/minor/ingestion/schedule or additional source-case campaign follows.
+
 ## 2026-10-06 — Own-membership source qualification completed
 
 Valid until: serving/test inputs, dependencies, native scripts or codec environment change — then requalify.
