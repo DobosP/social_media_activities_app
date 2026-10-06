@@ -61,11 +61,20 @@
       "path": "services/server/internal/web/partner_credit_link_privacy_html_case_test.go",
       "sha256": "46f8fe37c6ead5e13b98e154975518dad770b38b91bb57137afa31ab75991abd",
       "bytes": 6261
+    },
+    {
+      "slice": "booking_adapters",
+      "source_commit": "4096e47c2c70dcd46d6ef104ab29bf1ed0ca57de",
+      "source_parent": "f9568cd51a71e32b4ff0418745ffdb4295d0b8c1",
+      "path": "services/server/internal/booking/adapter_assertion_completion_test.go",
+      "sha256": "67d63028bf891ce4bb2347e473567dae26b786e70938a0e3e906703dc4e6df27",
+      "git_blob": "7c545382d0139f36bd5004806333e927f7a86dd2",
+      "bytes": 17603
     }
   ],
   "combined_hash_encoding": "SHA256 of UTF8 compact JSON sorted by path, each object keys path/sha256 sorted; no trailing newline",
-  "staged_source_tree_before_report": "4307525073001149b4f2f96f4f808ffe44438a62",
-  "combined_patch_sha256": "14ca7cc8d781c9514368425a2966ca90ce7112ede3b331fe948cc14b1dbe14b5",
+  "staged_source_tree_before_report": "988eb80f75ffd5b995e8dca5c4a7b6a66c12f53b",
+  "combined_patch_sha256": "28d0dfde8cc3beea1f84be987ad69a45f668ae40cc2713742b776bfdfd716a0e",
   "protected_inputs": {
     "STATUS.md": "6928e1f62bbf4f79dc0aa6ebbd5dc4973e1e8f050017a469e48a51aa11e482b5",
     "WORKLOG.md": "94e3c781207f3602546f2b73112b528df59b88f7994bbb176b9c8901272210ae",
@@ -76,7 +85,7 @@
     "services/server/internal/contracts/testdata/tooling-coverage.json": "09ddec1e08b56035de45b32e8600e7f848e38f3dd30aa33b32b86456639a45f8"
   },
   "runtime_verification": "not_run",
-  "source_file_count": 6,
+  "source_file_count": 7,
   "lf_source_bytes_verified": true,
   "no_production_changes": true,
   "proposal_inputs": [
@@ -109,11 +118,16 @@
       "slice": "f42_credit_link",
       "path": "C:\\Users\\Paul Work\\personal_repos\\_temp\\test__f42-partner-finance-html\\credit-link-privacy\\proposed-mappings.json",
       "sha256": "0a0c9e3445b671327e4994dd62f1867ffa8a249ca4345ac722cfbac2a05c2014"
+    },
+    {
+      "slice": "booking_adapters",
+      "path": "C:\\Users\\Paul Work\\personal_repos\\_temp\\test__booking-rest-assertions\\remaining-seven\\mapping-proposals.json",
+      "sha256": "579c84cf016188d04dd8fde741d2273db7535215d3aa580d072d1738cc7dbb2c"
     }
   ],
-  "pending_proposal_count": 19,
-  "qualification_plan_sha256": "592ae0f116340609ad32e101b4909caa8015470a01cc0984630c2f3a7b3124b5",
-  "pending_proposals_sha256": "ac1032787f7e68ae25bad0471e89899eee1ca6df1aa9ce9fe8587d1c50552787",
+  "pending_proposal_count": 26,
+  "qualification_plan_sha256": "001b1c9be2adea5a4ab758a25d0818e50437e5266a702e23e03822e124e952fd",
+  "pending_proposals_sha256": "21f5fc4f06d5ccb19404d3c4d6c87d13260c80e56bd1cc81d8583efde8fb6e50",
   "independent_source_reviews": [
     {
       "reviewer": "lifecycle_review",
@@ -126,8 +140,71 @@
     {
       "reviewer": "combined_finance_html_review",
       "scope": "exact combined finance/F42 bytes and staged tree, source obligations, actual HTML path and unique names; preparation only"
+    },
+    {
+      "reviewer": "combined_booking_export_review",
+      "scope": "4096e47 exact input source, 7 pending mappings including 3 explicit policy replacements, 10 unique control descriptions; approved static input only"
+    },
+    {
+      "reviewer": "combined_booking_export_review",
+      "status": "approved",
+      "scope_kind": "final_seven_input_combined_static",
+      "scope": "Exact seven source bytes/tree, prior six preservation, booking namespace, 26 frozen proposal identities including 4 semantic/3 explicit new policy replacements, unchanged first19/current rows/four inherited markers, 34 controls, declaration-only forecasts, protected base content and runtime hold. No blocking static findings; no edits or native calls."
+    },
+    {
+      "reviewer": "lifecycle_review",
+      "status": "approved",
+      "scope_kind": "seven_input_preservation_metadata",
+      "scope": "Immutable six checkpoint/source/report/proposal/plan/receipt/patch preservation, exact seven bundle/source tree, first19 proposals unchanged, all26 pending not_run+gaps, four inherited partial markers, protected shared docs/ledgers, staged three-file scope and qualification hold. No blocking findings; no edits or native calls."
     }
   ],
   "previous_five_source_sha256": "dca1d207165945023b2f9a63eef5ee23095289b91a2949ff348b6f504e448e18",
-  "combined_source_bundle_sha256": "e952fcb8d70446cd1c83ce534e51e643a0532d3dee740a8befd371d33c2c6fcf"
+  "combined_source_bundle_sha256": "759d22e87378e3f63be07727f5fc6cf5d1fa0d8a290ee97ed51157d276d33d21",
+  "previous_six_source_sha256": "e952fcb8d70446cd1c83ce534e51e643a0532d3dee740a8befd371d33c2c6fcf",
+  "previous_six_input_checkpoint": {
+    "head": "09c3ba2fd381d2e619708cc821c7d4e66b6563d3",
+    "tree": "5ad841edac9635f25e3c25e5c8437aed1de72a24",
+    "receipt": "C:\\Users\\Paul Work\\personal_repos\\_temp\\test__social-source-consolidation-20261006\\final-source-preparation-receipt.json",
+    "preserved_copy": "C:\\Users\\Paul Work\\personal_repos\\_temp\\test__social-source-consolidation-20261006\\six-input-checkpoint"
+  },
+  "seventh_input_originals": [
+    {
+      "name": "mapping-proposals.json",
+      "original_path": "C:\\Users\\Paul Work\\personal_repos\\_temp\\test__booking-rest-assertions\\remaining-seven\\mapping-proposals.json",
+      "preserved_copy": "C:\\Users\\Paul Work\\personal_repos\\_temp\\test__social-source-consolidation-20261006\\seventh-input-originals\\mapping-proposals.json",
+      "sha256": "579c84cf016188d04dd8fde741d2273db7535215d3aa580d072d1738cc7dbb2c"
+    },
+    {
+      "name": "sensitivity-proposals.json",
+      "original_path": "C:\\Users\\Paul Work\\personal_repos\\_temp\\test__booking-rest-assertions\\remaining-seven\\sensitivity-proposals.json",
+      "preserved_copy": "C:\\Users\\Paul Work\\personal_repos\\_temp\\test__social-source-consolidation-20261006\\seventh-input-originals\\sensitivity-proposals.json",
+      "sha256": "a64a87b329a18dc05323b62977ca0c4f79dedfea42bd087363a70ebd9cc71b22"
+    },
+    {
+      "name": "prepare_controls.py",
+      "original_path": "C:\\Users\\Paul Work\\personal_repos\\_temp\\test__booking-rest-assertions\\remaining-seven\\prepare_controls.py",
+      "preserved_copy": "C:\\Users\\Paul Work\\personal_repos\\_temp\\test__social-source-consolidation-20261006\\seventh-input-originals\\prepare_controls.py",
+      "sha256": "0665ad59e24f8848d2d99a76c814080d118cd9a1aa52370c43016be807d6835e"
+    },
+    {
+      "name": "result.json",
+      "original_path": "C:\\Users\\Paul Work\\personal_repos\\_temp\\test__booking-rest-assertions\\remaining-seven\\result.json",
+      "preserved_copy": "C:\\Users\\Paul Work\\personal_repos\\_temp\\test__social-source-consolidation-20261006\\seventh-input-originals\\result.json",
+      "sha256": "bd5b3d52feb6b1cc465b35d563c1bbf06f5aca5bb881a85981a74c5b2d1262db"
+    }
+  ],
+  "seventh_input_static_checks": {
+    "generator_python_ast": "passed_without_execution",
+    "control_unique_anchors": 10,
+    "assertion_markers_present": 10,
+    "frozen_python_ast_lines": "passed",
+    "first19_proposal_objects": "unchanged",
+    "current_partial_passed_markers": 4,
+    "runtime_verification": "not_run"
+  },
+  "final_seven_input_review_receipt": {
+    "path": "C:\\Users\\Paul Work\\personal_repos\\_temp\\test__social-source-consolidation-20261006\\seven-input-independent-reviews.json",
+    "sha256": "3aa7b18dfae5fe8b026d5817ac13874d9b15e8cc41a608de32acb15a93806268",
+    "runtime_verification": "not_run"
+  }
 }
