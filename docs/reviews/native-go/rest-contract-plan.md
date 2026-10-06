@@ -11,21 +11,24 @@ The prior c27 image supplies codecs only; its audit receipt does not qualify a d
 An assertion-only two-mapping batch extends existing authentication/transit tests.
 [Fresh source qualification](rest-auth-transit-checkpoint.json) on `e825a76`, run `9a7e5fc5d510`:709/all21,0skips/failures.
 Production/schema remain unchanged; the correct source passes, and three separately labelled controlled overlays prove assertion sensitivity.
-The ledger's1005 claimed/1666 unresolved entries count frozen assertions, not missing endpoints.
+A finite three-presence assertion batch adds one named registered-handler fixture covering both
+prefixes; correct source passes worker social48/0skip/fail and three labelled controls prove sensitivity.
+Current root710/all21 qualification is pending; prior run counts do not qualify new test inputs.
+The ledger's1008 claimed/1663 unresolved entries count frozen assertions, not missing endpoints.
 Go already serves the ordinary HTTP/toolchain paths; full Python reference retirement remains separate.
 
 ## Social REST:26 declarations
 
-All26 IDs below have prefix `apps/social/tests/test_api.py::`; five are now mapped and21 remain. The frozen file hash matches the
-inventory. Routes exist in `services/server/internal/social/http.go`. The remaining21 require complete
+All26 IDs below have prefix `apps/social/tests/test_api.py::`; eight are now mapped and18 remain. The frozen file hash matches the
+inventory. Routes exist in `services/server/internal/social/http.go`. The remaining18 require complete
 REST assertion mappings; existing qualified service/HTML foundations alone do not establish them.
 
 | Frozen declaration | Remaining exact REST obligation |
 |---|---|
 | test_activities_require_auth | Mapped: literal anonymous legacy GET refused in the registered mux; existing v1 coverage retained. |
 | test_activity_description_too_long_rejected | Mapped: current REST400 description string-array key, no write; both API prefixes. |
-| test_arrived_action_marks_membership | HTTP200 plus persisted non-null arrival. |
-| test_arrived_ignores_on_behalf_of | Guardian404 and unchanged ward arrival. |
+| test_arrived_action_marks_membership | Mapped: both-prefix own-action HTTP200 plus independent persisted non-null arrival. |
+| test_arrived_ignores_on_behalf_of | Mapped: eligible active linked guardian404, ward arrival unchanged; ward own positive control. |
 | test_create_and_list_activity | POST201/cohort, GET exactly one result. |
 | test_join_and_vote_flow | Join201/id and full legacy flow; existing HTTP votes are partial. |
 | test_list_is_cohort_scoped | Child REST list results=[], not only service detail refusal. |
@@ -42,7 +45,7 @@ REST assertion mappings; existing qualified service/HTML foundations alone do no
 | test_thread_posts_get_requires_membership | Populated-thread outsider403, owner200. |
 | test_thread_posts_list_is_bounded | Legacy200, cap5, newest-N/oldest-first order. |
 | test_transit_action_sets_status | Mapped: both-prefix POST200 plus independent actual response/persisted on_my_way checks. |
-| test_transit_ignores_on_behalf_of | Guardian404, ward transit unchanged. |
+| test_transit_ignores_on_behalf_of | Mapped: eligible active linked guardian404, ward transit none; ward own positive control. |
 | test_transit_invalid_status_is_forbidden | Mapped: unknown value HTTP403 after current visibility/member/window checks; state unchanged. |
 | test_v1_mine_membership_list_is_cursor_paginated | Seven rows, limit2/results2/nonempty cursor. |
 | test_v1_mine_membership_list_query_count_is_constant | Actual API trace≤4, ten results. |
@@ -84,7 +87,7 @@ Exact unresolved IDs have prefix `apps/booking/tests/`:
 The covered cancellation/other-owner refusal IDs remain. Do not claim new endpoints are needed for
 these booking rows; add only missing assertions or explicit accepted replacement evidence.
 
-## Export and public finance
+## Export and finance evidence scopes
 
 - Existing exact match now mapped after independent metadata review: `apps/accounts/tests/test_export.py::test_build_user_export_includes_activity_membership_and_donations`
   matches every frozen assertion in qualified `TestCasePort2ExportActivityDonationsAndSharedTargetBoundary`
@@ -96,20 +99,23 @@ these booking rows; add only missing assertions or explicit accepted replacement
 - `apps/donations/tests/test_w4_f24_civic_outcomes.py::test_partner_name_regated_to_public_at_read_time`:
   SQL checks both partner flags; current qualified test withdraws is_active, while the source requires is_verified=false.
 - `apps/donations/tests/test_f42_partner_campaign.py::{test_credit_does_not_expose_donor_pii,test_partner_website_renders_as_a_sanitised_link,test_malicious_partner_website_is_never_a_live_link,test_non_public_partner_is_not_credited}`:
-  preserve IDs/hashes and separate HTML href/credit obligations from any reviewed JSON replacement.
+  preserve IDs/hashes and the original HTML href/credit obligations outside the current REST batch;
+  do not replace them with JSON evidence to clear ledger rows.
 
-Concrete transport gap: donations.Register exposes start/mine/total/webhook. Campaigns, closeouts,
-spend, in-kind, civic outcomes, anchors and partners exist in qualified Ledger but reach paymentView;
-a complete public-finance REST DTO/route remains. Specify link sanitization, exact spend category,
-both partner re-gates and donor-name privacy before exposing that projection. Domain assertions
-cannot establish complete REST projection parity.
+REST scope correction: original donations exposes only start/mine/total/webhook, and Go Register
+matches those routes. Campaigns, spend, closeouts, in-kind, civic outcomes, anchors and partners are
+original domain/HTML surfaces; the current Go Ledger/paymentView are appropriate corresponding
+surfaces. No complete public-finance REST DTO/route obligation is inferred from those declarations.
+F26 exact category and F24 partner-is_verified assertions remain service evidence gaps; F42 credit/
+sanitized-link assertions remain HTML gaps. All frozen IDs/hashes and retirement gaps are preserved.
+Current REST scope retains existing donation endpoints and exact export-helper query equality.
 
 ## Order and scope
 
 1. Retain the exact export mapping and its source IDs/provenance and qualified c27 receipt.
-2. Complete root exact-source qualification for the assertion-only extensions;21 social assertion sets remain.
+2. Complete root exact-source qualification for the presence assertions;18 social assertion sets remain.
 3. Close booking REST assertions and reviewed adapter replacements.
-4. Specify/qualify public-finance REST projection and exact export-helper query equality.
+4. Qualify existing donation REST assertions and exact export-helper query equality; retain separate finance service/HTML evidence gaps.
 5. Triage relevant REST media/account-safety rows against existing code/tests similarly.
 
 Source qualification may land under ADR-0040 without claiming REST assertion closure or reference

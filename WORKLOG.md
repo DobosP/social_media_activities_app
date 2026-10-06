@@ -3,6 +3,62 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-06 — Three finite REST presence assertions and finance scope correction
+
+Valid until: `test/rest-contract-presence-20261006` lands or is superseded — then treat as history.
+
+Owner-authorized assertion-only batch on clean764c956. One new test function
+`TestRESTSourcePresenceOwnActorAndGuardianNonDelegation` covers six prefix/action subcases and exactly
+three frozen IDs in `apps/social/tests/test_api.py`: arrived_action_marks_membership:362,
+arrived_ignores_on_behalf_of:371, transit_ignores_on_behalf_of:419 (each with `test_` prefix).
+IDs/line/file SHA `fc35dea7bf6fc36444cb7aa4fcb52a274677bc0c78c328882dcd6ebdb759842f`, app-pack and
+accepted guardian-authority/oversight/co-member/coorganizer/safe-exit/safety policies remain unchanged.
+There is no production/schema/dependency/frontend change and no original source defect established.
+
+Actual adult arrival is checked for200 and independently committed non-null arrival. Guardian cases
+use verified active child/adult cohorts, matching live consent ID and active link, exact approved-venue
+row, real CreateActivity, Participate/current presence window and guardian nonmember preconditions.
+Guardian404 and unchanged ward state are independent checks. Each follows with the ward's own same
+action200/persistence control, excluding invalid fixtures as the cause of the refusal. No invented
+arrival response field is required. Both legacy and v1 paths are exercised.
+
+Correct source social race lane:48 top-level PASS,0SKIP/FAIL, all six cases; immutable log SHA
+`d240584ec024945426a6feaa01d9a06012a16964587e51dac3ed9414db01ad25`.
+Controlled Go overlays, not real source fail-before bugs, each produce one expected top-level
+failure/0skip and preserve the original passing source:
+- Arrival no-write:200 remains, adult/ward own persistence checks fail; SHA
+  `9ea839b24df7faaf49f544c1feae536b57e2c1dac394b895a818a6813cf09254`.
+- Guardian delegation: four guardian cases return200 and mutate ward state; independent status and
+  state checks fail; SHA `d9021cf344b7746387d8cebc5e822c3ab1232b635ec10c7874cf2063a9dd3400`.
+- Guardian write masked404: correct outward404 while ward is changed; only state checks fail across
+  four guardian cases; SHA `b7a46f40d6099d48ab68293e63fedf42dbf5c8fab2b7e1163d724d729c911299`.
+Independent critic APPROVE checked actual positive/control logs, eligible fixtures and exactly three maps.
+
+Own pinned Go1.27.1 archive SHA `63d339f0da5ab53635a56f2490a7984dfe12dfcff22ad749f63edaf590168445`
+checked; Node24.18.0 binary SHA `41a74efb34cbde5c7632cdac0cf8bd1a14d0b8d73dc1e82755014d9a9ce70f5c`
+from cached official node24; modules downloaded/verified in owned caches then GOPROXY=off.
+Fresh PG16/PostGIS/vector container `social-rest-presence-20261006-db`, internal network
+`social-rest-presence-20261006`, synthetic `social_rest_presence` database,2GiB/2CPU/noports;
+native bootstrap passed. Source race binaries run under qualify-native.sh's restricted user/cap-drop/
+read-only/no-new-privileges/mount flags; canonical c27 image supplies codecs only, not deployment
+qualification. Task env/runner/caches in `_temp/test__rest-contract-presence-20261006`; exact commands
+`python3 SCRATCH/run-social.py qualify` then `controls` use the global heavy lock. Actual initial disk
+26GiB/memory77GiB available; no resource refusal occurred. Unknown-owner caches/buffers/backups/keepers
+were untouched; own tools/fixture and separate immutable logs remain for root qualification.
+
+Owner doc-only scope correction: original donations REST is only start/mine/total/webhook and Go
+matches. Ledger/paymentView correspond to original domain/HTML surfaces; no complete public-finance
+REST projection/route is demanded. F26 category/F24 partner-is_verified service gaps and F42 HTML
+credit/link obligations remain separate, preserving every frozen ID/hash and retirement gap; no JSON
+replacement or extra mapping/endpoint is introduced. Existing donation REST and exact export-helper
+query equality remain in REST scope. No extra suite was run for this documentation correction.
+
+Worker pure contracts pass; metadata reports1008 manifest claims/1663 unresolved/0invalid of2671,
+retirement exit1; docs53/all defects0 and whitespace clean. Root owns required exact current-source native/
+all21/harness/contracts/docs (expected710 if counts match actual run) before main; prior709 receipts
+are preserved, not substituted. No worker optional whole-suite/build campaign, push/merge/deploy,
+provider/minor activation, producer pin, broader HTML/global-retirement or finance REST endpoint work.
+
 ## 2026-10-06 — Auth/transit assertion-only source qualification completed
 
 Valid until: test/serving inputs, dependencies, native scripts or codec environment changes — then requalify.

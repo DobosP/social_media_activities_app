@@ -13833,26 +13833,44 @@
       "legacy_file": "apps/social/tests/test_api.py",
       "line": 362,
       "source_sha256": "fc35dea7bf6fc36444cb7aa4fcb52a274677bc0c78c328882dcd6ebdb759842f",
-      "classification": "unresolved",
-      "native_evidence": [],
-      "rationale": "Preserve the legacy declaration until its behavioral assertions have independent native evidence; a larger native suite or registered route is insufficient.",
-      "gaps": [
-        "Remaining source assertion/transport/edge-case obligations require an explicit native port or reviewed replacement."
+      "classification": "native_semantic_coverage",
+      "native_evidence": [
+        {
+          "go_file": "services/server/internal/social/rest_presence_case_test.go",
+          "test": "TestRESTSourcePresenceOwnActorAndGuardianNonDelegation",
+          "scenario": "current adult owner in a valid presence window POSTs arrived through both API prefixes",
+          "assertions": [
+            "actual HTTP200",
+            "actual committed owner membership arrived_at is non-null"
+          ]
+        }
       ],
-      "runtime_verification": "not_run"
+      "rationale": "Finite three-presence assertion-only batch exercises actual registered legacy/v1 handlers with current synthetic PostgreSQL actors and eligible consent/cohort/guardianlink/approvedvenue/window preconditions. The correct unchanged source passes48 top-level social race tests, zero skips/failures; status and committed-state assertions are independent, and guardian refusals have same-ward own positive controls. Frozen source IDs/lines/hash and all app-pack/accepted guardian/co-member/coorganizer/safety policies remain. Separately labelled controlled overlays measure assertion sensitivity, not original source fail-before bugs. Root exact-source/native/all21 qualification and independent final review remain required before main; broader reference retirement/deployment are not authorized.",
+      "gaps": [],
+      "runtime_verification": "passed"
     },
     {
       "legacy_id": "apps/social/tests/test_api.py::test_arrived_ignores_on_behalf_of",
       "legacy_file": "apps/social/tests/test_api.py",
       "line": 371,
       "source_sha256": "fc35dea7bf6fc36444cb7aa4fcb52a274677bc0c78c328882dcd6ebdb759842f",
-      "classification": "unresolved",
-      "native_evidence": [],
-      "rationale": "Preserve the legacy declaration until its behavioral assertions have independent native evidence; a larger native suite or registered route is insufficient.",
-      "gaps": [
-        "Remaining source assertion/transport/edge-case obligations require an explicit native port or reviewed replacement."
+      "classification": "native_semantic_coverage",
+      "native_evidence": [
+        {
+          "go_file": "services/server/internal/social/rest_presence_case_test.go",
+          "test": "TestRESTSourcePresenceOwnActorAndGuardianNonDelegation",
+          "scenario": "active linked adult guardian submits arrived on_behalf_of eligible child owner at an exactly approved venue and valid window, both prefixes",
+          "assertions": [
+            "actual guardian HTTP404",
+            "committed ward arrived_at remains null",
+            "active verified cohorts/consent/guardianlink/approvedvenue/window proved",
+            "ward own same-action control succeeds and persists after refusal"
+          ]
+        }
       ],
-      "runtime_verification": "not_run"
+      "rationale": "Finite three-presence assertion-only batch exercises actual registered legacy/v1 handlers with current synthetic PostgreSQL actors and eligible consent/cohort/guardianlink/approvedvenue/window preconditions. The correct unchanged source passes48 top-level social race tests, zero skips/failures; status and committed-state assertions are independent, and guardian refusals have same-ward own positive controls. Frozen source IDs/lines/hash and all app-pack/accepted guardian/co-member/coorganizer/safety policies remain. Separately labelled controlled overlays measure assertion sensitivity, not original source fail-before bugs. Root exact-source/native/all21 qualification and independent final review remain required before main; broader reference retirement/deployment are not authorized.",
+      "gaps": [],
+      "runtime_verification": "passed"
     },
     {
       "legacy_id": "apps/social/tests/test_api.py::test_create_and_list_activity",
@@ -14086,13 +14104,23 @@
       "legacy_file": "apps/social/tests/test_api.py",
       "line": 419,
       "source_sha256": "fc35dea7bf6fc36444cb7aa4fcb52a274677bc0c78c328882dcd6ebdb759842f",
-      "classification": "unresolved",
-      "native_evidence": [],
-      "rationale": "Preserve the legacy declaration until its behavioral assertions have independent native evidence; a larger native suite or registered route is insufficient.",
-      "gaps": [
-        "Remaining source assertion/transport/edge-case obligations require an explicit native port or reviewed replacement."
+      "classification": "native_semantic_coverage",
+      "native_evidence": [
+        {
+          "go_file": "services/server/internal/social/rest_presence_case_test.go",
+          "test": "TestRESTSourcePresenceOwnActorAndGuardianNonDelegation",
+          "scenario": "active linked adult guardian submits on_my_way on_behalf_of eligible child owner at approved venue/window, both prefixes",
+          "assertions": [
+            "actual guardian HTTP404",
+            "committed ward transit_status remains none",
+            "active verified cohorts/consent/guardianlink/approvedvenue/window proved",
+            "ward own same-action control succeeds and persists after refusal"
+          ]
+        }
       ],
-      "runtime_verification": "not_run"
+      "rationale": "Finite three-presence assertion-only batch exercises actual registered legacy/v1 handlers with current synthetic PostgreSQL actors and eligible consent/cohort/guardianlink/approvedvenue/window preconditions. The correct unchanged source passes48 top-level social race tests, zero skips/failures; status and committed-state assertions are independent, and guardian refusals have same-ward own positive controls. Frozen source IDs/lines/hash and all app-pack/accepted guardian/co-member/coorganizer/safety policies remain. Separately labelled controlled overlays measure assertion sensitivity, not original source fail-before bugs. Root exact-source/native/all21 qualification and independent final review remain required before main; broader reference retirement/deployment are not authorized.",
+      "gaps": [],
+      "runtime_verification": "passed"
     },
     {
       "legacy_id": "apps/social/tests/test_api.py::test_transit_invalid_status_is_forbidden",
