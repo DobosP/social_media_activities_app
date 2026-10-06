@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-06",
+  "state": "SOURCE_PREPARATION_ONLY_NOT_RUNTIME_QUALIFIED",
+  "base_main": "aa10645922ad708db66c9ca0ce982e9f70e4a190",
+  "branch": "test/social-source-consolidation-20261006",
+  "worktree": "C:\\Users\\Paul Work\\personal_repos\\_worktrees\\social_media_activities_app\\test__social-source-consolidation-20261006",
+  "source_inputs": [
+    {
+      "slice": "lifecycle",
+      "source_commit": "953d19e5478d038fca8721979b201d44ea682316",
+      "path": "services/server/internal/social/rest_activity_lifecycle_case_test.go",
+      "sha256": "39de2e0a93cd2e1d3386f85481b88a9f3dbf32abf53d7ae330366524e2a3ae34",
+      "git_blob": "c43528f93bd9480f9d2c103e3e442d5cdfd8ba01",
+      "bytes": 4363
+    },
+    {
+      "slice": "booking",
+      "source_commit": "f9568cd51a71e32b4ff0418745ffdb4295d0b8c1",
+      "path": "services/server/internal/booking/rest_assertion_completion_test.go",
+      "sha256": "dfe2322acc1dafc4eabbb8ba2397c3729aef97c8581f5cc6643848f5ebfce3d1",
+      "git_blob": "d833a096df012d29b9d4a37611a2be21a620379b",
+      "bytes": 12355
+    },
+    {
+      "slice": "export",
+      "source_commit": "adddd96f53dfe16cdd679f45aa4b9b1ada545684",
+      "path": "services/server/internal/accounts/export_query_equality_case_test.go",
+      "sha256": "181db3c8b0cf944bfe84adc34ac1eccad8bc17c62a42fe1c8cb71504e173e222",
+      "git_blob": "34a663234a357f19f3cc3fd271bb21f42ac068d5",
+      "bytes": 3435
+    },
+    {
+      "slice": "finance",
+      "source_commit": "199a173489eb909788bfc21384d993f329a67c2a",
+      "path": "services/server/internal/donations/parity_test.go",
+      "sha256": "df77dcf6b4091407fbda25106f402d0f262ad3b1bb1710a345be06c5a9fe76c8",
+      "git_blob": "abd32f7a7ddd711b32fb071612c17e9161b5f3f4",
+      "bytes": 11282
+    },
+    {
+      "slice": "f42_html",
+      "source_commit": null,
+      "empty_source_branch_head": "aa10645922ad708db66c9ca0ce982e9f70e4a190",
+      "source_patch": "C:\\Users\\Paul Work\\personal_repos\\_temp\\test__f42-partner-finance-html\\f42-partner-finance-html.patch",
+      "original_patch_sha256": "9b2cf6476bc530ae53dff2899a68c4f26a4e38cebdb34d8c11dc5fe6f70d9c9e",
+      "normalized_patch_sha256": "9b2cf6476bc530ae53dff2899a68c4f26a4e38cebdb34d8c11dc5fe6f70d9c9e",
+      "standalone_lf_sha256": "0a3ea8929774837253e7071a5552083deb17eb09ef95228c712f6ef8f57f9b7e",
+      "path": "services/server/internal/web/partner_finance_html_case_test.go",
+      "sha256": "0a3ea8929774837253e7071a5552083deb17eb09ef95228c712f6ef8f57f9b7e",
+      "bytes": 6660
+    },
+    {
+      "slice": "f42_credit_link",
+      "source_commit": null,
+      "empty_source_branch_head": "aa10645922ad708db66c9ca0ce982e9f70e4a190",
+      "source_patch": "C:\\Users\\Paul Work\\personal_repos\\_temp\\test__f42-partner-finance-html\\credit-link-privacy\\f42-credit-link-privacy-html.patch",
+      "original_patch_sha256": "0ac03c68287d3f260bf90294e1e0d78361b7d3646fde543079ab0adf9f2fb82d",
+      "normalized_patch_sha256": "0ac03c68287d3f260bf90294e1e0d78361b7d3646fde543079ab0adf9f2fb82d",
+      "standalone_lf_sha256": "46f8fe37c6ead5e13b98e154975518dad770b38b91bb57137afa31ab75991abd",
+      "path": "services/server/internal/web/partner_credit_link_privacy_html_case_test.go",
+      "sha256": "46f8fe37c6ead5e13b98e154975518dad770b38b91bb57137afa31ab75991abd",
+      "bytes": 6261
+    }
+  ],
+  "combined_hash_encoding": "SHA256 of UTF8 compact JSON sorted by path, each object keys path/sha256 sorted; no trailing newline",
+  "staged_source_tree_before_report": "4307525073001149b4f2f96f4f808ffe44438a62",
+  "combined_patch_sha256": "14ca7cc8d781c9514368425a2966ca90ce7112ede3b331fe948cc14b1dbe14b5",
+  "protected_inputs": {
+    "STATUS.md": "6928e1f62bbf4f79dc0aa6ebbd5dc4973e1e8f050017a469e48a51aa11e482b5",
+    "WORKLOG.md": "94e3c781207f3602546f2b73112b528df59b88f7994bbb176b9c8901272210ae",
+    "docs/reviews/native-go/rest-contract-plan.md": "c61057cc60c56cf2a9270527adc17d15c4ebeca2940c5ce84b6927293b67b6c5",
+    "services/server/internal/contracts/testdata/legacy-test-inventory.json": "55c9463d80e68017e5efda022faa55bca8ffe6b6986e328d9ec139d41a0a855d",
+    "services/server/internal/contracts/testdata/privacy-coverage.json": "caa91940cdea7b9da939af24dd3dbd57e390466bc1dfa180fc371056b5763f90",
+    "services/server/internal/contracts/testdata/product-coverage.json": "fe7ea411465957706919ea5402023ef8cdb39047cf22b2e325a342500b40a9dd",
+    "services/server/internal/contracts/testdata/tooling-coverage.json": "09ddec1e08b56035de45b32e8600e7f848e38f3dd30aa33b32b86456639a45f8"
+  },
+  "runtime_verification": "not_run",
+  "source_file_count": 6,
+  "lf_source_bytes_verified": true,
+  "no_production_changes": true,
+  "proposal_inputs": [
+    {
+      "slice": "lifecycle",
+      "path": "C:\\Users\\Paul Work\\personal_repos\\_temp\\test__rest-contract-activity-lifecycle-windows-20261006\\proposed-mappings.pending.json",
+      "sha256": "456654281d33ac575e6b7fcd9060e896ef505977032d12629083a396400c281d"
+    },
+    {
+      "slice": "booking",
+      "path": "C:\\Users\\Paul Work\\personal_repos\\_temp\\test__booking-rest-assertions\\mapping-proposals.json",
+      "sha256": "c82acd86e730201d667ff8ffa72e55460819f0b80d2c183b4a2972e27f0a592e"
+    },
+    {
+      "slice": "export",
+      "path": "C:\\Users\\Paul Work\\personal_repos\\_temp\\export-query-equality\\proposed-mapping.json",
+      "sha256": "3342a7c640efa31750a2f100d8b7c09a7843f04e41375f8dae58d33c72f9f9a8"
+    },
+    {
+      "slice": "finance",
+      "path": "C:\\Users\\Paul Work\\personal_repos\\_temp\\f26-f24-finance-evidence\\evidence-proposal.json",
+      "sha256": "e42a24678750ea42177cbb07ef698ac08e0b4739211db92b20143de3dd6315e3"
+    },
+    {
+      "slice": "f42_html",
+      "path": "C:\\Users\\Paul Work\\personal_repos\\_temp\\test__f42-partner-finance-html\\proposed-mappings.json",
+      "sha256": "ffae5df2a3fdefb5dfc6700001716a78806aa1aef5820ffc77d7142e42159a3b"
+    },
+    {
+      "slice": "f42_credit_link",
+      "path": "C:\\Users\\Paul Work\\personal_repos\\_temp\\test__f42-partner-finance-html\\credit-link-privacy\\proposed-mappings.json",
+      "sha256": "0a0c9e3445b671327e4994dd62f1867ffa8a249ca4345ac722cfbac2a05c2014"
+    }
+  ],
+  "pending_proposal_count": 19,
+  "qualification_plan_sha256": "592ae0f116340609ad32e101b4909caa8015470a01cc0984630c2f3a7b3124b5",
+  "pending_proposals_sha256": "ac1032787f7e68ae25bad0471e89899eee1ca6df1aa9ce9fe8587d1c50552787",
+  "independent_source_reviews": [
+    {
+      "reviewer": "lifecycle_review",
+      "scope": "lifecycle exact bytes, semantics, privacy and co-organizer authority; preparation only"
+    },
+    {
+      "reviewer": "combined_booking_export_review",
+      "scope": "exact combined booking/export bytes and staged blobs, independent assertions and unique names; preparation only"
+    },
+    {
+      "reviewer": "combined_finance_html_review",
+      "scope": "exact combined finance/F42 bytes and staged tree, source obligations, actual HTML path and unique names; preparation only"
+    }
+  ],
+  "previous_five_source_sha256": "dca1d207165945023b2f9a63eef5ee23095289b91a2949ff348b6f504e448e18",
+  "combined_source_bundle_sha256": "e952fcb8d70446cd1c83ce534e51e643a0532d3dee740a8befd371d33c2c6fcf"
+}
