@@ -20,7 +20,8 @@ source passes worker social49/0skip/fail. Four labelled overlays isolate count/k
 A finite three-own-membership listing batch adds one named registered-handler matrix; correct
 source passes worker social50/0skip/fail, first actual v1 GET trace1 within ceiling4. Four mine-only
 overlays isolate cap/envelope/cursor/query sensitivity; the initial warmed-endpoint proof is historical.
-Root current native/all21 remains pending. The ledger's1014 claimed/1657 unresolved entries count frozen assertions, not missing endpoints.
+[Fresh own-membership qualification](rest-own-memberships-checkpoint.json) on `5474635`, run `38463c9a2516`:712/all21,0skips/failures.
+The ledger's1014 claimed/1657 unresolved entries count frozen assertions, not missing endpoints.
 Go already serves the ordinary HTTP/toolchain paths; full Python reference retirement remains separate.
 
 ## Social REST:26 declarations

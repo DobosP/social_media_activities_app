@@ -3,6 +3,34 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-06 — Own-membership source qualification completed
+
+Valid until: serving/test inputs, dependencies, native scripts or codec environment change — then requalify.
+
+Root qualified source `5474635eabf24c94c49121b221a50e2034258a70`, run `38463c9a2516`, after the reviewed three-row worker batch.
+Actual current-source native format/shared hashes/vet/race, Node4 offline tests, harness17/17,
+fresh native database bootstrap, full21 PostgreSQL/codec race lanes, contracts, docs and whitespace
+passed. Fresh712 top-level tests, zero skips/failures: configuration62, accounts75, admin20, app35, backup5, booking7, budgets16, catalog48, commands27, contracts5, discovery2, donations5, export5, jobs67, media54, messaging60, notifications4, recommendations8, safety56, social50, web101.
+Case retirement still exits1:1014 manifest claims/1657 unresolved/0invalid of2671; native counts
+do not establish full source-declaration equivalence. Exactly three own-membership mappings close;12 social
+declarations remain. All frozen IDs/lines/hash and accepted policies/app-pack remain unchanged.
+
+Protected source-object SHA `c6e670e5ea4936938e6421fedce5e80497e708f4bf5083cfa726f5a7099e99f8`; completion-manifest SHA
+`d4858830b9f914059f6333771ec4aac5abbb351367bf8b0641ba8a9676667c2c`. All30 qualification artifact hashes,8 worker
+positive/control/docs/format log hashes and the superseded warmed-endpoint initial log are verified and retained under
+`_temp/test__rest-contract-own-memberships-20261006`; controls are deliberate counterexamples, not source bugs.
+The immutable c27 image supplies codecs only; current race binaries and independent sidecar were
+compiled from this source. No image/frontend/security campaign, endpoint or production change,
+reference retirement or deployment/provider/minor/ingestion/schedule activation is claimed.
+
+Exact root command: source task `env.sh`, `export GOPROXY=off`, then
+`python3 /home/dobo/work/_temp/test__rest-contract-own-memberships-20261006/root-qualify.py` under the shared
+global lock with fresh16GiB MemAvailable and recorded phase-specific disk estimates. Memory floors
+refer to RAM; root disk is separately budgeted, with no invented21.2GiB floor or resource waiver.
+Final receipt/status/plan are documentation only; source-object equality and final docs/whitespace
+plus independent exact closure review are required before push. Prior receipts and all private
+positive/negative evidence, held work, unknown buffers, backups and keepers remain preserved.
+
 ## 2026-10-06 — Three finite REST own-membership listing assertions
 
 Valid until: `test/rest-contract-own-memberships-20261006` lands or is superseded — then treat as history.
