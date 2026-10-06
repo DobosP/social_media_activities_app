@@ -3,6 +3,34 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-06 — Thread pagination source qualification completed
+
+Valid until: serving/test inputs, dependencies, native scripts or codec environment change — then requalify.
+
+Root qualified source `f388641d29cf43a73fbef70236671920538501d2`, run `2423ca3e43ab`, after the reviewed three-row worker batch.
+Actual current-source native format/shared hashes/vet/race, Node4 offline tests, harness17/17,
+fresh native database bootstrap, full21 PostgreSQL/codec race lanes, contracts, docs and whitespace
+passed. Fresh713 top-level tests, zero skips/failures: configuration62, accounts75, admin20, app35, backup5, booking7, budgets16, catalog48, commands27, contracts5, discovery2, donations5, export5, jobs67, media54, messaging60, notifications4, recommendations8, safety56, social51, web101.
+Case retirement still exits1:1017 manifest claims/1654 unresolved/0invalid of2671; native counts
+do not establish full source-declaration equivalence. Exactly three thread-pagination mappings close;9 social
+declarations remain. All frozen IDs/lines/hash and accepted policies/app-pack remain unchanged.
+
+Protected source-object SHA `48d54128823cd3cb2298bf5435f1019697a03604c698b691e11ae6db9259df48`; completion-manifest SHA
+`20b9e1e86ce2b1ca858d2e5d2bcba3666ed731068c2f0d96146f44d51f08f127`. All30 qualification artifact hashes,8 worker
+positive/control/docs/format log hashes are verified and retained under
+`_temp/test__rest-contract-thread-pagination-20261006`; controls are deliberate counterexamples, not source bugs.
+The immutable c27 image supplies codecs only; current race binaries and independent sidecar were
+compiled from this source. No image/frontend/security campaign, endpoint or production change,
+reference retirement or deployment/provider/minor/ingestion/schedule activation is claimed.
+
+Exact root command: source task `env.sh`, `export GOPROXY=off`, then
+`python3 /home/dobo/work/_temp/test__rest-contract-thread-pagination-20261006/root-qualify.py` under the shared
+global lock with fresh16GiB MemAvailable and recorded phase-specific disk estimates. Memory floors
+refer to RAM; root disk is separately budgeted, with no invented21.2GiB floor or resource waiver.
+Final receipt/status/plan are documentation only; source-object equality and final docs/whitespace
+plus independent exact closure review are required before push. Prior receipts and all private
+positive/negative evidence, held work, unknown buffers, backups and keepers remain preserved.
+
 ## 2026-10-06 — Three finite REST thread pagination assertions
 
 Valid until: `test/rest-contract-thread-pagination-20261006` lands or is superseded — then treat as history.

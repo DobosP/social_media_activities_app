@@ -96,10 +96,10 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
-- Own memberships `5474635` (2026-10-06):712/all21 fresh tests,0skips/failures; native/hash/vet/race + Node4 + harness17 pass; [receipt](docs/reviews/native-go/rest-own-memberships-checkpoint.json).
-- Thread worker51/0skip/fail, all3 cases; first actual GET trace5/ceiling8;4 labelled controls fail intentionally. Root current native/all21 remains pending.
-- Eighteen exact mappings:1017 manifest claims/1654 unresolved/0invalid of2671; retirement remains blocked. Production/schema/dependencies/frontend unchanged; prior receipts preserved.
-- Prior [RSVP711](docs/reviews/native-go/rest-rsvp-checkpoint.json), [Presence710](docs/reviews/native-go/rest-presence-checkpoint.json), [auth/transit709](docs/reviews/native-go/rest-auth-transit-checkpoint.json) and [transport709](docs/reviews/native-go/rest-transport-checkpoint.json) receipts remain; c27 image supplies codecs only.
+- Thread pagination `f388641` (2026-10-06):713/all21 fresh tests,0skips/failures; native/hash/vet/race + Node4 + harness17 pass; [receipt](docs/reviews/native-go/rest-thread-pagination-checkpoint.json).
+- Three mappings/new3-case test: legacy newest5/oldest-first, exact v1envelope/pages9–11/6–8, limit10/results10/first API queries5<=8;4 sensitivity controls fail intentionally.
+- Eighteen exact mappings:1017 manifest claims/1654 unresolved/0invalid of2671; retirement exits1. Docs/all defects0; whitespace clean. Production/schema/dependencies/frontend unchanged.
+- Prior [own-list712](docs/reviews/native-go/rest-own-memberships-checkpoint.json), [RSVP711](docs/reviews/native-go/rest-rsvp-checkpoint.json), [Presence710](docs/reviews/native-go/rest-presence-checkpoint.json), [auth/transit709](docs/reviews/native-go/rest-auth-transit-checkpoint.json) and [transport709](docs/reviews/native-go/rest-transport-checkpoint.json) receipts remain; c27 image supplies codecs only.
 - Original `c27a99f`705 [source/image/audits](docs/reviews/native-go/restart-checkpoint.json) remain; no new deployment-image/audit/frontend qualification. Unused openpgp advisory stays separate.
 - Independent source/sensitivity review approved; final receipt/docs closure receives review before main push. Human deployment review remains open.
 

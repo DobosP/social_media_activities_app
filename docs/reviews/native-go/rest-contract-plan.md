@@ -24,7 +24,8 @@ overlays isolate cap/envelope/cursor/query sensitivity; the initial warmed-endpo
 A finite three-thread-pagination assertion batch adds one named registered-handler matrix; correct
 source passes worker social51/0skip/fail, first actual v1 GET trace5 within ceiling8. Four scoped
 overlays isolate display order/exact envelope/returned-cursor/query sensitivity.
-Root current native/all21 remains pending. The ledger's1017 claimed/1654 unresolved entries count frozen assertions, not missing endpoints.
+[Fresh thread pagination qualification](rest-thread-pagination-checkpoint.json) on `f388641`, run `2423ca3e43ab`:713/all21,0skips/failures.
+The ledger's1017 claimed/1654 unresolved entries count frozen assertions, not missing endpoints.
 Go already serves the ordinary HTTP/toolchain paths; full Python reference retirement remains separate.
 
 ## Social REST:26 declarations
