@@ -128,6 +128,10 @@ func TestNativeFinancialLedgerSemanticsAndOwnReceipts(t *testing.T) {
 	if len(closed) != 1 || closed[0]["slug"] != "completed" || len(closed[0]["spend_entries"].([]any)) != 1 {
 		t.Fatal("closeout publication boundary")
 	}
+	linkedSpend := closed[0]["spend_entries"].([]any)[0].(map[string]any)
+	if linkedSpend["category"] != "Books" {
+		t.Fatal("closeout linked spend category/untagged exclusion", linkedSpend)
+	}
 	if _, ok := closed[0]["goal_cents"]; ok {
 		t.Fatal("closeout goal/vanity metric")
 	}
@@ -138,6 +142,10 @@ func TestNativeFinancialLedgerSemanticsAndOwnReceipts(t *testing.T) {
 	partners := ledger["partners"].([]map[string]any)
 	if len(partners) != 1 || partners[0]["get_kind_display"] != "Library" || partners[0]["place"].(map[string]any)["pk"] != place {
 		t.Fatal("partner acknowledgement lost")
+	}
+	outcomes := ledger["civic_outcomes"].([]map[string]any)
+	if len(outcomes) != 1 || outcomes[0]["partner_name"] != "Fixture library" {
+		t.Fatal("public civic partner acknowledgement lost", outcomes)
 	}
 	raw, _ := json.Marshal(ledger)
 	for _, private := range []string{"own-reference", "private-foreign-reference", "private staff note", "private credit", "donor_id", "Retired prose"} {
@@ -152,6 +160,23 @@ func TestNativeFinancialLedgerSemanticsAndOwnReceipts(t *testing.T) {
 	raw, _ = json.Marshal(mine)
 	if !strings.Contains(string(raw), "own-reference") || strings.Contains(string(raw), "private-foreign-reference") {
 		t.Fatal("own receipt boundary")
+	}
+	if _, err := db.Exec(ctx, `UPDATE places_partner SET is_verified=false WHERE id=$1`, partner); err != nil {
+		t.Fatal(err)
+	}
+	ledger, err = s.Ledger(ctx, "EUR")
+	if err != nil {
+		t.Fatal(err)
+	}
+	outcomes = ledger["civic_outcomes"].([]map[string]any)
+	if len(outcomes) != 1 || outcomes[0]["headline"] != "Staff-authored outcome" {
+		t.Fatal("unverified partner removed civic outcome prose", outcomes)
+	}
+	if name, ok := outcomes[0]["partner_name"]; !ok || name != nil {
+		t.Fatal("unverified civic partner credit at read time", outcomes)
+	}
+	if _, err := db.Exec(ctx, `UPDATE places_partner SET is_verified=true WHERE id=$1`, partner); err != nil {
+		t.Fatal(err)
 	}
 	if _, err := db.Exec(ctx, `UPDATE places_partner SET is_active=false WHERE id=$1`, partner); err != nil {
 		t.Fatal(err)
