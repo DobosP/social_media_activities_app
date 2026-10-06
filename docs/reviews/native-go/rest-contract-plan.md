@@ -8,8 +8,9 @@ Baseline qualification is [the aggregate](restart-checkpoint.json):705 fresh nat
 The finite transport batch maps one existing export case and closes three social wire cases.
 [Fresh source qualification](rest-transport-checkpoint.json) on `67e07b9`, run `62b59f66e423`:709/all21,0skips/failures; social47 and web101.
 The prior c27 image supplies codecs only; its audit receipt does not qualify a deployment image for the changed serving code.
-An assertion-only two-mapping batch extends existing authentication/transit tests; correct production
-passes worker social47/0skip/fail, with three separately labelled sensitivity overlays. Root final21 is pending.
+An assertion-only two-mapping batch extends existing authentication/transit tests.
+[Fresh source qualification](rest-auth-transit-checkpoint.json) on `e825a76`, run `9a7e5fc5d510`:709/all21,0skips/failures.
+Production/schema remain unchanged; the correct source passes, and three separately labelled controlled overlays prove assertion sensitivity.
 The ledger's1005 claimed/1666 unresolved entries count frozen assertions, not missing endpoints.
 Go already serves the ordinary HTTP/toolchain paths; full Python reference retirement remains separate.
 

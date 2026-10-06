@@ -3,6 +3,48 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-06 — Auth/transit assertion-only source qualification completed
+
+Valid until: test/serving inputs, dependencies, native scripts or codec environment changes — then requalify.
+
+Clean committed source `e825a7671d419bd6b186c6082666dec2d013c9a7`, root run `9a7e5fc5d510`,
+completed all eight direct-source gates. All21 fresh PostgreSQL/codec race lanes passed709 with0skips/
+failures, including social47/web101. The unchanged top-level count includes the NEW literal legacy
+GET and transit response/persistence assertions in two existing functions; it is not reused709 evidence.
+Native format/shared-source hashes/vet/race across all3modules, Node's4 service-worker tests, harness17/17,
+source inventory1005/1666/0 invalid (expected retirement exit1), docs53/all defects0 and whitespace pass.
+
+Source-object SHA: `2945b5743a8e9ce9800263f5b2ced2bc324ddd6d3bf9da6e3ad66b88237c0907`.
+Completion-manifest SHA: `c4f4e848128564244ea587c837ded1ab314d7ddb06796ae09f80a30595844113`.
+Receipt `docs/reviews/native-go/rest-auth-transit-checkpoint.json` retains all8 actual statuses,
+all30 artifact hashes, all21 named test lists and exact immutable worker/control log paths/hashes.
+Evidence remains under `_temp/test__rest-contract-auth-transit-20261006/root-final/e825a7671d41-9a7e5fc5d510/`.
+Clean head/source objects were checked before the lock, after acquiring it and after the gate batch.
+Fresh synthetic database `social_rest_final_9a7e5fc5d510` used only the task's internal/noport fixture.
+Independent critic and mapping reviewer verified exactly2 changed frozen rows and unchanged source
+IDs/lines30+392/hashfc35, all other rows/inventory/source Python, and245 identical production Go/SQL files.
+
+Only two existing Go test functions and privacy-coverage mapping inputs differ from basec7a8 among
+protected serving inputs. Production, schema bootstrap, dependencies, frontend/assets and scripts
+remain unchanged. ADR-0040 item2 required this fresh21 run for the new assertions; conditional image/
+audit/frontend requirements were absent. Immutable c27 image34c1c228 supplies CODECS ONLY for current
+source-compiled race binaries and current independently built sidecar. It and its audits qualify c27,
+not a deployment image for later serving code. No new deployment image, vulnerability audit, frontend
+or optional test/build campaign is claimed. Prior67/c7 andc27 receipts and initial/failed logs remain.
+Original correct production passes; all3 separately labelled controlled counterexamples fail intended
+assertions, including a masked-success response with no committed update. They are not source bugs.
+
+Exact root command: source the task's `env.sh`, set `GOPROXY=off` and explicit synthetic fixture container,
+then run retained `_temp/test__rest-contract-auth-transit-20261006/root-qualify.py` on e825a76. It invokes
+native `createdb`, unchanged `social-server --migrate-only`, `scripts/check-native.sh GO`,
+`scripts/test-native-gates.sh`, full `scripts/qualify-native.sh GO IMMUTABLE_CODEC_IMAGE PRIVATE_NETWORK
+SYNTHETIC_DSN UNIQUE_SCRATCH`, `go -C services/server run ./cmd/check-contracts -root REPO -summary`,
+fleet `check_docs.py REPO`, and `git diff --check`. Broad work serialized on the global heavy lock;
+16GiB available-memory floor held; no actual resource refusal occurred. Final docs/receipt closure
+and independent exact-head source review follow. Stop after these two mappings:21 social declarations
+and1666 frozen declarations remain unresolved; further applicable REST batches are explicit. No deployment,
+providers, minors, ingestion, schedule enablement, producer-pin or HTML changes occurred.
+
 ## 2026-10-06 — Two finite REST auth/transit assertion mappings
 
 Valid until: `test/rest-contract-auth-transit-20261006` lands or is superseded — then treat as history.

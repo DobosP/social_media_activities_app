@@ -96,12 +96,12 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
-- Assertion-only worker:2 existing tests extended, social47/0skip/fail;3 controlled sensitivities fail as intended; root final21 pending.
+- Assertion-only `e825a76` (2026-10-06):709/all21 fresh tests,0skips/failures; native/hash/vet/race + Node4 + harness17 pass; [receipt](docs/reviews/native-go/rest-auth-transit-checkpoint.json).
+- Two existing tests strengthen auth/transit;3 controlled sensitivities fail as intended. Production/schema/dependencies/frontend unchanged; no new deployment-image/audit/frontend qualification.
 - Six exact mappings:1005 manifest claims/1666 unresolved/0invalid of2671; retirement exits1. Docs53/all defects0; whitespace clean.
-- Prior `67e07b9`709/all21/native/harness17 [source receipt](docs/reviews/native-go/rest-transport-checkpoint.json): c27 image reused only for codecs; no new deployment-image/audit/frontend qualification.
-- Original `c27a99f`:705/all21, canonical image, govulncheck1.8.0 all3modules/binary, Trivy0.75.0 and Node24.18.0 gates pass; unused openpgp advisory remains separate.
-- Prior source/image/smoke14/14/bundle36.71KiB evidence remains in [the original receipt](docs/reviews/native-go/restart-checkpoint.json).
-- Independent source/fail-before review approved; final receipt/docs closure receives review before main push. Human deployment review remains open.
+- Prior `67e07b9`709/all21 [source receipt](docs/reviews/native-go/rest-transport-checkpoint.json) and original `c27a99f`705 [source/image/audits](docs/reviews/native-go/restart-checkpoint.json) remain intact; c27 image supplies codecs only.
+- Original govulncheck1.8.0 all3modules/binary, Trivy0.75.0, Node24.18.0, smoke14/14 and bundle36.71KiB pass for c27; unused openpgp advisory remains separate.
+- Independent assertion/sensitivity review approved; final receipt/docs closure receives review before main push. Human deployment review remains open.
 
 ## Standard verification
 Native race/vet + shared-source hashes; database/codec contracts require explicit disposable fixtures
