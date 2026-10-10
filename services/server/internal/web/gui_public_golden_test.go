@@ -16,11 +16,13 @@ import (
 
 	"github.com/DobosP/cat_de_roman_esti/shared-go/authcore"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/accounts"
+	"github.com/flosch/pongo2/v6"
 )
 
 // This optional producer captures the ORIGINAL native Pongo renderer, not a
 // templ candidate, Django oracle, owner-signed matrix or Native Live gate.
 var guiPublicGoldenOutput = flag.String("gui-public-golden-output", "", "fresh private directory for synthetic original-native public HTML fixtures")
+var guiPublicGoldenReference = flag.String("gui-public-golden-reference", "", "unchanged private original capture bound by docs/reviews/gui-public-original/checkpoint.json")
 
 type guiPublicCase struct {
 	ID, Group, Path, Language, Profile string
@@ -49,8 +51,8 @@ func guiPublicHash(raw []byte) string {
 }
 
 func guiPublicSources(root string) (map[string]string, error) {
-	names := []string{"templates/base.html", "apps/web/templates/web/privacy.html", "apps/web/templates/web/terms.html", "apps/web/templates/web/open_data.html", "apps/web/templates/web/landing.html"}
-	for _, name := range []string{"server.go", "router.go", "renderer.go", "templates.go", "i18n.go", "views.go", "public_pages.go", "public_downloads.go", "public_structured.go", "routes.json", "public_routes.json", "gui_public_golden_test.go"} {
+	names := []string{"templates/base.html", "apps/web/templates/web/privacy.html", "apps/web/templates/web/terms.html", "apps/web/templates/web/open_data.html", "apps/web/templates/web/landing.html", "docs/reviews/gui-public-original/checkpoint.json"}
+	for _, name := range []string{"server.go", "router.go", "renderer.go", "templates.go", "i18n.go", "views.go", "public_pages.go", "public_downloads.go", "public_structured.go", "routes.json", "public_routes.json", "gui_public_golden_test.go", "gui_public_trace_test.go"} {
 		names = append(names, "services/server/internal/web/"+name)
 	}
 	err := filepath.WalkDir(filepath.Join(root, "locale"), func(name string, entry os.DirEntry, err error) error {
@@ -130,6 +132,17 @@ func TestGUIPublicOriginalCapture(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	var reference map[string]guiPublicReferenceRecord
+	if *guiPublicGoldenReference != "" {
+		checkpoint, err := os.ReadFile(filepath.Join(root, "docs/reviews/gui-public-original/checkpoint.json"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		reference, err = guiPublicReadReference(*guiPublicGoldenReference, checkpoint)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
 	var output *os.Root
 	if *guiPublicGoldenOutput != "" {
 		output, err = guiPublicOutput(*guiPublicGoldenOutput)
@@ -157,6 +170,8 @@ func TestGUIPublicOriginalCapture(t *testing.T) {
 				}
 			}
 			server := NewServer(nil, auth, nil, nil, nil, nil, config)
+			trace := &guiPublicTraceLoader{delegate: server.Renderer.loader}
+			server.Renderer.set = pongo2.NewSet("native-social", trace)
 			mux := http.NewServeMux()
 			server.Register(mux)
 			request := httptest.NewRequest(http.MethodGet, config.PublicURL+fixture.Path, nil)
@@ -206,7 +221,14 @@ func TestGUIPublicOriginalCapture(t *testing.T) {
 			if policy == "" || response.Header().Get("Content-Security-Policy") != "" || response.Header().Get("Set-Cookie") != "" {
 				t.Error("original anonymous report-only/fictional-CSRF behavior changed")
 			}
-			records = append(records, map[string]any{"case": fixture, "status": response.Code, "body_file": fixture.ID + ".html", "body_bytes": len(raw), "body_sha256": guiPublicHash(raw), "csp_header_sha256": guiPublicHash([]byte(policy)), "assertions_passed": !t.Failed()})
+			if err := guiPublicCheckLoads(fixture, trace.loads); err != nil {
+				t.Error(err)
+			}
+			record := map[string]any{"case": fixture, "status": response.Code, "body_file": fixture.ID + ".html", "body_bytes": len(raw), "body_sha256": guiPublicHash(raw), "csp_header_sha256": guiPublicHash([]byte(policy)), "template_loads": trace.loads, "assertions_passed": !t.Failed()}
+			if reference != nil {
+				record["original_reference"] = reference[fixture.ID]
+			}
+			records = append(records, record)
 			if output != nil {
 				if err := guiPublicWrite(output, fixture.ID+".html", raw); err != nil {
 					t.Error(err)
@@ -223,12 +245,21 @@ func TestGUIPublicOriginalCapture(t *testing.T) {
 	if string(beforeJSON) != string(afterJSON) || len(records) != 14 {
 		t.Error("source changed or original public case matrix was incomplete")
 	}
+	if reference != nil {
+		checkpoint, err := os.ReadFile(filepath.Join(root, "docs/reviews/gui-public-original/checkpoint.json"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := guiPublicReadReference(*guiPublicGoldenReference, checkpoint); err != nil {
+			t.Error(err)
+		}
+	}
 	if output != nil {
 		status := "captured"
 		if t.Failed() {
 			status = "failed"
 		}
-		manifest := map[string]any{"schema": 1, "status": status, "engine": "original-native-pongo2", "scope": "14 synthetic anonymous public registered-handler fixtures only; not Django oracle, Native Live, signed group coverage or retirement", "source_before": before, "source_after": after, "cases": records, "normalization": "none: raw HTML retained; nonces remain per-render, no body/attribute rewriting", "template_conditional_coverage": nil}
+		manifest := map[string]any{"schema": 1, "status": status, "engine": "original-native-pongo2", "scope": "14 synthetic anonymous public registered-handler fixtures only; not Django oracle, Native Live, signed group coverage or retirement", "source_before": before, "source_after": after, "cases": records, "normalization": "none: raw HTML retained; nonces remain per-render, no body/attribute rewriting", "template_load_scope": "actual successful original-loader streams, not template-conditional coverage", "original_reference_verified": reference != nil, "raw_golden_parity": "not evaluated", "template_conditional_coverage": nil}
 		raw, err := json.MarshalIndent(manifest, "", "  ")
 		if err != nil {
 			t.Fatal(err)

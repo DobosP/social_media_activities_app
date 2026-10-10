@@ -1,6 +1,8 @@
 # Original-native public GUI fixtures
 
 [ADR-0050](adr/0050-original-public-gui-fixtures.md) records the producer boundary.
+[ADR-0051](adr/0051-public-original-template-load-tracing.md) records test-only
+load tracing and unchanged-reference custody.
 The source is `services/server/internal/web/gui_public_golden_test.go`; existing
 native routing, templates, translations and rendering are used without edits.
 
@@ -16,6 +18,13 @@ To retain actual original HTML, append
 The parent must already exist with mode0700. The destination must not exist.
 No command here authorizes host Go, a new image, DB, hosted workflow or service.
 
+To bind the existing fourteen-body original capture, also append
+`-gui-public-golden-reference /absolute/private-original-capture-directory`.
+The original directory must remain mode0700 and contain exactly the fifteen
+mode0600 files bound by the committed original checkpoint. This reads originals
+before and after rendering without modifying or copying them. Omission is
+recorded as `original_reference_verified: false`, never implied acceptance.
+
 The matrix contains14 captures: privacy and terms in EN/RO with default and
 contrast/larger/reduce settings; open-data in EN/RO with and without a synthetic
 regular snapshot manifest; anonymous landing in EN/RO. All requests use the real
@@ -23,11 +32,15 @@ registered native mux. No account/session/PG/provider fixture is installed.
 
 Outputs are14 raw HTML files and `manifest.json`, private mode0600. The manifest
 records actual response/body hashes, current source/locale bindings before and
-after rendering, and scenario assertions. A failed case keeps a failed manifest
+after rendering, actual original page/base loader streams, and scenario assertions.
+These stream hashes cover the transformed bytes consumed by Pongo; the separate
+source bindings retain the raw template hashes. A failed case keeps a failed manifest
 and available bytes. Raw nonces are not printed or replaced; future canonical
 golden comparisons must use the kit's approved attribute-only masks, not a local
 body rewrite. Original public HTML is not a deterministic byte fixture until
 that separate comparison contract is installed and qualified.
+The successor explicitly records raw golden parity as unevaluated. Template-load
+closure is not the plan's formal template-conditional coverage metric.
 
 This is neither a full G0/G1 matrix nor template-conditional coverage. The
 historical `_breadcrumbs` hold, unsigned84+7 ownership, protected paths, native
@@ -40,3 +53,5 @@ passed2top-level tests and14subcases with race/count1, no failures/skips/cache.
 All14private body hashes/modes and18renderer input hashes were verified. The
 latest raw setup remains task-owned; the superseded failed fixture run is compact
 history. Full native qualification and independent landing review remain pending.
+The additive loader/reference successor is authored only; its managed tests and
+formatting have not run yet. The checkpoint remains the original75dc717 evidence.

@@ -53,7 +53,8 @@ On conflict: `STATUS.md` > newest-dated ADR > every other doc.
 | 0044 | [media-fingerprint-minimisation](0044-media-fingerprint-minimisation.md) | accepted; reference parity (audit GO-MEDIA-01/02); human privacy review gates first deployment | 2026-10-05 |
 | 0045 | [guardian-authority](0045-guardian-authority.md) | accepted; owner decisions 2026-10-05; human safety review gates first deployment | 2026-10-05 |
 | 0046 | [membership-logistics-scope](0046-membership-logistics-scope.md) | accepted; owner decisions 2026-10-05; human privacy review gates first deployment | 2026-10-05 |
-| 0050 | [original-public-gui-fixtures](0050-original-public-gui-fixtures.md) | source implemented; targeted execution/review pending; no group acceptance | 2026-10-10 |
+| 0050 | [original-public-gui-fixtures](0050-original-public-gui-fixtures.md) | targeted managed tests passed; landing/group review pending | 2026-10-10 |
+| 0051 | [public-original-template-load-tracing](0051-public-original-template-load-tracing.md) | source implemented; targeted execution/review pending; no conditional/parity acceptance | 2026-10-10 |
 
 ⚠ **0009 is claimed twice** — this ledger exists so it does not happen again. Both files stay:
 `0009-csp-enforcement-prep.md` (superseded by ADR-0010) and
