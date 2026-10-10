@@ -31,9 +31,9 @@ func TestGUIPublicNormalizerPermitsReleasedMasksOnly(t *testing.T) {
 		t.Fatal("released nonce attribute/JSON-CSRF masks or attribute order were lost")
 	}
 	for name, changed := range map[string]string{
-		"nonce-like-text": strings.Replace(right, "nonce first", "nonce second", 1),
+		"nonce-like-text":    strings.Replace(right, "nonce first", "nonce second", 1),
 		"ordinary-attribute": strings.Replace(right, `title="unchanged"`, `title="changed"`, 1),
-		"non-csrf-json": strings.Replace(right, `"b":2`, `"b":3`, 1),
+		"non-csrf-json":      strings.Replace(right, `"b":2`, `"b":3`, 1),
 	} {
 		t.Run(name, func(t *testing.T) {
 			if bytes.Equal(want.Normalized, observed(t, changed).Normalized) {
@@ -47,12 +47,12 @@ func TestGUIPublicNormalizerPreservesTextAttributesAndOrder(t *testing.T) {
 	base := `<main><p class="notice" aria-live="polite">Public warning</p><a href="/privacy/">Privacy</a><pre>a  b` + "\n" + `</pre><span>A</span> <span>B</span></main>`
 	want := observed(t, base)
 	mutations := map[string]string{
-		"one-character": strings.Replace(base, "Public warning", "Public warninh", 1),
-		"drop-warning-arm": strings.Replace(base, `<p class="notice" aria-live="polite">Public warning</p>`, "", 1),
-		"drop-attribute": strings.Replace(base, ` aria-live="polite"`, "", 1),
-		"change-url": strings.Replace(base, `href="/privacy/"`, `href="/terms/"`, 1),
-		"sibling-order": strings.Replace(base, `<p class="notice" aria-live="polite">Public warning</p><a href="/privacy/">Privacy</a>`, `<a href="/privacy/">Privacy</a><p class="notice" aria-live="polite">Public warning</p>`, 1),
-		"preformatted-space": strings.Replace(base, "a  b", "a b", 1),
+		"one-character":       strings.Replace(base, "Public warning", "Public warninh", 1),
+		"drop-warning-arm":    strings.Replace(base, `<p class="notice" aria-live="polite">Public warning</p>`, "", 1),
+		"drop-attribute":      strings.Replace(base, ` aria-live="polite"`, "", 1),
+		"change-url":          strings.Replace(base, `href="/privacy/"`, `href="/terms/"`, 1),
+		"sibling-order":       strings.Replace(base, `<p class="notice" aria-live="polite">Public warning</p><a href="/privacy/">Privacy</a>`, `<a href="/privacy/">Privacy</a><p class="notice" aria-live="polite">Public warning</p>`, 1),
+		"preformatted-space":  strings.Replace(base, "a  b", "a b", 1),
 		"inline-gap-presence": strings.Replace(base, "</span> <span>", "</span><span>", 1),
 	}
 	for name, changed := range mutations {
@@ -66,13 +66,13 @@ func TestGUIPublicNormalizerPreservesTextAttributesAndOrder(t *testing.T) {
 
 func TestGUIPublicNormalizerRetainsHardRefusalsIndependently(t *testing.T) {
 	for name, input := range map[string]string{
-		"empty-href": `<a href="">Privacy</a>`,
-		"empty-src": `<img src="">`,
-		"empty-action": `<form action=""></form>`,
+		"empty-href":              `<a href="">Privacy</a>`,
+		"empty-src":               `<img src="">`,
+		"empty-action":            `<form action=""></form>`,
 		"failed-url-sanitization": `<a href="about:invalid#TemplFailedSanitizationURL">Privacy</a>`,
-		"template-variable-leak": `<p>{{ person }}</p>`,
-		"template-tag-leak": `<p>{% if allowed %}</p>`,
-		"invalid-json": `<script type="application/json">{broken}</script>`,
+		"template-variable-leak":  `<p>{{ person }}</p>`,
+		"template-tag-leak":       `<p>{% if allowed %}</p>`,
+		"invalid-json":            `<script type="application/json">{broken}</script>`,
 	} {
 		t.Run(name, func(t *testing.T) {
 			var first, second bytes.Buffer

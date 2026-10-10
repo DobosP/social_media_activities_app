@@ -22,7 +22,7 @@ const guiPublicNormalizePolicy = "core-v1.6/golden.Normalize/strict"
 
 type guiPublicNormalizer struct {
 	path, binarySHA256, archivePath, archiveSHA256 string
-	binding                                      map[string]any
+	binding                                        map[string]any
 }
 
 func guiPublicBoundFile(name string, limit int64) ([]byte, error) {
