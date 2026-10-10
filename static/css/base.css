@@ -150,6 +150,7 @@ small { font-size: .82rem; }
 /* Community graph canvas (communities_graph.html). Deliberately dark in every
    theme: the vendored 3d-force-graph draws light nodes/links on this surface. */
 .graph-canvas { height: 62vh; border: 1px solid var(--line); border-radius: var(--r); background: #0e0f16; }
+.graph-canvas .graph-fallback { padding: 1rem; }
 
 /* =============================================================================
    Header & primary navigation — grouped bar (desktop) / slide-out drawer (mobile)

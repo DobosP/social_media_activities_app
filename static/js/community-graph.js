@@ -7,7 +7,7 @@
   if (!el) return;
 
   function fallback(msg) {
-    el.innerHTML = '<p class="muted" style="padding:1rem">' + msg +
+    el.innerHTML = '<p class="muted graph-fallback">' + msg +
       ' <a href="/communities/">Browse the list</a>.</p>';
   }
   function hasWebGL() {
