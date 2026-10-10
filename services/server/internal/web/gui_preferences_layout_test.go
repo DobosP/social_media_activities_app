@@ -11,6 +11,7 @@ import (
 	"testing"
 	"testing/fstest"
 
+	"github.com/DobosP/social_media_activities_app/services/server/internal/avatars"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
 	"github.com/flosch/pongo2/v6"
 )
@@ -257,7 +258,9 @@ func (f *guiPreferenceFixture) render(t *testing.T, filesystem, original bool, f
 	actor := platform.Actor{ID: 9001, PublicID: "00000000-0000-4000-8000-000000009001", Username: "gui_fixture_adult", DisplayName: "GUI fixture", AgeBand: "adult", Cohort: "adult", IsActive: true}
 	request := platform.WithActor(httptest.NewRequest("GET", "https://gui-fixture.invalid/synthetic-preferences/", nil), actor)
 	request.Header.Set("Accept-Language", "en")
-	data := pongo2.Context{"user": socialActor(actor), "csrf": "synthetic-preference-csrf"}
+	user := socialActor(actor)
+	user["avatar_uri"] = avatars.DataURI(avatars.RenderGeneration(avatars.DefaultGeneration, avatars.SignatureSeed(actor.Username, avatars.DefaultGeneration, 0), nil, nil, avatars.Options{PX: 80}))
+	data := pongo2.Context{"user": user, "csrf": "synthetic-preference-csrf"}
 	switch fixture.family {
 	case "access_preferences":
 		data["pref"] = map[string]bool{"needs_step_free": fixture.variant != "none", "needs_accessible_toilet": fixture.variant == "all", "needs_hearing_loop": fixture.variant == "all", "prefers_quiet": fixture.variant != "none"}
