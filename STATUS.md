@@ -77,7 +77,7 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 ## Open work
 
 - REST assertion closure remains separate:6 social API declarations, booking assertions, export query equality and
-  existing donation REST assertions; [bounded plan](docs/reviews/native-go/rest-contract-plan.md). Finance service/HTML gaps remain separate. [Public GUI fixtures](docs/gui-public-golden-fixtures.md):nonce83/staticFS62/VM14/[graph nonce19](docs/reviews/gui-public-original/graph-nonce-checkpoint.json) retained. SOC-5 public-card margin2/DOM14 authored NOT RUN. No original recapture/default assembly/SDK/registered admission/browser style/CSP/cohort/privacy/app/full/adoption/device acceptance.
+  existing donation REST assertions; [bounded plan](docs/reviews/native-go/rest-contract-plan.md). Finance service/HTML gaps remain separate. [Public GUI fixtures](docs/gui-public-golden-fixtures.md):nonce83/static62/VM14/[graph nonce19](docs/reviews/gui-public-original/graph-nonce-checkpoint.json) retained. SOC-5 d469 format0/fixture FAIL (8runs/0pass); native paginator-wrapper correction authored NOT RUN. No original recapture/default assembly/SDK/admission/browser style/CSP/cohort/privacy/app/full/adoption/device acceptance.
 - Native completion/toolchain/audit stacks (ADR-0035/0038) are source-qualified per ADR-0040; human code review
   gates first deployment. The1651 unresolved frozen declarations keep Python source/tests and block retirement; [GUI capture prep](docs/reviews/gui-capture-preparation/README.md) remains unsigned/unrun.
 - Build/promote a fresh immutable producer/server V2 release before real sync;

@@ -140,10 +140,13 @@ func (f *guiCommunityStyleFixture) render(t *testing.T, filesystem, original boo
 		page = append(page, map[string]any{"slug": "synthetic-public-community", "name": "Synthetic public community", "tier": kind,
 			"category": map[string]any{"name": "Synthetic category"}, "area": map[string]any{"name": "Synthetic area"}})
 	}
+	pageWrapper, _ := socialPagination("", len(page), 30)
+	pageWrapper["object_list"] = page
+	groupsWrapper, _ := socialPagination("", 0, 30)
 	request := httptest.NewRequest("GET", "https://gui-fixture.invalid/communities/", nil)
 	request.Header.Set("Accept-Language", "en")
 	response := httptest.NewRecorder()
-	if err := renderer.Render(response, request, "web/communities.html", pongo2.Context{"page": page, "groups_page": []any{}, "can_create": false}); err != nil {
+	if err := renderer.Render(response, request, "web/communities.html", pongo2.Context{"page": pageWrapper, "groups_page": groupsWrapper, "can_create": false}); err != nil {
 		t.Fatal(err)
 	}
 	if response.Code != 200 || response.Header().Get("Content-Type") != "text/html; charset=utf-8" || response.Header().Get("Content-Security-Policy-Report-Only") == "" || response.Header().Get("Content-Security-Policy") != "" {
