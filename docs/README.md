@@ -21,6 +21,7 @@ Native runtime index verified 2026-10-04.
 |---|---|
 | [NATIVE_SERVER.md](NATIVE_SERVER.md) | Canonical Go runtime, migration/adoption, commands and explicit configuration limits. |
 | [reviews/native-go/README.md](reviews/native-go/README.md) | Complete native release, real-codec/DB/HTTPS and resource/image proof. |
+| [gui-public-golden-fixtures.md](gui-public-golden-fixtures.md) | Original public GUI producer, released-normalizer evidence and current continuation; no formal group/Live acceptance. |
 | [reviews/go-foundation/README.md](reviews/go-foundation/README.md) | Historical public-only serving slice (superseded scope, ADR-0031). |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Native Go service boundaries and preserved product contracts (ADR-0032). |
 | [ASYNC_TASKS.md](ASYNC_TASKS.md) | The Postgres `DeferredTask` queue contract + what may never be deferred (ADR-0003). |

@@ -1,0 +1,711 @@
+{
+  "schema": 1,
+  "artifact_kind": "focused-original-native-public-released-normalizer-evidence",
+  "tested_source": "764beb183dde75a3c003105d011abb4cf06d2241",
+  "status": "pass",
+  "format_exit": 0,
+  "helper_test_exit": 0,
+  "build_exit": 0,
+  "build_info_exit": 0,
+  "app_test_exit": 0,
+  "toolchain_image_argument": "sha256:2e040a5165d79be63755424f707fdb8cf609ace831ada7a9baca398ac25e12b9",
+  "runtime_scope": "networknone/2CPU6GiB/UID1000/source+SDK+originalcorpusreadonly; existingprivatecache; noapp/DB/hostports",
+  "preexecution_image_inspect": "exactIDmatched",
+  "helper_counts": {
+    "unique_run": 21,
+    "test_pass": 21,
+    "package_pass": 1,
+    "fail": 0,
+    "skip": 0,
+    "cached": false,
+    "test_ids": [
+      "TestGUIPublicNormalizerPermitsReleasedMasksOnly",
+      "TestGUIPublicNormalizerPermitsReleasedMasksOnly/nonce-like-text",
+      "TestGUIPublicNormalizerPermitsReleasedMasksOnly/ordinary-attribute",
+      "TestGUIPublicNormalizerPermitsReleasedMasksOnly/non-csrf-json",
+      "TestGUIPublicNormalizerPreservesTextAttributesAndOrder",
+      "TestGUIPublicNormalizerPreservesTextAttributesAndOrder/one-character",
+      "TestGUIPublicNormalizerPreservesTextAttributesAndOrder/drop-warning-arm",
+      "TestGUIPublicNormalizerPreservesTextAttributesAndOrder/drop-attribute",
+      "TestGUIPublicNormalizerPreservesTextAttributesAndOrder/change-url",
+      "TestGUIPublicNormalizerPreservesTextAttributesAndOrder/sibling-order",
+      "TestGUIPublicNormalizerPreservesTextAttributesAndOrder/preformatted-space",
+      "TestGUIPublicNormalizerPreservesTextAttributesAndOrder/inline-gap-presence",
+      "TestGUIPublicNormalizerRetainsHardRefusalsIndependently",
+      "TestGUIPublicNormalizerRetainsHardRefusalsIndependently/template-variable-leak",
+      "TestGUIPublicNormalizerRetainsHardRefusalsIndependently/template-tag-leak",
+      "TestGUIPublicNormalizerRetainsHardRefusalsIndependently/invalid-json",
+      "TestGUIPublicNormalizerRetainsHardRefusalsIndependently/empty-href",
+      "TestGUIPublicNormalizerRetainsHardRefusalsIndependently/empty-src",
+      "TestGUIPublicNormalizerRetainsHardRefusalsIndependently/empty-action",
+      "TestGUIPublicNormalizerRetainsHardRefusalsIndependently/failed-url-sanitization",
+      "TestGUIPublicNormalizerBoundsRawInput"
+    ]
+  },
+  "app_counts": {
+    "unique_run": 23,
+    "test_pass": 23,
+    "package_pass": 1,
+    "fail": 0,
+    "skip": 0,
+    "cached": false,
+    "test_ids": [
+      "TestGUIPublicOriginalCapture",
+      "TestGUIPublicOriginalCapture/privacy-en-default",
+      "TestGUIPublicOriginalCapture/privacy-en-contrast",
+      "TestGUIPublicOriginalCapture/terms-en-default",
+      "TestGUIPublicOriginalCapture/terms-en-contrast",
+      "TestGUIPublicOriginalCapture/open-data-en-snapshot-false",
+      "TestGUIPublicOriginalCapture/open-data-en-snapshot-true",
+      "TestGUIPublicOriginalCapture/landing-en",
+      "TestGUIPublicOriginalCapture/privacy-ro-default",
+      "TestGUIPublicOriginalCapture/privacy-ro-contrast",
+      "TestGUIPublicOriginalCapture/terms-ro-default",
+      "TestGUIPublicOriginalCapture/terms-ro-contrast",
+      "TestGUIPublicOriginalCapture/open-data-ro-snapshot-false",
+      "TestGUIPublicOriginalCapture/open-data-ro-snapshot-true",
+      "TestGUIPublicOriginalCapture/landing-ro",
+      "TestGUIPublicCaptureRefusesExistingOutput",
+      "TestGUIPublicLoaderTracePreservesNativeStreams",
+      "TestGUIPublicReferenceRefusesChangedCorpus",
+      "TestGUIPublicReferenceRefusesChangedCorpus/body",
+      "TestGUIPublicReferenceRefusesChangedCorpus/missing",
+      "TestGUIPublicReferenceRefusesChangedCorpus/extra",
+      "TestGUIPublicReferenceRefusesChangedCorpus/alias",
+      "TestGUIPublicReferenceRefusesChangedCorpus/case-identity"
+    ]
+  },
+  "normalization_diagnostics": 14,
+  "successful_original_current_calls": 28,
+  "hard_findings": 0,
+  "template_loads": 28,
+  "unique_template_streams": 5,
+  "source_guard": {
+    "selected_source_rows": 28,
+    "released_sdk_rows": 41,
+    "owned_command_sources": 2,
+    "original_corpus_files": 15,
+    "two_archive_copies": true,
+    "all_bytes_and_full_modes_unchanged": true
+  },
+  "source_inputs": [
+    {
+      "path": "apps/web/templates/web/landing.html",
+      "bytes": 1875,
+      "sha256": "8fd980d985011f42c519281fd165bb22696175a66d5104a5cd3367e18a9ef4df",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/open_data.html",
+      "bytes": 5306,
+      "sha256": "ae75cc9b3dc9f9dabbcd4ce62de63bc25ad538051a33a96b01c77691e938100d",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/privacy.html",
+      "bytes": 5691,
+      "sha256": "6538ae63b9870de290b1725c8528eb400bc4c0888ac39c509fac32158dc89e79",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/terms.html",
+      "bytes": 3876,
+      "sha256": "848ebae7fa912b5adeb4381cc437e4383686920a19124c5cc83b68ee929854d9",
+      "full_mode": 33204
+    },
+    {
+      "path": "docs/reviews/gui-public-original/checkpoint.json",
+      "bytes": 11798,
+      "sha256": "3fa46e9a1fcb3ab8aa4baefa80c54a8d050b59527402db18cb20e24bbc104f1c",
+      "full_mode": 33204
+    },
+    {
+      "path": "locale/ro/LC_MESSAGES/django.po",
+      "bytes": 113861,
+      "sha256": "186558af2dbb8016c313d09bd0b8508bd5365d61961bcabb3a681c66b99b154c",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/authcore/go.mod",
+      "bytes": 283,
+      "sha256": "124899dbc57503d4a8884e5579435f7775421bfe0544bff1dee6e76ec895fa4c",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/authcore/go.sum",
+      "bytes": 825,
+      "sha256": "b2516a139953d6c42702bff40fad4da1ff04fa5cde523c089f07c6c1ea148109",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/go.mod",
+      "bytes": 1335,
+      "sha256": "1e0c2e6d9cda30507b6a5dde1d33f795737e609b47124983bbf9786844cabb46",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/go.sum",
+      "bytes": 7767,
+      "sha256": "83cc84cde408f45973444ecee13f40df4abac1c1272c259f463f18703cb6b012",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_golden_test.go",
+      "bytes": 12626,
+      "sha256": "934f57b03893f59e6c2b8fe49d990b7aecf63760888778a6941e09a57c8788ad",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_normalize_test.go",
+      "bytes": 7921,
+      "sha256": "03c5f7d1f305d204c8e93403787506ed4489acdb1376feeef3a834358520ee28",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_trace_test.go",
+      "bytes": 9724,
+      "sha256": "c65313d9b2dfd41bf10683132b88460355d321557dab9c1fe8765e32915ca5a3",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/i18n.go",
+      "bytes": 3984,
+      "sha256": "f0c2d287302907e8f34181c9de999898c052e35658c1cc01789f6a9d0a1bde75",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/public_downloads.go",
+      "bytes": 13032,
+      "sha256": "e19db748f4390bd0595083bc8e49a2da4f35031a961e52fdb607482bd926d4fd",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/public_pages.go",
+      "bytes": 17440,
+      "sha256": "6dfb36642cde63c253899ff8e76a1555a8bfb33cd068ef1dcca5861fdc82a2b4",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/public_routes.json",
+      "bytes": 47682,
+      "sha256": "961c7d1d0ab265f0f3d8fd84074172d62f72122dd6a1dd13a7b219315d1d5d06",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/public_structured.go",
+      "bytes": 7260,
+      "sha256": "2a0d2154f0f5f6904add9b01ac3135a09da560bb0134649a4f51c6d50a3241be",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/renderer.go",
+      "bytes": 5504,
+      "sha256": "6bf68709c3f66342225dd14264873774245ef467bb4a1e9369b9a7ea289de7a1",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/router.go",
+      "bytes": 2443,
+      "sha256": "b1cc3430d5148011cd827ab9fcd437cdf14a60c72dc5d980693e50bf9b8c0cca",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/routes.json",
+      "bytes": 7167,
+      "sha256": "d10de3908d9537bbdeb2f51427bcb1ecdffc57e9d5a5066cc3166c9fbb559fc3",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/server.go",
+      "bytes": 10960,
+      "sha256": "0c4208333d354d2256f275459a420ac5f2ff936abfab6c13cc4b8b6ca4fdcc09",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/templates.go",
+      "bytes": 14282,
+      "sha256": "8098259abbf45838fc732630188cde4b73ccefbc0f5e729b75497f6988db4b97",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/views.go",
+      "bytes": 7205,
+      "sha256": "f54f6757bcbf7db40e922e085dfeab6ae353014f7771be10e707bb7ee8058180",
+      "full_mode": 33204
+    },
+    {
+      "path": "templates/base.html",
+      "bytes": 13594,
+      "sha256": "ef2f179f6cbbfa8acc38272aa5a6c1d6acbb36c3c6e9290102d98a23b4b02e3b",
+      "full_mode": 33204
+    },
+    {
+      "path": "tools/gui-public-golden/normalize.go",
+      "bytes": 1465,
+      "sha256": "5282ddb0dab9101b028e6eda5411fc29995bf9f3a5b5de1d62c157a76eccd458",
+      "full_mode": 33204
+    },
+    {
+      "path": "tools/gui-public-golden/normalize_test.go",
+      "bytes": 4317,
+      "sha256": "f9bac4f56a598f5822054e846ef622ff2baecd885bd670cf0a4211d7c61704f7",
+      "full_mode": 33204
+    },
+    {
+      "path": "tools/gui-public-golden/release-bindings.json",
+      "bytes": 9594,
+      "sha256": "d845c6a1640e1f1cbe67f63af3ddc8ba7795d73ff0c2d97b23cb8ee4ff953015",
+      "full_mode": 33188
+    }
+  ],
+  "original_manifest_sha256": "5403a0f3c2817fcd6ec1ebfefe9546ae9318057b3fefe845d1f1b77bd3eceb4a",
+  "capture_manifest": {
+    "bytes": 33370,
+    "sha256": "11d53b3c4802ebcc109012eca05424679a8035176ad6fd127756411659232cba",
+    "full_mode": 33152
+  },
+  "captured_cases": [
+    {
+      "case_id": "privacy-en-default",
+      "raw": {
+        "path": "privacy-en-default.html",
+        "bytes": 8285,
+        "sha256": "c5c123c173297e5310eb69f8da24a8fc5ae3485ae5077ca017f7ed30f2ce0ab1",
+        "full_mode": 33152
+      },
+      "diagnostic": {
+        "current_hard": null,
+        "current_normalized_sha256": "074a8b28d7a777ab9fa2015b16cd1ea59f5d096bee23543e358198605a96e902",
+        "current_success": true,
+        "diagnostic_pass": true,
+        "normalized_bytes_equal": true,
+        "original_hard": null,
+        "original_normalized_sha256": "074a8b28d7a777ab9fa2015b16cd1ea59f5d096bee23543e358198605a96e902",
+        "original_success": true,
+        "scope": "repeatability of two original-native synthetic renders only; not templ/Django/group acceptance"
+      }
+    },
+    {
+      "case_id": "privacy-en-contrast",
+      "raw": {
+        "path": "privacy-en-contrast.html",
+        "bytes": 8291,
+        "sha256": "4d70f26baa9c2a36118fe8c2b8950de1752fec74995c05e7d6f72cfeac215822",
+        "full_mode": 33152
+      },
+      "diagnostic": {
+        "current_hard": null,
+        "current_normalized_sha256": "9909f80fff417bc64afd8ce0e96a73e9c23a573a4cacf0cf50f791bd708c132f",
+        "current_success": true,
+        "diagnostic_pass": true,
+        "normalized_bytes_equal": true,
+        "original_hard": null,
+        "original_normalized_sha256": "9909f80fff417bc64afd8ce0e96a73e9c23a573a4cacf0cf50f791bd708c132f",
+        "original_success": true,
+        "scope": "repeatability of two original-native synthetic renders only; not templ/Django/group acceptance"
+      }
+    },
+    {
+      "case_id": "terms-en-default",
+      "raw": {
+        "path": "terms-en-default.html",
+        "bytes": 6960,
+        "sha256": "8fff1e8f72bb69b3e2bb18a76892b39f97b928cd9d8923f8e59d074ccd6aec5e",
+        "full_mode": 33152
+      },
+      "diagnostic": {
+        "current_hard": null,
+        "current_normalized_sha256": "e8fb65fb2d03141bd0a5a5b43bfdc4dbf9ebe51d68e28f9f6990b75cb417b56d",
+        "current_success": true,
+        "diagnostic_pass": true,
+        "normalized_bytes_equal": true,
+        "original_hard": null,
+        "original_normalized_sha256": "e8fb65fb2d03141bd0a5a5b43bfdc4dbf9ebe51d68e28f9f6990b75cb417b56d",
+        "original_success": true,
+        "scope": "repeatability of two original-native synthetic renders only; not templ/Django/group acceptance"
+      }
+    },
+    {
+      "case_id": "terms-en-contrast",
+      "raw": {
+        "path": "terms-en-contrast.html",
+        "bytes": 6966,
+        "sha256": "8d855ec46ca8944dd4d491bf711ed31b11faeae196183b53debf9f2d81c64023",
+        "full_mode": 33152
+      },
+      "diagnostic": {
+        "current_hard": null,
+        "current_normalized_sha256": "632114302b1b9fab76059a02eeb2d47e231faab3fe188a6d67bc80f035d5c6cf",
+        "current_success": true,
+        "diagnostic_pass": true,
+        "normalized_bytes_equal": true,
+        "original_hard": null,
+        "original_normalized_sha256": "632114302b1b9fab76059a02eeb2d47e231faab3fe188a6d67bc80f035d5c6cf",
+        "original_success": true,
+        "scope": "repeatability of two original-native synthetic renders only; not templ/Django/group acceptance"
+      }
+    },
+    {
+      "case_id": "open-data-en-snapshot-false",
+      "raw": {
+        "path": "open-data-en-snapshot-false.html",
+        "bytes": 8536,
+        "sha256": "7322cc918a0528f45e565b84dd5c90acd8c560be056872b5502edf789f79f839",
+        "full_mode": 33152
+      },
+      "diagnostic": {
+        "current_hard": null,
+        "current_normalized_sha256": "535128808be221a32dc5d233cd5cb059cdb7460a26ee6e484d573150f2ab1321",
+        "current_success": true,
+        "diagnostic_pass": true,
+        "normalized_bytes_equal": true,
+        "original_hard": null,
+        "original_normalized_sha256": "535128808be221a32dc5d233cd5cb059cdb7460a26ee6e484d573150f2ab1321",
+        "original_success": true,
+        "scope": "repeatability of two original-native synthetic renders only; not templ/Django/group acceptance"
+      }
+    },
+    {
+      "case_id": "open-data-en-snapshot-true",
+      "raw": {
+        "path": "open-data-en-snapshot-true.html",
+        "bytes": 9355,
+        "sha256": "da06d498b7012362498cfa1f46350f50d50851cce17a197a6e74096a91702170",
+        "full_mode": 33152
+      },
+      "diagnostic": {
+        "current_hard": null,
+        "current_normalized_sha256": "11bff78a124294f69370babf48ce2414150f14249badab5ad4d3e3c1b3b49b03",
+        "current_success": true,
+        "diagnostic_pass": true,
+        "normalized_bytes_equal": true,
+        "original_hard": null,
+        "original_normalized_sha256": "11bff78a124294f69370babf48ce2414150f14249badab5ad4d3e3c1b3b49b03",
+        "original_success": true,
+        "scope": "repeatability of two original-native synthetic renders only; not templ/Django/group acceptance"
+      }
+    },
+    {
+      "case_id": "landing-en",
+      "raw": {
+        "path": "landing-en.html",
+        "bytes": 5111,
+        "sha256": "b3da2dc08b119c315cab50e36c102fa85314436d24b714fce2fd0eceb16b2814",
+        "full_mode": 33152
+      },
+      "diagnostic": {
+        "current_hard": null,
+        "current_normalized_sha256": "b4c0c99d210bbd08e102430df06c73a0520995e0b39ee17cdad3b4f1f09a0b8b",
+        "current_success": true,
+        "diagnostic_pass": true,
+        "normalized_bytes_equal": true,
+        "original_hard": null,
+        "original_normalized_sha256": "b4c0c99d210bbd08e102430df06c73a0520995e0b39ee17cdad3b4f1f09a0b8b",
+        "original_success": true,
+        "scope": "repeatability of two original-native synthetic renders only; not templ/Django/group acceptance"
+      }
+    },
+    {
+      "case_id": "privacy-ro-default",
+      "raw": {
+        "path": "privacy-ro-default.html",
+        "bytes": 9478,
+        "sha256": "afb50c59582f5c35617ba91081fb9e1093904f03efc2b9e19a70868b985c0db9",
+        "full_mode": 33152
+      },
+      "diagnostic": {
+        "current_hard": null,
+        "current_normalized_sha256": "87fca8417e1a6483f96c7fde52a6b4b8b4d6363761096270534d4d12bcac6363",
+        "current_success": true,
+        "diagnostic_pass": true,
+        "normalized_bytes_equal": true,
+        "original_hard": null,
+        "original_normalized_sha256": "87fca8417e1a6483f96c7fde52a6b4b8b4d6363761096270534d4d12bcac6363",
+        "original_success": true,
+        "scope": "repeatability of two original-native synthetic renders only; not templ/Django/group acceptance"
+      }
+    },
+    {
+      "case_id": "privacy-ro-contrast",
+      "raw": {
+        "path": "privacy-ro-contrast.html",
+        "bytes": 9484,
+        "sha256": "748d144757c834c72e324bb4686fecb94d3d15c8d835a595b5800b5686e53d59",
+        "full_mode": 33152
+      },
+      "diagnostic": {
+        "current_hard": null,
+        "current_normalized_sha256": "a1751b4e6fb07cf4352d9de27f3d0e05860fc47cfce25b71f1db911fc42e0b49",
+        "current_success": true,
+        "diagnostic_pass": true,
+        "normalized_bytes_equal": true,
+        "original_hard": null,
+        "original_normalized_sha256": "a1751b4e6fb07cf4352d9de27f3d0e05860fc47cfce25b71f1db911fc42e0b49",
+        "original_success": true,
+        "scope": "repeatability of two original-native synthetic renders only; not templ/Django/group acceptance"
+      }
+    },
+    {
+      "case_id": "terms-ro-default",
+      "raw": {
+        "path": "terms-ro-default.html",
+        "bytes": 7821,
+        "sha256": "bb084d48196111fc1466324386ec2e1c0b2feff64632cc8beac504dffe8d41e0",
+        "full_mode": 33152
+      },
+      "diagnostic": {
+        "current_hard": null,
+        "current_normalized_sha256": "ab35ea0ae8733c8a3b9eaaded3144ec6761a2c330d7e26bf70d994583b3c401f",
+        "current_success": true,
+        "diagnostic_pass": true,
+        "normalized_bytes_equal": true,
+        "original_hard": null,
+        "original_normalized_sha256": "ab35ea0ae8733c8a3b9eaaded3144ec6761a2c330d7e26bf70d994583b3c401f",
+        "original_success": true,
+        "scope": "repeatability of two original-native synthetic renders only; not templ/Django/group acceptance"
+      }
+    },
+    {
+      "case_id": "terms-ro-contrast",
+      "raw": {
+        "path": "terms-ro-contrast.html",
+        "bytes": 7827,
+        "sha256": "b211ecc4bc3cbbf096d4a82d22972e418c2dc86f1da33cdf41c5b7a4d5c4deec",
+        "full_mode": 33152
+      },
+      "diagnostic": {
+        "current_hard": null,
+        "current_normalized_sha256": "ff279530d46db136f2417e8c148a81852106ea1dd7b40d623062f73362f91c0a",
+        "current_success": true,
+        "diagnostic_pass": true,
+        "normalized_bytes_equal": true,
+        "original_hard": null,
+        "original_normalized_sha256": "ff279530d46db136f2417e8c148a81852106ea1dd7b40d623062f73362f91c0a",
+        "original_success": true,
+        "scope": "repeatability of two original-native synthetic renders only; not templ/Django/group acceptance"
+      }
+    },
+    {
+      "case_id": "open-data-ro-snapshot-false",
+      "raw": {
+        "path": "open-data-ro-snapshot-false.html",
+        "bytes": 8621,
+        "sha256": "2fff1490105acc49b7ab6d2e253f9af9ca72aa242ecfb0695c7759d5aa14b9a1",
+        "full_mode": 33152
+      },
+      "diagnostic": {
+        "current_hard": null,
+        "current_normalized_sha256": "7173f4fcdf8cee33665bc04e99d2be669d83705c4b277a7448164c9137bd76e2",
+        "current_success": true,
+        "diagnostic_pass": true,
+        "normalized_bytes_equal": true,
+        "original_hard": null,
+        "original_normalized_sha256": "7173f4fcdf8cee33665bc04e99d2be669d83705c4b277a7448164c9137bd76e2",
+        "original_success": true,
+        "scope": "repeatability of two original-native synthetic renders only; not templ/Django/group acceptance"
+      }
+    },
+    {
+      "case_id": "open-data-ro-snapshot-true",
+      "raw": {
+        "path": "open-data-ro-snapshot-true.html",
+        "bytes": 9440,
+        "sha256": "149fe3a88ea129b4123ed2fd24832c8f373d666b8c53f714b5572b0381fb3244",
+        "full_mode": 33152
+      },
+      "diagnostic": {
+        "current_hard": null,
+        "current_normalized_sha256": "50a2d7e4f810aae7207ab8399ecd663233d27ca235740a9495ea1d804641b586",
+        "current_success": true,
+        "diagnostic_pass": true,
+        "normalized_bytes_equal": true,
+        "original_hard": null,
+        "original_normalized_sha256": "50a2d7e4f810aae7207ab8399ecd663233d27ca235740a9495ea1d804641b586",
+        "original_success": true,
+        "scope": "repeatability of two original-native synthetic renders only; not templ/Django/group acceptance"
+      }
+    },
+    {
+      "case_id": "landing-ro",
+      "raw": {
+        "path": "landing-ro.html",
+        "bytes": 5504,
+        "sha256": "8f3d8804dd9c2d0ec33d9fe7ff569077d490c4652c56880de254e9e75d0407a8",
+        "full_mode": 33152
+      },
+      "diagnostic": {
+        "current_hard": null,
+        "current_normalized_sha256": "5f2bf6dd1981b9d07fb36bb978f0b5d4505067ca401784a7398c0372ce5512d0",
+        "current_success": true,
+        "diagnostic_pass": true,
+        "normalized_bytes_equal": true,
+        "original_hard": null,
+        "original_normalized_sha256": "5f2bf6dd1981b9d07fb36bb978f0b5d4505067ca401784a7398c0372ce5512d0",
+        "original_success": true,
+        "scope": "repeatability of two original-native synthetic renders only; not templ/Django/group acceptance"
+      }
+    }
+  ],
+  "binary": {
+    "bytes": 4897832,
+    "sha256": "598515e75c709803c7b23673e07b14baa93861608346a81c8fc708521c1b2f05",
+    "full_mode": 33216
+  },
+  "binary_module_scope": "github.com/DobosP/roedu-ui/web-kit (devel), actual private release-copy build; no compiled tagversion claim",
+  "release_binding": {
+    "binary_sha256": "598515e75c709803c7b23673e07b14baa93861608346a81c8fc708521c1b2f05",
+    "core_source": "b0ad658086a2745d1b3aea02659e6b644c89c680",
+    "go_archive_sha256": "d722a817074a01d8a983c3e8492335ee07d37fb0d58c9a938cd189df635e168d",
+    "golden_normalize_source_sha256": "a8539fe66388bb35aa94718843ef5241f72c7543242a5c4cc8a6f7c3b6bd57fa",
+    "helper_source_sha256": "5282ddb0dab9101b028e6eda5411fc29995bf9f3a5b5de1d62c157a76eccd458",
+    "policy": "core-v1.6/golden.Normalize/strict",
+    "provenance_scope": "owner-managed build receipt plus exact supplied archive/binary/source bindings; not public receiver or app adoption qualification"
+  },
+  "release_bindings_metadata_sha256": "d845c6a1640e1f1cbe67f63af3ddc8ba7795d73ff0c2d97b23cb8ee4ff953015",
+  "streams": {
+    "build.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    "build-review.json": {
+      "bytes": 855,
+      "sha256": "5463679cb91052d06e7f56da5b90e2e33c6d8d1f07eef5283712f84a9323d0ed",
+      "full_mode": 33152
+    },
+    "helper-test.cid": {
+      "bytes": 64,
+      "sha256": "5483ecefa1fabef34f000ba615cfb851e7be1dd7c7fab71dcd7d8e1a943b8bb3",
+      "full_mode": 33204
+    },
+    "app-test.cid": {
+      "bytes": 64,
+      "sha256": "e11cf7cb5598984dbd2c7a0f8e644ba8f7fffcfc3d955e97ec6f294c8cc8dc9e",
+      "full_mode": 33204
+    },
+    "format.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    "format.cid": {
+      "bytes": 64,
+      "sha256": "cfac391defb3d4f5a4994868e321e1a444556beb47cdb23743160b2c71d590fe",
+      "full_mode": 33204
+    },
+    "helper-test.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    "helper-test-exit.txt": {
+      "bytes": 19,
+      "sha256": "4b6e178dfa2ea2c954388d6de9f0d895bed2e5fd632ef7bb6731f878661bb71c",
+      "full_mode": 33152
+    },
+    "build-exit.txt": {
+      "bytes": 13,
+      "sha256": "d23c0f05910f10fee0717ccf63308e3d6232d1f7f5d24209ee85af30e16a5a4b",
+      "full_mode": 33152
+    },
+    "app-test.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    "format-exit.txt": {
+      "bytes": 14,
+      "sha256": "f2dfac9d3bb835badbda95cf2ff6eba9f30c5d0d989a590e7c815a423cc657c0",
+      "full_mode": 33152
+    },
+    "build.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    "build.cid": {
+      "bytes": 64,
+      "sha256": "e85a647868a0b16ab759fdc0e054bf018ee0f427999b10158d718285d0cb234f",
+      "full_mode": 33204
+    },
+    "binary-build-info.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    "helper-review.json": {
+      "bytes": 1964,
+      "sha256": "41c102c8fa821c574dd0eb65ff2062c7e18f79eddcc4225cb230a734d7023314",
+      "full_mode": 33152
+    },
+    "helper-test.stdout": {
+      "bytes": 23002,
+      "sha256": "8fcb72dabd8299645499cf106ea1579cf5d3060f75cfa6873a0d8bfb9c808890",
+      "full_mode": 33152
+    },
+    "binary-build-info.stdout": {
+      "bytes": 405,
+      "sha256": "87be64cb3a8d875b4775ffa3ce18e7b5a24434242de1418e2313d14ed62e18ac",
+      "full_mode": 33152
+    },
+    "app-test.stdout": {
+      "bytes": 24431,
+      "sha256": "b9f058feae76a52e4d1c7c7d3711964ef102eca7447983873d08445bca290b6e",
+      "full_mode": 33152
+    },
+    "social-gui-normalize": {
+      "bytes": 4897832,
+      "sha256": "598515e75c709803c7b23673e07b14baa93861608346a81c8fc708521c1b2f05",
+      "full_mode": 33216
+    },
+    "build-info-exit.txt": {
+      "bytes": 18,
+      "sha256": "fbcf36fbec94ae1ae3a86e30d8c18c717883077420d4ed74bf244414f2b58361",
+      "full_mode": 33152
+    },
+    "app-test-exit.txt": {
+      "bytes": 16,
+      "sha256": "ab7cef40fa5513db10a834fbe7e97aabb8e649dfeb926d18052242b5109d2d89",
+      "full_mode": 33152
+    },
+    "format.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    }
+  },
+  "private_observation_sha256": "3c1ac8579d156b28070bad7f22a3f954c9827507d7fe560bda5b7abd09e97075",
+  "independent_parent_review_sha256": "cde0e5142ed2711484eeab159600e847ce4ae6dd55eba16b7fe2129c289e3108",
+  "prior_r6_failure_observation_sha256": "6385204c712774e37d275724fde6989a9b1535f4b17b237b42870ff2eaccff8e",
+  "dependency_download_repeated": false,
+  "history_compaction": [
+    {
+      "archive": "evidence/normalizer-r6-3b27357.tar.gz",
+      "bytes": 8214,
+      "sha256": "a9a4e63a2923ddc15c7421cbd1456089b335d3d207d1080d906b941ee2b15dbc",
+      "members": 11,
+      "byte_fullmode_roundtrip_verified": true,
+      "superseded_raw_copy_removed": true
+    },
+    {
+      "archive": "evidence/superseded-capture-5871df2.tar.gz",
+      "bytes": 17171,
+      "sha256": "a61ec6ce4371baae9ecbee7aee35db8662069c8978550a93af16f514e94a354f",
+      "members": 15,
+      "byte_fullmode_roundtrip_verified": true,
+      "superseded_raw_copy_removed": true
+    }
+  ],
+  "boundaries": {
+    "original_native_repeatability_only": true,
+    "normalized_baseline_installed": false,
+    "Django_or_templ_parity": false,
+    "signed_group_matrix": false,
+    "native_live": false,
+    "template_conditional_percentage": null,
+    "full_native21": "NOT RUN",
+    "retirement": "1651 unresolved preserved; CLI NOT RUN",
+    "SDK_app_adoption": false,
+    "deployment_or_device": false
+  }
+}

@@ -4,7 +4,7 @@
 [ADR-0051](adr/0051-public-original-template-load-tracing.md) records test-only
 load tracing and unchanged-reference custody.
 [ADR-0052](adr/0052-released-public-golden-tooling-bridge.md) records the optional
-released public normalizer bridge; its managed execution has NOT RUN.
+released public normalizer bridge and its focused managed evidence.
 The source is `services/server/internal/web/gui_public_golden_test.go`; existing
 native routing, templates, translations and rendering are used without edits.
 
@@ -90,4 +90,29 @@ Raw original/current bytes are compared through the released API without writing
 normalized baseline files. The manifest records byte equality, independent hard
 findings/success and the combined diagnostic outcome separately. Binary/archive
 hashes are checked again after all cases. Omission supplies no normalization
-claim. Source is authored only; all new managed checks remain NOT RUN.
+claim. [Normalization checkpoint](reviews/gui-public-original/normalization-checkpoint.json):
+source764beb1 passed formatting/build,21helper actions and23app actions, each
+once with no failures/skips/cache/race. Fourteen original/current diagnostics
+were hard-free/equal.28source/41released-SDK/2owned-command/15original-file
+guards and both archive copies remained byte/fullmode-exact. Parent independently
+cleared the actual result within original-native public repeatability scope.
+The compiled command's module is honestly `(devel)` in the verified private SDK
+copy; archive/source/binary hashes bind it to the selected release. No normalized
+baseline, formal golden/Live/group result, templ adoption or retirement follows.
+
+## Continuation
+
+The source lane is `feat/gui-app-migration-a`, separate from shared `main`.
+Source764beb1 is the tested implementation; later checkpoint commits contain
+docs/proof only. Existing original, loader and format receipts retain their
+earlier source identities. Next source work needs parent review before starting;
+each managed runtime needs a recorded fleet slot. Full native21, the unsigned
+84+7 matrix, private applicability and1651retirement holds remain unresolved.
+
+Task-private keepers are under workspace `_temp/feat__gui-app-migration-a/social_media_activities_app`:
+the original `capture-75dc717`, latest `capture-764beb1`, reused `sdk-3b27357`,
+and `evidence/normalizer-r7-764beb1` with the actual ELF/streams/build information.
+No raw body or ELF is committed. The failedr6metadata/streams and superseded5871
+capture are deterministic private archives, with every member's bytes/fullmode
+roundtrip-verified before those two superseded raw copies were removed. Current
+original/latest data, source packets and published branches remain preserved.

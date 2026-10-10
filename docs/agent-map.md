@@ -18,6 +18,7 @@
 | Discovery | `internal/discovery`, `internal/recommendations` | Deterministic composition and current read gates. |
 | Finance/notices | `internal/booking`, `internal/donations`, `internal/notifications` | Provider transactions and native notification chokepoint. |
 | HTML/SPA | `internal/web`, `templates`, `apps/web/templates`, `locale` | Native rendering over shared presentation data. |
+| Public GUI migration | [Original fixtures](gui-public-golden-fixtures.md) | Current bounded evidence, private keepers and continuation; formal gates remain separate. |
 | Jobs/ops | `internal/jobs`, `internal/ops` | PostgreSQL queue,27 due jobs, readiness/metrics/private logs. |
 | Client | `frontend` | Preact/Vite TypeScript, encrypted client transport. |
 | Optional sidecar | `services/agentapi` | Independent read-only public snapshot service; native exporter owns input. |

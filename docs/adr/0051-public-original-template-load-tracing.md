@@ -1,7 +1,7 @@
 # ADR-0051: Public original template-load tracing
 
 Date: 2026-10-10
-Status: targeted tests passed at5871df2; formatter-only source recheck and landing review pending
+Status: targeted tests passed at5871df2; formatter-only recheck passed atbec6cf8; broader landing/group review pending
 
 ## Decision
 

@@ -1,7 +1,7 @@
 # ADR-0052: Released public golden tooling bridge
 
 Date: 2026-10-10
-Status: source implemented; managed build, tests and formatting NOT RUN
+Status: focused managed checks passed at764beb1; independent actual review clear within original-native repeatability scope
 
 ## Decision
 
@@ -50,3 +50,13 @@ Source and release-file metadata have been reviewed locally; managed compilation
 public-SDK tests, fourteen-case integration and formatting have NOT RUN on this
 successor. Existing tests and formatter receipts stay bound to their prior
 sources. Parent owns fresh runtime reservation, evidence review and publication.
+
+At764beb1, actual managed formatting and build passed;21helper and23app test
+actions each ran/passed once with zero failures/skips/cache/race findings. All14
+original/current diagnostics were equal and hard-free.28source files,41released
+SDK files,2owned commands,15original corpus files and both archives remained
+byte/fullmode-exact. The actual binary is SHA598515e7…/4,897,832B; its Go build
+information correctly reports a private released-module copy as `(devel)`, not
+a compiled tag version. Parent independently reviewed the bounded actual result.
+The earlier4035Bformat failure and exact locked x/net acquisition remain compact
+history. This adds no formal oracle/group/Live/templ/retirement acceptance.
