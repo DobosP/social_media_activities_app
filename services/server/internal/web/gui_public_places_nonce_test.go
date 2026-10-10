@@ -296,7 +296,7 @@ func (f *guiPlacesNonceFixture) render(t *testing.T, filesystem, original bool, 
 	}
 	switch fixture.template {
 	case "web/places.html":
-		if !bytes.Contains(body, []byte(`data-worker-url="/static/vendor/maplibre/maplibre-gl-csp-worker.js"`)) || !bytes.Contains(body, []byte(`<a href="/places/list/">View as a text list (no map needed)</a>`)) || bytes.Count(body, []byte(`data-filter-value="synthetic-category"`)) != map[bool]int{false: 0, true: 1}[fixture.populated] {
+		if !bytes.Contains(body, []byte(`data-worker-url="/static/vendor/maplibre/maplibre-gl-csp-worker.js"`)) || !bytes.Contains(body, []byte(`<a href="/places/list/">View as a text list (no map needed) &rarr;</a>`)) || bytes.Count(body, []byte(`data-filter-value="synthetic-category"`)) != map[bool]int{false: 0, true: 1}[fixture.populated] {
 			t.Fatal("existing map worker/text fallback/category arm differs")
 		}
 	case "web/places_list.html":
@@ -438,7 +438,7 @@ func TestGUIPublicPlacesNonceRejectsDOMMutations(t *testing.T) {
 		to       string
 	}{
 		{"map-worker-path", mapBody, mapExpected, `data-worker-url="/static/vendor/maplibre/maplibre-gl-csp-worker.js"`, `data-worker-url="/static/vendor/maplibre/synthetic-other.js"`},
-		{"map-text-fallback-link", mapBody, mapExpected, `<a href="/places/list/">View as a text list (no map needed)</a>`, `<a href="/synthetic-other/">View as a text list (no map needed)</a>`},
+		{"map-text-fallback-link", mapBody, mapExpected, `<a href="/places/list/">View as a text list (no map needed) &rarr;</a>`, `<a href="/synthetic-other/">View as a text list (no map needed) &rarr;</a>`},
 		{"map-filter-value", mapBody, mapExpected, `data-filter-value="synthetic-category"`, `data-filter-value="synthetic-other"`},
 		{"list-near-copy", listBody, listExpected, `Sorted by distance from you.`, `Synthetic changed disclosure.`},
 		{"list-place-link", listBody, listExpected, `<a href="/places/731/">Synthetic public place</a>`, `<a href="/places/732/">Synthetic public place</a>`},
