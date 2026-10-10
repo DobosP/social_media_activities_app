@@ -434,3 +434,38 @@ setup inverse and original3349B preimage remain source-bound. Original captures,
 all previous failures/receipts and source packets are untouched. No computed
 style/browser/CSP/backend filtering/auth/cohort/privacy/Live/full/device/default
 assembly or application-adoption acceptance follows.
+
+
+## Places and shared near-me nonce source checkpoint
+
+SOC-7 is SOURCE ONLY, NOT RUN. It adds the existing `request.csp_nonce` only to
+places.html's blocking MapLibre script, its deferred places-map script and the
+shared near-me partial's deferred script. Exact whole-file inverses restore the
+2791B map and931B partial preimages; paths/order/load attributes and every other
+product byte remain. No CSS, JavaScript, worker, nonce provider or CSP mode changes.
+
+The shared partial also reaches unchanged places_list, Home and query-empty
+activities templates. That attribute-only effect is explicit, not described as
+a public-only DOM delta. Synthetic native OS/FS PRESENTATION cases cover map
+empty/categories; text list empty/populated/near-active; Home empty/near-active;
+and activities empty/near-active/search. They execute no registered admission,
+DB/account/cohort/privacy decisions, coordinates, map/API/geolocation or browser
+scripts. The existing near-active disclosure and query-nonempty absence remain.
+
+The new `gui_public_places_nonce_test.go` authors46 actions (3parents/43children):
+20mode/case checks,18native-binding mutations and5safe DOM mutations. Existing
+base header/tag binding validates the actual response nonce; repeated responses
+must be fresh. Missing/wrong/duplicate nonce, path/order/load attributes and header
+mutations are refusals by that separate checker, not SDK hard findings. Original,
+explicit-only-nonce expected and current renderings use the unchanged released
+normalizer. Expected/current canonical equality is required; original/current
+equality is allowed according to delivered volatility. No new masks or goldens.
+
+After source/method review and parent runtime reservation, the existing pinned
+read-only formatter and focused managed Go route can run
+`go test -mod=readonly -race -count=1 -json ./internal/web -run '^TestGUIPublicPlacesNonce'`
+with the existing normalizer/reference flags. The actual764 normalizer binary,
+d722 released archive and original15files are reused unchanged. No helper build,
+dependency install, original14recapture or old34 rerun is included. Prior receipts
+retain their tested sources; no new execution, browserCSP, fullM1/Live/privacy,
+device, default assembly, adoption or retirement acceptance is recorded.

@@ -46,6 +46,6 @@
      data-link-label="{% trans 'View & organise' %} &rarr;"></div>
 {% endblock %}
 {% block scripts %}
-<script src="{% static 'vendor/maplibre/maplibre-gl-csp.js' %}"></script>
-<script src="{% static 'js/places-map.js' %}" defer></script>
+<script nonce="{{ request.csp_nonce }}" src="{% static 'vendor/maplibre/maplibre-gl-csp.js' %}"></script>
+<script nonce="{{ request.csp_nonce }}" src="{% static 'js/places-map.js' %}" defer></script>
 {% endblock %}

@@ -10,4 +10,4 @@ are never stored. Include once per page; reads `near_active` from the view conte
     <a class="muted" href="?">{% trans "Clear" %}</a>{% endif %}
   <span class="muted near-me-note">{% trans "Your location is used only to sort this page &mdash; never stored." %}</span>
 </div>
-<script src="{% static 'js/near-me.js' %}" defer></script>
+<script nonce="{{ request.csp_nonce }}" src="{% static 'js/near-me.js' %}" defer></script>

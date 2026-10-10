@@ -2460,3 +2460,24 @@ status are added. All product/test bytes, CSS/private groups, original captures,
 normalizer/release/source keepers and historical failure receipts remain unchanged.
 No auth/backend filtering/CSP/clinical/privacy/Live/full/device/default activation
 or app adoption is claimed. Later documentation HEAD is not a reexecution.
+
+
+## 2026-10-11 — SOC-7 places/shared near-me nonce SOURCE ONLY
+
+At clean published7dd1775, authored only the three existing request.csp_nonce
+attributes in places.html and _near_me.html. Exact template inverses retain the
+2791B/931B beforeimages. The partial's existing places_list, Home and query-empty
+activities consumers stay byte-exact, while their shared script gains the same
+nonce; this effect is explicit. No JS/CSS/worker/order/defer/provider/mode or
+backend/auth/cohort/privacy/default change occurred.
+
+One new native test file authors46 focused actions (3parents/43children) over
+10synthetic presentation shapes×OS/FS, actual response nonce freshness, separate
+binding refusal controls and released normalizer expected-delta/DOM controls.
+The API owns volatility; original/current canonical equality is allowed and no
+nonce mutation is misreported as an SDK hard finding. Formatter/compiler/tests
+are NOT RUN. Parent source/method review and runtime reservation are still needed.
+Existing764/d722/original15 and old14/83/62/14/19/34 evidence stay unchanged; no
+recapture, rebuild, install, route/DB/admission/geolocation/browserCSP/full/Live,
+privacy/device/adoption/retirement claim. Compact source and accepted-recipe
+method successors are task-owned; no workspace/cache/SDK/body clone is created.
