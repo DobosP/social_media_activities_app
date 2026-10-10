@@ -257,3 +257,31 @@ Only compact execution records are promoted, with no workspace/dependency/SDK/EL
 duplicate. Result/closure control filenames retain their original private-keeper
 names; the checkpoint states which exact bytes enter Git. No raw HTML or context
 is promoted.
+
+## Community graph fallback checkpoint
+
+At source `a8b9dc5`, the planned M1 externalization replaces only the fallback's
+inline `padding:1rem` with `graph-fallback` and one graph-scoped `1rem` CSS rule.
+The source inverse preserves every other widget byte and all existing CSS bytes
+and order. Fallback copy/link, capability guards, fetch and graph/cohort logic
+are unchanged; the vendored library's separate style injection remains unresolved.
+
+The [focused checkpoint](reviews/gui-public-original/community-fallback-checkpoint.json)
+records actual pinned, network-none, source-read-only Node execution: all14named
+VM/source-CSS cases passed once, zero fail/cancel/skip/todo, all25source byte/fullmode
+guards equal. The owned4CPU/6GiB container exited0 without OOM; removal returned0
+and exact CID/name absence passed. Parent and program reviewer accepted this scope.
+The compact result, raw TAP, exits, ownership/cleanup controls and closure retain
+their exact bytes/fullmodes. No workspace, dependency, cache, SDK, binary or rawHTML
+is copied. This later docs commit is distinct from tested `a8b9dc5`.
+
+A prior wrong local dispatch path exited2 before the reviewed method, tests or
+container started. Its exact erratum is retained as dispatch history; its later
+record timestamp is not an action timestamp. Correct method `f11115ae` then ran
+invocation `f220a42b` once. The wrong command is neither a failed Node run nor a retry.
+
+These tests model DOM-like inputs in VM and assert the literal CSS mapping; they
+provide no computed-style/browser-CSP, cohort/privacy, app/full or adoption proof.
+Original14/latestf010captures, nonce83/staticFS62 receipts and the sole764normalizer/
+SDK retain their separate sources. No recapture, dependency install, prior test
+rerun or new normalizer build occurred. Wider ownership/Live/device gates remain.

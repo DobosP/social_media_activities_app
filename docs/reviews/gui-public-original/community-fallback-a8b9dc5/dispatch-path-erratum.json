@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "recorded_utc": "2026-10-10T17:26:04.221321+00:00",
+  "scope": "Parent dispatch history only; not a Node/test/container result",
+  "source_reserved": "a8b9dc56ffec0ed0c01663aa16da4ebbd6c77dd3",
+  "actual_command": "python3 -B /home/dobo/work/_temp/feat__gui-app-migration-parent-20261006/nonexistent.py",
+  "actual_exit": 2,
+  "actual_error": "python3: can't open file '/home/dobo/work/_temp/feat__gui-app-migration-parent-20261006/nonexistent.py': [Errno 2] No such file or directory\n",
+  "reviewed_method_started_by_wrong_command": false,
+  "test_or_container_started_by_wrong_command": false,
+  "correction": "Run exact reviewedcommunity-fallback-managed-a8b9dc5/managed.py f11115ae\u2026 under the alreadyreserved slot; actualf220 invocation executedNode14once PASS0",
+  "correct_method_sha256": "f11115ae11c70382cdac2b506d4bf08f5b6ccf1f97cfa18dfcd32437961a5fdb",
+  "actual_correct_invocation": "f220a42b-137b-4509-859a-0e9943dbb7e2",
+  "actual_result_sha256": "088184a814f22c7a3b7ca33f72c4ee113c70f49a66cad279462ddbc24be467e0",
+  "provenance": "Exact precedingtoolcommand/exit/error; observationrecordtime is not fabricated actiontime"
+}

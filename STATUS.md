@@ -77,7 +77,7 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 ## Open work
 
 - REST assertion closure remains separate:6 social API declarations, booking assertions, export query equality and
-  existing donation REST assertions; [bounded plan](docs/reviews/native-go/rest-contract-plan.md). Finance service/HTML gaps remain separate. [Public GUI fixtures](docs/gui-public-golden-fixtures.md):f010 nonce83 and [staticFS62 at354](docs/reviews/gui-public-original/static-fs-checkpoint.json) retained. SOC-3 fallback inline-padding extraction + focused VM controls authored SOURCE ONLY/NOT RUN. No default assembly/original recapture/SDK/fullM1/privacy/group/Live/templ/retirement/device acceptance.
+  existing donation REST assertions; [bounded plan](docs/reviews/native-go/rest-contract-plan.md). Finance service/HTML gaps remain separate. [Public GUI fixtures](docs/gui-public-golden-fixtures.md):f010 nonce83/staticFS62 at354 retained; [SOC-3 at a8](docs/reviews/gui-public-original/community-fallback-checkpoint.json) passed VM14 once/source25/owned cleanup. Source CSS mapping only; no computed-style/browserCSP/cohort/privacy/app/full/adoption/device acceptance or original recapture.
 - Native completion/toolchain/audit stacks (ADR-0035/0038) are source-qualified per ADR-0040; human code review
   gates first deployment. The1651 unresolved frozen declarations keep Python source/tests and block retirement; [GUI capture prep](docs/reviews/gui-capture-preparation/README.md) remains unsigned/unrun.
 - Build/promote a fresh immutable producer/server V2 release before real sync;

@@ -1,0 +1,94 @@
+TAP version 13
+# Subtest: absent graph mount preserves content and does not request data
+ok 1 - absent graph mount preserves content and does not request data
+  ---
+  duration_ms: 5.401363
+  type: 'test'
+  ...
+# Subtest: capability fallback: save-data
+ok 2 - capability fallback: save-data
+  ---
+  duration_ms: 1.349202
+  type: 'test'
+  ...
+# Subtest: capability fallback: reduced-motion
+ok 3 - capability fallback: reduced-motion
+  ---
+  duration_ms: 0.955773
+  type: 'test'
+  ...
+# Subtest: capability fallback: no-WebGL-constructor
+ok 4 - capability fallback: no-WebGL-constructor
+  ---
+  duration_ms: 0.798814
+  type: 'test'
+  ...
+# Subtest: capability fallback: no-WebGL-context
+ok 5 - capability fallback: no-WebGL-context
+  ---
+  duration_ms: 0.706196
+  type: 'test'
+  ...
+# Subtest: capability fallback: canvas-refusal
+ok 6 - capability fallback: canvas-refusal
+  ---
+  duration_ms: 0.697571
+  type: 'test'
+  ...
+# Subtest: response fallback: empty graph
+ok 7 - response fallback: empty graph
+  ---
+  duration_ms: 0.923339
+  type: 'test'
+  ...
+# Subtest: response fallback: missing nodes
+ok 8 - response fallback: missing nodes
+  ---
+  duration_ms: 0.709422
+  type: 'test'
+  ...
+# Subtest: response fallback: non-OK response
+ok 9 - response fallback: non-OK response
+  ---
+  duration_ms: 0.770557
+  type: 'test'
+  ...
+# Subtest: response fallback: missing library
+ok 10 - response fallback: missing library
+  ---
+  duration_ms: 0.760981
+  type: 'test'
+  ...
+# Subtest: response fallback: fetch rejection
+ok 11 - response fallback: fetch rejection
+  ---
+  duration_ms: 0.721413
+  type: 'test'
+  ...
+# Subtest: response fallback: JSON rejection
+ok 12 - response fallback: JSON rejection
+  ---
+  duration_ms: 0.835111
+  type: 'test'
+  ...
+# Subtest: usable graph is not replaced by fallback presentation
+ok 13 - usable graph is not replaced by fallback presentation
+  ---
+  duration_ms: 1.068388
+  type: 'test'
+  ...
+# Subtest: source stylesheet maps only the graph fallback class to the original one-rem padding
+ok 14 - source stylesheet maps only the graph fallback class to the original one-rem padding
+  ---
+  duration_ms: 0.185748
+  type: 'test'
+  ...
+1..14
+# tests 14
+# suites 0
+# pass 14
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 67.753443
