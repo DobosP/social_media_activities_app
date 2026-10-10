@@ -3,6 +3,8 @@
 [ADR-0050](adr/0050-original-public-gui-fixtures.md) records the producer boundary.
 [ADR-0051](adr/0051-public-original-template-load-tracing.md) records test-only
 load tracing and unchanged-reference custody.
+[ADR-0052](adr/0052-released-public-golden-tooling-bridge.md) records the optional
+released public normalizer bridge; its managed execution has NOT RUN.
 The source is `services/server/internal/web/gui_public_golden_test.go`; existing
 native routing, templates, translations and rendering are used without edits.
 
@@ -65,3 +67,27 @@ files stayed byte/mode-equal. No test/capture/dependency action was repeated, an
 the23tests remain bound to5871df2. The original checkpoint
 and bodies remain unchanged. No full native/group/Live/parity/conditional result
 follows from these focused checks.
+
+The additive `tools/gui-public-golden/normalize.go` command imports the released
+public `golden.Normalize` with strict empty options. It receives bounded raw HTML
+on stdin and returns base64 canonical bytes plus separate hard findings in JSON;
+it refuses on any hard finding. Synthetic controls live beside it. No standalone
+application module/lock is introduced. An owner-approved managed preparation
+must verify/extract canonical `web-kit-go-core-v1.6.tgz` against all41rows in
+`tools/gui-public-golden/release-bindings.json`, retain the original module/sum,
+and copy only the two command sources into `web-kit/cmd/social-gui-normalize/`.
+That private tooling module can run its focused race/count1 tests and build the
+command with `-mod=readonly`; preparation must retain actual command streams,
+binary SHA256/build information and before/after source/archive bindings.
+There is no host Go fallback or authorization to execute before a runtime slot.
+
+After that genuine build, the original producer accepts the three flags together:
+`-gui-public-normalizer-binary /private/absolute/tool-binary`,
+`-gui-public-normalizer-sha256 <actual-managed-build-digest>`, and
+`-gui-public-normalizer-archive /private/absolute/web-kit-go-core-v1.6.tgz`.
+The existing original-reference flag is mandatory for this optional path.
+Raw original/current bytes are compared through the released API without writing
+normalized baseline files. The manifest records byte equality, independent hard
+findings/success and the combined diagnostic outcome separately. Binary/archive
+hashes are checked again after all cases. Omission supplies no normalization
+claim. Source is authored only; all new managed checks remain NOT RUN.

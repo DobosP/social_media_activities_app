@@ -52,7 +52,8 @@ func guiPublicHash(raw []byte) string {
 
 func guiPublicSources(root string) (map[string]string, error) {
 	names := []string{"templates/base.html", "apps/web/templates/web/privacy.html", "apps/web/templates/web/terms.html", "apps/web/templates/web/open_data.html", "apps/web/templates/web/landing.html", "docs/reviews/gui-public-original/checkpoint.json"}
-	for _, name := range []string{"server.go", "router.go", "renderer.go", "templates.go", "i18n.go", "views.go", "public_pages.go", "public_downloads.go", "public_structured.go", "routes.json", "public_routes.json", "gui_public_golden_test.go", "gui_public_trace_test.go"} {
+	names = append(names, "tools/gui-public-golden/normalize.go", "tools/gui-public-golden/normalize_test.go", "tools/gui-public-golden/release-bindings.json")
+	for _, name := range []string{"server.go", "router.go", "renderer.go", "templates.go", "i18n.go", "views.go", "public_pages.go", "public_downloads.go", "public_structured.go", "routes.json", "public_routes.json", "gui_public_golden_test.go", "gui_public_trace_test.go", "gui_public_normalize_test.go"} {
 		names = append(names, "services/server/internal/web/"+name)
 	}
 	err := filepath.WalkDir(filepath.Join(root, "locale"), func(name string, entry os.DirEntry, err error) error {
@@ -143,6 +144,10 @@ func TestGUIPublicOriginalCapture(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+	normalizer, err := guiPublicNewNormalizer(root)
+	if err != nil {
+		t.Fatal(err)
+	}
 	var output *os.Root
 	if *guiPublicGoldenOutput != "" {
 		output, err = guiPublicOutput(*guiPublicGoldenOutput)
@@ -228,6 +233,14 @@ func TestGUIPublicOriginalCapture(t *testing.T) {
 			if reference != nil {
 				record["original_reference"] = reference[fixture.ID]
 			}
+			if normalizer != nil {
+				diagnostic, err := normalizer.compare(reference[fixture.ID].raw, raw)
+				record["released_normalization"] = diagnostic
+				if err != nil {
+					t.Error(err)
+				}
+			}
+			record["assertions_passed"] = !t.Failed()
 			records = append(records, record)
 			if output != nil {
 				if err := guiPublicWrite(output, fixture.ID+".html", raw); err != nil {
@@ -254,12 +267,21 @@ func TestGUIPublicOriginalCapture(t *testing.T) {
 			t.Error(err)
 		}
 	}
+	if normalizer != nil {
+		if err := normalizer.checkUnchanged(); err != nil {
+			t.Error(err)
+		}
+	}
 	if output != nil {
 		status := "captured"
 		if t.Failed() {
 			status = "failed"
 		}
 		manifest := map[string]any{"schema": 1, "status": status, "engine": "original-native-pongo2", "scope": "14 synthetic anonymous public registered-handler fixtures only; not Django oracle, Native Live, signed group coverage or retirement", "source_before": before, "source_after": after, "cases": records, "normalization": "none: raw HTML retained; nonces remain per-render, no body/attribute rewriting", "template_load_scope": "actual successful original-loader streams, not template-conditional coverage", "original_reference_verified": reference != nil, "raw_golden_parity": "not evaluated", "template_conditional_coverage": nil}
+		if normalizer != nil {
+			manifest["released_normalizer"] = normalizer.binding
+			manifest["normalization"] = "released SDK canonical diagnostics computed separately; raw HTML files unchanged; no normalized baseline installed"
+		}
 		raw, err := json.MarshalIndent(manifest, "", "  ")
 		if err != nil {
 			t.Fatal(err)

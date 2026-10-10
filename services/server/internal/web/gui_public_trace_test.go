@@ -76,6 +76,7 @@ type guiPublicReferenceRecord struct {
 	Bytes    int           `json:"bytes"`
 	SHA256   string        `json:"sha256"`
 	FullMode uint32        `json:"full_mode"`
+	raw      []byte
 }
 
 type guiPublicReferenceCheckpoint struct {
@@ -157,6 +158,7 @@ func guiPublicReadReference(directory string, checkpoint []byte) (map[string]gui
 			return nil, fmt.Errorf("original body differs from the committed checkpoint: %s", fixture.ID)
 		}
 		wanted[name] = true
+		record.raw = raw
 		result[fixture.ID] = record
 	}
 	listing, err := root.Open(".")
@@ -238,7 +240,7 @@ func TestGUIPublicReferenceRefusesChangedCorpus(t *testing.T) {
 				if err := os.WriteFile(filepath.Join(directory, name), raw, 0o600); err != nil {
 					t.Fatal(err)
 				}
-				binding.Cases = append(binding.Cases, guiPublicReferenceRecord{fixture, name, len(raw), guiPublicHash(raw), 0o100600})
+				binding.Cases = append(binding.Cases, guiPublicReferenceRecord{fixture, name, len(raw), guiPublicHash(raw), 0o100600, nil})
 			}
 			checkpoint, err := json.Marshal(binding)
 			if err != nil {

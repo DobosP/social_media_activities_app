@@ -1,0 +1,304 @@
+{
+  "schema": 1,
+  "core_tag": "core-v1.6",
+  "source_commit": "b0ad658086a2745d1b3aea02659e6b644c89c680",
+  "public_api": "github.com/DobosP/roedu-ui/web-kit/golden.Normalize",
+  "policy": "core-v1.6/golden.Normalize/strict",
+  "options": "golden.Options{}; no Oracle or Assets supplied for this anonymous public scope",
+  "go_archive": {
+    "file": "web-kit-go-core-v1.6.tgz",
+    "bytes": 55202,
+    "sha256": "d722a817074a01d8a983c3e8492335ee07d37fb0d58c9a938cd189df635e168d"
+  },
+  "released_regular_files": [
+    {
+      "path": "web-kit/assets/assets.go",
+      "bytes": 6577,
+      "sha256": "575093f25aa52f59bd00591b3fcb04ec40987874fcd7f4e4be9057912418f3b2",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/assets/assets_test.go",
+      "bytes": 2352,
+      "sha256": "92e4e0d7e3b0f3cae62bb79c58be83ef7e8f847fbfef547d570889e8e95a9aa6",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/budget/budget.go",
+      "bytes": 21967,
+      "sha256": "175377db49b153da993a468af272f9ff01957eddd649c2b23a56b3365c07532c",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/budget/budget_test.go",
+      "bytes": 8679,
+      "sha256": "1713c5ef630d2a003e1bc06ba615639c72491be41c00824e67ff92c126bf6f11",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/budget/schema_cases_test.go",
+      "bytes": 2006,
+      "sha256": "8b0bda5f65988b378f3a0b34bd32d9f59c27da3435c1856654b16bf905498132",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/budget/testdata/budgets.seed.json",
+      "bytes": 794,
+      "sha256": "40f4fc9961a0276663791437417033b0589577ac65811f3863a0fde7a42f9fb4",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/budget/testdata/schema-cases.json",
+      "bytes": 5009,
+      "sha256": "c3e485273916ccf4da4165ed56031ecb9fa6bb914aede905a42ae9b693e98345",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/cmd/budget/main.go",
+      "bytes": 2870,
+      "sha256": "91b0d94368f9afdf455002669c8c3f0ffdd9ba896164b893df127452b8456dcf",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/cmd/budget/main_test.go",
+      "bytes": 3634,
+      "sha256": "53d983f5f3e3ecb26043aeba7bd0c8a283740bb237b5b61cc49d67ad3a74c7ab",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/csp/csp.go",
+      "bytes": 6771,
+      "sha256": "f9f3cf4a52eaac3dfb33272d4359b53d9d327faa284feb7dc667a886f341295e",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/csp/csp_test.go",
+      "bytes": 2858,
+      "sha256": "1493de53f38b6bcac49819684cf82ba7ee303e1058d8252325c2536132509c3f",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/csp/worker_test.go",
+      "bytes": 3379,
+      "sha256": "c3d7422b1cfc57a27c113eec0f1b953831926c9ad08b3e71dec9d0982fad6b95",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/engine/engine.go",
+      "bytes": 6958,
+      "sha256": "246b8d784421dd9e5832cf28164f44f2fc3007d63a0a0a6b591be7ed650c6205",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/engine/engine_test.go",
+      "bytes": 2708,
+      "sha256": "a53178465a9ef3a780cbf36e556c8714aa4e8d7cddbb3d84aac4348508fb706c",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/go.mod",
+      "bytes": 254,
+      "sha256": "9cf252beeca8b0e3be2e8282c3a3676e5597e107a2cffe9eca4ca6d32b26614c",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/go.sum",
+      "bytes": 2728,
+      "sha256": "f62f81f537f408583c94567f1fa9c4fae450cc35588beee2ffaad5632d693408",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/golden/normalize.go",
+      "bytes": 8245,
+      "sha256": "a8539fe66388bb35aa94718843ef5241f72c7543242a5c4cc8a6f7c3b6bd57fa",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/golden/normalize_test.go",
+      "bytes": 4208,
+      "sha256": "80100d66293cd96c23fcf434c0af2cd6298d13c1de317e091065789abe8c0e73",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/health/health.go",
+      "bytes": 1707,
+      "sha256": "3c1f3acccc0f809e9ec9a45a93e02643bc4dc49bebf6e8b2efe3d06212554689",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/health/health_test.go",
+      "bytes": 1691,
+      "sha256": "269e6e37cc9087c2f09f1ccff8e2afdb2513d41020f744ac4315101178a8cde6",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/health/identity.go",
+      "bytes": 3394,
+      "sha256": "a420d2d9ce61d04f033f0d01d23cd86614d82498f1e059d703e6a869fbb22d6d",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/health/identity_test.go",
+      "bytes": 2746,
+      "sha256": "c5c662cf9e684f3a43bb461545d1f6caec0d6d8e7541c628df5e735f256b49cd",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/island/island.go",
+      "bytes": 2881,
+      "sha256": "5a3c603f89f6455d14c32b305c4a5a0313037130dd1104025868cf542cd8d03d",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/island/island_test.go",
+      "bytes": 2749,
+      "sha256": "967d010169bc31cb501bf5d0aa3801e7cc0c753ea95a04bfca9089c0de7b8556",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/routes/routes.go",
+      "bytes": 2351,
+      "sha256": "5606ed7a1e7f3e489c23f75a81fbe2fd4db4bcdd3d5bc2ab4146f4a716d8d4df",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/routes/routes_test.go",
+      "bytes": 1210,
+      "sha256": "7ee7b40f2b3e2136a00d7a6ceee907dc3565f77727ecb2d77a2dd74270671140",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/sample/budget-bindings.json",
+      "bytes": 1760,
+      "sha256": "efd0c82606bc5c0e9909a72048d0ffc4d594a25234b8fb45d533c73900713405",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/sample/budget_test.go",
+      "bytes": 1663,
+      "sha256": "ceebd35f0c78069b88c502fac8ab3665d7c52edcce0658b20812ffcedc49e415",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/sample/embedfs/templates/home.html",
+      "bytes": 2180,
+      "sha256": "5cf1decc54bee7dc9926360113d528f7f573e5792f99833547380498fe5cbadf",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/sample/go.mod",
+      "bytes": 1232,
+      "sha256": "7e994d98faaa77c58ef2cd332353d816f47709355b1989380324b8c081f599ee",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/sample/go.sum",
+      "bytes": 6425,
+      "sha256": "5834761df20a45311cbe0ba4a0eb4f1e68d3de81064c3eecf24bb3c70d9933e2",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/sample/main.go",
+      "bytes": 14965,
+      "sha256": "ad7004ad6d6ec599db9e89a0285777ed8664dc73aa992395307503f8144ed161",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/sample/main_test.go",
+      "bytes": 14716,
+      "sha256": "869024b57a70e0c904018013762fd3f44aa51bd9a3b31a99281cb068e9e5d424",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/sample/sample.templ",
+      "bytes": 2272,
+      "sha256": "d7f81ecd4844eff6c9a2980871ce04ba81660772158f60e7f57eab9d8f851fe6",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/sample/sample_templ.go",
+      "bytes": 4797,
+      "sha256": "5f6e6ea637948c5e80cfa6fac08570e8af4498adc75cac1283de65e1daf99da2",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/sample/templ_test.go",
+      "bytes": 8092,
+      "sha256": "c7a169e7cbfc78c050720870d10c32a9d43df2470503c5a855446f8030a87c02",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/static/static.go",
+      "bytes": 1550,
+      "sha256": "8d83bec2d329242e0e2f81454aa6864dc2c01aa64928e56e631f0153b6b1694d",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/static/static_test.go",
+      "bytes": 2221,
+      "sha256": "4ba4803d61049aa2fc8ab02e1e6ae632cdaa6edeeb785f6641b60097f9341769",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/tokens/testdata/tokens.json",
+      "bytes": 10244,
+      "sha256": "fa71db7b135796151209220481e3dcedfdb3391a7da5faca116c79afccfb9170",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/tokens/tokens.go",
+      "bytes": 961,
+      "sha256": "6b1618b4106624afa224ed80984f334c625266674441dcc21f5f6f2df876681b",
+      "archive_mode": 436,
+      "full_mode": 33204
+    },
+    {
+      "path": "web-kit/tokens/tokens_test.go",
+      "bytes": 1340,
+      "sha256": "7ca5b2abfc5b15d4020fc42f62e433804484ffacbf73b7be93a1abe1314ac587",
+      "archive_mode": 436,
+      "full_mode": 33204
+    }
+  ],
+  "build_scope": "tool-only private released-module copy plus this consumer command; no app module/kit installation or archive modification",
+  "qualification": "NOT RUN; this binding is source/metadata, not a binary provenance receipt"
+}
