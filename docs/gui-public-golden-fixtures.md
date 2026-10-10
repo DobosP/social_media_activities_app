@@ -373,3 +373,33 @@ existing managed readonly/race/count1 route with
 No new packages, helper build, SDK adoption, DB/auth/cohort admission, private-group
 behavior or default assembly is involved. Prior proofs retain their own sources;
 fullM1/browserCSP/Live/privacy/adoption/device/retirement qualification remains open.
+
+## Public pagination margin source section
+
+SOC-6 replaces only the public `page.has_other_pages` paragraph's inline top margin
+with existing `muted u-mt-lg` classes. The identical group paginator paragraph and
+every other template/CSS/condition/link/word remain unchanged by the whole inverse.
+The existing utility sets `margin-top:1rem`, outranks ordinary `p` margin and is used
+outside the closed card loop; `.muted` supplies color only. CSS is not edited, and
+this source reasoning is not a computed-style/browser proof.
+
+The SOC-5 source setup reverses exactly this newly declared public-footer attribute
+before its unchanged3349B/ce0e preimage check. Its old14assertions, IDs, card delta
+and mutation controls remain byte-exact; prior e13proof is not relabeled as a new run.
+The new pagination family authors20actions for OS/FS empty/single/first/middle/last/
+filtered-middle contexts using actual `socialPagination` maps and30-row page size.
+Filtered query strings are synthetic presentation inputs; current bare `?page=`
+hrefs are preserved without added category/area/group propagation or backend filtering.
+
+Actual native flags/labels/previous-next links and original/explicit-one-attribute-
+expected/current canonical DOM are asserted. The empty/single footer stays absent;
+visible footers differ only by the one class attribute. Class/style/previous-next
+link/text/crossed-group-query mutations must be distinguished by the unchanged
+released normalizer. No masks, original captures or normalized baseline are changed.
+The combined expected inventory is34actions (4parents/30subcases), old14+new20.
+72normalizations are strictly source-expected, not a process census or browser tests.
+Formatting, compilation and all combined tests are NOT RUN. Reuse the existing
+managed flags/binary/archive/original15 route with
+`-run '^TestGUIPublicCommunity(Style|Pagination)'`; no rebuild, dependencies, recapture,
+auth/cohort/DB/admission/private-group behavior/default assembly/Live activation.
+Wider fullM1/browserCSP/privacy/adoption/device/retirement gates remain open.

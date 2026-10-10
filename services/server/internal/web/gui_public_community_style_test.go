@@ -58,6 +58,13 @@ func guiNewCommunityStyleFixture(t *testing.T) *guiCommunityStyleFixture {
 		}
 		original = bytes.Replace(original, []byte(delta[1]), []byte(delta[0]), 1)
 	}
+	// The separately declared public-footer delta is outside the old card cases.
+	const currentFooter = "{% if page.has_other_pages %}\n  <p class=\"muted u-mt-lg\">"
+	const previousFooter = "{% if page.has_other_pages %}\n  <p class=\"muted\" style=\"margin-top:1rem\">"
+	if bytes.Count(original, []byte(currentFooter)) != 1 {
+		t.Fatal("current source does not have exactly the declared public pagination delta")
+	}
+	original = bytes.Replace(original, []byte(currentFooter), []byte(previousFooter), 1)
 	// This reconstructs the exact known pre-change source, not a new baseline.
 	// Its hash pins every private-group/pagination/conditional/text byte too.
 	if len(original) != 3349 || guiPublicHash(original) != guiCommunityStylePreimageSHA256 {

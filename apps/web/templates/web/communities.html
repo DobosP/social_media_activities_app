@@ -47,7 +47,7 @@
 {% endfor %}
 
 {% if page.has_other_pages %}
-  <p class="muted" style="margin-top:1rem">
+  <p class="muted u-mt-lg">
     {% if page.has_previous %}<a href="?page={{ page.previous_page_number }}">&larr; {% trans "Previous" %}</a> &middot; {% endif %}
     {% blocktrans with number=page.number num_pages=page.paginator.num_pages %}Page {{ number }} of {{ num_pages }}{% endblocktrans %}
     {% if page.has_next %} &middot; <a href="?page={{ page.next_page_number }}">{% trans "Next" %} &rarr;</a>{% endif %}
