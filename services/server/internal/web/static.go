@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"io/fs"
 	"mime"
 	"net/http"
 	"os"
@@ -20,6 +21,17 @@ func StaticHandler(directory string) (http.Handler, error) {
 	if err != nil {
 		return nil, err
 	}
+	return newStaticHandler(func(name string) (staticAssetFile, error) {
+		return root.Open(name)
+	}), nil
+}
+
+type staticAssetFile interface {
+	fs.File
+	io.Seeker
+}
+
+func newStaticHandler(open func(string) (staticAssetFile, error)) http.Handler {
 	var hashes sync.Map
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "GET" && r.Method != "HEAD" {
@@ -38,7 +50,7 @@ func StaticHandler(directory string) (http.Handler, error) {
 				return
 			}
 		}
-		file, err := root.Open(name)
+		file, err := open(name)
 		if err != nil {
 			http.NotFound(w, r)
 			return
@@ -73,5 +85,5 @@ func StaticHandler(directory string) (http.Handler, error) {
 		w.Header().Set("ETag", tag.(string))
 		_, _ = file.Seek(0, io.SeekStart)
 		http.ServeContent(w, r, path.Base(name), info.ModTime(), file)
-	}), nil
+	})
 }

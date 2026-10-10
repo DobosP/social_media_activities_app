@@ -180,6 +180,37 @@ pending; each later runtime still needs a recorded parent slot.
 
 The source lane is `feat/gui-app-migration-a`, separate from shared `main`.
 Sourcef010e0d is the tested nonce delta over the earlier8b partial FS implementation.
+The separate current source section adds `StaticHandlerFS(files)` for a trusted
+filesystem rooted at the static directory. It shares the existing native request,
+MIME/cache/ETag and `ServeContent` path with the default OS constructor. Application
+assembly, `--site-root`, templates, nonce policy, SDK and dependencies stay unchanged;
+no filesystem transport is activated by this additive API.
+
+The supplied FS owns only relative release-asset names. Its confinement, stability
+and lifetime remain the caller's contract. A regular seekable input must have a
+nonnegative size no larger than the existing64MiB limit, correct end/start seeks
+and exact bounded reads including one overflow byte. The underlying file closes
+once before any asset header/body is published. A request-local memory snapshot
+then uses the common serving path; the FS path buffers at most64MiB plus one byte
+per request. No aggregate data cache or new HTTP cache policy is introduced.
+
+Authored focused tests bind snapshots of actual `static/css/base.css`,
+`static/js/site.js` and `static/js/hovercard.js`. They compare OS/FS bodies and
+all headers for GET/HEAD/range/conditional requests, preserve the existing
+immutable prefix and empty-file behavior, prove supplied/missing FS isolation,
+and exercise method/path/regular-size/read/seek/one-close refusals. Short/overlong
+streams and correct positions with seek errors are independent negative controls.
+Expected discovery is62actions (4top-level/58subcases); compilation, formatting
+and these tests are NOT RUN. Existing83nonce actions and all raw captures retain
+their original proof source; no recapture or helper/dependency rebuild follows.
+
+After parent source review and a recorded managed slot, the focused route is
+GOROOT formatting of the three changed Go paths followed by
+`go test -mod=readonly -race -count=1 -json ./internal/web -run '^TestGUIPublicStatic'`
+inside the existing pinned, capped, network-none, source-read-only runtime.
+This section does not install an embedded release, switch defaults, qualify
+whole delivery/M1, or alter private/auth/group/Live/device/retirement gates.
+
 The normalizer binary and
 its21helper action proof retain actualsource764beb1. Subsequent checkpoint
 commits contain docs/proof only; earlier receipts keep their source identities. New
