@@ -1,6 +1,6 @@
 # Status — social_media_activities_app
 
-Last verified: 2026-10-10 (public GUI fixture source; prior runtime receipts unchanged)
+Last verified: 2026-10-10 (focused public GUI fixtures; prior broader receipts unchanged)
 
 - **GitHub Actions (Last verified: 2026-10-05):** owner-requested on-demand policy,
   [ADR-0033](docs/adr/0033-manual-github-actions.md). Ordinary `ci.yml` calls Go/Node workflows;
@@ -77,7 +77,7 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 ## Open work
 
 - REST assertion closure remains separate:6 social API declarations, booking assertions, export query equality and
-  existing donation REST assertions; [bounded plan](docs/reviews/native-go/rest-contract-plan.md). Finance service/HTML gaps remain separate. [Original public GUI fixtures](docs/gui-public-golden-fixtures.md):14 managed native anonymous captures passed; one private-parent fixture failure corrected, focused rerun pending; no group/Live/templ/retirement acceptance.
+  existing donation REST assertions; [bounded plan](docs/reviews/native-go/rest-contract-plan.md). Finance service/HTML gaps remain separate. [Original public GUI fixtures](docs/gui-public-golden-fixtures.md):14 anonymous captures + overwrite refusal passed managed race/count1 (16 actions,0fail/skip); no group/Live/templ/retirement acceptance.
 - Native completion/toolchain/audit stacks (ADR-0035/0038) are source-qualified per ADR-0040; human code review
   gates first deployment. The1651 unresolved frozen declarations keep Python source/tests and block retirement; [GUI capture prep](docs/reviews/gui-capture-preparation/README.md) remains unsigned/unrun.
 - Build/promote a fresh immutable producer/server V2 release before real sync;

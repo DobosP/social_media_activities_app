@@ -4,8 +4,8 @@
 The source is `services/server/internal/web/gui_public_golden_test.go`; existing
 native routing, templates, translations and rendering are used without edits.
 
-Run inside an owner-approved managed Go1.27.1 runtime, with its task-owned cache
-and TMPDIR, from `services/server`:
+Run inside an owner-approved managed Go1.27.1 runtime with CGO enabled for race
+checks, its task-owned cache and TMPDIR, from `services/server`:
 
 ```sh
 go test -mod=readonly -race -count=1 -json ./internal/web -run '^TestGUIPublic'
@@ -34,3 +34,9 @@ historical `_breadcrumbs` hold, unsigned84+7 ownership, protected paths, native
 authcore/inline moderation separation and1651 retirement failures remain as in
 [capture preparation](reviews/gui-capture-preparation/README.md). No owner
 signature, Django parity, Native Live, templ/UI adoption or deployment is claimed.
+
+[Focused checkpoint](reviews/gui-public-original/checkpoint.json): source75dc717
+passed2top-level tests and14subcases with race/count1, no failures/skips/cache.
+All14private body hashes/modes and18renderer input hashes were verified. The
+latest raw setup remains task-owned; the superseded failed fixture run is compact
+history. Full native qualification and independent landing review remain pending.

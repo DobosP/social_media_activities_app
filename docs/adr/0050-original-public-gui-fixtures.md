@@ -1,7 +1,7 @@
 # ADR-0050: Original-native public GUI fixtures
 
 Date: 2026-10-10
-Status: source implemented; managed targeted execution and independent landing review pending
+Status: source implemented; targeted managed tests passed; independent landing/group review pending
 
 ## Decision
 
@@ -39,3 +39,9 @@ The real capture cases and exclusive-output refusal run as targeted native Go
 tests in an owner-approved managed Go1.27.1 runtime. Actual commands/counts are
 recorded in STATUS/WORKLOG after execution; authored cases are not passing proof.
 Landing remains subject to ADR-0040 and independent review.
+
+Managed source75dc717 passed the two top-level tests and14capture subcases (16
+unique run/pass actions, no skip/failure/cache). Fourteen private rawHTML bodies
+and their manifest were verified; source bindings stayed equal. The first CGO
+preflight and private-parent fixture failures remain compact history. This is
+focused producer evidence, not the full native21-lane or Native Live gate.

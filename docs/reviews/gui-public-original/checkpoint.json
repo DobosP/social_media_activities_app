@@ -1,0 +1,346 @@
+{
+  "schema": 1,
+  "artifact_kind": "focused-original-native-public-fixture-evidence",
+  "tested_source": "75dc717377f92b21ed99aabbe1f290d92535523e",
+  "status": "pass",
+  "toolchain_image_argument": "sha256:2e040a5165d79be63755424f707fdb8cf609ace831ada7a9baca398ac25e12b9",
+  "runtime_scope": "Owner-approved pinned container; source read-only; network none;2CPU/6GiB; no DB/app/host ports; no separate pre-execution image-inspection claim",
+  "command": [
+    "/usr/local/go/bin/go",
+    "test",
+    "-mod=readonly",
+    "-race",
+    "-count=1",
+    "-json",
+    "./internal/web",
+    "-run",
+    "^TestGUIPublic",
+    "-gui-public-golden-output=/scratch/capture-75dc717"
+  ],
+  "counts": {
+    "top_level": 2,
+    "capture_subcases": 14,
+    "unique_test_runs": 16,
+    "test_pass_actions": 16,
+    "package_pass": 1,
+    "fail": 0,
+    "skip": 0,
+    "cached": false
+  },
+  "source_before_after_equal": true,
+  "source_inputs": [
+    {
+      "path": "services/server/internal/web/gui_public_golden_test.go",
+      "sha256": "374cd33ddce8ddfdebc58fc25e59edbdaa7c8ab8e859b75599b513642e7e2b08",
+      "bytes": 10304,
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/go.mod",
+      "sha256": "1e0c2e6d9cda30507b6a5dde1d33f795737e609b47124983bbf9786844cabb46",
+      "bytes": 1335,
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/go.sum",
+      "sha256": "83cc84cde408f45973444ecee13f40df4abac1c1272c259f463f18703cb6b012",
+      "bytes": 7767,
+      "full_mode": 33204
+    },
+    {
+      "path": "services/authcore/go.mod",
+      "sha256": "124899dbc57503d4a8884e5579435f7775421bfe0544bff1dee6e76ec895fa4c",
+      "bytes": 283,
+      "full_mode": 33204
+    },
+    {
+      "path": "services/authcore/go.sum",
+      "sha256": "b2516a139953d6c42702bff40fad4da1ff04fa5cde523c089f07c6c1ea148109",
+      "bytes": 825,
+      "full_mode": 33204
+    },
+    {
+      "path": "templates/base.html",
+      "sha256": "ef2f179f6cbbfa8acc38272aa5a6c1d6acbb36c3c6e9290102d98a23b4b02e3b",
+      "bytes": 13594,
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/privacy.html",
+      "sha256": "6538ae63b9870de290b1725c8528eb400bc4c0888ac39c509fac32158dc89e79",
+      "bytes": 5691,
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/terms.html",
+      "sha256": "848ebae7fa912b5adeb4381cc437e4383686920a19124c5cc83b68ee929854d9",
+      "bytes": 3876,
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/open_data.html",
+      "sha256": "ae75cc9b3dc9f9dabbcd4ce62de63bc25ad538051a33a96b01c77691e938100d",
+      "bytes": 5306,
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/landing.html",
+      "sha256": "8fd980d985011f42c519281fd165bb22696175a66d5104a5cd3367e18a9ef4df",
+      "bytes": 1875,
+      "full_mode": 33204
+    }
+  ],
+  "renderer_sources": {
+    "apps/web/templates/web/landing.html": "8fd980d985011f42c519281fd165bb22696175a66d5104a5cd3367e18a9ef4df",
+    "apps/web/templates/web/open_data.html": "ae75cc9b3dc9f9dabbcd4ce62de63bc25ad538051a33a96b01c77691e938100d",
+    "apps/web/templates/web/privacy.html": "6538ae63b9870de290b1725c8528eb400bc4c0888ac39c509fac32158dc89e79",
+    "apps/web/templates/web/terms.html": "848ebae7fa912b5adeb4381cc437e4383686920a19124c5cc83b68ee929854d9",
+    "locale/ro/LC_MESSAGES/django.po": "186558af2dbb8016c313d09bd0b8508bd5365d61961bcabb3a681c66b99b154c",
+    "services/server/internal/web/gui_public_golden_test.go": "374cd33ddce8ddfdebc58fc25e59edbdaa7c8ab8e859b75599b513642e7e2b08",
+    "services/server/internal/web/i18n.go": "f0c2d287302907e8f34181c9de999898c052e35658c1cc01789f6a9d0a1bde75",
+    "services/server/internal/web/public_downloads.go": "e19db748f4390bd0595083bc8e49a2da4f35031a961e52fdb607482bd926d4fd",
+    "services/server/internal/web/public_pages.go": "6dfb36642cde63c253899ff8e76a1555a8bfb33cd068ef1dcca5861fdc82a2b4",
+    "services/server/internal/web/public_routes.json": "961c7d1d0ab265f0f3d8fd84074172d62f72122dd6a1dd13a7b219315d1d5d06",
+    "services/server/internal/web/public_structured.go": "2a0d2154f0f5f6904add9b01ac3135a09da560bb0134649a4f51c6d50a3241be",
+    "services/server/internal/web/renderer.go": "6bf68709c3f66342225dd14264873774245ef467bb4a1e9369b9a7ea289de7a1",
+    "services/server/internal/web/router.go": "b1cc3430d5148011cd827ab9fcd437cdf14a60c72dc5d980693e50bf9b8c0cca",
+    "services/server/internal/web/routes.json": "d10de3908d9537bbdeb2f51427bcb1ecdffc57e9d5a5066cc3166c9fbb559fc3",
+    "services/server/internal/web/server.go": "0c4208333d354d2256f275459a420ac5f2ff936abfab6c13cc4b8b6ca4fdcc09",
+    "services/server/internal/web/templates.go": "8098259abbf45838fc732630188cde4b73ccefbc0f5e729b75497f6988db4b97",
+    "services/server/internal/web/views.go": "f54f6757bcbf7db40e922e085dfeab6ae353014f7771be10e707bb7ee8058180",
+    "templates/base.html": "ef2f179f6cbbfa8acc38272aa5a6c1d6acbb36c3c6e9290102d98a23b4b02e3b"
+  },
+  "capture_manifest_sha256": "5403a0f3c2817fcd6ec1ebfefe9546ae9318057b3fefe845d1f1b77bd3eceb4a",
+  "captured_cases": [
+    {
+      "case": {
+        "ID": "privacy-en-default",
+        "Group": "G0",
+        "Path": "/privacy/",
+        "Language": "en",
+        "Profile": "default",
+        "Snapshot": false
+      },
+      "file": "privacy-en-default.html",
+      "bytes": 8285,
+      "sha256": "c5c123c173297e5310eb69f8da24a8fc5ae3485ae5077ca017f7ed30f2ce0ab1",
+      "full_mode": 33152
+    },
+    {
+      "case": {
+        "ID": "privacy-en-contrast",
+        "Group": "G0",
+        "Path": "/privacy/",
+        "Language": "en",
+        "Profile": "contrast",
+        "Snapshot": false
+      },
+      "file": "privacy-en-contrast.html",
+      "bytes": 8291,
+      "sha256": "4d70f26baa9c2a36118fe8c2b8950de1752fec74995c05e7d6f72cfeac215822",
+      "full_mode": 33152
+    },
+    {
+      "case": {
+        "ID": "terms-en-default",
+        "Group": "G0",
+        "Path": "/terms/",
+        "Language": "en",
+        "Profile": "default",
+        "Snapshot": false
+      },
+      "file": "terms-en-default.html",
+      "bytes": 6960,
+      "sha256": "8fff1e8f72bb69b3e2bb18a76892b39f97b928cd9d8923f8e59d074ccd6aec5e",
+      "full_mode": 33152
+    },
+    {
+      "case": {
+        "ID": "terms-en-contrast",
+        "Group": "G0",
+        "Path": "/terms/",
+        "Language": "en",
+        "Profile": "contrast",
+        "Snapshot": false
+      },
+      "file": "terms-en-contrast.html",
+      "bytes": 6966,
+      "sha256": "8d855ec46ca8944dd4d491bf711ed31b11faeae196183b53debf9f2d81c64023",
+      "full_mode": 33152
+    },
+    {
+      "case": {
+        "ID": "open-data-en-snapshot-false",
+        "Group": "G0",
+        "Path": "/open-data/",
+        "Language": "en",
+        "Profile": "default",
+        "Snapshot": false
+      },
+      "file": "open-data-en-snapshot-false.html",
+      "bytes": 8536,
+      "sha256": "b1ccc0a6fde232f14d149469e3a808f779777d48143c86efc8ae1eb27009c8aa",
+      "full_mode": 33152
+    },
+    {
+      "case": {
+        "ID": "open-data-en-snapshot-true",
+        "Group": "G0",
+        "Path": "/open-data/",
+        "Language": "en",
+        "Profile": "default",
+        "Snapshot": true
+      },
+      "file": "open-data-en-snapshot-true.html",
+      "bytes": 9355,
+      "sha256": "5b742d03dcadd53a0bea7d68c0ad825e7632bae91f1ae456fe0d5f8cc6fc64e4",
+      "full_mode": 33152
+    },
+    {
+      "case": {
+        "ID": "landing-en",
+        "Group": "G1",
+        "Path": "/",
+        "Language": "en",
+        "Profile": "default",
+        "Snapshot": false
+      },
+      "file": "landing-en.html",
+      "bytes": 5111,
+      "sha256": "b3da2dc08b119c315cab50e36c102fa85314436d24b714fce2fd0eceb16b2814",
+      "full_mode": 33152
+    },
+    {
+      "case": {
+        "ID": "privacy-ro-default",
+        "Group": "G0",
+        "Path": "/privacy/",
+        "Language": "ro",
+        "Profile": "default",
+        "Snapshot": false
+      },
+      "file": "privacy-ro-default.html",
+      "bytes": 9478,
+      "sha256": "afb50c59582f5c35617ba91081fb9e1093904f03efc2b9e19a70868b985c0db9",
+      "full_mode": 33152
+    },
+    {
+      "case": {
+        "ID": "privacy-ro-contrast",
+        "Group": "G0",
+        "Path": "/privacy/",
+        "Language": "ro",
+        "Profile": "contrast",
+        "Snapshot": false
+      },
+      "file": "privacy-ro-contrast.html",
+      "bytes": 9484,
+      "sha256": "748d144757c834c72e324bb4686fecb94d3d15c8d835a595b5800b5686e53d59",
+      "full_mode": 33152
+    },
+    {
+      "case": {
+        "ID": "terms-ro-default",
+        "Group": "G0",
+        "Path": "/terms/",
+        "Language": "ro",
+        "Profile": "default",
+        "Snapshot": false
+      },
+      "file": "terms-ro-default.html",
+      "bytes": 7821,
+      "sha256": "bb084d48196111fc1466324386ec2e1c0b2feff64632cc8beac504dffe8d41e0",
+      "full_mode": 33152
+    },
+    {
+      "case": {
+        "ID": "terms-ro-contrast",
+        "Group": "G0",
+        "Path": "/terms/",
+        "Language": "ro",
+        "Profile": "contrast",
+        "Snapshot": false
+      },
+      "file": "terms-ro-contrast.html",
+      "bytes": 7827,
+      "sha256": "b211ecc4bc3cbbf096d4a82d22972e418c2dc86f1da33cdf41c5b7a4d5c4deec",
+      "full_mode": 33152
+    },
+    {
+      "case": {
+        "ID": "open-data-ro-snapshot-false",
+        "Group": "G0",
+        "Path": "/open-data/",
+        "Language": "ro",
+        "Profile": "default",
+        "Snapshot": false
+      },
+      "file": "open-data-ro-snapshot-false.html",
+      "bytes": 8621,
+      "sha256": "3114126118d83557815bd370f692d3a1a99ad8ba4718ac0cb3fce387bfab9220",
+      "full_mode": 33152
+    },
+    {
+      "case": {
+        "ID": "open-data-ro-snapshot-true",
+        "Group": "G0",
+        "Path": "/open-data/",
+        "Language": "ro",
+        "Profile": "default",
+        "Snapshot": true
+      },
+      "file": "open-data-ro-snapshot-true.html",
+      "bytes": 9440,
+      "sha256": "6aef427f673ea578fbd1f27a62431fc9292bbec9f5516c7f8bd85a1aa3682f9f",
+      "full_mode": 33152
+    },
+    {
+      "case": {
+        "ID": "landing-ro",
+        "Group": "G1",
+        "Path": "/",
+        "Language": "ro",
+        "Profile": "default",
+        "Snapshot": false
+      },
+      "file": "landing-ro.html",
+      "bytes": 5504,
+      "sha256": "8f3d8804dd9c2d0ec33d9fe7ff569077d490c4652c56880de254e9e75d0407a8",
+      "full_mode": 33152
+    }
+  ],
+  "streams": {
+    "test-r3.stdout": {
+      "bytes": 17278,
+      "sha256": "51749d2d2703da9ed21c376a78065a4dd0549aa5b04484e5fe17215f5f0fa446"
+    },
+    "test-r3.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "format.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "format": "Actual pinned GOROOTgofmt output byte-equals tested file",
+  "failure_history": {
+    "preflight": "CGO0 blocked race beforecompile, rc2; retained",
+    "initial_fixture": "14renderer cases passed, overwrite-refusal fixture parent0755 failed package; corrected only fixture setup",
+    "initial_test_stdout_sha256": "3f32564064853a949c4023eb5cacb605256ca35683e1e04bad94bb9fe07ce8f3",
+    "superseded_raw_capture": "Compacted after exact15-file roundtrip; latest75dc717 raw setup retained",
+    "archive_sha256": "fbe53ab93fde41d619192e99cdad43cdc0b218a33d8643a930043b3111caa831",
+    "archive_bytes": 15516
+  },
+  "boundaries": {
+    "synthetic_only": true,
+    "native_live": false,
+    "signed_group_matrix": false,
+    "template_conditional_percentage": null,
+    "Django_parity": false,
+    "full_native_21_lanes": "NOT RUN",
+    "retirement_cli": "NOT RUN; existing1651 unresolved preserved",
+    "templ_or_UI_adoption": false,
+    "deployment_or_device": false
+  }
+}
