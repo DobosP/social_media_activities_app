@@ -2379,3 +2379,8 @@ Teacher/raw-data-server sessions were already active and received interface coor
 without duplicate consumer/pin changes. Hosted Actions remains manually disabled; no
 workflow/spending/provider/production/minor/source activation. PR108 awaits required
 human auth/privacy/safety review beforelanding; worktrees/stash are retained.
+
+
+## 2026-10-10 — Independent public GUI original fixtures (source)
+
+At78d3a66, added the real registered-native/Pongo anonymous fixture producer and14public scenarios: privacy/terms EN+RO/default+contrast, open-data EN+RO/snapshot-present+absent, landing EN+RO. Exclusive private rawHTML/source-manifest output is opt-in; no renderer/template/dependency/production changes. ADR0050 records original-native scope, not Django/NativeLive/fullgroup/conditional-percentage acceptance. Unsigned84+7, historical/private applicability holds and1651retirement remain unchanged. Source authored; managed tests/formatting NOT RUN. Parent owns managed runtime coordination, independent landing and release/device decisions.
