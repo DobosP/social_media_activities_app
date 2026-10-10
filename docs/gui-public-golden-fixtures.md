@@ -287,7 +287,7 @@ Original14/latestf010captures, nonce83/staticFS62 receipts and the sole764normal
 SDK retain their separate sources. No recapture, dependency install, prior test
 rerun or new normalizer build occurred. Wider ownership/Live/device gates remain.
 
-## Graph script nonce source section
+## Graph script nonce checkpoint
 
 The separate SOC-4 source adds only existing `request.csp_nonce` attributes to
 the two external scripts in `communities_graph.html`: vendored3d-force-graph first,
@@ -299,13 +299,23 @@ The script tags are unconditional. The actual template branches are the populate
 community list and its empty arm; focused tests render both with synthetic anonymous
 data through OS and caller-owned FS snapshots. They require real native header/tag
 nonce binding and fresh responses, plus missing/wrong/duplicate/path/`defer`, header
-and order mutation refusals. Expected discovery is19actions (2parents/17subcases).
-Formatting, compilation and all new tests are NOT RUN. No graph API/library execution,
-DB/auth/cohort admission, child data or default assembly is involved.
+and order mutation refusals. The original source checkpoint authored19actions
+(2parents/17subcases) before parent review and the recorded runtime reservation.
+No graph API/library execution, DB/auth/cohort admission, child data or default assembly
+is involved.
 
-After parent source/method review and a recorded runtime slot, the existing pinned
-read-only formatter/focused Go route can run
+At tested source `fbfa57a`, the existing pinned read-only formatter returned0 with
+empty streams, then the focused Go command passed:
 `go test -mod=readonly -race -count=1 -json ./internal/web -run '^TestGUIPublicGraphNonce'`.
+The [graph nonce checkpoint](reviews/gui-public-original/graph-nonce-checkpoint.json)
+binds actual19unique actions once (2parents/17subcases), packagePASS1/80JSON events,
+zero failure/skip/cache/race and all26source bytes/fullmodes unchanged. The4CPU/6GiB
+network-none/source-read-only container exited0 without OOM; owned removal returned0
+and exact CID/name absence passed. Parent and program reviewer accepted this scope.
+All28small closure rows plus closure retain exact bytes/fullmodes and sibling names;
+no workspace/cache/dependency/SDK/binary/rawHTML is copied. This later docs commit
+does not create another test execution or relabel earlier receipts.
+
 No original14/83recapture, old suite rerun, SDK/dependency/normalizer build or baseline
 replacement is part of this section. Existing receipts keep their source identities;
 no fullM1/Live/browserCSP/privacy/adoption/device/retirement qualification is claimed.

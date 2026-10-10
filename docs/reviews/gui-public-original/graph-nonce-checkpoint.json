@@ -1,0 +1,596 @@
+{
+  "schema": 1,
+  "artifact_kind": "focused-anonymous-graph-script-native-nonce-evidence",
+  "tested_source": "fbfa57a833a2fcd39d917deed8143f9c58e8a857",
+  "status": "pass",
+  "scope": "SOC-4 focused native OS/FS synthetic graph-template nonce format/race only; no route/backend/auth/cohort/privacy/library/browserCSP/app/full/Live/device qualification",
+  "actual_private_keeper": "_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/graph-nonce-fbfa57a-6f003063-f0dc-40e9-bf90-aae747021b0c",
+  "actual_invocation": "6f003063-f0dc-40e9-bf90-aae747021b0c",
+  "actual_result_sha256": "a9160dfa489c1cb9241854cfc7b250ebf2081b2ed10b12d9f978709dae68f5d3",
+  "actual_closure_sha256": "a62e62a6886d9e2eb29045d9d443d03f694d45db4a69efd0d855be5362965a19",
+  "actual_method": {
+    "bytes": 15307,
+    "sha256": "0d6f97e307e743bf0241a8ae9fd79e5633591bc1b4ed2b586a26d5fcf9a7ebb0",
+    "full_mode": 33152
+  },
+  "actual_image": "sha256:2e040a5165d79be63755424f707fdb8cf609ace831ada7a9baca398ac25e12b9",
+  "actual_format": {
+    "exit_code": 0,
+    "diff_bytes": 0,
+    "stderr_bytes": 0
+  },
+  "actual_tests": {
+    "run": 19,
+    "pass": 19,
+    "top_level": 2,
+    "subcases": 17,
+    "package_pass": 1,
+    "fail": 0,
+    "skip": 0,
+    "cached": false,
+    "identities": [
+      "TestGUIPublicGraphNonceFreshNativeResponses",
+      "TestGUIPublicGraphNonceFreshNativeResponses/filesystem-false/populated-false",
+      "TestGUIPublicGraphNonceFreshNativeResponses/filesystem-false/populated-true",
+      "TestGUIPublicGraphNonceFreshNativeResponses/filesystem-true/populated-false",
+      "TestGUIPublicGraphNonceFreshNativeResponses/filesystem-true/populated-true",
+      "TestGUIPublicGraphNonceRejectsRenderedMutations",
+      "TestGUIPublicGraphNonceRejectsRenderedMutations/script-0/missing-nonce",
+      "TestGUIPublicGraphNonceRejectsRenderedMutations/script-0/wrong-nonce",
+      "TestGUIPublicGraphNonceRejectsRenderedMutations/script-0/duplicate",
+      "TestGUIPublicGraphNonceRejectsRenderedMutations/script-0/changed-path",
+      "TestGUIPublicGraphNonceRejectsRenderedMutations/script-0/changed-defer",
+      "TestGUIPublicGraphNonceRejectsRenderedMutations/script-1/missing-nonce",
+      "TestGUIPublicGraphNonceRejectsRenderedMutations/script-1/wrong-nonce",
+      "TestGUIPublicGraphNonceRejectsRenderedMutations/script-1/duplicate",
+      "TestGUIPublicGraphNonceRejectsRenderedMutations/script-1/changed-path",
+      "TestGUIPublicGraphNonceRejectsRenderedMutations/script-1/changed-defer",
+      "TestGUIPublicGraphNonceRejectsRenderedMutations/missing-header",
+      "TestGUIPublicGraphNonceRejectsRenderedMutations/disagreeing-header",
+      "TestGUIPublicGraphNonceRejectsRenderedMutations/reversed-script-order"
+    ],
+    "JSON_events": 80
+  },
+  "actual_source26_before_after_equal": true,
+  "actual_source26_inputs": [
+    {
+      "path": "AGENTS.md",
+      "bytes": 6610,
+      "sha256": "4e9ba34a8af4b97527f85e01ecb51628b8b4d5c3d5f24baa5a412b332e1f8f04",
+      "full_mode": 33204
+    },
+    {
+      "path": "frontend/package.json",
+      "bytes": 757,
+      "sha256": "d9db2ac078e37992f192f6d57103325891659b352cb09917a026e713301846b0",
+      "full_mode": 33204
+    },
+    {
+      "path": "frontend/package-lock.json",
+      "bytes": 78329,
+      "sha256": "c6cd94641bd86097cd2232e672cda983e388182abd3922a9edb316649f26a53c",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/go.mod",
+      "bytes": 1335,
+      "sha256": "1e0c2e6d9cda30507b6a5dde1d33f795737e609b47124983bbf9786844cabb46",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/go.sum",
+      "bytes": 7767,
+      "sha256": "83cc84cde408f45973444ecee13f40df4abac1c1272c259f463f18703cb6b012",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/renderer.go",
+      "bytes": 5510,
+      "sha256": "94f11a3f1849c919ba100c4ba68236263f71f07741006c1992dadc4020723e68",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/renderer_fs.go",
+      "bytes": 3382,
+      "sha256": "fe484effba370a376d835722e718719289eb2c8fea81d6bde99182276b162673",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/static.go",
+      "bytes": 2394,
+      "sha256": "df27a7589dc84a883cad125cd8067df493d9f13316fc3c9d89904e5db19fd127",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/static_fs.go",
+      "bytes": 2894,
+      "sha256": "daa2e6493d3ad38d0cb564e11a691f3ce7c899e4beb72f0f582ea2c7a16eda78",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_static_fs_test.go",
+      "bytes": 15064,
+      "sha256": "3e7df1f699ea1902be0403ec5899d12c8445ba65657a9f2a767c5807c3819262",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_nonce_test.go",
+      "bytes": 10666,
+      "sha256": "3200f4557be726042234ca36314ed5d419ceb2f8e117abd8df775697940cce72",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_golden_test.go",
+      "bytes": 14274,
+      "sha256": "430775c2330e07b671897b372caf41844f1c5786ef60e741fb85252df32f1ad9",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_normalize_test.go",
+      "bytes": 8477,
+      "sha256": "b537803d403a11f258bb86e2754985f02da1fac49627cf1e4bf7e8de5e42f56a",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/app/app.go",
+      "bytes": 22947,
+      "sha256": "bafbe950fe966cff748edd59c6961ba1c1cd023b2857a4117d8a1b03bd2b3cec",
+      "full_mode": 33204
+    },
+    {
+      "path": "templates/base.html",
+      "bytes": 13658,
+      "sha256": "a8a5354db2968c99dcf043a2bb04ac635eb199a72455efe5cd96fc2946292b2c",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/communities_graph.html",
+      "bytes": 1733,
+      "sha256": "1bce8a688fbea5ce738ad19b01a7e0c282b8d084da78f32c5575271be28ce770",
+      "full_mode": 33204
+    },
+    {
+      "path": "docs/reviews/gui-public-original/checkpoint.json",
+      "bytes": 11798,
+      "sha256": "3fa46e9a1fcb3ab8aa4baefa80c54a8d050b59527402db18cb20e24bbc104f1c",
+      "full_mode": 33204
+    },
+    {
+      "path": "docs/reviews/gui-public-original/nonce-checkpoint.json",
+      "bytes": 49417,
+      "sha256": "b0a66c886ef77ddc68ce9d69c0420a937d46f36345934ce8ac3aadba78487ace",
+      "full_mode": 33204
+    },
+    {
+      "path": "docs/reviews/gui-public-original/static-fs-checkpoint.json",
+      "bytes": 18178,
+      "sha256": "823f04494580a62d86500d10cc74c05fa022fbfc8bbcb06bdec1ef3ba143dbbf",
+      "full_mode": 33152
+    },
+    {
+      "path": "tools/gui-public-golden/release-bindings.json",
+      "bytes": 9594,
+      "sha256": "d845c6a1640e1f1cbe67f63af3ddc8ba7795d73ff0c2d97b23cb8ee4ff953015",
+      "full_mode": 33188
+    },
+    {
+      "path": "tools/gui-public-golden/normalize.go",
+      "bytes": 1465,
+      "sha256": "5282ddb0dab9101b028e6eda5411fc29995bf9f3a5b5de1d62c157a76eccd458",
+      "full_mode": 33204
+    },
+    {
+      "path": "tools/gui-public-golden/normalize_test.go",
+      "bytes": 4317,
+      "sha256": "f9bac4f56a598f5822054e846ef622ff2baecd885bd670cf0a4211d7c61704f7",
+      "full_mode": 33204
+    },
+    {
+      "path": "static/js/community-graph.js",
+      "bytes": 3609,
+      "sha256": "122b7770e767dbe03c6660da7302eb182af7321b08288dcf8370d88d0abfcd0d",
+      "full_mode": 33204
+    },
+    {
+      "path": "static/css/base.css",
+      "bytes": 62402,
+      "sha256": "fc8d836db019e66946f4ac0db0c4987f99a27422900bb5628a228e8111faecee",
+      "full_mode": 33204
+    },
+    {
+      "path": "tools/gui-public-golden/community-graph-fallback.test.mjs",
+      "bytes": 6382,
+      "sha256": "235177a6d461883704bd80cec8be58b0fd627bd14fbfa8da33dea774a3c6cc8b",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_graph_nonce_test.go",
+      "bytes": 7915,
+      "sha256": "3416d6d16030b5ab5f853caf37fd3f67779bc793c1d0860d9289b79b14cb53c5",
+      "full_mode": 33204
+    }
+  ],
+  "actual_container": {
+    "created": {
+      "id": "581684164a8af754bd0d58474e790d76e00d068aa5153809bb2d940a4da67ed3",
+      "name": "/social-graph-nonce-6f003063-f0dc-40e9-bf90-aae747021b0c",
+      "image": "sha256:2e040a5165d79be63755424f707fdb8cf609ace831ada7a9baca398ac25e12b9",
+      "running": false,
+      "exit_code": 0,
+      "oom_killed": false,
+      "user": "1000:1000",
+      "cpus": 4000000000,
+      "memory": 6442450944,
+      "network": "none",
+      "mounts": [
+        {
+          "Destination": "/work",
+          "Mode": "",
+          "Propagation": "rprivate",
+          "RW": false,
+          "Source": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a",
+          "Type": "bind"
+        },
+        {
+          "Destination": "/scratch/go-build",
+          "Mode": "",
+          "Propagation": "rprivate",
+          "RW": true,
+          "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/go-build",
+          "Type": "bind"
+        },
+        {
+          "Destination": "/scratch/go-mod",
+          "Mode": "",
+          "Propagation": "rprivate",
+          "RW": true,
+          "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/go-mod",
+          "Type": "bind"
+        },
+        {
+          "Destination": "/scratch/tmp",
+          "Mode": "",
+          "Propagation": "rprivate",
+          "RW": true,
+          "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/tmp",
+          "Type": "bind"
+        },
+        {
+          "Destination": "/proof",
+          "Mode": "",
+          "Propagation": "rprivate",
+          "RW": true,
+          "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/graph-nonce-fbfa57a-6f003063-f0dc-40e9-bf90-aae747021b0c",
+          "Type": "bind"
+        }
+      ]
+    },
+    "exited": {
+      "id": "581684164a8af754bd0d58474e790d76e00d068aa5153809bb2d940a4da67ed3",
+      "name": "/social-graph-nonce-6f003063-f0dc-40e9-bf90-aae747021b0c",
+      "image": "sha256:2e040a5165d79be63755424f707fdb8cf609ace831ada7a9baca398ac25e12b9",
+      "running": false,
+      "exit_code": 0,
+      "oom_killed": false,
+      "user": "1000:1000",
+      "cpus": 4000000000,
+      "memory": 6442450944,
+      "network": "none",
+      "mounts": [
+        {
+          "Destination": "/work",
+          "Mode": "",
+          "Propagation": "rprivate",
+          "RW": false,
+          "Source": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a",
+          "Type": "bind"
+        },
+        {
+          "Destination": "/scratch/go-build",
+          "Mode": "",
+          "Propagation": "rprivate",
+          "RW": true,
+          "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/go-build",
+          "Type": "bind"
+        },
+        {
+          "Destination": "/scratch/go-mod",
+          "Mode": "",
+          "Propagation": "rprivate",
+          "RW": true,
+          "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/go-mod",
+          "Type": "bind"
+        },
+        {
+          "Destination": "/scratch/tmp",
+          "Mode": "",
+          "Propagation": "rprivate",
+          "RW": true,
+          "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/tmp",
+          "Type": "bind"
+        },
+        {
+          "Destination": "/proof",
+          "Mode": "",
+          "Propagation": "rprivate",
+          "RW": true,
+          "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/graph-nonce-fbfa57a-6f003063-f0dc-40e9-bf90-aae747021b0c",
+          "Type": "bind"
+        }
+      ]
+    }
+  },
+  "actual_cleanup": {
+    "id": "581684164a8af754bd0d58474e790d76e00d068aa5153809bb2d940a4da67ed3",
+    "name": "social-graph-nonce-6f003063-f0dc-40e9-bf90-aae747021b0c",
+    "remove_exit": 0,
+    "id_absent": true,
+    "name_absent": true,
+    "passed": true
+  },
+  "actual_controls_all_exit0": true,
+  "actual_errors": [],
+  "payload": [
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/graph-nonce-fbfa57a-6f003063-f0dc-40e9-bf90-aae747021b0c/container.cid",
+      "path": "container.cid",
+      "bytes": 64,
+      "sha256": "a16833365e0ba84e9d901c7b810ef9fad37ec55e2286f7a1eda589ca4648d777",
+      "source_full_mode": 33204,
+      "tracked_copy_full_mode": 33204
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/graph-nonce-fbfa57a-6f003063-f0dc-40e9-bf90-aae747021b0c/control-00.stderr",
+      "path": "control-00.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/graph-nonce-fbfa57a-6f003063-f0dc-40e9-bf90-aae747021b0c/control-00.stdout",
+      "path": "control-00.stdout",
+      "bytes": 72,
+      "sha256": "7aa16fdca68c8e892b9f6175e4b16af62027e2a5553fd18c527b104e940053b5",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/graph-nonce-fbfa57a-6f003063-f0dc-40e9-bf90-aae747021b0c/control-01.stderr",
+      "path": "control-01.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/graph-nonce-fbfa57a-6f003063-f0dc-40e9-bf90-aae747021b0c/control-01.stdout",
+      "path": "control-01.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/graph-nonce-fbfa57a-6f003063-f0dc-40e9-bf90-aae747021b0c/control-02.stderr",
+      "path": "control-02.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/graph-nonce-fbfa57a-6f003063-f0dc-40e9-bf90-aae747021b0c/control-02.stdout",
+      "path": "control-02.stdout",
+      "bytes": 65,
+      "sha256": "b18023913f456d0f6afbe54b58649cffd9430d379dc524ff4d2d63826c7d915f",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/graph-nonce-fbfa57a-6f003063-f0dc-40e9-bf90-aae747021b0c/control-03.stderr",
+      "path": "control-03.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/graph-nonce-fbfa57a-6f003063-f0dc-40e9-bf90-aae747021b0c/control-03.stdout",
+      "path": "control-03.stdout",
+      "bytes": 1328,
+      "sha256": "342cc8dd12113850976c6c5b5adcb2882da81e8864fa2c408b011b7efbca99d5",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/graph-nonce-fbfa57a-6f003063-f0dc-40e9-bf90-aae747021b0c/control-04.stderr",
+      "path": "control-04.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/graph-nonce-fbfa57a-6f003063-f0dc-40e9-bf90-aae747021b0c/control-04.stdout",
+      "path": "control-04.stdout",
+      "bytes": 1328,
+      "sha256": "342cc8dd12113850976c6c5b5adcb2882da81e8864fa2c408b011b7efbca99d5",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/graph-nonce-fbfa57a-6f003063-f0dc-40e9-bf90-aae747021b0c/control-05.stderr",
+      "path": "control-05.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/graph-nonce-fbfa57a-6f003063-f0dc-40e9-bf90-aae747021b0c/control-05.stdout",
+      "path": "control-05.stdout",
+      "bytes": 1328,
+      "sha256": "19e6d74935137c492102a5428092e09eb0e3c43824c8db842e85dc871a522c52",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/graph-nonce-fbfa57a-6f003063-f0dc-40e9-bf90-aae747021b0c/control-06.stderr",
+      "path": "control-06.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/graph-nonce-fbfa57a-6f003063-f0dc-40e9-bf90-aae747021b0c/control-06.stdout",
+      "path": "control-06.stdout",
+      "bytes": 65,
+      "sha256": "b18023913f456d0f6afbe54b58649cffd9430d379dc524ff4d2d63826c7d915f",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/graph-nonce-fbfa57a-6f003063-f0dc-40e9-bf90-aae747021b0c/control-07.stderr",
+      "path": "control-07.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/graph-nonce-fbfa57a-6f003063-f0dc-40e9-bf90-aae747021b0c/control-07.stdout",
+      "path": "control-07.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/graph-nonce-fbfa57a-6f003063-f0dc-40e9-bf90-aae747021b0c/control-08.stderr",
+      "path": "control-08.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/graph-nonce-fbfa57a-6f003063-f0dc-40e9-bf90-aae747021b0c/control-08.stdout",
+      "path": "control-08.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/graph-nonce-fbfa57a-6f003063-f0dc-40e9-bf90-aae747021b0c/docker-start.stderr",
+      "path": "docker-start.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/graph-nonce-fbfa57a-6f003063-f0dc-40e9-bf90-aae747021b0c/docker-start.stdout",
+      "path": "docker-start.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/graph-nonce-fbfa57a-6f003063-f0dc-40e9-bf90-aae747021b0c/format.exit",
+      "path": "format.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/graph-nonce-fbfa57a-6f003063-f0dc-40e9-bf90-aae747021b0c/format.stderr",
+      "path": "format.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/graph-nonce-fbfa57a-6f003063-f0dc-40e9-bf90-aae747021b0c/format.stdout",
+      "path": "format.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/graph-nonce-fbfa57a-6f003063-f0dc-40e9-bf90-aae747021b0c/result.json",
+      "path": "result.json",
+      "bytes": 27618,
+      "sha256": "a9160dfa489c1cb9241854cfc7b250ebf2081b2ed10b12d9f978709dae68f5d3",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/graph-nonce-fbfa57a-6f003063-f0dc-40e9-bf90-aae747021b0c/tests.exit",
+      "path": "tests.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/graph-nonce-fbfa57a-6f003063-f0dc-40e9-bf90-aae747021b0c/tests.stderr",
+      "path": "tests.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/graph-nonce-fbfa57a-6f003063-f0dc-40e9-bf90-aae747021b0c/tests.stdout",
+      "path": "tests.stdout",
+      "bytes": 22317,
+      "sha256": "429caf9e02a41c8f2706932c01e6c6ab8f017fa458ef08184d8d1f45b7ec5825",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/graph-nonce-fbfa57a-6f003063-f0dc-40e9-bf90-aae747021b0c/CLOSURE.json",
+      "path": "CLOSURE.json",
+      "bytes": 5568,
+      "sha256": "a62e62a6886d9e2eb29045d9d443d03f694d45db4a69efd0d855be5362965a19",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    }
+  ],
+  "payload_scope": "Exact 28 small closure rows plus closure, all sibling filenames retained. No workspace/cache/dependencies/SDK/binary/rawHTML copies. Full modes are the physical transfer observation; Git encodes only the executable bit.",
+  "actual_behavior_boundary": "Renderer.Render through OS/FS synthetic anonymous presentation contexts, empty/populated list and nonce mutation controls. No registered route, DB/auth/cohort admission, graph API/library or browser execution.",
+  "actual_conditional_scope": "Both graph scripts remain unconditional; four OS/FS x populated/empty list combinations each render twice with fresh nonce checks.",
+  "independent_actual_review": {
+    "actors": [
+      "parent",
+      "/root/program_pack"
+    ],
+    "basis": "Parent accepted actual session3209/PASS0/resulta9160dfa/closurea62e62a6, raw80events/19once/packagePASS/no fail-skip-cache-race/source26/isolation/cleanup."
+  },
+  "source_delta": "Only two existing graph-script nonce attributes use the existing request.csp_nonce; exact source inverse preserves every other template byte/path/order/defer. Current self policy already permits those same-origin assets; no CSP policy change or closure is claimed.",
+  "prior_proofs_preserved": {
+    "original14": "75dc717",
+    "nonce83": "f010e0d",
+    "staticFS62": "35441ad",
+    "SOC3_VM14": "a8b9dc5",
+    "normalizer_build": "764beb1",
+    "no_old_proof_relabelled_current": true,
+    "no_original_recapture_or_sdk_dependency_build": true
+  },
+  "later_docs_HEAD_is_not_a_new_execution": true,
+  "wider_holds": [
+    "vendor library style injection",
+    "browser/CSP",
+    "registered-route/backend/auth/cohort/privacy/DB",
+    "Live/fullM1/unsigned84+7/1651retirement",
+    "default embedding/templ/UI adoption",
+    "device/deployment"
+  ]
+}
