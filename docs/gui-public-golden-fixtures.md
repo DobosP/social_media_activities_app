@@ -438,7 +438,8 @@ assembly or application-adoption acceptance follows.
 
 ## Places and shared near-me nonce source checkpoint
 
-SOC-7 is SOURCE ONLY, NOT RUN. It adds the existing `request.csp_nonce` only to
+Historical source checkpoint (2026-10-11,150c87b): SOURCE ONLY, NOT RUN then.
+It adds the existing `request.csp_nonce` only to
 places.html's blocking MapLibre script, its deferred places-map script and the
 shared near-me partial's deferred script. Exact whole-file inverses restore the
 2791B map and931B partial preimages; paths/order/load attributes and every other
@@ -469,3 +470,36 @@ d722 released archive and original15files are reused unchanged. No helper build,
 dependency install, original14recapture or old34 rerun is included. Prior receipts
 retain their tested sources; no new execution, browserCSP, fullM1/Live/privacy,
 device, default assembly, adoption or retirement acceptance is recorded.
+
+
+### SOC-7 focused actual checkpoint
+
+At tested `b5403bc`, the existing pinned managed formatter returned0 with empty
+streams, followed by46 unique native actions once (3parents/43children), package
+PASS1/210JSON events and zero fail/skip/cache/race. The [compact checkpoint](reviews/gui-public-original/places-nonce-checkpoint.json)
+binds exact result/closure/control/stream bytes and parent actual review. All53
+selected app and18 existing external byte/full-mode guards stayed equal. The
+network-none/source-read-only4CPU/6GiB container exited0 without OOM; owned remove0
+and exact CID/name absence passed. Parent and independent peer accepted this scope.
+
+Twenty OS/FS presentation cases cover10 shapes, including affected Home and both
+activities query branches; no admission is inferred. Eighteen binding mutations
+and five safe DOM mutations passed. Existing native nonce/header/tag checks own
+freshness and missing/wrong/duplicate/path/load/order refusals separately from
+released SDK hard findings. Original/finite-expected/current comparisons passed
+with unchanged delivered volatility;71 normalizations is source-expected only,
+without an independent invocation census or separate browser test count.
+
+The initial150 source-only hold omitted unchanged ` &rarr;` in three fallback
+anchor literals. No runtime ran there. The b540 successor adds only those21bytes
+in the new test; its whole inverse restores150, and all46 cases/product bytes
+remain. Frozen source and method packets preserve both stages. This later docs
+commit is distinct from testedb540 and is not another execution.
+
+Thirty small literal result/stream/control/closure/parent-review files are copied.
+Original private600 and public tracked664 modes are recorded, with the original
+container.cid664 distinguished. No rawHTML/workspace/dependency/cache/SDK/binary
+clone is added. Original14/15files, sole764+d722 setup, all earlier proofs and
+source/failure keepers stay unchanged. No map/API/geolocation/registered route,
+auth/cohort/privacy/browserCSP/full/Live/device/default/adoption/retirement
+acceptance follows.

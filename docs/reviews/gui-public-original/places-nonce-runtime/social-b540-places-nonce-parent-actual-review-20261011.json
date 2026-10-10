@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "verdict": "ACTUAL SOC7 bounded PASS verified; independent review pending",
+  "source": "b5403bcbdf60d9ab3dd1039ed211f84705e9ab13",
+  "invocation": "363b287b-48e2-4e5f-a2af-94a4edeca3d1",
+  "wrapper_session": 98370,
+  "wrapper_exit": 0,
+  "result_sha256": "379448dadc30155247bc580b9138f9307a4cc45a612980da064122849c401156",
+  "closure": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/places-nonce-b5403bc-363b287b-48e2-4e5f-a2af-94a4edeca3d1/CLOSURE.json",
+  "closure_sha256": "ac80be755490119c609ced6a33a1ab71577019850ecc69bdef4b265ab24b0784",
+  "regular_rows": 28,
+  "bytes": 123730,
+  "unchanged_current_source_rows": 53,
+  "unchanged_external_rows": 18,
+  "actual_native_run_pass_once": 46,
+  "parents": 3,
+  "subcases": 43,
+  "events": 210,
+  "package_pass": 1,
+  "fail_skip_cache_race": 0,
+  "format_diff_bytes": 0,
+  "actual_owned_cleanup": {
+    "id": "378faad3fc8cd6e47d7060da68c0fcccc0c29744b8dff73b3a471c568f2596b4",
+    "name": "social-places-nonce-363b287b-48e2-4e5f-a2af-94a4edeca3d1",
+    "remove_exit": 0,
+    "id_absent": true,
+    "name_absent": true,
+    "passed": true
+  },
+  "scope": "SOC-7 OS/FS synthetic places/shared near-me presentation, native nonce binding and released DOM only; no map/API/geolocation/route/admission/DB/auth/cohort/privacy/browserCSP/app/full/Live/device qualification"
+}

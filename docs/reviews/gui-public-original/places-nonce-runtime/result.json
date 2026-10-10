@@ -1,0 +1,1439 @@
+{
+  "schema": 1,
+  "scope": "SOC-7 OS/FS synthetic places/shared near-me presentation, native nonce binding and released DOM only; no map/API/geolocation/route/admission/DB/auth/cohort/privacy/browserCSP/app/full/Live/device qualification",
+  "source": "b5403bcbdf60d9ab3dd1039ed211f84705e9ab13",
+  "invocation": "363b287b-48e2-4e5f-a2af-94a4edeca3d1",
+  "image_argument": "sha256:2e040a5165d79be63755424f707fdb8cf609ace831ada7a9baca398ac25e12b9",
+  "ledger": {
+    "bytes": 16172,
+    "sha256": "265e8fa1118a9e7de17a573edb083c080399b440b6944a5f39b443c989000c6e",
+    "full_mode": 33152
+  },
+  "method_source": {
+    "bytes": 18910,
+    "sha256": "d5c603689254dd4ac7f10a6ef63179c8a92ed06916345756178d9e6bdd0a5750",
+    "full_mode": 33152
+  },
+  "method_pass": true,
+  "format": {
+    "exit_code": 0,
+    "diff_bytes": 0,
+    "stderr_bytes": 0
+  },
+  "tests": {
+    "run": 46,
+    "pass": 46,
+    "top_level": 3,
+    "subcases": 43,
+    "package_pass": 1,
+    "fail": 0,
+    "skip": 0,
+    "cached": false,
+    "identities": [
+      "TestGUIPublicPlacesNonceDOM",
+      "TestGUIPublicPlacesNonceDOM/filesystem-false/map-empty",
+      "TestGUIPublicPlacesNonceDOM/filesystem-false/map-categories",
+      "TestGUIPublicPlacesNonceDOM/filesystem-false/list-empty",
+      "TestGUIPublicPlacesNonceDOM/filesystem-false/list-populated",
+      "TestGUIPublicPlacesNonceDOM/filesystem-false/list-near-active",
+      "TestGUIPublicPlacesNonceDOM/filesystem-false/home-empty",
+      "TestGUIPublicPlacesNonceDOM/filesystem-false/home-near-active",
+      "TestGUIPublicPlacesNonceDOM/filesystem-false/activities-empty",
+      "TestGUIPublicPlacesNonceDOM/filesystem-false/activities-near-active",
+      "TestGUIPublicPlacesNonceDOM/filesystem-false/activities-search",
+      "TestGUIPublicPlacesNonceDOM/filesystem-true/map-empty",
+      "TestGUIPublicPlacesNonceDOM/filesystem-true/map-categories",
+      "TestGUIPublicPlacesNonceDOM/filesystem-true/list-empty",
+      "TestGUIPublicPlacesNonceDOM/filesystem-true/list-populated",
+      "TestGUIPublicPlacesNonceDOM/filesystem-true/list-near-active",
+      "TestGUIPublicPlacesNonceDOM/filesystem-true/home-empty",
+      "TestGUIPublicPlacesNonceDOM/filesystem-true/home-near-active",
+      "TestGUIPublicPlacesNonceDOM/filesystem-true/activities-empty",
+      "TestGUIPublicPlacesNonceDOM/filesystem-true/activities-near-active",
+      "TestGUIPublicPlacesNonceDOM/filesystem-true/activities-search",
+      "TestGUIPublicPlacesNonceRejectsBindingMutations",
+      "TestGUIPublicPlacesNonceRejectsBindingMutations/script-0/missing-nonce",
+      "TestGUIPublicPlacesNonceRejectsBindingMutations/script-0/wrong-nonce",
+      "TestGUIPublicPlacesNonceRejectsBindingMutations/script-0/duplicate",
+      "TestGUIPublicPlacesNonceRejectsBindingMutations/script-0/changed-path",
+      "TestGUIPublicPlacesNonceRejectsBindingMutations/script-0/changed-defer",
+      "TestGUIPublicPlacesNonceRejectsBindingMutations/script-1/missing-nonce",
+      "TestGUIPublicPlacesNonceRejectsBindingMutations/script-1/wrong-nonce",
+      "TestGUIPublicPlacesNonceRejectsBindingMutations/script-1/duplicate",
+      "TestGUIPublicPlacesNonceRejectsBindingMutations/script-1/changed-path",
+      "TestGUIPublicPlacesNonceRejectsBindingMutations/script-1/changed-defer",
+      "TestGUIPublicPlacesNonceRejectsBindingMutations/script-2/missing-nonce",
+      "TestGUIPublicPlacesNonceRejectsBindingMutations/script-2/wrong-nonce",
+      "TestGUIPublicPlacesNonceRejectsBindingMutations/script-2/duplicate",
+      "TestGUIPublicPlacesNonceRejectsBindingMutations/script-2/changed-path",
+      "TestGUIPublicPlacesNonceRejectsBindingMutations/script-2/changed-defer",
+      "TestGUIPublicPlacesNonceRejectsBindingMutations/missing-header",
+      "TestGUIPublicPlacesNonceRejectsBindingMutations/disagreeing-header",
+      "TestGUIPublicPlacesNonceRejectsBindingMutations/map-script-order",
+      "TestGUIPublicPlacesNonceRejectsDOMMutations",
+      "TestGUIPublicPlacesNonceRejectsDOMMutations/map-worker-path",
+      "TestGUIPublicPlacesNonceRejectsDOMMutations/map-text-fallback-link",
+      "TestGUIPublicPlacesNonceRejectsDOMMutations/map-filter-value",
+      "TestGUIPublicPlacesNonceRejectsDOMMutations/list-near-copy",
+      "TestGUIPublicPlacesNonceRejectsDOMMutations/list-place-link"
+    ],
+    "JSON_events": 210
+  },
+  "before": [
+    {
+      "path": "AGENTS.md",
+      "bytes": 6610,
+      "sha256": "4e9ba34a8af4b97527f85e01ecb51628b8b4d5c3d5f24baa5a412b332e1f8f04",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/_activity_card.html",
+      "bytes": 2147,
+      "sha256": "bcea7db152f52d99ec1be70bb99cc831985197358f1ec359c44929a1f6cd5bd9",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/_near_me.html",
+      "bytes": 963,
+      "sha256": "5d0d51928ecda90b79843c3358514820f559ae7f3cf580f53c24d202259aef41",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/activities.html",
+      "bytes": 5197,
+      "sha256": "efb88d6e2731dce2433e0836b277e7748683f467eb19e052bc3ed56014403cd3",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/communities.html",
+      "bytes": 3328,
+      "sha256": "e57c0c3d9384dcf9baf497d92c933b883447ac9f0039dcc968870882476731c4",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/communities_graph.html",
+      "bytes": 1733,
+      "sha256": "1bce8a688fbea5ce738ad19b01a7e0c282b8d084da78f32c5575271be28ce770",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/home.html",
+      "bytes": 5439,
+      "sha256": "f1ec40eff38cbdc0c396ede308c73362c15d7132ee71203c88a25ec48d70db0c",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/landing.html",
+      "bytes": 1875,
+      "sha256": "8fd980d985011f42c519281fd165bb22696175a66d5104a5cd3367e18a9ef4df",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/open_data.html",
+      "bytes": 5306,
+      "sha256": "ae75cc9b3dc9f9dabbcd4ce62de63bc25ad538051a33a96b01c77691e938100d",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/places.html",
+      "bytes": 2855,
+      "sha256": "1ddadcc95a63c0e9912f4fad30ab8e2d4bd266e55f03c8e5ab00fafcf8abbc2e",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/places_list.html",
+      "bytes": 3071,
+      "sha256": "cd5e1a614f086572a4d807be617a2059c2e1fae7d8200c352ba669d9ca4676ca",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/privacy.html",
+      "bytes": 5691,
+      "sha256": "6538ae63b9870de290b1725c8528eb400bc4c0888ac39c509fac32158dc89e79",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/terms.html",
+      "bytes": 3876,
+      "sha256": "848ebae7fa912b5adeb4381cc437e4383686920a19124c5cc83b68ee929854d9",
+      "full_mode": 33204
+    },
+    {
+      "path": "docs/reviews/gui-public-original/checkpoint.json",
+      "bytes": 11798,
+      "sha256": "3fa46e9a1fcb3ab8aa4baefa80c54a8d050b59527402db18cb20e24bbc104f1c",
+      "full_mode": 33204
+    },
+    {
+      "path": "docs/reviews/gui-public-original/nonce-checkpoint.json",
+      "bytes": 49417,
+      "sha256": "b0a66c886ef77ddc68ce9d69c0420a937d46f36345934ce8ac3aadba78487ace",
+      "full_mode": 33204
+    },
+    {
+      "path": "docs/reviews/gui-public-original/static-fs-checkpoint.json",
+      "bytes": 18178,
+      "sha256": "823f04494580a62d86500d10cc74c05fa022fbfc8bbcb06bdec1ef3ba143dbbf",
+      "full_mode": 33152
+    },
+    {
+      "path": "frontend/package-lock.json",
+      "bytes": 78329,
+      "sha256": "c6cd94641bd86097cd2232e672cda983e388182abd3922a9edb316649f26a53c",
+      "full_mode": 33204
+    },
+    {
+      "path": "frontend/package.json",
+      "bytes": 757,
+      "sha256": "d9db2ac078e37992f192f6d57103325891659b352cb09917a026e713301846b0",
+      "full_mode": 33204
+    },
+    {
+      "path": "locale/ro/LC_MESSAGES/django.po",
+      "bytes": 113861,
+      "sha256": "186558af2dbb8016c313d09bd0b8508bd5365d61961bcabb3a681c66b99b154c",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/go.mod",
+      "bytes": 1335,
+      "sha256": "1e0c2e6d9cda30507b6a5dde1d33f795737e609b47124983bbf9786844cabb46",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/go.sum",
+      "bytes": 7767,
+      "sha256": "83cc84cde408f45973444ecee13f40df4abac1c1272c259f463f18703cb6b012",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/app/app.go",
+      "bytes": 22947,
+      "sha256": "bafbe950fe966cff748edd59c6961ba1c1cd023b2857a4117d8a1b03bd2b3cec",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_community_pagination_test.go",
+      "bytes": 10039,
+      "sha256": "77f753e282bcd8f4b96d00125d5b88ffa883f521641119d7482aaaa3f316a5c5",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_community_style_test.go",
+      "bytes": 11000,
+      "sha256": "3f23e85f624c0d5b98fac0a21c4bca124841c57802c252855cfdf36517e9fc5d",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_golden_test.go",
+      "bytes": 14274,
+      "sha256": "430775c2330e07b671897b372caf41844f1c5786ef60e741fb85252df32f1ad9",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_graph_nonce_test.go",
+      "bytes": 7915,
+      "sha256": "3416d6d16030b5ab5f853caf37fd3f67779bc793c1d0860d9289b79b14cb53c5",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_nonce_test.go",
+      "bytes": 10666,
+      "sha256": "3200f4557be726042234ca36314ed5d419ceb2f8e117abd8df775697940cce72",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_normalize_test.go",
+      "bytes": 8477,
+      "sha256": "b537803d403a11f258bb86e2754985f02da1fac49627cf1e4bf7e8de5e42f56a",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_places_nonce_test.go",
+      "bytes": 18462,
+      "sha256": "775dc84bd94ef52cc07025e283339ddb440e879f737daf2da31af77b310fe169",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_static_fs_test.go",
+      "bytes": 15064,
+      "sha256": "3e7df1f699ea1902be0403ec5899d12c8445ba65657a9f2a767c5807c3819262",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/i18n.go",
+      "bytes": 4187,
+      "sha256": "b6a6febb5c6795177ccb6f3d52659f7e00ee7c4fbf1aa2104d794e5fdd2c811c",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/public_pages.go",
+      "bytes": 17440,
+      "sha256": "6dfb36642cde63c253899ff8e76a1555a8bfb33cd068ef1dcca5861fdc82a2b4",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/renderer.go",
+      "bytes": 5510,
+      "sha256": "94f11a3f1849c919ba100c4ba68236263f71f07741006c1992dadc4020723e68",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/renderer_fs.go",
+      "bytes": 3382,
+      "sha256": "fe484effba370a376d835722e718719289eb2c8fea81d6bde99182276b162673",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/renderer_fs_test.go",
+      "bytes": 11279,
+      "sha256": "74d9a05ee399a11d60f1628969882ed1210ee454c62aeb95f14b3ac659adbc81",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/routes.json",
+      "bytes": 7167,
+      "sha256": "d10de3908d9537bbdeb2f51427bcb1ecdffc57e9d5a5066cc3166c9fbb559fc3",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/social_discovery.go",
+      "bytes": 14239,
+      "sha256": "596d5678603e71d3ebbd419d549dd9b0238d76f22896679ced1e2f5f1955bfec",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/social_pages.go",
+      "bytes": 33451,
+      "sha256": "64dea26858377fafc0fdc047d0f64b355afaa135aef4dbd4f8cd1a949c681ce7",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/static.go",
+      "bytes": 2394,
+      "sha256": "df27a7589dc84a883cad125cd8067df493d9f13316fc3c9d89904e5db19fd127",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/static_fs.go",
+      "bytes": 2894,
+      "sha256": "daa2e6493d3ad38d0cb564e11a691f3ce7c899e4beb72f0f582ea2c7a16eda78",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/templates.go",
+      "bytes": 14282,
+      "sha256": "8098259abbf45838fc732630188cde4b73ccefbc0f5e729b75497f6988db4b97",
+      "full_mode": 33204
+    },
+    {
+      "path": "static/css/base.css",
+      "bytes": 62453,
+      "sha256": "41f0f6a04b14da0874000ed7c9010f5dd75e2040a6f09082607ba12cf890fa00",
+      "full_mode": 33204
+    },
+    {
+      "path": "static/js/community-graph.js",
+      "bytes": 3609,
+      "sha256": "122b7770e767dbe03c6660da7302eb182af7321b08288dcf8370d88d0abfcd0d",
+      "full_mode": 33204
+    },
+    {
+      "path": "static/js/near-me.js",
+      "bytes": 829,
+      "sha256": "e42b390eae1db14d5f8976241fa636b82a5a12a166d5810a858c536b76733bdb",
+      "full_mode": 33204
+    },
+    {
+      "path": "static/js/places-map.js",
+      "bytes": 20487,
+      "sha256": "3f7dbc11a4c57e0ecf53cf6d7f0dc20b39ae6f26f76d810a78aa2d572f62c2d0",
+      "full_mode": 33204
+    },
+    {
+      "path": "static/vendor/maplibre/maplibre-gl-csp-worker.js",
+      "bytes": 457880,
+      "sha256": "f950e7b15c49c8b9c7bb52136df2a2df2f6f03b83b8927774573fc98b067f7f0",
+      "full_mode": 33204
+    },
+    {
+      "path": "static/vendor/maplibre/maplibre-gl-csp.js",
+      "bytes": 971665,
+      "sha256": "a1f1847bac64aa00acbf80fbb79b2c5af24d8eecaaa5e2ad14080fab81f1de95",
+      "full_mode": 33204
+    },
+    {
+      "path": "static/vendor/maplibre/maplibre-gl.css",
+      "bytes": 70024,
+      "sha256": "ab1e70d59ec40465bae7e7030da2f3ccf28133fd502e62bd598eefbadfd7a732",
+      "full_mode": 33204
+    },
+    {
+      "path": "templates/base.html",
+      "bytes": 13658,
+      "sha256": "a8a5354db2968c99dcf043a2bb04ac635eb199a72455efe5cd96fc2946292b2c",
+      "full_mode": 33204
+    },
+    {
+      "path": "tools/gui-public-golden/community-graph-fallback.test.mjs",
+      "bytes": 6382,
+      "sha256": "235177a6d461883704bd80cec8be58b0fd627bd14fbfa8da33dea774a3c6cc8b",
+      "full_mode": 33204
+    },
+    {
+      "path": "tools/gui-public-golden/normalize.go",
+      "bytes": 1465,
+      "sha256": "5282ddb0dab9101b028e6eda5411fc29995bf9f3a5b5de1d62c157a76eccd458",
+      "full_mode": 33204
+    },
+    {
+      "path": "tools/gui-public-golden/normalize_test.go",
+      "bytes": 4317,
+      "sha256": "f9bac4f56a598f5822054e846ef622ff2baecd885bd670cf0a4211d7c61704f7",
+      "full_mode": 33204
+    },
+    {
+      "path": "tools/gui-public-golden/release-bindings.json",
+      "bytes": 9594,
+      "sha256": "d845c6a1640e1f1cbe67f63af3ddc8ba7795d73ff0c2d97b23cb8ee4ff953015",
+      "full_mode": 33188
+    }
+  ],
+  "after": [
+    {
+      "path": "AGENTS.md",
+      "bytes": 6610,
+      "sha256": "4e9ba34a8af4b97527f85e01ecb51628b8b4d5c3d5f24baa5a412b332e1f8f04",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/_activity_card.html",
+      "bytes": 2147,
+      "sha256": "bcea7db152f52d99ec1be70bb99cc831985197358f1ec359c44929a1f6cd5bd9",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/_near_me.html",
+      "bytes": 963,
+      "sha256": "5d0d51928ecda90b79843c3358514820f559ae7f3cf580f53c24d202259aef41",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/activities.html",
+      "bytes": 5197,
+      "sha256": "efb88d6e2731dce2433e0836b277e7748683f467eb19e052bc3ed56014403cd3",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/communities.html",
+      "bytes": 3328,
+      "sha256": "e57c0c3d9384dcf9baf497d92c933b883447ac9f0039dcc968870882476731c4",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/communities_graph.html",
+      "bytes": 1733,
+      "sha256": "1bce8a688fbea5ce738ad19b01a7e0c282b8d084da78f32c5575271be28ce770",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/home.html",
+      "bytes": 5439,
+      "sha256": "f1ec40eff38cbdc0c396ede308c73362c15d7132ee71203c88a25ec48d70db0c",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/landing.html",
+      "bytes": 1875,
+      "sha256": "8fd980d985011f42c519281fd165bb22696175a66d5104a5cd3367e18a9ef4df",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/open_data.html",
+      "bytes": 5306,
+      "sha256": "ae75cc9b3dc9f9dabbcd4ce62de63bc25ad538051a33a96b01c77691e938100d",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/places.html",
+      "bytes": 2855,
+      "sha256": "1ddadcc95a63c0e9912f4fad30ab8e2d4bd266e55f03c8e5ab00fafcf8abbc2e",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/places_list.html",
+      "bytes": 3071,
+      "sha256": "cd5e1a614f086572a4d807be617a2059c2e1fae7d8200c352ba669d9ca4676ca",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/privacy.html",
+      "bytes": 5691,
+      "sha256": "6538ae63b9870de290b1725c8528eb400bc4c0888ac39c509fac32158dc89e79",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/terms.html",
+      "bytes": 3876,
+      "sha256": "848ebae7fa912b5adeb4381cc437e4383686920a19124c5cc83b68ee929854d9",
+      "full_mode": 33204
+    },
+    {
+      "path": "docs/reviews/gui-public-original/checkpoint.json",
+      "bytes": 11798,
+      "sha256": "3fa46e9a1fcb3ab8aa4baefa80c54a8d050b59527402db18cb20e24bbc104f1c",
+      "full_mode": 33204
+    },
+    {
+      "path": "docs/reviews/gui-public-original/nonce-checkpoint.json",
+      "bytes": 49417,
+      "sha256": "b0a66c886ef77ddc68ce9d69c0420a937d46f36345934ce8ac3aadba78487ace",
+      "full_mode": 33204
+    },
+    {
+      "path": "docs/reviews/gui-public-original/static-fs-checkpoint.json",
+      "bytes": 18178,
+      "sha256": "823f04494580a62d86500d10cc74c05fa022fbfc8bbcb06bdec1ef3ba143dbbf",
+      "full_mode": 33152
+    },
+    {
+      "path": "frontend/package-lock.json",
+      "bytes": 78329,
+      "sha256": "c6cd94641bd86097cd2232e672cda983e388182abd3922a9edb316649f26a53c",
+      "full_mode": 33204
+    },
+    {
+      "path": "frontend/package.json",
+      "bytes": 757,
+      "sha256": "d9db2ac078e37992f192f6d57103325891659b352cb09917a026e713301846b0",
+      "full_mode": 33204
+    },
+    {
+      "path": "locale/ro/LC_MESSAGES/django.po",
+      "bytes": 113861,
+      "sha256": "186558af2dbb8016c313d09bd0b8508bd5365d61961bcabb3a681c66b99b154c",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/go.mod",
+      "bytes": 1335,
+      "sha256": "1e0c2e6d9cda30507b6a5dde1d33f795737e609b47124983bbf9786844cabb46",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/go.sum",
+      "bytes": 7767,
+      "sha256": "83cc84cde408f45973444ecee13f40df4abac1c1272c259f463f18703cb6b012",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/app/app.go",
+      "bytes": 22947,
+      "sha256": "bafbe950fe966cff748edd59c6961ba1c1cd023b2857a4117d8a1b03bd2b3cec",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_community_pagination_test.go",
+      "bytes": 10039,
+      "sha256": "77f753e282bcd8f4b96d00125d5b88ffa883f521641119d7482aaaa3f316a5c5",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_community_style_test.go",
+      "bytes": 11000,
+      "sha256": "3f23e85f624c0d5b98fac0a21c4bca124841c57802c252855cfdf36517e9fc5d",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_golden_test.go",
+      "bytes": 14274,
+      "sha256": "430775c2330e07b671897b372caf41844f1c5786ef60e741fb85252df32f1ad9",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_graph_nonce_test.go",
+      "bytes": 7915,
+      "sha256": "3416d6d16030b5ab5f853caf37fd3f67779bc793c1d0860d9289b79b14cb53c5",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_nonce_test.go",
+      "bytes": 10666,
+      "sha256": "3200f4557be726042234ca36314ed5d419ceb2f8e117abd8df775697940cce72",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_normalize_test.go",
+      "bytes": 8477,
+      "sha256": "b537803d403a11f258bb86e2754985f02da1fac49627cf1e4bf7e8de5e42f56a",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_places_nonce_test.go",
+      "bytes": 18462,
+      "sha256": "775dc84bd94ef52cc07025e283339ddb440e879f737daf2da31af77b310fe169",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_static_fs_test.go",
+      "bytes": 15064,
+      "sha256": "3e7df1f699ea1902be0403ec5899d12c8445ba65657a9f2a767c5807c3819262",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/i18n.go",
+      "bytes": 4187,
+      "sha256": "b6a6febb5c6795177ccb6f3d52659f7e00ee7c4fbf1aa2104d794e5fdd2c811c",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/public_pages.go",
+      "bytes": 17440,
+      "sha256": "6dfb36642cde63c253899ff8e76a1555a8bfb33cd068ef1dcca5861fdc82a2b4",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/renderer.go",
+      "bytes": 5510,
+      "sha256": "94f11a3f1849c919ba100c4ba68236263f71f07741006c1992dadc4020723e68",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/renderer_fs.go",
+      "bytes": 3382,
+      "sha256": "fe484effba370a376d835722e718719289eb2c8fea81d6bde99182276b162673",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/renderer_fs_test.go",
+      "bytes": 11279,
+      "sha256": "74d9a05ee399a11d60f1628969882ed1210ee454c62aeb95f14b3ac659adbc81",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/routes.json",
+      "bytes": 7167,
+      "sha256": "d10de3908d9537bbdeb2f51427bcb1ecdffc57e9d5a5066cc3166c9fbb559fc3",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/social_discovery.go",
+      "bytes": 14239,
+      "sha256": "596d5678603e71d3ebbd419d549dd9b0238d76f22896679ced1e2f5f1955bfec",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/social_pages.go",
+      "bytes": 33451,
+      "sha256": "64dea26858377fafc0fdc047d0f64b355afaa135aef4dbd4f8cd1a949c681ce7",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/static.go",
+      "bytes": 2394,
+      "sha256": "df27a7589dc84a883cad125cd8067df493d9f13316fc3c9d89904e5db19fd127",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/static_fs.go",
+      "bytes": 2894,
+      "sha256": "daa2e6493d3ad38d0cb564e11a691f3ce7c899e4beb72f0f582ea2c7a16eda78",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/templates.go",
+      "bytes": 14282,
+      "sha256": "8098259abbf45838fc732630188cde4b73ccefbc0f5e729b75497f6988db4b97",
+      "full_mode": 33204
+    },
+    {
+      "path": "static/css/base.css",
+      "bytes": 62453,
+      "sha256": "41f0f6a04b14da0874000ed7c9010f5dd75e2040a6f09082607ba12cf890fa00",
+      "full_mode": 33204
+    },
+    {
+      "path": "static/js/community-graph.js",
+      "bytes": 3609,
+      "sha256": "122b7770e767dbe03c6660da7302eb182af7321b08288dcf8370d88d0abfcd0d",
+      "full_mode": 33204
+    },
+    {
+      "path": "static/js/near-me.js",
+      "bytes": 829,
+      "sha256": "e42b390eae1db14d5f8976241fa636b82a5a12a166d5810a858c536b76733bdb",
+      "full_mode": 33204
+    },
+    {
+      "path": "static/js/places-map.js",
+      "bytes": 20487,
+      "sha256": "3f7dbc11a4c57e0ecf53cf6d7f0dc20b39ae6f26f76d810a78aa2d572f62c2d0",
+      "full_mode": 33204
+    },
+    {
+      "path": "static/vendor/maplibre/maplibre-gl-csp-worker.js",
+      "bytes": 457880,
+      "sha256": "f950e7b15c49c8b9c7bb52136df2a2df2f6f03b83b8927774573fc98b067f7f0",
+      "full_mode": 33204
+    },
+    {
+      "path": "static/vendor/maplibre/maplibre-gl-csp.js",
+      "bytes": 971665,
+      "sha256": "a1f1847bac64aa00acbf80fbb79b2c5af24d8eecaaa5e2ad14080fab81f1de95",
+      "full_mode": 33204
+    },
+    {
+      "path": "static/vendor/maplibre/maplibre-gl.css",
+      "bytes": 70024,
+      "sha256": "ab1e70d59ec40465bae7e7030da2f3ccf28133fd502e62bd598eefbadfd7a732",
+      "full_mode": 33204
+    },
+    {
+      "path": "templates/base.html",
+      "bytes": 13658,
+      "sha256": "a8a5354db2968c99dcf043a2bb04ac635eb199a72455efe5cd96fc2946292b2c",
+      "full_mode": 33204
+    },
+    {
+      "path": "tools/gui-public-golden/community-graph-fallback.test.mjs",
+      "bytes": 6382,
+      "sha256": "235177a6d461883704bd80cec8be58b0fd627bd14fbfa8da33dea774a3c6cc8b",
+      "full_mode": 33204
+    },
+    {
+      "path": "tools/gui-public-golden/normalize.go",
+      "bytes": 1465,
+      "sha256": "5282ddb0dab9101b028e6eda5411fc29995bf9f3a5b5de1d62c157a76eccd458",
+      "full_mode": 33204
+    },
+    {
+      "path": "tools/gui-public-golden/normalize_test.go",
+      "bytes": 4317,
+      "sha256": "f9bac4f56a598f5822054e846ef622ff2baecd885bd670cf0a4211d7c61704f7",
+      "full_mode": 33204
+    },
+    {
+      "path": "tools/gui-public-golden/release-bindings.json",
+      "bytes": 9594,
+      "sha256": "d845c6a1640e1f1cbe67f63af3ddc8ba7795d73ff0c2d97b23cb8ee4ff953015",
+      "full_mode": 33188
+    }
+  ],
+  "binding_before": [
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/landing-en.html",
+      "bytes": 5111,
+      "sha256": "b3da2dc08b119c315cab50e36c102fa85314436d24b714fce2fd0eceb16b2814",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/landing-ro.html",
+      "bytes": 5504,
+      "sha256": "8f3d8804dd9c2d0ec33d9fe7ff569077d490c4652c56880de254e9e75d0407a8",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/manifest.json",
+      "bytes": 11826,
+      "sha256": "5403a0f3c2817fcd6ec1ebfefe9546ae9318057b3fefe845d1f1b77bd3eceb4a",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/open-data-en-snapshot-false.html",
+      "bytes": 8536,
+      "sha256": "b1ccc0a6fde232f14d149469e3a808f779777d48143c86efc8ae1eb27009c8aa",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/open-data-en-snapshot-true.html",
+      "bytes": 9355,
+      "sha256": "5b742d03dcadd53a0bea7d68c0ad825e7632bae91f1ae456fe0d5f8cc6fc64e4",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/open-data-ro-snapshot-false.html",
+      "bytes": 8621,
+      "sha256": "3114126118d83557815bd370f692d3a1a99ad8ba4718ac0cb3fce387bfab9220",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/open-data-ro-snapshot-true.html",
+      "bytes": 9440,
+      "sha256": "6aef427f673ea578fbd1f27a62431fc9292bbec9f5516c7f8bd85a1aa3682f9f",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/privacy-en-contrast.html",
+      "bytes": 8291,
+      "sha256": "4d70f26baa9c2a36118fe8c2b8950de1752fec74995c05e7d6f72cfeac215822",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/privacy-en-default.html",
+      "bytes": 8285,
+      "sha256": "c5c123c173297e5310eb69f8da24a8fc5ae3485ae5077ca017f7ed30f2ce0ab1",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/privacy-ro-contrast.html",
+      "bytes": 9484,
+      "sha256": "748d144757c834c72e324bb4686fecb94d3d15c8d835a595b5800b5686e53d59",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/privacy-ro-default.html",
+      "bytes": 9478,
+      "sha256": "afb50c59582f5c35617ba91081fb9e1093904f03efc2b9e19a70868b985c0db9",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/terms-en-contrast.html",
+      "bytes": 6966,
+      "sha256": "8d855ec46ca8944dd4d491bf711ed31b11faeae196183b53debf9f2d81c64023",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/terms-en-default.html",
+      "bytes": 6960,
+      "sha256": "8fff1e8f72bb69b3e2bb18a76892b39f97b928cd9d8923f8e59d074ccd6aec5e",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/terms-ro-contrast.html",
+      "bytes": 7827,
+      "sha256": "b211ecc4bc3cbbf096d4a82d22972e418c2dc86f1da33cdf41c5b7a4d5c4deec",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/terms-ro-default.html",
+      "bytes": 7821,
+      "sha256": "bb084d48196111fc1466324386ec2e1c0b2feff64632cc8beac504dffe8d41e0",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/normalizer-r7-764beb1/social-gui-normalize",
+      "bytes": 4897832,
+      "sha256": "598515e75c709803c7b23673e07b14baa93861608346a81c8fc708521c1b2f05",
+      "full_mode": 33216
+    },
+    {
+      "path": "/home/dobo/gates/kits/core-v1.6/web-kit-go-core-v1.6.tgz",
+      "bytes": 55202,
+      "sha256": "d722a817074a01d8a983c3e8492335ee07d37fb0d58c9a938cd189df635e168d",
+      "full_mode": 33204
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/normalizer-r7-764beb1/binary-build-info.stdout",
+      "bytes": 405,
+      "sha256": "87be64cb3a8d875b4775ffa3ce18e7b5a24434242de1418e2313d14ed62e18ac",
+      "full_mode": 33152
+    }
+  ],
+  "binding_after": [
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/landing-en.html",
+      "bytes": 5111,
+      "sha256": "b3da2dc08b119c315cab50e36c102fa85314436d24b714fce2fd0eceb16b2814",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/landing-ro.html",
+      "bytes": 5504,
+      "sha256": "8f3d8804dd9c2d0ec33d9fe7ff569077d490c4652c56880de254e9e75d0407a8",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/manifest.json",
+      "bytes": 11826,
+      "sha256": "5403a0f3c2817fcd6ec1ebfefe9546ae9318057b3fefe845d1f1b77bd3eceb4a",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/open-data-en-snapshot-false.html",
+      "bytes": 8536,
+      "sha256": "b1ccc0a6fde232f14d149469e3a808f779777d48143c86efc8ae1eb27009c8aa",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/open-data-en-snapshot-true.html",
+      "bytes": 9355,
+      "sha256": "5b742d03dcadd53a0bea7d68c0ad825e7632bae91f1ae456fe0d5f8cc6fc64e4",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/open-data-ro-snapshot-false.html",
+      "bytes": 8621,
+      "sha256": "3114126118d83557815bd370f692d3a1a99ad8ba4718ac0cb3fce387bfab9220",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/open-data-ro-snapshot-true.html",
+      "bytes": 9440,
+      "sha256": "6aef427f673ea578fbd1f27a62431fc9292bbec9f5516c7f8bd85a1aa3682f9f",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/privacy-en-contrast.html",
+      "bytes": 8291,
+      "sha256": "4d70f26baa9c2a36118fe8c2b8950de1752fec74995c05e7d6f72cfeac215822",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/privacy-en-default.html",
+      "bytes": 8285,
+      "sha256": "c5c123c173297e5310eb69f8da24a8fc5ae3485ae5077ca017f7ed30f2ce0ab1",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/privacy-ro-contrast.html",
+      "bytes": 9484,
+      "sha256": "748d144757c834c72e324bb4686fecb94d3d15c8d835a595b5800b5686e53d59",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/privacy-ro-default.html",
+      "bytes": 9478,
+      "sha256": "afb50c59582f5c35617ba91081fb9e1093904f03efc2b9e19a70868b985c0db9",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/terms-en-contrast.html",
+      "bytes": 6966,
+      "sha256": "8d855ec46ca8944dd4d491bf711ed31b11faeae196183b53debf9f2d81c64023",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/terms-en-default.html",
+      "bytes": 6960,
+      "sha256": "8fff1e8f72bb69b3e2bb18a76892b39f97b928cd9d8923f8e59d074ccd6aec5e",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/terms-ro-contrast.html",
+      "bytes": 7827,
+      "sha256": "b211ecc4bc3cbbf096d4a82d22972e418c2dc86f1da33cdf41c5b7a4d5c4deec",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/terms-ro-default.html",
+      "bytes": 7821,
+      "sha256": "bb084d48196111fc1466324386ec2e1c0b2feff64632cc8beac504dffe8d41e0",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/normalizer-r7-764beb1/social-gui-normalize",
+      "bytes": 4897832,
+      "sha256": "598515e75c709803c7b23673e07b14baa93861608346a81c8fc708521c1b2f05",
+      "full_mode": 33216
+    },
+    {
+      "path": "/home/dobo/gates/kits/core-v1.6/web-kit-go-core-v1.6.tgz",
+      "bytes": 55202,
+      "sha256": "d722a817074a01d8a983c3e8492335ee07d37fb0d58c9a938cd189df635e168d",
+      "full_mode": 33204
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/normalizer-r7-764beb1/binary-build-info.stdout",
+      "bytes": 405,
+      "sha256": "87be64cb3a8d875b4775ffa3ce18e7b5a24434242de1418e2313d14ed62e18ac",
+      "full_mode": 33152
+    }
+  ],
+  "container_created": {
+    "id": "378faad3fc8cd6e47d7060da68c0fcccc0c29744b8dff73b3a471c568f2596b4",
+    "name": "/social-places-nonce-363b287b-48e2-4e5f-a2af-94a4edeca3d1",
+    "image": "sha256:2e040a5165d79be63755424f707fdb8cf609ace831ada7a9baca398ac25e12b9",
+    "running": false,
+    "exit_code": 0,
+    "oom_killed": false,
+    "user": "1000:1000",
+    "cpus": 4000000000,
+    "memory": 6442450944,
+    "network": "none",
+    "mounts": [
+      {
+        "Destination": "/scratch/go-mod",
+        "Mode": "",
+        "Propagation": "rprivate",
+        "RW": true,
+        "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/go-mod",
+        "Type": "bind"
+      },
+      {
+        "Destination": "/scratch/tmp",
+        "Mode": "",
+        "Propagation": "rprivate",
+        "RW": true,
+        "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/tmp",
+        "Type": "bind"
+      },
+      {
+        "Destination": "/proof",
+        "Mode": "",
+        "Propagation": "rprivate",
+        "RW": true,
+        "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/places-nonce-b5403bc-363b287b-48e2-4e5f-a2af-94a4edeca3d1",
+        "Type": "bind"
+      },
+      {
+        "Destination": "/bindings/social-gui-normalize",
+        "Mode": "",
+        "Propagation": "rprivate",
+        "RW": false,
+        "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/normalizer-r7-764beb1/social-gui-normalize",
+        "Type": "bind"
+      },
+      {
+        "Destination": "/bindings/web-kit-go-core-v1.6.tgz",
+        "Mode": "",
+        "Propagation": "rprivate",
+        "RW": false,
+        "Source": "/home/dobo/gates/kits/core-v1.6/web-kit-go-core-v1.6.tgz",
+        "Type": "bind"
+      },
+      {
+        "Destination": "/original",
+        "Mode": "",
+        "Propagation": "rprivate",
+        "RW": false,
+        "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717",
+        "Type": "bind"
+      },
+      {
+        "Destination": "/work",
+        "Mode": "",
+        "Propagation": "rprivate",
+        "RW": false,
+        "Source": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a",
+        "Type": "bind"
+      },
+      {
+        "Destination": "/scratch/go-build",
+        "Mode": "",
+        "Propagation": "rprivate",
+        "RW": true,
+        "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/go-build",
+        "Type": "bind"
+      }
+    ]
+  },
+  "container_exited": {
+    "id": "378faad3fc8cd6e47d7060da68c0fcccc0c29744b8dff73b3a471c568f2596b4",
+    "name": "/social-places-nonce-363b287b-48e2-4e5f-a2af-94a4edeca3d1",
+    "image": "sha256:2e040a5165d79be63755424f707fdb8cf609ace831ada7a9baca398ac25e12b9",
+    "running": false,
+    "exit_code": 0,
+    "oom_killed": false,
+    "user": "1000:1000",
+    "cpus": 4000000000,
+    "memory": 6442450944,
+    "network": "none",
+    "mounts": [
+      {
+        "Destination": "/scratch/tmp",
+        "Mode": "",
+        "Propagation": "rprivate",
+        "RW": true,
+        "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/tmp",
+        "Type": "bind"
+      },
+      {
+        "Destination": "/proof",
+        "Mode": "",
+        "Propagation": "rprivate",
+        "RW": true,
+        "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/places-nonce-b5403bc-363b287b-48e2-4e5f-a2af-94a4edeca3d1",
+        "Type": "bind"
+      },
+      {
+        "Destination": "/bindings/social-gui-normalize",
+        "Mode": "",
+        "Propagation": "rprivate",
+        "RW": false,
+        "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/normalizer-r7-764beb1/social-gui-normalize",
+        "Type": "bind"
+      },
+      {
+        "Destination": "/bindings/web-kit-go-core-v1.6.tgz",
+        "Mode": "",
+        "Propagation": "rprivate",
+        "RW": false,
+        "Source": "/home/dobo/gates/kits/core-v1.6/web-kit-go-core-v1.6.tgz",
+        "Type": "bind"
+      },
+      {
+        "Destination": "/original",
+        "Mode": "",
+        "Propagation": "rprivate",
+        "RW": false,
+        "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717",
+        "Type": "bind"
+      },
+      {
+        "Destination": "/work",
+        "Mode": "",
+        "Propagation": "rprivate",
+        "RW": false,
+        "Source": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a",
+        "Type": "bind"
+      },
+      {
+        "Destination": "/scratch/go-build",
+        "Mode": "",
+        "Propagation": "rprivate",
+        "RW": true,
+        "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/go-build",
+        "Type": "bind"
+      },
+      {
+        "Destination": "/scratch/go-mod",
+        "Mode": "",
+        "Propagation": "rprivate",
+        "RW": true,
+        "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/go-mod",
+        "Type": "bind"
+      }
+    ]
+  },
+  "cleanup": {
+    "id": "378faad3fc8cd6e47d7060da68c0fcccc0c29744b8dff73b3a471c568f2596b4",
+    "name": "social-places-nonce-363b287b-48e2-4e5f-a2af-94a4edeca3d1",
+    "remove_exit": 0,
+    "id_absent": true,
+    "name_absent": true,
+    "passed": true
+  },
+  "errors": [],
+  "docker_start_exit": 0,
+  "elapsed_seconds": 17.042873029000475,
+  "controls": [
+    {
+      "argv": [
+        "docker",
+        "image",
+        "inspect",
+        "sha256:2e040a5165d79be63755424f707fdb8cf609ace831ada7a9baca398ac25e12b9",
+        "--format",
+        "{{.Id}}"
+      ],
+      "exit_code": 0,
+      "stdout": "control-00.stdout",
+      "stderr": "control-00.stderr"
+    },
+    {
+      "argv": [
+        "docker",
+        "container",
+        "ls",
+        "-aq",
+        "--filter",
+        "name=^/social-places-nonce-363b287b-48e2-4e5f-a2af-94a4edeca3d1$"
+      ],
+      "exit_code": 0,
+      "stdout": "control-01.stdout",
+      "stderr": "control-01.stderr"
+    },
+    {
+      "argv": [
+        "docker",
+        "create",
+        "--pull=never",
+        "--name",
+        "social-places-nonce-363b287b-48e2-4e5f-a2af-94a4edeca3d1",
+        "--cidfile",
+        "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/places-nonce-b5403bc-363b287b-48e2-4e5f-a2af-94a4edeca3d1/container.cid",
+        "--network",
+        "none",
+        "--cpus=4",
+        "--memory=6g",
+        "--user",
+        "1000:1000",
+        "--workdir",
+        "/work/services/server",
+        "--mount",
+        "type=bind,src=/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a,dst=/work,readonly",
+        "--mount",
+        "type=bind,src=/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/go-build,dst=/scratch/go-build",
+        "--mount",
+        "type=bind,src=/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/go-mod,dst=/scratch/go-mod",
+        "--mount",
+        "type=bind,src=/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/tmp,dst=/scratch/tmp",
+        "--mount",
+        "type=bind,src=/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/places-nonce-b5403bc-363b287b-48e2-4e5f-a2af-94a4edeca3d1,dst=/proof",
+        "--mount",
+        "type=bind,src=/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/normalizer-r7-764beb1/social-gui-normalize,dst=/bindings/social-gui-normalize,readonly",
+        "--mount",
+        "type=bind,src=/home/dobo/gates/kits/core-v1.6/web-kit-go-core-v1.6.tgz,dst=/bindings/web-kit-go-core-v1.6.tgz,readonly",
+        "--mount",
+        "type=bind,src=/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717,dst=/original,readonly",
+        "--env",
+        "GOWORK=off",
+        "--env",
+        "GOTOOLCHAIN=local",
+        "--env",
+        "GOCACHE=/scratch/go-build",
+        "--env",
+        "GOMODCACHE=/scratch/go-mod",
+        "--env",
+        "TMPDIR=/scratch/tmp",
+        "--env",
+        "GOMAXPROCS=2",
+        "--env",
+        "GOFLAGS=-p=2",
+        "--env",
+        "CGO_ENABLED=1",
+        "sha256:2e040a5165d79be63755424f707fdb8cf609ace831ada7a9baca398ac25e12b9",
+        "bash",
+        "-u",
+        "-o",
+        "pipefail",
+        "-c",
+        "umask 077\n/usr/local/go/bin/gofmt -d internal/web/gui_public_places_nonce_test.go > /proof/format.stdout 2> /proof/format.stderr\nformat_rc=$?\nprintf '%s\n' \"$format_rc\" > /proof/format.exit\nif [ \"$format_rc\" -ne 0 ] || [ -s /proof/format.stdout ] || [ -s /proof/format.stderr ]; then exit 1; fi\n/usr/local/go/bin/go test -mod=readonly -race -count=1 -json ./internal/web -run '^TestGUIPublicPlacesNonce' -gui-public-golden-reference /original -gui-public-normalizer-binary /bindings/social-gui-normalize -gui-public-normalizer-sha256 598515e75c709803c7b23673e07b14baa93861608346a81c8fc708521c1b2f05 -gui-public-normalizer-archive /bindings/web-kit-go-core-v1.6.tgz > /proof/tests.stdout 2> /proof/tests.stderr\ntest_rc=$?\nprintf '%s\n' \"$test_rc\" > /proof/tests.exit\nexit \"$test_rc\"\n"
+      ],
+      "exit_code": 0,
+      "stdout": "control-02.stdout",
+      "stderr": "control-02.stderr"
+    },
+    {
+      "argv": [
+        "docker",
+        "container",
+        "inspect",
+        "378faad3fc8cd6e47d7060da68c0fcccc0c29744b8dff73b3a471c568f2596b4",
+        "--format",
+        "{\"id\":{{json .Id}},\"name\":{{json .Name}},\"image\":{{json .Image}},\"running\":{{json .State.Running}},\"exit_code\":{{json .State.ExitCode}},\"oom_killed\":{{json .State.OOMKilled}},\"user\":{{json .Config.User}},\"cpus\":{{json .HostConfig.NanoCpus}},\"memory\":{{json .HostConfig.Memory}},\"network\":{{json .HostConfig.NetworkMode}},\"mounts\":{{json .Mounts}}}"
+      ],
+      "exit_code": 0,
+      "stdout": "control-03.stdout",
+      "stderr": "control-03.stderr"
+    },
+    {
+      "argv": [
+        "docker",
+        "container",
+        "inspect",
+        "378faad3fc8cd6e47d7060da68c0fcccc0c29744b8dff73b3a471c568f2596b4",
+        "--format",
+        "{\"id\":{{json .Id}},\"name\":{{json .Name}},\"image\":{{json .Image}},\"running\":{{json .State.Running}},\"exit_code\":{{json .State.ExitCode}},\"oom_killed\":{{json .State.OOMKilled}},\"user\":{{json .Config.User}},\"cpus\":{{json .HostConfig.NanoCpus}},\"memory\":{{json .HostConfig.Memory}},\"network\":{{json .HostConfig.NetworkMode}},\"mounts\":{{json .Mounts}}}"
+      ],
+      "exit_code": 0,
+      "stdout": "control-04.stdout",
+      "stderr": "control-04.stderr"
+    },
+    {
+      "argv": [
+        "docker",
+        "container",
+        "inspect",
+        "378faad3fc8cd6e47d7060da68c0fcccc0c29744b8dff73b3a471c568f2596b4",
+        "--format",
+        "{\"id\":{{json .Id}},\"name\":{{json .Name}},\"image\":{{json .Image}},\"running\":{{json .State.Running}},\"exit_code\":{{json .State.ExitCode}},\"oom_killed\":{{json .State.OOMKilled}},\"user\":{{json .Config.User}},\"cpus\":{{json .HostConfig.NanoCpus}},\"memory\":{{json .HostConfig.Memory}},\"network\":{{json .HostConfig.NetworkMode}},\"mounts\":{{json .Mounts}}}"
+      ],
+      "exit_code": 0,
+      "stdout": "control-05.stdout",
+      "stderr": "control-05.stderr"
+    },
+    {
+      "argv": [
+        "docker",
+        "container",
+        "rm",
+        "378faad3fc8cd6e47d7060da68c0fcccc0c29744b8dff73b3a471c568f2596b4"
+      ],
+      "exit_code": 0,
+      "stdout": "control-06.stdout",
+      "stderr": "control-06.stderr"
+    },
+    {
+      "argv": [
+        "docker",
+        "container",
+        "ls",
+        "-aq",
+        "--no-trunc",
+        "--filter",
+        "id=378faad3fc8cd6e47d7060da68c0fcccc0c29744b8dff73b3a471c568f2596b4"
+      ],
+      "exit_code": 0,
+      "stdout": "control-07.stdout",
+      "stderr": "control-07.stderr"
+    },
+    {
+      "argv": [
+        "docker",
+        "container",
+        "ls",
+        "-aq",
+        "--filter",
+        "name=^/social-places-nonce-363b287b-48e2-4e5f-a2af-94a4edeca3d1$"
+      ],
+      "exit_code": 0,
+      "stdout": "control-08.stdout",
+      "stderr": "control-08.stderr"
+    }
+  ],
+  "artifact_rows": [
+    {
+      "path": "container.cid",
+      "bytes": 64,
+      "sha256": "1e1f63f2df37995ec4d4647045c6c2ab2f63bf13911da8a11817ef345e23e97b",
+      "full_mode": 33204
+    },
+    {
+      "path": "control-00.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-00.stdout",
+      "bytes": 72,
+      "sha256": "7aa16fdca68c8e892b9f6175e4b16af62027e2a5553fd18c527b104e940053b5",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-01.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-01.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-02.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-02.stdout",
+      "bytes": 65,
+      "sha256": "f8465e597553697d66e6485f6f2ad040a3ddd46608467d16bf6748e435bdfa28",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-03.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-03.stdout",
+      "bytes": 1950,
+      "sha256": "4767e9ac2b31bbad9947c7db90da882426be41c86d5752c1357d55cd24d38748",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-04.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-04.stdout",
+      "bytes": 1950,
+      "sha256": "6f3f9c00f2debc45e6456cfc061b3376db6fba828bf8b85b5300073e66d136eb",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-05.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-05.stdout",
+      "bytes": 1950,
+      "sha256": "4767e9ac2b31bbad9947c7db90da882426be41c86d5752c1357d55cd24d38748",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-06.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-06.stdout",
+      "bytes": 65,
+      "sha256": "f8465e597553697d66e6485f6f2ad040a3ddd46608467d16bf6748e435bdfa28",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-07.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-07.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-08.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-08.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "docker-start.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "docker-start.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "format.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "full_mode": 33152
+    },
+    {
+      "path": "format.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "format.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "tests.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "full_mode": 33152
+    },
+    {
+      "path": "tests.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "tests.stdout",
+      "bytes": 64800,
+      "sha256": "623dfa9c500196fd6b2fcda2f39d3bbd1d315a3d0ae5a01d35ea5dea758978e6",
+      "full_mode": 33152
+    }
+  ]
+}

@@ -1,0 +1,182 @@
+{
+  "schema": 1,
+  "scope": "SOC-7 OS/FS synthetic places/shared near-me presentation, native nonce binding and released DOM only; no map/API/geolocation/route/admission/DB/auth/cohort/privacy/browserCSP/app/full/Live/device qualification",
+  "source": "b5403bcbdf60d9ab3dd1039ed211f84705e9ab13",
+  "invocation": "363b287b-48e2-4e5f-a2af-94a4edeca3d1",
+  "result_sha256": "379448dadc30155247bc580b9138f9307a4cc45a612980da064122849c401156",
+  "rows": [
+    {
+      "path": "container.cid",
+      "bytes": 64,
+      "sha256": "1e1f63f2df37995ec4d4647045c6c2ab2f63bf13911da8a11817ef345e23e97b",
+      "full_mode": 33204
+    },
+    {
+      "path": "control-00.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-00.stdout",
+      "bytes": 72,
+      "sha256": "7aa16fdca68c8e892b9f6175e4b16af62027e2a5553fd18c527b104e940053b5",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-01.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-01.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-02.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-02.stdout",
+      "bytes": 65,
+      "sha256": "f8465e597553697d66e6485f6f2ad040a3ddd46608467d16bf6748e435bdfa28",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-03.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-03.stdout",
+      "bytes": 1950,
+      "sha256": "4767e9ac2b31bbad9947c7db90da882426be41c86d5752c1357d55cd24d38748",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-04.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-04.stdout",
+      "bytes": 1950,
+      "sha256": "6f3f9c00f2debc45e6456cfc061b3376db6fba828bf8b85b5300073e66d136eb",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-05.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-05.stdout",
+      "bytes": 1950,
+      "sha256": "4767e9ac2b31bbad9947c7db90da882426be41c86d5752c1357d55cd24d38748",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-06.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-06.stdout",
+      "bytes": 65,
+      "sha256": "f8465e597553697d66e6485f6f2ad040a3ddd46608467d16bf6748e435bdfa28",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-07.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-07.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-08.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-08.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "docker-start.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "docker-start.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "format.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "full_mode": 33152
+    },
+    {
+      "path": "format.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "format.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "tests.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "full_mode": 33152
+    },
+    {
+      "path": "tests.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "tests.stdout",
+      "bytes": 64800,
+      "sha256": "623dfa9c500196fd6b2fcda2f39d3bbd1d315a3d0ae5a01d35ea5dea758978e6",
+      "full_mode": 33152
+    },
+    {
+      "path": "result.json",
+      "bytes": 52810,
+      "sha256": "379448dadc30155247bc580b9138f9307a4cc45a612980da064122849c401156",
+      "full_mode": 33152
+    }
+  ],
+  "regular_rows": 28,
+  "bytes": 123730,
+  "raw_bytes_available": true,
+  "no_workspace_dependency_cache_or_binary_copy": true,
+  "closed_observed_utc": "2026-10-10T21:56:17.564518+00:00"
+}

@@ -2481,3 +2481,27 @@ Existing764/d722/original15 and old14/83/62/14/19/34 evidence stay unchanged; no
 recapture, rebuild, install, route/DB/admission/geolocation/browserCSP/full/Live,
 privacy/device/adoption/retirement claim. Compact source and accepted-recipe
 method successors are task-owned; no workspace/cache/SDK/body clone is created.
+
+
+## 2026-10-11 — SOC-7 focused nonce/presentation proof transfer
+
+Actual session98370 at b5403bcbdf60d9ab3dd1039ed211f84705e9ab13 exited0. Result379448da
+and closureac80be75 retain46oncePASS (3parents/43children),210JSONevents, packagePASS1,
+zero fail/skip/cache/race, formatterempty0 and all53app/18external guards unchanged.
+Owned capped network-none/sourceRO container cleanup passed with no OOM. Parent
+review200e8982 and independent program actual review accepted this bounded result.
+
+The initial150 SOURCE HOLD omitted the unchanged arrow entity in three test
+anchor literals and was never run. The test-only b540 successor adds exactly21B;
+all46identities/assertions and three product nonce additions remain. Existing
+nonce provider, load attributes, scripts/CSS/worker and shared consumer sources
+stay unchanged. Home/activities coverage is PRESENTATION only, never admission.
+
+Transferred only30small exact actual result/streams/exits/controls/closure/parent
+review files plus checkpoint/currentdocs; private600/tracked664 modes are explicit
+and CID's original664 is retained in metadata. No body/SDK/binary/workspace clone.
+Seventy-one normalizations remains source-expected, not independent invocation
+or browser census. This docs HEAD is not retested. Original14/15,764+d722, prior
+83/62/VM14/graph19/community34 and all failed/source packets retain their own
+identities. No route/DB/account/cohort/privacy/map/API/geolocation/browserCSP/full,
+Live/device/default/adoption/retirement acceptance. Parent owns feature publication.
