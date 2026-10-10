@@ -7,8 +7,11 @@ load tracing and unchanged-reference custody.
 released public normalizer bridge and its focused managed evidence.
 [ADR-0053](adr/0053-filesystem-original-renderer-boundary.md) records the additive
 filesystem-backed original renderer and its focused partial evidence.
+[ADR-0054](adr/0054-public-external-script-nonce-binding.md) records the two
+existing external-script nonce additions and explicit original-fixture delta.
 The source is `services/server/internal/web/gui_public_golden_test.go`; existing
-native routing, templates, translations and rendering are used without edits.
+native routing, translations and rendering are used; template edits are limited
+to those two nonce attributes.
 
 Run inside an owner-approved managed Go1.27.1 runtime with CGO enabled for race
 checks, its task-owned cache and TMPDIR, from `services/server`:
@@ -88,9 +91,10 @@ After that genuine build, the original producer accepts the three flags together
 `-gui-public-normalizer-sha256 <actual-managed-build-digest>`, and
 `-gui-public-normalizer-archive /private/absolute/web-kit-go-core-v1.6.tgz`.
 The existing original-reference flag is mandatory for this optional path.
-Raw original/current bytes are compared through the released API without writing
-normalized baseline files. The manifest records byte equality, independent hard
-findings/success and the combined diagnostic outcome separately. Binary/archive
+Raw original/expected-delta/current bytes are compared through the released API
+without writing normalized baseline files. The current manifest requires original
+canonical inequality and expected-delta equality, independent hard findings/success
+and all three hashes; the original attributes were absent. Binary/archive
 hashes are checked again after all cases. Omission supplies no normalization
 claim. [Normalization checkpoint](reviews/gui-public-original/normalization-checkpoint.json):
 source764beb1 passed formatting/build,21helper actions and23app actions, each
@@ -128,10 +132,41 @@ ArbitraryFS immutability remains the caller's contract. No fullM1 or production
 switch, host-asset/private-page, formal oracle/group/Live/templ/retirement result
 is implied.
 
+The current source adds the existing `request.csp_nonce` only to `hovercard.js`
+and `site.js` external tags. Native disk/FS tests cover fresh actual header/tag
+binding, anonymous/authenticated presentation attributes, real response mutations
+and the exact two-attribute template inverse. These20new actions bring expected
+focused app discovery to83; formatting, tests and the new delta diagnostics are
+NOT RUN. Paths/load attributes, nonce provider and CSP mode stay unchanged.
+
+The original14raw bodies remain the reference. Only an in-memory expected copy
+adds the two nonce attributes with a synthetic marker; it is never a response or
+new baseline. The released SDK and masks stay unchanged. Each diagnostic requires
+all three successes/hard-free outputs, `original_normalized_bytes_equal: false`,
+`expected_delta_normalized_bytes_equal: true`, three canonical hashes and exact
+original/expected raw hashes. Existing63-action evidence retains source8b and
+its historical equality-only schema; no historical receipt is rewritten.
+
+After approved managed execution, the read-only capture DATA verifier is:
+
+```sh
+python3 tools/gui-public-golden/verify_nonce_capture.py \
+  --checkpoint /absolute/repo/docs/reviews/gui-public-original/checkpoint.json \
+  --original /absolute/private/original --disk /absolute/private/new-os \
+  --filesystem /absolute/private/new-fs --binary-sha256 ACTUAL_MANAGED_BINARY_SHA256
+```
+
+It requires exact15-member private inputs,14ordered cases in each current mode,
+the new strict flags/hash relations and anonymous native nonce-binding reports;
+it refuses the old equality-only schema. It emits only a DATA summary and cannot
+replace separate actual Go counts/streams, source/image/archive/binary proof.
+The DATA command and new source have NOT RUN; each runtime needs parent approval.
+
 ## Continuation
 
 The source lane is `feat/gui-app-migration-a`, separate from shared `main`.
-Source8bdbb4e is the tested partial FS implementation. The normalizer binary and
+Source8bdbb4e is the tested partial FS implementation; the nonce delta successor
+is source-only, awaiting its own managed evidence. The normalizer binary and
 its21helper action proof retain actualsource764beb1. Subsequent checkpoint
 commits contain docs/proof only; earlier receipts keep their source identities. New
 semantic work needs parent review before starting;

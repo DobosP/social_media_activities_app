@@ -156,12 +156,18 @@ func (b *guiPublicNormalizer) normalize(raw []byte) ([]byte, []string, error) {
 }
 
 func (b *guiPublicNormalizer) compare(original, current []byte) (map[string]any, error) {
-	want, wantHard, wantErr := b.normalize(original)
+	expected, delta, err := guiPublicExpectedNonceReference(original)
+	if err != nil {
+		return nil, err
+	}
+	before, beforeHard, beforeErr := b.normalize(original)
+	want, wantHard, wantErr := b.normalize(expected)
 	got, gotHard, gotErr := b.normalize(current)
+	originalEqual := bytes.Equal(before, got)
 	equal := bytes.Equal(want, got)
-	report := map[string]any{"original_normalized_sha256": guiPublicHash(want), "current_normalized_sha256": guiPublicHash(got), "original_hard": wantHard, "current_hard": gotHard, "normalized_bytes_equal": equal, "original_success": wantErr == nil, "current_success": gotErr == nil, "diagnostic_pass": wantErr == nil && gotErr == nil && equal, "scope": "repeatability of two original-native synthetic renders only; not templ/Django/group acceptance"}
-	if wantErr != nil || gotErr != nil || !equal {
-		return report, fmt.Errorf("original-native released-normalizer diagnostic differs or refused")
+	report := map[string]any{"original_normalized_sha256": guiPublicHash(before), "expected_delta_normalized_sha256": guiPublicHash(want), "current_normalized_sha256": guiPublicHash(got), "original_hard": beforeHard, "expected_delta_hard": wantHard, "current_hard": gotHard, "original_normalized_bytes_equal": originalEqual, "expected_delta_normalized_bytes_equal": equal, "original_success": beforeErr == nil, "expected_delta_success": wantErr == nil, "current_success": gotErr == nil, "declared_delta": delta, "diagnostic_pass": beforeErr == nil && wantErr == nil && gotErr == nil && equal && !originalEqual, "scope": "original-native outputs with only the explicit two-script nonce attribute delta; no baseline replacement or templ/Django/group acceptance"}
+	if beforeErr != nil || wantErr != nil || gotErr != nil || !equal || originalEqual {
+		return report, fmt.Errorf("declared nonce attribute delta is missing, differs or has hard findings")
 	}
 	return report, nil
 }

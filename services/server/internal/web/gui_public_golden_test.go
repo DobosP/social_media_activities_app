@@ -53,8 +53,8 @@ func guiPublicHash(raw []byte) string {
 
 func guiPublicSources(root string) (map[string]string, error) {
 	names := []string{"templates/base.html", "apps/web/templates/web/privacy.html", "apps/web/templates/web/terms.html", "apps/web/templates/web/open_data.html", "apps/web/templates/web/landing.html", "docs/reviews/gui-public-original/checkpoint.json"}
-	names = append(names, "tools/gui-public-golden/normalize.go", "tools/gui-public-golden/normalize_test.go", "tools/gui-public-golden/release-bindings.json")
-	for _, name := range []string{"server.go", "router.go", "renderer.go", "renderer_fs.go", "renderer_fs_test.go", "templates.go", "i18n.go", "views.go", "public_pages.go", "public_downloads.go", "public_structured.go", "routes.json", "public_routes.json", "gui_public_golden_test.go", "gui_public_trace_test.go", "gui_public_normalize_test.go"} {
+	names = append(names, "tools/gui-public-golden/normalize.go", "tools/gui-public-golden/normalize_test.go", "tools/gui-public-golden/release-bindings.json", "tools/gui-public-golden/verify_nonce_capture.py")
+	for _, name := range []string{"server.go", "router.go", "renderer.go", "renderer_fs.go", "renderer_fs_test.go", "templates.go", "i18n.go", "views.go", "public_pages.go", "public_downloads.go", "public_structured.go", "routes.json", "public_routes.json", "gui_public_golden_test.go", "gui_public_trace_test.go", "gui_public_normalize_test.go", "gui_public_nonce_test.go"} {
 		names = append(names, "services/server/internal/web/"+name)
 	}
 	err := filepath.WalkDir(filepath.Join(root, "locale"), func(name string, entry os.DirEntry, err error) error {
@@ -260,7 +260,12 @@ func guiPublicCapture(t *testing.T, filesystem bool) {
 			if err := guiPublicCheckLoads(fixture, trace.loads); err != nil {
 				t.Error(err)
 			}
+			nonceBinding, err := guiPublicScriptNonceBinding(body, policy, nil)
+			if err != nil {
+				t.Error(err)
+			}
 			record := map[string]any{"case": fixture, "status": response.Code, "body_file": fixture.ID + ".html", "body_bytes": len(raw), "body_sha256": guiPublicHash(raw), "csp_header_sha256": guiPublicHash([]byte(policy)), "template_loads": trace.loads, "assertions_passed": !t.Failed()}
+			record["external_script_nonce_binding"] = nonceBinding
 			if reference != nil {
 				record["original_reference"] = reference[fixture.ID]
 			}
