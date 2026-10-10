@@ -80,7 +80,7 @@ type guiPublicReferenceRecord struct {
 
 type guiPublicReferenceCheckpoint struct {
 	ManifestSHA256 string                     `json:"capture_manifest_sha256"`
-	Cases          []guiPublicReferenceRecord  `json:"captured_cases"`
+	Cases          []guiPublicReferenceRecord `json:"captured_cases"`
 }
 
 // This is custody of the already captured raw originals, not an HTML comparator.

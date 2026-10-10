@@ -77,7 +77,7 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 ## Open work
 
 - REST assertion closure remains separate:6 social API declarations, booking assertions, export query equality and
-  existing donation REST assertions; [bounded plan](docs/reviews/native-go/rest-contract-plan.md). Finance service/HTML gaps remain separate. [Original public GUI fixtures](docs/gui-public-golden-fixtures.md):14 anonymous captures + overwrite refusal passed managed race/count1 (16 actions,0fail/skip). Additive loader/reference source authored, NOT RUN; no group/Live/templ/retirement acceptance.
+  existing donation REST assertions; [bounded plan](docs/reviews/native-go/rest-contract-plan.md). Finance service/HTML gaps remain separate. [Original public GUI fixtures](docs/gui-public-golden-fixtures.md):loader/reference source5871 passed managed race/count1 (23 actions,0fail/skip),14cases/28loads; formatter failed one space, corrected source recheck pending. No group/Live/templ/retirement acceptance.
 - Native completion/toolchain/audit stacks (ADR-0035/0038) are source-qualified per ADR-0040; human code review
   gates first deployment. The1651 unresolved frozen declarations keep Python source/tests and block retirement; [GUI capture prep](docs/reviews/gui-capture-preparation/README.md) remains unsigned/unrun.
 - Build/promote a fresh immutable producer/server V2 release before real sync;

@@ -53,5 +53,12 @@ passed2top-level tests and14subcases with race/count1, no failures/skips/cache.
 All14private body hashes/modes and18renderer input hashes were verified. The
 latest raw setup remains task-owned; the superseded failed fixture run is compact
 history. Full native qualification and independent landing review remain pending.
-The additive loader/reference successor is authored only; its managed tests and
-formatting have not run yet. The checkpoint remains the original75dc717 evidence.
+[Loader/reference checkpoint](reviews/gui-public-original/trace-checkpoint.json):
+source5871df2 passed4top-level tests and19subcases (23unique actions, no
+failures/skips/cache). All14native cases recorded28actual page/base loads;
+20renderer/24selected-source bindings and the original15files stayed unchanged.
+The overall command exited1 solely because GOROOTgofmt found one extra space.
+The source correction is exactly that one-byte removal; its formatter-only
+recheck is pending, and the23tests remain bound to5871df2. The original checkpoint
+and bodies remain unchanged. No full native/group/Live/parity/conditional result
+follows from these focused checks.

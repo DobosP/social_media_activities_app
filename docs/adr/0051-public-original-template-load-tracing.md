@@ -1,7 +1,7 @@
 # ADR-0051: Public original template-load tracing
 
 Date: 2026-10-10
-Status: source implemented; targeted execution and independent review pending
+Status: targeted tests passed at5871df2; formatter-only source recheck and landing review pending
 
 ## Decision
 
@@ -37,3 +37,10 @@ symlink aliases and wrong case identity; they are custody tests, not native HTML
 captures. The original fourteen handler cases retain every existing assertion.
 Source is authored only; managed compilation/tests/formatting have not run on
 this successor. Exact-head landing remains subject to ADR-0040.
+
+Managed source5871df2 subsequently passed23unique test actions with no failure,
+skip or cache. All14native cases produced28actual loads, while20renderer inputs,
+24selected source inputs and15original corpus files stayed unchanged. Overall
+exit1 preserves the one-space GOROOTformat failure. Only that emitted ASCIIspace
+is removed in the source successor; formatter-only recheck is pending, and the
+23test results are not relabeled as execution of the whitespace successor.
