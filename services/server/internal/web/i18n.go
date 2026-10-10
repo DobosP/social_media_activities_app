@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/flosch/pongo2/v6"
 	"html"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -31,8 +32,13 @@ func loadCatalog(root string) translationCatalog {
 	if err != nil || info.Size() > 2<<20 {
 		return translationCatalog{}
 	}
+	result, _ := parseCatalog(file) // Preserve the original disk path's partial-catalog behavior.
+	return result
+}
+
+func parseCatalog(reader io.Reader) (translationCatalog, error) {
 	result := translationCatalog{}
-	scanner := bufio.NewScanner(file)
+	scanner := bufio.NewScanner(reader)
 	scanner.Buffer(make([]byte, 1024), 256<<10)
 	key := ""
 	entry := translation{Text: map[int]string{}}
@@ -94,7 +100,7 @@ func loadCatalog(root string) translationCatalog {
 		}
 	}
 	flush()
-	return result
+	return result, scanner.Err()
 }
 func (c translationCatalog) translate(language, message string, count int) string {
 	if language != "ro" {

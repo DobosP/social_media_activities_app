@@ -1,7 +1,7 @@
 # ADR ledger — claimed numbers
 
 Claim the next free number **here, in the same commit as the ADR file**, so two parallel worktrees
-never mint the same number. Next free number: **0050** (0041–0049 reserved 2026-10-05 for the audit fix sessions: G2 0041/0043–0046, G3 0042/0047–0049). Template: [`0000-template.md`](0000-template.md).
+never mint the same number. Next free number: **0054** (0041–0049 reserved 2026-10-05 for the audit fix sessions: G2 0041/0043–0046, G3 0042/0047–0049). Template: [`0000-template.md`](0000-template.md).
 ADRs are append-only: a reversal is a new ADR that flips the old one's `Status:` to `superseded-by ADR-NNNN`.
 On conflict: `STATUS.md` > newest-dated ADR > every other doc.
 
@@ -56,6 +56,7 @@ On conflict: `STATUS.md` > newest-dated ADR > every other doc.
 | 0050 | [original-public-gui-fixtures](0050-original-public-gui-fixtures.md) | targeted managed tests passed; landing/group review pending | 2026-10-10 |
 | 0051 | [public-original-template-load-tracing](0051-public-original-template-load-tracing.md) | targeted tests/formatter passed; broader landing/group review pending | 2026-10-10 |
 | 0052 | [released-public-golden-tooling-bridge](0052-released-public-golden-tooling-bridge.md) | focused managed checks and bounded actual review passed; no formal oracle/group acceptance | 2026-10-10 |
+| 0053 | [filesystem-original-renderer-boundary](0053-filesystem-original-renderer-boundary.md) | source implemented; managed tests/format NOT RUN; no default production switch | 2026-10-10 |
 
 ⚠ **0009 is claimed twice** — this ledger exists so it does not happen again. Both files stay:
 `0009-csp-enforcement-prep.md` (superseded by ADR-0010) and

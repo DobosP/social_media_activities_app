@@ -23,7 +23,7 @@ import (
 type Renderer struct {
 	Root       string
 	CSPEnforce bool
-	loader     *templateLoader
+	loader     pongo2.TemplateLoader
 	set        *pongo2.TemplateSet
 	once       sync.Once
 	catalog    translationCatalog

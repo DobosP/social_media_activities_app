@@ -22,6 +22,7 @@ import (
 // This optional producer captures the ORIGINAL native Pongo renderer, not a
 // templ candidate, Django oracle, owner-signed matrix or Native Live gate.
 var guiPublicGoldenOutput = flag.String("gui-public-golden-output", "", "fresh private directory for synthetic original-native public HTML fixtures")
+var guiPublicGoldenFSOutput = flag.String("gui-public-golden-fs-output", "", "separate fresh private directory for synthetic original-native filesystem HTML fixtures")
 var guiPublicGoldenReference = flag.String("gui-public-golden-reference", "", "unchanged private original capture bound by docs/reviews/gui-public-original/checkpoint.json")
 
 type guiPublicCase struct {
@@ -53,7 +54,7 @@ func guiPublicHash(raw []byte) string {
 func guiPublicSources(root string) (map[string]string, error) {
 	names := []string{"templates/base.html", "apps/web/templates/web/privacy.html", "apps/web/templates/web/terms.html", "apps/web/templates/web/open_data.html", "apps/web/templates/web/landing.html", "docs/reviews/gui-public-original/checkpoint.json"}
 	names = append(names, "tools/gui-public-golden/normalize.go", "tools/gui-public-golden/normalize_test.go", "tools/gui-public-golden/release-bindings.json")
-	for _, name := range []string{"server.go", "router.go", "renderer.go", "templates.go", "i18n.go", "views.go", "public_pages.go", "public_downloads.go", "public_structured.go", "routes.json", "public_routes.json", "gui_public_golden_test.go", "gui_public_trace_test.go", "gui_public_normalize_test.go"} {
+	for _, name := range []string{"server.go", "router.go", "renderer.go", "renderer_fs.go", "renderer_fs_test.go", "templates.go", "i18n.go", "views.go", "public_pages.go", "public_downloads.go", "public_structured.go", "routes.json", "public_routes.json", "gui_public_golden_test.go", "gui_public_trace_test.go", "gui_public_normalize_test.go"} {
 		names = append(names, "services/server/internal/web/"+name)
 	}
 	err := filepath.WalkDir(filepath.Join(root, "locale"), func(name string, entry os.DirEntry, err error) error {
@@ -125,6 +126,15 @@ func guiPublicWrite(output *os.Root, name string, raw []byte) error {
 }
 
 func TestGUIPublicOriginalCapture(t *testing.T) {
+	guiPublicCapture(t, false)
+}
+
+func TestGUIPublicFilesystemCapture(t *testing.T) {
+	guiPublicCapture(t, true)
+}
+
+func guiPublicCapture(t *testing.T, filesystem bool) {
+	t.Helper()
 	root, err := filepath.Abs("../../../../")
 	if err != nil {
 		t.Fatal(err)
@@ -132,6 +142,20 @@ func TestGUIPublicOriginalCapture(t *testing.T) {
 	before, err := guiPublicSources(root)
 	if err != nil {
 		t.Fatal(err)
+	}
+	transport, directory := "original-disk-root", *guiPublicGoldenOutput
+	var snapshot *guiPublicFSSnapshot
+	if filesystem {
+		transport, directory = "hash-bound-test-fs-snapshot", *guiPublicGoldenFSOutput
+		snapshot, err = guiPublicFilesystemSnapshot(root)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for name, digest := range snapshot.hashes {
+			if before[name] != digest {
+				t.Fatal("FS snapshot differs from the bound original source bytes")
+			}
+		}
 	}
 	var reference map[string]guiPublicReferenceRecord
 	if *guiPublicGoldenReference != "" {
@@ -149,8 +173,8 @@ func TestGUIPublicOriginalCapture(t *testing.T) {
 		t.Fatal(err)
 	}
 	var output *os.Root
-	if *guiPublicGoldenOutput != "" {
-		output, err = guiPublicOutput(*guiPublicGoldenOutput)
+	if directory != "" {
+		output, err = guiPublicOutput(directory)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -175,6 +199,13 @@ func TestGUIPublicOriginalCapture(t *testing.T) {
 				}
 			}
 			server := NewServer(nil, auth, nil, nil, nil, nil, config)
+			if snapshot != nil {
+				server.Renderer, err = NewRendererFS(root, snapshot.files)
+				if err != nil {
+					t.Fatal(err)
+				}
+				server.Renderer.CSPEnforce = config.CSPEnforce
+			}
 			trace := &guiPublicTraceLoader{delegate: server.Renderer.loader}
 			server.Renderer.set = pongo2.NewSet("native-social", trace)
 			mux := http.NewServeMux()
@@ -272,12 +303,22 @@ func TestGUIPublicOriginalCapture(t *testing.T) {
 			t.Error(err)
 		}
 	}
+	if snapshot != nil {
+		if err := snapshot.check(); err != nil {
+			t.Error(err)
+		}
+	}
 	if output != nil {
 		status := "captured"
 		if t.Failed() {
 			status = "failed"
 		}
 		manifest := map[string]any{"schema": 1, "status": status, "engine": "original-native-pongo2", "scope": "14 synthetic anonymous public registered-handler fixtures only; not Django oracle, Native Live, signed group coverage or retirement", "source_before": before, "source_after": after, "cases": records, "normalization": "none: raw HTML retained; nonces remain per-render, no body/attribute rewriting", "template_load_scope": "actual successful original-loader streams, not template-conditional coverage", "original_reference_verified": reference != nil, "raw_golden_parity": "not evaluated", "template_conditional_coverage": nil}
+		manifest["template_transport"] = transport
+		if snapshot != nil {
+			manifest["filesystem_snapshot_sha256"] = snapshot.hashes
+			manifest["filesystem_scope"] = "six hash-bracketed test snapshot files; arbitrary fs.FS immutability remains a caller contract; host assets/private pages outside scope"
+		}
 		if normalizer != nil {
 			manifest["released_normalizer"] = normalizer.binding
 			manifest["normalization"] = "released SDK canonical diagnostics computed separately; raw HTML files unchanged; no normalized baseline installed"
@@ -289,7 +330,7 @@ func TestGUIPublicOriginalCapture(t *testing.T) {
 		if err := guiPublicWrite(output, "manifest.json", append(raw, '\n')); err != nil {
 			t.Fatal(err)
 		}
-		t.Logf("original public capture: %d cases; private manifest at %s/manifest.json", len(records), *guiPublicGoldenOutput)
+		t.Logf("original public capture (%s): %d cases; private manifest at %s/manifest.json", transport, len(records), directory)
 	}
 }
 

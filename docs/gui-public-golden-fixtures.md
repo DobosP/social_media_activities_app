@@ -5,6 +5,8 @@
 load tracing and unchanged-reference custody.
 [ADR-0052](adr/0052-released-public-golden-tooling-bridge.md) records the optional
 released public normalizer bridge and its focused managed evidence.
+[ADR-0053](adr/0053-filesystem-original-renderer-boundary.md) records the additive
+filesystem-backed original renderer; its new checks have NOT RUN.
 The source is `services/server/internal/web/gui_public_golden_test.go`; existing
 native routing, templates, translations and rendering are used without edits.
 
@@ -100,12 +102,31 @@ The compiled command's module is honestly `(devel)` in the verified private SDK
 copy; archive/source/binary hashes bind it to the selected release. No normalized
 baseline, formal golden/Live/group result, templ adoption or retirement follows.
 
+The new `NewRendererFS(assetRoot, files)` boundary keeps original Pongo rendering,
+transforms and catalog parsing while reading templates/catalog only from the
+trusted supplied filesystem. The default disk constructor, production assembly
+and routes stay unchanged. Arbitrary FS immutability is the caller's contract;
+the test producer uses six exact source-hash-bound snapshots and checks them
+after rendering. Root-based assets/private pages remain outside this subset.
+
+`TestGUIPublicOriginalCapture` still runs every original scenario/assertion.
+`TestGUIPublicFilesystemCapture` adds the same14registered-handler scenarios
+using the new constructor and the existing released-normalizer flags. Optional
+`-gui-public-golden-fs-output /absolute/private-parent/new-fs-capture-directory`
+retains its own14raw bodies/manifest separately from the disk output and original
+reference. Root-relative include/extends, bounds/overflow, read/close errors,
+catalog parsing and genuine host-fallback refusal controls are additive. Expected
+new app discovery is63actions, authored NOT RUN; no prior23action result is
+relabeled as a pass on this source. The normalizer helper/source/archive remain
+unchanged, and its existing21action proof keeps source764beb1.
+
 ## Continuation
 
 The source lane is `feat/gui-app-migration-a`, separate from shared `main`.
-Source764beb1 is the tested implementation; later checkpoint commits contain
-docs/proof only. Existing original, loader and format receipts retain their
-earlier source identities. Next source work needs parent review before starting;
+Source764beb1 is the tested normalizer implementation; its following checkpoint
+commits contain docs/proof only. The additive FS boundary is now authored and
+unexecuted. Existing receipts retain their earlier source identities. New
+semantic work needs parent review before starting;
 each managed runtime needs a recorded fleet slot. Full native21, the unsigned
 84+7 matrix, private applicability and1651retirement holds remain unresolved.
 
