@@ -46,7 +46,8 @@ spacing and inline gap presence. Hard-finding controls include empty URLs,
 failed sanitization, template leaks and invalid JSON, including identical
 canonical output that still refuses. Raw input bounds are exercised separately.
 
-Source and release-file metadata have been reviewed locally; managed compilation,
+Historical source checkpoint (2026-10-10, source3b27357): source and release-file
+metadata had been reviewed locally; managed compilation,
 public-SDK tests, fourteen-case integration and formatting have NOT RUN on this
 successor. Existing tests and formatter receipts stay bound to their prior
 sources. Parent owns fresh runtime reservation, evidence review and publication.
