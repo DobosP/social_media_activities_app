@@ -319,3 +319,34 @@ does not create another test execution or relabel earlier receipts.
 No original14/83recapture, old suite rerun, SDK/dependency/normalizer build or baseline
 replacement is part of this section. Existing receipts keep their source identities;
 no fullM1/Live/browserCSP/privacy/adoption/device/retirement qualification is claimed.
+
+## Public community-card margin source section
+
+SOC-5 changes only two fixed inline margins in the public `for c in page` card:
+the title gains `community-card-title`; the paragraph reuses `u-m-0`. One added
+`.card h3.community-card-title` rule preserves `.2rem 0` and outranks both existing
+card first-child and heading selectors. The paragraph follows the title; its
+zero margin beats the ordinary `p` rule and agrees with the last-child bottom zero.
+All group/groups_page/pagination bytes, conditions, links/text/order and all other
+CSS bytes remain exact by the source inverse. This is source cascade reasoning,
+not a computed-style/browser proof.
+
+The new native tests author OS/FS synthetic anonymous empty/type/category card
+renders. The exact3349B pre-change template is reconstructed by only the inverse
+class replacements and pinned by its original SHA256; it is rendered through the
+same Pongo FS boundary as an explicit source comparator, not a captured oracle.
+The unchanged released normalizer parses original, in-memory expected class delta
+and current bodies. Populated arms must differ only by those two attributes; the
+empty arm must remain equal. Missing classes, restored inline style, altered text/
+link and reversed children must produce distinct canonical DOM, with hard findings
+checked separately. No masks or baseline are changed or persisted.
+
+Expected discovery is14actions (2parents/12subcases), with27normalizer calls.
+Formatting, compilation and tests are NOT RUN. The existing actual764binary/archive/
+original-corpus bindings are mandatory; omission fails rather than skips. Originals
+are verified before/after without recapture, and the binary/archive remain checked.
+The focused command is the existing managed readonly/race/count1 route with
+`-run '^TestGUIPublicCommunityStyle'` and the unchanged normalizer/reference flags.
+No new packages, helper build, SDK adoption, DB/auth/cohort admission, private-group
+behavior or default assembly is involved. Prior proofs retain their own sources;
+fullM1/browserCSP/Live/privacy/adoption/device/retirement qualification remains open.

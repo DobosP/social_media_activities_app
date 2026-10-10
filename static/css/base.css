@@ -365,6 +365,7 @@ small { font-size: .82rem; }
 .card > :first-child { margin-top: 0; }
 .card > :last-child { margin-bottom: 0; }
 .card h3 { margin: 0 0 .25rem; }
+.card h3.community-card-title { margin: .2rem 0; }
 .card h3 a { color: var(--fg); }
 .card h3 a:hover { color: var(--accent); }
 /* Accent-flagged cards (welcome mat, logistics, catch-up) — replaces inline

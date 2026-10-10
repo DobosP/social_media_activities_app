@@ -36,8 +36,8 @@
   with nothing to join.{% endblocktrans %}</p>
 {% for c in page %}
   <div class="card">
-    <h3 style="margin:.2rem 0"><a href="{% url 'community_detail' c.slug %}">{{ c.name }}</a></h3>
-    <p class="muted" style="margin:0">
+    <h3 class="community-card-title"><a href="{% url 'community_detail' c.slug %}">{{ c.name }}</a></h3>
+    <p class="muted u-m-0">
       {% if c.tier == "type" %}{{ c.category.name }} &middot; {{ c.area.name }}{% else %}{% blocktrans with category=c.category.name area=c.area.name %}All {{ category }} &middot; {{ area }}{% endblocktrans %}{% endif %}
     </p>
   </div>
