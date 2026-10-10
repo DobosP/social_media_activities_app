@@ -24,7 +24,7 @@ var guiPublicGoldenOutput = flag.String("gui-public-golden-output", "", "fresh p
 
 type guiPublicCase struct {
 	ID, Group, Path, Language, Profile string
-	Snapshot                         bool
+	Snapshot                           bool
 }
 
 func guiPublicCases() []guiPublicCase {
@@ -241,7 +241,10 @@ func TestGUIPublicOriginalCapture(t *testing.T) {
 }
 
 func TestGUIPublicCaptureRefusesExistingOutput(t *testing.T) {
-	parent := t.TempDir()
+	parent := filepath.Join(t.TempDir(), "private-parent")
+	if err := os.Mkdir(parent, 0o700); err != nil {
+		t.Fatal(err)
+	}
 	directory := filepath.Join(parent, "capture")
 	first, err := guiPublicOutput(directory)
 	if err != nil {
