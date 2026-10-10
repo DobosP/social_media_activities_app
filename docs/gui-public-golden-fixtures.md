@@ -200,14 +200,25 @@ all headers for GET/HEAD/range/conditional requests, preserve the existing
 immutable prefix and empty-file behavior, prove supplied/missing FS isolation,
 and exercise method/path/regular-size/read/seek/one-close refusals. Short/overlong
 streams and correct positions with seek errors are independent negative controls.
-Expected discovery is62actions (4top-level/58subcases); compilation, formatting
-and these tests are NOT RUN. Existing83nonce actions and all raw captures retain
-their original proof source; no recapture or helper/dependency rebuild follows.
+The historical e230 preflight returned1 with1075B of formatter diff and no stderr:
+two alignment lines each needed two spaces. Compiler and62tests did not run;
+all38source inputs and owned cleanup passed. The exact four-space successor is354.
 
-After parent source review and a recorded managed slot, the focused route is
-GOROOT formatting of the three changed Go paths followed by
+At source35441ad, actual read-only GOROOT formatting returned0 with empty streams,
+then the focused route passed:
 `go test -mod=readonly -race -count=1 -json ./internal/web -run '^TestGUIPublicStatic'`
-inside the existing pinned, capped, network-none, source-read-only runtime.
+The [static FS checkpoint](reviews/gui-public-original/static-fs-checkpoint.json)
+records62unique actions once (4top-level/58subcases), packagePASS1 and252JSON events,
+with zero failures/skips/cache/race reports and all38source bytes/fullmodes unchanged.
+The pinned2e040 runtime used4CPU/6GiB, network none, read-only source and existing
+private caches. Its container exited0 without OOM; removal of the owned CID
+returned0 and both that CID and exact name were absent. Parent and program reviewer
+accepted only this focused opt-in transport result. This later docs checkpoint
+does not create another test execution.
+
+Existing83nonce actions, original75dc/latestf010captures and actual764normalizer
+retain their separate proof sources. No83/14recapture, helper21/dependency
+acquisition or normalizer build was repeated. Each later runtime needs a recorded slot.
 This section does not install an embedded release, switch defaults, qualify
 whole delivery/M1, or alter private/auth/group/Live/device/retirement gates.
 
@@ -238,3 +249,11 @@ and both directory modes round-tripped before removing those two raw copies;
 archive/index hashes are in the nonce checkpoint. Historical8b proof and all
 unmerged source packets remain. The7d formatter failure remains sealed separately;
 its overall1 is not relabeled as the successfulf010 execution.
+
+The latest static transport keeper is
+`evidence/static-fs-35441ad-5f7f858c-782a-4d33-8568-cfdd9880c0a6`.
+The earlier small e230 formatter failure and all source/method packets remain.
+Only compact execution records are promoted, with no workspace/dependency/SDK/ELF
+duplicate. Result/closure control filenames retain their original private-keeper
+names; the checkpoint states which exact bytes enter Git. No raw HTML or context
+is promoted.

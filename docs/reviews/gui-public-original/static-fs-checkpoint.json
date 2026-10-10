@@ -1,0 +1,440 @@
+{
+  "schema": 1,
+  "artifact_kind": "focused-opt-in-static-filesystem-transport-evidence",
+  "tested_source": "35441ade1a43b8fdbc40153c2773a985d9fb5ae2",
+  "status": "pass",
+  "scope": "Only additive StaticHandlerFS transport and current OS/shared static response contracts; no default assembly/app/full/privacy/auth/group/Live/device/adoption qualification",
+  "actual_private_keeper": "_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/static-fs-35441ad-5f7f858c-782a-4d33-8568-cfdd9880c0a6",
+  "method_source": {
+    "bytes": 13905,
+    "sha256": "f787f328e478a49b4aa2e3e41dd89e4b045d027a2cdd353cb577a5398a179fe0",
+    "full_mode": 33152
+  },
+  "exact_method_selector_successor_sha256": "f787f328e478a49b4aa2e3e41dd89e4b045d027a2cdd353cb577a5398a179fe0",
+  "image_argument": "sha256:2e040a5165d79be63755424f707fdb8cf609ace831ada7a9baca398ac25e12b9",
+  "actual_format": {
+    "exit_code": 0,
+    "diff_bytes": 0,
+    "stderr_bytes": 0
+  },
+  "actual_tests": {
+    "run": 62,
+    "pass": 62,
+    "top_level": 4,
+    "subcases": 58,
+    "package_pass": 1,
+    "fail": 0,
+    "skip": 0,
+    "cached": false,
+    "JSON_events": 252
+  },
+  "actual_test_identities": [
+    "TestGUIPublicStaticFilesystemActualAssets",
+    "TestGUIPublicStaticFilesystemActualAssets/css/base.css",
+    "TestGUIPublicStaticFilesystemActualAssets/css/base.css/get",
+    "TestGUIPublicStaticFilesystemActualAssets/css/base.css/head",
+    "TestGUIPublicStaticFilesystemActualAssets/css/base.css/range",
+    "TestGUIPublicStaticFilesystemActualAssets/css/base.css/etag-not-modified",
+    "TestGUIPublicStaticFilesystemActualAssets/css/base.css/time-not-modified",
+    "TestGUIPublicStaticFilesystemActualAssets/css/base.css/if-range",
+    "TestGUIPublicStaticFilesystemActualAssets/js/site.js",
+    "TestGUIPublicStaticFilesystemActualAssets/js/site.js/get",
+    "TestGUIPublicStaticFilesystemActualAssets/js/site.js/head",
+    "TestGUIPublicStaticFilesystemActualAssets/js/site.js/range",
+    "TestGUIPublicStaticFilesystemActualAssets/js/site.js/etag-not-modified",
+    "TestGUIPublicStaticFilesystemActualAssets/js/site.js/time-not-modified",
+    "TestGUIPublicStaticFilesystemActualAssets/js/site.js/if-range",
+    "TestGUIPublicStaticFilesystemActualAssets/js/hovercard.js",
+    "TestGUIPublicStaticFilesystemActualAssets/js/hovercard.js/get",
+    "TestGUIPublicStaticFilesystemActualAssets/js/hovercard.js/head",
+    "TestGUIPublicStaticFilesystemActualAssets/js/hovercard.js/range",
+    "TestGUIPublicStaticFilesystemActualAssets/js/hovercard.js/etag-not-modified",
+    "TestGUIPublicStaticFilesystemActualAssets/js/hovercard.js/time-not-modified",
+    "TestGUIPublicStaticFilesystemActualAssets/js/hovercard.js/if-range",
+    "TestGUIPublicStaticFilesystemIsolationAndMethods",
+    "TestGUIPublicStaticFilesystemIsolationAndMethods/supplied-sentinel",
+    "TestGUIPublicStaticFilesystemIsolationAndMethods/missing-never-falls-back",
+    "TestGUIPublicStaticFilesystemIsolationAndMethods/nil-filesystem",
+    "TestGUIPublicStaticFilesystemIsolationAndMethods/POST",
+    "TestGUIPublicStaticFilesystemIsolationAndMethods/PUT",
+    "TestGUIPublicStaticFilesystemIsolationAndMethods/OPTIONS",
+    "TestGUIPublicStaticFilesystemIsolationAndMethods/existing-immutable-prefix-and-empty-file",
+    "TestGUIPublicStaticFilesystemRequestRefusals",
+    "TestGUIPublicStaticFilesystemRequestRefusals/\"/other/css/base.css\"",
+    "TestGUIPublicStaticFilesystemRequestRefusals/\"/static/\"",
+    "TestGUIPublicStaticFilesystemRequestRefusals/\"/static//css/base.css\"",
+    "TestGUIPublicStaticFilesystemRequestRefusals/\"/static/css//base.css\"",
+    "TestGUIPublicStaticFilesystemRequestRefusals/\"/static/css/../js/site.js\"",
+    "TestGUIPublicStaticFilesystemRequestRefusals/\"/static/../site.js\"",
+    "TestGUIPublicStaticFilesystemRequestRefusals/\"/static/css\\\\base.css\"",
+    "TestGUIPublicStaticFilesystemRequestRefusals/\"/static/css/base.css\\x00\"",
+    "TestGUIPublicStaticFilesystemRequestRefusals/\"/static/.hidden\"",
+    "TestGUIPublicStaticFilesystemRequestRefusals/\"/static/css/.private.css\"",
+    "TestGUIPublicStaticFilesystemRequestRefusals/\"/static/missing.css\"",
+    "TestGUIPublicStaticFilesystemRequestRefusals/\"/static/css\"",
+    "TestGUIPublicStaticFilesystemIORefusalsAndOneClose",
+    "TestGUIPublicStaticFilesystemIORefusalsAndOneClose/regular",
+    "TestGUIPublicStaticFilesystemIORefusalsAndOneClose/nil-file",
+    "TestGUIPublicStaticFilesystemIORefusalsAndOneClose/open-error",
+    "TestGUIPublicStaticFilesystemIORefusalsAndOneClose/open-error-with-file",
+    "TestGUIPublicStaticFilesystemIORefusalsAndOneClose/stat-error",
+    "TestGUIPublicStaticFilesystemIORefusalsAndOneClose/nil-stat",
+    "TestGUIPublicStaticFilesystemIORefusalsAndOneClose/directory",
+    "TestGUIPublicStaticFilesystemIORefusalsAndOneClose/negative-size",
+    "TestGUIPublicStaticFilesystemIORefusalsAndOneClose/oversize",
+    "TestGUIPublicStaticFilesystemIORefusalsAndOneClose/nonseekable",
+    "TestGUIPublicStaticFilesystemIORefusalsAndOneClose/seek-end-error",
+    "TestGUIPublicStaticFilesystemIORefusalsAndOneClose/wrong-seek-end",
+    "TestGUIPublicStaticFilesystemIORefusalsAndOneClose/seek-start-error",
+    "TestGUIPublicStaticFilesystemIORefusalsAndOneClose/wrong-seek-start",
+    "TestGUIPublicStaticFilesystemIORefusalsAndOneClose/partial-read-error",
+    "TestGUIPublicStaticFilesystemIORefusalsAndOneClose/short-stream",
+    "TestGUIPublicStaticFilesystemIORefusalsAndOneClose/overrun-stream",
+    "TestGUIPublicStaticFilesystemIORefusalsAndOneClose/close-error"
+  ],
+  "source38_before_after_equal": true,
+  "source38_inputs": [
+    {
+      "path": "apps/web/templates/web/landing.html",
+      "bytes": 1875,
+      "sha256": "8fd980d985011f42c519281fd165bb22696175a66d5104a5cd3367e18a9ef4df",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/open_data.html",
+      "bytes": 5306,
+      "sha256": "ae75cc9b3dc9f9dabbcd4ce62de63bc25ad538051a33a96b01c77691e938100d",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/privacy.html",
+      "bytes": 5691,
+      "sha256": "6538ae63b9870de290b1725c8528eb400bc4c0888ac39c509fac32158dc89e79",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/terms.html",
+      "bytes": 3876,
+      "sha256": "848ebae7fa912b5adeb4381cc437e4383686920a19124c5cc83b68ee929854d9",
+      "full_mode": 33204
+    },
+    {
+      "path": "docs/reviews/gui-public-original/checkpoint.json",
+      "bytes": 11798,
+      "sha256": "3fa46e9a1fcb3ab8aa4baefa80c54a8d050b59527402db18cb20e24bbc104f1c",
+      "full_mode": 33204
+    },
+    {
+      "path": "locale/ro/LC_MESSAGES/django.po",
+      "bytes": 113861,
+      "sha256": "186558af2dbb8016c313d09bd0b8508bd5365d61961bcabb3a681c66b99b154c",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/authcore/go.mod",
+      "bytes": 283,
+      "sha256": "124899dbc57503d4a8884e5579435f7775421bfe0544bff1dee6e76ec895fa4c",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/authcore/go.sum",
+      "bytes": 825,
+      "sha256": "b2516a139953d6c42702bff40fad4da1ff04fa5cde523c089f07c6c1ea148109",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/go.mod",
+      "bytes": 1335,
+      "sha256": "1e0c2e6d9cda30507b6a5dde1d33f795737e609b47124983bbf9786844cabb46",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/go.sum",
+      "bytes": 7767,
+      "sha256": "83cc84cde408f45973444ecee13f40df4abac1c1272c259f463f18703cb6b012",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_golden_test.go",
+      "bytes": 14274,
+      "sha256": "430775c2330e07b671897b372caf41844f1c5786ef60e741fb85252df32f1ad9",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_nonce_test.go",
+      "bytes": 10666,
+      "sha256": "3200f4557be726042234ca36314ed5d419ceb2f8e117abd8df775697940cce72",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_normalize_test.go",
+      "bytes": 8477,
+      "sha256": "b537803d403a11f258bb86e2754985f02da1fac49627cf1e4bf7e8de5e42f56a",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_static_fs_test.go",
+      "bytes": 15064,
+      "sha256": "3e7df1f699ea1902be0403ec5899d12c8445ba65657a9f2a767c5807c3819262",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_trace_test.go",
+      "bytes": 9724,
+      "sha256": "c65313d9b2dfd41bf10683132b88460355d321557dab9c1fe8765e32915ca5a3",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/i18n.go",
+      "bytes": 4187,
+      "sha256": "b6a6febb5c6795177ccb6f3d52659f7e00ee7c4fbf1aa2104d794e5fdd2c811c",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/public_downloads.go",
+      "bytes": 13032,
+      "sha256": "e19db748f4390bd0595083bc8e49a2da4f35031a961e52fdb607482bd926d4fd",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/public_pages.go",
+      "bytes": 17440,
+      "sha256": "6dfb36642cde63c253899ff8e76a1555a8bfb33cd068ef1dcca5861fdc82a2b4",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/public_routes.json",
+      "bytes": 47682,
+      "sha256": "961c7d1d0ab265f0f3d8fd84074172d62f72122dd6a1dd13a7b219315d1d5d06",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/public_structured.go",
+      "bytes": 7260,
+      "sha256": "2a0d2154f0f5f6904add9b01ac3135a09da560bb0134649a4f51c6d50a3241be",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/renderer.go",
+      "bytes": 5510,
+      "sha256": "94f11a3f1849c919ba100c4ba68236263f71f07741006c1992dadc4020723e68",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/renderer_fs.go",
+      "bytes": 3382,
+      "sha256": "fe484effba370a376d835722e718719289eb2c8fea81d6bde99182276b162673",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/renderer_fs_test.go",
+      "bytes": 11279,
+      "sha256": "74d9a05ee399a11d60f1628969882ed1210ee454c62aeb95f14b3ac659adbc81",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/router.go",
+      "bytes": 2443,
+      "sha256": "b1cc3430d5148011cd827ab9fcd437cdf14a60c72dc5d980693e50bf9b8c0cca",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/routes.json",
+      "bytes": 7167,
+      "sha256": "d10de3908d9537bbdeb2f51427bcb1ecdffc57e9d5a5066cc3166c9fbb559fc3",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/server.go",
+      "bytes": 10960,
+      "sha256": "0c4208333d354d2256f275459a420ac5f2ff936abfab6c13cc4b8b6ca4fdcc09",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/static.go",
+      "bytes": 2394,
+      "sha256": "df27a7589dc84a883cad125cd8067df493d9f13316fc3c9d89904e5db19fd127",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/static_fs.go",
+      "bytes": 2894,
+      "sha256": "daa2e6493d3ad38d0cb564e11a691f3ce7c899e4beb72f0f582ea2c7a16eda78",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/templates.go",
+      "bytes": 14282,
+      "sha256": "8098259abbf45838fc732630188cde4b73ccefbc0f5e729b75497f6988db4b97",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/views.go",
+      "bytes": 7205,
+      "sha256": "f54f6757bcbf7db40e922e085dfeab6ae353014f7771be10e707bb7ee8058180",
+      "full_mode": 33204
+    },
+    {
+      "path": "static/css/base.css",
+      "bytes": 62353,
+      "sha256": "8610eae6417410b82ae831b39e29814f8e3e9fd60c24f92fd1f3cb6c5b66dca0",
+      "full_mode": 33204
+    },
+    {
+      "path": "static/js/hovercard.js",
+      "bytes": 4349,
+      "sha256": "45634986f8ffefa44adead30797dfc7da3369b93784314cdef8e33c9596efb32",
+      "full_mode": 33204
+    },
+    {
+      "path": "static/js/site.js",
+      "bytes": 1602,
+      "sha256": "144ecbc76de716f720361b76c4863cbbda7e4408101fb494f48d4f59c9172938",
+      "full_mode": 33204
+    },
+    {
+      "path": "templates/base.html",
+      "bytes": 13658,
+      "sha256": "a8a5354db2968c99dcf043a2bb04ac635eb199a72455efe5cd96fc2946292b2c",
+      "full_mode": 33204
+    },
+    {
+      "path": "tools/gui-public-golden/normalize.go",
+      "bytes": 1465,
+      "sha256": "5282ddb0dab9101b028e6eda5411fc29995bf9f3a5b5de1d62c157a76eccd458",
+      "full_mode": 33204
+    },
+    {
+      "path": "tools/gui-public-golden/normalize_test.go",
+      "bytes": 4317,
+      "sha256": "f9bac4f56a598f5822054e846ef622ff2baecd885bd670cf0a4211d7c61704f7",
+      "full_mode": 33204
+    },
+    {
+      "path": "tools/gui-public-golden/release-bindings.json",
+      "bytes": 9594,
+      "sha256": "d845c6a1640e1f1cbe67f63af3ddc8ba7795d73ff0c2d97b23cb8ee4ff953015",
+      "full_mode": 33188
+    },
+    {
+      "path": "tools/gui-public-golden/verify_nonce_capture.py",
+      "bytes": 8075,
+      "sha256": "b5df938b01996f8b5ff675b1dc00e9bbe4d4d25bf7a277451e8ec65897f2b7ed",
+      "full_mode": 33204
+    }
+  ],
+  "pinned_runtime": "networknone/4CPU6GiB/actualuid1000/sourceRO/existingprivateGo caches/temp; noSDK/helper/originalcorpus/binary copy or rebuild",
+  "actual_cleanup_from_result": {
+    "pointer": "/cleanup",
+    "value": {
+      "id": "0bb0468bc2d33bb4fe87884b6120ac1081218cff49328416b623b6426377b519",
+      "name": "social-static-5f7f858c-782a-4d33-8568-cfdd9880c0a6",
+      "remove_exit": 0,
+      "id_absent": true,
+      "name_absent": true,
+      "passed": true
+    },
+    "actual_control_indices": [
+      6,
+      7,
+      8
+    ],
+    "source_result_sha256": "b8990515eed614a149cd669caa49c74d16d95de7bce151c1112743c23288331a"
+  },
+  "container_id": "0bb0468bc2d33bb4fe87884b6120ac1081218cff49328416b623b6426377b519",
+  "actual_no_OOM": true,
+  "source_level_default_OS_body_inverse": true,
+  "source_FS_contract": "Caller owns confinement/stability/lifetime; bounded seekable regular files close once before shared serving; request-local64MiB+1buffer, no new aggregate cache or HTTP policy",
+  "payload": [
+    {
+      "source_name": "result.json",
+      "path": "static-fs-35441ad-result.json",
+      "bytes": 35345,
+      "sha256": "b8990515eed614a149cd669caa49c74d16d95de7bce151c1112743c23288331a",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_name": "CLOSURE.json",
+      "path": "static-fs-35441ad-closure.json",
+      "bytes": 10490,
+      "sha256": "a433ff3ebc4454b4c3521ecf74a6c1a6e408e10b413491ef69efd52ba1adf179",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_name": "tests.stdout",
+      "path": "static-fs-35441ad-events.jsonl",
+      "bytes": 69632,
+      "sha256": "5ebd8cd3670a5a6f19f3299f80440447a012c3c6e2c15fdd76333fd316ddc8c0",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_name": "tests.stderr",
+      "path": "static-fs-35441ad-tests.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_name": "tests.exit",
+      "path": "static-fs-35441ad-tests.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_name": "format.stdout",
+      "path": "static-fs-35441ad-format.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_name": "format.stderr",
+      "path": "static-fs-35441ad-format.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_name": "format.exit",
+      "path": "static-fs-35441ad-format.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    }
+  ],
+  "control_path_availability": "Control filenames and artifact rows inside the exact result/closure retain their ORIGINAL private-keeper names. Their remaining raw bytes are preserved there; these references do not claim every control file is copied as a public sibling. Cleanup is retained exactly in the actual result, not manufactured by this ledger.",
+  "independent_actual_review": {
+    "actors": [
+      "parent",
+      "/root/program_pack"
+    ],
+    "basis": "Parent task explicitly accepted closurea433ff3e/resultb8990515,252events/62once/source38/pinnedisolation/ownedcleanup; no wider approval"
+  },
+  "history": {
+    "original_source": "e23076dab230325870c12708ff2d7e4320396a6c",
+    "original_failure_closure_sha256": "87aa47e5f214a7967e183d46f69785ed4c56fd86c61ad52c6bdc052a0adf5bf7",
+    "original_result_sha256": "f7139acf672b596473ca5c8a5372dcd9c227f9edb06c0ceae54cd5b1c1319e2f",
+    "actual_formatter_diff_sha256": "072be2986315b5f573486b98a5be5786aa9935123bfe0e69e0681564a4a87943",
+    "original_overall_exit": 1,
+    "compiler_and_Go62_run_at_e230": false,
+    "four_space_only_successor": true,
+    "old_source_failure_methods_retained": true
+  },
+  "preserved_proofs": {
+    "previous_nonce83_test_source": "f010e0df274d91eedf3c6628990c4649d7236f49",
+    "actual_normalizer_build_source": "764beb183dde75a3c003105d011abb4cf06d2241",
+    "original75dc_latestF_raw14_pair_and_sole764binary_SDK_unchanged": true,
+    "helper21_or_deps_binary_rebuild_or83_14recapture_repeated": false
+  },
+  "later_docs_HEAD_is_not_a_new_execution": true,
+  "wider_gates": "Fullnative21/M1/unsigned84+7/privateapplicability/1651retirement/templ/UI/defaultembedding/Live/physicaldevice/deploy remain separate and unqualified"
+}
