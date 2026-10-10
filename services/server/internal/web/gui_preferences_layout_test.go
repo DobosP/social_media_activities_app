@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 	"testing/fstest"
@@ -351,14 +352,60 @@ func (f *guiPreferenceFixture) compare(t *testing.T, filesystem bool, fixture gu
 		}
 		expected = bytes.Replace(expected, old, next, counts[index])
 	}
-	normalize := func(raw []byte) []byte {
+	normalize := func(phase string, raw []byte) []byte {
 		canonical, hard, err := f.normalizer.normalize(raw)
 		if err != nil || len(hard) != 0 {
-			t.Fatal("actual released DOM normalizer refused preference presentation")
+			wrapperCode := "none"
+			if err != nil {
+				// Compare in memory against source-bound wrapper constants only;
+				// never emit the error message or any captured child stream.
+				wrapperCode = "unknown-wrapper"
+				switch message := err.Error(); {
+				case message == "released normalizer returned no complete diagnostic frame":
+					wrapperCode = "frame-missing"
+				case message == "released normalizer diagnostic frame differs":
+					wrapperCode = "frame-invalid"
+				case strings.HasPrefix(message, "released normalizer refused; hard_findings="):
+					wrapperCode = "child-refused"
+				}
+			}
+			safePath := regexp.MustCompile(`^(/[a-z][a-z0-9-]*\[[0-9]+\])+(@[a-z][a-z0-9-]*)?$`)
+			codes, paths := []string{}, []string{}
+			for index, finding := range hard {
+				if index == 8 {
+					break // Full count remains visible; metadata is bounded.
+				}
+				code, path := "unknown-hard", "[withheld]"
+				for _, kind := range []struct {
+					prefix string
+					code   string
+					path   bool
+				}{
+					{"empty URL at ", "empty-url", true},
+					{"failed URL sanitization at ", "failed-url-sanitization", true},
+					{"template syntax leak at ", "template-syntax-leak", true},
+					{"invalid JSON script at ", "invalid-json-script", true},
+					{"HTML parse: ", "html-parse", false},
+					{"oracle HTML parse: ", "oracle-html-parse", false},
+				} {
+					if strings.HasPrefix(finding, kind.prefix) {
+						code = kind.code
+						candidate := strings.TrimPrefix(finding, kind.prefix)
+						if kind.path && len(candidate) <= 256 && safePath.MatchString(candidate) {
+							path = candidate
+						}
+						break
+					}
+				}
+				codes, paths = append(codes, code), append(paths, path)
+			}
+			t.Fatalf("actual released DOM normalizer refused preference presentation: phase=%s err_type=%T wrapper_code=%s hard_count=%d hard_shown=%d hard_codes=%q hard_paths=%q", phase, err, wrapperCode, len(hard), len(codes), codes, paths)
 		}
 		return canonical
 	}
-	oldDOM, expectedDOM, currentDOM := normalize(before), normalize(expected), normalize(current)
+	oldDOM := normalize("original", before)
+	expectedDOM := normalize("expected", expected)
+	currentDOM := normalize("current", current)
 	if !bytes.Equal(expectedDOM, currentDOM) {
 		t.Fatal("canonical preference DOM differs outside the finite class delta")
 	}
