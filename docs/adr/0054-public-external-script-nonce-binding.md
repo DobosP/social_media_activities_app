@@ -1,7 +1,7 @@
 # ADR-0054: Existing public external-script nonce binding
 
 Date: 2026-10-10
-Status: source authored; managed formatting/tests/delta diagnostics NOT RUN
+Status: focused managed checks passed atf010e0d; independent actual review clear within the bounded nonce section
 
 ## Decision
 
@@ -46,7 +46,7 @@ the owning managed runner must separately retain those actual controls.
 
 ## Verification and boundaries
 
-Expected focused app discovery is83actions: all63previous actions plus20new
+Historical source checkpoint (2026-10-10, source7d8627e): expected focused app discovery was83actions: all63previous actions plus20new
 nonce/delta actions (16top-level/67subcases). Both14-case native sets retain every
 old functional assertion. Expected diagnostics are28three-way comparisons and
 84normalizer calls. Compilation, GOROOT formatting, tests, DATA verification and
@@ -58,3 +58,34 @@ captures and earlier receipts remain unchanged. There is no fullM1, signed84+7
 matrix, Django parity, Native Live, private/group, templ/UI, retirement, device
 or deployment acceptance. Parent review and a fresh managed runtime reservation
 precede execution; independent landing and deployment gates remain separate.
+
+At7d, the managed formatter returned1 with4927B of alignment/line-break diff in
+the new nonce test only; no tests/captures/DATA ran. Parent independently verified
+that failure and exact whole-file afterimage before formatter successorf010e0d.
+
+Atf010, actual managed formatting,83app actions (16top/67subcases, each once,
+zero fail/skip/cache/race) and the strict capture DATA verifier passed. All63prior
+action identities remain. Both14-case disk/FS captures have hard-free three-way
+diagnostics: each untouched original differs canonically from current, and its
+explicit two-attribute expected copy equals current. All84success fields from
+the executed three-call path are true; all14disk/FS canonical hashes join.
+The28anonymous capture responses have distinct nonempty header nonce hashes and
+two bound external scripts. Separate actual disk/FS anonymous/fictional-adult
+presentation tests each render twice and require fresh nonces. No account or
+eligibility admission is established.
+
+All94input guards (32source/41SDK/2owned-command/15original/twoarchives/binary
+and buildinfo),56template loads and sixFSsnapshot/source28 joins remained exact.
+The normalizer helper/SDK and actual764binary were reused without download,
+helper-test or build repetition. All three owned containers exited0 and their
+names/CIDs were absent after removal; no live-container inspect is claimed.
+Parent independently cleared this actual boundary. The
+[nonce checkpoint](../reviews/gui-public-original/nonce-checkpoint.json) binds
+the compact proof; this documentation commit does not relabel its tested source.
+
+After latestf010/original keepers were verified, only the superseded8b disk/FS
+raw pair was deterministically archived. Every30file byte/fullmode and both
+directory modes round-tripped before those two raw copies were removed. The
+original75dc/latestf010pair, source packets and sole binary/SDK setup remain.
+Earlier8b receipts keep their original identities. All wider gates above remain
+unqualified; no baseline replacement or mask expansion follows from these checks.

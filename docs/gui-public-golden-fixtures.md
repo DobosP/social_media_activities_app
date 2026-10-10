@@ -135,9 +135,10 @@ is implied.
 The current source adds the existing `request.csp_nonce` only to `hovercard.js`
 and `site.js` external tags. Native disk/FS tests cover fresh actual header/tag
 binding, anonymous/authenticated presentation attributes, real response mutations
-and the exact two-attribute template inverse. These20new actions bring expected
-focused app discovery to83; formatting, tests and the new delta diagnostics are
-NOT RUN. Paths/load attributes, nonce provider and CSP mode stay unchanged.
+and the exact two-attribute template inverse. These20new actions bring focused
+app discovery to83. Historical source7d stopped at a formatting-only failure;
+its exact one-file correction became testedsourcef010. Paths/load attributes,
+nonce provider and CSP mode stay unchanged.
 
 The original14raw bodies remain the reference. Only an in-memory expected copy
 adds the two nonce attributes with a synthetic marker; it is never a response or
@@ -160,13 +161,26 @@ It requires exact15-member private inputs,14ordered cases in each current mode,
 the new strict flags/hash relations and anonymous native nonce-binding reports;
 it refuses the old equality-only schema. It emits only a DATA summary and cannot
 replace separate actual Go counts/streams, source/image/archive/binary proof.
-The DATA command and new source have NOT RUN; each runtime needs parent approval.
+Atf010, formatting,83app actions (16top/67subcases, each once, zero
+fail/skip/cache/race), both14-case captures and this strict DATA command passed.
+All63prior action identities remain. All28three-way comparisons are hard-free:
+original canonical output differs and expected-delta output equals current;
+84success fields from the executed three-call path are true. All14OS/FS hashes
+join and28capture header nonce hashes are distinct, with two scripts bound each.
+The actual separate disk/FS anonymous/fictional-adult controls render twice to
+require freshness; they establish no account/session/eligibility/privacy admission.
+All94input guards,56loads and sixFSsnapshot/source28 joins remained exact.
+The actual764helper binary/SDK was reused without dependency/build/helper-test
+repetition. Parent independently cleared this scoped result; the
+[nonce checkpoint](reviews/gui-public-original/nonce-checkpoint.json) retains
+exact streams, hashes, counts and cleanup records. Wider qualification remains
+pending; each later runtime still needs a recorded parent slot.
 
 ## Continuation
 
 The source lane is `feat/gui-app-migration-a`, separate from shared `main`.
-Source8bdbb4e is the tested partial FS implementation; the nonce delta successor
-is source-only, awaiting its own managed evidence. The normalizer binary and
+Sourcef010e0d is the tested nonce delta over the earlier8b partial FS implementation.
+The normalizer binary and
 its21helper action proof retain actualsource764beb1. Subsequent checkpoint
 commits contain docs/proof only; earlier receipts keep their source identities. New
 semantic work needs parent review before starting;
@@ -174,8 +188,8 @@ each managed runtime needs a recorded fleet slot. Full native21, the unsigned
 84+7 matrix, private applicability and1651retirement holds remain unresolved.
 
 Task-private keepers are under workspace `_temp/feat__gui-app-migration-a/social_media_activities_app`:
-the original `capture-75dc717`, latest `capture-8bdbb4e-os`/`capture-8bdbb4e-fs`,
-reused `sdk-3b27357`, `evidence/filesystem-r9-8bdbb4e` and the one actual ELF/build
+the original `capture-75dc717`, latest `capture-f010e0d-os`/`capture-f010e0d-fs`,
+reused `sdk-3b27357`, `evidence/nonce-r11-f010e0d` and the one actual ELF/build
 information in `evidence/normalizer-r7-764beb1`.
 No raw body or ELF is committed. The failedr6metadata/streams and superseded5871
 capture are deterministic private archives, with every member's bytes/fullmode
@@ -186,3 +200,10 @@ raw experiment are also deterministic private archives, with every regular
 member's bytes/fullmode and directory mode verified before removing only those
 two raw copies. Archive identities are in the filesystem checkpoint. The one
 binary/SDK/cache setup, original corpus and latest disk/FS pair remain present.
+
+After parent actual nonce review and verification of the latest/original keepers,
+only the superseded8b disk/FS raw pair was archived together (37,369B). All30files
+and both directory modes round-tripped before removing those two raw copies;
+archive/index hashes are in the nonce checkpoint. Historical8b proof and all
+unmerged source packets remain. The7d formatter failure remains sealed separately;
+its overall1 is not relabeled as the successfulf010 execution.

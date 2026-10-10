@@ -57,7 +57,7 @@ On conflict: `STATUS.md` > newest-dated ADR > every other doc.
 | 0051 | [public-original-template-load-tracing](0051-public-original-template-load-tracing.md) | targeted tests/formatter passed; broader landing/group review pending | 2026-10-10 |
 | 0052 | [released-public-golden-tooling-bridge](0052-released-public-golden-tooling-bridge.md) | focused managed checks and bounded actual review passed; no formal oracle/group acceptance | 2026-10-10 |
 | 0053 | [filesystem-original-renderer-boundary](0053-filesystem-original-renderer-boundary.md) | focused managed checks/partial actual review passed; no default production switch | 2026-10-10 |
-| 0054 | [public-external-script-nonce-binding](0054-public-external-script-nonce-binding.md) | source authored; managed formatting/tests/delta diagnostics NOT RUN | 2026-10-10 |
+| 0054 | [public-external-script-nonce-binding](0054-public-external-script-nonce-binding.md) | focused managed83/DATA checks passed; wider qualification pending | 2026-10-10 |
 
 ⚠ **0009 is claimed twice** — this ledger exists so it does not happen again. Both files stay:
 `0009-csp-enforcement-prep.md` (superseded by ADR-0010) and
