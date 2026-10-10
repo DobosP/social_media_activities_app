@@ -1172,3 +1172,11 @@ textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--accent)
 .person-card-sub { margin: .15rem 0 0; font-size: .85rem; }
 .person-card-body { margin-top: .5rem; }
 .person-card-body p { margin: .2rem 0; }
+
+/* Fixed preference-form layout; field/policy behavior is unchanged. */
+.row.preference-choice { gap: .5rem; align-items: flex-start; margin: .4rem 0; }
+.row.preference-choice--topic { margin: .35rem 0; }
+.card > .preference-submit { margin-top: .5rem; }
+fieldset.preference-topic-fields { border: 0; padding: 0; margin: 0; }
+legend.preference-topic-title { margin-bottom: .4rem; }
+.preference-feed-link { margin-left: .6rem; }

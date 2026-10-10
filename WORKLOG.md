@@ -2505,3 +2505,26 @@ or browser census. This docs HEAD is not retested. Original14/15,764+d722, prior
 83/62/VM14/graph19/community34 and all failed/source packets retain their own
 identities. No route/DB/account/cohort/privacy/map/API/geolocation/browserCSP/full,
 Live/device/default/adoption/retirement acceptance. Parent owns feature publication.
+
+
+## 2026-10-11 — SOC-8 complete preference-form layout SOURCE ONLY
+
+From published8c07366, authored only12fixed attribute-to-class changes across
+access/notification/topic preference forms (5+2+5) and six append-only scoped CSS
+rules. Exact inverses retain1791/1329/1551B template preimages and62453B CSS. New
+row/submit specificity+order preserves first-child/empty-row margins; fieldset and
+legend fonts/padding remain outside the moved original properties.
+
+One new test source authors41actions (2parents/39children), nine fictional adult
+PRESENTATION shapes×OS/FS and21safe DOM mutations, through the unchanged released
+normalizer. Genuine before OS uses only nine temporary exact source/catalog files,
+not original responses/workspaces. Fields/checked flags/order/CSRF/method/action,
+all copy/safety-arrival-access disclosures/selected feed link are preserved.
+The scoped CSRF mutation targets the actual preference form, not the base form.
+
+Formatter/compiler/tests/runtime are NOT RUN.84 normalizations is source-expected,
+not an invocation/browser census. No handlers/API/writes/PG/eligibility/auth/privacy
+policy, JS/default/SDK change. Original14/15,764+d722, qualified community/graph
+source, old34/83/62/VM14/graph19/places46 receipts and source/failed keepers remain.
+Parent source/method review and reserved managed runtime precede execution; no
+newflow/admission/privacy/Live/full/device/adoption/retirement acceptance.

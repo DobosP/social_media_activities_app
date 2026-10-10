@@ -503,3 +503,44 @@ clone is added. Original14/15files, sole764+d722 setup, all earlier proofs and
 source/failure keepers stay unchanged. No map/API/geolocation/registered route,
 auth/cohort/privacy/browserCSP/full/Live/device/default/adoption/retirement
 acceptance follows.
+
+
+## Authenticated preference-form layout source checkpoint
+
+SOC-8 is SOURCE ONLY, NOT RUN. Its explicit presentation-only scope covers access,
+notification and topic preference forms, including12fixed inline attributes
+(5+2+5). Six scoped CSS rules are appended without changing any old CSS byte/order.
+Whole template inverses preserve every field/name/value/checked conditional,
+POST method/implicit action, CSRF field, copy, disclosures and selected feed link.
+These are authenticated surfaces, not a new anonymous/public fixture group.
+
+The new row and submit020 selectors follow the existing card:first-child020 rule,
+retaining original margins even when notification rows are empty. The topic row
+keeps.35rem, other rows.4rem and every gap.5rem. Fieldset/legend classes add only
+original properties; the existing fieldset-plain utility is not used because it
+would also change legend font/padding. This is source cascade reasoning, not a
+computed-style or browser proof.
+
+`gui_preferences_layout_test.go` authors41actions (2parents/39children): nine
+fictional adult presentation shapes×OS/FS and21safe DOM mutations. Existing
+context shapes are used without invoking handlers/accounts APIs/PG/eligibility
+or preference writes. Before/current OS constructors read regular source files;
+the before OS fixture contains only nine small hash-bound template/catalog files.
+Before/current FS uses corresponding caller-owned snapshots. No original14body
+corpus or workspace is cloned. Owned temporary fixture files explicitly retain
+0444 despite the managed umask and are checked before ordinary test cleanup.
+
+Strict existing released normalization compares original/finite-class-expected/
+current DOM. Native field/checked/CSRF/form/copy checks remain independent. Mutations
+cover field/value/checked state, mandatory safety/arrival/access disclosure,
+method/action/CSRF identity, classes/inline restoration, selected feed link and
+label order.84 normalizations is source-expected only, no execution census.
+
+After closed source/method review and parent reservation, the same pinned managed
+read-only formatter and focused route may run
+`go test -mod=readonly -race -count=1 -json ./internal/web -run '^TestGUIPreferencesLayout'`
+with existing normalizer/reference flags. Existing764/d722/original15 and all old
+proofs/tests/keepers remain separate and unchanged; no rebuild/install/recapture.
+Auth/privacy/admission/notification/access/topic policies, all handlers, default
+assembly/SDK and signed fixture/Live/device/retirement prerequisites stay held.
+No formatter/compiler/test/browserCSP/computed-style/full qualification is claimed.
