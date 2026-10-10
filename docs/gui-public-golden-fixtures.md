@@ -10,8 +10,9 @@ filesystem-backed original renderer and its focused partial evidence.
 [ADR-0054](adr/0054-public-external-script-nonce-binding.md) records the two
 existing external-script nonce additions and explicit original-fixture delta.
 The source is `services/server/internal/web/gui_public_golden_test.go`; existing
-native routing, translations and rendering are used; template edits are limited
-to those two nonce attributes.
+native routing, translations and rendering are used; original14 template edits
+remain limited to those two base-script nonce attributes. The separate graph-script
+source section below adds no original capture or signed group coverage.
 
 Run inside an owner-approved managed Go1.27.1 runtime with CGO enabled for race
 checks, its task-owned cache and TMPDIR, from `services/server`:
@@ -285,3 +286,26 @@ provide no computed-style/browser-CSP, cohort/privacy, app/full or adoption proo
 Original14/latestf010captures, nonce83/staticFS62 receipts and the sole764normalizer/
 SDK retain their separate sources. No recapture, dependency install, prior test
 rerun or new normalizer build occurred. Wider ownership/Live/device gates remain.
+
+## Graph script nonce source section
+
+The separate SOC-4 source adds only existing `request.csp_nonce` attributes to
+the two external scripts in `communities_graph.html`: vendored3d-force-graph first,
+then community-graph, with both paths/order/`defer` and every other template byte
+unchanged by the whole inverse. It changes no nonce provider or CSP policy; the
+current `self` policy already permits these assets. Library style injection remains open.
+
+The script tags are unconditional. The actual template branches are the populated
+community list and its empty arm; focused tests render both with synthetic anonymous
+data through OS and caller-owned FS snapshots. They require real native header/tag
+nonce binding and fresh responses, plus missing/wrong/duplicate/path/`defer`, header
+and order mutation refusals. Expected discovery is19actions (2parents/17subcases).
+Formatting, compilation and all new tests are NOT RUN. No graph API/library execution,
+DB/auth/cohort admission, child data or default assembly is involved.
+
+After parent source/method review and a recorded runtime slot, the existing pinned
+read-only formatter/focused Go route can run
+`go test -mod=readonly -race -count=1 -json ./internal/web -run '^TestGUIPublicGraphNonce'`.
+No original14/83recapture, old suite rerun, SDK/dependency/normalizer build or baseline
+replacement is part of this section. Existing receipts keep their source identities;
+no fullM1/Live/browserCSP/privacy/adoption/device/retirement qualification is claimed.

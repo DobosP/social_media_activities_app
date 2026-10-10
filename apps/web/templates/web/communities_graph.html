@@ -29,6 +29,6 @@
 
 {% block scripts %}
 {# Vendored locally (no live CDN) so a viewer's IP/timing never leaks to a third party. #}
-<script src="{% static 'js/vendor/3d-force-graph.min.js' %}" defer></script>
-<script src="{% static 'js/community-graph.js' %}" defer></script>
+<script nonce="{{ request.csp_nonce }}" src="{% static 'js/vendor/3d-force-graph.min.js' %}" defer></script>
+<script nonce="{{ request.csp_nonce }}" src="{% static 'js/community-graph.js' %}" defer></script>
 {% endblock %}
