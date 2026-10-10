@@ -35,8 +35,8 @@ func guiPublicExpectedNonceReference(original []byte) ([]byte, map[string]any, e
 		expected = bytes.Replace(expected, []byte(tag), []byte(replacement), 1)
 	}
 	return expected, map[string]any{
-		"kind": "only-two-existing-external-script-nonce-attributes",
-		"paths": []string{"/static/js/hovercard.js", "/static/js/site.js"},
+		"kind":             "only-two-existing-external-script-nonce-attributes",
+		"paths":            []string{"/static/js/hovercard.js", "/static/js/site.js"},
 		"attributes_added": 2, "original_raw_sha256": guiPublicHash(original), "expected_copy_sha256": guiPublicHash(expected),
 		"scope": "explicit in-memory expected delta; no original or normalized baseline replaced; released SDK masks unchanged",
 	}, nil
@@ -152,14 +152,26 @@ func TestGUIPublicNonceBindingRejectsRealRenderedMutations(t *testing.T) {
 	if start < 0 || end < path {
 		t.Fatal("actual script start tag missing")
 	}
-	hovercard := body[start:end+1]
+	hovercard := body[start : end+1]
 	for name, mutate := range map[string]func(string, string) (string, string){
-		"missing-nonce": func(b, p string) (string, string) { return strings.Replace(b, hovercard, guiPublicOriginalScriptTags[0], 1), p },
-		"mismatched-nonce": func(b, p string) (string, string) { return strings.Replace(b, hovercard, strings.Replace(hovercard, `nonce="`, `nonce="wrong-`, 1), 1), p },
-		"changed-defer": func(b, p string) (string, string) { return strings.Replace(b, hovercard, strings.Replace(hovercard, " defer>", " async>", 1), 1), p },
-		"changed-path": func(b, p string) (string, string) { return strings.Replace(b, "/static/js/site.js", "/static/js/different.js", 1), p },
-		"unexpected-owner": func(b, p string) (string, string) { return strings.Replace(b, `id="site-js"`, `id="site-js" data-meetups-owner="unexpected"`, 1), p },
-		"duplicate-script": func(b, p string) (string, string) { return strings.Replace(b, "</body>", hovercard + "</script></body>", 1), p },
+		"missing-nonce": func(b, p string) (string, string) {
+			return strings.Replace(b, hovercard, guiPublicOriginalScriptTags[0], 1), p
+		},
+		"mismatched-nonce": func(b, p string) (string, string) {
+			return strings.Replace(b, hovercard, strings.Replace(hovercard, `nonce="`, `nonce="wrong-`, 1), 1), p
+		},
+		"changed-defer": func(b, p string) (string, string) {
+			return strings.Replace(b, hovercard, strings.Replace(hovercard, " defer>", " async>", 1), 1), p
+		},
+		"changed-path": func(b, p string) (string, string) {
+			return strings.Replace(b, "/static/js/site.js", "/static/js/different.js", 1), p
+		},
+		"unexpected-owner": func(b, p string) (string, string) {
+			return strings.Replace(b, `id="site-js"`, `id="site-js" data-meetups-owner="unexpected"`, 1), p
+		},
+		"duplicate-script": func(b, p string) (string, string) {
+			return strings.Replace(b, "</body>", hovercard+"</script></body>", 1), p
+		},
 		"missing-header": func(b, p string) (string, string) { return b, "" },
 	} {
 		t.Run(name, func(t *testing.T) {
@@ -183,11 +195,11 @@ func TestGUIPublicExpectedNonceDeltaIsExactlyTwoAttributes(t *testing.T) {
 		t.Fatal("declared expected delta changed anything beyond the two attributes")
 	}
 	for name, changed := range map[string][]byte{
-		"missing": bytes.Replace(original, []byte(guiPublicOriginalScriptTags[0]), nil, 1),
-		"duplicate": append(append([]byte(nil), original...), []byte(guiPublicOriginalScriptTags[1])...),
-		"already-nonced": want,
+		"missing":                bytes.Replace(original, []byte(guiPublicOriginalScriptTags[0]), nil, 1),
+		"duplicate":              append(append([]byte(nil), original...), []byte(guiPublicOriginalScriptTags[1])...),
+		"already-nonced":         want,
 		"changed-load-attribute": bytes.Replace(original, []byte(" defer>"), []byte(" async>"), 1),
-		"changed-path": bytes.Replace(original, []byte("/static/js/site.js"), []byte("/static/js/different.js"), 1),
+		"changed-path":           bytes.Replace(original, []byte("/static/js/site.js"), []byte("/static/js/different.js"), 1),
 	} {
 		t.Run(name, func(t *testing.T) {
 			if _, _, err := guiPublicExpectedNonceReference(changed); err == nil {
@@ -214,7 +226,9 @@ func TestGUIPublicBaseTemplateOnlyAddsTheTwoNonceAttributes(t *testing.T) {
 		}
 		before = bytes.Replace(before, []byte(changed), []byte(original), 1)
 	}
-	var checkpoint struct { Sources map[string]string `json:"renderer_sources"` }
+	var checkpoint struct {
+		Sources map[string]string `json:"renderer_sources"`
+	}
 	raw, err := os.ReadFile(filepath.Join(root, "docs/reviews/gui-public-original/checkpoint.json"))
 	if err != nil || json.Unmarshal(raw, &checkpoint) != nil || len(before) != 13594 || guiPublicHash(before) != "ef2f179f6cbbfa8acc38272aa5a6c1d6acbb36c3c6e9290102d98a23b4b02e3b" || checkpoint.Sources["templates/base.html"] != guiPublicHash(before) {
 		t.Fatal("base template changed beyond the declared nonce attributes or original source binding drifted")
