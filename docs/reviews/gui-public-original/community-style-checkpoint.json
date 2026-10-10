@@ -1,0 +1,1118 @@
+{
+  "schema": 1,
+  "artifact_kind": "focused-public-community-card-native-and-canonical-DOM-evidence",
+  "tested_source": "e13b53fae1c5cae0d0013e521be8600bc7d54739",
+  "status": "pass",
+  "scope": "SOC-5 focused actual OS/FS synthetic public-card renderer and released canonical DOM only; no computed style/browser/CSP/route/backend/auth/cohort/privacy/app/full/Live/device qualification",
+  "actual_private_keeper": "_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-e13b53f-ea2c6479-d94c-430c-91f2-1e797ebbf965",
+  "actual_invocation": "ea2c6479-d94c-430c-91f2-1e797ebbf965",
+  "actual_result_sha256": "d9b4a937b6a4b203f69e368e8b279d0fba002e1d4b804d5c6c8c5d18db8aef3e",
+  "actual_closure_sha256": "4b5e191d5290a9ad98d35555364ced7d257c75015628ad09fd46cf2b59fce7fe",
+  "actual_method": {
+    "bytes": 16566,
+    "sha256": "f632a2af69d1415072eadacb0794083d9ec5d10d1207b1add757bb59ee181cff",
+    "full_mode": 33152
+  },
+  "actual_image": "sha256:2e040a5165d79be63755424f707fdb8cf609ace831ada7a9baca398ac25e12b9",
+  "actual_format": {
+    "exit_code": 0,
+    "diff_bytes": 0,
+    "stderr_bytes": 0
+  },
+  "actual_tests": {
+    "run": 14,
+    "pass": 14,
+    "top_level": 2,
+    "subcases": 12,
+    "package_pass": 1,
+    "fail": 0,
+    "skip": 0,
+    "cached": false,
+    "identities": [
+      "TestGUIPublicCommunityStyleDOM",
+      "TestGUIPublicCommunityStyleDOM/filesystem-false/empty",
+      "TestGUIPublicCommunityStyleDOM/filesystem-false/type",
+      "TestGUIPublicCommunityStyleDOM/filesystem-false/category",
+      "TestGUIPublicCommunityStyleDOM/filesystem-true/empty",
+      "TestGUIPublicCommunityStyleDOM/filesystem-true/type",
+      "TestGUIPublicCommunityStyleDOM/filesystem-true/category",
+      "TestGUIPublicCommunityStyleRejectsDOMMutations",
+      "TestGUIPublicCommunityStyleRejectsDOMMutations/missing-title-class",
+      "TestGUIPublicCommunityStyleRejectsDOMMutations/missing-paragraph-class",
+      "TestGUIPublicCommunityStyleRejectsDOMMutations/restored-inline-style",
+      "TestGUIPublicCommunityStyleRejectsDOMMutations/changed-public-text",
+      "TestGUIPublicCommunityStyleRejectsDOMMutations/changed-public-link",
+      "TestGUIPublicCommunityStyleRejectsDOMMutations/reversed-card-children"
+    ],
+    "JSON_events": 67
+  },
+  "actual_source28_before_after_equal": true,
+  "actual_source28_inputs": [
+    {
+      "path": "AGENTS.md",
+      "bytes": 6610,
+      "sha256": "4e9ba34a8af4b97527f85e01ecb51628b8b4d5c3d5f24baa5a412b332e1f8f04",
+      "full_mode": 33204
+    },
+    {
+      "path": "frontend/package.json",
+      "bytes": 757,
+      "sha256": "d9db2ac078e37992f192f6d57103325891659b352cb09917a026e713301846b0",
+      "full_mode": 33204
+    },
+    {
+      "path": "frontend/package-lock.json",
+      "bytes": 78329,
+      "sha256": "c6cd94641bd86097cd2232e672cda983e388182abd3922a9edb316649f26a53c",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/go.mod",
+      "bytes": 1335,
+      "sha256": "1e0c2e6d9cda30507b6a5dde1d33f795737e609b47124983bbf9786844cabb46",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/go.sum",
+      "bytes": 7767,
+      "sha256": "83cc84cde408f45973444ecee13f40df4abac1c1272c259f463f18703cb6b012",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/renderer.go",
+      "bytes": 5510,
+      "sha256": "94f11a3f1849c919ba100c4ba68236263f71f07741006c1992dadc4020723e68",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/renderer_fs.go",
+      "bytes": 3382,
+      "sha256": "fe484effba370a376d835722e718719289eb2c8fea81d6bde99182276b162673",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/static.go",
+      "bytes": 2394,
+      "sha256": "df27a7589dc84a883cad125cd8067df493d9f13316fc3c9d89904e5db19fd127",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/static_fs.go",
+      "bytes": 2894,
+      "sha256": "daa2e6493d3ad38d0cb564e11a691f3ce7c899e4beb72f0f582ea2c7a16eda78",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_static_fs_test.go",
+      "bytes": 15064,
+      "sha256": "3e7df1f699ea1902be0403ec5899d12c8445ba65657a9f2a767c5807c3819262",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_nonce_test.go",
+      "bytes": 10666,
+      "sha256": "3200f4557be726042234ca36314ed5d419ceb2f8e117abd8df775697940cce72",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_golden_test.go",
+      "bytes": 14274,
+      "sha256": "430775c2330e07b671897b372caf41844f1c5786ef60e741fb85252df32f1ad9",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_normalize_test.go",
+      "bytes": 8477,
+      "sha256": "b537803d403a11f258bb86e2754985f02da1fac49627cf1e4bf7e8de5e42f56a",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/app/app.go",
+      "bytes": 22947,
+      "sha256": "bafbe950fe966cff748edd59c6961ba1c1cd023b2857a4117d8a1b03bd2b3cec",
+      "full_mode": 33204
+    },
+    {
+      "path": "templates/base.html",
+      "bytes": 13658,
+      "sha256": "a8a5354db2968c99dcf043a2bb04ac635eb199a72455efe5cd96fc2946292b2c",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/communities_graph.html",
+      "bytes": 1733,
+      "sha256": "1bce8a688fbea5ce738ad19b01a7e0c282b8d084da78f32c5575271be28ce770",
+      "full_mode": 33204
+    },
+    {
+      "path": "docs/reviews/gui-public-original/checkpoint.json",
+      "bytes": 11798,
+      "sha256": "3fa46e9a1fcb3ab8aa4baefa80c54a8d050b59527402db18cb20e24bbc104f1c",
+      "full_mode": 33204
+    },
+    {
+      "path": "docs/reviews/gui-public-original/nonce-checkpoint.json",
+      "bytes": 49417,
+      "sha256": "b0a66c886ef77ddc68ce9d69c0420a937d46f36345934ce8ac3aadba78487ace",
+      "full_mode": 33204
+    },
+    {
+      "path": "docs/reviews/gui-public-original/static-fs-checkpoint.json",
+      "bytes": 18178,
+      "sha256": "823f04494580a62d86500d10cc74c05fa022fbfc8bbcb06bdec1ef3ba143dbbf",
+      "full_mode": 33152
+    },
+    {
+      "path": "tools/gui-public-golden/release-bindings.json",
+      "bytes": 9594,
+      "sha256": "d845c6a1640e1f1cbe67f63af3ddc8ba7795d73ff0c2d97b23cb8ee4ff953015",
+      "full_mode": 33188
+    },
+    {
+      "path": "tools/gui-public-golden/normalize.go",
+      "bytes": 1465,
+      "sha256": "5282ddb0dab9101b028e6eda5411fc29995bf9f3a5b5de1d62c157a76eccd458",
+      "full_mode": 33204
+    },
+    {
+      "path": "tools/gui-public-golden/normalize_test.go",
+      "bytes": 4317,
+      "sha256": "f9bac4f56a598f5822054e846ef622ff2baecd885bd670cf0a4211d7c61704f7",
+      "full_mode": 33204
+    },
+    {
+      "path": "static/js/community-graph.js",
+      "bytes": 3609,
+      "sha256": "122b7770e767dbe03c6660da7302eb182af7321b08288dcf8370d88d0abfcd0d",
+      "full_mode": 33204
+    },
+    {
+      "path": "static/css/base.css",
+      "bytes": 62453,
+      "sha256": "41f0f6a04b14da0874000ed7c9010f5dd75e2040a6f09082607ba12cf890fa00",
+      "full_mode": 33204
+    },
+    {
+      "path": "tools/gui-public-golden/community-graph-fallback.test.mjs",
+      "bytes": 6382,
+      "sha256": "235177a6d461883704bd80cec8be58b0fd627bd14fbfa8da33dea774a3c6cc8b",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_graph_nonce_test.go",
+      "bytes": 7915,
+      "sha256": "3416d6d16030b5ab5f853caf37fd3f67779bc793c1d0860d9289b79b14cb53c5",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/communities.html",
+      "bytes": 3344,
+      "sha256": "14a4cde5dd7c0951287eb5d5976258810f15448503d0d3d7efe6be9608cc4330",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_community_style_test.go",
+      "bytes": 10498,
+      "sha256": "974649573663e9ff7e07695b3b2be3ce296ede6e59336b67ddb4e6032967eb76",
+      "full_mode": 33204
+    }
+  ],
+  "actual_external18_before_after_equal": true,
+  "actual_external18_inputs": [
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/landing-en.html",
+      "bytes": 5111,
+      "sha256": "b3da2dc08b119c315cab50e36c102fa85314436d24b714fce2fd0eceb16b2814",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/landing-ro.html",
+      "bytes": 5504,
+      "sha256": "8f3d8804dd9c2d0ec33d9fe7ff569077d490c4652c56880de254e9e75d0407a8",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/manifest.json",
+      "bytes": 11826,
+      "sha256": "5403a0f3c2817fcd6ec1ebfefe9546ae9318057b3fefe845d1f1b77bd3eceb4a",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/open-data-en-snapshot-false.html",
+      "bytes": 8536,
+      "sha256": "b1ccc0a6fde232f14d149469e3a808f779777d48143c86efc8ae1eb27009c8aa",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/open-data-en-snapshot-true.html",
+      "bytes": 9355,
+      "sha256": "5b742d03dcadd53a0bea7d68c0ad825e7632bae91f1ae456fe0d5f8cc6fc64e4",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/open-data-ro-snapshot-false.html",
+      "bytes": 8621,
+      "sha256": "3114126118d83557815bd370f692d3a1a99ad8ba4718ac0cb3fce387bfab9220",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/open-data-ro-snapshot-true.html",
+      "bytes": 9440,
+      "sha256": "6aef427f673ea578fbd1f27a62431fc9292bbec9f5516c7f8bd85a1aa3682f9f",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/privacy-en-contrast.html",
+      "bytes": 8291,
+      "sha256": "4d70f26baa9c2a36118fe8c2b8950de1752fec74995c05e7d6f72cfeac215822",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/privacy-en-default.html",
+      "bytes": 8285,
+      "sha256": "c5c123c173297e5310eb69f8da24a8fc5ae3485ae5077ca017f7ed30f2ce0ab1",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/privacy-ro-contrast.html",
+      "bytes": 9484,
+      "sha256": "748d144757c834c72e324bb4686fecb94d3d15c8d835a595b5800b5686e53d59",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/privacy-ro-default.html",
+      "bytes": 9478,
+      "sha256": "afb50c59582f5c35617ba91081fb9e1093904f03efc2b9e19a70868b985c0db9",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/terms-en-contrast.html",
+      "bytes": 6966,
+      "sha256": "8d855ec46ca8944dd4d491bf711ed31b11faeae196183b53debf9f2d81c64023",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/terms-en-default.html",
+      "bytes": 6960,
+      "sha256": "8fff1e8f72bb69b3e2bb18a76892b39f97b928cd9d8923f8e59d074ccd6aec5e",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/terms-ro-contrast.html",
+      "bytes": 7827,
+      "sha256": "b211ecc4bc3cbbf096d4a82d22972e418c2dc86f1da33cdf41c5b7a4d5c4deec",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/terms-ro-default.html",
+      "bytes": 7821,
+      "sha256": "bb084d48196111fc1466324386ec2e1c0b2feff64632cc8beac504dffe8d41e0",
+      "full_mode": 33152
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/normalizer-r7-764beb1/social-gui-normalize",
+      "bytes": 4897832,
+      "sha256": "598515e75c709803c7b23673e07b14baa93861608346a81c8fc708521c1b2f05",
+      "full_mode": 33216
+    },
+    {
+      "path": "/home/dobo/gates/kits/core-v1.6/web-kit-go-core-v1.6.tgz",
+      "bytes": 55202,
+      "sha256": "d722a817074a01d8a983c3e8492335ee07d37fb0d58c9a938cd189df635e168d",
+      "full_mode": 33204
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/normalizer-r7-764beb1/binary-build-info.stdout",
+      "bytes": 405,
+      "sha256": "87be64cb3a8d875b4775ffa3ce18e7b5a24434242de1418e2313d14ed62e18ac",
+      "full_mode": 33152
+    }
+  ],
+  "actual_container": {
+    "created": {
+      "id": "de01221e57f656e454c5fc1e2786023201eda686e91e148914669a3cfe37a3c6",
+      "name": "/social-community-style-ea2c6479-d94c-430c-91f2-1e797ebbf965",
+      "image": "sha256:2e040a5165d79be63755424f707fdb8cf609ace831ada7a9baca398ac25e12b9",
+      "running": false,
+      "exit_code": 0,
+      "oom_killed": false,
+      "user": "1000:1000",
+      "cpus": 4000000000,
+      "memory": 6442450944,
+      "network": "none",
+      "mounts": [
+        {
+          "Destination": "/bindings/social-gui-normalize",
+          "Mode": "",
+          "Propagation": "rprivate",
+          "RW": false,
+          "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/normalizer-r7-764beb1/social-gui-normalize",
+          "Type": "bind"
+        },
+        {
+          "Destination": "/bindings/web-kit-go-core-v1.6.tgz",
+          "Mode": "",
+          "Propagation": "rprivate",
+          "RW": false,
+          "Source": "/home/dobo/gates/kits/core-v1.6/web-kit-go-core-v1.6.tgz",
+          "Type": "bind"
+        },
+        {
+          "Destination": "/original",
+          "Mode": "",
+          "Propagation": "rprivate",
+          "RW": false,
+          "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717",
+          "Type": "bind"
+        },
+        {
+          "Destination": "/work",
+          "Mode": "",
+          "Propagation": "rprivate",
+          "RW": false,
+          "Source": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a",
+          "Type": "bind"
+        },
+        {
+          "Destination": "/scratch/go-build",
+          "Mode": "",
+          "Propagation": "rprivate",
+          "RW": true,
+          "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/go-build",
+          "Type": "bind"
+        },
+        {
+          "Destination": "/scratch/go-mod",
+          "Mode": "",
+          "Propagation": "rprivate",
+          "RW": true,
+          "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/go-mod",
+          "Type": "bind"
+        },
+        {
+          "Destination": "/scratch/tmp",
+          "Mode": "",
+          "Propagation": "rprivate",
+          "RW": true,
+          "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/tmp",
+          "Type": "bind"
+        },
+        {
+          "Destination": "/proof",
+          "Mode": "",
+          "Propagation": "rprivate",
+          "RW": true,
+          "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-e13b53f-ea2c6479-d94c-430c-91f2-1e797ebbf965",
+          "Type": "bind"
+        }
+      ]
+    },
+    "exited": {
+      "id": "de01221e57f656e454c5fc1e2786023201eda686e91e148914669a3cfe37a3c6",
+      "name": "/social-community-style-ea2c6479-d94c-430c-91f2-1e797ebbf965",
+      "image": "sha256:2e040a5165d79be63755424f707fdb8cf609ace831ada7a9baca398ac25e12b9",
+      "running": false,
+      "exit_code": 0,
+      "oom_killed": false,
+      "user": "1000:1000",
+      "cpus": 4000000000,
+      "memory": 6442450944,
+      "network": "none",
+      "mounts": [
+        {
+          "Destination": "/scratch/go-build",
+          "Mode": "",
+          "Propagation": "rprivate",
+          "RW": true,
+          "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/go-build",
+          "Type": "bind"
+        },
+        {
+          "Destination": "/scratch/go-mod",
+          "Mode": "",
+          "Propagation": "rprivate",
+          "RW": true,
+          "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/go-mod",
+          "Type": "bind"
+        },
+        {
+          "Destination": "/scratch/tmp",
+          "Mode": "",
+          "Propagation": "rprivate",
+          "RW": true,
+          "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/tmp",
+          "Type": "bind"
+        },
+        {
+          "Destination": "/proof",
+          "Mode": "",
+          "Propagation": "rprivate",
+          "RW": true,
+          "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-e13b53f-ea2c6479-d94c-430c-91f2-1e797ebbf965",
+          "Type": "bind"
+        },
+        {
+          "Destination": "/bindings/social-gui-normalize",
+          "Mode": "",
+          "Propagation": "rprivate",
+          "RW": false,
+          "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/normalizer-r7-764beb1/social-gui-normalize",
+          "Type": "bind"
+        },
+        {
+          "Destination": "/bindings/web-kit-go-core-v1.6.tgz",
+          "Mode": "",
+          "Propagation": "rprivate",
+          "RW": false,
+          "Source": "/home/dobo/gates/kits/core-v1.6/web-kit-go-core-v1.6.tgz",
+          "Type": "bind"
+        },
+        {
+          "Destination": "/original",
+          "Mode": "",
+          "Propagation": "rprivate",
+          "RW": false,
+          "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717",
+          "Type": "bind"
+        },
+        {
+          "Destination": "/work",
+          "Mode": "",
+          "Propagation": "rprivate",
+          "RW": false,
+          "Source": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a",
+          "Type": "bind"
+        }
+      ]
+    }
+  },
+  "actual_cleanup": {
+    "id": "de01221e57f656e454c5fc1e2786023201eda686e91e148914669a3cfe37a3c6",
+    "name": "social-community-style-ea2c6479-d94c-430c-91f2-1e797ebbf965",
+    "remove_exit": 0,
+    "id_absent": true,
+    "name_absent": true,
+    "passed": true
+  },
+  "actual_errors": [],
+  "actual_controls_all_exit0": true,
+  "actual_canonical_diagnostics": [
+    {
+      "test": "TestGUIPublicCommunityStyleDOM/filesystem-false/empty",
+      "kind": "empty",
+      "filesystem": false,
+      "delta_attributes": 0,
+      "original_sha256": "c7fd2e7bd03658b648c814f01e79365f63605c746241fb9a3e618107be01fa88",
+      "expected_sha256": "c7fd2e7bd03658b648c814f01e79365f63605c746241fb9a3e618107be01fa88",
+      "current_sha256": "c7fd2e7bd03658b648c814f01e79365f63605c746241fb9a3e618107be01fa88"
+    },
+    {
+      "test": "TestGUIPublicCommunityStyleDOM/filesystem-false/type",
+      "kind": "type",
+      "filesystem": false,
+      "delta_attributes": 2,
+      "original_sha256": "2521d1594a19c425de6fe5db2f72996a3eb124bdd9a7a5704737dbc714a2ab57",
+      "expected_sha256": "6bb70be21b4e52cae9c2ef65ed2a3fc3a0a6fe415f3a8b10d4d6d1997d5c9a62",
+      "current_sha256": "6bb70be21b4e52cae9c2ef65ed2a3fc3a0a6fe415f3a8b10d4d6d1997d5c9a62"
+    },
+    {
+      "test": "TestGUIPublicCommunityStyleDOM/filesystem-false/category",
+      "kind": "category",
+      "filesystem": false,
+      "delta_attributes": 2,
+      "original_sha256": "2f6b9efd61568274f706e8cf1db32abc19a7a8e445532d4015f41764c46b9871",
+      "expected_sha256": "88717e40d9e0b42f70403c20e6a5c9460c186da0a6360ad8e022666620edc987",
+      "current_sha256": "88717e40d9e0b42f70403c20e6a5c9460c186da0a6360ad8e022666620edc987"
+    },
+    {
+      "test": "TestGUIPublicCommunityStyleDOM/filesystem-true/empty",
+      "kind": "empty",
+      "filesystem": true,
+      "delta_attributes": 0,
+      "original_sha256": "c7fd2e7bd03658b648c814f01e79365f63605c746241fb9a3e618107be01fa88",
+      "expected_sha256": "c7fd2e7bd03658b648c814f01e79365f63605c746241fb9a3e618107be01fa88",
+      "current_sha256": "c7fd2e7bd03658b648c814f01e79365f63605c746241fb9a3e618107be01fa88"
+    },
+    {
+      "test": "TestGUIPublicCommunityStyleDOM/filesystem-true/type",
+      "kind": "type",
+      "filesystem": true,
+      "delta_attributes": 2,
+      "original_sha256": "2521d1594a19c425de6fe5db2f72996a3eb124bdd9a7a5704737dbc714a2ab57",
+      "expected_sha256": "6bb70be21b4e52cae9c2ef65ed2a3fc3a0a6fe415f3a8b10d4d6d1997d5c9a62",
+      "current_sha256": "6bb70be21b4e52cae9c2ef65ed2a3fc3a0a6fe415f3a8b10d4d6d1997d5c9a62"
+    },
+    {
+      "test": "TestGUIPublicCommunityStyleDOM/filesystem-true/category",
+      "kind": "category",
+      "filesystem": true,
+      "delta_attributes": 2,
+      "original_sha256": "2f6b9efd61568274f706e8cf1db32abc19a7a8e445532d4015f41764c46b9871",
+      "expected_sha256": "88717e40d9e0b42f70403c20e6a5c9460c186da0a6360ad8e022666620edc987",
+      "current_sha256": "88717e40d9e0b42f70403c20e6a5c9460c186da0a6360ad8e022666620edc987"
+    },
+    {
+      "test": "TestGUIPublicCommunityStyleRejectsDOMMutations",
+      "kind": "type",
+      "filesystem": false,
+      "delta_attributes": 2,
+      "original_sha256": "2521d1594a19c425de6fe5db2f72996a3eb124bdd9a7a5704737dbc714a2ab57",
+      "expected_sha256": "6bb70be21b4e52cae9c2ef65ed2a3fc3a0a6fe415f3a8b10d4d6d1997d5c9a62",
+      "current_sha256": "6bb70be21b4e52cae9c2ef65ed2a3fc3a0a6fe415f3a8b10d4d6d1997d5c9a62"
+    }
+  ],
+  "diagnostic_scope": "Six OS/FS x empty/type/category comparison subcases plus one mutation-parent type/OS positive comparator; seventh diagnostic is not another distinct case. Each populated comparator requires original!=current and expected==current; empty requires equality. Both delivery modes join each kind.",
+  "normalizations": {
+    "source_expected_calls": 27,
+    "independent_process_invocation_census": null,
+    "separate_browser_tests": 0,
+    "executed_native_actions": 14,
+    "interpretation": "27 derives from the unchanged source path; no claim of 27 independently counted calls or browser tests."
+  },
+  "failure_history": {
+    "source": "d4695e04c43d9a1f0274a3a81d9b05598e18628b",
+    "actual_result_sha256": "a44ba8fa9ad2a74a54234b280cc67c138c65409a4f27ad8b700c0c741bedffd2",
+    "actual_closure_sha256": "67cbccb2b6f0c2650f598965065015305c9e35bf601f56ad2af439fb6da67b81",
+    "format": {
+      "exit_code": 0,
+      "diff_bytes": 0,
+      "stderr_bytes": 0
+    },
+    "unique_runs": 8,
+    "test_pass": 0,
+    "test_fail": 8,
+    "package_fail": 1,
+    "full27_comparisons_and_mutation_children_reached": false,
+    "source28_external18_unchanged": true,
+    "owned_cleanup_noOOM": true,
+    "diagnosis": "transformTemplate iterates page.object_list and groups_page.object_list; synthetic fixture incorrectly supplied bare slices. No production style/CSS failure inferred."
+  },
+  "paginator_successor": {
+    "source": "e13b53fae1c5cae0d0013e521be8600bc7d54739",
+    "source_commit_base": "d4695e04c43d9a1f0274a3a81d9b05598e18628b",
+    "test_before": {
+      "path": "services/server/internal/web/gui_public_community_style_test.go",
+      "bytes": 10346,
+      "sha256": "97b32956fa45d939b4687abc98993dae7a2903f32b15738e45d06e874e88251e",
+      "full_mode": 33204
+    },
+    "test_after": {
+      "path": "services/server/internal/web/gui_public_community_style_test.go",
+      "bytes": 10498,
+      "sha256": "974649573663e9ff7e07695b3b2be3ce296ede6e59336b67ddb4e6032967eb76",
+      "full_mode": 33204
+    },
+    "only_added_lines": "\tpageWrapper, _ := socialPagination(\"\", len(page), 30)\n\tpageWrapper[\"object_list\"] = page\n\tgroupsWrapper, _ := socialPagination(\"\", 0, 30)\n",
+    "only_context_before": "pongo2.Context{\"page\": page, \"groups_page\": []any{}, \"can_create\": false}",
+    "only_context_after": "pongo2.Context{\"page\": pageWrapper, \"groups_page\": groupsWrapper, \"can_create\": false}",
+    "whole_inverse_and_assertions_ids_controls_unchanged": true,
+    "native_helper": {
+      "path": "services/server/internal/web/social_discovery.go",
+      "bytes": 14239,
+      "sha256": "596d5678603e71d3ebbd419d549dd9b0238d76f22896679ced1e2f5f1955bfec",
+      "full_mode": 33204
+    },
+    "transform": {
+      "path": "services/server/internal/web/templates.go",
+      "bytes": 14282,
+      "sha256": "8098259abbf45838fc732630188cde4b73ccefbc0f5e729b75497f6988db4b97",
+      "full_mode": 33204
+    },
+    "method_old_sha256": "2e25d88e444b25b1a15a93b2a613c931a41958431741dcb59d1c6f3eabeb9973",
+    "method_corrected_sha256": "f632a2af69d1415072eadacb0794083d9ec5d10d1207b1add757bb59ee181cff",
+    "method_only_four_identity_replacements": true
+  },
+  "payload": [
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-e13b53f-ea2c6479-d94c-430c-91f2-1e797ebbf965/container.cid",
+      "path": "community-style-e13b53f/container.cid",
+      "bytes": 64,
+      "sha256": "38fa1349c17d7f4e69ffebcf60be0c9a560b181865b461485b80150dd6ea4610",
+      "source_full_mode": 33204,
+      "tracked_copy_full_mode": 33204
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-e13b53f-ea2c6479-d94c-430c-91f2-1e797ebbf965/control-00.stderr",
+      "path": "community-style-e13b53f/control-00.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-e13b53f-ea2c6479-d94c-430c-91f2-1e797ebbf965/control-00.stdout",
+      "path": "community-style-e13b53f/control-00.stdout",
+      "bytes": 72,
+      "sha256": "7aa16fdca68c8e892b9f6175e4b16af62027e2a5553fd18c527b104e940053b5",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-e13b53f-ea2c6479-d94c-430c-91f2-1e797ebbf965/control-01.stderr",
+      "path": "community-style-e13b53f/control-01.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-e13b53f-ea2c6479-d94c-430c-91f2-1e797ebbf965/control-01.stdout",
+      "path": "community-style-e13b53f/control-01.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-e13b53f-ea2c6479-d94c-430c-91f2-1e797ebbf965/control-02.stderr",
+      "path": "community-style-e13b53f/control-02.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-e13b53f-ea2c6479-d94c-430c-91f2-1e797ebbf965/control-02.stdout",
+      "path": "community-style-e13b53f/control-02.stdout",
+      "bytes": 65,
+      "sha256": "968deb85e09d58779403043a69e25a0a43c08dac14c11ce0c3a2982d73dd5377",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-e13b53f-ea2c6479-d94c-430c-91f2-1e797ebbf965/control-03.stderr",
+      "path": "community-style-e13b53f/control-03.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-e13b53f-ea2c6479-d94c-430c-91f2-1e797ebbf965/control-03.stdout",
+      "path": "community-style-e13b53f/control-03.stdout",
+      "bytes": 1956,
+      "sha256": "9d52006dd5e96b62f5c5025247c2ed8c1d924ae8a8921e1e85da6560dbe05f06",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-e13b53f-ea2c6479-d94c-430c-91f2-1e797ebbf965/control-04.stderr",
+      "path": "community-style-e13b53f/control-04.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-e13b53f-ea2c6479-d94c-430c-91f2-1e797ebbf965/control-04.stdout",
+      "path": "community-style-e13b53f/control-04.stdout",
+      "bytes": 1956,
+      "sha256": "2b9253b9417525a4633054dd30a625f650bd161ee6497ad8013c266edc977dd3",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-e13b53f-ea2c6479-d94c-430c-91f2-1e797ebbf965/control-05.stderr",
+      "path": "community-style-e13b53f/control-05.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-e13b53f-ea2c6479-d94c-430c-91f2-1e797ebbf965/control-05.stdout",
+      "path": "community-style-e13b53f/control-05.stdout",
+      "bytes": 1956,
+      "sha256": "53bbc35f8de765b71b74e435f91be7471a0a8c8a58b8a991fb9db989cdb0ad46",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-e13b53f-ea2c6479-d94c-430c-91f2-1e797ebbf965/control-06.stderr",
+      "path": "community-style-e13b53f/control-06.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-e13b53f-ea2c6479-d94c-430c-91f2-1e797ebbf965/control-06.stdout",
+      "path": "community-style-e13b53f/control-06.stdout",
+      "bytes": 65,
+      "sha256": "968deb85e09d58779403043a69e25a0a43c08dac14c11ce0c3a2982d73dd5377",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-e13b53f-ea2c6479-d94c-430c-91f2-1e797ebbf965/control-07.stderr",
+      "path": "community-style-e13b53f/control-07.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-e13b53f-ea2c6479-d94c-430c-91f2-1e797ebbf965/control-07.stdout",
+      "path": "community-style-e13b53f/control-07.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-e13b53f-ea2c6479-d94c-430c-91f2-1e797ebbf965/control-08.stderr",
+      "path": "community-style-e13b53f/control-08.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-e13b53f-ea2c6479-d94c-430c-91f2-1e797ebbf965/control-08.stdout",
+      "path": "community-style-e13b53f/control-08.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-e13b53f-ea2c6479-d94c-430c-91f2-1e797ebbf965/docker-start.stderr",
+      "path": "community-style-e13b53f/docker-start.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-e13b53f-ea2c6479-d94c-430c-91f2-1e797ebbf965/docker-start.stdout",
+      "path": "community-style-e13b53f/docker-start.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-e13b53f-ea2c6479-d94c-430c-91f2-1e797ebbf965/format.exit",
+      "path": "community-style-e13b53f/format.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-e13b53f-ea2c6479-d94c-430c-91f2-1e797ebbf965/format.stderr",
+      "path": "community-style-e13b53f/format.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-e13b53f-ea2c6479-d94c-430c-91f2-1e797ebbf965/format.stdout",
+      "path": "community-style-e13b53f/format.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-e13b53f-ea2c6479-d94c-430c-91f2-1e797ebbf965/result.json",
+      "path": "community-style-e13b53f/result.json",
+      "bytes": 40428,
+      "sha256": "d9b4a937b6a4b203f69e368e8b279d0fba002e1d4b804d5c6c8c5d18db8aef3e",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-e13b53f-ea2c6479-d94c-430c-91f2-1e797ebbf965/tests.exit",
+      "path": "community-style-e13b53f/tests.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-e13b53f-ea2c6479-d94c-430c-91f2-1e797ebbf965/tests.stderr",
+      "path": "community-style-e13b53f/tests.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-e13b53f-ea2c6479-d94c-430c-91f2-1e797ebbf965/tests.stdout",
+      "path": "community-style-e13b53f/tests.stdout",
+      "bytes": 19798,
+      "sha256": "21642f5e3a64605fa6cc60d90361ef7296dbb9402703185e060bae85bc66b985",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-e13b53f-ea2c6479-d94c-430c-91f2-1e797ebbf965/CLOSURE.json",
+      "path": "community-style-e13b53f/CLOSURE.json",
+      "bytes": 5735,
+      "sha256": "4b5e191d5290a9ad98d35555364ced7d257c75015628ad09fd46cf2b59fce7fe",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-d4695e0-9126ee64-4535-4065-bc08-cca15eb063e2/container.cid",
+      "path": "community-style-d4695e0-failure/container.cid",
+      "bytes": 64,
+      "sha256": "d5f16559c72dc658073d36980e6c2145c5daf67471b1ed1354fd4ec4b5fb222e",
+      "source_full_mode": 33204,
+      "tracked_copy_full_mode": 33204
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-d4695e0-9126ee64-4535-4065-bc08-cca15eb063e2/control-00.stderr",
+      "path": "community-style-d4695e0-failure/control-00.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-d4695e0-9126ee64-4535-4065-bc08-cca15eb063e2/control-00.stdout",
+      "path": "community-style-d4695e0-failure/control-00.stdout",
+      "bytes": 72,
+      "sha256": "7aa16fdca68c8e892b9f6175e4b16af62027e2a5553fd18c527b104e940053b5",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-d4695e0-9126ee64-4535-4065-bc08-cca15eb063e2/control-01.stderr",
+      "path": "community-style-d4695e0-failure/control-01.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-d4695e0-9126ee64-4535-4065-bc08-cca15eb063e2/control-01.stdout",
+      "path": "community-style-d4695e0-failure/control-01.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-d4695e0-9126ee64-4535-4065-bc08-cca15eb063e2/control-02.stderr",
+      "path": "community-style-d4695e0-failure/control-02.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-d4695e0-9126ee64-4535-4065-bc08-cca15eb063e2/control-02.stdout",
+      "path": "community-style-d4695e0-failure/control-02.stdout",
+      "bytes": 65,
+      "sha256": "361f8e6794dbad97e2538fc64c2fa13a911c8653934a27c8db159ab51379dc0f",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-d4695e0-9126ee64-4535-4065-bc08-cca15eb063e2/control-03.stderr",
+      "path": "community-style-d4695e0-failure/control-03.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-d4695e0-9126ee64-4535-4065-bc08-cca15eb063e2/control-03.stdout",
+      "path": "community-style-d4695e0-failure/control-03.stdout",
+      "bytes": 1956,
+      "sha256": "c7cc7eddc76d81778e1b0ad0c609d1f521b9d98aa2735a441c04473275fce59f",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-d4695e0-9126ee64-4535-4065-bc08-cca15eb063e2/control-04.stderr",
+      "path": "community-style-d4695e0-failure/control-04.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-d4695e0-9126ee64-4535-4065-bc08-cca15eb063e2/control-04.stdout",
+      "path": "community-style-d4695e0-failure/control-04.stdout",
+      "bytes": 1956,
+      "sha256": "9da86e42b076e868ac42e4c3f4d7ff4062d7303c84709e2d1c332408d6505961",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-d4695e0-9126ee64-4535-4065-bc08-cca15eb063e2/control-05.stderr",
+      "path": "community-style-d4695e0-failure/control-05.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-d4695e0-9126ee64-4535-4065-bc08-cca15eb063e2/control-05.stdout",
+      "path": "community-style-d4695e0-failure/control-05.stdout",
+      "bytes": 1956,
+      "sha256": "8233c202d301bdf34abbd13b2fba2daba62ce934da7683baa1e779435cc5d158",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-d4695e0-9126ee64-4535-4065-bc08-cca15eb063e2/control-06.stderr",
+      "path": "community-style-d4695e0-failure/control-06.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-d4695e0-9126ee64-4535-4065-bc08-cca15eb063e2/control-06.stdout",
+      "path": "community-style-d4695e0-failure/control-06.stdout",
+      "bytes": 65,
+      "sha256": "361f8e6794dbad97e2538fc64c2fa13a911c8653934a27c8db159ab51379dc0f",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-d4695e0-9126ee64-4535-4065-bc08-cca15eb063e2/control-07.stderr",
+      "path": "community-style-d4695e0-failure/control-07.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-d4695e0-9126ee64-4535-4065-bc08-cca15eb063e2/control-07.stdout",
+      "path": "community-style-d4695e0-failure/control-07.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-d4695e0-9126ee64-4535-4065-bc08-cca15eb063e2/control-08.stderr",
+      "path": "community-style-d4695e0-failure/control-08.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-d4695e0-9126ee64-4535-4065-bc08-cca15eb063e2/control-08.stdout",
+      "path": "community-style-d4695e0-failure/control-08.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-d4695e0-9126ee64-4535-4065-bc08-cca15eb063e2/docker-start.stderr",
+      "path": "community-style-d4695e0-failure/docker-start.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-d4695e0-9126ee64-4535-4065-bc08-cca15eb063e2/docker-start.stdout",
+      "path": "community-style-d4695e0-failure/docker-start.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-d4695e0-9126ee64-4535-4065-bc08-cca15eb063e2/format.exit",
+      "path": "community-style-d4695e0-failure/format.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-d4695e0-9126ee64-4535-4065-bc08-cca15eb063e2/format.stderr",
+      "path": "community-style-d4695e0-failure/format.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-d4695e0-9126ee64-4535-4065-bc08-cca15eb063e2/format.stdout",
+      "path": "community-style-d4695e0-failure/format.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-d4695e0-9126ee64-4535-4065-bc08-cca15eb063e2/result.json",
+      "path": "community-style-d4695e0-failure/result.json",
+      "bytes": 39348,
+      "sha256": "a44ba8fa9ad2a74a54234b280cc67c138c65409a4f27ad8b700c0c741bedffd2",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-d4695e0-9126ee64-4535-4065-bc08-cca15eb063e2/tests.exit",
+      "path": "community-style-d4695e0-failure/tests.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-d4695e0-9126ee64-4535-4065-bc08-cca15eb063e2/tests.stderr",
+      "path": "community-style-d4695e0-failure/tests.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-d4695e0-9126ee64-4535-4065-bc08-cca15eb063e2/tests.stdout",
+      "path": "community-style-d4695e0-failure/tests.stdout",
+      "bytes": 12180,
+      "sha256": "d425e968b59ba58d20e316bd4bc8569beeee11c5809c21a4498180fe08adb468",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    },
+    {
+      "source_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/community-style-d4695e0-9126ee64-4535-4065-bc08-cca15eb063e2/CLOSURE.json",
+      "path": "community-style-d4695e0-failure/CLOSURE.json",
+      "bytes": 6302,
+      "sha256": "67cbccb2b6f0c2650f598965065015305c9e35bf601f56ad2af439fb6da67b81",
+      "source_full_mode": 33152,
+      "tracked_copy_full_mode": 33152
+    }
+  ],
+  "payload_scope": "Both small run closures and every listed regular stream/control/result retain exact bytes/full modes and sibling names; 58files/136067B. No workspace/cache/dependency/SDK/binary/original corpus or rawHTML clone. Git encodes only the executable bit; full modes describe the actual physical transfer.",
+  "independent_actual_review": {
+    "actors": [
+      "parent",
+      "/root/program_pack"
+    ],
+    "basis": "Both failure and corrected result were independently ACTUAL CLEAR before edits/proof promotion; current67events/14once/6DOMcomparisons+6mutations/source28+external18/isolation/cleanup."
+  },
+  "prior_proofs_preserved": {
+    "original14": "75dc717",
+    "nonce83": "f010e0d",
+    "staticFS62": "35441ad",
+    "SOC3_VM14": "a8b9dc5",
+    "graph_nonce19": "fbfa57a",
+    "normalizer_build": "764beb1",
+    "no_old_proof_relabelled_current": true,
+    "source_method_failure_packets_untouched": true,
+    "original15_files_and_latest_raw_corpora_preserved": true
+  },
+  "later_docs_HEAD_is_not_a_new_execution": true,
+  "wider_holds": [
+    "CSSOM/computed-style/browserCSP",
+    "registered admission/DB/auth/cohort/private-group/privacy/backend",
+    "Live/fullM1/unsigned84+7/1651retirement",
+    "default embedding/templ/UI adoption",
+    "device/deployment"
+  ]
+}

@@ -320,7 +320,7 @@ No original14/83recapture, old suite rerun, SDK/dependency/normalizer build or b
 replacement is part of this section. Existing receipts keep their source identities;
 no fullM1/Live/browserCSP/privacy/adoption/device/retirement qualification is claimed.
 
-## Public community-card margin source section
+## Public community-card margin checkpoint
 
 SOC-5 changes only two fixed inline margins in the public `for c in page` card:
 the title gains `community-card-title`; the paragraph reuses `u-m-0`. One added
@@ -341,11 +341,34 @@ empty arm must remain equal. Missing classes, restored inline style, altered tex
 link and reversed children must produce distinct canonical DOM, with hard findings
 checked separately. No masks or baseline are changed or persisted.
 
-Expected discovery is14actions (2parents/12subcases), with27normalizer calls.
-Formatting, compilation and tests are NOT RUN. The existing actual764binary/archive/
-original-corpus bindings are mandatory; omission fails rather than skips. Originals
-are verified before/after without recapture, and the binary/archive remain checked.
-The focused command is the existing managed readonly/race/count1 route with
+The first actual source `d4695e0` run passed formatting but failed all8started test
+actions plus package, with no test passes. Its fixture supplied bare slices while
+the native transform iterates `page.object_list` and `groups_page.object_list`.
+Mutation children and the complete DOM comparison path were not reached. The exact
+test-only paginator successor `e13b53f` uses existing `socialPagination` wrappers,
+assigns synthetic rows to the public wrapper and preserves all assertions/IDs/controls.
+Only four source/ledger/output identity substitutions adapt its private method;
+commands, flags, resources and cleanup remain exact.
+
+At tested `e13b53f`, actual formatting returned0 with empty streams and native14
+actions passed once (2parents/12subcases), packagePASS1/67JSON events and zero
+fail/skip/cache/race. The [focused checkpoint](reviews/gui-public-original/community-style-checkpoint.json)
+binds six OS/FS empty/type/category DOM comparisons and six mutation children.
+Seven logged hash diagnostics include the mutation parent's extra positive control;
+that is not a seventh distinct comparison case.27normalizations remain strictly
+source-expected: there is no independent invocation census and no27browser tests.
+
+All28app and18existing normalizer/archive/build-info/original-file bindings stayed
+byte/fullmode-exact. The4CPU/6GiB pinned network-none/source-read-only container
+exited0 without OOM; owned removal0 and exact CID/name absence passed. Parent and
+program reviewer accepted this bounded evidence. Both small run receipts/streams/
+controls/closures are copied exactly (58files/136,067B); all source/method/failure
+packets remain. This docs commit is distinct from tested `e13b53f`.
+
+The existing actual764binary/archive/original-corpus bindings remain mandatory;
+omission fails rather than skips. Originals are verified before/after without
+recapture, and the binary/archive remain checked. The focused command is the
+existing managed readonly/race/count1 route with
 `-run '^TestGUIPublicCommunityStyle'` and the unchanged normalizer/reference flags.
 No new packages, helper build, SDK adoption, DB/auth/cohort admission, private-group
 behavior or default assembly is involved. Prior proofs retain their own sources;
