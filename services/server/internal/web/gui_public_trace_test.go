@@ -231,6 +231,9 @@ func TestGUIPublicReferenceRefusesChangedCorpus(t *testing.T) {
 			}
 			for _, fixture := range guiPublicCases() {
 				raw := []byte("synthetic custody-test bytes: " + fixture.ID)
+				if mutation == "alias" && len(binding.Cases) == 1 {
+					raw = []byte("synthetic custody-test bytes: " + binding.Cases[0].Case.ID)
+				}
 				name := fixture.ID + ".html"
 				if err := os.WriteFile(filepath.Join(directory, name), raw, 0o600); err != nil {
 					t.Fatal(err)
@@ -253,8 +256,8 @@ func TestGUIPublicReferenceRefusesChangedCorpus(t *testing.T) {
 			case "extra":
 				err = os.WriteFile(filepath.Join(directory, "extra.html"), []byte("extra"), 0o600)
 			case "alias":
-				if err = os.Rename(first, filepath.Join(directory, "retained-original.html")); err == nil {
-					err = os.Symlink("retained-original.html", first)
+				if err = os.Remove(first); err == nil {
+					err = os.Symlink(binding.Cases[1].File, first)
 				}
 			case "case-identity":
 				binding.Cases[0].Case.Language = "ro"
@@ -262,6 +265,16 @@ func TestGUIPublicReferenceRefusesChangedCorpus(t *testing.T) {
 			}
 			if err != nil {
 				t.Fatal(err)
+			}
+			if mutation == "alias" {
+				entries, err := os.ReadDir(directory)
+				if err != nil || len(entries) != 15 {
+					t.Fatal("alias control changed the exact original member set")
+				}
+				raw, err := os.ReadFile(first)
+				if err != nil || len(raw) != binding.Cases[0].Bytes || guiPublicHash(raw) != binding.Cases[0].SHA256 {
+					t.Fatal("alias control changed the expected body bytes")
+				}
 			}
 			if _, err := guiPublicReadReference(directory, checkpoint); err == nil {
 				t.Fatal("changed synthetic corpus accepted")
