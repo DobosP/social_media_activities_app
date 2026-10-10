@@ -2446,3 +2446,17 @@ Actual d469 source/method2e25d88e returned failure: formatter0/empty streams,8un
 ## 2026-10-10 — SOC-6 public pagination margin source
 
 After published192, authored only the public page.has_other_pages paragraph's style-to-muted/u-mt-lg attribute change; group/groups_page pagination, all other template words/links/conditions and CSS bytes stay exact. Existing1rem utility beats ordinary p margin outside cards; no CSS/computed-style/browser claim. SOC-5 setup gains only a strict public-footer source inverse before unchanged3349B/ce0e hash, preserving all old14assertions/IDs/card-delta/controls. New20actions use actual socialPagination(page,count,30) maps for OS/FS empty/single/first/middle/last/filtered-middle and explicit flags/labels/page-only hrefs; synthetic category/area/gpage queries do not establish or change backend filtering. Native original/expected-one-attribute/current DOM and six class/style/prev-next/link/text controls reuse actual764/d722/original15/unchanged normalization flags. Combined34actions (4parents/30subcases),72normalizations SOURCE-EXPECTED only; formatter/compiler/runtime NOT RUN, no process census or browser-test count. Prior e13and older receipts retain sources; no recapture, mask/baseline replacement, rebuild/package/SDK/backend/auth/cohort/private-group/privacy/default/Live/device/adoption/retirement qualification. Parent owns source/method review, managed reservation and publication.
+
+### 2026-10-10 - SOC-6 public pagination bounded proof
+
+Parent promoted the independently accepted actual bdeb source execution to
+`docs/reviews/gui-public-original/community-pagination-checkpoint.json`: native34
+once PASS (old14card/new20pagination,4parents30subcases), packagePASS/160events,
+formatter0/empty,29app+18external guards unchanged, exact owned cleanup/noOOM.
+Six actual-map OS/FS states and six new/six retained DOM mutations passed;72
+normalizations stays source-expected only, no invocation census/browser claim.
+Only29 small literal result/control/stream/closure files plus checkpoint/current
+status are added. All product/test bytes, CSS/private groups, original captures,
+normalizer/release/source keepers and historical failure receipts remain unchanged.
+No auth/backend filtering/CSP/clinical/privacy/Live/full/device/default activation
+or app adoption is claimed. Later documentation HEAD is not a reexecution.

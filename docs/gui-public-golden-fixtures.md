@@ -403,3 +403,34 @@ managed flags/binary/archive/original15 route with
 `-run '^TestGUIPublicCommunity(Style|Pagination)'`; no rebuild, dependencies, recapture,
 auth/cohort/DB/admission/private-group behavior/default assembly/Live activation.
 Wider fullM1/browserCSP/privacy/adoption/device/retirement gates remain open.
+
+## Public pagination actual bounded execution
+
+The earlier SOC-6 source-only NOT RUN labels above remain authored history.
+The [current checkpoint](reviews/gui-public-original/community-pagination-checkpoint.json)
+binds actual tested `bdeb9cba11096698436fdbc9763da1d40d936610`, not this later
+documentation HEAD. Its [literal result](reviews/gui-public-original/community-pagination-bdeb9cb-pass/result.json)
+and [closure](reviews/gui-public-original/community-pagination-bdeb9cb-pass/CLOSURE.json)
+record actual exit0:34 unique actions passed once (four parents/30 subcases),
+one package pass/160 JSON events, zero failure/skip/cache/race. Prior14 card
+controls and new20 pagination controls both executed; no broad suite was rerun.
+
+Six fictional paginator states (empty/single/first/middle/last/filtered-middle)
+passed through current OS/FS rendering and the already verified released DOM
+normalizer. Six new pagination and six retained card mutations were distinguished.
+Existing bare page-only href behavior remains; this proves no SQL/filtering or
+registered-handler contract.72 normalizations remains source-expected only,
+without an independently measured invocation census or separate browser tests.
+
+Actual formatting returned0 with empty stdout/stderr. All29 selected app and18
+external byte/full-mode bindings stayed equal before/after; actual owned CID
+removal0 and ID/exact-name absence passed, no OOM. Parent and independent program
+readback accepted only synthetic renderer/canonical DOM scope.29 small literal
+files are promoted; no workspace/dependencies/cache/build/ELF/original corpus
+copy is added. Private600/tracked664 modes are recorded explicitly.
+
+The single public-footer attribute delta, unchanged CSS/group markup, exact old14
+setup inverse and original3349B preimage remain source-bound. Original captures,
+all previous failures/receipts and source packets are untouched. No computed
+style/browser/CSP/backend filtering/auth/cohort/privacy/Live/full/device/default
+assembly or application-adoption acceptance follows.
