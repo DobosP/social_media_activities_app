@@ -1,0 +1,980 @@
+{
+  "schema": 1,
+  "artifact_kind": "focused-original-Pongo-filesystem-delivery-evidence",
+  "tested_source": "8bdbb4e7fe360bd957943a77eb579c554982e836",
+  "status": "pass",
+  "format_exit": 0,
+  "app_test_exit": 0,
+  "toolchain_image_argument": "sha256:2e040a5165d79be63755424f707fdb8cf609ace831ada7a9baca398ac25e12b9",
+  "runtime_scope": "networknone/2CPU6GiB/UID1000/source+SDK+originalcorpus+normalizer/buildinfoRO; privateexistingcache; no DB/app/hostports",
+  "counts": {
+    "top_level": 12,
+    "subcases": 51,
+    "unique_run": 63,
+    "test_pass": 63,
+    "package_pass": 1,
+    "fail": 0,
+    "skip": 0,
+    "cached": false
+  },
+  "test_ids": [
+    "TestGUIPublicOriginalCapture",
+    "TestGUIPublicOriginalCapture/privacy-en-default",
+    "TestGUIPublicOriginalCapture/privacy-en-contrast",
+    "TestGUIPublicOriginalCapture/terms-en-default",
+    "TestGUIPublicOriginalCapture/terms-en-contrast",
+    "TestGUIPublicOriginalCapture/open-data-en-snapshot-false",
+    "TestGUIPublicOriginalCapture/open-data-en-snapshot-true",
+    "TestGUIPublicOriginalCapture/landing-en",
+    "TestGUIPublicOriginalCapture/privacy-ro-default",
+    "TestGUIPublicOriginalCapture/privacy-ro-contrast",
+    "TestGUIPublicOriginalCapture/terms-ro-default",
+    "TestGUIPublicOriginalCapture/terms-ro-contrast",
+    "TestGUIPublicOriginalCapture/open-data-ro-snapshot-false",
+    "TestGUIPublicOriginalCapture/open-data-ro-snapshot-true",
+    "TestGUIPublicOriginalCapture/landing-ro",
+    "TestGUIPublicFilesystemCapture",
+    "TestGUIPublicFilesystemCapture/privacy-en-default",
+    "TestGUIPublicFilesystemCapture/privacy-en-contrast",
+    "TestGUIPublicFilesystemCapture/terms-en-default",
+    "TestGUIPublicFilesystemCapture/terms-en-contrast",
+    "TestGUIPublicFilesystemCapture/open-data-en-snapshot-false",
+    "TestGUIPublicFilesystemCapture/open-data-en-snapshot-true",
+    "TestGUIPublicFilesystemCapture/landing-en",
+    "TestGUIPublicFilesystemCapture/privacy-ro-default",
+    "TestGUIPublicFilesystemCapture/privacy-ro-contrast",
+    "TestGUIPublicFilesystemCapture/terms-ro-default",
+    "TestGUIPublicFilesystemCapture/terms-ro-contrast",
+    "TestGUIPublicFilesystemCapture/open-data-ro-snapshot-false",
+    "TestGUIPublicFilesystemCapture/open-data-ro-snapshot-true",
+    "TestGUIPublicFilesystemCapture/landing-ro",
+    "TestGUIPublicCaptureRefusesExistingOutput",
+    "TestGUIPublicLoaderTracePreservesNativeStreams",
+    "TestGUIPublicReferenceRefusesChangedCorpus",
+    "TestGUIPublicReferenceRefusesChangedCorpus/body",
+    "TestGUIPublicReferenceRefusesChangedCorpus/missing",
+    "TestGUIPublicReferenceRefusesChangedCorpus/extra",
+    "TestGUIPublicReferenceRefusesChangedCorpus/alias",
+    "TestGUIPublicReferenceRefusesChangedCorpus/case-identity",
+    "TestGUIPublicFilesystemRootRelativeIncludes",
+    "TestGUIPublicFilesystemNeverFallsBackToHost",
+    "TestGUIPublicFilesystemRefusesPathAliases",
+    "TestGUIPublicFilesystemRefusesPathAliases/#00",
+    "TestGUIPublicFilesystemRefusesPathAliases/.",
+    "TestGUIPublicFilesystemRefusesPathAliases//base.html",
+    "TestGUIPublicFilesystemRefusesPathAliases/../base.html",
+    "TestGUIPublicFilesystemRefusesPathAliases/./base.html",
+    "TestGUIPublicFilesystemRefusesPathAliases/web/../base.html",
+    "TestGUIPublicFilesystemRefusesPathAliases/web\\base.html",
+    "TestGUIPublicFilesystemRefusesPathAliases/base.htmlNUL",
+    "TestGUIPublicFilesystemBoundedReadsRefuseRatherThanTruncate",
+    "TestGUIPublicFilesystemBoundedReadsRefuseRatherThanTruncate/declared-overflow",
+    "TestGUIPublicFilesystemBoundedReadsRefuseRatherThanTruncate/actual-overflow",
+    "TestGUIPublicFilesystemBoundedReadsRefuseRatherThanTruncate/negative-size",
+    "TestGUIPublicFilesystemBoundedReadsRefuseRatherThanTruncate/short-read",
+    "TestGUIPublicFilesystemBoundedReadsRefuseRatherThanTruncate/directory",
+    "TestGUIPublicFilesystemBoundedReadsRefuseRatherThanTruncate/symlink-type",
+    "TestGUIPublicFilesystemBoundedReadsRefuseRatherThanTruncate/stat-error",
+    "TestGUIPublicFilesystemBoundedReadsRefuseRatherThanTruncate/nil-stat",
+    "TestGUIPublicFilesystemBoundedReadsRefuseRatherThanTruncate/read-error",
+    "TestGUIPublicFilesystemBoundedReadsRefuseRatherThanTruncate/close-error",
+    "TestGUIPublicFilesystemDoesNotBypassOpenRefusal",
+    "TestGUIPublicFilesystemCatalogueErrorKeepsDefaultDiskBehavior",
+    "TestGUIPublicFilesystemCatalogueUsesItsRealSizeBound"
+  ],
+  "all23_prior_actions_retained": true,
+  "registered_handler_cases": {
+    "original_disk": 14,
+    "additional_filesystem": 14
+  },
+  "normalization_diagnostics_hard_free_equal": 28,
+  "successful_normalizer_calls": 56,
+  "OS_FS_canonical_equal_all14": true,
+  "template_loads": 56,
+  "filesystem_snapshot_sha256": {
+    "apps/web/templates/web/landing.html": "8fd980d985011f42c519281fd165bb22696175a66d5104a5cd3367e18a9ef4df",
+    "apps/web/templates/web/open_data.html": "ae75cc9b3dc9f9dabbcd4ce62de63bc25ad538051a33a96b01c77691e938100d",
+    "apps/web/templates/web/privacy.html": "6538ae63b9870de290b1725c8528eb400bc4c0888ac39c509fac32158dc89e79",
+    "apps/web/templates/web/terms.html": "848ebae7fa912b5adeb4381cc437e4383686920a19124c5cc83b68ee929854d9",
+    "locale/ro/LC_MESSAGES/django.po": "186558af2dbb8016c313d09bd0b8508bd5365d61961bcabb3a681c66b99b154c",
+    "templates/base.html": "ef2f179f6cbbfa8acc38272aa5a6c1d6acbb36c3c6e9290102d98a23b4b02e3b"
+  },
+  "snapshot_scope": "six actualsource hash-joined/bracketed virtual inputs; arbitraryfs.FS immutability remains callercontract",
+  "source_guard": {
+    "selected_source_rows": 30,
+    "released_SDK_rows": 41,
+    "owned_command_sources": 2,
+    "original_corpus_files": 15,
+    "archives": 2,
+    "binary_and_actual_buildinfo": true,
+    "all_bytes_fullmodes_unchanged": true
+  },
+  "source_inputs": [
+    {
+      "path": "apps/web/templates/web/landing.html",
+      "bytes": 1875,
+      "sha256": "8fd980d985011f42c519281fd165bb22696175a66d5104a5cd3367e18a9ef4df",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/open_data.html",
+      "bytes": 5306,
+      "sha256": "ae75cc9b3dc9f9dabbcd4ce62de63bc25ad538051a33a96b01c77691e938100d",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/privacy.html",
+      "bytes": 5691,
+      "sha256": "6538ae63b9870de290b1725c8528eb400bc4c0888ac39c509fac32158dc89e79",
+      "full_mode": 33204
+    },
+    {
+      "path": "apps/web/templates/web/terms.html",
+      "bytes": 3876,
+      "sha256": "848ebae7fa912b5adeb4381cc437e4383686920a19124c5cc83b68ee929854d9",
+      "full_mode": 33204
+    },
+    {
+      "path": "docs/reviews/gui-public-original/checkpoint.json",
+      "bytes": 11798,
+      "sha256": "3fa46e9a1fcb3ab8aa4baefa80c54a8d050b59527402db18cb20e24bbc104f1c",
+      "full_mode": 33204
+    },
+    {
+      "path": "locale/ro/LC_MESSAGES/django.po",
+      "bytes": 113861,
+      "sha256": "186558af2dbb8016c313d09bd0b8508bd5365d61961bcabb3a681c66b99b154c",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/authcore/go.mod",
+      "bytes": 283,
+      "sha256": "124899dbc57503d4a8884e5579435f7775421bfe0544bff1dee6e76ec895fa4c",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/authcore/go.sum",
+      "bytes": 825,
+      "sha256": "b2516a139953d6c42702bff40fad4da1ff04fa5cde523c089f07c6c1ea148109",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/go.mod",
+      "bytes": 1335,
+      "sha256": "1e0c2e6d9cda30507b6a5dde1d33f795737e609b47124983bbf9786844cabb46",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/go.sum",
+      "bytes": 7767,
+      "sha256": "83cc84cde408f45973444ecee13f40df4abac1c1272c259f463f18703cb6b012",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_golden_test.go",
+      "bytes": 14025,
+      "sha256": "edf5ffaef19a4a25a0a04baa7d4bb4ae52cbfac9c31b523fd2ccf0be088a949c",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_normalize_test.go",
+      "bytes": 7921,
+      "sha256": "03c5f7d1f305d204c8e93403787506ed4489acdb1376feeef3a834358520ee28",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/gui_public_trace_test.go",
+      "bytes": 9724,
+      "sha256": "c65313d9b2dfd41bf10683132b88460355d321557dab9c1fe8765e32915ca5a3",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/i18n.go",
+      "bytes": 4187,
+      "sha256": "b6a6febb5c6795177ccb6f3d52659f7e00ee7c4fbf1aa2104d794e5fdd2c811c",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/public_downloads.go",
+      "bytes": 13032,
+      "sha256": "e19db748f4390bd0595083bc8e49a2da4f35031a961e52fdb607482bd926d4fd",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/public_pages.go",
+      "bytes": 17440,
+      "sha256": "6dfb36642cde63c253899ff8e76a1555a8bfb33cd068ef1dcca5861fdc82a2b4",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/public_routes.json",
+      "bytes": 47682,
+      "sha256": "961c7d1d0ab265f0f3d8fd84074172d62f72122dd6a1dd13a7b219315d1d5d06",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/public_structured.go",
+      "bytes": 7260,
+      "sha256": "2a0d2154f0f5f6904add9b01ac3135a09da560bb0134649a4f51c6d50a3241be",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/renderer.go",
+      "bytes": 5510,
+      "sha256": "94f11a3f1849c919ba100c4ba68236263f71f07741006c1992dadc4020723e68",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/renderer_fs.go",
+      "bytes": 3382,
+      "sha256": "fe484effba370a376d835722e718719289eb2c8fea81d6bde99182276b162673",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/renderer_fs_test.go",
+      "bytes": 11279,
+      "sha256": "74d9a05ee399a11d60f1628969882ed1210ee454c62aeb95f14b3ac659adbc81",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/router.go",
+      "bytes": 2443,
+      "sha256": "b1cc3430d5148011cd827ab9fcd437cdf14a60c72dc5d980693e50bf9b8c0cca",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/routes.json",
+      "bytes": 7167,
+      "sha256": "d10de3908d9537bbdeb2f51427bcb1ecdffc57e9d5a5066cc3166c9fbb559fc3",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/server.go",
+      "bytes": 10960,
+      "sha256": "0c4208333d354d2256f275459a420ac5f2ff936abfab6c13cc4b8b6ca4fdcc09",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/templates.go",
+      "bytes": 14282,
+      "sha256": "8098259abbf45838fc732630188cde4b73ccefbc0f5e729b75497f6988db4b97",
+      "full_mode": 33204
+    },
+    {
+      "path": "services/server/internal/web/views.go",
+      "bytes": 7205,
+      "sha256": "f54f6757bcbf7db40e922e085dfeab6ae353014f7771be10e707bb7ee8058180",
+      "full_mode": 33204
+    },
+    {
+      "path": "templates/base.html",
+      "bytes": 13594,
+      "sha256": "ef2f179f6cbbfa8acc38272aa5a6c1d6acbb36c3c6e9290102d98a23b4b02e3b",
+      "full_mode": 33204
+    },
+    {
+      "path": "tools/gui-public-golden/normalize.go",
+      "bytes": 1465,
+      "sha256": "5282ddb0dab9101b028e6eda5411fc29995bf9f3a5b5de1d62c157a76eccd458",
+      "full_mode": 33204
+    },
+    {
+      "path": "tools/gui-public-golden/normalize_test.go",
+      "bytes": 4317,
+      "sha256": "f9bac4f56a598f5822054e846ef622ff2baecd885bd670cf0a4211d7c61704f7",
+      "full_mode": 33204
+    },
+    {
+      "path": "tools/gui-public-golden/release-bindings.json",
+      "bytes": 9594,
+      "sha256": "d845c6a1640e1f1cbe67f63af3ddc8ba7795d73ff0c2d97b23cb8ee4ff953015",
+      "full_mode": 33188
+    }
+  ],
+  "normalizer_binary": {
+    "path": "evidence/normalizer-r7-764beb1/social-gui-normalize",
+    "sha256": "598515e75c709803c7b23673e07b14baa93861608346a81c8fc708521c1b2f05",
+    "bytes": 4897832,
+    "full_mode": 33216
+  },
+  "normalizer_actual_build_source": "764beb183dde75a3c003105d011abb4cf06d2241",
+  "helper_download_build_repeated": false,
+  "captures": {
+    "os": {
+      "manifest": {
+        "bytes": 33902,
+        "sha256": "e9d25e53e1f3ca570a2f120b2b1ba891a5173064c06a78bfa0b9ca5dd7acbbb5",
+        "full_mode": 33152
+      },
+      "transport": "original-disk-root",
+      "raw_files": 15,
+      "directory_mode": "0700",
+      "file_mode": "0600"
+    },
+    "fs": {
+      "manifest": {
+        "bytes": 34756,
+        "sha256": "55d1c6cb46baf49fe36da3ed2c292d39f7b47e47ee822db2bef378d2e185701e",
+        "full_mode": 33152
+      },
+      "transport": "hash-bound-test-fs-snapshot",
+      "raw_files": 15,
+      "directory_mode": "0700",
+      "file_mode": "0600"
+    }
+  },
+  "case_pairs": [
+    {
+      "case_id": "privacy-en-default",
+      "disk_raw": {
+        "path": "privacy-en-default.html",
+        "bytes": 8285,
+        "sha256": "c5c123c173297e5310eb69f8da24a8fc5ae3485ae5077ca017f7ed30f2ce0ab1",
+        "full_mode": 33152
+      },
+      "filesystem_raw": {
+        "path": "privacy-en-default.html",
+        "bytes": 8285,
+        "sha256": "c5c123c173297e5310eb69f8da24a8fc5ae3485ae5077ca017f7ed30f2ce0ab1",
+        "full_mode": 33152
+      },
+      "normalized_sha256": "074a8b28d7a777ab9fa2015b16cd1ea59f5d096bee23543e358198605a96e902",
+      "both_diagnostics_hard_free_equal": true,
+      "disk_template_loads": [
+        {
+          "name": "web/privacy.html",
+          "bytes": 6858,
+          "sha256": "b57954e341d0b1e39d41884df88ff8f82b3ee792576245f87ca42d4cbdff1272"
+        },
+        {
+          "name": "base.html",
+          "bytes": 14618,
+          "sha256": "0a553d8feaff89e9f8f3fe45d51a80fd5f8af3c9ae7121ee19619c9b69f5cf22"
+        }
+      ],
+      "filesystem_template_loads": [
+        {
+          "name": "web/privacy.html",
+          "bytes": 6858,
+          "sha256": "b57954e341d0b1e39d41884df88ff8f82b3ee792576245f87ca42d4cbdff1272"
+        },
+        {
+          "name": "base.html",
+          "bytes": 14618,
+          "sha256": "0a553d8feaff89e9f8f3fe45d51a80fd5f8af3c9ae7121ee19619c9b69f5cf22"
+        }
+      ]
+    },
+    {
+      "case_id": "privacy-en-contrast",
+      "disk_raw": {
+        "path": "privacy-en-contrast.html",
+        "bytes": 8291,
+        "sha256": "4d70f26baa9c2a36118fe8c2b8950de1752fec74995c05e7d6f72cfeac215822",
+        "full_mode": 33152
+      },
+      "filesystem_raw": {
+        "path": "privacy-en-contrast.html",
+        "bytes": 8291,
+        "sha256": "4d70f26baa9c2a36118fe8c2b8950de1752fec74995c05e7d6f72cfeac215822",
+        "full_mode": 33152
+      },
+      "normalized_sha256": "9909f80fff417bc64afd8ce0e96a73e9c23a573a4cacf0cf50f791bd708c132f",
+      "both_diagnostics_hard_free_equal": true,
+      "disk_template_loads": [
+        {
+          "name": "web/privacy.html",
+          "bytes": 6858,
+          "sha256": "b57954e341d0b1e39d41884df88ff8f82b3ee792576245f87ca42d4cbdff1272"
+        },
+        {
+          "name": "base.html",
+          "bytes": 14618,
+          "sha256": "0a553d8feaff89e9f8f3fe45d51a80fd5f8af3c9ae7121ee19619c9b69f5cf22"
+        }
+      ],
+      "filesystem_template_loads": [
+        {
+          "name": "web/privacy.html",
+          "bytes": 6858,
+          "sha256": "b57954e341d0b1e39d41884df88ff8f82b3ee792576245f87ca42d4cbdff1272"
+        },
+        {
+          "name": "base.html",
+          "bytes": 14618,
+          "sha256": "0a553d8feaff89e9f8f3fe45d51a80fd5f8af3c9ae7121ee19619c9b69f5cf22"
+        }
+      ]
+    },
+    {
+      "case_id": "terms-en-default",
+      "disk_raw": {
+        "path": "terms-en-default.html",
+        "bytes": 6960,
+        "sha256": "8fff1e8f72bb69b3e2bb18a76892b39f97b928cd9d8923f8e59d074ccd6aec5e",
+        "full_mode": 33152
+      },
+      "filesystem_raw": {
+        "path": "terms-en-default.html",
+        "bytes": 6960,
+        "sha256": "8fff1e8f72bb69b3e2bb18a76892b39f97b928cd9d8923f8e59d074ccd6aec5e",
+        "full_mode": 33152
+      },
+      "normalized_sha256": "e8fb65fb2d03141bd0a5a5b43bfdc4dbf9ebe51d68e28f9f6990b75cb417b56d",
+      "both_diagnostics_hard_free_equal": true,
+      "disk_template_loads": [
+        {
+          "name": "web/terms.html",
+          "bytes": 4603,
+          "sha256": "7cedc36fb465d5f88f25a72b63ef4ea9ed9f354ee64ce1a14f41cb1e1fbf0637"
+        },
+        {
+          "name": "base.html",
+          "bytes": 14618,
+          "sha256": "0a553d8feaff89e9f8f3fe45d51a80fd5f8af3c9ae7121ee19619c9b69f5cf22"
+        }
+      ],
+      "filesystem_template_loads": [
+        {
+          "name": "web/terms.html",
+          "bytes": 4603,
+          "sha256": "7cedc36fb465d5f88f25a72b63ef4ea9ed9f354ee64ce1a14f41cb1e1fbf0637"
+        },
+        {
+          "name": "base.html",
+          "bytes": 14618,
+          "sha256": "0a553d8feaff89e9f8f3fe45d51a80fd5f8af3c9ae7121ee19619c9b69f5cf22"
+        }
+      ]
+    },
+    {
+      "case_id": "terms-en-contrast",
+      "disk_raw": {
+        "path": "terms-en-contrast.html",
+        "bytes": 6966,
+        "sha256": "8d855ec46ca8944dd4d491bf711ed31b11faeae196183b53debf9f2d81c64023",
+        "full_mode": 33152
+      },
+      "filesystem_raw": {
+        "path": "terms-en-contrast.html",
+        "bytes": 6966,
+        "sha256": "8d855ec46ca8944dd4d491bf711ed31b11faeae196183b53debf9f2d81c64023",
+        "full_mode": 33152
+      },
+      "normalized_sha256": "632114302b1b9fab76059a02eeb2d47e231faab3fe188a6d67bc80f035d5c6cf",
+      "both_diagnostics_hard_free_equal": true,
+      "disk_template_loads": [
+        {
+          "name": "web/terms.html",
+          "bytes": 4603,
+          "sha256": "7cedc36fb465d5f88f25a72b63ef4ea9ed9f354ee64ce1a14f41cb1e1fbf0637"
+        },
+        {
+          "name": "base.html",
+          "bytes": 14618,
+          "sha256": "0a553d8feaff89e9f8f3fe45d51a80fd5f8af3c9ae7121ee19619c9b69f5cf22"
+        }
+      ],
+      "filesystem_template_loads": [
+        {
+          "name": "web/terms.html",
+          "bytes": 4603,
+          "sha256": "7cedc36fb465d5f88f25a72b63ef4ea9ed9f354ee64ce1a14f41cb1e1fbf0637"
+        },
+        {
+          "name": "base.html",
+          "bytes": 14618,
+          "sha256": "0a553d8feaff89e9f8f3fe45d51a80fd5f8af3c9ae7121ee19619c9b69f5cf22"
+        }
+      ]
+    },
+    {
+      "case_id": "open-data-en-snapshot-false",
+      "disk_raw": {
+        "path": "open-data-en-snapshot-false.html",
+        "bytes": 8536,
+        "sha256": "d01756ad0328943fc9e80e68dcdc2d50ffecc20d9afa406770db1e1d97ddacff",
+        "full_mode": 33152
+      },
+      "filesystem_raw": {
+        "path": "open-data-en-snapshot-false.html",
+        "bytes": 8536,
+        "sha256": "b318dbd9663b18008f6d8d94fef26dd2c34dbf3af2979f331f9ea58b97deca40",
+        "full_mode": 33152
+      },
+      "normalized_sha256": "535128808be221a32dc5d233cd5cb059cdb7460a26ee6e484d573150f2ab1321",
+      "both_diagnostics_hard_free_equal": true,
+      "disk_template_loads": [
+        {
+          "name": "web/open_data.html",
+          "bytes": 5947,
+          "sha256": "6b5c7efcddf955e9214d4ad9fe5ef0fddc4e272def2124511d3a5c400971e1d8"
+        },
+        {
+          "name": "base.html",
+          "bytes": 14618,
+          "sha256": "0a553d8feaff89e9f8f3fe45d51a80fd5f8af3c9ae7121ee19619c9b69f5cf22"
+        }
+      ],
+      "filesystem_template_loads": [
+        {
+          "name": "web/open_data.html",
+          "bytes": 5947,
+          "sha256": "6b5c7efcddf955e9214d4ad9fe5ef0fddc4e272def2124511d3a5c400971e1d8"
+        },
+        {
+          "name": "base.html",
+          "bytes": 14618,
+          "sha256": "0a553d8feaff89e9f8f3fe45d51a80fd5f8af3c9ae7121ee19619c9b69f5cf22"
+        }
+      ]
+    },
+    {
+      "case_id": "open-data-en-snapshot-true",
+      "disk_raw": {
+        "path": "open-data-en-snapshot-true.html",
+        "bytes": 9355,
+        "sha256": "18a6830c30e8a921c7dabc9741e2849d9cd04094f60f2e40a84d5a6b64ea560d",
+        "full_mode": 33152
+      },
+      "filesystem_raw": {
+        "path": "open-data-en-snapshot-true.html",
+        "bytes": 9355,
+        "sha256": "b0f8c2ef2a03353bd8d74098102c7bf68c79f9e4aec330868a0f9115d020c903",
+        "full_mode": 33152
+      },
+      "normalized_sha256": "11bff78a124294f69370babf48ce2414150f14249badab5ad4d3e3c1b3b49b03",
+      "both_diagnostics_hard_free_equal": true,
+      "disk_template_loads": [
+        {
+          "name": "web/open_data.html",
+          "bytes": 5947,
+          "sha256": "6b5c7efcddf955e9214d4ad9fe5ef0fddc4e272def2124511d3a5c400971e1d8"
+        },
+        {
+          "name": "base.html",
+          "bytes": 14618,
+          "sha256": "0a553d8feaff89e9f8f3fe45d51a80fd5f8af3c9ae7121ee19619c9b69f5cf22"
+        }
+      ],
+      "filesystem_template_loads": [
+        {
+          "name": "web/open_data.html",
+          "bytes": 5947,
+          "sha256": "6b5c7efcddf955e9214d4ad9fe5ef0fddc4e272def2124511d3a5c400971e1d8"
+        },
+        {
+          "name": "base.html",
+          "bytes": 14618,
+          "sha256": "0a553d8feaff89e9f8f3fe45d51a80fd5f8af3c9ae7121ee19619c9b69f5cf22"
+        }
+      ]
+    },
+    {
+      "case_id": "landing-en",
+      "disk_raw": {
+        "path": "landing-en.html",
+        "bytes": 5111,
+        "sha256": "b3da2dc08b119c315cab50e36c102fa85314436d24b714fce2fd0eceb16b2814",
+        "full_mode": 33152
+      },
+      "filesystem_raw": {
+        "path": "landing-en.html",
+        "bytes": 5111,
+        "sha256": "b3da2dc08b119c315cab50e36c102fa85314436d24b714fce2fd0eceb16b2814",
+        "full_mode": 33152
+      },
+      "normalized_sha256": "b4c0c99d210bbd08e102430df06c73a0520995e0b39ee17cdad3b4f1f09a0b8b",
+      "both_diagnostics_hard_free_equal": true,
+      "disk_template_loads": [
+        {
+          "name": "web/landing.html",
+          "bytes": 2103,
+          "sha256": "457cee5873b96e03cd015365cdb5ac144b68bf32b70cf64acdf3aad30e1da0fb"
+        },
+        {
+          "name": "base.html",
+          "bytes": 14618,
+          "sha256": "0a553d8feaff89e9f8f3fe45d51a80fd5f8af3c9ae7121ee19619c9b69f5cf22"
+        }
+      ],
+      "filesystem_template_loads": [
+        {
+          "name": "web/landing.html",
+          "bytes": 2103,
+          "sha256": "457cee5873b96e03cd015365cdb5ac144b68bf32b70cf64acdf3aad30e1da0fb"
+        },
+        {
+          "name": "base.html",
+          "bytes": 14618,
+          "sha256": "0a553d8feaff89e9f8f3fe45d51a80fd5f8af3c9ae7121ee19619c9b69f5cf22"
+        }
+      ]
+    },
+    {
+      "case_id": "privacy-ro-default",
+      "disk_raw": {
+        "path": "privacy-ro-default.html",
+        "bytes": 9478,
+        "sha256": "afb50c59582f5c35617ba91081fb9e1093904f03efc2b9e19a70868b985c0db9",
+        "full_mode": 33152
+      },
+      "filesystem_raw": {
+        "path": "privacy-ro-default.html",
+        "bytes": 9478,
+        "sha256": "afb50c59582f5c35617ba91081fb9e1093904f03efc2b9e19a70868b985c0db9",
+        "full_mode": 33152
+      },
+      "normalized_sha256": "87fca8417e1a6483f96c7fde52a6b4b8b4d6363761096270534d4d12bcac6363",
+      "both_diagnostics_hard_free_equal": true,
+      "disk_template_loads": [
+        {
+          "name": "web/privacy.html",
+          "bytes": 6858,
+          "sha256": "b57954e341d0b1e39d41884df88ff8f82b3ee792576245f87ca42d4cbdff1272"
+        },
+        {
+          "name": "base.html",
+          "bytes": 14618,
+          "sha256": "0a553d8feaff89e9f8f3fe45d51a80fd5f8af3c9ae7121ee19619c9b69f5cf22"
+        }
+      ],
+      "filesystem_template_loads": [
+        {
+          "name": "web/privacy.html",
+          "bytes": 6858,
+          "sha256": "b57954e341d0b1e39d41884df88ff8f82b3ee792576245f87ca42d4cbdff1272"
+        },
+        {
+          "name": "base.html",
+          "bytes": 14618,
+          "sha256": "0a553d8feaff89e9f8f3fe45d51a80fd5f8af3c9ae7121ee19619c9b69f5cf22"
+        }
+      ]
+    },
+    {
+      "case_id": "privacy-ro-contrast",
+      "disk_raw": {
+        "path": "privacy-ro-contrast.html",
+        "bytes": 9484,
+        "sha256": "748d144757c834c72e324bb4686fecb94d3d15c8d835a595b5800b5686e53d59",
+        "full_mode": 33152
+      },
+      "filesystem_raw": {
+        "path": "privacy-ro-contrast.html",
+        "bytes": 9484,
+        "sha256": "748d144757c834c72e324bb4686fecb94d3d15c8d835a595b5800b5686e53d59",
+        "full_mode": 33152
+      },
+      "normalized_sha256": "a1751b4e6fb07cf4352d9de27f3d0e05860fc47cfce25b71f1db911fc42e0b49",
+      "both_diagnostics_hard_free_equal": true,
+      "disk_template_loads": [
+        {
+          "name": "web/privacy.html",
+          "bytes": 6858,
+          "sha256": "b57954e341d0b1e39d41884df88ff8f82b3ee792576245f87ca42d4cbdff1272"
+        },
+        {
+          "name": "base.html",
+          "bytes": 14618,
+          "sha256": "0a553d8feaff89e9f8f3fe45d51a80fd5f8af3c9ae7121ee19619c9b69f5cf22"
+        }
+      ],
+      "filesystem_template_loads": [
+        {
+          "name": "web/privacy.html",
+          "bytes": 6858,
+          "sha256": "b57954e341d0b1e39d41884df88ff8f82b3ee792576245f87ca42d4cbdff1272"
+        },
+        {
+          "name": "base.html",
+          "bytes": 14618,
+          "sha256": "0a553d8feaff89e9f8f3fe45d51a80fd5f8af3c9ae7121ee19619c9b69f5cf22"
+        }
+      ]
+    },
+    {
+      "case_id": "terms-ro-default",
+      "disk_raw": {
+        "path": "terms-ro-default.html",
+        "bytes": 7821,
+        "sha256": "bb084d48196111fc1466324386ec2e1c0b2feff64632cc8beac504dffe8d41e0",
+        "full_mode": 33152
+      },
+      "filesystem_raw": {
+        "path": "terms-ro-default.html",
+        "bytes": 7821,
+        "sha256": "bb084d48196111fc1466324386ec2e1c0b2feff64632cc8beac504dffe8d41e0",
+        "full_mode": 33152
+      },
+      "normalized_sha256": "ab35ea0ae8733c8a3b9eaaded3144ec6761a2c330d7e26bf70d994583b3c401f",
+      "both_diagnostics_hard_free_equal": true,
+      "disk_template_loads": [
+        {
+          "name": "web/terms.html",
+          "bytes": 4603,
+          "sha256": "7cedc36fb465d5f88f25a72b63ef4ea9ed9f354ee64ce1a14f41cb1e1fbf0637"
+        },
+        {
+          "name": "base.html",
+          "bytes": 14618,
+          "sha256": "0a553d8feaff89e9f8f3fe45d51a80fd5f8af3c9ae7121ee19619c9b69f5cf22"
+        }
+      ],
+      "filesystem_template_loads": [
+        {
+          "name": "web/terms.html",
+          "bytes": 4603,
+          "sha256": "7cedc36fb465d5f88f25a72b63ef4ea9ed9f354ee64ce1a14f41cb1e1fbf0637"
+        },
+        {
+          "name": "base.html",
+          "bytes": 14618,
+          "sha256": "0a553d8feaff89e9f8f3fe45d51a80fd5f8af3c9ae7121ee19619c9b69f5cf22"
+        }
+      ]
+    },
+    {
+      "case_id": "terms-ro-contrast",
+      "disk_raw": {
+        "path": "terms-ro-contrast.html",
+        "bytes": 7827,
+        "sha256": "b211ecc4bc3cbbf096d4a82d22972e418c2dc86f1da33cdf41c5b7a4d5c4deec",
+        "full_mode": 33152
+      },
+      "filesystem_raw": {
+        "path": "terms-ro-contrast.html",
+        "bytes": 7827,
+        "sha256": "b211ecc4bc3cbbf096d4a82d22972e418c2dc86f1da33cdf41c5b7a4d5c4deec",
+        "full_mode": 33152
+      },
+      "normalized_sha256": "ff279530d46db136f2417e8c148a81852106ea1dd7b40d623062f73362f91c0a",
+      "both_diagnostics_hard_free_equal": true,
+      "disk_template_loads": [
+        {
+          "name": "web/terms.html",
+          "bytes": 4603,
+          "sha256": "7cedc36fb465d5f88f25a72b63ef4ea9ed9f354ee64ce1a14f41cb1e1fbf0637"
+        },
+        {
+          "name": "base.html",
+          "bytes": 14618,
+          "sha256": "0a553d8feaff89e9f8f3fe45d51a80fd5f8af3c9ae7121ee19619c9b69f5cf22"
+        }
+      ],
+      "filesystem_template_loads": [
+        {
+          "name": "web/terms.html",
+          "bytes": 4603,
+          "sha256": "7cedc36fb465d5f88f25a72b63ef4ea9ed9f354ee64ce1a14f41cb1e1fbf0637"
+        },
+        {
+          "name": "base.html",
+          "bytes": 14618,
+          "sha256": "0a553d8feaff89e9f8f3fe45d51a80fd5f8af3c9ae7121ee19619c9b69f5cf22"
+        }
+      ]
+    },
+    {
+      "case_id": "open-data-ro-snapshot-false",
+      "disk_raw": {
+        "path": "open-data-ro-snapshot-false.html",
+        "bytes": 8621,
+        "sha256": "37e513c4779d4c0f5a2b2f440f2a41b4b483ca9c75b5bbbf6446d11c1a6958b0",
+        "full_mode": 33152
+      },
+      "filesystem_raw": {
+        "path": "open-data-ro-snapshot-false.html",
+        "bytes": 8621,
+        "sha256": "c7584cce897f27debe51c437a988266bcb5a7b65370bcf06c1e1010a252f61cc",
+        "full_mode": 33152
+      },
+      "normalized_sha256": "7173f4fcdf8cee33665bc04e99d2be669d83705c4b277a7448164c9137bd76e2",
+      "both_diagnostics_hard_free_equal": true,
+      "disk_template_loads": [
+        {
+          "name": "web/open_data.html",
+          "bytes": 5947,
+          "sha256": "6b5c7efcddf955e9214d4ad9fe5ef0fddc4e272def2124511d3a5c400971e1d8"
+        },
+        {
+          "name": "base.html",
+          "bytes": 14618,
+          "sha256": "0a553d8feaff89e9f8f3fe45d51a80fd5f8af3c9ae7121ee19619c9b69f5cf22"
+        }
+      ],
+      "filesystem_template_loads": [
+        {
+          "name": "web/open_data.html",
+          "bytes": 5947,
+          "sha256": "6b5c7efcddf955e9214d4ad9fe5ef0fddc4e272def2124511d3a5c400971e1d8"
+        },
+        {
+          "name": "base.html",
+          "bytes": 14618,
+          "sha256": "0a553d8feaff89e9f8f3fe45d51a80fd5f8af3c9ae7121ee19619c9b69f5cf22"
+        }
+      ]
+    },
+    {
+      "case_id": "open-data-ro-snapshot-true",
+      "disk_raw": {
+        "path": "open-data-ro-snapshot-true.html",
+        "bytes": 9440,
+        "sha256": "59d6bcf017df3036404055bf5e99dd0c3eed176d250231d347bac6ece7e09426",
+        "full_mode": 33152
+      },
+      "filesystem_raw": {
+        "path": "open-data-ro-snapshot-true.html",
+        "bytes": 9440,
+        "sha256": "2cd3ac0509ec2f0728c6b46c093a66d4cb055e0f56a6e51788d6d72f94ba057f",
+        "full_mode": 33152
+      },
+      "normalized_sha256": "50a2d7e4f810aae7207ab8399ecd663233d27ca235740a9495ea1d804641b586",
+      "both_diagnostics_hard_free_equal": true,
+      "disk_template_loads": [
+        {
+          "name": "web/open_data.html",
+          "bytes": 5947,
+          "sha256": "6b5c7efcddf955e9214d4ad9fe5ef0fddc4e272def2124511d3a5c400971e1d8"
+        },
+        {
+          "name": "base.html",
+          "bytes": 14618,
+          "sha256": "0a553d8feaff89e9f8f3fe45d51a80fd5f8af3c9ae7121ee19619c9b69f5cf22"
+        }
+      ],
+      "filesystem_template_loads": [
+        {
+          "name": "web/open_data.html",
+          "bytes": 5947,
+          "sha256": "6b5c7efcddf955e9214d4ad9fe5ef0fddc4e272def2124511d3a5c400971e1d8"
+        },
+        {
+          "name": "base.html",
+          "bytes": 14618,
+          "sha256": "0a553d8feaff89e9f8f3fe45d51a80fd5f8af3c9ae7121ee19619c9b69f5cf22"
+        }
+      ]
+    },
+    {
+      "case_id": "landing-ro",
+      "disk_raw": {
+        "path": "landing-ro.html",
+        "bytes": 5504,
+        "sha256": "8f3d8804dd9c2d0ec33d9fe7ff569077d490c4652c56880de254e9e75d0407a8",
+        "full_mode": 33152
+      },
+      "filesystem_raw": {
+        "path": "landing-ro.html",
+        "bytes": 5504,
+        "sha256": "8f3d8804dd9c2d0ec33d9fe7ff569077d490c4652c56880de254e9e75d0407a8",
+        "full_mode": 33152
+      },
+      "normalized_sha256": "5f2bf6dd1981b9d07fb36bb978f0b5d4505067ca401784a7398c0372ce5512d0",
+      "both_diagnostics_hard_free_equal": true,
+      "disk_template_loads": [
+        {
+          "name": "web/landing.html",
+          "bytes": 2103,
+          "sha256": "457cee5873b96e03cd015365cdb5ac144b68bf32b70cf64acdf3aad30e1da0fb"
+        },
+        {
+          "name": "base.html",
+          "bytes": 14618,
+          "sha256": "0a553d8feaff89e9f8f3fe45d51a80fd5f8af3c9ae7121ee19619c9b69f5cf22"
+        }
+      ],
+      "filesystem_template_loads": [
+        {
+          "name": "web/landing.html",
+          "bytes": 2103,
+          "sha256": "457cee5873b96e03cd015365cdb5ac144b68bf32b70cf64acdf3aad30e1da0fb"
+        },
+        {
+          "name": "base.html",
+          "bytes": 14618,
+          "sha256": "0a553d8feaff89e9f8f3fe45d51a80fd5f8af3c9ae7121ee19619c9b69f5cf22"
+        }
+      ]
+    }
+  ],
+  "streams": {
+    "app-test.cid": {
+      "bytes": 64,
+      "sha256": "58478aa17bb654bcb7bd298f72e6bc83058ed10e1eb5b95f4878ad77c496c003",
+      "full_mode": 33204
+    },
+    "format.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    "format.cid": {
+      "bytes": 64,
+      "sha256": "e9fb6d2cc7fea33bf496abfa976f186e76be8049df3285d52e1dd63b1a63f916",
+      "full_mode": 33204
+    },
+    "app-test.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    "format-exit.txt": {
+      "bytes": 14,
+      "sha256": "f2dfac9d3bb835badbda95cf2ff6eba9f30c5d0d989a590e7c815a423cc657c0",
+      "full_mode": 33152
+    },
+    "app-test.stdout": {
+      "bytes": 67423,
+      "sha256": "e8d161d9567ce33418bc398c5a0c78ed7c3ccdfb6d9ac0930db19990435891fd",
+      "full_mode": 33152
+    },
+    "app-test-exit.txt": {
+      "bytes": 16,
+      "sha256": "ab7cef40fa5513db10a834fbe7e97aabb8e649dfeb926d18052242b5109d2d89",
+      "full_mode": 33152
+    },
+    "format.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    }
+  },
+  "private_observation_sha256": "456a76c2211f32ac4444c4e4f3fdfbca9ceaae6bae9f95b5206285a8f55bf3da",
+  "independent_parent_review_sha256": "883bfd9b7e3e5b61391a1f58e9dd27ff11f29b0723a707cd558c6c196a0fa2f4",
+  "prior_r8_formatter_failure_sha256": "2c5bcf596434b40e833186d2da43bf58358259000a6f350a09ac841f6c96fb2a",
+  "history_compaction": [
+    {
+      "archive": "evidence/filesystem-r8-9b220d7.tar.gz",
+      "bytes": 10493,
+      "sha256": "5be9a68b0d3de6407b16d3fb63532780460d06406e60cda191651e62ea350313",
+      "regular_members": 7,
+      "directory_members": 5,
+      "byte_fullmode_roundtrip_verified": true,
+      "raw_copy_removed_after_verification": true
+    },
+    {
+      "archive": "evidence/superseded-capture-764beb1.tar.gz",
+      "bytes": 19412,
+      "sha256": "b5ebf18217a0a2246bbddd3c9e62b3b25be916b165955cf5f824223d37e066d0",
+      "regular_members": 15,
+      "directory_members": 0,
+      "byte_fullmode_roundtrip_verified": true,
+      "raw_copy_removed_after_verification": true
+    }
+  ],
+  "boundaries": {
+    "default_production_switch": false,
+    "normalized_baseline_installed": false,
+    "fullM1": false,
+    "private_pages_or_host_assets": false,
+    "Django_templ_parity": false,
+    "native_live": false,
+    "signed_group_matrix": false,
+    "template_conditional_percentage": null,
+    "full_native21": "NOT RUN",
+    "retirement": "1651 unresolved preserved; CLI NOT RUN",
+    "deployment_or_device": false
+  }
+}

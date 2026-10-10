@@ -1,7 +1,7 @@
 # ADR-0053: Filesystem-backed original renderer boundary
 
 Date: 2026-10-10
-Status: source implemented; managed tests and formatting NOT RUN
+Status: focused managed checks passed at8bdbb4e; independent actual review clear within the partial FS boundary
 
 ## Decision
 
@@ -46,8 +46,21 @@ overflow and preserved legacy parser behavior.
 
 ## Verification
 
-Source authored only. Expected focused app discovery is63actions: the previous
+Historical source checkpoint (2026-10-10, source9b220d7): expected app discovery was63actions: the previous
 23, a new14-case FS capture plus its parent, and25focused FS actions. Managed
 compilation, formatting, captures and normalization have NOT RUN on this source.
 The existing21helper/23app proof remains bound to764beb1. This is not fullM1,
 templ/Django parity, Native Live, signed group coverage, retirement or deployment.
+
+The later9bformatter preflight returned1 for alignment only; it stopped before
+tests/captures. Its exact one-file afterimage became formatting successor8b.
+
+At8bdbb4e, actual readonly managed formatting and63app actions passed (12top,
+51subcases, each once, zero fail/skip/cache/race). All23previous action identities
+remain. The14disk and14FSregistered-handler cases yielded28hard-free/equal
+released-normalizer diagnostics; all14disk/FS canonical hashes also joined.
+56template loads and six FSsnapshot/source-hash joins were verified, with all
+30source/41SDK/2owned-command/15original files, two archives and the reused
+764binary/build information byte/fullmode-unchanged. Parent independently cleared
+only this partial original-Pongo FS evidence. No default production switch,
+host-asset/private-page, fullM1 or group/Live/templ/retirement claim follows.

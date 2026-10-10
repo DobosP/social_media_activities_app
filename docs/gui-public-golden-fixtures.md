@@ -6,7 +6,7 @@ load tracing and unchanged-reference custody.
 [ADR-0052](adr/0052-released-public-golden-tooling-bridge.md) records the optional
 released public normalizer bridge and its focused managed evidence.
 [ADR-0053](adr/0053-filesystem-original-renderer-boundary.md) records the additive
-filesystem-backed original renderer; its new checks have NOT RUN.
+filesystem-backed original renderer and its focused partial evidence.
 The source is `services/server/internal/web/gui_public_golden_test.go`; existing
 native routing, templates, translations and rendering are used without edits.
 
@@ -115,25 +115,39 @@ using the new constructor and the existing released-normalizer flags. Optional
 `-gui-public-golden-fs-output /absolute/private-parent/new-fs-capture-directory`
 retains its own14raw bodies/manifest separately from the disk output and original
 reference. Root-relative include/extends, bounds/overflow, read/close errors,
-catalog parsing and genuine host-fallback refusal controls are additive. Expected
-new app discovery is63actions, authored NOT RUN; no prior23action result is
-relabeled as a pass on this source. The normalizer helper/source/archive remain
-unchanged, and its existing21action proof keeps source764beb1.
+catalog parsing and genuine host-fallback refusal controls are additive.
+[Filesystem checkpoint](reviews/gui-public-original/filesystem-checkpoint.json):
+source8bdbb4e passed formatting and63app actions (12top/51subcases, each once,
+zero fail/skip/cache/race), retaining all23prior identities. Both14-case sets
+were hard-free/equal to originals through the released normalizer, and all14
+disk/FS canonical hashes joined.56template loads, six FSsnapshot/source joins
+and30source/41SDK/2owned-command/15original/archive/binary guards were verified.
+Parent independently cleared the partial result. The normalizer helper/archive
+and actual764binary were reused unchanged; no helper/download/build was repeated.
+ArbitraryFS immutability remains the caller's contract. No fullM1 or production
+switch, host-asset/private-page, formal oracle/group/Live/templ/retirement result
+is implied.
 
 ## Continuation
 
 The source lane is `feat/gui-app-migration-a`, separate from shared `main`.
-Source764beb1 is the tested normalizer implementation; its following checkpoint
-commits contain docs/proof only. The additive FS boundary is now authored and
-unexecuted. Existing receipts retain their earlier source identities. New
+Source8bdbb4e is the tested partial FS implementation. The normalizer binary and
+its21helper action proof retain actualsource764beb1. Subsequent checkpoint
+commits contain docs/proof only; earlier receipts keep their source identities. New
 semantic work needs parent review before starting;
 each managed runtime needs a recorded fleet slot. Full native21, the unsigned
 84+7 matrix, private applicability and1651retirement holds remain unresolved.
 
 Task-private keepers are under workspace `_temp/feat__gui-app-migration-a/social_media_activities_app`:
-the original `capture-75dc717`, latest `capture-764beb1`, reused `sdk-3b27357`,
-and `evidence/normalizer-r7-764beb1` with the actual ELF/streams/build information.
+the original `capture-75dc717`, latest `capture-8bdbb4e-os`/`capture-8bdbb4e-fs`,
+reused `sdk-3b27357`, `evidence/filesystem-r9-8bdbb4e` and the one actual ELF/build
+information in `evidence/normalizer-r7-764beb1`.
 No raw body or ELF is committed. The failedr6metadata/streams and superseded5871
 capture are deterministic private archives, with every member's bytes/fullmode
 roundtrip-verified before those two superseded raw copies were removed. Current
 original/latest data, source packets and published branches remain preserved.
+The accepted failedr8formatter evidence/proposed afterimage and superseded764
+raw experiment are also deterministic private archives, with every regular
+member's bytes/fullmode and directory mode verified before removing only those
+two raw copies. Archive identities are in the filesystem checkpoint. The one
+binary/SDK/cache setup, original corpus and latest disk/FS pair remain present.
