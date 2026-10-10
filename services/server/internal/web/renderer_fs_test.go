@@ -2,8 +2,8 @@ package web
 
 import (
 	"bytes"
-	"fmt"
 	"errors"
+	"fmt"
 	"io"
 	"io/fs"
 	"net/http/httptest"
@@ -20,7 +20,7 @@ import (
 const rendererFSTestPO = "msgid \"Activities\"\nmsgstr \"Activități\"\n"
 
 type guiPublicFSSnapshot struct {
-	files fstest.MapFS
+	files  fstest.MapFS
 	hashes map[string]string
 }
 
@@ -65,11 +65,11 @@ func (s *guiPublicFSSnapshot) check() error {
 
 func TestGUIPublicFilesystemRootRelativeIncludes(t *testing.T) {
 	files := fstest.MapFS{
-		"locale/ro/LC_MESSAGES/django.po": {Data: []byte(rendererFSTestPO)},
-		"templates/web/base.html": {Data: []byte(`<main>{% block content %}base{% endblock %}</main>`)},
-		"templates/web/web/base.html": {Data: []byte(`<main>WRONG base-relative template</main>`)},
-		"apps/web/templates/web/page.html": {Data: []byte(`{% extends "web/base.html" %}{% block content %}{% include "web/partial.html" %}{% endblock %}`)},
-		"apps/web/templates/web/partial.html": {Data: []byte(`<p>{% trans "Activities" %}</p>`)},
+		"locale/ro/LC_MESSAGES/django.po":         {Data: []byte(rendererFSTestPO)},
+		"templates/web/base.html":                 {Data: []byte(`<main>{% block content %}base{% endblock %}</main>`)},
+		"templates/web/web/base.html":             {Data: []byte(`<main>WRONG base-relative template</main>`)},
+		"apps/web/templates/web/page.html":        {Data: []byte(`{% extends "web/base.html" %}{% block content %}{% include "web/partial.html" %}{% endblock %}`)},
+		"apps/web/templates/web/partial.html":     {Data: []byte(`<p>{% trans "Activities" %}</p>`)},
 		"apps/web/templates/web/web/partial.html": {Data: []byte(`<p>WRONG base-relative partial</p>`)},
 	}
 	renderer, err := NewRendererFS("unused-host-asset-root", files)
@@ -91,7 +91,7 @@ func TestGUIPublicFilesystemNeverFallsBackToHost(t *testing.T) {
 	root := t.TempDir()
 	for name, raw := range map[string]string{
 		"locale/ro/LC_MESSAGES/django.po": "msgid \"Activities\"\nmsgstr \"HOST catalogue\"\n",
-		"templates/web/page.html": "HOST template must never render",
+		"templates/web/page.html":         "HOST template must never render",
 	} {
 		p := filepath.Join(root, filepath.FromSlash(name))
 		if err := os.MkdirAll(filepath.Dir(p), 0o700); err != nil {
@@ -116,7 +116,7 @@ func TestGUIPublicFilesystemNeverFallsBackToHost(t *testing.T) {
 
 func TestGUIPublicFilesystemRefusesPathAliases(t *testing.T) {
 	loader := &rendererFSLoader{delegate: pongo2.NewFSLoader(fstest.MapFS{
-		"base.html": {Data: []byte("root fallback exists")},
+		"base.html":           {Data: []byte("root fallback exists")},
 		"templates/base.html": {Data: []byte("canonical template exists")},
 	})}
 	for _, name := range []string{"", ".", "/base.html", "../base.html", "./base.html", "web/../base.html", "web\\base.html", "base.html\x00"} {
@@ -136,16 +136,16 @@ type rendererFSInfo struct {
 	mode fs.FileMode
 }
 
-func (i rendererFSInfo) Name() string { return "fixture" }
-func (i rendererFSInfo) Size() int64 { return i.size }
-func (i rendererFSInfo) Mode() fs.FileMode { return i.mode }
+func (i rendererFSInfo) Name() string       { return "fixture" }
+func (i rendererFSInfo) Size() int64        { return i.size }
+func (i rendererFSInfo) Mode() fs.FileMode  { return i.mode }
 func (i rendererFSInfo) ModTime() time.Time { return time.Time{} }
-func (i rendererFSInfo) IsDir() bool { return i.mode.IsDir() }
-func (i rendererFSInfo) Sys() any { return nil }
+func (i rendererFSInfo) IsDir() bool        { return i.mode.IsDir() }
+func (i rendererFSInfo) Sys() any           { return nil }
 
 type rendererFSFile struct {
-	reader io.Reader
-	info fs.FileInfo
+	reader            io.Reader
+	info              fs.FileInfo
 	statErr, closeErr error
 	closed, readBytes int
 }
@@ -156,7 +156,7 @@ func (f *rendererFSFile) Read(p []byte) (int, error) {
 	return n, err
 }
 func (f *rendererFSFile) Stat() (fs.FileInfo, error) { return f.info, f.statErr }
-func (f *rendererFSFile) Close() error { f.closed++; return f.closeErr }
+func (f *rendererFSFile) Close() error               { f.closed++; return f.closeErr }
 
 type rendererErrorReader struct{}
 
@@ -216,7 +216,7 @@ func TestGUIPublicFilesystemBoundedReadsRefuseRatherThanTruncate(t *testing.T) {
 
 type rendererOpenBarrier struct {
 	fallback fs.FS
-	opened []string
+	opened   []string
 }
 
 func (f *rendererOpenBarrier) Open(name string) (fs.File, error) {
