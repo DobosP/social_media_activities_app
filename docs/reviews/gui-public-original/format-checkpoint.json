@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "artifact_kind": "managed-original-public-format-only-evidence",
+  "formatted_source": "bec6cf8ca2e797880bc830b04a173950c8097d78",
+  "actual_outer_exit": 0,
+  "format_exit": 0,
+  "toolchain_image_argument": "sha256:2e040a5165d79be63755424f707fdb8cf609ace831ada7a9baca398ac25e12b9",
+  "preexecution_image_inspect": "exactIDmatched",
+  "container_id": "56474abfa2c0b497c45dbf17ef83b7e4d27b27e89bd9fbd5187530bf2157db7b",
+  "postexecution_exact_owned_name_inspect": "no-such-container after --rm; no live-inspect claim",
+  "command": [
+    "/usr/local/go/bin/gofmt",
+    "-d",
+    "internal/web/gui_public_golden_test.go",
+    "internal/web/gui_public_trace_test.go"
+  ],
+  "runtime_scope": "source readonly;networknone;2CPU/6GiB;UID1000;private task scratch only",
+  "streams": {
+    "format.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    "format.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    "exit-status.txt": {
+      "bytes": 14,
+      "sha256": "f2dfac9d3bb835badbda95cf2ff6eba9f30c5d0d989a590e7c815a423cc657c0",
+      "full_mode": 33152
+    },
+    "container.cid": {
+      "bytes": 64,
+      "sha256": "f060e415795da1c4b93680be4ffb33faff3e3c83f2592ce47c592aeca5dadc6d",
+      "full_mode": 33204
+    }
+  },
+  "selected_source_24_before_after_equal": true,
+  "original_15_before_after_equal": true,
+  "code_sha256": "826c605e3402cf592db3ecc57a4f52c67deb1e20edaf51c5bf6b5e41b0fd07b6",
+  "private_observation_sha256": "b4788cda364f547a36e4753f929f47cca83d5b7de3340c514b6899ae53dbd094",
+  "before_ledger_sha256": "62addda8cb9486cd13181a84e62ddcd3f5f6f7b7cdfc4ef92b12e81a2c3fb532",
+  "tests_executed": false,
+  "tests_remain_bound_to": "5871df2503905fc7634576fcd6b3b1e838ad5ffd",
+  "prior_overall_exit_at_tested_source": 1,
+  "prior_formatter_failure_preserved": true,
+  "scope": "Formatting only; no full native21/Live/group/raw parity/template-conditional/retirement/device acceptance"
+}

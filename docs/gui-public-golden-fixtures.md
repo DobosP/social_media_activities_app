@@ -58,7 +58,10 @@ source5871df2 passed4top-level tests and19subcases (23unique actions, no
 failures/skips/cache). All14native cases recorded28actual page/base loads;
 20renderer/24selected-source bindings and the original15files stayed unchanged.
 The overall command exited1 solely because GOROOTgofmt found one extra space.
-The source correction is exactly that one-byte removal; its formatter-only
-recheck is pending, and the23tests remain bound to5871df2. The original checkpoint
+The source correction is exactly that one-byte removal. Its
+[formatter-only checkpoint](reviews/gui-public-original/format-checkpoint.json)
+atbec6cf8 exited0 with empty stdout/stderr;24selected-source and15original corpus
+files stayed byte/mode-equal. No test/capture/dependency action was repeated, and
+the23tests remain bound to5871df2. The original checkpoint
 and bodies remain unchanged. No full native/group/Live/parity/conditional result
 follows from these focused checks.
