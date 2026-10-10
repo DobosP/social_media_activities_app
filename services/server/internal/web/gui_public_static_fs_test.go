@@ -311,7 +311,7 @@ type guiPublicStaticNonSeeker struct{ probe *guiPublicStaticProbe }
 
 func (f guiPublicStaticNonSeeker) Read(p []byte) (int, error) { return f.probe.Read(p) }
 func (f guiPublicStaticNonSeeker) Stat() (fs.FileInfo, error) { return f.probe.Stat() }
-func (f guiPublicStaticNonSeeker) Close() error             { return f.probe.Close() }
+func (f guiPublicStaticNonSeeker) Close() error               { return f.probe.Close() }
 
 func TestGUIPublicStaticFilesystemIORefusalsAndOneClose(t *testing.T) {
 	raw := []byte("SYNTHETIC_ASSET_BYTES_MUST_NOT_LEAK")

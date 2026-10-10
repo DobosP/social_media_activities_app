@@ -91,4 +91,4 @@ type staticFSMemoryFile struct {
 }
 
 func (f *staticFSMemoryFile) Stat() (fs.FileInfo, error) { return f.info, nil }
-func (f *staticFSMemoryFile) Close() error             { return nil }
+func (f *staticFSMemoryFile) Close() error               { return nil }
