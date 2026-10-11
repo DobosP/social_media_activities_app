@@ -2678,3 +2678,17 @@ is preserved as historical recordtime, actualacceptance separate. Tested7d85 is
 not this laterdocsH execution. Oldoriginal14/15/764+d722/form44/privacy/JS/worker/
 backend/source/failure proofs untouched; no cleanup/newSource/runtime/push/full/
 Live/device/default/templSDKadoption. Parent owns feature publication.
+
+
+### 2026-10-11 — G1 original registered GET oracle source (not executed)
+
+Authored a disjoint37-case public/SEO native-GET producer from exact75dc historical
+sources:31 HTML candidates,2anonymous-series login redirects,4missing-resource404s.
+Twenty historical template/catalog rows and14 native producer/source-inverse joins
+prevent current nonce changes from being relabeled original. Original15/14 and all
+prior presentation proofs, SDK/helper, modules, policies and production bytes are
+preserved. Default checks explicitly report HTTP NOT REQUESTED; opt-in requires
+fresh private output, existing disposable DSN and original reference, with no skip.
+Nine response mutations and six source/prerequisite refusals are authored. No
+formatter/compiler/test/PG/capture/Normalize execution, formal group acceptance,
+privacy/admission/backend/provider/device/full or retirement result is claimed.

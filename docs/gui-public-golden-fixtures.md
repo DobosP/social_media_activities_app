@@ -771,3 +771,54 @@ indexedhash. Originalprivate600/public664 modes and historical source-review
 NOTRUN labels are explicit. This later docsHEAD is not retested. Original14/15/
 764+d722, priorform44/privacy/nonce/static/VM/source/failure keepers and allJS/
 backend/guardian/defaults remain unchanged; no full/device/Live/templSDK approval.
+
+
+## G1 historical-native registered GET walk — source only
+
+The additive `services/server/internal/web/gui_public_get_walk_test.go` and its two
+`testdata/gui-public-get-walk/` JSON inputs are authored **NOT RUN**. They extend
+M0 source-native oracle production beyond the unchanged fourteen-body keeper.
+The37-case registry covers17 registered route names:31 HTML candidates, two real
+anonymous series login redirects and four missing-resource404 candidates. It
+includes the four landing templates, events and place lists/details, discover,
+campaigns, partners and donate; series HTML remains an explicit applicability
+hold. These are finite synthetic states, not exhaustive template-arm coverage.
+
+The20 template/catalog inputs are exact Git75dc717377f92b21ed99aabbe1f290d92535523e
+bytes (180942B), materialized only inside a fresh owned test directory. Fourteen
+native producer bindings require exact historical equality or the literal inverse
+of the previously reviewed renderer-loader interface/catalog-reader extraction.
+The real OS `NewRenderer`, native service projections and registered mux perform
+all GETs. Today's nonce-modified template tree is not called original. Source
+checks default to an explicit **HTTP NOT REQUESTED** result; they create no PG,
+body capture or HTTP qualification. No new `t.Skip` is introduced.
+
+The future parent-reviewed managed invocation, from `services/server`, is:
+
+```sh
+go test -mod=readonly -race -count=1 -json ./internal/web \
+  -run '^(TestGUIPublicGetWalk|TestGUIPublicGetWalkSourceRefusals)$' \
+  -web-domain-test-dsn EXPLICIT_OWNED_UNIX_PG_FIXTURE \
+  -gui-public-golden-reference /private/unchanged-original15 \
+  -gui-public-get-walk-output /private/new-parent/new-g1-walk
+```
+
+The existing disposable native-schema PostgreSQL fixture and unchanged private
+original15 are mandatory before opt-in capture. Missing DSN fails before testdb
+and cannot skip. The existing private-output helper requires a0700 parent and
+fresh destination; every raw response (including302/404) is retained0600 before
+assertions. The37 `.body` files and one manifest retain actual statuses, body
+hashes, observed native template streams, source before/after and failure codes.
+Failures retain partial output. Nine response-field mutations must fail through
+their owning assertions; six source/DSN refusals are separate. Expected focused
+execution is54 unique actions: two roots,37 GET leaves, nine response mutations
+and six source/prerequisite refusals. Default source-only checks cannot satisfy
+that receipt/body census. Managed formatting/compiler/PG/HTTP remain pending.
+
+This is raw M0 provenance, **not normalized golden acceptance**. The released
+764helper/core1.6 archive/public `golden.Normalize` and original15 are unchanged;
+no helper invocation, hard-free result or normalized baseline is fabricated.
+Future strict comparisons must retain real hard findings without a local mask or
+waiver. No original14 rewrite, signed group/Native Live/templ/full/adoption,
+auth/guardian/member-privacy/provider/network/browser/device approval follows.
+The parent owns the exact isolated runtime method, execution, review and publication.

@@ -1,0 +1,569 @@
+{
+  "cases": [
+    {
+      "contains": [],
+      "filtered": false,
+      "id": "landing-en-default",
+      "json_ld": false,
+      "language": "en",
+      "path": "/",
+      "profile": "default",
+      "route": "home",
+      "state": "empty",
+      "status": 200,
+      "template": "web/landing.html"
+    },
+    {
+      "contains": [],
+      "filtered": false,
+      "id": "landing-en-contrast",
+      "json_ld": false,
+      "language": "en",
+      "path": "/",
+      "profile": "contrast",
+      "route": "home",
+      "state": "empty",
+      "status": 200,
+      "template": "web/landing.html"
+    },
+    {
+      "contains": [],
+      "filtered": false,
+      "id": "landing-ro-default",
+      "json_ld": false,
+      "language": "ro",
+      "path": "/",
+      "profile": "default",
+      "route": "home",
+      "state": "empty",
+      "status": 200,
+      "template": "web/landing.html"
+    },
+    {
+      "contains": [],
+      "filtered": false,
+      "id": "landing-ro-contrast",
+      "json_ld": false,
+      "language": "ro",
+      "path": "/",
+      "profile": "contrast",
+      "route": "home",
+      "state": "empty",
+      "status": 200,
+      "template": "web/landing.html"
+    },
+    {
+      "contains": [
+        "Nothing here yet"
+      ],
+      "filtered": false,
+      "id": "index-empty",
+      "json_ld": false,
+      "language": "en",
+      "path": "/things-to-do/",
+      "profile": "default",
+      "route": "things_to_do_index",
+      "state": "empty",
+      "status": 200,
+      "template": "web/landing_index.html"
+    },
+    {
+      "contains": [
+        "Cluj-Napoca",
+        "Basketball"
+      ],
+      "filtered": false,
+      "id": "index-populated",
+      "json_ld": false,
+      "language": "en",
+      "path": "/things-to-do/",
+      "profile": "default",
+      "route": "things_to_do_index",
+      "state": "populated",
+      "status": 200,
+      "template": "web/landing_index.html"
+    },
+    {
+      "contains": [
+        "Cluj-Napoca",
+        "Basketball"
+      ],
+      "filtered": false,
+      "id": "city-populated",
+      "json_ld": false,
+      "language": "en",
+      "path": "/things-to-do/cluj-napoca/",
+      "profile": "default",
+      "route": "things_to_do_city",
+      "state": "populated",
+      "status": 200,
+      "template": "web/landing_city.html"
+    },
+    {
+      "contains": [],
+      "filtered": false,
+      "id": "city-missing",
+      "json_ld": false,
+      "language": "en",
+      "path": "/things-to-do/missing-synthetic/",
+      "profile": "default",
+      "route": "things_to_do_city",
+      "state": "empty",
+      "status": 404,
+      "template": ""
+    },
+    {
+      "contains": [
+        "Original synthetic hall",
+        "Original synthetic event"
+      ],
+      "filtered": false,
+      "id": "landing-detail-populated",
+      "json_ld": true,
+      "language": "en",
+      "path": "/things-to-do/cluj-napoca/basketball/",
+      "profile": "default",
+      "route": "things_to_do",
+      "state": "populated",
+      "status": 200,
+      "template": "web/landing_detail.html"
+    },
+    {
+      "contains": [],
+      "filtered": false,
+      "id": "landing-detail-missing",
+      "json_ld": false,
+      "language": "en",
+      "path": "/things-to-do/cluj-napoca/missing-synthetic/",
+      "profile": "default",
+      "route": "things_to_do",
+      "state": "populated",
+      "status": 404,
+      "template": ""
+    },
+    {
+      "contains": [
+        "No upcoming events yet"
+      ],
+      "filtered": false,
+      "id": "events-empty",
+      "json_ld": false,
+      "language": "en",
+      "path": "/events/",
+      "profile": "default",
+      "route": "events_list",
+      "state": "empty",
+      "status": 200,
+      "template": "web/events.html"
+    },
+    {
+      "contains": [
+        "Original synthetic event"
+      ],
+      "filtered": false,
+      "id": "events-populated",
+      "json_ld": true,
+      "language": "en",
+      "path": "/events/",
+      "profile": "default",
+      "route": "events_list",
+      "state": "populated",
+      "status": 200,
+      "template": "web/events.html"
+    },
+    {
+      "contains": [
+        "Original synthetic event"
+      ],
+      "filtered": true,
+      "id": "events-filter-match",
+      "json_ld": true,
+      "language": "en",
+      "path": "/events/?q=synthetic&activity=basketball&area=cluj-napoca",
+      "profile": "default",
+      "route": "events_list",
+      "state": "populated",
+      "status": 200,
+      "template": "web/events.html"
+    },
+    {
+      "contains": [
+        "No upcoming events yet"
+      ],
+      "filtered": true,
+      "id": "events-filter-empty",
+      "json_ld": false,
+      "language": "en",
+      "path": "/events/?q=no-such-synthetic-event",
+      "profile": "default",
+      "route": "events_list",
+      "state": "populated",
+      "status": 200,
+      "template": "web/events.html"
+    },
+    {
+      "contains": [
+        "Original synthetic event",
+        "CC BY 4.0"
+      ],
+      "filtered": false,
+      "id": "event-id",
+      "json_ld": true,
+      "language": "en",
+      "path": "/events/{event}/",
+      "profile": "default",
+      "route": "event_detail",
+      "state": "populated",
+      "status": 200,
+      "template": "web/event_detail.html"
+    },
+    {
+      "contains": [
+        "Original synthetic event",
+        "CC BY 4.0"
+      ],
+      "filtered": false,
+      "id": "event-slug",
+      "json_ld": true,
+      "language": "en",
+      "path": "/events/{event}/original-synthetic-event/",
+      "profile": "default",
+      "route": "event_detail_slug",
+      "state": "populated",
+      "status": 200,
+      "template": "web/event_detail.html"
+    },
+    {
+      "contains": [],
+      "filtered": false,
+      "id": "event-missing",
+      "json_ld": false,
+      "language": "en",
+      "path": "/events/999999999/",
+      "profile": "default",
+      "route": "event_detail",
+      "state": "empty",
+      "status": 404,
+      "template": ""
+    },
+    {
+      "contains": [
+        "Places"
+      ],
+      "filtered": false,
+      "id": "places-map-empty",
+      "json_ld": false,
+      "language": "en",
+      "path": "/places/",
+      "profile": "default",
+      "route": "places_map",
+      "state": "empty",
+      "status": 200,
+      "template": "web/places.html"
+    },
+    {
+      "contains": [
+        "Places"
+      ],
+      "filtered": false,
+      "id": "places-map-populated",
+      "json_ld": false,
+      "language": "en",
+      "path": "/places/",
+      "profile": "default",
+      "route": "places_map",
+      "state": "populated",
+      "status": 200,
+      "template": "web/places.html"
+    },
+    {
+      "contains": [
+        "Places"
+      ],
+      "filtered": false,
+      "id": "places-list-empty",
+      "json_ld": false,
+      "language": "en",
+      "path": "/places/list/",
+      "profile": "default",
+      "route": "places_list",
+      "state": "empty",
+      "status": 200,
+      "template": "web/places_list.html"
+    },
+    {
+      "contains": [
+        "Original synthetic hall"
+      ],
+      "filtered": false,
+      "id": "places-list-populated",
+      "json_ld": true,
+      "language": "en",
+      "path": "/places/list/",
+      "profile": "default",
+      "route": "places_list",
+      "state": "populated",
+      "status": 200,
+      "template": "web/places_list.html"
+    },
+    {
+      "contains": [
+        "Original synthetic hall"
+      ],
+      "filtered": true,
+      "id": "places-list-filter-match",
+      "json_ld": true,
+      "language": "en",
+      "path": "/places/list/?city=Cluj-Napoca&activity=basketball",
+      "profile": "default",
+      "route": "places_list",
+      "state": "populated",
+      "status": 200,
+      "template": "web/places_list.html"
+    },
+    {
+      "contains": [
+        "Places"
+      ],
+      "filtered": true,
+      "id": "places-list-filter-empty",
+      "json_ld": false,
+      "language": "en",
+      "path": "/places/list/?city=missing-synthetic",
+      "profile": "default",
+      "route": "places_list",
+      "state": "populated",
+      "status": 200,
+      "template": "web/places_list.html"
+    },
+    {
+      "contains": [
+        "Original synthetic hall"
+      ],
+      "filtered": false,
+      "id": "place-id",
+      "json_ld": true,
+      "language": "en",
+      "path": "/places/{place}/",
+      "profile": "default",
+      "route": "place_detail",
+      "state": "populated",
+      "status": 200,
+      "template": "web/place_detail.html"
+    },
+    {
+      "contains": [
+        "Original synthetic hall"
+      ],
+      "filtered": false,
+      "id": "place-slug",
+      "json_ld": true,
+      "language": "en",
+      "path": "/places/{place}/original-synthetic-hall/",
+      "profile": "default",
+      "route": "place_detail_slug",
+      "state": "populated",
+      "status": 200,
+      "template": "web/place_detail.html"
+    },
+    {
+      "contains": [],
+      "filtered": false,
+      "id": "place-missing",
+      "json_ld": false,
+      "language": "en",
+      "path": "/places/999999999/",
+      "profile": "default",
+      "route": "place_detail",
+      "state": "empty",
+      "status": 404,
+      "template": ""
+    },
+    {
+      "contains": [],
+      "filtered": false,
+      "id": "series-list-anonymous-redirect",
+      "json_ld": false,
+      "language": "en",
+      "path": "/activities/series/",
+      "profile": "default",
+      "route": "series_list",
+      "state": "empty",
+      "status": 302,
+      "template": ""
+    },
+    {
+      "contains": [],
+      "filtered": false,
+      "id": "series-detail-anonymous-redirect",
+      "json_ld": false,
+      "language": "en",
+      "path": "/activities/series/999999999/",
+      "profile": "default",
+      "route": "series_detail",
+      "state": "empty",
+      "status": 302,
+      "template": ""
+    },
+    {
+      "contains": [
+        "looking for people"
+      ],
+      "filtered": false,
+      "id": "discover-empty",
+      "json_ld": false,
+      "language": "en",
+      "path": "/discover/",
+      "profile": "default",
+      "route": "discover",
+      "state": "empty",
+      "status": 200,
+      "template": "web/discover.html"
+    },
+    {
+      "contains": [
+        "Original synthetic meetup",
+        "Original synthetic group"
+      ],
+      "filtered": false,
+      "id": "discover-populated",
+      "json_ld": false,
+      "language": "en",
+      "path": "/discover/",
+      "profile": "default",
+      "route": "discover",
+      "state": "populated",
+      "status": 200,
+      "template": "web/discover.html"
+    },
+    {
+      "contains": [
+        "No active campaigns right now"
+      ],
+      "filtered": false,
+      "id": "campaigns-empty",
+      "json_ld": false,
+      "language": "en",
+      "path": "/campaigns/",
+      "profile": "default",
+      "route": "campaigns",
+      "state": "empty",
+      "status": 200,
+      "template": "web/campaigns.html"
+    },
+    {
+      "contains": [
+        "Original synthetic campaign",
+        "Original synthetic closed campaign",
+        "Books delivered."
+      ],
+      "filtered": false,
+      "id": "campaigns-populated",
+      "json_ld": false,
+      "language": "en",
+      "path": "/campaigns/",
+      "profile": "default",
+      "route": "campaigns",
+      "state": "populated",
+      "status": 200,
+      "template": "web/campaigns.html"
+    },
+    {
+      "contains": [
+        "No civic partners listed yet"
+      ],
+      "filtered": false,
+      "id": "partners-empty",
+      "json_ld": false,
+      "language": "en",
+      "path": "/partners/",
+      "profile": "default",
+      "route": "partners",
+      "state": "empty",
+      "status": 200,
+      "template": "web/partners.html"
+    },
+    {
+      "contains": [
+        "Original synthetic partner"
+      ],
+      "filtered": false,
+      "id": "partners-populated",
+      "json_ld": false,
+      "language": "en",
+      "path": "/partners/",
+      "profile": "default",
+      "route": "partners",
+      "state": "populated",
+      "status": 200,
+      "template": "web/partners.html"
+    },
+    {
+      "contains": [
+        "Support the project",
+        "General fund"
+      ],
+      "filtered": false,
+      "id": "donate-empty",
+      "json_ld": false,
+      "language": "en",
+      "path": "/donate/",
+      "profile": "default",
+      "route": "donate",
+      "state": "empty",
+      "status": 200,
+      "template": "web/donate.html"
+    },
+    {
+      "contains": [
+        "Original synthetic campaign"
+      ],
+      "filtered": false,
+      "id": "donate-populated",
+      "json_ld": false,
+      "language": "en",
+      "path": "/donate/",
+      "profile": "default",
+      "route": "donate",
+      "state": "populated",
+      "status": 200,
+      "template": "web/donate.html"
+    },
+    {
+      "contains": [
+        "Original synthetic campaign"
+      ],
+      "filtered": false,
+      "id": "donate-selected",
+      "json_ld": false,
+      "language": "en",
+      "path": "/donate/?campaign=synthetic-campaign",
+      "profile": "default",
+      "route": "donate",
+      "state": "populated",
+      "status": 200,
+      "template": "web/donate.html"
+    }
+  ],
+  "html_mutations": [
+    "status",
+    "content-type",
+    "cache",
+    "template",
+    "language",
+    "canonical",
+    "robots",
+    "heading",
+    "footer"
+  ],
+  "kind": "authored-registered-GET-case-registry-NOT-RUN",
+  "schema": 1,
+  "source_refusals": [
+    "wrong-history",
+    "wrong-source-hash",
+    "duplicate-path",
+    "alias-path",
+    "missing-base",
+    "missing-dsn"
+  ]
+}
