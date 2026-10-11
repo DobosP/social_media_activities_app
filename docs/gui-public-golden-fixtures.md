@@ -507,7 +507,8 @@ acceptance follows.
 
 ## Authenticated preference-form layout source checkpoint
 
-SOC-8 is SOURCE ONLY, NOT RUN. Its explicit presentation-only scope covers access,
+Historical initial source checkpoint (09bc599): SOURCE ONLY, NOT RUN then.
+Its explicit presentation-only scope covers access,
 notification and topic preference forms, including12fixed inline attributes
 (5+2+5). Six scoped CSS rules are appended without changing any old CSS byte/order.
 Whole template inverses preserve every field/name/value/checked conditional,
@@ -544,3 +545,48 @@ proofs/tests/keepers remain separate and unchanged; no rebuild/install/recapture
 Auth/privacy/admission/notification/access/topic policies, all handlers, default
 assembly/SDK and signed fixture/Live/device/retirement prerequisites stay held.
 No formatter/compiler/test/browserCSP/computed-style/full qualification is claimed.
+
+
+### SOC-8 accepted scoped execution and continuation
+
+At tested39ef5bc, the pinned managed formatter passed0/empty, then41 unique native
+checks passed once (2parents/39children), packagePASS1/189JSONevents, zero
+fail/skip/cache/race. All65source+18external byte/full-mode guards were unchanged;
+actual4CPU/6GiB/sourceRO/network-none container exit0/noOOM and owned CID/name
+cleanup passed. Parent and independent planning review accepted only the scoped
+[checkpoint](reviews/gui-public-original/preferences-layout-checkpoint.json).
+
+Nine fictional authenticated-adult shapes×OS/FS and21safe DOM mutations reached
+all strict original/finite-expected/current checks. Twenty-one comparison logs
+join expected/current hashes and distinguish originals; OS/FS phase hashes agree
+for all9shapes. Existing released Options{} returns zero hard findings; neither
+oracle/asset masks nor guards changed.84 normalizations is source-expected only,
+not an independently measured invocation count or browser tests.
+
+Initial09bc actually failed20run checks plus package,0passes;21mutation children
+were not reached. Its generic message hid the finding. Diagnostic-onlyb20 also
+failed20+package;19safe messages identified original normalization/empty-url at
+the authenticated navigation img src. Expected/current and21mutation children
+were unreached. Both had formatter0/unchanged63+18guards/ownedcleanup and remain
+failed. Safe diagnostics preserve every fatal guard and disclose no body values.
+
+The39ef test-only context successor completes the existing user-map avatar_uri
+through native deterministic helpers with fictional username/defaultgeneration1/
+salt0/no interests/PX80. It changes no shared helper, renderer, account policy,
+auth flags or SDK. The same URI is compared in all old/currentOSFS phases; no
+avatarHTTP/asset/image or privacy result follows. All41IDs/assertions/mutations
+and12attribute class extraction/inverses remain intact.
+
+Only45small literal records are promoted: selected successful Go/exit/control
+streams, private capsule closures and exact source-method/parent/independent
+reviews, plus failed Go/exit/closure/review history. Their transfer list records
+original private600/public664 modes. Raw result receipts embed sourceguard arrays
+and stay private under exact digests; closure indices describe those complete
+private capsules, not a fabricated complete public copy. No rawHTML/guard arrays,
+workspace/cache/dependency/SDK/ELF/binary clone. This later docsHEAD is not retested.
+
+Original14/15files, sole764+d722 and every earlier proof/source/failure keeper
+stay unchanged. No newflow/handler/API/PG/write/auth/privacy/admission/eligibility,
+CSP/computedstyle/full/Live/device/default/SDKadoption/retirement approval. Future
+work needs an exact separately authorized source scope; current evidence does not
+open those holds or replace any original baseline.

@@ -1,0 +1,194 @@
+{
+  "schema": 1,
+  "scope": "SOC-8 fictional authenticated adult preference-form OS/FS presentation and released DOM only; no handler/API/PG/write/auth/privacy/admission/eligibility/browserCSP/computedstyle/app/full/Live/device/default/adoption qualification",
+  "source": "b20fff56d62b84aaae29c5b32c26968f2ed3a9af",
+  "invocation": "f21a0de3-ffdb-4435-bccf-99f97a0f0440",
+  "result_sha256": "d279b97034366d1038c9a2d8c48d3681a7fdf5b4083a981971be223cb4a074d0",
+  "rows": [
+    {
+      "path": "container.cid",
+      "bytes": 64,
+      "sha256": "4a69a696cc2b3da2b2e0fbc7090f198f376d47e1965dec6258b7e2bcf34a58e1",
+      "full_mode": 33204
+    },
+    {
+      "path": "control-00.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-00.stdout",
+      "bytes": 72,
+      "sha256": "7aa16fdca68c8e892b9f6175e4b16af62027e2a5553fd18c527b104e940053b5",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-01.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-01.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-02.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-02.stdout",
+      "bytes": 65,
+      "sha256": "8a5d735a6ab9f29eb0314a92c1511b0f645155ae1fb405a1102807fce45691dc",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-03.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-03.stdout",
+      "bytes": 1962,
+      "sha256": "75d19d77181fb3e1b0f9461aa1450b995fd1b278db4343c868d3649f36398571",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-04.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-04.stdout",
+      "bytes": 1962,
+      "sha256": "d9937af0ae093bd11ce268fc9e25292a6af882863350ea472e7a644d3067aafa",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-05.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-05.stdout",
+      "bytes": 1962,
+      "sha256": "b298d5f57f0d6b1abf1f4bfce891ea6cbe0f5facdd261b75033573ce0e4986d3",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-06.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-06.stdout",
+      "bytes": 65,
+      "sha256": "8a5d735a6ab9f29eb0314a92c1511b0f645155ae1fb405a1102807fce45691dc",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-07.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-07.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-08.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-08.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "docker-start.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "docker-start.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "format.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "full_mode": 33152
+    },
+    {
+      "path": "format.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "format.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "tests.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "full_mode": 33152
+    },
+    {
+      "path": "tests.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "tests.stdout",
+      "bytes": 33052,
+      "sha256": "291e9f84d86af10fb19b5a6d10865b78f6a085e4da59d74e135e678ce20bb049",
+      "full_mode": 33152
+    },
+    {
+      "path": "result.json",
+      "bytes": 53609,
+      "sha256": "d279b97034366d1038c9a2d8c48d3681a7fdf5b4083a981971be223cb4a074d0",
+      "full_mode": 33152
+    }
+  ],
+  "regular_rows": 28,
+  "bytes": 92817,
+  "raw_bytes_available": true,
+  "no_workspace_dependency_cache_binary_copy": true,
+  "actual_run_fail_once": 20,
+  "actual_pass": 0,
+  "unexecuted_planned_mutation_children": 21,
+  "safe_refusal_metadata": "gui_preferences_layout_test.go:402: actual released DOM normalizer refused preference presentation: phase=original err_type=*errors.errorString wrapper_code=child-refused hard_count=1 hard_shown=1 hard_codes=[\"empty-url\"] hard_paths=[\"/html[0]/body[0]/header[0]/div[0]/nav[0]/details[1]/summary[0]/img[0]@src\"]",
+  "safe_message_count": 19,
+  "current_expected_normalization": "NOTRUNafteroriginalfatal",
+  "format_pass": true,
+  "owned_cleanup_pass": true,
+  "source_external_unchanged": [
+    63,
+    18
+  ],
+  "closed_observed_utc": "2026-10-10T23:03:37.677443+00:00"
+}

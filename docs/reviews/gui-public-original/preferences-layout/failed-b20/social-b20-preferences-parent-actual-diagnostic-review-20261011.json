@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "scope": "SOC-8 fictional authenticated adult preference-form OS/FS presentation and released DOM only; no handler/API/PG/write/auth/privacy/admission/eligibility/browserCSP/computedstyle/app/full/Live/device/default/adoption qualification",
+  "source": "b20fff56d62b84aaae29c5b32c26968f2ed3a9af",
+  "invocation": "f21a0de3-ffdb-4435-bccf-99f97a0f0440",
+  "result_sha256": "d279b97034366d1038c9a2d8c48d3681a7fdf5b4083a981971be223cb4a074d0",
+  "regular_rows": 28,
+  "bytes": 92817,
+  "raw_bytes_available": true,
+  "no_workspace_dependency_cache_binary_copy": true,
+  "actual_run_fail_once": 20,
+  "actual_pass": 0,
+  "unexecuted_planned_mutation_children": 21,
+  "safe_refusal_metadata": "gui_preferences_layout_test.go:402: actual released DOM normalizer refused preference presentation: phase=original err_type=*errors.errorString wrapper_code=child-refused hard_count=1 hard_shown=1 hard_codes=[\"empty-url\"] hard_paths=[\"/html[0]/body[0]/header[0]/div[0]/nav[0]/details[1]/summary[0]/img[0]@src\"]",
+  "safe_message_count": 19,
+  "current_expected_normalization": "NOTRUNafteroriginalfatal",
+  "format_pass": true,
+  "owned_cleanup_pass": true,
+  "source_external_unchanged": [
+    63,
+    18
+  ],
+  "closed_observed_utc": "2026-10-10T23:03:37.677443+00:00",
+  "closure": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/preferences-layout-b20fff5-f21a0de3-ffdb-4435-bccf-99f97a0f0440/CLOSURE.json",
+  "closure_sha256": "3c247b7550d718a57fde607a2670c860009de0d7bf5323680e28b3ebae28ef2f",
+  "wrapper_session": 65870,
+  "wrapper_exit": 1,
+  "parent_verdict": "ACTUAL safe diagnosticfailure boundary verified; source-contextrepairproposal pending, no production/privacy conclusion"
+}

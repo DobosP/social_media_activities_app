@@ -1,0 +1,180 @@
+{
+  "schema": 1,
+  "scope": "SOC-8 fictional authenticated adult preference-form OS/FS presentation and released DOM only; no handler/API/PG/write/auth/privacy/admission/eligibility/browserCSP/computedstyle/app/full/Live/device/default/adoption qualification",
+  "source": "39ef5bc189bab92f36144c73dfdb86b1286a1815",
+  "invocation": "4db3a04e-196b-49cb-8405-621042aa5b6d",
+  "result_sha256": "6acb99cab39968772775be28cd34f2ed212df4693a5cc3efdbc33924e8acdc1e",
+  "rows": [
+    {
+      "path": "container.cid",
+      "bytes": 64,
+      "sha256": "bd803c1b2d8bd4997f357731fb51c610d24adad6c48586d0c9be5480e7e6eb8a",
+      "full_mode": 33204
+    },
+    {
+      "path": "control-00.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-00.stdout",
+      "bytes": 72,
+      "sha256": "7aa16fdca68c8e892b9f6175e4b16af62027e2a5553fd18c527b104e940053b5",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-01.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-01.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-02.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-02.stdout",
+      "bytes": 65,
+      "sha256": "71ed5bd0b4b3c6dde288508ee42ebc7589eea02b2745dd2ccfdb7257bd1e35a9",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-03.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-03.stdout",
+      "bytes": 1962,
+      "sha256": "bfc8f0706464005dfbbf3fa87131a8b36073bad10bd7123e557a7e251e55a194",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-04.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-04.stdout",
+      "bytes": 1962,
+      "sha256": "86c120fb1b1b433dd83027598e33bf24b9152725a43101b68d5841c0667adf01",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-05.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-05.stdout",
+      "bytes": 1962,
+      "sha256": "bfc8f0706464005dfbbf3fa87131a8b36073bad10bd7123e557a7e251e55a194",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-06.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-06.stdout",
+      "bytes": 65,
+      "sha256": "71ed5bd0b4b3c6dde288508ee42ebc7589eea02b2745dd2ccfdb7257bd1e35a9",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-07.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-07.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-08.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "control-08.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "docker-start.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "docker-start.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "format.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "full_mode": 33152
+    },
+    {
+      "path": "format.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "format.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "result.json",
+      "bytes": 57357,
+      "sha256": "6acb99cab39968772775be28cd34f2ed212df4693a5cc3efdbc33924e8acdc1e",
+      "full_mode": 33152
+    },
+    {
+      "path": "tests.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "full_mode": 33152
+    },
+    {
+      "path": "tests.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "full_mode": 33152
+    },
+    {
+      "path": "tests.stdout",
+      "bytes": 57553,
+      "sha256": "4f131fdb802660dbf4502bf5a441f78342f967ee137f1eea99603b2818bce89f",
+      "full_mode": 33152
+    }
+  ],
+  "raw_rows": 28,
+  "raw_bytes": 121066,
+  "qualification": "Bounded targeted presentation proof only; no broader acceptance"
+}

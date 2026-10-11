@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "source": "39ef5bc189bab92f36144c73dfdb86b1286a1815",
+  "invocation": "4db3a04e-196b-49cb-8405-621042aa5b6d",
+  "result_sha256": "6acb99cab39968772775be28cd34f2ed212df4693a5cc3efdbc33924e8acdc1e",
+  "closure_sha256": "74ccac8b286a52188371c134f0b933c1be21a33e49a2690fe79d11c6d5c2e113",
+  "regular_rows": 28,
+  "bytes": 121066,
+  "all_current_hash_bytes_fullmodes_verified": true,
+  "current_guard_counts": [
+    65,
+    18
+  ],
+  "native_pass_once": 41,
+  "package_pass": 1,
+  "dom_pass": null,
+  "format_exit": 0,
+  "owned_cleanup_pass": true,
+  "noOOM": true,
+  "verdict": "Parent ACTUAL targeted CLEAR; independent review pending",
+  "scope": "SOC-8 fictional authenticated adult preference-form OS/FS presentation and released DOM only; no handler/API/PG/write/auth/privacy/admission/eligibility/browserCSP/computedstyle/app/full/Live/device/default/adoption qualification",
+  "observed_utc": "2026-10-10T23:49:55.883205+00:00"
+}

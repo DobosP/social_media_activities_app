@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "source": "09bc59905c11aacea653a8422138d681b7017d14",
+  "base": "8c07366be3ca66108577f7e1651734b850e2fa13",
+  "paths": 8,
+  "literal_style_sites": 12,
+  "whole_template_inverses": true,
+  "css_old_prefix_bytes": 62453,
+  "css_append_bytes": 429,
+  "source_bindings": 63,
+  "external_bindings": 18,
+  "policy_refs": 7,
+  "other_prior_git_entries_exact": 1891,
+  "method_after_sha256": "33a76e3e500380d589ba3cb60a0b7d98483b8af1700ff5046217d3bbadaf3796",
+  "expected_test_actions": 41,
+  "runtime": "NOTRUN",
+  "parent_verdict": "SOURCE+methodCLEAR after directtemplate/cascade/Go fixture+mutation review; program independentSOURCECLEAR",
+  "scope": "Fictional adult authenticatedpresentation only; no backend/auth/privacy/admission/geolocation/browser/full qualification",
+  "observed_utc": "2026-10-10T22:34:07.675731+00:00"
+}

@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "source": "39ef5bc189bab92f36144c73dfdb86b1286a1815",
+  "base": "b20fff56d62b84aaae29c5b32c26968f2ed3a9af",
+  "verdict": "Parent SOURCE+method CLEAR; new runtime NOT RUN",
+  "only_path": "services/server/internal/web/gui_preferences_layout_test.go",
+  "whole_inverse_exact": true,
+  "other_Git_entries_unchanged": 1898,
+  "sealed_rows_verified": [
+    6,
+    4
+  ],
+  "source_external_policy_avatar_refs_verified": [
+    65,
+    18,
+    7,
+    2
+  ],
+  "method_inverse_literal_replacements": 7,
+  "source_sha256": "280a40d68c86e4acce1188216a66b87c72833ea68e18f0b20f4187175b0e58bb",
+  "method_sha256": "788c989f45294bb9b352c81bbf4fde4bccfca0fea852dcdbd2f80fc5b304992d",
+  "scope": "Synthetic adult presentation avatar_uri via native pure deterministic producer; all41IDs/assertions/mutations/flags/otherdata unchanged",
+  "observed_utc": "2026-10-10T23:48:36.256471+00:00"
+}

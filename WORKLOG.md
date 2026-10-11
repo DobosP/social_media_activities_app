@@ -2528,3 +2528,29 @@ policy, JS/default/SDK change. Original14/15,764+d722, qualified community/graph
 source, old34/83/62/VM14/graph19/places46 receipts and source/failed keepers remain.
 Parent source/method review and reserved managed runtime precede execution; no
 newflow/admission/privacy/Live/full/device/adoption/retirement acceptance.
+
+
+## 2026-10-11 — SOC-8 scoped actual proof and failed diagnostics transfer
+
+Actual tested39ef5bc passed formatter0/empty and41once (2parents/39children)+pkg,
+189GoJSONevents,0fail/skip/cache/race; all65source+18external guards unchanged and
+owned capped network-none/sourceRO cleanup/noOOM passed. Root13397ad0 and genuine
+independent264d694a accepted synthetic authenticated adult PRESENTATION only.
+NineOSFSshapes and21safeDOMmutations passed strict releasedOptions{};21comparison
+logs join all expected/current hashes and preserve original difference.84calls
+remain source-expected only, not independent invocation/browser census.
+
+Initial09bc20fails+pkg/0pass hid the original normalizer refusal; b20samefailure
+exposed19safe empty-url authnavimg@src messages. Expected/current and21mutation
+children never ran in either; formatter0/63+18/cleanup passed. Both receipts remain
+failed.39ef completed only testuser.avatar_uri via native pure deterministic
+helper/defaultgeneration1/salt0/PX80; no sharedhelper/policy/mask/authflag changes.
+
+Promoted45small exact selected record files plus checkpoint/currentdocs, retaining
+private600/public664 mode truth. Raw result receipts contain guard arrays and stay
+private under exact hashes; copied closures describe original private capsules,
+not the partial public member set. No HTML/guardarrays/workspace/cache/dependency/
+SDK/ELF/binary clone. Tested39ef stays distinct from this docsHEAD, not rerun.
+All oldsource/proofs/original14/15/764+d722 and failedkeepers remain; no API/PG/write,
+auth/privacy/admission/eligibility/CSP/computedstyle/avatarHTTP/image/full/Live/
+device/default/adoption/retirement approval. Parent owns feature publication.

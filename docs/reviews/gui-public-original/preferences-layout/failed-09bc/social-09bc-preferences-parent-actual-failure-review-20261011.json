@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "scope": "SOC-8 fictional authenticated adult preference-form OS/FS presentation and released DOM only; no handler/API/PG/write/auth/privacy/admission/eligibility/browserCSP/computedstyle/app/full/Live/device/default/adoption qualification",
+  "source": "09bc59905c11aacea653a8422138d681b7017d14",
+  "invocation": "a71fc8f9-c146-42d4-91ac-5dfff86ea296",
+  "result_sha256": "dfcc31afe76e2c10764f2215bdd299959d9f193ff53d22a2bbb769ca20b74af5",
+  "regular_rows": 28,
+  "bytes": 88705,
+  "raw_bytes_available": true,
+  "no_workspace_dependency_cache_binary_copy": true,
+  "actual_run_fail_once": 20,
+  "actual_pass": 0,
+  "unexecuted_planned_mutation_children": 21,
+  "format_pass": true,
+  "cleanup_pass": true,
+  "source_external_unchanged": [
+    63,
+    18
+  ],
+  "closed_observed_utc": "2026-10-10T22:39:40.362935+00:00",
+  "closure": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/preferences-layout-09bc599-a71fc8f9-c146-42d4-91ac-5dfff86ea296/CLOSURE.json",
+  "closure_sha256": "1b418d631b75abf500a9f0f046cbd5380c42677c094911c6e2edd1af50e2987d",
+  "wrapper_session": 21825,
+  "wrapper_exit": 1,
+  "parent_verdict": "ACTUAL failure boundary verified; precise normalizer cause not yet diagnosed, no currentproduct regression or privacyfact inferred",
+  "observed_message": "gui_preferences_layout_test.go:357 normalizer refused preference presentation; err/hard metadata not printed"
+}

@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "reviewer": "/root/planning_evidence",
+  "role": "Independent actual targeted execution/source/data reviewer",
+  "scope": "SOC-8 fictional authenticated adult preference-form OS/FS presentation and released DOM only; no handler/API/PG/write/auth/privacy/admission/eligibility/browserCSP/computedstyle/app/full/Live/device/default/adoption qualification",
+  "source": "39ef5bc189bab92f36144c73dfdb86b1286a1815",
+  "invocation": "4db3a04e-196b-49cb-8405-621042aa5b6d",
+  "verdict": "ACTUAL bounded presentation CLEAR",
+  "result": {
+    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/preferences-layout-39ef5bc-4db3a04e-196b-49cb-8405-621042aa5b6d/result.json",
+    "sha256": "6acb99cab39968772775be28cd34f2ed212df4693a5cc3efdbc33924e8acdc1e",
+    "method_pass": true
+  },
+  "closure": {
+    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/preferences-layout-39ef5bc-4db3a04e-196b-49cb-8405-621042aa5b6d/CLOSURE.json",
+    "sha256": "74ccac8b286a52188371c134f0b933c1be21a33e49a2690fe79d11c6d5c2e113",
+    "rows_verified": 28,
+    "bytes_verified": 121066,
+    "all_hashes_bytes_fullmodes_current": true
+  },
+  "context_bindings": {
+    "current_clean_head": true,
+    "source_rows_before_after_current_Git_byte_fullmode_equal": 65,
+    "external_before_after_current_fullmode_equal": 18,
+    "method_sha256": "788c989f45294bb9b352c81bbf4fde4bccfca0fea852dcdbd2f80fc5b304992d",
+    "ledger_sha256": "5d396cb58b6972be7cefdfd34c6408382fe4ed14de4a4b3cde72eb38e9f05216",
+    "original14_plus_manifest_and_actual_released_archive_binary_buildinfo": true
+  },
+  "execution": {
+    "formatter_exit0_stdout_stderr_empty": true,
+    "native_unique_once_run_pass": 41,
+    "parents": 2,
+    "children": 39,
+    "mutation_children_actual_once_pass": 21,
+    "package_pass": 1,
+    "JSON_events": 189,
+    "fail_skip_cache_race": 0,
+    "native_exit": 0,
+    "nine_control_commands_exit0": true
+  },
+  "render_semantics": {
+    "fictional_shapes": 9,
+    "positive_OS_FS_cases": 18,
+    "extra_mutation_seed_compares": 3,
+    "original_expected_current_logs": 21,
+    "every_expected_current_canonical_sha_equal": true,
+    "every_original_distinct_from_expected_current": true,
+    "OS_FS_same_phase_hashes_all9": true,
+    "allthreephases_require_strict_released_normalization_zero_hard": true,
+    "mutation_success": "All21 reached actual safe mutation normalization; PASS requires errnil/hard0 and canonicalbytes!=expected, so unrelated hard refusal cannot satisfy them.",
+    "raw_page_equality_claimed": false,
+    "canonical_comparison": "Existing public core1.6 Normalize strict Options{} only; no oracle/asset masks/policy change",
+    "deterministic_avatar": "New test-only avatar_uri uses existing native avatars.RenderGeneration/SignatureSeed/defaultgeneration1/salt0/PX80 for fictional username, fixing missing fixture field. Actual accounts/avatar and avatar renderer/normalizer policy/source unchanged; no DB/API/auth call."
+  },
+  "isolation_cleanup": {
+    "image": "sha256:2e040a5165d79be63755424f707fdb8cf609ace831ada7a9baca398ac25e12b9",
+    "user": "1000:1000",
+    "cpus": 4,
+    "memory_bytes": 6442450944,
+    "network": "none",
+    "source_original_archive_binary_readonly_mounts": true,
+    "all8unique_mount_records_consistent": true,
+    "actual_CID": "3548b2d245c524fda0b6dfeda5e082e0b7beccce886fc52a07572681c2fa1baf",
+    "actual_name": "social-preferences-layout-4db3a04e-196b-49cb-8405-621042aa5b6d",
+    "noOOM": true,
+    "remove_exit": 0,
+    "ID_name_absence_recorded_true": true
+  },
+  "readback_precision": "Reviewer initially compared cleanup inspect mount-array order; Docker reordered it. Each of8uniqueDestination records is byte-field equal and all other identity/state fields equal. No product/runtime failure or evidence rewrite.",
+  "failed_histories": [
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/preferences-layout-09bc599-a71fc8f9-c146-42d4-91ac-5dfff86ea296/result.json",
+      "sha256": "dfcc31afe76e2c10764f2215bdd299959d9f193ff53d22a2bbb769ca20b74af5",
+      "full_mode": 33152,
+      "state": "Original actual failure remains retained"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/preferences-layout-b20fff5-f21a0de3-ffdb-4435-bccf-99f97a0f0440/result.json",
+      "sha256": "d279b97034366d1038c9a2d8c48d3681a7fdf5b4083a981971be223cb4a074d0",
+      "full_mode": 33152,
+      "state": "Original actual failure remains retained"
+    }
+  ],
+  "limits": "Synthetic adult native Renderer/OS-FS canonical DOM and class/layout preservation only. No handler/API/PG/write/auth/privacy/admission/eligibility/browserCSP/computedstyle/app/full/Live/device/default/adoption qualification.",
+  "reviewer_runtime_or_source_edits": false
+}

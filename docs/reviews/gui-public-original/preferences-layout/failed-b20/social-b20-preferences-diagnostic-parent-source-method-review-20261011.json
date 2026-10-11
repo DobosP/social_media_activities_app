@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "source": "b20fff56d62b84aaae29c5b32c26968f2ed3a9af",
+  "base": "09bc59905c11aacea653a8422138d681b7017d14",
+  "only_path": "services/server/internal/web/gui_preferences_layout_test.go",
+  "other_Git_entries_exact": 1898,
+  "other_source_external_policy_refs_exact": [
+    62,
+    18,
+    7
+  ],
+  "whole_Go_inverse": true,
+  "method_identity_only_replacements": 4,
+  "fatal_guard_phase_order": "unchanged original\u2192expected\u2192current",
+  "diagnostic_emission": "fixedphase+errtype+allowlistedwrappercode+fullcount+first8allowlistedcodes+ASCIIstructuralpaths<=256; no rawerror/body/HTML/streams/values",
+  "case_IDs": 41,
+  "runtime": "NOTRUN",
+  "verdict": "Parent+program SOURCE/methodCLEAR",
+  "observed_utc": "2026-10-10T22:58:44.893728+00:00"
+}
