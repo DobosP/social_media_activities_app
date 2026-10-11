@@ -1,0 +1,57 @@
+{
+  "schema": 1,
+  "valid_until": "Product/tests/method/input identities change; historical proof of3bc only.",
+  "tested_source": "3bc46a6a640511268d678b940d72d3c350e5d9e5",
+  "actual_invocation": "df79db52-7b3b-49b4-ad33-9914a15278d5",
+  "actual_result_sha256": "414abc343ebf6947073aafc2f90f6a84b96b2ad5d32deb9b4886678510fda7cd",
+  "actual_capture_sha256": "c1b5321e6fa918e6d32f20a804acdca298505e59ca94f57893159dc159cf4748",
+  "actual_method_sha256": "24a997ea35e1566fe3475082789652df47e4ef3c7d66819ffe586cc6b0970721",
+  "toolchain": "sha256:2e040a5165d79be63755424f707fdb8cf609ace831ada7a9baca398ac25e12b9",
+  "normalizer_binary_sha256": "598515e75c709803c7b23673e07b14baa93861608346a81c8fc708521c1b2f05",
+  "canonical_archive_sha256": "d722a817074a01d8a983c3e8492335ee07d37fb0d58c9a938cd189df635e168d",
+  "actual_results": {
+    "named_run_PASS_once": 65,
+    "new_campaign_named": 24,
+    "entire_preserved_preference_named": 41,
+    "roots": 4,
+    "package_PASS": 1,
+    "GoJSON_events": 298,
+    "strict_postvalidated_comparison_rows": 34,
+    "campaign_rows": 13,
+    "preference_rows": 21,
+    "formatter": "exit0/emptydiff+stderr",
+    "failure_skip_cancel_cache_race": "none observed in focusedstreams",
+    "owned_cleanup": "nonforce rm0; exactID+UUIDname absent",
+    "elapsed_seconds": 24.62203720100115
+  },
+  "custody": {
+    "source_rows": 126,
+    "external_binding_rows": 18,
+    "policy_rows": 7,
+    "raw_rows": 38,
+    "private_rows": 55,
+    "canonical_archive": "exact d722; no nlink1 policy inferred",
+    "before_after_live_bytes_fullmodes": "exact; private UID/device/inode/nlink1 also exact"
+  },
+  "precision": {
+    "normalizer_calls_39new_84old_123combined": "SOURCEEXPECTED only; no runtimeAPI/process census",
+    "before_template": "Exact3116B7930SOURCE, not original75dc baseline",
+    "comparison": "Strict delivered764/d722 Normalize/hard0; expected-current exact owned-fill transform and OS/FS equality; original15/raw38 untouched",
+    "source_delta": "Only inner progress fill becomes decorative SVG using same fractional token; scopedCSS and precise preferenceCSS inverse; outerARIA/financialcopy/links/empty/completed/ledger/auth/privacy unchanged",
+    "actual_config": "2e/UID1000/4CPU6GiB512/networknone/nine mounts/five hostRO inputs/private TMPDIR0700; writable ephemeral root+ownedscratch explicit",
+    "retention": "One actual run plus refs-only compactcapsule. No body/workspace/deps/ELF/cache snapshots."
+  },
+  "reviews": [
+    {
+      "path": "parent-actual-review.json",
+      "bytes": 1302,
+      "sha256": "2ba2b8d810b07b28c457be66ecad2fa087241d07d9a23ad50872186bb017c32c"
+    },
+    {
+      "path": "independent-actual-review.json",
+      "bytes": 5522,
+      "sha256": "8191736e1d332809d99d296470a57dd2006831014dbdf798a3a6344061b838f3"
+    }
+  ],
+  "scope": "Synthetic current renderer/static and bounded XML owning-fragment assertions only. No browser geometry/enforcedCSP/finance/registeredGET/semantic original oracle/normalizedbaseline/full/authprivacy/Live/device/UI/templ/default/adoption qualification. Earlier45transport and original37raw receiver proofs remain separate."
+}

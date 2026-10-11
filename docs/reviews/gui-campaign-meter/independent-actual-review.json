@@ -1,0 +1,113 @@
+{
+  "schema": 1,
+  "reviewer": "/root/cross_repo_plan",
+  "role": "independent ACTUAL execution reviewer of product source and runtime collection",
+  "authorship_disclosure": "I authored only the two private R2 LF-to-backslash-n syntax escapes in retained_control, whole inverse02ccc8\u219224a997. I did not author this campaign product source, collector logic, runtime execution or actual result. This review is not a second independent source approval of my two escapes.",
+  "verdict": "ACTUAL focused65 PASS boundary CLEAR",
+  "source": "3bc46a6a640511268d678b940d72d3c350e5d9e5",
+  "invocation": "df79db52-7b3b-49b4-ad33-9914a15278d5",
+  "wrapper_session": 49212,
+  "recorded_wrapper_exit": 0,
+  "observation": {
+    "path": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-3bc-campaign65-pass-compact-20261011/observation.json",
+    "bytes": 10228,
+    "sha256": "c1b5321e6fa918e6d32f20a804acdca298505e59ca94f57893159dc159cf4748",
+    "full_mode": 33152
+  },
+  "execution": {
+    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/campaign-meter-3bc46a6-df79db52-7b3b-49b4-ad33-9914a15278d5/result.json",
+    "bytes": 194987,
+    "sha256": "414abc343ebf6947073aafc2f90f6a84b96b2ad5d32deb9b4886678510fda7cd",
+    "full_mode": 33152
+  },
+  "parent_review": {
+    "path": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-3bc-campaign65-parent-actual-review-20261011.json",
+    "bytes": 1302,
+    "sha256": "2ba2b8d810b07b28c457be66ecad2fa087241d07d9a23ad50872186bb017c32c",
+    "full_mode": 33152
+  },
+  "source_method": {
+    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/campaign-meter-managed-3bc46a6-r2/after.py",
+    "bytes": 39321,
+    "sha256": "24a997ea35e1566fe3475082789652df47e4ef3c7d66819ffe586cc6b0970721",
+    "full_mode": 33152
+  },
+  "verified_literal_hash_bytes_fullmodes": {
+    "compact_live_refs": 28,
+    "result_artifact_rows": 27,
+    "raw_Go_JSON_SHA256": "40384ec1702908c1a43ee2cfcd9ac56b2396fd941f8a67d49cf4f2e2c3819020",
+    "private_stream_modes": 33152,
+    "no_duplicate_artifact_trees_created": true
+  },
+  "actual_tests": {
+    "JSON_events": 298,
+    "named_runs_unique_once": 65,
+    "named_passes_unique_once": 65,
+    "package_pass": 1,
+    "roots": 4,
+    "children": 61,
+    "campaign": 24,
+    "complete_preferences": 41,
+    "zero_fail_skip_cancel_cache_race": true,
+    "readonly_formatter_exit": 0,
+    "formatter_stdout_stderr_bytes": 0,
+    "actual_test_exit": 0,
+    "strict_inventory_matches_frozen_expected65": true
+  },
+  "actual_safe_comparison_rows": {
+    "campaign": 13,
+    "preferences": 21,
+    "total": 34,
+    "all_expected_current_hashes_equal": true,
+    "all_boolean_original_equal_values_match_hash_equality": true,
+    "all_six_campaign_current_OS_FS_hash_joins": true,
+    "raw_source_frame_and_body_retention": false,
+    "precision": "Hash rows are emitted only after unchanged source-bound strict Normalize/hard0 checks. No independent raw diagnostic frames or canonical bodies retained.123 normalization calls remain SOURCE EXPECTED; no API/process census inferred."
+  },
+  "actual_guards": {
+    "source126": true,
+    "normalizer_original_external18": true,
+    "policy7": true,
+    "frozen_raw38": true,
+    "private_raw_original_binary_buildinfo55": true,
+    "before_after_rows_fullmode_exact_and_live_bytes_reverified": true,
+    "all55_actual_device_inode_UID_Nlink1_tuples_live_and_bracket_equal": true,
+    "original15_complete_unchanged": true,
+    "sole_764_binary_sha256": "598515e75c709803c7b23673e07b14baa93861608346a81c8fc708521c1b2f05",
+    "canonical_d722_archive_exact_bytes_mode": true,
+    "canonical_Nlink1_observed_not_new_constraint": true,
+    "current_source_clean_exact3bc": true
+  },
+  "actual_container": {
+    "CID": "3c4a00a45063195e68f822cd195b58842c33fc22e86d395af0be154cd80a80e6",
+    "image": "sha256:2e040a5165d79be63755424f707fdb8cf609ace831ada7a9baca398ac25e12b9",
+    "uid_gid": "1000:1000",
+    "cpus": 4,
+    "memory_bytes": 6442450944,
+    "pids": 512,
+    "network": "none",
+    "exact_mounts": 9,
+    "readonly_host_binds": 5,
+    "readonly_root": false,
+    "ports": 0,
+    "prestart_completed_precleanup_sanitized_configs": true,
+    "entrypoint": "/usr/local/bin/roedu-runner",
+    "command_hash_stable": true,
+    "environment_values_acquired": false,
+    "command_values_retained": false,
+    "fresh_child_TMPDIR_mode": 16832,
+    "no_OOM": true
+  },
+  "owned_cleanup": {
+    "nonforce_exact_CID_remove_exit": 0,
+    "ID_absence_recorded_exit0_empty_stdout": true,
+    "exact_UUID_name_absence_recorded_exit0_empty_stdout": true,
+    "all9_Docker_controls_exit0_empty_stderr": true,
+    "already_exited_so_stop_not_needed": true,
+    "reviewer_did_not_repeat_Docker_or_cleanup": true
+  },
+  "material_findings": [],
+  "qualification_scope": "Actual synthetic campaign24 plus complete preference41 renderer/static regression only. Bounded XML-compatible owning-fragment checks and strict canonical DOM model, not real browser geometry/computed style/enforced CSP. No PG, registeredGETwalk, oracle recapture, helper build, normalized baseline, finance business-rule/auth/privacy/Live/full/device/default/templ/SDK adoption qualification.",
+  "review_operations": "Existing JSON/Git/source/data/hash/mode reads and this compact scratch review only; no candidate imports/runtime/tests/formatter/compiler/Go/Node/normalizer/Docker/source/controller/cleanup/push.",
+  "state": "VERIFIED IDLE"
+}

@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "utc": "2026-10-11T15:13:07.673318+00:00",
+  "verdict": "ACTUAL focused65PASS CLEAR; independent review pending",
+  "source": "3bc46a6a640511268d678b940d72d3c350e5d9e5",
+  "capture": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-3bc-campaign65-pass-compact-20261011",
+  "capture_sha256": "c1b5321e6fa918e6d32f20a804acdca298505e59ca94f57893159dc159cf4748",
+  "execution_sha256": "414abc343ebf6947073aafc2f90f6a84b96b2ad5d32deb9b4886678510fda7cd",
+  "actual_named_runs_pass_once": 65,
+  "actual_package_pass": 1,
+  "actual_JSON_events": 298,
+  "native_format_empty_pass": true,
+  "actual_strict_comparison_metadata_rows": {
+    "campaign": 13,
+    "preferences": 21
+  },
+  "source_expected_only_API_calls": "39new/84old/123combined; actualAPI/processcensus NOTCLAIMED",
+  "guards_live_bytes_fullmodes_verified": {
+    "after": 126,
+    "binding_after": 18,
+    "policy_after": 7,
+    "raw_after": 38,
+    "private_envelope_after": 55
+  },
+  "prestart_completed_precleanup_actual_configs_verified": true,
+  "exact_ownedcleanup_nonforce_pass": true,
+  "scope": "Synthetic campaign24 plus complete preference41 renderer/static regression only; no PG/registeredGETwalk/capture/helperbuild/baseline/browser/full/authprivacy/Live/device/default/adoption qualification"
+}

@@ -1063,3 +1063,19 @@ receiver56/original14 records stay historical and unchanged; no new handler,
 financial business rule, privacy/safety, full, browser-CSP, device, roedu-meter,
 hashed-widget, templ/default or SDK adoption acceptance follows. Parent+peer
 review and a closed supported managed method precede actual checks.
+
+## Campaign meter focused actual checkpoint
+
+The authored3bc section above is historical Source NOTRUN chronology. After
+parent and independent source/method review,3bc invocationdf79db52 actually
+passed65 native actions once:24 campaign actions and all41 prior preferences,
+with packagePASS/298JSON, formatter0 and exact owned-container cleanup.
+All34 strict postvalidated comparison hash rows (13campaign+21preferences)
+passed; each six-shape OS/FS join matched. Beforeafter source126/external18/
+policy7/raw38/private55/canonicald722 remained exact. The first private driver
+syntax HOLD and exact two-LF-escape successor remain frozen separately.
+[Compact proof](reviews/gui-campaign-meter/README.md) binds actual source/method/
+result/capture and both reviews. It contains no duplicate bodies or workspace.
+The7930 pre-template is source history;123 normalization calls remain a source
+expectation, not API/process census. Browser geometry/CSP/finance/semantic
+original oracle/full/authprivacy/Live/device/UI/templ/default/adoption stay open.

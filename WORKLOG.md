@@ -2874,3 +2874,17 @@ All previous37/45/54/56 and original15/raw38/764/d722 proof bytes remain; no new
 response bodies or canonical baseline were authored. Real browser geometry,
 screenshots/enforcedCSP/device/full and privacy/auth/Live/default/adoption are
 unverified and remain required where applicable.
+
+## 2026-10-11 — campaign meter focused actual checkpoint
+
+Closed3bc eight-path source and the existing preference owning CSS inverse
+were accepted before runtime. Private methodR1 had two literal-LF syntax errors;
+frozenHOLD8a678 remains, and exactly two escaped-newline repairs passed source
+reviewfc8a1094 before execution. Actual invocationdf79db52 passed65 actions
+once/298GoJSON/packagePASS (24new campaign+all41preference). Strict metadata
+13campaign/21preference rows passed, formatter0 and bounded nonforce cleanup
+passed.126/18/7/raw38/private55 and canonicald722 beforeafter guards stayed
+exact. Parent2ba2b8d8 and independent8191736e accepted the scoped actual boundary.
+Compact proof lives in docs/reviews/gui-campaign-meter; historical source/failed
+packets remain. This is synthetic current renderer/static/XML-fragment proof,
+not browser/CSP/finance/full/privacy/Live/device/templ/UI/default adoption.
