@@ -590,3 +590,36 @@ stay unchanged. No newflow/handler/API/PG/write/auth/privacy/admission/eligibili
 CSP/computedstyle/full/Live/device/default/SDKadoption/retirement approval. Future
 work needs an exact separately authorized source scope; current evidence does not
 open those holds or replace any original baseline.
+
+
+### SOC-9 activity create/edit script nonce source checkpoint
+
+SOURCE ONLY, NOT RUN: the existing activity_form/activity_edit templates add
+request.csp_nonce to four existing external tags each. Their full inverses
+restore the exact2f439 preimages; blocking Leaflet first and deferred place-picker,
+concept-combobox/form-wizard paths/order/load attributes stay unchanged. No shared
+wizard, JS/CSS/worker, renderer/nonce provider, default mode or backend edit.
+
+The new gui_activity_form_nonce_test.go authors44 native actions:3parents,
+8 OS/FS create/edit filled/field-error cases,23 separate native nonce/header/path/
+order/blocking/defer mutations and10 safe form-DOM mutations. Synthetic adult
+PRESENTATION maps match the current four-row form.steps, edit activity context,
+pure GET bound-widget repair and existing deterministic fictional avatar field.
+No live form handler, DB, POST, participation/ownership/organizer/admission or
+privacy decision is exercised or approved. Original OS/FS reads use only nine
+small hash-bound source/catalog files; no original14body corpus is recaptured.
+
+Strict original/explicit-four-attribute-expected/current normalization reuses
+actual764/d722 Options{} unchanged. Delivered nonce volatility permits canonical
+original/current equality; independent native header/tag checks own nonce
+binding/freshness. DOM mutations require no hard findings and canonical inequality,
+so unrelated policy refusal cannot satisfy a negative control.40 normalizations
+is SOURCE EXPECTED only, not a measured invocation census or browser test count.
+
+After separate source/method review and parent runtime reservation, use the same
+pinned managed read-only formatter then fresh focused route:
+`go test -mod=readonly -race -count=1 -json ./internal/web -run '^TestGUIActivityFormNonce'`
+with existing original-reference/normalizer flags. No helper rebuild, dependency
+install, original capture, map/geolocation/API/browserJS/CSP/computed-style/full/
+Live/device/default/SDKadoption or privacy/auth/eligibility claim follows. Old
+41/34/46/83 and original15/764+d722 keep their distinct accepted evidence.

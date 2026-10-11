@@ -2554,3 +2554,26 @@ SDK/ELF/binary clone. Tested39ef stays distinct from this docsHEAD, not rerun.
 All oldsource/proofs/original14/15/764+d722 and failedkeepers remain; no API/PG/write,
 auth/privacy/admission/eligibility/CSP/computedstyle/avatarHTTP/image/full/Live/
 device/default/adoption/retirement approval. Parent owns feature publication.
+
+
+## 2026-10-11 — SOC-9 activity create/edit external script nonce source
+
+At clean published2f439, implemented only eight existing request.csp_nonce
+attributes across activity_form/activity_edit. Whole inverses preserve every
+original path/order/blocking/defer, form/wizard field/CSRF/link/disclosure byte;
+shared wizard, JS/CSS/Leaflet/backend/defaults/helpers/SDK/policies stay exact.
+
+New focused native source authors44 actions (3parents/41children):8 OS/FS
+create/edit filled/error presentations,23 nonce/header/path/order/load mutation
+controls and10 safe form-DOM mutations. Four-row step maps/pure GET widget repair
+and existing fictional deterministic avatar match current native field contracts.
+This synthetic authenticated adult PRESENTATION is not auth/participation/
+ownership/organizer/admission/privacy approval or a handler/DB/POST execution.
+
+Existing verified764 normalizer/d722/original15 are reused unchanged. Strict
+original/expected/current Options{} comparison permits nonce volatility equality;
+native binding/freshness is separate.40 normalization calls is SOURCE EXPECTED
+only, not an actual census/browser count. All formatter/compiler/tests/runtime
+are NOT RUN. No map/geolocation/API/browserJS/CSP/computedstyle/full/Live/device/
+default/adoption/retirement acceptance. Parent reviews closed source/method and
+assigns any managed runtime separately; earlier proof/failure packets are retained.

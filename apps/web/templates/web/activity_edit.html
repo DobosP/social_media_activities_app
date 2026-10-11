@@ -30,8 +30,8 @@
 {% include "web/_activity_form_wizard.html" with submit_label=submit_label cancel_url=cancel_url %}
 {% endblock %}
 {% block scripts %}
-<script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
-<script src="{% static 'js/place-picker.js' %}" defer></script>
-<script src="{% static 'js/concept-combobox.js' %}" defer></script>
-<script src="{% static 'js/form-wizard.js' %}" defer></script>
+<script nonce="{{ request.csp_nonce }}" src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
+<script nonce="{{ request.csp_nonce }}" src="{% static 'js/place-picker.js' %}" defer></script>
+<script nonce="{{ request.csp_nonce }}" src="{% static 'js/concept-combobox.js' %}" defer></script>
+<script nonce="{{ request.csp_nonce }}" src="{% static 'js/form-wizard.js' %}" defer></script>
 {% endblock %}
