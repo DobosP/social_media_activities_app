@@ -963,3 +963,50 @@ actual result; no failed receipt was relabeled. Earlier raw R2–R5 records also
 remain unchanged. Later docsHEAD was not retested. This closes only the finite
 opt-in receiver section, with no renderer parity/accepted normalized baseline/
 fullM0/auth/privacy/Live/device/default/templ/SDK adoption authority.
+
+
+## Current G1 registered GET OS/FS transport — SOURCE ONLY
+
+From publishedf37a382, one additive test module and one four-line dispatcher
+guard in existing `TestGUIPublicGetWalk` author45 flat named actions: that root,
+37 uniquely prefixed current-pair leaves and7 owning refusal controls. There is
+no new top-level Test function. When the flag is absent, the entire original root
+body restores byte-exact; all raw/receiver/original assertions stay unchanged.
+
+The proposed targeted invocation selects only `^TestGUIPublicGetWalk$` with the
+test-only `-gui-public-current-get-transport` flag, existing isolated
+`-web-domain-test-dsn` and all existing original15/normalizer bindings. Opted mode
+requires DSN/tool/original prerequisites before testdb.New; no new skip or default
+HTTP qualification. Parent reviews a separate closed managed method before any
+execution; no Go/formatter/compiler/normalizer/PG/Docker runtime has run here.
+
+The unchanged37-case registry/fixtures/registered mux/GetCheck drive current OS
+and current FS delivery over the same synthetic empty/populated states. There
+are74 intended registered GET requests,31HTML pairs and6native302/404 pairs. A
+module-local immutable20-file current template/PO snapshot is bounded; the old
+six-file FS snapshot/helper is unchanged. The existing typed102 guard plus22
+explicit paths closes source124 (old110+13missing current paths+newmodule).
+
+Native current status/selected headers/canonical/robots/language/profile/JSONLD/
+content and transformed-stream/header-script nonce checks precede strict public
+Normalize on each HTML response. Require current OS/FS canonical equality/hard0;
+negative pairs retain exact native body/status/Location and no template loads,
+with no HTML normalization. Independent random nonce values are never forced
+equal or masked locally. Source/hash/canonical-digest/count/safe-code logs only;
+no raw/normalized bodies or new baseline are written.
+
+Seven controls preserve a genuine positive frame before refusing missing DSN,
+missing normalizer, copied status mismatch, transformed-stream mismatch, wrong
+actual nonce binding despite canonical equality, safe visible-text canonical
+difference, and exactly the owning empty-url hard finding. Mutated buffers and
+load arrays are fresh copies; current sources and original inputs stay intact.
+
+Current template/catalog delivery only; the existing OS assetRoot lookup stays
+shared and is not new static-FS or browser evidence.
+
+This compares current↔current only. The three existing specialized .compare uses,
+original15/raw38/764/d722 and all earlier failure/PASS proofs remain unchanged.
+No helper rebuild/SDK flag/mask/baseline update, new controller/framework, fullM0/
+auth/privacy/Live/device/templ/default/adoption approval. Parent owns actual
+immutable PG fixture lineage/application binding, capped networknone execution,
+cleanup, independent review and feature publication after Source acceptance.

@@ -2797,3 +2797,30 @@ separate from the new R4 PASS. Earlier raw R2–R5 failures are not rewritten.
 No new runtime in this docs transfer; no renderer parity/accepted normalized
 baseline/fullM0/auth/privacy/Live/device/default/templ/SDK adoption authority.
 Parent reviews this closed local docs commit before feature publication; no push.
+
+
+## 2026-10-11 — current G1 registered GET OS/FS transport SOURCE ONLY
+
+Five paths only: new helper/test-only flag module, minimal four-line existing-
+root dispatch, STATUS120, guide and this append. No new default-empty-pass Test root. Absent the flag, the whole
+prior TestGUIPublicGetWalk body is byte-exact by inverse. All old raw/receiver/
+original helpers/assertions and all three .compare uses remain unchanged.
+
+Authored45 flat IDs =existingroot+37currentpairs+7owning refusals.74 intended real
+registered GETs reuse existing empty/populated synthetic PG fixtures:31HTML pairs
+use strict public Normalize/canonical equality after native HTTP/current-stream/
+nonce binding;6native302/404 pairs have no template loads or HTML normalization.
+Current20 bounded FS snapshot is local; source124 is closed from unchanged typed
+102 plus22 paths. Old six-file snapshot and all raw38/original15/764/d722 remain.
+
+Seven controls begin from genuine successful observations/prerequisite frames:
+missingDSN/tool,status,stream,nonce-binding,canonical-text difference and owning
+empty-url hard finding. No historical-current equality, local masks, baseline
+updates, raw body/context/cookie/nonce-value outputs or fixture recapture. Native
+errors remain red; source-only counts and requests are not actual proof.
+
+No parser/formatter/compiler/import/tests/Go/Node/normalizer/Docker/PG/runtime/
+install/cleanup/push. Parent and peer review the closed source before adapting
+the existing managed PG route with actual immutable lineage/current-app binding,
+resource caps and owned cleanup. No fullM0/auth/privacy/Live/device/default/templ/
+SDK adoption authority; earlier fce7 receiver and a115 raw PASS remain scoped.

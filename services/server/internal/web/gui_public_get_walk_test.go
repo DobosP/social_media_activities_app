@@ -400,6 +400,10 @@ func guiPublicGetBoundInputs(root string) (map[string]map[string]any, error) {
 }
 
 func TestGUIPublicGetWalk(t *testing.T) {
+	if *guiPublicCurrentGetTransport {
+		guiPublicCurrentGetTransportWalk(t)
+		return
+	}
 	root, err := filepath.Abs("../../../..")
 	if err != nil || guiPublicHash(guiPublicGetSourceBytes) != guiPublicGetSourceSHA {
 		t.Fatal("historical source identity differs")
