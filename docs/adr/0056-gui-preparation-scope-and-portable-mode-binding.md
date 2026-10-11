@@ -1,7 +1,7 @@
 # ADR-0056: GUI preparation scope, portable live mode binding, default-context owner attribute
 
 Date: 2026-10-11
-Status: proposed — owner decision Q2 recorded; mode fix on branch `fix/gui-review-20261011`;
+Status: proposed — owner decisions Q2 and Q6 recorded; mode fix on branch `fix/gui-review-20261011`;
 the 794573c live-output change awaits programme privacy/independent review before landing
 
 ## Decision
@@ -49,3 +49,35 @@ refused"). Why not re-pin modes: no single umask satisfies mixed pins, and the p
   `main` 78d3a66 passes that package, so `scripts/check-native.sh` is red on the branch, which
   ADR-0040 §1 forbids for landing. Owner to choose: a validated-source-only no-flag path (the
   `TestGUIPublicGetWalk` pattern, no `t.Skip`) or a landing-gate exception.
+
+## Amendment 2026-10-12: owner decision Q6, source-only default path
+
+**Owner decision Q6** (provenance: owner answer in Claude Code independent-review session,
+2026-10-11 ~21:35 UTC; recorded verbatim, unsigned). Question: the open owner question above
+(20 focused GUI tests red in the default no-flag run). Answer: "Source-only default path":
+without flags, each test validates its committed sources and registries and passes, the way
+`TestGUIPublicGetWalk` already does (no `t.Skip`); with flags it keeps every current
+requirement; costs reviewed inverse rows for the pinned test files.
+
+**Changed default-run semantics.** The no-flag default run of the 20 focused GUI tests is now
+source-only validation. When all four focused flags (`-gui-public-normalizer-binary`,
+`-gui-public-normalizer-sha256`, `-gui-public-normalizer-archive`,
+`-gui-public-golden-reference`) are absent, as set values and as named arguments, each fixture
+runs its existing committed source inverse checks, then `guiSourceOnlyDefault`
+(`gui_source_only_default_test.go`) checks the registry-pinned normalizer/original15 inputs
+(release bindings, helper sources, checkpoint metadata), logs `NORMALIZATION NOT REQUESTED: ...`
+and the test returns as a pass. It never calls `t.Skip`. It never opens the private
+archive, binary or original15 corpus, and it makes no DOM comparison or GUI qualification
+claim. GUI qualification still requires the flagged runs. "Omission fails rather than skips"
+(docs/gui-public-golden-fixtures.md) now applies to partial flag sets only: naming any one of
+those flags selects the flagged path, which keeps every existing requirement.
+
+**Custody chain.** Seven of the eight edited test files are preserved inputs of the frozen
+historical walk `source.json`. Their gates are reviewed inverse rows in `guiPublicGetRepairRows`.
+Rows for one path invert in order, each from the exact afterimage bytes to the exact preimage
+bytes (`guiPublicGetRowsPreimage`), ending on the recorded `source.json` SHA-256/bytes. For
+`gui_preferences_layout_test.go` the rows end on the sealed campaign custody input, which the
+existing campaign inverse then maps to the recorded preimage. The renderer.go/server.go repair
+counters are unchanged. The `unknown` and `mixed` refusal controls now cover all ten repair
+inputs. `source.json`, `cases.json` and the historical receipts are unchanged. The
+preference registry re-pins the nine edited files and `guiPreferencesGETRegistrySHA` follows it.
