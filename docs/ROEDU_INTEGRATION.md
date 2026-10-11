@@ -144,6 +144,25 @@ for the whole sequence.
 The scheduled `sync_roedu` wrapper reads `ROEDU_APP_PACK`. When set, venue ingestion and event
 sync both use that app pack; when absent, both use legacy products. One run never mixes modes.
 
+## Local POC (development only)
+
+[ADR-0057](adr/0057-roedu-local-poc-consumer.md) defines a loopback-only proof of concept over a
+`local_poc` release from ro_data_server. Every one of these must hold, or startup is refused:
+- `ROEDU_LOCAL_POC=1`;
+- `--dev` (or `DJANGO_DEBUG`), without `--dev-container`;
+- `SOCIAL_REACT_UI` off;
+- a loopback `ROEDU_API_URL`.
+
+What changes in this mode:
+- Each item keeps its real deny and its admission, and every POC row shows "LOCAL POC — not
+  cleared for publication".
+- `ROEDU_SYNC_CITIES` (POC only) lists exact producer city facets, for example `Cluj`, `București`
+  or `Pitesti`. Do not assume `Cluj-Napoca`, and leave out cities with no items.
+- `/events/?include_past=1` also lists past POC events.
+
+A POC sync is never complete, so it never reconciles absence. `ingest_places --source roedu`
+refuses a POC pack; use `sync_roedu` / `sync_roedu_events`.
+
 ## Safety model
 
 The platform enforces the license/GDPR gate **server-side** (the `social-app-dev`

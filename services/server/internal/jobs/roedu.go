@@ -33,10 +33,16 @@ type PackRead struct {
 	Items                                    []map[string]any
 	Pack, Snapshot, Release, Generated, Mode string
 	Complete                                 bool
+	// LocalPOC: every page said local_poc:true and the client's POC gate held
+	// (ADR-0057). Never set for a production page.
+	LocalPOC bool
 }
 type RoeduClient struct {
 	BaseURL, APIKey string
 	HTTP            *http.Client
+	// LocalPOC is set only by the development + loopback + ROEDU_LOCAL_POC=1
+	// configuration gate (ADR-0057); see LocalPOCActive.
+	LocalPOC bool
 }
 
 func text(value any, maxLen int, empty bool) bool {
@@ -424,7 +430,12 @@ func (c *RoeduClient) Read(ctx context.Context, city string) (PackRead, error) {
 		decoder := json.NewDecoder(bytes.NewReader(raw))
 		decoder.UseNumber()
 		var page map[string]any
-		if decoder.Decode(&page) != nil || decoder.Decode(new(any)) != io.EOF || !exactKeys(page, "pack_id app layer schema_version snapshot_id release_id snapshot_generated_at snapshot_mode snapshot_complete items pagination withheld errors") {
+		if decoder.Decode(&page) != nil || decoder.Decode(new(any)) != io.EOF || !exactKeys(page, c.envelopeFields(page)) {
+			return result, errors.New("invalid RO-EDU page envelope")
+		}
+		_, pocKey := page["local_poc"]
+		localPOC := pocKey && page["local_poc"] == true
+		if pocKey && !localPOC {
 			return result, errors.New("invalid RO-EDU page envelope")
 		}
 		snapshot, _ := page["snapshot_id"].(string)
@@ -435,7 +446,7 @@ func (c *RoeduClient) Read(ctx context.Context, city string) (PackRead, error) {
 		if page["pack_id"] != SocialPack || page["app"] != "social_media_activities_app" || page["layer"] != "redistributable" || !equalsNumber(page["schema_version"], 1) || !releasePattern.MatchString(snapshot) || page["release_id"] != snapshot || !dateOK || !completeOK || (mode != "full" && mode != "partial") || complete != (mode == "full") {
 			return result, errors.New("RO-EDU product identity or completeness invalid")
 		}
-		if result.Snapshot != "" && (result.Snapshot != snapshot || result.Generated != generated || result.Mode != mode) {
+		if result.Snapshot != "" && (result.Snapshot != snapshot || result.Generated != generated || result.Mode != mode || result.LocalPOC != localPOC) {
 			return result, errors.New("RO-EDU snapshot drift")
 		}
 		result.Pack = SocialPack
@@ -443,6 +454,7 @@ func (c *RoeduClient) Read(ctx context.Context, city string) (PackRead, error) {
 		result.Release = snapshot
 		result.Generated = generated
 		result.Mode = mode
+		result.LocalPOC = localPOC
 		withheldRaw, ok := page["withheld"].(json.Number)
 		withheldInt, integerErr := withheldRaw.Int64()
 		if !ok || integerErr != nil || withheldInt < 0 || withheldInt > 1000000 {
@@ -468,7 +480,7 @@ func (c *RoeduClient) Read(ctx context.Context, city string) (PackRead, error) {
 		}
 		for _, rawItem := range items {
 			item, ok := rawItem.(map[string]any)
-			if !ok || !ValidatePackItem(item) {
+			if !ok || !validatePageItem(item, localPOC) {
 				clean = false
 				continue
 			}

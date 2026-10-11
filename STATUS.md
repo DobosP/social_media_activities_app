@@ -1,11 +1,9 @@
 # Status — social_media_activities_app
 
-Last verified: 2026-10-11
+Last verified: 2026-10-12
 
-- **GitHub Actions (Last verified: 2026-10-05):** owner-requested on-demand policy,
-  [ADR-0033](docs/adr/0033-manual-github-actions.md). Ordinary `ci.yml` calls Go/Node workflows;
-  original Python gates remain in optional manual `reference.yml` (ADR-0038). YAML/input/job/
-  read-only permission checks pass. Native Actions remains manually disabled; no hosted run claimed.
+- **GitHub Actions (Last verified: 2026-10-05):** owner-requested on-demand policy, [ADR-0033](docs/adr/0033-manual-github-actions.md). Ordinary `ci.yml` calls Go/Node workflows;
+  original Python gates remain in optional manual `reference.yml` (ADR-0038). YAML/input/job/read-only permission checks pass. Native Actions remains manually disabled; no hosted run claimed.
 
 Current truth: STATUS > newest ADR > other docs. History: WORKLOG, ADRs and git.
 
@@ -22,6 +20,7 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   identity, coherent completeness, safe bounded pagination, exact facts-only fields, exactly policy schema 5/ruleset 8/hash
   `140290d4bc6374ebb5b7922dee98c79bee5501a6cf76e1ef18923a8647068fd1` (4/6, 5/7 refused), capture/acquisition schema 3. Unknown
   fields, prose/person data, internal evidence/paths, unsafe URLs, policy drift, malformed relationships, duplicates, and page drift fail closed.
+  Development/loopback-only local POC (ADR-0057; 2026-10-12): a verified admission over the item's REAL deny, honest privacy values, every POC row labelled "LOCAL POC — not cleared for publication"; production unchanged.
 - **Lifecycle and reconciliation:** source lifecycle/confidence/category,
   recurrence/timezone/price/availability, source timestamps, venue identity, and pack/release/snapshot
   identity are retained. Cancelled, postponed, removed, moved-online, tombstoned, low-confidence, or
@@ -95,6 +94,7 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
+- Local POC (2026-10-12, ADR-0057): hermetic `go test -race ./...` + vet pass; jobs/web/cmd/catalog/commands on disposable PG: POC DB tests pass, failures only the known codec/demo reds also on the base commit ([WORKLOG](WORKLOG.md)).
 - Policy 5/8 (2026-10-11, ADR-0055): jobs+cmd+contracts hermetic pass; jobs/cmd on disposable PG: same 3+3 codec-host failures as main, roedu DB tests pass; legacy client 43/43 ([WORKLOG](WORKLOG.md)).
 - Thread access `874b437` (2026-10-06):714/all21 fresh tests,0skips/failures; native/hash/vet/race + Node4 + harness17 pass; [receipt](docs/reviews/native-go/rest-thread-access-checkpoint.json).
 - Three mappings/new6-case test: outsiderPOST403/owner201, privateGET403/owner200, guardian ghostwrite403/ward-own201; persisted author/body and zero-write/privacy checks;4 sensitivity controls fail intentionally.

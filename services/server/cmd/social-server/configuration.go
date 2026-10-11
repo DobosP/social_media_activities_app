@@ -250,6 +250,7 @@ func (c runtimeConfig) apply(a *app.App) error {
 	a.Web.Config.SiteName = c.Web.SiteName
 	a.Web.Config.SiteGoogleVerification = c.Web.SiteGoogleVerification
 	a.Web.Config.SiteBingVerification = c.Web.SiteBingVerification
+	a.Web.Config.LocalPOC = c.Web.LocalPOC
 	return nil
 }
 
@@ -479,8 +480,12 @@ func configuration(get environment, o cliOptions, presence ...environmentPresenc
 	if jc.RoeduSyncEnabled && get("ROEDU_API_KEY") == "" {
 		d.invalid("ROEDU_API_KEY")
 	}
+	localPOC := localPOCGate(&d, o.DevContainer, out.Development, out.App.ReactUI, apiURL)
 	if apiURL != "" {
-		jc.Roedu = &jobs.RoeduClient{BaseURL: apiURL, APIKey: get("ROEDU_API_KEY")}
+		jc.Roedu = &jobs.RoeduClient{BaseURL: apiURL, APIKey: get("ROEDU_API_KEY"), LocalPOC: localPOC}
+	}
+	if d.isSet("ROEDU_SYNC_CITIES") {
+		jc.RoeduCities = roeduSyncCities(&d, get("ROEDU_SYNC_CITIES"), localPOC)
 	}
 	jc.IndexNowEnabled = d.boolean("INDEXNOW_ENABLED", false)
 	jc.IndexNowKey = get("INDEXNOW_KEY")
@@ -559,6 +564,7 @@ func configuration(get environment, o cliOptions, presence ...environmentPresenc
 		}
 	}
 	out.Web = web.Config{IndexNowKey: jc.IndexNowKey, SnapshotDir: jc.AgentSnapshotDir, SiteAreaServed: d.value("SITE_AREA_SERVED", "Cluj-Napoca"), SiteContactEmail: get("SITE_CONTACT_EMAIL"), SiteSameAs: d.list("SITE_SAMEAS", nil)}
+	out.Web.LocalPOC = localPOC
 	out.Web.SiteName = d.value("SITE_NAME", "Activities")
 	if out.Web.SiteName == "" || len([]rune(out.Web.SiteName)) > 200 || strings.TrimSpace(out.Web.SiteName) != out.Web.SiteName || strings.ContainsAny(out.Web.SiteName, "\r\n\x00") {
 		d.invalid("SITE_NAME")
