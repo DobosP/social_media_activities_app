@@ -2603,3 +2603,24 @@ from selected public files/modes. Testedfc7 is not this later docsHEAD execution
 Oldsource/failure/proofs/original14/15/verified764+d722 retained; no cleanup,
 newmask/baseline approval, handler/DB/POST/auth/ownership/privacy/admission/map/API/
 browserCSP/computedstyle/full/Live/device/default/adoption claim. Parent publishes.
+
+
+## 2026-10-11 — SOC-10 complete browse presentation nonce SOURCE ONLY
+
+At clean published80f, added only one request.csp_nonce to the existing deferred
+browse-modes script in activities.html; whole inverse restores exact5197B source.
+No shared card/near partial/JS/CSS/SQL/handler/policy/default edit or old case change.
+
+Authored37 focused actions:3parents,14OSFS seven synthetic adult presentations,
+8native nonce/header/path/order/load mutations and12safe DOM mutations. Actual
+socialPagination(...,24) maps and matching synthetic page rows preserve list/cards,
+search/suggestion, beginners and first/middle/last links/branches. Existing pure
+avatar/accent helpers and fictional dates are presentation inputs, not API/DB/
+cohortvisibility/auth/ownership/privacy/admission or real data evidence.
+
+Strict original/oneattrExpected/current Options{}+native header/tag freshness
+reuse verified764/d722/original15.66normalizations is SOURCE EXPECTED only;
+no measured census/browser count or new mask. Formatter/compiler/tests/runtime
+NOT RUN. Parent reviews closed Source/method then reserves any managed runtime.
+All old proofs/failure/source/baseline keepers remain; no gesture/map/geolocation/
+JS/browserCSP/computedstyle/full/Live/device/M6/default/SDK/templ adoption claim.

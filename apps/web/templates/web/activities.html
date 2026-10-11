@@ -67,4 +67,4 @@
 {% endif %}
 {% endblock %}
 
-{% block scripts %}<script src="{% static 'js/browse-modes.js' %}" defer></script>{% endblock %}
+{% block scripts %}<script nonce="{{ request.csp_nonce }}" src="{% static 'js/browse-modes.js' %}" defer></script>{% endblock %}

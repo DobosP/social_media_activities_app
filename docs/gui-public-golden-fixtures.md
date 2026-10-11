@@ -659,3 +659,34 @@ Synthetic authenticated adult renderer PRESENTATION only: no handler/DB/POST,
 auth/participation/ownership/organizer/admission/privacy/map/API/browserJS/CSP,
 computedstyle/full/Live/device/default/adoption approval. Prior proof/source and
 original14/15/sole764+d722 keepers remain intact; parent owns feature publication.
+
+
+### SOC-10 complete browse presentation nonce source checkpoint
+
+SOURCE ONLY, NOT RUN: activities.html adds only request.csp_nonce to its one
+existing deferred browse-modes.js tag. The whole inverse restores the exact80f
+5197B preimage. Shared activity-card/near-me partials, JS/CSS/handlers/filter SQL,
+fields/query links/pagination/copy/order, default assembly and policies stay exact.
+
+New gui_activity_browse_nonce_test.go authors37 native actions:3parents,
+14 OS/FS cases across seven synthetic adult list/cards/search/suggestion/beginners/
+first-middle-last shapes,8 separate native binding refusals and12 safe DOM
+mutations. Actual socialPagination(...,24) builds page maps; populated counts
+match each24-row page, using fixed fictional dates and native deterministic accents.
+The existing fictional avatar field completes authenticated presentation. No
+socialBrowse/SocialPage/DB/API/visibility/participation/privacy/admission execution
+or live data. Nine source/catalog files form old/current OS/FS inputs only.
+
+Strict original/explicit-one-attribute-expected/current Options{} uses existing
+verified764/d722/original15 unchanged. Native header/tag freshness and nonce/path/
+defer/header/order refusals are separate from SDK hard findings. Safe GET/filter/
+selected-view/card/link/page/suggestion/empty-copy mutations require hard0 and
+canonical inequality.66 Normalize calls is SOURCE EXPECTED only, no invocation
+census/browser count; delivered nonce volatility permits original equality.
+
+After parent source/method review/reservation, the same pinned4CPU6GiB network-none
+read-only formatter and fresh Go route may run `-mod=readonly -race -count=1 -json
+./internal/web -run '^TestGUIActivityBrowseNonce'` with existing normalizer flags.
+No rebuild/download/original recapture or old case change. M6 browse island remains
+held; no JS/gesture/location/map/network/browserCSP/computedstyle/full/Live/device/
+default/SDK/templ adoption or auth/ownership/privacy acceptance is claimed.
