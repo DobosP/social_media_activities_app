@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "utc": "2026-10-11T02:51:10.699305+00:00",
+  "verdict": "ParentSOC11 ACTUAL scopednative25/VM8 CLEAR",
+  "source": "7d85e91fe8cc82708d8d34439fc35c4d7678a251",
+  "session": 79758,
+  "invocation": "d4f63330-41f4-4fc3-a01d-ca0915493c39",
+  "result_sha256": "d2405e8c32b5a36a7baacf51095a0bd798ec1a65409ee05b623be6b54f7deeeb",
+  "closure_sha256": "1a2279f3d037e1bf75c1ca784a2b8ded7f864080be9e0a30a1d86f0f812c0ccd",
+  "regular_rows": 31,
+  "regular_bytes": 105314,
+  "source_guards": 86,
+  "external_guards": 18,
+  "native_events": 112,
+  "native_unique_once_PASS": 25,
+  "package_PASS": 1,
+  "VM_TAP_once_PASS": 8,
+  "fail_skip_cache_race_cancel_todo": 0,
+  "formatter_exit": 0,
+  "all_actualartifact_source_external_bytes_modes_verified": true,
+  "normalizations": "32SOURCEEXPECTEDonly/notacensus",
+  "cleanup": {
+    "id": "ec073d75b2bc864ec706546c05e064b8cde167d0cb74fbf763d408181cfeacbc",
+    "name": "social-my-meetups-nonce-d4f63330-41f4-4fc3-a01d-ca0915493c39",
+    "remove_exit": 0,
+    "id_absent": true,
+    "name_absent": true,
+    "passed": true
+  },
+  "scope": "SOC-11 synthetic authenticated adult member-content OS/FS nonce/presentation, released DOM and fictional actual-script VM only; no handler/API/PG/write/auth/participation/ownership/organizer/admission/privacy/geolocation/browserJS/browserCSP/computedstyle/app/full/Live/device/default/adoption qualification"
+}

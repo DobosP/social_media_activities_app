@@ -2660,3 +2660,21 @@ only/no census. VM covers offlinehonesty/events/heldsuccess/failure/no-store onl
 no realnetwork/browser/SW/cache/privacy evidence. Formatter/compiler/Go/Node/runtime
 NOT RUN. Parent reviews sealed source/method before reserving supported runtime;
 no install/rebuild/recapture/push/activation/full/device/adoption or oldproof change.
+
+
+## 2026-10-11 — SOC-11 compact synthetic member-presentation proof
+
+Actualtested7d85:formatter0/empty,25nativeoncePASS+package1/112JSONevents and
+8VMfake-onlyPASS, zero fail/skip/cache/race/cancel/todo;86source+18external fullmode/
+hash brackets exact, pinned4CPU6GiB/sourceRO/networknone/noOOM/ownedcleanup passed.
+6OSFS/8binding/8safeDOM source assertions,8hashlogs/3phasejoins;32Normalize remains
+SOURCEEXPECTED/no measured census/browser count. No realmember/child/health/
+network/browser/worker/SW/cache/auth/admission/ownership/guardian/privacy proof.
+
+Promoted only9literal Go/Node stdout/exits/format-exit/private-CLOSURE/review
+records. Public9 is not completeprivate31; rawresult86+18arrays and otherstreams
+stay private by indexedhash, honest600→664 modes. Source-review NOTRUN/peerpending
+is preserved as historical recordtime, actualacceptance separate. Tested7d85 is
+not this laterdocsH execution. Oldoriginal14/15/764+d722/form44/privacy/JS/worker/
+backend/source/failure proofs untouched; no cleanup/newSource/runtime/push/full/
+Live/device/default/templSDKadoption. Parent owns feature publication.

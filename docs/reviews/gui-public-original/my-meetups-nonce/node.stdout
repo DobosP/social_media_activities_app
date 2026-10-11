@@ -1,0 +1,58 @@
+TAP version 13
+# Subtest: missing-note returns without requests or listeners
+ok 1 - missing-note returns without requests or listeners
+  ---
+  duration_ms: 2.296441
+  type: 'test'
+  ...
+# Subtest: offline-initial reveals warning without a health request
+ok 2 - offline-initial reveals warning without a health request
+  ---
+  duration_ms: 1.456529
+  type: 'test'
+  ...
+# Subtest: online-success hides the warning after no-store health result
+ok 3 - online-success hides the warning after no-store health result
+  ---
+  duration_ms: 4.403823
+  type: 'test'
+  ...
+# Subtest: online-failure reveals the warning
+ok 4 - online-failure reveals the warning
+  ---
+  duration_ms: 1.382588
+  type: 'test'
+  ...
+# Subtest: online-rejection reveals the warning
+ok 5 - online-rejection reveals the warning
+  ---
+  duration_ms: 1.119675
+  type: 'test'
+  ...
+# Subtest: offline-event reveals warning without another request
+ok 6 - offline-event reveals warning without another request
+  ---
+  duration_ms: 1.297011
+  type: 'test'
+  ...
+# Subtest: online-event re-probes with no-store before hiding warning
+ok 7 - online-event re-probes with no-store before hiding warning
+  ---
+  duration_ms: 1.059324
+  type: 'test'
+  ...
+# Subtest: pending-online result preserves the previous warning state
+ok 8 - pending-online result preserves the previous warning state
+  ---
+  duration_ms: 1.034923
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 85.405051

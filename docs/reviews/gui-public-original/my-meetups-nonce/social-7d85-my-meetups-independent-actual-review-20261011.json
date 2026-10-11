@@ -1,0 +1,68 @@
+{
+  "schema": 1,
+  "reviewer": "/root/program_pack",
+  "verdict": "ACTUAL_TARGETED_BOUNDARY_CLEAR",
+  "reviewed_utc": "2026-10-11T02:58:51.058858+00:00",
+  "source": "7d85e91fe8cc82708d8d34439fc35c4d7678a251",
+  "invocation": "d4f63330-41f4-4fc3-a01d-ca0915493c39",
+  "actual_parent_session": 79758,
+  "capture": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/my-meetups-nonce-7d85e91-d4f63330-41f4-4fc3-a01d-ca0915493c39",
+  "parent_owned_closure_sha256": "1a2279f3d037e1bf75c1ca784a2b8ded7f864080be9e0a30a1d86f0f812c0ccd",
+  "result_sha256": "d2405e8c32b5a36a7baacf51095a0bd798ec1a65409ee05b623be6b54f7deeeb",
+  "all31_regular_tuple_bytes_hashes_full_modes_verified": true,
+  "row_bytes": 105314,
+  "private_owned_unaliased_directory0700": true,
+  "native": {
+    "raw_Go_JSON_events": 112,
+    "unique_run_PASS_once": 25,
+    "package_PASS": 1,
+    "fail_skip_cache_race": 0,
+    "OS_FS_adult_presentation_children": 6,
+    "binding_refusal_children": 8,
+    "safe_DOM_mutation_children": 8,
+    "parents": 3,
+    "flags": "-mod=readonly -race -count=1 -json"
+  },
+  "VM": {
+    "actual_TAP_version": 13,
+    "expected_unique_IDs_once": 8,
+    "counters": {
+      "tests": 8,
+      "pass": 8,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "actual_command": "node --test --test-reporter=tap /work/tools/gui-public-golden/my-meetups-offline.test.mjs (inside pinned2e image)",
+    "scope": "Fake-only unchanged my-meetups.js warning/health-result/event behavior, no actual browser/network/SW/cache/member-privacy proof."
+  },
+  "formatter_empty_exit0": true,
+  "format_native_node_three_recorded_exits_zero": true,
+  "source86_external18_before_after_live_bytes_full_modes_Git_exact": true,
+  "clean_exact_HEAD": true,
+  "normalizer_calls": {
+    "source_expected": 32,
+    "independent_measured_census": null
+  },
+  "managed": {
+    "image": "sha256:2e040a5165d79be63755424f707fdb8cf609ace831ada7a9baca398ac25e12b9",
+    "source_mount_readonly": true,
+    "network": "none",
+    "cpus": 4,
+    "memory_bytes": 6442450944,
+    "no_OOM": true,
+    "nine_controls_exit0": true
+  },
+  "owned_cleanup": {
+    "full_CID": "ec073d75b2bc864ec706546c05e064b8cde167d0cb74fbf763d408181cfeacbc",
+    "remove_exit": 0,
+    "actual_ID_and_exact_name_absence_streams_verified": true
+  },
+  "parent_actual_review": {
+    "reported_sha256": "0058a5b73dfed2610cfab2f5ea10c31363827dc309fecf550f90f864cd09f0eb",
+    "matching_physical_record": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-7d85-meetups-parent-actual-review-20261011.json"
+  },
+  "limits": "Synthetic adult Renderer/nonce/DOM plus fake-only script checks. No actual network/browser/SW/memberprivacy/auth/guardian/backend/full/Live/device/default/adoption qualification.",
+  "actions": "Read-only actual capsule/source/Git/reference verification plus this private JSON; no runtime, parser/compiler/install, source-WT/controller writes or cleanup by reviewer."
+}

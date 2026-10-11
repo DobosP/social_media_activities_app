@@ -716,7 +716,7 @@ Renderer presentation only, no handler/DB/API/auth/ownership/privacy/admission/
 location/JS/browserCSP/computedstyle/full/Live/device/default/M6/templSDK approval.
 
 
-### SOC-11 my-meetups member-presentation source checkpoint
+### Historical SOC-11 initial7d85 source checkpoint (2026-10-11)
 
 SOURCE ONLY, NOT RUN: only request.csp_nonce is added to the one existing deferred
 my-meetups.js tag. The whole template inverse restores exact2377B/d97c source,
@@ -747,3 +747,27 @@ with current normalizer flags, then Node `--test --test-reporter=tap` on
 `tools/gui-public-golden/my-meetups-offline.test.mjs`. No helper rebuild/install/
 recapture. All oldproofs/policies/originals remain distinct; no full/Live/browserCSP/
 computedstyle/device/default/templSDKadoption or worker/backend approval follows.
+
+
+### SOC-11 accepted scoped member-presentation execution
+
+At tested7d85e91, formatter0/empty,25unique native checks PASS once+package1/
+112GoJSONevents, and8exact actual-script VM tests PASS once with zero fail/cancel/
+skip/todo. All86source+18external byte/full-mode guards, pinned4CPU6GiB/sourceRO/
+networknone/noOOM/ownedcleanup passed. Parent and independent review accepted the
+[scoped checkpoint](reviews/gui-public-original/my-meetups-nonce-checkpoint.json).
+
+SixOSFS adult presentations,8native binding refusals and8safe DOM mutations
+passed;8comparison hash logs join expected/current and3OSFSphasejoins agree.
+32Normalize calls remains SOURCE EXPECTED, no invocation census or browser count.
+VM inputs are fictional note/navigator/window/fakefetch only, with no-store health
+and online/offline/held/success/failure cases. No realnetwork/browser/SW/cache/
+worker/privacy/ownership/admission or member/child data qualification follows.
+
+Only9literal records are promoted:Go/Node rawstdout and exits,format exit,
+fullprivateCLOSURE and3source/actualreviews. Selectedpublic9 != completeprivate31;
+rawresult86+18arrays/emptyformatter-error/Dockercontrol streams remain private by
+indexedhash. Originalprivate600/public664 modes and historical source-review
+NOTRUN labels are explicit. This later docsHEAD is not retested. Original14/15/
+764+d722, priorform44/privacy/nonce/static/VM/source/failure keepers and allJS/
+backend/guardian/defaults remain unchanged; no full/device/Live/templSDK approval.

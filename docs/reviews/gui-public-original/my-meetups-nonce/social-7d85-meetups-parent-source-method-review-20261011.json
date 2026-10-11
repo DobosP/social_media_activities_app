@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "utc": "2026-10-11T02:39:19.916844+00:00",
+  "verdict": "ParentSOC11 Source/method bounded CLEAR + planningfd8bfdc7",
+  "source": "7d85e91fe8cc82708d8d34439fc35c4d7678a251",
+  "paths": 6,
+  "other_oldGit_physical_blob_modes_verified": 1993,
+  "reference_counts": [
+    86,
+    18,
+    7
+  ],
+  "all_seal_refs_currentGit_afterimages_beforeimages_productinverse_fullmodes_verified": true,
+  "native_authored": 25,
+  "VM_authored": 8,
+  "normalizations": "32SOURCEEXPECTEDonly/nomeasuredcensus",
+  "root_VM_review": "Exact507BunchangedJS/hash bindsfake-onlynote/navigator/window/healthno-store successfailure-rejection/offlineonlineevents/heldresult cases; missingnote no-op; noactualrequests/SW/cache/browserprivacyclaim",
+  "scope": "Explicit syntheticauthenticatedADULT/memberpresentation only; auth/guardian/privacy/backend/API/defaults unchanged/unqualified",
+  "runtime": "NOT RUN"
+}

@@ -1,0 +1,189 @@
+{
+  "schema": 1,
+  "scope": "SOC11 synthetic authenticated adult/member-content Renderer presentation and fake-only actual-script VM; no auth/admission/ownership/guardian/privacy/API/realmember/realchild/worker/cache/backend/browser/full/device/default/adoption qualification",
+  "tested_source": "7d85e91fe8cc82708d8d34439fc35c4d7678a251",
+  "actual_invocation": "d4f63330-41f4-4fc3-a01d-ca0915493c39",
+  "actual_method_exit": 0,
+  "raw_private_result_sha256": "d2405e8c32b5a36a7baacf51095a0bd798ec1a65409ee05b623be6b54f7deeeb",
+  "private_closure_sha256": "1a2279f3d037e1bf75c1ca784a2b8ded7f864080be9e0a30a1d86f0f812c0ccd",
+  "source_packet_seal": "69287d9bdbd4986c653452fdb2c443cf8812982c17a8cd7609dbb2df9d1cd104",
+  "method_packet_seal": "c6581a84d727ff6f8228702c70be3dac81f97cc80f6735be42a94c56bac3e485",
+  "method_source_sha256": "ccb1dc7fc0c278c4b2422a0711b90f85a2331ad8772e9f8c795b6a528804ea4d",
+  "parent_actual_review_sha256": "0058a5b73dfed2610cfab2f5ea10c31363827dc309fecf550f90f864cd09f0eb",
+  "independent_actual_review_sha256": "c8e13950bc257e165882f1d2677311df8658348ed43bdb5ab616236119a40130",
+  "native": {
+    "run": 25,
+    "pass": 25,
+    "top_level": 3,
+    "subcases": 22,
+    "package_pass": 1,
+    "fail": 0,
+    "skip": 0,
+    "cached": false,
+    "identities": [
+      "TestGUIMyMeetupsNonceDOM",
+      "TestGUIMyMeetupsNonceDOM/filesystem-false/empty",
+      "TestGUIMyMeetupsNonceDOM/filesystem-false/populated",
+      "TestGUIMyMeetupsNonceDOM/filesystem-false/optional-absent",
+      "TestGUIMyMeetupsNonceDOM/filesystem-true/empty",
+      "TestGUIMyMeetupsNonceDOM/filesystem-true/populated",
+      "TestGUIMyMeetupsNonceDOM/filesystem-true/optional-absent",
+      "TestGUIMyMeetupsNonceRejectsBindingMutations",
+      "TestGUIMyMeetupsNonceRejectsBindingMutations/missing-nonce",
+      "TestGUIMyMeetupsNonceRejectsBindingMutations/wrong-nonce",
+      "TestGUIMyMeetupsNonceRejectsBindingMutations/duplicate",
+      "TestGUIMyMeetupsNonceRejectsBindingMutations/changed-path",
+      "TestGUIMyMeetupsNonceRejectsBindingMutations/changed-defer",
+      "TestGUIMyMeetupsNonceRejectsBindingMutations/missing-header",
+      "TestGUIMyMeetupsNonceRejectsBindingMutations/disagreeing-header",
+      "TestGUIMyMeetupsNonceRejectsBindingMutations/script-order",
+      "TestGUIMyMeetupsNonceRejectsDOMMutations",
+      "TestGUIMyMeetupsNonceRejectsDOMMutations/hidden-status",
+      "TestGUIMyMeetupsNonceRejectsDOMMutations/status-role",
+      "TestGUIMyMeetupsNonceRejectsDOMMutations/offline-copy",
+      "TestGUIMyMeetupsNonceRejectsDOMMutations/calendar-download",
+      "TestGUIMyMeetupsNonceRejectsDOMMutations/meetup-link",
+      "TestGUIMyMeetupsNonceRejectsDOMMutations/meeting-point",
+      "TestGUIMyMeetupsNonceRejectsDOMMutations/saved-copy",
+      "TestGUIMyMeetupsNonceRejectsDOMMutations/empty-copy"
+    ],
+    "JSON_events": 112
+  },
+  "VM": {
+    "tests": 8,
+    "pass": 8,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "identities": [
+      "missing-note returns without requests or listeners",
+      "offline-initial reveals warning without a health request",
+      "online-success hides the warning after no-store health result",
+      "online-failure reveals the warning",
+      "online-rejection reveals the warning",
+      "offline-event reveals warning without another request",
+      "online-event re-probes with no-store before hiding warning",
+      "pending-online result preserves the previous warning state"
+    ],
+    "scope": "Synthetic VM only, no browser/network/SW/cache/privacy proof"
+  },
+  "formatter": {
+    "exit_code": 0,
+    "diff_bytes": 0,
+    "stderr_bytes": 0
+  },
+  "source_guards": 86,
+  "external_guards": 18,
+  "source_byte_fullmode_before_after_equal": true,
+  "normalization": {
+    "OS_FS_positive_children": 6,
+    "binding_mutations": 8,
+    "safe_DOM_mutations": 8,
+    "actual_comparison_hash_logs": 8,
+    "all_expected_current_equal": true,
+    "observed_original_current_equal": 0,
+    "observed_original_current_distinct": 8,
+    "OS_FS_phase_hash_joins": 3,
+    "source_expected_calls": 32,
+    "independent_invocation_census": null,
+    "browser_count": 0,
+    "policy": "Actual verified764/d722 Options{} unchanged; no oracle/asset masks or newbaseline. Nonce volatility equality permitted; actuals observed separately. Native binding refusals separate from SDK hard findings."
+  },
+  "VM_limit": "Eight exact-unchanged-script VM cases use fictional note/navigator/window/fakefetch, no real health/network/browser/SW/cache/privacy or member-data proof. ActualJS/site/worker/cache/purge and guardian/backend conditions unchanged.",
+  "isolation": {
+    "image_id": "sha256:2e040a5165d79be63755424f707fdb8cf609ace831ada7a9baca398ac25e12b9",
+    "source_readonly": true,
+    "network": "none",
+    "cpus": 4,
+    "memory_bytes": 6442450944,
+    "noOOM": true
+  },
+  "owned_cleanup": {
+    "id": "ec073d75b2bc864ec706546c05e064b8cde167d0cb74fbf763d408181cfeacbc",
+    "name": "social-my-meetups-nonce-d4f63330-41f4-4fc3-a01d-ca0915493c39",
+    "remove_exit": 0,
+    "id_absent": true,
+    "name_absent": true,
+    "passed": true
+  },
+  "literal_transfers": [
+    {
+      "path": "tests.stdout",
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/my-meetups-nonce-7d85e91-d4f63330-41f4-4fc3-a01d-ca0915493c39/tests.stdout",
+      "bytes": 31519,
+      "sha256": "24bd48b147374fb92a72ffc29a2113e4e67732e3fefc48da9cab98eb7de757c2",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204
+    },
+    {
+      "path": "tests.exit",
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/my-meetups-nonce-7d85e91-d4f63330-41f4-4fc3-a01d-ca0915493c39/tests.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204
+    },
+    {
+      "path": "node.stdout",
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/my-meetups-nonce-7d85e91-d4f63330-41f4-4fc3-a01d-ca0915493c39/node.stdout",
+      "bytes": 1498,
+      "sha256": "ff1c496064100dda8ec2c6cc39e283a513a04978fcf5217742a48b3a6a5a357b",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204
+    },
+    {
+      "path": "node.exit",
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/my-meetups-nonce-7d85e91-d4f63330-41f4-4fc3-a01d-ca0915493c39/node.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204
+    },
+    {
+      "path": "format.exit",
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/my-meetups-nonce-7d85e91-d4f63330-41f4-4fc3-a01d-ca0915493c39/format.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204
+    },
+    {
+      "path": "CLOSURE.json",
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/my-meetups-nonce-7d85e91-d4f63330-41f4-4fc3-a01d-ca0915493c39/CLOSURE.json",
+      "bytes": 5624,
+      "sha256": "1a2279f3d037e1bf75c1ca784a2b8ded7f864080be9e0a30a1d86f0f812c0ccd",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204
+    },
+    {
+      "path": "social-7d85-meetups-parent-actual-review-20261011.json",
+      "actual_source": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-7d85-meetups-parent-actual-review-20261011.json",
+      "bytes": 1401,
+      "sha256": "0058a5b73dfed2610cfab2f5ea10c31363827dc309fecf550f90f864cd09f0eb",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204
+    },
+    {
+      "path": "social-7d85-my-meetups-independent-actual-review-20261011.json",
+      "actual_source": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-7d85-my-meetups-independent-actual-review-20261011.json",
+      "bytes": 3007,
+      "sha256": "c8e13950bc257e165882f1d2677311df8658348ed43bdb5ab616236119a40130",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204
+    },
+    {
+      "path": "social-7d85-meetups-parent-source-method-review-20261011.json",
+      "actual_source": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-7d85-meetups-parent-source-method-review-20261011.json",
+      "bytes": 906,
+      "sha256": "1208f5e747f292d7eaf21c997ca25c64df881f26ecb1fdcef8084cd6f0604151",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204
+    }
+  ],
+  "transfer_total_bytes": 43961,
+  "availability": "Only9selected literal records are public, not the complete private31row capture. Copied full CLOSURE indexes that private capture; rawresult86+18guardarrays, emptyformatter/error streams and Dockercontrols remain private by indexedhash. Originalprivate600/public0664 modes explicit.",
+  "historical_review_precision": "Copied source-methodreview NOTRUN/peerpending refers to its original source-review time; lateractualroot+independent acceptance is separate and unchanged.",
+  "later_docs_HEAD_not_reexecuted": true,
+  "retention": "Original14/15/764+d722 and all earlier source/failure/form44/privacy/VM/static proof keepers unchanged; no cleanup or original recapture."
+}
