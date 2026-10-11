@@ -3,6 +3,35 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-12 — Local POC consumer review fixes (ADR-0057)
+
+Valid until: the cross-repo local-POC contract v1 or the ro_data_server POC projection changes.
+
+Independent review of the consumer half found one major defect and four minors. Changes:
+- Major: the real ro_data_server B2 page for a release whose items were all admitted is `full`,
+  `snapshot_complete: true`, `withheld: 0`. The consumer marked it complete and ran full-snapshot
+  reconciliation (rollback check, tombstoning a non-POC row of that city, a sync-state row). Now
+  `Read` never reports a POC pack complete and `ApplyRoedu` drops any `Complete` claim on a POC pack.
+- Events now keep their evidence in a POC-only `source_local_poc_evidence` jsonb column (real
+  `gdpr_relevant`, `privacy_classification`, decision id, deny attestation, admission), added next
+  to `source_local_poc`.
+- RSS/Atom feeds prefix flagged entries with the marker. The sitemap was already safe: it clears
+  the whole query, so `include_past` never reaches it (now pinned by a test).
+- `catalog.EventLocalPOCSQL` probes for the flag column once per query (an InitPlan; checked with
+  EXPLAIN) and evaluates `to_jsonb(e)` only when it exists, so production pays no per-row cost.
+- Fixed-value admission negatives now assert that `LocalPOCAdmissionDigest` itself refuses them.
+
+Checks:
+- Hermetic `go test -race ./...`, `go vet ./...`, `gofmt -l` and `scripts/check-native.sh` pass.
+- On a throwaway 127.0.0.1 `sociallive-postgis-pgvector:16` container (removed afterwards): jobs
+  77 PASS, cmd/social-server 61 PASS, catalog and web ok. The only failures are the 3+3 codec reds
+  already present on the base commit.
+- New `TestLocalPOCCompleteSnapshotIsNeverComplete` and
+  `TestPostgresLocalPOCCompleteSnapshotNeverReconciles`. Removing either guard fails the hermetic
+  test, and removing both also fails the DB test (rollback check fires). The reviewer's real B2
+  page, run through an overlay test, now syncs with `complete:false`, leaves the non-POC row
+  scheduled and writes no sync state.
+
 ## 2026-10-12 — Development-only RO-EDU local POC, consumer half (ADR-0057)
 
 Valid until: the cross-repo local-POC contract v1 or the ro_data_server POC projection changes — then regenerate the fixture and requalify.

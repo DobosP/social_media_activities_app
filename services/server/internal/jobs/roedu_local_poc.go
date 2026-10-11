@@ -311,23 +311,40 @@ func roeduSyncOptions(pack PackRead) RoeduApplyOptions {
 	return RoeduApplyOptions{MinConfidence: 1}
 }
 
-// ensureLocalPOCColumn adds the event flag column a POC sync writes. It exists
-// only in a database a POC sync has written to (the production schema is
-// unchanged); readers use catalog.EventLocalPOCSQL, which tolerates its absence.
-// It must run before the transaction's first events_event write: the baseline's
-// DEFERRABLE INITIALLY DEFERRED foreign keys leave pending trigger events that
-// make a later ALTER TABLE fail (SQLSTATE 55006).
+// ensureLocalPOCColumn adds the event flag and evidence columns a POC sync
+// writes. They exist only in a database a POC sync has written to (the
+// production schema is unchanged); readers use catalog.EventLocalPOCSQL, which
+// tolerates their absence. It must run before the transaction's first
+// events_event write: the baseline's DEFERRABLE INITIALLY DEFERRED foreign keys
+// leave pending trigger events that make a later ALTER TABLE fail (SQLSTATE 55006).
 func ensureLocalPOCColumn(ctx context.Context, tx pgx.Tx) error {
-	var exists bool
-	if err := tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM pg_attribute WHERE attrelid='events_event'::regclass AND attname='source_local_poc' AND NOT attisdropped)`).Scan(&exists); err != nil || exists {
+	var present int
+	if err := tx.QueryRow(ctx, `SELECT count(*) FROM pg_attribute WHERE attrelid='events_event'::regclass AND attname IN('source_local_poc','source_local_poc_evidence') AND NOT attisdropped`).Scan(&present); err != nil || present == 2 {
 		return err
 	}
-	_, err := tx.Exec(ctx, `ALTER TABLE events_event ADD COLUMN IF NOT EXISTS source_local_poc boolean NOT NULL DEFAULT false`)
+	_, err := tx.Exec(ctx, `ALTER TABLE events_event ADD COLUMN IF NOT EXISTS source_local_poc boolean NOT NULL DEFAULT false, ADD COLUMN IF NOT EXISTS source_local_poc_evidence jsonb`)
 	return err
 }
 
-// markLocalPOCEvent flags one event row this POC sync wrote.
-func markLocalPOCEvent(ctx context.Context, tx pgx.Tx, external string) error {
-	_, err := tx.Exec(ctx, `UPDATE events_event SET source_local_poc=true WHERE source='roedu' AND external_id=$1`, external)
+// LocalPOCEventEvidence is the honest evidence a POC event row keeps (CONTRACT
+// §2: the admission at every layer): the item's REAL privacy values, its real
+// publish_source attestation and decision id, and its admission (absent for a
+// clear-allow item of a POC release).
+func LocalPOCEventEvidence(item map[string]any) map[string]any {
+	evidence := map[string]any{"gdpr_relevant": item["gdpr_relevant"], "privacy_classification": item["privacy_classification"], "policy_decision_id": item["policy_decision_id"], "policy_attestation": item["policy_attestation"]}
+	if admission, ok := item["local_poc_admission"]; ok {
+		evidence["local_poc_admission"] = admission
+	}
+	return evidence
+}
+
+// markLocalPOCEvent flags one event row this POC sync wrote and stores its
+// evidence.
+func markLocalPOCEvent(ctx context.Context, tx pgx.Tx, external string, item map[string]any) error {
+	evidence, err := json.Marshal(LocalPOCEventEvidence(item))
+	if err != nil {
+		return err
+	}
+	_, err = tx.Exec(ctx, `UPDATE events_event SET source_local_poc=true,source_local_poc_evidence=$2::jsonb WHERE source='roedu' AND external_id=$1`, external, string(evidence))
 	return err
 }

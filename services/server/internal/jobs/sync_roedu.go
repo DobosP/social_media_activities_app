@@ -100,6 +100,10 @@ func (r *Runner) ApplyRoeduWithOptions(ctx context.Context, pack PackRead, city 
 	if pack.LocalPOC && !r.Config.Roedu.LocalPOCActive() {
 		return nil, ErrLocalPOCRefused
 	}
+	if pack.LocalPOC {
+		// Never complete: no rollback check, absence tombstoning or sync state.
+		pack.Complete = false
+	}
 	if options.DryRun {
 		generated, dateOK := aware(pack.Generated)
 		if pack.Pack != SocialPack || !releasePattern.MatchString(pack.Release) || pack.Release != pack.Snapshot || !dateOK || (pack.Mode != "full" && pack.Mode != "partial") || (pack.Complete && pack.Mode != "full") {
@@ -275,7 +279,7 @@ func (r *Runner) ApplyRoeduWithOptions(ctx context.Context, pack PackRead, city 
 				written, err = tx.Exec(ctx, `INSERT INTO events_event(external_id,place_id,activity_type_id,title,description,starts_at,ends_at,url,attribution,license_name,provenance_url,is_import_held,lifecycle_status,is_tombstone,source_category,source_city,source_confidence,source_first_seen_at,source_last_seen_at,source_pack_id,source_release_id,source_snapshot_generated_at,source_snapshot_id,source_updated_at,source_venue_id,source_availability,source_currency,source_is_free,source_price_max,source_price_min,source_recurrence,source_timezone,source,created_at,updated_at) VALUES($1,$2,$3,$4,'',$5,$6,$7,$8,$9,'',$10,$11,false,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,'roedu',now(),now())`, args...)
 			}
 			if err == nil && pack.LocalPOC && written.RowsAffected() > 0 {
-				err = markLocalPOCEvent(ctx, tx, external)
+				err = markLocalPOCEvent(ctx, tx, external, item)
 			}
 			if err != nil {
 				return err

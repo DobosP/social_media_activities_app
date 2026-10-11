@@ -11,8 +11,10 @@ const LocalPOCMarker = "LOCAL POC — not cleared for publication"
 // EventLocalPOCSQL is true for an events_event row `e` written by a POC sync.
 // The source_local_poc column exists only in a database a POC sync has written
 // to (the production schema is unchanged), so the row is read through to_jsonb:
-// where the column is absent this is false, never an error.
-const EventLocalPOCSQL = `coalesce((to_jsonb(e)->>'source_local_poc')='true',false)`
+// where the column is absent this is false, never an error. The uncorrelated
+// column probe runs once per query (an InitPlan) and CASE evaluates to_jsonb(e)
+// only when it holds, so a production database never pays the per-row cost.
+const EventLocalPOCSQL = `CASE WHEN (SELECT EXISTS(SELECT 1 FROM pg_attribute WHERE attrelid='events_event'::regclass AND attname='source_local_poc' AND NOT attisdropped)) THEN coalesce((to_jsonb(e)->>'source_local_poc')='true',false) ELSE false END`
 
 // PlaceLocalPOC reports the POC flag a POC sync stored in a place's raw tags.
 func PlaceLocalPOC(tags map[string]any) bool { return tags["roedu_local_poc"] == true }

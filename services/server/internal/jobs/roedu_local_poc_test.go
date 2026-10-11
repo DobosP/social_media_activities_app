@@ -185,6 +185,31 @@ func TestLocalPOCAdmissionNegatives(t *testing.T) {
 		"shape: description":        func(item, _, _ map[string]any) { item["description"] = "private prose" },
 		"admission not object":      func(item, _, _ map[string]any) { item["local_poc_admission"] = "admitted" },
 	}
+	// Fixed-value mutations cannot be re-digested: LocalPOCAdmissionDigest
+	// itself refuses them, so the item is refused by the value check and never
+	// merely by a stale digest.
+	for name, mutate := range map[string]func(map[string]any){
+		"relative poc_root":        func(adm map[string]any) { adm["poc_root"] = "mnt/poc" },
+		"kind":                     func(adm map[string]any) { adm["kind"] = "legal_basis" },
+		"not_a_legal_basis false":  func(adm map[string]any) { adm["not_a_legal_basis"] = false },
+		"not_a_legal_basis string": func(adm map[string]any) { adm["not_a_legal_basis"] = "true" },
+		"schema_version 2":         func(adm map[string]any) { adm["schema_version"] = json.Number("2") },
+		"schema_version 1.0":       func(adm map[string]any) { adm["schema_version"] = json.Number("1.0") },
+		"schema_version string":    func(adm map[string]any) { adm["schema_version"] = "1" },
+		"waived not WAIVABLE":      func(adm map[string]any) { adm["waived_reasons"] = []any{"capture_id_missing"} },
+		"waived unsorted":          func(adm map[string]any) { adm["waived_reasons"] = []any{"privacy_unknown", "capability_denied"} },
+		"waived duplicate":         func(adm map[string]any) { adm["waived_reasons"] = []any{"privacy_unknown", "privacy_unknown"} },
+		"underlying id empty":      func(adm map[string]any) { adm["underlying_decision_id"] = "" },
+	} {
+		admission := deepCopy(t, base)["local_poc_admission"].(map[string]any)
+		if _, ok := LocalPOCAdmissionDigest(admission); !ok {
+			t.Fatal("fixture admission does not digest")
+		}
+		mutate(admission)
+		if digest, ok := LocalPOCAdmissionDigest(admission); ok {
+			t.Fatal("digest computed over a refused fixed value:", name, digest)
+		}
+	}
 	for name, mutate := range cases {
 		item := deepCopy(t, base)
 		admission, _ := item["local_poc_admission"].(map[string]any)
@@ -312,5 +337,42 @@ func TestLocalPOCVenueTagsOnlyForPOCPacks(t *testing.T) {
 	LocalPOCTags(tags, PackRead{LocalPOC: true}, item)
 	if tags["roedu_local_poc"] != true || tags["roedu:gdpr_relevant"] != true || tags["roedu:privacy_classification"] != "unknown" || tags["roedu:local_poc_admission"] == nil {
 		t.Fatal("POC venue evidence", tags)
+	}
+}
+
+// ADR-0057: a POC snapshot is never complete, even when the producer admitted
+// every item (snapshot_mode full, snapshot_complete true, withheld 0), so it
+// never reaches rollback checks, absence tombstoning or sync state.
+func TestLocalPOCCompleteSnapshotIsNeverComplete(t *testing.T) {
+	page := pocPage(t)
+	page["snapshot_mode"], page["snapshot_complete"], page["withheld"] = "full", true, json.Number("0")
+	read, err := pocClient(t, "http://127.0.0.1:8077", true, pocMarshal(t, page)).Read(context.Background(), "Cluj-Napoca")
+	if err != nil || !read.LocalPOC || read.Complete || read.Mode != "full" || len(read.Items) != 2 {
+		t.Fatal("complete POC snapshot read as complete", read.LocalPOC, read.Complete, read.Mode, len(read.Items), err)
+	}
+	// The same envelope without local_poc stays complete for production.
+	production, err := os.ReadFile("testdata/roedu-page.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if read, err := pocClient(t, "http://127.0.0.1:8077", false, production).Read(context.Background(), "Cluj-Napoca"); err != nil || !read.Complete {
+		t.Fatal("production completeness changed", read.Complete, err)
+	}
+	// ApplyRoedu ignores a Complete claim on a POC pack it is handed directly.
+	config := DefaultConfig()
+	config.Roedu = &RoeduClient{BaseURL: "http://127.0.0.1:8077", LocalPOC: true}
+	pack := PackRead{Items: pocItems(t), Pack: SocialPack, Snapshot: "sha256-" + strings.Repeat("7", 64), Release: "sha256-" + strings.Repeat("7", 64), Generated: "2026-07-12T08:00:00+00:00", Mode: "full", Complete: true, LocalPOC: true}
+	summary, err := New(nil, config).ApplyRoeduWithOptions(context.Background(), pack, "Cluj-Napoca", RoeduApplyOptions{MinConfidence: LocalPOCMinConfidence, DryRun: true})
+	if err != nil || summary["complete"] != false || summary["local_poc"] != true {
+		t.Fatal("POC pack applied as complete", summary, err)
+	}
+}
+
+func TestLocalPOCEventEvidenceKeepsTheRealDecision(t *testing.T) {
+	item := pocItems(t)[1]
+	evidence := LocalPOCEventEvidence(item)
+	attestation, _ := evidence["policy_attestation"].(map[string]any)
+	if evidence["gdpr_relevant"] != true || evidence["privacy_classification"] != "unknown" || attestation["effect"] != "deny" || evidence["policy_decision_id"] != item["policy_decision_id"] || evidence["local_poc_admission"] == nil {
+		t.Fatal("POC event evidence", evidence)
 	}
 }

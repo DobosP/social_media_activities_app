@@ -220,9 +220,13 @@ func (s *Server) publicFeed(r *http.Request, events []map[string]any, atom bool)
 	}
 	for _, e := range events {
 		path := s.publicAbsolute(r, publicEventPath(e))
+		title := spaText(e["title"])
+		if spaBool(e["local_poc"]) {
+			title = catalog.LocalPOCMarker + ": " + title // ADR-0057
+		}
 		if atom {
 			out.WriteString(`<entry><title>`)
-			xmlText(&out, spaText(e["title"]))
+			xmlText(&out, title)
 			out.WriteString(`</title><id>`)
 			xmlText(&out, path)
 			out.WriteString(`</id><link rel="alternate" href="`)
@@ -236,7 +240,7 @@ func (s *Server) publicFeed(r *http.Request, events []map[string]any, atom bool)
 			out.WriteString(`</updated></entry>`)
 		} else {
 			out.WriteString(`<item><title>`)
-			xmlText(&out, spaText(e["title"]))
+			xmlText(&out, title)
 			out.WriteString(`</title><link>`)
 			xmlText(&out, path)
 			out.WriteString(`</link><guid>`)

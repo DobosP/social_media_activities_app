@@ -160,7 +160,8 @@ What changes in this mode:
   or `Pitesti`. Do not assume `Cluj-Napoca`, and leave out cities with no items.
 - `/events/?include_past=1` also lists past POC events.
 
-A POC sync is never complete, so it never reconciles absence. `ingest_places --source roedu`
+A POC sync is never complete, even when the page claims a complete snapshot, so it never
+reconciles absence or records a sync state. `ingest_places --source roedu`
 refuses a POC pack; use `sync_roedu` / `sync_roedu_events`.
 
 ## Safety model

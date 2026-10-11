@@ -94,7 +94,7 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
-- Local POC (2026-10-12, ADR-0057): hermetic `go test -race ./...` + vet pass; jobs/web/cmd/catalog/commands on disposable PG: POC DB tests pass, failures only the known codec/demo reds also on the base commit ([WORKLOG](WORKLOG.md)).
+- Local POC (2026-10-12, ADR-0057): hermetic `go test -race ./...` + vet pass; jobs/web/cmd/catalog/commands on disposable PG: POC DB tests pass (review fixes: a complete POC snapshot never reconciles, event evidence stored, feeds labelled), failures only the known codec/demo reds also on the base commit ([WORKLOG](WORKLOG.md)).
 - Policy 5/8 (2026-10-11, ADR-0055): jobs+cmd+contracts hermetic pass; jobs/cmd on disposable PG: same 3+3 codec-host failures as main, roedu DB tests pass; legacy client 43/43 ([WORKLOG](WORKLOG.md)).
 - Thread access `874b437` (2026-10-06):714/all21 fresh tests,0skips/failures; native/hash/vet/race + Node4 + harness17 pass; [receipt](docs/reviews/native-go/rest-thread-access-checkpoint.json).
 - Three mappings/new6-case test: outsiderPOST403/owner201, privateGET403/owner200, guardian ghostwrite403/ward-own201; persisted author/body and zero-write/privacy checks;4 sensitivity controls fail intentionally.

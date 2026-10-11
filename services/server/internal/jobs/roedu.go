@@ -505,7 +505,9 @@ func (c *RoeduClient) Read(ctx context.Context, city string) (PackRead, error) {
 			return result, errors.New("invalid RO-EDU pagination")
 		}
 		if pagination["next_cursor"] == nil {
-			result.Complete = complete && clean
+			// A local POC snapshot is never complete, even when the producer
+			// admitted every item (withheld 0): it never reconciles (ADR-0057).
+			result.Complete = complete && clean && !result.LocalPOC
 			finishedPaging = true
 			break
 		}

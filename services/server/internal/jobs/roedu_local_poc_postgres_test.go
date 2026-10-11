@@ -11,7 +11,7 @@ import (
 func localPOCColumnExists(t *testing.T, r *Runner) bool {
 	t.Helper()
 	var exists bool
-	if err := r.DB.QueryRow(context.Background(), `SELECT EXISTS(SELECT 1 FROM pg_attribute WHERE attrelid='events_event'::regclass AND attname='source_local_poc' AND NOT attisdropped)`).Scan(&exists); err != nil {
+	if err := r.DB.QueryRow(context.Background(), `SELECT EXISTS(SELECT 1 FROM pg_attribute WHERE attrelid='events_event'::regclass AND attname IN('source_local_poc','source_local_poc_evidence') AND NOT attisdropped)`).Scan(&exists); err != nil {
 		t.Fatal(err)
 	}
 	return exists
@@ -23,7 +23,7 @@ func TestPostgresLocalPOCProductionSyncLeavesNoPOCTrace(t *testing.T) {
 	ctx := context.Background()
 	// The fixture clones the template database's tables; start from the
 	// production schema even if a POC sync ever ran against that template.
-	if _, err := r.DB.Exec(ctx, `ALTER TABLE events_event DROP COLUMN IF EXISTS source_local_poc`); err != nil {
+	if _, err := r.DB.Exec(ctx, `ALTER TABLE events_event DROP COLUMN IF EXISTS source_local_poc, DROP COLUMN IF EXISTS source_local_poc_evidence`); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := r.ApplyRoedu(ctx, readPackFixture(t), "Cluj-Napoca"); err != nil {
@@ -94,6 +94,15 @@ func TestPostgresLocalPOCSyncFlagsRowsAndKeepsHonestEvidence(t *testing.T) {
 	if !localPOCColumnExists(t, r) {
 		t.Fatal("POC sync did not add its flag column")
 	}
+	var evidence map[string]any
+	if err = r.DB.QueryRow(ctx, `SELECT source_local_poc_evidence FROM events_event WHERE source='roedu' AND external_id='event-1'`).Scan(&evidence); err != nil {
+		t.Fatal(err)
+	}
+	eventAttestation, _ := evidence["policy_attestation"].(map[string]any)
+	eventAdmission, _ := evidence["local_poc_admission"].(map[string]any)
+	if evidence["gdpr_relevant"] != true || evidence["privacy_classification"] != "unknown" || eventAttestation["effect"] != "deny" || evidence["policy_decision_id"] != event["policy_decision_id"] || eventAdmission["admission_digest"] != event["local_poc_admission"].(map[string]any)["admission_digest"] {
+		t.Fatal("POC event evidence not stored honestly", evidence)
+	}
 	rows, err := r.DB.Query(ctx, `SELECT external_id,source_local_poc,is_import_held,lifecycle_status,is_tombstone,starts_at<now() FROM events_event WHERE source='roedu' ORDER BY external_id`)
 	if err != nil {
 		t.Fatal(err)
@@ -144,5 +153,39 @@ func TestPostgresLocalPOCSyncFlagsRowsAndKeepsHonestEvidence(t *testing.T) {
 	pack := PackRead{Items: []map[string]any{items[0].(map[string]any)}, Pack: SocialPack, Snapshot: "sha256-" + string(bytes.Repeat([]byte("7"), 64)), Release: "sha256-" + string(bytes.Repeat([]byte("7"), 64)), Generated: "2026-07-12T08:00:00+00:00", Mode: "partial", LocalPOC: true}
 	if _, err = r.ApplyRoeduWithOptions(ctx, pack, "Cluj-Napoca", RoeduApplyOptions{MinConfidence: 1}); !errors.Is(err, ErrLocalPOCRefused) {
 		t.Fatal("POC pack applied without the gate", err)
+	}
+}
+
+// ADR-0057: when the producer admitted every item the POC page is full and
+// complete with withheld 0; the consumer still never reconciles it. A non-POC
+// row absent from the snapshot is not tombstoned, a newer recorded sync state
+// does not trip the rollback check and is left untouched, and none is written.
+func TestPostgresLocalPOCCompleteSnapshotNeverReconciles(t *testing.T) {
+	r := jobFixture(t)
+	ctx := context.Background()
+	if _, err := r.DB.Exec(ctx, `INSERT INTO events_event(title,description,starts_at,url,source,external_id,created_at,updated_at,attribution,license_name,provenance_url,is_import_held,is_tombstone,lifecycle_status,source_category,source_city,source_pack_id,source_release_id,source_snapshot_id,source_venue_id,source_availability,source_currency,source_recurrence,source_timezone) VALUES('Other production row','',now()+interval '3 days','','roedu','other-1',now(),now(),'','','',false,false,'scheduled','other','Cluj-Napoca',$1,'','','','','','','Europe/Bucharest')`, SocialPack); err != nil {
+		t.Fatal(err)
+	}
+	newer := "sha256-" + string(bytes.Repeat([]byte("9"), 64))
+	if _, err := r.DB.Exec(ctx, `INSERT INTO events_roedueventsyncstate(pack_id,city,snapshot_id,release_id,snapshot_generated_at,completed_at) VALUES($1,'Cluj-Napoca',$2,$2,'2030-01-01T00:00:00+00:00',now())`, SocialPack, newer); err != nil {
+		t.Fatal(err)
+	}
+	page := pocPage(t)
+	page["snapshot_mode"], page["snapshot_complete"], page["withheld"] = "full", true, json.Number("0")
+	r.Config.RoeduSyncEnabled = true
+	r.Config.Roedu = pocClient(t, "http://127.0.0.1:8077", true, pocMarshal(t, page))
+	result, err := r.SyncRoedu(ctx)
+	if err != nil || result["local_poc"] != true || result["complete"] != false || result["events"] != 1 || result["tombstones"] != 0 {
+		t.Fatal("complete POC snapshot sync", result, err)
+	}
+	var status string
+	var tomb bool
+	if err = r.DB.QueryRow(ctx, `SELECT lifecycle_status,is_tombstone FROM events_event WHERE source='roedu' AND external_id='other-1'`).Scan(&status, &tomb); err != nil || status != "scheduled" || tomb {
+		t.Fatal("POC snapshot reconciled a non-POC row", status, tomb, err)
+	}
+	var states int
+	var snapshot string
+	if err = r.DB.QueryRow(ctx, `SELECT count(*),max(snapshot_id) FROM events_roedueventsyncstate`).Scan(&states, &snapshot); err != nil || states != 1 || snapshot != newer {
+		t.Fatal("POC snapshot touched the sync state", states, snapshot, err)
 	}
 }

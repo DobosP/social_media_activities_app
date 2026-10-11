@@ -75,6 +75,22 @@ func TestLocalPOCMarkerAndPastEventsOnPublicPages(t *testing.T) {
 	if !strings.Contains(html, localPOCMarkerHTML) {
 		t.Fatal("POC event detail unmarked")
 	}
+	// Feeds label each POC entry; the sitemap never takes include_past, so past
+	// POC events stay out of it even under the gate.
+	for _, name := range []string{"events_feed", "events_feed_atom"} {
+		w := httptest.NewRecorder()
+		if !s.PublicDownload(w, socialLegacyRequest("GET", "/events/feed/?include_past=1", platform.Actor{}, 0, nil), platform.Actor{}, name) {
+			t.Fatal(name, "not handled")
+		}
+		feed := w.Body.String()
+		if !strings.Contains(feed, localPOCMarkerHTML+": POC upcoming concert") || strings.Contains(feed, localPOCMarkerHTML+": Production") || strings.Contains(feed, "archived") {
+			t.Fatal(name, "POC entry unlabelled or past entry listed", feed)
+		}
+	}
+	sitemap, err := s.publicSitemap(socialLegacyRequest("GET", "/sitemap.xml?include_past=1", platform.Actor{}, 0, nil))
+	if err != nil || strings.Contains(string(sitemap), fmt.Sprintf("/events/%d/", pastPOC)) || !strings.Contains(string(sitemap), fmt.Sprintf("/events/%d/", upcoming)) {
+		t.Fatal("sitemap listed a past POC event", err, string(sitemap))
+	}
 	s.Config.LocalPOC = false
 	// A POC venue tag marks the place everywhere, in any mode.
 	if _, html = localPOCRender(t, s, "places_list", 0, "/places/list/"); strings.Contains(html, localPOCMarkerHTML) {

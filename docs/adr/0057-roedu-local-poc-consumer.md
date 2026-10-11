@@ -60,16 +60,23 @@ the extra key.
 - Each venue gets these raw tags: `roedu_local_poc: true`, `roedu:gdpr_relevant`,
   `roedu:privacy_classification`, `roedu:local_poc_admission`, and the existing
   `roedu:policy_attestation` (with the deny).
-- Each event row that the POC sync wrote gets `source_local_poc = true`. The POC sync adds this
-  column the first time it writes, so the production schema is unchanged. Readers go through
-  `to_jsonb(e)`, which reads as false where the column does not exist.
+- Each event row that the POC sync wrote gets `source_local_poc = true` and
+  `source_local_poc_evidence`: the item's real `gdpr_relevant`, `privacy_classification`,
+  `policy_decision_id`, `policy_attestation` (with the deny) and its `local_poc_admission`. The POC
+  sync adds both columns at the start of its first transaction, so the production schema is
+  unchanged. Readers probe for the flag column once per query and only then read the row through
+  `to_jsonb(e)`, so it reads as false where the column does not exist and a production database
+  pays no per-row cost.
 - `ingest_places --source roedu` refuses a POC pack. The generic place merge cannot carry the
   marker, so POC venues enter only through `sync_roedu` / `sync_roedu_events`.
 
 **Sync.**
-- A POC page is partial and has `withheld > 0`, so a POC sync is never complete. It does not
-  reconcile absences, record a sync state or check for rollback. This is accepted for the POC.
-  Stale rows stay until a clean snapshot replaces them.
+- A POC sync is never complete. This is enforced, not assumed: when the producer admits every
+  item, a POC page is `full`, `snapshot_complete: true` and `withheld: 0`, and the consumer still
+  reads it as incomplete (`Read`), and `ApplyRoedu` drops any `Complete` claim on a POC pack. So a
+  POC snapshot never reconciles absences (it cannot tombstone non-POC rows), never records a sync
+  state and never checks for rollback. This is accepted for the POC. Stale rows stay until a clean
+  snapshot replaces them.
 - The scheduled job imports POC rows at a floor of 0.9 (Events V3 rows are 1.0 or 0.9). Production
   stays at 1. The manual command already takes `min_confidence`.
 - A POC sync never resolves Commons covers, so nothing leaves the PC.
@@ -82,6 +89,9 @@ the extra key.
   a flagged venue. This happens in every mode, so a POC database served without the gate is still
   labelled.
 - `base.html` shows a banner when the gate is on or when the page shows a flagged row.
+- The RSS and Atom event feeds prefix each flagged entry's title with the marker. The sitemap
+  ignores every query parameter, so it never lists past events; under the gate it lists upcoming
+  POC event URLs, whose pages carry the marker.
 - `include_past=1` on `/events/` and on place pages also lists past flagged events (scheduled,
   rescheduled, sold out or expired): upcoming events first, then the most recent past events. This
   works only with the gate on. Production rows are never lifted, and the parameter does nothing
@@ -101,9 +111,10 @@ is kept and verified, and the waiver is shown.
 - A POC item whose waived reasons include `missing_legal_basis` or `privacy_revision_missing` still
   needs the production shape: a non-empty `legal_basis` and a 64-hex `privacy_revision`. Such items
   stay invalid. This is fail-closed and is revisited only by a contract change.
-- The SPA (`SOCIAL_REACT_UI`), the JSON API, the RSS/ICS feeds, open-data downloads and agent
-  snapshots carry no per-row marker. The gate refuses the SPA, and the remaining surfaces are
-  loopback-only in the POC.
+- The SPA (`SOCIAL_REACT_UI`), the JSON API, open-data downloads and agent snapshots carry no
+  per-row marker. The gate refuses the SPA, and the remaining machine surfaces are loopback-only in
+  the POC; they are an accepted gap. The calendar (ICS) export lists a user's own activities, not
+  RO-EDU events.
 - The fixture is `internal/jobs/testdata/roedu-local-poc-page.json`, built by
   `generate_roedu_local_poc_fixture.py` from the real 5/8 producer deny.
 
