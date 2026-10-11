@@ -29,7 +29,7 @@ var guiPreferencesGETTransport = flag.Bool("gui-preferences-get-transport", fals
 //go:embed testdata/gui-preferences-get/registry.json
 var guiPreferencesGETRegistryBytes []byte
 
-const guiPreferencesGETRegistrySHA = "96df9398249f550180685009c5eb74f65446c7b83195892090c520f3348c255d"
+const guiPreferencesGETRegistrySHA = "86154fab6f4fd03846e876a62ac204803177a2f77d50815b3245ba11a742c21c"
 
 type guiPreferenceGETCase struct {
 	guiPublicGetCase

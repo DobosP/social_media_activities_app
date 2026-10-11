@@ -180,6 +180,39 @@ func guiPublicGetRepairInputs(root string, source guiPublicGetSource) (map[strin
 	return inputs, nil
 }
 
+// These are the two sealed campaign custody inputs already present in the
+// current tree, not new production changes. Only owned in-memory copies are
+// inverted; every live current-source reader keeps the actual current bytes.
+func guiPublicGetCampaignCustodyPreimages(inputs map[string]guiPublicGetRepairInput) (map[string][]byte, error) {
+	const testPath = "services/server/internal/web/gui_preferences_layout_test.go"
+	const cssPath = "static/css/base.css"
+	test, testExists := inputs[testPath]
+	css, cssExists := inputs[cssPath]
+	if !testExists || !cssExists || test.binding.FullMode != 0o100664 || css.binding.FullMode != 0o100664 ||
+		len(test.raw) != 23168 || guiPublicHash(test.raw) != "ec3e45b912cee2ae4f0c0bbbfc2ded632e6a806403b7843b0086ffe66553a1f4" ||
+		len(css.raw) != 63035 || guiPublicHash(css.raw) != "886c3387f063f3625623b6233dbd7f2472be2dc54df11f6e63de737638f2b6bc" {
+		return nil, fmt.Errorf("repair-complete-campaign-custody")
+	}
+	oldCSS, err := guiCampaignMeterCSSBefore(css.raw)
+	if err != nil || len(oldCSS) != 62882 || guiPublicHash(oldCSS) != "db20897d8d822eba19c0f6124a678fb0642e69e0775fcc746913c837ac5e211a" {
+		return nil, fmt.Errorf("repair-campaign-CSS-preimage")
+	}
+	oldTest := append([]byte(nil), test.raw...)
+	for _, edit := range []struct{ after, before string }{
+		{"\tcssBeforeMeter, err := guiCampaignMeterCSSBefore(css)\n\tif err != nil {\n\t\tt.Fatal(\"exact approved campaign-meter CSS inverse required before preference guard\")\n\t}\n\tif !bytes.HasSuffix(cssBeforeMeter, []byte(guiPreferenceCSS)) || bytes.Count(cssBeforeMeter, []byte(guiPreferenceCSS)) != 1 {\n", "\tif !bytes.HasSuffix(css, []byte(guiPreferenceCSS)) || bytes.Count(css, []byte(guiPreferenceCSS)) != 1 {\n"},
+		{"\toldCSS := cssBeforeMeter[:len(cssBeforeMeter)-len(guiPreferenceCSS)]\n", "\toldCSS := css[:len(css)-len(guiPreferenceCSS)]\n"},
+	} {
+		if bytes.Count(oldTest, []byte(edit.after)) != 1 {
+			return nil, fmt.Errorf("repair-campaign-test-delta")
+		}
+		oldTest = bytes.Replace(oldTest, []byte(edit.after), []byte(edit.before), 1)
+	}
+	if len(oldTest) != 22961 || guiPublicHash(oldTest) != "280a40d68c86e4acce1188216a66b87c72833ea68e18f0b20f4187175b0e58bb" {
+		return nil, fmt.Errorf("repair-campaign-test-preimage")
+	}
+	return map[string][]byte{testPath: oldTest, cssPath: oldCSS}, nil
+}
+
 func guiPublicGetRepairHistoricalProof(source guiPublicGetSource, inputs map[string]guiPublicGetRepairInput) error {
 	if source.Schema != 1 || source.SourceCommit != guiPublicGetHistory || len(source.PreservedSourceInputs) != 86 || len(source.Producers) != 14 || len(inputs) != 93 {
 		return fmt.Errorf("repair-source-frame")
@@ -201,6 +234,13 @@ func guiPublicGetRepairHistoricalProof(source guiPublicGetSource, inputs map[str
 			return fmt.Errorf("repair-exact-preimage")
 		}
 		preimages[row.path] = original // In-memory custody proof, never a live source binding.
+	}
+	campaign, err := guiPublicGetCampaignCustodyPreimages(inputs)
+	if err != nil {
+		return err
+	}
+	for name, raw := range campaign {
+		preimages[name] = raw // Historical reference only; current input tuples remain unchanged.
 	}
 	seen := map[string]bool{}
 	preservedRepairs := 0
@@ -793,11 +833,34 @@ func TestGUIPublicGetWalkSourceRefusals(t *testing.T) {
 				}
 				return
 			case "unknown":
-				path := "services/server/internal/web/renderer.go"
-				replace(path, append(changed[path].raw, '\n'))
+				for _, path := range []string{"services/server/internal/web/renderer.go", "services/server/internal/web/server.go", "services/server/internal/web/gui_preferences_layout_test.go", "static/css/base.css"} {
+					original := changed[path]
+					replace(path, append(append([]byte(nil), original.raw...), '\n'))
+					refused := guiPublicGetRepairHistoricalProof(candidate, changed) != nil
+					changed[path] = original
+					if !refused || guiPublicGetRepairHistoricalProof(candidate, changed) != nil || guiPublicGetRepairHistoricalProof(source, inputs) != nil {
+						t.Fatal("unknown four-input profile admitted or control aliased")
+					}
+				}
+				return
 			case "mixed":
-				row := guiPublicGetRepairRows()[0]
-				replace(row.path, bytes.Replace(changed[row.path].raw, []byte(row.after), []byte(row.before), 1))
+				previous, err := guiPublicGetCampaignCustodyPreimages(changed)
+				if err != nil {
+					t.Fatal("sealed campaign positive control unavailable")
+				}
+				for _, row := range guiPublicGetRepairRows() {
+					previous[row.path] = bytes.Replace(changed[row.path].raw, []byte(row.after), []byte(row.before), 1)
+				}
+				for path, raw := range previous {
+					original := changed[path]
+					replace(path, raw)
+					refused := guiPublicGetRepairHistoricalProof(candidate, changed) != nil
+					changed[path] = original
+					if !refused || guiPublicGetRepairHistoricalProof(candidate, changed) != nil || guiPublicGetRepairHistoricalProof(source, inputs) != nil {
+						t.Fatal("mixed four-input profile admitted or control aliased")
+					}
+				}
+				return
 			case "mode":
 				path := "services/server/internal/web/server.go"
 				input := changed[path]

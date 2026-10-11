@@ -552,8 +552,8 @@
       "full_mode": 33204
     },
     "services/server/internal/web/gui_public_get_walk_test.go": {
-      "bytes": 37075,
-      "sha256": "9f8964128482bb11525b9ca861ab61628ea982805acb7c4de59b442a813ae494",
+      "bytes": 40776,
+      "sha256": "e500e2d978863b5e588fa0f0b3c5802bf01634077faa639f341b2a59a4e11ada",
       "full_mode": 33204
     },
     "services/server/internal/web/gui_public_golden_test.go": {
