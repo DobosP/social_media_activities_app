@@ -42,8 +42,8 @@ type guiG1NormalizationPins struct {
 	CasesSHA256              string       `json:"cases_sha256"`
 	SourceInputsSHA256       string       `json:"source_inputs_sha256"`
 	CaptureObservationSHA256 string       `json:"capture_observation_sha256"`
-	RawResultSHA256           string       `json:"raw_result_sha256"`
-	MethodSHA256              string       `json:"method_sha256"`
+	RawResultSHA256          string       `json:"raw_result_sha256"`
+	MethodSHA256             string       `json:"method_sha256"`
 	Counts                   struct {
 		Cases        int `json:"cases"`
 		Members      int `json:"members"`
@@ -82,8 +82,8 @@ type guiG1Manifest struct {
 	Status                      string                  `json:"status"`
 	Scope                       string                  `json:"scope"`
 	HistoricalProducer          string                  `json:"historical_producer"`
-	SourceInputsSHA256           string                  `json:"source_inputs_sha256"`
-	CaseRegistrySHA256           string                  `json:"case_registry_sha256"`
+	SourceInputsSHA256          string                  `json:"source_inputs_sha256"`
+	CaseRegistrySHA256          string                  `json:"case_registry_sha256"`
 	ExpectedCases               int                     `json:"expected_cases"`
 	InputsUnchanged             bool                    `json:"inputs_unchanged"`
 	Original15ReferenceVerified bool                    `json:"original15_reference_verified"`
@@ -365,8 +365,8 @@ func TestGUIPublicGetWalkNormalize(t *testing.T) {
 	link := `<link rel="canonical" href="https://fixture.local/">`
 	controls := []struct {
 		name, source, wantHard string
-		equal bool
-		change func([]byte) ([]byte, error)
+		equal                  bool
+		change                 func([]byte) ([]byte, error)
 	}{
 		{"nonce-value-equivalent", "events-populated", "", true, func(raw []byte) ([]byte, error) {
 			matches := regexp.MustCompile(` nonce="[^"]+"`).FindAll(raw, -1)
@@ -481,7 +481,7 @@ func TestGUIPublicGetWalkNormalizeCorpusRefusals(t *testing.T) {
 	})
 	controls := []struct {
 		name, code string
-		change func(*testing.T, string, guiG1Binding) guiG1Binding
+		change     func(*testing.T, string, guiG1Binding) guiG1Binding
 	}{
 		{"missing-body", "member-census", func(t *testing.T, directory string, pin guiG1Binding) guiG1Binding {
 			if os.Remove(filepath.Join(directory, cases[0].ID+".body")) != nil {
