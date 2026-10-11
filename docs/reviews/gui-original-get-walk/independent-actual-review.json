@@ -1,0 +1,138 @@
+{
+  "actions": "Read-only source/data/Git/hash/fullmode/actualGoJSON/raw-index/header/trace/cleanup verification plus this compact private JSON; no rerun/runtime/Source edits or capture copies.",
+  "actual_capture": {
+    "all37_raw_body_hashes_sizes_private600_independently_exact": true,
+    "manifest": {
+      "bytes": 82363,
+      "full_mode": 33152,
+      "path": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-a115-r6-g1-complete-pass-compact-20261011/artifacts/proof/captured/manifest.json",
+      "sha256": "591c6b70edc83620ead9ca5ba18ecf4c39d3171e5365276961b96b184b729fb7"
+    },
+    "normalization": "NOT RUN; normalized_qualification=false",
+    "ordered_status_URL_allowlisted_headers_and_template_load_names_verified": true,
+    "outer108_and_Go102_before_after_exact_all102_now_bound": true,
+    "raw_members": 38,
+    "source_load_transform_hashes": "Real Go body/trace assertions passed and bind unchanged producer/transform source. Reviewer did not rerun renderer/transform/parser."
+  },
+  "actual_frontier": "capture_snapshot returned its complete38-row result after all strict source/census/ordered-receipt/URL/header/template/body/private-mode/member checks. Source-after and owned cleanup also passed before method_pass=true. Previously blocked Python checks now actually executed; no retroactive R4/R5 change.",
+  "actual_method_pass": true,
+  "actual_native": {
+    "DB_create_schema_PG_binding0": true,
+    "HTTP": 37,
+    "HTTP_status_counts": {
+      "200": 31,
+      "302": 2,
+      "404": 4
+    },
+    "JSON_events": 220,
+    "PG": {
+      "extensions": {
+        "fuzzystrmatch": "1.2",
+        "pg_trgm": "1.6",
+        "postgis": "3.6.4",
+        "postgis_tiger_geocoder": "3.6.4",
+        "postgis_topology": "3.6.4",
+        "vector": "0.8.7"
+      },
+      "listen_addresses": "",
+      "server_version_num": 160015
+    },
+    "exact54_registered_unique_run_pass_once": true,
+    "fail_skip_cancel_cache_race": 0,
+    "formatter0_empty": true,
+    "nine_response_mutations_six_refusals_actual": true,
+    "package_pass": 1,
+    "subcases": 52,
+    "top_roots": 2
+  },
+  "actual_wrapper_exit": 0,
+  "actual_wrapper_session": 7968,
+  "all114_frozen_and_live_source_rows_bytes_fullmodes_verified": true,
+  "authorship_disclosure": "Reviewer authored G1/source and R3 predecessor; independent completed-evidence readback, not independent source approval of own design. R4-R6 corrections are separately reviewed/preserved.",
+  "capsule": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-a115-r6-g1-complete-pass-compact-20261011",
+  "cleanup": {
+    "PG": {
+      "owned_pid": 24,
+      "pid_and_socket_files_absent": 1,
+      "pid_probe_exit": 1,
+      "status_exit": 3,
+      "stop_exit": 0
+    },
+    "owned_containers": {
+      "db": {
+        "id": "a17a9451d9356b8ee86aaecfaf826a242a2ea32918e61553928c6855b982c5f4",
+        "id_absent": true,
+        "name": "social-g1-db-cbd00d1a-927c-4a5c-a27c-00838941dfdd",
+        "name_absent": true,
+        "passed": true,
+        "remove_exit": 0
+      },
+      "tc": {
+        "id": "759eb80e6d2b97ea3972dc69724ff6f8c81e03f608c56c6bc4770ae062736760",
+        "id_absent": true,
+        "name": "social-g1-tc-cbd00d1a-927c-4a5c-a27c-00838941dfdd",
+        "name_absent": true,
+        "passed": true,
+        "remove_exit": 0
+      }
+    },
+    "retained_controls_all_exit0": true
+  },
+  "copied_payload_bytes": 507814,
+  "errors": [],
+  "guards": {
+    "TC2e_networknone_sourceRO_unchanged_recipe": true,
+    "TC_exit0_noOOM": true,
+    "resource_split": {
+      "aggregate_bytes": 6442450944,
+      "aggregate_cpus": 4,
+      "db_bytes": 1073741824,
+      "db_cpus": 1,
+      "performance_comparison": false,
+      "tc_bytes": 5368709120,
+      "tc_cpus": 3
+    },
+    "source108_external18_PGsix_policy7_before_after_and_current_bytes_modes": true
+  },
+  "historical_relation": {
+    "actual_candidate_source": "a115deb5d706745a22d5e1049b0b938cae10cfad",
+    "exact20_historical_template_catalogue_source_members_oldGit_verified": true,
+    "historical_source": "75dc717377f92b21ed99aabbe1f290d92535523e",
+    "literal75dc_binary_or_image": false,
+    "native14_current_and_historical_producer_hashes_verified": true,
+    "original15_baseline_external18_physically_bound_unchanged": true
+  },
+  "lineage": {
+    "actual_DB_IID": "sha256:f66de888683449864f820c365551125bb2627782be15a264f9746d53573b39d5",
+    "actual_DB_build_source": "bac5d718360504330d5f5cdbf2f75cf5a0ad0799",
+    "existing_parent_application_binding": {
+      "bytes": 5617,
+      "full_mode": 33152,
+      "sha256": "96b57be2fd4f350a7f3d5f9c1a7c66967052314ec62777d58c94ece9dae22f9c"
+    },
+    "ledger": {
+      "bytes": 46417,
+      "full_mode": 33152,
+      "sha256": "fb45044f1f50874a1a97b42883bf8fa24547d0dc63e7eb270dd3baa7205180ba"
+    },
+    "method": {
+      "bytes": 42007,
+      "full_mode": 33152,
+      "sha256": "acc2886deeb117ff510347f9754d496dcbcfbf6fab324e288732787c06484a11"
+    },
+    "new_DB_build_or_relabel": false
+  },
+  "observation": {
+    "bytes": 55669,
+    "full_mode": 33152,
+    "path": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-a115-r6-g1-complete-pass-compact-20261011/observation.json",
+    "sha256": "e0acca692699c1103c865684dc655a5cba342719a14e637bec342487e653c788"
+  },
+  "qualification_limits": "Finite synthetic anonymous public/SEO raw registered-GET oracle and source/response proof only. Historical20/native14 relation is not literal75dc executable/image. No strict Normalize/golden/fullM0/conditional coverage/owner-signed groups/auth/privacy/Live/device/templ/default-delivery/adoption approval. Failed R2-R5 receipts and packets remain frozen; this is new R6 proof.",
+  "reviewer": "/root/program_pack",
+  "schema": 1,
+  "source": "a115deb5d706745a22d5e1049b0b938cae10cfad",
+  "source_clean": true,
+  "state": "VERIFIED IDLE",
+  "verdict": "ACTUAL COMPLETE FINITE RAW G1 PROOF BOUNDARY CLEAR"
+}

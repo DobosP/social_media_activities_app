@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "reviewer": "/root/cross_repo_plan",
+  "verdict": "ACTUAL_R3_FORMAT_REFUSAL_BOUNDARY_CLEAR",
+  "source": "bac5d718360504330d5f5cdbf2f75cf5a0ad0799",
+  "session": 31229,
+  "exit": 1,
+  "capsule": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-bac5-r3-format-refusal-compact-20261011",
+  "observation_sha256": "ab38e76e80847f167f0a223b46b4d67f96ea1fff15ef60ed0ea74ff3fedef582",
+  "closure_sha256": "50d892717de1edcd70a9ecd85ecd609d6dc465dc2030f28b74d112b5a0715dc7",
+  "all64_source_capture_bytes_fullmodes_exact": true,
+  "captured_bytes": 160537,
+  "actual_format": {
+    "exit_code": 1,
+    "diff_bytes": 4969,
+    "stderr_bytes": 0
+  },
+  "only_failure": "Actual native formatter refused; test/compiler/SQL/extensions/37GET phases not reached. Raw4969B formatter patch is retained for exact source-only application.",
+  "source106_old86_external18_policy7_PG6_current_and_beforeafter_exact": true,
+  "owning_source_clean": true,
+  "R3_Tmpfs_projection_actual_admission": true,
+  "TC3CPU5GiB_DB1CPU1GiB_networknone_and_exact_IIDs": true,
+  "owned_TC_DB_removal0_IDnameabsence": true,
+  "actual_PG_stop0_status3_ownedPID24_kill0exit1_PIDsocket_absence": true,
+  "no_54_tests_or_37_GET_qualification": true,
+  "scope": "Read-only actual failure review; no execution or source edits. Frozen R2/R3 packets and failed outcomes preserved. Root-authorized exact formatter-only successor may now be authored separately.",
+  "state": "VERIFIED IDLE / NEXT AUTHORIZED SOURCE ONLY"
+}

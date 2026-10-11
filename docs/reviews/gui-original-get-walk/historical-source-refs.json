@@ -1,0 +1,216 @@
+{
+  "actual_candidate_source": "a115deb5d706745a22d5e1049b0b938cae10cfad",
+  "historical20_members": [
+    {
+      "bytes": 2147,
+      "path": "apps/web/templates/web/_activity_card.html",
+      "sha256": "bcea7db152f52d99ec1be70bb99cc831985197358f1ec359c44929a1f6cd5bd9"
+    },
+    {
+      "bytes": 931,
+      "path": "apps/web/templates/web/_near_me.html",
+      "sha256": "33a062a0945e9c1c391606121de7575bcedb7f7267547f71451a69c0ebddc309"
+    },
+    {
+      "bytes": 1545,
+      "path": "apps/web/templates/web/_share_box.html",
+      "sha256": "692af1bdd0650dc1878dddf87f3126f1055536808fadadb670a40109b0bafb6e"
+    },
+    {
+      "bytes": 3116,
+      "path": "apps/web/templates/web/campaigns.html",
+      "sha256": "40bcb0b71f3e95c56fe238e57244f3f36c937283e1f6961bfa654a390feb3b06"
+    },
+    {
+      "bytes": 1323,
+      "path": "apps/web/templates/web/discover.html",
+      "sha256": "19f70d3d5b68717778570184f167722a83373c8280a4e049f74e5880e0966a04"
+    },
+    {
+      "bytes": 1328,
+      "path": "apps/web/templates/web/donate.html",
+      "sha256": "ed79567f5c044a56d0f385eeae59f1c5b00b45610d86896be2060ea634e15d6f"
+    },
+    {
+      "bytes": 4880,
+      "path": "apps/web/templates/web/event_detail.html",
+      "sha256": "c2610dd26f45fb921c6e3908ab9f228668c8e462df8d3f120abde34837239e51"
+    },
+    {
+      "bytes": 2950,
+      "path": "apps/web/templates/web/events.html",
+      "sha256": "47364476d705664b7bba8ab22651685d3da8d563f5d9ab3ebff2090763645702"
+    },
+    {
+      "bytes": 1875,
+      "path": "apps/web/templates/web/landing.html",
+      "sha256": "8fd980d985011f42c519281fd165bb22696175a66d5104a5cd3367e18a9ef4df"
+    },
+    {
+      "bytes": 950,
+      "path": "apps/web/templates/web/landing_city.html",
+      "sha256": "13a2de227dce427b8263fc56496bdba990cb099b508063a8b63119b4f06b8f64"
+    },
+    {
+      "bytes": 2363,
+      "path": "apps/web/templates/web/landing_detail.html",
+      "sha256": "e732e315afb7b1aa91b90b4c413db1fb8b7cb41762b3d02b6fe37b946b2b2e6d"
+    },
+    {
+      "bytes": 922,
+      "path": "apps/web/templates/web/landing_index.html",
+      "sha256": "35dd1c8e55ea04ba5ba63644316c07e078d0344cd52f3b960506da3f3d9d2d5a"
+    },
+    {
+      "bytes": 1184,
+      "path": "apps/web/templates/web/partners.html",
+      "sha256": "f18c2292eb37006772067a3825c317b8c043711271483f95a66ca9bffc127600"
+    },
+    {
+      "bytes": 17872,
+      "path": "apps/web/templates/web/place_detail.html",
+      "sha256": "8fca89fd4294dea0b01ee45a7407a14ad35468c1c6be544c727e07c6c5ca3d60"
+    },
+    {
+      "bytes": 2791,
+      "path": "apps/web/templates/web/places.html",
+      "sha256": "7ccd6a47cfbc61a0a9eba1bb040ef25439cf663f6eed56add9eb5a303368388f"
+    },
+    {
+      "bytes": 3071,
+      "path": "apps/web/templates/web/places_list.html",
+      "sha256": "cd5e1a614f086572a4d807be617a2059c2e1fae7d8200c352ba669d9ca4676ca"
+    },
+    {
+      "bytes": 3090,
+      "path": "apps/web/templates/web/series_detail.html",
+      "sha256": "58b3a0f87c7a79a9754cefa2d03bc02bc0d14b207c20a534764c3de64a2b9a0d"
+    },
+    {
+      "bytes": 1149,
+      "path": "apps/web/templates/web/series_list.html",
+      "sha256": "d7a52e5365aa9947bd6ee9e7045ef2dc45a7c5a398562fcc57c1271939fb5bab"
+    },
+    {
+      "bytes": 113861,
+      "path": "locale/ro/LC_MESSAGES/django.po",
+      "sha256": "186558af2dbb8016c313d09bd0b8508bd5365d61961bcabb3a681c66b99b154c"
+    },
+    {
+      "bytes": 13594,
+      "path": "templates/base.html",
+      "sha256": "ef2f179f6cbbfa8acc38272aa5a6c1d6acbb36c3c6e9290102d98a23b4b02e3b"
+    }
+  ],
+  "historical_source": "75dc717377f92b21ed99aabbe1f290d92535523e",
+  "holds": [
+    {
+      "reason": "Registered GET requires login; anonymous 302 is measured, no original public HTML invented.",
+      "template": "web/series_list.html"
+    },
+    {
+      "reason": "Registered GET requires login; anonymous 302 is measured, no membership or owner-control scope.",
+      "template": "web/series_detail.html"
+    },
+    {
+      "reason": "Historical separate G0 unreachable-partial hold remains unchanged; this file is not in G1 closure.",
+      "template": "web/_breadcrumbs.html"
+    }
+  ],
+  "kind": "DERIVED metadata; raw source bytes remain pinned in tracked fixture",
+  "literal_historical_binary_or_image": false,
+  "native14_producer_relations": [
+    {
+      "current_sha256": "0c4208333d354d2256f275459a420ac5f2ff936abfab6c13cc4b8b6ca4fdcc09",
+      "historical_sha256": "0c4208333d354d2256f275459a420ac5f2ff936abfab6c13cc4b8b6ca4fdcc09",
+      "path": "services/server/internal/web/server.go",
+      "relation": "byte-identical"
+    },
+    {
+      "current_sha256": "b1cc3430d5148011cd827ab9fcd437cdf14a60c72dc5d980693e50bf9b8c0cca",
+      "historical_sha256": "b1cc3430d5148011cd827ab9fcd437cdf14a60c72dc5d980693e50bf9b8c0cca",
+      "path": "services/server/internal/web/router.go",
+      "relation": "byte-identical"
+    },
+    {
+      "current_sha256": "f54f6757bcbf7db40e922e085dfeab6ae353014f7771be10e707bb7ee8058180",
+      "historical_sha256": "f54f6757bcbf7db40e922e085dfeab6ae353014f7771be10e707bb7ee8058180",
+      "path": "services/server/internal/web/views.go",
+      "relation": "byte-identical"
+    },
+    {
+      "current_sha256": "6dfb36642cde63c253899ff8e76a1555a8bfb33cd068ef1dcca5861fdc82a2b4",
+      "historical_sha256": "6dfb36642cde63c253899ff8e76a1555a8bfb33cd068ef1dcca5861fdc82a2b4",
+      "path": "services/server/internal/web/public_pages.go",
+      "relation": "byte-identical"
+    },
+    {
+      "current_sha256": "8bc13dfcc549bdfe97e0dd3cb76b5237b26abcd9ac141f3036666880e97ab8a2",
+      "historical_sha256": "8bc13dfcc549bdfe97e0dd3cb76b5237b26abcd9ac141f3036666880e97ab8a2",
+      "path": "services/server/internal/web/public_details.go",
+      "relation": "byte-identical"
+    },
+    {
+      "current_sha256": "e5f17284d738a8722117c6ff14cea7f9adc57c76738bb73f9a60fcbd17203bce",
+      "historical_sha256": "e5f17284d738a8722117c6ff14cea7f9adc57c76738bb73f9a60fcbd17203bce",
+      "path": "services/server/internal/web/public_landings.go",
+      "relation": "byte-identical"
+    },
+    {
+      "current_sha256": "2a0d2154f0f5f6904add9b01ac3135a09da560bb0134649a4f51c6d50a3241be",
+      "historical_sha256": "2a0d2154f0f5f6904add9b01ac3135a09da560bb0134649a4f51c6d50a3241be",
+      "path": "services/server/internal/web/public_structured.go",
+      "relation": "byte-identical"
+    },
+    {
+      "current_sha256": "e19db748f4390bd0595083bc8e49a2da4f35031a961e52fdb607482bd926d4fd",
+      "historical_sha256": "e19db748f4390bd0595083bc8e49a2da4f35031a961e52fdb607482bd926d4fd",
+      "path": "services/server/internal/web/public_downloads.go",
+      "relation": "byte-identical"
+    },
+    {
+      "current_sha256": "b8beefd346b5a91ba0281a7c73beec806567cb51ceda49834fb7a9b124a044ff",
+      "historical_sha256": "b8beefd346b5a91ba0281a7c73beec806567cb51ceda49834fb7a9b124a044ff",
+      "path": "services/server/internal/web/payments.go",
+      "relation": "byte-identical"
+    },
+    {
+      "current_sha256": "8098259abbf45838fc732630188cde4b73ccefbc0f5e729b75497f6988db4b97",
+      "historical_sha256": "8098259abbf45838fc732630188cde4b73ccefbc0f5e729b75497f6988db4b97",
+      "path": "services/server/internal/web/templates.go",
+      "relation": "byte-identical"
+    },
+    {
+      "current_sha256": "d10de3908d9537bbdeb2f51427bcb1ecdffc57e9d5a5066cc3166c9fbb559fc3",
+      "historical_sha256": "d10de3908d9537bbdeb2f51427bcb1ecdffc57e9d5a5066cc3166c9fbb559fc3",
+      "path": "services/server/internal/web/routes.json",
+      "relation": "byte-identical"
+    },
+    {
+      "current_sha256": "802581c7288706661fa6fcba9af0779109098f9a1e2f5633e0373e3ada83db1d",
+      "historical_sha256": "802581c7288706661fa6fcba9af0779109098f9a1e2f5633e0373e3ada83db1d",
+      "path": "services/server/internal/web/methods.json",
+      "relation": "byte-identical"
+    },
+    {
+      "current_sha256": "94f11a3f1849c919ba100c4ba68236263f71f07741006c1992dadc4020723e68",
+      "historical_sha256": "6bf68709c3f66342225dd14264873774245ef467bb4a1e9369b9a7ea289de7a1",
+      "path": "services/server/internal/web/renderer.go",
+      "relation": "loader-interface-only"
+    },
+    {
+      "current_sha256": "b6a6febb5c6795177ccb6f3d52659f7e00ee7c4fbf1aa2104d794e5fdd2c811c",
+      "historical_sha256": "f0c2d287302907e8f34181c9de999898c052e35658c1cc01789f6a9d0a1bde75",
+      "path": "services/server/internal/web/i18n.go",
+      "relation": "catalog-reader-extraction-only"
+    }
+  ],
+  "normalized_golden_qualification": false,
+  "original15_separate_from_new38_members": true,
+  "schema": 1,
+  "tracked_input": {
+    "bytes": 267577,
+    "path": "services/server/internal/web/testdata/gui-public-get-walk/source.json",
+    "sha256": "e92e1d44feee05d052bc733f68db102d45b76d9fbcd927453bdace7392757ac3"
+  }
+}

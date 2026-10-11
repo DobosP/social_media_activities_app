@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "utc": "2026-10-11T07:19:12.513593+00:00",
+  "source": "a115deb5d706745a22d5e1049b0b938cae10cfad",
+  "method_sha256": "dc7d878afa581cf0a1d1a0c94c32aff159c901ab9e26e3eb6e3b730692da6ea1",
+  "ledger_sha256": "fb45044f1f50874a1a97b42883bf8fa24547d0dc63e7eb270dd3baa7205180ba",
+  "actual_command_exit": 1,
+  "actual_error": "RuntimeError: Closed actual source106/original86/external18 ledger required",
+  "actual_error_location": "managed.py main line380",
+  "actual_new_ledger_rows": 108,
+  "stale_literal_required_rows": 106,
+  "stage": "preflight need before source snapshots/UUID/evidence/Docker calls",
+  "new_R5_product_execution": "NOT_RUN",
+  "stdout_stderr_file_bytes_available": false,
+  "evidence_basis": "Actual exec_command exit1/traceback plus frozenmethod lineorder andliteralledger; no invented persistedrawstream hashes",
+  "prior_R4_native54_pass_and_methodfailure_unchanged": true,
+  "scope": "Parent andSource review missed a necessary fixedcount adaptation while restricting R5 to2selectors. Correct separate successor toexact108; no open-ended count or guardwaiver."
+}

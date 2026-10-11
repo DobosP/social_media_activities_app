@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "utc": "2026-10-11T05:51:07.058959+00:00",
+  "reviewer": "parent",
+  "verdict": "BOUNDED ACTUAL INSPECTION FAILURE PRESERVED; EXACT OWNED RECOVERY COMPLETE",
+  "source": "bac5d718360504330d5f5cdbf2f75cf5a0ad0799",
+  "wrapperSession": 15795,
+  "wrapperExit": 1,
+  "captureSha256": "4b6f682150190e181870e7fb6f789ac839b2d62ce219412ea506418554958cb4",
+  "rowsVerifiedBytesFullModes": 50,
+  "resultSha256": "cccbc86f6bd10e49df6ba0c85e556a8775e87b7c1f8ffd5e783561d77677c79e",
+  "diagnosis": "Docker Go template directly dereferenced absent optional HostConfig.Tmpfs. Controls12 and13 failed before TCstart. Use safe map index in separate successor, keep exact DB tmpfs requirements.",
+  "notRun": [
+    "formatter",
+    "database_create_and_SQL",
+    "PGextensions",
+    "application_compile_and_tests",
+    "37GET"
+  ],
+  "actualDBCleanup": {
+    "stop_exit": 0,
+    "status_exit": 3,
+    "owned_pid": 24,
+    "pid_probe_exit": 1,
+    "pid_and_socket_files_absent": 1
+  },
+  "methodTCcleanup": false,
+  "parentExactRecoverySha256": "bb32c3972bfa6510dbda735b7e7842ffee887c733beb4ee890a228788bd1849e",
+  "parentCleanupScope": "Exact created/stopped TC full raw config,9 mounts/privatecid/resources/source verified before nonforce removal. Both TC/DB exactIDs and names absent. No foreign/global deletion.",
+  "source_bindings_unchanged": true,
+  "runtimeAcceptance": false
+}

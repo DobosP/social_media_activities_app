@@ -1,0 +1,78 @@
+{
+  "schema": 1,
+  "utc": "2026-10-11T06:56:37.973018+00:00",
+  "reviewer": "parent",
+  "verdict": "ACTUALNATIVE54PASS/CAPTURELEDGER2PINREFUSAL PRESERVED",
+  "source": "a115deb5d706745a22d5e1049b0b938cae10cfad",
+  "captureSha256": "f279d1fff351a752ff369aabe0e23406289fab092b087ca4fb1732f984a6a77b",
+  "wrapperExit": 1,
+  "methodPass": false,
+  "formatter": {
+    "exit_code": 0,
+    "diff_bytes": 0,
+    "stderr_bytes": 0
+  },
+  "nativeTestsPASS": 54,
+  "nativeFailSkip": 0,
+  "actualHTTPcases": 37,
+  "actualRawMembers": 38,
+  "capturePythonChecksAfterPinGuard": "NOT_RUN",
+  "producerPinGaps": [
+    {
+      "path": "services/server/internal/web/public_routes.json",
+      "captured": {
+        "bytes": 47682,
+        "full_mode": 33204,
+        "sha256": "961c7d1d0ab265f0f3d8fd84074172d62f72122dd6a1dd13a7b219315d1d5d06"
+      },
+      "outerExpected": null
+    },
+    {
+      "path": "tools/gui-public-golden/verify_nonce_capture.py",
+      "captured": {
+        "bytes": 8075,
+        "full_mode": 33204,
+        "sha256": "b5df938b01996f8b5ff675b1dc00e9bbe4d4d25bf7a277451e8ec65897f2b7ed"
+      },
+      "outerExpected": null
+    }
+  ],
+  "PGbinding": {
+    "server_version_num": 160015,
+    "listen_addresses": "",
+    "extensions": {
+      "fuzzystrmatch": "1.2",
+      "pg_trgm": "1.6",
+      "postgis": "3.6.4",
+      "postgis_tiger_geocoder": "3.6.4",
+      "postgis_topology": "3.6.4",
+      "vector": "0.8.7"
+    }
+  },
+  "cleanup": {
+    "tc": {
+      "id": "267cbe895e1a6c2a82f901a020eb7369faccdba34bb932052b3f5bb71476a3e2",
+      "name": "social-g1-tc-ff783e0b-f6d6-4d6b-ab87-97bcd28db18b",
+      "remove_exit": 0,
+      "id_absent": true,
+      "name_absent": true,
+      "passed": true
+    },
+    "db": {
+      "id": "0de7bb619b4e31bafb92a39f51e47d876025be03aa8f3df125ad074aaff82360",
+      "name": "social-g1-db-ff783e0b-f6d6-4d6b-ab87-97bcd28db18b",
+      "remove_exit": 0,
+      "id_absent": true,
+      "name_absent": true,
+      "passed": true
+    }
+  },
+  "PGcleanup": {
+    "stop_exit": 0,
+    "status_exit": 3,
+    "owned_pid": 24,
+    "pid_probe_exit": 1,
+    "pid_and_socket_files_absent": 1
+  },
+  "scope": "Actualnative54passed/37HTTPproduced/38rawmembers; finalPythoncaptureguard failed on2missingliteralouterpins, beforelatercapturechecks. NooverallmethodPASS/canonical/Normalize/live/privacy/adoption inference. PG/containercleanup passed."
+}

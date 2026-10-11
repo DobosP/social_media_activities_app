@@ -2692,3 +2692,36 @@ fresh private output, existing disposable DSN and original reference, with no sk
 Nine response mutations and six source/prerequisite refusals are authored. No
 formatter/compiler/test/PG/capture/Normalize execution, formal group acceptance,
 privacy/admission/backend/provider/device/full or retirement result is claimed.
+
+
+## 2026-10-11 — finite G1 historical-native raw GET proof transfer
+
+Actual tested a115/R6cbd00d1a: formatter0/empty,54 unique native actions PASS once
+plus package1/220JSONevents, zero fail/skip/cache/race. The37 registered GETs measured
+31HTML200/2anonymous-series302/4native404; nine response mutations and six source/
+prerequisite refusals passed. All later strict Python capture checks executed PASS,
+38 private members and outer108/Go102/external18/policy7/PG6 brackets equal.
+Parent611a265f and peer9530eb02 accepted this finite scope.
+
+20 exact75dc historical template/catalog inputs and14 native producer/inverse joins
+render through the current a115 registered handlers. This is not a literal75dc
+executable/image or normalized baseline; Normalize was not invoked. Original15/14,
+sole764helper/d722 and all prior presentation/failure/source keepers remain unchanged.
+DBbuild stays actualbac5/f66, separately bound to applicationa115 by existing96b57
+and six PG tuples. Actual PG16.15/PostGIS3.6.4/vector0.8.7/Unix fixture checks,
+PGstop0/status3/PID24probe1/socket absence and both exact CID/name removals passed.
+No new DB build or production infrastructure qualification is claimed.
+
+R2 inspection failure required parent-owned recovery; R3 formatterFAIL4969B preceded
+compiler/native/HTTP phases. R4 native54 PASS but final two-pin capture guardFAIL
+left later checks NOT RUN. R5 pre-Docker fixed106-count failure remains failed.
+R6 exact108/error correction and actual57 pure controls are distinct from the
+complete native54/37 run. No failed method is retroactively accepted; no R5 raw
+stream is invented.
+
+Promoted only10 literal small records plus derived checkpoint/input/history/transfer
+metadata. Public selection is not private114/507814B or38 raw members. Rawresult
+133537B/guard arrays/bodies/ELFs/workspaces/caches stay private; modes600-to664 are
+explicit. Later docsHEAD is not tested a115 execution. No runtime/cleanup/product
+change or full/M0/auth/privacy/group/Live/device/templ/adoption/default approval.
+Parent reviews and owns feature publication; no worker push.

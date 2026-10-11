@@ -775,6 +775,9 @@ backend/guardian/defaults remain unchanged; no full/device/Live/templSDK approva
 
 ## G1 historical-native registered GET walk — source only
 
+Historical source checkpoint (2026-10-11, before execution). Its NOT RUN statements
+below describe that checkpoint; the accepted finite raw execution is recorded next.
+
 The additive `services/server/internal/web/gui_public_get_walk_test.go` and its two
 `testdata/gui-public-get-walk/` JSON inputs are authored **NOT RUN**. They extend
 M0 source-native oracle production beyond the unchanged fourteen-body keeper.
@@ -822,3 +825,46 @@ Future strict comparisons must retain real hard findings without a local mask or
 waiver. No original14 rewrite, signed group/Native Live/templ/full/adoption,
 auth/guardian/member-privacy/provider/network/browser/device approval follows.
 The parent owns the exact isolated runtime method, execution, review and publication.
+
+
+## G1 accepted finite raw registered GET execution
+
+The [compact checkpoint](reviews/gui-original-get-walk/README.md) binds tested
+applicationa115 to actual R6 invocationcbd00d1a, exit0/methodtrue. Formatter output
+was empty;54 unique native actions passed once plus package1/220JSONevents, with
+zero fail/skip/cache/race. The37 registered GETs produced31 HTML200,2 anonymous
+series login302 and4 native404 responses; nine response mutations and six source/
+prerequisite refusals passed. Every later strict Python capture check now executed
+and passed:38 private members, ordered receipts/body hashes/private modes and exact
+outer108/Go102/external18/policy7/PG6 before-after bindings. This is finite raw oracle
+evidence, not full M0 or normalized golden acceptance.
+
+The current native candidate renders20 exact75dc historical template/catalog source
+inputs and14 native producer/inverse joins. It is not a literal75dc executable or
+image. Original15/14 remains unchanged and separate. No golden.Normalize/helper
+invocation, hard-free normalized result or normalized baseline is claimed. The
+released d722 archive and764 binary remain unchanged custody inputs.
+
+DB imagef66 remains the actualbac5 build. The existing96b57 binding separately joins
+applicationa115 and six PG source tuples. Actual fixture PG16.15/PostGIS3.6.4/vector
+0.8.7/private-socket checks, PGstop0/status3/PID24probe1/socket absence and both exact
+CID/name removals passed. No production infrastructure/default-delivery approval.
+
+R2 stopped at optionalTmpfs inspection before TCstart, with method TCcleanupfalse
+and separate exact parent-owned recovery. R3 admitted that projection but refused
+the4969B native formatter diff before compiler/SQL/native54/37GET. Only the exact
+formatter afterimage changed one Go test at a115. R4 native54 passed/37 responses
+were produced, but the final capture guard refused two absent outer pins; later
+Python checks were NOT RUN and overall methodfalse. R5 supplied those pins but
+refused stale fixed106 preflight before UUID/output/Docker. All failed packets
+remain frozen. R6 changed only fixed108/error text, passed57 separate pure controls,
+then passed the complete normal54/37 managed route. No failed attempt is relabeled.
+
+Ten literal records preserve the220-event Go stream/exit, PGcleanup, parent/peer
+actual reviews, private114-closure index and R2–R5 failure summaries. Derived
+checkpoint/input/history/transfer metadata is labeled separately. Public selection
+is not private114rows/507814B or the38-member raw corpus; large result/guard arrays,
+HTML, binaries, workspaces and caches stay private. Later docsHEAD was not retested.
+No new runtime or cleanup, Normalize/full/M0/auth/privacy/group/Live/device/templ/
+adoption/default activation or real member/child/backend approval follows.
+Parent owns feature publication; all previous source/proof/baseline keepers remain.

@@ -1,0 +1,68 @@
+{
+  "all_original15_preserved": true,
+  "baseline_replaced_or_recaptured": false,
+  "kind": "DERIVED selected references, not copied source guard arrays",
+  "literal_source_count": 108,
+  "old86_external18_policy7_PG6_preserved": true,
+  "producer_manifest_source_count": 102,
+  "schema": 1,
+  "selected_closed_method": {
+    "bytes": 42007,
+    "full_mode": 33152,
+    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/g1-get-walk-managed-a115deb-r6/managed.py",
+    "sha256": "acc2886deeb117ff510347f9754d496dcbcfbf6fab324e288732787c06484a11"
+  },
+  "selected_existing_custody_refs": [
+    {
+      "bytes": 11826,
+      "full_mode": 33152,
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/manifest.json",
+      "sha256": "5403a0f3c2817fcd6ec1ebfefe9546ae9318057b3fefe845d1f1b77bd3eceb4a"
+    },
+    {
+      "bytes": 4897832,
+      "full_mode": 33216,
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/normalizer-r7-764beb1/social-gui-normalize",
+      "sha256": "598515e75c709803c7b23673e07b14baa93861608346a81c8fc708521c1b2f05"
+    },
+    {
+      "bytes": 55202,
+      "full_mode": 33204,
+      "path": "/home/dobo/gates/kits/core-v1.6/web-kit-go-core-v1.6.tgz",
+      "sha256": "d722a817074a01d8a983c3e8492335ee07d37fb0d58c9a938cd189df635e168d"
+    },
+    {
+      "bytes": 405,
+      "full_mode": 33152,
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/normalizer-r7-764beb1/binary-build-info.stdout",
+      "sha256": "87be64cb3a8d875b4775ffa3ce18e7b5a24434242de1418e2313d14ed62e18ac"
+    }
+  ],
+  "source_ledger": {
+    "bytes": 46417,
+    "full_mode": 33152,
+    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/g1-get-walk-managed-a115deb-r5/reference-ledger.json",
+    "sha256": "fb45044f1f50874a1a97b42883bf8fa24547d0dc63e7eb270dd3baa7205180ba"
+  },
+  "tested_source": "a115deb5d706745a22d5e1049b0b938cae10cfad",
+  "tracked_runtime_fixture_refs": [
+    {
+      "bytes": 267577,
+      "full_mode": 33204,
+      "path": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a/services/server/internal/web/testdata/gui-public-get-walk/source.json",
+      "sha256": "e92e1d44feee05d052bc733f68db102d45b76d9fbcd927453bdace7392757ac3"
+    },
+    {
+      "bytes": 13489,
+      "full_mode": 33204,
+      "path": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a/services/server/internal/web/testdata/gui-public-get-walk/cases.json",
+      "sha256": "35b30b7a2520750525fd2ee380d2f5597aa6fe6b374c92d5cd9a6db030abbce3"
+    },
+    {
+      "bytes": 28268,
+      "full_mode": 33204,
+      "path": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a/services/server/internal/web/gui_public_get_walk_test.go",
+      "sha256": "837dd40c7fbeff46e539098f00e419bc1c7b9ed85f6fa78ac91b4d6b6a113635"
+    }
+  ]
+}

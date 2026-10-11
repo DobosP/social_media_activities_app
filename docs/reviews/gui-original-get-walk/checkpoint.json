@@ -1,0 +1,212 @@
+{
+  "actual": {
+    "HTTP_status_counts": {
+      "200": 31,
+      "302": 2,
+      "404": 4
+    },
+    "PG": {
+      "extensions": {
+        "fuzzystrmatch": "1.2",
+        "pg_trgm": "1.6",
+        "postgis": "3.6.4",
+        "postgis_tiger_geocoder": "3.6.4",
+        "postgis_topology": "3.6.4",
+        "vector": "0.8.7"
+      },
+      "listen_addresses": "",
+      "server_version_num": 160015
+    },
+    "PG_cleanup": {
+      "owned_pid": 24,
+      "pid_and_socket_files_absent": 1,
+      "pid_probe_exit": 1,
+      "status_exit": 3,
+      "stop_exit": 0
+    },
+    "all_later_strict_Python_capture_checks_executed_and_passed": true,
+    "capture_summary": {
+      "HTML": 31,
+      "cases": 37,
+      "missing": 4,
+      "mutation_controls": 9,
+      "normalized_qualification": false,
+      "redirects": 2,
+      "source_inputs": 102
+    },
+    "exit": 0,
+    "formatter": {
+      "diff_bytes": 0,
+      "exit_code": 0,
+      "stderr_bytes": 0
+    },
+    "guards": {
+      "Go102_equal_all_bound": true,
+      "external18_policy7_PG6_equal": true,
+      "outer108_equal": true
+    },
+    "invocation": "cbd00d1a-927c-4a5c-a27c-00838941dfdd",
+    "method_pass": true,
+    "method_source": {
+      "bytes": 42007,
+      "full_mode": 33152,
+      "sha256": "acc2886deeb117ff510347f9754d496dcbcfbf6fab324e288732787c06484a11"
+    },
+    "native": {
+      "JSON_events": 220,
+      "cached": false,
+      "fail": 0,
+      "identities": [
+        "TestGUIPublicGetWalk",
+        "TestGUIPublicGetWalk/landing-en-default",
+        "TestGUIPublicGetWalk/landing-en-default/refuse-status",
+        "TestGUIPublicGetWalk/landing-en-default/refuse-content-type",
+        "TestGUIPublicGetWalk/landing-en-default/refuse-cache",
+        "TestGUIPublicGetWalk/landing-en-default/refuse-template",
+        "TestGUIPublicGetWalk/landing-en-default/refuse-language",
+        "TestGUIPublicGetWalk/landing-en-default/refuse-canonical",
+        "TestGUIPublicGetWalk/landing-en-default/refuse-robots",
+        "TestGUIPublicGetWalk/landing-en-default/refuse-heading",
+        "TestGUIPublicGetWalk/landing-en-default/refuse-footer",
+        "TestGUIPublicGetWalk/landing-en-contrast",
+        "TestGUIPublicGetWalk/landing-ro-default",
+        "TestGUIPublicGetWalk/landing-ro-contrast",
+        "TestGUIPublicGetWalk/index-empty",
+        "TestGUIPublicGetWalk/index-populated",
+        "TestGUIPublicGetWalk/city-populated",
+        "TestGUIPublicGetWalk/city-missing",
+        "TestGUIPublicGetWalk/landing-detail-populated",
+        "TestGUIPublicGetWalk/landing-detail-missing",
+        "TestGUIPublicGetWalk/events-empty",
+        "TestGUIPublicGetWalk/events-populated",
+        "TestGUIPublicGetWalk/events-filter-match",
+        "TestGUIPublicGetWalk/events-filter-empty",
+        "TestGUIPublicGetWalk/event-id",
+        "TestGUIPublicGetWalk/event-slug",
+        "TestGUIPublicGetWalk/event-missing",
+        "TestGUIPublicGetWalk/places-map-empty",
+        "TestGUIPublicGetWalk/places-map-populated",
+        "TestGUIPublicGetWalk/places-list-empty",
+        "TestGUIPublicGetWalk/places-list-populated",
+        "TestGUIPublicGetWalk/places-list-filter-match",
+        "TestGUIPublicGetWalk/places-list-filter-empty",
+        "TestGUIPublicGetWalk/place-id",
+        "TestGUIPublicGetWalk/place-slug",
+        "TestGUIPublicGetWalk/place-missing",
+        "TestGUIPublicGetWalk/series-list-anonymous-redirect",
+        "TestGUIPublicGetWalk/series-detail-anonymous-redirect",
+        "TestGUIPublicGetWalk/discover-empty",
+        "TestGUIPublicGetWalk/discover-populated",
+        "TestGUIPublicGetWalk/campaigns-empty",
+        "TestGUIPublicGetWalk/campaigns-populated",
+        "TestGUIPublicGetWalk/partners-empty",
+        "TestGUIPublicGetWalk/partners-populated",
+        "TestGUIPublicGetWalk/donate-empty",
+        "TestGUIPublicGetWalk/donate-populated",
+        "TestGUIPublicGetWalk/donate-selected",
+        "TestGUIPublicGetWalkSourceRefusals",
+        "TestGUIPublicGetWalkSourceRefusals/wrong-history",
+        "TestGUIPublicGetWalkSourceRefusals/wrong-source-hash",
+        "TestGUIPublicGetWalkSourceRefusals/duplicate-path",
+        "TestGUIPublicGetWalkSourceRefusals/alias-path",
+        "TestGUIPublicGetWalkSourceRefusals/missing-base",
+        "TestGUIPublicGetWalkSourceRefusals/missing-dsn"
+      ],
+      "package_pass": 1,
+      "pass": 54,
+      "run": 54,
+      "skip": 0,
+      "subcases": 52,
+      "top_level": 2
+    },
+    "owned_cleanup": {
+      "db": {
+        "id": "a17a9451d9356b8ee86aaecfaf826a242a2ea32918e61553928c6855b982c5f4",
+        "id_absent": true,
+        "name": "social-g1-db-cbd00d1a-927c-4a5c-a27c-00838941dfdd",
+        "name_absent": true,
+        "passed": true,
+        "remove_exit": 0
+      },
+      "tc": {
+        "id": "759eb80e6d2b97ea3972dc69724ff6f8c81e03f608c56c6bc4770ae062736760",
+        "id_absent": true,
+        "name": "social-g1-tc-cbd00d1a-927c-4a5c-a27c-00838941dfdd",
+        "name_absent": true,
+        "passed": true,
+        "remove_exit": 0
+      }
+    },
+    "raw_capture_members": 38,
+    "registered_requests": 37,
+    "response_mutation_controls": 9,
+    "session": 7968,
+    "source_prerequisite_refusals": 6,
+    "toolchain_image": "sha256:2e040a5165d79be63755424f707fdb8cf609ace831ada7a9baca398ac25e12b9"
+  },
+  "documentation_source": "Later docs-only commit; not a reexecution of tested a115.",
+  "history": {
+    "R2": "Optional Tmpfs inspection refused before TC start; method TC cleanup failed; exact parent recovery recorded.",
+    "R3": "Formatter refused4969B diff; compiler/SQL/extensions/native54/37GET not run.",
+    "R4": "Native54 PASS and37HTTP/38members produced; final capture guard refused2missing outer pins; later checks not run; overall false.",
+    "R5": "108-row ledger refused stale fixed106 preflight before UUID/output/Docker; exit1; no product execution.",
+    "R6": "Exactly fixed108 count/error; frozenR5ledger unchanged; actual57pures separate; normal complete54/37 route passed."
+  },
+  "infrastructure_lineage": {
+    "actual_DB_build_source": "bac5d718360504330d5f5cdbf2f75cf5a0ad0799",
+    "actual_DB_image": "sha256:f66de888683449864f820c365551125bb2627782be15a264f9746d53573b39d5",
+    "application_source": "a115deb5d706745a22d5e1049b0b938cae10cfad",
+    "existing_parent_binding": {
+      "bytes": 5617,
+      "full_mode": 33152,
+      "sha256": "96b57be2fd4f350a7f3d5f9c1a7c66967052314ec62777d58c94ece9dae22f9c"
+    },
+    "new_DB_image_build": false
+  },
+  "kind": "DERIVED finite historical-native G1 raw GET checkpoint",
+  "private_records_not_promoted": {
+    "capture_observation": {
+      "bytes": 55669,
+      "full_mode": 33152,
+      "path": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-a115-r6-g1-complete-pass-compact-20261011/observation.json",
+      "sha256": "e0acca692699c1103c865684dc655a5cba342719a14e637bec342487e653c788"
+    },
+    "full_private_rows": 114,
+    "large_result": {
+      "bytes": 133537,
+      "full_mode": 33152,
+      "path": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-a115-r6-g1-complete-pass-compact-20261011/artifacts/result.json",
+      "sha256": "f64fa50a62b6ba30d11310e208ff9cb76df249d9d5f75b5122040df68ae93b6c"
+    },
+    "private_capsule_payload_bytes": 507814,
+    "public_selected_literal_files": 10,
+    "public_selection_is_not_full_private_closure": true,
+    "raw_body_files": 37,
+    "raw_capture_manifest": {
+      "bytes": 82363,
+      "full_mode": 33152,
+      "path": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-a115-r6-g1-complete-pass-compact-20261011/artifacts/proof/captured/manifest.json",
+      "sha256": "591c6b70edc83620ead9ca5ba18ecf4c39d3171e5365276961b96b184b729fb7"
+    },
+    "raw_member_set": 38
+  },
+  "pure_controls": {
+    "actual": 57,
+    "reference": {
+      "bytes": 18457,
+      "full_mode": 33152,
+      "path": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-a115-r6-ledger-pure-controls-20261011/result.json",
+      "sha256": "9e3dc733e9f9bbc3a5fd1e7cabcc6eaf781275eb8fa84c3d2c3b2a67303f35d3"
+    },
+    "scope": "51 existing +6 actual-main-ledger AST controls; separate stdlib run, not54 native or HTTP evidence."
+  },
+  "qualification_limits": [
+    "Raw historical-source/current-native oracle only; not literal75dc executable/image.",
+    "No Normalize/helper invocation or normalized baseline acceptance.",
+    "No formalM0/full/auth/privacy/group/Live/device/templ/adoption/default-delivery approval.",
+    "Original15/14, sole764normalizer/d722 and prior presentation proofs unchanged."
+  ],
+  "schema": 1,
+  "tested_source": "a115deb5d706745a22d5e1049b0b938cae10cfad",
+  "valid_until": "Owning source, frozen inputs, method or evidence changes; then treat as history."
+}

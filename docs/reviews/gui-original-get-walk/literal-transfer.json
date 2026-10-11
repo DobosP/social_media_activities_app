@@ -1,0 +1,171 @@
+{
+  "full_private114_closure_not_recreated": true,
+  "kind": "DERIVED transfer ledger",
+  "public_mode": 33204,
+  "rows": [
+    {
+      "literal_bytes_equal": true,
+      "public": {
+        "bytes": 53835,
+        "full_mode": 33204,
+        "path": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a/docs/reviews/gui-original-get-walk/native-tests.jsonl",
+        "sha256": "6be642bd5737f67fe7263d69ff23ffaed8a9ecc40bbc88c7148854055c703547"
+      },
+      "public_file": "native-tests.jsonl",
+      "source": {
+        "bytes": 53835,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-a115-r6-g1-complete-pass-compact-20261011/artifacts/proof/tests.stdout",
+        "sha256": "6be642bd5737f67fe7263d69ff23ffaed8a9ecc40bbc88c7148854055c703547"
+      }
+    },
+    {
+      "literal_bytes_equal": true,
+      "public": {
+        "bytes": 2,
+        "full_mode": 33204,
+        "path": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a/docs/reviews/gui-original-get-walk/native-tests.exit",
+        "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+      },
+      "public_file": "native-tests.exit",
+      "source": {
+        "bytes": 2,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-a115-r6-g1-complete-pass-compact-20261011/artifacts/proof/tests.exit",
+        "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+      }
+    },
+    {
+      "literal_bytes_equal": true,
+      "public": {
+        "bytes": 98,
+        "full_mode": 33204,
+        "path": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a/docs/reviews/gui-original-get-walk/pg-cleanup.json",
+        "sha256": "c23b6aee760b1b531e858666f5f75a0ff5372ce5a7ba14c888330e624dc33356"
+      },
+      "public_file": "pg-cleanup.json",
+      "source": {
+        "bytes": 98,
+        "full_mode": 33188,
+        "path": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-a115-r6-g1-complete-pass-compact-20261011/artifacts/pg-socket/pg-cleanup.json",
+        "sha256": "c23b6aee760b1b531e858666f5f75a0ff5372ce5a7ba14c888330e624dc33356"
+      }
+    },
+    {
+      "literal_bytes_equal": true,
+      "public": {
+        "bytes": 2147,
+        "full_mode": 33204,
+        "path": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a/docs/reviews/gui-original-get-walk/parent-actual-review.json",
+        "sha256": "611a265ff4e8517a3ca3a35d8c0fbc41368e1a86760fc67dce8bdb43f633d687"
+      },
+      "public_file": "parent-actual-review.json",
+      "source": {
+        "bytes": 2147,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-a115-r6-complete-parent-actual-review-20261011.json",
+        "sha256": "611a265ff4e8517a3ca3a35d8c0fbc41368e1a86760fc67dce8bdb43f633d687"
+      }
+    },
+    {
+      "literal_bytes_equal": true,
+      "public": {
+        "bytes": 5949,
+        "full_mode": 33204,
+        "path": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a/docs/reviews/gui-original-get-walk/independent-actual-review.json",
+        "sha256": "9530eb020a7295ec69b31a8dd51f5bdf72b832ec135b929fedf6608818195e4c"
+      },
+      "public_file": "independent-actual-review.json",
+      "source": {
+        "bytes": 5949,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-a115-r6-g1-complete-independent-actual-review-20261011.json",
+        "sha256": "9530eb020a7295ec69b31a8dd51f5bdf72b832ec135b929fedf6608818195e4c"
+      }
+    },
+    {
+      "literal_bytes_equal": true,
+      "public": {
+        "bytes": 212,
+        "full_mode": 33204,
+        "path": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a/docs/reviews/gui-original-get-walk/private-capsule-closure.json",
+        "sha256": "b7e123ebdef77f088d505b2457256cd36efd36dd14fb89c6952da48074692ab1"
+      },
+      "public_file": "private-capsule-closure.json",
+      "source": {
+        "bytes": 212,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-a115-r6-g1-complete-pass-compact-20261011/CLOSURE.json",
+        "sha256": "b7e123ebdef77f088d505b2457256cd36efd36dd14fb89c6952da48074692ab1"
+      }
+    },
+    {
+      "literal_bytes_equal": true,
+      "public": {
+        "bytes": 1387,
+        "full_mode": 33204,
+        "path": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a/docs/reviews/gui-original-get-walk/history-r2-failure-review.json",
+        "sha256": "e2e91c4260440b9113778555498979d0b39b25d81c283a28b88561ea517a4410"
+      },
+      "public_file": "history-r2-failure-review.json",
+      "source": {
+        "bytes": 1387,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-bac5-r2-failure-parent-actual-review-20261011.json",
+        "sha256": "e2e91c4260440b9113778555498979d0b39b25d81c283a28b88561ea517a4410"
+      }
+    },
+    {
+      "literal_bytes_equal": true,
+      "public": {
+        "bytes": 1511,
+        "full_mode": 33204,
+        "path": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a/docs/reviews/gui-original-get-walk/history-r3-format-review.json",
+        "sha256": "0b3aed96fa6a5ed373cfdbaf5db6868514450149b9cd87597bcbb7a772d4cba6"
+      },
+      "public_file": "history-r3-format-review.json",
+      "source": {
+        "bytes": 1511,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-bac5-r3-format-refusal-independent-actual-review-20261011.json",
+        "sha256": "0b3aed96fa6a5ed373cfdbaf5db6868514450149b9cd87597bcbb7a772d4cba6"
+      }
+    },
+    {
+      "literal_bytes_equal": true,
+      "public": {
+        "bytes": 2378,
+        "full_mode": 33204,
+        "path": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a/docs/reviews/gui-original-get-walk/history-r4-pin-refusal-review.json",
+        "sha256": "90408e8c8f5f5c43c4c03c02e50e3c6181fbce1693b5665f0e70be7f4c8479d6"
+      },
+      "public_file": "history-r4-pin-refusal-review.json",
+      "source": {
+        "bytes": 2378,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-a115-r4-native54-pin-refusal-parent-actual-review-20261011.json",
+        "sha256": "90408e8c8f5f5c43c4c03c02e50e3c6181fbce1693b5665f0e70be7f4c8479d6"
+      }
+    },
+    {
+      "literal_bytes_equal": true,
+      "public": {
+        "bytes": 1105,
+        "full_mode": 33204,
+        "path": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a/docs/reviews/gui-original-get-walk/history-r5-preflight-refusal.json",
+        "sha256": "3470a823beb7b72787aea484a96c5cac3cb34914db10e03ae58d2956a28f46a8"
+      },
+      "public_file": "history-r5-preflight-refusal.json",
+      "source": {
+        "bytes": 1105,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-a115-r5-preflight-count-refusal-20261011.json",
+        "sha256": "3470a823beb7b72787aea484a96c5cac3cb34914db10e03ae58d2956a28f46a8"
+      }
+    }
+  ],
+  "schema": 1,
+  "selected_literal_bytes": 68624,
+  "selected_literal_records": 10,
+  "source_modes_recorded_honestly": true
+}

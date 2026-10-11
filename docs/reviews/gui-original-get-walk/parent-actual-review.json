@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "utc": "2026-10-11T07:47:34.675918+00:00",
+  "reviewer": "parent",
+  "verdict": "FINITE G1RAW HTTP CAPTURE ACTUALPASS CLEAR",
+  "source": "a115deb5d706745a22d5e1049b0b938cae10cfad",
+  "methodSha256": "acc2886deeb117ff510347f9754d496dcbcfbf6fab324e288732787c06484a11",
+  "wrapperSession": 7968,
+  "wrapperExit": 0,
+  "methodPass": true,
+  "captureSha256": "e0acca692699c1103c865684dc655a5cba342719a14e637bec342487e653c788",
+  "nativeUniqueOncePass": 54,
+  "packagePass": 1,
+  "JSONEvents": 220,
+  "failSkipCacheRace": 0,
+  "HTTPcases": 37,
+  "HTML": 31,
+  "anonymousRedirects": 2,
+  "nativeMissing": 4,
+  "actualRawMembersVerified": 38,
+  "responseMutationControls": 9,
+  "sourceRefusals": 6,
+  "outer108AndProducer102BeforeAfter": "Allactualstrictwrapper capturechecks nowexecuted andpassed. No retrofitR4/R5statuses.",
+  "PG": {
+    "server_version_num": 160015,
+    "listen_addresses": "",
+    "extensions": {
+      "fuzzystrmatch": "1.2",
+      "pg_trgm": "1.6",
+      "postgis": "3.6.4",
+      "postgis_tiger_geocoder": "3.6.4",
+      "postgis_topology": "3.6.4",
+      "vector": "0.8.7"
+    }
+  },
+  "cleanup": {
+    "tc": {
+      "id": "759eb80e6d2b97ea3972dc69724ff6f8c81e03f608c56c6bc4770ae062736760",
+      "name": "social-g1-tc-cbd00d1a-927c-4a5c-a27c-00838941dfdd",
+      "remove_exit": 0,
+      "id_absent": true,
+      "name_absent": true,
+      "passed": true
+    },
+    "db": {
+      "id": "a17a9451d9356b8ee86aaecfaf826a242a2ea32918e61553928c6855b982c5f4",
+      "name": "social-g1-db-cbd00d1a-927c-4a5c-a27c-00838941dfdd",
+      "remove_exit": 0,
+      "id_absent": true,
+      "name_absent": true,
+      "passed": true
+    }
+  },
+  "PGcleanup": {
+    "stop_exit": 0,
+    "status_exit": 3,
+    "owned_pid": 24,
+    "pid_probe_exit": 1,
+    "pid_and_socket_files_absent": 1
+  },
+  "scope": "Actual complete finite raw G1registered GET/producer/response/hash proof atA115 usingR6strict108pins. 31HTML/2anonymous302/4native404. Currentcandidate+exacthistorical20template/native14relation, notliteral75dc binary, Normalize/full/authprivacy/live/device/templ/adoption qualification. FailedR2-R5 remain unchanged."
+}
