@@ -2624,3 +2624,21 @@ no measured census/browser count or new mask. Formatter/compiler/tests/runtime
 NOT RUN. Parent reviews closed Source/method then reserves any managed runtime.
 All old proofs/failure/source/baseline keepers remain; no gesture/map/geolocation/
 JS/browserCSP/computedstyle/full/Live/device/M6/default/SDK/templ adoption claim.
+
+
+## 2026-10-11 — SOC-10 compact accepted browse proof
+
+Actualtested44ccdc5:37uniqueoncePASS+package1/170JSONevents;format0/empty,
+79source+18external hashes/fullmodes unchanged, pinned4CPU6GiB/sourceRO/networknone/
+noOOM/ownedcleanup passed. Scope14OSFS presentations+8native binding refusals+
+12safe DOM mutations;18compare logs/7phase joins,66Normalize SOURCEEXPECTED only.
+Existing764/d722 Options{}+original15 unchanged, no newmask/baseline approval.
+
+Promoted only9necessary literal streams/index/review records. Public selected
+members are explicitly not the full private28capture; raw result guard arrays,
+empty formatter/error and remaining controls stay private by exactindexed hashes.
+Originalprivate/public664 modes and source-review historicNOTRUN/peerpending remain
+honest. Tested44cc differs from this later docsHEAD; no rerun. Original14/form44/
+privacy/source/failure/SDK keepers untouched. No handler/DB/API/auth/ownership/
+privacy/admission/location/JS/browserCSP/computedstyle/full/Live/device/default/
+M6/templSDKadoption acceptance or cleanup. Parent owns feature publication.

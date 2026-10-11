@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "utc": "2026-10-11T02:03:47.397041+00:00",
+  "verdict": "ParentACTUAL scopedSOC10 presentation37 CLEAR",
+  "source": "44ccdc5bcde2c82968f0f287c088f9c90783ad81",
+  "session": 11839,
+  "invocation": "5224520c-a099-4357-a495-06804313eae8",
+  "result_sha256": "7c6766ebbb9e049d1c14f159e353aab183c05fd57faf02cc92794d026d199b6d",
+  "closure_sha256": "9159422c7d7af05ac2bcf89bbd954fafa61e4c95b16b667c63f3a0aa1f2c5888",
+  "regular_rows": 28,
+  "regular_bytes": 120422,
+  "source_guards": 79,
+  "external_guards": 18,
+  "native_events": 170,
+  "unique_once_PASS": 37,
+  "package_PASS": 1,
+  "fail_skip_cache_race": 0,
+  "formatter_exit": 0,
+  "all_actualartifact_source_external_bytes_modes_verified": true,
+  "cleanup": {
+    "id": "a0bad666d966d3714ac3c4d99697ecb1b0dc0664c198ca3473fae92fd19356c7",
+    "name": "social-activity-browse-nonce-5224520c-a099-4357-a495-06804313eae8",
+    "remove_exit": 0,
+    "id_absent": true,
+    "name_absent": true,
+    "passed": true
+  },
+  "normalizations": "66SOURCEEXPECTED only; not instrumentation-derivedcensus",
+  "scope": "SOC-10 fictional authenticated adult activity browse OS/FS presentation, nonce binding and released DOM only; no handler/API/PG/write/auth/participation/ownership/organizer/admission/privacy/geolocation/browserJS/browserCSP/computedstyle/app/full/Live/device/default/adoption qualification"
+}

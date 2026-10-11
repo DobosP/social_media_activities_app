@@ -1,0 +1,183 @@
+{
+  "schema": 1,
+  "scope": "SOC10 fictional authenticated adult Renderer OS/FS activity browse nonce/presentation only; no handler/DB/API/visibility/auth/ownership/privacy/admission/geolocation/browserJS/CSP/full/device/default/templSDKadoption qualification",
+  "tested_source": "44ccdc5bcde2c82968f0f287c088f9c90783ad81",
+  "actual_invocation": "5224520c-a099-4357-a495-06804313eae8",
+  "method_exit": 0,
+  "raw_private_result_sha256": "7c6766ebbb9e049d1c14f159e353aab183c05fd57faf02cc92794d026d199b6d",
+  "private_closure_sha256": "9159422c7d7af05ac2bcf89bbd954fafa61e4c95b16b667c63f3a0aa1f2c5888",
+  "source_packet_seal": "410cb54a783486b48e96f27f7cecab3e9b9b4620f083df4c25ee63cdacf9df7c",
+  "method_packet_seal": "3370fa6358d0dfcc265727699fa3058acbfd7ecc07ad1d7aefde03df9e813f6b",
+  "method_source_sha256": "1a1ef0e9836537e264fd1d802118d8dbd35eff01bd57d520438fcc0bc152c134",
+  "parent_actual_review_sha256": "4d6d3b89bec489e5311099701c1bde16189e26966e423cc8b010eb4fd79c0d13",
+  "independent_actual_review_sha256": "807c6e5d915a0e25761e978385968433581efa5b5e051a33cecb5332eaa1422c",
+  "native": {
+    "run": 37,
+    "pass": 37,
+    "top_level": 3,
+    "subcases": 34,
+    "package_pass": 1,
+    "fail": 0,
+    "skip": 0,
+    "cached": false,
+    "identities": [
+      "TestGUIActivityBrowseNonceDOM",
+      "TestGUIActivityBrowseNonceDOM/filesystem-false/empty-list",
+      "TestGUIActivityBrowseNonceDOM/filesystem-false/empty-search-cards",
+      "TestGUIActivityBrowseNonceDOM/filesystem-false/filled-list",
+      "TestGUIActivityBrowseNonceDOM/filesystem-false/filled-cards-beginners",
+      "TestGUIActivityBrowseNonceDOM/filesystem-false/cards-first",
+      "TestGUIActivityBrowseNonceDOM/filesystem-false/cards-middle",
+      "TestGUIActivityBrowseNonceDOM/filesystem-false/cards-last",
+      "TestGUIActivityBrowseNonceDOM/filesystem-true/empty-list",
+      "TestGUIActivityBrowseNonceDOM/filesystem-true/empty-search-cards",
+      "TestGUIActivityBrowseNonceDOM/filesystem-true/filled-list",
+      "TestGUIActivityBrowseNonceDOM/filesystem-true/filled-cards-beginners",
+      "TestGUIActivityBrowseNonceDOM/filesystem-true/cards-first",
+      "TestGUIActivityBrowseNonceDOM/filesystem-true/cards-middle",
+      "TestGUIActivityBrowseNonceDOM/filesystem-true/cards-last",
+      "TestGUIActivityBrowseNonceRejectsBindingMutations",
+      "TestGUIActivityBrowseNonceRejectsBindingMutations/missing-nonce",
+      "TestGUIActivityBrowseNonceRejectsBindingMutations/wrong-nonce",
+      "TestGUIActivityBrowseNonceRejectsBindingMutations/duplicate",
+      "TestGUIActivityBrowseNonceRejectsBindingMutations/changed-path",
+      "TestGUIActivityBrowseNonceRejectsBindingMutations/changed-defer",
+      "TestGUIActivityBrowseNonceRejectsBindingMutations/missing-header",
+      "TestGUIActivityBrowseNonceRejectsBindingMutations/disagreeing-header",
+      "TestGUIActivityBrowseNonceRejectsBindingMutations/script-order",
+      "TestGUIActivityBrowseNonceRejectsDOMMutations",
+      "TestGUIActivityBrowseNonceRejectsDOMMutations/GET-method",
+      "TestGUIActivityBrowseNonceRejectsDOMMutations/query-value",
+      "TestGUIActivityBrowseNonceRejectsDOMMutations/beginners-hidden",
+      "TestGUIActivityBrowseNonceRejectsDOMMutations/cards-hidden",
+      "TestGUIActivityBrowseNonceRejectsDOMMutations/selected-view",
+      "TestGUIActivityBrowseNonceRejectsDOMMutations/card-link",
+      "TestGUIActivityBrowseNonceRejectsDOMMutations/card-title",
+      "TestGUIActivityBrowseNonceRejectsDOMMutations/previous-link",
+      "TestGUIActivityBrowseNonceRejectsDOMMutations/next-link",
+      "TestGUIActivityBrowseNonceRejectsDOMMutations/page-copy",
+      "TestGUIActivityBrowseNonceRejectsDOMMutations/suggestion-link",
+      "TestGUIActivityBrowseNonceRejectsDOMMutations/empty-copy"
+    ],
+    "JSON_events": 170
+  },
+  "formatter": {
+    "exit_code": 0,
+    "diff_bytes": 0,
+    "stderr_bytes": 0
+  },
+  "guards": {
+    "source": 79,
+    "external": 18,
+    "byte_fullmode_before_after_equal": true
+  },
+  "normalization": {
+    "OS_FS_positive_children": 14,
+    "native_binding_mutations": 8,
+    "safe_DOM_mutations": 12,
+    "actual_compare_hash_logs": 18,
+    "all_expected_current_equal": true,
+    "observed_original_current_equal": 0,
+    "observed_original_current_distinct": 18,
+    "OS_FS_phase_hash_joins": 7,
+    "source_expected_calls": 66,
+    "independent_invocation_census": null,
+    "browser_tests": 0,
+    "policy": "Verified764/d722 Normalize Options{} unchanged; native nonce/header refusals separate, safe mutations hard0 before inequality; no masks or baseline blessing."
+  },
+  "isolation": {
+    "image_id": "sha256:2e040a5165d79be63755424f707fdb8cf609ace831ada7a9baca398ac25e12b9",
+    "cpus": 4,
+    "memory_bytes": 6442450944,
+    "source_readonly": true,
+    "network": "none",
+    "noOOM": true
+  },
+  "owned_cleanup": {
+    "id": "a0bad666d966d3714ac3c4d99697ecb1b0dc0664c198ca3473fae92fd19356c7",
+    "name": "social-activity-browse-nonce-5224520c-a099-4357-a495-06804313eae8",
+    "remove_exit": 0,
+    "id_absent": true,
+    "name_absent": true,
+    "passed": true
+  },
+  "literal_transfers": [
+    {
+      "path": "tests.stdout",
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-browse-nonce-44ccdc5-5224520c-a099-4357-a495-06804313eae8/tests.stdout",
+      "bytes": 51459,
+      "sha256": "97a080ee49abbf24cd96abefa972f413aa7d52fd5779b662fb1869d9bc0903b1",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204
+    },
+    {
+      "path": "tests.exit",
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-browse-nonce-44ccdc5-5224520c-a099-4357-a495-06804313eae8/tests.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204
+    },
+    {
+      "path": "format.exit",
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-browse-nonce-44ccdc5-5224520c-a099-4357-a495-06804313eae8/format.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204
+    },
+    {
+      "path": "CLOSURE.json",
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-browse-nonce-44ccdc5-5224520c-a099-4357-a495-06804313eae8/CLOSURE.json",
+      "bytes": 5135,
+      "sha256": "9159422c7d7af05ac2bcf89bbd954fafa61e4c95b16b667c63f3a0aa1f2c5888",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204
+    },
+    {
+      "path": "control-04.stdout",
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-browse-nonce-44ccdc5-5224520c-a099-4357-a495-06804313eae8/control-04.stdout",
+      "bytes": 1968,
+      "sha256": "1d62f9098c6b1993a876bf712b87e3dc253c33b803c6043edfa6822aeaa5b133",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204
+    },
+    {
+      "path": "control-06.stdout",
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-browse-nonce-44ccdc5-5224520c-a099-4357-a495-06804313eae8/control-06.stdout",
+      "bytes": 65,
+      "sha256": "bf7ffeb7f3f7130da9d182895b50cafa9ee06c2790f0934be9071b558e35af99",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204
+    },
+    {
+      "path": "social-44ccd-browse-parent-actual-review-20261011.json",
+      "actual_source": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-44ccd-browse-parent-actual-review-20261011.json",
+      "bytes": 1371,
+      "sha256": "4d6d3b89bec489e5311099701c1bde16189e26966e423cc8b010eb4fd79c0d13",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204
+    },
+    {
+      "path": "social-44cc-activity-browse-independent-actual-review-20261011.json",
+      "actual_source": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-44cc-activity-browse-independent-actual-review-20261011.json",
+      "bytes": 2760,
+      "sha256": "807c6e5d915a0e25761e978385968433581efa5b5e051a33cecb5332eaa1422c",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204
+    },
+    {
+      "path": "social-44ccd-browse-parent-source-method-review-20261011.json",
+      "actual_source": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-44ccd-browse-parent-source-method-review-20261011.json",
+      "bytes": 1261,
+      "sha256": "20ac13ba797eff3aba882d33aa7b82a4249202a168427c99d5982627a411be5e",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204
+    }
+  ],
+  "transfer_total_bytes": 64023,
+  "availability": "Exactly9selected literal public files, not the complete private28row capture. Full CLOSURE index is copied unchanged and describes that private capture. Raw result guard arrays, empty formatter/error streams, remaining control/absence streams remain private by indexed hashes; their execution was independently verified. Originalprivate/public0664 modes are explicit.",
+  "historical_source_method_review": "Source review says peerpending/NOTRUN at its original recordtime; retained unchanged, lateractualparent+independent acceptance is separate.",
+  "later_docs_HEAD_not_reexecuted": true,
+  "retention": "Original14/15, sole764/d722, priorform44 and its failed/source capsules, previousprivacy/nonce/static/CSS proofs remain unchanged. No cleanup or recapture."
+}

@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "reviewer": "/root/program_pack",
+  "verdict": "ACTUAL_TARGETED_BOUNDARY_CLEAR",
+  "reviewed_utc": "2026-10-11T02:06:29.637444+00:00",
+  "source": "44ccdc5bcde2c82968f0f287c088f9c90783ad81",
+  "invocation": "5224520c-a099-4357-a495-06804313eae8",
+  "capture": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-browse-nonce-44ccdc5-5224520c-a099-4357-a495-06804313eae8",
+  "parent_owned_closure_sha256": "9159422c7d7af05ac2bcf89bbd954fafa61e4c95b16b667c63f3a0aa1f2c5888",
+  "result_sha256": "7c6766ebbb9e049d1c14f159e353aab183c05fd57faf02cc92794d026d199b6d",
+  "all28_regular_rows_bytes_hashes_full_modes_verified": true,
+  "row_bytes": 120422,
+  "private_unaliased_owned_directory0700": true,
+  "raw_Go_JSON_events": 170,
+  "unique_run_PASS_once": 37,
+  "package_PASS": 1,
+  "fail_skip_cache_race": 0,
+  "formatter_empty_exit0": true,
+  "native_groups_PASS": {
+    "synthetic_OS_FS_presentation_states": 14,
+    "binding_mutations": 8,
+    "safe_DOM_mutations": 12,
+    "parents": 3
+  },
+  "meaningful_scope": "Seven synthetic list/cards/empty/search/beginners and first/middle/last states rendered through real OS/FS Renderers and real socialPagination size24, with unchanged nine-file original-source fixtures and strict released normalization. Binding refusals and safe DOM inequality controls all executed; no unrelated hard-error acceptance.",
+  "source79_external18_before_after_live_bytes_full_modes_and_Git_exact": true,
+  "clean_exact_HEAD": true,
+  "normalizer_calls": {
+    "source_expected": 66,
+    "independent_measured_census": null
+  },
+  "managed": {
+    "image": "sha256:2e040a5165d79be63755424f707fdb8cf609ace831ada7a9baca398ac25e12b9",
+    "source_mount_readonly": true,
+    "network": "none",
+    "cpus": 4,
+    "memory_bytes": 6442450944,
+    "native_readonly_modules_race_count1": true,
+    "no_OOM": true,
+    "nine_control_exits_zero": true
+  },
+  "owned_cleanup": {
+    "full_CID": "a0bad666d966d3714ac3c4d99697ecb1b0dc0664c198ca3473fae92fd19356c7",
+    "remove_exit": 0,
+    "actual_ID_and_exact_name_absence_streams_verified": true
+  },
+  "parent_actual_review": {
+    "reported_sha256": "4d6d3b89bec489e5311099701c1bde16189e26966e423cc8b010eb4fd79c0d13",
+    "matching_physical_record": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-44ccd-browse-parent-actual-review-20261011.json"
+  },
+  "limits": "Synthetic adult Renderer presentation/nonce/DOM only; no handler/auth/privacy/SQL/API/JavaScript/browserCSP/full/Live/device/default/adoption qualification.",
+  "actions": "Read-only actual metadata/streams/source/Git/reference checks plus this private JSON; no runtime, source/controller edits, parser/compiler/install or cleanup by reviewer."
+}

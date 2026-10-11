@@ -661,7 +661,7 @@ computedstyle/full/Live/device/default/adoption approval. Prior proof/source and
 original14/15/sole764+d722 keepers remain intact; parent owns feature publication.
 
 
-### SOC-10 complete browse presentation nonce source checkpoint
+### Historical SOC-10 initial44cc source checkpoint (2026-10-11)
 
 SOURCE ONLY, NOT RUN: activities.html adds only request.csp_nonce to its one
 existing deferred browse-modes.js tag. The whole inverse restores the exact80f
@@ -690,3 +690,27 @@ read-only formatter and fresh Go route may run `-mod=readonly -race -count=1 -js
 No rebuild/download/original recapture or old case change. M6 browse island remains
 held; no JS/gesture/location/map/network/browserCSP/computedstyle/full/Live/device/
 default/SDK/templ adoption or auth/ownership/privacy acceptance is claimed.
+
+
+### SOC-10 accepted scoped browse execution
+
+At tested44ccdc5, formatter0/empty and37 unique native checks passed once,
+packagePASS1/170JSONevents/zero fail-skip-cache-race. All79source+18external
+hash/full-mode brackets and pinned4CPU6GiB/sourceRO/networknone/noOOM/ownedcleanup
+passed. Parent and independent review accepted only the
+[scoped checkpoint](reviews/gui-public-original/activity-browse-nonce-checkpoint.json).
+
+Fourteen OS/FS presentations,8native binding refusals and12safe DOM mutations
+passed. Eighteen comparison hash logs join expected/current; all7OSFS phase joins
+agree.66 Normalize calls remains SOURCE EXPECTED, not an invocation census or
+browser count; existing764/d722 Options{} and original15 are unchanged.
+
+Only9small literal records are promoted: native JSON/exit, format exit, full
+private capture index, actual exit/removal stdout and3source/actual reviews.
+Selected public members are not the full private28-row capture: empty formatter/
+error/remaining control streams and raw result guard arrays stay private under
+indexed digests. Source-private/public664 modes and historical source-review
+NOTRUN/peerpending labels are preserved honestly. This later docsHEAD is not run.
+No original14/form44/privacy proof is replaced or recaptured. Synthetic adult
+Renderer presentation only, no handler/DB/API/auth/ownership/privacy/admission/
+location/JS/browserCSP/computedstyle/full/Live/device/default/M6/templSDK approval.
