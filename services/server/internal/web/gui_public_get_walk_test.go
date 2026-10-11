@@ -56,7 +56,7 @@ type guiPublicGetSource struct {
 	} `json:"producers"`
 	Files []struct {
 		Path, SHA256, Base64 string
-		Bytes               int
+		Bytes                int
 	} `json:"files"`
 	PreservedSourceInputs []struct {
 		Path, SHA256 string
@@ -67,10 +67,10 @@ type guiPublicGetSource struct {
 
 type guiPublicGetCase struct {
 	ID, Route, Path, Template, State, Language, Profile string
-	Status                                            int
-	Contains                                          []string
-	Filtered                                          bool
-	JSONLD                                            bool `json:"json_ld"`
+	Status                                              int
+	Contains                                            []string
+	Filtered                                            bool
+	JSONLD                                              bool `json:"json_ld"`
 }
 
 func guiPublicGetSources(raw []byte) (guiPublicGetSource, map[string][]byte, error) {
@@ -338,7 +338,7 @@ func guiPublicGetCheck(c guiPublicGetCase, w *httptest.ResponseRecorder, loads [
 		return fmt.Errorf("robots")
 	}
 	for _, link := range []string{"/privacy/", "/terms/", "/login/", "/register/"} {
-		if !regexp.MustCompile(`<a [^>]*href="`+regexp.QuoteMeta(link)+`"`).MatchString(body) {
+		if !regexp.MustCompile(`<a [^>]*href="` + regexp.QuoteMeta(link) + `"`).MatchString(body) {
 			return fmt.Errorf("footer")
 		}
 	}
@@ -537,18 +537,34 @@ func TestGUIPublicGetWalk(t *testing.T) {
 			}
 			if c.ID == "landing-en-default" {
 				mutations := []struct {
-					code string
+					code  string
 					apply func(*httptest.ResponseRecorder, *[]guiPublicTemplateLoad)
 				}{
 					{"status", func(v *httptest.ResponseRecorder, _ *[]guiPublicTemplateLoad) { v.Code = 500 }},
-					{"content-type", func(v *httptest.ResponseRecorder, _ *[]guiPublicTemplateLoad) { v.Header().Set("Content-Type", "application/json") }},
-					{"cache", func(v *httptest.ResponseRecorder, _ *[]guiPublicTemplateLoad) { v.Header().Set("Cache-Control", "public") }},
-					{"template", func(_ *httptest.ResponseRecorder, loads *[]guiPublicTemplateLoad) { (*loads)[0].Name = "web/terms.html" }},
-					{"language", func(v *httptest.ResponseRecorder, _ *[]guiPublicTemplateLoad) { v.Body = bytes.NewBuffer(bytes.Replace(v.Body.Bytes(), []byte(`lang="en"`), []byte(`lang="ro"`), 1)) }},
-					{"canonical", func(v *httptest.ResponseRecorder, _ *[]guiPublicTemplateLoad) { v.Body = bytes.NewBuffer(bytes.Replace(v.Body.Bytes(), []byte(`<link rel="canonical" href="`+canonical+`">`), []byte(`<link rel="canonical" href="https://fixture.invalid/wrong/">`), 1)) }},
-					{"robots", func(v *httptest.ResponseRecorder, _ *[]guiPublicTemplateLoad) { v.Body = bytes.NewBuffer(bytes.Replace(v.Body.Bytes(), []byte(`name="robots" content="index, follow"`), []byte(`name="robots" content="noindex, follow"`), 1)) }},
-					{"heading", func(v *httptest.ResponseRecorder, _ *[]guiPublicTemplateLoad) { v.Body = bytes.NewBuffer(bytes.Replace(v.Body.Bytes(), []byte("<h1>"), []byte("<div>"), 1)) }},
-					{"footer", func(v *httptest.ResponseRecorder, _ *[]guiPublicTemplateLoad) { v.Body = bytes.NewBuffer(bytes.ReplaceAll(v.Body.Bytes(), []byte(`href="/privacy/"`), []byte(`href="/missing-synthetic/"`))) }},
+					{"content-type", func(v *httptest.ResponseRecorder, _ *[]guiPublicTemplateLoad) {
+						v.Header().Set("Content-Type", "application/json")
+					}},
+					{"cache", func(v *httptest.ResponseRecorder, _ *[]guiPublicTemplateLoad) {
+						v.Header().Set("Cache-Control", "public")
+					}},
+					{"template", func(_ *httptest.ResponseRecorder, loads *[]guiPublicTemplateLoad) {
+						(*loads)[0].Name = "web/terms.html"
+					}},
+					{"language", func(v *httptest.ResponseRecorder, _ *[]guiPublicTemplateLoad) {
+						v.Body = bytes.NewBuffer(bytes.Replace(v.Body.Bytes(), []byte(`lang="en"`), []byte(`lang="ro"`), 1))
+					}},
+					{"canonical", func(v *httptest.ResponseRecorder, _ *[]guiPublicTemplateLoad) {
+						v.Body = bytes.NewBuffer(bytes.Replace(v.Body.Bytes(), []byte(`<link rel="canonical" href="`+canonical+`">`), []byte(`<link rel="canonical" href="https://fixture.invalid/wrong/">`), 1))
+					}},
+					{"robots", func(v *httptest.ResponseRecorder, _ *[]guiPublicTemplateLoad) {
+						v.Body = bytes.NewBuffer(bytes.Replace(v.Body.Bytes(), []byte(`name="robots" content="index, follow"`), []byte(`name="robots" content="noindex, follow"`), 1))
+					}},
+					{"heading", func(v *httptest.ResponseRecorder, _ *[]guiPublicTemplateLoad) {
+						v.Body = bytes.NewBuffer(bytes.Replace(v.Body.Bytes(), []byte("<h1>"), []byte("<div>"), 1))
+					}},
+					{"footer", func(v *httptest.ResponseRecorder, _ *[]guiPublicTemplateLoad) {
+						v.Body = bytes.NewBuffer(bytes.ReplaceAll(v.Body.Bytes(), []byte(`href="/privacy/"`), []byte(`href="/missing-synthetic/"`)))
+					}},
 				}
 				passed := []string{}
 				for _, mutation := range mutations {
