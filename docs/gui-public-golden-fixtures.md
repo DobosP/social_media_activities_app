@@ -714,3 +714,36 @@ NOTRUN/peerpending labels are preserved honestly. This later docsHEAD is not run
 No original14/form44/privacy proof is replaced or recaptured. Synthetic adult
 Renderer presentation only, no handler/DB/API/auth/ownership/privacy/admission/
 location/JS/browserCSP/computedstyle/full/Live/device/default/M6/templSDK approval.
+
+
+### SOC-11 my-meetups member-presentation source checkpoint
+
+SOURCE ONLY, NOT RUN: only request.csp_nonce is added to the one existing deferred
+my-meetups.js tag. The whole template inverse restores exact2377B/d97c source,
+including all guardian/member-content fields/conditions/copy/routes. ActualJS/site,
+worker/cache/purge, socialUpcoming/socialGuardians/auth/privacy/API and defaults
+stay byte-exact. This is synthetic authenticated ADULT/MEMBER-CONTENT PRESENTATION,
+not private-route admission, ownership, guardian, privacy or real data approval.
+
+New native source authors25 actions:3parents/6OSFS empty/populated/optional-time-
+meetingpoint cases/8native binding refusals/8safe DOM mutations. It reads only
+seven source/catalog files for original/current OSFS, uses existing fictional
+avatar helpers/fixeddates and no guardian rows. No real member/child data, DB/API/
+handler/eligibility execution or guardian branch coverage is claimed.
+
+Strict original/oneattrExpected/current Options{} reuses immutable764/d722/
+original15; nonce volatility equality is allowed. Safe hidden-status/copy/calendar/
+card/memberpoint mutations must be hardfree and canonically different.32 Normalize
+calls is SOURCE EXPECTED only, no measured invocation census or browser count.
+The new outside-static Node test authors8actual-script VM cases using fictional
+note/navigator/window/fakefetch only:missingnote/offline, health success/failure/
+rejection, online/offline events and held response; exact no-store health request.
+No network, browser/SW/cache/offlineprivacy result or newJS behavior is claimed.
+
+After closed source/method review and parent reservation, use the existing pinned
+network-none4CPU6GiB sourceRO route:readonlygofmt, freshfocused Go
+`-mod=readonly -race -count=1 -json ./internal/web -run '^TestGUIMyMeetupsNonce'`
+with current normalizer flags, then Node `--test --test-reporter=tap` on
+`tools/gui-public-golden/my-meetups-offline.test.mjs`. No helper rebuild/install/
+recapture. All oldproofs/policies/originals remain distinct; no full/Live/browserCSP/
+computedstyle/device/default/templSDKadoption or worker/backend approval follows.

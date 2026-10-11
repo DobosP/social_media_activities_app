@@ -38,5 +38,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{% static 'js/my-meetups.js' %}" defer></script>
+<script nonce="{{ request.csp_nonce }}" src="{% static 'js/my-meetups.js' %}" defer></script>
 {% endblock %}

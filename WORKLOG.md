@@ -2642,3 +2642,21 @@ honest. Tested44cc differs from this later docsHEAD; no rerun. Original14/form44
 privacy/source/failure/SDK keepers untouched. No handler/DB/API/auth/ownership/
 privacy/admission/location/JS/browserCSP/computedstyle/full/Live/device/default/
 M6/templSDKadoption acceptance or cleanup. Parent owns feature publication.
+
+
+## 2026-10-11 — SOC-11 synthetic member-presentation SOURCE ONLY
+
+At clean publishedd97c, added only one existing my-meetups external script nonce.
+Whole inverse preserves2377Btemplate; JS/site/worker/cache/purge, member/guardian
+conditions, socialUpcoming/socialGuardians/backend/auth/privacy/API/defaults exact.
+Explicit authorized scope is synthetic authenticated ADULT/MEMBER-CONTENT
+PRESENTATION, never real member/child data or ownership/guardian/privacy approval.
+
+Authored25native actions (3parents/6OSFS/8binding/8safeDOM) plus8outside-static
+actualJS VM cases with fictional node/navigator/window and fakehealth fetch.
+Empty/populated/optionalfields, nativefreshnonce and strict764/d722 Options{}
+old/oneattrExpected/current DOM are source-bound.32Normalize calls SOURCEEXPECTED
+only/no census. VM covers offlinehonesty/events/heldsuccess/failure/no-store only,
+no realnetwork/browser/SW/cache/privacy evidence. Formatter/compiler/Go/Node/runtime
+NOT RUN. Parent reviews sealed source/method before reserving supported runtime;
+no install/rebuild/recapture/push/activation/full/device/adoption or oldproof change.
