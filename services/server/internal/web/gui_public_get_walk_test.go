@@ -123,6 +123,21 @@ func guiPublicGetProducerOriginal(name string, raw []byte) ([]byte, error) {
 	return raw, nil
 }
 
+// Live (non-capture) checkouts cannot reproduce recorded group/other
+// permission bits: git stores only 100644/100755 and the checkout umask varies.
+// Live comparisons keep bytes, SHA-256, file type and executable bits; recorded
+// full_mode values stay as history and the strict capture binder still compares
+// them in full.
+const guiPublicGetLiveModeMask = 0o170111
+
+func guiPublicGetLiveMode(actual, wanted uint32) bool {
+	return actual&guiPublicGetLiveModeMask == wanted&guiPublicGetLiveModeMask
+}
+
+func guiPublicGetBindingLive(actual, wanted guiG1Binding) bool {
+	return actual.Bytes == wanted.Bytes && actual.SHA256 == wanted.SHA256 && guiPublicGetLiveMode(actual.FullMode, wanted.FullMode)
+}
+
 // The repaired default profile proves historical preimage custody only. It
 // cannot authorize the old HTTP capture or supply substituted current tuples
 // to any source reader/receiver. Both reviewed production afterimages are
@@ -188,7 +203,7 @@ func guiPublicGetCampaignCustodyPreimages(inputs map[string]guiPublicGetRepairIn
 	const cssPath = "static/css/base.css"
 	test, testExists := inputs[testPath]
 	css, cssExists := inputs[cssPath]
-	if !testExists || !cssExists || test.binding.FullMode != 0o100664 || css.binding.FullMode != 0o100664 ||
+	if !testExists || !cssExists || !guiPublicGetLiveMode(test.binding.FullMode, 0o100664) || !guiPublicGetLiveMode(css.binding.FullMode, 0o100664) ||
 		len(test.raw) != 23168 || guiPublicHash(test.raw) != "ec3e45b912cee2ae4f0c0bbbfc2ded632e6a806403b7843b0086ffe66553a1f4" ||
 		len(css.raw) != 63035 || guiPublicHash(css.raw) != "886c3387f063f3625623b6233dbd7f2472be2dc54df11f6e63de737638f2b6bc" {
 		return nil, fmt.Errorf("repair-complete-campaign-custody")
@@ -226,7 +241,7 @@ func guiPublicGetRepairHistoricalProof(source guiPublicGetSource, inputs map[str
 	}
 	for _, row := range guiPublicGetRepairRows() {
 		input, exists := inputs[row.path]
-		if !exists || input.binding.FullMode != 0o100664 || len(input.raw) != row.afterBytes || guiPublicHash(input.raw) != row.afterSHA || bytes.Count(input.raw, []byte(row.after)) != 1 {
+		if !exists || !guiPublicGetLiveMode(input.binding.FullMode, 0o100664) || len(input.raw) != row.afterBytes || guiPublicHash(input.raw) != row.afterSHA || bytes.Count(input.raw, []byte(row.after)) != 1 {
 			return fmt.Errorf("repair-complete-current-profile")
 		}
 		original := bytes.Replace(input.raw, []byte(row.after), []byte(row.before), 1)
@@ -251,7 +266,7 @@ func guiPublicGetRepairHistoricalProof(source guiPublicGetSource, inputs map[str
 		seen[row.Path] = true
 		input, exists := inputs[row.Path]
 		raw := preimages[row.Path]
-		if !exists || len(raw) != row.Bytes || guiPublicHash(raw) != row.SHA256 || input.binding.FullMode != row.FullMode {
+		if !exists || len(raw) != row.Bytes || guiPublicHash(raw) != row.SHA256 || !guiPublicGetLiveMode(input.binding.FullMode, row.FullMode) {
 			return fmt.Errorf("repair-preserved-binding")
 		}
 		if row.Path == "services/server/internal/web/renderer.go" || row.Path == "services/server/internal/web/server.go" {
@@ -862,10 +877,21 @@ func TestGUIPublicGetWalkSourceRefusals(t *testing.T) {
 				}
 				return
 			case "mode":
-				path := "services/server/internal/web/server.go"
-				input := changed[path]
-				input.binding.FullMode = 0o100644
-				changed[path] = input
+				// Each executable bit, a non-regular type and a special bit must refuse.
+				for _, path := range []string{"services/server/internal/web/server.go", "static/css/base.css"} {
+					for _, mode := range []uint32{0o100764, 0o100674, 0o100665, 0o120664, 0o104664} {
+						original := changed[path]
+						input := original
+						input.binding.FullMode = mode
+						changed[path] = input
+						refused := guiPublicGetRepairHistoricalProof(candidate, changed) != nil
+						changed[path] = original
+						if !refused || guiPublicGetRepairHistoricalProof(candidate, changed) != nil || guiPublicGetRepairHistoricalProof(source, inputs) != nil {
+							t.Fatal("changed repair mode admitted or control aliased")
+						}
+					}
+				}
+				return
 			case "missing":
 				delete(changed, "services/server/internal/web/server.go")
 			case "preserved-source":

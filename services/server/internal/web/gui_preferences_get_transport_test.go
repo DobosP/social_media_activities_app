@@ -29,7 +29,7 @@ var guiPreferencesGETTransport = flag.Bool("gui-preferences-get-transport", fals
 //go:embed testdata/gui-preferences-get/registry.json
 var guiPreferencesGETRegistryBytes []byte
 
-const guiPreferencesGETRegistrySHA = "86154fab6f4fd03846e876a62ac204803177a2f77d50815b3245ba11a742c21c"
+const guiPreferencesGETRegistrySHA = "17a0f01c72b0ac49bc48d531937549971f76a0db505782244d0249a3f57014d9"
 
 type guiPreferenceGETCase struct {
 	guiPublicGetCase
@@ -97,7 +97,7 @@ func guiPreferenceGETInputs(root string, registry guiPreferenceGETRegistry) (map
 	actual := map[string]guiG1Binding{}
 	for name, wanted := range registry.Sources {
 		_, row, err := guiCurrentTransportReadBinding(root, name, 2<<20)
-		if err != nil || row != wanted {
+		if err != nil || !guiPublicGetBindingLive(row, wanted) {
 			return nil, fmt.Errorf("preference-current-source")
 		}
 		actual[name] = row
@@ -109,7 +109,7 @@ func guiPreferenceGETSnapshot(root string, registry guiPreferenceGETRegistry) (f
 	files := fstest.MapFS{}
 	for _, name := range guiPreferencesGETFiles {
 		raw, binding, err := guiCurrentTransportReadBinding(root, name, 2<<20)
-		if err != nil || binding != registry.Sources[name] || files[name] != nil {
+		if err != nil || !guiPublicGetBindingLive(binding, registry.Sources[name]) || files[name] != nil {
 			return nil, fmt.Errorf("preference-template-source")
 		}
 		files[name] = &fstest.MapFile{Data: append([]byte(nil), raw...), Mode: 0o444}
@@ -124,7 +124,7 @@ func guiPreferenceGETSnapshotCheck(root string, registry guiPreferenceGETRegistr
 	for _, name := range guiPreferencesGETFiles {
 		file := files[name]
 		raw, binding, err := guiCurrentTransportReadBinding(root, name, 2<<20)
-		if err != nil || binding != registry.Sources[name] || file == nil || file.Mode != 0o444 || !bytes.Equal(raw, file.Data) {
+		if err != nil || !guiPublicGetBindingLive(binding, registry.Sources[name]) || file == nil || file.Mode != 0o444 || !bytes.Equal(raw, file.Data) {
 			return fmt.Errorf("preference-template-bytes")
 		}
 	}
