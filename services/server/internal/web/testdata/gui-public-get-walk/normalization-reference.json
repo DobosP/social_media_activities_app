@@ -1,0 +1,25 @@
+{
+  "candidate_source": "a115deb5d706745a22d5e1049b0b938cae10cfad",
+  "capture_invocation": "cbd00d1a-927c-4a5c-a27c-00838941dfdd",
+  "capture_observation_sha256": "e0acca692699c1103c865684dc655a5cba342719a14e637bec342487e653c788",
+  "cases_sha256": "35b30b7a2520750525fd2ee380d2f5597aa6fe6b374c92d5cd9a6db030abbce3",
+  "counts": {
+    "HTML": 31,
+    "cases": 37,
+    "members": 38,
+    "missing": 4,
+    "redirects": 2,
+    "source_inputs": 102
+  },
+  "historical_source": "75dc717377f92b21ed99aabbe1f290d92535523e",
+  "kind": "accepted-raw-G1-input-reference-not-normalized-baseline",
+  "manifest": {
+    "bytes": 82363,
+    "full_mode": 33152,
+    "sha256": "591c6b70edc83620ead9ca5ba18ecf4c39d3171e5365276961b96b184b729fb7"
+  },
+  "method_sha256": "acc2886deeb117ff510347f9754d496dcbcfbf6fab324e288732787c06484a11",
+  "raw_result_sha256": "f64fa50a62b6ba30d11310e208ff9cb76df249d9d5f75b5122040df68ae93b6c",
+  "schema": 1,
+  "source_inputs_sha256": "e92e1d44feee05d052bc733f68db102d45b76d9fbcd927453bdace7392757ac3"
+}

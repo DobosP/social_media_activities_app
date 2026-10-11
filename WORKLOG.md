@@ -2725,3 +2725,27 @@ metadata. Public selection is not private114/507814B or38 raw members. Rawresult
 explicit. Later docsHEAD is not tested a115 execution. No runtime/cleanup/product
 change or full/M0/auth/privacy/group/Live/device/templ/adoption/default approval.
 Parent reviews and owns feature publication; no worker push.
+
+
+## 2026-10-11 — strict G1 raw-corpus normalization receiver SOURCE ONLY
+
+From published0cc81, added only one opt-in Go test file and1022B accepted-input
+metadata. The exact R6 manifest591c/sourcea115/cbd00d1a pins the37receipts/38members;
+no canonical output is stored as an expected baseline. Existing764/d722, Options{},
+.normalize/checkUnchanged/.compare, old14reader/original15, SDK/production/helpers/
+modules/templates/privacy/default behavior remain unchanged.
+
+Authored55 actions:2roots/37receipt children (31HTML200 SDK diagnostics and6non200
+explicitly not HTML-normalized),7actual-body canonical/hard controls and9synthetic
+custody refusals. Hard findings always fail the actual receiver; later children
+continue. Mutations bind exact existing landing/events targets without logging
+body/nonce/error/hard values. Alias control preserves38names/equal-body hashes.
+Source/corpus/original15/binary/archive are bracketed.38 API attempts is expected
+source data only, not actual process/browser execution. No full body corpus clone.
+
+No formatter/compiler/test/normalizer/Go/Node/Docker/runtime/install/cleanup/push
+ran. Parent reviews the closed source and reserves the existing managed route.
+No new HTTP/PG capture or helper build is needed. Existing raw54/37PASS and R2–R5
+failures keep their identities; this new source has no execution proof. No new
+baseline, templ/receiver parity/full/M0/auth/privacy/Live/device/adoption/default
+activation approval. All unmerged source/evidence keepers are preserved.

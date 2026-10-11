@@ -868,3 +868,39 @@ HTML, binaries, workspaces and caches stay private. Later docsHEAD was not retes
 No new runtime or cleanup, Normalize/full/M0/auth/privacy/group/Live/device/templ/
 adoption/default activation or real member/child/backend approval follows.
 Parent owns feature publication; all previous source/proof/baseline keepers remain.
+
+
+## G1 opt-in strict normalization receiver — SOURCE ONLY
+
+From published0cc81, authored only the new Go test receiver and1022B metadata
+pins for the accepted R6 raw input. The fixed manifest591c/body bindings identify
+tested raw sourcea115/cbd00d1a; they contain no expected canonical output. Existing
+764 binary/d722 archive, Options{}, .normalize/checkUnchanged, earlier .compare,
+14-case reader, original15/14 and all producer/template/SDK/policy bytes stay exact.
+
+The opt-in reader validates all37 ordered receipts and38 private regular members,
+102 matching source rows, metadata/body hashes, modes and identities. Only31HTML200
+bodies reach the released normalizer;2anonymous302+4native404 stay measured non200
+receipts, explicitly not normalized as HTML. Each real hard finding fails its child
+and the aggregate; other children continue. Logs expose hashes/byte counts and
+allowlisted hard codes only, never body/nonce/raw error or hard-finding values.
+
+Authored55 native actions:2roots,37receipt children,7actual-body mutations and9
+synthetic corpus refusals. Literal source-backed nonce-value/attribute-order
+controls require equality; visible text/link/node-order require inequality without
+unrelated hard findings. EmptyURL/template leakage require their owning hard code.
+Each synthetic custody negative starts from a valid frame; the alias keeps38names
+and equal existing-body hashes, isolating the alias guard. Original bodies are not
+cloned for negative controls.38 wrapper API attempts is source-expected only, not
+an executed process/browser census. Source/corpus/original15/binary/archive are
+checked again after diagnostics; no normalized baseline or new HTTP capture.
+
+After separate source review and parent reservation, the existing single-TC pinned
+4CPU/6GiB/read-only/network-none route can run formatter then:
+`go test -mod=readonly -race -count=1 -json ./internal/web -run '^TestGUIPublicGetWalkNormalize'`
+with the authored `-gui-public-get-walk-normalize-reference` pointing to the exact
+read-only R6 corpus, existing original15 and all three normalizer binding flags.
+No PG, helper/SDK rebuild, install or original recapture is needed. All formatting,
+compilation,55tests and normalization are NOT RUN. Raw sourcea115 and later receiver
+source identities stay distinct. No templ/current-renderer parity, literal75dc
+executable, full/M0/auth/privacy/group/Live/device/default/adoption acceptance.
