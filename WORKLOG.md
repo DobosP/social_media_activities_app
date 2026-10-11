@@ -2824,3 +2824,26 @@ install/cleanup/push. Parent and peer review the closed source before adapting
 the existing managed PG route with actual immutable lineage/current-app binding,
 resource caps and owned cleanup. No fullM0/auth/privacy/Live/device/default/templ/
 SDK adoption authority; earlier fce7 receiver and a115 raw PASS remain scoped.
+
+
+## 2026-10-11 — accepted current G1 registered GET transport proof
+
+Tested813f197 completed actual managed session16095/invocation9aeff430 with
+45namedactions once PASS+package1/222GoJSON. Actual37current OS/FS pairs made
+74registeredGETs:31HTML canonical-equal/hard0,2anonymous302+4native404 exact
+native negatives,7owning refusals. Formatter0/empty;124source/20current/18external/
+7policy/6PG/raw38/private55/canonical beforeafter exact; actual pinnedTC and
+bac5-built f66DB/config-sanitation/ownedPG stop+exactCID/name cleanup passed.
+
+Promoted ONLY two exact small accepted actual reviews (9,817B) plus derived
+checkpoint/README/transfer ledger under gui-original-get-walk/current-transport.
+Parent39b8 and independentef05 are literal, including parent's then-pending
+independent-review wording; new checkpoint joins later acceptance. Private
+result0087a022/Go4ad9/capturefe4a/79generated records remain references, not Git
+copies. Source/method/old rawG1 and receiver failures/PASS records stay unchanged.
+
+This docs HEAD is not the tested813f source and was not runtime retested. Scope
+is synthetic anonymous current template/catalog GET transport, with shared OS
+assetRoot. No semantic original oracle, accepted normalized baseline, full/M0/
+M1/auth/privacy/Live/device/browser-CSP/templ/default/SDK adoption approval. No
+code/runtime/helper rebuild/recapture/cleanup/controller/push in this task.

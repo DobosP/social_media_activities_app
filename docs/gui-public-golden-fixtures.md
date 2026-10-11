@@ -1010,3 +1010,24 @@ No helper rebuild/SDK flag/mask/baseline update, new controller/framework, fullM
 auth/privacy/Live/device/templ/default/adoption approval. Parent owns actual
 immutable PG fixture lineage/application binding, capped networknone execution,
 cleanup, independent review and feature publication after Source acceptance.
+
+
+## Accepted current G1 registered GET OS/FS transport
+
+The source-only section above is retained as authored history. Tested813f197
+completed the parent-reserved managed invocation with45 named actions once PASS
+plus package1/222GoJSON events:37current OS/FS pairs/74registeredGETs,31HTML
+pairs/two anonymous302/four native404 and7owning refusals. Formatter0/empty;
+source124/current20/external18/policy7/PG6/raw38/private55/canonical inputs
+remained exact. Sanitized effective config and actual PG/CID cleanup passed.
+
+[Current transport checkpoint](reviews/gui-original-get-walk/current-transport/checkpoint.json)
+joins the two exact accepted review records; their original pending labels and
+all previous raw/receiver failures remain frozen. Only those two small reviews
+are literal public copies; the large result, GoJSON,79generated records, bodies
+and templates stay private. Tested813f is distinct from the later docs HEAD.
+
+Current↔current template/catalog delivery only; shared OS assetRoot is not new
+static-FS/browser evidence. No historical-current semantic oracle, accepted
+normalized baseline, full/auth/privacy/Live/device/browser-CSP/templ/default/SDK
+adoption authority; original15/raw38/764/d722 and allthree .compare uses remain.

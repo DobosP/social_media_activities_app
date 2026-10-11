@@ -1,0 +1,55 @@
+{
+  "schema": 1,
+  "utc": "2026-10-11T12:55:48.346770+00:00",
+  "verdict": "ACTUAL current45 PASS boundedtransport",
+  "source": "813f197bf0f4d190e3e2ea0a394ddd73121c6bc6",
+  "capture": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-813f-current45-pass-compact-20261011",
+  "capture_sha256": "fe4a06b4f6459e574eec900a001b8939d9f7622901e56d7fcce4cdd5d977df3f",
+  "wrapperSession": 16095,
+  "wrapperExit": 0,
+  "named_oncePASS": 45,
+  "GoJSONevents": 222,
+  "pairedGETs": 74,
+  "pairs": 37,
+  "HTMLpairs": 31,
+  "anonymous302pairs": 2,
+  "native404pairs": 4,
+  "refusals": 7,
+  "format": {
+    "exit_code": 0,
+    "diff_bytes": 0,
+    "stderr_bytes": 0
+  },
+  "readsets": "124source/20current/18external/7policy/6PG/raw38/private55/canonical beforeafter exact",
+  "actualTC": "5dfc39f33576fe722ee23f8c03a2552c870b964fd58b83fccd5b36d5494504b9",
+  "actualDB": "e5991e1882f9381cb31f85435e1949e39e5046e80f95939080494188cc0dbae0",
+  "actualConfig": "Strict live verification beforestart+cleanup inmethod; sanitized resource/mount/IID/commandSHA/envnames retained",
+  "ownedCleanup": {
+    "tc": {
+      "id": "5dfc39f33576fe722ee23f8c03a2552c870b964fd58b83fccd5b36d5494504b9",
+      "name": "social-g1-tc-9aeff430-4e48-41df-9522-10d342d07e65",
+      "remove_exit": 0,
+      "id_absent": true,
+      "name_absent": true,
+      "passed": true
+    },
+    "db": {
+      "id": "e5991e1882f9381cb31f85435e1949e39e5046e80f95939080494188cc0dbae0",
+      "name": "social-g1-db-9aeff430-4e48-41df-9522-10d342d07e65",
+      "remove_exit": 0,
+      "id_absent": true,
+      "name_absent": true,
+      "passed": true
+    }
+  },
+  "PGcleanup": {
+    "stop_exit": 0,
+    "status_exit": 3,
+    "owned_pid": 24,
+    "pid_probe_exit": 1,
+    "pid_and_socket_files_absent": 1
+  },
+  "all79artifact_rows_fullmodes": true,
+  "source_clean": true,
+  "qualification": "Current anonymousregisteredGET OS/FS template/catalog equivalence only; no renderer-oracle/acceptednormalizedbaseline/full/privacy/Live/device/templ/adoption. Independentactualreviewpending."
+}

@@ -1,0 +1,149 @@
+{
+  "schema": 1,
+  "kind": "accepted-bounded-current-G1-registered-GET-OS-FS-transport",
+  "valid_until": "Owning tested source, method, frozen input or actual evidence changes; then history only.",
+  "tested_source": "813f197bf0f4d190e3e2ea0a394ddd73121c6bc6",
+  "documentation_commit": "Later docs-only commit containing this record; not runtime tested.",
+  "base_published_source": "f37a382b025883feefced9f5d9de3e0d4eb55e5e",
+  "actual_invocation": "9aeff430-4e48-41df-9522-10d342d07e65",
+  "actual_parent_session": 16095,
+  "actual_parent_exit": 0,
+  "method_sha256": "01364c2f1204f999dfbc45fc94ef8f24e60fb5ef8d6198b650ad3a1d2fb439ce",
+  "source_packet": {
+    "private_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/current-get-transport-source-f37-20261011",
+    "seal_sha256": "f7760fa011fc694d200b0fcf6d30fa82aa5ca24473343c53ec3cba962f8be56a",
+    "ledger124_sha256": "07ff0bb1b36530d307f1e428ce0c223670f50a2bb44cb6c0579237c64bb85a1b"
+  },
+  "method_packet": {
+    "private_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/current-get-transport-managed-813f197-20261011",
+    "seal_sha256": "854e9a8677f4369e66ef85fa0f0789fc8ecd9568a19620ad6b5d9814c3ee7d15"
+  },
+  "actual": {
+    "method_pass": true,
+    "formatter": {
+      "exit_code": 0,
+      "diff_bytes": 0,
+      "stderr_bytes": 0
+    },
+    "named_actions_once_PASS": 45,
+    "roots": 1,
+    "subcases": 44,
+    "package_PASS": 1,
+    "Go_JSON_events": 222,
+    "failure_skip_cache_race": 0,
+    "current_OS_FS_pairs": 37,
+    "registered_GET_requests": 74,
+    "HTML_pairs": 31,
+    "HTML_canonical_agreement_and_hard0": true,
+    "anonymous302_pairs": 2,
+    "native404_pairs": 4,
+    "native_negative_body_status_selected_headers_agree": true,
+    "owning_refusals": 7,
+    "raw_or_normalized_bodies_retained": false,
+    "normalizer_process_or_API_census": null,
+    "readset_counts": {
+      "current_source": 124,
+      "current_template_PO_subset": 20,
+      "external": 18,
+      "policy": 7,
+      "PG_source": 6,
+      "raw_members": 38,
+      "private_owned_Nlink1_distinct_inode_files": 55
+    },
+    "actual_config_precision": "Previously SOURCE-accepted method validates raw effective configurations before start and during cleanup. This actual review inspects saved sanitized projections, command/environment digests, names, resources and mounts; raw command/environment values are not retained or newly inspected.",
+    "resource_split": {
+      "TC_CPU": 3,
+      "TC_memory_GiB": 5,
+      "TC_pids": 512,
+      "DB_CPU": 1,
+      "DB_memory_GiB": 1,
+      "DB_pids": 256,
+      "aggregate_CPU": 4,
+      "aggregate_memory_GiB": 6,
+      "network": "none",
+      "performance_comparison": false
+    },
+    "no_OOM": true,
+    "owned_container_cleanup": {
+      "tc": {
+        "id": "5dfc39f33576fe722ee23f8c03a2552c870b964fd58b83fccd5b36d5494504b9",
+        "name": "social-g1-tc-9aeff430-4e48-41df-9522-10d342d07e65",
+        "remove_exit": 0,
+        "id_absent": true,
+        "name_absent": true,
+        "passed": true
+      },
+      "db": {
+        "id": "e5991e1882f9381cb31f85435e1949e39e5046e80f95939080494188cc0dbae0",
+        "name": "social-g1-db-9aeff430-4e48-41df-9522-10d342d07e65",
+        "remove_exit": 0,
+        "id_absent": true,
+        "name_absent": true,
+        "passed": true
+      }
+    },
+    "PG_cleanup": {
+      "stop_exit": 0,
+      "status_exit": 3,
+      "owned_pid": 24,
+      "pid_probe_exit": 1,
+      "pid_and_socket_files_absent": 1
+    }
+  },
+  "prior_inputs": {
+    "original15_cases14": "Unchanged separate keeper; no new capture.",
+    "raw_G1_source": "a115deb5d706745a22d5e1049b0b938cae10cfad",
+    "raw_manifest_sha256": "591c6b70edc83620ead9ca5ba18ecf4c39d3171e5365276961b96b184b729fb7",
+    "actual_DB_build_source": "bac5d718360504330d5f5cdbf2f75cf5a0ad0799",
+    "actual_DB_image": "sha256:f66de888683449864f820c365551125bb2627782be15a264f9746d53573b39d5",
+    "actual_current_application_binding_sha256": "3a46d3534afcac71f24e92e7342c9bf50dceaab37176997a7fd7c692ca9ae7ea",
+    "sole_normalizer_build_source": "764beb183dde75a3c003105d011abb4cf06d2241",
+    "sole_normalizer_sha256": "598515e75c709803c7b23673e07b14baa93861608346a81c8fc708521c1b2f05",
+    "canonical_archive_sha256": "d722a817074a01d8a983c3e8492335ee07d37fb0d58c9a938cd189df635e168d"
+  },
+  "private_evidence": {
+    "path": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-813f-current45-pass-compact-20261011",
+    "observation_sha256": "fe4a06b4f6459e574eec900a001b8939d9f7622901e56d7fcce4cdd5d977df3f",
+    "literal_records": 7,
+    "literal_bytes": 302533,
+    "live_generated_metadata_references": 79,
+    "result": {
+      "bytes": 226409,
+      "sha256": "0087a0227e813ca42f0e34d7b732b4cf264dd0a2e5ba1fba98fee9f3954e1a7c",
+      "copied_to_Git": false
+    },
+    "Go_JSON": {
+      "bytes": 75799,
+      "sha256": "4ad9cdf41b0ef08c90958c736f4ac79f05bb4adead3d41ca6da0469f0d6cc852",
+      "copied_to_Git": false
+    },
+    "selection_scope": "This public five-file selection contains only two literal review records plus three derived documents; it is not the complete private capture or generated runtime tree."
+  },
+  "public_literal_records": [
+    {
+      "public_path": "docs/reviews/gui-original-get-walk/current-transport/parent-actual-review.json",
+      "bytes": 2052,
+      "sha256": "39b8a5567c746706ad93a6b41697896286d8bff317922fa15059b4cef3b718ad",
+      "source_full_mode": 33152,
+      "public_full_mode": 33204,
+      "literal_bytes_equal": true
+    },
+    {
+      "public_path": "docs/reviews/gui-original-get-walk/current-transport/independent-actual-review.json",
+      "bytes": 7765,
+      "sha256": "ef05bff981771f4ef8e7d1933746d389034444836f5a31baf0d3069b32eb4ec5",
+      "source_full_mode": 33152,
+      "public_full_mode": 33204,
+      "literal_bytes_equal": true
+    }
+  ],
+  "acceptance_precision": "The frozen parent literal still says independent actual review pending. The separate later ef05 independent actual review and parent continuation acceptance close that pending review; no old record was rewritten.",
+  "history": "All raw G1 R2-R5 refusals/partial proofs, receiver R2 Init and R3 formatter refusals, original15/raw38 and prior PASS/source packets remain untouched.",
+  "scope": "Synthetic anonymous current OS/FS template/catalog registered GET equivalence only. Existing OS assetRoot lookup remains shared; no separate static-FS or browser qualification.",
+  "limits": [
+    "No historical-current semantic original oracle, renderer migration parity or accepted normalized baseline.",
+    "No full/M0/M1/auth/privacy/Live/device/browser-CSP/templ/default/SDK adoption acceptance.",
+    "No request-time grant, real data/provider/network or member/guardian privacy decision.",
+    "No new runtime, code, fixtures, normalizer/helper, SDK, policy, cleanup or publication action in this docs commit."
+  ]
+}

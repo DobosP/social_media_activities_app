@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "kind": "literal-proof-transfer-two-review-records-only",
+  "tested_source": "813f197bf0f4d190e3e2ea0a394ddd73121c6bc6",
+  "documentation_commit": "Later docs-only commit; not retested.",
+  "literal_record_count": 2,
+  "literal_bytes": 9817,
+  "transfers": [
+    {
+      "source": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-813f-current45-parent-actual-review-20261011.json",
+      "public_path": "docs/reviews/gui-original-get-walk/current-transport/parent-actual-review.json",
+      "bytes": 2052,
+      "sha256": "39b8a5567c746706ad93a6b41697896286d8bff317922fa15059b4cef3b718ad",
+      "source_full_mode": 33152,
+      "public_full_mode": 33204,
+      "literal_bytes_equal": true
+    },
+    {
+      "source": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-813f-current45-independent-actual-result-review-20261011.json",
+      "public_path": "docs/reviews/gui-original-get-walk/current-transport/independent-actual-review.json",
+      "bytes": 7765,
+      "sha256": "ef05bff981771f4ef8e7d1933746d389034444836f5a31baf0d3069b32eb4ec5",
+      "source_full_mode": 33152,
+      "public_full_mode": 33204,
+      "literal_bytes_equal": true
+    }
+  ],
+  "derived_public_paths": [
+    "docs/reviews/gui-original-get-walk/current-transport/README.md",
+    "docs/reviews/gui-original-get-walk/current-transport/checkpoint.json",
+    "docs/reviews/gui-original-get-walk/current-transport/literal-transfer.json"
+  ],
+  "not_copied": [
+    "226409-byte runtime result",
+    "75799-byte GoJSON stream",
+    "79 generated records",
+    "raw38 bodies",
+    "templates/typed contexts/cookies/nonces/secrets",
+    "workspace/source/SDK/cache/ELFs"
+  ],
+  "frozen_parent_precision": "Parent literal pending label is preserved; checkpoint joins later independent actual acceptance."
+}
