@@ -268,6 +268,9 @@ func (s *Server) page(w http.ResponseWriter, r *http.Request, name string) {
 			}
 		}
 		data["avatar_uri"] = avatar
+		if user, ok := data["user"].(map[string]any); ok && user["id"] == actor.ID && user["public_id"] == actor.PublicID {
+			user["avatar_uri"] = avatar
+		}
 	}
 	if err = s.Renderer.Render(w, r, template, data); err != nil {
 		platform.Error(w, 500, "Page unavailable.")

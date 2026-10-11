@@ -123,6 +123,137 @@ func guiPublicGetProducerOriginal(name string, raw []byte) ([]byte, error) {
 	return raw, nil
 }
 
+// The repaired default profile proves historical preimage custody only. It
+// cannot authorize the old HTTP capture or supply substituted current tuples
+// to any source reader/receiver. Both reviewed production afterimages are
+// required together; the original physical-old capture binder stays below.
+type guiPublicGetRepairInput struct {
+	raw     []byte
+	binding guiG1Binding
+}
+
+type guiPublicGetRepairRow struct {
+	path, beforeSHA, afterSHA string
+	beforeBytes, afterBytes   int
+	before, after             string
+}
+
+func guiPublicGetRepairRows() []guiPublicGetRepairRow {
+	return []guiPublicGetRepairRow{
+		{
+			path:        "services/server/internal/web/renderer.go",
+			beforeSHA:   "94f11a3f1849c919ba100c4ba68236263f71f07741006c1992dadc4020723e68",
+			afterSHA:    "7c1ec3a7601072ce88e2c4d39184faa9fdb734066681980ebad1ab0a04a98280",
+			beforeBytes: 5510,
+			afterBytes:  5539,
+			before:      `"is_admin": actor.Admin(), "username": actor.Username`,
+			after:       `"is_admin": actor.Admin(), "public_id": actor.PublicID, "username": actor.Username`,
+		},
+		{
+			path:        "services/server/internal/web/server.go",
+			beforeSHA:   "0c4208333d354d2256f275459a420ac5f2ff936abfab6c13cc4b8b6ca4fdcc09",
+			afterSHA:    "5a55f84558c62d240fb48d9f147fea623ec863435696b4b6eb50127664f4c340",
+			beforeBytes: 10960,
+			afterBytes:  11113,
+			before:      "\t\tdata[\"avatar_uri\"] = avatar\n\t}\n\tif err = s.Renderer.Render",
+			after:       "\t\tdata[\"avatar_uri\"] = avatar\n\t\tif user, ok := data[\"user\"].(map[string]any); ok && user[\"id\"] == actor.ID && user[\"public_id\"] == actor.PublicID {\n\t\t\tuser[\"avatar_uri\"] = avatar\n\t\t}\n\t}\n\tif err = s.Renderer.Render",
+		},
+	}
+}
+
+func guiPublicGetRepairInputs(root string, source guiPublicGetSource) (map[string]guiPublicGetRepairInput, error) {
+	names := map[string]bool{}
+	for _, row := range source.PreservedSourceInputs {
+		names[row.Path] = true
+	}
+	for _, row := range source.Producers {
+		names[row.Path] = true
+	}
+	inputs := map[string]guiPublicGetRepairInput{}
+	for name := range names {
+		raw, binding, err := guiCurrentTransportReadBinding(root, name, 2<<20)
+		if err != nil {
+			return nil, fmt.Errorf("repair-current-input")
+		}
+		inputs[name] = guiPublicGetRepairInput{raw, binding}
+	}
+	return inputs, nil
+}
+
+func guiPublicGetRepairHistoricalProof(source guiPublicGetSource, inputs map[string]guiPublicGetRepairInput) error {
+	if source.Schema != 1 || source.SourceCommit != guiPublicGetHistory || len(source.PreservedSourceInputs) != 86 || len(source.Producers) != 14 || len(inputs) != 93 {
+		return fmt.Errorf("repair-source-frame")
+	}
+	preimages := map[string][]byte{}
+	for name, input := range inputs {
+		if len(input.raw) != input.binding.Bytes || guiPublicHash(input.raw) != input.binding.SHA256 || input.binding.FullMode&0o170000 != 0o100000 || input.binding.FullMode&0o7000 != 0 {
+			return fmt.Errorf("repair-current-input")
+		}
+		preimages[name] = input.raw
+	}
+	for _, row := range guiPublicGetRepairRows() {
+		input, exists := inputs[row.path]
+		if !exists || input.binding.FullMode != 0o100664 || len(input.raw) != row.afterBytes || guiPublicHash(input.raw) != row.afterSHA || bytes.Count(input.raw, []byte(row.after)) != 1 {
+			return fmt.Errorf("repair-complete-current-profile")
+		}
+		original := bytes.Replace(input.raw, []byte(row.after), []byte(row.before), 1)
+		if len(original) != row.beforeBytes || guiPublicHash(original) != row.beforeSHA {
+			return fmt.Errorf("repair-exact-preimage")
+		}
+		preimages[row.path] = original // In-memory custody proof, never a live source binding.
+	}
+	seen := map[string]bool{}
+	preservedRepairs := 0
+	for _, row := range source.PreservedSourceInputs {
+		if seen[row.Path] || filepath.ToSlash(filepath.Clean(row.Path)) != row.Path || filepath.IsAbs(row.Path) || strings.Contains(row.Path, "\\") || strings.HasPrefix(row.Path, "../") {
+			return fmt.Errorf("repair-preserved-path")
+		}
+		seen[row.Path] = true
+		input, exists := inputs[row.Path]
+		raw := preimages[row.Path]
+		if !exists || len(raw) != row.Bytes || guiPublicHash(raw) != row.SHA256 || input.binding.FullMode != row.FullMode {
+			return fmt.Errorf("repair-preserved-binding")
+		}
+		if row.Path == "services/server/internal/web/renderer.go" || row.Path == "services/server/internal/web/server.go" {
+			preservedRepairs++
+		}
+	}
+	seen = map[string]bool{}
+	producerRepairs := 0
+	for _, row := range source.Producers {
+		if seen[row.Path] || !strings.HasPrefix(row.Path, "services/server/internal/web/") || filepath.ToSlash(filepath.Clean(row.Path)) != row.Path {
+			return fmt.Errorf("repair-producer-path")
+		}
+		seen[row.Path] = true
+		raw, exists := preimages[row.Path]
+		if !exists || len(raw) > 512<<10 || guiPublicHash(raw) != row.CurrentSHA256 {
+			return fmt.Errorf("repair-producer-preimage")
+		}
+		original, err := guiPublicGetProducerOriginal(row.Path, raw)
+		if err != nil || guiPublicHash(original) != row.HistoricalSHA256 {
+			return fmt.Errorf("repair-producer-history")
+		}
+		if row.Path == "services/server/internal/web/renderer.go" || row.Path == "services/server/internal/web/server.go" {
+			producerRepairs++
+		}
+	}
+	if preservedRepairs != 2 || producerRepairs != 2 {
+		return fmt.Errorf("repair-two-producer-relations")
+	}
+	return nil
+}
+
+func guiPublicGetBindRequestedProducers(root string, source guiPublicGetSource, capture bool) error {
+	if capture {
+		return guiPublicGetBindProducers(root, source) // Strict physical-old identity before any PG/output.
+	}
+	inputs, err := guiPublicGetRepairInputs(root, source)
+	if err != nil {
+		return err
+	}
+	return guiPublicGetRepairHistoricalProof(source, inputs)
+}
+
 func guiPublicGetBindProducers(root string, source guiPublicGetSource) error {
 	for _, row := range source.PreservedSourceInputs {
 		if filepath.ToSlash(filepath.Clean(row.Path)) != row.Path || filepath.IsAbs(row.Path) || strings.HasPrefix(row.Path, "../") {
@@ -409,7 +540,7 @@ func TestGUIPublicGetWalk(t *testing.T) {
 		t.Fatal("historical source identity differs")
 	}
 	source, files, err := guiPublicGetSources(guiPublicGetSourceBytes)
-	if err != nil || guiPublicGetBindProducers(root, source) != nil {
+	if err != nil || guiPublicGetBindRequestedProducers(root, source, *guiPublicGetWalkOutput != "") != nil {
 		t.Fatal("historical native producer binding differs")
 	}
 	cases, err := guiPublicGetCases()
@@ -417,7 +548,7 @@ func TestGUIPublicGetWalk(t *testing.T) {
 		t.Fatal(err)
 	}
 	if *guiPublicGetWalkOutput == "" {
-		t.Log("HTTP NOT REQUESTED: validated source/registry only; no PG, capture, normalization or registered-GET qualification")
+		t.Log("HTTP NOT REQUESTED: historical preimage/custody and exact current two-repair bytes verified; no old/current producer equivalence, PG, capture, normalization or registered-GET qualification")
 		return
 	}
 	if err := guiPublicGetRequireDSN(*webDomainDSN); err != nil {
@@ -631,4 +762,70 @@ func TestGUIPublicGetWalkSourceRefusals(t *testing.T) {
 			t.Fatal("capture prerequisite refusal changed")
 		}
 	})
+	// Source-only controls use owned in-memory copies of actual physical inputs;
+	// no historical file, producer or raw receiver input is replaced on disk.
+	root, err := filepath.Abs("../../../..")
+	source, _, sourceErr := guiPublicGetSources(guiPublicGetSourceBytes)
+	inputs, inputErr := guiPublicGetRepairInputs(root, source)
+	if err != nil || sourceErr != nil || inputErr != nil || guiPublicGetRepairHistoricalProof(source, inputs) != nil {
+		t.Fatal("reviewed current repair profile unavailable for source controls")
+	}
+	for _, name := range []string{"profile", "unknown", "mixed", "mode", "missing", "preserved-source", "producer-source", "history", "capture-boundary"} {
+		t.Run("repair-"+name, func(t *testing.T) {
+			changed := map[string]guiPublicGetRepairInput{}
+			for path, input := range inputs {
+				changed[path] = guiPublicGetRepairInput{append([]byte(nil), input.raw...), input.binding}
+			}
+			encoded, err := json.Marshal(source)
+			var candidate guiPublicGetSource
+			if err != nil || json.Unmarshal(encoded, &candidate) != nil {
+				t.Fatal("owned historical source control unavailable")
+			}
+			replace := func(path string, raw []byte) {
+				input := changed[path]
+				input.raw, input.binding.Bytes, input.binding.SHA256 = raw, len(raw), guiPublicHash(raw)
+				changed[path] = input
+			}
+			switch name {
+			case "profile":
+				if guiPublicGetBindRequestedProducers(root, source, false) != nil {
+					t.Fatal("complete reviewed default profile refused")
+				}
+				return
+			case "unknown":
+				path := "services/server/internal/web/renderer.go"
+				replace(path, append(changed[path].raw, '\n'))
+			case "mixed":
+				row := guiPublicGetRepairRows()[0]
+				replace(row.path, bytes.Replace(changed[row.path].raw, []byte(row.after), []byte(row.before), 1))
+			case "mode":
+				path := "services/server/internal/web/server.go"
+				input := changed[path]
+				input.binding.FullMode = 0o100644
+				changed[path] = input
+			case "missing":
+				delete(changed, "services/server/internal/web/server.go")
+			case "preserved-source":
+				path := source.PreservedSourceInputs[0].Path
+				replace(path, append(changed[path].raw, '\n'))
+			case "producer-source":
+				path := "services/server/internal/web/router.go"
+				replace(path, append(changed[path].raw, '\n'))
+			case "history":
+				for index := range candidate.Producers {
+					if candidate.Producers[index].Path == "services/server/internal/web/renderer.go" {
+						candidate.Producers[index].HistoricalSHA256 = strings.Repeat("0", 64)
+					}
+				}
+			case "capture-boundary":
+				if guiPublicGetBindRequestedProducers(root, source, true) == nil || guiPublicGetBindProducers(root, source) == nil {
+					t.Fatal("repaired physical producer admitted as old HTTP capture")
+				}
+				return
+			}
+			if guiPublicGetRepairHistoricalProof(candidate, changed) == nil || guiPublicGetRepairHistoricalProof(source, inputs) != nil {
+				t.Fatal("changed repair source admitted or source control aliased")
+			}
+		})
+	}
 }

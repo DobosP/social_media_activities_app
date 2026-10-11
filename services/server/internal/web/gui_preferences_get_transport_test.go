@@ -29,7 +29,7 @@ var guiPreferencesGETTransport = flag.Bool("gui-preferences-get-transport", fals
 //go:embed testdata/gui-preferences-get/registry.json
 var guiPreferencesGETRegistryBytes []byte
 
-const guiPreferencesGETRegistrySHA = "27c3594c0bac137eb5a38b28a7033026777b89453d09a74574f63ee417343961"
+const guiPreferencesGETRegistrySHA = "96df9398249f550180685009c5eb74f65446c7b83195892090c520f3348c255d"
 
 type guiPreferenceGETCase struct {
 	guiPublicGetCase
@@ -322,7 +322,7 @@ func guiPreferenceGETResponse(item guiPreferenceGETCase, response guiCurrentTran
 		return "", fmt.Errorf("preference-HTTP-metadata")
 	}
 	wanted := map[string]bool{item.Template: true, "base.html": true}
-	if item.Route == "display_preferences" && item.Profile == "adult" {
+	if item.Route == "display_preferences" {
 		wanted["web/_you_tabs.html"] = true
 	}
 	if len(response.loads) != len(wanted) || len(response.loads) == 0 || response.loads[0].Name != item.Template {
@@ -344,6 +344,14 @@ func guiPreferenceGETResponse(item guiPreferenceGETCase, response guiCurrentTran
 		transformed := []byte(transformTemplate(string(raw)))
 		if load.Bytes != len(transformed) || load.SHA256 != guiPublicHash(transformed) {
 			return "", fmt.Errorf("preference-consumed-template-source")
+		}
+	}
+	if item.Profile == "adult" {
+		prefix := `class="avatar nav-avatar" src="data:image/svg+xml;base64,`
+		body := response.recorder.Body.String()
+		start := strings.Index(body, prefix)
+		if start < 0 || strings.Count(body, prefix) != 1 || strings.Index(body[start+len(prefix):], `"`) <= 0 {
+			return "", fmt.Errorf("preference-own-avatar-presentation")
 		}
 	}
 	if err := guiPreferenceGETContent(response.recorder.Body.Bytes(), item); err != nil {
