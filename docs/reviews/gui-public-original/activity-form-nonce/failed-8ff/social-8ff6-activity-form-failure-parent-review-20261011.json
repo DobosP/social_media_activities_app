@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "source": "8ff6e354243c526c2cfad9e807a42f3dee0d1d1f",
+  "invocation": "786ca716-65ef-40a0-b0c4-532fc4576195",
+  "command_exit": 1,
+  "method_pass": false,
+  "immutable_result_tests_field": null,
+  "result_sha256": "3a7a4ece9fab17e2b0a4b6346422c6092d24782f062a1d7524b0dfede7521d68",
+  "closure_sha256": "c4bf4177f08b46b21a8805777fb6a3d9a834bb91f91fb5178e90bbcb22ad6c10",
+  "regular_rows": 28,
+  "bytes": 121218,
+  "source_external_unchanged": [
+    77,
+    18
+  ],
+  "raw_JSON_events": 191,
+  "unique_runs": 44,
+  "test_pass": 42,
+  "test_fail": [
+    "TestGUIActivityFormNonceRejectsDOMMutations/csrf-field-name",
+    "TestGUIActivityFormNonceRejectsDOMMutations"
+  ],
+  "package_fail": 1,
+  "skip_cache_race": 0,
+  "format_exit": 0,
+  "owned_cleanup_pass": true,
+  "noOOM": true,
+  "failure_boundary": "Onlycsrf-field-name childfails at exactactivityCSRFmutationtarget guard beforemutation/Normalize; all8OSFSpositive+23binding+other9DOMmutationchildren pass; parentDOMmutationtest andpackagefail propagate. Suffixscope includeslaterbody; no productregression inferred.",
+  "normalizations": "40sourceexpectedonly; actualinvocationcensus NOTMEASURED",
+  "verdict": "Parent actualfailureboundary CLEAR, independentreviewpending; no Sourceedits untilreview",
+  "utc": "2026-10-11T00:39:12.667478+00:00"
+}

@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "reviewer": "/root/program_pack",
+  "verdict": "ACTUAL_FAILURE_BOUNDARY_CLEAR",
+  "reviewed_utc": "2026-10-11T00:41:44.674949+00:00",
+  "source": "8ff6e354243c526c2cfad9e807a42f3dee0d1d1f",
+  "invocation": "786ca716-65ef-40a0-b0c4-532fc4576195",
+  "capture": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-form-nonce-8ff6e35-786ca716-65ef-40a0-b0c4-532fc4576195",
+  "closure_sha256": "c4bf4177f08b46b21a8805777fb6a3d9a834bb91f91fb5178e90bbcb22ad6c10",
+  "result_sha256": "3a7a4ece9fab17e2b0a4b6346422c6092d24782f062a1d7524b0dfede7521d68",
+  "parent_review_sha256": "89d832b383cbe744754ec8a1493bf4b8a0fc3f0ca09ed991a25477b302d53394",
+  "all28_bytes_hashes_full_modes_verified": true,
+  "raw_bytes": 121218,
+  "raw_JSON_events": 191,
+  "unique_runs_once": 44,
+  "test_PASS": 42,
+  "test_FAIL": [
+    "TestGUIActivityFormNonceRejectsDOMMutations/csrf-field-name",
+    "TestGUIActivityFormNonceRejectsDOMMutations"
+  ],
+  "package_FAIL": 1,
+  "skip_cache_race": 0,
+  "formatter_exit": 0,
+  "formatter_diff_stderr_bytes": 0,
+  "command_exit": 1,
+  "immutable_result_tests_summary": null,
+  "earned_scope": {
+    "OS_FS_positive_children_PASS": 8,
+    "native_binding_mutations_PASS": 23,
+    "other_safe_DOM_mutations_PASS": 9
+  },
+  "failure": {
+    "message": "gui_activity_form_nonce_test.go:466: exact activity CSRF mutation target required",
+    "failed_child_stopped_before_mutation_and_Normalize": true,
+    "source_boundary": "gui_activity_form_nonce_test.go:464-468 scans body[start:] to EOF, whereas render() already bounds exactly one CSRF target inside the activity form. templates/base.html:167 has a later unchanged language-switch POST form with its own CSRF tag.",
+    "actual_rendered_token_match_count": "NOT_RECORDED; no raw body/token emitted or inferred",
+    "finite_repair_direction": "Bound target uniqueness and replacement to the actual activity form end; preserve surrounding bytes and all original assertions. Source correction remains parent-authorized and unimplemented by this review."
+  },
+  "guards": {
+    "source77_before_after_and_live_Git_bytes_full_modes_exact": true,
+    "external18_before_after_and_live_bytes_full_modes_exact": true,
+    "clean_exact_HEAD": true
+  },
+  "managed_context": {
+    "image": "sha256:2e040a5165d79be63755424f707fdb8cf609ace831ada7a9baca398ac25e12b9",
+    "container_id": "7d6f7e121b34a47150afcec80381079265514635fad666e293b41f2c1a4b8b3e",
+    "cpus": 4,
+    "memory_bytes": 6442450944,
+    "network": "none",
+    "source_readonly": true,
+    "native_flags": "-mod=readonly -race -count=1 -json",
+    "oom_killed": false
+  },
+  "owned_cleanup": {
+    "remove_exit": 0,
+    "ID_and_exact_name_absence_verified_in_actual_streams": true,
+    "no_reviewer_Docker_execution": true
+  },
+  "limitations": "Failed targeted synthetic authenticated adult Renderer presentation only; no aggregate PASS, handler/DB/POST/auth/privacy/participation/map/API/browserCSP/full/Live/device/default/adoption qualification. Forty normalization calls remain source-expected rather than an independent invocation census.",
+  "actions": "Read-only actual metadata/streams/source/Git review plus this private review file; no runtime, repository/controller edits or corrections."
+}

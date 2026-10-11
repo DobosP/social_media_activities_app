@@ -592,7 +592,7 @@ work needs an exact separately authorized source scope; current evidence does no
 open those holds or replace any original baseline.
 
 
-### SOC-9 activity create/edit script nonce source checkpoint
+### Historical SOC-9 initial8ff source checkpoint (2026-10-11)
 
 SOURCE ONLY, NOT RUN: the existing activity_form/activity_edit templates add
 request.csp_nonce to four existing external tags each. Their full inverses
@@ -623,3 +623,39 @@ with existing original-reference/normalizer flags. No helper rebuild, dependency
 install, original capture, map/geolocation/API/browserJS/CSP/computed-style/full/
 Live/device/default/SDKadoption or privacy/auth/eligibility claim follows. Old
 41/34/46/83 and original15/764+d722 keep their distinct accepted evidence.
+
+
+### SOC-9 accepted focused activity form execution
+
+At testedfc7fb45, formatter0/empty and44 unique native checks passed once
+(3parents/41children), packagePASS1/190JSONevents, zero fail/skip/cache/race.
+All77source+18external byte/full-mode guards stayed exact; actual pinned4CPU/
+6GiB/sourceRO/network-none container exited0/noOOM and ownedCID/name cleanup
+passed. Parent and independent review accepted the scoped
+[checkpoint](reviews/gui-public-original/activity-form-nonce-checkpoint.json).
+
+Eight OS/FS filled/error presentations,23 native nonce/header/path/order/load
+mutations and10 safe form-DOM mutations passed. Ten original/expected/current
+comparison logs join expected/current hashes and distinguish originals; all4
+OS/FS phase joins agree. Source permits nonce-volatility equality; observed
+originals were distinct here.40 Normalize calls remains SOURCE EXPECTED only,
+not an independent invocation census or browser test count. Strict Options{}
+and764/d722/original15 are unchanged; no masking or baseline approval.
+
+Original8ff remains FAIL1:44 once/42PASS, CSRFchild+parentFAIL/packageFAIL,
+formatter0/guards77+18/ownedcleanup. Its body-to-EOF target guard stopped before
+that mutation and Normalize; the unchanged later language-switch form is outside
+the activity form. No exact rendered-token count was recorded or inferred.
+Only the new test child was corrected atfc7: unique actual activity start through
+first closing form, one target inside that segment, fresh-buffer prefix/suffix
+preservation. All44IDs/other assertions/production8nonce attrs remained exact.
+
+The39 small literal transfers retain accepted Go/control/exit/closure/reviews
+and failed Go/exit/closure/reviews. Raw result guard arrays stay private under
+exact digests. CLOSURE indices describe complete private capsules, not this
+selected public copy; originalprivate600/public664 modes are explicit. No rawHTML,
+avatarURI/workspace/cache/ELF/binary clone. This later docsHEAD is not retested.
+Synthetic authenticated adult renderer PRESENTATION only: no handler/DB/POST,
+auth/participation/ownership/organizer/admission/privacy/map/API/browserJS/CSP,
+computedstyle/full/Live/device/default/adoption approval. Prior proof/source and
+original14/15/sole764+d722 keepers remain intact; parent owns feature publication.

@@ -1,0 +1,456 @@
+{
+  "schema": 1,
+  "scope": "SOC-9 synthetic authenticated adult activity create/edit Renderer OS/FS nonce/presentation and released DOM only; no handler/DB/POST/auth/participation/ownership/organizer/admission/privacy/map/API/browserJS/browserCSP/full/Live/device/default/adoption qualification",
+  "tested_source": "fc7fb45e1319015b6cf9e8c1683238122351d4f8",
+  "actual_invocation": "edce39c2-b87d-42f7-a396-8a54949d1cba",
+  "actual_method_exit": 0,
+  "method_sha256": "1d22ac14c73b246786717c66b64030454e24e3d421e7184f34aa36084520c407",
+  "source_packet_seal": "451a014cb24cdffe72b4d2facab528adce0bcb6d3300f298f92e4738db767dc7",
+  "method_packet_seal": "dc64855a67c9499053439ddcc8da67eda1a519791bb077741eaebabe559139e6",
+  "actual_private_result_sha256": "9f5a3c8bba3ecf3ce930443bfb9403ee6f2636c8baa1e0d5dcc54b930908f336",
+  "accepted_closure_sha256": "937bf6161931f0f11a0edce1bbe204c660c26fb53a7664e06f1dd9509ade2d11",
+  "parent_actual_review_sha256": "98e7729e1781632a770c0d2ad25285194a9bfc57045dfa52cc1b326ec63aaffb",
+  "independent_actual_review_sha256": "ca49576c52d503492f5c20200f23e408cac4fa2278356146ab9a180de1b7540f",
+  "native": {
+    "run": 44,
+    "pass": 44,
+    "top_level": 3,
+    "subcases": 41,
+    "package_pass": 1,
+    "fail": 0,
+    "skip": 0,
+    "cached": false,
+    "identities": [
+      "TestGUIActivityFormNonceDOM",
+      "TestGUIActivityFormNonceDOM/filesystem-false/create-filled",
+      "TestGUIActivityFormNonceDOM/filesystem-false/create-field-error",
+      "TestGUIActivityFormNonceDOM/filesystem-false/edit-filled",
+      "TestGUIActivityFormNonceDOM/filesystem-false/edit-field-error",
+      "TestGUIActivityFormNonceDOM/filesystem-true/create-filled",
+      "TestGUIActivityFormNonceDOM/filesystem-true/create-field-error",
+      "TestGUIActivityFormNonceDOM/filesystem-true/edit-filled",
+      "TestGUIActivityFormNonceDOM/filesystem-true/edit-field-error",
+      "TestGUIActivityFormNonceRejectsBindingMutations",
+      "TestGUIActivityFormNonceRejectsBindingMutations/script-0/missing-nonce",
+      "TestGUIActivityFormNonceRejectsBindingMutations/script-0/wrong-nonce",
+      "TestGUIActivityFormNonceRejectsBindingMutations/script-0/duplicate",
+      "TestGUIActivityFormNonceRejectsBindingMutations/script-0/changed-path",
+      "TestGUIActivityFormNonceRejectsBindingMutations/script-0/changed-load",
+      "TestGUIActivityFormNonceRejectsBindingMutations/script-1/missing-nonce",
+      "TestGUIActivityFormNonceRejectsBindingMutations/script-1/wrong-nonce",
+      "TestGUIActivityFormNonceRejectsBindingMutations/script-1/duplicate",
+      "TestGUIActivityFormNonceRejectsBindingMutations/script-1/changed-path",
+      "TestGUIActivityFormNonceRejectsBindingMutations/script-1/changed-load",
+      "TestGUIActivityFormNonceRejectsBindingMutations/script-2/missing-nonce",
+      "TestGUIActivityFormNonceRejectsBindingMutations/script-2/wrong-nonce",
+      "TestGUIActivityFormNonceRejectsBindingMutations/script-2/duplicate",
+      "TestGUIActivityFormNonceRejectsBindingMutations/script-2/changed-path",
+      "TestGUIActivityFormNonceRejectsBindingMutations/script-2/changed-load",
+      "TestGUIActivityFormNonceRejectsBindingMutations/script-3/missing-nonce",
+      "TestGUIActivityFormNonceRejectsBindingMutations/script-3/wrong-nonce",
+      "TestGUIActivityFormNonceRejectsBindingMutations/script-3/duplicate",
+      "TestGUIActivityFormNonceRejectsBindingMutations/script-3/changed-path",
+      "TestGUIActivityFormNonceRejectsBindingMutations/script-3/changed-load",
+      "TestGUIActivityFormNonceRejectsBindingMutations/missing-header",
+      "TestGUIActivityFormNonceRejectsBindingMutations/disagreeing-header",
+      "TestGUIActivityFormNonceRejectsBindingMutations/script-order",
+      "TestGUIActivityFormNonceRejectsDOMMutations",
+      "TestGUIActivityFormNonceRejectsDOMMutations/form-method",
+      "TestGUIActivityFormNonceRejectsDOMMutations/csrf-field-name",
+      "TestGUIActivityFormNonceRejectsDOMMutations/title-field",
+      "TestGUIActivityFormNonceRejectsDOMMutations/selected-type",
+      "TestGUIActivityFormNonceRejectsDOMMutations/create-submit",
+      "TestGUIActivityFormNonceRejectsDOMMutations/create-propose-link",
+      "TestGUIActivityFormNonceRejectsDOMMutations/edit-cancel-link",
+      "TestGUIActivityFormNonceRejectsDOMMutations/edit-fixed-type",
+      "TestGUIActivityFormNonceRejectsDOMMutations/step-key",
+      "TestGUIActivityFormNonceRejectsDOMMutations/error-copy"
+    ],
+    "JSON_events": 190
+  },
+  "formatter": {
+    "exit_code": 0,
+    "diff_bytes": 0,
+    "stderr_bytes": 0
+  },
+  "source_guards": 77,
+  "external_guards": 18,
+  "before_after_guards_equal": true,
+  "normalization": {
+    "OS_FS_positive_children": 8,
+    "native_binding_mutations": 23,
+    "safe_DOM_mutations": 10,
+    "actual_comparison_logs": 10,
+    "expected_current_all_equal": true,
+    "observed_original_current_equal": 0,
+    "observed_original_current_different": 10,
+    "OS_FS_phase_hash_joins": 4,
+    "source_expected_calls": 40,
+    "independent_invocation_census": null,
+    "browser_tests": 0,
+    "policy": "Existing verified764/d722 Normalize Options{} unchanged; nonce volatility equality permitted by source, observed originals distinct in these10logs. No oracle/asset masks/guards modified.",
+    "negative_control_limit": "Actual native source requires errnil/hard0 before canonical inequality; native nonce/header/path/load refusals are separate from SDK hard findings."
+  },
+  "isolation_cleanup": {
+    "image_id": "sha256:2e040a5165d79be63755424f707fdb8cf609ace831ada7a9baca398ac25e12b9",
+    "caps": "actual4CPU/6GiB/sourceRO/networknone",
+    "noOOM": true,
+    "created_full_CID": "9cba91ec40e0d6ed89957b993082f981320605e9f2de65af004161fa1485ce18",
+    "owned_cleanup": {
+      "id": "9cba91ec40e0d6ed89957b993082f981320605e9f2de65af004161fa1485ce18",
+      "name": "social-activity-form-nonce-edce39c2-b87d-42f7-a396-8a54949d1cba",
+      "remove_exit": 0,
+      "id_absent": true,
+      "name_absent": true,
+      "passed": true
+    }
+  },
+  "failed_history": {
+    "source": "8ff6e354243c526c2cfad9e807a42f3dee0d1d1f",
+    "invocation": "786ca716-65ef-40a0-b0c4-532fc4576195",
+    "wrapper_exit": 1,
+    "raw_private_result_sha256": "3a7a4ece9fab17e2b0a4b6346422c6092d24782f062a1d7524b0dfede7521d68",
+    "closure_sha256": "c4bf4177f08b46b21a8805777fb6a3d9a834bb91f91fb5178e90bbcb22ad6c10",
+    "run_once": 44,
+    "test_PASS": 42,
+    "test_FAIL": [
+      "TestGUIActivityFormNonceRejectsDOMMutations/csrf-field-name",
+      "TestGUIActivityFormNonceRejectsDOMMutations"
+    ],
+    "package_FAIL": 1,
+    "fail_stage": "CSRF child exact-target guard before mutation and Normalize; unchanged later language-switch form outside activity segment",
+    "actual_rendered_token_match_count": "NOT RECORDED; no count or raw token inferred",
+    "native_earned_children": {
+      "OS_FS": 8,
+      "binding_mutations": 23,
+      "other_safe_DOM_mutations": 9
+    },
+    "formatter": {
+      "exit_code": 0,
+      "diff_bytes": 0,
+      "stderr_bytes": 0
+    },
+    "guards77_18_unchanged": true,
+    "owned_cleanup": true,
+    "immutable_tests_summary": null
+  },
+  "source_correction": "Only the existing CSRF child now bounds the unique full activity form start through its first closing form tag, requires one exact target in that segment and uses a fresh buffer preserving prefix/suffix. All44IDs/other assertions/mutations and production8attrs remain exact. Whole Go inverse restores8ff;1945otherGit entries were preserved at this test-only successor.",
+  "transfers": [
+    {
+      "path": "accepted-fc7/container.cid",
+      "bytes": 64,
+      "sha256": "64e4b1f007dd0d6f3169d33ffb7f060be9209fe93bdb0b19f22b941ce32d84fc",
+      "source_full_mode": 33204,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-form-nonce-fc7fb45-edce39c2-b87d-42f7-a396-8a54949d1cba/container.cid"
+    },
+    {
+      "path": "accepted-fc7/control-00.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-form-nonce-fc7fb45-edce39c2-b87d-42f7-a396-8a54949d1cba/control-00.stderr"
+    },
+    {
+      "path": "accepted-fc7/control-00.stdout",
+      "bytes": 72,
+      "sha256": "7aa16fdca68c8e892b9f6175e4b16af62027e2a5553fd18c527b104e940053b5",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-form-nonce-fc7fb45-edce39c2-b87d-42f7-a396-8a54949d1cba/control-00.stdout"
+    },
+    {
+      "path": "accepted-fc7/control-01.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-form-nonce-fc7fb45-edce39c2-b87d-42f7-a396-8a54949d1cba/control-01.stderr"
+    },
+    {
+      "path": "accepted-fc7/control-01.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-form-nonce-fc7fb45-edce39c2-b87d-42f7-a396-8a54949d1cba/control-01.stdout"
+    },
+    {
+      "path": "accepted-fc7/control-02.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-form-nonce-fc7fb45-edce39c2-b87d-42f7-a396-8a54949d1cba/control-02.stderr"
+    },
+    {
+      "path": "accepted-fc7/control-02.stdout",
+      "bytes": 65,
+      "sha256": "8047b05f30df1d33e9bc8d459daba8c828c5e408384ab59c6c1e571dc9016eee",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-form-nonce-fc7fb45-edce39c2-b87d-42f7-a396-8a54949d1cba/control-02.stdout"
+    },
+    {
+      "path": "accepted-fc7/control-03.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-form-nonce-fc7fb45-edce39c2-b87d-42f7-a396-8a54949d1cba/control-03.stderr"
+    },
+    {
+      "path": "accepted-fc7/control-03.stdout",
+      "bytes": 1964,
+      "sha256": "a7869d45df960e06835d19635f4c827f5aa9fca5e6ede4ac99cf33405d013b89",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-form-nonce-fc7fb45-edce39c2-b87d-42f7-a396-8a54949d1cba/control-03.stdout"
+    },
+    {
+      "path": "accepted-fc7/control-04.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-form-nonce-fc7fb45-edce39c2-b87d-42f7-a396-8a54949d1cba/control-04.stderr"
+    },
+    {
+      "path": "accepted-fc7/control-04.stdout",
+      "bytes": 1964,
+      "sha256": "9e8b0d4c537fdc55801c74fa721f1f2c71b3f8492aed929c1cd46f8ad56b252b",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-form-nonce-fc7fb45-edce39c2-b87d-42f7-a396-8a54949d1cba/control-04.stdout"
+    },
+    {
+      "path": "accepted-fc7/control-05.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-form-nonce-fc7fb45-edce39c2-b87d-42f7-a396-8a54949d1cba/control-05.stderr"
+    },
+    {
+      "path": "accepted-fc7/control-05.stdout",
+      "bytes": 1964,
+      "sha256": "a2af52f4190d0f3a9932da4b7531985b1ed185f71844ea383d8aa882a479f159",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-form-nonce-fc7fb45-edce39c2-b87d-42f7-a396-8a54949d1cba/control-05.stdout"
+    },
+    {
+      "path": "accepted-fc7/control-06.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-form-nonce-fc7fb45-edce39c2-b87d-42f7-a396-8a54949d1cba/control-06.stderr"
+    },
+    {
+      "path": "accepted-fc7/control-06.stdout",
+      "bytes": 65,
+      "sha256": "8047b05f30df1d33e9bc8d459daba8c828c5e408384ab59c6c1e571dc9016eee",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-form-nonce-fc7fb45-edce39c2-b87d-42f7-a396-8a54949d1cba/control-06.stdout"
+    },
+    {
+      "path": "accepted-fc7/control-07.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-form-nonce-fc7fb45-edce39c2-b87d-42f7-a396-8a54949d1cba/control-07.stderr"
+    },
+    {
+      "path": "accepted-fc7/control-07.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-form-nonce-fc7fb45-edce39c2-b87d-42f7-a396-8a54949d1cba/control-07.stdout"
+    },
+    {
+      "path": "accepted-fc7/control-08.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-form-nonce-fc7fb45-edce39c2-b87d-42f7-a396-8a54949d1cba/control-08.stderr"
+    },
+    {
+      "path": "accepted-fc7/control-08.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-form-nonce-fc7fb45-edce39c2-b87d-42f7-a396-8a54949d1cba/control-08.stdout"
+    },
+    {
+      "path": "accepted-fc7/docker-start.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-form-nonce-fc7fb45-edce39c2-b87d-42f7-a396-8a54949d1cba/docker-start.stderr"
+    },
+    {
+      "path": "accepted-fc7/docker-start.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-form-nonce-fc7fb45-edce39c2-b87d-42f7-a396-8a54949d1cba/docker-start.stdout"
+    },
+    {
+      "path": "accepted-fc7/format.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-form-nonce-fc7fb45-edce39c2-b87d-42f7-a396-8a54949d1cba/format.exit"
+    },
+    {
+      "path": "accepted-fc7/format.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-form-nonce-fc7fb45-edce39c2-b87d-42f7-a396-8a54949d1cba/format.stderr"
+    },
+    {
+      "path": "accepted-fc7/format.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-form-nonce-fc7fb45-edce39c2-b87d-42f7-a396-8a54949d1cba/format.stdout"
+    },
+    {
+      "path": "accepted-fc7/tests.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-form-nonce-fc7fb45-edce39c2-b87d-42f7-a396-8a54949d1cba/tests.exit"
+    },
+    {
+      "path": "accepted-fc7/tests.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-form-nonce-fc7fb45-edce39c2-b87d-42f7-a396-8a54949d1cba/tests.stderr"
+    },
+    {
+      "path": "accepted-fc7/tests.stdout",
+      "bytes": 55425,
+      "sha256": "aac93c1f3df782c1287428ae9d10efc2542af4f70338e03971c2e78b13433b86",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-form-nonce-fc7fb45-edce39c2-b87d-42f7-a396-8a54949d1cba/tests.stdout"
+    },
+    {
+      "path": "accepted-fc7/CLOSURE.json",
+      "bytes": 5540,
+      "sha256": "937bf6161931f0f11a0edce1bbe204c660c26fb53a7664e06f1dd9509ade2d11",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-form-nonce-fc7fb45-edce39c2-b87d-42f7-a396-8a54949d1cba/CLOSURE.json"
+    },
+    {
+      "path": "accepted-fc7/social-fc7fb-activity-form-parent-actual-review-20261011.json",
+      "bytes": 1273,
+      "sha256": "98e7729e1781632a770c0d2ad25285194a9bfc57045dfa52cc1b326ec63aaffb",
+      "source_full_mode": 33204,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-fc7fb-activity-form-parent-actual-review-20261011.json"
+    },
+    {
+      "path": "accepted-fc7/social-fc7fb-activity-form-independent-actual-review-20261011.json",
+      "bytes": 2489,
+      "sha256": "ca49576c52d503492f5c20200f23e408cac4fa2278356146ab9a180de1b7540f",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-fc7fb-activity-form-independent-actual-review-20261011.json"
+    },
+    {
+      "path": "accepted-fc7/social-fc7fb-csrf-parent-source-method-review-20261011.json",
+      "bytes": 966,
+      "sha256": "04e85b91d384bad85f9bdd1ea87bb8d41658875cb15b07ce64d66e37d88913a8",
+      "source_full_mode": 33204,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-fc7fb-csrf-parent-source-method-review-20261011.json"
+    },
+    {
+      "path": "failed-8ff/tests.stdout",
+      "bytes": 55771,
+      "sha256": "4533f9d282fb1d197b3da0b3cba2aff1bb9ec609fbd6b6e49baa76f447ad9cba",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-form-nonce-8ff6e35-786ca716-65ef-40a0-b0c4-532fc4576195/tests.stdout"
+    },
+    {
+      "path": "failed-8ff/tests.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-form-nonce-8ff6e35-786ca716-65ef-40a0-b0c4-532fc4576195/tests.stderr"
+    },
+    {
+      "path": "failed-8ff/tests.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-form-nonce-8ff6e35-786ca716-65ef-40a0-b0c4-532fc4576195/tests.exit"
+    },
+    {
+      "path": "failed-8ff/format.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-form-nonce-8ff6e35-786ca716-65ef-40a0-b0c4-532fc4576195/format.exit"
+    },
+    {
+      "path": "failed-8ff/CLOSURE.json",
+      "bytes": 5537,
+      "sha256": "c4bf4177f08b46b21a8805777fb6a3d9a834bb91f91fb5178e90bbcb22ad6c10",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-form-nonce-8ff6e35-786ca716-65ef-40a0-b0c4-532fc4576195/CLOSURE.json"
+    },
+    {
+      "path": "failed-8ff/social-8ff6-activity-form-failure-parent-review-20261011.json",
+      "bytes": 1323,
+      "sha256": "89d832b383cbe744754ec8a1493bf4b8a0fc3f0ca09ed991a25477b302d53394",
+      "source_full_mode": 33204,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-8ff6-activity-form-failure-parent-review-20261011.json"
+    },
+    {
+      "path": "failed-8ff/social-8ff6-activity-form-independent-actual-failure-review-20261011.json",
+      "bytes": 3287,
+      "sha256": "8e803d79e2f2e3735f89197739cf2dc679d1f360290b6b7836ecfbceecbbb0de",
+      "source_full_mode": 33152,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-8ff6-activity-form-independent-actual-failure-review-20261011.json"
+    },
+    {
+      "path": "failed-8ff/social-8ff6-activity-form-parent-source-method-review-20261011.json",
+      "bytes": 1059,
+      "sha256": "1753545be0504ddec325e60e9f70bd16ce70a21c304405e3830e74d8223b24c9",
+      "source_full_mode": 33204,
+      "tracked_full_mode": 33204,
+      "actual_source": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-8ff6-activity-form-parent-source-method-review-20261011.json"
+    }
+  ],
+  "transfer_total_bytes": 138836,
+  "partial_promotion": "Raw result receipts embed source/external guard arrays and remain private under exact hashes. Copied CLOSURE indices describe the complete original private capsules, not a fabricated complete public member set. Source private modes and new public0664 modes are recorded honestly.",
+  "later_docs_source_not_reexecuted": true,
+  "retention": "Original8ff source/method/failure, fc7 correction/run, original14/15, prior proofs and sole764/d722 retained; no cleanup or baseline replacement."
+}

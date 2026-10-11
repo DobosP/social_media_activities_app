@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "source": "8ff6e354243c526c2cfad9e807a42f3dee0d1d1f",
+  "base": "2f4390096514baf6b8767ea625ef910fc730ef90",
+  "verdict": "Parent SOURCE+method CLEAR; new runtime NOTRUN",
+  "Git_paths": 6,
+  "nonce_only_attributes": 8,
+  "whole_template_inverses_exact": true,
+  "other_Git_entries_preserved": 1940,
+  "source_external_policy_refs": [
+    77,
+    18,
+    7
+  ],
+  "authored_unique_caseIDs": 44,
+  "method_inverse": "TOP/inventory/scope plus16literalbindings; entireaccepted39efmethodrestored",
+  "method_sha256": "1771d6140660c6fc346b0e14b63e234e07d081557edda3027002d3b2b0e166d1",
+  "meaningful_controls": "Actual renderer header/fresh nonce binding, exact paths/order/defer, strictOptions{} and safeDOM mutations require successfulnormalization+differentcanonicalbytes; no unrelatedrefusalpass",
+  "normalizations": "40sourceexpectedonly/notmeasured",
+  "scope": "Synthetic authenticatedadult presentation only; no DB/API/POST/auth/privacy/admission/map/browser/CSP/full/device qualification",
+  "utc": "2026-10-11T00:32:21.881239+00:00"
+}

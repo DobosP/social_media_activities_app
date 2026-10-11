@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "source": "fc7fb45e1319015b6cf9e8c1683238122351d4f8",
+  "invocation": "edce39c2-b87d-42f7-a396-8a54949d1cba",
+  "command_exit": 0,
+  "method_pass": true,
+  "result_sha256": "9f5a3c8bba3ecf3ce930443bfb9403ee6f2636c8baa1e0d5dcc54b930908f336",
+  "closure_sha256": "937bf6161931f0f11a0edce1bbe204c660c26fb53a7664e06f1dd9509ade2d11",
+  "regular_rows": 28,
+  "bytes": 124169,
+  "source_external_unchanged": [
+    77,
+    18
+  ],
+  "JSON_events": 190,
+  "native_unique_run_pass_once": 44,
+  "parents_children": [
+    3,
+    41
+  ],
+  "positive_binding_DOM_children": [
+    8,
+    23,
+    10
+  ],
+  "package_pass": 1,
+  "fail_skip_cache_race": 0,
+  "format_exit": 0,
+  "owned_cleanup_pass": true,
+  "noOOM": true,
+  "normalizations": "40sourceexpectedonly; independentinvocationcensusNOTMEASURED",
+  "verdict": "Parent ACTUALtargetedCLEAR; independentreviewpending",
+  "scope": "SOC-9 fictional authenticated adult activity create/edit OS/FS presentation, nonce binding and released DOM only; no handler/API/PG/write/auth/participation/ownership/organizer/admission/privacy/geolocation/browserJS/browserCSP/computedstyle/app/full/Live/device/default/adoption qualification",
+  "original8ff_failure_preserved": true,
+  "utc": "2026-10-11T01:08:08.829708+00:00"
+}

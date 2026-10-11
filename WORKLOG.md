@@ -2577,3 +2577,29 @@ only, not an actual census/browser count. All formatter/compiler/tests/runtime
 are NOT RUN. No map/geolocation/API/browserJS/CSP/computedstyle/full/Live/device/
 default/adoption/retirement acceptance. Parent reviews closed source/method and
 assigns any managed runtime separately; earlier proof/failure packets are retained.
+
+
+## 2026-10-11 — SOC-9 focused proof and bounded CSRF correction
+
+Accepted actualfc7fb45:formatter0/empty,44 unique native PASS once+packagePASS1,
+190JSONevents/zero fail-skip-cache-race;77source+18external full-mode/hash brackets
+exact. Pinned4CPU/6GiB/sourceRO/networknone/noOOM/ownedCID+name cleanup passed.
+Scope is synthetic adult activity create/edit OS/FS PRESENTATION:8positives,
+23separate native binding mutations and10safe DOM mutations. Ten comparison logs
+join expected/current and distinguish originals, with4OSFSphasejoins.40Normalize
+calls is SOURCE EXPECTED only, no independent census/browser test count.
+
+Original8ff failure remains immutable:44once/42PASS, CSRFchild+parentFAIL and
+packageFAIL, format0/77+18unchanged/ownedcleanup. It failed the exact-target guard
+before that mutation/Normalize. No rendered-token count was recorded or inferred.
+Only the existing new test child now bounds the unique activity form through its
+first closing tag, requires one exact CSRF target there and rebuilds prefix/changed
+segment/suffix into a fresh nonalias buffer. The whole Go inverse restores8ff;
+all44IDs/other assertions/production8attrs and1945otherGit were preserved there.
+
+Promoted39literal small records plus checkpoint; raw result guard arrays remain
+private by digest, and complete-private CLOSURE indices are explicitly distinct
+from selected public files/modes. Testedfc7 is not this later docsHEAD execution.
+Oldsource/failure/proofs/original14/15/verified764+d722 retained; no cleanup,
+newmask/baseline approval, handler/DB/POST/auth/ownership/privacy/admission/map/API/
+browserCSP/computedstyle/full/Live/device/default/adoption claim. Parent publishes.

@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "source": "fc7fb45e1319015b6cf9e8c1683238122351d4f8",
+  "base": "8ff6e354243c526c2cfad9e807a42f3dee0d1d1f",
+  "verdict": "Parent CSRF-only SOURCE+identity-method CLEAR; new runtime NOTRUN",
+  "Git_paths": 1,
+  "other_Git_and_physical_rows_preserved": 1945,
+  "source_external_policy_refs": [
+    77,
+    18,
+    7
+  ],
+  "whole_Go_inverse_exact": true,
+  "all44IDs_preserved": true,
+  "bounded_target": "Unique full activityformstart\u2192firstclosingform; exactlyonetargetwithinsegment; freshnonaliasprefix+changedsegment+suffix, othersbyteexact",
+  "method_identity_replacements": 4,
+  "method_sha256": "1d22ac14c73b246786717c66b64030454e24e3d421e7184f34aa36084520c407",
+  "old_failure_closure_preserved": "c4bf4177f08b46b21a8805777fb6a3d9a834bb91f91fb5178e90bbcb22ad6c10",
+  "scope": "Fixture-negative-control correctness only; no production/SDK/policy/normalizer or broader qualification change",
+  "utc": "2026-10-11T00:52:03.242745+00:00"
+}

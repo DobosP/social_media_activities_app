@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "reviewer": "/root/program_pack",
+  "verdict": "ACTUAL_TARGETED_BOUNDARY_CLEAR",
+  "reviewed_utc": "2026-10-11T01:11:56.250650+00:00",
+  "source": "fc7fb45e1319015b6cf9e8c1683238122351d4f8",
+  "invocation": "edce39c2-b87d-42f7-a396-8a54949d1cba",
+  "capture": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/activity-form-nonce-fc7fb45-edce39c2-b87d-42f7-a396-8a54949d1cba",
+  "closure_sha256": "937bf6161931f0f11a0edce1bbe204c660c26fb53a7664e06f1dd9509ade2d11",
+  "result_sha256": "9f5a3c8bba3ecf3ce930443bfb9403ee6f2636c8baa1e0d5dcc54b930908f336",
+  "parent_review_sha256": "98e7729e1781632a770c0d2ad25285194a9bfc57045dfa52cc1b326ec63aaffb",
+  "all28_bytes_hashes_full_modes_verified": true,
+  "raw_bytes": 124169,
+  "raw_JSON_events": 190,
+  "unique_run_PASS_once": 44,
+  "package_PASS": 1,
+  "fail_skip_cache_race": 0,
+  "format_exit": 0,
+  "format_stdout_stderr_bytes": 0,
+  "native_child_groups_PASS": {
+    "OS_FS_positive": 8,
+    "native_nonce_header_path_order_load_mutations": 23,
+    "safe_DOM_mutations": 10
+  },
+  "CSRF_child": "Actual PASS after the exact form-bounded uniqueness/replacement guard, strict released normalization with zero hard findings and meaningful canonical DOM inequality. No source-baseline alias mutation.",
+  "source77_and_external18_before_after_live_bytes_modes_exact": true,
+  "clean_exact_HEAD": true,
+  "managed": {
+    "image": "sha256:2e040a5165d79be63755424f707fdb8cf609ace831ada7a9baca398ac25e12b9",
+    "source_readonly": true,
+    "network": "none",
+    "cpus": 4,
+    "memory_bytes": 6442450944,
+    "race_count1_modreadonly": true,
+    "oom_killed": false
+  },
+  "owned_cleanup": {
+    "container_id": "9cba91ec40e0d6ed89957b993082f981320605e9f2de65af004161fa1485ce18",
+    "remove_exit": 0,
+    "actual_ID_and_exact_name_absence_streams_verified": true
+  },
+  "normalizer_calls": {
+    "source_expected": 40,
+    "independent_invocation_census": null
+  },
+  "prior_failed_closure_unchanged": "c4bf4177f08b46b21a8805777fb6a3d9a834bb91f91fb5178e90bbcb22ad6c10",
+  "scope": "Actual targeted synthetic authenticated adult activity create/edit Renderer OS/FS nonce/presentation and released DOM only. No handler/DB/POST/auth/privacy/participation/map/API/browserJS/browserCSP/full/Live/device/default/adoption qualification.",
+  "reviewer_actions": "Read-only metadata/streams/source/Git checks plus this private review JSON; no runtime, repository/controller edits or correction."
+}
