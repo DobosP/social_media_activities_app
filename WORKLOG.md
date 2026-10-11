@@ -2770,3 +2770,30 @@ Parent independently reviews the source and later methodNlink1 input envelope,
 newsource/110ledger/56inventory before reservation. No new baseline/renderer parity/
 full/M0/auth/privacy/Live/device/adoption qualification. Actual raw54/37 and all
 R2–R5 failures keep their identities; all unmerged source/evidence keepers remain.
+
+
+## 2026-10-11 — accepted bounded G1 strict frozen-raw receiver proof
+
+Promoted only3 literal result/root/peer records (193558B) plus derived checkpoint
+and transfer ledger under docs/reviews/gui-original-get-walk. Tested sourcefce7
+and raw candidatea115 remain distinct from this later docs-only commit. RawR6
+54/37 proofs, original15/14, sole764 binary/d722 archive and prior proof bytes stay
+unchanged; no body, normalized-baseline, context, cookie, nonce value, transcript,
+workspace, cache or ELF copies enter Git.
+
+Actual R4 ce72be2f exited0/methodtrue: formatter0/empty,56 unique once PASS plus
+package1/273 GoJSONevents, zero fail/skip/cache/race.31HTML strict single-input
+diagnostics,6 nonHTML receipts,7 substantive body mutations and10 custody
+refusals passed. One actual wrapper log38 agrees with31+7 API calls; no process
+or browser census. All110/18/7/38/55 source/binding/policy/raw/private brackets
+and UID/Nlink1/distinct path/inode checks passed; pinned2e4CPU6GiB512/networknone
+and exact owned CID/name cleanup/noOOM passed. Parent and independent actual
+review accepted only this receiver scope.
+
+Initial d82/R1 source hold remains; receiver R2 Init-inspect refusal before start
+retains method/cleanupfalse with separate exact parent recovery. Receiver R3
+formatter refusal before Go/normalizer and exactfce7 whitespace repair remain
+separate from the new R4 PASS. Earlier raw R2–R5 failures are not rewritten.
+No new runtime in this docs transfer; no renderer parity/accepted normalized
+baseline/fullM0/auth/privacy/Live/device/default/templ/SDK adoption authority.
+Parent reviews this closed local docs commit before feature publication; no push.

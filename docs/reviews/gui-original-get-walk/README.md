@@ -41,3 +41,24 @@ No literal-original executable, Normalize/full/M0/auth/privacy/group/Live/device
 templ/adoption/default activation, real member/child data or backend approval
 follows. Parent owns feature publication. No runtime, cleanup or product change
 occurred in this proof promotion.
+
+
+## Separate strict frozen-raw receiver checkpoint
+
+The raw R6 selection and ten-transfer counts above remain their original record.
+A separate [receiver checkpoint](receiver-checkpoint.json) binds testedfce7/R4 to
+56 actions once+package/273events, formatter0 and owned cleanup. It reuses raw
+a115/manifest591c:31 strict HTML diagnostics,6 nonHTML receipts,7 mutations and10
+custody refusals passed. The actual38 wrapper API attempts are not process/browser
+census. Source110/bindings18/policy7/raw38/private55 and original15/764/d722 stayed
+unchanged. No new GET capture, renderer parity or normalized baseline was accepted.
+
+Only3 safe literal result/parent/peer records (193558B) and2 derived metadata files
+are added; [their ledger](receiver-literal-transfer.json) records exact bytes and
+private0600/public0664 modes. This five-file selection differs from the private28
+runtime rows/273409B. Raw Go/control streams stay in that sealed capsule; raw
+corpus, normalized bodies, typed contexts, cookies, nonce values, workspaces,
+caches and ELF bytes are not copied. Receiver R2 inspection/cleanup failure and
+R3 formatter refusal remain frozen, with separate parent recovery and exact
+format-only repair; no prior method is backfilled. This docs commit is not a rerun
+or full/M0/auth/privacy/Live/device/default/templ/SDK adoption approval.

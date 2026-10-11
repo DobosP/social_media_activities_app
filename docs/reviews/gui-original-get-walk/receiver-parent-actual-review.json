@@ -1,0 +1,143 @@
+{
+  "schema": 1,
+  "utc": "2026-10-11T10:27:00.528491+00:00",
+  "source": "fce7e0d4e6502a0fd0dec2c70f3ab8a26dd8ef28",
+  "state": "Parent + independent Program ACTUAL bounded receiver PASS CLEAR",
+  "observation_sha256": "9274169ee8df1a95fc7c16cb513e62f1a32db94b0d1dfff10c871ca7af0a7594",
+  "result_sha256": "5b3679ab3af9de668c83172653e369f0248da32f2fafe15ed9100619a67945f5",
+  "independent_review_sha256": "ee26abe7fff47410b542739e17c43ae6200f0f639b495624408be0308f2e7485",
+  "literal_runtime_rows_verified": 28,
+  "literal_runtime_bytes": 273409,
+  "events": 273,
+  "tests_once_pass": 56,
+  "formatter": {
+    "exit_code": 0,
+    "diff_bytes": 0,
+    "stderr_bytes": 0
+  },
+  "reported_API_attempts": 38,
+  "scope_API_count": "Wrapper API attempts; not process/browser census",
+  "HTML_receipts": 31,
+  "nonHTML_receipts": 6,
+  "mutations": 7,
+  "custody_cases": 10,
+  "original_raw_candidate": "a115deb5d706745a22d5e1049b0b938cae10cfad",
+  "before_after_inputs_exact": true,
+  "owned_cleanup": {
+    "id": "c61a78c5dd639a2686112a0b78fe9bab2ea37cfd79d41948cc42ddf653873b23",
+    "name": "social-g1-normalize-ce72be2f-5b0d-4780-b89a-b28c23473070",
+    "remove_exit": 0,
+    "id_absent": true,
+    "name_absent": true,
+    "passed": true,
+    "last_state": {
+      "id": "c61a78c5dd639a2686112a0b78fe9bab2ea37cfd79d41948cc42ddf653873b23",
+      "name": "/social-g1-normalize-ce72be2f-5b0d-4780-b89a-b28c23473070",
+      "image": "sha256:2e040a5165d79be63755424f707fdb8cf609ace831ada7a9baca398ac25e12b9",
+      "running": false,
+      "exit_code": 0,
+      "oom_killed": false,
+      "user": "1000:1000",
+      "cpus": 4000000000,
+      "memory": 6442450944,
+      "network": "none",
+      "mounts": [
+        {
+          "Destination": "/scratch/go-build",
+          "Mode": "",
+          "Propagation": "rprivate",
+          "RW": true,
+          "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/go-build",
+          "Type": "bind"
+        },
+        {
+          "Destination": "/scratch/go-mod",
+          "Mode": "",
+          "Propagation": "rprivate",
+          "RW": true,
+          "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/go-mod",
+          "Type": "bind"
+        },
+        {
+          "Destination": "/proof",
+          "Mode": "",
+          "Propagation": "rprivate",
+          "RW": true,
+          "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-normalize-9b77532-ce72be2f-5b0d-4780-b89a-b28c23473070",
+          "Type": "bind"
+        },
+        {
+          "Destination": "/bindings/social-gui-normalize",
+          "Mode": "",
+          "Propagation": "rprivate",
+          "RW": false,
+          "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/normalizer-r7-764beb1/social-gui-normalize",
+          "Type": "bind"
+        },
+        {
+          "Destination": "/bindings/web-kit-go-core-v1.6.tgz",
+          "Mode": "",
+          "Propagation": "rprivate",
+          "RW": false,
+          "Source": "/home/dobo/gates/kits/core-v1.6/web-kit-go-core-v1.6.tgz",
+          "Type": "bind"
+        },
+        {
+          "Destination": "/original",
+          "Mode": "",
+          "Propagation": "rprivate",
+          "RW": false,
+          "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717",
+          "Type": "bind"
+        },
+        {
+          "Destination": "/work",
+          "Mode": "",
+          "Propagation": "rprivate",
+          "RW": false,
+          "Source": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a",
+          "Type": "bind"
+        },
+        {
+          "Destination": "/scratch/tmp",
+          "Mode": "",
+          "Propagation": "rprivate",
+          "RW": true,
+          "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/tmp",
+          "Type": "bind"
+        },
+        {
+          "Destination": "/g1-reference",
+          "Mode": "",
+          "Propagation": "rprivate",
+          "RW": false,
+          "Source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured",
+          "Type": "bind"
+        }
+      ],
+      "pids": 512,
+      "readonly": false,
+      "privileged": false,
+      "ports": {},
+      "groups": null,
+      "tmpfs": null,
+      "cap_drop": null,
+      "security": null,
+      "init": null,
+      "working_dir": "/work/services/server",
+      "entrypoint": [
+        "/usr/local/bin/roedu-runner"
+      ],
+      "cmd": [
+        "bash",
+        "-u",
+        "-o",
+        "pipefail",
+        "-c",
+        "umask 077\n/usr/local/go/bin/gofmt -d internal/web/gui_public_get_walk_normalize_test.go > /proof/format.stdout 2> /proof/format.stderr\nformat_rc=$?\nprintf '%s\n' \"$format_rc\" > /proof/format.exit\nif [ \"$format_rc\" -ne 0 ] || [ -s /proof/format.stdout ] || [ -s /proof/format.stderr ]; then exit 1; fi\n/usr/local/go/bin/go test -mod=readonly -race -count=1 -json ./internal/web -run '^TestGUIPublicGetWalkNormalize' -gui-public-get-walk-normalize-reference /g1-reference -gui-public-golden-reference /original -gui-public-normalizer-binary /bindings/social-gui-normalize -gui-public-normalizer-sha256 598515e75c709803c7b23673e07b14baa93861608346a81c8fc708521c1b2f05 -gui-public-normalizer-archive /bindings/web-kit-go-core-v1.6.tgz > /proof/tests.stdout 2> /proof/tests.stderr\ntest_rc=$?\nprintf '%s\n' \"$test_rc\" > /proof/tests.exit\nexit \"$test_rc\"\n"
+      ]
+    }
+  },
+  "scope": "Strict frozen raw G1 receiver only; no new HTTP/PG/capture/helperbuild/baseline/renderer-parity/full/authprivacy/Live/device/default/adoption qualification",
+  "retention": "No source/workspace/deps/cache/binary/rawcorpus copies; compact28 runtime rows only"
+}

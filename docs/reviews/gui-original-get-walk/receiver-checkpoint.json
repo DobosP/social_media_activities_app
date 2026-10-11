@@ -1,0 +1,120 @@
+{
+  "schema": 1,
+  "kind": "accepted-bounded-strict-frozen-raw-G1-receiver-not-normalized-baseline",
+  "valid_until": "Owning tested source, frozen inputs, method or actual evidence changes; then historical only.",
+  "tested_receiver_source": "fce7e0d4e6502a0fd0dec2c70f3ab8a26dd8ef28",
+  "documentation_commit": "Later docs-only commit containing this record; not retested.",
+  "raw_candidate_source": "a115deb5d706745a22d5e1049b0b938cae10cfad",
+  "raw_capture_invocation": "cbd00d1a-927c-4a5c-a27c-00838941dfdd",
+  "raw_manifest_sha256": "591c6b70edc83620ead9ca5ba18ecf4c39d3171e5365276961b96b184b729fb7",
+  "receiver_invocation": "ce72be2f-5b0d-4780-b89a-b28c23473070",
+  "method_sha256": "02e1f2def870bf6dd9e49a711c9050404a09e7966ac6e441e02183aa8709c261",
+  "actual": {
+    "method_pass": true,
+    "formatter": {
+      "exit_code": 0,
+      "diff_bytes": 0,
+      "stderr_bytes": 0
+    },
+    "docker_start_exit": 0,
+    "test_command_exit": 0,
+    "named_actions_once_PASS": 56,
+    "roots": 2,
+    "subcases": 54,
+    "package_PASS": 1,
+    "Go_JSON_events": 273,
+    "failure_skip_cache_race_cancel_todo": 0,
+    "HTML_single_input_strict_diagnostics": 31,
+    "nonHTML_raw_receipts_not_normalized": 6,
+    "body_mutations": 7,
+    "custody_refusals": 10,
+    "wrapper_API_attempts": 38,
+    "API_count_scope": "Actual wrapper log;31 diagnostic plus7 mutation calls. Not process-start or browser census.",
+    "canonical_controls": "Two equivalences, three meaningful differences without unrelated hard findings, and two exact owning hard refusals all passed.",
+    "input_counts_unchanged": {
+      "source": 110,
+      "bindings": 18,
+      "policy": 7,
+      "raw_members": 38,
+      "private_UID_Nlink1_distinct_path_inode_files": 55
+    },
+    "source_ledger_sha256": "da767705ed2fa28dc84cb512e2708a0e8e64e945d6698fafce8087e883a53270",
+    "raw_ledger_sha256": "e9200c95b19c9073a51964966a3628c2c4e9f5142d4d467f8c3a2d10069a3ef8",
+    "owned_cleanup": {
+      "id": "c61a78c5dd639a2686112a0b78fe9bab2ea37cfd79d41948cc42ddf653873b23",
+      "name": "social-g1-normalize-ce72be2f-5b0d-4780-b89a-b28c23473070",
+      "remove_exit": 0,
+      "id_absent": true,
+      "name_absent": true,
+      "passed": true
+    },
+    "toolchain": "sha256:2e040a5165d79be63755424f707fdb8cf609ace831ada7a9baca398ac25e12b9",
+    "CPU": 4,
+    "memory_bytes": 6442450944,
+    "pids": 512,
+    "network": "none",
+    "actual_entrypoint": [
+      "/usr/local/bin/roedu-runner"
+    ],
+    "container_rootfs": "Writable ephemeral root; host source/raw/original/binary/archive mounts readonly.",
+    "no_OOM": true
+  },
+  "unchanged_original_inputs": {
+    "original15_cases14": "Separate frozen keeper unchanged.",
+    "sole764_binary_sha256": "598515e75c709803c7b23673e07b14baa93861608346a81c8fc708521c1b2f05",
+    "released_core16_archive_sha256": "d722a817074a01d8a983c3e8492335ee07d37fb0d58c9a938cd189df635e168d",
+    "raw_R6_proof": "Existing54/37 raw producer proof and all failed raw R2-R5 records unchanged."
+  },
+  "public_literal_records": [
+    {
+      "path": "receiver-result.json",
+      "bytes": 182180,
+      "sha256": "5b3679ab3af9de668c83172653e369f0248da32f2fafe15ed9100619a67945f5"
+    },
+    {
+      "path": "receiver-parent-actual-review.json",
+      "bytes": 5948,
+      "sha256": "4c75948b378809f875a4c3cc43a82b3f9fe151db3fd22244158bbbac0f5089c6"
+    },
+    {
+      "path": "receiver-independent-actual-review.json",
+      "bytes": 5430,
+      "sha256": "ee26abe7fff47410b542739e17c43ae6200f0f639b495624408be0308f2e7485"
+    }
+  ],
+  "private_complete_capture": {
+    "path": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-fce7-r4-normalize56-pass-compact-20261011",
+    "literal_runtime_rows": 28,
+    "literal_runtime_bytes": 273409,
+    "observation_sha256": "9274169ee8df1a95fc7c16cb513e62f1a32db94b0d1dfff10c871ca7af0a7594",
+    "closure_sha256": "fa8b076215764823ac171ddc23e8b68ee5cc6b2ffb69a7fd10636250cfb06838",
+    "checksum_sha256": "4708e1cd63f905f3fa4fb8e74c036cccb44029efe44cacd64cb27a1435fcec64",
+    "seal_sha256": "cfe5ba62277447d080c54a213c7de1664b359f4e24c5ce2174d9ade34cf27144",
+    "raw_Go_stream_bytes": 80966,
+    "raw_Go_stream_sha256": "8deaa511a8380c24c0501812b020f550b8f08353e3c63ad106258f7ef6c5f80c",
+    "selection_scope": "Public3 literal records plus2 derived metadata files differ from complete private28 runtime records. No raw corpus, normalized bytes, workspaces, caches or ELF copies."
+  },
+  "history": [
+    {
+      "stage": "initial d82 source and unfinished private R1",
+      "outcome": "Held before runtime for equal-body hardlink custody; separate9b portable inode guard added one control. R1 stays unaccepted/source-only."
+    },
+    {
+      "stage": "receiver R2 at9b",
+      "outcome": "Create succeeded; absent optional HostConfig.Init made initial/recovery inspect exit1. Methodfalse/cleanupfalse retained; parent separately removed the exact created-not-started TC. No formatter/Go/normalizer ran.",
+      "observation_sha256": "17e83daf2b11c02168da8b24a4f4237055cca44a33db2a114dc35ddae597cb43",
+      "independent_review_sha256": "634d4d74402034176abd562fabdd443c844ccf862675766757b7b2f91e03d78f"
+    },
+    {
+      "stage": "receiver R3 at9b",
+      "outcome": "Safe optional Init projection admitted the actual container; captured2487B native formatter diff refused before Go/normalizer. Exact formatter-only source successor is fce7.",
+      "independent_review_sha256": "8aacfb870f3ccc448df7ca45a87e80b732b84b96897ecbf3caae0db236bad5d4",
+      "native_formatter_diff_sha256": "e862220e4189926a096f766cc2d4609a9cc1b169e488d5b195a3d86538f5a162"
+    },
+    {
+      "stage": "receiver R4 atfce7",
+      "outcome": "New actual formatter/56-action/diagnostic/input/owned-cleanup PASS; no prior failed receipt relabeled."
+    }
+  ],
+  "qualification": "Finite opt-in strict single-input frozen-raw receiver only. No new PG/HTTP/capture/helper build/install; no renderer parity, accepted normalized baseline, exhaustive M0/template-arm/full, auth/privacy/Live/device/default/templ/SDK adoption authority."
+}

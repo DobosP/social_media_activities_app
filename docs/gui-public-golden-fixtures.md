@@ -872,6 +872,10 @@ Parent owns feature publication; all previous source/proof/baseline keepers rema
 
 ## G1 opt-in strict normalization receiver — SOURCE ONLY
 
+Historical source checkpoint before receiver execution. The NOT RUN statements
+below describe that checkpoint and its custody successor; accepted execution is
+recorded in the separate section at the end.
+
 From published0cc81, authored only the new Go test receiver and1022B metadata
 pins for the accepted R6 raw input. The fixed manifest591c/body bindings identify
 tested raw sourcea115/cbd00d1a; they contain no expected canonical output. Existing
@@ -927,3 +931,35 @@ inputs, catching outside-corpus aliases before runtime. No method is approved or
 executed by this source change. Formatter/compiler/56tests/normalizer remain NOT
 RUN; all earlier source/actual raw54/37/failure/SDK/original15 identities and wider
 Normalize-baseline/renderer parity/full/M0/privacy/Live/device/adoption holds remain.
+
+
+## G1 accepted finite strict frozen-raw receiver execution
+
+At tested `fce7e0d4e6502a0fd0dec2c70f3ab8a26dd8ef28`, R4 invocation
+`ce72be2f-5b0d-4780-b89a-b28c23473070` exited0/method_pass=true. Formatter output
+was empty;56 unique actions passed once plus package1/273 Go JSON events, with
+zero failures/skips/cache/race. These are2roots,37 receipt children,7 actual-body
+mutations and10 custody refusals. See the derived
+[receiver checkpoint](reviews/gui-original-get-walk/receiver-checkpoint.json) and
+its three literal result/parent/peer records.
+
+The receiver reads accepted raw sourcea115/manifest591c without rerunning its GET
+producer. Thirty-one HTML single-input diagnostics passed strict Normalize with
+hard0;2anonymous302+4native404 receipts were not HTML-normalized. Two canonical
+equivalences,3 meaningful differences and2 owning hard refusals passed. The actual
+wrapper log reports38 API attempts (31+7); this is not process/browser census.
+No canonical body corpus or expected normalized baseline was created.
+
+All110source/18binding/7policy/38raw/55private file brackets, UID/Nlink1/distinct
+paths/inodes and original15/764/d722 bindings remained exact. Actual pinned2e
+4CPU/6GiB/512pids/networknone/readonly-host-inputs and full owned CID/name removal
+passed with no OOM. The container root was writable ephemeral storage.
+
+Initial d82/R1 stayed unaccepted source. Receiver R2 stopped before start when
+optional Init inspection failed, retained method/cleanupfalse, and required
+separate exact parent recovery. Receiver R3 refused the captured2487B formatter
+diff before Go/normalizer; fce7 is its exact whitespace-only repair. R4 is a new
+actual result; no failed receipt was relabeled. Earlier raw R2–R5 records also
+remain unchanged. Later docsHEAD was not retested. This closes only the finite
+opt-in receiver section, with no renderer parity/accepted normalized baseline/
+fullM0/auth/privacy/Live/device/default/templ/SDK adoption authority.
