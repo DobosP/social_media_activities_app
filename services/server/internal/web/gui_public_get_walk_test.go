@@ -449,10 +449,12 @@ func TestGUIPublicGetWalk(t *testing.T) {
 		if !unchanged || guiPublicGetBindProducers(root, source) != nil {
 			t.Error("source/producers changed during G1 capture")
 		}
+		referenceUnchanged := false
 		if reference != nil {
 			checkpoint, readErr := os.ReadFile(filepath.Join(root, "docs/reviews/gui-public-original/checkpoint.json"))
 			next, refErr := guiPublicReadReference(*guiPublicGoldenReference, checkpoint)
-			if readErr != nil || refErr != nil || !reflect.DeepEqual(reference, next) {
+			referenceUnchanged = readErr == nil && refErr == nil && reflect.DeepEqual(reference, next)
+			if !referenceUnchanged {
 				t.Error("original15 corpus changed")
 			}
 		}
@@ -460,7 +462,7 @@ func TestGUIPublicGetWalk(t *testing.T) {
 		if t.Failed() || len(records) != len(cases) {
 			status = "fail"
 		}
-		manifest := map[string]any{"schema": 1, "kind": "historical-native-G1-registered-GET-walk", "status": status, "historical_producer": guiPublicGetHistory, "source_inputs_sha256": guiPublicGetSourceSHA, "case_registry_sha256": guiPublicGetCasesSHA, "cases": records, "expected_cases": len(cases), "inputs_before": before, "inputs_after": after, "inputs_unchanged": unchanged, "original15_reference_verified": reference != nil, "normalization": "NOT RUN; raw M0 source-native oracle capture is not strict golden/Live acceptance", "scope": "Synthetic anonymous public/SEO GET only; series are real login redirects; no owner-signed group/template-conditional coverage, original14 rewrite, current nonce-tree provenance, auth/privacy/provider/browser/clinical/device/full/retirement/adoption claim"}
+		manifest := map[string]any{"schema": 1, "kind": "historical-native-G1-registered-GET-walk", "status": status, "historical_producer": guiPublicGetHistory, "source_inputs_sha256": guiPublicGetSourceSHA, "case_registry_sha256": guiPublicGetCasesSHA, "cases": records, "expected_cases": len(cases), "inputs_before": before, "inputs_after": after, "inputs_unchanged": unchanged, "original15_reference_verified": reference != nil && referenceUnchanged, "normalization": "NOT RUN; raw M0 source-native oracle capture is not strict golden/Live acceptance", "scope": "Synthetic anonymous public/SEO GET only; series are real login redirects; no owner-signed group/template-conditional coverage, original14 rewrite, current nonce-tree provenance, auth/privacy/provider/browser/clinical/device/full/retirement/adoption claim"}
 		raw, marshalErr := json.MarshalIndent(manifest, "", "  ")
 		if marshalErr != nil || guiPublicWrite(output, "manifest.json", append(raw, '\n')) != nil {
 			t.Error("G1 capture manifest could not be retained")
