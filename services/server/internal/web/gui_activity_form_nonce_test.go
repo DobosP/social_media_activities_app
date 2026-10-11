@@ -458,14 +458,29 @@ func TestGUIActivityFormNonceRejectsDOMMutations(t *testing.T) {
 				body, expectedDOM = edit, editDOM
 			}
 			count := bytes.Count(body, []byte(mutation.from))
-			// The CSRF token exists in both content and the unchanged base logout
-			// form. Select the content form so the mutation targets this family.
+			// Bound the target to the unique activity form. Unchanged base forms
+			// outside this segment must neither satisfy nor fail its uniqueness.
 			if mutation.name == "csrf-field-name" {
-				start := bytes.Index(body, []byte(`<form method="post" class="stack activity-wizard"`))
-				if start < 0 || bytes.Count(body[start:], []byte(mutation.from)) != 1 {
+				startTag := []byte(`<form method="post" class="stack activity-wizard" data-wizard>`)
+				if bytes.Count(body, startTag) != 1 {
+					t.Fatal("exact unique activity form required")
+				}
+				start := bytes.Index(body, startTag)
+				closing := bytes.Index(body[start:], []byte("</form>"))
+				if closing < 0 {
+					t.Fatal("exact activity form end required")
+				}
+				end := start + closing + len("</form>")
+				segment := body[start:end]
+				if bytes.Count(segment, []byte(mutation.from)) != 1 {
 					t.Fatal("exact activity CSRF mutation target required")
 				}
-				body = append(append([]byte(nil), body[:start]...), bytes.Replace(body[start:], []byte(mutation.from), []byte(mutation.to), 1)...)
+				changedSegment := bytes.Replace(segment, []byte(mutation.from), []byte(mutation.to), 1)
+				changed := make([]byte, 0, len(body)-len(segment)+len(changedSegment))
+				changed = append(changed, body[:start]...)
+				changed = append(changed, changedSegment...)
+				changed = append(changed, body[end:]...)
+				body = changed
 			} else {
 				if count != 1 {
 					t.Fatal("exact unique activity DOM mutation target required")
