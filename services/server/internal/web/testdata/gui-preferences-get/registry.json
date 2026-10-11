@@ -1,0 +1,880 @@
+{
+  "Schema": 1,
+  "Scope": "current-native-registered-preference-GET-transport-only",
+  "Cases": [
+    {
+      "ID": "display-anonymous-default",
+      "Route": "display_preferences",
+      "Path": "/display/",
+      "Template": "web/display_preferences.html",
+      "State": "default",
+      "Language": "en",
+      "Profile": "anonymous",
+      "Status": 200,
+      "Contains": [],
+      "Filtered": false,
+      "json_ld": false,
+      "Location": ""
+    },
+    {
+      "ID": "display-adult-contrast",
+      "Route": "display_preferences",
+      "Path": "/display/",
+      "Template": "web/display_preferences.html",
+      "State": "contrast",
+      "Language": "en",
+      "Profile": "adult",
+      "Status": 200,
+      "Contains": [],
+      "Filtered": false,
+      "json_ld": false,
+      "Location": ""
+    },
+    {
+      "ID": "access-adult-none",
+      "Route": "access_preferences",
+      "Path": "/access/",
+      "Template": "web/access_preferences.html",
+      "State": "none",
+      "Language": "en",
+      "Profile": "adult",
+      "Status": 200,
+      "Contains": [],
+      "Filtered": false,
+      "json_ld": false,
+      "Location": ""
+    },
+    {
+      "ID": "access-adult-all",
+      "Route": "access_preferences",
+      "Path": "/access/",
+      "Template": "web/access_preferences.html",
+      "State": "all",
+      "Language": "en",
+      "Profile": "adult",
+      "Status": 200,
+      "Contains": [],
+      "Filtered": false,
+      "json_ld": false,
+      "Location": ""
+    },
+    {
+      "ID": "access-adult-mixed",
+      "Route": "access_preferences",
+      "Path": "/access/",
+      "Template": "web/access_preferences.html",
+      "State": "mixed",
+      "Language": "en",
+      "Profile": "adult",
+      "Status": 200,
+      "Contains": [],
+      "Filtered": false,
+      "json_ld": false,
+      "Location": ""
+    },
+    {
+      "ID": "access-anonymous",
+      "Route": "access_preferences",
+      "Path": "/access/",
+      "Template": "",
+      "State": "none",
+      "Language": "en",
+      "Profile": "anonymous",
+      "Status": 302,
+      "Contains": [],
+      "Filtered": false,
+      "json_ld": false,
+      "Location": "/login/?next=%2Faccess%2F"
+    },
+    {
+      "ID": "notifications-adult-none",
+      "Route": "notification_preferences",
+      "Path": "/notifications/preferences/",
+      "Template": "web/notification_preferences.html",
+      "State": "none",
+      "Language": "en",
+      "Profile": "adult",
+      "Status": 200,
+      "Contains": [],
+      "Filtered": false,
+      "json_ld": false,
+      "Location": ""
+    },
+    {
+      "ID": "notifications-adult-mixed",
+      "Route": "notification_preferences",
+      "Path": "/notifications/preferences/",
+      "Template": "web/notification_preferences.html",
+      "State": "mixed",
+      "Language": "en",
+      "Profile": "adult",
+      "Status": 200,
+      "Contains": [],
+      "Filtered": false,
+      "json_ld": false,
+      "Location": ""
+    },
+    {
+      "ID": "notifications-adult-arrival",
+      "Route": "notification_preferences",
+      "Path": "/notifications/preferences/",
+      "Template": "web/notification_preferences.html",
+      "State": "arrival",
+      "Language": "en",
+      "Profile": "adult",
+      "Status": 200,
+      "Contains": [],
+      "Filtered": false,
+      "json_ld": false,
+      "Location": ""
+    },
+    {
+      "ID": "notifications-anonymous",
+      "Route": "notification_preferences",
+      "Path": "/notifications/preferences/",
+      "Template": "",
+      "State": "none",
+      "Language": "en",
+      "Profile": "anonymous",
+      "Status": 302,
+      "Contains": [],
+      "Filtered": false,
+      "json_ld": false,
+      "Location": "/login/?next=%2Fnotifications%2Fpreferences%2F"
+    },
+    {
+      "ID": "topics-adult-none",
+      "Route": "topic_preferences",
+      "Path": "/topics/",
+      "Template": "web/topic_preferences.html",
+      "State": "none",
+      "Language": "en",
+      "Profile": "adult",
+      "Status": 200,
+      "Contains": [],
+      "Filtered": false,
+      "json_ld": false,
+      "Location": ""
+    },
+    {
+      "ID": "topics-adult-selected",
+      "Route": "topic_preferences",
+      "Path": "/topics/",
+      "Template": "web/topic_preferences.html",
+      "State": "selected",
+      "Language": "en",
+      "Profile": "adult",
+      "Status": 200,
+      "Contains": [],
+      "Filtered": false,
+      "json_ld": false,
+      "Location": ""
+    },
+    {
+      "ID": "topics-anonymous",
+      "Route": "topic_preferences",
+      "Path": "/topics/",
+      "Template": "",
+      "State": "none",
+      "Language": "en",
+      "Profile": "anonymous",
+      "Status": 302,
+      "Contains": [],
+      "Filtered": false,
+      "json_ld": false,
+      "Location": "/login/?next=%2Ftopics%2F"
+    }
+  ],
+  "Sources": {
+    "AGENTS.md": {
+      "bytes": 6610,
+      "sha256": "4e9ba34a8af4b97527f85e01ecb51628b8b4d5c3d5f24baa5a412b332e1f8f04",
+      "full_mode": 33204
+    },
+    "apps/web/templates/web/_activity_card.html": {
+      "bytes": 2147,
+      "sha256": "bcea7db152f52d99ec1be70bb99cc831985197358f1ec359c44929a1f6cd5bd9",
+      "full_mode": 33204
+    },
+    "apps/web/templates/web/_activity_form_wizard.html": {
+      "bytes": 1813,
+      "sha256": "483dd8446caee278e784b010a656c69ec4f1600f469aff67cadc218975f0d5b8",
+      "full_mode": 33204
+    },
+    "apps/web/templates/web/_near_me.html": {
+      "bytes": 963,
+      "sha256": "5d0d51928ecda90b79843c3358514820f559ae7f3cf580f53c24d202259aef41",
+      "full_mode": 33204
+    },
+    "apps/web/templates/web/_share_box.html": {
+      "bytes": 1545,
+      "sha256": "692af1bdd0650dc1878dddf87f3126f1055536808fadadb670a40109b0bafb6e",
+      "full_mode": 33204
+    },
+    "apps/web/templates/web/_you_tabs.html": {
+      "bytes": 1421,
+      "sha256": "05802298d9ce584395386b6177a1a1c2b9a37f770a17a4ec61bdc8188283d20c",
+      "full_mode": 33204
+    },
+    "apps/web/templates/web/access_preferences.html": {
+      "bytes": 1632,
+      "sha256": "574629e69610684e9dbfa21cad1e7bae71137747670cd8ea2cddc1e023832e7d",
+      "full_mode": 33204
+    },
+    "apps/web/templates/web/activities.html": {
+      "bytes": 5229,
+      "sha256": "b45a21a056a03867cd363c6aaacb9841c01ea3fc85bb785788c0279ee0445631",
+      "full_mode": 33204
+    },
+    "apps/web/templates/web/activity_edit.html": {
+      "bytes": 2224,
+      "sha256": "81bbf41329add0a9b37842e2b1743ac1c4219b625f2672839f35c1273e56f764",
+      "full_mode": 33204
+    },
+    "apps/web/templates/web/activity_form.html": {
+      "bytes": 2342,
+      "sha256": "460ce245427a4bdf7a258c7aac35916a19f3dc42f4e71d651f351d455620e672",
+      "full_mode": 33204
+    },
+    "apps/web/templates/web/campaigns.html": {
+      "bytes": 3246,
+      "sha256": "1854336b78dc5703000eb6b2021131ba7c4227fab03ff2ea46c6c8b7ef608a16",
+      "full_mode": 33204
+    },
+    "apps/web/templates/web/communities.html": {
+      "bytes": 3328,
+      "sha256": "e57c0c3d9384dcf9baf497d92c933b883447ac9f0039dcc968870882476731c4",
+      "full_mode": 33204
+    },
+    "apps/web/templates/web/communities_graph.html": {
+      "bytes": 1733,
+      "sha256": "1bce8a688fbea5ce738ad19b01a7e0c282b8d084da78f32c5575271be28ce770",
+      "full_mode": 33204
+    },
+    "apps/web/templates/web/discover.html": {
+      "bytes": 1323,
+      "sha256": "19f70d3d5b68717778570184f167722a83373c8280a4e049f74e5880e0966a04",
+      "full_mode": 33204
+    },
+    "apps/web/templates/web/display_preferences.html": {
+      "bytes": 2600,
+      "sha256": "4ee3e9caf6204592ae1f02b9c5dbb37158ca9afff96366131f84b9e4ba9ed182",
+      "full_mode": 33204
+    },
+    "apps/web/templates/web/donate.html": {
+      "bytes": 1328,
+      "sha256": "ed79567f5c044a56d0f385eeae59f1c5b00b45610d86896be2060ea634e15d6f",
+      "full_mode": 33204
+    },
+    "apps/web/templates/web/event_detail.html": {
+      "bytes": 4880,
+      "sha256": "c2610dd26f45fb921c6e3908ab9f228668c8e462df8d3f120abde34837239e51",
+      "full_mode": 33204
+    },
+    "apps/web/templates/web/events.html": {
+      "bytes": 2950,
+      "sha256": "47364476d705664b7bba8ab22651685d3da8d563f5d9ab3ebff2090763645702",
+      "full_mode": 33204
+    },
+    "apps/web/templates/web/home.html": {
+      "bytes": 5439,
+      "sha256": "f1ec40eff38cbdc0c396ede308c73362c15d7132ee71203c88a25ec48d70db0c",
+      "full_mode": 33204
+    },
+    "apps/web/templates/web/landing.html": {
+      "bytes": 1875,
+      "sha256": "8fd980d985011f42c519281fd165bb22696175a66d5104a5cd3367e18a9ef4df",
+      "full_mode": 33204
+    },
+    "apps/web/templates/web/landing_city.html": {
+      "bytes": 950,
+      "sha256": "13a2de227dce427b8263fc56496bdba990cb099b508063a8b63119b4f06b8f64",
+      "full_mode": 33204
+    },
+    "apps/web/templates/web/landing_detail.html": {
+      "bytes": 2363,
+      "sha256": "e732e315afb7b1aa91b90b4c413db1fb8b7cb41762b3d02b6fe37b946b2b2e6d",
+      "full_mode": 33204
+    },
+    "apps/web/templates/web/landing_index.html": {
+      "bytes": 922,
+      "sha256": "35dd1c8e55ea04ba5ba63644316c07e078d0344cd52f3b960506da3f3d9d2d5a",
+      "full_mode": 33204
+    },
+    "apps/web/templates/web/my_meetups.html": {
+      "bytes": 2409,
+      "sha256": "a88cad49c802522c823aeea2d44d2ce4521b83399e71434b66c19b0cc06f2ff0",
+      "full_mode": 33204
+    },
+    "apps/web/templates/web/notification_preferences.html": {
+      "bytes": 1284,
+      "sha256": "0925080977ad3173a7afca58fc8605fd7ea21862a58aa2ab619e3e582337aeb3",
+      "full_mode": 33204
+    },
+    "apps/web/templates/web/open_data.html": {
+      "bytes": 5306,
+      "sha256": "ae75cc9b3dc9f9dabbcd4ce62de63bc25ad538051a33a96b01c77691e938100d",
+      "full_mode": 33204
+    },
+    "apps/web/templates/web/partners.html": {
+      "bytes": 1184,
+      "sha256": "f18c2292eb37006772067a3825c317b8c043711271483f95a66ca9bffc127600",
+      "full_mode": 33204
+    },
+    "apps/web/templates/web/place_detail.html": {
+      "bytes": 17872,
+      "sha256": "8fca89fd4294dea0b01ee45a7407a14ad35468c1c6be544c727e07c6c5ca3d60",
+      "full_mode": 33204
+    },
+    "apps/web/templates/web/places.html": {
+      "bytes": 2855,
+      "sha256": "1ddadcc95a63c0e9912f4fad30ab8e2d4bd266e55f03c8e5ab00fafcf8abbc2e",
+      "full_mode": 33204
+    },
+    "apps/web/templates/web/places_list.html": {
+      "bytes": 3071,
+      "sha256": "cd5e1a614f086572a4d807be617a2059c2e1fae7d8200c352ba669d9ca4676ca",
+      "full_mode": 33204
+    },
+    "apps/web/templates/web/privacy.html": {
+      "bytes": 5691,
+      "sha256": "6538ae63b9870de290b1725c8528eb400bc4c0888ac39c509fac32158dc89e79",
+      "full_mode": 33204
+    },
+    "apps/web/templates/web/series_detail.html": {
+      "bytes": 3090,
+      "sha256": "58b3a0f87c7a79a9754cefa2d03bc02bc0d14b207c20a534764c3de64a2b9a0d",
+      "full_mode": 33204
+    },
+    "apps/web/templates/web/series_list.html": {
+      "bytes": 1149,
+      "sha256": "d7a52e5365aa9947bd6ee9e7045ef2dc45a7c5a398562fcc57c1271939fb5bab",
+      "full_mode": 33204
+    },
+    "apps/web/templates/web/terms.html": {
+      "bytes": 3876,
+      "sha256": "848ebae7fa912b5adeb4381cc437e4383686920a19124c5cc83b68ee929854d9",
+      "full_mode": 33204
+    },
+    "apps/web/templates/web/topic_preferences.html": {
+      "bytes": 1516,
+      "sha256": "4e81286b26aaf2ca93f552b50851b625461162843ac15a195daa33994ad16942",
+      "full_mode": 33204
+    },
+    "docs/reviews/gui-public-original/checkpoint.json": {
+      "bytes": 11798,
+      "sha256": "3fa46e9a1fcb3ab8aa4baefa80c54a8d050b59527402db18cb20e24bbc104f1c",
+      "full_mode": 33204
+    },
+    "docs/reviews/gui-public-original/nonce-checkpoint.json": {
+      "bytes": 49417,
+      "sha256": "b0a66c886ef77ddc68ce9d69c0420a937d46f36345934ce8ac3aadba78487ace",
+      "full_mode": 33204
+    },
+    "docs/reviews/gui-public-original/static-fs-checkpoint.json": {
+      "bytes": 18178,
+      "sha256": "823f04494580a62d86500d10cc74c05fa022fbfc8bbcb06bdec1ef3ba143dbbf",
+      "full_mode": 33152
+    },
+    "frontend/package-lock.json": {
+      "bytes": 78329,
+      "sha256": "c6cd94641bd86097cd2232e672cda983e388182abd3922a9edb316649f26a53c",
+      "full_mode": 33204
+    },
+    "frontend/package.json": {
+      "bytes": 757,
+      "sha256": "d9db2ac078e37992f192f6d57103325891659b352cb09917a026e713301846b0",
+      "full_mode": 33204
+    },
+    "locale/ro/LC_MESSAGES/django.po": {
+      "bytes": 113861,
+      "sha256": "186558af2dbb8016c313d09bd0b8508bd5365d61961bcabb3a681c66b99b154c",
+      "full_mode": 33204
+    },
+    "services/server/go.mod": {
+      "bytes": 1335,
+      "sha256": "1e0c2e6d9cda30507b6a5dde1d33f795737e609b47124983bbf9786844cabb46",
+      "full_mode": 33204
+    },
+    "services/server/go.sum": {
+      "bytes": 7767,
+      "sha256": "83cc84cde408f45973444ecee13f40df4abac1c1272c259f463f18703cb6b012",
+      "full_mode": 33204
+    },
+    "services/server/internal/accounts/avatar.go": {
+      "bytes": 5527,
+      "sha256": "6fb322e55072e5efa402d9f256b1766279f4ae41827f51dae5e753917925fb03",
+      "full_mode": 33204
+    },
+    "services/server/internal/accounts/http.go": {
+      "bytes": 3640,
+      "sha256": "3928fb12423f314197e65b3e6bb84fbb1e2bbb71c945f5ca03b8b92170df2954",
+      "full_mode": 33204
+    },
+    "services/server/internal/accounts/service.go": {
+      "bytes": 11593,
+      "sha256": "b14ce2cf8663d3f88808ec0be362dc42660c70e5a0bb2370260aae716c2f03b2",
+      "full_mode": 33204
+    },
+    "services/server/internal/accounts/settings.go": {
+      "bytes": 3655,
+      "sha256": "7652857e3e52800c2143be80d296d0fd0f50f9a3eaf71779277ecf4926d63db0",
+      "full_mode": 33204
+    },
+    "services/server/internal/app/app.go": {
+      "bytes": 22947,
+      "sha256": "bafbe950fe966cff748edd59c6961ba1c1cd023b2857a4117d8a1b03bd2b3cec",
+      "full_mode": 33204
+    },
+    "services/server/internal/avatars/render.go": {
+      "bytes": 13518,
+      "sha256": "161c0ceefa0e0b23a772e99b7cf10619d0ceff11032b56c3e56eeb18c1da1a6d",
+      "full_mode": 33204
+    },
+    "services/server/internal/catalog/seed.go": {
+      "bytes": 4149,
+      "sha256": "4fb31fd1ee4dc18a374c40781aa3813cc0fa2a9b0905e6b471ded66dd309fc3d",
+      "full_mode": 33204
+    },
+    "services/server/internal/catalog/testdata/reference_seed.json": {
+      "bytes": 23600,
+      "sha256": "35e59b632ae4b71b0aa9d33332ffd80f53abf581ad7e65f0556e24d481cc548d",
+      "full_mode": 33204
+    },
+    "services/server/internal/donations/ledger.go": {
+      "bytes": 7697,
+      "sha256": "32bf3d5bae9cfdb0bf4b2cc152122877de49e68783b64571adb62adcf7e3d8ad",
+      "full_mode": 33204
+    },
+    "services/server/internal/platform/platform.go": {
+      "bytes": 4968,
+      "sha256": "15a341cbbabef4b9333c5a84d3b53a121e67c5c8ac3cb05bdbfd846fb0ac77e1",
+      "full_mode": 33204
+    },
+    "services/server/internal/recommendations/service.go": {
+      "bytes": 15613,
+      "sha256": "7046cb847225e7a374c18e531f18a9eb9b57b454679ecc9ac09bf210e58f2bc9",
+      "full_mode": 33204
+    },
+    "services/server/internal/social/activities.go": {
+      "bytes": 24972,
+      "sha256": "b218038a3bd103d0d9dfa8da9657c9aae57e2abb633c331c899cd36b3f22c45b",
+      "full_mode": 33204
+    },
+    "services/server/internal/social/groups.go": {
+      "bytes": 12025,
+      "sha256": "dc5d3d49be00f1a349259df14271e909e5fea284f500a1cf654cadc085ef3438",
+      "full_mode": 33204
+    },
+    "services/server/internal/social/service.go": {
+      "bytes": 17233,
+      "sha256": "480e418295c91cb01738144496d0329b957144fc92f54b1241f9d7e0794bb03b",
+      "full_mode": 33204
+    },
+    "services/server/internal/testdb/testdb.go": {
+      "bytes": 5761,
+      "sha256": "265401ada8cf105f3f270bb5588ddb667a2444441065b16d1ded0b42f843d86a",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/account_actions.go": {
+      "bytes": 9827,
+      "sha256": "fc4c1d764985fee8adcc620fbca6e3bfd67338c6612502c075eb61fafc18497c",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/account_pages.go": {
+      "bytes": 27247,
+      "sha256": "35859b5eedf18dbac83ebabf1c9dc91549e34112e4e00009cc96a7c256e72162",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/assets/meetups-worker.js": {
+      "bytes": 2266,
+      "sha256": "a6d20d592b64b4dcdc3816a1bbc5e21c727bfb665900bf3f5aca30669e80bbd9",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/assets/meetups-worker.test.mjs": {
+      "bytes": 4448,
+      "sha256": "d291961ef40f20bd16e68c88fa5b776666e170256974c443fd8611cce85c31cc",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/forms.go": {
+      "bytes": 7324,
+      "sha256": "6a41190d4f81107c32b7f0f651f59dfc6d1adc298b66eea3861105579360d3cb",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/forms.json": {
+      "bytes": 15482,
+      "sha256": "7c9b36080ff671c98e1bbf32a63f91e641f678a2276e2e585952dace371ce125",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/gui_activity_browse_nonce_test.go": {
+      "bytes": 19971,
+      "sha256": "1c21f63a61bca3b4778ce5f673ea4397ae8d74d8441d4b818fb529a4fa97dff5",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/gui_activity_form_nonce_test.go": {
+      "bytes": 22020,
+      "sha256": "39c3c1d3cc6e62ea55926ad44f77cfe3cea31a1ca279702c2b41b78921bbbd17",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/gui_my_meetups_nonce_test.go": {
+      "bytes": 15903,
+      "sha256": "d56a397e8be7ed7d3fae9b886793199d95d73ecd41878c09d51c4e0eef8142e6",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/gui_preferences_layout_test.go": {
+      "bytes": 23168,
+      "sha256": "ec3e45b912cee2ae4f0c0bbbfc2ded632e6a806403b7843b0086ffe66553a1f4",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/gui_public_campaign_meter_test.go": {
+      "bytes": 23964,
+      "sha256": "1180aaf31598a6a539c5db60ae8a44ac1868ff8e370df85311378845104d2cac",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/gui_public_community_pagination_test.go": {
+      "bytes": 10039,
+      "sha256": "77f753e282bcd8f4b96d00125d5b88ffa883f521641119d7482aaaa3f316a5c5",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/gui_public_community_style_test.go": {
+      "bytes": 11000,
+      "sha256": "3f23e85f624c0d5b98fac0a21c4bca124841c57802c252855cfdf36517e9fc5d",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/gui_public_current_get_transport_test.go": {
+      "bytes": 20373,
+      "sha256": "ac52a67afc4b446f4b11ae9c2ee1e3d5608b661f5760e67df071c0fc2c831a84",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/gui_public_get_walk_normalize_test.go": {
+      "bytes": 26128,
+      "sha256": "711426ea8443c65ff7b49c45440a4cbaadfd48ed099175c3f602128c00b6368a",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/gui_public_get_walk_test.go": {
+      "bytes": 28354,
+      "sha256": "1d14a380e262ee507e2e023d7de8e9f7868c9a862f41c448fe5b97800033e3d5",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/gui_public_golden_test.go": {
+      "bytes": 14274,
+      "sha256": "430775c2330e07b671897b372caf41844f1c5786ef60e741fb85252df32f1ad9",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/gui_public_graph_nonce_test.go": {
+      "bytes": 7915,
+      "sha256": "3416d6d16030b5ab5f853caf37fd3f67779bc793c1d0860d9289b79b14cb53c5",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/gui_public_nonce_test.go": {
+      "bytes": 10666,
+      "sha256": "3200f4557be726042234ca36314ed5d419ceb2f8e117abd8df775697940cce72",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/gui_public_normalize_test.go": {
+      "bytes": 8477,
+      "sha256": "b537803d403a11f258bb86e2754985f02da1fac49627cf1e4bf7e8de5e42f56a",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/gui_public_places_nonce_test.go": {
+      "bytes": 18462,
+      "sha256": "775dc84bd94ef52cc07025e283339ddb440e879f737daf2da31af77b310fe169",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/gui_public_static_fs_test.go": {
+      "bytes": 15064,
+      "sha256": "3e7df1f699ea1902be0403ec5899d12c8445ba65657a9f2a767c5807c3819262",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/gui_public_trace_test.go": {
+      "bytes": 9724,
+      "sha256": "c65313d9b2dfd41bf10683132b88460355d321557dab9c1fe8765e32915ca5a3",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/i18n.go": {
+      "bytes": 4187,
+      "sha256": "b6a6febb5c6795177ccb6f3d52659f7e00ee7c4fbf1aa2104d794e5fdd2c811c",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/methods.go": {
+      "bytes": 395,
+      "sha256": "e7c07930ad55a36c13fefdb2ef33a86d66f21f24506271baa7a6694fc9ec286f",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/methods.json": {
+      "bytes": 5966,
+      "sha256": "802581c7288706661fa6fcba9af0779109098f9a1e2f5633e0373e3ada83db1d",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/payments.go": {
+      "bytes": 5748,
+      "sha256": "b8beefd346b5a91ba0281a7c73beec806567cb51ceda49834fb7a9b124a044ff",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/payments_test.go": {
+      "bytes": 4359,
+      "sha256": "469aa8f436c80a5e7daa26a6dd4a3a10c972479716c1e2f6c3742a34363e21ef",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/post_notice.go": {
+      "bytes": 3906,
+      "sha256": "a624adeeaa227f93b8ede36f0397fe15983778cf61331cc8ea4c899b74b9699c",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/public_details.go": {
+      "bytes": 14963,
+      "sha256": "8bc13dfcc549bdfe97e0dd3cb76b5237b26abcd9ac141f3036666880e97ab8a2",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/public_downloads.go": {
+      "bytes": 13032,
+      "sha256": "e19db748f4390bd0595083bc8e49a2da4f35031a961e52fdb607482bd926d4fd",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/public_landings.go": {
+      "bytes": 3787,
+      "sha256": "e5f17284d738a8722117c6ff14cea7f9adc57c76738bb73f9a60fcbd17203bce",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/public_pages.go": {
+      "bytes": 17440,
+      "sha256": "6dfb36642cde63c253899ff8e76a1555a8bfb33cd068ef1dcca5861fdc82a2b4",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/public_pages_test.go": {
+      "bytes": 9090,
+      "sha256": "aaa9a460656072e26346cd75949446f33f28dc0f1de5e24387867a3b11442292",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/public_routes.json": {
+      "bytes": 47682,
+      "sha256": "961c7d1d0ab265f0f3d8fd84074172d62f72122dd6a1dd13a7b219315d1d5d06",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/public_structured.go": {
+      "bytes": 7260,
+      "sha256": "2a0d2154f0f5f6904add9b01ac3135a09da560bb0134649a4f51c6d50a3241be",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/renderer.go": {
+      "bytes": 5510,
+      "sha256": "94f11a3f1849c919ba100c4ba68236263f71f07741006c1992dadc4020723e68",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/renderer_fs.go": {
+      "bytes": 3382,
+      "sha256": "fe484effba370a376d835722e718719289eb2c8fea81d6bde99182276b162673",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/renderer_fs_test.go": {
+      "bytes": 11279,
+      "sha256": "74d9a05ee399a11d60f1628969882ed1210ee454c62aeb95f14b3ac659adbc81",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/router.go": {
+      "bytes": 2443,
+      "sha256": "b1cc3430d5148011cd827ab9fcd437cdf14a60c72dc5d980693e50bf9b8c0cca",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/routes.json": {
+      "bytes": 7167,
+      "sha256": "d10de3908d9537bbdeb2f51427bcb1ecdffc57e9d5a5066cc3166c9fbb559fc3",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/server.go": {
+      "bytes": 10960,
+      "sha256": "0c4208333d354d2256f275459a420ac5f2ff936abfab6c13cc4b8b6ca4fdcc09",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/social_discovery.go": {
+      "bytes": 14239,
+      "sha256": "596d5678603e71d3ebbd419d549dd9b0238d76f22896679ced1e2f5f1955bfec",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/social_forms.go": {
+      "bytes": 17265,
+      "sha256": "a188251caa27d7924025d6e8aa24643aea2925210d93a4580b3b55bee7d1bd43",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/social_pages.go": {
+      "bytes": 33451,
+      "sha256": "64dea26858377fafc0fdc047d0f64b355afaa135aef4dbd4f8cd1a949c681ce7",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/social_pages_test.go": {
+      "bytes": 39438,
+      "sha256": "0119cf76117b4f65b8f7d34e30027a522f242e5da4ca248a6cf3002a4107448a",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/spa.go": {
+      "bytes": 25020,
+      "sha256": "91a53d2c60d2d3944aa45774a844682fe6fadfc6c47f7944485d44cb28247fe6",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/static.go": {
+      "bytes": 2394,
+      "sha256": "df27a7589dc84a883cad125cd8067df493d9f13316fc3c9d89904e5db19fd127",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/static_fs.go": {
+      "bytes": 2894,
+      "sha256": "daa2e6493d3ad38d0cb564e11a691f3ce7c899e4beb72f0f582ea2c7a16eda78",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/templates.go": {
+      "bytes": 14282,
+      "sha256": "8098259abbf45838fc732630188cde4b73ccefbc0f5e729b75497f6988db4b97",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/testdata/gui-public-campaign-meter/campaigns-pre-externalization-7930.html": {
+      "bytes": 3116,
+      "sha256": "40bcb0b71f3e95c56fe238e57244f3f36c937283e1f6961bfa654a390feb3b06",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/testdata/gui-public-get-walk/cases.json": {
+      "bytes": 13489,
+      "sha256": "35b30b7a2520750525fd2ee380d2f5597aa6fe6b374c92d5cd9a6db030abbce3",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/testdata/gui-public-get-walk/normalization-reference.json": {
+      "bytes": 1022,
+      "sha256": "ecd1e22d36b7f925d47f649ef0c5c92a26e7dc487b78374e9cc26db32dfe5f13",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/testdata/gui-public-get-walk/source.json": {
+      "bytes": 267577,
+      "sha256": "e92e1d44feee05d052bc733f68db102d45b76d9fbcd927453bdace7392757ac3",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/topic_pages.go": {
+      "bytes": 1725,
+      "sha256": "062cdd37a76125e4db9713b9c3b7c4ce36c456cc1aec925789770c0c755e511f",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/venue_claim_access_case_port_test.go": {
+      "bytes": 6040,
+      "sha256": "392ccc50f23759845598975c845de17422ac8665f4bc64101a748cd3f69e60a0",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/views.go": {
+      "bytes": 7205,
+      "sha256": "f54f6757bcbf7db40e922e085dfeab6ae353014f7771be10e707bb7ee8058180",
+      "full_mode": 33204
+    },
+    "services/server/internal/web/web_case_port_test.go": {
+      "bytes": 13245,
+      "sha256": "3937382bf6191e0a441fbb1410ca7f8c1e395896b028b875d5baabfd7dbc0ba7",
+      "full_mode": 33204
+    },
+    "static/css/base.css": {
+      "bytes": 63035,
+      "sha256": "886c3387f063f3625623b6233dbd7f2472be2dc54df11f6e63de737638f2b6bc",
+      "full_mode": 33204
+    },
+    "static/js/browse-modes.js": {
+      "bytes": 8335,
+      "sha256": "750c9deb1b209d7d1ec4a4f857ed6fcbd63cecebf22aa994c589b9da85058156",
+      "full_mode": 33204
+    },
+    "static/js/community-graph.js": {
+      "bytes": 3609,
+      "sha256": "122b7770e767dbe03c6660da7302eb182af7321b08288dcf8370d88d0abfcd0d",
+      "full_mode": 33204
+    },
+    "static/js/concept-combobox.js": {
+      "bytes": 9482,
+      "sha256": "95388d4e992a10afaf6f003bf4846f90d53fac8d4ac84f424d58f2d87bb2a65b",
+      "full_mode": 33204
+    },
+    "static/js/form-wizard.js": {
+      "bytes": 2579,
+      "sha256": "379ae2f54c53cbe6347eddf8f9113d5eaa4ab8cbcf8c844a3057cb0ee897b2ed",
+      "full_mode": 33204
+    },
+    "static/js/my-meetups.js": {
+      "bytes": 507,
+      "sha256": "a90afd9e8e320dbe3b3f348627f416bb0422940512145069607fb350e3e2924f",
+      "full_mode": 33204
+    },
+    "static/js/near-me.js": {
+      "bytes": 829,
+      "sha256": "e42b390eae1db14d5f8976241fa636b82a5a12a166d5810a858c536b76733bdb",
+      "full_mode": 33204
+    },
+    "static/js/place-picker.js": {
+      "bytes": 3741,
+      "sha256": "faccf83b2732ebe56805ce9d866ec905728fe388e6a875070b06ca63b7c905c9",
+      "full_mode": 33204
+    },
+    "static/js/places-map.js": {
+      "bytes": 20487,
+      "sha256": "3f7dbc11a4c57e0ecf53cf6d7f0dc20b39ae6f26f76d810a78aa2d572f62c2d0",
+      "full_mode": 33204
+    },
+    "static/js/site.js": {
+      "bytes": 1602,
+      "sha256": "144ecbc76de716f720361b76c4863cbbda7e4408101fb494f48d4f59c9172938",
+      "full_mode": 33204
+    },
+    "static/vendor/leaflet/leaflet.css": {
+      "bytes": 14145,
+      "sha256": "337bfca5cabd03b39815b2700febe2b3b7edf55921c59cd49f88ecb328212303",
+      "full_mode": 33204
+    },
+    "static/vendor/leaflet/leaflet.js": {
+      "bytes": 147552,
+      "sha256": "db49d009c841f5ca34a888c96511ae936fd9f5533e90d8b2c4d57596f4e5641a",
+      "full_mode": 33204
+    },
+    "static/vendor/maplibre/maplibre-gl-csp-worker.js": {
+      "bytes": 457880,
+      "sha256": "f950e7b15c49c8b9c7bb52136df2a2df2f6f03b83b8927774573fc98b067f7f0",
+      "full_mode": 33204
+    },
+    "static/vendor/maplibre/maplibre-gl-csp.js": {
+      "bytes": 971665,
+      "sha256": "a1f1847bac64aa00acbf80fbb79b2c5af24d8eecaaa5e2ad14080fab81f1de95",
+      "full_mode": 33204
+    },
+    "static/vendor/maplibre/maplibre-gl.css": {
+      "bytes": 70024,
+      "sha256": "ab1e70d59ec40465bae7e7030da2f3ccf28133fd502e62bd598eefbadfd7a732",
+      "full_mode": 33204
+    },
+    "templates/base.html": {
+      "bytes": 13658,
+      "sha256": "a8a5354db2968c99dcf043a2bb04ac635eb199a72455efe5cd96fc2946292b2c",
+      "full_mode": 33204
+    },
+    "tools/gui-public-golden/community-graph-fallback.test.mjs": {
+      "bytes": 6382,
+      "sha256": "235177a6d461883704bd80cec8be58b0fd627bd14fbfa8da33dea774a3c6cc8b",
+      "full_mode": 33204
+    },
+    "tools/gui-public-golden/my-meetups-offline.test.mjs": {
+      "bytes": 4813,
+      "sha256": "52d0907e7caba66d785370cf00ca4d19b1ec1947b98d455fe8d6353bd17bcc8a",
+      "full_mode": 33204
+    },
+    "tools/gui-public-golden/normalize.go": {
+      "bytes": 1465,
+      "sha256": "5282ddb0dab9101b028e6eda5411fc29995bf9f3a5b5de1d62c157a76eccd458",
+      "full_mode": 33204
+    },
+    "tools/gui-public-golden/normalize_test.go": {
+      "bytes": 4317,
+      "sha256": "f9bac4f56a598f5822054e846ef622ff2baecd885bd670cf0a4211d7c61704f7",
+      "full_mode": 33204
+    },
+    "tools/gui-public-golden/release-bindings.json": {
+      "bytes": 9594,
+      "sha256": "d845c6a1640e1f1cbe67f63af3ddc8ba7795d73ff0c2d97b23cb8ee4ff953015",
+      "full_mode": 33188
+    },
+    "tools/gui-public-golden/verify_nonce_capture.py": {
+      "bytes": 8075,
+      "sha256": "b5df938b01996f8b5ff675b1dc00e9bbe4d4d25bf7a277451e8ec65897f2b7ed",
+      "full_mode": 33204
+    }
+  }
+}
