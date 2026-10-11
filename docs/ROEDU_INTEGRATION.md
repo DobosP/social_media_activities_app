@@ -27,10 +27,10 @@ Places:
   producer withholding/errors, a record limit, or relationship drift makes the read incomplete,
   so it cannot infer absence.
 - The client validates exact venue/event/tombstone output shapes. Public fields are bound to policy
-  schema 4/ruleset 6 and acquisition schema 3 through a path-free attestation. Full policy,
-  clearance, rights, acquisition evidence, source prose/person fields, internal paths/checksums,
-  unsafe URLs, and unknown fields fail closed. The generic product iterator remains only for the
-  explicitly configured legacy delivery mode.
+  schema 5/ruleset 8 ([ADR-0055](adr/0055-roedu-policy-schema5-ruleset8.md)) and acquisition schema 3
+  through a path-free attestation. Full policy, clearance, rights, acquisition evidence, source
+  prose/person fields, internal paths/checksums, unsafe URLs, and unknown fields fail closed. The
+  generic product iterator remains only for the explicitly configured legacy delivery mode.
 - `apps/ingestion/sources/ro_scraper.py` — `RomaniaScraperAdapter` (`name="roedu"`)
   reads the `venues` product → `RawPlace`. It synthesizes OSM-style `tags` from the
   venue name (`_tags_for`) so `ingestion.mapping` can attach a `PlaceActivity` edge.

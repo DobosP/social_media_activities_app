@@ -3,6 +3,37 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-11 — RO-EDU consumer pin moved to policy schema 5 / ruleset 8 (ADR-0055)
+
+Valid until: the producer policy tuple, the social projection or the serving layer changes — then regenerate and requalify.
+
+Owner directive "move everything to policy version 8". Changes:
+- The Go verifier and the legacy Python oracle now accept only 5/8/`140290d4…`.
+- The `roedu-page.json` and `roedu-validator.json` fixtures were regenerated through the real chain by
+  `services/server/internal/jobs/testdata/generate_roedu_fixtures.py`: producer classifier 8 and the 5/8
+  evaluator (romania_scraper main 000ecee2), then `materialize_social_items`, then ro_data_server 5183272
+  `_public_pack_view`. The generator reproduces both files byte for byte.
+- The generated attestation keys equal `exactKeys` (15 keys) and the item keys equal `commonFields` plus the
+  per-kind fields. Reasons stay `["explicitly_cleared"]` and no lawful-basis field reaches the projection.
+- Two hand-written values the real chain never serves were replaced: the license literal
+  (`RO-LAW-8-1996-ART-9` → `Law 8/1996 art. 9`) and the `.test` ticket host (withheld by the serving
+  layer → `tickets.example.org`).
+- New `TestROEDUPolicyTupleIsExactlySchema5Ruleset8` checks that 5/8 is accepted and that 4/6, 5/7 and
+  half-moved tuples are refused.
+
+Checks:
+- Hermetic `go test ./internal/jobs/... ./cmd/social-server/... ./internal/contracts/...`, `go vet` and
+  `gofmt -l` passed.
+- Against a disposable migrated PostGIS/pgvector container, jobs ran 65 pass / 3 fail and
+  `cmd/social-server` ran 59 pass / 3 fail. The failure sets are identical on a main export (jobs 64 pass,
+  since main lacks the new test). Every failure is a missing host media codec (`ffmpeg`/codec runtime).
+  Every RO-EDU DB test passed.
+- Legacy `test_roedu_client` ran 43/43 on both the branch and main under a minimal SimpleTestCase settings
+  module; the full reference image was not run. With 5/8 client code over the old 4/6 fixtures it fails
+  (6 failures, 1 error).
+- `check-contracts -summary` was identical to main: 1020 verified, 1651 unresolved, 0 invalid, exit 1.
+- `ruff check` and `ruff format --check` passed on the touched Python.
+
 ## 2026-10-06 — GUI capture preparation preserved
 
 Valid until: source `aa10645` or the approved capture/gate contract changes — then recheck applicability.

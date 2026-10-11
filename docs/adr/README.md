@@ -1,7 +1,7 @@
 # ADR ledger — claimed numbers
 
 Claim the next free number **here, in the same commit as the ADR file**, so two parallel worktrees
-never mint the same number. Next free number: **0050** (0041–0049 reserved 2026-10-05 for the audit fix sessions: G2 0041/0043–0046, G3 0042/0047–0049). Template: [`0000-template.md`](0000-template.md).
+never mint the same number. Next free number: **0056** (0041–0049 reserved 2026-10-05 for the audit fix sessions: G2 0041/0043–0046, G3 0042/0047–0049; 0050–0054 claimed on branch `feat/gui-app-migration-a`). Template: [`0000-template.md`](0000-template.md).
 ADRs are append-only: a reversal is a new ADR that flips the old one's `Status:` to `superseded-by ADR-NNNN`.
 On conflict: `STATUS.md` > newest-dated ADR > every other doc.
 
@@ -31,7 +31,7 @@ On conflict: `STATUS.md` > newest-dated ADR > every other doc.
 | 0021 | [map-quality-filters-labels-aggregation](0021-map-quality-filters-labels-aggregation.md) | accepted | 2026-07-07 |
 | 0022 | [resource-bounded-asgi-browser-runtime](0022-resource-bounded-asgi-browser-runtime.md) | accepted | 2026-07-11 |
 | 0023 | [roedu-event-lifecycle-snapshot-reconciliation](0023-roedu-event-lifecycle-snapshot-reconciliation.md) | accepted | 2026-07-12 |
-| 0024 | [canonical-roedu-social-app-pack](0024-canonical-roedu-social-app-pack.md) | accepted | 2026-07-12 |
+| 0024 | [canonical-roedu-social-app-pack](0024-canonical-roedu-social-app-pack.md) | accepted; policy tuple superseded by ADR-0055 | 2026-07-12 |
 | 0025 | [agent-and-search-engine-access-surface](0025-agent-and-search-engine-access-surface.md) | accepted | 2026-07-12 |
 | 0026 | [private-thread-video-and-sota-image-compression](0026-private-thread-video-and-sota-image-compression.md) | accepted (supersedes the "no video" line of ADR-0004) | 2026-07-13 |
 | 0027 | [avatar-styles-uniqueness-registry](0027-avatar-styles-uniqueness-registry.md) | accepted (owner-approved) | 2026-07-13 |
@@ -53,6 +53,7 @@ On conflict: `STATUS.md` > newest-dated ADR > every other doc.
 | 0044 | [media-fingerprint-minimisation](0044-media-fingerprint-minimisation.md) | accepted; reference parity (audit GO-MEDIA-01/02); human privacy review gates first deployment | 2026-10-05 |
 | 0045 | [guardian-authority](0045-guardian-authority.md) | accepted; owner decisions 2026-10-05; human safety review gates first deployment | 2026-10-05 |
 | 0046 | [membership-logistics-scope](0046-membership-logistics-scope.md) | accepted; owner decisions 2026-10-05; human privacy review gates first deployment | 2026-10-05 |
+| 0055 | [roedu-policy-schema5-ruleset8](0055-roedu-policy-schema5-ruleset8.md) | accepted; owner directive 2026-10-11; supersedes ADR-0024's 4/6 tuple; lands with the serving/Teacher 5/8 moves | 2026-10-11 |
 
 ⚠ **0009 is claimed twice** — this ledger exists so it does not happen again. Both files stay:
 `0009-csp-enforcement-prep.md` (superseded by ADR-0010) and

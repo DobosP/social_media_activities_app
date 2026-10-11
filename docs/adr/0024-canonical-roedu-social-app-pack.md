@@ -1,7 +1,7 @@
 # ADR-0024: Consume one policy-bound RO-EDU social app pack
 
 Date: 2026-07-12
-Status: accepted
+Status: accepted; policy-tuple clause (schema 4/ruleset 6) superseded-by ADR-0055
 
 ## Decision
 

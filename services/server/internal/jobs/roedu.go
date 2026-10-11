@@ -20,7 +20,7 @@ import (
 )
 
 const SocialPack = "roedu:social_media_activities_app:events_places:v1"
-const PolicyHash = "07f27d3c9a5e5898ba7cfac686c645713114dd9c13d72ecc054570d368daf58d"
+const PolicyHash = "140290d4bc6374ebb5b7922dee98c79bee5501a6cf76e1ef18923a8647068fd1"
 
 var ErrProductRefused = errors.New("RO-EDU producer refused all items")
 
@@ -199,7 +199,7 @@ func validateCommon(item map[string]any) bool {
 			return false
 		}
 	}
-	if !equalsNumber(attestation["schema_version"], 4) || !equalsNumber(attestation["ruleset_version"], 6) || attestation["ruleset_hash"] != PolicyHash || attestation["subject_sha256"] != item["content_id"] || attestation["decision_id"] != item["policy_decision_id"] || !equalsNumber(item["capture_schema_version"], 3) || !equalsNumber(attestation["capture_schema_version"], 3) || attestation["capture_id"] != item["capture_id"] || attestation["acquisition_evidence_sha256"] != item["acquisition_evidence_sha256"] || attestation["acquisition_lane"] != item["acquisition_lane"] || attestation["action"] != "publish_source" || attestation["effect"] != "allow" {
+	if !equalsNumber(attestation["schema_version"], 5) || !equalsNumber(attestation["ruleset_version"], 8) || attestation["ruleset_hash"] != PolicyHash || attestation["subject_sha256"] != item["content_id"] || attestation["decision_id"] != item["policy_decision_id"] || !equalsNumber(item["capture_schema_version"], 3) || !equalsNumber(attestation["capture_schema_version"], 3) || attestation["capture_id"] != item["capture_id"] || attestation["acquisition_evidence_sha256"] != item["acquisition_evidence_sha256"] || attestation["acquisition_lane"] != item["acquisition_lane"] || attestation["action"] != "publish_source" || attestation["effect"] != "allow" {
 		return false
 	}
 	lane := item["acquisition_lane"]
