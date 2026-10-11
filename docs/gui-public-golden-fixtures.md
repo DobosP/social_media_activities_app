@@ -1031,3 +1031,35 @@ Current↔current template/catalog delivery only; shared OS assetRoot is not new
 static-FS/browser evidence. No historical-current semantic oracle, accepted
 normalized baseline, full/auth/privacy/Live/device/browser-CSP/templ/default/SDK
 adoption authority; original15/raw38/764/d722 and allthree .compare uses remain.
+
+
+## Campaign meter current-Pongo source section — NOT RUN
+
+The campaigns template has one approved inner-fill delta: its dynamic inline
+`width:{{ c.percent }}%` becomes the same token on a decorative, nonfocusable
+SVG rectangle. Existing outer progressbar ARIA, text, financial values, partners,
+donation links and empty/completed branches remain exact. Two scoped static CSS
+rules preserve the declared meter geometry/color source; browser appearance is
+not yet qualified. No JS, SDK/UI1, provider, auth or ledger logic changed.
+
+The literal7930 pre-externalization template fixture is source, not historical
+75dc output or a replacement original baseline. Authored24 named actions comprise
+two roots,12 OS/FS synthetic presentation models, two actual CSS GET/HEAD checks
+and eight precise owning-fragment refusals. Three-way strict released Normalize
+uses only an in-memory exact fill replacement within the observed progressbar;
+currentOS/FS agreement and source/header/loader/custody checks remain required.
+The parsed bounded fragment is XML-compatible HTML/SVG, not a browser DOM or
+computed-layout test. Existing764/d722/original15 are mandatory unchanged inputs.
+
+An existing preference test pinned all preceding62453B of CSS. The separately
+parent-authorized eighth path now inverts ONLY the exact new two-rule/comment
+delta on copied bytes before that same old hash/suffix assertion. Missing,
+duplicate, misplaced or changed delta refuses; old preference rules,41 IDs and
+assertions remain exact. Actual rendering/static/source checks keep FULLnew CSS.
+The frozen pre-edit gap record is `5a4b66ad453dea8819e3f91d6c5e25f9c9bc667c94c7cf7ac63bb79f5b6d4cc6`.
+
+All new source/compiler/formatter/tests/runtime are NOT RUN. Current45/raw37/
+receiver56/original14 records stay historical and unchanged; no new handler,
+financial business rule, privacy/safety, full, browser-CSP, device, roedu-meter,
+hashed-widget, templ/default or SDK adoption acceptance follows. Parent+peer
+review and a closed supported managed method precede actual checks.

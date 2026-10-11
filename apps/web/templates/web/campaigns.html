@@ -11,7 +11,7 @@
     <div role="progressbar" aria-valuenow="{{ c.percent }}" aria-valuemin="0" aria-valuemax="100"
          aria-label="{% blocktrans with raised=c.raised_cents|cents goal=c.goal_cents|cents %}raised {{ raised }} of {{ goal }} EUR goal{% endblocktrans %}"
          class="meter">
-      <div style="width:{{ c.percent }}%"></div>
+      <svg class="campaign-meter-fill" aria-hidden="true" focusable="false" viewBox="0 0 100 1" preserveAspectRatio="none"><rect width="{{ c.percent }}%" height="1"></rect></svg>
     </div>
     <p class="muted">{% blocktrans with raised=c.raised_cents|cents goal=c.goal_cents|cents %}Raised {{ raised }} of {{ goal }} EUR goal.{% endblocktrans %}</p>
     {% comment %}F42: a one-line text credit for the verified civic partner this campaign supports

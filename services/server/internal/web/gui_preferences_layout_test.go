@@ -123,10 +123,14 @@ func guiNewPreferenceFixture(t *testing.T) *guiPreferenceFixture {
 		}
 	}
 	css := read("static/css/base.css")
-	if !bytes.HasSuffix(css, []byte(guiPreferenceCSS)) || bytes.Count(css, []byte(guiPreferenceCSS)) != 1 {
+	cssBeforeMeter, err := guiCampaignMeterCSSBefore(css)
+	if err != nil {
+		t.Fatal("exact approved campaign-meter CSS inverse required before preference guard")
+	}
+	if !bytes.HasSuffix(cssBeforeMeter, []byte(guiPreferenceCSS)) || bytes.Count(cssBeforeMeter, []byte(guiPreferenceCSS)) != 1 {
 		t.Fatal("exact appended scoped preference CSS required")
 	}
-	oldCSS := css[:len(css)-len(guiPreferenceCSS)]
+	oldCSS := cssBeforeMeter[:len(cssBeforeMeter)-len(guiPreferenceCSS)]
 	if len(oldCSS) != 62453 || guiPublicHash(oldCSS) != "41f0f6a04b14da0874000ed7c9010f5dd75e2040a6f09082607ba12cf890fa00" {
 		t.Fatal("CSS append inverse differs from the unchanged original stylesheet")
 	}

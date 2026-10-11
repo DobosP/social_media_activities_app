@@ -2847,3 +2847,30 @@ is synthetic anonymous current template/catalog GET transport, with shared OS
 assetRoot. No semantic original oracle, accepted normalized baseline, full/M0/
 M1/auth/privacy/Live/device/browser-CSP/templ/default/SDK adoption approval. No
 code/runtime/helper rebuild/recapture/cleanup/controller/push in this task.
+
+
+## 2026-10-11 — campaign meter current-Pongo source, unrun
+
+Valid until: this source/delivery contract changes — then treat as history.
+Parent explicitly authorized one inner campaign-fill structural change and two
+scoped CSS rules: identical fractional percent token in decorative SVG, with
+outer ARIA/financial copy/links/partners/empty/completed logic untouched. This is
+an app-local presentation delta, not roedu-meter/UI/templ/hashing adoption.
+
+Before edits, source inspection found the old preference stylesheet guard would
+refuse any new CSS (gap5a4b66 frozen). Parent then authorized ONLY an eighth-path
+strict inverse of this new delta on COPIED bytes before the original429B suffix
+and62453B/41f0 hash check. Full currentCSS still reaches actual render/static
+checks. No old expected hash, case, assertion, SDK mask or policy was repinned.
+
+New literal7930 SOURCE fixture and native24 inventory cover six OS/FS synthetic
+models, actual CSS GET/HEAD, exact-owned-fill expected copy, released strict
+Normalize/current agreement, source/nonce/loader custody and eight precise
+negative controls. Four additional inline CSS inverse refusal assertions have
+no extra named t.Run IDs. Source-only; no parser/import/compiler/formatter/Go/
+Node/normalizer/PG/Docker/tests/runtime/install/push/cleanup was executed here.
+
+All previous37/45/54/56 and original15/raw38/764/d722 proof bytes remain; no new
+response bodies or canonical baseline were authored. Real browser geometry,
+screenshots/enforcedCSP/device/full and privacy/auth/Live/default/adoption are
+unverified and remain required where applicable.

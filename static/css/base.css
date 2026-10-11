@@ -142,10 +142,12 @@ small { font-size: .82rem; }
 .fieldset-plain { border: 0; padding: 0; margin: 0; }
 .fieldset-plain legend { font-size: .85rem; padding: 0; }
 
-/* Donation-campaign progress meter (campaigns.html). The bar width stays a
-   per-row inline style (dynamic percent) — everything static lives here. */
+/* Donation-campaign progress meter (campaigns.html). The fractional fill uses an
+   SVG width attribute; static geometry and colors remain in this stylesheet. */
 .meter { background: var(--chip-bg); border-radius: var(--r-pill); height: 10px; overflow: hidden; margin: .4rem 0; }
 .meter > div { background: var(--accent); height: 100%; }
+.meter > svg.campaign-meter-fill { display: block; width: 100%; height: 100%; }
+.meter > svg.campaign-meter-fill > rect { fill: var(--accent); }
 
 /* Community graph canvas (communities_graph.html). Deliberately dark in every
    theme: the vendored 3d-force-graph draws light nodes/links on this surface. */
