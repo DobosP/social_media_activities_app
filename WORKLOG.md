@@ -2749,3 +2749,24 @@ No new HTTP/PG capture or helper build is needed. Existing raw54/37PASS and R2�
 failures keep their identities; this new source has no execution proof. No new
 baseline, templ/receiver parity/full/M0/auth/privacy/Live/device/adoption/default
 activation approval. All unmerged source/evidence keepers are preserved.
+
+
+## 2026-10-11 — strict G1 receiver hardlink custody SOURCE successor
+
+Initial d82 source was held before runtime: its full38name/hash/mode custody checks
+accepted equal-hash hardlinked members. Actual R6 inputs remain distinct/intact;
+no runtime or corruption claim. Frozen d82 packet and unfinished private methodR1
+are preserved as unaccepted source; no initial Source CLEAR is implied.
+
+Inserted only portable os.SameFile detection among all38member FileInfos plus one
+same-bytes/same38names hardlink negative, after a valid synthetic positive control.
+Owning member-alias refusal isolates the inode guard. All old55IDs/assertions and
+Go bytes outside those two insertions restore exactly by inverse;56 authored actions,
+38 expected wrapper API attempts unchanged. Metadata/SDK/764/original15/oldtests/
+producer/templates/modules/defaults/policy are untouched.
+
+No formatter/compiler/tests/normalizer/Go/Node/Docker/runtime/install/cleanup/push.
+Parent independently reviews the source and later methodNlink1 input envelope,
+newsource/110ledger/56inventory before reservation. No new baseline/renderer parity/
+full/M0/auth/privacy/Live/device/adoption qualification. Actual raw54/37 and all
+R2–R5 failures keep their identities; all unmerged source/evidence keepers remain.

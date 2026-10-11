@@ -904,3 +904,26 @@ No PG, helper/SDK rebuild, install or original recapture is needed. All formatti
 compilation,55tests and normalization are NOT RUN. Raw sourcea115 and later receiver
 source identities stay distinct. No templ/current-renderer parity, literal75dc
 executable, full/M0/auth/privacy/group/Live/device/default/adoption acceptance.
+
+
+### G1 receiver hardlink custody source successor — NOT RUN
+
+Independent review held initial d82 source before runtime: equal-hash hardlinked
+body members could retain the38 names/modes/hashes while sharing an inode. The
+actual R6 raw files remain intact and distinct; no corruption or execution is
+inferred. The d82 packet and unfinished private R1 method remain frozen/unaccepted.
+
+A separate source successor adds only an os.SameFile check against all preceding
+member FileInfo values (including the manifest) and one same-bytes hardlink refusal.
+Its synthetic positive frame is validated first; replacing one leaf with a hardlink
+to an equal existing body preserves all38names/bytes/modes/hash claims. The owning
+constant member-alias code must reject that input. Every old55ID/assertion/source
+byte outside those insertions stays exact;56 actions are authored, with the same
+38 source-expected wrapper API attempts. No new policy, normalization mask or data.
+
+Portable Go guards duplicate inodes within the38 members. The separate parent
+managed-method successor must also require Nlink1 for actual raw/original/binary
+inputs, catching outside-corpus aliases before runtime. No method is approved or
+executed by this source change. Formatter/compiler/56tests/normalizer remain NOT
+RUN; all earlier source/actual raw54/37/failure/SDK/original15 identities and wider
+Normalize-baseline/renderer parity/full/M0/privacy/Live/device/adoption holds remain.

@@ -232,6 +232,11 @@ func guiG1ReadCorpus(directory string, pin guiG1Binding, cases []guiPublicGetCas
 		if readErr != nil || bodyBinding.Bytes != row.BodyBytes || bodyBinding.SHA256 != row.BodySHA256 {
 			return nil, fmt.Errorf("body-file")
 		}
+		for _, prior := range corpus.FileInfo {
+			if os.SameFile(prior, bodyInfo) {
+				return nil, fmt.Errorf("member-alias")
+			}
+		}
 		corpus.Bodies[c.ID] = body
 		corpus.Bindings[row.BodyFile] = bodyBinding
 		corpus.FileInfo[row.BodyFile] = bodyInfo
@@ -494,6 +499,15 @@ func TestGUIPublicGetWalkNormalizeCorpusRefusals(t *testing.T) {
 			// All bodies/declared hashes are equal and the38-name set stays exact.
 			name := filepath.Join(directory, cases[0].ID+".body")
 			if os.Remove(name) != nil || os.Symlink(cases[1].ID+".body", name) != nil {
+				t.Fatal("synthetic mutation")
+			}
+			return pin
+		}},
+		{"hardlink-equal-existing-body", "member-alias", func(t *testing.T, directory string, pin guiG1Binding) guiG1Binding {
+			// Replace only one leaf with a link to an equal existing body. Names,
+			// modes, lengths and declared hashes remain valid; only inode aliases differ.
+			name := filepath.Join(directory, cases[0].ID+".body")
+			if os.Remove(name) != nil || os.Link(filepath.Join(directory, cases[1].ID+".body"), name) != nil {
 				t.Fatal("synthetic mutation")
 			}
 			return pin
