@@ -92,6 +92,9 @@ func guiNewActivityFormFixture(t *testing.T) *guiActivityFormFixture {
 	if err != nil {
 		t.Fatal(err)
 	}
+	if guiSourceOnlyDefault(t, root, "activity form nonce") {
+		return nil
+	}
 	normalizer, err := guiPublicNewNormalizer(root)
 	if err != nil || normalizer == nil {
 		t.Fatal("existing actual764 normalizer/released archive bindings required")
@@ -368,6 +371,9 @@ func (f *guiActivityFormFixture) compare(t *testing.T, filesystem bool, fixture 
 
 func TestGUIActivityFormNonceDOM(t *testing.T) {
 	f := guiNewActivityFormFixture(t)
+	if f == nil {
+		return // Committed source-only default path (ADR-0056 Q6).
+	}
 	for _, filesystem := range []bool{false, true} {
 		for _, fixture := range guiActivityFormCases {
 			t.Run(fmt.Sprintf("filesystem-%t/%s", filesystem, fixture.name), func(t *testing.T) {
@@ -379,6 +385,9 @@ func TestGUIActivityFormNonceDOM(t *testing.T) {
 
 func TestGUIActivityFormNonceRejectsBindingMutations(t *testing.T) {
 	f := guiNewActivityFormFixture(t)
+	if f == nil {
+		return // Committed source-only default path (ADR-0056 Q6).
+	}
 	body, policy := f.render(t, false, false, guiActivityFormCases[0])
 	nonce, err := guiActivityFormNonceBinding(string(body), policy, true)
 	if err != nil {
@@ -433,6 +442,9 @@ func TestGUIActivityFormNonceRejectsBindingMutations(t *testing.T) {
 
 func TestGUIActivityFormNonceRejectsDOMMutations(t *testing.T) {
 	f := guiNewActivityFormFixture(t)
+	if f == nil {
+		return // Committed source-only default path (ADR-0056 Q6).
+	}
 	create, _, createDOM := f.compare(t, false, guiActivityFormCases[0])
 	edit, _, editDOM := f.compare(t, false, guiActivityFormCases[3])
 	for _, mutation := range []struct {

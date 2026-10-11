@@ -103,6 +103,9 @@ func guiNewPlacesNonceFixture(t *testing.T) *guiPlacesNonceFixture {
 	if err != nil {
 		t.Fatal(err)
 	}
+	if guiSourceOnlyDefault(t, root, "public places nonce") {
+		return nil
+	}
 	normalizer, err := guiPublicNewNormalizer(root)
 	if err != nil || normalizer == nil {
 		t.Fatal("existing actual released normalizer/archive/original bindings required")
@@ -355,6 +358,9 @@ func (f *guiPlacesNonceFixture) compare(t *testing.T, filesystem bool, fixture g
 
 func TestGUIPublicPlacesNonceDOM(t *testing.T) {
 	f := guiNewPlacesNonceFixture(t)
+	if f == nil {
+		return // Committed source-only default path (ADR-0056 Q6).
+	}
 	for _, filesystem := range []bool{false, true} {
 		for _, fixture := range guiPlacesNonceCases {
 			t.Run(fmt.Sprintf("filesystem-%t/%s", filesystem, fixture.name), func(t *testing.T) {
@@ -366,6 +372,9 @@ func TestGUIPublicPlacesNonceDOM(t *testing.T) {
 
 func TestGUIPublicPlacesNonceRejectsBindingMutations(t *testing.T) {
 	f := guiNewPlacesNonceFixture(t)
+	if f == nil {
+		return // Committed source-only default path (ADR-0056 Q6).
+	}
 	mapCase, listCase := guiPlacesNonceCases[1], guiPlacesNonceCases[4]
 	mapBody, mapPolicy := f.render(t, false, false, mapCase)
 	listBody, listPolicy := f.render(t, false, false, listCase)
@@ -428,6 +437,9 @@ func TestGUIPublicPlacesNonceRejectsBindingMutations(t *testing.T) {
 
 func TestGUIPublicPlacesNonceRejectsDOMMutations(t *testing.T) {
 	f := guiNewPlacesNonceFixture(t)
+	if f == nil {
+		return // Committed source-only default path (ADR-0056 Q6).
+	}
 	mapBody, _, mapExpected := f.compare(t, false, guiPlacesNonceCases[1])
 	listBody, _, listExpected := f.compare(t, false, guiPlacesNonceCases[4])
 	for _, mutation := range []struct {

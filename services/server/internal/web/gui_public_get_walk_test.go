@@ -16,6 +16,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -173,7 +174,246 @@ func guiPublicGetRepairRows() []guiPublicGetRepairRow {
 			before:      "\t\tdata[\"avatar_uri\"] = avatar\n\t}\n\tif err = s.Renderer.Render",
 			after:       "\t\tdata[\"avatar_uri\"] = avatar\n\t\tif user, ok := data[\"user\"].(map[string]any); ok && user[\"id\"] == actor.ID && user[\"public_id\"] == actor.PublicID {\n\t\t\tuser[\"avatar_uri\"] = avatar\n\t\t}\n\t}\n\tif err = s.Renderer.Render",
 		},
+		// Owner decision Q6 (ADR-0056): reviewed source-only default-path gates in
+		// seven preserved focused GUI tests. Rows for one path invert in order, each
+		// from the exact bytes the previous row produced, back to the recorded
+		// preimage (for the preference test: the sealed campaign custody input).
+		{
+			path:        "services/server/internal/web/gui_activity_browse_nonce_test.go",
+			beforeSHA:   "9aa8698d284c8834aaf21e45b50f80df1b91763a36444952236d3725ce1c19ee",
+			afterSHA:    "1e6da72fb234af0045d9b4ecb3c81fb78efe9aa4280b61de7b7852591d81b0b1",
+			beforeBytes: 20211,
+			afterBytes:  20288,
+			before:      "\tnormalizer, err := guiPublicNewNormalizer(root)\n",
+			after:       "\tif guiSourceOnlyDefault(t, root, \"activity browse nonce\") {\n\t\treturn nil\n\t}\n\tnormalizer, err := guiPublicNewNormalizer(root)\n",
+		},
+		{
+			path:        "services/server/internal/web/gui_activity_browse_nonce_test.go",
+			beforeSHA:   "6c24b9e2ac92bfe505e2a6a5d6f6e14b59ae7d67802bd24442b26a29e267799f",
+			afterSHA:    "9aa8698d284c8834aaf21e45b50f80df1b91763a36444952236d3725ce1c19ee",
+			beforeBytes: 20131,
+			afterBytes:  20211,
+			before:      "func TestGUIActivityBrowseNonceDOM(t *testing.T) {\n\tf := guiNewActivityBrowseFixture(t)\n",
+			after:       "func TestGUIActivityBrowseNonceDOM(t *testing.T) {\n\tf := guiNewActivityBrowseFixture(t)\n\tif f == nil {\n\t\treturn // Committed source-only default path (ADR-0056 Q6).\n\t}\n",
+		},
+		{
+			path:        "services/server/internal/web/gui_activity_browse_nonce_test.go",
+			beforeSHA:   "96645eec6ee6cc6df68ad1d16693e4355d0b190df5ce3db55d8e2e8d958bcec3",
+			afterSHA:    "6c24b9e2ac92bfe505e2a6a5d6f6e14b59ae7d67802bd24442b26a29e267799f",
+			beforeBytes: 20051,
+			afterBytes:  20131,
+			before:      "func TestGUIActivityBrowseNonceRejectsBindingMutations(t *testing.T) {\n\tf := guiNewActivityBrowseFixture(t)\n",
+			after:       "func TestGUIActivityBrowseNonceRejectsBindingMutations(t *testing.T) {\n\tf := guiNewActivityBrowseFixture(t)\n\tif f == nil {\n\t\treturn // Committed source-only default path (ADR-0056 Q6).\n\t}\n",
+		},
+		{
+			path:        "services/server/internal/web/gui_activity_browse_nonce_test.go",
+			beforeSHA:   "1c21f63a61bca3b4778ce5f673ea4397ae8d74d8441d4b818fb529a4fa97dff5",
+			afterSHA:    "96645eec6ee6cc6df68ad1d16693e4355d0b190df5ce3db55d8e2e8d958bcec3",
+			beforeBytes: 19971,
+			afterBytes:  20051,
+			before:      "func TestGUIActivityBrowseNonceRejectsDOMMutations(t *testing.T) {\n\tf := guiNewActivityBrowseFixture(t)\n",
+			after:       "func TestGUIActivityBrowseNonceRejectsDOMMutations(t *testing.T) {\n\tf := guiNewActivityBrowseFixture(t)\n\tif f == nil {\n\t\treturn // Committed source-only default path (ADR-0056 Q6).\n\t}\n",
+		},
+		{
+			path:        "services/server/internal/web/gui_activity_form_nonce_test.go",
+			beforeSHA:   "1d6bef60b34ecd7e79a27fec9ac1b59747b3b0cfd1d6d21c9b4015b6f2e08c58",
+			afterSHA:    "bf0057e5f60c06fb77275d0b6ab4fdc95ae5b3e4933e3bc6f6c6001952bbea70",
+			beforeBytes: 22260,
+			afterBytes:  22335,
+			before:      "\tnormalizer, err := guiPublicNewNormalizer(root)\n",
+			after:       "\tif guiSourceOnlyDefault(t, root, \"activity form nonce\") {\n\t\treturn nil\n\t}\n\tnormalizer, err := guiPublicNewNormalizer(root)\n",
+		},
+		{
+			path:        "services/server/internal/web/gui_activity_form_nonce_test.go",
+			beforeSHA:   "5a9db7a5c6f8d3f83731747f1cef8c63b7738d662333145d2e72b719bce05477",
+			afterSHA:    "1d6bef60b34ecd7e79a27fec9ac1b59747b3b0cfd1d6d21c9b4015b6f2e08c58",
+			beforeBytes: 22180,
+			afterBytes:  22260,
+			before:      "func TestGUIActivityFormNonceDOM(t *testing.T) {\n\tf := guiNewActivityFormFixture(t)\n",
+			after:       "func TestGUIActivityFormNonceDOM(t *testing.T) {\n\tf := guiNewActivityFormFixture(t)\n\tif f == nil {\n\t\treturn // Committed source-only default path (ADR-0056 Q6).\n\t}\n",
+		},
+		{
+			path:        "services/server/internal/web/gui_activity_form_nonce_test.go",
+			beforeSHA:   "82f8d08b924e1d06291e31e4fd813f594ff74ef9110f27bfa2a61842b5227c85",
+			afterSHA:    "5a9db7a5c6f8d3f83731747f1cef8c63b7738d662333145d2e72b719bce05477",
+			beforeBytes: 22100,
+			afterBytes:  22180,
+			before:      "func TestGUIActivityFormNonceRejectsBindingMutations(t *testing.T) {\n\tf := guiNewActivityFormFixture(t)\n",
+			after:       "func TestGUIActivityFormNonceRejectsBindingMutations(t *testing.T) {\n\tf := guiNewActivityFormFixture(t)\n\tif f == nil {\n\t\treturn // Committed source-only default path (ADR-0056 Q6).\n\t}\n",
+		},
+		{
+			path:        "services/server/internal/web/gui_activity_form_nonce_test.go",
+			beforeSHA:   "39c3c1d3cc6e62ea55926ad44f77cfe3cea31a1ca279702c2b41b78921bbbd17",
+			afterSHA:    "82f8d08b924e1d06291e31e4fd813f594ff74ef9110f27bfa2a61842b5227c85",
+			beforeBytes: 22020,
+			afterBytes:  22100,
+			before:      "func TestGUIActivityFormNonceRejectsDOMMutations(t *testing.T) {\n\tf := guiNewActivityFormFixture(t)\n",
+			after:       "func TestGUIActivityFormNonceRejectsDOMMutations(t *testing.T) {\n\tf := guiNewActivityFormFixture(t)\n\tif f == nil {\n\t\treturn // Committed source-only default path (ADR-0056 Q6).\n\t}\n",
+		},
+		{
+			path:        "services/server/internal/web/gui_my_meetups_nonce_test.go",
+			beforeSHA:   "7fc3298319abda668aa24a46ca8616dd664033f55645c16d6d1d9fe9b6bb63e1",
+			afterSHA:    "1f4096db8fcba97165ae9365d3e382e51292059f2567622c64ec6d71b7e4abcc",
+			beforeBytes: 16143,
+			afterBytes:  16215,
+			before:      "\tnormalizer, err := guiPublicNewNormalizer(root)\n",
+			after:       "\tif guiSourceOnlyDefault(t, root, \"my meetups nonce\") {\n\t\treturn nil\n\t}\n\tnormalizer, err := guiPublicNewNormalizer(root)\n",
+		},
+		{
+			path:        "services/server/internal/web/gui_my_meetups_nonce_test.go",
+			beforeSHA:   "9bddec96031a0ae6d79c090e13691522496bd76b2d5b77e0ecaaebdf54c49e5b",
+			afterSHA:    "7fc3298319abda668aa24a46ca8616dd664033f55645c16d6d1d9fe9b6bb63e1",
+			beforeBytes: 16063,
+			afterBytes:  16143,
+			before:      "func TestGUIMyMeetupsNonceDOM(t *testing.T) {\n\tf := guiNewMyMeetupsFixture(t)\n",
+			after:       "func TestGUIMyMeetupsNonceDOM(t *testing.T) {\n\tf := guiNewMyMeetupsFixture(t)\n\tif f == nil {\n\t\treturn // Committed source-only default path (ADR-0056 Q6).\n\t}\n",
+		},
+		{
+			path:        "services/server/internal/web/gui_my_meetups_nonce_test.go",
+			beforeSHA:   "1647bfceb0e0ac34b7797c4f01e27a87e76e6b63d3efc2e8df90daea5958262f",
+			afterSHA:    "9bddec96031a0ae6d79c090e13691522496bd76b2d5b77e0ecaaebdf54c49e5b",
+			beforeBytes: 15983,
+			afterBytes:  16063,
+			before:      "func TestGUIMyMeetupsNonceRejectsBindingMutations(t *testing.T) {\n\tf := guiNewMyMeetupsFixture(t)\n",
+			after:       "func TestGUIMyMeetupsNonceRejectsBindingMutations(t *testing.T) {\n\tf := guiNewMyMeetupsFixture(t)\n\tif f == nil {\n\t\treturn // Committed source-only default path (ADR-0056 Q6).\n\t}\n",
+		},
+		{
+			path:        "services/server/internal/web/gui_my_meetups_nonce_test.go",
+			beforeSHA:   "d56a397e8be7ed7d3fae9b886793199d95d73ecd41878c09d51c4e0eef8142e6",
+			afterSHA:    "1647bfceb0e0ac34b7797c4f01e27a87e76e6b63d3efc2e8df90daea5958262f",
+			beforeBytes: 15903,
+			afterBytes:  15983,
+			before:      "func TestGUIMyMeetupsNonceRejectsDOMMutations(t *testing.T) {\n\tf := guiNewMyMeetupsFixture(t)\n",
+			after:       "func TestGUIMyMeetupsNonceRejectsDOMMutations(t *testing.T) {\n\tf := guiNewMyMeetupsFixture(t)\n\tif f == nil {\n\t\treturn // Committed source-only default path (ADR-0056 Q6).\n\t}\n",
+		},
+		{
+			path:        "services/server/internal/web/gui_public_places_nonce_test.go",
+			beforeSHA:   "623dbc5ceeebf13916d3e2de353bfdf620ef21bdc574fb57962fff11b393c4a7",
+			afterSHA:    "b0f655613d5f1341686f0b828f6c3a1052419c3c6d14202e2a6e520d12e6d371",
+			beforeBytes: 18702,
+			afterBytes:  18777,
+			before:      "\tnormalizer, err := guiPublicNewNormalizer(root)\n",
+			after:       "\tif guiSourceOnlyDefault(t, root, \"public places nonce\") {\n\t\treturn nil\n\t}\n\tnormalizer, err := guiPublicNewNormalizer(root)\n",
+		},
+		{
+			path:        "services/server/internal/web/gui_public_places_nonce_test.go",
+			beforeSHA:   "a84a73f606452b98204ad3ca88cde871a4e79ab9cc030978f6a0ee4486eac064",
+			afterSHA:    "623dbc5ceeebf13916d3e2de353bfdf620ef21bdc574fb57962fff11b393c4a7",
+			beforeBytes: 18622,
+			afterBytes:  18702,
+			before:      "func TestGUIPublicPlacesNonceDOM(t *testing.T) {\n\tf := guiNewPlacesNonceFixture(t)\n",
+			after:       "func TestGUIPublicPlacesNonceDOM(t *testing.T) {\n\tf := guiNewPlacesNonceFixture(t)\n\tif f == nil {\n\t\treturn // Committed source-only default path (ADR-0056 Q6).\n\t}\n",
+		},
+		{
+			path:        "services/server/internal/web/gui_public_places_nonce_test.go",
+			beforeSHA:   "f33a54bf4a4153319f77c5f7a3bad960998e4d4109535c9b98a7daf14a783ec7",
+			afterSHA:    "a84a73f606452b98204ad3ca88cde871a4e79ab9cc030978f6a0ee4486eac064",
+			beforeBytes: 18542,
+			afterBytes:  18622,
+			before:      "func TestGUIPublicPlacesNonceRejectsBindingMutations(t *testing.T) {\n\tf := guiNewPlacesNonceFixture(t)\n",
+			after:       "func TestGUIPublicPlacesNonceRejectsBindingMutations(t *testing.T) {\n\tf := guiNewPlacesNonceFixture(t)\n\tif f == nil {\n\t\treturn // Committed source-only default path (ADR-0056 Q6).\n\t}\n",
+		},
+		{
+			path:        "services/server/internal/web/gui_public_places_nonce_test.go",
+			beforeSHA:   "775dc84bd94ef52cc07025e283339ddb440e879f737daf2da31af77b310fe169",
+			afterSHA:    "f33a54bf4a4153319f77c5f7a3bad960998e4d4109535c9b98a7daf14a783ec7",
+			beforeBytes: 18462,
+			afterBytes:  18542,
+			before:      "func TestGUIPublicPlacesNonceRejectsDOMMutations(t *testing.T) {\n\tf := guiNewPlacesNonceFixture(t)\n",
+			after:       "func TestGUIPublicPlacesNonceRejectsDOMMutations(t *testing.T) {\n\tf := guiNewPlacesNonceFixture(t)\n\tif f == nil {\n\t\treturn // Committed source-only default path (ADR-0056 Q6).\n\t}\n",
+		},
+		{
+			path:        "services/server/internal/web/gui_preferences_layout_test.go",
+			beforeSHA:   "2151e8fa96c378655789bcdb34eb0f2cf1380fe3294f81df1932c5a050968c14",
+			afterSHA:    "48f619e8da05af530a391ff5e7c440a2a806d4eb08381ded993b296945ab247c",
+			beforeBytes: 23328,
+			afterBytes:  23402,
+			before:      "\tnormalizer, err := guiPublicNewNormalizer(root)\n",
+			after:       "\tif guiSourceOnlyDefault(t, root, \"preferences layout\") {\n\t\treturn nil\n\t}\n\tnormalizer, err := guiPublicNewNormalizer(root)\n",
+		},
+		{
+			path:        "services/server/internal/web/gui_preferences_layout_test.go",
+			beforeSHA:   "4e5e3a66cd5f603e8b067138dd65f3fae27bb766a9838d302492414e9b4b9f5d",
+			afterSHA:    "2151e8fa96c378655789bcdb34eb0f2cf1380fe3294f81df1932c5a050968c14",
+			beforeBytes: 23248,
+			afterBytes:  23328,
+			before:      "func TestGUIPreferencesLayoutDOM(t *testing.T) {\n\tf := guiNewPreferenceFixture(t)\n",
+			after:       "func TestGUIPreferencesLayoutDOM(t *testing.T) {\n\tf := guiNewPreferenceFixture(t)\n\tif f == nil {\n\t\treturn // Committed source-only default path (ADR-0056 Q6).\n\t}\n",
+		},
+		{
+			path:        "services/server/internal/web/gui_preferences_layout_test.go",
+			beforeSHA:   "ec3e45b912cee2ae4f0c0bbbfc2ded632e6a806403b7843b0086ffe66553a1f4",
+			afterSHA:    "4e5e3a66cd5f603e8b067138dd65f3fae27bb766a9838d302492414e9b4b9f5d",
+			beforeBytes: 23168,
+			afterBytes:  23248,
+			before:      "func TestGUIPreferencesLayoutRejectsDOMMutations(t *testing.T) {\n\tf := guiNewPreferenceFixture(t)\n",
+			after:       "func TestGUIPreferencesLayoutRejectsDOMMutations(t *testing.T) {\n\tf := guiNewPreferenceFixture(t)\n\tif f == nil {\n\t\treturn // Committed source-only default path (ADR-0056 Q6).\n\t}\n",
+		},
+		{
+			path:        "services/server/internal/web/gui_public_community_style_test.go",
+			beforeSHA:   "1526525de66e861fdb384d380f65d9e43d3633a9de713d79f7534a00b7f09626",
+			afterSHA:    "2c83bda04ea6f7a4fe5bad64ee44f20336bde0ea16ff31c5ac58bb1bdc8fd0aa",
+			beforeBytes: 11160,
+			afterBytes:  11242,
+			before:      "\tnormalizer, err := guiPublicNewNormalizer(root)\n",
+			after:       "\tif guiSourceOnlyDefault(t, root, \"community style/pagination\") {\n\t\treturn nil\n\t}\n\tnormalizer, err := guiPublicNewNormalizer(root)\n",
+		},
+		{
+			path:        "services/server/internal/web/gui_public_community_style_test.go",
+			beforeSHA:   "79f87af13988047cc88eca19e2114bba6688df15e5cc0c507c9850d4f30fcf0a",
+			afterSHA:    "1526525de66e861fdb384d380f65d9e43d3633a9de713d79f7534a00b7f09626",
+			beforeBytes: 11080,
+			afterBytes:  11160,
+			before:      "func TestGUIPublicCommunityStyleDOM(t *testing.T) {\n\tf := guiNewCommunityStyleFixture(t)\n",
+			after:       "func TestGUIPublicCommunityStyleDOM(t *testing.T) {\n\tf := guiNewCommunityStyleFixture(t)\n\tif f == nil {\n\t\treturn // Committed source-only default path (ADR-0056 Q6).\n\t}\n",
+		},
+		{
+			path:        "services/server/internal/web/gui_public_community_style_test.go",
+			beforeSHA:   "3f23e85f624c0d5b98fac0a21c4bca124841c57802c252855cfdf36517e9fc5d",
+			afterSHA:    "79f87af13988047cc88eca19e2114bba6688df15e5cc0c507c9850d4f30fcf0a",
+			beforeBytes: 11000,
+			afterBytes:  11080,
+			before:      "func TestGUIPublicCommunityStyleRejectsDOMMutations(t *testing.T) {\n\tf := guiNewCommunityStyleFixture(t)\n",
+			after:       "func TestGUIPublicCommunityStyleRejectsDOMMutations(t *testing.T) {\n\tf := guiNewCommunityStyleFixture(t)\n\tif f == nil {\n\t\treturn // Committed source-only default path (ADR-0056 Q6).\n\t}\n",
+		},
+		{
+			path:        "services/server/internal/web/gui_public_community_pagination_test.go",
+			beforeSHA:   "838a8aed0ffb988fb5c0c10af09b31226345042834317648953b203617580ac0",
+			afterSHA:    "4a20eb5583d33b5a795cee95a2542aa32c4ea920f1a94fdd4b9a6462b0f8fb2b",
+			beforeBytes: 10119,
+			afterBytes:  10199,
+			before:      "func TestGUIPublicCommunityPaginationDOM(t *testing.T) {\n\tf := guiNewCommunityStyleFixture(t)\n",
+			after:       "func TestGUIPublicCommunityPaginationDOM(t *testing.T) {\n\tf := guiNewCommunityStyleFixture(t)\n\tif f == nil {\n\t\treturn // Committed source-only default path (ADR-0056 Q6).\n\t}\n",
+		},
+		{
+			path:        "services/server/internal/web/gui_public_community_pagination_test.go",
+			beforeSHA:   "77f753e282bcd8f4b96d00125d5b88ffa883f521641119d7482aaaa3f316a5c5",
+			afterSHA:    "838a8aed0ffb988fb5c0c10af09b31226345042834317648953b203617580ac0",
+			beforeBytes: 10039,
+			afterBytes:  10119,
+			before:      "func TestGUIPublicCommunityPaginationRejectsDOMMutations(t *testing.T) {\n\tf := guiNewCommunityStyleFixture(t)\n",
+			after:       "func TestGUIPublicCommunityPaginationRejectsDOMMutations(t *testing.T) {\n\tf := guiNewCommunityStyleFixture(t)\n\tif f == nil {\n\t\treturn // Committed source-only default path (ADR-0056 Q6).\n\t}\n",
+		},
 	}
+}
+
+// guiPublicGetRowsPreimage inverts every reviewed row of one path in order.
+// Each row must find its exact afterimage and land on its exact preimage, so a
+// later row only ever sees the bytes the previous reviewed row produced.
+func guiPublicGetRowsPreimage(path string, raw []byte) ([]byte, error) {
+	for _, row := range guiPublicGetRepairRows() {
+		if row.path != path {
+			continue
+		}
+		if len(raw) != row.afterBytes || guiPublicHash(raw) != row.afterSHA || bytes.Count(raw, []byte(row.after)) != 1 {
+			return nil, fmt.Errorf("repair-complete-current-profile")
+		}
+		raw = bytes.Replace(raw, []byte(row.after), []byte(row.before), 1)
+		if len(raw) != row.beforeBytes || guiPublicHash(raw) != row.beforeSHA {
+			return nil, fmt.Errorf("repair-exact-preimage")
+		}
+	}
+	return raw, nil
 }
 
 func guiPublicGetRepairInputs(root string, source guiPublicGetSource) (map[string]guiPublicGetRepairInput, error) {
@@ -198,13 +438,15 @@ func guiPublicGetRepairInputs(root string, source guiPublicGetSource) (map[strin
 // These are the two sealed campaign custody inputs already present in the
 // current tree, not new production changes. Only owned in-memory copies are
 // inverted; every live current-source reader keeps the actual current bytes.
+// The preference test first loses its reviewed Q6 rows (ADR-0056), exactly.
 func guiPublicGetCampaignCustodyPreimages(inputs map[string]guiPublicGetRepairInput) (map[string][]byte, error) {
 	const testPath = "services/server/internal/web/gui_preferences_layout_test.go"
 	const cssPath = "static/css/base.css"
 	test, testExists := inputs[testPath]
 	css, cssExists := inputs[cssPath]
+	testRaw, testErr := guiPublicGetRowsPreimage(testPath, test.raw)
 	if !testExists || !cssExists || !guiPublicGetLiveMode(test.binding.FullMode, 0o100664) || !guiPublicGetLiveMode(css.binding.FullMode, 0o100664) ||
-		len(test.raw) != 23168 || guiPublicHash(test.raw) != "ec3e45b912cee2ae4f0c0bbbfc2ded632e6a806403b7843b0086ffe66553a1f4" ||
+		testErr != nil || len(testRaw) != 23168 || guiPublicHash(testRaw) != "ec3e45b912cee2ae4f0c0bbbfc2ded632e6a806403b7843b0086ffe66553a1f4" ||
 		len(css.raw) != 63035 || guiPublicHash(css.raw) != "886c3387f063f3625623b6233dbd7f2472be2dc54df11f6e63de737638f2b6bc" {
 		return nil, fmt.Errorf("repair-complete-campaign-custody")
 	}
@@ -212,7 +454,7 @@ func guiPublicGetCampaignCustodyPreimages(inputs map[string]guiPublicGetRepairIn
 	if err != nil || len(oldCSS) != 62882 || guiPublicHash(oldCSS) != "db20897d8d822eba19c0f6124a678fb0642e69e0775fcc746913c837ac5e211a" {
 		return nil, fmt.Errorf("repair-campaign-CSS-preimage")
 	}
-	oldTest := append([]byte(nil), test.raw...)
+	oldTest := append([]byte(nil), testRaw...)
 	for _, edit := range []struct{ after, before string }{
 		{"\tcssBeforeMeter, err := guiCampaignMeterCSSBefore(css)\n\tif err != nil {\n\t\tt.Fatal(\"exact approved campaign-meter CSS inverse required before preference guard\")\n\t}\n\tif !bytes.HasSuffix(cssBeforeMeter, []byte(guiPreferenceCSS)) || bytes.Count(cssBeforeMeter, []byte(guiPreferenceCSS)) != 1 {\n", "\tif !bytes.HasSuffix(css, []byte(guiPreferenceCSS)) || bytes.Count(css, []byte(guiPreferenceCSS)) != 1 {\n"},
 		{"\toldCSS := cssBeforeMeter[:len(cssBeforeMeter)-len(guiPreferenceCSS)]\n", "\toldCSS := css[:len(css)-len(guiPreferenceCSS)]\n"},
@@ -241,12 +483,12 @@ func guiPublicGetRepairHistoricalProof(source guiPublicGetSource, inputs map[str
 	}
 	for _, row := range guiPublicGetRepairRows() {
 		input, exists := inputs[row.path]
-		if !exists || !guiPublicGetLiveMode(input.binding.FullMode, 0o100664) || len(input.raw) != row.afterBytes || guiPublicHash(input.raw) != row.afterSHA || bytes.Count(input.raw, []byte(row.after)) != 1 {
+		if !exists || !guiPublicGetLiveMode(input.binding.FullMode, 0o100664) {
 			return fmt.Errorf("repair-complete-current-profile")
 		}
-		original := bytes.Replace(input.raw, []byte(row.after), []byte(row.before), 1)
-		if len(original) != row.beforeBytes || guiPublicHash(original) != row.beforeSHA {
-			return fmt.Errorf("repair-exact-preimage")
+		original, err := guiPublicGetRowsPreimage(row.path, input.raw)
+		if err != nil {
+			return err
 		}
 		preimages[row.path] = original // In-memory custody proof, never a live source binding.
 	}
@@ -603,7 +845,7 @@ func TestGUIPublicGetWalk(t *testing.T) {
 		t.Fatal(err)
 	}
 	if *guiPublicGetWalkOutput == "" {
-		t.Log("HTTP NOT REQUESTED: historical preimage/custody and exact current two-repair bytes verified; no old/current producer equivalence, PG, capture, normalization or registered-GET qualification")
+		t.Log("HTTP NOT REQUESTED: historical preimage/custody and exact current reviewed repair-row bytes verified; no old/current producer equivalence, PG, capture, normalization or registered-GET qualification")
 		return
 	}
 	if err := guiPublicGetRequireDSN(*webDomainDSN); err != nil {
@@ -848,13 +1090,22 @@ func TestGUIPublicGetWalkSourceRefusals(t *testing.T) {
 				}
 				return
 			case "unknown":
-				for _, path := range []string{"services/server/internal/web/renderer.go", "services/server/internal/web/server.go", "services/server/internal/web/gui_preferences_layout_test.go", "static/css/base.css"} {
+				paths := []string{"services/server/internal/web/renderer.go", "services/server/internal/web/server.go", "services/server/internal/web/gui_preferences_layout_test.go", "static/css/base.css"}
+				for _, row := range guiPublicGetRepairRows() {
+					if !slices.Contains(paths, row.path) {
+						paths = append(paths, row.path) // Every Q6 gated test input, once.
+					}
+				}
+				if len(paths) != 10 {
+					t.Fatal("reviewed repair input set changed")
+				}
+				for _, path := range paths {
 					original := changed[path]
 					replace(path, append(append([]byte(nil), original.raw...), '\n'))
 					refused := guiPublicGetRepairHistoricalProof(candidate, changed) != nil
 					changed[path] = original
 					if !refused || guiPublicGetRepairHistoricalProof(candidate, changed) != nil || guiPublicGetRepairHistoricalProof(source, inputs) != nil {
-						t.Fatal("unknown four-input profile admitted or control aliased")
+						t.Fatal("unknown repair-input profile admitted or control aliased")
 					}
 				}
 				return
@@ -864,7 +1115,14 @@ func TestGUIPublicGetWalkSourceRefusals(t *testing.T) {
 					t.Fatal("sealed campaign positive control unavailable")
 				}
 				for _, row := range guiPublicGetRepairRows() {
-					previous[row.path] = bytes.Replace(changed[row.path].raw, []byte(row.after), []byte(row.before), 1)
+					if _, sealed := previous[row.path]; !sealed {
+						if previous[row.path], err = guiPublicGetRowsPreimage(row.path, changed[row.path].raw); err != nil {
+							t.Fatal("reviewed row preimage positive control unavailable")
+						}
+					}
+				}
+				if len(previous) != 10 {
+					t.Fatal("reviewed mixed preimage set changed")
 				}
 				for path, raw := range previous {
 					original := changed[path]
@@ -872,7 +1130,7 @@ func TestGUIPublicGetWalkSourceRefusals(t *testing.T) {
 					refused := guiPublicGetRepairHistoricalProof(candidate, changed) != nil
 					changed[path] = original
 					if !refused || guiPublicGetRepairHistoricalProof(candidate, changed) != nil || guiPublicGetRepairHistoricalProof(source, inputs) != nil {
-						t.Fatal("mixed four-input profile admitted or control aliased")
+						t.Fatal("mixed repair-input profile admitted or control aliased")
 					}
 				}
 				return

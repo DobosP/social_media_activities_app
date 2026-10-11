@@ -507,38 +507,38 @@
       "full_mode": 33204
     },
     "services/server/internal/web/gui_activity_browse_nonce_test.go": {
-      "bytes": 19971,
-      "sha256": "1c21f63a61bca3b4778ce5f673ea4397ae8d74d8441d4b818fb529a4fa97dff5",
+      "bytes": 20288,
+      "sha256": "1e6da72fb234af0045d9b4ecb3c81fb78efe9aa4280b61de7b7852591d81b0b1",
       "full_mode": 33204
     },
     "services/server/internal/web/gui_activity_form_nonce_test.go": {
-      "bytes": 22020,
-      "sha256": "39c3c1d3cc6e62ea55926ad44f77cfe3cea31a1ca279702c2b41b78921bbbd17",
+      "bytes": 22335,
+      "sha256": "bf0057e5f60c06fb77275d0b6ab4fdc95ae5b3e4933e3bc6f6c6001952bbea70",
       "full_mode": 33204
     },
     "services/server/internal/web/gui_my_meetups_nonce_test.go": {
-      "bytes": 15903,
-      "sha256": "d56a397e8be7ed7d3fae9b886793199d95d73ecd41878c09d51c4e0eef8142e6",
+      "bytes": 16215,
+      "sha256": "1f4096db8fcba97165ae9365d3e382e51292059f2567622c64ec6d71b7e4abcc",
       "full_mode": 33204
     },
     "services/server/internal/web/gui_preferences_layout_test.go": {
-      "bytes": 23168,
-      "sha256": "ec3e45b912cee2ae4f0c0bbbfc2ded632e6a806403b7843b0086ffe66553a1f4",
+      "bytes": 23402,
+      "sha256": "48f619e8da05af530a391ff5e7c440a2a806d4eb08381ded993b296945ab247c",
       "full_mode": 33204
     },
     "services/server/internal/web/gui_public_campaign_meter_test.go": {
-      "bytes": 23964,
-      "sha256": "1180aaf31598a6a539c5db60ae8a44ac1868ff8e370df85311378845104d2cac",
+      "bytes": 24194,
+      "sha256": "7f1870610531274bff7eb3131f15fc0ef51d7b31e9a870190d139bc854b3e10d",
       "full_mode": 33204
     },
     "services/server/internal/web/gui_public_community_pagination_test.go": {
-      "bytes": 10039,
-      "sha256": "77f753e282bcd8f4b96d00125d5b88ffa883f521641119d7482aaaa3f316a5c5",
+      "bytes": 10199,
+      "sha256": "4a20eb5583d33b5a795cee95a2542aa32c4ea920f1a94fdd4b9a6462b0f8fb2b",
       "full_mode": 33204
     },
     "services/server/internal/web/gui_public_community_style_test.go": {
-      "bytes": 11000,
-      "sha256": "3f23e85f624c0d5b98fac0a21c4bca124841c57802c252855cfdf36517e9fc5d",
+      "bytes": 11242,
+      "sha256": "2c83bda04ea6f7a4fe5bad64ee44f20336bde0ea16ff31c5ac58bb1bdc8fd0aa",
       "full_mode": 33204
     },
     "services/server/internal/web/gui_public_current_get_transport_test.go": {
@@ -552,8 +552,8 @@
       "full_mode": 33204
     },
     "services/server/internal/web/gui_public_get_walk_test.go": {
-      "bytes": 42157,
-      "sha256": "c3fd5aa6d5ef14ff39eca333f03c907d28239cf050a44f755ca203721ac459aa",
+      "bytes": 58190,
+      "sha256": "8596d4ec883ba038682f005398a0f23ac56a5043fe9a1e5b2997cf9325a88d17",
       "full_mode": 33204
     },
     "services/server/internal/web/gui_public_golden_test.go": {
@@ -577,8 +577,8 @@
       "full_mode": 33204
     },
     "services/server/internal/web/gui_public_places_nonce_test.go": {
-      "bytes": 18462,
-      "sha256": "775dc84bd94ef52cc07025e283339ddb440e879f737daf2da31af77b310fe169",
+      "bytes": 18777,
+      "sha256": "b0f655613d5f1341686f0b828f6c3a1052419c3c6d14202e2a6e520d12e6d371",
       "full_mode": 33204
     },
     "services/server/internal/web/gui_public_static_fs_test.go": {

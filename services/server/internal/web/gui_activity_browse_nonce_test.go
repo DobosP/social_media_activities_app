@@ -90,6 +90,9 @@ func guiNewActivityBrowseFixture(t *testing.T) *guiActivityBrowseFixture {
 	if err != nil {
 		t.Fatal(err)
 	}
+	if guiSourceOnlyDefault(t, root, "activity browse nonce") {
+		return nil
+	}
 	normalizer, err := guiPublicNewNormalizer(root)
 	if err != nil || normalizer == nil {
 		t.Fatal("existing actual764 normalizer/released archive bindings required")
@@ -359,6 +362,9 @@ func (f *guiActivityBrowseFixture) compare(t *testing.T, filesystem bool, fixtur
 
 func TestGUIActivityBrowseNonceDOM(t *testing.T) {
 	f := guiNewActivityBrowseFixture(t)
+	if f == nil {
+		return // Committed source-only default path (ADR-0056 Q6).
+	}
 	for _, filesystem := range []bool{false, true} {
 		for _, fixture := range guiActivityBrowseCases {
 			t.Run(fmt.Sprintf("filesystem-%t/%s", filesystem, fixture.name), func(t *testing.T) {
@@ -370,6 +376,9 @@ func TestGUIActivityBrowseNonceDOM(t *testing.T) {
 
 func TestGUIActivityBrowseNonceRejectsBindingMutations(t *testing.T) {
 	f := guiNewActivityBrowseFixture(t)
+	if f == nil {
+		return // Committed source-only default path (ADR-0056 Q6).
+	}
 	body, policy := f.render(t, false, false, guiActivityBrowseCases[2])
 	nonce, err := guiActivityBrowseNonceBinding(string(body), policy, true, true)
 	if err != nil {
@@ -419,6 +428,9 @@ func TestGUIActivityBrowseNonceRejectsBindingMutations(t *testing.T) {
 
 func TestGUIActivityBrowseNonceRejectsDOMMutations(t *testing.T) {
 	f := guiNewActivityBrowseFixture(t)
+	if f == nil {
+		return // Committed source-only default path (ADR-0056 Q6).
+	}
 	bodies, expected := map[int][]byte{}, map[int][]byte{}
 	for _, index := range []int{1, 2, 4, 5} {
 		bodies[index], _, expected[index] = f.compare(t, false, guiActivityBrowseCases[index])

@@ -77,6 +77,9 @@ func guiNewMyMeetupsFixture(t *testing.T) *guiMyMeetupsFixture {
 	if err != nil {
 		t.Fatal(err)
 	}
+	if guiSourceOnlyDefault(t, root, "my meetups nonce") {
+		return nil
+	}
 	normalizer, err := guiPublicNewNormalizer(root)
 	if err != nil || normalizer == nil {
 		t.Fatal("existing actual764 normalizer/released archive bindings required")
@@ -295,6 +298,9 @@ func (f *guiMyMeetupsFixture) compare(t *testing.T, filesystem bool, fixture gui
 
 func TestGUIMyMeetupsNonceDOM(t *testing.T) {
 	f := guiNewMyMeetupsFixture(t)
+	if f == nil {
+		return // Committed source-only default path (ADR-0056 Q6).
+	}
 	for _, filesystem := range []bool{false, true} {
 		for _, fixture := range guiMyMeetupsCases {
 			t.Run(fmt.Sprintf("filesystem-%t/%s", filesystem, fixture.name), func(t *testing.T) {
@@ -306,6 +312,9 @@ func TestGUIMyMeetupsNonceDOM(t *testing.T) {
 
 func TestGUIMyMeetupsNonceRejectsBindingMutations(t *testing.T) {
 	f := guiNewMyMeetupsFixture(t)
+	if f == nil {
+		return // Committed source-only default path (ADR-0056 Q6).
+	}
 	body, policy := f.render(t, false, false, guiMyMeetupsCases[1])
 	nonce, err := guiMyMeetupsNonceBinding(string(body), policy, true)
 	if err != nil {
@@ -357,6 +366,9 @@ func TestGUIMyMeetupsNonceRejectsBindingMutations(t *testing.T) {
 
 func TestGUIMyMeetupsNonceRejectsDOMMutations(t *testing.T) {
 	f := guiNewMyMeetupsFixture(t)
+	if f == nil {
+		return // Committed source-only default path (ADR-0056 Q6).
+	}
 	empty, _, emptyDOM := f.compare(t, false, guiMyMeetupsCases[0])
 	filled, _, filledDOM := f.compare(t, false, guiMyMeetupsCases[1])
 	for _, mutation := range []struct {

@@ -84,6 +84,9 @@ func guiNewCommunityStyleFixture(t *testing.T) *guiCommunityStyleFixture {
 	if err != nil {
 		t.Fatal(err)
 	}
+	if guiSourceOnlyDefault(t, root, "community style/pagination") {
+		return nil
+	}
 	normalizer, err := guiPublicNewNormalizer(root)
 	if err != nil || normalizer == nil {
 		t.Fatal("actual existing released normalizer/archive/original-corpus bindings are required")
@@ -208,6 +211,9 @@ func (f *guiCommunityStyleFixture) compare(t *testing.T, filesystem bool, kind s
 
 func TestGUIPublicCommunityStyleDOM(t *testing.T) {
 	f := guiNewCommunityStyleFixture(t)
+	if f == nil {
+		return // Committed source-only default path (ADR-0056 Q6).
+	}
 	for _, filesystem := range []bool{false, true} {
 		for _, kind := range []string{"empty", "type", "category"} {
 			t.Run(fmt.Sprintf("filesystem-%t/%s", filesystem, kind), func(t *testing.T) {
@@ -219,6 +225,9 @@ func TestGUIPublicCommunityStyleDOM(t *testing.T) {
 
 func TestGUIPublicCommunityStyleRejectsDOMMutations(t *testing.T) {
 	f := guiNewCommunityStyleFixture(t)
+	if f == nil {
+		return // Committed source-only default path (ADR-0056 Q6).
+	}
 	body, expected := f.compare(t, false, "type")
 	for _, mutation := range []struct {
 		name string

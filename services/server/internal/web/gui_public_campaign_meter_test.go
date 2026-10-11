@@ -164,6 +164,9 @@ func guiNewCampaignMeterFixture(t *testing.T) *guiCampaignMeterFixtureData {
 	if err != nil {
 		t.Fatal(err)
 	}
+	if guiSourceOnlyDefault(t, root, "campaign meter") {
+		return nil
+	}
 	normalizer, err := guiPublicNewNormalizer(root)
 	if err != nil || normalizer == nil {
 		t.Fatal("actual unchanged764 normalizer/archive/original15 required")
@@ -506,6 +509,9 @@ func (f *guiCampaignMeterFixtureData) compare(t *testing.T, filesystem bool, kin
 
 func TestGUIPublicCampaignMeterDelivery(t *testing.T) {
 	f := guiNewCampaignMeterFixture(t)
+	if f == nil {
+		return // Committed source-only default path (ADR-0056 Q6).
+	}
 	disk := map[string][]byte{}
 	for _, kind := range guiCampaignMeterKinds {
 		for _, filesystem := range []bool{false, true} {
@@ -542,6 +548,9 @@ func TestGUIPublicCampaignMeterDelivery(t *testing.T) {
 
 func TestGUIPublicCampaignMeterRefusals(t *testing.T) {
 	f := guiNewCampaignMeterFixture(t)
+	if f == nil {
+		return // Committed source-only default path (ADR-0056 Q6).
+	}
 	body, _ := f.compare(t, false, "fractional")
 	_, percent, money := guiCampaignMeterContext("fractional")
 	fill := strings.Replace(guiCampaignMeterAfterTag, "{{ c.percent }}", percent, 1)

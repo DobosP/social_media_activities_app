@@ -142,6 +142,9 @@ func guiNewPreferenceFixture(t *testing.T) *guiPreferenceFixture {
 	if err != nil {
 		t.Fatal(err)
 	}
+	if guiSourceOnlyDefault(t, root, "preferences layout") {
+		return nil
+	}
 	normalizer, err := guiPublicNewNormalizer(root)
 	if err != nil || normalizer == nil {
 		t.Fatal("existing actual released normalizer/archive/original bindings required")
@@ -422,6 +425,9 @@ func (f *guiPreferenceFixture) compare(t *testing.T, filesystem bool, fixture gu
 
 func TestGUIPreferencesLayoutDOM(t *testing.T) {
 	f := guiNewPreferenceFixture(t)
+	if f == nil {
+		return // Committed source-only default path (ADR-0056 Q6).
+	}
 	for _, filesystem := range []bool{false, true} {
 		for _, fixture := range guiPreferenceCases {
 			t.Run(fmt.Sprintf("filesystem-%t/%s", filesystem, fixture.name), func(t *testing.T) {
@@ -433,6 +439,9 @@ func TestGUIPreferencesLayoutDOM(t *testing.T) {
 
 func TestGUIPreferencesLayoutRejectsDOMMutations(t *testing.T) {
 	f := guiNewPreferenceFixture(t)
+	if f == nil {
+		return // Committed source-only default path (ADR-0056 Q6).
+	}
 	access, accessDOM := f.compare(t, false, guiPreferenceCases[2])
 	notifications, notificationDOM := f.compare(t, false, guiPreferenceCases[5])
 	topics, topicDOM := f.compare(t, false, guiPreferenceCases[8])

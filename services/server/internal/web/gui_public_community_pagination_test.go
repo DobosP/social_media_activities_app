@@ -191,6 +191,9 @@ func guiCommunityPaginationCompare(t *testing.T, f *guiCommunityStyleFixture, fi
 
 func TestGUIPublicCommunityPaginationDOM(t *testing.T) {
 	f := guiNewCommunityStyleFixture(t)
+	if f == nil {
+		return // Committed source-only default path (ADR-0056 Q6).
+	}
 	for _, filesystem := range []bool{false, true} {
 		for _, fixture := range guiCommunityPaginationCases {
 			t.Run(fmt.Sprintf("filesystem-%t/%s", filesystem, fixture.name), func(t *testing.T) {
@@ -202,6 +205,9 @@ func TestGUIPublicCommunityPaginationDOM(t *testing.T) {
 
 func TestGUIPublicCommunityPaginationRejectsDOMMutations(t *testing.T) {
 	f := guiNewCommunityStyleFixture(t)
+	if f == nil {
+		return // Committed source-only default path (ADR-0056 Q6).
+	}
 	body, expected := guiCommunityPaginationCompare(t, f, false, guiCommunityPaginationCases[5])
 	bar := guiCommunityPaginationBar(t, body, guiPaginationCurrentTag)
 	for _, mutation := range []struct {
