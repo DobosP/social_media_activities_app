@@ -144,6 +144,13 @@ for the whole sequence.
 The scheduled `sync_roedu` wrapper reads `ROEDU_APP_PACK`. When set, venue ingestion and event
 sync both use that app pack; when absent, both use legacy products. One run never mixes modes.
 
+Venue identity ([ADR-0058](adr/0058-roedu-venue-identity-and-license-width.md)): one RO-EDU
+venue id is one place. A venue may merge into a nearby name-similar OSM/Overture place only if
+no other venue id has claimed that place; `dedup_places` and every place merge refuse to fold two
+venue ids together. Two venues in one building (Opera Națională Română Cluj and Teatrul Național
+Cluj) therefore stay two places with their own events. Item `license` is accepted up to 500
+runes, matching the server; the native credit columns are `varchar(500)`.
+
 ## Local POC (development only)
 
 [ADR-0057](adr/0057-roedu-local-poc-consumer.md) defines a loopback-only proof of concept over a

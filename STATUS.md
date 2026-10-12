@@ -21,11 +21,11 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   `140290d4bc6374ebb5b7922dee98c79bee5501a6cf76e1ef18923a8647068fd1` (4/6, 5/7 refused), capture/acquisition schema 3. Unknown
   fields, prose/person data, internal evidence/paths, unsafe URLs, policy drift, malformed relationships, duplicates, and page drift fail closed.
   Development/loopback-only local POC (ADR-0057; 2026-10-12): a verified admission over the item's REAL deny, honest privacy values, every POC row labelled "LOCAL POC — not cleared for publication"; production unchanged.
-- **Lifecycle and reconciliation:** source lifecycle/confidence/category,
-  recurrence/timezone/price/availability, source timestamps, venue identity, and pack/release/snapshot
-  identity are retained. Cancelled, postponed, removed, moved-online, tombstoned, low-confidence, or
-  unsafe-venue events stay out of public discovery. Only an unbounded clean full snapshot can reconcile
-  absence, atomically within its exact pack/city scope; partial/delta/legacy reads cannot.
+- **Lifecycle and reconciliation:** source lifecycle/confidence/category, recurrence/timezone/price/availability,
+  source timestamps, venue identity, and pack/release/snapshot identity are retained. One RO-EDU venue id is one place:
+  same-location venues never merge (ADR-0058; item license ≤500 runes). Cancelled, postponed, removed, moved-online,
+  tombstoned, low-confidence, or unsafe-venue events stay out of public discovery. Only an unbounded clean full snapshot
+  can reconcile absence, atomically within its exact pack/city scope; partial/delta/legacy reads cannot.
 - **Plural sentiment and moderation (ADR-0029):** fixed appreciation facets, adult-only dissent, private
   conduct concern, minor-protective thresholds, anti-pile-on/coordination sensors, batched public summaries,
   and audited human moderation are implemented for activity and group threads. Counts and engagement ranking
@@ -94,8 +94,8 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
-- Local POC (2026-10-12, ADR-0057): hermetic `go test -race ./...` + vet pass; jobs/web/cmd/catalog/commands on disposable PG: POC DB tests pass (review fixes: a complete POC snapshot never reconciles, event evidence stored, feeds labelled), failures only the known codec/demo reds also on the base commit ([WORKLOG](WORKLOG.md)).
-- Policy 5/8 (2026-10-11, ADR-0055): jobs+cmd+contracts hermetic pass; jobs/cmd on disposable PG: same 3+3 codec-host failures as main, roedu DB tests pass; legacy client 43/43 ([WORKLOG](WORKLOG.md)).
+- Venue identity + license 500 (2026-10-12, ADR-0058): check-native pass; jobs/commands/budgets/catalog/admin/web on disposable PG: new identity/race/license tests pass, only the known codec/demo reds; new-binary `--migrate-only` widens adopted and fresh DBs ([WORKLOG](WORKLOG.md)).
+- Local POC (2026-10-12, ADR-0057): hermetic `go test -race ./...` + vet pass; jobs/web/cmd/catalog/commands on disposable PG: POC DB tests pass (review fixes: a complete POC snapshot never reconciles, event evidence stored, feeds labelled), failures only the known codec/demo reds also on the base commit; policy 5/8 (2026-10-11, ADR-0055) same, legacy client 43/43 ([WORKLOG](WORKLOG.md)).
 - Thread access `874b437` (2026-10-06):714/all21 fresh tests,0skips/failures; native/hash/vet/race + Node4 + harness17 pass; [receipt](docs/reviews/native-go/rest-thread-access-checkpoint.json).
 - Three mappings/new6-case test: outsiderPOST403/owner201, privateGET403/owner200, guardian ghostwrite403/ward-own201; persisted author/body and zero-write/privacy checks;4 sensitivity controls fail intentionally.
 - Twenty-one exact mappings:1020 manifest claims/1651 unresolved/0invalid of2671; retirement exits1. Docs/all defects0; whitespace clean. Production/schema/dependencies/frontend unchanged.

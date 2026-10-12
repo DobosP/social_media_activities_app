@@ -401,7 +401,7 @@ def _social_common_is_valid(item: dict) -> bool:
         not _FORBIDDEN_PUBLIC_FIELDS.intersection(item)
         and _stable_id(item.get("id"))
         and _exact_text(item.get("source"), 255)
-        and _exact_text(item.get("license"), 120)
+        and _exact_text(item.get("license"), 500)
         and _exact_text(item.get("attribution"), 255)
         and isinstance(item.get("access_type"), str)
         and item.get("access_type") in REDISTRIBUTABLE_ACCESS_TYPES

@@ -3,6 +3,39 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-12 — RO-EDU venue identity wins over location; license up to 500 runes (ADR-0058)
+
+Valid until: the canonical pack's item bounds or the place-merge rules change — then requalify.
+
+Owner directive: "increase the server limit … Even if they have same location, it may be two
+different venues." Changes:
+- `ValidatePackItem` and the legacy Python oracle accept a `license` of up to 500 runes (it was
+  120). The real `opera_cluj_events` value is 131 runes. `schema.Migrate` widens
+  `places_place`/`events_event.license_name` to `varchar(500)` (`go-roedu-license-500-v1`,
+  guarded, catalog-only). Without the widening, the 131-rune INSERT would abort the city's sync.
+- A place carries at most one RO-EDU venue id (`jobs.RoeduVenueIdentitiesSQL`: own roedu
+  `external_id` plus `merged_sources` roedu entries).
+- `findRoeduDuplicate` skips places claimed by another venue id, then locks and rechecks the
+  chosen row.
+- `dedup_places` skips identity-conflicting pairs, and `mergePlaces` refuses them under its row
+  locks.
+
+Checks (disposable 127.0.0.1 `sociallive-postgis-pgvector:16` container, public schema bootstrapped
+by the pre-change binary so the fixtures exercise adoption from 120):
+- `scripts/check-native.sh` passes (gofmt, vet, `go test -race ./...`, Node worker).
+- jobs: 81 PASS, 3 FAIL. commands: 27 PASS, 1 FAIL. The failures are the known
+  ffmpeg-codec and `seed_mobile_card_demo` reds, which the same run on the base commit shows too.
+  budgets, catalog, admin and web are ok.
+- New `TestPostgresRoeduSameLocationVenuesStayDistinct` (3 venue ids, one building, an OSM place
+  with the same name, re-synced twice), `TestPostgresRoeduConcurrentClaimNeverSharesAPlace`,
+  `TestNativeDedupKeepsDistinctRoeduVenues`, `TestRoeduLicenseBoundMatchesServer` and
+  `TestRoeduVenuesConflict`. Mutation checks: each test fails when its own guard is removed (the
+  claim filter, the locked recheck, the dedup filter, the merge guard).
+- The new binary's `--migrate-only` widens both an adopted 120-column database and a fresh
+  bootstrap, and a rerun is a no-op.
+- The Python oracle validator was checked standalone (17/131/500 accepted, 501 refused). Django
+  pytest is not available on this host.
+
 ## 2026-10-12 — Local POC consumer review fixes (ADR-0057)
 
 Valid until: the cross-repo local-POC contract v1 or the ro_data_server POC projection changes.

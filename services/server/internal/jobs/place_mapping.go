@@ -178,24 +178,63 @@ func PlaceNameSimilarity(left, right string) float64 {
 	}
 	return 2 * float64(matched) / float64(len(a)+len(b))
 }
+
+// RoeduVenueIdentitiesSQL is the sorted set of RO-EDU venue ids a place row
+// carries: its own id when RO-EDU created it, plus every RO-EDU venue merged
+// into it. A place carries at most one, so two venues sharing one building
+// (different ids, same coordinates) always stay two places (ADR-0058).
+func RoeduVenueIdentitiesSQL(alias string) string {
+	return `ARRAY(SELECT DISTINCT venue FROM (SELECT CASE WHEN ` + alias + `.source='roedu' THEN ` + alias + `.external_id::text END AS venue UNION ALL SELECT claim->>'external_id' FROM jsonb_array_elements(CASE WHEN jsonb_typeof(` + alias + `.raw_tags->'merged_sources')='array' THEN ` + alias + `.raw_tags->'merged_sources' ELSE '[]'::jsonb END) claim WHERE jsonb_typeof(claim)='object' AND claim->>'source'='roedu') venues WHERE venue IS NOT NULL AND venue<>'' ORDER BY venue)`
+}
+
+// RoeduVenuesConflict reports whether merging places carrying these RO-EDU
+// venue identities would fold two different venues into one place.
+func RoeduVenuesConflict(left, right []string) bool {
+	seen := map[string]bool{}
+	for _, venue := range append(append([]string{}, left...), right...) {
+		seen[venue] = true
+	}
+	return len(seen) > 1
+}
+
+// findRoeduDuplicate picks the nearby non-RO-EDU place an RO-EDU venue merges
+// into. Location and name only nominate: a place another RO-EDU venue id has
+// already claimed is never shared, and the chosen row is locked and rechecked
+// so a concurrent sync cannot claim it twice.
 func findRoeduDuplicate(ctx context.Context, tx pgx.Tx, item map[string]any) (int64, error) {
 	location := item["location"].(map[string]any)
-	rows, err := tx.Query(ctx, `SELECT id,name FROM places_place WHERE source<>'roedu' AND ST_DWithin(location,ST_SetSRID(ST_MakePoint($1,$2),4326)::geography,75) ORDER BY ST_Distance(location,ST_SetSRID(ST_MakePoint($1,$2),4326)::geography),id LIMIT 50`, numberValue(location, "lon"), numberValue(location, "lat"))
+	external := stringValue(item, "id")
+	rows, err := tx.Query(ctx, `SELECT id,name FROM places_place WHERE source<>'roedu' AND ST_DWithin(location,ST_SetSRID(ST_MakePoint($1,$2),4326)::geography,75) AND `+RoeduVenueIdentitiesSQL("places_place")+` <@ ARRAY[$3::text] ORDER BY ST_Distance(location,ST_SetSRID(ST_MakePoint($1,$2),4326)::geography),id LIMIT 50`, numberValue(location, "lon"), numberValue(location, "lat"), external)
 	if err != nil {
 		return 0, err
 	}
-	defer rows.Close()
+	candidates := []int64{}
 	for rows.Next() {
 		var id int64
 		var name string
 		if err = rows.Scan(&id, &name); err != nil {
+			rows.Close()
 			return 0, err
 		}
 		if PlaceNameSimilarity(name, stringValue(item, "title")) >= .82 {
+			candidates = append(candidates, id)
+		}
+	}
+	err = rows.Err()
+	rows.Close()
+	if err != nil {
+		return 0, err
+	}
+	for _, id := range candidates {
+		var free bool
+		if err = tx.QueryRow(ctx, `SELECT `+RoeduVenueIdentitiesSQL("places_place")+` <@ ARRAY[$2::text] FROM places_place WHERE id=$1 FOR UPDATE`, id, external).Scan(&free); err != nil && !errors.Is(err, pgx.ErrNoRows) {
+			return 0, err
+		}
+		if err == nil && free {
 			return id, nil
 		}
 	}
-	return 0, rows.Err()
+	return 0, nil
 }
 func mapRoeduVenue(ctx context.Context, tx pgx.Tx, id int64, tags map[string]any) error {
 	for _, match := range MatchPlaceTags(tags) {

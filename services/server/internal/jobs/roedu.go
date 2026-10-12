@@ -158,7 +158,9 @@ func validateCommon(item map[string]any) bool {
 	if !validLane || (laneCheck != "web_http" && laneCheck != "sanctioned_api" && laneCheck != "bulk_download" && laneCheck != "derived_member") {
 		return false
 	}
-	if !stable(item["id"]) || !text(item["source"], 255, false) || !text(item["license"], 120, false) || !text(item["attribution"], 255, false) || !text(item["legal_basis"], 500, false) || item["gdpr_relevant"] != false || item["redistributable"] != true || item["privacy_classification"] != "no_personal_data" {
+	// license follows the server's 500-rune bound (a source's legal basis can
+	// exceed 120 runes); the credit columns are widened to match.
+	if !stable(item["id"]) || !text(item["source"], 255, false) || !text(item["license"], 500, false) || !text(item["attribution"], 255, false) || !text(item["legal_basis"], 500, false) || item["gdpr_relevant"] != false || item["redistributable"] != true || item["privacy_classification"] != "no_personal_data" {
 		return false
 	}
 	if item["access_type"] != "public_document" && item["access_type"] != "open_license" && item["access_type"] != "public_domain" {
