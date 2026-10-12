@@ -197,14 +197,21 @@ func RoeduVenuesConflict(left, right []string) bool {
 	return len(seen) > 1
 }
 
-// findRoeduDuplicate picks the nearby non-RO-EDU place an RO-EDU venue merges
-// into. Location and name only nominate: a place another RO-EDU venue id has
-// already claimed is never shared, and the chosen row is locked and rechecked
-// so a concurrent sync cannot claim it twice.
+// findRoeduDuplicate picks the nearby non-RO-EDU place a pack venue item
+// merges into (see FindRoeduDuplicate).
 func findRoeduDuplicate(ctx context.Context, tx pgx.Tx, item map[string]any) (int64, error) {
 	location := item["location"].(map[string]any)
-	external := stringValue(item, "id")
-	rows, err := tx.Query(ctx, `SELECT id,name FROM places_place WHERE source<>'roedu' AND ST_DWithin(location,ST_SetSRID(ST_MakePoint($1,$2),4326)::geography,75) AND `+RoeduVenueIdentitiesSQL("places_place")+` <@ ARRAY[$3::text] ORDER BY ST_Distance(location,ST_SetSRID(ST_MakePoint($1,$2),4326)::geography),id LIMIT 50`, numberValue(location, "lon"), numberValue(location, "lat"), external)
+	return FindRoeduDuplicate(ctx, tx, stringValue(item, "id"), stringValue(item, "title"), numberValue(location, "lon"), numberValue(location, "lat"))
+}
+
+// FindRoeduDuplicate picks the nearby non-RO-EDU place an RO-EDU venue merges
+// into. Location and name only nominate: a place another RO-EDU venue id has
+// already claimed is never shared, and the chosen row is locked and rechecked
+// so a concurrent sync cannot claim it twice. The place this venue already
+// claimed is preferred, so a nearer newcomer never moves it. sync_roedu and
+// ingest_places source=roedu both merge through it (ADR-0058).
+func FindRoeduDuplicate(ctx context.Context, tx pgx.Tx, external, title string, lon, lat float64) (int64, error) {
+	rows, err := tx.Query(ctx, `SELECT id,name FROM places_place WHERE source<>'roedu' AND ST_DWithin(location,ST_SetSRID(ST_MakePoint($1,$2),4326)::geography,75) AND `+RoeduVenueIdentitiesSQL("places_place")+` <@ ARRAY[$3::text] ORDER BY cardinality(`+RoeduVenueIdentitiesSQL("places_place")+`)>0 DESC,ST_Distance(location,ST_SetSRID(ST_MakePoint($1,$2),4326)::geography),id LIMIT 50`, lon, lat, external)
 	if err != nil {
 		return 0, err
 	}
@@ -216,7 +223,7 @@ func findRoeduDuplicate(ctx context.Context, tx pgx.Tx, item map[string]any) (in
 			rows.Close()
 			return 0, err
 		}
-		if PlaceNameSimilarity(name, stringValue(item, "title")) >= .82 {
+		if PlaceNameSimilarity(name, title) >= .82 {
 			candidates = append(candidates, id)
 		}
 	}

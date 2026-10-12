@@ -305,5 +305,5 @@ func EditableFields(model string) map[string]Field {
 // Imported facts remain owned by their source pack. Manual event editing is a
 // separate native path; releasing a held import uses ReviewEvent below.
 func init() {
-	curatedFields["events.event"] = map[string]Field{"title": text(255, true), "description": text(20000, false), "starts_at": Field{Kind: "datetime", Required: true}, "ends_at": Field{Kind: "datetime"}, "url": webURL(500, false), "place_id": foreign("places_place", false), "activity_type_id": foreign("taxonomy_activitytype", false), "attribution": text(255, false), "license_name": text(120, false), "provenance_url": webURL(500, false), "lifecycle_status": choice("scheduled,rescheduled,postponed,cancelled,sold_out,moved_online,expired,removed,unknown", "scheduled")}
+	curatedFields["events.event"] = map[string]Field{"title": text(255, true), "description": text(20000, false), "starts_at": Field{Kind: "datetime", Required: true}, "ends_at": Field{Kind: "datetime"}, "url": webURL(500, false), "place_id": foreign("places_place", false), "activity_type_id": foreign("taxonomy_activitytype", false), "attribution": text(255, false), "license_name": text(500, false), "provenance_url": webURL(500, false), "lifecycle_status": choice("scheduled,rescheduled,postponed,cancelled,sold_out,moved_online,expired,removed,unknown", "scheduled")}
 }

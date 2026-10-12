@@ -3,6 +3,31 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-12 — ADR-0058 review fixes: second RO-EDU merge path, admin license width
+
+Valid until: the place-merge rules or the admin curated event fields change — then requalify.
+
+Review found a second path that merged RO-EDU venues by location: `ingest_places source=roedu`
+(`upsertPlace`, dedup on by default) ran its own 75 m / name-similarity query and appended the
+venue to any match without checking existing claims. Changes:
+- `upsertPlace` now merges RO-EDU venues only through the exported `jobs.FindRoeduDuplicate`
+  (claim filter + `FOR UPDATE` recheck), the same helper `sync_roedu` uses.
+- `FindRoeduDuplicate` prefers the place the venue already claimed over a nearer newcomer, so a
+  claim is persistent as ADR-0058 states.
+- The admin `events.event` `license_name` field is 500 runes, matching the widened column.
+- The Django oracle `[:120]` slices stay deferred (ADR-0058); not changed, Django is not
+  installed on this host.
+
+Checks (disposable 127.0.0.1 `sociallive-postgis-pgvector:16` container, freshly migrated):
+- `scripts/check-native.sh` passes (31 packages ok).
+- jobs: 81 PASS, 3 FAIL (ffmpeg codec, host). commands: 28 PASS, 1 FAIL
+  (`TestNativeSeedBrowseUsersEventsAndMobileScenarios`, known on the base commit). admin: ok.
+- New `TestPostgresIngestRoeduPlacesKeepsVenueIdentity` (3 venue ids in one building + a same-name
+  OSM place, ingested twice; a nearer same-name newcomer does not move a claim) and
+  `TestNativeOperatorEventLicenseMatchesColumnWidth` (131/500 accepted, 501 refused). Mutation
+  checks: routing roedu back to the generic dedup fails the first test (OSM place carries
+  venue-1 and venue-3); dropping the claimed-first ordering fails its persistence half.
+
 ## 2026-10-12 — RO-EDU venue identity wins over location; license up to 500 runes (ADR-0058)
 
 Valid until: the canonical pack's item bounds or the place-merge rules change — then requalify.

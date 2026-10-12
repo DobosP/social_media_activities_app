@@ -51,3 +51,70 @@ func TestNativeDedupKeepsDistinctRoeduVenues(t *testing.T) {
 		}
 	}
 }
+
+type roeduPlaceFixture []RawPlace
+
+func (f roeduPlaceFixture) Fetch(_ context.Context, _ PlaceOptions, emit func(RawPlace) error) error {
+	for _, raw := range f {
+		if err := emit(raw); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// ADR-0058: ingest_places source=roedu merges through the same claim rule as
+// sync_roedu. Two same-name venue ids in one building never share the nearby
+// OSM place, re-ingesting keeps the mapping, and a nearer newcomer with the
+// same name never moves a venue off the place it already claimed.
+func TestPostgresIngestRoeduPlacesKeepsVenueIdentity(t *testing.T) {
+	r, s := commandFixture(t)
+	ctx := context.Background()
+	place := func(name string, lon, lat float64) int64 {
+		id := testdb.Place(t, r.DB, name, "osm")
+		if _, err := r.DB.Exec(ctx, `UPDATE places_place SET raw_tags='{"amenity":"theatre"}'::jsonb,location=ST_SetSRID(ST_MakePoint($2,$3),4326) WHERE id=$1`, id, lon, lat); err != nil {
+			t.Fatal(err)
+		}
+		return id
+	}
+	claims := func(id int64) []string {
+		var venues []string
+		if err := r.DB.QueryRow(ctx, `SELECT `+jobs.RoeduVenueIdentitiesSQL("p")+` FROM places_place p WHERE id=$1`, id).Scan(&venues); err != nil {
+			t.Fatal(err)
+		}
+		return venues
+	}
+	venue := func(id, name string, lon, lat float64) RawPlace {
+		return RawPlace{Source: "roedu", ExternalID: id, Name: name, Lon: lon, Lat: lat, Tags: map[string]any{"amenity": "theatre"}, License: "Date publice; temei legal: Legea nr. 544/2001 privind liberul acces la informatiile de interes public, art. 5 alin. (1)"}
+	}
+	osm := place("Teatrul Național Cluj", 23.5949, 46.7712)
+	ingest := func(raws ...RawPlace) {
+		t.Helper()
+		s.Config.Sources = map[string]PlaceSource{"roedu": roeduPlaceFixture(raws)}
+		if _, err := s.ingestPlaces(ctx, args(map[string]any{"source": "roedu"})); err != nil {
+			t.Fatal(err)
+		}
+	}
+	building := []RawPlace{venue("venue-1", "Teatrul Național Cluj", 23.5949, 46.7712), venue("venue-2", "Opera Națională Română Cluj", 23.5949, 46.7712), venue("venue-3", "Teatrul Național Cluj", 23.5949, 46.7712)}
+	for range 2 {
+		ingest(building...)
+		if got := claims(osm); len(got) != 1 || got[0] != "venue-1" {
+			t.Fatal("same-location RO-EDU venues share one OSM place", got)
+		}
+		var own []string
+		if err := r.DB.QueryRow(ctx, `SELECT coalesce(array_agg(external_id ORDER BY external_id),'{}') FROM places_place WHERE source='roedu'`).Scan(&own); err != nil || len(own) != 2 || own[0] != "venue-2" || own[1] != "venue-3" {
+			t.Fatal("each unmerged venue id must own exactly one place", own, err)
+		}
+	}
+	// A nearer same-name place appears later; the existing claim stays put.
+	claimed := place("Filarmonica de Stat Transilvania", 23.60, 46.77)
+	ingest(venue("venue-4", "Filarmonica de Stat Transilvania", 23.6001, 46.7701))
+	nearer := place("Filarmonica de Stat Transilvania", 23.6001, 46.7701)
+	ingest(venue("venue-4", "Filarmonica de Stat Transilvania", 23.6001, 46.7701))
+	if got := claims(claimed); len(got) != 1 || got[0] != "venue-4" {
+		t.Fatal("a re-ingest moved the venue off its claimed place", got)
+	}
+	if got := claims(nearer); len(got) != 0 {
+		t.Fatal("a re-ingest folded the venue into a second place", got)
+	}
+}

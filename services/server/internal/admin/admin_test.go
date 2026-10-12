@@ -345,3 +345,19 @@ func TestNativeOperatorManualEventsKeepImportedFactsImmutable(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+// ADR-0058: events_event.license_name is varchar(500); the curated field
+// accepts what the column holds and refuses one rune more.
+func TestNativeOperatorEventLicenseMatchesColumnWidth(t *testing.T) {
+	s, a := fixture(t)
+	ctx := context.Background()
+	place := testdb.Place(t, s.DB, "License width fixture venue", "osm")
+	for _, n := range []int{131, 500} {
+		if _, err := s.Save(ctx, a, "events.event", 0, rawFields(map[string]any{"title": fmt.Sprint("License width ", n), "starts_at": "2030-01-01T18:00:00+02:00", "place_id": place, "license_name": strings.Repeat("ș", n), "attribution": "Synthetic owner"})); err != nil {
+			t.Fatal(n, err)
+		}
+	}
+	if _, err := s.Save(ctx, a, "events.event", 0, rawFields(map[string]any{"title": "License width 501", "starts_at": "2030-01-01T18:00:00+02:00", "place_id": place, "license_name": strings.Repeat("ș", 501), "attribution": "Synthetic owner"})); err == nil {
+		t.Fatal("license wider than the column accepted")
+	}
+}

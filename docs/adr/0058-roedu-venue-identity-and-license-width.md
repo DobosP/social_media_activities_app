@@ -15,12 +15,14 @@ name similarity still *nominate* a merge. They never *decide* one between two ve
 - A place's RO-EDU identities are its own `external_id` when `source='roedu'`, plus every
   `merged_sources` entry with `source: roedu` (`jobs.RoeduVenueIdentitiesSQL`). No place may ever
   carry more than one.
-- `sync_roedu` (`findRoeduDuplicate`) still merges a venue into a nearby (≤75 m), name-similar
-  (≥0.82) non-RO-EDU place, but only into one that no *other* venue id has claimed. The chosen
-  row is locked `FOR UPDATE` and rechecked first. Two syncs for differently spelled city facets
-  ("Bucuresti"/"București") hold different advisory locks, so they could otherwise both claim
-  the place. A venue that loses gets its own `source='roedu'` place. A claim is persistent, so
-  re-syncs keep the same mapping.
+- Both RO-EDU place writers, `sync_roedu` and `ingest_places source=roedu` (`upsertPlace`), merge
+  only through `jobs.FindRoeduDuplicate`. It still merges a venue into a nearby (≤75 m),
+  name-similar (≥0.82) non-RO-EDU place, but only into one that no *other* venue id has claimed.
+  The chosen row is locked `FOR UPDATE` and rechecked first. Two syncs for differently spelled
+  city facets ("Bucuresti"/"București") hold different advisory locks, and the two writers hold
+  different ones again, so they could otherwise both claim the place. A venue that loses gets its
+  own `source='roedu'` place. A claim is persistent: the place a venue already claimed is
+  preferred over any nearer newcomer, so re-syncs and re-ingests keep the same mapping.
 - `dedup_places` skips any candidate pair whose union of identities has more than one venue id
   (both rows are read fresh on every iteration). `mergePlaces` repeats the check under its row
   locks for every caller. `aggregate_unnamed_places` merges only unnamed OSM/Overture sub-venues
@@ -34,7 +36,8 @@ ro_data_server bound (`legal_basis` already had 500). This applies to the native
 to the legacy Python oracle validator, which the validator golden pins. `places_place.license_name`
 and `events_event.license_name` widen from `varchar(120)` to `varchar(500)` in `schema.Migrate`
 (version `go-roedu-license-500-v1`). The migration is catalog-only, guarded and idempotent.
-`places_placecover.license_name` (Commons covers) keeps 120.
+`places_placecover.license_name` (Commons covers) keeps 120. The admin curation field for
+`events.event` `license_name` (manual events; imported facts are not editable there) is 500 too.
 
 ## Context / why
 
