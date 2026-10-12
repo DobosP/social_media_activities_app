@@ -3,6 +3,50 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-13 — Event city filters and explicit local POC history
+
+Valid until: city comparison, event views, protected inputs or qualification environment changes — then requalify.
+
+ADR-0059 fixes the ignored city argument and adds a separate `past_only=1` view behind
+the existing local POC gate. City comparisons share NFC/case/whitespace/Romanian spelling
+folding and one explicit Bucharest alias; stored facts and identities are not rewritten.
+Modes and forms retain discovery filters; subscriptions retain city/area/activity and
+remain upcoming-only. Filtered SEO/JSON-LD and SSR/SPA POC labels follow the selected rows.
+The React+POC CLI refusal and all public safety/policy guards remain unchanged.
+
+Focused synthetic route checks exercise city aliases in query and stored NFD facts,
+combined/unknown city filters, HTML/soft navigation/API/feed parity, more than100 upcoming
+events plus history, and past production/held/cancelled/tombstone/unpublished exclusions.
+An unchanged-source Go overlay dropping city selection fails the unknown-city control;
+the separate overlay dropping past-only selection fails its capacity control (100 upcoming rows hide history).
+Shared offline Python template URL defaults and keyed SPA filter forms were corrected
+after independent read-only review. The strengthened final focused set passes4/4,
+including a selected-city unpublished venue and offline-template fallback.
+`check-native.sh /usr/local/go/bin/go` passes31 package OK lines plus Node4;
+Node24.21.0/npm11.19.0 `npm test` passes3/3 and `npm run build` passes typecheck
+and36.72/40KiB gzip budget. Locked installation used Node24 with npm9.2 offline
+and the existing shared npm cache; no new cache tree was copied.
+Root independently approved the source diff before full qualification.
+Full21 qualification remains a separate exact-commit landing gate.
+
+Focused log SHA256 `57c8957fd605d3056368ba0900614e6c9607bd391a1300476df6876c5ab71f89`;
+native checks `18aa20a22820877638b2bcff55dfb1cec2020ff87bfd5663838ccea71cbf119c`;
+city negative `c8bb8c55f139174602ebd9f35a7ccb92128f678f19efb560b385a19c3464f9c2`;
+history negative `76e67412bcdc8c4e8e4b39bae3765fd0456dface5cbada1186cf491a7489da98`.
+Negative controls are test-only Go overlays, not modifications of the working source.
+
+Runner and compact logs: `/home/dobo/work/_temp/fix__local-poc-city-filters/social/`.
+It reuses the one shared Go cache/module cache and canonical codec image with a new
+internal/no-host-port, disk-backed disposable PG fixture (2CPU/2GiB). Live runtime,
+crawl archive, data, other owners and shared main are untouched by this worker.
+
+Status history retained here: prior [thread-pages713](docs/reviews/native-go/rest-thread-pagination-checkpoint.json),
+[own-list712](docs/reviews/native-go/rest-own-memberships-checkpoint.json), [RSVP711](docs/reviews/native-go/rest-rsvp-checkpoint.json),
+[Presence710](docs/reviews/native-go/rest-presence-checkpoint.json), [auth/transit709](docs/reviews/native-go/rest-auth-transit-checkpoint.json)
+and [transport709](docs/reviews/native-go/rest-transport-checkpoint.json) receipts remain. Original `c27a99f`705
+[source/image/audits](docs/reviews/native-go/restart-checkpoint.json) remain; this source fix claims no new deployment image/audit.
+The unused openpgp advisory and human first-deployment review remain separate.
+
 ## 2026-10-13 — Policy 5/8 and isolated POC landing qualification
 
 Valid until: any protected source object or qualification environment changes — then requalify.

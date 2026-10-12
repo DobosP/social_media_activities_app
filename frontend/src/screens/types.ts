@@ -83,13 +83,16 @@ export interface EventRow {
   when: string;
   place: { name: string; url: string } | null;
   description: string;
+  localPocMarker?: string;
+  pastLabel?: string;
 }
 
 export interface EventsData {
   events: EventRow[];
-  filters: { query: string; activity: string; area: string; areaName: string };
+  filters: { query: string; activity: string; area: string; areaName: string; city?: string };
   areas: { slug: string; name: string }[];
-  urls: { action: string; rss: string; thingsIndex: string };
+  urls: { action: string; rss: string; thingsIndex: string; clear?: string };
+  localPOC?: { includePast: boolean; pastOnly: boolean; upcomingURL: string; includePastURL: string; pastOnlyURL: string };
   ui: Record<string, string>;
 }
 

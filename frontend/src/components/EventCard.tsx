@@ -8,6 +8,7 @@ export function EventCard({ e }: { e: EventRow }) {
       <h3 className="sa-acard__title">
         <a href={e.url}>{e.title}</a>
       </h3>
+      {e.localPocMarker && <p><Badge tone="neutral" size="sm">{e.localPocMarker}</Badge>{e.pastLabel && <> <Badge tone="neutral" size="sm">{e.pastLabel}</Badge></>}</p>}
       {e.type && (
         <Badge tone="neutral" size="sm">
           {e.type}

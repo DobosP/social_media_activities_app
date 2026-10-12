@@ -271,6 +271,17 @@ func (s *Server) BuildSPA(ctx context.Context, r *http.Request, a platform.Actor
 	case "events":
 		data["events"], err = s.spaEventRows(ctx, r, legacy["events"])
 		data["filters"] = map[string]any{"query": spaText(legacy["query"]), "activity": spaText(legacy["activity"]), "area": spaText(legacy["area"]), "areaName": spaText(legacy["area_name"])}
+		if city, present := legacy["city"]; present {
+			spaMap(data["filters"])["city"] = spaText(city)
+			ui["cityLabel"], ui["clear"] = tr("City"), tr("Clear filters")
+			spaMap(data["urls"])["rss"] = legacy["event_feed_url"]
+			spaMap(seo["rss"])["url"] = legacy["event_feed_url"]
+			spaMap(data["urls"])["clear"] = legacy["event_clear_url"]
+			if spaBool(legacy["local_poc_mode"]) {
+				data["localPOC"] = map[string]any{"includePast": spaBool(legacy["local_poc_past"]), "pastOnly": spaBool(legacy["local_poc_past_only"]), "upcomingURL": legacy["event_upcoming_url"], "includePastURL": legacy["event_include_past_url"], "pastOnlyURL": legacy["event_past_only_url"]}
+				ui["upcomingOnly"], ui["includePast"], ui["pastOnly"] = tr("Upcoming only"), tr("Include past events (LOCAL POC)"), tr("Past events only (LOCAL POC)")
+			}
+		}
 		data["areas"] = spaChoices(legacy["areas"])
 	case "places":
 		data["places"], err = s.spaPlaceRows(ctx, r, legacy["places"])

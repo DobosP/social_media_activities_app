@@ -141,7 +141,7 @@ func (s *Server) publicPlaceDetail(r *http.Request, a platform.Actor) (pongo2.Co
 		for _, combo := range combos {
 			area := spaMap(combo["area"])
 			typ := spaMap(combo["activity"])
-			if strings.EqualFold(spaText(area["city"]), spaText(p["city"])) {
+			if catalog.CityKey(spaText(area["city"])) == catalog.CityKey(spaText(p["city"])) {
 				data["related_city"] = map[string]any{"name": area["name"], "url": routeURL("things_to_do_city", area["slug"])}
 				for _, edge := range edges {
 					if spaMap(edge["activity"])["slug"] == typ["slug"] && !spaBool(edge["is_disputed"]) {
@@ -173,7 +173,10 @@ func (s *Server) publicEvents(r *http.Request, city string, place int64, cap int
 	if s.localPOCPast(r) {
 		listed, order = publicLocalPOCPastSQL, publicLocalPOCPastOrder
 	}
-	rows, err := socialRows(r.Context(), s.DB, `SELECT `+catalog.PublicEventProjectionSQL()+publicEventModel+publicEventsJoin+` WHERE `+catalog.PolicyFromContext(r.Context()).EventSQL()+` AND `+listed+` AND ($1::text='' OR t.slug=$1) AND ($2::bigint=0 OR e.place_id=$2) AND ($3::text='' OR lower(p.address_city)=lower($3)) AND ($4::text='' OR upper(e.title) LIKE '%'||upper($4)||'%' OR upper(e.description) LIKE '%'||upper($4)||'%' OR upper(p.name) LIKE '%'||upper($4)||'%') AND (NOT EXISTS(SELECT 1 FROM communities_area ar WHERE ar.slug=$5) OR EXISTS(SELECT 1 FROM communities_area ar WHERE ar.slug=$5 AND ((ar.derive_method='city' AND lower(p.address_city)=lower(ar.city))))) ORDER BY `+order+` LIMIT $6`, activity, place, city, search, q.Get("area"), cap)
+	if s.localPOCPastOnly(r) {
+		listed, order = publicLocalPOCPastOnlySQL, "e.starts_at DESC,e.id"
+	}
+	rows, err := socialRows(r.Context(), s.DB, `SELECT `+catalog.PublicEventProjectionSQL()+publicEventModel+publicEventsJoin+` WHERE `+catalog.PolicyFromContext(r.Context()).EventSQL()+` AND `+listed+` AND ($1::text='' OR t.slug=$1) AND ($2::bigint=0 OR e.place_id=$2) AND ($3::text='' OR `+catalog.CityEqualSQL("p.address_city", "$3::text")+`) AND ($4::text='' OR upper(e.title) LIKE '%'||upper($4)||'%' OR upper(e.description) LIKE '%'||upper($4)||'%' OR upper(p.name) LIKE '%'||upper($4)||'%') AND (NOT EXISTS(SELECT 1 FROM communities_area ar WHERE ar.slug=$5) OR EXISTS(SELECT 1 FROM communities_area ar WHERE ar.slug=$5 AND ((ar.derive_method='city' AND `+catalog.CityEqualSQL("p.address_city", "ar.city")+`)))) ORDER BY `+order+` LIMIT $6`, activity, place, city, search, q.Get("area"), cap)
 	if err != nil {
 		return nil, err
 	}
@@ -217,7 +220,7 @@ func (s *Server) publicEventDetail(r *http.Request, a platform.Actor) (pongo2.Co
 		data["structured_data"] = publicLD(s.publicEventLD(r, e))
 		data["breadcrumb_data"] = publicLD(s.publicBreadcrumb(r, []map[string]any{{"name": "Home", "url": "/"}, {"name": "Events", "url": "/events/"}, {"name": e["title"], "url": publicEventPath(e)}}))
 		if len(p) > 0 && spaBool(spaMap(e["activity_type"])["is_active"]) {
-			areas, err := socialRows(r.Context(), s.DB, `SELECT jsonb_build_object('slug',slug,'name',name) FROM communities_area WHERE is_active AND lower(city)=lower($1) ORDER BY id LIMIT 1`, p["city"])
+			areas, err := socialRows(r.Context(), s.DB, `SELECT jsonb_build_object('slug',slug,'name',name) FROM communities_area WHERE is_active AND `+catalog.CityEqualSQL("city", "$1::text")+` ORDER BY id LIMIT 1`, p["city"])
 			if err != nil {
 				return nil, err
 			}

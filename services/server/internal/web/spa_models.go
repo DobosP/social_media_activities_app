@@ -358,7 +358,7 @@ func (s *Server) spaEventRows(ctx context.Context, r *http.Request, value any) (
 		for _, item := range items {
 			ids = append(ids, spaID(item))
 		}
-		rows, err := s.DB.Query(ctx, `SELECT `+catalog.PublicEventProjectionSQL()+` || jsonb_build_object('activity_type_obj',jsonb_build_object('name',t.name),'place_obj',CASE WHEN p.id IS NULL THEN NULL ELSE jsonb_build_object('id',p.id,'name',p.name,'display_name',`+catalog.PlaceDisplayNameSQL()+`) END) FROM events_event e LEFT JOIN places_place p ON p.id=e.place_id LEFT JOIN taxonomy_activitytype t ON t.id=e.activity_type_id WHERE `+catalog.PolicyFromContext(r.Context()).EventSQL()+` AND e.id=ANY($1)`, ids)
+		rows, err := s.DB.Query(ctx, `SELECT `+catalog.PublicEventProjectionSQL()+` || jsonb_build_object('local_poc',`+catalog.EventLocalPOCSQL+` OR coalesce(p.raw_tags->'roedu_local_poc'='true'::jsonb,false),'activity_type_obj',jsonb_build_object('name',t.name),'place_obj',CASE WHEN p.id IS NULL THEN NULL ELSE jsonb_build_object('id',p.id,'name',p.name,'display_name',`+catalog.PlaceDisplayNameSQL()+`) END) FROM events_event e LEFT JOIN places_place p ON p.id=e.place_id LEFT JOIN taxonomy_activitytype t ON t.id=e.activity_type_id WHERE `+catalog.PolicyFromContext(r.Context()).EventSQL()+` AND e.id=ANY($1)`, ids)
 		if err != nil {
 			return nil, err
 		}
@@ -397,7 +397,15 @@ func (s *Server) spaEventRows(ctx context.Context, r *http.Request, value any) (
 		if spaID(p) > 0 {
 			place = map[string]any{"name": p["name"], "url": s.spaPlacePath(p)}
 		}
-		out = append(out, map[string]any{"pk": spaID(e), "url": fmt.Sprintf("/events/%d/%s/", spaID(e), snapshot.Slug(spaText(e["title"]), "event")), "title": e["title"], "type": spaText(typ["name"]), "when": s.spaDate(r, e["starts_at"], "D j M, H:i"), "place": place, "description": spaTruncate(spaText(e["description"]), 22)})
+		row := map[string]any{"pk": spaID(e), "url": fmt.Sprintf("/events/%d/%s/", spaID(e), snapshot.Slug(spaText(e["title"]), "event")), "title": e["title"], "type": spaText(typ["name"]), "when": s.spaDate(r, e["starts_at"], "D j M, H:i"), "place": place, "description": spaTruncate(spaText(e["description"]), 22)}
+		markLocalPOCEvent(e)
+		if spaBool(e["local_poc"]) {
+			row["localPocMarker"] = catalog.LocalPOCMarker
+			if spaBool(e["local_poc_past"]) {
+				row["pastLabel"] = s.Renderer.catalog.translate(language(r), "Past event", 1)
+			}
+		}
+		out = append(out, row)
 	}
 	return out, nil
 }

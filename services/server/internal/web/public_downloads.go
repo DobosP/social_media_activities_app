@@ -91,18 +91,18 @@ func (s *Server) PublicDownload(w http.ResponseWriter, r *http.Request, a platfo
 		platform.ExtendDeadlines(w, 0, platform.TransferWriteTimeout(stat.Size()))
 		http.ServeContent(w, r, file, stat.ModTime(), f)
 	case "events_feed", "events_feed_atom":
-		// Feeds ignore q and all non-source filters, retaining only area/activity.
+		// Feeds retain city/area/activity and ignore free text and history.
 		request := r.Clone(r.Context())
 		u := *r.URL
 		request.URL = &u
 		q := u.Query()
 		for key := range q {
-			if key != "area" && key != "activity" {
+			if key != "area" && key != "activity" && key != "city" {
 				q.Del(key)
 			}
 		}
 		u.RawQuery = q.Encode()
-		events, err := s.publicEvents(request, "", 0, 100)
+		events, err := s.publicEvents(request, strings.TrimSpace(q.Get("city")), 0, 100)
 		if err != nil {
 			platform.Fail(w, err)
 			return true
