@@ -1,8 +1,8 @@
 # ADR-0056: GUI preparation scope, portable live mode binding, default-context owner attribute
 
 Date: 2026-10-11
-Status: proposed — owner decisions Q2 and Q6 recorded; mode fix on branch `fix/gui-review-20261011`;
-the 794573c live-output change awaits programme privacy/independent review before landing
+Status: proposed — owner decisions Q2 and Q6 recorded; mode fix and source-only default path merged into
+`feat/gui-app-migration-a` (345fb30); 794573c read-only privacy review recorded below (no blocker; not executed)
 
 ## Decision
 
@@ -42,7 +42,7 @@ refused"). Why not re-pin modes: no single umask satisfies mixed pins, and the p
 
 - The repair `mode` refusal control now proves group/owner/other exec bits, a symlink type and a
   setuid bit refuse on two inputs; a 0o100644 checkout of a 0o100664 pin is admitted by design.
-- Open owner question: 20 branch-added focused GUI tests (activity browse/form, my meetups,
+- Resolved by the Q6 amendment below (source-only default path): 20 branch-added focused GUI tests (activity browse/form, my meetups,
   places nonce; preferences layout; campaign meter; community pagination/style) fail in the
   default no-flag `go test ./internal/web` because their normalizer/archive/original15 bindings
   are mandatory and "omission fails rather than skips" (docs/gui-public-golden-fixtures.md).
@@ -81,3 +81,18 @@ existing campaign inverse then maps to the recorded preimage. The renderer.go/se
 counters are unchanged. The `unknown` and `mixed` refusal controls now cover all ten repair
 inputs. `source.json`, `cases.json` and the historical receipts are unchanged. The
 preference registry re-pins the nine edited files and `guiPreferencesGETRegistrySHA` follows it.
+
+## Amendment 2026-10-12: independent privacy review of 794573c
+
+Read-only review (Claude Code independent-review session; code reading, no tests executed):
+Django parity confirmed by source. The `auth` context processor supplies `request.user`
+(`public_id` UUIDField, `apps/accounts/models.py:72`), and privacy, terms, display_preferences,
+account_delete and open_data all `render()` templates extending `templates/base.html`, whose
+`site.js` tag emits `data-meetups-owner="{{ user.public_id }}"` for signed-in users. Before
+794573c Go emitted `""` there, so `site.js` skipped the F38 owner-change and logout purge; the
+fix restores it, which is safer on shared devices. No new exposure: the UUID is the viewer's
+own, already rendered on own-context pages and used as a public route key, and authenticated
+pages are `private, no-cache`. Service-worker scope is unchanged (`/my-meetups/` + `base.css`);
+CSP is unchanged (nonce-bound `site.js`, `worker-src 'self'`). Pre-existing, parity-preserving
+follow-up (not introduced here): account deletion does not purge the on-device meetups cache or
+the `mz-meetups-owner` marker, because the delete POST is not a `/logout/` form.
