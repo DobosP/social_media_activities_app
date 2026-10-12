@@ -9,6 +9,7 @@ import (
 	"github.com/DobosP/social_media_activities_app/services/server/internal/catalog"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"io"
 	"math"
 	"net/http"
@@ -22,6 +23,11 @@ func (r *Runner) SyncRoedu(ctx context.Context) (map[string]any, error) {
 	if !r.Config.RoeduSyncEnabled || r.Config.Roedu == nil || r.Config.Roedu.APIKey == "" {
 		return map[string]any{"disabled": true}, nil
 	}
+	// A POC sync never resolves Commons covers: nothing leaves the PC (ADR-0057).
+	localPOC := r.Config.Roedu.LocalPOCActive()
+	if len(r.Config.RoeduCities) > 0 {
+		return r.syncRoeduCities(ctx, localPOC)
+	}
 	city := r.Config.RoeduCity
 	if city == "" {
 		city = "Cluj-Napoca"
@@ -32,7 +38,7 @@ func (r *Runner) SyncRoedu(ctx context.Context) (map[string]any, error) {
 			return nil, err
 		}
 		var coverErr error
-		if r.Config.ResolvePlaceCovers != nil {
+		if r.Config.ResolvePlaceCovers != nil && !localPOC {
 			_, coverErr = r.Config.ResolvePlaceCovers(ctx, nil)
 		}
 		if auditErr := platform.Transaction(ctx, r.DB, func(tx pgx.Tx) error {
@@ -48,11 +54,11 @@ func (r *Runner) SyncRoedu(ctx context.Context) (map[string]any, error) {
 		}
 		return result, coverErr
 	}
-	summary, err := r.ApplyRoedu(ctx, pack, city)
+	summary, err := r.ApplyRoeduWithOptions(ctx, pack, city, roeduSyncOptions(pack))
 	if err != nil {
 		return summary, err
 	}
-	if r.Config.ResolvePlaceCovers != nil {
+	if r.Config.ResolvePlaceCovers != nil && !localPOC {
 		_, coverErr := r.Config.ResolvePlaceCovers(ctx, nil)
 		if err == nil {
 			err = coverErr
@@ -91,6 +97,13 @@ func (r *Runner) ApplyRoeduWithOptions(ctx context.Context, pack PackRead, city 
 	if options.MinConfidence < 0 || options.MinConfidence > 1 || math.IsNaN(options.MinConfidence) || math.IsInf(options.MinConfidence, 0) {
 		return nil, platform.ErrInvalid
 	}
+	if pack.LocalPOC && !r.Config.Roedu.LocalPOCActive() {
+		return nil, ErrLocalPOCRefused
+	}
+	if pack.LocalPOC {
+		// Never complete: no rollback check, absence tombstoning or sync state.
+		pack.Complete = false
+	}
 	if options.DryRun {
 		generated, dateOK := aware(pack.Generated)
 		if pack.Pack != SocialPack || !releasePattern.MatchString(pack.Release) || pack.Release != pack.Snapshot || !dateOK || (pack.Mode != "full" && pack.Mode != "partial") || (pack.Complete && pack.Mode != "full") {
@@ -109,7 +122,7 @@ func (r *Runner) ApplyRoeduWithOptions(ctx context.Context, pack PackRead, city 
 		}
 		venues, events, tombstones, held := 0, 0, 0, 0
 		for _, item := range pack.Items {
-			if !ValidatePackItem(item) {
+			if !validatePageItem(item, pack.LocalPOC) {
 				return nil, errors.New("invalid RO-EDU item reached storage")
 			}
 			switch item["kind"] {
@@ -124,7 +137,11 @@ func (r *Runner) ApplyRoeduWithOptions(ctx context.Context, pack PackRead, city 
 				}
 			}
 		}
-		return map[string]any{"venues": venues, "events": events, "tombstones": tombstones, "held": held, "complete": pack.Complete, "dry_run": true}, nil
+		summary := map[string]any{"venues": venues, "events": events, "tombstones": tombstones, "held": held, "complete": pack.Complete, "dry_run": true}
+		if pack.LocalPOC {
+			summary["local_poc"] = true
+		}
+		return summary, nil
 	}
 
 	venues, events, tombstones := 0, 0, 0
@@ -135,6 +152,11 @@ func (r *Runner) ApplyRoeduWithOptions(ctx context.Context, pack PackRead, city 
 		}
 		if _, err := tx.Exec(ctx, `SELECT pg_advisory_xact_lock(hashtextextended($1,0))`, "roedu:"+SocialPack+":"+city); err != nil {
 			return err
+		}
+		if pack.LocalPOC {
+			if err := ensureLocalPOCColumn(ctx, tx); err != nil {
+				return err
+			}
 		}
 		if pack.Complete && pack.Mode == "full" {
 			var previous string
@@ -153,7 +175,7 @@ func (r *Runner) ApplyRoeduWithOptions(ctx context.Context, pack PackRead, city 
 			return err
 		}
 		for _, item := range pack.Items {
-			if !ValidatePackItem(item) {
+			if !validatePageItem(item, pack.LocalPOC) {
 				return errors.New("invalid RO-EDU item reached storage")
 			}
 			if item["kind"] != "venue" {
@@ -166,6 +188,7 @@ func (r *Runner) ApplyRoeduWithOptions(ctx context.Context, pack PackRead, city 
 			tagMap["roedu_app_pack"] = pack.Pack
 			tagMap["roedu_release_id"] = pack.Release
 			tagMap["roedu_snapshot_id"] = pack.Snapshot
+			LocalPOCTags(tagMap, pack, item)
 			tags, _ := json.Marshal(tagMap)
 			var id int64
 			duplicate, err := findRoeduDuplicate(ctx, tx, item)
@@ -248,11 +271,15 @@ func (r *Runner) ApplyRoeduWithOptions(ctx context.Context, pack PackRead, city 
 				return err
 			}
 			args := []any{external, place, typeID, stringValue(item, "title"), start, end, safeURL(stringValue(item, "ticket_url")), stringValue(item, "attribution"), stringValue(item, "license"), numberValue(item, "confidence") < options.MinConfidence, stringValue(item, "status"), category, stringValue(facets, "city"), numberValue(item, "confidence"), dateValue(item, "first_seen"), dateValue(item, "last_seen"), pack.Pack, pack.Release, dateString(pack.Generated), pack.Snapshot, dateValue(item, "updated_at"), venue, stringValue(item, "availability"), stringValue(item, "currency"), item["is_free"], money(item, "price_max"), money(item, "price_min"), stringValue(item, "recurrence"), stringValue(item, "timezone")}
+			var written pgconn.CommandTag
 			if err == nil {
 				args = append(args, id)
-				_, err = tx.Exec(ctx, `UPDATE events_event SET external_id=$1::text,place_id=$2,activity_type_id=COALESCE($3,activity_type_id),title=$4,description='',starts_at=$5,ends_at=$6,url=$7,attribution=$8,license_name=$9,is_import_held=$10,lifecycle_status=$11,is_tombstone=false,source_category=$12,source_city=$13,source_confidence=$14,source_first_seen_at=$15,source_last_seen_at=$16,source_pack_id=$17,source_release_id=$18,source_snapshot_generated_at=$19,source_snapshot_id=$20,source_updated_at=$21,source_venue_id=$22,source_availability=$23,source_currency=$24,source_is_free=$25,source_price_max=$26,source_price_min=$27,source_recurrence=$28,source_timezone=$29,updated_at=now() WHERE id=$30 AND (source_updated_at IS NULL OR source_updated_at<=$21)`, args...)
+				written, err = tx.Exec(ctx, `UPDATE events_event SET external_id=$1::text,place_id=$2,activity_type_id=COALESCE($3,activity_type_id),title=$4,description='',starts_at=$5,ends_at=$6,url=$7,attribution=$8,license_name=$9,is_import_held=$10,lifecycle_status=$11,is_tombstone=false,source_category=$12,source_city=$13,source_confidence=$14,source_first_seen_at=$15,source_last_seen_at=$16,source_pack_id=$17,source_release_id=$18,source_snapshot_generated_at=$19,source_snapshot_id=$20,source_updated_at=$21,source_venue_id=$22,source_availability=$23,source_currency=$24,source_is_free=$25,source_price_max=$26,source_price_min=$27,source_recurrence=$28,source_timezone=$29,updated_at=now() WHERE id=$30 AND (source_updated_at IS NULL OR source_updated_at<=$21)`, args...)
 			} else {
-				_, err = tx.Exec(ctx, `INSERT INTO events_event(external_id,place_id,activity_type_id,title,description,starts_at,ends_at,url,attribution,license_name,provenance_url,is_import_held,lifecycle_status,is_tombstone,source_category,source_city,source_confidence,source_first_seen_at,source_last_seen_at,source_pack_id,source_release_id,source_snapshot_generated_at,source_snapshot_id,source_updated_at,source_venue_id,source_availability,source_currency,source_is_free,source_price_max,source_price_min,source_recurrence,source_timezone,source,created_at,updated_at) VALUES($1,$2,$3,$4,'',$5,$6,$7,$8,$9,'',$10,$11,false,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,'roedu',now(),now())`, args...)
+				written, err = tx.Exec(ctx, `INSERT INTO events_event(external_id,place_id,activity_type_id,title,description,starts_at,ends_at,url,attribution,license_name,provenance_url,is_import_held,lifecycle_status,is_tombstone,source_category,source_city,source_confidence,source_first_seen_at,source_last_seen_at,source_pack_id,source_release_id,source_snapshot_generated_at,source_snapshot_id,source_updated_at,source_venue_id,source_availability,source_currency,source_is_free,source_price_max,source_price_min,source_recurrence,source_timezone,source,created_at,updated_at) VALUES($1,$2,$3,$4,'',$5,$6,$7,$8,$9,'',$10,$11,false,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,'roedu',now(),now())`, args...)
+			}
+			if err == nil && pack.LocalPOC && written.RowsAffected() > 0 {
+				err = markLocalPOCEvent(ctx, tx, external, item)
 			}
 			if err != nil {
 				return err
@@ -267,9 +294,58 @@ func (r *Runner) ApplyRoeduWithOptions(ctx context.Context, pack PackRead, city 
 				return err
 			}
 		}
-		return platform.RecordAudit(ctx, tx, platform.Actor{}, "ingestion.roedu_synced", "", map[string]any{"venues": venues, "events": events, "tombstones": tombstones, "complete": pack.Complete, "pack": pack.Pack, "release": pack.Release, "min_confidence": options.MinConfidence, "rollback_allowed": options.AllowSnapshotRollback})
+		audit := map[string]any{"venues": venues, "events": events, "tombstones": tombstones, "complete": pack.Complete, "pack": pack.Pack, "release": pack.Release, "min_confidence": options.MinConfidence, "rollback_allowed": options.AllowSnapshotRollback}
+		if pack.LocalPOC {
+			audit["local_poc"] = true
+		}
+		return platform.RecordAudit(ctx, tx, platform.Actor{}, "ingestion.roedu_synced", "", audit)
 	})
-	return map[string]any{"venues": venues, "events": events, "tombstones": tombstones, "complete": pack.Complete}, err
+	summary := map[string]any{"venues": venues, "events": events, "tombstones": tombstones, "complete": pack.Complete}
+	if pack.LocalPOC {
+		summary["local_poc"] = true
+	}
+	return summary, err
+}
+
+// syncRoeduCities runs the scheduled sync once per exact producer city facet
+// (ROEDU_SYNC_CITIES, accepted only under the POC gate). A city with no items
+// is skipped: listing it would only produce a product refusal.
+func (r *Runner) syncRoeduCities(ctx context.Context, localPOC bool) (map[string]any, error) {
+	results := map[string]any{}
+	out := map[string]any{"cities": results}
+	if !localPOC {
+		return nil, ErrLocalPOCRefused
+	}
+	for _, city := range r.Config.RoeduCities {
+		pack, err := r.Config.Roedu.Read(ctx, city)
+		if errors.Is(err, ErrProductRefused) {
+			if auditErr := platform.Transaction(ctx, r.DB, func(tx pgx.Tx) error {
+				return platform.RecordAudit(ctx, tx, platform.Actor{}, "ingestion.roedu_refused", "", map[string]any{"pack": SocialPack, "city": city})
+			}); auditErr != nil {
+				return out, auditErr
+			}
+			skipped := map[string]any{"skipped": true, "refused": true}
+			var refusal *ProductRefusalError
+			if errors.As(err, &refusal) {
+				skipped["withheld"] = refusal.Withheld()
+			}
+			results[city] = skipped
+			continue
+		}
+		if err != nil {
+			return out, fmt.Errorf("RO-EDU city %q: %w", city, err)
+		}
+		if len(pack.Items) == 0 {
+			results[city] = map[string]any{"skipped": true, "items": 0}
+			continue
+		}
+		summary, err := r.ApplyRoeduWithOptions(ctx, pack, city, roeduSyncOptions(pack))
+		results[city] = summary
+		if err != nil {
+			return out, err
+		}
+	}
+	return out, nil
 }
 func dateString(raw string) time.Time { value, _ := time.Parse(time.RFC3339Nano, raw); return value }
 

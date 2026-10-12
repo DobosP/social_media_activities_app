@@ -20,14 +20,14 @@
       {% for a in areas %}<option value="{{ a.slug }}"{% if a.slug == area %} selected{% endif %}>{{ a.name }}</option>{% endfor %}
     </select>
   {% endif %}
-  <button class="btn" type="submit">{% trans "Search" %}</button>
+  <button class="btn" type="submit">{% trans "Search" %}</button>{% if local_poc_past %}<input type="hidden" name="include_past" value="1">{% endif %}
   {% if query %}<a class="muted" href="{% url 'events_list' %}">{% trans "clear" %}</a>{% endif %}
-</form>
+</form>{% if local_poc_mode %}<p class="muted">{% if local_poc_past %}<a href="{% url 'events_list' %}">Upcoming only</a>{% else %}<a href="{% url 'events_list' %}?include_past=1">Include past events (LOCAL POC)</a>{% endif %}</p>{% endif %}
 {% if area_name %}<p class="muted">{% blocktrans %}Showing events in <strong>{{ area_name }}</strong> only.{% endblocktrans %}</p>{% endif %}
 <div class="grid">
   {% for e in events %}
     <div class="card">
-      <h3><a href="{{ e|event_url }}">{{ e.title }}</a></h3>
+      <h3><a href="{{ e|event_url }}">{{ e.title }}</a></h3>{% if e.local_poc %}<p><span class="tag fact--false">LOCAL POC — not cleared for publication</span>{% if e.local_poc_past %} <span class="tag">Past event</span>{% endif %}</p>{% endif %}
       <div>{% if e.activity_type %}<span class="tag">{{ e.activity_type.name }}</span>{% endif %}</div>
       <p class="muted">{{ e.starts_at|date:"D j M, H:i" }}{% if e.place %} &middot;
         <a href="{{ e.place|place_url }}">{{ e.place.name }}</a>{% endif %}</p>

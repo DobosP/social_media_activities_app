@@ -78,6 +78,7 @@ func (s *Server) publicLanding(r *http.Request, a platform.Actor, name string) (
 		return nil, "", platform.ErrNotFound
 	}
 	data["places"], data["events"] = places, events
+	data["local_poc_content"] = anyLocalPOC(places) || anyLocalPOC(events)
 	if len(events) > 0 {
 		data["structured_data"] = publicLD(s.publicItemList(r, events, true))
 	}

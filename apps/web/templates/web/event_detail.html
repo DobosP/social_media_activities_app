@@ -14,7 +14,7 @@
     <li><span aria-current="page">{{ event.title }}</span></li>
   </ol>
 </nav>
-<h1>{{ event.title }}</h1>
+<h1>{{ event.title }}</h1>{% if event.local_poc %}<p><span class="tag fact--false">LOCAL POC — not cleared for publication</span></p>{% endif %}
 <div>{% if event.activity_type %}<span class="tag">{{ event.activity_type.name }}</span>{% endif %}</div>
 <p class="muted">{{ event.starts_at|date:"l j F Y, H:i" }}{% if event.ends_at %} &ndash; {{ event.ends_at|date:"H:i" }}{% endif %}
   {% if event.place %}<br>{% url 'place_detail' event.place.pk as place_url %}{% blocktrans with place_name=event.place.display_name %}at <a href="{{ place_url }}">{{ place_name }}</a>{% endblocktrans %}{% endif %}</p>

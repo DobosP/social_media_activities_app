@@ -187,6 +187,7 @@ func (call invocation) run(ctx context.Context, r *jobs.Runner) (any, error) {
 	case "sync_roedu":
 		if call.City != "" {
 			r.Config.RoeduCity = call.City
+			r.Config.RoeduCities = nil
 		}
 	case "indexnow_batch_submit":
 		if call.WindowHours != nil {

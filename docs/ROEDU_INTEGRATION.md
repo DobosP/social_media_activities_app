@@ -27,10 +27,10 @@ Places:
   producer withholding/errors, a record limit, or relationship drift makes the read incomplete,
   so it cannot infer absence.
 - The client validates exact venue/event/tombstone output shapes. Public fields are bound to policy
-  schema 4/ruleset 6 and acquisition schema 3 through a path-free attestation. Full policy,
-  clearance, rights, acquisition evidence, source prose/person fields, internal paths/checksums,
-  unsafe URLs, and unknown fields fail closed. The generic product iterator remains only for the
-  explicitly configured legacy delivery mode.
+  schema 5/ruleset 8 ([ADR-0055](adr/0055-roedu-policy-schema5-ruleset8.md)) and acquisition schema 3
+  through a path-free attestation. Full policy, clearance, rights, acquisition evidence, source
+  prose/person fields, internal paths/checksums, unsafe URLs, and unknown fields fail closed. The
+  generic product iterator remains only for the explicitly configured legacy delivery mode.
 - `apps/ingestion/sources/ro_scraper.py` — `RomaniaScraperAdapter` (`name="roedu"`)
   reads the `venues` product → `RawPlace`. It synthesizes OSM-style `tags` from the
   venue name (`_tags_for`) so `ingestion.mapping` can attach a `PlaceActivity` edge.
@@ -143,6 +143,34 @@ for the whole sequence.
 
 The scheduled `sync_roedu` wrapper reads `ROEDU_APP_PACK`. When set, venue ingestion and event
 sync both use that app pack; when absent, both use legacy products. One run never mixes modes.
+
+Venue identity ([ADR-0058](adr/0058-roedu-venue-identity-and-license-width.md)): one RO-EDU
+venue id is one place. Through `sync_roedu` or `ingest_places source=roedu`, a venue may merge
+into a nearby name-similar OSM/Overture place only if no other venue id has claimed that place,
+and it keeps the place it already claimed; `dedup_places` and every place merge refuse to fold two
+venue ids together. Two venues in one building (Opera Națională Română Cluj and Teatrul Național
+Cluj) therefore stay two places with their own events. Item `license` is accepted up to 500
+runes, matching the server; the native credit columns are `varchar(500)`.
+
+## Local POC (development only)
+
+[ADR-0057](adr/0057-roedu-local-poc-consumer.md) defines a loopback-only proof of concept over a
+`local_poc` release from ro_data_server. Every one of these must hold, or startup is refused:
+- `ROEDU_LOCAL_POC=1`;
+- `--dev` (or `DJANGO_DEBUG`), without `--dev-container`;
+- `SOCIAL_REACT_UI` off;
+- a loopback `ROEDU_API_URL`.
+
+What changes in this mode:
+- Each item keeps its real deny and its admission, and every POC row shows "LOCAL POC — not
+  cleared for publication".
+- `ROEDU_SYNC_CITIES` (POC only) lists exact producer city facets, for example `Cluj`, `București`
+  or `Pitesti`. Do not assume `Cluj-Napoca`, and leave out cities with no items.
+- `/events/?include_past=1` also lists past POC events.
+
+A POC sync is never complete, even when the page claims a complete snapshot, so it never
+reconciles absence or records a sync state. `ingest_places --source roedu`
+refuses a POC pack; use `sync_roedu` / `sync_roedu_events`.
 
 ## Safety model
 

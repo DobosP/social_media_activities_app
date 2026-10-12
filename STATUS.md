@@ -1,11 +1,9 @@
 # Status — social_media_activities_app
 
-Last verified: 2026-10-06
+Last verified: 2026-10-13
 
-- **GitHub Actions (Last verified: 2026-10-05):** owner-requested on-demand policy,
-  [ADR-0033](docs/adr/0033-manual-github-actions.md). Ordinary `ci.yml` calls Go/Node workflows;
-  original Python gates remain in optional manual `reference.yml` (ADR-0038). YAML/input/job/
-  read-only permission checks pass. Native Actions remains manually disabled; no hosted run claimed.
+- **GitHub Actions (Last verified: 2026-10-05):** owner-requested on-demand policy, [ADR-0033](docs/adr/0033-manual-github-actions.md). Ordinary `ci.yml` calls Go/Node workflows;
+  original Python gates remain in optional manual `reference.yml` (ADR-0038). YAML/input/job/read-only permission checks pass. Native Actions remains manually disabled; no hosted run claimed.
 
 Current truth: STATUS > newest ADR > other docs. History: WORKLOG, ADRs and git.
 
@@ -17,17 +15,17 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Product contract
 
-- **RO-EDU canonical places/events (ADR-0023/0024):** the only canonical product accepted is
-  `roedu:social_media_activities_app:events_places:v1`, schema 1. Pages require one immutable promoted
-  release/snapshot identity, coherent completeness, safe bounded pagination, exact facts-only fields, policy
-  schema 4/ruleset 6/hash `07f27d3c9a5e5898ba7cfac686c645713114dd9c13d72ecc054570d368daf58d`, and
-  capture/acquisition schema 3. Unknown fields, prose/person data, internal evidence/paths, unsafe URLs,
-  policy drift, malformed relationships, duplicates, and page drift fail closed.
-- **Lifecycle and reconciliation:** source lifecycle/confidence/category,
-  recurrence/timezone/price/availability, source timestamps, venue identity, and pack/release/snapshot
-  identity are retained. Cancelled, postponed, removed, moved-online, tombstoned, low-confidence, or
-  unsafe-venue events stay out of public discovery. Only an unbounded clean full snapshot can reconcile
-  absence, atomically within its exact pack/city scope; partial/delta/legacy reads cannot.
+- **RO-EDU canonical places/events (ADR-0023/0024/0055; Last verified: 2026-10-11):** the only canonical product accepted is
+  `roedu:social_media_activities_app:events_places:v1`, schema 1. Pages require one immutable promoted release/snapshot
+  identity, coherent completeness, safe bounded pagination, exact facts-only fields, exactly policy schema 5/ruleset 8/hash
+  `140290d4bc6374ebb5b7922dee98c79bee5501a6cf76e1ef18923a8647068fd1` (4/6, 5/7 refused), capture/acquisition schema 3. Unknown
+  fields, prose/person data, internal evidence/paths, unsafe URLs, policy drift, malformed relationships, duplicates, and page drift fail closed.
+  Development/loopback-only local POC (ADR-0057; 2026-10-12): a verified admission over the item's REAL deny, honest privacy values, every POC row labelled "LOCAL POC — not cleared for publication"; production unchanged.
+- **Lifecycle and reconciliation:** source lifecycle/confidence/category, recurrence/timezone/price/availability,
+  source timestamps, venue identity, and pack/release/snapshot identity are retained. One RO-EDU venue id is one place:
+  same-location venues never merge (ADR-0058; item license ≤500 runes). Cancelled, postponed, removed, moved-online,
+  tombstoned, low-confidence, or unsafe-venue events stay out of public discovery. Only an unbounded clean full snapshot
+  can reconcile absence, atomically within its exact pack/city scope; partial/delta/legacy reads cannot.
 - **Plural sentiment and moderation (ADR-0029):** fixed appreciation facets, adult-only dissent, private
   conduct concern, minor-protective thresholds, anti-pile-on/coordination sensors, batched public summaries,
   and audited human moderation are implemented for activity and group threads. Counts and engagement ranking
@@ -96,12 +94,14 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
+- Policy 5/8 + local POC landing (2026-10-13): exact `98bc921` full native qualification **737 PASS / all 21 lanes / 0 SKIP / 0 FAIL**; check-native, harness17, docs/whitespace pass. Demo fixture clocks aligned; old main failure reproduced. [Receipt](docs/reviews/native-go/policy8-local-poc-checkpoint-20261013.json) pins source objects; docs-only closure reuses them unchanged.
+- Venue identity + license 500 (2026-10-12, ADR-0058, + review fix: `ingest_places source=roedu` guarded too): check-native pass; jobs/commands/budgets/catalog/admin/web on disposable PG: new identity/race/license tests pass, only the known codec/demo reds; new-binary `--migrate-only` widens adopted and fresh DBs ([WORKLOG](WORKLOG.md)).
+- Local POC (2026-10-12, ADR-0057): hermetic `go test -race ./...` + vet pass; jobs/web/cmd/catalog/commands on disposable PG: POC DB tests pass (review fixes: a complete POC snapshot never reconciles, event evidence stored, feeds labelled), failures only the known codec/demo reds also on the base commit; policy 5/8 (2026-10-11, ADR-0055) same, legacy client 43/43 ([WORKLOG](WORKLOG.md)).
 - Thread access `874b437` (2026-10-06):714/all21 fresh tests,0skips/failures; native/hash/vet/race + Node4 + harness17 pass; [receipt](docs/reviews/native-go/rest-thread-access-checkpoint.json).
 - Three mappings/new6-case test: outsiderPOST403/owner201, privateGET403/owner200, guardian ghostwrite403/ward-own201; persisted author/body and zero-write/privacy checks;4 sensitivity controls fail intentionally.
 - Twenty-one exact mappings:1020 manifest claims/1651 unresolved/0invalid of2671; retirement exits1. Docs/all defects0; whitespace clean. Production/schema/dependencies/frontend unchanged.
 - Prior [thread-pages713](docs/reviews/native-go/rest-thread-pagination-checkpoint.json), [own-list712](docs/reviews/native-go/rest-own-memberships-checkpoint.json), [RSVP711](docs/reviews/native-go/rest-rsvp-checkpoint.json), [Presence710](docs/reviews/native-go/rest-presence-checkpoint.json), [auth/transit709](docs/reviews/native-go/rest-auth-transit-checkpoint.json) and [transport709](docs/reviews/native-go/rest-transport-checkpoint.json) receipts remain; c27 image supplies codecs only.
 - Original `c27a99f`705 [source/image/audits](docs/reviews/native-go/restart-checkpoint.json) remain; no new deployment-image/audit/frontend qualification. Unused openpgp advisory stays separate.
-- Independent source/sensitivity review approved; final receipt/docs closure receives review before main push. Human deployment review remains open.
 
 ## Standard verification
 Native race/vet + shared-source hashes; database/codec contracts require explicit disposable fixtures

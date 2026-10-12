@@ -20,7 +20,7 @@ import (
 )
 
 const SocialPack = "roedu:social_media_activities_app:events_places:v1"
-const PolicyHash = "07f27d3c9a5e5898ba7cfac686c645713114dd9c13d72ecc054570d368daf58d"
+const PolicyHash = "140290d4bc6374ebb5b7922dee98c79bee5501a6cf76e1ef18923a8647068fd1"
 
 var ErrProductRefused = errors.New("RO-EDU producer refused all items")
 
@@ -33,10 +33,16 @@ type PackRead struct {
 	Items                                    []map[string]any
 	Pack, Snapshot, Release, Generated, Mode string
 	Complete                                 bool
+	// LocalPOC: every page said local_poc:true and the client's POC gate held
+	// (ADR-0057). Never set for a production page.
+	LocalPOC bool
 }
 type RoeduClient struct {
 	BaseURL, APIKey string
 	HTTP            *http.Client
+	// LocalPOC is set only by the development + loopback + ROEDU_LOCAL_POC=1
+	// configuration gate (ADR-0057); see LocalPOCActive.
+	LocalPOC bool
 }
 
 func text(value any, maxLen int, empty bool) bool {
@@ -152,7 +158,9 @@ func validateCommon(item map[string]any) bool {
 	if !validLane || (laneCheck != "web_http" && laneCheck != "sanctioned_api" && laneCheck != "bulk_download" && laneCheck != "derived_member") {
 		return false
 	}
-	if !stable(item["id"]) || !text(item["source"], 255, false) || !text(item["license"], 120, false) || !text(item["attribution"], 255, false) || !text(item["legal_basis"], 500, false) || item["gdpr_relevant"] != false || item["redistributable"] != true || item["privacy_classification"] != "no_personal_data" {
+	// license follows the server's 500-rune bound (a source's legal basis can
+	// exceed 120 runes); the credit columns are widened to match.
+	if !stable(item["id"]) || !text(item["source"], 255, false) || !text(item["license"], 500, false) || !text(item["attribution"], 255, false) || !text(item["legal_basis"], 500, false) || item["gdpr_relevant"] != false || item["redistributable"] != true || item["privacy_classification"] != "no_personal_data" {
 		return false
 	}
 	if item["access_type"] != "public_document" && item["access_type"] != "open_license" && item["access_type"] != "public_domain" {
@@ -199,7 +207,7 @@ func validateCommon(item map[string]any) bool {
 			return false
 		}
 	}
-	if !equalsNumber(attestation["schema_version"], 4) || !equalsNumber(attestation["ruleset_version"], 6) || attestation["ruleset_hash"] != PolicyHash || attestation["subject_sha256"] != item["content_id"] || attestation["decision_id"] != item["policy_decision_id"] || !equalsNumber(item["capture_schema_version"], 3) || !equalsNumber(attestation["capture_schema_version"], 3) || attestation["capture_id"] != item["capture_id"] || attestation["acquisition_evidence_sha256"] != item["acquisition_evidence_sha256"] || attestation["acquisition_lane"] != item["acquisition_lane"] || attestation["action"] != "publish_source" || attestation["effect"] != "allow" {
+	if !equalsNumber(attestation["schema_version"], 5) || !equalsNumber(attestation["ruleset_version"], 8) || attestation["ruleset_hash"] != PolicyHash || attestation["subject_sha256"] != item["content_id"] || attestation["decision_id"] != item["policy_decision_id"] || !equalsNumber(item["capture_schema_version"], 3) || !equalsNumber(attestation["capture_schema_version"], 3) || attestation["capture_id"] != item["capture_id"] || attestation["acquisition_evidence_sha256"] != item["acquisition_evidence_sha256"] || attestation["acquisition_lane"] != item["acquisition_lane"] || attestation["action"] != "publish_source" || attestation["effect"] != "allow" {
 		return false
 	}
 	lane := item["acquisition_lane"]
@@ -424,7 +432,12 @@ func (c *RoeduClient) Read(ctx context.Context, city string) (PackRead, error) {
 		decoder := json.NewDecoder(bytes.NewReader(raw))
 		decoder.UseNumber()
 		var page map[string]any
-		if decoder.Decode(&page) != nil || decoder.Decode(new(any)) != io.EOF || !exactKeys(page, "pack_id app layer schema_version snapshot_id release_id snapshot_generated_at snapshot_mode snapshot_complete items pagination withheld errors") {
+		if decoder.Decode(&page) != nil || decoder.Decode(new(any)) != io.EOF || !exactKeys(page, c.envelopeFields(page)) {
+			return result, errors.New("invalid RO-EDU page envelope")
+		}
+		_, pocKey := page["local_poc"]
+		localPOC := pocKey && page["local_poc"] == true
+		if pocKey && !localPOC {
 			return result, errors.New("invalid RO-EDU page envelope")
 		}
 		snapshot, _ := page["snapshot_id"].(string)
@@ -435,7 +448,7 @@ func (c *RoeduClient) Read(ctx context.Context, city string) (PackRead, error) {
 		if page["pack_id"] != SocialPack || page["app"] != "social_media_activities_app" || page["layer"] != "redistributable" || !equalsNumber(page["schema_version"], 1) || !releasePattern.MatchString(snapshot) || page["release_id"] != snapshot || !dateOK || !completeOK || (mode != "full" && mode != "partial") || complete != (mode == "full") {
 			return result, errors.New("RO-EDU product identity or completeness invalid")
 		}
-		if result.Snapshot != "" && (result.Snapshot != snapshot || result.Generated != generated || result.Mode != mode) {
+		if result.Snapshot != "" && (result.Snapshot != snapshot || result.Generated != generated || result.Mode != mode || result.LocalPOC != localPOC) {
 			return result, errors.New("RO-EDU snapshot drift")
 		}
 		result.Pack = SocialPack
@@ -443,6 +456,7 @@ func (c *RoeduClient) Read(ctx context.Context, city string) (PackRead, error) {
 		result.Release = snapshot
 		result.Generated = generated
 		result.Mode = mode
+		result.LocalPOC = localPOC
 		withheldRaw, ok := page["withheld"].(json.Number)
 		withheldInt, integerErr := withheldRaw.Int64()
 		if !ok || integerErr != nil || withheldInt < 0 || withheldInt > 1000000 {
@@ -468,7 +482,7 @@ func (c *RoeduClient) Read(ctx context.Context, city string) (PackRead, error) {
 		}
 		for _, rawItem := range items {
 			item, ok := rawItem.(map[string]any)
-			if !ok || !ValidatePackItem(item) {
+			if !ok || !validatePageItem(item, localPOC) {
 				clean = false
 				continue
 			}
@@ -493,7 +507,9 @@ func (c *RoeduClient) Read(ctx context.Context, city string) (PackRead, error) {
 			return result, errors.New("invalid RO-EDU pagination")
 		}
 		if pagination["next_cursor"] == nil {
-			result.Complete = complete && clean
+			// A local POC snapshot is never complete, even when the producer
+			// admitted every item (withheld 0): it never reconciles (ADR-0057).
+			result.Complete = complete && clean && !result.LocalPOC
 			finishedPaging = true
 			break
 		}

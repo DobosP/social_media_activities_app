@@ -19,7 +19,7 @@
   <div class="grid">
     {% for e in events %}
       <div class="card">
-        <h3><a href="{{ e|event_url }}">{{ e.title }}</a></h3>
+        <h3><a href="{{ e|event_url }}">{{ e.title }}</a></h3>{% if e.local_poc %}<p><span class="tag fact--false">LOCAL POC — not cleared for publication</span></p>{% endif %}
         <p class="muted">{{ e.starts_at|date:"D j M, H:i" }}{% if e.place %} &middot;
           <a href="{{ e.place|place_url }}">{{ e.place.name }}</a>{% endif %}</p>
         {% if e.description %}<p>{{ e.description|truncatewords:22 }}</p>{% endif %}

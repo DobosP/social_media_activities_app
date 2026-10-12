@@ -39,6 +39,7 @@ type Config struct {
 	Roedu                                                                                                                                                          *RoeduClient
 	RoeduSyncEnabled                                                                                                                                               bool
 	RoeduCity                                                                                                                                                      string
+	RoeduCities                                                                                                                                                    []string
 	IndexNowEnabled                                                                                                                                                bool
 	IndexNowKey, SiteBaseURL                                                                                                                                       string
 	IndexNowWindowHours, IndexNowMaxURLs                                                                                                                           int

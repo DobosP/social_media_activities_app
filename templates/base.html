@@ -115,7 +115,7 @@
   </div>
 </header>
 
-<main class="container" id="main" role="main" tabindex="-1">
+<main class="container" id="main" role="main" tabindex="-1">{% if local_poc_mode or local_poc_content %}<p class="banner local-poc-banner" role="status"><strong>LOCAL POC — not cleared for publication</strong></p>{% endif %}
   {% if messages %}
     <ul class="messages">
       {% for m in messages %}<li class="msg {{ m.tags }}">{{ m }}</li>{% endfor %}

@@ -302,7 +302,14 @@ func (s *Service) upsertPlace(ctx context.Context, raw RawPlace, matches []jobs.
 			return err
 		}
 		var place int64
-		if dedup && raw.Source != "osm" && strings.TrimSpace(raw.Name) != "" {
+		if dedup && raw.Source == "roedu" && strings.TrimSpace(raw.Name) != "" {
+			// An RO-EDU venue id is one place: never fold it into a place another
+			// venue id already claimed, even in the same building (ADR-0058).
+			var err error
+			if place, err = jobs.FindRoeduDuplicate(ctx, tx, raw.ExternalID, raw.Name, raw.Lon, raw.Lat); err != nil {
+				return err
+			}
+		} else if dedup && raw.Source != "osm" && strings.TrimSpace(raw.Name) != "" {
 			rows, err := tx.Query(ctx, `SELECT id,name FROM places_place WHERE source<>$1 AND ST_DWithin(location,ST_SetSRID(ST_MakePoint($2,$3),4326)::geography,75) ORDER BY ST_Distance(location,ST_SetSRID(ST_MakePoint($2,$3),4326)::geography),id LIMIT 50`, raw.Source, raw.Lon, raw.Lat)
 			if err != nil {
 				return err
@@ -331,14 +338,14 @@ func (s *Service) upsertPlace(ctx context.Context, raw RawPlace, matches []jobs.
 					break
 				}
 			}
-			if place > 0 {
-				entry, _ := json.Marshal(map[string]any{"source": raw.Source, "external_id": raw.ExternalID, "attribution": raw.Attribution, "license_name": raw.License, "provenance_url": external(raw.Provenance)})
-				_, err = tx.Exec(ctx, `UPDATE places_place SET raw_tags=jsonb_set(CASE WHEN jsonb_typeof(raw_tags)='object' THEN raw_tags ELSE '{}'::jsonb END,'{merged_sources}',coalesce(raw_tags->'merged_sources','[]'::jsonb)||jsonb_build_array($2::jsonb)),last_seen_at=now(),opening_hours_raw=CASE WHEN opening_hours_raw='' THEN $3 ELSE opening_hours_raw END,opening_hours=CASE WHEN opening_hours_raw='' THEN $4::jsonb ELSE opening_hours END,website=CASE WHEN website='' THEN $5 ELSE website END,phone=CASE WHEN phone='' THEN $6 ELSE phone END,attribution=CASE WHEN attribution='' THEN $7 ELSE attribution END,license_name=CASE WHEN license_name='' THEN $8 ELSE license_name END,provenance_url=CASE WHEN provenance_url='' THEN $9 ELSE provenance_url END WHERE id=$1`, place, entry, raw.OpeningHours, hours, external(raw.Website), raw.Phone, raw.Attribution, raw.License, external(raw.Provenance))
-				if err != nil {
-					return err
-				}
-				counts["deduped"]++
+		}
+		if place > 0 {
+			entry, _ := json.Marshal(map[string]any{"source": raw.Source, "external_id": raw.ExternalID, "attribution": raw.Attribution, "license_name": raw.License, "provenance_url": external(raw.Provenance)})
+			_, err := tx.Exec(ctx, `UPDATE places_place SET raw_tags=jsonb_set(CASE WHEN jsonb_typeof(raw_tags)='object' THEN raw_tags ELSE '{}'::jsonb END,'{merged_sources}',coalesce(raw_tags->'merged_sources','[]'::jsonb)||jsonb_build_array($2::jsonb)),last_seen_at=now(),opening_hours_raw=CASE WHEN opening_hours_raw='' THEN $3 ELSE opening_hours_raw END,opening_hours=CASE WHEN opening_hours_raw='' THEN $4::jsonb ELSE opening_hours END,website=CASE WHEN website='' THEN $5 ELSE website END,phone=CASE WHEN phone='' THEN $6 ELSE phone END,attribution=CASE WHEN attribution='' THEN $7 ELSE attribution END,license_name=CASE WHEN license_name='' THEN $8 ELSE license_name END,provenance_url=CASE WHEN provenance_url='' THEN $9 ELSE provenance_url END WHERE id=$1`, place, entry, raw.OpeningHours, hours, external(raw.Website), raw.Phone, raw.Attribution, raw.License, external(raw.Provenance))
+			if err != nil {
+				return err
 			}
+			counts["deduped"]++
 		}
 		if place == 0 {
 			err := tx.QueryRow(ctx, `SELECT id FROM places_place WHERE source=$1 AND (($1='osm' AND osm_type=$2 AND osm_id=$3) OR ($1<>'osm' AND external_id=$4)) FOR UPDATE`, raw.Source, raw.OSMType, raw.OSMID, raw.ExternalID).Scan(&place)

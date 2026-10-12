@@ -3,6 +3,190 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-13 — Policy 5/8 and isolated POC landing qualification
+
+Valid until: any protected source object or qualification environment changes — then requalify.
+
+- Exact clean `98bc92176440570f1742b1ba2ced1922cca08f57`: canonical full qualification passed all 21 lanes, 737 top-level tests, zero skips/failures. check-native (31 package OK lines + Node4), harness17, docs53/all0 and whitespace pass. The case-retirement ledger remains 1020 verified /1651 unresolved /0 invalid; expected exit1 blocks reference retirement, which this change does not attempt.
+- The previous main second-seed failure was reproduced; the one-line fixture clock alignment preserves production time validation and all idempotence assertions. Root independently reviewed the correction and existing feature boundaries; the complete command lane passes29.
+- The first corrected full attempt lost its disposable PostgreSQL connection and observed recovery; its exact historical cause cannot be proven because cleanup had already removed that DB. The disk-backed successor passed media54 and the complete21-lane gate with unchanged2CPU/2GiB and per-lane time limits. POC and other owners’ resources were untouched; disposable container/network/volume/password-file absence was verified.
+- The receipt records commands/counts/hashes, cleanup and the explicit source-hash algorithm: SHA256 of raw `git ls-tree -r HEAD -- <14 protected roots>` bytes = `f6c65a1355c8cc974f99998dad118a928b18e6522ca676c97bf263c15c3850af`; offline ingestion/config objects also match. This receipt-only closure follows the established source-object-equality allowance; it changes no protected input and does not repeat passed gates.
+- Superseded owned test binaries from failed/targeted iterations were pruned (899MB reported); compact manifests/logs remain history, not a claim that those deleted executable bytes remain. The latest verified setup remains. Existing c27 codec image was reused; no fresh deployment-image, dependency audit, frontend qualification or production activation is claimed.
+- The four-branch continuation is owner-authorized. Runtime source worktrees stay until the loopback POC has been independently verified on its rolling archive.
+
+## 2026-10-13 — Deterministic native demo fixture clock
+
+Valid until: the demo fixture clock or activity mutation rules change — then requalify.
+
+The command seed fixture fixed `jobs.Config.Now` at 2026-10-04 but left the social service
+on wall time. On 2026-10-13, the second `seed_mobile_card_demo` correctly refused to update
+the fixture's already-past activity. The fixture now gives `social.Service.Now` the same
+fixed clock. Product time validation and the existing second-seed idempotence assertions
+are unchanged. Independent root review approved this one-line fixture correction.
+
+Explicit disposable PostgreSQL/codec checks used the canonical c27 codec image, exact-source
+race binaries, an internal network without host ports and no existing runtime/database.
+Runner: `/home/dobo/work/_temp/feat-local-poc-real-data/verification/social/run-qualification.sh`.
+Commands were `bash RUNNER SOURCE MODE LABEL`, with these source/mode/label arguments:
+
+- Unchanged main `78d3a6686063ae7935c90527ee2f2b6ec444fda4`, source
+  `/home/dobo/work/social_media_activities_app`, `baseline baseline-main`: the existing
+  `TestNativeSeedBrowseUsersEventsAndMobileScenarios` fails at `demo_test.go:147`, exit 1;
+  log SHA256 `05dda282850a54b23708b9f66f47bd548a8719e15a2204241d08d7cd4b09c698`.
+- Corrected policy8 worktree, source
+  `/home/dobo/work/_worktrees/social_media_activities_app/feat__policy8-local-poc`,
+  `commands targeted-clock-fix`: 29 top-level PASS, 0 SKIP, 0 FAIL, exit 0;
+  log SHA256 `f5602b7d786108a493218304867f5a2359476c73cc541f9db2832a969b3e5a91`.
+
+The pre-correction full qualification stopped fail-closed at commands (28 PASS/1 FAIL),
+after configuration64/accounts75/admin21/app35/backup5/booking7/budgets16/catalog48 passed
+without skips. It is not a landing receipt. The corrected source still requires the full
+21-lane landing run; prior missing-host-codec results do not substitute for that gate.
+
+## 2026-10-12 — ADR-0058 review fixes: second RO-EDU merge path, admin license width
+
+Valid until: the place-merge rules or the admin curated event fields change — then requalify.
+
+Review found a second path that merged RO-EDU venues by location: `ingest_places source=roedu`
+(`upsertPlace`, dedup on by default) ran its own 75 m / name-similarity query and appended the
+venue to any match without checking existing claims. Changes:
+- `upsertPlace` now merges RO-EDU venues only through the exported `jobs.FindRoeduDuplicate`
+  (claim filter + `FOR UPDATE` recheck), the same helper `sync_roedu` uses.
+- `FindRoeduDuplicate` prefers the place the venue already claimed over a nearer newcomer, so a
+  claim is persistent as ADR-0058 states.
+- The admin `events.event` `license_name` field is 500 runes, matching the widened column.
+- The Django oracle `[:120]` slices stay deferred (ADR-0058); not changed, Django is not
+  installed on this host.
+
+Checks (disposable 127.0.0.1 `sociallive-postgis-pgvector:16` container, freshly migrated):
+- `scripts/check-native.sh` passes (31 packages ok).
+- jobs: 81 PASS, 3 FAIL (ffmpeg codec, host). commands: 28 PASS, 1 FAIL
+  (`TestNativeSeedBrowseUsersEventsAndMobileScenarios`, known on the base commit). admin: ok.
+- New `TestPostgresIngestRoeduPlacesKeepsVenueIdentity` (3 venue ids in one building + a same-name
+  OSM place, ingested twice; a nearer same-name newcomer does not move a claim) and
+  `TestNativeOperatorEventLicenseMatchesColumnWidth` (131/500 accepted, 501 refused). Mutation
+  checks: routing roedu back to the generic dedup fails the first test (OSM place carries
+  venue-1 and venue-3); dropping the claimed-first ordering fails its persistence half.
+
+## 2026-10-12 — RO-EDU venue identity wins over location; license up to 500 runes (ADR-0058)
+
+Valid until: the canonical pack's item bounds or the place-merge rules change — then requalify.
+
+Owner directive: "increase the server limit … Even if they have same location, it may be two
+different venues." Changes:
+- `ValidatePackItem` and the legacy Python oracle accept a `license` of up to 500 runes (it was
+  120). The real `opera_cluj_events` value is 131 runes. `schema.Migrate` widens
+  `places_place`/`events_event.license_name` to `varchar(500)` (`go-roedu-license-500-v1`,
+  guarded, catalog-only). Without the widening, the 131-rune INSERT would abort the city's sync.
+- A place carries at most one RO-EDU venue id (`jobs.RoeduVenueIdentitiesSQL`: own roedu
+  `external_id` plus `merged_sources` roedu entries).
+- `findRoeduDuplicate` skips places claimed by another venue id, then locks and rechecks the
+  chosen row.
+- `dedup_places` skips identity-conflicting pairs, and `mergePlaces` refuses them under its row
+  locks.
+
+Checks (disposable 127.0.0.1 `sociallive-postgis-pgvector:16` container, public schema bootstrapped
+by the pre-change binary so the fixtures exercise adoption from 120):
+- `scripts/check-native.sh` passes (gofmt, vet, `go test -race ./...`, Node worker).
+- jobs: 81 PASS, 3 FAIL. commands: 27 PASS, 1 FAIL. The failures are the known
+  ffmpeg-codec and `seed_mobile_card_demo` reds, which the same run on the base commit shows too.
+  budgets, catalog, admin and web are ok.
+- New `TestPostgresRoeduSameLocationVenuesStayDistinct` (3 venue ids, one building, an OSM place
+  with the same name, re-synced twice), `TestPostgresRoeduConcurrentClaimNeverSharesAPlace`,
+  `TestNativeDedupKeepsDistinctRoeduVenues`, `TestRoeduLicenseBoundMatchesServer` and
+  `TestRoeduVenuesConflict`. Mutation checks: each test fails when its own guard is removed (the
+  claim filter, the locked recheck, the dedup filter, the merge guard).
+- The new binary's `--migrate-only` widens both an adopted 120-column database and a fresh
+  bootstrap, and a rerun is a no-op.
+- The Python oracle validator was checked standalone (17/131/500 accepted, 501 refused). Django
+  pytest is not available on this host.
+
+## 2026-10-12 — Local POC consumer review fixes (ADR-0057)
+
+Valid until: the cross-repo local-POC contract v1 or the ro_data_server POC projection changes.
+
+Independent review of the consumer half found one major defect and four minors. Changes:
+- Major: the real ro_data_server B2 page for a release whose items were all admitted is `full`,
+  `snapshot_complete: true`, `withheld: 0`. The consumer marked it complete and ran full-snapshot
+  reconciliation (rollback check, tombstoning a non-POC row of that city, a sync-state row). Now
+  `Read` never reports a POC pack complete and `ApplyRoedu` drops any `Complete` claim on a POC pack.
+- Events now keep their evidence in a POC-only `source_local_poc_evidence` jsonb column (real
+  `gdpr_relevant`, `privacy_classification`, decision id, deny attestation, admission), added next
+  to `source_local_poc`.
+- RSS/Atom feeds prefix flagged entries with the marker. The sitemap was already safe: it clears
+  the whole query, so `include_past` never reaches it (now pinned by a test).
+- `catalog.EventLocalPOCSQL` probes for the flag column once per query (an InitPlan; checked with
+  EXPLAIN) and evaluates `to_jsonb(e)` only when it exists, so production pays no per-row cost.
+- Fixed-value admission negatives now assert that `LocalPOCAdmissionDigest` itself refuses them.
+
+Checks:
+- Hermetic `go test -race ./...`, `go vet ./...`, `gofmt -l` and `scripts/check-native.sh` pass.
+- On a throwaway 127.0.0.1 `sociallive-postgis-pgvector:16` container (removed afterwards): jobs
+  77 PASS, cmd/social-server 61 PASS, catalog and web ok. The only failures are the 3+3 codec reds
+  already present on the base commit.
+- New `TestLocalPOCCompleteSnapshotIsNeverComplete` and
+  `TestPostgresLocalPOCCompleteSnapshotNeverReconciles`. Removing either guard fails the hermetic
+  test, and removing both also fails the DB test (rollback check fires). The reviewer's real B2
+  page, run through an overlay test, now syncs with `complete:false`, leaves the non-POC row
+  scheduled and writes no sync state.
+
+## 2026-10-12 — Development-only RO-EDU local POC, consumer half (ADR-0057)
+
+Valid until: the cross-repo local-POC contract v1 or the ro_data_server POC projection changes — then regenerate the fixture and requalify.
+
+Owner authorization "POC consumer half". Changes (all behind the dev + loopback + `ROEDU_LOCAL_POC=1` gate):
+- Envelope accepts `local_poc: true`. Admission items pass the contract verifier rule; the rest of the validation is the unchanged production validator.
+- POC venues store their honest evidence in raw tags. POC events are flagged with `source_local_poc`, a column that only a POC sync adds.
+- `ROEDU_SYNC_CITIES` runs the sync per city and skips empty cities. The POC import floor is 0.9, and a POC sync resolves no Commons covers.
+- The marker and banner render on event and place pages and lists. `include_past=1` lists past POC events.
+- The fixture `roedu-local-poc-page.json` is the real 5/8 producer deny (privacy `unknown`) over the production fixture's evidence. It is generated by `generate_roedu_local_poc_fixture.py` (venv at romania_scraper main 000ecee2). Its admissions match romania_scraper `local_poc_admission` on branch `feat/policy8-local-poc` (7d792928).
+
+Checks:
+- Hermetic `go test -race ./...` and `go vet ./...` pass; `gofmt -l` is clean; KAT-1 and KAT-2 pass.
+- On a throwaway migrated `sociallive-postgis-pgvector:16` container (127.0.0.1 only, removed afterwards), the POC jobs and web DB tests pass, and so do web and catalog in full.
+- `scripts/check-native.sh` passes.
+- End-to-end smoke (all loopback): the built binary ran against a loopback stand-in producer page, with ffmpeg replaced by a stub that is never invoked.
+  - `--job sync_roedu` with `ROEDU_SYNC_CITIES=Cluj-Napoca,Pitesti` applied Cluj (1 venue, 2 events, including a past `expired` 0.9 row) and skipped Pitesti as refused.
+  - `/events/`, `/events/?include_past=1`, `/places/list/` and the event and place detail pages show the marker.
+  - Without `--dev`, startup refuses `ROEDU_LOCAL_POC`. With the flag unset, the job refuses the POC envelope, and the same database still renders its markers.
+- Bug the smoke caught: the lazy `ALTER TABLE` ran after deferred-FK event inserts (SQLSTATE 55006). The column is now ensured at transaction start, and the DB test restores the baseline's deferred FK, so it fails on the old order.
+- The templates render byte-identical when the POC flags are off: every marker is an inline `{% if %}` appended to an existing line, checked by stripping those segments and comparing with HEAD.
+- Failures, all present on the base commit 34c4d40 too:
+  - jobs: 3 failures, missing ffmpeg;
+  - cmd/social-server: 3 failures, codec runtime unavailable;
+  - commands: `TestNativeSeedBrowseUsersEventsAndMobileScenarios` fails with "invalid request".
+
+## 2026-10-11 — RO-EDU consumer pin moved to policy schema 5 / ruleset 8 (ADR-0055)
+
+Valid until: the producer policy tuple, the social projection or the serving layer changes — then regenerate and requalify.
+
+Owner directive "move everything to policy version 8". Changes:
+- The Go verifier and the legacy Python oracle now accept only 5/8/`140290d4…`.
+- The `roedu-page.json` and `roedu-validator.json` fixtures were regenerated through the real chain by
+  `services/server/internal/jobs/testdata/generate_roedu_fixtures.py`: producer classifier 8 and the 5/8
+  evaluator (romania_scraper main 000ecee2), then `materialize_social_items`, then ro_data_server 5183272
+  `_public_pack_view`. The generator reproduces both files byte for byte.
+- The generated attestation keys equal `exactKeys` (15 keys) and the item keys equal `commonFields` plus the
+  per-kind fields. Reasons stay `["explicitly_cleared"]` and no lawful-basis field reaches the projection.
+- Two hand-written values the real chain never serves were replaced: the license literal
+  (`RO-LAW-8-1996-ART-9` → `Law 8/1996 art. 9`) and the `.test` ticket host (withheld by the serving
+  layer → `tickets.example.org`).
+- New `TestROEDUPolicyTupleIsExactlySchema5Ruleset8` checks that 5/8 is accepted and that 4/6, 5/7 and
+  half-moved tuples are refused.
+
+Checks:
+- Hermetic `go test ./internal/jobs/... ./cmd/social-server/... ./internal/contracts/...`, `go vet` and
+  `gofmt -l` passed.
+- Against a disposable migrated PostGIS/pgvector container, jobs ran 65 pass / 3 fail and
+  `cmd/social-server` ran 59 pass / 3 fail. The failure sets are identical on a main export (jobs 64 pass,
+  since main lacks the new test). Every failure is a missing host media codec (`ffmpeg`/codec runtime).
+  Every RO-EDU DB test passed.
+- Legacy `test_roedu_client` ran 43/43 on both the branch and main under a minimal SimpleTestCase settings
+  module; the full reference image was not run. With 5/8 client code over the old 4/6 fixtures it fails
+  (6 failures, 1 error).
+- `check-contracts -summary` was identical to main: 1020 verified, 1651 unresolved, 0 invalid, exit 1.
+- `ruff check` and `ruff format --check` passed on the touched Python.
+
 ## 2026-10-06 — GUI capture preparation preserved
 
 Valid until: source `aa10645` or the approved capture/gate contract changes — then recheck applicability.

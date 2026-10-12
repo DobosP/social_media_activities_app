@@ -56,6 +56,7 @@ func (s *Server) PublicView(r *http.Request, a platform.Actor, name string) (pon
 		}
 		sort.SliceStable(places, func(i, j int) bool { return spaBool(places[i]["access_match"]) && !spaBool(places[j]["access_match"]) })
 		data["places"], data["near_active"], data["truncated"] = places, near, len(places) == 200
+		data["local_poc_content"] = anyLocalPOC(places)
 		data["filters"] = map[string]any{"activity": r.URL.Query().Get("activity"), "city": r.URL.Query().Get("city"), "source": r.URL.Query().Get("source")}
 		data["filtered"] = near || r.URL.Query().Get("activity") != "" || r.URL.Query().Get("city") != "" || r.URL.Query().Get("source") != ""
 		if len(places) > 0 {
@@ -126,6 +127,7 @@ func (s *Server) PublicView(r *http.Request, a platform.Actor, name string) (pon
 			return fail(err)
 		}
 		data["events"], data["areas"], data["query"], data["activity"] = events, areas, strings.TrimSpace(r.URL.Query().Get("q")), r.URL.Query().Get("activity")
+		data["local_poc_content"], data["local_poc_past"] = anyLocalPOC(events), s.localPOCPast(r)
 		data["area"], data["area_name"] = "", ""
 		for _, area := range areas {
 			if area["slug"] == r.URL.Query().Get("area") {
@@ -256,6 +258,7 @@ func (s *Server) publicDecoratePlaces(ctx context.Context, places []map[string]a
 	for _, p := range places {
 		p["display_name"], p["display_address"], p["label"] = p["_display_name"], p["address"], p["name"]
 		p["get_source_display"] = map[string]string{"osm": "OpenStreetMap", "overture": "Overture", "user": "User contributed", "roedu": "RO-EDU"}[spaText(p["source"])]
+		p["local_poc"] = catalog.PlaceLocalPOC(spaMap(p["_tags"]))
 		hours := spaText(p["opening_hours_text"])
 		p["posted_hours_text"] = hours
 		p["display_opening_hours"] = hours

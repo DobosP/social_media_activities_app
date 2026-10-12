@@ -39,6 +39,8 @@ type Config struct {
 	UploadScratch                                          string
 	AccountRetention                                       AccountRetentionConfig
 	SPA, CSPEnforce                                        bool
+	// LocalPOC: the development-only RO-EDU local POC gate held (ADR-0057).
+	LocalPOC bool
 }
 type Server struct {
 	DB              *pgxpool.Pool
@@ -224,6 +226,7 @@ func (s *Server) page(w http.ResponseWriter, r *http.Request, name string) {
 	if canonical, _ := data["canonical_url"].(string); canonical == "" {
 		data["canonical_url"] = strings.TrimRight(s.Config.PublicURL, "/") + r.URL.Path
 	}
+	data["local_poc_mode"] = s.Config.LocalPOC
 	data["site_name"] = s.Config.SiteName
 	if data["site_name"] == "" {
 		data["site_name"] = "Activities"
