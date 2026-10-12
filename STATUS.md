@@ -94,7 +94,7 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
-- Native demo fixture (2026-10-13): command/social clocks now share the existing fixed time; unchanged main reproduces the second-seed failure, corrected commands lane 29 PASS/0 SKIP/0 FAIL. Full landing qualification pending ([WORKLOG](WORKLOG.md)).
+- Policy 5/8 + local POC landing (2026-10-13): exact `98bc921` full native qualification **737 PASS / all 21 lanes / 0 SKIP / 0 FAIL**; check-native, harness17, docs/whitespace pass. Demo fixture clocks aligned; old main failure reproduced. [Receipt](docs/reviews/native-go/policy8-local-poc-checkpoint-20261013.json) pins source objects; docs-only closure reuses them unchanged.
 - Venue identity + license 500 (2026-10-12, ADR-0058, + review fix: `ingest_places source=roedu` guarded too): check-native pass; jobs/commands/budgets/catalog/admin/web on disposable PG: new identity/race/license tests pass, only the known codec/demo reds; new-binary `--migrate-only` widens adopted and fresh DBs ([WORKLOG](WORKLOG.md)).
 - Local POC (2026-10-12, ADR-0057): hermetic `go test -race ./...` + vet pass; jobs/web/cmd/catalog/commands on disposable PG: POC DB tests pass (review fixes: a complete POC snapshot never reconciles, event evidence stored, feeds labelled), failures only the known codec/demo reds also on the base commit; policy 5/8 (2026-10-11, ADR-0055) same, legacy client 43/43 ([WORKLOG](WORKLOG.md)).
 - Thread access `874b437` (2026-10-06):714/all21 fresh tests,0skips/failures; native/hash/vet/race + Node4 + harness17 pass; [receipt](docs/reviews/native-go/rest-thread-access-checkpoint.json).

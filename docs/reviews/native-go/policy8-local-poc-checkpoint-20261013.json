@@ -1,0 +1,368 @@
+{
+  "schema_version": 1,
+  "completed": true,
+  "source_head": "98bc92176440570f1742b1ba2ced1922cca08f57",
+  "verified_at": "2026-10-13T01:23:08.185270+03:00",
+  "source_input_identity": {
+    "source_head": "98bc92176440570f1742b1ba2ced1922cca08f57",
+    "source_paths": [
+      "services/server",
+      "services/authcore",
+      "services/agentapi",
+      "frontend",
+      "scripts",
+      "templates",
+      "apps/web/templates",
+      "locale",
+      "static",
+      "db",
+      "Dockerfile",
+      "Dockerfile.db",
+      ".dockerignore",
+      ".github/workflows"
+    ],
+    "source_objects_sha256": "f6c65a1355c8cc974f99998dad118a928b18e6522ca676c97bf263c15c3850af",
+    "source_hash_algorithm": "SHA256 of exact stdout bytes from git ls-tree -r HEAD -- <source_paths in listed order>; explicit algorithm, not claimed equal to earlier collector algorithm",
+    "protected_root_git_objects": {
+      "services/server": "0414f91f4a46de1ff14c2a67d7d38d86ad6fe0df",
+      "services/authcore": "4155df0ced03ba9868e4289a37658a09ac375ce2",
+      "services/agentapi": "263237a6cfb9e35cc25c83cf743d61af767c56ca",
+      "frontend": "1ecbed7572a7028a04f8c2c8a841ee7a2f681447",
+      "scripts": "276e83871478b12f2e3c3cf739eb4a36ab0825ef",
+      "templates": "05292c79649051e2af38c02a81d6220659dc8255",
+      "apps/web/templates": "abecdf2a0a33451f9e9a502a0282f1def42bbceb",
+      "locale": "1686d4854f479861a0617ae635be57ec6f6bc157",
+      "static": "c01ab7ae3a9546b2293fa042e3db33333fad7a1f",
+      "db": "93a0124318b7b3a906914802ab1c1c0b745cb2f2",
+      "Dockerfile": "2b84ca927f8e1850674a805ba983d72b895a83fa",
+      "Dockerfile.db": "3a54c78eb8793ed96dbd64e46fff79e9133e48e2",
+      ".dockerignore": "d17d3d599b0644b9ce2db6571fe51b8c7e3a08b6",
+      ".github/workflows": "34e411ebdf93bf72eb725f87a478fb7ad0ddcfc1"
+    },
+    "additional_offline_and_config_objects": {
+      "apps/ingestion": "3b619402cdba6cd19e51588dd541914c031a4ee7",
+      ".env.example": "98be42fd2fd3eaf91bb3eb7d9e22ec3125e648e3"
+    },
+    "working_tree_porcelain": ""
+  },
+  "qualification": {
+    "exit_code": 0,
+    "lanes": 21,
+    "passed": 737,
+    "skips": 0,
+    "failures": 0,
+    "all_fresh": true,
+    "lane_results": [
+      {
+        "name": "accounts",
+        "passed": 75,
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "441bb8012348a29c502e279e6724d07be4322d7b4558ff5a4c4076a8335f6818"
+      },
+      {
+        "name": "admin",
+        "passed": 21,
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "9b6faf0c3ac827e9e6fcc4fb14eecefcd3b30a004af770baae4c7a6939d15c80"
+      },
+      {
+        "name": "app",
+        "passed": 35,
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "676c406a0511a271a2fa028948b93b3c06c6d5485002cf3ebf24e75b27fc04c8"
+      },
+      {
+        "name": "backup",
+        "passed": 5,
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "26c0bf55f07b881343a9719afbcec7a69d84c0add17d9ff618c296d2f890c8f7"
+      },
+      {
+        "name": "booking",
+        "passed": 7,
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "3d95a91439e507c762b3c946c949e3c59c72c71085a1239da637423b848e2b35"
+      },
+      {
+        "name": "budgets",
+        "passed": 16,
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "6f7dfae0d13db461f666878df6fa4b6db47c9ccf3a59aaf186bc8f95830fb3f6"
+      },
+      {
+        "name": "catalog",
+        "passed": 48,
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "4b1e81bf4f6db46fa9b65898af8e3b6d2ed2862b6d5160db3e5c3835a717bcd4"
+      },
+      {
+        "name": "commands",
+        "passed": 29,
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "1599d308d4808334b8a82ee655d57e03f1289830652609699a4628e8af974ac1"
+      },
+      {
+        "name": "configuration",
+        "passed": 64,
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "7c595f4c38d8fcc5e62e7e8c0786f9f7148a43ba72ad87017ee50baf896ef96a"
+      },
+      {
+        "name": "contracts",
+        "passed": 5,
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "80ff5ae7a34ba3522852d3af7fced87fbc61cc29218b8046c6afe154abb84043"
+      },
+      {
+        "name": "discovery",
+        "passed": 2,
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "afcec75b8229b3af4f8902dd90800fbb3746c55eb898f4fa06758ecc7cad8374"
+      },
+      {
+        "name": "donations",
+        "passed": 5,
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "7df2935512a2391aaccc550c7e0a5e0c37b252856368db1f5c2be65f3e599bf3"
+      },
+      {
+        "name": "export",
+        "passed": 5,
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "f39004621a50d609d3de2a8ad2f4781ad32deeaf3e1f0f68e0831668bc6cc3f6"
+      },
+      {
+        "name": "jobs",
+        "passed": 84,
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "3441873b6b9408357f3c85f94d5ba1c34b852cd50eb25fbc56fc51c0545b9109"
+      },
+      {
+        "name": "media",
+        "passed": 54,
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "6dfa1a8a41ff7fcdaf52a95edf46dfaf4093cc54746b728398d4c64a7f870201"
+      },
+      {
+        "name": "messaging",
+        "passed": 60,
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "f8e5acc393cb97ca1fe85afe90113b39af230fc2f2f0b13d4ceb0ac3229f7470"
+      },
+      {
+        "name": "notifications",
+        "passed": 4,
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "f0a1efdb45e71041f3fdbd3065090c7fd2ccaf0a9e5ac5eb696afc04471f8f9b"
+      },
+      {
+        "name": "recommendations",
+        "passed": 8,
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "e92c131a71a394bde1969c284fec41a527c327f4969dd8bb24c5c413551b190e"
+      },
+      {
+        "name": "safety",
+        "passed": 56,
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "7eed707ce60d12557a518441bc0cabfb69cf02c89174655e947649586d2868c0"
+      },
+      {
+        "name": "social",
+        "passed": 52,
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "6306fa0a7a857bfc6070418bc6f35ac5cf3ef214ac5603ca19928ac198109d27"
+      },
+      {
+        "name": "web",
+        "passed": 102,
+        "skips": 0,
+        "failures": 0,
+        "log_sha256": "77eeadf3e8afba6be60e09a4e951b934dd4f563fdd04cafb2fb4cb3a80fff6fd"
+      }
+    ]
+  },
+  "gate_exit_statuses": {
+    "check-native": 0,
+    "full-qualify-native": 0,
+    "native-gate-harness": 0,
+    "docs": 0,
+    "whitespace": 0,
+    "contracts-final": 1
+  },
+  "native_check": {
+    "ok_package_lines": 31,
+    "node_worker_passed": 4
+  },
+  "gate_harness": {
+    "passed": 17,
+    "total": 17
+  },
+  "docs": {
+    "files": 53,
+    "dead_links": 0,
+    "stale_terms": 0,
+    "retired_verbs": 0,
+    "orphans": 0
+  },
+  "case_retirement": {
+    "expected_exit_code": 1,
+    "total": 2671,
+    "verified": 1020,
+    "unresolved": 1651,
+    "invalid": 0
+  },
+  "tools": {
+    "go": "go version go1.27.1 linux/amd64",
+    "go_binary_sha256": "30969f97169d7f43fe6a085873d75613adc21e30818a8c61d95bd27275df4624",
+    "node": "vp v0.2.9\n\nLocal vite-plus:\n  vite-plus  Not found\n\nTools:\n  vite             Not found\n  rolldown         Not found\n  vitest           Not found\n  oxfmt            Not found\n  oxlint           Not found\n  oxlint-tsgolint  Not found\n  tsdown           Not found\n\nEnvironment:\n  Package manager  Not found\n  Node.js          v24.21.0",
+    "node_binary_sha256": "132186eedfe8e79d0c81a92d26141beefd607cb48b248abfb976fb031153ea1a"
+  },
+  "codec_image": {
+    "image_id": "sha256:34c1c2281d9fc96cf486dda8e88497ef5061e21a412c712d8ef61ca14b07031b",
+    "tag": "social-native:source-final-c27a99fd7105-9615f07cc770",
+    "scope": "Existing canonical codec image executes current source-compiled race binaries; no new deployment image or audit claimed"
+  },
+  "database_fixture": {
+    "image_id": "sha256:6f7f1ad998c5d3f3ed2a4138791afa68c28692dc4d439251ed708e45c1cb0ae8",
+    "storage": "Docker-owned anonymous disk volume, removed after qualification",
+    "resource_config": "2147483648 2000000000 {}",
+    "internal_network": true,
+    "final_state_before_cleanup": {
+      "Status": "running",
+      "Running": true,
+      "Paused": false,
+      "Restarting": false,
+      "OOMKilled": false,
+      "Dead": false,
+      "Pid": 864947,
+      "ExitCode": 0,
+      "Error": "",
+      "StartedAt": "2026-10-12T21:33:09.458760024Z",
+      "FinishedAt": "0001-01-01T00:00:00Z"
+    },
+    "size_before_cleanup": "752M\t/var/lib/postgresql/data",
+    "observed_root_headroom_min_gib": 79,
+    "required_root_headroom_gib": 30
+  },
+  "commands": {
+    "qualification": "bash /home/dobo/work/_temp/feat-local-poc-real-data/verification/social/run-qualification.sh /home/dobo/work/_worktrees/social_media_activities_app/feat__policy8-local-poc full final",
+    "source_checks": "scripts/check-native.sh /usr/local/go/bin/go",
+    "environment": {
+      "GOTOOLCHAIN": "local",
+      "GOWORK": "off",
+      "GOMAXPROCS": "2",
+      "GOFLAGS": "-mod=readonly -p=2",
+      "GOPROXY": "off",
+      "GOCACHE": "/home/dobo/work/_temp/feat-local-poc-real-data/gocache",
+      "GOMODCACHE": "/home/dobo/work/_temp/feat-local-poc-real-data/verification/social/gomodcache"
+    }
+  },
+  "fixture_correction": {
+    "commit": "98bc92176440570f1742b1ba2ced1922cca08f57",
+    "change": "commands/demo_test.go aligns social.Service.Now with existing jobs.Config.Now; product time validation and second-seed assertion retained",
+    "main_negative_control": "78d3a6686063ae7935c90527ee2f2b6ec444fda4: TestNativeSeedBrowseUsersEventsAndMobileScenarios fails demo_test.go147, exit1",
+    "corrected_commands_lane": {
+      "passed": 29,
+      "skips": 0,
+      "failures": 0,
+      "exit_code": 0
+    },
+    "independent_review": "Root Codex orchestrator approved minimal one-line fixture correction before commit"
+  },
+  "setup_correction": {
+    "symptom": "Earlier tmpfs1GiB fixture produced PostgreSQL unexpected EOF/recovery mid-media",
+    "evidence_limit": "Original EXIT cleanup removed DB logs/OOM state; exact prior failure cause cannot be proven retrospectively",
+    "correction": "Disk-backed anonymous volume; memory2GiB and2CPU constraints unchanged; targeted media54 and full21 subsequently pass"
+  },
+  "cleanup": {
+    "container": {
+      "resource": "social-policy8-verify-db-20261013",
+      "exit_code": 1,
+      "confirmed_removed": true,
+      "diagnostic": "Error response from daemon: No such container: social-policy8-verify-db-20261013"
+    },
+    "network": {
+      "resource": "social-policy8-verify-20261013",
+      "exit_code": 1,
+      "confirmed_removed": true,
+      "diagnostic": "Error response from daemon: network social-policy8-verify-20261013 not found"
+    },
+    "anonymous_volume": {
+      "resource": "2f464f556dd50b90683b5a10fe3eb6a1f0045b21234b1704785a4f44ed60482d",
+      "exit_code": 1,
+      "confirmed_removed": true,
+      "diagnostic": "Error response from daemon: get 2f464f556dd50b90683b5a10fe3eb6a1f0045b21234b1704785a4f44ed60482d: no such volume"
+    },
+    "temporary_password_file_removed": true
+  },
+  "historical_derivatives": {
+    "pruned_owned_binary_bytes": 898877912,
+    "retained": "Compact first-attempt/tmpfs manifests and synthetic negative/positive logs; pruned binaries are unavailable"
+  },
+  "artifact_sha256": {
+    "final/tests/accounts.log": "441bb8012348a29c502e279e6724d07be4322d7b4558ff5a4c4076a8335f6818",
+    "final/tests/admin.log": "9b6faf0c3ac827e9e6fcc4fb14eecefcd3b30a004af770baae4c7a6939d15c80",
+    "final/tests/app.log": "676c406a0511a271a2fa028948b93b3c06c6d5485002cf3ebf24e75b27fc04c8",
+    "final/tests/backup.log": "26c0bf55f07b881343a9719afbcec7a69d84c0add17d9ff618c296d2f890c8f7",
+    "final/tests/booking.log": "3d95a91439e507c762b3c946c949e3c59c72c71085a1239da637423b848e2b35",
+    "final/tests/budgets.log": "6f7dfae0d13db461f666878df6fa4b6db47c9ccf3a59aaf186bc8f95830fb3f6",
+    "final/tests/catalog.log": "4b1e81bf4f6db46fa9b65898af8e3b6d2ed2862b6d5160db3e5c3835a717bcd4",
+    "final/tests/commands.log": "1599d308d4808334b8a82ee655d57e03f1289830652609699a4628e8af974ac1",
+    "final/tests/configuration.log": "7c595f4c38d8fcc5e62e7e8c0786f9f7148a43ba72ad87017ee50baf896ef96a",
+    "final/tests/contracts.log": "80ff5ae7a34ba3522852d3af7fced87fbc61cc29218b8046c6afe154abb84043",
+    "final/tests/discovery.log": "afcec75b8229b3af4f8902dd90800fbb3746c55eb898f4fa06758ecc7cad8374",
+    "final/tests/donations.log": "7df2935512a2391aaccc550c7e0a5e0c37b252856368db1f5c2be65f3e599bf3",
+    "final/tests/export.log": "f39004621a50d609d3de2a8ad2f4781ad32deeaf3e1f0f68e0831668bc6cc3f6",
+    "final/tests/jobs.log": "3441873b6b9408357f3c85f94d5ba1c34b852cd50eb25fbc56fc51c0545b9109",
+    "final/tests/media.log": "6dfa1a8a41ff7fcdaf52a95edf46dfaf4093cc54746b728398d4c64a7f870201",
+    "final/tests/messaging.log": "f8e5acc393cb97ca1fe85afe90113b39af230fc2f2f0b13d4ceb0ac3229f7470",
+    "final/tests/notifications.log": "f0a1efdb45e71041f3fdbd3065090c7fd2ccaf0a9e5ac5eb696afc04471f8f9b",
+    "final/tests/recommendations.log": "e92c131a71a394bde1969c284fec41a527c327f4969dd8bb24c5c413551b190e",
+    "final/tests/safety.log": "7eed707ce60d12557a518441bc0cabfb69cf02c89174655e947649586d2868c0",
+    "final/tests/social.log": "6306fa0a7a857bfc6070418bc6f35ac5cf3ef214ac5603ca19928ac198109d27",
+    "final/tests/web.log": "77eeadf3e8afba6be60e09a4e951b934dd4f563fdd04cafb2fb4cb3a80fff6fd",
+    "check-native-final.log": "f1f8caa58c7ed4516710319f0624cd7aeb91d9664962af4f2a34e49668f0fb83",
+    "native-gate-harness.log": "a1180332d1925bad73aa540d43d6ae6a24c7a5b9d9cde802f933f49d44cc8879",
+    "docs.log": "20cab5cf58a49dfd8805188bed6aba5702513ca8a332e45ffd08491387d4c3df",
+    "whitespace.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "contracts-final.log": "747502280f12281876e2cb239196cfb53b22914db9ca8dea36bf2d1bf1ff54c0",
+    "final/bootstrap.log": "5b2d46f349e9e364c57767d324dec52dfaa9b8e3bf31082d9c8dcc76e00a64ab",
+    "final/qualification.log": "b077881658b18593fd2113c866df9d5fe4715cd0ae2084b8113a0f465799d014",
+    "final/database.log": "6688b3010074f77714a3f0d6a9fd731460fad1f2beebae838e14dfb812250aa4",
+    "final/database-state.json": "5dae1014499195f595a7f28efe992b26b861dc7e11e8fa3ff39a5c23f37e9d00",
+    "final/database-disk.txt": "d809d6372ec02b19df72f9f83442178fb8a2bfd0f42686be09ba51a8ef307428",
+    "final/database-size.txt": "d2b75f42f213e7f2c12ac58c80206c866dec2850eb95664fd63f25e78541342a",
+    "cleanup-proof.json": "d9fd907231fcae8868f689714644bb2423e757d70d7a8715a86c2cc51b8b6de6",
+    "source-input-identity.json": "f1d858eae2814137b63dd90908bb05fd750d5e3a296b7f4a45ec80931c10e7e9",
+    "source-inputs.git-tree": "f6c65a1355c8cc974f99998dad118a928b18e6522ca676c97bf263c15c3850af",
+    "run-qualification.sh": "07653cf059b90a412a6fe7939ec01db636201fd462ffcecbf036fc3fdea0a182",
+    "baseline-main/tests/commands.log": "05dda282850a54b23708b9f66f47bd548a8719e15a2204241d08d7cd4b09c698",
+    "targeted-clock-fix/tests/commands.log": "f5602b7d786108a493218304867f5a2359476c73cc541f9db2832a969b3e5a91",
+    "media-disk-fixture/tests/media.log": "02c5c98a4c9246c45376238ed45b27de9211423fd620ab9966d4726e69c3ed96",
+    "pre-clock-attempt-manifest.json": "b46bd0e79af6537f574a23d5b5a97d2e817e1ff8dd10494afde9a24aba100c55",
+    "tmpfs-attempt-manifest.json": "9a230076295149d01e2235919e66e344afd68bf8263ab0a5d191f4538ad11753"
+  },
+  "root_closure_needed": "STATUS.md97 still says full landing qualification pending; root will update receipt-only docs and verify protected/additional Git object equality before landing",
+  "scope": "Source qualification only; no push, merge, deployment, live POC runtime/database change or production authorization by this worker"
+}

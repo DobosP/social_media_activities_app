@@ -3,6 +3,17 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-13 — Policy 5/8 and isolated POC landing qualification
+
+Valid until: any protected source object or qualification environment changes — then requalify.
+
+- Exact clean `98bc92176440570f1742b1ba2ced1922cca08f57`: canonical full qualification passed all 21 lanes, 737 top-level tests, zero skips/failures. check-native (31 package OK lines + Node4), harness17, docs53/all0 and whitespace pass. The case-retirement ledger remains 1020 verified /1651 unresolved /0 invalid; expected exit1 blocks reference retirement, which this change does not attempt.
+- The previous main second-seed failure was reproduced; the one-line fixture clock alignment preserves production time validation and all idempotence assertions. Root independently reviewed the correction and existing feature boundaries; the complete command lane passes29.
+- The first corrected full attempt lost its disposable PostgreSQL connection and observed recovery; its exact historical cause cannot be proven because cleanup had already removed that DB. The disk-backed successor passed media54 and the complete21-lane gate with unchanged2CPU/2GiB and per-lane time limits. POC and other owners’ resources were untouched; disposable container/network/volume/password-file absence was verified.
+- The receipt records commands/counts/hashes, cleanup and the explicit source-hash algorithm: SHA256 of raw `git ls-tree -r HEAD -- <14 protected roots>` bytes = `f6c65a1355c8cc974f99998dad118a928b18e6522ca676c97bf263c15c3850af`; offline ingestion/config objects also match. This receipt-only closure follows the established source-object-equality allowance; it changes no protected input and does not repeat passed gates.
+- Superseded owned test binaries from failed/targeted iterations were pruned (899MB reported); compact manifests/logs remain history, not a claim that those deleted executable bytes remain. The latest verified setup remains. Existing c27 codec image was reused; no fresh deployment-image, dependency audit, frontend qualification or production activation is claimed.
+- The four-branch continuation is owner-authorized. Runtime source worktrees stay until the loopback POC has been independently verified on its rolling archive.
+
 ## 2026-10-13 — Deterministic native demo fixture clock
 
 Valid until: the demo fixture clock or activity mutation rules change — then requalify.
