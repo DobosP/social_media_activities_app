@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "reviewer": "/root",
+  "verdict": "ACTUAL targeted90profileactions PASS0; independentreviewpending",
+  "source": "22f3746f3cde42e4ff9012b4953b129ff9fd614e",
+  "captureSha256": "80883e6a9327ce6ec1169b30e1b151b7c86675ef2537c54a451315f22d483445",
+  "primaryResultSha256": "99f72b96f29f8e2e7de6f674185aaa31583aad8a954b6f01e66297cb6585652c",
+  "profileQualifiedActions": 90,
+  "distinctLabels": 89,
+  "packages": 3,
+  "actualProfiles": {
+    "named_actions": 90,
+    "unique_test_labels_across_profiles": 89,
+    "profile_qualified_identities": 90,
+    "package_passes": 3,
+    "not_90_global_unique_IDs_or_processes": true
+  },
+  "all10guardsExact": true,
+  "literalArtifactRowsVerified": 98,
+  "actualSeparateFreshDatabaseOIDsVerified": true,
+  "actualOwnedPGTCDBCleanupPASS": true,
+  "scope": "Synthetic current-current registeredtransport/data-onlycustody only. No old=currentbehavior/authprivacy/browser/full/device/default/adoption proof."
+}

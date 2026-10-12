@@ -1,0 +1,659 @@
+{
+  "source_inputs": [
+    "AGENTS.md",
+    "apps/web/templates/web/_activity_card.html",
+    "apps/web/templates/web/_activity_form_wizard.html",
+    "apps/web/templates/web/_near_me.html",
+    "apps/web/templates/web/_share_box.html",
+    "apps/web/templates/web/_you_tabs.html",
+    "apps/web/templates/web/access_preferences.html",
+    "apps/web/templates/web/activities.html",
+    "apps/web/templates/web/activity_edit.html",
+    "apps/web/templates/web/activity_form.html",
+    "apps/web/templates/web/campaigns.html",
+    "apps/web/templates/web/communities.html",
+    "apps/web/templates/web/communities_graph.html",
+    "apps/web/templates/web/discover.html",
+    "apps/web/templates/web/display_preferences.html",
+    "apps/web/templates/web/donate.html",
+    "apps/web/templates/web/event_detail.html",
+    "apps/web/templates/web/events.html",
+    "apps/web/templates/web/home.html",
+    "apps/web/templates/web/landing.html",
+    "apps/web/templates/web/landing_city.html",
+    "apps/web/templates/web/landing_detail.html",
+    "apps/web/templates/web/landing_index.html",
+    "apps/web/templates/web/my_meetups.html",
+    "apps/web/templates/web/notification_preferences.html",
+    "apps/web/templates/web/open_data.html",
+    "apps/web/templates/web/partners.html",
+    "apps/web/templates/web/place_detail.html",
+    "apps/web/templates/web/places.html",
+    "apps/web/templates/web/places_list.html",
+    "apps/web/templates/web/privacy.html",
+    "apps/web/templates/web/series_detail.html",
+    "apps/web/templates/web/series_list.html",
+    "apps/web/templates/web/terms.html",
+    "apps/web/templates/web/topic_preferences.html",
+    "docs/reviews/gui-public-original/checkpoint.json",
+    "docs/reviews/gui-public-original/nonce-checkpoint.json",
+    "docs/reviews/gui-public-original/static-fs-checkpoint.json",
+    "frontend/package-lock.json",
+    "frontend/package.json",
+    "locale/ro/LC_MESSAGES/django.po",
+    "services/server/go.mod",
+    "services/server/go.sum",
+    "services/server/internal/accounts/avatar.go",
+    "services/server/internal/accounts/http.go",
+    "services/server/internal/accounts/service.go",
+    "services/server/internal/accounts/settings.go",
+    "services/server/internal/app/app.go",
+    "services/server/internal/avatars/render.go",
+    "services/server/internal/catalog/seed.go",
+    "services/server/internal/catalog/testdata/reference_seed.json",
+    "services/server/internal/donations/ledger.go",
+    "services/server/internal/platform/platform.go",
+    "services/server/internal/recommendations/service.go",
+    "services/server/internal/social/activities.go",
+    "services/server/internal/social/groups.go",
+    "services/server/internal/social/service.go",
+    "services/server/internal/testdb/testdb.go",
+    "services/server/internal/web/account_actions.go",
+    "services/server/internal/web/account_pages.go",
+    "services/server/internal/web/assets/meetups-worker.js",
+    "services/server/internal/web/assets/meetups-worker.test.mjs",
+    "services/server/internal/web/forms.go",
+    "services/server/internal/web/forms.json",
+    "services/server/internal/web/gui_activity_browse_nonce_test.go",
+    "services/server/internal/web/gui_activity_form_nonce_test.go",
+    "services/server/internal/web/gui_my_meetups_nonce_test.go",
+    "services/server/internal/web/gui_preferences_get_transport_test.go",
+    "services/server/internal/web/gui_preferences_layout_test.go",
+    "services/server/internal/web/gui_public_campaign_meter_test.go",
+    "services/server/internal/web/gui_public_community_pagination_test.go",
+    "services/server/internal/web/gui_public_community_style_test.go",
+    "services/server/internal/web/gui_public_current_get_transport_test.go",
+    "services/server/internal/web/gui_public_get_walk_normalize_test.go",
+    "services/server/internal/web/gui_public_get_walk_test.go",
+    "services/server/internal/web/gui_public_golden_test.go",
+    "services/server/internal/web/gui_public_graph_nonce_test.go",
+    "services/server/internal/web/gui_public_nonce_test.go",
+    "services/server/internal/web/gui_public_normalize_test.go",
+    "services/server/internal/web/gui_public_places_nonce_test.go",
+    "services/server/internal/web/gui_public_static_fs_test.go",
+    "services/server/internal/web/gui_public_trace_test.go",
+    "services/server/internal/web/i18n.go",
+    "services/server/internal/web/methods.go",
+    "services/server/internal/web/methods.json",
+    "services/server/internal/web/payments.go",
+    "services/server/internal/web/payments_test.go",
+    "services/server/internal/web/post_notice.go",
+    "services/server/internal/web/public_details.go",
+    "services/server/internal/web/public_downloads.go",
+    "services/server/internal/web/public_landings.go",
+    "services/server/internal/web/public_pages.go",
+    "services/server/internal/web/public_pages_test.go",
+    "services/server/internal/web/public_routes.json",
+    "services/server/internal/web/public_structured.go",
+    "services/server/internal/web/renderer.go",
+    "services/server/internal/web/renderer_fs.go",
+    "services/server/internal/web/renderer_fs_test.go",
+    "services/server/internal/web/router.go",
+    "services/server/internal/web/routes.json",
+    "services/server/internal/web/server.go",
+    "services/server/internal/web/social_discovery.go",
+    "services/server/internal/web/social_forms.go",
+    "services/server/internal/web/social_pages.go",
+    "services/server/internal/web/social_pages_test.go",
+    "services/server/internal/web/spa.go",
+    "services/server/internal/web/static.go",
+    "services/server/internal/web/static_fs.go",
+    "services/server/internal/web/templates.go",
+    "services/server/internal/web/testdata/gui-preferences-get/registry.json",
+    "services/server/internal/web/testdata/gui-public-campaign-meter/campaigns-pre-externalization-7930.html",
+    "services/server/internal/web/testdata/gui-public-get-walk/cases.json",
+    "services/server/internal/web/testdata/gui-public-get-walk/normalization-reference.json",
+    "services/server/internal/web/testdata/gui-public-get-walk/source.json",
+    "services/server/internal/web/topic_pages.go",
+    "services/server/internal/web/venue_claim_access_case_port_test.go",
+    "services/server/internal/web/views.go",
+    "services/server/internal/web/web_case_port_test.go",
+    "static/css/base.css",
+    "static/js/browse-modes.js",
+    "static/js/community-graph.js",
+    "static/js/concept-combobox.js",
+    "static/js/form-wizard.js",
+    "static/js/my-meetups.js",
+    "static/js/near-me.js",
+    "static/js/place-picker.js",
+    "static/js/places-map.js",
+    "static/js/site.js",
+    "static/vendor/leaflet/leaflet.css",
+    "static/vendor/leaflet/leaflet.js",
+    "static/vendor/maplibre/maplibre-gl-csp-worker.js",
+    "static/vendor/maplibre/maplibre-gl-csp.js",
+    "static/vendor/maplibre/maplibre-gl.css",
+    "templates/base.html",
+    "tools/gui-public-golden/community-graph-fallback.test.mjs",
+    "tools/gui-public-golden/my-meetups-offline.test.mjs",
+    "tools/gui-public-golden/normalize.go",
+    "tools/gui-public-golden/normalize_test.go",
+    "tools/gui-public-golden/release-bindings.json",
+    "tools/gui-public-golden/verify_nonce_capture.py",
+    "services/server/internal/web/gui_source_only_default_test.go"
+  ],
+  "current7_inputs": [
+    "apps/web/templates/web/_you_tabs.html",
+    "apps/web/templates/web/access_preferences.html",
+    "apps/web/templates/web/display_preferences.html",
+    "apps/web/templates/web/notification_preferences.html",
+    "apps/web/templates/web/topic_preferences.html",
+    "locale/ro/LC_MESSAGES/django.po",
+    "templates/base.html"
+  ],
+  "current_g1_inputs": [
+    "AGENTS.md",
+    "apps/web/templates/web/_activity_card.html",
+    "apps/web/templates/web/_activity_form_wizard.html",
+    "apps/web/templates/web/_near_me.html",
+    "apps/web/templates/web/_share_box.html",
+    "apps/web/templates/web/access_preferences.html",
+    "apps/web/templates/web/activities.html",
+    "apps/web/templates/web/activity_edit.html",
+    "apps/web/templates/web/activity_form.html",
+    "apps/web/templates/web/campaigns.html",
+    "apps/web/templates/web/communities.html",
+    "apps/web/templates/web/communities_graph.html",
+    "apps/web/templates/web/discover.html",
+    "apps/web/templates/web/donate.html",
+    "apps/web/templates/web/event_detail.html",
+    "apps/web/templates/web/events.html",
+    "apps/web/templates/web/home.html",
+    "apps/web/templates/web/landing.html",
+    "apps/web/templates/web/landing_city.html",
+    "apps/web/templates/web/landing_detail.html",
+    "apps/web/templates/web/landing_index.html",
+    "apps/web/templates/web/my_meetups.html",
+    "apps/web/templates/web/notification_preferences.html",
+    "apps/web/templates/web/open_data.html",
+    "apps/web/templates/web/partners.html",
+    "apps/web/templates/web/place_detail.html",
+    "apps/web/templates/web/places.html",
+    "apps/web/templates/web/places_list.html",
+    "apps/web/templates/web/privacy.html",
+    "apps/web/templates/web/series_detail.html",
+    "apps/web/templates/web/series_list.html",
+    "apps/web/templates/web/terms.html",
+    "apps/web/templates/web/topic_preferences.html",
+    "docs/reviews/gui-public-original/checkpoint.json",
+    "docs/reviews/gui-public-original/nonce-checkpoint.json",
+    "docs/reviews/gui-public-original/static-fs-checkpoint.json",
+    "frontend/package-lock.json",
+    "frontend/package.json",
+    "locale/ro/LC_MESSAGES/django.po",
+    "services/server/go.mod",
+    "services/server/go.sum",
+    "services/server/internal/accounts/avatar.go",
+    "services/server/internal/app/app.go",
+    "services/server/internal/avatars/render.go",
+    "services/server/internal/donations/ledger.go",
+    "services/server/internal/platform/platform.go",
+    "services/server/internal/social/activities.go",
+    "services/server/internal/social/groups.go",
+    "services/server/internal/social/service.go",
+    "services/server/internal/testdb/testdb.go",
+    "services/server/internal/web/account_actions.go",
+    "services/server/internal/web/account_pages.go",
+    "services/server/internal/web/assets/meetups-worker.js",
+    "services/server/internal/web/assets/meetups-worker.test.mjs",
+    "services/server/internal/web/forms.go",
+    "services/server/internal/web/forms.json",
+    "services/server/internal/web/gui_activity_browse_nonce_test.go",
+    "services/server/internal/web/gui_activity_form_nonce_test.go",
+    "services/server/internal/web/gui_my_meetups_nonce_test.go",
+    "services/server/internal/web/gui_preferences_layout_test.go",
+    "services/server/internal/web/gui_public_community_pagination_test.go",
+    "services/server/internal/web/gui_public_community_style_test.go",
+    "services/server/internal/web/gui_public_current_get_transport_test.go",
+    "services/server/internal/web/gui_public_get_walk_normalize_test.go",
+    "services/server/internal/web/gui_public_get_walk_test.go",
+    "services/server/internal/web/gui_public_golden_test.go",
+    "services/server/internal/web/gui_public_graph_nonce_test.go",
+    "services/server/internal/web/gui_public_nonce_test.go",
+    "services/server/internal/web/gui_public_normalize_test.go",
+    "services/server/internal/web/gui_public_places_nonce_test.go",
+    "services/server/internal/web/gui_public_static_fs_test.go",
+    "services/server/internal/web/gui_public_trace_test.go",
+    "services/server/internal/web/i18n.go",
+    "services/server/internal/web/methods.json",
+    "services/server/internal/web/payments.go",
+    "services/server/internal/web/payments_test.go",
+    "services/server/internal/web/public_details.go",
+    "services/server/internal/web/public_downloads.go",
+    "services/server/internal/web/public_landings.go",
+    "services/server/internal/web/public_pages.go",
+    "services/server/internal/web/public_pages_test.go",
+    "services/server/internal/web/public_routes.json",
+    "services/server/internal/web/public_structured.go",
+    "services/server/internal/web/renderer.go",
+    "services/server/internal/web/renderer_fs.go",
+    "services/server/internal/web/renderer_fs_test.go",
+    "services/server/internal/web/router.go",
+    "services/server/internal/web/routes.json",
+    "services/server/internal/web/server.go",
+    "services/server/internal/web/social_discovery.go",
+    "services/server/internal/web/social_forms.go",
+    "services/server/internal/web/social_pages.go",
+    "services/server/internal/web/social_pages_test.go",
+    "services/server/internal/web/static.go",
+    "services/server/internal/web/static_fs.go",
+    "services/server/internal/web/templates.go",
+    "services/server/internal/web/testdata/gui-public-get-walk/cases.json",
+    "services/server/internal/web/testdata/gui-public-get-walk/normalization-reference.json",
+    "services/server/internal/web/testdata/gui-public-get-walk/source.json",
+    "services/server/internal/web/topic_pages.go",
+    "services/server/internal/web/venue_claim_access_case_port_test.go",
+    "services/server/internal/web/views.go",
+    "static/css/base.css",
+    "static/js/browse-modes.js",
+    "static/js/community-graph.js",
+    "static/js/concept-combobox.js",
+    "static/js/form-wizard.js",
+    "static/js/my-meetups.js",
+    "static/js/near-me.js",
+    "static/js/place-picker.js",
+    "static/js/places-map.js",
+    "static/js/site.js",
+    "static/vendor/leaflet/leaflet.css",
+    "static/vendor/leaflet/leaflet.js",
+    "static/vendor/maplibre/maplibre-gl-csp-worker.js",
+    "static/vendor/maplibre/maplibre-gl-csp.js",
+    "static/vendor/maplibre/maplibre-gl.css",
+    "templates/base.html",
+    "tools/gui-public-golden/community-graph-fallback.test.mjs",
+    "tools/gui-public-golden/my-meetups-offline.test.mjs",
+    "tools/gui-public-golden/normalize.go",
+    "tools/gui-public-golden/normalize_test.go",
+    "tools/gui-public-golden/release-bindings.json",
+    "tools/gui-public-golden/verify_nonce_capture.py"
+  ],
+  "current20_inputs": [
+    "apps/web/templates/web/_activity_card.html",
+    "apps/web/templates/web/_near_me.html",
+    "apps/web/templates/web/_share_box.html",
+    "apps/web/templates/web/campaigns.html",
+    "apps/web/templates/web/discover.html",
+    "apps/web/templates/web/donate.html",
+    "apps/web/templates/web/event_detail.html",
+    "apps/web/templates/web/events.html",
+    "apps/web/templates/web/landing.html",
+    "apps/web/templates/web/landing_city.html",
+    "apps/web/templates/web/landing_detail.html",
+    "apps/web/templates/web/landing_index.html",
+    "apps/web/templates/web/partners.html",
+    "apps/web/templates/web/place_detail.html",
+    "apps/web/templates/web/places.html",
+    "apps/web/templates/web/places_list.html",
+    "apps/web/templates/web/series_detail.html",
+    "apps/web/templates/web/series_list.html",
+    "locale/ro/LC_MESSAGES/django.po",
+    "templates/base.html"
+  ],
+  "readonly_policy_refs": [
+    "services/server/internal/web/account_pages.go",
+    "services/server/internal/web/account_actions.go",
+    "services/server/internal/web/views.go",
+    "services/server/internal/web/topic_pages.go",
+    "services/server/internal/platform/platform.go",
+    "services/server/internal/web/server.go",
+    "services/server/internal/web/routes.json"
+  ],
+  "normalizer_and_original_inputs": [
+    {
+      "bytes": 5111,
+      "full_mode": 33152,
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/landing-en.html",
+      "sha256": "b3da2dc08b119c315cab50e36c102fa85314436d24b714fce2fd0eceb16b2814"
+    },
+    {
+      "bytes": 5504,
+      "full_mode": 33152,
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/landing-ro.html",
+      "sha256": "8f3d8804dd9c2d0ec33d9fe7ff569077d490c4652c56880de254e9e75d0407a8"
+    },
+    {
+      "bytes": 11826,
+      "full_mode": 33152,
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/manifest.json",
+      "sha256": "5403a0f3c2817fcd6ec1ebfefe9546ae9318057b3fefe845d1f1b77bd3eceb4a"
+    },
+    {
+      "bytes": 8536,
+      "full_mode": 33152,
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/open-data-en-snapshot-false.html",
+      "sha256": "b1ccc0a6fde232f14d149469e3a808f779777d48143c86efc8ae1eb27009c8aa"
+    },
+    {
+      "bytes": 9355,
+      "full_mode": 33152,
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/open-data-en-snapshot-true.html",
+      "sha256": "5b742d03dcadd53a0bea7d68c0ad825e7632bae91f1ae456fe0d5f8cc6fc64e4"
+    },
+    {
+      "bytes": 8621,
+      "full_mode": 33152,
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/open-data-ro-snapshot-false.html",
+      "sha256": "3114126118d83557815bd370f692d3a1a99ad8ba4718ac0cb3fce387bfab9220"
+    },
+    {
+      "bytes": 9440,
+      "full_mode": 33152,
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/open-data-ro-snapshot-true.html",
+      "sha256": "6aef427f673ea578fbd1f27a62431fc9292bbec9f5516c7f8bd85a1aa3682f9f"
+    },
+    {
+      "bytes": 8291,
+      "full_mode": 33152,
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/privacy-en-contrast.html",
+      "sha256": "4d70f26baa9c2a36118fe8c2b8950de1752fec74995c05e7d6f72cfeac215822"
+    },
+    {
+      "bytes": 8285,
+      "full_mode": 33152,
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/privacy-en-default.html",
+      "sha256": "c5c123c173297e5310eb69f8da24a8fc5ae3485ae5077ca017f7ed30f2ce0ab1"
+    },
+    {
+      "bytes": 9484,
+      "full_mode": 33152,
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/privacy-ro-contrast.html",
+      "sha256": "748d144757c834c72e324bb4686fecb94d3d15c8d835a595b5800b5686e53d59"
+    },
+    {
+      "bytes": 9478,
+      "full_mode": 33152,
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/privacy-ro-default.html",
+      "sha256": "afb50c59582f5c35617ba91081fb9e1093904f03efc2b9e19a70868b985c0db9"
+    },
+    {
+      "bytes": 6966,
+      "full_mode": 33152,
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/terms-en-contrast.html",
+      "sha256": "8d855ec46ca8944dd4d491bf711ed31b11faeae196183b53debf9f2d81c64023"
+    },
+    {
+      "bytes": 6960,
+      "full_mode": 33152,
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/terms-en-default.html",
+      "sha256": "8fff1e8f72bb69b3e2bb18a76892b39f97b928cd9d8923f8e59d074ccd6aec5e"
+    },
+    {
+      "bytes": 7827,
+      "full_mode": 33152,
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/terms-ro-contrast.html",
+      "sha256": "b211ecc4bc3cbbf096d4a82d22972e418c2dc86f1da33cdf41c5b7a4d5c4deec"
+    },
+    {
+      "bytes": 7821,
+      "full_mode": 33152,
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/capture-75dc717/terms-ro-default.html",
+      "sha256": "bb084d48196111fc1466324386ec2e1c0b2feff64632cc8beac504dffe8d41e0"
+    },
+    {
+      "bytes": 4897832,
+      "full_mode": 33216,
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/normalizer-r7-764beb1/social-gui-normalize",
+      "sha256": "598515e75c709803c7b23673e07b14baa93861608346a81c8fc708521c1b2f05"
+    },
+    {
+      "bytes": 55202,
+      "full_mode": 33204,
+      "path": "/home/dobo/gates/kits/core-v1.6/web-kit-go-core-v1.6.tgz",
+      "sha256": "d722a817074a01d8a983c3e8492335ee07d37fb0d58c9a938cd189df635e168d"
+    },
+    {
+      "bytes": 405,
+      "full_mode": 33152,
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/normalizer-r7-764beb1/binary-build-info.stdout",
+      "sha256": "87be64cb3a8d875b4775ffa3ce18e7b5a24434242de1418e2313d14ed62e18ac"
+    }
+  ],
+  "historical_private_raw": {
+    "directory": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured",
+    "directory_full_mode": 16832,
+    "no_body_copies": true,
+    "rows": [
+      {
+        "bytes": 3983,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/campaigns-empty.body",
+        "sha256": "2e99421f0b0fb2064dd944e0b7cf7da9e131ddfd2a8ad5e2eb20552dfa4bf3b8"
+      },
+      {
+        "bytes": 5003,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/campaigns-populated.body",
+        "sha256": "3daf422adf374e9dbf70280b30a1dbe4427dcd02e3ca6a4e4f0cffaf911df36e"
+      },
+      {
+        "bytes": 24,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/city-missing.body",
+        "sha256": "49e3e25f416e0168c3f9057c42bf73a33ed125a90310ee61f7d300518d51724a"
+      },
+      {
+        "bytes": 4133,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/city-populated.body",
+        "sha256": "96b3c7ab4542b52b213a95d164597ed889c51b4b6b1560654f0f56feef20f0ae"
+      },
+      {
+        "bytes": 4255,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/discover-empty.body",
+        "sha256": "5840464963f980badfca6c81a5639117fc425f57b2a42dc6fe5121118df59a73"
+      },
+      {
+        "bytes": 4462,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/discover-populated.body",
+        "sha256": "4af59148c2241078ea94ca8507a7a7ecb746db1eafce892db38fa1011f1b6c57"
+      },
+      {
+        "bytes": 4697,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/donate-empty.body",
+        "sha256": "3734a94a0546ff2114874a88331d4fdcd60938113a8f0e5eb62bf10ac963de2c"
+      },
+      {
+        "bytes": 4751,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/donate-populated.body",
+        "sha256": "80c372773ca28476f7fc041cf522884fba73c9eb74fbf106e716525be0f92bf4"
+      },
+      {
+        "bytes": 4760,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/donate-selected.body",
+        "sha256": "218fc281a6d917189abe3bbc9bfa9647b538f8c7f113370e424b20a649c9df88"
+      },
+      {
+        "bytes": 5937,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/event-id.body",
+        "sha256": "0619a8990a1c03b2a78100f163a318ed9a3c29ee2c85534816b7d2c26a84a52f"
+      },
+      {
+        "bytes": 24,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/event-missing.body",
+        "sha256": "49e3e25f416e0168c3f9057c42bf73a33ed125a90310ee61f7d300518d51724a"
+      },
+      {
+        "bytes": 5962,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/event-slug.body",
+        "sha256": "b58a82ab99e2f3e25f6fdc3c348a76c3046a4e1f2f143361dd6e7c1066c842f5"
+      },
+      {
+        "bytes": 4416,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/events-empty.body",
+        "sha256": "480cd198c654f5bed182afe75640a9e4a02eac4310b363239720d54ab97fe8b8"
+      },
+      {
+        "bytes": 4639,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/events-filter-empty.body",
+        "sha256": "654c8c8eb2fabf92271b2ee6d2455a47417a7e4f0762d71c46ecb0fed0cd3ed3"
+      },
+      {
+        "bytes": 5384,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/events-filter-match.body",
+        "sha256": "621c2ecd3206a95ed2016611c9ead4485665fd8c241e64e646ee2c397adde5f6"
+      },
+      {
+        "bytes": 5112,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/events-populated.body",
+        "sha256": "5f5ed5b496e4d6bd470105d25bc9261dd0eaf7e1bc62103cf07cf90b7a25c466"
+      },
+      {
+        "bytes": 3923,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/index-empty.body",
+        "sha256": "9117e1c1f2f5544704555419fb84c0bdee8ba844b349b915bd99f9c953e6d830"
+      },
+      {
+        "bytes": 4099,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/index-populated.body",
+        "sha256": "01dcaae24f2b396400c0d5aa5f85871328363e231fd9d7b6957e9f309c735663"
+      },
+      {
+        "bytes": 24,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/landing-detail-missing.body",
+        "sha256": "49e3e25f416e0168c3f9057c42bf73a33ed125a90310ee61f7d300518d51724a"
+      },
+      {
+        "bytes": 5776,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/landing-detail-populated.body",
+        "sha256": "64c0ae6396b770961c42b5b226fc904c0b4b9840c95d2bcd299b6c4d7af5fffd"
+      },
+      {
+        "bytes": 5106,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/landing-en-contrast.body",
+        "sha256": "1f7af83677dafa42d1eca344a7b93b4bf1ed51a813e212964436119bd9be14d9"
+      },
+      {
+        "bytes": 5100,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/landing-en-default.body",
+        "sha256": "dd693c3ae23fc5ff4ff58c4f65936079b17e3bde8e7fd8be9c0ab171b33da28f"
+      },
+      {
+        "bytes": 5499,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/landing-ro-contrast.body",
+        "sha256": "5325508dec9a65f5f7cb99796e770b60d1888c450af4aae0c1d3b441d6ac7b43"
+      },
+      {
+        "bytes": 5493,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/landing-ro-default.body",
+        "sha256": "b1dda0f9d6370c577feaafb478f4294f2de1d1a84438396205c31b9a45bfc7f6"
+      },
+      {
+        "bytes": 82363,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/manifest.json",
+        "sha256": "591c6b70edc83620ead9ca5ba18ecf4c39d3171e5365276961b96b184b729fb7"
+      },
+      {
+        "bytes": 4081,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/partners-empty.body",
+        "sha256": "845b5db347c03ea9b150a1d96a9cb4cb1bddc2e62d8159af93d8889cd5658f9b"
+      },
+      {
+        "bytes": 4380,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/partners-populated.body",
+        "sha256": "a98e6612bb926691b7480532b822d5817d5a96fd2a5064bbaf0d75cf972fe934"
+      },
+      {
+        "bytes": 12492,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/place-id.body",
+        "sha256": "d3f71670c68583841063043cbd1630451eaf1b9b5ee09975316ac20d9594ea7f"
+      },
+      {
+        "bytes": 24,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/place-missing.body",
+        "sha256": "49e3e25f416e0168c3f9057c42bf73a33ed125a90310ee61f7d300518d51724a"
+      },
+      {
+        "bytes": 12516,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/place-slug.body",
+        "sha256": "1c7b6b009828f0c328b92fd69279ba81c4deefe3da4a39544c9023bde813141d"
+      },
+      {
+        "bytes": 4658,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/places-list-empty.body",
+        "sha256": "bb6071de70884e055238188da16ba02dbf2d23da1db4229a8cc66f3d56d20b16"
+      },
+      {
+        "bytes": 4677,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/places-list-filter-empty.body",
+        "sha256": "9507b8f92f0a7c7a6752b3e10e936d920307932068d3be7ad7842c935f02fcfe"
+      },
+      {
+        "bytes": 6353,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/places-list-filter-match.body",
+        "sha256": "1b40e722e7880f706e95a13c6628c8f187a80c843ee13cf5facf226b92d8919b"
+      },
+      {
+        "bytes": 6330,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/places-list-populated.body",
+        "sha256": "90e001d1c4012db0e449793a4ec27eb07ff69cb42ea264c579abfa66849ab455"
+      },
+      {
+        "bytes": 13045,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/places-map-empty.body",
+        "sha256": "bbeb335371f7ad954942bb768a87d03cddc2cb684bd9a079e4442f9b2d234f2a"
+      },
+      {
+        "bytes": 13180,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/places-map-populated.body",
+        "sha256": "7e7deb73117a8d9d11cfb88d75154e9c3023a126bcd51548ca60adab475e47cf"
+      },
+      {
+        "bytes": 73,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/series-detail-anonymous-redirect.body",
+        "sha256": "26684cff5f493589523f0c00fef32a7e2a68c0594326142b8caea9e94dea6bb4"
+      },
+      {
+        "bytes": 61,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/g1-get-walk-a115deb-cbd00d1a-927c-4a5c-a27c-00838941dfdd/proof/captured/series-list-anonymous-redirect.body",
+        "sha256": "1a56be419ad86fd551d6abcba94ac92227ba67ac60aef470a4849f08e082c973"
+      }
+    ],
+    "schema": 1,
+    "source": "a115deb5d706745a22d5e1049b0b938cae10cfad"
+  },
+  "provenance": "External original/raw/tool identities retained from accepted22f method; source groups materialize current committed Git, never historical source aliases."
+}

@@ -1,0 +1,108 @@
+{
+  "schema": 1,
+  "valid_until": "Tested22f source/method/input identities change; then history.",
+  "tested_source": "22f3746f3cde42e4ff9012b4953b129ff9fd614e",
+  "actual_invocation": "6722ddad-2747-45a1-b5de-98b4f2f8b1ee",
+  "actual_session": 79787,
+  "actual_exit": 0,
+  "method_sha256": "19a99e4e88c5530bc005e46896606ae8865dc1418469ffefe79418aa19697fdc",
+  "actual_result_sha256": "99f72b96f29f8e2e7de6f674185aaa31583aad8a954b6f01e66297cb6585652c",
+  "toolchain": "sha256:2e040a5165d79be63755424f707fdb8cf609ace831ada7a9baca398ac25e12b9",
+  "DB_image": "sha256:f66de888683449864f820c365551125bb2627782be15a264f9746d53573b39d5",
+  "DB_build_source": "bac5 existing actual build; literal full identity is retained in primary result and independent review",
+  "DB_application_binding": "813f existing actual binding, unchanged PG6 proved separately at22; not a new DB build",
+  "normalizer_sha256": "598515e75c709803c7b23673e07b14baa93861608346a81c8fc708521c1b2f05",
+  "canonical_archive_sha256": "d722a817074a01d8a983c3e8492335ee07d37fb0d58c9a938cd189df635e168d",
+  "actual_profiles": {
+    "default": {
+      "named_PASS_once": 17,
+      "JSON_events": 73,
+      "HTTP_GETs": 0,
+      "scope": "Data-only strict four-input historical-preimage custody and refusal controls; explicit old capture still refuses new physical producer beforePG/output."
+    },
+    "preferences": {
+      "named_PASS_once": 28,
+      "JSON_events": 130,
+      "current_pairs": 13,
+      "registered_GETs": 26,
+      "HTML": 10,
+      "native302": 3,
+      "observed_settings_API_GETs": 12
+    },
+    "current_G1": {
+      "named_PASS_once": 45,
+      "JSON_events": 222,
+      "current_pairs": 37,
+      "registered_GETs": 74,
+      "HTML": 31,
+      "anonymous302": 2,
+      "native404": 4
+    }
+  },
+  "aggregate": {
+    "profile_qualified_actions": 90,
+    "distinct_labels": 89,
+    "package_PASS": 3,
+    "fail_skip_cache_race": 0,
+    "precision": "GetWalk root appears in bothdefault/currentG1 profiles;90 is not90 globaluniqueIDs or processes."
+  },
+  "equality": "EachHTMLpair has equal released-normalizer canonical bytes/hashes and hard0. RawHTMLbytes differ with genuine nonce; no rawHTML equality claim. Native negative pairs retain strict raw/body/header/status comparisons.",
+  "actual_DB": {
+    "version": 160015,
+    "distinct_fixture_database_OIDs": [
+      16384,
+      22446
+    ],
+    "six_extensions_verified": true,
+    "fixture_schemas_absent_before_after": true,
+    "stop_exit": 0,
+    "status_exit": 3,
+    "PID_probe_exit": 1,
+    "socket_PID_absent": true
+  },
+  "custody": {
+    "actual_artifacts": 98,
+    "UID_census": {
+      "1000": 96,
+      "65534": 2
+    },
+    "source140": 140,
+    "current_G1_source124": 124,
+    "preferences_FS7": 7,
+    "current_G1_FS20": 20,
+    "external18": 18,
+    "policy7": 7,
+    "PG6": 6,
+    "raw38": 38,
+    "private55": 55,
+    "all10_beforeafter_guards_exact": true,
+    "formatter": "4Go outputs exact/emptydiff; zero errors",
+    "owned_cleanup": "27controls0; exact2CID nonforce remove andID/nameabsence; PGstop/status/PID/socket verified/noOOM"
+  },
+  "compact_capture": {
+    "path": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-22f-three-profile-pass-compact-20261011/observation.json",
+    "sha256": "80883e6a9327ce6ec1169b30e1b151b7c86675ef2537c54a451315f22d483445"
+  },
+  "reviews": [
+    {
+      "path": "parent-actual-review.json",
+      "bytes": 962,
+      "sha256": "9211cf276dc8b502f05371a48cf733972d129275652fdd6f72d39a0a12304d65",
+      "private_source": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-22f-three-profile-parent-actual-review-20261011.json"
+    },
+    {
+      "path": "independent-actual-review.json",
+      "bytes": 10110,
+      "sha256": "ae81c86998d3809b971660715f2a866f1234438cc072f15bb330d924c0c8781c",
+      "private_source": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-22f374-three-profile-independent-actual-review-20261011.json"
+    }
+  ],
+  "history": {
+    "691": "Actualpreference28:13PASS15FAIL/pkgFAIL; anonymous compileload and ownPublicID/avatar context issues. Frozen failure retained.",
+    "794": "Actualdefault8:6PASS2FAIL/pkgFAIL; two prior campaign preimages missing from historicalcustody adapter. Later profiles unexecuted; UNKNOWN labels preserved. Frozen failure retained.",
+    "22_source_fix": "Only exact test/data custody compatibility added after accepted productionrepair; strict oldcapture, currentreaders/e92/original/raw/private envelopes unchanged."
+  },
+  "output_name_precision": "Primary directory keeps inherited794-UUID basename; authoritativeactualSource/result/ledger/method are22.",
+  "scope": "Synthetic adult presentation and current-current registeredGET transport only. No historical producer behavioral equivalence, accepted original normalizedbaseline, auth/privacy/finance/Live/browser/CSP/full/device/templ/default/adoption authority. Later docs HEAD untested.",
+  "retention": "Small reviews and derived proof only; primary controls/streams referencedonce, no rawbody/context/workspace/dependencies/caches/ELF copies."
+}

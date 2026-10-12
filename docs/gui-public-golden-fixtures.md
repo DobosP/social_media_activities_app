@@ -1079,3 +1079,52 @@ result/capture and both reviews. It contains no duplicate bodies or workspace.
 The7930 pre-template is source history;123 normalization calls remain a source
 expectation, not API/process census. Browser geometry/CSP/finance/semantic
 original oracle/full/authprivacy/Live/device/UI/templ/default/adoption stay open.
+
+
+### Current preference/G1 transport checkpoint at22f
+
+Actual79787 passed default17/preference28/currentG1-45 separately:90 profile
+actions across89labels and3packages.50current pairs made100registeredGETs,
+plus12native settingsAPI GETs. HTML canonical equality/hard0 and strict native
+negatives passed. The four-input historical custody adapter is data-only; old
+HTTP capture still refuses current producers. Originale92/raw38/private55 and
+every earlier failure stay separate. Formatter4,98artifacts,guards,distinctPG
+fixtureDBs andownedcleanup passed. [Compact proof](reviews/gui-preferences-get-transport/README.md)
+records scope; no originalsemantic/authprivacy/Live/browser/CSP/full/device/
+default/templ/adoption qualification. Later docs HEAD is untested.
+
+
+## Reproducible preparation profiles
+
+ADR-0056/Q6 now gives the20 focused GUI tests a source-only no-flag path,
+with no `t.Skip`. Naming any one normalizer/reference flag selects the strict
+flagged path and requires every existing input. Historical NOT RUN and actual
+receipts above remain attached to their original source, not the current tip.
+
+The committed `tools/gui-public-golden/managed_profiles.py` replaces private
+method packets for default17/preference28/currentG1-45. After reserving two
+product runtimes and checking disk capacity, from a clean committed worktree:
+
+```sh
+python3 -I tools/gui-public-golden/managed_profiles.py \
+  --workspace /home/dobo/work/_temp/feat__gui-app-migration-a/social-profiles-current \
+  --db-binding /home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-813f-existing-db-application-binding-20261011/actual-parent-db-application-binding.json
+```
+
+The workspace must be fresh. The runner exports literal Git bytes before Docker,
+mounts only that immutable export, and brackets all exported files plus141
+selected source/7preference/124G1/20FS/7policy inputs. Git source uses file type
+and executable bits; no unsupported checkout permission pin is authored.
+Existing strict original15/raw38/private55/normalizer/archive/DB-lineage guards,
+all90 profile identities/89labels, race/count1, real GETs and owning refusals
+remain required. Exact owned PostgreSQL stop/PID/socket and both CID/name
+removals run independently even after a failed test. No gate or milestone
+acceptance follows from a source-only default run.
+
+The two pinned images, unchanged private captures/normalizer, actual prior DB
+build DATA records and one existing task-owned Go cache are prerequisites,
+identified by committed metadata. They are inputs, never executable private
+methods; no helper rebuild or live-worktree mount occurs. The runner keeps one
+private raw result and prints its path. Promote one compact record per actual
+run; keep source branches, baselines and original captures. Formal S3A remains
+blocked on S0b and owner kit sync; device/privacy/CSP/full gates stay separate.

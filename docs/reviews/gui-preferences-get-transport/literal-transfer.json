@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "literal_records": [
+    {
+      "path": "parent-actual-review.json",
+      "bytes": 962,
+      "sha256": "9211cf276dc8b502f05371a48cf733972d129275652fdd6f72d39a0a12304d65",
+      "private_source": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-22f-three-profile-parent-actual-review-20261011.json"
+    },
+    {
+      "path": "independent-actual-review.json",
+      "bytes": 10110,
+      "sha256": "ae81c86998d3809b971660715f2a866f1234438cc072f15bb330d924c0c8781c",
+      "private_source": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-22f374-three-profile-independent-actual-review-20261011.json"
+    }
+  ],
+  "derived": [
+    "owning-proof.json",
+    "README.md",
+    "literal-transfer.json"
+  ],
+  "tested_source": "22f3746f3cde42e4ff9012b4953b129ff9fd614e",
+  "later_docs_HEAD_untested": true
+}

@@ -1,0 +1,244 @@
+{
+  "PG_precision": "Distinct actual fresh named database OIDs16384/22446, PG16.15/sixextension versions/Unix-only and fixture-schema absence beforeafter verified from actual SQL stdout+exit0. One owned cluster; no same-fixture/leftover DB reuse or newly relabelled image build.",
+  "actual_PG_cleanup": {
+    "owned_pid": 24,
+    "pid_and_socket_files_absent": 1,
+    "pid_probe_exit": 1,
+    "status_exit": 3,
+    "stop_exit": 0
+  },
+  "actual_controls": {
+    "all_exit0": true,
+    "count": 27
+  },
+  "actual_database_isolation": {
+    "current_g1": {
+      "database": "social_gui_current_g1",
+      "database_oid": 22446,
+      "extensions": {
+        "fuzzystrmatch": "1.2",
+        "pg_trgm": "1.6",
+        "postgis": "3.6.4",
+        "postgis_tiger_geocoder": "3.6.4",
+        "postgis_topology": "3.6.4",
+        "vector": "0.8.7"
+      },
+      "fixture_schemas": 0,
+      "listen_addresses": "",
+      "server_version_num": 160015
+    },
+    "preferences": {
+      "database": "social_gui_preferences",
+      "database_oid": 16384,
+      "extensions": {
+        "fuzzystrmatch": "1.2",
+        "pg_trgm": "1.6",
+        "postgis": "3.6.4",
+        "postgis_tiger_geocoder": "3.6.4",
+        "postgis_topology": "3.6.4",
+        "vector": "0.8.7"
+      },
+      "fixture_schemas": 0,
+      "listen_addresses": "",
+      "server_version_num": 160015
+    }
+  },
+  "actual_effective_context": {
+    "DB_CPU_memory_pids": [
+      1,
+      1,
+      256
+    ],
+    "DB_IID": "sha256:f66de888683449864f820c365551125bb2627782be15a264f9746d53573b39d5",
+    "DB_build_source": "bac5d718360504330d5f5cdbf2f75cf5a0ad0799",
+    "DB_readonly_owned_tmpfs_999_999": true,
+    "SDK_SHA": "d722a817074a01d8a983c3e8492335ee07d37fb0d58c9a938cd189df635e168d",
+    "TC_CPU_memory_pids": [
+      3,
+      5,
+      512
+    ],
+    "TC_IID": "sha256:2e040a5165d79be63755424f707fdb8cf609ace831ada7a9baca398ac25e12b9",
+    "TC_roedu_runner_writable_ephemeral_root_as_proven_recipe": true,
+    "actual_source_tool_archive_original_readonly_mounts": true,
+    "aggregate_CPUs": 4,
+    "aggregate_memory_GiB": 6,
+    "current_application_source": "22f3746f3cde42e4ff9012b4953b129ff9fd614e",
+    "network": "none",
+    "no_ports_privileged_or_OOM": true,
+    "normalizer_SHA": "598515e75c709803c7b23673e07b14baa93861608346a81c8fc708521c1b2f05",
+    "old_DB_application_binding_source": "813f197bf0f4d190e3e2ea0a394ddd73121c6bc6"
+  },
+  "actual_exit": 0,
+  "actual_guard_brackets": {
+    "FS20": 20,
+    "FS7": 7,
+    "PG_source6": 6,
+    "all10_before_after_deep_equal": true,
+    "canonical_d722": true,
+    "current_G1_source": 124,
+    "current_physical_tuple_hash_fullmode_verified": true,
+    "external18": 18,
+    "policy7": 7,
+    "private55": 55,
+    "private55_UID_inode_nlink1_and_raw38_physical_hash_modes_verified": true,
+    "raw38": 38,
+    "source140": 140
+  },
+  "actual_native": {
+    "JSON_events_total": 425,
+    "aggregate_profile_actions": 90,
+    "cross_profile_unique_test_labels": 89,
+    "default17": "Actual HTTP NOT REQUESTED scope log, source/reference custody controls only, no fixtureDB passed to defaultGo or historical capture/receiver qualification.",
+    "four_input_controls": "Actual default repair-unknown andrepair-mixed bothPASS; acceptedSource loops separately mutate/reset each of four current inputs before requiring genuine positive again. No new8 named tests or measured loop-iteration receipt claimed.",
+    "not_global_process_or_normalizer_census": true,
+    "package_PASS": 3,
+    "profiles": {
+      "current_g1": {
+        "JSON_events": 222,
+        "exact_closed_ID_inventory": true,
+        "fail_skip_cache_race_cancel": 0,
+        "package_PASS": 1,
+        "run_PASS_unique_once": 45
+      },
+      "default": {
+        "JSON_events": 73,
+        "exact_closed_ID_inventory": true,
+        "fail_skip_cache_race_cancel": 0,
+        "package_PASS": 1,
+        "run_PASS_unique_once": 17
+      },
+      "preferences": {
+        "JSON_events": 130,
+        "exact_closed_ID_inventory": true,
+        "fail_skip_cache_race_cancel": 0,
+        "package_PASS": 1,
+        "run_PASS_unique_once": 28
+      }
+    }
+  },
+  "actual_owned_cleanup": {
+    "db": {
+      "id": "f048267cf57ceedab936946a279986a38d46ba6686a0f7a30145abd3662a303c",
+      "id_absent": true,
+      "name": "social-preference-context-db-6722ddad-2747-45a1-b5de-98b4f2f8b1ee",
+      "name_absent": true,
+      "passed": true,
+      "remove_exit": 0
+    },
+    "tc": {
+      "id": "98b33e29f985019c7c0aa1fbf6c215615161597832e464db3d3b8533b3ab6ce0",
+      "id_absent": true,
+      "name": "social-preference-context-tc-6722ddad-2747-45a1-b5de-98b4f2f8b1ee",
+      "name_absent": true,
+      "passed": true,
+      "remove_exit": 0
+    }
+  },
+  "actual_session": 79787,
+  "actual_transport": {
+    "HTML_precision": "Actual HTML canonical hashes match and hard findings are0 for both transports. Raw HTML hashes can differ due to nonce volatility; whole raw HTML equality is NOT claimed. Native-negative raw hashes equal. No normalized baseline or original=current behavioral equality.",
+    "current_G1": {
+      "GETs": 74,
+      "HTML_pairs": 31,
+      "all37_case_rows_from_raw_exact_registry_verified": true,
+      "anonymous302_pairs": 2,
+      "native404_pairs": 4,
+      "pairs": 37,
+      "source_inputs": 124
+    },
+    "normalizer_process_or_API_census": null,
+    "preferences": {
+      "GETs": 26,
+      "HTML_pairs": 10,
+      "all13_case_rows_from_raw_exact_registry_verified": true,
+      "anonymous302_pairs": 3,
+      "observed_native_settings_API_GETs": 12,
+      "pairs": 13
+    },
+    "raw_or_canonical_body_recapture": false
+  },
+  "artifact_custody": {
+    "PG_ready_cleanup_hostUID65534_distinct_from_containerUID999": true,
+    "UID_census": {
+      "1000": 96,
+      "65534": 2
+    },
+    "all_bytes_hash_fullmodes_nlink_verified": true,
+    "new_workspace_body_ELF_or_cache_copies": false,
+    "rows": 98
+  },
+  "cleanup_attribution": "Existing actual exact2CID nonforce removal0/ID+exactname absence and ownedPGstop/status/PID/socket receipts verified. Reviewer invoked no Docker or fresh cleanup.",
+  "errors": [],
+  "evidence": {
+    "actual_ledger": {
+      "bytes": 66135,
+      "full_mode": 33152,
+      "sha256": "93cef4b4b7e58910df748a32319b76cb746e6f771ed625a7a8e58bcf039cdb0b"
+    },
+    "actual_method": {
+      "bytes": 65228,
+      "full_mode": 33152,
+      "sha256": "19a99e4e88c5530bc005e46896606ae8865dc1418469ffefe79418aa19697fdc"
+    },
+    "actual_parent_DB_binding": {
+      "bytes": 5617,
+      "full_mode": 33152,
+      "sha256": "3a46d3534afcac71f24e92e7342c9bf50dceaab37176997a7fd7c692ca9ae7ea"
+    },
+    "capsule": {
+      "path": "/home/dobo/work/_temp/adhoc-gui-migration-parent-20261006/social-22f-three-profile-pass-compact-20261011/observation.json",
+      "sha256": "80883e6a9327ce6ec1169b30e1b151b7c86675ef2537c54a451315f22d483445"
+    },
+    "primary_result": {
+      "bytes": 344268,
+      "full_mode": 33152,
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/preferences-context-794573c-6722ddad-2747-45a1-b5de-98b4f2f8b1ee/result.json",
+      "sha256": "99f72b96f29f8e2e7de6f674185aaa31583aad8a954b6f01e66297cb6585652c"
+    },
+    "raw_native_streams": {
+      "current_g1": {
+        "bytes": 75799,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/preferences-context-794573c-6722ddad-2747-45a1-b5de-98b4f2f8b1ee/proof/current_g1-tests.stdout",
+        "sha256": "e1770715b1f72c7592e612f5b106cd36a480e07812b6ab6d60d682301f70a178"
+      },
+      "default": {
+        "bytes": 18476,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/preferences-context-794573c-6722ddad-2747-45a1-b5de-98b4f2f8b1ee/proof/default-tests.stdout",
+        "sha256": "6d1c5520bffa4fa339aa32f2b0d7614a00e8fe9091127ba4aeb4bf2176418343"
+      },
+      "preferences": {
+        "bytes": 43819,
+        "full_mode": 33152,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/evidence/preferences-context-794573c-6722ddad-2747-45a1-b5de-98b4f2f8b1ee/proof/preferences-tests.stdout",
+        "sha256": "b4b480039c523003a7688d6a2652ce52dbc84586ebd8d7c7fa6cefce1f986555"
+      }
+    },
+    "root_actual_review_sha256": "9211cf276dc8b502f05371a48cf733972d129275652fdd6f72d39a0a12304d65"
+  },
+  "formatter": {
+    "diff_bytes": 0,
+    "exit_code": 0,
+    "stderr_bytes": 0
+  },
+  "invocation": "6722ddad-2747-45a1-b5de-98b4f2f8b1ee",
+  "kind": "independent-bounded-actual-three-profile-review",
+  "namespace_precision": "Inherited preferences-context-794573c-UUID basename is nonauthoritative; actual SOURCE/result/method/ledger bind22f. No prior794 receipt relabel.",
+  "operations": {
+    "candidate_parser_import_formatter_compiler_Go_Node_normalizer_Docker_PG_or_application_runtime": false,
+    "private_review_write_only": true,
+    "read_only_JSON_text_regex_hash_Git_filesystem_metadata": true,
+    "repository_Source_controller_cleanup_mutation": false
+  },
+  "preserved_history": "Actual691 preference failure and794 default8 custody failure, their exact Source/method/result/UNKNOWN states and accepted reviews remain frozen. Source22f successful90 profile actions are new scoped evidence, not a rewrite or retroactive acceptance.",
+  "qualification": "Synthetic current-native source custody/preference/anonymous public OS-FS transport only; no original behavioral equivalence, accepted normalizedbaseline, authentication/privacy/admission/Live/browserCSP/full/device/templ/default/adoption approval.",
+  "reviewer": "/root/program_pack",
+  "role": "Non-author of22f repair/method; prior independent source/method reviewer. Earlier3bc campaign helper authorship disclosed; current actual evidence readback independent of execution.",
+  "schema": 1,
+  "source": "22f3746f3cde42e4ff9012b4953b129ff9fd614e",
+  "status": "VERIFIED IDLE",
+  "tracked_clean": true,
+  "verdict": "ACTUAL BOUNDARY CLEAR: three-profile PASS0"
+}

@@ -2888,3 +2888,48 @@ exact. Parent2ba2b8d8 and independent8191736e accepted the scoped actual boundar
 Compact proof lives in docs/reviews/gui-campaign-meter; historical source/failed
 packets remain. This is synthetic current renderer/static/XML-fragment proof,
 not browser/CSP/finance/full/privacy/Live/device/templ/UI/default adoption.
+
+
+## 2026-10-11 — current preference/G1 transport and custody at22f
+
+Actual79787/6722ddad completed0:17default+28preference+45currentG1 actions
+passed once/3packages,90profile identities across89labels,425GoJSONevents.
+Preference13pairs/26GET/10HTML3redirect+12settingsAPI; currentG1 37pairs/74GET/
+31HTML2redirect4native404. HTML canonical equal/hard0 only, rawHTMLnonce differs.
+Formatter4,98artifact bytes/modes,10beforeafter guards,2distinctfreshPG16.15 DB
+OIDs/sixextensions/fixtureabsence and exact ownedPG+2container cleanup passed.
+Parent9211cf27 and independentae81c869 accepted bounded current-current scope.
+
+691 originally failed28named/13PASS15FAIL; repaired ownPublicID/avatar context
+and static compileload expectations preserved all strict nonce/URL/body checks.
+794 default then failed8named/6PASS2FAIL because two already-reviewed campaign
+preimages were missing from its historical custody adapter.22f adds only exact
+current four-input binding/in-memory inverses and strengthens existing refusal
+IDs; immutablee92/capture/currentreaders/original/raw/private inputs unchanged.
+Both failed receipts stay frozen; explicit old capture still refuses current
+physical producers. No old=current behavioral equivalence is inferred.
+
+Compact literal reviews and derived proof are promoted without body/context/
+workspace/cache/SDK/ELF copies. ActualSource22f is distinct from its inherited
+794 UUID output basename and this later untested docsHEAD. No originalsemantic/
+authprivacy/finance/Live/browser/CSP/full/device/default/UI/templ/adoption
+authority follows.
+
+
+## 2026-10-12 — committed GUI preparation profiles
+
+Promoted the accepted22f17/28/45 managed method into
+`tools/gui-public-golden/managed_profiles.py`, with finite committed input and
+identity contracts. Current clean Git export replaces the live-worktree mount;
+all exported files are bracketed, source modes use type/executable semantics,
+and the Q6 source-only helper strengthens outer source custody to141. The
+default scope log follows current reviewed-repair-row wording. All flagged
+commands, strict transport/refusal parsers, PG image/build lineage, original/raw
+private envelopes, resource caps and independent owned cleanup remain.
+
+Reverified the four pending documentation units against ee39a70 and literal22f
+result/review hashes; retained22f as historical17/28/45 proof, with later Q6
+semantics stated separately. Six offline adversarial method tests, Python
+source parse,17/17 native gate harness, fleet docs and whitespace passed.
+Current flagged runtime is pending; no full/auth/privacy/browser/device/templ
+adoption or formal S3A milestone claim. E6Q10 permits only this feature push.
