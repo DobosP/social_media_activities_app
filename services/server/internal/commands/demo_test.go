@@ -36,6 +36,7 @@ func seedFixture(t *testing.T) (*Service, *jobs.Runner) {
 	cfg.Social = soc
 	cfg.Accounts = account
 	cfg.Now = func() time.Time { return time.Date(2026, 10, 4, 6, 0, 0, 0, time.UTC) }
+	soc.Now = cfg.Now
 	r := jobs.New(db, cfg)
 	root, _ := filepath.Abs("../../../..")
 	scratch := t.TempDir()

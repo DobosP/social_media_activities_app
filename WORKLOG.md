@@ -3,6 +3,35 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-13 — Deterministic native demo fixture clock
+
+Valid until: the demo fixture clock or activity mutation rules change — then requalify.
+
+The command seed fixture fixed `jobs.Config.Now` at 2026-10-04 but left the social service
+on wall time. On 2026-10-13, the second `seed_mobile_card_demo` correctly refused to update
+the fixture's already-past activity. The fixture now gives `social.Service.Now` the same
+fixed clock. Product time validation and the existing second-seed idempotence assertions
+are unchanged. Independent root review approved this one-line fixture correction.
+
+Explicit disposable PostgreSQL/codec checks used the canonical c27 codec image, exact-source
+race binaries, an internal network without host ports and no existing runtime/database.
+Runner: `/home/dobo/work/_temp/feat-local-poc-real-data/verification/social/run-qualification.sh`.
+Commands were `bash RUNNER SOURCE MODE LABEL`, with these source/mode/label arguments:
+
+- Unchanged main `78d3a6686063ae7935c90527ee2f2b6ec444fda4`, source
+  `/home/dobo/work/social_media_activities_app`, `baseline baseline-main`: the existing
+  `TestNativeSeedBrowseUsersEventsAndMobileScenarios` fails at `demo_test.go:147`, exit 1;
+  log SHA256 `05dda282850a54b23708b9f66f47bd548a8719e15a2204241d08d7cd4b09c698`.
+- Corrected policy8 worktree, source
+  `/home/dobo/work/_worktrees/social_media_activities_app/feat__policy8-local-poc`,
+  `commands targeted-clock-fix`: 29 top-level PASS, 0 SKIP, 0 FAIL, exit 0;
+  log SHA256 `f5602b7d786108a493218304867f5a2359476c73cc541f9db2832a969b3e5a91`.
+
+The pre-correction full qualification stopped fail-closed at commands (28 PASS/1 FAIL),
+after configuration64/accounts75/admin21/app35/backup5/booking7/budgets16/catalog48 passed
+without skips. It is not a landing receipt. The corrected source still requires the full
+21-lane landing run; prior missing-host-codec results do not substitute for that gate.
+
 ## 2026-10-12 — ADR-0058 review fixes: second RO-EDU merge path, admin license width
 
 Valid until: the place-merge rules or the admin curated event fields change — then requalify.

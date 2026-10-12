@@ -1,6 +1,6 @@
 # Status — social_media_activities_app
 
-Last verified: 2026-10-12
+Last verified: 2026-10-13
 
 - **GitHub Actions (Last verified: 2026-10-05):** owner-requested on-demand policy, [ADR-0033](docs/adr/0033-manual-github-actions.md). Ordinary `ci.yml` calls Go/Node workflows;
   original Python gates remain in optional manual `reference.yml` (ADR-0038). YAML/input/job/read-only permission checks pass. Native Actions remains manually disabled; no hosted run claimed.
@@ -94,6 +94,7 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
+- Native demo fixture (2026-10-13): command/social clocks now share the existing fixed time; unchanged main reproduces the second-seed failure, corrected commands lane 29 PASS/0 SKIP/0 FAIL. Full landing qualification pending ([WORKLOG](WORKLOG.md)).
 - Venue identity + license 500 (2026-10-12, ADR-0058, + review fix: `ingest_places source=roedu` guarded too): check-native pass; jobs/commands/budgets/catalog/admin/web on disposable PG: new identity/race/license tests pass, only the known codec/demo reds; new-binary `--migrate-only` widens adopted and fresh DBs ([WORKLOG](WORKLOG.md)).
 - Local POC (2026-10-12, ADR-0057): hermetic `go test -race ./...` + vet pass; jobs/web/cmd/catalog/commands on disposable PG: POC DB tests pass (review fixes: a complete POC snapshot never reconciles, event evidence stored, feeds labelled), failures only the known codec/demo reds also on the base commit; policy 5/8 (2026-10-11, ADR-0055) same, legacy client 43/43 ([WORKLOG](WORKLOG.md)).
 - Thread access `874b437` (2026-10-06):714/all21 fresh tests,0skips/failures; native/hash/vet/race + Node4 + harness17 pass; [receipt](docs/reviews/native-go/rest-thread-access-checkpoint.json).
@@ -101,7 +102,6 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 - Twenty-one exact mappings:1020 manifest claims/1651 unresolved/0invalid of2671; retirement exits1. Docs/all defects0; whitespace clean. Production/schema/dependencies/frontend unchanged.
 - Prior [thread-pages713](docs/reviews/native-go/rest-thread-pagination-checkpoint.json), [own-list712](docs/reviews/native-go/rest-own-memberships-checkpoint.json), [RSVP711](docs/reviews/native-go/rest-rsvp-checkpoint.json), [Presence710](docs/reviews/native-go/rest-presence-checkpoint.json), [auth/transit709](docs/reviews/native-go/rest-auth-transit-checkpoint.json) and [transport709](docs/reviews/native-go/rest-transport-checkpoint.json) receipts remain; c27 image supplies codecs only.
 - Original `c27a99f`705 [source/image/audits](docs/reviews/native-go/restart-checkpoint.json) remain; no new deployment-image/audit/frontend qualification. Unused openpgp advisory stays separate.
-- Independent source/sensitivity review approved; final receipt/docs closure receives review before main push. Human deployment review remains open.
 
 ## Standard verification
 Native race/vet + shared-source hashes; database/codec contracts require explicit disposable fixtures
