@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import re
+import signal
 import stat
 import subprocess
 import sys
@@ -964,7 +965,12 @@ def prepare_workspace(workspace):
     return exported
 
 
+def terminate(signum, frame):
+    raise RuntimeError("Managed invocation terminated by signal " + str(signum))
+
+
 def main():
+    signal.signal(signal.SIGTERM, terminate)
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--workspace', required=True, help='Fresh task-owned _temp directory; no live-worktree mount')
     parser.add_argument('--db-binding', required=True, help='Exact prior actual813f/bac5/f66 private DATA record, not a program')

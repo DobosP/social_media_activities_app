@@ -13,3 +13,5 @@ The data-only default profile requires the exact four reviewed current inputs an
 No original semantic oracle, accepted normalizedbaseline, auth/privacy/finance/Live/browser/CSP/full/device/default delivery or GUI/templ adoption is qualified. This later docs commit was not rerun. No raw body/context/workspace/cache/dependency/ELF copies were added.
 
 Current-source recheck (2026-10-12): these literal reviews and primary result hashes/counts still verify. Current ee39a70 includes ADR-0056/Q6 source-only default validation and portable live type/executable-mode binding;22f evidence does not qualify those later changes. A new run uses the committed runner described in [the fixture guide](../../gui-public-golden-fixtures.md#reproducible-preparation-profiles).
+
+Committed reproducibility run (2026-10-12): [79b compact record](repro-current-checkpoint.json) passed17/28/45 once with strict transport/custody and owned cleanup. A preliminary Docker-socket sandbox refusal created no container; it remains separate procedural history. Later SIGTERM hardening/inventory/plan changes use cheap checks and do not relabel the tested79b source.

@@ -2933,3 +2933,27 @@ semantics stated separately. Six offline adversarial method tests, Python
 source parse,17/17 native gate harness, fleet docs and whitespace passed.
 Current flagged runtime is pending; no full/auth/privacy/browser/device/templ
 adoption or formal S3A milestone claim. E6Q10 permits only this feature push.
+
+
+## 2026-10-12 — reproducible current profiles and finite preparation closure
+
+Committed79b31af ran from its literal immutable Git export: default17,
+preference28,currentG1-45 passed once/3packages (90profile identities/89labels),
+100registeredGETs/50pairs plus12settingsAPI reads, strict hard0 canonical joins,
+all refusals and formatter0. Source141/124,FS7/20,PG6/policy7/external18/raw38/
+private55 and entire exported Git tree stayed exact. Separate fresh PG fixtures
+and owned PG/PID/socket/twoCID/name cleanup passed. Independent read-only review
+accepted this exact result. One compact record binds result890991 and source79b.
+Initial sandbox Docker-socket denial created no containers/tests; same committed
+method succeeded with Docker access. No check weakened or failed receipt changed.
+
+Successor adds SIGTERM→existing failure/finally cleanup and an offline process
+test, plus committed source-only inventory recheck/ExecPlan. Seven method tests,
+exact13-member keeper and91loader/84port/7frozen/155route inventory, fleet docs,
+Python parse and whitespace pass; no repeat of completed transport for these
+changes. Current inventory has13changed template bodies, unsignedG0=6/G5=12
+and historical login ownership hold. Formal next action is S3A M0 afterS0b tag/
+owner kit sync and reviewed ownership/native-versus-historical matrix; no
+unspecified READY slice or formal milestone claim. Pruned only the verified
+superseded owned Git export after retaining acquisition/result metadata and the
+latest successful reproducible setup; original branches/captures/keepers remain.

@@ -1,6 +1,9 @@
 """Offline adversarial profile framing and exported-source custody checks."""
 import importlib.util
 import json
+import signal
+import subprocess
+import sys
 from pathlib import Path
 import unittest
 
@@ -52,6 +55,31 @@ class ProfileContractTests(unittest.TestCase):
         self.assertFalse(result['cleanup_pass'])
         with self.assertRaises(RuntimeError):
             profiles.creation_observation(False, 1, b'', b'', 'owned', profiles.IMAGE)
+
+    def test_sigterm_reaches_finally_cleanup(self):
+        code = """import importlib.util, signal, sys
+spec = importlib.util.spec_from_file_location('profiles', sys.argv[1])
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+signal.signal(signal.SIGTERM, module.terminate)
+try:
+    print('READY', flush=True)
+    signal.pause()
+except RuntimeError:
+    print('REFUSED', flush=True)
+finally:
+    print('CLEANUP', flush=True)
+"""
+        process = subprocess.Popen([sys.executable, '-I', '-c', code, str(Path(__file__).with_name('managed_profiles.py'))], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        try:
+            self.assertEqual(process.stdout.readline().strip(), 'READY')
+            process.send_signal(signal.SIGTERM)
+            output, errors = process.communicate(timeout=5)
+            self.assertEqual((process.returncode, output, errors), (0, 'REFUSED\nCLEANUP\n', ''))
+        finally:
+            if process.poll() is None:
+                process.kill()
+                process.communicate()
 
     def test_pg_fixture_rejects_tcp_and_dirty_schemas(self):
         good = {'database': 'synthetic', 'database_oid': 1, 'server_version_num': 160015, 'listen_addresses': '', 'fixture_schemas': 0, 'extensions': dict.fromkeys(['postgis', 'fuzzystrmatch', 'postgis_tiger_geocoder', 'postgis_topology', 'pg_trgm', 'vector'], '1')}

@@ -1,0 +1,102 @@
+{
+  "schema": 1,
+  "date": "2026-10-12",
+  "tested_source": "79b31afc98550949a8298636a5a3ff8a6751658e",
+  "invocation": "6befdf7e-ab13-4d7c-abf1-ac374b111980",
+  "method_pass": true,
+  "method_sha256": "9e977da2e06eca7e5adcc883210e7af03ef7bd124a5af023acfec388e3c969cb",
+  "result": {
+    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-profiles-current-20261012-r2/evidence/profiles-79b31afc9855-6befdf7e-ab13-4d7c-abf1-ac374b111980/result.json",
+    "sha256": "890991842cf611054654edadb95a995ba9252824bb6e032559b53621da61d050"
+  },
+  "profiles": {
+    "default": {
+      "named_PASS_once": 17,
+      "package_PASS": 1,
+      "JSON_events": 73
+    },
+    "preferences": {
+      "named_PASS_once": 28,
+      "package_PASS": 1,
+      "JSON_events": 130
+    },
+    "current_g1": {
+      "named_PASS_once": 45,
+      "package_PASS": 1,
+      "JSON_events": 222
+    }
+  },
+  "aggregate": {
+    "named_actions": 90,
+    "unique_test_labels_across_profiles": 89,
+    "profile_qualified_identities": 90,
+    "package_passes": 3,
+    "not_90_global_unique_IDs_or_processes": true
+  },
+  "transport": {
+    "registered_GETs": 100,
+    "OS_FS_pairs": 50,
+    "settings_API_GETs": 12,
+    "HTML_pairs": 41,
+    "native_negative_pairs": 9,
+    "strict_canonical_equal_hard0": true,
+    "raw_nonce_equality_claim": false
+  },
+  "formatter": {
+    "exit_code": 0,
+    "diff_bytes": 0,
+    "stderr_bytes": 0
+  },
+  "guards": {
+    "selected_source": 141,
+    "preference_FS": 7,
+    "G1_source": 124,
+    "G1_FS": 20,
+    "policy": 7,
+    "PG_source": 6,
+    "external": 18,
+    "raw": 38,
+    "private_envelope": 55,
+    "all_before_after_exact": true,
+    "entire_Git_export_verified_after_process": true
+  },
+  "database": {
+    "separate_fixture_OIDs": [
+      16384,
+      22446
+    ],
+    "server_version_num": 160015,
+    "six_extensions_and_fixture_absence": true
+  },
+  "PG_cleanup": {
+    "stop_exit": 0,
+    "status_exit": 3,
+    "owned_pid": 24,
+    "pid_probe_exit": 1,
+    "pid_and_socket_files_absent": 1
+  },
+  "owned_containers": {
+    "tc": {
+      "id": "b1449da19915ee2399d66f17013483e45085bde95052775540395870452896d3",
+      "name": "social-preference-context-tc-6befdf7e-ab13-4d7c-abf1-ac374b111980",
+      "remove_exit": 0,
+      "id_absent": true,
+      "name_absent": true,
+      "passed": true
+    },
+    "db": {
+      "id": "851c70b815f2c94a316090cf13138973b8fdf0829aa51f03ba398d7b9a5c6e83",
+      "name": "social-preference-context-db-6befdf7e-ab13-4d7c-abf1-ac374b111980",
+      "remove_exit": 0,
+      "id_absent": true,
+      "name_absent": true,
+      "passed": true
+    }
+  },
+  "review": "Independent cat_review read-only review accepted the exact result/17+28+45 counts/strict guards/owned cleanup; no validator weakening.",
+  "procedural_history": {
+    "first_attempt": "Sandbox Docker-socket permission denied at image inspect; zero containers and all profiles NOT RUN. Same committed method succeeded with Docker authorization; no check/source weakened."
+  },
+  "successor_scope": "Later SIGTERM handler and source-only inventory/ExecPlan use cheap checks; completed79b transport is not relabeled as later source execution.",
+  "scope": "Synthetic current-current transport only; no original semantic oracle, normalized baseline, auth/privacy/finance/Live/browser/CSP/full/device/default/templ adoption or formal S3A acceptance."
+}
