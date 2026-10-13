@@ -89,3 +89,13 @@ native gate passed on `730dd5c7` (27 Go package results and four Node tests); th
 the correction without rewriting the original receipts. This narrow feature does
 not trigger ADR-0040's conditional integration/image/dependency or frontend rebuild
 gates. Development landing is authorized; local activation is separately verified.
+
+
+Runtime activation evidence (2026-10-13): Paul explicitly approved exact Social
+commit `b55afe9` and its local refresh; the push and runtime8 activation completed.
+Both facets aliases, full count conservation, bucket pagination/city filters and
+POC labels pass against selected L7; event/place totals stay 1,568/104. The initial
+startup observation refusal was rolled back and retained; its reviewed timing
+repair passed 86 synthetic controls before a fresh successful preparation.
+WORKLOG and the linked activation/review receipts hold exact identities. This
+observation supersedes earlier pending-local-activation wording only.

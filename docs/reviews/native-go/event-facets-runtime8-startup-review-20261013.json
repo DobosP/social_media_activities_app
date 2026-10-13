@@ -1,0 +1,77 @@
+{
+  "actual_live_actions_by_reviewer": [],
+  "approval_limit": "Source-only peer approval. Root owns immutable retry preparation, activation and subsequent runtime validation; this receipt does not claim repaired live activation success.",
+  "bindings": {
+    "independent-review.json": "57f7524a30e6732c28e184eb994c751a746709800c6264c268afe4f6f5b4d3e3",
+    "independent-startup-transition-tests.log": "764917d2fe703b77b07d6d0119cb820bfb3564436cd5c936d84fb2d85d893d4b",
+    "prep-receipt-startup-observation-repair.json": "71b537d96ca7d54b97490405eb2739425bbe0182328b21770c199566aa930377",
+    "root-startup-repair-review.json": "ed004a4b76b6a7040825fd976dd59baea7960163bf137e2e53d00dde50698e69",
+    "ruff-startup-observation-repair.log": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+    "social_refresh.py": "cf38057346989057ea19089560fa160fa23afea2e4493db74d9bb5f35e2fab47",
+    "test_social_refresh.py": "70f7c3acf0c1c85dba3661f98c4e28ed2fa6f5b57d706d69c4e69eff45f95123",
+    "tests-startup-observation-repair.log": "5de81f416081e579b9ccfbfe2b54cfa6e330cf1d12f2473ee6deb47b70973ece"
+  },
+  "existing_evidence_recount": {
+    "all_four_worker_artifact_hashes_and_sizes_verified": true,
+    "fail": 0,
+    "physical_precommit_failure_subcases": 11,
+    "ruff": "passed",
+    "skip": 0,
+    "unique_top_level_pass": 86
+  },
+  "findings": [],
+  "independent_targeted_reproduction": {
+    "cases": 2,
+    "fail": 0,
+    "log": "independent-startup-transition-tests.log",
+    "log_sha256": "764917d2fe703b77b07d6d0119cb820bfb3564436cd5c936d84fb2d85d893d4b",
+    "pass": 2,
+    "scope": "Only mocked tests: frozen old helper false refusal and repaired helper success for exec/discovery and listener/HTTP timing transitions. No Live construction or actual process, socket, HTTP, signal, build or data operations.",
+    "skip": 0
+  },
+  "preserved_actual_failure": {
+    "compact_bytes": 909098,
+    "compact_files_previously_independently_rehashed": 29,
+    "compact_history_path": "/home/dobo/work/_temp/feat-local-poc-real-data/continuation/runtime8/history/runtime8-62e8-actual-startup-observation-refusal",
+    "evidence_limit": "No timestamped per-sample PID/socket trace survives. The root-reported traceback plus reproduced sequential-read races support the repair; they do not reconstruct vanished kernel ordering.",
+    "last_failure_sha256": "5865781049bb9f9c8f174523f8346be54587ca4dfed4f0c4afcd61c86af21264",
+    "original_prepared_sha256": "0e5d8521d4dd0688017d8b96a219f7ce803ea558964628e693880ed9f5a90c79",
+    "packet_history_sha256": "9b3a22bdcfa36bc0518493dc13e948d0bb2fa7abca654f6cfe75bcbc66562f64",
+    "phase": "start_candidate",
+    "recorded_rollback": "exact_prior_source_binary_and_metadata_restored",
+    "retention_limit": "Compact history contains the recorded copies; large staged binary was inventoried, not copied into that compact packet. Root moved original failed work separately."
+  },
+  "review_conclusions": [
+    "Same authenticated Popen child may progress between sequential observations; resampling no longer labels that progression as foreign.",
+    "Exact UID/PPID/PID/starttime/cwd, site/static paths, positive own loopback LISTEN inode and repeated final identity/discovery checks remain necessary.",
+    "Foreign or reused PID/starttime, multiple identities, and a healthy endpoint without positive own-listener evidence still refuse; no unknown process adoption or signalling.",
+    "Only an individual fd readlink FileNotFoundError is skipped; it supplies no ownership evidence. Permission and other read failures still refuse.",
+    "Monotonic 30-second startup budget and 60-iteration cap remain bounded; at most one in-flight frozen 2-second HTTP request may finish beyond the deadline.",
+    "Metadata modes, authenticated source/export/build inputs, rollback in-progress receipt ordering, data fences and unrelated activation code remain unchanged from the approved 62e8 source."
+  ],
+  "reviewed_at": "2026-10-13T15:08:46.150721+00:00",
+  "reviewer": "agent:codex/teacher_cpu_inputs",
+  "schema_version": 1,
+  "scope": "Independent narrow startup-observation repair review; prior metadata/export/build/smoke approval preserved.",
+  "source_delta": {
+    "all_76_prior_test_bodies_AST_unchanged": true,
+    "changed_AST_units": [
+      "class:Live/start",
+      "top:owns_loopback_listener"
+    ],
+    "new_test_methods": [
+      "class:KernelMetadata/test_disappearing_listener_supplies_no_positive_ownership",
+      "class:KernelMetadata/test_disappearing_unrelated_own_fd_does_not_hide_a_positive_listener",
+      "class:KernelMetadata/test_permission_error_on_own_fd_remains_a_refusal",
+      "class:SpawnOnly/test_discovered_same_pid_reused_starttime_is_not_adopted_or_signalled",
+      "class:SpawnOnly/test_exec_and_listener_appear_after_empty_discovery_during_http",
+      "class:SpawnOnly/test_exec_between_direct_lookup_and_discovery_reproduces_old_refusal_then_succeeds",
+      "class:SpawnOnly/test_listener_appears_between_inode_read_and_http_reproduces_old_refusal_then_succeeds",
+      "class:SpawnOnly/test_multiple_discovered_identities_never_declare_readiness",
+      "class:SpawnOnly/test_own_discovery_with_two_not_yet_ready_direct_reads_waits_without_foreign_claim",
+      "class:SpawnOnly/test_startup_deadline_bounds_slow_observation_attempts"
+    ],
+    "other_source_AST_units_unchanged": true
+  },
+  "status": "approved_source_only"
+}

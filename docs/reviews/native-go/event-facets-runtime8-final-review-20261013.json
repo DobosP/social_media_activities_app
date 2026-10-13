@@ -1,0 +1,97 @@
+{
+  "actual_running_social_executable_matches_binary": true,
+  "aggregate_counts": [
+    1568,
+    754,
+    104
+  ],
+  "bindings": {
+    "independent-startup-repair-review.json": "eaf1ef245d3bf02f45f265373a3f74b371d4504a6e9ee72916f3bb2f6c1e9fa6",
+    "prep-receipt-startup-observation-repair.json": "71b537d96ca7d54b97490405eb2739425bbe0182328b21770c199566aa930377",
+    "request-retry.json": "bd432e06421786b70926da9e35139796c14ae4f7ca21b90cf6501a8da2538354",
+    "social_refresh.py": "cf38057346989057ea19089560fa160fa23afea2e4493db74d9bb5f35e2fab47",
+    "test_social_refresh.py": "70f7c3acf0c1c85dba3661f98c4e28ed2fa6f5b57d706d69c4e69eff45f95123",
+    "work/activation-result.json": "0895a74f6a2b92d5456bdee9be4b3dc1c365ddae195e01fbcff9dd860656d390",
+    "work/prepared.json": "d07b8a05017389379216a294e84b2af3f55f0392aaa828c5020db4fd3b4cf58e"
+  },
+  "checks": [
+    "Exact immutable retry request/prepared/source-review/activation bindings verified before and after inspection.",
+    "Final manifest and receipt reconstructed from original authenticated metadata and qualified target; modes remain0600.",
+    "Full current Social export bytes, paths and modes equal prepared inventory and authenticated Git archive; binary build metadata and running executable SHA match.",
+    "Unchanged data PID, selectedL7, producer/data source snapshots, other binaries, frontend assets, protected receipts and producer import verified against prepared baseline.",
+    "Both healthy owned services use immutable runtime paths; current Social PID/starttime match the committed transaction and activation result.",
+    "Bounded loopback facet aliases, public shape, POC notice, event count equality, missing counts, bucket conservation, pagination and stored city filter passed; only aggregates retained.",
+    "Transaction complete; prior runtime slots pruned after verified commit; all29 compact failed-attempt history copies and all6 original802 packet copies remain exact."
+  ],
+  "completed_at": "2026-10-13T15:13:17.121045+00:00",
+  "count_order": [
+    "events",
+    "upcoming_at_measurement_time",
+    "distinct_places"
+  ],
+  "data_process": {
+    "kind": "data",
+    "pid": 3183381,
+    "starttime": "9091306"
+  },
+  "facets_smoke": {
+    "aliases": 2,
+    "city_buckets": 17,
+    "city_filter_count": 1103,
+    "count": 1568,
+    "local_poc": true,
+    "missing_city_count": 0,
+    "missing_place_count": 0,
+    "pagination": "passed",
+    "place_buckets": 104,
+    "status": "passed"
+  },
+  "findings": [],
+  "healthy_exact_owned_processes": true,
+  "limits": [
+    "No production or privacy/admission clearance is inferred; localPOC notice remains active.",
+    "SelectedL7 identity and healthy data service verified; previously verified full sealed release checksums were not rescanned.",
+    "Historical actual failed startup lacks per-sample kernel trace; its compact evidence remains intact."
+  ],
+  "manifest_sha256": "37878424ced5d9ec9eb1c5839343a595362f74ae8cf0c2b6e248428b20441352",
+  "measured_at": "2026-10-13T15:13:12.580282+00:00",
+  "positive_owned_loopback_listener": true,
+  "preserved_evidence": {
+    "data_snapshot": {
+      "entries": 566,
+      "root_mode": 509,
+      "sha256": "cffc26754a9cd85625b92b5bd7e6c6c3f95922f00503d9bcc0cf882f43cb8440"
+    },
+    "failed_packet_bytes": 909098,
+    "failed_packet_files": 29,
+    "failed_packet_sha256": "9b3a22bdcfa36bc0518493dc13e948d0bb2fa7abca654f6cfe75bcbc66562f64",
+    "failed_prepared_sha256": "0e5d8521d4dd0688017d8b96a219f7ce803ea558964628e693880ed9f5a90c79",
+    "frontend_inventory_sha256": "799bc620b2c523ef75fca72c21ca3dea5773e1af561eda130f6ebc567981140e",
+    "original802_packet_files": 6,
+    "producer_snapshot": {
+      "entries": 3696,
+      "root_mode": 509,
+      "sha256": "cd3d8b7e8fc8b735609ce64d7d3927431d82a1d75b824aee579b93ebdc263ec6"
+    },
+    "protected_receipts_count": 80,
+    "protected_receipts_digest": "099e4b03f13825c1bae4fc67454e4c6ac3486803191f8fc85c10af4d842f6a03"
+  },
+  "producer_commit_preserved": "24b32ec4675d21c94e02a00256345f2ce2312630",
+  "read_only_scope": "Existing shared coordinator lock opened read-only. Read-only filesystem/Git/process metadata, go version metadata, bounded loopback GETs and owned local POC PostgreSQL aggregate SELECT via Docker only. No restart/build/signals/source/database mutation. Only this distinct review file written.",
+  "receipt_sha256": "562ba731642ac17f83e3d6f7abe211653285c7b32ff727d103557aa7650d10e9",
+  "reviewer": "agent:codex/teacher_cpu_inputs",
+  "runtime_generation": 8,
+  "schema_version": 1,
+  "selected_release": "sha256-75caf6b0c0357ce334782c0f94d2327dd3139db4665f0a4161f924926eeaca91",
+  "social_binary_sha256": "2ea2e83c9e5952b17636aad8db56015aeef7e1d241e30cec30dcdb9c2ce07436",
+  "social_process": {
+    "kind": "social",
+    "pid": 4173217,
+    "site_root": "/home/dobo/work/_temp/feat-local-poc-real-data/runtime/social",
+    "starttime": "10820590",
+    "static_dir": "/home/dobo/work/_temp/feat-local-poc-real-data/runtime/social/static"
+  },
+  "source_target_commit": "b55afe9942edf6feefa9cebe617caaefb45b1d00",
+  "status": "approved_verified_runtime8",
+  "upcoming_is_clock_sensitive": true
+}
