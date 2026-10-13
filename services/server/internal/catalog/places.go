@@ -161,7 +161,7 @@ type PlaceQuery struct {
 }
 
 func placeQuery(q url.Values) (PlaceQuery, error) {
-	v := PlaceQuery{City: q.Get("city"), Source: q.Get("source"), Activity: q.Get("activity"), Category: q.Get("category")}
+	v := PlaceQuery{City: strings.TrimSpace(q.Get("city")), Source: q.Get("source"), Activity: q.Get("activity"), Category: q.Get("category")}
 	if raw := q.Get("min_confidence"); raw != "" {
 		n, err := strconv.ParseFloat(raw, 64)
 		if err != nil || math.IsNaN(n) || math.IsInf(n, 0) {
@@ -197,7 +197,7 @@ func placeWhere(v PlaceQuery, a platform.Actor) (string, []any) {
 	return DefaultPolicy().placeWhere(v, a)
 }
 func (policy Policy) placeWhere(v PlaceQuery, a platform.Actor) (string, []any) {
-	where := policy.PlaceSQL() + ` AND ($1::text='' OR lower(p.address_city)=lower($1)) AND ($2::text='' OR lower(p.source)=lower($2)) AND ($3::text='' OR EXISTS(SELECT 1 FROM places_placeactivity pa JOIN taxonomy_activitytype t ON t.id=pa.activity_id WHERE pa.place_id=p.id AND lower(t.slug)=lower($3) AND NOT pa.is_disputed AND ($4::double precision IS NULL OR pa.confidence>=$4))) AND ($5::text='' OR EXISTS(SELECT 1 FROM places_placeactivity pa JOIN taxonomy_activitytype t ON t.id=pa.activity_id JOIN taxonomy_activitycategory c ON c.id=t.category_id LEFT JOIN taxonomy_activitycategory parent ON parent.id=c.parent_id WHERE pa.place_id=p.id AND NOT pa.is_disputed AND (lower(c.slug)=lower($5) OR lower(parent.slug)=lower($5)) AND ($4::double precision IS NULL OR pa.confidence>=$4))) AND ($4::double precision IS NULL OR EXISTS(SELECT 1 FROM places_placeactivity pa WHERE pa.place_id=p.id AND pa.confidence>=$4)) AND ($6::boolean IS NULL OR (` + hasUpcomingSQL(a) + `)=$6) AND ($7::double precision IS NULL OR $8::double precision IS NULL OR $9::double precision IS NULL OR ST_DWithin(p.location,ST_SetSRID(ST_MakePoint($7,$8),4326)::geography,$9))`
+	where := policy.PlaceSQL() + ` AND ($1::text='' OR ` + CityEqualSQL("p.address_city", "$1::text") + `) AND ($2::text='' OR lower(p.source)=lower($2)) AND ($3::text='' OR EXISTS(SELECT 1 FROM places_placeactivity pa JOIN taxonomy_activitytype t ON t.id=pa.activity_id WHERE pa.place_id=p.id AND lower(t.slug)=lower($3) AND NOT pa.is_disputed AND ($4::double precision IS NULL OR pa.confidence>=$4))) AND ($5::text='' OR EXISTS(SELECT 1 FROM places_placeactivity pa JOIN taxonomy_activitytype t ON t.id=pa.activity_id JOIN taxonomy_activitycategory c ON c.id=t.category_id LEFT JOIN taxonomy_activitycategory parent ON parent.id=c.parent_id WHERE pa.place_id=p.id AND NOT pa.is_disputed AND (lower(c.slug)=lower($5) OR lower(parent.slug)=lower($5)) AND ($4::double precision IS NULL OR pa.confidence>=$4))) AND ($4::double precision IS NULL OR EXISTS(SELECT 1 FROM places_placeactivity pa WHERE pa.place_id=p.id AND pa.confidence>=$4)) AND ($6::boolean IS NULL OR (` + hasUpcomingSQL(a) + `)=$6) AND ($7::double precision IS NULL OR $8::double precision IS NULL OR $9::double precision IS NULL OR ST_DWithin(p.location,ST_SetSRID(ST_MakePoint($7,$8),4326)::geography,$9))`
 	args := []any{v.City, v.Source, v.Activity, v.MinConfidence, v.Category, v.HasUpcoming, v.Near.Lon, v.Near.Lat, v.Near.Radius}
 	if len(v.BBox) == 4 {
 		where += ` AND p.location::geometry && ST_MakeEnvelope($10,$11,$12,$13,4326)`

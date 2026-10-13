@@ -57,6 +57,7 @@ On conflict: `STATUS.md` > newest-dated ADR > every other doc.
 | 0056 | *(claimed on branch `fix/gui-review-20261011`: gui-preparation-scope-and-portable-mode-binding)* | not on this branch | 2026-10-11 |
 | 0057 | [roedu-local-poc-consumer](0057-roedu-local-poc-consumer.md) | accepted; owner authorization 2026-10-12 ("POC consumer half"); development/loopback only; human privacy review gates any wider use | 2026-10-12 |
 | 0058 | [roedu-venue-identity-and-license-width](0058-roedu-venue-identity-and-license-width.md) | accepted; owner directive 2026-10-12 (same-location venues stay distinct; raise the license limit) | 2026-10-12 |
+| 0059 | [event-city-filters-and-local-poc-history](0059-event-city-filters-and-local-poc-history.md) | accepted; owner-requested continuation; independent review gates landing | 2026-10-13 |
 
 ⚠ **0009 is claimed twice** — this ledger exists so it does not happen again. Both files stay:
 `0009-csp-enforcement-prep.md` (superseded by ADR-0010) and

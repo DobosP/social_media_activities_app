@@ -6,6 +6,7 @@
   {% for e in events %}
     <div class="card">
       <h3><a href="{{ e|event_url }}">{{ e.title }}</a></h3>
+      {% if e.local_poc %}<p><span class="tag fact--false">LOCAL POC — not cleared for publication</span>{% if e.local_poc_past %} <span class="tag">Past event</span>{% endif %}</p>{% endif %}
       {% if e.activity_type %}<span class="tag">{{ e.activity_type.name }}</span>{% endif %}
       <p class="muted">{{ e.starts_at|date:"D j M, H:i" }}{% if e.place %} &middot;
         <a href="{{ e.place|place_url }}">{{ e.place.name }}</a>{% endif %}</p>
