@@ -3,6 +3,30 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-13 — City/history exact-source qualification closure
+
+Valid until: protected source inputs or fixture environment change — then requalify.
+
+Exact clean source `f412dfc2cc89b328369b4100f2d13b815575752d` passed the canonical
+full21 PostgreSQL/codec gate:740 PASS,0 SKIP,0 FAIL (web105). The disk-backed2CPU/2GiB
+fixture stayed healthy without OOM, with root free space113GiB above the30GiB floor;
+its container, internal network, anonymous volume and password file are verified absent.
+The [compact checkpoint](docs/reviews/native-go/local-poc-city-filters-checkpoint-20261013.json)
+pins per-lane logs, native/frontend/focused checks, meaningful negative controls and
+raw14-root Git-tree SHA256 `fba22444f060f85b9c58537d2534e30dcdb763609ca576e9204371857b667162`.
+Additional offline/config object identities are unchanged. Receipt-only documentation
+closure follows the established source-object-equality allowance; source gates are not
+repeated after this docs-only commit. Root independently reviewed source; docs/whitespace
+and independent closure review remain required before root lands the branch.
+
+The verified23-file frontend packet is retained at
+`/home/dobo/work/_temp/feat-local-poc-real-data/continuation/social/frontend-assets`;
+its receipt SHA256 is `0a7c496c29a85b64f30470147fb109d64ca069bda9df92d6e8e0862c4d428374`.
+Superseded owned test/bootstrap binaries466357664bytes and the152973byte duplicate
+frontend copy were pruned only after verified successors; manifests/logs are history,
+not a claim that those deleted bytes remain. No new deployment-image/dependency audit,
+case-retirement CLI run, main/push or live runtime/data change is claimed.
+
 ## 2026-10-13 — Event city filters and explicit local POC history
 
 Valid until: city comparison, event views, protected inputs or qualification environment changes — then requalify.

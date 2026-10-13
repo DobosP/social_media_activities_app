@@ -48,3 +48,7 @@ rows remain excluded. Controlled test-only overlays restore each bug and must fa
 Landing needs native source checks, relevant frontend tests/build, the full 21-lane
 PostgreSQL/codec qualification and independent review under ADR-0040. Source landing
 does not switch the running POC, deploy, activate ingestion or authorize production.
+
+Exact source `f412dfc` completed all21 lanes with740 passes,0 skips/failures,
+plus native/frontend/focused checks. The [checkpoint](../reviews/native-go/local-poc-city-filters-checkpoint-20261013.json)
+records source-object equality for receipt-only closure and disposable cleanup.

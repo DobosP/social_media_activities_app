@@ -1,0 +1,311 @@
+{
+  "schema_version": 1,
+  "status": "verified",
+  "valid_until": "Any protected source object or qualification environment changes; then requalify. Receipt-only docs closure requires identical source objects, docs/whitespace and independent review.",
+  "source_identity": {
+    "source_head": "f412dfc2cc89b328369b4100f2d13b815575752d",
+    "source_paths": [
+      "services/server",
+      "services/authcore",
+      "services/agentapi",
+      "frontend",
+      "scripts",
+      "templates",
+      "apps/web/templates",
+      "locale",
+      "static",
+      "db",
+      "Dockerfile",
+      "Dockerfile.db",
+      ".dockerignore",
+      ".github/workflows"
+    ],
+    "source_objects_sha256": "fba22444f060f85b9c58537d2534e30dcdb763609ca576e9204371857b667162",
+    "source_hash_algorithm": "SHA256 of exact stdout bytes from git ls-tree -r SOURCE_HEAD -- <source_paths in listed order>",
+    "protected_root_git_objects": {
+      "services/server": "d1207b3a3dfb14cbde0c3c07cdb10be1e0b0cf35",
+      "services/authcore": "4155df0ced03ba9868e4289a37658a09ac375ce2",
+      "services/agentapi": "263237a6cfb9e35cc25c83cf743d61af767c56ca",
+      "frontend": "0f66c15ab427457bbed8be69d6da3f0d52fb6d09",
+      "scripts": "276e83871478b12f2e3c3cf739eb4a36ab0825ef",
+      "templates": "05292c79649051e2af38c02a81d6220659dc8255",
+      "apps/web/templates": "120c03e7cd3f8e0cef4a4e428dda72542c45c05d",
+      "locale": "1686d4854f479861a0617ae635be57ec6f6bc157",
+      "static": "c01ab7ae3a9546b2293fa042e3db33333fad7a1f",
+      "db": "93a0124318b7b3a906914802ab1c1c0b745cb2f2",
+      "Dockerfile": "2b84ca927f8e1850674a805ba983d72b895a83fa",
+      "Dockerfile.db": "3a54c78eb8793ed96dbd64e46fff79e9133e48e2",
+      ".dockerignore": "d17d3d599b0644b9ce2db6571fe51b8c7e3a08b6",
+      ".github/workflows": "34e411ebdf93bf72eb725f87a478fb7ad0ddcfc1"
+    },
+    "additional_offline_and_config_objects": {
+      "apps/ingestion": "3b619402cdba6cd19e51588dd541914c031a4ee7",
+      ".env.example": "98be42fd2fd3eaf91bb3eb7d9e22ec3125e648e3"
+    },
+    "working_tree_porcelain": ""
+  },
+  "qualification": {
+    "command": "bash /home/dobo/work/_temp/fix__local-poc-city-filters/social/run-qualification.sh /home/dobo/work/_worktrees/social_media_activities_app/fix__local-poc-city-filters full full",
+    "exit_code": 0,
+    "lanes": [
+      {
+        "lane": "configuration",
+        "pass": 64,
+        "skip": 0,
+        "fail": 0,
+        "log_sha256": "dcea2dd2ee6f877c10e95368d9d4ca80d4cf443a679be04aed3caee0b6cbe60e"
+      },
+      {
+        "lane": "accounts",
+        "pass": 75,
+        "skip": 0,
+        "fail": 0,
+        "log_sha256": "e481f9850d466f3edd0137267c8f65457a4d90178f2ffd7f55a3e6d70735e00c"
+      },
+      {
+        "lane": "admin",
+        "pass": 21,
+        "skip": 0,
+        "fail": 0,
+        "log_sha256": "f424ae12fb12898c52b45c182ff5ae77d4b7a84f778193337e2100515a937a3e"
+      },
+      {
+        "lane": "app",
+        "pass": 35,
+        "skip": 0,
+        "fail": 0,
+        "log_sha256": "68bc49c23fd236e55f6c126f454ca8adfb3db541eeb0daa39a62311cbc4a593a"
+      },
+      {
+        "lane": "backup",
+        "pass": 5,
+        "skip": 0,
+        "fail": 0,
+        "log_sha256": "4f67f4b29d622424a53c50290655c53eff088ac26c0a8c7a67bc15d5391c7282"
+      },
+      {
+        "lane": "booking",
+        "pass": 7,
+        "skip": 0,
+        "fail": 0,
+        "log_sha256": "a1ef094934326e9c1a5a6e685155b50b2156fe9255ce889c188e9a8f1f678157"
+      },
+      {
+        "lane": "budgets",
+        "pass": 16,
+        "skip": 0,
+        "fail": 0,
+        "log_sha256": "ccb6fa48b913819891d6364f23f25bbd41e284c1df36cb6c6a65748959236b73"
+      },
+      {
+        "lane": "catalog",
+        "pass": 48,
+        "skip": 0,
+        "fail": 0,
+        "log_sha256": "436b699e189c09d6ddfe4c3705dc00f880ad9ab19beb3eeb059d49537f180e14"
+      },
+      {
+        "lane": "commands",
+        "pass": 29,
+        "skip": 0,
+        "fail": 0,
+        "log_sha256": "701c02db19916782166f2e3b3291008c95e056f13fd89b67e3c54d4cd7a42896"
+      },
+      {
+        "lane": "contracts",
+        "pass": 5,
+        "skip": 0,
+        "fail": 0,
+        "log_sha256": "7d1addf45410df1456849ebfc4f9be9e76fc57fde237b4404af27d5a86343eeb"
+      },
+      {
+        "lane": "discovery",
+        "pass": 2,
+        "skip": 0,
+        "fail": 0,
+        "log_sha256": "93d794e6c90876d8da0ecedc03d0181fc546fc4aae4de2e5ad4ef7f2e2058f95"
+      },
+      {
+        "lane": "donations",
+        "pass": 5,
+        "skip": 0,
+        "fail": 0,
+        "log_sha256": "5a26ff835165ae6b949b1f475062aa0a2b4c53c3ce0570c990b74c2aa06c3a43"
+      },
+      {
+        "lane": "export",
+        "pass": 5,
+        "skip": 0,
+        "fail": 0,
+        "log_sha256": "7c5c44fd2d7d117f7aa3e47bdcc5927a3d2cb5a52a54ee1ce87a03dd350de91d"
+      },
+      {
+        "lane": "jobs",
+        "pass": 84,
+        "skip": 0,
+        "fail": 0,
+        "log_sha256": "d4518965a1dc09851577c799a44dbf902817eea8a71f6cb50d48e56a0d47f006"
+      },
+      {
+        "lane": "media",
+        "pass": 54,
+        "skip": 0,
+        "fail": 0,
+        "log_sha256": "baef94cb315c3e844d334f411904a1f95092ccd18ae0f73027615ff5de8edbc4"
+      },
+      {
+        "lane": "messaging",
+        "pass": 60,
+        "skip": 0,
+        "fail": 0,
+        "log_sha256": "11d871eb04a215aa8403dd542cffc4933d55050e9d599ced3ac4ca8f5b3a81ef"
+      },
+      {
+        "lane": "notifications",
+        "pass": 4,
+        "skip": 0,
+        "fail": 0,
+        "log_sha256": "1a1ee3d7c91a5eb9a1603174434b5ac4b435fd2f2bf3ef827e3fa63cf3ab1ad6"
+      },
+      {
+        "lane": "recommendations",
+        "pass": 8,
+        "skip": 0,
+        "fail": 0,
+        "log_sha256": "d9773f694bf9cb7b89a0dd9a04ab654d584309e5184d228a155843e026a8d8de"
+      },
+      {
+        "lane": "safety",
+        "pass": 56,
+        "skip": 0,
+        "fail": 0,
+        "log_sha256": "5cf0d34b762c846661be66a93d6720c8f1ffcecdbc5e3b0ca2d98acf189f0c76"
+      },
+      {
+        "lane": "social",
+        "pass": 52,
+        "skip": 0,
+        "fail": 0,
+        "log_sha256": "5f6af36b652a9b5fe1f22255e094933cfd398042a7570910fa1f251e56754f9f"
+      },
+      {
+        "lane": "web",
+        "pass": 105,
+        "skip": 0,
+        "fail": 0,
+        "log_sha256": "31b5b95f8d3d8517a1f612b3ebedb80bbd55bafa48a4a6ac1226e96550ffcba7"
+      }
+    ],
+    "total_pass": 740,
+    "total_skip": 0,
+    "total_fail": 0,
+    "qualification_log_sha256": "405da6b020aeb67921727532d917c8bb177a6a7fac8a55409ce88ac77c344375",
+    "runner_sha256": "cf73c11458d28550634441bc8c59c094ec2728ab727abc00eea1fcc473a7e95d"
+  },
+  "checks": {
+    "native": {
+      "log_sha256": "18aa20a22820877638b2bcff55dfb1cec2020ff87bfd5663838ccea71cbf119c",
+      "pass_count": 31,
+      "expected_exit_code": 0
+    },
+    "focused": {
+      "log_sha256": "57c8957fd605d3056368ba0900614e6c9607bd391a1300476df6876c5ab71f89",
+      "pass_count": 4,
+      "expected_exit_code": 0
+    },
+    "city_negative": {
+      "log_sha256": "c8bb8c55f139174602ebd9f35a7ccb92128f678f19efb560b385a19c3464f9c2",
+      "pass_count": null,
+      "expected_exit_code": 1
+    },
+    "history_negative": {
+      "log_sha256": "76e67412bcdc8c4e8e4b39bae3765fd0456dface5cbada1186cf491a7489da98",
+      "pass_count": null,
+      "expected_exit_code": 1
+    },
+    "frontend_install": {
+      "log_sha256": "f38bd47e5737aecc60df2ed5ed22613133719c31323a115f99f017815f41c81d",
+      "pass_count": null,
+      "expected_exit_code": 0
+    },
+    "frontend_test": {
+      "log_sha256": "c9e26fd1df5b677aab8e3e2c9178195ebfdf46e428da098e215d1a1284c19d9b",
+      "pass_count": 3,
+      "expected_exit_code": 0
+    },
+    "frontend_build": {
+      "log_sha256": "6a1806af457fca7437c162f3471451005e036f0bbe022b8fbc8739f98df00c4d",
+      "pass_count": null,
+      "expected_exit_code": 0
+    }
+  },
+  "frontend_packet": {
+    "receipt_path": "/home/dobo/work/_temp/feat-local-poc-real-data/continuation/social/frontend-receipt.json",
+    "receipt_sha256": "0a7c496c29a85b64f30470147fb109d64ca069bda9df92d6e8e0862c4d428374",
+    "frontend_tree": "0f66c15ab427457bbed8be69d6da3f0d52fb6d09",
+    "assets_count": 23,
+    "inventory_verified": true
+  },
+  "fixture": {
+    "database_image": "social-native-db:go-complete-20261004",
+    "codec_image": "social-native:source-final-c27a99fd7105-9615f07cc770",
+    "codec_image_id": "sha256:34c1c2281d9fc96cf486dda8e88497ef5061e21a412c712d8ef61ca14b07031b",
+    "cpu": 2,
+    "memory_bytes": 2147483648,
+    "disk_backed_anonymous_volume": true,
+    "internal_network": true,
+    "host_ports": false,
+    "minimum_required_root_free_gib": 30,
+    "observed_minimum_root_free_gib": 113,
+    "observed_peak_pg_volume_mib": 837,
+    "database_precleanup_state": {
+      "Status": "running",
+      "Running": true,
+      "Paused": false,
+      "Restarting": false,
+      "OOMKilled": false,
+      "Dead": false,
+      "Pid": 1197855,
+      "ExitCode": 0,
+      "Error": "",
+      "StartedAt": "2026-10-12T23:04:36.812883574Z",
+      "FinishedAt": "0001-01-01T00:00:00Z"
+    }
+  },
+  "cleanup": {
+    "container": {
+      "resource": "social-city-filters-full-db-20261013",
+      "exit_code": 1,
+      "confirmed_removed": true,
+      "diagnostic": "Error response from daemon: No such container: social-city-filters-full-db-20261013"
+    },
+    "network": {
+      "resource": "social-city-filters-full-20261013",
+      "exit_code": 1,
+      "confirmed_removed": true,
+      "diagnostic": "Error response from daemon: network social-city-filters-full-20261013 not found"
+    },
+    "anonymous_volume": {
+      "resource": "3103e020e9a23cc6bc75db4ed177f187c96391b294060529fd00ab776f92a136",
+      "exit_code": 1,
+      "confirmed_removed": true,
+      "diagnostic": "Error response from daemon: get 3103e020e9a23cc6bc75db4ed177f187c96391b294060529fd00ab776f92a136: no such volume"
+    },
+    "temporary_password_file_removed": true
+  },
+  "retention": {
+    "pruned_intermediate_derivatives_manifest_sha256": "3a7dd4178f756e6b19378a497e90e8ebb14ca66302968af546208e8a1d4ba61e",
+    "pruned_bytes": 466357664,
+    "frontend_duplicate_pruned_bytes": 152973,
+    "limitation": "Superseded owned test/bootstrap binaries and duplicate frontend packet were pruned after verified successors. Compact logs/manifests are history, not a claim that deleted executable bytes remain. Latest verified setup and stable frontend packet remain."
+  },
+  "scope": {
+    "fresh_native_and_frontend_checks": true,
+    "fresh_full_21_lanes": true,
+    "fresh_deployment_image_or_dependency_audit": false,
+    "case_retirement_ledger": "Inherited 1020 verified / 1651 unresolved / 0 invalid; no fresh retirement CLI run. Contracts lane5 freshly passed.",
+    "live_runtime_or_data_changed": false,
+    "main_or_push": false,
+    "sitemap_boundary": "Publication adapter verified; existing global HTTP /sitemap.xml 404 was not changed."
+  }
+}

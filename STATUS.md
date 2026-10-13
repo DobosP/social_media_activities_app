@@ -95,7 +95,7 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
-- City/history (2026-10-13, ADR-0059): focused registered-route/POC guards pass; negative controls and final source/frontend checks recorded in WORKLOG. Full exact-source 21-lane qualification remains required before landing.
+- City/history (2026-10-13, ADR-0059): exact `f412dfc` **740 PASS / all21 lanes / 0 SKIP / 0 FAIL**; native/frontend/focused and negative controls pass. [Receipt](docs/reviews/native-go/local-poc-city-filters-checkpoint-20261013.json) pins unchanged source inputs; live POC remains separate.
 - Policy 5/8 + local POC landing (2026-10-13): exact `98bc921` full native qualification **737 PASS / all 21 lanes / 0 SKIP / 0 FAIL**; check-native, harness17, docs/whitespace pass. Demo fixture clocks aligned; old main failure reproduced. [Receipt](docs/reviews/native-go/policy8-local-poc-checkpoint-20261013.json) pins source objects; docs-only closure reuses them unchanged.
 - Venue identity + license 500 (2026-10-12, ADR-0058, + review fix: `ingest_places source=roedu` guarded too): check-native pass; jobs/commands/budgets/catalog/admin/web on disposable PG: new identity/race/license tests pass, only the known codec/demo reds; new-binary `--migrate-only` widens adopted and fresh DBs ([WORKLOG](WORKLOG.md)).
 - Local POC (2026-10-12, ADR-0057): hermetic `go test -race ./...` + vet pass; jobs/web/cmd/catalog/commands on disposable PG: POC DB tests pass (review fixes: a complete POC snapshot never reconciles, event evidence stored, feeds labelled), failures only the known codec/demo reds also on the base commit; policy 5/8 (2026-10-11, ADR-0055) same, legacy client 43/43 ([WORKLOG](WORKLOG.md)).
