@@ -2697,3 +2697,46 @@ Original160 affected-lane qualification and native31-package/Node4 receipts stay
 unchanged historical evidence. Root source review is complete; corrected full21
 qualification and owner app-main landing/push remain pending. No runtime activation,
 fresh canonical production-image build/audit, deployment or live ingestion is claimed.
+
+
+## 2026-10-13 — Event facets full21 qualification closure
+
+Valid until: the qualified source or fixture inputs change — then treat as history.
+
+Exact corrected source `37129450d27990c6f7620bb72155ddbc8a094a20` completed the
+unchanged canonical `scripts/qualify-native.sh`: **747 unique top-level PASS /
+all21 lanes /0 SKIP /0 FAIL**. Counts are configuration64/accounts75/admin21/app35/
+backup5/booking7/budgets16/catalog54/commands29/contracts5/discovery2/donations5/
+export5/jobs84/media54/messaging60/notifications4/recommendations8/safety56/social52/
+web106. These are top-level tests; nested cases are not added to that total.
+
+`bash /home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/run-qualification.sh`
+used Go1.27.1/race, GOMAXPROCS2/-p2/offline modules, the existing pinned codec and
+PostgreSQL/PostGIS images, actual codecs and the independent sidecar process. A
+resource-only Docker wrapper added2CPU/2GiB/zero swap without changing package
+selection, assertions, flags or fail-closed PASS/skip checks. Resource inspection
+on the initial integration run matched those limits; the corrected run used the
+identical resource wrapper and flags. The owned fixture/network/password file were
+removed; a responsive host Docker inspection independently verified absence.
+
+The [full checkpoint](docs/reviews/native-go/event-facets-full21-checkpoint-20261013.json)
+(SHA256 `b149f4dc3d1b440d930b89bddf8f470068442dafd4b4683209fa0836d91b77b2`)
+and [independent review](docs/reviews/native-go/event-facets-full21-independent-review-20261013.json)
+(SHA256 `d4bb37ae8e772a9e42c6c5cbdcd87b4a02582b990d384f54e904b2e8cb17d67b`)
+recount all21 logs,747 unique tests,61 artifact hashes, ten protected source/Git
+objects and module/runner bindings. No reviewer gate/fixture rerun was used.
+
+Genuine first-full c733194 PASS/1 FAIL/0 SKIP, corrected app35 and original160
+affected-lane receipts/logs remain unchanged history. Earlier derived binaries
+were inventoried rather than copied into failed-run history; rolling full21 paths
+hold verified371 successors. Historical inventories do not promise old binary
+bytes remain available. One rolling full21 setup and compact history are retained;
+only exact superseded task-owned diagnostic binaries are eligible for subsequent
+cleanup, with the actual deletion receipt kept in task scratch. Source branch and
+worktree, shared images/caches and other owners' work remain.
+
+Native31-package/Node4 source checks remain historical evidence, not an exact371
+rerun claim. No fresh canonical production-image build/audit, hosted CI run, Social
+feature runtime activation, app-main landing/push, provider or production/child
+activation occurred. Root publishes this reviewed feature; owner integration and
+first-deployment gates remain separate. This closure changes documentation only.

@@ -1,7 +1,7 @@
 # ADR-0060 — Gated event city and place facets
 
 Date: 2026-10-13
-Status: implemented on feature branch; source independently reviewed, owner landing pending
+Status: source independently reviewed and full21 qualified; owner landing pending
 Extends: [ADR-0025](0025-agent-and-search-engine-access-surface.md) and
 [ADR-0059](0059-event-city-filters-and-local-poc-history.md).
 
@@ -69,3 +69,14 @@ to the additive382/320 contract, without changing API behavior or other assertio
 The isolated app lane passes35 tests/0 skips/0 failures. A fresh full21 check on the
 corrected head and owner app-main landing remain pending. No new production image
 or image-audit result is claimed.
+
+Full21 closure (2026-10-13): corrected source
+`37129450d27990c6f7620bb72155ddbc8a094a20` completed747 unique top-level passes
+across all21 native PostgreSQL/codec lanes,0 failures/0 skips. The
+[full checkpoint](../reviews/native-go/event-facets-full21-checkpoint-20261013.json) and
+[independent recount](../reviews/native-go/event-facets-full21-independent-review-20261013.json)
+bind the exact source and genuine first-failure history. This supersedes the prior
+pending-full21 verification status above. Source behavior is unchanged by the app
+assertion correction and this evidence-only closure. Historical native31/Node4
+evidence remains separately scoped; no new canonical production image/audit,
+Social runtime activation or owner app-main landing/push is claimed.

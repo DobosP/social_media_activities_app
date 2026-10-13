@@ -81,6 +81,8 @@ users — open `http://localhost:8000/`:
   - `?activity=<slug>` `?city=` `?source=` `?min_confidence=` `?in_bbox=minx,miny,maxx,maxy`
   - `?near_lon=&near_lat=` orders nearest-first and adds `distance_m`; add `?radius_m=` to
     also filter within a radius (metres)
+- `GET /api/events/facets/`, `GET /api/v1/events/facets/` — bounded city/place buckets over
+  the full matching public-event query; contract and limits: [ADR-0060](docs/adr/0060-gated-event-city-and-place-facets.md).
 - `GET /api/docs/` — native API guide (`/api/schema/` for field-level OpenAPI)
 - `/admin/` — guarded native operator pages with audited curated edits and governed domain actions
 

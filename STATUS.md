@@ -94,7 +94,7 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Verification record (newest first)
 
-- Event facets (2026-10-13, ADR-0060): reviewed source retained catalog54+web106/native31/Node4 proof; app inventory assertion corrected, isolated app35 PASS /0 SKIP/0 FAIL. First full21 stopped on that stale test (WORKLOG); corrected full21 pending. Owner app-main landing/push and activation remain pending.
+- Event facets (2026-10-13, ADR-0060): exact `37129450` **747 PASS /all21 lanes /0 SKIP /0 FAIL**, independently recounted; [full checkpoint](docs/reviews/native-go/event-facets-full21-checkpoint-20261013.json). Native31/Node4 remain historical evidence. Owner app-main landing/push, activation and new canonical image/audits remain pending.
 - City/history (2026-10-13, ADR-0059): exact `f412dfc` **740 PASS / all21 lanes / 0 SKIP / 0 FAIL**; native/frontend/focused and negative controls pass. [Receipt](docs/reviews/native-go/local-poc-city-filters-checkpoint-20261013.json) pins unchanged source inputs; live POC remains separate.
 - Policy 5/8 + local POC landing (2026-10-13): exact `98bc921` full native qualification **737 PASS / all 21 lanes / 0 SKIP / 0 FAIL**; check-native, harness17, docs/whitespace pass. Demo fixture clocks aligned; old main failure reproduced. [Receipt](docs/reviews/native-go/policy8-local-poc-checkpoint-20261013.json) pins source objects; docs-only closure reuses them unchanged.
 - Venue identity + license 500 (2026-10-12, ADR-0058, + review fix: `ingest_places source=roedu` guarded too): check-native pass; jobs/commands/budgets/catalog/admin/web on disposable PG: new identity/race/license tests pass, only the known codec/demo reds; new-binary `--migrate-only` widens adopted and fresh DBs ([WORKLOG](WORKLOG.md)).
