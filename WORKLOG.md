@@ -2666,3 +2666,34 @@ owner app-main landing remain separate. No source landing, runtime switch, sourc
 activation, provider use, GUI milestone or production action is claimed.
 
 Independent final review recomputed all protected source/Git objects, qualification artifacts and retained first-attempt history: catalog54 + web106 top-level passes, zero failures/skips, with19 filter subcases separate; native31 packages and Node4. Review `docs/reviews/native-go/event-facets-independent-review-20261013.json` is clear. Source `724f20cdcde8dff53268fc903f9b12ad2fcce6b4` is unchanged by this evidence-only closure. Full21-lane landing qualification, production image/audits, runtime activation and app-main landing/push remain unperformed; this reviewed feature is prepared for owner integration.
+
+
+## 2026-10-13 — Full integration inventory assertion correction
+
+Valid until: the tested source or fixture inputs change — then treat as history.
+
+A full21 run on published `c73332d5d77964ce5c9a19f1cf12dbe17e820afd`
+completed configuration64/accounts75/admin21, then stopped in app with34 passes
+and1 failure,0 skips: `TestNativeDocumentationRoutesAreReachableThroughApplication`
+retained the pre-facets380-operation/318-path expectation. Total attempted194 PASS /
+1 FAIL /0 SKIP; the remaining17 lanes were not run. This was a genuine failed
+integration check, separate from the earlier reviewed catalog54+web106 proof.
+
+The only test-source correction is that assertion's exact382/320 inventory. JSON
+parsing, OpenAPI3.0.3, anonymous/no-cookie/native-header and HTML assertions remain.
+A scan of every native inventory assertion found only the already-correct web
+382/320 assertion and the dynamic route-inventory equality besides this app case.
+No API/source behavior, schema, dependency, production image or frontend changed.
+
+`bash /home/dobo/work/_temp/feat__social-coverage-api-20261013/social/run-app-inventory-fix.sh`
+compiled the corrected app tests with Go1.27.1/race and ran the entire app lane on
+a fresh private PostgreSQL/PostGIS fixture:35 PASS /0 SKIP/0 FAIL. Host builds use
+GOMAXPROCS2/-p2/offline modules; fixture/test containers use2CPU/2GiB/zero swap and
+the existing pinned codec/database images. The failed full run's exact logs and
+input hashes remain in task scratch `social/history/full21-c733-stale-app-assertion/`;
+its disposable container/network/password file were removed and verified absent.
+
+Original160 affected-lane qualification and native31-package/Node4 receipts stay
+unchanged historical evidence. Root source review is complete; corrected full21
+qualification and owner app-main landing/push remain pending. No runtime activation,
+fresh canonical production-image build/audit, deployment or live ingestion is claimed.

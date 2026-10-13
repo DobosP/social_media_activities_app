@@ -1,7 +1,7 @@
 # ADR-0060 — Gated event city and place facets
 
 Date: 2026-10-13
-Status: implemented on feature branch; independent review and owner landing pending
+Status: implemented on feature branch; source independently reviewed, owner landing pending
 Extends: [ADR-0025](0025-agent-and-search-engine-access-surface.md) and
 [ADR-0059](0059-event-city-filters-and-local-poc-history.md).
 
@@ -60,3 +60,12 @@ labels. Invalid requests fail before database access. Additive OpenAPI tests pre
 legacy parameter maps, with route inventory and actual documentation checks.
 
 Exact executed gates and remaining checks are recorded in `WORKLOG.md` and `STATUS.md`.
+
+Independent source review completed before publication (see the
+[event-facets source review](../reviews/native-go/event-facets-independent-review-20261013.json)).
+The first full21 integration attempt then found an app documentation test still
+asserting380 operations/318 paths. Its exact inventory expectation was corrected
+to the additive382/320 contract, without changing API behavior or other assertions.
+The isolated app lane passes35 tests/0 skips/0 failures. A fresh full21 check on the
+corrected head and owner app-main landing remain pending. No new production image
+or image-audit result is claimed.
