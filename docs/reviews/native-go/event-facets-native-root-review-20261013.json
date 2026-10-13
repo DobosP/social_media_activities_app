@@ -1,0 +1,11 @@
+{
+  "status": "root_native_gate_recount_and_artifact_hash_review_pass",
+  "receipt_sha256": "a8a9816696071d569af706d8c00a7e37f5fe66f7447972388cee07d26162e14f",
+  "original_receipt_sha256": "b3e0fe0b9a11eb8f84de8b407b23bfb4defb8703f765c84ca52ffa23288574c8",
+  "actual_go_package_results": 27,
+  "cached_go_package_results": 18,
+  "node_pass": 4,
+  "node_fail": 0,
+  "all_bound_artifacts_rehashed": 7,
+  "scope": "No gate rerun; corrected accounting, not behavior or test outcomes."
+}

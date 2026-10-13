@@ -1,0 +1,18 @@
+{
+  "status": "historical recount; source logs unchanged",
+  "rows": [
+    {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/check-native.log",
+      "sha256": "561bfd0856a2eb60b70b2fa1bb45a04962533babf3330499958d91afa49f1099",
+      "go_package_results": 27,
+      "node_pass": 4
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/history/first-fixture-test-expectation/check-native.log",
+      "sha256": "d2b10c5c953581b3213a37f4ee7721d16073314421443fb57ea2e30277752509",
+      "go_package_results": 27,
+      "node_pass": 4
+    }
+  ],
+  "interpretation": "Earlier31 package-result claims combined27 Go package pass lines and4 Node TAP pass lines; these are distinct units. Native gates passed. Full21 747-case result is unaffected."
+}

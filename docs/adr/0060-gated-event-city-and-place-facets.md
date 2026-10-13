@@ -80,3 +80,12 @@ pending-full21 verification status above. Source behavior is unchanged by the ap
 assertion correction and this evidence-only closure. Historical native31/Node4
 evidence remains separately scoped; no new canonical production image/audit,
 Social runtime activation or owner app-main landing/push is claimed.
+
+Landing authorization and remaining gates (2026-10-13): after reviewing the explicit
+landing/local-runtime plan, the owner instructed autonomous continuation. The final
+native gate passed on `730dd5c7` (27 Go package results and four Node tests); the
+747-case integration proof applies to byte-identical source trees. The historical
+31-package label included four Node TAP lines; WORKLOG and the count erratum retain
+the correction without rewriting the original receipts. This narrow feature does
+not trigger ADR-0040's conditional integration/image/dependency or frontend rebuild
+gates. Development landing is authorized; local activation is separately verified.

@@ -2740,3 +2740,18 @@ rerun claim. No fresh canonical production-image build/audit, hosted CI run, Soc
 feature runtime activation, app-main landing/push, provider or production/child
 activation occurred. Root publishes this reviewed feature; owner integration and
 first-deployment gates remain separate. This closure changes documentation only.
+
+
+## 2026-10-13 — Final native checks and authorized Social landing
+
+Valid until: the qualified source or runtime inputs change — then history.
+
+After reading the plan explicitly listing the Social landing/push and local runtime refresh, the owner asked to finish step 1 and continue the next steps autonomously. This authorizes this feature's development landing and local POC activation; no GUI milestone, public deployment, provider activation or real-child launch is accepted by it.
+
+On exact clean `730dd5c7e1f35ff05555aba4c3f6369d1e6b06b3`, the unchanged `scripts/check-native.sh /usr/local/go/bin/go` passed portable auth hashes, gofmt, vet, race checks and the Node24 offline worker. There are **27 Go package pass results (18 cached) and four Node tests**, not 31 Go packages plus four Node tests. Root found the original broad `^ok` counter had included Node TAP lines `ok 1` through `ok 4` as packages. The first receipt is preserved unchanged as count-error history; the [corrected checkpoint](docs/reviews/native-go/event-facets-native-landing-checkpoint-20261013.json), [root recount](docs/reviews/native-go/event-facets-native-root-review-20261013.json) and [historical erratum](docs/reviews/native-go/event-facets-native-count-erratum-20261013.json) separate the units. The same correction applies to the two retained earlier native logs. No test outcome changed and no gate was rerun for this reporting correction.
+
+The full integration proof remains 747 unique top-level passes across all 21 PostgreSQL/codec lanes, zero failures/skips. Git trees for services, frontend, apps, templates, locale and db are identical to qualified `37129450`; only seven documentation/evidence paths changed. Native's no-DSN skips do not substitute for that separate full integration proof. Applicable docs checks cover 53 files with zero findings, and whitespace passes.
+
+ADR-0040 item 3 applies to landing the integration branch or changing Dockerfiles, dependencies or the runtime image. This is a narrow feature branch with none of those changes; a new image/Trivy/govulncheck cycle is not triggered here, and no fresh audit pass is claimed. Frontend/browser worker assets are unchanged; the additive Go-embedded route inventory is covered by native contracts and does not change the browser bundle. Public/first-deployment gates remain separate.
+
+Independent final native/landing review is clear: [review](docs/reviews/native-go/event-facets-native-independent-review-20261013.json), SHA256 `ff4616bf841e573525ede633909efddd5a9cca7bcf58203eea7ff32ed3874a82`. It independently separates Go/Node results, preserves the count-error receipts, verifies applicable gates and unchanged integration source trees, and confirms the narrow latest owner authorization.

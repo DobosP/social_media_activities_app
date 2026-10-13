@@ -1,0 +1,203 @@
+{
+  "schema_version": 1,
+  "status": "passed_applicable_landing_native_checks",
+  "qualified_current_commit": "730dd5c7e1f35ff05555aba4c3f6369d1e6b06b3",
+  "branch": "feat/social-coverage-api-20261013",
+  "finished_at": "2026-10-13T13:04:04.460887+00:00",
+  "commands": {
+    "native": "bash /home/dobo/work/_temp/feat__social-coverage-api-20261013/social/landing-native-checks/run-native.sh",
+    "underlying_native": "scripts/check-native.sh /usr/local/go/bin/go",
+    "docs": "python3 /home/dobo/work/agent-ops/scripts/check_docs.py .",
+    "whitespace": "git diff --check"
+  },
+  "native": {
+    "exit": 0,
+    "package_results": 27,
+    "cached_package_results": 18,
+    "packages": [
+      "github.com/DobosP/social_media_activities_app/services/server/cmd/social-server",
+      "github.com/DobosP/social_media_activities_app/services/server/internal/accounts",
+      "github.com/DobosP/social_media_activities_app/services/server/internal/admin",
+      "github.com/DobosP/social_media_activities_app/services/server/internal/app",
+      "github.com/DobosP/social_media_activities_app/services/server/internal/avatars",
+      "github.com/DobosP/social_media_activities_app/services/server/internal/backup",
+      "github.com/DobosP/social_media_activities_app/services/server/internal/booking",
+      "github.com/DobosP/social_media_activities_app/services/server/internal/budgets",
+      "github.com/DobosP/social_media_activities_app/services/server/internal/catalog",
+      "github.com/DobosP/social_media_activities_app/services/server/internal/chat",
+      "github.com/DobosP/social_media_activities_app/services/server/internal/commands",
+      "github.com/DobosP/social_media_activities_app/services/server/internal/contracts",
+      "github.com/DobosP/social_media_activities_app/services/server/internal/discovery",
+      "github.com/DobosP/social_media_activities_app/services/server/internal/donations",
+      "github.com/DobosP/social_media_activities_app/services/server/internal/export",
+      "github.com/DobosP/social_media_activities_app/services/server/internal/jobs",
+      "github.com/DobosP/social_media_activities_app/services/server/internal/media",
+      "github.com/DobosP/social_media_activities_app/services/server/internal/messaging",
+      "github.com/DobosP/social_media_activities_app/services/server/internal/notifications",
+      "github.com/DobosP/social_media_activities_app/services/server/internal/ops",
+      "github.com/DobosP/social_media_activities_app/services/server/internal/platform",
+      "github.com/DobosP/social_media_activities_app/services/server/internal/recommendations",
+      "github.com/DobosP/social_media_activities_app/services/server/internal/safety",
+      "github.com/DobosP/social_media_activities_app/services/server/internal/social",
+      "github.com/DobosP/social_media_activities_app/services/server/internal/web",
+      "github.com/DobosP/cat_de_roman_esti/shared-go/authcore",
+      "agentapi"
+    ],
+    "portable_auth_hashes": "pass by unchanged canonical gate",
+    "gofmt": "pass",
+    "vet": "pass",
+    "race": "pass",
+    "node_offline_worker_pass": 4,
+    "node_offline_worker_fail": 0,
+    "database_scope": "No explicit DSN supplied; DB fixture cases skip by design and are not claimed as integration qualification. Separate full21 proof below covers actual PG/codecs."
+  },
+  "toolchain": {
+    "go": "go version go1.27.1 linux/amd64",
+    "node": "v24.21.0"
+  },
+  "environment": {
+    "PATH": "/home/dobo/.vite-plus/bin:/usr/local/go/bin:/usr/bin:/bin",
+    "GOTOOLCHAIN": "local",
+    "GOWORK": "off",
+    "GOMAXPROCS": "2",
+    "GOFLAGS": "-mod=readonly -p=2",
+    "GOPROXY": "off",
+    "GOSUMDB": "off",
+    "GOCACHE": "/home/dobo/work/_temp/feat-local-poc-real-data/gocache",
+    "GOMODCACHE": "/home/dobo/work/_temp/feat-local-poc-real-data/verification/social/gomodcache",
+    "TMPDIR": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/landing-native-checks/tmp"
+  },
+  "docs": {
+    "files": 53,
+    "dead_links": 0,
+    "stale_terms": 0,
+    "retired_verbs": 0,
+    "orphans": 0
+  },
+  "whitespace": "pass",
+  "prior_full21": {
+    "source_commit": "37129450d27990c6f7620bb72155ddbc8a094a20",
+    "top_level_pass": 747,
+    "lanes": 21,
+    "fail": 0,
+    "skip": 0,
+    "receipt_path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/checkpoint.json",
+    "receipt_sha256": "b149f4dc3d1b440d930b89bddf8f470068442dafd4b4683209fa0836d91b77b2",
+    "independent_review_sha256": "d4bb37ae8e772a9e42c6c5cbdcd87b4a02582b990d384f54e904b2e8cb17d67b",
+    "rerun": false,
+    "source_equivalence_subtrees": {
+      "services": {
+        "prior_full21": "8c4abab0dcd3878f90d3f99e973fbb69f2255011",
+        "current": "8c4abab0dcd3878f90d3f99e973fbb69f2255011"
+      },
+      "frontend": {
+        "prior_full21": "0f66c15ab427457bbed8be69d6da3f0d52fb6d09",
+        "current": "0f66c15ab427457bbed8be69d6da3f0d52fb6d09"
+      },
+      "apps": {
+        "prior_full21": "545077bc62a06539f5d9121bd150499cf5ee4e8e",
+        "current": "545077bc62a06539f5d9121bd150499cf5ee4e8e"
+      },
+      "templates": {
+        "prior_full21": "05292c79649051e2af38c02a81d6220659dc8255",
+        "current": "05292c79649051e2af38c02a81d6220659dc8255"
+      },
+      "locale": {
+        "prior_full21": "1686d4854f479861a0617ae635be57ec6f6bc157",
+        "current": "1686d4854f479861a0617ae635be57ec6f6bc157"
+      },
+      "db": {
+        "prior_full21": "93a0124318b7b3a906914802ab1c1c0b745cb2f2",
+        "current": "93a0124318b7b3a906914802ab1c1c0b745cb2f2"
+      }
+    },
+    "changes_since_full21": [
+      "README.md",
+      "STATUS.md",
+      "WORKLOG.md",
+      "docs/adr/0060-gated-event-city-and-place-facets.md",
+      "docs/adr/README.md",
+      "docs/reviews/native-go/event-facets-full21-checkpoint-20261013.json",
+      "docs/reviews/native-go/event-facets-full21-independent-review-20261013.json"
+    ]
+  },
+  "applicable_ADR0040_gates": {
+    "item1_current_native": "passed on exact730dd5c7",
+    "item2_full21": "existing independently verified371 proof carried by identical services/frontend/apps/templates/locale/db trees; not rerun",
+    "item5_docs_whitespace": "passed on current source",
+    "independent_source_review": "prior source and full21 independent reviews retained; this receipt is for root review"
+  },
+  "conditional_gates_not_triggered": {
+    "item3_image_build_Trivy_govulncheck": {
+      "status": "not applicable to this narrow feature",
+      "reason": "Feature branch is not the integration branch; no Dockerfile, Go/npm dependency or runtime-image changes since feature baseaf61. No fresh image/audit pass claimed.",
+      "changed_trigger_paths": []
+    },
+    "item4_frontend_ci_test_build": {
+      "status": "not applicable",
+      "reason": "No frontend or browser/worker embedded asset inputs changed. Native Go embedded public_routes.json metadata changed for the additive API and is covered by Go contracts; it is not a frontend bundle input.",
+      "changed_frontend_asset_paths": []
+    }
+  },
+  "feature_base_commit": "af61d48966b2e8f6a85aef6f1e672d1343be6e36",
+  "gate_sha256": {
+    "scripts/check-native.sh": "1e5f6d9be40d3688c725005eb268f49f79c8d42a817075504809daa56cd39c61",
+    "scripts/qualify-native.sh": "c5ea3b35b48c50d1caf9ab57dbae5260e8e23acbe6c89d20079687568cde13b1",
+    "docs/adr/0040-landing-and-deployment-review-gates.md": "4d332d34caad17e846179f501592cfb8b9fbe76469dcd970cbd618b7ddd407c3"
+  },
+  "worktree_clean_at_finish": true,
+  "actions_not_taken": [
+    "behavior/source changes",
+    "commits or pushes",
+    "live runtime operations",
+    "747 integration rerun",
+    "provider/model/GPU calls",
+    "production or real-child activation"
+  ],
+  "artifacts": {
+    "inputs.json": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/landing-native-checks/inputs.json",
+      "sha256": "e6064061bbec3ada99589f83371eb68380cc1af65d189264c9d45d3bd1197bac",
+      "bytes": 3314
+    },
+    "run-native.sh": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/landing-native-checks/run-native.sh",
+      "sha256": "ef7a6bbd741716a10ddda25db5e28c0e01c78192be4ef2eda0f84c408661833f",
+      "bytes": 1000
+    },
+    "native.log": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/landing-native-checks/native.log",
+      "sha256": "4ff283f5919b25ae8b6dee605741462a5a6cd9f8f3104a7fd45b20af30191c81",
+      "bytes": 3858
+    },
+    "docs.log": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/landing-native-checks/docs.log",
+      "sha256": "d741038e5af9a33dc436da583da2d7ebcec362b059d73d058ea342b13d42fb78",
+      "bytes": 268
+    },
+    "docs.exit": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/landing-native-checks/docs.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    },
+    "whitespace.log": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/landing-native-checks/whitespace.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "whitespace.exit": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/landing-native-checks/whitespace.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "bytes": 2
+    }
+  },
+  "counting_correction": {
+    "prior_receipt_sha256": "b3e0fe0b9a11eb8f84de8b407b23bfb4defb8703f765c84ca52ffa23288574c8",
+    "prior_receipt_retained": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/landing-native-checks/history/receipt-b3e0fe0b-mixed-go-node-count.json",
+    "reason": "The original broad ^ok parser included four Node TAP lines as Go package results. Actual Go-package timing/cached lines are counted separately from Node TAP.",
+    "actual_go_package_results": 27,
+    "node_tests": 4,
+    "integration747_unchanged": true,
+    "new_tests_run": false
+  }
+}
