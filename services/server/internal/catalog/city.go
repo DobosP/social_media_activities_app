@@ -16,13 +16,15 @@ func CityKey(city string) string {
 	return key
 }
 
+// cityKeySQL accepts trusted SQL expressions only; user values stay parameters.
+func cityKeySQL(expression string) string {
+	// Same Unicode whitespace set as strings.TrimSpace, including NBSP.
+	const whitespace = " \t\n\r\v\f\u0085\u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u2028\u2029\u202f\u205f\u3000"
+	key := "translate(lower(normalize(btrim(" + expression + ", '" + whitespace + "'), NFC)), 'ăâîșşțţ', 'aaisstt')"
+	return "(CASE " + key + " WHEN 'bucharest' THEN 'bucuresti' ELSE " + key + " END)"
+}
+
 // CityEqualSQL accepts trusted SQL expressions only; user values stay parameters.
 func CityEqualSQL(left, right string) string {
-	fold := func(expression string) string {
-		// Same Unicode whitespace set as strings.TrimSpace, including NBSP.
-		const whitespace = " \t\n\r\v\f\u0085\u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u2028\u2029\u202f\u205f\u3000"
-		key := "translate(lower(normalize(btrim(" + expression + ", '" + whitespace + "'), NFC)), 'ăâîșşțţ', 'aaisstt')"
-		return "(CASE " + key + " WHEN 'bucharest' THEN 'bucuresti' ELSE " + key + " END)"
-	}
-	return fold(left) + "=" + fold(right)
+	return cityKeySQL(left) + "=" + cityKeySQL(right)
 }

@@ -48,7 +48,7 @@ func TestNativePublicDocumentationAssembledMux(t *testing.T) {
 			t.Fatal("HTML documentation did not link its schema")
 		}
 	}
-	if document["openapi"] != "3.0.3" || document["x-native-api-operation-count"] != float64(380) || len(document["paths"].(map[string]any)) != 318 {
+	if document["openapi"] != "3.0.3" || document["x-native-api-operation-count"] != float64(382) || len(document["paths"].(map[string]any)) != 320 {
 		t.Fatal("documentation route returned stale protocol/route coverage")
 	}
 	contract := s.publicSchema()
@@ -68,7 +68,7 @@ func TestNativePublicDocumentationAssembledMux(t *testing.T) {
 			t.Fatal("documentation response has the wrong protocol content type", path)
 		}
 	}
-	t.Logf("anonymous mux delivers 380 operations, 318 paths, %d component schemas", len(schemas))
+	t.Logf("anonymous mux delivers 382 operations, 320 paths, %d component schemas", len(schemas))
 }
 
 func TestNativeOpenAPIDocumentProtocolTypedDictionaries(t *testing.T) {

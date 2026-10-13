@@ -30,6 +30,7 @@ func New(db *pgxpool.Pool) *Service {
 func (s *Service) Register(mux *http.ServeMux) {
 	for _, base := range []string{"/api", "/api/v1"} {
 		registerRoute(mux, "GET "+base+"/events/", s.events)
+		registerRoute(mux, "GET "+base+"/events/facets/", s.eventFacets)
 		registerRoute(mux, "GET "+base+"/events/{id}/", s.event)
 		registerRoute(mux, "GET "+base+"/places/", s.places)
 		registerRoute(mux, "GET "+base+"/places/{id}/", s.place)

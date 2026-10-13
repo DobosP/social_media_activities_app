@@ -44,6 +44,8 @@ Built on the social core; see services/tests for exact behaviour. All uphold the
   agent-grade API filters (events: place/activity/city/from/to/q/near; public activity
   cards: from/to + proximity); `llms.txt` v2; `robots.txt` public-API Allow carve-outs. Gate:
   `social.Activity` never on a crawler surface; snapshot key-sets pinned by exact-key tests.
+  Additive full-query event city/place facets preserve those public gates and bounded
+  coverage semantics ([ADR-0060](adr/0060-gated-event-city-and-place-facets.md)).
 - **Activity lifecycle** — `cancel_activity` / `complete_activity` (`social/services.py`) +
   `auto_complete_activities` command; cancel notifies members and blocks joins.
 - **Edit before start** — `update_activity` (whitelisted `ACTIVITY_EDITABLE_FIELDS`; place/type/

@@ -2631,3 +2631,36 @@ Teacher/raw-data-server sessions were already active and received interface coor
 without duplicate consumer/pin changes. Hosted Actions remains manually disabled; no
 workflow/spending/provider/production/minor/source activation. PR108 awaits required
 human auth/privacy/safety review beforelanding; worktrees/stash are retained.
+
+## 2026-10-13 — Event city/place facets feature (ADR-0060)
+
+Valid until: the feature's implementation or qualification inputs change — then treat as history.
+
+Added read-only `/api[/v1]/events/facets/`, sharing the actual event parser and runtime
+publication policy. A single PostgreSQL statement aggregates the entire matching query
+before independently bounded city/place bucket pages. City comparison aliases share
+one SQL key; actual labels and distinct public venue IDs survive. Missing facts,
+completeness and POC publication notices are explicit. Existing event/place schemas,
+GUI, ingestion, snapshots and release selection remain unchanged.
+
+Verification on 2026-10-13:
+- `bash /home/dobo/work/_temp/feat__social-coverage-api-20261013/social/run-qualification.sh`:
+  isolated real PostgreSQL/PostGIS fixture, catalog54 + web106 top-level PASS,
+  0 SKIP / 0 FAIL; all19 facet filter subcases pass separately. New source-built
+  server/test binaries use existing release-codec and database images, not a newly
+  built production image. Disposable fixture and private credential file removed.
+- `scripts/check-native.sh /usr/local/go/bin/go` with Go1.27.1, Node24.21.0, offline
+  modules, GOMAXPROCS2 and task TMPDIR: source hashes, format, vet/race over31 package
+  results and Node4 pass. Its no-DSN database skips are not fixture qualification.
+- Cheap parser/schema/route/SQL-projection/protocol checks and docs53/whitespace pass.
+  Public documentation now describes382 operations/320 paths, adding only2 routes.
+- Restoring the exact base registrar through a Go source overlay makes the new
+  invalid-query registered-route test fail with404, proving it detects absent routing.
+  First fixture run exposed a test-only wrong expectation for `limit=0` (clamps to1,
+  not50). That single expected value/returned count was corrected; production bytes
+  stayed identical. Compact first-run logs/manifests remain in task scratch history.
+
+Source/test SHA256 inputs, commands, fixture image IDs and logs are bound in the task
+qualification receipt. Independent final review and all21 lanes before eventual
+owner app-main landing remain separate. No source landing, runtime switch, source
+activation, provider use, GUI milestone or production action is claimed.

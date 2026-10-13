@@ -356,6 +356,11 @@
   },
   {
     "Method": "GET",
+    "Path": "/api/events/facets/",
+    "Source": "internal/catalog/service.go"
+  },
+  {
+    "Method": "GET",
     "Path": "/api/events/{id}/",
     "Source": "internal/catalog/service.go"
   },
@@ -1282,6 +1287,11 @@
   {
     "Method": "GET",
     "Path": "/api/v1/events/",
+    "Source": "internal/catalog/service.go"
+  },
+  {
+    "Method": "GET",
+    "Path": "/api/v1/events/facets/",
     "Source": "internal/catalog/service.go"
   },
   {
