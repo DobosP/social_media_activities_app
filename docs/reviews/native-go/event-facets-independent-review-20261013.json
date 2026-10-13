@@ -1,0 +1,108 @@
+{
+  "artifact_recomputation": {
+    "all_sizes_and_sha256_verified": true,
+    "receipt_artifacts": 14,
+    "retained_first_attempt_files": 12,
+    "superseded_first_attempt_binaries_absent": true
+  },
+  "base_commit": "af61d48966b2e8f6a85aef6f1e672d1343be6e36",
+  "canonical_checkpoint_byte_identical": true,
+  "canonical_checkpoint_sha256": "d4a0fdbbdddf7f089ce9208f3a1e72d991e22604edc5f9c5e7f9a1b048d67cca",
+  "corrected_first_attempt": {
+    "only_changed_protected_file": "services/server/internal/catalog/event_facets_test.go",
+    "preserved_history_manifest_sha256": "35e9be8d28834045086408bdf1bcac91f2dd457bff85a3293d4d05c880128e56",
+    "production_source_bytes_unchanged": true,
+    "reason": "Existing ParseLimit clamps limit=0 to1; corrected only expected limit/result count.",
+    "recount_catalog_fail": 1,
+    "recount_catalog_skip": 0,
+    "recount_catalog_top_level_pass": 53,
+    "web_not_run": true
+  },
+  "date": "2026-10-13",
+  "findings": [],
+  "fixture_cleanup": {
+    "container_and_network_absence_recorded_in_bound_receipt": true,
+    "credential_file_absence_independently_checked": true,
+    "daemon_state_not_requeried_in_this_review": true,
+    "runner_trap_owns_named_fixture_resources": true
+  },
+  "limits": [
+    "This approves feature source/evidence only; all21 lanes and canonical image/audits were not run here. App-main push/GUI milestone landing/production remain separately gated.",
+    "Historical retained test logs were rehashed and recounted; this reviewer did not execute a fresh database fixture."
+  ],
+  "negative_control": {
+    "baseline_service_bytes_equal_base_commit": true,
+    "exit": 1,
+    "expected_status": 400,
+    "log_sha256": "4c460d092ff3ef58cac0a453ec33dc802996e7022bbc68774b13bca825d0b374",
+    "observed_status": 404,
+    "route_overlay_bound": true,
+    "test": "TestEventFacetsInvalidQueriesFailBeforeDatabase"
+  },
+  "protected_source_sha256": {
+    "services/server/internal/catalog/city.go": "6b9b95c194b3c0f1281cc54b074d8688c9ac976c47d040caaae36d319b7061c3",
+    "services/server/internal/catalog/event_facets.go": "e60991662cd70d82e6958996556d4c3a621b7dd97389981ea781333e8d75ebc1",
+    "services/server/internal/catalog/event_facets_test.go": "dd2e3e289ea795684a73db320595fe5c4265eac6992c84e658a8156c269c6ecb",
+    "services/server/internal/catalog/service.go": "a2ac08d352242d8486fcde3fe8c5a2a1589c7f727066c35103a1143ebd1bf233",
+    "services/server/internal/web/public_documentation_test.go": "5be2ed8d47ad0bf0e0205fc625f4fb565e4db001bea7c195cdfdd42c5d50eb41",
+    "services/server/internal/web/public_routes.json": "63444f88d0bc34d7c2c30e5ef18ec5696a8979619762e4586455a72cb28d47f1",
+    "services/server/internal/web/public_schema.go": "b927fcd0bee8bdba8987be3ae280517a320836bbba7a15377586c8475a500ccb",
+    "services/server/internal/web/public_schema_event_facets.go": "4b60ebe8779123febd07bc8644f6de9e34549995bfc0b2dceedbbe841131152a",
+    "services/server/internal/web/public_schema_event_facets_test.go": "059226fb180672111362c93ace02be6ce8c376b8fdaa36cd028bab7df1d31ca6"
+  },
+  "qualification_receipt_sha256": "d4a0fdbbdddf7f089ce9208f3a1e72d991e22604edc5f9c5e7f9a1b048d67cca",
+  "qualification_recount": {
+    "catalog": {
+      "fail": 0,
+      "log_sha256": "19209eaf2cbdd1e912a160e940108959ef4d423c89940bfea4fc4bd6537a8872",
+      "skip": 0,
+      "top_level_pass": 54
+    },
+    "docs_dead_links": 0,
+    "docs_files": 53,
+    "docs_orphans": 0,
+    "docs_retired_verbs": 0,
+    "docs_stale_terms": 0,
+    "native_node_fail": 0,
+    "native_node_pass": 4,
+    "native_node_skip": 0,
+    "native_package_results": 31,
+    "new_filter_subcases_separate_from_top_level": 19,
+    "top_level_total": 160,
+    "web": {
+      "fail": 0,
+      "log_sha256": "68d52cf337d9ae4967fecec99dfb114cf72255570fdd10ae9da22ba2e464eff0",
+      "skip": 0,
+      "top_level_pass": 106
+    }
+  },
+  "remaining_gates": [
+    "full21-lane qualification on this feature; required before owner app-main landing",
+    "fresh production image and image vulnerability audits",
+    "runtime activation or real ingestion",
+    "GUI/milestone/production/child activation"
+  ],
+  "reviewer": "agent:codex/teacher_cpu_inputs",
+  "schema_version": 1,
+  "scope": "Independent static source review and recomputation of retained qualification evidence. No new PostgreSQL run, runtime activation, ingestion, model/provider action or app-main landing.",
+  "source_commit": "724f20cdcde8dff53268fc903f9b12ad2fcce6b4",
+  "source_commit_blob_checks": {
+    "base_is_ancestor": true,
+    "changed_paths": 15,
+    "files": 9,
+    "sole_untracked_file": "docs/reviews/native-go/event-facets-checkpoint-20261013.json",
+    "status_lines": 120,
+    "whitespace": "pass",
+    "working_bytes_equal_git_objects": true
+  },
+  "static_checks": [
+    "One SQL statement materializes eligible events exactly once using the existing parser, policy eventWhere, eventJoin and parameterized argument vector; aggregation precedes bounded pages.",
+    "Extracted cityKeySQL body equals the old CityEqualSQL fold body after indentation normalization; NFC, Unicode whitespace, Romanian spelling and Bucharest alias semantics are retained.",
+    "Shared limit/offset behavior and hard bounds are retained; complete means all buckets are returned, with truncated its inverse. City and place pages are separate.",
+    "Venue buckets retain place IDs; equal coordinates/names do not collapse identities. Missing city/place counts and empty arrays preserve their documented meaning.",
+    "Existing held/tombstone/proposed-venue/closure and invalid-policy vetoes remain; the public projection has no event IDs, account/child/participation data, raw provenance or paths.",
+    "Event or venue POC flags label the aggregate with the existing publication notice. No schema, ingestion, child-safety, identity, deployment, dependency or GUI gate changes.",
+    "OpenAPI additions clone limit/offset parameter maps without mutating the existing event schema; other filters are retained byte-for-byte in value."
+  ],
+  "verdict": "approved feature source and bounded qualification; no actionable findings"
+}
