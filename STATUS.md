@@ -1,6 +1,6 @@
 # Status — social_media_activities_app
 
-Last verified: 2026-10-13
+Last verified: 2026-10-14
 
 - **GitHub Actions (Last verified: 2026-10-05):** owner-requested on-demand policy, [ADR-0033](docs/adr/0033-manual-github-actions.md). Ordinary `ci.yml` calls Go/Node workflows;
   original Python gates remain in optional manual `reference.yml` (ADR-0038). YAML/input/job/read-only permission checks pass. Native Actions remains manually disabled; no hosted run claimed.
@@ -19,7 +19,7 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
   identity, coherent completeness, safe bounded pagination, exact facts-only fields, exactly policy schema 5/ruleset 8/hash
   `140290d4bc6374ebb5b7922dee98c79bee5501a6cf76e1ef18923a8647068fd1` (4/6, 5/7 refused), capture/acquisition schema 3. Unknown
   fields, prose/person data, internal evidence/paths, unsafe URLs, policy drift, malformed relationships, duplicates, and page drift fail closed.
-  Development/loopback-only local POC (ADR-0057; 2026-10-12): a verified admission over the item's REAL deny, honest privacy values, every POC row labelled "LOCAL POC — not cleared for publication"; production unchanged.
+  Development/loopback-only local POC (ADR-0057; 2026-10-14): verified REAL deny admission retains access/privacy labels, including factual TDM items; POC rows stay marked and local. TDM boundary independently reviewed; native checks and754 disposable-DB/codec cases pass. Runtime adoption remains separate; production unchanged.
   City filters compare NFC/ASCII/cedilla spellings without rewriting facts; dev POC `past_only=1` reaches history separately from the bounded upcoming list (ADR-0059; 2026-10-13). Mode/form/SPA/feed links retain supported filters and POC labels.
 - **Lifecycle and reconciliation:** source lifecycle/confidence/category, recurrence/timezone/price/availability,
   source timestamps, venue identity, and pack/release/snapshot identity are retained. One RO-EDU venue id is one place:

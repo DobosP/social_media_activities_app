@@ -153,7 +153,16 @@ func publicURL(value any) bool {
 
 const commonFields = "id kind title tags facets source provenance license attribution access_type legal_basis gdpr_relevant privacy_classification privacy_revision policy_decision_id redistributable confidence content_id capture_id capture_schema_version acquisition_lane acquisition_evidence_sha256 policy_attestation first_seen last_seen updated_at"
 
-func validateCommon(item map[string]any) bool {
+// The local context is used only after the existing admission verifier succeeds.
+// It permits the literal TDM access label without rewriting any source metadata.
+type packAccessContext uint8
+
+const (
+	publicPackAccess packAccessContext = iota
+	verifiedLocalPOCPackAccess
+)
+
+func validateCommon(item map[string]any, accessContext packAccessContext) bool {
 	laneCheck, validLane := item["acquisition_lane"].(string)
 	if !validLane || (laneCheck != "web_http" && laneCheck != "sanctioned_api" && laneCheck != "bulk_download" && laneCheck != "derived_member") {
 		return false
@@ -163,7 +172,7 @@ func validateCommon(item map[string]any) bool {
 	if !stable(item["id"]) || !text(item["source"], 255, false) || !text(item["license"], 500, false) || !text(item["attribution"], 255, false) || !text(item["legal_basis"], 500, false) || item["gdpr_relevant"] != false || item["redistributable"] != true || item["privacy_classification"] != "no_personal_data" {
 		return false
 	}
-	if item["access_type"] != "public_document" && item["access_type"] != "open_license" && item["access_type"] != "public_domain" {
+	if item["access_type"] != "public_document" && item["access_type"] != "open_license" && item["access_type"] != "public_domain" && !(accessContext == verifiedLocalPOCPackAccess && item["access_type"] == "tdm_exception") {
 		return false
 	}
 	for _, key := range []string{"privacy_revision", "content_id", "capture_id", "acquisition_evidence_sha256", "policy_decision_id"} {
@@ -239,7 +248,11 @@ func location(value any) bool {
 	return l && o && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180
 }
 func ValidatePackItem(item map[string]any) bool {
-	if !validateCommon(item) {
+	return validatePackItem(item, publicPackAccess)
+}
+
+func validatePackItem(item map[string]any, accessContext packAccessContext) bool {
+	if !validateCommon(item, accessContext) {
 		return false
 	}
 	kind, _ := item["kind"].(string)

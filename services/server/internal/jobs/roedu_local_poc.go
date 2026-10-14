@@ -4,7 +4,7 @@ package jobs
 // page carries items whose REAL publish_source decision is a deny plus a closed
 // `local_poc_admission` recording which of that deny's reasons the owner waived
 // for a loopback-only development build. The admission is never a legal basis:
-// ValidatePackItem is untouched and still refuses every such item, and every
+// ValidatePackItem remains strict and still refuses every such item, and every
 // path here requires RoeduClient.LocalPOCActive (set only by the development,
 // loopback, ROEDU_LOCAL_POC=1 configuration gate) plus the page's own
 // `local_poc: true`.
@@ -91,7 +91,9 @@ func validatePageItem(item map[string]any, localPOC bool) bool {
 // privacy_classification=no_personal_data, effect=allow, reasons=
 // [explicitly_cleared]); the unchanged production validator then checks every
 // other shape, integrity and SHA field on a copy with those four set to the
-// production constants. The item itself is never rewritten.
+// production constants. A private access context additionally permits the
+// literal tdm_exception label only after this admission verifies. Neither the
+// item nor its access label is rewritten, including on the validation copy.
 func ValidateLocalPOCPackItem(item map[string]any) bool {
 	raw, present := item["local_poc_admission"]
 	if !present {
@@ -126,7 +128,7 @@ func ValidateLocalPOCPackItem(item map[string]any) bool {
 	cleared["effect"] = "allow"
 	cleared["reasons"] = []any{"explicitly_cleared"}
 	shape["policy_attestation"] = cleared
-	return ValidatePackItem(shape)
+	return validatePackItem(shape, verifiedLocalPOCPackAccess)
 }
 
 // VerifyLocalPOCAdmission applies contract §2's verifier rule to one item's
@@ -297,6 +299,7 @@ func LocalPOCTags(tags map[string]any, pack PackRead, item map[string]any) {
 		return
 	}
 	tags["roedu_local_poc"] = true
+	tags["roedu:access_type"] = item["access_type"]
 	tags["roedu:gdpr_relevant"] = item["gdpr_relevant"]
 	tags["roedu:privacy_classification"] = item["privacy_classification"]
 	if admission, ok := item["local_poc_admission"]; ok {
@@ -327,11 +330,11 @@ func ensureLocalPOCColumn(ctx context.Context, tx pgx.Tx) error {
 }
 
 // LocalPOCEventEvidence is the honest evidence a POC event row keeps (CONTRACT
-// §2: the admission at every layer): the item's REAL privacy values, its real
-// publish_source attestation and decision id, and its admission (absent for a
-// clear-allow item of a POC release).
+// §2: the admission at every layer): the item's REAL access and privacy values,
+// its real publish_source attestation and decision id, and its admission (absent
+// for a clear-allow item of a POC release).
 func LocalPOCEventEvidence(item map[string]any) map[string]any {
-	evidence := map[string]any{"gdpr_relevant": item["gdpr_relevant"], "privacy_classification": item["privacy_classification"], "policy_decision_id": item["policy_decision_id"], "policy_attestation": item["policy_attestation"]}
+	evidence := map[string]any{"access_type": item["access_type"], "gdpr_relevant": item["gdpr_relevant"], "privacy_classification": item["privacy_classification"], "policy_decision_id": item["policy_decision_id"], "policy_attestation": item["policy_attestation"]}
 	if admission, ok := item["local_poc_admission"]; ok {
 		evidence["local_poc_admission"] = admission
 	}

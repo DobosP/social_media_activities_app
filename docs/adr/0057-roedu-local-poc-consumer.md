@@ -126,3 +126,29 @@ is kept and verified, and the waiver is shown.
   development-only feature.
 - Accepting `ROEDU_SYNC_CITIES` in production. Empty-city semantics for complete snapshots would need
   their own decision.
+
+## 2026-10-14 — Preserve factual TDM access at the local boundary
+
+The owner's existing private local-POC directive includes usable event facts whose real source
+access is `tdm_exception`. The production access allowlist prevented those otherwise valid,
+waiver-bearing facts from passing the consumer's local validator. It must not relabel that access
+as `public_document` or treat the owner admission as a legal basis.
+
+After the existing admission verifier succeeds, a private access context permits the literal
+`tdm_exception` label while applying the same factual shape, digest, policy pin and capture tuple
+checks. The access label stays unchanged even on the validation copy. The public
+`ValidatePackItem` entry point always selects the strict production context; an item without an
+admission still uses it. The existing four clearance substitutions on the private validation copy
+remain as described above, and do not rewrite the incoming item or stored deny.
+
+Local event JSON evidence additionally retains the original `access_type`; local venue tags carry
+the same literal value. The admission verifier, WAIVABLE set, evaluator, reasons, legal basis,
+privacy values, production envelope, local mode/page gates and child-facing authority/consent/
+moderation rules are unchanged. The existing digest-bound absolute `poc_root` contract remains;
+this clarification adds no configured filesystem-root expectation to the consumer.
+
+Synthetic native controls cover both event and venue acceptance, wholesale input preservation,
+strict public/no-admission refusal, malformed or tampered admissions, root grammar/digest changes,
+capture/content/acquisition integrity, policy pins, closed factual fields including CNP/prose,
+production/remote-client refusal, false/missing page markers, and nil-database dry-run/evidence
+retention. They are authored for root qualification; no runtime activation is implied.

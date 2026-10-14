@@ -1,0 +1,199 @@
+{
+  "status": "passed",
+  "actual_runner_returncode": 0,
+  "script": "scripts/qualify-native.sh",
+  "lanes": [
+    {
+      "lane": "accounts",
+      "pass": 75,
+      "skip": 0,
+      "fail": 0,
+      "sha256": "d49f842337635569af023cc449e2d40e76d38d50f45b51f0c2c3b6ff9bbf520b"
+    },
+    {
+      "lane": "admin",
+      "pass": 21,
+      "skip": 0,
+      "fail": 0,
+      "sha256": "26d7b3fce3b925bfbba933bbdf3a1428a42e32dab0b816062ce0b3487cbbf04c"
+    },
+    {
+      "lane": "app",
+      "pass": 35,
+      "skip": 0,
+      "fail": 0,
+      "sha256": "ae296b4a3adb6acef41b2aaf4cde8014b7c66d5c00538fcdc6af64725f5f4d5f"
+    },
+    {
+      "lane": "backup",
+      "pass": 5,
+      "skip": 0,
+      "fail": 0,
+      "sha256": "f1c0f885174b5aa0ccffe4ceb5572e169dc9dce4767647f97e7e90f8d1dd0cb7"
+    },
+    {
+      "lane": "booking",
+      "pass": 7,
+      "skip": 0,
+      "fail": 0,
+      "sha256": "0c0c7be6778322291655869cc5135c728c056d1b6d6e0532abd3fd42e28dc8f7"
+    },
+    {
+      "lane": "budgets",
+      "pass": 16,
+      "skip": 0,
+      "fail": 0,
+      "sha256": "3e3a6b0b988441dc480ee5dcfad769cc25fc36cf7f8db37417aa33f40cb85f98"
+    },
+    {
+      "lane": "catalog",
+      "pass": 54,
+      "skip": 0,
+      "fail": 0,
+      "sha256": "b6053b553ac4745b35454fdc9f9c6090d3d6cc2ea3910ba23b5720e7be51e6fc"
+    },
+    {
+      "lane": "commands",
+      "pass": 29,
+      "skip": 0,
+      "fail": 0,
+      "sha256": "bd63a37a4d1102fec04c8c90ce1431f054f482a0cee2f4ea2c5062807bfabb34"
+    },
+    {
+      "lane": "configuration",
+      "pass": 64,
+      "skip": 0,
+      "fail": 0,
+      "sha256": "e2667942d224c01433e0085866cb768e140eb1e723b7ea2e63e05c8fccd7ec79"
+    },
+    {
+      "lane": "contracts",
+      "pass": 5,
+      "skip": 0,
+      "fail": 0,
+      "sha256": "60b2fe21bdb6645a067f94ea46e2ad66f79f2b2ccf0cb8080d36ad702a3181d4"
+    },
+    {
+      "lane": "discovery",
+      "pass": 2,
+      "skip": 0,
+      "fail": 0,
+      "sha256": "9e891f0aae090113e3d87066d2382d319bd94afc94805be5037d33d7a66b34a2"
+    },
+    {
+      "lane": "donations",
+      "pass": 5,
+      "skip": 0,
+      "fail": 0,
+      "sha256": "950855a1180fd7c559b5d09b46d578aaa818e4bc2c264586d3f17b6d74002899"
+    },
+    {
+      "lane": "export",
+      "pass": 5,
+      "skip": 0,
+      "fail": 0,
+      "sha256": "2ad778d1294cffa1981a7a972a5617a73cbb2cd4216375d9d3c7fc8153244da6"
+    },
+    {
+      "lane": "jobs",
+      "pass": 91,
+      "skip": 0,
+      "fail": 0,
+      "sha256": "9ab123f861234aa780f64824272a2092273aad3cf49d62ff0a8c087a727d2800"
+    },
+    {
+      "lane": "media",
+      "pass": 54,
+      "skip": 0,
+      "fail": 0,
+      "sha256": "4e16a6a9011391276f755d351942731a36502641480857cd5a675327053ccbbf"
+    },
+    {
+      "lane": "messaging",
+      "pass": 60,
+      "skip": 0,
+      "fail": 0,
+      "sha256": "9a6d6ce9937fa8e6fce7b825419b20a8e42efb1b6bc49900582f4991671ad52d"
+    },
+    {
+      "lane": "notifications",
+      "pass": 4,
+      "skip": 0,
+      "fail": 0,
+      "sha256": "22e218d204b09a62e38982f54fdd71dd007b2820ceaa465f119e2755491666cd"
+    },
+    {
+      "lane": "recommendations",
+      "pass": 8,
+      "skip": 0,
+      "fail": 0,
+      "sha256": "80707b1a4eee4263d2f5c1e403c3f39b485a07d1788ae9c1cd825621f097e5ef"
+    },
+    {
+      "lane": "safety",
+      "pass": 56,
+      "skip": 0,
+      "fail": 0,
+      "sha256": "eda6989eccc4196b43d72dfa1b09940764cf56a9884781256bbcc2f683a0141e"
+    },
+    {
+      "lane": "social",
+      "pass": 52,
+      "skip": 0,
+      "fail": 0,
+      "sha256": "517a211825df6db7f8778ff0d6a0c57e5a5073ac1e1060d2ff274a3d93f060de"
+    },
+    {
+      "lane": "web",
+      "pass": 106,
+      "skip": 0,
+      "fail": 0,
+      "sha256": "a6fdeaab2af814864e8f6addafae347542c5a335f91e582ff8f887a8be30bbe7"
+    }
+  ],
+  "totals": {
+    "lanes": 21,
+    "passed": 754,
+    "skips": 0,
+    "failures": 0
+  },
+  "new_tdm_database_tests": [
+    "TestPostgresLocalPOCTDMSyncStoresOriginalAccessAndDeny",
+    "TestPostgresLocalPOCTDMOutsideGateWritesNothing"
+  ],
+  "native_exit_sha256": "a320ff8e3c465e1ecc1510e78693f89d3e2b4db7dd20f779e797ad12d8a1dded",
+  "cleanup_sha256": "7fef54e35052321a5c48d5d759a0a7fb82759eb942f96000c81cf7b0eceb69d8",
+  "codec_image": "sha256:34c1c2281d9fc96cf486dda8e88497ef5061e21a412c712d8ef61ca14b07031b",
+  "database_image": "sha256:6f7f1ad998c5d3f3ed2a4138791afa68c28692dc4d439251ed708e45c1cb0ae8",
+  "source_freeze_sha256": "42b2b9080d1ca283a3382c449eeb512ddb34ae756de15a69dbb14fed4cde9341",
+  "source_unchanged": true,
+  "limits": [
+    "Existing canonical codec image executes freshly source-compiled race binaries; no new deployment image or vulnerability audit claimed.",
+    "Original passwordless-bootstrap failure remains recorded separately; failed fixture resources verified absent.",
+    "Only fresh owner-labelled disposable fixtures used; active POC runtime, main, sources and live databases untouched."
+  ],
+  "schema_version": 1,
+  "valid_until": "Qualified successor source/runtime; retain as native source history.",
+  "date": "2026-10-14",
+  "complete_qualification_sha256": "07c2f8adef3780e86cfca4a8a90039a82333d3daa0ed6a22b5c31cfa7f05acac",
+  "native_check": {
+    "receipt_sha256": "4039a95fbdb64d3b5497bfac8ea87ba0f02d8147c2e6e2d388ffc5a327199701",
+    "log_sha256": "e73174a925d45e79954ab2d3480ea84dbbebe410d0a824d61674e7c201df1f1a",
+    "go_package_results": 31,
+    "node_worker_tests": 4,
+    "node_version": "24.19.0"
+  },
+  "no_fix_sensitivity": {
+    "receipt_sha256": "a2900a0245d8e05872d055a46ca527fb8568c4a732b8508a54db8b10832b25e1",
+    "event_and_venue_refuse_without_fix": true
+  },
+  "independent_code_review_sha256": "3cfddcf2c31990722dae7c02cab7e887f07d2973117ef7b137b8bbf1fd4abe03",
+  "source_files": {
+    "services/server/internal/jobs/roedu.go": "e0f7a55e560c943bc6786c104e2aabda9a9b5457715813d954a0833267839cac",
+    "services/server/internal/jobs/roedu_local_poc.go": "0022f0948f79b8cf9d2ac880daac1cafce902a56cdc8708a2755c82d7d1edce7",
+    "services/server/internal/jobs/roedu_local_poc_tdm_test.go": "3f69a67745ef0873523426d43814cabc0f351c6674f7bec445a9dc7f79de3c33",
+    "services/server/internal/jobs/roedu_local_poc_tdm_postgres_test.go": "f653e6ae41d12446b35848344216a3e9c9d94a8301c2e2d0f8cca8ea445b3a73"
+  },
+  "running_poc_mutated": false,
+  "app_main_push_approved": false
+}

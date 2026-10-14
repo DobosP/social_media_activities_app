@@ -3,6 +3,28 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-14 — Literal TDM access through verified local POC admission
+
+Valid until: these source inputs or local-POC contract change — then requalify.
+
+The development consumer's production access allowlist rejected real `tdm_exception` event/venue
+facts despite an existing verified local admission. A private access context now permits exactly
+that label only after the unchanged admission verifier succeeds. Public `ValidatePackItem` keeps
+the strict production context. Neither incoming access nor the real privacy/deny/admission is
+relabelled; local event JSON evidence now includes original access, and local venue tags preserve it.
+ADR-0057's appended clarification records the existing owner scope and unchanged contract/gates.
+
+The new native `roedu_local_poc_tdm_test.go` covers event/venue positives, no-admission production
+strictness, 22 adversarial mutations on both kinds, intact source metadata, local dry-run/evidence,
+production/remote endpoint refusal and false/missing page markers. CNP/prose assertions verify the
+closed factual field contract; they do not claim to rescan producer bodies or extend the waiver.
+Tests reuse synthetic checked-in fixtures and fake HTTP transport; no real network or database is
+needed by this family. Two additional `roedu_local_poc_tdm_postgres_test.go` cases use root's
+explicit disposable fixture to prove literal access/deny storage and zero writes/schema changes
+with the development gate off. Worker authored source/formatting; West independently reviewed the code. Root qualification passed native check31 Go package results and Node4/4, then all21 disposable PostgreSQL/codec lanes:754pass/0skip/0fail, including both new TDM storage cases. The unchanged positive test fails in both event/venue subcases with a Go overlay of the two base implementation files, proving regression sensitivity without editing source. Initial passwordless fixture bootstrap refusal and verified cleanup remain separate. [Compact qualification](docs/reports/major-city-events-20261014/tdm-native-qualification.json), SHA90dcbba7e3f45d52f7410ea34409a656331d723e7beb5a1cce37f1bb3be9bfd7, binds source, native exits/logs, pinned fixture images and cleanup. These overlapping test populations are not added. No deployment image/audit qualification is claimed.
+No commit, push, build, test, real ingestion, service/runtime/source activation or deployment was
+performed by the worker. Active POC source remains its older keeper until separately qualified.
+
 ## 2026-10-13 — City/history exact-source qualification closure
 
 Valid until: protected source inputs or fixture environment change — then requalify.
