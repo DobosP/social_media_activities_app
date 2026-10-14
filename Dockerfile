@@ -8,7 +8,7 @@ RUN npm ci
 COPY frontend ./
 RUN npm run build
 
-FROM golang:1.27.1-bookworm AS backend
+FROM golang:1.27.2-bookworm AS backend
 ARG GOMAXPROCS=2
 ARG GOFLAGS=-p=2
 WORKDIR /build/services/server
