@@ -27,3 +27,6 @@ on1672 unresolved frozen declarations;999 mappings are manifest claims rather th
 as [inert continuation keepers](continuation-keepers/manifest.json), not shipping source.
 
 Remaining REST-facing assertions/transport gaps: [bounded contract plan](rest-contract-plan.md).
+
+The isolated [Connections view repair](connections-view-fix-plan.md) is a source-only
+draft with native qualification pending; it does not replace these historical receipts.

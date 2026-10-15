@@ -1,6 +1,6 @@
 # Status — social_media_activities_app
 
-Last verified: 2026-10-14
+Last verified: 2026-10-16 (source/docs checks only; Connections fix native qualification pending)
 
 - **GitHub Actions (Last verified: 2026-10-05):** owner-requested on-demand policy, [ADR-0033](docs/adr/0033-manual-github-actions.md). Ordinary `ci.yml` calls Go/Node workflows;
   original Python gates remain in optional manual `reference.yml` (ADR-0038). YAML/input/job/read-only permission checks pass. Native Actions remains manually disabled; no hosted run claimed.
@@ -74,8 +74,8 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Open work
 
-- REST assertion closure remains separate:6 social API declarations, booking assertions, export query equality and
-  existing donation REST assertions; [bounded plan](docs/reviews/native-go/rest-contract-plan.md). Finance service/HTML gaps remain separate.
+- Connections HTML [source fix](docs/reviews/native-go/connections-view-fix-plan.md) is drafted: strict complete row decoding, exact int64 pending action IDs and authorized-user avatars with zero/three enrichment queries. New pure/native-renderer/tagged-PG tests are unexecuted; independent review and pinned qualification remain. Core corrected-oracle adoption is separate; no main/production change.
+- REST assertion closure remains separate:6 social API declarations, booking/export/donation assertions; [bounded plan](docs/reviews/native-go/rest-contract-plan.md). Finance service/HTML gaps remain separate.
 - Native completion/toolchain/audit stacks (ADR-0035/0038) are source-qualified per ADR-0040; human code review
   gates first deployment. The1651 unresolved frozen declarations keep Python source/tests and block retirement; [GUI capture prep](docs/reviews/gui-capture-preparation/README.md) remains unsigned/unrun.
 - Build/promote a fresh immutable producer/server V2 release before real sync;

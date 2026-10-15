@@ -140,10 +140,17 @@ func (s *Server) view(r *http.Request, a platform.Actor, name string) (pongo2.Co
 			return nil, "", err
 		}
 		pending, err := s.Social.PendingConnections(r.Context(), a)
-		data["connections"] = value
-		data["incoming"] = pending["incoming"]
-		data["outgoing"] = pending["outgoing"]
-		return data, template, err
+		if err != nil {
+			return nil, "", err
+		}
+		projected, err := connectionsPageContext(r.Context(), s.DB, value, pending["incoming"], pending["outgoing"])
+		if err != nil {
+			return nil, "", err
+		}
+		for key, rows := range projected {
+			data[key] = rows
+		}
+		return data, template, nil
 	case "person", "person_card":
 		value, err := s.Social.Profile(r.Context(), a, r.PathValue("public_id"))
 		data["person"] = value
