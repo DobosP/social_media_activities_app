@@ -17,7 +17,10 @@ and the source template's pk alias. SQL, services, safety and templates stay exa
   the existing authorized-ID accounts.Avatars list helper before further code.
 - [x] Author strict complete projection and exactint64 alias, bounded actual-avatar enrichment, four pure/native-renderer tops and two required-DSN taggedPG tops.
 - [x] Source-only lexical/whitespace/docs checks and exact seven-path freeze prepared.
-- [ ] Independent source review before native execution.
+- [x] Independent seven-path source review approves152e095d; root commitsd2e122d with all268 original Go test files unchanged.
+- [x] Exactd2 source packet passes fresh roedu-ui@acc49e59 StageA23:81 pure names/30 actual Pongo cases,18 collector controls, two required-DSN refusals and vets (independent review61c643e4).
+- [x] Same-SHA direct PG bridge passes native15/host35: full migration,7 positive lifecycles, labelled parent-view negative, source/packet checks and isolated resource cleanup (independent reviewab8eb3bb).
+- [ ] Root reviews and publishes metadata successor; owning Go1.27.1/full, capture and corrected-core-oracle adoption remain separate.
 
 ## 3. Surprises & Discoveries
 All38 source inputs frozen in core still match this app HEAD. The real view passes
@@ -42,11 +45,13 @@ Adopting a separately corrected v2 core oracle remains a separate policy decisio
 This is an existing view bug fix, not a new product/safety architecture decision.
 
 ## 5. Outcomes & Retrospective
-The seven-path source batch is authored and awaits independent review. The actual
+The seven-path source batch atd2e122d is independently source-reviewed. The actual
 view checks both query errors, decodes every row, enriches accepted avatars, then
 assigns all three context arrays. No service/SQL/template/auth/route/dependency or
-old-test byte changes are present. Native tests are unexecuted; no test success,
-commit, push, appmain landing or corrected-core-oracle adoption is claimed.
+old-test byte changes are present. Its exact fixed575-file packet is qualified
+through the pinned Go1.27.2 core bridge for pure/rendering and selected live PG.
+This does not qualify the app's owning Go1.27.1/full gates, native capture, appmain
+landing, production or corrected-core-oracle adoption. Historical receipts stay exact.
 
 ## 6. Context and Orientation
 Read AGENTS, STATUS, agent-map/testing, SAFETY Core rules, ARCHITECTURE Working
@@ -73,7 +78,8 @@ Author only the seven approved paths in this lane. Scratch lives under
 format/tests execute only through root's later pinned wrapper, never on the host.
 Planned pure command: go test -race -count=1 -timeout=300s -run '^TestConnectionsContext' ./internal/web.
 Planned PG command: go test -race -count=1 -timeout=300s -tags=connections_view_pg -run '^TestConnectionsPage' ./internal/web -args -web-domain-test-dsn=<explicit disposable fixture>.
-Root supplies exact validated wrapper/image/SHA and fixtures; these are not run now.
+The shapes above describe the source-stage plan. Actual bridge selectors and
+outcomes are retained in the exact coreacc49e59 proof; no app-owning run is claimed.
 
 ## 9. Validation and Acceptance
 Pure controls bind exact complete maps, detached bytes/order and typed IDs1,
@@ -102,6 +108,18 @@ Architecture2384059548c78d2dd5564929edc8d18916228ecdc7c3043409f665aaf8b1380f
 and diagnostic audit1685713d71b0496edf1ebdb7d137274ae6b4d926d98f6861c7f33e3848f9f0ba
 are in the core Social capture task scratch. The original source diagnostics are
 not copied or relabelled as successful app behavior. No artifacts are pruned here.
+
+Source freeze152e095d is approved by source review8052f3f9001fe741341b13c5d82f8506ebf4dac8750719e2048b1d96370b20c0;
+StageA actual review is61c643e4baec2a036680056fc3d95178e85ac17c59a4dd6f3fc970371503e341.
+Selected PG actual review isab8eb3bb47503e348284358814b0a89246a231a3cea08f840da5f06af3d22077.
+Its closed132-payload-file/9447582B proof has manifestc91d4cee911e207d0c2e4212b1b9bf21f6b258e8bd5ebbb2e4c6b72b53f02a18,
+host result78ae348c55aa650f296acec54c5eda4378d1b491e12499b16d2194dbe3847bf3
+and native result669188ae5cacf1b7ceabe62b8baac4f56849cd12effc01987bb50a6b9f398166.
+Core task scratch retains these separate actual records. All are scoped to
+appd2e122d/coreacc49e59, not this documentation successor. The original fixed packet
+was not recollected. Native Go builds and testing.TempDir use a fresh held exec
+temporary root, which is empty and removed; the disposable DB/native pair/network
+are removed with independent exact-label absence confirmation393a3e96.
 
 ## 12. Interfaces and Dependencies
 Keep Social Service signatures []json.RawMessage and routeURL unchanged. Maps

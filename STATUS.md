@@ -1,6 +1,6 @@
 # Status — social_media_activities_app
 
-Last verified: 2026-10-16 (source/docs checks only; Connections fix native qualification pending)
+Last verified: 2026-10-16 (Connections d2e122d bridge: pinned Go1.27.2 pure81/native-renderer30 and selected migration/PG7 independently accepted; owning Go1.27.1/full pending)
 
 - **GitHub Actions (Last verified: 2026-10-05):** owner-requested on-demand policy, [ADR-0033](docs/adr/0033-manual-github-actions.md). Ordinary `ci.yml` calls Go/Node workflows;
   original Python gates remain in optional manual `reference.yml` (ADR-0038). YAML/input/job/read-only permission checks pass. Native Actions remains manually disabled; no hosted run claimed.
@@ -74,7 +74,7 @@ and donations only. `docs/SAFETY.md` owns the safety invariants.
 
 ## Open work
 
-- Connections HTML [source fix](docs/reviews/native-go/connections-view-fix-plan.md) is drafted: strict complete row decoding, exact int64 pending action IDs and authorized-user avatars with zero/three enrichment queries. New pure/native-renderer/tagged-PG tests are unexecuted; independent review and pinned qualification remain. Core corrected-oracle adoption is separate; no main/production change.
+- Connections HTML [source fix](docs/reviews/native-go/connections-view-fix-plan.md) atd2e122d passes independently reviewed pinned Go1.27.2 bridge qualification through roedu-ui@acc49e59:81 pure names/30 actual-renderer cases, full migration,7 positive PG lifecycles and the expected parent-view negative; source/packet and isolated cleanup verify (reviewab8eb3bb). Owning Go1.27.1/full, native capture and corrected-core-oracle adoption remain separate; no main/production change.
 - REST assertion closure remains separate:6 social API declarations, booking/export/donation assertions; [bounded plan](docs/reviews/native-go/rest-contract-plan.md). Finance service/HTML gaps remain separate.
 - Native completion/toolchain/audit stacks (ADR-0035/0038) are source-qualified per ADR-0040; human code review
   gates first deployment. The1651 unresolved frozen declarations keep Python source/tests and block retirement; [GUI capture prep](docs/reviews/gui-capture-preparation/README.md) remains unsigned/unrun.

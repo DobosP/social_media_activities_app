@@ -28,5 +28,7 @@ as [inert continuation keepers](continuation-keepers/manifest.json), not shippin
 
 Remaining REST-facing assertions/transport gaps: [bounded contract plan](rest-contract-plan.md).
 
-The isolated [Connections view repair](connections-view-fix-plan.md) is a source-only
-draft with native qualification pending; it does not replace these historical receipts.
+The isolated [Connections view repair](connections-view-fix-plan.md) atd2e122d
+passes independently reviewed Go1.27.2 bridge pure/rendering and selected live-PG
+qualification. Owning Go1.27.1/full, capture and core-oracle adoption remain open;
+these subset results do not replace the historical aggregate receipts above.
