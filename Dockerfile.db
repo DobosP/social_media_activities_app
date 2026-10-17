@@ -1,7 +1,7 @@
 # PostgreSQL 16 + PostGIS + pgvector for local/native CI.
 # Retain PG16 volume compatibility; use maintained Debian Bookworm repositories.
 # Native --migrate-only installs/adopts schema; this image seeds no app data.
-FROM postgres:16-bookworm
+FROM postgres:18-bookworm
 RUN apt-get update \
     && apt-get upgrade -y --no-install-recommends \
     && apt-get install -y --no-install-recommends \
