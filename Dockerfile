@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Native release. Django sources remain offline contract oracles (Dockerfile.reference).
-FROM node:24-bookworm-slim AS frontend
+FROM node:25-bookworm-slim AS frontend
 WORKDIR /build/frontend
 COPY frontend/package.json frontend/package-lock.json ./
 COPY frontend/vendor ./vendor
