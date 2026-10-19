@@ -1,0 +1,123 @@
+{
+  "scope": "Raw files omitted from compact keeper; physical retention state is separately recorded; original Git branches preserved",
+  "rows": [
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-pg-qa-successor/run-1f8c9742de32-e9f8010a-d5ae-4ca6-bf47-607d280e1638/proof/command-006.stdout",
+      "sha256": "7e8bc878a13e1c8a5aee3ca5deb15fe652da44878eddd283c7b51ab1f7b8155e",
+      "reason": "duplicate full Git archive stdout; source commit/tree/manifest retained"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-pg-qa/run-1dd7b0c31e95-7513901c-cba2-4153-9352-369ba6d209bc/proof/command-006.stdout",
+      "sha256": "14a1feb10a4b3f84eec78f725032a6616f8aa2fd22e423d297c586e6671fa160",
+      "reason": "duplicate full Git archive stdout; source commit/tree/manifest retained"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/desktop/group-en-desktop.png",
+      "sha256": "d1614d5769aee1f8ac24b2c3f1a928cd051a0dd606cbd1e8e44610db5c809554",
+      "bytes": 79284,
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/desktop/group-prefill-ro-desktop.png",
+      "sha256": "91487745bcacd0588497f5882769471c92109e584d7da6588c38e7d95800ca33",
+      "bytes": 92868,
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/desktop/group-required-en-desktop.png",
+      "sha256": "9f20e396ad913e52b19a8c15a5769b750ff2afa75490b8e58114e85054196e83",
+      "bytes": 82417,
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/desktop/group-service-en-desktop.png",
+      "sha256": "05562a54694a6fff9fc33fad1de795eafdda40b72b7267e5c88d0f07c6a7e29d",
+      "bytes": 85185,
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/desktop/group-staff-en-desktop.png",
+      "sha256": "a3f92203c67152c8e79876b2ddaa3dbe0d62a346437d7d1dc217fc6f2e1c413d",
+      "bytes": 82335,
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/desktop/group-staff-ro-desktop.png",
+      "sha256": "31334481f23aca7c028683d9b8a1007d7e89d5649c92028b0b33af56d2722037",
+      "bytes": 107145,
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/desktop/group-unclassified-ro-desktop.png",
+      "sha256": "2739dec097aa61ad5d7fc7cf560e0bb271ae8ca5f9488d37c9ae3ab265ea3a1b",
+      "bytes": 83390,
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/desktop/group-unknown-prefill-en-desktop.png",
+      "sha256": "6e5e1c7166e62d2c102d178eb2625a24413e04093066115dc8795c23c1d888ae",
+      "bytes": 78033,
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/geometry/group-en-desktop.png",
+      "sha256": "d1614d5769aee1f8ac24b2c3f1a928cd051a0dd606cbd1e8e44610db5c809554",
+      "bytes": 79284,
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/geometry/group-escaping-ro-desktop.png",
+      "sha256": "365db87f147a3192589d3f1ad1390cbf92146dd0cd0b446fbbdc06eefead64de",
+      "bytes": 122644,
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/geometry/group-positive-ro-desktop.png",
+      "sha256": "cba55cad6696c0e57dd5c6687bc71e8e39fd71265081a6dcd3d4aa42cb0d4ea2",
+      "bytes": 100943,
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/geometry/group-prefill-ro-desktop.png",
+      "sha256": "91487745bcacd0588497f5882769471c92109e584d7da6588c38e7d95800ca33",
+      "bytes": 92868,
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/geometry/group-required-en-desktop.png",
+      "sha256": "9f20e396ad913e52b19a8c15a5769b750ff2afa75490b8e58114e85054196e83",
+      "bytes": 82417,
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/geometry/group-service-en-desktop.png",
+      "sha256": "05562a54694a6fff9fc33fad1de795eafdda40b72b7267e5c88d0f07c6a7e29d",
+      "bytes": 85185,
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/geometry/group-staff-en-desktop.png",
+      "sha256": "a3f92203c67152c8e79876b2ddaa3dbe0d62a346437d7d1dc217fc6f2e1c413d",
+      "bytes": 82335,
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/geometry/group-staff-ro-desktop.png",
+      "sha256": "31334481f23aca7c028683d9b8a1007d7e89d5649c92028b0b33af56d2722037",
+      "bytes": 107145,
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/geometry/group-unclassified-ro-desktop.png",
+      "sha256": "2739dec097aa61ad5d7fc7cf560e0bb271ae8ca5f9488d37c9ae3ab265ea3a1b",
+      "bytes": 83390,
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/geometry/group-unknown-prefill-en-desktop.png",
+      "sha256": "6e5e1c7166e62d2c102d178eb2625a24413e04093066115dc8795c23c1d888ae",
+      "bytes": 78033,
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained"
+    }
+  ]
+}

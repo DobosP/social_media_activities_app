@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "status": "EXECUTED_FEATURE_COMPOSITE_PENDING_FINAL_INDEPENDENT_ACCEPTANCE",
+  "operator": "agent:codex (PROGRAM E8)",
+  "PG_source": "1f8c9742de327a6758224a22bf9f7919245ec9a3",
+  "presentation_source": "d05343bb0ea10836feb9d7e62fd2325c8c85bb7a",
+  "PG_result_sha256": "151e8873e1e56a464e5a6d7f6b275a634411e44885798a3ce36092c5fb889e23",
+  "PG": {
+    "complete_affected_packages": 6,
+    "top_level": 408,
+    "named_passes": 1190,
+    "skips": 0,
+    "failures": 0
+  },
+  "presentation_bridge": {
+    "producer_source": "1f8c9742de327a6758224a22bf9f7919245ec9a3",
+    "ui_head": "d05343bb0ea10836feb9d7e62fd2325c8c85bb7a",
+    "UI_only_changed_paths": [
+      "STATUS.md",
+      "tools/gui-native-group/README.md",
+      "tools/gui-native-group/desktop-qa.mjs",
+      "tools/gui-native-group/fixture-export_test.go.txt",
+      "tools/gui-native-group/prepare-ui-overlay.py"
+    ],
+    "presentation_changed_paths": [
+      {
+        "path": "static/css/group-create-native.css",
+        "PG_source_sha256": "4e8b3c6a33c257b4f9503f96ceddaa23153db8d1590a025b903be5e234beebb9",
+        "UI_source_sha256": "5cf7f8d6e02186091fe98279d38ceeff7ccdd31eb7c223807a33641795df4228"
+      },
+      {
+        "path": "services/server/internal/app/group_native_http_test.go",
+        "PG_source_sha256": "30038fefb3354475a10865c0b87c19dd6e7b0063785bad109af0559ad7cfd011",
+        "UI_source_sha256": "a22605f35544b53e792a643e3f8a1aea42c358baed3e1a1a1ceebaa67e574616"
+      }
+    ],
+    "scope": "PG producer epoch plus exact opaque-header presentation/test repair; no complete PG claim for later presentation epoch"
+  },
+  "UI": {
+    "states": 10,
+    "strict_whole_document_Axe_audits": 30,
+    "no_JS": 2,
+    "PNGs": 40,
+    "findings": 0,
+    "result_sha256": "877693363ca5afc19890fa2e039f6b1987debadbfd9340cd514b8b12f5f95411",
+    "cleanup": true,
+    "family_bodies_byte_exact": 8
+  },
+  "benchmark": {
+    "scope": "Actual same-form EN/RO nonstaff cachedPongo/native body only on PG producer source; CSS repair leaves body measurement code and inputs exact",
+    "raw_stdout_sha256": "5d0740c341af9f65c18f89885156aa3dde0435208494a517e36b13ec995ae842",
+    "limitation": "Native smaller HTML/gzip/allocatedbytes but higher CPU and allocation count; no general speedup claim"
+  },
+  "archive": {
+    "sha256": "1bb27df97ec9641119a30e76afff1ab1181947f5036888f954a96a5b30f8adf9",
+    "bytes": 4994968,
+    "members": 899
+  },
+  "history": [
+    "Initial1dd web historical sourceguard failures remain red; capture inadmissible there",
+    "First desktop/geometry two contrast incompletes retained; account menu disproved as cause",
+    "Exact scoped opaque header repaired presentation, all runtimeGo unchanged",
+    "Earlier broad pure unit selected two DB roots withoutDSN; skipped and unqualified; final exact10pure roots48named zero skips",
+    "Original Go export tool stdout not independently saved; successor presentation export raw stream retained"
+  ],
+  "limits": [
+    "Not exact-final completePG on later CSS/test presentation source",
+    "No full21/current-image/main/milestone/deployment/realchild claim"
+  ],
+  "retention": "Older export retention365b9 and explicit omitted-raw inventory retained; no source branches or other owners work pruned"
+}

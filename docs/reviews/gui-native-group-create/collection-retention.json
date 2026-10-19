@@ -1,0 +1,40 @@
+{
+  "scope": "Superseded owned first draft only; excluded unrelated Teacher audits whose scratch originals remain intact",
+  "old_archive_sha256": "ab357968692f59feac2331553054b5228fdfb907af17d4ca45a78913ccfdd74e",
+  "successor_archive_sha256": "1bb27df97ec9641119a30e76afff1ab1181947f5036888f954a96a5b30f8adf9",
+  "removed_cross_repo_rows": [
+    {
+      "member": "evidence/group-fresh-independent-review/audit_teacher_keeper.py",
+      "original_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-fresh-independent-review/audit_teacher_keeper.py",
+      "bytes": 8314,
+      "sha256": "992d690d84fcb8aa8c9e16c52672c24d56cf54f49d91e8d6a8562b671c0d6ad1",
+      "mode": 436,
+      "uid": 1000,
+      "gid": 1000,
+      "mtime_ns": 1792385347440596647
+    },
+    {
+      "member": "evidence/group-fresh-independent-review/teacher-auth-evidence-review.json",
+      "original_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-fresh-independent-review/teacher-auth-evidence-review.json",
+      "bytes": 1445,
+      "sha256": "4e35a2c9110b91159c586208baf1f9b7bcc604553a41b5f86dd8ef3dcfe73262",
+      "mode": 436,
+      "uid": 1000,
+      "gid": 1000,
+      "mtime_ns": 1792385348293606300
+    },
+    {
+      "member": "evidence/group-fresh-independent-review/teacher-dashboard-contract-review.json",
+      "original_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-fresh-independent-review/teacher-dashboard-contract-review.json",
+      "bytes": 2445,
+      "sha256": "39a7f3b0defc676b753bd99006b2f34f125acf0a0685e616ff3e566061353e8e",
+      "mode": 436,
+      "uid": 1000,
+      "gid": 1000,
+      "mtime_ns": 1792385147061287972
+    }
+  ],
+  "old_raw_archive_available": false,
+  "original_Teacher_files_preserved": true,
+  "new_complete_metadata_readback": true
+}

@@ -1,6 +1,6 @@
 # Native group creation: bounded implementation plan
 
-Status: reviewed implementation applied after qualified family closure; formatting/focused race/custody/vet pass, complete PG/UI qualification pending.
+Status: completed and independently feature-qualified; [accepted keeper](../reviews/gui-native-group-create/README.md) joins PG1f8c974 with presentationd05343b.
 
 - Approved contract: `75301bc5ddc302d605cde0f20922e76709d97f3507eaad0bdf8493daa2590728`.
 - Independent contract review: `bafda78cf942e411330f19e08caca3b2ff246be9857f3474ef761dc3ce2fbbea`.
@@ -28,3 +28,7 @@ Status: reviewed implementation applied after qualified family closure; formatti
 
 No formatter, compiler, Go parser, tests, browser, service or DB ran during packet
 preparation. Source-only review is not functional qualification or a speed claim.
+
+Completed: all seven steps, exact PG6 and later scoped presentation checks as separately
+bound in the keeper. Initial source-guard/contrast failures and unqualified DSN skips
+remain explicit; no later complete PG, main, milestone or deployment claim.

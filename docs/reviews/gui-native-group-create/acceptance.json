@@ -1,0 +1,81 @@
+{
+  "schema": 1,
+  "verdict": "ACCEPT_SOCIAL_NATIVE_GROUP_FUNCTIONAL_FEATURE_COMPOSITE_AND_KEEPER_FOR_FEATURE_PUBLICATION",
+  "reviewer": "Fresh independent reviewer; no Group implementation, test or method authorship",
+  "PG_source": "1f8c9742de327a6758224a22bf9f7919245ec9a3",
+  "PG_tree": "068b57dcc9d2122e488ab3f52c957a19fba637d8",
+  "presentation_source": "d05343bb0ea10836feb9d7e62fd2325c8c85bb7a",
+  "keeper": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-keeper/draft",
+  "bindings": {
+    "archive_sha256": "1bb27df97ec9641119a30e76afff1ab1181947f5036888f954a96a5b30f8adf9",
+    "archive_bytes": 4994968,
+    "archive_members": 899,
+    "archive_uncompressed_member_bytes": 62300810,
+    "archive_manifest_sha256": "e1a1b2106a4bca7b1ec51c717e502fe5307f4d26c05ba41e6d46ab43eb671129",
+    "result_sha256": "77473d9a77dbbad78563712b06dd6888278cb97bd284fc24016f89e55bd51a57",
+    "README_sha256": "16e1c06ac0192fd884f02b840394f74c25ff5ef48f1fdf01e1d1692d49b42b4a",
+    "omitted_manifest_sha256": "fd4e8872e0306e782a6d95a825489b8d036f4c60c8494000a8fb22ce6d3392d7",
+    "collector_sha256": "2ec8f295a798dcb7734dfa2bce92488d0a9252337c1f4812079ec11d6db93cd8"
+  },
+  "independent_review_receipts": [
+    {
+      "path": "source-method-review.json",
+      "sha256": "f6b2c739dface190ffdd5fc61429f549b203bc67fbe5ff65f8182b008146440d"
+    },
+    {
+      "path": "pg-source-review.json",
+      "sha256": "7e4056bbdd6a8fe6caed8c27e2ac930f1f4b759f90ce8b623876d254518f91c4"
+    },
+    {
+      "path": "capture-fixture-review.json",
+      "sha256": "23477dba3d024297ce51395621d8b9b93ee033a1a852159c274574a0d7058f4a"
+    },
+    {
+      "path": "desktop-initial-review.json",
+      "sha256": "62b506d0a228687172c9cd1fff5c651dda561cd3f798776976d477b66191f5d5"
+    },
+    {
+      "path": "geometry-review.json",
+      "sha256": "0be607971dd64b0db5d67bdd2ad4dcac908b248116cf98dabbd967d48e65ff9e"
+    },
+    {
+      "path": "benchmark-review.json",
+      "sha256": "1e2add196e1d193040ccb36d022283b37703512037deed8b921c451404760713"
+    },
+    {
+      "path": "opaque-header-source-review.json",
+      "sha256": "7d193c961502cd9d961fc236106cabc10c11f7036c7016a827ee320291b46e44"
+    },
+    {
+      "path": "opaque-header-root-addendum-review.json",
+      "sha256": "9a1152bd974cbf78355de3ab37d39ddbe6cb846cde7a690a1cdbd6e691efe17f"
+    },
+    {
+      "path": "presentation-ui-review.json",
+      "sha256": "770df7f5ddbc160f24b94d5873113311ad4f2c4197c98db7e9f20e4c142e3e0e"
+    },
+    {
+      "path": "keeper-review.json",
+      "sha256": "763a0c4db9171775ef956cfba4faf5689d1dc30723badc9a482311b012bd6b6e"
+    }
+  ],
+  "findings": [],
+  "accepted_checks": [
+    "Complete final production, web/App test, copy, custody, capture, UI and benchmark source independently reviewed. Group changes are a typed native presentation of existing form/actions. No backend policy, dependency, schema, authcore, original-template, base CSS or catalogue change. All seven family product files remain exact.",
+    "All 31 current custody rows were parsed independently; every original 27-row relation remains exact and ordered. Renderer/forms inverses rehash to the complete original 5,510/7,324-byte sources. Preference registry 138 physical current bindings and original assertions are preserved with additive refusal controls.",
+    "At exact PG source 1f8c9742, all six affected race-compiled packages passed 408 roots and 1,190 named tests once, with no skip, failure, cache or race. All old declarations and 13 added Group roots are present. Rehashed 597 proof rows, 292 command receipts, six binaries and 2,124 full source-manifest rows at checkout/export, and independently regenerated the exact Git archive hash.",
+    "All five canonical datasets match before/after in all six databases. Raw inspections preserve 1 GiB PG tmpfs, 2 GiB PG memory and original CPU/PID caps. Six guarded name/OID retirements, drops, checkpoints and storage snapshots, 13 CID/name removals, PG stop=0/status=3/PID/socket absence and clean raw PG shutdown were independently checked. Only intentional negative SQL errors occur.",
+    "The sole successful once-PASS actual form producer marker exactly matches the immutable 5,267-byte captured projection. Capture result/method/stream/source hashes join the complete successful run. The failed first 1dd invocation remains failed and its projection is inadmissible.",
+    "Presentation source d05343bb has the exact independently approved scoped opaque-header CSS and additive static transport test, plus reviewed UI/docs changes. All production Go stays byte exact to the PG producer. The paired CSS/App bridge is pinned; no complete PG pass is claimed on the later presentation SHA.",
+    "Actual successor export and desktop report pass: ten native states, two no-JS cases, 30 whole-document Axe audits with zero violations/incompletes, 40 rehashed PNGs, 2,250 topmost visible-nav hit tests and 58 successful asset responses. All 41 source rows and before/after Git bridges join. All ten body HTML files remain exact across the CSS repair; all eight family bodies were byte-compared to the accepted canonical archive.",
+    "Viewed all ten current default full-page PNGs and all nine naturally scrolled audit PNGs. No new clipping, overlap or unreadable content found. The former translucent sticky-header blur is resolved without scroll normalization or Axe exclusions. Initial failed desktop and geometry dispositions remain retained.",
+    "Final pure raw receipt joins ten roots and 48 named passes without skip/failure. The new actual App GET/HEAD static root passed with nil DB in tool-returned output; its missing separate raw stream is explicitly disclosed. Vet/syntax/docs results remain labeled operator exit receipts. Earlier broad unit selection with two DSN skips remains unqualified.",
+    "Actual same-form warmed EN/RO cached-Pongo/native benchmark has 12 raw rows, three repetitions and 100 iterations. Native HTML/gzip/allocated bytes are about 42%/30%/13% lower, while median CPU is about 53%/131% higher and allocation count about 95% higher. This is descriptive body evidence, with no request, database, staff or general speedup claim.",
+    "All 899 regular compact archive members match original bytes and complete mode/UID/GID/nsmtime metadata. The 4,994,968-byte archive preserves 596 final and 116 failed PG proof rows, complete source manifests, current 40 and causal eight PNGs, reports, actual capture, raw benchmark and reproduction sources. Only two duplicate full Git streams and 18 superseded PNGs are omitted; all 20 still physically exist at review time.",
+    "The corrected keeper excludes exactly three unrelated Teacher review files whose originals remain intact; only collector payload otherwise changes. Prior manifest/result/collector history remains, and the superseded raw draft archive was actually pruned. README/result honestly preserve the two qualification epochs and all failed/unqualified attempts."
+  ],
+  "scope": "Only the Group functional feature, six complete affected PG packages and repaired desktop presentation composite. Not all21, current deployment image, main landing, formal Social milestone, production, mobile/device testing, provider/government integration or real-child activation.",
+  "next": "Root may promote the verified keeper plus this final review as a direct companion, update STATUS/ADR/ExecPlan to the exact accepted composite, complete docs-only checks and publish the feature branch through the required workflow. No new native, PG or browser rerun is justified by this green evidence or docs-only promotion.",
+  "retention": "After verifying promoted copies, root may prune only owned redundant experiment exports, binaries, proof trees or omitted duplicate streams/old PNGs according to the persistent rolling-retention instruction. Retain protected Git branches, unmerged source packets, original baselines, canonical keepers and a compact executed manifest. Explicitly record deleted raw availability; capture-time source paths and manifests are history, not a claim deleted bytes remain live.",
+  "execution": "Read-only source, Git, JSON, raw logs, archive metadata and actual PNG inspection plus scratch review artifacts only. No owning edits, native/browser/PG/container execution, process control, push or deletion by this reviewer."
+}

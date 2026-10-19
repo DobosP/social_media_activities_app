@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "verdict": "APPROVE_STAGED_GROUP_PUBLICATION_METADATA_AND_EXECUTED_RETENTION",
+  "presentation_source": "d05343bb0ea10836feb9d7e62fd2325c8c85bb7a",
+  "accepted_review_sha256": "2304adbac2454c9212b126bef9749556c167439d8c2000b0c348cfa3454a619b",
+  "keeper_sha256": "1bb27df97ec9641119a30e76afff1ab1181947f5036888f954a96a5b30f8adf9",
+  "retention_sha256": "eb25a49c9ba361ccd64f9843c9276213fae044662cb58b028c20bf2770bd968b",
+  "staged_paths": [
+    "STATUS.md",
+    "docs/adr/0062-native-group-create.md",
+    "docs/adr/README.md",
+    "docs/execplans/gui-native-group-create.md",
+    "docs/reviews/gui-native-group-create/README.md",
+    "docs/reviews/gui-native-group-create/acceptance.json",
+    "docs/reviews/gui-native-group-create/archive-manifest.json",
+    "docs/reviews/gui-native-group-create/collection-retention.json",
+    "docs/reviews/gui-native-group-create/evidence.tar.gz",
+    "docs/reviews/gui-native-group-create/omitted-artifacts.json",
+    "docs/reviews/gui-native-group-create/result.json",
+    "docs/reviews/gui-native-group-create/retention.json"
+  ],
+  "findings": [],
+  "checks": [
+    "Promoted archive, manifest, original acceptance, result and omission inventory remain byte exact to the accepted keeper. Publication changes are limited to four status/ADR/index/plan documents and eight keeper companions; no unstaged or runtime source delta.",
+    "STATUS is exactly 120 lines. ADR history is retained with an appended dated closure and updated current status. Metadata accurately reports PG 1f8c9742 versus presentation d05343bb, higher measured CPU/allocation count, retained failures and feature-only scope.",
+    "Executed retention has exactly 25 targets totaling 515,130,085 logical bytes. Every listed target is now absent: two obsolete source exports, two obsolete binary trees, three duplicate Git streams and eighteen superseded PNGs. None is the latest rolling source/binaries or an unmerged source packet.",
+    "Latest 1f8 source/binaries, all current forty and causal eight PNGs, raw logs and exact failed reports remain. Retention truth supersedes the earlier capture-time note that the omitted raw files were physically present. Canonical keeper and protected Git identity remain available."
+  ],
+  "next": "Root may commit and publish these exact metadata/keeper changes after the already reported docs-only checks; no runtime rerun or new approval gate. Rebind the next source contract to the resulting clean published metadata HEAD before building.",
+  "execution": "Read-only staged diff, file existence, metadata, JSON and hash checks plus scratch review only. No owning writes, runtime, process/container work, push or deletion."
+}

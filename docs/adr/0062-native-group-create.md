@@ -1,7 +1,7 @@
 # ADR-0062: Native group creation form
 
 Date: 2026-10-19
-Status: implementation applied; focused race/custody/vet pass, complete PG/UI qualification pending
+Status: implemented; independently feature-qualified PG1f8c974 plus presentationd05343b
 
 ## Decision
 
@@ -58,3 +58,20 @@ now pass, including the failed roots and added refusal controls; a complete fres
 six-lane successor and actual desktop qualification remain required. Committed
 [UI methods](../../tools/gui-native-group/README.md) bind forms.json and an exact
 tool-only Git delta; no failed-run projection is admitted for benchmarking.
+
+## Completed feature qualification — 2026-10-19
+
+[Independent acceptance](../reviews/gui-native-group-create/acceptance.json) joins
+complete affected PG1f8c974/6packages/408roots/1,190named/zero skips and all owned
+cleanup with presentationd05343b/10desktop/30strict whole-document Axe audits/2no-JS.
+Actual geometry proved that the translucent sticky header exposed form backgrounds.
+One Group-scoped opaque rule and exact static-transport test repair passed the same
+naturally scrolled audits; frozen base assets and every runtime Go byte stay unchanged.
+The paired CSS/test and seven UI/status source bridge keeps the original complete PG
+epoch explicit; no later presentation-source complete PG claim follows.
+Eight accepted family bodies are byte-exact. Keeper1bb27df9 retains899members with
+complete byte/mode/UID/GID/nsmtime readback, raw failures and immutable actual form capture.
+Matched body measurements show smaller HTML/gzip/allocatedbytes but more CPU and
+allocation count; no general speedup. Verified obsolete generated outputs515,130,085B
+were pruned after acceptance; latest source/setup and compact proof remain.
+No full21/current-image, main, GUI milestone, production or real-child activation.

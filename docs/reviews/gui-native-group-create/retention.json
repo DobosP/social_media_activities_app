@@ -1,0 +1,210 @@
+{
+  "operator": "agent:codex (PROGRAM E8)",
+  "state": "EXECUTED_VERIFIED_GENERATED_OUTPUT_PRUNING",
+  "accepted_group_keeper": "1bb27df97ec9641119a30e76afff1ab1181947f5036888f954a96a5b30f8adf9",
+  "independent_acceptance_sha256": "2304adbac2454c9212b126bef9749556c167439d8c2000b0c348cfa3454a619b",
+  "items": [
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/pg-qa/rerun-rolling-database/run-118fd7f46c6c-565fdf56-3a13-419a-b428-284457e43d8c/source",
+      "reason": "Superseded Git-exact generated source export",
+      "files": 2086,
+      "logical_bytes": 20480669,
+      "rows_sha256": "1564045d877cfba3e78f0e1913a5d465456217d412a2c22addad75655b14933a",
+      "raw_unavailable": true
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/pg-qa/rerun-rolling-database/run-118fd7f46c6c-565fdf56-3a13-419a-b428-284457e43d8c/binaries",
+      "reason": "Superseded generated test/helper executables",
+      "files": 7,
+      "logical_bytes": 197982255,
+      "rows_sha256": "6fdbfc8e1a01965bee181d3176e3d49a1fbc863d3621a285def4478fb900c10c",
+      "raw_unavailable": true
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/pg-qa/rerun-rolling-database/run-118fd7f46c6c-565fdf56-3a13-419a-b428-284457e43d8c/proof/command-006.stdout",
+      "reason": "Duplicate superseded full Git archive stdout",
+      "files": 1,
+      "logical_bytes": 22138880,
+      "rows_sha256": "ef4717b0e160d306ff5c9432600415930745de91a5adc58f59632df3aaceaad1",
+      "raw_unavailable": true
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-pg-qa/run-1dd7b0c31e95-7513901c-cba2-4153-9352-369ba6d209bc/source",
+      "reason": "Superseded Git-exact generated source export",
+      "files": 2118,
+      "logical_bytes": 23746241,
+      "rows_sha256": "9ca61f1a17b719d074ee5bec29e2a05bfb16d6a2eb6fba69f8351c01348a4f86",
+      "raw_unavailable": true
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-pg-qa/run-1dd7b0c31e95-7513901c-cba2-4153-9352-369ba6d209bc/binaries",
+      "reason": "Superseded generated test/helper executables",
+      "files": 7,
+      "logical_bytes": 198233139,
+      "rows_sha256": "54d1a3898090f82555ea43f216cfc27fa32ba7148a7d7a47c3ece37e39b01cae",
+      "raw_unavailable": true
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-pg-qa/run-1dd7b0c31e95-7513901c-cba2-4153-9352-369ba6d209bc/proof/command-006.stdout",
+      "reason": "duplicate full Git archive stdout; source commit/tree/manifest retained",
+      "files": 1,
+      "logical_bytes": 25436160,
+      "rows_sha256": "c0102fc2e1e986be4c7983af11d14fb8c74a400903fd4f0ec0c2b117428137aa",
+      "raw_unavailable": true
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-pg-qa-successor/run-1f8c9742de32-e9f8010a-d5ae-4ca6-bf47-607d280e1638/proof/command-006.stdout",
+      "reason": "duplicate full Git archive stdout; source commit/tree/manifest retained",
+      "files": 1,
+      "logical_bytes": 25507840,
+      "rows_sha256": "d601628346c33b9f53e36477db69b48718ca1d5f4cf4db726b4196a720f441b5",
+      "raw_unavailable": true
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/desktop/group-en-desktop.png",
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained",
+      "files": 1,
+      "logical_bytes": 79284,
+      "rows_sha256": "0c026b0031fa9dbfc982e0418bb242d2f652dc64ccd1a243073d60082a386e06",
+      "raw_unavailable": true
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/desktop/group-prefill-ro-desktop.png",
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained",
+      "files": 1,
+      "logical_bytes": 92868,
+      "rows_sha256": "577bbcf0379217cdeddd5206094190a8c904e66c5e79d50b658e2d4b6b3d3ed0",
+      "raw_unavailable": true
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/desktop/group-required-en-desktop.png",
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained",
+      "files": 1,
+      "logical_bytes": 82417,
+      "rows_sha256": "69e93d8de37779f5c3c83c9b372e5d25f52c066aa6930e04c2c61dcba3331dbc",
+      "raw_unavailable": true
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/desktop/group-service-en-desktop.png",
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained",
+      "files": 1,
+      "logical_bytes": 85185,
+      "rows_sha256": "980e35753a1696ff9820cb74c1d91d8784cc2c166691101dd14538fa0b453050",
+      "raw_unavailable": true
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/desktop/group-staff-en-desktop.png",
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained",
+      "files": 1,
+      "logical_bytes": 82335,
+      "rows_sha256": "30f426c249532ec663d33752ea48da3e25ea0215bbd3ffc7916afafe3a8eaa53",
+      "raw_unavailable": true
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/desktop/group-staff-ro-desktop.png",
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained",
+      "files": 1,
+      "logical_bytes": 107145,
+      "rows_sha256": "c0d659654338e3a9ec9fb8e4d2c7eb3a4196884169f73f2325334b7d0c02fae4",
+      "raw_unavailable": true
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/desktop/group-unclassified-ro-desktop.png",
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained",
+      "files": 1,
+      "logical_bytes": 83390,
+      "rows_sha256": "057667334d4e3e12abe852473d21d4ffdf51d3f97861d21e1e6a0dde38d07cc5",
+      "raw_unavailable": true
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/desktop/group-unknown-prefill-en-desktop.png",
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained",
+      "files": 1,
+      "logical_bytes": 78033,
+      "rows_sha256": "e53ff15e6985de239b642372e0cc674cc7b77579dd043e88691e5f548e33a013",
+      "raw_unavailable": true
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/geometry/group-en-desktop.png",
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained",
+      "files": 1,
+      "logical_bytes": 79284,
+      "rows_sha256": "0c026b0031fa9dbfc982e0418bb242d2f652dc64ccd1a243073d60082a386e06",
+      "raw_unavailable": true
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/geometry/group-escaping-ro-desktop.png",
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained",
+      "files": 1,
+      "logical_bytes": 122644,
+      "rows_sha256": "d889a17b459b7e061d1cea1c2df5a1632e51cfc2b073f99c7b0e5b342a7b7d42",
+      "raw_unavailable": true
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/geometry/group-positive-ro-desktop.png",
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained",
+      "files": 1,
+      "logical_bytes": 100943,
+      "rows_sha256": "8d8fbef69a03faef4586e2610ddc3f30164de545a3a30ca62aaba2f3f0efd979",
+      "raw_unavailable": true
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/geometry/group-prefill-ro-desktop.png",
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained",
+      "files": 1,
+      "logical_bytes": 92868,
+      "rows_sha256": "577bbcf0379217cdeddd5206094190a8c904e66c5e79d50b658e2d4b6b3d3ed0",
+      "raw_unavailable": true
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/geometry/group-required-en-desktop.png",
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained",
+      "files": 1,
+      "logical_bytes": 82417,
+      "rows_sha256": "69e93d8de37779f5c3c83c9b372e5d25f52c066aa6930e04c2c61dcba3331dbc",
+      "raw_unavailable": true
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/geometry/group-service-en-desktop.png",
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained",
+      "files": 1,
+      "logical_bytes": 85185,
+      "rows_sha256": "980e35753a1696ff9820cb74c1d91d8784cc2c166691101dd14538fa0b453050",
+      "raw_unavailable": true
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/geometry/group-staff-en-desktop.png",
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained",
+      "files": 1,
+      "logical_bytes": 82335,
+      "rows_sha256": "30f426c249532ec663d33752ea48da3e25ea0215bbd3ffc7916afafe3a8eaa53",
+      "raw_unavailable": true
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/geometry/group-staff-ro-desktop.png",
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained",
+      "files": 1,
+      "logical_bytes": 107145,
+      "rows_sha256": "c0d659654338e3a9ec9fb8e4d2c7eb3a4196884169f73f2325334b7d0c02fae4",
+      "raw_unavailable": true
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/geometry/group-unclassified-ro-desktop.png",
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained",
+      "files": 1,
+      "logical_bytes": 83390,
+      "rows_sha256": "057667334d4e3e12abe852473d21d4ffdf51d3f97861d21e1e6a0dde38d07cc5",
+      "raw_unavailable": true
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-ui-qa/geometry/group-unknown-prefill-en-desktop.png",
+      "reason": "superseded PNG; latest40 verified captures and causal8 retained",
+      "files": 1,
+      "logical_bytes": 78033,
+      "rows_sha256": "e53ff15e6985de239b642372e0cc674cc7b77579dd043e88691e5f548e33a013",
+      "raw_unavailable": true
+    }
+  ],
+  "logical_bytes_removed": 515130085,
+  "preserved": "Latest1f8 source/binaries rolling setup; all raw test/PG proof logs except duplicate full Git archives; current40PNGs+8causal images; every source branch/unmerged packet/other-owner work/baseline/canonical keeper. Original failed reports unchanged."
+}
