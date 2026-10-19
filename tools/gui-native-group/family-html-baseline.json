@@ -1,0 +1,56 @@
+{
+  "schema": 1,
+  "accepted_UI_report_sha256": "1d2eab616eb452f739e27a18c2db78b1116706c499bc785ad1762726128e2372",
+  "final_body_binding_sha256": "b284d4cbadf2e9acfbcea8d38ee5f0aa6e4885e6232be8aaa302e1237a01cd72",
+  "scope": "Eight accepted synthetic family HTML hashes only; original source/fixtures/baselines untouched.",
+  "html": [
+    {
+      "path": "guardians-empty.html",
+      "bytes": 3967,
+      "sha256": "937bee6a2eb803a6381a9c66fae76f7eb9db1ae0b2f680e8e25773e450178cfc",
+      "equal": true
+    },
+    {
+      "path": "guardians-en.html",
+      "bytes": 5965,
+      "sha256": "712a60a6d10b9549aabe615763a7de881a6e3ac0b74e9c55ec0208051c79af85",
+      "equal": true
+    },
+    {
+      "path": "guardians-ro.html",
+      "bytes": 6290,
+      "sha256": "02d370bbfd34d525f89c12d6a5681c12f2be94ae0215d82d60be1d05ea0f7ff4",
+      "equal": true
+    },
+    {
+      "path": "wards-disabled.html",
+      "bytes": 17106,
+      "sha256": "e5c5e3b87c61b84cd6951f6eab9d9673b8562fb8f996b7c57a1457756db8df2f",
+      "equal": true
+    },
+    {
+      "path": "wards-empty.html",
+      "bytes": 4808,
+      "sha256": "8fc16b80f7c52c7edb1e1197076e8e11d3aaf13b4167ded9f8d8fabc2ecb05e1",
+      "equal": true
+    },
+    {
+      "path": "wards-en.html",
+      "bytes": 17888,
+      "sha256": "bdb84759b0a172f1b179dbd0111c454e9056f2f8715ce271cf41cbc85c46deed",
+      "equal": true
+    },
+    {
+      "path": "wards-ro.html",
+      "bytes": 18415,
+      "sha256": "ef0ec4a5ebabb2519d99f805aeedbedc98d796dd718d36494714207f84a77598",
+      "equal": true
+    },
+    {
+      "path": "wards-unverified-ro.html",
+      "bytes": 17487,
+      "sha256": "3d947f227ffa4574c97a0facc11352c40d6cc555377deb77e9e37e6fef173880",
+      "equal": true
+    }
+  ]
+}

@@ -46,3 +46,15 @@ copy and custody race tests plus touched web/app vet pass. Complete synthetic PG
 desktop/a11y and matched body-render measurements remain pending after application
 to the qualified family feature.
 This is not a Social milestone, main landing, deployment or performance acceptance.
+
+
+The first complete web invocation on1dd7b0c failed three old source-custody
+checks; all nine new group web roots/27named cases passed. The frozen preference
+registry remains unchanged: exact in-memory inverses recover its three prior
+inputs while live readers retain all138 physical current tuples. The old27-row,
+ten-path mutation controls remain alongside new controls for all31 current rows
+and new form drift. Every old assertion and pin is retained. Focused race checks
+now pass, including the failed roots and added refusal controls; a complete fresh
+six-lane successor and actual desktop qualification remain required. Committed
+[UI methods](../../tools/gui-native-group/README.md) bind forms.json and an exact
+tool-only Git delta; no failed-run projection is admitted for benchmarking.

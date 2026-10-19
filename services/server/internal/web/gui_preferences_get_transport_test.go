@@ -96,10 +96,15 @@ func guiPreferenceGETInputs(root string, registry guiPreferenceGETRegistry) (map
 	}
 	actual := map[string]guiG1Binding{}
 	for name, wanted := range registry.Sources {
-		_, row, err := guiCurrentTransportReadBinding(root, name, 2<<20)
+		raw, row, err := guiCurrentTransportReadBinding(root, name, 2<<20)
+		physical := row
+		if err == nil {
+			row, err = groupCreatePreferenceSourceBinding(name, raw, row, wanted)
+		}
 		if err != nil || !guiPublicGetBindingLive(row, wanted) {
 			return nil, fmt.Errorf("preference-current-source")
 		}
+		row = physical // Preserve the actual current tuple for every live reader.
 		actual[name] = row
 	}
 	return actual, nil

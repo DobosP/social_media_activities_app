@@ -1140,7 +1140,7 @@ func TestGUIPublicGetWalkSourceRefusals(t *testing.T) {
 				return
 			case "unknown":
 				paths := []string{"services/server/internal/web/renderer.go", "services/server/internal/web/server.go", "services/server/internal/web/gui_preferences_layout_test.go", "static/css/base.css"}
-				for _, row := range guiPublicGetRepairRows() {
+				for _, row := range groupCreatePreviousRepairRows() {
 					if !slices.Contains(paths, row.path) {
 						paths = append(paths, row.path) // Every Q6 gated test input, once.
 					}
@@ -1163,7 +1163,7 @@ func TestGUIPublicGetWalkSourceRefusals(t *testing.T) {
 				if err != nil {
 					t.Fatal("sealed campaign positive control unavailable")
 				}
-				for _, row := range guiPublicGetRepairRows() {
+				for _, row := range groupCreatePreviousRepairRows() {
 					if _, sealed := previous[row.path]; !sealed {
 						if previous[row.path], err = guiPublicGetRowsPreimage(row.path, changed[row.path].raw); err != nil {
 							t.Fatal("reviewed row preimage positive control unavailable")

@@ -5,6 +5,7 @@ Status: reviewed implementation applied after qualified family closure; formatti
 - Approved contract: `75301bc5ddc302d605cde0f20922e76709d97f3507eaad0bdf8493daa2590728`.
 - Independent contract review: `bafda78cf942e411330f19e08caca3b2ff246be9857f3474ef761dc3ce2fbbea`.
 - Decision: [ADR-0062](../adr/0062-native-group-create.md).
+- Reproduction: [committed native group methods](../../tools/gui-native-group/README.md), with separate actual PG producer and UI-only method identities.
 - Source preparation base: `595d39c9d538c51bc18c684b801ac0ef32a1a1ef`.
 
 1. Close the current native family feature and independently review this packet.

@@ -1,0 +1,329 @@
+package web
+
+// Virtual QA/benchmark test, admitted only through the committed scratch overlay.
+import (
+	"bytes"
+	"compress/gzip"
+	"encoding/base64"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"flag"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
+	"github.com/flosch/pongo2/v6"
+)
+
+var groupQAProducerSource = flag.String("group-ui-producer-source", "", "actual successful PG source for the clean UI-only Git delta bridge")
+
+var groupQABenchmarkCapture = flag.String("group-benchmark-capture", "", "admitted actual SQL/form projection from committed capture extractor")
+
+var groupQAOutput = flag.String("group-ui-qa-output-dir", "", "new owned task scratch directory for group fixtures")
+
+type groupQAState struct {
+	Name, Language, Theme, Text, Motion, Error, ErrorField, Type, Cohort string
+	Staff, EmptyTitle, UnknownPrefill, Unicode, Escaping               bool
+}
+
+var groupQAStates = []groupQAState{
+	{Name: "group-en", Language: "en", Theme: "light", Text: "normal", Motion: "reduce", Type: "7"},
+	{Name: "group-prefill-ro", Language: "ro", Theme: "dark", Text: "large", Motion: "reduce", Type: "8"},
+	{Name: "group-staff-en", Language: "en", Theme: "light", Text: "normal", Motion: "auto", Staff: true, Type: "7", Cohort: "adult"},
+	{Name: "group-staff-ro", Language: "ro", Theme: "contrast", Text: "larger", Motion: "reduce", Staff: true, Type: "7"},
+	{Name: "group-required-en", Language: "en", Theme: "auto", Text: "normal", Motion: "auto", Type: "7", EmptyTitle: true, ErrorField: "title", Error: "title: This field is required."},
+	{Name: "group-positive-ro", Language: "ro", Theme: "light", Text: "large", Motion: "reduce", Type: "not-a-number", ErrorField: "activity_type", Error: "activity_type: Enter a positive whole number."},
+	{Name: "group-service-en", Language: "en", Theme: "light", Text: "normal", Motion: "reduce", Type: "7", Error: "This action is temporarily unavailable. Please try again."},
+	{Name: "group-unclassified-ro", Language: "ro", Theme: "dark", Text: "normal", Motion: "reduce", Type: "7", Error: "PRIVATE-SQL-PROVIDER-DETAIL"},
+	{Name: "group-unknown-prefill-en", Language: "en", Theme: "light", Text: "normal", Motion: "auto", UnknownPrefill: true},
+	{Name: "group-escaping-ro", Language: "ro", Theme: "dark", Text: "larger", Motion: "reduce", Type: "7", Unicode: true, Escaping: true},
+}
+
+func groupQAData(state groupQAState) (*http.Request, pongo2.Context) {
+	request, data := groupCreateProjectionFixture(state.Staff)
+	request.Header.Set("Accept-Language", state.Language)
+	data["language"], data["display_theme"], data["display_text"], data["display_motion"] = state.Language, state.Theme, state.Text, state.Motion
+	data["csrf"] = "synthetic-social-group-qa-csrf"
+	form := data["form"].(map[string]any)
+	form["errors"] = state.Error
+	snapshot := form["native_group"].(groupCreateForm)
+	snapshot.Fields[0].Value = "Cluj-Napoca"
+	snapshot.Fields[1].Value = state.Type
+	if state.UnknownPrefill {
+		snapshot.Fields[1].Value = ""
+	}
+	if state.EmptyTitle {
+		snapshot.Fields[2].Value = ""
+	}
+	if state.Staff {
+		snapshot.Fields[4].Value = state.Cohort
+	}
+	if state.Unicode {
+		snapshot.Fields[3].Value = strings.Repeat("😀", 2000)
+	}
+	if state.Escaping {
+		snapshot.Fields[2].Value = `Generated "><img src="/should-not-load" onerror="generated()">`
+	}
+	form["native_group"] = snapshot
+	return request, data
+}
+
+var groupQASourceNames = []string{
+	"services/server/internal/web/group_create.go", "services/server/internal/web/group_create_test.go", "services/server/internal/web/group_create_copy_test.go",
+	"services/server/internal/web/forms.json", "services/server/internal/web/forms.go", "services/server/internal/web/social_forms.go", "services/server/internal/web/social_actions.go",
+	"services/server/internal/web/renderer.go", "services/server/internal/web/i18n.go", "services/server/internal/web/family.go", "services/server/internal/web/family_benchmark_test.go",
+	"services/server/internal/web/pages/group-create.gohtml", "apps/web/templates/web/group_form.html", "templates/base.html", "locale/ro/LC_MESSAGES/django.po",
+	"static/css/base.css", "static/css/group-create-native.css", "static/fonts/bricolage-grotesque-latin-wght-normal.woff2", "static/fonts/bricolage-grotesque-latin-ext-wght-normal.woff2",
+	"tools/gui-native-group/prepare-ui-overlay.py", "tools/gui-native-group/fixture-export_test.go.txt", "tools/gui-native-group/desktop-qa.mjs", "tools/gui-native-group/family-html-baseline.json",
+	"tools/gui-native-family/ui/fixture-export_test.go.txt", "tools/gui-native-family/ui/color-stability.mjs",
+	"tools/gui-native-group/extract-projection.py", "services/server/internal/web/templates.go", "services/server/internal/web/family_copy.go", "services/server/internal/web/family_render.go",
+	"services/server/internal/web/family_projection_test.go", "services/server/internal/web/pages/family-shell.gohtml", "services/server/internal/web/pages/family-wards.gohtml", "services/server/internal/web/pages/family-guardianship.gohtml",
+	"apps/web/templates/web/wards.html", "apps/web/templates/web/guardianship.html", "static/css/family-native.css",
+	"tools/gui-native-family/qualify.py", "tools/gui-native-family/db-entry.sh", "tools/gui-native-family/db-binding.json", "tools/gui-native-family/test_qualify.py", "services/server/tools/gui-native-family-bootstrap/main.go",
+}
+
+// Git work is outside all renderer timing. The same committed helper used
+// to prepare the overlay checks the exact six-path UI-only delta before/after.
+func groupQABridge(t testing.TB, root, source string) string {
+	t.Helper()
+	raw, err := exec.Command("python3", "-I", filepath.Join(root, "tools/gui-native-group/prepare-ui-overlay.py"), "--repo", root, "--producer-source", source, "--check-bridge").CombinedOutput()
+	if err != nil { t.Fatal("clean UI-only source bridge refused", err, string(raw)) }
+	var proof struct { Head string `json:"ui_head"` }
+	if json.Unmarshal(raw, &proof) != nil || len(proof.Head) != 40 { t.Fatal("actual Git bridge receipt missing") }
+	t.Log("group-ui-Git-bridge " + strings.TrimSpace(string(raw)))
+	return proof.Head
+}
+
+func groupQASources(t testing.TB, root string) []map[string]any {
+	t.Helper()
+	rows := []map[string]any{}
+	for _, name := range groupQASourceNames {
+		raw, err := os.ReadFile(filepath.Join(root, name))
+		if err != nil {
+			t.Fatal(err)
+		}
+		sum := sha256.Sum256(raw)
+		rows = append(rows, map[string]any{"path": name, "bytes": len(raw), "sha256": hex.EncodeToString(sum[:])})
+	}
+	return rows
+}
+
+func groupQAFamilyEquality(t *testing.T, root, output string, renderer *Renderer) []map[string]any {
+	t.Helper()
+	var baseline struct {
+		Schema                     int `json:"schema"`
+		AcceptedUIReport           string `json:"accepted_UI_report_sha256"`
+		HTML                       []struct { Path, SHA256 string; Bytes int; Equal bool } `json:"html"`
+	}
+	raw, err := os.ReadFile(filepath.Join(root, "tools/gui-native-group/family-html-baseline.json"))
+	if err != nil || json.Unmarshal(raw, &baseline) != nil || baseline.Schema != 1 || len(baseline.HTML) != 8 || baseline.AcceptedUIReport != "1d2eab616eb452f739e27a18c2db78b1116706c499bc785ad1762726128e2372" {
+		t.Fatal("exact existing eight-family reference required", err)
+	}
+	byName := map[string]struct { SHA256 string; Bytes int }{}
+	for _, row := range baseline.HTML {
+		if !row.Equal || filepath.Base(row.Path) != row.Path || byName[row.Path].SHA256 != "" {
+			t.Fatal("invalid or duplicate family reference")
+		}
+		byName[row.Path] = struct { SHA256 string; Bytes int }{row.SHA256, row.Bytes}
+	}
+	if err := os.Mkdir(filepath.Join(output, "family"), 0700); err != nil {
+		t.Fatal(err)
+	}
+	rows := []map[string]any{}
+	for _, state := range familyQAStates {
+		request, data := familyQAData(state)
+		name := "web/wards.html"
+		if state.Kind == "guardianship" {
+			name = "web/guardianship.html"
+		}
+		w := httptest.NewRecorder()
+		if err := renderer.Render(w, request, name, data); err != nil {
+			t.Fatal(state.Name, err)
+		}
+		body := w.Body.Bytes()
+		sum := sha256.Sum256(body)
+		hash := hex.EncodeToString(sum[:])
+		file := state.Name + ".html"
+		wanted, ok := byName[file]
+		if !ok || wanted.SHA256 != hash || wanted.Bytes != len(body) {
+			t.Fatal("group changes disturbed an existing family HTML body", state.Name)
+		}
+		if err := os.WriteFile(filepath.Join(output, "family", file), body, 0600); err != nil {
+			t.Fatal(err)
+		}
+		rows = append(rows, map[string]any{"name": state.Name, "sha256": hash, "bytes": len(body), "equal": true})
+	}
+	return rows
+}
+
+func TestSocialGroupQAExport(t *testing.T) {
+	if *groupQAOutput == "" || !filepath.IsAbs(*groupQAOutput) || !strings.Contains(*groupQAOutput, "/_temp/") {
+		t.Fatal("explicit new task scratch directory required")
+	}
+	if err := os.Mkdir(*groupQAOutput, 0700); err != nil {
+		t.Fatal(err)
+	}
+	root, err := filepath.Abs("../../../..")
+	if err != nil {
+		t.Fatal(err)
+	}
+	head := groupQABridge(t, root, *groupQAProducerSource)
+	before := groupQASources(t, root)
+	renderer := NewRenderer(root)
+	rows := []map[string]any{}
+	for _, state := range groupQAStates {
+		request, data := groupQAData(state)
+		w := httptest.NewRecorder()
+		if err := renderer.Render(w, request, "web/group_form.html", data); err != nil {
+			t.Fatal(state.Name, err)
+		}
+		body := w.Body.Bytes()
+		if bytes.Contains(body, []byte("PRIVATE-")) || bytes.Contains(body, []byte("<script")) || w.Header().Get("Cache-Control") != "private, no-cache" || w.Header().Get("Content-Type") != "text/html; charset=utf-8" || !strings.Contains(w.Header().Get("Vary"), "Cookie") {
+			t.Fatal("actual native escaped/private response contract", state.Name)
+		}
+		page, err := renderer.groupCreatePage(request, data)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var zipped bytes.Buffer
+		writer, err := gzip.NewWriterLevel(&zipped, gzip.BestCompression)
+		if err != nil { t.Fatal(err) }
+		if _, err = writer.Write(body); err != nil { t.Fatal(err) }
+		if err = writer.Close(); err != nil { t.Fatal(err) }
+		sum := sha256.Sum256(body)
+		if err = os.WriteFile(filepath.Join(*groupQAOutput, state.Name+".html"), body, 0600); err != nil { t.Fatal(err) }
+		values := map[string]string{}
+		labels := map[string]string{}
+		controls := map[string]string{}
+		for _, field := range page.Fields {
+			values[field.Name], labels[field.Name] = field.Value, field.Label
+			controls[field.Name] = field.Value
+			if field.Select {
+				controls[field.Name] = ""
+				for _, choice := range field.Options { if choice.Selected { controls[field.Name] = choice.Value } }
+			}
+		}
+		rows = append(rows, map[string]any{"name": state.Name, "staff": state.Staff, "language": state.Language, "theme": state.Theme, "text": state.Text, "motion": state.Motion,
+			"error": state.Error != "", "error_field": state.ErrorField, "error_summary": page.ErrorSummary, "unknown_prefill": state.UnknownPrefill, "unicode": state.Unicode,
+			"canonical": "/groups/new/", "values": values, "control_values": controls, "labels": labels, "bytes": len(body), "gzip_level9_bytes": zipped.Len(), "sha256": hex.EncodeToString(sum[:]),
+			"renderer_headers": map[string]string{"Content-Type": w.Header().Get("Content-Type"), "Cache-Control": w.Header().Get("Cache-Control"), "Vary": w.Header().Get("Vary"), "Reporting-Endpoints": w.Header().Get("Reporting-Endpoints")},
+			"renderer_csp_report_only": w.Header().Get("Content-Security-Policy-Report-Only") != ""})
+	}
+	family := groupQAFamilyEquality(t, root, *groupQAOutput, renderer)
+	after := groupQASources(t, root)
+	beforeJSON, err := json.Marshal(before); if err != nil { t.Fatal(err) }
+	afterJSON, err := json.Marshal(after); if err != nil { t.Fatal(err) }
+	if !bytes.Equal(beforeJSON, afterJSON) || groupQABridge(t, root, *groupQAProducerSource) != head { t.Fatal("actual source/assets/Git HEAD changed during export") }
+	raw, err := json.MarshalIndent(map[string]any{"schema": 1, "scope": "Actual Renderer.Render/valid synthetic Actor; fixture-only, not authenticated HTTP or new policy qualification", "sources_before": before, "sources_after": after, "source_unchanged": true, "states": rows, "family_byte_equality": family, "PG_producer_source": *groupQAProducerSource, "UI_method_source": head}, "", "  ")
+	if err != nil { t.Fatal(err) }
+	if err = os.WriteFile(filepath.Join(*groupQAOutput, "fixtures.json"), append(raw, '\n'), 0600); err != nil { t.Fatal(err) }
+}
+
+// The extractor admits only the successful committed PG root's one synthetic
+// actual s.form capture. This QA-only restoration of its original safe widget
+// HTML is never available to production handlers or arbitrary HTTP content.
+func groupQABenchmarkProjection(b *testing.B, root string) (*http.Request, pongo2.Context) {
+	b.Helper()
+	if *groupQABenchmarkCapture == "" || !filepath.IsAbs(*groupQABenchmarkCapture) || !strings.Contains(*groupQABenchmarkCapture, "/_temp/") {
+		b.Fatal("explicit admitted actual form capture required; benchmark cannot use a handcrafted legacy form")
+	}
+	var artifact struct {
+		Schema int `json:"schema"`
+		ProjectionBase64 string `json:"projection_base64"`
+		ProjectionSHA256 string `json:"projection_sha256"`
+		SourceSHA string `json:"source_sha"`
+		MethodSHA string `json:"qualifier_method_sha256"`
+		ProducerRoot string `json:"producer_root"`
+		SourceRows []struct { Path, SHA256 string; Bytes int } `json:"source_rows"`
+	}
+	raw, err := os.ReadFile(*groupQABenchmarkCapture)
+	if err != nil || len(raw) > 512<<10 || json.Unmarshal(raw, &artifact) != nil || artifact.Schema != 1 || artifact.SourceSHA != *groupQAProducerSource || len(artifact.SourceSHA) != 40 || artifact.ProducerRoot != "TestNativeGroupSemanticSnapshotUsesExistingBoundValuesAndCleaner" {
+		b.Fatal("bounded admitted actual projection required", err)
+	}
+	projection, err := base64.StdEncoding.DecodeString(artifact.ProjectionBase64)
+	if err != nil || len(projection) > 128<<10 { b.Fatal("bounded projection encoding required", err) }
+	sum := sha256.Sum256(projection)
+	if hex.EncodeToString(sum[:]) != artifact.ProjectionSHA256 { b.Fatal("actual projection digest differs") }
+	current := groupQASources(b, root)
+	captured := map[string]string{}
+	for _, row := range artifact.SourceRows { if captured[row.Path] != "" { b.Fatal("duplicate admitted source") }; captured[row.Path] = row.SHA256 }
+	// The PG producer precedes UI-only tool publication. Its native/product/PG
+	// rows must remain exact; the four later UI methods bind their own current
+	// source snapshot above. No PG pass is claimed for those later UI tools.
+	qualified := 0
+	for _, row := range current {
+		name := row["path"].(string)
+		if strings.HasPrefix(name, "tools/gui-native-group/") && name != "tools/gui-native-group/extract-projection.py" { continue }
+		qualified++
+		if captured[name] != row["sha256"].(string) { b.Fatal("native benchmark source differs from qualified producer", name) }
+	}
+	if len(captured) != qualified { b.Fatal("complete qualified native producer source frame required") }
+	var value struct {
+		Schema int `json:"schema"`
+		ASP string `json:"as_p"`
+		Native groupCreateForm `json:"native_group"`
+		Errors string `json:"errors"`
+		Actor struct {
+			ID int64 `json:"id"`
+			PublicID string `json:"public_id"`
+			Username string `json:"username"`
+			DisplayName string `json:"display_name"`
+			AgeBand string `json:"age_band"`
+			Cohort string `json:"cohort"`
+			Role string `json:"role"`
+			Verified bool `json:"identity_verified"`
+			Active bool `json:"is_active"`
+			Staff bool `json:"is_staff"`
+			Superuser bool `json:"is_superuser"`
+		} `json:"actor"`
+	}
+	decoder := json.NewDecoder(bytes.NewReader(projection)); decoder.DisallowUnknownFields()
+	if err = decoder.Decode(&value); err != nil || value.Schema != 1 || value.Errors != "" || value.ASP == "" || value.Native.Staff || len(value.Native.Fields) != 4 || !value.Actor.Active || !value.Actor.Verified || value.Actor.Staff || value.Actor.Superuser || value.Actor.Username != "legacy-organiser" || value.Actor.AgeBand != "adult" || value.Actor.Cohort != "adult" || value.Actor.Role != "user" || value.Actor.ID <= 0 {
+		b.Fatal("exact admitted synthetic adult/nonstaff form shape required", err)
+	}
+	actor := platform.Actor{ID:value.Actor.ID,PublicID:value.Actor.PublicID,Username:value.Actor.Username,DisplayName:value.Actor.DisplayName,AgeBand:value.Actor.AgeBand,Cohort:value.Actor.Cohort,Role:value.Actor.Role,IdentityVerified:value.Actor.Verified,IsActive:value.Actor.Active,IsStaff:value.Actor.Staff,IsSuperuser:value.Actor.Superuser}
+	request := platform.WithActor(httptest.NewRequest("POST", "https://fixture.local/groups/new/", nil), actor)
+	form := map[string]any{"native_group":value.Native,"as_p":pongo2.AsSafeValue(value.ASP),"errors":value.Errors}
+	b.Logf("actual-form source=%s PG-method=%s projection_sha256=%s cases=adult-nonstaff-only", artifact.SourceSHA, artifact.MethodSHA, artifact.ProjectionSHA256)
+	return request, pongo2.Context{"form":form,"user":socialActor(actor),"csrf":"synthetic-social-group-benchmark-csrf","connections_enabled":true,"display_theme":"light","display_text":"normal","display_motion":"reduce","site_name":"Synthetic Activities"}
+}
+
+// Warmed same-ACTUAL-form body render only, after PG has stopped. Both engines
+// receive the captured original as_p and typed DTO from the same real s.form
+// call. Native includes VM/copy construction; query/widget preparation is outside
+// both timed loops. EN/RO nonstaff only; no full HTTP or staff benchmark claim.
+func BenchmarkSocialGroupBodyRender(b *testing.B) {
+	root, err := filepath.Abs("../../../.."); if err != nil { b.Fatal(err) }
+	head := groupQABridge(b, root, *groupQAProducerSource)
+	before, err := json.Marshal(groupQASources(b, root)); if err != nil { b.Fatal(err) }
+	for _, lang := range []string{"en", "ro"} {
+		b.Run(lang, func(b *testing.B) {
+			renderer := NewRenderer(root)
+			request, data := groupQABenchmarkProjection(b, root)
+			request.Header.Set("Accept-Language", lang); data["language"] = lang
+			merged := familyBenchmarkDefaults(renderer, request, data)
+			old, err := renderer.set.FromCache("web/group_form.html"); if err != nil { b.Fatal(err) }
+			for _, native := range []bool{false, true} {
+				name := "pongo"; if native { name = "native" }
+				b.Run(name, func(b *testing.B) {
+					render := func() []byte {
+						if native { raw, err := renderer.renderGroupCreate(request, merged); if err != nil { b.Fatal(err) }; return raw }
+						var output bytes.Buffer; if err := old.ExecuteWriter(merged, &output); err != nil { b.Fatal(err) }; return output.Bytes()
+					}
+					raw := render(); zipped := familyBenchmarkGzip(b, raw)
+					b.ReportAllocs(); b.ResetTimer()
+					for i := 0; i < b.N; i++ { render() }
+					b.StopTimer(); b.ReportMetric(float64(len(raw)), "html-B"); b.ReportMetric(float64(zipped), "gzip-B")
+				})
+			}
+		})
+	}
+	after, err := json.Marshal(groupQASources(b, root)); if err != nil { b.Fatal(err) }
+	if !bytes.Equal(before, after) || groupQABridge(b, root, *groupQAProducerSource) != head { b.Fatal("benchmark sources or Git HEAD changed") }
+}
