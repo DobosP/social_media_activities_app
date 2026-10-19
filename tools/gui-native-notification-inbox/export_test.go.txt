@@ -1,0 +1,154 @@
+package web
+
+// Absent-path QA overlay only. Every actual renderer/permission field remains
+// in committed product source; these fixtures do not prove live authority.
+import (
+	"bytes"
+	"compress/gzip"
+	"encoding/base64"
+	"encoding/json"
+	"flag"
+	"fmt"
+	"html"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"regexp"
+	"strings"
+	"testing"
+ "time"
+
+ "github.com/DobosP/social_media_activities_app/services/server/internal/platform"
+
+	"github.com/flosch/pongo2/v6"
+)
+
+var notificationInboxQAProducer=flag.String("notification-inbox-ui-producer-source","","successful complete canonical PG source")
+var notificationInboxQAOutput=flag.String("notification-inbox-ui-qa-output-dir","","fresh task scratch fixture output")
+var notificationInboxQACapture=flag.String("notification-inbox-benchmark-capture","","admitted actual current account display rows")
+var notificationInboxQAModes=[]string{"empty-en","one-unread-ro","mixed-en","all-read-ro","escaped-ro","unsafe-links-en"}
+type notificationInboxQABridgeProof struct {
+	Producer string `json:"producer_source"`
+	Head string `json:"ui_head"`
+	Product []string `json:"product_paths"`
+	Paths []string `json:"source_paths"`
+}
+func notificationInboxQABridge(t testing.TB,root string)notificationInboxQABridgeProof {
+	t.Helper();raw,err:=exec.Command("python3","-I",filepath.Join(root,"tools/gui-native-notification-inbox/qualify.py"),"--repo",root,"--producer-source",*notificationInboxQAProducer,"--check-bridge").Output()
+	var proof notificationInboxQABridgeProof
+	if err!=nil||json.Unmarshal(raw,&proof)!=nil||proof.Producer!=*notificationInboxQAProducer||!regexp.MustCompile(`^[0-9a-f]{40}$`).MatchString(proof.Head)||len(proof.Product)<2000||len(proof.Paths)!=len(proof.Product)+5 { t.Fatal("exact committed full-source/five-UI bridge required",err) }
+	return proof
+}
+func notificationInboxQAGzip(t testing.TB,raw []byte)int {
+	t.Helper();var output bytes.Buffer;writer,err:=gzip.NewWriterLevel(&output,gzip.BestCompression);if err!=nil{t.Fatal(err)}
+	if _,err=writer.Write(raw);err!=nil{t.Fatal(err)};if err=writer.Close();err!=nil{t.Fatal(err)};return output.Len()
+}
+func notificationInboxQANormalize(t testing.TB,w *httptest.ResponseRecorder,replacement string)([]byte,map[string]string,map[string]any) {
+	t.Helper();raw:=w.Body.Bytes();policy:=w.Header().Get("Content-Security-Policy-Report-Only");mode:="Content-Security-Policy-Report-Only"
+	if enforced:=w.Header().Get("Content-Security-Policy");enforced!=""{policy=enforced;mode="Content-Security-Policy"}
+	match:=regexp.MustCompile(`'nonce-([^']+)'`).FindStringSubmatch(policy)
+	if w.Code!=http.StatusOK||w.Header().Get("Content-Type")!="text/html; charset=utf-8"||w.Header().Get("Cache-Control")!="private, no-cache"||!strings.Contains(w.Header().Get("Vary"),"Cookie")||len(w.Result().Cookies())!=0||len(match)!=2||match[1]=="" { t.Fatal("actual renderer private response/nonce shape differs") }
+	nonce:=match[1];attribute:=`nonce="`+nonce+`"`;count:=bytes.Count(raw,[]byte(attribute))
+	if count<2||strings.Count(policy,"'nonce-"+nonce+"'")!=1{t.Fatal("actual CSP and HTML nonce disagree")}
+	body:=bytes.ReplaceAll(raw,[]byte(attribute),[]byte(`nonce="`+replacement+`"`))
+	if bytes.Contains(body,[]byte(nonce)){t.Fatal("nonce escaped admitted attribute context")}
+	headers:=map[string]string{};replacements:=0
+	for key,values:=range w.Header(){
+		if len(values)!=1{t.Fatal("single-value renderer header required",key)};value:=values[0]
+		if strings.Contains(value,nonce){if key!=mode||strings.Count(value,nonce)!=1{t.Fatal("nonce escaped admitted actual CSP header")};value=strings.Replace(value,nonce,replacement,1);replacements++};headers[key]=value
+	}
+	if replacements!=1{t.Fatal("exactly one actual CSP normalization required")}
+	return body,headers,map[string]any{"raw_html_sha256":groupDetailQAHash(raw),"normalized_html_sha256":groupDetailQAHash(body),"attribute_replacements":count,"csp_replacements":replacements}
+}
+// Expectations use source fields, protected catalogue/filter and source date
+// formatting. They never read the new typed inbox decoder or row projection.
+func notificationInboxQAExpected(t testing.TB,r *Renderer,request *http.Request,data pongo2.Context)map[string]any{
+ t.Helper();lang:=data["language"].(string);tr:=func(value string)string{return html.UnescapeString(r.catalog.translate(lang,value,1))};source,ok:=data["items"].([]map[string]any);if !ok||len(source)>100{t.Fatal("bounded source-shaped inbox rows required")}
+ filter,err:=r.set.FromString(`{{ value|safe_href }}`);if err!=nil{t.Fatal(err)};location,err:=time.LoadLocation("Europe/Bucharest");if err!=nil{t.Fatal(err)};rows:=[]map[string]any{}
+ for _,row:=range source{stamp,err:=time.Parse(time.RFC3339Nano,row["created_at"].(string));if err!=nil{t.Fatal(err)};stamp=stamp.In(location);href,err:=filter.Execute(pongo2.Context{"value":row["url"]});if err!=nil{t.Fatal(err)};why:=row["why"].(string);if why!=""{why=strings.ReplaceAll(tr("Why you got this: %(why)s"),"%(why)s",why)};rows=append(rows,map[string]any{"title":row["title"],"body":row["body"],"why":why,"url":html.UnescapeString(href),"when":stamp.Format("2 Jan 15:04"),"iso":stamp.Format(time.RFC3339),"unread":row["read_at"]==nil})}
+ actions:=[]string{"/logout/","/i18n/setlang/"};if len(rows)>0{actions=append(actions,"/notifications/read-all/")};actor,ok:=platform.ActorFrom(request);if !ok{t.Fatal("current fixture request actor required")}
+ return map[string]any{"title":tr("Notifications"),"settings":tr("Notification settings"),"mark_all":tr("Mark all read"),"new":tr("new"),"view":tr("view"),"empty":tr("No notifications yet."),"rows":rows,"csrf":data["csrf"],"script_sources":[]string{"/static/js/hovercard.js","/static/js/site.js"},"form_actions":actions,"canonical":"/notifications/","language":lang,"theme":data["display_theme"],"text":data["display_text"],"motion":data["display_motion"],"owner":actor.PublicID}
+}
+var notificationInboxPreferencesBaseline=[]struct{Name string;Bytes int;SHA string}{
+ {"none-en",14907,"2f71224f26e2828e768b9fe92ca0e3ed3baa59332cb48b3b368cf8b8db75e7e0"},
+ {"some-ro",15301,"157fd5f77d6fbe03018eff910132b050ff49a59339c40a716e3fdd6b49d43eae"},
+ {"all-ro",15413,"49427801261d32b0bdfc39d31a57b5d18c31d4a327a1ae094994de8d1b24b237"},
+ {"errors-en",15051,"5edda90c1f19a9c36d5ff2ed78f14cc979f7fe167c457ad21edd61b83c4211af"},
+ {"escaped-ro",15406,"c0abb3d13783e00af75bcf78f79d62ef5869e448f756c55f81c5f1087f31e738"},
+ {"unassigned-en",14910,"60c47d64c34c3191018313270663dbf7d3306d575ae160215f552d6042d96e24"},
+}
+func notificationInboxQAPrior(t *testing.T,root,output string,r *Renderer)[]map[string]any{
+ t.Helper();rows:=notificationQAPrior(t,root,output,r);if err:=os.Mkdir(filepath.Join(output,"notification-preferences"),0700);err!=nil{t.Fatal(err)};if len(notificationInboxPreferencesBaseline)!=len(notificationQAModes){t.Fatal("accepted preferences census changed")}
+ for i,mode:=range notificationQAModes{want:=notificationInboxPreferencesBaseline[i];if mode!=want.Name{t.Fatal("accepted preferences order changed")};request,data:=notificationPreferencesFixture(mode);request.Header.Set("Accept-Language",data["language"].(string));data["csrf"]="synthetic-notification-ui-csrf";delete(data,"request");w:=httptest.NewRecorder();if err:=r.Render(w,request,"web/notification_preferences.html",data);err!=nil{t.Fatal(err)};body,_,_:=notificationQANormalize(t,w,"synthetic-notification-ui-nonce");if len(body)!=want.Bytes||groupDetailQAHash(body)!=want.SHA{t.Fatal("inbox disturbed accepted preferences body",mode)};path:="notification-preferences/"+mode+".html";groupDetailQAWrite(t,filepath.Join(output,path),body);rows=append(rows,map[string]any{"kind":"notification-preferences","name":mode,"path":path,"bytes":len(body),"sha256":groupDetailQAHash(body),"equal":true})}
+ if len(rows)!=31{t.Fatal("complete prior31 native bodies required")};return rows
+}
+func TestSocialNotificationInboxQAExport(t *testing.T) {
+	root,err:=filepath.Abs("../../../..");if err!=nil{t.Fatal(err)};bridge:=notificationInboxQABridge(t,root);before:=groupDetailQASources(t,root,bridge.Paths)
+	// Presentation fixtures are never substituted for the real App marker.
+	for _,lang:=range []string{"en","ro"}{notificationInboxQACaptured(t,root,lang)}
+	output:=*notificationInboxQAOutput
+	if !filepath.IsAbs(output)||!strings.Contains(output,"/_temp/"){t.Fatal("fresh owned task scratch required")}
+	parent,err:=filepath.EvalSymlinks(filepath.Dir(output));if err!=nil||parent!=filepath.Dir(output){t.Fatal("unalias existing output parent required")}
+	if err=os.Mkdir(output,0700);err!=nil{t.Fatal(err)}
+	states,normalizations:=[]map[string]any{},[]map[string]any{}
+	r:=NewRenderer(root)
+	for _,mode:=range notificationInboxQAModes {
+		request,data:=notificationInboxFixture(mode);request.Header.Set("Accept-Language",data["language"].(string));data["csrf"]="synthetic-notification-inbox-ui-csrf";delete(data,"request")
+		expected:=notificationInboxQAExpected(t,r,request,data)
+		w:=httptest.NewRecorder();if err=r.Render(w,request,"web/notifications.html",data);err!=nil{t.Fatal(mode,err)}
+		body,headers,normalized:=notificationInboxQANormalize(t,w,"synthetic-notification-inbox-ui-nonce");normalized["name"]=mode
+		if bytes.Contains(body,[]byte("PRIVATE-"))||bytes.Contains(body,[]byte("<style")){t.Fatal("private/executable display data entered native fixture")}
+		groupDetailQAWrite(t,filepath.Join(output,mode+".html"),body)
+		states=append(states,map[string]any{"name":mode,"language":data["language"],"theme":data["display_theme"],"text":data["display_text"],"motion":data["display_motion"],"bytes":len(body),"sha256":groupDetailQAHash(body),"go_gzip_level9_bytes":notificationInboxQAGzip(t,body),"canonical":"/notifications/","synthetic_csrf":"synthetic-notification-inbox-ui-csrf","renderer_headers":headers,"expected":expected})
+		normalizations=append(normalizations,normalized)
+	}
+	prior:=notificationInboxQAPrior(t,root,output,r);after:=groupDetailQASources(t,root,bridge.Paths)
+	left,_:=json.Marshal(before);right,_:=json.Marshal(after);if !bytes.Equal(left,right)||notificationInboxQABridge(t,root).Head!=bridge.Head{t.Fatal("source/Git changed during export")}
+	manifest:=map[string]any{"schema":1,"PG_producer_source":*notificationInboxQAProducer,"UI_method_source":bridge.Head,"source_unchanged":true,"sources_before":before,"sources_after":after,"states":states,"previous_body_equality":prior,"normalization":map[string]any{"schema":1,"kind":"render-nonce-only","replacement":"synthetic-notification-inbox-ui-nonce","states":normalizations},"baseline_keeper_sha256":"29a9ff0d2e420d5454aaebd324d0bc686bc22cf14b6f04ce86e4b8ce7e71d7e5","scope":"Six real native Renderer inbox fixtures and31priorbody equalities only. Actual registered/current-authority proof is complete seven-package App/PG; only same-call display whitelist enters measurements."}
+	raw,err:=json.MarshalIndent(manifest,"","  ");if err!=nil{t.Fatal(err)};groupDetailQAWrite(t,filepath.Join(output,"fixtures.json"),append(raw,'\n'))
+}
+func notificationInboxQACaptured(t testing.TB,root,lang string)(*http.Request,pongo2.Context) {
+	t.Helper();file:=*notificationInboxQACapture
+	if !filepath.IsAbs(file)||!strings.Contains(file,"/_temp/"){t.Fatal("actual admitted capture required")}
+	actual,err:=filepath.EvalSymlinks(file);if err!=nil||actual!=file{t.Fatal("unalias capture required",err)}
+	info,err:=os.Lstat(file);if err!=nil||!info.Mode().IsRegular()||info.Size()>2<<20{t.Fatal("bounded capture required",err)}
+	raw,err:=os.ReadFile(file);if err!=nil{t.Fatal(err)}
+	var artifact struct{Schema int `json:"schema"`;Source string `json:"source_sha"`;Root string `json:"producer_root"`;Method string `json:"qualifier_method_sha256"`;Projection string `json:"projection_base64"`;SHA string `json:"projection_sha256"`;Rows []struct{Path,SHA256 string;Bytes int} `json:"source_rows"`}
+	if json.Unmarshal(raw,&artifact)!=nil||artifact.Schema!=1||artifact.Source!=*notificationInboxQAProducer||artifact.Root!="TestNativeNotificationInboxRegisteredHTTPAndCurrentAuthority"||len(artifact.Method)!=64{t.Fatal("successful actual producer capture required")}
+	bridge:=notificationInboxQABridge(t,root);current:=groupDetailQASources(t,root,bridge.Product);byPath:=map[string]string{}
+	for _,row:=range artifact.Rows{if byPath[row.Path]!=""{t.Fatal("duplicate capture source")};byPath[row.Path]=fmt.Sprintf("%d:%s",row.Bytes,row.SHA256)}
+	if len(byPath)!=len(current){t.Fatal("complete producer product source frame required")};for _,row:=range current{if byPath[row["path"].(string)]!=fmt.Sprintf("%d:%s",row["bytes"].(int),row["sha256"].(string)){t.Fatal("producer source changed",row["path"])}}
+	projection,err:=base64.StdEncoding.DecodeString(artifact.Projection);if err!=nil||len(projection)>256<<10||groupDetailQAHash(projection)!=artifact.SHA{t.Fatal("bounded projection digest differs")}
+ type item struct{Title,Body,Why,URL string;Created string `json:"created_at"`;ReadAt *bool `json:"read_at"`}
+ var value struct{Schema int `json:"schema"`;Variants []struct{Language string `json:"language"`;Projection struct{Items []item `json:"items"`} `json:"projection"`} `json:"variants"`;Capture string `json:"capture"`}
+ decoder:=json.NewDecoder(bytes.NewReader(projection));decoder.DisallowUnknownFields()
+ if decoder.Decode(&value)!=nil||value.Schema!=1||len(value.Variants)!=2||value.Variants[0].Language!="en"||value.Variants[1].Language!="ro"||value.Capture!="same registered-cookie GET callback; display whitelist only; no actor/IDs/credentials/render environment"{t.Fatal("exact same-call display schema required")}
+ for _,variant:=range value.Variants{if variant.Language==lang{
+  if len(variant.Projection.Items)!=100{t.Fatal("current bounded100 source rows required")};items:=make([]map[string]any,0,100)
+  for _,row:=range variant.Projection.Items{if _,err:=time.Parse(time.RFC3339Nano,row.Created);err!=nil||row.ReadAt!=nil&&!*row.ReadAt{t.Fatal("actual timestamp/read presence malformed",err)};var readAt any;if row.ReadAt!=nil{readAt=true};items=append(items,map[string]any{"title":row.Title,"body":row.Body,"why":row.Why,"url":row.URL,"created_at":row.Created,"read_at":readAt})}
+  // Only the explicit fixed render environment is synthetic. Actor comes
+  // from the same request for both engines; no AccountView id contract.
+  request,data:=notificationInboxFixture("empty-en");request.Header.Set("Accept-Language",lang);delete(data,"PRIVATE-extra")
+  data["language"],data["csrf"],data["items"]=lang,"synthetic-notification-inbox-benchmark-csrf",items
+  data["display_theme"],data["display_text"],data["display_motion"]="light","normal","reduce"
+  t.Logf("actual same-call display body-only source=%s method=%s projection=%s language=%s; fixed shared synthetic request actor/defaults",artifact.Source,artifact.Method,artifact.SHA,lang)
+  return request,data
+ }}
+	t.Fatal("captured language missing");return nil,nil
+}
+func BenchmarkSocialNotificationInboxBodyRender(b *testing.B) {
+	root,err:=filepath.Abs("../../../..");if err!=nil{b.Fatal(err)};bridge:=notificationInboxQABridge(b,root);before,_:=json.Marshal(groupDetailQASources(b,root,bridge.Paths))
+	for _,lang:=range []string{"en","ro"}{b.Run(lang,func(b *testing.B){
+		r:=NewRenderer(root);request,data:=notificationInboxQACaptured(b,root,lang);semanticBefore,err:=json.Marshal(data);if err!=nil{b.Fatal(err)};merged:=familyBenchmarkDefaults(r,request,data)
+		old,err:=r.set.FromCache("web/notifications.html");if err!=nil{b.Fatal(err)}
+		for _,native:=range []bool{false,true}{name:="classic";if native{name="native"};b.Run(name,func(b *testing.B){
+			render:=func()[]byte{if native{raw,err:=r.renderNotificationInbox(request,merged);if err!=nil{b.Fatal(err)};return raw};var output bytes.Buffer;if err:=old.ExecuteWriter(merged,&output);err!=nil{b.Fatal(err)};return output.Bytes()}
+			raw:=render();if len(raw)==0{b.Fatal("empty matched body")};compressed:=notificationInboxQAGzip(b,raw);b.ReportAllocs();b.ResetTimer()
+			for i:=0;i<b.N;i++{familyBenchmarkSink=render()};b.StopTimer();b.ReportMetric(float64(len(raw)),"html-B/op");b.ReportMetric(float64(compressed),"gzip9-B/op")
+		})}
+		semanticAfter,err:=json.Marshal(data);if err!=nil||!bytes.Equal(semanticBefore,semanticAfter){b.Fatal("body renderer mutated shared actual display projection",err)}
+	})}
+	after,_:=json.Marshal(groupDetailQASources(b,root,bridge.Paths));if !bytes.Equal(before,after)||notificationInboxQABridge(b,root).Head!=bridge.Head{b.Fatal("source/Git changed during warmed benchmark")}
+}

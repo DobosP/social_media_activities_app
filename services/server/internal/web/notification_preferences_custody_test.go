@@ -25,6 +25,12 @@ func notificationPreferencesSourceRelation(path string) (beforeSHA, afterSHA str
 	return "", "", 0, 0, "", "", false
 }
 func notificationPreferencesSourcePreimage(path string, raw []byte) ([]byte, error) {
+	// Retained prior controls may enter on the exact recovered inbox preimage.
+	var inboxErr error
+	raw, inboxErr = notificationInboxPriorSource(path, raw)
+	if inboxErr != nil {
+		return nil, inboxErr
+	}
 	beforeSHA, afterSHA, beforeBytes, afterBytes, before, after, ok := notificationPreferencesSourceRelation(path)
 	if !ok || len(raw) != afterBytes || guiPublicHash(raw) != afterSHA || bytes.Count(raw, []byte(after)) != 1 {
 		return nil, fmt.Errorf("notification-complete-current-source")

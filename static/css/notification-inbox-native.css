@@ -1,0 +1,8 @@
+.notification-inbox-native .btn { transition: transform .04s ease; }
+:root .notification-inbox-native .site-header { background: var(--card); }
+@media (min-width: 880px) {
+  .notification-inbox-native .nav-menu > .nav-panel { width: max-content; max-width: calc(100vw - 2.5rem); }
+}
+.notification-inbox-native .notification-inbox-heading { margin-bottom: 1.5rem; }
+.notification-inbox-native .notification-inbox-title { margin: 0; font-size: 1.125rem; overflow-wrap: anywhere; }
+.notification-inbox-native .notification-inbox-list p { overflow-wrap: anywhere; }

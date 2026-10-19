@@ -460,6 +460,15 @@ func guiPublicGetRepairRows() []guiPublicGetRepairRow {
 // Each row must find its exact afterimage and land on its exact preimage, so a
 // later row only ever sees the bytes the previous reviewed row produced.
 func guiPublicGetRowsPreimage(path string, raw []byte) ([]byte, error) {
+	// Require the actual newest physical source, then retain the entire old chain.
+	switch path {
+	case "services/server/internal/web/renderer.go", "services/server/internal/web/gui_public_get_walk_test.go":
+		var inboxErr error
+		raw, inboxErr = notificationInboxSourcePreimage(path, raw)
+		if inboxErr != nil {
+			return nil, inboxErr
+		}
+	}
 	// Exact new notification/source-control inverses precede the unchanged32-row
 	// Group/family/historical chain. Live tuples stay physical.
 	switch path {

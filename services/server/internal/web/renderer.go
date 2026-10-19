@@ -105,6 +105,12 @@ func (r *Renderer) Render(w http.ResponseWriter, request *http.Request, name str
 			return renderErr
 		}
 		_, _ = output.Write(raw)
+	} else if name == "web/notifications.html" {
+		raw, renderErr := r.renderNotificationInbox(request, defaults)
+		if renderErr != nil {
+			return renderErr
+		}
+		_, _ = output.Write(raw)
 	} else if name == "web/notification_preferences.html" {
 		raw, renderErr := r.renderNotificationPreferences(request, defaults)
 		if renderErr != nil {
