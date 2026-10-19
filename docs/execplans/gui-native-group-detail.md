@@ -71,3 +71,20 @@ Only the committed UI wrapper and truthful STATUS/plan change after PG. Existing
 whole-Git/UI-only source bridging keeps the qualified PG epoch distinct; no PG
 repeat is warranted. Actual desktop7+7/strict Axe/confirmations/prior18 bodies
 and the matched captured-body benchmark remain unrun at this checkpoint.
+
+## First actual UI and link-cue repair
+
+Actual099 UI on PG7fb exports/captures correctly, matches all eighteen earlier
+native bodies and completes7JS+7no-JS/confirmations/assets/cleanup. It remains
+failed:21 strict audits/zero violations/exactly nine repeated inline-link
+incompletes. Benchmark was requested but not reached; retain the original
+NOT_REQUESTED field alongside this clarification and the corrected future field.
+
+Controlled before/candidate diagnostics retain every rule and natural scroll.
+Eighteen link rectangles/colors are identical; a permanent scoped underline
+clears all21 audits. Candidate remains failed from fourteen active asset-hash
+guards, never accepted. Reviewda2f59c3 approves only the new sheet, exact new-App
+expected sheet bytes and benchmark-intent metadata. Actual CSS GET/HEAD race1,
+web focused17roots/74named/zero skips, app/web vet and Python syntax pass.
+Commit this batch, then fresh complete6 and exact-source UI/benchmark. Keep both
+prior failures/raw diagnostics; no CSS/test source-bridge exception is introduced.

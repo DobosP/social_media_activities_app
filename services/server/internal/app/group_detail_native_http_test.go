@@ -70,7 +70,7 @@ func TestNativeGroupDetailScopedStaticAppTransport(t *testing.T) {
 		t.Fatal(err)
 	}
 	a := &App{Config: Config{AllowedHosts: []string{"social.fixture.test"}}, Static: handler}
-	const expected = ".group-detail-page .btn { transition: transform .04s ease; }\n:root .group-detail-page .site-header { background: var(--card); }\n"
+	const expected = ".group-detail-page .btn { transition: transform .04s ease; }\n:root .group-detail-page .site-header { background: var(--card); }\n\n.group-detail-page .post .meta a, .group-detail-page .reply-quote a { text-decoration: underline; text-underline-offset: .16em; }\n"
 	for _, method := range []string{http.MethodGet, http.MethodHead} {
 		w := httptest.NewRecorder()
 		a.ServeHTTP(w, httptest.NewRequest(method, "https://social.fixture.test/static/css/group-detail-native.css", nil))

@@ -1,2 +1,4 @@
 .group-detail-page .btn { transition: transform .04s ease; }
 :root .group-detail-page .site-header { background: var(--card); }
+
+.group-detail-page .post .meta a, .group-detail-page .reply-quote a { text-decoration: underline; text-underline-offset: .16em; }

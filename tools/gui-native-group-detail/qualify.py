@@ -162,7 +162,8 @@ def main():
         "scope": "Isolated actual native rendering, seven desktop/seven no-JS projection fixtures, strict Axe/current assets/local mocked endpoints and eighteen prior HTML equalities; no authenticated HTTP, production transport, codec, provider, authority or release claim.",
         "disk_before": dict(zip(("total", "used", "free"), shutil.disk_usage(scratch))),
         "commands": [], "failures": [], "owned_temp": {"path": str(temp), "removed": False},
-        "benchmark": {"status": "NOT_REQUESTED"},
+        "benchmark_requested": args.benchmark,
+        "benchmark": {"status": "REQUESTED_NOT_REACHED" if args.benchmark else "NOT_REQUESTED"},
     }
     (output / "status.json").write_text(json.dumps(report, indent=2) + "\n")
     desktop_attempted = False

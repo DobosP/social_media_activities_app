@@ -81,3 +81,28 @@ A new pure regression file covers typed nil/untyped absence, real GET target,
 first bound POST value and nonnil malformed target refusal before any output.
 Focused repaired race17roots/74named/zero skips and web vet pass. A clean-source
 successor complete affected-six run is required; no repair pass is inferred yet.
+
+## Complete PG and inline-link presentation correction
+
+Qualified producer7fb35d0 passes complete affected PG6:428 roots/1,246 named,
+zero skips/failures,291 commands, thirteen owned-container removals, six guarded
+DB retirements and graceful PG cleanup. Independent6d6c91ec binds rawf56fb1e6.
+UI-only executable-reader method0995583 preserves all native/PG inputs; its
+actual export admits the successful App projection and matches eighteen earlier
+native bodies. Seven JS/seven no-JS shapes and confirmations complete, but the
+21 strict whole-document audits report nine repeated link-in-text incomplete
+assessments and zero violations. This UI remains failed; no benchmark ran.
+
+A controlled diagnostic records eighteen unchanged link rectangles/colors and
+natural thread/header occlusion. Timestamp permalinks share adjacent muted text
+color with no permanent non-color cue. A scoped underline for post metadata and
+quote links clears all21 audits. The experiment remains failed at fourteen
+unchanged exact-asset guards because its stylesheet was deliberately substituted;
+no experiment is accepted as qualification or as removal of natural occlusion.
+
+Independentda2f59c3 approves only the new page stylesheet cue, its exact existing
+new-App served-sheet expectation and truthful benchmark requested/not-reached
+metadata. All Go runtime, policy/query/HTML/original assets and test predicates
+remain. Actual CSS GET/HEAD race and focused web17roots/74named/zero skips/vet
+pass. Fresh complete-six/current-asset UI/captured-body benchmark must qualify
+the committed stylesheet rather than add a CSS/test source-bridge exception.
