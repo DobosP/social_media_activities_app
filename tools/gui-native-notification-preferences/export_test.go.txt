@@ -1,0 +1,173 @@
+package web
+
+// Absent-path QA overlay only. Every actual renderer/permission field remains
+// in committed product source; these fixtures do not prove live authority.
+import (
+	"bytes"
+	"compress/gzip"
+	"encoding/base64"
+	"encoding/json"
+	"flag"
+	"fmt"
+	"html"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"regexp"
+	"strings"
+	"testing"
+
+	"github.com/flosch/pongo2/v6"
+)
+
+var notificationQAProducer=flag.String("notification-ui-producer-source","","successful complete canonical PG source")
+var notificationQAOutput=flag.String("notification-ui-qa-output-dir","","fresh task scratch fixture output")
+var notificationQACapture=flag.String("notification-benchmark-capture","","admitted actual current account display rows")
+var notificationQAModes=[]string{"none-en","some-ro","all-ro","errors-en","escaped-ro","unassigned-en"}
+type notificationQABridgeProof struct {
+	Producer string `json:"producer_source"`
+	Head string `json:"ui_head"`
+	Product []string `json:"product_paths"`
+	Paths []string `json:"source_paths"`
+}
+func notificationQABridge(t testing.TB,root string)notificationQABridgeProof {
+	t.Helper();raw,err:=exec.Command("python3","-I",filepath.Join(root,"tools/gui-native-notification-preferences/qualify.py"),"--repo",root,"--producer-source",*notificationQAProducer,"--check-bridge").Output()
+	var proof notificationQABridgeProof
+	if err!=nil||json.Unmarshal(raw,&proof)!=nil||proof.Producer!=*notificationQAProducer||!regexp.MustCompile(`^[0-9a-f]{40}$`).MatchString(proof.Head)||len(proof.Product)<2000||len(proof.Paths)!=len(proof.Product)+5 { t.Fatal("exact committed full-source/five-UI bridge required",err) }
+	return proof
+}
+func notificationQAGzip(t testing.TB,raw []byte)int {
+	t.Helper();var output bytes.Buffer;writer,err:=gzip.NewWriterLevel(&output,gzip.BestCompression);if err!=nil{t.Fatal(err)}
+	if _,err=writer.Write(raw);err!=nil{t.Fatal(err)};if err=writer.Close();err!=nil{t.Fatal(err)};return output.Len()
+}
+func notificationQANormalize(t testing.TB,w *httptest.ResponseRecorder,replacement string)([]byte,map[string]string,map[string]any) {
+	t.Helper();raw:=w.Body.Bytes();policy:=w.Header().Get("Content-Security-Policy-Report-Only");mode:="Content-Security-Policy-Report-Only"
+	if enforced:=w.Header().Get("Content-Security-Policy");enforced!=""{policy=enforced;mode="Content-Security-Policy"}
+	match:=regexp.MustCompile(`'nonce-([^']+)'`).FindStringSubmatch(policy)
+	if w.Code!=http.StatusOK||w.Header().Get("Content-Type")!="text/html; charset=utf-8"||w.Header().Get("Cache-Control")!="private, no-cache"||!strings.Contains(w.Header().Get("Vary"),"Cookie")||len(w.Result().Cookies())!=0||len(match)!=2||match[1]=="" { t.Fatal("actual renderer private response/nonce shape differs") }
+	nonce:=match[1];attribute:=`nonce="`+nonce+`"`;count:=bytes.Count(raw,[]byte(attribute))
+	if count<2||strings.Count(policy,"'nonce-"+nonce+"'")!=1{t.Fatal("actual CSP and HTML nonce disagree")}
+	body:=bytes.ReplaceAll(raw,[]byte(attribute),[]byte(`nonce="`+replacement+`"`))
+	if bytes.Contains(body,[]byte(nonce)){t.Fatal("nonce escaped admitted attribute context")}
+	headers:=map[string]string{};replacements:=0
+	for key,values:=range w.Header(){
+		if len(values)!=1{t.Fatal("single-value renderer header required",key)};value:=values[0]
+		if strings.Contains(value,nonce){if key!=mode||strings.Count(value,nonce)!=1{t.Fatal("nonce escaped admitted actual CSP header")};value=strings.Replace(value,nonce,replacement,1);replacements++};headers[key]=value
+	}
+	if replacements!=1{t.Fatal("exactly one actual CSP normalization required")}
+	return body,headers,map[string]any{"raw_html_sha256":groupDetailQAHash(raw),"normalized_html_sha256":groupDetailQAHash(body),"attribute_replacements":count,"csp_replacements":replacements}
+}
+func notificationQAExpected(t testing.TB,r *Renderer,request *http.Request,data pongo2.Context)map[string]any {
+	t.Helper();lang:=data["language"].(string);tr:=func(s string)string{return html.UnescapeString(r.catalog.translate(lang,s,1))}
+	rows,ok:=data["rows"].([]map[string]any);if !ok||len(rows)!=22{t.Fatal("source-shaped22rows required")}
+	expected:=[]map[string]any{};selected:=[]string{}
+	for i,row:=range rows{
+		kind,vok:=row["value"].(string);label,lok:=row["label"].(string);reason,rok:=row["reason"].(string);muted,mok:=row["muted"].(bool)
+		if !vok||!lok||!rok||!mok||kind!=accountNotificationOrder[i]{t.Fatal("actual supplied row source shape/order differs")}
+		expected=append(expected,map[string]any{"kind":kind,"label":strings.ReplaceAll(tr("Mute: %(label)s"),"%(label)s",label),"reason":reason,"muted":muted,"arrival":kind=="arrival"})
+		if muted{selected=append(selected,kind)}
+	}
+	messages:=[]string{};if values,ok:=data["messages"].([]socialMessage);ok{for range values{messages=append(messages,tr("This action is temporarily unavailable. Please try again."))}}
+	return map[string]any{"title":tr("Notification settings"),"rows":expected,"selected":selected,"intro":tr(notificationPreferencesIntro),"warning":tr(notificationPreferencesArrival),"messages":messages,"csrf":data["csrf"],"script_sources":[]string{"/static/js/hovercard.js","/static/js/site.js"},"form_actions":[]string{"/logout/","/notifications/preferences/","/i18n/setlang/"},"canonical":"/notifications/preferences/","language":lang,"theme":data["display_theme"],"text":data["display_text"],"motion":data["display_motion"]}
+}
+
+// Constants are the seven accepted fa3 normalized bodies in635360ce's25-row
+// baseline. The first18 keep using their unchanged accepted constructors.
+var notificationDetailBaseline=[]struct{Name string;Bytes int;SHA string}{
+	{"owner-en",25028,"3d2f87b6030946f2d95e233fd480ef3ac29aae063ca378e4f3df91e0135164c0"},
+	{"member-ro",24242,"1913336ed4bbdd0f095b49a5d6e90286122d3006c51f7ee70a82669f63db0ca2"},
+	{"nonmember-en",4816,"bb99826da6f0a696e906bb838247f9f11734f512b19c8c4379029cbaec2a0500"},
+	{"child-ro",12605,"7349346ce0dd7495ec80d996712c165cdff70eb44be63de0098695616e6c5b7d"},
+	{"curator-ro",5657,"765d37ae843b1df9181fc778dd77aba27219a6ec08869fb7e7cee06673a17288"},
+	{"same-cohort-curator-en",6238,"23c73ba440924aa14154f243ca79f663b3728325065123a5f209adecb9691b80"},
+	{"errors-escape-ro",25573,"13bdba9e9a005baf446f7da69e8d43f10a6d21d16a536684940fec34f4435aaa"},
+}
+
+
+func notificationQAPrior(t *testing.T,root,output string,r *Renderer)[]map[string]any {
+	t.Helper();rows:=groupDetailQAPriorBodies(t,root,output,r)
+	if len(notificationDetailBaseline)!=len(groupDetailQAStates){t.Fatal("accepted detail body census changed")}
+	if err:=os.Mkdir(filepath.Join(output,"group-detail"),0700);err!=nil{t.Fatal(err)}
+	for i,state:=range groupDetailQAStates{
+		want:=notificationDetailBaseline[i];if state.Name!=want.Name{t.Fatal("accepted detail constructor order changed")}
+		renderer,request,data:=groupDetailQAData(t,state);w:=httptest.NewRecorder()
+		if err:=renderer.Render(w,request,"web/group_detail.html",data);err!=nil{t.Fatal(err)}
+		body,_,_:=notificationQANormalize(t,w,"synthetic-group-detail-ui-nonce")
+		if len(body)!=want.Bytes||groupDetailQAHash(body)!=want.SHA{t.Fatal("notification view disturbed accepted detail body",state.Name)}
+		path:="group-detail/"+state.Name+".html";groupDetailQAWrite(t,filepath.Join(output,path),body);rows=append(rows,map[string]any{"kind":"group-detail","name":state.Name,"path":path,"bytes":len(body),"sha256":groupDetailQAHash(body),"equal":true})
+	}
+	if len(rows)!=25{t.Fatal("complete prior25native bodies required")};return rows
+}
+func TestSocialNotificationPreferencesQAExport(t *testing.T) {
+	root,err:=filepath.Abs("../../../..");if err!=nil{t.Fatal(err)};bridge:=notificationQABridge(t,root);before:=groupDetailQASources(t,root,bridge.Paths)
+	// Presentation fixtures are never substituted for the real App marker.
+	for _,lang:=range []string{"en","ro"}{notificationQACaptured(t,root,lang)}
+	output:=*notificationQAOutput
+	if !filepath.IsAbs(output)||!strings.Contains(output,"/_temp/"){t.Fatal("fresh owned task scratch required")}
+	parent,err:=filepath.EvalSymlinks(filepath.Dir(output));if err!=nil||parent!=filepath.Dir(output){t.Fatal("unalias existing output parent required")}
+	if err=os.Mkdir(output,0700);err!=nil{t.Fatal(err)}
+	states,normalizations:=[]map[string]any{},[]map[string]any{}
+	r:=NewRenderer(root)
+	for _,mode:=range notificationQAModes {
+		request,data:=notificationPreferencesFixture(mode);request.Header.Set("Accept-Language",data["language"].(string));data["csrf"]="synthetic-notification-ui-csrf";delete(data,"request")
+		expected:=notificationQAExpected(t,r,request,data)
+		w:=httptest.NewRecorder();if err=r.Render(w,request,"web/notification_preferences.html",data);err!=nil{t.Fatal(mode,err)}
+		body,headers,normalized:=notificationQANormalize(t,w,"synthetic-notification-ui-nonce");normalized["name"]=mode
+		if bytes.Contains(body,[]byte("PRIVATE-"))||bytes.Contains(body,[]byte("<style")){t.Fatal("private/executable display data entered native fixture")}
+		groupDetailQAWrite(t,filepath.Join(output,mode+".html"),body)
+		states=append(states,map[string]any{"name":mode,"language":data["language"],"theme":data["display_theme"],"text":data["display_text"],"motion":data["display_motion"],"bytes":len(body),"sha256":groupDetailQAHash(body),"go_gzip_level9_bytes":notificationQAGzip(t,body),"canonical":"/notifications/preferences/","synthetic_csrf":"synthetic-notification-ui-csrf","renderer_headers":headers,"expected":expected})
+		normalizations=append(normalizations,normalized)
+	}
+	prior:=notificationQAPrior(t,root,output,r);after:=groupDetailQASources(t,root,bridge.Paths)
+	left,_:=json.Marshal(before);right,_:=json.Marshal(after);if !bytes.Equal(left,right)||notificationQABridge(t,root).Head!=bridge.Head{t.Fatal("source/Git changed during export")}
+	manifest:=map[string]any{"schema":1,"PG_producer_source":*notificationQAProducer,"UI_method_source":bridge.Head,"source_unchanged":true,"sources_before":before,"sources_after":after,"states":states,"previous_body_equality":prior,"normalization":map[string]any{"schema":1,"kind":"render-nonce-only","replacement":"synthetic-notification-ui-nonce","states":normalizations},"baseline_keeper_sha256":"f1fc63527352bbb41a4d7640a0634dac6164d7e34eaddca0209fe355ecc14153","scope":"Six real native Renderer presentation fixtures and25priorbody equalities only. Real registered/current-authority proof is in canonical six-package App/PG; only current displayed row values enter matched benchmark."}
+	raw,err:=json.MarshalIndent(manifest,"","  ");if err!=nil{t.Fatal(err)};groupDetailQAWrite(t,filepath.Join(output,"fixtures.json"),append(raw,'\n'))
+}
+func notificationQACaptured(t testing.TB,root,lang string)(*http.Request,pongo2.Context) {
+	t.Helper();file:=*notificationQACapture
+	if !filepath.IsAbs(file)||!strings.Contains(file,"/_temp/"){t.Fatal("actual admitted capture required")}
+	actual,err:=filepath.EvalSymlinks(file);if err!=nil||actual!=file{t.Fatal("unalias capture required",err)}
+	info,err:=os.Lstat(file);if err!=nil||!info.Mode().IsRegular()||info.Size()>2<<20{t.Fatal("bounded capture required",err)}
+	raw,err:=os.ReadFile(file);if err!=nil{t.Fatal(err)}
+	var artifact struct{Schema int `json:"schema"`;Source string `json:"source_sha"`;Root string `json:"producer_root"`;Method string `json:"qualifier_method_sha256"`;Projection string `json:"projection_base64"`;SHA string `json:"projection_sha256"`;Rows []struct{Path,SHA256 string;Bytes int} `json:"source_rows"`}
+	if json.Unmarshal(raw,&artifact)!=nil||artifact.Schema!=1||artifact.Source!=*notificationQAProducer||artifact.Root!="TestNativeNotificationPreferencesRegisteredHTTPAndDelivery"||len(artifact.Method)!=64{t.Fatal("successful actual producer capture required")}
+	bridge:=notificationQABridge(t,root);current:=groupDetailQASources(t,root,bridge.Product);byPath:=map[string]string{}
+	for _,row:=range artifact.Rows{if byPath[row.Path]!=""{t.Fatal("duplicate capture source")};byPath[row.Path]=fmt.Sprintf("%d:%s",row.Bytes,row.SHA256)}
+	if len(byPath)!=len(current){t.Fatal("complete producer product source frame required")};for _,row:=range current{if byPath[row["path"].(string)]!=fmt.Sprintf("%d:%s",row["bytes"].(int),row["sha256"].(string)){t.Fatal("producer source changed",row["path"])}}
+	projection,err:=base64.StdEncoding.DecodeString(artifact.Projection);if err!=nil||len(projection)>64<<10||groupDetailQAHash(projection)!=artifact.SHA{t.Fatal("bounded projection digest differs")}
+	type row struct{Value,Label,Reason string;Muted bool}
+	var value struct{Schema int `json:"schema"`;Variants []struct{Language string `json:"language"`;Projection struct{Rows []row `json:"rows"`} `json:"projection"`} `json:"variants"`}
+	decoder:=json.NewDecoder(bytes.NewReader(projection));decoder.DisallowUnknownFields()
+	if decoder.Decode(&value)!=nil||value.Schema!=1||len(value.Variants)!=2||value.Variants[0].Language!="en"||value.Variants[1].Language!="ro"{t.Fatal("exact minimal display schema required")}
+	for _,variant:=range value.Variants{if variant.Language==lang{
+		if len(variant.Projection.Rows)!=22{t.Fatal("complete optional rows required")}
+		rows:=make([]map[string]any,0,22);for i,row:=range variant.Projection.Rows{
+			if row.Value!=accountNotificationOrder[i]||row.Label==""||row.Reason==""{t.Fatal("actual row source shape/order differs")}
+			rows=append(rows,map[string]any{"value":row.Value,"label":row.Label,"reason":row.Reason,"muted":row.Muted})
+		}
+		// Only explicit render environment is synthetic. All22display values
+		// and booleans come from the successful current authorized projection.
+		request,data:=notificationPreferencesFixture("none-en");request.Header.Set("Accept-Language",lang)
+		data["language"],data["csrf"],data["rows"]=lang,"synthetic-notification-benchmark-csrf",rows
+		delete(data,"PRIVATE-foreign-preferences")
+		t.Logf("actual same-display body-only source=%s method=%s projection=%s language=%s; fixed shared synthetic render environment",artifact.Source,artifact.Method,artifact.SHA,lang)
+		return request,data
+	}}
+	t.Fatal("captured language missing");return nil,nil
+}
+func BenchmarkSocialNotificationPreferencesBodyRender(b *testing.B) {
+	root,err:=filepath.Abs("../../../..");if err!=nil{b.Fatal(err)};bridge:=notificationQABridge(b,root);before,_:=json.Marshal(groupDetailQASources(b,root,bridge.Paths))
+	for _,lang:=range []string{"en","ro"}{b.Run(lang,func(b *testing.B){
+		r:=NewRenderer(root);request,data:=notificationQACaptured(b,root,lang);semanticBefore,err:=json.Marshal(data);if err!=nil{b.Fatal(err)};merged:=familyBenchmarkDefaults(r,request,data)
+		old,err:=r.set.FromCache("web/notification_preferences.html");if err!=nil{b.Fatal(err)}
+		for _,native:=range []bool{false,true}{name:="classic";if native{name="native"};b.Run(name,func(b *testing.B){
+			render:=func()[]byte{if native{raw,err:=r.renderNotificationPreferences(request,merged);if err!=nil{b.Fatal(err)};return raw};var output bytes.Buffer;if err:=old.ExecuteWriter(merged,&output);err!=nil{b.Fatal(err)};return output.Bytes()}
+			raw:=render();if len(raw)==0{b.Fatal("empty matched body")};compressed:=notificationQAGzip(b,raw);b.ReportAllocs();b.ResetTimer()
+			for i:=0;i<b.N;i++{familyBenchmarkSink=render()};b.StopTimer();b.ReportMetric(float64(len(raw)),"html-B/op");b.ReportMetric(float64(compressed),"gzip9-B/op")
+		})}
+		semanticAfter,err:=json.Marshal(data);if err!=nil||!bytes.Equal(semanticBefore,semanticAfter){b.Fatal("body renderer mutated shared actual display projection",err)}
+	})}
+	after,_:=json.Marshal(groupDetailQASources(b,root,bridge.Paths));if !bytes.Equal(before,after)||notificationQABridge(b,root).Head!=bridge.Head{b.Fatal("source/Git changed during warmed benchmark")}
+}

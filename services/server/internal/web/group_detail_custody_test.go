@@ -27,6 +27,11 @@ func groupDetailPreviousRepairRows(rows []guiPublicGetRepairRow) []guiPublicGetR
 	return append([]guiPublicGetRepairRow(nil), rows[1:]...)
 }
 func groupDetailRendererPreimage(raw []byte) ([]byte, error) {
+	var notificationErr error
+	raw, notificationErr = notificationPreferencesPriorSource("services/server/internal/web/renderer.go", raw)
+	if notificationErr != nil {
+		return nil, notificationErr
+	}
 	rows := guiPublicGetRepairRows()
 	if groupDetailPreviousRepairRows(rows) == nil {
 		return nil, fmt.Errorf("group-detail-current-rows")
@@ -42,6 +47,11 @@ func groupDetailRendererPreimage(raw []byte) ([]byte, error) {
 	return before, nil
 }
 func groupDetailWalkerPreimage(raw []byte) ([]byte, error) {
+	var notificationErr error
+	raw, notificationErr = notificationPreferencesPriorSource("services/server/internal/web/gui_public_get_walk_test.go", raw)
+	if notificationErr != nil {
+		return nil, notificationErr
+	}
 	if len(raw) != 62298 || guiPublicHash(raw) != "8604ff0a20a1d2eb3ecff08ba5245124c7fccce7b9c223910db03cdef378f096" || bytes.Count(raw, []byte("\t\t// ADR-0063: exact whole group-detail dispatch; retain the complete31-row preimage.\n\t\t{\n\t\t\tpath:        \"services/server/internal/web/renderer.go\",\n\t\t\tbeforeSHA:   \"6228270fd3343f7d352b79780bd9055ccbf9fe70b2d7917acdb4e0b6ffd31ed3\",\n\t\t\tafterSHA:    \"3ba5b4456312437e8edf058b4f9967385bf14e483a0bb6d771b5881231d5c0e6\",\n\t\t\tbeforeBytes: 5967,\n\t\t\tafterBytes:  6146,\n\t\t\tbefore:      \"\\t} else {\\n\\t\\ttemplate, parseErr := r.set.FromCache(name)\",\n\t\t\tafter:       \"\\t} else if name == \\\"web/group_detail.html\\\" {\\n\\t\\traw, renderErr := r.renderGroupDetail(request, defaults)\\n\\t\\tif renderErr != nil {\\n\\t\\t\\treturn renderErr\\n\\t\\t}\\n\\t\\t_, _ = output.Write(raw)\\n\\t} else {\\n\\t\\ttemplate, parseErr := r.set.FromCache(name)\",\n\t\t},\n")) != 1 {
 		return nil, fmt.Errorf("group-detail-complete-walker")
 	}

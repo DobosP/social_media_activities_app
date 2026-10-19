@@ -62,6 +62,7 @@ On conflict: `STATUS.md` > newest-dated ADR > every other doc.
 | 0061 | [native-family-pages](0061-native-family-pages.md) | implemented; independently qualified affected PG6/desktop8+2, feature branch only | 2026-10-19 |
 | 0062 | [native-group-create](0062-native-group-create.md) | independently feature-qualified PG1f8c974 + presentationd05343b | 2026-10-19 |
 | 0063 | [native-group-detail](0063-native-group-detail.md) | independently feature-qualified affectedPG6/desktop7+7; feature branch only | 2026-10-19 |
+| 0064 | [native-notification-preferences](0064-native-notification-preferences.md) | reviewed source applied; actual qualification pending | 2026-10-19 |
 
 ⚠ **0009 is claimed twice** — this ledger exists so it does not happen again. Both files stay:
 `0009-csp-enforcement-prep.md` (superseded by ADR-0010) and

@@ -28,8 +28,19 @@ func groupCreatePreferenceSourceBinding(path string, raw []byte, physical, wante
 	}
 	previous := raw
 	var err error
+	if path == "services/server/internal/web/gui_preferences_layout_test.go" || path == "services/server/internal/web/gui_preferences_get_transport_test.go" {
+		previous, err = notificationPreferencesSourcePreimage(path, raw)
+		if err != nil {
+			return guiG1Binding{}, err
+		}
+		raw = previous
+	}
 	switch path {
 	case "services/server/internal/web/renderer.go":
+		raw, err = notificationPreferencesRendererPreimage(raw)
+		if err != nil {
+			return guiG1Binding{}, err
+		}
 		rows := groupDetailPreviousRepairRows(guiPublicGetRepairRows())
 		raw, err = groupDetailRendererPreimage(raw)
 		if err != nil {
@@ -42,6 +53,10 @@ func groupCreatePreferenceSourceBinding(path string, raw []byte, physical, wante
 	case "services/server/internal/web/forms.go":
 		previous, err = guiPublicGetRowsPreimage(path, raw)
 	case "services/server/internal/web/gui_public_get_walk_test.go":
+		raw, err = notificationPreferencesWalkerPreimage(raw)
+		if err != nil {
+			return guiG1Binding{}, err
+		}
 		raw, err = groupDetailWalkerPreimage(raw)
 		if err != nil {
 			return guiG1Binding{}, err

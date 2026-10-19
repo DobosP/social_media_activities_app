@@ -205,6 +205,10 @@ func guiPreferenceGET(t *testing.T, s *Server, files fstest.MapFS, item guiPrefe
 	}
 	renderer.CSPEnforce = s.Config.CSPEnforce
 	trace := &guiPublicTraceLoader{delegate: renderer.loader}
+	if item.Route == "notification_preferences" {
+		// Let the test-only alias retain original template-load trace identities.
+		renderer.loader = trace
+	}
 	renderer.set = pongo2.NewSet("native-social-current-preference", trace)
 	s.Renderer = renderer
 	mux := http.NewServeMux()
@@ -222,7 +226,9 @@ func guiPreferenceGET(t *testing.T, s *Server, files fstest.MapFS, item guiPrefe
 	}
 	response := httptest.NewRecorder()
 	*requests = *requests + 1
-	mux.ServeHTTP(response, request)
+	// Only retained notification form-byte predicates use the frozen reference.
+	// Every other route still executes its current registered native mux.
+	notificationPreferencesFrozenReferenceHandler(s, mux).ServeHTTP(response, request)
 	return guiCurrentTransportResponse{response, append([]guiPublicTemplateLoad(nil), trace.loads...), s.Config.PublicURL + item.Path}
 }
 
