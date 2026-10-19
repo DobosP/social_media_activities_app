@@ -85,3 +85,13 @@ before optimization, but higher CPU than Pongo; no full HTTP speedup is claimed.
 Final source exports preserve the eight accepted fixture bodies byte-for-byte.
 Historical captures/receipts are unchanged; source-only defaults are not an
 original semantic oracle. Teacher/Social milestone landing remains owner-only.
+
+## Notification inbox current checkpoint
+
+[ADR-0065](../adr/0065-native-notification-inbox.md) retains the complete3e536
+seven-package PASS446/1338 and failed first UIbd606:6JS6no-JS/31prior bodies,
+12 inline-link distinction violations, benchmark not reached. A reviewed
+owned-CSS underline repair clears all18Axe audits in causal diagnostic0177;
+its12 unchanged old-asset guard failures remain deliberate failures. Next is
+a fresh complete7 on the committed CSS source and the second primary UI run.
+No serving/backend/authority expansion or final feature acceptance is claimed.

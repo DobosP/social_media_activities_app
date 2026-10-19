@@ -117,3 +117,22 @@ format/whitespace and Python syntax pass; no live database is used by these pure
 controls. Original304tests/serving code/old helper/deps/assets remain unchanged.
 Commit the reviewed applied images before the complete seven-package method;
 no PG/UI/measurement or successor retention acceptance is claimed here.
+
+## Reviewed inline-link distinction repair
+
+Exact3e536 complete seven-package qualification passed446roots/1,338named cases,
+zero failures/skips; all15containers/seven databases/privatePG cleaned. Independent
+5dfcd accepts that source epoch. Its first primary UI runbd606 completed6JS/6no-JS
+states and31 byte-exact prior bodies but retained12 Axe link-in-text-block
+violations in four states across three menu modes. Benchmark was requested but
+not reached. This remains failed UI evidence.
+
+The owned inbox stylesheet adds a persistent underline to its inline View links.
+It changes no palette, original asset, Go/template/service, test or qualification
+method. The causal diagnostic0177 runs the same fixtures and18 unchanged strict
+Axe audits with the candidate CSS: all audits are issue-free, while all12 exact
+old-CSS guards deliberately fail. That diagnostic is not qualification. The
+reviewed presentation fix requires a fresh complete seven-package run on its
+committed CSS source followed by the second primary UI/measurement attempt. Both
+failed PG histories and the failed first UI remain retained; successor acceptance,
+keeper and rolling retention are pending. No broader gate or activation claim.

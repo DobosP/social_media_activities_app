@@ -6,3 +6,4 @@
 .notification-inbox-native .notification-inbox-heading { margin-bottom: 1.5rem; }
 .notification-inbox-native .notification-inbox-title { margin: 0; font-size: 1.125rem; overflow-wrap: anywhere; }
 .notification-inbox-native .notification-inbox-list p { overflow-wrap: anywhere; }
+.notification-inbox-native a[data-notification-link] { text-decoration: underline; }
