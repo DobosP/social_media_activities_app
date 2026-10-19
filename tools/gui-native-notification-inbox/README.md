@@ -2,8 +2,17 @@
 
 Commit these six methods before using them on a clean source SHA. The new
 `qualify-pg.py` adds complete notifications to the unchanged family driver's six
-packages; the original driver, DB entry/binding/tests and catalogue bootstrap
-stay unchanged. This is seven affected packages, not the full application gate.
+packages; the original driver, DB entry/binding/tests and original six-package
+catalogue bootstrap stay unchanged. The separate notifications-only helper is
+`services/server/tools/gui-native-notification-inbox-bootstrap`: it accepts only
+the same exact local socket/port/user/12-lowercase-hex namespace with the
+`notifications` suffix and runs canonical `catalog.New(db).Migrate` with the same
+30-second context. It adds no reference rows or schema logic. Its complete pure
+flag/DSN and invalid-invocation tests and vet run separately before fixtures;
+valid-grammar controls call only the pure parser, never a live DB. The driver
+builds a second bootstrap binary and selects it only for the notifications
+reference role. All six earlier role commands retain their original helper.
+This is seven affected packages, not the full application gate.
 
 ```sh
 python3 -I tools/gui-native-notification-inbox/qualify-pg.py \

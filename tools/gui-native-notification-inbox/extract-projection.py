@@ -80,8 +80,8 @@ def main():
          and all(v.get('state') == 'PASS' and v['tests']['fail'] == 0 and v['tests']['skip'] == 0 for v in result['lanes'].values()), 'Complete successful seven-lane result required; no filtered or skipped substitute')
     need(set(result.get('retired_databases', {})) == set(LANES), 'All seven controlled database retirements required')
     method_rows = result.get('method_inputs', [])
-    expected_methods = {'tools/gui-native-family/' + name for name in ('qualify.py', 'db-entry.sh', 'db-binding.json', 'test_qualify.py')} | {'services/server/tools/gui-native-family-bootstrap/main.go', 'tools/gui-native-notification-inbox/qualify-pg.py'}
-    need(len(method_rows) == 6 and {row['path'] for row in method_rows} == expected_methods
+    expected_methods = {'tools/gui-native-family/' + name for name in ('qualify.py', 'db-entry.sh', 'db-binding.json', 'test_qualify.py')} | {'services/server/tools/gui-native-family-bootstrap/main.go', 'tools/gui-native-notification-inbox/qualify-pg.py', 'services/server/tools/gui-native-notification-inbox-bootstrap/main.go', 'services/server/tools/gui-native-notification-inbox-bootstrap/main_test.go'}
+    need(len(method_rows) == 8 and {row['path'] for row in method_rows} == expected_methods
          and all(row['path'] in bridge_before['product_paths'] and len(read(repo / row['path'])) == row['bytes']
                  and digest(read(repo / row['path'])) == row['sha256'] for row in method_rows)
          and any(row['path'] == 'tools/gui-native-notification-inbox/qualify-pg.py' and row['sha256'] == result['method_sha256'] for row in method_rows),

@@ -1,7 +1,7 @@
 # ADR-0065: Native notification inbox presentation
 
 Date: 2026-10-20
-Status: implemented — focused checks pass; first complete PG attempt failed at a new timestamp assertion; independently reviewed test-only repair applied, fresh complete qualification pending.
+Status: implemented — reviewed isolated notifications bootstrap applied; helper unit/static checks pass, both failed partial histories retained; fresh complete7/UI qualification pending.
 
 ## Scope
 
@@ -79,3 +79,41 @@ timestamp. Read-state/date/body assertions, product escaping/rendering, all old
 tests and original resource/time limits remain unchanged. Actual failure review
 adf73e82 and exact diagnostic are retained; fresh complete seven-package
 qualification, UI, prior-body checks and measurements remain pending.
+
+## Second actual PG attempt and isolated notifications bootstrap
+
+Exact0e31da9 completed all original six affected packages:442 roots/1,327 named
+passes with no failures/skips and six owned database retirements/checkpoints.
+The notifications reference role then failed before its native package ran:
+the frozen original helper accepts only the six earlier database suffixes and
+returned `explicit isolated qualification DSN required`. All14 created CIDs and
+names were removed and the private PostgreSQL stopped. This is another failed
+partial campaign, not complete seven-package qualification. Originalf087 App
+assertion failure and0e31 bootstrap rejection remain distinct immutable history.
+
+An additive qualification-only notifications bootstrap accepts only
+`host=/pgsocket port=55434 user=app dbname=social_family_<12-lowercase-hex>_notifications sslmode=disable`.
+It uses the same canonical `catalog.New(db).Migrate`,30-second context and JSON
+success contract. Pure grammar/flag and early invalid-run controls require no
+live DB; separate unit/vet/build receipts precede the new reference role. Only
+notifications selects the added binary. The original helper and six earlier
+bootstrap/runtime/build/vet commands, all product/service/tests/schema/deps,
+seven inventories/fifteen final CIDs/seven retirements and all caps/timeouts
+remain unchanged. Extractor admission extends its exact method-input set only
+with the two new helper files. No skip/filter, fixture reset or widened DSN.
+
+This source checkpoint makes no new test or runtime PASS claim. Root must review,
+apply, perform cheap checks and commit before one fresh complete seven-package
+qualification and the actual UI/no-JS/Axe/31-body/capture/measurement work. Both
+failed raw histories remain; no retention is eligible before accepted successor
+custody. No full21/main/milestone/production/provider/real-child activation.
+
+## Applied isolated-bootstrap checkpoint
+
+Independent41e1774a approves the additive nine-path repair. Root applied exact
+images, mechanically formatted only the NEW helper test, and ran the complete
+new helper package with race:3roots/41named, zero failures/skips. Helper vet,
+format/whitespace and Python syntax pass; no live database is used by these pure
+controls. Original304tests/serving code/old helper/deps/assets remain unchanged.
+Commit the reviewed applied images before the complete seven-package method;
+no PG/UI/measurement or successor retention acceptance is claimed here.

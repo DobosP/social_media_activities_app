@@ -1,6 +1,6 @@
 # Native notification inbox — bounded execution plan
 
-Status: reviewed product/methods and NEW timestamp-assertion repair applied; local checks pass, fresh complete runtime qualification pending. Authority:
+Status: reviewed isolated bootstrap repair applied; helper3roots/41named/static pass, fresh complete seven-package qualification pending. Authority:
 programme ADR-0032 functional presentation scope and Social ADR-0065 proposal.
 
 1. Goal: existing inbox rendering and mark-all workflow using current Go services.
@@ -45,3 +45,19 @@ failed; all five created CIDs/privatePG cleaned. Root retained failure/diagnosti
 and applied independently reviewed5973 test-only repair9aac. No production or old
 test changes. Run cheap compile/vet/docs, commit, then one fresh complete PG7;
 keep original failure distinct from its successor. UI/measurement remain pending.
+
+Second actual attempt0e31: original six complete packages442roots/1,327named
+passed and retired their databases, then the original six-suffix bootstrap
+rejected notifications before its native package. All14 created roles/privatePG
+cleaned. Add only a strict notifications helper, pure non-DB grammar/invalid-run
+controls, separate unit/vet/build, notifications-only reference entrypoint and
+exact extractor8-input source join. Original helper/six role commands/product
+assertions/caps remain. Commit after independent source/static review, then run
+one fresh complete seven; no success is forecast. Retainf087 and0e distinct failed
+histories and keep all retention pending accepted complete successor custody.
+
+Root applied checkpoint: independent41e approves9paths; only NEW Go test format
+changed mechanically. Pure helper race3roots/41named0fail0skip, helper vet,
+format/whitespace and Python syntax pass. No original tests or serving source
+changed. Commit exact applied source, then qualify all seven complete packages;
+all earlier partial failures remain unqualified and retained.

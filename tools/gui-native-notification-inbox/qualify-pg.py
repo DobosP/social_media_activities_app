@@ -61,6 +61,8 @@ REFERENCE_SQL = """SELECT jsonb_build_object(
 'content_types',(SELECT jsonb_agg(to_jsonb(t) ORDER BY t.id) FROM public.django_content_type t))"""
 REFERENCE_SEED = 'services/server/internal/catalog/testdata/reference_seed.json'
 REFERENCE_HELPER = 'services/server/tools/gui-native-family-bootstrap/main.go'
+NOTIFICATIONS_REFERENCE_HELPER = 'services/server/tools/gui-native-notification-inbox-bootstrap/main.go'
+NOTIFICATIONS_REFERENCE_TEST = 'services/server/tools/gui-native-notification-inbox-bootstrap/main_test.go'
 
 
 STORAGE_SQL = """SELECT json_build_object('maintenance_database',current_database(),
@@ -406,6 +408,8 @@ def execute(args):
         method_inputs = {str((db_method / name).relative_to(REPO)): regular(db_method / name)
                          for name in ('qualify.py', 'db-entry.sh', 'db-binding.json', 'test_qualify.py')}
         method_inputs[REFERENCE_HELPER] = regular(REPO / REFERENCE_HELPER)
+        method_inputs[NOTIFICATIONS_REFERENCE_HELPER] = regular(REPO / NOTIFICATIONS_REFERENCE_HELPER)
+        method_inputs[NOTIFICATIONS_REFERENCE_TEST] = regular(REPO / NOTIFICATIONS_REFERENCE_TEST)
         method_inputs['tools/gui-native-notification-inbox/qualify-pg.py'] = regular(Path(__file__).absolute())
         result['method_inputs'] = [{'path': path, 'bytes': len(raw), 'sha256': digest(raw)}
                                   for path, raw in method_inputs.items()]
@@ -438,9 +442,17 @@ def execute(args):
               '-o', str(out / 'binaries/reference-bootstrap'), './tools/gui-native-family-bootstrap'],
              host_go=True, timeout=600, label='reference-bootstrap-compile')
         result['reference_bootstrap_binary'] = {'sha256': digest(regular(out / 'binaries/reference-bootstrap'))}
+        call([str(GO), '-C', str(out / 'source/services/server'), 'build', '-mod=readonly', '-buildvcs=false', '-trimpath',
+              '-o', str(out / 'binaries/reference-notifications-bootstrap'), './tools/gui-native-notification-inbox-bootstrap'],
+             host_go=True, timeout=600, label='notifications-reference-bootstrap-compile')
+        result['notifications_reference_bootstrap_binary'] = {'sha256': digest(regular(out / 'binaries/reference-notifications-bootstrap'))}
         for lane, _ in LANES:
             call([str(GO), '-C', str(out / 'source/services/server'), 'test', '-mod=readonly', '-race', '-c', '-o', str(out / 'binaries' / (lane + '.test')), './internal/' + lane], host_go=True, timeout=600, label=lane + '-compile')
         call([str(GO), '-C', str(out / 'source/services/server'), 'vet', *['./internal/' + lane for lane, _ in LANES], './tools/gui-native-family-bootstrap'], host_go=True, timeout=600, label='affected-vet')
+        call([str(GO), '-C', str(out / 'source/services/server'), 'test', '-mod=readonly', '-count=1', '-v',
+              './tools/gui-native-notification-inbox-bootstrap'], host_go=True, timeout=600, label='notifications-bootstrap-unit')
+        call([str(GO), '-C', str(out / 'source/services/server'), 'vet', './tools/gui-native-notification-inbox-bootstrap'],
+             host_go=True, timeout=600, label='notifications-bootstrap-vet')
         db_tmpfs = {'/var/lib/postgresql/data': 'rw,nosuid,nodev,size=1g,uid=999,gid=999,mode=0700',
                     '/tmp': 'rw,nosuid,nodev,size=64m,uid=999,gid=999,mode=1777'}
         create('db', DB_IMAGE, '999:999', 'bash', ['-u', '-o', 'pipefail', '-c', db_entry.decode()],
@@ -468,8 +480,9 @@ def execute(args):
             binds = [(str(out / 'source'), '/src', False), (str(out / 'binaries'), '/tests', False),
                      (str(out / 'test-tmp'), '/scratch', True), (str(socket), '/pgsocket', False)]
             reference_role = 'reference-' + lane
+            reference_entrypoint = '/tests/reference-notifications-bootstrap' if lane == 'notifications' else '/tests/reference-bootstrap'
             create(reference_role, CODEC_IMAGE, str(os.getuid()) + ':' + str(os.getgid()),
-                   '/tests/reference-bootstrap', ['-dsn', dsn], binds,
+                   reference_entrypoint, ['-dsn', dsn], binds,
                    {'/tmp': 'rw,nosuid,nodev,size=64m,mode=1777'}, [], 2, 3 << 30, 512)
             reference_code, reference_stdout, reference_stderr = docker('start', '-a', owners[reference_role]['cid'],
                                                                          timeout=90, failure=True, label=lane + '-reference-bootstrap')
