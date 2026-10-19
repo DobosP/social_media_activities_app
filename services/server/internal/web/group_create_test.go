@@ -3,6 +3,7 @@ package web
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -171,6 +172,23 @@ func TestNativeGroupSemanticSnapshotUsesExistingBoundValuesAndCleaner(t *testing
 	if err != nil || other["native_group"] != nil {
 		t.Fatal("group metadata leaked into unrelated form shape", err)
 	}
+	// One bounded synthetic capture from this SAME actual SQL/form-builder call.
+	// It contains no credential, token or real account data. The committed QA
+	// extractor requires this root's actual PASS and the complete source frame.
+	classic, ok := form["as_p"].(*pongo2.Value)
+	if !ok {
+		t.Fatal("actual legacy safe widget projection missing")
+	}
+	projection, err := json.Marshal(map[string]any{
+		"schema": 1, "as_p": classic.String(), "native_group": snapshot, "errors": form["errors"],
+		"actor": map[string]any{"id": actor.ID, "public_id": actor.PublicID, "username": actor.Username, "display_name": actor.DisplayName,
+			"age_band": actor.AgeBand, "cohort": actor.Cohort, "role": actor.Role, "identity_verified": actor.IdentityVerified,
+			"is_active": actor.IsActive, "is_staff": actor.IsStaff, "is_superuser": actor.IsSuperuser},
+	})
+	if err != nil || len(projection) > 128<<10 {
+		t.Fatal("bounded actual synthetic form projection unavailable", err)
+	}
+	t.Log("NATIVE_GROUP_FORM_V1 " + string(projection))
 }
 
 func TestNativeGroupDescriptionPreservesSupplementaryPlaneRuneBound(t *testing.T) {
