@@ -41,7 +41,7 @@ func TestNativeNotificationPreferencesStaticTransportWithoutDatabase(t *testing.
 		t.Fatal(err)
 	}
 	a := &App{Config: Config{AllowedHosts: []string{"social.fixture.test"}}, Static: handler}
-	const expected = ".notification-preferences-page .btn { transition: transform .04s ease; }\n:root .notification-preferences-page .site-header { background: var(--card); }\n"
+	const expected = ".notification-preferences-page .btn { transition: transform .04s ease; }\n:root .notification-preferences-page .site-header { background: var(--card); }\n@media (min-width: 880px) {\n  .notification-preferences-page .nav-menu > .nav-panel { width: max-content; max-width: calc(100vw - 2.5rem); }\n}\n.notification-preferences-page .preference-choice { flex-wrap: nowrap; }\n.notification-preferences-page .preference-choice > input { flex: 0 0 auto; }\n.notification-preferences-page .preference-choice > span { min-width: 0; }\n"
 	for _, method := range []string{http.MethodGet, http.MethodHead} {
 		w := httptest.NewRecorder()
 		a.ServeHTTP(w, httptest.NewRequest(method, "https://social.fixture.test/static/css/notification-preferences-native.css", nil))
@@ -166,7 +166,7 @@ func TestNativeNotificationPreferencesRegisteredHTTPAndDelivery(t *testing.T) {
 		if guest.Code != http.StatusFound || !strings.HasPrefix(guest.Header().Get("Location"), "/login/?next=") || strings.Contains(guest.Body.String(), "notification-kind-arrival") || snapshot(t, false) != before {
 			t.Fatal("anonymous/query scope or read-only preferences boundary changed")
 		}
-		wantCSS := ".notification-preferences-page .btn { transition: transform .04s ease; }\n:root .notification-preferences-page .site-header { background: var(--card); }\n"
+		wantCSS := ".notification-preferences-page .btn { transition: transform .04s ease; }\n:root .notification-preferences-page .site-header { background: var(--card); }\n@media (min-width: 880px) {\n  .notification-preferences-page .nav-menu > .nav-panel { width: max-content; max-width: calc(100vw - 2.5rem); }\n}\n.notification-preferences-page .preference-choice { flex-wrap: nowrap; }\n.notification-preferences-page .preference-choice > input { flex: 0 0 auto; }\n.notification-preferences-page .preference-choice > span { min-width: 0; }\n"
 		for _, method := range []string{http.MethodGet, http.MethodHead} {
 			style := familyAppRequest(t, f.app, familyAppCredential{}, method, "/static/css/notification-preferences-native.css", "", nil, false)
 			if style.Code != http.StatusOK || !strings.HasPrefix(style.Header().Get("Content-Type"), "text/css") || style.Header().Get("Cache-Control") != "public, max-age=3600" ||

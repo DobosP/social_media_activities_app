@@ -1,2 +1,8 @@
 .notification-preferences-page .btn { transition: transform .04s ease; }
 :root .notification-preferences-page .site-header { background: var(--card); }
+@media (min-width: 880px) {
+  .notification-preferences-page .nav-menu > .nav-panel { width: max-content; max-width: calc(100vw - 2.5rem); }
+}
+.notification-preferences-page .preference-choice { flex-wrap: nowrap; }
+.notification-preferences-page .preference-choice > input { flex: 0 0 auto; }
+.notification-preferences-page .preference-choice > span { min-width: 0; }

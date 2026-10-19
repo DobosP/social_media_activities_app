@@ -159,7 +159,14 @@ async function keyboardChecks(page,state,label){
   entries=await serialized();check(entries.length===1&&entries[0][0]==='csrfmiddlewaretoken'&&entries[0][1]===state.synthetic_csrf,label+': unchecked optional controls omit muted and preserve CSRF');
   for(let i=0;i<state.expected.rows.length;i++){if(state.expected.rows[i].muted)await inputs.nth(i).check();else await inputs.nth(i).uncheck();}
   entries=await serialized();check(isDeepStrictEqual(entries.filter(([name])=>name==='muted').map(([,value])=>value),state.expected.selected),label+': source selections restored after absent-field witness');records.push({absentMutedVerified:true,restoredEntries:entries});
-  const button=form.locator('button[type=submit]');await button.focus();check(await button.evaluate(e=>e===document.activeElement&&getComputedStyle(e).outlineStyle!=='none'),label+': ordinary save button visible focus');
+  const button=form.locator('button[type=submit]');
+  // Restoring checked values above uses pointer input. Verify keyboard focus
+  // with a real Tab from the final checkbox, preserving the outline assertion.
+  await inputs.last().focus();await page.keyboard.press('Tab');
+  const saveFocus=await button.evaluate(e=>({active:e===document.activeElement,focusVisible:e.matches(':focus-visible'),outlineStyle:getComputedStyle(e).outlineStyle,outlineWidth:getComputedStyle(e).outlineWidth}));
+  check(await button.evaluate(e=>e===document.activeElement&&getComputedStyle(e).outlineStyle!=='none'),label+': ordinary save button visible focus');
+  check(saveFocus.focusVisible&&parseFloat(saveFocus.outlineWidth)>0,label+': save button has actual keyboard-visible nonzero outline');
+  records.push({saveButtonKeyboardFocus:saveFocus,keyboardStep:'last checkbox, Tab, save button'});
   const account=page.locator('header details.nav-menu.nav-end'),summary=account.locator('summary');await summary.focus();await page.keyboard.press('Enter');check(await account.evaluate(e=>e.open),label+': account menu keyboard open');await page.keyboard.press('Enter');check(!await account.evaluate(e=>e.open),label+': account menu keyboard closed');
   return records;
 }

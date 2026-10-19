@@ -56,3 +56,10 @@ then qualify the complete unchanged six-package profile and committed UI method.
 Successor focused web12roots/68named/zero skips/failures and App staticrace1 pass.
 Touched vet/auth hashes/full native format/syntax/docs are clear; four absent-path
 overlays compile without running tests. Complete canonical6/UI remain pending.
+
+Actual7819 complete6 passes436roots/1,279named/zero skips; independent69e714.
+First UI6+6/25priorbodies remains failed from six focus-modality assertions and
+six repeated wrapped-menu contrast incompletes. No benchmark ran. Reviewed
+three-file layout/real-Tab repaira046 is applied; jointdiagnostic18Axe/12focus
+clears but remains failed12intentional asset guards. Qualify fresh exact source
+with unchanged complete6 and strict UI; preserve raw first failures/diagnostics.

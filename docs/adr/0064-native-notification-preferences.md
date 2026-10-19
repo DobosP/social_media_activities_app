@@ -89,3 +89,34 @@ snapshot hashes,full native formatting,Node/Python syntax and63-document checks
 are clear. All four absent-path Go export overlays compile (no tests executed).
 Commit this complete source/method batch,then run the unchanged complete affected
 six-package qualifier before actual capture/export/desktop/measurement acceptance.
+
+## Complete PG and first UI presentation repair
+
+Exact7819 passes all six affected PostgreSQL packages:436 roots/1,279 named
+passes,zero skips/failures;293 waited commands/599 artifacts,thirteen owned
+container removals,six database retirements and stopped PG. Independent69e71436
+binds resultcf4cbeb7. The first UI admits the real projection and all25 prior
+bodies,completes6JS+6no-JS/cleanup,but remains failed: six save-focus method
+failures and six repeated color-contrast incomplete checks,zero violations.
+The requested benchmark was not reached; its original result remains unchanged.
+
+Form serialization restores selections via pointer actions; a later programmatic
+focus does not prove keyboard modality. The method now uses real Tab from the
+last checkbox and retains its original assertion,adding actual focus-visible/
+nonzero outline metrics. The RO account-overview label wraps in its narrow
+menu; no actual text occlusion was found. Scoped intrinsic desktop panel width
+clears the ambiguity,while bounded max-width preserves the viewport. Scoped
+nowrap/input-flex/text-min-width rules keep each checkbox beside its label
+without hiding or truncating text. Existing themes,hover,motion and base assets
+remain unchanged. Only two new-App stylesheet literal expectations change.
+
+Independent a046033d approves the three-file batch. Controlled jointdiagnostic
+74b061e2 passes18 strict audits/408 predicates and all12 real-Tab focus states,
+with all264 rows grouped; it remains failed at12 deliberate stylesheet asset
+guards and is never qualification. Fresh complete-six and current-asset UI/
+matched measurements on committed source remain required; no bridge exception.
+
+Applied repair passes actual new-App stylesheet GET/HEAD race1 with the exact
+521-byte served CSS; Node syntax and whitespace checks are clear. No native
+renderer/service/query/authority code changed after7819. Commit the reviewed
+presentation/method batch and qualify complete6/current assets on that new SHA.
