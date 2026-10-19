@@ -290,13 +290,17 @@ func (r *Renderer) groupDetailPage(request *http.Request, data pongo2.Context) (
 		}
 		if target := data["reply_target"]; target != nil {
 			row := d.row(target)
-			author := d.row(row["author"])
-			page.ReplyAuthor = d.optionalText(author["display_name"])
-			if page.ReplyAuthor == "" {
-				page.ReplyAuthor = d.text(author["username"])
-			}
-			if request.Method != "POST" {
-				page.ComposeReplyTo = strconv.FormatInt(d.id(row["id"]), 10)
+			// socialThreadContext supplies a typed nil map when no query target
+			// exists. Preserve that absence; nonnil malformed rows still fail.
+			if row != nil {
+				author := d.row(row["author"])
+				page.ReplyAuthor = d.optionalText(author["display_name"])
+				if page.ReplyAuthor == "" {
+					page.ReplyAuthor = d.text(author["username"])
+				}
+				if request.Method != "POST" {
+					page.ComposeReplyTo = strconv.FormatInt(d.id(row["id"]), 10)
+				}
 			}
 		}
 	}

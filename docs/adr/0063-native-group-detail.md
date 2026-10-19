@@ -64,3 +64,20 @@ actual captured projection, desktop7+7/strict Axe and matched warmed body
 measurements are still required on committed source. The earlier source-only
 preparation statements describe that earlier checkpoint; they are not runtime
 claims for this applied checkpoint.
+
+## First native execution and narrow correction
+
+The first complete-six attempt on dc1c15ca ran the complete web lane only:
+185 roots,183 pass/two fail, zero skips; two existing group-page leaf cases
+returned invalid-snapshot/500. No later App/capture/five package lane or UI ran.
+Recorded container exit was1 with no OOM/timeout; all three owned containers and
+the synthetic PG process/socket were cleaned. Original rawbc9758 remains failed.
+
+Unchanged socialThreadContext stores its optional reply target as a typed nil
+map when no query target exists. The new renderer mistook that interface for a
+present row. Independent source8a3775a8 approves only a decoded-row nil guard;
+all original author/id/bound-POST logic, producers, policies and tests remain.
+A new pure regression file covers typed nil/untyped absence, real GET target,
+first bound POST value and nonnil malformed target refusal before any output.
+Focused repaired race17roots/74named/zero skips and web vet pass. A clean-source
+successor complete affected-six run is required; no repair pass is inferred yet.

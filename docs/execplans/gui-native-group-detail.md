@@ -43,3 +43,13 @@ focused web14roots/61named/zero skips, app/web vet, auth hashes, syntax, complet
 native formatting and eight original qualifier controls pass. Root must commit
 this complete batch, compile the absent-source overlay, then execute the existing
 complete six-lane method once. No positive PG/capture/browser result exists yet.
+
+## First complete-six attempt
+
+Actual dc1 web ran185 roots once,183pass/two failing old root/leaf pairs with
+invalid-snapshot/500; later five lanes and actual App capture never ran. PG and
+all three owned containers stopped/removed, no OOM/timeout. Failure rawbc9758 is
+retained. Approved8a3775a8 fixes only the new renderer's typed-nil optional reply
+row handling; old producers/tests/policies remain exact. Actual repaired pure
+race17roots/74named/zero skips and web vet pass. Commit the narrow correction and
+this truthful checkpoint before one successor complete-six run; UI stays pending.
