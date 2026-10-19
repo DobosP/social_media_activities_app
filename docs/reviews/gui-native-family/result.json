@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "status": "PROPOSED_BOUNDED_FEATURE_KEEPER",
+  "operator": "agent:codex (PROGRAM E8)",
+  "source": "118fd7f46c6cfc9504d752ba382f890cdbbc8a44",
+  "tree": "2e151e16a26aa1d29ef23d71e6c8e940910645d1",
+  "six_lane_pass": true,
+  "counts": {"web": {"top_level": 164, "named_passes": 722, "skip": 0, "fail": 0}, "app": {"top_level": 36, "named_passes": 59, "skip": 0, "fail": 0}, "accounts": {"top_level": 75, "named_passes": 121, "skip": 0, "fail": 0}, "recommendations": {"top_level": 8, "named_passes": 24, "skip": 0, "fail": 0}, "social": {"top_level": 52, "named_passes": 123, "skip": 0, "fail": 0}, "messaging": {"top_level": 60, "named_passes": 100, "skip": 0, "fail": 0}},
+  "totals": {"packages": 6, "top_level": 395, "named_passes": 1149, "skip": 0, "fail": 0},
+  "method_sha256": "dccfe6bbd27289785e690361c6ce277f2f82b406acd6c5734d37254f79ae4ce2",
+  "cleanup": "Recorded thirteen-container and PG/PID/socket shutdown proofs; no new runtime probe by collector.",
+  "history": {"catalogue-failure": {"source": "cdbd21a5a54ba2705cbe5be84e746ed4705fa5d1", "pass": false, "disposition": "Catalogue reference initialization missing; existing accounts tests failed."}, "archive-build-failure": {"source": "595d39c9d538c51bc18c684b801ac0ef32a1a1ef", "pass": false, "disposition": "Reference bootstrap build failed against the exported archive."}, "wal-tmpfs-failure": {"source": "dc7a272599e3ed5d1d9bfab99f6338285dd6a72d", "pass": false, "disposition": "PostgreSQL WAL exhausted the fixed1GiB data tmpfs; method and graceful stop failed."}, "final-six-lane-pass": {"source": "118fd7f46c6cfc9504d752ba382f890cdbbc8a44", "pass": true, "disposition": "Six complete affected packages passed after completed-database retirement and checkpoints; limits unchanged."}},
+  "ui": {"states": 8, "no_js": 2, "axe_predicates": 192, "button_samples": 27, "new_browser_run_after_perf": false, "final_html_equal": 8, "all_frame_certification": false},
+  "benchmark": "Actual final body-only raw retained; smaller payload and ~47% lower allocations than initial native, higher CPU than Pongo; no full HTTP speedup.",
+  "retention": "No deletion by collector. Prior16 superseded PNG paths already pruned per retained executed manifest; latest8 remain. Full Git archive stdout excluded from keeper, not claimed already deleted.",
+  "archive": {"sha256": "cf40051663b86cfcd8026ae2f095c658c2c054e324a84d741125f6f429ea4a5d", "bytes": 2493488, "members": 1222, "roundtrip": "PASS"},
+  "manifest": "archive-manifest.json",
+  "authority": "Not full21, new/current image, main, milestone, deployment/provider or real-child activation."
+}

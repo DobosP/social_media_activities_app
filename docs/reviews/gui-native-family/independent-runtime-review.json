@@ -1,0 +1,110 @@
+{
+  "schema": 1,
+  "verdict": "ADMIT_SOCIAL_SIX_COMPLETE_AFFECTED_PG_RUNTIME_EVIDENCE",
+  "source": "118fd7f46c6cfc9504d752ba382f890cdbbc8a44",
+  "tree": "2e151e16a26aa1d29ef23d71e6c8e940910645d1",
+  "result_sha256": "386689c67f5d60a9417e3d0ae239d25f542c5747dd09e6dccb935b612edfcaac",
+  "method_sha256": "dccfe6bbd27289785e690361c6ce277f2f82b406acd6c5734d37254f79ae4ce2",
+  "source_manifest_sha256": "a7a4a0815026a99954d6bc2f0755e37c652a716427ae621eb47dd9ed1ca129de",
+  "supervisor_status_sha256": "9cdd83e09f3fc41ae159bc0ed6def6a0b199aa7fcb9b00973d31421fee10b47c",
+  "actual_gate_stdout_sha256": "7f7873b87d374707f1d208fd94827b6541377394d2aa9cf5b29be9f86a2ac92d",
+  "scope": "Current two native family views and six affected complete synthetic PG packages. Not full21/current-image/release/formalSocialmilestone/main/production/provider/government or real-child activation. Group-create candidate remains unapplied and outside this acceptance.",
+  "actual_status": {
+    "method_pass": true,
+    "errors": [],
+    "waited_gate_child_exit": 0,
+    "seconds": 430.8718395579999,
+    "detached_supervisor_OS_exit": "NOT_REQUIRED_OR_INFERRED"
+  },
+  "native": {
+    "complete_lanes": 6,
+    "top_level_inventory_total": 395,
+    "named_PASS_total": 1149,
+    "required_new_family_declarations": 17,
+    "zero_skip_fail_cache_race": true,
+    "all_listed_roots_and_all_named_RUN_PASS_once": true,
+    "lanes": [
+      {
+        "lane": "web",
+        "top_level": 164,
+        "named_passes": 722,
+        "native_stdout_sha256": "d2fcce274a674290259b00a4475f962452127c6f71f56698f24b1be08cfc9e40",
+        "actual_test2json_sha256": "cb3942e6c0f8226efeb41d96ac307e74a2696ac80a836a1a7a0e5608f981c52f"
+      },
+      {
+        "lane": "app",
+        "top_level": 36,
+        "named_passes": 59,
+        "native_stdout_sha256": "800cc3bad2ad8f5fce03b8f9d4f2375cbae603f2a07481c4424ee179a9e7a1f9",
+        "actual_test2json_sha256": "17e4be21d6df067c949a6e75bf5f9b85762e514eedfee50654768db4f9657393"
+      },
+      {
+        "lane": "accounts",
+        "top_level": 75,
+        "named_passes": 121,
+        "native_stdout_sha256": "11e7c27f263db38652dba0ee3f4e97c04e3737b292df06bce42a86dd31763a8a",
+        "actual_test2json_sha256": "609fbaf6f7d3a491cbe07d4a0c5c6a762314535698c98b8bfa0a25b48a2520f2"
+      },
+      {
+        "lane": "recommendations",
+        "top_level": 8,
+        "named_passes": 24,
+        "native_stdout_sha256": "88c8673f4a25d476a15544dddeac1c75059442d4c5618b7d33054fa06c54369f",
+        "actual_test2json_sha256": "39fa31ae2bedc843bf2de77524ebba3b3517429b430c9f5937a0f84271863a28"
+      },
+      {
+        "lane": "social",
+        "top_level": 52,
+        "named_passes": 123,
+        "native_stdout_sha256": "05c72d21968689b3866d5ef7610f49732e01dbd75da3c85a06d0a2c0b9f61d66",
+        "actual_test2json_sha256": "20356d4826c5f921ecbdd85a69a90e8644e5d06b8ad779a862c8ab387817b3bd"
+      },
+      {
+        "lane": "messaging",
+        "top_level": 60,
+        "named_passes": 100,
+        "native_stdout_sha256": "e3dc5c87f4e402af07669eb5b82ea006f6fa1fe19de8ec2d27a5be28039cb6d8",
+        "actual_test2json_sha256": "2dc3033d6e0f428b7c900ba3273e16e97cb42f87bb72471c439d721dc19574c9"
+      }
+    ],
+    "cryptographic_transport_join": "All six actual native stdout hashes/lengths equal respective go tool test2json stdin receipts. Actual pinned Go tool output frames/package identity/eachpackagePASS and complete inventories/binary hashes independently checked. No run/skip/retry filter.",
+    "native_caps": "Original10m package timeout/660s host wait,2CPU/3GiBclient memory/512PIDs preserved."
+  },
+  "source_and_methods": [
+    "All597 proof rows exactly match regular retained files and all292 actual command exits are0 with hash/size joins.",
+    "Recreated exact clean118fd7 Git archive in memory:22,138,880B/SHA199525b7...,tree2e151e16 and all2086 regular source members/content/mode-normalization match current exported source manifest; no duplicate archive retained.",
+    "All five committed method inputs equal archive/current method bytes; actual helper230b6bb5 and six test binary hashes, actual Go executable30969f97/go1.27.1 command receipt match.",
+    "All before/after six public metadata records match PG16/extensions/zero residual fixture schemas/budgets/three migration markers, and all five full canonical reference datasets equal embedded source10/38/9/8/91 exactly.",
+    "Recorded repeated source/Git fences and readonly source mounts preserve actual qualified source; no owning mutations performed by reviewer."
+  ],
+  "database_retirement": {
+    "completed": 6,
+    "constraints": "Each native/catalog/source proof precedes drop; both clientCIDs removed first. Exact generated namespace/capturedOID/appowner/non-template/zero-client/defaults+current-only metadata independently verified in actual SQL captures.",
+    "actual_absence_checkpoint": "All six raw DROP(noFORCE/IFEXISTS), positive name/OID absence, separate successful CHECKPOINT and postcheckpoint defaults-only/stablepostmaster records verified before next creation.",
+    "storage_samples": 19,
+    "data_tmpfs_bytes": 1073741824,
+    "db_memory_bytes": 2147483648,
+    "max_sampled_tmpfs_used_bytes": 653086720,
+    "WAL_bytes_after_first_lane_and_remaining_samples": 436207616,
+    "limit": "Storage snapshots are observed samples, not an intra-lane peak benchmark or general scalability guarantee. Original cap unchanged; current full six-lane run proves this case completes."
+  },
+  "owned_runtime_cleanup": {
+    "containers_created_and_removed": 13,
+    "identity": "Every created CID/name/image/ownerUUID/user/caps/network-none/readonly/bind set matches every subsequent inspect and final removal. Docker mount ordering normalized as a set; no anonymous volumes accepted.",
+    "absence": "All13fullCID and anchored-name removal queries exit0 with empty stdout, normal nonforce rm outputs match IDs.",
+    "postgres": "Actual readyPID23 and final cleanupJSON stop0/status3/pid_probe1/PID+socketabsent match actual final log and captured dockerwait0; no current runtime command issued by reviewer."
+  },
+  "PG_log": {
+    "sha256": "87fbcae98477ae9c89387bda4f7e61a46e3652cdf8fd05cc57cf04a9b38e92bb",
+    "PANIC_FATAL_NoSpace_recovery": 0,
+    "expected_ERRORs": {
+      "intentional_family_audit_refusal": 3,
+      "bootstrap_fixture_refuse_audit_constraint": 1,
+      "fixture_login_finalize_failure_constraint": 1
+    },
+    "lifecycle": "One clean initial ready, no interrupted/recovery events, final shutdown checkpoint/server stopped/no server running. Logical replication worker exit1 occurs during normal shutdown and is not classified as a failure."
+  },
+  "findings": [],
+  "remaining": "Independent actual selected keeper/archive/source+UI/metadata joins and retention review before functional feature publication. Preserve all prior catalogue/helper-build/WAL failure histories and their failed graceful-shutdown result. No new native run warranted by these green receipts.",
+  "execution": "Static source/artifact/JSON/hash/log/localGit/archive/proof inspection and scratch review only; no candidate import/parser/native tests/Go/browser/Docker/PG/network/process control or owning writes."
+}

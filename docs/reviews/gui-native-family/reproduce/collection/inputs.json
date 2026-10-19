@@ -1,0 +1,314 @@
+{
+  "schema": 1,
+  "source": "118fd7f46c6cfc9504d752ba382f890cdbbc8a44",
+  "tree": "2e151e16a26aa1d29ef23d71e6c8e940910645d1",
+  "runs": [
+    {
+      "label": "catalogue-failure",
+      "run": "pg-qa/run-cdbd21a5a54b-ce908181-a4da-47ef-91f3-a32018b32b70",
+      "supervisor": "pg-qa",
+      "source": "cdbd21a5a54ba2705cbe5be84e746ed4705fa5d1",
+      "method_sha256": "f4893e5adc2158db35c919c064ae32a3c4439c4912c43366fb0586e477b93400",
+      "pass": false,
+      "disposition": "Catalogue reference initialization missing; existing accounts tests failed.",
+      "files": [
+        {
+          "path": "pg-qa/run-cdbd21a5a54b-ce908181-a4da-47ef-91f3-a32018b32b70/result.json",
+          "bytes": 179458,
+          "sha256": "7a22c9465248a735c233e33b3f9bc43450d8953e0b405c6188edfc3b8249c566"
+        },
+        {
+          "path": "pg-qa/run-cdbd21a5a54b-ce908181-a4da-47ef-91f3-a32018b32b70/source-manifest.json",
+          "bytes": 330914,
+          "sha256": "f317cb07908aea40e5429ef6cdad4e235511242adfe5be25aa7c49facb3a5dbc"
+        },
+        {
+          "path": "pg-qa/supervisor-status.json",
+          "bytes": 1161,
+          "sha256": "1713a1ec629b70ec0c2faac65694f1489a8acea15a5d4350da13a2d282af66c1"
+        },
+        {
+          "path": "pg-qa/supervisor.py",
+          "bytes": 2785,
+          "sha256": "18b083ec5ccf087400978915d4da3f5d7e5a783f4724a54ad029ac0f0b563332"
+        },
+        {
+          "path": "pg-qa/supervisor.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "pg-qa/supervised-gate.log",
+          "bytes": 695,
+          "sha256": "304ffd2eb62c8cce2b6bdee61db4819732343dec6c53f58cedbe6ccc6ca3a7c3"
+        },
+        {
+          "path": "pg-qa/run-cdbd21a5a54b-ce908181-a4da-47ef-91f3-a32018b32b70/socket/pg-cleanup.json",
+          "bytes": 98,
+          "sha256": "c23b6aee760b1b531e858666f5f75a0ff5372ce5a7ba14c888330e624dc33356"
+        }
+      ]
+    },
+    {
+      "label": "archive-build-failure",
+      "run": "pg-qa/rerun-catalog-corrected/run-595d39c9d538-195d5716-adb3-44ba-8e5d-033c8a8f8cfa",
+      "supervisor": "pg-qa/rerun-catalog-corrected",
+      "source": "595d39c9d538c51bc18c684b801ac0ef32a1a1ef",
+      "method_sha256": "33b4192d0f60bddf5f5d4bc7a46ece6661e97b4bc942286fad7124f2bf0f8a24",
+      "pass": false,
+      "disposition": "Reference bootstrap build failed against the exported archive.",
+      "files": [
+        {
+          "path": "pg-qa/rerun-catalog-corrected/run-595d39c9d538-195d5716-adb3-44ba-8e5d-033c8a8f8cfa/result.json",
+          "bytes": 11476,
+          "sha256": "de1c7320ee17167418528bcc2ab9bf404e9a3a363a942814a4896e7f27882a55"
+        },
+        {
+          "path": "pg-qa/rerun-catalog-corrected/run-595d39c9d538-195d5716-adb3-44ba-8e5d-033c8a8f8cfa/source-manifest.json",
+          "bytes": 332023,
+          "sha256": "34e79836c7938b80daebdd2d84ea9d5450530d9c620b622d996aa7ca8f2497ff"
+        },
+        {
+          "path": "pg-qa/rerun-catalog-corrected/supervisor-status.json",
+          "bytes": 1185,
+          "sha256": "df44f6b510eccfcc2dd0d54bc58cd79d02852beec66fe690de89af0da39a392d"
+        },
+        {
+          "path": "pg-qa/rerun-catalog-corrected/supervisor.py",
+          "bytes": 2785,
+          "sha256": "18b083ec5ccf087400978915d4da3f5d7e5a783f4724a54ad029ac0f0b563332"
+        },
+        {
+          "path": "pg-qa/rerun-catalog-corrected/supervisor.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "pg-qa/rerun-catalog-corrected/supervised-gate.log",
+          "bytes": 252,
+          "sha256": "85a8fb603f020c6a899c0e06c32fad592190e200aac21ed6862e934167aab129"
+        }
+      ]
+    },
+    {
+      "label": "wal-tmpfs-failure",
+      "run": "pg-qa/rerun-archive-verified/run-dc7a272599e3-ecd6c513-de67-4752-bf66-71d68e991e4f",
+      "supervisor": "pg-qa/rerun-archive-verified",
+      "source": "dc7a272599e3ed5d1d9bfab99f6338285dd6a72d",
+      "method_sha256": "d288419c5fd8fa9e02b41b2eb64d688ab7e634ef256489c444d660ad20a13e43",
+      "pass": false,
+      "disposition": "PostgreSQL WAL exhausted the fixed1GiB data tmpfs; method and graceful stop failed.",
+      "files": [
+        {
+          "path": "pg-qa/rerun-archive-verified/run-dc7a272599e3-ecd6c513-de67-4752-bf66-71d68e991e4f/result.json",
+          "bytes": 336191,
+          "sha256": "2aeda8bfaa1620e6cc760cc41a77c0d65db8c2404fc0396a003d0830d9ae22aa"
+        },
+        {
+          "path": "pg-qa/rerun-archive-verified/run-dc7a272599e3-ecd6c513-de67-4752-bf66-71d68e991e4f/source-manifest.json",
+          "bytes": 332023,
+          "sha256": "cf14bbdf4e7ea9683febb621246dc3e8d6cca987f063ed1e5a4b8a2d2811e21d"
+        },
+        {
+          "path": "pg-qa/rerun-archive-verified/supervisor-status.json",
+          "bytes": 1184,
+          "sha256": "cba042cee870e6191cb5f60eb28107837ba4cf274887f7f073bd300dcd4fbbeb"
+        },
+        {
+          "path": "pg-qa/rerun-archive-verified/supervisor.py",
+          "bytes": 2785,
+          "sha256": "18b083ec5ccf087400978915d4da3f5d7e5a783f4724a54ad029ac0f0b563332"
+        },
+        {
+          "path": "pg-qa/rerun-archive-verified/supervisor.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "pg-qa/rerun-archive-verified/supervised-gate.log",
+          "bytes": 1194,
+          "sha256": "9cb814ebaa78c888b8b3fb1f77abaaef831e6430913dca1d801adb4deb2ab33d"
+        },
+        {
+          "path": "pg-qa/rerun-archive-verified/run-dc7a272599e3-ecd6c513-de67-4752-bf66-71d68e991e4f/socket/pg-cleanup.json",
+          "bytes": 98,
+          "sha256": "d3fe7fcea70c6988e80bf14075db14fbf42edf6f11bc664bfdb576a25edbc9a2"
+        }
+      ]
+    },
+    {
+      "label": "final-six-lane-pass",
+      "run": "pg-qa/rerun-rolling-database/run-118fd7f46c6c-565fdf56-3a13-419a-b428-284457e43d8c",
+      "supervisor": "pg-qa/rerun-rolling-database",
+      "source": "118fd7f46c6cfc9504d752ba382f890cdbbc8a44",
+      "method_sha256": "dccfe6bbd27289785e690361c6ce277f2f82b406acd6c5734d37254f79ae4ce2",
+      "pass": true,
+      "disposition": "Six complete affected packages passed after completed-database retirement and checkpoints; limits unchanged.",
+      "files": [
+        {
+          "path": "pg-qa/rerun-rolling-database/run-118fd7f46c6c-565fdf56-3a13-419a-b428-284457e43d8c/result.json",
+          "bytes": 547574,
+          "sha256": "386689c67f5d60a9417e3d0ae239d25f542c5747dd09e6dccb935b612edfcaac"
+        },
+        {
+          "path": "pg-qa/rerun-rolling-database/run-118fd7f46c6c-565fdf56-3a13-419a-b428-284457e43d8c/source-manifest.json",
+          "bytes": 332023,
+          "sha256": "a7a4a0815026a99954d6bc2f0755e37c652a716427ae621eb47dd9ed1ca129de"
+        },
+        {
+          "path": "pg-qa/rerun-rolling-database/supervisor-status.json",
+          "bytes": 1184,
+          "sha256": "9cdd83e09f3fc41ae159bc0ed6def6a0b199aa7fcb9b00973d31421fee10b47c"
+        },
+        {
+          "path": "pg-qa/rerun-rolling-database/supervisor.py",
+          "bytes": 2785,
+          "sha256": "18b083ec5ccf087400978915d4da3f5d7e5a783f4724a54ad029ac0f0b563332"
+        },
+        {
+          "path": "pg-qa/rerun-rolling-database/supervisor.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "pg-qa/rerun-rolling-database/supervised-gate.log",
+          "bytes": 1549,
+          "sha256": "7f7873b87d374707f1d208fd94827b6541377394d2aa9cf5b29be9f86a2ac92d"
+        },
+        {
+          "path": "pg-qa/rerun-rolling-database/run-118fd7f46c6c-565fdf56-3a13-419a-b428-284457e43d8c/socket/pg-cleanup.json",
+          "bytes": 98,
+          "sha256": "72a5afa50a83c5c811bed069b7a7df9ef03e1dcf1cbb5c7bc9b029612a301efe"
+        }
+      ]
+    }
+  ],
+  "records": [
+    {
+      "path": "ui-qa/desktop/desktop-results.json",
+      "bytes": 91894,
+      "sha256": "0c603d354d5b11a19d1a06948f65de24de7b029f4d626db0995a47be777ef619"
+    },
+    {
+      "path": "ui-qa/desktop-v2/desktop-results.json",
+      "bytes": 111892,
+      "sha256": "0812b2534493bf94a69ecabe28ac152ec0f2611c5c36e610e016b00eb6823fd7"
+    },
+    {
+      "path": "ui-qa/desktop-v3/desktop-results.json",
+      "bytes": 114272,
+      "sha256": "1d2eab616eb452f739e27a18c2db78b1116706c499bc785ad1762726128e2372"
+    },
+    {
+      "path": "ui-qa/fixtures-final/fixtures.json",
+      "bytes": 13154,
+      "sha256": "a94b46afb85c6dc3bc6fa87964bb3d36cbf5fbb2d3472991fdc1ff93a8bb7c59"
+    },
+    {
+      "path": "ui-qa/final-byte-binding.json",
+      "bytes": 1896,
+      "sha256": "b284d4cbadf2e9acfbcea8d38ee5f0aa6e4885e6232be8aaa302e1237a01cd72"
+    },
+    {
+      "path": "ui-qa/v2-color-replay.json",
+      "bytes": 2075,
+      "sha256": "bbb1635d203a2df692e665bfe56e525603b4e58f2089a90b914626aa0c492a5b"
+    },
+    {
+      "path": "ui-qa/retention-v3-executed.json",
+      "bytes": 7791,
+      "sha256": "0b0c0e6aecf5b757abdc1fccf49ba9b76ead8d74edd1669a8ec2b745fc467b16"
+    },
+    {
+      "path": "ui-qa/independent-v3-result-review.json",
+      "bytes": 4211,
+      "sha256": "311af13a917395f31458579bc7501b9117f4d5b71828d3f5ad8820e106d3c68d"
+    },
+    {
+      "path": "ui-qa/independent-v3-source-review.json",
+      "bytes": 2947,
+      "sha256": "7cfbab9e03bca410fefa1c3263516d5300c520821deb06d1f53726ae1f19d863"
+    },
+    {
+      "path": "ui-qa/independent-source-review.json",
+      "bytes": 3148,
+      "sha256": "7e0f3323a721108c63fce787c1bf9ba68e03744aff2a63c98c0400831f6143cf"
+    },
+    {
+      "path": "ui-qa/independent-v2-source-review.json",
+      "bytes": 3249,
+      "sha256": "175679cf8a5ba8e9d823e8f0ca5c59cc20e0808d7adb722654ce8c88f4df210f"
+    },
+    {
+      "path": "ui-qa/independent-v2-result-review.json",
+      "bytes": 5758,
+      "sha256": "77a5e2485a925f75bfd1d5fe5bae2dfdc88bfbf3e0400cc0ce063b6aa344ac60"
+    },
+    {
+      "path": "ui-qa/history-v1/desktop-qa.mjs",
+      "bytes": 18095,
+      "sha256": "9c1ab21657a3e200c10e11e17859de3ff3a86034af2a13aba098893f40122f36"
+    },
+    {
+      "path": "ui-qa/history-v1/source-proof.json",
+      "bytes": 6941,
+      "sha256": "62e871960cf703427ea554115e0c84b51913b995412db86919156875af3e5e7e"
+    },
+    {
+      "path": "ui-qa/history-v2/desktop-qa.mjs",
+      "bytes": 20677,
+      "sha256": "ee258ecdfff422ef4387f55dc8ad85509e96f54c4cedf23da853f5d73ae16997"
+    },
+    {
+      "path": "ui-qa/history-v2/source-proof.json",
+      "bytes": 8339,
+      "sha256": "a1ca93fb7aa6caedbc3b2fae2e6aad6da45cc763c13acd0546270e5f9ef5524b"
+    },
+    {
+      "path": "ui-qa/source-proof.json",
+      "bytes": 9981,
+      "sha256": "5dbf94100106c2e3a59219c8015208b228b5db5e4097901736e68aaaa68cb1dc"
+    },
+    {
+      "path": "logs/ui-export-final.log",
+      "bytes": 87,
+      "sha256": "886bf82b7eb90bc136b3a1e29eec1bc2f360782a5c9df6f195a2be985aa8fbc7"
+    },
+    {
+      "path": "logs/native-render-benchmark-final.log",
+      "bytes": 2401,
+      "sha256": "3da7770e2cbd585f4ec839acb07885d6058d502db2d01de4091ba76e89bd677f"
+    },
+    {
+      "path": "render-profile/independent-source-and-experiment-review.json",
+      "bytes": 6398,
+      "sha256": "1c01135f1caae67678c36465c66fb741da9b4399c2910e0fa0e0e35384115a23"
+    },
+    {
+      "path": "render-profile/byte-equivalence.json",
+      "bytes": 1519,
+      "sha256": "b0f86ef7376e9333c6eb31dd6b33bd3a9111b6d65cf6c9337acd407f6a678d70"
+    },
+    {
+      "path": "render-profile/proposed.patch",
+      "bytes": 1416,
+      "sha256": "062fd403b317ecf12ecc9fb331fae6bd6e2465dfe244c08e9a0c989b4ccbf205"
+    },
+    {
+      "path": "pg-qa/parser-controls.json",
+      "bytes": 835,
+      "sha256": "9f8ba8c5b01f3a46e569024d53b29546953b2bacd8de8d14762423c880050867"
+    },
+    {
+      "path": "ui-qa/pg-method-proposal/independent-source-review.json",
+      "bytes": 3402,
+      "sha256": "09e65e4cccf9ac327b7430711d486651b1abfaaa08b3ccdc86f40db983bf1b65"
+    },
+    {
+      "path": "ui-qa/keeper-design/independent-source-review.json",
+      "bytes": 2100,
+      "sha256": "3e55f92f6fdc433eb6c235f962d7926abfc464a1b9dbb1c1fa7a74ac3b86c50e"
+    }
+  ],
+  "scope": "Selected synthetic evidence only; never a full workspace/cache/database/binary or release archive."
+}

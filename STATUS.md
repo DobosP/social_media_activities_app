@@ -1,13 +1,13 @@
 # Status — social_media_activities_app
 
-Last verified: 2026-10-19 (family UI8+2/focused pass; PG setup/build repairs await fresh qualification)
+Last verified: 2026-10-19 (native family feature: complete affected PG6 and scoped desktop/a11y qualified)
 
 - **GitHub Actions (Last verified: 2026-10-05):** owner-requested on-demand policy,
   [ADR-0033](docs/adr/0033-manual-github-actions.md). Ordinary `ci.yml` calls Go/Node workflows;
   original Python gates remain in optional manual `reference.yml` (ADR-0038). YAML/input/job/
   read-only permission checks pass. Native Actions remains manually disabled; no hosted run claimed.
 Current truth: STATUS > newest ADR > other docs. History: WORKLOG, ADRs and git.
-Family pages: [ADR-0061](docs/adr/0061-native-family-pages.md) implements two typed Go views. Eight desktop/two no-JS fixtures,192Axe predicates and27 button samples pass. Complete six-package PG qualification is pending; the runner now retires each completed owned database and checkpoints within unchanged1GiB/2GiB limits. Earlier setup/build/WAL failures remain explicit in the ADR. No main, milestone or deployment claim.
+Family pages: [ADR-0061](docs/adr/0061-native-family-pages.md) implements two typed Go views. Exact source118fd7f passes six complete affected PG packages:395roots/1,149named passes, zero skips/failures, six guarded database retirements/checkpoints and13owned-container cleanup. Eight desktop/two no-JS fixtures,192Axe predicates and27 button samples pass; [compact qualification](docs/reviews/gui-native-family/README.md) retains failures and source joins. Native HTML/allocations are smaller; body CPU remains higher than original Pongo. No full21/current-image/main/milestone/deployment claim.
 
 ## What this is
 

@@ -1,0 +1,30 @@
+[
+  {
+    "run": "catalogue-failure",
+    "bytes": 22077440,
+    "path": "proof/command-006.stdout",
+    "sha256": "623e6e95d26e17d757b4b78638701fa5dde49d458ed8fb3b172123b9c4d0d630",
+    "reason": "Full Git archive stdout excluded; exact Git SHA/tree and recorded archive hash remain source keepers. Not a deletion claim."
+  },
+  {
+    "run": "archive-build-failure",
+    "bytes": 22128640,
+    "path": "proof/command-006.stdout",
+    "sha256": "0b6d6adc291f0b0a37c4e0cf9b2ff6a75c1e8506d35b0dbaa3143f83409f68d8",
+    "reason": "Full Git archive stdout excluded; exact Git SHA/tree and recorded archive hash remain source keepers. Not a deletion claim."
+  },
+  {
+    "run": "wal-tmpfs-failure",
+    "bytes": 22128640,
+    "path": "proof/command-006.stdout",
+    "sha256": "4feff4865eb68e87e0fe9e693e323bcc77e7347d37891a12b51435e40e3bc04a",
+    "reason": "Full Git archive stdout excluded; exact Git SHA/tree and recorded archive hash remain source keepers. Not a deletion claim."
+  },
+  {
+    "run": "final-six-lane-pass",
+    "bytes": 22138880,
+    "path": "proof/command-006.stdout",
+    "sha256": "199525b7df64c57f00ea479e8834334fec1203645fb3426b406eb21f085b962e",
+    "reason": "Full Git archive stdout excluded; exact Git SHA/tree and recorded archive hash remain source keepers. Not a deletion claim."
+  }
+]

@@ -1,0 +1,60 @@
+{
+  "schema": 1,
+  "verdict": "ACCEPT_SOCIAL_NATIVE_FAMILY_FUNCTIONAL_FEATURE_AND_KEEPER_FOR_FEATURE_PUBLICATION",
+  "qualified_source": "118fd7f46c6cfc9504d752ba382f890cdbbc8a44",
+  "qualified_tree": "2e151e16a26aa1d29ef23d71e6c8e940910645d1",
+  "keeper": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/package-draft/proposed-keeper-cdf74cd0-36f6-4f66-a3ea-3d13672b1380",
+  "bindings": {
+    "archive_sha256": "cf40051663b86cfcd8026ae2f095c658c2c054e324a84d741125f6f429ea4a5d",
+    "archive_bytes": 2493488,
+    "members": 1222,
+    "uncompressed_member_bytes": 9028829,
+    "archive_manifest_sha256": "2470b0f841204327df02e3f3754eb2730ae10f27c453addad15f67b71287d37e",
+    "result_sha256": "ec146809e780f9a278c4bf642cfdc3d313ebc30899b6da321008f5f28c81ac8b",
+    "README_sha256": "2ffbfa4959fb153cfcdf90469a574b2906bd5fc142b0f16a31c63dd895d72afd",
+    "omitted_manifest_sha256": "1bf5cfe5b75b42ebd7611d267ea6e15f260bb8539a60ac07aff91ecc3beda5f7",
+    "collector_source_sha256": "d40b855b05061cae229c0490bba61477c49cbf4a710934a1b83888589441892b",
+    "collector_inputs_sha256": "14c6f1fc908b627053d9125547b24fe58bb5184c3c46839522f4154a4d20d0a8",
+    "collector_plan_sha256": "0a9d9e233d40c942f393c5a67ffd3180d7cd887fb6aa80c2109c6528c370d194",
+    "runtime_review_sha256": "80d026f171d6bd0034a22d4702763200e7b5862f19d3837f8b5d257d380c6cef",
+    "V3_UI_review_sha256": "311af13a917395f31458579bc7501b9117f4d5b71828d3f5ad8820e106d3c68d",
+    "perf_review_sha256": "1c01135f1caae67678c36465c66fb741da9b4399c2910e0fa0e0e35384115a23"
+  },
+  "scope": "Two native family views plus six complete affected packages, not all21/fullrelease/current-image, formalSocialmilestone/main/production/provider/government or real-child activation. Group-create candidate remains outside this acceptance.",
+  "independent_actual_checks": [
+    "All1222 distinct literal relative regular archive members match exact original capture bytes/size/mode/UID/GID/nsmtime and complete manifest inventory. Archive2,493,488B contains9,028,829rawB; no source workspace/cache/DB/ELF/test binary payload.",
+    "All selected proof artifacts and raw source/supervisor/results for catalogue failure, archive-helper build failure and WAL/tmpfs/PANIC/graceful-stop failure retain their real failed dispositions. Final actual runtime result386689c6 joins review80d026:6complete395roots/1149namedPASS/all17new family declarations/zero skips-failures.",
+    "All2086 final source rows rebind actual committed Git118 blobs and current clean source.15 reproduction files preserve10exact committed PG/UI method inputs and5collector/inputs/tests/plan/template bytes.",
+    "Reviewed final collectord40b: canonical Test|Example|Fuzz inventory selection retains raw benchmark entries while requiring every real test root/case; lowercase actual UI pass correction and generated template link are literal evidence-shape repairs, no native test weakening.",
+    "All6guarded database retirement/checkpoint/storage and13CID/PGcleanup receipts match independently admitted actual run. Original1GiBdata/2GiBPGmemory caps preserved. CurrentPG log has no PANIC/FATAL/NoSpace/recovery; five ordinary ERRORs are explicit negative-test fixtures.",
+    "Eight archived finalHTML+eight latestPNG bytes hash-join acceptedV3actual report and final body-binding,192Axe/27initial-settledcolor samples/2noJS/48asset200/zero reported errors. All19current source rows match118; only reviewed3Go perf files differ from originalbrowser source and all8actual output bodies remain byte-exact.",
+    "Actual benchmark receipts retain smaller payload/~47%allocation reduction versus initialnative and higher bodyCPU than Pongo; no HTTP,production or all-frame accessibility/performance certification inferred.",
+    "Prior16 superseded PNG paths were already pruned per executed retention manifest; latest8 remain. Four full Git archive stdout streams are deliberately omitted from keeper with exact hash/size/sourceGit identity; omission is not a deletion claim.",
+    "README39lines/result19lines stay compact and describe feature-only evidence honestly. Approved runtime review is to be promoted as a direct companion, not falsely claimed inside archive."
+  ],
+  "approved_metadata": {
+    "manifest_sha256": "df07afc1c8fb381ef1f10214318936deae4c8014e234e5f799fa11a6ef117951",
+    "files": [
+      {
+        "path": "STATUS.md",
+        "before_sha256": "8b02a744e0065b56e51780a8fab91630a9635b8ccab3e97b5bcefb855413bdf7",
+        "after_sha256": "bcd8f3abca97ea508868853f6f943e6d98710a9311beeefdfb64eb04b7bc1d8f"
+      },
+      {
+        "path": "docs/adr/0061-native-family-pages.md",
+        "before_sha256": "f554b53a863894ef4b7fe4b24d9213a43c5667822d10097ee64174bbc7ae873f",
+        "after_sha256": "263e4bcee4911544eda183d565198265ddf4b723921c4e7f754da6cd5a199e1d"
+      },
+      {
+        "path": "docs/adr/README.md",
+        "before_sha256": "8515f5be9084df2cef592523d5335bbd032097b98d7f58c0e3c8a320c1c38e3e",
+        "after_sha256": "5b87866680c2317f4ab017efb239b54816cbd5c0c4cf37ea9a7cbc69e35be394"
+      }
+    ],
+    "checks": "Three current preimages/postimages match. STATUS120lines and append-only ADR0061 current qualification accurately report actual counts/scope/limits/slowerCPU. ADR ledger changes only0061pending\u2192implemented feature qualification;0062has no premature claim. Apply after keeper promotion and run docs-only link/governance checks."
+  },
+  "retention": "Root may promote verified keeper plus immutable runtime/final reviews and publish the feature branch. Only after promotion, preserve exact committed source/branches/unmerged packets/baselines/pinned images/caches and all canonical keeper bytes; recheck precise owned stopped experiment paths before pruning redundant transient exports/binaries/proof trees or omitted raw archives, retain compact executed manifest and explicitly state deleted raw availability. No deletion performed by this review.",
+  "findings": [],
+  "next": "Root may apply the three reviewed metadata files, complete docs-only checks and publish feature. No new PG/native/browser rerun justified by current green evidence. New Group implementation needs its own qualified source and original8family byte comparison after source changes.",
+  "execution": "Read-only archive/source/JSON/hash/Git/metadata and collector-text review plus this compact scratch file only; no candidate import/parser/tests/native/Go/browser/Docker/PG/network/process control or owning writes."
+}

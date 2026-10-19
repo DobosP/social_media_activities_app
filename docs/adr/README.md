@@ -59,7 +59,7 @@ On conflict: `STATUS.md` > newest-dated ADR > every other doc.
 | 0053 | [filesystem-original-renderer-boundary](0053-filesystem-original-renderer-boundary.md) | focused managed checks/partial actual review passed; no default production switch | 2026-10-10 |
 | 0054 | [public-external-script-nonce-binding](0054-public-external-script-nonce-binding.md) | focused managed83/DATA checks passed; wider qualification pending | 2026-10-10 |
 | 0056 | [gui-preparation-scope-and-portable-mode-binding](0056-gui-preparation-scope-and-portable-mode-binding.md) | proposed; owner decision Q2 2026-10-11; 794573c output change awaits privacy/independent review | 2026-10-11 |
-| 0061 | [native-family-pages](0061-native-family-pages.md) | proposed; source reviewed and focused Go checks pass; PG/desktop qualification pending | 2026-10-19 |
+| 0061 | [native-family-pages](0061-native-family-pages.md) | implemented; independently qualified affected PG6/desktop8+2, feature branch only | 2026-10-19 |
 
 ⚠ **0009 is claimed twice** — this ledger exists so it does not happen again. Both files stay:
 `0009-csp-enforcement-prep.md` (superseded by ADR-0010) and

@@ -1,7 +1,7 @@
 # ADR-0061: Native family management and ward explanation
 
 Date: 2026-10-19
-Status: proposed — scoped UI passed; first PG failed; corrected qualification pending
+Status: implemented and independently feature-qualified; main/milestone activation remains separate
 
 ## Context and decision
 
@@ -130,3 +130,25 @@ PostgreSQL may recycle WAL without shrinking file bytes; the repair removes
 completed DB/catalog bloat and permits WAL reuse but does not guarantee every
 single-lane peak. A fresh complete six-lane run is required; if one isolated lane
 still exhausts the fixed cap, fresh-PG-per-lane is the next lifecycle option.
+
+
+## Feature qualification — 2026-10-19
+
+Exact clean source `118fd7f` passed the committed six-lane method in430.872seconds:
+web722/app59/accounts121/recommendations24/social123/messaging100 named passes,
+395top-level roots and1,149total named passes. All compiled inventories match
+actual race/test2json streams, with zero skipped or failed tests. Seventeen new
+family roots, original source-custody assertions and canonical reference datasets
+are present. Five exact method inputs and all2,086 exported source files are bound.
+
+Every complete lane was followed by verified client removal, exact owned database
+retirement and CHECKPOINT within the unchanged1GiBtmpfs/2GiBmemory cap. All13 owned
+containers were removed; PostgreSQL stopped with exit0/status3 and no remaining
+PID/socket. Raw PG logs contain expected negative-test errors and no PANIC,
+no-space or recovery event. Independent runtime and compact archive reviews are
+retained with the [qualified feature keeper](../reviews/gui-native-family/README.md).
+The earlier missing-catalogue, archive-build and WAL/storage failures remain failures.
+
+This qualifies the bounded functional feature and isolated desktop fixtures, not
+all21 packages, a new deployment image, Social GUI milestone, main landing or
+production/real-child activation. No native-body CPU speedup is claimed.

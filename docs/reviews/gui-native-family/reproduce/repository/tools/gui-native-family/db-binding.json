@@ -1,0 +1,54 @@
+{
+  "schema": 1,
+  "image_id": "sha256:f66de888683449864f820c365551125bb2627782be15a264f9746d53573b39d5",
+  "postgres_uid": 999,
+  "postgres_gid": 999,
+  "db_entry_sha256": "b4ed745834cdb9b91ba0291b49dc049e316806b01494b67ff48a0eb8ff9432b4",
+  "application_pg_source_bindings": [
+    {
+      "bytes": 606,
+      "full_mode": 33204,
+      "path": "Dockerfile.db",
+      "sha256": "a22bc01a8602fe8a2f54b647ced3162ed0a4b9ace4702be659b2b7f380136d75"
+    },
+    {
+      "bytes": 4860,
+      "full_mode": 33204,
+      "path": ".github/workflows/native.yml",
+      "sha256": "3a51de6db5b7885bbd6237e2426164979db31511c46ff4cdd58ff85db4fdf267"
+    },
+    {
+      "bytes": 4307,
+      "full_mode": 33277,
+      "path": "scripts/qualify-native.sh",
+      "sha256": "c5ea3b35b48c50d1caf9ab57dbae5260e8e23acbe6c89d20079687568cde13b1"
+    },
+    {
+      "bytes": 233549,
+      "full_mode": 33204,
+      "path": "services/server/internal/schema/baseline.sql",
+      "sha256": "6a5f1ca89c5117e6e5c331b4097a06456ce25da2d3d26a3b3a950cb89df1ef7a"
+    },
+    {
+      "bytes": 13134,
+      "full_mode": 33204,
+      "path": "services/server/internal/schema/budgets.sql",
+      "sha256": "5d2b6007a647d1aeede91bcf49508a95e9952cff13d8803877636c8b395ca785"
+    },
+    {
+      "bytes": 2661,
+      "full_mode": 33204,
+      "path": "services/server/internal/schema/migrate.go",
+      "sha256": "f5f109580096f6cb9c61883b77fd0fa74fd0f08c2adf1babfdb5b378158e90cc"
+    }
+  ],
+  "provenance": {
+    "historical_binding_sha256": "3a46d3534afcac71f24e92e7342c9bf50dceaab37176997a7fd7c692ca9ae7ea",
+    "source": "bac5d718360504330d5f5cdbf2f75cf5a0ad0799",
+    "application_source": "813f197bf0f4d190e3e2ea0a394ddd73121c6bc6",
+    "managed_entry_source": "tools/gui-public-golden/managed_profiles.py",
+    "managed_entry_source_sha256": "33dfe0bda4b1bd600ec2d762f3e53900b89e0efc14697ff1f105d3326af84459",
+    "compatibility": "Runtime comparison is exact path/bytes/SHA; historical full_mode is context only. No historical full build tree, raw export/cache or scratch path is a runtime input.",
+    "codec_scope": "Existing c27 image supplies codecs only, not a newly qualified current application image."
+  }
+}

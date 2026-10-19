@@ -1,0 +1,90 @@
+package web
+
+// QA-only virtual test file, supplied through go test -overlay. No owning edit.
+import (
+    "bytes"
+    "compress/gzip"
+    "crypto/sha256"
+    "encoding/hex"
+    "encoding/json"
+    "flag"
+    "net/http"
+    "net/http/httptest"
+    "os"
+    "path/filepath"
+    "strings"
+    "testing"
+
+    "github.com/DobosP/social_media_activities_app/services/server/internal/platform"
+    "github.com/flosch/pongo2/v6"
+)
+
+var familyQAOutput = flag.String("family-ui-qa-output-dir", "", "new synthetic family fixture directory in task scratch")
+
+type familyQAState struct { Name,Kind,Language,Theme,Text,Motion string; Empty,Disabled,Unverified,StoredCategory,Error bool }
+var familyQAStates=[]familyQAState{
+    {Name:"wards-en",Kind:"wards",Language:"en",Theme:"light",Text:"normal",Motion:"reduce",StoredCategory:true},
+    {Name:"wards-ro",Kind:"wards",Language:"ro",Theme:"dark",Text:"large",Motion:"reduce",StoredCategory:true},
+    {Name:"guardians-en",Kind:"guardianship",Language:"en",Theme:"light",Text:"normal",Motion:"auto"},
+    {Name:"guardians-ro",Kind:"guardianship",Language:"ro",Theme:"contrast",Text:"larger",Motion:"reduce"},
+    {Name:"wards-empty",Kind:"wards",Language:"en",Theme:"auto",Text:"normal",Motion:"auto",Empty:true},
+    {Name:"wards-disabled",Kind:"wards",Language:"en",Theme:"light",Text:"normal",Motion:"auto",Disabled:true,Error:true},
+    {Name:"wards-unverified-ro",Kind:"wards",Language:"ro",Theme:"contrast",Text:"normal",Motion:"reduce",Unverified:true},
+    {Name:"guardians-empty",Kind:"guardianship",Language:"en",Theme:"light",Text:"normal",Motion:"auto",Empty:true},
+}
+
+func familyQAData(state familyQAState) (*http.Request,pongo2.Context) {
+    request,data:=familyProjectionFixture()
+    request.Header.Set("Accept-Language",state.Language)
+    data["language"],data["display_theme"],data["display_text"],data["display_motion"]=state.Language,state.Theme,state.Text,state.Motion
+    data["csrf"]="synthetic-social-family-qa-csrf"
+    data["minor_onboarding"]=!state.Disabled
+    wards:=data["wards"].([]map[string]any)
+    if state.StoredCategory {wards[0]["caps"].(map[string]any)["guardrail_allowed_categories"]=[]string{"sport","stored-child-category"}}
+    if state.Error {data["messages"]=[]socialMessage{{"message":"PRIVATE-SQL-ERROR","tags":"error"}}}
+    if state.Unverified {actor,_:=platform.ActorFrom(request);actor.IdentityVerified=false;request=platform.WithActor(request,actor)}
+    if state.Kind=="guardianship" {
+        request.URL.Path="/guardianship/"
+        actor,_:=platform.ActorFrom(request);actor.ID=41;actor.PublicID="synthetic-family-ward-public-id";actor.Username="generated-child";actor.DisplayName="";actor.Cohort="child";actor.AgeBand="under_16"
+        request=platform.WithActor(request,actor)
+        data["has_guardians"]=!state.Empty
+        rows:=[]map[string]any{}
+        if !state.Empty {
+            for i,ward:=range wards {caps:=ward["caps"].(map[string]any);if i==1 {caps["relationship"]="grandparent"};rows=append(rows,map[string]any{"username":[]string{"generated-parent","generated-other-guardian"}[i],"display_name":"","caps":caps,"private_token":"PRIVATE-GUARDIAN-INVITE"})}
+        }
+        data["guardians"]=rows
+    } else if state.Empty {data["wards"]=[]map[string]any{}}
+    return request,data
+}
+
+func familyQASources(t *testing.T,root string) []map[string]any {
+    t.Helper();rows:=[]map[string]any{}
+    for _,name:=range []string{"services/server/internal/web/family.go","services/server/internal/web/family_copy.go","services/server/internal/web/family_render.go","services/server/internal/web/family_projection_test.go","services/server/internal/web/family_benchmark_test.go","services/server/internal/web/renderer.go","services/server/internal/web/i18n.go","services/server/internal/web/templates.go","services/server/internal/web/pages/family-shell.gohtml","services/server/internal/web/pages/family-wards.gohtml","services/server/internal/web/pages/family-guardianship.gohtml","apps/web/templates/web/wards.html","apps/web/templates/web/guardianship.html","templates/base.html","locale/ro/LC_MESSAGES/django.po","static/css/base.css","static/css/family-native.css","static/fonts/bricolage-grotesque-latin-wght-normal.woff2","static/fonts/bricolage-grotesque-latin-ext-wght-normal.woff2"} {
+        raw,err:=os.ReadFile(filepath.Join(root,name));if err!=nil{t.Fatal(err)};sum:=sha256.Sum256(raw)
+        rows=append(rows,map[string]any{"path":name,"bytes":len(raw),"sha256":hex.EncodeToString(sum[:])})
+    }
+    return rows
+}
+
+func TestSocialFamilyQAExport(t *testing.T) {
+    if *familyQAOutput==""||!filepath.IsAbs(*familyQAOutput)||!strings.Contains(*familyQAOutput,"/_temp/"){t.Fatal("explicit new task scratch directory required")}
+    if err:=os.Mkdir(*familyQAOutput,0700);err!=nil{t.Fatal(err)}
+    root,err:=filepath.Abs("../../../..");if err!=nil{t.Fatal(err)}
+    sourcesBefore:=familyQASources(t,root)
+    renderer:=NewRenderer(root);rows:=[]map[string]any{}
+    for _,state:=range familyQAStates {
+        request,data:=familyQAData(state);name:="web/wards.html";if state.Kind=="guardianship"{name="web/guardianship.html"}
+        w:=httptest.NewRecorder();if err=renderer.Render(w,request,name,data);err!=nil{t.Fatal(state.Name,err)}
+        raw:=w.Body.Bytes()
+        for _,private:=range []string{"PRIVATE-","outside.invalid","synthetic-family-public-id","synthetic-family-ward-public-id"}{if bytes.Contains(raw,[]byte(private)){t.Fatal("unadmitted fixture input rendered",state.Name,private)}}
+        if w.Header().Get("Cache-Control")!="private, no-cache"||w.Header().Get("Content-Type")!="text/html; charset=utf-8"||!strings.Contains(w.Header().Get("Vary"),"Cookie"){t.Fatal("actual common Renderer headers diverged",state.Name)}
+        file:=filepath.Join(*familyQAOutput,state.Name+".html");if err=os.WriteFile(file,raw,0600);err!=nil{t.Fatal(err)}
+        var zipped bytes.Buffer;writer,err:=gzip.NewWriterLevel(&zipped,gzip.BestCompression);if err!=nil{t.Fatal(err)};if _,err=writer.Write(raw);err!=nil{t.Fatal(err)};if err=writer.Close();err!=nil{t.Fatal(err)}
+        sum:=sha256.Sum256(raw);wardCount,guardianCount:=0,0
+        if state.Kind=="wards"{wardCount=len(data["wards"].([]map[string]any))}else{guardianCount=len(data["guardians"].([]map[string]any))}
+        rows=append(rows,map[string]any{"name":state.Name,"kind":state.Kind,"language":state.Language,"theme":state.Theme,"text":state.Text,"motion":state.Motion,"ward_count":wardCount,"guardian_count":guardianCount,"invite":state.Kind=="wards"&&!state.Disabled&&!state.Unverified,"invite_unavailable":state.Kind=="wards"&&(state.Disabled||state.Unverified),"stored_category":state.StoredCategory,"error":state.Error,"canonical":request.URL.Path,"bytes":len(raw),"gzip_level9_bytes":zipped.Len(),"sha256":hex.EncodeToString(sum[:]),"renderer_headers":map[string]string{"Content-Type":w.Header().Get("Content-Type"),"Cache-Control":w.Header().Get("Cache-Control"),"Vary":w.Header().Get("Vary"),"Reporting-Endpoints":w.Header().Get("Reporting-Endpoints")},"renderer_csp_report_only":w.Header().Get("Content-Security-Policy-Report-Only")!=""})
+    }
+    sourcesAfter:=familyQASources(t,root);beforeJSON,err:=json.Marshal(sourcesBefore);if err!=nil{t.Fatal(err)};afterJSON,err:=json.Marshal(sourcesAfter);if err!=nil{t.Fatal(err)};if !bytes.Equal(beforeJSON,afterJSON){t.Fatal("native source/assets changed during fixture export")}
+    raw,err:=json.MarshalIndent(map[string]any{"sources_before":sourcesBefore,"sources_after":sourcesAfter,"source_unchanged":true,"schema":1,"scope":"Actual native Renderer.Render with synthetic typed fixture and valid Actor; isolated HTML/headers only, not authenticated HTTP/session/PG or release qualification","states":rows},"","  ");if err!=nil{t.Fatal(err)}
+    if err=os.WriteFile(filepath.Join(*familyQAOutput,"fixtures.json"),append(raw,'\n'),0600);err!=nil{t.Fatal(err)}
+}

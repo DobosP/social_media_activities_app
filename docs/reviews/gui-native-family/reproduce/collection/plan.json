@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_V2_FINAL_LITERAL_FRAME_CORRECTION_ROOT_RECHECK_PENDING",
+  "source": "118fd7f46c6cfc9504d752ba382f890cdbbc8a44",
+  "method_sha256": "dccfe6bbd27289785e690361c6ce277f2f82b406acd6c5734d37254f79ae4ce2",
+  "files": {
+    "package-result.py": {
+      "bytes": 18841,
+      "sha256": "d40b855b05061cae229c0490bba61477c49cbf4a710934a1b83888589441892b"
+    },
+    "test_package_result.py": {
+      "bytes": 5204,
+      "sha256": "735d73d5249b3720fdefc5400575f5a3fb3ff3e9104609535ac4a8e16733bf1b"
+    },
+    "inputs.json": {
+      "bytes": 12385,
+      "sha256": "14c6f1fc908b627053d9125547b24fe58bb5184c3c46839522f4154a4d20d0a8"
+    },
+    "README.template.md": {
+      "bytes": 2857,
+      "sha256": "395ea844e6499a7c22ecb228fa76c7b661a53cef5e28acd9ea6ff7c151fc7da5"
+    }
+  },
+  "planned_commands": [
+    "python3 -I test_package_result.py",
+    "python3 -I package-result.py --after-success"
+  ],
+  "admission": "Pinned four actual run/source/supervisor records; independent raw six-lane JSON inventory; exact current clean Git/source and final8HTML/UI19-source bridge; recorded13-object/PG cleanup, no new runtime probe.",
+  "archive": "Selected proof receipts,metadata,latest8HTML/PNG,failed-history and exact committed/reproduction source; no Git archive stdout,workspace,cache,DB,ELF/test binary. Exclusive private output; full byte/mode/UID/GID/nanotime roundtrip, original capture and current source fences; no deletion.",
+  "claims": "Proposed bounded feature keeper only; not full21/image/main/milestone/production/real-child acceptance.",
+  "not_run": "No candidate import,Python parser/tests/collection/archive,Go/browser/DB/Docker/native by author. Root is sole operator; independent actual archive review remains required.",
+  "prior_execution": {
+    "v1_pure_controls": "Root actual3PASS",
+    "v1_collection": "Root actual stopped at inventory admission before output; BenchmarkNativeFamilyBodyRender incorrectly treated as requiredTest. No PG rerun or evidence weakening.",
+    "history": "history-v1/ retains exact prior packager/tests/plan."
+  },
+  "revision": "Use canonical qualifier exact (?:Test|Example|Fuzz)[A-Za-z0-9_]+ fullmatch from full raw list; benchmark bytes remain retained. Examples/Fuzz stay required, with explicit new refusal cases. Append generated README template-source link within40line budget. Actual existing browser report status is lowercase pass; all run/supervisor, artifact existence/hash, UI asset/source/perf/body/PNG and selected input field assumptions inspected directly against actual JSON/files."
+}
