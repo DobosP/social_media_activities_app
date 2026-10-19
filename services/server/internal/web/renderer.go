@@ -99,6 +99,12 @@ func (r *Renderer) Render(w http.ResponseWriter, request *http.Request, name str
 			return renderErr
 		}
 		_, _ = output.Write(raw)
+	} else if name == "web/group_form.html" {
+		raw, renderErr := r.renderGroupCreate(request, defaults)
+		if renderErr != nil {
+			return renderErr
+		}
+		_, _ = output.Write(raw)
 	} else {
 		template, parseErr := r.set.FromCache(name)
 		if parseErr != nil {

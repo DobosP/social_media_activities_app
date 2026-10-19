@@ -156,6 +156,16 @@ type guiPublicGetRepairRow struct {
 
 func guiPublicGetRepairRows() []guiPublicGetRepairRow {
 	return []guiPublicGetRepairRow{
+		// ADR-0062: exact selected group dispatch, before the untouched family chain.
+		{
+			path:        "services/server/internal/web/renderer.go",
+			beforeSHA:   "e7c10feff706989b6141da3803e2ec4ff73c78a54f34c6e32db9e7b4937c6eee",
+			afterSHA:    "6228270fd3343f7d352b79780bd9055ccbf9fe70b2d7917acdb4e0b6ffd31ed3",
+			beforeBytes: 5790,
+			afterBytes:  5967,
+			before:      "\t} else {\n\t\ttemplate, parseErr := r.set.FromCache(name)",
+			after:       "\t} else if name == \"web/group_form.html\" {\n\t\traw, renderErr := r.renderGroupCreate(request, defaults)\n\t\tif renderErr != nil {\n\t\t\treturn renderErr\n\t\t}\n\t\t_, _ = output.Write(raw)\n\t} else {\n\t\ttemplate, parseErr := r.set.FromCache(name)",
+		},
 		// ADR-0061: exact native family dispatch inverse; all previous rows
 		// continue from the complete pre-dispatch renderer byte-for-byte.
 		{
@@ -175,6 +185,34 @@ func guiPublicGetRepairRows() []guiPublicGetRepairRow {
 			afterBytes:  5539,
 			before:      `"is_admin": actor.Admin(), "username": actor.Username`,
 			after:       `"is_admin": actor.Admin(), "public_id": actor.PublicID, "username": actor.Username`,
+		},
+		// Group-only semantic metadata inverses recover the entire original form builder.
+		{
+			path:        "services/server/internal/web/forms.go",
+			beforeSHA:   "13a1cbfaf4156fdf9812a22fc21d37e45e27b774a909a1726c38a1d0ea5db4a4",
+			afterSHA:    "a9cc66599f770b3e6b30ea3bc4be7148253702c939d484ae6b7bea5d16af6717",
+			beforeBytes: 7554,
+			afterBytes:  7628,
+			before:      "\tresult[\"fields\"] = all\n",
+			after:       "\tresult[\"fields\"] = all\n\tif name == \"GroupCreateForm\" {\n\t\tresult[\"native_group\"] = nativeGroup\n\t}\n",
+		},
+		{
+			path:        "services/server/internal/web/forms.go",
+			beforeSHA:   "0552d217fef715afb933a09f5a06fc0fdb0bd17b9305832ac484d6a8887f4019",
+			afterSHA:    "13a1cbfaf4156fdf9812a22fc21d37e45e27b774a909a1726c38a1d0ea5db4a4",
+			beforeBytes: 7374,
+			afterBytes:  7554,
+			before:      "\t\tresult[key] = field\n",
+			after:       "\t\tresult[key] = field\n\t\tif name == \"GroupCreateForm\" {\n\t\t\tnativeGroup.Fields = append(nativeGroup.Fields, groupCreateInput{Name: key, Value: value, Options: append([]option(nil), options[key]...)})\n\t\t}\n",
+		},
+		{
+			path:        "services/server/internal/web/forms.go",
+			beforeSHA:   "6a41190d4f81107c32b7f0f651f59dfc6d1adc298b66eea3861105579360d3cb",
+			afterSHA:    "0552d217fef715afb933a09f5a06fc0fdb0bd17b9305832ac484d6a8887f4019",
+			beforeBytes: 7324,
+			afterBytes:  7374,
+			before:      "\tall := []any{}\n",
+			after:       "\tall := []any{}\n\tnativeGroup := groupCreateForm{Staff: a.IsStaff}\n",
 		},
 		{
 			path:        "services/server/internal/web/server.go",

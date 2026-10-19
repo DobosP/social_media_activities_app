@@ -107,6 +107,7 @@ func (s *Server) form(r *http.Request, a platform.Actor, name string, initial ma
 	options["cohort"] = []option{{"adult", "Adult"}, {"teen", "Teen"}, {"child", "Child"}}
 	options["coarse_window"] = []option{{"weekday_daytime", "Weekday daytime"}, {"weekday_evening", "Weekday evening"}, {"weekend_daytime", "Weekend daytime"}, {"weekend_evening", "Weekend evening"}}
 	all := []any{}
+	nativeGroup := groupCreateForm{Staff: a.IsStaff}
 	var paragraphs strings.Builder
 	for _, key := range names {
 		f := fields[key]
@@ -184,11 +185,17 @@ func (s *Server) form(r *http.Request, a platform.Actor, name string, initial ma
 		labelTag := `<label for="id_` + escape(key) + `">` + escape(label) + `</label>`
 		field := map[string]any{"name": key, "value": value, "label": label, "label_tag": pongo2.AsSafeValue(labelTag), "help_text": f.HelpText, "errors": "", "widget": pongo2.AsSafeValue(widget)}
 		result[key] = field
+		if name == "GroupCreateForm" {
+			nativeGroup.Fields = append(nativeGroup.Fields, groupCreateInput{Name: key, Value: value, Options: append([]option(nil), options[key]...)})
+		}
 		all = append(all, field)
 		paragraphs.WriteString("<p>" + labelTag + widget + "<span class=\"helptext\">" + escape(f.HelpText) + "</span></p>")
 	}
 	result["as_p"] = pongo2.AsSafeValue(paragraphs.String())
 	result["fields"] = all
+	if name == "GroupCreateForm" {
+		result["native_group"] = nativeGroup
+	}
 	if name == "ActivityForm" || name == "ActivityEditForm" {
 		steps := []any{}
 		for _, step := range []struct {

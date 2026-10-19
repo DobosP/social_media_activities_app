@@ -18,6 +18,8 @@ func TestNativeFamilyDispatchCustodyIsExactAndRefusesOtherBytes(t *testing.T) {
 		t.Fatal(err)
 	}
 	rows := guiPublicGetRepairRows()
+	// The newest group inverse must exactly recover this existing family afterimage.
+	raw, rows = groupCreateFamilyCustodyPreimage(t, raw, rows)
 	if len(rows) < 2 {
 		t.Fatal("previous reviewed custody rows disappeared")
 	}
@@ -32,7 +34,7 @@ func TestNativeFamilyDispatchCustodyIsExactAndRefusesOtherBytes(t *testing.T) {
 	if len(previous) != row.beforeBytes || guiPublicHash(previous) != row.beforeSHA {
 		t.Fatal("new inverse did not recover the complete old renderer")
 	}
-	historical, err := guiPublicGetRowsPreimage(path, raw)
+	historical, err := groupCreateCustodyRowsPreimage(path, raw, rows)
 	if err != nil || len(historical) != 5510 || guiPublicHash(historical) != "94f11a3f1849c919ba100c4ba68236263f71f07741006c1992dadc4020723e68" {
 		t.Fatal("all previous custody inverses no longer reach the exact historical source", err)
 	}
@@ -44,10 +46,10 @@ func TestNativeFamilyDispatchCustodyIsExactAndRefusesOtherBytes(t *testing.T) {
 		"old-current-profile": previous,
 	} {
 		t.Run(name, func(t *testing.T) {
-			if _, err := guiPublicGetRowsPreimage(path, changed); err == nil {
+			if _, err := groupCreateCustodyRowsPreimage(path, changed, rows); err == nil {
 				t.Fatal("unsupported current source admitted")
 			}
-			if got, err := guiPublicGetRowsPreimage(path, raw); err != nil || !bytes.Equal(got, historical) {
+			if got, err := groupCreateCustodyRowsPreimage(path, raw, rows); err != nil || !bytes.Equal(got, historical) {
 				t.Fatal("negative control aliased the physical source", err)
 			}
 		})

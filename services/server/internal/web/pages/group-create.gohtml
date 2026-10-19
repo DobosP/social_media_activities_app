@@ -1,0 +1,53 @@
+{{define "group-create"}}<!doctype html>
+<html lang="{{.Shell.Language}}" data-theme="{{.Shell.Theme}}" data-text="{{.Shell.Text}}" data-motion="{{.Shell.Motion}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>{{index .Copy "Create a group"}} · {{.Shell.SiteName}}</title>
+<link rel="canonical" href="/groups/new/">
+<link rel="preload" href="/static/fonts/bricolage-grotesque-latin-ext-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/static/fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/static/css/base.css">
+<link rel="stylesheet" href="/static/css/group-create-native.css">
+</head>
+<body class="group-create-page">
+<a class="skip-link" href="#main">{{index .Copy "Skip to main content"}}</a>
+<header class="site-header"><div class="container nav-wrap">
+<a class="brand" href="/"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><circle cx="6" cy="6" r="5" fill="currentColor"></circle></svg> {{index .Copy "Activities"}}</a>
+<input type="checkbox" id="nav-toggle" class="nav-toggle-cb"><label for="nav-toggle" class="nav-toggle"><span aria-hidden="true">☰</span> {{index .Copy "Menu"}}</label>
+<nav class="nav" aria-label="{{index .Copy "Primary"}}">{{range .Shell.Navigation}}<a class="nav-link" href="{{.URL}}"{{if .Current}} aria-current="page"{{end}}>{{.Label}}</a>{{end}}</nav>
+<details class="nav-menu nav-end"><summary>{{.Shell.DisplayName}}</summary><div class="nav-panel">
+<a href="/settings/">{{index .Copy "Settings"}}</a>
+<form method="post" action="/logout/" class="inline"><input type="hidden" name="csrfmiddlewaretoken" value="{{.Shell.CSRF}}"><button class="linkbtn" type="submit">{{index .Copy "Log out"}}</button></form>
+</div></details>
+</div></header>
+<main class="container" id="main" tabindex="-1">
+<p class="muted"><a href="/communities/">← {{index .Copy "Communities &amp; groups"}}</a></p>
+<h1>{{index .Copy "Create a group"}}</h1>
+<p class="muted">{{index .Copy "A standing group for a city + activity type, visible to people your age."}}</p>
+{{if .Shell.Messages}}<ul class="messages">{{range .Shell.Messages}}<li class="msg"><span role="status">{{.}}</span></li>{{end}}</ul>{{end}}
+{{if .ErrorSummary}}<p class="msg error" id="group-form-error" role="alert">{{.ErrorSummary}}</p>{{end}}
+<form method="post" action="/groups/new/"{{if .ErrorSummary}} aria-describedby="group-form-error"{{end}}>
+<input type="hidden" name="csrfmiddlewaretoken" value="{{.Shell.CSRF}}">
+{{range .Fields}}<p>
+<label for="id_{{.Name}}">{{.Label}}</label>
+{{if .Select}}<select id="id_{{.Name}}" name="{{.Name}}"{{if .Required}} required{{end}}{{if .Error}} aria-invalid="true" aria-describedby="id_{{.Name}}_error"{{end}}>
+<option value="">---------</option>{{range .Options}}<option value="{{.Value}}"{{if .Selected}} selected{{end}}>{{.Label}}</option>{{end}}
+</select>{{else if .Textarea}}<textarea id="id_{{.Name}}" name="{{.Name}}" aria-describedby="id_{{.Name}}_help{{if .Error}} id_{{.Name}}_error{{end}}"{{if .Error}} aria-invalid="true"{{end}}>{{.Value}}</textarea>{{else}}<input type="text" id="id_{{.Name}}" name="{{.Name}}"{{if .Required}} required{{end}}{{if .MaxLength}} maxlength="{{.MaxLength}}"{{end}} value="{{.Value}}"{{if .Error}} aria-invalid="true" aria-describedby="id_{{.Name}}_error"{{end}}>{{end}}
+{{if .Help}}<span class="helptext" id="id_{{.Name}}_help">{{.Help}}</span>{{end}}
+{{if .Error}}<span class="errorlist" id="id_{{.Name}}_error">{{.Error}}</span>{{end}}
+</p>{{end}}
+<button class="btn" type="submit">{{index .Copy "Create group"}}</button>
+</form>
+</main>
+<footer class="site-footer"><div class="container">
+<p><strong>{{index .Copy "Demo environment: do not enter real personal data."}}</strong></p>
+<nav class="footer-links" aria-label="{{index .Copy "Privacy"}}">{{range .Shell.Footer}}<a href="{{.URL}}">{{.Label}}</a> {{end}}</nav>
+<form method="post" action="/i18n/setlang/" class="inline lang-switch">
+<input type="hidden" name="csrfmiddlewaretoken" value="{{.Shell.CSRF}}"><input type="hidden" name="next" value="/groups/new/">
+<label for="group-language">{{index .Copy "Language"}}</label><select id="group-language" name="language"><option value="en"{{if .Shell.English}} selected{{end}}>English</option><option value="ro"{{if not .Shell.English}} selected{{end}}>Română</option></select>
+<button class="linkbtn" type="submit">{{index .Copy "Set language"}}</button>
+</form>
+</div></footer>
+</body></html>{{end}}

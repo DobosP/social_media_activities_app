@@ -1,7 +1,7 @@
 # ADR ledger — claimed numbers
 
 Claim the next free number **here, in the same commit as the ADR file**, so two parallel worktrees
-never mint the same number. Next free number: **0062** (0057–0060 already claimed on existing refs; 0061 claimed here) (0041–0049 reserved 2026-10-05 for the audit fix sessions: G2 0041/0043–0046, G3 0042/0047–0049; 0055 claimed on branch `feat/policy8-local-poc`). Template: [`0000-template.md`](0000-template.md).
+never mint the same number. Next free number: **0063** (0057–0060 already claimed on existing refs; 0061 claimed here) (0041–0049 reserved 2026-10-05 for the audit fix sessions: G2 0041/0043–0046, G3 0042/0047–0049; 0055 claimed on branch `feat/policy8-local-poc`). Template: [`0000-template.md`](0000-template.md).
 ADRs are append-only: a reversal is a new ADR that flips the old one's `Status:` to `superseded-by ADR-NNNN`.
 On conflict: `STATUS.md` > newest-dated ADR > every other doc.
 
@@ -60,6 +60,7 @@ On conflict: `STATUS.md` > newest-dated ADR > every other doc.
 | 0054 | [public-external-script-nonce-binding](0054-public-external-script-nonce-binding.md) | focused managed83/DATA checks passed; wider qualification pending | 2026-10-10 |
 | 0056 | [gui-preparation-scope-and-portable-mode-binding](0056-gui-preparation-scope-and-portable-mode-binding.md) | proposed; owner decision Q2 2026-10-11; 794573c output change awaits privacy/independent review | 2026-10-11 |
 | 0061 | [native-family-pages](0061-native-family-pages.md) | implemented; independently qualified affected PG6/desktop8+2, feature branch only | 2026-10-19 |
+| 0062 | [native-group-create](0062-native-group-create.md) | implemented; focused race/custody/vet pass, complete PG/UI qualification pending | 2026-10-19 |
 
 ⚠ **0009 is claimed twice** — this ledger exists so it does not happen again. Both files stay:
 `0009-csp-enforcement-prep.md` (superseded by ADR-0010) and
