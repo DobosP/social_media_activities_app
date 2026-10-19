@@ -1,7 +1,7 @@
 # ADR-0061: Native family management and ward explanation
 
 Date: 2026-10-19
-Status: proposed — scoped UI/body measurements reviewed; PostgreSQL pending
+Status: proposed — scoped UI passed; first PG failed; corrected qualification pending
 
 ## Context and decision
 
@@ -84,3 +84,21 @@ python3 -I tools/gui-native-family/qualify.py --sha FULL_CLEAN_SHA \
 The method binds its three committed inputs to the clean source archive. Keep
 source/authcore checks, all original test/CSRF/audit requirements, and owner-only
 Teacher/Social milestone/main/production decisions separate from this scoped proof.
+
+
+## PostgreSQL fixture correction — 2026-10-19
+
+The corrected method binds five committed inputs, including the native catalogue
+bootstrap and pure metadata-admission controls, to its clean source archive.
+
+The first complete six-lane attempt on `cdbd21a` passed web722 and app59 named
+cases, then failed four existing account roots because the method had installed
+schema/budgets but omitted canonical reference data. All owned containers and the
+PG process/socket were removed with recorded shutdown checks. This remains failed
+historical evidence. The corrected method invokes the existing `catalog.Migrate`
+in a bounded, owned, network-none helper for each fresh public database. It binds
+all canonical content types, taxonomy, relations and child-venue metadata against
+the current embedded reference source before and after each complete lane; it
+excludes nondeterministic timestamps and legitimately advancing identity sequences.
+No product policy, schemas, tests, assertions, skips or native caps change. A fresh
+complete six-lane run on the new clean source remains required before acceptance.

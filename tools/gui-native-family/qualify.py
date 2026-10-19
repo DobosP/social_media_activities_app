@@ -49,6 +49,16 @@ MIGRATION_SQL = ("CREATE TABLE IF NOT EXISTS go_backend_migrations(version text 
 BIND_SQL = """SELECT json_build_object('database',current_database(),'oid',(SELECT oid::bigint FROM pg_database WHERE datname=current_database()),'version',current_setting('server_version_num')::integer,'listen',current_setting('listen_addresses'),'fixtures',(SELECT count(*) FROM pg_namespace WHERE nspname LIKE 'native_fixture_%'),'extensions',(SELECT json_object_agg(extname,extversion ORDER BY extname) FROM pg_extension WHERE extname IN ('postgis','fuzzystrmatch','postgis_tiger_geocoder','postgis_topology','pg_trgm','vector')),'budgets',to_regclass('public.go_rate_budget') IS NOT NULL,'markers',(SELECT json_agg(version ORDER BY version) FROM go_backend_migrations))"""
 
 
+REFERENCE_SQL = """SELECT jsonb_build_object(
+'categories',(SELECT jsonb_agg(to_jsonb(t)-'created_at'-'updated_at' ORDER BY t.id) FROM public.taxonomy_activitycategory t),
+'types',(SELECT jsonb_agg(to_jsonb(t)-'created_at'-'updated_at' ORDER BY t.id) FROM public.taxonomy_activitytype t),
+'relations',(SELECT jsonb_agg(to_jsonb(t) ORDER BY t.id) FROM public.taxonomy_activityrelation t),
+'child_venues',(SELECT jsonb_agg(to_jsonb(t)-'created_at' ORDER BY t.id) FROM public.places_childvenueclass t),
+'content_types',(SELECT jsonb_agg(to_jsonb(t) ORDER BY t.id) FROM public.django_content_type t))"""
+REFERENCE_SEED = 'services/server/internal/catalog/testdata/reference_seed.json'
+REFERENCE_HELPER = 'services/server/tools/gui-native-family-bootstrap/main.go'
+
+
 def need(ok, message):
     if not ok:
         raise RuntimeError(message)
@@ -111,6 +121,13 @@ def parse_tests(raw, package, expected):
          'Exactly one actual package PASS required')
     return {'top_level': len(expected), 'named_passes': len(passes), 'skip': 0, 'fail': 0,
             'identities': runs, 'json_events': len(events)}
+
+
+def validate_reference(raw, expected):
+    actual = json.loads(raw)
+    need(actual == expected, 'Full canonical catalog reference metadata differs')
+    return {'canonical_json_sha256': digest(json.dumps(actual, sort_keys=True, separators=(',', ':')).encode()),
+            'rows': {name: len(rows) for name, rows in actual.items()}}
 
 
 def execute(args):
@@ -217,8 +234,8 @@ def execute(args):
         for destination, options in tmpfs.items():
             argv += ['--tmpfs', destination + ':' + options]
         if role != 'db':
-            argv += ['--workdir', '/src/services/server/internal/' + role,
-                     '--env', 'TMPDIR=/scratch', '--env', 'GOMAXPROCS=2']
+            workdir = '/src/services/server' if role.startswith('reference-') else '/src/services/server/internal/' + role
+            argv += ['--workdir', workdir, '--env', 'TMPDIR=/scratch', '--env', 'GOMAXPROCS=2']
         argv += [image, *command]
         code, stdout, _ = docker(*argv, failure=True)
         if code == 0:
@@ -292,6 +309,7 @@ def execute(args):
              and set(value['extensions']) == {'postgis', 'fuzzystrmatch', 'postgis_tiger_geocoder', 'postgis_topology', 'pg_trgm', 'vector'}
              and value['markers'] == ['django-477d43a-contract-v1', 'go-shared-rate-budgets-v1', 'go-shared-rate-budgets-v2'],
              'Fresh public PG16/extensions/budgets/fixture-cleanup binding differs')
+        value['catalog_reference'] = validate_reference(psql(database, sql=REFERENCE_SQL, label=label + '-reference'), reference_expected)
         return value
 
     try:
@@ -308,7 +326,8 @@ def execute(args):
         db_entry = regular(method / 'db-entry.sh')
         need(digest(db_entry) == DB_ENTRY_SHA == binding['db_entry_sha256'], 'Exact reused DB_ENTRY differs')
         method_inputs = {str((method / name).relative_to(REPO)): regular(method / name)
-                         for name in ('qualify.py', 'db-entry.sh', 'db-binding.json')}
+                         for name in ('qualify.py', 'db-entry.sh', 'db-binding.json', 'test_qualify.py')}
+        method_inputs[REFERENCE_HELPER] = regular(REPO / REFERENCE_HELPER)
         result['method_inputs'] = [{'path': path, 'bytes': len(raw), 'sha256': digest(raw)}
                                   for path, raw in method_inputs.items()]
         for image in (DB_IMAGE, CODEC_IMAGE):
@@ -330,9 +349,19 @@ def execute(args):
         for row in binding['application_pg_source_bindings']:
             actual = regular(out / 'source' / row['path'])
             need(len(actual) == row['bytes'] and digest(actual) == row['sha256'], 'Current PG6 source differs from reused DB compatibility binding')
+        reference_raw = regular(out / 'source' / REFERENCE_SEED)
+        reference_expected = {name: sorted(rows, key=lambda row: row['id'])
+                              for name, rows in json.loads(reference_raw).items()}
+        need(set(reference_expected) == {'categories', 'types', 'relations', 'child_venues', 'content_types'}
+             and all(reference_expected.values()), 'Complete current canonical reference source required')
+        result['catalog_reference_source'] = {'path': REFERENCE_SEED, 'bytes': len(reference_raw), 'sha256': digest(reference_raw)}
+        call([str(GO), '-C', str(out / 'source/services/server'), 'build', '-mod=readonly', '-trimpath',
+              '-o', str(out / 'binaries/reference-bootstrap'), './tools/gui-native-family-bootstrap'],
+             host_go=True, timeout=600, label='reference-bootstrap-compile')
+        result['reference_bootstrap_binary'] = {'sha256': digest(regular(out / 'binaries/reference-bootstrap'))}
         for lane, _ in LANES:
             call([str(GO), '-C', str(out / 'source/services/server'), 'test', '-mod=readonly', '-race', '-c', '-o', str(out / 'binaries' / (lane + '.test')), './internal/' + lane], host_go=True, timeout=600, label=lane + '-compile')
-        call([str(GO), '-C', str(out / 'source/services/server'), 'vet', *['./internal/' + lane for lane, _ in LANES]], host_go=True, timeout=600, label='affected-vet')
+        call([str(GO), '-C', str(out / 'source/services/server'), 'vet', *['./internal/' + lane for lane, _ in LANES], './tools/gui-native-family-bootstrap'], host_go=True, timeout=600, label='affected-vet')
         db_tmpfs = {'/var/lib/postgresql/data': 'rw,nosuid,nodev,size=1g,uid=999,gid=999,mode=0700',
                     '/tmp': 'rw,nosuid,nodev,size=64m,uid=999,gid=999,mode=1777'}
         create('db', DB_IMAGE, '999:999', 'bash', ['-u', '-o', 'pipefail', '-c', db_entry.decode()],
@@ -352,12 +381,23 @@ def execute(args):
             psql(database, raw=regular(out / 'source/services/server/internal/schema/baseline.sql'), label=lane + '-baseline')
             psql(database, raw=b'BEGIN;\n' + regular(out / 'source/services/server/internal/schema/budgets.sql') + b'\nCOMMIT;\n', label=lane + '-budgets')
             psql(database, sql=MIGRATION_SQL, label=lane + '-migration-markers')
-            pg_before = pg_binding(database, lane + '-pg-before')
-            need(pg_before['oid'] not in oids, 'Each complete lane must have a distinct fresh public database')
-            oids.append(pg_before['oid'])
             dsn = 'host=/pgsocket port=55434 user=app dbname=' + database + ' sslmode=disable'
             binds = [(str(out / 'source'), '/src', False), (str(out / 'binaries'), '/tests', False),
                      (str(out / 'test-tmp'), '/scratch', True), (str(socket), '/pgsocket', False)]
+            reference_role = 'reference-' + lane
+            create(reference_role, CODEC_IMAGE, str(os.getuid()) + ':' + str(os.getgid()),
+                   '/tests/reference-bootstrap', ['-dsn', dsn], binds,
+                   {'/tmp': 'rw,nosuid,nodev,size=64m,mode=1777'}, [], 2, 3 << 30, 512)
+            reference_code, reference_stdout, reference_stderr = docker('start', '-a', owners[reference_role]['cid'],
+                                                                         timeout=90, failure=True, label=lane + '-reference-bootstrap')
+            reference_observed = observe(reference_role)
+            need(reference_code == reference_observed['exit'] == 0 and not reference_observed['running']
+                 and not reference_observed['oom'] and not reference_stderr
+                 and json.loads(reference_stdout) == {'status': 'catalog-migrated'}, 'Canonical catalog bootstrap failed')
+            remove(reference_role)
+            pg_before = pg_binding(database, lane + '-pg-before')
+            need(pg_before['oid'] not in oids, 'Each complete lane must have a distinct fresh public database')
+            oids.append(pg_before['oid'])
             command = ['-test.v=test2json', '-test.timeout=10m', '-' + flag, dsn]
             create(lane, CODEC_IMAGE, str(os.getuid()) + ':' + str(os.getgid()), '/tests/' + lane + '.test',
                    command, binds, {'/tmp': 'rw,nosuid,nodev,size=64m,mode=1777'}, [], 2, 3 << 30, 512)
@@ -389,7 +429,7 @@ def execute(args):
     except Exception as error:
         result['errors'].append(type(error).__name__ + ': ' + str(error))
     finally:
-        for role in [lane for lane, _ in reversed(LANES)] + ['db']:
+        for role in [role for lane, _ in reversed(LANES) for role in (lane, 'reference-' + lane)] + ['db']:
             if role in owners and role not in result['cleanup']:
                 try:
                     remove(role)

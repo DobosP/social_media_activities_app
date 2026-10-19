@@ -1,0 +1,21 @@
+// Pure replay sensitivity against the retained ACTUAL V2 report. No browser.
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import { fileURLToPath } from 'node:url';
+import { initialColorsEqualSettled } from './color-stability.mjs';
+const option=name=>{const i=process.argv.indexOf(name);assert.ok(i>=2&&process.argv[i+1],name);return path.resolve(process.argv[i+1]);};
+const input=option('--report'),output=option('--output');
+assert.ok(output.includes('/_temp/')&&!fs.existsSync(output));
+const hash=raw=>crypto.createHash('sha256').update(raw).digest('hex');
+const raw=fs.readFileSync(input),inputHash=hash(raw);
+assert.equal(inputHash,'0812b2534493bf94a69ecabe28ac152ec0f2611c5c36e610e016b00eb6823fd7');
+const actual=JSON.parse(raw);assert.equal(actual.status,'pass');assert.equal(actual.states.length,8);
+const states=actual.states.map(state=>({name:state.name,initialColorsEqualSettled:initialColorsEqualSettled(state.steadyState.before,state.steadyState.after),mismatches:state.steadyState.before.flatMap((initial,index)=>initialColorsEqualSettled([initial],[state.steadyState.after[index]])?[]:[{action:initial.action,label:initial.label,initial:{color:initial.color,backgroundColor:initial.backgroundColor},settled:{color:state.steadyState.after[index]?.color,backgroundColor:state.steadyState.after[index]?.backgroundColor}}])}));
+assert.ok(states.some(state=>!state.initialColorsEqualSettled));
+assert.equal(states.find(state=>state.name==='wards-disabled').initialColorsEqualSettled,false);
+assert.ok(states.find(state=>state.name==='wards-disabled').mismatches.some(button=>button.action==='/wards/42/limits/'));
+const result={status:'EXPECTED_ACTUAL_V2_REJECTION_BY_NEW_V3_PREDICATE',input:{path:input,sha256:inputHash},predicateSHA256:hash(fs.readFileSync(fileURLToPath(new URL('./color-stability.mjs',import.meta.url)))),states,scope:'Pure stored actual before/settled sample replay only; no browser execution or all-frame assertion.'};
+fs.writeFileSync(output,JSON.stringify(result,null,2)+'\n',{flag:'wx',mode:0o600});
+console.log(JSON.stringify({status:result.status,refusedStates:states.filter(state=>!state.initialColorsEqualSettled).map(state=>state.name),resultSHA256:hash(fs.readFileSync(output))}));
