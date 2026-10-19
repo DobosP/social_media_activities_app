@@ -59,6 +59,15 @@ REFERENCE_SEED = 'services/server/internal/catalog/testdata/reference_seed.json'
 REFERENCE_HELPER = 'services/server/tools/gui-native-family-bootstrap/main.go'
 
 
+STORAGE_SQL = """SELECT json_build_object('maintenance_database',current_database(),
+'server_start',pg_postmaster_start_time(),'listen',current_setting('listen_addresses'),
+'wal_bytes',(SELECT COALESCE(sum(size),0)::bigint FROM pg_ls_waldir()),
+'databases',(SELECT json_agg(json_build_object('name',d.datname,'oid',d.oid::bigint,'owner',pg_get_userbyid(d.datdba),
+'template',d.datistemplate,'bytes',pg_database_size(d.oid),
+'client_connections',(SELECT count(*) FROM pg_stat_activity a WHERE a.datid=d.oid AND a.backend_type='client backend'))
+ORDER BY d.datname) FROM pg_database d))"""
+
+
 def need(ok, message):
     if not ok:
         raise RuntimeError(message)
@@ -128,6 +137,27 @@ def validate_reference(raw, expected):
     need(actual == expected, 'Full canonical catalog reference metadata differs')
     return {'canonical_json_sha256': digest(json.dumps(actual, sort_keys=True, separators=(',', ':')).encode()),
             'rows': {name: len(rows) for name, rows in actual.items()}}
+
+
+def lane_database(invocation, lane):
+    parsed = uuid.UUID(invocation)
+    need(str(parsed) == invocation and parsed.version == 4
+         and lane in {name for name, _ in LANES}, 'Literal current UUID4 and complete lane required')
+    return 'social_family_' + invocation.replace('-', '')[:12] + '_' + lane
+
+
+def retirement_identity(invocation, lane, oid, snapshot):
+    database = lane_database(invocation, lane)
+    need(type(oid) is int and oid > 0, 'Captured qualified lane OID required')
+    rows = snapshot['databases']
+    need(snapshot['maintenance_database'] == 'postgres' and snapshot['listen'] == ''
+         and len(rows) == 4 and {row['name'] for row in rows} == {'postgres', 'template0', 'template1', database},
+         'Only default databases and this exact generated fresh lane database may exist')
+    matches = [row for row in rows if row['name'] == database]
+    need(len(matches) == 1 and matches[0]['oid'] == oid and matches[0]['owner'] == 'app'
+         and matches[0]['template'] is False and matches[0]['client_connections'] == 0,
+         'Current generated lane database ownership/OID/no-client identity differs')
+    return matches[0]
 
 
 def execute(args):
@@ -312,6 +342,49 @@ def execute(args):
         value['catalog_reference'] = validate_reference(psql(database, sql=REFERENCE_SQL, label=label + '-reference'), reference_expected)
         return value
 
+    def storage_snapshot(label):
+        actual = observe('db')
+        need(actual['running'] and not actual['oom'], 'Storage receipt requires current running owned DB CID')
+        value = json.loads(psql('postgres', sql=STORAGE_SQL, label=label + '-catalog'))
+        raw = docker('exec', owners['db']['cid'], 'df', '-B1', '--output=size,used,avail,target',
+                     '/var/lib/postgresql/data', label=label + '-tmpfs')[1]
+        lines = raw.decode().splitlines()
+        need(len(lines) == 2, 'One actual PG tmpfs storage row required')
+        fields = lines[1].split()
+        need(len(fields) == 4 and fields[3] == '/var/lib/postgresql/data'
+             and all(re.fullmatch('[0-9]+', item) for item in fields[:3]), 'Actual bounded PG tmpfs row differs')
+        total, used, available = map(int, fields[:3])
+        need(total == 1 << 30 and 0 <= used <= total and 0 <= available <= total,
+             'Original positive1GiB PG tmpfs cap required unchanged')
+        value['tmpfs'] = {'bytes': total, 'used_bytes': used, 'available_bytes': available}
+        return value
+
+    def retire_lane_database(lane, database, oid):
+        need(database == lane_database(invocation, lane) and lane in result['lanes']
+             and result['lanes'][lane]['pg_before'] == result['lanes'][lane]['pg_after']
+             and result['cleanup'][lane]['id_absent'] and result['cleanup'][lane]['name_absent']
+             and result['cleanup']['reference-' + lane]['id_absent']
+             and result['cleanup']['reference-' + lane]['name_absent'], 'Qualified lane and removed owned clients required before drop')
+        need(source_rows(out / 'source') == before, 'Exported source changed before owned lane database retirement')
+        unchanged_git()
+        before_drop = storage_snapshot(lane + '-retire-before')
+        need(before_drop['server_start'] == result['pg_storage_initial']['server_start'], 'Owned postmaster lifetime changed before drop')
+        identity = retirement_identity(invocation, lane, oid, before_drop)
+        # Identifier has only the exact runtime-generated UUID namespace and
+        # lane characters. No IF EXISTS, FORCE, wildcard or termination seam.
+        psql('postgres', sql='DROP DATABASE "' + database + '"', label=lane + '-retire-drop')
+        after_drop = storage_snapshot(lane + '-retire-dropped')
+        need({row['name'] for row in after_drop['databases']} == {'postgres', 'template0', 'template1'}
+             and all(row['oid'] != oid for row in after_drop['databases']), 'Dropped owned database name/OID still present')
+        psql('postgres', sql='CHECKPOINT', label=lane + '-retire-checkpoint')
+        after_checkpoint = storage_snapshot(lane + '-retire-checkpointed')
+        need({row['name'] for row in after_checkpoint['databases']} == {'postgres', 'template0', 'template1'}
+             and after_checkpoint['server_start'] == before_drop['server_start']
+             and all(row['oid'] != oid for row in after_checkpoint['databases']), 'Owned maintenance checkpoint/lifecycle differs')
+        return {'database': database, 'oid': oid, 'qualified_identity': identity, 'name_and_oid_absent': True,
+                'checkpoint_completed': True, 'before_drop': before_drop, 'after_drop': after_drop,
+                'after_checkpoint': after_checkpoint, 'captured_metadata': 'pg_before/pg_after remain capture-time proof; completed lane database is intentionally retired'}
+
     try:
         result['disk_before'] = dict(zip(('total', 'used', 'free'), shutil.disk_usage(BASE)))
         need(result['disk_before']['free'] >= 4 << 30, 'At least 4GiB actual free scratch disk required')
@@ -375,8 +448,12 @@ def execute(args):
         need(ready['uid'] == ready['gid'] == 999 and ready['owned_pid'] > 0, 'Actual owned DB process identity differs')
         result['pg_ready'] = ready
         oids = []
+        result['retired_databases'] = {}
+        result['pg_storage_initial'] = storage_snapshot('cluster-initial')
+        need({row['name'] for row in result['pg_storage_initial']['databases']} == {'postgres', 'template0', 'template1'},
+             'Fresh owned cluster may contain only initial maintenance/templates')
         for lane, flag in LANES:
-            database = 'social_family_' + invocation.replace('-', '')[:12] + '_' + lane
+            database = lane_database(invocation, lane)
             docker('exec', owners['db']['cid'], PG + 'createdb', '-h', '/socket', '-p', '55434', '-U', 'app', database, label=lane + '-createdb')
             psql(database, raw=regular(out / 'source/services/server/internal/schema/baseline.sql'), label=lane + '-baseline')
             psql(database, raw=b'BEGIN;\n' + regular(out / 'source/services/server/internal/schema/budgets.sql') + b'\nCOMMIT;\n', label=lane + '-budgets')
@@ -422,8 +499,9 @@ def execute(args):
             result['lanes'][lane] = {'state': 'PASS', 'tests': counts, 'pg_before': pg_before, 'pg_after': pg_after,
                                      'binary': {'sha256': digest(regular(out / 'binaries' / (lane + '.test')))}}
             remove(lane)
+            result['retired_databases'][lane] = retire_lane_database(lane, database, pg_after['oid'])
             unchanged_git()
-            print(json.dumps({'lane': lane, 'phase': 'complete package passed and owned container removed', 'named_passes': counts['named_passes']}), flush=True)
+            print(json.dumps({'lane': lane, 'phase': 'complete package passed, clients removed and owned database retired/checkpointed', 'named_passes': counts['named_passes']}), flush=True)
         need(source_rows(out / 'source') == before, 'Read-only exported source changed')
         unchanged_git()
     except Exception as error:
@@ -437,6 +515,7 @@ def execute(args):
                     result['errors'].append('cleanup ' + role + ': ' + type(error).__name__ + ': ' + str(error))
         result['seconds'] = time.monotonic() - started
         result['method_pass'] = (not result['errors'] and set(result['lanes']) == {lane for lane, _ in LANES}
+                                 and set(result.get('retired_databases', {})) == {lane for lane, _ in LANES}
                                  and all(value.get('id_absent') and value.get('name_absent') for value in result['cleanup'].values()))
         result['artifact_rows'] = [{'path': path.relative_to(out).as_posix(), 'bytes': path.stat().st_size, 'sha256': digest(regular(path))}
                                    for path in sorted((out / 'proof').glob('*')) if path.is_file()]

@@ -7,7 +7,7 @@ Last verified: 2026-10-19 (family UI8+2/focused pass; PG setup/build repairs awa
   original Python gates remain in optional manual `reference.yml` (ADR-0038). YAML/input/job/
   read-only permission checks pass. Native Actions remains manually disabled; no hosted run claimed.
 Current truth: STATUS > newest ADR > other docs. History: WORKLOG, ADRs and git.
-Family pages: [ADR-0061](docs/adr/0061-native-family-pages.md) implements two typed Go views using existing services. V3 isolated desktop8/no-JS2,192Axe predicates and27 initial/settled button samples pass; the scoped CSS leaves original base styles intact. Prior V1 failures and V2 stable-only pass remain history. Focused Go checks pass; warmed body measurements show smaller payload and higher CPU than Pongo. First PG run passed web722/app59, then four existing account roots failed because the method omitted canonical catalog initialization. The catalogue correction then stopped at archive-only helper compilation before runtime; its VCS-stamping fix requires fresh archive preflight and six-lane qualification. No milestone, main landing or deployment claim.
+Family pages: [ADR-0061](docs/adr/0061-native-family-pages.md) implements two typed Go views. Eight desktop/two no-JS fixtures,192Axe predicates and27 button samples pass. Complete six-package PG qualification is pending; the runner now retires each completed owned database and checkpoints within unchanged1GiB/2GiB limits. Earlier setup/build/WAL failures remain explicit in the ADR. No main, milestone or deployment claim.
 
 ## What this is
 

@@ -54,6 +54,51 @@ class CatalogBindingTests(unittest.TestCase):
             self.admit(changed)
 
 
+class OwnedLaneRetirementTests(unittest.TestCase):
+    invocation = 'abcdef01-2222-4333-8444-555555555555'
+
+    def snapshot(self):
+        rows = [{'name': name, 'oid': n, 'owner': 'app', 'template': name != 'postgres',
+                 'client_connections': 0, 'bytes': 1024} for n, name in enumerate(['postgres', 'template0', 'template1'], 1)]
+        rows.append({'name': METHOD['lane_database'](self.invocation, 'web'), 'oid': 42, 'owner': 'app',
+                     'template': False, 'client_connections': 0, 'bytes': 2048})
+        return {'maintenance_database': 'postgres', 'listen': '', 'databases': rows}
+
+    def test_exact_generated_qualified_database_is_admitted(self):
+        row = METHOD['retirement_identity'](self.invocation, 'web', 42, self.snapshot())
+        self.assertEqual(row['name'], 'social_family_abcdef012222_web')
+        self.assertEqual(row['oid'], 42)
+
+    def test_invalid_namespace_or_lane_is_refused(self):
+        for invocation, lane in [(self.invocation, 'postgres'), (self.invocation, '../web'),
+                                  (self.invocation.upper(), 'web'), ('11111111-2222-1333-8444-555555555555', 'web')]:
+            with self.subTest(invocation=invocation, lane=lane), self.assertRaises((RuntimeError, ValueError)):
+                METHOD['lane_database'](invocation, lane)
+
+    def test_foreign_oid_owner_template_or_live_clients_refuse_drop(self):
+        for key, value in [('oid', 43), ('owner', 'foreign'), ('template', True), ('client_connections', 1)]:
+            changed = self.snapshot()
+            changed['databases'][-1][key] = value
+            with self.subTest(key=key), self.assertRaises(RuntimeError):
+                METHOD['retirement_identity'](self.invocation, 'web', 42, changed)
+        with self.assertRaises(RuntimeError):
+            METHOD['retirement_identity'](self.invocation, 'web', True, self.snapshot())
+
+    def test_missing_or_extra_database_and_wrong_maintenance_refuse_drop(self):
+        for change in ('missing', 'extra', 'maintenance', 'listen'):
+            changed = self.snapshot()
+            if change == 'missing':
+                changed['databases'].pop()
+            elif change == 'extra':
+                changed['databases'].append({'name': 'unowned_database', 'oid': 90})
+            elif change == 'maintenance':
+                changed['maintenance_database'] = changed['databases'][-1]['name']
+            else:
+                changed['listen'] = '*'
+            with self.subTest(change=change), self.assertRaises(RuntimeError):
+                METHOD['retirement_identity'](self.invocation, 'web', 42, changed)
+
+
 if __name__ == '__main__':
     if not __debug__:
         raise SystemExit('Optimization is refused')

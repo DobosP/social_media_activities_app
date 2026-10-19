@@ -112,3 +112,21 @@ stamping. The helper build now sets `-buildvcs=false`; the explicit clean SHA,
 tree, archive/source/method bindings and binary digest remain mandatory. Verify
 that build from a fresh committed archive before scheduling the six-lane run.
 This build-only failure is retained separately from the earlier account failure.
+
+
+The dc7a272 attempt passed web722/app59/accounts121/recommendations24, then
+failed during the social lane with a PostgreSQL WAL no-space PANIC. The fixed
+1GiB PG tmpfs and2GiB memory cap were preserved. All11 owned containers were
+removed; graceful PG shutdown failed after the PANIC and is not claimed.
+The method now retires only each verified generated lane database after complete
+test/metadata/source proofs and verified client-container removal. Exact name,
+captured OID,app owner,non-template status and zero client connections are checked
+on the current owned CID. DROP has no FORCE/IF EXISTS; absence is verified.
+A separate successful CHECKPOINT on postgres precedes the next fresh lane.
+Raw catalog/WAL/tmpfs-used/free snapshots are retained before drop,after drop and
+after checkpoint. Capture-time metadata remains evidence after intentional DB
+retirement. No tests,assertions,schema,configuration or caps are changed.
+PostgreSQL may recycle WAL without shrinking file bytes; the repair removes
+completed DB/catalog bloat and permits WAL reuse but does not guarantee every
+single-lane peak. A fresh complete six-lane run is required; if one isolated lane
+still exhausts the fixed cap, fresh-PG-per-lane is the next lifecycle option.
