@@ -1,0 +1,32 @@
+[
+  {
+    "source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-preferences-pg-qa/run-e900960d50be-2503620e-5e0f-4acb-9ea2-09f713d162ae/proof/command-006.stdout",
+    "bytes": 38318080,
+    "path": "proof/command-006.stdout",
+    "sha256": "2081ba49bc398d18b6535e90f794831539fcfc88ff59ff546d9ee7fbd9a41339",
+    "reason": "Full binary Git archive stdout omitted; original recorded digest/tree/source manifest retained. No deletion."
+  },
+  {
+    "source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-preferences-pg-qa/run-7819bdfdb6ae-fa50086a-086a-47ff-884f-23360ccc2e6d/proof/command-006.stdout",
+    "bytes": 38318080,
+    "path": "proof/command-006.stdout",
+    "sha256": "3bdffb34596c0eddb8a705dee4af80bd33ee9c05663a21788dbb624bd64d330f",
+    "reason": "Full binary Git archive stdout omitted; original recorded digest/tree/source manifest retained. No deletion."
+  },
+  {
+    "scope": "Full source exports/test executables/bootstrap binary/caches/DBs/socket/host-tmp/test-tmp/profiles/full proposed and before source trees",
+    "reason": "Not selected. Exact source SHA/tree/full source manifest/commands/hash history preserved. No deletion by collector."
+  },
+  {
+    "scope": "Prior Group-detail baseline archive",
+    "reason": "Canonical dependency already retained at pinned repository path/hash, not duplicated. Complete source manifest retains its identity; preserve canonical keeper."
+  },
+  {
+    "scope": "Foreign programme/Teacher/other-module work",
+    "reason": "Outside this bounded notification keeper."
+  },
+  {
+    "scope": "Duplicate historical HTML/PNG bytes",
+    "reason": "Explicit exact content aliases retain each original path/hash/bytecount/mode/UID/GID/nsmtime. Alias bodies are not independent tar members or equal target metadata."
+  }
+]

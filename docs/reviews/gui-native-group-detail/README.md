@@ -31,7 +31,7 @@ and14% more allocations. These are body samples,not HTTP/SQL/throughput speedups
 [Retention](retention.json) records actual removal of6,572 superseded owned files,
 780,572,285 logical bytes and718 empty directories after accepted keeper custody.
 Those raw paths are unavailable. Full exact manifests/receipts/methods remain in
-`retention.tar.gz`; latest fa3 setup,all logs/source packets/branches and keepers remain.
+`retention.tar.gz`. The later [Notification retention](../gui-native-notification-preferences/README.md) supersedes/prunes the generated fa3 source/binaries; e900 is the rolling setup. Group-detail logs/UI/Git refs/source packets and this keeper remain.
 
 Reproduce on exact fa3 with [committed methods](../../../tools/gui-native-group-detail/README.md).
 Installed tool identities,exact commands,capture and cleanup remain in raw results.

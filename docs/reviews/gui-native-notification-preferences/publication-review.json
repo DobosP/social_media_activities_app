@@ -1,0 +1,167 @@
+{
+  "schema": 1,
+  "verdict": "ACCEPT_DOCS_ONLY_NOTIFICATION_CLOSURE_AND_FEATURE_BRANCH_PUBLICATION",
+  "qualified_product_source_sha": "e900960d50beed03ef387159da0e6d903ec5bf9a",
+  "qualified_product_tree": "42c8b3bda206d066086655572dd618de54a73ba1",
+  "previous_published_base_sha": "99b88a446031cdf3d99bd04bdfcb41706d2a6aab",
+  "reviewed_prepublication_path_count": 17,
+  "existing_metadata_paths": 5,
+  "canonical_packet_paths": 12,
+  "reviewed_paths": [
+    {
+      "path": "STATUS.md",
+      "bytes": 16823,
+      "sha256": "3ac3b554ef21528ae23fd3abcfc3077f93e9b186bf4e6cf8448607288b27a0a5"
+    },
+    {
+      "path": "docs/adr/0064-native-notification-preferences.md",
+      "bytes": 8304,
+      "sha256": "98334b327a5d28c93b65532670fcebb0f21ecddb1a35a63d9379a85c8b61c9cd"
+    },
+    {
+      "path": "docs/adr/README.md",
+      "bytes": 9032,
+      "sha256": "1ed53dc94f678b1f1c8c462ae54546788cecf7d788747064cf1bf71cc1fae601"
+    },
+    {
+      "path": "docs/execplans/gui-native-notification-preferences.md",
+      "bytes": 4666,
+      "sha256": "14124b46ebb3bf924945ab50123681633b216a6b5e337ede6268cb53b79abab1"
+    },
+    {
+      "path": "docs/reviews/gui-native-group-detail/README.md",
+      "bytes": 2631,
+      "sha256": "849e88b7afa8d02532c2c05fd2da071f64832c94d887b9bc40ce56c25b3f8839"
+    },
+    {
+      "path": "docs/reviews/gui-native-notification-preferences/README.md",
+      "bytes": 2923,
+      "sha256": "0b6ef04dbe80ecb7af5ea3094363984e5e681490b8af968368d255621c6fe81e"
+    },
+    {
+      "path": "docs/reviews/gui-native-notification-preferences/acceptance.json",
+      "bytes": 6176,
+      "sha256": "f33290416633a92dc8c7fddf811fb75e7289e95a29b4db7e6ca7a5c2ec33fce0"
+    },
+    {
+      "path": "docs/reviews/gui-native-notification-preferences/archive-manifest.json",
+      "bytes": 678405,
+      "sha256": "f308fef6e70d9148ae91617cf949ed30ad9e94adc87116cb5e219d1e001885ed"
+    },
+    {
+      "path": "docs/reviews/gui-native-notification-preferences/collection-result.json",
+      "bytes": 631,
+      "sha256": "8c57e13ab23156ce9cb46de2126cbd6d8c0c9cff03c68a1d2ca4d9f99b8f039f"
+    },
+    {
+      "path": "docs/reviews/gui-native-notification-preferences/content-aliases.json",
+      "bytes": 88861,
+      "sha256": "cd85b1c950137aaed62c6c8ab2b6b8c2c98cca5feb94e049a9bb06e276b62fce"
+    },
+    {
+      "path": "docs/reviews/gui-native-notification-preferences/evidence.tar.gz",
+      "bytes": 10621806,
+      "sha256": "29a9ff0d2e420d5454aaebd324d0bc686bc22cf14b6f04ce86e4b8ce7e71d7e5"
+    },
+    {
+      "path": "docs/reviews/gui-native-notification-preferences/excluded.json",
+      "bytes": 1839,
+      "sha256": "fbd7d221d9055f1bff52bde42458b48f6eb408043ba759e0cd96f13b2ddad6df"
+    },
+    {
+      "path": "docs/reviews/gui-native-notification-preferences/keeper-review.json",
+      "bytes": 3996,
+      "sha256": "4ad6ab7248564a75abbbbc0469f150b6d472d442ca0bc9a08d24cc3824adb2ae"
+    },
+    {
+      "path": "docs/reviews/gui-native-notification-preferences/result.json",
+      "bytes": 1016,
+      "sha256": "a207c9f9f5229977fa0016dcc92dc3d167cfca876b793a9d38d48d976dd6bacb"
+    },
+    {
+      "path": "docs/reviews/gui-native-notification-preferences/retention-result.json",
+      "bytes": 1600820,
+      "sha256": "6e2d9d0082bc5b11636f0bf6d2c392d54d78c013814ffdeef3a43ae111bade52"
+    },
+    {
+      "path": "docs/reviews/gui-native-notification-preferences/retention.tar.gz",
+      "bytes": 535633,
+      "sha256": "536843ffd0939a9d14fa9d83423f143201117f58ccca1c0c1f91592ef999fd69"
+    },
+    {
+      "path": "docs/reviews/gui-native-notification-preferences/selection.json",
+      "bytes": 858483,
+      "sha256": "292307e96ab6a703c24e4a591b8ed3e35a780c7d133c5a0b9b050810f6b46c32"
+    }
+  ],
+  "allowed_additional_copy": {
+    "path": "docs/reviews/gui-native-notification-preferences/publication-review.json",
+    "content": "Exact bytes of this independent publication-metadata-review.json receipt; verify its SHA before commit. One additional review-only path produces18 total paths."
+  },
+  "feature_acceptance_sha256": "f33290416633a92dc8c7fddf811fb75e7289e95a29b4db7e6ca7a5c2ec33fce0",
+  "keeper_review_sha256": "4ad6ab7248564a75abbbbc0469f150b6d472d442ca0bc9a08d24cc3824adb2ae",
+  "keeper_archive_sha256": "29a9ff0d2e420d5454aaebd324d0bc686bc22cf14b6f04ce86e4b8ce7e71d7e5",
+  "retention_archive_sha256": "536843ffd0939a9d14fa9d83423f143201117f58ccca1c0c1f91592ef999fd69",
+  "actual_retention_result_sha256": "6e2d9d0082bc5b11636f0bf6d2c392d54d78c013814ffdeef3a43ae111bade52",
+  "actual_retention_independent_review_sha256": "a4fdea73236432e5749322693b3aaee288946fba0e8b4265a8b69915a62129de",
+  "actual_retention_independent_review": {
+    "schema": 1,
+    "verdict": "ACCEPT_ACTUAL_EXACT_NOTIFICATION_RETENTION_AND_PRESERVED_ROLLING_SUCCESSOR",
+    "source_sha": "e900960d50beed03ef387159da0e6d903ec5bf9a",
+    "actual_retention_result_sha256": "6e2d9d0082bc5b11636f0bf6d2c392d54d78c013814ffdeef3a43ae111bade52",
+    "reviewed_execution_sha256": "e07a4572012bf735fcd31b028e82d3711a2c92162f4861c75656420e83fe9a8c",
+    "retention_source_review_sha256": "231bac84c80d24d931a5038f68e8998eac04f6f5878cff4e7c67631902a8227d",
+    "retention_plan_sha256": "a5aeb91205eeb924d5162a91605ba41ff65c2e7032b1ad88f4a73db3a72e206a",
+    "canonical_retention_archive_sha256": "536843ffd0939a9d14fa9d83423f143201117f58ccca1c0c1f91592ef999fd69",
+    "canonical_retention_archive_bytes": 535633,
+    "canonical_retention_archive_members": 16,
+    "canonical_bundle_receipt_sha256": "b0e2442227a55fe8a4e927dff9abd2fc727ae2f798e667c66be7119938846227",
+    "exact_files_deleted": 4511,
+    "exact_directories_removed": 482,
+    "logical_bytes_deleted": 559474592,
+    "raw_deleted_paths_unavailable": true,
+    "latest_source_rows_retained_and_rehashed": 2186,
+    "latest_UI_artifacts_retained_and_rehashed": 67,
+    "latest_native_nonbinary_raw_artifacts_rehashed": 596,
+    "source_packet_and_method_inputs_rehashed": 151,
+    "Root_actual_live_39CID_name_absence_receipt": true,
+    "findings": [],
+    "checks": [
+      "Actual result6e2d is COMPLETE/executed and matches every planned deleted path/hash/bytecount/category in exact order, all4511 files/482 directories. Every target is now absent by lexists, including no replacement symlink. Sum559474592 is logical bytes, not a measured free-disk delta. Receipt states deleted raw paths unavailable.",
+      "Canonical retention result is byte-identical. Whole retention archive536843/535633B has16 regular literal-path members; every byte/hash/mode/UID/GID/PAXnsmtime matches bundle manifestb0e244 and current compact originals. Contains exact plan/verifier/custody/dry-run, approvede07a source and strict helper, independent source review231b, V1failedsource/finding/history, actual completion receipt. Initial failed source stayed historical and did not delete.",
+      "Root actual receipt reports successful live read-only39CID/name absence before mutation, from reviewed source mandatory checks. Reviewer did not rerun Docker. Current deleted target absence and surviving output identities independently verify the reported operation; no expanded deletion observed.",
+      "Latest e900 full2186-file source export and seven exact binaries remain and rehash to original qualification identities. All596 current nonbinary native raw artifacts and67 fullUI artifacts remain exact; latest result/capture/measurement identities unchanged. Original2superseded raw result/source manifests/nonbinary logs and nonempty socket lifecycle receipts survive.",
+      "Original4344 superseded generated-source files/14 binaries/two Git-tar stdout/151 old HTMLPNG paths are gone as authorized. Their sourceGit commits/trees, complete archived manifests/results/logs and historical body physical/alias custody remain.133 aliases preserve historical metadata/content only, not deleted raw-path availability.",
+      "All selected source packet/review/reproduction/collection inputs outside targets rehashed intact; canonical notification29a9 and Group-detailf1fc archives unchanged. Current tracked runtime/source bytes match e900 qualification outside declared closing metadata docs. No branches/worktrees/unmerged source packet/cache/Teacher or unrelated target was included."
+    ],
+    "scope": "Accept actual bounded owned retention and preserved rolling successor. Final current storage metadata review/publication remains separate; no main/milestone/production/provider/realchild approval.",
+    "execution": "Read-only actualreceipt/plan/fulltar/stat/Git/raw source/log/UI/sourcepacket/hash inspection plus scratch receipt; no deletion, candidate import/runtime, Docker/browser/PG/native or owning mutation."
+  },
+  "prior_metadata_finding_sha256": "5d1a551c8037193f7a4a40e4f0170abe93c7d86dbb44cede15cafe0561461bec",
+  "prior_metadata_findings_resolved": true,
+  "final_doc_checks": {
+    "command": "python3 -I /home/dobo/work/agent-ops/scripts/check_docs.py /home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a --all",
+    "exit": 0,
+    "files": 61,
+    "dead_links": 0,
+    "stale_terms": 0,
+    "retired_verbs": 0,
+    "orphans": 0,
+    "report_only_history": "Unchanged historical archive-link notices remain outside live gate defects; no all-history-link-clean claim."
+  },
+  "final_git_diff_check_exit": 0,
+  "runtime_delta_after_qualified_e900": false,
+  "findings": [],
+  "checks": [
+    "Final17 paths are exactly five existing metadata Markdown files plus12 canonical keeper/retention files. All qualified tracked source bytes outside these declared metadata paths remain exact e900; no Go/HTML/CSS/JS/method/auth/schema/catalogue/dependency/runtime delta. Documentation checks61 and current whitespace checks pass independently; STATUS120 and both keeper README budgets remain satisfied.",
+    "Current STATUS/ADR0064/index/plan/Notification README accurately state feature-branch acceptance on producte900: completeaffected6/436roots1279named/292commands597artifacts, UI6+6/18strictAxe408passes/12keyboardSave/25oldbodies/66assets78GET, current22row display-only capture and proper cleanup. Exact product SHA is distinguished from this later docs-only closing commit; no later exactsource fullPG claim.",
+    "Body measurement is explicitly mixed elapsed timing, not CPUprofile/general speedup: +44.30%EN/+42.16%RO render ns/op and +6.82%allocation count, with lower allocatedbytes/HTML/gzip. Same actual captured rows/shared synthetic environment/nativevalidation cost and body-only limits remain in preserved independent measurement review; no blanket efficiency claim.",
+    "Canonical evidence29a9/1484members133historicalaliases and independent4ad6/f332 receipts remain unchanged. Immutable collection-time PENDING labels and original failed firstUI/requested-not-reached benchmark/five diagnostics are labeled historical. All67 finalUI artifacts physical; aliases preserve exact historical bytes/metadata, not independent epoch/raw-path availability.",
+    "Actual retention6e2d/536843 is independently accepted in embedded a4fdea review:4511files482dirs559474592logicalB removed, rawpaths unavailable. Latest e900 reproducible source/binaries/fullUI/logs remain. Current Group-detail outerREADME and STATUS now explicitly say later Notification retention superseded/pruned generated fa3 setup while retaining Group-detail logs/UI/Gitrefs/sourcepackets/keeper; no stale fa3 physical-availability claim.",
+    "ADR0064 original entire decision/body prefix, including the original four-line applied-repair checkpoint, is restored byte-for-byte relative to e900; only Status metadata updates and new final checkpoint append remain. Prior metadata finding5d1a is resolved. Historical ADR0063 checkpoint is retained as history.",
+    "No main push/GUI milestone/production/currentimage/all21/provider/government/realchild/legal-content-policy activation is claimed or authorized. Root may copy this exact review once, commit the18 docs/evidence/review paths, and publish existing GUI feature branch using required ops. Actual push/remote verification remains Root work; no push is claimed by this review."
+  ],
+  "authorized_next_steps": "Copy exact review bytes to the single declared canonical publication-review.json path; verify18-path docs-only diff and review hashes; commit feature-branch metadata/evidence and publish feat/gui-app-migration-a through ops. Preserve immutable archives/history/qualified source refs and report actual publication outcome. No native/PG/UI rerun required for this docs-only closure.",
+  "scope": "Independent final current canonical metadata/actual retention/feature-publication readiness acceptance only. No app main/milestone/production or broad release approval.",
+  "execution": "Read-only source/Git/diff/hash/actual receipts/canonical metadata inspection and standard read-only doc/whitespace gate calls plus scratch review receipts. Reviewer performed no owning edit/commit/push/runtime/deletion."
+}

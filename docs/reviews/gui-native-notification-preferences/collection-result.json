@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "status": "COLLECTED_PENDING_INDEPENDENT_KEEPER_REVIEW",
+  "qualified_source": "e900960d50beed03ef387159da0e6d903ec5bf9a",
+  "selection_sha256": "292307e96ab6a703c24e4a591b8ed3e35a780c7d133c5a0b9b050810f6b46c32",
+  "archive_sha256": "29a9ff0d2e420d5454aaebd324d0bc686bc22cf14b6f04ce86e4b8ce7e71d7e5",
+  "archive_bytes": 10621806,
+  "archive_members": 1484,
+  "archive_manifest_sha256": "f308fef6e70d9148ae91617cf949ed30ad9e94adc87116cb5e219d1e001885ed",
+  "aliases": 133,
+  "inputs_unchanged": true,
+  "full_readback": true,
+  "bytes_mode_UID_GID_nanosecondmtime": true,
+  "physical_deletion_performed": false
+}

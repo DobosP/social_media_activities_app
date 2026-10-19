@@ -1,7 +1,7 @@
 # ADR-0064 — Native notification preferences
 
 Date: 2026-10-19
-Status: independently reviewed source applied; actual qualification pending
+Status: independently feature-qualified e900960; feature branch only
 
 ## Decision
 
@@ -120,3 +120,14 @@ Applied repair passes actual new-App stylesheet GET/HEAD race1 with the exact
 521-byte served CSS; Node syntax and whitespace checks are clear. No native
 renderer/service/query/authority code changed after7819. Commit the reviewed
 presentation/method batch and qualify complete6/current assets on that new SHA.
+
+Finale900960 passes unchanged complete6:436roots/1,279named/zero skips,
+292waited commands/597artifacts/13CIDremovals/6DBretirements/stoppedPG. Independent
+8dfaa7f2 andbc1f0079 accept actual6JS+6no-JS/18strictAxe408predicates/12visible
+keyboard Save states/25oldbodies/66assets/78GET/cleanup. Actual22rowcapture and
+12matchedbenchrows are admitted descriptively byb8abda54: elapsed body timing
++44.30%EN/+42.16%RO,allocations+6.82%;allocatedbytes/HTML/gzip lower. No CPU
+profile or overall speedup claim. Keeper29a9ff retains1,484members/133historical
+aliases; independent4ad6ab72/f3329041 accepts custody/feature. See
+[canonical evidence](../reviews/gui-native-notification-preferences/README.md).
+No all21/current-image/main/milestone/activation claim; retention is separate.

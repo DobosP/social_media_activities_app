@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "verdict": "ACCEPT_IMMUTABLE_E900_NOTIFICATION_COMPACT_KEEPER",
+  "source_sha": "e900960d50beed03ef387159da0e6d903ec5bf9a",
+  "source_tree": "42c8b3bda206d066086655572dd618de54a73ba1",
+  "archive_sha256": "29a9ff0d2e420d5454aaebd324d0bc686bc22cf14b6f04ce86e4b8ce7e71d7e5",
+  "archive_bytes": 10621806,
+  "archive_members": 1484,
+  "physical_selected_inputs": 1479,
+  "historical_content_aliases": 133,
+  "selection_sha256": "292307e96ab6a703c24e4a591b8ed3e35a780c7d133c5a0b9b050810f6b46c32",
+  "archive_manifest_sha256": "f308fef6e70d9148ae91617cf949ed30ad9e94adc87116cb5e219d1e001885ed",
+  "collection_result_sha256": "8c57e13ab23156ce9cb46de2126cbd6d8c0c9cff03c68a1d2ca4d9f99b8f039f",
+  "Root_selection_review_sha256": "1819a848836052a8866b8ee369fd0859a7d3106ed12b8b375fcd862906f46f7c",
+  "collection_source_review_sha256": "7581bbe8bb3f2ef8e8d4f006814064b3bd641c05d9fc699174569d2c3b81e56f",
+  "complete_current_source_rows_rehashed": 2186,
+  "current_reproduction_method_files": 14,
+  "retained_native_raw_proofs": 1194,
+  "final_UI_physical_artifacts": 67,
+  "historical_UI_artifacts_resolved": 65,
+  "physical_deletion_performed": false,
+  "findings": [],
+  "checks": [
+    "Whole archive29a9ff/10621806B/1484 regular literal-path entries independently read back, each byte/hash/mode/UID/GID/PAX nanosecondmtime matched archive-manifestf308 and still-existing original. No symlinks/hardlinks/traversal, duplicate members, foreign runtime trees or caches. Five outer metadata bytes match archived snapshot exactly; candidate remains immutable.",
+    "1479 selected physical inputs and133 historical HTML/PNG aliases all rehashed against exact owned canonical originals/stat metadata. Every alias resolves directly to a physical tar body with identical bytes/hash/length; original alias path/metadata remain distinct, not accepted epoch identity or independent member. All current67 UI artifacts remain physical, including24PNGs/31HTML and rawcapture/benchmark.",
+    "Both complete native epochs retain untouched result/fullsource manifests and1194 non-binary raw proof rows: final596/292commands597artifacts, initial598/293commands599artifacts. Both source/tree/result hashes preserved. Two omitted binary Git archives still physically exist and match retained digests; collector performed no deletion.",
+    "Initial UI FAIL/requested benchmark not reached and all five failed diagnostics (launch, before, opaque surface, intrinsic width and joint) stay failed. Every historical UI65 artifact and all diagnostic referenced screenshot bodies resolve losslessly by physical body or alias. All raw reports/source packets/checks/reviews remain distinct and available.",
+    "Accepted exacte900 native8dfa/UIbc1f/measurementb8ab and Root six-image aded visual receipts are physically present and current. Full2186 current source hashes/cleanGit/tree verified; originalf1fc Group-detail keeper preserved as pinned dependency. Fourteen exact current reproduction inputs include five UI methods, four helper/color dependencies and five native qualification inputs; no fullsource/dependency distribution claim.",
+    "Collection source0d720/config0ab76 independent Root-source-review7581 and exact parent-reviewed selection1819 bind this collection. Source code contains no deletion/owning mutation path; staged/PENDING labels in immutable collection snapshots correctly describe collection-time state. This separate receipt is keeper acceptance, not rewriting past results."
+  ],
+  "scope": "Accept immutable source/runtime/history compact keeper only. Root may do separately verified owned retention, canonical promotion and truthful metadata review/publication. No deletion authorized by this receipt itself, no main/milestone/production/mobile/provider/realchild acceptance.",
+  "execution": "Read-only tar/header/PAX/fullbody/source/stat/hash/alias/rawresult/keeper/dependency/Git review plus scratch receipt; no collector import/execution/runtime/deletion/owning writes."
+}

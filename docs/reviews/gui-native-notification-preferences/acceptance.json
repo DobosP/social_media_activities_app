@@ -1,0 +1,73 @@
+{
+  "schema": 1,
+  "verdict": "ACCEPT_BOUNDED_NOTIFICATION_PREFERENCES_SOURCE_RUNTIME_AND_COMPACT_KEEPER_PENDING_PROMOTED_METADATA_REVIEW",
+  "source_sha": "e900960d50beed03ef387159da0e6d903ec5bf9a",
+  "source_tree": "42c8b3bda206d066086655572dd618de54a73ba1",
+  "accepted_previous_published_base_sha": "99b88a446031cdf3d99bd04bdfcb41706d2a6aab",
+  "current_qualified_native_result_sha256": "fdcfbb8a16f8cb4837ff3cbfc3108dac2ca1a54ea6e34780301abd2ed202021d",
+  "current_qualified_UI_result_sha256": "b40e2e4b2c9fb4e9c988e988cbfc86181785684b3044703575c0a6b99f732c4a",
+  "native_review_sha256": "8dfaa7f2e9511f0ff3f6332ae8e0e3c3b4ffc65bd441f89cae57481d0f41c4e7",
+  "UI_review_sha256": "bc1f007954da095a682de6d7af6bac28a4d678ce73d627f3dc20832abf64d6b0",
+  "measurement_review_sha256": "b8abda54a225abbc82d4a5c2a270a8e34cdfe73c73f9443e23df1cd7e58e0570",
+  "keeper_review_sha256": "4ad6ab7248564a75abbbbc0469f150b6d472d442ca0bc9a08d24cc3824adb2ae",
+  "keeper_archive_sha256": "29a9ff0d2e420d5454aaebd324d0bc686bc22cf14b6f04ce86e4b8ce7e71d7e5",
+  "keeper_archive_bytes": 10621806,
+  "keeper_archive_members": 1484,
+  "keeper_historical_content_aliases": 133,
+  "actuals": {
+    "native_packages": 6,
+    "native_roots": 436,
+    "native_named": 1279,
+    "native_commands": 292,
+    "native_artifacts": 597,
+    "native_fail": 0,
+    "native_skip": 0,
+    "native_race": 0,
+    "UI_artifacts": 67,
+    "waited_UI_children_all_exit0": 4,
+    "JS_states": 6,
+    "noJS_states": 6,
+    "Axe_audits": 18,
+    "Axe_pass_occurrences": 408,
+    "Axe_violations": 0,
+    "Axe_incomplete": 0,
+    "positive_asset_receipts": 66,
+    "local_GET_requests": 78,
+    "prior_body_equalities": 25,
+    "body_benchmark_rows": 12
+  },
+  "measurement_median_native_changes_percent": {
+    "en": {
+      "render_ns_per_op": 44.30269080076417,
+      "gzip9_bytes_per_op": -9.519675925925931,
+      "html_bytes_per_op": -4.509114166933159,
+      "allocated_bytes_per_op": -26.16744804164052,
+      "allocation_count_per_op": 6.824146981627299
+    },
+    "ro": {
+      "render_ns_per_op": 42.15742130578168,
+      "gzip9_bytes_per_op": -10.318331503841927,
+      "html_bytes_per_op": -4.660752217918285,
+      "allocated_bytes_per_op": -26.705563887771156,
+      "allocation_count_per_op": 6.824146981627299
+    }
+  },
+  "physical_retention_deletion_performed": false,
+  "findings": [],
+  "accepted_behavior": [
+    "Existing self-scoped notification preferences GET/POST rebuilt with typed cached GoHTML and ordinary enabled checkboxes/fieldset/Save. All22 source-ordered optional kinds, labels/reasons/selected meanings and arrival warning remain. Missing muted fields clear optional mutes; mandatory system/moderation delivery bypass remains, optional mod_alert is still an ordinary kind.",
+    "Existing authentication/current-active-account, self-only service, CSRF/origin, filtering/dedup/sort, mandatory atomic audit/rollback and notification chokepoint semantics remain. Existing unverified/unassigned/cohort/role admission preserved; no new adult/guardian/MFA authority gate or policy expansion.",
+    "Fixed errors, persisted selections after rejected writes, current SPA/data return paths/private response/nonce/shared assets retained. Full original Family/Create/Detail25 presentation bodies remain exact. Source/old assertions preserved through reviewed seams; current CSS and new test literals qualify exact e900."
+  ],
+  "evidence_and_limits": [
+    "Initial source approval and closed repairs, actual complete native6, current capture/desktop/noJS/strictAxe, mixed matched-body measurement and immutable keeper each have separate independent acceptance. Exactcurrent2186 source and UI2184/capture2179 frames remain distinct and correctly bound.",
+    "Source-defined captured display rows are a second authorized side-effect-free AccountView after successful registered cookie GETs. Desktop fixtures use real Renderer with synthetic read-only display environment, not authenticated browser/live authority/production transport proof.",
+    "All12 Save states show real Tab keyboard focus solid3px; scoped intrinsic desktop menu and checkbox/text layout clear original6Axe incompletes without rule removal or scroll normalization. Normal dropdown overlays underlying page; no generalized no-overlap, completed translation or device claim.",
+    "Body render time is slower in this sample (+44.30%EN/+42.16%RO), allocation count +6.82%, allocated bytes -26.17%/-26.71%, HTML -4.51%/-4.66%, gzip9 -9.52%/-10.32%. Admit descriptive warmed-body timings/allocations only, no CPU profile/HTTP/DB/throughput/general speedup or absolute efficiency claim.",
+    "Archive29a9ff contains1484 verified members and133 historical content aliases, preserving initial fullPG293/599 and failed initial UI/requested-not-reached measurement plus five failed diagnostics. Candidate collection-time PENDING labels remain immutable; current acceptance is this separate receipt.",
+    "No owned raw deletion has occurred in this review. Current rolling source/binaries, original branches/unmerged source packets/other-owner work/canonical baseline keepers remain. Any later physical retention pruning requires its own exact ownership/cleanup/archive verification receipt and truthful raw-availability wording."
+  ],
+  "next_authorized_steps": "Root may prepare and execute separately reviewed owned retention, promote byte-identical immutable keeper plus review receipts, update bounded STATUS/ADR/index/plan/ledger truth, obtain promoted metadata/retention accuracy review, then publish GUI feature branch through prescribed ops. This acceptance does not land Teacher/Social GUI milestones or app main.",
+  "scope": "Bounded notification module source/runtime/keeper acceptance only. Canonical promotion/retention/docs/publication review remains. No all21/current-image/main/merge-ready/milestone/production/mobile/provider/government/real-child activation or legal/content/privacy ruling.",
+  "execution": "Independent review agent authored no product/collector/runtime source and performed no native/browser/PG/container/deletion/network/owning mutation. Read-only evidence and scratch review receipts only."
+}

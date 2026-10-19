@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "status": "COLLECTED_CANDIDATE_PENDING_INDEPENDENT_KEEPER_REVIEW",
+  "source": "e900960d50beed03ef387159da0e6d903ec5bf9a",
+  "tree": "42c8b3bda206d066086655572dd618de54a73ba1",
+  "scope": "Complete affected six and notification native desktop, source/history/causal evidence only. No all21/image/main/milestone/production/provider/real-child/mobile claim. Collector never deletes.",
+  "actuals": {
+    "native_roots": 436,
+    "native_named": 1279,
+    "native_commands": 292,
+    "native_artifact_rows": 597,
+    "UI_artifact_rows": 67,
+    "JS_states": 6,
+    "noJS_states": 6,
+    "audits": 18,
+    "Axe_pass_occurrences": 408,
+    "benchmark_rows": 12,
+    "prior_bodies": 25
+  },
+  "history": "7819 completePG PASS; initialUI FAIL/benchmark requested not reached; launch failure; before and failed opaque-link candidate; intrinsic-width and joint diagnostics overall FAIL preserving all exact-asset guards.",
+  "physical_deletion_performed": false,
+  "independent_keeper_review": "PENDING"
+}
