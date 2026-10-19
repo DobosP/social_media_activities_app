@@ -156,6 +156,16 @@ type guiPublicGetRepairRow struct {
 
 func guiPublicGetRepairRows() []guiPublicGetRepairRow {
 	return []guiPublicGetRepairRow{
+		// ADR-0063: exact whole group-detail dispatch; retain the complete31-row preimage.
+		{
+			path:        "services/server/internal/web/renderer.go",
+			beforeSHA:   "6228270fd3343f7d352b79780bd9055ccbf9fe70b2d7917acdb4e0b6ffd31ed3",
+			afterSHA:    "3ba5b4456312437e8edf058b4f9967385bf14e483a0bb6d771b5881231d5c0e6",
+			beforeBytes: 5967,
+			afterBytes:  6146,
+			before:      "\t} else {\n\t\ttemplate, parseErr := r.set.FromCache(name)",
+			after:       "\t} else if name == \"web/group_detail.html\" {\n\t\traw, renderErr := r.renderGroupDetail(request, defaults)\n\t\tif renderErr != nil {\n\t\t\treturn renderErr\n\t\t}\n\t\t_, _ = output.Write(raw)\n\t} else {\n\t\ttemplate, parseErr := r.set.FromCache(name)",
+		},
 		// ADR-0062: exact selected group dispatch, before the untouched family chain.
 		{
 			path:        "services/server/internal/web/renderer.go",

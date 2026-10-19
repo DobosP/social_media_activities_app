@@ -28,6 +28,7 @@ func groupCreateCustodyRowsPreimage(path string, raw []byte, rows []guiPublicGet
 
 func groupCreateFamilyCustodyPreimage(t *testing.T, raw []byte, rows []guiPublicGetRepairRow) ([]byte, []guiPublicGetRepairRow) {
 	t.Helper()
+	raw, rows = groupDetailGroupCustodyPreimage(t, raw, rows)
 	if len(rows) < 4 {
 		t.Fatal("new group relation or existing family relations disappeared")
 	}
@@ -53,8 +54,9 @@ func TestNativeGroupCurrentCustodyExtendsAllOriginalRelationsAndRefusesDrift(t *
 		t.Fatal(err)
 	}
 	rows := guiPublicGetRepairRows()
+	raw, rows = groupDetailGroupCustodyPreimage(t, raw, rows)
 	previous, _ := groupCreateFamilyCustodyPreimage(t, raw, rows)
-	historical, err := guiPublicGetRowsPreimage(path, raw)
+	historical, err := groupCreateCustodyRowsPreimage(path, raw, rows)
 	if err != nil || len(historical) != 5510 || guiPublicHash(historical) != "94f11a3f1849c919ba100c4ba68236263f71f07741006c1992dadc4020723e68" {
 		t.Fatal("all current renderer relations no longer recover the original source", err)
 	}
@@ -66,10 +68,10 @@ func TestNativeGroupCurrentCustodyExtendsAllOriginalRelationsAndRefusesDrift(t *
 		"former-family-current-is-not-new-current": previous,
 	} {
 		t.Run(name, func(t *testing.T) {
-			if _, err := guiPublicGetRowsPreimage(path, changed); err == nil {
+			if _, err := groupCreateCustodyRowsPreimage(path, changed, rows); err == nil {
 				t.Fatal("unsupported current renderer source admitted")
 			}
-			if got, err := guiPublicGetRowsPreimage(path, raw); err != nil || !bytes.Equal(got, historical) {
+			if got, err := groupCreateCustodyRowsPreimage(path, raw, rows); err != nil || !bytes.Equal(got, historical) {
 				t.Fatal("negative probe altered physical source custody", err)
 			}
 		})

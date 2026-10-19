@@ -1,0 +1,62 @@
+{{define "group-detail"}}<!doctype html>
+<html lang="{{.Shell.Language}}" data-theme="{{.Shell.Theme}}" data-text="{{.Shell.Text}}" data-motion="{{.Shell.Motion}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="index, follow">
+<meta name="description" content="{{index .Copy "A nonprofit, text-first way to meet up in person for real group activities at real places. First city: Cluj-Napoca."}}">
+<title>{{.Title}} · {{.Shell.SiteName}}</title>
+<link rel="canonical" href="{{.Canonical}}">
+<link rel="preload" href="/static/fonts/bricolage-grotesque-latin-ext-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/static/fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/static/css/base.css">
+<link rel="stylesheet" href="/static/css/group-detail-native.css">
+</head>
+<body class="group-detail-page">
+<a class="skip-link" href="#main">{{index .Copy "Skip to main content"}}</a>
+<header class="site-header"><div class="container nav-wrap">
+<a class="brand" href="/"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><circle cx="6" cy="6" r="5" fill="currentColor"></circle></svg> {{index .Copy "Activities"}}</a>
+<input type="checkbox" id="nav-toggle" class="nav-toggle-cb"><label for="nav-toggle" class="nav-toggle"><span aria-hidden="true">☰</span> {{index .Copy "Menu"}}</label>
+<nav class="nav" aria-label="{{index .Copy "Primary"}}">{{range .Shell.Navigation}}<a class="nav-link" href="{{.URL}}"{{if .Current}} aria-current="page"{{end}}>{{.Label}}</a>{{end}}</nav>
+<details class="nav-menu nav-end"><summary>{{.Shell.DisplayName}}</summary><div class="nav-panel">
+<a href="/settings/">{{index .Copy "Settings"}}</a>
+<form method="post" action="/logout/" class="inline"><input type="hidden" name="csrfmiddlewaretoken" value="{{.Shell.CSRF}}"><button class="linkbtn" type="submit">{{index .Copy "Log out"}}</button></form>
+</div></details>
+</div></header>
+<main class="container" id="main" tabindex="-1">
+<p class="muted"><a href="/groups/">← {{index .Copy "Groups"}}</a></p>
+<h1>{{.Title}}</h1>
+<p class="muted">{{.Kind}} · {{.Area}} · {{.CohortLabel}}{{if ne .Status "active"}} · {{.StatusLabel}}{{end}}</p>
+{{if .Description}}<p>{{.Description}}</p>{{end}}
+{{if .Shell.Messages}}<ul class="messages">{{range .Shell.Messages}}<li class="msg"><span role="status">{{.}}</span></li>{{end}}</ul>{{end}}
+<section class="group-membership" aria-label="{{index .Copy "Group membership"}}">
+{{if not .Owner}}{{if .Member}}<form method="post" action="{{.LeaveURL}}" class="inline"><input type="hidden" name="csrfmiddlewaretoken" value="{{.Shell.CSRF}}"><button class="btn btn-sm" type="submit">{{index .Copy "Leave group"}}</button></form>{{else}}<form method="post" action="{{.JoinURL}}" class="inline"><input type="hidden" name="csrfmiddlewaretoken" value="{{.Shell.CSRF}}"><button class="btn" type="submit">{{index .Copy "Join group"}}</button></form>{{end}}
+{{else}}
+<form method="post" action="{{.ArchiveURL}}" class="inline" data-confirm="{{index .Copy "Archive this group? Its thread will be frozen."}}"><input type="hidden" name="csrfmiddlewaretoken" value="{{.Shell.CSRF}}"><button class="btn btn-sm" type="submit">{{index .Copy "Archive group"}}</button></form>
+{{if eq .Cohort "adult"}}<form method="post" action="{{.ListingURL}}" class="inline"><input type="hidden" name="csrfmiddlewaretoken" value="{{.Shell.CSRF}}"><input type="hidden" name="next" value="{{.Canonical}}">{{if .Listed}}<input type="hidden" name="listed" value="0"><button class="btn btn-sm btn-secondary" type="submit">{{index .Copy "Hide from logged-out visitors"}}</button>{{else}}<input type="hidden" name="listed" value="1"><button class="btn btn-sm" type="submit">{{index .Copy "Show to logged-out visitors"}}</button>{{end}}</form>{{end}}
+{{end}}
+</section>
+{{if .RosterVisible}}<section aria-labelledby="group-roster-heading"><h2 id="group-roster-heading">{{.RosterHeading}}</h2><ul class="members">{{range .Roster}}<li><img class="avatar avatar-xs" src="{{.Avatar}}" width="24" height="24" alt="">{{if .Other}}<a href="{{.ProfileURL}}" data-hovercard-user="{{.PublicID}}">{{.Name}}</a>{{else}}{{.Name}}{{end}}</li>{{end}}</ul></section>{{end}}
+{{if .CanAnnounce}}<section aria-labelledby="group-announcement-heading"><h2 id="group-announcement-heading">{{index .Copy "Post an announcement"}}</h2><form method="post" action="{{.AnnounceURL}}"><input type="hidden" name="csrfmiddlewaretoken" value="{{.Shell.CSRF}}"><label class="visually-hidden" for="group-announcement-body">{{index .Copy "Post an announcement"}}</label><textarea id="group-announcement-body" name="body" rows="2" placeholder="{{index .Copy "A pinned update for everyone..."}}"></textarea><button class="btn btn-sm" type="submit">{{index .Copy "Announce"}}</button></form></section>{{end}}
+{{if .ShowThread}}<section aria-labelledby="group-conversation-heading"><h2 id="group-conversation-heading">{{index .Copy "Conversation"}}</h2>
+{{range .Announcements}}<article class="post post-announcement"><div class="meta">📌 {{.Author.Name}} · {{.When}}{{if .Author.Other}} · <a class="muted u-text-xs" href="{{.ReportURL}}">{{index .Copy "report"}}</a>{{end}}</div><div>{{range $i,$line := .Lines}}{{if $i}}<br>{{end}}{{$line}}{{end}}</div></article>{{end}}
+<div id="thread-list" class="thread">{{range .Posts}}{{template "group-detail-post" .}}<div class="replies" data-parent="{{.ID}}">{{range .Replies}}{{template "group-detail-post" .}}{{end}}</div>{{else}}{{if not .Announcements}}<p class="muted" id="no-messages">{{index .Copy "No messages yet."}}</p>{{end}}{{end}}</div>
+<button type="button" id="thread-jump" class="thread-jump" hidden>↓ {{index .Copy "New messages"}}</button>
+{{if .CanPost}}<div id="typing-indicator" class="typing-indicator" aria-hidden="true"></div><form method="post" id="compose" action="{{.PostURL}}" class="stack compose-form"><input type="hidden" name="csrfmiddlewaretoken" value="{{.Shell.CSRF}}">{{if .ReplyAuthor}}<p class="muted compose-reply-note">{{index .Copy "Replying to"}} {{.ReplyAuthor}} · <a href="{{.Canonical}}#compose">{{index .Copy "cancel"}}</a></p>{{end}}<input type="hidden" name="reply_to" id="id_reply_to" value="{{.ComposeReplyTo}}"><label class="visually-hidden" for="id_body">{{index .Copy "Write a message"}}</label><textarea id="id_body" name="body">{{.ComposeBody}}</textarea><button class="btn btn-sm" type="submit">{{index .Copy "Post"}}</button></form>{{else}}<p class="muted">{{index .Copy "This group's thread is announcement-only."}}</p>{{end}}
+</section>{{end}}
+{{if .CanAsk}}<section aria-labelledby="ask-organiser-h"><h2 id="ask-organiser-h">{{index .Copy "Ask the organiser"}}</h2><p class="muted">{{index .Copy "Pick a question to send to the group's organiser. Only the organiser sees your question. They answer everyone here in an announcement — there are no private replies."}}</p><form method="post" action="{{.AskURL}}"><input type="hidden" name="csrfmiddlewaretoken" value="{{.Shell.CSRF}}"><label for="group-ask-prompt">{{index .Copy "Your question"}}</label><select id="group-ask-prompt" name="prompt" required>{{range .Questions}}<option value="{{.Value}}">{{.Label}}</option>{{end}}</select><button class="btn btn-sm" type="submit">{{index .Copy "Send question"}}</button></form></section>{{end}}
+<section aria-labelledby="group-upcoming-heading"><h2 id="group-upcoming-heading">{{index .Copy "Upcoming activities"}}</h2>{{range .Feed}}{{template "group-detail-card" .}}{{else}}<p class="muted">{{index .Copy "No upcoming activities here right now."}} <a class="btn btn-sm" href="/activities/new/">{{index .Copy "Organise one"}}</a></p>{{end}}</section>
+</main>
+<footer class="site-footer"><div class="container">
+<p><strong>{{index .Copy "Demo environment: do not enter real personal data."}}</strong></p>
+<nav class="footer-links" aria-label="{{index .Copy "Privacy"}}">{{range .Shell.Footer}}<a href="{{.URL}}">{{.Label}}</a> {{end}}</nav>
+<form method="post" action="/i18n/setlang/" class="inline lang-switch">
+<input type="hidden" name="csrfmiddlewaretoken" value="{{.Shell.CSRF}}"><input type="hidden" name="next" value="{{.Canonical}}">
+<label for="group-detail-language">{{index .Copy "Language"}}</label><select id="group-detail-language" name="language"><option value="en"{{if .Shell.English}} selected{{end}}>English</option><option value="ro"{{if not .Shell.English}} selected{{end}}>Română</option></select>
+<button class="linkbtn" type="submit">{{index .Copy "Set language"}}</button>
+</form>
+</div></footer>
+<script nonce="{{.Nonce}}" src="/static/js/hovercard.js" defer></script>
+<script nonce="{{.Nonce}}" id="site-js" src="/static/js/site.js" defer data-meetups-owner="{{.PublicID}}"></script>
+{{if .LiveThread}}{{if .NudgeJSON}}<script nonce="{{.Nonce}}" id="presend-nudge" type="application/json">{{.NudgeJSON}}</script><script src="/static/js/presend-nudge.js"></script>{{end}}<script nonce="{{.Nonce}}" id="thread-chat-config" type="application/json">{{.ChatJSON}}</script><script src="/static/js/thread-chat.js"></script>{{end}}
+</body></html>{{end}}

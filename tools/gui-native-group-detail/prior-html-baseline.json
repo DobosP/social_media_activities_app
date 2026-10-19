@@ -1,0 +1,151 @@
+{
+  "schema": 1,
+  "accepted_keeper_sha256": "1bb27df97ec9641119a30e76afff1ab1181947f5036888f954a96a5b30f8adf9",
+  "scope": "Exact accepted family8/group-create10 HTML bytes; no new runtime claim",
+  "html": [
+    {
+      "kind": "family",
+      "name": "guardians-empty",
+      "path": "family/guardians-empty.html",
+      "bytes": 3967,
+      "sha256": "937bee6a2eb803a6381a9c66fae76f7eb9db1ae0b2f680e8e25773e450178cfc",
+      "equal": true
+    },
+    {
+      "kind": "family",
+      "name": "guardians-en",
+      "path": "family/guardians-en.html",
+      "bytes": 5965,
+      "sha256": "712a60a6d10b9549aabe615763a7de881a6e3ac0b74e9c55ec0208051c79af85",
+      "equal": true
+    },
+    {
+      "kind": "family",
+      "name": "guardians-ro",
+      "path": "family/guardians-ro.html",
+      "bytes": 6290,
+      "sha256": "02d370bbfd34d525f89c12d6a5681c12f2be94ae0215d82d60be1d05ea0f7ff4",
+      "equal": true
+    },
+    {
+      "kind": "family",
+      "name": "wards-disabled",
+      "path": "family/wards-disabled.html",
+      "bytes": 17106,
+      "sha256": "e5c5e3b87c61b84cd6951f6eab9d9673b8562fb8f996b7c57a1457756db8df2f",
+      "equal": true
+    },
+    {
+      "kind": "family",
+      "name": "wards-empty",
+      "path": "family/wards-empty.html",
+      "bytes": 4808,
+      "sha256": "8fc16b80f7c52c7edb1e1197076e8e11d3aaf13b4167ded9f8d8fabc2ecb05e1",
+      "equal": true
+    },
+    {
+      "kind": "family",
+      "name": "wards-en",
+      "path": "family/wards-en.html",
+      "bytes": 17888,
+      "sha256": "bdb84759b0a172f1b179dbd0111c454e9056f2f8715ce271cf41cbc85c46deed",
+      "equal": true
+    },
+    {
+      "kind": "family",
+      "name": "wards-ro",
+      "path": "family/wards-ro.html",
+      "bytes": 18415,
+      "sha256": "ef0ec4a5ebabb2519d99f805aeedbedc98d796dd718d36494714207f84a77598",
+      "equal": true
+    },
+    {
+      "kind": "family",
+      "name": "wards-unverified-ro",
+      "path": "family/wards-unverified-ro.html",
+      "bytes": 17487,
+      "sha256": "3d947f227ffa4574c97a0facc11352c40d6cc555377deb77e9e37e6fef173880",
+      "equal": true
+    },
+    {
+      "kind": "group-create",
+      "name": "group-en",
+      "path": "group-create/group-en.html",
+      "bytes": 4600,
+      "sha256": "0a12ee29514647683cd450b535bbce7955c0d331dce17ced826aed481dbb5f9a",
+      "equal": true
+    },
+    {
+      "kind": "group-create",
+      "name": "group-escaping-ro",
+      "path": "group-create/group-escaping-ro.html",
+      "bytes": 12751,
+      "sha256": "8662ae04ada7dd6e56d77b2abf27ec4c201ac159df4fb1a73ff70b5a8e2d9090",
+      "equal": true
+    },
+    {
+      "kind": "group-create",
+      "name": "group-positive-ro",
+      "path": "group-create/group-positive-ro.html",
+      "bytes": 5005,
+      "sha256": "1a01cefde116e5d9b087fe7bcbd3a37053c747506beb3a96f2ffc0d5333bf111",
+      "equal": true
+    },
+    {
+      "kind": "group-create",
+      "name": "group-prefill-ro",
+      "path": "group-create/group-prefill-ro.html",
+      "bytes": 4703,
+      "sha256": "536fce33aeae0b7d925473a81fe7c168515592f3aa6f10fdc6e1e3c2783cf67c",
+      "equal": true
+    },
+    {
+      "kind": "group-create",
+      "name": "group-required-en",
+      "path": "group-create/group-required-en.html",
+      "bytes": 4828,
+      "sha256": "2b51fcc436292ed33f9235635bda2cd162c16172af21bf73a14e6d5c3006e5a2",
+      "equal": true
+    },
+    {
+      "kind": "group-create",
+      "name": "group-service-en",
+      "path": "group-create/group-service-en.html",
+      "bytes": 4753,
+      "sha256": "e365650f148d1c05bec5185c397c51b378f26c9db09191af3eaea862a6f6111c",
+      "equal": true
+    },
+    {
+      "kind": "group-create",
+      "name": "group-staff-en",
+      "path": "group-create/group-staff-en.html",
+      "bytes": 4845,
+      "sha256": "2096a2c58a0ada370693c1e7b0981ad5d21fefc4997b51f1e4b72a8b5cea883e",
+      "equal": true
+    },
+    {
+      "kind": "group-create",
+      "name": "group-staff-ro",
+      "path": "group-create/group-staff-ro.html",
+      "bytes": 4958,
+      "sha256": "9737d8e6495dbc4496a1fe677fc079a20481524db01ca8947305d4113dbb88a0",
+      "equal": true
+    },
+    {
+      "kind": "group-create",
+      "name": "group-unclassified-ro",
+      "path": "group-create/group-unclassified-ro.html",
+      "bytes": 4829,
+      "sha256": "e6836cc7e269c3e91a8d7fccd280960d8e92331b36aeb1e426c9c90ba160ab3c",
+      "equal": true
+    },
+    {
+      "kind": "group-create",
+      "name": "group-unknown-prefill-en",
+      "path": "group-create/group-unknown-prefill-en.html",
+      "bytes": 4589,
+      "sha256": "7f78ffc664945a8a7c926690f4e6b7fcabbbd8dd3f8ca012abf9e070a571a90c",
+      "equal": true
+    }
+  ]
+}

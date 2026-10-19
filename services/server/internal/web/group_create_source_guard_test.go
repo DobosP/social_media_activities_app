@@ -11,7 +11,7 @@ import (
 // Only the two retained Q6 mutation inventories use their original 27 rows.
 // All current custody readers still traverse the complete 31-row chain.
 func groupCreatePreviousRepairRows() []guiPublicGetRepairRow {
-	rows := guiPublicGetRepairRows()
+	rows := groupDetailPreviousRepairRows(guiPublicGetRepairRows())
 	if len(rows) != 31 || rows[0].path != "services/server/internal/web/renderer.go" || rows[0].afterSHA != "6228270fd3343f7d352b79780bd9055ccbf9fe70b2d7917acdb4e0b6ffd31ed3" || rows[1].afterSHA != rows[0].beforeSHA || rows[2].beforeSHA != "94f11a3f1849c919ba100c4ba68236263f71f07741006c1992dadc4020723e68" || rows[3].path != "services/server/internal/web/forms.go" || rows[3].afterSHA != "a9cc66599f770b3e6b30ea3bc4be7148253702c939d484ae6b7bea5d16af6717" || rows[4].afterSHA != rows[3].beforeSHA || rows[5].afterSHA != rows[4].beforeSHA || rows[5].beforeSHA != "6a41190d4f81107c32b7f0f651f59dfc6d1adc298b66eea3861105579360d3cb" || rows[6].path != "services/server/internal/web/server.go" {
 		return nil
 	}
@@ -30,7 +30,11 @@ func groupCreatePreferenceSourceBinding(path string, raw []byte, physical, wante
 	var err error
 	switch path {
 	case "services/server/internal/web/renderer.go":
-		rows := guiPublicGetRepairRows()
+		rows := groupDetailPreviousRepairRows(guiPublicGetRepairRows())
+		raw, err = groupDetailRendererPreimage(raw)
+		if err != nil {
+			return guiG1Binding{}, err
+		}
 		if groupCreatePreviousRepairRows() == nil {
 			return guiG1Binding{}, fmt.Errorf("group-preference-repair-chain")
 		}
@@ -38,6 +42,10 @@ func groupCreatePreferenceSourceBinding(path string, raw []byte, physical, wante
 	case "services/server/internal/web/forms.go":
 		previous, err = guiPublicGetRowsPreimage(path, raw)
 	case "services/server/internal/web/gui_public_get_walk_test.go":
+		raw, err = groupDetailWalkerPreimage(raw)
+		if err != nil {
+			return guiG1Binding{}, err
+		}
 		if len(raw) != 61574 || guiPublicHash(raw) != "08a920a05fd36516a0787aa0842e2f19d60996897171a1831e06827a712b3dd2" {
 			return guiG1Binding{}, fmt.Errorf("group-preference-complete-source")
 		}
@@ -125,7 +133,7 @@ func TestNativeGroupRepairSourceControlsCoverTheNewFormInput(t *testing.T) {
 	root, err := filepath.Abs("../../../..")
 	source, _, sourceErr := guiPublicGetSources(guiPublicGetSourceBytes)
 	inputs, inputErr := guiPublicGetRepairInputs(root, source)
-	if err != nil || sourceErr != nil || inputErr != nil || guiPublicGetRepairHistoricalProof(source, inputs) != nil || len(groupCreatePreviousRepairRows()) != 27 || len(guiPublicGetRepairRows()) != 31 {
+	if err != nil || sourceErr != nil || inputErr != nil || guiPublicGetRepairHistoricalProof(source, inputs) != nil || len(groupCreatePreviousRepairRows()) != 27 || len(groupDetailPreviousRepairRows(guiPublicGetRepairRows())) != 31 {
 		t.Fatal("complete old/current repair inventories unavailable")
 	}
 	const path = "services/server/internal/web/forms.go"

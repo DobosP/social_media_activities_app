@@ -1,0 +1,275 @@
+package web
+
+// Virtual test source added only by the committed absent-path overlay. Fixture
+// rendering is isolated presentation evidence; the complete App suite owns real
+// authentication, CSRF, authority, audit and transport qualification.
+import (
+	"bytes"
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/hex"
+	"encoding/json"
+	"flag"
+	"fmt"
+	"html"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"regexp"
+	"sort"
+	"strconv"
+	"strings"
+	"testing"
+
+	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
+	"github.com/flosch/pongo2/v6"
+)
+
+var groupDetailQAProducer = flag.String("group-detail-ui-producer-source", "", "actual complete successful PG producer SHA")
+var groupDetailQAOutput = flag.String("group-detail-ui-qa-output-dir", "", "fresh owned fixture output directory")
+var groupDetailQACapture = flag.String("group-detail-benchmark-capture", "", "admitted actual authorized view projection")
+
+type groupDetailQAState struct { Name, Language, Theme, Text, Motion string }
+var groupDetailQAStates = []groupDetailQAState{
+	{"owner-en","en","light","normal","reduce"},
+	{"member-ro","ro","dark","large","reduce"},
+	{"nonmember-en","en","auto","normal","auto"},
+	{"child-ro","ro","contrast","larger","reduce"},
+	{"curator-ro","ro","dark","normal","reduce"},
+	{"same-cohort-curator-en","en","light","normal","auto"},
+	{"errors-escape-ro","ro","contrast","large","reduce"},
+}
+
+func groupDetailQAHash(raw []byte) string { sum:=sha256.Sum256(raw);return hex.EncodeToString(sum[:]) }
+type groupDetailQABridgeProof struct {
+	Head string `json:"ui_head"`
+	Paths []string `json:"source_paths"`
+	Product []string `json:"product_paths"`
+}
+func groupDetailQABridge(t testing.TB, root string) groupDetailQABridgeProof {
+	t.Helper()
+	raw,err:=exec.Command("python3","-I",filepath.Join(root,"tools/gui-native-group-detail/prepare-ui-overlay.py"),"--repo",root,"--producer-source",*groupDetailQAProducer,"--check-bridge").CombinedOutput()
+	if err!=nil{t.Fatal("exact clean committed producer/UI-only bridge refused",err,string(raw))}
+	var proof groupDetailQABridgeProof
+	if json.Unmarshal(raw,&proof)!=nil || len(proof.Head)!=40 || len(proof.Paths)!=91 || len(proof.Product)!=85 {t.Fatal("complete declared partial-reference source frame missing")}
+	return proof
+}
+func groupDetailQASources(t testing.TB, root string, paths []string) []map[string]any {
+	t.Helper();rows:=[]map[string]any{};seen:=map[string]bool{}
+	for _,name:=range paths{
+		if name==""||filepath.IsAbs(name)||filepath.Clean(name)!=name||strings.HasPrefix(name,"../")||seen[name]{t.Fatal("finite unique source reference required",name)};seen[name]=true
+		file:=filepath.Join(root,name);actual,err:=filepath.EvalSymlinks(file);if err!=nil||actual!=file{t.Fatal("unaliased source reference required",name,err)}
+		info,err:=os.Lstat(file);if err!=nil||!info.Mode().IsRegular(){t.Fatal("regular source reference required",name,err)}
+		raw,err:=os.ReadFile(file);if err!=nil{t.Fatal(err)}
+		rows=append(rows,map[string]any{"path":name,"bytes":len(raw),"sha256":groupDetailQAHash(raw)})
+	};return rows
+}
+func groupDetailQAWrite(t testing.TB, path string, raw []byte){
+	t.Helper();f,err:=os.OpenFile(path,os.O_CREATE|os.O_EXCL|os.O_WRONLY,0600);if err!=nil{t.Fatal(err)}
+	if _,err=f.Write(raw);err!=nil{_ = f.Close();t.Fatal(err)};if err=f.Close();err!=nil{t.Fatal(err)}
+}
+
+func groupDetailQAData(t testing.TB,state groupDetailQAState)(*Renderer,*http.Request,pongo2.Context){
+	t.Helper();renderer,request,data:=groupDetailProjectionFixture(t)
+	actor,_:=platform.ActorFrom(request)
+	group:=data["group"].(map[string]any)
+	data["language"],data["display_theme"],data["display_text"],data["display_motion"]=state.Language,state.Theme,state.Text,state.Motion
+	data["csrf"]="synthetic-group-detail-ui-csrf"
+	// Render must supply its own real nonce/context so the actual HTML and CSP
+	// agree BEFORE the separately recorded nonce-only artifact normalization.
+	delete(data,"request")
+	switch state.Name{
+	case "member-ro":
+		actor.ID,actor.PublicID,actor.Username,actor.DisplayName=12,"00000000-0000-4000-8000-000000000012","generated-group-member","Generated group member"
+		data["is_owner"],data["can_announce"]=false,false
+	case "nonmember-en":
+		actor.ID,actor.PublicID,actor.Username,actor.DisplayName=13,"00000000-0000-4000-8000-000000000013","generated-group-outsider","Generated group outsider"
+		data["is_owner"],data["is_member"],data["show_thread"],data["can_post"],data["can_announce"],data["show_dissent_concern"]=false,false,false,false,false,false
+		data["roster"],data["posts"],data["announcements"]=nil,nil,nil
+		delete(data,"thread_chat_config");delete(data,"presend_nudge")
+	case "child-ro":
+		actor.ID,actor.PublicID,actor.Username,actor.DisplayName=14,"00000000-0000-4000-8000-000000000014","generated-group-child","Generated child fixture"
+		actor.Cohort,actor.AgeBand="child","under_16"
+		group["cohort"],group["is_staff_curated"],group["owner_is_staff"]="child",true,true
+		data["is_owner"],data["can_announce"],data["can_post"],data["can_ask"],data["show_dissent_concern"]=false,false,false,true,false
+		data["roster"],data["feed"]=nil,[]map[string]any{}
+		data["posts"]=[]map[string]any{groupDetailFixturePost(91,groupDetailFixturePerson(15,"Generated minor peer"),"**Current minor body** @member https://fixture.invalid/minor","child")}
+		data["question_prompts"]=[]any{[]string{"next_meetup","When is the next meetup?"},[]string{"where","Where exactly do we meet?"},[]string{"what_to_bring","What should I bring?"},[]string{"how_it_works","I'm new here — how does this group work?"},[]string{"more_info","Could you post more about what's coming up?"}}
+	case "curator-ro","same-cohort-curator-en":
+		actor.IsStaff=true;group["owner_is_staff"]=true
+		data["is_member"],data["can_post"],data["show_dissent_concern"]=false,false,false
+		data["roster"],data["posts"]=nil,nil
+		delete(data,"thread_chat_config");delete(data,"presend_nudge")
+		if state.Name=="curator-ro"{group["cohort"],group["is_staff_curated"],group["owner_is_staff"]="child",true,true;data["feed"]=[]map[string]any{}}else{actor.IdentityVerified=false}
+	case "errors-escape-ro":
+		group["title"]=`Generated "><img src="/should-not-load" onerror="generated()">`
+		group["description"]="Generated <script>escaped</script> & ordinary description"
+		data["messages"]=[]socialMessage{{"tags":"error","message":"PRIVATE-SQL-PROVIDER"}}
+		data["post_form"].(map[string]any)["body"]=map[string]any{"value":`Generated </textarea><img src="/should-not-load" onerror="generated()">`}
+	}
+	if config,ok:=data["thread_chat_config"].(map[string]any);ok{config["meId"]=actor.ID}
+	request=platform.WithActor(request,actor);request.Header.Set("Accept-Language",state.Language);data["user"]=socialActor(actor)
+	(&Server{Renderer:renderer}).socialTranslateModels(request,map[string]any(data))
+	return renderer,request,data
+}
+
+// Derive expectations from the SUPPLIED source projection, never native VM or
+// rendered HTML. Keep repeated form actions (five reaction forms per post).
+func groupDetailQAExpected(renderer *Renderer,request *http.Request,data pongo2.Context) map[string]any{
+	actor,_:=platform.ActorFrom(request);group:=spaMap(data["group"]);gid:=spaID(group);path:=fmt.Sprintf("/groups/%d/",gid)
+	owner,member,show,post,announce,ask:=spaBool(data["is_owner"]),spaBool(data["is_member"]),spaBool(data["show_thread"]),spaBool(data["can_post"]),spaBool(data["can_announce"]),spaBool(data["can_ask"])
+	forms:=[]string{"/logout/","/i18n/setlang/"};confirmations:=[]map[string]string{};roster:=[]string{};roots,replies,reports:=[]int64{},[]int64{},[]int64{};texts,annTexts,feedTitles:=[]string{},[]string{},[]string{}
+	confirmationText:=func(message string)string{return html.UnescapeString(renderer.catalog.translate(language(request),message,1))}
+	if owner{confirmations=append(confirmations,map[string]string{"action":path+"archive/","text":confirmationText("Archive this group? Its thread will be frozen.")});forms=append(forms,path+"archive/");if group["cohort"]=="adult"{forms=append(forms,path+"listing/")}}else if member{forms=append(forms,path+"leave/")}else{forms=append(forms,path+"join/")}
+	if announce{forms=append(forms,path+"announce/")};if ask{forms=append(forms,path+"ask/")}
+	for _,row:=range spaRows(data["roster"]){name:=spaText(row["display_name"]);if name==""{name=spaText(row["username"])};roster=append(roster,name)}
+	var visit func(map[string]any,bool)
+	visit=func(row map[string]any,reply bool){
+		id:=spaID(row);if reply{replies=append(replies,id)}else{roots=append(roots,id)};texts=append(texts,spaText(row["body"]))
+		if member{
+			for range spaRows(data["reaction_emojis"]){forms=append(forms,fmt.Sprintf("%sposts/%d/react/",path,id))}
+			if spaBool(data["show_dissent_concern"]){forms=append(forms,fmt.Sprintf("%sposts/%d/dissent/",path,id),fmt.Sprintf("%sposts/%d/concern/",path,id))}
+			if int64(spaInt(row["author_id"]))==actor.ID{confirmations=append(confirmations,map[string]string{"action":fmt.Sprintf("%sposts/%d/delete/",path,id),"text":confirmationText("Delete your message? This can't be undone.")});forms=append(forms,fmt.Sprintf("%sposts/%d/delete/",path,id),fmt.Sprintf("%sposts/%d/edit/",path,id))}else{reports=append(reports,id)}
+		}
+		for _,child:=range spaRows(spaMap(row["replies"])["all"]){visit(child,true)}
+	}
+	announcements:=[]map[string]any{}
+	if show{
+		announcements=spaRows(data["announcements"])
+		for _,row:=range announcements{annTexts=append(annTexts,spaText(row["body"]));if int64(spaInt(row["author_id"]))!=actor.ID{reports=append(reports,spaID(row))}}
+		for _,row:=range spaRows(data["posts"]){visit(row,false)}
+		if post{forms=append(forms,path+"post/")}
+	}
+	for _,row:=range spaRows(data["feed"]){feedTitles=append(feedTitles,spaText(row["title"]))}
+	_,live:=data["thread_chat_config"];scripts:=[]string{"/static/js/hovercard.js","/static/js/site.js"};var chat,nudge any
+	if live{chat=data["thread_chat_config"];if data["presend_nudge"]!=nil{nudge=data["presend_nudge"];scripts=append(scripts,"/static/js/presend-nudge.js")};scripts=append(scripts,"/static/js/thread-chat.js")}
+	sort.Strings(forms);sort.Slice(reports,func(i,j int)bool{return reports[i]<reports[j]})
+	return map[string]any{"title":group["title"],"owner":owner,"member":member,"show_thread":show,"can_post":post,"can_announce":announce,"can_ask":ask,"live_thread":live,"roster_visible":data["roster"]!=nil,"roster_count":len(roster),"roster_names":roster,"post_ids":roots,"reply_ids":replies,"post_texts":texts,"announcement_count":len(announcements),"announcement_texts":annTexts,"feed_titles":feedTitles,"report_post_ids":reports,"form_actions":forms,"confirmations":confirmations,"script_sources":scripts,"chat_config":chat,"nudge_config":nudge}
+}
+
+func groupDetailQAPriorBodies(t *testing.T,root,output string,renderer *Renderer)[]map[string]any{
+	t.Helper();var baseline struct{Schema int `json:"schema"`;Keeper string `json:"accepted_keeper_sha256"`;HTML []struct{Kind,Name,Path,SHA256 string;Bytes int;Equal bool} `json:"html"`}
+	raw,err:=os.ReadFile(filepath.Join(root,"tools/gui-native-group-detail/prior-html-baseline.json"));if err!=nil||json.Unmarshal(raw,&baseline)!=nil||baseline.Schema!=1||baseline.Keeper!="1bb27df97ec9641119a30e76afff1ab1181947f5036888f954a96a5b30f8adf9"||len(baseline.HTML)!=18{t.Fatal("exact accepted eighteen-body reference missing",err)}
+	byPath:=map[string]struct{Bytes int;SHA string}{};for _,row:=range baseline.HTML{if !row.Equal||row.Path!=row.Kind+"/"+row.Name+".html"||byPath[row.Path].SHA!=""{t.Fatal("invalid prior-body row")};byPath[row.Path]=struct{Bytes int;SHA string}{row.Bytes,row.SHA256}}
+	rows:=[]map[string]any{}
+	for _,kind:=range []string{"family","group-create"}{if err:=os.Mkdir(filepath.Join(output,kind),0700);err!=nil{t.Fatal(err)}}
+	export:=func(kind,name,template string,request *http.Request,data pongo2.Context){
+		w:=httptest.NewRecorder();if err:=renderer.Render(w,request,template,data);err!=nil{t.Fatal(err)};body:=w.Body.Bytes();path:=kind+"/"+name+".html";wanted,ok:=byPath[path]
+		if !ok||len(body)!=wanted.Bytes||groupDetailQAHash(body)!=wanted.SHA{t.Fatal("group detail disturbed accepted existing body",path)}
+		groupDetailQAWrite(t,filepath.Join(output,path),body);rows=append(rows,map[string]any{"kind":kind,"name":name,"path":path,"bytes":len(body),"sha256":groupDetailQAHash(body),"equal":true})
+	}
+	for _,state:=range familyQAStates{request,data:=familyQAData(state);name:="web/wards.html";if state.Kind=="guardianship"{name="web/guardianship.html"};export("family",state.Name,name,request,data)}
+	for _,state:=range groupQAStates{request,data:=groupQAData(state);export("group-create",state.Name,"web/group_form.html",request,data)}
+	if len(rows)!=18{t.Fatal("prior-body fixture count changed")};return rows
+}
+
+func TestSocialGroupDetailQAExport(t *testing.T){
+	root,err:=filepath.Abs("../../../..");if err!=nil{t.Fatal(err)}
+	bridge:=groupDetailQABridge(t,root);before:=groupDetailQASources(t,root,bridge.Paths)
+	typedNil:=groupDetailQARestore(t,map[string]any{"_group_detail_capture":"nil-string-slice"},"projection.posts[0].sentiment_lines")
+	if values,ok:=typedNil.([]string);!ok||values!=nil{t.Fatal("capture restoration lost exact typed-nil footer value")}
+
+	// Export also admits the actual capture: it must never silently substitute
+	// a presentation fixture for the later matched legacy/native comparison.
+	for _,lang:=range []string{"en","ro"}{groupDetailQACaptured(t,root,lang)}
+	output:=*groupDetailQAOutput
+	if output==""||!filepath.IsAbs(output)||!strings.Contains(output,"/_temp/"){t.Fatal("fresh owned task scratch output required")}
+	parent,err:=filepath.EvalSymlinks(filepath.Dir(output));if err!=nil||parent!=filepath.Dir(output){t.Fatal("unalias existing output parent required",err)}
+	if err=os.Mkdir(output,0700);err!=nil{t.Fatal(err)}
+	rows,normalizations:=[]map[string]any{},[]map[string]any{}
+	for _,state:=range groupDetailQAStates{
+		renderer,request,data:=groupDetailQAData(t,state);expected:=groupDetailQAExpected(renderer,request,data)
+		w:=httptest.NewRecorder();if err=renderer.Render(w,request,"web/group_detail.html",data);err!=nil{t.Fatal(state.Name,err)}
+		raw:=w.Body.Bytes();rawHash:=groupDetailQAHash(raw);policy:=w.Header().Get("Content-Security-Policy-Report-Only")
+		match:=regexp.MustCompile(`'nonce-([^']+)'`).FindStringSubmatch(policy)
+		if w.Code!=http.StatusOK||w.Header().Get("Content-Type")!="text/html; charset=utf-8"||w.Header().Get("Cache-Control")!="private, no-cache"||!strings.Contains(w.Header().Get("Vary"),"Cookie")||len(w.Result().Cookies())!=0||len(match)!=2||match[1]==""||bytes.Contains(raw,[]byte("PRIVATE-")){t.Fatal("actual private escaped native Renderer contract differs",state.Name)}
+		nonce:=match[1];attribute:=`nonce="`+nonce+`"`;count:=bytes.Count(raw,[]byte(attribute));if count<2||strings.Count(policy,"'nonce-"+nonce+"'")!=1{t.Fatal("actual nonce/body policy shape differs")}
+		body:=bytes.ReplaceAll(raw,[]byte(attribute),[]byte(`nonce="synthetic-group-detail-ui-nonce"`))
+		if bytes.Contains(body,[]byte(nonce)){t.Fatal("nonce occurred outside admitted attribute context")}
+		headers:=map[string]string{};replaced:=0
+		for key,values:=range w.Header(){if len(values)!=1{t.Fatal("finite single-value actual Renderer header required",key)};value:=values[0];if strings.Contains(value,nonce){if key!="Content-Security-Policy-Report-Only"||strings.Count(value,nonce)!=1{t.Fatal("nonce occurred outside admitted CSP context")};value=strings.Replace(value,nonce,"synthetic-group-detail-ui-nonce",1);replaced++};headers[key]=value}
+		if replaced!=1{t.Fatal("one actual CSP nonce replacement required")}
+		groupDetailQAWrite(t,filepath.Join(output,state.Name+".html"),body)
+		rows=append(rows,map[string]any{"name":state.Name,"language":state.Language,"theme":state.Theme,"text":state.Text,"motion":state.Motion,"bytes":len(body),"sha256":groupDetailQAHash(body),"canonical":"/groups/41/","synthetic_csrf":"synthetic-group-detail-ui-csrf","renderer_headers":headers,"expected":expected})
+		normalizations=append(normalizations,map[string]any{"name":state.Name,"raw_html_sha256":rawHash,"normalized_html_sha256":groupDetailQAHash(body),"attribute_replacements":count,"csp_replacements":replaced})
+	}
+	prior:=groupDetailQAPriorBodies(t,root,output,NewRenderer(root));after:=groupDetailQASources(t,root,bridge.Paths)
+	left,_:=json.Marshal(before);right,_:=json.Marshal(after);if !bytes.Equal(left,right)||groupDetailQABridge(t,root).Head!=bridge.Head{t.Fatal("source/Git changed during actual export")}
+	manifest:=map[string]any{"schema":1,"PG_producer_source":*groupDetailQAProducer,"UI_method_source":bridge.Head,"source_unchanged":true,"sources_before":before,"sources_after":after,"states":rows,"previous_body_equality":prior,"normalization":map[string]any{"schema":1,"kind":"render-nonce-only","replacement":"synthetic-group-detail-ui-nonce","states":normalizations},"scope":"Actual isolated Renderer, valid synthetic Actors, source-projected expectations; no authenticated HTTP/real child/media codec/provider claim. Only render-environment CSRF is synthetic and actual renderer nonce is normalized for retained artifacts."}
+	raw,err:=json.MarshalIndent(manifest,"","  ");if err!=nil{t.Fatal(err)};groupDetailQAWrite(t,filepath.Join(output,"fixtures.json"),append(raw,'\n'))
+}
+
+func groupDetailQARestore(t testing.TB,value any,path string)any{
+	t.Helper()
+	switch row:=value.(type){
+	case map[string]any:
+		if tag,exists:=row["_group_detail_capture"];exists{
+			if tag=="nil-string-slice"{
+				if len(row)!=1||!strings.HasSuffix(path,".sentiment_lines"){t.Fatal("unadmitted typed-nil source path",path)}
+				return []string(nil)
+			}
+			text,ok:=row["value"].(string)
+			if len(row)!=2||tag!="pongo-safe-string"||!ok||!strings.HasSuffix(path,".body_html")&&!strings.HasPrefix(path,"projection.post_form."){t.Fatal("unadmitted original safe-value capture path",path)}
+			return pongo2.AsSafeValue(text)
+		}
+		for key,child:=range row{row[key]=groupDetailQARestore(t,child,path+"."+key)}
+	case []any:
+		for i,child:=range row{row[i]=groupDetailQARestore(t,child,path+"["+strconv.Itoa(i)+"]")}
+	};return value
+}
+
+func groupDetailQACaptured(t testing.TB,root,lang string)(*http.Request,pongo2.Context){
+	t.Helper();file:=*groupDetailQACapture
+	if !filepath.IsAbs(file)||!strings.Contains(file,"/_temp/"){t.Fatal("explicit admitted actual capture required")}
+	actual,err:=filepath.EvalSymlinks(file);if err!=nil||actual!=file{t.Fatal("unaliased capture required",err)}
+	info,err:=os.Lstat(file);if err!=nil||!info.Mode().IsRegular()||info.Size()>2<<20{t.Fatal("bounded regular capture required",err)}
+	raw,err:=os.ReadFile(file);if err!=nil{t.Fatal(err)}
+	var artifact struct{Schema int `json:"schema"`;Source string `json:"source_sha"`;Producer string `json:"producer_root"`;Method string `json:"qualifier_method_sha256"`;Projection string `json:"projection_base64"`;SHA string `json:"projection_sha256"`;Rows []struct{Path,SHA256 string;Bytes int} `json:"source_rows"`}
+	if json.Unmarshal(raw,&artifact)!=nil||artifact.Schema!=1||artifact.Source!=*groupDetailQAProducer||artifact.Producer!="TestNativeGroupDetailRegisteredProjectionCaptureUsesCurrentAuthority"||len(artifact.Method)!=64{t.Fatal("actual successful producer receipt required")}
+	bridge:=groupDetailQABridge(t,root);current:=groupDetailQASources(t,root,bridge.Product);captured:=map[string]string{}
+	for _,row:=range artifact.Rows{if captured[row.Path]!=""{t.Fatal("duplicate capture source")};captured[row.Path]=fmt.Sprintf("%d:%s",row.Bytes,row.SHA256)}
+	if len(captured)!=len(current){t.Fatal("complete declared product source frame required")};for _,row:=range current{if captured[row["path"].(string)]!=fmt.Sprintf("%d:%s",row["bytes"].(int),row["sha256"].(string)){t.Fatal("producer/product source changed",row["path"])}}
+	projection,err:=base64.StdEncoding.DecodeString(artifact.Projection);if err!=nil||len(projection)>512<<10||groupDetailQAHash(projection)!=artifact.SHA{t.Fatal("bounded actual projection digest differs",err)}
+	var value struct{
+		Schema int `json:"schema"`
+		Actor struct{ID int64 `json:"id"`;PublicID string `json:"public_id"`;Username string `json:"username"`;DisplayName string `json:"display_name"`;AgeBand string `json:"age_band"`;Cohort string `json:"cohort"`;Role string `json:"role"`;Verified bool `json:"identity_verified"`;Active bool `json:"is_active"`;Staff bool `json:"is_staff"`;Superuser bool `json:"is_superuser"`} `json:"actor"`
+		Variants []struct{Language,Path string;Projection map[string]any} `json:"variants"`
+		Environment string `json:"render_environment"`
+	}
+	decoder:=json.NewDecoder(bytes.NewReader(projection));decoder.UseNumber();decoder.DisallowUnknownFields();if err=decoder.Decode(&value);err!=nil||value.Schema!=1||len(value.Variants)!=2||value.Variants[0].Language!="en"||value.Variants[1].Language!="ro"||value.Actor.ID<1||value.Actor.Username!="generated-native-group-owner"||value.Actor.Cohort!="adult"||value.Actor.AgeBand!="adult"||value.Actor.Role!="user"||!value.Actor.Active||!value.Actor.Verified||value.Actor.Staff||value.Actor.Superuser{t.Fatal("exact synthetic adult/nonstaff actual source projection required",err)}
+	actor:=platform.Actor{ID:value.Actor.ID,PublicID:value.Actor.PublicID,Username:value.Actor.Username,DisplayName:value.Actor.DisplayName,AgeBand:value.Actor.AgeBand,Cohort:value.Actor.Cohort,Role:value.Actor.Role,IdentityVerified:value.Actor.Verified,IsActive:value.Actor.Active,IsStaff:value.Actor.Staff,IsSuperuser:value.Actor.Superuser}
+	for _,variant:=range value.Variants{if variant.Language==lang{
+		if !regexp.MustCompile(`^/groups/[1-9][0-9]*/$`).MatchString(variant.Path){t.Fatal("finite current group path required")}
+		request:=platform.WithActor(httptest.NewRequest("GET","https://fixture.invalid"+variant.Path,nil),actor);request.Header.Set("Accept-Language",lang)
+		data:=groupDetailQARestore(t,socialNumbers(variant.Projection),"projection").(map[string]any)
+		config:=spaMap(data["thread_chat_config"]);labels:=map[string]string{};for key,value:=range spaMap(config["i18n"]){text,ok:=value.(string);if !ok{t.Fatal("actual current i18n string map required")};labels[key]=text};config["i18n"]=labels
+		if prompts,ok:=data["question_prompts"].([]any);ok{for i,prompt:=range prompts{pair,ok:=prompt.([]any);if !ok||len(pair)!=2{t.Fatal("actual question pair required")};left,ok:=pair[0].(string);right,other:=pair[1].(string);if !ok||!other{t.Fatal("actual question strings required")};prompts[i]=[]string{left,right}}}
+		// Only render environment is synthetic; all captured permissions,
+		// identity, cohort, content, timestamps and widgets remain unchanged.
+		data["language"],data["csrf"] =lang,"synthetic-group-detail-benchmark-csrf"
+		t.Logf("actual-view body-only source=%s method=%s projection=%s language=%s",artifact.Source,artifact.Method,artifact.SHA,lang)
+		return request,pongo2.Context(data)
+	}}
+	t.Fatal("actual captured language missing");return nil,nil
+}
+
+// SAME actual registered-view semantic context/widgets for both engines. The
+// original Pongo template stays untouched. Native includes VM/copy/markup checks.
+// Parsing, source/receipt/Git checks, queries, nonce generation, headers, network
+// and gzip are outside timing. This is adult/nonstaff body cost only, not full
+// HTTP latency, worst-case content, equivalent HTML or a speedup acceptance.
+func BenchmarkSocialGroupDetailBodyRender(b *testing.B){
+	root,err:=filepath.Abs("../../../..");if err!=nil{b.Fatal(err)};bridge:=groupDetailQABridge(b,root);before,_:=json.Marshal(groupDetailQASources(b,root,bridge.Paths))
+	for _,lang:=range []string{"en","ro"}{b.Run(lang,func(b *testing.B){
+		renderer:=NewRenderer(root);request,data:=groupDetailQACaptured(b,root,lang);merged:=familyBenchmarkDefaults(renderer,request,data)
+		old,err:=renderer.set.FromCache("web/group_detail.html");if err!=nil{b.Fatal(err)}
+		for _,native:=range []bool{false,true}{name:="classic";if native{name="native"};b.Run(name,func(b *testing.B){
+			render:=func()[]byte{if native{raw,err:=renderer.renderGroupDetail(request,merged);if err!=nil{b.Fatal(err)};return raw};var output bytes.Buffer;if err:=old.ExecuteWriter(merged,&output);err!=nil{b.Fatal(err)};return output.Bytes()}
+			raw:=render();gzip:=familyBenchmarkGzip(b,raw);if len(raw)==0{b.Fatal("empty matched actual body")};b.ReportAllocs();b.ResetTimer()
+			for i:=0;i<b.N;i++{familyBenchmarkSink=render()};b.StopTimer();b.ReportMetric(float64(len(raw)),"html-B/op");b.ReportMetric(float64(gzip),"gzip9-B/op")
+		})}
+	})}
+	after,_:=json.Marshal(groupDetailQASources(b,root,bridge.Paths));if !bytes.Equal(before,after)||groupDetailQABridge(b,root).Head!=bridge.Head{b.Fatal("source/Git changed during warmed benchmark")}
+}
