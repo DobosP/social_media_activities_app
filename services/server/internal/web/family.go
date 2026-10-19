@@ -325,6 +325,9 @@ func (r *Renderer) familyPage(request *http.Request, name string, data pongo2.Co
 		d.fail()
 	}
 	translate := func(message string) string {
+		if value, found := page.Copy[message]; found {
+			return value
+		}
 		value := familyPlainCopy(r.catalog, lang, message, 1)
 		page.Copy[message] = value
 		return value

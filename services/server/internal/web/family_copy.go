@@ -72,6 +72,8 @@ var familyCopySources = map[string]string{
 	"supervised — no adult seated yet": "supervised &mdash; no adult seated yet",
 }
 
+var familyCopyMarkup = strings.NewReplacer("<strong>", "", "</strong>", "")
+
 func familyPlainCopy(catalog translationCatalog, language, message string, count int) string {
 	source := message
 	if original, ok := familyCopySources[message]; ok {
@@ -86,6 +88,6 @@ func familyPlainCopy(catalog translationCatalog, language, message string, count
 		}
 	}
 	value := catalog.translate(language, source, count)
-	value = strings.NewReplacer("<strong>", "", "</strong>", "").Replace(value)
+	value = familyCopyMarkup.Replace(value)
 	return strings.Join(strings.Fields(html.UnescapeString(value)), " ")
 }

@@ -112,6 +112,7 @@ func TestNativeFamilyAssembledHTTPScopesCSRFAndCurrentAuthority(t *testing.T) {
 	ctx := context.Background()
 	cfg := integrationConfig(t)
 	cfg.Accounts.AllowMinorOnboarding = true
+	cfg.StaticDir = cfg.SiteRoot + "/static"
 	a, err := New(ctx, db, cfg, true)
 	if err != nil {
 		t.Fatal(err)
@@ -171,6 +172,12 @@ func TestNativeFamilyAssembledHTTPScopesCSRFAndCurrentAuthority(t *testing.T) {
 	}
 	t.Run("scoped-native-get-and-readonly-ward", func(t *testing.T) {
 		body := familyAppHTML(t, a, g, "/wards/?ward_pk="+fmt.Sprint(foreign.ID))
+		// The scoped stylesheet must be available through the assembled native
+		// transport, rather than only the presentation fixture preview server.
+		style := familyAppRequest(t, a, familyAppCredential{}, "GET", "/static/css/family-native.css", "", nil, false)
+		if style.Code != http.StatusOK || !strings.HasPrefix(style.Header().Get("Content-Type"), "text/css") || style.Header().Get("Cache-Control") != "public, max-age=3600" || style.Header().Get("X-Content-Type-Options") != "nosniff" || style.Header().Get("X-Social-Runtime") != "go" || style.Body.String() != ".family-page .btn { transition: transform .04s ease; }\n" || !strings.Contains(body, `<link rel="stylesheet" href="/static/css/family-native.css">`) {
+			t.Fatal("family stylesheet missing from native HTML/static transport or unexpected scoped bytes")
+		}
 		for _, want := range []string{ward.Username, limits, topics, revoke, `name="allowed_weekdays"`, `name="allowed_categories"`, `name="topics"`, "I've arrived"} {
 			if !strings.Contains(body, want) {
 				t.Fatal("own current native control absent", want)

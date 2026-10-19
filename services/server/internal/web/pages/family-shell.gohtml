@@ -9,11 +9,12 @@
 <link rel="preload" href="/static/fonts/bricolage-grotesque-latin-ext-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/static/fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/static/css/base.css">
+<link rel="stylesheet" href="/static/css/family-native.css">
 </head>
-<body>
+<body class="family-page">
 <a class="skip-link" href="#main">{{index .Copy "Skip to main content"}}</a>
 <header class="site-header"><div class="container nav-wrap">
-<a class="brand" href="/"><span class="dot" aria-hidden="true">●</span> {{index .Copy "Activities"}}</a>
+<a class="brand" href="/"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><circle cx="6" cy="6" r="5" fill="currentColor"></circle></svg> {{index .Copy "Activities"}}</a>
 <input type="checkbox" id="nav-toggle" class="nav-toggle-cb"><label for="nav-toggle" class="nav-toggle"><span aria-hidden="true">☰</span> {{index .Copy "Menu"}}</label>
 <nav class="nav" aria-label="{{index .Copy "Primary"}}">{{range .Shell.Navigation}}<a class="nav-link" href="{{.URL}}"{{if .Current}} aria-current="page"{{end}}>{{.Label}}</a>{{end}}</nav>
 <details class="nav-menu nav-end"><summary>{{.Shell.DisplayName}}</summary><div class="nav-panel">
@@ -24,7 +25,7 @@
 <main class="container" id="main" tabindex="-1">
 <h1>{{if .WardsPage}}{{index .Copy "Your wards"}}{{else}}{{index .Copy "Your guardians"}}{{end}}</h1>
 <nav class="tabs" aria-label="{{index .Copy "Account"}}">{{range .Shell.AccountTabs}}<a href="{{.URL}}"{{if .Current}} class="is-active" aria-current="page"{{end}}>{{.Label}}</a>{{end}}</nav>
-{{if .Shell.Messages}}<ul class="messages">{{range .Shell.Messages}}<li class="msg" role="status">{{.}}</li>{{end}}</ul>{{end}}
+{{if .Shell.Messages}}<ul class="messages">{{range .Shell.Messages}}<li class="msg"><span role="status">{{.}}</span></li>{{end}}</ul>{{end}}
 {{if .WardsPage}}{{template "family-wards-content" .}}{{else}}{{template "family-guardianship-content" .}}{{end}}
 </main>
 <footer class="site-footer"><div class="container">

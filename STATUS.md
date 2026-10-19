@@ -1,13 +1,13 @@
 # Status — social_media_activities_app
 
-Last verified: 2026-10-19 (family focused Go checks pass; PG/desktop qualification pending)
+Last verified: 2026-10-19 (family isolated UI8+2/focused checks pass; six-package PG pending)
 
 - **GitHub Actions (Last verified: 2026-10-05):** owner-requested on-demand policy,
   [ADR-0033](docs/adr/0033-manual-github-actions.md). Ordinary `ci.yml` calls Go/Node workflows;
   original Python gates remain in optional manual `reference.yml` (ADR-0038). YAML/input/job/
   read-only permission checks pass. Native Actions remains manually disabled; no hosted run claimed.
 Current truth: STATUS > newest ADR > other docs. History: WORKLOG, ADRs and git.
-Family pages: [ADR-0061](docs/adr/0061-native-family-pages.md) implements two typed Go views using existing services; source review and focused race/vet/header/custody checks pass. Actual PG/desktop qualification remains pending; no milestone, landing or deployment claim.
+Family pages: [ADR-0061](docs/adr/0061-native-family-pages.md) implements two typed Go views using existing services. V3 isolated desktop8/no-JS2,192Axe predicates and27 initial/settled button samples pass; the scoped CSS leaves original base styles intact. Prior V1 failures and V2 stable-only pass remain history. Focused Go checks pass; warmed body measurements show smaller payload and higher CPU than Pongo. Complete PG and publication remain pending. No milestone, main landing or deployment claim.
 
 ## What this is
 

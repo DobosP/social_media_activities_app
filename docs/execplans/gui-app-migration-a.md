@@ -1,6 +1,7 @@
 # Social GUI preparation and S3A execution plan
 
-Last verified: 2026-10-12. Authority: roedu-ui PROGRAM E5/E6 and ADR-0019/0020.
+Last verified: 2026-10-19. Bounded functional work follows programme ADR-0032.
+The formal sequence below retains its historical PROGRAM E5/E6/ADR-0019/0020 scope.
 This branch is pre-S3A preparation; formal S3A starts after the S0b templ-kit tag
 and owner kit sync. No milestone or owner signature is recorded here.
 
@@ -67,14 +68,20 @@ an automatic whole-template conversion. [ADR-0061](../adr/0061-native-family-pag
 covers `/wards/` and `/guardianship/`: typed escaped presentation, cached embedded
 HTML, existing actions and services. Original templates, source-case declarations,
 route policy, schema and dependencies remain. Source review and focused family
-race/vet/header/custody checks pass; PG/desktop qualification remains pending.
-No S3A milestone, performance, landing or deployment is claimed.
+race/vet/header/custody checks pass. Actual V3 isolated fixtures passed eight EN/RO
+desktop states plus two no-JS cases, 192 Axe predicates and all 27 initial/settled
+button-color samples. The new scoped stylesheet removes the observed color tween;
+original base styles and important reduced-motion rules remain. V1 Axe/list failures
+and V2 stable-only pass remain honest history; no all-frame certification follows.
+No S3A milestone, speedup over Pongo, main landing or deployment is claimed.
 The old Samsung/device step above is historical: PROGRAM E10 requires no device
 measurements anywhere. Teacher/Social milestone landing remains owner-only.
 
-Next: source/authcore checks and synthetic PostgreSQL web+assembled-App
-qualification on the applied exact SHA;
-then desktop/no-JS/a11y review and matched warmed body-render measurements. The
-exact renderer inverse/current binding extension is reviewed and passes current
-source checks. Historical captures and receipts remain unchanged; this does not
-turn source-only defaults into an original semantic oracle.
+Next: check source/authcore and run the committed `tools/gui-native-family/qualify.py`
+against the exact clean feature SHA with explicit owned scratch/cache paths.
+Complete six-package PG and publication remain pending. Matched body measurement
+completed: smaller native HTML and about 47% fewer native allocation bytes than
+before optimization, but higher CPU than Pongo; no full HTTP speedup is claimed.
+Final source exports preserve the eight accepted fixture bodies byte-for-byte.
+Historical captures/receipts are unchanged; source-only defaults are not an
+original semantic oracle. Teacher/Social milestone landing remains owner-only.

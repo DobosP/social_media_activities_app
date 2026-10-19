@@ -1,7 +1,7 @@
 # ADR-0061: Native family management and ward explanation
 
 Date: 2026-10-19
-Status: proposed — source reviewed; focused Go checks pass; PG/desktop qualification pending
+Status: proposed — scoped UI/body measurements reviewed; PostgreSQL pending
 
 ## Context and decision
 
@@ -49,3 +49,38 @@ synthetic PG, desktop/no-JS/a11y and matched warmed rendering. No production cos
 legal compliance, security certification, formal milestone or performance result
 is established by this source proposal. Full landing gates and human first-launch
 review remain as ADR-0040; Teacher/Social milestone landing remains owner-only.
+
+## 2026-10-19: scoped qualification update
+
+The initial verification plan above is historical; current scoped evidence follows.
+The family shell now uses an owned 55-byte stylesheet after unchanged `base.css`.
+Its `.family-page .btn` rule retains press motion and important reduced-motion
+rules, while removing the observed background/border tween. Decorative SVG and
+status spans inside list items repair the V1 glyph/list accessibility findings.
+
+V1 failed Axe; V2 passed steady-state checks but retained the 120ms contrast defect.
+V3 passed eight EN/RO fixtures plus two no-JS cases, 192 Axe predicates, 48 successful
+assets and 27 equal initial/settled button-color samples; the same predicate rejects
+V2. These are two samples, not all-frame certification. Independent review binds
+report `1d2eab616eb452f739e27a18c2db78b1116706c499bc785ad1762726128e2372`.
+The final applied-source export preserves all eight accepted HTML bodies byte-for-byte.
+
+Final warmed body measurements have smaller native HTML (17.7/18.2kB) and about
+47% fewer allocated bytes than the initial native implementation. Body CPU remains
+higher than original Pongo; no full HTTP/production speedup is claimed. Reviewed
+request-local copy memoization, an immutable markup replacer and private buffer
+retain escaping and introduce no cross-request account cache.
+
+Complete six-package PostgreSQL qualification and publication remain pending.
+Run the committed method from the clean feature checkout; repo/pinned Go have
+defaults and scratch/cache paths must be explicit existing owned directories:
+
+```sh
+python3 -I tools/gui-native-family/qualify.py --sha FULL_CLEAN_SHA \
+  --scratch /absolute/task-scratch --cache /absolute/go-cache \
+  --modcache /absolute/go-mod --execute
+```
+
+The method binds its three committed inputs to the clean source archive. Keep
+source/authcore checks, all original test/CSRF/audit requirements, and owner-only
+Teacher/Social milestone/main/production decisions separate from this scoped proof.

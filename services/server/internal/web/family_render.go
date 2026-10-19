@@ -31,6 +31,7 @@ func (r *Renderer) renderFamily(request *http.Request, name string, data pongo2.
 		entry = "family-wards"
 	}
 	var output bytes.Buffer
+	output.Grow(4096 + len(page.Wards)*8192 + len(page.Guardians)*2048)
 	if err = parsed.ExecuteTemplate(&output, entry, page); err != nil {
 		return nil, err
 	}
