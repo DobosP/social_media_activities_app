@@ -1,0 +1,60 @@
+{
+  "schema": 1,
+  "verdict": "ACCEPT_COMPACT_GROUP_DETAIL_KEEPER_CANDIDATE",
+  "source_sha": "fa3e7c90bf736f63981b00d2f117417d01b26cd2",
+  "independent_no_product_test_method_authorship": true,
+  "archive_sha256": "f1fc63527352bbb41a4d7640a0634dac6164d7e34eaddca0209fe355ecc14153",
+  "archive_bytes": 4554877,
+  "archive_manifest_sha256": "8d35838f34e3154202d9603d562ec000d318d2454eea69b6d5ecc180a189bc3a",
+  "selection_sha256": "759ae9b91b22d2d6bbf69715464aeb5a27b064b1e190f4183927f63565c6166c",
+  "collector_sha256": "c0ae0cb0a19deae34f3c35abfd0c75df5ab0dab1da60d8b508c271d84a24ccc6",
+  "outer_result_sha256": "57acb030c342f80b63048faccb636fc3e417050fd6bf14f6941f13ee83bbb29c",
+  "collection_result_sha256": "183268ffe87677fbddf4b9b440b365a02687c5e8393379c34c7c87d861deee04",
+  "README_sha256": "9b361d485715586d8b09d8c7b18673d038cb60b756fe57a49a4de95da7abc34c",
+  "physical_members_byte_hash_mode_UID_GID_nsmtime_verified": 1550,
+  "selected_physical_originals_verified": 1545,
+  "outer_metadata_members_verified": 5,
+  "explicit_alias_original_bytes_and_fullstat_verified": 105,
+  "native_epochs": [
+    {
+      "label": "native-initial-failed",
+      "source": "dc1c15caa1404ae667b440a4b1c08ebeee7280e4",
+      "method_pass": false,
+      "original_commands": 57,
+      "original_artifacts": 117,
+      "retained_raw_proof_rows": 116
+    },
+    {
+      "label": "native-prior-qualified",
+      "source": "7fb35d0e69190813ff088af6f2cde84718333495",
+      "method_pass": true,
+      "original_commands": 291,
+      "original_artifacts": 595,
+      "retained_raw_proof_rows": 594
+    },
+    {
+      "label": "native-final",
+      "source": "fa3e7c90bf736f63981b00d2f117417d01b26cd2",
+      "method_pass": true,
+      "original_commands": 292,
+      "original_artifacts": 597,
+      "retained_raw_proof_rows": 596
+    }
+  ],
+  "final_source_frame_current_Git_verified": 2158,
+  "final_UI_artifacts_verified": 67,
+  "initial_failed_UI_artifacts_physical_or_exact_alias_verified": 65,
+  "diagnostic_PNGs_physical_or_exact_alias_verified": 56,
+  "unique_historical_causal_bodies": 4,
+  "physical_deletion_performed": false,
+  "findings": [],
+  "checks": [
+    "All1550 regular safe tar members independently read, rehashed and joined selected/current originals with mode/UID/GID/nsmtime. All105 aliases rejoined their original bytes/full metadata and physical target bytes; aliases explicitly preserve historical content, not accepted identity or target metadata.",
+    "All three immutable native epoch results and every raw artifact except the three explicit binary Git archive stdout streams are retained: final596/597 plus old116+594. Complete final292 command result and2158 source Git/current frame remain exact. Final67 UI and failed65 UI artifacts plus56 diagnostic PNGs resolve completely through physical members/explicit aliases.",
+    "Four unique historical causal bodies remain physical. Initial dc1 native failure, earlier7fb native pass, refused Node preflight, failed099 UI and failed local-sheet CSS diagnostic remain distinct; nine-to-zero incompletes never converts the14asset-refusal experiment into qualification. Original failed benchmark intent is clarified, not rewritten.",
+    "No foreign Teacher/notification/programmeledger, database, sourceexport, cache, installeddependencies, browser profiles or binaries entered the archive. Eight selected current committed reproduction files and one priorbaseline reference match exact Git; collector/selection templates are retained without running collector again.",
+    "README40/result accurately describe fa3 complete six-package scope,7+7/21strictAxe/18priorbody equality, actual admitted EN/RO body-only descriptive measurement and mixed allocations. No fullHTTP/SQL/throughput/general speedup or all21/deployment/main/milestone/production/mobile/provider/real-child claim. No collection deletion occurred; excluded streams still physically exist."
+  ],
+  "limits": "Keeper candidate acceptance only. Root may promote unchanged artifact/report identities, perform separately verified owned retention and update bounded canonical docs. Subsequent physical deletion/promotion metadata requires truthful separate review.",
+  "execution": "Read-only file/Git/JSON/archive/hash/fullstat/original/alias review and scratch receipt only; no owning writes, product/native/compiler/test/browser/PG/container/process/network/collector/deletion work."
+}

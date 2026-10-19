@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "verdict": "APPROVE_EXACT_SOCIAL_RETENTION_V2_SOURCE_AND_TARGET_BIND_PENDING_ROOT_VERIFY_ONLY_RUN",
+  "script_sha256": "7f3879d3fce07ccfbfb5c65c77dcdf7d0b617ff7913f728f6a365e8cd2a96327",
+  "manifest_sha256": "1e8f0d5b4e474c141bbcb2dddf42d0b252f57bbb2f262964771acc67143d6be4",
+  "repair_patch_sha256": "3158f1a0f5905895e3bb60ee5954a75bbe366707aa528fd71d9bbf79ddcbe036",
+  "files_independently_rehashed_and_fullmetadata_verified": 6572,
+  "logical_bytes": 780572285,
+  "directories_fullmetadata_and_bottomup_verified": 718,
+  "category_counts": {
+    "superseded-historical-html-png": 109,
+    "superseded-native-executable": 21,
+    "redundant-binary-git-archive-stdout": 3,
+    "superseded-generated-source": 6439
+  },
+  "complete_generated_export_frames": [
+    {
+      "source": "dc1c15caa1404ae667b440a4b1c08ebeee7280e4",
+      "export_files": 2157,
+      "binaries": 7
+    },
+    {
+      "source": "7fb35d0e69190813ff088af6f2cde84718333495",
+      "export_files": 2158,
+      "binaries": 7
+    },
+    {
+      "source": "1f8c9742de327a6758224a22bf9f7919245ec9a3",
+      "export_files": 2124,
+      "binaries": 7
+    }
+  ],
+  "accepted_keeper_members_independently_rehashed_fullmetadata": 2449,
+  "historical_bodies_physical_or_alias_joined": 109,
+  "findings": [],
+  "checks": [
+    "V2 differs from preserved V1 only by explicit exact old GroupCreate3key/hash/complete-roundtrip/899member wrapper validation and passing its members to unchanged fullmetadata verifier and digest joins. Target manifest is unchanged1e8f0d5b. First verify-only TypeError remains preserved as failed before deletion/receipt.",
+    "All6572 current exact files independently streamed/rehashed and full UID/GID/mode/nsmtime/device/inode/nohardlink identity checked, and all718directories metadata/bottomup order checked including six empty host/test-temp roots. Exact6439generated source files join complete historical source frames2157+2158+2124;21old executables,3explicitly omitted Gitstreams and109historical bodies only.",
+    "Both accepted keepers2449members rehashed with full mode/UID/GID/nsmtime; all109historical bodies join retained physical originals or exact aliases/separate originalmetadata. Oldresult/sourceframes and Gitcommits remain available. Latestfa3 source/build/current67UI/28PNGs, allrawlogs/JSON/sourcepackets/branches/originalbaselines/keepers/caches/socket receipts and foreignTeacher work remain outside targets.",
+    "Read complete V1 and focused V2 method: default verify-only, explicitexecute+exact approved manifest+freshdirectreceipt, no-follow parent/file descriptors, owner/inode/hash/time/hardlink guards, stable streamedreads, completeextra-entry refusal, requiredacceptedfeature+keeper/source/cleanup/Git and fresh successful current Docker CID/name absence before mutation. Exact unlink then empty-only rmdir; no recursivefallback/sudo/chmod/containerstop. Partial receipts preserve exact removedpaths/raw-unavailability and no auto-resume."
+  ],
+  "next": "Root sole executor may run exact V2 verify-only to obtain a truthful successful fresh Docker CID/name absence and complete check receipt. This source approval is not a deletion receipt; after successful verification Root may apply the already scoped owned retention and must preserve actual complete/partial receipt for subsequent metadata review.",
+  "scope": "Read-only retention method/target custody review, no native/PG/UI requalification or current fresh Docker inventory by reviewer; no physical deletion performed.",
+  "execution": "Read-only script text/JSON/Git/files/archive/metadata/hash joins and scratch report only; no prune parser/import/execution, candidate/native/browser/PG/container/process/network or owning writes."
+}

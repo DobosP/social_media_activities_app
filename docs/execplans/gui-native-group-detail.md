@@ -1,6 +1,6 @@
 # Native group detail: bounded implementation and qualification
 
-Status: independently reviewed source4bd70762 applied; focused checks pass, complete affected PG/UI qualification pending.
+Status: independently feature-qualified exactfa3e7c90; bounded feature publication ready after metadata review.
 Decision: [ADR-0063](../adr/0063-native-group-detail.md).
 Base: published Group-create featurefeebb552; approved contract30be79d1,
 independent contract review11f9f63f. Earlier feature keepers remain history.
@@ -88,3 +88,16 @@ expected sheet bytes and benchmark-intent metadata. Actual CSS GET/HEAD race1,
 web focused17roots/74named/zero skips, app/web vet and Python syntax pass.
 Commit this batch, then fresh complete6 and exact-source UI/benchmark. Keep both
 prior failures/raw diagnostics; no CSS/test source-bridge exception is introduced.
+
+## Accepted exact-source closure
+
+Completed all eight steps on exactfa3: affected PG6/428roots/1,246named/zero
+skips,strict desktop7+7/21Axe/18prior bodies/native confirmations and actual
+matched EN/RO body measurements. Independent6c4f/bc8c and whole-feature948f/
+keeper2026 accept archivef1fc (1,550 members,105 historical aliases). Source,
+failures,mixed performance and actual cleanup remain in the compact keeper.
+Reviewed exact retention removed780,572,285 logical bytes of superseded owned
+outputs; their raw paths are unavailable. Preserve latest fa3 setup and all Git
+source branches/unmerged packets. Metadata review then publish the feature
+branch; next module is the existing notification preferences page. No main,
+formal milestone,full21,current-image or activation claim follows.

@@ -1,7 +1,7 @@
 # ADR-0063: Native group detail and existing owner controls
 
 Date: 2026-10-19
-Status: independently reviewed source; complete affected qualification pending
+Status: independently feature-qualified affected PG6/desktop7+7; feature branch only
 Extends: ADR-0032/0061/0062; no previous decision is superseded.
 
 ## Decision
@@ -106,3 +106,24 @@ metadata. All Go runtime, policy/query/HTML/original assets and test predicates
 remain. Actual CSS GET/HEAD race and focused web17roots/74named/zero skips/vet
 pass. Fresh complete-six/current-asset UI/captured-body benchmark must qualify
 the committed stylesheet rather than add a CSS/test source-bridge exception.
+
+## Exact-source accepted checkpoint
+
+Exactfa3e7c90 passes fresh complete affected six-package PostgreSQL:428 roots,
+1,246 named passes,zero skips/failures/race findings;292 commands/597 artifact
+rows,six guarded DB retirements,thirteen owned-container removals and clean PG
+shutdown. Independent6c4ffeb3 binds result5a9d2887 and current source/asset frame.
+Actual UI38705d6f passes7JS+7no-JS,21 strict Axe audits/498 pass occurrences,
+zero violations/incompletes,all18 prior bodies and seven canceled native dialogs.
+Independentbc8c07f9 accepts the actual capture and twelve matched body samples.
+EN CPU is near-equal/RO modestly lower; allocated bytes/HTML/gzip are lower but
+allocation count rises. No full-request or general efficiency conclusion follows.
+
+Whole-feature acceptance948fb5cb and keeper review2026e632 accept the compact
+1,550-member archivef1fc6352 and105 exact historical content aliases. After source
+reviewbfff15e2 and successful current verify-only check, Root removed exactly
+6,572 superseded owned files/780,572,285 logical bytes/718 empty directories.
+Deleted raw paths are unavailable; exact manifests/receipts/failure history,
+current rolling source/binaries/UI and all source branches/packets remain in the
+[keeper](../reviews/gui-native-group-detail/README.md). No full21,current-image,
+main,milestone,production,provider,government or real-child activation is accepted.

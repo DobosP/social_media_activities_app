@@ -1,0 +1,78 @@
+{
+  "schema": 1,
+  "verdict": "ACCEPT_COMPLETE_GROUP_DETAIL_FEATURE_ON_QUALIFIED_FEATURE_BRANCH_SOURCE",
+  "independent_no_product_test_method_authorship": true,
+  "source_sha": "fa3e7c90bf736f63981b00d2f117417d01b26cd2",
+  "source_tree": "6534fc70fa61b2e21ba61d909c4d7d7d69ed54dc",
+  "accepted_prior_family_group_create_base": "feebb5527a783f91133e614a90d9bdec9db84a17",
+  "reviews": [
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-detail-fresh-review/product-source-review.json",
+      "sha256": "135233e64c2afb12ff5788a3079490876eeb9eed88e8797ee9eae068abc2ea1d",
+      "verdict": "APPROVE_PRODUCT_SOURCE_V1_PLUS_FOCUSED_V2"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-detail-fresh-review/applied-product-method-source-review.json",
+      "sha256": "4bd70762ea28bac9443c6734e2be8ddffa6738132063d39b6ebffe328e8a93c1",
+      "verdict": "APPROVE_APPLIED_GROUP_DETAIL_PRODUCT_AND_FINAL_EIGHT_METHOD_SOURCE"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-detail-fresh-review/applied-method-format-doc-review.json",
+      "sha256": "06536b739041e4fb27ba70e9812a4065b793aa58f3c275c54d2230cd76698b9e",
+      "verdict": "APPROVE_APPLIED_METHOD_FORMAT_AND_FOUR_DOC_CHECKPOINT"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-detail-reply-target-repair/independent-source-review.json",
+      "sha256": "8a3775a89c40144cafc0a7452fef377deed9b7c0d9f04446b32610e9fb88486f",
+      "verdict": "APPROVE_NARROW_TYPED_NIL_REPLY_TARGET_SOURCE_REPAIR"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-detail-ui-dependency-repair/independent-source-review.json",
+      "sha256": "19f856ddcee60116296926f35dda674b4100b8a4af90003e8bcb44ee9c661f98",
+      "verdict": "APPROVE_UI_ONLY_STREAMED_EXECUTABLE_IDENTITY_REPAIR"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-detail-link-cue-repair/independent-source-review.json",
+      "sha256": "da2f59c34a2c405375105b8fea6935634567e13fe9478176df2a68533479af0c",
+      "verdict": "APPROVE_SCOPED_NONCOLOR_LINK_CUE_AND_TRUTHFUL_BENCHMARK_INTENT_SOURCE"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-detail-fresh-review/final-pg-review.json",
+      "sha256": "6c4ffeb35dfec8da9357e43c0c947fe4d4facc4ea6ce70e8831cef293b30aed9",
+      "verdict": "ACCEPT_FINAL_ACTUAL_COMPLETE_SIX_GROUP_DETAIL_PG"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-detail-fresh-review/final-ui-benchmark-review.json",
+      "sha256": "bc8c07f947a0e647e2ba0b71e2bfe1ee07f398287bc2282a36d4cd9621c7aeed",
+      "verdict": "ACCEPT_FINAL_ACTUAL_GROUP_DETAIL_CAPTURE_UI_AND_DESCRIPTIVE_BENCHMARK"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-detail-fresh-review/keeper-review.json",
+      "sha256": "2026e6321a3854247cfb2734815b759790c6c270d00ebd98867f5cc23e998b4a",
+      "verdict": "ACCEPT_COMPACT_GROUP_DETAIL_KEEPER_CANDIDATE"
+    }
+  ],
+  "actual_native_result_sha256": "5a9d28874abfddd6e801c5e4e72577ffe053e2e389e9127bcdf4582abe9fdd63",
+  "actual_UI_runner_result_sha256": "38705d6fd0d317006649871a777a371fc7c6bc0891dd0eb0e01db2418833440b",
+  "archive_sha256": "f1fc63527352bbb41a4d7640a0634dac6164d7e34eaddca0209fe355ecc14153",
+  "archive_bytes": 4554877,
+  "archive_members": 1550,
+  "archive_manifest_sha256": "8d35838f34e3154202d9603d562ec000d318d2454eea69b6d5ecc180a189bc3a",
+  "keeper_result_sha256": "57acb030c342f80b63048faccb636fc3e417050fd6bf14f6941f13ee83bbb29c",
+  "keeper_README_sha256": "9b361d485715586d8b09d8c7b18673d038cb60b756fe57a49a4de95da7abc34c",
+  "keeper_selection_sha256": "759ae9b91b22d2d6bbf69715464aeb5a27b064b1e190f4183927f63565c6166c",
+  "keeper_collection_result_sha256": "183268ffe87677fbddf4b9b440b365a02687c5e8393379c34c7c87d861deee04",
+  "findings": [],
+  "accepted": [
+    "Typed native whole existing group detail, owner/member/roster/conversation/feed/forms render preserves unchanged current service/action/authority projection. Supplied CanAsk compatibility, null config and typed-nil reply_target edge are preserved without new backend policy. Exact original32physical/31retained/27original/138 preference authorities and seven qualified Family product sources remain protected; no dependency/schema/authcore/originaltemplates/baseCSS/catalogue changes.",
+    "All approved product/test/custody/method packets and focused corrections were independently reviewed without authorship. Root application and formatting bindings preserve prior tests/assertions and exact old renderer/guard/harness inverse; committed reproduction methods precede actual qualification.",
+    "Finalfa3 actual complete six affected packages have428root/1246named oncePASS, zero skip/fail/race/cache; final597raw artifacts,292commands and2158source rows independently verified. Original PG tmpfs1GiB/memory2GiB and native/ref client caps, all five canonical datasets before/after every lane, six guarded DB retirements/checkpoints, thirteenCID removals and stop0/status3/PIDsocket absence are accepted; only intentional SQL negative errors remain.",
+    "Same exactfa3 actual App capture marker is joined from successful registered/current-authority raw log through lossless projection and current source/assets to UI/export. SevenJS/sevennoJS states,21strict whole-document Axe audits/498pass-rule occurrences/zero violations or incompletes, seven real native confirmation cancellations,91successful asset responses and all18 prior Family/Create HTML bytes remain exact; all owned cleanup receipts pass. All28PNG hashes plus14actual full-page/all-open images were independently reviewed.",
+    "Twelve raw benchmark rows compare cached original Pongo/native against the same actual admitted synthetic adult-owner EN/RO body projection,3samples100iterations. Social numeric restoration preserves the actual consumed unread0 conditional. EN CPU essentially equal/RO modestly lower in these samples; about40%fewer allocated bytes/about22%lessHTML/about14%lessgzip, but about14%MORE allocations. Native VM/copy/markup checks inside its timing; setup/queries/headers/nonce/gzip outside. No general speedup or request/SQL/codec/staff/worstcase/throughput claim.",
+    "Compact keeperf1fc was independently read in full:1550physical members byte/hash/mode/UID/GID/nsmtime join originals,105explicit bytealiases preserve separate original metadata, all67currentUI and65failedUI artifacts/56diagnosticPNGs resolve fully, four unique historical bodies remain physical. All final596/597 and old710raw native proof rows plus unmodified complete command/results and source frames remain. Exactly3duplicate binaryGit tar streams excluded; all still physically exist. No foreign Teacher/notification/programmeledger/cache/export/profile/binary/database content.",
+    "All failures remain historical failures: dc1 wholePG typednil, initial Node pre-output refusal,099 UI9Axe incompletes and controlledCSS experiment14asset refusals. Finalfa3 uses fresh complete6 and exact current assets; no composite source exception or diagnostic pass is inferred. Original inaccurate failed benchmark intent remains preserved and explicitly clarified; no benchmark occurred there."
+  ],
+  "scope": "Whole bounded Group-detail feature acceptance on exact clean qualified feature branch sourcefa3, including product/test/custody/reproduction/actual native+capture/UI/descriptive measurement/compact keeper. Not all21, a deployment image, main merge, Social GUI milestone, production, mobile/device, provider/government or real-child activation.",
+  "retention": "No physical deletion by collection or review. Root may now perform only separately verified owned superseded-output retention and promote unchanged keeper identities with this sidecar acceptance. Actual deletion, canonical docs/promotion and publication metadata still require truthful subsequent review; excluded records are history, not a claim deleted bytes remain.",
+  "execution": "Independent read-only source/Git/patch/raw receipt/archive/hash/stat/actual image/owned-file absence review with scratch reports only; no owning edits, candidate parser/import/formatter/compiler/test/native/browser/PG/container/process/network/collector/deletion work."
+}

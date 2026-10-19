@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "status": "COLLECTED_CANDIDATE_PENDING_INDEPENDENT_KEEPER_REVIEW",
+  "source": "fa3e7c90bf736f63981b00d2f117417d01b26cd2",
+  "scope": "Complete affected six packages and native group-detail desktop presentation; no all21/image/main/milestone/production/mobile/provider/real-child claim",
+  "native": {"original_commands":292,"original_artifact_rows":597,"retained_raw_proof_rows":596,"source_rows":2158,"root_passes":428,"named_passes":1246,"skips":0,"owned_objects_cleaned":13,"retired_databases":6},
+  "ui": {"original_artifact_rows":67,"PNGs":28,"HTML_bodies":25,"JS_states":7,"noJS_states":7,"whole_document_audits":21,"Axe_pass_occurrences":498,"violations":0,"incomplete":0,"canceled_confirmations":7,"unchanged_prior_bodies":18},
+  "benchmark": {"status":"DESCRIPTIVE_EXECUTED_SEPARATELY","rows":12,"groups":4,"samples_per_group":3,"iterations_per_sample":100,"scope":"Same admitted synthetic EN/RO projection; warm body render, native VM included; no HTTP/SQL/throughput/general-speedup acceptance"},
+  "history": [
+    {"epoch":"dc1","native":"FAIL; typed-nil reply_target; old tests unchanged"},
+    {"epoch":"7fb","native":"PASS; earlier exact source, not finalfa3"},
+    {"epoch":"initial Node preflight","status":"REFUSED before browser/export/benchmark"},
+    {"epoch":"099 UI","status":"FAIL; nine Axe incompletes, no benchmark executed"},
+    {"epoch":"CSS diagnostic","status":"FAILED; fourteen candidate asset guards despite nine-to-zero incompletes; no benchmark"}
+  ],
+  "custody": {"historical_body_storage":"Explicit exact-content aliases plus unique causal bodies; original stat metadata retained for every alias","physical_deletion_performed":false,"archive_readback":"Every member byte/hash/mode/UID/GID/nanosecondmtime verified; source inputs fenced before and after"},
+  "reviews": {"native":"6c4ffeb35dfec8da9357e43c0c947fe4d4facc4ea6ce70e8831cef293b30aed9","UI_capture_benchmark":"bc8c07f947a0e647e2ba0b71e2bfe1ee07f398287bc2282a36d4cd9621c7aeed"}
+}

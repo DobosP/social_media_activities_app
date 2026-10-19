@@ -1,0 +1,35 @@
+[
+  {
+    "source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-detail-pg-qa/run-dc1c15caa140-80827a3c-328e-4b5f-8251-df819898caf2/proof/command-006.stdout",
+    "bytes": 31221760,
+    "path": "proof/command-006.stdout",
+    "sha256": "ed2a54f24b5375a0efe9c068aeb8078fcae8bc7f1c161696448c1556f6b0e5eb",
+    "reason": "Binary full Git archive stdout excluded by explicit Root selection. Original result/complete Git manifest/archive digest retained; no deletion performed."
+  },
+  {
+    "source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-detail-pg-qa/run-7fb35d0e6919-05b5bdfb-4f6a-4cae-ab44-d99aba7327fe/proof/command-006.stdout",
+    "bytes": 31221760,
+    "path": "proof/command-006.stdout",
+    "sha256": "dc23d175bd912764a62fc021a5115178f49f7957693e3d080b28adc63094ceca",
+    "reason": "Binary full Git archive stdout excluded by explicit Root selection. Original result/complete Git manifest/archive digest retained; no deletion performed."
+  },
+  {
+    "source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/group-detail-pg-qa/run-fa3e7c90bf73-af3786aa-506c-4a81-ad95-3366c3e28abe/proof/command-006.stdout",
+    "bytes": 31232000,
+    "path": "proof/command-006.stdout",
+    "sha256": "b92047a31e43ad8b72bd656dc64e81c11d71e18761e8638d32fbda44f4ca5ad4",
+    "reason": "Binary full Git archive stdout excluded by explicit Root selection. Original result/complete Git manifest/archive digest retained; no deletion performed."
+  },
+  {
+    "scope": "Complete source exports, Go test executables/bootstrap binary, caches, database/socket/host-tmp/test-tmp trees, profiles",
+    "reason": "Not selected. Exact source Git SHA/tree, complete source manifest, binary identities and original command/results remain. No deletion by collector."
+  },
+  {
+    "scope": "Foreign programme-ledger-review.json; Teacher and future notification source/review files",
+    "reason": "Explicitly outside bounded Social group-detail keeper."
+  },
+  {
+    "scope": "Old duplicate HTML/PNG physical paths",
+    "reason": "Every old25HTML/28PNG and diagnostic56PNG record retained as physical content or exact alias with original mode/UID/GID/nsmtime; no unique body omitted and no source input deleted."
+  }
+]

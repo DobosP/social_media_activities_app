@@ -1,0 +1,115 @@
+{
+  "schema": 1,
+  "status": "COMPLETE_EXACT_OWNED_TRANSIENT_RETENTION",
+  "manifest_sha256": "1e8f0d5b4e474c141bbcb2dddf42d0b252f57bbb2f262964771acc67143d6be4",
+  "actual_receipt_sha256": "256619b7e006883b9848d181ff11444e2bbdae484b37890cbf0024a92e6d370f",
+  "deleted_files": 6572,
+  "removed_directories": 718,
+  "logical_bytes_deleted": 780572285,
+  "raw_deleted_paths_unavailable": true,
+  "preserved": [
+    "Every result/log/JSON/review/source packet/branch/baseline/canonical keeper",
+    "Latestfa3 source/binaries and latest67UI/28PNG",
+    "All caches, Teacher/current unrelated work and all socket directories (nonempty cleanup/ready/stop-request receipts)"
+  ],
+  "retention_archive_sha256": "7a55f6505b43afa326cb76998603dc258d984060c30f2f27c098fb3d4640de1d",
+  "full_roundtrip_verified": true,
+  "members": [
+    {
+      "member": "prune.py",
+      "bytes": 17439,
+      "sha256": "7f3879d3fce07ccfbfb5c65c77dcdf7d0b617ff7913f728f6a365e8cd2a96327",
+      "mode": 436,
+      "uid": 1000,
+      "gid": 1000,
+      "mtime_ns": 1792396573467249592
+    },
+    {
+      "member": "prune-manifest.json",
+      "bytes": 3133792,
+      "sha256": "1e8f0d5b4e474c141bbcb2dddf42d0b252f57bbb2f262964771acc67143d6be4",
+      "mode": 436,
+      "uid": 1000,
+      "gid": 1000,
+      "mtime_ns": 1792396308706724609
+    },
+    {
+      "member": "README.md",
+      "bytes": 2510,
+      "sha256": "5df9e722947ae38b2004b6d6f66f9ec46ae6e7512d10a47ef519bc467f50394b",
+      "mode": 436,
+      "uid": 1000,
+      "gid": 1000,
+      "mtime_ns": 1792396583653729843
+    },
+    {
+      "member": "root-dry-run-v2.json",
+      "bytes": 964,
+      "sha256": "8f395589e2b211546935b2de6da3cb8c3212158ab2d602b1aa87e92908e97fec",
+      "mode": 436,
+      "uid": 1000,
+      "gid": 1000,
+      "mtime_ns": 1792396644314493565
+    },
+    {
+      "member": "retention-result.json",
+      "bytes": 2303659,
+      "sha256": "256619b7e006883b9848d181ff11444e2bbdae484b37890cbf0024a92e6d370f",
+      "mode": 436,
+      "uid": 1000,
+      "gid": 1000,
+      "mtime_ns": 1792396781848225558
+    },
+    {
+      "member": "legacy-manifest-repair.patch",
+      "bytes": 1706,
+      "sha256": "3158f1a0f5905895e3bb60ee5954a75bbe366707aa528fd71d9bbf79ddcbe036",
+      "mode": 436,
+      "uid": 1000,
+      "gid": 1000,
+      "mtime_ns": 1792396573552253620
+    },
+    {
+      "member": "legacy-manifest-repair-proof.json",
+      "bytes": 1464,
+      "sha256": "2dbb9d236d28cbffc438a0f1c98d63dcbf02333983a2362a551199ac19849f6e",
+      "mode": 436,
+      "uid": 1000,
+      "gid": 1000,
+      "mtime_ns": 1792396573557253857
+    },
+    {
+      "member": "history-v1/prune.py",
+      "bytes": 16885,
+      "sha256": "89bc66b9653efb47f08575694cfe7749ffe6d2ba2292db3c3844d8afd96c38c9",
+      "mode": 436,
+      "uid": 1000,
+      "gid": 1000,
+      "mtime_ns": 1792396544013833105
+    },
+    {
+      "member": "history-v1/README.md",
+      "bytes": 2368,
+      "sha256": "c982377131f6e7d95fe2cd81ec76605faa095c359cab0b0827c6f1fd3361e853",
+      "mode": 436,
+      "uid": 1000,
+      "gid": 1000,
+      "mtime_ns": 1792396544016833251
+    },
+    {
+      "member": "history-v1/root-first-dryrun-failure.json",
+      "bytes": 640,
+      "sha256": "07232d2dd07ade51e34c013d1d2e938becff68a85380531a3287af597413c90c",
+      "mode": 436,
+      "uid": 1000,
+      "gid": 1000,
+      "mtime_ns": 1792396544019833398
+    }
+  ],
+  "history": "V1 verifier refused the wrapped legacy manifest before deletion; reviewed V2 schema normalization passed verification-only then exact execution. Listed deleted historical raw trees are unavailable; compact manifests/logs/results, source Git refs/unmerged packets and latest fa3 source/binaries/current67 UI remain.",
+  "history_manifest_exact_alias": {
+    "path": "history-v1/prune-manifest.json",
+    "content_member": "prune-manifest.json",
+    "sha256": "1e8f0d5b4e474c141bbcb2dddf42d0b252f57bbb2f262964771acc67143d6be4"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "verdict": "ACCEPT_SOCIAL_GROUP_DETAIL_ACTUAL_RETENTION_AND_PROMOTED_PUBLICATION_METADATA",
+  "qualified_source_sha": "fa3e7c90bf736f63981b00d2f117417d01b26cd2",
+  "immutable_keeper_archive_sha256": "f1fc63527352bbb41a4d7640a0634dac6164d7e34eaddca0209fe355ecc14153",
+  "immutable_keeper_result_sha256": "57acb030c342f80b63048faccb636fc3e417050fd6bf14f6941f13ee83bbb29c",
+  "whole_feature_acceptance_sha256": "948fb5cb6695b6a7aa3663cc40dce09c3545a5d747981ac32798c11397e9e882",
+  "retention_source_review_sha256": "bfff15e2fccf38cc160754ec99935fec6fabc25678c6b639a2b5b7b68ac784a4",
+  "actual_retention_receipt_sha256": "256619b7e006883b9848d181ff11444e2bbdae484b37890cbf0024a92e6d370f",
+  "verify_only_receipt_sha256": "8f395589e2b211546935b2de6da3cb8c3212158ab2d602b1aa87e92908e97fec",
+  "canonical_retention_summary_sha256": "04334f5bc0409000d6f5bb53e23a84816c9a987fa8b82be3019733cf86fe55ee",
+  "retention_archive_sha256": "7a55f6505b43afa326cb76998603dc258d984060c30f2f27c098fb3d4640de1d",
+  "retention_members_rehashed_fullmetadata": 10,
+  "actual_deleted_files_verified_absent": 6572,
+  "actual_removed_directories_verified_absent": 718,
+  "logical_bytes_removed": 780572285,
+  "canonical_promoted_files": 13,
+  "existing_metadata_paths": [
+    "STATUS.md",
+    "docs/adr/0063-native-group-detail.md",
+    "docs/adr/README.md",
+    "docs/execplans/gui-native-group-detail.md"
+  ],
+  "all_retained_native_rawproof_rows_rehashed": 1902,
+  "prior_group_create_retention_sha256": "eb25a49c9ba361ccd64f9843c9276213fae044662cb58b028c20bf2770bd968b",
+  "latest_UI_artifacts_rehashed": 67,
+  "findings": [],
+  "checks": [
+    "Actual execution receipt exactly matches the reviewed6572file/718directory ordered targetframe and780572285logical bytes. Every target is physically absent; successful priorverify-only/current-ownedCID-name absence is recorded separately from execution. FirstV1 refused-only history remains preserved; no deletion by reviewer.",
+    "Tenretentionarchive members match method/plan/repair/failedhistory/verify-only/execution originals with full bytes/mode/UID/GID/nsmtime, plus exact explicitoldmanifest alias. Actual receipt says rawpaths unavailable. Sourceexport copies/old binaries/3duplicateGitstreams/109historical bodies are gone; owning sources/Gitrefs/sourcepackets/baselines/canonicalkeepers/rawproofs/currentsetup remain.",
+    "Thirteenpromotedfiles retain exactf1fc/manifest8d35/result57ac/acceptance948f/keeper2026/retentionreviewbfff identities. Original inarchive collection pending/no-deletion fields are preserved historical snapshots; canonicalREADME and retention.json carry later accepted/removal truth. Latestfa3 source/binaries and all67currentUI/28PNG remain; all nonpruned raw nativeproof/results/sourceframes/Gitrefs independently checked. The old1f8 Gitarchive stream was already unavailable under prior accepted GroupCreate retention and is not a new deletion target.",
+    "Onlyfourexistingmetadata docs plus13newcanonical files differ. STATUS120/ADR0063 append-only accepted checkpoint/ADRindex/execplan accurately bind completeaffected6/428roots1246named/current7+7/21Axe/18oldbodies/cleanup/mixeddescriptive measurements and actualretention; originalfailed epochs remainhistory. Native/service/query/schema/policy/authcore/originaltemplate/baseCSS/catalogue/dependency/method source unchanged.",
+    "README uses canonicalreproductionlink and exactarchive1550/4554877B/105aliases, explains originalthreadclip/no occlusion-removal/fulltranslation claim, declares rawdeletedpaths unavailable, and bounds featurepublication without all21/currentimage/main/milestone/production/provider/realchild acceptance. Root reports docs61/check59/diff0; reviewer ran no gates."
+  ],
+  "next": "Root may commit/publish only this exact bounded metadata/keeper delta on the authorized feature branch. Any source or evidence-content change requires separate review. Future notification contract must rebind to actual clean published metadataHEAD before implementation.",
+  "execution": "Read-only currentGit/docs/JSON/archive/hash/stopped-ownedtarget absence/original-retained-path review and scratch receipt only; no owning edits/native/browser/PG/container/process/network/prune/delete/runtime work."
+}
