@@ -1,7 +1,7 @@
 # ADR-0065: Native notification inbox presentation
 
 Date: 2026-10-20
-Status: implemented — reviewed source and six qualification methods applied; focused local checks pass; complete PG/UI pending.
+Status: implemented — focused checks pass; first complete PG attempt failed at a new timestamp assertion; independently reviewed test-only repair applied, fresh complete qualification pending.
 
 ## Scope
 
@@ -61,3 +61,21 @@ Reviewed 20-path product/method batch is applied. Focused web race checks pass
 compile checks, authcore snapshot, full native format, Python/Node syntax,
 whitespace and all61-document guard checks pass. These are local checks, not
 complete affected PostgreSQL, browser, previous-body or measurement acceptance.
+
+## First actual PG attempt and assertion repair
+
+Exact f087480 completed web199roots/863named without failures/skips, then the
+complete App package failed only the new inbox date assertion and its parent:
+48roots/96named RUN,94PASS. The other five new leaves and all existing App cases
+passed; the remaining five packages did not run. All five created container IDs
+and names were removed and the private PostgreSQL stopped. This is a failed
+partial campaign, not complete affected qualification; original streams remain.
+
+Actual native-render diagnostic confirmed that GoHTML safely emits the timezone
+plus as an HTML entity; the decoded value is exactly the expected Bucharest ISO
+timestamp. Independent5973e72e approves NEW test-only patch9aac0388: require one
+actual marked time attribute and compare its decoded value with the same full
+timestamp. Read-state/date/body assertions, product escaping/rendering, all old
+tests and original resource/time limits remain unchanged. Actual failure review
+adf73e82 and exact diagnostic are retained; fresh complete seven-package
+qualification, UI, prior-body checks and measurements remain pending.

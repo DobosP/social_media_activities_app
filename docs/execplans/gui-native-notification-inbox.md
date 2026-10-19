@@ -1,6 +1,6 @@
 # Native notification inbox — bounded execution plan
 
-Status: reviewed product and six methods applied; focused local checks pass; actual runtime qualification pending. Authority:
+Status: reviewed product/methods and NEW timestamp-assertion repair applied; local checks pass, fresh complete runtime qualification pending. Authority:
 programme ADR-0032 functional presentation scope and Social ADR-0065 proposal.
 
 1. Goal: existing inbox rendering and mark-all workflow using current Go services.
@@ -39,3 +39,9 @@ recorded separately. Focused race13roots/72named0fail0skip, App/web vet, five
 overlay compile checks, authcore snapshot, full native format/syntax/docs pass.
 Exact source commit, complete seven-package PG, desktop/no-JS/Axe/body checks and
 measurements remain pending.
+
+First actual attempt: f087480 Web199/863 PASS, App only NEW raw timestamp assertion
+failed; all five created CIDs/privatePG cleaned. Root retained failure/diagnostic
+and applied independently reviewed5973 test-only repair9aac. No production or old
+test changes. Run cheap compile/vet/docs, commit, then one fresh complete PG7;
+keep original failure distinct from its successor. UI/measurement remain pending.

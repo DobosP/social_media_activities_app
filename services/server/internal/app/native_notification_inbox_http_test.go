@@ -185,8 +185,16 @@ func TestNativeNotificationInboxRegisteredHTTPAndCurrentAuthority(t *testing.T) 
 			}
 		}
 		cards := regexp.MustCompile(`(?s)<article\b[^>]*\bdata-notification-row=""[^>]*>.*?</article>`).FindAllString(body, -1)
-		if len(cards) != 100 || !strings.Contains(cards[0], `data-notification-unread="true"`) ||
-			!strings.Contains(cards[0], `datetime="2026-01-15T14:00:00+02:00"`) || !strings.Contains(cards[0], "15 Jan 14:00") ||
+		if len(cards) != 100 {
+			t.Fatal("source notification card bound changed")
+		}
+		// GoHTML escapes '+' as an HTML entity. Check the single actual
+		// time attribute's decoded value while retaining its exact timestamp.
+		dates := regexp.MustCompile(`<time\b[^>]*\bdata-notification-time=""[^>]*\bdatetime="([^"]+)"`).FindAllStringSubmatch(cards[0], -1)
+		if len(dates) != 1 || html.UnescapeString(dates[0][1]) != "2026-01-15T14:00:00+02:00" {
+			t.Fatal("source notification time attribute value changed")
+		}
+		if !strings.Contains(cards[0], `data-notification-unread="true"`) || !strings.Contains(cards[0], "15 Jan 14:00") ||
 			!strings.Contains(html.UnescapeString(cards[0]), `Generated <script>alert("plain text")</script> & body`) {
 			t.Fatal("source read-presence/date/plain-body aliases changed")
 		}
