@@ -1,0 +1,53 @@
+{{define "family-wards"}}{{template "family-shell" .}}{{end}}
+{{define "family-wards-content"}}
+<p class="muted">{{index .Copy "Children you are the registered parent/legal guardian of. Guardianship is set up alongside parental consent. You can see where and when they're meeting in person — not their conversations, photos or who else is there."}}</p>
+{{range .Wards}}
+<section class="card" aria-labelledby="ward-{{.ID}}-heading">
+<h2 id="ward-{{.ID}}-heading">{{.Name}} <span class="tag">{{.Cohort}}</span></h2>
+<h3>{{index $.Copy "Upcoming meetups"}}</h3>
+{{if .Meetups}}<ul class="members">{{range .Meetups}}<li>{{.Start}} · {{.Activity}} · {{.Place}}{{if .City}}, {{.City}}{{end}}
+{{if .Supervised}} · {{if .SupervisionLive}}{{index $.Copy "guardian-supervised"}}{{else}}{{index $.Copy "supervised — no adult seated yet"}}{{end}}{{end}}
+{{if .Rationale}}<p class="muted u-text-sm">✓ {{.Rationale}}</p>{{end}}
+{{if .End}}<p><span class="muted">{{index $.Copy "Ends:"}}</span> {{.End}}</p>{{end}}
+{{if .MeetingPoint}}<p><span class="muted">{{index $.Copy "Where to meet:"}}</span> {{.MeetingPoint}}</p>{{end}}
+</li>{{end}}</ul>{{else}}<p class="muted">{{index $.Copy "No upcoming meetups."}}</p>{{end}}
+<h3>{{index $.Copy "What this guardianship lets you do"}}</h3>
+<ul class="muted activity-meta-note">
+<li>{{index $.Copy "See their upcoming meetups (place, time, activity type) — shown above."}}</li>
+{{if .Arrival}}<li>{{if $.Shell.English}}Get an alert when they tap “I've arrived” at a meetup.{{else}}{{index $.Copy "Get an alert when they tap “I've arrived” at a meetup."}}{{end}}</li>{{end}}
+{{if .Observe}}<li>{{index $.Copy "If you've set up secure messaging, read their group chats as a visible, read-only observer."}}</li>{{end}}
+{{if .RequiresConsent}}<li>{{if .ConsentActive}}{{index $.Copy "Parental consent is active."}}{{else}}{{index $.Copy "Parental consent is not active."}}{{end}}{{if .GrantConsent}} {{index $.Copy "You can grant or revoke it."}}{{end}}</li>{{end}}
+{{range .ChosenLimits}}<li>{{.}}</li>{{end}}
+<li>{{index $.Copy "You cannot see their thread posts, photos, who else is there, or chat content (beyond the observer view above); you never enter their activities or cohort."}}</li>
+</ul>
+{{if .CombinedBlocks}}<p class="muted activity-meta-note" role="note">{{index $.Copy "Combined with another guardian's limits, no meetups currently match — so they can join nothing right now. Loosen a limit if that isn't what you intend."}}</p>{{end}}
+{{with .Preview}}<p class="muted activity-meta-note" role="note">{{if .Total}}{{.Text}}{{else}}{{index $.Copy "No upcoming meetups to check against right now."}}{{end}}</p>{{end}}
+{{if .CanLimits}}<details class="card card-muted u-my-half"><summary>{{index $.Copy "Set participation limits"}}</summary>
+<p class="muted activity-meta-note">{{index $.Copy "Optional, conservative limits on the meetups your child can join. These only ever make their options narrower — they never open anything up. If more than one guardian sets a limit, the strictest one applies."}}</p>
+<form method="post" action="{{.LimitsURL}}" class="stack">
+<input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}">
+<label class="inline"><input type="checkbox" name="supervised_only"{{if .Supervised}} checked{{end}}> {{index $.Copy "Only guardian-accompanied meetups"}}</label>
+<label for="ward-{{.ID}}-earliest">{{index $.Copy "Earliest start time"}}</label><select id="ward-{{.ID}}-earliest" name="earliest_start_hour">{{range .Earliest}}<option value="{{.Value}}"{{if .Selected}} selected{{end}}>{{.Label}}</option>{{end}}</select>
+<label for="ward-{{.ID}}-latest">{{index $.Copy "Latest start time"}}</label><select id="ward-{{.ID}}-latest" name="latest_start_hour">{{range .Latest}}<option value="{{.Value}}"{{if .Selected}} selected{{end}}>{{.Label}}</option>{{end}}</select>
+<fieldset class="fieldset-plain"><legend>{{index $.Copy "Only on these days (none ticked = any day)"}}</legend>{{range .Weekdays}}<label class="inline u-mr-half"><input type="checkbox" name="allowed_weekdays" value="{{.Value}}"{{if .Selected}} checked{{end}}> {{.Label}}</label>{{end}}</fieldset>
+{{if .Categories}}<fieldset class="fieldset-plain"><legend>{{index $.Copy "Only these kinds of activity (none ticked = any kind)"}}</legend>{{range .Categories}}<label class="inline u-mr-half"><input type="checkbox" name="allowed_categories" value="{{.Value}}"{{if .Selected}} checked{{end}}> {{.Label}}</label>{{end}}</fieldset>{{end}}
+<label for="ward-{{.ID}}-max">{{index $.Copy "Most open meetups at once"}}</label><input id="ward-{{.ID}}-max" type="number" name="max_open_joins" min="1" max="50" inputmode="numeric" value="{{.MaxOpen}}" placeholder="{{index $.Copy "No limit"}}">
+<button class="btn btn-sm" type="submit">{{index $.Copy "Save limits"}}</button>
+</form></details>{{end}}
+{{if .CanTopics}}<details class="card card-muted u-my-half"><summary>{{index $.Copy "Suggested topics for their feed"}}</summary>
+<p class="muted activity-meta-note">{{index $.Copy "Pick the kinds of activity their suggestions should lean toward. This only nudges the order of what's suggested and adds an honest note — it never hides anything, and it never changes what they're allowed to join (use the participation limits above for that)."}}</p>
+<form method="post" action="{{.TopicsURL}}" class="stack"><input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}">
+{{if .Topics}}<fieldset class="fieldset-plain"><legend>{{index $.Copy "Topics to lean toward (none ticked = no steering)"}}</legend>{{range .Topics}}<label class="inline u-mr-half"><input type="checkbox" name="topics" value="{{.Value}}"{{if .Selected}} checked{{end}}> {{.Label}}</label>{{end}}</fieldset>{{end}}
+<button class="btn btn-sm" type="submit">{{index $.Copy "Save topics"}}</button></form></details>{{end}}
+<details class="u-my-half"><summary>{{index $.Copy "End guardianship"}}</summary>
+<p>{{.RevokeExplanation}}</p>
+<form method="post" action="{{.RevokeURL}}"><input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}"><button class="btn btn-sm btn-danger" type="submit">{{index $.Copy "End guardianship"}}</button></form></details>
+</section>
+{{else}}<p class="muted">{{index .Copy "You aren't a registered guardian of any account."}}</p>{{end}}
+{{if .Invite}}<section aria-labelledby="family-invite-heading"><h2 id="family-invite-heading">{{index .Copy "Link a child's account"}}</h2>
+<p class="muted">{{index .Copy "Enter your child's username to send a guardianship request. They confirm it from their own home page. You must be a verified adult."}}</p>
+<form method="post" action="/wards/invite/" class="stack"><input type="hidden" name="csrfmiddlewaretoken" value="{{.Shell.CSRF}}">
+<label for="ward-username">{{index .Copy "Child's username"}}</label><input id="ward-username" type="text" name="ward_username" required autocomplete="off">
+<label for="ward-relationship">{{index .Copy "Relationship"}}</label><select id="ward-relationship" name="relationship"><option value="parent">{{index .Copy "Parent"}}</option><option value="legal_guardian">{{index .Copy "Legal guardian"}}</option></select>
+<button class="btn" type="submit">{{index .Copy "Send guardianship request"}}</button></form></section>{{else}}{{if .InviteUnavailable}}<p class="muted activity-meta-note" role="note">{{.InviteUnavailable}}</p>{{end}}{{end}}
+{{end}}

@@ -552,8 +552,8 @@
       "full_mode": 33204
     },
     "services/server/internal/web/gui_public_get_walk_test.go": {
-      "bytes": 58190,
-      "sha256": "8596d4ec883ba038682f005398a0f23ac56a5043fe9a1e5b2997cf9325a88d17",
+      "bytes": 59333,
+      "sha256": "49c2d59891606be901dae56569c916c15f9b7eddb0d4931bfc59a6f41ac0ccea",
       "full_mode": 33204
     },
     "services/server/internal/web/gui_public_golden_test.go": {
@@ -657,8 +657,8 @@
       "full_mode": 33204
     },
     "services/server/internal/web/renderer.go": {
-      "bytes": 5539,
-      "sha256": "7c1ec3a7601072ce88e2c4d39184faa9fdb734066681980ebad1ab0a04a98280",
+      "bytes": 5790,
+      "sha256": "e7c10feff706989b6141da3803e2ec4ff73c78a54f34c6e32db9e7b4937c6eee",
       "full_mode": 33204
     },
     "services/server/internal/web/renderer_fs.go": {

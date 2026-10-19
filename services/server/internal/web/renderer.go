@@ -91,13 +91,22 @@ func (r *Renderer) Render(w http.ResponseWriter, request *http.Request, name str
 	for k, v := range data {
 		defaults[k] = v
 	}
-	template, err := r.set.FromCache(name)
-	if err != nil {
-		return err
-	}
 	var output bytes.Buffer
-	if err = template.ExecuteWriter(defaults, &output); err != nil {
-		return err
+	var err error
+	if name == "web/wards.html" || name == "web/guardianship.html" {
+		raw, renderErr := r.renderFamily(request, name, defaults)
+		if renderErr != nil {
+			return renderErr
+		}
+		_, _ = output.Write(raw)
+	} else {
+		template, parseErr := r.set.FromCache(name)
+		if parseErr != nil {
+			return parseErr
+		}
+		if err = template.ExecuteWriter(defaults, &output); err != nil {
+			return err
+		}
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", "private, no-cache")

@@ -1,0 +1,13 @@
+{{define "family-guardianship"}}{{template "family-shell" .}}{{end}}
+{{define "family-guardianship-content"}}
+<p class="muted">{{index .Copy "The adults registered as your parent/legal guardian, and exactly what each one can and cannot see about you. This page is for your information only."}}</p>
+{{range .Guardians}}<section class="card"><h2>{{.Name}} <span class="tag">{{.Relationship}}</span></h2>
+<h3>{{index $.Copy "What they can see about you"}}</h3>
+<ul class="muted activity-meta-note"><li>{{index $.Copy "Where and when your upcoming meetups are (place, time, activity type)."}}</li>
+{{if .Arrival}}<li>{{if $.Shell.English}}An alert when you tap “I've arrived” at a meetup.{{else}}{{index $.Copy "An alert when you tap “I've arrived” at a meetup."}}{{end}}</li>{{end}}
+{{if .Observe}}<li>{{index $.Copy "If they have set up secure messaging, they can read your group chats as a visible observer (you can see them in the chat)."}}</li>{{end}}
+<li>{{index $.Copy "They cannot read your activity threads, see your photos or who else is there, post as you, or join your activities. They are never in your cohort."}}</li></ul>
+{{if .ChosenLimits}}<h3>{{index $.Copy "Limits they've set on the meetups you can join"}}</h3><ul class="muted activity-meta-note">{{range .ChosenLimits}}<li>{{.}}</li>{{end}}</ul>{{end}}
+</section>{{else}}<p class="muted">{{index .Copy "No one is registered as your guardian."}}</p>{{end}}
+{{if .Guardians}}<p class="muted activity-meta-note">{{if .Shell.English}}This page doesn't have a “remove” button. To change a guardianship link, talk to your guardian. If something feels wrong, use <strong>Report</strong> on an activity or person, or leave the activity.{{else}}{{index .Copy "This page doesn't have a remove button. To change a guardianship link, talk to your guardian. If something feels wrong, use Report on an activity or person, or leave the activity."}}{{end}}</p>{{end}}
+{{end}}

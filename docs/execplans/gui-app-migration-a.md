@@ -58,3 +58,23 @@ review before being used as a new requirement.
 No main push, landing, kit/pin/budget edit or Paul-only target is authorized by
 this plan. At most two product runtimes, none during timed Cat runs; immutable
 exports, task-owned rolling caches, exact owned cleanup and compact records apply.
+
+
+## Bounded functional family pages (2026-10-19)
+
+Programme ADR-0032 permits selected functional native Go pages without opening
+an automatic whole-template conversion. [ADR-0061](../adr/0061-native-family-pages.md)
+covers `/wards/` and `/guardianship/`: typed escaped presentation, cached embedded
+HTML, existing actions and services. Original templates, source-case declarations,
+route policy, schema and dependencies remain. Source review and focused family
+race/vet/header/custody checks pass; PG/desktop qualification remains pending.
+No S3A milestone, performance, landing or deployment is claimed.
+The old Samsung/device step above is historical: PROGRAM E10 requires no device
+measurements anywhere. Teacher/Social milestone landing remains owner-only.
+
+Next: source/authcore checks and synthetic PostgreSQL web+assembled-App
+qualification on the applied exact SHA;
+then desktop/no-JS/a11y review and matched warmed body-render measurements. The
+exact renderer inverse/current binding extension is reviewed and passes current
+source checks. Historical captures and receipts remain unchanged; this does not
+turn source-only defaults into an original semantic oracle.

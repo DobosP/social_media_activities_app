@@ -156,6 +156,17 @@ type guiPublicGetRepairRow struct {
 
 func guiPublicGetRepairRows() []guiPublicGetRepairRow {
 	return []guiPublicGetRepairRow{
+		// ADR-0061: exact native family dispatch inverse; all previous rows
+		// continue from the complete pre-dispatch renderer byte-for-byte.
+		{
+			path:        "services/server/internal/web/renderer.go",
+			beforeSHA:   "7c1ec3a7601072ce88e2c4d39184faa9fdb734066681980ebad1ab0a04a98280",
+			afterSHA:    "e7c10feff706989b6141da3803e2ec4ff73c78a54f34c6e32db9e7b4937c6eee",
+			beforeBytes: 5539,
+			afterBytes:  5790,
+			before:      "\ttemplate, err := r.set.FromCache(name)\n\tif err != nil {\n\t\treturn err\n\t}\n\tvar output bytes.Buffer\n\tif err = template.ExecuteWriter(defaults, &output); err != nil {\n\t\treturn err\n\t}\n",
+			after:       "\tvar output bytes.Buffer\n\tvar err error\n\tif name == \"web/wards.html\" || name == \"web/guardianship.html\" {\n\t\traw, renderErr := r.renderFamily(request, name, defaults)\n\t\tif renderErr != nil {\n\t\t\treturn renderErr\n\t\t}\n\t\t_, _ = output.Write(raw)\n\t} else {\n\t\ttemplate, parseErr := r.set.FromCache(name)\n\t\tif parseErr != nil {\n\t\t\treturn parseErr\n\t\t}\n\t\tif err = template.ExecuteWriter(defaults, &output); err != nil {\n\t\t\treturn err\n\t\t}\n\t}\n",
+		},
 		{
 			path:        "services/server/internal/web/renderer.go",
 			beforeSHA:   "94f11a3f1849c919ba100c4ba68236263f71f07741006c1992dadc4020723e68",
