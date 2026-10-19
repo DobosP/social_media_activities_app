@@ -48,6 +48,30 @@ def regular(path, maximum=64 << 20):
     return raw
 
 
+def executable_digest(path):
+    """Hash an explicit installed executable without loading it as a payload."""
+    need(path.is_absolute() and path.resolve() == path, "canonical executable required")
+    before = path.lstat()
+    need(stat.S_ISREG(before.st_mode) and before.st_size > 0 and os.access(path, os.X_OK),
+         "existing regular executable required")
+    hashed, count = hashlib.sha256(), 0
+    with path.open("rb") as stream:
+        opened = os.fstat(stream.fileno())
+        need((before.st_dev, before.st_ino) == (opened.st_dev, opened.st_ino),
+             "executable replaced before read")
+        while chunk := stream.read(1 << 20):
+            count += len(chunk)
+            need(count <= before.st_size, "executable grew during read")
+            hashed.update(chunk)
+        after = os.fstat(stream.fileno())
+    final = path.lstat()
+    keys = ("st_dev", "st_ino", "st_mode", "st_size", "st_mtime_ns", "st_ctime_ns")
+    need(count == before.st_size and
+         all(getattr(before, key) == getattr(opened, key) == getattr(after, key) == getattr(final, key)
+             for key in keys), "executable changed during streamed read")
+    return hashed.hexdigest()
+
+
 def git(repo, *args):
     return subprocess.check_output(["git", "-C", str(repo), *args],
                                    env={"PATH": os.defpath, "LANG": "C.UTF-8"})
@@ -116,8 +140,9 @@ def main():
         value = getattr(args, name)
         need(value.is_absolute(), "absolute existing dependency path required: " + name)
         paths[name] = value.resolve(strict=True)
-    for name in ("go", "node", "axe_file", "chrome"):
-        regular(paths[name])
+    for name in ("go", "node", "chrome"):
+        executable_digest(paths[name])
+    regular(paths["axe_file"])
     need(all(paths[name].is_dir() for name in ("cache", "modcache", "playwright_package")),
          "existing caches and installed Playwright directory required")
     output = scratch / ("run-" + args.producer_source[:12] + "-" + str(uuid.uuid4()))
@@ -156,7 +181,8 @@ def main():
              "installed Go1.27.1 and actual Node24 executable required")
         report["runtime"] = {"go": go_version, "node": node_version}
         report["explicit_dependencies"] = [{"name": name, "path": str(paths[name]),
-                                             "sha256": digest(regular(paths[name]))}
+                                             "sha256": (digest(regular(paths[name])) if name == "axe_file"
+                                                        else executable_digest(paths[name]))}
                                             for name in ("go", "node", "axe_file", "chrome")]
         package = paths["playwright_package"] / "package.json"
         report["explicit_dependencies"].append({"name": "playwright_package",

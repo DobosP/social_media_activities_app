@@ -53,3 +53,21 @@ retained. Approved8a3775a8 fixes only the new renderer's typed-nil optional repl
 row handling; old producers/tests/policies remain exact. Actual repaired pure
 race17roots/74named/zero skips and web vet pass. Commit the narrow correction and
 this truthful checkpoint before one successor complete-six run; UI stays pending.
+
+## Complete affected PG and UI setup checkpoint
+
+Successor exact7fb35d0 passed all six affected packages:428 roots/1,246 named,
+zero skips/failures,291 commands, thirteen owned-container removals, six guarded
+DB retirements and graceful PG stop/status3/PID/socket absence. Resultf56fb1e6
+retains exact source, raw streams and actual one bounded EN/RO App projection.
+The first dc1 raw failure remains failed; this is not full21/current-image proof.
+
+The UI wrapper's first invocation refused the installed126,816,376-byte Node
+executable through its64MiB payload reader before any output/export/browser or
+benchmark was created. Reviewed19f856dd replaces only installed executable
+identity reads with1MiB streamed hashing and stable captured file metadata;
+the payload reader and every resource/version/assertion/cleanup gate are exact.
+Only the committed UI wrapper and truthful STATUS/plan change after PG. Existing
+whole-Git/UI-only source bridging keeps the qualified PG epoch distinct; no PG
+repeat is warranted. Actual desktop7+7/strict Axe/confirmations/prior18 bodies
+and the matched captured-body benchmark remain unrun at this checkpoint.
