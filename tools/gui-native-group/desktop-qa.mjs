@@ -71,6 +71,63 @@ const metricsFor=page=>page.evaluate(()=>{
   for(const e of document.querySelectorAll('[for],[aria-describedby],[aria-labelledby]'))for(const a of ['for','aria-describedby','aria-labelledby'])for(const id of(e.getAttribute(a)||'').split(/\s+/).filter(Boolean))if(!document.getElementById(id))unresolved.push(id);
   return{groupPage:document.body.classList.contains('group-create-page'),stylesheets:[...document.querySelectorAll('link[rel=stylesheet]')].map(link=>link.getAttribute('href')),language:document.documentElement.lang,theme:document.documentElement.dataset.theme,text:document.documentElement.dataset.text,motion:document.documentElement.dataset.motion,h1:document.querySelector('h1')?.textContent,canonical:document.querySelector('link[rel=canonical]')?.getAttribute('href'),overflow:Math.max(document.documentElement.scrollWidth,document.body.scrollWidth)-innerWidth,duplicateIDs:ids.filter((x,i)=>ids.indexOf(x)!==i),unresolved,unlabelled:[...document.querySelectorAll('input:not([type=hidden]),select,textarea')].filter(x=>!x.labels?.length&&!x.getAttribute('aria-label')&&!x.getAttribute('aria-labelledby')).map(x=>x.id||x.name),scripts:document.scripts.length,inline:document.querySelectorAll('[style],style').length+[...document.querySelectorAll('*')].filter(e=>[...e.attributes].some(a=>/^on/i.test(a.name))).length,currentPages:document.querySelectorAll('[aria-current=page]').length,details:[...document.querySelectorAll('main details')].map(d=>({open:d.open,summary:d.querySelector('summary')?.textContent})),status:document.querySelectorAll('[role=status]').length,errorSummary:document.querySelector('main [role=alert]')?.textContent.trim()||'',invalidFields:[...document.querySelectorAll('main [aria-invalid=true]')].map(e=>e.name),forms:[...document.querySelectorAll('form')].map(f=>({action:f.getAttribute('action'),method:f.method,csrf:f.querySelectorAll('input[name=csrfmiddlewaretoken]').length,fields:[...f.querySelectorAll('input:not([type=hidden]),select,textarea')].map(e=>({name:e.name,type:e.type,value:e.value,checked:e.checked,required:e.required,autocomplete:e.autocomplete,id:e.id,label:e.labels?.[0]?.textContent||'',maxLengthAttr:e.getAttribute('maxlength')}))}))};
 });
+// Audit the naturally scrolled keyboard state, with account disclosure forced
+// open, closed and keyboard-open. Never reset scroll or exclude an Axe target.
+const geometryFor=page=>page.evaluate(()=>{
+  const box=rect=>({x:rect.x,y:rect.y,width:rect.width,height:rect.height,top:rect.top,right:rect.right,bottom:rect.bottom,left:rect.left});
+  const describe=element=>element?{tag:element.tagName,id:element.id,classes:element.className,text:(element.textContent||'').trim().slice(0,120),href:element.getAttribute('href')}:null;
+  const record=element=>{
+    const style=getComputedStyle(element),range=document.createRange();range.selectNodeContents(element);
+    const rects=[...range.getClientRects()].filter(rect=>rect.width>0&&rect.height>0);
+    return{element:describe(element),box:box(element.getBoundingClientRect()),textRects:rects.map(box),style:{display:style.display,visibility:style.visibility,position:style.position,zIndex:style.zIndex,color:style.color,backgroundColor:style.backgroundColor},points:rects.flatMap(rect=>[[.5,.5],[.1,.5],[.9,.5],[.5,.1],[.5,.9]].map(([fx,fy])=>{
+      const x=rect.left+rect.width*fx,y=rect.top+rect.height*fy,inside=x>=0&&y>=0&&x<innerWidth&&y<innerHeight;
+      const top=inside?document.elementFromPoint(x,y):null;
+      return{x,y,insideViewport:inside,targetOrDescendantAtTop:!!top&&(element===top||element.contains(top)),top:describe(top),stack:inside?document.elementsFromPoint(x,y).slice(0,8).map(describe):[]};
+    }))};
+  };
+  return{scroll:{x:scrollX,y:scrollY},viewport:{width:innerWidth,height:innerHeight},document:{width:document.documentElement.scrollWidth,height:document.documentElement.scrollHeight},focused:describe(document.activeElement),header:record(document.querySelector('header')),wrap:record(document.querySelector('header .nav-wrap')),nav:record(document.querySelector('header .nav')),details:[...document.querySelectorAll('details')].map(element=>({open:element.open,element:record(element),summary:record(element.querySelector('summary')),panel:element.querySelector('.nav-panel')?record(element.querySelector('.nav-panel')):null})),links:[...document.querySelectorAll('header a')].map(record)};
+});
+const auditSettle=page=>page.evaluate(async()=>{
+  await document.fonts.ready;
+  const frame=()=>new Promise(resolve=>requestAnimationFrame(resolve)),deadline=performance.now()+4000;
+  for(;;){
+    await frame();await frame();
+    const active=document.getAnimations().filter(animation=>animation.pending||animation.playState==='running');
+    if(!active.length)return;
+    if(performance.now()>=deadline||active.some(animation=>animation.effect?.getComputedTiming()?.iterations===Infinity))throw new Error('Audit layout did not settle');
+    let timer;try{await Promise.race([Promise.allSettled(active.map(animation=>animation.finished)),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('Audit animation completion timed out')),Math.max(1,deadline-performance.now()));})]);}finally{clearTimeout(timer);}
+  }
+});
+const auditWholeDocumentAxe=page=>page.evaluate(async()=>{
+  const result=await window.axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}});
+  return{version:result.testEngine.version,passes:result.passes.map(rule=>rule.id),violations:result.violations,incomplete:result.incomplete};
+});
+const auditDetailsStates=async(page,state,originalAxe)=>{
+  const records=[];
+  const capture=async(name,axe)=>{
+    const geometry=await geometryFor(page),file=path.join(output,state.name+'-audit-'+name+'.png');
+    // Viewport screenshot preserves the exact audit scroll/viewport geometry;
+    // original pre-keyboard fullPage screenshots remain unchanged alongside it.
+    await page.screenshot({path:file,fullPage:false});
+    check(!axe.violations.length&&!axe.incomplete.length,state.name+': '+name+' whole-document axe findings/incomplete');
+    check(/^rgb\(\d+,\s*\d+,\s*\d+\)$/.test(geometry.header.style.backgroundColor),state.name+': '+name+' header background is not opaque');
+    records.push({name,geometry,axe,screenshot:path.basename(file),screenshotSHA256:hashFile(file)});
+  };
+  await capture('forced-open',originalAxe);
+  await page.evaluate(()=>{for(const element of document.querySelectorAll('header details'))element.open=false;});
+  await auditSettle(page);
+  await capture('closed',await auditWholeDocumentAxe(page));
+  const account=page.locator('header details.nav-menu.nav-end'),summary=account.locator('summary');
+  assert.equal(await account.count(),1,'Audit requires the actual single account disclosure');
+  await summary.focus();await page.keyboard.press('Enter');
+  assert.equal(await account.evaluate(element=>element.open),true,'Audit keyboard-open failed');
+  await auditSettle(page);
+  await capture('keyboard-open',await auditWholeDocumentAxe(page));
+  // Preserve the existing all-open end state; no existing assertion is removed.
+  await page.evaluate(()=>{for(const element of document.querySelectorAll('details'))element.open=true;});
+  return{scope:'Whole-document WCAG audits at natural keyboard scroll; opaque Group header, all three disclosure states required',records};
+};
+
 const keyboardChecks=async(page,state,label)=>{
   const form=page.locator('main form[action="/groups/new/"]'),city=form.locator('input[name=city]'),type=form.locator('select[name=activity_type]'),title=form.locator('input[name=title]'),description=form.locator('textarea[name=description]');
   const result={initialValidity:await form.evaluate(f=>f.checkValidity())};
@@ -151,7 +208,8 @@ try{
     steadyState.initialColorsEqualSettled=initialColorsEqualSettled(steadyState.before,steadyState.after);
     check(steadyState.initialColorsEqualSettled,state.name+': group button initial foreground/background differs from settled colors');
     check(!axe.violations.length&&!axe.incomplete.length,state.name+': axe findings/incomplete');
-    report.states.push({name:state.name,fixtureSHA256:state.sha256,htmlBytes:raw.length,htmlGzipLevel9:zlib.gzipSync(raw,{level:9}).length,metrics,keyboard,steadyState,axe,screenshotSHA256:hashFile(path.join(output,state.name+'-desktop.png'))});
+    const auditStates=await auditDetailsStates(page,state,axe);
+    report.states.push({name:state.name,fixtureSHA256:state.sha256,htmlBytes:raw.length,htmlGzipLevel9:zlib.gzipSync(raw,{level:9}).length,metrics,keyboard,steadyState,axe,auditStates,screenshotSHA256:hashFile(path.join(output,state.name+'-desktop.png'))});
   }
   noJSContext=await context.browser().newContext({javaScriptEnabled:false,viewport:report.viewport,locale:'ro-RO'});await noJSContext.route('**/*',route=>new URL(route.request().url()).origin===base?route.continue():route.abort());
   const noJSPage=await noJSContext.newPage();let noJSState='no-js-setup';attach(noJSPage,()=>noJSState);

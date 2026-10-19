@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync/atomic"
@@ -17,6 +18,7 @@ import (
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/social"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/testdb"
+	"github.com/DobosP/social_media_activities_app/services/server/internal/web"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -25,6 +27,31 @@ type groupNativeAppFixture struct {
 	owner, peer platform.Actor
 	credentials familyAppCredential
 	typeID      int64
+}
+
+// Static delivery bypasses authentication/database work in the real App. Keep
+// this presentation repair independently testable without another PG bootstrap.
+func TestNativeGroupOpaqueHeaderStaticTransportWithoutDatabase(t *testing.T) {
+	root, err := filepath.Abs("../../../..")
+	if err != nil {
+		t.Fatal(err)
+	}
+	handler, err := web.StaticHandler(filepath.Join(root, "static"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	a := &App{Config: Config{AllowedHosts: []string{"social.fixture.test"}}, Static: handler}
+	const expected = ".group-create-page .btn { transition: transform .04s ease; }\n:root .group-create-page .site-header { background: var(--card); }\n"
+	for _, method := range []string{http.MethodGet, http.MethodHead} {
+		w := httptest.NewRecorder()
+		a.ServeHTTP(w, httptest.NewRequest(method, "https://social.fixture.test/static/css/group-create-native.css", nil))
+		if w.Code != http.StatusOK || !strings.HasPrefix(w.Header().Get("Content-Type"), "text/css") || w.Header().Get("Cache-Control") != "public, max-age=3600" || w.Header().Get("X-Content-Type-Options") != "nosniff" || w.Header().Get("X-Social-Runtime") != "go" || w.Header().Get("ETag") == "" || len(w.Result().Cookies()) != 0 {
+			t.Fatal("opaque header asset lost actual App transport", method, w.Code)
+		}
+		if method == http.MethodGet && w.Body.String() != expected || method == http.MethodHead && w.Body.Len() != 0 {
+			t.Fatal("opaque header asset body differs", method)
+		}
+	}
 }
 
 func newGroupNativeAppFixture(t *testing.T) groupNativeAppFixture {
@@ -127,7 +154,7 @@ func TestNativeGroupAssembledCreationCSRFAndCurrentAuthority(t *testing.T) {
 		w := familyAppRequest(t, f.app, f.credentials, "GET", "/groups/new/", "", nil, false)
 		body := groupNativeAppHTML(t, w, false)
 		style := familyAppRequest(t, f.app, familyAppCredential{}, "GET", "/static/css/group-create-native.css", "", nil, false)
-		if style.Code != http.StatusOK || !strings.HasPrefix(style.Header().Get("Content-Type"), "text/css") || style.Header().Get("Cache-Control") != "public, max-age=3600" || style.Header().Get("X-Content-Type-Options") != "nosniff" || style.Header().Get("X-Social-Runtime") != "go" || style.Body.String() != ".group-create-page .btn { transition: transform .04s ease; }\n" || !strings.Contains(body, `<link rel="stylesheet" href="/static/css/group-create-native.css">`) {
+		if style.Code != http.StatusOK || !strings.HasPrefix(style.Header().Get("Content-Type"), "text/css") || style.Header().Get("Cache-Control") != "public, max-age=3600" || style.Header().Get("X-Content-Type-Options") != "nosniff" || style.Header().Get("X-Social-Runtime") != "go" || style.Body.String() != ".group-create-page .btn { transition: transform .04s ease; }\n:root .group-create-page .site-header { background: var(--card); }\n" || !strings.Contains(body, `<link rel="stylesheet" href="/static/css/group-create-native.css">`) {
 			t.Fatal("native group stylesheet lost actual transport or scoped bytes")
 		}
 		guest := familyAppRequest(t, f.app, familyAppCredential{}, "GET", "/groups/new/?owner=999999", "", nil, false)

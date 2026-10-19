@@ -1,1 +1,2 @@
 .group-create-page .btn { transition: transform .04s ease; }
+:root .group-create-page .site-header { background: var(--card); }

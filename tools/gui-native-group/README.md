@@ -13,7 +13,10 @@ synthetic adult Actor fields. No production HTML or credentials enter this path.
 
 Commit the remaining UI-only methods before UI/benchmark execution. Record that
 later method commit separately from the PG producer; require native/PG producer
-source rows unchanged. Every phase checks an exact six-path UI-only Git delta and clean HEAD before/after.
+source rows unchanged except the exact Group-scoped opaque-header CSS repair.
+Every phase checks clean HEAD and the seven UI/status paths plus that pinned CSS/test pair.
+The original complete PG/capture epoch is separate from the repaired presentation;
+no complete PG pass is claimed for the later CSS/test epoch.
 No PG pass is claimed on the later UI-only commit; no extra PG fixture is needed.
 
 Create a fresh overlay in an existing owned task scratch parent:
@@ -24,6 +27,8 @@ Run the desktop script with existing installed tooling and a new output director
 `node tools/gui-native-group/desktop-qa.mjs --repo /absolute/checkout --producer-source <actual-PG-SHA> --fixtures /owned/_temp/new-fixtures --output /owned/_temp/new-desktop --playwright-package /absolute/playwright --axe-file /absolute/axe.min.js --chrome /absolute/chrome`
 Ten native projection shapes cover EN/RO,staff/nonstaff,validation/service errors,
 prefill-shaped values,display preferences and supplementary-plane description text.
+Every state keeps naturally scrolled full-document Axe audits with account menu
+forced open, closed and keyboard-open; no scroll normalization or rule exclusions.
 Two no-JS cases exercise ordinary controls/disclosures. Actual query prefill remains
 an HTTP/PG assertion,not a claim derived from these synthetic projections.
 
