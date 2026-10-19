@@ -102,3 +102,13 @@ the current embedded reference source before and after each complete lane; it
 excludes nondeterministic timestamps and legitimately advancing identity sequences.
 No product policy, schemas, tests, assertions, skips or native caps change. A fresh
 complete six-lane run on the new clean source remains required before acceptance.
+
+
+## Archive build correction — 2026-10-19
+
+The `595d39c` successor stopped during helper compilation before creating any
+database or container: a Git archive has no VCS metadata for automatic compiler
+stamping. The helper build now sets `-buildvcs=false`; the explicit clean SHA,
+tree, archive/source/method bindings and binary digest remain mandatory. Verify
+that build from a fresh committed archive before scheduling the six-lane run.
+This build-only failure is retained separately from the earlier account failure.

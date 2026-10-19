@@ -355,7 +355,7 @@ def execute(args):
         need(set(reference_expected) == {'categories', 'types', 'relations', 'child_venues', 'content_types'}
              and all(reference_expected.values()), 'Complete current canonical reference source required')
         result['catalog_reference_source'] = {'path': REFERENCE_SEED, 'bytes': len(reference_raw), 'sha256': digest(reference_raw)}
-        call([str(GO), '-C', str(out / 'source/services/server'), 'build', '-mod=readonly', '-trimpath',
+        call([str(GO), '-C', str(out / 'source/services/server'), 'build', '-mod=readonly', '-buildvcs=false', '-trimpath',
               '-o', str(out / 'binaries/reference-bootstrap'), './tools/gui-native-family-bootstrap'],
              host_go=True, timeout=600, label='reference-bootstrap-compile')
         result['reference_bootstrap_binary'] = {'sha256': digest(regular(out / 'binaries/reference-bootstrap'))}
