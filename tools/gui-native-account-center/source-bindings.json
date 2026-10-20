@@ -22,7 +22,12 @@
     "node": "67ca5783febb8bf85736c79fcdd92c8d6d465a0eb2a082672bcdfa76a506751c",
     "playwright_package": "ca170ec143a88ed3043ac953eb3b2377b2b97304104f4e1e23316684ce2c35af"
   },
-  "method_source_review": null,
+  "method_source_review": {
+    "expected": "ACCEPT_OPERATIONAL_ACCOUNT_GET_ONLY_L2_P_AND_EXACT_FOUR_METADATA_IMAGES",
+    "field": "status",
+    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/language-account-operational-final/operational-review.json",
+    "sha256": "698a6f3bf71f5b760cefb62e39f41dd0d72bacaf69d6c4a1c9d401fe663b87c8"
+  },
   "native_account_source_review": {
     "expected": "ACCEPT_ACTUAL_REPAIRED_LANGUAGE_L2_COMPLETE7_SOURCE_CASE_PRIVACY_AND_CLEANUP",
     "field": "status",
