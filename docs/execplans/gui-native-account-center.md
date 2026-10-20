@@ -2,7 +2,7 @@
 
 Valid until: closing/source bytes change — rebind and independently review before application.
 
-Status: APPLIED; nativea8 PG7 acceptedhistorical; firstUI44ed FAILEDec7e; CSS repair pending. Basebdb5cc8,
+Status: R02ac native/full7 independently accepted82b0; paired causal debug accepted; repaired primary UI pending. Basebdb5cc8,
 contractV3 006f1c6954cd; qualified native/UI0afd and canonicalbc10/all37 bodies
 are concretely bound. Root exact four-new-Go formatting receiptd365 is recorded.
 
@@ -49,9 +49,13 @@ with no positive source/PG/UI acceptance implied.
 History at that cheap checkpoint: native commit/full7 and a later exact UI-method
 binding were the planned next steps. Those steps subsequently produced the actual
 native acceptance and first failed UI recorded below. They are not pending local
-checks. Current Next: source-review the account-only header/panel CSS repair and
-paired debug, then commit the new source and repeat unchanged complete7 and primary
-UI on its exact reviewed bindings. Language-save remains a separate later repair.
+checks. Current Next: use the separately reviewed exact operational payload and README/
+two doc afterimages for a metadata-only UI epoch, then execute repaired primary UI.
+Accepted review82b01e1a binds exactR/result856b/all four native input hashes and
+fills both native/full7 binding roles. Final operational review and the sole
+method-review reference fill precede the committed UI run. Paired debugc31b/d4a65 is accepted
+causal evidence only and cannot replace complete7 or primary UI. Language-save
+remains a separate later repair.
 
 ## Exact native PostgreSQL acceptance and UI-method epoch
 
@@ -96,3 +100,26 @@ After source approval, Root runs local checks, commits a new sourceR and repeats
 unchanged complete7. A new applied review must contain the three unchanged native
 input digests and newCSS digest, then final operational review rebinds UI toR.
 Actual primary UI/measurement/custody/feature acceptance remains pending.
+
+## Repaired source and operational candidate checkpoint
+
+NativeR02ac07258cca866180ef93aeeb6a17ecb07baae1/tree4e22ad4 is committed.
+Paired causal debug c31b60e3, independently reviewed d4a65ce5, reproduced all15
+baseline incomplete audits and produced zero issues in all24 candidate audits.
+All48 audits used immutable admitted fixture/assets/CSS buffers and original
+natural-scroll/keyboard/Axe functions; owned profiles/server cleanup was verified.
+This debug evidence is separate from primary qualification.
+
+The unchanged complete7 driver completed on exactR with result856b0b3b:457roots/
+1,368named,zero failures/skips,340commands/695artifactrows. Root waited exit0
+(receipt2019869c). Independent review82b01e1a accepts exactR/raw/native/full7,
+all four native source digests and owned15CIDs/sevenDB/privatePG cleanup.
+Three method code files stay exact41ef/d22b/3ee. The final canonical payload has
+exactly CLI,binding,method_nonbinding_image_sha256, with its own method review
+reference null during review. After final admission only that saved reference
+may be filled. Native producer and pg-run remainR, never the later UI-method SHA.
+
+The next actual primary run still must execute eight JS/eight no-JS,24strict
+whole-document Axe audits,real Tab/FormData/current assets/all37 previous bodies
+and optional48fixed-synthetic matched body samples. No repaired primary UI,
+measurement,custody or feature acceptance follows from this candidate.

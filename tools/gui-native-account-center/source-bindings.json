@@ -7,12 +7,12 @@
     "keeper_review_sha256": "2d0af9fb0abe7446d63549237be12e18ef4df5a184bcd386abf7c9240d9d365a"
   },
   "complete7_driver_sha256": "696f2f1a83ba70d316172ae18a79f49d09d4f2ceca16350f1b2e42d32fb2a960",
-  "complete7_result_sha256": "dab389ac8492b0db6bfcaca26fcd84ce535a8f14a0def7445b31d4819ab3fa2e",
+  "complete7_result_sha256": "856b0b3beb1d3b5d9cd784c067b27dd67e3ccca876f94607361abf920829962e",
   "complete7_review": {
-    "expected": "ACCEPT_EXACT_A8F_COMPLETE_SEVEN_NATIVE_PG_ACCOUNT_SOURCE_AUTHORITY_PRIVACY_AND_CLEANUP",
+    "expected": "ACCEPT_EXACT_02AC_REPAIRED_NATIVE_ACCOUNT_SOURCE_COMPLETE_SEVEN_PG_AUTHORITY_PRIVACY_AND_CLEANUP",
     "field": "status",
-    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/account-center-checks/final-full-pg-review.json",
-    "sha256": "fffe5e68e82b293e32b17bfb5c7c4a6bf3f100184d716eca372f3bb9436cd6ec"
+    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/account-center-checks/css-repair-final-full-pg-review.json",
+    "sha256": "82b01e1a3487d46f86af31cd6b76b3959c216b58c21ff99dcace2836ac4c584b"
   },
   "date_publication_source": "bdb5cc82a30c2b3307c87d56fdc92fc55948ecff",
   "dependency_sha256": {
@@ -23,19 +23,19 @@
     "playwright_package": "ca170ec143a88ed3043ac953eb3b2377b2b97304104f4e1e23316684ce2c35af"
   },
   "method_source_review": {
-    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/next-social-account-center-methods/operational-a8/final-operational-review.json",
-    "sha256": "747a66f61931c4848e5be0715cc922ae10e431c38228122f01fb8cc9112b3f5a",
+    "expected": "ACCEPTED_OPERATIONAL_ACCOUNT_REPAIRED_R_P2_AND_EXACT_TWO_DOC_AFTERIMAGES",
     "field": "status",
-    "expected": "ACCEPTED_OPERATIONAL_ACCOUNT_UI_PAYLOAD_AND_EXACT_TWO_DOC_AFTERIMAGES"
+    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/next-social-account-center-methods/operational-02ac-final/final-operational-review.json",
+    "sha256": "73ed1d50a8282b39a9a4cbb7303f1981cf57a2456e88f5f588e10ed16130b7ae"
   },
   "native_account_source_review": {
-    "expected": "ACCEPTED_ACCOUNT_APPLIED_V4_SOURCE_AND_LOCAL_CHECKS",
+    "expected": "ACCEPT_EXACT_02AC_REPAIRED_NATIVE_ACCOUNT_SOURCE_COMPLETE_SEVEN_PG_AUTHORITY_PRIVACY_AND_CLEANUP",
     "field": "status",
-    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/account-center-checks/applied-local-review.json",
-    "sha256": "7ee3206d6cba9d946942f0232ce182d8e3023a40287fde8e1cde55ed4ceaa4dd"
+    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/account-center-checks/css-repair-final-full-pg-review.json",
+    "sha256": "82b01e1a3487d46f86af31cd6b76b3959c216b58c21ff99dcace2836ac4c584b"
   },
-  "producer_source": "a8f713f74885acfc51f6985bc8c6a366950029b3",
-  "qualification_claim": "Exact nativeS complete seven affected PG packages independently accepted; source and14negativecontrols accepted. UI/benchmark/feature acceptance remain pending.",
+  "producer_source": "02ac07258cca866180ef93aeeb6a17ecb07baae1",
+  "qualification_claim": "Exact repaired nativeR02ac complete7 and all four native UI source hashes are independently accepted82b01e1a:457roots/1368named,zero failures/skips,340commands/695artifactrows,15owned CIDs/seven databases/privatePG cleaned. Paired causal debugc31b60/d4a65 is accepted debug only. First primaryUI ec7e remains failed/benchmarkNOT_REACHED. This operational metadata does not accept repaired primaryUI,body measurements,custody,feature,milestone or activation.",
   "schema": 1,
   "status": "BOUND_REVIEWED_COMMITTED_METHODS",
   "unchanged_overlay_helpers": [
