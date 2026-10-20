@@ -44,6 +44,7 @@ type trustPage struct {
 type trustPerson struct {
 	PublicID, Display, Username, Tier, About, ProfileURL, Photo, ReportURL, BlockURL string
 	Avatar                                                                           template.URL
+	AvatarSource                                                                     template.HTMLAttr
 	Verified, Connected, JoinRequest, CanConnect, Pending, CanMessage                bool
 	Activities, Groups                                                               string
 	ActivityOverflow, GroupOverflow                                                  int64
@@ -135,6 +136,19 @@ func trustAvatar(d *groupDetailDecoder, value any, required bool) template.URL {
 		return ""
 	}
 	return template.URL(raw)
+}
+
+// Only the already-vetted generated SVG image URI may use this fixed attribute.
+// html/template escapes '+' in quoted values, while the established profile
+// response contract retains the exact generated URI. Escape HTML metacharacters
+// before marking the complete, fixed-name src attribute; no caller HTML or
+// arbitrary URL is trusted, and uploaded-photo URLs use their existing path.
+func trustProfileAvatar(d *groupDetailDecoder, value any) (template.URL, template.HTMLAttr) {
+	avatar := trustAvatar(d, value, true)
+	if avatar == "" {
+		return "", ""
+	}
+	return avatar, template.HTMLAttr(`src="` + html.EscapeString(string(avatar)) + `"`)
 }
 
 // Translations are escaped text. Rich legal copy permits only the same literal
@@ -318,7 +332,8 @@ func (r *Renderer) trustPage(request *http.Request, name string, data pongo2.Con
 	switch name {
 	case "web/person.html", "web/_person_card.html":
 		card := d.row(data["card"])
-		p.Person = trustPerson{PublicID: d.text(card["public_id"]), Display: d.text(card["display"]), Tier: d.text(card["tier"]), Avatar: trustAvatar(&d, card["avatar"], true)}
+		avatar, avatarSource := trustProfileAvatar(&d, card["avatar"])
+		p.Person = trustPerson{PublicID: d.text(card["public_id"]), Display: d.text(card["display"]), Tier: d.text(card["tier"]), Avatar: avatar, AvatarSource: avatarSource}
 		person := &p.Person
 		if person.PublicID == "" || person.Display == "" || (person.Tier != "stranger" && person.Tier != "shared" && person.Tier != "connected") {
 			d.fail()

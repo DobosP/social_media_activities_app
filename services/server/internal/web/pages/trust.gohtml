@@ -24,7 +24,7 @@
 {{define "trust-person-card"}}<div class="person-card" role="group" aria-label="{{$.Person.About}}">
   <div class="person-card-head">
 
-    {{if $.Fragment}}<img class="avatar" src="{{$.Person.Avatar}}" width="56" height="56" alt="">{{end}}
+    {{if $.Fragment}}<img class="avatar" {{$.Person.AvatarSource}} width="56" height="56" alt="">{{end}}
     <div>
       <p class="person-card-name"><strong>{{$.Person.Display}}</strong>
         {{if $.Person.Verified}}<span class="tag" title="{{call $.T "age band verified"}}">{{call $.T "verified"}}</span>{{end}}</p>
@@ -59,7 +59,7 @@
 
       <img class="avatar" src="{{.Person.Photo}}" width="96" height="96" alt="{{call $.T "profile picture"}}">
     {{else}}
-      <img class="avatar" src="{{.Person.Avatar}}" width="96" height="96" alt="{{call $.T "generated avatar"}}">
+      <img class="avatar" {{.Person.AvatarSource}} width="96" height="96" alt="{{call $.T "generated avatar"}}">
     {{end}}
     <div class="u-flex-1">
       {{template "trust-person-card" $}}

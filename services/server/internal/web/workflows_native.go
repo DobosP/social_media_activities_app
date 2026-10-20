@@ -93,6 +93,13 @@ func (p workflowPage) T(message string) string {
 	return html.UnescapeString(p.catalog.translate(p.Shell.Language, message, 1))
 }
 
+// Text preserves the source text-node apostrophe while escaping every markup
+// delimiter. It is used only for literal translated member-control text, never
+// for attributes or producer-supplied trusted HTML.
+func (p workflowPage) Text(message string) template.HTML {
+	return template.HTML(strings.ReplaceAll(html.EscapeString(p.T(message)), "&#39;", "'"))
+}
+
 // ComposeBody keeps one explicit accessible name while preserving the copied
 // field value, type, constraints, help and errors. It never reads request data.
 func (p workflowPage) ComposeBody() workflowField {
@@ -217,7 +224,10 @@ func (r *Renderer) workflowPage(request *http.Request, name string, data pongo2.
 	p.Nonce, p.LanguageNext = d.text(context["csp_nonce"]), d.text(context["path"])
 	p.Shell = familyShell{Language: d.text(data["language"]), Theme: d.text(data["display_theme"]), Text: d.text(data["display_text"]), Motion: d.text(data["display_motion"]), SiteName: d.text(data["site_name"]), Canonical: d.text(data["canonical_url"]), CSRF: d.text(data["csrf"]), DisplayName: actor.DisplayName}
 	p.Shell.English = p.Shell.Language == "en"
-	if p.Shell.Language != "en" && p.Shell.Language != "ro" || p.Shell.SiteName == "" || p.Shell.CSRF == "" || p.Nonce == "" || p.LanguageNext != request.URL.Path || !accountCenterCanonical(p.Shell.Canonical) {
+	// The shared action producer can supply an empty token when no Auth service
+	// is attached (for example a direct authorized action error render). Copy the
+	// supplied string; token creation and POST admission belong to the server.
+	if p.Shell.Language != "en" && p.Shell.Language != "ro" || p.Shell.SiteName == "" || p.Nonce == "" || p.LanguageNext != request.URL.Path || !accountCenterCanonical(p.Shell.Canonical) {
 		d.fail()
 	}
 	if p.Shell.Theme != "auto" && p.Shell.Theme != "light" && p.Shell.Theme != "dark" && p.Shell.Theme != "contrast" || p.Shell.Text != "normal" && p.Shell.Text != "large" && p.Shell.Text != "larger" || p.Shell.Motion != "auto" && p.Shell.Motion != "reduce" && p.Shell.Motion != "full" {

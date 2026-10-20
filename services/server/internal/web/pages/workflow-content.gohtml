@@ -343,14 +343,14 @@
 
     {{if (not $.MyArrival)}}
       {{if (eq $.MyTransit "on_my_way")}}
-        <p class="muted message-copy">&#128694; {{$.T "You told the group you're on the way."}}</p>
+        <p class="muted message-copy">&#128694; {{$.Text "You told the group you're on the way."}}</p>
       {{else if (eq $.MyTransit "running_late")}}
-        <p class="muted message-copy">&#8987; {{$.T "You told the group you're running a little late."}}</p>
+        <p class="muted message-copy">&#8987; {{$.Text "You told the group you're running a little late."}}</p>
       {{end}}
     {{end}}
     {{if (and $.ArrivalWindowOpen (not $.MyArrival))}}
       <form method="post" action="{{wfurl "activity_arrived" $.Activity.ID}}" class="activity-inline-form"><input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}">
-        <button class="btn btn-sm" type="submit">&#128205; {{$.T "I've arrived"}}</button>
+        <button class="btn btn-sm" type="submit">&#128205; {{$.Text "I've arrived"}}</button>
         <span class="muted activity-note">{{$.T "Tells the group you're here &mdash; no location shared."}}</span>
       </form>
       {{if (or $.CanSayOnMyWay $.CanSayRunningLate)}}

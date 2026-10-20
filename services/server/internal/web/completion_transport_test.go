@@ -1,6 +1,7 @@
 package web
 
 import (
+	"bytes"
 	"context"
 	"encoding/xml"
 	"fmt"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/DobosP/social_media_activities_app/services/server/internal/discovery"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/donations"
+	"github.com/DobosP/social_media_activities_app/services/server/internal/media"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/social"
 	"github.com/DobosP/social_media_activities_app/services/server/internal/testdb"
@@ -41,6 +43,8 @@ func TestNativeCompletionRegisteredCurrentRoutesUseActualProducerContexts(t *tes
 	s.Donations = donations.New(s.DB, donations.Config{})
 	s.Discovery = discovery.New(s.DB, s.Catalog, s.Social, s.Recommendations)
 	s.Social.BodyMarkup = BodyMarkup
+	// Use the actual media read routes required by the activity detail producer.
+	s.Media = media.NewService(s.DB, nil, nil, media.TokenCodec{Key: bytes.Repeat([]byte("x"), 32)}, s.Social)
 	place := testdb.Place(t, s.DB, "Current completion venue", "osm")
 	var typ int64
 	if err := s.DB.QueryRow(ctx, `SELECT id FROM taxonomy_activitytype WHERE slug='basketball'`).Scan(&typ); err != nil {
@@ -72,6 +76,7 @@ func TestNativeCompletionRegisteredCurrentRoutesUseActualProducerContexts(t *tes
 	mux := http.NewServeMux()
 	s.Accounts.Register(mux)
 	s.Social.Register(mux)
+	s.Media.Register(mux)
 	s.Safety.Register(mux)
 	s.Messaging.Register(mux)
 	s.Register(mux)

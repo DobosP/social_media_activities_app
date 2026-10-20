@@ -23,6 +23,8 @@ External services, mutations, actual map tiles and encrypted-chat enrollment are
 
 Full native21 uses committed `scripts/qualify-native-final.py --help`: exact Git source,
 existing pinned PG/codec images, one private disposable DB and unchanged canonical21 lanes.
+The explicit `--affected-catalog-web` mode runs only those two complete packages and can never
+report full21 acceptance. Durable checkpoints retain the1GiB fixture ceiling.
 It does not qualify a new deployment image. Full PG qualification and final runtime review
 are pending until recorded as passing in qualification.json.
 

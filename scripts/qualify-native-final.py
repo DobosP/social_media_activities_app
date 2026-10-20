@@ -15,6 +15,23 @@ INTERRUPTED=None
 def need(ok,message):
     if not ok: raise RuntimeError(message)
 
+def qualification_mode(affected):
+    need(type(affected) is bool,'finite affected-mode boolean required')
+    return (['catalog','web'],'PASS_AFFECTED_CATALOG_WEB_ONLY') if affected else (list(PACKAGES),'PASS_FULL_NATIVE21')
+
+def affected_driver(native,source):
+    need(digest(native)==NATIVE_SHA and source.is_absolute() and source.resolve()==source,'pinned canonical script and exported source required')
+    splices=[{'before':'for native_package in '+' '.join(PACKAGES)+'; do\n','after':'for native_package in catalog web; do\n'},
+             {'before':'native_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)\n','after':'native_root='+shlex_quote(str(source))+'\n'}]
+    derived=native.decode()
+    for splice in splices:
+        need(derived.count(splice['before'])==1,'one exact affected-driver anchor required');derived=derived.replace(splice['before'],splice['after'],1)
+    restored=derived
+    for splice in reversed(splices):
+        need(restored.count(splice['after'])==1,'one exact inverse driver anchor required');restored=restored.replace(splice['after'],splice['before'],1)
+    need(restored.encode()==native,'affected driver inverse differs from canonical script')
+    return derived.encode(),{'canonical_sha256':digest(native),'derived_sha256':digest(derived.encode()),'inverse_sha256':digest(restored.encode()),'splices':splices,'exact_inverse':True,'scope':'Complete catalog+web only;19 packages excluded; never full21 acceptance'}
+
 def fixture_host_rule(network,owner):
     need(network.get('Internal') is True and (network.get('Labels') or {}).get(OWNER_LABEL)==owner and not network.get('Containers'),'fresh owned internal network required')
     configurations=(network.get('IPAM') or {}).get('Config') or []
@@ -22,6 +39,13 @@ def fixture_host_rule(network,owner):
     subnet=ipaddress.ip_network(configurations[0]['Subnet'],strict=True)
     need(subnet.version==4 and any(subnet.subnet_of(ipaddress.ip_network(block)) for block in ('10.0.0.0/8','172.16.0.0/12','192.168.0.0/16')),'RFC1918 fixture subnet required')
     return 'host all app '+str(subnet)+' trust'
+
+def fixture_wal_entry(entry):
+    # Normal durable checkpoints recycle WAL well before the fixed1GiB volume.
+    # max_wal_size is a soft checkpoint trigger, never a larger storage ceiling.
+    anchor = 'port = 5432\nPG_CONF\n'
+    need(entry.count(anchor) == 1, 'single derived fixture configuration anchor required')
+    return entry.replace(anchor, 'port = 5432\nmax_wal_size = 128MB\nmin_wal_size = 32MB\ncheckpoint_timeout = 30s\nPG_CONF\n', 1)
 
 def digest(raw): return hashlib.sha256(raw).hexdigest()
 
@@ -163,6 +187,7 @@ def docker_wrapper(plan_path,argv):
 def execute(args):
     global INTERRUPTED
     repo,out,go=args.repo,args.out,args.go
+    packages,pass_status=qualification_mode(args.affected_catalog_web)
     need(all(path.is_absolute() and path.resolve()==path for path in (repo,go,out.parent)),'canonical repo/go/output parent required')
     need(repo.is_dir() and out.parent.is_dir() and not out.exists() and not out.is_relative_to(repo),'fresh owned output outside repo required')
     need(out.parent.stat().st_uid==os.getuid() and go.is_file() and os.access(go,os.X_OK),'owned output parent and Go executable required')
@@ -175,6 +200,8 @@ def execute(args):
     base_env['TMPDIR']=str(out/'host-tmp');owner=str(uuid.uuid4());prefix='native21-'+owner.replace('-','')[:16];names={'db':prefix+'-db','package':prefix+'-package','network':prefix+'-network','volume':prefix+'-data'}
     report={'status':'RUNNING','source':args.sha,'scope':'Full21 current synthetic native packages; canonical images supply PG/codecs, not a current application image qualification. No provider/ingestion/minor/production activity.','disk_before':dict(zip(('total','used','free'),shutil.disk_usage(out.parent))),'owner':owner,'resources':names,'commands':[],'packages':[],'cleanup':{},'errors':[]};started=time.monotonic()
     write(out/'ownership.json',{'owner':owner,'label':OWNER_LABEL,'resources':names,'docker_host':'unix:///var/run/docker.sock'})
+    report['required_packages']=packages;report['qualification_mode']='affected-catalog-web' if args.affected_catalog_web else 'full21'
+    if args.affected_catalog_web:report['scope']='AFFECTED CATALOG+WEB ONLY: two complete current synthetic packages;19 omitted, never full21 or milestone acceptance. Same exact committed export/images/isolation/WAL/cleanup checks.'
     def call(argv,label,timeout=60,env=None,okay=False,maximum=None,progress=False,cleanup=False):
         if INTERRUPTED and not cleanup:raise InterruptedError('signal '+str(INTERRUPTED))
         index=len(report['commands']);stdout=out/'commands'/('%03d-'%index+label+'.stdout');stderr=stdout.with_suffix('.stderr');row={'argv':[str(x)for x in argv],'label':label,'stdout':str(stdout.relative_to(out)),'stderr':str(stderr.relative_to(out))};report['commands'].append(row)
@@ -210,6 +237,17 @@ def execute(args):
         if value is None:return False
         labels=value.get('Config',{}).get('Labels') if kind=='container' else value.get('Labels')
         need((labels or {}).get(OWNER_LABEL)==owner,'refuse cleanup of nonowned '+kind);return True
+    def fixture_storage(label,cleanup=False):
+        need(owned('container',names['db']),'storage receipt requires owned DB container')
+        raw=dk('exec',names['db'],'df','-B1','--output=size,used,avail,target','/var/lib/postgresql/data',label=label+'-tmpfs',cleanup=cleanup,maximum=4096)
+        lines=raw.decode().splitlines();need(len(lines)==2,'one fixture tmpfs row required');parts=lines[1].split()
+        need(len(parts)==4 and parts[3]=='/var/lib/postgresql/data' and all(v.isdigit() for v in parts[:3]),'fixed fixture tmpfs fields required')
+        total,used,available=map(int,parts[:3]);need(total==1<<30 and 0<=used<=total and 0<=available<=total,'unchanged1GiB fixture ceiling required')
+        result={'tmpfs_bytes':total,'used_bytes':used,'available_bytes':available}
+        for key,path in [('data','/var/lib/postgresql/data'),('wal','/var/lib/postgresql/data/pg_wal'),('base','/var/lib/postgresql/data/base')]:
+            fields=dk('exec',names['db'],'du','-s','-B1',path,label=label+'-'+key,cleanup=cleanup,maximum=4096).decode().split()
+            need(len(fields)==2 and fields[0].isdigit() and fields[1]==path,'fixed owned fixture usage row required');result[key+'_allocated_bytes']=int(fields[0])
+        report.setdefault('fixture_storage',{})[label]=result
     try:
         resolved=call(['git','-C',repo,'rev-parse',args.sha+'^{commit}'],'source-commit').decode().strip();need(resolved==args.sha,'exact commit required')
         own=call(['git','-C',repo,'show',args.sha+':'+relative],'committed-method');need(own==method.read_bytes(),'commit this exact qualifier before invocation')
@@ -232,6 +270,7 @@ def execute(args):
         need((source/'scripts/qualify-native.sh').read_bytes()==native,'exported native method differs')
         entry=(source/'tools/gui-native-family/db-entry.sh').read_text();need(digest(entry.encode())=='b4ed745834cdb9b91ba0291b49dc049e316806b01494b67ff48a0eb8ff9432b4','canonical DB init/cleanup source differs')
         for a,b in [('--auth-host=reject','--auth-host=trust'),("listen_addresses = ''","listen_addresses = '*'"),('55434','5432'),('--no-locale','--locale=C.utf8')]:need(a in entry,'DB fixture anchor missing');entry=entry.replace(a,b)
+        entry=fixture_wal_entry(entry)
         call([go,'-C',source/'services/server','build','-trimpath','-o',out/'runtime/tests/social-server','./cmd/social-server'],'current-bootstrap-build',timeout=600,env=dict(base_env,CGO_ENABLED='0'))
         dk('network','create','--internal','--label',OWNER_LABEL+'='+owner,names['network'],label='network-create')
         network=json.loads(dk('network','inspect',names['network'],label='network-before-db'))[0]
@@ -254,28 +293,41 @@ def execute(args):
             need(not INTERRUPTED and time.monotonic()<deadline,'DB readiness deadline/interruption');time.sleep(.2)
         report['db_ready']=json.loads((out/'socket/ready.json').read_text());need(report['db_ready']['uid']==report['db_ready']['gid']==999,'DB UID/GID differs')
         dk('exec',names['db'],'/usr/lib/postgresql/16/bin/createdb','-h','/socket','-p','5432','-U','app','native21',label='database-create')
-        locale=dk('exec',names['db'],'/usr/lib/postgresql/16/bin/psql','-h','/socket','-p','5432','-U','app','-d','native21','-At','-c',"SELECT current_setting('lc_ctype')||'|'||current_setting('lc_collate')||'|'||lower('ŞȘŢȚĂÂÎ')",label='fixture-unicode-locale').decode().strip()
+        locale=dk('exec',names['db'],'/usr/lib/postgresql/16/bin/psql','-h','/socket','-p','5432','-U','app','-d','native21','-At','-c',"SELECT datctype||'|'||datcollate||'|'||lower('ŞȘŢȚĂÂÎ') FROM pg_catalog.pg_database WHERE datname=current_database()",label='fixture-unicode-locale').decode().strip()
         need(locale=='C.utf8|C.utf8|'+'ŞȘŢȚĂÂÎ'.lower(),'Unicode-aware fixture locale required')
         report['fixture_unicode_locale']=locale
+        wal_sql="SELECT json_build_object('max_wal_size',current_setting('max_wal_size'),'min_wal_size',current_setting('min_wal_size'),'checkpoint_timeout',current_setting('checkpoint_timeout'),'fsync',current_setting('fsync'),'full_page_writes',current_setting('full_page_writes'),'synchronous_commit',current_setting('synchronous_commit'))"
+        wal=json.loads(dk('exec',names['db'],'/usr/lib/postgresql/16/bin/psql','--no-psqlrc','-h','/socket','-p','5432','-U','app','-d','native21','-v','ON_ERROR_STOP=1','-Atc',wal_sql,label='fixture-durable-checkpoint-settings'))
+        need(wal=={'max_wal_size':'128MB','min_wal_size':'32MB','checkpoint_timeout':'30s','fsync':'on','full_page_writes':'on','synchronous_commit':'on'},'normal durable fixture checkpoint settings required')
+        report['fixture_durable_checkpoint_settings']=wal
         # The CLI requires a URL and explicit password; this marker is not a
         # credential because the disposable, isolated DB uses trust admission.
         dsn='postgres://app:fixture-only-not-a-credential@native21-db:5432/native21?sslmode=disable'
         dk('run',*common,'--name',names['package'],'--user',str(os.getuid())+':'+str(os.getgid()),'-e','DATABASE_URL='+dsn,'-v',str(out/'runtime/tests')+':/tests:ro','--tmpfs','/tmp:rw,nosuid,nodev,size=64m,mode=1777',CODEC_IMAGE,'/tests/social-server','--migrate-only',label='current-migrate-only',timeout=90)
+        fixture_storage('before-tests')
         (out/'shim').mkdir();plan={'source':str(source),'scratch':str(out/'runtime'),'out':str(out),'docker':docker,'codec':CODEC_IMAGE,'owner':owner,'network':names['network'],'package_name':names['package']};write(out/'plan.json',plan)
         shim=out/'shim/docker';shim.write_text('#!/bin/sh\nexec '+shlex_quote(sys.executable)+' -I '+shlex_quote(str(source/relative))+' --docker-wrapper '+shlex_quote(str(out/'plan.json'))+' "$@"\n');shim.chmod(0o755)
         runtime_env=dict(base_env,PATH=str(out/'shim')+':'+base_env['PATH'])
-        call(['/bin/bash',source/'scripts/qualify-native.sh',go,CODEC_IMAGE,names['network'],dsn,out/'runtime'],'native21-complete',timeout=21*(600+660)+600,env=runtime_env,progress=True)
-        for package in PACKAGES:
+        driver=source/'scripts/qualify-native.sh'
+        if args.affected_catalog_web:
+            derived,derivation=affected_driver(native,source);driver=out/'affected-driver.sh';driver.write_bytes(derived);driver.chmod(0o700)
+            write(out/'affected-driver-derivation.json',derivation);report['affected_driver_sha256']=digest(derived)
+        call(['/bin/bash',driver,go,CODEC_IMAGE,names['network'],dsn,out/'runtime'],'affected-catalog-web-complete' if args.affected_catalog_web else 'native21-complete',timeout=len(packages)*(600+660)+600,env=runtime_env,progress=True)
+        need(not args.affected_catalog_web or file_hash(driver)==report['affected_driver_sha256'],'affected driver changed during execution')
+        for package in packages:
             logfile=out/'runtime/tests'/(package+'.log');text=logfile.read_text();roots=re.findall(r'^--- PASS: (\S+)',text,re.M);named=re.findall(r'^\s*--- PASS: (\S+)',text,re.M)
             need(roots and len(roots)==len(set(roots)) and not re.search(r'--- (SKIP|FAIL):|DATA RACE|^FAIL\b',text,re.M),'package not completely passing: '+package)
             receipt=json.loads((out/('package-'+package+'.json')).read_text());need(receipt['exit']==0,'package container failed');report['packages'].append({'name':package,'roots':len(roots),'named_passes':len(named),'skip':0,'log_sha256':file_hash(logfile),'binary_sha256':file_hash(out/'runtime/tests'/(package+'.test'))})
-        need(len(report['packages'])==21 and tree_rows(source,expected)==before,'complete21/read-only source verification failed')
-        report['status']='PASS_FULL_NATIVE21'
+        need(len(report['packages'])==len(packages) and tree_rows(source,expected)==before,'complete selected packages/read-only source verification failed')
+        fixture_storage('after-tests')
+        report['status']=pass_status
     except BaseException as error:
         report['errors'].append(type(error).__name__+': '+str(error));report['status']='FAILED'
         try:
             if owned('container',names['db']):
-                dk('exec',names['db'],'sh','-c',"grep -E ' (ERROR|FATAL|DETAIL|HINT):' /tmp/postgres.log | tail -c 65536",label='failed-owned-fixture-pg-log',okay=True,cleanup=True,maximum=65536)
+                try:fixture_storage('failed-before-cleanup',cleanup=True)
+                except BaseException as storage_error:report['errors'].append('fixture storage diagnostic: '+str(storage_error))
+                dk('exec',names['db'],'sh','-c',"grep -E ' (ERROR|FATAL|PANIC|DETAIL|HINT):' /tmp/postgres.log | tail -c 65536",label='failed-owned-fixture-pg-log',okay=True,cleanup=True,maximum=65536)
         except BaseException as diagnostic_error:report['errors'].append('fixture diagnostic: '+str(diagnostic_error))
     finally:
         for kind,key,operation in [('container','package','rm'),('container','db','rm'),('network','network','rm'),('volume','volume','rm')]:
@@ -294,7 +346,7 @@ def execute(args):
         report['seconds']=round(time.monotonic()-started,3);write(out/'packages.json',report.pop('packages'));write(out/'commands.json',report.pop('commands'))
         artifacts=[{'path':str(p.relative_to(out)),'bytes':p.stat().st_size,'sha256':file_hash(p)} for p in sorted(out.rglob('*')) if p.is_file() and not p.is_relative_to(out/'source') and not p.is_relative_to(out/'host-tmp') and not p.is_relative_to(out/'runtime/test-tmp')]
         write(out/'artifact-manifest.json',artifacts);report['manifests']={n:{'path':n,'sha256':file_hash(out/n)} for n in ['source-manifest.json','artifact-manifest.json','commands.json','packages.json'] if (out/n).exists()};report['disk_after']=dict(zip(('total','used','free'),shutil.disk_usage(out.parent)));write(out/'RESULT.json',report);print(json.dumps({'status':report['status'],'result':str(out/'RESULT.json'),'sha256':file_hash(out/'RESULT.json')}),flush=True)
-    return 0 if report['status']=='PASS_FULL_NATIVE21' else 1
+    return 0 if report['status']==pass_status else 1
 
 def shlex_quote(value):
     import shlex
@@ -302,6 +354,6 @@ def shlex_quote(value):
 
 if __name__=='__main__':
     if sys.argv[1:2]==['--docker-wrapper']:raise SystemExit(docker_wrapper(Path(sys.argv[2]),sys.argv[3:]))
-    parser=argparse.ArgumentParser();parser.add_argument('--repo',required=True,type=Path);parser.add_argument('--sha',required=True);parser.add_argument('--go',required=True,type=Path);parser.add_argument('--codec-image',required=True);parser.add_argument('--db-image',required=True);parser.add_argument('--out',required=True,type=Path);args=parser.parse_args()
+    parser=argparse.ArgumentParser();parser.add_argument('--repo',required=True,type=Path);parser.add_argument('--sha',required=True);parser.add_argument('--go',required=True,type=Path);parser.add_argument('--codec-image',required=True);parser.add_argument('--db-image',required=True);parser.add_argument('--out',required=True,type=Path);parser.add_argument('--affected-catalog-web',action='store_true',help='Complete catalog+web only; never full21 acceptance');args=parser.parse_args()
     for number in (signal.SIGINT,signal.SIGTERM):signal.signal(number,signal_received)
     raise SystemExit(execute(args))

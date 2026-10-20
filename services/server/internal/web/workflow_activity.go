@@ -300,7 +300,9 @@ func (r *Renderer) workflowActivityPage(request *http.Request, data pongo2.Conte
 			p.HasReplyTarget = true
 		}
 	}
-	p.MediaCapabilitiesSupplied = d.boolean(data["media_capabilities_supplied"])
+	// The reference producer omits this marker. Its existing template branch
+	// supplies the historical media controls only when that marker is absent.
+	p.MediaCapabilitiesSupplied = d.optionalBool(data["media_capabilities_supplied"])
 	p.AttachmentsEnabled = d.boolean(data["attachments_enabled"])
 	p.FileEnabled = d.boolean(data["file_enabled"])
 	p.VideoEnabled = d.boolean(data["video_enabled"])

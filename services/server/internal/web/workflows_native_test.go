@@ -261,7 +261,7 @@ func TestNativeWorkflowsCapabilitiesAndCopiedMessagingConfig(t *testing.T) {
 }
 
 func TestNativeWorkflowsRejectMalformedBeforeOutput(t *testing.T) {
-	for key, mutate := range map[string]func(pongo2.Context){"identity": func(d pongo2.Context) { d["user"].(map[string]any)["id"] = 2 }, "form-type": func(d pongo2.Context) { d["form"] = "safe legacy HTML" }, "vocabulary-type": func(d pongo2.Context) { d["type_vocabulary"] = []any{false} }, "request-path": func(d pongo2.Context) { d["request"].(map[string]any)["path"] = "/foreign/" }, "unsafe-canonical": func(d pongo2.Context) { d["canonical_url"] = "javascript:payload" }, "csrf": func(d pongo2.Context) { d["csrf"] = "" }} {
+	for key, mutate := range map[string]func(pongo2.Context){"identity": func(d pongo2.Context) { d["user"].(map[string]any)["id"] = 2 }, "form-type": func(d pongo2.Context) { d["form"] = "safe legacy HTML" }, "vocabulary-type": func(d pongo2.Context) { d["type_vocabulary"] = []any{false} }, "request-path": func(d pongo2.Context) { d["request"].(map[string]any)["path"] = "/foreign/" }, "unsafe-canonical": func(d pongo2.Context) { d["canonical_url"] = "javascript:payload" }, "csrf-type": func(d pongo2.Context) { d["csrf"] = true }} {
 		t.Run(key, func(t *testing.T) {
 			r, request, data := workflowsFixture(t, "web/activity_form.html")
 			mutate(data)

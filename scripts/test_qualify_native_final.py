@@ -4,6 +4,36 @@ from pathlib import Path
 spec=importlib.util.spec_from_file_location('native21_final',Path(__file__).with_name('qualify-native-final.py'))
 module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
 class FinalNativeBoundaryTests(unittest.TestCase):
+    def test_affected_driver_has_exact_inverse_and_distinct_full_status(self):
+        native=Path(__file__).with_name('qualify-native.sh').read_bytes()
+        with tempfile.TemporaryDirectory(dir=Path(os.environ['TMPDIR'])) as temporary:
+            source=Path(temporary).resolve()/"exported source with ' quote";source.mkdir()
+            derived,proof=module.affected_driver(native,source)
+            self.assertEqual(proof['canonical_sha256'],module.NATIVE_SHA)
+            self.assertTrue(proof['exact_inverse']);self.assertEqual(len(proof['splices']),2)
+            inverse=derived.decode()
+            for splice in reversed(proof['splices']):
+                self.assertEqual(inverse.count(splice['after']),1)
+                inverse=inverse.replace(splice['after'],splice['before'],1)
+            self.assertEqual(inverse.encode(),native)
+            self.assertEqual(proof['inverse_sha256'],module.NATIVE_SHA)
+            self.assertEqual(derived.count(b'for native_package in catalog web; do\n'),1)
+            self.assertIn(('native_root='+module.shlex_quote(str(source))+'\n').encode(),derived)
+            with self.assertRaises(RuntimeError):module.affected_driver(native+b'# drift\n',source)
+        self.assertEqual(module.qualification_mode(False),(module.PACKAGES,'PASS_FULL_NATIVE21'))
+        self.assertEqual(module.qualification_mode(True),(['catalog','web'],'PASS_AFFECTED_CATALOG_WEB_ONLY'))
+        self.assertNotEqual(module.qualification_mode(False)[1],module.qualification_mode(True)[1])
+        for invalid in [None,1,'catalog','web']:
+            with self.assertRaises(RuntimeError):module.qualification_mode(invalid)
+    def test_fixture_wal_entry_retains_durability_and_refuses_ambiguous_anchor(self):
+        original = 'fsync = on\nfull_page_writes = on\nsynchronous_commit = on\nport = 5432\nPG_CONF\nstarted=1\n'
+        added = 'max_wal_size = 128MB\nmin_wal_size = 32MB\ncheckpoint_timeout = 30s\n'
+        result = module.fixture_wal_entry(original)
+        self.assertEqual(result.replace(added, '', 1), original)
+        self.assertEqual(result.count(added), 1)
+        self.assertTrue(result.index(added) < result.index('PG_CONF'))
+        for invalid in [original.replace('port = 5432', 'port = 55434'), original + 'port = 5432\nPG_CONF\n']:
+            with self.assertRaises(RuntimeError): module.fixture_wal_entry(invalid)
     def test_wrapper_records_actual_package_exit_and_rejects_filtering(self):
         import uuid
         from unittest.mock import patch

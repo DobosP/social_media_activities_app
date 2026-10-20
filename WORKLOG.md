@@ -3,6 +3,14 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-21 — Repair complete-web contracts and bound disposable WAL
+
+Valid until: these producer/view/method inputs change — then requalify affected checks.
+
+The affected diagnostic verified C.utf8 and catalog54/0skip. Complete web exposed current rendering gaps plus later fixture exhaustion (278 roots passed,24 failed,0skip; result3dd8ff36; resource removal passed, graceful PG stop failed). New views now preserve empty CSRF strings supplied by unchanged direct action handlers, optional legacy media-marker behavior, exact generated profile avatar URI and literal member-control apostrophes. HTML metacharacters stay escaped, SVG URI validation/tier clamps and all mutation/CSRF/media/scanning/service rules remain unchanged. The NEW completion fixture now wires the existing actual Media read service needed by activity detail. Original assertions remain; new contract tests exercise these branches. Cross-reviews a038ec64/7fc4560b pass.
+
+The same1GiB disposable volume now uses normal128MB/32MB WAL targets and30s checkpoints, retaining fsync/full-page-writes/synchronous-commit on. Actual settings and bounded total/WAL/base usage are required receipts; no storage limit is raised. A finite affected-mode driver is exactly reversible to the canonical shell except its2-package list/root path. It has a distinct affected-only status and omits19 packages explicitly; default full21 script/status/flags/timeout remain unchanged. The PG16 locale query uses documented pg_database fields after its earlier unsupported-GUC preflight failed safely. Seven method controls pass. Required native28Go+4worker checks pass (stdout629b968e). All78 current DOM event trees/text/attributes/headers equal QA4 except the exact CSP nonce (c8066dba); raw HTML entity serialization changes only, CSS/JS unchanged. Current affected and full21 qualification remain pending.
+
 ## 2026-10-21 — Unicode fixture locale and native result-count erratum
 
 Valid until: these fixture/method/source inputs change — then requalify.
