@@ -79,12 +79,28 @@
     "other_author_source": {
       "path": "/home/dobo/work/_temp/gui-functional-hub/social-final-independent-review-v1/review.json",
       "sha256": "c0a41349f6ff45b0d8aa1d28b266c1234d0cb8c12384c890868b1aa9901bda78"
+    },
+    "qualifier_bootstrap_delta": {
+      "path": "/home/dobo/work/_temp/gui-functional-hub/social-native21-final-core-v3-independent.json",
+      "sha256": "0801368cf3ea30ca0624f326b72129081c6a16caf8750108088b46a635b53a1c"
     }
   },
   "full21": {
     "status": "PENDING_EXACT_COMMITTED_CANDIDATE",
     "method": "scripts/qualify-native-final.py",
-    "canonical_shell_sha256": "c5ea3b35b48c50d1caf9ab57dbae5260e8e23acbe6c89d20079687568cde13b1"
+    "canonical_shell_sha256": "c5ea3b35b48c50d1caf9ab57dbae5260e8e23acbe6c89d20079687568cde13b1",
+    "attempts": [
+      {
+        "path": "/home/dobo/work/_temp/gui-functional-hub/social-final-native21-v1/RESULT.json",
+        "sha256": "d40f3e56473289197f8cb9ab37c97f6ee0ae6d2fceed2ff343b6ad24befda96e",
+        "status": "REFUSED_MISTYPED_SHA_BEFORE_WORKLOAD"
+      },
+      {
+        "path": "/home/dobo/work/_temp/gui-functional-hub/social-final-native21-v2/RESULT.json",
+        "sha256": "5c3a3e03038d05bafd5811c58b0aeca661c832e1d6c262c02f056c18d4244b6b",
+        "status": "BOOTSTRAP_KEYWORD_DSN_REFUSED_CLEANUP_PASS"
+      }
+    ]
   },
   "holds": [
     "Social main and formal GUI milestone landing",
