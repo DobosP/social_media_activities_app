@@ -180,13 +180,17 @@ func (s *Server) socialPostModels(ctx context.Context, a platform.Actor, tid int
 			return nil, e
 		}
 	}
-	// The native view copies the same already-authorized mention selection.
-	// Compute it once per hydrated page; no query or domain decision is added.
-	workflowMentionNames := make([]string, 0, len(roster))
-	for name := range roster {
-		workflowMentionNames = append(workflowMentionNames, name)
+	// Only activity workflows consume a copied mention selection. Group rows
+	// retain their established projection without allocating unused metadata.
+	workflowActivity := aid > 0 && gid == 0
+	var workflowMentionNames []string
+	if workflowActivity {
+		workflowMentionNames = make([]string, 0, len(roster))
+		for name := range roster {
+			workflowMentionNames = append(workflowMentionNames, name)
+		}
+		sort.Strings(workflowMentionNames)
 	}
-	sort.Strings(workflowMentionNames)
 	for _, p := range rows {
 		if snippet, ok := p["snippet"].(map[string]any); ok {
 			value := []rune(strings.ReplaceAll(strings.TrimSpace(spaText(snippet["text"])), "\n", " "))
@@ -198,7 +202,9 @@ func (s *Server) socialPostModels(ctx context.Context, a platform.Actor, tid int
 		}
 		people = append(people, spaMap(p["author"]))
 		p["body_html"] = pongo2.AsSafeValue(BodyMarkup(spaText(p["body"]), roster, a.Cohort == "adult"))
-		p["workflow_body_mentions"] = workflowMentionNames
+		if workflowActivity {
+			p["workflow_body_mentions"] = workflowMentionNames
+		}
 		p["replies"] = map[string]any{"all": []map[string]any{}}
 	}
 	if err = s.socialAvatars(ctx, people); err != nil {
@@ -440,7 +446,11 @@ func (s *Server) socialThreadContext(r *http.Request, a platform.Actor, kind str
 	if target != nil {
 		initial["reply_to"] = spaID(target)
 	}
-	data["post_form"], err = s.form(r, a, "PostForm", initial)
+	if kind == "activity" {
+		data["post_form"], err = s.activityPostForm(r, a, initial)
+	} else {
+		data["post_form"], err = s.form(r, a, "PostForm", initial)
+	}
 	if err != nil {
 		return err
 	}

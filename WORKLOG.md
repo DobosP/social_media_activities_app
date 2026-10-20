@@ -3,6 +3,12 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-21 — Scope activity form metadata after combined App qualification
+
+Valid until: the scoped producers or qualification inputs change — then requalify.
+
+Full21 V5 on b9450809 completed configuration64/accounts75/admin21 with no skips, then App exposed one existing strict capture failure: a new typed PostForm value was also allocated for the group page. Cleanup passed; the failed result f4d27c8b remains history. Ordinary PostForm now retains its prior map before allocation; an explicit activity constructor carries the new snapshot. Mention metadata is allocated only for hydrated activity rows. Queries, authorization, BodyMarkup and all old assertions are unchanged. Independent delta2dc52b15 and bindings826698ff pass (144 physical/32 exact inverses; only forms.go changes inside that plan, social_threads bound separately). The new GET/POST regression uses the actual producer and compares complete widget content through a typed Pongo semantic normalization, preserving quote binding and escaping. Required source/race checks pass (32 Go packages/worker4, stdout30c1ea8b); all78 fresh bodies/headers equal QA4 except their exact CSP nonce (relation0b648ae2). No template/static/SPA change or desktop rerun is needed. Full21 on the final committed scope fix remains pending.
+
 ## 2026-10-21 — Remaining functional Go interfaces; combined candidate
 
 Valid until: these source or qualification inputs change — then requalify affected checks.

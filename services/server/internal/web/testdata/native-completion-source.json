@@ -166,51 +166,59 @@
     },
     {
       "Path": "services/server/internal/web/forms.go",
-      "CurrentSHA256": "c38e6e7ec9079179b94dae7aab1e3444ba5801b30d3efd85129145ebc018465a",
+      "CurrentSHA256": "5c4369c3417673c83abde5512f37d12bb8d77371d27c4303e39d4af5d49efdb8",
       "PriorSHA256": "a9cc66599f770b3e6b30ea3bc4be7148253702c939d484ae6b7bea5d16af6717",
-      "CurrentBytes": 8398,
+      "CurrentBytes": 8984,
       "PriorBytes": 7628,
       "CurrentMode": 33204,
       "Splices": [
         {
+          "PriorStart": 1285,
+          "PriorEnd": 1285,
+          "CurrentStart": 1285,
+          "CurrentEnd": 1848,
+          "Before": "",
+          "After": "\treturn s.formWithWorkflow(r, a, name, initial, name != \"PostForm\")\n}\n\n// Activity posts alone consume the typed workflow snapshot. Group posts keep\n// their established BoundField projection without constructing unused metadata.\nfunc (s *Server) activityPostForm(r *http.Request, a platform.Actor, initial map[string]any) (map[string]any, error) {\n\treturn s.formWithWorkflow(r, a, \"PostForm\", initial, true)\n}\n\nfunc (s *Server) formWithWorkflow(r *http.Request, a platform.Actor, name string, initial map[string]any, withWorkflow bool) (map[string]any, error) {\n"
+        },
+        {
           "PriorStart": 3925,
           "PriorEnd": 3925,
-          "CurrentStart": 3925,
-          "CurrentEnd": 4019,
+          "CurrentStart": 4488,
+          "CurrentEnd": 4582,
           "Before": "",
           "After": "\tnativeSeriesGauge := seriesGaugeFormSnapshot{Name: name, Cohort: a.Cohort, Staff: a.IsStaff}\n"
         },
         {
           "PriorStart": 4628,
           "PriorEnd": 4628,
-          "CurrentStart": 4722,
-          "CurrentEnd": 4963,
+          "CurrentStart": 5285,
+          "CurrentEnd": 5526,
           "Before": "",
           "After": "\t\tnativeSeriesGaugeChecked := f.Kind == \"BooleanField\" && (value == \"true\" || value == \"on\")\n\t\tif r.Method == \"POST\" && (r.PostForm.Get(key) == \"\" || strings.EqualFold(r.PostForm.Get(key), \"false\")) {\n\t\t\tnativeSeriesGaugeChecked = false\n\t\t}\n"
         },
         {
           "PriorStart": 6465,
           "PriorEnd": 6465,
-          "CurrentStart": 6800,
-          "CurrentEnd": 7088,
+          "CurrentStart": 7363,
+          "CurrentEnd": 7651,
           "Before": "",
           "After": "\t\tif seriesGaugeFormName(name) {\n\t\t\t_, hasOptions := options[key]\n\t\t\tnativeSeriesGauge.Fields = append(nativeSeriesGauge.Fields, seriesGaugeFormInput{Name: key, Value: value, HasOptions: hasOptions, Checked: nativeSeriesGaugeChecked, Options: append([]option(nil), options[key]...)})\n\t\t}\n"
         },
         {
           "PriorStart": 6767,
           "PriorEnd": 6767,
-          "CurrentStart": 7390,
-          "CurrentEnd": 7478,
+          "CurrentStart": 7953,
+          "CurrentEnd": 8041,
           "Before": "",
           "After": "\t}\n\tif seriesGaugeFormName(name) {\n\t\tresult[\"native_series_gauges\"] = nativeSeriesGauge\n"
         },
         {
           "PriorStart": 7606,
           "PriorEnd": 7606,
-          "CurrentStart": 8317,
-          "CurrentEnd": 8376,
+          "CurrentStart": 8880,
+          "CurrentEnd": 8962,
           "Before": "",
-          "After": "\taddWorkflowSnapshot(result, name, fields, names, options)\n"
+          "After": "\tif withWorkflow {\n\t\taddWorkflowSnapshot(result, name, fields, names, options)\n\t}\n"
         }
       ]
     },

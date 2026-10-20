@@ -3,137 +3,15 @@
   "status": "IMPLEMENTED_NATIVE_FRONTEND_DESKTOP_PASS_FULL21_PENDING",
   "operator": "agent:codex (PROGRAM E8)",
   "date": "2026-10-21",
-  "source": {
-    "parent": "a2676cfb5326cf9a3b232bd916bbd32bf313e50e",
-    "integrated_main": "5426e9154a67d5b3c3769a2a9f53c4197e690174",
-    "phase": "uncommitted candidate; commit required before full21"
-  },
-  "inventory": {
-    "named_get_aliases": 79,
-    "global_downloads": 4,
-    "typed_destinations": 50,
-    "new_typed_destinations": 39,
-    "compatibility_destinations": 14,
-    "overlapping_optional_spa_modules": 20,
-    "spa_default": false,
-    "historical_reference_exclusions": 2,
-    "remaining_source_functional_gaps": 0,
-    "proof": {
-      "path": "/home/dobo/work/_temp/gui-functional-hub/social-route-completion-audit/manifest-v4.json",
-      "sha256": "6ad0002d719159ba76e65705a109f71be3b0bbb26ca29719920dadb1751b2c57"
-    }
-  },
-  "native": {
-    "status": "PASS_REQUIRED_SOURCE_CHECKS",
-    "command": "bash scripts/check-native.sh /usr/local/go/bin/go",
-    "proof": {
-      "path": "/home/dobo/work/_temp/gui-functional-hub/social-native-completion-checks/final-iteration-v3-result.json",
-      "sha256": "4cfb6112640b40a62f8f67460c080e63ac457027de38bb764e63b16f4a10b05c"
-    },
-    "limit": "Default DB skips do not qualify database behavior.",
-    "go_packages_with_tests": 32,
-    "worker_tests": 4
-  },
-  "frontend": {
-    "status": "PASS",
-    "contracts": 3,
-    "initial_js_css_gzip_kib": 36.72,
-    "cap_kib": 40,
-    "proof": {
-      "path": "/home/dobo/work/_temp/gui-functional-hub/social-frontend-completion/RESULT.json",
-      "sha256": "076e56e663f4eab2fcd028f8d5f637fff524692d3e2943f5a9a152c1029e669a"
-    },
-    "limit": "No claim of20 complete browser workflows."
-  },
-  "desktop": {
-    "status": "PASS_DESKTOP_SCOPE",
-    "states": 78,
-    "strict_audits": 156,
-    "violations": 0,
-    "incomplete": 0,
-    "csp_events": 0,
-    "cleanup": true,
-    "proof": {
-      "path": "/home/dobo/work/_temp/gui-functional-hub/social-completion-desktop/qa-v4/result.json",
-      "sha256": "cfb51986292f728c119f2a014f0c2c504e3ce85e6a0c77486acd1ed90c550d6e"
-    },
-    "limit": "Synthetic ordinary-renderer EN/RO desktop fixtures; no mutations/external providers/map tiles/E2EE enrollment/mobile."
-  },
-  "source_reviews": {
-    "main_integration": {
-      "path": "/home/dobo/work/_temp/gui-functional-hub/social-main-integration/independent-source-review.json",
-      "sha256": "234fac47370bb1ae230871799499f614d818c16543a22c4896abf1624af74233"
-    },
-    "physical_and_historical_bindings": {
-      "path": "/home/dobo/work/_temp/gui-functional-hub/social-native-completion-adapters-v2/final-bindings-v4/independent-source-review.json",
-      "sha256": "30cbf2792d411ec8ed82d9d5e0ef6df8237db0c3bfe8d4150eac72635204b769"
-    },
-    "place_accent": {
-      "path": "/home/dobo/work/_temp/gui-functional-hub/social-place-accent-image-fix-v1/independent-root-source-review.json",
-      "sha256": "450ddb6b136304315237bb220783332df9d1da2a2db7b8b28d146757b52b73fd"
-    },
-    "qualifier": {
-      "path": "/home/dobo/work/_temp/gui-functional-hub/social-native21-final-core-v2/independent-source-review-public.json",
-      "sha256": "e347bb647611a76bec813967207edfcb7e615c06a6a80e834adf490dc35a52f0"
-    },
-    "other_author_source": {
-      "path": "/home/dobo/work/_temp/gui-functional-hub/social-final-independent-review-v1/review.json",
-      "sha256": "c0a41349f6ff45b0d8aa1d28b266c1234d0cb8c12384c890868b1aa9901bda78"
-    },
-    "qualifier_bootstrap_delta": {
-      "path": "/home/dobo/work/_temp/gui-functional-hub/social-native21-final-core-v3-independent.json",
-      "sha256": "0801368cf3ea30ca0624f326b72129081c6a16caf8750108088b46a635b53a1c"
-    },
-    "qualifier_private_admission_delta": {
-      "path": "/home/dobo/work/_temp/gui-functional-hub/social-native21-private-admission-review.json",
-      "sha256": "96bbe123f34ce33a2bbe3ee99fabc54b50acc8c3440bc533b260941c721e2bac"
-    },
-    "qualifier_receipt_dsn_delta": {
-      "path": "/home/dobo/work/_temp/gui-functional-hub/social-native21-receipt-dsn-review.json",
-      "sha256": "a9d06effc8f9a4904a85fa236fe134832817abdaa7daf7420af82503c0d8c274"
-    }
-  },
-  "full21": {
-    "status": "PENDING_EXACT_COMMITTED_CANDIDATE",
-    "method": "scripts/qualify-native-final.py",
-    "canonical_shell_sha256": "c5ea3b35b48c50d1caf9ab57dbae5260e8e23acbe6c89d20079687568cde13b1",
-    "attempts": [
-      {
-        "path": "/home/dobo/work/_temp/gui-functional-hub/social-final-native21-v1/RESULT.json",
-        "sha256": "d40f3e56473289197f8cb9ab37c97f6ee0ae6d2fceed2ff343b6ad24befda96e",
-        "status": "REFUSED_MISTYPED_SHA_BEFORE_WORKLOAD"
-      },
-      {
-        "path": "/home/dobo/work/_temp/gui-functional-hub/social-final-native21-v2/RESULT.json",
-        "sha256": "5c3a3e03038d05bafd5811c58b0aeca661c832e1d6c262c02f056c18d4244b6b",
-        "status": "BOOTSTRAP_KEYWORD_DSN_REFUSED_CLEANUP_PASS"
-      },
-      {
-        "path": "/home/dobo/work/_temp/gui-functional-hub/social-final-native21-v3/RESULT.json",
-        "sha256": "14278979ef8e5a914d9f9b3c899f2b11650d8cdf5c689fd1b8600e0e254ae90d",
-        "status": "FRESH_MIGRATION_REFUSED_CLEANUP_PASS"
-      },
-      {
-        "path": "/home/dobo/work/_temp/gui-functional-hub/social-final-native21-v4/RESULT.json",
-        "sha256": "d2a6b875d36079b5e47c65ca3d510f25aefbef2e6d203455276d0dc4dd9b6a47",
-        "status": "MIGRATION_PASS_CONFIGURATION_URL_AND_RECEIPT_FAILURE_CLEANUP_PASS"
-      }
-    ],
-    "method_boundary_tests": 5
-  },
-  "holds": [
-    "Social main and formal GUI milestone landing",
-    "Production and canonical new-image audits",
-    "Real account/child/provider/government activation",
-    "Held erasure/privacy/content decisions"
-  ],
+  "source": {"parent":"a2676cfb5326cf9a3b232bd916bbd32bf313e50e","integrated_main":"5426e9154a67d5b3c3769a2a9f53c4197e690174","phase":"Activity-only form metadata scope fixed; final committed full21 pending."},
+  "inventory": {"named_get_aliases":79,"global_downloads":4,"typed_destinations":50,"new_typed_destinations":39,"compatibility_destinations":14,"overlapping_optional_spa_modules":20,"spa_default":false,"historical_reference_exclusions":2,"remaining_source_functional_gaps":0,"proof":{"path":"/home/dobo/work/_temp/gui-functional-hub/social-route-completion-audit/manifest-v4.json","sha256":"6ad0002d719159ba76e65705a109f71be3b0bbb26ca29719920dadb1751b2c57"}},
+  "native": {"status":"PASS_REQUIRED_SOURCE_CHECKS","command":"bash scripts/check-native.sh /usr/local/go/bin/go","proof":{"path":"/home/dobo/work/_temp/gui-functional-hub/social-native-completion-checks/final-iteration-v5-result.json","sha256":"b14c09da841feecf9bab38479d365c05673e2d7637aef528ad8b166eefb55756"},"limit":"Default DB skips do not qualify database behavior.","go_packages_with_tests":32,"worker_tests":4},
+  "frontend": {"status":"PASS","contracts":3,"initial_js_css_gzip_kib":36.72,"cap_kib":40,"proof":{"path":"/home/dobo/work/_temp/gui-functional-hub/social-frontend-completion/RESULT.json","sha256":"076e56e663f4eab2fcd028f8d5f637fff524692d3e2943f5a9a152c1029e669a"},"limit":"No claim of20 complete browser workflows."},
+  "desktop": {"status":"PASS_DESKTOP_SCOPE","states":78,"strict_audits":156,"violations":0,"incomplete":0,"csp_events":0,"cleanup":true,"proof":{"path":"/home/dobo/work/_temp/gui-functional-hub/social-completion-desktop/qa-v4/result.json","sha256":"cfb51986292f728c119f2a014f0c2c504e3ce85e6a0c77486acd1ed90c550d6e"},"limit":"Synthetic ordinary-renderer EN/RO desktop fixtures; no mutations/external providers/map tiles/E2EE enrollment/mobile.","current_render_relation":{"path":"/home/dobo/work/_temp/gui-functional-hub/social-completion-desktop/scope-fix-render-relation.json","sha256":"0b648ae271f7ef1ebd37de15f40a21feee9899da44f4d579a0bca577e8717a16"}},
+  "source_reviews": {"main_integration":{"path":"/home/dobo/work/_temp/gui-functional-hub/social-main-integration/independent-source-review.json","sha256":"234fac47370bb1ae230871799499f614d818c16543a22c4896abf1624af74233"},"physical_and_historical_bindings":{"path":"/home/dobo/work/_temp/gui-functional-hub/social-native-completion-adapters-v2/final-bindings-v5/independent-source-review.json","sha256":"826698ffabd316e0d58e4f13c59a83d7a322f03ef549eb26a9a668b8c021fd9c"},"place_accent":{"path":"/home/dobo/work/_temp/gui-functional-hub/social-place-accent-image-fix-v1/independent-root-source-review.json","sha256":"450ddb6b136304315237bb220783332df9d1da2a2db7b8b28d146757b52b73fd"},"qualifier":{"path":"/home/dobo/work/_temp/gui-functional-hub/social-native21-final-core-v2/independent-source-review-public.json","sha256":"e347bb647611a76bec813967207edfcb7e615c06a6a80e834adf490dc35a52f0"},"other_author_source":{"path":"/home/dobo/work/_temp/gui-functional-hub/social-final-independent-review-v1/review.json","sha256":"c0a41349f6ff45b0d8aa1d28b266c1234d0cb8c12384c890868b1aa9901bda78"},"qualifier_bootstrap_delta":{"path":"/home/dobo/work/_temp/gui-functional-hub/social-native21-final-core-v3-independent.json","sha256":"0801368cf3ea30ca0624f326b72129081c6a16caf8750108088b46a635b53a1c"},"qualifier_private_admission_delta":{"path":"/home/dobo/work/_temp/gui-functional-hub/social-native21-private-admission-review.json","sha256":"96bbe123f34ce33a2bbe3ee99fabc54b50acc8c3440bc533b260941c721e2bac"},"qualifier_receipt_dsn_delta":{"path":"/home/dobo/work/_temp/gui-functional-hub/social-native21-receipt-dsn-review.json","sha256":"a9d06effc8f9a4904a85fa236fe134832817abdaa7daf7420af82503c0d8c274"},"activity_form_scope_delta":{"path":"/home/dobo/work/_temp/gui-functional-hub/social-post-form-scope-fix-v1/independent-scope-delta-review.json","sha256":"2dc52b15aa291b42907962f96a1a3d63c756c4559301d8f23507053198884453"}},
+  "full21": {"status":"PENDING_EXACT_COMMITTED_CANDIDATE","method":"scripts/qualify-native-final.py","canonical_shell_sha256":"c5ea3b35b48c50d1caf9ab57dbae5260e8e23acbe6c89d20079687568cde13b1","attempts":[{"path":"/home/dobo/work/_temp/gui-functional-hub/social-final-native21-v1/RESULT.json","sha256":"d40f3e56473289197f8cb9ab37c97f6ee0ae6d2fceed2ff343b6ad24befda96e","status":"REFUSED_MISTYPED_SHA_BEFORE_WORKLOAD"},{"path":"/home/dobo/work/_temp/gui-functional-hub/social-final-native21-v2/RESULT.json","sha256":"5c3a3e03038d05bafd5811c58b0aeca661c832e1d6c262c02f056c18d4244b6b","status":"BOOTSTRAP_KEYWORD_DSN_REFUSED_CLEANUP_PASS"},{"path":"/home/dobo/work/_temp/gui-functional-hub/social-final-native21-v3/RESULT.json","sha256":"14278979ef8e5a914d9f9b3c899f2b11650d8cdf5c689fd1b8600e0e254ae90d","status":"FRESH_MIGRATION_REFUSED_CLEANUP_PASS"},{"path":"/home/dobo/work/_temp/gui-functional-hub/social-final-native21-v4/RESULT.json","sha256":"d2a6b875d36079b5e47c65ca3d510f25aefbef2e6d203455276d0dc4dd9b6a47","status":"MIGRATION_PASS_CONFIGURATION_URL_AND_RECEIPT_FAILURE_CLEANUP_PASS"},{"path":"/home/dobo/work/_temp/gui-functional-hub/social-final-native21-v5/RESULT.json","sha256":"f4d27c8b207649cb666de8c2edba1f02b3dfc914e153ce745bcbb58b1dcdfd10","status":"CONFIG64_ACCOUNTS75_ADMIN21_PASS_APP_SHARED_METADATA_CAPTURE_FAILURE_CLEANUP_PASS"}],"method_boundary_tests":5},
+  "holds": ["Social main and formal GUI milestone landing","Production and canonical new-image audits","Real account/child/provider/government activation","Held erasure/privacy/content decisions"],
   "teacher": "Further rewrites deferred; published088934f retained.",
   "cat": "S1 implementation complete locally; auditc7082c9b; app-main push remains owner.",
-  "retention": {
-    "path": "/home/dobo/work/_temp/gui-functional-hub/social-completion-desktop/retention-v4.json",
-    "sha256": "6feaf6446a27892c7f60c491dbcfe4efc118be5c91bd82e065b8c34a75b2ac0b",
-    "pruned_owned_ui_files": 702,
-    "pruned_bytes": 44026671,
-    "history": "Deleted raw captures unavailable; manifests/results and latest setup retained."
-  }
+  "retention": {"path":"/home/dobo/work/_temp/gui-functional-hub/social-completion-desktop/retention-v4.json","sha256":"6feaf6446a27892c7f60c491dbcfe4efc118be5c91bd82e065b8c34a75b2ac0b","pruned_owned_ui_files":702,"pruned_bytes":44026671,"history":"Deleted raw captures unavailable; manifests/results and latest setup retained."}
 }

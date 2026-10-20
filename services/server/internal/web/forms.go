@@ -44,6 +44,16 @@ var definitions = func() map[string]map[string]fieldDef {
 type option struct{ Value, Label string }
 
 func (s *Server) form(r *http.Request, a platform.Actor, name string, initial map[string]any) (map[string]any, error) {
+	return s.formWithWorkflow(r, a, name, initial, name != "PostForm")
+}
+
+// Activity posts alone consume the typed workflow snapshot. Group posts keep
+// their established BoundField projection without constructing unused metadata.
+func (s *Server) activityPostForm(r *http.Request, a platform.Actor, initial map[string]any) (map[string]any, error) {
+	return s.formWithWorkflow(r, a, "PostForm", initial, true)
+}
+
+func (s *Server) formWithWorkflow(r *http.Request, a platform.Actor, name string, initial map[string]any, withWorkflow bool) (map[string]any, error) {
 	fields, ok := definitions[name]
 	if !ok {
 		return nil, platform.ErrNotFound
@@ -224,6 +234,8 @@ func (s *Server) form(r *http.Request, a platform.Actor, name string, initial ma
 		}
 		result["steps"] = steps
 	}
-	addWorkflowSnapshot(result, name, fields, names, options)
+	if withWorkflow {
+		addWorkflowSnapshot(result, name, fields, names, options)
+	}
 	return result, nil
 }
