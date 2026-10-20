@@ -87,6 +87,10 @@
     "qualifier_private_admission_delta": {
       "path": "/home/dobo/work/_temp/gui-functional-hub/social-native21-private-admission-review.json",
       "sha256": "96bbe123f34ce33a2bbe3ee99fabc54b50acc8c3440bc533b260941c721e2bac"
+    },
+    "qualifier_receipt_dsn_delta": {
+      "path": "/home/dobo/work/_temp/gui-functional-hub/social-native21-receipt-dsn-review.json",
+      "sha256": "a9d06effc8f9a4904a85fa236fe134832817abdaa7daf7420af82503c0d8c274"
     }
   },
   "full21": {
@@ -108,9 +112,14 @@
         "path": "/home/dobo/work/_temp/gui-functional-hub/social-final-native21-v3/RESULT.json",
         "sha256": "14278979ef8e5a914d9f9b3c899f2b11650d8cdf5c689fd1b8600e0e254ae90d",
         "status": "FRESH_MIGRATION_REFUSED_CLEANUP_PASS"
+      },
+      {
+        "path": "/home/dobo/work/_temp/gui-functional-hub/social-final-native21-v4/RESULT.json",
+        "sha256": "d2a6b875d36079b5e47c65ca3d510f25aefbef2e6d203455276d0dc4dd9b6a47",
+        "status": "MIGRATION_PASS_CONFIGURATION_URL_AND_RECEIPT_FAILURE_CLEANUP_PASS"
       }
     ],
-    "method_boundary_tests": 4
+    "method_boundary_tests": 5
   },
   "holds": [
     "Social main and formal GUI milestone landing",

@@ -157,7 +157,7 @@ def docker_wrapper(plan_path,argv):
         if inspected.returncode==0:
             need(json.loads(inspected.stdout).get(OWNER_LABEL)==plan['owner'],'package ownership differs')
             subprocess.run([plan['docker'],'--host=unix:///var/run/docker.sock','rm','-f',plan['package_name']],check=True,capture_output=True,timeout=30)
-        write(Path(plan['out'])/'package-'+package+'.json',{'package':package,'argv':command,'exit':code})
+        write(Path(plan['out'])/('package-'+package+'.json'),{'package':package,'argv':command,'exit':code})
     return code
 
 def execute(args):
@@ -254,11 +254,10 @@ def execute(args):
             need(not INTERRUPTED and time.monotonic()<deadline,'DB readiness deadline/interruption');time.sleep(.2)
         report['db_ready']=json.loads((out/'socket/ready.json').read_text());need(report['db_ready']['uid']==report['db_ready']['gid']==999,'DB UID/GID differs')
         dk('exec',names['db'],'/usr/lib/postgresql/16/bin/createdb','-h','/socket','-p','5432','-U','app','native21',label='database-create')
-        dsn='host=native21-db port=5432 user=app dbname=native21 sslmode=disable'
         # The CLI requires a URL and explicit password; this marker is not a
         # credential because the disposable, isolated DB uses trust admission.
-        bootstrap_url='postgres://app:fixture-only-not-a-credential@native21-db:5432/native21?sslmode=disable'
-        dk('run',*common,'--name',names['package'],'--user',str(os.getuid())+':'+str(os.getgid()),'-e','DATABASE_URL='+bootstrap_url,'-v',str(out/'runtime/tests')+':/tests:ro','--tmpfs','/tmp:rw,nosuid,nodev,size=64m,mode=1777',CODEC_IMAGE,'/tests/social-server','--migrate-only',label='current-migrate-only',timeout=90)
+        dsn='postgres://app:fixture-only-not-a-credential@native21-db:5432/native21?sslmode=disable'
+        dk('run',*common,'--name',names['package'],'--user',str(os.getuid())+':'+str(os.getgid()),'-e','DATABASE_URL='+dsn,'-v',str(out/'runtime/tests')+':/tests:ro','--tmpfs','/tmp:rw,nosuid,nodev,size=64m,mode=1777',CODEC_IMAGE,'/tests/social-server','--migrate-only',label='current-migrate-only',timeout=90)
         (out/'shim').mkdir();plan={'source':str(source),'scratch':str(out/'runtime'),'out':str(out),'docker':docker,'codec':CODEC_IMAGE,'owner':owner,'network':names['network'],'package_name':names['package']};write(out/'plan.json',plan)
         shim=out/'shim/docker';shim.write_text('#!/bin/sh\nexec '+shlex_quote(sys.executable)+' -I '+shlex_quote(str(source/relative))+' --docker-wrapper '+shlex_quote(str(out/'plan.json'))+' "$@"\n');shim.chmod(0o755)
         runtime_env=dict(base_env,PATH=str(out/'shim')+':'+base_env['PATH'])

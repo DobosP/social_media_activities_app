@@ -4,6 +4,25 @@ from pathlib import Path
 spec=importlib.util.spec_from_file_location('native21_final',Path(__file__).with_name('qualify-native-final.py'))
 module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
 class FinalNativeBoundaryTests(unittest.TestCase):
+    def test_wrapper_records_actual_package_exit_and_rejects_filtering(self):
+        import uuid
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory(dir=Path(os.environ['TMPDIR'])) as temporary:
+            out=Path(temporary).resolve();source=out/'source';scratch=out/'runtime'
+            plan={'source':str(source),'scratch':str(scratch),'out':str(out),'codec':module.CODEC_IMAGE,'owner':str(uuid.uuid4()),'network':'native21-owned-network','package_name':'native21-owned-package','docker':'/usr/bin/docker'}
+            plan_file=out/'plan.json';plan_file.write_text(json.dumps(plan))
+            prefix=['run','--rm','--read-only','--cap-drop=ALL','--security-opt=no-new-privileges','--user',str(os.getuid())+':'+str(os.getgid()),'--network',plan['network'],'-e','TMPDIR=/scratch/test-tmp','-e','GOMAXPROCS=2','-v',str(source)+':/src:ro','-v',str(scratch)+':/scratch','-w','/src/services/server/cmd/social-server',module.CODEC_IMAGE,'/scratch/tests/configuration.test','-test.v','-test.timeout=10m']
+            # Subprocesses are isolated stubs: no Docker invocation occurs.
+            for code in (0,7):
+                with patch.object(module.subprocess,'Popen') as popen, patch.object(module.subprocess,'run') as inspect:
+                    popen.return_value.wait.return_value=code;inspect.return_value.returncode=1
+                    self.assertEqual(module.docker_wrapper(plan_file,prefix.copy()),code)
+                receipt=json.loads((out/'package-configuration.json').read_text())
+                self.assertEqual(receipt['exit'],code)
+                self.assertEqual(receipt['argv'][-3:],['/scratch/tests/configuration.test','-test.v','-test.timeout=10m'])
+            with patch.object(module.subprocess,'Popen') as popen:
+                with self.assertRaises(RuntimeError):module.docker_wrapper(plan_file,prefix+['-test.run=Filtered'])
+                popen.assert_not_called()
     def test_fixture_host_admission_requires_owned_empty_private_network(self):
         import copy
         network={'Internal':True,'Labels':{module.OWNER_LABEL:'owner'},'Containers':{},'IPAM':{'Config':[{'Subnet':'172.31.240.0/24'}]}}
