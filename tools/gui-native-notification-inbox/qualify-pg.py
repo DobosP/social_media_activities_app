@@ -421,7 +421,7 @@ def execute(args):
         result['go'] = {'version': version, 'actual_executable': str(GO.resolve()), 'sha256': digest(regular(GO.resolve()))}
         for cache in (CACHE, MODCACHE):
             need(cache.resolve() == cache and cache.is_dir() and cache.stat().st_uid == os.getuid(), 'Existing owned rolling cache required')
-        archive = git('archive', '--format=tar.gz', args.sha)
+        archive = git('archive', '--format=tar.gz', '-9', args.sha)
         result['git_archive'] = {'format': 'tar.gz', 'bytes': len(archive), 'sha256': digest(archive), 'retention': 'Exported once to the rolling source tree; raw archive stdout remains until separately verified retention cleanup; exact clean Git SHA/tree is the source keeper'}
         with tarfile.open(fileobj=io.BytesIO(archive), mode='r:gz') as source_tar:
             source_tar.extractall(out / 'source', filter='data')

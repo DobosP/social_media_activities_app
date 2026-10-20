@@ -65,6 +65,7 @@ On conflict: `STATUS.md` > newest-dated ADR > every other doc.
 | 0064 | [native-notification-preferences](0064-native-notification-preferences.md) | independently feature-qualified affectedPG6/desktop6+6; feature branch only | 2026-10-20 |
 | 0065 | [native-notification-inbox](0065-native-notification-inbox.md) | original496 feature-qualified/custody retained; date0afd independently qualified affectedPG7/450roots1353named, UI6+6/all37 exact, matched body costs lower/HTML larger; date keeperbc10/feature6611 and exact retention3eef/postcheck4122 accepted; feature branch only | 2026-10-20 |
 | 0066 | [native-account-center](0066-native-account-center.md) | exactR nativePG7/457roots1368named and M3 UI8+8/24Axe/all37 bodies independently accepted; matched BODY elapsed/allocationcount higher,bytes/HTML/gzip lower; independently feature-qualified; compact keeper and exact retention accepted; feature branch only; feature branch only | 2026-10-20 |
+| 0067 | [native-language-action](0067-native-language-action.md) | C7586-bound source proposal:10formattedGo287d/companionV2source6502 ready; named whole-SHA gzip9 option3171 keeps64MiB/cases/cleanup; final wholepacket review/application/L/preflight/full7/UI pending | 2026-10-20 |
 
 ⚠ **0009 is claimed twice** — this ledger exists so it does not happen again. Both files stay:
 `0009-csp-enforcement-prep.md` (superseded by ADR-0010) and

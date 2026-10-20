@@ -64,7 +64,7 @@ class ArchiveTransportControls(unittest.TestCase):
         namespace.update(git=fake_git, args=types.SimpleNamespace(sha='1' * 40), result={},
                          tarfile=tarfile, io=io, out=root)
         exec(transport, namespace)
-        self.assertEqual(calls, [('archive', '--format=tar.gz', '1' * 40)])
+        self.assertEqual(calls, [('archive', '--format=tar.gz', '-9', '1' * 40)])
         return namespace
 
     def test_entire_fixed_source_roundtrip_and_format_receipt(self):

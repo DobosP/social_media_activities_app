@@ -1,0 +1,63 @@
+{
+  "account_closing_source": "7586d7c40fea262f22942c5242e7ec05716216c2",
+  "account_keeper": {
+    "archive": "docs/reviews/gui-native-account-center/evidence.tar.gz",
+    "archive_sha256": "e31b656ba310cb09639a6ab7e1a2a2dc8d305e17ae7a1f30ce3c8bc5ca3bee26",
+    "feature_review": {
+      "expected": "ACCEPT_BOUNDED_NATIVE_ACCOUNT_OVERVIEW_SETTINGS_FEATURE_EXACT_R_M3_WITH_EXPLICIT_BODY_TRADEOFFS",
+      "field": "status",
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/account-center-keeper/acceptance.json",
+      "sha256": "2c3806753662f6a483117446b0d0d3fc9ec2f69f4bc11c0f27341ae50f01806a"
+    },
+    "keeper_review": {
+      "expected": "ACCEPT_ACTUAL_NATIVE_ACCOUNT_KEEPER_COMPLETE_BYTES_PAX_METADATA_AND_BOUNDED_PROVENANCE",
+      "field": "status",
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/account-center-keeper/keeper-review.json",
+      "sha256": "279909705896aa2ca5acbf51cc056df5b47288fa7b95ec0be4c2513134b7549a"
+    },
+    "manifest": "docs/reviews/gui-native-account-center/archive-manifest.json",
+    "manifest_sha256": "6a0c5c50e3c8e77f46a36becc9617f2120476716350354b447716ee29089af8f"
+  },
+  "account_operational_review": null,
+  "account_run": {
+    "fixtures_sha256": null,
+    "path": null,
+    "prior37_sha256": null,
+    "result_sha256": null
+  },
+  "cache": "/home/dobo/work/_temp/gui-functional-hub/go-cache",
+  "complete7_review": null,
+  "dependencies": {
+    "axe_file": {
+      "path": "/home/dobo/work/_temp/feat__gui-cat-m3/gates/cat_de_roman_esti/tools/gui-baseline-quality/node_modules/axe-core/axe.min.js",
+      "sha256": "20c09fe157a8a34a30e241aaa1fcdade657734f08ab379ecfbeb7d45cc46e878"
+    },
+    "chrome": {
+      "path": "/opt/google/chrome/google-chrome",
+      "sha256": "aea09d69ce7f24d5901f6bfb15dd44d0c856e793e0a498f8d8393ec7d2c308ec"
+    },
+    "go": {
+      "path": "/usr/local/go/bin/go",
+      "sha256": "30969f97169d7f43fe6a085873d75613adc21e30818a8c61d95bd27275df4624"
+    },
+    "node": {
+      "path": "/home/dobo/.vite-plus/js_runtime/node/24.22.0/bin/node",
+      "sha256": "67ca5783febb8bf85736c79fcdd92c8d6d465a0eb2a082672bcdfa76a506751c"
+    },
+    "playwright_package": {
+      "path": "/home/dobo/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright",
+      "sha256": "ca170ec143a88ed3043ac953eb3b2377b2b97304104f4e1e23316684ce2c35af"
+    }
+  },
+  "language_product_source": null,
+  "method_sha256": {
+    "desktop.mjs": "c65f7bc23e07e7376eb226f730439b39db1b0ba27dc6af2cd75d3419a11a1a88",
+    "fixture_test.go.txt": "348f0a20e81b9908c08735093e0a1744b6d546174b7effd28d5e98e1f20cf25b",
+    "qualify.py": "c69b9025add1fd7c4aeb1ca891894fd38e4c5bf6dd75abe7c8ade7897f3d781d"
+  },
+  "modcache": "/home/dobo/work/_temp/feat__gui-app-migration-a/social_media_activities_app/go-mod",
+  "schema": 1,
+  "site_js_sha256": "144ecbc76de716f720361b76c4863cbbda7e4408101fb494f48d4f59c9172938",
+  "source_review": null,
+  "status": "DISABLED_PENDING_ACCOUNT_PUBLICATION_LANGUAGE_SOURCE_FULL7_AND_REVIEWS"
+}

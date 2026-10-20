@@ -460,6 +460,16 @@ func guiPublicGetRepairRows() []guiPublicGetRepairRow {
 // Each row must find its exact afterimage and land on its exact preimage, so a
 // later row only ever sees the bytes the previous reviewed row produced.
 func guiPublicGetRowsPreimage(path string, raw []byte) ([]byte, error) {
+	// Latest language registration/current walker must be exact before the
+	// unchanged account/inbox and original historical source chain.
+	switch path {
+	case "services/server/internal/web/server.go", "services/server/internal/app/app.go", "services/server/internal/web/gui_public_get_walk_test.go":
+		var languageErr error
+		raw, languageErr = languageActionSourcePreimage(path, raw)
+		if languageErr != nil {
+			return nil, languageErr
+		}
+	}
 	// Require the complete newest account source before the unchanged prior chain.
 	switch path {
 	case "services/server/internal/web/renderer.go", "services/server/internal/web/gui_public_get_walk_test.go":

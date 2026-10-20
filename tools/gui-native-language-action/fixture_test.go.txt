@@ -1,0 +1,100 @@
+package web
+
+// Absent-path test overlay only. This serves synthetic GET pages; the POST
+// route and CheckCSRF are the real registered functions from language_action_test.go.
+// No AccountView, Self, identity store, App session middleware or database runs.
+import (
+	"bufio"
+	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"flag"
+	"fmt"
+	"html/template"
+	"io"
+	"net"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"os/signal"
+	"strings"
+	"sync/atomic"
+	"syscall"
+	"testing"
+	"time"
+)
+
+var languageCompanionProduct = flag.String("language-companion-product", "", "reviewed exact language product")
+var languageCompanionSiteHash = flag.String("language-companion-site-sha", "", "admitted immutable site.js buffer digest")
+var languageCompanionAxeHash = flag.String("language-companion-axe-sha", "", "admitted immutable Axe buffer digest")
+
+const languageCompanionPage = `<!doctype html><html lang="{{.Language}}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Synthetic language action</title><script id="site-js" src="/static/js/site.js" defer></script></head><body><main id="main"><h1>Synthetic account language</h1><p>This isolated page does not represent an authenticated account.</p><section aria-labelledby="settings-heading"><h2 id="settings-heading">Language</h2><form method="post" action="/i18n/setlang/"><input type="hidden" name="csrfmiddlewaretoken" value="{{.CSRF}}"><input type="hidden" name="next" value="{{.Next}}"><label for="settings-language">Language</label><select id="settings-language" name="language"><option value="en"{{if .English}} selected{{end}}>English</option><option value="ro"{{if not .English}} selected{{end}}>Română</option></select><button type="submit">Save</button></form></section></main><footer><form method="post" action="/i18n/setlang/" class="inline lang-switch"><input type="hidden" name="csrfmiddlewaretoken" value="{{.CSRF}}"><input type="hidden" name="next" value="{{.Next}}"><label for="footer-language">Language</label><select id="footer-language" name="language" data-auto-submit><option value="en"{{if .English}} selected{{end}}>English</option><option value="ro"{{if not .English}} selected{{end}}>Română</option></select><noscript><button type="submit">Set language</button></noscript></form></footer></body></html>`
+
+func TestNativeLanguageBrowserCompanion(t *testing.T) {
+	if len(*languageCompanionProduct) != 40 || len(*languageCompanionSiteHash) != 64 || len(*languageCompanionAxeHash) != 64 {
+		t.Fatal("explicit admitted companion inputs required")
+	}
+	reader := bufio.NewReaderSize(io.LimitReader(os.Stdin, (2<<20)+1), 8192)
+	raw, err := reader.ReadBytes('\n')
+	if err != nil || len(raw) > 2<<20 {
+		t.Fatal("bounded canonical synthetic input required")
+	}
+	var input struct { Product string `json:"product"`; SiteJS []byte `json:"site_js"`; Axe []byte `json:"axe"` }
+	if json.Unmarshal(raw, &input) != nil || input.Product != *languageCompanionProduct || len(input.SiteJS) == 0 || len(input.SiteJS) > 1<<18 || len(input.Axe) == 0 || len(input.Axe) > 1<<20 {
+		t.Fatal("synthetic input identity differs")
+	}
+	digest := sha256.Sum256(input.SiteJS)
+	if hex.EncodeToString(digest[:]) != *languageCompanionSiteHash { t.Fatal("immutable script buffer differs") }
+	digest = sha256.Sum256(input.Axe)
+	if hex.EncodeToString(digest[:]) != *languageCompanionAxeHash { t.Fatal("immutable audit buffer differs") }
+	page, err := template.New("synthetic-language").Parse(languageCompanionPage)
+	if err != nil { t.Fatal("synthetic page unavailable") }
+	listener, err := net.Listen("tcp4", "127.0.0.1:0")
+	if err != nil { t.Fatal("owned loopback unavailable") }
+	defer listener.Close()
+	origin := "http://" + listener.Addr().String()
+	_, real := languageTestServer(t, origin)
+	var pages, posts, unexpected, internal atomic.Int64
+	server := &http.Server{ReadHeaderTimeout: 5*time.Second, ReadTimeout: 10*time.Second, WriteTimeout: 10*time.Second, IdleTimeout: 5*time.Second}
+	server.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-store")
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		if r.Host != listener.Addr().String() { unexpected.Add(1); http.Error(w, "Fixture unavailable", 400); return }
+		if r.Method == http.MethodPost && r.URL.Path == "/i18n/setlang/" && r.URL.EscapedPath() == "/i18n/setlang/" {
+			posts.Add(1)
+			// Recorder is memory-only; no cookie, header, body or CSRF proof is printed.
+			response := httptest.NewRecorder(); real.ServeHTTP(response, r)
+			if response.Body.Len() > 4096 { internal.Add(1); http.Error(w, "Fixture unavailable", 500); return }
+			for name, values := range response.Header() { for _, value := range values { w.Header().Add(name, value) } }
+			w.WriteHeader(response.Code); _, _ = w.Write(response.Body.Bytes()); return
+		}
+		if r.Method == http.MethodGet && r.URL.RawQuery == "" && r.URL.Path == "/static/js/site.js" {
+			w.Header().Set("Content-Type", "text/javascript; charset=utf-8"); _, _ = w.Write(input.SiteJS); return
+		}
+		if r.Method == http.MethodGet && r.URL.RawQuery == "" && r.URL.Path == "/qa/axe.js" {
+			w.Header().Set("Content-Type", "text/javascript; charset=utf-8"); _, _ = w.Write(input.Axe); return
+		}
+		if r.Method == http.MethodGet && r.URL.RawQuery == "" && r.URL.Path == "/favicon.ico" { w.WriteHeader(204); return }
+		if r.Method == http.MethodGet && r.URL.RawQuery == "" && (r.URL.Path == "/" || r.URL.Path == "/settings/" || r.URL.Path == "/settings/api-token/revoke/") {
+			pages.Add(1); lang := language(r)
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.Header().Set("Content-Security-Policy", "default-src 'none'; script-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'")
+			data := struct { Language, CSRF, Next string; English bool }{lang, strings.Repeat("c", 52), r.URL.Path, lang == "en"}
+			if page.Execute(w, data) != nil { internal.Add(1) }; return
+		}
+		unexpected.Add(1); http.NotFound(w, r)
+	})
+	closed := make(chan error, 1)
+	go func(){ closed <- server.Serve(listener) }()
+	stop := make(chan os.Signal, 1); signal.Notify(stop, os.Interrupt, syscall.SIGTERM); defer signal.Stop(stop)
+	ready, _ := json.Marshal(map[string]any{"kind":"LANGUAGE_COMPANION_READY", "origin":origin, "product":input.Product})
+	fmt.Println(string(ready))
+	select { case <-stop: case <-time.After(180*time.Second): internal.Add(1) }
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second); defer cancel()
+	if server.Shutdown(ctx) != nil { internal.Add(1); _ = server.Close() }
+	if err := <-closed; err != http.ErrServerClosed { internal.Add(1) }
+	summary, _ := json.Marshal(map[string]any{"kind":"LANGUAGE_COMPANION_STOPPED", "pages":pages.Load(), "posts":posts.Load(), "unexpected":unexpected.Load(), "internal":internal.Load(), "server_stopped":true})
+	fmt.Println(string(summary))
+	if unexpected.Load() != 0 || internal.Load() != 0 || pages.Load() == 0 || posts.Load() == 0 { t.Fatal("synthetic companion lifecycle or route boundary failed") }
+}

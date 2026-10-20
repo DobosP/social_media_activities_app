@@ -20,6 +20,13 @@ func accountCenterSourceRelation(path string) (beforeSHA, afterSHA string, befor
 	return "", "", 0, 0, "", "", false
 }
 func accountCenterSourcePreimage(path string, raw []byte) ([]byte, error) {
+	// Retained account custody consumes only the exact recovered language
+	// preimage; ordinary current reads first pass the strict language gate.
+	var languageErr error
+	raw, languageErr = languageActionPriorSource(path, raw)
+	if languageErr != nil {
+		return nil, languageErr
+	}
 	beforeSHA, afterSHA, beforeBytes, afterBytes, before, after, ok := accountCenterSourceRelation(path)
 	if !ok || len(raw) != afterBytes || guiPublicHash(raw) != afterSHA || bytes.Count(raw, []byte(after)) != 1 {
 		return nil, fmt.Errorf("account-complete-current-source")
@@ -57,6 +64,13 @@ func accountCenterInboxMutationTarget(path string, physical []byte, original str
 		}
 		target = after + original[len(before):]
 	}
+	if path == "services/server/internal/web/gui_public_get_walk_test.go" {
+		_, _, _, _, languageBefore, languageAfter, mapped := languageActionSourceRelation(path)
+		if !mapped || !bytes.HasPrefix([]byte(target), []byte(languageBefore)) {
+			return "", fmt.Errorf("language-account-inbox-mapped-mutation-prefix")
+		}
+		target = languageAfter + target[len(languageBefore):]
+	}
 	if target == "" || bytes.Count(physical, []byte(target)) != 1 {
 		return "", fmt.Errorf("account-inbox-current-mutation-target")
 	}
@@ -82,6 +96,10 @@ func TestNativeAccountCenterCustodyRetainsStrictCurrentAndAllPriorSources(t *tes
 			t.Fatal("new complete source inverse refused")
 		}
 		_, _, _, _, _, after, _ := accountCenterSourceRelation(path)
+		after, err = languageActionAccountMutationTarget(path, physical, after)
+		if err != nil {
+			t.Fatal("latest language/account negative target unavailable")
+		}
 		historical, err := guiPublicGetRowsPreimage(path, physical)
 		if err != nil {
 			t.Fatal("complete original source chain refused")

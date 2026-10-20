@@ -28,6 +28,15 @@ func groupCreatePreferenceSourceBinding(path string, raw []byte, physical, wante
 	}
 	previous := raw
 	var err error
+	// Require exact latest language registration/limit/walker before the
+	// untouched preference/account and original source inverse chain.
+	if path == "services/server/internal/web/server.go" || path == "services/server/internal/app/app.go" || path == "services/server/internal/web/gui_public_get_walk_test.go" {
+		raw, err = languageActionSourcePreimage(path, raw)
+		if err != nil {
+			return guiG1Binding{}, err
+		}
+		previous = raw
+	}
 	// Live admission requires the exact newest account bytes before prior controls.
 	if path == "services/server/internal/web/renderer.go" || path == "services/server/internal/web/gui_public_get_walk_test.go" {
 		raw, err = accountCenterSourcePreimage(path, raw)

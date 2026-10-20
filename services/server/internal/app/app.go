@@ -387,6 +387,10 @@ func (a *App) serveHTTP(w http.ResponseWriter, r *http.Request) {
 	if largeUpload {
 		limit = 82 << 20
 	}
+	// Bound this exact form before the existing session-CSRF parser too.
+	if r.Method == http.MethodPost && r.URL.Path == "/i18n/setlang/" && r.URL.EscapedPath() == "/i18n/setlang/" {
+		limit = min(limit, web.LanguageFormMaxBytes)
+	}
 	// Declared oversize is rejected before authentication, decoding or disk
 	// spooling, including GET bodies. Streaming unknown-length input still uses
 	// the existing reader/field limits at its owning adapter.

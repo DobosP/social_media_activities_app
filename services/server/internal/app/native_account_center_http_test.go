@@ -232,8 +232,11 @@ func TestNativeAccountCenterAssembledHTTPPreservesExistingActionsAndAuthority(t 
 			t.Fatal("existing same-origin Referer/form admission changed", referer.Code)
 		}
 		w := request(t, f.ownerCookie, http.MethodPost, "/i18n/setlang/", "https://app.example", url.Values{"language": {"ro"}, "next": {"/settings/"}}, true, nil)
-		if w.Code != http.StatusNotFound || f.counts(t) != before {
-			t.Fatal("separate missing language action was silently implemented", w.Code)
+		// NEXT language slice intentionally supersedes only this temporary404
+		// gap expectation; the exact old source is retained in its source packet.
+		choices := w.Result().Cookies()
+		if w.Code != http.StatusFound || w.Header().Get("Location") != "/settings/" || len(choices) != 1 || choices[0].Name != "django_language" || choices[0].Value != "ro" || f.counts(t) != before {
+			t.Fatal("registered language choice did not preserve the account/state boundary", w.Code)
 		}
 		for _, method := range []string{http.MethodGet, http.MethodHead} {
 			w = request(t, f.ownerCookie, method, "/settings/api-token/revoke/", "", nil, false, nil)
