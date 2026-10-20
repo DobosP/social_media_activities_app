@@ -1,6 +1,6 @@
 # ADR-0071 — Grouped Go rendering for the remaining functional interfaces
 
-Status: Accepted architecture; feature implementation under qualification, no GUI milestone landing.
+Status: Accepted architecture and qualified feature implementation; no GUI milestone landing.
 Date: 2026-10-21
 
 ## Context

@@ -25,8 +25,9 @@ Full native21 uses committed `scripts/qualify-native-final.py --help`: exact Git
 existing pinned PG/codec images, one private disposable DB and unchanged canonical21 lanes.
 The explicit `--affected-catalog-web` mode runs only those two complete packages and can never
 report full21 acceptance. Durable checkpoints retain the1GiB fixture ceiling.
-It does not qualify a new deployment image. Full PG qualification and final runtime review
-are pending until recorded as passing in qualification.json.
+Exact83da8ae4 passes all21 suites:980 top-level/2,734 named passes including roots,
+zero failures/skips/races, source closure and clean PG/resource shutdown. Independent
+source/runtime reviews are bound in qualification.json. This does not qualify a new deployment image.
 
 Teacher rewrites are deferred; Cat S1 implementation was independently verified complete.
 Social main/milestone landing, production and real child/provider activation remain held.

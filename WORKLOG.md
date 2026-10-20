@@ -3,6 +3,16 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-21 — Complete the selected Social functional interfaces
+
+Valid until: qualified product/method inputs change — then requalify affected checks.
+
+Operator: agent:codex (PROGRAM E8). Exact83da8ae48e0cba2ed4acaae13425d8fec283574f passes the unchanged canonical full21 driver through committed scripts/qualify-native-final.py:980 top-level and2,734 named passes including roots, zero failures/skips/races; result87d7fc40 in20.68min. All2,425 exported source members, bounded CRC64 archive, package binaries/logs and command receipts are bound. Locale/durable checkpoint checks pass within the unchanged1GiB fixture (after341,905,408B, WAL134,217,728B), gracefulPG stop0/status3/PID1 and all4resource absence receipts pass. The prior exact-source affected-only run also passed catalog54/web309. Required native28Go+4worker, frontend3contracts/typecheck/build/36.72-of-40KiB gzip and78current DOM/header relations to the156-audit desktop pass remain valid. Independent current-source/route/runtime reviews are indexed in docs/reviews/gui-functional-completion/qualification.json; author exclusions remain explicit.
+
+The finite source inventory now accounts for79 named GET aliases+4global downloads,50cached typed destinations (11prior+39new),14retained Go/Pongo destinations and20overlapping optional SPA modules, defaultflagfalse. Selected functional source gaps are empty. Existing services still own permissions, actions, consent, privacy and data. All original tests/goldens/registries remain. Previous qualifier/view/fixture failures remain truthful history. Teacher rewrites stay deferred at088934f; Cat S1 remains accepted locally at16733891/docsfb829aaa. Social main/formal milestones, canonical deployment-image audits, production/real-account-child/provider/government activation and held erasure/privacy/content decisions remain separate.
+
+Phase1 retention, after affectedV2 was independently verified and while fullV7 was active, removed756,516,012logicalB of superseded failed V6/affectedV1 source/XZ/binaries (202preserved evidence files). After both actual full21 runtime reviews accepted (a0b2dae0/73d8befc), phase2 removed377,597,686logicalB of affectedV2 generated source/XZ/binaries, two diagnostic binaries and156intermediate HTML copies (222preserved evidence files). Root independently rehashed all424non-target evidence files. The complete latest fullV7 source/archive/binaries/all162captured artifacts and QA4/reference-v4/current-v7 remain verified; prior capture-time manifests describe history. Deleted raw copies are unavailable, and standalone historical diagnostics require exact Git re-export/rebuild. Results/manifests/logs, branches/source packets, original baselines/canonical keepers and the latest reproducible fullV7/desktop setup remain. Closing changes are documentation only; no product gate repeat is warranted.
+
 ## 2026-10-21 — Workflow viewer-avatar exact current representation
 
 Valid until: these view/method inputs change — then requalify affected checks.
