@@ -2,7 +2,7 @@
 
 Valid until: closing/source bytes change — rebind and independently review before application.
 
-Status: APPLIED; nativea8 complete affectedPG7 acceptedfffe; desktop/UI pending. Basebdb5cc8,
+Status: APPLIED; nativea8 PG7 acceptedhistorical; firstUI44ed FAILEDec7e; CSS repair pending. Basebdb5cc8,
 contractV3 006f1c6954cd; qualified native/UI0afd and canonicalbc10/all37 bodies
 are concretely bound. Root exact four-new-Go formatting receiptd365 is recorded.
 
@@ -40,16 +40,18 @@ Exact V3 source applied afterb05d/e867; first focused failure54bf preserved.
 Independentfc68 V4 adjusts only the strict current mutation fixture target after
 all original source inverse/authority checks. Every original assertion remains.
 The identical second focused batch passes12roots/52named withzero skips/failures/
-race warnings; App/web vet and full format/docs/whitespace pass. App scenarios
-are compiled only. Fourteen synthetic method-admission refusals passed f8e5/5515,
+race warnings; App/web vet and full format/docs/whitespace pass. At that cheap
+checkpoint App scenarios were compiled only; the later exacta8 full campaign did
+execute all eight registered groups and passed. Fourteen synthetic method-admission
+refusals passed f8e5/5515,
 with no positive source/PG/UI acceptance implied.
 
-Next: commit the native source, preflight the entire-SHA tar.gz against unchanged
-64MiB, then qualify the unchanged complete7 driver on that exact clean commit.
-Independently review actual PG results; only then bind/commit the five UI method
-files and run them with an exact methods-only bridge. All37 old bodies and eight
-new fixed fixtures/24 strict Axe audits remain future work. Language-save remains
-a separate functional repair after this account checkpoint.
+History at that cheap checkpoint: native commit/full7 and a later exact UI-method
+binding were the planned next steps. Those steps subsequently produced the actual
+native acceptance and first failed UI recorded below. They are not pending local
+checks. Current Next: source-review the account-only header/panel CSS repair and
+paired debug, then commit the new source and repeat unchanged complete7 and primary
+UI on its exact reviewed bindings. Language-save remains a separate later repair.
 
 ## Exact native PostgreSQL acceptance and UI-method epoch
 
@@ -75,3 +77,22 @@ body rendering only. No actual token/session/export payload, form action, extern
 origin, device or provider is used. Preserve every failed attempt and original
 inner status. Full21/current-image/main/milestone/production/real-child activation
 and a general efficiency claim remain outside this checkpoint.
+
+## First primary UI failure and proposed account-only repair
+
+Committed UI epoch44ed4c1c0a3709f2ff43422c013b10b42c2310c2 on nativea8 completed
+all eightJS/eightnoJS and37literal prior-body comparisons. Result ec7e7006 and
+desktop37ad9d1b retain15strictAxe color-contrast incomplete audits/zero violations:
+five states across all three menu modes,54incomplete nodes including opaque-menu
+occlusion of the danger-card paragraph. No low-ratio violation was observed.
+Owned browser profiles/server were closed/removed; requested benchmark was NOT_REACHED.
+
+The proposed repair changes only new account CSS: opaque header plus header/open
+panel in ordinary document flow. All controls, width/wrapping, forms, focus, shared
+assets, native projection and frozen methods remain. A separately reviewed paired
+baseline/candidate debug run must reproduce the failure and inspect all48strict
+audits without manual scroll/position/rule exclusions; it is not qualification.
+After source approval, Root runs local checks, commits a new sourceR and repeats
+unchanged complete7. A new applied review must contain the three unchanged native
+input digests and newCSS digest, then final operational review rebinds UI toR.
+Actual primary UI/measurement/custody/feature acceptance remains pending.
