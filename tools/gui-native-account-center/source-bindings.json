@@ -1,0 +1,68 @@
+{
+  "accepted_date_keeper": {
+    "archive_manifest_sha256": "2787ff123c6b333d5aeed9650c22cdab92b8e2a76f189085a4eb52c5f3bc21d4",
+    "archive_sha256": "bc10a80ae1a9b0f404e9434f2a0065d941a0cb4a336d5ea06eb39032da09c7ea",
+    "canonical_archive": "docs/reviews/gui-native-notification-inbox-dates/evidence.tar.gz",
+    "feature_review_sha256": "6611a306c2e9659a492d2abbc2cb507c81f7b45a1bbecfa3c53946bfe65a6444",
+    "keeper_review_sha256": "2d0af9fb0abe7446d63549237be12e18ef4df5a184bcd386abf7c9240d9d365a"
+  },
+  "complete7_driver_sha256": "696f2f1a83ba70d316172ae18a79f49d09d4f2ceca16350f1b2e42d32fb2a960",
+  "complete7_result_sha256": "dab389ac8492b0db6bfcaca26fcd84ce535a8f14a0def7445b31d4819ab3fa2e",
+  "complete7_review": {
+    "expected": "ACCEPT_EXACT_A8F_COMPLETE_SEVEN_NATIVE_PG_ACCOUNT_SOURCE_AUTHORITY_PRIVACY_AND_CLEANUP",
+    "field": "status",
+    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/account-center-checks/final-full-pg-review.json",
+    "sha256": "fffe5e68e82b293e32b17bfb5c7c4a6bf3f100184d716eca372f3bb9436cd6ec"
+  },
+  "date_publication_source": "bdb5cc82a30c2b3307c87d56fdc92fc55948ecff",
+  "dependency_sha256": {
+    "axe_file": "20c09fe157a8a34a30e241aaa1fcdade657734f08ab379ecfbeb7d45cc46e878",
+    "chrome": "aea09d69ce7f24d5901f6bfb15dd44d0c856e793e0a498f8d8393ec7d2c308ec",
+    "go": "30969f97169d7f43fe6a085873d75613adc21e30818a8c61d95bd27275df4624",
+    "node": "67ca5783febb8bf85736c79fcdd92c8d6d465a0eb2a082672bcdfa76a506751c",
+    "playwright_package": "ca170ec143a88ed3043ac953eb3b2377b2b97304104f4e1e23316684ce2c35af"
+  },
+  "method_source_review": {
+    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/next-social-account-center-methods/operational-a8/final-operational-review.json",
+    "sha256": "747a66f61931c4848e5be0715cc922ae10e431c38228122f01fb8cc9112b3f5a",
+    "field": "status",
+    "expected": "ACCEPTED_OPERATIONAL_ACCOUNT_UI_PAYLOAD_AND_EXACT_TWO_DOC_AFTERIMAGES"
+  },
+  "native_account_source_review": {
+    "expected": "ACCEPTED_ACCOUNT_APPLIED_V4_SOURCE_AND_LOCAL_CHECKS",
+    "field": "status",
+    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/account-center-checks/applied-local-review.json",
+    "sha256": "7ee3206d6cba9d946942f0232ce182d8e3023a40287fde8e1cde55ed4ceaa4dd"
+  },
+  "producer_source": "a8f713f74885acfc51f6985bc8c6a366950029b3",
+  "qualification_claim": "Exact nativeS complete seven affected PG packages independently accepted; source and14negativecontrols accepted. UI/benchmark/feature acceptance remain pending.",
+  "schema": 1,
+  "status": "BOUND_REVIEWED_COMMITTED_METHODS",
+  "unchanged_overlay_helpers": [
+    {
+      "bytes": 16509,
+      "path": "tools/gui-native-notification-inbox/export_test.go.txt",
+      "sha256": "fceb971adde713f410aacdcefd143e09ada7a8e1ff8c59cd679ace18ab119289"
+    },
+    {
+      "bytes": 15643,
+      "path": "tools/gui-native-notification-preferences/export_test.go.txt",
+      "sha256": "dae147e2f5ae09427a3a1049ef03cb5f6e4cfdb58412e662b7e093f1a7589b62"
+    },
+    {
+      "bytes": 24769,
+      "path": "tools/gui-native-group-detail/fixture-export_test.go.txt",
+      "sha256": "c1b742a9e88f316169ddeace5a8aa619870ee3895f0e6e0584953a830309be53"
+    },
+    {
+      "bytes": 19404,
+      "path": "tools/gui-native-group/fixture-export_test.go.txt",
+      "sha256": "ac0aac2dbcd999040456d7d9e04ff2fe4a799f0c370ea2e47e5d1e10341b402c"
+    },
+    {
+      "bytes": 7919,
+      "path": "tools/gui-native-family/ui/fixture-export_test.go.txt",
+      "sha256": "101cc1a1a03cbec5ba27c316c74d711cb55d0e2d11bbfc6df00cca01799e2272"
+    }
+  ]
+}

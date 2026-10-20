@@ -1,0 +1,152 @@
+package web
+
+// Absent-path method overlay. All inputs here are fixed synthetic AccountView
+// display maps. No genuine token, session, export or issuance data is admitted.
+import (
+	"bytes"
+	"encoding/base64"
+	"encoding/json"
+	"flag"
+	"html"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"regexp"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
+	"github.com/flosch/pongo2/v6"
+)
+
+var accountCenterQAProducer = flag.String("account-center-ui-producer-source", "", "successful complete seven-package native source")
+var accountCenterQAOutput = flag.String("account-center-ui-qa-output-dir", "", "fresh owned scratch output")
+var accountCenterQAModes = []string{"overview-basic-en", "overview-guardian-ro", "overview-ward-connections-en", "overview-escaped-ro", "settings-no-token-en", "settings-token-ro", "settings-expired-record-en", "settings-revoke-error-ro"}
+
+type accountCenterQABridgeProof struct {
+	Producer string `json:"producer_source"`
+	Head string `json:"ui_head"`
+	Product []string `json:"product_paths"`
+	Paths []string `json:"source_paths"`
+}
+
+func accountCenterQABridge(t testing.TB, root string) accountCenterQABridgeProof {
+	t.Helper()
+	raw, err := exec.Command("python3", "-I", filepath.Join(root, "tools/gui-native-account-center/qualify.py"), "--repo", root, "--producer-source", *accountCenterQAProducer, "--check-bridge").Output()
+	var proof accountCenterQABridgeProof
+	if err != nil || json.Unmarshal(raw, &proof) != nil || proof.Producer != *accountCenterQAProducer || !regexp.MustCompile(`^[0-9a-f]{40}$`).MatchString(proof.Head) || len(proof.Product) < 2000 || len(proof.Paths) != len(proof.Product)+5 { t.Fatal("exact committed full source/five-method bridge required", err) }
+	return proof
+}
+
+// This fixture does not call AccountView, Self, a database or an action handler.
+// Normal GET enrichment and original direct POST revoke-error defaults are
+// represented separately; the actual source producer is proved by full PG.
+func accountCenterQAFixture(t testing.TB, mode string) (*http.Request, string, pongo2.Context) {
+	t.Helper()
+	settings, actionError := strings.HasPrefix(mode, "settings-"), mode == "settings-revoke-error-ro"
+	lang := "en"; if strings.HasSuffix(mode, "-ro") { lang = "ro" }
+	path, name, method := "/you/", "web/you.html", http.MethodGet
+	if settings { path, name = "/settings/", "web/settings.html" }; if actionError { path, method = "/settings/api-token/revoke/", http.MethodPost }
+	guardian := mode == "overview-guardian-ro" || mode == "settings-token-ro"
+	ward := mode == "overview-ward-connections-en" || mode == "settings-token-ro"
+	connections := mode == "overview-ward-connections-en" || mode == "settings-token-ro" || mode == "settings-expired-record-en"
+	actor := platform.Actor{ID: 731, PublicID: "33333333-3333-4333-8333-333333333333", Username: "synthetic-account", DisplayName: "Synthetic account person", Cohort: "unassigned", AgeBand: "unknown", IsActive: true}
+	if mode == "overview-escaped-ro" { actor.DisplayName = `Synthetic <script>label</script> & "person"` }
+	request := platform.WithActor(httptest.NewRequest(method, "https://account.example"+path, nil), actor)
+	request.Header.Set("Accept-Language", lang)
+	user := map[string]any{"id": actor.ID, "pk": actor.ID, "public_id": actor.PublicID, "username": actor.Username, "display_name": actor.DisplayName, "is_active": true, "is_authenticated": true, "is_guardian": guardian}
+	data := pongo2.Context{"user": user, "is_guardian": guardian, "has_guardians": ward, "connections_enabled": connections, "language": lang, "display_theme": "light", "display_text": "normal", "display_motion": "reduce", "csrf": "synthetic-account-center-ui-csrf", "PRIVATE-extra": "PRIVATE-must-not-render"}
+	if strings.Contains(mode, "guardian") || mode == "settings-token-ro" || actionError { data["display_theme"], data["display_text"] = "dark", "large" }
+	if strings.Contains(mode, "ward-connections") || mode == "settings-expired-record-en" { data["display_theme"], data["display_text"] = "contrast", "larger" }
+	if settings { data["languages"], data["current_language"] = []any{[]string{"en", "English"}, []string{"ro", "Română"}}, lang }
+	if mode == "settings-token-ro" { data["api_token_created"] = time.Date(2026, time.January, 15, 10, 0, 0, 0, time.UTC) }
+	if mode == "settings-expired-record-en" || actionError { data["api_token_created"] = time.Date(2020, time.January, 15, 10, 0, 0, 0, time.UTC) }
+	if actionError {
+		// No GET site/canonical/avatar enrichment or notice consumption. Renderer
+		// defaults retain the action request path and Social Activities site.
+		data["messages"] = []socialMessage{{"message": `Synthetic unavailable <script>message</script> & retry.`, "tags": "error"}}
+	} else {
+		data["site_name"], data["canonical_url"] = "Synthetic <site> & account", "https://account.example"+path
+		avatar := "data:image/svg+xml;base64," + base64.StdEncoding.EncodeToString([]byte(`<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26"><circle cx="13" cy="13" r="10"/></svg>`))
+		user["avatar_uri"], data["avatar_uri"] = avatar, avatar
+		if mode == "overview-escaped-ro" { data["messages"] = []socialMessage{{"message": `Synthetic <script>notice</script> & "text".`, "tags": "success"}} }
+	}
+	return request, name, data
+}
+
+// Expectations use explicit original-template navigation/form/source fields and
+// the protected catalogue; they never inspect the new typed VM/projection.
+func accountCenterQAExpected(t testing.TB, r *Renderer, request *http.Request, name string, data pongo2.Context) map[string]any {
+	t.Helper(); lang := data["language"].(string); tr := func(s string) string { return html.UnescapeString(r.catalog.translate(lang, s, 1)) }
+	link := func(label, url string) map[string]any { return map[string]any{"label": tr(label), "href": url} }
+	settings := name == "web/settings.html"; guardian, ward, connections := data["is_guardian"].(bool), data["has_guardians"].(bool), data["connections_enabled"].(bool)
+	title := tr("Account & settings"); if settings { title = tr("Settings") }
+	tabs := []map[string]any{}
+	for _, row := range [][2]string{{"Overview", "/you/"}, {"Profile", "/profile/"}, {"Interests", "/interests/"}, {"Display", "/display/"}, {"Privacy &amp; data", "/my-privacy/"}, {"Donations", "/my-donations/"}} { tabs = append(tabs, link(row[0], row[1])) }
+	if ward { tabs = append(tabs, link("Guardians", "/guardianship/")) }; tabs = append(tabs, link("Settings", "/settings/"))
+	for _, tab := range tabs { tab["current"] = tab["href"] == map[bool]string{false: "/you/", true: "/settings/"}[settings] }
+	profile := [][2]string{{"Your profile", "/profile/"}, {"Interests", "/interests/"}, {"Your topics (tune suggestions)", "/topics/"}, {"Access needs", "/access/"}, {"Display (theme, text size, motion)", "/display/"}, {"Age verification", "/verify-age/"}, {"Notifications", "/notifications/"}, {"Messages", "/messages/"}}
+	if connections { profile = append(profile, [2]string{"Connections", "/connections/"}) }; profile = append(profile, [2]string{"Saved searches", "/saved-searches/"}, [2]string{"Notification settings", "/notifications/preferences/"})
+	profileHeading := "Profile &amp; preferences"
+	if settings { profileHeading = "Preferences"; profile = [][2]string{{"Display (theme, text size, motion)", "/display/"}, {"Notifications", "/notifications/preferences/"}, {"Access needs", "/access/"}, {"Interests", "/interests/"}, {"Your topics (tune suggestions)", "/topics/"}, {"Saved searches", "/saved-searches/"}} }
+	privacy := [][2]string{{"Privacy &amp; your data", "/my-privacy/"}, {"Your safety record", "/my-safety-record/"}, {"Your activity log", "/my-activity-log/"}}
+	if settings { privacy = [][2]string{{"Privacy &amp; your data", "/my-privacy/"}, {"Age verification", "/verify-age/"}, {"Your safety record", "/my-safety-record/"}, {"Your activity log", "/my-activity-log/"}} }
+	if guardian { privacy = append(privacy, [2]string{"Wards you look after", "/wards/"}) }; if ward { privacy = append(privacy, [2]string{"Your guardians", "/guardianship/"}) }
+	giving := [][2]string{{"My donations", "/my-donations/"}, {"Support this platform", "/donate/"}, {"Campaigns", "/campaigns/"}, {"Where the money goes", "/transparency/"}}; if settings { giving = [][2]string{{"My donations", "/my-donations/"}, {"Where the money goes", "/transparency/"}} }
+	groups := []map[string]any{}; for i, rows := range [][][2]string{profile, privacy, giving} { links := []map[string]any{}; for _, row := range rows { links = append(links, link(row[0], row[1])) }; groups = append(groups, map[string]any{"heading": tr([]string{profileHeading, "Privacy &amp; safety", "Giving"}[i]), "links": links}) }
+	created, hasToken := data["api_token_created"].(time.Time); tokenText := tr("No device currently holds API access to your account.")
+	if hasToken { tokenText = strings.ReplaceAll(tr("A device (e.g. the mobile app) holds API access to your account, issued %(when)s. Revoke it if you lost the device or no longer use it."), "%(when)s", djangoDate(created, "j M Y")) }
+	messages := []string{}; if rows, ok := data["messages"].([]socialMessage); ok { for _, row := range rows { messages = append(messages, row["message"]) } }
+	actor, ok := platform.ActorFrom(request); if !ok { t.Fatal("synthetic actor missing") }
+	site, canonical, avatar := "Social Activities", request.URL.Path, false; if value, ok := data["site_name"].(string); ok { site, canonical, avatar = value, data["canonical_url"].(string), true }
+	return map[string]any{"settings": settings, "title": title, "site": site, "canonical": canonical, "path": request.URL.Path, "source_method": request.Method, "actor_label": actor.DisplayName, "owner": actor.PublicID, "avatar": avatar, "tabs": tabs, "groups": groups, "guardian": guardian, "ward": ward, "connections": connections, "has_token_record": hasToken, "token_text": tokenText, "messages": messages, "signed": strings.ReplaceAll(tr("Signed in as <strong>%(name)s</strong>."), "<strong>%(name)s</strong>", actor.DisplayName), "avatar_uri": data["avatar_uri"], "language": lang, "theme": data["display_theme"], "text": data["display_text"], "motion": data["display_motion"], "script_sources": []string{"/static/js/hovercard.js", "/static/js/site.js"}, "language_label": tr("Language"), "save_label": tr("Save"), "revoke_label": tr("Revoke API access"), "logout_label": tr("Log out"), "language_heading": tr("Language"), "api_heading": tr("API access"), "account_heading": tr("Your account"), "export_label": tr("Download my data"), "delete_label": tr("Delete my account")}
+}
+
+func accountCenterQAPrior(t *testing.T, root, output string, r *Renderer) []map[string]any {
+	t.Helper(); rows := notificationInboxQAPrior(t, root, output, r)
+	if err := os.Mkdir(filepath.Join(output, "notification-inbox"), 0700); err != nil { t.Fatal(err) }
+	for _, mode := range notificationInboxQAModes {
+		request, data := notificationInboxFixture(mode); request.Header.Set("Accept-Language", data["language"].(string)); data["csrf"] = "synthetic-notification-inbox-ui-csrf"; delete(data, "request")
+		w := httptest.NewRecorder(); if err := r.Render(w, request, "web/notifications.html", data); err != nil { t.Fatal(err) }
+		body, _, _ := notificationInboxQANormalize(t, w, "synthetic-notification-inbox-ui-nonce")
+		path := "notification-inbox/"+mode+".html"; groupDetailQAWrite(t, filepath.Join(output, path), body)
+		rows = append(rows, map[string]any{"kind": "notification-inbox", "name": mode, "path": path, "bytes": len(body), "sha256": groupDetailQAHash(body), "equal": false})
+	}
+	if len(rows) != 37 { t.Fatal("exact37 prior body candidates required; Python compares literal physical keeper bytes") }; return rows
+}
+
+func TestSocialAccountCenterQAExport(t *testing.T) {
+	root, err := filepath.Abs("../../../.."); if err != nil { t.Fatal(err) }; bridge := accountCenterQABridge(t, root); before := groupDetailQASources(t, root, bridge.Paths)
+	output := *accountCenterQAOutput; if !filepath.IsAbs(output) || !strings.Contains(output, "/_temp/") { t.Fatal("owned scratch output required") }; parent, err := filepath.EvalSymlinks(filepath.Dir(output)); if err != nil || parent != filepath.Dir(output) { t.Fatal("unalias output parent required") }; if err = os.Mkdir(output, 0700); err != nil { t.Fatal(err) }
+	r := NewRenderer(root); states, normalizations := []map[string]any{}, []map[string]any{}
+	for _, mode := range accountCenterQAModes {
+		request, name, data := accountCenterQAFixture(t, mode); expected := accountCenterQAExpected(t, r, request, name, data); semanticBefore, err := json.Marshal(data); if err != nil { t.Fatal(err) }
+		w := httptest.NewRecorder(); if err = r.Render(w, request, name, data); err != nil { t.Fatal(mode, err) }; body, headers, normalized := notificationInboxQANormalize(t, w, "synthetic-account-center-ui-nonce"); normalized["name"] = mode
+		semanticAfter, err := json.Marshal(data); if err != nil || !bytes.Equal(semanticBefore, semanticAfter) { t.Fatal("renderer mutated synthetic source") }
+		if bytes.Contains(body, []byte("PRIVATE-")) || bytes.Contains(body, []byte("<style")) || bytes.Contains(body, []byte("<script>notice")) || bytes.Contains(body, []byte("<script>label")) { t.Fatal("private or active fixture text leaked") }
+		groupDetailQAWrite(t, filepath.Join(output, mode+".html"), body)
+		states = append(states, map[string]any{"name": mode, "language": data["language"], "theme": data["display_theme"], "text": data["display_text"], "motion": data["display_motion"], "bytes": len(body), "sha256": groupDetailQAHash(body), "go_gzip_level9_bytes": notificationInboxQAGzip(t, body), "canonical": expected["canonical"], "synthetic_csrf": data["csrf"], "renderer_headers": headers, "expected": expected, "synthetic_source_sha256": groupDetailQAHash(semanticBefore)})
+		normalizations = append(normalizations, normalized)
+	}
+	prior := accountCenterQAPrior(t, root, output, r); after := groupDetailQASources(t, root, bridge.Paths); left, _ := json.Marshal(before); right, _ := json.Marshal(after); if !bytes.Equal(left, right) || accountCenterQABridge(t, root).Head != bridge.Head { t.Fatal("source/Git changed during export") }
+	manifest := map[string]any{"schema": 1, "PG_producer_source": *accountCenterQAProducer, "UI_method_source": bridge.Head, "source_unchanged": true, "sources_before": before, "sources_after": after, "states": states, "previous_body_candidates": prior, "normalization": map[string]any{"schema": 1, "kind": "render-nonce-only", "replacement": "synthetic-account-center-ui-nonce", "states": normalizations}, "baseline_keeper_sha256": "bc10a80ae1a9b0f404e9434f2a0065d941a0cb4a336d5ea06eb39032da09c7ea", "scope": "Eight fixed synthetic AccountView display fixtures only. Prior37 bodies require separate physical keeper equality. No genuine token/session/export/evidence input; no action submitted; no actual authorization or language-save claim."}
+	raw, err := json.MarshalIndent(manifest, "", "  "); if err != nil { t.Fatal(err) }; groupDetailQAWrite(t, filepath.Join(output, "fixtures.json"), append(raw, '\n'))
+}
+
+func BenchmarkSocialAccountCenterBodyRender(b *testing.B) {
+	root, err := filepath.Abs("../../../.."); if err != nil { b.Fatal(err) }; bridge := accountCenterQABridge(b, root); before, _ := json.Marshal(groupDetailQASources(b, root, bridge.Paths))
+	for _, mode := range accountCenterQAModes { b.Run(mode, func(b *testing.B) {
+		r := NewRenderer(root); request, name, data := accountCenterQAFixture(b, mode); semanticBefore, err := json.Marshal(data); if err != nil { b.Fatal(err) }; b.Logf("fixed synthetic AccountView state=%s input-sha256=%s; no genuine token/session/export input", mode, groupDetailQAHash(semanticBefore)); merged := familyBenchmarkDefaults(r, request, data)
+		old, err := r.set.FromCache(name); if err != nil { b.Fatal(err) }
+		for _, native := range []bool{false, true} { engine := "classic"; if native { engine = "native" }; b.Run(engine, func(b *testing.B) {
+			render := func() []byte { if native { raw, err := r.renderAccountCenter(request, name, merged); if err != nil { b.Fatal(err) }; return raw }; var output bytes.Buffer; if err := old.ExecuteWriter(merged, &output); err != nil { b.Fatal(err) }; return output.Bytes() }
+			raw := render(); if len(raw) == 0 { b.Fatal("empty body") }; compressed := notificationInboxQAGzip(b, raw); b.ReportAllocs(); b.ResetTimer()
+			for i := 0; i < b.N; i++ { familyBenchmarkSink = render() }; b.StopTimer(); b.ReportMetric(float64(len(raw)), "html-B/op"); b.ReportMetric(float64(compressed), "gzip9-B/op")
+		}) }
+		semanticAfter, err := json.Marshal(data); if err != nil || !bytes.Equal(semanticBefore, semanticAfter) { b.Fatal("matched source changed") }
+	}) }
+	after, _ := json.Marshal(groupDetailQASources(b, root, bridge.Paths)); if !bytes.Equal(before, after) || accountCenterQABridge(b, root).Head != bridge.Head { b.Fatal("source changed during benchmark") }
+}
