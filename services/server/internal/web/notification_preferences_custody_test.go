@@ -25,6 +25,13 @@ func notificationPreferencesSourceRelation(path string) (beforeSHA, afterSHA str
 	return "", "", 0, 0, "", "", false
 }
 func notificationPreferencesSourcePreimage(path string, raw []byte) ([]byte, error) {
+	if path == "services/server/internal/web/gui_preferences_layout_test.go" || path == "services/server/internal/web/gui_preferences_get_transport_test.go" {
+		var displayErr error
+		raw, displayErr = displayAccessPriorSource(path, raw)
+		if displayErr != nil {
+			return nil, displayErr
+		}
+	}
 	// Retained prior controls may enter on the exact recovered inbox preimage.
 	var inboxErr error
 	raw, inboxErr = notificationInboxPriorSource(path, raw)
@@ -82,6 +89,10 @@ func TestNativeNotificationPreferencesCustodyKeepsCompletePriorChainsAndPhysical
 			}
 		}
 		_, _, _, _, _, after, _ := notificationPreferencesSourceRelation(path)
+		after, err = displayAccessMutationTarget(path, physical, after)
+		if err != nil {
+			t.Fatal("latest display/access preference mutation target unavailable")
+		}
 		for _, changed := range [][]byte{bytes.Replace(physical, []byte(after), nil, 1), append(append([]byte(nil), physical...), []byte(after)...)} {
 			if _, err := notificationPreferencesSourcePreimage(path, changed); err == nil {
 				t.Fatal("missing/duplicate literal relation admitted", path)

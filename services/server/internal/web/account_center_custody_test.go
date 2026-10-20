@@ -20,6 +20,13 @@ func accountCenterSourceRelation(path string) (beforeSHA, afterSHA string, befor
 	return "", "", 0, 0, "", "", false
 }
 func accountCenterSourcePreimage(path string, raw []byte) ([]byte, error) {
+	if path == "services/server/internal/web/renderer.go" {
+		var displayErr error
+		raw, displayErr = displayAccessPriorSource(path, raw)
+		if displayErr != nil {
+			return nil, displayErr
+		}
+	}
 	// Retained account custody consumes only the exact recovered language
 	// preimage; ordinary current reads first pass the strict language gate.
 	var languageErr error
@@ -70,6 +77,11 @@ func accountCenterInboxMutationTarget(path string, physical []byte, original str
 			return "", fmt.Errorf("language-account-inbox-mapped-mutation-prefix")
 		}
 		target = languageAfter + target[len(languageBefore):]
+	}
+	var displayErr error
+	target, displayErr = displayAccessMutationTarget(path, physical, target)
+	if displayErr != nil {
+		return "", displayErr
 	}
 	if target == "" || bytes.Count(physical, []byte(target)) != 1 {
 		return "", fmt.Errorf("account-inbox-current-mutation-target")

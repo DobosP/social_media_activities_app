@@ -26,6 +26,16 @@ func groupCreatePreferenceSourceBinding(path string, raw []byte, physical, wante
 	if len(raw) != physical.Bytes || guiPublicHash(raw) != physical.SHA256 || !guiPublicGetLiveMode(physical.FullMode, wanted.FullMode) {
 		return guiG1Binding{}, fmt.Errorf("group-preference-physical-source")
 	}
+	// Exact physical tuple was checked above; only its complete newest image
+	// may enter the retained original preference source chain.
+	switch path {
+	case "services/server/internal/web/renderer.go", "services/server/internal/web/gui_public_get_walk_test.go", "services/server/internal/web/gui_preferences_layout_test.go", "services/server/internal/web/gui_preferences_get_transport_test.go":
+		var displayErr error
+		raw, displayErr = displayAccessSourcePreimage(path, raw)
+		if displayErr != nil {
+			return guiG1Binding{}, displayErr
+		}
+	}
 	previous := raw
 	var err error
 	// Require exact latest language registration/limit/walker before the

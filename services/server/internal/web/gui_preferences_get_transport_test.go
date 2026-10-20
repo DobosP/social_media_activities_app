@@ -205,7 +205,7 @@ func guiPreferenceGET(t *testing.T, s *Server, files fstest.MapFS, item guiPrefe
 	}
 	renderer.CSPEnforce = s.Config.CSPEnforce
 	trace := &guiPublicTraceLoader{delegate: renderer.loader}
-	if item.Route == "notification_preferences" {
+	if item.Route == "notification_preferences" || item.Route == "display_preferences" || item.Route == "access_preferences" {
 		// Let the test-only alias retain original template-load trace identities.
 		renderer.loader = trace
 	}
@@ -226,9 +226,9 @@ func guiPreferenceGET(t *testing.T, s *Server, files fstest.MapFS, item guiPrefe
 	}
 	response := httptest.NewRecorder()
 	*requests = *requests + 1
-	// Only retained notification form-byte predicates use the frozen reference.
-	// Every other route still executes its current registered native mux.
-	notificationPreferencesFrozenReferenceHandler(s, mux).ServeHTTP(response, request)
+	// Only retained notification/display/access form predicates use references.
+	// Other routes execute the current registered native mux.
+	displayAccessFrozenReferenceHandler(s, mux).ServeHTTP(response, request)
 	return guiCurrentTransportResponse{response, append([]guiPublicTemplateLoad(nil), trace.loads...), s.Config.PublicURL + item.Path}
 }
 

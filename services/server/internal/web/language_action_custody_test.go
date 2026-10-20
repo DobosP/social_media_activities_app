@@ -69,6 +69,11 @@ func languageActionAccountMutationTarget(path string, physical []byte, original 
 	default:
 		return "", fmt.Errorf("language-target-scope")
 	}
+	var displayErr error
+	target, displayErr = displayAccessMutationTarget(path, physical, target)
+	if displayErr != nil {
+		return "", displayErr
+	}
 	if target == "" || bytes.Count(physical, []byte(target)) != 1 {
 		return "", fmt.Errorf("language-unique-current-account-target")
 	}
@@ -89,6 +94,12 @@ func TestNativeLanguageCustodyRequiresNewestSourceAndRetainsHistoricalInverses(t
 			t.Fatal("new complete inverse refused")
 		}
 		beforeSHA, _, beforeBytes, _, _, after, _ := languageActionSourceRelation(path)
+		if path == "services/server/internal/web/gui_public_get_walk_test.go" {
+			after, err = displayAccessMutationTarget(path, physical, after)
+			if err != nil {
+				t.Fatal("latest display/access language mutation target unavailable")
+			}
+		}
 		if len(previous) != beforeBytes || guiPublicHash(previous) != beforeSHA {
 			t.Fatal("whole prior source not recovered")
 		}
@@ -145,6 +156,11 @@ func languageActionRepairWalkerRelation() (beforeSHA, afterSHA string, beforeByt
 func languageActionRepairWalkerPreimage(path string, raw []byte) ([]byte, error) {
 	if path != "services/server/internal/web/gui_public_get_walk_test.go" {
 		return append([]byte(nil), raw...), nil
+	}
+	var displayErr error
+	raw, displayErr = displayAccessPriorSource(path, raw)
+	if displayErr != nil {
+		return nil, displayErr
 	}
 	beforeSHA, afterSHA, beforeBytes, afterBytes, before, after := languageActionRepairWalkerRelation()
 	if len(raw) != afterBytes || guiPublicHash(raw) != afterSHA || bytes.Count(raw, []byte(after)) != 1 {

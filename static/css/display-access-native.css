@@ -1,0 +1,11 @@
+:root .display-access-native .site-header { position:static; background:var(--card); }
+.display-access-native .nav-menu > .nav-panel { position:static; width:max-content; max-width:calc(100vw - 2rem); }
+.display-access-native .nav-panel a { overflow-wrap:anywhere; }
+.display-access-native .display-access-intro { max-width:72ch; }
+.display-access-native .display-access-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,17rem),1fr)); gap:1rem; }
+.display-access-native .display-access-grid fieldset { min-width:0; margin:0; }
+.display-access-native .preference-choice { flex-wrap:nowrap; }
+.display-access-native .preference-choice > input { flex:0 0 auto; }
+.display-access-native .preference-choice > span { min-width:0; }
+.display-access-native .preference-submit { margin-top:1rem; }
+.display-access-native .footer-links a { text-decoration:underline; text-underline-offset:.15em; }

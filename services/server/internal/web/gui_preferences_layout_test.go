@@ -288,9 +288,9 @@ func (f *guiPreferenceFixture) render(t *testing.T, filesystem, original bool, f
 		data["categories"], data["chosen"] = categories, chosen
 	}
 	response := httptest.NewRecorder()
-	// Retained notification bytes below are the frozen Pongo reference only;
-	// current native22-row authority/markup is checked by the new App/UI suites.
-	if err := notificationPreferencesFrozenReferenceRender(renderer, response, request, "web/"+fixture.family+".html", data); err != nil {
+	// Retained notification/display/access bytes use frozen Pongo references;
+	// ordinary current native authority/markup is checked by App/UI suites.
+	if err := displayAccessFrozenReferenceRender(renderer, response, request, "web/"+fixture.family+".html", data); err != nil {
 		t.Fatal(err)
 	}
 	body := append([]byte(nil), response.Body.Bytes()...)
