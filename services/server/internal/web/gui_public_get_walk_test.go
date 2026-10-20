@@ -460,6 +460,15 @@ func guiPublicGetRepairRows() []guiPublicGetRepairRow {
 // Each row must find its exact afterimage and land on its exact preimage, so a
 // later row only ever sees the bytes the previous reviewed row produced.
 func guiPublicGetRowsPreimage(path string, raw []byte) ([]byte, error) {
+	// Require exact newest topics images before the retained display/history chain.
+	switch path {
+	case "services/server/internal/web/renderer.go", "services/server/internal/web/gui_public_get_walk_test.go", "services/server/internal/web/gui_preferences_layout_test.go", "services/server/internal/web/gui_preferences_get_transport_test.go":
+		var topicsErr error
+		raw, topicsErr = topicsSourcePreimage(path, raw)
+		if topicsErr != nil {
+			return nil, topicsErr
+		}
+	}
 	// Require exact newest display/access physical images before old inverses.
 	switch path {
 	case "services/server/internal/web/renderer.go", "services/server/internal/web/gui_public_get_walk_test.go", "services/server/internal/web/gui_preferences_layout_test.go", "services/server/internal/web/gui_preferences_get_transport_test.go":

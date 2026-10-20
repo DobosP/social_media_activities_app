@@ -25,6 +25,11 @@ func displayAccessSourceRelation(path string) (beforeSHA, afterSHA string, befor
 }
 
 func displayAccessSourcePreimage(path string, raw []byte) ([]byte, error) {
+	var topicsErr error
+	raw, topicsErr = topicsPriorSource(path, raw)
+	if topicsErr != nil {
+		return nil, topicsErr
+	}
 	beforeSHA, afterSHA, beforeBytes, afterBytes, before, after, ok := displayAccessSourceRelation(path)
 	if !ok || len(raw) != afterBytes || guiPublicHash(raw) != afterSHA || bytes.Count(raw, []byte(after)) != 1 {
 		return nil, fmt.Errorf("display-access-complete-current-source")
@@ -46,6 +51,12 @@ func displayAccessPriorSource(path string, raw []byte) ([]byte, error) {
 // Only exact current images and a real unique retained predecessor literal can
 // produce a mutation fixture. The original controls keep all their assertions.
 func displayAccessMutationTarget(path string, physical []byte, priorTarget string) (string, error) {
+	topicsPhysical := physical
+	var topicsErr error
+	physical, topicsErr = topicsPriorSource(path, physical)
+	if topicsErr != nil {
+		return "", topicsErr
+	}
 	previous, err := displayAccessSourcePreimage(path, physical)
 	if err != nil {
 		return "", err
@@ -67,6 +78,10 @@ func displayAccessMutationTarget(path string, physical []byte, priorTarget strin
 	if bytes.Count(physical, []byte(target)) != 1 {
 		return "", fmt.Errorf("display-access-unique-current-mutation-target")
 	}
+	target, topicsErr = topicsMutationTarget(path, topicsPhysical, target)
+	if topicsErr != nil {
+		return "", topicsErr
+	}
 	return target, nil
 }
 func TestNativeDisplayAccessCustodyRequiresNewestCompleteSourcesAndRetainsEveryOriginalTuple(t *testing.T) {
@@ -87,6 +102,11 @@ func TestNativeDisplayAccessCustodyRequiresNewestCompleteSourcesAndRetainsEveryO
 		beforeSHA, _, beforeBytes, _, _, after, _ := displayAccessSourceRelation(path)
 		if err != nil || len(previous) != beforeBytes || guiPublicHash(previous) != beforeSHA {
 			t.Fatal("complete original predecessor not recovered")
+		}
+		// Keep every original negative probe real against the latest physical image.
+		after, err = topicsMutationTarget(path, physical, after)
+		if err != nil {
+			t.Fatal("latest topics/display mutation target unavailable")
 		}
 		oldControl, err := displayAccessPriorSource(path, previous)
 		if err != nil || !bytes.Equal(oldControl, previous) {

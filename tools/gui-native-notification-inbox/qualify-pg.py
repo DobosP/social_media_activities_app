@@ -10,6 +10,7 @@ import fcntl
 import hashlib
 import io
 import json
+import lzma
 import os
 from pathlib import Path
 import re
@@ -20,6 +21,13 @@ import subprocess
 import tarfile
 import time
 import uuid
+
+# Explicit future Git transport; canonical keeper codecs remain unchanged.
+SOURCE_ARCHIVE_ENV = {'PATH': '/usr/bin:/bin', 'LANG': 'C.UTF-8', 'LC_ALL': 'C.UTF-8'}
+XZ_EXECUTABLE = '/usr/bin/xz'
+XZ_EXECUTABLE_SHA256 = 'b5b163eb273291934556377ab883b4b2a5d4da50bd0dc0a91774ecc234ccd8d0'
+XZ_VERSION = 'xz (XZ Utils) 5.4.5'
+XZ_FILTER = 'tar.tar.xz.command=/usr/bin/xz --threads=1 --check=crc64 -c'
 
 DEFAULT_REPO = Path(__file__).absolute().parents[2]
 DB_IMAGE = 'sha256:f66de888683449864f820c365551125bb2627782be15a264f9746d53573b39d5'
@@ -166,6 +174,34 @@ def retirement_identity(invocation, lane, oid, snapshot):
     return matches[0]
 
 
+def strict_xz_receipt(raw, maximum_compressed=64 << 20,
+                      maximum_expanded=128 << 20, memory_limit=64 << 20):
+    """Validate one complete CRC64 XZ stream without retaining expanded tar."""
+    need(isinstance(raw, bytes) and 0 < len(raw) <= maximum_compressed <= 64 << 20,
+         'Compressed source archive exceeds unchanged64MiB bound')
+    need(0 < maximum_expanded <= 128 << 20 and 0 < memory_limit <= 64 << 20,
+         'Bounded source archive expansion and decoder memory required')
+    decoder = lzma.LZMADecompressor(format=lzma.FORMAT_XZ, memlimit=memory_limit)
+    offset, expanded = 0, 0
+    hashed = hashlib.sha256()
+    while not decoder.eof:
+        if decoder.needs_input:
+            need(offset < len(raw), 'Complete XZ footer/EOF required')
+            chunk = raw[offset:offset + (1 << 20)]
+            offset += len(chunk)
+        else:
+            chunk = b''
+        unpacked = decoder.decompress(chunk, max_length=min(1 << 20, maximum_expanded - expanded + 1))
+        expanded += len(unpacked)
+        need(expanded <= maximum_expanded, 'Expanded source tar exceeds128MiB bound')
+        hashed.update(unpacked)
+    need(decoder.check == lzma.CHECK_CRC64 and not decoder.unused_data and offset == len(raw),
+         'Exactly one CRC64 XZ stream without trailing data or extra streams required')
+    return {'expanded_tar_bytes': expanded, 'expanded_tar_sha256': hashed.hexdigest(),
+            'compressed_limit_bytes': 64 << 20, 'expanded_limit_bytes': 128 << 20,
+            'decoder_memory_limit_bytes': 64 << 20, 'CRC64_full_EOF_single_stream': True}
+
+
 def execute(args):
     REPO, BASE, GO, CACHE, MODCACHE = args.repo, args.scratch, args.go, args.cache, args.modcache
     method = REPO / 'tools/gui-native-notification-inbox'
@@ -206,13 +242,14 @@ def execute(args):
             stream.write(raw)
         return {'path': name, 'bytes': len(raw), 'sha256': digest(raw)}
 
-    def call(argv, *, timeout=60, data=None, host_go=False, failure=False, label=None, cwd=None):
+    def call(argv, *, timeout=60, data=None, host_go=False, failure=False, label=None, cwd=None, command_env=None):
+        need(command_env is None or command_env == SOURCE_ARCHIVE_ENV, 'Only literal source transport environment override allowed')
         index = len(result['commands'])
         label = label or ('command-%03d' % index)
         start = time.monotonic()
         try:
             completed = subprocess.run(argv, input=data, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                       timeout=timeout, env=environment if host_go else None, umask=0o077, cwd=cwd)
+                                       timeout=timeout, env=command_env if command_env is not None else environment if host_go else None, umask=0o077, cwd=cwd)
             code, stdout, stderr = completed.returncode, completed.stdout, completed.stderr
         except subprocess.TimeoutExpired as error:
             code, stdout, stderr = None, error.stdout or b'', error.stderr or b''
@@ -220,6 +257,8 @@ def execute(args):
                   'seconds': time.monotonic() - start,
                   'stdout': write('proof/' + label + '.stdout', stdout),
                   'stderr': write('proof/' + label + '.stderr', stderr)}
+        if command_env is not None:
+            record['environment'] = dict(command_env)
         if data is not None:
             record['stdin'] = {'bytes': len(data), 'sha256': digest(data)}
         result['commands'].append(record)
@@ -421,9 +460,14 @@ def execute(args):
         result['go'] = {'version': version, 'actual_executable': str(GO.resolve()), 'sha256': digest(regular(GO.resolve()))}
         for cache in (CACHE, MODCACHE):
             need(cache.resolve() == cache and cache.is_dir() and cache.stat().st_uid == os.getuid(), 'Existing owned rolling cache required')
-        archive = git('archive', '--format=tar.gz', '-9', args.sha)
-        result['git_archive'] = {'format': 'tar.gz', 'bytes': len(archive), 'sha256': digest(archive), 'retention': 'Exported once to the rolling source tree; raw archive stdout remains until separately verified retention cleanup; exact clean Git SHA/tree is the source keeper'}
-        with tarfile.open(fileobj=io.BytesIO(archive), mode='r:gz') as source_tar:
+        xz_raw = regular(Path(XZ_EXECUTABLE))
+        need(digest(xz_raw) == XZ_EXECUTABLE_SHA256 and os.access(XZ_EXECUTABLE, os.X_OK), 'Exact existing installed XZ executable required')
+        xz_version = call([XZ_EXECUTABLE, '--version'], command_env=SOURCE_ARCHIVE_ENV)[1].decode('ascii').splitlines()[0]
+        need(xz_version == XZ_VERSION, 'Exact existing installed XZ version required')
+        result['source_archive_compressor'] = {'path': XZ_EXECUTABLE, 'sha256': digest(xz_raw), 'version': xz_version, 'threads': 1, 'preset': 6, 'check': 'CRC64', 'environment': dict(SOURCE_ARCHIVE_ENV), 'filter': XZ_FILTER}
+        archive = call(['git', '-C', str(REPO), '-c', XZ_FILTER, 'archive', '--format=tar.xz', '-6', args.sha], command_env=SOURCE_ARCHIVE_ENV)[1]
+        result['git_archive'] = {'format': 'tar.xz', 'bytes': len(archive), 'sha256': digest(archive), **strict_xz_receipt(archive), 'retention': 'Exported once to the rolling source tree; raw compressed archive stdout remains until separately verified retention cleanup; exact clean Git SHA/tree is the source keeper'}
+        with tarfile.open(fileobj=io.BytesIO(archive), mode='r:xz') as source_tar:
             source_tar.extractall(out / 'source', filter='data')
         before = source_rows(out / 'source')
         write('source-manifest.json', json.dumps(before, sort_keys=True, separators=(',', ':')).encode() + b'\n')

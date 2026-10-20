@@ -1,0 +1,29 @@
+{{define "topics"}}<!doctype html>
+<html lang="{{.Shell.Language}}" data-theme="{{.Shell.Theme}}" data-text="{{.Shell.Text}}" data-motion="{{.Shell.Motion}}">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="index, follow">
+<title>{{index .Copy "Your topics"}} · {{.Shell.SiteName}}</title><link rel="canonical" href="{{.Shell.Canonical}}">
+<link rel="preload" href="/static/fonts/bricolage-grotesque-latin-ext-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/static/fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/static/css/base.css"><link rel="stylesheet" href="/static/css/topics-native.css"></head>
+<body class="topics-native has-tabbar">
+<a class="skip-link" href="#main">{{index .Copy "Skip to main content"}}</a>
+<header class="site-header"><div class="container nav-wrap"><a class="brand" href="/">{{index .Copy "Activities"}}</a>
+<input type="checkbox" id="nav-toggle" class="nav-toggle-cb"><label for="nav-toggle" class="nav-toggle"><span aria-hidden="true">☰</span> {{index .Copy "Menu"}}</label>
+<nav class="nav" aria-label="{{index .Copy "Primary"}}">{{range .Shell.Navigation}}<a class="nav-link" href="{{.URL}}">{{.Label}}{{if and (eq .URL "/notifications/") $.Unread}} <span class="pill">{{$.Unread}}</span>{{end}}</a>{{end}}</nav>
+<details class="nav-menu nav-end"><summary>{{if .Avatar}}<img class="avatar nav-avatar" src="{{.Avatar}}" width="26" height="26" alt="">{{end}}<span class="nav-username">{{.Shell.DisplayName}}</span></summary><div class="nav-panel">
+{{range .AccountLinks}}<a href="{{.URL}}">{{.Label}}</a>{{end}}<form method="post" action="/logout/" class="inline"><input type="hidden" name="csrfmiddlewaretoken" value="{{.Shell.CSRF}}"><button class="linkbtn" type="submit">{{index .Copy "Log out"}}</button></form>
+</div></details></div></header>
+<main class="container" id="main" tabindex="-1"><h1>{{index .Copy "Your topics"}}</h1>
+{{if .Messages}}<ul class="messages">{{range .Messages}}<li class="msg {{.Tags}}"><span role="status">{{.Text}}</span></li>{{end}}</ul>{{end}}
+<p class="muted topics-intro">{{index .Copy "Pick the kinds of activity you'd like your suggestions to lean toward. This is your hand on the algorithm &mdash; a setting you choose, never guessed from what you click."}}</p>
+<p class="muted topics-intro">{{index .Copy "It only nudges the order and adds an honest &ldquo;matches your chosen topics&rdquo; note. It never hides anything: you'll still see everything happening for your age group, whether or not you pick any topics."}}</p>
+<form method="post" class="card topics-form"><input type="hidden" name="csrfmiddlewaretoken" value="{{.Shell.CSRF}}">
+<fieldset class="preference-topic-fields"><legend class="muted preference-topic-title">{{index .Copy "Topics to lean toward"}}</legend>
+{{range .Choices}}<label class="row preference-choice preference-choice--topic"><input type="checkbox" name="topics" value="{{.Slug}}"{{if .Checked}} checked{{end}}><span><strong>{{.Name}}</strong>{{if .Description}}<br><span class="muted u-text-sm">{{.Description}}</span>{{end}}</span></label>
+{{else}}<p class="muted">{{index .Copy "No topics are available yet."}}</p>{{end}}</fieldset>
+<button class="btn preference-submit" type="submit">{{index .Copy "Save topics"}}</button>{{if .HasChosen}}<a class="muted preference-feed-link" href="/">{{index .Copy "see your feed"}}</a>{{end}}</form></main>
+<nav class="tabbar" aria-label="{{index .Copy "Menu"}}"><a href="/">{{index .Copy "Home"}}</a><a href="/activities/">{{index .Copy "Browse"}}</a><a class="tab-cta" href="/activities/new/">{{index .Copy "Organize"}}</a><a href="/messages/">Chat</a><a href="/you/">{{index .Copy "Profile"}}</a></nav>
+<footer class="site-footer"><div class="container"><p><strong>{{index .Copy "Demo environment: do not enter real personal data."}}</strong></p>
+<nav class="footer-links" aria-label="{{index .Copy "Privacy"}}">{{range .Shell.Footer}}<a href="{{.URL}}">{{.Label}}</a> {{end}}</nav>
+<form method="post" action="/i18n/setlang/" class="inline lang-switch"><input type="hidden" name="csrfmiddlewaretoken" value="{{.Shell.CSRF}}"><input type="hidden" name="next" value="{{.LanguageNext}}"><label for="topics-language">{{index .Copy "Language"}}</label><select id="topics-language" name="language" data-auto-submit><option value="en"{{if .Shell.English}} selected{{end}}>English</option><option value="ro"{{if not .Shell.English}} selected{{end}}>Română</option></select><noscript><button class="linkbtn" type="submit">{{index .Copy "Set language"}}</button></noscript></form>
+</div></footer><script nonce="{{.Nonce}}" src="/static/js/hovercard.js" defer></script><script nonce="{{.Nonce}}" id="site-js" src="/static/js/site.js" defer data-meetups-owner="{{.PublicID}}"></script></body></html>{{end}}
