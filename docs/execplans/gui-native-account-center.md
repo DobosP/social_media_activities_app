@@ -2,7 +2,7 @@
 
 Valid until: closing/source bytes change — rebind and independently review before application.
 
-Status: R02ac native/full7 independently accepted82b0; paired causal debug accepted; repaired primary UI pending. Basebdb5cc8,
+Status: nativeR/full7 accepted82b0; repaired desktop PASS7a0f but overall FAILda4e at classic benchmark setup; key repair pending. Basebdb5cc8,
 contractV3 006f1c6954cd; qualified native/UI0afd and canonicalbc10/all37 bodies
 are concretely bound. Root exact four-new-Go formatting receiptd365 is recorded.
 
@@ -49,11 +49,11 @@ with no positive source/PG/UI acceptance implied.
 History at that cheap checkpoint: native commit/full7 and a later exact UI-method
 binding were the planned next steps. Those steps subsequently produced the actual
 native acceptance and first failed UI recorded below. They are not pending local
-checks. Current Next: use the separately reviewed exact operational payload and README/
-two doc afterimages for a metadata-only UI epoch, then execute repaired primary UI.
-Accepted review82b01e1a binds exactR/result856b/all four native input hashes and
-fills both native/full7 binding roles. Final operational review and the sole
-method-review reference fill precede the committed UI run. Paired debugc31b/d4a65 is accepted
+checks. Current Next: review the one-character shared synthetic key repair and finalP3/
+README/two doc afterimages, fill only the saved C3 reference, then commit a methods-
+only UI epoch and rerun the whole UI+matched-body wrapper. NativeR/result856b/
+review82b01e1a and all four native source inputs remain unchanged. Both native/
+full7 roles retain82b; no new full7 or guard/row-count relaxation is introduced. Paired debugc31b/d4a65 is accepted
 causal evidence only and cannot replace complete7 or primary UI. Language-save
 remains a separate later repair.
 
@@ -114,12 +114,42 @@ The unchanged complete7 driver completed on exactR with result856b0b3b:457roots/
 1,368named,zero failures/skips,340commands/695artifactrows. Root waited exit0
 (receipt2019869c). Independent review82b01e1a accepts exactR/raw/native/full7,
 all four native source digests and owned15CIDs/sevenDB/privatePG cleanup.
-Three method code files stay exact41ef/d22b/3ee. The final canonical payload has
+At C2, three method code files were41ef/d22b/3ee. The canonical payload has
 exactly CLI,binding,method_nonbinding_image_sha256, with its own method review
 reference null during review. After final admission only that saved reference
 may be filled. Native producer and pg-run remainR, never the later UI-method SHA.
 
-The next actual primary run still must execute eight JS/eight no-JS,24strict
-whole-document Axe audits,real Tab/FormData/current assets/all37 previous bodies
-and optional48fixed-synthetic matched body samples. No repaired primary UI,
-measurement,custody or feature acceptance follows from this candidate.
+That exact C2 method epoch subsequently ran the primary wrapper described below.
+The next whole-wrapper rerun retains eight JS/eight no-JS,24strict whole-document
+Axe audits,real Tab/FormData/current assets/all37 previous bodies and the full
+48fixed-synthetic matched samples. No measurement,custody or feature acceptance
+follows from the methods-only repair candidate.
+
+## Repaired desktop pass and benchmark setup failure
+
+UI method epochfe647ce594569d66feaddb15ad54effc94161a98 on nativeR02ac
+produced overall resultda4eb762 FAIL. Independent review034dc4ff accepts desktop
+report7a0f6722 only:8JS/8noJS,24strict whole-document Axe audits and37literal
+previous bodies. It confirms17benchmark failure frames,eight shared input logs,
+24native-only rows/zero classic rows and no matched comparison. Rawbenchmark
+03de39be records eight classic warmup failures: Pongo rejects context key
+PRIVATE-extra as an invalid identifier. Its24native-only rows are not a matched
+benchmark and produce no accepted comparison or efficiency claim. Original
+result/streams/C2 and earlier accessibility failureec7e remain immutable.
+
+The minimal methods-only correction changes one character of the common fixture
+key to PRIVATE_extra, a valid Pongo identifier. PRIVATE-must-not-render and every
+private-leak/source-mutation/assertion guard remain byte-exact. Export and both
+benchmark engines still use the same shared fixed source constructor; the eight
+fixtures,three samples/100iterations/CPU1,warmups,metrics and timeouts do not change.
+Only the new TXT hash and operational README/binding/two docs change; Python/Node
+code41ef/d22b, nativeR/all four source inputs,acceptedPG82b/currentartifact
+receipts,oldhelpers/dependencies and admission/Axe/cleanup controls stay exact.
+
+FinalP3 has exactly CLI,binding,method_nonbinding_image_sha256, its own review
+reference null during independent C3 admission, and actualR as native producer/
+pg-run. Root alone fills that saved C3 reference, commits allowed method/docs
+changes, then reruns the complete UI+matched benchmark wrapper. No real account
+input, action submission, producer source change, new full7 or reduced row count
+is authorized by this fixture correction. The source input hash changes; actual
+HTML/metrics and all48 matched rows require fresh independent evidence review.

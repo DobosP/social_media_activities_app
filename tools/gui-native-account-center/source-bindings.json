@@ -23,10 +23,10 @@
     "playwright_package": "ca170ec143a88ed3043ac953eb3b2377b2b97304104f4e1e23316684ce2c35af"
   },
   "method_source_review": {
-    "expected": "ACCEPTED_OPERATIONAL_ACCOUNT_REPAIRED_R_P2_AND_EXACT_TWO_DOC_AFTERIMAGES",
+    "expected": "ACCEPTED_OPERATIONAL_ACCOUNT_BENCHMARK_KEY_P3_AND_EXACT_TWO_DOC_AFTERIMAGES",
     "field": "status",
-    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/next-social-account-center-methods/operational-02ac-final/final-operational-review.json",
-    "sha256": "73ed1d50a8282b39a9a4cbb7303f1981cf57a2456e88f5f588e10ed16130b7ae"
+    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/next-social-account-center-methods/operational-benchmark-repair/final-operational-review.json",
+    "sha256": "c9b2e22e9d720c1ba085d7fb3b5814ccccbdf12919dc89828d5eee1077f69d62"
   },
   "native_account_source_review": {
     "expected": "ACCEPT_EXACT_02AC_REPAIRED_NATIVE_ACCOUNT_SOURCE_COMPLETE_SEVEN_PG_AUTHORITY_PRIVACY_AND_CLEANUP",
@@ -35,7 +35,7 @@
     "sha256": "82b01e1a3487d46f86af31cd6b76b3959c216b58c21ff99dcace2836ac4c584b"
   },
   "producer_source": "02ac07258cca866180ef93aeeb6a17ecb07baae1",
-  "qualification_claim": "Exact repaired nativeR02ac complete7 and all four native UI source hashes are independently accepted82b01e1a:457roots/1368named,zero failures/skips,340commands/695artifactrows,15owned CIDs/seven databases/privatePG cleaned. Paired causal debugc31b60/d4a65 is accepted debug only. First primaryUI ec7e remains failed/benchmarkNOT_REACHED. This operational metadata does not accept repaired primaryUI,body measurements,custody,feature,milestone or activation.",
+  "qualification_claim": "Exact nativeR02ac/full7/all four native inputs remain independently accepted82b01e1a/result856b. Paired c31b/d4a65 is debug only. First UIec7e failed accessibility/benchmarkNOT_REACHED. Repaired desktop7a0f is independently accepted034dc4ff for8JS8noJS24strictAxe37oldbodies, but overall resultda4e FAILED at classic Pongo warmups due invalid PRIVATE-extra context key;24native-only rows are not matched measurement. This methods-only one-character valid-key repair keeps the same private value/shared inputs/guards; fresh fullUI+matched measurements and separate custody/feature acceptance remain pending.",
   "schema": 1,
   "status": "BOUND_REVIEWED_COMMITTED_METHODS",
   "unchanged_overlay_helpers": [

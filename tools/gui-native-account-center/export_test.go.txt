@@ -58,7 +58,7 @@ func accountCenterQAFixture(t testing.TB, mode string) (*http.Request, string, p
 	request := platform.WithActor(httptest.NewRequest(method, "https://account.example"+path, nil), actor)
 	request.Header.Set("Accept-Language", lang)
 	user := map[string]any{"id": actor.ID, "pk": actor.ID, "public_id": actor.PublicID, "username": actor.Username, "display_name": actor.DisplayName, "is_active": true, "is_authenticated": true, "is_guardian": guardian}
-	data := pongo2.Context{"user": user, "is_guardian": guardian, "has_guardians": ward, "connections_enabled": connections, "language": lang, "display_theme": "light", "display_text": "normal", "display_motion": "reduce", "csrf": "synthetic-account-center-ui-csrf", "PRIVATE-extra": "PRIVATE-must-not-render"}
+	data := pongo2.Context{"user": user, "is_guardian": guardian, "has_guardians": ward, "connections_enabled": connections, "language": lang, "display_theme": "light", "display_text": "normal", "display_motion": "reduce", "csrf": "synthetic-account-center-ui-csrf", "PRIVATE_extra": "PRIVATE-must-not-render"}
 	if strings.Contains(mode, "guardian") || mode == "settings-token-ro" || actionError { data["display_theme"], data["display_text"] = "dark", "large" }
 	if strings.Contains(mode, "ward-connections") || mode == "settings-expired-record-en" { data["display_theme"], data["display_text"] = "contrast", "larger" }
 	if settings { data["languages"], data["current_language"] = []any{[]string{"en", "English"}, []string{"ro", "Română"}}, lang }
