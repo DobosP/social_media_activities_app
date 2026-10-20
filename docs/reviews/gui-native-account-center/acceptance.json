@@ -1,0 +1,108 @@
+{
+  "schema": 1,
+  "status": "ACCEPT_BOUNDED_NATIVE_ACCOUNT_OVERVIEW_SETTINGS_FEATURE_EXACT_R_M3_WITH_EXPLICIT_BODY_TRADEOFFS",
+  "reviewer": "agent:codex /root/account_center_source_review",
+  "observed_utc": "2026-10-20T05:53:12.471142+00:00",
+  "native_source": "02ac07258cca866180ef93aeeb6a17ecb07baae1",
+  "UI_method_source": "75edf1a051e95441248f58dbfed9e610cc4a00b6",
+  "native_UI_input_hashes": {
+    "services/server/internal/web/account_center_native.go": "91368882d286d052e14fa586abfe2e6ce30f555c4605a81967c861ca40c62e3f",
+    "services/server/internal/web/pages/account-center.gohtml": "6370bd3f0a800fe86811e986f004dc8023683464ad53b16707da9e3e1c273446",
+    "services/server/internal/web/account_center_native_test.go": "f3f85548d60abf767fd860faa10f9698ae8f9e363653dc142a52ff8715638cf1",
+    "static/css/account-center-native.css": "a403375bbc41d376bd5e9568614694bc932be51af50b0004792e029e5d75c7cf"
+  },
+  "method_code_hashes": {
+    "qualify.py": "41eff00431eeae4212eb83f11434ac080c6fe5e3d2e45c2de0dac901d3b1f97f",
+    "desktop-qa.mjs": "d22bbc4c27b4a0427d1af7c52d6804042c7223298ddfbe72394ea1d73b197fc4",
+    "export_test.go.txt": "1aea74e77a28a0cee9bd23d59d4d7e30d0d4d0259ab8f21e055b182306fdf368"
+  },
+  "native_complete7_result_sha256": "856b0b3beb1d3b5d9cd784c067b27dd67e3ccca876f94607361abf920829962e",
+  "native_source_complete7_review_sha256": "82b01e1a3487d46f86af31cd6b76b3959c216b58c21ff99dcace2836ac4c584b",
+  "final_UI_result_sha256": "949ebfe97d0f66fc858af87948a8feb6212c12af4790cabdbb62227108416ad8",
+  "final_UI_descriptive_BODY_review_sha256": "a5d109a9116d3cdabf456f05eabf3e6cddd75462ecf1c7e2d2bdacea2b2afbfe",
+  "keeper_review_sha256": "279909705896aa2ca5acbf51cc056df5b47288fa7b95ec0be4c2513134b7549a",
+  "keeper_archive_sha256": "e31b656ba310cb09639a6ab7e1a2a2dc8d305e17ae7a1f30ce3c8bc5ca3bee26",
+  "keeper_manifest_sha256": "6a0c5c50e3c8e77f46a36becc9617f2120476716350354b447716ee29089af8f",
+  "keeper_immutable_result_sha256": "fc046c45c91e3101edb50162e8447bb3f01138e8ee5fb75e2ca369676651a292",
+  "keeper_members": 2587,
+  "accepted_scope": "Native Go-rendered /you/ accountoverview and /settings/ presentation/projection/navigation with existing current-self/context/CSRF/action authority preserved; exactaccount-only opaque normal-flow header/panel and method-only matched-synthetic key correction. This is one bounded consumerGUI feature,not a whole-app milestone.",
+  "source_preservation": [
+    "NativeGo9136/GoHTML6370/puretestf3f8/CSSa403 exactacceptedR. App/custody/originalauthority assertions and completehistoricalsource inverse chains remain accepted82b/V4; alloriginaltests preserved or fully invertible behavior-preserving bridge.",
+    "FinalM3 differs from nativeR only through five committed UI methods/two explicit nonruntime docs. Python41ef/Node d22b guard codes unchanged; exporter1aea changes one common fixedsynthetic key to a valididentifier with sameprivatevalue/assertions/sharedtiming inputs. No productionauthpolicy,SQL,languagehandler,new unread/Self query or oldhelper change."
+  ],
+  "actual_native_authority": {
+    "complete_affected_native_packages": 7,
+    "test_roots": 457,
+    "named_PASS": 1368,
+    "FAIL": 0,
+    "SKIP": 0,
+    "separate_cheap_focused_roots": 12,
+    "separate_cheap_named_PASS": 52,
+    "new_registered_account_App_root": "TestNativeAccountCenterAssembledHTTPPreservesExistingActionsAndAuthority",
+    "eight_registered_groups": [
+      "registered-get-head-self-context-and-static",
+      "anonymous-method-csrf-origin-and-language-gap",
+      "stored-expired-token-metadata-self-only-revoke-and-idempotence",
+      "revoke-error-preserves-post-context-no-avatar-query-or-notice-consumption",
+      "failed-settings-reconstruction-remains-service-unavailable",
+      "current-active-expired-session-and-token-admission",
+      "export-head-preview-and-spa-boundaries",
+      "logout-refusal-then-existing-cookie-clear-and-session-delete"
+    ],
+    "six_account_pure_custody_web_roots_once": true,
+    "privacy": "Actual account root output is genericGo runnerframing only. Existing42260B oldinbox whitelisted display capture remains exact672d/100orderedENROrows/no privateextras. Credentials/nonces/headers/session/token/export bodies stay memory-only in reviewed nativeHTTP tests."
+  },
+  "actual_GUI": {
+    "JS_states": 8,
+    "noJS_states": 8,
+    "strict_whole_document_Axe_audits": 24,
+    "Axe_pass_predicates": 531,
+    "violations": 0,
+    "incomplete": 0,
+    "real_Tab_witnesses": 428,
+    "observational_FormData_forms": 62,
+    "all37prior_literal_bc10_bodies": true,
+    "current_asset_responses": 88,
+    "admitted_local_GET_requests": 104,
+    "Root_reviewed_all8_screens_and_finalPNG_bytes_identical": true,
+    "all_owned_context_server_profile_HOME_cleanup_verified": true,
+    "scope": "Fixed synthetic browserpresentation only; no action/logout/revoke/export/delete/language submission or realauthenticatedbrowser input. Actual backendauthority comes separately from complete nativePGHTTP tests."
+  },
+  "body_measurements": {
+    "accepted": "Scoped descriptive8statesx2enginesx3samplesx100iterationsCPU1 bodyrender measurements,not general efficiency acceptance.",
+    "native_median_elapsed_percent_higher": [
+      35.35,
+      66.26
+    ],
+    "native_median_allocation_count_percent_higher": [
+      39.59,
+      46.77
+    ],
+    "native_median_allocated_bytes_percent_lower": [
+      14.5,
+      23.39
+    ],
+    "native_HTML_percent_smaller": [
+      37.15,
+      42.27
+    ],
+    "native_gzip9_percent_smaller": [
+      26.38,
+      30.11
+    ],
+    "variability": "Three samples per group; classicbasicENns span/median47.10%,native4.00\u20137.20%. Allperstate samples/medians/ranges/spread retained bya5d; noHTTP,DB,CPUprofile,authenticissuance,throughput or causal/universal speedup claim.",
+    "profiling": "Later3s nativeprofiling/debug is outside keeperfinite scopes and excluded from official48-sample evidence."
+  },
+  "history_and_custody": [
+    "Originalec7e strictAxeFAIL/benchmarkNOT_REACHED and M2da4e benchmarkFAIL despite desktoppass remain original failedbytes; native24unmatched samples neverenter finalmeasurements. Paireddebug/negativecontrols preserve their own limitedstatuses.",
+    "One reviewed collection completed0 with2587members/42,854,195uncompressedB/17,834,701compressedB; independentwholePAXbytes/portablemetadata/2559frozenidentity source/control/reviewclosure accepted in separatekeeper2799. Collector innerresult remains immutableCOLLECTED_PENDING...; outerreviews supplykeeper/featureacceptance without rewritingit.",
+    "LatestRall695physicalPGproofs includinglargeGitstdout and latestsource/binary/dependency/currentUI setup remainprotected. Canonicalbc10/olderbaseline trees are reference-only. Exclusionledgers and shallowgeneratedroot metadata are not deletion inventories or authority."
+  ],
+  "remaining_boundaries": [
+    "Language-save404 is a separately tracked functional repair; native form faithfully preserves existingaction. No acceptance of a newly implemented language backend or allaccountsettings workflows follows.",
+    "No new school/professional tenancy,auth/MFA policy,government identity/provider integration,legal/EU compliance determination,realchild/account go-live,whole21/current-image/fullapp milestone/main or production approval.",
+    "Exact owned superseded0afd/a8 retention and canonicalclosingmetadata/featurebranchpublication require their own independent reviews; this boundedfeatureacceptance grants no deletion or landingauthority."
+  ],
+  "execution": "Reused accepted82b native/a5d primaryUI/body and bfa7frozenselection controls. Independently verified one actual archive fully plus directphysicalnative4/method3/reviewhashes; no new productqualification,Go/tests/browser/PG/benchmark run,candidatecollection,owningedit,extraction or deletion.",
+  "findings": []
+}

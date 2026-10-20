@@ -1,0 +1,51 @@
+{
+  "actuals": {
+    "PG": {
+      "artifacts_per_run": 695,
+      "commands_per_run": 340,
+      "databases_per_run": 7,
+      "lanes_per_run": 7,
+      "named_per_run": 1368,
+      "roles_per_run": 15,
+      "roots_per_run": 457
+    },
+    "UI": {
+      "JS": 8,
+      "matched_samples": 48,
+      "new_fixed_bodies": 8,
+      "noJS": 8,
+      "old_body_identities": 37,
+      "strictAxe": 24
+    },
+    "selected_bytes": 39330905,
+    "selected_files": 2559,
+    "source_rows": 2256
+  },
+  "archive": {
+    "bytes": 17834701,
+    "members": 2587,
+    "sha256": "e31b656ba310cb09639a6ab7e1a2a2dc8d305e17ae7a1f30ce3c8bc5ca3bee26"
+  },
+  "baseline": {
+    "all37_physical_bytes_equal": true,
+    "archive_sha256": "bc10a80ae1a9b0f404e9434f2a0065d941a0cb4a336d5ea06eb39032da09c7ea",
+    "reference_only": true
+  },
+  "exclusions": "Generatedworkspaces/binaries/DB not ingested; exact duplicate Gitstdout metadata only. No deletion. ALLlatestR695PGartifact bytes including Gitstdout remain protected physical UI-reproduction inputs.",
+  "history": "FirstUIec7eFAIL; paireddebugonly; repaired desktop7a0f accepted but overallda4e benchmarkFAIL/24native-only notmatched; key1aea final949 PASS/48matched with separate actualreview. All original innerstatuses preserved.",
+  "limits": [
+    "No acceptance by collector; separate full keeper/feature reviews remain required.",
+    "Mixed fixed synthetic BODY tradeoff: native median elapsed 35.35-66.26% higher and allocation counts39.59-46.77% higher; allocated bytes14.50-23.39%,HTML37.15-42.27%,gzip26.38-30.11% lower. Three samples100iterationsCPU1; no HTTP/CPU-profile/general speedup claim.",
+    "No main/milestone/production/provider/government/real-child/legal activation."
+  ],
+  "native_source": "02ac07258cca866180ef93aeeb6a17ecb07baae1",
+  "observer": {
+    "gid_map": "      1000          0          1\n",
+    "label": "actual collector observer; no UID/GID normalization",
+    "uid_map": "      1000          0          1\n"
+  },
+  "schema": 1,
+  "source_sha": "75edf1a051e95441248f58dbfed9e610cc4a00b6",
+  "source_tree": "e0b844fff50626b120752affc54d2e21cf32d2e6",
+  "status": "COLLECTED_PENDING_INDEPENDENT_KEEPER_AND_FEATURE_REVIEW"
+}

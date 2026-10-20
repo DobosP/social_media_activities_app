@@ -1,0 +1,102 @@
+{
+  "schema": 1,
+  "status": "ACCEPT_ACTUAL_NATIVE_ACCOUNT_KEEPER_COMPLETE_BYTES_PAX_METADATA_AND_BOUNDED_PROVENANCE",
+  "reviewer": "agent:codex /root/account_center_source_review",
+  "observed_utc": "2026-10-20T05:52:18.957049+00:00",
+  "source_sha": "75edf1a051e95441248f58dbfed9e610cc4a00b6",
+  "native_source": "02ac07258cca866180ef93aeeb6a17ecb07baae1",
+  "source_tree": "e0b844fff50626b120752affc54d2e21cf32d2e6",
+  "archive_sha256": "e31b656ba310cb09639a6ab7e1a2a2dc8d305e17ae7a1f30ce3c8bc5ca3bee26",
+  "archive_bytes": 17834701,
+  "archive_manifest_sha256": "6a0c5c50e3c8e77f46a36becc9617f2120476716350354b447716ee29089af8f",
+  "immutable_collection_result_sha256": "fc046c45c91e3101edb50162e8447bb3f01138e8ee5fb75e2ca369676651a292",
+  "immutable_inner_status": "COLLECTED_PENDING_INDEPENDENT_KEEPER_AND_FEATURE_REVIEW",
+  "members": 2587,
+  "uncompressed_payload_bytes": 42854195,
+  "native_UI_input_hashes": {
+    "services/server/internal/web/account_center_native.go": "91368882d286d052e14fa586abfe2e6ce30f555c4605a81967c861ca40c62e3f",
+    "services/server/internal/web/pages/account-center.gohtml": "6370bd3f0a800fe86811e986f004dc8023683464ad53b16707da9e3e1c273446",
+    "services/server/internal/web/account_center_native_test.go": "f3f85548d60abf767fd860faa10f9698ae8f9e363653dc142a52ff8715638cf1",
+    "static/css/account-center-native.css": "a403375bbc41d376bd5e9568614694bc932be51af50b0004792e029e5d75c7cf"
+  },
+  "method_code_hashes": {
+    "tools/gui-native-account-center/qualify.py": "41eff00431eeae4212eb83f11434ac080c6fe5e3d2e45c2de0dac901d3b1f97f",
+    "tools/gui-native-account-center/desktop-qa.mjs": "d22bbc4c27b4a0427d1af7c52d6804042c7223298ddfbe72394ea1d73b197fc4",
+    "tools/gui-native-account-center/export_test.go.txt": "1aea74e77a28a0cee9bd23d59d4d7e30d0d4d0259ab8f21e055b182306fdf368"
+  },
+  "native_source_and_complete7_review_sha256": "82b01e1a3487d46f86af31cd6b76b3959c216b58c21ff99dcace2836ac4c584b",
+  "final_UI_and_BODY_review_sha256": "a5d109a9116d3cdabf456f05eabf3e6cddd75462ecf1c7e2d2bdacea2b2afbfe",
+  "source_admission_sha256": "a77e4b9c96e23bed504b124638301cc2b005567abada653fa825c220de068778",
+  "actual_selection_control_release_sha256": "bfa70517fded479d7b82e9c3afae6053bde9715a84104b49dc803692cb49db83",
+  "actual_selection_sha256": "bf9ed59146817e287f7c975046a63f1cda79017b68f538e83e3a28299be2adaa",
+  "collector_sha256": "b74e3625728a2f39941a65bfbf4e8e494a169992ea5880b7a221f2590958ce2d",
+  "controls_source_sha256": "e956df265ebb77e0581eb0e26f8c26172ff8d119399976eb12126eaa8d9d98b4",
+  "profile_sha256": "cab8365ce534f4c06a05b24bfc6e07623ec721ce4435a56bca6ba631eebba94f",
+  "pending_input_sha256": "9a27f92641c4f72ea4723202f9d677dd9c6b9f5330f3ed00f70ad485b8126784",
+  "controls_result_sha256": "4a1aa2520c336a45fd43f782f1821be6ed3bb58a349568af950b24f6ac531256",
+  "final_binding_sha256": "c14050728b04afa3ce61573aff95a15f05b70d81018e9e74563a378a1e5c3bc5",
+  "Root_terminal_sha256": "97086414aa3295d9f29fb12d6efb2503fc72f3b36fd8ade082f1a017fa8fb38c",
+  "Root_launch_sha256": "1397e60bc83b556040cff8b98efac7f80e58637d2907ba6b8434918e44851a5b",
+  "Root_waited_exit": 0,
+  "Root_stdout_sha256": "32be6196fb1c29c8e7e47f86373c9753cf1a1f8de16542fe15ca5ea9d7cd8a01",
+  "Root_stderr_bytes": 0,
+  "payload_closure": {
+    "frozen_selected_members": 2559,
+    "selected_bytes": 39330905,
+    "finite_collector_history_control_release_extras": 28,
+    "V1_history_files_including_both_reviews": 12,
+    "full_current_source_frame_rows": 2256,
+    "reused_independent_directory_censuses": 323,
+    "reused_complete_attempt_censuses": 2,
+    "all_archive_bytes_mode_UID_GID_nsmtime_independently_readback": true,
+    "all2559_selected_live_full9stat_match_frozen_rows": true,
+    "all28_extras_equal_actual_admitted_source_control_review_input_bytes": true,
+    "unique_physical_origin_and_safe_regular_member_paths": true,
+    "no_archive_extraction_or_ownership_normalization": true,
+    "observer": {
+      "gid_map": "      1000          0          1\n",
+      "label": "actual collector observer; no UID/GID normalization",
+      "uid_map": "      1000          0          1\n"
+    }
+  },
+  "limits_verified": {
+    "file_bytes": 67108864,
+    "payload_bytes": 134217728,
+    "members": 4096,
+    "all_within_original_caps": true
+  },
+  "preserved_inner_states": [
+    "Firstec7e strictAxe overallFAIL and benchmarkREQUESTED_NOT_REACHED.",
+    "Pairedc31 remains causaldebug-only; fourteenrefusals remain syntheticnegativecontrol-only.",
+    "M2da4e overallFAIL with desktop7a0fpass and benchmarkREQUESTED_NOT_ADMITTED/24native-only; no matched timing acceptance.",
+    "Final949 PASS retains benchmarkEXECUTED_SEPARATE_NOT_ADMITTED; separatea5d admits descriptive matchedBODY measurements only.",
+    "Currentcollector result remains COLLECTED_PENDING_INDEPENDENT_KEEPER_AND_FEATURE_REVIEW byte-exact; this outerreview supplieskeeperacceptance without selfrewrite."
+  ],
+  "protected_references": {
+    "bc10_archive_sha256": "bc10a80ae1a9b0f404e9434f2a0065d941a0cb4a336d5ea06eb39032da09c7ea",
+    "reference_only_full1689PAX37body_verification_reused_from_selection_release": true,
+    "old_keeper_archive_or_tree_not_in_payload": true,
+    "two_large_duplicate_Git_stdouts_not_archived": true,
+    "generated_source_bin_tmp_children_not_archived": true,
+    "latest_R_all695_rawproofs_including_Gitstdout_remain_physical_protected": true,
+    "metadata_exclusions_not_complete_generated_tree_inventory_or_deletion_authority": true
+  },
+  "independent_readback": {
+    "verifier_source_sha256": "7b266e7d3d28586ff7f7dc5cad77dfd0647f786ad643bdcf1ef884bfab470b9a",
+    "stdout_sha256": "527bb960b2d009d0ef4f0b3dbdcc6f89157f0a4ffc4b27ea7fda9102974266f0",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "waited_exit": 0,
+    "source_selection_audit_reused_without_new_prepare_or_runtime": true
+  },
+  "checks": [
+    "Complete expected member/origin closure independently derived from exact frozen2559rows plus28explicit collector/history/control/review/binding extras. All2587regularsafe members read in order; everybyte/hash/size/mode/UID/GID/nsmtime joins actualmanifest and frozen originalmetadata; no missing,duplicate,alias or extra member.",
+    "Embeddedselectionbf9e exact and physicalsource/currentcontrol/profile/disabledinput/V1history/finalbinding/source-reviewa77/selection-releasebfa7/raw4controlstreams are exact originals. Finalbinding differs from preparedbinding only by six authorized actualresult/release/exits/streams fields; actualRootlaunch/wait0/stdout/result/archive joins agree.",
+    "Physical native4/method3 images and accepted82b/a5d reviews are directly present with exact hashes. Both nativePG/threeUI/paired/fourteennegative/sixcollectorcontrol/sourcepacket histories are preserved with originalstatuses; no failure or innerpending value is rewritten.",
+    "Four foreign PGready/cleanup metadata rows preserve actualobserver UID/GID. Current livefrozen rows still match nine identityfields; archivedselectedcontent equals releasedfrozen SHA values. Reusedindependentselectionaudit covers complete2256Git/source frame,323dirs/2attemptparents,695perPG artifacts/referencebc10 metadata and privacy; one collection does not broaden those finite scopes.",
+    "Archive has42,854,195uncompressedB/17,834,701compressedB/2587members within unchangedcaps. AlllatestRphysicalproofs remainprotected; no generatedcheckout/binary/DB/cache,oldcanonicalarchives,realaccount/credential/child capture or unrelatedprofilingmetrics enteredpayload.",
+    "Reviewer read archive entirely in memory and reused acceptedselectionaudit; no candidateimport/collection/product/Go/PG/browser/benchmark rerun,extraction,innerfile/owningmutation or deletion."
+  ],
+  "accepted_next_step": "This exact archive/manifest/result may be promoted unchanged as the accountkeeper after separate boundedfeature acceptance. Any rollingretention and canonicalmetadata/publication need separate exact reviewed plans; this review grants no deletion.",
+  "scope_limits": "Keepercustody/readback/provenance acceptance only,not full21/main/milestone/production/provider/government/legal/realchild or generalized efficiency acceptance. Bounded accountfeature review is separate; all mixedBODYtradeoffs and innerstatuses remain explicit.",
+  "findings": []
+}

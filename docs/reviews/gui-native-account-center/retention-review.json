@@ -1,0 +1,112 @@
+{
+  "schema": 1,
+  "status": "ACCEPT_ACTUAL_COMPLETE_EXACT_ACCOUNT_ROLLING_RETENTION_AND_INDEPENDENT_HOST_POSTCHECK",
+  "reviewer": "agent:codex /root/account_center_source_review",
+  "observed_utc": "2026-10-20T06:45:22.382808+00:00",
+  "execution_receipt_sha256": "502be224d205310f4af4183d55f9c8314ff183f3d88886cb5d152ba5f760fc24",
+  "method_sha256": "49bc9c7141d8bc1189e521fe1bc1e0a7037140497f3a63d336e26dfd21d691de",
+  "builder_sha256": "3b90690c1d15110258a7ef77655d4e252d4d8fb86117196b0473606baaa51260",
+  "archive_verifier_sha256": "57acb4e34e0b7378b5e28e8a5521dfd81f4d3984f02dd20288e59aabe4770160",
+  "plan_sha256": "2ec96b7f43067b874fb0a7d741523ba1b579ae1461266cb97f808ad356eedb6f",
+  "inventory_sha256": "42c8923d04738912cff8a2dc7d9ac497339c10abdb2fd44dac25cfabfa7929bc",
+  "latest_snapshot_sha256": "4791125487ed712f628f5dda36b2730d79881a85da329db72cac56eb3ec7b322",
+  "source_sha": "75edf1a051e95441248f58dbfed9e610cc4a00b6",
+  "native_source": "02ac07258cca866180ef93aeeb6a17ecb07baae1",
+  "source_tree": "e0b844fff50626b120752affc54d2e21cf32d2e6",
+  "keeper_archive_sha256": "e31b656ba310cb09639a6ab7e1a2a2dc8d305e17ae7a1f30ce3c8bc5ca3bee26",
+  "keeper_review_sha256": "279909705896aa2ca5acbf51cc056df5b47288fa7b95ec0be4c2513134b7549a",
+  "bounded_feature_review_sha256": "2c3806753662f6a483117446b0d0d3fc9ec2f69f4bc11c0f27341ae50f01806a",
+  "actual_inventory_review_sha256": "392f3c0ed266dc467582dd985bb691bdb3901a012bbb41995dfa94615b1ea8af",
+  "peer_source_plan_review_sha256": "bd7a2f8af46f972b4dd5ba3ad3eec4c12d94b7314950ff74d5d2a5e4c9fa4355",
+  "actual_dry_run_receipt_sha256": "2fcbb9cd0746b250433e7e316895ffe3eb26bc9a5451396bd62a6f3acc501be0",
+  "actual_dry_run_review_sha256": "963d53efba4accce208741c6b510f8f5f0ec3037bf2d6d4ced574b6678d842a8",
+  "Root_execution_launch_sha256": "bf68a7b8a5bbb0b810288cd2f1a8fbffadfdbd9b95d2dcc9855940bc16555b59",
+  "Root_execution_terminal_sha256": "b8c591ec4ad194baf0902015acaa8ad89fb152b8d1d031503cb198061b003bb6",
+  "Root_execution_binding_sha256": "9c1af4c7613c05fc5dd9f105c03a21e435ca769b4c73520d1e5d7b209a29b28a",
+  "Root_stdout_sha256": "e240233a39b3ebf4f04d3fe4f9d878ffe6df21200ac2700c4352c932918f636a",
+  "Root_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "Root_waited_exit": 0,
+  "Root_timed_out": false,
+  "actual_deletion": {
+    "files": 4500,
+    "empty_directories": 489,
+    "logical_bytes": 667239108,
+    "all4989exact_target_objects_physically_absent": true,
+    "deleted_receipt_rows_and_hashes_exact_inventory": true,
+    "no_duplicate_or_extra_deleted_path": true,
+    "scope": "Only old0afd and a8 generatedsource/binaries,fourwholetrees,and exacta8proof/command-006.stdout.",
+    "historical_raw_deleted_bytes_unavailable": true,
+    "prior_already_pruned0afd_stdout_not_recounted_or_deleted": true,
+    "allocated_input_sum_not_free_space_claim": 676671488
+  },
+  "protected_postcheck": {
+    "run_rows": 4669,
+    "current_UI_rows": 97,
+    "account_packets_and_all_UI_rows": 1556,
+    "date_canonical_rows": 14,
+    "unique_protected_physical_rows_rehashed": 6239,
+    "all_latest_R695proofs_including_large_Gitstdout_rehashed": true,
+    "latest_R_full_generated_source_preserved": true,
+    "latest_R_nine_successful_binary_hashes_preserved": true,
+    "all_current_and_historical_UI_sourcepackets_keepers_hashes_unchanged": true,
+    "only_allowed_parent_entry_losses": [
+      {
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-date-pg-qa/run-0afd29b79fec-0d124589-48a8-45be-a6b7-b93476bc129c",
+        "lost_entries": [
+          "binaries",
+          "source"
+        ]
+      },
+      {
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/account-center-pg-qa/run-a8f713f74885-7c56c571-615c-40bc-9163-4e6e9e9afecf",
+        "lost_entries": [
+          "binaries",
+          "source"
+        ]
+      },
+      {
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/account-center-pg-qa/run-a8f713f74885-7c56c571-615c-40bc-9163-4e6e9e9afecf/proof",
+        "lost_entries": [
+          "command-006.stdout"
+        ]
+      }
+    ],
+    "allother_original_full9stat_membership_mode_UIDGID_bytes_hash_allocatedfields_unchanged": true,
+    "HOST999_probe_and_observer_mapping_unchanged_without_normalization": true,
+    "M3Git_HEAD_tree_clean_and_branches_untouched": true,
+    "oneuse_nonce_marker_sha256": "6cfae70090a34859131cdbe95ab5b036a919ac3b20eedf983021a5f9ff19c89e",
+    "fresh_distinct_execution_UUID_after_dryreview_and_exact_binding_marker_verified": true
+  },
+  "live_state": {
+    "recorded_pre_and_immediate_originalCID_name_absence": 45,
+    "recorded_pre_and_immediate_no_running_bind_overlap": true,
+    "independent_postcheck_originalCID_name_absence": 45,
+    "independent_containers": 55,
+    "independent_running": 3,
+    "independent_running_bind_mounts": 0,
+    "same_minimal_daemon_sha256": "d5a22dfe53a7000ac004631e5f0b9fb70b684852bb48f6072e505482119856d1"
+  },
+  "independent_HOST_postcheck": {
+    "script_sha256": "7e341e3e7260b47e196718bcc935fb3bd34d47252ad04eeb48e0fa701c38fb87",
+    "stdout_sha256": "6cacb28740d80bf1fecf0ab9a4ad905aa001a9ab17f75011068e94694e6939ec",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "waited_exit": 0,
+    "disk_after": {
+      "total": 741953318912,
+      "used": 667763294208,
+      "available": 36424515584
+    },
+    "disk_scope": "Observed wholefilesystem snapshot only; no causal exactspace-reclaimed attribution."
+  },
+  "checks": [
+    "Actual502be receiptCOMPLETE/executedtrue agrees with Rootlaunchbf68/terminalb8c/wait0/notimeout/rawstdout e240/stderr0.4500unique filepaths/bytes/SHA and489unique deepestfirstemptydir removals match exactfrozeninventory; sum667239108logicalB and all4989physical absences verified underHOST.",
+    "Allprotected6239uniquephysicalobjects rehashed againstoriginalHOST snapshots; complete4669run/97UI/1556packet/14datecanonical sets and membership retained. Onlyold0afd/a8runparents lostsource+binaries,and a8proofparent lostcommand-006.stdout; originalparentdev/ino/mode/UID/GIDunchanged. No other parententryloss or metadata relaxation.",
+    "LatestR695rawartifact hashes\u2014including47.5MBGitstdout\u2014fullsource andnineoriginalsuccessfulbinaryhashes remainphysical. Old0afdstdout was alreadyabsent beforethisrun and not counted again. Git/currentM3tree and allkeepers/baseline/sourcepacket/log/UI evidence are intact; targetrawbytes alone are unavailable.",
+    "Executionbinding/source/plan/inventory/latest/dryreceipt/dryreview/currentRoot+peer/keeperacceptedhashes join actualfiles. NewUUID4 differsfromdryUUID; oneusemarker binds exact9c1executionbinding andfreshissue time followsallreviewmtimes/withinexecutionhour. Reservednamespacefix remainsactual49bc.",
+    "Rootrecordedbothpre/immediatelive45CIDnameabsence/nooverlap; independentpostHOSTDockerread55containers/3running/0binds gives exactsamedaemonhashd5a2. HOSTforeign999probe remainsdistinctfromkeeper65534representation; no ownershiptranslation.",
+    "Reviewer usedfixedrecord read/stat/hash/knownmembership postchecks withremovedset,not builder/remover or productrequalification. No newinventory,Go/PG/browser/productruntime,target/protected/owningwrite or deletion by reviewer. OutputsretentionHEREonly."
+  ],
+  "next_step": "Root may freeze compact retentionHERE method/history archive and fill canonicalclosing18afterimages from acceptedtemplates58a1/actualkeeper+feature+thisretention. ConditionalouterdateREADME now records pruned0afdsource/bin truth. Finalfilledmetadata/archive/copybytes and featurebranchpublication require separateclosed-delta independentreview.",
+  "limits": "Actualexactretention/postcheck acceptance only. No broadercleanup,additionaldeletion,main/milestone/production/provider/government/legal/realchild activation or newperformanceclaim. Retainedmanifests/receipts are historicalrecords,not a claimdeletedrawpaths still exist.",
+  "findings": []
+}

@@ -2,7 +2,7 @@
 
 Valid until: closing/source bytes change — rebind and independently review before application.
 
-Status: nativeR/full7 accepted82b0; repaired desktop PASS7a0f but overall FAILda4e at classic benchmark setup; key repair pending. Basebdb5cc8,
+Status: exact nativeR/full7 and M3 synthetic UI/body accepted82b0/a5d1; Complete keeper e31b656b (2,587 members; review27990970) and bounded native feature2c380675 are independently accepted. The canonical publication record separately binds the qualified source epochs and actual cleanup. Basebdb5cc8,
 contractV3 006f1c6954cd; qualified native/UI0afd and canonicalbc10/all37 bodies
 are concretely bound. Root exact four-new-Go formatting receiptd365 is recorded.
 
@@ -49,13 +49,9 @@ with no positive source/PG/UI acceptance implied.
 History at that cheap checkpoint: native commit/full7 and a later exact UI-method
 binding were the planned next steps. Those steps subsequently produced the actual
 native acceptance and first failed UI recorded below. They are not pending local
-checks. Current Next: review the one-character shared synthetic key repair and finalP3/
-README/two doc afterimages, fill only the saved C3 reference, then commit a methods-
-only UI epoch and rerun the whole UI+matched-body wrapper. NativeR/result856b/
-review82b01e1a and all four native source inputs remain unchanged. Both native/
-full7 roles retain82b; no new full7 or guard/row-count relaxation is introduced. Paired debugc31b/d4a65 is accepted
-causal evidence only and cannot replace complete7 or primary UI. Language-save
-remains a separate later repair.
+checks. Current Next: Implement the missing /i18n/setlang/ action as a separate Go functional slice; it still returns404 here. Formatted source287d08b and companion source-only6502/static7c70 are prepared; final published-base binding, application and language qualification remain pending. Renderer optimization is separate; no new efficiency claim. Earlier preparation/failed-run sections below
+remain historical checkpoints; final native/UI/body evidence is recorded in the
+closing checkpoint. Language-save404 remains a separate next functional repair.
 
 ## Exact native PostgreSQL acceptance and UI-method epoch
 
@@ -153,3 +149,30 @@ changes, then reruns the complete UI+matched benchmark wrapper. No real account
 input, action submission, producer source change, new full7 or reduced row count
 is authorized by this fixture correction. The source input hash changes; actual
 HTML/metrics and all48 matched rows require fresh independent evidence review.
+
+## Final native/UI/body qualification and closing checkpoint
+
+NativeR02ac0725/result856b is independently accepted82b01e1a:7complete affected
+packages,457roots/1,368named,zero failures/skips,340commands695artifacts and
+15ownedroles/sevenDB/privatePG cleanup. C3c9b2e22e admitted one valid synthetic
+key character only; final methodM375edf1a/result949ebfe9 and48matched BODY rows
+are independently accepteda5d109a9. Actual desktop8JS8noJS/24strictAxe531passing
+predicates/428keyboard62forms/37literalpriorbodies/88assets104localGET/87artifacts
+and owned cleanup passed. Root separately viewed eight screenshots.
+
+Body measurements are mixed across eight states: native median elapsed35.35–
+66.26% and allocationCOUNT39.59–46.77% higher,allocatedbytes14.50–23.39%,HTML
+37.15–42.27%,gzip26.38–30.11% lower. Three samples/100iterations/CPU1 describe
+fixedsynthetic warmed BODY only; no HTTP/DB/CPUprofile/causal/general speedup.
+Raw79522304/table6544e2e0 and all sample/range/spread calculations remain evidence.
+
+Earlier cheapfailure54bf,firstUIec7eFAIL/benchmarkNOT_REACHED,paireddebug-only,
+anda8nativePGPASS remain distinct. M2da4e is overallFAIL despite desktop7a0fPASS;
+its24native-only rows never become matched measurements. All original producer
+innerstatuses,source/control repairs and14negative admission receipts remain.
+
+Complete keeper e31b656b (2,587 members; review27990970) and bounded native feature2c380675 are independently accepted. The canonical publication record separately binds the qualified source epochs and actual cleanup. Native source,auth/SQL/policy and language404 are not
+changed by closing metadata. Exact rolling retention removed4,500 superseded generated files and489directories,667,239,108logicalB: only old0afd+a8 source/binaries and one a8 duplicateGitstdout. Receipt502be224d205310f4af4183d55f9c8314ff183f3d88886cb5d152ba5f760fc24 and independent HOST postchecke1cc2df6fd76e5f2748101179d0964c150ca6de2ad6abb2d12b62ccd1c1113b7 are accepted. The117-member compact retention archive is1,182,446B,SHA2160043249944779fd16ed97096c463b704d008c18505c9fafe412255f9276df. Deleted raw paths are unavailable; retained manifests describe history. Earlier0afd Gitstdout was already pruned and is not counted again. ALL695 latestR PG
+artifacts including compressedGitstdout,latestR source/bin,M3Git/dependencies
+and currentUI/rawsafeproof remain protected. Datebc10 is reference-only.
+No main/milestone/production/provider/government/legal/real-child activation.

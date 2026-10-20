@@ -1,0 +1,93 @@
+{
+  "schema": 1,
+  "status": "ACCEPT_EXACT_CANONICAL_ACCOUNT_PUBLICATION_AFTERIMAGES_AND_COMPACT_RETENTION_ARCHIVE",
+  "verdict": "ACCEPT_SOURCE_METADATA_AND_EXACT_FUTURE_SELF_COPY_ONLY",
+  "reviewer": "independent /root/account_center_source_review; did not author implementation, collector, remover, archive or closing afterimages",
+  "observed_utc": "2026-10-20T06:59:59.006157+00:00",
+  "findings": [],
+  "publication_manifest_sha256": "797ebeefa8b2134be1f309a02ee49ae887bea29e1e554eea02be5ba34dc3c39a",
+  "closing_bindings_sha256": "4fb390befee2558f62b95fae1a0f467dddbb696c0b276e86b6c81cc969ef3cbd",
+  "accepted_template_source_review_sha256": "58a1fe37f2311fcee0af8a12262c66b9b5a278e42657769a12664a488f99f0f2",
+  "base_HEAD": "75edf1a051e95441248f58dbfed9e610cc4a00b6",
+  "base_tree": "e0b844fff50626b120752affc54d2e21cf32d2e6",
+  "native_source": "02ac07258cca866180ef93aeeb6a17ecb07baae1",
+  "native_UI_input_hashes": {
+    "services/server/internal/web/account_center_native.go": "91368882d286d052e14fa586abfe2e6ce30f555c4605a81967c861ca40c62e3f",
+    "services/server/internal/web/pages/account-center.gohtml": "6370bd3f0a800fe86811e986f004dc8023683464ad53b16707da9e3e1c273446",
+    "services/server/internal/web/account_center_native_test.go": "f3f85548d60abf767fd860faa10f9698ae8f9e363653dc142a52ff8715638cf1",
+    "static/css/account-center-native.css": "a403375bbc41d376bd5e9568614694bc932be51af50b0004792e029e5d75c7cf"
+  },
+  "method_code_hashes": {
+    "qualify.py": "41eff00431eeae4212eb83f11434ac080c6fe5e3d2e45c2de0dac901d3b1f97f",
+    "desktop-qa.mjs": "d22bbc4c27b4a0427d1af7c52d6804042c7223298ddfbe72394ea1d73b197fc4",
+    "export_test.go.txt": "1aea74e77a28a0cee9bd23d59d4d7e30d0d4d0259ab8f21e055b182306fdf368"
+  },
+  "known_qualified_inputs": {
+    "UI_and_body_review_sha256": "a5d109a9116d3cdabf456f05eabf3e6cddd75462ecf1c7e2d2bdacea2b2afbfe",
+    "UI_method_source": "75edf1a051e95441248f58dbfed9e610cc4a00b6",
+    "UI_result_sha256": "949ebfe97d0f66fc858af87948a8feb6212c12af4790cabdbb62227108416ad8",
+    "benchmark_stdout_sha256": "7952230485a5af44510fdbfa49d05ad6cc71acc0e4cafb138645816509e46147",
+    "date_baseline_sha256": "bc10a80ae1a9b0f404e9434f2a0065d941a0cb4a336d5ea06eb39032da09c7ea",
+    "date_closing": "bdb5cc82a30c2b3307c87d56fdc92fc55948ecff",
+    "measurement_table_sha256": "6544e2e0917222a5c592b1ef3d17aad8f9459144f0015909174c1577eb329ad1",
+    "native_PG_result_sha256": "856b0b3beb1d3b5d9cd784c067b27dd67e3ccca876f94607361abf920829962e",
+    "native_PG_review_sha256": "82b01e1a3487d46f86af31cd6b76b3959c216b58c21ff99dcace2836ac4c584b",
+    "native_source": "02ac07258cca866180ef93aeeb6a17ecb07baae1"
+  },
+  "keeper_archive_sha256": "e31b656ba310cb09639a6ab7e1a2a2dc8d305e17ae7a1f30ce3c8bc5ca3bee26",
+  "keeper_review_sha256": "279909705896aa2ca5acbf51cc056df5b47288fa7b95ec0be4c2513134b7549a",
+  "bounded_feature_acceptance_sha256": "2c3806753662f6a483117446b0d0d3fc9ec2f69f4bc11c0f27341ae50f01806a",
+  "actual_retention_receipt_sha256": "502be224d205310f4af4183d55f9c8314ff183f3d88886cb5d152ba5f760fc24",
+  "actual_retention_postreview_sha256": "e1cc2df6fd76e5f2748101179d0964c150ca6de2ad6abb2d12b62ccd1c1113b7",
+  "retention_archive_sha256": "2160043249944779fd16ed97096c463b704d008c18505c9fafe412255f9276df",
+  "retention_archive_members_sha256": "041cd635c604bd4568f1d7e366f083dfebeaa6f45e140b38051f7acb38910425",
+  "retention_archive_result_sha256": "6f3bfbfe488821891c8962bc88c88bee0ee96656e413675a849e6223c5169b20",
+  "retention_method_hashes": {
+    "build-proposal.py": "3b90690c1d15110258a7ef77655d4e252d4d8fb86117196b0473606baaa51260",
+    "verify-archive-content.py": "57acb4e34e0b7378b5e28e8a5521dfd81f4d3984f02dd20288e59aabe4770160",
+    "retain.py": "49bc9c7141d8bc1189e521fe1bc1e0a7037140497f3a63d336e26dfd21d691de"
+  },
+  "read_only_check_source_sha256": "123b494aabfb40a1f6bd1daf24c952d9d2a8ca0a67bf118cd501a1c1f2e50a6e",
+  "read_only_check_observation_sha256": "23c59255e457ef4882458e2848ae87009c5a84543297eb1f55d486b6b1e5f9b4",
+  "approved_seventeen_target_hashes": {
+    "STATUS.md": "80be83d334a6ce656a81b74aee42421248de5668edfb19bda1f0752a552b7932",
+    "docs/adr/0066-native-account-center.md": "2df3dc0a06698d1fbd3668ec564e46d3dba2f156d1d1d5a3b1e418d17cced411",
+    "docs/adr/README.md": "2eb5a52fa870cc044d422291622c322bd07ae474e4888c69de23826af395349f",
+    "docs/execplans/gui-native-account-center.md": "4bbb8f8d5aa7b725b8753b0d78deea7a2edeef7506f6483ca9d436cc20e9a163",
+    "docs/reviews/gui-native-account-center/README.md": "6c0f6c9897b3ee5331f8581effbddc51e104cd7d96693add49f69033ba00a880",
+    "docs/reviews/gui-native-notification-inbox-dates/README.md": "5d443b68aeeb47f70009c402e01db4ff24918c4b48ba2bd7bd08b237e95f73a5",
+    "docs/reviews/gui-native-account-center/acceptance.json": "2c3806753662f6a483117446b0d0d3fc9ec2f69f4bc11c0f27341ae50f01806a",
+    "docs/reviews/gui-native-account-center/archive-manifest.json": "6a0c5c50e3c8e77f46a36becc9617f2120476716350354b447716ee29089af8f",
+    "docs/reviews/gui-native-account-center/collection-result.json": "fc046c45c91e3101edb50162e8447bb3f01138e8ee5fb75e2ca369676651a292",
+    "docs/reviews/gui-native-account-center/collector-source-review.json": "a77e4b9c96e23bed504b124638301cc2b005567abada653fa825c220de068778",
+    "docs/reviews/gui-native-account-center/evidence.tar.gz": "e31b656ba310cb09639a6ab7e1a2a2dc8d305e17ae7a1f30ce3c8bc5ca3bee26",
+    "docs/reviews/gui-native-account-center/keeper-review.json": "279909705896aa2ca5acbf51cc056df5b47288fa7b95ec0be4c2513134b7549a",
+    "docs/reviews/gui-native-account-center/retention-result.json": "502be224d205310f4af4183d55f9c8314ff183f3d88886cb5d152ba5f760fc24",
+    "docs/reviews/gui-native-account-center/retention-review.json": "e1cc2df6fd76e5f2748101179d0964c150ca6de2ad6abb2d12b62ccd1c1113b7",
+    "docs/reviews/gui-native-account-center/retention.tar.gz": "2160043249944779fd16ed97096c463b704d008c18505c9fafe412255f9276df",
+    "docs/reviews/gui-native-account-center/root-collection-receipt.json": "97086414aa3295d9f29fb12d6efb2503fc72f3b36fd8ade082f1a017fa8fb38c",
+    "docs/reviews/gui-native-account-center/selection.json": "bf9ed59146817e287f7c975046a63f1cda79017b68f538e83e3a28299be2adaa"
+  },
+  "actual_archive_checks": [
+    "Entire 1,182,446B gzip hash and all 117 ordered regular-file PAX members independently read without extraction; every byte/length/mode/UID/GID/nsmtime matches members.json, totaling 2,895,985 payload bytes.",
+    "Exactly 116 finite actual retentionHERE inputs match their archived bytes and original complete nine-stat tuples before/after bounded reads. Safe relative names, no symlink traversal, duplicate or extra member; actual complete file census equals the 116 selected inputs.",
+    "The sole generated META/retention-members.json is explicitly derived, not a historical observed file; its exact 116 rows, execution receipt and independent postreview joins match. Observed HOST/archive ownership is preserved, never normalized.",
+    "Accepted builder/remover/verifier sources, V1 histories, both real review streams, negative refusals, dry/execution bindings, one-use marker, actual receipts and postcheck are retained exactly. No generated source/binary/database/cache/credential/export or new product capture enters this finite archive."
+  ],
+  "closed_delta_text_checks": [
+    "All six rendered Markdown afterimages equal exact accepted templates with only final typed actual fields substituted. No extra changes or unresolved placeholders. Five original beforeimages equal clean M3 Git bytes; new account canonical README did not exist.",
+    "STATUS remains 120 lines; plan is 178 lines. ADR-0066 preserves every original non-Status byte as a complete exact prefix and appends its qualification checkpoint; index changes only row0066. Date README change is now warranted by actual old0afd source/bin cleanup; all other date canonical bytes remain unchanged.",
+    "All eleven actual artifact copy roles match their source bytes, sizes and expected hashes; original inner collection pending status, failed result statuses and prior native a8 PASS remain unchanged. Canonical account has thirteen roles: README, eleven actual copies, and this separate real publication review.",
+    "Native457/1368 and synthetic UI8+8/24 strict Axe/37 literal old bodies/48 matched BODY evidence are accurately attributed to accepted82b/a5 epochs. Mixed elapsed/allocation-count costs and byte/HTML/gzip reductions are retained without HTTP/DB/CPU-profile/causal/general speedup claims.",
+    "Actual removal is 4,500 files plus489 directories/667,239,108 logicalB, only old0afd+a8 generated source/bin plus one a8 duplicate Gitstdout. Already-pruned0afd stdout is not recounted; deleted raw bytes are unavailable. LatestR all695 physical proofs including Gitstdout, current source/9bins, M3Git, UI, packets and keepers remain protected per accepted actual HOST postcheck.",
+    "CURRENT_NEXT receipts287d08b/6502b6a/7c708d9 were separately read and hash-verified: formatted functional source and companion static/source preparation only. Final published-base/application/language qualification remain null/pending; current404 is not upgraded."
+  ],
+  "future_eighteenth_exact_copy": {
+    "source": "/home/dobo/work/_temp/gui-functional-hub/account-closing-prep/final/publication-review.json",
+    "canonical_target": "docs/reviews/gui-native-account-center/publication-review.json",
+    "rule": "Root hashes this actual saved review and copies those bytes exactly after creation; no self-digest field or change to this review is required. It is the only additional canonical afterimage."
+  },
+  "authorized_next_scope": "Root may copy exactly the seventeen bound afterimages plus the actual eighteenth review, perform appropriate docs/whitespace checks, commit metadata and publish the existing GUI feature branch. Actual remote equality requires subsequent push/readback evidence; it is not asserted here.",
+  "limits": "Metadata/custody closing only, reusing accepted source/selection/native/UI/body/retention audits. No new native/method epoch, full21, main landing, Teacher/Social milestone, production, provider/government/legal-parent/real-child activation or universal efficiency acceptance.",
+  "reviewer_execution": "Read-only stdlib file/hash/tar/Git plus small existing receipt inspection. One initial tar member lookup typo failed before mutation and was corrected to actual META/retention-members.json. No candidate import, extraction, product/Go/PG/browser/control/remover/collector execution, owning edit, retentionHERE write or deletion."
+}

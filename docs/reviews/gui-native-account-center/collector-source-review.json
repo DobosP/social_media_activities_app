@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "status": "ACCEPT_EXACT_ACCOUNT_KEEPER_V2_PRINCIPAL_CLOSED_DELTA_SOURCE_ONLY",
+  "reviewer": "agent:codex /root/account_center_source_review",
+  "observed_utc": "2026-10-20T05:36:53.929444+00:00",
+  "collector_sha256": "b74e3625728a2f39941a65bfbf4e8e494a169992ea5880b7a221f2590958ce2d",
+  "controls_source_sha256": "e956df265ebb77e0581eb0e26f8c26172ff8d119399976eb12126eaa8d9d98b4",
+  "profile_sha256": "cab8365ce534f4c06a05b24bfc6e07623ec721ce4435a56bca6ba631eebba94f",
+  "pending_binding_sha256": "9a27f92641c4f72ea4723202f9d677dd9c6b9f5330f3ed00f70ad485b8126784",
+  "native_source": "02ac07258cca866180ef93aeeb6a17ecb07baae1",
+  "source_sha": "75edf1a051e95441248f58dbfed9e610cc4a00b6",
+  "V2_manifest_sha256": "351e904e5689845930a8563ef18fc7abb4996ea5834381e60af02317decea088",
+  "repair_patch_sha256": "39729fc8b9a797c3308677cefaabf15d36dc6d3096a10dbb80f48cc3a3b2db2f",
+  "source_proof_sha256": "448081f5943be2f9e7ade304553242c9c96c54146f09204f49456acda7d72f33",
+  "FILEHASHES_sha256": "6d5a0475ac0d1ad92f0787db7a903274e0bbc8b4a49e86f76cf870184fcf903a",
+  "previous_principal_changes_required_sha256": "5c421bbed7cd89a4244bfef5e32bae4b34c7ab38c3b5733085f0b6495bd55c92",
+  "previous_narrow_critic_changes_required_sha256": "0288b15218fb013dfd05a3f997aa76ce632653d9fb3eca44e07f8fb8c9d1b226",
+  "finding_disposition": [
+    {
+      "id": "ACCOUNT-KEEP-F1",
+      "status": "CLOSED_AT_SOURCE",
+      "evidence": "row_for canonical/scope/forbidden/finite-role guards precede read. accepted spec digest/field/status shape and directHERE/checks parent guard precede boundread. output_gate validates fresh owned direct-child prepare/collect target beforebinding read/traversal; final writer rechecks remain."
+    },
+    {
+      "id": "ACCOUNT-KEEP-F2",
+      "status": "CLOSED_AT_SOURCE",
+      "evidence": "Independent trusted_read admits canonical directHERE regularNOFOLLOW bounded buffers with earliest/full9stat before candidate load. Four source/input hashes plusaccepted source-review scalars required. Cached admitted collector bytes are compiled/executed in an inert named module only; no SourceFileLoader reread,sys.dont_write_bytecode=True beforeimports/loading. Final trusted buffer identity checks precede exclusive receipt. Six original control bodies literalV1."
+    },
+    {
+      "id": "ACCOUNT-KEEP-F3",
+      "status": "CLOSED_AT_SOURCE",
+      "evidence": "controls_source_sha256 is separate from controls RESULTsha; currentsource bound/admitted and required directly by source and selection reviews. Actual receipt source/profile/pending digests join admitted controls/profile/disabled input; archivedcontrols source rebound to samehash. Earliest/final fences preserve these inputs."
+    },
+    {
+      "id": "ACCOUNT-KEEP-F4",
+      "status": "CLOSED_AT_SOURCE",
+      "evidence": "Historicalec7e absentdesktop_report field is checked as absent; unique original artifactrow/path/hash37ad joined toactualraw byte length. Original failedrawresult/report remain immutable; no field or innerstatus rewritten."
+    },
+    {
+      "id": "ACCOUNT-KEEP-F5",
+      "status": "CLOSED_AT_SOURCE",
+      "evidence": "Shared nineidentity fields now include st_nlink for originalread/link/directory/source/exclusion/selection fences; trustedpreloader uses the same ninefield set. Primitive provenance explicitly discloses constantparameter extension;13generic function-definition literals unchanged."
+    },
+    {
+      "id": "ACCOUNT-KEEP-F6",
+      "status": "CLOSED_AT_SOURCE",
+      "evidence": "Current disabledbinding has distinct admitted pending_binding_sha256,required by source/selection review andactualcontrols receipt; explicitarchiveextra pins exactinput. Profile also binds twelve V1history/preservation files andarchives them through finite explicitextras; no recursiveHERE scan introduced."
+    }
+  ],
+  "closed_delta_checks": {
+    "all_six_source_image_before_after_digests_verified": true,
+    "supplied_repair_patch_regenerated_byte_exact": true,
+    "complete_V1_history_files_including_preservation": 12,
+    "both_original_reviews_retained_exact": true,
+    "profile_only_new_field": "collector_history exact12name/hash map; allprior finite roles/paths/semantic/baseline/limits/protection fields unchanged",
+    "original_six_control_class_bodies_byte_exact": true,
+    "generic_function_definition_literals_byte_exact": 13,
+    "owning_clean_exact_M3_verified_read_only": true
+  },
+  "unchanged_invariants": [
+    "Exact finite2PG/3UI/paired/sourcepacket roles and all-entry attempt fences remain. No generated completecheckout/binary/DB/cache ingestion or unrelatedprofile/debug inputs added. LatestRsource/bin/all695physicalPGproofs includinglargeGitstdout remain protected; archive exclusion never grants deletion.",
+    "File64MiB/payload128MiB/member4096 caps remain. FullcurrentGit/source witnesses,earliestbytes/full9stat,internalGitlinks,directorymembership/observer/attempt/source fences and completePAX byte/mode/UID/GID/nsmtime roundtrip remain before/afteroutput. No ownershipnormalization.",
+    "Reference-onlybc10 complete1689PAXmember validation/all37literalbody identity checks remain in memory without historicaltree/archive duplication. Current run bodies/proofs remain originalpayloads even if equal to oldaliases.",
+    "All firstAxeFAIL/M2benchmarkFAIL/paireddebug/control-only/innerbenchmarkstatuses stay original bytes. Final949/82b/a5d references and mixedBODYtradeoff remain scope-limited. No realaccount/credential/child/evidence capture or newauth/action runtime is added.",
+    "Source acceptance,Rootsixsyntheticcontrols+separatedisabledCLI refusal,read-onlyprepare,independentactualselection/controlrelease,onecollection/fullreadback,independentkeeper/feature,then separately reviewedretention/publication remain distinct."
+  ],
+  "permitted_next_steps": "After this principal acceptance AND independent narrowV2 source acceptance,Root may syntax-check exactsources,run declaredsixsyntheticcontrols pluscanonicaldisabledCLI refusal,and create one fresh read-onlypreparedselection with admitted hashes. Actualcontrols/selection counts/raws require separate independentrelease before any collection.",
+  "actual_control_results_selection_counts_or_archive": null,
+  "execution": "Closed-delta static source/text/profile/manifest/proof/patch/hash comparison and currentGitHEAD/status only. No candidateparser/import/compiler/runtime,controls,sourceframe/attemptcensus/inventory/prepare/collection/producttests/deletion or owning mutation.",
+  "limits": "Source acceptance only,not actualcontrols/selection/custody/archive/keeper/feature/retention/main/milestone/production/provider/government/legal/realchild acceptance. No newproductrerun or benchmark follows.",
+  "findings": []
+}

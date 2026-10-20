@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "operator": "agent:codex (PROGRAM E8)",
+  "status": "ROOT_ACTUAL_COLLECTION_TERMINAL_NOT_KEEPER_OR_FEATURE_ACCEPTANCE",
+  "argv": [
+    "python3",
+    "-I",
+    "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/account-center-keeper/collect.py",
+    "--binding",
+    "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/account-center-keeper/binding-final.json",
+    "--output",
+    "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/account-center-keeper/candidate-75edf1a"
+  ],
+  "launch_sha256": "1397e60bc83b556040cff8b98efac7f80e58637d2907ba6b8434918e44851a5b",
+  "waited_exit": 0,
+  "stdout_sha256": "32be6196fb1c29c8e7e47f86373c9753cf1a1f8de16542fe15ca5ea9d7cd8a01",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "terminal_utc": "2026-10-20T05:47:17.025492+00:00"
+}

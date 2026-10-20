@@ -1,7 +1,7 @@
 # ADR-0066: Native account overview and settings presentation
 
 Date: 2026-10-20
-Status: applied on the GUI feature branch; exact source and additive fixture repair reviewed; focused race12/52 and local checks pass, complete PG/UI qualification pending.
+Status: exact nativeR and synthetic M3 UI/body independently accepted; Complete keeper e31b656b (2,587 members; review27990970) and bounded native feature2c380675 are independently accepted. The canonical publication record separately binds the qualified source epochs and actual cleanup.
 
 ## Scope and source
 
@@ -101,3 +101,36 @@ Commit this exact source before one complete affected PostgreSQL qualification.
 UI methods use a later reviewed methods-only bridge after actual PG acceptance;
 all native source/assets and old helpers must stay exact. No full21/current-image,
 main/milestone/provider/government/real-child activation or efficiency claim.
+
+## Completed native/UI/body qualification and bounded closing
+
+The preceding authored/source/local-check paragraphs preserve their original
+checkpoint; their pending qualification statements are historical. Nativea8
+subsequently passed complete affectedPG7 (fffe). FirstUIec7e failed15strictAxe
+color-contrast incomplete audits/zero violations and never reached benchmarking.
+The account-only opaque normal-flow header/panel repair retained all controls;
+paired c31b/d4a65 is causal debug only. Exact repaired nativeR02ac07258cca866180ef93aeeb6a17ecb07baae1
+then passed fresh complete7:457roots/1,368named,zero failures/skips,340commands/
+695artifacts and15ownedroles/sevenDB/privatePG cleanup (review82b01e1a/result856b).
+
+C2methodfe647ce desktop7a0f passed,but overallda4e failed classic Pongo warmups
+because the synthetic common-map key PRIVATE-extra was an invalid identifier.
+Its24native-only rows remain unmatched/unused. C3c9b permits only one character
+to PRIVATE_extra,preserving the privatevalue/sharedsource/assertions. Final M3
+75edf1a051e95441248f58dbfed9e610cc4a00b6/result949ebfe9 is accepteda5d109a9:
+8JS8noJS/24strictwholeDocAxe531passingpredicates/428keyboard62forms/37literal
+previousbodies/88assets104localGET/87artifacts/cleanup and48matched BODY samples.
+Original failure statuses/raw/source repairs and14negativecontrols remain.
+
+Native median BODY elapsed35.35–66.26% and allocationCOUNT39.59–46.77% are higher;
+allocatedbytes14.50–23.39%,HTML37.15–42.27%,gzip26.38–30.11% are lower across
+eight fixedsynthetic states. Three100-iteration samples/group,CPU1 are descriptive
+and include native validation/projection/copy. This is a mixed tradeoff,no
+HTTP/DB/CPUprofile/causal/general efficiency claim (table6544e2e0/raw79522304).
+
+Complete keeper e31b656b (2,587 members; review27990970) and bounded native feature2c380675 are independently accepted. The canonical publication record separately binds the qualified source epochs and actual cleanup. Exact rolling retention removed4,500 superseded generated files and489directories,667,239,108logicalB: only old0afd+a8 source/binaries and one a8 duplicateGitstdout. Receipt502be224d205310f4af4183d55f9c8314ff183f3d88886cb5d152ba5f760fc24 and independent HOST postchecke1cc2df6fd76e5f2748101179d0964c150ca6de2ad6abb2d12b62ccd1c1113b7 are accepted. The117-member compact retention archive is1,182,446B,SHA2160043249944779fd16ed97096c463b704d008c18505c9fafe412255f9276df. Deleted raw paths are unavailable; retained manifests describe history. Earlier0afd Gitstdout was already pruned and is not counted again. The canonical account
+record preserves original collector pendingstatus separately from outeractual
+acceptance; datebc10 remains an immutable reference. ALL695latestR PG artifacts
+including compressedGitstdout/latestR source/bin/M3Git/currentUI stay protected.
+Language-save404 remains a separate next repair. No original auth/SQL/policy,
+main/milestone/production/provider/government/legal/real-child activation follows.
