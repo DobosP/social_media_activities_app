@@ -1,0 +1,237 @@
+package web
+
+// Absent-path export only. Fixed synthetic presentation maps; no actual
+// session, access need, account credential, API capture or action invocation.
+import (
+	"bytes"
+	"encoding/base64"
+	"encoding/json"
+	"flag"
+	"html"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"regexp"
+	"strings"
+	"testing"
+
+	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
+	"github.com/flosch/pongo2/v6"
+)
+
+var displayAccessQAProducer = flag.String("display-access-ui-producer-source", "", "independently qualified native source")
+var displayAccessQAOutput = flag.String("display-access-ui-qa-output-dir", "", "fresh owned output")
+var displayAccessQAModes = []string{"display-public-en", "display-public-ro", "display-signed-dark-ro", "display-signed-contrast-en", "display-public-empty-csrf-en", "access-none-en", "access-mixed-ro", "access-error-ro"}
+
+func displayAccessQABridge(t testing.TB, root string) accountCenterQABridgeProof {
+	t.Helper()
+	raw, err := exec.Command("python3", "-I", filepath.Join(root, "tools/gui-native-display-access/qualify.py"), "--repo", root, "--producer-source", *displayAccessQAProducer, "--check-bridge").Output()
+	var proof accountCenterQABridgeProof
+	if err != nil || json.Unmarshal(raw, &proof) != nil || proof.Producer != *displayAccessQAProducer || !regexp.MustCompile(`^[0-9a-f]{40}$`).MatchString(proof.Head) || len(proof.Product) < 2000 || len(proof.Paths) != len(proof.Product)+5 {
+		t.Fatal("new display/access full current-source admission refused")
+	}
+	return proof
+}
+
+func displayAccessQAFixture(t testing.TB, mode string) (*http.Request, string, pongo2.Context) {
+	t.Helper()
+	display := strings.HasPrefix(mode, "display-")
+	signed := !display || strings.HasPrefix(mode, "display-signed-")
+	errState := mode == "access-error-ro"
+	lang := "en"
+	if strings.HasSuffix(mode, "-ro") {
+		lang = "ro"
+	}
+	path, name, method := "/access/", "web/access_preferences.html", http.MethodGet
+	if display {
+		path, name = "/display/", "web/display_preferences.html"
+	}
+	if errState {
+		method = http.MethodPost
+	}
+	request := httptest.NewRequest(method, "https://preferences.example"+path, nil)
+	request.Header.Set("Accept-Language", lang)
+	actor := platform.Actor{ID: 917, PublicID: "55555555-5555-4555-8555-555555555555", Username: "synthetic-preferences", DisplayName: `Synthetic <label> & "person"`, Cohort: "adult", AgeBand: "adult", IsActive: true}
+	if signed {
+		request = platform.WithActor(request, actor)
+	}
+	data := pongo2.Context{"language": lang, "display_theme": "light", "display_text": "normal", "display_motion": "reduce", "csrf": "synthetic-display-access-ui-csrf", "PRIVATE_extra": "PRIVATE-must-not-render"}
+	if mode == "display-public-en" || mode == "display-public-empty-csrf-en" {
+		data["display_theme"], data["display_motion"] = "auto", "auto"
+	}
+	if mode == "display-public-ro" {
+		data["display_text"], data["display_motion"] = "large", "full"
+	}
+	if mode == "display-signed-dark-ro" || errState {
+		data["display_theme"], data["display_text"] = "dark", "large"
+	}
+	if mode == "display-signed-contrast-en" || mode == "access-mixed-ro" {
+		data["display_theme"], data["display_text"] = "contrast", "larger"
+	}
+	if mode == "display-public-empty-csrf-en" {
+		request.URL.RawQuery = "_data=1"
+		data["csrf"] = ""
+	}
+	if !display {
+		user := accountUserMap(actor)
+		user["is_guardian"] = false
+		data["user"], data["is_guardian"], data["has_guardians"], data["connections_enabled"] = user, false, false, false
+		data["pref"] = map[string]any{"needs_step_free": mode == "access-mixed-ro", "needs_accessible_toilet": errState, "needs_hearing_loop": errState, "prefers_quiet": mode == "access-mixed-ro"}
+	}
+	if errState {
+		data["messages"] = []socialMessage{{"message": `Synthetic <script>unavailable</script> & retry.`, "tags": "error"}}
+	} else {
+		data["site_name"], data["canonical_url"] = "Synthetic <site> & preferences", "https://preferences.example"+path
+		if signed {
+			avatar := "data:image/svg+xml;base64," + base64.StdEncoding.EncodeToString([]byte(`<svg xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="3"/></svg>`))
+			data["avatar_uri"] = avatar
+			if !display {
+				data["user"].(map[string]any)["avatar_uri"] = avatar
+			}
+		}
+	}
+	return request, name, data
+}
+
+// Expectations derive from fixed form/source choices and immutable catalogue,
+// never from the new typed projector or its generated HTML.
+func displayAccessQAExpected(t testing.TB, r *Renderer, request *http.Request, name string, data pongo2.Context) map[string]any {
+	t.Helper()
+	lang := data["language"].(string)
+	tr := func(s string) string { return html.UnescapeString(r.catalog.translate(lang, s, 1)) }
+	display := name == "web/display_preferences.html"
+	actor, signed := platform.ActorFrom(request)
+	title := tr("Access preferences")
+	intro := tr("A setting you choose &mdash; we never track or infer it. We only ever show what a venue's open data records, and places with unknown accessibility are still shown to you.")
+	fields := []map[string]any{}
+	groups := []map[string]any{}
+	if display {
+		title = tr("Display settings")
+		intro = tr("Choose how the site looks. Your choice is saved on this device only (a small functional cookie) and applies whether or not you're signed in. By default we follow your device's own light/dark and reduced-motion settings.")
+		for _, group := range []struct {
+			name, label string
+			options     [][2]string
+		}{{"display_theme", "Theme", [][2]string{{"auto", "Match my device"}, {"light", "Light"}, {"dark", "Dark"}, {"contrast", "High contrast"}}}, {"display_text", "Text size", [][2]string{{"normal", "Normal"}, {"large", "Large"}, {"larger", "Larger"}}}, {"display_motion", "Motion", [][2]string{{"auto", "Match my device"}, {"reduce", "Reduce motion"}, {"full", "Full motion"}}}} {
+			groups = append(groups, map[string]any{"name": group.name, "legend": tr(group.label)})
+			for _, option := range group.options {
+				fields = append(fields, map[string]any{"name": group.name, "value": option[0], "label": tr(option[1]), "checked": option[0] == data[group.name], "type": "radio"})
+			}
+		}
+	} else {
+		pref := data["pref"].(map[string]any)
+		for _, field := range [][2]string{{"needs_step_free", "I need step-free access"}, {"needs_accessible_toilet", "I need an accessible toilet"}, {"needs_hearing_loop", "I need a hearing loop"}, {"prefers_quiet", "I prefer quiet / sensory-friendly places"}} {
+			detail := ""
+			if field[0] == "prefers_quiet" {
+				detail = tr("Saved for the future &mdash; venue data for this isn't available yet, so it doesn't change what you see.")
+			}
+			fields = append(fields, map[string]any{"name": field[0], "value": "on", "label": tr(field[1]), "detail": detail, "checked": pref[field[0]], "type": "checkbox"})
+		}
+	}
+	tabs := []map[string]any{}
+	if signed && display {
+		for _, tab := range [][2]string{{"Overview", "/you/"}, {"Profile", "/profile/"}, {"Interests", "/interests/"}, {"Display", "/display/"}, {"Privacy &amp; data", "/my-privacy/"}, {"Donations", "/my-donations/"}, {"Settings", "/settings/"}} {
+			tabs = append(tabs, map[string]any{"label": tr(tab[0]), "href": tab[1], "current": tab[1] == "/display/"})
+		}
+	}
+	site, canonical, avatar := "Social Activities", request.URL.Path, ""
+	if value, ok := data["site_name"].(string); ok {
+		site = value
+		canonical = data["canonical_url"].(string)
+		avatar, _ = data["avatar_uri"].(string)
+	}
+	messages := []string{}
+	if rows, ok := data["messages"].([]socialMessage); ok {
+		for _, row := range rows {
+			messages = append(messages, row["message"])
+		}
+	}
+	label, owner := "", ""
+	if signed {
+		label, owner = actor.DisplayName, actor.PublicID
+	}
+	save := tr("Save preferences")
+	if display {
+		save = tr("Save display settings")
+	}
+	return map[string]any{"display": display, "signed": signed, "title": title, "intro": intro, "site": site, "canonical": canonical, "path": request.URL.Path, "source_method": request.Method, "actor_label": label, "owner": owner, "avatar_uri": avatar, "tabs": tabs, "groups": groups, "fields": fields, "messages": messages, "save_label": save, "script_sources": []string{"/static/js/hovercard.js", "/static/js/site.js"}, "language": lang}
+}
+
+func TestSocialDisplayAccessQAExport(t *testing.T) {
+	root, err := filepath.Abs("../../../..")
+	if err != nil {
+		t.Fatal(err)
+	}
+	bridge := displayAccessQABridge(t, root)
+	before := groupDetailQASources(t, root, bridge.Paths)
+	output := *displayAccessQAOutput
+	if !filepath.IsAbs(output) || !strings.Contains(output, "/_temp/") {
+		t.Fatal("owned output required")
+	}
+	parent, err := filepath.EvalSymlinks(filepath.Dir(output))
+	if err != nil || parent != filepath.Dir(output) {
+		t.Fatal("canonical parent required")
+	}
+	if err = os.Mkdir(output, 0700); err != nil {
+		t.Fatal(err)
+	}
+	r := NewRenderer(root)
+	states, norm := []map[string]any{}, []map[string]any{}
+	for _, mode := range displayAccessQAModes {
+		request, name, data := displayAccessQAFixture(t, mode)
+		expected := displayAccessQAExpected(t, r, request, name, data)
+		semanticBefore, err := json.Marshal(data)
+		if err != nil {
+			t.Fatal(err)
+		}
+		w := httptest.NewRecorder()
+		if err = r.Render(w, request, name, data); err != nil {
+			t.Fatal("current preference render unavailable")
+		}
+		body, headers, n := notificationInboxQANormalize(t, w, "synthetic-display-access-ui-nonce")
+		n["name"] = mode
+		semanticAfter, err := json.Marshal(data)
+		if err != nil || !bytes.Equal(semanticBefore, semanticAfter) {
+			t.Fatal("source map mutated")
+		}
+		if bytes.Contains(body, []byte("PRIVATE-")) || bytes.Contains(body, []byte("<style")) || bytes.Contains(body, []byte("<script>unavailable")) {
+			t.Fatal("private/active fixture leaked")
+		}
+		groupDetailQAWrite(t, filepath.Join(output, mode+".html"), body)
+		states = append(states, map[string]any{"name": mode, "language": data["language"], "theme": data["display_theme"], "text": data["display_text"], "motion": data["display_motion"], "bytes": len(body), "sha256": groupDetailQAHash(body), "canonical": expected["canonical"], "synthetic_csrf": data["csrf"], "renderer_headers": headers, "expected": expected, "synthetic_source_sha256": groupDetailQAHash(semanticBefore)})
+		norm = append(norm, n)
+	}
+	// Reuse only old fixture/prior/render helpers. The old account bridge and
+	// export entrypoint are never invoked to bless this new product source.
+	prior := accountCenterQAPrior(t, root, output, r)
+	if err = os.Mkdir(filepath.Join(output, "account-center"), 0700); err != nil {
+		t.Fatal(err)
+	}
+	for _, mode := range accountCenterQAModes {
+		request, name, data := accountCenterQAFixture(t, mode)
+		w := httptest.NewRecorder()
+		if err = r.Render(w, request, name, data); err != nil {
+			t.Fatal("current prior account render refused")
+		}
+		body, _, _ := notificationInboxQANormalize(t, w, "synthetic-account-center-ui-nonce")
+		path := "account-center/" + mode + ".html"
+		groupDetailQAWrite(t, filepath.Join(output, path), body)
+		prior = append(prior, map[string]any{"kind": "account-center", "name": mode, "path": path, "bytes": len(body), "sha256": groupDetailQAHash(body), "equal": false})
+	}
+	if len(prior) != 45 {
+		t.Fatal("all45 current generated prior candidates required")
+	}
+	after := groupDetailQASources(t, root, bridge.Paths)
+	left, _ := json.Marshal(before)
+	right, _ := json.Marshal(after)
+	if !bytes.Equal(left, right) || displayAccessQABridge(t, root).Head != bridge.Head {
+		t.Fatal("full current source changed during export")
+	}
+	manifest := map[string]any{"schema": 1, "PG_producer_source": *displayAccessQAProducer, "UI_method_source": bridge.Head, "source_unchanged": true, "sources_before": before, "sources_after": after, "states": states, "previous_body_candidates": prior, "normalization": map[string]any{"schema": 1, "kind": "render-nonce-only", "replacement": "synthetic-display-access-ui-nonce", "states": norm}, "baseline_keeper_sha256": "bc10a80ae1a9b0f404e9434f2a0065d941a0cb4a336d5ea06eb39032da09c7ea", "account_baseline_keeper_sha256": "e31b656ba310cb09639a6ab7e1a2a2dc8d305e17ae7a1f30ce3c8bc5ca3bee26", "scope": "Eight fixed synthetic display/access contexts only;all45 current generated prior bodies require physical equality. No real preference/identity,actions or benchmark."}
+	raw, err := json.MarshalIndent(manifest, "", "  ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	groupDetailQAWrite(t, filepath.Join(output, "fixtures.json"), append(raw, '\n'))
+}

@@ -1,7 +1,7 @@
 # Native display/access preference implementation
 
 Date: 2026-10-20
-State: implemented on reviewed closing2750eb58; iterative checks completed; full affectedPG7 and desktop qualification pending.
+State: exact nativeS independently qualified by complete affectedPG7; finite desktop methods prepared; actual desktop qualification pending.
 
 Implement only the two existing functional HTML preference views in
 [ADR-0068](../adr/0068-native-display-access-preferences.md). Core c44afc3c
@@ -53,3 +53,9 @@ pending. Source qualification,rendering-cost improvement,main/milestone/
 production/legal/provider/government/real-child acceptance are not claimed.
 
 Applied-source checkpoint: Applied native display/access presentation passes iterative focused race checks:35roots/127named passed,including all9new web roots;one pre-existing DB root was unexecuted/skipped without a DSN. Vet web+app,format,whitespace and docs67 pass. Full affectedPG7 must still execute that root and all5new App roots with zero skips;desktop/45body qualification pending. No new performance or milestone acceptance.
+
+## Native qualification and desktop preparation
+
+Complete affectedPG7 on exactS e0065ca9 is independently accepted176b83f7/result6169:483roots1435named,0failures/skips/race,all469/1395priorL2 identities and14new roots,342commands699artifacts/2293source/15roles7DBprivatePGcleanup0-3-1. The previously unexecuted no-DSN root and all5new App roots now pass in PG. Finite desktop8JS8noJS/21unique strictAxe/45fresh literal prior bodies remains unexecuted;no benchmark or new authority/milestone claim.
+
+The next finite method is V2 of the isolated tools/gui-native-display-access proposal. Its prior interruption,pre-child admission and bounded no-JS phase findings are preserved and repaired in the source successor; actual code3/README/binding/CLI own-nullP admission precedes execution. The five method files and these two metadata paths are the entire source bridge from S. No native product,old method,asset,catalogue or dependency change is admitted by that bridge.

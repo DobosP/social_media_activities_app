@@ -1,0 +1,113 @@
+{
+  "accepted_prior45": {
+    "account_keeper": {
+      "archive": "docs/reviews/gui-native-account-center/evidence.tar.gz",
+      "archive_sha256": "e31b656ba310cb09639a6ab7e1a2a2dc8d305e17ae7a1f30ce3c8bc5ca3bee26",
+      "feature_review": {
+        "expected": "ACCEPT_BOUNDED_NATIVE_ACCOUNT_OVERVIEW_SETTINGS_FEATURE_EXACT_R_M3_WITH_EXPLICIT_BODY_TRADEOFFS",
+        "field": "status",
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/account-center-keeper/acceptance.json",
+        "sha256": "2c3806753662f6a483117446b0d0d3fc9ec2f69f4bc11c0f27341ae50f01806a"
+      },
+      "keeper_review": {
+        "expected": "ACCEPT_ACTUAL_NATIVE_ACCOUNT_KEEPER_COMPLETE_BYTES_PAX_METADATA_AND_BOUNDED_PROVENANCE",
+        "field": "status",
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/account-center-keeper/keeper-review.json",
+        "sha256": "279909705896aa2ca5acbf51cc056df5b47288fa7b95ec0be4c2513134b7549a"
+      },
+      "manifest": "docs/reviews/gui-native-account-center/archive-manifest.json",
+      "manifest_sha256": "6a0c5c50e3c8e77f46a36becc9617f2120476716350354b447716ee29089af8f"
+    },
+    "account_run": {
+      "fixtures_sha256": "2cdb61476708275e72069052d87f900015a099b3f62e8a6f200a0a41184d6ebf",
+      "path": "/home/dobo/work/_temp/ac-ui/run-0dbcc6ba753e-72fe6be6-c466-491d-9bf0-749e8c5e9d6a",
+      "prior37_sha256": "ed635b73cabff43a28609522e637a7b1a2387bdf39b57509535a7c35a7700cca",
+      "result_sha256": "d868902b56200a251dd60f280f6b6204c46ab778421980b3f73c4ccf6a40ecd7"
+    },
+    "language_product_source": "0dbcc6ba753e94b3dee2203f32546692f97f7894"
+  },
+  "benchmark_requested": false,
+  "closing_source": "2750eb5874508bb5f87d93ca4701e5dc9d7b3501",
+  "complete7_driver_sha256": "3171a637cca913e95fd3ab63beea1bf526a272ee75ad2cde75d77785cea3a8d1",
+  "complete7_result_sha256": "6169a0f162852654958aec6f36bb9a8abe2099dd4f3f2b5cd1f94f8f33cf106e",
+  "complete7_review": {
+    "expected": "ACCEPT_ACTUAL_DISPLAY_ACCESS_COMPLETE7_SOURCE_RAW_CASE_PRIVACY_AND_CLEANUP",
+    "field": "status",
+    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/display-access-checks/actual-full7-review.json",
+    "sha256": "176b83f776c2301dbc8f3a877ea3a44b5a72230791a9f640fdd1021ea47a38e5"
+  },
+  "dependency_sha256": {
+    "axe_file": "20c09fe157a8a34a30e241aaa1fcdade657734f08ab379ecfbeb7d45cc46e878",
+    "chrome": "aea09d69ce7f24d5901f6bfb15dd44d0c856e793e0a498f8d8393ec7d2c308ec",
+    "go": "30969f97169d7f43fe6a085873d75613adc21e30818a8c61d95bd27275df4624",
+    "node": "67ca5783febb8bf85736c79fcdd92c8d6d465a0eb2a082672bcdfa76a506751c",
+    "playwright_package": "ca170ec143a88ed3043ac953eb3b2377b2b97304104f4e1e23316684ce2c35af"
+  },
+  "method_sha256": {
+    "desktop-qa.mjs": "b3543fdbb02145f5ce36304ceb49464b5f06f8f0fca60d9e1a0c4585bd920d8a",
+    "export_test.go.txt": "21be13a4272c61b5ef2ab72ac1761ae69d219117d8fe71bf10eabec602c69810",
+    "qualify.py": "caf6895f23c3356ea1f03535f189be1abbb0c0e819182c1696fdbb95ff9bc3e1"
+  },
+  "method_source_review": {
+    "expected": "ACCEPT_EXACT_DISPLAY_ACCESS_OPERATIONAL_SEVEN_IMAGES_CLI_NULL_SELFREF_P_AND_ACTUAL_CONTROL",
+    "field": "status",
+    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/display-access-operational-final/operational-review.json",
+    "sha256": "9e4787a8db14010461215b1ec2c221a72493191b66d1063ec428c9b9a224b3a5"
+  },
+  "native_preferences_source_review": {
+    "expected": "ACCEPT_EXACT_PUBLISHED_C_BOUND_DISPLAY_ACCESS_NINETEEN_SOURCE_PACKET_FOR_APPLICATION_AND_FOCUSED_CHECKS",
+    "field": "status",
+    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/next-social-display-access-implementation/composed-source/independent-whole-source-review.json",
+    "sha256": "17ace96ba6716207d28cb5b351aebbe2e8767eac37376dd79a8c67c03fe707aa"
+  },
+  "prior45_authorities": {
+    "companion_review": {
+      "expected": "ACCEPT_ACTUAL_STANDALONE_LANGUAGE_COMPANION_EXACT_L2_45BODY_PRIVACY_AND_CLEANUP",
+      "field": "status",
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/language-companion-operational-final/actual-companion-review.json",
+      "sha256": "40339c773400ed0649c37bd2e30187f291e9672c6efb7be6671b8dbc3c89bd38"
+    },
+    "feature_review": {
+      "expected": "ACCEPT_BOUNDED_NATIVE_LANGUAGE_PREFERENCE_ACTION_EXACT_L2_WITH_ACCOUNT_UI_AND_SYNTHETIC_COMPANION",
+      "field": "status",
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/language-companion-operational-final/bounded-language-feature-acceptance.json",
+      "sha256": "5d6004ce97a09b5e6ada39a609eba93e9ed523d505348bf896acf4bef3aba34a"
+    }
+  },
+  "producer_source": "e0065ca92ecff73d8c1250a2af505be7b8535edd",
+  "qualification_claim": "Exact native producer e0065ca92ecff73d8c1250a2af505be7b8535edd/tree8a416b563b0876e7b9dc5240b0dfb818eebb7fab has independently accepted complete affectedPG7:483roots1435named/zero failures-skips-race/all469roots1395named priorL2 identities plus14new roots/342commands699artifacts/2293source/15roles7DB/privatePG0-3-1. Actual6169 result/176b review; source published separately with desktop pending. This new finite presentation method has not run. Declared8JS8noJS/21unique strictAxe/45fresh literal prior bodies; no benchmark/actions/realpreferences/legal/production claim. Operational exactCLI/code/README/null-selfrefP review is mandatory; historicalL2/M016c only grants baseline byte authority.",
+  "schema": 1,
+  "status": "BOUND_REVIEWED_COMMITTED_METHODS",
+  "unchanged_overlay_helpers": [
+    {
+      "bytes": 16962,
+      "path": "tools/gui-native-account-center/export_test.go.txt",
+      "sha256": "1aea74e77a28a0cee9bd23d59d4d7e30d0d4d0259ab8f21e055b182306fdf368"
+    },
+    {
+      "bytes": 16509,
+      "path": "tools/gui-native-notification-inbox/export_test.go.txt",
+      "sha256": "fceb971adde713f410aacdcefd143e09ada7a8e1ff8c59cd679ace18ab119289"
+    },
+    {
+      "bytes": 15643,
+      "path": "tools/gui-native-notification-preferences/export_test.go.txt",
+      "sha256": "dae147e2f5ae09427a3a1049ef03cb5f6e4cfdb58412e662b7e093f1a7589b62"
+    },
+    {
+      "bytes": 24769,
+      "path": "tools/gui-native-group-detail/fixture-export_test.go.txt",
+      "sha256": "c1b742a9e88f316169ddeace5a8aa619870ee3895f0e6e0584953a830309be53"
+    },
+    {
+      "bytes": 19404,
+      "path": "tools/gui-native-group/fixture-export_test.go.txt",
+      "sha256": "ac0aac2dbcd999040456d7d9e04ff2fe4a799f0c370ea2e47e5d1e10341b402c"
+    },
+    {
+      "bytes": 7919,
+      "path": "tools/gui-native-family/ui/fixture-export_test.go.txt",
+      "sha256": "101cc1a1a03cbec5ba27c316c74d711cb55d0e2d11bbfc6df00cca01799e2272"
+    }
+  ]
+}
