@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "status": "ACCEPT_BOUNDED_NATIVE_TOPICS_GET_EXACT_S2_M_WITH_EXPLICIT_POLISH_LIMITS",
+  "findings": [],
+  "source_sha": "1bde5522389ef4e354c24a898a6a494fc1cd0408",
+  "method_source": "f54842552e6efc94d8f22ff5af771bd186a632ea",
+  "native_source_review_sha256": "68fe231f857c07a1615abf9a2da2cfbea8c8c3799f3d0f7238fa49a7acf811d5",
+  "full_PG_review_sha256": "bce8623cab936e10a4e7f47804b2a47407d13e57751eb522dd4c05be32959ab6",
+  "full_PG_result_sha256": "6057d18997eaec1d6e2386b7f6cad47752447d8a2fc2d5c57b8db61255843699",
+  "UI_review_sha256": "dbbca4142e5d5e031dcbd260571d1ccb9bc11fa5aeea55281d588933cddd416d",
+  "UI_result_sha256": "68c030b1c8be8863e01fee7a1412634169c3725e1e3ff91e2398689c05eaffb5",
+  "desktop_sha256": "24e30a8e637f9f7203361c3352c10be1aee835a4345fc19688622f3326a46a37",
+  "fixture_manifest_sha256": "535d4d7bbf56c2828f6aa6764f744f3f57fa2ba9ceb039159459b28c6b8aaba5",
+  "root_visual_review_sha256": "1f3f787c123ff7a773736e2c5f070545b7c9277ddcec8e987a8ccba16bee8159",
+  "operational_review_sha256": "d1831edf027679e12481c928b5a56a4e10e0922de6abc0291b158a02da2b29b9",
+  "accepted_functional_scope": [
+    "Native Go HTML for the existing signed /topics/ page,using cached typed projection and scoped CSS. Existing category order,description,chosen-map key membership,empty state and independent nonempty-chosen feed truth remain. Fixed text and optional notices/labels are escaped;existing navigation,language,CSRF,headers and current owner context remain.",
+    "Current handlers,SetTopics,known-category/unknown-ignore/empty-clear behavior,guardian admission,audit,query and SPA authority are unchanged. Their existing registered tests remain in complete affectedPG7. No actual browser preference/language/logout/save action or account activation is exercised by the static UI.",
+    "Exact nativeS2 affectedPG7 accepted491roots1478named/zero failure-skip-race-cache,with all483roots1435named prior display identities and all8newTopics roots43named. Strict boundedXZ source archive preserves all2311Gitblob/mode/PAX identities,15owned roles/7DB/privatePG lifecycle and actualHOST cleanup.",
+    "Actual finite UI8JS8noJS/24strictAxe537passing observations/zero violations-incomplete,96keyboard records(80focus/12Space-FormData/4emptyN/A),48initialforms,104recordedlocalGET88positiveassets/105artifacts and all53fresh literal prior bodies. Full4276PAX keeper readback and actual profiles/groups/HOME cleanup accepted."
+  ],
+  "body_preservation": {
+    "prior_date_bodies": 37,
+    "prior_account_bodies": 8,
+    "prior_display_access_bodies": 8,
+    "total": 53,
+    "literal_equal": true,
+    "existing_normalization_only": true
+  },
+  "polish_limits": [
+    "Footer link spacing remains cramped in the inherited native shell.",
+    "Existing Topics translation IDs fall back to English for the main Romanian page copy,while navigation uses current Romanian translations;no frozen catalogue changes are hidden here."
+  ],
+  "qualification_limits": [
+    "Functional presentation acceptance with fixed synthetic signed GET fixtures and1280x720 desktop profiles. Original product report-only CSP is preserved;isolated fixture enforcement is test setup. Axe observations do not establish complete accessibility certification.",
+    "No benchmark was requested;no HTTP,DB,CPU,rendering-cost or general efficiency conclusion is established.",
+    "No final design or complete Romanian translation approval,no new content/catalogue/license/government/legal/clinical/scoring/privacy ruling,no real child or identity-provider activation,no mobile/device evidence.",
+    "No main push,production deployment,Teacher/Social GUI milestone or remote future-closing claim. Any later publication,keeper or retention result needs its own actual record. All historical failures and inner preparation statuses stay separate and unchanged."
+  ],
+  "canonical_copy_rule": "This exact serialized bounded acceptance may be copied unchanged as a future canonical acceptance.json. Its digest is external;no self-hash or future publication SHA is asserted.",
+  "execution": "Root was runtime operator. This reviewer performed only source/raw/custody and actualHOST read-only checks;independent desktop peer read JSON/source and2PNGs. No product rerun,owning mutation or deletion."
+}

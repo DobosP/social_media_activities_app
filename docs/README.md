@@ -22,7 +22,8 @@ Native runtime index verified 2026-10-04.
 | [NATIVE_SERVER.md](NATIVE_SERVER.md) | Canonical Go runtime, migration/adoption, commands and explicit configuration limits. |
 | [reviews/native-go/README.md](reviews/native-go/README.md) | Complete native release, real-codec/DB/HTTPS and resource/image proof. |
 | [reviews/gui-native-display-access/README.md](reviews/gui-native-display-access/README.md) | Bounded native display/access feature,exact PG/UI evidence,failure history and polish limits. |
-| [execplans/gui-native-topics-and-xz.md](execplans/gui-native-topics-and-xz.md) | Selected self Topics/source transport plan; Root tiny-control observations pending independent review, product qualification pending. |
+| [execplans/gui-native-topics-and-xz.md](execplans/gui-native-topics-and-xz.md) | Completed native self Topics/source transport plan;actual PG7 and finite desktop independently accepted. |
+| [reviews/gui-native-topics/README.md](reviews/gui-native-topics/README.md) | Bounded native Topics feature,exact source/PG/UI evidence and explicit polish limits. |
 | [gui-public-golden-fixtures.md](gui-public-golden-fixtures.md) | Original public GUI producer, released-normalizer evidence and current continuation; no formal group/Live acceptance. |
 | [reviews/go-foundation/README.md](reviews/go-foundation/README.md) | Historical public-only serving slice (superseded scope, ADR-0031). |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Native Go service boundaries and preserved product contracts (ADR-0032). |

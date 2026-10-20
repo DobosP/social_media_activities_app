@@ -1,7 +1,7 @@
 # Native self Topics and bounded source transport
 
 Date: 2026-10-20
-State: exact S2 independently qualified by completePG7;finite desktop methods prepared,actual desktop pending.
+State: bounded functional feature independently accepted;exact S2 completePG7 and T finite desktop qualified;feature publication follows this closing.
 
 This selected slice follows [ADR-0069](../adr/0069-native-self-topics.md) and
 [ADR-0070](../adr/0070-bounded-xz-git-source-transport.md). Actual beforeepoch is
@@ -76,3 +76,11 @@ Earlier source-only checkpoints above remain historical. Applied exact whole-rev
 Complete affectedPG7 on exactS2 1bde5522 is independently acceptedbce8623c/result6057d189:491roots1478named,zero failures/skips/race,all483/1435prior identities plus8Topics roots43named,341commands697artifacts2311sourcefiles/15roles7DB/privatePGcleanup. All19 previously unexecuted no-DSN roots now pass in PG. Whole strictXZ/Gitblob-mode-PAX matches preflight0384 and rawf707;native source publicationb7814d48 is exact S2. Finite8signedJS8noJS/24strictAxe/53fresh literal prior bodies remains unexecuted. No benchmark,new authority or milestone acceptance.
 
 The source bridge admits only five new method paths plus STATUS and this plan. All other native product,qualification driver,old helpers/assets/catalogues/dependencies remain byte-exact S2. Source-proposal checkpoints above stay historical.
+
+## Accepted bounded feature
+
+Native self Topics is independently accepted as a bounded functional feature on exact native S2 `1bde5522389ef4e354c24a898a6a494fc1cd0408` and desktop method T `f54842552e6efc94d8f22ff5af771bd186a632ea`. Complete affectedPG7 result6057d189/reviewbce8623c passes491roots/1478named with zero failures/skips/race,all483/1435prior identities plus8Topics roots/43named,341commands697artifacts2311sourcefiles and15roles7DB/privatePG cleanup. The19 earlier no-DSN roots now pass. Strict XZ/Git blob-mode-PAX preflight0384 and actual rawf707 match under unchanged compressed64MiB/timeout60s bounds.
+
+First actual Topics desktop result68c030b1/reviewdbbca414 passes8JS+8no-JS states,24strict whole-document Axe audits/537passing observations,zero violations/incomplete,53fresh literal prior bodies,48initial FormData forms,104localGET/88assets and105artifacts. The96keyboard records comprise80actual focus confirmations,12checkbox Space/FormData observations and4empty-state N/A records. All8unique no-JS contexts remain product-script-disabled;two profiles/server/privateHOME and owned groups are closed/removed. Five final screenshots were visually inspected. No benchmark was requested.
+
+Independent bounded-feature acceptance `ef74a9c3f29e52dd22799d237814e224d448f60a925abbe699fa70e2818a61bb` is copied byte-exact to [acceptance.json](../reviews/gui-native-topics/acceptance.json);the [canonical record](../reviews/gui-native-topics/README.md) references source/results/reviews in place. Footer links remain cramped and most Romanian Topics main-page copy retains existing English fallbacks. Functional acceptance does not certify final design,complete translation or legal compliance. No new archive/deletion,main/GUI milestone,production,new recommender policy,provider/government,identity/legal-parent or real-child activation is claimed. Earlier source-only/pending checkpoints remain history.

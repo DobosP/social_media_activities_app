@@ -1,0 +1,81 @@
+{
+  "schema": 1,
+  "status": "ACCEPTED_BOUNDED_SELF_TOPICS_PROVENANCE_INDEX_NO_NEW_ARCHIVE",
+  "producer_source": "1bde5522389ef4e354c24a898a6a494fc1cd0408",
+  "producer_tree": "40ba64c6a4e4799d078daadc0d33f14b76d5adb0",
+  "method_source": "f54842552e6efc94d8f22ff5af771bd186a632ea",
+  "method_tree": "38309e39d74c897378b7f69d36233b1fb7c1231c",
+  "published_native_source_receipt": {
+    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/topics-source-publication/publication.json",
+    "sha256": "b7814d488dcc24ce043a6260b294a8f66573c9b163609cc6a0629d775f72d910"
+  },
+  "actual_complete7": {
+    "result": {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/topics-pg-qa/run-1bde5522389e-aad05df8-ae64-4877-897b-a7503e55e049/result.json",
+      "sha256": "6057d18997eaec1d6e2386b7f6cad47752447d8a2fc2d5c57b8db61255843699"
+    },
+    "review": {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/next-social-topics-checks/actual-full7-review.json",
+      "sha256": "bce8623cab936e10a4e7f47804b2a47407d13e57751eb522dd4c05be32959ab6"
+    },
+    "source_manifest": {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/topics-pg-qa/run-1bde5522389e-aad05df8-ae64-4877-897b-a7503e55e049/source-manifest.json",
+      "sha256": "25c52ca1c16c1a69009338118649f8072db581e4f617b556596a7a4ba2c82431"
+    }
+  },
+  "actual_UI": {
+    "result": {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/tp-ui/run-1bde5522389e-d12a9d71-53b4-44e0-994d-23c6318e2c38/result.json",
+      "sha256": "68c030b1c8be8863e01fee7a1412634169c3725e1e3ff91e2398689c05eaffb5"
+    },
+    "desktop": {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/tp-ui/run-1bde5522389e-d12a9d71-53b4-44e0-994d-23c6318e2c38/desktop/desktop-results.json",
+      "sha256": "24e30a8e637f9f7203361c3352c10be1aee835a4345fc19688622f3326a46a37"
+    },
+    "review": {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/topics-ui-operational/actual-ui-review.json",
+      "sha256": "dbbca4142e5d5e031dcbd260571d1ccb9bc11fa5aeea55281d588933cddd416d"
+    },
+    "Root_terminal": {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/topics-ui-operational/UI-root-terminal.json",
+      "sha256": "272a4acf102c464bff7dc01ca2ab258967a9a37dd507641ee343a523dba2ec2a"
+    }
+  },
+  "method_admission": {
+    "review": {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/topics-ui-operational/operational-review.json",
+      "sha256": "d1831edf027679e12481c928b5a56a4e10e0922de6abc0291b158a02da2b29b9"
+    },
+    "P": {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/topics-ui-operational/P.json",
+      "sha256": "a3843f2c0f7fef4bf2976cfc028f004d3d6587e7aa62bdaa9fb3121874217263"
+    },
+    "bridge": {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/topics-ui-operational/root-method-commit-and-bridge.json",
+      "sha256": "aa114c731250c6a8e286e7f9b00ae9f5d90022c54cfb264ee52f9e0fe96e54c4"
+    },
+    "actual_wrong_qualifier_control": {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/tp-ui/wrong-qualifier-control-host/result.json",
+      "sha256": "d6f9178b9d6ebd85c45ac64cc201971660e2f7cc367fd4f6e76ebb05fd757317"
+    }
+  },
+  "bounded_feature_review_copy": {
+    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/topics-ui-operational/bounded-feature-acceptance.json",
+    "sha256": "ef74a9c3f29e52dd22799d237814e224d448f60a925abbe699fa70e2818a61bb",
+    "canonical_path": "docs/reviews/gui-native-topics/acceptance.json",
+    "exact_bytes": true
+  },
+  "code3": {
+    "qualify.py": "69857446610dbafdd19b7f1ddb622cd1b26f85667597747db3077a59c76e83e7",
+    "desktop-qa.mjs": "7feb63801e411bf812ccc0c79cadf9a4eb411fc2ead254d0a331405539f51628",
+    "export_test.go.txt": "21478c0eb9f26aa3ec5f1a80df5b45d026da0c89d9f31b8219ee9996eed8e078"
+  },
+  "native_images": {
+    "services/server/internal/web/topics_native.go": "2990f6cb2522b8370355077025d62d175938e8b7c095b796614b0cf074871954",
+    "services/server/internal/web/pages/topics.gohtml": "e47d63141f5e5ae5ad0c4be4a9f44cf3995d432fae64398054813e84014a688f",
+    "static/css/topics-native.css": "f5a622dc829d0374ea290559b10788c73b6107278e2a5a476a19925d002fd269",
+    "services/server/internal/web/renderer.go": "24c388bcedad06808589a8c036c2d002a4b2cc87dcebd7f65bbf376ef21fd8a4"
+  },
+  "benchmark": "NOT_REQUESTED",
+  "record_kind": "Metadata references only; no standalone byte keeper or new archive; no own future closing SHA asserted."
+}

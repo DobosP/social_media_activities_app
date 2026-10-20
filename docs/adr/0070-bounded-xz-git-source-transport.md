@@ -1,7 +1,7 @@
 # ADR-0070: Bounded explicit XZ transport for full Git source qualification
 
 Date: 2026-10-20
-Status: applied with independently accepted fixed-fixture controls;actual new-producer whole-source preflight and completePG7 qualification pending.
+Status: independently qualified on exact S2 complete source preflight and affectedPG7;unchanged caps and all source/control/lifecycle guards retained.
 
 ## Decision
 
@@ -88,3 +88,11 @@ source-only, and future application/producer/fullPG/UI results remain unknown.
 ## Applied-source focused checkpoint
 
 Earlier source-only checkpoints above remain historical. Applied exact whole-reviewed68fe231f Topics/core/test-preservation/XZ source. Focused race runf5f488cb passed32roots/117named,including all8newTopics roots;19pre-existing database-dependent roots were skipped without a DSN,including the registered topics/guardian and SPA roots,so those remain mandatory zero-skip checks in completePG7. Affected vet web+app,mechanical format10Go/AST2Python,docs69 and whitespace pass;no race warning. Source-selected4XZcontrols and exact fourth-root-only memlimit-removal sensitivity1cbc are independently accepted in68fe;these tiny fake-Git fixtures do not qualify a new producer. Exact whole-SHA XZ/Git blob-mode-PAX preflight,complete affectedPG7,53fresh literal prior bodies and finite desktop qualification remain pending. No benchmark,new policy/main/milestone/production claim.
+
+## Accepted exact-source qualification
+
+Earlier pending/preparation statements above are historical checkpoints. Exact native S2 `1bde5522389ef4e354c24a898a6a494fc1cd0408` passed whole-source preflight0384f042 and actual complete affectedPG7 result6057d189,independently acceptedbce8623c. Actual compressed Git stdout is62,146,892B/SHAf7078b09 and expanded tar106,373,120B/SHA08aae256:all2311Gitblob/mode/PAX files match. Compressed64MiB/expanded128MiB/decoder64MiB/60s bounds,CRC64/fullEOF/single-stream refusal and exact pinned executable/environment remain.
+
+All491roots1478named pass with zero failures/skips/race;341commands697physical artifacts,15roles7DB/privatePG and HOST cleanup are accepted. The four controls plus exact memory-limit sensitivity1cbcdb3c are independently accepted within68fe231f. Complete raw source/binaries/artifacts,including compressed Git stdout,remain in place. Old display/account/language gzip evidence and readers remain unchanged.
+
+This qualifies source packaging for the bounded Topics campaign;it establishes no rendering benchmark,production-data or general security claim. [Canonical Topics provenance](../reviews/gui-native-topics/provenance.json) references the actual source/result/review in place. No new archive or deletion is performed by this metadata closing;no main/milestone/production/content/legal/real-child activation follows.

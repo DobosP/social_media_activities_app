@@ -1,0 +1,89 @@
+{
+  "schema": 1,
+  "status": "ACCEPTED_BOUNDED_SELF_TOPICS_EVIDENCE_INDEX_NO_NEW_ARCHIVE",
+  "complete7_actuals": {
+    "roots": 491,
+    "named": 1478,
+    "failures": 0,
+    "skips": 0,
+    "race_warnings": 0,
+    "commands": 341,
+    "artifacts": 697,
+    "source_files": 2311,
+    "owned_roles": 15,
+    "retired_databases": 7,
+    "prior_display_roots_retained": 483,
+    "prior_display_named_retained": 1435,
+    "new_roots": 8,
+    "new_named": 43
+  },
+  "UI_actuals": {
+    "JS_states": 8,
+    "noJS_states": 8,
+    "strict_Axe_audits": 24,
+    "Axe_passing_rule_observations": 537,
+    "violations": 0,
+    "incomplete": 0,
+    "literal_prior_bodies": 53,
+    "keyboard_records": 96,
+    "actual_focus_confirmations": 80,
+    "checkbox_Space_FormData_observations": 12,
+    "empty_state_keyboard_NA_records": 4,
+    "initial_FormData_forms": 48,
+    "local_GET_requests": 104,
+    "asset_responses": 88,
+    "artifact_rows": 105,
+    "owned_noJS_sessions_closed": 8,
+    "first_actual_UI_attempt": true
+  },
+  "fixture_manifest": {
+    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/tp-ui/run-1bde5522389e-d12a9d71-53b4-44e0-994d-23c6318e2c38/fixtures/fixtures.json",
+    "sha256": "535d4d7bbf56c2828f6aa6764f744f3f57fa2ba9ceb039159459b28c6b8aaba5"
+  },
+  "visual_review": {
+    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/topics-ui-operational/Root-visual-review.json",
+    "sha256": "1f3f787c123ff7a773736e2c5f070545b7c9277ddcec8e987a8ccba16bee8159"
+  },
+  "bounded_feature_review": {
+    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/topics-ui-operational/bounded-feature-acceptance.json",
+    "sha256": "ef74a9c3f29e52dd22799d237814e224d448f60a925abbe699fa70e2818a61bb"
+  },
+  "source_transport": {
+    "kind": "Explicit single-thread XZ6 CRC64, strict FORMAT_XZ full EOF and no trailing data; complete Git blob/mode/PAX closure.",
+    "preflight": {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/next-social-topics-checks/archive-preflight.json",
+      "sha256": "0384f042fc31411bf10177ebf8dc39400f79301ae152ffa8e3ca56bd35419800"
+    },
+    "compressed_bytes": 62146892,
+    "compressed_limit_bytes": 67108864,
+    "expanded_bytes": 106373120,
+    "expanded_limit_bytes": 134217728,
+    "decoder_limit_bytes": 67108864,
+    "timeout_seconds": 60,
+    "raw_compressed_sha256": "f7078b09759087941fbf9d1d4b839f5acacc9e2188fb9d55248d3c4737d53509",
+    "actual_controls": {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/next-social-xz-checks/v2-controls/result.json",
+      "sha256": "1cbcdb3c0402bc1e4926cebf08c098a013431c64bc5c162dc6895aef4ba83394"
+    }
+  },
+  "polish_limits": [
+    "Footer links remain cramped in the inherited native shell.",
+    "Most Romanian Topics main-page copy uses existing English fallbacks; navigation is Romanian. No full translation or final-design claim."
+  ],
+  "retention": {
+    "this_closing_deletes_nothing": true,
+    "current_S2_source_binaries_all697_including_compressed_Git_stdout": "REQUIRED_IN_PLACE",
+    "current_UI_all105": "REQUIRED_IN_PLACE",
+    "previous_native_and_UI_history": "All display/access, language and historical R canonical proofs and protected sources/binaries/artifacts remain in place.",
+    "canonical_date_account_archives": "REFERENCE_ONLY_NO_COPY",
+    "other_protected": "Source branches, unmerged source packets, original baselines, canonical keepers, shared caches and other owners remain unchanged.",
+    "separate_unit_HOME_cleanup": {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/next-social-topics-checks/unit-HOME-cleanup.json",
+      "sha256": "2e277f452e302006ae7997336cb87a09850b4523f791804f59847070ba8a7565"
+    },
+    "removed_generated_state": "Only the completed private unit HOME telemetry:8files6dirs98306logicalB; deleted bytes unavailable and inventory/logs retained. No global process-absence or allocated-space claim."
+  },
+  "complete_artifact_lists": "Original manifests and artifacts remain in place; rows are not duplicated here.",
+  "benchmark": "NOT_REQUESTED",
+  "new_claims": "No main, GUI milestone, production, provider/government, legal-parent/identity, new recommender policy or real-child activation."
+}
