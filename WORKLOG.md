@@ -3,6 +3,14 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-21 — Unicode fixture locale and native result-count erratum
+
+Valid until: these fixture/method/source inputs change — then requalify.
+
+Native21 V6 on a1788069 cleared configuration64/accounts75/admin21/app58/backup5/booking7/budgets16, including the unchanged group semantic capture. Catalog then exposed a manual-fixture mismatch: initdb's C ctype does not fold uppercase Romanian Ş before the existing SQL translation. The derived disposable entry selects available C.utf8; a fixed read-only SQL precheck requires both locale settings and all seven Romanian uppercase forms to fold correctly. Canonical application/catalog/test code and native21 shell/flags are unchanged. Pinned image locale proof163364f9 and the failed V6 result09c0e787 are retained; owned cleanup passed. Targeted catalog/web verification and final full21 remain pending.
+
+Count erratum: prior entries and commit prose saying32 Go packages plus4 worker tests counted the worker TAP lines twice. The latest required check actually passes28 Go package result lines plus4 numeric worker results (32 combined ok lines). The pass result is unchanged. Current qualification records use28+4; historical wording remains explicitly superseded by this erratum, without changing the unrelated32 strict inverse-row count.
+
 ## 2026-10-21 — Scope activity form metadata after combined App qualification
 
 Valid until: the scoped producers or qualification inputs change — then requalify.

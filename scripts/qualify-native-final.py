@@ -231,7 +231,7 @@ def execute(args):
         report['archive']={'sha256':digest(archive),'bytes':len(archive),**receipt};write(out/'source-manifest.json',before);source=out/'source';need((source/relative).read_bytes()==own,'exported qualifier differs')
         need((source/'scripts/qualify-native.sh').read_bytes()==native,'exported native method differs')
         entry=(source/'tools/gui-native-family/db-entry.sh').read_text();need(digest(entry.encode())=='b4ed745834cdb9b91ba0291b49dc049e316806b01494b67ff48a0eb8ff9432b4','canonical DB init/cleanup source differs')
-        for a,b in [('--auth-host=reject','--auth-host=trust'),("listen_addresses = ''","listen_addresses = '*'"),('55434','5432')]:need(a in entry,'DB transport anchor missing');entry=entry.replace(a,b)
+        for a,b in [('--auth-host=reject','--auth-host=trust'),("listen_addresses = ''","listen_addresses = '*'"),('55434','5432'),('--no-locale','--locale=C.utf8')]:need(a in entry,'DB fixture anchor missing');entry=entry.replace(a,b)
         call([go,'-C',source/'services/server','build','-trimpath','-o',out/'runtime/tests/social-server','./cmd/social-server'],'current-bootstrap-build',timeout=600,env=dict(base_env,CGO_ENABLED='0'))
         dk('network','create','--internal','--label',OWNER_LABEL+'='+owner,names['network'],label='network-create')
         network=json.loads(dk('network','inspect',names['network'],label='network-before-db'))[0]
@@ -254,6 +254,9 @@ def execute(args):
             need(not INTERRUPTED and time.monotonic()<deadline,'DB readiness deadline/interruption');time.sleep(.2)
         report['db_ready']=json.loads((out/'socket/ready.json').read_text());need(report['db_ready']['uid']==report['db_ready']['gid']==999,'DB UID/GID differs')
         dk('exec',names['db'],'/usr/lib/postgresql/16/bin/createdb','-h','/socket','-p','5432','-U','app','native21',label='database-create')
+        locale=dk('exec',names['db'],'/usr/lib/postgresql/16/bin/psql','-h','/socket','-p','5432','-U','app','-d','native21','-At','-c',"SELECT current_setting('lc_ctype')||'|'||current_setting('lc_collate')||'|'||lower('ŞȘŢȚĂÂÎ')",label='fixture-unicode-locale').decode().strip()
+        need(locale=='C.utf8|C.utf8|'+'ŞȘŢȚĂÂÎ'.lower(),'Unicode-aware fixture locale required')
+        report['fixture_unicode_locale']=locale
         # The CLI requires a URL and explicit password; this marker is not a
         # credential because the disposable, isolated DB uses trust admission.
         dsn='postgres://app:fixture-only-not-a-credential@native21-db:5432/native21?sslmode=disable'
