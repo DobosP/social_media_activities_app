@@ -3,6 +3,12 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-21 — Workflow viewer-avatar exact current representation
+
+Valid until: these view/method inputs change — then requalify affected checks.
+
+The committed7b2 affected run cleared catalog54 and every web contract except the existing footer/query-growth test's exact raw viewer-avatar check. The fixture held at306,761,728/1,073,741,824bytes with128MB WAL and clean PG shutdown/resource removal; no storage ceiling/durability relaxation. The new workflow shell now serializes the already-validated optional viewer avatar through one fixed quoted/HTML-escaped src attribute, preserving literal standard-base64 plus, just as the profile contract requires. GroupDetail/shared models, all queries, token/media rules and old assertions are unchanged. Two new regressions retain optional nil/empty and malformed/oversize URI refusal. Independent c1f1817e accepts the delta. Native28Go+4worker checks pass (stdoutad9e2aba), and all78 current parsed DOM/header streams equal QA4 after exact CSP nonce substitution (615bc2bb). Current affected and final all21 runs remain pending.
+
 ## 2026-10-21 — Repair complete-web contracts and bound disposable WAL
 
 Valid until: these producer/view/method inputs change — then requalify affected checks.

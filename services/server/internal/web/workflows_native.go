@@ -26,6 +26,7 @@ type workflowPage struct {
 	catalog                                                                                                           translationCatalog
 	Kind, Title, Nonce, PublicID, LanguageNext, ReturnTo, SubmitLabel                                                 string
 	Avatar                                                                                                            template.URL
+	AvatarSource                                                                                                      template.HTMLAttr
 	AccountLinks                                                                                                      []familyLink
 	Messages                                                                                                          []accountCenterMessage
 	Unread                                                                                                            int64
@@ -252,6 +253,12 @@ func (r *Renderer) workflowPage(request *http.Request, name string, data pongo2.
 		p.Shell.DisplayName = actor.Username
 	}
 	p.Avatar = d.person(map[string]any{"id": actor.ID, "public_id": actor.PublicID, "username": actor.Username, "display_name": actor.DisplayName, "avatar_uri": user["avatar_uri"]}, actor.ID, false).Avatar
+	if p.Avatar != "" {
+		// Preserve the exact generated URI after the existing optional image-only
+		// validation. Only this fixed-name attribute is trusted; every HTML
+		// metacharacter remains escaped and missing avatars remain absent.
+		p.AvatarSource = template.HTMLAttr(`src="` + html.EscapeString(string(p.Avatar)) + `"`)
+	}
 	if data["unread_notifications"] != nil {
 		p.Unread = d.integer(data["unread_notifications"])
 		if p.Unread < 0 {

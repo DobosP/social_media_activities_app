@@ -10,7 +10,7 @@
 <header class="site-header"><div class="container nav-wrap"><a class="brand" href="/">{{index .Copy "Activities"}}</a>
 <input type="checkbox" id="nav-toggle" class="nav-toggle-cb"><label for="nav-toggle" class="nav-toggle"><span aria-hidden="true">☰</span> {{index .Copy "Menu"}}</label>
 <nav class="nav" aria-label="{{index .Copy "Primary"}}">{{range .Shell.Navigation}}<a class="nav-link" href="{{.URL}}">{{.Label}}{{if and (eq .URL "/notifications/") $.Unread}} <span class="pill">{{$.Unread}}</span>{{end}}</a>{{end}}</nav>
-<details class="nav-menu nav-end"><summary>{{if .Avatar}}<img class="avatar nav-avatar" src="{{.Avatar}}" width="26" height="26" alt="">{{end}}<span class="nav-username">{{.Shell.DisplayName}}</span></summary><div class="nav-panel">
+<details class="nav-menu nav-end"><summary>{{if .Avatar}}<img class="avatar nav-avatar" {{.AvatarSource}} width="26" height="26" alt="">{{end}}<span class="nav-username">{{.Shell.DisplayName}}</span></summary><div class="nav-panel">
 {{range .AccountLinks}}<a href="{{.URL}}">{{.Label}}</a>{{end}}<form method="post" action="/logout/" class="inline"><input type="hidden" name="csrfmiddlewaretoken" value="{{.Shell.CSRF}}"><button class="linkbtn" type="submit">{{index .Copy "Log out"}}</button></form>
 </div></details></div></header>
 <main class="container" id="main" tabindex="-1">
