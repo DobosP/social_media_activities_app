@@ -176,3 +176,11 @@ changed by closing metadata. Exact rolling retention removed4,500 superseded gen
 artifacts including compressedGitstdout,latestR source/bin,M3Git/dependencies
 and currentUI/rawsafeproof remain protected. Datebc10 is reference-only.
 No main/milestone/production/provider/government/legal/real-child activation.
+
+## Rebind after actual repaired language qualification
+
+Exact producer `0dbcc6ba753e94b3dee2203f32546692f97f7894` and full7 result `25485a22f879b944b3739861a0e09be8b67e4017e2845e553cf5bb4e6260deaa` are independently accepted by review `7449f313926b430fe1b8e1d90deaa9dc861319e13b2b380c77cb1d467e23b6f9`:469 roots/1,395 named, zero failures/skips/race, every priorR case retained, all15roles/sevenDB/privatePG cleanup. FirstL1 e802 remains failed. Native account four inputs and account Python41ef/Node d22b/GoTXT1aea/five old helpers stay exact; driver3171 is committed inside the producer.
+
+Only binding, method README, STATUS and this plan change for the operational rebind. Its reviewed CLI uses the actual L2 run and current explicit dependency/cache/scratch paths; benchmark is absent. The saved operational review binds the final canonical P and permits only its own null reference to be filled. No later UI commit is used as native producer.
+
+Account8JS/8noJS/24strictAxe/keyboard/forms/assets/37priorbody and cleanup remain pending until this exact committed metadata run executes. Historical48mixedBODY samples stay historical. A separate externally admitted companion requires the actual passed account run and accepted operational/full7 reviews, then adds eight e31 bodies for45 and five real-handler flows. No language ADR/plan, native source, asset, catalogue, dependency, code helper, cap or assertion changes here.

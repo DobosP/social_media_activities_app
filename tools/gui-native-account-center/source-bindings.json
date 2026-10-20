@@ -6,13 +6,13 @@
     "feature_review_sha256": "6611a306c2e9659a492d2abbc2cb507c81f7b45a1bbecfa3c53946bfe65a6444",
     "keeper_review_sha256": "2d0af9fb0abe7446d63549237be12e18ef4df5a184bcd386abf7c9240d9d365a"
   },
-  "complete7_driver_sha256": "696f2f1a83ba70d316172ae18a79f49d09d4f2ceca16350f1b2e42d32fb2a960",
-  "complete7_result_sha256": "856b0b3beb1d3b5d9cd784c067b27dd67e3ccca876f94607361abf920829962e",
+  "complete7_driver_sha256": "3171a637cca913e95fd3ab63beea1bf526a272ee75ad2cde75d77785cea3a8d1",
+  "complete7_result_sha256": "25485a22f879b944b3739861a0e09be8b67e4017e2845e553cf5bb4e6260deaa",
   "complete7_review": {
-    "expected": "ACCEPT_EXACT_02AC_REPAIRED_NATIVE_ACCOUNT_SOURCE_COMPLETE_SEVEN_PG_AUTHORITY_PRIVACY_AND_CLEANUP",
+    "expected": "ACCEPT_ACTUAL_REPAIRED_LANGUAGE_L2_COMPLETE7_SOURCE_CASE_PRIVACY_AND_CLEANUP",
     "field": "status",
-    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/account-center-checks/css-repair-final-full-pg-review.json",
-    "sha256": "82b01e1a3487d46f86af31cd6b76b3959c216b58c21ff99dcace2836ac4c584b"
+    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/language-action-checks/repaired-language-full7-review.json",
+    "sha256": "7449f313926b430fe1b8e1d90deaa9dc861319e13b2b380c77cb1d467e23b6f9"
   },
   "date_publication_source": "bdb5cc82a30c2b3307c87d56fdc92fc55948ecff",
   "dependency_sha256": {
@@ -22,20 +22,15 @@
     "node": "67ca5783febb8bf85736c79fcdd92c8d6d465a0eb2a082672bcdfa76a506751c",
     "playwright_package": "ca170ec143a88ed3043ac953eb3b2377b2b97304104f4e1e23316684ce2c35af"
   },
-  "method_source_review": {
-    "expected": "ACCEPTED_OPERATIONAL_ACCOUNT_BENCHMARK_KEY_P3_AND_EXACT_TWO_DOC_AFTERIMAGES",
-    "field": "status",
-    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/next-social-account-center-methods/operational-benchmark-repair/final-operational-review.json",
-    "sha256": "c9b2e22e9d720c1ba085d7fb3b5814ccccbdf12919dc89828d5eee1077f69d62"
-  },
+  "method_source_review": null,
   "native_account_source_review": {
-    "expected": "ACCEPT_EXACT_02AC_REPAIRED_NATIVE_ACCOUNT_SOURCE_COMPLETE_SEVEN_PG_AUTHORITY_PRIVACY_AND_CLEANUP",
+    "expected": "ACCEPT_ACTUAL_REPAIRED_LANGUAGE_L2_COMPLETE7_SOURCE_CASE_PRIVACY_AND_CLEANUP",
     "field": "status",
-    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/account-center-checks/css-repair-final-full-pg-review.json",
-    "sha256": "82b01e1a3487d46f86af31cd6b76b3959c216b58c21ff99dcace2836ac4c584b"
+    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/language-action-checks/repaired-language-full7-review.json",
+    "sha256": "7449f313926b430fe1b8e1d90deaa9dc861319e13b2b380c77cb1d467e23b6f9"
   },
-  "producer_source": "02ac07258cca866180ef93aeeb6a17ecb07baae1",
-  "qualification_claim": "Exact nativeR02ac/full7/all four native inputs remain independently accepted82b01e1a/result856b. Paired c31b/d4a65 is debug only. First UIec7e failed accessibility/benchmarkNOT_REACHED. Repaired desktop7a0f is independently accepted034dc4ff for8JS8noJS24strictAxe37oldbodies, but overall resultda4e FAILED at classic Pongo warmups due invalid PRIVATE-extra context key;24native-only rows are not matched measurement. This methods-only one-character valid-key repair keeps the same private value/shared inputs/guards; fresh fullUI+matched measurements and separate custody/feature acceptance remain pending.",
+  "producer_source": "0dbcc6ba753e94b3dee2203f32546692f97f7894",
+  "qualification_claim": "Exact repaired language producer L2 0dbcc6ba753e94b3dee2203f32546692f97f7894 has independently accepted complete affected PG7:469 roots/1395 named, no failures/skips/race; all1368 priorR identities and native account4 retained,15roles7DB/privatePG cleanup. First L1 e802 remains failed. This metadata-only rebind retains account code41ef/d22b/1aea, five helpers and in-L2 driver3171. Account GET-only browser run is pending; no benchmark is requested. Historical R/M3 mixed BODY measurements stay historical. Separate language interaction and eight additional account-body comparisons require their own admission and actual results.",
   "schema": 1,
   "status": "BOUND_REVIEWED_COMMITTED_METHODS",
   "unchanged_overlay_helpers": [
