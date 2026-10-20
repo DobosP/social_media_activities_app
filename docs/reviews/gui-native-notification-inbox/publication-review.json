@@ -1,0 +1,149 @@
+{
+  "schema": "independent-docs-publication-review-v1",
+  "verdict": "ACCEPT_EXACT_496_SOCIAL_INBOX_CANONICAL_CUSTODY_AND_DOCS_ONLY_FEATURE_PUBLICATION",
+  "reviewer": "agent:codex /root/teacher_claim_source_review; independent of Root publication author and operator",
+  "observed_utc": "2026-10-20T00:56:18.030211+00:00",
+  "source_sha": "496056a6a528d01d544abbf77e18877b60d629bd",
+  "source_tree": "28b3d96d48e13b3e9befaa7ec7ab780130453363",
+  "bindings": [
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-publication/promotion.json",
+      "bytes": 3704,
+      "sha256": "2ee3f917e01c4979b96c5cce6621ff071b2b32db2ea04cf717c064b874f256ec"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-publication/publication-validation.json",
+      "bytes": 1613,
+      "sha256": "d86fc2ccb9245e1c1fb2c5c70fb74597f75e6b68d8b20717f3c459cba7594cbb"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-publication/archive-social-retention.py",
+      "bytes": 4924,
+      "sha256": "f40a2d6a6e74b528d73a04bfba0969fbb6940b163118442c01e480b136ac55c2"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-publication/retention-archive-readback.json",
+      "bytes": 566,
+      "sha256": "7334468f2cecb2ad236cf64298b3d3cfc2bfd1a09cde05fb6818d185d7aba6c5"
+    },
+    {
+      "path": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a/STATUS.md",
+      "bytes": 18117,
+      "sha256": "fc0bea59b0c3d63adb82ad184927371660259a2f4cb0f3689e8bba2bdab4d945"
+    },
+    {
+      "path": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a/docs/adr/0065-native-notification-inbox.md",
+      "bytes": 10763,
+      "sha256": "d7d1f1318ca35487d9c0360f9eedcceadb72a40884e9501f98edd91213f42a07"
+    },
+    {
+      "path": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a/docs/adr/README.md",
+      "bytes": 9245,
+      "sha256": "d3c13733e474d89ed492fbbf46d627e67b058cf3bc29a95c8a4daacabdbab274"
+    },
+    {
+      "path": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a/docs/execplans/gui-app-migration-a.md",
+      "bytes": 7465,
+      "sha256": "c58526f801f855877e9dc315aaa1c0935321b2acd5d25a158c82e8f65466cc7b"
+    },
+    {
+      "path": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a/docs/execplans/gui-native-notification-inbox.md",
+      "bytes": 5419,
+      "sha256": "09eccd43ca01a7394a2519482ec54b38c75f6b774707dcb5d3508c9f1facc22a"
+    },
+    {
+      "path": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a/docs/reviews/gui-native-group-detail/README.md",
+      "bytes": 2740,
+      "sha256": "6092185a9dc1002dce90025c59ccdeb470dc61286289ebfb10ee1fdcb385199f"
+    },
+    {
+      "path": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a/docs/reviews/gui-native-notification-inbox/README.md",
+      "bytes": 3522,
+      "sha256": "7a3286ce186e379504b569c614bb13ae2df7b108b694bdacf85dc8ed4e5530a5"
+    },
+    {
+      "path": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a/docs/reviews/gui-native-notification-inbox/acceptance.json",
+      "bytes": 6817,
+      "sha256": "38abd7473228855908d9e4a1e5bd85efccfd0346d27dd3e7a7e1402095fb4c8b"
+    },
+    {
+      "path": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a/docs/reviews/gui-native-notification-inbox/archive-manifest.json",
+      "bytes": 1223949,
+      "sha256": "6720016f22139a372003b81c2d4ce6f2fe2be01ffb04eda4d91c941f23fceead"
+    },
+    {
+      "path": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a/docs/reviews/gui-native-notification-inbox/collection-result.json",
+      "bytes": 628,
+      "sha256": "828fc196a7d2b4fa7c84a07b8bb9261282afcaa0fc163ee687ea3acde967a515"
+    },
+    {
+      "path": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a/docs/reviews/gui-native-notification-inbox/content-aliases.json",
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a/docs/reviews/gui-native-notification-inbox/evidence.tar.gz",
+      "bytes": 8921346,
+      "sha256": "e007db95293927d330e574efeb4938e52edd2309b520f07895ce0c5fa77b5eb5"
+    },
+    {
+      "path": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a/docs/reviews/gui-native-notification-inbox/excluded.json",
+      "bytes": 2762,
+      "sha256": "265bc713a19a7acd65ebec22834e96b229a917ca7eadeb44ba19f6aa87560a95"
+    },
+    {
+      "path": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a/docs/reviews/gui-native-notification-inbox/keeper-review.json",
+      "bytes": 8085,
+      "sha256": "205b60d81c51e277d4c0167fa24b40905e7f60ecd4dac3b0e8cb4a0207dd8427"
+    },
+    {
+      "path": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a/docs/reviews/gui-native-notification-inbox/result.json",
+      "bytes": 1310,
+      "sha256": "893a42f84c943b1807a58482c2ce9361fa330bab8b22e4cd8f0812255b6314c0"
+    },
+    {
+      "path": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a/docs/reviews/gui-native-notification-inbox/retention-result.json",
+      "bytes": 3119480,
+      "sha256": "538fb032b95f3e411bd6a0045feb8e6a1021c416b44e7c7ac4cb92b9cb62204e"
+    },
+    {
+      "path": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a/docs/reviews/gui-native-notification-inbox/retention.tar.gz",
+      "bytes": 2733154,
+      "sha256": "9209b5d9ba78cc1e70fc051d2e77a4508d734b475eed559087ecd6ee57eb2253"
+    },
+    {
+      "path": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a/docs/reviews/gui-native-notification-inbox/selection.json",
+      "bytes": 1393608,
+      "sha256": "8eb2204317187acf5d37c5dafc72e7352a5a5d5a57df2a552500f26007a272a8"
+    },
+    {
+      "path": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a/docs/reviews/gui-native-notification-preferences/README.md",
+      "bytes": 3109,
+      "sha256": "13b0ac2382ffe7ca3f67ffb65644b28c33b225a9e601a743721956269ee1c9f3"
+    }
+  ],
+  "tracked_document_diff_sha256": "20debbe4a42557dc34e78e9a2e32c3374e6067b9df5397d8ce7086abaaf87f6d",
+  "scope": {
+    "tracked_document_changes": 7,
+    "new_canonical_files": 12,
+    "total_promoted_files": 19,
+    "product_or_method_delta": false,
+    "runtime_repeated": false
+  },
+  "independent_checks": [
+    "Exact HEAD496/tree28b3. All19promoted bytes match finite publication manifest and scratch images. Only7tracked metadata documents differ; all12untracked paths belong to the new canonical inbox evidence directory. No product, source, test, CSS, dependency, reproduction-method or authorization changes.",
+    "All7beforeimages equal committed496. Original ADR0065 body is byte-prefix preserved after removing its mutable Status line; accepted source qualification is appended. Other6diffs state only current verified qualification, superseded rolling setup, cleanup availability and bounded follow-up status.",
+    "Canonical evidence archive e007db95293927d330e574efeb4938e52edd2309b520f07895ce0c5fa77b5eb5 is exactly8,921,346bytes. Independently streamed all2,695regular unique safe-path members against manifest672001 bytes/SHA/mode/UID/GID/exact decimal nsmtime and every2,695live original; no extraction. Canonical7unaltered candidate outer records plus205b keeper and38ab feature review are byte-exact copies. Collection-time pending records stay immutable and are explicitly explained by outer acceptance.",
+    "Canonical retention archive9209b5d9ba78cc1e70fc051d2e77a4508d734b475eed559087ecd6ee57eb2253 is exactly2,733,154bytes. Independently streamed all47unique regular safe-path members:46exact fixed source/method/plan/history/receipt/review inputs plus manifest80c254. Every source payload/hash/mode/UID/GID/nsmtime and live inode/device/nsctime remain equal to archive manifest; every PAX hash/nsmtime matches. Full original sandbox view, failed first canonical dryrun, causal-only evidence, refused five-path observer proposal, unchanged strict source3e95, explicit10-file host-view rebind and independent accepted host/dryrun/execution reviews are retained.",
+    "Canonical retention-result538fb032b95f3e411bd6a0045feb8e6a1021c416b44e7c7ac4cb92b9cb62204e equals archived actual receipt byte-for-byte: COMPLETE_EXACT_SOCIAL_ROLLING_RETENTION,8,863files/967dirs/1,278,664,437logical bytes. Independent actual reviewdda99 is included with findings empty. Publication clearly states deleted generated source/binary/duplicate Git stdout paths are unavailable while historical raw HTML/PNG/proof/log/source packets/refs/keepers and latest496 source/binaries/UI remain.",
+    "Qualification facts match independent currentdb593 PG7/446roots/1,338named/339commands/693artifact rows/cleanup and565b desktop6+6/18strictAxe375/31prior bodies/73artifacts. Historical3e PG success, f087 and0e partial failures, firstUI failure and causal CSS intentional failure remain distinct. No failed historical run is relabelled qualification.",
+    "Performance explicitly uses12matched warmed samples, not24. Published medians match independently accepted9a04/38ab: elapsed+80.76%EN/+113.10%RO,allocated bytes+28.18%,HTML+46.49%/+45.79%,allocation count-5.16%/-5.14%,gzip-7.55%/-10.02%. No CPU-profile, HTTP/SQL/throughput or general efficiency claim; date-formatting optimization is separately unqualified source analysis.",
+    "git diff --check independently passes. Root reports docs guard63checks/0errors; no product gate, browser, benchmark, verifier, Docker operation or deletion was repeated for this publication review."
+  ],
+  "findings": [],
+  "limits": [
+    "Accepts exact19file docs/canonical promotion and subsequent feature-branch commit/publish only; adding an exact copy of this independent publication review is allowed. Publication must preserve all reviewed evidence bytes and source/method contents.",
+    "No main landing, GUI milestone, all21/full-image, production, provider/government/legal/real-child activation or new optimization qualification. Future source/date optimization requires separately reviewed source and exact-source affected qualification.",
+    "Local scratch remains auxiliary; archived original metadata describes deleted generated targets and does not claim their raw bytes survive. Collection-time pending records describe immutable collection time, not final feature status."
+  ]
+}

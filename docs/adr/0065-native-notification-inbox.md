@@ -1,7 +1,7 @@
 # ADR-0065: Native notification inbox presentation
 
 Date: 2026-10-20
-Status: implemented — reviewed isolated notifications bootstrap applied; helper unit/static checks pass, both failed partial histories retained; fresh complete7/UI qualification pending.
+Status: independently feature-qualified — exact496 affectedPG7/desktop6+6; compact keeper and reviewed rolling retention, feature branch only.
 
 ## Scope
 
@@ -136,3 +136,36 @@ reviewed presentation fix requires a fresh complete seven-package run on its
 committed CSS source followed by the second primary UI/measurement attempt. Both
 failed PG histories and the failed first UI remain retained; successor acceptance,
 keeper and rolling retention are pending. No broader gate or activation claim.
+
+
+## Final exact-source bounded qualification
+
+Exact496056a passes all seven complete affected packages:446 root passes/1,338
+named cases, zero failures/skips;339 waited commands/693 artifact rows,15 owned
+containers/seven databases/private PostgreSQL cleaned. Independentdb593 accepts
+the source/command/case/cleanup record. Desktop6JS+6no-JS passes18 unchanged strict
+Axe audits/375 predicates,31 byte-exact previous bodies,66 assets/78 local GETs
+and owned cleanup; independent565b accepts the actual record. Actual same-GET
+100-row EN/RO display capture retains only the reviewed presentation whitelist.
+
+Independent9a04 accepts12 matched warmed body samples and their regressions:
+median elapsed timing80.76%EN/113.10%RO higher,allocated bytes28.18% higher and
+HTML46.49%/45.79% larger; allocation count5.16%/5.14% lower and gzip7.55%/10.02%
+smaller. These are descriptive elapsed body measurements, not CPU profiling,
+HTTP/SQL/throughput or a general efficiency improvement. Date-formatting source
+analysis is an unqualified separate follow-up; it cannot recast these results.
+
+[Canonical keepere007](../reviews/gui-native-notification-inbox/README.md) retains
+2,695 members/8,921,346B with exact bytes/mode/UID/GID/nsmtime, all73 current UI
+artifacts and distinct failed/partial/diagnostic/source-method histories. Independent
+keeper205b and bounded feature38ab accept this source epoch. The outer retention
+record separately documents removal of8,863 owned superseded generated files,
+967 empty directories and1,278,664,437logicalB after accepted custody. Deleted
+source/binary/duplicate Git stdout raw paths are unavailable; all historical
+logs/PNG/HTML/proof/source packets/Git refs/canonical keepers and the latest496
+source/binaries/UI remain. The first refused retention dryrun and causal observer
+diagnostic remain failures; explicit host-view metadata rebinding preserved strict
+ownership guards before the accepted dryrun and execution. No policy changed.
+
+This is bounded feature acceptance on the feature branch. No all21/current-image,
+main/milestone/production/provider/government or real-child activation follows.

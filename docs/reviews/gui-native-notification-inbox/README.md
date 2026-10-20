@@ -1,0 +1,17 @@
+# Native notification inbox — feature qualification
+
+Exact product source `496056a6a528d01d544abbf77e18877b60d629bd` is independently accepted by [feature review](acceptance.json) and [keeper review](keeper-review.json). Feature branch only.
+
+Complete affected PostgreSQL: seven packages,446 roots/1,338 named cases, zero skips/failures;339 waited commands/693 artifact rows,15 container removals and seven database retirements/checkpoints, stopped private PG. Desktop:6JS+6no-JS,18 strict whole-document Axe audits/375 passing predicates, zero violations/incomplete checks,66 asset responses/78 local GETs and all31 accepted prior bodies byte equal. All73 final UI artifacts are physical members.
+
+The actual display capture retains100 ordered self-scoped items per EN/RO variant, from the same registered GET callback. Existing recipient scope,100-row ordering/bound, safe-link/date policy and beyond-display idempotent mark-all behavior remain unchanged; no per-item action, new audit, policy or authority is introduced. Inline links have a persistent underline.
+
+Matched warmed body rendering uses identical actual display inputs and includes native validation/projection. Median elapsed rendering is80.76% higher EN/113.10% higher RO, allocated bytes28.18% higher and HTML46.49%/45.79% larger; allocations5.16%/5.14% lower and gzip7.55%/10.02% smaller. This is descriptive elapsed body timing, not a CPU profile, HTTP/DB/throughput or overall efficiency/speedup claim. A separately scoped date-formatting follow-up is source analysis only at this checkpoint.
+
+[evidence.tar.gz](evidence.tar.gz) retains2,695 members (8,921,346B); [selection](selection.json) and [archive manifest](archive-manifest.json) preserve exact bytes/mode/UID/GID/nsmtime. There are no content aliases. Inner collection-time pending-status records remain immutable; independent outer reviews establish final acceptance.
+
+Two failed PG attempts remain distinct: f087 passed web then failed a NEW timestamp assertion;0e passed six suites then its catalogue helper refused notifications before native. Accepted3e complete7 belongs solely to that source epoch. Its first UI failed12 link-distinction checks and never reached the benchmark. The causal underline diagnostic remains FAIL on12 deliberately unchanged old-asset guards with18 issue-free Axe audits; it is not qualification. The final496 full/UI are separate accepted runs. V1/V2/V3 collector histories and all raw proof/repairs remain retained.
+
+Reproduce with the [committed methods](../../../tools/gui-native-notification-inbox/README.md) on the exact clean checkout and installed dependencies. Prior preference keeper29a9 is a pinned canonical dependency; this archive is not a full source/dependency distribution. Excluded Git tar streams retain digest/tree/source manifests, not raw bytes.
+
+No all21/current-image/main/GUI milestone/production/provider/government or real-child activation claim. Reviewed rolling retention removed8,863 superseded owned generated files/967 empty directories (1,278,664,437 logical bytes). [Actual receipt](retention-result.json) and [method/history](retention.tar.gz) retain the plan, original metadata, refused first dryrun, explicit host-observer rebind, accepted second dryrun, exact execution and independent postcheck. Deleted generated source/binary/duplicate Git stdout raw paths are unavailable; all historical HTML/PNG/log/proof/source packets/Git refs/keepers and latest496 source/binaries/UI remain. Collection itself deleted nothing.

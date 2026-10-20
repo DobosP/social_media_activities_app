@@ -1,0 +1,123 @@
+{
+  "schema": "independent-keeper-review-v1",
+  "verdict": "ACCEPT_EXACT_496_INBOX_V4_COMPACT_CUSTODY_NO_DELETION",
+  "reviewer": "agent:codex /root/teacher_claim_source_review; independent of V4 author and Root collection",
+  "observed_utc": "2026-10-20T00:00:43.975000+00:00",
+  "source_sha": "496056a6a528d01d544abbf77e18877b60d629bd",
+  "source_tree": "28b3d96d48e13b3e9befaa7ec7ab780130453363",
+  "bindings": [
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-closure-preparation/candidate-496/evidence.tar.gz",
+      "bytes": 8921346,
+      "sha256": "e007db95293927d330e574efeb4938e52edd2309b520f07895ce0c5fa77b5eb5"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-closure-preparation/candidate-496/archive-manifest.json",
+      "bytes": 1223949,
+      "sha256": "6720016f22139a372003b81c2d4ce6f2fe2be01ffb04eda4d91c941f23fceead"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-closure-preparation/candidate-496/selection.json",
+      "bytes": 1393608,
+      "sha256": "8eb2204317187acf5d37c5dafc72e7352a5a5d5a57df2a552500f26007a272a8"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-closure-preparation/candidate-496/collection-result.json",
+      "bytes": 628,
+      "sha256": "828fc196a7d2b4fa7c84a07b8bb9261282afcaa0fc163ee687ea3acde967a515"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-closure-preparation/candidate-496/result.json",
+      "bytes": 1310,
+      "sha256": "893a42f84c943b1807a58482c2ce9361fa330bab8b22e4cd8f0812255b6314c0"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-closure-preparation/candidate-496/content-aliases.json",
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-closure-preparation/candidate-496/excluded.json",
+      "bytes": 2762,
+      "sha256": "265bc713a19a7acd65ebec22834e96b229a917ca7eadeb44ba19f6aa87560a95"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-closure-preparation/candidate-496/README.md",
+      "bytes": 1046,
+      "sha256": "01636a16375db21508076c1b1ea05736c1bc989fad05d5702d464a3d7620c5fc"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-closure-preparation/keeper.py",
+      "bytes": 52119,
+      "sha256": "1e323218c946fb9856b63c9dd485f7148f26242ca988bdfc4916284306a5beab"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-closure-preparation/config.json",
+      "bytes": 6494,
+      "sha256": "c76e4c795108e957348bd00a8b0d459fa3b7b7a9199a1ec2cb4fa45b69df86a7"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-closure-preparation/final-binding.json",
+      "bytes": 1319,
+      "sha256": "886392ee01bf9c1b731bf534766b8e481530947de8d2ea8ddbe6755186236078"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-closure-preparation/selection-root-review.json",
+      "bytes": 1195,
+      "sha256": "efdc25ac8ebb7375ae61aaae4978991170c815f6bcfe367b111f2d6c41d2891c"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-closure-preparation/independent-v4-source-review.json",
+      "bytes": 12248,
+      "sha256": "757ad833ef472b5646ef97b00f1a944399187054b3e719cc1a5364b32894327b"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/next-social-notification-inbox-checks/collector-v4-source-reviewed-config.json",
+      "bytes": 6509,
+      "sha256": "ae3d1b14d5c5bcf751a74f669de7339998ddc68bd24022856816121093b12cce"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-closure-preparation/controls-v4/result.json",
+      "bytes": 1232,
+      "sha256": "5dd2e919e7c811c3f1e8671e21934ffdf51efced54302d8f4c51bfbdc2c0c718"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/next-social-notification-inbox-implementation/measurement-review.json",
+      "bytes": 10873,
+      "sha256": "9a04cc421e3652c7438f9bf52cd6e56758911106805e51fc54216ff93964c52a"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/next-social-notification-inbox-checks/final-root-visual-review.json",
+      "bytes": 2359,
+      "sha256": "bca5a5b1e13add0447b7117f83a5217c904982fbb0609ad0bbd4397d6c632299"
+    },
+    {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/next-social-notification-inbox-checks/date-performance-source-assessment.json",
+      "bytes": 5003,
+      "sha256": "8831a5429ed2cad2d7041b2741e3505f01a8739f7072fa8f869509b697d2e301"
+    }
+  ],
+  "archive_sha256": "e007db95293927d330e574efeb4938e52edd2309b520f07895ce0c5fa77b5eb5",
+  "archive_bytes": 8921346,
+  "archive_members": 2695,
+  "original_selected_files": 2690,
+  "original_selected_logical_bytes": 28935565,
+  "aliases": 0,
+  "checks": [
+    "Every2695PAX tar member streamed and independently matched manifest bytes/hash/mode/UID/GID/exact nsmtime and live original bytes/full metadata; no duplicate/path traversal/nonregular entry. All2690selected originals plus5generated outer records accounted for. No extraction or rawPG read.",
+    "Exact root-approved selection8eb equals precollection selection and archived selection; collector1e3 remains source-approved757. Current configc76 differs from reviewedae3 only in status and actual446/1338/339/693 counts; source-reviewedconfig bytes retained. Separate binding/actual-rebind/source/control/review metadata selected.",
+    "Full current2215Git/source-manifest blob/mode/length/SHA matrix independently matches clean496/tree28b3. Every selected current/historical proof, source packet and review byte is exact; source/state/census are unchanged at review.",
+    "Four native epochs remain distinct: current496 complete7/446/1338/339/693; f087AppFAIL with remaining5unrun;0e sixPASS442/1327 then helperFAIL; historical3e complete7/446/1338/340/695 only. Original5df review preserved, separate finaldb593 review selected.",
+    "All71firstUI raw artifacts and24causal PNGs physical with metadata. FirstUI remainsFAIL12inline-link violations/benchmarknotreached; diagnostic remainsFAIL12unchanged oldCSS guards/18cleanAxe. V3top11/0500 and V1/V2source histories remain physical, no alias promotion.",
+    "Current73UI artifacts,6JS6noJS/18strictAxe375/31old bodies/12matchedbench, capture/independent UI565b/measurement9a04/Rootvisualbca5/sourcehypothesis8831 are preserved. Pinned canonical29a9 prior keeper is dependency, not duplicated.",
+    "Five pure unbound/content/mode/inode/symlink controls record unchanged reread accepts then refusal; pending binding refused before output. Production earliest-read raw/stat registry and full archive readback predicates were reviewed independently before collection.",
+    "Archive excludes rawDB/WAL/source-export/binaries/cache/profile trees. No physical deletion occurred; redundant full Git stdout exclusions retain exact recorded hashes/tree/manifest/commands. Metadata history is not a replacement for future deletion authority."
+  ],
+  "findings": [],
+  "physical_deletion_performed": false,
+  "candidate_mutated": false,
+  "limits": [
+    "Custody acceptance only; canonical promotion/publication remains Root work. No main/milestone/production/provider/government/real-child authority.",
+    "This review reads source/evidence/archive/metadata only; no collector invocation, product runtime, browser, DB/network or extraction/deletion. Historical incomplete/failed epochs remain failed."
+  ]
+}

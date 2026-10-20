@@ -95,3 +95,16 @@ owned-CSS underline repair clears all18Axe audits in causal diagnostic0177;
 its12 unchanged old-asset guard failures remain deliberate failures. Next is
 a fresh complete7 on the committed CSS source and the second primary UI run.
 No serving/backend/authority expansion or final feature acceptance is claimed.
+
+
+## Notification inbox accepted feature checkpoint
+
+Exact496 is independently qualified affectedPG7/446roots/1,338named/zero skips
+and desktop6JS6no-JS/18strictAxe375/31unchanged prior bodies. Canonical keeper and
+bounded acceptance are in [the feature record](../reviews/gui-native-notification-inbox/README.md).
+Both failed PG attempts, first UI failure and causal CSS diagnostic remain history.
+Matched body elapsed timing and allocated bytes regress; no general efficiency
+claim follows. Verified rolling retention removes only superseded generated
+source/binaries/duplicate Git stdout; latest496 setup and all historical UI/logs,
+source packets/Git refs/keepers remain. Deleted raw paths are unavailable.
+Formal S3A/owner capture and landing/production decisions remain separate.

@@ -1,6 +1,6 @@
 # Native notification inbox — bounded execution plan
 
-Status: reviewed isolated bootstrap repair applied; helper3roots/41named/static pass, fresh complete seven-package qualification pending. Authority:
+Status: complete bounded feature qualification accepted on496; compact keeper and reviewed rolling retention. Authority:
 programme ADR-0032 functional presentation scope and Social ADR-0065 proposal.
 
 1. Goal: existing inbox rendering and mark-all workflow using current Go services.
@@ -61,3 +61,16 @@ changed mechanically. Pure helper race3roots/41named0fail0skip, helper vet,
 format/whitespace and Python syntax pass. No original tests or serving source
 changed. Commit exact applied source, then qualify all seven complete packages;
 all earlier partial failures remain unqualified and retained.
+
+
+Final checkpoint: exact496 completePG7/446roots/1,338named/zero skips is accepted
+db593; UI6JS6no-JS/18strictAxe375/31prior bodies/66assets78GET and cleanup accepted
+565b. Keeper e007/2,695members is accepted205b; bounded feature38ab is independent.
+All failed PG/UI and causal CSS histories remain distinct. Body timing is80.76%
+EN/113.10%RO higher,allocation bytes28.18% higher/HTML larger,allocation count and
+gzip lower; accepted9a04 is descriptive, with no overall efficiency claim. The
+separate date-formatting proposal needs its own source review and qualification.
+Reviewed rolling retention removed8,863owned generated files/967empty directories,
+1,278,664,437logicalB; deleted raw targets unavailable. Latest496 setup, historical
+logs/screenshots/proofs/packets/branches/canonical keepers remain. Publish reviewed
+canonical metadata through ops; no main/milestone/activation authority follows.

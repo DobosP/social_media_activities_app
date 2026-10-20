@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "status": "COLLECTED_CANDIDATE_PENDING_INDEPENDENT_KEEPER_REVIEW",
+  "source": "496056a6a528d01d544abbf77e18877b60d629bd",
+  "tree": "28b3d96d48e13b3e9befaa7ec7ab780130453363",
+  "scope": "Seven affected complete PG packages and native inbox display qualification only. No full21/main/milestone/production, authority or retention-policy change.",
+  "actuals": {
+    "native_roots": 446,
+    "native_named": 1338,
+    "native_commands": 339,
+    "native_artifact_rows": 693,
+    "UI_artifact_rows": 73,
+    "JS_states": 6,
+    "noJS_states": 6,
+    "audits": 18,
+    "Axe_pass_occurrences": 375,
+    "benchmark_rows": 12,
+    "prior_bodies": 31
+  },
+  "history": "Original f087 web PASS/App FAIL and0e31 six PASS/notifications-bootstrap refusal remain failed. Historical3e complete-seven PG446/1338 is accepted only for that PG epoch; its first primary UI fails12 inline-link Axe checks and never benchmarks. Causal underline diagnostic remains intentionally FAIL12 original-CSS asset guards with18 clean Axe audits. All historical results/reviews/repairs and24 diagnostic PNGs retain original bytes/metadata, distinct from exact final CSS source. Prior preference history remains canonical29a9 dependency.",
+  "physical_deletion_performed": false,
+  "independent_keeper_review": "PENDING"
+}

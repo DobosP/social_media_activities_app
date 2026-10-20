@@ -1,0 +1,46 @@
+[
+  {
+    "source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-pg-qa/run-496056a6a528-9681bb2d-06e5-4b23-9b62-8ab6f4ce3b80/proof/command-006.stdout",
+    "bytes": 52971520,
+    "path": "proof/command-006.stdout",
+    "sha256": "f0e30e2e586fba4c70ab514a11998337ef93f44d2152e310408ca28fdaef91f8",
+    "reason": "Full binary Git archive stdout omitted; original recorded digest/tree/source manifest retained. No deletion."
+  },
+  {
+    "source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-pg-qa/run-f0874800b1de-9f0eaafa-44f5-4df3-ba44-e40a419e5350/proof/command-006.stdout",
+    "bytes": 52951040,
+    "path": "proof/command-006.stdout",
+    "sha256": "cd0a245f98f8c16ee0297a2f1273471afc93b7281883e364d72589a0db8f49fe",
+    "reason": "Original failed Git archive stdout omitted; original digest/tree/source manifest/commands retained. No deletion."
+  },
+  {
+    "source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-pg-qa/run-0e31da9bc26f-dfae1f27-76e5-48ab-865c-9a8a2b6fb9c5/proof/command-006.stdout",
+    "bytes": 52961280,
+    "path": "proof/command-006.stdout",
+    "sha256": "05513880d078f0ea9a5bd7442567e0c1bee04109cefeade0b42677883b286c22",
+    "reason": "Second failed Git archive stdout omitted; original digest/tree/manifest/commands retained. No deletion."
+  },
+  {
+    "source": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-pg-qa/run-3e536f9e1c88-42f1d122-b499-4659-89e1-68c180bffc1f/proof/command-006.stdout",
+    "bytes": 52971520,
+    "path": "proof/command-006.stdout",
+    "sha256": "18332845b73a13fdc214f52fb92a7a211c53a352b383ebf55844518005c33e97",
+    "reason": "Full binary Git archive stdout omitted; original recorded digest/tree/source manifest retained. No deletion."
+  },
+  {
+    "scope": "Full source exports/test executables/bootstrap binary/caches/DBs/socket/host-tmp/test-tmp/profiles/full proposed and before source trees",
+    "reason": "Not selected. Exact source SHA/tree/full source manifest/commands/hash history preserved. No deletion by collector."
+  },
+  {
+    "scope": "Prior notification-preferences baseline archive",
+    "reason": "Canonical dependency already retained at pinned repository path/hash, not duplicated. Complete source manifest retains its identity; preserve canonical keeper."
+  },
+  {
+    "scope": "Foreign programme/Teacher/other-module work",
+    "reason": "Outside this bounded notification keeper."
+  },
+  {
+    "scope": "Duplicate historical HTML/PNG bytes",
+    "reason": "Explicit exact content aliases retain each original path/hash/bytecount/mode/UID/GID/nsmtime. Alias bodies are not independent tar members or equal target metadata."
+  }
+]
