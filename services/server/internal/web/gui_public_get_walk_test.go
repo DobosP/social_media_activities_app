@@ -577,6 +577,16 @@ func guiPublicGetRepairHistoricalProof(source guiPublicGetSource, inputs map[str
 			return fmt.Errorf("repair-current-input")
 		}
 		preimages[name] = input.raw
+		// App is preserved in the93-input frame but has no original repair row.
+		// Recover only its exact language-limit preimage for this historical proof;
+		// the input map and every live physical tuple remain unchanged.
+		if name == "services/server/internal/app/app.go" {
+			original, err := languageActionSourcePreimage(name, input.raw)
+			if err != nil {
+				return err
+			}
+			preimages[name] = original
+		}
 	}
 	for _, row := range guiPublicGetRepairRows() {
 		input, exists := inputs[row.path]

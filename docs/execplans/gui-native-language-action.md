@@ -70,3 +70,33 @@ through EOF under the same cap BEFORE full7. ActualL,its size/full7/UI/operation
 admission/results remain pending; no future size or PASS is predicted. Existing
 account operational metadata already admits the actual in-L driver hash through
 complete7_driver_sha256; its source/allowlist stays unchanged.
+
+## First exact-L qualification and bounded custody repair
+
+Exact L `c438b3c51d10ebdc04dd937cf0c6bee67aee5a0b` passed focused race
+checks (17 roots/53 named, zero failures/skips/race warnings), affected App/web
+vet, formatting, four archive controls and documentation checks (local result
+51766411). Its complete Git gzip stream reached EOF: 67,077,682 bytes, SHA
+38ad639fed2d052ad8375cd4a5834e4eb05f35115d1dd41a26556d9e625b4075,
+under the unchanged 67,108,864-byte bound (preflight685fa344).
+
+The first full7 campaign is FAILED, result e802817e5f2ef23cb5794af0b2c3f8a55e0f2fc203aaf28ec7ce1feaee87d097,
+Root terminal8756c4cc. Its web package ran 215 roots/879 named cases: 212/876
+passed and three source-custody roots failed, with zero skips/race warnings.
+Later six packages were not run. The native lane exited1 after112.22 seconds,
+without OOM or timeout. The owned private PostgreSQL server and all three
+created containers were stopped and removed. Preserve that failed outcome.
+
+The three failures share the historical proof's separate preserved `app.go`
+input, which does not occur in its 32-row repair inventory. The existing exact
+language inverse had not been applied to that separate historical proof. Add
+that inverse before comparing the preserved historical app pin; require the
+complete newest physical app bytes and retain the physical input tuple, every
+original row, assertion and mutation control. Recovered old bytes remain an
+in-memory historical proof and never become live source admission.
+
+Independently review the exact repair, run focused source/custody checks, commit
+the clean repaired source and repeat complete-stream preflight before one full7
+rerun. Actual repaired-SHA/full7 acceptance, account UI rebinding and the separate
+language companion remain pending. No runtime, account-presentation or broader
+performance acceptance follows from this repair checkpoint.

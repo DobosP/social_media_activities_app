@@ -22,6 +22,13 @@ func languageActionSourceRelation(path string) (beforeSHA, afterSHA string, befo
 	return "", "", 0, 0, "", "", false
 }
 func languageActionSourcePreimage(path string, raw []byte) ([]byte, error) {
+	// Ordinary current reads require the complete repaired walker first. Its
+	// exact failed-L1 preimage then enters the unchanged language/history chain.
+	var repairErr error
+	raw, repairErr = languageActionRepairWalkerPreimage(path, raw)
+	if repairErr != nil {
+		return nil, repairErr
+	}
 	beforeSHA, afterSHA, beforeBytes, afterBytes, before, after, ok := languageActionSourceRelation(path)
 	if !ok || len(raw) != afterBytes || guiPublicHash(raw) != afterSHA || bytes.Count(raw, []byte(after)) != 1 {
 		return nil, fmt.Errorf("language-complete-current-source")
@@ -126,5 +133,128 @@ func TestNativeLanguageAccountMutationBridgeKeepsEveryPriorTargetReal(t *testing
 		if _, err := languageActionAccountMutationTarget(path, append(append([]byte(nil), physical...), '\n'), old); err == nil {
 			t.Fatal("unrelated current source drift admitted")
 		}
+	}
+}
+
+// This additive relation preserves the exact failed L1 walker bytes as history.
+// It admits only the complete newest physical source, never an old/mixed epoch.
+func languageActionRepairWalkerRelation() (beforeSHA, afterSHA string, beforeBytes, afterBytes int, before, after string) {
+	return "02ad521217b8db6a6c4688e3b5a30403256dc0807f03b8a8d4c70897bb040a74", "825ca4ef550e24cf0c0005187125c57ff47789e10c8e2ff5cbca4cba24441d7a", 63953, 64366, "\t\tpreimages[name] = input.raw\n", "\t\tpreimages[name] = input.raw\n\t\t// App is preserved in the93-input frame but has no original repair row.\n\t\t// Recover only its exact language-limit preimage for this historical proof;\n\t\t// the input map and every live physical tuple remain unchanged.\n\t\tif name == \"services/server/internal/app/app.go\" {\n\t\t\toriginal, err := languageActionSourcePreimage(name, input.raw)\n\t\t\tif err != nil {\n\t\t\t\treturn err\n\t\t\t}\n\t\t\tpreimages[name] = original\n\t\t}\n"
+}
+
+func languageActionRepairWalkerPreimage(path string, raw []byte) ([]byte, error) {
+	if path != "services/server/internal/web/gui_public_get_walk_test.go" {
+		return append([]byte(nil), raw...), nil
+	}
+	beforeSHA, afterSHA, beforeBytes, afterBytes, before, after := languageActionRepairWalkerRelation()
+	if len(raw) != afterBytes || guiPublicHash(raw) != afterSHA || bytes.Count(raw, []byte(after)) != 1 {
+		return nil, fmt.Errorf("language-repair-complete-current-walker")
+	}
+	previous := bytes.Replace(append([]byte(nil), raw...), []byte(after), []byte(before), 1)
+	if len(previous) != beforeBytes || guiPublicHash(previous) != beforeSHA {
+		return nil, fmt.Errorf("language-repair-exact-failed-epoch")
+	}
+	return previous, nil
+}
+
+func TestNativeLanguageRepairWalkerRetainsExactFailedEpochAndRefusals(t *testing.T) {
+	root, err := filepath.Abs("../../../..")
+	if err != nil {
+		t.Fatal("source root unavailable")
+	}
+	const path = "services/server/internal/web/gui_public_get_walk_test.go"
+	physical, err := os.ReadFile(filepath.Join(root, path))
+	if err != nil {
+		t.Fatal("physical walker unavailable")
+	}
+	previous, err := languageActionRepairWalkerPreimage(path, physical)
+	beforeSHA, _, beforeBytes, _, _, after := languageActionRepairWalkerRelation()
+	if err != nil || len(previous) != beforeBytes || guiPublicHash(previous) != beforeSHA {
+		t.Fatal("exact failed source epoch not retained")
+	}
+	historical, err := guiPublicGetRowsPreimage(path, physical)
+	if err != nil || len(historical) == 0 {
+		t.Fatal("unchanged historical chain refused")
+	}
+	for name, raw := range map[string][]byte{
+		"failed-epoch-is-not-current": previous,
+		"unrelated-LF":                append(append([]byte(nil), physical...), '\n'),
+		"truncated":                   physical[:len(physical)-1],
+		"missing-inverse-literal":     bytes.Replace(physical, []byte(after), nil, 1),
+		"duplicated-inverse-literal":  append(append([]byte(nil), physical...), []byte(after)...),
+		"modified-inverse-literal":    bytes.Replace(physical, []byte(after), []byte(after+" "), 1),
+	} {
+		t.Run(name, func(t *testing.T) {
+			if bytes.Equal(raw, physical) {
+				t.Fatal("new source probe became a no-op")
+			}
+			if _, err := languageActionRepairWalkerPreimage(path, raw); err == nil {
+				t.Fatal("old or modified walker admitted")
+			}
+			if _, err := guiPublicGetRowsPreimage(path, raw); err == nil {
+				t.Fatal("ordinary source reader bypassed repaired physical epoch")
+			}
+		})
+	}
+	if again, err := os.ReadFile(filepath.Join(root, path)); err != nil || !bytes.Equal(again, physical) {
+		t.Fatal("physical walker changed during memory-only controls")
+	}
+}
+
+func TestNativeLanguageRepairHistoricalAppProofKeepsPhysicalTuples(t *testing.T) {
+	root, err := filepath.Abs("../../../..")
+	source, _, sourceErr := guiPublicGetSources(guiPublicGetSourceBytes)
+	inputs, inputErr := guiPublicGetRepairInputs(root, source)
+	if err != nil || sourceErr != nil || inputErr != nil || len(inputs) != 93 || guiPublicGetRepairHistoricalProof(source, inputs) != nil {
+		t.Fatal("complete current historical proof unavailable")
+	}
+	const path = "services/server/internal/app/app.go"
+	input := inputs[path]
+	prior, err := languageActionSourcePreimage(path, input.raw)
+	matched := false
+	for _, row := range source.PreservedSourceInputs {
+		if row.Path == path {
+			matched = err == nil && len(prior) == row.Bytes && guiPublicHash(prior) == row.SHA256
+		}
+	}
+	if !matched || input.binding.Bytes != len(input.raw) || input.binding.SHA256 != guiPublicHash(input.raw) || bytes.Equal(prior, input.raw) {
+		t.Fatal("historical app proof replaced a physical current tuple")
+	}
+	_, _, _, _, _, after, ok := languageActionSourceRelation(path)
+	if !ok || bytes.Count(input.raw, []byte(after)) != 1 {
+		t.Fatal("real app limit mutation target unavailable")
+	}
+	for name, raw := range map[string][]byte{
+		"old-app-is-not-current":   prior,
+		"unrelated-LF":             append(append([]byte(nil), input.raw...), '\n'),
+		"truncated":                input.raw[:len(input.raw)-1],
+		"missing-limit-literal":    bytes.Replace(input.raw, []byte(after), nil, 1),
+		"duplicated-limit-literal": append(append([]byte(nil), input.raw...), []byte(after)...),
+		"modified-limit-literal":   bytes.Replace(input.raw, []byte(after), []byte(after+" "), 1),
+	} {
+		t.Run(name, func(t *testing.T) {
+			if bytes.Equal(raw, input.raw) {
+				t.Fatal("app source probe became a no-op")
+			}
+			changed := map[string]guiPublicGetRepairInput{}
+			for path, original := range inputs {
+				changed[path] = original
+			}
+			binding := input.binding
+			binding.Bytes, binding.SHA256 = len(raw), guiPublicHash(raw)
+			changed[path] = guiPublicGetRepairInput{raw, binding}
+			if guiPublicGetRepairHistoricalProof(source, changed) == nil {
+				t.Fatal("rehashed old or modified app source admitted")
+			}
+			if guiPublicGetRepairHistoricalProof(source, inputs) != nil {
+				t.Fatal("negative probe mutated original proof")
+			}
+		})
+	}
+	if inputs[path].binding != input.binding || !bytes.Equal(inputs[path].raw, input.raw) {
+		t.Fatal("physical input map changed")
+	}
+	if again, err := os.ReadFile(filepath.Join(root, path)); err != nil || !bytes.Equal(again, input.raw) {
+		t.Fatal("physical app source changed")
 	}
 }
