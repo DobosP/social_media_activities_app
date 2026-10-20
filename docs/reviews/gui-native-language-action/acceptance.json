@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "status": "ACCEPT_BOUNDED_NATIVE_LANGUAGE_PREFERENCE_ACTION_EXACT_L2_WITH_ACCOUNT_UI_AND_SYNTHETIC_COMPANION",
+  "verdict": "ACCEPT_BOUNDED_LANGUAGE_FEATURE_NOT_PUBLICATION_OR_PRODUCTION",
+  "findings": [],
+  "reviewer": "independent /root/account_center_source_review; source and actual-evidence reviewer, not implementation/companion author or runtime operator",
+  "observed_utc": "2026-10-20T08:58:13.400514+00:00",
+  "source_sha": "0dbcc6ba753e94b3dee2203f32546692f97f7894",
+  "source_tree": "6fc5c7ec24db0cd6f91eee21227e49dcf77ca6e6",
+  "account_UI_method_source": "016c5a69e3199da643ad755301e5c78fb8d2e0c7",
+  "published_account_baseline_source": "7586d7c40fea262f22942c5242e7ec05716216c2",
+  "whole_source_admission_sha256": "b360b8df5c800b1d4692c766bf85071286d9373308711fdeba1919e726e62115",
+  "repaired_source_admission_sha256": "ea42c05b0353824dd43d23e3ed4b734ce13875d5ed7b775782ae7a741bacab4a",
+  "actual_full7_result_sha256": "25485a22f879b944b3739861a0e09be8b67e4017e2845e553cf5bb4e6260deaa",
+  "actual_full7_review_sha256": "7449f313926b430fe1b8e1d90deaa9dc861319e13b2b380c77cb1d467e23b6f9",
+  "complete7_driver_sha256": "3171a637cca913e95fd3ab63beea1bf526a272ee75ad2cde75d77785cea3a8d1",
+  "actual_account_UI_result_sha256": "d868902b56200a251dd60f280f6b6204c46ab778421980b3f73c4ccf6a40ecd7",
+  "actual_account_UI_review_sha256": "e9343e5039c187ec191da54d2b80e66e6935bbba09693206120e9f037e3f8f73",
+  "account_operational_review_sha256": "698a6f3bf71f5b760cefb62e39f41dd0d72bacaf69d6c4a1c9d401fe663b87c8",
+  "actual_companion_result_sha256": "426117d2dccb0db187841c223e6423ba329d3bbd91e414f24b214e5adca0394e",
+  "actual_companion_review_sha256": "40339c773400ed0649c37bd2e30187f291e9672c6efb7be6671b8dbc3c89bd38",
+  "companion_operational_review_sha256": "eea0e0a79a0865d8b41d93f7e8dc8788e60dfca3bdff7ea05fa239c49e8aa112",
+  "companion_binding_sha256": "1acf8e40aee23ebf6a76003d68a6825358b74aac67314c0bd3c591196feafdae",
+  "companion_method_sha256": {
+    "desktop.mjs": "c65f7bc23e07e7376eb226f730439b39db1b0ba27dc6af2cd75d3419a11a1a88",
+    "fixture_test.go.txt": "348f0a20e81b9908c08735093e0a1744b6d546174b7effd28d5e98e1f20cf25b",
+    "qualify.py": "c69b9025add1fd7c4aeb1ca891894fd38e4c5bf6dd75abe7c8ade7897f3d781d"
+  },
+  "native_UI_input_hashes": {
+    "services/server/internal/web/account_center_native.go": "91368882d286d052e14fa586abfe2e6ce30f555c4605a81967c861ca40c62e3f",
+    "services/server/internal/web/pages/account-center.gohtml": "6370bd3f0a800fe86811e986f004dc8023683464ad53b16707da9e3e1c273446",
+    "services/server/internal/web/account_center_native_test.go": "f3f85548d60abf767fd860faa10f9698ae8f9e363653dc142a52ff8715638cf1",
+    "static/css/account-center-native.css": "a403375bbc41d376bd5e9568614694bc932be51af50b0004792e029e5d75c7cf"
+  },
+  "baseline_account_keeper_reference_only_sha256": "e31b656ba310cb09639a6ab7e1a2a2dc8d305e17ae7a1f30ce3c8bc5ca3bee26",
+  "baseline_date_keeper_reference_only_sha256": "bc10a80ae1a9b0f404e9434f2a0065d941a0cb4a336d5ea06eb39032da09c7ea",
+  "accepted_behavior": [
+    "Existing forms can save only en/ro through exact canonical GoPOST/i18n/setlang/, bounded4096 before App session-form parsing and again standalone. MIME/field/multiplicity/path/declared/stream limits and original neighboring paths/method refusals remain enforced; no cookie on refusal.",
+    "Every caller including anonymous/session/API-token uses existing same-origin/double-submit CSRF. Existing invalid/stale credentials and peer sessions retain authority boundaries; display preference cannot revive identity. Source-defined host-only yearlyLax cookie follows existing TLS/HTTPS Secure convention; existing locale negotiation prefers the saved choice.",
+    "Returns are finite source-known localHTML GET destinations with first-route/nonHTML/_data/action checks. Existing revoke-error hiddennext maps to /settings/ without changing its render context. Templates/assets/catalogues/SQL/schema/authcore/identity/consent authority remain unchanged.",
+    "Full exactL2 affectedPG7 independently passes469roots/1395named with no failure/skip/race/cache, all original1368named cases retained, actual340commands695artifacts/15role7DB/privatePG cleanup. Four assembled language App roots cover caller/refusal/authority/boundary loops; original source assertions/306-test inverses and repaired93-input custody proof stay strict.",
+    "Unchanged account presentation independently passes8JS+8noJS/24strictAxe531 predicates,428Tab62forms/37literal old bodies/85artifacts/ownedcleanup; no performance benchmark requested.32PNG/16body metrics match originalM3. Separate standalone companion passes5realPOST/localGET flows,5refusals/3syntheticAxe48 passing observations and45literal body identities, with owned server/profile/HOME cleanup independently checked.",
+    "Failed initialL1/e802 remains failed:215roots879named RUN,212/876 PASS and3shared historical-App custody failures, no OOM/timeout and later six lanes unrun. Strict test-only repair fixes the separate proof join; local23/91 plus new exactL2 complete run passes. No historical result or pending inner status is upgraded."
+  ],
+  "evidence_scope": "Cookie/redirect/localization browser checks use actual registered handler with fixed synthetic GET pages and existing site.js, not authentic session/account browser requests. Actual App authority tests, account presentation and companion evidence remain distinct.26 interception records are not allHTTP; server10POST11pages and five followedGET assertions remain separate.",
+  "performance_scope": "No new timing/body benchmark or generalized efficiency claim. Earlier account BODY measurements remain mixed and are not reattributed as language-action performance.",
+  "storage_temporal_scope": "At this acceptance, failedL1 generated source/binaries/Gitstdout still exist; no new language custody archive has been collected or accepted here. Future exact retention/availability, keeper/archive and publication metadata reviews are separate; old account/date keepers are immutable references.",
+  "publication_scope": "This real bounded-feature review may later be copied byte-for-byte as canonical acceptance.json. It contains no own digest or remote/closing publication claim. Root feature-branch push/readback is separate; no main landing, GUI milestone, production/provider/government/legal-parent/real-child activation follows.",
+  "execution": "Reviews and read-only actual source/raw/privacy/cleanup inspection only. No product rerun, source/owning mutation, new archive collection or deletion."
+}

@@ -1,3 +1,5 @@
+> Current closing record: [language action](../../docs/reviews/gui-native-language-action/README.md). ProducerL20dbcc6ba nativePG7449 and unchanged account UIe934 are accepted; separate companion and bounded feature independently accepted40339c77/5d6004ce; source publishedM016c(d185); separate L1 retentionb617/postf8a60b8837f9e252fd33f0c9baf346ab90d5d3eccf11ef5e8b74e4cd8612ba6e. The complete proposal/admission history below is retained verbatim and is not current runtime acceptance. No new benchmark or custody claim.
+
 # Language action companion — disabled source proposal
 
 This supplements the unchanged account GET-only presentation harness. It exercises the actual registered language POST and pinned CheckCSRF through `languageTestServer`, with three deliberately synthetic GET pages and the admitted original site.js buffer. It never assembles App session middleware, calls AccountView/Self, queries a database, or executes revoke/logout/export/delete. The four language App roots remain the production-assembly authority evidence.

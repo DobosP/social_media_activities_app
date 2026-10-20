@@ -1,0 +1,148 @@
+{
+  "attempts": [
+    {
+      "availability": "Original failed result/source-manifest/all141non-target rows remain (136files5dirs,2knownparent transitions). Only generated source/binaries/oneGitstdout removed under b617/postf8a60b8837f9e252fd33f0c9baf346ab90d5d3eccf11ef5e8b74e4cd8612ba6e;deletedbytes unavailable. Failure remains unchanged.",
+      "independent_review": {
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/language-action-checks/first-full7-failure-review.json",
+        "sha256": "c884ae8f2f017ea26e513b8dec2eaf2e215da880958ec79e63216cedd1934aaa"
+      },
+      "kind": "initial language L1 complete7",
+      "original_count_scope": "215/879 RUN;212/876PASS3custodyFAIL;later6unrun;threeactualroles/privatePGcleaned",
+      "result_sha256": "e802817e5f2ef23cb5794af0b2c3f8a55e0f2fc203aaf28ec7ce1feaee87d097",
+      "source": "c438b3c51d10ebdc04dd937cf0c6bee67aee5a0b",
+      "status": "FAILED_UNCHANGED"
+    },
+    {
+      "artifact_rows": 695,
+      "availability": "ALL original physical artifacts retained,including literal compressed Gitstdout; no new archive or omission",
+      "commands": 340,
+      "failed": 0,
+      "kind": "repaired L2 complete7",
+      "lifecycle": "15roles/sevenDB/privatePG cleanup accepted",
+      "named_passes": 1395,
+      "result": {
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/language-action-pg-qa/run-0dbcc6ba753e-39474fb2-4f78-4698-bed0-3e598d51ab69/result.json",
+        "sha256": "25485a22f879b944b3739861a0e09be8b67e4017e2845e553cf5bb4e6260deaa"
+      },
+      "review": {
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/language-action-checks/repaired-language-full7-review.json",
+        "sha256": "7449f313926b430fe1b8e1d90deaa9dc861319e13b2b380c77cb1d467e23b6f9"
+      },
+      "roots": 469,
+      "skipped": 0,
+      "source": "0dbcc6ba753e94b3dee2203f32546692f97f7894",
+      "source_manifest": {
+        "actual_tracked_source_files": 2280,
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/language-action-pg-qa/run-0dbcc6ba753e-39474fb2-4f78-4698-bed0-3e598d51ab69/source-manifest.json",
+        "physical_retention": "REQUIRED_IN_PLACE; full manifest not duplicated",
+        "sha256": "50d27e9795fdadfe8e17c6a22cfc268d5082459c25ab73ebaf4dc99c6462fa39"
+      },
+      "status": "ACTUAL_ACCEPTED_SEVEN_COMPLETE_PACKAGES"
+    },
+    {
+      "PNG32_literal_equal_historical_M3": "Verified by actual independent review; new layout not inferred",
+      "actuals": {
+        "Axe_pass_predicates": 531,
+        "JS_states": 8,
+        "artifact_rows": 85,
+        "audit_PNGs": 24,
+        "current_assets": 88,
+        "incomplete": 0,
+        "literal_prior_bodies": 37,
+        "local_GET_requests": 104,
+        "noJS_states": 8,
+        "observed_FormData_forms": 62,
+        "primary_PNGs": 8,
+        "real_keyboard_witnesses": 428,
+        "strict_whole_document_Axe_audits": 24,
+        "violations": 0
+      },
+      "availability": "All85original artifacts and complete result/export/source manifests retained at exact run path",
+      "benchmark": "NOT_REQUESTED",
+      "desktop_sha256": "5decef0238cb5365bcc25474810ef3f858a703aa49097fcc0bec4ac48c5d69f8",
+      "fixture_manifest_sha256": "2cdb61476708275e72069052d87f900015a099b3f62e8a6f200a0a41184d6ebf",
+      "kind": "unchanged account GET-only UI",
+      "method_source": "016c5a69e3199da643ad755301e5c78fb8d2e0c7",
+      "prior37_sha256": "ed635b73cabff43a28609522e637a7b1a2387bdf39b57509535a7c35a7700cca",
+      "producer_source": "0dbcc6ba753e94b3dee2203f32546692f97f7894",
+      "result_sha256": "d868902b56200a251dd60f280f6b6204c46ab778421980b3f73c4ccf6a40ecd7",
+      "review": {
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/language-account-operational-final/actual-account-ui-review.json",
+        "sha256": "e9343e5039c187ec191da54d2b80e66e6935bbba09693206120e9f037e3f8f73"
+      },
+      "run": "/home/dobo/work/_temp/ac-ui/run-0dbcc6ba753e-72fe6be6-c466-491d-9bf0-749e8c5e9d6a",
+      "status": "ACTUAL_ACCEPTED_ACCOUNT_PRESENTATION_ONLY"
+    },
+    {
+      "45_body_preservation": "Original37 physical bc10 bodies plus8 literal account e31 bodies;entire2587-member e31 bytes/PAX verified;no new normalization",
+      "actual_counts": {
+        "flows": 5,
+        "refusals": 5,
+        "strict_synthetic_page_Axe_audits": 3,
+        "passing_Axe_rule_observations": 48,
+        "violations": 0,
+        "incomplete": 0,
+        "interception_records": 26,
+        "server_POSTs": 10,
+        "server_pages": 11,
+        "unexpected_requests": 0,
+        "server_internal_errors": 0,
+        "body_identities": 45,
+        "baseline_account_keeper_members": 2587,
+        "retained_run_files": 11
+      },
+      "actual_review": {
+        "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/language-companion-operational-final/actual-companion-review.json",
+        "sha256": "40339c773400ed0649c37bd2e30187f291e9672c6efb7be6671b8dbc3c89bd38"
+      },
+      "availability": "All11 safe actual run files retained at exact /home/dobo/work/_temp/la-ui/run-slc8vqty;method/source/input hashes remain original.",
+      "kind": "separate real-handler language companion",
+      "producer_source": "0dbcc6ba753e94b3dee2203f32546692f97f7894",
+      "result": {
+        "path": "/home/dobo/work/_temp/la-ui/run-slc8vqty/result.json",
+        "sha256": "426117d2dccb0db187841c223e6423ba329d3bbd91e414f24b214e5adca0394e"
+      },
+      "status": "ACTUAL_ACCEPTED_STANDALONE_REGISTERED_HANDLER_SYNTHETIC_GET_ONLY"
+    }
+  ],
+  "bounded_feature_review": {
+    "canonical_path": "docs/reviews/gui-native-language-action/acceptance.json",
+    "original_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/language-companion-operational-final/bounded-language-feature-acceptance.json",
+    "sha256": "5d6004ce97a09b5e6ada39a609eba93e9ed523d505348bf896acf4bef3aba34a"
+  },
+  "inventory_policy": "Reference exact original complete manifests/results,never duplicate rows or imply absent bytes remain. Every current method-required input stays physical.",
+  "proof_index_is_standalone_byte_keeper": false,
+  "retention": {
+    "current_account_UI_ALL85_required": true,
+    "historical_R_PG_ALL695_protected": true,
+    "latest_L2_PG_ALL695_required": true,
+    "performed_by_this_closing": false,
+    "previous_pruning": "Only earlier accepted canonical account/date retention applies; deleted paths unavailable,not recounted or deleted again",
+    "protected": "branches/unmerged packets/baselines/canonical keepers/old raw logs+UI/sharedcaches/other owners",
+    "targets": [
+      "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/language-action-pg-qa/run-c438b3c51d10-2efef790-19dc-499f-aa80-7fcd50bb48a8/source",
+      "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/language-action-pg-qa/run-c438b3c51d10-2efef790-19dc-499f-aa80-7fcd50bb48a8/binaries",
+      "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/language-action-pg-qa/run-c438b3c51d10-2efef790-19dc-499f-aa80-7fcd50bb48a8/proof/command-006.stdout"
+    ],
+    "accepted_companion_ALL11_required": true,
+    "separate_L1_actual_retention": {
+      "receipt": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/language-L1-retention-execution/execution-receipt.json",
+      "receipt_sha256": "b61733e9f40ef659d4874250e44d05d6444b1c10671840f35bfba60d8bc40211",
+      "postcheck_path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/language-L1-retention-execution/independent-actual-execution-postreview.json",
+      "postcheck_sha256": "f8a60b8837f9e252fd33f0c9baf346ab90d5d3eccf11ef5e8b74e4cd8612ba6e",
+      "files": 2290,
+      "directories": 248,
+      "logical_bytes": 407696307,
+      "allocated_disk_freed_claim": false
+    },
+    "targets_availability": "REMOVED after actual independent postcheck;metadata inventories are history,not surviving raw bytes"
+  },
+  "schema": 1,
+  "status": "ACCEPTED_BOUNDED_LANGUAGE_EVIDENCE_INDEX_NO_NEW_ARCHIVE",
+  "source_publication": {
+    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/language-source-publication/publication.json",
+    "sha256": "d1855cac923ae7d26fc59a83a30e41f6e1a13e255b2373b5450bb26880e7cac5",
+    "published_source": "016c5a69e3199da643ad755301e5c78fb8d2e0c7",
+    "remote_source": "016c5a69e3199da643ad755301e5c78fb8d2e0c7"
+  }
+}
