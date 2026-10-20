@@ -460,6 +460,15 @@ func guiPublicGetRepairRows() []guiPublicGetRepairRow {
 // Each row must find its exact afterimage and land on its exact preimage, so a
 // later row only ever sees the bytes the previous reviewed row produced.
 func guiPublicGetRowsPreimage(path string, raw []byte) ([]byte, error) {
+	// Require the complete newest account source before the unchanged prior chain.
+	switch path {
+	case "services/server/internal/web/renderer.go", "services/server/internal/web/gui_public_get_walk_test.go":
+		var accountErr error
+		raw, accountErr = accountCenterSourcePreimage(path, raw)
+		if accountErr != nil {
+			return nil, accountErr
+		}
+	}
 	// Require the actual newest physical source, then retain the entire old chain.
 	switch path {
 	case "services/server/internal/web/renderer.go", "services/server/internal/web/gui_public_get_walk_test.go":

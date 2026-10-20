@@ -28,6 +28,14 @@ func groupCreatePreferenceSourceBinding(path string, raw []byte, physical, wante
 	}
 	previous := raw
 	var err error
+	// Live admission requires the exact newest account bytes before prior controls.
+	if path == "services/server/internal/web/renderer.go" || path == "services/server/internal/web/gui_public_get_walk_test.go" {
+		raw, err = accountCenterSourcePreimage(path, raw)
+		if err != nil {
+			return guiG1Binding{}, err
+		}
+		previous = raw
+	}
 	// Live tuples require the complete newest inbox source before old inverses.
 	if path == "services/server/internal/web/renderer.go" || path == "services/server/internal/web/gui_public_get_walk_test.go" {
 		raw, err = notificationInboxSourcePreimage(path, raw)

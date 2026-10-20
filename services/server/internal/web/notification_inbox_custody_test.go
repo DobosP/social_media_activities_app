@@ -20,6 +20,12 @@ func notificationInboxSourceRelation(path string) (beforeSHA, afterSHA string, b
 	return "", "", 0, 0, "", "", false
 }
 func notificationInboxSourcePreimage(path string, raw []byte) ([]byte, error) {
+	// Explicit retained controls may enter only on the exact account preimage.
+	var accountErr error
+	raw, accountErr = accountCenterPriorSource(path, raw)
+	if accountErr != nil {
+		return nil, accountErr
+	}
 	beforeSHA, afterSHA, beforeBytes, afterBytes, before, after, ok := notificationInboxSourceRelation(path)
 	if !ok || len(raw) != afterBytes || guiPublicHash(raw) != afterSHA || bytes.Count(raw, []byte(after)) != 1 {
 		return nil, fmt.Errorf("inbox-complete-current-source")
@@ -71,6 +77,10 @@ func TestNativeNotificationInboxCustodyRetainsEveryOriginalAuthority(t *testing.
 		current, err := notificationPreferencesSourcePreimage(path, physical)
 		if err != nil || !bytes.Equal(old, current) {
 			t.Fatal("new inverse changed a previous authority", path, err)
+		}
+		after, err = accountCenterInboxMutationTarget(path, physical, after)
+		if err != nil {
+			t.Fatal("current inbox mutation fixture unavailable", path, err)
 		}
 		for name, changed := range map[string][]byte{
 			"previous-is-not-physical": before,
