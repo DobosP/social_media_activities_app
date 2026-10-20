@@ -126,3 +126,33 @@ fixtures are removed. All700 protected files/306 Go tests remain exact; Go unit/
 vet are reused from source-identical EA9. First full failuref33d stays failed.
 Commit then run fresh complete7 before unchangedUI/37body/measurements. No new
 resource limit, test omission, source subset or general speedup claim.
+
+
+## Exact0afd accepted qualification, custody and rolling retention
+
+Complete fresh PG7 is accepted34cc:450roots/1,353named/zero skips,340commands/
+695proofs/2,230source files,15stopped roles/seven retired databases/stopped PG.
+UI8eb passes6JS6no-JS/18Axe375/66assets78GET with all75physical UI files;
+93af proves31previous+6inbox body bytes equal496 without extra normalization.
+Measurement555 accepts12 same-display warmed samples: body elapsed60.50%EN/
+70.64%RO and allocated bytes80.86%/80.84% lower than matched classic, but HTML
+46.49%/45.79% larger and gzip7.55%/10.02% smaller. Output bytes are unchanged.
+Only three sequential100-iteration samples/group: no causal CPU/HTTP/SQL/general
+speedup claim. Stable resolver outcome/availability and tzdata during a page are
+required; first failure retains each row's source offset for that page, next page
+retries. Prior per-field transient recovery is not promised.
+
+FirstEA9 stays overallFAIL/noresult with all7nativePASS; safe raw proof andf33d
+remain distinct, lost command metadata is not reconstructed. Referencee007 keeps
+2,695original members without duplication. Accepted date archivebc10 retains
+1,689members/4,114,989B, keeper2d0a/feature6611 and Root4b7c; immutable inner
+pending statuses remain historical, outer reviews establish actual acceptance.
+Exact retention3eef/postcheck4122 removed4,464files/487dirs/703,582,358logicalB
+from superseded496/failedEA9 generated source/binaries and two duplicate Git
+stdout files. Deleted raw paths are unavailable. Latest0afd source/binaries/UI,
+all nonduplicate logs/proof, source packets/branches/baselines/keepers remain.
+Retentioneb496/49members preserves original plan370b and full reviewed method,
+HOST observer, dryrun, exact execution and postcheck metadata. Canonical closure:
+[date evidence](../reviews/gui-native-notification-inbox-dates/README.md).
+No full21/current-image/main/milestone/production/provider/government/real-child
+activation or fresh authority follows; feature branch only.

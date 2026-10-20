@@ -1,7 +1,7 @@
 # ADR-0065: Native notification inbox presentation
 
 Date: 2026-10-20
-Status: independently feature-qualified — exact496 affectedPG7/desktop6+6; compact keeper and reviewed rolling retention, feature branch only.
+Status: independently feature-qualified — original496 and date0afd affectedPG7/desktop6+6; compact custody and reviewed rolling retention, feature branch only.
 
 ## Scope
 
@@ -241,3 +241,46 @@ unchanged; previous EA9 Go-focused9/56 and vet are source-identical, not rerun.
 Actual first-failure auditf33df158 verifies all seven native suites450/1353 and
 owned cleanup while preserving overallFAIL/noresult. Commit the repaired method,
 then run one fresh complete7; no UI, body or measurement acceptance follows here.
+
+
+## Exact0afd date follow-up — accepted custody and rolling retention
+
+Fresh exact0afd29b79fecf69bfb88847a8412d4bb2e02a787, with the reviewed compressed
+entire-SHA transport, is independently accepted34ccf92b: all seven complete
+native suites450roots/1,353named/zero skips,340commands/695proof artifacts,
+2,230source files,15stopped/absent roles/seven database retirements and stopped
+private PG. This is the fresh successful result1ba8e249; firstEA9 remains overall
+FAILexit1/noresult despite native450/1353 PASS. Auditf33d and raw observations
+preserve the packaging failure; lost command argv/times/records are not rebuilt.
+
+UI review8eb0240e accepts6JS+6no-JS/18strictAxe375/66assets78GET/cleanup;
+all37 proof93af2b7b establishes byte equality for31previous+6accepted inbox bodies
+without extra normalization. All75 physical UI files and Root's six-image visual
+review remain evidence. Measurement555c309e accepts12 warmed matched samples:
+elapsed body median60.50%EN/70.64%RO lower,allocated bytes80.86%/80.84% lower,
+counts55.01%/54.99% lower than classic. HTML remains46.49%/45.79% larger and
+gzip7.55%/10.02% smaller; HTML/gzip are byte-equal to496. Only three sequential
+100-iteration samples/group were taken. Prior496 regressions remain historical;
+cross-run native improvements are descriptive, not causal CPU/HTTP/SQL/throughput
+or general speedup claims. Stable resolver-outcome/tzdata during a page remains
+the explicit compatibility condition; first-failure per-row offsets persist for
+that page and the next page retries, unlike possible per-field recovery before.
+
+Canonical [date evidence](../reviews/gui-native-notification-inbox-dates/README.md)
+retains archivebc10/1,689members/4,114,989B, independent keeper2d0a and bounded
+feature6611, original selection/excluded beforeimages and Root invocation4b7c.
+Inner collection-time pending status is immutable; separate outer reviews accept
+actual custody. Original e007/2,695-member keeper remains a reference dependency.
+
+Exact reviewed retention3eef/postcheck4122 removed4,464 superseded generated
+files/487empty directories/703,582,358logicalB. Removed496/failedEA9 source and
+binaries plus two duplicate Git stdout raw paths are unavailable. All nonduplicate
+test proof/logs, UI/HTML/PNG, source manifests/packets, branches, baselines and
+canonical keepers remain; latest0afd source/binaries/UI is the rolling setup.
+Retained method/historyeb496/49members preserves plan370b, both source reviews,
+negative control, accepted HOST dryrun, fresh execution and independent postchecks.
+HOST999 and archived65534 observer metadata stay distinct without normalization.
+
+No full21/current-image/main/milestone/production/provider/government or real-child
+activation or new legal/clinical/privacy authority follows. Formal landing remains
+Paul-only. Date performance remains scoped to the body measurements above.

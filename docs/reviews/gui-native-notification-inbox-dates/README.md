@@ -1,0 +1,31 @@
+# Native notification inbox dates — qualified page-local rendering
+
+The [feature review](acceptance.json) and [keeper review](keeper-review.json) independently accept this bounded follow-up. Exact qualified producer and UI method are `0afd29b79fecf69bfb88847a8412d4bb2e02a787`. Feature branch only.
+
+Complete affected PostgreSQL qualification is independently accepted by review `34ccf92bb01861e208f729375e691a9448bb3aad3736dedbe025a4eee586d61c`: seven complete packages,450 roots/1,353 named passes,zero skips/failures,340 commands,695 proof artifacts and2,230 source files. All15 owned roles are stopped/absent,all seven lane databases retired/checkpointed and the private PG stopped. The actual result is `1ba8e2499b7fe93b979e835c0e3d7533f731b08581d2e40a9b0519f780d8a647`.
+
+UI review `8eb0240e6ad6244ad18595ad298abd8b781051c471cd7a8a5147c6f29e521c3f` accepts6JS+6no-JS states,18 strict whole-document Axe audits/375 passing predicates,66 assets/78 local GETs and complete cleanup. All73 listed artifacts plus result/status are75 physical files. Proof `93af2b7b6249880e78b2d43823cdadb9aecefb73390a9957cf8c5d5879a7d218` compares all31 previous plus6 accepted inbox HTML bodies byte for byte, with no extra normalization. All six screenshots were viewed by Root. The UI result is `5a3fe1e513fe4ec9b49c3c60327c9e7d2d98be173aa7a041b72b9d683ad34f3e`.
+
+Measurement review `555c309e70d8b1aeedf3a03db231133091a0e863b7c221b72c733417733fbfad` accepts twelve warmed samples: EN/RO × classic/native × three sequential100-iteration samples. Both engines receive the identical registered-display projection; native validation/copy work is included. The projection matches accepted496 exactly (`672d58c74b44a1426e80a705ee7ba6e97842f5578aea1b96cb483ee8056543d0`).
+
+| Native versus matched classic | EN | RO |
+| --- | ---: | ---: |
+| Median elapsed body time | 60.50% lower | 70.64% lower |
+| Allocated bytes/body | 80.86% lower | 80.84% lower |
+| Allocation count/body | 55.01% lower | 54.99% lower |
+| HTML bytes | 46.49% larger | 45.79% larger |
+| gzip9 bytes | 7.55% smaller | 10.02% smaller |
+
+Output HTML/gzip bytes are unchanged from496. Native medians versus the previous native run are77.54% lower EN/79.25% lower RO, but that cross-run comparison is descriptive: classic medians also moved and only three samples/group were collected. These are warmed elapsed body measurements, not CPU profiles, causal date-formatting shares, HTTP/SQL/throughput, tail-latency or general speedup evidence.
+
+[ADR-0065](../../adr/0065-native-notification-inbox.md) records the page-local lazy timezone resolver. Compatibility assumes a stable resolver outcome/availability and tzdata during one page render. On a first resolver failure, each row keeps its own original location/offset for the rest of that page; the old helper could recover on a later per-field call. A new page retries. This is not unconditional transient-failure parity. The generic helper, old templates/assets/tests, self scope, newest100 ordering, links and mark-all behavior remain unchanged.
+
+First exactEA9 remains **overallFAIL exit1/no result.json**, even though all seven native suites passed450/1,353. The unchanged64MiB regular-artifact guard rejected the70,430,720B uncompressed entire-SHA Git stdout during final packaging. Review `f33df1580a7034a9bf3bdaa7c60f645098fb9759284b48ddb2225954d611b719` accepts only that failure/native-results/cleanup audit. All safe raw proof, source manifest, CIDs, cleanup and independent observations remain evidence. Lost in-memory command records/argv/times are not reconstructed; its current binary hashes are postfailure observations only. The reviewed successor transports the same entire explicit SHA as tar.gz, reads explicit r:gz and keeps the64MiB guard. Four synthetic archive controls passed before the fresh successful0afd run.
+
+The prior [notification inbox keeper](../gui-native-notification-inbox/README.md), archive `e007db95293927d330e574efeb4938e52edd2309b520f07895ce0c5fa77b5eb5`/2,695 members, remains an immutable reference dependency. Its original regressions and failures remain historical. This follow-up verifies its internal member bytes/metadata and all37 physical body identities; it does not duplicate2,695 historical files or require obsolete live originals.
+
+[evidence.tar.gz](evidence.tar.gz) retains1,689 members/4,114,989B, SHA bc10a80ae1a9b0f404e9434f2a0065d941a0cb4a336d5ea06eb39032da09c7ea. The [manifest](archive-manifest.json), [selection](selection.json) and [excluded beforeimages](excluded-beforeimages.json.gz) preserve exact bytes and original portable metadata. Keeper review2d0af9fb and feature review6611a306 establish acceptance. The immutable [collection result](collection-result.json) retains its collection-time pending status. [Root invocation](root-collection-receipt.json) records the actual command and waited exit.
+
+Reviewed rolling retention removed exactly4,464 superseded generated files/487 empty directories/703,582,358logicalB: old496 and failedEA9 generated source/binaries plus two literal duplicate Git stdout files. Those raw paths are unavailable. The [actual receipt](retention-result.json), [independent postcheck](retention-review.json) and [method/history](retention.tar.gz) retain exact inventories, source/keeper bindings, disabled-request refusal, successful HOST dryrun, distinct reviews, fresh exact execution and all postcheck observations. The49-member/1,008,429B retention archive has SHA eb496c440734558f55cd7a5b54f450f0d901eeffd644afb6d40b403d6425d216. Latest0afd source/binaries/UI, all nonduplicate proof/test logs, HTML/PNG, source manifests/packets, branches, original baselines and canonical keepers remain. The old496 stdout was already pruned by538f and is not counted again. Original HOST999 and archive-view65534 foreign metadata remain distinct, with no ownership translation.
+
+No full21/current-image/main/GUI milestone/production/provider/government/real-child activation or new authority claim. [Committed reproduction methods](../../../tools/gui-native-notification-inbox/README.md) require the exact clean source and installed dependencies; this compact evidence is not a full source/dependency distribution.

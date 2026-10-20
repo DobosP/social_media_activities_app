@@ -1,0 +1,60 @@
+{
+  "schema": 1,
+  "verdict": "ACCEPT_EXACT_0AFD_DATE_CANONICAL_DOCS_ONLY_PUBLICATION_WITH_QUALIFICATION_AND_STORAGE_LIMITS",
+  "reviewer": "independent teacher_claim_source_review; no owning writes, runtime or packaging execution",
+  "observed_utc": "2026-10-20T03:14:09.098785+00:00",
+  "qualified_source_sha": "0afd29b79fecf69bfb88847a8412d4bb2e02a787",
+  "qualified_source_tree": "d7cc1a7e5171daebc2e6150e121c0651e2c192d7",
+  "publication_source_bridge": "OwningHEAD remains exact0afd; staged17paths are five existing docs plus twelve canonical evidence files. All2,225 unmodified original sourceframe files retain exact8stat/hash; no native/method delta. Root may add only this review as the eighteenth canonical path before docs-only commit.",
+  "promotion_sha256": "f727ff02b79c73d72af59fb2954bb36a0cd85966027fac757faf076ad0fc289f",
+  "published17_path_sha256": {
+    "STATUS.md": "d9b82926118509c1196fdc5da19c81f5f89b96896d4821ffa583c722da36dad1",
+    "docs/adr/0065-native-notification-inbox.md": "9958a667fdeafe2ada6f2dd437236120a8c6427f78f9288abc8bb13459e8e7a5",
+    "docs/adr/README.md": "af58f961316bcab788111780a059de5372baad3504a78af21208696820f7be47",
+    "docs/execplans/gui-native-notification-inbox.md": "d45e1f28e946e8a5a750e78d1de68421e40047f4c3fa9b0f54f8bbf49519fd8e",
+    "docs/reviews/gui-native-notification-inbox-dates/README.md": "68803d6a175398653b110cdaaf967edf17ce270b9ff1d47fc112a86846ce9a26",
+    "docs/reviews/gui-native-notification-inbox/README.md": "b96629ac9b92f892c1404aa957c70b86115777e737f69cf36ee2afdcb93bcdce",
+    "docs/reviews/gui-native-notification-inbox-dates/evidence.tar.gz": "bc10a80ae1a9b0f404e9434f2a0065d941a0cb4a336d5ea06eb39032da09c7ea",
+    "docs/reviews/gui-native-notification-inbox-dates/archive-manifest.json": "2787ff123c6b333d5aeed9650c22cdab92b8e2a76f189085a4eb52c5f3bc21d4",
+    "docs/reviews/gui-native-notification-inbox-dates/collection-result.json": "9d005b48c274481e21f509a6d9e15550ce237f397c3de23bef987a01ab13126e",
+    "docs/reviews/gui-native-notification-inbox-dates/selection.json": "982a51b039310e3df32c124fd44a2f4758685865ba697f2fa185f363c2a7809f",
+    "docs/reviews/gui-native-notification-inbox-dates/excluded-beforeimages.json.gz": "6900bbf52db7adf654c06927af5e520d0834d69b66273ba67ba1911277ac06d0",
+    "docs/reviews/gui-native-notification-inbox-dates/keeper-review.json": "2d0af9fb0abe7446d63549237be12e18ef4df5a184bcd386abf7c9240d9d365a",
+    "docs/reviews/gui-native-notification-inbox-dates/acceptance.json": "6611a306c2e9659a492d2abbc2cb507c81f7b45a1bbecfa3c53946bfe65a6444",
+    "docs/reviews/gui-native-notification-inbox-dates/root-collection-receipt.json": "4b7c031c2f21a11c49e48e9a55b58b960434b4b78f68230764d5652e499c0d42",
+    "docs/reviews/gui-native-notification-inbox-dates/retention-result.json": "3eef88c1be04e94b6196f4e753179c671e8f757cdb2e20e19acd118563da8308",
+    "docs/reviews/gui-native-notification-inbox-dates/retention-review.json": "41221f0a80fba87961e06bd0b75b98abc87fe9e84e74c8bf5185f7f80d7f08ec",
+    "docs/reviews/gui-native-notification-inbox-dates/retention.tar.gz": "eb496c440734558f55cd7a5b54f450f0d901eeffd644afb6d40b403d6425d216"
+  },
+  "scratch_bindings": {
+    "promotion-result.json": "f727ff02b79c73d72af59fb2954bb36a0cd85966027fac757faf076ad0fc289f",
+    "promotion-result-v1.json": "ad3fc0f8a2fa36de6c28095f5938618a8f568c1c8aebdc034aad897ada093ae7",
+    "package-retention.py": "febf2450c89df1f86d37cc38d1e2386e76cf9f24e34dd77efa41c2456a5cf79f",
+    "retention-package-result.json": "d17ab92655ccb2d2535d187130c7c0f2b7b784cbe9da319efb84a2222dc5a2af",
+    "independent-archive-readback-observation.json": "8d41ff5e4a9b9e5109d3cb4205a7f18c860a126488d18faddac4bbcb8a60cde1",
+    "independent-publication-path-observation.json": "88d7867bbb2507053462f9c6e56082e96f3faee31a5e81576bea7b0fa9cb53f1"
+  },
+  "accepted_evidence": {
+    "archive": "bc10a80ae1a9b0f404e9434f2a0065d941a0cb4a336d5ea06eb39032da09c7ea",
+    "keeper": "2d0af9fb0abe7446d63549237be12e18ef4df5a184bcd386abf7c9240d9d365a",
+    "feature": "6611a306c2e9659a492d2abbc2cb507c81f7b45a1bbecfa3c53946bfe65a6444",
+    "Root_collection": "4b7c031c2f21a11c49e48e9a55b58b960434b4b78f68230764d5652e499c0d42",
+    "retention_receipt": "3eef88c1be04e94b6196f4e753179c671e8f757cdb2e20e19acd118563da8308",
+    "retention_actual_postcheck": "41221f0a80fba87961e06bd0b75b98abc87fe9e84e74c8bf5185f7f80d7f08ec",
+    "retention_archive": "eb496c440734558f55cd7a5b54f450f0d901eeffd644afb6d40b403d6425d216"
+  },
+  "verified": [
+    "Independent complete1,689-member qualification archive and49-member retention archive readbacks: every byte/hash/mode/UID/GID/nsmtime and live original portable metadata match. All48 safe retention files are included once plus portable manifest. No deleted payload is bundled.",
+    "Original e007 archive remains byte exact. Current keeper review/feature/selection/exclusions/Root invocation and actual retention records are unmodified exact copies; immutable inner collection pending status stays historical.",
+    "ADR old body remains exact prefix except Status; execplan remains append-only, STATUS120, current stale headings corrected, whitespace passes. Root reported docs guard63/zero; reviewer did not repeat gates.",
+    "Docs preserve freshPG7/450roots1353named/zero skips, UI6+6/18Axe375/all37bytes and twelve matched warmed samples; elapsed/allocated savings, largerHTML and descriptive-only/cross-run limits agree with accepted evidence.",
+    "Stable per-page resolver-outcome/tzdata condition and transient recovery difference are explicit. FirstEA9 remains overallFAIL/noresult despite native passes; lost command/execution-binary provenance is not reconstructed.",
+    "Exact4,464files/487dirs/703,582,358B removal and four planned parent changes agree with accepted postcheck; deleted raw source/binary/tar paths are unavailable, latest0afd setup/nonduplicate proofs/UI/branches/baselines/keepers remain. Original HOST999/archive65534 views are distinct."
+  ],
+  "limits": [
+    "This is bounded feature-branch custody/documentation publication only; no app main/milestone/full21/current-image/production/provider/government/real-child or legal/clinical/privacy acceptance.",
+    "No new product tests, UI capture, benchmark, collector, packager or remover ran in this review. Root full9stat packaging fence is source/receipt-backed; independent current readback checks portable metadata without inventing a past inode/ctime baseline.",
+    "This review does not include its own future canonical bytes/hash, avoiding a self-hash cycle. Any changed payload/claim after these exact17hashes requires review."
+  ],
+  "findings": []
+}

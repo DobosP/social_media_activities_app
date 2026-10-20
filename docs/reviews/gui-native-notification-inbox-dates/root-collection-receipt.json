@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "operator": "agent:codex (PROGRAM E8)",
+  "status": "ROOT_COLLECTOR_EXIT_ZERO_PENDING_INDEPENDENT_KEEPER_AND_FEATURE_ACCEPTANCE",
+  "terminal_observed_utc": "2026-10-20T02:32:17.680259+00:00",
+  "source_sha": "0afd29b79fecf69bfb88847a8412d4bb2e02a787",
+  "command": "python3 -I /home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-date-keeper/collect.py --binding /home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-date-keeper/final-binding.json --output /home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-date-keeper/candidate-0afd",
+  "cwd": "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a",
+  "tool_session_id": 87089,
+  "initial_tool_chunk": "aebaf8",
+  "terminal_tool_chunk": "37fe7f",
+  "waited_exit": 0,
+  "controls": {
+    "command": "python3 -I /home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-date-keeper/run_controls.py",
+    "waited_exit": 0,
+    "tool_chunk": "cb1c81",
+    "receipt_sha256": "4d5eaac33291164a4c3660a917efcd89142f518fbda3cecf4ba8649959ba6801"
+  },
+  "source_review_sha256": "a96b7ca3b6c6fef634554fd2ff7c270628f5217c70a783b3d91142b729bef1e5",
+  "binding_sha256": "fbb749018c12027312925e5b1bcc817e3d595d5511103b530e1d4ec8dc7f2e45",
+  "archive": {
+    "sha256": "bc10a80ae1a9b0f404e9434f2a0065d941a0cb4a336d5ea06eb39032da09c7ea",
+    "bytes": 4114989,
+    "members": 1689
+  },
+  "result_sha256": "9d005b48c274481e21f509a6d9e15550ce237f397c3de23bef987a01ab13126e",
+  "manifest_sha256": "2787ff123c6b333d5aeed9650c22cdab92b8e2a76f189085a4eb52c5f3bc21d4",
+  "uid_map": "      1000          0          1\n",
+  "gid_map": "      1000          0          1\n",
+  "scope": "No product/runtime, promotion or deletion. Inner collection remains pending; independent actual keeper/feature review required."
+}

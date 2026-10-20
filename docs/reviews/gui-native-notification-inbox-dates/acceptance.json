@@ -1,0 +1,77 @@
+{
+  "schema": "independent-bounded-social-date-feature-review-v1",
+  "verdict": "ACCEPT_BOUNDED_0AFD_NOTIFICATION_INBOX_DATE_FEATURE_WITH_STABLE_PAGE_RESOLVER_LIMIT_AND_DESCRIPTIVE_MEASUREMENTS",
+  "reviewer": "agent:codex /root/teacher_claim_source_review",
+  "observed_utc": "2026-10-20T02:38:36.004027+00:00",
+  "source_sha": "0afd29b79fecf69bfb88847a8412d4bb2e02a787",
+  "UI_method_source": "0afd29b79fecf69bfb88847a8412d4bb2e02a787",
+  "archive_sha256": "bc10a80ae1a9b0f404e9434f2a0065d941a0cb4a336d5ea06eb39032da09c7ea",
+  "keeper_review_sha256": "2d0af9fb0abe7446d63549237be12e18ef4df5a184bcd386abf7c9240d9d365a",
+  "bindings": {
+    "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-date-keeper/independent-keeper-review.json": "2d0af9fb0abe7446d63549237be12e18ef4df5a184bcd386abf7c9240d9d365a",
+    "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-date-keeper/candidate-0afd/evidence.tar.gz": "bc10a80ae1a9b0f404e9434f2a0065d941a0cb4a336d5ea06eb39032da09c7ea",
+    "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-date-keeper/candidate-0afd/result.json": "9d005b48c274481e21f509a6d9e15550ce237f397c3de23bef987a01ab13126e",
+    "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-date-checks/final-full-pg-review.json": "34ccf92bb01861e208f729375e691a9448bb3aad3736dedbe025a4eee586d61c",
+    "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-date-checks/final-ui-review.json": "8eb0240e6ad6244ad18595ad298abd8b781051c471cd7a8a5147c6f29e521c3f",
+    "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-date-checks/measurement-review.json": "555c309e70d8b1aeedf3a03db231133091a0e863b7c221b72c733417733fbfad",
+    "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-date-checks/all37-body-comparison.json": "93af2b7b6249880e78b2d43823cdadb9aecefb73390a9957cf8c5d5879a7d218",
+    "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-date-checks/root-visual-review.json": "aa1d66c386dda4414c87b680dccf8aad71f5e0f581246fc217ffb02e8d9894b6",
+    "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-date-checks/root-ui-invocation.json": "b4ac3d1aaac1e6124eddf68979bae334607978ee4432d9125374b8c0ecaa803a",
+    "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-date-keeper/independent-feature-measurement-check.json": "c70c4b949ebdb166313f17a79881707eac62ff99a8367eab0b347bb67e0ab53e",
+    "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-date-keeper/baseline-references.json": "e93c0d94f24559277641f59bdd9ff88f499cc716b2140993d463aca303320a9f"
+  },
+  "accepted_scope": "Existing self-scoped/newest100 notification inbox presentation: one lazy per-page Europe/Bucharest resolution and exact paired date formats. Generic date helper/producer/auth/defaults/retention/mark-all/HTML/assets remain unchanged. Source5379/applied checks and696f archive-only repair are retained separately.",
+  "qualification": {
+    "complete_affected_lanes": 7,
+    "native_roots": 450,
+    "native_named": 1353,
+    "fail": 0,
+    "skip": 0,
+    "actual_commands": 340,
+    "actual_proof_artifacts": 695,
+    "current_source_rows": 2230,
+    "removed_owned_roles": 15,
+    "retired_checkpointed_databases": 7,
+    "desktop_JS": 6,
+    "desktop_noJS": 6,
+    "strict_Axe": 18,
+    "prior_bodies": 31,
+    "current_inbox_bodies": 6,
+    "total_exact_body_comparisons": 37,
+    "physical_UI_files": 75,
+    "GET_only_requests": 78,
+    "positive_asset_responses": 66,
+    "actual_matched_body_samples": 12
+  },
+  "performance_actual_medians_and_ranges": {
+    "en": {
+      "ns/op": "classic median=2.11673e+06; native median=836016; change=-60.5043%; classic range=2.0546e+06..2.45436e+06; native range=737761..1.15048e+06",
+      "B/op": "classic median=1.27707e+06; native median=244381; change=-80.8639%; classic range=1.27707e+06..1.27707e+06; native range=244381..244384",
+      "allocs/op": "classic median=12005; native median=5401; change=-55.0104%; classic range=12005..12005; native range=5401..5401",
+      "html-B/op": "classic median=37750; native median=55299; change=+46.4874%; classic range=37750..37750; native range=55299..55299",
+      "gzip9-B/op": "classic median=3444; native median=3184; change=-7.5494%; classic range=3444..3444; native range=3184..3184"
+    },
+    "ro": {
+      "ns/op": "classic median=2.42426e+06; native median=711644; change=-70.6449%; classic range=1.83345e+06..2.64028e+06; native range=703879..718756",
+      "B/op": "classic median=1.2772e+06; native median=244685; change=-80.8421%; classic range=1.2772e+06..1.2772e+06; native range=244685..244685",
+      "allocs/op": "classic median=12005; native median=5403; change=-54.9938%; classic range=12005..12005; native range=5403..5403",
+      "html-B/op": "classic median=38253; native median=55769; change=+45.7899%; classic range=38253..38253; native range=55769..55769",
+      "gzip9-B/op": "classic median=3644; native median=3279; change=-10.0165%; classic range=3644..3644; native range=3279..3279"
+    }
+  },
+  "assessment": [
+    "ActualPG34cc accepts complete exact0afd/1ba8 with all raw/package/lifecycle/cleanup/source joins. UI8eb accepts same exact source/5a3f, strict desktop/noJS/Axe,31prior bodies, all child exits/cleanup. Physical proof93af plus this peer37body comparison establishes byte equality to accepted496 baseline without new normalization; same-forwarded-GET projection672d supplies identical actual100-row EN/RO display input.",
+    "Independently parsed every actual benchmark root line: exactly4engine/language groups x3samples x100iterations, all5units complete. Current EN native836016ns vs classic2116726ns:60.50%lower; RO711644 vs2424263:70.64%lower. Allocatedbytes80.86%/80.84%lower and allocation counts55.01%/54.99%lower. NativeHTML stays46.49%/45.79%larger; gzip7.55%/10.02%smaller. Exact medians/ranges above; no body-size reduction from date change.",
+    "These are descriptive warmed matched display-body samples, with native projection/date/copy work included. Only3sequential samples/group and100iterations were taken; EN native range737761..1150485ns and RO703879..718756ns show variation. Historical classic median itself shifted+2.78%EN/+50.60%RO. Prior accepted496 rendering regressions remain immutable referenced history; cross-run timing reductions do not measure a causal share or prove general HTTP/SQL/production latency/CPU/throughput/markup equivalence.",
+    "The page-local formatter is per render, not a shared/global failure cache. Compatibility explicitly assumes stable resolver outcome/availability and tzdata during a page. A transient first lookup failure retains each stamp original offset for that page, whereas old repeated calls could recover mid-page; next page retries. This intentional boundary is disclosed in source ADR and pure tests, not claimed as unconditional transient-failure parity.",
+    "FirstEA9 all7native450/1353 positive streams still belong to an overallFAILED exit1/noresult epoch; current9binary hashes are not backfilled into first execution records. Narrow compressed transport repair preserved64MiB/caps and required fresh current full7. Actual six custody controls/pending refusal, Root collection and independent keeper are distinct from functional qualification.",
+    "Producer/backend/auth/recipient scope/mark-all idempotence/mandatory delivery/defaults/schema/assets and all prior body identities remain protected. Source and runtime evidence accepts only this bounded feature-branch presentation follow-up. No new authority, child/government/provider integration or legal/privacy ruling is activated."
+  ],
+  "findings": [],
+  "limits": [
+    "Accepts bounded date-rendering feature and compact custody on exact0afd only; outer feature acceptance may support Root canonical metadata preparation and later separately reviewed cleanup.",
+    "No all21/current-image/main/GUI milestone/production/provider/government/real-child activation. Teacher/Social formal landing decisions remain separate.",
+    "No new normalization, unconditional all-input/temporary-resolver parity, measured CPU causal attribution or general efficiency/speedup claim. Retain current HTML size tradeoff and previous496 regressions.",
+    "No deletion performed or authorized here. Retention method/plan/binding/dryrun/execution and canonical publication require their separate reviews."
+  ]
+}

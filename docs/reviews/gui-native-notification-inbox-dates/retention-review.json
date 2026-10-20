@@ -1,0 +1,58 @@
+{
+  "schema": 1,
+  "verdict": "ACCEPT_ACTUAL_EXACT_0AFD_SOCIAL_DATE_ROLLING_RETENTION_AND_PROTECTED_STATE",
+  "reviewer": "independent teacher_claim_source_review; no author or remover execution role",
+  "observed_utc": "2026-10-20T03:09:37.051632+00:00",
+  "source_sha": "0afd29b79fecf69bfb88847a8412d4bb2e02a787",
+  "source_tree": "d7cc1a7e5171daebc2e6150e121c0651e2c192d7",
+  "method_sha256": "1e973f6f8985c25ea647954cd97225bd257b012928548ce56e91d190b0f7a5a9",
+  "plan_sha256": "370bdc1fe8ffe987b7cfe8485b5e654cdc03b29a24f0465c012cfa1a53f6671b",
+  "inventory_sha256": "af3fa2b49e6e971e14002e5b3894a0cfe3281b12492d34c18873acf2b8f7a030",
+  "latest_snapshot_sha256": "54fc886f6308eb7b7823df1cfc5f8a65b612ad235695af5d5207bf03c2abb0bd",
+  "execution_receipt_sha256": "3eef88c1be04e94b6196f4e753179c671e8f757cdb2e20e19acd118563da8308",
+  "bindings": {
+    "retain.py": "1e973f6f8985c25ea647954cd97225bd257b012928548ce56e91d190b0f7a5a9",
+    "plan.json": "370bdc1fe8ffe987b7cfe8485b5e654cdc03b29a24f0465c012cfa1a53f6671b",
+    "inventory.json.gz": "af3fa2b49e6e971e14002e5b3894a0cfe3281b12492d34c18873acf2b8f7a030",
+    "latest-snapshot.json.gz": "54fc886f6308eb7b7823df1cfc5f8a65b612ad235695af5d5207bf03c2abb0bd",
+    "binding-execute.json": "6d74e516fead34e4b9285a2e25d57b2629c8db8b734b031a8b7f305f10d50d52",
+    "root-execution-authorization.json": "68c2662c2784a053ac08ec9c4b0b1f58e0da87158c1003f5c2dbc1c65052e995",
+    "root-execution-invocation.json": "fee56ed6c3bb9d4cdf6d2551f475fa99058f2644cb39d1453e6cf86c11978a00",
+    "execution-receipt.json": "3eef88c1be04e94b6196f4e753179c671e8f757cdb2e20e19acd118563da8308",
+    "execution.stdout": "5581d72ead026c80a5acb1efaa107a804c4afd7b01c05692bc62a38dce18d0aa",
+    "execution.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "independent-source-plan-review.json": "19bc54e73018f1fc75be53477dde80d85d25072356dc89ed6fa313a45e5d38aa",
+    "root-source-plan-review.json": "9c4172d19a04244921b1c6e58e94d767c7397be12f1fa4749a07f86d711d9b63",
+    "independent-dry-run-review.json": "16701539b5b76d210abbd0b2054bcb9c1efbea6a9c318d0115203296558cbe7f",
+    "dry-run-receipt.json": "be61be519a051b47528e42094f23d7173c54d052f0548597b904bba16f99f126",
+    "independent-postcheck-host.py": "3066963797745f4dd1f34bf0c8523bd4f1e0e45d84be0ef0f747914ab67a0d80",
+    "independent-execution-host-observation.json": "243eb161fac7a96088e7d8b2ff975917e0a5dfa507cf12d2f9a2ef973da47cfe",
+    "independent-postcheck-default.py": "9f43c15538f3237e22ccef4dcb049ea44baaa1c0ea8a31f54a4d2f769940fcc9",
+    "independent-execution-default-observation.json": "dd0fdfbe8f06f1d254cdfc87f53482b4f4fb4b830ad9cbd77e51dea8356f72f4"
+  },
+  "actual_scope": {
+    "files_removed": 4464,
+    "directories_removed": 487,
+    "logical_bytes_removed": 703582358,
+    "all4951_exact_target_paths_absent": true,
+    "receipt_row_order_and_all_beforeimage_hashes_match_original_finite_inventories": true
+  },
+  "preservation": [
+    "Independent HOST read verified all4,464 retained files full9stat/hash and all267 protected directories; only four planned direct-parent membership/time changes and exact link-count changes occurred.",
+    "Latest0afd source/binaries, all historical/current nonduplicate proofs/logs/UI, original canonical e007 and new bc10 custody remain byte/metadata exact.",
+    "Default observer independently verified1,673 selected files+6repro full8stat/hash and owning2230source frame; all1689new archive members plus all2695old members fully read back with bytes/mode/UID/GID/nsmtime.",
+    "All45 original Docker CIDs/names remain absent; successful55container daemon inventory hash unchanged, three running containers inspected with no target bind overlap; three PG cleanup records/socket absence remain exact.",
+    "HOST six foreign protected files remain UID/GID999; default four archived foreign rows remain65534. No ownership normalization/rebind occurred.",
+    "Source Git remains clean0afd with the historical source commits reachable; failedEA9 still has no result.json and no reconstructed command ledger or execution-binary hash receipts."
+  ],
+  "execution_checks": [
+    "Actual separate Root authorization and fresh one-use UUID marker bind exact reviewed method/plan/inventories, accepted keeper and independent successful dryrun.",
+    "Root invocation records session62066, waitedexit0 and exact bounded stdout; stderr is empty. Independent postchecks repeated neither retainer nor product runtime."
+  ],
+  "limits": [
+    "Deleted superseded496/failedEA9 source/binaries and two duplicate Git stdout payloads are no longer physically available. Retained manifests describe history and do not claim those deleted bytes remain live.",
+    "Earlier failedEA9 remains overallFAILED despite seven native suites passing. Lost per-command/execution-binary provenance was never reconstructed.",
+    "No app main/milestone/production/real-child/government integration acceptance or further deletion authority is conferred."
+  ],
+  "findings": []
+}

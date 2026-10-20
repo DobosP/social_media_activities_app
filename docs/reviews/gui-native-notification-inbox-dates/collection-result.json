@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "status": "COLLECTED_PENDING_INDEPENDENT_KEEPER_AND_FEATURE_REVIEW",
+  "source_sha": "0afd29b79fecf69bfb88847a8412d4bb2e02a787",
+  "UI_method_source": "0afd29b79fecf69bfb88847a8412d4bb2e02a787",
+  "observer": {
+    "label": "functions.exec default sandbox observer; Root collection/live review must use this same view",
+    "uid_map": "      1000          0          1\n",
+    "gid_map": "      1000          0          1\n"
+  },
+  "actuals": {
+    "PG": {
+      "roots": 450,
+      "named": 1353,
+      "lanes": 7,
+      "commands": 340,
+      "proof_artifacts": 695,
+      "source_rows": 2230,
+      "roles": 15,
+      "retired_databases": 7
+    },
+    "UI": {
+      "states": 6,
+      "noJS": 6,
+      "audits": 18,
+      "physical_files": 75,
+      "previous_bodies": 31,
+      "all_body_comparisons": 37
+    },
+    "measurement": {
+      "rows": 12,
+      "scope": "Matched display-body only; current elapsed/allocated bytes lower, HTML larger, no causal CPU/HTTP/general speed claim."
+    }
+  },
+  "archive": {
+    "sha256": "bc10a80ae1a9b0f404e9434f2a0065d941a0cb4a336d5ea06eb39032da09c7ea",
+    "bytes": 4114989,
+    "members": 1689
+  },
+  "baseline": {
+    "archive_sha256": "e007db95293927d330e574efeb4938e52edd2309b520f07895ce0c5fa77b5eb5",
+    "reference_only": true,
+    "all37_physical_bytes_equal": true
+  },
+  "history": "EA9 all7native PASS but overallFAILexit1/noresult; LOST command metadata not reconstructed; first binary hashes only observed postfailure.",
+  "exclusions": "Literal duplicate Git stdout and generated source/bin/emptytmp beforeimages retained as metadata; raw bytes not copied or deleted.",
+  "limits": [
+    "No full21/current-image/main/milestone/production/provider/government/real-child activation.",
+    "Matched body elapsed/allocated bytes lower; HTML larger; no causal CPU/HTTP/general speedup claim.",
+    "No deletion or acceptance by collector. Independent actual keeper and bounded feature reviews remain required."
+  ]
+}

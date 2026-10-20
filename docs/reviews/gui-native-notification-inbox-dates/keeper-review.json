@@ -1,0 +1,48 @@
+{
+  "schema": "independent-actual-social-date-keeper-review-v1",
+  "verdict": "ACCEPT_EXACT_0AFD_DATE_COMPACT_KEEPER_CUSTODY_NO_DELETION",
+  "reviewer": "agent:codex /root/teacher_claim_source_review; independent of collector author and Root execution",
+  "observed_utc": "2026-10-20T02:38:35.987548+00:00",
+  "source_sha": "0afd29b79fecf69bfb88847a8412d4bb2e02a787",
+  "UI_method_source": "0afd29b79fecf69bfb88847a8412d4bb2e02a787",
+  "archive_sha256": "bc10a80ae1a9b0f404e9434f2a0065d941a0cb4a336d5ea06eb39032da09c7ea",
+  "archive_bytes": 4114989,
+  "archive_members": 1689,
+  "base_selection_files": 1673,
+  "base_selection_logical_bytes": 12969561,
+  "bindings": {
+    "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-date-keeper/candidate-0afd/evidence.tar.gz": "bc10a80ae1a9b0f404e9434f2a0065d941a0cb4a336d5ea06eb39032da09c7ea",
+    "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-date-keeper/candidate-0afd/archive-manifest.json": "2787ff123c6b333d5aeed9650c22cdab92b8e2a76f189085a4eb52c5f3bc21d4",
+    "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-date-keeper/candidate-0afd/result.json": "9d005b48c274481e21f509a6d9e15550ce237f397c3de23bef987a01ab13126e",
+    "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-date-keeper/root-collection-invocation.json": "4b7c031c2f21a11c49e48e9a55b58b960434b4b78f68230764d5652e499c0d42",
+    "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-date-keeper/final-binding.json": "fbb749018c12027312925e5b1bcc817e3d595d5511103b530e1d4ec8dc7f2e45",
+    "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-date-keeper/controls-result.json": "4d5eaac33291164a4c3660a917efcd89142f518fbda3cecf4ba8649959ba6801",
+    "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-date-keeper/independent-source-review.json": "a96b7ca3b6c6fef634554fd2ff7c270628f5217c70a783b3d91142b729bef1e5",
+    "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-date-keeper/prepared-selection.json": "982a51b039310e3df32c124fd44a2f4758685865ba697f2fa185f363c2a7809f",
+    "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-date-keeper/exclusions.json.gz": "6900bbf52db7adf654c06927af5e520d0834d69b66273ba67ba1911277ac06d0",
+    "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-date-keeper/SOURCE_PROOF.final.json": "28fb05172e7a8ed4dbf017bb630149e42a25cc2d2279d8b5699a55ffe589c77d",
+    "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/notification-inbox-date-keeper/independent-actual-keeper-observation.json": "70db81ee564e20f432eed420180021c9b1572e1a0c01cc8f0377e5c94ec9a614"
+  },
+  "observer": {
+    "label": "functions.exec default sandbox observer; Root collection/live review must use this same view",
+    "uid_map": "      1000          0          1\n",
+    "gid_map": "      1000          0          1\n"
+  },
+  "checks": [
+    "Root4b7 invocation records exact default-observer command/session87089/waitedexit0 and source-reviewa96/bindingfbb/controls4d5/terminal archive/result identities. Actual six reader/directory controls and pending refusal streams match receipt hashes; Ran6/OK and first pending-status guard refusal are observed. Final binding changes only status, collector review and actual controls digest from reviewed example.",
+    "Independently streamed all1689unique regular safe PAX members frombc10/4,114,989B against complete2787manifest, expected selected+reproduction+dynamic metadata set and every live original byte/hash/mode/UID/GID/exact decimal nsmtime. No unknown/missing/duplicate member, symlink/hardlink or extraction. Candidate contains exactly archive/manifest/result, with9d005inner result still pending independent review.",
+    "All1673base selected files plus6reproduction-source files still match their frozen complete8stat;10dynamic binding/review/control/proof metadata inputs match captured archive portable metadata and expected hashes. Past dynamic inode/ctime are not separately persisted by the manifest; unchanged collector source proves its earliest8stat fences ran, while this peer verifies portable metadata/live bytes. Exact final member count is1689, not1673.",
+    "All2230current source files and67safe directory identities/memberships remain equal after collection; owning Git clean0afd. Default uid_map/gid_map exact; four literal reviewed PGready/cleanup JSONs retain65534observation, no normalization. Every selected raw firstEA9711/current0afd714 and currentUI75physicalfile remains present. New files inside safe trees are covered by corrected F1 directory registry.",
+    "All4479excluded reference file hashes/full8stat and492directory memberships/full8stat remain present and unchanged. Only2duplicate wire archives+8generated source/bin/emptytmp trees are excluded, with beforeimages retained; no raw excluded bytes are copied/deleted. First binaries remain observed-postfailure-only; no lost command/executiondigest backfill. Current recorded binary and archive joins remain exact actual1ba8 fields.",
+    "Immutable e007 baseline is reference-only, not copied2695times. Its bound current source hash remains unchanged from this peer full2695PAX/member readback, with37selected newbody byte matches. All first/partial/failed diagnostic/control/source-method histories, firstEA9 noresult/f33d and original Root terminal facts are preserved distinctly; no in-memory result reconstruction.",
+    "No collector/control/gate/product/DB/browser/benchmark/service command or deletion was repeated by this reviewer. All source/references and physical beforeimages were read-only; only compact independent records written outside candidate."
+  ],
+  "findings": [],
+  "candidate_mutated": false,
+  "physical_deletion_performed": false,
+  "limits": [
+    "Custody acceptance only; bounded feature acceptance is a separate outer review. Preserve immutable inner pending result rather than rewriting it as accepted.",
+    "Root may bind this exact keeper to later independently reviewed retention/publication preparation; this record grants no deletion or main/milestone/production/provider/government/real-child authority.",
+    "Both full source/bin setups and two wire archive originals currently remain available outside payload; excluded metadata is a description, not a claim of raw payload duplication or future availability after cleanup."
+  ]
+}
