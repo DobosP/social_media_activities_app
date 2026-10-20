@@ -169,3 +169,37 @@ ownership guards before the accepted dryrun and execution. No policy changed.
 
 This is bounded feature acceptance on the feature branch. No all21/current-image,
 main/milestone/production/provider/government or real-child activation follows.
+
+
+## Page-local date resolution follow-up — source proposal
+
+The current496 feature and compact retention are independently accepted and
+published by closingcb68b6d. The original twelve warmed body measurements retain
+all elapsed/allocation-byte/HTML regressions. This separate runtime-source change
+resolves Europe/Bucharest lazily once per page, converts each timestamp once and
+formats the exact fixed display/RFC3339 pair. Generic djangoDate, producer,
+self/newest100/mark-all/permissions, timestamp validation, original tests, markup,
+assets and qualification methods remain unchanged.
+
+Equivalence requires stable resolver outcome/availability and tzdata during a page render. A transient first failure stays in per-row source offsets for the rest of that page; the old helper could recover on a later per-field call. The next page retries. This intentional page-local outcome is not unconditional transient-failure parity.
+
+The new four pure test roots cover the frozen helper's output for winter/summer,
+DST transitions, offsets/subseconds/rollover/zero, deterministic persistent load
+failure, fresh-page retry and independent concurrent pages. Source formatting
+and exact text inverses are recorded; compilation/tests/full affected7/UI/Axe,
+all31 previous plus6 current inbox body identities and matched measurements
+remain to be run on the committed source. Source-level reductions from200 to1
+zone loads and500 to200 Format calls at100 rows are hypotheses, not measured
+causal shares or performance results. No global cache, original assertion/gate
+weakening, main/milestone/production/provider or real-child activation follows.
+
+
+## Applied date-source checkpoint
+
+Independent5379fe2a accepts the rebound six-path source over publishedcb68b6d,
+including the explicit stable resolver-outcome/tzdata compatibility limit.
+Root applied exact two Go images; all305oldtests/11helper-template-method witnesses
+remain byte equal. Focused race9roots/56named has zero failures/skips; App/web vet,
+format, whitespace and63document checks pass. These are local checks. Commit exact
+source before unchanged full affected7, desktop/no-JS/Axe/37body verification and
+matched body measurement; no new performance or complete qualification claim.

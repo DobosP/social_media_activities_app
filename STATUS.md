@@ -2,6 +2,8 @@
 
 Last verified: 2026-10-20 (native pages through notification inbox: independently qualified complete affected PG7 and desktop/a11y)
 
+Separate inbox date optimization (ADR-0065), applied after publishedcb68b6d and independent5379fe2a: one lazy page-local Bucharest resolution and fixed paired formats; four NEW pure roots. Focused race9roots/56named/zero failures-skips, App/web vet, format/docs pass; complete affected7/UI/37body checks and measurements pending. Equivalence requires stable resolver outcome/availability and tzdata during a page render. A transient first failure stays in per-row source offsets for the rest of that page; the old helper could recover on a later per-field call. The next page retries. This intentional page-local outcome is not unconditional transient-failure parity. Existing496 qualification/measurements remain historical; focused tests do not establish full runtime qualification or a speedup.
+
 - **GitHub Actions (Last verified: 2026-10-05):** owner-requested on-demand policy,
   [ADR-0033](docs/adr/0033-manual-github-actions.md). Ordinary `ci.yml` calls Go/Node workflows;
   original Python gates remain in optional manual `reference.yml` (ADR-0038). YAML/input/job/

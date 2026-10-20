@@ -31,6 +31,38 @@ type notificationInboxRow struct {
 	Unread                               bool
 }
 
+// One render owns this formatter. Resolve the same source timezone lazily once,
+// without changing the generic date helper or caching failure across requests.
+type notificationInboxDates struct {
+	loadLocation func(string) (*time.Location, error)
+	attempted    bool
+	zone         *time.Location
+}
+
+func (dates *notificationInboxDates) format(stamp time.Time) (string, string) {
+	if stamp.IsZero() {
+		return "", ""
+	}
+	if !dates.attempted {
+		dates.attempted = true
+		load := dates.loadLocation
+		if load == nil {
+			load = time.LoadLocation
+		}
+		zone, err := load("Europe/Bucharest")
+		dates.zone = nil
+		if err == nil {
+			dates.zone = zone
+		}
+	}
+	if dates.zone != nil {
+		stamp = stamp.In(dates.zone)
+	}
+	// These are precisely the frozen j M H:i and c token expansions. A failed
+	// timezone load keeps each individual stamp's original location/offset.
+	return stamp.Format("2 Jan 15:04"), stamp.Format(time.RFC3339)
+}
+
 //go:embed pages/notification-inbox.gohtml
 var notificationInboxPages embed.FS
 var errNotificationInboxSnapshot = errors.New("invalid native notification inbox snapshot")
@@ -106,6 +138,7 @@ func (r *Renderer) notificationInboxPage(request *http.Request, data pongo2.Cont
 	if len(rows) > 100 {
 		return notificationInboxPage{}, errNotificationInboxSnapshot
 	}
+	var dates notificationInboxDates
 	for _, row := range rows {
 		item := notificationInboxRow{Title: d.text(row["title"]), Body: d.text(row["body"])}
 		why, href := d.text(row["why"]), d.text(row["url"])
@@ -136,7 +169,7 @@ func (r *Renderer) notificationInboxPage(request *http.Request, data pongo2.Cont
 		if stamp.IsZero() {
 			d.fail()
 		}
-		item.When, item.ISOTime = djangoDate(stamp, "j M H:i"), djangoDate(stamp, "c")
+		item.When, item.ISOTime = dates.format(stamp)
 		page.Rows = append(page.Rows, item)
 	}
 	if messages, exists := data["messages"]; exists && messages != nil {

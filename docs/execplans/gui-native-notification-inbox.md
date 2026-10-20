@@ -74,3 +74,24 @@ Reviewed rolling retention removed8,863owned generated files/967empty directorie
 1,278,664,437logicalB; deleted raw targets unavailable. Latest496 setup, historical
 logs/screenshots/proofs/packets/branches/canonical keepers remain. Publish reviewed
 canonical metadata through ops; no main/milestone/activation authority follows.
+
+
+## Page-local date follow-up after publishedcb68b6d
+
+Current496 canonical keeper/feature/retention publication is closed. A private
+page-local lazy date formatter and four NEW pure test roots are proposed over
+that actual closing source, with generic helper/305oldtests/markup/assets/methods
+frozen. Equivalence requires stable resolver outcome/availability and tzdata during a page render. A transient first failure stays in per-row source offsets for the rest of that page; the old helper could recover on a later per-field call. The next page retries. This intentional page-local outcome is not unconditional transient-failure parity.
+No new compiler/runtime/measurement result follows from source formatting.
+After independent whole-patch review, Root applies and runs focused unit/vet,
+commits exact source, runs unchanged complete affected7, then unchanged desktop/
+no-JS/strictAxe/31old bodies and matched actual-display body samples. Independently
+compare all6 current inbox fixture bytes with accepted496 as well. Preserve all
+existing regressions and failed histories. No activation/authority expansion.
+
+
+Applied date-source checkpoint:5379fe2a approved six paths; two Go images remain
+exact4f25/e940. Focused race9roots/56named/zero skips, App/web vet, format/docs and
+source preservation pass. Commit, then unchanged full affected7 and unchanged
+UI/no-JS/Axe/31prior bodies plus6 accepted inbox bytes and matched measurements.
+All current496 regressions/accepted custody remain history; no speedup forecast.
