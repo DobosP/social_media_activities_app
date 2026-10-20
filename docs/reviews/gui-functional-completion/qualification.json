@@ -83,6 +83,10 @@
     "qualifier_bootstrap_delta": {
       "path": "/home/dobo/work/_temp/gui-functional-hub/social-native21-final-core-v3-independent.json",
       "sha256": "0801368cf3ea30ca0624f326b72129081c6a16caf8750108088b46a635b53a1c"
+    },
+    "qualifier_private_admission_delta": {
+      "path": "/home/dobo/work/_temp/gui-functional-hub/social-native21-private-admission-review.json",
+      "sha256": "96bbe123f34ce33a2bbe3ee99fabc54b50acc8c3440bc533b260941c721e2bac"
     }
   },
   "full21": {
@@ -99,8 +103,14 @@
         "path": "/home/dobo/work/_temp/gui-functional-hub/social-final-native21-v2/RESULT.json",
         "sha256": "5c3a3e03038d05bafd5811c58b0aeca661c832e1d6c262c02f056c18d4244b6b",
         "status": "BOOTSTRAP_KEYWORD_DSN_REFUSED_CLEANUP_PASS"
+      },
+      {
+        "path": "/home/dobo/work/_temp/gui-functional-hub/social-final-native21-v3/RESULT.json",
+        "sha256": "14278979ef8e5a914d9f9b3c899f2b11650d8cdf5c689fd1b8600e0e254ae90d",
+        "status": "FRESH_MIGRATION_REFUSED_CLEANUP_PASS"
       }
-    ]
+    ],
+    "method_boundary_tests": 4
   },
   "holds": [
     "Social main and formal GUI milestone landing",
@@ -109,5 +119,12 @@
     "Held erasure/privacy/content decisions"
   ],
   "teacher": "Further rewrites deferred; published088934f retained.",
-  "cat": "S1 implementation complete locally; auditc7082c9b; app-main push remains owner."
+  "cat": "S1 implementation complete locally; auditc7082c9b; app-main push remains owner.",
+  "retention": {
+    "path": "/home/dobo/work/_temp/gui-functional-hub/social-completion-desktop/retention-v4.json",
+    "sha256": "6feaf6446a27892c7f60c491dbcfe4efc118be5c91bd82e065b8c34a75b2ac0b",
+    "pruned_owned_ui_files": 702,
+    "pruned_bytes": 44026671,
+    "history": "Deleted raw captures unavailable; manifests/results and latest setup retained."
+  }
 }

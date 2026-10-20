@@ -4,6 +4,15 @@ from pathlib import Path
 spec=importlib.util.spec_from_file_location('native21_final',Path(__file__).with_name('qualify-native-final.py'))
 module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
 class FinalNativeBoundaryTests(unittest.TestCase):
+    def test_fixture_host_admission_requires_owned_empty_private_network(self):
+        import copy
+        network={'Internal':True,'Labels':{module.OWNER_LABEL:'owner'},'Containers':{},'IPAM':{'Config':[{'Subnet':'172.31.240.0/24'}]}}
+        self.assertEqual(module.fixture_host_rule(network,'owner'),'host all app 172.31.240.0/24 trust')
+        invalid=[]
+        for key,value in [('Internal',False),('Labels',{module.OWNER_LABEL:'other'}),('Containers',{'foreign':{}}),('IPAM',{'Config':[]}),('IPAM',{'Config':[{'Subnet':'8.8.8.0/24'}]}),('IPAM',{'Config':[{'Subnet':'127.0.0.0/8'}]}),('IPAM',{'Config':[{'Subnet':'fd00::/64'}]}),('IPAM',{'Config':[{'Subnet':'172.31.240.1/24'}]}),('IPAM',{'Config':[{'Subnet':'172.31.240.0/24'},{'Subnet':'172.31.241.0/24'}]})]:
+            changed=copy.deepcopy(network);changed[key]=value;invalid.append(changed)
+        for changed in invalid:
+            with self.assertRaises((RuntimeError,ValueError)):module.fixture_host_rule(changed,'owner')
     def test_exact_xz_caps_single_crc64_stream(self):
         raw=b'fixture';compressed=lzma.compress(raw,check=lzma.CHECK_CRC64)
         self.assertEqual(module.strict_xz_receipt.__defaults__,(64<<20,128<<20,64<<20))

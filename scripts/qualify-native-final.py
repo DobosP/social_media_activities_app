@@ -2,7 +2,7 @@
 """Full native21 from a committed Git export and existing codec/PG images only."""
 import sys
 sys.dont_write_bytecode = True
-import argparse, hashlib, io, json, lzma, os, re, shutil, signal, stat, subprocess, tarfile, time, uuid
+import argparse, hashlib, io, ipaddress, json, lzma, os, re, shutil, signal, stat, subprocess, tarfile, time, uuid
 from pathlib import Path, PurePosixPath
 DB_IMAGE='sha256:f66de888683449864f820c365551125bb2627782be15a264f9746d53573b39d5'
 CODEC_IMAGE='sha256:34c1c2281d9fc96cf486dda8e88497ef5061e21a412c712d8ef61ca14b07031b'
@@ -14,6 +14,14 @@ INTERRUPTED=None
 
 def need(ok,message):
     if not ok: raise RuntimeError(message)
+
+def fixture_host_rule(network,owner):
+    need(network.get('Internal') is True and (network.get('Labels') or {}).get(OWNER_LABEL)==owner and not network.get('Containers'),'fresh owned internal network required')
+    configurations=(network.get('IPAM') or {}).get('Config') or []
+    need(len(configurations)==1,'one private IPv4 fixture subnet required')
+    subnet=ipaddress.ip_network(configurations[0]['Subnet'],strict=True)
+    need(subnet.version==4 and any(subnet.subnet_of(ipaddress.ip_network(block)) for block in ('10.0.0.0/8','172.16.0.0/12','192.168.0.0/16')),'RFC1918 fixture subnet required')
+    return 'host all app '+str(subnet)+' trust'
 
 def digest(raw): return hashlib.sha256(raw).hexdigest()
 
@@ -224,9 +232,16 @@ def execute(args):
         need((source/'scripts/qualify-native.sh').read_bytes()==native,'exported native method differs')
         entry=(source/'tools/gui-native-family/db-entry.sh').read_text();need(digest(entry.encode())=='b4ed745834cdb9b91ba0291b49dc049e316806b01494b67ff48a0eb8ff9432b4','canonical DB init/cleanup source differs')
         for a,b in [('--auth-host=reject','--auth-host=trust'),("listen_addresses = ''","listen_addresses = '*'"),('55434','5432')]:need(a in entry,'DB transport anchor missing');entry=entry.replace(a,b)
-        entry_path=out/'db-entry.sh';entry_path.write_text(entry);entry_path.chmod(0o644)
         call([go,'-C',source/'services/server','build','-trimpath','-o',out/'runtime/tests/social-server','./cmd/social-server'],'current-bootstrap-build',timeout=600,env=dict(base_env,CGO_ENABLED='0'))
         dk('network','create','--internal','--label',OWNER_LABEL+'='+owner,names['network'],label='network-create')
+        network=json.loads(dk('network','inspect',names['network'],label='network-before-db'))[0]
+        rule=fixture_host_rule(network,owner)
+        # initdb only creates loopback HBA rows. Admit the exact fresh private
+        # subnet before starting the DB; no host ports or other networks exist.
+        need(entry.count('started=1\n')==1,'single DB start anchor required')
+        entry=entry.replace('started=1\n',"printf '%s\\n' '"+rule+"' >>\"$data/pg_hba.conf\"\nstarted=1\n")
+        entry_path=out/'db-entry.sh';entry_path.write_text(entry);entry_path.chmod(0o644)
+        report['fixture_host_admission']=rule
         dk('volume','create','--label',OWNER_LABEL+'='+owner,'--opt','type=tmpfs','--opt','device=tmpfs','--opt','o=size=1g,uid=999,gid=999,mode=0700',names['volume'],label='volume-create')
         common=['--rm','--read-only','--cap-drop=ALL','--security-opt=no-new-privileges','--network',names['network'],'--label',OWNER_LABEL+'='+owner,'--pull=never']
         dk('run','-d',*common,'--name',names['db'],'--network-alias','native21-db','--user','999:999','--group-add',str((out/'socket').stat().st_gid),'--tmpfs','/tmp:rw,nosuid,nodev,size=64m,uid=999,gid=999,mode=1777','--mount','type=volume,source='+names['volume']+',target=/var/lib/postgresql/data','-v',str(out/'socket')+':/socket','-v',str(entry_path)+':/entry.sh:ro',DB_IMAGE,'bash','-u','-o','pipefail','/entry.sh',label='db-start')
@@ -254,7 +269,12 @@ def execute(args):
             receipt=json.loads((out/('package-'+package+'.json')).read_text());need(receipt['exit']==0,'package container failed');report['packages'].append({'name':package,'roots':len(roots),'named_passes':len(named),'skip':0,'log_sha256':file_hash(logfile),'binary_sha256':file_hash(out/'runtime/tests'/(package+'.test'))})
         need(len(report['packages'])==21 and tree_rows(source,expected)==before,'complete21/read-only source verification failed')
         report['status']='PASS_FULL_NATIVE21'
-    except BaseException as error:report['errors'].append(type(error).__name__+': '+str(error));report['status']='FAILED'
+    except BaseException as error:
+        report['errors'].append(type(error).__name__+': '+str(error));report['status']='FAILED'
+        try:
+            if owned('container',names['db']):
+                dk('exec',names['db'],'sh','-c',"grep -E ' (ERROR|FATAL|DETAIL|HINT):' /tmp/postgres.log | tail -c 65536",label='failed-owned-fixture-pg-log',okay=True,cleanup=True,maximum=65536)
+        except BaseException as diagnostic_error:report['errors'].append('fixture diagnostic: '+str(diagnostic_error))
     finally:
         for kind,key,operation in [('container','package','rm'),('container','db','rm'),('network','network','rm'),('volume','volume','rm')]:
             name=names[key]
