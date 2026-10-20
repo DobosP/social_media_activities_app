@@ -44,15 +44,15 @@
     "playwright_package": "ca170ec143a88ed3043ac953eb3b2377b2b97304104f4e1e23316684ce2c35af"
   },
   "method_sha256": {
-    "desktop-qa.mjs": "b3543fdbb02145f5ce36304ceb49464b5f06f8f0fca60d9e1a0c4585bd920d8a",
+    "desktop-qa.mjs": "4ed67b91fcb581736e0272f01b5c2720f2c340b0307b400deff2b0edf5fc2539",
     "export_test.go.txt": "21be13a4272c61b5ef2ab72ac1761ae69d219117d8fe71bf10eabec602c69810",
     "qualify.py": "caf6895f23c3356ea1f03535f189be1abbb0c0e819182c1696fdbb95ff9bc3e1"
   },
   "method_source_review": {
-    "expected": "ACCEPT_EXACT_DISPLAY_ACCESS_OPERATIONAL_SEVEN_IMAGES_CLI_NULL_SELFREF_P_AND_ACTUAL_CONTROL",
+    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/display-access-operational-v3/combined-source-operational-review.json",
+    "sha256": "11b84d209286659a8ddc04d52ac84b2005a7cc2771a718f5c50990ca524eaabd",
     "field": "status",
-    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/display-access-operational-final/operational-review.json",
-    "sha256": "9e4787a8db14010461215b1ec2c221a72493191b66d1063ec428c9b9a224b3a5"
+    "expected": "ACCEPT_EXACT_DISPLAY_ACCESS_V3_SOURCE_AND_SEVEN_OPERATIONAL_IMAGES_WITH_UI_CONDITIONAL_ON_FRESH_CONTROL"
   },
   "native_preferences_source_review": {
     "expected": "ACCEPT_EXACT_PUBLISHED_C_BOUND_DISPLAY_ACCESS_NINETEEN_SOURCE_PACKET_FOR_APPLICATION_AND_FOCUSED_CHECKS",
@@ -75,7 +75,7 @@
     }
   },
   "producer_source": "e0065ca92ecff73d8c1250a2af505be7b8535edd",
-  "qualification_claim": "Exact native producer e0065ca92ecff73d8c1250a2af505be7b8535edd/tree8a416b563b0876e7b9dc5240b0dfb818eebb7fab has independently accepted complete affectedPG7:483roots1435named/zero failures-skips-race/all469roots1395named priorL2 identities plus14new roots/342commands699artifacts/2293source/15roles7DB/privatePG0-3-1. Actual6169 result/176b review; source published separately with desktop pending. This new finite presentation method has not run. Declared8JS8noJS/21unique strictAxe/45fresh literal prior bodies; no benchmark/actions/realpreferences/legal/production claim. Operational exactCLI/code/README/null-selfrefP review is mandatory; historicalL2/M016c only grants baseline byte authority.",
+  "qualification_claim": "Native S e0065ca92ecff73d8c1250a2af505be7b8535edd/tree8a416b563b0876e7b9dc5240b0dfb818eebb7fab remains independently accepted176b for completePG7:483roots1435named,zero failures/skips/race,all469/1395priorL2 cases,342commands699artifacts,15roles7DB/privatePGcleanup. First UI d562/fdf9266c is FAIL:four avatar metric checks and first noJS settling deadline;13JS strictAxe0issues/45fresh literal prior bodies do not grant fullUI acceptance. The source-admitted debug diagnostic253b/043a/result2fc04ed2/terminale9e26e3e, independently reviewed 819b67459e47432781c56d286540f85ef8d8ea90f6919d3c675601598784b11d, proves a candidate trusted callback scheduler under contextJSfalse only, not fullUI qualification. V3 changes only Node avatar measurements and noJS audit scheduling; Python/Go/nativeS/assets/catalogues/helpers remain exact. Second finite UI8JS8noJS/21unique strictAxe/45fresh literal prior bodies remains pending and requires exact CLI/nullP/source admission and a genuine V3 wrong-qualifier control pass. No benchmark/actions/mobile/new authority or milestone acceptance.",
   "schema": 1,
   "status": "BOUND_REVIEWED_COMMITTED_METHODS",
   "unchanged_overlay_helpers": [

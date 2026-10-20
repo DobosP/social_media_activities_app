@@ -1,7 +1,7 @@
 # Native display/access preference implementation
 
 Date: 2026-10-20
-State: exact nativeS independently qualified by complete affectedPG7; finite desktop methods prepared; actual desktop qualification pending.
+State: exact nativeS independently qualified; first desktop FAIL preserved; diagnostic-proven Node-only V3 repair prepared for the second finite desktop attempt.
 
 Implement only the two existing functional HTML preference views in
 [ADR-0068](../adr/0068-native-display-access-preferences.md). Core c44afc3c
@@ -56,6 +56,10 @@ Applied-source checkpoint: Applied native display/access presentation passes ite
 
 ## Native qualification and desktop preparation
 
-Complete affectedPG7 on exactS e0065ca9 is independently accepted176b83f7/result6169:483roots1435named,0failures/skips/race,all469/1395priorL2 identities and14new roots,342commands699artifacts/2293source/15roles7DBprivatePGcleanup0-3-1. The previously unexecuted no-DSN root and all5new App roots now pass in PG. Finite desktop8JS8noJS/21unique strictAxe/45fresh literal prior bodies remains unexecuted;no benchmark or new authority/milestone claim.
+Complete affectedPG7 on exactS e0065ca9 is independently accepted176b83f7/result6169:483roots1435named,0failures/skips/race,all469/1395priorL2 identities and14new roots,342commands699artifacts/2293source/15roles7DBprivatePGcleanup0-3-1. The previously unexecuted no-DSN root and all5new App roots now pass in PG. First desktop d562/resultfdf9266c FAILED four avatar content-size checker predicates and the first no-JS fonts/RAF deadline;8JS states/13strictAxe0issues and all45literal prior bodies completed,0no-JS states/audits completed. Both profiles/server/process groups/HOME closed;independent failure classifications05f9d4bc/6f7eed46 retained. Separate nonqualifying disabled-script probe2fc04ed2 demonstrated natural styles and a trusted Node callback scheduler without enabling product JS;actual independent review 819b67459e47432781c56d286540f85ef8d8ea90f6919d3c675601598784b11d. A Node-only V3 avatar/no-JS repair is prepared;second finite8JS8noJS/21strictAxe/45body qualification remains pending. No benchmark,new authority or milestone acceptance.
 
 The next finite method is V2 of the isolated tools/gui-native-display-access proposal. Its prior interruption,pre-child admission and bounded no-JS phase findings are preserved and repaired in the source successor; actual code3/README/binding/CLI own-nullP admission precedes execution. The five method files and these two metadata paths are the entire source bridge from S. No native product,old method,asset,catalogue or dependency change is admitted by that bridge.
+
+## V3 checker repair
+
+The first actual UI failure is retained, not promoted. The disabled-script diagnostic and independent actual review above support only the repaired test mechanism. Product JavaScript stays disabled in all eight no-JS states. Natural fonts/styles use bounded Node polling; trusted context-addressed callback IDs allow the exact cached Axe to finish. Avatar checks distinguish source attributes, measured border box and content size. All21unique strict audits,45fresh prior bodies,real keyboard/forms,exact assets/CSP and owned cleanup remain required. Existing JS settle/audit bodies,Python/Go methods,nativeS and all old helpers stay byte-exact. No completePG rerun follows from this tooling/metadata-only source bridge.
