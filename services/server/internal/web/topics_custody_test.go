@@ -24,6 +24,13 @@ func topicsSourceRelation(path string) (beforeSHA, afterSHA string, beforeBytes,
 	return "", "", 0, 0, "", "", false
 }
 func topicsSourcePreimage(path string, raw []byte) ([]byte, error) {
+	prior, completionErr := completionSourcePreimage(path, raw)
+	if completionErr != nil {
+		return nil, completionErr
+	}
+	return topicsEpochSourcePreimage(path, prior)
+}
+func topicsEpochSourcePreimage(path string, raw []byte) ([]byte, error) {
 	beforeSHA, afterSHA, beforeBytes, afterBytes, before, after, ok := topicsSourceRelation(path)
 	if !ok || len(raw) != afterBytes || guiPublicHash(raw) != afterSHA || bytes.Count(raw, []byte(after)) != 1 {
 		return nil, fmt.Errorf("topics-complete-current-source")
@@ -35,17 +42,28 @@ func topicsSourcePreimage(path string, raw []byte) ([]byte, error) {
 	return previous, nil
 }
 func topicsPriorSource(path string, raw []byte) ([]byte, error) {
+	var completionErr error
+	raw, completionErr = completionSourceStage(path, raw)
+	if completionErr != nil {
+		return nil, completionErr
+	}
 	beforeSHA, _, beforeBytes, _, _, _, ok := topicsSourceRelation(path)
 	if !ok || len(raw) == beforeBytes && guiPublicHash(raw) == beforeSHA {
 		return append([]byte(nil), raw...), nil
 	}
-	return topicsSourcePreimage(path, raw)
+	return topicsEpochSourcePreimage(path, raw)
 }
 
 // Only exact current images and a real unique retained predecessor literal can
 // produce a mutation fixture. The original controls keep all their assertions.
 func topicsMutationTarget(path string, physical []byte, priorTarget string) (string, error) {
-	previous, err := topicsSourcePreimage(path, physical)
+	completionPhysical := physical
+	var completionErr error
+	physical, completionErr = completionSourceStage(path, physical)
+	if completionErr != nil {
+		return "", completionErr
+	}
+	previous, err := topicsEpochSourcePreimage(path, physical)
 	if err != nil {
 		return "", err
 	}
@@ -66,7 +84,7 @@ func topicsMutationTarget(path string, physical []byte, priorTarget string) (str
 	if bytes.Count(physical, []byte(target)) != 1 {
 		return "", fmt.Errorf("topics-unique-current-mutation-target")
 	}
-	return target, nil
+	return completionMutationTarget(path, completionPhysical, target)
 }
 func TestNativeTopicsCustodyRequiresNewestCompleteSourcesAndRetainsEveryOriginalTuple(t *testing.T) {
 	root, err := filepath.Abs("../../../..")
@@ -84,6 +102,10 @@ func TestNativeTopicsCustodyRequiresNewestCompleteSourcesAndRetainsEveryOriginal
 		}
 		previous, err := topicsSourcePreimage(path, physical)
 		beforeSHA, _, beforeBytes, _, _, after, _ := topicsSourceRelation(path)
+		after, err = completionMutationTarget(path, physical, after)
+		if err != nil {
+			t.Fatal("completion physical mutation literal unavailable", err)
+		}
 		if err != nil || len(previous) != beforeBytes || guiPublicHash(previous) != beforeSHA {
 			t.Fatal("complete original predecessor not recovered")
 		}

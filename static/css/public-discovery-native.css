@@ -1,0 +1,8 @@
+/* Native public documents share existing map/graph/place styles and tokens. */
+:root .public-discovery-native .site-header { position:static; background:var(--card); }
+.public-discovery-native .nav-menu > .nav-panel { position:static; width:max-content; max-width:calc(100vw - 2rem); }
+.public-discovery-native .nav-panel a { overflow-wrap:anywhere; }
+.public-discovery-native .footer-links a { text-decoration:underline; text-underline-offset:.15em; }
+.public-discovery-native .public-discovery-main { padding-block:1.25rem; }
+.public-discovery-native .card h3 { margin-top:0; }
+.public-discovery-native .card p,.public-discovery-native .place-hero-body { overflow-wrap:anywhere; }

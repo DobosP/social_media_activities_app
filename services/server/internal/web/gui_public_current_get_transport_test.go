@@ -194,6 +194,7 @@ func guiCurrentTransportGET(t *testing.T, fixture guiPublicGetFixture, snapshot 
 	}
 	renderer.CSPEnforce = s.Config.CSPEnforce
 	trace := &guiPublicTraceLoader{delegate: renderer.loader}
+	renderer.loader = trace // Retained compatibility trace; current Go routes have separate App evidence.
 	renderer.set = pongo2.NewSet("native-social-current-G1", trace)
 	s.Renderer = renderer
 	mux := http.NewServeMux()
@@ -208,7 +209,7 @@ func guiCurrentTransportGET(t *testing.T, fixture guiPublicGetFixture, snapshot 
 	}
 	recorder := httptest.NewRecorder()
 	*requests = *requests + 1
-	mux.ServeHTTP(recorder, request)
+	completionFrozenReferenceHandler(s, mux).ServeHTTP(recorder, request)
 	canonical := s.Config.PublicURL + request.URL.Path
 	if item.Route == "place_detail" || item.Route == "place_detail_slug" {
 		canonical = fmt.Sprintf("%s/places/%d/original-synthetic-hall/", s.Config.PublicURL, fixture.place)

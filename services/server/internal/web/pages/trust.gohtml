@@ -1,0 +1,444 @@
+{{define "trust"}}<!DOCTYPE html>
+<html lang="{{.Shell.Language}}" data-theme="{{.Shell.Theme}}" data-text="{{.Shell.Text}}" data-motion="{{.Shell.Motion}}">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{.Title}}</title>{{if .GoogleVerification}}<meta name="google-site-verification" content="{{.GoogleVerification}}">{{end}}{{if .BingVerification}}<meta name="msvalidate.01" content="{{.BingVerification}}">{{end}}<meta name="description" content="{{call .T `A nonprofit, text-first way to meet up in person for real group activities at real places. First city: Cluj-Napoca.`}}">
+<meta name="robots" content="index, follow"><link rel="canonical" href="{{.Shell.Canonical}}">
+<meta property="og:site_name" content="{{.Shell.SiteName}}"><meta property="og:type" content="website"><meta property="og:title" content="{{call .T `Social Activities`}}"><meta property="og:url" content="{{.Shell.Canonical}}"><meta property="og:locale" content="{{.Locale}}"><meta property="og:description" content="{{call .T `A nonprofit, text-first way to meet up in person for real group activities at real places.`}}"><meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="/static/css/base.css"><link rel="stylesheet" href="/static/css/trust-native.css"><link rel="stylesheet" href="/static/css/completion-accessibility.css"></head>
+<body class="trust-native{{if .Authenticated}} has-tabbar{{end}}"><a class="skip-link" href="#main">{{call .T `Skip to main content`}}</a>
+<header class="site-header"><div class="container nav-wrap"><a class="brand" href="{{.Links.home}}"><svg class="native-brand-mark" viewBox="0 0 8 8" width="8" height="8" aria-hidden="true" focusable="false"><circle cx="4" cy="4" r="3" fill="currentColor"/></svg> {{call .T `Activities`}}</a>
+<input type="checkbox" id="nav-toggle" class="nav-toggle-cb"><label for="nav-toggle" class="nav-toggle">☰ {{call .T `Menu`}}</label>
+<nav class="nav" aria-label="{{call .T `Primary`}}">{{range .Shell.Navigation}}<a class="nav-link" href="{{.URL}}">{{.Label}}</a>{{end}}
+{{if .Authenticated}}{{if .Unread}}<span class="pill">{{.Unread}}</span>{{end}}<details class="nav-menu nav-end"><summary>{{if .Avatar}}<img class="avatar nav-avatar" src="{{.Avatar}}" width="26" height="26" alt="">{{end}} {{.Shell.DisplayName}}</summary><div class="nav-panel">{{range .AccountLinks}}<a href="{{.URL}}">{{.Label}}</a>{{end}}<form method="post" action="{{.Links.logout}}">{{template "trust-csrf" .}}<button class="linkbtn" type="submit">{{call .T `Log out`}}</button></form></div></details>
+{{else}}<a class="nav-link" href="{{.Links.login}}">{{call .T `Log in`}}</a><a class="nav-link nav-cta" href="{{.Links.register}}">{{call .T `Sign up`}}</a>{{end}}</nav></div></header>
+<main class="container trust-content" id="main" tabindex="-1">{{if .Messages}}<ul class="messages">{{range .Messages}}<li class="msg {{.Tags}}">{{.Text}}</li>{{end}}</ul>{{end}}
+{{if eq .Mode "person"}}{{template "trust-person" .}}{{else if eq .Mode "activity_log"}}{{template "trust-activity-log" .}}{{else if eq .Mode "safety_record"}}{{template "trust-safety-record" .}}{{else if eq .Mode "my_privacy"}}{{template "trust-my-privacy" .}}{{else if eq .Mode "verify_age"}}{{template "trust-verify-age" .}}{{else if eq .Mode "account_delete"}}{{template "trust-account-delete" .}}{{else if eq .Mode "report"}}{{template "trust-report" .}}{{else if eq .Mode "privacy"}}{{template "trust-privacy" .}}{{else if eq .Mode "terms"}}{{template "trust-terms" .}}{{end}}</main>
+{{if .Authenticated}}<nav class="tabbar" aria-label="{{call .T `Menu`}}"><a href="{{.Links.home}}">{{call .T `Home`}}</a><a href="{{.Links.activity_list}}">{{call .T `Browse`}}</a><a class="tab-cta" href="{{.Links.activity_create}}">{{call .T `Organize`}}</a><a href="{{.Links.messages}}">Chat</a><a href="{{.Links.you}}">{{call .T `Profile`}}</a></nav>{{end}}
+<footer class="site-footer"><div class="container"><p>{{template "trust-rich" (call .Rich "A nonprofit, text-first way to meet up in person &mdash; the opposite of image-perfect social\n       media.")}} <strong>{{call .T `Demo environment: do not enter real personal data.`}}</strong></p><p class="footer-links">{{range .Shell.Footer}}<a href="{{.URL}}">{{.Label}}</a> {{end}}</p>
+<form method="post" action="{{.Links.set_language}}" class="inline lang-switch">{{template "trust-csrf" .}}<input type="hidden" name="next" value="{{.LanguageNext}}"><select name="language" aria-label="{{call .T `Language`}}" data-auto-submit><option value="en"{{if .Shell.English}} selected{{end}}>English</option><option value="ro"{{if not .Shell.English}} selected{{end}}>Română</option></select><noscript><button class="linkbtn" type="submit">{{call .T `Set language`}}</button></noscript></form></div></footer>
+<script nonce="{{.Nonce}}" src="/static/js/hovercard.js" defer></script><script nonce="{{.Nonce}}" id="site-js" src="/static/js/site.js" defer{{if .Authenticated}} data-meetups-owner="{{.PublicID}}"{{end}}></script></body></html>{{end}}
+{{define "trust-csrf"}}<input type="hidden" name="csrfmiddlewaretoken" value="{{.Shell.CSRF}}">{{end}}
+{{define "trust-rich"}}{{range .}}{{if eq .Kind "text"}}{{.Text}}{{else if eq .Kind "strong"}}<strong>{{else if eq .Kind "/strong"}}</strong>{{else if eq .Kind "em"}}<em>{{else if eq .Kind "/em"}}</em>{{else if eq .Kind "br"}}<br>{{else if eq .Kind "link"}}<a href="{{.URL}}">{{else if eq .Kind "/link"}}</a>{{end}}{{end}}{{end}}
+
+
+{{define "trust-person-card"}}<div class="person-card" role="group" aria-label="{{$.Person.About}}">
+  <div class="person-card-head">
+
+    {{if $.Fragment}}<img class="avatar" src="{{$.Person.Avatar}}" width="56" height="56" alt="">{{end}}
+    <div>
+      <p class="person-card-name"><strong>{{$.Person.Display}}</strong>
+        {{if $.Person.Verified}}<span class="tag" title="{{call $.T "age band verified"}}">{{call $.T "verified"}}</span>{{end}}</p>
+      {{if $.Person.Username}}<p class="muted person-card-sub">{{$.Person.Username}}</p>{{end}}
+    </div>
+  </div>
+  {{if ne $.Person.Tier "stranger"}}
+    <div class="person-card-body">
+      {{if $.Person.Connected}}<p class="tag tag-muted">{{call $.T "Connected with you"}}</p>{{end}}
+      {{if $.Person.JoinRequest}}<p class="muted">{{call $.T "Pending join request between you"}}</p>{{end}}
+      {{if $.Person.Activities}}
+        <p class="muted person-card-sub">{{call $.T "With you in:"}}
+          {{$.Person.Activities}}{{if $.Person.ActivityOverflow}} (+{{$.Person.ActivityOverflow}}){{end}}</p>
+      {{end}}
+      {{if $.Person.Groups}}
+        <p class="muted person-card-sub">{{call $.T "Groups with you:"}}
+          {{$.Person.Groups}}{{if $.Person.GroupOverflow}} (+{{$.Person.GroupOverflow}}){{end}}</p>
+      {{end}}
+      {{if $.Person.Interests}}
+        <p class="person-card-sub">{{range $.Person.Interests}}<span class="tag">{{.}}</span>{{end}}</p>
+      {{end}}
+    </div>
+  {{end}}
+  <p class="person-card-sub"><a href="{{$.Person.ProfileURL}}">{{call $.T "View profile"}}</a></p>
+</div>{{end}}
+
+{{define "trust-person"}}<h1>{{.Person.Display}}</h1>
+
+<div class="card">
+  <div class="row trust-person-row">
+    {{if .Person.Photo}}
+
+      <img class="avatar" src="{{.Person.Photo}}" width="96" height="96" alt="{{call $.T "profile picture"}}">
+    {{else}}
+      <img class="avatar" src="{{.Person.Avatar}}" width="96" height="96" alt="{{call $.T "generated avatar"}}">
+    {{end}}
+    <div class="u-flex-1">
+      {{template "trust-person-card" $}}
+      <div class="row trust-controls">
+        {{if and .Person.CanConnect (not .Person.Pending)}}
+          <form method="post" action="{{$.Links.connection_request}}" class="inline">{{template "trust-csrf" $}}
+            <input type="hidden" name="public_id" value="{{.Person.PublicID}}">
+            <input type="hidden" name="next" value="{{.Person.ProfileURL}}">
+            <button class="btn btn-sm" type="submit">{{call $.T "Connect"}}</button></form>
+        {{else if .Person.Pending}}
+          <span class="muted">{{call $.T "Connection request pending"}}</span>
+        {{end}}
+        {{if .Person.CanMessage}}
+          <form method="post" action="{{$.Links.connection_message}}" class="inline">{{template "trust-csrf" $}}
+            <input type="hidden" name="public_id" value="{{.Person.PublicID}}">
+            <button class="btn btn-sm" type="submit">{{call $.T "Message"}}</button></form>
+        {{end}}
+        <a class="btn btn-secondary btn-sm" href="{{.Person.ReportURL}}">{{call $.T "Report"}}</a>
+        <form method="post" action="{{.Person.BlockURL}}" class="inline">{{template "trust-csrf" $}}
+          <input type="hidden" name="next" value="{{$.Links.home}}">
+          <button class="linkbtn" type="submit">{{call $.T "Block"}}</button></form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="helptext">{{call $.T "You can see this profile because you share an activity, group, connection, or a pending join request — or it is the minimal public card (name and picture only). Age, history, and attendance are never shown."}}</p>{{end}}
+
+{{define "trust-activity-log"}}<h1>{{call $.T "Your activity log"}}</h1>
+<p class="muted">{{call $.T "A plain-language record of the safety-relevant actions you've taken on the platform. Only you can see this page. We keep this for safety and to be transparent with you — it is never used to profile you or rank you."}}</p>
+
+<div class="grid">
+  {{range .Entries}}
+    <div class="card">
+      <strong>{{.Label}}</strong>
+      <p class="muted">{{.When}}</p>
+    </div>
+  {{else}}
+    <p class="muted">{{call $.T "You haven't taken any recorded actions yet."}}</p>
+  {{end}}
+</div>
+
+<p class="muted activity-meta-note">{{template "trust-rich" (call $.Rich "Looking for moderation decisions about you, or reports you've filed? Those are on your safety record.")}}
+  <a href="{{$.Links.safety_record}}">{{call $.T "View your safety record"}} &rarr;</a></p>{{end}}
+
+{{define "trust-safety-record"}}<h1>{{call $.T "Your safety record"}}</h1>
+<p class="muted">{{call $.T "A record of moderation decisions about your account, your activities and your posts, and the status of the reports you've sent us. Only you can see this page."}}</p>
+
+<h2>{{call $.T "Decisions about you"}}</h2>
+<div class="grid">
+  {{range .Decisions}}
+    <div class="card">
+      <strong>{{.Action}}</strong> &middot; <span class="muted">{{.Scope}}</span>
+      {{if .Sanction}}
+        <span class="tag">{{if .Active}}{{call $.T "active"}}{{else}}{{call $.T "no longer active"}}{{end}}</span>
+      {{end}}
+      <p>{{.Reason}}</p>
+      {{if .AuthorDeleted}}
+        <p class="muted">{{call $.T "You also deleted this message yourself. Reversing this decision doesn't undo your own deletion, so the message stays deleted."}}</p>
+      {{end}}
+      <p class="muted">{{.When}}</p>
+      {{if .CanAppeal}}
+        <details>
+          <summary>{{call $.T "Contest this decision"}}</summary>
+          <form method="post" action="{{$.Links.safety_record_appeal}}">{{template "trust-csrf" $}}
+            <input type="hidden" name="action_id" value="{{.ID}}">
+            <p><textarea name="statement" rows="4" maxlength="2000" required
+                         placeholder="{{call $.T "Explain why you think this is wrong..."}}"></textarea></p>
+            <button class="btn" type="submit">{{call $.T "Submit contest"}}</button>
+          </form>
+        </details>
+      {{else if .AppealStatus}}
+        <p class="muted">{{.AppealStatus}}</p>
+      {{end}}
+    </div>
+  {{else}}
+    <p class="muted">{{call $.T "No moderation decisions have affected your account or content."}}</p>
+  {{end}}
+</div>
+
+<h2>{{call $.T "Reports you've filed"}}</h2>
+<div class="grid">
+  {{range .Reports}}
+    <div class="card">
+      <strong>{{.Reason}}</strong> <span class="tag">{{.Status}}</span>
+      {{if .Detail}}<p>{{.Detail}}</p>{{end}}
+      {{if .Outcome}}<p class="muted">{{.Outcome}}</p>{{end}}
+      <p class="muted">{{.Filed}}{{if .Reviewed}} &middot; {{.Reviewed}}{{end}}</p>
+    </div>
+  {{else}}
+    <p class="muted">{{call $.T "You haven't filed any reports."}}</p>
+  {{end}}
+</div>
+
+<p class="muted activity-meta-note">{{call $.T "If you believe a decision is wrong, you can contest it using the form on that decision. Our moderation team reviews every contest."}}</p>{{end}}
+
+{{define "trust-my-privacy"}}<h1>{{call $.T "What we know about you"}}</h1>
+<nav class="you-tabs" aria-label="{{call $.T `Account`}}">{{range .Shell.AccountTabs}}<a href="{{.URL}}"{{if .Current}} aria-current="page"{{end}}>{{.Label}}</a>{{end}}</nav>
+<p class="muted">{{call $.T "Every kind of personal data we hold about you, in one place — with a link to change or remove each one. Only you can see this page."}}</p>
+
+<h2>{{call $.T "Your data"}}</h2>
+<div class="grid">
+
+  <div class="card">
+    <strong>{{call $.T "Age verification"}}</strong>
+    {{if .Privacy.Provenance}}
+      <p>{{template "trust-rich" (call $.Rich "We hold a proven age band: <strong>%(band)s</strong>." "band" $.Privacy.Band)}}
+        {{if .Privacy.Provider}}<span class="muted">{{.Privacy.Provider}}</span>{{end}}</p>
+      <p class="muted">{{call $.T "We store an age band only — never your date of birth or identity documents."}}</p>
+    {{else}}
+      <p class="muted">{{call $.T "Your age isn't verified yet."}}</p>
+    {{end}}
+    <a href="{{$.Links.verify_age}}">{{call $.T "Manage age verification"}} &rarr;</a>
+  </div>
+
+  <div class="card">
+    <strong>{{call $.T "Your interests"}}</strong>
+    <p>{{.Privacy.Interests}}</p>
+    <p class="muted">{{call $.T "Used only to suggest activities to you — never to profile or target you."}}</p>
+    <a href="{{$.Links.interests}}">{{call $.T "Edit your interests"}} &rarr;</a>
+  </div>
+
+  <div class="card">
+    <strong>{{call $.T "Access needs"}}</strong>
+    {{if .Privacy.Access}}
+      <p>{{call $.T "You've set access preferences we use to label matching places."}}</p>
+    {{else}}
+      <p class="muted">{{call $.T "You haven't set any access preferences."}}</p>
+    {{end}}
+    <a href="{{$.Links.access_preferences}}">{{call $.T "Edit access needs"}} &rarr;</a>
+  </div>
+
+  <div class="card">
+    <strong>{{call $.T "Notifications"}}</strong>
+    {{if .Privacy.Muted}}
+      <p>{{.Privacy.Muted}}</p>
+    {{else}}
+      <p class="muted">{{call $.T "You haven't muted any notifications."}}</p>
+    {{end}}
+    <p class="muted">{{call $.T "Safety and legal notices can never be muted."}}</p>
+    <a href="{{$.Links.notification_preferences}}">{{call $.T "Manage notifications"}} &rarr;</a>
+  </div>
+
+  <div class="card">
+    <strong>{{call $.T "Your safety record"}}</strong>
+    <p>{{.Privacy.Decisions}}</p>
+    <a href="{{$.Links.safety_record}}">{{call $.T "View your safety record"}} &rarr;</a>
+  </div>
+
+  <div class="card">
+    <strong>{{call $.T "Your activity log"}}</strong>
+    <p class="muted">{{call $.T "A plain-language record of the safety-relevant actions you've taken."}}</p>
+    <a href="{{$.Links.activity_log}}">{{call $.T "View your activity log"}} &rarr;</a>
+  </div>
+
+  <div class="card">
+    <strong>{{call $.T "Your donations"}}</strong>
+    <p>{{.Privacy.Donations}}</p>
+    <p class="muted">{{call $.T "We never store card or payment details."}}</p>
+    <a href="{{$.Links.my_donations}}">{{call $.T "View your donations"}} &rarr;</a>
+  </div>
+
+  {{if .HasGuardians}}
+  <div class="card">
+    <strong>{{call $.T "Guardianship"}}</strong>
+    <p>{{call $.T "A parent or guardian is linked to your account."}}</p>
+    <a href="{{$.Links.my_guardians}}">{{call $.T "See what this link grants"}} &rarr;</a>
+  </div>
+  {{end}}
+
+</div>
+
+{{if .Privacy.HasToken}}
+<p class="muted">{{template "trust-rich" (call $.Rich "A device (e.g. the mobile app) currently holds API access to your\n  account — you can revoke it in <a href=\"%(settings_url)s\">Settings</a>." "settings_url" $.Links.settings)}}</p>
+{{end}}
+
+<h2>{{call $.T "Take your data with you, or remove it"}}</h2>
+<div class="row u-row-gap">
+  <a class="btn btn-sm" href="{{$.Links.account_export}}" download>{{call $.T "Download my data"}}</a>
+  <a class="btn btn-sm btn-secondary" href="{{$.Links.account_delete}}">{{call $.T "Delete my account"}}</a>
+</div>
+
+<h2>{{call $.T "How long your data is kept"}}</h2>
+<p class="muted">{{call $.T "We keep things only as long as they're useful, then they self-delete. Here's the clock for each kind of data."}}</p>
+<dl class="retention">
+  {{range .Privacy.Retention}}<dt>{{.Label}}</dt><dd>{{.When}}</dd>
+  {{end}}
+</dl>
+
+<h2>{{call $.T "What we never collect or do"}}</h2>
+<ul class="members">
+  <li>{{call $.T "We never store your location — proximity uses your device's position only for the search you ask for, and is never saved."}}</li>
+  <li>{{call $.T "We store an age band, never your date of birth."}}</li>
+  <li>{{call $.T "No ads, no behavioural tracking, no profiling — we're funded by donations."}}</li>
+  <li>{{call $.T "No public photo feeds — photos exist only privately inside an activity thread, and you get one profile picture at most."}}</li>
+  <li>{{call $.T "No reliability scores, attendance history, or vanity metrics about you."}}</li>
+</ul>{{end}}
+
+{{define "trust-verify-age"}}<h1>{{call $.T "Verify your age"}}</h1>
+{{if .Wallet.Verified}}<div class="banner">{{call $.T "Your age is verified and you can participate."}}</div>{{end}}
+<p class="muted">{{call $.T "Prove your age band with the EU Digital Identity wallet (OpenID4VP). The app receives only an over-16 / over-18 proof &mdash; never your birthdate &mdash; and verifies its signature cryptographically."}}</p>
+{{if .Wallet.Available}}
+{{if .Wallet.Challenge}}
+<div class="card">
+  <p>{{call $.T "Use this request with your trusted EU wallet. Only the age-band claims are requested."}}</p>
+  <script nonce="{{.Nonce}}" type="application/json" id="age-verification-request">{{.Wallet.Request}}</script>
+  <details><summary>{{call $.T "Wallet request"}}</summary><pre>{{.Wallet.RequestText}}</pre></details>
+</div>
+<form method="post" class="card">{{template "trust-csrf" $}}
+  <input type="hidden" name="action" value="verify">
+  <input type="hidden" name="state" value="{{.Wallet.State}}">
+  <label for="wallet-presentation">{{call $.T "Signed wallet presentation"}}</label>
+  <textarea id="wallet-presentation" name="vp_token" maxlength="32768" rows="4" autocomplete="off" required></textarea>
+  <label for="wallet-holder-proof">{{call $.T "Holder binding proof"}}</label>
+  <textarea id="wallet-holder-proof" name="holder_binding_proof" maxlength="32768" rows="4" autocomplete="off" required></textarea>
+  <button class="btn u-mt-md" type="submit">{{call $.T "Verify wallet proof"}}</button>
+</form>
+{{else}}
+<form method="post" class="card">{{template "trust-csrf" $}}
+  <input type="hidden" name="action" value="start">
+  <button class="btn" type="submit">{{call $.T "Create a wallet verification request"}}</button>
+</form>
+{{end}}
+{{else if .Wallet.Sandbox}}
+<form method="post" class="card">{{template "trust-csrf" $}}
+  <p><strong>{{call $.T "Demo wallet"}}</strong> {{call $.T "&mdash; present an age proof:"}}</p>
+  <label><input type="radio" name="age" value="adult" checked> {{call $.T "18 or over (adult)"}}</label>
+  <label><input type="radio" name="age" value="16_17"> {{call $.T "16-17"}}</label>
+  <label><input type="radio" name="age" value="under_16"> {{call $.T "under 16"}}</label>
+  <button class="btn u-mt-md" type="submit">{{call $.T "Present to the app"}}</button>
+</form>
+{{else}}
+<div class="banner">{{call $.T "EU wallet verification isn't configured on this server yet."}}</div>
+{{end}}{{end}}
+
+{{define "trust-account-delete"}}<h1>{{call $.T "Delete my account"}}</h1>
+<p class="muted">{{call $.T "This is permanent and cannot be undone. Here is what deleting your account removes — and the one thing that lawfully stays. Only you can see this page."}}</p>
+
+<div class="card">
+  <strong>{{call $.T "What gets permanently deleted"}}</strong>
+  <ul class="members">{{range .Destroyed}}<li>{{.}}</li>{{end}}</ul>
+  <p class="muted">{{call $.T "Your profile, login, any device API access, and other account data (saved searches, preferences, blocks, notifications, connections) are deleted too."}}</p>
+</div>
+
+<div class="card">
+  <strong>{{call $.T "What lawfully stays"}}</strong>
+  <ul class="members">{{range .Retained}}<li>{{.}}</li>{{end}}</ul>
+</div>
+
+<form method="post" action="{{$.Links.account_delete}}" class="u-mt-lg">{{template "trust-csrf" $}}
+  <button class="btn btn-secondary" type="submit">{{call $.T "Permanently delete my account"}}</button>
+  <a class="btn btn-sm" href="{{$.Links.my_privacy}}">{{call $.T "Cancel"}}</a>
+</form>{{end}}
+
+{{define "trust-report"}}<h1>{{template "trust-rich" (call $.Rich "Report this %(target_type)s" "target_type" $.Report.Target)}}</h1>
+<p class="muted">{{template "trust-rich" (call $.Rich "Reporting: <strong>%(target_label)s</strong>. Reports are confidential and go\n  straight to the moderation team. If someone is in immediate danger, contact local emergency\n  services." "target_label" $.Report.Label)}}</p>
+<form method="post" class="card">{{template "trust-csrf" $}}
+  <input type="hidden" name="type" value="{{.Report.Target}}">
+  <input type="hidden" name="id" value="{{.Report.ID}}">
+  {{if .Report.Error}}<ul class="errorlist"><li>{{.Report.Error}}</li></ul>{{end}}
+  <p><label for="id_reason">{{call $.T `Reason`}}</label><select id="id_reason" name="reason" required>{{range .Report.Choices}}<option value="{{.Value}}"{{if .Selected}} selected{{end}}>{{.Label}}</option>{{end}}</select></p>
+  <p><label for="id_detail">{{call $.T `Details (optional)`}}</label><textarea id="id_detail" name="detail">{{.Report.Detail}}</textarea></p>
+  <button class="btn btn-danger" type="submit">{{call $.T "Send report"}}</button>
+</form>{{end}}
+
+{{define "trust-privacy"}}<div class="banner">
+  <strong>{{call $.T "DRAFT &mdash; to be finalized by the DPO/legal before launch."}}</strong>
+  {{call $.T "This text is placeholder copy and is not legally binding in its current form."}}
+</div>
+
+<h1>{{call $.T "Privacy Policy"}}</h1>
+<p class="muted">{{call $.T "Last reviewed: draft. This platform is operated for users in Romania and the EU and is designed around the GDPR (Regulation (EU) 2016/679) and the Digital Services Act."}}</p>
+
+<div class="card">
+  <h2>{{call $.T "Who we are"}}</h2>
+  <p>{{template "trust-rich" (call $.Rich "This service is a nonprofit, text-first platform for arranging in-person activities. The\n    operating organisation is the data controller for the personal data described below.\n    <em>(Legal entity name, address and registration number to be inserted by legal.)</em>")}}</p>
+</div>
+
+<div class="card">
+  <h2>{{call $.T "What data we collect"}}</h2>
+  <ul>
+    <li>{{template "trust-rich" (call $.Rich "<strong>Age band, not date of birth.</strong> We only ever store an age <em>band</em>\n      (for example \"over 16\" or \"over 18\"). We do <strong>not</strong> collect or store your\n      birthdate. Age is proven through the EU Digital Identity wallet, which discloses only the\n      band to us.")}}</li>
+    <li>{{template "trust-rich" (call $.Rich "<strong>Username and display name</strong> you choose at registration. We do not require\n      your real name.")}}</li>
+    <li>{{template "trust-rich" (call $.Rich "<strong>Activity data</strong> you create or take part in: activities you organise or join,\n      posts in activity threads, interests you select, places and events you view, and\n      membership/voting records needed to run the activity.")}}</li>
+    <li>{{template "trust-rich" (call $.Rich "<strong>Safety data</strong> needed to keep minors and the community safe: reports you file\n      or that concern you, blocks, and moderation decisions.")}}</li>
+    <li>{{template "trust-rich" (call $.Rich "<strong>Account security data</strong> such as a hashed password and basic technical logs.")}}</li>
+  </ul>
+  <p class="muted">{{call $.T "We do not run behavioural advertising, sell personal data, or profile you to manipulate engagement."}}</p>
+</div>
+
+<div class="card">
+  <h2>{{call $.T "Lawful basis for processing"}}</h2>
+  <ul>
+    <li>{{template "trust-rich" (call $.Rich "<strong>Performance of a contract</strong> (Art. 6(1)(b)) to provide the account and\n      activity features you ask for.")}}</li>
+    <li>{{template "trust-rich" (call $.Rich "<strong>Legal obligation</strong> (Art. 6(1)(c)) for age assurance and child-safety\n      duties, including obligations under the Digital Services Act.")}}</li>
+    <li>{{template "trust-rich" (call $.Rich "<strong>Legitimate interests</strong> (Art. 6(1)(f)) to keep the service safe, prevent\n      abuse, and maintain security &mdash; balanced against your rights.")}}</li>
+    <li>{{template "trust-rich" (call $.Rich "<strong>Consent</strong> (Art. 6(1)(a)) where specifically requested. For users under 16,\n      processing relies on parental/guardian consent as required by GDPR Art. 8 and Romanian law.")}}</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h2>{{call $.T "How long we keep data (retention)"}}</h2>
+  <p>{{template "trust-rich" (call $.Rich "We keep personal data only as long as needed for the purpose it was collected, then delete or\n    anonymise it. Account data is retained while your account is active. Safety and moderation\n    records may be retained longer where required to protect users or to meet legal obligations.\n    <em>(Concrete retention periods to be confirmed by the DPO.)</em>")}}</p>
+</div>
+
+<div class="card">
+  <h2>{{call $.T "Your rights"}}</h2>
+  <p>{{call $.T "Under the GDPR you have the right to:"}}</p>
+  <ul>
+    <li>{{template "trust-rich" (call $.Rich "<strong>Access</strong> the personal data we hold about you and obtain a copy.")}}</li>
+    <li>{{template "trust-rich" (call $.Rich "<strong>Rectification</strong> of inaccurate data.")}}</li>
+    <li>{{template "trust-rich" (call $.Rich "<strong>Erasure</strong> (\"right to be forgotten\", Art. 17). You can delete your account\n      and personal data yourself from your")}}
+      {{if .Authenticated}}<a href="{{$.Links.profile}}">{{call $.T "profile page"}}</a>{{else}}{{call $.T "profile page"}}{{end}},
+      {{call $.T "or by contacting our Data Protection Officer."}}</li>
+    <li>{{template "trust-rich" (call $.Rich "<strong>Restriction</strong> and <strong>objection</strong> to certain processing.")}}</li>
+    <li>{{template "trust-rich" (call $.Rich "<strong>Data portability</strong> for data you provided to us.")}}</li>
+    <li>{{template "trust-rich" (call $.Rich "<strong>Lodge a complaint</strong> with a supervisory authority, in Romania the National\n      Supervisory Authority for Personal Data Processing (ANSPDCP).")}}</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h2>{{call $.T "Children and guardians"}}</h2>
+  <p>{{call $.T "This platform is used by minors. Users under 16 require verified parental or guardian consent before they can join or organise activities, and we keep cohorts age-separated. Guardians can review and withdraw consent at any time."}}</p>
+</div>
+
+<div class="card">
+  <h2>{{call $.T "Contact our Data Protection Officer"}}</h2>
+  <p>{{call $.T "For any privacy question or to exercise your rights, contact our Data Protection Officer:"}}</p>
+  <p><strong>{{call $.T "Data Protection Officer"}}</strong><br>
+    {{template "trust-rich" (call $.Rich "Email: <em>dpo@example.org (placeholder &mdash; to be set by legal)</em><br>\n    Postal address: <em>(to be inserted by legal)</em>")}}</p>
+</div>{{end}}
+
+{{define "trust-terms"}}<div class="banner">
+  <strong>{{call $.T "DRAFT &mdash; to be finalized by the DPO/legal before launch."}}</strong>
+  {{call $.T "This text is placeholder copy and is not legally binding in its current form."}}
+</div>
+
+<h1>{{call $.T "Terms of Service"}}</h1>
+<p class="muted">{{call $.T "These terms govern use of this nonprofit, text-first platform for arranging in-person activities, operated for users in Romania and the EU."}}</p>
+
+<div class="card">
+  <h2>{{call $.T "Acceptable use"}}</h2>
+  <p>{{call $.T "By using the service you agree to:"}}</p>
+  <ul>
+    <li>{{call $.T "Use the platform only for lawful, real, in-person activities and respectful interaction."}}</li>
+    <li>{{call $.T "Provide truthful age information and not impersonate others or share your account."}}</li>
+    <li>{{call $.T "Keep content text-first and appropriate &mdash; no harassment, hate speech, sexual content, grooming, threats, spam, scams, or sharing of others' private data."}}</li>
+    <li>{{call $.T "Not attempt to contact, meet, or share content with users outside your permitted age cohort."}}</li>
+    <li>{{call $.T "Not upload illegal content or content that endangers minors. Such content is reported to the appropriate authorities."}}</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h2>{{call $.T "Minors and cohort policy"}}</h2>
+  <p>{{call $.T "This platform is intended to be safe for minors:"}}</p>
+  <ul>
+    <li>{{template "trust-rich" (call $.Rich "Users are grouped into <strong>age cohorts</strong>, and interaction is kept within a user's\n      own cohort. Adults and minors are not mixed in the same activity spaces.")}}</li>
+    <li>{{template "trust-rich" (call $.Rich "Users <strong>under 16</strong> require verified <strong>parental or guardian consent</strong>\n      before they can join or organise activities. Without consent, browsing only is allowed.")}}</li>
+    <li>{{call $.T "Age is verified via the EU Digital Identity wallet, which discloses only an age band &mdash; never a birthdate."}}</li>
+    <li>{{call $.T "Guardians may review activity and withdraw consent at any time."}}</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h2>{{call $.T "Moderation"}}</h2>
+  <p>{{call $.T "To protect the community and minors, we may review reported content and accounts, remove content, restrict features, or suspend or terminate accounts that breach these terms or endanger others. Decisions follow our child-safety priorities and applicable law, including the Digital Services Act. Serious matters affecting child safety may be escalated to authorities."}}</p>
+</div>
+
+<div class="card">
+  <h2>{{call $.T "Reporting and appeals"}}</h2>
+  <p>{{template "trust-rich" (call $.Rich "You can report users or activities through the in-app reporting tools. If we take a moderation\n    action against your account or content, you will be informed and may <strong>appeal</strong> the\n    decision. Appeals are reviewed by a person who was not solely responsible for the original\n    decision. <em>(Appeal channel and timelines to be finalised by legal in line with DSA\n    requirements.)</em>")}}</p>
+</div>
+
+<div class="card">
+  <h2>{{call $.T "Your data and account deletion"}}</h2>
+  <p>{{template "trust-rich" (call $.Rich "Our handling of personal data is described in the <a href=\"%(privacy_url)s\">Privacy\n    Policy</a>. You may delete your account and personal data at any time from your profile page\n    (right to erasure, GDPR Art. 17)." "privacy_url" $.Links.privacy)}}</p>
+</div>
+
+<div class="card">
+  <h2>{{call $.T "Changes and contact"}}</h2>
+  <p>{{template "trust-rich" (call $.Rich "We may update these terms; material changes will be communicated. For questions about these\n    terms, contact us at <em>(contact to be inserted by legal)</em>.")}}</p>
+</div>{{end}}

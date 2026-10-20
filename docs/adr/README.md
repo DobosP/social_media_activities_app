@@ -1,7 +1,7 @@
 # ADR ledger — claimed numbers
 
-Claim the next free number **here, in the same commit as the ADR file**, so two parallel worktrees
-never mint the same number. Next free number: **0063** (0057–0060 already claimed on existing refs; 0061 claimed here) (0041–0049 reserved 2026-10-05 for the audit fix sessions: G2 0041/0043–0046, G3 0042/0047–0049; 0055 claimed on branch `feat/policy8-local-poc`). Template: [`0000-template.md`](0000-template.md).
+Claim the next free number **here, in the same commit as the ADR file**, so parallel worktrees never mint the same number.
+Next free number: **0072**. Existing published/reserved numbers remain claimed; template: [`0000-template.md`](0000-template.md).
 ADRs are append-only: a reversal is a new ADR that flips the old one's `Status:` to `superseded-by ADR-NNNN`.
 On conflict: `STATUS.md` > newest-dated ADR > every other doc.
 
@@ -31,7 +31,7 @@ On conflict: `STATUS.md` > newest-dated ADR > every other doc.
 | 0021 | [map-quality-filters-labels-aggregation](0021-map-quality-filters-labels-aggregation.md) | accepted | 2026-07-07 |
 | 0022 | [resource-bounded-asgi-browser-runtime](0022-resource-bounded-asgi-browser-runtime.md) | accepted | 2026-07-11 |
 | 0023 | [roedu-event-lifecycle-snapshot-reconciliation](0023-roedu-event-lifecycle-snapshot-reconciliation.md) | accepted | 2026-07-12 |
-| 0024 | [canonical-roedu-social-app-pack](0024-canonical-roedu-social-app-pack.md) | accepted | 2026-07-12 |
+| 0024 | [canonical-roedu-social-app-pack](0024-canonical-roedu-social-app-pack.md) | accepted; policy tuple superseded by ADR-0055 | 2026-07-12 |
 | 0025 | [agent-and-search-engine-access-surface](0025-agent-and-search-engine-access-surface.md) | accepted | 2026-07-12 |
 | 0026 | [private-thread-video-and-sota-image-compression](0026-private-thread-video-and-sota-image-compression.md) | accepted (supersedes the "no video" line of ADR-0004) | 2026-07-13 |
 | 0027 | [avatar-styles-uniqueness-registry](0027-avatar-styles-uniqueness-registry.md) | accepted (owner-approved) | 2026-07-13 |
@@ -69,6 +69,12 @@ On conflict: `STATUS.md` > newest-dated ADR > every other doc.
 | 0068 | [native-display-access-preferences](0068-native-display-access-preferences.md) | bounded functional feature accepted463bf0e1;S e006 PG7/483roots1435named accepted176b;T2 d2cd UI8+8/21Axe462/45bodies acceptedb3526ecf;originalFAIL and explicitpolish retained;no benchmark/main/milestone | 2026-10-20 |
 | 0069 | [native-self-topics](0069-native-self-topics.md) | bounded feature independently accepted;S2 PG7/491roots1478named0skip,T desktop8+8/24strictAxe/53prior bodies;existing authority and polish limits retained | 2026-10-20 |
 | 0070 | [bounded-xz-git-source-transport](0070-bounded-xz-git-source-transport.md) | strict full-source XZ transport independently qualified on S2;exact preflight0384/fullPG6057 acceptedbce862;caps/control refusals and old gzip history retained | 2026-10-20 |
+| 0071 | [functional-go-interface-completion](0071-functional-go-interface-completion.md) | accepted architecture;39 grouped Go destinations implemented; aggregate qualification pending; feature branch only | 2026-10-21 |
+| 0055 | [roedu-policy-schema5-ruleset8](0055-roedu-policy-schema5-ruleset8.md) | accepted; owner directive 2026-10-11; supersedes ADR-0024's 4/6 tuple; lands with the serving/Teacher 5/8 moves | 2026-10-11 |
+| 0057 | [roedu-local-poc-consumer](0057-roedu-local-poc-consumer.md) | accepted; owner authorization 2026-10-12 ("POC consumer half"); development/loopback only; human privacy review gates any wider use | 2026-10-12 |
+| 0058 | [roedu-venue-identity-and-license-width](0058-roedu-venue-identity-and-license-width.md) | accepted; owner directive 2026-10-12 (same-location venues stay distinct; raise the license limit) | 2026-10-12 |
+| 0059 | [event-city-filters-and-local-poc-history](0059-event-city-filters-and-local-poc-history.md) | accepted; owner-requested continuation; independent review gates landing | 2026-10-13 |
+| 0060 | [gated-event-city-and-place-facets](0060-gated-event-city-and-place-facets.md) | source reviewed; full21 qualified747/21/0/0; owner landing pending | 2026-10-13 |
 
 ⚠ **0009 is claimed twice** — this ledger exists so it does not happen again. Both files stay:
 `0009-csp-enforcement-prep.md` (superseded by ADR-0010) and

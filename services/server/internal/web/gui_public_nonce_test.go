@@ -108,7 +108,7 @@ func guiPublicNonceResponse(t *testing.T, filesystem, authenticated bool) (strin
 	var firstBody, firstPolicy string
 	for iteration := 0; iteration < 2; iteration++ {
 		response := httptest.NewRecorder()
-		if err := renderer.Render(response, request, "web/landing.html", data); err != nil {
+		if err := completionFrozenReferenceRender(renderer, response, request, "web/landing.html", data); err != nil {
 			t.Fatal(err)
 		}
 		body, policy := response.Body.String(), response.Header().Get("Content-Security-Policy-Report-Only")
@@ -217,6 +217,10 @@ func TestGUIPublicBaseTemplateOnlyAddsTheTwoNonceAttributes(t *testing.T) {
 	current, err := os.ReadFile(filepath.Join(root, "templates/base.html"))
 	if err != nil {
 		t.Fatal(err)
+	}
+	current, err = completionSourcePreimage("templates/base.html", current)
+	if err != nil {
+		t.Fatal("exact current completion source required before retained nonce proof")
 	}
 	before := append([]byte(nil), current...)
 	for _, original := range []string{`<script src="{% static 'js/hovercard.js' %}" defer>`, `<script id="site-js" src="{% static 'js/site.js' %}" defer{% if user.is_authenticated %} data-meetups-owner="{{ user.public_id }}"{% endif %}>`} {

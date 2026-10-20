@@ -232,7 +232,7 @@ func (f *guiMyMeetupsFixture) render(t *testing.T, filesystem, original bool, fi
 	}
 	data := pongo2.Context{"user": user, "csrf": "synthetic-my-meetups-csrf", "meetups": rows, "generated_at": time.Date(2029, 12, 31, 10, 0, 0, 0, time.UTC), "my_guardians": []any{}}
 	response := httptest.NewRecorder()
-	if err := renderer.Render(response, request, "web/my_meetups.html", data); err != nil {
+	if err := completionFrozenReferenceRender(renderer, response, request, "web/my_meetups.html", data); err != nil {
 		t.Fatal(err)
 	}
 	body := append([]byte(nil), response.Body.Bytes()...)

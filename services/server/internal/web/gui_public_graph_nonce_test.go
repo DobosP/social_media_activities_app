@@ -122,7 +122,7 @@ func guiPublicGraphNonceResponse(t *testing.T, filesystem, populated bool) (stri
 	var firstBody, firstPolicy string
 	for iteration := 0; iteration < 2; iteration++ {
 		response := httptest.NewRecorder()
-		if err := renderer.Render(response, request, "web/communities_graph.html", data); err != nil {
+		if err := completionFrozenReferenceRender(renderer, response, request, "web/communities_graph.html", data); err != nil {
 			t.Fatal(err)
 		}
 		body := response.Body.String()

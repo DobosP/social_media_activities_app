@@ -3,6 +3,290 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-21 — Remaining functional Go interfaces; combined candidate
+
+Valid until: these source or qualification inputs change — then requalify affected checks.
+
+Operator: agent:codex (PROGRAM E8). Integrated incoming main5426e915 whole with independent source review; policy5/rules8, local POC disclosure and earlier GUI source remain. ADR-0071 adds39 cached typed destinations, retaining14 compatibility destinations and20 optional SPA modules. Existing services/actions/authority stay authoritative. Inbox redirects after login;4 exact metadata downloads use their existing producers. Teacher stays deferred; Cat S1 code is complete locally.
+
+`bash scripts/check-native.sh /usr/local/go/bin/go` passes on the candidate (stdout7108a9483d891e1451a65cf27ad014a6cddf85c421a1c5483cea10feac4dee0a); default DB skips are not release evidence. Locked frontend npm ci/test/build passes3 contracts, typecheck/Vite and36.72/40KiB gzip. Ordinary renderer export feeds the unchanged desktop runner:78 states,156 strict audits,0 violations/incompletes/CSP errors and successful cleanup; resultcfb51986292f728c119f2a014f0c2c504e3ce85e6a0c77486acd1ed90c550d6e. No external map/provider requests or mutations were allowed; no full SPA/E2EE browser or mobile claim.
+
+Original assertions/goldens/registries remain. Test-only historical references and32 exact source inverses retain144 physical bindings. Old OpenAPI AST validation caught a new registration loop; four explicit callbacks fix it without changing the old validator. Earlier desktop failures led to scoped labels/layout fixes, reproducible graph CSS extraction and isolation of identical decorative venue SVG bytes. Current source and methods have independent cross-reviews. Full21 on the committed candidate and final runtime review remain pending; [compact record](docs/reviews/gui-functional-completion/README.md) owns the next result. No landing/production/provider/minor activation or held erasure ruling is claimed.
+
+## 2026-10-14 — Literal TDM access through verified local POC admission
+
+Valid until: these source inputs or local-POC contract change — then requalify.
+
+The development consumer's production access allowlist rejected real `tdm_exception` event/venue
+facts despite an existing verified local admission. A private access context now permits exactly
+that label only after the unchanged admission verifier succeeds. Public `ValidatePackItem` keeps
+the strict production context. Neither incoming access nor the real privacy/deny/admission is
+relabelled; local event JSON evidence now includes original access, and local venue tags preserve it.
+ADR-0057's appended clarification records the existing owner scope and unchanged contract/gates.
+
+The new native `roedu_local_poc_tdm_test.go` covers event/venue positives, no-admission production
+strictness, 22 adversarial mutations on both kinds, intact source metadata, local dry-run/evidence,
+production/remote endpoint refusal and false/missing page markers. CNP/prose assertions verify the
+closed factual field contract; they do not claim to rescan producer bodies or extend the waiver.
+Tests reuse synthetic checked-in fixtures and fake HTTP transport; no real network or database is
+needed by this family. Two additional `roedu_local_poc_tdm_postgres_test.go` cases use root's
+explicit disposable fixture to prove literal access/deny storage and zero writes/schema changes
+with the development gate off. Worker authored source/formatting; West independently reviewed the code. Root qualification passed native check31 Go package results and Node4/4, then all21 disposable PostgreSQL/codec lanes:754pass/0skip/0fail, including both new TDM storage cases. The unchanged positive test fails in both event/venue subcases with a Go overlay of the two base implementation files, proving regression sensitivity without editing source. Initial passwordless fixture bootstrap refusal and verified cleanup remain separate. [Compact qualification](docs/reports/major-city-events-20261014/tdm-native-qualification.json), SHA90dcbba7e3f45d52f7410ea34409a656331d723e7beb5a1cce37f1bb3be9bfd7, binds source, native exits/logs, pinned fixture images and cleanup. These overlapping test populations are not added. No deployment image/audit qualification is claimed.
+No commit, push, build, test, real ingestion, service/runtime/source activation or deployment was
+performed by the worker. Active POC source remains its older keeper until separately qualified.
+
+## 2026-10-13 — City/history exact-source qualification closure
+
+Valid until: protected source inputs or fixture environment change — then requalify.
+
+Exact clean source `f412dfc2cc89b328369b4100f2d13b815575752d` passed the canonical
+full21 PostgreSQL/codec gate:740 PASS,0 SKIP,0 FAIL (web105). The disk-backed2CPU/2GiB
+fixture stayed healthy without OOM, with root free space113GiB above the30GiB floor;
+its container, internal network, anonymous volume and password file are verified absent.
+The [compact checkpoint](docs/reviews/native-go/local-poc-city-filters-checkpoint-20261013.json)
+pins per-lane logs, native/frontend/focused checks, meaningful negative controls and
+raw14-root Git-tree SHA256 `fba22444f060f85b9c58537d2534e30dcdb763609ca576e9204371857b667162`.
+Additional offline/config object identities are unchanged. Receipt-only documentation
+closure follows the established source-object-equality allowance; source gates are not
+repeated after this docs-only commit. Root independently reviewed source; docs/whitespace
+and independent closure review remain required before root lands the branch.
+
+The verified23-file frontend packet is retained at
+`/home/dobo/work/_temp/feat-local-poc-real-data/continuation/social/frontend-assets`;
+its receipt SHA256 is `0a7c496c29a85b64f30470147fb109d64ca069bda9df92d6e8e0862c4d428374`.
+Superseded owned test/bootstrap binaries466357664bytes and the152973byte duplicate
+frontend copy were pruned only after verified successors; manifests/logs are history,
+not a claim that those deleted bytes remain. No new deployment-image/dependency audit,
+case-retirement CLI run, main/push or live runtime/data change is claimed.
+
+## 2026-10-13 — Event city filters and explicit local POC history
+
+Valid until: city comparison, event views, protected inputs or qualification environment changes — then requalify.
+
+ADR-0059 fixes the ignored city argument and adds a separate `past_only=1` view behind
+the existing local POC gate. City comparisons share NFC/case/whitespace/Romanian spelling
+folding and one explicit Bucharest alias; stored facts and identities are not rewritten.
+Modes and forms retain discovery filters; subscriptions retain city/area/activity and
+remain upcoming-only. Filtered SEO/JSON-LD and SSR/SPA POC labels follow the selected rows.
+The React+POC CLI refusal and all public safety/policy guards remain unchanged.
+
+Focused synthetic route checks exercise city aliases in query and stored NFD facts,
+combined/unknown city filters, HTML/soft navigation/API/feed parity, more than100 upcoming
+events plus history, and past production/held/cancelled/tombstone/unpublished exclusions.
+An unchanged-source Go overlay dropping city selection fails the unknown-city control;
+the separate overlay dropping past-only selection fails its capacity control (100 upcoming rows hide history).
+Shared offline Python template URL defaults and keyed SPA filter forms were corrected
+after independent read-only review. The strengthened final focused set passes4/4,
+including a selected-city unpublished venue and offline-template fallback.
+`check-native.sh /usr/local/go/bin/go` passes31 package OK lines plus Node4;
+Node24.21.0/npm11.19.0 `npm test` passes3/3 and `npm run build` passes typecheck
+and36.72/40KiB gzip budget. Locked installation used Node24 with npm9.2 offline
+and the existing shared npm cache; no new cache tree was copied.
+Root independently approved the source diff before full qualification.
+Full21 qualification remains a separate exact-commit landing gate.
+
+Focused log SHA256 `57c8957fd605d3056368ba0900614e6c9607bd391a1300476df6876c5ab71f89`;
+native checks `18aa20a22820877638b2bcff55dfb1cec2020ff87bfd5663838ccea71cbf119c`;
+city negative `c8bb8c55f139174602ebd9f35a7ccb92128f678f19efb560b385a19c3464f9c2`;
+history negative `76e67412bcdc8c4e8e4b39bae3765fd0456dface5cbada1186cf491a7489da98`.
+Negative controls are test-only Go overlays, not modifications of the working source.
+
+Runner and compact logs: `/home/dobo/work/_temp/fix__local-poc-city-filters/social/`.
+It reuses the one shared Go cache/module cache and canonical codec image with a new
+internal/no-host-port, disk-backed disposable PG fixture (2CPU/2GiB). Live runtime,
+crawl archive, data, other owners and shared main are untouched by this worker.
+
+Status history retained here: prior [thread-pages713](docs/reviews/native-go/rest-thread-pagination-checkpoint.json),
+[own-list712](docs/reviews/native-go/rest-own-memberships-checkpoint.json), [RSVP711](docs/reviews/native-go/rest-rsvp-checkpoint.json),
+[Presence710](docs/reviews/native-go/rest-presence-checkpoint.json), [auth/transit709](docs/reviews/native-go/rest-auth-transit-checkpoint.json)
+and [transport709](docs/reviews/native-go/rest-transport-checkpoint.json) receipts remain. Original `c27a99f`705
+[source/image/audits](docs/reviews/native-go/restart-checkpoint.json) remain; this source fix claims no new deployment image/audit.
+The unused openpgp advisory and human first-deployment review remain separate.
+
+## 2026-10-13 — Policy 5/8 and isolated POC landing qualification
+
+Valid until: any protected source object or qualification environment changes — then requalify.
+
+- Exact clean `98bc92176440570f1742b1ba2ced1922cca08f57`: canonical full qualification passed all 21 lanes, 737 top-level tests, zero skips/failures. check-native (31 package OK lines + Node4), harness17, docs53/all0 and whitespace pass. The case-retirement ledger remains 1020 verified /1651 unresolved /0 invalid; expected exit1 blocks reference retirement, which this change does not attempt.
+- The previous main second-seed failure was reproduced; the one-line fixture clock alignment preserves production time validation and all idempotence assertions. Root independently reviewed the correction and existing feature boundaries; the complete command lane passes29.
+- The first corrected full attempt lost its disposable PostgreSQL connection and observed recovery; its exact historical cause cannot be proven because cleanup had already removed that DB. The disk-backed successor passed media54 and the complete21-lane gate with unchanged2CPU/2GiB and per-lane time limits. POC and other owners’ resources were untouched; disposable container/network/volume/password-file absence was verified.
+- The receipt records commands/counts/hashes, cleanup and the explicit source-hash algorithm: SHA256 of raw `git ls-tree -r HEAD -- <14 protected roots>` bytes = `f6c65a1355c8cc974f99998dad118a928b18e6522ca676c97bf263c15c3850af`; offline ingestion/config objects also match. This receipt-only closure follows the established source-object-equality allowance; it changes no protected input and does not repeat passed gates.
+- Superseded owned test binaries from failed/targeted iterations were pruned (899MB reported); compact manifests/logs remain history, not a claim that those deleted executable bytes remain. The latest verified setup remains. Existing c27 codec image was reused; no fresh deployment-image, dependency audit, frontend qualification or production activation is claimed.
+- The four-branch continuation is owner-authorized. Runtime source worktrees stay until the loopback POC has been independently verified on its rolling archive.
+
+## 2026-10-13 — Deterministic native demo fixture clock
+
+Valid until: the demo fixture clock or activity mutation rules change — then requalify.
+
+The command seed fixture fixed `jobs.Config.Now` at 2026-10-04 but left the social service
+on wall time. On 2026-10-13, the second `seed_mobile_card_demo` correctly refused to update
+the fixture's already-past activity. The fixture now gives `social.Service.Now` the same
+fixed clock. Product time validation and the existing second-seed idempotence assertions
+are unchanged. Independent root review approved this one-line fixture correction.
+
+Explicit disposable PostgreSQL/codec checks used the canonical c27 codec image, exact-source
+race binaries, an internal network without host ports and no existing runtime/database.
+Runner: `/home/dobo/work/_temp/feat-local-poc-real-data/verification/social/run-qualification.sh`.
+Commands were `bash RUNNER SOURCE MODE LABEL`, with these source/mode/label arguments:
+
+- Unchanged main `78d3a6686063ae7935c90527ee2f2b6ec444fda4`, source
+  `/home/dobo/work/social_media_activities_app`, `baseline baseline-main`: the existing
+  `TestNativeSeedBrowseUsersEventsAndMobileScenarios` fails at `demo_test.go:147`, exit 1;
+  log SHA256 `05dda282850a54b23708b9f66f47bd548a8719e15a2204241d08d7cd4b09c698`.
+- Corrected policy8 worktree, source
+  `/home/dobo/work/_worktrees/social_media_activities_app/feat__policy8-local-poc`,
+  `commands targeted-clock-fix`: 29 top-level PASS, 0 SKIP, 0 FAIL, exit 0;
+  log SHA256 `f5602b7d786108a493218304867f5a2359476c73cc541f9db2832a969b3e5a91`.
+
+The pre-correction full qualification stopped fail-closed at commands (28 PASS/1 FAIL),
+after configuration64/accounts75/admin21/app35/backup5/booking7/budgets16/catalog48 passed
+without skips. It is not a landing receipt. The corrected source still requires the full
+21-lane landing run; prior missing-host-codec results do not substitute for that gate.
+
+## 2026-10-12 — ADR-0058 review fixes: second RO-EDU merge path, admin license width
+
+Valid until: the place-merge rules or the admin curated event fields change — then requalify.
+
+Review found a second path that merged RO-EDU venues by location: `ingest_places source=roedu`
+(`upsertPlace`, dedup on by default) ran its own 75 m / name-similarity query and appended the
+venue to any match without checking existing claims. Changes:
+- `upsertPlace` now merges RO-EDU venues only through the exported `jobs.FindRoeduDuplicate`
+  (claim filter + `FOR UPDATE` recheck), the same helper `sync_roedu` uses.
+- `FindRoeduDuplicate` prefers the place the venue already claimed over a nearer newcomer, so a
+  claim is persistent as ADR-0058 states.
+- The admin `events.event` `license_name` field is 500 runes, matching the widened column.
+- The Django oracle `[:120]` slices stay deferred (ADR-0058); not changed, Django is not
+  installed on this host.
+
+Checks (disposable 127.0.0.1 `sociallive-postgis-pgvector:16` container, freshly migrated):
+- `scripts/check-native.sh` passes (31 packages ok).
+- jobs: 81 PASS, 3 FAIL (ffmpeg codec, host). commands: 28 PASS, 1 FAIL
+  (`TestNativeSeedBrowseUsersEventsAndMobileScenarios`, known on the base commit). admin: ok.
+- New `TestPostgresIngestRoeduPlacesKeepsVenueIdentity` (3 venue ids in one building + a same-name
+  OSM place, ingested twice; a nearer same-name newcomer does not move a claim) and
+  `TestNativeOperatorEventLicenseMatchesColumnWidth` (131/500 accepted, 501 refused). Mutation
+  checks: routing roedu back to the generic dedup fails the first test (OSM place carries
+  venue-1 and venue-3); dropping the claimed-first ordering fails its persistence half.
+
+## 2026-10-12 — RO-EDU venue identity wins over location; license up to 500 runes (ADR-0058)
+
+Valid until: the canonical pack's item bounds or the place-merge rules change — then requalify.
+
+Owner directive: "increase the server limit … Even if they have same location, it may be two
+different venues." Changes:
+- `ValidatePackItem` and the legacy Python oracle accept a `license` of up to 500 runes (it was
+  120). The real `opera_cluj_events` value is 131 runes. `schema.Migrate` widens
+  `places_place`/`events_event.license_name` to `varchar(500)` (`go-roedu-license-500-v1`,
+  guarded, catalog-only). Without the widening, the 131-rune INSERT would abort the city's sync.
+- A place carries at most one RO-EDU venue id (`jobs.RoeduVenueIdentitiesSQL`: own roedu
+  `external_id` plus `merged_sources` roedu entries).
+- `findRoeduDuplicate` skips places claimed by another venue id, then locks and rechecks the
+  chosen row.
+- `dedup_places` skips identity-conflicting pairs, and `mergePlaces` refuses them under its row
+  locks.
+
+Checks (disposable 127.0.0.1 `sociallive-postgis-pgvector:16` container, public schema bootstrapped
+by the pre-change binary so the fixtures exercise adoption from 120):
+- `scripts/check-native.sh` passes (gofmt, vet, `go test -race ./...`, Node worker).
+- jobs: 81 PASS, 3 FAIL. commands: 27 PASS, 1 FAIL. The failures are the known
+  ffmpeg-codec and `seed_mobile_card_demo` reds, which the same run on the base commit shows too.
+  budgets, catalog, admin and web are ok.
+- New `TestPostgresRoeduSameLocationVenuesStayDistinct` (3 venue ids, one building, an OSM place
+  with the same name, re-synced twice), `TestPostgresRoeduConcurrentClaimNeverSharesAPlace`,
+  `TestNativeDedupKeepsDistinctRoeduVenues`, `TestRoeduLicenseBoundMatchesServer` and
+  `TestRoeduVenuesConflict`. Mutation checks: each test fails when its own guard is removed (the
+  claim filter, the locked recheck, the dedup filter, the merge guard).
+- The new binary's `--migrate-only` widens both an adopted 120-column database and a fresh
+  bootstrap, and a rerun is a no-op.
+- The Python oracle validator was checked standalone (17/131/500 accepted, 501 refused). Django
+  pytest is not available on this host.
+
+## 2026-10-12 — Local POC consumer review fixes (ADR-0057)
+
+Valid until: the cross-repo local-POC contract v1 or the ro_data_server POC projection changes.
+
+Independent review of the consumer half found one major defect and four minors. Changes:
+- Major: the real ro_data_server B2 page for a release whose items were all admitted is `full`,
+  `snapshot_complete: true`, `withheld: 0`. The consumer marked it complete and ran full-snapshot
+  reconciliation (rollback check, tombstoning a non-POC row of that city, a sync-state row). Now
+  `Read` never reports a POC pack complete and `ApplyRoedu` drops any `Complete` claim on a POC pack.
+- Events now keep their evidence in a POC-only `source_local_poc_evidence` jsonb column (real
+  `gdpr_relevant`, `privacy_classification`, decision id, deny attestation, admission), added next
+  to `source_local_poc`.
+- RSS/Atom feeds prefix flagged entries with the marker. The sitemap was already safe: it clears
+  the whole query, so `include_past` never reaches it (now pinned by a test).
+- `catalog.EventLocalPOCSQL` probes for the flag column once per query (an InitPlan; checked with
+  EXPLAIN) and evaluates `to_jsonb(e)` only when it exists, so production pays no per-row cost.
+- Fixed-value admission negatives now assert that `LocalPOCAdmissionDigest` itself refuses them.
+
+Checks:
+- Hermetic `go test -race ./...`, `go vet ./...`, `gofmt -l` and `scripts/check-native.sh` pass.
+- On a throwaway 127.0.0.1 `sociallive-postgis-pgvector:16` container (removed afterwards): jobs
+  77 PASS, cmd/social-server 61 PASS, catalog and web ok. The only failures are the 3+3 codec reds
+  already present on the base commit.
+- New `TestLocalPOCCompleteSnapshotIsNeverComplete` and
+  `TestPostgresLocalPOCCompleteSnapshotNeverReconciles`. Removing either guard fails the hermetic
+  test, and removing both also fails the DB test (rollback check fires). The reviewer's real B2
+  page, run through an overlay test, now syncs with `complete:false`, leaves the non-POC row
+  scheduled and writes no sync state.
+
+## 2026-10-12 — Development-only RO-EDU local POC, consumer half (ADR-0057)
+
+Valid until: the cross-repo local-POC contract v1 or the ro_data_server POC projection changes — then regenerate the fixture and requalify.
+
+Owner authorization "POC consumer half". Changes (all behind the dev + loopback + `ROEDU_LOCAL_POC=1` gate):
+- Envelope accepts `local_poc: true`. Admission items pass the contract verifier rule; the rest of the validation is the unchanged production validator.
+- POC venues store their honest evidence in raw tags. POC events are flagged with `source_local_poc`, a column that only a POC sync adds.
+- `ROEDU_SYNC_CITIES` runs the sync per city and skips empty cities. The POC import floor is 0.9, and a POC sync resolves no Commons covers.
+- The marker and banner render on event and place pages and lists. `include_past=1` lists past POC events.
+- The fixture `roedu-local-poc-page.json` is the real 5/8 producer deny (privacy `unknown`) over the production fixture's evidence. It is generated by `generate_roedu_local_poc_fixture.py` (venv at romania_scraper main 000ecee2). Its admissions match romania_scraper `local_poc_admission` on branch `feat/policy8-local-poc` (7d792928).
+
+Checks:
+- Hermetic `go test -race ./...` and `go vet ./...` pass; `gofmt -l` is clean; KAT-1 and KAT-2 pass.
+- On a throwaway migrated `sociallive-postgis-pgvector:16` container (127.0.0.1 only, removed afterwards), the POC jobs and web DB tests pass, and so do web and catalog in full.
+- `scripts/check-native.sh` passes.
+- End-to-end smoke (all loopback): the built binary ran against a loopback stand-in producer page, with ffmpeg replaced by a stub that is never invoked.
+  - `--job sync_roedu` with `ROEDU_SYNC_CITIES=Cluj-Napoca,Pitesti` applied Cluj (1 venue, 2 events, including a past `expired` 0.9 row) and skipped Pitesti as refused.
+  - `/events/`, `/events/?include_past=1`, `/places/list/` and the event and place detail pages show the marker.
+  - Without `--dev`, startup refuses `ROEDU_LOCAL_POC`. With the flag unset, the job refuses the POC envelope, and the same database still renders its markers.
+- Bug the smoke caught: the lazy `ALTER TABLE` ran after deferred-FK event inserts (SQLSTATE 55006). The column is now ensured at transaction start, and the DB test restores the baseline's deferred FK, so it fails on the old order.
+- The templates render byte-identical when the POC flags are off: every marker is an inline `{% if %}` appended to an existing line, checked by stripping those segments and comparing with HEAD.
+- Failures, all present on the base commit 34c4d40 too:
+  - jobs: 3 failures, missing ffmpeg;
+  - cmd/social-server: 3 failures, codec runtime unavailable;
+  - commands: `TestNativeSeedBrowseUsersEventsAndMobileScenarios` fails with "invalid request".
+
+## 2026-10-11 — RO-EDU consumer pin moved to policy schema 5 / ruleset 8 (ADR-0055)
+
+Valid until: the producer policy tuple, the social projection or the serving layer changes — then regenerate and requalify.
+
+Owner directive "move everything to policy version 8". Changes:
+- The Go verifier and the legacy Python oracle now accept only 5/8/`140290d4…`.
+- The `roedu-page.json` and `roedu-validator.json` fixtures were regenerated through the real chain by
+  `services/server/internal/jobs/testdata/generate_roedu_fixtures.py`: producer classifier 8 and the 5/8
+  evaluator (romania_scraper main 000ecee2), then `materialize_social_items`, then ro_data_server 5183272
+  `_public_pack_view`. The generator reproduces both files byte for byte.
+- The generated attestation keys equal `exactKeys` (15 keys) and the item keys equal `commonFields` plus the
+  per-kind fields. Reasons stay `["explicitly_cleared"]` and no lawful-basis field reaches the projection.
+- Two hand-written values the real chain never serves were replaced: the license literal
+  (`RO-LAW-8-1996-ART-9` → `Law 8/1996 art. 9`) and the `.test` ticket host (withheld by the serving
+  layer → `tickets.example.org`).
+- New `TestROEDUPolicyTupleIsExactlySchema5Ruleset8` checks that 5/8 is accepted and that 4/6, 5/7 and
+  half-moved tuples are refused.
+
+Checks:
+- Hermetic `go test ./internal/jobs/... ./cmd/social-server/... ./internal/contracts/...`, `go vet` and
+  `gofmt -l` passed.
+- Against a disposable migrated PostGIS/pgvector container, jobs ran 65 pass / 3 fail and
+  `cmd/social-server` ran 59 pass / 3 fail. The failure sets are identical on a main export (jobs 64 pass,
+  since main lacks the new test). Every failure is a missing host media codec (`ffmpeg`/codec runtime).
+  Every RO-EDU DB test passed.
+- Legacy `test_roedu_client` ran 43/43 on both the branch and main under a minimal SimpleTestCase settings
+  module; the full reference image was not run. With 5/8 client code over the old 4/6 fixtures it fails
+  (6 failures, 1 error).
+- `check-contracts -summary` was identical to main: 1020 verified, 1651 unresolved, 0 invalid, exit 1.
+- `ruff check` and `ruff format --check` passed on the touched Python.
+
 ## 2026-10-06 — GUI capture preparation preserved
 
 Valid until: source `aa10645` or the approved capture/gate contract changes — then recheck applicability.
@@ -2957,3 +3241,273 @@ owner kit sync and reviewed ownership/native-versus-historical matrix; no
 unspecified READY slice or formal milestone claim. Pruned only the verified
 superseded owned Git export after retaining acquisition/result metadata and the
 latest successful reproducible setup; original branches/captures/keepers remain.
+## 2026-10-13 — Event city/place facets feature (ADR-0060)
+
+Valid until: the feature's implementation or qualification inputs change — then treat as history.
+
+Added read-only `/api[/v1]/events/facets/`, sharing the actual event parser and runtime
+publication policy. A single PostgreSQL statement aggregates the entire matching query
+before independently bounded city/place bucket pages. City comparison aliases share
+one SQL key; actual labels and distinct public venue IDs survive. Missing facts,
+completeness and POC publication notices are explicit. Existing event/place schemas,
+GUI, ingestion, snapshots and release selection remain unchanged.
+
+Verification on 2026-10-13:
+- `bash /home/dobo/work/_temp/feat__social-coverage-api-20261013/social/run-qualification.sh`:
+  isolated real PostgreSQL/PostGIS fixture, catalog54 + web106 top-level PASS,
+  0 SKIP / 0 FAIL; all19 facet filter subcases pass separately. New source-built
+  server/test binaries use existing release-codec and database images, not a newly
+  built production image. Disposable fixture and private credential file removed.
+- `scripts/check-native.sh /usr/local/go/bin/go` with Go1.27.1, Node24.21.0, offline
+  modules, GOMAXPROCS2 and task TMPDIR: source hashes, format, vet/race over31 package
+  results and Node4 pass. Its no-DSN database skips are not fixture qualification.
+- Cheap parser/schema/route/SQL-projection/protocol checks and docs53/whitespace pass.
+  Public documentation now describes382 operations/320 paths, adding only2 routes.
+- Restoring the exact base registrar through a Go source overlay makes the new
+  invalid-query registered-route test fail with404, proving it detects absent routing.
+  First fixture run exposed a test-only wrong expectation for `limit=0` (clamps to1,
+  not50). That single expected value/returned count was corrected; production bytes
+  stayed identical. Compact first-run logs/manifests remain in task scratch history.
+
+Source/test SHA256 inputs, commands, fixture image IDs and logs are bound in the task
+qualification receipt. Independent final review and all21 lanes before eventual
+owner app-main landing remain separate. No source landing, runtime switch, source
+activation, provider use, GUI milestone or production action is claimed.
+
+Independent final review recomputed all protected source/Git objects, qualification artifacts and retained first-attempt history: catalog54 + web106 top-level passes, zero failures/skips, with19 filter subcases separate; native31 packages and Node4. Review `docs/reviews/native-go/event-facets-independent-review-20261013.json` is clear. Source `724f20cdcde8dff53268fc903f9b12ad2fcce6b4` is unchanged by this evidence-only closure. Full21-lane landing qualification, production image/audits, runtime activation and app-main landing/push remain unperformed; this reviewed feature is prepared for owner integration.
+
+
+## 2026-10-13 — Full integration inventory assertion correction
+
+Valid until: the tested source or fixture inputs change — then treat as history.
+
+A full21 run on published `c73332d5d77964ce5c9a19f1cf12dbe17e820afd`
+completed configuration64/accounts75/admin21, then stopped in app with34 passes
+and1 failure,0 skips: `TestNativeDocumentationRoutesAreReachableThroughApplication`
+retained the pre-facets380-operation/318-path expectation. Total attempted194 PASS /
+1 FAIL /0 SKIP; the remaining17 lanes were not run. This was a genuine failed
+integration check, separate from the earlier reviewed catalog54+web106 proof.
+
+The only test-source correction is that assertion's exact382/320 inventory. JSON
+parsing, OpenAPI3.0.3, anonymous/no-cookie/native-header and HTML assertions remain.
+A scan of every native inventory assertion found only the already-correct web
+382/320 assertion and the dynamic route-inventory equality besides this app case.
+No API/source behavior, schema, dependency, production image or frontend changed.
+
+`bash /home/dobo/work/_temp/feat__social-coverage-api-20261013/social/run-app-inventory-fix.sh`
+compiled the corrected app tests with Go1.27.1/race and ran the entire app lane on
+a fresh private PostgreSQL/PostGIS fixture:35 PASS /0 SKIP/0 FAIL. Host builds use
+GOMAXPROCS2/-p2/offline modules; fixture/test containers use2CPU/2GiB/zero swap and
+the existing pinned codec/database images. The failed full run's exact logs and
+input hashes remain in task scratch `social/history/full21-c733-stale-app-assertion/`;
+its disposable container/network/password file were removed and verified absent.
+
+Original160 affected-lane qualification and native31-package/Node4 receipts stay
+unchanged historical evidence. Root source review is complete; corrected full21
+qualification and owner app-main landing/push remain pending. No runtime activation,
+fresh canonical production-image build/audit, deployment or live ingestion is claimed.
+
+
+## 2026-10-13 — Event facets full21 qualification closure
+
+Valid until: the qualified source or fixture inputs change — then treat as history.
+
+Exact corrected source `37129450d27990c6f7620bb72155ddbc8a094a20` completed the
+unchanged canonical `scripts/qualify-native.sh`: **747 unique top-level PASS /
+all21 lanes /0 SKIP /0 FAIL**. Counts are configuration64/accounts75/admin21/app35/
+backup5/booking7/budgets16/catalog54/commands29/contracts5/discovery2/donations5/
+export5/jobs84/media54/messaging60/notifications4/recommendations8/safety56/social52/
+web106. These are top-level tests; nested cases are not added to that total.
+
+`bash /home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/run-qualification.sh`
+used Go1.27.1/race, GOMAXPROCS2/-p2/offline modules, the existing pinned codec and
+PostgreSQL/PostGIS images, actual codecs and the independent sidecar process. A
+resource-only Docker wrapper added2CPU/2GiB/zero swap without changing package
+selection, assertions, flags or fail-closed PASS/skip checks. Resource inspection
+on the initial integration run matched those limits; the corrected run used the
+identical resource wrapper and flags. The owned fixture/network/password file were
+removed; a responsive host Docker inspection independently verified absence.
+
+The [full checkpoint](docs/reviews/native-go/event-facets-full21-checkpoint-20261013.json)
+(SHA256 `b149f4dc3d1b440d930b89bddf8f470068442dafd4b4683209fa0836d91b77b2`)
+and [independent review](docs/reviews/native-go/event-facets-full21-independent-review-20261013.json)
+(SHA256 `d4bb37ae8e772a9e42c6c5cbdcd87b4a02582b990d384f54e904b2e8cb17d67b`)
+recount all21 logs,747 unique tests,61 artifact hashes, ten protected source/Git
+objects and module/runner bindings. No reviewer gate/fixture rerun was used.
+
+Genuine first-full c733194 PASS/1 FAIL/0 SKIP, corrected app35 and original160
+affected-lane receipts/logs remain unchanged history. Earlier derived binaries
+were inventoried rather than copied into failed-run history; rolling full21 paths
+hold verified371 successors. Historical inventories do not promise old binary
+bytes remain available. One rolling full21 setup and compact history are retained;
+only exact superseded task-owned diagnostic binaries are eligible for subsequent
+cleanup, with the actual deletion receipt kept in task scratch. Source branch and
+worktree, shared images/caches and other owners' work remain.
+
+Native31-package/Node4 source checks remain historical evidence, not an exact371
+rerun claim. No fresh canonical production-image build/audit, hosted CI run, Social
+feature runtime activation, app-main landing/push, provider or production/child
+activation occurred. Root publishes this reviewed feature; owner integration and
+first-deployment gates remain separate. This closure changes documentation only.
+
+
+## 2026-10-13 — Final native checks and authorized Social landing
+
+Valid until: the qualified source or runtime inputs change — then history.
+
+After reading the plan explicitly listing the Social landing/push and local runtime refresh, the owner asked to finish step 1 and continue the next steps autonomously. This authorizes this feature's development landing and local POC activation; no GUI milestone, public deployment, provider activation or real-child launch is accepted by it.
+
+On exact clean `730dd5c7e1f35ff05555aba4c3f6369d1e6b06b3`, the unchanged `scripts/check-native.sh /usr/local/go/bin/go` passed portable auth hashes, gofmt, vet, race checks and the Node24 offline worker. There are **27 Go package pass results (18 cached) and four Node tests**, not 31 Go packages plus four Node tests. Root found the original broad `^ok` counter had included Node TAP lines `ok 1` through `ok 4` as packages. The first receipt is preserved unchanged as count-error history; the [corrected checkpoint](docs/reviews/native-go/event-facets-native-landing-checkpoint-20261013.json), [root recount](docs/reviews/native-go/event-facets-native-root-review-20261013.json) and [historical erratum](docs/reviews/native-go/event-facets-native-count-erratum-20261013.json) separate the units. The same correction applies to the two retained earlier native logs. No test outcome changed and no gate was rerun for this reporting correction.
+
+The full integration proof remains 747 unique top-level passes across all 21 PostgreSQL/codec lanes, zero failures/skips. Git trees for services, frontend, apps, templates, locale and db are identical to qualified `37129450`; only seven documentation/evidence paths changed. Native's no-DSN skips do not substitute for that separate full integration proof. Applicable docs checks cover 53 files with zero findings, and whitespace passes.
+
+ADR-0040 item 3 applies to landing the integration branch or changing Dockerfiles, dependencies or the runtime image. This is a narrow feature branch with none of those changes; a new image/Trivy/govulncheck cycle is not triggered here, and no fresh audit pass is claimed. Frontend/browser worker assets are unchanged; the additive Go-embedded route inventory is covered by native contracts and does not change the browser bundle. Public/first-deployment gates remain separate.
+
+Independent final native/landing review is clear: [review](docs/reviews/native-go/event-facets-native-independent-review-20261013.json), SHA256 `ff4616bf841e573525ede633909efddd5a9cca7bcf58203eea7ff32ed3874a82`. It independently separates Go/Node results, preserves the count-error receipts, verifies applicable gates and unchanged integration source trees, and confirms the narrow latest owner authorization.
+
+
+## 2026-10-13 — Explicit approval, pushed facets and verified local runtime8
+
+Valid until: source/runtime identities or selected release change — then history.
+
+The first app-main push was refused by automatic approval review before execution because the workspace reserves app-main pushes for Paul. Paul then explicitly answered “Approve this Social main push and local POC refresh” for `b55afe9942edf6feefa9cebe617caaefb45b1d00`. That exact commit was pushed successfully. This adds no GUI milestone acceptance, production deployment or real-child/provider activation.
+
+The source-only local update changes only the archived Social export and Social binary. Producer `24b32ec4`, data server `56955e4`, static assets, selected L7 and data-server PID are preserved. The fresh binary carries exact reviewed source b55afe9; its six application input trees match the 747-case qualified source. This subsequent documentation closure does not require another application build.
+
+The first activation stopped at a startup identity observation and restored exact prior source/binary/metadata with healthy services. Its original prepared packet `0e5d8521…` remains immutable history. Review found sequential observations can cross the same child's exec or listen transition; no retained per-sample trace proves the vanished ordering. The narrow repair resamples only the authenticated own PID/starttime and listener, preserves foreign-process/socket refusal and skips only an individual disappearing fd. It passed 86 unique synthetic controls, with 11 physical transaction subcases counted separately, and two independent source reviews. Two controls reproduce the old false refusals before demonstrating repaired success.
+
+A fresh prepared packet `d07b8a05…` bound the restored process. Activation succeeded with manifest `37878424…`, receipt `562ba731…`, and cleanup complete. Both `/api/events/facets/` and `/api/v1/events/facets/` pass bounded loopback checks: 1,568 matching events, 17 normalized city buckets, 104 distinct place buckets, zero missing city/place values in the imported query, pagination/city filters and POC labels preserved. Database totals remain 1,568 events, 754 upcoming at the observation and 104 places. Upcoming is clock-sensitive; these are stored records, not semantic uniqueness. The Giurgiu producer source fix is separately qualified and awaits a new data refresh.
+
+[Activation receipt](docs/reviews/native-go/event-facets-runtime8-activation-20261013.json) and [startup review](docs/reviews/native-go/event-facets-runtime8-startup-review-20261013.json) preserve these scopes. Current local setup and restart entry remain `_temp/feat-local-poc-real-data/ACTIVE_RUNTIME.md`; the updater is a completed one-shot operation. Earlier failed packets remain compact history; original baselines and sealed releases are retained.
+
+Independent [final runtime review](docs/reviews/native-go/event-facets-runtime8-final-review-20261013.json) verifies the reconstructed exact manifest/receipt, complete current Git export and running binary, healthy owned listener and unchanged producer/data/assets/80 protected receipts. At 15:13:12 UTC counts remain 1,568/754/104; the independent bounded facets smoke passes. No additional whole-release rescan or model/provider action occurred.
+
+
+## 2026-10-20 — GUI integration source checkpoint (qualification pending)
+
+Reviewed main5426e915 is integrated with GUIa2676cf without hand-editing product policies. Main product changes merged automatically; both histories and ADR index entries are preserved. The pre-integration GUI status below is historical exact-source evidence, not a result for the combined source.
+
+<details><summary>Pre-integration GUI status at a2676cf</summary>
+
+# Status — social_media_activities_app
+
+Last verified: 2026-10-20 (Topics bounded functional feature independently accepted ef74a9c3; exact S2 completePG7 and T desktop accepted; no main/milestone/activation)
+
+Current Topics result: [canonical native self Topics record](docs/reviews/gui-native-topics/README.md). NativeS2 1bde5522 completePG7/491roots1478named/zero skips acceptedbce8623c;first actual desktop68c030b1 accepteddbbca414:8JS8noJS/24strictAxe537/53prior bodies/105artifacts/ownedcleanup. Independent bounded featureef74a9c3 is byte-exact canonical acceptance. Footer spacing/RO English fallback remain explicit;benchmarkNOT_REQUESTED. No main/milestone/activation. Earlier Topics pending/source-only statements below are historical checkpoints. Accepted [date record](docs/reviews/gui-native-notification-inbox-dates/README.md) bc10/6611 and [account record](docs/reviews/gui-native-account-center/README.md) e31/2799/2c38 retain exact source epochs,all earlier failures and mixed measurements. Account historical BODY elapsed35.35–66.26% and allocationCOUNT39.59–46.77% higher;allocatedbytes14.50–23.39%,HTML37.15–42.27%,gzip26.38–30.11% lower;no general speedup. Their actual retention receipts cover4,464 then4,500superseded generated files;removed raw paths are unavailable,old0afd Gitstdout is not recounted. HistoricalRsource/binaries/all695PGproofs INCLUDING Gitstdout remain protected. Language-save [ADR-0067](docs/adr/0067-native-language-action.md): repairedL20dbcc6ba/result25485a22 is independently accepted7449f313 for completePG7/469roots1,395named/zero failures-skips-race/340commands695artifacts/all15roles7DBprivatePGcleanup;all1,368priorR cases retained. Current account methodM016c/resultd868 is independently acceptede934:8JS8noJS/24strictAxe531/37literalbc10bodies/85artifacts/cleanup,and all32PNGs equalM3. No new benchmark requested. Companion independently accepted40339c77/result426117d2:5real registeredPOST/localGET flows,5refusals,3strict synthetic-pageAxe/48passing observations,45literalbody identities,owned cleanup; syntheticGET/registered-handler scope only;bounded feature independent5d6004ce (exact real review copied as canonical acceptance.json);see [current language record](docs/reviews/gui-native-language-action/README.md). L1c438/e802 FAILED three custody roots before six unrun lanes;exact repair andoriginalFAIL remain ADR/Git/evidence history. CurrentL2source/binaries/ALL695physicalPGartifacts,currentUI85 and accepted11-filecompanionraw remain in place. Separate exact failed-L1 retentionb61733e9/postf8a60b8837f9e252fd33f0c9baf346ab90d5d3eccf11ef5e8b74e4cd8612ba6e removed onlyL1source/binaries/command006:2290files248dirs407696307logicalB;deletedgeneratedbytesunavailable,originalfailedresult/manifest/141non-targetrowsremain. No further cleanup by this metadata closing. Sourcecode/accountmethods/helpers/assets/catalogues/dependencies unchanged. No main/milestone/production/provider/government/legal/real-child activation. Display/access [ADR-0068](docs/adr/0068-native-display-access-preferences.md) is applied after published language closing2750eb58. Applied native display/access presentation passes iterative focused race checks:35roots/127named passed,including all9new web roots;one pre-existing DB root was unexecuted/skipped without a DSN. Vet web+app,format,whitespace and docs67 pass. Complete affectedPG7 on exactS e0065ca9 is independently accepted176b83f7/result6169:483roots1435named,0failures/skips/race,all469/1395priorL2 identities and14new roots,342commands699artifacts/2293source/15roles7DBprivatePGcleanup0-3-1. The previously unexecuted no-DSN root and all5new App roots now pass in PG. Native display/access bounded functional feature independently accepted463bf0e1 on exactS e0065ca9 and desktopT2 d2cd4a88;see [current display/access record](docs/reviews/gui-native-display-access/README.md). ActualUI4984f789/reviewb3526ecf:8JS8noJS/21unique strictAxe462passing/0violations-incomplete/114keyboard/45literalpriorbodies/94artifacts/ownedcleanup. Firstfdf9266c remainsFAIL;nonqualifyingdiagnostic2fc04ed2 and source-onlyV3 repairs do not replace actualUI. BenchmarkNOT_REQUESTED. Footer spacing and existingROcatalogue fallback remain explicit polish work. Four canonical metadata files reference original proof in place;no new archive or further deletion. No new authority or milestone acceptance. No new performance or milestone acceptance. Applied exact whole-reviewed68fe231f Topics/core/test-preservation/XZ source. Focused race runf5f488cb passed32roots/117named,including all8newTopics roots;19pre-existing database-dependent roots were skipped without a DSN,including the registered topics/guardian and SPA roots,so those remain mandatory zero-skip checks in completePG7. Affected vet web+app,mechanical format10Go/AST2Python,docs69 and whitespace pass;no race warning. Source-selected4XZcontrols and exact fourth-root-only memlimit-removal sensitivity1cbc are independently accepted in68fe;these tiny fake-Git fixtures do not qualify a new producer. Exact whole-SHA XZ/Git blob-mode-PAX preflight,complete affectedPG7,53fresh literal prior bodies and finite desktop qualification remain pending. No benchmark,new policy/main/milestone/production claim. Complete affectedPG7 on exactS2 1bde5522 is independently acceptedbce8623c/result6057d189:491roots1478named,zero failures/skips/race,all483/1435prior identities plus8Topics roots43named,341commands697artifacts2311sourcefiles/15roles7DB/privatePGcleanup. All19 previously unexecuted no-DSN roots now pass in PG. Whole strictXZ/Gitblob-mode-PAX matches preflight0384 and rawf707;native source publicationb7814d48 is exact S2. Finite8signedJS8noJS/24strictAxe/53fresh literal prior bodies remains unexecuted. No benchmark,new authority or milestone acceptance.
+
+- **GitHub Actions (Last verified: 2026-10-05):** owner-requested on-demand policy, [ADR-0033](docs/adr/0033-manual-github-actions.md). Ordinary `ci.yml` calls Go/Node workflows; original Python gates remain in optional manual `reference.yml` (ADR-0038). YAML/input/job/
+  read-only permission checks pass. Native Actions remains manually disabled; no hosted run claimed.
+Current truth: STATUS > newest ADR > other docs. History: WORKLOG, ADRs and git.
+Family pages: [ADR-0061](docs/adr/0061-native-family-pages.md) implements two typed Go views. Exact source118fd7f passes six complete affected PG packages:395roots/1,149named passes, zero skips/failures, six guarded database retirements/checkpoints and13owned-container cleanup. Eight desktop/two no-JS fixtures,192Axe predicates and27 button samples pass; [compact qualification](docs/reviews/gui-native-family/README.md) retains failures and source joins. Native HTML/allocations are smaller; body CPU remains higher than original Pongo. No full21/current-image/main/milestone/deployment claim. Group creation: [ADR-0062](docs/adr/0062-native-group-create.md) is independently feature-qualified: complete affected PG1f8c974/6packages/408roots/1,190named/zero skips plus scoped opaque-header presentationd05343b; all runtime Go unchanged. UI10states/30strictAxe/2no-JS/40PNGs and eight byte-exact family bodies pass; [keeper1bb27df9](docs/reviews/gui-native-group-create/README.md) retains exact source epochs, failures, cleanup and higher CPU/allocation-count measurements. No later exact-source completePG/full21/current-image/main/milestone/activation claim. Group detail: [ADR-0063](docs/adr/0063-native-group-detail.md) is independently feature-qualified on exactfa3e7c9: affected PG6/428roots/1,246named/zero skips, UI7+7/21strictAxe/18old bodies/native confirmations/cleanup; [keeperf1fc/acceptance948f](docs/reviews/gui-native-group-detail/README.md) preserves all failures and105 historical aliases. Matched body CPU is near-equal EN/modestly lower RO,allocated bytes/HTML/gzip lower but allocation count higher. Prior retention pruned780,572,285B; later Notification retention supersedes/prunes fa3 generated source/binaries. 496 was the rolling setup after the original reviewed inbox retention; Group-detail logs/UI/Git refs/keeper remain. Notification preferences: [ADR-0064](docs/adr/0064-native-notification-preferences.md) is independently feature-qualified on exacte900960 (4ad6/f332): complete affected PG6/436roots/1,279named/zero skips, UI6+6/18strictAxe408predicates/12keyboard Save states/25old bodies/cleanup; [keeper29a9ff](docs/reviews/gui-native-notification-preferences/README.md) retains1,484members/133historical aliases and immutable failed history. Current self-only services and mandatory delivery remain unchanged. Matched elapsed body timing44%EN/42%RO and allocations6.82% higher; allocated bytes26–27%, HTML4.5–4.7% and gzip9.5–10.3% lower. No CPU-profile/overall-speedup/full21/current-image/main/milestone/activation claim. Verified superseded owned outputs559,474,592B pruned; deleted raw paths unavailable, latest setup/source/logs/packets remain. Feature branch only. Notification inbox: [ADR-0065](docs/adr/0065-native-notification-inbox.md) is independently feature-qualified on exact496056a (205b/38ab): complete affected PG7/446roots/1,338named/zero skips,339commands/693artifact rows,15CIDs/sevenDBs/privatePG cleaned; UI6JS6no-JS/18strictAxe375predicates/31prior bodies/66assets78GET/cleanup. [Keepere007](docs/reviews/gui-native-notification-inbox/README.md) retains2,695members and distinct failed f087/0e PG, firstUI and causal CSS histories. Existing self-only newest100/safe links/Bucharest dates and all-own idempotent mark-all remain unchanged. Matched warmed elapsed body timing80.76%EN/113.10%RO higher,allocated bytes28.18% higher,HTML46.49%/45.79% larger; allocations5.16%/5.14% lower and gzip7.55%/10.02% smaller. No general efficiency or CPU-profile claim; the separately qualified date follow-up and accepted custody/retention are recorded above. Reviewed rolling retention removed8,863superseded generated files/967empty directories/1,278,664,437logicalB. Those raw generated source/binary/duplicate Git stdout paths are unavailable; all historical logs/UI/source packets/branches/keepers remain, latest496 source/binaries/UI were preserved at that checkpoint; 0afd source/binaries/UI were retained at the3eef checkpoint; later account502be/e1cc pruned only its generated source/binaries,and its UI/logs/keepers remain. No full21/current-image/main/milestone/production/provider/real-child activation.
+
+## What this is
+
+A children-first, in-person local-activities social app: no ads, deterministic
+discovery rather than engagement ML, Cluj-Napoca first, EU residency required,
+and donations only. `docs/SAFETY.md` owns the safety invariants.
+
+## Product contract
+
+- **RO-EDU canonical places/events (ADR-0023/0024):** the only canonical product accepted is
+  `roedu:social_media_activities_app:events_places:v1`, schema 1. Pages require one immutable promoted
+  release/snapshot identity, coherent completeness, safe bounded pagination, exact facts-only fields, policy
+  schema 4/ruleset 6/hash `07f27d3c9a5e5898ba7cfac686c645713114dd9c13d72ecc054570d368daf58d`, and
+  capture/acquisition schema 3. Unknown fields, prose/person data, internal evidence/paths, unsafe URLs,
+  policy drift, malformed relationships, duplicates, and page drift fail closed.
+- **Lifecycle and reconciliation:** source lifecycle/confidence/category,
+  recurrence/timezone/price/availability, source timestamps, venue identity, and pack/release/snapshot
+  identity are retained. Cancelled, postponed, removed, moved-online, tombstoned, low-confidence, or
+  unsafe-venue events stay out of public discovery. Only an unbounded clean full snapshot can reconcile
+  absence, atomically within its exact pack/city scope; partial/delta/legacy reads cannot.
+- **Plural sentiment and moderation (ADR-0029):** fixed appreciation facets, adult-only dissent, private
+  conduct concern, minor-protective thresholds, anti-pile-on/coordination sensors, batched public summaries,
+  and audited human moderation are implemented for activity and group threads. Counts and engagement ranking
+  are not exposed.
+- **Private-thread media (ADR-0026):** canonical AVIF/WebP image processing and adult-only, cohort-gated
+  private-thread video are implemented with fail-closed scanning, sandboxed transcoding, signed serving,
+  retention/erasure coverage, and no public/discovery short-video surface.
+- **Identity surfaces (ADR-0027/0028):** non-collectible signature-avatar styles, uniqueness enforcement,
+  tiered profile visibility, block/cohort vetoes, and query-bounded hover cards are live. Minor pairs remain
+  clamped.
+- **Public/agent access (ADR-0025):** anonymous event/place APIs, gate-filtered snapshots with safe V2
+  source facts, event price/availability JSON-LD, the no-DB Go sidecar, and crawler contracts are
+  implemented. Public activity export remains the hard-coded ADULT + explicit-listing subset.
+- **Core product/runtime:** D1–D10 and the audited feature waves, phased React/Preact UI behind kill
+  switches, API/CSP/header/readiness hardening, bounded native HTTP/database behavior, EU-hosting templates,
+  and deferred jobs are present. The production Terraform has never been applied.
+- **Native Go serving backend (ADR-0032):** `services/server` now owns account/password/OAuth,
+  EUDI/guardian/cohort gates, domain APIs, voting, moderation, media, encrypted live transport,
+  HTML/SPA hydration, booking/donations, notifications/discovery, native schema adoption and jobs.
+  Docker/Compose/systemd/Render/cloud-init launch paths invoke Go, but Render and fresh cloud-init cannot
+  boot yet (RELEASE_READINESS §Before first deployment). Shared authentication is a hash-verified
+  portable copy; Django remains offline contract/reference tooling.
+- Go conversion on `origin/main` (2026-10-04): landing authorized by the owner 2026-10-04; human
+  auth/erasure/privacy/safety code review pending — gates first deployment (ADR-0040).
+  Social deployment/provider/minor launch gates remain separate from source landing.
+
+## Safety and operating gates
+
+- A RO-EDU venue remains child-venue **UNKNOWN** until staff approve that exact
+  place. Low-confidence and non-live lifecycle rows remain nonpublic.
+- Canonical ingestion never copies descriptions, people, private/internal
+  evidence, internal paths, or raw provenance. License/access metadata survives.
+- Cohort, guardianship, block, minor-contact, moderation, consent, and
+  private-thread visibility gates are unchanged by the V2 integration.
+- Landing needs green local gates on the exact head plus an independent reviewer (ADR-0040); it does not
+  run ingestion, enable scheduled sync, deploy, apply Terraform, or authorize minors.
+- First deployment is gated by human auth/erasure/privacy/safety code review and the list in
+  `docs/RELEASE_READINESS.md` §Before first deployment (audit 2026-10-05).
+- Launch is blocked on the GDPR/DPIA/DPO/parental-consent stack and production
+  operations. Never apply paid infrastructure without owner authorization.
+- Audit 2026-10-05 G2: report eligibility (ADR-0041), direct-only blocks/sanction chat eviction (ADR-0043),
+  avatar/fingerprint minimisation (ADR-0044), guardian authority (ADR-0045), co-member logistics (ADR-0046),
+  typing throttle, group mentions, message history/query ceilings and safe-exit API responses (WORKLOG).
+- Audit 2026-10-05 G3: administrator-only console; failed-login/IP admission, bounded media/runtime and budget families;
+  busy avatars return503 without spending an attempt. Two snapshot producers still differ (WORKLOG, GO-EXPORT-01).
+
+## Open work
+
+- GUI preparation (ADR-0056/E5Q2): Q6 no-flag focused tests are source-only, without skips; flagged runs retain all requirements. Committed [profile runner](tools/gui-public-golden/managed_profiles.py) exports clean Git source and preserves17/28/45/strict cleanup; [79b current run](docs/reviews/gui-preferences-get-transport/repro-current-checkpoint.json) passed90/3packages,100GET+12API/strict cleanup. [Preparation plan](docs/execplans/gui-app-migration-a.md) completed its finite slices; formal S3A is BLOCKED-DEP on S0b/owner kit sync and exact ownership/capture applicability review. [Current preference/G1 proof](docs/reviews/gui-preferences-get-transport/README.md):22f actual90profile actions/89labels/3packages PASS (default17+preferences28+G1-45),100registeredGET/50pairs,12settingsAPI GETs; canonicalHTMLhard0, strict negatives/4-input custody refusals,formatter4/guards/PG2freshDBs/ownedcleanup passed. Historical691/794 failures retained; no old=current semantics/authprivacy/Live/full/device/default/adoption claim. [Campaign meter proof](docs/reviews/gui-campaign-meter/README.md):3bc actual65 once PASS/298JSON (24new+all41preferences),34strict hash rows,formatter0/ownedcleanup;126/18/7/raw38/private55/d722 exact. Exact fractionalSVG/scopedCSS and owning preferenceCSS inverse; full currentCSS served. No browser geometry/CSP/finance/authprivacy/full/device/UI/templ/adoption claim. Current G1 OS/FS registered GET transport813f PASS:45 once+package/222JSON,37pairs/74GET/31HTML+2anonymous302+4native404/7refusals; formatter0/source124+current20+18+7+PG6+raw38+private55 exact/ownedPG+CID cleanup. [Current checkpoint](docs/reviews/gui-original-get-walk/current-transport/checkpoint.json); current-current template/catalog only, no semantic original oracle/normalized baseline/full/privacy/Live/device/templ/adoption; later docsH not retested. G1 strict frozen-raw receiver fce7/R4 PASS:56 once+package/273JSON,31HTML hard0/6nonHTML/7mutations/10custody; actual38 wrapper API attempts, not process/browser census; formatter0/110+18+7+38+55 guards/owned cleanup; [receiver checkpoint](docs/reviews/gui-original-get-walk/receiver-checkpoint.json). No renderer parity/accepted normalized baseline/full/M0/privacy/Live/device/adoption. Existing raw historical-source/current-native oracle [a115/R6 proof](docs/reviews/gui-original-get-walk/README.md):54 once PASS+package/220events,37GET(31HTML200/2anonymous302/4native404),9mutations/6refusals,format0/108+102guards/owned PG+CID cleanup;20 historical75dc/native14 joins. No literal75dc binary/Normalize/full/M0/privacy/Live/device/adoption. R2–R5 failures retained; later docsH not retested. REST assertion closure remains separate:6 social API declarations, booking assertions, export query equality and
+  existing donation REST assertions; [bounded plan](docs/reviews/native-go/rest-contract-plan.md). Finance service/HTML gaps remain separate. [Public GUI fixtures](docs/gui-public-golden-fixtures.md):[SOC-5 e13/prior proofs](docs/reviews/gui-public-original/community-style-checkpoint.json) retained. SOC-6 [bdeb scoped proof](docs/reviews/gui-public-original/community-pagination-checkpoint.json):34oncePASS(14card+20pagination)/160events,format0/29+18guards/ownedcleanup;72 source-expected only, no invocation census. SOC-7 [b540 proof](docs/reviews/gui-public-original/places-nonce-checkpoint.json):46oncePASS/210events,fmt0/53+18guards/ownedcleanup; shared Home/activity PRESENTATION only. SOC-8 [39ef proof](docs/reviews/gui-public-original/preferences-layout-checkpoint.json):41oncePASS/189events,fmt0/65+18guards/ownedcleanup; synthetic authenticated adult PRESENTATION only, two earlier failed runs retained. SOC-9 [fc7 proof](docs/reviews/gui-public-original/activity-form-nonce-checkpoint.json):44oncePASS/190events,fmt0/77+18guards/ownedcleanup;8 OS/FS+23binding+10DOM synthetic adult PRESENTATION, prior8ff42PASS/2FAIL retained. SOC-10 [44cc proof](docs/reviews/gui-public-original/activity-browse-nonce-checkpoint.json):37oncePASS/170events,fmt0/79+18/cleanup; synthetic adult presentation only. SOC-11 [7d85 proof](docs/reviews/gui-public-original/my-meetups-nonce-checkpoint.json):native25oncePASS/112events+VM8fake-only,fmt0/86+18/cleanup; no worker/cache/privacy approval. No recapture/default/SDK/backend filters/admission/browser style/CSP/cohort/privacy/full/adoption/device acceptance.
+- Native completion/toolchain/audit stacks (ADR-0035/0038) are source-qualified per ADR-0040; human code review
+  gates first deployment. The1651 unresolved frozen declarations keep Python source/tests and block retirement; [GUI capture prep](docs/reviews/gui-capture-preparation/README.md) remains unsigned/unrun.
+- Build/promote a fresh immutable producer/server V2 release before real sync;
+  the serving repo's producer dependency must be intentionally bumped first.
+- Complete held-event review UX, curated cultural child-venue policy, localized
+  taxonomy/cinema mapping, and production alerting/shared-state operations.
+- Native shared-state/action limits use PostgreSQL (ADR-0037); typed policy overrides and private,
+  optional Sentry reporting are implemented (ADR-0034). Redis/Python worker flags remain refused;
+  external delivery, source landing and production activation still require their own verification.
+- Operational gaps remain in `docs/PRODUCTION_READINESS.md`. Treat an unticked box
+  in `docs/archive/COMPLETENESS_GAPS_2026-06.md` as a hypothesis to verify against
+  HEAD, not a specification — two backlog surveys turned already-shipped entries
+  back into planned work.
+- Hosting provider and box size are RECOMMENDED-NOT-CONFIRMED (ADR-0001 §To revisit; `deploy/README.md` banner,
+  owner note 2026-07-02): reconcile by ADR before procurement. Never `terraform apply` without owner go-ahead.
+
+## Verification record (newest first)
+
+- Thread access `874b437` (2026-10-06):714/all21 fresh tests,0skips/failures; native/hash/vet/race + Node4 + harness17 pass; [receipt](docs/reviews/native-go/rest-thread-access-checkpoint.json).
+- Three mappings/new6-case test: outsiderPOST403/owner201, privateGET403/owner200, guardian ghostwrite403/ward-own201; persisted author/body and zero-write/privacy checks;4 sensitivity controls fail intentionally.
+- Twenty-one exact mappings:1020 manifest claims/1651 unresolved/0invalid of2671; retirement exits1. Docs/all defects0; whitespace clean. Production/schema/dependencies/frontend unchanged.
+- Prior [thread-pages713](docs/reviews/native-go/rest-thread-pagination-checkpoint.json), [own-list712](docs/reviews/native-go/rest-own-memberships-checkpoint.json), [RSVP711](docs/reviews/native-go/rest-rsvp-checkpoint.json), [Presence710](docs/reviews/native-go/rest-presence-checkpoint.json), [auth/transit709](docs/reviews/native-go/rest-auth-transit-checkpoint.json) and [transport709](docs/reviews/native-go/rest-transport-checkpoint.json) receipts remain; c27 image supplies codecs only.
+- Original `c27a99f`705 [source/image/audits](docs/reviews/native-go/restart-checkpoint.json) remain; no new deployment-image/audit/frontend qualification. Unused openpgp advisory stays separate.
+- Independent source/sensitivity review approved; final receipt/docs closure receives review before main push. Human deployment review remains open.
+
+## Standard verification
+Native race/vet + shared-source hashes; database/codec contracts require explicit disposable fixtures
+through `scripts/qualify-native.sh` (`docs/agent-testing.md`); its fail-closed gates are regression-tested by `scripts/test-native-gates.sh`. Whitespace/doc gates are required.
+Dispatch-only (ADR-0033) Go/Node CI: `ci.yml`/`native.yml`/`go.yml`; optional offline reference: `reference.yml`; operators: CLI guide/ROEDU integration.
+
+## Doc map
+
+| Doc | Job |
+|---|---|
+| `AGENTS.md` | Operating contract: read first, commands, safety, docs discipline. |
+| `docs/README.md` · `docs/agent-map.md` · `docs/agent-testing.md` | Full index · entry points and routes · gates. |
+| `docs/PRODUCTION_READINESS.md` · `docs/RELEASE_READINESS.md` | Live gap list · launch gate and before-first-deployment list. |
+| `docs/ROEDU_INTEGRATION.md` · `docs/SAFETY.md` | RO-EDU operator contract · child-safety invariants. |
+| `docs/adr/` · `WORKLOG.md` | Decisions · dated history. |
+| vault `projects/social-media-activities-app.md` | Fleet role, status, next. |
+
+</details>

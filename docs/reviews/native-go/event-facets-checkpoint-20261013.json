@@ -1,0 +1,163 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-13",
+  "scope": "additive event city/place facets, feature-source qualification; no app main landing or runtime activation",
+  "base_commit": "af61d48966b2e8f6a85aef6f1e672d1343be6e36",
+  "source_commit": "724f20cdcde8dff53268fc903f9b12ad2fcce6b4",
+  "qualification_binding": "Final compiled/running source and test bytes match every listed SHA256 and source-commit blob; qualification happened before committing these exact bytes.",
+  "source_sha256": {
+    "services/server/internal/catalog/city.go": "6b9b95c194b3c0f1281cc54b074d8688c9ac976c47d040caaae36d319b7061c3",
+    "services/server/internal/catalog/service.go": "a2ac08d352242d8486fcde3fe8c5a2a1589c7f727066c35103a1143ebd1bf233",
+    "services/server/internal/catalog/event_facets.go": "e60991662cd70d82e6958996556d4c3a621b7dd97389981ea781333e8d75ebc1",
+    "services/server/internal/catalog/event_facets_test.go": "dd2e3e289ea795684a73db320595fe5c4265eac6992c84e658a8156c269c6ecb",
+    "services/server/internal/web/public_schema.go": "b927fcd0bee8bdba8987be3ae280517a320836bbba7a15377586c8475a500ccb",
+    "services/server/internal/web/public_schema_event_facets.go": "4b60ebe8779123febd07bc8644f6de9e34549995bfc0b2dceedbbe841131152a",
+    "services/server/internal/web/public_schema_event_facets_test.go": "059226fb180672111362c93ace02be6ce8c376b8fdaa36cd028bab7df1d31ca6",
+    "services/server/internal/web/public_routes.json": "63444f88d0bc34d7c2c30e5ef18ec5696a8979619762e4586455a72cb28d47f1",
+    "services/server/internal/web/public_documentation_test.go": "5be2ed8d47ad0bf0e0205fc625f4fb565e4db001bea7c195cdfdd42c5d50eb41"
+  },
+  "postgres_qualification": {
+    "lanes": {
+      "catalog": {
+        "top_level_pass": 54,
+        "skip": 0,
+        "fail": 0,
+        "log_sha256": "19209eaf2cbdd1e912a160e940108959ef4d423c89940bfea4fc4bd6537a8872"
+      },
+      "web": {
+        "top_level_pass": 106,
+        "skip": 0,
+        "fail": 0,
+        "log_sha256": "68d52cf337d9ae4967fecec99dfb114cf72255570fdd10ae9da22ba2e464eff0"
+      }
+    },
+    "top_level_total": 160,
+    "fixture": "task-owned private disposable PostgreSQL/PostGIS network/container; real baseline schema and foreign keys",
+    "new_facet_filter_subcases": 19,
+    "codec_image_id": "sha256:34c1c2281d9fc96cf486dda8e88497ef5061e21a412c712d8ef61ca14b07031b",
+    "database_image_id": "sha256:6f7f1ad998c5d3f3ed2a4138791afa68c28692dc4d439251ed708e45c1cb0ae8",
+    "fresh_production_image_built": false
+  },
+  "native": {
+    "passed": true,
+    "package_results": 31,
+    "node_tests_pass": 4,
+    "go": "go1.27.1",
+    "node": "v24.21.0",
+    "database_skips": "No-DSN source checks do not qualify database behavior; actual catalog/web lanes above have zero skips."
+  },
+  "docs": {
+    "files": 53,
+    "dead_links": 0,
+    "stale_terms": 0,
+    "retired_verbs": 0,
+    "orphans": 0,
+    "whitespace": "pass",
+    "status_lines": 120
+  },
+  "negative_control": {
+    "base_registrar_restored": "af61d48966b2e8f6a85aef6f1e672d1343be6e36:services/server/internal/catalog/service.go",
+    "new_test": "TestEventFacetsInvalidQueriesFailBeforeDatabase",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "observed": "Registered facet route absent:404 instead of400. Baseline source overlay preserved in scratch."
+  },
+  "corrected_first_run": {
+    "reason": "Test-only limit=0 expectation incorrectly assumed default50; existing paging clamps to1. Corrected expected limit and result count only; production inputs unchanged.",
+    "catalog_pass": 53,
+    "catalog_fail": 1,
+    "skip": 0,
+    "web": "not run",
+    "history_manifest_sha256": "35e9be8d28834045086408bdf1bcac91f2dd457bff85a3293d4d05c880128e56"
+  },
+  "cleanup": {
+    "container_absent": true,
+    "network_absent": true,
+    "credential_file_absent": true
+  },
+  "commands": {
+    "database_lanes": "bash /home/dobo/work/_temp/feat__social-coverage-api-20261013/social/run-qualification.sh",
+    "native": "PATH=/home/dobo/.vite-plus/bin:/usr/local/go/bin:/usr/bin:/bin GOTOOLCHAIN=local GOWORK=off GOMAXPROCS=2 GOFLAGS=\"-mod=readonly -p=2\" GOPROXY=off bash scripts/check-native.sh /usr/local/go/bin/go (task TMPDIR and existing POC Go caches; exact runner context in task scratch)",
+    "docs": "python3 /home/dobo/work/agent-ops/scripts/check_docs.py .",
+    "whitespace": "git diff --check"
+  },
+  "artifacts": {
+    "qualification-source-inputs.json": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/qualification-source-inputs.json",
+      "sha256": "4ed4fe5d899ae5010827c1ed8e2eea74dd90709ca4235e62a348228e676657ba",
+      "bytes": 1234
+    },
+    "run-qualification.sh": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/run-qualification.sh",
+      "sha256": "34d803a17ae4ae0c7e31dc4c84367aeab45c7ef2a7f95cec3833a32242cf7503",
+      "bytes": 3991
+    },
+    "qualification-run.log": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/qualification-run.log",
+      "sha256": "ceecb8cc51a2ab82ad3868952853e18dc2155bea48696483bd3036dae9429a8c",
+      "bytes": 67
+    },
+    "check-native.log": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/check-native.log",
+      "sha256": "561bfd0856a2eb60b70b2fa1bb45a04962533babf3330499958d91afa49f1099",
+      "bytes": 3870
+    },
+    "cheap-check.log": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/cheap-check.log",
+      "sha256": "2a15f66c7a567069da6ea62ba7b56a7d5445b6922422dda81444898543240d3f",
+      "bytes": 178
+    },
+    "docs-check.log": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/docs-check.log",
+      "sha256": "d741038e5af9a33dc436da583da2d7ebcec362b059d73d058ea342b13d42fb78",
+      "bytes": 268
+    },
+    "baseline-route-overlay.json": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/baseline-route-overlay.json",
+      "sha256": "5cb3bd691ab12200463e0eca928a7340de04254caacd9f52768af12a5d0b2170",
+      "bytes": 238
+    },
+    "baseline-service.go": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/baseline-service.go",
+      "sha256": "14478171434d46e87881bdd21d2bca655822dd023e7fb6cbae8ca5d7df08e6c4",
+      "bytes": 7345
+    },
+    "baseline-sensitivity.log": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/baseline-sensitivity.log",
+      "sha256": "4c460d092ff3ef58cac0a453ec33dc802996e7022bbc68774b13bca825d0b374",
+      "bytes": 249
+    },
+    "baseline-sensitivity.exit": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/baseline-sensitivity.exit",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+      "bytes": 2
+    },
+    "fixture-cleanup.json": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/fixture-cleanup.json",
+      "sha256": "332cbfe5f98a9ed57ac411783f7500a18ddf1a6880a1c6e8e7e985ec554f3e49",
+      "bytes": 91
+    },
+    "qualification/codec-image-id.txt": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/qualification/codec-image-id.txt",
+      "sha256": "8f1d6ab789309b8f62256856efa8f535c0ceac70342294b5450a74f1f9707132",
+      "bytes": 72
+    },
+    "qualification/database-image-id.txt": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/qualification/database-image-id.txt",
+      "sha256": "2c441dbf82442f777b6a9ba0a224f79c41168394fc300b01e32cf7da8818a2fc",
+      "bytes": 72
+    },
+    "history/first-fixture-test-expectation/manifest.json": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/history/first-fixture-test-expectation/manifest.json",
+      "sha256": "35e9be8d28834045086408bdf1bcac91f2dd457bff85a3293d4d05c880128e56",
+      "bytes": 2501
+    }
+  },
+  "independent_final_review": "pending root recomputation/review",
+  "not_run": [
+    "full21-lane qualification on this feature; required before owner app-main landing",
+    "fresh production image and image vulnerability audits",
+    "runtime activation or real ingestion",
+    "GUI/milestone/production/child activation"
+  ]
+}

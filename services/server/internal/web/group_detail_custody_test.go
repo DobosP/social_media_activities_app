@@ -109,7 +109,11 @@ func TestNativeGroupDetailDispatchAndReadersRetainExactPriorAuthorities(t *testi
 	if err != nil || guiPublicHash(historical) != "94f11a3f1849c919ba100c4ba68236263f71f07741006c1992dadc4020723e68" {
 		t.Fatal("newest inverse lost an original relation", err)
 	}
-	for name, changed := range map[string][]byte{"missing-dispatch": bytes.Replace(raw, []byte(rows[0].after), nil, 1), "duplicate-dispatch": append(append([]byte(nil), raw...), []byte(rows[0].after)...), "wrong-context": bytes.Replace(raw, []byte("r.renderGroupDetail(request, defaults)"), []byte("r.renderGroupDetail(request, data)"), 1), "unrelated-byte": append(append([]byte(nil), raw...), '\n'), "old31-is-not-current": previous} {
+	mutationLiteral, completionErr := completionMutationTarget(path, raw, rows[0].after)
+	if completionErr != nil {
+		t.Fatal("completion group-detail physical mutation target unavailable", completionErr)
+	}
+	for name, changed := range map[string][]byte{"missing-dispatch": bytes.Replace(raw, []byte(mutationLiteral), nil, 1), "duplicate-dispatch": append(append([]byte(nil), raw...), []byte(mutationLiteral)...), "wrong-context": bytes.Replace(raw, []byte("r.renderGroupDetail(request, defaults)"), []byte("r.renderGroupDetail(request, data)"), 1), "unrelated-byte": append(append([]byte(nil), raw...), '\n'), "old31-is-not-current": previous} {
 		t.Run(name, func(t *testing.T) {
 			if _, err := guiPublicGetRowsPreimage(path, changed); err == nil {
 				t.Fatal("unsupported current source admitted")

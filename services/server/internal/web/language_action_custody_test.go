@@ -22,6 +22,13 @@ func languageActionSourceRelation(path string) (beforeSHA, afterSHA string, befo
 	return "", "", 0, 0, "", "", false
 }
 func languageActionSourcePreimage(path string, raw []byte) ([]byte, error) {
+	prior, completionErr := completionSourcePreimage(path, raw)
+	if completionErr != nil {
+		return nil, completionErr
+	}
+	return languageActionEpochSourcePreimage(path, prior)
+}
+func languageActionEpochSourcePreimage(path string, raw []byte) ([]byte, error) {
 	// Ordinary current reads require the complete repaired walker first. Its
 	// exact failed-L1 preimage then enters the unchanged language/history chain.
 	var repairErr error
@@ -40,11 +47,16 @@ func languageActionSourcePreimage(path string, raw []byte) ([]byte, error) {
 	return previous, nil
 }
 func languageActionPriorSource(path string, raw []byte) ([]byte, error) {
+	var completionErr error
+	raw, completionErr = completionSourceStage(path, raw)
+	if completionErr != nil {
+		return nil, completionErr
+	}
 	beforeSHA, _, beforeBytes, _, _, _, ok := languageActionSourceRelation(path)
 	if !ok || len(raw) == beforeBytes && guiPublicHash(raw) == beforeSHA {
 		return append([]byte(nil), raw...), nil
 	}
-	return languageActionSourcePreimage(path, raw)
+	return languageActionEpochSourcePreimage(path, raw)
 }
 func languageActionAccountMutationTarget(path string, physical []byte, original string) (string, error) {
 	_, _, _, _, _, expected, mapped := accountCenterSourceRelation(path)

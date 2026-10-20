@@ -1,0 +1,733 @@
+{{define "workflow-activity-form"}}
+<h1>{{$.T "Organise an activity"}}</h1>
+<p class="muted">{{$.T "It will be visible to people your age only."}}</p>
+<p class="muted">{{$series_url := wfurl "series_create"}}{{$.B 0 1 $series_url}}</p>
+
+
+<section id="place-picker" aria-label="{{$.T "Find a place on the map"}}" hidden>
+  <div class="row place-picker-controls">
+    <button type="button" id="place-near-me" class="btn btn-sm btn-secondary"
+      data-locating="{{$.T "Locating…"}}"
+      data-unavailable="{{$.T "Location unavailable"}}">&#128205; {{$.T "Find places near me"}}</button>
+    <span class="muted activity-note">{{$.T "Your location is used only to sort the map &mdash; never stored."}}</span>
+  </div>
+  <div id="map"
+    data-places-url="/api/places/"
+    data-choose-label="{{$.T "Choose this place"}}"
+    data-selected-prefix="{{$.T "Selected place:"}}"
+    data-unnamed="{{$.T "Unnamed place"}}"></div>
+  <p id="place-picker-status" class="muted" aria-live="polite"></p>
+</section>
+
+
+{{template "workflow-wizard" .}}
+{{end}}
+
+{{define "workflow-activity-edit"}}
+<p class="muted"><a href="{{wfurl "activity_detail" $.Activity.ID}}">{{$.T "&larr; Back to activity"}}</a></p>
+<h1>{{$.T "Edit activity"}}</h1>
+<p class="muted">{{$.B 1 1 $.Activity.ActivityType.Name}}</p>
+
+<section id="place-picker" aria-label="{{$.T "Find a place on the map"}}" hidden>
+  <div class="row place-picker-controls">
+    <button type="button" id="place-near-me" class="btn btn-sm btn-secondary"
+      data-locating="{{$.T "Locating..."}}"
+      data-unavailable="{{$.T "Location unavailable"}}">&#128205; {{$.T "Find places near me"}}</button>
+    <span class="muted activity-note">{{$.T "Your location is used only to sort the map &mdash; never stored."}}</span>
+  </div>
+  <div id="map"
+    data-places-url="/api/places/"
+    data-choose-label="{{$.T "Choose this place"}}"
+    data-selected-prefix="{{$.T "Selected place:"}}"
+    data-unnamed="{{$.T "Unnamed place"}}"></div>
+  <p id="place-picker-status" class="muted" aria-live="polite"></p>
+</section>
+
+{{$cancel_url := wfurl "activity_detail" $.Activity.ID}}
+{{template "workflow-wizard" .}}
+{{end}}
+
+{{define "workflow-activity-detail"}}
+{{template "workflow-activity-header" .}}
+{{template "workflow-activity-organizer" .}}
+{{template "workflow-activity-membership" .}}
+{{template "workflow-activity-thread" .}}
+{{end}}
+
+{{define "workflow-safe-exit-page"}}
+
+<h1>{{$.Activity.Title}}</h1>
+{{template "workflow-activity-safe-exit" .}}
+{{end}}
+
+{{define "workflow-place-propose"}}
+<h1>{{$.T "Add a missing place"}}</h1>
+<p class="muted">{{$.T "Add a real venue we don't have yet (a court, pitch, community centre). It stays hidden from everyone until a few neighbours confirm it &mdash; or our team publishes it. Enter the coordinates (you can copy them from a map app)."}}</p>
+<form method="post" class="card"><input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}">
+  {{if (eq $.ReturnTo "organize")}}<input type="hidden" name="return_to" value="organize">{{end}}
+  {{template "workflow-fields" .Form}}
+  <button class="btn" type="submit">{{$.T "Submit place"}}</button>
+</form>
+{{end}}
+
+{{define "workflow-place-claim"}}
+<h1>{{$.T "Is this your venue?"}}</h1>
+<p class="muted">{{$.Place.DisplayName}}{{if $.Place.DisplayAddress}} &mdash; {{$.Place.DisplayAddress}}{{end}}</p>
+<p class="muted">{{$.T "If you run this place, claim it: once a moderator verifies you, your organisation is listed as its steward and the page links your official website. Claiming is free and never paid placement &mdash; claimed venues rank exactly like every other place."}}</p>
+<form method="post" class="card"><input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}">
+  {{template "workflow-fields" .Form}}
+  <button class="btn" type="submit">{{$.T "Submit claim"}}</button>
+</form>
+{{end}}
+
+{{define "workflow-places-pending"}}
+<h1>{{$.T "Places awaiting confirmation"}}</h1>
+<p class="muted">{{$.T "Neighbours proposed these venues. If you know a place is real, confirm it &mdash; enough independent confirmations publish it for everyone. We never show who proposed a place."}}</p>
+{{range $idx, $p := $.Proposals}}
+  <div class="card">
+    <strong>{{(wfdefault $p.Place.Name ($.T "Unnamed place"))}}</strong>
+    {{if $p.Place.AddressCity}}<span class="muted">&middot; {{$p.Place.AddressCity}}</span>{{end}}
+    <p class="muted">{{$.B 2 1 $p.ConfirmationsCount $p.RequiredConfirmations}}</p>
+    <form method="post" action="{{wfurl "place_confirm" $p.ID}}" class="inline"><input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}">
+      <button class="btn btn-sm" type="submit">{{$.T "Confirm this place"}}</button></form>
+  </div>
+{{else}}
+  <p class="muted">{{$.T "No places are awaiting confirmation right now."}}</p>
+{{end}}
+{{end}}
+
+{{define "workflow-messages"}}
+<div class="mz-head">
+  <h1>{{$.T "Messages"}}</h1>
+  <span class="mz-lock muted" title="{{$.T "End-to-end encrypted"}}">🔒 {{$.T "end-to-end encrypted"}}</span>
+</div>
+<p class="muted mz-intro">{{$.T "Private chats only you and the other people can read."}}
+  {{$.T "Start with a connection or username; first messages arrive as requests."}}</p>
+
+
+<span class="csrf-primer">{{$.Shell.CSRF}}</span>
+<script nonce="{{$.Nonce}}" id="mz-config" type="application/json">{{$.MessagingJSON}}</script>
+
+<p id="mz-status" class="muted">{{$.B 3 1}}</p>
+
+<div class="mz-app card" id="mz-app">
+  <aside class="mz-sidebar" id="mz-sidebar">
+
+    <div class="mz-start-head">
+      <strong>{{$.T "Start a chat"}}</strong>
+      <span class="muted">{{$.T "same age group only"}}</span>
+    </div>
+    <div id="mz-connections" class="mz-connections"></div>
+
+    <form id="mz-new-form" class="mz-new mz-new-primary" aria-label="{{$.T "Start a new chat"}}">
+      <label>{{$.T "Username or group"}}
+        <input name="usernames" autocomplete="off" placeholder="{{$.T "alex or alex, sam"}}" required></label>
+      <label>{{$.T "Group name"}} <small class="muted">{{$.T "(optional)"}}</small>
+        <input name="title" autocomplete="off" placeholder="{{$.T "Trail crew"}}"></label>
+      <input type="hidden" name="kind" value="direct">
+      <button class="btn btn-sm" type="submit">{{$.T "Start chat"}}</button>
+      <p class="muted mz-form-hint">{{$.T "They must accept before they can read your messages."}}</p>
+    </form>
+
+
+    <input id="mz-conv-search" type="search" autocomplete="off"
+           placeholder="{{$.T "Search chats…"}}" aria-label="{{$.T "Search chats"}}">
+
+
+    <div class="mz-tabs" role="group" aria-label="{{$.T "Messages"}}">
+      <button class="mz-tab is-active" data-filter="all" type="button">{{$.T "All"}}</button>
+      <button class="mz-tab" data-filter="direct" type="button">{{$.T "Direct"}}</button>
+      <button class="mz-tab" data-filter="group" type="button">{{$.T "Groups"}}</button>
+      <button class="mz-tab" data-filter="invited" type="button">{{$.T "Requests"}}</button>
+    </div>
+
+    <div id="mz-conversations" class="mz-conv-list"><p class="muted">{{$.B 4 1}}</p></div>
+
+    <details class="mz-more">
+      <summary>{{$.T "Device and guardian options"}}</summary>
+      <div id="mz-guardian-section" hidden>
+        <h4 class="mz-guardian-title">{{$.T "Guardian oversight"}}</h4>
+        <p class="muted mz-guardian-copy">{{$.T "Conversations of the person you look after. Observing is read-only and visible to everyone in the chat."}}</p>
+        <div id="mz-guardian-list"></div>
+      </div>
+      {{if $.CanCreateGroup}}
+        <p class="mz-group-link"><a class="btn btn-sm btn-secondary" href="{{wfurl "group_create"}}">{{$.T "Start a standing group"}}</a></p>
+        <p class="muted mz-group-copy">{{$.T "A public, joinable community with its own conversation."}}</p>
+      {{end}}
+      <p class="muted mz-key-copy">{{$.T "Your private key lives only in this browser. Back it up (encrypted) to read your history on another device."}}</p>
+      <button id="mz-backup" class="btn btn-sm btn-secondary" type="button">{{$.T "Back up my key"}}</button>
+    </details>
+  </aside>
+
+  <section class="mz-main" id="mz-main">
+    <header class="mz-main-head">
+      <button class="mz-back linkbtn" id="mz-back" type="button" aria-label="{{$.T "Back to conversations"}}">&larr;</button>
+      <span class="mz-avatar" id="mz-title-avatar" aria-hidden="true"></span>
+      <h3 id="mz-title" class="mz-title">{{$.T "Select a conversation"}}</h3>
+      <div id="mz-toolbar" class="mz-toolbar" hidden>
+
+        <input id="mz-msg-search" type="search" autocomplete="off"
+               placeholder="{{$.T "Search in chat…"}}" aria-label="{{$.T "Search in this chat (on this device only)"}}"
+               title="{{$.T "Searches the decrypted messages on this device only"}}">
+        <label class="muted" title="{{$.T "Disappearing messages"}}">⏲
+          <select id="mz-timer">
+            <option value="0">{{$.T "Off"}}</option>
+            <option value="3600">{{$.T "1 hour"}}</option>
+            <option value="86400">{{$.T "1 day"}}</option>
+            <option value="604800">{{$.T "1 week"}}</option>
+            <option value="2592000">{{$.T "30 days"}}</option>
+          </select>
+        </label>
+      </div>
+    </header>
+    <div id="mz-guardian"></div>
+    <div id="mz-verify"></div>
+    <div id="mz-log" class="mz-log">
+      <div class="mz-empty">
+        <strong>{{$.T "Choose a chat to read messages."}}</strong>
+        <p class="muted">{{$.T "Use Start a chat for a username, tap a connection shortcut, or open Requests when someone has invited you."}}</p>
+        <p class="muted">{{$.T "Chats stay end-to-end encrypted and inside your age group."}}</p>
+      </div>
+    </div>
+    <form id="mz-composer" class="mz-composer" hidden>
+      <input id="mz-input" autocomplete="off" placeholder="{{$.T "Write an encrypted message&hellip;"}}">
+      <button class="btn btn-sm" type="submit">{{$.T "Send"}}</button>
+    </form>
+  </section>
+</div>
+{{end}}
+
+{{define "workflow-activity-header"}}
+<p class="muted"><a href="{{wfurl "activity_list"}}">&larr; {{$.T "Activities"}}</a></p>
+<h1>{{$.Activity.Title}}</h1>
+<div>
+  <span class="tag">{{$.Activity.ActivityType.Name}}</span>
+  {{range $idx, $secondary_type := $.Activity.SecondaryTypes}}<span class="tag tag-muted">{{$secondary_type.Name}}</span>{{end}}
+  {{if $.Activity.HasCostAmount}}
+    {{if $.Activity.CostNote}}
+      <span class="tag">{{$.B 5 1 $.Activity.CostAmount $.Activity.CostNote}}</span>
+    {{else}}
+      <span class="tag">{{$.B 6 1 $.Activity.CostAmount}}</span>
+    {{end}}
+  {{else if (ne $.Activity.CostBand "unspecified")}}<span class="tag">{{$.Activity.GetCostBandDisplay}}</span>{{end}}
+  {{if (ne $.Activity.Difficulty "unspecified")}}<span class="tag">{{$.Activity.GetDifficultyDisplay}}</span>{{end}}
+  {{if $.Activity.BeginnersWelcome}}<span class="tag">{{$.T "beginners welcome"}}</span>{{end}}
+  {{if (ne $.Activity.Status "open")}}<span class="tag">{{$.Activity.GetStatusDisplay}}</span>{{end}}
+  {{if $.Activity.GuardianAccompanied}}<span class="tag">{{$.T "guardian-accompanied"}}</span>{{end}}
+  {{if $.ChildSafeVenue}}<span class="tag" title="{{$.T "A known public venue type, approved for children&#39;s meetups."}}">{{$.T "approved public venue"}}</span>{{end}}
+  {{if $.Supervised}}{{if $.SupervisorPresent}}<span class="tag" title="{{$.T "The organiser&#39;s verified guardian is present as a read-only supervisor."}}">{{$.T "supervised"}}</span>{{else}}<span class="tag" title="{{$.T "This activity requires the organiser&#39;s guardian to supervise before anyone is admitted."}}">{{$.T "supervisor needed"}}</span>{{end}}{{end}}
+</div>
+
+
+{{if $.MeetupBrief}}
+<section class="card" aria-labelledby="brief-heading">
+  <h2 id="brief-heading" class="u-mt-0">{{$.T "At a glance"}}</h2>
+  <dl class="brief">
+    {{range $pair1 := $.MeetupBrief}}<dt>{{$pair1.Label}}</dt><dd>{{$pair1.Sentence}}</dd>
+    {{end}}
+  </dl>
+</section>
+{{end}}
+
+{{template "workflow-activity-safety" .}}
+<p class="muted">{{(wfdate $.Activity.StartsAt "l j F Y, H:i")}}{{if $.Activity.EndsAt}} &ndash; {{(wfdate $.Activity.EndsAt "H:i")}}{{end}}<br>
+  {{$place_url := wfurl "place_detail" $.Activity.Place.ID}}{{$.B 7 1 $place_url (wfdefault $.Activity.Place.DisplayName ($.T "a place"))}}{{if $.Activity.Place.AddressCity}}, {{$.Activity.Place.AddressCity}}{{end}}</p>
+{{if $.ActivityCommunities}}
+  <p class="muted activity-meta-note">{{$.T "Part of:"}}
+    {{range $idx, $c := $.ActivityCommunities}}<a class="tag" href="{{wfurl "community_detail" $c.Slug}}">{{$c.Name}}</a> {{end}}</p>
+{{end}}
+{{if $.CanCreateGroup}}
+  <p class="muted activity-meta-note">{{$group_create_url := wfurl "group_create"}}{{$.B 8 1 $group_create_url (wfquery $.Activity.Place.AddressCity) $.Activity.ActivityType.Slug}}</p>
+{{end}}
+{{template "workflow-share-box" .}}
+{{if $.Activity.Description}}<p>{{(wfparagraphs $.Activity.Description)}}</p>{{end}}
+{{if $.Activity.AccessibilityNotes}}<p class="muted"><strong>{{$.T "Accessibility:"}}</strong><br>{{(wflines $.Activity.AccessibilityNotes)}}</p>{{end}}
+<p class="muted">{{$.B 9 1 (wfdefault $.Activity.Owner.DisplayName $.Activity.Owner.Username)}}
+  {{if (not $.IsOwner)}}&middot; <a href="{{wfurl "report"}}?type=activity&id={{$.Activity.ID}}">{{$.T "Report"}}</a>{{end}}</p>
+
+{{if (not $.IsOpen)}}
+  <div class="banner">{{$.B 10 1 (wflower $.Activity.GetStatusDisplay)}}{{if (eq $.Activity.Status "cancelled")}}
+    {{$.T "The organiser called it off &mdash; see your alerts for any details."}}{{end}}</div>
+{{end}}
+{{end}}
+
+{{define "workflow-activity-organizer"}}
+{{if $.MeetingPointNeeded}}
+
+  <div class="card card-accent" role="note">
+    <strong>{{$.T "This meetup is going ahead &mdash; but has no meeting point yet."}}</strong>
+    <p class="muted compact-copy">{{$.T "Enough people have said they're coming. Add where to meet so everyone can find the group."}}
+      <a href="{{wfurl "activity_edit" $.Activity.ID}}">{{$.T "Add a meeting point"}}</a></p>
+  </div>
+{{end}}
+
+{{if (and $.IsOrganizer $.IsOpen)}}
+  <div class="card">
+    <strong>{{$.T "Organiser tools"}}</strong>
+    <div class="row activity-tool-row">
+      <a class="btn btn-sm" href="{{wfurl "activity_edit" $.Activity.ID}}">{{$.T "Edit details"}}</a>
+
+      <a class="btn btn-sm btn-secondary" href="{{wfurl "activity_create"}}?from={{$.Activity.ID}}">{{$.T "Set up another like this"}}</a>
+    </div>
+
+    {{if (and $.IsOpen (eq $.Activity.Cohort "adult"))}}
+      <form method="post" action="{{wfurl "activity_listing_toggle" $.Activity.ID}}" class="activity-action-form">
+        <input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}">
+        <input type="hidden" name="next" value="{{$.LanguageNext}}">
+        {{if $.Activity.IsPubliclyListed}}
+          <input type="hidden" name="listed" value="0">
+          <button class="btn btn-sm btn-secondary" type="submit">{{$.T "Hide from logged-out visitors"}}</button>
+          <span class="muted activity-note">{{$.T "Currently visible on the public discover page."}}</span>
+        {{else}}
+          <input type="hidden" name="listed" value="1">
+          <button class="btn btn-sm" type="submit">{{$.T "Show to logged-out visitors"}}</button>
+          <span class="muted activity-note">{{$.T "Currently hidden from the public discover page."}}</span>
+        {{end}}
+      </form>
+    {{end}}
+	    <form method="post" action="{{wfurl "activity_cancel" $.Activity.ID}}" class="stack activity-action-form"
+	          data-confirm="{{$.T "Cancel this activity? Every member will be notified."}}">
+      <input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}">
+      <label>{{$.T "Cancel this activity"}}
+        <input type="text" name="reason" maxlength="200"
+               placeholder="{{$.T "Optional: why (members will see this)"}}"></label>
+      <button class="btn btn-sm btn-danger" type="submit">{{$.T "Cancel activity"}}</button>
+    </form>
+  </div>
+{{end}}
+
+{{if (and $.IsOrganizer (not $.IsOpen))}}
+
+  <div class="card">
+    <a class="btn btn-sm" href="{{wfurl "activity_create"}}?from={{$.Activity.ID}}">{{$.T "Set up another like this"}}</a>
+    <span class="muted activity-note">{{$.T "Starts a new meetup pre-filled from this one &mdash; you pick the new time."}}</span>
+  </div>
+{{end}}
+
+{{if $.CanManageOrganizers}}
+
+  <div class="card">
+    <strong>{{$.T "Organisers"}}</strong>
+    <p class="muted organizer-help">{{$.T "A co-organiser can edit details, admit members, and post announcements. Hand the activity over to keep it going if you step away."}}</p>
+    <ul class="members">
+      {{range $idx, $m := $.Members}}{{if (and (ne $m.Role "owner") (ne $m.Role "guardian"))}}
+        <li>{{(wfdefault $m.User.DisplayName $m.User.Username)}}{{if (eq $m.Role "co_organizer")}} &middot; <span class="tag">{{$.T "co-organiser"}}</span>{{end}}
+          {{if (eq $m.Role "co_organizer")}}
+            <form method="post" action="{{wfurl "activity_revoke_coorg" $.Activity.ID}}" class="inline"><input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}">
+              <input type="hidden" name="user_id" value="{{$m.User.ID}}">
+              <button class="linkbtn coorg-action" type="submit">{{$.T "Remove co-organiser"}}</button></form>
+          {{else}}
+            <form method="post" action="{{wfurl "activity_grant_coorg" $.Activity.ID}}" class="inline"><input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}">
+              <input type="hidden" name="user_id" value="{{$m.User.ID}}">
+              <button class="btn btn-sm coorg-action" type="submit">{{$.T "Make co-organiser"}}</button></form>
+          {{end}}
+	          <form method="post" action="{{wfurl "activity_transfer_owner" $.Activity.ID}}" class="inline"
+	                data-confirm="{{$.T "Hand this activity over? They become the organiser and you become a regular member."}}"><input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}">
+            <input type="hidden" name="user_id" value="{{$m.User.ID}}">
+            <button class="linkbtn coorg-action" type="submit">{{$.T "Hand over"}}</button></form>
+        </li>
+      {{end}}{{end}}
+    </ul>
+  </div>
+{{end}}
+{{end}}
+
+{{define "workflow-activity-membership"}}
+{{if $.IsMember}}
+  <div class="card">
+    <strong>{{$.T "You're a member"}}{{if $.IsOwner}} {{$.T "(owner)"}}{{else if $.IsOrganizer}} {{$.T "(co-organiser)"}}{{end}}.</strong>
+    {{if (not $.IsOwner)}}
+      <form method="post" action="{{wfurl "activity_leave" $.Activity.ID}}" class="inline u-float-right"><input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}">
+        <button class="linkbtn" type="submit">{{$.T "Leave"}}</button></form>
+    {{end}}
+
+    {{if (not $.MyArrival)}}
+      {{if (eq $.MyTransit "on_my_way")}}
+        <p class="muted message-copy">&#128694; {{$.T "You told the group you're on the way."}}</p>
+      {{else if (eq $.MyTransit "running_late")}}
+        <p class="muted message-copy">&#8987; {{$.T "You told the group you're running a little late."}}</p>
+      {{end}}
+    {{end}}
+    {{if (and $.ArrivalWindowOpen (not $.MyArrival))}}
+      <form method="post" action="{{wfurl "activity_arrived" $.Activity.ID}}" class="activity-inline-form"><input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}">
+        <button class="btn btn-sm" type="submit">&#128205; {{$.T "I've arrived"}}</button>
+        <span class="muted activity-note">{{$.T "Tells the group you're here &mdash; no location shared."}}</span>
+      </form>
+      {{if (or $.CanSayOnMyWay $.CanSayRunningLate)}}
+        <div class="row u-row-tight">
+          {{if $.CanSayOnMyWay}}
+            <form method="post" action="{{wfurl "activity_transit" $.Activity.ID}}" class="inline"><input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}">
+              <input type="hidden" name="status" value="on_my_way">
+              <button class="btn btn-sm" type="submit">&#128694; {{$.T "On my way"}}</button>
+            </form>
+          {{end}}
+          {{if $.CanSayRunningLate}}
+            <form method="post" action="{{wfurl "activity_transit" $.Activity.ID}}" class="inline"><input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}">
+              <input type="hidden" name="status" value="running_late">
+              <button class="btn btn-sm" type="submit">&#8987; {{$.T "Running ~10 min late"}}</button>
+            </form>
+          {{end}}
+          <span class="muted activity-note">{{$.T "A quick heads-up &mdash; no location shared."}}</span>
+        </div>
+      {{end}}
+    {{else if $.MyArrival}}
+      <p class="muted message-copy">&#10003; {{$.B 11 1 (wfdate $.MyArrival "H:i")}}</p>
+    {{end}}
+
+    {{if $.CanMarkDeparting}}
+      <form method="post" action="{{wfurl "activity_departing" $.Activity.ID}}" class="activity-inline-form"><input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}">
+        <button class="btn btn-sm" type="submit">&#127968; {{$.T "I'm heading home"}}</button>
+        <span class="muted activity-note">{{$.T "Tells the grown-ups who look after you &mdash; no location shared."}}</span>
+      </form>
+    {{else if $.MyDeparture}}
+      <p class="muted message-copy">&#10003; {{$.B 12 1 (wfdate $.MyDeparture "H:i")}}</p>
+    {{end}}
+
+    {{if $.CanSetSupport}}
+      {{if $.MyBringsSupport}}
+        <form method="post" action="{{wfurl "activity_support_companion" $.Activity.ID}}" class="inline activity-inline-form"><input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}">
+          <span class="muted">&#10003; {{$.T "You're bringing a support person."}}</span>
+          <button class="linkbtn" type="submit">{{$.T "clear"}}</button></form>
+      {{else}}
+        <form method="post" action="{{wfurl "activity_support_companion" $.Activity.ID}}" class="activity-inline-form"><input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}">
+          <input type="hidden" name="brings" value="on">
+          <button class="btn btn-sm" type="submit">{{$.T "I'm bringing a support person"}}</button>
+          <span class="muted activity-note">{{$.T "A carer, PA, or interpreter &mdash; not counted toward capacity."}}</span>
+        </form>
+      {{end}}
+    {{end}}
+    <div class="row u-row-tight">
+      <span class="muted">{{$.B 13 1 $.RSVPSummary.Going $.RSVPSummary.Total}}</span>
+
+      {{if $.RSVPSummary.MinToGo}}
+        {{if $.RSVPSummary.MetMinimum}}
+          <span class="tag">&#10003; {{$.T "It's on"}}</span>
+        {{else}}
+          <span class="muted">{{$.B 14 $.RSVPSummary.RemainingNeeded $.RSVPSummary.RemainingNeeded}}</span>
+        {{end}}
+      {{end}}
+      <form class="inline" method="post" action="{{wfurl "activity_rsvp" $.Activity.ID}}"><input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}">
+        <input type="hidden" name="intent" value="going">
+        <button class="btn btn-sm{{if (ne $.MyMembership.AttendanceIntent "going")}} btn-secondary{{end}}" type="submit">{{$.T "I'm coming"}}</button></form>
+      <form class="inline" method="post" action="{{wfurl "activity_rsvp" $.Activity.ID}}"><input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}">
+        <input type="hidden" name="intent" value="not_going">
+        <button class="btn btn-sm{{if (ne $.MyMembership.AttendanceIntent "not_going")}} btn-secondary{{end}}" type="submit">{{$.T "Can't make it"}}</button></form>
+      {{if (ne $.MyMembership.AttendanceIntent "unknown")}}
+        <form class="inline" method="post" action="{{wfurl "activity_rsvp" $.Activity.ID}}"><input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}">
+          <input type="hidden" name="intent" value="unknown">
+          <button class="linkbtn" type="submit">{{$.T "clear"}}</button></form>
+      {{end}}
+    </div>
+    {{if $.IsCompleted}}
+
+      <div class="meetup-confirm">
+        <strong>{{$.T "Did this meet up?"}}</strong>
+        <span class="muted">{{$.B 15 1 $.MetSummary.Confirmed $.MetSummary.Total}}</span>
+        {{if $.MyMetConfirmed}}
+          <form class="inline" method="post" action="{{wfurl "activity_met" $.Activity.ID}}"><input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}">
+            <input type="hidden" name="met" value="no">
+            <span class="muted">&#10003; {{$.T "you confirmed"}} &middot;</span>
+            <button class="linkbtn" type="submit">{{$.T "undo"}}</button></form>
+        {{else}}
+          <form class="inline" method="post" action="{{wfurl "activity_met" $.Activity.ID}}"><input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}">
+            <button class="btn btn-sm" type="submit">{{$.T "Yes, we met up"}}</button></form>
+        {{end}}
+      </div>
+    {{end}}
+    <h3>{{$.T "Pending join requests"}}</h3>
+    {{range $idx, $m := $.Pending}}
+      <div class="row u-space-between">
+
+        <div><img class="avatar avatar-xs" src="{{$m.User.Avatar}}" width="24" height="24" alt="">
+          <a href="{{wfurl "person" $m.User.PublicID}}" data-hovercard-user="{{$m.User.PublicID}}">{{(wfdefault $m.User.DisplayName $m.User.Username)}}</a>
+          <span class="muted">&mdash; {{$.B 16 1 $m.Approvals $m.Needed}}</span></div>
+        <div class="vote-row">
+          {{if (ne $m.MyVote nil)}}<span class="muted">{{$.B 17 1 (wfyesno $m.MyVote ($.T "approve,deny"))}}</span>{{end}}
+          <form class="inline" method="post" action="{{wfurl "membership_vote" $.Activity.ID $m.ID}}"><input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}">
+            <input type="hidden" name="vote" value="approve">
+            <button class="btn btn-sm" type="submit">{{$.T "Approve"}}</button></form>
+          <form class="inline" method="post" action="{{wfurl "membership_vote" $.Activity.ID $m.ID}}"><input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}">
+            <input type="hidden" name="vote" value="deny">
+            <button class="btn btn-sm btn-secondary" type="submit">{{$.T "Deny"}}</button></form>
+        </div>
+      </div>
+    {{else}}<p class="muted">{{$.T "No pending requests."}}</p>{{end}}
+  </div>
+{{else if (and $.MyMembership (eq $.MyMembership.State "requested"))}}
+  <div class="banner">{{$.T "Your join request is pending a vote of current members."}}</div>
+{{else if $.CanJoin}}
+  <form method="post" action="{{wfurl "activity_join" $.Activity.ID}}"><input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}">
+    <button class="btn" type="submit">{{$.T "Request to join"}}</button></form>
+{{else if (ne $.User.Cohort $.Activity.Cohort)}}
+  <div class="banner">{{$.T "This activity isn't open to your account."}}</div>
+{{end}}
+
+{{if $.ShowWelcome}}
+
+  <div class="card card-accent">
+    <strong>{{$.T "Welcome to your first meetup!"}}</strong>
+    <p class="muted compact-copy">{{$.B 18 1}}</p>
+  </div>
+{{end}}
+
+
+{{if (or $.IsMember $.IsOwner)}}{{if $.Activity.FirstTimeNote}}
+  <div class="card{{if $.ShowWelcome}} card-accent{{end}}">
+    <strong>{{$.T "First time here?"}}</strong>
+    <p class="message-copy">{{(wflines $.Activity.FirstTimeNote)}}</p>
+  </div>
+{{end}}{{end}}
+
+{{template "workflow-activity-safe-exit" .}}
+
+{{if (or $.IsMember $.IsOwner)}}{{if (or $.Activity.MeetingPoint $.Activity.WhatToBring $.Activity.OrganizerNote)}}
+  <div class="card card-accent">
+    <strong>{{$.T "Meetup logistics"}}</strong>
+    {{if $.Activity.MeetingPoint}}<p class="message-copy"><span class="muted">{{$.T "Where to meet:"}}</span><br>{{(wflines $.Activity.MeetingPoint)}}</p>{{end}}
+    {{if $.Activity.WhatToBring}}<p class="message-copy"><span class="muted">{{$.T "What to bring:"}}</span><br>{{(wflines $.Activity.WhatToBring)}}</p>{{end}}
+    {{if $.Activity.OrganizerNote}}<p class="message-copy"><span class="muted">{{$.T "From the organiser:"}}</span><br>{{(wflines $.Activity.OrganizerNote)}}</p>{{end}}
+  </div>
+{{end}}{{end}}
+
+<h2>{{$.T "Members"}}</h2>
+<ul class="members">
+  {{range $idx, $m := $.Members}}<li><img class="avatar avatar-xs" src="{{$m.User.Avatar}}" width="24" height="24" alt="">{{if (ne $m.User.ID $.User.ID)}}<a href="{{wfurl "person" $m.User.PublicID}}" data-hovercard-user="{{$m.User.PublicID}}">{{(wfdefault $m.User.DisplayName $m.User.Username)}}</a>{{else}}{{(wfdefault $m.User.DisplayName $m.User.Username)}}{{end}}{{if (eq $m.Role "owner")}} &middot; {{$.T "owner"}}{{else if (eq $m.Role "co_organizer")}} &middot; {{$.T "co-organiser"}}{{else if (eq $m.Role "guardian")}} &middot; {{$.T "guardian"}}{{end}}{{if (ne $m.User.ID $.User.ID)}}
+    &middot; <a class="member-action-link" href="{{wfurl "report"}}?type=user&id={{$m.User.ID}}">{{$.T "report"}}</a>
+    {{if (and $.ConnEnabled (ne $m.Role "guardian") (wfnotin $m.User.ID $.ConnRelatedIDs))}}
+    <form method="post" action="{{wfurl "connection_request"}}" class="inline"><input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}">
+      <input type="hidden" name="public_id" value="{{$m.User.PublicID}}">
+      <input type="hidden" name="next" value="{{wfurl "activity_detail" $.Activity.ID}}">
+      <button class="btn btn-sm member-action-btn" type="submit">{{$.T "connect"}}</button></form>{{end}}
+    <form method="post" action="{{wfurl "block_user" $m.User.ID}}" class="inline"><input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}">
+      <input type="hidden" name="next" value="{{wfurl "activity_detail" $.Activity.ID}}">
+      <button class="linkbtn member-action-btn" type="submit">{{$.T "block"}}</button></form>{{end}}</li>{{end}}
+</ul>
+{{end}}
+
+{{define "workflow-activity-thread"}}
+{{if (or $.IsMember $.User.IsStaff)}}
+  {{if (and $.Digest $.Digest.HasContent)}}
+
+    <details class="card card-accent">
+      <summary><strong>{{$.T "Catch up"}}</strong> <span class="muted">&mdash; {{$.T "what you missed"}}</span></summary>
+      {{if (ne $.Digest.MemberCount nil)}}<p class="muted digest-line">{{$.B 19 $.Digest.MemberCount $.Digest.Going $.Digest.Total $.Digest.MemberCount}}</p>{{end}}
+      {{if $.Digest.Announcements}}<p class="muted digest-heading">{{$.T "Latest announcements:"}}</p>
+        {{range $idx, $p := $.Digest.Announcements}}<div class="post post-announcement"><div class="meta">&#128204; {{$p.Author.Name}} &middot; {{(wfdate $p.CreatedAt "j M H:i")}}</div><div>{{(wflines (wftruncate $p.Body 200))}}</div></div>{{end}}{{end}}
+      {{if $.Digest.Logistical}}<p class="muted message-copy">{{$.T "Logistics mentioned:"}}</p>
+        {{range $idx, $p := $.Digest.Logistical}}<div class="post"><div class="meta">{{$p.Author.Name}} &middot; {{(wfdate $p.CreatedAt "j M H:i")}}</div><div>{{(wflines (wftruncate $p.Body 200))}}</div></div>{{end}}{{end}}
+      {{if $.Digest.Recent}}<p class="muted message-copy">{{$.T "Most recent:"}}</p>
+        {{range $idx, $p := $.Digest.Recent}}<div class="post"><div class="meta">{{$p.Author.Name}} &middot; {{(wfdate $p.CreatedAt "j M H:i")}}</div><div>{{(wflines (wftruncate $p.Body 200))}}</div></div>{{end}}{{end}}
+    </details>
+  {{end}}
+
+  <h2 id="messages">{{$.T "Messages"}}</h2>
+  {{if $.IsOrganizer}}
+    <form method="post" action="{{wfurl "activity_announce" $.Activity.ID}}" class="stack announce-form"><input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}">
+      <label>{{$.T "Post an announcement"}} <span class="muted">{{$.T "(pinned; notifies every member)"}}</span>
+        <textarea name="body" rows="2" maxlength="4000" required
+                  placeholder="{{$.T "Meet at the north gate; bring water; time changed..."}}"></textarea></label>
+      <button class="btn btn-sm" type="submit">{{$.T "Post announcement"}}</button>
+    </form>
+  {{end}}
+  {{if $.Announcements}}
+    <div class="thread" aria-label="{{$.T "Pinned announcements"}}">
+      {{range $idx, $p := $.Announcements}}
+        <div class="post post-announcement">
+          <div class="meta">&#128204; {{$p.Author.Name}} &middot; {{(wfdate $p.CreatedAt "j M H:i")}}</div>
+          <div>{{(wflines $p.Body)}}</div>
+        </div>
+      {{end}}
+    </div>
+  {{end}}
+
+  <form method="get" action="{{wfurl "activity_detail" $.Activity.ID}}" class="search-bar" role="search">
+    <input type="search" name="tq" value="{{$.ThreadQuery}}" placeholder="{{$.T "Search this conversation…"}}"
+           aria-label="{{$.T "Search this conversation"}}" minlength="2">
+    <button class="btn btn-sm btn-secondary" type="submit">{{$.T "Search"}}</button>
+    {{if $.ThreadQuery}}<a class="muted" href="{{wfurl "activity_detail" $.Activity.ID}}#messages">{{$.T "clear"}}</a>{{end}}
+  </form>
+  {{if $.ThreadQuery}}
+    <div class="card card-muted" aria-label="{{$.T "Search results"}}">
+      <p class="muted thread-search-count">{{$.B 20 (len $.ThreadResults) (len $.ThreadResults)}}</p>
+      {{range $idx, $p := $.ThreadResults}}
+        <div class="post">
+          <div class="meta">{{$p.Author.Name}} &middot;
+            <a href="{{wfurl "activity_detail" $.Activity.ID}}#post-{{$p.ID}}">{{(wfdate $p.CreatedAt "j M H:i")}}</a></div>
+          <div>{{(wflines (wftruncate $p.Body 240))}}</div>
+        </div>
+      {{else}}<p class="muted">{{$.T "Nothing matched."}}</p>{{end}}
+    </div>
+  {{end}}
+
+  {{if $.HasOlder}}
+    <p><a href="?before={{$.OlderCursor}}#messages" rel="prev">&uarr; {{$.T "Older messages"}}</a></p>
+  {{end}}
+  <div id="thread-list" class="thread">
+    {{range $idx, $p := $.Posts}}
+      {{if $p.DayBreak}}
+        <div class="day-sep" aria-hidden="true"><span>{{(wfdate $p.CreatedAt "D j M")}}</span></div>
+      {{end}}
+      {{template "group-detail-post" $p}}
+      <div class="replies" data-parent="{{$p.ID}}">
+        {{range $idx, $r := $p.Replies}}{{template "group-detail-post" $r}}{{end}}
+      </div>
+    {{else}}<p class="muted" id="no-messages">{{$.T "No messages yet. Say hello!"}}</p>{{end}}
+  </div>
+
+  <button type="button" id="thread-jump" class="thread-jump" hidden>&darr; {{$.T "New messages"}}</button>
+
+  {{if $.IsMember}}
+
+    {{if $.HasThreadAudience}}
+      <p class="muted compose-note" role="note">
+        &#128274;
+        {{if $.AudienceIsGroup}}{{$.T "Visible to members of this group only."}}{{else}}{{$.T "Visible to members of this activity only."}}{{end}}
+        {{$.T "Never public, never indexed, never shown to other cohorts."}}
+        {{if (ne $.AudiencePeers nil)}}{{$.B 21 $.AudiencePeers $.AudiencePeers}}{{end}}
+      </p>
+    {{end}}
+
+    <div id="typing-indicator" class="typing-indicator" aria-hidden="true"></div>
+    <form method="post" id="compose" enctype="multipart/form-data"
+          action="{{wfurl "activity_post" $.Activity.ID}}" class="stack compose-form"><input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}">
+      {{if $.HasReplyTarget}}
+        <p class="muted compose-reply-note">{{$.B 22 1 (wfdefault $.ReplyAuthor $.ReplyAuthor)}}
+          &middot; <a href="{{wfurl "activity_detail" $.Activity.ID}}#compose">{{$.T "cancel"}}</a></p>
+      {{end}}
+      {{template "workflow-field" ($.PostForm.Field "reply_to")}}
+      {{template "workflow-field" $.ComposeBody}}
+      <div class="row compose-row">
+
+        {{if (or (not $.MediaCapabilitiesSupplied) $.AttachmentsEnabled)}}
+        <label class="visually-hidden" for="{{"id_attachment"}}">{{if $.VideoEnabled}}{{if (or (not $.MediaCapabilitiesSupplied) $.FileEnabled)}}{{$.T "Attach a photo, PDF, or short video"}}{{else}}{{$.T "Attach a photo or short video"}}{{end}}{{else}}{{if (or (not $.MediaCapabilitiesSupplied) $.FileEnabled)}}{{$.T "Attach a photo or PDF"}}{{else}}{{$.T "Attach a photo"}}{{end}}{{end}}</label>
+        <input type="file" name="attachment" id="{{"id_attachment"}}"
+               accept="{{if $.MediaCapabilitiesSupplied}}{{$.AttachmentAccept}}{{else}}image/png,image/jpeg,image/webp,application/pdf{{if $.VideoEnabled}},video/mp4,video/quicktime,video/webm{{end}}{{end}}">
+        <label class="muted compose-select-label">
+          🕓 <span class="visually-hidden">{{$.T "Make this picture temporary"}}</span>
+          <select name="disappear">
+            <option value="">{{$.T "Keep"}}</option>
+            {{range $pair3 := $.EphemeralOptions}}<option value="{{$pair3.Value}}">{{$.B 23 1 $pair3.Label}}</option>{{end}}
+          </select></label>
+        {{end}}
+        <button class="btn btn-sm" type="submit">{{$.T "Post"}}</button>
+      </div>
+      <label class="compose-ping-label">
+        <input type="checkbox" name="ping" value="on">
+        {{$.B 24 1}}
+        <span class="muted">{{$.T "(off = they just see the tag)"}}</span></label>
+      {{if (or (not $.MediaCapabilitiesSupplied) $.AttachmentsEnabled)}}
+      {{if $.VideoEnabled}}
+        {{if (or (not $.MediaCapabilitiesSupplied) $.FileEnabled)}}
+        <p class="muted compose-upload-note">{{$.B 25 1 $.VideoMaxSeconds}}</p>
+        {{else}}
+        <p class="muted compose-upload-note">{{$.B 26 1 $.VideoMaxSeconds}}</p>
+        {{end}}
+      {{else}}
+        {{if (or (not $.MediaCapabilitiesSupplied) $.FileEnabled)}}
+        <p class="muted compose-upload-note">{{$.B 27 1}}</p>
+        {{else}}
+        <p class="muted compose-upload-note">{{$.B 28 1}}</p>
+        {{end}}
+      {{end}}
+      {{end}}
+    </form>
+
+    <div id="live-status" class="visually-hidden" role="status" aria-live="polite"></div>
+  {{end}}
+
+  <h2>{{$.T "Photos"}}</h2>
+  <p class="muted">{{$.T "Private to members &mdash; location metadata is stripped on upload."}}</p>
+  {{if $.IsMember}}
+    <form method="post" action="{{wfurl "activity_photo" $.Activity.ID}}" enctype="multipart/form-data" class="row"><input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}">
+      <label class="visually-hidden" for="activity-thread-photo">{{$.T "Add photo"}}</label>
+      <input type="file" id="activity-thread-photo" name="image" accept="image/*" required>
+      <button class="btn btn-sm" type="submit">{{$.T "Add photo"}}</button>
+    </form>
+  {{end}}
+  <div class="photos">
+    {{range $idx, $ph := $.Photos}}<a href="{{$ph.URL}}" target="_blank" rel="noopener noreferrer"><img src="{{(wfdefault $ph.ThumbURL $ph.URL)}}" alt="{{$.T "thread photo"}}" loading="lazy"></a>{{else}}
+    <p class="muted">{{$.T "No photos yet."}}</p>{{end}}
+  </div>
+
+{{else}}
+  <p class="muted">{{$.T "The messages and photos are private to members. Request to join to take part."}}</p>
+{{end}}
+{{end}}
+
+{{define "workflow-activity-safety"}}
+{{if (and $.IsOwner $.Supervised)}}
+<div class="card">
+  {{if $.SupervisorPresent}}
+    <p class="muted">{{$.T "&#10003; A supervising guardian is in place — members can be admitted."}}</p>
+  {{else}}
+    <p>{{$.T "This activity requires a supervising guardian. No one can be admitted until one of your guardians joins as a read-only supervisor."}}</p>
+    {{if $.OwnerSupervisorCandidates}}
+      <form method="post" action="{{wfurl "activity_add_supervisor" $.Activity.ID}}" class="stack">
+        <input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}">
+        <label>{{$.T "Add a guardian as supervisor"}}
+          <select name="user_id">
+            {{range $idx, $g := $.OwnerSupervisorCandidates}}<option value="{{$g.ID}}">{{(wfdefault $g.DisplayName $g.Username)}}</option>{{end}}
+          </select></label>
+        <button class="btn btn-sm" type="submit">{{$.T "Add supervisor"}}</button>
+      </form>
+    {{else}}
+      <p class="muted">{{$wards_url := wfurl "wards"}}{{$.B 29 1}}</p>
+    {{end}}
+  {{end}}
+  <form method="post" action="{{wfurl "activity_set_supervision" $.Activity.ID}}" class="inline">
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}"><input type="hidden" name="supervised" value="off">
+    <button class="btn btn-sm btn-secondary" type="submit">{{$.T "Stop requiring a supervisor"}}</button>
+  </form>
+</div>
+{{else if (and $.IsOwner $.IsOpen (eq $.Activity.Cohort "child") $.Activity.GuardianAccompanied)}}
+<form method="post" action="{{wfurl "activity_set_supervision" $.Activity.ID}}" class="inline activity-inline-form">
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}"><input type="hidden" name="supervised" value="on">
+  <button class="btn btn-sm btn-secondary" type="submit">{{$.T "Require a supervising guardian"}}</button>
+</form>
+{{end}}
+{{end}}
+
+{{define "workflow-activity-safe-exit"}}
+
+{{if (and $.IsMember (not $.IsOwner))}}
+  <div class="card card-danger">
+    <strong>{{$.T "Feeling unsafe or uncomfortable?"}}</strong>
+    <p class="muted compact-copy">{{$.B 30 1}}</p>
+    {{if $.MyGuardians}}
+      <p class="muted">{{$.T "People you can talk to:"}}
+        {{range $idx, $g := $.MyGuardians}}<strong>{{(wfdefault $g.DisplayName $g.Username)}}</strong>{{if (not (eq $idx (wfprev (len $.MyGuardians))))}}, {{end}}{{end}}.</p>
+    {{end}}
+
+    <form method="post" action="{{wfurl "activity_unsafe" $.Activity.ID}}" class="inline activity-inline-form"><input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}">
+      <button class="btn btn-danger" type="submit">&#9888;&#65039; {{$.T "I feel unsafe &mdash; tell someone now"}}</button>
+    </form>
+    <div class="row u-row-gap">
+      <a class="btn btn-sm btn-secondary" href="{{wfurl "report"}}?type=activity&id={{$.Activity.ID}}">{{$.T "Report with details"}}</a>
+      <form method="post" action="{{wfurl "activity_leave" $.Activity.ID}}" class="inline"><input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}">
+        <button class="btn btn-sm btn-secondary" type="submit">{{$.T "Leave this activity"}}</button></form>
+    </div>
+  </div>
+{{end}}
+{{end}}
+
+{{define "workflow-share-box"}}
+
+{{if $.ShareTargets}}
+<details class="share-box">
+  <summary class="muted">{{$.T "Share"}}</summary>
+  <form method="post" action="{{wfurl "share_to_thread"}}" class="stack u-form-narrow"><input type="hidden" name="csrfmiddlewaretoken" value="{{$.Shell.CSRF}}">
+    <input type="hidden" name="kind" value="{{$.ShareKind}}">
+    <input type="hidden" name="obj_id" value="{{$.ShareObjID}}">
+    <input type="hidden" name="next" value="{{$.LanguageNext}}">
+    <label for="share-target-{{$.ShareObjID}}">{{$.T "To one of your activity chats"}}</label>
+    <select id="share-target-{{$.ShareObjID}}" name="target">
+      {{range $idx, $a := $.ShareTargets}}<option value="{{$a.ID}}">{{$a.Title}} ({{(wfdate $a.StartsAt "j M")}})</option>{{end}}
+    </select>
+    <label class="visually-hidden" for="share-note-{{$.ShareObjID}}">{{$.T "Add a note (optional)"}}</label>
+    <input id="share-note-{{$.ShareObjID}}" name="note" maxlength="280" placeholder="{{$.T "Add a note (optional)"}}">
+    <button class="btn btn-sm" type="submit">{{$.T "Share"}}</button>
+    <p class="helptext">{{$.T "To share in a private message, copy this page's link and paste it in the chat."}}</p>
+  </form>
+</details>
+{{end}}
+{{end}}

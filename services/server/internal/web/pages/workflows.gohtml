@@ -1,0 +1,35 @@
+{{define "workflows"}}<!doctype html>
+<html lang="{{.Shell.Language}}" data-theme="{{.Shell.Theme}}" data-text="{{.Shell.Text}}" data-motion="{{.Shell.Motion}}">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="index, follow">
+<title>{{.Title}} · {{.Shell.SiteName}}</title><link rel="canonical" href="{{.Shell.Canonical}}">
+<link rel="preload" href="/static/fonts/bricolage-grotesque-latin-ext-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/static/fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/static/css/base.css"><link rel="stylesheet" href="/static/css/workflows-native.css"><link rel="stylesheet" href="/static/css/completion-accessibility.css">{{if or (eq .Kind "activity-create") (eq .Kind "activity-edit")}}<link rel="stylesheet" href="/static/vendor/leaflet/leaflet.css">{{end}}</head>
+<body class="workflows-native has-tabbar">
+<a class="skip-link" href="#main">{{index .Copy "Skip to main content"}}</a>
+<header class="site-header"><div class="container nav-wrap"><a class="brand" href="/">{{index .Copy "Activities"}}</a>
+<input type="checkbox" id="nav-toggle" class="nav-toggle-cb"><label for="nav-toggle" class="nav-toggle"><span aria-hidden="true">☰</span> {{index .Copy "Menu"}}</label>
+<nav class="nav" aria-label="{{index .Copy "Primary"}}">{{range .Shell.Navigation}}<a class="nav-link" href="{{.URL}}">{{.Label}}{{if and (eq .URL "/notifications/") $.Unread}} <span class="pill">{{$.Unread}}</span>{{end}}</a>{{end}}</nav>
+<details class="nav-menu nav-end"><summary>{{if .Avatar}}<img class="avatar nav-avatar" src="{{.Avatar}}" width="26" height="26" alt="">{{end}}<span class="nav-username">{{.Shell.DisplayName}}</span></summary><div class="nav-panel">
+{{range .AccountLinks}}<a href="{{.URL}}">{{.Label}}</a>{{end}}<form method="post" action="/logout/" class="inline"><input type="hidden" name="csrfmiddlewaretoken" value="{{.Shell.CSRF}}"><button class="linkbtn" type="submit">{{index .Copy "Log out"}}</button></form>
+</div></details></div></header>
+<main class="container" id="main" tabindex="-1">
+{{if .Messages}}<ul class="messages">{{range .Messages}}<li class="msg {{.Tags}}"><span role="status">{{.Text}}</span></li>{{end}}</ul>{{end}}
+{{if eq .Kind "activity-create"}}{{template "workflow-activity-form" .}}{{else if eq .Kind "activity-edit"}}{{template "workflow-activity-edit" .}}{{else if eq .Kind "activity-detail"}}{{template "workflow-activity-detail" .}}{{else if eq .Kind "safe-exit"}}{{template "workflow-safe-exit-page" .}}{{else if eq .Kind "place-propose"}}{{template "workflow-place-propose" .}}{{else if eq .Kind "place-claim"}}{{template "workflow-place-claim" .}}{{else if eq .Kind "places-pending"}}{{template "workflow-places-pending" .}}{{else if eq .Kind "messages"}}{{template "workflow-messages" .}}{{end}}
+</main>
+<nav class="tabbar" aria-label="{{index .Copy "Menu"}}"><a href="/">{{index .Copy "Home"}}</a><a href="/activities/">{{index .Copy "Browse"}}</a><a class="tab-cta" href="/activities/new/">{{index .Copy "Organize"}}</a><a href="/messages/">Chat</a><a href="/you/">{{index .Copy "Profile"}}</a></nav>
+<footer class="site-footer"><div class="container"><p><strong>{{index .Copy "Demo environment: do not enter real personal data."}}</strong></p>
+<nav class="footer-links" aria-label="{{index .Copy "Privacy"}}">{{range .Shell.Footer}}<a href="{{.URL}}">{{.Label}}</a> {{end}}</nav>
+<form method="post" action="/i18n/setlang/" class="inline lang-switch"><input type="hidden" name="csrfmiddlewaretoken" value="{{.Shell.CSRF}}"><input type="hidden" name="next" value="{{.LanguageNext}}"><label for="workflows-language">{{index .Copy "Language"}}</label><select id="workflows-language" name="language" data-auto-submit><option value="en"{{if .Shell.English}} selected{{end}}>English</option><option value="ro"{{if not .Shell.English}} selected{{end}}>Română</option></select><noscript><button class="linkbtn" type="submit">{{index .Copy "Set language"}}</button></noscript></form>
+</div></footer><script nonce="{{.Nonce}}" src="/static/js/hovercard.js" defer></script><script nonce="{{.Nonce}}" id="site-js" src="/static/js/site.js" defer data-meetups-owner="{{.PublicID}}"></script>{{if or (eq .Kind "activity-create") (eq .Kind "activity-edit")}}<script nonce="{{.Nonce}}" src="/static/vendor/leaflet/leaflet.js"></script><script nonce="{{.Nonce}}" src="/static/js/workflow-map-controls.js"></script><script nonce="{{.Nonce}}" src="/static/js/place-picker.js" defer></script><script nonce="{{.Nonce}}" src="/static/js/concept-combobox.js" defer></script><script nonce="{{.Nonce}}" src="/static/js/form-wizard.js" defer></script>{{end}}
+{{if and (eq .Kind "activity-detail") .IsMember}}<script nonce="{{.Nonce}}" id="presend-nudge" type="application/json">{{.NudgeJSON}}</script><script nonce="{{.Nonce}}" src="/static/js/presend-nudge.js"></script><script nonce="{{.Nonce}}" id="thread-chat-config" type="application/json">{{.ChatJSON}}</script><script nonce="{{.Nonce}}" src="/static/js/thread-chat.js"></script>{{end}}
+{{if eq .Kind "messages"}}<script nonce="{{.Nonce}}" src="/static/js/e2ee-messaging.js"></script>{{end}}
+</body></html>{{end}}
+
+{{define "workflow-wizard"}}<script nonce="{{.Nonce}}" id="activity-type-vocabulary" type="application/json">{{.VocabularyJSON}}</script>
+<form method="post" class="stack activity-wizard" data-wizard><input type="hidden" name="csrfmiddlewaretoken" value="{{.Shell.CSRF}}">
+<nav class="wizard-steps" hidden aria-label="{{.T "Form steps"}}">{{range .Form.Steps}}<button type="button" class="wizard-step" data-wizard-step="{{.Index}}"><span class="wizard-step-index">{{.Number}}</span><span>{{.Label}}</span></button>{{end}}</nav>
+{{if .Form.Errors}}<p class="errorlist" role="alert">{{.Form.Errors}}</p>{{end}}{{if .Form.NonFieldErrors}}<p class="errorlist" role="alert">{{.Form.NonFieldErrors}}</p>{{end}}
+{{range .Form.Steps}}<fieldset class="form-section wizard-panel" data-wizard-panel data-step-key="{{.Key}}"><legend>{{.Label}}</legend><div class="form-section-body">{{range .Fields}}{{template "workflow-field" .}}{{if and (eq .Name "place") (eq $.Kind "activity-create")}}<div class="helptext"><a class="muted-link" href="/places/propose/?return=organize">{{$.T "Can't find the place? Add a missing place →"}}</a></div>{{end}}{{end}}</div></fieldset>{{end}}
+<div class="row activity-form-actions wizard-actions"><button class="btn btn-secondary" type="button" data-wizard-back hidden>{{.T "Back"}}</button><button class="btn" type="button" data-wizard-next hidden>{{.T "Next"}}</button><button class="btn" type="submit" data-wizard-submit>{{.SubmitLabel}}</button>{{if eq .Kind "activity-edit"}}<a class="btn btn-secondary" href="{{wfurl "activity_detail" .Activity.ID}}">{{.T "Cancel"}}</a>{{end}}</div>
+</form>{{end}}

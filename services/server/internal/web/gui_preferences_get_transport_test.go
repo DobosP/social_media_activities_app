@@ -114,7 +114,7 @@ func guiPreferenceGETSnapshot(root string, registry guiPreferenceGETRegistry) (f
 	files := fstest.MapFS{}
 	for _, name := range guiPreferencesGETFiles {
 		raw, binding, err := guiCurrentTransportReadBinding(root, name, 2<<20)
-		if err != nil || !guiPublicGetBindingLive(binding, registry.Sources[name]) || files[name] != nil {
+		if err != nil || !completionSourceBindingMatches(name, raw, binding, registry.Sources[name]) || files[name] != nil {
 			return nil, fmt.Errorf("preference-template-source")
 		}
 		files[name] = &fstest.MapFile{Data: append([]byte(nil), raw...), Mode: 0o444}
@@ -129,7 +129,7 @@ func guiPreferenceGETSnapshotCheck(root string, registry guiPreferenceGETRegistr
 	for _, name := range guiPreferencesGETFiles {
 		file := files[name]
 		raw, binding, err := guiCurrentTransportReadBinding(root, name, 2<<20)
-		if err != nil || !guiPublicGetBindingLive(binding, registry.Sources[name]) || file == nil || file.Mode != 0o444 || !bytes.Equal(raw, file.Data) {
+		if err != nil || !completionSourceBindingMatches(name, raw, binding, registry.Sources[name]) || file == nil || file.Mode != 0o444 || !bytes.Equal(raw, file.Data) {
 			return fmt.Errorf("preference-template-bytes")
 		}
 	}
@@ -228,7 +228,7 @@ func guiPreferenceGET(t *testing.T, s *Server, files fstest.MapFS, item guiPrefe
 	*requests = *requests + 1
 	// Only retained notification/display/access/topics predicates use references.
 	// Other routes execute the current registered native mux.
-	topicsFrozenReferenceHandler(s, mux).ServeHTTP(response, request)
+	completionFrozenReferenceHandler(s, mux).ServeHTTP(response, request)
 	return guiCurrentTransportResponse{response, append([]guiPublicTemplateLoad(nil), trace.loads...), s.Config.PublicURL + item.Path}
 }
 

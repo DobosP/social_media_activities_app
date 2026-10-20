@@ -26,11 +26,16 @@ func groupCreatePreferenceSourceBinding(path string, raw []byte, physical, wante
 	if len(raw) != physical.Bytes || guiPublicHash(raw) != physical.SHA256 || !guiPublicGetLiveMode(physical.FullMode, wanted.FullMode) {
 		return guiG1Binding{}, fmt.Errorf("group-preference-physical-source")
 	}
+	var completionErr error
+	raw, completionErr = completionSourcePreimage(path, raw)
+	if completionErr != nil {
+		return guiG1Binding{}, completionErr
+	}
 	// The original physical tuple stays authoritative before any memory inverse.
 	switch path {
 	case "services/server/internal/web/renderer.go", "services/server/internal/web/gui_public_get_walk_test.go", "services/server/internal/web/gui_preferences_layout_test.go", "services/server/internal/web/gui_preferences_get_transport_test.go":
 		var topicsErr error
-		raw, topicsErr = topicsSourcePreimage(path, raw)
+		raw, topicsErr = topicsEpochSourcePreimage(path, raw)
 		if topicsErr != nil {
 			return guiG1Binding{}, topicsErr
 		}
@@ -50,7 +55,7 @@ func groupCreatePreferenceSourceBinding(path string, raw []byte, physical, wante
 	// Require exact latest language registration/limit/walker before the
 	// untouched preference/account and original source inverse chain.
 	if path == "services/server/internal/web/server.go" || path == "services/server/internal/app/app.go" || path == "services/server/internal/web/gui_public_get_walk_test.go" {
-		raw, err = languageActionSourcePreimage(path, raw)
+		raw, err = languageActionEpochSourcePreimage(path, raw)
 		if err != nil {
 			return guiG1Binding{}, err
 		}
@@ -95,7 +100,7 @@ func groupCreatePreferenceSourceBinding(path string, raw []byte, physical, wante
 		}
 		previous, err = groupCreateCustodyRowsPreimage(path, raw, rows[:1])
 	case "services/server/internal/web/forms.go":
-		previous, err = guiPublicGetRowsPreimage(path, raw)
+		previous, err = guiPublicGetRowsEpochPreimage(path, raw)
 	case "services/server/internal/web/gui_public_get_walk_test.go":
 		raw, err = notificationPreferencesWalkerPreimage(raw)
 		if err != nil {

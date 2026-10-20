@@ -31,7 +31,7 @@ func (s *Server) PublicView(r *http.Request, a platform.Actor, name string) (pon
 	fail := func(err error) (pongo2.Context, string, bool, error) { return nil, "", true, err }
 	switch name {
 	case "places_map":
-		categories, err := socialRows(ctx, s.DB, `SELECT jsonb_build_object('slug',coalesce(parent.slug,c.slug),'name',coalesce(parent.name,c.name)) FROM places_placeactivity pa JOIN places_place p ON p.id=pa.place_id JOIN taxonomy_activitytype t ON t.id=pa.activity_id JOIN taxonomy_activitycategory c ON c.id=t.category_id LEFT JOIN taxonomy_activitycategory parent ON parent.id=c.parent_id WHERE NOT pa.is_disputed AND `+catalog.PolicyFromContext(r.Context()).PlaceSQL()+` AND ($1::text='' OR lower(p.address_city)=lower($1)) GROUP BY coalesce(parent.slug,c.slug),coalesce(parent.name,c.name) ORDER BY lower(coalesce(parent.name,c.name))`, r.URL.Query().Get("city"))
+		categories, err := socialRows(ctx, s.DB, `SELECT jsonb_build_object('slug',coalesce(parent.slug,c.slug),'name',coalesce(parent.name,c.name)) FROM places_placeactivity pa JOIN places_place p ON p.id=pa.place_id JOIN taxonomy_activitytype t ON t.id=pa.activity_id JOIN taxonomy_activitycategory c ON c.id=t.category_id LEFT JOIN taxonomy_activitycategory parent ON parent.id=c.parent_id WHERE NOT pa.is_disputed AND `+catalog.PolicyFromContext(r.Context()).PlaceSQL()+` AND ($1::text='' OR `+catalog.CityEqualSQL("p.address_city", "$1::text")+`) GROUP BY coalesce(parent.slug,c.slug),coalesce(parent.name,c.name) ORDER BY lower(coalesce(parent.name,c.name))`, r.URL.Query().Get("city"))
 		if err != nil {
 			return fail(err)
 		}
@@ -56,6 +56,7 @@ func (s *Server) PublicView(r *http.Request, a platform.Actor, name string) (pon
 		}
 		sort.SliceStable(places, func(i, j int) bool { return spaBool(places[i]["access_match"]) && !spaBool(places[j]["access_match"]) })
 		data["places"], data["near_active"], data["truncated"] = places, near, len(places) == 200
+		data["local_poc_content"] = anyLocalPOC(places)
 		data["filters"] = map[string]any{"activity": r.URL.Query().Get("activity"), "city": r.URL.Query().Get("city"), "source": r.URL.Query().Get("source")}
 		data["filtered"] = near || r.URL.Query().Get("activity") != "" || r.URL.Query().Get("city") != "" || r.URL.Query().Get("source") != ""
 		if len(places) > 0 {
@@ -117,7 +118,8 @@ func (s *Server) PublicView(r *http.Request, a platform.Actor, name string) (pon
 			data["place"], data["form"] = p, form
 		}
 	case "events_list":
-		events, err := s.publicEvents(r, "", 0, 100)
+		city := strings.TrimSpace(r.URL.Query().Get("city"))
+		events, err := s.publicEvents(r, city, 0, 100)
 		if err != nil {
 			return fail(err)
 		}
@@ -126,13 +128,29 @@ func (s *Server) PublicView(r *http.Request, a platform.Actor, name string) (pon
 			return fail(err)
 		}
 		data["events"], data["areas"], data["query"], data["activity"] = events, areas, strings.TrimSpace(r.URL.Query().Get("q")), r.URL.Query().Get("activity")
+		data["city"] = city
+		data["local_poc_content"], data["local_poc_past"] = anyLocalPOC(events), s.localPOCPast(r)
+		data["local_poc_past_only"] = s.localPOCPastOnly(r)
+		data["event_upcoming_url"] = s.eventViewURL(r, "", false)
+		data["event_include_past_url"] = s.eventViewURL(r, "include_past", false)
+		data["event_past_only_url"] = s.eventViewURL(r, "past_only", false)
+		data["event_feed_url"] = eventFilterURL(routeURL("events_feed"), eventFilterValues(r, true))
+		mode := ""
+		if s.localPOCPast(r) {
+			mode = "include_past"
+		}
+		if s.localPOCPastOnly(r) {
+			mode = "past_only"
+		}
+		data["event_clear_url"] = s.eventViewURL(r, mode, true)
 		data["area"], data["area_name"] = "", ""
 		for _, area := range areas {
 			if area["slug"] == r.URL.Query().Get("area") {
 				data["area"], data["area_name"] = area["slug"], area["name"]
 			}
 		}
-		data["filtered"] = data["query"] != "" || data["activity"] != "" || r.URL.Query().Get("area") != ""
+		data["event_filters_active"] = city != "" || data["query"] != "" || data["activity"] != "" || r.URL.Query().Get("area") != ""
+		data["filtered"] = data["event_filters_active"] == true || mode != ""
 		if len(events) > 0 {
 			data["structured_data"] = publicLD(s.publicItemList(r, events, true))
 		}
@@ -185,7 +203,7 @@ func publicPlaceFieldsSQL(ctx context.Context) string {
 func (s *Server) publicPlaces(r *http.Request, a platform.Actor, city, activity string, cap int) ([]map[string]any, bool, error) {
 	q := r.URL.Query()
 	if city == "" {
-		city = q.Get("city")
+		city = strings.TrimSpace(q.Get("city"))
 	}
 	if activity == "" {
 		activity = q.Get("activity")
@@ -203,7 +221,7 @@ func (s *Server) publicPlaces(r *http.Request, a platform.Actor, city, activity 
 		}
 		confidence = &f
 	}
-	where := catalog.PolicyFromContext(r.Context()).PlaceSQL() + ` AND ($1::text='' OR lower(p.address_city)=lower($1)) AND ($2::text='' OR lower(p.source)=lower($2)) AND ($3::text='' OR EXISTS(SELECT 1 FROM places_placeactivity pa JOIN taxonomy_activitytype t ON t.id=pa.activity_id WHERE pa.place_id=p.id AND NOT pa.is_disputed AND lower(t.slug)=lower($3) AND ($4::float8 IS NULL OR pa.confidence>=$4))) AND ($4::float8 IS NULL OR EXISTS(SELECT 1 FROM places_placeactivity pa WHERE pa.place_id=p.id AND pa.confidence>=$4)) AND ($5::float8 IS NULL OR $6::float8 IS NULL OR $7::float8 IS NULL OR ST_DWithin(p.location,ST_SetSRID(ST_MakePoint($5,$6),4326)::geography,$7))`
+	where := catalog.PolicyFromContext(r.Context()).PlaceSQL() + ` AND ($1::text='' OR ` + catalog.CityEqualSQL("p.address_city", "$1::text") + `) AND ($2::text='' OR lower(p.source)=lower($2)) AND ($3::text='' OR EXISTS(SELECT 1 FROM places_placeactivity pa JOIN taxonomy_activitytype t ON t.id=pa.activity_id WHERE pa.place_id=p.id AND NOT pa.is_disputed AND lower(t.slug)=lower($3) AND ($4::float8 IS NULL OR pa.confidence>=$4))) AND ($4::float8 IS NULL OR EXISTS(SELECT 1 FROM places_placeactivity pa WHERE pa.place_id=p.id AND pa.confidence>=$4)) AND ($5::float8 IS NULL OR $6::float8 IS NULL OR $7::float8 IS NULL OR ST_DWithin(p.location,ST_SetSRID(ST_MakePoint($5,$6),4326)::geography,$7))`
 	where += ` AND ($9::text='' OR EXISTS(SELECT 1 FROM places_placeactivity pa JOIN taxonomy_activitytype t ON t.id=pa.activity_id JOIN taxonomy_activitycategory c ON c.id=t.category_id LEFT JOIN taxonomy_activitycategory parent ON parent.id=c.parent_id WHERE pa.place_id=p.id AND NOT pa.is_disputed AND (lower(c.slug)=lower($9) OR lower(parent.slug)=lower($9)) AND ($4::float8 IS NULL OR pa.confidence>=$4)))`
 	var upcoming *bool
 	if raw := strings.ToLower(q.Get("has_upcoming")); raw == "true" || raw == "false" {
@@ -256,6 +274,7 @@ func (s *Server) publicDecoratePlaces(ctx context.Context, places []map[string]a
 	for _, p := range places {
 		p["display_name"], p["display_address"], p["label"] = p["_display_name"], p["address"], p["name"]
 		p["get_source_display"] = map[string]string{"osm": "OpenStreetMap", "overture": "Overture", "user": "User contributed", "roedu": "RO-EDU"}[spaText(p["source"])]
+		p["local_poc"] = catalog.PlaceLocalPOC(spaMap(p["_tags"]))
 		hours := spaText(p["opening_hours_text"])
 		p["posted_hours_text"] = hours
 		p["display_opening_hours"] = hours

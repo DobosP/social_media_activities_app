@@ -1,0 +1,1062 @@
+{
+  "Schema": 1,
+  "SourceCommit": "a2676cfb5326cf9a3b232bd916bbd32bf313e50e",
+  "Rows": [
+    {
+      "Path": "apps/web/templates/web/event_detail.html",
+      "CurrentSHA256": "d2c0a9f2254031dfd64d0926dc84202a3db93196f4a9cf94f4a9a0063f73a1ff",
+      "PriorSHA256": "c2610dd26f45fb921c6e3908ab9f228668c8e462df8d3f120abde34837239e51",
+      "CurrentBytes": 5000,
+      "PriorBytes": 4880,
+      "CurrentMode": 33204,
+      "Splices": [
+        {
+          "PriorStart": 1100,
+          "PriorEnd": 1100,
+          "CurrentStart": 1100,
+          "CurrentEnd": 1220,
+          "Before": "",
+          "After": "{% if event.local_poc %}<p><span class=\"tag fact--false\">LOCAL POC — not cleared for publication</span></p>{% endif %}"
+        }
+      ]
+    },
+    {
+      "Path": "apps/web/templates/web/events.html",
+      "CurrentSHA256": "55e9a39f64b97dea69e87deec0826d4ead1726dc03d91330e43bbaaa56a81f2f",
+      "PriorSHA256": "47364476d705664b7bba8ab22651685d3da8d563f5d9ab3ebff2090763645702",
+      "CurrentBytes": 4293,
+      "PriorBytes": 2950,
+      "CurrentMode": 33204,
+      "Splices": [
+        {
+          "PriorStart": 581,
+          "PriorEnd": 696,
+          "CurrentStart": 581,
+          "CurrentEnd": 755,
+          "Before": "<link rel=\"alternate\" type=\"application/rss+xml\" title=\"{% trans 'Upcoming events' %}\" href=\"{% url 'events_feed' %",
+          "After": "{% url 'events_feed' as fallback_feed %}<link rel=\"alternate\" type=\"application/rss+xml\" title=\"{% trans 'Upcoming events' %}\" href=\"{{ event_feed_url|default:fallback_feed }"
+        },
+        {
+          "PriorStart": 734,
+          "PriorEnd": 734,
+          "CurrentStart": 793,
+          "CurrentEnd": 995,
+          "Before": "",
+          "After": "{% url 'events_feed' as fallback_feed %}{% url 'events_list' as fallback_clear %}\n{% with event_feed_href=event_feed_url|default:fallback_feed event_clear_href=event_clear_url|default:fallback_clear %}\n"
+        },
+        {
+          "PriorStart": 801,
+          "PriorEnd": 1183,
+          "CurrentStart": 1062,
+          "CurrentEnd": 1433,
+          "Before": "% url 'events_feed' %}\">{% trans \"Subscribe (RSS)\" %}</a> &middot; <a href=\"{% url 'things_to_do_index' %}\">{% trans \"Browse by city &amp; activity\" %}</a></p>\n<p class=\"muted\">{% trans \"Upcoming events at places near you. Find one you like, then organise an activity to go together.\" %}{% if activity %} {% url 'events_list' as clear_url %}{% blocktrans with activity_name=activity",
+          "After": "{ event_feed_href }}\">{% trans \"Subscribe (RSS)\" %}</a> &middot; <a href=\"{% url 'things_to_do_index' %}\">{% trans \"Browse by city &amp; activity\" %}</a></p>\n<p class=\"muted\">{% trans \"Upcoming events at places near you. Find one you like, then organise an activity to go together.\" %}{% if activity %} {% blocktrans with activity_name=activity clear_url=event_clear_href"
+        },
+        {
+          "PriorStart": 1556,
+          "PriorEnd": 1556,
+          "CurrentStart": 1806,
+          "CurrentEnd": 1924,
+          "Before": "",
+          "After": "  <input type=\"text\" name=\"city\" value=\"{{ city }}\" placeholder=\"{% trans 'City' %}\" aria-label=\"{% trans 'City' %}\">\n"
+        },
+        {
+          "PriorStart": 2105,
+          "PriorEnd": 2212,
+          "CurrentStart": 2473,
+          "CurrentEnd": 3265,
+          "Before": "\n  {% if query %}<a class=\"muted\" href=\"{% url 'events_list' %}\">{% trans \"clear\" %}</a>{% endif %}\n</form>",
+          "After": "{% if local_poc_past_only %}<input type=\"hidden\" name=\"past_only\" value=\"1\">{% elif local_poc_past %}<input type=\"hidden\" name=\"include_past\" value=\"1\">{% endif %}\n  {% if event_filters_active or query %}<a class=\"muted\" href=\"{{ event_clear_href }}\">{% trans \"Clear filters\" %}</a>{% endif %}\n</form>{% if local_poc_mode %}<p class=\"muted\">\n  {% if local_poc_past or local_poc_past_only %}<a href=\"{{ event_upcoming_url }}\">Upcoming only</a> &middot; {% endif %}\n  {% if not local_poc_past or local_poc_past_only %}<a href=\"{{ event_include_past_url }}\">Include past events (LOCAL POC)</a> &middot; {% endif %}\n  {% if local_poc_past_only %}<strong>Past events only (LOCAL POC)</strong>{% else %}<a href=\"{{ event_past_only_url }}\">Past events only (LOCAL POC)</a>{% endif %}\n</p>{% endif %}"
+        },
+        {
+          "PriorStart": 2481,
+          "PriorEnd": 2481,
+          "CurrentStart": 3534,
+          "CurrentEnd": 3722,
+          "Before": "",
+          "After": "{% if e.local_poc %}<p><span class=\"tag fact--false\">LOCAL POC — not cleared for publication</span>{% if e.local_poc_past %} <span class=\"tag\">Past event</span>{% endif %}</p>{% endif %}"
+        },
+        {
+          "PriorStart": 2877,
+          "PriorEnd": 2908,
+          "CurrentStart": 4118,
+          "CurrentEnd": 4237,
+          "Before": "trans \"No upcoming events yet.\"",
+          "After": "if local_poc_past_only %}{% trans \"No past POC events match.\" %}{% else %}{% trans \"No upcoming events yet.\" %}{% endif"
+        },
+        {
+          "PriorStart": 2935,
+          "PriorEnd": 2935,
+          "CurrentStart": 4264,
+          "CurrentEnd": 4278,
+          "Before": "",
+          "After": "{% endwith %}\n"
+        }
+      ]
+    },
+    {
+      "Path": "apps/web/templates/web/landing_detail.html",
+      "CurrentSHA256": "2f8098bb43ebac4705f7914f168c127279525b38bacd277827d161c89db577aa",
+      "PriorSHA256": "e732e315afb7b1aa91b90b4c413db1fb8b7cb41762b3d02b6fe37b946b2b2e6d",
+      "CurrentBytes": 2479,
+      "PriorBytes": 2363,
+      "CurrentMode": 33204,
+      "Splices": [
+        {
+          "PriorStart": 1349,
+          "PriorEnd": 1349,
+          "CurrentStart": 1349,
+          "CurrentEnd": 1465,
+          "Before": "",
+          "After": "{% if e.local_poc %}<p><span class=\"tag fact--false\">LOCAL POC — not cleared for publication</span></p>{% endif %}"
+        }
+      ]
+    },
+    {
+      "Path": "apps/web/templates/web/place_detail.html",
+      "CurrentSHA256": "53552c2d12f9e986a237ac56418a88c1476763993982becac9427eb7b1adebb2",
+      "PriorSHA256": "8fca89fd4294dea0b01ee45a7407a14ad35468c1c6be544c727e07c6c5ca3d60",
+      "CurrentBytes": 18376,
+      "PriorBytes": 17872,
+      "CurrentMode": 33204,
+      "Splices": [
+        {
+          "PriorStart": 2375,
+          "PriorEnd": 2375,
+          "CurrentStart": 2375,
+          "CurrentEnd": 2495,
+          "Before": "",
+          "After": "{% if place.local_poc %}<p><span class=\"tag fact--false\">LOCAL POC — not cleared for publication</span></p>{% endif %}"
+        },
+        {
+          "PriorStart": 5561,
+          "PriorEnd": 5561,
+          "CurrentStart": 5681,
+          "CurrentEnd": 5877,
+          "Before": "",
+          "After": "{% if local_poc_mode %}<p class=\"muted\">{% if local_poc_past %}<a href=\"?\">Upcoming events only</a>{% else %}<a href=\"?include_past=1\">Include past events (LOCAL POC)</a>{% endif %}</p>{% endif %}"
+        },
+        {
+          "PriorStart": 5736,
+          "PriorEnd": 5736,
+          "CurrentStart": 6052,
+          "CurrentEnd": 6240,
+          "Before": "",
+          "After": "{% if e.local_poc %}<p><span class=\"tag fact--false\">LOCAL POC — not cleared for publication</span>{% if e.local_poc_past %} <span class=\"tag\">Past event</span>{% endif %}</p>{% endif %}"
+        }
+      ]
+    },
+    {
+      "Path": "apps/web/templates/web/places_list.html",
+      "CurrentSHA256": "0e368c25cb079ef033bb2ffa8ea25939c02cf20e38a4eac2bef3fb9829ef4543",
+      "PriorSHA256": "cd5e1a614f086572a4d807be617a2059c2e1fae7d8200c352ba669d9ca4676ca",
+      "CurrentBytes": 3180,
+      "PriorBytes": 3071,
+      "CurrentMode": 33204,
+      "Splices": [
+        {
+          "PriorStart": 2242,
+          "PriorEnd": 2242,
+          "CurrentStart": 2242,
+          "CurrentEnd": 2351,
+          "Before": "",
+          "After": "{% if p.local_poc %}<span class=\"tag fact--false\">LOCAL POC — not cleared for publication</span>{% endif %}"
+        }
+      ]
+    },
+    {
+      "Path": "services/server/internal/web/forms.go",
+      "CurrentSHA256": "c38e6e7ec9079179b94dae7aab1e3444ba5801b30d3efd85129145ebc018465a",
+      "PriorSHA256": "a9cc66599f770b3e6b30ea3bc4be7148253702c939d484ae6b7bea5d16af6717",
+      "CurrentBytes": 8398,
+      "PriorBytes": 7628,
+      "CurrentMode": 33204,
+      "Splices": [
+        {
+          "PriorStart": 3925,
+          "PriorEnd": 3925,
+          "CurrentStart": 3925,
+          "CurrentEnd": 4019,
+          "Before": "",
+          "After": "\tnativeSeriesGauge := seriesGaugeFormSnapshot{Name: name, Cohort: a.Cohort, Staff: a.IsStaff}\n"
+        },
+        {
+          "PriorStart": 4628,
+          "PriorEnd": 4628,
+          "CurrentStart": 4722,
+          "CurrentEnd": 4963,
+          "Before": "",
+          "After": "\t\tnativeSeriesGaugeChecked := f.Kind == \"BooleanField\" && (value == \"true\" || value == \"on\")\n\t\tif r.Method == \"POST\" && (r.PostForm.Get(key) == \"\" || strings.EqualFold(r.PostForm.Get(key), \"false\")) {\n\t\t\tnativeSeriesGaugeChecked = false\n\t\t}\n"
+        },
+        {
+          "PriorStart": 6465,
+          "PriorEnd": 6465,
+          "CurrentStart": 6800,
+          "CurrentEnd": 7088,
+          "Before": "",
+          "After": "\t\tif seriesGaugeFormName(name) {\n\t\t\t_, hasOptions := options[key]\n\t\t\tnativeSeriesGauge.Fields = append(nativeSeriesGauge.Fields, seriesGaugeFormInput{Name: key, Value: value, HasOptions: hasOptions, Checked: nativeSeriesGaugeChecked, Options: append([]option(nil), options[key]...)})\n\t\t}\n"
+        },
+        {
+          "PriorStart": 6767,
+          "PriorEnd": 6767,
+          "CurrentStart": 7390,
+          "CurrentEnd": 7478,
+          "Before": "",
+          "After": "\t}\n\tif seriesGaugeFormName(name) {\n\t\tresult[\"native_series_gauges\"] = nativeSeriesGauge\n"
+        },
+        {
+          "PriorStart": 7606,
+          "PriorEnd": 7606,
+          "CurrentStart": 8317,
+          "CurrentEnd": 8376,
+          "Before": "",
+          "After": "\taddWorkflowSnapshot(result, name, fields, names, options)\n"
+        }
+      ]
+    },
+    {
+      "Path": "services/server/internal/web/group_create_source_guard_test.go",
+      "CurrentSHA256": "a149873d73305bba2161b87460470608944e69a69f1cce0d4207d4ae9dddfb6b",
+      "PriorSHA256": "54dfbf21645399aee7e8822c6645eaa9065ded92f6da45dc5859c910ddb9b8f1",
+      "CurrentBytes": 10986,
+      "PriorBytes": 10819,
+      "CurrentMode": 33188,
+      "Splices": [
+        {
+          "PriorStart": 1718,
+          "PriorEnd": 1718,
+          "CurrentStart": 1718,
+          "CurrentEnd": 1870,
+          "Before": "",
+          "After": "\tvar completionErr error\n\traw, completionErr = completionSourcePreimage(path, raw)\n\tif completionErr != nil {\n\t\treturn guiG1Binding{}, completionErr\n\t}\n"
+        },
+        {
+          "PriorStart": 2102,
+          "PriorEnd": 2102,
+          "CurrentStart": 2254,
+          "CurrentEnd": 2259,
+          "Before": "",
+          "After": "Epoch"
+        },
+        {
+          "PriorStart": 3112,
+          "PriorEnd": 3112,
+          "CurrentStart": 3269,
+          "CurrentEnd": 3274,
+          "Before": "",
+          "After": "Epoch"
+        },
+        {
+          "PriorStart": 4781,
+          "PriorEnd": 4781,
+          "CurrentStart": 4943,
+          "CurrentEnd": 4948,
+          "Before": "",
+          "After": "Epoch"
+        }
+      ]
+    },
+    {
+      "Path": "services/server/internal/web/group_detail_custody_test.go",
+      "CurrentSHA256": "d46a72152ebf0d27cb4fbb66a200c85227fb20d26908f6e0fd3d56ce7d51149c",
+      "PriorSHA256": "f715126c7d2ab6ae704700e19d2464dab14e61c71eaaf0e246f28c8071ac89d4",
+      "CurrentBytes": 8610,
+      "PriorBytes": 8401,
+      "CurrentMode": 33204,
+      "Splices": [
+        {
+          "PriorStart": 6472,
+          "PriorEnd": 6666,
+          "CurrentStart": 6472,
+          "CurrentEnd": 6875,
+          "Before": "for name, changed := range map[string][]byte{\"missing-dispatch\": bytes.Replace(raw, []byte(rows[0].after), nil, 1), \"duplicate-dispatch\": append(append([]byte(nil), raw...), []byte(rows[0].after",
+          "After": "mutationLiteral, completionErr := completionMutationTarget(path, raw, rows[0].after)\n\tif completionErr != nil {\n\t\tt.Fatal(\"completion group-detail physical mutation target unavailable\", completionErr)\n\t}\n\tfor name, changed := range map[string][]byte{\"missing-dispatch\": bytes.Replace(raw, []byte(mutationLiteral), nil, 1), \"duplicate-dispatch\": append(append([]byte(nil), raw...), []byte(mutationLiteral"
+        }
+      ]
+    },
+    {
+      "Path": "services/server/internal/web/gui_activity_form_nonce_test.go",
+      "CurrentSHA256": "f50207469285dbed163ccfceac61c4928d50ac528ca62faa435b668d6cdbd78e",
+      "PriorSHA256": "bf0057e5f60c06fb77275d0b6ab4fdc95ae5b3e4933e3bc6f6c6001952bbea70",
+      "CurrentBytes": 22361,
+      "PriorBytes": 22335,
+      "CurrentMode": 33204,
+      "Splices": [
+        {
+          "PriorStart": 10814,
+          "PriorEnd": 10830,
+          "CurrentStart": 10814,
+          "CurrentEnd": 10856,
+          "Before": "renderer.Render(",
+          "After": "completionFrozenReferenceRender(renderer, "
+        }
+      ]
+    },
+    {
+      "Path": "services/server/internal/web/gui_my_meetups_nonce_test.go",
+      "CurrentSHA256": "f667566b6738b8c3b94c09ed15d266ebcbdc624b0e652809d6be77b7bcb41507",
+      "PriorSHA256": "1f4096db8fcba97165ae9365d3e382e51292059f2567622c64ec6d71b7e4abcc",
+      "CurrentBytes": 16241,
+      "PriorBytes": 16215,
+      "CurrentMode": 33204,
+      "Splices": [
+        {
+          "PriorStart": 8099,
+          "PriorEnd": 8115,
+          "CurrentStart": 8099,
+          "CurrentEnd": 8141,
+          "Before": "renderer.Render(",
+          "After": "completionFrozenReferenceRender(renderer, "
+        }
+      ]
+    },
+    {
+      "Path": "services/server/internal/web/gui_preferences_get_transport_test.go",
+      "CurrentSHA256": "b55b7e9d009af9f02b9e745c9205ef8c8b0d0b5e6fe98b8aab9e154b69eca0da",
+      "PriorSHA256": "128707ffa6c589ddb43fc1c5336406791df6c07a6815ed30707ec19a961d530b",
+      "CurrentBytes": 28097,
+      "PriorBytes": 28057,
+      "CurrentMode": 33188,
+      "Splices": [
+        {
+          "PriorStart": 4417,
+          "PriorEnd": 4441,
+          "CurrentStart": 4417,
+          "CurrentEnd": 4459,
+          "Before": "guiPublicGetBindingLive(",
+          "After": "completionSourceBindingMatches(name, raw, "
+        },
+        {
+          "PriorStart": 5034,
+          "PriorEnd": 5058,
+          "CurrentStart": 5052,
+          "CurrentEnd": 5094,
+          "Before": "guiPublicGetBindingLive(",
+          "After": "completionSourceBindingMatches(name, raw, "
+        },
+        {
+          "PriorStart": 10093,
+          "PriorEnd": 10099,
+          "CurrentStart": 10129,
+          "CurrentEnd": 10139,
+          "Before": "topics",
+          "After": "completion"
+        }
+      ]
+    },
+    {
+      "Path": "services/server/internal/web/gui_public_campaign_meter_test.go",
+      "CurrentSHA256": "e7f6095629bd8de912e2c0d8c4f61cfefb426e00a258d833c4353603a3422ab9",
+      "PriorSHA256": "7f1870610531274bff7eb3131f15fc0ef51d7b31e9a870190d139bc854b3e10d",
+      "CurrentBytes": 24314,
+      "PriorBytes": 24194,
+      "CurrentMode": 33204,
+      "Splices": [
+        {
+          "PriorStart": 16982,
+          "PriorEnd": 16982,
+          "CurrentStart": 16982,
+          "CurrentEnd": 17076,
+          "Before": "",
+          "After": "\trenderer.loader = trace // Retained Pongo reference trace, current native tested separately.\n"
+        },
+        {
+          "PriorStart": 17333,
+          "PriorEnd": 17349,
+          "CurrentStart": 17427,
+          "CurrentEnd": 17469,
+          "Before": "renderer.Render(",
+          "After": "completionFrozenReferenceRender(renderer, "
+        }
+      ]
+    },
+    {
+      "Path": "services/server/internal/web/gui_public_current_get_transport_test.go",
+      "CurrentSHA256": "4013dc084a8a5e7b48a350d133fa0452b8424ffbf0840ac40f16f38c95038161",
+      "PriorSHA256": "ac52a67afc4b446f4b11ae9c2ee1e3d5608b661f5760e67df071c0fc2c831a84",
+      "CurrentBytes": 20514,
+      "PriorBytes": 20373,
+      "CurrentMode": 33204,
+      "Splices": [
+        {
+          "PriorStart": 6877,
+          "PriorEnd": 6877,
+          "CurrentStart": 6877,
+          "CurrentEnd": 6981,
+          "Before": "",
+          "After": "\trenderer.loader = trace // Retained compatibility trace; current Go routes have separate App evidence.\n"
+        },
+        {
+          "PriorStart": 7551,
+          "PriorEnd": 7554,
+          "CurrentStart": 7655,
+          "CurrentEnd": 7695,
+          "Before": "mux",
+          "After": "completionFrozenReferenceHandler(s, mux)"
+        }
+      ]
+    },
+    {
+      "Path": "services/server/internal/web/gui_public_get_walk_test.go",
+      "CurrentSHA256": "0be6bd604eaab792c21ba6e087ed63426cee14bfee991450c643e8d0adab49ed",
+      "PriorSHA256": "1007f5ef6b4888ab22742138cab1348c514429ff41f2daf76ee359e22cb765a7",
+      "CurrentBytes": 65901,
+      "PriorBytes": 65310,
+      "CurrentMode": 33188,
+      "Splices": [
+        {
+          "PriorStart": 26719,
+          "PriorEnd": 26719,
+          "CurrentStart": 26719,
+          "CurrentEnd": 26969,
+          "Before": "",
+          "After": "\tprior, completionErr := completionSourcePreimage(path, raw)\n\tif completionErr != nil {\n\t\treturn nil, completionErr\n\t}\n\treturn guiPublicGetRowsEpochPreimage(path, prior)\n}\nfunc guiPublicGetRowsEpochPreimage(path string, raw []byte) ([]byte, error) {\n"
+        },
+        {
+          "PriorStart": 27106,
+          "PriorEnd": 27106,
+          "CurrentStart": 27356,
+          "CurrentEnd": 27361,
+          "Before": "",
+          "After": "Epoch"
+        },
+        {
+          "PriorStart": 28023,
+          "PriorEnd": 28023,
+          "CurrentStart": 28278,
+          "CurrentEnd": 28283,
+          "Before": "",
+          "After": "Epoch"
+        },
+        {
+          "PriorStart": 33981,
+          "PriorEnd": 33981,
+          "CurrentStart": 34241,
+          "CurrentEnd": 34453,
+          "Before": "",
+          "After": "\t\t}\n\t\tif name != \"services/server/internal/app/app.go\" {\n\t\t\tprior, completionErr := completionSourcePreimage(name, input.raw)\n\t\t\tif completionErr != nil {\n\t\t\t\treturn completionErr\n\t\t\t}\n\t\t\tpreimages[name] = prior\n"
+        },
+        {
+          "PriorStart": 53249,
+          "PriorEnd": 53249,
+          "CurrentStart": 53721,
+          "CurrentEnd": 53803,
+          "Before": "",
+          "After": "\t\t\ts.Renderer.loader = trace // Original Pongo capture, not the rebuilt Go pages.\n"
+        },
+        {
+          "PriorStart": 53860,
+          "PriorEnd": 53863,
+          "CurrentStart": 54414,
+          "CurrentEnd": 54454,
+          "Before": "mux",
+          "After": "completionFrozenReferenceHandler(s, mux)"
+        }
+      ]
+    },
+    {
+      "Path": "services/server/internal/web/gui_public_golden_test.go",
+      "CurrentSHA256": "2d7dff8c512bff3618826aeab80c1365aae926d16d8f0e5652c2572d9c471f72",
+      "PriorSHA256": "430775c2330e07b671897b372caf41844f1c5786ef60e741fb85252df32f1ad9",
+      "CurrentBytes": 14396,
+      "PriorBytes": 14274,
+      "CurrentMode": 33204,
+      "Splices": [
+        {
+          "PriorStart": 7446,
+          "PriorEnd": 7446,
+          "CurrentStart": 7446,
+          "CurrentEnd": 7526,
+          "Before": "",
+          "After": "\t\t\tserver.Renderer.loader = trace // Preserve original capture/load predicates.\n"
+        },
+        {
+          "PriorStart": 8139,
+          "PriorEnd": 8142,
+          "CurrentStart": 8219,
+          "CurrentEnd": 8264,
+          "Before": "mux",
+          "After": "completionFrozenReferenceHandler(server, mux)"
+        }
+      ]
+    },
+    {
+      "Path": "services/server/internal/web/gui_public_graph_nonce_test.go",
+      "CurrentSHA256": "5bc6a8d4bc39059931f11fba64b9cff5996ee81f8e8bed5472bc76d71cdcf207",
+      "PriorSHA256": "3416d6d16030b5ab5f853caf37fd3f67779bc793c1d0860d9289b79b14cb53c5",
+      "CurrentBytes": 7941,
+      "PriorBytes": 7915,
+      "CurrentMode": 33204,
+      "Splices": [
+        {
+          "PriorStart": 3923,
+          "PriorEnd": 3939,
+          "CurrentStart": 3923,
+          "CurrentEnd": 3965,
+          "Before": "renderer.Render(",
+          "After": "completionFrozenReferenceRender(renderer, "
+        }
+      ]
+    },
+    {
+      "Path": "services/server/internal/web/gui_public_nonce_test.go",
+      "CurrentSHA256": "7ac6b0f4ed6fb89b71ce5e399dbf6c3e1c4c06e451b74d47c6f519db87c920cc",
+      "PriorSHA256": "3200f4557be726042234ca36314ed5d419ceb2f8e117abd8df775697940cce72",
+      "CurrentBytes": 10867,
+      "PriorBytes": 10666,
+      "CurrentMode": 33204,
+      "Splices": [
+        {
+          "PriorStart": 4611,
+          "PriorEnd": 4627,
+          "CurrentStart": 4611,
+          "CurrentEnd": 4653,
+          "Before": "renderer.Render(",
+          "After": "completionFrozenReferenceRender(renderer, "
+        },
+        {
+          "PriorStart": 9560,
+          "PriorEnd": 9560,
+          "CurrentStart": 9586,
+          "CurrentEnd": 9761,
+          "Before": "",
+          "After": "\tcurrent, err = completionSourcePreimage(\"templates/base.html\", current)\n\tif err != nil {\n\t\tt.Fatal(\"exact current completion source required before retained nonce proof\")\n\t}\n"
+        }
+      ]
+    },
+    {
+      "Path": "services/server/internal/web/gui_public_places_nonce_test.go",
+      "CurrentSHA256": "f949172bb703ab8aa61f1933519583a2d33dbb3d3b9e29734e1b4bb40c2464f2",
+      "PriorSHA256": "b0f655613d5f1341686f0b828f6c3a1052419c3c6d14202e2a6e520d12e6d371",
+      "CurrentBytes": 18803,
+      "PriorBytes": 18777,
+      "CurrentMode": 33204,
+      "Splices": [
+        {
+          "PriorStart": 9676,
+          "PriorEnd": 9692,
+          "CurrentStart": 9676,
+          "CurrentEnd": 9718,
+          "Before": "renderer.Render(",
+          "After": "completionFrozenReferenceRender(renderer, "
+        }
+      ]
+    },
+    {
+      "Path": "services/server/internal/web/language_action_custody_test.go",
+      "CurrentSHA256": "7bc077637c2d031acbd9c8f1d2d9b684d7a1c5829ecc16ab979ebbf91532aa4b",
+      "PriorSHA256": "1f46f295002773248948515963359f677a022d987b5b825a6443da6c36cbeb9a",
+      "CurrentBytes": 14663,
+      "PriorBytes": 14262,
+      "CurrentMode": 33188,
+      "Splices": [
+        {
+          "PriorStart": 2414,
+          "PriorEnd": 2414,
+          "CurrentStart": 2414,
+          "CurrentEnd": 2672,
+          "Before": "",
+          "After": "\tprior, completionErr := completionSourcePreimage(path, raw)\n\tif completionErr != nil {\n\t\treturn nil, completionErr\n\t}\n\treturn languageActionEpochSourcePreimage(path, prior)\n}\nfunc languageActionEpochSourcePreimage(path string, raw []byte) ([]byte, error) {\n"
+        },
+        {
+          "PriorStart": 3302,
+          "PriorEnd": 3302,
+          "CurrentStart": 3560,
+          "CurrentEnd": 3698,
+          "Before": "",
+          "After": "\tvar completionErr error\n\traw, completionErr = completionSourceStage(path, raw)\n\tif completionErr != nil {\n\t\treturn nil, completionErr\n\t}\n"
+        },
+        {
+          "PriorStart": 3519,
+          "PriorEnd": 3519,
+          "CurrentStart": 3915,
+          "CurrentEnd": 3920,
+          "Before": "",
+          "After": "Epoch"
+        }
+      ]
+    },
+    {
+      "Path": "services/server/internal/web/notification_preferences_reference_test.go",
+      "CurrentSHA256": "90be68793becaa662f1ebe11b111e9057872c26215681f3b187e60890ff9a32e",
+      "PriorSHA256": "d3f65ecc0c2b7e4e222307e744d6d17b2377d181dbca361edc136d97b411cc22",
+      "CurrentBytes": 9131,
+      "PriorBytes": 8944,
+      "CurrentMode": 33204,
+      "Splices": [
+        {
+          "PriorStart": 7370,
+          "PriorEnd": 7370,
+          "CurrentStart": 7370,
+          "CurrentEnd": 7557,
+          "Before": "",
+          "After": "\traw, err = completionSourcePreimage(\"services/server/internal/web/server.go\", raw)\n\tif err != nil {\n\t\tt.Fatal(\"exact current completion source required before historical page proof\")\n\t}\n"
+        }
+      ]
+    },
+    {
+      "Path": "services/server/internal/web/payments.go",
+      "CurrentSHA256": "77f58b2e034d5c231e8991380c10c145fe54c04fe7fee96032e88d9a67077586",
+      "PriorSHA256": "b8beefd346b5a91ba0281a7c73beec806567cb51ceda49834fb7a9b124a044ff",
+      "CurrentBytes": 6061,
+      "PriorBytes": 5748,
+      "CurrentMode": 33204,
+      "Splices": [
+        {
+          "PriorStart": 2776,
+          "PriorEnd": 2857,
+          "CurrentStart": 2776,
+          "CurrentEnd": 3170,
+          "Before": "return map[string]any{\"as_p\": pongo2.AsSafeValue(html.String()), \"errors\": messag",
+          "After": "native := informationDonationForm{Amount: amount, Campaign: campaign, Error: message}\n\tfor _, choice := range choices {\n\t\tvalue := fmt.Sprint(choice[\"id\"])\n\t\tnative.Choices = append(native.Choices, familyOption{Value: value, Label: fmt.Sprint(choice[\"title\"]), Selected: value == campaign})\n\t}\n\treturn map[string]any{\"as_p\": pongo2.AsSafeValue(html.String()), \"errors\": message, \"native\": nativ"
+        }
+      ]
+    },
+    {
+      "Path": "services/server/internal/web/public_details.go",
+      "CurrentSHA256": "76dd6069558a00f99b12d33f5e04a5ed336bed16c5c075179204818f2538c2b0",
+      "PriorSHA256": "8bc13dfcc549bdfe97e0dd3cb76b5237b26abcd9ac141f3036666880e97ab8a2",
+      "CurrentBytes": 15520,
+      "PriorBytes": 14963,
+      "CurrentMode": 33204,
+      "Splices": [
+        {
+          "PriorStart": 5700,
+          "PriorEnd": 5700,
+          "CurrentStart": 5700,
+          "CurrentEnd": 5820,
+          "Before": "",
+          "After": "\tdata[\"local_poc_content\"] = spaBool(p[\"local_poc\"]) || anyLocalPOC(events)\n\tdata[\"local_poc_past\"] = s.localPOCPast(r)\n"
+        },
+        {
+          "PriorStart": 7289,
+          "PriorEnd": 7330,
+          "CurrentStart": 7409,
+          "CurrentEnd": 7467,
+          "Before": "strings.EqualFold(spaText(area[\"city\"]), ",
+          "After": "catalog.CityKey(spaText(area[\"city\"])) == catalog.CityKey("
+        },
+        {
+          "PriorStart": 7858,
+          "PriorEnd": 7858,
+          "CurrentStart": 7995,
+          "CurrentEnd": 8040,
+          "Before": "",
+          "After": "local_poc',` + catalog.EventLocalPOCSQL + `,'"
+        },
+        {
+          "PriorStart": 8810,
+          "PriorEnd": 9521,
+          "CurrentStart": 8992,
+          "CurrentEnd": 9973,
+          "Before": "rows, err := socialRows(r.Context(), s.DB, `SELECT `+catalog.PublicEventProjectionSQL()+publicEventModel+publicEventsJoin+` WHERE `+catalog.PolicyFromContext(r.Context()).EventSQL()+` AND `+publicUpcomingSQL+` AND ($1::text='' OR t.slug=$1) AND ($2::bigint=0 OR e.place_id=$2) AND ($3::text='' OR lower(p.address_city)=lower($3)) AND ($4::text='' OR upper(e.title) LIKE '%'||upper($4)||'%' OR upper(e.description) LIKE '%'||upper($4)||'%' OR upper(p.name) LIKE '%'||upper($4)||'%') AND (NOT EXISTS(SELECT 1 FROM communities_area ar WHERE ar.slug=$5) OR EXISTS(SELECT 1 FROM communities_area ar WHERE ar.slug=$5 AND ((ar.derive_method='city' AND lower(p.address_city)=lower(ar.city))))) ORDER BY e.starts_at,e.id",
+          "After": "listed, order := publicUpcomingSQL, \"e.starts_at,e.id\"\n\tif s.localPOCPast(r) {\n\t\tlisted, order = publicLocalPOCPastSQL, publicLocalPOCPastOrder\n\t}\n\tif s.localPOCPastOnly(r) {\n\t\tlisted, order = publicLocalPOCPastOnlySQL, \"e.starts_at DESC,e.id\"\n\t}\n\trows, err := socialRows(r.Context(), s.DB, `SELECT `+catalog.PublicEventProjectionSQL()+publicEventModel+publicEventsJoin+` WHERE `+catalog.PolicyFromContext(r.Context()).EventSQL()+` AND `+listed+` AND ($1::text='' OR t.slug=$1) AND ($2::bigint=0 OR e.place_id=$2) AND ($3::text='' OR `+catalog.CityEqualSQL(\"p.address_city\", \"$3::text\")+`) AND ($4::text='' OR upper(e.title) LIKE '%'||upper($4)||'%' OR upper(e.description) LIKE '%'||upper($4)||'%' OR upper(p.name) LIKE '%'||upper($4)||'%') AND (NOT EXISTS(SELECT 1 FROM communities_area ar WHERE ar.slug=$5) OR EXISTS(SELECT 1 FROM communities_area ar WHERE ar.slug=$5 AND ((ar.derive_method='city' AND `+catalog.CityEqualSQL(\"p.address_city\", \"ar.city\")+`)))) ORDER BY `+order+`"
+        },
+        {
+          "PriorStart": 9803,
+          "PriorEnd": 9803,
+          "CurrentStart": 10255,
+          "CurrentEnd": 10278,
+          "Before": "",
+          "After": "\t\tmarkLocalPOCEvent(e)\n"
+        },
+        {
+          "PriorStart": 10666,
+          "PriorEnd": 10666,
+          "CurrentStart": 11141,
+          "CurrentEnd": 11163,
+          "Before": "",
+          "After": "\tmarkLocalPOCEvent(e)\n"
+        },
+        {
+          "PriorStart": 11127,
+          "PriorEnd": 11127,
+          "CurrentStart": 11624,
+          "CurrentEnd": 11661,
+          "Before": "",
+          "After": "local_poc_content\": e[\"local_poc\"], \""
+        },
+        {
+          "PriorStart": 12063,
+          "PriorEnd": 12084,
+          "CurrentStart": 12597,
+          "CurrentEnd": 12641,
+          "Before": "lower(city)=lower($1)",
+          "After": "`+catalog.CityEqualSQL(\"city\", \"$1::text\")+`"
+        }
+      ]
+    },
+    {
+      "Path": "services/server/internal/web/public_downloads.go",
+      "CurrentSHA256": "799f45282212c1e6aaad97c4e0eb7f42219dda40c8618f14a0ec2d9f10fef923",
+      "PriorSHA256": "e19db748f4390bd0595083bc8e49a2da4f35031a961e52fdb607482bd926d4fd",
+      "CurrentBytes": 13171,
+      "PriorBytes": 13032,
+      "CurrentMode": 33204,
+      "Splices": [
+        {
+          "PriorStart": 3864,
+          "PriorEnd": 3928,
+          "CurrentStart": 3864,
+          "CurrentEnd": 3921,
+          "Before": "ignore q and all non-source filters, retaining only area/activit",
+          "After": "retain city/area/activity and ignore free text and histor"
+        },
+        {
+          "PriorStart": 4079,
+          "PriorEnd": 4079,
+          "CurrentStart": 4072,
+          "CurrentEnd": 4089,
+          "Before": "",
+          "After": "&& key != \"city\" "
+        },
+        {
+          "PriorStart": 4172,
+          "PriorEnd": 4174,
+          "CurrentStart": 4182,
+          "CurrentEnd": 4214,
+          "Before": "\"\"",
+          "After": "strings.TrimSpace(q.Get(\"city\"))"
+        },
+        {
+          "PriorStart": 11898,
+          "PriorEnd": 11898,
+          "CurrentStart": 11938,
+          "CurrentEnd": 12065,
+          "Before": "",
+          "After": "\t\ttitle := spaText(e[\"title\"])\n\t\tif spaBool(e[\"local_poc\"]) {\n\t\t\ttitle = catalog.LocalPOCMarker + \": \" + title // ADR-0057\n\t\t}\n"
+        },
+        {
+          "PriorStart": 11964,
+          "PriorEnd": 11983,
+          "CurrentStart": 12131,
+          "CurrentEnd": 12136,
+          "Before": "spaText(e[\"title\"])",
+          "After": "title"
+        },
+        {
+          "PriorStart": 12486,
+          "PriorEnd": 12505,
+          "CurrentStart": 12639,
+          "CurrentEnd": 12644,
+          "Before": "spaText(e[\"title\"])",
+          "After": "title"
+        }
+      ]
+    },
+    {
+      "Path": "services/server/internal/web/public_landings.go",
+      "CurrentSHA256": "e79c5fdb612b8a0aba9b309e11b79ae12597d063970edfdd46a20c16f2a99d9c",
+      "PriorSHA256": "e5f17284d738a8722117c6ff14cea7f9adc57c76738bb73f9a60fcbd17203bce",
+      "CurrentBytes": 3893,
+      "PriorBytes": 3787,
+      "CurrentMode": 33204,
+      "Splices": [
+        {
+          "PriorStart": 755,
+          "PriorEnd": 1046,
+          "CurrentStart": 755,
+          "CurrentEnd": 1080,
+          "Before": "lower(p.address_city)=lower(ar.city) AND pa.activity_id=t.id AND NOT pa.is_disputed AND `+catalog.PolicyFromContext(r.Context()).PlaceSQL()+`) OR EXISTS(SELECT 1 FROM events_event e JOIN places_place p ON p.id=e.place_id WHERE e.activity_type_id=t.id AND lower(p.address_city)=lower(ar.city)",
+          "After": "`+catalog.CityEqualSQL(\"p.address_city\", \"ar.city\")+` AND pa.activity_id=t.id AND NOT pa.is_disputed AND `+catalog.PolicyFromContext(r.Context()).PlaceSQL()+`) OR EXISTS(SELECT 1 FROM events_event e JOIN places_place p ON p.id=e.place_id WHERE e.activity_type_id=t.id AND `+catalog.CityEqualSQL(\"p.address_city\", \"ar.city\")+`"
+        },
+        {
+          "PriorStart": 3130,
+          "PriorEnd": 3130,
+          "CurrentStart": 3164,
+          "CurrentEnd": 3236,
+          "Before": "",
+          "After": "\tdata[\"local_poc_content\"] = anyLocalPOC(places) || anyLocalPOC(events)\n"
+        }
+      ]
+    },
+    {
+      "Path": "services/server/internal/web/public_pages.go",
+      "CurrentSHA256": "b3ac0739edcce80e097a2fe5b4faebde3fc172c7ce511655af428c47929290bd",
+      "PriorSHA256": "6dfb36642cde63c253899ff8e76a1555a8bfb33cd068ef1dcca5861fdc82a2b4",
+      "CurrentBytes": 18425,
+      "PriorBytes": 17440,
+      "CurrentMode": 33204,
+      "Splices": [
+        {
+          "PriorStart": 1913,
+          "PriorEnd": 1944,
+          "CurrentStart": 1913,
+          "CurrentEnd": 1967,
+          "Before": "lower(p.address_city)=lower($1)",
+          "After": "`+catalog.CityEqualSQL(\"p.address_city\", \"$1::text\")+`"
+        },
+        {
+          "PriorStart": 3385,
+          "PriorEnd": 3385,
+          "CurrentStart": 3408,
+          "CurrentEnd": 3458,
+          "Before": "",
+          "After": "\t\tdata[\"local_poc_content\"] = anyLocalPOC(places)\n"
+        },
+        {
+          "PriorStart": 5995,
+          "PriorEnd": 6030,
+          "CurrentStart": 6068,
+          "CurrentEnd": 6160,
+          "Before": "events, err := s.publicEvents(r, \"\"",
+          "After": "city := strings.TrimSpace(r.URL.Query().Get(\"city\"))\n\t\tevents, err := s.publicEvents(r, city"
+        },
+        {
+          "PriorStart": 6427,
+          "PriorEnd": 6427,
+          "CurrentStart": 6557,
+          "CurrentEnd": 7207,
+          "Before": "",
+          "After": "\t\tdata[\"city\"] = city\n\t\tdata[\"local_poc_content\"], data[\"local_poc_past\"] = anyLocalPOC(events), s.localPOCPast(r)\n\t\tdata[\"local_poc_past_only\"] = s.localPOCPastOnly(r)\n\t\tdata[\"event_upcoming_url\"] = s.eventViewURL(r, \"\", false)\n\t\tdata[\"event_include_past_url\"] = s.eventViewURL(r, \"include_past\", false)\n\t\tdata[\"event_past_only_url\"] = s.eventViewURL(r, \"past_only\", false)\n\t\tdata[\"event_feed_url\"] = eventFilterURL(routeURL(\"events_feed\"), eventFilterValues(r, true))\n\t\tmode := \"\"\n\t\tif s.localPOCPast(r) {\n\t\t\tmode = \"include_past\"\n\t\t}\n\t\tif s.localPOCPastOnly(r) {\n\t\t\tmode = \"past_only\"\n\t\t}\n\t\tdata[\"event_clear_url\"] = s.eventViewURL(r, mode, true)\n"
+        },
+        {
+          "PriorStart": 6633,
+          "PriorEnd": 6720,
+          "CurrentStart": 7413,
+          "CurrentEnd": 7598,
+          "Before": "filtered\"] = data[\"query\"] != \"\" || data[\"activity\"] != \"\" || r.URL.Query().Get(\"area\")",
+          "After": "event_filters_active\"] = city != \"\" || data[\"query\"] != \"\" || data[\"activity\"] != \"\" || r.URL.Query().Get(\"area\") != \"\"\n\t\tdata[\"filtered\"] = data[\"event_filters_active\"] == true || mode"
+        },
+        {
+          "PriorStart": 10784,
+          "PriorEnd": 10796,
+          "CurrentStart": 11662,
+          "CurrentEnd": 11693,
+          "Before": "q.Get(\"city\"",
+          "After": "strings.TrimSpace(q.Get(\"city\")"
+        },
+        {
+          "PriorStart": 11230,
+          "PriorEnd": 11261,
+          "CurrentStart": 12127,
+          "CurrentEnd": 12185,
+          "Before": "lower(p.address_city)=lower($1)",
+          "After": "` + catalog.CityEqualSQL(\"p.address_city\", \"$1::text\") + `"
+        },
+        {
+          "PriorStart": 14723,
+          "PriorEnd": 14723,
+          "CurrentStart": 15647,
+          "CurrentEnd": 15708,
+          "Before": "",
+          "After": "\t\tp[\"local_poc\"] = catalog.PlaceLocalPOC(spaMap(p[\"_tags\"]))\n"
+        }
+      ]
+    },
+    {
+      "Path": "services/server/internal/web/public_routes.json",
+      "CurrentSHA256": "63444f88d0bc34d7c2c30e5ef18ec5696a8979619762e4586455a72cb28d47f1",
+      "PriorSHA256": "961c7d1d0ab265f0f3d8fd84074172d62f72122dd6a1dd13a7b219315d1d5d06",
+      "CurrentBytes": 47903,
+      "PriorBytes": 47682,
+      "CurrentMode": 33204,
+      "Splices": [
+        {
+          "PriorStart": 8061,
+          "PriorEnd": 8061,
+          "CurrentStart": 8061,
+          "CurrentEnd": 8170,
+          "Before": "",
+          "After": "    \"Source\": \"internal/catalog/service.go\"\n  },\n  {\n    \"Method\": \"GET\",\n    \"Path\": \"/api/events/facets/\",\n"
+        },
+        {
+          "PriorStart": 30420,
+          "PriorEnd": 30420,
+          "CurrentStart": 30529,
+          "CurrentEnd": 30641,
+          "Before": "",
+          "After": "    \"Path\": \"/api/v1/events/facets/\",\n    \"Source\": \"internal/catalog/service.go\"\n  },\n  {\n    \"Method\": \"GET\",\n"
+        }
+      ]
+    },
+    {
+      "Path": "services/server/internal/web/renderer.go",
+      "CurrentSHA256": "9be94164a567f2d6609039099c3291fc2d949f041149cdc04eed291859ab7ab5",
+      "PriorSHA256": "24c388bcedad06808589a8c036c2d002a4b2cc87dcebd7f65bbf376ef21fd8a4",
+      "CurrentBytes": 8684,
+      "PriorBytes": 7158,
+      "CurrentMode": 33188,
+      "Splices": [
+        {
+          "PriorStart": 5574,
+          "PriorEnd": 5574,
+          "CurrentStart": 5574,
+          "CurrentEnd": 6947,
+          "Before": "",
+          "After": "\t} else if name == \"web/my_meetups.html\" || name == \"web/my_venues.html\" {\n\t\traw, renderErr := r.renderCollections(request, name, defaults)\n\t\tif renderErr != nil {\n\t\t\treturn renderErr\n\t\t}\n\t\t_, _ = output.Write(raw)\n\t} else if informationTemplate(name) {\n\t\traw, renderErr := r.renderInformation(request, name, defaults)\n\t\tif renderErr != nil {\n\t\t\treturn renderErr\n\t\t}\n\t\t_, _ = output.Write(raw)\n\t} else if nativeTrustTemplates[name] {\n\t\traw, renderErr := r.renderTrust(request, name, defaults)\n\t\tif renderErr != nil {\n\t\t\treturn renderErr\n\t\t}\n\t\t_, _ = output.Write(raw)\n\t} else if publicNativeTemplate(name) {\n\t\traw, renderErr := r.renderPublicNative(request, name, defaults)\n\t\tif renderErr != nil {\n\t\t\treturn renderErr\n\t\t}\n\t\t_, _ = output.Write(raw)\n\t} else if nativeSeriesGaugeTemplates[name] {\n\t\traw, renderErr := r.renderSeriesGauges(request, name, defaults)\n\t\tif renderErr != nil {\n\t\t\treturn renderErr\n\t\t}\n\t\t_, _ = output.Write(raw)\n\t} else if name == \"web/activity_form.html\" || name == \"web/activity_edit.html\" || name == \"web/activity_detail.html\" || name == \"web/activity_safe_exit.html\" || name == \"web/place_propose.html\" || name == \"web/place_claim.html\" || name == \"web/places_pending.html\" || name == \"web/messages.html\" {\n\t\traw, renderErr := r.renderWorkflows(request, name, defaults)\n\t\tif renderErr != nil {\n\t\t\treturn renderErr\n\t\t}\n\t\t_, _ = output.Write(raw)\n"
+        },
+        {
+          "PriorStart": 5761,
+          "PriorEnd": 5761,
+          "CurrentStart": 7134,
+          "CurrentEnd": 7297,
+          "Before": "",
+          "After": "\t}\n\tbody, err := preserveLocalPOCNotice(output.Bytes(), defaults[\"local_poc_mode\"] == true || defaults[\"local_poc_content\"] == true)\n\tif err != nil {\n\t\treturn err\n"
+        },
+        {
+          "PriorStart": 6616,
+          "PriorEnd": 6630,
+          "CurrentStart": 8152,
+          "CurrentEnd": 8156,
+          "Before": "output.Bytes()",
+          "After": "body"
+        }
+      ]
+    },
+    {
+      "Path": "services/server/internal/web/server.go",
+      "CurrentSHA256": "307472fb4e913d9bb75da616c0dec0e90c0af34b2b3c5683a726b68de0096a6d",
+      "PriorSHA256": "36e32c94561e12c5f8db040a9e303822c76d0a922e9e3644e64c42776740d39a",
+      "CurrentBytes": 12011,
+      "PriorBytes": 11223,
+      "CurrentMode": 33204,
+      "Splices": [
+        {
+          "PriorStart": 1810,
+          "PriorEnd": 1810,
+          "CurrentStart": 1810,
+          "CurrentEnd": 1899,
+          "Before": "",
+          "After": "\t// LocalPOC: the development-only RO-EDU local POC gate held (ADR-0057).\n\tLocalPOC bool\n"
+        },
+        {
+          "PriorStart": 3233,
+          "PriorEnd": 3233,
+          "CurrentStart": 3322,
+          "CurrentEnd": 3897,
+          "Before": "",
+          "After": "\tmux.HandleFunc(\"GET /robots.txt\", func(w http.ResponseWriter, r *http.Request) {\n\t\ts.PublicDownload(w, r, platform.Actor{}, \"robots_txt\")\n\t})\n\tmux.HandleFunc(\"GET /llms.txt\", func(w http.ResponseWriter, r *http.Request) {\n\t\ts.PublicDownload(w, r, platform.Actor{}, \"llms_txt\")\n\t})\n\tmux.HandleFunc(\"GET /indexnow.txt\", func(w http.ResponseWriter, r *http.Request) {\n\t\ts.PublicDownload(w, r, platform.Actor{}, \"indexnow_key_file\")\n\t})\n\tmux.HandleFunc(\"GET /sitemap.xml\", func(w http.ResponseWriter, r *http.Request) {\n\t\ts.PublicDownload(w, r, platform.Actor{}, \"sitemap\")\n\t})\n"
+        },
+        {
+          "PriorStart": 7054,
+          "PriorEnd": 7054,
+          "CurrentStart": 7718,
+          "CurrentEnd": 7798,
+          "Before": "",
+          "After": "\tif name == \"inbox\" {\n\t\thttp.Redirect(w, r, \"/notifications/\", 302)\n\t\treturn\n\t}\n"
+        },
+        {
+          "PriorStart": 8037,
+          "PriorEnd": 8037,
+          "CurrentStart": 8781,
+          "CurrentEnd": 8825,
+          "Before": "",
+          "After": "\tdata[\"local_poc_mode\"] = s.Config.LocalPOC\n"
+        }
+      ]
+    },
+    {
+      "Path": "services/server/internal/web/social_forms.go",
+      "CurrentSHA256": "f12e7f6116f14c59fb713bc570d9aa2e08db6e3a3d802e80a57f68dde36b9b3e",
+      "PriorSHA256": "a188251caa27d7924025d6e8aa24643aea2925210d93a4580b3b55bee7d1bd43",
+      "CurrentBytes": 17313,
+      "PriorBytes": 17265,
+      "CurrentMode": 33204,
+      "Splices": [
+        {
+          "PriorStart": 14979,
+          "PriorEnd": 14979,
+          "CurrentStart": 14979,
+          "CurrentEnd": 15027,
+          "Before": "",
+          "After": "\trepairWorkflowSnapshot(r, form, initial, edit)\n"
+        }
+      ]
+    },
+    {
+      "Path": "services/server/internal/web/spa.go",
+      "CurrentSHA256": "4b36137a33dabd928738fe621437920f1169ea43115cc7cd4e54bedc36a3c238",
+      "PriorSHA256": "91a53d2c60d2d3944aa45774a844682fe6fadfc6c47f7944485d44cb28247fe6",
+      "CurrentBytes": 25849,
+      "PriorBytes": 25020,
+      "CurrentMode": 33204,
+      "Splices": [
+        {
+          "PriorStart": 16577,
+          "PriorEnd": 16577,
+          "CurrentStart": 16577,
+          "CurrentEnd": 17406,
+          "Before": "",
+          "After": "\t\tif city, present := legacy[\"city\"]; present {\n\t\t\tspaMap(data[\"filters\"])[\"city\"] = spaText(city)\n\t\t\tui[\"cityLabel\"], ui[\"clear\"] = tr(\"City\"), tr(\"Clear filters\")\n\t\t\tspaMap(data[\"urls\"])[\"rss\"] = legacy[\"event_feed_url\"]\n\t\t\tspaMap(seo[\"rss\"])[\"url\"] = legacy[\"event_feed_url\"]\n\t\t\tspaMap(data[\"urls\"])[\"clear\"] = legacy[\"event_clear_url\"]\n\t\t\tif spaBool(legacy[\"local_poc_mode\"]) {\n\t\t\t\tdata[\"localPOC\"] = map[string]any{\"includePast\": spaBool(legacy[\"local_poc_past\"]), \"pastOnly\": spaBool(legacy[\"local_poc_past_only\"]), \"upcomingURL\": legacy[\"event_upcoming_url\"], \"includePastURL\": legacy[\"event_include_past_url\"], \"pastOnlyURL\": legacy[\"event_past_only_url\"]}\n\t\t\t\tui[\"upcomingOnly\"], ui[\"includePast\"], ui[\"pastOnly\"] = tr(\"Upcoming only\"), tr(\"Include past events (LOCAL POC)\"), tr(\"Past events only (LOCAL POC)\")\n\t\t\t}\n\t\t}\n"
+        }
+      ]
+    },
+    {
+      "Path": "services/server/internal/web/topics_custody_test.go",
+      "CurrentSHA256": "faecb0490f6bfc924084275907841121c7995f8434770ea82066bc7185be129a",
+      "PriorSHA256": "00c2d20e107dd8151178c38496687d0914c976c57e2984622d62dcba94b080d2",
+      "CurrentBytes": 14767,
+      "PriorBytes": 13998,
+      "CurrentMode": 33188,
+      "Splices": [
+        {
+          "PriorStart": 5622,
+          "PriorEnd": 5622,
+          "CurrentStart": 5622,
+          "CurrentEnd": 5864,
+          "Before": "",
+          "After": "\tprior, completionErr := completionSourcePreimage(path, raw)\n\tif completionErr != nil {\n\t\treturn nil, completionErr\n\t}\n\treturn topicsEpochSourcePreimage(path, prior)\n}\nfunc topicsEpochSourcePreimage(path string, raw []byte) ([]byte, error) {\n"
+        },
+        {
+          "PriorStart": 6204,
+          "PriorEnd": 6204,
+          "CurrentStart": 6446,
+          "CurrentEnd": 6584,
+          "Before": "",
+          "After": "\tvar completionErr error\n\traw, completionErr = completionSourceStage(path, raw)\n\tif completionErr != nil {\n\t\treturn nil, completionErr\n\t}\n"
+        },
+        {
+          "PriorStart": 6405,
+          "PriorEnd": 6405,
+          "CurrentStart": 6785,
+          "CurrentEnd": 6790,
+          "Before": "",
+          "After": "Epoch"
+        },
+        {
+          "PriorStart": 6689,
+          "PriorEnd": 6712,
+          "CurrentStart": 7074,
+          "CurrentEnd": 7281,
+          "Before": "previous, err := topics",
+          "After": "completionPhysical := physical\n\tvar completionErr error\n\tphysical, completionErr = completionSourceStage(path, physical)\n\tif completionErr != nil {\n\t\treturn \"\", completionErr\n\t}\n\tprevious, err := topicsEpoch"
+        },
+        {
+          "PriorStart": 7436,
+          "PriorEnd": 7447,
+          "CurrentStart": 8005,
+          "CurrentEnd": 8063,
+          "Before": "target, nil",
+          "After": "completionMutationTarget(path, completionPhysical, target)"
+        },
+        {
+          "PriorStart": 8350,
+          "PriorEnd": 8350,
+          "CurrentStart": 8966,
+          "CurrentEnd": 9119,
+          "Before": "",
+          "After": "\t\tafter, err = completionMutationTarget(path, physical, after)\n\t\tif err != nil {\n\t\t\tt.Fatal(\"completion physical mutation literal unavailable\", err)\n\t\t}\n"
+        }
+      ]
+    },
+    {
+      "Path": "templates/base.html",
+      "CurrentSHA256": "5fa897bd72834c75bac8c10c067b5a454dd5cfdd5140b9bd775863eec3a6641a",
+      "PriorSHA256": "a8a5354db2968c99dcf043a2bb04ac635eb199a72455efe5cd96fc2946292b2c",
+      "CurrentBytes": 13824,
+      "PriorBytes": 13658,
+      "CurrentMode": 33204,
+      "Splices": [
+        {
+          "PriorStart": 8504,
+          "PriorEnd": 8504,
+          "CurrentStart": 8504,
+          "CurrentEnd": 8670,
+          "Before": "",
+          "After": "{% if local_poc_mode or local_poc_content %}<p class=\"banner local-poc-banner\" role=\"status\"><strong>LOCAL POC — not cleared for publication</strong></p>{% endif %}"
+        }
+      ]
+    }
+  ]
+}

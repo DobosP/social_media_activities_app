@@ -5,6 +5,9 @@ public reads. Event endpoints preserve source lifecycle/date/search/proximity fi
 price strings and credit metadata. Places preserve GeoJSON pagination, non-disputed activity
 edges, crowd-corrected display values and honest open/closed/unknown states.
 
+Additive event city/place facets and their bounded full-query coverage contract are
+documented in [ADR-0060](../../../../docs/adr/0060-gated-event-city-and-place-facets.md).
+
 Native reference seeding is embedded, idempotent and preserves existing operator edits. It seeds
 only taxonomy, curated child venue classes and content-type reference metadata; no account data
 is imported. Synthetic tests retain the actual baseline foreign keys.

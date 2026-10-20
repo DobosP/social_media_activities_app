@@ -1,0 +1,15 @@
+:root .series-gauges-native .site-header { position:static; background:var(--card); }
+.series-gauges-native .nav-menu > .nav-panel { position:static; width:max-content; max-width:calc(100vw - 2rem); }
+.series-gauges-native .nav-panel a { overflow-wrap:anywhere; }
+.series-gauges-native .series-gauges-intro { max-width:76ch; }
+.series-gauges-native .series-gauges-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,20rem),1fr)); gap:1rem; }
+.series-gauges-native .series-gauges-grid h2 { font-size:1.25rem; }
+.series-gauges-native .series-gauges-prose { white-space:pre-line; overflow-wrap:anywhere; }
+.series-gauges-native .series-gauges-form { display:grid; gap:1rem; max-width:54rem; margin-top:1rem; }
+.series-gauges-native .series-gauges-field { display:grid; gap:.4rem; }
+.series-gauges-native .series-gauges-field input,
+.series-gauges-native .series-gauges-field select,
+.series-gauges-native .series-gauges-field textarea { max-width:100%; }
+.series-gauges-native .series-gauges-field textarea { min-height:7rem; }
+.series-gauges-native .series-gauges-after { margin-top:1rem; }
+.series-gauges-native .footer-links a { text-decoration:underline; text-underline-offset:.15em; }

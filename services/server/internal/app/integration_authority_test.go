@@ -30,7 +30,7 @@ func TestNativeDocumentationRoutesAreReachableThroughApplication(t *testing.T) {
 				Operations int                        `json:"x-native-api-operation-count"`
 				Paths      map[string]json.RawMessage `json:"paths"`
 			}
-			if json.Unmarshal(w.Body.Bytes(), &schema) != nil || schema.OpenAPI != "3.0.3" || schema.Operations != 380 || len(schema.Paths) != 318 {
+			if json.Unmarshal(w.Body.Bytes(), &schema) != nil || schema.OpenAPI != "3.0.3" || schema.Operations != 382 || len(schema.Paths) != 320 {
 				t.Fatal("assembled documentation inventory differs")
 			}
 		} else if !strings.Contains(w.Header().Get("Content-Type"), "text/html") || !strings.Contains(w.Body.String(), "/api/schema/") {

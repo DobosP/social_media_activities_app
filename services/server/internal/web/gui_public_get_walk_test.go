@@ -460,11 +460,18 @@ func guiPublicGetRepairRows() []guiPublicGetRepairRow {
 // Each row must find its exact afterimage and land on its exact preimage, so a
 // later row only ever sees the bytes the previous reviewed row produced.
 func guiPublicGetRowsPreimage(path string, raw []byte) ([]byte, error) {
+	prior, completionErr := completionSourcePreimage(path, raw)
+	if completionErr != nil {
+		return nil, completionErr
+	}
+	return guiPublicGetRowsEpochPreimage(path, prior)
+}
+func guiPublicGetRowsEpochPreimage(path string, raw []byte) ([]byte, error) {
 	// Require exact newest topics images before the retained display/history chain.
 	switch path {
 	case "services/server/internal/web/renderer.go", "services/server/internal/web/gui_public_get_walk_test.go", "services/server/internal/web/gui_preferences_layout_test.go", "services/server/internal/web/gui_preferences_get_transport_test.go":
 		var topicsErr error
-		raw, topicsErr = topicsSourcePreimage(path, raw)
+		raw, topicsErr = topicsEpochSourcePreimage(path, raw)
 		if topicsErr != nil {
 			return nil, topicsErr
 		}
@@ -483,7 +490,7 @@ func guiPublicGetRowsPreimage(path string, raw []byte) ([]byte, error) {
 	switch path {
 	case "services/server/internal/web/server.go", "services/server/internal/app/app.go", "services/server/internal/web/gui_public_get_walk_test.go":
 		var languageErr error
-		raw, languageErr = languageActionSourcePreimage(path, raw)
+		raw, languageErr = languageActionEpochSourcePreimage(path, raw)
 		if languageErr != nil {
 			return nil, languageErr
 		}
@@ -604,6 +611,13 @@ func guiPublicGetRepairHistoricalProof(source guiPublicGetSource, inputs map[str
 				return err
 			}
 			preimages[name] = original
+		}
+		if name != "services/server/internal/app/app.go" {
+			prior, completionErr := completionSourcePreimage(name, input.raw)
+			if completionErr != nil {
+				return completionErr
+			}
+			preimages[name] = prior
 		}
 	}
 	for _, row := range guiPublicGetRepairRows() {
@@ -1037,6 +1051,7 @@ func TestGUIPublicGetWalk(t *testing.T) {
 			s := fixture.server
 			s.Renderer = NewRenderer(snapshotRoot) // Fresh native cache/load trace per GET.
 			trace := &guiPublicTraceLoader{delegate: s.Renderer.loader}
+			s.Renderer.loader = trace // Original Pongo capture, not the rebuilt Go pages.
 			s.Renderer.set = pongo2.NewSet("native-social-original-G1", trace)
 			mux := http.NewServeMux()
 			s.Register(mux)
@@ -1049,7 +1064,7 @@ func TestGUIPublicGetWalk(t *testing.T) {
 				}
 			}
 			w := httptest.NewRecorder()
-			mux.ServeHTTP(w, r)
+			completionFrozenReferenceHandler(s, mux).ServeHTTP(w, r)
 			canonical := s.Config.PublicURL + r.URL.Path
 			if c.Route == "place_detail" || c.Route == "place_detail_slug" {
 				canonical = fmt.Sprintf("%s/places/%d/original-synthetic-hall/", s.Config.PublicURL, fixture.place)

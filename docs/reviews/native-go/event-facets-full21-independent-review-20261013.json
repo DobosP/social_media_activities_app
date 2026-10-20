@@ -1,0 +1,228 @@
+{
+  "artifact_hash_verification": {
+    "all_sizes_and_hashes_equal_checkpoint": true,
+    "bytes_rehashed": 609099114,
+    "files": 61,
+    "includes_all21_test_logs_and_compiled_binaries": true
+  },
+  "canonical_checkpoint_byte_identical": true,
+  "checkpoint_sha256": "b149f4dc3d1b440d930b89bddf8f470068442dafd4b4683209fa0836d91b77b2",
+  "completion_sha256": "93c3f782fac16cc2d1a93605399960a2260d5d9bde79b8823f306c8d3d6b2a95",
+  "date": "2026-10-13",
+  "fail": 0,
+  "findings": [],
+  "fixture_cleanup": {
+    "container_absent": true,
+    "container_name": "social-event-facets-full21-db-20261013",
+    "credential_file_absent": true,
+    "gate_or_fixture_reexecuted_by_reviewer": false,
+    "independent_responsive_host_Docker_inspection": true,
+    "network_absent": true,
+    "network_name": "social-event-facets-full21-20261013"
+  },
+  "lane_recounts": {
+    "accounts": {
+      "fail": 0,
+      "log_sha256": "b56e599214b7550c0fe3535cde4784809e42e103b794225d4725f6c83ce03407",
+      "skip": 0,
+      "top_level_pass": 75,
+      "unique_top_level_test_names": 75
+    },
+    "admin": {
+      "fail": 0,
+      "log_sha256": "31f5b2bb90dc30196811d5a2eb886b328b957706caee073d0446aabca8d681e8",
+      "skip": 0,
+      "top_level_pass": 21,
+      "unique_top_level_test_names": 21
+    },
+    "app": {
+      "fail": 0,
+      "log_sha256": "6563f6c3a4aa0ce4afeb21aed6e8f7de27b18719955cbbeeefe6b836b0b38f75",
+      "skip": 0,
+      "top_level_pass": 35,
+      "unique_top_level_test_names": 35
+    },
+    "backup": {
+      "fail": 0,
+      "log_sha256": "5e0452bb08eb7b461840bd4ae73b5f09dda718700ad812e56dd6f24bf02c3819",
+      "skip": 0,
+      "top_level_pass": 5,
+      "unique_top_level_test_names": 5
+    },
+    "booking": {
+      "fail": 0,
+      "log_sha256": "f719729312a2258fc094678dbd74a5099bdb374e87b23e3a29721562e6679f81",
+      "skip": 0,
+      "top_level_pass": 7,
+      "unique_top_level_test_names": 7
+    },
+    "budgets": {
+      "fail": 0,
+      "log_sha256": "bf5fed50cc4bd97ec9b6e02d01fd462ee5cbab96686ceb8c1d27f89d74758efd",
+      "skip": 0,
+      "top_level_pass": 16,
+      "unique_top_level_test_names": 16
+    },
+    "catalog": {
+      "fail": 0,
+      "log_sha256": "e24b8337fccb62af38c8c0c36d8fcf58cae5fbf49477b8ff458dd166f4f41bce",
+      "skip": 0,
+      "top_level_pass": 54,
+      "unique_top_level_test_names": 54
+    },
+    "commands": {
+      "fail": 0,
+      "log_sha256": "6c9e59cd5b2cec4deaddde45797907f2694c8578a078fca1ab4a641e6b822b5e",
+      "skip": 0,
+      "top_level_pass": 29,
+      "unique_top_level_test_names": 29
+    },
+    "configuration": {
+      "fail": 0,
+      "log_sha256": "1e061f3abd29fbd8df9299d74acd10fdd299d5da63d7fbe7a85af2127fc2847d",
+      "skip": 0,
+      "top_level_pass": 64,
+      "unique_top_level_test_names": 64
+    },
+    "contracts": {
+      "fail": 0,
+      "log_sha256": "7d1addf45410df1456849ebfc4f9be9e76fc57fde237b4404af27d5a86343eeb",
+      "skip": 0,
+      "top_level_pass": 5,
+      "unique_top_level_test_names": 5
+    },
+    "discovery": {
+      "fail": 0,
+      "log_sha256": "f6639a14587846d3e2404a43c168758608b994c8418769ac97306d06f260375a",
+      "skip": 0,
+      "top_level_pass": 2,
+      "unique_top_level_test_names": 2
+    },
+    "donations": {
+      "fail": 0,
+      "log_sha256": "ddce675973116bbd6c83752c2e7e773a827145b0c836d6c9d4b6aae3743cc23b",
+      "skip": 0,
+      "top_level_pass": 5,
+      "unique_top_level_test_names": 5
+    },
+    "export": {
+      "fail": 0,
+      "log_sha256": "12f1d343a8f702f7c54275a1db1107b827601f8d64612628cddbfe8f450e725e",
+      "skip": 0,
+      "top_level_pass": 5,
+      "unique_top_level_test_names": 5
+    },
+    "jobs": {
+      "fail": 0,
+      "log_sha256": "81fe7b87e517d88cffa0f880fc5b71255caf552d7552bbad27a7768ec8c8a8bf",
+      "skip": 0,
+      "top_level_pass": 84,
+      "unique_top_level_test_names": 84
+    },
+    "media": {
+      "fail": 0,
+      "log_sha256": "e5c4988084ef40bcd7a327384a0c48a60a972c9315cc59b88c50812b55e9a654",
+      "skip": 0,
+      "top_level_pass": 54,
+      "unique_top_level_test_names": 54
+    },
+    "messaging": {
+      "fail": 0,
+      "log_sha256": "30238482fa12ad1335fd873278e38373b5192191facc2dbe3a0810afecd62daa",
+      "skip": 0,
+      "top_level_pass": 60,
+      "unique_top_level_test_names": 60
+    },
+    "notifications": {
+      "fail": 0,
+      "log_sha256": "e3b75fc34d129030a97f62b6d8ae56f1f73c718c59b4d64b2b351ecff2c070f5",
+      "skip": 0,
+      "top_level_pass": 4,
+      "unique_top_level_test_names": 4
+    },
+    "recommendations": {
+      "fail": 0,
+      "log_sha256": "22928c76900fa2519afad8301d4e2839c0078a019dfe39cdcff3d92d9d7a5262",
+      "skip": 0,
+      "top_level_pass": 8,
+      "unique_top_level_test_names": 8
+    },
+    "safety": {
+      "fail": 0,
+      "log_sha256": "2ea31a5e3d8317484e67b4e56974379779b700f99ff89b578d0c746a677f2f0a",
+      "skip": 0,
+      "top_level_pass": 56,
+      "unique_top_level_test_names": 56
+    },
+    "social": {
+      "fail": 0,
+      "log_sha256": "e34110cd68a1f2b5974cb726b13f592878705e0cc1b03cab208feffdfd440c89",
+      "skip": 0,
+      "top_level_pass": 52,
+      "unique_top_level_test_names": 52
+    },
+    "web": {
+      "fail": 0,
+      "log_sha256": "a82860f2b1905cbd3c7aedf865b3cb15be6092c9717d164cd774a01c5b3e5f50",
+      "skip": 0,
+      "top_level_pass": 106,
+      "unique_top_level_test_names": 106
+    }
+  },
+  "lanes_recounted": 21,
+  "limits": [
+    "Top-level747 is the actual full21 run, not the sum of earlier160/194/35 attempts. Parameter subcases are not added to this total.",
+    "Historical native31-package/Node4 evidence was preserved; check-native was not rerun on371 and is not claimed here.",
+    "No new canonical production-image build, vulnerability audit, hosted CI, app-main landing/push, feature runtime deployment, provider or real-child activation is qualified by this receipt."
+  ],
+  "prior_evidence": {
+    "affected160_receipt_sha256": "d4a0fdbbdddf7f089ce9208f3a1e72d991e22604edc5f9c5e7f9a1b048d67cca",
+    "corrected_app35_checkpoint_sha256": "14f091126c14830edab4a8b98b834c4f470614534d7e47e3ec557b58d4713cdb",
+    "corrected_app_counts_recounted": {
+      "fail": 0,
+      "pass": 35,
+      "skip": 0
+    },
+    "corrected_app_metadata_artifacts_rehashed": 13,
+    "first_failed_counts_recounted": {
+      "fail": 1,
+      "later_lanes_not_run": 17,
+      "pass": 194,
+      "skip": 0
+    },
+    "first_failed_full21_checkpoint_sha256": "df0f78c3424d9fa731478d514fbe932e398a3383bd9b102831ee2ac7e6e7ae4a",
+    "first_failed_metadata_files_rehashed": 19,
+    "negative_control_baseline_registrar_and_log_hashes_preserved": true,
+    "negative_control_observed404_expected400_exit1": true,
+    "negative_control_test": "TestEventFacetsInvalidQueriesFailBeforeDatabase",
+    "retention": "Genuine c733 failure logs/metadata remain exact. Earlier derived binaries were inventoried but not copied into history; rolling full21 paths hold verified371 successors. Historical retained_currently flags describe capture time, not availability of old binary bytes."
+  },
+  "qualified_source_commit": "37129450d27990c6f7620bb72155ddbc8a094a20",
+  "qualified_source_tree": "34afe1e7d7a0ee01b51e177905f529cc16e1fb94",
+  "reviewer": "agent:codex/teacher_cpu_inputs",
+  "schema_version": 1,
+  "skip": 0,
+  "source_verification": {
+    "gate_and_module_entries": 6,
+    "nine_prior_API_schema_test_objects_unchanged": true,
+    "only_server_tree_delta_since_prior_review": "integration_authority_test.go expected operation/path counts380/318→382/320; entire remaining file byte-identical",
+    "production_API_behavior_changes_since_prior_review": 0,
+    "protected_source_sha256": {
+      "services/server/internal/app/integration_authority_test.go": "9627508f7020331afb6a04c25759b120c80b77d989347ba26459ccd453456969",
+      "services/server/internal/catalog/city.go": "6b9b95c194b3c0f1281cc54b074d8688c9ac976c47d040caaae36d319b7061c3",
+      "services/server/internal/catalog/event_facets.go": "e60991662cd70d82e6958996556d4c3a621b7dd97389981ea781333e8d75ebc1",
+      "services/server/internal/catalog/event_facets_test.go": "dd2e3e289ea795684a73db320595fe5c4265eac6992c84e658a8156c269c6ecb",
+      "services/server/internal/catalog/service.go": "a2ac08d352242d8486fcde3fe8c5a2a1589c7f727066c35103a1143ebd1bf233",
+      "services/server/internal/web/public_documentation_test.go": "5be2ed8d47ad0bf0e0205fc625f4fb565e4db001bea7c195cdfdd42c5d50eb41",
+      "services/server/internal/web/public_routes.json": "63444f88d0bc34d7c2c30e5ef18ec5696a8979619762e4586455a72cb28d47f1",
+      "services/server/internal/web/public_schema.go": "b927fcd0bee8bdba8987be3ae280517a320836bbba7a15377586c8475a500ccb",
+      "services/server/internal/web/public_schema_event_facets.go": "4b60ebe8779123febd07bc8644f6de9e34549995bfc0b2dceedbbe841131152a",
+      "services/server/internal/web/public_schema_event_facets_test.go": "059226fb180672111362c93ace02be6ce8c376b8fdaa36cd028bab7df1d31ca6"
+    },
+    "protected_worktree_files_and_commit_objects": 10,
+    "sole_untracked_file_at_review": "docs/reviews/native-go/event-facets-full21-checkpoint-20261013.json",
+    "source_inputs_commit_tree_harness_runner_and_wrapper_binding_equal": true
+  },
+  "top_level_total_recounted": 747,
+  "verdict": "approved full21 source qualification; no actionable findings"
+}

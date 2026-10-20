@@ -400,6 +400,7 @@ var socialOptionTag = regexp.MustCompile(`<option value="([0-9]+)"(?: selected)?
 // Keep classic source BoundField behavior, including an immutable primary type,
 // selected multiple choices, hidden quote target and explicit label IDs.
 func socialBoundFormRepair(r *http.Request, form map[string]any, initial map[string]any, edit bool) {
+	repairWorkflowSnapshot(r, form, initial, edit)
 	for key, value := range form {
 		field, ok := value.(map[string]any)
 		if !ok || field["widget"] == nil {

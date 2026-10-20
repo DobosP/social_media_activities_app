@@ -1,0 +1,98 @@
+{
+  "corrected_native_receipt_sha256": "a8a9816696071d569af706d8c00a7e37f5fe66f7447972388cee07d26162e14f",
+  "current_source_commit": "730dd5c7e1f35ff05555aba4c3f6369d1e6b06b3",
+  "date": "2026-10-13",
+  "findings": [],
+  "full21": {
+    "checkpoint_sha256": "b149f4dc3d1b440d930b89bddf8f470068442dafd4b4683209fa0836d91b77b2",
+    "fail": 0,
+    "independent_review_sha256": "d4bb37ae8e772a9e42c6c5cbdcd87b4a02582b990d384f54e904b2e8cb17d67b",
+    "lanes": 21,
+    "qualification_rerun": false,
+    "recount_not_repeated_in_this_docs_review": true,
+    "skip": 0,
+    "top_level_pass": 747
+  },
+  "hash_verification": {
+    "bound_native_artifacts_rehashed": 7,
+    "canonical_three_JSON_receipts_byte_equal": true,
+    "docs_exit": 0,
+    "docs_files": 53,
+    "docs_findings": 0,
+    "docs_log_sha256": "d741038e5af9a33dc436da583da2d7ebcec362b059d73d058ea342b13d42fb78",
+    "gate_and_ADR_hashes": {
+      "docs/adr/0040-landing-and-deployment-review-gates.md": "4d332d34caad17e846179f501592cfb8b9fbe76469dcd970cbd618b7ddd407c3",
+      "scripts/check-native.sh": "1e5f6d9be40d3688c725005eb268f49f79c8d42a817075504809daa56cd39c61",
+      "scripts/qualify-native.sh": "c5ea3b35b48c50d1caf9ab57dbae5260e8e23acbe6c89d20079687568cde13b1"
+    },
+    "pending_docs_sha256": {
+      "STATUS.md": "c40305244d3d9b52fa94d77c0b993b12b23e1b8467fe51e30149e1cf6875d8b0",
+      "WORKLOG.md": "b0de7c980931d3fe84b41798683a8cd6a2bd49eb1042b4d72bad2a5914188632",
+      "docs/adr/0060-gated-event-city-and-place-facets.md": "29b665be58fea76265951db9b00399f67aee3658ae84c5463e9902244d8b8ae2",
+      "docs/reviews/native-go/event-facets-native-count-erratum-20261013.json": "e6b6066b3f6c86b26cad51375776c1c84265f37dcc4a79f6d35458fc6aaa9e3c",
+      "docs/reviews/native-go/event-facets-native-landing-checkpoint-20261013.json": "a8a9816696071d569af706d8c00a7e37f5fe66f7447972388cee07d26162e14f",
+      "docs/reviews/native-go/event-facets-native-root-review-20261013.json": "27f9f1e37597f81c349e6fcd7c33523d15eddd9b12d3ee6344a538055c02dad4"
+    },
+    "whitespace_exit": 0,
+    "whitespace_log_empty": true
+  },
+  "historical_erratum": {
+    "both_prior_log_hashes_and27_Go_plus4_Node_counts_independently_confirmed": true,
+    "receipt_sha256": "e6b6066b3f6c86b26cad51375776c1c84265f37dcc4a79f6d35458fc6aaa9e3c",
+    "reviewer_correction": "My earlier affected-source review repeated the broad31 label as Go packages. The retained erratum corrects that accounting to27 Go package results plus4 Node TAP tests; no test outcome or747 full21 count changes.",
+    "rows": [
+      {
+        "go_package_results": 27,
+        "node_pass": 4,
+        "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/check-native.log",
+        "sha256": "561bfd0856a2eb60b70b2fa1bb45a04962533babf3330499958d91afa49f1099"
+      },
+      {
+        "go_package_results": 27,
+        "node_pass": 4,
+        "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/history/first-fixture-test-expectation/check-native.log",
+        "sha256": "d2b10c5c953581b3213a37f4ee7721d16073314421443fb57ea2e30277752509"
+      }
+    ]
+  },
+  "native_log_sha256": "4ff283f5919b25ae8b6dee605741462a5a6cd9f8f3104a7fd45b20af30191c81",
+  "native_recount": {
+    "Go_package_timing_or_cached_results": 27,
+    "Node_TAP_fail": 0,
+    "Node_TAP_pass": 4,
+    "Node_TAP_skip": 0,
+    "broad_ok_lines_that_mixed_units": 31,
+    "cached_Go_results": 18,
+    "gate_rerun_for_count_fix": false,
+    "native_gate_outcome_unchanged": true
+  },
+  "original_miscount_receipt_sha256": "b3e0fe0b9a11eb8f84de8b407b23bfb4defb8703f765c84ca52ffa23288574c8",
+  "original_receipt_preserved_byte_identical": true,
+  "policy_scope": {
+    "ADR0040_item3_read_exactly": true,
+    "frontend_or_browser_worker_asset_changes": false,
+    "image_gate_condition": "Landing the integration branch, or Dockerfile/dependency/runtime-image changes. This task is a narrow feature branch with none of those changes.",
+    "latest_human_authorization_recorded_as_narrow_feature_development_landing_and_local_POC_refresh": true,
+    "native_embedded_route_metadata": "Changed additive API inventory is covered by Go contracts; it is not a browser frontend bundle input.",
+    "new_image_Trivy_govulncheck_pass_claimed": false,
+    "no_general_GUI_milestone_production_provider_or_real_child_authority_inferred": true
+  },
+  "reviewer": "agent:codex/teacher_cpu_inputs",
+  "schema_version": 1,
+  "scope": "Read-only documentation, native-log/source-tree/receipt review. No source edit, commit, gate rerun, corpus access or runtime action.",
+  "source_equivalence": {
+    "all_six_unchanged": true,
+    "applicable_gates_and_modules_unchanged": true,
+    "prior_full21_source_commit": "37129450d27990c6f7620bb72155ddbc8a094a20",
+    "seven_intervening_changes_documentation_only": true,
+    "subtree_Git_objects": {
+      "apps": "545077bc62a06539f5d9121bd150499cf5ee4e8e",
+      "db": "93a0124318b7b3a906914802ab1c1c0b745cb2f2",
+      "frontend": "0f66c15ab427457bbed8be69d6da3f0d52fb6d09",
+      "locale": "1686d4854f479861a0617ae635be57ec6f6bc157",
+      "services": "8c4abab0dcd3878f90d3f99e973fbb69f2255011",
+      "templates": "05292c79649051e2af38c02a81d6220659dc8255"
+    }
+  },
+  "verdict": "approved corrected native accounting and scoped landing documentation; no actionable findings"
+}

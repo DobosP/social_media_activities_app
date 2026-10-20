@@ -4,14 +4,17 @@
 {% block meta_description %}{% trans "Upcoming events at real places in Cluj-Napoca — sport, outdoors, games, reading and culture you can join in person." %}{% endblock %}
 {% block meta_robots %}{% if filtered %}noindex, follow{% else %}index, follow{% endif %}{% endblock %}
 {% block structured_data %}{% if structured_data %}<script nonce="{{ request.csp_nonce }}" type="application/ld+json">{{ structured_data }}</script>{% endif %}{% endblock %}
-{% block head %}<link rel="alternate" type="application/rss+xml" title="{% trans 'Upcoming events' %}" href="{% url 'events_feed' %}">{% endblock %}
+{% block head %}{% url 'events_feed' as fallback_feed %}<link rel="alternate" type="application/rss+xml" title="{% trans 'Upcoming events' %}" href="{{ event_feed_url|default:fallback_feed }}">{% endblock %}
 {% block content %}
+{% url 'events_feed' as fallback_feed %}{% url 'events_list' as fallback_clear %}
+{% with event_feed_href=event_feed_url|default:fallback_feed event_clear_href=event_clear_url|default:fallback_clear %}
 <h1>{% trans "What's happening" %}</h1>
-<p class="muted"><a href="{% url 'events_feed' %}">{% trans "Subscribe (RSS)" %}</a> &middot; <a href="{% url 'things_to_do_index' %}">{% trans "Browse by city &amp; activity" %}</a></p>
-<p class="muted">{% trans "Upcoming events at places near you. Find one you like, then organise an activity to go together." %}{% if activity %} {% url 'events_list' as clear_url %}{% blocktrans with activity_name=activity %}Filtered by <strong>{{ activity_name }}</strong> &middot;
+<p class="muted"><a href="{{ event_feed_href }}">{% trans "Subscribe (RSS)" %}</a> &middot; <a href="{% url 'things_to_do_index' %}">{% trans "Browse by city &amp; activity" %}</a></p>
+<p class="muted">{% trans "Upcoming events at places near you. Find one you like, then organise an activity to go together." %}{% if activity %} {% blocktrans with activity_name=activity clear_url=event_clear_href %}Filtered by <strong>{{ activity_name }}</strong> &middot;
   <a href="{{ clear_url }}">clear</a>.{% endblocktrans %}{% endif %}</p>
 <form method="get" action="{% url 'events_list' %}" class="search-bar" role="search">
   <input type="search" name="q" value="{{ query }}" placeholder="{% trans 'Search events…' %}" aria-label="{% trans 'Search events' %}" minlength="2">
+  <input type="text" name="city" value="{{ city }}" placeholder="{% trans 'City' %}" aria-label="{% trans 'City' %}">
   {% if activity %}<input type="hidden" name="activity" value="{{ activity }}">{% endif %}
   {% comment %}W4-F14: narrow to a city Area (composes with the search + type filters).{% endcomment %}
   {% if areas %}
@@ -20,19 +23,24 @@
       {% for a in areas %}<option value="{{ a.slug }}"{% if a.slug == area %} selected{% endif %}>{{ a.name }}</option>{% endfor %}
     </select>
   {% endif %}
-  <button class="btn" type="submit">{% trans "Search" %}</button>
-  {% if query %}<a class="muted" href="{% url 'events_list' %}">{% trans "clear" %}</a>{% endif %}
-</form>
+  <button class="btn" type="submit">{% trans "Search" %}</button>{% if local_poc_past_only %}<input type="hidden" name="past_only" value="1">{% elif local_poc_past %}<input type="hidden" name="include_past" value="1">{% endif %}
+  {% if event_filters_active or query %}<a class="muted" href="{{ event_clear_href }}">{% trans "Clear filters" %}</a>{% endif %}
+</form>{% if local_poc_mode %}<p class="muted">
+  {% if local_poc_past or local_poc_past_only %}<a href="{{ event_upcoming_url }}">Upcoming only</a> &middot; {% endif %}
+  {% if not local_poc_past or local_poc_past_only %}<a href="{{ event_include_past_url }}">Include past events (LOCAL POC)</a> &middot; {% endif %}
+  {% if local_poc_past_only %}<strong>Past events only (LOCAL POC)</strong>{% else %}<a href="{{ event_past_only_url }}">Past events only (LOCAL POC)</a>{% endif %}
+</p>{% endif %}
 {% if area_name %}<p class="muted">{% blocktrans %}Showing events in <strong>{{ area_name }}</strong> only.{% endblocktrans %}</p>{% endif %}
 <div class="grid">
   {% for e in events %}
     <div class="card">
-      <h3><a href="{{ e|event_url }}">{{ e.title }}</a></h3>
+      <h3><a href="{{ e|event_url }}">{{ e.title }}</a></h3>{% if e.local_poc %}<p><span class="tag fact--false">LOCAL POC — not cleared for publication</span>{% if e.local_poc_past %} <span class="tag">Past event</span>{% endif %}</p>{% endif %}
       <div>{% if e.activity_type %}<span class="tag">{{ e.activity_type.name }}</span>{% endif %}</div>
       <p class="muted">{{ e.starts_at|date:"D j M, H:i" }}{% if e.place %} &middot;
         <a href="{{ e.place|place_url }}">{{ e.place.name }}</a>{% endif %}</p>
       {% if e.description %}<p>{{ e.description|truncatewords:22 }}</p>{% endif %}
     </div>
-  {% empty %}<p class="muted">{% trans "No upcoming events yet." %}</p>{% endfor %}
+  {% empty %}<p class="muted">{% if local_poc_past_only %}{% trans "No past POC events match." %}{% else %}{% trans "No upcoming events yet." %}{% endif %}</p>{% endfor %}
 </div>
+{% endwith %}
 {% endblock %}

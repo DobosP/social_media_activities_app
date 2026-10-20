@@ -277,7 +277,7 @@ func (f *guiActivityFormFixture) render(t *testing.T, filesystem, original bool,
 		data["activity"] = map[string]any{"pk": 731, "title": "Synthetic activity", "activity_type": map[string]any{"name": "Synthetic type"}}
 	}
 	response := httptest.NewRecorder()
-	if err := renderer.Render(response, request, "web/"+family+".html", data); err != nil {
+	if err := completionFrozenReferenceRender(renderer, response, request, "web/"+family+".html", data); err != nil {
 		t.Fatal(err)
 	}
 	body := append([]byte(nil), response.Body.Bytes()...)

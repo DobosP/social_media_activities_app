@@ -67,6 +67,7 @@ func (s *Server) publicSchema() map[string]any {
 		}
 	}
 	s.publicCatalogSchema(paths, schemas)
+	publicEventFacetsSchema(paths, schemas)
 	operationCount := s.publicInventorySchema(paths, schemas)
 	return map[string]any{"openapi": "3.0.3", "info": map[string]any{"title": "Activities native API", "version": "1.0.0", "description": "Public venues and events retain license and access metadata. Private account/social APIs require authenticated cohort authorization; session-cookie mutations require same-origin CSRF, and login/signup/logout always require CSRF. Minor meetups and identities are never published."}, "paths": paths, "x-native-api-operation-count": operationCount, "components": map[string]any{"schemas": schemas, "securitySchemes": map[string]any{"stripeSignature": map[string]any{"type": "apiKey", "in": "header", "name": "Stripe-Signature", "description": "Stripe signature validation over the raw event body."}, "webhookSecret": map[string]any{"type": "apiKey", "in": "header", "name": "X-Webhook-Secret", "description": "Native payment provider webhook authentication."}, "cookieAuth": map[string]any{"type": "apiKey", "in": "cookie", "name": "sessionid"}, "tokenAuth": map[string]any{"type": "apiKey", "in": "header", "name": "Authorization", "description": "Use Token followed by a space and the 40-character hexadecimal API token; Bearer is not accepted."}}}}
 }

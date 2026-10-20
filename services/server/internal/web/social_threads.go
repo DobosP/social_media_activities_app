@@ -180,6 +180,13 @@ func (s *Server) socialPostModels(ctx context.Context, a platform.Actor, tid int
 			return nil, e
 		}
 	}
+	// The native view copies the same already-authorized mention selection.
+	// Compute it once per hydrated page; no query or domain decision is added.
+	workflowMentionNames := make([]string, 0, len(roster))
+	for name := range roster {
+		workflowMentionNames = append(workflowMentionNames, name)
+	}
+	sort.Strings(workflowMentionNames)
 	for _, p := range rows {
 		if snippet, ok := p["snippet"].(map[string]any); ok {
 			value := []rune(strings.ReplaceAll(strings.TrimSpace(spaText(snippet["text"])), "\n", " "))
@@ -191,6 +198,7 @@ func (s *Server) socialPostModels(ctx context.Context, a platform.Actor, tid int
 		}
 		people = append(people, spaMap(p["author"]))
 		p["body_html"] = pongo2.AsSafeValue(BodyMarkup(spaText(p["body"]), roster, a.Cohort == "adult"))
+		p["workflow_body_mentions"] = workflowMentionNames
 		p["replies"] = map[string]any{"all": []map[string]any{}}
 	}
 	if err = s.socialAvatars(ctx, people); err != nil {

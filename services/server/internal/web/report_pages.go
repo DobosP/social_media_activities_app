@@ -89,6 +89,7 @@ func (s *Server) reportAction(w http.ResponseWriter, r *http.Request, a platform
 		if response != nil && response.Code == http.StatusBadRequest {
 			form := object(data["form"])
 			form["as_p"] = pongoErrorPrefix("Choose a valid report reason.", form["as_p"])
+			form["native_trust_error"] = "Choose a valid report reason."
 			data["csrf"] = s.Auth.EnsureCSRF(w, r)
 			if err := s.Renderer.Render(w, r, "web/report.html", data); err != nil {
 				platform.Error(w, 500, "Page unavailable.")

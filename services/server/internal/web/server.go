@@ -39,6 +39,8 @@ type Config struct {
 	UploadScratch                                          string
 	AccountRetention                                       AccountRetentionConfig
 	SPA, CSPEnforce                                        bool
+	// LocalPOC: the development-only RO-EDU local POC gate held (ADR-0057).
+	LocalPOC bool
 }
 type Server struct {
 	DB              *pgxpool.Pool
@@ -79,6 +81,18 @@ func (s *Server) Register(mux *http.ServeMux) {
 	mux.HandleFunc("POST /i18n/setlang", http.NotFound)
 	mux.HandleFunc("GET /api/schema/{$}", s.OpenAPIDocument)
 	mux.HandleFunc("GET /api/docs/{$}", s.APIDocumentation)
+	mux.HandleFunc("GET /robots.txt", func(w http.ResponseWriter, r *http.Request) {
+		s.PublicDownload(w, r, platform.Actor{}, "robots_txt")
+	})
+	mux.HandleFunc("GET /llms.txt", func(w http.ResponseWriter, r *http.Request) {
+		s.PublicDownload(w, r, platform.Actor{}, "llms_txt")
+	})
+	mux.HandleFunc("GET /indexnow.txt", func(w http.ResponseWriter, r *http.Request) {
+		s.PublicDownload(w, r, platform.Actor{}, "indexnow_key_file")
+	})
+	mux.HandleFunc("GET /sitemap.xml", func(w http.ResponseWriter, r *http.Request) {
+		s.PublicDownload(w, r, platform.Actor{}, "sitemap")
+	})
 	// Django's typed int/uuid paths overlap in ways ServeMux's untyped wildcards
 	// cannot express. Native API paths keep ServeMux; this typed router owns HTML.
 	mux.HandleFunc("GET /", s.legacyHTTP)
@@ -189,6 +203,10 @@ func (s *Server) page(w http.ResponseWriter, r *http.Request, name string) {
 		http.Redirect(w, r, "/login/?next="+url.QueryEscape(r.URL.RequestURI()), 302)
 		return
 	}
+	if name == "inbox" {
+		http.Redirect(w, r, "/notifications/", 302)
+		return
+	}
 	if name == "groups" {
 		http.Redirect(w, r, "/communities/", 302)
 		return
@@ -226,6 +244,7 @@ func (s *Server) page(w http.ResponseWriter, r *http.Request, name string) {
 	if canonical, _ := data["canonical_url"].(string); canonical == "" {
 		data["canonical_url"] = strings.TrimRight(s.Config.PublicURL, "/") + r.URL.Path
 	}
+	data["local_poc_mode"] = s.Config.LocalPOC
 	data["site_name"] = s.Config.SiteName
 	if data["site_name"] == "" {
 		data["site_name"] = "Activities"

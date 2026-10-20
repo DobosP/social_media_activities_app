@@ -1,0 +1,97 @@
+{
+  "schema": 1,
+  "status": "IMPLEMENTED_NATIVE_FRONTEND_DESKTOP_PASS_FULL21_PENDING",
+  "operator": "agent:codex (PROGRAM E8)",
+  "date": "2026-10-21",
+  "source": {
+    "parent": "a2676cfb5326cf9a3b232bd916bbd32bf313e50e",
+    "integrated_main": "5426e9154a67d5b3c3769a2a9f53c4197e690174",
+    "phase": "uncommitted candidate; commit required before full21"
+  },
+  "inventory": {
+    "named_get_aliases": 79,
+    "global_downloads": 4,
+    "typed_destinations": 50,
+    "new_typed_destinations": 39,
+    "compatibility_destinations": 14,
+    "overlapping_optional_spa_modules": 20,
+    "spa_default": false,
+    "historical_reference_exclusions": 2,
+    "remaining_source_functional_gaps": 0,
+    "proof": {
+      "path": "/home/dobo/work/_temp/gui-functional-hub/social-route-completion-audit/manifest-v4.json",
+      "sha256": "6ad0002d719159ba76e65705a109f71be3b0bbb26ca29719920dadb1751b2c57"
+    }
+  },
+  "native": {
+    "status": "PASS_REQUIRED_SOURCE_CHECKS",
+    "command": "bash scripts/check-native.sh /usr/local/go/bin/go",
+    "proof": {
+      "path": "/home/dobo/work/_temp/gui-functional-hub/social-native-completion-checks/final-iteration-v3-result.json",
+      "sha256": "4cfb6112640b40a62f8f67460c080e63ac457027de38bb764e63b16f4a10b05c"
+    },
+    "limit": "Default DB skips do not qualify database behavior.",
+    "go_packages_with_tests": 32,
+    "worker_tests": 4
+  },
+  "frontend": {
+    "status": "PASS",
+    "contracts": 3,
+    "initial_js_css_gzip_kib": 36.72,
+    "cap_kib": 40,
+    "proof": {
+      "path": "/home/dobo/work/_temp/gui-functional-hub/social-frontend-completion/RESULT.json",
+      "sha256": "076e56e663f4eab2fcd028f8d5f637fff524692d3e2943f5a9a152c1029e669a"
+    },
+    "limit": "No claim of20 complete browser workflows."
+  },
+  "desktop": {
+    "status": "PASS_DESKTOP_SCOPE",
+    "states": 78,
+    "strict_audits": 156,
+    "violations": 0,
+    "incomplete": 0,
+    "csp_events": 0,
+    "cleanup": true,
+    "proof": {
+      "path": "/home/dobo/work/_temp/gui-functional-hub/social-completion-desktop/qa-v4/result.json",
+      "sha256": "cfb51986292f728c119f2a014f0c2c504e3ce85e6a0c77486acd1ed90c550d6e"
+    },
+    "limit": "Synthetic ordinary-renderer EN/RO desktop fixtures; no mutations/external providers/map tiles/E2EE enrollment/mobile."
+  },
+  "source_reviews": {
+    "main_integration": {
+      "path": "/home/dobo/work/_temp/gui-functional-hub/social-main-integration/independent-source-review.json",
+      "sha256": "234fac47370bb1ae230871799499f614d818c16543a22c4896abf1624af74233"
+    },
+    "physical_and_historical_bindings": {
+      "path": "/home/dobo/work/_temp/gui-functional-hub/social-native-completion-adapters-v2/final-bindings-v4/independent-source-review.json",
+      "sha256": "30cbf2792d411ec8ed82d9d5e0ef6df8237db0c3bfe8d4150eac72635204b769"
+    },
+    "place_accent": {
+      "path": "/home/dobo/work/_temp/gui-functional-hub/social-place-accent-image-fix-v1/independent-root-source-review.json",
+      "sha256": "450ddb6b136304315237bb220783332df9d1da2a2db7b8b28d146757b52b73fd"
+    },
+    "qualifier": {
+      "path": "/home/dobo/work/_temp/gui-functional-hub/social-native21-final-core-v2/independent-source-review-public.json",
+      "sha256": "e347bb647611a76bec813967207edfcb7e615c06a6a80e834adf490dc35a52f0"
+    },
+    "other_author_source": {
+      "path": "/home/dobo/work/_temp/gui-functional-hub/social-final-independent-review-v1/review.json",
+      "sha256": "c0a41349f6ff45b0d8aa1d28b266c1234d0cb8c12384c890868b1aa9901bda78"
+    }
+  },
+  "full21": {
+    "status": "PENDING_EXACT_COMMITTED_CANDIDATE",
+    "method": "scripts/qualify-native-final.py",
+    "canonical_shell_sha256": "c5ea3b35b48c50d1caf9ab57dbae5260e8e23acbe6c89d20079687568cde13b1"
+  },
+  "holds": [
+    "Social main and formal GUI milestone landing",
+    "Production and canonical new-image audits",
+    "Real account/child/provider/government activation",
+    "Held erasure/privacy/content decisions"
+  ],
+  "teacher": "Further rewrites deferred; published088934f retained.",
+  "cat": "S1 implementation complete locally; auditc7082c9b; app-main push remains owner."
+}

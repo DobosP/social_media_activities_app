@@ -8,6 +8,7 @@ import (
 	"io"
 	"math"
 	"net/http"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -88,6 +89,43 @@ func TestOperatorCase3ROEDUConsumerPolicyMutationsFailClosed(t *testing.T) {
 	item["timezone"] = "Europe/Bucharest"
 	if ValidatePackItem(item) {
 		t.Fatal("stale tombstone timezone accepted")
+	}
+}
+
+// ADR-0055: exactly one producer policy tuple is current. The previous social
+// pin (4/6) and the previous serving/teacher pin (5/7), each with its own real
+// hash, must fail closed, as must any half-moved tuple.
+func TestROEDUPolicyTupleIsExactlySchema5Ruleset8(t *testing.T) {
+	const current = "140290d4bc6374ebb5b7922dee98c79bee5501a6cf76e1ef18923a8647068fd1"
+	if PolicyHash != current {
+		t.Fatal("consumer policy hash drifted from the ruleset-8 producer manifest")
+	}
+	for _, tc := range []struct {
+		name            string
+		schema, ruleset int
+		hash            string
+		valid           bool
+	}{
+		{"current_5_8", 5, 8, current, true},
+		{"previous_social_4_6", 4, 6, "07f27d3c9a5e5898ba7cfac686c645713114dd9c13d72ecc054570d368daf58d", false},
+		{"previous_serving_5_7", 5, 7, "0a249bf00b817159cee00cd3a90e8bef79b23841006e3c9a7b99f4ef6802ee62", false},
+		{"old_hash_new_versions", 5, 8, "07f27d3c9a5e5898ba7cfac686c645713114dd9c13d72ecc054570d368daf58d", false},
+		{"old_schema", 4, 8, current, false},
+		{"old_ruleset", 5, 7, current, false},
+		{"future_ruleset", 5, 9, current, false},
+	} {
+		for index, kind := range []string{"venue", "event"} {
+			t.Run(tc.name+"_"+kind, func(t *testing.T) {
+				item := retirementPackPage(t)["items"].([]any)[index].(map[string]any)
+				attestation := item["policy_attestation"].(map[string]any)
+				attestation["schema_version"] = json.Number(strconv.Itoa(tc.schema))
+				attestation["ruleset_version"] = json.Number(strconv.Itoa(tc.ruleset))
+				attestation["ruleset_hash"] = tc.hash
+				if ValidatePackItem(item) != tc.valid {
+					t.Fatal("policy tuple acceptance changed", tc.schema, tc.ruleset, tc.hash)
+				}
+			})
+		}
 	}
 }
 

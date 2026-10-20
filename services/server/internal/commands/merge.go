@@ -19,6 +19,7 @@ type mergePlace struct {
 	Name, Source string
 	Tags         map[string]any
 	Distance     float64
+	Venues       []string
 }
 
 func placePriority(source string) int {
@@ -73,14 +74,16 @@ func (s *Service) dedupPlaces(ctx context.Context, input map[string]json.RawMess
 		if deleted[p.ID] || strings.TrimSpace(p.Name) == "" {
 			continue
 		}
-		nearby, err := s.Runner.DB.Query(ctx, `SELECT candidate.id,candidate.name,candidate.source FROM places_place candidate JOIN places_place original ON original.id=$1 WHERE candidate.id<>original.id AND ST_DWithin(candidate.location,original.location,$2) ORDER BY ST_Distance(candidate.location,original.location),candidate.id LIMIT 50`, p.ID, in.MaxDistance)
+		// RO-EDU venue identities are read fresh for both rows: an earlier merge
+		// in this run may have folded a venue into either (ADR-0058).
+		nearby, err := s.Runner.DB.Query(ctx, `SELECT candidate.id,candidate.name,candidate.source,`+jobs.RoeduVenueIdentitiesSQL("candidate")+`,`+jobs.RoeduVenueIdentitiesSQL("original")+` FROM places_place candidate JOIN places_place original ON original.id=$1 WHERE candidate.id<>original.id AND ST_DWithin(candidate.location,original.location,$2) ORDER BY ST_Distance(candidate.location,original.location),candidate.id LIMIT 50`, p.ID, in.MaxDistance)
 		if err != nil {
 			return counts, err
 		}
 		candidates := []mergePlace{}
 		for nearby.Next() {
 			var c mergePlace
-			if err = nearby.Scan(&c.ID, &c.Name, &c.Source); err != nil {
+			if err = nearby.Scan(&c.ID, &c.Name, &c.Source, &c.Venues, &p.Venues); err != nil {
 				nearby.Close()
 				return counts, err
 			}
@@ -93,7 +96,7 @@ func (s *Service) dedupPlaces(ctx context.Context, input map[string]json.RawMess
 		}
 		var match *mergePlace
 		for _, c := range candidates {
-			if !deleted[c.ID] && jobs.PlaceNameSimilarity(p.Name, c.Name) >= in.MinName {
+			if !deleted[c.ID] && !jobs.RoeduVenuesConflict(p.Venues, c.Venues) && jobs.PlaceNameSimilarity(p.Name, c.Name) >= in.MinName {
 				candidate := c
 				match = &candidate
 				break
@@ -264,6 +267,12 @@ func (s *Service) mergePlaces(ctx context.Context, canonical, duplicate int64, a
 		}
 		blocked, err := placeDependents(ctx, tx, duplicate)
 		if err != nil || blocked {
+			return err
+		}
+		// Two different RO-EDU venues never become one place, whatever their
+		// distance or names (ADR-0058); rechecked under the row locks.
+		var venues int
+		if err = tx.QueryRow(ctx, `SELECT count(DISTINCT venue) FROM places_place p, unnest(`+jobs.RoeduVenueIdentitiesSQL("p")+`) venue WHERE p.id IN($1,$2)`, canonical, duplicate).Scan(&venues); err != nil || venues > 1 {
 			return err
 		}
 		rows, err := tx.Query(ctx, `SELECT id,activity_id,origin,confidence,source,mapping_rule,is_disputed FROM places_placeactivity WHERE place_id=$1 ORDER BY id FOR UPDATE`, duplicate)

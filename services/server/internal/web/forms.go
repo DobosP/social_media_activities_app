@@ -108,6 +108,7 @@ func (s *Server) form(r *http.Request, a platform.Actor, name string, initial ma
 	options["coarse_window"] = []option{{"weekday_daytime", "Weekday daytime"}, {"weekday_evening", "Weekday evening"}, {"weekend_daytime", "Weekend daytime"}, {"weekend_evening", "Weekend evening"}}
 	all := []any{}
 	nativeGroup := groupCreateForm{Staff: a.IsStaff}
+	nativeSeriesGauge := seriesGaugeFormSnapshot{Name: name, Cohort: a.Cohort, Staff: a.IsStaff}
 	var paragraphs strings.Builder
 	for _, key := range names {
 		f := fields[key]
@@ -136,6 +137,10 @@ func (s *Server) form(r *http.Request, a platform.Actor, name string, initial ma
 			attrs += fmt.Sprintf(` minlength="%d"`, f.MinLength)
 		}
 		widget := ""
+		nativeSeriesGaugeChecked := f.Kind == "BooleanField" && (value == "true" || value == "on")
+		if r.Method == "POST" && (r.PostForm.Get(key) == "" || strings.EqualFold(r.PostForm.Get(key), "false")) {
+			nativeSeriesGaugeChecked = false
+		}
 		if choices, ok := options[key]; ok {
 			multiple := ""
 			if f.Kind == "ModelMultipleChoiceField" {
@@ -188,6 +193,10 @@ func (s *Server) form(r *http.Request, a platform.Actor, name string, initial ma
 		if name == "GroupCreateForm" {
 			nativeGroup.Fields = append(nativeGroup.Fields, groupCreateInput{Name: key, Value: value, Options: append([]option(nil), options[key]...)})
 		}
+		if seriesGaugeFormName(name) {
+			_, hasOptions := options[key]
+			nativeSeriesGauge.Fields = append(nativeSeriesGauge.Fields, seriesGaugeFormInput{Name: key, Value: value, HasOptions: hasOptions, Checked: nativeSeriesGaugeChecked, Options: append([]option(nil), options[key]...)})
+		}
 		all = append(all, field)
 		paragraphs.WriteString("<p>" + labelTag + widget + "<span class=\"helptext\">" + escape(f.HelpText) + "</span></p>")
 	}
@@ -195,6 +204,9 @@ func (s *Server) form(r *http.Request, a platform.Actor, name string, initial ma
 	result["fields"] = all
 	if name == "GroupCreateForm" {
 		result["native_group"] = nativeGroup
+	}
+	if seriesGaugeFormName(name) {
+		result["native_series_gauges"] = nativeSeriesGauge
 	}
 	if name == "ActivityForm" || name == "ActivityEditForm" {
 		steps := []any{}
@@ -212,5 +224,6 @@ func (s *Server) form(r *http.Request, a platform.Actor, name string, initial ma
 		}
 		result["steps"] = steps
 	}
+	addWorkflowSnapshot(result, name, fields, names, options)
 	return result, nil
 }

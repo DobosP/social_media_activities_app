@@ -80,7 +80,12 @@ func donateForm(r *http.Request, choices []map[string]any, message string) map[s
 		html.WriteString(`<option value="` + escape(value) + `"` + selected + `>` + escape(fmt.Sprint(choice["title"])) + `</option>`)
 	}
 	html.WriteString(`</select></p>`)
-	return map[string]any{"as_p": pongo2.AsSafeValue(html.String()), "errors": message}
+	native := informationDonationForm{Amount: amount, Campaign: campaign, Error: message}
+	for _, choice := range choices {
+		value := fmt.Sprint(choice["id"])
+		native.Choices = append(native.Choices, familyOption{Value: value, Label: fmt.Sprint(choice["title"]), Selected: value == campaign})
+	}
+	return map[string]any{"as_p": pongo2.AsSafeValue(html.String()), "errors": message, "native": native}
 }
 
 // Decimal form amounts are converted with integer arithmetic. Rounding an

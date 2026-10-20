@@ -1,0 +1,68 @@
+{
+  "status": "SOURCE_ONLY_NOT_EXECUTED",
+  "purpose": "Pragmatic desktop QA of all39 selected current Go-rendered synthetic fixtures in EN light and RO dark (78 total), exported by current ordinary Renderer.",
+  "export_command": [
+    "/usr/local/go/bin/go",
+    "test",
+    "./internal/web",
+    "-run",
+    "^TestNativeCompletionDesktopExport$",
+    "-count=1",
+    "-native-completion-preview-output",
+    "ABSOLUTE_FRESH_EXPORT_DIRECTORY"
+  ],
+  "runner_command": [
+    "/home/dobo/.vite-plus/js_runtime/node/24.22.0/bin/node",
+    "/home/dobo/work/_temp/gui-functional-hub/social-native-completion-desktop-v3/desktop-qa.mjs",
+    "--repo",
+    "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a",
+    "--fixtures",
+    "ABSOLUTE_FRESH_EXPORT_DIRECTORY",
+    "--output",
+    "ABSOLUTE_FRESH_QA_DIRECTORY",
+    "--node",
+    "/home/dobo/.vite-plus/js_runtime/node/24.22.0/bin/node",
+    "--playwright-package",
+    "/home/dobo/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright",
+    "--chrome",
+    "/opt/google/chrome/google-chrome",
+    "--axe-file",
+    "/home/dobo/work/_temp/feat__gui-cat-m3/gates/cat_de_roman_esti/tools/gui-baseline-quality/node_modules/axe-core/axe.min.js",
+    "--bindings",
+    "/home/dobo/work/_worktrees/social_media_activities_app/feat__gui-app-migration-a/tools/gui-native-topics/source-bindings.json"
+  ],
+  "browser_dependency_basis": {
+    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/topics-ui-operational/operational-review.json",
+    "sha256": "d1831edf027679e12481c928b5a56a4e10e0922de6abc0291b158a02da2b29b9",
+    "pins": {
+      "axe_file": "20c09fe157a8a34a30e241aaa1fcdade657734f08ab379ecfbeb7d45cc46e878",
+      "chrome": "aea09d69ce7f24d5901f6bfb15dd44d0c856e793e0a498f8d8393ec7d2c308ec",
+      "go": "30969f97169d7f43fe6a085873d75613adc21e30818a8c61d95bd27275df4624",
+      "node": "67ca5783febb8bf85736c79fcdd92c8d6d465a0eb2a082672bcdfa76a506751c",
+      "playwright_package": "ca170ec143a88ed3043ac953eb3b2377b2b97304104f4e1e23316684ce2c35af"
+    }
+  },
+  "coverage": [
+    "Fixed desktop viewport1280x900 only, exactly39 selected templates x EN/RO with both closed-details and open-details whole-document Axe WCAG2A/AA+2.1AA.",
+    "Original exported HTML length/SHA/header checks and nonce policy preserved; same-origin exact existing static bytes are hash-recorded and checked unchanged after run.",
+    "Person-card fragment has an explicitly declared standalone plain main host with base/trust CSS and language/theme attributes; original fragment identity is retained. This host is not a product page.",
+    "Keyboard activation/focus of summary controls, native required-field rejection and POST CSRF/control inventories; no submit dispatched to a backend.",
+    "Capture JavaScript/page/console/CSP errors and horizontal overflow; compact Axe nodes and viewport screenshots per state/mode. Save after every state and continue to reveal all failures."
+  ],
+  "network_and_privacy": [
+    "Only localhost GET fixture/asset requests reach the owned server. Browser routing aborts all non-GET requests before network and all external HTTP(S); WebSocket handshakes intercepted and closed. No form submitted, no geolocation grant or location call.",
+    "Finite GET stubs only: healthz, empty place results, empty graph, empty messaging key metadata/conversations/guardian conversations. Unknown local paths fail. External map tile/style attempts are blocked and explicitly unexercised; unknown external origins fail.",
+    "Messaging script may generate a fresh synthetic key in the isolated browser; its automatic enrollment POST is blocked before network and reported. No private keys/request bodies are captured. Persistent owned browser profile is removed in finally; E2EE connection/key persistence/conversation functionality is not qualified.",
+    "Service workers blocked; no offline/PWA claim. Only this run’s fresh owned profile is deleted; sources, exports and result/screenshots retained."
+  ],
+  "scope_limits": [
+    "Source-only author packet. No Node/parser/formatter/browser/Go/test/PG or candidate execution by the author; Root must independently review/admit before running.",
+    "Renderer fixtures are not registered GET/authentication/account/domain/action/provider/production evidence. Current registered transport/backend tests remain separately required.",
+    "Axe incomplete results require review just like violations. PASS_DESKTOP_SCOPE is scoped to the recorded fixtures and intentional network limits; it does not accept app milestones or production release."
+  ],
+  "review_delta": [
+    "Assert details.open changed after keyboard Enter, besides focus visibility.",
+    "Attempt browser close, owned profile removal and server shutdown independently; cleanup failures recorded and final result save always attempted.",
+    "Host only the exact exported synthetic person image URI with literal local SVG/hash/type; no wildcard media routing or actual media/authorization qualification."
+  ]
+}

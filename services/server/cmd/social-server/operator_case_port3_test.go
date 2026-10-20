@@ -221,7 +221,7 @@ func TestOperatorCase3ROEDUCanonicalAdapterFieldsAndMalformedWithholding(t *test
 				t.Fatal("adapter did not select only the valid venue")
 			}
 			p := out[0]
-			if p.Source != "roedu" || p.ExternalID != "venue-1" || p.Name != "Teatrul Național Cluj" || p.Lat != 46.7712 || p.Lon != 23.5949 || p.Website != "https://opera-cluj.ro/" || p.Attribution != "opera_cluj_events" || p.License != "RO-LAW-8-1996-ART-9" || p.Provenance != "" || !reflect.DeepEqual(p.Address, map[string]string{"street": "Piața Ștefan cel Mare 2", "city": "Cluj-Napoca", "county": "Cluj", "country": "RO"}) {
+			if p.Source != "roedu" || p.ExternalID != "venue-1" || p.Name != "Teatrul Național Cluj" || p.Lat != 46.7712 || p.Lon != 23.5949 || p.Website != "https://opera-cluj.ro/" || p.Attribution != "opera_cluj_events" || p.License != "Law 8/1996 art. 9" || p.Provenance != "" || !reflect.DeepEqual(p.Address, map[string]string{"street": "Piața Ștefan cel Mare 2", "city": "Cluj-Napoca", "county": "Cluj", "country": "RO"}) {
 				t.Fatal("canonical raw venue lost source, license, coordinates, website or exact address")
 			}
 			for key, value := range map[string]any{"amenity": "theatre", "roedu:tags": []any{"venue:theatre"}, "roedu:city": "Cluj-Napoca", "roedu:county": "Cluj", "roedu:category": "theatre", "roedu:venue_category": "theatre", "roedu:source": "opera_cluj_events", "roedu:confidence": json.Number("1")} {

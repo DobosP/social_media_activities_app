@@ -1,0 +1,42 @@
+{{define "collections"}}<!doctype html>
+<html lang="{{.Shell.Language}}" data-theme="{{.Shell.Theme}}" data-text="{{.Shell.Text}}" data-motion="{{.Shell.Motion}}">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="index, follow">
+<title>{{.Title}} · {{.Shell.SiteName}}</title><link rel="canonical" href="{{.Shell.Canonical}}">
+<link rel="preload" href="/static/fonts/bricolage-grotesque-latin-ext-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/static/fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/static/css/base.css"><link rel="stylesheet" href="/static/css/collections-native.css"><link rel="stylesheet" href="/static/css/completion-accessibility.css"></head>
+<body class="collections-native has-tabbar">
+<a class="skip-link" href="#main">{{index .Copy "Skip to main content"}}</a>
+<header class="site-header"><div class="container nav-wrap"><a class="brand" href="/">{{index .Copy "Activities"}}</a>
+<input type="checkbox" id="nav-toggle" class="nav-toggle-cb"><label for="nav-toggle" class="nav-toggle"><span aria-hidden="true">☰</span> {{index .Copy "Menu"}}</label>
+<nav class="nav" aria-label="{{index .Copy "Primary"}}">{{range .Shell.Navigation}}<a class="nav-link" href="{{.URL}}">{{.Label}}{{if and (eq .URL "/notifications/") $.Unread}} <span class="pill">{{$.Unread}}</span>{{end}}</a>{{end}}</nav>
+<details class="nav-menu nav-end"><summary>{{if .Avatar}}<img class="avatar nav-avatar" src="{{.Avatar}}" width="26" height="26" alt="">{{end}}<span class="nav-username">{{.Shell.DisplayName}}</span></summary><div class="nav-panel">
+{{range .AccountLinks}}<a href="{{.URL}}">{{.Label}}</a>{{end}}<form method="post" action="/logout/" class="inline"><input type="hidden" name="csrfmiddlewaretoken" value="{{.Shell.CSRF}}"><button class="linkbtn" type="submit">{{index .Copy "Log out"}}</button></form>
+</div></details></div></header>
+<main class="container" id="main" tabindex="-1">
+{{if eq .Kind "meetups"}}
+<h1>{{index .Copy "My next meetups"}}</h1>
+{{else}}
+<h1>{{index .Copy "Venues worth a quick check"}}</h1>
+{{end}}
+{{if .Messages}}<ul class="messages">{{range .Messages}}<li class="msg {{.Tags}}"><span role="status">{{.Text}}</span></li>{{end}}</ul>{{end}}
+{{if eq .Kind "meetups"}}
+<p class="muted">{{.Generated}}</p>
+{{if .Meetups}}<p><a class="btn btn-sm btn-secondary" href="{{.CalendarURL}}" download>📅 {{index .Copy "Add to my calendar (.ics)"}}</a> <span class="help">{{index .Copy "A one-time download of your upcoming meetups for your phone or desktop calendar."}}</span></p>{{end}}
+<p id="offline-note" class="card card-accent" hidden role="status">⚠️ {{index .Copy "You're offline &mdash; this is a saved copy. A meetup cancelled or moved since you last had signal may not show here."}}</p>
+{{range .Meetups}}<article class="card collection-meetup">
+<h2><a href="{{.URL}}">{{.Title}}</a></h2><span class="tag">{{.Type}}</span>
+<p class="muted compact-copy">📅 {{.Start}}{{if .End}} – {{.End}}{{end}}{{if .Place}}<br>📍 {{.Place}}{{end}}</p>
+{{if .MeetingPoint}}<p class="compact-copy"><span class="muted">{{index $.Copy "Where to meet:"}}</span><br><span class="collection-lines">{{.MeetingPoint}}</span></p>{{end}}
+</article>{{else}}<p class="muted">{{index .Copy "No upcoming meetups yet."}} <a href="{{.BrowseURL}}">{{index .Copy "Find one to join"}}</a>.</p>{{end}}
+{{if .Guardians}}<section class="card"><h2>{{index .Copy "Grown-ups you can turn to"}}</h2><p class="muted compact-copy">{{index .Copy "If something doesn't feel right, you can reach out to:"}}</p><ul class="members">{{range .Guardians}}<li>{{.}}</li>{{end}}</ul></section>{{end}}
+{{else}}
+<p class="muted">{{index .Copy "For the meetups you're going to, these venues have a data-quality flag right now &mdash; worth a quick check before you head out. This page is just for you and is never sent as a notification."}}</p>
+{{if .Venues}}<ul class="members collection-venues">{{range .Venues}}<li><a href="{{.URL}}">{{.Name}}</a> {{range .Flags}}<span class="tag{{if .Warning}} tag-warn{{end}}">{{.Text}}</span> {{end}}</li>{{end}}</ul>{{else}}<p class="muted">{{index .Copy "Nothing to flag &mdash; the venues for your upcoming meetups all look fine."}}</p>{{end}}
+{{end}}
+</main>
+<nav class="tabbar" aria-label="{{index .Copy "Menu"}}"><a href="/">{{index .Copy "Home"}}</a><a href="/activities/">{{index .Copy "Browse"}}</a><a class="tab-cta" href="/activities/new/">{{index .Copy "Organize"}}</a><a href="/messages/">Chat</a><a href="/you/">{{index .Copy "Profile"}}</a></nav>
+<footer class="site-footer"><div class="container"><p><strong>{{index .Copy "Demo environment: do not enter real personal data."}}</strong></p>
+<nav class="footer-links" aria-label="{{index .Copy "Privacy"}}">{{range .Shell.Footer}}<a href="{{.URL}}">{{.Label}}</a> {{end}}</nav>
+<form method="post" action="/i18n/setlang/" class="inline lang-switch"><input type="hidden" name="csrfmiddlewaretoken" value="{{.Shell.CSRF}}"><input type="hidden" name="next" value="{{.LanguageNext}}"><label for="collections-language">{{index .Copy "Language"}}</label><select id="collections-language" name="language" data-auto-submit><option value="en"{{if .Shell.English}} selected{{end}}>English</option><option value="ro"{{if not .Shell.English}} selected{{end}}>Română</option></select><noscript><button class="linkbtn" type="submit">{{index .Copy "Set language"}}</button></noscript></form>
+</div></footer><script nonce="{{.Nonce}}" src="/static/js/hovercard.js" defer></script><script nonce="{{.Nonce}}" id="site-js" src="/static/js/site.js" defer data-meetups-owner="{{.PublicID}}"></script>{{if eq .Kind "meetups"}}<script nonce="{{.Nonce}}" src="/static/js/my-meetups.js" defer></script>{{end}}</body></html>{{end}}

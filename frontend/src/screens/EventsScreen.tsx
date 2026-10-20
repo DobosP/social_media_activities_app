@@ -27,6 +27,7 @@ export function EventsScreen({ payload }: ScreenProps) {
       <p className="muted">{ui.lead}</p>
 
       <form
+        key={JSON.stringify([filters, data.localPOC])}
         className="sa-toolbar"
         role="search"
         onSubmit={(e) => {
@@ -36,6 +37,8 @@ export function EventsScreen({ payload }: ScreenProps) {
             q: String(fd.get('q') ?? ''),
             area: String(fd.get('area') ?? ''),
             activity: filters.activity,
+            city: String(fd.get('city') ?? ''),
+            ...(data.localPOC?.pastOnly ? { past_only: '1' } : data.localPOC?.includePast ? { include_past: '1' } : {}),
           });
         }}
       >
@@ -47,6 +50,7 @@ export function EventsScreen({ payload }: ScreenProps) {
           placeholder={ui.searchPlaceholder}
           aria-label={ui.searchLabel}
         />
+        {filters.city !== undefined && <input type="text" name="city" defaultValue={filters.city} placeholder={ui.cityLabel} aria-label={ui.cityLabel} />}
         {data.areas.length > 0 && (
           <select name="area" defaultValue={filters.area} aria-label={ui.areaLabel}>
             <option value="">{ui.anyArea}</option>
@@ -60,12 +64,18 @@ export function EventsScreen({ payload }: ScreenProps) {
         <Button type="submit" size="sm">
           {ui.search}
         </Button>
-        {(filters.query || filters.area || filters.activity) && (
-          <Button size="sm" variant="ghost" onClick={() => navigate(data.urls.action)}>
+        {(filters.query || filters.area || filters.activity || filters.city) && (
+          <Button size="sm" variant="ghost" onClick={() => navigate(data.urls.clear ?? data.urls.action)}>
             {ui.clear}
           </Button>
         )}
       </form>
+
+      {data.localPOC && <p className="muted">
+        {(data.localPOC.includePast || data.localPOC.pastOnly) && <><SmartLink href={data.localPOC.upcomingURL}>{ui.upcomingOnly}</SmartLink>{' · '}</>}
+        {(!data.localPOC.includePast || data.localPOC.pastOnly) && <><SmartLink href={data.localPOC.includePastURL}>{ui.includePast}</SmartLink>{' · '}</>}
+        {data.localPOC.pastOnly ? <strong>{ui.pastOnly}</strong> : <SmartLink href={data.localPOC.pastOnlyURL}>{ui.pastOnly}</SmartLink>}
+      </p>}
 
       {data.events.length === 0 ? (
         <p className="sa-empty">{ui.empty}</p>

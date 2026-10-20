@@ -58,9 +58,9 @@ REDISTRIBUTABLE_ACCESS_TYPES = frozenset({"public_document", "open_license", "pu
 SOCIAL_APP_NAME = "social_media_activities_app"
 SOCIAL_APP_PACK_ID = "roedu:social_media_activities_app:events_places:v1"
 SOCIAL_APP_PACK_SCHEMA_VERSION = 1
-POLICY_SCHEMA_VERSION = 4
-POLICY_RULESET_VERSION = 6
-POLICY_RULESET_HASH = "07f27d3c9a5e5898ba7cfac686c645713114dd9c13d72ecc054570d368daf58d"
+POLICY_SCHEMA_VERSION = 5
+POLICY_RULESET_VERSION = 8
+POLICY_RULESET_HASH = "140290d4bc6374ebb5b7922dee98c79bee5501a6cf76e1ef18923a8647068fd1"
 
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
 _PROMOTED_RELEASE_ID = re.compile(r"^sha256-[0-9a-f]{64}$")
@@ -401,7 +401,7 @@ def _social_common_is_valid(item: dict) -> bool:
         not _FORBIDDEN_PUBLIC_FIELDS.intersection(item)
         and _stable_id(item.get("id"))
         and _exact_text(item.get("source"), 255)
-        and _exact_text(item.get("license"), 120)
+        and _exact_text(item.get("license"), 500)
         and _exact_text(item.get("attribution"), 255)
         and isinstance(item.get("access_type"), str)
         and item.get("access_type") in REDISTRIBUTABLE_ACCESS_TYPES

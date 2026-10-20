@@ -1,0 +1,9 @@
+/* Scoped self-service collections; base tokens and native controls stay shared. */
+:root .collections-native .site-header { position:static; background:var(--card); }
+.collections-native .nav-menu > .nav-panel { position:static; width:max-content; max-width:calc(100vw - 2rem); }
+.collections-native .nav-panel a { overflow-wrap:anywhere; }
+.collections-native .footer-links a { text-decoration:underline; text-underline-offset:.15em; }
+.collections-native .collection-meetup h2 { font-size:1.1rem; margin:0 0 .4rem; }
+.collections-native .collection-lines { white-space:pre-line; overflow-wrap:anywhere; }
+.collections-native .collection-venues li { margin-block:.75rem; overflow-wrap:anywhere; }
+.collections-native #offline-note[hidden] { display:none; }

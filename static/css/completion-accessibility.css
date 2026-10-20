@@ -1,0 +1,77 @@
+/* Only the new cached Go views. Original base tokens/assets remain unchanged. */
+:root :is(.collections-native,.information-native,.public-discovery-native,.series-gauges-native,.trust-native,.workflows-native) .site-header {
+  position:static;
+  background:var(--card);
+  backdrop-filter:none;
+}
+:is(.collections-native,.information-native,.public-discovery-native,.series-gauges-native,.trust-native,.workflows-native) .site-header .nav-wrap {
+  align-items:flex-start;
+  flex-wrap:wrap;
+}
+:is(.collections-native,.information-native,.public-discovery-native,.series-gauges-native,.trust-native,.workflows-native) .site-header .nav {
+  flex:1 1 30rem;
+  min-width:0;
+  align-items:flex-start;
+}
+:is(.collections-native,.information-native,.public-discovery-native,.series-gauges-native,.trust-native,.workflows-native) .site-header .nav-menu {
+  min-width:0;
+  max-width:100%;
+}
+:is(.collections-native,.information-native,.public-discovery-native,.series-gauges-native,.trust-native,.workflows-native) .site-header .nav-menu[open] {
+  flex-basis:20rem;
+}
+:is(.collections-native,.information-native,.public-discovery-native,.series-gauges-native,.trust-native,.workflows-native) .site-header .nav-menu > summary {
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+:is(.collections-native,.information-native,.public-discovery-native,.series-gauges-native,.trust-native,.workflows-native) .site-header .nav-menu > .nav-panel {
+  position:static;
+  width:auto;
+  min-width:0;
+  max-width:100%;
+}
+:is(.collections-native,.information-native,.public-discovery-native,.series-gauges-native,.trust-native,.workflows-native) .site-header .nav-panel a {
+  line-height:1.5;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+:is(.collections-native,.information-native,.public-discovery-native,.series-gauges-native,.trust-native,.workflows-native) main a:not(.btn):not(.nav-link):not(.share-card):not(.map-chip) {
+  text-decoration-line:underline;
+  text-underline-offset:.16em;
+}
+:is(.collections-native,.information-native,.public-discovery-native,.series-gauges-native,.trust-native,.workflows-native) .footer-links {
+  display:flex;
+  flex-wrap:wrap;
+  gap:.5rem 1rem;
+}
+:is(.collections-native,.information-native,.public-discovery-native,.series-gauges-native,.trust-native,.workflows-native) .footer-links a {
+  text-decoration:underline;
+  text-underline-offset:.16em;
+}
+.native-brand-mark {color:var(--accent);flex:none}
+.public-discovery-native .breadcrumbs ol {color:var(--muted)}
+.public-discovery-native .breadcrumbs [aria-current="page"] {color:var(--fg)}
+.public-discovery-native #mz-graph {
+  --fg:#eceefa;
+  --muted:#b0b5ce;
+  --accent:#a5b4fc;
+  --accent-strong:#c7d2fe;
+  color:var(--fg);
+}
+.public-discovery-native #mz-graph .graph-fallback {color:var(--muted)}
+.public-discovery-native #mz-graph a {color:var(--accent);text-decoration:underline}
+.collections-native .collection-venues {display:grid;gap:.75rem;list-style:none;padding:0}
+.collections-native .collection-venues li {
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:.5rem;
+  margin:0;
+  padding:.75rem;
+  border:1px solid var(--line);
+  border-radius:var(--r);
+  background:var(--card);
+}
+.collections-native .collection-venues li > a {flex-basis:100%}
+.workflows-native .leaflet-control-zoom a {display:flex;align-items:center;justify-content:center}
+.workflows-native .leaflet-control-zoom svg {display:block;flex:none}

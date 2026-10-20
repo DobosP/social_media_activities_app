@@ -187,6 +187,10 @@ func TestNativeNotificationPreferencesFrozenReferenceIsSeparateFromStrictNative(
 	if err != nil {
 		t.Fatal(err)
 	}
+	raw, err = completionSourcePreimage("services/server/internal/web/server.go", raw)
+	if err != nil {
+		t.Fatal("exact current completion source required before historical page proof")
+	}
 	start := bytes.Index(raw, []byte("func (s *Server) page("))
 	if start < 0 {
 		t.Fatal("source page boundary changed")

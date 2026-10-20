@@ -28,6 +28,11 @@ func (s roeduPlaces) Fetch(ctx context.Context, o commands.PlaceOptions, emit fu
 	if err != nil {
 		return err
 	}
+	if pack.LocalPOC {
+		// The generic place merge cannot carry the POC marker onto an existing
+		// place; POC venues enter only through sync_roedu (ADR-0057).
+		return errors.New("RO-EDU local POC packs ingest only through sync_roedu")
+	}
 	emitted := 0
 	for _, item := range pack.Items {
 		if item["kind"] != "venue" {

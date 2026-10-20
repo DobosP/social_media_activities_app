@@ -1,0 +1,551 @@
+{
+  "schema_version": 1,
+  "status": "full21_source_qualified",
+  "finished_at": "2026-10-13T11:07:21.024075+00:00",
+  "qualified_source_commit": "37129450d27990c6f7620bb72155ddbc8a094a20",
+  "qualified_source_tree": "34afe1e7d7a0ee01b51e177905f529cc16e1fb94",
+  "top_level_total": 747,
+  "lane_count": 21,
+  "fail": 0,
+  "skip": 0,
+  "lanes": {
+    "configuration": {
+      "top_level_pass": 64,
+      "fail": 0,
+      "skip": 0,
+      "log_sha256": "1e061f3abd29fbd8df9299d74acd10fdd299d5da63d7fbe7a85af2127fc2847d",
+      "unique_top_level_test_names": 64
+    },
+    "accounts": {
+      "top_level_pass": 75,
+      "fail": 0,
+      "skip": 0,
+      "log_sha256": "b56e599214b7550c0fe3535cde4784809e42e103b794225d4725f6c83ce03407",
+      "unique_top_level_test_names": 75
+    },
+    "admin": {
+      "top_level_pass": 21,
+      "fail": 0,
+      "skip": 0,
+      "log_sha256": "31f5b2bb90dc30196811d5a2eb886b328b957706caee073d0446aabca8d681e8",
+      "unique_top_level_test_names": 21
+    },
+    "app": {
+      "top_level_pass": 35,
+      "fail": 0,
+      "skip": 0,
+      "log_sha256": "6563f6c3a4aa0ce4afeb21aed6e8f7de27b18719955cbbeeefe6b836b0b38f75",
+      "unique_top_level_test_names": 35
+    },
+    "backup": {
+      "top_level_pass": 5,
+      "fail": 0,
+      "skip": 0,
+      "log_sha256": "5e0452bb08eb7b461840bd4ae73b5f09dda718700ad812e56dd6f24bf02c3819",
+      "unique_top_level_test_names": 5
+    },
+    "booking": {
+      "top_level_pass": 7,
+      "fail": 0,
+      "skip": 0,
+      "log_sha256": "f719729312a2258fc094678dbd74a5099bdb374e87b23e3a29721562e6679f81",
+      "unique_top_level_test_names": 7
+    },
+    "budgets": {
+      "top_level_pass": 16,
+      "fail": 0,
+      "skip": 0,
+      "log_sha256": "bf5fed50cc4bd97ec9b6e02d01fd462ee5cbab96686ceb8c1d27f89d74758efd",
+      "unique_top_level_test_names": 16
+    },
+    "catalog": {
+      "top_level_pass": 54,
+      "fail": 0,
+      "skip": 0,
+      "log_sha256": "e24b8337fccb62af38c8c0c36d8fcf58cae5fbf49477b8ff458dd166f4f41bce",
+      "unique_top_level_test_names": 54
+    },
+    "commands": {
+      "top_level_pass": 29,
+      "fail": 0,
+      "skip": 0,
+      "log_sha256": "6c9e59cd5b2cec4deaddde45797907f2694c8578a078fca1ab4a641e6b822b5e",
+      "unique_top_level_test_names": 29
+    },
+    "contracts": {
+      "top_level_pass": 5,
+      "fail": 0,
+      "skip": 0,
+      "log_sha256": "7d1addf45410df1456849ebfc4f9be9e76fc57fde237b4404af27d5a86343eeb",
+      "unique_top_level_test_names": 5
+    },
+    "discovery": {
+      "top_level_pass": 2,
+      "fail": 0,
+      "skip": 0,
+      "log_sha256": "f6639a14587846d3e2404a43c168758608b994c8418769ac97306d06f260375a",
+      "unique_top_level_test_names": 2
+    },
+    "donations": {
+      "top_level_pass": 5,
+      "fail": 0,
+      "skip": 0,
+      "log_sha256": "ddce675973116bbd6c83752c2e7e773a827145b0c836d6c9d4b6aae3743cc23b",
+      "unique_top_level_test_names": 5
+    },
+    "export": {
+      "top_level_pass": 5,
+      "fail": 0,
+      "skip": 0,
+      "log_sha256": "12f1d343a8f702f7c54275a1db1107b827601f8d64612628cddbfe8f450e725e",
+      "unique_top_level_test_names": 5
+    },
+    "jobs": {
+      "top_level_pass": 84,
+      "fail": 0,
+      "skip": 0,
+      "log_sha256": "81fe7b87e517d88cffa0f880fc5b71255caf552d7552bbad27a7768ec8c8a8bf",
+      "unique_top_level_test_names": 84
+    },
+    "media": {
+      "top_level_pass": 54,
+      "fail": 0,
+      "skip": 0,
+      "log_sha256": "e5c4988084ef40bcd7a327384a0c48a60a972c9315cc59b88c50812b55e9a654",
+      "unique_top_level_test_names": 54
+    },
+    "messaging": {
+      "top_level_pass": 60,
+      "fail": 0,
+      "skip": 0,
+      "log_sha256": "30238482fa12ad1335fd873278e38373b5192191facc2dbe3a0810afecd62daa",
+      "unique_top_level_test_names": 60
+    },
+    "notifications": {
+      "top_level_pass": 4,
+      "fail": 0,
+      "skip": 0,
+      "log_sha256": "e3b75fc34d129030a97f62b6d8ae56f1f73c718c59b4d64b2b351ecff2c070f5",
+      "unique_top_level_test_names": 4
+    },
+    "recommendations": {
+      "top_level_pass": 8,
+      "fail": 0,
+      "skip": 0,
+      "log_sha256": "22928c76900fa2519afad8301d4e2839c0078a019dfe39cdcff3d92d9d7a5262",
+      "unique_top_level_test_names": 8
+    },
+    "safety": {
+      "top_level_pass": 56,
+      "fail": 0,
+      "skip": 0,
+      "log_sha256": "2ea31a5e3d8317484e67b4e56974379779b700f99ff89b578d0c746a677f2f0a",
+      "unique_top_level_test_names": 56
+    },
+    "social": {
+      "top_level_pass": 52,
+      "fail": 0,
+      "skip": 0,
+      "log_sha256": "e34110cd68a1f2b5974cb726b13f592878705e0cc1b03cab208feffdfd440c89",
+      "unique_top_level_test_names": 52
+    },
+    "web": {
+      "top_level_pass": 106,
+      "fail": 0,
+      "skip": 0,
+      "log_sha256": "a82860f2b1905cbd3c7aedf865b3cb15be6092c9717d164cd774a01c5b3e5f50",
+      "unique_top_level_test_names": 106
+    }
+  },
+  "protected_source_sha256": {
+    "services/server/internal/catalog/city.go": "6b9b95c194b3c0f1281cc54b074d8688c9ac976c47d040caaae36d319b7061c3",
+    "services/server/internal/catalog/service.go": "a2ac08d352242d8486fcde3fe8c5a2a1589c7f727066c35103a1143ebd1bf233",
+    "services/server/internal/catalog/event_facets.go": "e60991662cd70d82e6958996556d4c3a621b7dd97389981ea781333e8d75ebc1",
+    "services/server/internal/catalog/event_facets_test.go": "dd2e3e289ea795684a73db320595fe5c4265eac6992c84e658a8156c269c6ecb",
+    "services/server/internal/web/public_schema.go": "b927fcd0bee8bdba8987be3ae280517a320836bbba7a15377586c8475a500ccb",
+    "services/server/internal/web/public_schema_event_facets.go": "4b60ebe8779123febd07bc8644f6de9e34549995bfc0b2dceedbbe841131152a",
+    "services/server/internal/web/public_schema_event_facets_test.go": "059226fb180672111362c93ace02be6ce8c376b8fdaa36cd028bab7df1d31ca6",
+    "services/server/internal/web/public_routes.json": "63444f88d0bc34d7c2c30e5ef18ec5696a8979619762e4586455a72cb28d47f1",
+    "services/server/internal/web/public_documentation_test.go": "5be2ed8d47ad0bf0e0205fc625f4fb565e4db001bea7c195cdfdd42c5d50eb41",
+    "services/server/internal/app/integration_authority_test.go": "9627508f7020331afb6a04c25759b120c80b77d989347ba26459ccd453456969"
+  },
+  "gate_and_module_inputs": {
+    "scripts/qualify-native.sh": {
+      "sha256": "c5ea3b35b48c50d1caf9ab57dbae5260e8e23acbe6c89d20079687568cde13b1"
+    },
+    "services/server/go.mod": {
+      "sha256": "1e0c2e6d9cda30507b6a5dde1d33f795737e609b47124983bbf9786844cabb46"
+    },
+    "services/server/go.sum": {
+      "sha256": "83cc84cde408f45973444ecee13f40df4abac1c1272c259f463f18703cb6b012"
+    },
+    "services/agentapi/go.mod": {
+      "sha256": "b392174c8ba5e72399c7a27ed2329ef0fc97b6c6c41ed451ca2c6940985c40dd"
+    },
+    "services/agentapi/go.sum": {
+      "absent": true
+    },
+    "services/server/internal/app/integration_authority_test.go": {
+      "sha256": "9627508f7020331afb6a04c25759b120c80b77d989347ba26459ccd453456969"
+    }
+  },
+  "source_binding": "Clean exact37129450 throughout full gate; protected code/test/module/harness bytes independently matched worktree and Git objects after completion.",
+  "fixture": {
+    "codec_image_id": "sha256:34c1c2281d9fc96cf486dda8e88497ef5061e21a412c712d8ef61ca14b07031b",
+    "database_image_id": "sha256:6f7f1ad998c5d3f3ed2a4138791afa68c28692dc4d439251ed708e45c1cb0ae8",
+    "resource_preflight": {
+      "home_free_bytes": 109816688640,
+      "data_free_bytes": 292779343872,
+      "mem_available_bytes": 40468197376,
+      "cpu_limit": 2,
+      "test_memory_bytes": 2147483648,
+      "fixture_memory_bytes": 2147483648,
+      "swap_for_test_containers": false
+    },
+    "cpu_per_container": 2,
+    "memory_per_container_bytes": 2147483648,
+    "swap_per_container_bytes": 0,
+    "private_network": true,
+    "actual_postgresql_postgis_codecs_and_independent_sidecar": true
+  },
+  "cleanup": {
+    "container_absent": true,
+    "network_absent": true,
+    "credential_file_absent": true
+  },
+  "commands": {
+    "runner": "bash /home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/run-qualification.sh",
+    "official_harness": "/home/dobo/work/_worktrees/social_media_activities_app/feat__social-coverage-api-20261013/scripts/qualify-native.sh",
+    "resource_wrapper": "Only adds2CPU/2GiB/zeroSwap to Docker run; official package selection/race/codec/skip/PASS gates unchanged."
+  },
+  "previous_genuine_evidence": {
+    "affected160_source_receipt_path": "/home/dobo/work/_worktrees/social_media_activities_app/feat__social-coverage-api-20261013/docs/reviews/native-go/event-facets-checkpoint-20261013.json",
+    "affected160_source_receipt_sha256": "d4a0fdbbdddf7f089ce9208f3a1e72d991e22604edc5f9c5e7f9a1b048d67cca",
+    "failed_full21_c733_path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/history/full21-c733-stale-app-assertion/failed-checkpoint.json",
+    "failed_full21_c733_sha256": "df0f78c3424d9fa731478d514fbe932e398a3383bd9b102831ee2ac7e6e7ae4a",
+    "failed_full21_counts": {
+      "pass": 194,
+      "fail": 1,
+      "skip": 0,
+      "later_lanes_not_run": 17
+    },
+    "corrected_app35_path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/app-inventory-fix/checkpoint.json",
+    "corrected_app35_sha256": "14f091126c14830edab4a8b98b834c4f470614534d7e47e3ec557b58d4713cdb",
+    "native31_and_node4": "Historical prior source-input qualification retained; no claim of rerunning check-native on371."
+  },
+  "artifacts": {
+    "bin/docker": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/bin/docker",
+      "sha256": "2d627ecd9500d9248e97a2887e3c52946555166016844596a0f1b3999a165079",
+      "bytes": 241
+    },
+    "bootstrap.log": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/bootstrap.log",
+      "sha256": "5b2d46f349e9e364c57767d324dec52dfaa9b8e3bf31082d9c8dcc76e00a64ab",
+      "bytes": 22
+    },
+    "cleanup.json": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/cleanup.json",
+      "sha256": "332cbfe5f98a9ed57ac411783f7500a18ddf1a6880a1c6e8e7e985ec554f3e49",
+      "bytes": 91
+    },
+    "codec-image-id.txt": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/codec-image-id.txt",
+      "sha256": "8f1d6ab789309b8f62256856efa8f535c0ceac70342294b5450a74f1f9707132",
+      "bytes": 72
+    },
+    "completion.json": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/completion.json",
+      "sha256": "93c3f782fac16cc2d1a93605399960a2260d5d9bde79b8823f306c8d3d6b2a95",
+      "bytes": 1922
+    },
+    "container-id.txt": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/container-id.txt",
+      "sha256": "b12a6d9fca6e55c96646404b73803d42be942dd53a80fb947eaf1299adf9432a",
+      "bytes": 65
+    },
+    "database-image-id.txt": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/database-image-id.txt",
+      "sha256": "2c441dbf82442f777b6a9ba0a224f79c41168394fc300b01e32cf7da8818a2fc",
+      "bytes": 72
+    },
+    "database-size.txt": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/database-size.txt",
+      "sha256": "2b9222936194944c8f7c5e19bbd5e8d05e7de5860803be268b90b56ae74ac7f5",
+      "bytes": 30
+    },
+    "database-state.json": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/database-state.json",
+      "sha256": "dc3571e845910c17b63b3ac8e355bafa858df359bcd7f04e7af3e55ce2392895",
+      "bytes": 220
+    },
+    "database.log": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/database.log",
+      "sha256": "8b12e141b9cee14ff9e7d5c78df6d02043f6585eeb7e1d8ae8c148c00730628d",
+      "bytes": 14212
+    },
+    "network-id.txt": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/network-id.txt",
+      "sha256": "654fa87867cb7b9da72edb53be73adad4cd29bb7ca1f55a4ae33fb7dd7715b34",
+      "bytes": 65
+    },
+    "observed-container-resources.json": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/observed-container-resources.json",
+      "sha256": "5418490bf9d4858cd6600b11bbf1cf4d31b63469fde4369b1472668056831476",
+      "bytes": 391
+    },
+    "qualification.log": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/qualification.log",
+      "sha256": "7c4c4af67b8f909ead1d6ab298ee9bab2a8314a1a52c5f292271ce36d23db84c",
+      "bytes": 886
+    },
+    "resource-preflight.json": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/resource-preflight.json",
+      "sha256": "349893c3518a5bf7f5633918889feea31c6da89ec459e8909fb2a760a3463098",
+      "bytes": 239
+    },
+    "run-qualification.sh": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/run-qualification.sh",
+      "sha256": "b214764f7c45b7958d6ad6904c58c5a6c076e96d097ecd4d61770555de597835",
+      "bytes": 5630
+    },
+    "runner.log": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/runner.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "social-server": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/social-server",
+      "sha256": "9459a5796335ada352bb91a71b6cc232c23998c045198a40c257fae690ce8296",
+      "bytes": 40305482
+    },
+    "source-inputs.json": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/source-inputs.json",
+      "sha256": "0518848983d30883c8d6300c5e8713cd20d883a848c34973b8ba121026d27372",
+      "bytes": 1169
+    },
+    "tests/accounts.log": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/accounts.log",
+      "sha256": "b56e599214b7550c0fe3535cde4784809e42e103b794225d4725f6c83ce03407",
+      "bytes": 18120
+    },
+    "tests/accounts.test": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/accounts.test",
+      "sha256": "ded6de3dbdbf86e62d6ace5bb210945a8641e85b36fc316546d36a1b7273dd23",
+      "bytes": 29884001
+    },
+    "tests/admin.log": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/admin.log",
+      "sha256": "31f5b2bb90dc30196811d5a2eb886b328b957706caee073d0446aabca8d681e8",
+      "bytes": 8278
+    },
+    "tests/admin.test": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/admin.test",
+      "sha256": "aafc22cb84d654e07bd0f867369f9997efa8683f7349d930d53623f868f3c7e9",
+      "bytes": 30271165
+    },
+    "tests/agentapi": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/agentapi",
+      "sha256": "1b64b82710fd1c8ffbf6c1ebc6b9b8932dff68b31931339f08b242d3655bc10a",
+      "bytes": 10913791
+    },
+    "tests/app.log": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/app.log",
+      "sha256": "6563f6c3a4aa0ce4afeb21aed6e8f7de27b18719955cbbeeefe6b836b0b38f75",
+      "bytes": 8108
+    },
+    "tests/app.test": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/app.test",
+      "sha256": "64de36f44038f82d8506bc671f7dd7e11ca885f063a33e39310ab053d6caedcb",
+      "bytes": 40054616
+    },
+    "tests/backup.log": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/backup.log",
+      "sha256": "5e0452bb08eb7b461840bd4ae73b5f09dda718700ad812e56dd6f24bf02c3819",
+      "bytes": 719
+    },
+    "tests/backup.test": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/backup.test",
+      "sha256": "d40744a66e5b6e595a1986d3f2f19592d072cc1942f83a6a77fe826e0a01b59a",
+      "bytes": 15604807
+    },
+    "tests/booking.log": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/booking.log",
+      "sha256": "f719729312a2258fc094678dbd74a5099bdb374e87b23e3a29721562e6679f81",
+      "bytes": 917
+    },
+    "tests/booking.test": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/booking.test",
+      "sha256": "fcdad346b2c070ad3a14e102fba0542d66526e7e88e41695d9e0e23bc367b706",
+      "bytes": 22337602
+    },
+    "tests/budgets.log": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/budgets.log",
+      "sha256": "bf5fed50cc4bd97ec9b6e02d01fd462ee5cbab96686ceb8c1d27f89d74758efd",
+      "bytes": 2232
+    },
+    "tests/budgets.test": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/budgets.test",
+      "sha256": "c23841d3c485c8cb4ae798b448632e7dd646ec24e38eef2c4c07a84287b8a8b8",
+      "bytes": 20841086
+    },
+    "tests/catalog.log": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/catalog.log",
+      "sha256": "e24b8337fccb62af38c8c0c36d8fcf58cae5fbf49477b8ff458dd166f4f41bce",
+      "bytes": 21585
+    },
+    "tests/catalog.test": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/catalog.test",
+      "sha256": "735f77ed462ea4cf77791dd60e667ac1bb08442de653f7214334a47f7d8fc84a",
+      "bytes": 26264620
+    },
+    "tests/commands.log": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/commands.log",
+      "sha256": "6c9e59cd5b2cec4deaddde45797907f2694c8578a078fca1ab4a641e6b822b5e",
+      "bytes": 5161
+    },
+    "tests/commands.test": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/commands.test",
+      "sha256": "1e184f73b9acf47ba459ed7db12eeb6889a1d2ba2f042720666b5fd91b6e2357",
+      "bytes": 26607305
+    },
+    "tests/configuration.log": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/configuration.log",
+      "sha256": "1e061f3abd29fbd8df9299d74acd10fdd299d5da63d7fbe7a85af2127fc2847d",
+      "bytes": 20735
+    },
+    "tests/configuration.test": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/configuration.test",
+      "sha256": "088e6fd653f43d08cdcc9a2431fb9ec0ec1d62959b91f7e1cc7e7bb783cde8a6",
+      "bytes": 55611577
+    },
+    "tests/contracts.log": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/contracts.log",
+      "sha256": "7d1addf45410df1456849ebfc4f9be9e76fc57fde237b4404af27d5a86343eeb",
+      "bytes": 783
+    },
+    "tests/contracts.test": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/contracts.test",
+      "sha256": "cb4ec276174bef48642bf02b9c070ea9d10c6a64e1ec4d4708ad7acd004e008d",
+      "bytes": 8086679
+    },
+    "tests/discovery.log": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/discovery.log",
+      "sha256": "f6639a14587846d3e2404a43c168758608b994c8418769ac97306d06f260375a",
+      "bytes": 211
+    },
+    "tests/discovery.test": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/discovery.test",
+      "sha256": "53b9269cc965984099e576bd35c0dfd6c9b287e966e981502139f7be043e57e0",
+      "bytes": 22273788
+    },
+    "tests/donations.log": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/donations.log",
+      "sha256": "ddce675973116bbd6c83752c2e7e773a827145b0c836d6c9d4b6aae3743cc23b",
+      "bytes": 575
+    },
+    "tests/donations.test": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/donations.test",
+      "sha256": "266bcf60ab6489c2480885f3b81b4f87728350d4e35c3142c017998204ba6d31",
+      "bytes": 22301238
+    },
+    "tests/export.log": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/export.log",
+      "sha256": "12f1d343a8f702f7c54275a1db1107b827601f8d64612628cddbfe8f450e725e",
+      "bytes": 2415
+    },
+    "tests/export.test": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/export.test",
+      "sha256": "e07879af30ffa345dd8ce1113b454a9b85cabb8a1f3ce3aa1347cb8b3c26d653",
+      "bytes": 23127784
+    },
+    "tests/jobs.log": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/jobs.log",
+      "sha256": "81fe7b87e517d88cffa0f880fc5b71255caf552d7552bbad27a7768ec8c8a8bf",
+      "bytes": 37193
+    },
+    "tests/jobs.test": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/jobs.test",
+      "sha256": "9cb198ea2fb43b65fcb70fbecbb4cb51c0f96c12a03adbd47688d31272f57641",
+      "bytes": 26613707
+    },
+    "tests/media.log": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/media.log",
+      "sha256": "e5c4988084ef40bcd7a327384a0c48a60a972c9315cc59b88c50812b55e9a654",
+      "bytes": 16991
+    },
+    "tests/media.test": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/media.test",
+      "sha256": "4f6109b391028148555dfc9b1a6d5111bb5dcc2620a6342c2ae21adea019c37b",
+      "bytes": 26145720
+    },
+    "tests/messaging.log": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/messaging.log",
+      "sha256": "30238482fa12ad1335fd873278e38373b5192191facc2dbe3a0810afecd62daa",
+      "bytes": 16876
+    },
+    "tests/messaging.test": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/messaging.test",
+      "sha256": "6835ca5ef7c91324357b60f580af824461712c9ac91c5990e08b5bb55ddd8536",
+      "bytes": 26865461
+    },
+    "tests/notifications.log": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/notifications.log",
+      "sha256": "e3b75fc34d129030a97f62b6d8ae56f1f73c718c59b4d64b2b351ecff2c070f5",
+      "bytes": 1602
+    },
+    "tests/notifications.test": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/notifications.test",
+      "sha256": "b8df56689ecd278e56267da5e7f55343a66ddddbd96bea6091dd495259ebd008",
+      "bytes": 21412696
+    },
+    "tests/recommendations.log": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/recommendations.log",
+      "sha256": "22928c76900fa2519afad8301d4e2839c0078a019dfe39cdcff3d92d9d7a5262",
+      "bytes": 3830
+    },
+    "tests/recommendations.test": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/recommendations.test",
+      "sha256": "be1955f5d005c6523971c84413f339e76e4a89255c3aa6dc625555ed715a50b7",
+      "bytes": 22090408
+    },
+    "tests/safety.log": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/safety.log",
+      "sha256": "2ea31a5e3d8317484e67b4e56974379779b700f99ff89b578d0c746a677f2f0a",
+      "bytes": 14881
+    },
+    "tests/safety.test": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/safety.test",
+      "sha256": "d817d9de1aa4bb5dddd054cf9e44d66a2b4cab9ceabe8d3db3068df2052b24d6",
+      "bytes": 29633630
+    },
+    "tests/social.log": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/social.log",
+      "sha256": "e34110cd68a1f2b5974cb726b13f592878705e0cc1b03cab208feffdfd440c89",
+      "bytes": 19578
+    },
+    "tests/social.test": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/social.test",
+      "sha256": "3b8688c74bd5bf7bd3450d5c60d5b757153b664cbe0af965758d0228136a45ff",
+      "bytes": 24047654
+    },
+    "tests/web.log": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/web.log",
+      "sha256": "a82860f2b1905cbd3c7aedf865b3cb15be6092c9717d164cd774a01c5b3e5f50",
+      "bytes": 78370
+    },
+    "tests/web.test": {
+      "path": "/home/dobo/work/_temp/feat__social-coverage-api-20261013/social/full21/tests/web.test",
+      "sha256": "57875ab68885d8ab6694b3ffc2a7077b5968c8b12be8ca584c6d05de1aba6310",
+      "bytes": 37499810
+    }
+  },
+  "independent_final_recount": "pending root/reviewer",
+  "not_claimed": [
+    "new canonical production-image build or image vulnerability audit",
+    "hosted CI run",
+    "app-main landing/push",
+    "Social feature runtime activation",
+    "production/provider/real-child activation"
+  ]
+}

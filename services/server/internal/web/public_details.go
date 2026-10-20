@@ -103,6 +103,8 @@ func (s *Server) publicPlaceDetail(r *http.Request, a platform.Actor) (pongo2.Co
 		return nil, err
 	}
 	data["events"] = events
+	data["local_poc_content"] = spaBool(p["local_poc"]) || anyLocalPOC(events)
+	data["local_poc_past"] = s.localPOCPast(r)
 	if a.ID > 0 && a.IsActive && a.Cohort != "" && a.Cohort != "unassigned" {
 		local, err := socialRows(ctx, s.DB, `SELECT jsonb_build_object('id',a.id) FROM social_activity a JOIN accounts_user u ON u.id=a.owner_id WHERE `+social.ActivityVisibilitySQL()+` AND a.place_id=$3 AND a.status='open' AND a.starts_at>=now() ORDER BY a.starts_at,a.id LIMIT 10000`, a.ID, a.Cohort, place)
 		if err != nil {
@@ -139,7 +141,7 @@ func (s *Server) publicPlaceDetail(r *http.Request, a platform.Actor) (pongo2.Co
 		for _, combo := range combos {
 			area := spaMap(combo["area"])
 			typ := spaMap(combo["activity"])
-			if strings.EqualFold(spaText(area["city"]), spaText(p["city"])) {
+			if catalog.CityKey(spaText(area["city"])) == catalog.CityKey(spaText(p["city"])) {
 				data["related_city"] = map[string]any{"name": area["name"], "url": routeURL("things_to_do_city", area["slug"])}
 				for _, edge := range edges {
 					if spaMap(edge["activity"])["slug"] == typ["slug"] && !spaBool(edge["is_disputed"]) {
@@ -154,7 +156,7 @@ func (s *Server) publicPlaceDetail(r *http.Request, a platform.Actor) (pongo2.Co
 	return data, nil
 }
 
-var publicEventModel = ` || jsonb_build_object('created_at',e.created_at,'updated_at',e.updated_at,'activity_type',CASE WHEN t.id IS NULL THEN NULL ELSE jsonb_build_object('id',t.id,'slug',t.slug,'name',t.name,'is_active',t.is_active) END,'place',CASE WHEN p.id IS NULL THEN NULL ELSE (` + catalog.PlaceExportProjectionSQL() + publicPlaceFields + `) END)`
+var publicEventModel = ` || jsonb_build_object('local_poc',` + catalog.EventLocalPOCSQL + `,'created_at',e.created_at,'updated_at',e.updated_at,'activity_type',CASE WHEN t.id IS NULL THEN NULL ELSE jsonb_build_object('id',t.id,'slug',t.slug,'name',t.name,'is_active',t.is_active) END,'place',CASE WHEN p.id IS NULL THEN NULL ELSE (` + catalog.PlaceExportProjectionSQL() + publicPlaceFields + `) END)`
 
 const publicEventsJoin = ` FROM events_event e LEFT JOIN places_place p ON p.id=e.place_id LEFT JOIN taxonomy_activitytype t ON t.id=e.activity_type_id `
 const publicUpcomingSQL = `e.starts_at>=now() AND e.lifecycle_status IN('scheduled','rescheduled','sold_out') AND NOT e.is_tombstone AND NOT e.is_import_held`
@@ -167,7 +169,14 @@ func (s *Server) publicEvents(r *http.Request, city string, place int64, cap int
 		search = ""
 	}
 	search = strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`).Replace(search)
-	rows, err := socialRows(r.Context(), s.DB, `SELECT `+catalog.PublicEventProjectionSQL()+publicEventModel+publicEventsJoin+` WHERE `+catalog.PolicyFromContext(r.Context()).EventSQL()+` AND `+publicUpcomingSQL+` AND ($1::text='' OR t.slug=$1) AND ($2::bigint=0 OR e.place_id=$2) AND ($3::text='' OR lower(p.address_city)=lower($3)) AND ($4::text='' OR upper(e.title) LIKE '%'||upper($4)||'%' OR upper(e.description) LIKE '%'||upper($4)||'%' OR upper(p.name) LIKE '%'||upper($4)||'%') AND (NOT EXISTS(SELECT 1 FROM communities_area ar WHERE ar.slug=$5) OR EXISTS(SELECT 1 FROM communities_area ar WHERE ar.slug=$5 AND ((ar.derive_method='city' AND lower(p.address_city)=lower(ar.city))))) ORDER BY e.starts_at,e.id LIMIT $6`, activity, place, city, search, q.Get("area"), cap)
+	listed, order := publicUpcomingSQL, "e.starts_at,e.id"
+	if s.localPOCPast(r) {
+		listed, order = publicLocalPOCPastSQL, publicLocalPOCPastOrder
+	}
+	if s.localPOCPastOnly(r) {
+		listed, order = publicLocalPOCPastOnlySQL, "e.starts_at DESC,e.id"
+	}
+	rows, err := socialRows(r.Context(), s.DB, `SELECT `+catalog.PublicEventProjectionSQL()+publicEventModel+publicEventsJoin+` WHERE `+catalog.PolicyFromContext(r.Context()).EventSQL()+` AND `+listed+` AND ($1::text='' OR t.slug=$1) AND ($2::bigint=0 OR e.place_id=$2) AND ($3::text='' OR `+catalog.CityEqualSQL("p.address_city", "$3::text")+`) AND ($4::text='' OR upper(e.title) LIKE '%'||upper($4)||'%' OR upper(e.description) LIKE '%'||upper($4)||'%' OR upper(p.name) LIKE '%'||upper($4)||'%') AND (NOT EXISTS(SELECT 1 FROM communities_area ar WHERE ar.slug=$5) OR EXISTS(SELECT 1 FROM communities_area ar WHERE ar.slug=$5 AND ((ar.derive_method='city' AND `+catalog.CityEqualSQL("p.address_city", "ar.city")+`)))) ORDER BY `+order+` LIMIT $6`, activity, place, city, search, q.Get("area"), cap)
 	if err != nil {
 		return nil, err
 	}
@@ -177,6 +186,7 @@ func (s *Server) publicEvents(r *http.Request, city string, place int64, cap int
 				return nil, err
 			}
 		}
+		markLocalPOCEvent(e)
 	}
 	return rows, nil
 }
@@ -195,6 +205,7 @@ func (s *Server) publicEventDetail(r *http.Request, a platform.Actor) (pongo2.Co
 			return nil, err
 		}
 	}
+	markLocalPOCEvent(e)
 	e["get_source_display"] = strings.Title(spaText(e["source"]))
 	e["get_lifecycle_status_display"] = strings.Title(strings.ReplaceAll(spaText(e["lifecycle_status"]), "_", " "))
 	public, discoverable := spaBool(e["_public"]), spaBool(e["_discoverable"])
@@ -203,13 +214,13 @@ func (s *Server) publicEventDetail(r *http.Request, a platform.Actor) (pongo2.Co
 	if err != nil {
 		return nil, err
 	}
-	data := pongo2.Context{"user": socialActor(a), "event": e, "event_discoverable": discoverable, "event_reliability": reliability, "attribution_credit": publicCredit(e), "can_report_event": public && discoverable && eligible, "can_convene": public && discoverable && eligible && len(p) > 0, "share_targets": []any{}, "share_kind": "event", "share_obj_id": spaID(e), "canonical_url": s.publicAbsolute(r, r.URL.Path)}
+	data := pongo2.Context{"local_poc_content": e["local_poc"], "user": socialActor(a), "event": e, "event_discoverable": discoverable, "event_reliability": reliability, "attribution_credit": publicCredit(e), "can_report_event": public && discoverable && eligible, "can_convene": public && discoverable && eligible && len(p) > 0, "share_targets": []any{}, "share_kind": "event", "share_obj_id": spaID(e), "canonical_url": s.publicAbsolute(r, r.URL.Path)}
 	if public {
 		data["canonical_url"] = s.publicAbsolute(r, publicEventPath(e))
 		data["structured_data"] = publicLD(s.publicEventLD(r, e))
 		data["breadcrumb_data"] = publicLD(s.publicBreadcrumb(r, []map[string]any{{"name": "Home", "url": "/"}, {"name": "Events", "url": "/events/"}, {"name": e["title"], "url": publicEventPath(e)}}))
 		if len(p) > 0 && spaBool(spaMap(e["activity_type"])["is_active"]) {
-			areas, err := socialRows(r.Context(), s.DB, `SELECT jsonb_build_object('slug',slug,'name',name) FROM communities_area WHERE is_active AND lower(city)=lower($1) ORDER BY id LIMIT 1`, p["city"])
+			areas, err := socialRows(r.Context(), s.DB, `SELECT jsonb_build_object('slug',slug,'name',name) FROM communities_area WHERE is_active AND `+catalog.CityEqualSQL("city", "$1::text")+` ORDER BY id LIMIT 1`, p["city"])
 			if err != nil {
 				return nil, err
 			}

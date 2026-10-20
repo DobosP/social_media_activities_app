@@ -207,6 +207,7 @@ func guiPublicCapture(t *testing.T, filesystem bool) {
 				server.Renderer.CSPEnforce = config.CSPEnforce
 			}
 			trace := &guiPublicTraceLoader{delegate: server.Renderer.loader}
+			server.Renderer.loader = trace // Preserve original capture/load predicates.
 			server.Renderer.set = pongo2.NewSet("native-social", trace)
 			mux := http.NewServeMux()
 			server.Register(mux)
@@ -219,7 +220,7 @@ func guiPublicCapture(t *testing.T, filesystem bool) {
 				}
 			}
 			response := httptest.NewRecorder()
-			mux.ServeHTTP(response, request)
+			completionFrozenReferenceHandler(server, mux).ServeHTTP(response, request)
 			raw := response.Body.Bytes()
 			body := string(raw)
 			if response.Code != http.StatusOK || response.Header().Get("Content-Type") != "text/html; charset=utf-8" {

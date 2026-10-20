@@ -279,7 +279,7 @@ func (f *guiPlacesNonceFixture) render(t *testing.T, filesystem, original bool, 
 	request := httptest.NewRequest("GET", "https://gui-fixture.invalid"+fixture.uri, nil)
 	request.Header.Set("Accept-Language", "en")
 	response := httptest.NewRecorder()
-	if err := renderer.Render(response, request, fixture.template, data); err != nil {
+	if err := completionFrozenReferenceRender(renderer, response, request, fixture.template, data); err != nil {
 		t.Fatal(err)
 	}
 	policy := response.Header().Get("Content-Security-Policy-Report-Only")

@@ -435,6 +435,7 @@ func (f *guiCampaignMeterFixtureData) render(t *testing.T, filesystem, previous 
 		}
 	}
 	trace := &guiPublicTraceLoader{delegate: renderer.loader}
+	renderer.loader = trace // Retained Pongo reference trace, current native tested separately.
 	renderer.set = pongo2.NewSet("native-social", trace)
 	data, _, _ := guiCampaignMeterContext(kind)
 	if data == nil {
@@ -443,7 +444,7 @@ func (f *guiCampaignMeterFixtureData) render(t *testing.T, filesystem, previous 
 	request := httptest.NewRequest(http.MethodGet, "https://gui-fixture.invalid/campaigns/", nil)
 	request.Header.Set("Accept-Language", "en")
 	response := httptest.NewRecorder()
-	if err := renderer.Render(response, request, "web/campaigns.html", data); err != nil {
+	if err := completionFrozenReferenceRender(renderer, response, request, "web/campaigns.html", data); err != nil {
 		t.Fatal("native campaign render failed")
 	}
 	if response.Code != 200 || response.Header().Get("Content-Type") != "text/html; charset=utf-8" || response.Header().Get("Content-Security-Policy") != "" {

@@ -1,0 +1,47 @@
+{
+  "after_counts": [
+    1568,
+    754,
+    104
+  ],
+  "after_social_pid": {
+    "kind": "social",
+    "pid": 4173217,
+    "site_root": "/home/dobo/work/_temp/feat-local-poc-real-data/runtime/social",
+    "starttime": "10820590",
+    "static_dir": "/home/dobo/work/_temp/feat-local-poc-real-data/runtime/social/static"
+  },
+  "before_counts": [
+    1568,
+    754,
+    104
+  ],
+  "before_social_pid": {
+    "kind": "social",
+    "pid": 4032052,
+    "site_root": "/home/dobo/work/_temp/feat-local-poc-real-data/runtime/social",
+    "starttime": "10614918",
+    "static_dir": "/home/dobo/work/_temp/feat-local-poc-real-data/runtime/social/static"
+  },
+  "cleanup_pending": false,
+  "data_pid_unchanged": true,
+  "facets_smoke": {
+    "aliases": 2,
+    "city_buckets": 17,
+    "city_filter_count": 1103,
+    "count": 1568,
+    "local_poc": true,
+    "missing_city_count": 0,
+    "missing_place_count": 0,
+    "pagination": "passed",
+    "place_buckets": 104,
+    "status": "passed"
+  },
+  "manifest_sha256": "37878424ced5d9ec9eb1c5839343a595362f74ae8cf0c2b6e248428b20441352",
+  "owner": "local-poc-social-event-facets-runtime8",
+  "producer_data_assets_history_unchanged": true,
+  "receipt_sha256": "562ba731642ac17f83e3d6f7abe211653285c7b32ff727d103557aa7650d10e9",
+  "runtime_generation": 8,
+  "selected_release": "sha256-75caf6b0c0357ce334782c0f94d2327dd3139db4665f0a4161f924926eeaca91",
+  "status": "verified"
+}

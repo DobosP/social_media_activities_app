@@ -65,5 +65,25 @@ func Migrate(ctx context.Context, db *pgxpool.Pool) error {
 	if _, err = tx.Exec(ctx, `INSERT INTO go_backend_migrations(version) VALUES('go-shared-rate-budgets-v1'),('go-shared-rate-budgets-v2') ON CONFLICT DO NOTHING`); err != nil {
 		return err
 	}
+	if _, err = tx.Exec(ctx, roeduLicenseWidth, pgx.QueryExecModeSimpleProtocol); err != nil {
+		return err
+	}
+	if _, err = tx.Exec(ctx, `INSERT INTO go_backend_migrations(version) VALUES('go-roedu-license-500-v1') ON CONFLICT DO NOTHING`); err != nil {
+		return err
+	}
 	return tx.Commit(ctx)
 }
+
+// RO-EDU serves an item license up to 500 runes, so the imported place and
+// event credit columns widen from the Django contract's 120. Widening a varchar
+// is catalog-only (no rewrite, no data change); the guard skips the exclusive
+// lock once a column is wide enough. Commons cover licenses keep 120.
+const roeduLicenseWidth = `DO $$
+BEGIN
+	IF (SELECT atttypmod-4 FROM pg_attribute WHERE attrelid='places_place'::regclass AND attname='license_name' AND NOT attisdropped)<500 THEN
+		ALTER TABLE places_place ALTER COLUMN license_name TYPE varchar(500);
+	END IF;
+	IF (SELECT atttypmod-4 FROM pg_attribute WHERE attrelid='events_event'::regclass AND attname='license_name' AND NOT attisdropped)<500 THEN
+		ALTER TABLE events_event ALTER COLUMN license_name TYPE varchar(500);
+	END IF;
+END $$`

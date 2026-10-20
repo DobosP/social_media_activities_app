@@ -35,7 +35,7 @@
     {% endif %}
   </figure>
   <div class="place-hero-body">
-    <h1 id="place-title">{{ place_label|default:_("Unnamed place") }}</h1>
+    <h1 id="place-title">{{ place_label|default:_("Unnamed place") }}</h1>{% if place.local_poc %}<p><span class="tag fact--false">LOCAL POC — not cleared for publication</span></p>{% endif %}
     {% if category_chips %}
       {# i18n-followup: new concise aria label for top-level place topic chips. #}
       <div class="place-chip-row" aria-label="{% trans 'Activity categories' %}">
@@ -85,12 +85,12 @@
   <h2>{% trans "Upcoming here" %}</h2>
   {% for a in meetups %}{% include "web/_activity_card.html" %}{% empty %}
   <p class="muted">{% trans "No upcoming activities here yet." %}</p>{% endfor %}
-
+{% if local_poc_mode %}<p class="muted">{% if local_poc_past %}<a href="?">Upcoming events only</a>{% else %}<a href="?include_past=1">Include past events (LOCAL POC)</a>{% endif %}</p>{% endif %}
   {% if events %}
   <h2>{% trans "Events here" %}</h2>
   {% for e in events %}
     <div class="card">
-      <h3><a href="{% url 'event_detail' e.pk %}">{{ e.title }}</a></h3>
+      <h3><a href="{% url 'event_detail' e.pk %}">{{ e.title }}</a></h3>{% if e.local_poc %}<p><span class="tag fact--false">LOCAL POC — not cleared for publication</span>{% if e.local_poc_past %} <span class="tag">Past event</span>{% endif %}</p>{% endif %}
       <p class="muted">{{ e.starts_at|date:"D j M, H:i" }}</p>
     </div>
   {% endfor %}

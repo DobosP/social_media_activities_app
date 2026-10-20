@@ -141,6 +141,42 @@ func (r *Renderer) Render(w http.ResponseWriter, request *http.Request, name str
 			return renderErr
 		}
 		_, _ = output.Write(raw)
+	} else if name == "web/my_meetups.html" || name == "web/my_venues.html" {
+		raw, renderErr := r.renderCollections(request, name, defaults)
+		if renderErr != nil {
+			return renderErr
+		}
+		_, _ = output.Write(raw)
+	} else if informationTemplate(name) {
+		raw, renderErr := r.renderInformation(request, name, defaults)
+		if renderErr != nil {
+			return renderErr
+		}
+		_, _ = output.Write(raw)
+	} else if nativeTrustTemplates[name] {
+		raw, renderErr := r.renderTrust(request, name, defaults)
+		if renderErr != nil {
+			return renderErr
+		}
+		_, _ = output.Write(raw)
+	} else if publicNativeTemplate(name) {
+		raw, renderErr := r.renderPublicNative(request, name, defaults)
+		if renderErr != nil {
+			return renderErr
+		}
+		_, _ = output.Write(raw)
+	} else if nativeSeriesGaugeTemplates[name] {
+		raw, renderErr := r.renderSeriesGauges(request, name, defaults)
+		if renderErr != nil {
+			return renderErr
+		}
+		_, _ = output.Write(raw)
+	} else if name == "web/activity_form.html" || name == "web/activity_edit.html" || name == "web/activity_detail.html" || name == "web/activity_safe_exit.html" || name == "web/place_propose.html" || name == "web/place_claim.html" || name == "web/places_pending.html" || name == "web/messages.html" {
+		raw, renderErr := r.renderWorkflows(request, name, defaults)
+		if renderErr != nil {
+			return renderErr
+		}
+		_, _ = output.Write(raw)
 	} else {
 		template, parseErr := r.set.FromCache(name)
 		if parseErr != nil {
@@ -149,6 +185,10 @@ func (r *Renderer) Render(w http.ResponseWriter, request *http.Request, name str
 		if err = template.ExecuteWriter(defaults, &output); err != nil {
 			return err
 		}
+	}
+	body, err := preserveLocalPOCNotice(output.Bytes(), defaults["local_poc_mode"] == true || defaults["local_poc_content"] == true)
+	if err != nil {
+		return err
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", "private, no-cache")
@@ -162,7 +202,7 @@ func (r *Renderer) Render(w http.ResponseWriter, request *http.Request, name str
 	}
 	w.Header().Set(cspHeader, "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self' 'nonce-"+nonce+"'; style-src 'self'; img-src 'self' data: https://*.tile.openstreetmap.org; connect-src 'self' ws: wss: https://tiles.openfreemap.org; font-src 'self'; worker-src 'self'; form-action 'self'; report-uri /api/v1/ops/csp-report/; report-to csp")
 	w.Header().Set("Reporting-Endpoints", `csp="/api/v1/ops/csp-report/"`)
-	_, err = w.Write(output.Bytes())
+	_, err = w.Write(body)
 	return err
 }
 func (r *Renderer) Bootstrap(w http.ResponseWriter, request *http.Request, route, title, csrf string, data any) error {

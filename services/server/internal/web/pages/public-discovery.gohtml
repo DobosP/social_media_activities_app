@@ -1,0 +1,130 @@
+{{define "public-discovery"}}<!doctype html>
+<html lang="{{.Shell.Language}}" data-theme="{{.Shell.Theme}}" data-text="{{.Shell.Text}}" data-motion="{{.Shell.Motion}}">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+{{if .GoogleVerification}}<meta name="google-site-verification" content="{{.GoogleVerification}}">{{end}}{{if .BingVerification}}<meta name="msvalidate.01" content="{{.BingVerification}}">{{end}}
+<title>{{.Title}}</title><meta name="description" content="{{.Description}}"><meta name="robots" content="index, follow"><link rel="canonical" href="{{.Shell.Canonical}}">
+<meta property="og:site_name" content="{{.Shell.SiteName}}"><meta property="og:type" content="{{.OGType}}"><meta property="og:title" content="{{.OGTitle}}"><meta property="og:description" content="{{.OGDescription}}"><meta property="og:url" content="{{.Shell.Canonical}}"><meta property="og:locale" content="{{.OGLocale}}"><meta name="twitter:card" content="summary">
+<link rel="preload" href="/static/fonts/bricolage-grotesque-latin-ext-wght-normal.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="/static/fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/static/css/base.css"><link rel="stylesheet" href="/static/css/public-discovery-native.css"><link rel="stylesheet" href="/static/css/completion-accessibility.css">{{if .Structured}}<script nonce="{{.Nonce}}" type="application/ld+json">{{.Structured}}</script>{{end}}{{if .Breadcrumb}}<script nonce="{{.Nonce}}" type="application/ld+json">{{.Breadcrumb}}</script>{{end}}{{if eq .Kind "places"}}<link rel="stylesheet" href="/static/vendor/maplibre/maplibre-gl.css">{{end}}{{if eq .Kind "communities_graph"}}<link rel="stylesheet" href="/static/css/community-graph-vendor.css">{{end}}</head>
+<body class="public-discovery-native{{if .Signed}} has-tabbar{{end}}">
+<a class="skip-link" href="#main">{{index .Copy "Skip to main content"}}</a>
+<header class="site-header"><div class="container nav-wrap"><a class="brand" href="/"><svg class="native-brand-mark" viewBox="0 0 8 8" width="8" height="8" aria-hidden="true" focusable="false"><circle cx="4" cy="4" r="3" fill="currentColor"/></svg> {{index .Copy "Activities"}}</a>
+<input type="checkbox" id="nav-toggle" class="nav-toggle-cb"><label for="nav-toggle" class="nav-toggle"><span aria-hidden="true">☰</span> {{index .Copy "Menu"}}</label>
+<nav class="nav" aria-label="{{index .Copy "Primary"}}">{{range .Shell.Navigation}}<a class="nav-link" href="{{.URL}}">{{.Label}}</a>{{end}}
+<details class="nav-menu"><summary>{{index .Copy "Discover"}}</summary><div class="nav-panel">{{range .Navigation}}<a href="{{.URL}}">{{.Label}}</a>{{end}}</div></details><span class="spacer"></span>
+{{if .Signed}}<a class="nav-link" href="/notifications/">{{index .Copy "Notifications"}}{{if .Unread}} <span class="pill">{{.Unread}}</span>{{end}}</a><a class="nav-link" href="/messages/">{{index .Copy "Messages"}}</a>
+<details class="nav-menu nav-end"><summary>{{if .Avatar}}<img class="avatar nav-avatar" src="{{.Avatar}}" width="26" height="26" alt="">{{end}}<span class="nav-username">{{.Shell.DisplayName}}</span></summary><div class="nav-panel">{{range .AccountLinks}}<a href="{{.URL}}">{{.Label}}</a>{{end}}<div class="sep"></div><form method="post" action="/logout/" class="inline"><input type="hidden" name="csrfmiddlewaretoken" value="{{.Shell.CSRF}}"><button class="linkbtn" type="submit">{{index .Copy "Log out"}}</button></form></div></details>
+{{else}}<a class="nav-link nav-end" href="/login/">{{index .Copy "Log in"}}</a><a class="nav-link nav-cta" href="/register/">{{index .Copy "Sign up"}}</a>{{end}}</nav></div></header>
+<main class="container public-discovery-main" id="main" tabindex="-1">
+{{if .Messages}}<ul class="messages">{{range .Messages}}<li class="msg {{.Tags}}"><span role="status">{{.Text}}</span></li>{{end}}</ul>{{end}}
+{{if eq .Kind "landing"}}
+<section class="hero">
+  <h1>{{index .Copy "Meet people. Do real things. In person."}}</h1>
+  <p class="lead">{{index .Copy "A nonprofit, text-first platform for organising in-person activities &mdash; sport, outdoor, reading, board &amp; video games, culture &mdash; at real places near you. No public photo feeds, no endless scrolling, no ads."}}</p>
+  <div class="row">
+    <a class="btn" href="/register/">{{index .Copy "Get started"}}</a>
+    <a class="btn btn-secondary" href="/discover/">{{index .Copy "See what's happening"}}</a>
+    <a class="btn btn-secondary" href="/places/">{{index .Copy "Browse places"}}</a>
+  </div>
+</section>
+
+<h2>{{index .Copy "How it works"}}</h2>
+<div class="grid grid-2">
+  <div class="card"><h3>{{index .Copy "1. Find a place &amp; people"}}</h3>
+    <p>{{index .Copy "Places are already on the map (courts, parks, libraries, cafes). Tell us your interests and we suggest activities for you nearby."}}</p></div>
+  <div class="card"><h3>{{index .Copy "2. Join by vote"}}</h3>
+    <p>{{index .Copy "Ask to join an activity; current members vote you in (two-thirds by default). The group decides who joins."}}</p></div>
+  <div class="card"><h3>{{index .Copy "3. Organise &amp; chat"}}</h3>
+    <p>{{index .Copy "Create your own meetup, post in its private thread, share photos, and chat live with members &mdash; text-first, always."}}</p></div>
+</div>
+
+<div class="banner">{{index .Copy "Safe by design: people are grouped into age cohorts and only ever see and join activities within their own cohort &mdash; children interact only with similar-age peers. Age checks are simulated in this demo."}}</div>
+{{else if eq .Kind "communities_graph"}}
+<p class="muted"><a href="/communities/">← {{index .Copy "Communities (list)"}}</a></p>
+<h1>{{.Title}}</h1><p class="muted">{{index .Copy "Drag to rotate, scroll to zoom, click a node to focus, click a community to open it."}}</p>
+<div class="row u-my-half"><label class="visually-hidden" for="mz-graph-search">{{index .Copy "Search the graph"}}</label><input id="mz-graph-search" placeholder="{{index .Copy "Search the graph…"}}" autocomplete="off" class="u-flex-1"><label class="muted activity-meta-note u-nowrap"><input type="checkbox" id="mz-graph-counts" checked> {{index .Copy "show counts"}}</label></div>
+<div id="mz-graph" class="graph-canvas"></div><noscript><p class="muted">{{index .Copy "The graph needs JavaScript"}} — <a href="/communities/">{{index .Copy "browse the list instead"}}</a>.</p></noscript>
+<details class="u-mt-md"><summary class="muted">{{index .Copy "All communities (text list &mdash; always works)"}}</summary><ul class="members u-mt-sm">{{range .Communities}}<li><a href="{{.URL}}">{{.Label}}</a></li>{{else}}<li class="muted">{{index .Copy "No communities yet."}}</li>{{end}}</ul></details>
+{{else if eq .Kind "discover"}}
+<h1>{{index .Copy "Activities &amp; groups looking for people"}}</h1><p class="muted">{{index .Copy "Open adult activities and groups near you. Sign in to ask to join. Children's activities are never shown here."}}</p>
+<h2>{{index .Copy "Upcoming activities"}}</h2><div class="grid">{{range .Activities}}<article class="card"><h3>{{.Title}}</h3><p class="muted">{{.Type}} · {{.Place}}</p><p>{{.Start}}</p></article>{{else}}<p class="muted">{{index .Copy "No public activities right now &mdash; check back soon."}}</p>{{end}}</div>
+<h2>{{index .Copy "Groups"}}</h2><div class="grid">{{range .Groups}}<article class="card"><h3>{{.Title}}</h3><p class="muted">{{.Type}} · {{.Area}}</p>{{if .Description}}<p>{{.Description}}</p>{{end}}</article>{{else}}<p class="muted">{{index .Copy "No public groups right now &mdash; check back soon."}}</p>{{end}}</div><div class="row"><a class="btn" href="/register/">{{index .Copy "Join to take part"}}</a></div>
+{{else if eq .Kind "places"}}
+<h1>{{.Title}}</h1><p class="muted">{{index .Copy "Real locations where activities can happen, from open data. Click a marker to see what's on or to organise there."}}</p><p><a href="/places/list/">{{index .Copy "View as a text list (no map needed)"}} →</a>{{if .Signed}} · <a href="/places/propose/">{{index .Copy "Add a missing place"}}</a> · <a href="/places/pending/">{{index .Copy "Pending places"}}</a>{{end}}</p>
+<script nonce="{{.Nonce}}" id="places-type-vocabulary" type="application/json">{{.MapVocabulary}}</script>
+<div class="map-search" data-map-search-root><label for="map-search">{{index .Copy "Caută un loc sau o activitate"}}</label><div class="map-search-control"><input id="map-search" type="search" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="map-search-listbox" data-vocab-island="places-type-vocabulary"><button class="map-search-clear" type="button" data-map-search-clear hidden aria-label="{{index .Copy "Clear map search"}}">{{index .Copy "Clear"}}</button></div><div id="map-search-listbox" class="map-search-listbox" role="listbox" hidden></div></div>
+<div class="map-chip-row" role="group" aria-label="Place map filters">{{range .Categories}}<button class="map-chip" type="button" data-map-filter="category" data-filter-value="{{.Slug}}" aria-pressed="false">{{.Name}}</button>{{end}}<button class="map-chip" type="button" data-map-filter="has-upcoming" aria-pressed="false">Happening soon</button><button class="map-chip" type="button" data-map-filter="open-now" aria-pressed="false">{{index .Copy "Open now"}}</button></div>
+<div id="map" class="places-map" data-places-url="/api/places/?page_size=500" data-place-path="/places/" data-worker-url="/static/vendor/maplibre/maplibre-gl-csp-worker.js" data-unnamed="{{index .Copy "Unnamed place"}}" data-open-now-label="{{index .Copy "Open now"}}" data-link-label="{{index .Copy "View & organise"}} →"></div>
+{{else if eq .Kind "event_detail"}}
+<nav class="breadcrumbs" aria-label="{{index .Copy "Breadcrumb"}}"><ol><li><a href="/">{{index .Copy "Home"}}</a></li><li><a href="/events/">{{index .Copy "Events"}}</a></li><li><span aria-current="page">{{.Event.Title}}</span></li></ol></nav>
+<h1>{{.Event.Title}}</h1>{{if .Event.POC}}<p><span class="tag fact--false">LOCAL POC — not cleared for publication</span></p>{{end}}<div>{{if .Event.Type}}<span class="tag">{{.Event.Type}}</span>{{end}}</div>
+<p class="muted">{{.Event.Start}}{{if .Event.End}} – {{.Event.End}}{{end}}{{if .Event.At}}<br>{{.Event.At}}{{end}}</p>
+{{if .Event.Status}}<p><span class="tag fact--false">{{.Event.Status}}</span></p>{{end}}{{if .Event.Unverified}}<p><span class="tag fact--false">{{index .Copy "Members reported this event may have changed (cancelled, moved, or wrong time). Check before you go."}}</span></p>{{end}}
+{{template "public-paragraphs" .Event.Description}}{{if .Event.Website}}<p><a href="{{.Event.Website}}" rel="noopener noreferrer" target="_blank">{{index .Copy "Event website &rarr;"}}</a></p>{{end}}{{if .Event.Related}}<p class="muted">{{.Event.Related}}</p>{{end}}
+{{if or .Event.Credit.Attribution .Event.Credit.License .Event.Credit.URL}}<p class="muted activity-meta-note">{{index .Copy "Source credit:"}} {{.Event.Credit.Attribution}}{{if .Event.Credit.License}} · {{.Event.Credit.License}}{{end}}{{if .Event.Credit.URL}} · <a href="{{.Event.Credit.URL}}" rel="noopener noreferrer" target="_blank">{{index .Copy "source record"}}</a>{{end}}</p>{{end}}
+{{if .Event.CanReport}}<section class="card"><h2 class="u-mt-0">{{index .Copy "Is this event wrong?"}}</h2><form method="post" action="{{.Event.ReportURL}}" class="inline"><input type="hidden" name="csrfmiddlewaretoken" value="{{.Shell.CSRF}}"><button class="btn btn--light" name="kind" value="cancelled">{{index .Copy "Cancelled"}}</button><button class="btn btn--light" name="kind" value="moved">{{index .Copy "Moved"}}</button><button class="btn btn--light" name="kind" value="wrong_time">{{index .Copy "Wrong time"}}</button></form><p class="muted u-text-sm">{{index .Copy "If enough members report it, we'll flag the event and stop showing it. We never show who reported."}}</p>{{if .Staff}}<form method="post" action="{{.Event.ResetURL}}" class="inline"><input type="hidden" name="csrfmiddlewaretoken" value="{{.Shell.CSRF}}"><button class="btn btn-sm btn-secondary" type="submit">{{index .Copy "Clear reports (staff)"}}</button></form>{{end}}</section>{{end}}
+{{if .Event.CanOrganize}}<p><a class="btn" href="{{.Event.OrganizeURL}}">{{index .Copy "Organise an activity to go together"}}</a></p>{{end}}{{if .Event.CanConvene}}<p><a class="btn btn-secondary" href="{{.Event.GaugeURL}}">{{index .Copy "I'd go if someone convened &mdash; gauge interest"}}</a></p>{{end}}{{template "public-share" .Event.Share}}
+{{else if eq .Kind "open_data"}}
+<h1>{{index .Copy "Open data"}}</h1>
+<p class="muted">{{index .Copy "The venues, events and activity taxonomy behind this site are open data &mdash; free to read, cite and build on. This page lists what's here, how it updates, the licence, and the machine-readable ways to access it."}}</p>
+
+<div class="card">
+  <h2 class="u-mt-0">{{index .Copy "What's in the dataset"}}</h2>
+  <ul class="members">
+    <li>{{index .Copy "Public venues in Cluj-Napoca (parks, libraries, sports venues), seeded from open data."}}</li>
+    <li>{{index .Copy "Events: what's happening at those venues, soonest first."}}</li>
+    <li>{{index .Copy "Activity taxonomy: the categories and activity types used to tag venues and events."}}</li>
+    <li>{{index .Copy "Public adult opt-in activity cards &mdash; meetups their organizers chose to list for anonymous discovery. Child and teen meetups are never included: they require a verified, cohort-isolated account and are intentionally kept out of this dataset."}}</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h2 class="u-mt-0">{{index .Copy "How it updates"}}</h2>
+  <p class="muted">{{index .Copy "Venues and events are refreshed periodically from their sources (OpenStreetMap, Overture Maps, RO-EDU, venue calendars, and staff/community edits). There is no live push feed &mdash; poll the feeds or JSON API on a reasonable schedule (see the rate limit below)."}}</p>
+</div>
+
+<div class="card" id="licensing">
+  <h2 class="u-mt-0">{{index .Copy "Licensing & attribution"}}</h2>
+  <p class="muted">{{index .Copy "Venue and event records carry their own source attribution and licence where known &mdash; for example, OpenStreetMap contributors under the Open Database Licence (ODbL), the Overture Maps Foundation, or RO-EDU. Each place or event page, and the corresponding JSON API record, shows that record's specific attribution: check the record, not this page, for the authoritative credit. Where no source licence applies, content is offered on the same open terms as the rest of this nonprofit's public pages &mdash; free to read, cite and reuse with attribution."}}</p>
+</div>
+
+<div class="card">
+  <h2 class="u-mt-0">{{index .Copy "Machine access"}}</h2>
+  <ul class="members">
+    <li><a href="/events/feed/">{{index .Copy "Events feed (RSS)"}}</a></li>
+    <li><a href="/events/feed/atom/">{{index .Copy "Events feed (Atom)"}}</a></li>
+    <li><a href="/api/v1/events/">{{index .Copy "Public events JSON API"}}</a> &mdash; {{index .Copy "filter with ?place=, ?activity=, ?city=, ?from=/?to=, ?q=, ?near_lon=&near_lat=&radius_m=, ?include_past="}}</li>
+    <li><a href="/api/v1/places/">{{index .Copy "Public places JSON API"}}</a> &mdash; {{index .Copy "filter with ?activity=, ?city=, ?near_lon=&near_lat=&radius_m="}}</li>
+    <li><a href="/api/v1/discovery/near-me/">{{index .Copy "Places near a point"}}</a> &mdash; {{index .Copy "anonymous discovery"}}</li>
+    <li><a href="/api/v1/discovery/happening/">{{index .Copy "What's happening near a point"}}</a> &mdash; {{index .Copy "anonymous discovery"}}</li>
+    <li><a href="/api/v1/discovery/public/activities/">{{index .Copy "Public adult activities looking for people"}}</a></li>
+    <li><a href="/api/v1/discovery/public/groups/">{{index .Copy "Public adult standing groups looking for people"}}</a></li>
+    <li><a href="/api/schema/">{{index .Copy "OpenAPI schema"}}</a></li>
+    <li>{{index .Copy "High-volume agent API (where deployed): /agent/v1/ &mdash; a cached, read-only mirror of the public data, with its own OpenAPI schema at /agent/v1/openapi.json."}}</li>
+    <li><a href="/llms.txt">llms.txt</a></li>
+    <li><a href="/sitemap.xml">{{index .Copy "Sitemap"}}</a></li>
+  </ul>
+  <p class="muted">{{index .Copy "Anonymous requests are rate-limited (60 requests/minute) &mdash; please cache responses and poll politely."}}</p>
+</div>
+
+{{if .Snapshot}}
+<div class="card">
+  <h2 class="u-mt-0">{{index .Copy "Bulk snapshot downloads"}}</h2>
+  <p class="muted">{{index .Copy "For a bulk pull instead of paging the API, download the periodically-generated snapshot files:"}}</p>
+  <ul class="members">
+    <li><a href="/open-data/snapshot/manifest.json">manifest.json</a> &mdash; {{index .Copy "what's in the snapshot, and when it was generated"}}</li>
+    <li><a href="/open-data/snapshot/events.json">events.json</a></li>
+    <li><a href="/open-data/snapshot/places.json">places.json</a></li>
+    <li><a href="/open-data/snapshot/activities.json">activities.json</a></li>
+    <li><a href="/open-data/snapshot/taxonomy.json">taxonomy.json</a></li>
+  </ul>
+</div>
+{{end}}
+{{else if eq .Kind "place_detail"}}{{template "public-place-detail" .}}{{end}}
+</main>
+{{if .Signed}}<nav class="tabbar" aria-label="{{index .Copy "Menu"}}"><a href="/">{{index .Copy "Home"}}</a><a href="/activities/">{{index .Copy "Browse"}}</a><a class="tab-cta" href="/activities/new/">{{index .Copy "Organize"}}</a><a href="/messages/">Chat</a><a href="/you/">{{index .Copy "Profile"}}</a></nav>{{end}}
+<footer class="site-footer"><div class="container"><p>{{.FooterIntro}} <strong>{{index .Copy "Demo environment: do not enter real personal data."}}</strong></p><nav class="footer-links" aria-label="{{index .Copy "Privacy"}}">{{range .Shell.Footer}}<a href="{{.URL}}">{{.Label}}</a> {{end}}</nav>
+<form method="post" action="/i18n/setlang/" class="inline lang-switch"><input type="hidden" name="csrfmiddlewaretoken" value="{{.Shell.CSRF}}"><input type="hidden" name="next" value="{{.LanguageNext}}"><label for="public-discovery-language">{{index .Copy "Language"}}</label><select id="public-discovery-language" name="language" data-auto-submit><option value="en"{{if .Shell.English}} selected{{end}}>English</option><option value="ro"{{if not .Shell.English}} selected{{end}}>Română</option></select><noscript><button class="linkbtn" type="submit">{{index .Copy "Set language"}}</button></noscript></form></div></footer>
+<script nonce="{{.Nonce}}" src="/static/js/hovercard.js" defer></script><script nonce="{{.Nonce}}" id="site-js" src="/static/js/site.js" defer{{if .Signed}} data-meetups-owner="{{.PublicID}}"{{end}}></script>{{if eq .Kind "places"}}<script nonce="{{.Nonce}}" src="/static/vendor/maplibre/maplibre-gl-csp.js"></script><script nonce="{{.Nonce}}" src="/static/js/places-map.js" defer></script>{{else if eq .Kind "communities_graph"}}<script nonce="{{.Nonce}}" src="/static/js/vendor/3d-force-graph-csp.min.js" defer></script><script nonce="{{.Nonce}}" src="/static/js/community-graph.js" defer></script>{{end}}</body></html>{{end}}
+{{define "public-paragraphs"}}{{range .}}<p>{{range $i,$line := .}}{{if $i}}<br>{{end}}{{$line}}{{end}}</p>{{end}}{{end}}
+{{define "public-share"}}{{if .Share.Targets}}<details class="share-box"><summary class="muted">{{index .Copy "Share"}}</summary><form method="post" action="/share/" class="stack u-form-narrow"><input type="hidden" name="csrfmiddlewaretoken" value="{{.CSRF}}"><input type="hidden" name="kind" value="{{.Share.Kind}}"><input type="hidden" name="obj_id" value="{{.Share.ObjectID}}"><input type="hidden" name="next" value="{{.Next}}"><label for="share-target-{{.Share.ObjectID}}">{{index .Copy "To one of your activity chats"}}</label><select id="share-target-{{.Share.ObjectID}}" name="target">{{range .Share.Targets}}<option value="{{.ID}}">{{.Label}}</option>{{end}}</select><label class="visually-hidden" for="share-note-{{.Share.ObjectID}}">{{index .Copy "Add a note (optional)"}}</label><input id="share-note-{{.Share.ObjectID}}" name="note" maxlength="280" placeholder="{{index .Copy "Add a note (optional)"}}"><button class="btn btn-sm" type="submit">{{index .Copy "Share"}}</button><p class="helptext">{{index .Copy "To share in a private message, copy this page's link and paste it in the chat."}}</p></form></details>{{end}}{{end}}
