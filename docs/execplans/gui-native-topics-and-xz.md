@@ -1,7 +1,7 @@
 # Native self Topics and bounded source transport
 
 Date: 2026-10-20
-State: exact20source applied;focused checks pass with19 pre-existing no-DSN skips;clean producer/fullPG/desktop pending.
+State: exact S2 independently qualified by completePG7;finite desktop methods prepared,actual desktop pending.
 
 This selected slice follows [ADR-0069](../adr/0069-native-self-topics.md) and
 [ADR-0070](../adr/0070-bounded-xz-git-source-transport.md). Actual beforeepoch is
@@ -70,3 +70,9 @@ source-only, and future application/producer/fullPG/UI results remain unknown.
 ## Applied-source focused checkpoint
 
 Earlier source-only checkpoints above remain historical. Applied exact whole-reviewed68fe231f Topics/core/test-preservation/XZ source. Focused race runf5f488cb passed32roots/117named,including all8newTopics roots;19pre-existing database-dependent roots were skipped without a DSN,including the registered topics/guardian and SPA roots,so those remain mandatory zero-skip checks in completePG7. Affected vet web+app,mechanical format10Go/AST2Python,docs69 and whitespace pass;no race warning. Source-selected4XZcontrols and exact fourth-root-only memlimit-removal sensitivity1cbc are independently accepted in68fe;these tiny fake-Git fixtures do not qualify a new producer. Exact whole-SHA XZ/Git blob-mode-PAX preflight,complete affectedPG7,53fresh literal prior bodies and finite desktop qualification remain pending. No benchmark,new policy/main/milestone/production claim.
+
+## Native qualification and finite desktop preparation
+
+Complete affectedPG7 on exactS2 1bde5522 is independently acceptedbce8623c/result6057d189:491roots1478named,zero failures/skips/race,all483/1435prior identities plus8Topics roots43named,341commands697artifacts2311sourcefiles/15roles7DB/privatePGcleanup. All19 previously unexecuted no-DSN roots now pass in PG. Whole strictXZ/Gitblob-mode-PAX matches preflight0384 and rawf707;native source publicationb7814d48 is exact S2. Finite8signedJS8noJS/24strictAxe/53fresh literal prior bodies remains unexecuted. No benchmark,new authority or milestone acceptance.
+
+The source bridge admits only five new method paths plus STATUS and this plan. All other native product,qualification driver,old helpers/assets/catalogues/dependencies remain byte-exact S2. Source-proposal checkpoints above stay historical.

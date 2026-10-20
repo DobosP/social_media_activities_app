@@ -1,0 +1,227 @@
+package web
+
+// Absent virtual source only. Fixed synthetic current producer-shaped maps;
+// no DB,session,credential,real preference,mutation or old bridge invocation.
+import (
+	"bytes"
+	"encoding/base64"
+	"encoding/json"
+	"flag"
+	"html"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"regexp"
+	"strings"
+	"testing"
+
+	"github.com/DobosP/social_media_activities_app/services/server/internal/platform"
+	"github.com/flosch/pongo2/v6"
+)
+
+var topicsQAProducer = flag.String("topics-ui-producer-source", "", "independently qualified new native source")
+var topicsQAQualifierSHA = flag.String("topics-ui-qualifier-source-sha256", "", "parent-admitted immutable qualifier digest")
+var topicsQAOutput = flag.String("topics-ui-qa-output-dir", "", "fresh owned output")
+var topicsQAModes = []string{"topics-empty-en", "topics-none-ro", "topics-selected-en", "topics-dark-ro", "topics-contrast-ro", "topics-false-membership-en", "topics-unknown-chosen-ro", "topics-escaped-ro"}
+
+func topicsQABridge(t testing.TB, root string) accountCenterQABridgeProof {
+	t.Helper()
+	name := filepath.Join(root, "tools/gui-native-topics/qualify.py")
+	input, err := os.OpenRoot(root)
+	if err != nil {
+		t.Fatal("current qualifier root unavailable")
+	}
+	file, err := input.Open("tools/gui-native-topics/qualify.py")
+	input.Close()
+	if err != nil {
+		t.Fatal("current qualifier source unavailable")
+	}
+	raw, err := readRendererFSFile(file, 1<<20)
+	if err != nil || !regexp.MustCompile(`^[0-9a-f]{64}$`).MatchString(*topicsQAQualifierSHA) || groupDetailQAHash(raw) != *topicsQAQualifierSHA {
+		t.Fatal("parent-admitted immutable qualifier source required before child")
+	}
+	const runner = "import sys; p=sys.argv[1]; source=sys.stdin.buffer.read(1048577); assert len(source)<=1048576; sys.argv=[p]+sys.argv[2:]; exec(compile(source,p,'exec'),{'__file__':p,'__name__':'__main__'})"
+	command := exec.Command("python3", "-I", "-c", runner, name, "--repo", root, "--producer-source", *topicsQAProducer, "--check-bridge")
+	command.Stdin = bytes.NewReader(raw)
+	result, err := command.Output()
+	var proof accountCenterQABridgeProof
+	if err != nil || json.Unmarshal(result, &proof) != nil || proof.Producer != *topicsQAProducer || !regexp.MustCompile(`^[0-9a-f]{40}$`).MatchString(proof.Head) || len(proof.Product) < 2000 || len(proof.Paths) != len(proof.Product)+5 {
+		t.Fatal("new topics full current-source admission refused")
+	}
+	return proof
+}
+
+func topicsQAFixture(t testing.TB, mode string) (*http.Request, pongo2.Context) {
+	t.Helper()
+	lang := "en"
+	if strings.HasSuffix(mode, "-ro") {
+		lang = "ro"
+	}
+	request := httptest.NewRequest(http.MethodGet, "https://topics.example/topics/", nil)
+	request.Header.Set("Accept-Language", lang)
+	actor := platform.Actor{ID: 941, PublicID: "55555555-5555-4555-8555-555555555941", Username: "synthetic-topics", DisplayName: `Synthetic <label> & "person"`, Cohort: "adult", AgeBand: "adult", IsActive: true}
+	request = platform.WithActor(request, actor)
+	categories := []map[string]any{{"slug": "synthetic-movement", "name": "Synthetic movement", "description": "Generated topic detail."}, {"slug": "synthetic-reading", "name": "Synthetic reading", "description": ""}, {"slug": "synthetic-culture", "name": "Synthetic culture", "description": "Generated third detail."}}
+	chosen := map[string]bool{}
+	unread, connections := 0, false
+	theme, text, motion := "light", "normal", "reduce"
+	switch mode {
+	case "topics-empty-en":
+		categories, theme, motion = []map[string]any{}, "auto", "auto"
+	case "topics-none-ro":
+	case "topics-selected-en":
+		chosen["synthetic-movement"], chosen["synthetic-culture"] = true, true
+		text, motion, unread, connections = "large", "full", 1, true
+	case "topics-dark-ro":
+		chosen["synthetic-reading"] = true
+		theme, text, unread = "dark", "large", 3
+	case "topics-contrast-ro":
+		for _, row := range categories {
+			chosen[row["slug"].(string)] = true
+		}
+		theme, text, unread, connections = "contrast", "larger", 9, true
+	case "topics-false-membership-en":
+		chosen["synthetic-movement"] = false
+		theme, motion = "auto", "auto"
+	case "topics-unknown-chosen-ro":
+		categories = []map[string]any{}
+		chosen["synthetic-unavailable"] = true
+		theme, text = "contrast", "large"
+	case "topics-escaped-ro":
+		categories[0] = map[string]any{"slug": `synthetic-" onmouseover="payload`, "name": `<script>topic</script>`, "description": `<img src=x onerror=payload>`}
+		chosen[categories[0]["slug"].(string)] = true
+		theme, text, unread = "dark", "larger", 2
+	default:
+		t.Fatal("undeclared synthetic topics state")
+	}
+	avatar := "data:image/svg+xml;base64," + base64.StdEncoding.EncodeToString([]byte(`<svg xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="3"/></svg>`))
+	data := pongo2.Context{"categories": categories, "chosen": chosen, "unread_notifications": unread, "has_guardians": false, "connections_enabled": connections,
+		"language": lang, "display_theme": theme, "display_text": text, "display_motion": motion,
+		"csrf": "synthetic-topics-ui-csrf", "site_name": "Synthetic <site> & topics", "canonical_url": "https://topics.example/topics/", "avatar_uri": avatar, "PRIVATE_extra": "PRIVATE-must-not-render"}
+	// There is deliberately no data.user: actual topicPage uses Renderer
+	// defaults,not AccountView's id/pk/is_active/guardian snapshot.
+	if mode == "topics-escaped-ro" {
+		data["messages"] = []socialMessage{{"message": `Synthetic <script>notice</script> & source.`, "tags": "info"}}
+	}
+	return request, data
+}
+
+func topicsQAExpected(t testing.TB, r *Renderer, request *http.Request, data pongo2.Context) map[string]any {
+	t.Helper()
+	lang := data["language"].(string)
+	tr := func(message string) string { return html.UnescapeString(r.catalog.translate(lang, message, 1)) }
+	actor, signed := platform.ActorFrom(request)
+	if !signed || data["user"] != nil || request.Method != http.MethodGet {
+		t.Fatal("only signed current-default synthetic topic GET contexts")
+	}
+	chosen := data["chosen"].(map[string]bool)
+	fields := []map[string]any{}
+	for _, row := range data["categories"].([]map[string]any) {
+		slug := row["slug"].(string)
+		_, checked := chosen[slug]
+		fields = append(fields, map[string]any{"name": "topics", "type": "checkbox", "value": slug, "checked": checked, "label": row["name"], "detail": row["description"]})
+	}
+	messages := []string{}
+	if rows, ok := data["messages"].([]socialMessage); ok {
+		for _, row := range rows {
+			messages = append(messages, row["message"])
+		}
+	}
+	return map[string]any{"signed": true, "renderer_default_user": true, "source_method": request.Method, "language": lang,
+		"title": tr("Your topics"), "site": data["site_name"], "canonical": data["canonical_url"], "path": request.URL.Path,
+		"actor_label": actor.DisplayName, "owner": actor.PublicID, "avatar_uri": data["avatar_uri"], "connections": data["connections_enabled"], "unread": data["unread_notifications"],
+		"intros": []string{tr("Pick the kinds of activity you'd like your suggestions to lean toward. This is your hand on the algorithm &mdash; a setting you choose, never guessed from what you click."), tr("It only nudges the order and adds an honest &ldquo;matches your chosen topics&rdquo; note. It never hides anything: you'll still see everything happening for your age group, whether or not you pick any topics.")},
+		"groups": []map[string]any{{"legend": tr("Topics to lean toward"), "field_count": len(fields)}}, "fields": fields, "messages": messages,
+		"feed": len(chosen) != 0, "feed_label": tr("see your feed"), "empty_label": tr("No topics are available yet."), "save_label": tr("Save topics"), "script_sources": []string{"/static/js/hovercard.js", "/static/js/site.js"}}
+}
+
+func TestSocialTopicsQAExport(t *testing.T) {
+	root, err := filepath.Abs("../../../..")
+	if err != nil {
+		t.Fatal(err)
+	}
+	bridge := topicsQABridge(t, root)
+	before := groupDetailQASources(t, root, bridge.Paths)
+	output := *topicsQAOutput
+	if !filepath.IsAbs(output) || !strings.Contains(output, "/_temp/") {
+		t.Fatal("owned output required")
+	}
+	parent, err := filepath.EvalSymlinks(filepath.Dir(output))
+	if err != nil || parent != filepath.Dir(output) {
+		t.Fatal("canonical output parent required")
+	}
+	if err = os.Mkdir(output, 0700); err != nil {
+		t.Fatal(err)
+	}
+	r := NewRenderer(root)
+	states, norm := []map[string]any{}, []map[string]any{}
+	for _, mode := range topicsQAModes {
+		request, data := topicsQAFixture(t, mode)
+		expected := topicsQAExpected(t, r, request, data)
+		semanticBefore, err := json.Marshal(data)
+		if err != nil {
+			t.Fatal(err)
+		}
+		response := httptest.NewRecorder()
+		if err = r.Render(response, request, "web/topic_preferences.html", data); err != nil {
+			t.Fatal("current topics rendering unavailable")
+		}
+		body, headers, n := notificationInboxQANormalize(t, response, "synthetic-topics-ui-nonce")
+		n["name"] = mode
+		semanticAfter, err := json.Marshal(data)
+		if err != nil || !bytes.Equal(semanticBefore, semanticAfter) || bytes.Contains(body, []byte("PRIVATE-")) || bytes.Contains(body, []byte("<style")) || bytes.Contains(body, []byte("<script>topic")) {
+			t.Fatal("source mutation or private/active fixture leak")
+		}
+		groupDetailQAWrite(t, filepath.Join(output, mode+".html"), body)
+		states = append(states, map[string]any{"name": mode, "language": data["language"], "theme": data["display_theme"], "text": data["display_text"], "motion": data["display_motion"], "bytes": len(body), "sha256": groupDetailQAHash(body), "canonical": expected["canonical"], "synthetic_csrf": data["csrf"], "renderer_headers": headers, "expected": expected, "synthetic_source_sha256": groupDetailQAHash(semanticBefore)})
+		norm = append(norm, n)
+	}
+	// Original helper bodies only;never their old bridge/export entrypoints.
+	prior := accountCenterQAPrior(t, root, output, r)
+	for _, kind := range []string{"account-center", "display-access"} {
+		if err = os.Mkdir(filepath.Join(output, kind), 0700); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, mode := range accountCenterQAModes {
+		request, name, data := accountCenterQAFixture(t, mode)
+		response := httptest.NewRecorder()
+		if err = r.Render(response, request, name, data); err != nil {
+			t.Fatal("current prior account render refused")
+		}
+		body, _, _ := notificationInboxQANormalize(t, response, "synthetic-account-center-ui-nonce")
+		name = "account-center/" + mode + ".html"
+		groupDetailQAWrite(t, filepath.Join(output, name), body)
+		prior = append(prior, map[string]any{"kind": "account-center", "name": mode, "path": name, "bytes": len(body), "sha256": groupDetailQAHash(body), "equal": false})
+	}
+	for _, mode := range displayAccessQAModes {
+		request, name, data := displayAccessQAFixture(t, mode)
+		response := httptest.NewRecorder()
+		if err = r.Render(response, request, name, data); err != nil {
+			t.Fatal("current prior display/access render refused")
+		}
+		body, _, _ := notificationInboxQANormalize(t, response, "synthetic-display-access-ui-nonce")
+		name = "display-access/" + mode + ".html"
+		groupDetailQAWrite(t, filepath.Join(output, name), body)
+		prior = append(prior, map[string]any{"kind": "display-access", "name": mode, "path": name, "bytes": len(body), "sha256": groupDetailQAHash(body), "equal": false})
+	}
+	if len(prior) != 53 {
+		t.Fatal("all53 newly rendered prior bodies required")
+	}
+	after := groupDetailQASources(t, root, bridge.Paths)
+	left, _ := json.Marshal(before)
+	right, _ := json.Marshal(after)
+	if !bytes.Equal(left, right) || topicsQABridge(t, root).Head != bridge.Head {
+		t.Fatal("whole current source changed during export")
+	}
+	manifest := map[string]any{"schema": 1, "PG_producer_source": *topicsQAProducer, "UI_method_source": bridge.Head, "source_unchanged": true, "sources_before": before, "sources_after": after, "states": states, "previous_body_candidates": prior,
+		"normalization":          map[string]any{"schema": 1, "kind": "render-nonce-only", "replacement": "synthetic-topics-ui-nonce", "states": norm},
+		"baseline_keeper_sha256": "bc10a80ae1a9b0f404e9434f2a0065d941a0cb4a336d5ea06eb39032da09c7ea", "account_baseline_keeper_sha256": "e31b656ba310cb09639a6ab7e1a2a2dc8d305e17ae7a1f30ce3c8bc5ca3bee26", "scope": "Eight fixed signed synthetic topic GET contexts;53fresh prior bodies require literal equality. No session/credential/action/DB/browser input,public topic HTML or benchmark."}
+	raw, err := json.MarshalIndent(manifest, "", "  ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	groupDetailQAWrite(t, filepath.Join(output, "fixtures.json"), append(raw, '\n'))
+}
