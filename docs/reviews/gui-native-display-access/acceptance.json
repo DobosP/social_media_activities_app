@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "status": "ACCEPT_BOUNDED_NATIVE_DISPLAY_ACCESS_PREFERENCES_EXACT_S_T2_WITH_EXPLICIT_POLISH_LIMITS",
+  "verdict": "ACCEPT_BOUNDED_FUNCTIONAL_PRESENTATION_NOT_FINAL_DESIGN_OR_ACTIVATION",
+  "findings": [],
+  "reviewer": "/root/account_center_source_review; independent actual/feature evidence reviewer, not native core/UI-method author or runtime operator; native whole-source independence is Teacher17ace.",
+  "source_sha": "e0065ca92ecff73d8c1250a2af505be7b8535edd",
+  "source_tree": "8a416b563b0876e7b9dc5240b0dfb818eebb7fab",
+  "UI_method_source": "d2cd4a883ae50225a86bae7590d55c57989a10cd",
+  "UI_method_tree": "3da55d29ea7076ea251db06163c90169a07e2f0a",
+  "independent_native_whole_source_review_sha256": "17ace96ba6716207d28cb5b351aebbe2e8767eac37376dd79a8c67c03fe707aa",
+  "actual_complete7_result_sha256": "6169a0f162852654958aec6f36bb9a8abe2099dd4f3f2b5cd1f94f8f33cf106e",
+  "actual_complete7_review_sha256": "176b83f776c2301dbc8f3a877ea3a44b5a72230791a9f640fdd1021ea47a38e5",
+  "actual_UI_result_sha256": "4984f7895cfd378c186a995ed1886257d6f63f55cc73a68acd8ad3385be4f836",
+  "actual_UI_desktop_sha256": "10060e952b27683917e3d94ddfc2148b375acfd80df525ed9da2c81ab33ce8ac",
+  "actual_UI_review_sha256": "b3526ecfccefe6ef22491d71ed1ab36c16c8fa43be10b94b82ff7772df37e801",
+  "actual_UI_fixture_manifest": {
+    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/da-ui/run-e0065ca92ecf-5f7fb613-4034-41bc-9d40-76a329f33365/fixtures/fixtures.json",
+    "sha256": "5ad6a57e64bdbbd8aeec43e12b50289a53e97972dd221ec8f25c99e9c0550097"
+  },
+  "actual_UI_qualified_run": "/home/dobo/work/_temp/feat__gui-app-migration-a/da-ui/run-e0065ca92ecf-5f7fb613-4034-41bc-9d40-76a329f33365",
+  "UI_source_operational_review_sha256": "11b84d209286659a8ddc04d52ac84b2005a7cc2771a718f5c50990ca524eaabd",
+  "UI_operational_P_sha256": "d5c07bc668a3ef531b3c072d3e4e4f62c2e1119e27a6d783cf826aff81b6fc73",
+  "current_method_sha256": {
+    "desktop-qa.mjs": "4ed67b91fcb581736e0272f01b5c2720f2c340b0307b400deff2b0edf5fc2539",
+    "export_test.go.txt": "21be13a4272c61b5ef2ab72ac1761ae69d219117d8fe71bf10eabec602c69810",
+    "qualify.py": "caf6895f23c3356ea1f03535f189be1abbb0c0e819182c1696fdbb95ff9bc3e1"
+  },
+  "native_display_input_hashes": {
+    "services/server/internal/web/display_access_native.go": "4da9a9990ac71213248b2908b5466747eb663e2ea647e5d0992d36131c9bdd0e",
+    "services/server/internal/web/pages/display-access.gohtml": "dd3ce6f80e7a4e97d0364962bf98a6bc6b8b511f3e0d38edf1838621bfcd7864",
+    "services/server/internal/web/display_access_native_test.go": "6c1a2c20a45b13926f84fdb8163a5c31f0d2d108ea7f3b664b552b3478d1874d",
+    "static/css/display-access-native.css": "4edce6964bdf8e5a7390b672d473bd3f87dbb9c1e22ce240606ff1c8cc1468e1"
+  },
+  "Root_visual_review_sha256": "534f4c9f12d2436572c5c45fe14443765d1385f1fc8a4a8559a746c330d2a6fb",
+  "accepted_behavior": [
+    "Exact /display/ and /access/ HTML dispatch uses typed cached Go templates; existing view/services/handlers,auth/CSRF/audit,cookie and SPA behavior remain the authority. Renderer projection adds no account/self/unread query or new identity/guardian policy.",
+    "Public/signed display preserves theme/text/motion defaults,device choices,locale and original shell flags;access preserves the four self booleans,quiet/unknown-accessibility disclosure and distinct ordinary GET versus persisted POST-error context. Actual App tests cover anonymous/session/CSRF/method/isolation/audit/error/SPA paths; synthetic browser forms are observed,not submitted.",
+    "Native exactS complete affectedPG7 independently passes483roots1435named/zero failures-skips-race/all469/1395 priorL2 identities plus14new roots. Actual342commands699artifacts/15roles7DB/privatePG cleanup and unchanged strict historical test/source inverses are retained in176b.",
+    "Fresh T2 UI independently passes8JS+8noJS/21strictwhole-documentAxe462 passing rule observations/zero violations-incomplete,114keyboard42FormData/104localGET88assets/94artifacts/ownedcleanup. Eight noJS schedulers close error-free while product JavaScript stays disabled;all45 prior bodies literally match full1689bc10+2587e31 physical PAX proof.",
+    "Generated-only avatar URI/emptyalt remains exact;actual26px source attributes and border-box are distinct from24px content properties. All8 primaryJS PNGs equal the first run;the V3 checker repair changes observation/instrumentation only,not native product rendering."
+  ],
+  "tracked_polish_limits": [
+    "Footer links remain present/individually functional by Root inspection but visually cramped;spacing needs a separately scoped CSS/product qualification. Current browser run observes href/form structure and makes no navigation/action submission.",
+    "Existing Romanian catalogue still falls back to English for the hearing-loop label and existing Gauge interest/Open data copy. No frozen catalogue/content edit or complete translation/final content/compliance ruling is accepted."
+  ],
+  "preserved_history": "Firstprimaryfdf remainsFAIL;its avatar-content measurement and noJS RAF/font phase errors are not upgraded. Successful noJS diagnostic2fc/819b only proves a bounded mechanism;first socketpath launch failure and original sandbox-control EPERM failure remain separate history. Fresh V3 control6ec and actualUI4984 are distinct later evidence.",
+  "performance_scope": "No new timing/body benchmark was requested. Cached Go rendering is an implementation choice here;no comparative HTTP/CPU/body cost or general efficiency claim is accepted. Earlier mixed account measurements remain historical and unmodified.",
+  "storage_temporal_scope": "At this acceptance,the latest nativeS source/binaries/all699 PG artifacts,current94-artifact UI and the referenced prior canonical archives/manifests remain physical. No new display keeper/archive or cleanup has been performed by this review. Future exact retention/availability and publication metadata require their own records;deleted paths from earlier accepted cleanups stay unavailable.",
+  "publication_scope": "May later be copied byte-for-byte as canonical acceptance.json;contains no own digest or future closing/remote publication claim. Native sourceS publication4b064466 is separate from the still-local UI method epoch at this review. No main push,Teacher/Social GUI milestone,production,provider/government/legal-parent/real-child activation.",
+  "evidence_scope": "Fixed fictional display maps and local readonly fixture server only;actual save/permissions are exercised separately in fullPG/App evidence. This is functional migration acceptance with explicit polish limits,not final design,complete translation,legal or accessibility certification.",
+  "observed_utc": "2026-10-20T11:48:56.871139+00:00"
+}

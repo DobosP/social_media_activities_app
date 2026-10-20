@@ -1,0 +1,81 @@
+{
+  "schema": 1,
+  "status": "ACCEPTED_BOUNDED_DISPLAY_ACCESS_EVIDENCE_INDEX_NO_NEW_ARCHIVE",
+  "complete7_actuals": {
+    "roots": 483,
+    "named": 1435,
+    "failures": 0,
+    "skips": 0,
+    "race_warnings": 0,
+    "commands": 342,
+    "artifacts": 699,
+    "source_files": 2293,
+    "owned_roles": 15,
+    "retired_databases": 7,
+    "prior_L2_roots_retained": 469,
+    "prior_L2_named_retained": 1395,
+    "new_roots": 14
+  },
+  "UI_actuals": {
+    "JS_states": 8,
+    "noJS_states": 8,
+    "strict_Axe_audits": 21,
+    "Axe_passing_rule_observations": 462,
+    "violations": 0,
+    "incomplete": 0,
+    "literal_prior_bodies": 45,
+    "keyboard_observations": 114,
+    "FormData_forms": 42,
+    "local_GET_requests": 104,
+    "asset_responses": 88,
+    "artifact_rows": 94,
+    "owned_noJS_sessions_closed": 8
+  },
+  "fixture_manifest": {
+    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/da-ui/run-e0065ca92ecf-5f7fb613-4034-41bc-9d40-76a329f33365/fixtures/fixtures.json",
+    "sha256": "5ad6a57e64bdbbd8aeec43e12b50289a53e97972dd221ec8f25c99e9c0550097"
+  },
+  "complete_artifact_lists": "Original source/result/fixture/artifact manifests remain in place; rows are not duplicated here.",
+  "first_primary_failure": {
+    "method": "d562d7b012df899359fed77dbc96ece00ede0737",
+    "status": "FAIL_UNCHANGED",
+    "result_sha256": "fdf9266caccf28dfccb8de0563153b972c5698dbe2020c0efa0900c31ef7a47e",
+    "scope": "Eight JS states/13strictAxe0issues and45bodies;four avatar checker failures,first noJSsettle timeout,zero completed noJSstates/audits;all86artifacts retained."
+  },
+  "nonqualifying_diagnostic": {
+    "result_sha256": "2fc04ed20a1c5aca24c0b4902e8d675675daf2b306d9dde217d8cad41fc2f370",
+    "review": {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/next-social-display-access-implementation/nojs-diagnostic/independent-actual-review.json",
+      "sha256": "819b67459e47432781c56d286540f85ef8d8ea90f6919d3c675601598784b11d"
+    },
+    "scope": "Candidate scheduling mechanism only, not primary UI qualification."
+  },
+  "visual_review": {
+    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/display-access-operational-v3/Root-visual-review.json",
+    "sha256": "534f4c9f12d2436572c5c45fe14443765d1385f1fc8a4a8559a746c330d2a6fb"
+  },
+  "polish_limits": [
+    "Footer links are individually functional but cramped; scoped CSS follow-up remains.",
+    "Existing Romanian catalogue has an English hearing-loop fallback and other existing mixed labels; catalogues remain frozen."
+  ],
+  "retention": {
+    "this_closing_deletes_nothing": true,
+    "current_S_source_binaries_all699_including_compressed_Git_stdout": "REQUIRED_IN_PLACE",
+    "current_T2_UI_all94": "REQUIRED_IN_PLACE",
+    "first_UI_all86": "RETAINED_FAILURE_HISTORY",
+    "canonical_date_account_archives": "REFERENCE_ONLY_NO_COPY",
+    "historical_R_L2_sources_binaries_all695_each": "PROTECTED_IN_PLACE",
+    "other_protected": "Source branches,unmerged source packets,original baselines,canonical keepers,shared caches and other owners unchanged.",
+    "separate_failed_diagnostic_HOME_cleanup": {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/next-social-display-access-implementation/nojs-diagnostic/first-launch-home-cleanup.json",
+      "sha256": "fa1970bf1eb3cf728c7780240c65ca7ee2b98f20d71a898dfcab3e50e9d72e1b"
+    },
+    "removed_generated_state": "Only the superseded failed Chrome HOME:4files13dirs1symlink48600logicalB,deletedbytes unavailable;all logs/results/reviews preserved. No allocated-space claim."
+  },
+  "bounded_feature_review": {
+    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/display-access-operational-v3/bounded-feature-acceptance.json",
+    "sha256": "463bf0e18b671f1d7d04a74c09313da79b5f516a0395cf8ef20a3b1dec61db21"
+  },
+  "benchmark": "NOT_REQUESTED",
+  "new_claims": "No main,GUI milestone,production,legal,provider,government,identity or real-child activation."
+}

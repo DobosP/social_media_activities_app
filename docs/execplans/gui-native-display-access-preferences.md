@@ -1,7 +1,7 @@
 # Native display/access preference implementation
 
 Date: 2026-10-20
-State: exact nativeS independently qualified; first desktop FAIL preserved; diagnostic-proven Node-only V3 repair prepared for the second finite desktop attempt.
+State: bounded functional feature independently accepted on native S and method T2; exact metadata closing prepared for feature-branch publication.
 
 Implement only the two existing functional HTML preference views in
 [ADR-0068](../adr/0068-native-display-access-preferences.md). Core c44afc3c
@@ -63,3 +63,7 @@ The next finite method is V2 of the isolated tools/gui-native-display-access pro
 ## V3 checker repair
 
 The first actual UI failure is retained, not promoted. The disabled-script diagnostic and independent actual review above support only the repaired test mechanism. Product JavaScript stays disabled in all eight no-JS states. Natural fonts/styles use bounded Node polling; trusted context-addressed callback IDs allow the exact cached Axe to finish. Avatar checks distinguish source attributes, measured border box and content size. All21unique strict audits,45fresh prior bodies,real keyboard/forms,exact assets/CSP and owned cleanup remain required. Existing JS settle/audit bodies,Python/Go methods,nativeS and all old helpers stay byte-exact. No completePG rerun follows from this tooling/metadata-only source bridge.
+
+## Accepted bounded feature
+
+Native display/access bounded functional feature independently accepted463bf0e1 on exactS e0065ca9 and desktopT2 d2cd4a88;see [current display/access record](../reviews/gui-native-display-access/README.md). ActualUI4984f789/reviewb3526ecf:8JS8noJS/21unique strictAxe462passing/0violations-incomplete/114keyboard/45literalpriorbodies/94artifacts/ownedcleanup. Firstfdf9266c remainsFAIL;nonqualifyingdiagnostic2fc04ed2 and source-onlyV3 repairs do not replace actualUI. BenchmarkNOT_REQUESTED. Footer spacing and existingROcatalogue fallback remain explicit polish work. Four canonical metadata files reference original proof in place;no new archive or further deletion. No new authority or milestone acceptance.

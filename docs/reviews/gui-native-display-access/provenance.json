@@ -1,0 +1,73 @@
+{
+  "schema": 1,
+  "status": "ACCEPTED_BOUNDED_DISPLAY_ACCESS_PROVENANCE_INDEX_NO_NEW_ARCHIVE",
+  "producer_source": "e0065ca92ecff73d8c1250a2af505be7b8535edd",
+  "producer_tree": "8a416b563b0876e7b9dc5240b0dfb818eebb7fab",
+  "method_source": "d2cd4a883ae50225a86bae7590d55c57989a10cd",
+  "method_tree": "3da55d29ea7076ea251db06163c90169a07e2f0a",
+  "published_native_source_receipt": {
+    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/next-social-display-access-checks/native-source-publication.json",
+    "sha256": "4b0644662fd99dcd9531df1f85d0b9160654789a5eb8f4c37efb50fa958935d3"
+  },
+  "actual_complete7": {
+    "result": {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/display-access-pg-qa/run-e0065ca92ecf-fec31086-dc6d-46e6-bd2c-17f61162adbe/result.json",
+      "sha256": "6169a0f162852654958aec6f36bb9a8abe2099dd4f3f2b5cd1f94f8f33cf106e"
+    },
+    "review": {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/display-access-checks/actual-full7-review.json",
+      "sha256": "176b83f776c2301dbc8f3a877ea3a44b5a72230791a9f640fdd1021ea47a38e5"
+    },
+    "source_manifest": {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/display-access-pg-qa/run-e0065ca92ecf-fec31086-dc6d-46e6-bd2c-17f61162adbe/source-manifest.json",
+      "sha256": "f65e47b285e1d59527ad0a703f5892db1f0ca9a1cef20d97031fd75432ff3294"
+    }
+  },
+  "actual_UI": {
+    "result": {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/da-ui/run-e0065ca92ecf-5f7fb613-4034-41bc-9d40-76a329f33365/result.json",
+      "sha256": "4984f7895cfd378c186a995ed1886257d6f63f55cc73a68acd8ad3385be4f836"
+    },
+    "desktop": {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/da-ui/run-e0065ca92ecf-5f7fb613-4034-41bc-9d40-76a329f33365/desktop/desktop-results.json",
+      "sha256": "10060e952b27683917e3d94ddfc2148b375acfd80df525ed9da2c81ab33ce8ac"
+    },
+    "review": {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/display-access-operational-v3/actual-ui-review.json",
+      "sha256": "b3526ecfccefe6ef22491d71ed1ab36c16c8fa43be10b94b82ff7772df37e801"
+    }
+  },
+  "method_admission": {
+    "review": {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/display-access-operational-v3/combined-source-operational-review.json",
+      "sha256": "11b84d209286659a8ddc04d52ac84b2005a7cc2771a718f5c50990ca524eaabd"
+    },
+    "P": {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/display-access-operational-v3/P.json",
+      "sha256": "d5c07bc668a3ef531b3c072d3e4e4f62c2e1119e27a6d783cf826aff81b6fc73"
+    },
+    "bridge": {
+      "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/display-access-operational-v3/root-method-commit-and-bridge.json",
+      "sha256": "b29ef3aea7c5b8d4464f2e90827adde51d4b66ca9012bc5f0987f357af3e51ee"
+    }
+  },
+  "bounded_feature_review_copy": {
+    "path": "/home/dobo/work/_temp/feat__gui-app-migration-a/social-family/display-access-operational-v3/bounded-feature-acceptance.json",
+    "sha256": "463bf0e18b671f1d7d04a74c09313da79b5f516a0395cf8ef20a3b1dec61db21",
+    "canonical_path": "docs/reviews/gui-native-display-access/acceptance.json",
+    "exact_bytes": true
+  },
+  "code3": {
+    "qualify.py": "caf6895f23c3356ea1f03535f189be1abbb0c0e819182c1696fdbb95ff9bc3e1",
+    "desktop-qa.mjs": "4ed67b91fcb581736e0272f01b5c2720f2c340b0307b400deff2b0edf5fc2539",
+    "export_test.go.txt": "21be13a4272c61b5ef2ab72ac1761ae69d219117d8fe71bf10eabec602c69810"
+  },
+  "native_images": {
+    "services/server/internal/web/display_access_native.go": "4da9a9990ac71213248b2908b5466747eb663e2ea647e5d0992d36131c9bdd0e",
+    "services/server/internal/web/pages/display-access.gohtml": "dd3ce6f80e7a4e97d0364962bf98a6bc6b8b511f3e0d38edf1838621bfcd7864",
+    "static/css/display-access-native.css": "4edce6964bdf8e5a7390b672d473bd3f87dbb9c1e22ce240606ff1c8cc1468e1",
+    "services/server/internal/web/renderer.go": "98911956e9eb57ac7275da2d27e3888e04b987889e4060d88021976af897eeb6"
+  },
+  "benchmark": "NOT_REQUESTED",
+  "record_kind": "Metadata references only; no standalone byte keeper or archive; no own future closing SHA asserted."
+}

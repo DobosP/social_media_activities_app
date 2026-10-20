@@ -1,7 +1,7 @@
 # ADR-0068: Native display and access preference pages
 
 Date: 2026-10-20
-Status: implemented; focused iterative checks passed with one explicit pre-existing no-DSN observation; complete PG7/desktop qualification pending.
+Status: implemented and independently qualified as a bounded functional feature; main/milestone/production remain separate.
 
 ## Decision
 
@@ -84,3 +84,9 @@ Source binding: actual language closing `2750eb5874508bb5f87d93ca4701e5dc9d7b350
 ## Applied-source iterative checkpoint
 
 Applied native display/access presentation passes iterative focused race checks:35roots/127named passed,including all9new web roots;one pre-existing DB root was unexecuted/skipped without a DSN. Vet web+app,format,whitespace and docs67 pass. Full affectedPG7 must still execute that root and all5new App roots with zero skips;desktop/45body qualification pending. No new performance or milestone acceptance.
+
+## Actual bounded qualification
+
+Native display/access bounded functional feature independently accepted463bf0e1 on exactS e0065ca9 and desktopT2 d2cd4a88;see [current display/access record](../reviews/gui-native-display-access/README.md). ActualUI4984f789/reviewb3526ecf:8JS8noJS/21unique strictAxe462passing/0violations-incomplete/114keyboard/45literalpriorbodies/94artifacts/ownedcleanup. Firstfdf9266c remainsFAIL;nonqualifyingdiagnostic2fc04ed2 and source-onlyV3 repairs do not replace actualUI. BenchmarkNOT_REQUESTED. Footer spacing and existingROcatalogue fallback remain explicit polish work. Four canonical metadata files reference original proof in place;no new archive or further deletion. No new authority or milestone acceptance.
+
+Earlier pending/iterative checkpoints above remain history;the actual fullPG run executed the previously skipped no-DSN root and all five new App roots with zero skips.
