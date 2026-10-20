@@ -203,3 +203,41 @@ remain byte equal. Focused race9roots/56named has zero failures/skips; App/web v
 format, whitespace and63document checks pass. These are local checks. Commit exact
 source before unchanged full affected7, desktop/no-JS/Axe/37body verification and
 matched body measurement; no new performance or complete qualification claim.
+
+## Date follow-up first full attempt: native passes, packaging fails
+
+The exactea9fe7e attempt ran all seven complete native suites:450 root passes/
+1,353 named passes, with the existing per-lane caps, timeout and private-service
+lifecycle. Root observed those native results; the independent failure audit is
+separate. Overall invocation exit1 is a failed qualification attempt: the
+finally artifact inventory refused proof/command-006.stdout at70,430,720bytes
+against the unchanged64MiB regular-input limit. That stdout is the complete
+uncompressed clean-SHA Git archive. No result.json was written. Preserve the
+actual failure and raw streams; do not reconstruct/replay them as acceptance.
+
+The bounded method-source repair requests git archive --format=tar.gz for the
+same entire explicit clean SHA, reads it with explicit tarfile r:gz and records
+format=tar.gz in git_archive metadata. The64MiB regular guard, source manifest,
+data-filter extraction, all eight method-input roles, seven complete lanes,
+root/case/query/resource caps, timeouts, cleanup and extractor remain unchanged.
+A new standard-library-only synthetic transport/control file covers exact
+member bytes/modes and metadata, compressed-only/truncated refusal, existing
+path filter and unchanged cap. Its addition does not change Go/runtime/tests.
+
+This proposal is method source only until independent review and application.
+After committing the repair, run a fresh complete seven-lane qualification;
+no failed-run result is manufactured and no native-only pass becomes overall
+acceptance. Date-source UI/no-JS/Axe/all37 body comparisons and matched body
+measurements remain pending. No new efficiency, current-image, main/milestone,
+production/provider/government or real-child activation claim follows.
+
+
+## Applied compressed-transport checkpoint
+
+Independentf81c00af and controls critic0c06d2e8 accept the exact transport repair.
+Root's four synthetic controls all pass, temporary fixtures are removed, Python
+syntax/docs/whitespace pass. All700 protected witnesses/306 Go test files remain
+unchanged; previous EA9 Go-focused9/56 and vet are source-identical, not rerun.
+Actual first-failure auditf33df158 verifies all seven native suites450/1353 and
+owned cleanup while preserving overallFAIL/noresult. Commit the repaired method,
+then run one fresh complete7; no UI, body or measurement acceptance follows here.

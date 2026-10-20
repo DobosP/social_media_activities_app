@@ -95,3 +95,34 @@ exact4f25/e940. Focused race9roots/56named/zero skips, App/web vet, format/docs 
 source preservation pass. Commit, then unchanged full affected7 and unchanged
 UI/no-JS/Axe/31prior bodies plus6 accepted inbox bytes and matched measurements.
 All current496 regressions/accepted custody remain history; no speedup forecast.
+
+## Date qualification archive transport repair — source only
+
+Exactea9fe7e first full date attempt passed all seven native suites,
+450roots/1,353named, but the overall invocation exited1 while packaging proof:
+command-006.stdout is70,430,720B of uncompressed complete Git archive and the
+existing artifact regular guard is64MiB. No result.json exists; failed history
+and raw streams remain failed, not reconstructed acceptance. Independent failure
+audit remains a separate record.
+
+Propose only compressed Git archive transport for the same entire clean SHA:
+--format=tar.gz, explicit tarfile r:gz and result git_archive format metadata.
+Keep the64MiB guard, extractor/source-manifest checks, eight method-input roles,
+seven full suites, all original resource/query/time caps and cleanup unchanged.
+New pure standard-library synthetic controls cover roundtrip/refusals/cap;
+Go/runtime/templates/all305 old test files stay frozen. No candidate method,
+PG/Go/runtime or complete qualification ran for this source proposal.
+
+After independent review, Root applies and commits the method successor, then
+runs a fresh full7. Do not replay the failed streams into a success result.
+Only independently accepted current full qualification can unlock unchanged
+UI/no-JS/Axe/37body verification and matched display-body measurements. Prior496
+measurements remain honest historical regressions; date efficiency is unproven.
+
+
+Applied compressed-transport checkpoint: independentf81c/critic0c06 accepted;
+four actual synthetic controls pass, Python syntax/docs/whitespace pass and
+fixtures are removed. All700 protected files/306 Go tests remain exact; Go unit/
+vet are reused from source-identical EA9. First full failuref33d stays failed.
+Commit then run fresh complete7 before unchangedUI/37body/measurements. No new
+resource limit, test omission, source subset or general speedup claim.
