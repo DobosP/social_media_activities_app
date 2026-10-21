@@ -58,5 +58,5 @@
 </div></footer>
 <script nonce="{{.Nonce}}" src="/static/js/hovercard.js" defer></script>
 <script nonce="{{.Nonce}}" id="site-js" src="/static/js/site.js" defer data-meetups-owner="{{.PublicID}}"></script>
-{{if .LiveThread}}{{if .NudgeJSON}}<script nonce="{{.Nonce}}" id="presend-nudge" type="application/json">{{.NudgeJSON}}</script><script src="/static/js/presend-nudge.js"></script>{{end}}<script nonce="{{.Nonce}}" id="thread-chat-config" type="application/json">{{.ChatJSON}}</script><script src="/static/js/thread-chat.js"></script>{{end}}
+{{if .LiveThread}}{{if .NudgeJSON}}<script nonce="{{.Nonce}}" id="presend-nudge" type="application/json">{{.NudgeJSON}}</script><script nonce="{{.Nonce}}" src="/static/js/presend-nudge.js"></script>{{end}}<script nonce="{{.Nonce}}" id="thread-chat-config" type="application/json">{{.ChatJSON}}</script><script nonce="{{.Nonce}}" src="/static/js/thread-chat.js"></script>{{end}}
 </body></html>{{end}}
