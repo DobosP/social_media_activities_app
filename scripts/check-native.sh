@@ -10,6 +10,14 @@ if ! native_go=$(command -v "$native_go"); then
   echo "check-native.sh: Go executable not found: ${1:-go}" >&2
   exit 2
 fi
+# ADR-0072: go1.27.3 is the security toolchain floor; the server module's go line
+# alone still admits an older local toolchain, and its floor is the lowest.
+native_go_version=$("$native_go" -C "$native_root/services/server" env GOVERSION) || native_go_version=
+if [[ ! $native_go_version =~ ^go([0-9]+)\.([0-9]+)(\.([0-9]+))? ]] ||
+  ((10#${BASH_REMATCH[1]} * 1000000 + 10#${BASH_REMATCH[2]} * 1000 + 10#${BASH_REMATCH[4]:-0} < 1027003)); then
+  echo "check-native.sh: go1.27.3 or newer required (ADR-0072), got '$native_go_version'" >&2
+  exit 2
+fi
 # Ask the module's own toolchain, which may differ from the first go on PATH.
 native_goroot=$("$native_go" -C "$native_root/services/server" env GOROOT)
 native_gofmt=$native_goroot/bin/gofmt
@@ -30,7 +38,9 @@ fi
 "$native_go" -C "$native_root/services/server" run ./cmd/check-authcore
 for native_module in services/server services/authcore services/agentapi; do
   "$native_go" -C "$native_root/$native_module" vet ./...
-  "$native_go" -C "$native_root/$native_module" test -race ./...
+  # -count=1: tests read repository files outside the module (custody pins,
+  # templates); a cached PASS would not see those inputs change (TI-2).
+  "$native_go" -C "$native_root/$native_module" test -race -count=1 ./...
 done
 # TAP output is stable across Node releases; a run with zero passing tests fails.
 native_worker=$(node --test --test-reporter=tap "$native_root/services/server/internal/web/assets/meetups-worker.test.mjs") || {

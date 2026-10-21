@@ -55,11 +55,17 @@ expect() {
   fi
 }
 
-# --- qualify-native.sh: stub go builds empty binaries, stub docker replays a log.
+# --- qualify-native.sh: stub go reports NATIVE_GATES_GO_VERSION (fail: go env
+# errors) and builds empty binaries, stub docker replays a log.
 qualify_bin=$gates_tmp/qualify-bin
 stub "$qualify_bin" uname 'echo "${NATIVE_GATES_UNAME:-Linux}"'
 stub "$qualify_bin" docker 'exec cat -- "$NATIVE_GATES_DOCKER_LOG"'
-stub "$qualify_bin" go 'out=
+stub "$qualify_bin" go 'if [[ ${1:-} == -C && ${3:-} == env && ${4:-} == GOVERSION ]]; then
+  [[ $NATIVE_GATES_GO_VERSION != fail ]] || { echo "go-stub: env failed" >&2; exit 1; }
+  printf "%s\n" "$NATIVE_GATES_GO_VERSION"
+  exit 0
+fi
+out=
 while (($#)); do
   if [[ $1 == -o && $# -ge 2 ]]; then out=$2; shift; fi
   shift
@@ -78,11 +84,12 @@ stub "$gates_tmp/grep-fail" grep "mode=\$NATIVE_GATES_GREP_FAIL
 for a; do [[ \$a == -\$mode ]] && { [[ \$NATIVE_GATES_GREP_FAIL != c-positive ]] || echo 1; echo 'grep-stub: forced error' >&2; exit 2; }; done
 exec $(printf '%q' "$(command -v grep)") \"\$@\""
 
-# run_qualify CASE LOG UNAME [GREP_FAIL_MODE]
+# [GATES_GO_VERSION=goX.Y.Z|fail] run_qualify CASE LOG UNAME [GREP_FAIL_MODE]; go1.27.3 by default.
 run_qualify() {
   local status=0 path=$gates_bin:$qualify_bin
   [[ -z ${4:-} ]] || path=$gates_tmp/grep-fail:$path
   PATH=$path NATIVE_GATES_DOCKER_LOG=$gates_tmp/$2 NATIVE_GATES_UNAME=$3 NATIVE_GATES_GREP_FAIL=${4:-} \
+    NATIVE_GATES_GO_VERSION=${GATES_GO_VERSION:-go1.27.3} \
     "$gates_bash" "$gates_dir/qualify-native.sh" "$qualify_bin/go" social-native:fixture fixture-net \
     'postgres://fixture:fixture@db.invalid:5432/fixture' "$gates_tmp/scratch-$1" \
     >"$gates_tmp/$1.out" 2>"$gates_tmp/$1.err" || status=$?
@@ -102,16 +109,26 @@ gates_status=0; run_qualify k pass.log Linux c || gates_status=$?
 expect 'k qualify: grep -c erroring fails the lane' nonzero "$gates_status" "$gates_tmp/k.err" 'Could not count'
 gates_status=0; run_qualify q pass.log Linux c-positive || gates_status=$?
 expect 'q qualify: positive count plus grep error fails the lane' nonzero "$gates_status" "$gates_tmp/q.err" 'Could not count'
+gates_status=0; GATES_GO_VERSION=go1.27.1 run_qualify w pass.log Linux || gates_status=$?
+expect 'w qualify: go older than go1.27.3 is refused' nonzero "$gates_status" "$gates_tmp/w.err" 'go1.27.3 or newer required'
+gates_status=0; GATES_GO_VERSION=fail run_qualify x pass.log Linux || gates_status=$?
+expect 'x qualify: unreadable go version is refused' nonzero "$gates_status" "$gates_tmp/x.err" 'go1.27.3 or newer required'
 
-# --- check-native.sh: stub go reports a temp GOROOT whose bin/ holds gofmt (or not);
+# --- check-native.sh: stub go reports NATIVE_GATES_GO_VERSION and a temp GOROOT whose
+# bin/ holds gofmt (or not), and refuses a go test that may replay a cached result;
 # stub node prints a TAP summary with NATIVE_GATES_NODE_PASS passing tests.
 stub "$gates_tmp/node-bin" node 'echo "node-stub $*"
 if [[ $NATIVE_GATES_NODE_PASS == fail ]]; then printf "%s\n" "1..1" "not ok 1 - boom" "# pass 0" "# fail 1"; exit 1; fi
 printf "%s\n" "1..$NATIVE_GATES_NODE_PASS" "# tests $NATIVE_GATES_NODE_PASS" "# pass $NATIVE_GATES_NODE_PASS" "# fail 0"'
-# run_check CASE GOFMT_BODY|- NODE(pass|zero|fail|none) GO_ENV(ok|fail|empty) [GO_ARG]
+# [GATES_GO_VERSION=goX.Y.Z|fail] run_check CASE GOFMT_BODY|- NODE(pass|zero|fail|none) GO_ENV(ok|fail|empty) [GO_ARG]
 run_check() {
   local status=0 goroot=$gates_tmp/goroot-$1 path=$gates_bin node_pass=4
-  stub "$goroot/bin" go "if [[ \${1:-} == -C && \${3:-} == env && \${4:-} == GOROOT ]]; then
+  stub "$goroot/bin" go "if [[ \${1:-} == -C && \${3:-} == env && \${4:-} == GOVERSION ]]; then
+  [[ \$NATIVE_GATES_GO_VERSION != fail ]] || { echo 'go-stub: env failed' >&2; exit 1; }
+  printf '%s\\n' \"\$NATIVE_GATES_GO_VERSION\"
+  exit 0
+fi
+if [[ \${1:-} == -C && \${3:-} == env && \${4:-} == GOROOT ]]; then
   case \$NATIVE_GATES_GO_ENV in
     ok) printf '%s\\n' $(printf '%q' "$goroot");;
     empty) echo;;
@@ -119,7 +136,12 @@ run_check() {
   esac
   exit 0
 fi
-if [[ \${1:-} == -C ]]; then case \${3:-} in run|vet|test) exit 0;; esac; fi
+if [[ \${1:-} == -C && \${3:-} == test ]]; then
+  [[ \" \$* \" == *' -count=1 '* ]] || { echo 'go-stub: go test may replay a cached result' >&2; exit 3; }
+  echo \"go-stub: uncached test \$2\"
+  exit 0
+fi
+if [[ \${1:-} == -C ]]; then case \${3:-} in run|vet) exit 0;; esac; fi
 echo \"go-stub: unexpected \$*\" >&2
 exit 2"
   [[ $2 == - ]] || stub "$goroot/bin" gofmt "$2"
@@ -127,7 +149,7 @@ exit 2"
   [[ $3 == none ]] || path=$path:$gates_tmp/node-bin
   [[ $3 != zero ]] || node_pass=0
   [[ $3 != fail ]] || node_pass=fail
-  PATH=$path NATIVE_GATES_GO_ENV=$4 NATIVE_GATES_NODE_PASS=$node_pass \
+  PATH=$path NATIVE_GATES_GO_ENV=$4 NATIVE_GATES_NODE_PASS=$node_pass NATIVE_GATES_GO_VERSION=${GATES_GO_VERSION:-go1.27.3} \
     "$gates_bash" "$gates_dir/check-native.sh" "${5:-go}" \
     >"$gates_tmp/$1.out" 2>"$gates_tmp/$1.err" || status=$?
   return "$status"
@@ -152,6 +174,16 @@ gates_status=0; run_check o 'exit 0' zero ok || gates_status=$?
 expect 'o check: worker test with zero passes fails' nonzero "$gates_status" "$gates_tmp/o.err" 'no passing tests'
 gates_status=0; run_check p 'exit 0' fail ok || gates_status=$?
 expect 'p check: failing worker test fails and shows its TAP' nonzero "$gates_status" "$gates_tmp/p.err" 'not ok 1 - boom'
+gates_status=0; run_check r 'exit 0' pass ok || gates_status=$?
+expect 'r check: every go test run bypasses the test cache' zero "$gates_status" "$gates_tmp/r.out" 'go-stub: uncached test'
+gates_status=0; GATES_GO_VERSION=go1.27.1 run_check s 'exit 0' pass ok || gates_status=$?
+expect 's check: go older than go1.27.3 is refused' nonzero "$gates_status" "$gates_tmp/s.err" 'go1.27.3 or newer required'
+gates_status=0; GATES_GO_VERSION=go1.27.10 run_check t 'exit 0' pass ok || gates_status=$?
+expect 't check: go1.27.10 compares numerically and passes' zero "$gates_status"
+gates_status=0; GATES_GO_VERSION=go1.27rc2 run_check u 'exit 0' pass ok || gates_status=$?
+expect 'u check: a go1.27 prerelease is refused' nonzero "$gates_status" "$gates_tmp/u.err" 'go1.27.3 or newer required'
+gates_status=0; GATES_GO_VERSION=fail run_check v 'exit 0' pass ok || gates_status=$?
+expect 'v check: unreadable go version is refused' nonzero "$gates_status" "$gates_tmp/v.err" 'go1.27.3 or newer required'
 
 echo "native gate harness: $gates_passed/$gates_total passed"
 ((gates_passed == gates_total))

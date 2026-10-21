@@ -18,6 +18,14 @@ native_dsn=$4
 native_scratch=$5
 native_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 [[ $native_scratch = /* && $native_scratch != / ]] || exit 2
+# ADR-0072: go1.27.3 is the security toolchain floor; the server module's go line
+# alone still admits an older local toolchain, and its floor is the lowest.
+native_go_version=$(GOWORK=off "$native_go" -C "$native_root/services/server" env GOVERSION) || native_go_version=
+if [[ ! $native_go_version =~ ^go([0-9]+)\.([0-9]+)(\.([0-9]+))? ]] ||
+  ((10#${BASH_REMATCH[1]} * 1000000 + 10#${BASH_REMATCH[2]} * 1000 + 10#${BASH_REMATCH[4]:-0} < 1027003)); then
+  echo "qualify-native.sh: go1.27.3 or newer required (ADR-0072), got '$native_go_version'" >&2
+  exit 2
+fi
 mkdir -p "$native_scratch/tests" "$native_scratch/test-tmp"
 chmod 700 "$native_scratch/test-tmp"
 export GOWORK=off

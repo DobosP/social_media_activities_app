@@ -6,7 +6,7 @@ import argparse, hashlib, io, ipaddress, json, lzma, os, re, shutil, signal, sta
 from pathlib import Path, PurePosixPath
 DB_IMAGE='sha256:f66de888683449864f820c365551125bb2627782be15a264f9746d53573b39d5'
 CODEC_IMAGE='sha256:34c1c2281d9fc96cf486dda8e88497ef5061e21a412c712d8ef61ca14b07031b'
-NATIVE_SHA='c5ea3b35b48c50d1caf9ab57dbae5260e8e23acbe6c89d20079687568cde13b1'
+NATIVE_SHA='19265fec060df11262e799956e275aa031366ae0ca404a4919a4d8390aefae76'
 XZ_SHA='b5b163eb273291934556377ab883b4b2a5d4da50bd0dc0a91774ecc234ccd8d0'
 PACKAGES='configuration accounts admin app backup booking budgets catalog commands contracts discovery donations export jobs media messaging notifications recommendations safety social web'.split()
 OWNER_LABEL='com.dobolabs.native21'
