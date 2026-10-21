@@ -30,5 +30,7 @@ predates the GUI feature. go1.27.3 is the current stable release.
 ## Consequences
 
 Raising the server module's `go` line, or editing `AGENTS.md`, first needs a reviewed
-extension of the custody chain. Cat and Teacher remain on go1.27.1 until their own lanes bump
+extension of the custody chain. A cheaper follow-up is a go1.27.3 version assertion in the unpinned
+`scripts/check-native.sh` and `scripts/qualify-native.sh`. The server's CI toolchain is now coupled to the
+sidecar module's `go` line. Cat and Teacher remain on go1.27.1 until their own lanes bump
 them. Historical receipts that name go1.27.1 remain true for their recorded sources.

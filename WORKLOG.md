@@ -3,6 +3,38 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-21 — Main landing of the functional Go interfaces (ADR-0073)
+
+Valid until: the next change to `main` — then treat as history.
+
+Authority: Paul's 2026-10-21 Cat/Social main landing authorization; operator agent:claude-code,
+independent of the Codex implementation. Fast-forward `main` 5426e915 → product head a70e0242
+(feature bbaa198 + ADR-0072) + this documentation commit, which changes no build or test input.
+
+- Canonical image of bbaa198 (`docker build --no-cache --pull`, git-archive source): Trivy v0.75.0
+  exit 1 (4 HIGH stdlib go1.27.1), govulncheck v1.8.0 server source exit 3 (14 stdlib). Fix
+  a70e0242 (ADR-0072): go1.27.3 builders, sidecar `go 1.27.3`, native.yml version from the sidecar
+  module; `services/server/go.mod` and `AGENTS.md` left byte-identical because 12 custody tests
+  failed when superseded d077e84 changed them.
+- Final gates on a70e0242 with sha256-verified go.dev go1.27.3, `GOTOOLCHAIN=local`: check-native
+  exit 0 (fresh GOCACHE); test-native-gates 17/17; govulncheck 8/8 clean (server/authcore/agentapi
+  source+package, both binary twins); Trivy 0 on release and sidecar images; `--migrate-only` on a
+  fresh Dockerfile.db container; `scripts/qualify-native.sh GO <fresh image> <internal net>
+  postgres://app:app@db:5432/app?sslmode=disable <scratch>` with `GOFLAGS='-mod=readonly
+  -buildvcs=false'`: 21 packages, 980 top-level / 2,734 named passes, 0 skips/failures/races,
+  1,898 s; smoke (compose dev env, read-only, cap-drop, tmpfs) 5×200, uid 10001, CapEff 0, SIGTERM 0;
+  Node 24.22.0 `npm ci && npm test && npm run build` 3/3, 36.72/40 KiB; check-contracts verified 1020 /
+  invalid 0 (exit 1 expected); check_docs 0/0/0/0; `git diff --check` clean.
+  Record: `docs/reviews/gui-main-landing/` (results.json binds image IDs, base digests and log hashes).
+- Review: five dimensions + refutation + adjudication over main..bbaa198, ready-with-notes, no code
+  blocker; separate critic review of a70e0242 APPROVE-WITH-NOTES. Not run: browser re-run (desktop
+  78-state evidence stays historical), human GOV-4 review.
+- Holds and owner decisions: TI-1 custody family byte-pins ≥138 inputs (retire/archive or epoch);
+  CRD-2 deliberate removal of the wards revoke `data-confirm`; formal S3 milestones, deployment,
+  provider/government/minor activation, privacy/content rulings. Follow-ups: TI-2 `-count=1`,
+  TI-3 generic CSRF/nonce/style test, go1.27.3 assertion in gate scripts, NAS archive of
+  `_temp/gui-functional-hub` before any sweep.
+
 ## 2026-10-21 — Complete the selected Social functional interfaces
 
 Valid until: qualified product/method inputs change — then requalify affected checks.

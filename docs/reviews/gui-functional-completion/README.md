@@ -30,4 +30,4 @@ zero failures/skips/races, source closure and clean PG/resource shutdown. Indepe
 source/runtime reviews are bound in qualification.json. This does not qualify a new deployment image.
 
 Teacher rewrites are deferred; Cat S1 implementation was independently verified complete.
-Social main/milestone landing, production and real child/provider activation remain held.
+Social main landing followed on 2026-10-21 ([record](../gui-main-landing/README.md)); milestone, production and real child/provider activation remain held.

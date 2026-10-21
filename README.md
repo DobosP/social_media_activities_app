@@ -19,7 +19,7 @@ contract oracles; the default Docker image contains no Python runtime.
 
 ## Stack
 
-- **Go 1.27.1** native serving backend; selection and limits: [ADR-0032](docs/adr/0032-complete-native-go-backend.md)
+- **Go 1.27.3** release/qualification toolchain ([ADR-0072](docs/adr/0072-go-1-27-3-security-toolchain.md)) native serving backend; selection and limits: [ADR-0032](docs/adr/0032-complete-native-go-backend.md)
 - **PostgreSQL + PostGIS** via **pgx** — the single primary datastore (relational +
   geospatial + graph + `pgvector`; no separate graph/vector DB)
 - **Go WebSockets + PostgreSQL notifications** for live delivery; private EU-native S3 storage for blobs

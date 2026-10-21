@@ -62,7 +62,8 @@ Not fixed yet; each blocks the first deployment of the Go runtime
 
 - [ ] GOV-4 — human review of auth/erasure/privacy/safety code: `services/authcore`, `internal/accounts`
       (login, erasure, bootstrap), `internal/safety`, media erasure, messaging authority, admin permissions,
-      budgets; record reviewer name and reviewed revision. Done when that record names a revision at or
+      budgets, plus the native GUI pages that render or post to them (family/guardian, account delete,
+      verify age, my privacy, report; ADR-0071/0073); record reviewer name and reviewed revision. Done when that record names a revision at or
       before the deployed one and its findings are closed.
 - [ ] GOV-1 / GO-RT-03 — `render.yaml` launches Go without `MEDIA_STORAGE_BACKEND`, `SITE_BASE_URL`,
       `DJANGO_ALLOWED_HOSTS`, `TRUSTED_PROXY_CIDRS`; web and `--due` cron exit at startup (storage check,

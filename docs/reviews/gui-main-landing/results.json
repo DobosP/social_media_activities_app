@@ -1,0 +1,78 @@
+{
+ "schema": 1,
+ "date": "2026-10-21",
+ "operator": "agent:claude-code (orchestrator; independent of the Codex implementation)",
+ "authority": "Paul 2026-10-21 Cat/Social main landing authorization (ADR-0073)",
+ "source": {
+  "main_before": "5426e9154a67d5b3c3769a2a9f53c4197e690174",
+  "feature_tip": "bbaa198388b75a7485f5b76d9f1adaa697ff31cc",
+  "product_head": "a70e02426fc17945abea1d82a4e595bc5710a1b0",
+  "product_tree": "dd330aad56cdad93a433aa865985d0e607caf9e3",
+  "landing": "product head plus one documentation commit (no build/test input)"
+ },
+ "toolchain": {
+  "go": "go1.27.3 (go.dev sha256 65efbc80fdc1fa2cd2631cad5b481777a68e8725f34e89f50fc6ac714e379b40), GOTOOLCHAIN=local",
+  "node": "24.22.0 (node:24-bookworm-slim container)",
+  "trivy": "0.75.0",
+  "govulncheck": "v1.8.0"
+ },
+ "images": {
+  "release": "sha256:8d1d8646bbd6583959b4dd41c686efa7ded535bfc39e49fbad2ab281e3db310e",
+  "db": "sha256:3a469205f86623a9f3f320a590ddf72fb8b90a8b9600fcd4d7167f54674cb65b",
+  "agentapi": "sha256:bc37022d56e03670024d1d638e512a87c612d2390425beac7ffe5edfe594af04",
+  "bases": [
+   "golang:1.27.3-bookworm@sha256:21ade014faf952365b9ecbd8dbdb87176fbacb82fac9fb132d9f2a7b8cc3f132",
+   "debian:bookworm-slim@sha256:7ff6ba31527b9e336162fa061746c366c4b2032f4d2cff2078bea43f78efe3f8",
+   "postgres:16-bookworm@sha256:d81f7b51697014367236d07ec58b54153fc28f828b72bf247fe5c7487520bcb0",
+   "node:24-bookworm-slim@sha256:91acba91b842bec0bf7ea6f5e09c644c7ccad72c4996ed9616d861d1c7cd60d4"
+  ],
+  "build": "docker build --no-cache --pull from git archive of the exact head (release, Dockerfile.db, services/agentapi)"
+ },
+ "gates": {
+  "check_native": {
+   "command": "bash scripts/check-native.sh <go1.27.3>",
+   "result": "exit 0, fresh GOCACHE, 32 package results + worker TAP",
+   "log_sha256": "ec6abae0f3d64cf669709a3414abacaa32fc8afac404185cb62c4474d4aefe38"
+  },
+  "gate_harness": {
+   "command": "bash scripts/test-native-gates.sh",
+   "result": "17/17"
+  },
+  "govulncheck": {
+   "command": "govulncheck ./... and -scan=package ./... per module (server, authcore, agentapi); -mode=binary on CGO_ENABLED=0 -trimpath twins of social-server and agentapi",
+   "result": "8/8 No vulnerabilities found",
+   "log_sha256": "7825b110ef1fede58855a6904a86ada8defe92ad197a0eafd24bbce89ce35162"
+  },
+  "trivy": {
+   "command": "trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 (release and agentapi images)",
+   "result": "exit 0, 0 findings each",
+   "release_json_sha256": "615772cdbdb8e45ee8dea4a7959b61a1a64be68aa3cfb7f55ea954f250e5afa9",
+   "agentapi_json_sha256": "0e00eb519f554a47ecce95c604a91b78a596ed01fe11d6ef38918d51ece80f42"
+  },
+  "image_checks": "user 10001:10001; no python/python3/pip; ffmpeg, ffprobe, avifenc, prlimit present; social-server --help",
+  "migrate": "social-server --migrate-only on a fresh Dockerfile.db container (locale en_US.utf8, Romanian lower-casing correct)",
+  "native21": {
+   "command": "scripts/qualify-native.sh <go1.27.3> <fresh release image> <internal network> postgres://app:app@db:5432/app?sslmode=disable <scratch> (GOFLAGS=-mod=readonly -buildvcs=false)",
+   "result": "21 packages, 980 top-level / 2,734 named passes incl. subtests, 0 skips, 0 failures, 0 data races, 1,898 s",
+   "packages": "accounts 75/121, admin 21/53, app 58/119, backup 5/5, booking 7/7, budgets 16/16, catalog 54/149, commands 29/34, configuration 64/127, contracts 5/5, discovery 2/2, donations 5/5, export 5/15, jobs 91/308, media 54/115, messaging 60/100, notifications 4/11, recommendations 8/24, safety 56/87, social 52/123, web 309/1308",
+   "counts_sha256": "1652875c78f82eb3e0c464022b347931a30b39860364cf03a1798ff0d06d2ffa"
+  },
+  "smoke": {
+   "result": "compose dev env/command, read-only, cap-drop ALL, no-new-privileges, tmpfs var dirs: /healthz /readyz /sw.js /api/schema/ /api/docs/ 200; uid 10001; CapEff 0; SIGTERM exit 0, not OOM",
+   "log_sha256": "293830a6b2a465d304a451dfef059d5fe040701433eb9f7bb5a6a8032edeedc9"
+  },
+  "frontend": {
+   "command": "npm ci && npm test && npm run build (Node 24.22.0)",
+   "result": "3/3 contracts, typecheck/Vite, initial 36.72/40 KiB gzip"
+  },
+  "check_contracts": {
+   "result": "verified 1020, unresolved 1651, invalid 0 (exit 1 expected: blocks Python retirement, not landing)"
+  },
+  "docs": "fleet check_docs 0/0/0/0; git diff --check clean"
+ },
+ "failed_history": {
+  "bbaa198": "Trivy 4 HIGH stdlib (go1.27.1); govulncheck server source 14 stdlib vulns; first 21-lane attempt never started (Go VCS stamping under the ~/work repo)",
+  "d077e84": "go.mod bump broke 12 custody tests in internal/web; superseded, never published; 21-lane probe stopped after 10 clean lanes"
+ },
+ "cleanup": "gate containers, network and superseded images removed; latest logs retained under _temp/feat__gui-app-migration-a/main-landing-20261021"
+}
