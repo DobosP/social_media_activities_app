@@ -3,6 +3,51 @@
 Append-only, newest first. Current truth is `STATUS.md`; this file holds the dated detail
 `STATUS.md` summarizes.
 
+## 2026-10-21 — Post-landing GUI hardening (review TI-2/3/4/6, OSP-1, go1.27.3 gate floor)
+
+Valid until: the next change to `main` — then treat as history.
+
+Authority: Paul's 2026-10-21 Social main landing authorization (ADR-0073) covering the deferred review
+follow-ups; operator agent:claude-code. Fast-forward `main` 63e3e25 → product head 9a3c306 (5 commits) + this
+documentation commit, which changes no build or test input. No custody-pinned file changed: a combined newline
+probe of every touched file kept 26/26 server packages green; the positive control (one newline in
+`services/server/go.mod`) turned 12 custody tests red. Record: `docs/reviews/gui-post-landing-hardening/`.
+
+- OSP-1: `pages/group-detail.gohtml` loads `presend-nudge.js` and `thread-chat.js` with the response nonce.
+- TI-3: `native_output_invariants_test.go` renders 110 states (78 completion previews, 4 group-detail variants,
+  12 other native renderer fixtures; EN and RO) through `Renderer.Render` with CSP enforced: exactly one nonempty
+  `csrfmiddlewaretoken` per POST form (350), the header script-src nonce on every executable script (248), no
+  `style=`, `<style>`, inline handlers, `javascript:` URLs or form overrides. Before the template fix it failed on
+  exactly the 8 live group-thread script tags. 21 single-defect mutations with expected messages; deleting any
+  of the 16 checker branches fails a subtest (implementer and reviewer sweeps).
+- TI-4: `group_detail_roster_guard_test.go`, 11 control-then-defect cases + curator case; disabling the cohort
+  gate, the roster gate, its member or thread clause, or the 1000-row cap turns exactly the matching cases red.
+  The roster gate's two cohort clauses are individually redundant with the cohort gate (by design).
+- TI-2 / TC-1: `check-native.sh` runs `go test -race -count=1`; it and `qualify-native.sh` refuse an effective
+  server-module toolchain older than go1.27.3 (numeric compare; rc/devel/empty refused). Harness 24/24 (new r–x);
+  14/24 against main's scripts, 19/24 with only `-count=1` back-ported. `qualify-native-final.py` NATIVE_SHA
+  re-bound to the new `qualify-native.sh` (splice anchors unchanged). TI-6: `test_qualify_native_final.py` uses
+  `TMPDIR` or `tempfile.gettempdir()`: 8/8 set, unset or empty; main's file raises KeyError unset.
+- Gates on 9a3c306 with sha256-verified go.dev go1.27.3, `GOTOOLCHAIN=local`: check-native exit 0 (fresh GOCACHE,
+  32 package results + worker 4/4); harness 24/24; govulncheck v1.8.0 8/8 clean; Node 24 frontend 3/3,
+  36.72/40 KiB; check-contracts 1020 / 1651 / invalid 0 (exit 1 expected); no-cache release, sidecar and DB
+  images; image checks; Trivy v0.75.0 0 on both; `--migrate-only`; locale en_US.utf8 with correct Romanian
+  lower-casing; `scripts/qualify-native.sh GO <fresh image> <internal net>
+  postgres://app:app@db:5432/app?sslmode=disable <scratch>` with `GOFLAGS='-mod=readonly -buildvcs=false'`: 21 packages,
+  984 top-level / 2,770 named passes (web 313/1,344 = 309/1,308 + the 4 new tests and 36 subtests), 0
+  skips/failures/races, 3,341 s on a loaded host; smoke (compose dev env, read-only, cap-drop, tmpfs) 5×200, uid 10001, CapEff 0,
+  SIGTERM 0; check_docs 0/0/0/0; `git diff --check` clean.
+  A first chain on b7604ed was stopped mid-native21 (8/21 lanes, all passing) when review notes N1–N4 led to
+  9a3c306; its images were removed.
+- Review: independent reviewer APPROVE-WITH-NOTES on b7604ed (all new tests fail without their fix, no pinned
+  input touched), then APPROVE on 9a3c306 after N1 (`<!-->`/`--!>` comment skip), N2 (unpinned checker
+  branches, `javascript:` URLs), N3 (comment) and N4 (form floor) were fixed. Info left: only `href` of the URL
+  attributes has a mutation; `object data`/meta-refresh/`vbscript:` are not checked.
+- Not changed: custody family (TI-1 owner decision), `AGENTS.md` "Go 1.27.1" label (pinned), the server
+  `go 1.27.1` floor, CRD-2, frontend, dependencies, Dockerfiles. Historical tool bindings
+  (`tools/gui-native-family/db-binding.json`, `tools/gui-public-golden/managed_profiles.py`) still name the
+  old `qualify-native.sh` digest; they were already stale (native.yml). No deployment, provider or minor activation.
+
 ## 2026-10-21 — Main landing of the functional Go interfaces (ADR-0073)
 
 Valid until: the next change to `main` — then treat as history.

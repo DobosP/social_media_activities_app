@@ -1,0 +1,86 @@
+{
+ "schema": 1,
+ "date": "2026-10-21",
+ "operator": "agent:claude-code (orchestrator); independent reviewer subagent (Opus, read-only scratch copies)",
+ "authority": "Paul 2026-10-21 Social main landing authorization (ADR-0073), review follow-ups",
+ "source": {
+  "main_before": "63e3e25ddda152d202b34da08388e03e7423c1c5",
+  "product_head": "9a3c3060a4c16c59031117014cbed27900f4a6b6",
+  "product_tree": "7a30e40fa7faacd297cccc428822e310e13f282d",
+  "superseded_head": "b7604ed80f162225e9c30bb53476e726dd7b96b4 (review notes N1-N4; native21 stopped after 8/21 passing lanes, images removed)",
+  "landing": "product head plus one documentation commit (no build/test input)"
+ },
+ "custody_probe": {
+  "method": "newline appended to every touched file plus two new test files in a git-archive copy; go test -count=1 ./... (services/server)",
+  "result": "26/26 packages ok",
+  "positive_control": "one newline in services/server/go.mod: 12 custody test failures"
+ },
+ "toolchain": {
+  "go": "go1.27.3 (go.dev sha256 65efbc80fdc1fa2cd2631cad5b481777a68e8725f34e89f50fc6ac714e379b40), GOTOOLCHAIN=local",
+  "node": "24 (node:24-bookworm-slim container)",
+  "trivy": "0.75.0",
+  "govulncheck": "v1.8.0"
+ },
+ "images": {
+  "release": "sha256:ae9bf20a961898b44a2088a92ff09e23919360350f4e5065955ee226ec5a2c6c",
+  "db": "sha256:34ecb175b9d61a31754dd228b39b815337ce9cf37897705eb3dfe2720d0e15f1",
+  "agentapi": "sha256:33cf29e12c77b72d5876477298ea77273485bcbea4d04728d03b10670c55ee66",
+  "bases": [
+   "node@sha256:91acba91b842bec0bf7ea6f5e09c644c7ccad72c4996ed9616d861d1c7cd60d4",
+   "golang@sha256:21ade014faf952365b9ecbd8dbdb87176fbacb82fac9fb132d9f2a7b8cc3f132",
+   "postgres@sha256:0ea6700a3b4f0ae6ce746519073558aed4d88a79d8d07622a9a644946c7319c4"
+  ],
+  "build": "docker build --no-cache --pull from git archive of the exact head (release, Dockerfile.db, services/agentapi)"
+ },
+ "gates": {
+  "check_native": {
+   "command": "bash scripts/check-native.sh <go1.27.3>",
+   "result": "exit 0, fresh GOCACHE, -count=1, 32 package results + worker TAP 4/4",
+   "log_sha256": "d0c15e279615b89d5038a78b1af35b404079874d71aaa29e7e7318789206e380"
+  },
+  "gate_harness": {
+   "command": "bash scripts/test-native-gates.sh",
+   "result": "24/24; against main's scripts 14/24, with only -count=1 back-ported 19/24",
+   "log_sha256": "21fc4430f8e0bfc5e046127874abdef271b0de2ca0e65a483a3146f93247a935"
+  },
+  "qualifier_unit": {
+   "command": "python3 -I scripts/test_qualify_native_final.py",
+   "result": "8/8 with TMPDIR set, unset or empty; main's file: 3 KeyError with TMPDIR unset"
+  },
+  "govulncheck": {
+   "result": "8/8 No vulnerabilities found (server/authcore/agentapi source+package, both binary twins)",
+   "log_sha256": "7825b110ef1fede58855a6904a86ada8defe92ad197a0eafd24bbce89ce35162"
+  },
+  "trivy": {
+   "command": "trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1",
+   "result": "exit 0, 0 findings on release and agentapi",
+   "release_json_sha256": "b0fd595441421d3e3d2f491d393049260b630be9fa6abf28cb2c665a603a7e71",
+   "agentapi_json_sha256": "de566b9bd09ff2d8f3cfe62d08dc92d7569c3cf1398384cd04b737f5f943e8fc"
+  },
+  "image_checks": "user 10001:10001; no python/python3/pip; ffmpeg, ffprobe, avifenc, prlimit present; social-server --help",
+  "migrate": "social-server --migrate-only on a fresh Dockerfile.db container; locale en_US.utf8, Romanian lower-casing correct",
+  "native21": {
+   "command": "scripts/qualify-native.sh <go1.27.3> <fresh release image> <internal network> postgres://app:app@db:5432/app?sslmode=disable <scratch> (GOFLAGS=-mod=readonly -buildvcs=false)",
+   "result": "21 packages, 984 top-level / 2,770 named passes incl. subtests, 0 skips, 0 failures, 0 data races, 3,341 s (loaded host)",
+   "packages": "accounts 75/121, admin 21/53, app 58/119, backup 5/5, booking 7/7, budgets 16/16, catalog 54/149, commands 29/34, configuration 64/127, contracts 5/5, discovery 2/2, donations 5/5, export 5/15, jobs 91/308, media 54/115, messaging 60/100, notifications 4/11, recommendations 8/24, safety 56/87, social 52/123, web 313/1344",
+   "counts_sha256": "00f569692eb9dbcf430bdab01b376a61d2f508fce90d43b01019ee3677bcb06a"
+  },
+  "smoke": {
+   "result": "/healthz /readyz /sw.js /api/schema/ /api/docs/ 200; uid 10001; CapEff 0; SIGTERM exit 0, not OOM",
+   "log_sha256": "4ab065eef33316bcc541b5cc83083d100ff72b230a2cade8a504a470d46d7274"
+  },
+  "frontend": {
+   "result": "3/3 contracts, typecheck/Vite, initial 36.72/40 KiB gzip",
+   "log_sha256": "962d1cab671451d0c0042b3446f0e40e4ac49536707bab0a17f5b77e92865351"
+  },
+  "check_contracts": {
+   "result": "verified 1020, unresolved 1651, invalid 0 (exit 1 expected: blocks Python retirement, not landing)"
+  },
+  "docs": "fleet check_docs 0/0/0/0; git diff --check clean"
+ },
+ "review": {
+  "b7604ed": "APPROVE-WITH-NOTES: new tests fail without their fixes; no pinned input; notes N1-N5",
+  "9a3c306": "APPROVE: N1-N4 fixed; independent sweep 16/16 checker branches killed; no new false negative across 12 comment forms; no services/ reader of the committed docs"
+ },
+ "cleanup": "gate containers and network removed by the chain; images and scratch removed after landing"
+}
