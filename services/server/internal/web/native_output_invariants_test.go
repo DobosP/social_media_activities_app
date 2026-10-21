@@ -45,11 +45,24 @@ func nativeOutputTags(body string) ([]nativeOutputTag, error) {
 		}
 		i += lt
 		if strings.HasPrefix(body[i:], "<!--") {
-			end := strings.Index(body[i+4:], "-->")
-			if end < 0 {
-				return nil, fmt.Errorf("unterminated comment at byte %d", i)
+			// As browsers parse it: <!--> and <!---> close at once, otherwise
+			// the earlier of --> and --!> ends the comment.
+			rest := body[i+4:]
+			switch {
+			case strings.HasPrefix(rest, ">"):
+				i += 5
+			case strings.HasPrefix(rest, "->"):
+				i += 6
+			default:
+				end, closer := strings.Index(rest, "-->"), 3
+				if bang := strings.Index(rest, "--!>"); bang >= 0 && (end < 0 || bang < end) {
+					end, closer = bang, 4
+				}
+				if end < 0 {
+					return nil, fmt.Errorf("unterminated comment at byte %d", i)
+				}
+				i += 4 + end + closer
 			}
-			i += 4 + end + 3
 			continue
 		}
 		if strings.HasPrefix(body[i:], "<!") {
@@ -132,6 +145,19 @@ func nativeOutputTags(body string) ([]nativeOutputTag, error) {
 	}
 }
 
+var nativeOutputURLAttributes = map[string]bool{"href": true, "src": true, "action": true, "formaction": true, "xlink:href": true}
+
+// nativeOutputURLScheme drops what browsers ignore in a URL (ASCII whitespace
+// and controls) and lower-cases it, so "Java\tScript:" still reads javascript:.
+func nativeOutputURLScheme(value string) string {
+	return strings.ToLower(strings.Map(func(r rune) rune {
+		if r <= ' ' {
+			return -1
+		}
+		return r
+	}, value))
+}
+
 // nativeOutputViolations checks one rendered response body against nonce, the
 // script-src nonce of that same response's enforced CSP header.
 func nativeOutputViolations(body, nonce string) ([]string, nativeOutputCounts) {
@@ -167,6 +193,9 @@ func nativeOutputViolations(body, nonce string) ([]string, nativeOutputCounts) {
 			}
 			if attr == "formmethod" || attr == "formaction" {
 				violations = append(violations, attr+" override on <"+tag.name+">")
+			}
+			if nativeOutputURLAttributes[attr] && strings.HasPrefix(nativeOutputURLScheme(tag.attrs[attr]), "javascript:") {
+				violations = append(violations, "javascript: URL in "+attr+" on <"+tag.name+">")
 			}
 		}
 		switch tag.name {
@@ -396,7 +425,7 @@ func TestNativeOutputFormsScriptsAndStylesHoldTheCSPContract(t *testing.T) {
 	}
 	t.Logf("%d states, %d POST forms, %d nonced executable scripts", len(states), total.postForms, total.nonceScripts)
 	// Floors keep a fixture regression from passing vacuously.
-	if total.postForms < len(states) || total.nonceScripts < 2*len(states) {
+	if total.postForms < 2*len(states) || total.nonceScripts < 2*len(states) {
 		t.Fatalf("contract checked too little output: %d POST forms, %d nonced scripts over %d states", total.postForms, total.nonceScripts, len(states))
 	}
 	live := states["web/group_detail.html:owner-live-en"]
@@ -407,33 +436,53 @@ func TestNativeOutputFormsScriptsAndStylesHoldTheCSPContract(t *testing.T) {
 	}
 }
 
-// Each single-defect mutation of real current output must be caught, so the
-// contract above can never pass by checking nothing.
+// Each single-defect mutation of real current output must be caught by its own
+// check, so no branch of the contract above can pass by checking nothing.
 func TestNativeOutputContractRejectsEachSingleDefect(t *testing.T) {
 	renderer, request, data := groupDetailProjectionFixture(t)
 	state := nativeOutputRender(t, renderer, request, "web/group_detail.html", data, "en")
 	if violations, counts := nativeOutputViolations(state.body, state.nonce); len(violations) != 0 || counts.postForms < 5 || counts.nonceScripts < 4 {
 		t.Fatal("unmutated live group detail must be clean and exercise forms and scripts", violations, counts)
 	}
+	if violations, _ := nativeOutputViolations(state.body, ""); !strings.Contains(strings.Join(violations, "\n"), "no script-src nonce") {
+		t.Fatal("a response without a script-src nonce was accepted")
+	}
 	token := `<input type="hidden" name="csrfmiddlewaretoken" value="synthetic-group-detail-csrf">`
-	mutations := map[string][2]string{
-		"drop-one-token":      {token, ""},
-		"inject-style":        {`<h1`, `<h1 style="color:red"`},
-		"unnonce-thread-chat": {`<script nonce="` + state.nonce + `" src="/static/js/thread-chat.js">`, `<script src="/static/js/thread-chat.js">`},
-		"foreign-nonce":       {`nonce="` + state.nonce + `" src="/static/js/presend-nudge.js"`, `nonce="stale" src="/static/js/presend-nudge.js"`},
-		"inline-handler":      {`<h1`, `<h1 onclick="x()"`},
-		"inline-style-block":  {`</head>`, `<style>h1{color:red}</style></head>`},
-		"empty-token":         {token, `<input type="hidden" name="csrfmiddlewaretoken" value="">`},
-		"second-token":        {token, token + token},
+	chat := `<script nonce="` + state.nonce + `" src="/static/js/thread-chat.js">`
+	config := `<script nonce="` + state.nonce + `" id="thread-chat-config" type="application/json">`
+	hidden := `<script src="/static/js/hidden.js"></script></body>`
+	mutations := map[string]struct{ anchor, replacement, want string }{
+		"drop-one-token":       {token, "", "carries 0 csrfmiddlewaretoken"},
+		"empty-token":          {token, `<input type="hidden" name="csrfmiddlewaretoken" value="">`, "not a nonempty hidden input"},
+		"second-token":         {token, token + token, "carries 2 csrfmiddlewaretoken"},
+		"differing-token":      {token, `<input type="hidden" name="csrfmiddlewaretoken" value="other">`, "different CSRF tokens"},
+		"token-outside-form":   {`</body>`, token + `</body>`, "outside a POST form"},
+		"nested-form":          {`</form>`, "", "nested <form>"},
+		"stray-form-close":     {`</body>`, `</form></body>`, "without an open form"},
+		"unterminated-form":    {`</body>`, `<form method="get"></body>`, "unterminated <form>"},
+		"form-override":        {`type="submit">`, `type="submit" formaction="/elsewhere/">`, "formaction override"},
+		"javascript-url":       {`href="/`, "href=\"Java\tScript:alert(1)\" data-was=\"/", "javascript: URL in href"},
+		"inject-style":         {`<h1`, `<h1 style="color:red"`, "inline style attribute"},
+		"inline-handler":       {`<h1`, `<h1 onclick="x()"`, "inline onclick handler"},
+		"inline-style-block":   {`</head>`, `<style>h1{color:red}</style></head>`, "inline <style> element"},
+		"unnonce-thread-chat":  {chat, `<script src="/static/js/thread-chat.js">`, "lacks the response nonce"},
+		"foreign-script-nonce": {chat, `<script nonce="stale" src="/static/js/thread-chat.js">`, "lacks the response nonce"},
+		"foreign-data-nonce":   {config, `<script nonce="stale" id="thread-chat-config" type="application/json">`, "foreign nonce"},
+		"unclassified-type":    {config, `<script nonce="` + state.nonce + `" id="thread-chat-config" type="text/x-template">`, "unclassified <script"},
+		"duplicate-attribute":  {chat, `<script nonce="` + state.nonce + `" nonce="` + state.nonce + `" src="/static/js/thread-chat.js">`, "duplicate nonce attribute"},
+		"empty-comment":        {`</body>`, `<!-->` + hidden, "lacks the response nonce"},
+		"dash-empty-comment":   {`</body>`, `<!--->` + hidden, "lacks the response nonce"},
+		"bang-comment-closer":  {`</body>`, `<!-- note --!>` + hidden, "lacks the response nonce"},
 	}
 	for name, mutation := range mutations {
 		t.Run(name, func(t *testing.T) {
-			if !strings.Contains(state.body, mutation[0]) {
-				t.Fatal("mutation anchor missing from current output", mutation[0])
+			if !strings.Contains(state.body, mutation.anchor) {
+				t.Fatal("mutation anchor missing from current output", mutation.anchor)
 			}
-			mutated := strings.Replace(state.body, mutation[0], mutation[1], 1)
-			if violations, _ := nativeOutputViolations(mutated, state.nonce); len(violations) == 0 {
-				t.Fatal("contract accepted a single-defect mutation")
+			mutated := strings.Replace(state.body, mutation.anchor, mutation.replacement, 1)
+			violations, _ := nativeOutputViolations(mutated, state.nonce)
+			if !strings.Contains(strings.Join(violations, "\n"), mutation.want) {
+				t.Fatalf("contract missed a single-defect mutation: want %q, got %q", mutation.want, violations)
 			}
 		})
 	}

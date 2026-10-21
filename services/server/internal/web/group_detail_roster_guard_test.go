@@ -109,8 +109,9 @@ func TestNativeGroupDetailRefusesCrossCohortAndNonAdultRosterProjections(t *test
 	}
 }
 
-// Staff may view an outside-cohort group only as its curator; a roster supplied
-// there is refused by both the roster gate and the outside-cohort clamp.
+// Staff may view an outside-cohort group only as its curator. A roster supplied
+// there is refused redundantly: by the roster gate's group-cohort and member
+// clauses and by the outside-cohort clamp, so no single clause is pinned here.
 func TestNativeGroupDetailOutsideCohortCuratorNeverReceivesARoster(t *testing.T) {
 	r, request, data := groupDetailProjectionFixture(t)
 	request = groupDetailGuardActor(request, data, 11, "adult", true)
