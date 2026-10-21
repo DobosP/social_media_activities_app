@@ -14,6 +14,8 @@ Pre-integration Topics acceptance remains source-scoped at native1bde5522/method
 
 The feature integrates main5426e915 as a whole. [ADR-0071](docs/adr/0071-functional-go-interface-completion.md) records39 completed destinations across six families. Exact83da8ae4 passes all21 native database/codec suites:980 top-level tests,2,734 named passes including roots,0 failures/skips/races, full source closure and owned-resource cleanup. Required native28Go+4worker checks and frontend3contracts/typecheck/Vite/36.72-of-40KiB gzip pass. Desktop78 EN/RO states/156 strict accessibility audits pass with0 violations/incompletes/CSP errors; all78 current DOM/header streams match that passing desktop set except exact CSP nonce. Independent source/runtime reviews and failed history are bound in the [completion record](docs/reviews/gui-functional-completion/README.md). Inbox and4 public metadata aliases use existing handlers. Selected implementation work is complete on the feature branch; no Social main/milestone landing, new deployment-image qualification, production/provider/government/minor activation or privacy/content ruling follows.
 
+Go toolchain (2026-10-21, [ADR-0072](docs/adr/0072-go-1-27-3-security-toolchain.md)): release builders, `services/agentapi` and dispatch CI use go1.27.3 after go1.27.1 failed the ADR-0040 Trivy (4 HIGH stdlib) and govulncheck gates on the canonical `bbaa198` image. GUI source-custody tests byte-pin `services/server/go.mod` (still `go 1.27.1`) and `AGENTS.md`; authcore is unchanged.
+
 ## What this is
 
 A children-first, in-person local-activities social app: no ads, deterministic

@@ -1,7 +1,7 @@
 # ADR ledger — claimed numbers
 
 Claim the next free number **here, in the same commit as the ADR file**, so parallel worktrees never mint the same number.
-Next free number: **0072**. Existing published/reserved numbers remain claimed; template: [`0000-template.md`](0000-template.md).
+Next free number: **0073**. Existing published/reserved numbers remain claimed; template: [`0000-template.md`](0000-template.md).
 ADRs are append-only: a reversal is a new ADR that flips the old one's `Status:` to `superseded-by ADR-NNNN`.
 On conflict: `STATUS.md` > newest-dated ADR > every other doc.
 
@@ -70,6 +70,7 @@ On conflict: `STATUS.md` > newest-dated ADR > every other doc.
 | 0069 | [native-self-topics](0069-native-self-topics.md) | bounded feature independently accepted;S2 PG7/491roots1478named0skip,T desktop8+8/24strictAxe/53prior bodies;existing authority and polish limits retained | 2026-10-20 |
 | 0070 | [bounded-xz-git-source-transport](0070-bounded-xz-git-source-transport.md) | strict full-source XZ transport independently qualified on S2;exact preflight0384/fullPG6057 acceptedbce862;caps/control refusals and old gzip history retained | 2026-10-20 |
 | 0071 | [functional-go-interface-completion](0071-functional-go-interface-completion.md) | accepted architecture;39 grouped Go destinations qualified; feature branch only, main/milestone held | 2026-10-21 |
+| 0072 | [go-1-27-3-security-toolchain](0072-go-1-27-3-security-toolchain.md) | accepted; landing-blocker fix: go1.27.1 failed ADR-0040 Trivy/govulncheck; release builders/agentapi/CI use go1.27.3; custody-pinned server go.mod/AGENTS.md and authcore unchanged | 2026-10-21 |
 | 0055 | [roedu-policy-schema5-ruleset8](0055-roedu-policy-schema5-ruleset8.md) | accepted; owner directive 2026-10-11; supersedes ADR-0024's 4/6 tuple; lands with the serving/Teacher 5/8 moves | 2026-10-11 |
 | 0057 | [roedu-local-poc-consumer](0057-roedu-local-poc-consumer.md) | accepted; owner authorization 2026-10-12 ("POC consumer half"); development/loopback only; human privacy review gates any wider use | 2026-10-12 |
 | 0058 | [roedu-venue-identity-and-license-width](0058-roedu-venue-identity-and-license-width.md) | accepted; owner directive 2026-10-12 (same-location venues stay distinct; raise the license limit) | 2026-10-12 |

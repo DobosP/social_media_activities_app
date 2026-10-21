@@ -4,7 +4,7 @@ Last verified: 2026-10-05
 
 ## Environment and boundaries
 
-- Go1.27.1 serves and qualifies the backend; Node24/TypeScript qualify the frontend.
+- Go1.27.3 serves and qualifies the backend; Node24/TypeScript qualify the frontend.
 - Default Docker/Compose runs Go. Never run pytest/manage.py inside that image.
 - Explicit disposable PostgreSQL16/PostGIS/vector and native AVIF/WebP/FFmpeg codecs
   qualify database, media, erasure, admission, CLI and actual sidecar-process contracts.

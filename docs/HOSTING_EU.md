@@ -13,7 +13,7 @@ real ingestion, provider activation or minor onboarding.
 ## Release artifact
 
 Build and qualify the exact source candidate in the native CI environment. Current Go
-modules require Go 1.27.1; the frontend build uses Node 24. Export the Docker `release`
+release builders use Go 1.27.3 (ADR-0072); the frontend build uses Node 24. Export the Docker `release`
 target into task scratch, package the resulting executable/static/templates/locale/
 reviewed reference data, and record the archive's exact SHA-256. Preserve its provenance
 and license metadata. Follow [NATIVE_SERVER](NATIVE_SERVER.md) and
