@@ -3,10 +3,12 @@ import importlib.util,json,lzma,os,tempfile,unittest
 from pathlib import Path
 spec=importlib.util.spec_from_file_location('native21_final',Path(__file__).with_name('qualify-native-final.py'))
 module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+# Task-owned TMPDIR when set; otherwise the platform temporary directory (TI-6).
+def scratch_dir():return Path(os.environ.get('TMPDIR') or tempfile.gettempdir())
 class FinalNativeBoundaryTests(unittest.TestCase):
     def test_affected_driver_has_exact_inverse_and_distinct_full_status(self):
         native=Path(__file__).with_name('qualify-native.sh').read_bytes()
-        with tempfile.TemporaryDirectory(dir=Path(os.environ['TMPDIR'])) as temporary:
+        with tempfile.TemporaryDirectory(dir=scratch_dir()) as temporary:
             source=Path(temporary).resolve()/"exported source with ' quote";source.mkdir()
             derived,proof=module.affected_driver(native,source)
             self.assertEqual(proof['canonical_sha256'],module.NATIVE_SHA)
@@ -37,7 +39,7 @@ class FinalNativeBoundaryTests(unittest.TestCase):
     def test_wrapper_records_actual_package_exit_and_rejects_filtering(self):
         import uuid
         from unittest.mock import patch
-        with tempfile.TemporaryDirectory(dir=Path(os.environ['TMPDIR'])) as temporary:
+        with tempfile.TemporaryDirectory(dir=scratch_dir()) as temporary:
             out=Path(temporary).resolve();source=out/'source';scratch=out/'runtime'
             plan={'source':str(source),'scratch':str(scratch),'out':str(out),'codec':module.CODEC_IMAGE,'owner':str(uuid.uuid4()),'network':'native21-owned-network','package_name':'native21-owned-package','docker':'/usr/bin/docker'}
             plan_file=out/'plan.json';plan_file.write_text(json.dumps(plan))
@@ -78,7 +80,7 @@ class FinalNativeBoundaryTests(unittest.TestCase):
         self.assertEqual(module.inspected_object(0,json.dumps([value]).encode(),b'',name),value)
     def test_full_git_path_blob_and_mode_fail_closed(self):
         import hashlib
-        scratch=Path(os.environ['TMPDIR']);self.assertTrue(scratch.is_absolute())
+        scratch=scratch_dir();self.assertTrue(scratch.is_absolute())
         with tempfile.TemporaryDirectory(dir=scratch) as temporary:
             root=Path(temporary);file=root/'fixture';raw=b'one\n';file.write_bytes(raw);file.chmod(0o644)
             oid=hashlib.sha1(b'blob 4\0'+raw).hexdigest();expected={'fixture':('100644',oid)}
@@ -89,4 +91,12 @@ class FinalNativeBoundaryTests(unittest.TestCase):
             with self.assertRaises(RuntimeError):module.tree_rows(root,expected)
             file.write_bytes(raw);(root/'extra').write_bytes(b'extra')
             with self.assertRaises(RuntimeError):module.tree_rows(root,expected)
+    def test_scratch_falls_back_to_platform_temp_without_tmpdir(self):
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory(dir=scratch_dir()) as owned:
+            with patch.dict(os.environ,{'TMPDIR':owned}):self.assertEqual(scratch_dir(),Path(owned))
+        with patch.dict(os.environ):
+            os.environ.pop('TMPDIR',None);fallback=scratch_dir()
+            self.assertEqual(fallback,Path(tempfile.gettempdir()));self.assertTrue(fallback.is_absolute() and fallback.is_dir())
+            with patch.dict(os.environ,{'TMPDIR':''}):self.assertEqual(scratch_dir(),fallback)
 if __name__=='__main__':unittest.main()
