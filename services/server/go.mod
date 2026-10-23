@@ -9,7 +9,7 @@ require (
 	github.com/getsentry/sentry-go v0.49.0
 	github.com/jackc/pgx/v5 v5.11.0
 	github.com/parquet-go/parquet-go v0.32.0
-	golang.org/x/text v0.42.0
+	golang.org/x/text v0.43.0
 )
 
 require (
@@ -28,7 +28,7 @@ require (
 	github.com/twpayne/go-geom v1.6.1 // indirect
 	golang.org/x/crypto v0.57.0 // indirect
 	golang.org/x/oauth2 v0.37.0 // indirect
-	golang.org/x/sync v0.23.0 // indirect
+	golang.org/x/sync v0.24.0 // indirect
 	golang.org/x/sys v0.48.0 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 )
